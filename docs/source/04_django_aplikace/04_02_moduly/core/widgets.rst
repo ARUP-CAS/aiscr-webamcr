@@ -40,7 +40,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``build_attrs()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``build_attrs()``.
 
-      :return: Vrací proměnná ``attrs``.
+          :return: Vrací proměnná ``attrs``.
 
 
 .. py:class:: AutocompleteListSelect2

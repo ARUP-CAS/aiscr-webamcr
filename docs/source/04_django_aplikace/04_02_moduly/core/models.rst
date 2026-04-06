@@ -66,11 +66,11 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      :return: Vrací atribut objektu.
+          :return: Vrací atribut objektu.
 
    .. py:method:: create_soubor_vazby()
 
@@ -112,7 +112,7 @@ Třídy
 
       :param file: Soubor nebo cesta k souboru používaná při operaci.
 
-      :return: Vrací výsledek volání ``get()``.
+          :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: get_thumb_icon()
 
@@ -120,7 +120,7 @@ Třídy
 
       :param file: Soubor nebo cesta k souboru používaná při operaci.
 
-      :return: Vrací n-tici.
+          :return: Vrací n-tici.
 
    .. py:method:: get_mime_types()
 
@@ -151,7 +151,7 @@ Třídy
       :param file: Soubor nebo cesta k souboru používaná při operaci.
       :param source_url: Parametr ``source_url`` ovlivňuje větvení podmínek.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``mime``, bool.
+          :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``mime``, bool.
 
    .. py:method:: check_antivirus()
 
@@ -224,7 +224,7 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       :return: Textová reprezentace odstávky systému.
 
@@ -262,7 +262,7 @@ Třídy
 
       :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
 
-      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
    .. py:method:: check_accessibility()
 
@@ -311,4 +311,4 @@ Funkce
    :param user: Parametr ``user`` se předává do volání ``filter()``, ``append()``, pracuje se s atributy ``hlavni_role``.
    :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
 
-   :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+       :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.

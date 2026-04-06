@@ -21,9 +21,9 @@ Třídy
 
    .. py:method:: _instance_geom_wkt()
 
-      Provádí operaci instance geom wkt.
+             Provádí operaci instance geom wkt.
 
-      :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
+             :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: run_loaded_validation()
@@ -45,5 +45,5 @@ Třídy
       :param geom: Parametr ``geom`` předává se do volání ``callproc()``, ``debug()``.
       :param epsg: Parametr ``epsg`` se předává do volání ``callproc()``.
 
-      :raises forms.ValidationError: Vyvolá se při zpracování zachycené výjimky typu ``Exception``; nebo při splnění podmínky ``validation_results != 'valid'``.
+          :raises forms.ValidationError: Vyvolá se při zpracování zachycené výjimky typu ``Exception``; nebo při splnění podmínky ``validation_results != 'valid'``.
 

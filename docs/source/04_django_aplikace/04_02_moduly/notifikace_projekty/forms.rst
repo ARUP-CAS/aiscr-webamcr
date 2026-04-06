@@ -64,4 +64,4 @@ Funkce
    :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
    :param model_typ: Parametr ``model_typ`` slouží jako vstup pro logiku funkce ``create_pes_form``.
 
-   :return: Vrací proměnná ``PesForm``.
+       :return: Vrací proměnná ``PesForm``.

@@ -341,10 +341,10 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def check_container_content(self, container_path, path):
         """
-        Porovnává PNG obrázky a ověřuje shodnost obsahu.
+        Stáhne obsah z URL kontejneru a porovná ho s referenčním souborem na disku.
 
-        :param png_path: Cesta k PNG souboru.
-        :param expected: Očekávaný obsah.
+        :param container_path: URL kontejneru (Fedora) ke stažení obsahu.
+        :param path: Adresář s referenčními soubory pro porovnání.
         :return: True pokud se obsah shoduje.
         """
         headers = {}

@@ -45,7 +45,7 @@ Třídy
       :param name: Parametr ``name`` nepoužito.
       :param value: Parametr ``value`` ovlivňuje větvení podmínek, předává se do volání ``filter()``.
 
-      :return: Vrací filtrovaný ``queryset`` podle ``ident_cely`` nebo poznámky z historie.
+          :return: Vrací filtrovaný ``queryset`` podle ``ident_cely`` nebo poznámky z historie.
 
 
 .. py:class:: Model3DFilter
@@ -60,7 +60,7 @@ Třídy
 
       :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
 
-      :return: Vrací proměnná ``queryset``.
+          :return: Vrací proměnná ``queryset``.
 
    .. py:method:: filter_popisne_udaje()
 

@@ -24,7 +24,7 @@ Třídy
 
       :param date: Objekt typu ``date`` určený k formátování.
 
-      :return: Vrací výsledek volání ``strftime()``.
+          :return: Vrací výsledek volání ``strftime()``.
 
    .. py:method:: format_date_time()
 
@@ -32,7 +32,7 @@ Třídy
 
       :param date_time: Objekt typu ``datetime`` určený k formátování.
 
-      :return: Vrací výsledek volání ``strftime()``.
+          :return: Vrací výsledek volání ``strftime()``.
 
    .. py:method:: _get_creators()
 
@@ -590,9 +590,9 @@ Funkce
 
 .. py:function:: convert_geo_location_to_dict(item)
 
-   Převede geo location to dict.
+      Převede geo location to dict.
 
-   :param item: Jedna položka zpracovávané kolekce.
+      :param item: Jedna položka zpracovávané kolekce.
    :return: Výstup funkce odpovídající implementované logice.
 
 .. py:function:: serialize_ez_creator(autor)
@@ -624,7 +624,7 @@ Funkce
 
    :param organizace: Organizace AMČR, jejíž název a případný ROR identifikátor budou zahrnuty.
 
-   :return: Vrací proměnná ``serialized_affiliation``.
+       :return: Vrací proměnná ``serialized_affiliation``.
 
 .. py:function:: serialize_organizace_contributor(organizace, contributor_type)
 
@@ -633,7 +633,7 @@ Funkce
    :param organizace: Organizace AMČR, která má být zahrnuta jako přispěvatel.
    :param contributor_type: Typ přispěvatele dle schématu DataCite (např. ``DataCurator``, ``HostingInstitution``).
 
-   :return: Vrací slovník.
+       :return: Vrací slovník.
 
 .. py:function:: serialize_osoba_identifiers(osoba)
 
@@ -641,7 +641,7 @@ Funkce
 
    :param osoba: Osoba z číselníku AMČR, jejíž identifikátory mají být zahrnuty.
 
-   :return: Vrací proměnná ``result``.
+       :return: Vrací proměnná ``result``.
 
 .. py:function:: serialize_osoba(osoba, organizace, contributor_type)
 
@@ -660,7 +660,7 @@ Funkce
    :param subject_attr: Název atributu objektu ``serialized_record``, jehož hodnota bude použita jako text hesla.
    :param lang: Kód jazyka dle ISO 639-1 pro pole ``lang`` ve výstupu DataCite.
 
-   :return: Vrací výsledek volání ``frozenset()``.
+       :return: Vrací výsledek volání ``frozenset()``.
 
 .. py:function:: serialize_subjects_komponenty(komp)
 
@@ -668,7 +668,7 @@ Funkce
 
    :param komp: Komponenta dokumentační jednotky nebo části dokumentu v systému AMČR.
 
-   :return: Vrací proměnná ``result``.
+       :return: Vrací proměnná ``result``.
 
 .. py:function:: serialize_dates_coverage(datace)
 

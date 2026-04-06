@@ -81,7 +81,7 @@ Třídy
       :param check_status: Parametr ``check_status`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
       :param reload_record: Parametr ``reload_record`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``update_record()``.
+          :return: Vrací výsledek volání ``update_record()``.
 
    .. py:method:: igsn_url()
 
@@ -95,5 +95,5 @@ Třídy
 
       :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
 

@@ -37,6 +37,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import quote
 
 import yaml
 
@@ -1176,16 +1177,17 @@ def has_meaningful_code(source_file: Path) -> bool:
         return False
 
 
-def extract_docstrings(source_file: Path) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+def extract_docstrings(source_file: Path) -> Tuple[Optional[str], List[Dict[str, Any]], List[Dict[str, Any]]]:
     """Extrahuje docstrings z modulu Python pomocí AST parsování.
 
     :param source_file: Cesta ke zdrojovému souboru.
-    :return: tuple: (třídy, funkce), kde každá je seznamem slovníků.
+    :return: tuple: (docstring modulu nebo None, třídy, funkce); třídy a funkce jsou seznamy slovníků.
     """
     with open(source_file, "r", encoding="utf-8") as f:
         source_code = f.read()
 
     tree = ast.parse(source_code)
+    module_doc = ast.get_docstring(tree, clean=False)
 
     classes = []
     functions = []
@@ -1210,15 +1212,32 @@ def extract_docstrings(source_file: Path) -> Tuple[List[Dict[str, Any]], List[Di
             args = [arg.arg for arg in node.args.args]
             functions.append({"name": node.name, "docstring": docstring, "args": args, "lineno": node.lineno})
 
-    return classes, functions
+    return module_doc, classes, functions
+
+
+def _looks_like_sphinx_fieldlist(docstring: str) -> bool:
+    """Vrátí True, pokud text vypadá jako Sphinx info pole (:param:, :return: atd.)."""
+    return bool(
+        re.search(r"^\s*:(?:param|type|return|returns|raises|raise|yield|yields|rtype)\b", docstring, re.I | re.M)
+    )
+
+
+def _indent_docstring_lines(docstring: str, indent: str) -> List[str]:
+    """Přidá ``indent`` k neprázdným řádkům; prázdné řádky ponechá prázdné."""
+    out: List[str] = []
+    for line in docstring.splitlines():
+        if line.strip():
+            out.append(f"{indent}{line}")
+        else:
+            out.append("")
+    return out
 
 
 def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
-    """Formátuje docstring ve stylu Google pro výstup RST.
+    """Formátuje docstring pro výstup RST v režimu explicit.
 
-    Převádí sekce Args:, Returns: atd. do správného formátu RST
-    s názvy argumentů uzavřenými v zpětných lomítkách. Názvy sekcí jsou přeloženy
-    do češtiny.
+    Docstringy se Sphinx poli (:param:, :return:, …) se předají beze změny obsahu (jen odsazení).
+    Google sekce (Args:, Returns:, …) se převedou na stejná Sphinx info pole.
 
     :param docstring: Docstring, který se má formátovat
     :param indent: Prefix odsazení pro každý řádek.
@@ -1227,18 +1246,25 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
     if not docstring:
         return []
 
+    if _looks_like_sphinx_fieldlist(docstring):
+        return _indent_docstring_lines(docstring, indent)
+
     lines = docstring.split("\n")
     result = []
     in_args_section = False
-    in_returns_section = False
+    args_variant = ""
+    in_returns_like = False
+    returns_variant = ""
     in_status_codes_section = False
     in_process_section = False
     in_custom_section = False
     in_other_section = False
 
-    # Klíčová slova sekcí, která formátují položky jako seznamy se zpětnými apostrofy kolem názvů.
+    field_cont = indent + "   "
+
+    # Sekce převáděné na Sphinx info pole: :param / :ivar (+ volitelně :type).
     args_like_sections = {"Args:", "Attributes:", "Response Data Keys:", "URL Parameters:"}
-    # Klíčová slova sekcí, která formátují položky kurzívou.
+    # Sekce převáděné na :return / :rtype, :raises resp. :yields.
     returns_like_sections = {"Returns:", "Raises:", "Yields:"}
     # Klíčová slova sekcí, která formátují položky jako seznamy se zpětnými apostrofy kolem kódů.
     status_codes_sections = {"Response Status Codes:"}
@@ -1311,27 +1337,36 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
         # Ověří, zda vstupujeme do nové sekce.
         if is_section_keyword(stripped):
             in_args_section = stripped in args_like_sections
-            in_returns_section = stripped in returns_like_sections
+            args_variant = stripped if in_args_section else ""
+            in_returns_like = stripped in returns_like_sections
+            returns_variant = stripped if in_returns_like else ""
             in_status_codes_section = stripped in status_codes_sections
             in_process_section = stripped in process_sections
             in_custom_section = False
             in_other_section = stripped in other_sections
 
-            translated_name = translate_section(stripped)
-            result.append("")
-            result.append(f"{indent}**{translated_name}:**")
-            result.append("")
+            use_translated_header = bool(in_status_codes_section or in_process_section or in_other_section)
+            if use_translated_header:
+                translated_name = translate_section(stripped)
+                result.append("")
+                result.append(f"{indent}**{translated_name}:**")
+                result.append("")
+            elif in_args_section or in_returns_like:
+                if result and result[-1].strip():
+                    result.append("")
             i += 1
             continue
 
         # Ověří, zda vstupujeme do vlastní sekce (např. „Rozdíly oproti NewFileUploadView:“).
         # Vlastní sekce detekuje jen tehdy, když už nejsme uvnitř známé sekce.
         in_any_section = (
-            in_args_section or in_returns_section or in_status_codes_section or in_process_section or in_custom_section
+            in_args_section or in_returns_like or in_status_codes_section or in_process_section or in_custom_section
         )
         if not in_any_section and is_custom_section(stripped, i):
             in_args_section = False
-            in_returns_section = False
+            args_variant = ""
+            in_returns_like = False
+            returns_variant = ""
             in_status_codes_section = False
             in_process_section = False
             in_custom_section = True
@@ -1345,7 +1380,7 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
             i += 1
             continue
 
-        # Zpracuje sekce typu Args – formátuje je jako seznam se zpětnými apostrofy.
+        # Zpracuje sekce typu Args – převod na Sphinx :param / :ivar (+ :type).
         if in_args_section and stripped:
             # Ověří, zda jde o řádek argumentu (název (typ): popis).
             # nebo formát (name: description)
@@ -1355,11 +1390,11 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
                 arg_name = arg_match.group(1)
                 arg_type = arg_match.group(2)
                 arg_desc = arg_match.group(3)
+                field = ":ivar" if args_variant == "Attributes:" else ":param"
 
+                result.append(f"{indent}{field} {arg_name}: {arg_desc}")
                 if arg_type:
-                    result.append(f"{indent}- ``{arg_name}`` (*{arg_type}*): {arg_desc}")
-                else:
-                    result.append(f"{indent}- ``{arg_name}``: {arg_desc}")
+                    result.append(f"{indent}:type {arg_name}: {arg_type}")
 
                 # Ověří navazující řádky (více odsazené než argument).
                 i += 1
@@ -1374,13 +1409,14 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
                         # Ověří, zda jde o nový argument (podporuje *args, **kwargs).
                         if re.match(r"^\s+\*{0,2}\w+\s*(?:\([^)]+\))?\s*:", next_line):
                             break
-                        result.append(f"{indent}  {next_stripped}")
+                        result.append(f"{field_cont}{next_stripped}")
                     else:
                         break
                     i += 1
                 continue
             elif not stripped:
                 in_args_section = False
+                args_variant = ""
 
         # Zpracuje sekci Response Status Codes – formátuje ji jako seznam se zpětnými apostrofy kolem kódů.
         if in_status_codes_section and stripped:
@@ -1489,41 +1525,58 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
             elif not stripped:
                 in_custom_section = False
 
-        # Handle Returns/Raises section
-        if in_returns_section and stripped:
-            # Ověří, zda to odpovídá formátu typ: popis.
-            # Supports: Type, Type[inner], Type | Type2, Optional[Type], etc.
-            ret_match = re.match(r"^([\w\[\], |]+)\s*:\s*(.*)$", stripped)
-            if ret_match:
-                ret_type = ret_match.group(1).strip()
-                ret_desc = ret_match.group(2)
-                result.append(f"{indent}*{ret_type}*: {ret_desc}")
+        # Returns / Raises / Yields → Sphinx :return, :raises, :yields
+        if in_returns_like:
+            if not stripped:
+                in_returns_like = False
+                returns_variant = ""
+            else:
+                # Ověří, zda to odpovídá formátu typ: popis.
+                # Supports: Type, Type[inner], Type | Type2, Optional[Type], etc.
+                ret_match = re.match(r"^([\w\[\], |]+)\s*:\s*(.*)$", stripped)
+                if ret_match:
+                    ret_type = ret_match.group(1).strip()
+                    ret_desc = ret_match.group(2)
+                    if returns_variant == "Returns:":
+                        result.append(f"{indent}:return: {ret_desc}")
+                        result.append(f"{indent}:rtype: {ret_type}")
+                    elif returns_variant == "Raises:":
+                        result.append(f"{indent}:raises {ret_type}: {ret_desc}")
+                    elif returns_variant == "Yields:":
+                        body = f"*{ret_type}*: {ret_desc}" if ret_desc else f"``{ret_type}``"
+                        result.append(f"{indent}:yields: {body}")
 
-                # Ověří navazující řádky.
-                i += 1
-                while i < len(lines):
-                    next_line = lines[i]
-                    next_stripped = next_line.strip()
-                    if not next_stripped or is_section_keyword(next_stripped):
-                        break
-                    if next_line.startswith("    ") or next_line.startswith("\t"):
-                        # Ověří, zda jde o novou položku typu.
-                        if re.match(r"^\s+[\w\[\], |]+\s*:", next_line):
-                            break
-                        result.append(f"{indent}{next_stripped}")
-                    else:
-                        break
+                    # Ověří navazující řádky.
                     i += 1
+                    while i < len(lines):
+                        next_line = lines[i]
+                        next_stripped = next_line.strip()
+                        if not next_stripped or is_section_keyword(next_stripped):
+                            break
+                        if next_line.startswith("    ") or next_line.startswith("\t"):
+                            # Ověří, zda jde o novou položku typu.
+                            if re.match(r"^\s+[\w\[\], |]+\s*:", next_line):
+                                break
+                            result.append(f"{field_cont}{next_stripped}")
+                        else:
+                            break
+                        i += 1
+                    continue
+                if returns_variant == "Returns:":
+                    result.append(f"{indent}:return: {stripped}")
+                elif returns_variant == "Raises:":
+                    result.append(f"{indent}{stripped}")
+                elif returns_variant == "Yields:":
+                    result.append(f"{indent}:yields: {stripped}")
+                i += 1
                 continue
-            elif not stripped:
-                in_returns_section = False
 
         # Handle other sections or regular text
         if in_other_section and stripped:
             result.append(f"{indent}{stripped}")
         elif (
             not in_args_section
-            and not in_returns_section
+            and not in_returns_like
             and not in_status_codes_section
             and not in_process_section
             and not in_custom_section
@@ -1544,9 +1597,15 @@ def generate_rst_explicit(source_file: Path, module_name: str, module_title: str
     :param module_description: Popis modulu.
     :return: Vygenerovaný obsah RST.
     """
-    classes, functions = extract_docstrings(source_file)
+    module_doc, classes, functions = extract_docstrings(source_file)
 
     rst_lines = [module_title, "=" * len(module_title), "", module_description, ""]
+
+    if module_doc and module_doc.strip():
+        overview = "Přehled modulu"
+        rst_lines.extend([overview, "-" * len(overview), ""])
+        rst_lines.extend(format_docstring_for_rst(module_doc.strip(), ""))
+        rst_lines.append("")
 
     if classes:
         rst_lines.extend(["Třídy", "------", ""])
@@ -2011,7 +2070,37 @@ def generate_rst_for_project_script(source_file: Path, output_dir: Path) -> bool
     output_file = output_dir / f"{doc_name}.rst"
     language = get_script_language(source_file.name)
 
-    rst_content = f"""Skript {source_file.name}
+    if source_file.suffix.lower() == ".py":
+        module_title = f"Skript {source_file.name}"
+        module_description = f"Automaticky generovaná dokumentace skriptu ``scripts/{source_file.name}``."
+        module_name = f"scripts.{source_file.stem}"
+        try:
+            body = generate_rst_explicit(source_file, module_name, module_title, module_description)
+            src_href = f"../../../../scripts/{source_file.name}"
+            code_heading = "Zdrojový kód"
+            rst_content = (
+                body.rstrip()
+                + "\n\n"
+                + f"{code_heading}\n"
+                + "-" * len(code_heading)
+                + "\n\n"
+                + f".. literalinclude:: {src_href}\n"
+                + f"   :language: {language}\n"
+                + "   :linenos:\n"
+            )
+        except Exception as e:
+            print(f"    ⚠ Falling back to literalinclude-only for {source_file.name}: {e}")
+            rst_content = f"""Skript {source_file.name}
+================{'=' * len(source_file.name)}
+
+Automaticky generovaná dokumentace skriptu ``scripts/{source_file.name}``.
+
+.. literalinclude:: ../../../../scripts/{source_file.name}
+   :language: {language}
+   :linenos:
+"""
+    else:
+        rst_content = f"""Skript {source_file.name}
 ================{'=' * len(source_file.name)}
 
 Automaticky generovaná dokumentace skriptu ``scripts/{source_file.name}``.
@@ -2457,7 +2546,15 @@ def generate_docker_images_rst() -> bool:
         if not entry.get("image", "").startswith("${"):
             content_lines += _build_image_block(entry, versions, hub_cache)
 
-    new_content = "Docker images\n=============\n\n" + "\n".join(content_lines) + "\n"
+    banner_lines = [
+        "..",
+        "   Tento soubor je automaticky generován. Neupravujte ručně.",
+        "   Změny tagů: ``docker-compose*.yml``, ``Dockerfile-DB``; popis a licence:",
+        "   ``docs/docker_images_meta.yaml``. Obnovení: ``python docs/generate_module_docs.py``",
+        "   nebo ``python docs/licenses/convert_to_rst.py``.",
+        "",
+    ]
+    new_content = "\n".join(banner_lines) + "Docker images\n=============\n\n" + "\n".join(content_lines) + "\n"
 
     if check_content_changed(new_content, output_file):
         output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -2600,18 +2697,86 @@ def load_json(path: Path) -> dict:
 
 
 def normalize_repo_url(url: str) -> str:
-    """Normalizuje URL repozitáře odstraněním prefixu ``git+`` a suffixu ``.git``.
+    """Normalizuje URL repozitáře pro zobrazení v dokumentaci.
+
+    Odstraní prefix ``git+``, převede ``git://host/…`` na ``https://host/…``
+    (prohlížeče ``git://`` nepodporují spolehlivě) a ořízne příponu ``.git``.
 
     :param url: Surová URL repozitáře (např. ``git+https://github.com/foo/bar.git``).
     :type url: str
     :return: Normalizovaná URL (např. ``https://github.com/foo/bar``).
     :rtype: str
     """
+    if not url:
+        return url
     if url.startswith("git+"):
         url = url[4:]
+    if url.startswith("git://"):
+        url = "https://" + url[6:]
     if url.endswith(".git"):
         url = url[:-4]
     return url
+
+
+def npm_package_page_url(package_name: str) -> str:
+    """Vrátí kanonickou URL stránky balíčku na https://www.npmjs.com/.
+
+    Používá se jako záložní odkaz, když v ``node_modules`` není k dispozici
+    ``homepage`` ani ``repository`` (např. při běhu generátoru bez ``npm install``).
+    Scoped balíčky (``@scope/name``) se kódují s ``%2F`` místo lomítka v cestě.
+
+    :param package_name: Název balíčku z ``package.json`` (např. ``leaflet`` nebo ``@types/node``).
+    :type package_name: str
+    :return: URL ve tvaru ``https://www.npmjs.com/package/...``.
+    :rtype: str
+    """
+    encoded = quote(package_name, safe="@")
+    return f"https://www.npmjs.com/package/{encoded}"
+
+
+def parse_preserved_js_library_links(rst_content: str) -> Dict[str, str]:
+    """Z existujícího RST vytáhne mapu ``název balíčku → odkaz`` z generovaného bloku.
+
+    Parsuje řádky ``list-table`` mezi značkami ``.. BEGIN GENERATED NODEJS LIBRARIES``
+    a ``.. END GENERATED NODEJS LIBRARIES``. Řádek záhlaví tabulky
+    (``Název knihovny``) se přeskočí. Slouží k zachování odkazů při běhu bez
+    ``node_modules`` (např. CI), aby se nepřepisovaly platné URL hodnotami
+    z :func:`npm_package_page_url`.
+
+    Očekává stejný čtyřřádkový tvar řádků tabulky jako :func:`build_rst_table`;
+    ruční zalamování buněk může parsování rozhodit.
+
+    :param rst_content: Obsah souboru ``javascript_knihovny.rst`` (nebo ekvivalent).
+    :type rst_content: str
+    :return: Slovník ``{název balíčku: URL}`` pro neprázdné odkazy.
+    :rtype: Dict[str, str]
+    """
+    if BEGIN_MARKER not in rst_content or END_MARKER not in rst_content:
+        return {}
+
+    start = rst_content.index(BEGIN_MARKER)
+    end = rst_content.index(END_MARKER)
+    section = rst_content[start:end]
+    preserved: Dict[str, str] = {}
+    lines = section.splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if line.startswith("   * - "):
+            name = line[7:].strip()
+            if (
+                i + 3 < len(lines)
+                and lines[i + 1].startswith("     - ")
+                and lines[i + 2].startswith("     - ")
+                and lines[i + 3].startswith("     - ")
+            ):
+                url = lines[i + 3][len("     - ") :].strip()
+                if name != "Název knihovny" and url:
+                    preserved[name] = url
+                i += 4
+                continue
+        i += 1
+    return preserved
 
 
 def load_dependencies(package_json: dict) -> Dict[str, str]:
@@ -2647,6 +2812,8 @@ def load_lock_licenses(lock_file: Path) -> Dict[str, str]:
         if key.startswith("node_modules/"):
             name = key[len("node_modules/") :]
             license_val = info.get("license")
+            if isinstance(license_val, dict):
+                license_val = (license_val.get("type") or "").strip()
 
             if license_val:
                 licenses[name] = license_val
@@ -2658,7 +2825,9 @@ def read_node_module_metadata(project_root: Path, name: str) -> tuple[str, str]:
     """Načte licenci a URL domovské stránky balíčku z adresáře ``node_modules``.
 
     Pokud soubor ``package.json`` daného balíčku neexistuje, vrátí dvojici
-    prázdných řetězců. URL repozitáře je normalizována pomocí :func:`normalize_repo_url`.
+    prázdných řetězců. Pole ``license`` může být řetězec nebo objekt s klíčem
+    ``type`` (starší formát npm). URL repozitáře je normalizována pomocí
+    :func:`normalize_repo_url`.
 
     :param project_root: Kořenový adresář projektu obsahující ``node_modules``.
     :type project_root: Path
@@ -2676,6 +2845,8 @@ def read_node_module_metadata(project_root: Path, name: str) -> tuple[str, str]:
     data = load_json(nm_pkg)
 
     license_val = data.get("license", "")
+    if isinstance(license_val, dict):
+        license_val = (license_val.get("type") or "").strip()
 
     homepage = data.get("homepage", "")
 
@@ -2695,13 +2866,18 @@ def collect_libraries(
     project_root: Path,
     dependencies: Dict[str, str],
     lock_licenses: Dict[str, str],
+    preserved_links: Optional[Dict[str, str]] = None,
 ) -> List[JsLibrary]:
     """Sestaví seznam Node.js knihoven obohacený o licence a URL.
 
     Pro každou závislost z ``dependencies`` nejprve hledá licenci v ``lock_licenses``
     (ze souboru ``package-lock.json``), a pokud ji nenajde, čte ji přímo
-    ze souboru ``package.json`` v ``node_modules``. Homepage je vždy čtena
-    z ``node_modules``. Záznamy jsou seřazeny abecedně podle názvu balíčku.
+    ze souboru ``package.json`` v ``node_modules``. Homepage se čte z
+    ``node_modules``; chybí-li, použije se dříve uložený odkaz z ``preserved_links``
+    (poslední generovaný blok v RST — stabilizuje CI bez ``npm ci``), jinak URL
+    stránky balíčku na npm (:func:`npm_package_page_url`). Nový balíček bez
+    uloženého odkazu tedy dostane vždy npm URL. Záznamy jsou seřazeny abecedně
+    podle názvu balíčku.
 
     :param project_root: Kořenový adresář projektu obsahující ``node_modules``.
     :type project_root: Path
@@ -2709,6 +2885,8 @@ def collect_libraries(
     :type dependencies: Dict[str, str]
     :param lock_licenses: Slovník ``{název balíčku: licence}`` z ``package-lock.json``.
     :type lock_licenses: Dict[str, str]
+    :param preserved_links: Volitelně odkazy z existujícího generovaného bloku RST.
+    :type preserved_links: Optional[Dict[str, str]]
     :return: Seřazený seznam objektů :class:`JsLibrary`.
     :rtype: List[JsLibrary]
     """
@@ -2726,6 +2904,10 @@ def collect_libraries(
             license_val = nm_license
 
         homepage = nm_homepage
+        if not homepage and preserved_links:
+            homepage = preserved_links.get(name, "")
+        if not homepage:
+            homepage = npm_package_page_url(name)
 
         rows.append(JsLibrary(name, version, license_val, homepage))
 
@@ -2774,6 +2956,12 @@ def build_rst_table(rows: List[JsLibrary]) -> str:
 
 
 def insert_generated_block(content: str, block: str) -> str:
+    """Vloží nebo nahradí generovaný blok mezi značkami v RST obsahu.
+
+    :param content: Původní text souboru (např. ``.rst``).
+    :param block: Nový generovaný úsek včetně značek začátku a konce.
+    :return: Obsah po vložení bloku, jinak ``block`` předřazený před ``content``.
+    """
     if BEGIN_MARKER in content and END_MARKER in content:
         start = content.index(BEGIN_MARKER)
         end = content.index(END_MARKER) + len(END_MARKER)
@@ -2787,6 +2975,11 @@ def insert_generated_block(content: str, block: str) -> str:
 
 def generate_js_libraries_rst() -> bool:
     """Vygeneruje tabulku Node.js JavaScript knihoven pro javascript_knihovny.rst.
+
+    Licences berou z ``package-lock.json``; odkazy nejprve z ``node_modules``,
+    při jejich absenci z existujícího generovaného bloku v souboru, jinak z
+    :func:`npm_package_page_url`. Pro aktualizaci odkazů z metadat balíčků
+    (homepage, repository) je potřeba mít nainstalované závislosti (``npm ci``).
 
     :return: True v případě úspěchu, False v opačném případě.
     :rtype: bool
@@ -2815,13 +3008,14 @@ def generate_js_libraries_rst() -> bool:
 
     lock_licenses = load_lock_licenses(package_lock_file)
 
-    rows = collect_libraries(project_root, dependencies, lock_licenses)
-
-    table_block = build_rst_table(rows)
-
     existing_content = ""
     if output_file.exists():
         existing_content = output_file.read_text(encoding="utf-8")
+
+    preserved_links = parse_preserved_js_library_links(existing_content)
+    rows = collect_libraries(project_root, dependencies, lock_licenses, preserved_links)
+
+    table_block = build_rst_table(rows)
 
     new_content = insert_generated_block(existing_content, table_block)
 
@@ -2852,7 +3046,21 @@ def main() -> None:
         type=str,
         help="Specific module to process (e.g., 'adb', 'core'). If not specified, processes all modules.",
     )
+    parser.add_argument(
+        "--docker-images-only",
+        action="store_true",
+        help="Only regenerate docs/source/12_zavislosti/docker_images.rst (compose + docker_images_meta.yaml).",
+    )
     args = parser.parse_args()
+
+    if args.docker_images_only:
+        generate_docker_images_rst()
+        if changes_detected:
+            print("\n⚠ Documentation changes detected!")
+            print("The documentation files have been updated.")
+            print("Please review and commit these changes.")
+            sys.exit(1)
+        return
 
     # Generate RST files
     if not generate_all_modules(mode=args.mode, specific_module=args.module):

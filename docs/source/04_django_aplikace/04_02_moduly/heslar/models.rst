@@ -32,11 +32,11 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+          :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
 
    .. py:method:: save()
 
@@ -45,7 +45,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``save()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
 
-      :raises ValidationError: Vyvolá se při splnění podmínky ``self._state.adding and (not FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'heslar'))``.
+          :raises ValidationError: Vyvolá se při splnění podmínky ``self._state.adding and (not FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'heslar'))``.
 
 
 .. py:class:: HeslarDatace
@@ -98,11 +98,11 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      :return: Vrací atribut objektu.
+          :return: Vrací atribut objektu.
 
 
 .. py:class:: HeslarOdkaz
@@ -150,7 +150,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``save()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
 
-      :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_katastr')``.
+          :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_katastr')``.
 
 
 .. py:class:: RuianKraj
@@ -178,7 +178,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``save()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
 
-      :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_kraj')``.
+          :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_kraj')``.
 
 
 .. py:class:: RuianOkres
@@ -206,5 +206,5 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``save()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
 
-      :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_okres')``.
+          :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_okres')``.
 

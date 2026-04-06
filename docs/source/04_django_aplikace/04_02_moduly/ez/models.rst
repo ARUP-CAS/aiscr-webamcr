@@ -20,11 +20,11 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+          :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
 
    .. py:method:: set_odeslany()
 
@@ -135,5 +135,5 @@ Funkce
 
    Funkce vrátí pro permanentní ident ID podle sekvence externího zdroje.
 
-   :return: Vrací hodnotu podle větve zpracování.
-   :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.
+       :return: Vrací hodnotu podle větve zpracování.
+       :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.

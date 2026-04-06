@@ -18,7 +18,7 @@ Třídy
 
       :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
 
-      :return: Vrací proměnná ``queryset``.
+          :return: Vrací proměnná ``queryset``.
 
    .. py:method:: filter_popisne_udaje()
 
@@ -28,7 +28,7 @@ Třídy
       :param name: Název pole filtru (nevyužit přímo, předán Django filtersetem).
       :param value: Hledaný řetězec, podle nějž se filtruje ve více textových polích externího zdroje.
 
-      :return: Vrací výsledek volání ``filter()``.
+          :return: Vrací výsledek volání ``filter()``.
 
    .. py:method:: filter_akce_ident()
 
@@ -38,7 +38,7 @@ Třídy
       :param name: Název pole filtru (nevyužit přímo, předán Django filtersetem).
       :param value: Hledaný identifikátor akce, podle nějž se filtruje přes propojené archeologické záznamy typu akce.
 
-      :return: Vrací výsledek volání ``filter()``.
+          :return: Vrací výsledek volání ``filter()``.
 
    .. py:method:: filter_lokalita_ident()
 
@@ -48,7 +48,7 @@ Třídy
       :param name: Název pole filtru (nevyužit přímo, předán Django filtersetem).
       :param value: Hledaný identifikátor lokality, podle nějž se filtruje přes propojené archeologické záznamy typu lokalita.
 
-      :return: Vrací výsledek volání ``filter()``.
+          :return: Vrací výsledek volání ``filter()``.
 
    .. py:method:: __init__()
 

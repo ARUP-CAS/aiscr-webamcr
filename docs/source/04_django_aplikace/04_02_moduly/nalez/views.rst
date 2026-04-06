@@ -15,7 +15,7 @@ Funkce
    :param typ: Parametr ``typ`` ovlivňuje větvení podmínek.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``debug()``.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``response``, výsledek volání ``render()``.
+       :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``response``, výsledek volání ``render()``.
 
 .. py:function:: edit_nalez(request, typ_vazby, komp_ident_cely)
 
@@ -25,4 +25,4 @@ Funkce
    :param typ_vazby: Parametr ``typ_vazby`` slouží jako vstup pro logiku funkce ``edit_nalez``.
    :param komp_ident_cely: Identifikátor ``komp_ident_cely`` používaný pro dohledání cílového záznamu.
 
-   :return: Vrací proměnná ``response``.
+       :return: Vrací proměnná ``response``.

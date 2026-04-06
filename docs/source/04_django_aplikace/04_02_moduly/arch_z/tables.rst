@@ -25,7 +25,7 @@ Třídy
 
       :param value: Parametr ``value`` předává se do volání ``bool()``, ``len()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, str.
+          :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, str.
 
 
 .. py:class:: AkceTable
@@ -41,7 +41,7 @@ Třídy
       :param queryset: Parametr ``queryset`` pracuje se s atributy ``annotate``, vstupuje do návratové hodnoty.
       :param is_descending: Parametr ``is_descending`` předává se do volání ``order_by()``.
 
-      :return: Vrací n-tici.
+          :return: Vrací n-tici.
 
    .. py:method:: __init__()
 

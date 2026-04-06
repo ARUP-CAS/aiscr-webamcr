@@ -24,7 +24,7 @@ Třídy
 
       :param kwargs: Další klíčové argumenty předané do základní třídy.
 
-      :return: Vrací proměnná ``context``.
+          :return: Vrací proměnná ``context``.
 
    .. py:method:: get()
 
@@ -34,7 +34,7 @@ Třídy
       :param args: Poziční argumenty.
       :param kwargs: Klíčové argumenty předané do ``get_context_data()``.
 
-      :return: Vrací výsledek volání ``render_to_response()``.
+          :return: Vrací výsledek volání ``render_to_response()``.
 
    .. py:method:: post()
 
@@ -44,7 +44,7 @@ Třídy
       :param args: Poziční argumenty.
       :param kwargs: Klíčové argumenty.
 
-      :return: Vrací výsledek volání ``JsonResponse()``.
+          :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 Funkce
@@ -58,7 +58,7 @@ Funkce
    :param typ_vazby: Typ vazby dokumentační jednotky (DJ nebo dokument).
    :param ident_cely: Identifikátor dokumentační jednotky.
 
-   :return: Vrací proměnná ``response``.
+       :return: Vrací proměnná ``response``.
 
 .. py:function:: zapsat(request, arch_z_ident_cely)
 
@@ -67,7 +67,7 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``CreateDJForm()``, ``add_message()``, pracuje se s atributy ``POST``, ``user``.
    :param arch_z_ident_cely: Identifikátor ``arch_z_ident_cely`` používaný pro dohledání cílového záznamu.
 
-   :return: Vrací proměnná ``redirect``.
+       :return: Vrací proměnná ``redirect``.
 
 .. py:function:: smazat(request, ident_cely)
 
@@ -76,4 +76,4 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``create_transaction()``, ``add_message()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``warning()``.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.

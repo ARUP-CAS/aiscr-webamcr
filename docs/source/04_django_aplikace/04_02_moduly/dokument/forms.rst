@@ -168,4 +168,4 @@ Funkce
 
    :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
 
-   :return: Vrací proměnná ``TvarForm``.
+       :return: Vrací proměnná ``TvarForm``.

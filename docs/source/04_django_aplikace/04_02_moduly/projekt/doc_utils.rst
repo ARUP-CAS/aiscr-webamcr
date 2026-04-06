@@ -23,12 +23,12 @@ Třídy
 
    .. py:method:: format_date()
 
-      Provádí operaci format date.
+             Provádí operaci format date.
 
-      :param date_obj: Časový údaj ``date_obj`` použitý při filtrování nebo výpočtu.
+             :param date_obj: Časový údaj ``date_obj`` použitý při filtrování nebo výpočtu.
       Zpracovaná hodnota po validaci nebo transformaci.
 
-      :return: Vrací hodnotu typu ``str``; podle větve může jít o: str, výsledek volání ``strftime()``.
+          :return: Vrací hodnotu typu ``str``; podle větve může jít o: str, výsledek volání ``strftime()``.
 
    .. py:method:: _create_style_dict()
 
@@ -80,7 +80,7 @@ Třídy
 
    .. py:method:: _initiate_document()
 
-      Provádí operaci initiate document.
+             Provádí operaci initiate document.
 
       :return: Výstup funkce odpovídající implementované logice.
 

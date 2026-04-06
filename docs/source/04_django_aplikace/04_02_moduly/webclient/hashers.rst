@@ -20,7 +20,7 @@ Třídy
       :param salt: Parametr `salt` používaný při výpočtu hashe hesla.
       :param iterations: Parametr `iterations` používaný při výpočtu hashe hesla.
 
-      :return: Vrací proměnná ``pass_hash``.
+          :return: Vrací proměnná ``pass_hash``.
 
    .. py:method:: encode()
 
@@ -30,5 +30,5 @@ Třídy
       :param salt: Parametr `salt` používaný při výpočtu hashe hesla.
       :param iterations: Parametr `iterations` používaný při výpočtu hashe hesla.
 
-      :return: Vrací výsledek volání ``encode_sha1_hash()``.
+          :return: Vrací výsledek volání ``encode_sha1_hash()``.
 

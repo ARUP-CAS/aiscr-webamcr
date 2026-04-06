@@ -12,7 +12,7 @@ Funkce
 
    :param request: HTTP požadavek; není přímo využit, ale Django jej předává každému context processoru.
 
-   :return: Vrací proměnná ``constants_dict``.
+       :return: Vrací proměnná ``constants_dict``.
 
 .. py:function:: digi_links_from_settings(request)
 
@@ -20,7 +20,7 @@ Funkce
 
    :param request: HTTP požadavek; není přímo využit, ale Django jej předává každému context processoru.
 
-   :return: Vrací výsledek volání ``getattr()``.
+       :return: Vrací výsledek volání ``getattr()``.
 
 .. py:function:: logout_next_url(request)
 
@@ -28,7 +28,7 @@ Funkce
 
    :param request: HTTP požadavek, z jehož atributu ``path`` se čte aktuální URL.
 
-   :return: Vrací slovník.
+       :return: Vrací slovník.
 
 .. py:function:: auto_logout_client(request)
 
@@ -36,7 +36,7 @@ Funkce
 
    :param request: Parametr ``request`` se předává do volání ``str()``, ``seconds_until_session_end()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: slovník, proměnná ``ctx``.
+       :return: Vrací hodnotu podle větve zpracování, typicky: slovník, proměnná ``ctx``.
 
 .. py:function:: main_shows(request)
 
@@ -44,4 +44,4 @@ Funkce
 
    :param request: HTTP požadavek, z jehož atributu ``user`` se čte přihlášený uživatel a jeho role.
 
-   :return: Vrací proměnná ``main_show``.
+       :return: Vrací proměnná ``main_show``.

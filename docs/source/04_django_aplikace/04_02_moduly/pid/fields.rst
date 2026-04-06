@@ -26,7 +26,7 @@ Třídy
 
    .. py:method:: _set_initial_values()
 
-      Nastaví initial values.
+             Nastaví initial values.
 
       :return: Výstup funkce odpovídající implementované logice.
 
@@ -43,7 +43,7 @@ Třídy
 
       :param value: Řetězec s DOI identifikátorem, jehož platnost se ověřuje.
 
-      :return: Vrací výsledek volání ``verify_doi()``.
+          :return: Vrací výsledek volání ``verify_doi()``.
 
    .. py:method:: validate()
 
@@ -51,7 +51,7 @@ Třídy
 
       :param value: Parametr ``value`` předává se do volání ``verify_doi()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``verify_doi()``.
+          :return: Vrací výsledek volání ``verify_doi()``.
 
 
 .. py:class:: OrcidAutocompleteField
@@ -72,7 +72,7 @@ Třídy
 
       :param value: Řetězec s ORCID identifikátorem, případně s prefixem ``https://orcid.org/``.
 
-      :return: Vrací hodnotu podle větve zpracování.
+          :return: Vrací hodnotu podle větve zpracování.
 
    .. py:method:: valid_value()
 
@@ -80,7 +80,7 @@ Třídy
 
       :param value: Řetězec s ORCID identifikátorem, jehož platnost se ověřuje.
 
-      :return: Vrací výsledek volání ``verify_orcid()``.
+          :return: Vrací výsledek volání ``verify_orcid()``.
 
    .. py:method:: validate()
 
@@ -88,7 +88,7 @@ Třídy
 
       :param value: Parametr ``value`` předává se do volání ``verify_orcid()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``verify_orcid()``.
+          :return: Vrací výsledek volání ``verify_orcid()``.
 
 
 .. py:class:: RorAutocompleteField
@@ -103,7 +103,7 @@ Třídy
 
       :param value: Řetězec s ROR identifikátorem, jehož platnost se ověřuje.
 
-      :return: Vrací výsledek volání ``verify_ror()``.
+          :return: Vrací výsledek volání ``verify_ror()``.
 
    .. py:method:: validate()
 
@@ -111,7 +111,7 @@ Třídy
 
       :param value: Parametr ``value`` předává se do volání ``verify_ror()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``verify_ror()``.
+          :return: Vrací výsledek volání ``verify_ror()``.
 
 
 .. py:class:: WikiDataAutocompleteField
@@ -132,7 +132,7 @@ Třídy
 
       :param value: Řetězec s identifikátorem Wikidata, případně s prefixem ``https://www.wikidata.org/entity/``.
 
-      :return: Vrací hodnotu podle větve zpracování.
+          :return: Vrací hodnotu podle větve zpracování.
 
    .. py:method:: valid_value()
 
@@ -140,7 +140,7 @@ Třídy
 
       :param value: Řetězec s identifikátorem nebo URL záznamu Wikidata, jehož platnost se ověřuje.
 
-      :return: Vrací výsledek volání ``verify_wikidata()``.
+          :return: Vrací výsledek volání ``verify_wikidata()``.
 
    .. py:method:: validate()
 
@@ -148,5 +148,5 @@ Třídy
 
       :param value: Parametr ``value`` předává se do volání ``verify_wikidata()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``verify_wikidata()``.
+          :return: Vrací výsledek volání ``verify_wikidata()``.
 

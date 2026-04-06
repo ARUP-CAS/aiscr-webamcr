@@ -71,7 +71,7 @@ Třídy
 
       :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
 
-      :return: Vrací atribut objektu.
+          :return: Vrací atribut objektu.
 
    .. py:method:: set_transaction_main_record()
 

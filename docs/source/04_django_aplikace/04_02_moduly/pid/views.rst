@@ -27,10 +27,10 @@ Třídy
 
    .. py:method:: _save_value_to_cache()
 
-      Uloží value to cache.
+             Uloží value to cache.
 
-      :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
-      :param value: Parametr ``value`` předává se do volání ``set()``.
+             :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
+             :param value: Parametr ``value`` předává se do volání ``set()``.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: api_call()
@@ -176,5 +176,5 @@ Třídy
       :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
       :param kwargs: Parametr ``kwargs`` pracuje se s atributy ``get``.
 
-      :return: Vrací proměnná ``result``.
+          :return: Vrací proměnná ``result``.
 

@@ -23,7 +23,7 @@ def url_to_classes(value):
     """
     Mapuje URL cestu na CSS třídy oddělené tečkami.
 
-    :param url_path: CestaURL k transformaci.
+    :param value: URL cesta k transformaci.
     :return: Řetězec s CSS třídami.
     """
     if value == "/":

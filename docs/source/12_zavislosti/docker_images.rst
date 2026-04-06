@@ -1,3 +1,8 @@
+..
+   Tento soubor je automaticky generován. Neupravujte ručně.
+   Změny tagů: ``docker-compose*.yml``, ``Dockerfile-DB``; popis a licence:
+   ``docs/docker_images_meta.yaml``. Obnovení: ``python docs/generate_module_docs.py``
+   nebo ``python docs/licenses/convert_to_rst.py``.
 Docker images
 =============
 

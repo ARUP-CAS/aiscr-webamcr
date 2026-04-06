@@ -20,7 +20,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, pracuje se s atributy ``pop``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``dispatch()``.
+          :return: Vrací výsledek volání ``dispatch()``.
 
 
 .. py:class:: OznameniZapsatView
@@ -37,8 +37,8 @@ Třídy
 
       :param request: Parametr ``request`` se předává do volání ``OznamovatelForm()``, ``ProjektOznameniForm()``, pracuje se s atributy ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
-      :raises PermissionDenied: Vyvolá se v konkrétních chybových větvích této funkce.
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
+          :raises PermissionDenied: Vyvolá se v konkrétních chybových větvích této funkce.
 
    .. py:method:: get()
 
@@ -46,8 +46,8 @@ Třídy
 
       :param request: Parametr ``request`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``render()``.
-      :raises PermissionDenied: Vyvolá se při splnění podmínky ``not projekty``; nebo při splnění podmínky ``cache_project is not None and self.ident_cely == cache_project``.
+          :return: Vrací výsledek volání ``render()``.
+          :raises PermissionDenied: Vyvolá se při splnění podmínky ``not projekty``; nebo při splnění podmínky ``cache_project is not None and self.ident_cely == cache_project``.
 
 
 .. py:class:: OznameniDokumentaceView
@@ -62,8 +62,8 @@ Třídy
 
       :param request: Parametr ``request`` předává se do volání ``debug()``, ``get()``, pracuje se s atributy ``POST``, ovlivňuje větvení podmínek.
 
-      :return: Vrací výsledek volání ``redirect()``.
-      :raises PermissionDenied: Vyvolá se v konkrétních chybových větvích této funkce.
+          :return: Vrací výsledek volání ``redirect()``.
+          :raises PermissionDenied: Vyvolá se v konkrétních chybových větvích této funkce.
 
    .. py:method:: get()
 
@@ -71,8 +71,8 @@ Třídy
 
       :param request: Parametr ``request`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``redirect()``.
-      :raises PermissionDenied: Vyvolá se při splnění podmínky ``not projekt``; nebo při splnění podmínky ``cache_project is not None and self.ident_cely == cache_project``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``redirect()``.
+          :raises PermissionDenied: Vyvolá se při splnění podmínky ``not projekt``; nebo při splnění podmínky ``cache_project is not None and self.ident_cely == cache_project``.
 
 
 .. py:class:: OznameniPotvrzeniView
@@ -87,8 +87,8 @@ Třídy
 
       :param request: Parametr ``request`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``redirect()``.
-      :raises PermissionDenied: Vyvolá se při splnění podmínky ``not projekty``; nebo při splnění podmínky ``cache_project is not None and self.ident_cely == cache_project``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``redirect()``.
+          :raises PermissionDenied: Vyvolá se při splnění podmínky ``not projekty``; nebo při splnění podmínky ``cache_project is not None and self.ident_cely == cache_project``.
 
 
 .. py:class:: OznamovatelCreateView
@@ -103,7 +103,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
 
-      :return: Vrací proměnná ``context``.
+          :return: Vrací proměnná ``context``.
 
    .. py:method:: get()
 
@@ -113,7 +113,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
 
    .. py:method:: post()
 
@@ -123,7 +123,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací výsledek volání ``JsonResponse()``.
+          :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 Funkce
@@ -136,8 +136,8 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``OznamovatelProjektForm()``, ``add_message()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
-   :raises PermissionDenied: Vyvolá se při splnění podmínky ``projekt.stav == PROJEKT_STAV_ARCHIVOVANY``.
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
+       :raises PermissionDenied: Vyvolá se při splnění podmínky ``projekt.stav == PROJEKT_STAV_ARCHIVOVANY``.
 
 .. py:function:: post_poi2kat(request)
 
@@ -145,4 +145,4 @@ Funkce
 
    :param request: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
 
-   :return: Vrací výsledek volání ``JsonResponse()``.
+       :return: Vrací výsledek volání ``JsonResponse()``.

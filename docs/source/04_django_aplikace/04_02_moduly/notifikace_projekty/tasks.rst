@@ -12,7 +12,7 @@ Funkce
 
    :param projekt_type: Parametr ``projekt_type`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
 
-   :return: Vrací výsledek volání ``get()``.
+       :return: Vrací výsledek volání ``get()``.
 
 .. py:function:: check_hlidaci_pes(projekt_id)
 
@@ -20,4 +20,4 @@ Funkce
 
    :param projekt_id: Identifikátor ``projekt_id`` používaný pro dohledání cílového záznamu.
 
-   :return: Vrací výsledek volání ``send_ep02()``.
+       :return: Vrací výsledek volání ``send_ep02()``.

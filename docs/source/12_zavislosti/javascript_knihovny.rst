@@ -53,7 +53,7 @@ Knihovny instalované pomocí Node.js
    * - leaflet-fullscreen
      - 1.0.2
      - ISC
-     - git://github.com/Leaflet/Leaflet.fullscreen
+     - https://github.com/Leaflet/Leaflet.fullscreen
    * - leaflet-spin
      - 1.1.2
      - MIT
@@ -73,7 +73,7 @@ Knihovny instalované pomocí Node.js
    * - spin.js
      - 4.1.1
      - MIT
-     - git://github.com/fgnass/spin.js
+     - https://github.com/fgnass/spin.js
 
 .. END GENERATED NODEJS LIBRARIES
 

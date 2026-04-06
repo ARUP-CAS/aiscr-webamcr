@@ -241,7 +241,7 @@ Třídy
       :param kwargs: Klíčové argumenty předávané do ``get_context_data()``.
 
       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
-      :raises Exception: Vyvolá se s textem "arch_z.views.PianCreateView.get.label_not_found"; nebo s textem "arch_z.views.PianCreateView.get.transormation_error".
+          :raises Exception: Vyvolá se s textem "arch_z.views.PianCreateView.get.label_not_found"; nebo s textem "arch_z.views.PianCreateView.get.transormation_error".
 
 
 .. py:class:: PianUpdateView
@@ -276,8 +276,8 @@ Třídy
       :param kwargs: Klíčové argumenty předávané do ``get_context_data()``.
 
       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
-      :raises PermissionDenied: Vyvolá se při splnění podmínky ``context['j'].pian.stav == PIAN_POTVRZEN``.
-      :raises Exception: Vyvolá se s textem "arch_z.views.PianUpdateView.get.label_not_found"; nebo s textem "arch_z.views.PianUpdateView.transormation_error".
+          :raises PermissionDenied: Vyvolá se při splnění podmínky ``context['j'].pian.stav == PIAN_POTVRZEN``.
+          :raises Exception: Vyvolá se s textem "arch_z.views.PianUpdateView.get.label_not_found"; nebo s textem "arch_z.views.PianUpdateView.transormation_error".
 
 
 .. py:class:: AdbCreateView
@@ -307,7 +307,7 @@ Třídy
 
       :param request: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
 
-      :return: Vrací výsledek volání ``JsonResponse()``.
+          :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: AkceIndexView
@@ -341,7 +341,7 @@ Třídy
 
       :param field: Název pole z požadavku (může začínat znaménkem ``-`` pro sestupné řazení).
 
-      :return: Vrací výsledek volání ``get()``.
+          :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: get_queryset()
 
@@ -442,7 +442,7 @@ Třídy
 
       :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
 
-      :return: Vrací hodnotu podle větve zpracování.
+          :return: Vrací hodnotu podle větve zpracování.
 
    .. py:method:: get_queryset()
 
@@ -463,7 +463,7 @@ Třídy
 
       :param request: Parametr ``request`` předává se do volání ``get()``, pracuje se s atributy ``GET``.
 
-      :return: Vrací výsledek volání ``HttpResponse()``.
+          :return: Vrací výsledek volání ``HttpResponse()``.
 
 
 Funkce
@@ -491,8 +491,8 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``CreateArchZForm()``, ``CreateAkceForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``redirect()``, vstupuje do návratové hodnoty.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
-   :raises PermissionDenied: Vyvolá se při splnění podmínky ``zaznam.stav == AZ_STAV_ARCHIVOVANY``.
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
+       :raises PermissionDenied: Vyvolá se při splnění podmínky ``zaznam.stav == AZ_STAV_ARCHIVOVANY``.
 
 .. py:function:: odeslat(request, ident_cely)
 
@@ -505,7 +505,7 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``debug()``.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: archivovat(request, ident_cely)
 
@@ -518,7 +518,7 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``debug()``, ``get_object_or_404()``.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: vratit(request, ident_cely)
 
@@ -532,9 +532,9 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``debug()``.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
-   :raises PermissionDenied: Vyvolá se při splnění podmínky ``dokument.stav != D_STAV_ODESLANY``.
-   :raises StateChangedError: Vyvolá se při splnění podmínky ``check_stav_changed(request, dokument)``.
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+       :raises PermissionDenied: Vyvolá se při splnění podmínky ``dokument.stav != D_STAV_ODESLANY``.
+       :raises StateChangedError: Vyvolá se při splnění podmínky ``check_stav_changed(request, dokument)``.
 
 .. py:function:: zapsat(request, projekt_ident_cely)
 
@@ -546,8 +546,8 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``CreateArchZForm()``, ``CreateAkceForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param projekt_ident_cely: Identifikátor ``projekt_ident_cely`` používaný pro dohledání cílového záznamu.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
-   :raises PermissionDenied: Vyvolá se při splnění podmínky ``not PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY``; nebo při splnění podmínky ``projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID``.
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
+       :raises PermissionDenied: Vyvolá se při splnění podmínky ``not PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY``; nebo při splnění podmínky ``projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID``.
 
 .. py:function:: smazat(request, ident_cely)
 
@@ -559,7 +559,7 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``create_transaction()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``debug()``.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely)
 
@@ -571,7 +571,7 @@ Funkce
    :param arch_z_ident_cely: Identifikátor ``arch_z_ident_cely`` používaný pro dohledání cílového záznamu.
    :param proj_ident_cely: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``pripojit()``.
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``pripojit()``.
 
 .. py:function:: odpojit_dokument(request, ident_cely, arch_z_ident_cely)
 
@@ -583,7 +583,7 @@ Funkce
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``filter()``, ``odpojit()``, vstupuje do návratové hodnoty.
    :param arch_z_ident_cely: Identifikátor ``arch_z_ident_cely`` používaný pro dohledání cílového záznamu.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``odpojit()``.
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``odpojit()``.
 
 .. py:function:: post_ajax_get_pians(request)
 
@@ -591,7 +591,7 @@ Funkce
 
    :param request: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
 
-   :return: Vrací výsledek volání ``JsonResponse()``.
+       :return: Vrací výsledek volání ``JsonResponse()``.
 
 .. py:function:: post_akce2kat(request)
 
@@ -599,7 +599,7 @@ Funkce
 
    :param request: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
 
-   :return: Vrací výsledek volání ``JsonResponse()``.
+       :return: Vrací výsledek volání ``JsonResponse()``.
 
 .. py:function:: get_history_dates(historie_vazby, request_user)
 
@@ -635,7 +635,7 @@ Funkce
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``debug()``, ``get_object_or_404()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param akce_vedouci_id: Identifikátor ``akce_vedouci_id`` používaný pro dohledání cílového záznamu.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: get_dj_form_detail(app, jednotka, jednotky, show, old_adb_post, user, session)
 
