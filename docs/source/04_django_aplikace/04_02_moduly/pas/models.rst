@@ -14,7 +14,7 @@ Třídy
 
    .. py:method:: initial_pristupnost()
 
-      Provádí operaci initial pristupnost.
+      Vrací výchozí hodnotu dostupnosti.
 
       :return: Vrací atribut objektu.
 
@@ -89,23 +89,23 @@ Třídy
 
       Samostaný nález má připojený alespoň jeden soubor.
 
-      :return: Vrací proměnná ``resp``.
+          :return: Vrací proměnná ``resp``.
 
    .. py:method:: nahled_soubor()
 
-      Provádí operaci nahled soubor.
+      Vrací cestu k miniaturnímu náhledu souboru.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``first()``, None.
+      :return: První soubor nebo None, pokud žádný neexistuje.
 
    .. py:method:: large_thumbnail()
 
-      Provádí operaci large thumbnail.
+      Vrací cestu k velké miniaturě obrázku.
 
       :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, None.
 
    .. py:method:: small_thumbnail()
 
-      Provádí operaci small thumbnail.
+      Vrací cestu k malé miniaturě obrázku.
 
       :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, None.
 
@@ -117,11 +117,11 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+          :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
 
    .. py:method:: get_permission_object()
 
@@ -143,9 +143,7 @@ Třídy
 
    .. py:method:: redis_snapshot_id()
 
-      Provádí operaci redis snapshot id.
-
-      :return: Vrací hodnotu podle větve zpracování.
+      Vrací identifikátor snímku v Redisu.
 
    .. py:method:: generate_redis_snapshot()
 
@@ -165,9 +163,7 @@ Třídy
 
    .. py:method:: igsn_exists()
 
-      Provádí operaci igsn exists.
-
-      :return: Vrací výsledek volání ``check_record_exists()``.
+      Určuje, zda existuje IGSN identifikátor.
 
    .. py:method:: igsn_delete()
 
@@ -175,7 +171,7 @@ Třídy
 
       :param check_status: Parametr ``check_status`` předává se do volání ``delete_record()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``delete_record()``.
+          :return: Vrací výsledek volání ``delete_record()``.
 
    .. py:method:: igsn_hide()
 
@@ -183,7 +179,7 @@ Třídy
 
       :param check_status: Parametr ``check_status`` předává se do volání ``hide_record()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``hide_record()``.
+          :return: Vrací výsledek volání ``hide_record()``.
 
    .. py:method:: igsn_publish()
 
@@ -191,7 +187,7 @@ Třídy
 
       :param check_status: Parametr ``check_status`` předává se do volání ``publish_record()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``publish_record()``.
+          :return: Vrací výsledek volání ``publish_record()``.
 
    .. py:method:: igsn_update()
 
@@ -200,13 +196,11 @@ Třídy
       :param check_status: Parametr ``check_status`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
       :param reload_record: Parametr ``reload_record`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``update_record()``.
+          :return: Vrací výsledek volání ``update_record()``.
 
    .. py:method:: igsn_url()
 
-      Provádí operaci igsn url.
-
-      :return: Vrací výsledek volání ``get_record_url()``.
+      Vrací URL odkaz na nález v IGSN databázi.
 
 
 .. py:class:: UzivatelSpoluprace
@@ -224,9 +218,7 @@ Třídy
 
    .. py:method:: aktivni()
 
-      Provádí operaci aktivni.
-
-      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+      Vrací hodnotu určující, zda je spolupráce aktivní.
 
    .. py:method:: set_aktivni()
 
@@ -247,7 +239,7 @@ Třídy
 
       Kontrola že stav není aktivný.
 
-      :return: Vrací proměnná ``result``.
+          :return: Vrací proměnná ``result``.
 
    .. py:method:: check_pred_deaktivaci()
 
@@ -255,15 +247,15 @@ Třídy
 
       Kontrola že stav není neaktivný.
 
-      :return: Vrací proměnná ``result``.
+          :return: Vrací proměnná ``result``.
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      :return: Vrací hodnotu podle větve zpracování.
+          :return: Vrací hodnotu podle větve zpracování.
 
    .. py:method:: get_create_user()
 
@@ -279,9 +271,7 @@ Třídy
 
    .. py:method:: redis_snapshot_id()
 
-      Provádí operaci redis snapshot id.
-
-      :return: Vrací hodnotu podle větve zpracování.
+      Vrací identifikátor snímku v Redisu.
 
    .. py:method:: generate_redis_snapshot()
 
@@ -295,5 +285,5 @@ Třídy
 
       :param pk: Primární klíč zpracovávaného záznamu.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
 

@@ -17,7 +17,8 @@ class OznameniSeleniumTest(BaseSeleniumTestClass):
 
     @staticmethod
     def oznameni_projektu(self):
-        """Provádí operaci oznameni projektu.
+        """
+        Provádí operaci oznameni projektu.
 
         :return: Vrací hodnotu podle větve zpracování.
         """

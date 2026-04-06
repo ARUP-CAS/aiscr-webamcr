@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=Komponenta, weak=False)
 def komponenta_save(sender, instance: Komponenta, **kwargs):
     """
-    Provádí operaci komponenta save.
+    Aktualizuje metadata nadřazeného záznamu (dokumentu nebo arch. záznamu) po uložení komponenty.
 
-    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``komponenta_save``.
-    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``pk``, ``suppress_signal``, ovlivňuje větvení podmínek.
-    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``komponenta_save``.
+    :param sender: Třída modelu, která signál vyslala.
+    :param instance: Ukládaná instance komponenty.
+    :param kwargs: Další parametry signálu.
     """
     logger.debug("komponenta.signals.komponenta_save.start", extra={"pk": instance.pk})
     if instance.suppress_signal:
@@ -55,11 +55,11 @@ def komponenta_save(sender, instance: Komponenta, **kwargs):
 @receiver(post_delete, sender=Komponenta, weak=False)
 def komponenta_delete(sender, instance: Komponenta, **kwargs):
     """
-    Provádí operaci komponenta delete.
+    Aktualizuje metadata nadřazeného záznamu (dokumentu nebo arch. záznamu) po smazání komponenty.
 
-    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``komponenta_delete``.
-    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``pk``, ``suppress_signal``, ovlivňuje větvení podmínek.
-    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``komponenta_delete``.
+    :param sender: Třída modelu, která signál vyslala.
+    :param instance: Smazaná instance komponenty.
+    :param kwargs: Další parametry signálu.
     """
     logger.debug("komponenta.signals.komponenta_delete.start", extra={"pk": instance.pk})
     if instance.suppress_signal:

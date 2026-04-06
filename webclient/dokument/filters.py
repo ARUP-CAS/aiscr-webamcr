@@ -73,9 +73,10 @@ class SouborTypFilter(MultipleChoiceFilter):
 
     @property
     def field(self):
-        """Provádí operaci field.
+        """
+        Vrací dynamicky generované pole s volbami typů souborů z aktuální databáze.
 
-        :return: Vrací atribut objektu.
+        :return: FormField s volbami z databáze.
         """
         qs = self.model._default_manager.distinct()
         qs = qs.order_by(self.field_name).values_list(self.field_name, flat=True)
@@ -385,13 +386,12 @@ class Model3DFilter(HistorieFilter, FilterSet):
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
-        Metoda pro filtrování podle popisu, poznámky, odkazu a poznámek v objektech a předmětech.
+        Filtruje modely 3D podle popisu, poznámky, odkazu a textů v komponentách.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
-        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``filter()``.
+        :param queryset: QuerySet modelů 3D k filtrování.
+        :param name: Jméno pole pro filtrování.
+        :param value: Hodnota pro vyhledávání.
+        :return: Filtrovaný QuerySet.
         """
         return queryset.filter(
             Q(oznaceni_originalu__icontains=value)
@@ -404,13 +404,12 @@ class Model3DFilter(HistorieFilter, FilterSet):
 
     def filter_roky(self, queryset, name, value):
         """
-        Metoda pro filtrování podle roku revize a popisu ADB.
+        Filtruje modely podle roku vzniku.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_roky``.
-        :param value: Parametr ``value`` předává se do volání ``filter()``, pracuje se s atributy ``start``, ``stop``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``distinct()``.
+        :param queryset: QuerySet modelů k filtrování.
+        :param name: Jméno pole pro filtrování.
+        :param value: RangeField s start/stop roky.
+        :return: Filtrovaný QuerySet.
         """
         if value:
             if value.start is not None and value.stop is not None:
@@ -430,13 +429,12 @@ class Model3DFilter(HistorieFilter, FilterSet):
 
     def filter_roky_range(self, queryset, name, value):
         """
-        Metoda pro filtrování podle roku revize a popisu ADB.
+        Filtruje modely podle rozsahu let.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_roky_range``.
-        :param value: Parametr ``value`` pracuje se s atributy ``start``, ``stop``, ovlivňuje větvení podmínek.
-
-            :return: Vrací proměnná ``queryset``.
+        :param queryset: QuerySet modelů k filtrování.
+        :param name: Jméno pole pro filtrování (tuple name).
+        :param value: RangeField s start/stop roky.
+        :return: Filtrovaný QuerySet.
         """
         if value:
             if value.start is not None:
@@ -1027,13 +1025,12 @@ class DokumentFilter(Model3DFilter):
 
     def filter_uzemni_prislusnost(self, queryset, name, value):
         """
-        Metoda pro filtrování podle územní příslušnosti.
+        Filtruje dokumenty podle územní příslušnosti.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_uzemni_prislusnost``.
-        :param value: Parametr ``value`` předává se do volání ``debug()``, ``reduce()``.
-
-            :return: Vrací výsledek volání ``filter()``.
+        :param queryset: QuerySet dokumentů k filtrování.
+        :param name: Jméno pole pro filtrování.
+        :param value: Hodnota pro filtrování.
+        :return: Filtrovaný QuerySet.
         """
         logger.debug("dokument.filters.DokumentFilter.filter_uzemni_prislusnost", extra={"value": value})
         query = reduce(operator.or_, (Q(ident_cely__contains=item) for item in value))
@@ -1041,13 +1038,12 @@ class DokumentFilter(Model3DFilter):
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
-        Metoda pro filtrování podle popisu, poznámky, licence, čísla objektu, regionu a události.
+        Filtruje dokumenty podle popisu, poznámky, odkazu a textů v komponentách.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
-        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``filter()``.
+        :param queryset: QuerySet dokumentů k filtrování.
+        :param name: Jméno pole pro filtrování.
+        :param value: Hodnota pro filtrování.
+        :return: Filtrovaný QuerySet.
         """
         return queryset.filter(
             Q(oznaceni_originalu__icontains=value)
@@ -1061,13 +1057,12 @@ class DokumentFilter(Model3DFilter):
 
     def filter_predmet_pozn_pocet(self, queryset, name, value):
         """
-        Metoda pro filtrování podle poznámky a počtu předmětů.
+        Filtruje dokumenty podle počtu poznámek v předmětech.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_predmet_pozn_pocet``.
-        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``distinct()``.
+        :param queryset: QuerySet dokumentů k filtrování.
+        :param name: Jméno pole pro filtrování.
+        :param value: Hodnota pro filtrování.
+        :return: Filtrovaný QuerySet.
         """
         return queryset.filter(
             Q(casti__komponenty__komponenty__predmety__poznamka__icontains=value)
@@ -1076,13 +1071,12 @@ class DokumentFilter(Model3DFilter):
 
     def filter_objekt_pozn_pocet(self, queryset, name, value):
         """
-        Metoda pro filtrování podle poznámky a počtu objektu.
+        Filtruje dokumenty podle počtu poznámek v objektech.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_objekt_pozn_pocet``.
-        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``distinct()``.
+        :param queryset: QuerySet dokumentů k filtrování.
+        :param name: Jméno pole pro filtrování.
+        :param value: Hodnota pro filtrování.
+        :return: Filtrovaný QuerySet.
         """
         return queryset.filter(
             Q(casti__komponenty__komponenty__objekty__poznamka__icontains=value)
@@ -1091,13 +1085,12 @@ class DokumentFilter(Model3DFilter):
 
     def filter_jistota(self, queryset, name, value):
         """
-        Metoda pro filtrování podle jistoty.
+        Filtruje dokumenty podle míry jistoty.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``distinct``, ``filter``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_jistota``.
-        :param value: Parametr ``value`` ovlivňuje větvení podmínek.
-
-            :return: Vrací výsledek volání ``distinct()``.
+        :param queryset: QuerySet dokumentů k filtrování.
+        :param name: Jméno pole pro filtrování.
+        :param value: Hodnota pro filtrování.
+        :return: Filtrovaný QuerySet.
         """
         if "True" in value and "False" in value:
             return queryset.distinct()
@@ -1110,13 +1103,12 @@ class DokumentFilter(Model3DFilter):
 
     def filter_neident_poznamka(self, queryset, name, value):
         """
-        Metoda pro filtrování podle neident akce.
+        Filtruje dokumenty podle poznámky v neidentifikované akci.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_neident_poznamka``.
-        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``distinct()``.
+        :param queryset: QuerySet dokumentů k filtrování.
+        :param name: Jméno pole pro filtrování.
+        :param value: Hodnota pro filtrování.
+        :return: Filtrovaný QuerySet.
         """
         return queryset.filter(
             Q(casti__neident_akce__poznamka__icontains=value)
@@ -1127,13 +1119,12 @@ class DokumentFilter(Model3DFilter):
 
     def filter_let_poznamka(self, queryset, name, value):
         """
-        Metoda pro filtrování podle letu.
+        Filtruje dokumenty podle poznámky v letecké akci.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_let_poznamka``.
-        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``distinct()``.
+        :param queryset: QuerySet dokumentů k filtrování.
+        :param name: Jméno pole pro filtrování.
+        :param value: Hodnota pro filtrování.
+        :return: Filtrovaný QuerySet.
         """
         return queryset.filter(
             Q(let__typ_letounu__icontains=value)
@@ -1144,37 +1135,34 @@ class DokumentFilter(Model3DFilter):
 
     def filter_id_AZ(self, queryset, name, value):
         """
-        Metoda pro filtrování podle id AZ.
+        Filtruje dokumenty podle identifikátoru archeologické akce.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_id_AZ``.
-        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``distinct()``.
+        :param queryset: QuerySet dokumentů k filtrování.
+        :param name: Jméno pole pro filtrování.
+        :param value: Hodnota pro filtrování.
+        :return: Filtrovaný QuerySet.
         """
         return queryset.filter(Q(casti__archeologicky_zaznam__ident_cely__icontains=value)).distinct()
 
     def filter_id_projekt(self, queryset, name, value):
         """
-        Metoda pro filtrování podle id projektu.
+        Filtruje dokumenty podle identifikátoru projektu.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_id_projekt``.
-        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``distinct()``.
+        :param queryset: QuerySet dokumentů k filtrování.
+        :param name: Jméno pole pro filtrování.
+        :param value: Hodnota pro filtrování.
+        :return: Filtrovaný QuerySet.
         """
         return queryset.filter(Q(casti__projekt__ident_cely__icontains=value)).distinct()
 
     def filter_exist_neident_akce(self, queryset, name, value):
         """
-        Metoda pro filtrování podle existence neident akce.
+        Filtruje dokumenty s neidentifikovanou akcí.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, ``exclude``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_exist_neident_akce``.
-        :param value: Parametr ``value`` předává se do volání ``len()``, ovlivňuje větvení podmínek.
-
-            :return: Vrací výsledek volání ``distinct()``.
+        :param queryset: QuerySet dokumentů k filtrování.
+        :param name: Jméno pole pro filtrování.
+        :param value: Hodnota pro filtrování.
+        :return: Filtrovaný QuerySet.
         """
         if len(value) == 1:
             akce = NeidentAkce.objects.filter(dokument_cast=models.OuterRef("pk"))
@@ -1191,13 +1179,12 @@ class DokumentFilter(Model3DFilter):
 
     def filter_exist_komponenty(self, queryset, name, value):
         """
-        Metoda pro filtrování podle existence komponenty.
+        Filtruje dokumenty s komponentami.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, ``exclude``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_exist_komponenty``.
-        :param value: Parametr ``value`` předává se do volání ``len()``, ovlivňuje větvení podmínek.
-
-            :return: Vrací výsledek volání ``distinct()``.
+        :param queryset: QuerySet dokumentů k filtrování.
+        :param name: Jméno pole pro filtrování.
+        :param value: Hodnota pro filtrování.
+        :return: Filtrovaný QuerySet.
         """
         if len(value) == 1:
             komponenty = Komponenta.objects.filter(komponenta_vazby__casti_dokumentu=models.OuterRef("pk"))
@@ -1213,13 +1200,12 @@ class DokumentFilter(Model3DFilter):
 
     def filter_exist_nalezy(self, queryset, name, value):
         """
-        Metoda pro filtrování podle existence nálezu.
+        Filtruje dokumenty s nálezy.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, ``exclude``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_exist_nalezy``.
-        :param value: Parametr ``value`` předává se do volání ``len()``, ovlivňuje větvení podmínek.
-
-            :return: Vrací výsledek volání ``distinct()``.
+        :param queryset: QuerySet dokumentů k filtrování.
+        :param name: Jméno pole pro filtrování.
+        :param value: Hodnota pro filtrování.
+        :return: Filtrovaný QuerySet.
         """
         if len(value) == 1:
             objekty = NalezObjekt.objects.filter(komponenta__komponenta_vazby__casti_dokumentu=models.OuterRef("pk"))
@@ -1242,13 +1228,12 @@ class DokumentFilter(Model3DFilter):
 
     def filter_exist_tvary(self, queryset, name, value):
         """
-        Metoda pro filtrování podle existence tvaru.
+        Filtruje dokumenty s tvary.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, ``distinct``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_exist_tvary``.
-        :param value: Parametr ``value`` předává se do volání ``len()``, ovlivňuje větvení podmínek.
-
-            :return: Vrací výsledek volání ``distinct()``.
+        :param queryset: QuerySet dokumentů k filtrování.
+        :param name: Jméno pole pro filtrování.
+        :param value: Hodnota pro filtrování.
+        :return: Filtrovaný QuerySet.
         """
         if len(value) == 1:
             tvar = Tvar.objects.filter(dokument=models.OuterRef("pk"))
@@ -1262,13 +1247,12 @@ class DokumentFilter(Model3DFilter):
 
     def filter_exist_soubory(self, queryset, name, value):
         """
-        Metoda pro filtrování podle existence souboru.
+        Filtruje dokumenty se soubory.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, ``distinct``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_exist_soubory``.
-        :param value: Parametr ``value`` předává se do volání ``len()``, ovlivňuje větvení podmínek.
-
-            :return: Vrací výsledek volání ``distinct()``.
+        :param queryset: QuerySet dokumentů k filtrování.
+        :param name: Jméno pole pro filtrování.
+        :param value: Hodnota pro filtrování.
+        :return: Filtrovaný QuerySet.
         """
         if len(value) == 1:
             soubor = Soubor.objects.filter(vazba__dokument_souboru=models.OuterRef("pk"))

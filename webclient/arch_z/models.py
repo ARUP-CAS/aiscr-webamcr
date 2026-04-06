@@ -306,7 +306,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         return result, doc_result
 
     def set_lokalita_permanent_ident_cely(self):
-        """Metoda pro nastavení permanentního identifikátoru lokality ze sekvence lokalit.
+        """
+        Metoda pro nastavení permanentního identifikátoru lokality ze sekvence lokalit.
 
         :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.
         """
@@ -411,7 +412,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         return redirect(self.get_absolute_url(dj_ident_cely))
 
     def __str__(self):
-        """Metoda vrátí str reprezentaci modelu ident_cely.
+        """
+        Metoda vrátí str reprezentaci modelu ident_cely.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
         """
@@ -421,14 +423,16 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             return "[ident_cely not yet assigned]"
 
     def get_permission_object(self):
-        """Vrací permission object.
+        """
+        Vrací permission object.
 
         :return: Vrací proměnná ``self``.
         """
         return self
 
     def get_create_user(self):
-        """Vrací create user.
+        """
+        Vrací create user.
 
         :return: Vrací n-tici.
         """
@@ -439,7 +443,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             return ()
 
     def get_create_org(self):
-        """Vrací create org.
+        """
+        Vrací create org.
 
         :return: Vrací n-tici.
         """
@@ -449,7 +454,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             return ()
 
     def check_set_permanent_ident(self):
-        """Ověří set permanent ident.
+        """
+        Ověří set permanent ident.
 
         :return: Vrací proměnná ``poznamka_historie``.
         """
@@ -488,7 +494,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     @property
     def initial_casti_dokumentu(self):
-        """Vrátí ID navázaných částí dokumentu v okamžiku načtení instance.
+        """
+        Vrátí ID navázaných částí dokumentu v okamžiku načtení instance.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``values_list()``, seznam.
         """
@@ -499,7 +506,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     @property
     def initial_pristupnost(self):
-        """Vrátí původní hodnotu přístupnosti záznamu.
+        """
+        Vrátí původní hodnotu přístupnosti záznamu.
 
         :return: Vrací atribut objektu.
         """
@@ -691,7 +699,8 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     @property
     def initial_projekt(self):
-        """Vrátí původní projekt navázaný při inicializaci instance.
+        """
+        Vrátí původní projekt navázaný při inicializaci instance.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
         """
@@ -702,14 +711,16 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         return None
 
     def get_absolute_url(self):
-        """Vrátí URL detailu archeologického záznamu navázaného na akci.
+        """
+        Vrátí URL detailu archeologického záznamu navázaného na akci.
 
         :return: Vrací výsledek volání ``reverse()``.
         """
         return reverse("arch_z:detail", kwargs={"ident_cely": self.archeologicky_zaznam.ident_cely})
 
     def vedouci_organizace(self):
-        """Vrátí seznam vedoucích organizací akce jako text.
+        """
+        Vrátí seznam vedoucích organizací akce jako text.
 
         :return: Vrací výsledek volání ``join()``.
         """
@@ -717,7 +728,8 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     @cached_property
     def vedouci(self):
-        """Vrátí textový seznam vedoucích osob navázaných na akci.
+        """
+        Vrátí textový seznam vedoucích osob navázaných na akci.
 
         :return: Vrací výsledek volání ``join()``.
         """
@@ -739,7 +751,8 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     @property
     def redis_snapshot_id(self):
-        """Sestaví klíč Redis snapshotu pro seznam akci.
+        """
+        Sestaví klíč Redis snapshotu pro seznam akci.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -748,7 +761,8 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         return f"{AkceListView.redis_snapshot_prefix}_{self.archeologicky_zaznam.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Připraví data akce pro uložení snapshotu do Redis cache.
+        """
+        Připraví data akce pro uložení snapshotu do Redis cache.
 
         :return: Vrací n-tici.
         """
@@ -796,14 +810,16 @@ class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
         ordering = ["vedouci__prijmeni", "vedouci__jmeno"]
 
     def __str__(self):
-        """Metoda vrátí str reprezentaci modelu vedouci.
+        """
+        Metoda vrátí str reprezentaci modelu vedouci.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
         return f"{self.vedouci.vypis_cely} ({self.organizace})"
 
     def vypis_name(self):
-        """Metoda vrátí str reprezentaci modelu vedouci pro vypis.
+        """
+        Metoda vrátí str reprezentaci modelu vedouci pro vypis.
 
         :return: Vrací hodnotu podle větve zpracování.
         """

@@ -312,12 +312,12 @@ def dokument_cast_save_metadata_delete(sender, instance: DokumentCast, **kwargs)
 @receiver(post_save, sender=Tvar, weak=False)
 def tvar_save(sender, instance: Tvar, created, **kwargs):
     """
-    Po uložení tvaru zajistí zápis metadat souvisejícího dokumentu.
+    Uloží metadata dokumentu při uložení tvaru.
 
-    :param sender: Model, který signal vyvolal.
+    :param sender: Model, který signal vyvolal (Tvar).
     :param instance: Uložená instance tvaru.
-    :param created: Parametr ``created`` slouží jako vstup pro logiku funkce ``tvar_save``.
-    :param kwargs: Dodatečné argumenty předané Django signalem.
+    :param created: Zda je nová instance nebo aktualizace.
+    :param kwargs: Dodatečné argumenty Djangoho signálu.
     """
     logger.debug("dokument.signals.tvar_save.start", extra={"pk": instance.pk})
     if instance.dokument and instance.active_transaction and not instance.suppress_signal:

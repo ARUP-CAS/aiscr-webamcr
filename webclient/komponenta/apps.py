@@ -7,7 +7,7 @@ class KomponentaConfig(AppConfig):
     name = "komponenta"
 
     def ready(self):
-        """Provádí operaci ready."""
+        """Načte signály aplikace komponenta po spuštění Django."""
         super(KomponentaConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import komponenta.signals

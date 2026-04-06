@@ -115,9 +115,9 @@ return 0
     @staticmethod
     def prepare_model_for_redis(table):
         """
-        Provádí operaci prepare model for redis.
+        Převede řádek Django-tables2 tabulky do slovníku pro uložení do Redis cache.
 
-        :param table: Parametr ``table`` pracuje se s atributy ``columns``, ``rows``.
+        :param table: Tabulka (django-tables2) obsahující jeden řádek s daty záznamu.
 
             :return: Vrací proměnná ``data``.
         """
@@ -211,12 +211,13 @@ class ClamdNetworkSocket:
 
     def _basic_command(self, command):
         """
-               Provádí operaci basic command.
+        Odešle jednoduchý příkaz do clamd a vrátí jeho odpověď.
 
-               :param command: Textový název, klíč nebo zpráva ``command`` používaná v rámci operace.
+        :param command: Název příkazu zasílaného do clamd démona (např. 'PING', 'VERSION').
+
         :return: Výstup funkce odpovídající implementované logice.
 
-            :raises ClamdResponseError: Vyvolá se při splnění podmínky ``len(response) > 1``.
+        :raises ClamdResponseError: Vyvolá se při splnění podmínky ``len(response) > 1``.
         """
         self._init_socket()
         try:

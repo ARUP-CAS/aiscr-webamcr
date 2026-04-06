@@ -8,7 +8,7 @@ class NotifikaceProjektyConfig(AppConfig):
     name = "notifikace_projekty"
 
     def ready(self):
-        """Provádí operaci ready."""
+        """Načte signály aplikace notifikace_projekty po spuštění Django."""
         super(NotifikaceProjektyConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import notifikace_projekty.signals

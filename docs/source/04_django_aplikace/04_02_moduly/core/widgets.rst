@@ -21,11 +21,10 @@ Třídy
 
    .. py:method:: format_value()
 
-      Provádí operaci format value.
+      Formátuje hodnotu cizího klíče pro čtení jako textový popis.
 
-      :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``format_value``.
-
-      :return: Vrací výsledek volání ``str()``.
+      :param value: Primární klíč objektu k zobrazení.
+      :return: Textový popis objektu.
 
 
 .. py:class:: AutocompleteSelect2WidgetMixin
@@ -41,7 +40,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``build_attrs()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``build_attrs()``.
 
-      :return: Vrací proměnná ``attrs``.
+          :return: Vrací proměnná ``attrs``.
 
 
 .. py:class:: AutocompleteListSelect2

@@ -13,7 +13,7 @@
   let object_id = "{{ ident_cely }}";
   const addRemoveLinks = true;
   </script>
-  <link rel="stylesheet" type="text/css" href="{% static 'css/dropzone.min.css' %}"/>
+  <link rel="stylesheet" type="text/css" href="{% static 'dropzone/dist/min/dropzone.min.css' %}"/>
   <link rel="stylesheet" type="text/css" href="{% static 'css/bs-stepper.min.css' %}" />
 {% endblock %}
 
@@ -130,7 +130,7 @@
 {% endblock %}
 
 {% block script %}
-  <script src="{% static 'js/dropzone.min.js' %}"></script>
+  <script src="{% static 'dropzone/dist/min/dropzone.min.js' %}"></script>
   <script>object_id = "{{ projekt.ident_cely }}";</script>
   {% if file_id %}
         <script>maxFiles = 1;</script>

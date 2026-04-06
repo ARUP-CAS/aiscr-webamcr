@@ -13,7 +13,7 @@ Funkce
    :param item_group: Parametr ``item_group`` předává se do volání ``filter()``.
    :param item_id: Identifikátor objektu ``item``.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``loads()``, slovník.
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``loads()``, slovník.
 
 .. py:function:: get_id_from_database(table, heslo, ident_cely, heslarDB)
 

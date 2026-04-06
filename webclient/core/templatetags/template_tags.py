@@ -96,7 +96,7 @@ class QuerystringNodeMulti(Node):
 @register.tag
 def querystring_multi(parser, token):
     """
-    Provádí operaci querystring multi.
+    Upravuje řetězec dotazu přidáním nebo změnou parametru s více hodnotami.
 
     Vytvoří URL (obsahující pouze dotazový řetězec [včetně „?“]) odvozený
     z dotazového řetězce aktuální URL, a to jeho aktualizací pomocí zadaných
@@ -113,8 +113,8 @@ def querystring_multi(parser, token):
     :param parser: Parametr ``parser`` předává se do volání ``token_kwargs()``, pracuje se s atributy ``compile_filter``.
     :param token: Textový nebo strukturální vstup `token` používaný při sestavení nebo zpracování obsahu.
 
-        :return: Vrací výsledek volání ``QuerystringNodeMulti()``.
-        :raises TemplateSyntaxError: Vyvolá se při splnění podmínky ``bits and bits.pop(0) != 'without'``.
+    :return: Vrací výsledek volání ``QuerystringNodeMulti()``.
+    :raises TemplateSyntaxError: Vyvolá se při splnění podmínky ``bits and bits.pop(0) != 'without'``.
     """
     bits = token.split_contents()
     tag = bits.pop(0)
@@ -142,7 +142,8 @@ def querystring_multi(parser, token):
 # Vrátí informaci o zapnutém režimu údržby.
 @register.simple_tag
 def get_maintenance():
-    """Vrací maintenance. v aplikaci.
+    """
+    Vrací maintenance. v aplikaci.
 
     :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
     """
@@ -153,7 +154,8 @@ def get_maintenance():
 
 @register.simple_tag
 def get_server_domain():
-    """Vrátí doménu používanou pro e-mailové odkazy.
+    """
+    Vrátí doménu používanou pro e-mailové odkazy.
 
     :return: Vrací atribut objektu.
     """
@@ -162,7 +164,8 @@ def get_server_domain():
 
 @register.simple_tag
 def get_site_url():
-    """Vrátí základní URL adresu aplikace.
+    """
+    Vrátí základní URL adresu aplikace.
 
     :return: Vrací atribut objektu.
     """
@@ -201,7 +204,8 @@ def message_top(forloop_counter):
 
 @register.simple_tag
 def get_datetime_now():
-    """Vrátí aktuální datum a čas ve formátu používaném v šablonách.
+    """
+    Vrátí aktuální datum a čas ve formátu používaném v šablonách.
 
     :return: Vrací výsledek volání ``strftime()``.
     """
@@ -210,7 +214,8 @@ def get_datetime_now():
 
 @register.simple_tag
 def get_test_env():
-    """Vrátí příznak testovacího prostředí.
+    """
+    Vrátí příznak testovacího prostředí.
 
     :return: Vrací atribut objektu.
     """

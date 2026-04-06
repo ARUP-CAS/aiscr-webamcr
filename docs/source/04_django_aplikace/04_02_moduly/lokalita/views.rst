@@ -18,7 +18,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
 
-      :return: Vrací proměnná ``context``.
+          :return: Vrací proměnná ``context``.
 
 
 .. py:class:: LokalitaListView
@@ -37,7 +37,7 @@ Třídy
 
       :param field: Parametr ``field`` předává se do volání ``get()``, pracuje se s atributy ``replace``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``get()``.
+          :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: get_queryset()
 
@@ -51,7 +51,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací proměnná ``context``.
+          :return: Vrací proměnná ``context``.
 
 
 .. py:class:: LokalitaDetailView
@@ -68,7 +68,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
 
-      :return: Vrací výsledek volání ``render_to_response()``.
+          :return: Vrací výsledek volání ``render_to_response()``.
 
    .. py:method:: get_archeologicky_zaznam()
 
@@ -86,7 +86,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací proměnná ``context``.
+          :return: Vrací proměnná ``context``.
 
    .. py:method:: get_shows()
 
@@ -107,23 +107,21 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací proměnná ``context``.
+          :return: Vrací proměnná ``context``.
 
    .. py:method:: form_valid()
 
-      Provádí operaci form valid.
+      Validuje data ve formuláři
 
-      :param form: Parametr ``form`` se předává do volání ``form_invalid()``, ``form_valid()``, pracuje se s atributy ``save``, vstupuje do návratové hodnoty.
-
-      :return: Vrací výsledek volání ``form_valid()``.
+      :param form: Instance vyplněného formuláře.
+      :return: HTTP odpověď.
 
    .. py:method:: form_invalid()
 
-      Provádí operaci form invalid.
+      Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
 
-      :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
-
-      :return: Vrací výsledek volání ``form_invalid()``.
+      :param form: Instance vyplněného formuláře.
+      :return: HTTP odpověď.
 
    .. py:method:: get()
 
@@ -133,7 +131,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``get()``.
+          :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: post()
 
@@ -143,7 +141,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``post()``.
+          :return: Vrací výsledek volání ``post()``.
 
 
 .. py:class:: LokalitaEditView
@@ -158,23 +156,21 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací proměnná ``context``.
+          :return: Vrací proměnná ``context``.
 
    .. py:method:: form_valid()
 
-      Provádí operaci form valid.
+      Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
 
-      :param form: Parametr ``form`` se předává do volání ``form_invalid()``, ``form_valid()``, vstupuje do návratové hodnoty.
-
-      :return: Vrací výsledek volání ``form_valid()``.
+      :param form: Instance vyplněného formuláře.
+      :return: HTTP odpověď.
 
    .. py:method:: form_invalid()
 
-      Provádí operaci form invalid.
+      Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
 
-      :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
-
-      :return: Vrací výsledek volání ``form_invalid()``.
+      :param form: Instance vyplněného formuláře.
+      :return: HTTP odpověď.
 
    .. py:method:: get()
 
@@ -184,7 +180,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``get()``.
+          :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: post()
 
@@ -194,7 +190,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``post()``.
+          :return: Vrací výsledek volání ``post()``.
 
 
 .. py:class:: LokalitaRelatedView
@@ -210,11 +206,12 @@ Třídy
 
    .. py:method:: get_context_data()
 
-      Vrací context data.
+      Zpracuje dispečing požadavku.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
-
-      :return: Vrací proměnná ``context``.
+      :param request: HTTP požadavek.
+      :param args: Poziční argumenty.
+      :param kwargs: Pojmenované argumenty.
+      :return: HTTP odpověď.
 
 
 .. py:class:: LokalitaDokumentacniJednotkaRelatedView
@@ -231,7 +228,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``dispatch()``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``dispatch()``.
 
    .. py:method:: get_dokumentacni_jednotka()
 
@@ -245,7 +242,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací proměnná ``context``.
+          :return: Vrací proměnná ``context``.
 
 
 .. py:class:: LokalitaDokumentacniJednotkaUpdateView
@@ -260,7 +257,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací proměnná ``context``.
+          :return: Vrací proměnná ``context``.
 
 
 .. py:class:: LokalitaKomponentaCreateView
@@ -275,17 +272,16 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací proměnná ``context``.
+          :return: Vrací proměnná ``context``.
 
    .. py:method:: get()
 
-      Vrací výsledek operace.
+      Zpracuje dispečing požadavku.
 
-      :param request: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
-      :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
-
-      :return: Vrací výsledek volání ``get()``.
+      :param request: HTTP požadavek.
+      :param args: Poziční argumenty.
+      :param kwargs: Pojmenované argumenty.
+      :return: HTTP odpověď.
 
 
 .. py:class:: LokalitaKomponentaUpdateView
@@ -302,7 +298,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``dispatch()``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``dispatch()``.
 
    .. py:method:: get_komponenta()
 
@@ -316,7 +312,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací proměnná ``context``.
+          :return: Vrací proměnná ``context``.
 
 
 .. py:class:: LokalitaPianCreateView
@@ -331,7 +327,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací proměnná ``context``.
+          :return: Vrací proměnná ``context``.
 
    .. py:method:: get()
 
@@ -341,8 +337,8 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
-      :raises Exception: Vyvolá se s textem "lokalita.views.LokalitaPianCreateView.get.label_not_found"; nebo s textem "lokalita.views.LokalitaPianCreateView.get.transormation_error".
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
+          :raises Exception: Vyvolá se s textem "lokalita.views.LokalitaPianCreateView.get.label_not_found"; nebo s textem "lokalita.views.LokalitaPianCreateView.get.transormation_error".
 
 
 .. py:class:: LokalitaPianUpdateView
@@ -359,7 +355,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``dispatch()``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``dispatch()``.
 
    .. py:method:: get_pian()
 
@@ -373,7 +369,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací proměnná ``context``.
+          :return: Vrací proměnná ``context``.
 
    .. py:method:: get()
 
@@ -383,9 +379,9 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
-      :raises PermissionDenied: Vyvolá se při splnění podmínky ``self.pian == PIAN_POTVRZEN``.
-      :raises Exception: Vyvolá se s textem "lokalita.views.LokalitaPianUpdateView.get.label_not_found"; nebo s textem "lokalita.views.LokalitaPianUpdateView.get.transormation_error".
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
+          :raises PermissionDenied: Vyvolá se při splnění podmínky ``self.pian == PIAN_POTVRZEN``.
+          :raises Exception: Vyvolá se s textem "lokalita.views.LokalitaPianUpdateView.get.label_not_found"; nebo s textem "lokalita.views.LokalitaPianUpdateView.get.transormation_error".
 
 
 Funkce

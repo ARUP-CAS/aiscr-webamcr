@@ -9,9 +9,9 @@ class HistorieOrganizaceMultipleChoiceFilter(django_filters.ModelMultipleChoiceF
         """
         Vrací queryset. v aplikaci.
 
-        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_queryset``.
+        :param request: HTTP požadavek.
 
-            :return: Vrací výsledek volání ``all()``.
+        :return: Výsledek volání ``all()``.
         """
         return Organizace.objects.all()
 
@@ -19,9 +19,9 @@ class HistorieOrganizaceMultipleChoiceFilter(django_filters.ModelMultipleChoiceF
         """
         Filtruje hodnotu. v aplikaci.
 
-        :param qs: Parametr ``qs`` vstupuje do návratové hodnoty.
-        :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``filter``.
+        :param qs: Queryset, který má být filtrován.
+        :param value: Vybrané hodnoty filtru (v této implementaci se queryset vrací beze změny).
 
-            :return: Vrací proměnná ``qs``.
+        :return: Proměnná ``qs``.
         """
         return qs

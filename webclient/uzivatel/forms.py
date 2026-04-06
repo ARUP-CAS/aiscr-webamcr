@@ -335,7 +335,8 @@ class UpdatePasswordSettings(forms.ModelForm):
     )
 
     def clean(self):
-        """Provádí operaci clean.
+        """
+        Provádí operaci clean.
 
         :raises ValidationError: Vyvolá se při splnění podmínky ``not old_password and (password1 or password2)``; nebo při splnění podmínky ``old_password and (not (password1 or password2))``.
         """
@@ -409,7 +410,8 @@ class AuthUserLoginForm(AuthenticationForm):
         )
 
     def get_invalid_login_error(self):
-        """Vrací invalid login error.
+        """
+        Vrací invalid login error.
 
         :return: Vrací výsledek volání ``ValidationError()``.
         """

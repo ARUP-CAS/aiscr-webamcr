@@ -85,7 +85,8 @@ class PianCreateForm(OptimisticLockingMixin, forms.ModelForm):
         return g.wkt if hasattr(g, "wkt") else str(g)
 
     def run_loaded_validation(self):
-        """Metoda pro validaci geometrií při potvrzení PIANu.
+        """
+        Metoda pro validaci geometrií při potvrzení PIANu.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -106,7 +107,8 @@ class PianCreateForm(OptimisticLockingMixin, forms.ModelForm):
         return not bool(self.errors)
 
     def clean(self):
-        """Provádí operaci clean.
+        """
+        Provádí operaci clean.
 
         :raises forms.ValidationError: Vyvolá se při splnění podmínky ``isinstance(geom, Polygon)``; nebo při splnění podmínky ``zm10 is not None and zm50 is not None``.
         """

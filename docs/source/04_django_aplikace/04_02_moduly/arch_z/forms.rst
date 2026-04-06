@@ -45,11 +45,11 @@ Třídy
 
    .. py:method:: year_only()
 
-      Provádí operaci year only.
+      Ověří, zda zadaná hodnota odpovídá formátu čtyřciferného roku.
 
       :param value: Parametr ``value`` předává se do volání ``fullmatch()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``fullmatch()``.
+          :return: Vrací výsledek volání ``fullmatch()``.
 
    .. py:method:: get_date_based_on_year()
 
@@ -57,7 +57,7 @@ Třídy
 
       :param year: Časový údaj ``year`` použitý při filtrování nebo výpočtu.
 
-      :return: Vrací výsledek volání ``date()``.
+          :return: Vrací výsledek volání ``date()``.
 
    .. py:method:: to_python()
 
@@ -65,7 +65,7 @@ Třídy
 
       :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``year_only()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_date_based_on_year()``, výsledek volání ``to_python()``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_date_based_on_year()``, výsledek volání ``to_python()``.
 
 
 .. py:class:: StartDateInput
@@ -115,7 +115,7 @@ Třídy
 
       datum zahájení není dále něž mesíc v budoucnu
 
-      :return: Vrací vybranou hodnotu z kolekce.
+          :return: Vrací vybranou hodnotu z kolekce.
 
    .. py:method:: clean_datum_ukonceni()
 
@@ -125,7 +125,7 @@ Třídy
 
       datum ukončení není dále něž mesíc v budoucnu
 
-      :return: Vrací vybranou hodnotu z kolekce.
+          :return: Vrací vybranou hodnotu z kolekce.
 
 
 .. py:class:: ArchzFilterForm

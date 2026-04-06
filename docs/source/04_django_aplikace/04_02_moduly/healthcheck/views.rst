@@ -16,7 +16,7 @@ Třídy
 
       Vrací výsledek operace.
 
-      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+      :param request: HTTP GET požadavek.
 
       :return: Vrací výsledek volání ``JsonResponse()``.
 

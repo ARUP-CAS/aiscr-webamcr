@@ -7,7 +7,7 @@ class PianConfig(AppConfig):
     name = "pian"
 
     def ready(self):
-        """Provádí operaci ready."""
+        """Načte signály aplikace pian po spuštění Django."""
         super(PianConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import pian.signals

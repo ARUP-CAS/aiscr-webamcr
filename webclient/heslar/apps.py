@@ -7,7 +7,7 @@ class HeslarConfig(AppConfig):
     name = "heslar"
 
     def ready(self):
-        """Provádí operaci ready."""
+        """Registruje signály aplikace heslar při spuštění Django."""
         super(HeslarConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import heslar.signals

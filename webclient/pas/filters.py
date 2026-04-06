@@ -310,25 +310,25 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
 
     def filter_obdobi(self, queryset, name, value):
         """
-        Metoda pro filtrování podle období.
+        Filtruje samostatné nálezy podle období.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_obdobi``.
-        :param value: Parametr ``value`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
+        :param queryset: Soubor záznamů k filtrování
+        :param name: Název pole pro filtrování
+        :param value: Hodnota pro filtrování
 
-            :return: Vrací výsledek volání ``filter()``.
+        :return: Vrací filtrovaný ``queryset``
         """
         return queryset.filter(obdobi__in=value)
 
     def filter_druh_nalezu(self, queryset, name, value):
         """
-        Metoda pro filtrování podle druhu nálezu.
+        Filtruje samostatné nálezy podle typu.
 
-        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_druh_nalezu``.
-        :param value: Parametr ``value`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
+        :param queryset: Soubor záznamů k filtrování
+        :param name: Název pole pro filtrování
+        :param value: Hodnota pro filtrování
 
-            :return: Vrací výsledek volání ``filter()``.
+        :return: Vrací filtrovaný ``queryset``
         """
         return queryset.filter(druh_nalezu__in=value)
 

@@ -56,9 +56,11 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 model_lookup[key] = model
 
         def find_model(al, object_name):
+            """Vrací model ze lookup slovníku podle aplikace a názvu objektu."""
             return model_lookup.get((al, object_name))
 
         def custom_link(name, url=None):
+            """Vytvoří strukturu pro vlastní odkaz v admin menu."""
             return {
                 "name": name,
                 "object_name": name,
@@ -69,6 +71,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
             }
 
         def make_section(name, app_label_key, models):
+            """Vytvoří sekci admin menu s filtrovanými modely."""
             filtered = [m for m in models if m is not None]
             if not filtered:
                 return None
@@ -550,7 +553,8 @@ class AmcrCustomAdminSite(admin.AdminSite):
     def get_urls(
         self,
     ):
-        """Vrátí vlastní URL cesty admin site pro hromadné operace.
+        """
+        Vrátí vlastní URL cesty admin site pro hromadné operace.
 
         :return: Seznam URL vzorů rozšířený o cesty pro aktualizaci metadat,
             aktualizaci DOI/IGSN a hromadný import dat.

@@ -7,7 +7,7 @@ class UzivatelConfig(AppConfig):
     name = "uzivatel"
 
     def ready(self):
-        """Provádí operaci ready."""
+        """Zaregistruje signály aplikace uzivatel po spuštění Django."""
         super(UzivatelConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import uzivatel.signals

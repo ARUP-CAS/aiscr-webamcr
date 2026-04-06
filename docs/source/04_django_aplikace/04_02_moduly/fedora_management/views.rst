@@ -14,20 +14,20 @@ Třídy
 
    .. py:method:: process_record()
 
-      Provádí operaci process record.
+      Zpracuje jeden záznam v rámci dávkového zpracování metadat — přepisuje se v podtřídách.
 
-      :param record: Parametr ``record`` slouží jako vstup pro logiku funkce ``process_record``.
-      :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
-      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``process_record``.
+      :param record: Instance záznamu ke zpracování.
+      :param result: Slovník s výsledky průběhu zpracování.
+      :param kwargs: Další parametry předané z pohledu.
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
-      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``process_record()``, pracuje se s atributy ``get``.
+      :param request: HTTP GET požadavek.
+      :param kwargs: Klíčové argumenty včetně ``job_id`` identifikujícího dávkovou úlohu v Redis.
 
-      :return: Vrací výsledek volání ``JsonResponse()``.
+          :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: ContinueMedataProcessing
@@ -38,11 +38,11 @@ Třídy
 
    .. py:method:: process_record()
 
-      Provádí operaci process record.
+      Uloží metadata záznamu do Fedory a aktualizuje výsledkový slovník o stav zpracování.
 
-      :param record: Parametr ``record`` předává se do volání ``isinstance()``, ``debug()``, pracuje se s atributy ``save_metadata``, ``ident_cely``, ovlivňuje větvení podmínek.
-      :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
-      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``process_record``.
+      :param record: Instance záznamu, jehož metadata mají být uložena.
+      :param result: Slovník s výsledky průběhu zpracování.
+      :param kwargs: Další parametry předané z pohledu.
 
-      :return: Vrací proměnná ``result``.
+          :return: Vrací proměnná ``result``.
 

@@ -21,11 +21,10 @@ logger = logging.getLogger(__name__)
 @register.filter
 def url_to_classes(value):
     """
-    Provádí operaci url to classes.
+    Mapuje URL cestu na CSS třídy oddělené tečkami.
 
-    :param value: Parametr ``value`` pracuje se s atributy ``endswith``, ``replace``, ovlivňuje větvení podmínek.
-
-        :return: Vrací hodnotu podle větve zpracování, typicky: str, proměnná ``classes``.
+    :param value: URL cesta k transformaci.
+    :return: Řetězec s CSS třídami.
     """
     if value == "/":
         return "app-home"

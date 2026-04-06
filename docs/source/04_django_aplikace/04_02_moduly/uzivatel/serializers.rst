@@ -18,7 +18,7 @@ Třídy
 
       :param obj: Parametr ``obj`` předává se do volání ``str()``, pracuje se s atributy ``osoba``, vstupuje do návratové hodnoty.
 
-      :return: Vrací slovník.
+          :return: Vrací slovník.
 
    .. py:method:: to_representation()
 
@@ -26,5 +26,5 @@ Třídy
 
       :param instance: Parametr ``instance`` předává se do volání ``get_attribute()``.
 
-      :return: Vrací proměnná ``ret``.
+          :return: Vrací proměnná ``ret``.
 

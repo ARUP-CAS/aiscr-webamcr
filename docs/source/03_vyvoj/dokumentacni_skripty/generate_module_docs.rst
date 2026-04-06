@@ -3,6 +3,111 @@ Skript generate_module_docs
 
 Dokumentace skriptu ``docs/generate_module_docs.py``.
 
+Přehled modulu
+--------------
+
+Skript pro generování Sphinx dokumentace pro všechny Django moduly v webclient/
+a jejich uložení do docs/source/04_django_aplikace/04_02_moduly/
+
+Skript extrahuje docstringy z modulů a generuje podrobnou
+reStructuredText dokumentaci pro každý adresář modulu.
+
+
+**Použití:**
+
+- autodoc: Používá direktivy Sphinx autodoc
+- explicit: Zapisuje docstringy přímo do RST
+  --module MODULE Konkrétní modul ke zpracování (např. 'adb', 'core')
+  Pokud není zadáno, zpracuje všechny moduly
+
+Třídy
+------
+
+.. py:class:: DockerImageScanner
+
+   Prohledává soubory projektu a sbírá tagy Docker image.
+
+   Prochází všechny soubory ``docker-compose*.yml`` v kořenovém adresáři projektu
+   a soubor ``Dockerfile-DB``. Výsledkem je slovník mapující základní název image
+   (bez tagu) na jeho plný tag.
+
+   :param project_root: Kořenový adresář projektu.
+   :type project_root: Path
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje scanner s kořenovým adresářem projektu.
+
+      :param project_root: Kořenový adresář projektu.
+      :type project_root: Path
+
+   .. py:method:: collect_versions()
+
+      Shromáždí verze image ze souborů docker-compose a Dockerfile-DB.
+
+      Prochází nejprve compose soubory, poté ``Dockerfile-DB``. Pro každý
+      základní název image je uložen první nalezený plný tag (produkční soubory
+      mají přednost díky pořadí vrácenému metodou :meth:`_ordered_compose_files`).
+
+      :return: Slovník ``{základní název image: plný tag}``.
+      :rtype: Dict[str, str]
+
+   .. py:method:: _compose_images()
+
+      Extrahuje plné tagy image ze souborů docker-compose.
+
+      Přeskočí proměnné (``${...}``) a testovací image
+      (``docker.io/library/test_*``).
+
+      :return: Seznam plných tagů image (např. ``redis:8.4.0``).
+      :rtype: List[str]
+
+   .. py:method:: _dockerfile_images()
+
+      Extrahuje image z direktiv FROM v souboru Dockerfile-DB.
+
+      Pokud soubor ``Dockerfile-DB`` neexistuje, vrátí prázdný seznam.
+
+      :return: Seznam plných tagů image z direktiv FROM.
+      :rtype: List[str]
+
+   .. py:method:: _ordered_compose_files()
+
+      Vrátí seznam souborů docker-compose seřazených podle priority.
+
+      Produkční soubory (``docker-compose.yml``, ``docker-compose-proxy.yml``)
+      jsou řazeny jako první, aby jejich verze image měly přednost při volání
+      :meth:`collect_versions`.
+
+      :return: Seřazený seznam cest k souborům docker-compose.
+      :rtype: List[Path]
+
+   .. py:method:: _base_image()
+
+      Vrátí základní název image bez tagu.
+
+      :param full_tag: Plný tag image (např. ``redis:8.4.0``).
+      :type full_tag: str
+      :return: Název image bez tagu (např. ``redis``).
+      :rtype: str
+
+
+.. py:class:: JsLibrary
+
+   Datová třída reprezentující jednu Node.js knihovnu.
+
+   :param name: Název balíčku (např. ``bootstrap``).
+   :type name: str
+   :param version: Verze balíčku (např. ``5.3.8``).
+   :type version: str
+   :param license: Identifikátor licence (např. ``MIT``).
+   :type license: str
+   :param homepage: URL domovské stránky nebo repozitáře knihovny.
+   :type homepage: str
+
+
 Funkce
 ------
 
@@ -46,7 +151,7 @@ Funkce
 
 .. py:function:: parse_receiver_decorator(decorator, function_name)
 
-   Analyzujte dekorátor @receiver(), abyste extrahovali informace o signálu.
+   Analyzuje dekorátor @receiver() pro extrakci informací o signálu.
 
    :param decorator: AST Volací uzel představující @receiver()
    :param function_name: Název dekorované funkce
@@ -184,15 +289,22 @@ Funkce
    Extrahuje docstrings z modulu Python pomocí AST parsování.
 
    :param source_file: Cesta ke zdrojovému souboru.
-   :return: tuple: (třídy, funkce), kde každá je seznamem slovníků.
+   :return: tuple: (docstring modulu nebo None, třídy, funkce); třídy a funkce jsou seznamy slovníků.
+
+.. py:function:: _looks_like_sphinx_fieldlist(docstring)
+
+   Vrátí True, pokud text vypadá jako Sphinx info pole (:param:, :return: atd.).
+
+.. py:function:: _indent_docstring_lines(docstring, indent)
+
+   Přidá ``indent`` k neprázdným řádkům; prázdné řádky ponechá prázdné.
 
 .. py:function:: format_docstring_for_rst(docstring, indent)
 
-   Formátuje docstring ve stylu Google pro výstup RST.
+   Formátuje docstring pro výstup RST v režimu explicit.
 
-   Převádí sekce Args:, Returns: atd. do správného formátu RST
-   s názvy argumentů uzavřenými v zpětných lomítkách. Názvy sekcí jsou přeloženy
-   do češtiny.
+   Docstringy se Sphinx poli (:param:, :return:, …) se předají beze změny obsahu (jen odsazení).
+   Google sekce (Args:, Returns:, …) se převedou na stejná Sphinx info pole.
 
    :param docstring: Docstring, který se má formátovat
    :param indent: Prefix odsazení pro každý řádek.
@@ -331,6 +443,256 @@ Funkce
    Vytvoří HTML dokumentaci pomocí Sphinx.
 
    :return: True, pokud se sestavení podařilo, False v opačném případě.
+
+.. py:function:: _fetch_dockerhub_odkaz(image)
+
+   Načte zdrojovou URL pro Docker Hub image (best-effort, bez autentizace).
+
+   :param image: Základní název image, např. ``grafana/grafana-enterprise``.
+   :type image: str
+   :return: Řetězec zdrojové URL, nebo prázdný řetězec při chybě nebo nepodporovaném registru.
+   :rtype: str
+
+.. py:function:: _parse_compose_versions(project_root)
+
+   Parsuje všechny soubory docker-compose*.yml a Dockerfile-DB v project_root
+   a hledá direktivy image:. Vrátí slovník mapující základní název image na plný tag.
+
+   Priorita: docker-compose.yml / docker-compose-proxy.yml (produkce) jako první,
+   poté ostatní soubory.
+
+   :param project_root: Kořenový adresář projektu.
+   :type project_root: Path
+   :return: Slovník ``{základní název image: plný tag}``.
+   :rtype: Dict[str, str]
+
+.. py:function:: _check_missing_meta_images(versions, images_meta)
+
+   Vrátí seznam základních názvů image nalezených v docker-compose / Dockerfile-DB,
+   které nejsou pokryty žádným záznamem v docker_images_meta.yaml.
+
+   Proměnné reference na image (``${...}``) v compose souborech jsou již filtrovány
+   třídou DockerImageScanner, takže jsou kontrolovány pouze konkrétní názvy image.
+
+   :param versions: Slovník ``{základní název image: plný tag}`` z docker-compose souborů.
+   :type versions: Dict[str, str]
+   :param images_meta: Seznam metadatových záznamů z docker_images_meta.yaml.
+   :type images_meta: List[Dict[str, str]]
+   :return: Seřazený seznam základních názvů image chybějících v metadatech.
+   :rtype: List[str]
+
+.. py:function:: _load_odkaz_cache()
+
+   Načte mezipaměť odkazů DockerHub ze souboru ``docker_images_odkaz_cache.yaml``.
+
+   Pokud soubor neexistuje, vrátí prázdný slovník.
+
+   :return: Slovník ``{název image: URL}`` s dříve uloženými odkazy.
+   :rtype: Dict[str, str]
+
+.. py:function:: _save_odkaz_cache(cache)
+
+   Uloží mezipaměť odkazů DockerHub do souboru ``docker_images_odkaz_cache.yaml``.
+
+   :param cache: Slovník ``{název image: URL}`` k uložení.
+   :type cache: Dict[str, str]
+
+.. py:function:: _fetch_missing_links(image_keys, cache)
+
+   Načte DockerHub odkazy pouze pro image, které ještě nejsou v mezipaměti, paralelně.
+
+   :param image_keys: Seznam základních názvů image, pro které se mají načíst odkazy.
+   :type image_keys: List[str]
+   :param cache: Existující mezipaměť odkazů ``{název image: URL}``.
+   :type cache: Dict[str, str]
+   :return: Aktualizovaná mezipaměť včetně nově načtených odkazů.
+   :rtype: Dict[str, str]
+
+.. py:function:: generate_docker_images_rst()
+
+   Vygeneruje dokumentaci Docker image.
+
+   :return: True v případě úspěchu, False v opačném případě.
+   :rtype: bool
+
+.. py:function:: _build_section_header(title, description)
+
+   Vytvoří záhlaví sekce RST.
+
+   :param title: Název sekce.
+   :type title: str
+   :param description: Popis sekce.
+   :type description: str
+   :return: Seznam řádků RST záhlaví sekce.
+   :rtype: List[str]
+
+.. py:function:: _build_image_block(entry, versions, hub_cache)
+
+   Sestaví RST blok pro jeden Docker image.
+
+   :param entry: Metadatový záznam image z docker_images_meta.yaml.
+   :type entry: Dict[str, str]
+   :param versions: Slovník ``{základní název image: plný tag}`` z docker-compose souborů.
+   :type versions: Dict[str, str]
+   :param hub_cache: Mezipaměť odkazů DockerHub ``{název image: URL}``.
+   :type hub_cache: Dict[str, str]
+   :return: Seznam řádků RST bloku pro daný image.
+   :rtype: List[str]
+
+.. py:function:: _extract_version(full_tag)
+
+   Extrahuje verzi tagu z plného tagu Docker image.
+
+   :param full_tag: Plný tag image (např. ``redis:8.4.0``).
+   :type full_tag: str
+   :return: Verze tagu (např. ``8.4.0``), nebo ``latest`` pokud tag není přítomen.
+   :rtype: str
+
+.. py:function:: load_json(path)
+
+   Načte a vrátí obsah JSON souboru.
+
+   :param path: Cesta k JSON souboru.
+   :type path: Path
+   :return: Deserializovaný obsah JSON souboru.
+   :rtype: dict
+
+.. py:function:: normalize_repo_url(url)
+
+   Normalizuje URL repozitáře pro zobrazení v dokumentaci.
+
+   Odstraní prefix ``git+``, převede ``git://host/…`` na ``https://host/…``
+   (prohlížeče ``git://`` nepodporují spolehlivě) a ořízne příponu ``.git``.
+
+   :param url: Surová URL repozitáře (např. ``git+https://github.com/foo/bar.git``).
+   :type url: str
+   :return: Normalizovaná URL (např. ``https://github.com/foo/bar``).
+   :rtype: str
+
+.. py:function:: npm_package_page_url(package_name)
+
+   Vrátí kanonickou URL stránky balíčku na https://www.npmjs.com/.
+
+   Používá se jako záložní odkaz, když v ``node_modules`` není k dispozici
+   ``homepage`` ani ``repository`` (např. při běhu generátoru bez ``npm install``).
+   Scoped balíčky (``@scope/name``) se kódují s ``%2F`` místo lomítka v cestě.
+
+   :param package_name: Název balíčku z ``package.json`` (např. ``leaflet`` nebo ``@types/node``).
+   :type package_name: str
+   :return: URL ve tvaru ``https://www.npmjs.com/package/...``.
+   :rtype: str
+
+.. py:function:: parse_preserved_js_library_links(rst_content)
+
+   Z existujícího RST vytáhne mapu ``název balíčku → odkaz`` z generovaného bloku.
+
+   Parsuje řádky ``list-table`` mezi značkami ``.. BEGIN GENERATED NODEJS LIBRARIES``
+   a ``.. END GENERATED NODEJS LIBRARIES``. Řádek záhlaví tabulky
+   (``Název knihovny``) se přeskočí. Slouží k zachování odkazů při běhu bez
+   ``node_modules`` (např. CI), aby se nepřepisovaly platné URL hodnotami
+   z :func:`npm_package_page_url`.
+
+   Očekává stejný čtyřřádkový tvar řádků tabulky jako :func:`build_rst_table`;
+   ruční zalamování buněk může parsování rozhodit.
+
+   :param rst_content: Obsah souboru ``javascript_knihovny.rst`` (nebo ekvivalent).
+   :type rst_content: str
+   :return: Slovník ``{název balíčku: URL}`` pro neprázdné odkazy.
+   :rtype: Dict[str, str]
+
+.. py:function:: load_dependencies(package_json)
+
+   Načte produkční závislosti ze slovníku ``package.json``.
+
+   :param package_json: Deserializovaný obsah souboru ``package.json``.
+   :type package_json: dict
+   :return: Slovník ``{název balíčku: verze}`` z pole ``dependencies``.
+   :rtype: Dict[str, str]
+
+.. py:function:: load_lock_licenses(lock_file)
+
+   Načte licence balíčků ze souboru ``package-lock.json``.
+
+   Prochází sekci ``packages`` lock souboru a extrahuje pole ``license``
+   pro každý záznam pod klíčem ``node_modules/<název>``.
+
+   :param lock_file: Cesta k souboru ``package-lock.json``.
+   :type lock_file: Path
+   :return: Slovník ``{název balíčku: licence}``.
+   :rtype: Dict[str, str]
+
+.. py:function:: read_node_module_metadata(project_root, name)
+
+   Načte licenci a URL domovské stránky balíčku z adresáře ``node_modules``.
+
+   Pokud soubor ``package.json`` daného balíčku neexistuje, vrátí dvojici
+   prázdných řetězců. Pole ``license`` může být řetězec nebo objekt s klíčem
+   ``type`` (starší formát npm). URL repozitáře je normalizována pomocí
+   :func:`normalize_repo_url`.
+
+   :param project_root: Kořenový adresář projektu obsahující ``node_modules``.
+   :type project_root: Path
+   :param name: Název balíčku (např. ``bootstrap``).
+   :type name: str
+   :return: Dvojice ``(licence, homepage_url)``.
+   :rtype: tuple[str, str]
+
+.. py:function:: collect_libraries(project_root, dependencies, lock_licenses, preserved_links)
+
+   Sestaví seznam Node.js knihoven obohacený o licence a URL.
+
+   Pro každou závislost z ``dependencies`` nejprve hledá licenci v ``lock_licenses``
+   (ze souboru ``package-lock.json``), a pokud ji nenajde, čte ji přímo
+   ze souboru ``package.json`` v ``node_modules``. Homepage se čte z
+   ``node_modules``; chybí-li, použije se dříve uložený odkaz z ``preserved_links``
+   (poslední generovaný blok v RST — stabilizuje CI bez ``npm ci``), jinak URL
+   stránky balíčku na npm (:func:`npm_package_page_url`). Nový balíček bez
+   uloženého odkazu tedy dostane vždy npm URL. Záznamy jsou seřazeny abecedně
+   podle názvu balíčku.
+
+   :param project_root: Kořenový adresář projektu obsahující ``node_modules``.
+   :type project_root: Path
+   :param dependencies: Slovník ``{název balíčku: verze}`` z ``package.json``.
+   :type dependencies: Dict[str, str]
+   :param lock_licenses: Slovník ``{název balíčku: licence}`` z ``package-lock.json``.
+   :type lock_licenses: Dict[str, str]
+   :param preserved_links: Volitelně odkazy z existujícího generovaného bloku RST.
+   :type preserved_links: Optional[Dict[str, str]]
+   :return: Seřazený seznam objektů :class:`JsLibrary`.
+   :rtype: List[JsLibrary]
+
+.. py:function:: build_rst_table(rows)
+
+   Sestaví RST blok s tabulkou Node.js knihoven.
+
+   Vygeneruje sekci dokumentace ve formátu ``list-table`` ohraničenou
+   značkami ``BEGIN_MARKER`` a ``END_MARKER``, která obsahuje sloupce
+   Název knihovny, Verze, Licence a Odkaz.
+
+   :param rows: Seznam záznamů Node.js knihoven k zobrazení v tabulce.
+   :type rows: List[JsLibrary]
+   :return: Řetězec s RST obsahem tabulky včetně ohraničujících značek.
+   :rtype: str
+
+.. py:function:: insert_generated_block(content, block)
+
+   Vloží nebo nahradí generovaný blok mezi značkami v RST obsahu.
+
+   :param content: Původní text souboru (např. ``.rst``).
+   :param block: Nový generovaný úsek včetně značek začátku a konce.
+   :return: Obsah po vložení bloku, jinak ``block`` předřazený před ``content``.
+
+.. py:function:: generate_js_libraries_rst()
+
+   Vygeneruje tabulku Node.js JavaScript knihoven pro javascript_knihovny.rst.
+
+   Licences berou z ``package-lock.json``; odkazy nejprve z ``node_modules``,
+   při jejich absenci z existujícího generovaného bloku v souboru, jinak z
+   :func:`npm_package_page_url`. Pro aktualizaci odkazů z metadat balíčků
+   (homepage, repository) je potřeba mít nainstalované závislosti (``npm ci``).
+
+   :return: True v případě úspěchu, False v opačném případě.
+   :rtype: bool
 
 .. py:function:: main()
 

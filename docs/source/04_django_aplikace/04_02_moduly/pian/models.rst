@@ -38,15 +38,15 @@ Třídy
       :param added_pristupnost_id: Identifikátor objektu ``added_pristupnost``.
       :param skip_zaznam_id: Identifikátor objektu ``skip_zaznam``.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``first()``, výsledek volání ``get()``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``first()``, výsledek volání ``get()``.
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      :return: Vrací hodnotu podle větve zpracování.
+          :return: Vrací hodnotu podle větve zpracování.
 
    .. py:method:: get_absolute_url()
 
@@ -54,7 +54,7 @@ Třídy
 
       :param request: Parametr ``request`` předává se do volání ``error()``, ovlivňuje větvení podmínek.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_absolute_url()``, výsledek volání ``reverse()``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_absolute_url()``, výsledek volání ``reverse()``.
 
    .. py:method:: get_permission_object()
 
@@ -80,7 +80,7 @@ Třídy
 
       Metoda vrátí identifikátor podle sekvence PIAN.
 
-      :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence < maximum``.
+          :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence < maximum``.
 
    .. py:method:: set_vymezeny()
 
@@ -122,9 +122,9 @@ Funkce
    :param katastr: Parametr ``katastr`` předává se do volání ``get_ZM_from_point()``, pracuje se s atributy ``definicni_bod``, ``hranice``.
    :param fedora_transaction: Parametr ``fedora_transaction`` slouží jako vstup pro logiku funkce ``vytvor_pian``.
 
-   :return: Vrací proměnná ``pian``.
-   :raises Exception: Vyvolá se s textem "zm10s.not_found"; nebo s textem "zm50s.not_found".
-   :raises ObjectDoesNotExist: Vyvolá se při zpracování zachycené výjimky typu ``ObjectDoesNotExist``.
+       :return: Vrací proměnná ``pian``.
+       :raises Exception: Vyvolá se s textem "zm10s.not_found"; nebo s textem "zm50s.not_found".
+       :raises ObjectDoesNotExist: Vyvolá se při zpracování zachycené výjimky typu ``ObjectDoesNotExist``.
 
 .. py:function:: get_ZM_from_point(point)
 
@@ -132,4 +132,4 @@ Funkce
 
    :param point: Parametr ``point`` předává se do volání ``list()``, ``filter()``.
 
-   :return: Vrací n-tici.
+       :return: Vrací n-tici.

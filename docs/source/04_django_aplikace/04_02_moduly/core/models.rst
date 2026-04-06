@@ -21,9 +21,9 @@ Třídy
 
    .. py:method:: navazany_objekt()
 
-      Provádí operaci navazany objekt.
+      Vrátí navázaný objekt podle typu vazby.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Navázaný objekt (Projekt, Dokument nebo SamostatnyNalez).
 
 
 .. py:class:: Soubor
@@ -34,21 +34,21 @@ Třídy
 
    .. py:method:: url()
 
-      Provádí operaci url.
+      Vrátí URL pro přístup k souboru.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, str.
+      :return: URL souboru nebo prázdný řetězec.
 
    .. py:method:: repository_uuid()
 
-      Provádí operaci repository uuid.
+      Vrátí UUID souboru v repozitáři.
 
       :return: Vrací vybranou hodnotu z kolekce.
 
    .. py:method:: calculate_sha_512()
 
-      Provádí operaci calculate sha 512.
+      Vrátí SHA-512 hash souboru uloženého v Fedora repozitáři.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+      :return: Haš souboru ze skladiště nebo prázdný řetězec, pokud soubor neexistuje.
 
    .. py:method:: delete()
 
@@ -66,11 +66,11 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      :return: Vrací atribut objektu.
+          :return: Vrací atribut objektu.
 
    .. py:method:: create_soubor_vazby()
 
@@ -78,9 +78,9 @@ Třídy
 
    .. py:method:: vytvoreno()
 
-      Provádí operaci vytvoreno.
+      Vrátí záznam historie s typem zmény "Nahrání SBR" (prvního nahrání souboru).
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``first()``, None.
+      :return: Záznam historie nebo ``None``, pokud soubor nevlastní historii.
 
    .. py:method:: get_repository_content()
 
@@ -112,7 +112,7 @@ Třídy
 
       :param file: Soubor nebo cesta k souboru používaná při operaci.
 
-      :return: Vrací výsledek volání ``get()``.
+          :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: get_thumb_icon()
 
@@ -120,7 +120,7 @@ Třídy
 
       :param file: Soubor nebo cesta k souboru používaná při operaci.
 
-      :return: Vrací n-tici.
+          :return: Vrací n-tici.
 
    .. py:method:: get_mime_types()
 
@@ -151,7 +151,7 @@ Třídy
       :param file: Soubor nebo cesta k souboru používaná při operaci.
       :param source_url: Parametr ``source_url`` ovlivňuje větvení podmínek.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``mime``, bool.
+          :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``mime``, bool.
 
    .. py:method:: check_antivirus()
 
@@ -169,27 +169,27 @@ Třídy
 
    .. py:method:: large_thumbnail()
 
-      Provádí operaci large thumbnail.
+      Vrátí větší náhled obrázku.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: FileResponse s náhledem nebo None.
 
    .. py:method:: small_thumbnail()
 
-      Provádí operaci small thumbnail.
+      Vrátí menší náhled obrázku.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: FileResponse s náhledem nebo None.
 
    .. py:method:: content_file_response()
 
-      Provádí operaci content file response.
+      Vrátí soubor jako HTTP response.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: FileResponse se souborem nebo None.
 
    .. py:method:: getMock()
 
-      Provádí operaci getMock.
+      Vrátí mock reprezentaci souboru.
 
-      :return: Vrací slovník.
+      :return: Slovník s daty souboru.
 
    .. py:method:: get_historicke_verze()
 
@@ -224,7 +224,7 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       :return: Textová reprezentace odstávky systému.
 
@@ -237,13 +237,12 @@ Třídy
 
    .. py:method:: check_concrete_permission()
 
-      Ověří concrete permission.
+      Ověří, zda má uživatel konkrétní oprávnění na daný záznam a typ.
 
-      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``check_concrete_permission``.
-      :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
-      :param typ: Parametr ``typ`` slouží jako vstup pro logiku funkce ``check_concrete_permission``.
-
-      :return: Vrací hodnotu podle větve zpracování, typicky: bool, proměnná ``perm_check``.
+      :param user: Uživatel, pro kterého se kontroluje oprávnění.
+      :param ident: Identifikátor archeologického záznamu (např. C-XX-YYYYNNNNN).
+      :param typ: Typ objektu, pro který se kontroluje oprávnění (např. projekt, lokalita).
+      :return: ``True`` pokud má uživatel oprávnění, ``False`` jinak.
 
    .. py:method:: check_base()
 
@@ -263,7 +262,7 @@ Třídy
 
       :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
 
-      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
    .. py:method:: check_accessibility()
 
@@ -298,12 +297,11 @@ Funkce
 
 .. py:function:: get_upload_to(instance, filename)
 
-   Funkce pro získaní cesty, kde se ma daný typ souboru uložit.
+   Určí cestu pro uložení souboru.
 
-   :param instance: Parametr ``instance`` předává se do volání ``fullmatch()``, ``join()``, pracuje se s atributy ``vazba``, ``nazev``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   :param filename: Parametr ``filename`` slouží jako vstup pro logiku funkce ``get_upload_to``.
-
-   :return: Vrací výsledek volání ``join()``.
+   :param instance: Instance souboru.
+   :param filename: Název souboru.
+   :return: Cesta pro uložení souboru.
 
 .. py:function:: check_permissions(action, user, ident)
 
@@ -313,4 +311,4 @@ Funkce
    :param user: Parametr ``user`` se předává do volání ``filter()``, ``append()``, pracuje se s atributy ``hlavni_role``.
    :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
 
-   :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+       :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.

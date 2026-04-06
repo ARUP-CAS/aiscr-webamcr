@@ -21,12 +21,11 @@ Třídy
 
    .. py:method:: render_nahled()
 
-      Metoda pro správně zobrazení náhledu souboru.
+      Vykreslí HTML náhled modelu 3D.
 
-      :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
-      :param record: Parametr ``record`` předává se do volání ``len()``, ``reverse()``, pracuje se s atributy ``soubory``, ``ident_cely``, ovlivňuje větvení podmínek.
-
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
+      :param value: Hodnota sloupce (ignorováno).
+      :param record: Záznam s daty modelu 3D.
+      :return: HTML řetězec s náhledem nebo prázdný řetězec.
 
 
 .. py:class:: DokumentTable
@@ -37,12 +36,11 @@ Třídy
 
    .. py:method:: render_nahled()
 
-      Metoda pro správně zobrazení náhledu souboru.
+      Vykreslí HTML náhled modelu 3D.
 
-      :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
-      :param record: Parametr ``record`` předává se do volání ``hasattr()``, ``len()``, pracuje se s atributy ``soubory``, ``ident_cely``, ovlivňuje větvení podmínek.
-
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
+      :param value: Hodnota sloupce (ignorováno).
+      :param record: Záznam s daty modelu 3D.
+      :return: HTML řetězec s náhledem nebo prázdný řetězec.
 
    .. py:method:: __init__()
 

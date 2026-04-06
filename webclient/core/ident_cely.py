@@ -195,19 +195,18 @@ def get_dj_ident(event: ArcheologickyZaznam) -> str:
         raise MaximalIdentNumberError(max_count)
 
 
-def get_komponenta_ident(zaznam, fedora_transaction: FedoraTransaction) -> str:
+def get_komponenta_ident(zaznam: ArcheologickyZaznam | Dokument, fedora_transaction: FedoraTransaction) -> str:
     """
-    Metoda pro výpočet identu komponenty DJ a dokument části.
+    Vypočítá identifikátor komponenty pro dokumentační jednotku nebo dokument.
 
     Logika složení je: ident_cely arch záznamu nebo dokumentu + "-D" + pořadové číslo komponenty per záznam doplněno na 3 číslice nulami.
     Při překročení maxima komponent u záznamu (999) se uživateli na web vrátí chybová hláška.
     Příklad: "M-202100034A-K001", "M-DD-202100034-K001"
 
-    :param zaznam: Parametr ``zaznam`` předává se do volání ``isinstance()``, pracuje se s atributy ``dokumentacni_jednotky_akce``, ``casti``, ovlivňuje větvení podmínek.
-    :param fedora_transaction: Parametr ``fedora_transaction`` slouží jako vstup pro logiku funkce ``get_komponenta_ident``.
-    :return: Vrací výsledek operace.
-
-        :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``max_count < MAXIMAL_KOMPONENTAS``.
+    :param zaznam: Archeologický záznam nebo dokument k zpracování.
+    :param fedora_transaction: Aktivní transakce Fedora pro práci s repozitářem.
+    :return: Vygenerovaný identifikátor komponenty.
+    :raises MaximalIdentNumberError: Vyvolá se při překročení maxima komponent (999).
     """
     MAXIMAL_KOMPONENTAS: int = 999
     last_digit_count = 3
@@ -416,7 +415,8 @@ def get_next_sequence_integrity_check(object_class: Type[ModelWithMetadata] | Ty
 
 
 def get_heslar_ident():
-    """Metoda pro výpočet identu hesláře.
+    """
+    Metoda pro výpočet identu hesláře.
 
     :return: Vrací výsledek volání ``get_next_sequence_integrity_check()``.
     """
@@ -424,7 +424,8 @@ def get_heslar_ident():
 
 
 def get_uzivatel_ident():
-    """Metoda pro výpočet identu uživatele.
+    """
+    Metoda pro výpočet identu uživatele.
 
     :return: Vrací výsledek volání ``get_next_sequence_integrity_check()``.
     """
@@ -432,7 +433,8 @@ def get_uzivatel_ident():
 
 
 def get_organizace_ident():
-    """Metoda pro výpočet identu organizce.
+    """
+    Metoda pro výpočet identu organizce.
 
     :return: Vrací výsledek volání ``get_next_sequence_integrity_check()``.
     """
@@ -440,7 +442,8 @@ def get_organizace_ident():
 
 
 def get_osoba_ident():
-    """Metoda pro výpočet identu osoby.
+    """
+    Metoda pro výpočet identu osoby.
 
     :return: Vrací výsledek volání ``get_next_sequence_integrity_check()``.
     """
