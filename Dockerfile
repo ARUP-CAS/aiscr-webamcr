@@ -1,3 +1,10 @@
+FROM node:20-bookworm-slim AS node-modules
+
+WORKDIR /node_modules_build
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
+
 FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.3 AS python-builder
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -21,7 +28,6 @@ RUN echo $TZ > /etc/timezone && \
         unrar \
         jq \
         postgresql-client \
-        curl \
         libmagic1 \
         redis-tools && \
     locale-gen cs_CZ.utf8 && \
@@ -91,6 +97,9 @@ RUN pip3 install --no-cache-dir --no-index --find-links=/wheels /wheels/* --brea
     rm -rf /wheels ~/.cache/pip
 
 COPY --from=app-builder /code /code
+COPY --from=node-modules /node_modules_build/node_modules /node_modules
+# Kořen repozitáře v image = / (WORKDIR /code → BASE_DIR.parent); potřeba pro _npm_staticfiles_dirs().
+COPY ./package.json ./package-lock.json /
 
 RUN mkdir -p /vol/web/media /vol/web/static /vol/web/locale/cs/LC_MESSAGES /vol/web/locale/en/LC_MESSAGES && \
     userdel ubuntu && \

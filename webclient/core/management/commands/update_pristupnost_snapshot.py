@@ -32,9 +32,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """
-        Provádí operaci add arguments.
+        Registruje volitelný argument pro velikost dávky zpracování.
 
-        :param parser: Parametr ``parser`` pracuje se s atributy ``add_argument``.
+        :param parser: Argumentový parser pro přidání nových parametrů příkazu.
         """
         parser.add_argument(
             "--batch-size",
@@ -45,9 +45,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """
-        Zpracuje hodnotu. v aplikaci.
+        Aktualizuje snapshot přístupnosti AMČR záznamů na základě jejich aktuálního stavu.
 
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
+        :param args: Poziční argumenty příkazu (nepoužívá se).
         :param options: Parametr ``options`` slouží jako vstup pro logiku funkce ``handle``.
         """
         from projekt.models import Projekt

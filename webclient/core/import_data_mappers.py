@@ -106,14 +106,13 @@ from uzivatel.models import Organizace, Osoba, User, UserNotificationType
 @dataclass
 class ImportDataValidationResult:
     """
-    Datová třída, která reprezentuje výsledek validace jednoho záznamu při importu dat.
+    Datová třída reprezentující výsledek validace jednoho záznamu při importu dat.
 
-    Attributes:
-    item_order: Pořadové číslo záznamu v importu.
-    file_name: Název CSV souboru, ze kterého záznam pochází.
-    primary_key_import: Primární klíč záznamu v datovém souboru.
-    primary_key_table: Primární klíč záznamu v databázi.
-    validation_result: Textový popis výsledku validace (úspěch nebo chybová zpráva).
+    :ivar item_order: Pořadové číslo záznamu v importu.
+    :ivar file_name: Název CSV souboru, ze kterého záznam pochází.
+    :ivar primary_key_import: Primární klíč záznamu v datovém souboru.
+    :ivar primary_key_table: Primární klíč záznamu v databázi.
+    :ivar validation_result: Textový popis výsledku validace (úspěch nebo chybová zpráva).
     """
 
     item_order: int
@@ -353,7 +352,8 @@ class BaseImportField:
 
     @property
     def value(self):
-        """Provádí operaci value.
+        """
+        Provádí operaci value.
 
         :return: Vrací atribut objektu.
         """
@@ -372,7 +372,8 @@ class BaseImportField:
 
     @property
     def is_null(self):
-        """Určí, zda null.
+        """
+        Určí, zda null.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -380,7 +381,8 @@ class BaseImportField:
 
     @property
     def instance_value(self):
-        """Provádí operaci instance value.
+        """
+        Provádí operaci instance value.
 
         :return: Vrací atribut objektu.
         """
@@ -388,7 +390,8 @@ class BaseImportField:
 
     @property
     def serialized_value(self):
-        """Provádí operaci serialized value.
+        """
+        Provádí operaci serialized value.
 
         :return: Vrací atribut objektu.
         """
@@ -512,7 +515,8 @@ class DateImportField(BaseImportField):
 
     @property
     def value(self):
-        """Provádí operaci value.
+        """
+        Provádí operaci value.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -529,7 +533,8 @@ class DateImportField(BaseImportField):
 
     @property
     def serialized_value(self):
-        """Provádí operaci serialized value.
+        """
+        Provádí operaci serialized value.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -571,7 +576,8 @@ class DateTimeImportField(BaseImportField):
 
     @property
     def value(self):
-        """Provádí operaci value.
+        """
+        Provádí operaci value.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -588,7 +594,8 @@ class DateTimeImportField(BaseImportField):
 
     @property
     def serialized_value(self):
-        """Provádí operaci serialized value.
+        """
+        Provádí operaci serialized value.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -621,7 +628,8 @@ class DateRangeImportField(BaseImportField):
 
     @property
     def serialized_value(self):
-        """Provádí operaci serialized value.
+        """
+        Provádí operaci serialized value.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -685,7 +693,8 @@ class LookupImportField(BaseImportField):
 
     @property
     def instance_value(self):
-        """Provádí operaci instance value.
+        """
+        Provádí operaci instance value.
 
         :return: Vrací atribut objektu.
         """
@@ -823,7 +832,8 @@ class GeomImportField(BaseImportField):
 
     @property
     def serialized_value(self):
-        """Provádí operaci serialized value.
+        """
+        Provádí operaci serialized value.
 
         :return: Vrací výsledek volání ``getattr()``.
         """
@@ -867,7 +877,8 @@ class GenericForeignKeyImportField(LookupImportField):
 
     @property
     def serialized_value(self):
-        """Provádí operaci serialized value.
+        """
+        Provádí operaci serialized value.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``getattr()``, atribut objektu.
         """
@@ -927,7 +938,8 @@ class ImportModelMapper(ABC):
 
     @classmethod
     def get_import_data_mapper_dict(cls):
-        """Vrátí slovník mapující názvy importních souborů na příslušné třídy mapperů.
+        """
+        Vrátí slovník mapující názvy importních souborů na příslušné třídy mapperů.
 
         :return: Vrací slovník.
         """
@@ -1013,7 +1025,8 @@ class ImportModelMapper(ABC):
         return field_mapping
 
     def _get_filter_kwargs_primary_key(self) -> dict | None:
-        """Vrátí slovník s názvem (názvy) a hodnotou (hodnotami) primárního klíče pro filtrování.
+        """
+        Vrátí slovník s názvem (názvy) a hodnotou (hodnotami) primárního klíče pro filtrování.
 
         :return: Vrací hodnotu typu ``dict | None``; podle větve může jít o: None, slovník, hodnotu podle větve zpracování.
         """

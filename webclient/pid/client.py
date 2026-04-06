@@ -28,7 +28,8 @@ class DigitalObjectIdentifierClient:
     }
 
     def __init__(self, record):
-        """Inicializuje klienta podle typu předaného doménového záznamu.
+        """
+        Inicializuje klienta podle typu předaného doménového záznamu.
 
         :param record: Parametr ``record`` předává se do volání ``type()``.
         :raises ValueError: Vyvolá se při splnění podmínky ``record_type in self.record_serializer_map``.
@@ -64,7 +65,8 @@ class DigitalObjectIdentifierClient:
             raise DoiWriteError(response.status_code, response.text, response.url)
 
     def get_record_url(self):
-        """Vrátí URL detailu záznamu v DataCite.
+        """
+        Vrátí URL detailu záznamu v DataCite.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -121,9 +123,9 @@ class DigitalObjectIdentifierClient:
 
     def hide_record(self, check_status=True):
         """
-        Provádí operaci hide record.
+        Skryje existující záznam v DataCite pomocí serializovaného payloadu pro skrytí.
 
-        :param check_status: Parametr ``check_status`` předává se do volání ``check_record_exists()``, ovlivňuje větvení podmínek.
+        :param check_status: Příznak, zda má být ověřena existence záznamu a zkontrolován stavový kód odpovědi.
 
             :return: Vrací výsledek volání ``json()``.
             :raises DoiNoTransactionError: Vyvolá se při splnění podmínky ``not isinstance(self.record, Lokalita) and (not hasattr(self.record, 'active_transaction'))``.

@@ -18,7 +18,7 @@ Třídy
 
       :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``str()``, pracuje se s atributy ``lower``, ``upper``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: None, hodnotu podle větve zpracování, výsledek volání ``str()``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: None, hodnotu podle větve zpracování, výsledek volání ``str()``.
 
    .. py:method:: __init__()
 
@@ -39,5 +39,5 @@ Třídy
       :param value: Hodnota pole ``oznamovatel.oznamovatel`` z přidruženého záznamu.
       :param record: Instance projektu z aktuálního řádku tabulky.
       :return: Hodnota oznamovatele, přeložený label ``oznamovatel_oznamovatel.hidden`` pokud uživatel
-      nemá oprávnění ji zobrazit, nebo prázdný řetězec pokud projekt nemá oznamovatele.
+          nemá oprávnění ji zobrazit, nebo prázdný řetězec pokud projekt nemá oznamovatele.
 

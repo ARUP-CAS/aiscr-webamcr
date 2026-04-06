@@ -32,9 +32,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """
-        Provádí operaci add arguments.
+        Registruje příkazové argumenty pro filtrování a limitování zpracování záznamů.
 
-        :param parser: Parametr ``parser`` pracuje se s atributy ``add_argument``.
+        :param parser: Argumentový parser pro přidání nových parametrů příkazu.
         """
         parser.add_argument(
             "--model",
@@ -57,10 +57,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """
-        Zpracuje hodnotu. v aplikaci.
+        Vygeneruje a uloží XML metadata pro AMČR záznamy do Fedora repozitáře.
 
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
-        :param options: Parametr ``options`` pracuje se s atributy ``get``.
+        :param args: Poziční argumenty příkazu (nepoužívá se).
+        :param options: Pojmenované argumenty (model, limit, start_with_pk) ze příkazového řádku.
         """
         model_class = options.get("model")
         limit = options.get("limit")

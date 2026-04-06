@@ -223,7 +223,8 @@ class OznamovatelProjektCreateForm(OznamovatelProjektForm):
     )
 
     def clean_send_mail(self):
-        """Provádí operaci clean send mail.
+        """
+        Provádí operaci clean send mail.
 
         :return: Vrací výsledek volání ``get()``.
         """

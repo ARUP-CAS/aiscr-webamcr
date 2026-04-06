@@ -317,7 +317,8 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
 
     @property
     def navazany_objekt(self):
-        """Vrátí objekt navázaný na danou vazbu historie.
+        """
+        Vrátí objekt navázaný na danou vazbu historie.
 
         :return: Vrací atribut objektu.
         """

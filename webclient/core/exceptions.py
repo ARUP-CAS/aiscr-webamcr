@@ -7,10 +7,10 @@ class PianNotInKladysm5Error(Exception):
         message="Pians geometry is not contained in any of the Kladysm map lists",
     ):
         """
-        Inicializuje instanci třídy.
+        Inicializuje výjimku s odkazem na PIAN, jehož geometrie neleží v žádném kladu mapových listů.
 
-        :param pian: Parametr ``pian`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param pian: Instance PIANu, jehož geometrie se nenachází v žádném kladu mapových listů.
+        :param message: Textová zpráva popisující důvod výjimky.
         """
         self.pian = pian
         self.message = message
@@ -22,10 +22,10 @@ class MaximalIdentNumberError(Exception):
 
     def __init__(self, number, message="Maximalni cislo identifikatoru bylo prekroceno"):
         """
-        Inicializuje instanci třídy.
+        Inicializuje výjimku s číslem identifikátoru, které překročilo povolené maximum.
 
-        :param number: Parametr ``number`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param number: Číslo identifikátoru, které překročilo maximální povolenou hodnotu.
+        :param message: Textová zpráva popisující důvod výjimky.
         """
         self.number = number
         self.message = message
@@ -37,10 +37,10 @@ class DJNemaPianError(Exception):
 
     def __init__(self, dj, message="Adb nelze vytvorit protoze DJ nema pian"):
         """
-        Inicializuje instanci třídy.
+        Inicializuje výjimku pro případ, kdy dokumentační jednotka nemá přiřazen žádný PIAN.
 
-        :param dj: Parametr ``dj`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param dj: Instance dokumentační jednotky, která postrádá přiřazený PIAN.
+        :param message: Textová zpráva popisující důvod výjimky.
         """
         self.dj = dj
         self.message = message
@@ -52,9 +52,9 @@ class NelzeZjistitRaduError(Exception):
 
     def __init__(self, message="Nelze zjistit radu dokumentu"):
         """
-        Inicializuje instanci třídy.
+        Inicializuje výjimku pro případ, kdy nelze určit řadu dokumentu.
 
-        :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param message: Textová zpráva popisující důvod výjimky.
         """
         self.message = message
 
@@ -64,9 +64,9 @@ class NeocekavanaRadaError(Exception):
 
     def __init__(self, message="Neocekavana rada dokumentu."):
         """
-        Inicializuje instanci třídy.
+        Inicializuje výjimku pro případ, kdy je zjištěna neočekávaná řada dokumentu.
 
-        :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param message: Textová zpráva popisující důvod výjimky.
         """
         self.message = message
 
@@ -76,9 +76,9 @@ class WrongSheetError(Exception):
 
     def __init__(self, message="Excel nema spravne sloupce"):
         """
-        Inicializuje instanci třídy.
+        Inicializuje výjimku pro případ, kdy importovaný Excel soubor nemá správné sloupce.
 
-        :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param message: Textová zpráva popisující důvod výjimky.
         """
         self.message = message
 
@@ -88,9 +88,9 @@ class NeznamaGeometrieError(Exception):
 
     def __init__(self, message="Neocekavana geometrie pianu."):
         """
-        Inicializuje instanci třídy.
+        Inicializuje výjimku pro případ, kdy je zjištěn neznámý nebo neočekávaný typ geometrie PIANu.
 
-        :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param message: Textová zpráva popisující důvod výjimky.
         """
         self.message = message
 
@@ -100,9 +100,9 @@ class UnexpectedDataRelations(Exception):
 
     def __init__(self, message="Duplicitni nebo chybejici relace."):
         """
-        Inicializuje instanci třídy.
+        Inicializuje výjimku pro případ duplicitních nebo chybějících datových relací při importu.
 
-        :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param message: Textová zpráva popisující důvod výjimky.
         """
         self.message = message
 
@@ -112,10 +112,10 @@ class MaximalEventCount(Exception):
 
     def __init__(self, number, message="Maximalni pocet akci prekrocen"):
         """
-        Inicializuje instanci třídy.
+        Inicializuje výjimku pro případ, kdy byl překročen maximální počet archeologických akcí.
 
-        :param number: Parametr ``number`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param number: Aktuální počet akcí, jenž překročil povolené maximum.
+        :param message: Textová zpráva popisující důvod výjimky.
         """
         self.number = number
         self.message = message
@@ -127,9 +127,9 @@ class WrongCSVError(Exception):
 
     def __init__(self, message="CSV nema spravne sloupce"):
         """
-        Inicializuje instanci třídy.
+        Inicializuje výjimku pro případ, kdy importovaný CSV soubor nemá správné sloupce.
 
-        :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param message: Textová zpráva popisující důvod výjimky.
         """
         self.message = message
 
@@ -139,9 +139,9 @@ class ZaznamSouborNotmatching(Exception):
 
     def __init__(self, message="Zaznam nema dany soubor"):
         """
-        Inicializuje instanci třídy.
+        Inicializuje výjimku pro případ, kdy záznam AMČR neobsahuje očekávaný soubor.
 
-        :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param message: Textová zpráva popisující důvod výjimky.
         """
         self.message = message
 
@@ -151,8 +151,8 @@ class StateChangedError(Exception):
 
     def __init__(self, message="Záznam byl mezitím změměn"):
         """
-        Inicializuje instanci třídy.
+        Inicializuje výjimku pro případ, kdy byl stav záznamu AMČR změněn jiným uživatelem od jeho načtení.
 
-        :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param message: Textová zpráva popisující důvod výjimky.
         """
         self.message = message

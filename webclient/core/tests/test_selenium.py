@@ -58,7 +58,7 @@ class LocalResolver(etree.Resolver):
 
     def resolve(self, url, id, context):
         """
-        Provádí operaci resolve.
+        Nahradí vzdálené XSD v URL lokálním souborem.
 
         :param url: Parametr ``url`` ovlivňuje větvení podmínek.
         :param id: Identifikátor zpracovávaného záznamu.
@@ -90,17 +90,21 @@ class WaitForPageLoad:
         self.old_page = self.browser.find_element(By.TAG_NAME, "html")
 
     def page_has_loaded(self):
-        """Provádí operaci page has loaded.
+        """
+        Ověří, že se stránka plně načetla kontrolou elementů.
 
-        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        :param driver: Selenium WebDriver.
+        :return: True pokud je stránka připravena.
         """
         new_page = self.browser.find_element(By.TAG_NAME, "html")
         return new_page.id != self.old_page.id
 
     def page_is_ready(self):
-        """Provádí operaci page is ready.
+        """
+        Ověří, zda jsou všechny asynchronní operace dokončeny.
 
-        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        :param driver: Selenium WebDriver.
+        :return: True pokud je stránka v klidu.
         """
         page_state = self.browser.execute_script("return document.readyState;")
         return page_state == "complete"
@@ -160,7 +164,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Provádí operaci setUpClass.
+        """
+        Provádí operaci setUpClass.
 
         :raises RuntimeError: Vyvolá se při splnění podmínky ``cls.server_thread.error``.
         """
@@ -177,7 +182,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     @classmethod
     def _create_server_thread(cls, connections_override):
-        """Vytvoření vlastního serverového vlákna
+        """
+        Vytvoření vlastního serverového vlákna
 
         :param connections_override: Parametr ``connections_override`` slouží jako vstup pro logiku funkce ``_create_server_thread``.
         :return: Vrací výsledek volání ``WerkzeugServerThread()``.
@@ -335,12 +341,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def check_container_content(self, container_path, path):
         """
-        Ověří container content.
+        Stáhne obsah z URL kontejneru a porovná ho s referenčním souborem na disku.
 
-        :param container_path: Parametr ``container_path`` se předává do volání ``get()``, ``str()``, pracuje se s atributy ``split``.
-        :param path: Parametr ``path`` se předává do volání ``open()``, ``porovnej_xml_bez_ignorovanych()``.
-
-            :return: Vrací proměnná ``members``.
+        :param container_path: URL kontejneru (Fedora) ke stažení obsahu.
+        :param path: Adresář s referenčními soubory pro porovnání.
+        :return: True pokud se obsah shoduje.
         """
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
@@ -430,7 +435,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def wipe_Fedora_dir(self, name, deep):
         """
-        Provádí operaci wipe Fedora dir.
+        Vymaže kontejner v repositáři.
 
         :param name: Parametr ``name`` předává se do volání ``get_container_content()``.
         :param deep: Parametr ``deep`` předává se do volání ``wipe_Fedora_dir()``, ovlivňuje větvení podmínek.
@@ -657,7 +662,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         result = self._outcome.result
 
         def has_issue():
-            """Určí, zda issue.
+            """
+            Určí, zda issue.
 
             :return: Vrací výsledek volání ``any()``.
             """
@@ -859,7 +865,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def clickAt(self, el, position_x, position_y):
         """
-        Provádí operaci clickAt.
+        Klikne na element se čekáním na jeho dostupnost.
 
         :param el: Parametr ``el`` se předává do volání ``move_to_element_with_offset()``.
         :param position_x: Číselná hodnota ``position_x`` použitá při výpočtu nebo transformaci.
@@ -952,9 +958,9 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def _select_radion_group_item(self, item_order=1):
         """
-               Provádí operaci select radion group item.
+        Vybere položku z radion group.
 
-               :param item_order: Parametr ``item_order`` se předává do volání ``find_element()``.
+        :param item_order: Parametr ``item_order`` se předává do volání ``find_element()``.
         :return: Výstup funkce odpovídající implementované logice.
         """
         self.driver.find_element(
@@ -1377,7 +1383,8 @@ return new Date('2025-06-28T12:00:00Z');}};
         puvodni_base = max(uri_counter, key=uri_counter.get)
 
         # Nahraď v grafech
-        """nove_triples = []
+        """
+        nove_triples = []
         for s, p, o in list(graf):
             novy_s = URIRef(str(s).replace(puvodni_base, nova_base_uri)) if isinstance(s, URIRef) and str(s).startswith(puvodni_base) else s
             novy_o = URIRef(str(o).replace(puvodni_base, nova_base_uri)) if isinstance(o, URIRef) and str(o).startswith(puvodni_base) else o
@@ -1500,7 +1507,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def uprav_rdf_pred_ulozenim(self, rdf_input, ignorovat_predikaty=None):
         """
-        Provádí operaci uprav rdf pred ulozenim.
+        Upraví rdf pred ulozenim.
 
         Načte RDF z textu nebo bytes, odstraní proměnlivé predikáty, base URI a UUID,
         a vrátí výstup jako serializovaný Turtle string.
@@ -1695,7 +1702,8 @@ return new Date('2025-06-28T12:00:00Z');}};
         return res
 
     def getTime(self):
-        """Provádí operaci getTime.
+        """
+        Provádí operaci getTime.
 
         :return: Vrací proměnná ``t``.
         """

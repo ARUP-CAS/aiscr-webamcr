@@ -3,6 +3,11 @@ Skript check_method_docstrings
 
 Dokumentace skriptu ``docs/check_method_docstrings.py``.
 
+Přehled modulu
+--------------
+
+Kontrola docstringů tříd, metod a funkcí dle projektového style guide.
+
 Třídy
 ------
 

@@ -18,7 +18,7 @@ Třídy
 
       :param obj: Parametr ``obj`` pracuje se s atributy ``ident_cely``, ``vedouci_projektu``, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování.
+          :return: Vrací hodnotu podle větve zpracování.
 
 
 .. py:class:: PotvrditNalezForm
@@ -99,4 +99,4 @@ Funkce
 
    :param email: Uživatel nebo osoba ``email``, v jejímž kontextu se operace provádí.
 
-   :raises ValidationError: Vyvolá se při splnění podmínky ``not user.exists()``; nebo při splnění podmínky ``user[0].hlavni_role not in Group.objects.filter(id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID))``.
+       :raises ValidationError: Vyvolá se při splnění podmínky ``not user.exists()``; nebo při splnění podmínky ``user[0].hlavni_role not in Group.objects.filter(id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID))``.

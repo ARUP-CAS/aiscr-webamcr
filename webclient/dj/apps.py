@@ -7,6 +7,6 @@ class DjConfig(AppConfig):
     name = "dj"
 
     def ready(self):
-        """Provádí operaci ready."""
+        """Načte signály aplikace dj po spuštění Django."""
         super(DjConfig, self).ready()
         import dj.signals

@@ -7,7 +7,7 @@ class PasConfig(AppConfig):
     name = "pas"
 
     def ready(self):
-        """Provádí operaci ready."""
+        """Registruje signály aplikace pas při spuštění Django."""
         super(PasConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import pas.signals

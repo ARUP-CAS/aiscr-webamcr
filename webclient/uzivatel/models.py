@@ -48,7 +48,8 @@ logger = logging.getLogger(__name__)
 
 
 def only_notification_groups():
-    """Provádí operaci only notification groups.
+    """
+    Provádí operaci only notification groups.
 
     :return: Vrací výsledek volání ``all()``.
     """
@@ -56,7 +57,8 @@ def only_notification_groups():
 
 
 def get_default_licence():
-    """Vrací default licence.
+    """
+    Vrací default licence.
 
     :return: Vrací proměnná ``DOKUMENT_LICENCE_NEZNAMA``.
     """
@@ -166,7 +168,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @cached_property
     def user_str(self):
-        """Provádí operaci user str.
+        """
+        Provádí operaci user str.
 
         :return: Vrací proměnná ``retezec``.
         """
@@ -177,7 +180,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @cached_property
     def user_str_en(self):
-        """Provádí operaci user str en.
+        """
+        Provádí operaci user str en.
 
         :return: Vrací proměnná ``retezec``.
         """
@@ -221,7 +225,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         return base
 
     def moje_spolupracujici_organizace(self):
-        """Provádí operaci moje spolupracujici organizace.
+        """
+        Provádí operaci moje spolupracujici organizace.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``moje_spolupracujici_organizace``, výsledek volání ``all()``.
         """
@@ -244,7 +249,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             return Organizace.objects.all()
 
     def moje_stavy_pruzkumnych_projektu(self):
-        """Provádí operaci moje stavy pruzkumnych projektu.
+        """
+        Provádí operaci moje stavy pruzkumnych projektu.
 
         :return: Vrací n-tici.
         """
@@ -287,7 +293,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             logger.error("user.email_user.error", extra={"pk": self.pk, "email": self.email})
 
     def name_and_id(self):
-        """Vrátí jméno uživatele včetně jeho plného identifikátoru.
+        """
+        Vrátí jméno uživatele včetně jeho plného identifikátoru.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -295,7 +302,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @property
     def is_archiver_or_more(self):
-        """Určí, zda archiver or more.
+        """
+        Určí, zda archiver or more.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -303,7 +311,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @property
     def is_archeolog_or_more(self):
-        """Určí, zda archeolog or more.
+        """
+        Určí, zda archeolog or more.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -353,7 +362,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @property
     def metadata(self):
-        """Provádí operaci metadata.
+        """
+        Provádí operaci metadata.
 
         :return: Vrací výsledek volání ``get_metadata()``.
         """
@@ -435,7 +445,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @property
     def can_see_users_details(self):
-        """Provádí operaci can see users details.
+        """
+        Provádí operaci can see users details.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -443,7 +454,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @property
     def full_details(self):
-        """Provádí operaci full details.
+        """
+        Provádí operaci full details.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -451,7 +463,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @property
     def anonymous_details(self):
-        """Provádí operaci anonymous details.
+        """
+        Provádí operaci anonymous details.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -459,7 +472,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @property
     def can_see_ours_item(self):
-        """Provádí operaci can see ours item.
+        """
+        Provádí operaci can see ours item.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -479,21 +493,24 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         ]
 
     def get_permission_object(self):
-        """Vrací permission object.
+        """
+        Vrací permission object.
 
         :return: Vrací proměnná ``self``.
         """
         return self
 
     def get_create_user(self):
-        """Vrací create user.
+        """
+        Vrací create user.
 
         :return: Vrací n-tici.
         """
         return (self,)
 
     def get_create_org(self):
-        """Vrací create org.
+        """
+        Vrací create org.
 
         :return: Vrací n-tici.
         """
@@ -624,7 +641,8 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
                 return ""
 
     def get_nazev(self):
-        """Vrací název organizace ve formátu používaném v aplikaci.
+        """
+        Vrací název organizace ve formátu používaném v aplikaci.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
         """

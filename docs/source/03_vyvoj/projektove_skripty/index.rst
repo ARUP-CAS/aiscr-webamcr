@@ -8,6 +8,8 @@ Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``
    :caption: Obsah:
 
    build_prod_image_sh
+   check_container_image_reference_parity_py
+   check_npm_vendor_package_names_py
    crontab_txt
    dev_deploy_sh
    entrypoint_dev_sh

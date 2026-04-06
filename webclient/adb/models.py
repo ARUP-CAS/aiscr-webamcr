@@ -96,14 +96,16 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         db_table = "adb"
 
     def get_absolute_url(self):
-        """Vrací absolute url.
+        """
+        Vrací absolute url.
 
         :return: Vrací výsledek volání ``get_absolute_url()``.
         """
         return self.dokumentacni_jednotka.get_absolute_url()
 
     def get_permission_object(self):
-        """Vrací permission object.
+        """
+        Vrací permission object.
 
         :return: Vrací výsledek volání ``get_permission_object()``.
         """
@@ -229,7 +231,8 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
         super(VyskovyBod, self).save(*args, **kwargs)
 
     def __init__(self, *args, **kwargs):
-        """Override init metody pro úpravu souřadnic.
+        """
+        Override init metody pro úpravu souřadnic.
 
         :param args: Parametr ``args`` předává se do volání ``__init__()``.
         :param kwargs: Parametr ``kwargs`` předává se do volání ``__init__()``.
@@ -259,14 +262,16 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
         ]
 
     def get_absolute_url(self):
-        """Vrací absolute url.
+        """
+        Vrací absolute url.
 
         :return: Vrací výsledek volání ``get_absolute_url()``.
         """
         return self.adb.dokumentacni_jednotka.get_absolute_url()
 
     def get_permission_object(self):
-        """Vrací permission object.
+        """
+        Vrací permission object.
 
         :return: Vrací výsledek volání ``get_permission_object()``.
         """

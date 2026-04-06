@@ -14,10 +14,10 @@ Třídy
 
    .. py:method:: user_can_authenticate()
 
-      Provádí operaci user can authenticate.
+      Ověří, zda se uživatel může přihlásit; vrátí True, nebo vyvolá ValidationError, pokud je neaktivní.
 
-      :param user: Parametr ``user`` pracuje se s atributy ``is_active``, ovlivňuje větvení podmínek.
+      :param user: Uživatelský objekt, jehož atribut ``is_active`` se ověřuje.
 
-      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-      :raises ValidationError: Vyvolá se při splnění podmínky ``user.is_active``.
+          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+          :raises ValidationError: Vyvolá se při splnění podmínky ``user.is_active``.
 

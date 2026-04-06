@@ -20,11 +20,10 @@ class AdbReadOnlyTextInput(forms.TextInput):
 
     def format_value(self, value):
         """
-        Provádí operaci format value.
+        Vrátí textový popis osoby (vypis_cely) pro zobrazení v read-only poli.
 
-        :param value: Parametr ``value`` předává se do volání ``filter()``, ovlivňuje větvení podmínek.
-
-            :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+        :param value: Primární klíč záznamu Osoba.
+        :return: Textový popis osoby nebo prázdný řetězec, pokud záznam neexistuje.
         """
         if value:
             osoba_query = Osoba.objects.filter(pk=value)

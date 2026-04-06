@@ -20,7 +20,8 @@ class CustomTextTestResult(unittest.runner.TextTestResult):
     """Rozšíření třídy TextTestResult s podporou číslování testovacích případů."""
 
     def __init__(self, stream, descriptions, verbosity):
-        """Inicializuje generátor čísel testů a poté zavolá implementaci předka.
+        """
+        Inicializuje generátor čísel testů a poté zavolá implementaci předka.
 
         :param stream: Parametr ``stream`` předává se do volání ``__init__()``, vstupuje do návratové hodnoty.
         :param descriptions: Parametr ``descriptions`` předává se do volání ``__init__()``, vstupuje do návratové hodnoty.
@@ -53,7 +54,8 @@ class CustomTextTestResult(unittest.runner.TextTestResult):
         return super(CustomTextTestResult, self).startTest(test)
 
     def _exc_info_to_string(self, err, test):
-        """Získá text informací o výjimce z předka a na začátek přidá řádek s číslem testu.
+        """
+        Získá text informací o výjimce z předka a na začátek přidá řádek s číslem testu.
 
         :param err: Parametr ``err`` předává se do volání ``_exc_info_to_string()``.
         :param test: Parametr ``test`` předává se do volání ``_exc_info_to_string()``, ``format()``, pracuje se s atributy ``progress_index``.
@@ -112,12 +114,12 @@ class AMCRSeleniumTestRunner(BaseRunner):
 
     def setup_databases(self, *args, **kwargs):
         """
-        Provádí operaci setup databases.
+        Připraví instanci testovací databáze
 
         :param args: Parametr ``args`` se předává do volání ``setup_databases()``.
         :param kwargs: Parametr ``kwargs`` se předává do volání ``setup_databases()``.
 
-            :return: Vrací proměnná ``temp_return``.
+        :return: Vrací proměnná ``temp_return``.
         """
         self.keepdb = True
         temp_return = super().setup_databases(*args, **kwargs)
@@ -127,9 +129,9 @@ class AMCRSeleniumTestRunner(BaseRunner):
         # do somthing
         # return super().teardown_databases(*args, **kwargs)
         """
-        Provádí operaci teardown databases.
+        Smaže testovací databáze a vyčistí jejich prostředky.
 
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``teardown_databases``.
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``teardown_databases``.
+        :param args: Parametr ``args`` se předává do volání ``teardown_databases()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``teardown_databases()``.
         """
         pass

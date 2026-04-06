@@ -563,6 +563,10 @@ a.dropdown-item {
   }
 }
 
+.leaflet-top {
+  max-width: 100%;
+}
+
 .leaflet-top.leaflet-right {
   z-index: 1005;
 }
@@ -582,6 +586,11 @@ a.dropdown-item {
 .leaflet-container {
   background: #ffffff !important;
   border: $input-border-width solid $input-border-color;
+}
+
+/* https://github.com/Leaflet/Leaflet/issues/8659#issuecomment-1610074905 */
+.leaflet-container :focus:not(:focus-visible) {
+  outline: 0;
 }
 
 input.coordInput {

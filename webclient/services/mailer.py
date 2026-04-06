@@ -482,7 +482,8 @@ class Mailer:
 
     @classmethod
     def send_enz03(cls):
-        """Odešle notifikaci E-NZ-03 archivům za archeologické záznamy odeslané před přesně 91 dny.
+        """
+        Odešle notifikaci E-NZ-03 archivům za archeologické záznamy odeslané před přesně 91 dny.
 
         Vyhledá záznamy ve stavu ``AZ_STAV_ODESLANY``, jejichž poslední změna typu ``ODESLANI_AZ``
         proběhla přesně 91 dní zpět (bez novější změny stejného typu). Podle prefixu ``ident_cely``

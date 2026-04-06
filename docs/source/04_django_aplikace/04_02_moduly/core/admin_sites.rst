@@ -47,7 +47,7 @@ Třídy
       Importuje datové CSV soubory ze ZIP archivu do interní importní fronty.
 
       :param request: HTTP požadavek; při ``POST`` od superuživatele zvaliduje vstupní formulář,
-      zpracuje obsah ZIPu, provede validační kroky přes mapery a uloží připravené záznamy do Redis.
+          zpracuje obsah ZIPu, provede validační kroky přes mapery a uloží připravené záznamy do Redis.
       :return: Odpověď ``TemplateResponse`` s výsledkem validace, případně s chybovou hláškou importu.
       :raises ImportDataUnsupportedFilesError: Vyvolá se, pokud ZIP obsahuje soubory mimo povolenou sadu názvů.
       :raises ImportDataUnsupportedFileError: Vyvolá se, pokud pro nalezený CSV soubor neexistuje mapper.
@@ -57,5 +57,5 @@ Třídy
       Vrátí vlastní URL cesty admin site pro hromadné operace.
 
       :return: Seznam URL vzorů rozšířený o cesty pro aktualizaci metadat,
-      aktualizaci DOI/IGSN a hromadný import dat.
+          aktualizaci DOI/IGSN a hromadný import dat.
 

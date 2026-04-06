@@ -23,12 +23,12 @@ Třídy
 
    .. py:method:: format_date()
 
-      Provádí operaci format date.
+             Provádí operaci format date.
 
-      :param date_obj: Časový údaj ``date_obj`` použitý při filtrování nebo výpočtu.
+             :param date_obj: Časový údaj ``date_obj`` použitý při filtrování nebo výpočtu.
       Zpracovaná hodnota po validaci nebo transformaci.
 
-      :return: Vrací hodnotu typu ``str``; podle větve může jít o: str, výsledek volání ``strftime()``.
+          :return: Vrací hodnotu typu ``str``; podle větve může jít o: str, výsledek volání ``strftime()``.
 
    .. py:method:: _create_style_dict()
 
@@ -80,7 +80,7 @@ Třídy
 
    .. py:method:: _initiate_document()
 
-      Provádí operaci initiate document.
+             Provádí operaci initiate document.
 
       :return: Výstup funkce odpovídající implementované logice.
 
@@ -153,11 +153,11 @@ Funkce
 
 .. py:function:: draw_image(filename, canvas, counter)
 
-   Provádí operaci draw image.
+   Vykreslí obrázek na ReportLab canvas na pozici určenou pořadovým číslem (vlevo, uprostřed, vpravo).
 
-   :param filename: Parametr ``filename`` se předává do volání ``ImageReader()``, ``drawImage()``.
-   :param canvas: Parametr ``canvas`` pracuje se s atributy ``drawImage``.
-   :param counter: Parametr ``counter`` ovlivňuje větvení podmínek.
+   :param filename: Cesta k souboru obrázku, který se vykreslí do záhlaví.
+   :param canvas: ReportLab canvas objekt, na který se obrázek nakreslí.
+   :param counter: Pořadové číslo obrázku (0 = vlevo, 1 = uprostřed, 2 = vpravo).
 
 .. py:function:: add_page_number(canvas, doc)
 

@@ -38,11 +38,11 @@ Třídy
 
    .. py:method:: prepare_model_for_redis()
 
-      Provádí operaci prepare model for redis.
+      Převede řádek Django-tables2 tabulky do slovníku pro uložení do Redis cache.
 
-      :param table: Parametr ``table`` pracuje se s atributy ``columns``, ``rows``.
+      :param table: Tabulka (django-tables2) obsahující jeden řádek s daty záznamu.
 
-      :return: Vrací proměnná ``data``.
+          :return: Vrací proměnná ``data``.
 
 
 .. py:class:: ClamdError
@@ -91,9 +91,10 @@ Třídy
 
    .. py:method:: _basic_command()
 
-      Provádí operaci basic command.
+      Odešle jednoduchý příkaz do clamd a vrátí jeho odpověď.
 
-      :param command: Textový název, klíč nebo zpráva ``command`` používaná v rámci operace.
+      :param command: Název příkazu zasílaného do clamd démona (např. 'PING', 'VERSION').
+
       :return: Výstup funkce odpovídající implementované logice.
 
       :raises ClamdResponseError: Vyvolá se při splnění podmínky ``len(response) > 1``.
@@ -113,12 +114,12 @@ Třídy
 
    .. py:method:: _send_command()
 
-      Odešle command.
+             Odešle command.
 
-      Používá prefix 'n' a ukončovač nového řádku podle doporučení `man clamd`.
+             Používá prefix 'n' a ukončovač nového řádku podle doporučení `man clamd`.
 
-      :param cmd: Textový název, klíč nebo zpráva ``cmd`` používaná v rámci operace.
-      :param args: Parametr ``args`` se předává do volání ``join()``, ovlivňuje větvení podmínek.
+             :param cmd: Textový název, klíč nebo zpráva ``cmd`` používaná v rámci operace.
+             :param args: Parametr ``args`` se předává do volání ``join()``, ovlivňuje větvení podmínek.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _recv_response()

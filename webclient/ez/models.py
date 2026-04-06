@@ -90,7 +90,8 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         db_table = "externi_zdroj"
 
     def get_absolute_url(self):
-        """Metoda pro získaní absolut url záznamu podle identu.
+        """
+        Metoda pro získaní absolut url záznamu podle identu.
 
         :return: Vrací výsledek volání ``reverse()``.
         """
@@ -193,14 +194,16 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         self.save()
 
     def get_permission_object(self):
-        """Vrací permission object.
+        """
+        Vrací permission object.
 
         :return: Vrací proměnná ``self``.
         """
         return self
 
     def get_create_user(self):
-        """Vrací create user.
+        """
+        Vrací create user.
 
         :return: Vrací n-tici.
         """
@@ -211,7 +214,8 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             return ()
 
     def get_create_org(self):
-        """Vrací create org.
+        """
+        Vrací create org.
 
         :return: Vrací n-tici.
         """
@@ -238,16 +242,18 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     @property
     def redis_snapshot_id(self):
-        """Provádí operaci redis snapshot id.
+        """
+        Vrátí identifikátor Redis snímku pro tento externí zdroj.
 
-        :return: Vrací hodnotu podle větve zpracování.
+        :return: Řetězec tvaru ``<prefix>_<ident_cely>`` používaný jako klíč v Redis.
         """
         from ez.views import ExterniZdrojListView
 
         return f"{ExterniZdrojListView.redis_snapshot_prefix}_{self.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Vygeneruje redis snapshot.
+        """
+        Vygeneruje redis snapshot.
 
         :return: Vrací n-tici.
         """
@@ -259,7 +265,8 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         return self.redis_snapshot_id, data
 
     def check_set_permanent_ident(self):
-        """Ověří set permanent ident.
+        """
+        Ověří set permanent ident.
 
         :return: Vrací proměnná ``historie_poznamka``.
         """
@@ -318,7 +325,8 @@ class ExterniZdrojAutor(ExportModelOperationsMixin("externi_zdroj_autor"), model
     poradi = models.IntegerField()
 
     def get_osoba(self):
-        """Vrací osoba. v aplikaci.
+        """
+        Vrací osoba. v aplikaci.
 
         :return: Vrací atribut objektu.
         """
@@ -339,7 +347,8 @@ class ExterniZdrojEditor(ExportModelOperationsMixin("externi_zdroj_editor"), mod
     poradi = models.IntegerField()
 
     def get_osoba(self):
-        """Vrací osoba. v aplikaci.
+        """
+        Vrací osoba. v aplikaci.
 
         :return: Vrací atribut objektu.
         """
