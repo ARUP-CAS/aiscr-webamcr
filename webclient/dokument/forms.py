@@ -45,11 +45,10 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
 
     def clean(self, value):
         """
-        Provádí operaci clean.
+        Očistí a seřadí seznam autorů podle zadaného pořadí.
 
-        :param value: Parametr ``value`` předává se do volání ``clean()``, ``debug()``, ovlivňuje větvení podmínek.
-
-            :return: Vrací proměnná ``qs``.
+        :param value: Seznam ID autorů.
+        :return: QuerySet autorů seřazený podle zadaného pořadí.
         """
         qs = super().clean(value)
         if value:
@@ -225,13 +224,13 @@ class EditDokumentExtraDataForm(OptimisticLockingMixin, forms.ModelForm):
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
         """
-        Inicializuje instanci třídy.
+        Inicializuje formulář pro editaci metadat dokumentu s kontrolou dostupnosti polí.
 
-        :param args: Parametr ``args`` se předává do volání ``__init__()``.
-        :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
-        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
-        :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+        :param args: Poziční argumenty pro ModelForm.
+        :param readonly: Zda jsou pole jen pro čtení.
+        :param required: Která pole jsou povinná.
+        :param required_next: Která pole budou povinná v následující relaci.
+        :param kwargs: Pojmenované argumenty včetně rada, let, dok_osoby a edit.
         """
         rada = kwargs.pop("rada", None)
         let = kwargs.pop("let", "")
@@ -471,14 +470,14 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
         self, *args, readonly=False, required=None, required_next=None, can_edit_datum_zverejneni=False, **kwargs
     ):
         """
-        Inicializuje instanci třídy.
+        Inicializuje formulář s kontrolou práv a dostupnosti polí.
 
-        :param args: Parametr ``args`` se předává do volání ``__init__()``.
-        :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
-        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
-        :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param can_edit_datum_zverejneni: Parametr ``can_edit_datum_zverejneni`` ovlivňuje větvení podmínek.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+        :param args: Poziční argumenty pro ModelForm.
+        :param readonly: Zda jsou pole jen pro čtení.
+        :param required: Která pole jsou povinná.
+        :param required_next: Která pole budou povinná v následující relaci.
+        :param can_edit_datum_zverejneni: Zda lze editovat datum zveřejnění.
+        :param kwargs: Klíčové argumenty včetně create a region_not_required.
         """
         create = kwargs.pop("create", None)
         region_not_required = kwargs.pop("region_not_required", None)
@@ -643,13 +642,13 @@ class CreateModelDokumentForm(OptimisticLockingMixin, forms.ModelForm):
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
         """
-        Inicializuje instanci třídy.
+        Inicializuje formulář pro vytvoření 3D modelu s nastavením dostupných typů.
 
-        :param args: Parametr ``args`` se předává do volání ``__init__()``.
-        :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
-        :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        :param args: Poziční argumenty pro ModelForm.
+        :param readonly: Zda jsou pole jen pro čtení.
+        :param required: Která pole jsou povinná.
+        :param required_next: Která pole budou povinná v následující relaci.
+        :param kwargs: Pojmenované argumenty pro ModelForm.
         """
         super(CreateModelDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
@@ -748,13 +747,13 @@ class CreateModelExtraDataForm(OptimisticLockingMixin, forms.ModelForm):
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
         """
-        Inicializuje instanci třídy.
+        Inicializuje formulář pro zadání extra dat 3D modelu.
 
-        :param args: Parametr ``args`` se předává do volání ``__init__()``.
-        :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
-        :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        :param args: Poziční argumenty pro ModelForm.
+        :param readonly: Zda jsou pole jen pro čtení.
+        :param required: Která pole jsou povinná.
+        :param required_next: Která pole budou povinná v následující relaci.
+        :param kwargs: Pojmenované argumenty pro ModelForm.
         """
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
         # self.fields["format"].required = True
@@ -828,11 +827,11 @@ class DokumentCastForm(forms.ModelForm):
 
     def __init__(self, readonly=False, *args, **kwargs):
         """
-        Inicializuje instanci třídy.
+        Inicializuje formulář pro editaci poznámky k součásti dokumentu.
 
-        :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param args: Parametr ``args`` se předává do volání ``__init__()``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        :param readonly: Zda jsou pole jen pro čtení.
+        :param args: Poziční argumenty pro ModelForm.
+        :param kwargs: Pojmenované argumenty pro ModelForm.
         """
         super(DokumentCastForm, self).__init__(*args, **kwargs)
 

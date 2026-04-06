@@ -20,11 +20,11 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      :return: Vrací výsledek volání ``str()``.
+          :return: Vrací výsledek volání ``str()``.
 
    .. py:method:: get_create_user()
 

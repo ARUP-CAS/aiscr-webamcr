@@ -37,9 +37,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """
-        Provádí operaci add arguments.
+        Registruje příkazové argumenty pro výběr souborů určených k generování náhledů.
 
-        :param parser: Parametr ``parser`` pracuje se s atributy ``add_argument``.
+        :param parser: Argumentový parser pro přidání nových parametrů příkazu.
         """
         parser.add_argument(
             "--pks",
@@ -62,12 +62,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """
-        Zpracuje vstupní argumenty příkazu a spustí generování náhledů.
+        Vygeneruje náhledy (thumbnaily) pro specifikované AMČR soubory v Fedora repozitáři.
 
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
-        :param options: Parametr ``options`` pracuje se s atributy ``get``.
-
-            :raises CommandError: Vyvolá se při splnění podmínky ``provided_options != 1``.
+        :param args: Poziční argumenty příkazu (nepoužívá se).
+        :param options: Pojmenované argumenty (pks, range, csv) ze příkazového řádku.
+        :raises CommandError: Pokud není zadán právě jeden z argumentů (pks, range, csv).
         """
         pks = options.get("pks")
         pk_range = options.get("range")

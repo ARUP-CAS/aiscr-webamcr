@@ -10,11 +10,11 @@ logger = logging.getLogger(__name__)
 @receiver(pre_save, sender=Historie, weak=False)
 def soubor_update_metadata(sender, instance: Historie, **kwargs):
     """
-    Provádí operaci soubor update metadata.
+    Před uložením záznamu Historie nastaví snímek organizace podle přiřazeného uživatele.
 
-    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``soubor_update_metadata``.
-    :param instance: Parametr ``instance`` pracuje se s atributy ``uzivatel``, ``organizace_snapshot``, ovlivňuje větvení podmínek.
-    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``soubor_update_metadata``.
+    :param sender: Třída modelu, která signál vyslala.
+    :param instance: Ukládaná instance záznamu Historie.
+    :param kwargs: Další parametry signálu.
     """
     logger.debug("historie.signals.soubor_update_metadata.start")
     if instance.uzivatel:

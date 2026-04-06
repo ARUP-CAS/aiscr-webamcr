@@ -18,8 +18,8 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``, pracuje se s atributy ``get``.
 
-      :return: Vrací proměnná ``context``.
-      :raises Http404: Vyvolá se s textem "Page not found"; nebo s textem "Model not found".
+          :return: Vrací proměnná ``context``.
+          :raises Http404: Vyvolá se s textem "Page not found"; nebo s textem "Model not found".
 
 
 .. py:class:: VypisOnlyView
@@ -39,8 +39,8 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``, pracuje se s atributy ``get``.
 
-      :return: Vrací proměnná ``context``.
-      :raises Http404: Vyvolá se s textem "Page not found".
+          :return: Vrací proměnná ``context``.
+          :raises Http404: Vyvolá se s textem "Page not found".
 
 
 Funkce

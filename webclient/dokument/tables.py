@@ -105,12 +105,11 @@ class Model3DTable(SearchTable):
 
     def render_nahled(self, value, record):
         """
-        Metoda pro správně zobrazení náhledu souboru.
+        Vykreslí HTML náhled modelu 3D.
 
-        :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
-        :param record: Parametr ``record`` předává se do volání ``len()``, ``reverse()``, pracuje se s atributy ``soubory``, ``ident_cely``, ovlivňuje větvení podmínek.
-
-            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
+        :param value: Hodnota sloupce (ignorováno).
+        :param record: Záznam s daty modelu 3D.
+        :return: HTML řetězec s náhledem nebo prázdný řetězec.
         """
         if len(record.soubory.soubory.all()) > 0:
             soubor = record.soubory.soubory.first()
@@ -257,12 +256,11 @@ class DokumentTable(SearchTable):
 
     def render_nahled(self, value, record):
         """
-        Metoda pro správně zobrazení náhledu souboru.
+        Vykreslí HTML náhled modelu 3D.
 
-        :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
-        :param record: Parametr ``record`` předává se do volání ``hasattr()``, ``len()``, pracuje se s atributy ``soubory``, ``ident_cely``, ovlivňuje větvení podmínek.
-
-            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
+        :param value: Hodnota sloupce (ignorováno).
+        :param record: Záznam s daty modelu 3D.
+        :return: HTML řetězec s náhledem nebo prázdný řetězec.
         """
         if hasattr(record.soubory, "first_soubor") and len(record.soubory.first_soubor) > 0:
             soubor = record.soubory.first_soubor[0]

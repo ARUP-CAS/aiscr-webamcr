@@ -95,7 +95,8 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     @property
     def pristupnost_pom(self):
-        """Provádí operaci pristupnost pom.
+        """
+        Provádí operaci pristupnost pom.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``first()``, výsledek volání ``get()``.
         """
@@ -116,7 +117,8 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     @property
     def pristupnost(self):
-        """Provádí operaci pristupnost.
+        """
+        Provádí operaci pristupnost.
 
         :return: Vrací atribut objektu.
         """
@@ -191,14 +193,16 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             return reverse("core:home")
 
     def get_permission_object(self):
-        """Vrací permission object.
+        """
+        Vrací permission object.
 
         :return: Vrací proměnná ``self``.
         """
         return self
 
     def get_create_user(self):
-        """Vrací create user.
+        """
+        Vrací create user.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``my_list``, n-tici.
         """
@@ -218,7 +222,8 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             return ()
 
     def get_create_org(self):
-        """Vrací create org.
+        """
+        Vrací create org.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``our_list``, n-tici.
         """

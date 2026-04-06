@@ -215,7 +215,8 @@ class PesNotificationsForm(forms.ModelForm):
         self.pes_object_count = pes_object_count
 
     def clean(self):
-        """Provádí operaci clean.
+        """
+        Provádí operaci clean.
 
         :return: Vrací proměnná ``cleaned_data``.
         """
@@ -231,7 +232,8 @@ class PesInlineFormSet(forms.BaseInlineFormSet):
     """Implementuje komponentu ``PesInlineFormSet`` v rámci aplikace."""
 
     def count_non_empty_forms(self):
-        """Provádí operaci count non empty forms.
+        """
+        Provádí operaci count non empty forms.
 
         :return: Vrací proměnná ``non_empty_count``.
         """

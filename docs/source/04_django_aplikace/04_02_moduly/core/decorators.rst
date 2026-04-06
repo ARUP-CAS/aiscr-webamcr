@@ -3,6 +3,11 @@ CORE decorators
 
 Modul decorators.
 
+Přehled modulu
+--------------
+
+Sdílené dekorátory pro řízení přístupu a režimu odstávky.
+
 Funkce
 ------
 
@@ -13,9 +18,9 @@ Funkce
    Na vstupe je list povolených uživatelských skupin.
    Jestli uživatel nemá jesnou z daných skupin jako hlavní tak funkce vráti exception PermissionError a nezobrazí formulár.
 
-   :param allowed_groups: Parametr ``allowed_groups`` slouží jako vstup pro logiku funkce ``allowed_user_groups``.
+   :param allowed_groups: Seznam nebo množina ID povolených hlavních rolí (skupin), jimž je přístup povolen.
 
-   :return: Vrací proměnná ``_method_wrapper``.
+       :return: Vrací proměnná ``_method_wrapper``.
 
 .. py:function:: odstavka_in_progress(view_func)
 
@@ -23,4 +28,4 @@ Funkce
 
    :param view_func: View funkce obalená dekorátorem nebo middlewarem.
 
-   :return: Vrací proměnná ``wrapper``.
+       :return: Vrací proměnná ``wrapper``.

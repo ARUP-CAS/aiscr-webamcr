@@ -3,6 +3,11 @@ PID client
 
 Modul client.
 
+Přehled modulu
+--------------
+
+Klient pro komunikaci s DataCite API při správě DOI/IGSN identifikátorů.
+
 Třídy
 ------
 
@@ -26,7 +31,7 @@ Třídy
       :param response: Textový nebo strukturální vstup `response` používaný při sestavení nebo zpracování obsahu.
       :return: Vrací výsledek ověření nebo validačního pravidla.
 
-      :raises DoiWriteError: Vyvolá se při splnění podmínky ``not str(response.status_code).startswith('2')``.
+          :raises DoiWriteError: Vyvolá se při splnění podmínky ``not str(response.status_code).startswith('2')``.
 
    .. py:method:: get_record_url()
 
@@ -40,8 +45,8 @@ Třídy
 
       :param check_status: Parametr ``check_status`` ovlivňuje větvení podmínek.
 
-      :return: Vrací výsledek volání ``startswith()``.
-      :raises DoiConnectionError: Vyvolá se při splnění podmínky ``str(response.status_code).startswith('5') and check_status``.
+          :return: Vrací výsledek volání ``startswith()``.
+          :raises DoiConnectionError: Vyvolá se při splnění podmínky ``str(response.status_code).startswith('5') and check_status``.
 
    .. py:method:: delete_record()
 
@@ -49,17 +54,17 @@ Třídy
 
       :param check_status: Parametr ``check_status`` předává se do volání ``check_record_exists()``, ovlivňuje větvení podmínek.
 
-      :return: Vrací výsledek volání ``json()``.
-      :raises DoiNoTransactionError: Vyvolá se při splnění podmínky ``not isinstance(self.record, Lokalita) and (not hasattr(self.record, 'active_transaction'))``.
+          :return: Vrací výsledek volání ``json()``.
+          :raises DoiNoTransactionError: Vyvolá se při splnění podmínky ``not isinstance(self.record, Lokalita) and (not hasattr(self.record, 'active_transaction'))``.
 
    .. py:method:: hide_record()
 
-      Provádí operaci hide record.
+      Skryje existující záznam v DataCite pomocí serializovaného payloadu pro skrytí.
 
-      :param check_status: Parametr ``check_status`` předává se do volání ``check_record_exists()``, ovlivňuje větvení podmínek.
+      :param check_status: Příznak, zda má být ověřena existence záznamu a zkontrolován stavový kód odpovědi.
 
-      :return: Vrací výsledek volání ``json()``.
-      :raises DoiNoTransactionError: Vyvolá se při splnění podmínky ``not isinstance(self.record, Lokalita) and (not hasattr(self.record, 'active_transaction'))``.
+          :return: Vrací výsledek volání ``json()``.
+          :raises DoiNoTransactionError: Vyvolá se při splnění podmínky ``not isinstance(self.record, Lokalita) and (not hasattr(self.record, 'active_transaction'))``.
 
    .. py:method:: publish_record()
 
@@ -67,8 +72,8 @@ Třídy
 
       :param check_status: Parametr ``check_status`` předává se do volání ``check_record_exists()``, ovlivňuje větvení podmínek.
 
-      :return: Vrací výsledek volání ``json()``.
-      :raises DoiNoTransactionError: Vyvolá se při splnění podmínky ``not isinstance(self.record, Lokalita) and (not hasattr(self.record, 'active_transaction'))``.
+          :return: Vrací výsledek volání ``json()``.
+          :raises DoiNoTransactionError: Vyvolá se při splnění podmínky ``not isinstance(self.record, Lokalita) and (not hasattr(self.record, 'active_transaction'))``.
 
    .. py:method:: update_record()
 
@@ -77,5 +82,5 @@ Třídy
       :param check_status: Parametr ``check_status`` předává se do volání ``check_record_exists()``, ovlivňuje větvení podmínek.
       :param reload_record: Parametr ``reload_record`` ovlivňuje větvení podmínek.
 
-      :return: Vrací výsledek volání ``json()``.
+          :return: Vrací výsledek volání ``json()``.
 

@@ -21,11 +21,11 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      :return: Vrací atribut objektu.
+          :return: Vrací atribut objektu.
 
    .. py:method:: get_absolute_url()
 
@@ -45,15 +45,15 @@ Třídy
 
    .. py:method:: set_permanent_identificator()
 
-      Nastaví permanent identificator.
+             Nastaví permanent identificator.
 
-      :param dokument: Parametr ``dokument`` předává se do volání ``get_dokument_rada()``, ``set_permanent_ident_cely()``, pracuje se s atributy ``ident_cely``, ``typ_dokumentu``.
-      :param request: Parametr ``request`` předává se do volání ``add_message()``.
-      :param messages: Parametr ``messages`` předává se do volání ``add_message()``, pracuje se s atributy ``add_message``, ``SUCCESS``.
-      :param fedora_transaction: Parametr ``fedora_transaction`` pracuje se s atributy ``rollback_transaction``.
+             :param dokument: Parametr ``dokument`` předává se do volání ``get_dokument_rada()``, ``set_permanent_ident_cely()``, pracuje se s atributy ``ident_cely``, ``typ_dokumentu``.
+             :param request: Parametr ``request`` předává se do volání ``add_message()``.
+             :param messages: Parametr ``messages`` předává se do volání ``add_message()``, pracuje se s atributy ``add_message``, ``SUCCESS``.
+             :param fedora_transaction: Parametr ``fedora_transaction`` pracuje se s atributy ``rollback_transaction``.
       Výsledek provedené změny nad cílovým objektem.
 
-      :return: Vrací hodnotu typu ``Optional[JsonResponse]`` (výsledek volání ``JsonResponse()``).
+          :return: Vrací hodnotu typu ``Optional[JsonResponse]`` (výsledek volání ``JsonResponse()``).
 
    .. py:method:: set_odeslany()
 
@@ -87,7 +87,7 @@ Třídy
 
       Dokument má aspoň jeden dokument.
 
-      :return: Vrací proměnná ``result``.
+          :return: Vrací proměnná ``result``.
 
    .. py:method:: check_pred_archivaci()
 
@@ -95,7 +95,7 @@ Třídy
 
       kontrola jako před odesláním
 
-      :return: Vrací proměnná ``result``.
+          :return: Vrací proměnná ``result``.
 
    .. py:method:: has_extra_data()
 
@@ -120,7 +120,7 @@ Třídy
       :param region: Parametr ``region`` se předává do volání ``get()``, ``create()``.
       :param rada: Parametr ``rada`` se předává do volání ``get()``, ``create()``, pracuje se s atributy ``zkratka``.
 
-      :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.
+          :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.
 
    .. py:method:: set_datum_zverejneni()
 
@@ -146,27 +146,27 @@ Třídy
 
    .. py:method:: thumbnail_image()
 
-      Provádí operaci thumbnail image.
+      Vrací ID prvního souboru jako náhled.
 
-      :return: Vrací atribut objektu.
+      :return: ID prvního souboru nebo None.
 
    .. py:method:: thumbnail_image_file()
 
-      Provádí operaci thumbnail image file.
+      Vrací první soubor jako náhled (seřazeny abecedně).
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: První seřazený soubor nebo None.
 
    .. py:method:: large_thumbnail()
 
-      Provádí operaci large thumbnail.
+      Vrací velký náhled prvního souboru.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, None.
+      :return: URL velkého náhledu nebo None.
 
    .. py:method:: small_thumbnail()
 
-      Provádí operaci small thumbnail.
+      Vrací malý náhled prvního souboru.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, None.
+      :return: URL malého náhledu nebo None.
 
    .. py:method:: set_snapshots()
 
@@ -174,9 +174,9 @@ Třídy
 
    .. py:method:: redis_snapshot_id()
 
-      Provádí operaci redis snapshot id.
+      Generuje klíč pro uložení snapshotu seznamu dokumentů v Redisu.
 
-      :return: Vrací hodnotu podle větve zpracování.
+      :return: Klíč Redis snapshot (3D nebo běžný dokument).
 
    .. py:method:: generate_redis_snapshot()
 
@@ -192,46 +192,43 @@ Třídy
 
    .. py:method:: doi_exists()
 
-      Provádí operaci doi exists.
+      Zjistí, zda existuje DOI záznam.
 
       :return: Vrací výsledek volání ``check_record_exists()``.
 
    .. py:method:: doi_delete()
 
-      Provádí operaci doi delete.
+      Odstraní DOI záznam z registru.
 
-      :param check_status: Parametr ``check_status`` předává se do volání ``delete_record()``, vstupuje do návratové hodnoty.
-
+      :param check_status: Zda ověřit status odpovědi serveru.
       :return: Vrací výsledek volání ``delete_record()``.
 
    .. py:method:: doi_hide()
 
-      Provádí operaci doi hide.
+      Skryje DOI záznam v registru bez odstranění.
 
-      :param check_status: Parametr ``check_status`` předává se do volání ``hide_record()``, vstupuje do návratové hodnoty.
-
+      :param check_status: Zda ověřit status odpovědi serveru.
       :return: Vrací výsledek volání ``hide_record()``.
 
    .. py:method:: doi_publish()
 
-      Provádí operaci doi publish.
+      Publikuje DOI záznam v registru.
 
-      :param check_status: Parametr ``check_status`` předává se do volání ``publish_record()``, vstupuje do návratové hodnoty.
-
+      :param check_status: Zda ověřit status odpovědi serveru.
       :return: Vrací výsledek volání ``publish_record()``.
 
    .. py:method:: doi_update()
 
-      Provádí operaci doi update.
+      Aktualizuje DOI metadata v registru.
 
-      :param check_status: Parametr ``check_status`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
-      :param reload_record: Parametr ``reload_record`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
+      :param check_status: Zda ověřit status odpovědi serveru.
+      :param reload_record: Zda znovu načíst data záznamu po aktualizaci.
 
-      :return: Vrací výsledek volání ``update_record()``.
+          :return: Vrací výsledek volání ``update_record()``.
 
    .. py:method:: doi_url()
 
-      Provádí operaci doi url.
+      Vrací URL adresu DOI záznamu.
 
       :return: Vrací výsledek volání ``get_record_url()``.
 
@@ -269,9 +266,9 @@ Třídy
 
    .. py:method:: initial_projekt()
 
-      Provádí operaci initial projekt.
+      Vrací projekt předaný při vytvoření součásti, pokud je dostupný.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Projekt instance nebo None.
 
    .. py:method:: create_transaction()
 
@@ -281,13 +278,13 @@ Třídy
       :param success_message: Parametr ``success_message`` předává se do volání ``FedoraTransaction()``.
       :param error_message: Parametr ``error_message`` předává se do volání ``FedoraTransaction()``.
 
-      :return: Vrací atribut objektu.
+          :return: Vrací atribut objektu.
 
    .. py:method:: dokument_doi()
 
-      Provádí operaci dokument doi.
+      Vrací DOI identifikátor nadřazeného dokumentu.
 
-      :return: Vrací atribut objektu.
+      :return: DOI řetězec nebo None.
 
 
 .. py:class:: DokumentExtraData
@@ -308,11 +305,11 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      :return: Vrací hodnotu podle větve zpracování.
+          :return: Vrací hodnotu podle větve zpracování.
 
 
 .. py:class:: DokumentOsoba
@@ -328,11 +325,11 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      :return: Vrací hodnotu podle větve zpracování.
+          :return: Vrací hodnotu podle větve zpracování.
 
 
 .. py:class:: Tvar
@@ -356,7 +353,7 @@ Třídy
       :param success_message: Parametr ``success_message`` předává se do volání ``FedoraTransaction()``.
       :param error_message: Parametr ``error_message`` předává se do volání ``FedoraTransaction()``.
 
-      :return: Vrací atribut objektu.
+          :return: Vrací atribut objektu.
 
 
 .. py:class:: DokumentSekvence
@@ -372,11 +369,11 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      :return: Vrací atribut objektu.
+          :return: Vrací atribut objektu.
 
    .. py:method:: save()
 
@@ -385,7 +382,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``save()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
 
-      :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'let')``.
+          :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'let')``.
 
    .. py:method:: get_absolute_url()
 
@@ -405,4 +402,4 @@ Funkce
    :param filename: Parametr ``filename`` se předává do volání ``splitext()``, vstupuje do návratové hodnoty.
    :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.
+       :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.

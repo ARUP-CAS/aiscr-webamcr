@@ -25,7 +25,7 @@ Třídy
 
       :param anonymized: Číselná hodnota ``anonymized`` použitá při výpočtu nebo transformaci.
 
-      :return: Vrací hodnotu podle větve zpracování.
+          :return: Vrací hodnotu podle větve zpracování.
 
    .. py:method:: save_record_deletion_record()
 
@@ -48,11 +48,11 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      :return: Vrací výsledek volání ``format()``.
+          :return: Vrací výsledek volání ``format()``.
 
    .. py:method:: get_last_transaction_date()
 

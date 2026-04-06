@@ -581,7 +581,8 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         return super().render_change_form(request, context, **kwargs)
 
     def get_urls(self):
-        """Vrací urls. v aplikaci.
+        """
+        Vrací urls. v aplikaci.
 
         :return: Vrací hodnotu podle větve zpracování.
         """

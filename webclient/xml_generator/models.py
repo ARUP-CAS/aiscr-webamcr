@@ -74,7 +74,8 @@ class BaseAmcrModel(models.Model):
 
     @property
     def get_ident_cely_link(self):
-        """Vrací ident cely link.
+        """
+        Vrací ident cely link.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -124,7 +125,8 @@ class ModelWithMetadata(BaseAmcrModel):
 
     @property
     def metadata(self):
-        """Provádí operaci metadata.
+        """
+        Provádí operaci metadata.
 
         :return: Vrací výsledek volání ``get_metadata()``.
         """
@@ -147,7 +149,8 @@ class ModelWithMetadata(BaseAmcrModel):
         return connector.get_metadata_historicka(timestamp)
 
     def get_historicke_verze(self):
-        """Metoda k získání údajů o historických verzích metadat ve Fedoře pro tabulku historie
+        """
+        Metoda k získání údajů o historických verzích metadat ve Fedoře pro tabulku historie
 
         :return: Vrací proměnná ``results``.
         """

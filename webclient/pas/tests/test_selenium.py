@@ -19,11 +19,14 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
     """Implementuje komponentu ``AkceSamostatneNalezy`` v rámci aplikace."""
 
     def go_to_form(self):
-        """Provádí operaci go to form."""
+        """
+        Přejde na formulář pro vytvoření nálezů.
+        """
         self.goToAddress("/pas/zapsat")
 
     def create_PAS(self):
-        """Vytvoří PAS. v aplikaci.
+        """
+        Vytvoří PAS. v aplikaci.
 
         :return: Vrací vybranou hodnotu z kolekce.
         """

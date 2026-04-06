@@ -7,7 +7,7 @@ class ProjektConfig(AppConfig):
     name = "projekt"
 
     def ready(self):
-        """Provádí operaci ready."""
+        """Zaregistruje signály aplikace projekt po spuštění Django."""
         super(ProjektConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import projekt.signals

@@ -24,7 +24,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací proměnná ``context``.
+          :return: Vrací proměnná ``context``.
 
    .. py:method:: get_success_url()
 
@@ -40,21 +40,21 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``post()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``post()``.
 
-      :return: Vrací výsledek volání ``JsonResponse()``.
+          :return: Vrací výsledek volání ``JsonResponse()``.
 
    .. py:method:: form_valid()
 
-      Provádí operaci form valid.
+      Zpracuje platný formulář editace neidentifikované akce a zobrazí zprávu o úspěchu.
 
-      :param form: Parametr ``form`` se předává do volání ``form_valid()``, vstupuje do návratové hodnoty.
+      :param form: Validovaný formulář editace.
 
-      :return: Vrací výsledek volání ``form_valid()``.
+          :return: Vrací výsledek volání ``form_valid()``.
 
    .. py:method:: form_invalid()
 
-      Provádí operaci form invalid.
+      Zpracuje neplatný formulář editace neidentifikované akce a zobrazí chybovou zprávu.
 
-      :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
+      :param form: Nevalidní formulář s chybami.
 
-      :return: Vrací výsledek volání ``form_invalid()``.
+          :return: Vrací výsledek volání ``form_invalid()``.
 

@@ -8,16 +8,16 @@ Funkce
 
 .. py:function:: komponenta_save(sender, instance)
 
-   Provádí operaci komponenta save.
+   Aktualizuje metadata nadřazeného záznamu (dokumentu nebo arch. záznamu) po uložení komponenty.
 
-   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``komponenta_save``.
-   :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``pk``, ``suppress_signal``, ovlivňuje větvení podmínek.
-   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``komponenta_save``.
+   :param sender: Třída modelu, která signál vyslala.
+   :param instance: Ukládaná instance komponenty.
+   :param kwargs: Další parametry signálu.
 
 .. py:function:: komponenta_delete(sender, instance)
 
-   Provádí operaci komponenta delete.
+   Aktualizuje metadata nadřazeného záznamu (dokumentu nebo arch. záznamu) po smazání komponenty.
 
-   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``komponenta_delete``.
-   :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``pk``, ``suppress_signal``, ovlivňuje větvení podmínek.
-   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``komponenta_delete``.
+   :param sender: Třída modelu, která signál vyslala.
+   :param instance: Smazaná instance komponenty.
+   :param kwargs: Další parametry signálu.

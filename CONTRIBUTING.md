@@ -204,15 +204,16 @@ Některé soubory jsou modifikovány automaticky skripty nebo hooky:
 
 | Skript | Co generuje |
 | --- | --- |
-| `docs/generate_module_docs.py` | Sphinx dokumentace modulů |
+| `docs/generate_module_docs.py` | Sphinx dokumentaci modulů, `docs/source/12_zavislosti/docker_images.rst` (tagy z `docker-compose*.yml` / `Dockerfile-DB` a metadata v `docs/docker_images_meta.yaml`) a další generované RST bloky |
 | `docs/generate_selenium_test_docs.py` | Dokumentaci Selenium testů |
-| `docs/licenses/convert_to_rst.py` | `docs/source/12_zavislosti/python_knihovny.rst` |
+| `docs/licenses/convert_to_rst.py` | `docs/source/12_zavislosti/python_knihovny.rst` z `pip-licenses`; navíc obnoví `docker_images.rst` voláním `generate_module_docs.py --docker-images-only` |
 
 Pravidla:
 
 1. Ručně neupravujte auto-generované bloky.
 2. Po změně Selenium testů spusťte generátor dokumentace.
-3. Po změně závislostí zkontrolujte generování seznamu knihoven.
+3. Po změně závislostí zkontrolujte generování seznamu knihoven. Po změně tagů Docker image v compose nebo v `Dockerfile-DB` spusťte `docs/generate_module_docs.py` (nebo `docs/licenses/convert_to_rst.py`), aby zůstal v souladu soubor `docs/source/12_zavislosti/docker_images.rst`.
+4. Tabulka Node.js knihoven (`docs/source/12_zavislosti/javascript_knihovny.rst`): sloupec Odkaz se bere z `node_modules/`; chybí-li (např. jen Python pre-commit v CI), zůstane odkaz z posledního uloženého generovaného bloku, jinak se doplní URL na npmjs.com. Pro odkazy z `homepage` / `repository` v `package.json` spusťte `npm ci` a znovu `docs/generate_module_docs.py`.
 
 ---
 

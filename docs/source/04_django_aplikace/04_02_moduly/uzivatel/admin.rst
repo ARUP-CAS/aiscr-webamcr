@@ -46,7 +46,7 @@ Třídy
 
       :param request: Parametr ``request`` předává se do volání ``get_queryset()``.
 
-      :return: Vrací proměnná ``queryset``.
+          :return: Vrací proměnná ``queryset``.
 
    .. py:method:: get_extra()
 
@@ -56,7 +56,7 @@ Třídy
       :param obj: Parametr ``obj`` ovlivňuje větvení podmínek.
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_extra``.
 
-      :return: Vrací proměnná ``extra``.
+          :return: Vrací proměnná ``extra``.
 
    .. py:method:: __init__()
 
@@ -78,7 +78,7 @@ Třídy
 
       :param request: Parametr ``request`` předává se do volání ``get_queryset()``.
 
-      :return: Vrací proměnná ``queryset``.
+          :return: Vrací proměnná ``queryset``.
 
 
 .. py:class:: PesKrajNotificationTypeInline
@@ -136,7 +136,7 @@ Třídy
 
       :param request: Parametr ``request`` předává se do volání ``get_queryset()``.
 
-      :return: Vrací proměnná ``queryset``.
+          :return: Vrací proměnná ``queryset``.
 
    .. py:method:: get_extra()
 
@@ -146,7 +146,7 @@ Třídy
       :param obj: Parametr ``obj`` ovlivňuje větvení podmínek.
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_extra``.
 
-      :return: Vrací proměnná ``extra``.
+          :return: Vrací proměnná ``extra``.
 
 
 .. py:class:: CustomUserAdmin
@@ -162,7 +162,7 @@ Třídy
       :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
       :param obj: Parametr ``obj`` předává se do volání ``filter()``, ovlivňuje větvení podmínek.
 
-      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
    .. py:method:: save_model()
 
@@ -181,7 +181,7 @@ Třídy
       :param id: Identifikátor zpracovávaného záznamu.
       :param form_url: Parametr ``form_url`` se předává do volání ``user_change_password()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``user_change_password()``.
+          :return: Vrací výsledek volání ``user_change_password()``.
 
    .. py:method:: get_readonly_fields()
 
@@ -190,7 +190,7 @@ Třídy
       :param request: Parametr ``request`` předává se do volání ``get_readonly_fields()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
       :param obj: Parametr ``obj`` předává se do volání ``get_readonly_fields()``, pracuje se s atributy ``ident_cely``, ovlivňuje větvení podmínek.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``fields``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``fields``.
 
    .. py:method:: render_change_form()
 
@@ -200,7 +200,7 @@ Třídy
       :param context: Parametr ``context`` se předává do volání ``render_change_form()``, pracuje se s atributy ``update``, vstupuje do návratové hodnoty.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``render_change_form()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``render_change_form()``.
+          :return: Vrací výsledek volání ``render_change_form()``.
 
    .. py:method:: get_urls()
 
@@ -214,7 +214,7 @@ Třídy
 
       :param object_id: Identifikátor objektu ``object``.
 
-      :return: Vrací n-tici.
+          :return: Vrací n-tici.
 
    .. py:method:: delete_history_records()
 
@@ -225,7 +225,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``delete_history_records``.
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_history_records``.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``TemplateResponse()``, výsledek volání ``HttpResponseRedirect()``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``TemplateResponse()``, výsledek volání ``HttpResponseRedirect()``.
 
    .. py:method:: delete_model()
 
@@ -248,7 +248,7 @@ Třídy
       :param request: Parametr ``request`` předává se do volání ``has_delete_permission()``, vstupuje do návratové hodnoty.
       :param obj: Parametr ``obj`` předává se do volání ``filter()``, pracuje se s atributy ``pk``, ovlivňuje větvení podmínek.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_delete_permission()``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_delete_permission()``.
 
 
 .. py:class:: NotificationsLogAdmin
@@ -307,5 +307,5 @@ Třídy
       :param request: Parametr ``request`` předává se do volání ``TestEmailForm()``, ``success()``, pracuje se s atributy ``user``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :return: Odpověď s formulářem a výsledkem odeslání.
 
-      :raises PermissionDenied: Vyvolá se při splnění podmínky ``not request.user.has_perm('uzivatel.send_test_email')``.
+          :raises PermissionDenied: Vyvolá se při splnění podmínky ``not request.user.has_perm('uzivatel.send_test_email')``.
 

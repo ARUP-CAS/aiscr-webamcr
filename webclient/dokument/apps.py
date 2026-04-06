@@ -7,7 +7,9 @@ class DokumentConfig(AppConfig):
     name = "dokument"
 
     def ready(self):
-        """Provádí operaci ready."""
+        """
+        Inicializuje aplikaci a zaregistruje signály ze modulu dokument.
+        """
         super(DokumentConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import dokument.signals

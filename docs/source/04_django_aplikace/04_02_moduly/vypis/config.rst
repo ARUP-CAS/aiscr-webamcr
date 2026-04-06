@@ -12,4 +12,4 @@ Funkce
 
    :param name: Parametr ``name`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
 
-   :return: Vrací výsledek volání ``get()``.
+       :return: Vrací výsledek volání ``get()``.

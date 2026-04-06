@@ -14,7 +14,7 @@ Třídy
 
    .. py:method:: clean_orcid()
 
-      Provádí operaci clean orcid.
+      Doplní k zadanému ORCID identifikátoru prefix URL ``https://orcid.org/`` a vrátí jej, nebo ``None`` pro prázdný vstup.
 
       :return: Vrací hodnotu podle větve zpracování.
 
@@ -27,7 +27,7 @@ Třídy
 
    .. py:method:: clean_wikidata()
 
-      Provádí operaci clean wikidata.
+      Doplní k zadanému identifikátoru Wikidata prefix URL ``https://www.wikidata.org/entity/`` a vrátí jej, nebo ``None`` pro prázdný vstup.
 
       :return: Vrací hodnotu podle větve zpracování.
 

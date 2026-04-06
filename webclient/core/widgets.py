@@ -22,11 +22,10 @@ class ForeignKeyReadOnlyTextInput(forms.TextInput):
 
     def format_value(self, value):
         """
-        Provádí operaci format value.
+        Formátuje hodnotu cizího klíče pro čtení jako textový popis.
 
-        :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``format_value``.
-
-            :return: Vrací výsledek volání ``str()``.
+        :param value: Primární klíč objektu k zobrazení.
+        :return: Textový popis objektu.
         """
         return str(self.value)
 

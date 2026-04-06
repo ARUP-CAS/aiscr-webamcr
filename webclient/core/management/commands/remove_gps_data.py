@@ -45,9 +45,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """
-        Provádí operaci add arguments.
+        Registruje povinný argument pro CSV soubor se seznamem souborů.
 
-        :param parser: Parametr ``parser`` pracuje se s atributy ``add_argument``.
+        :param parser: Argumentový parser pro přidání nových parametrů příkazu.
         """
         parser.add_argument(
             "csv_file",
@@ -57,10 +57,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """
-        Zpracuje hodnotu. v aplikaci.
+        Odstraní GPS metadata (EXIF data) z obrázků uvedených v CSV souboru.
 
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
-        :param options: Parametr ``options`` slouží jako vstup pro logiku funkce ``handle``.
+        :param args: Poziční argumenty příkazu (nepoužívá se).
+        :param options: Pojmenované argumenty (csv_file) ze příkazového řádku.
         """
         csv_file = options["csv_file"]
 

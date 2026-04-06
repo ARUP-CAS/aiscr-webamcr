@@ -6,7 +6,7 @@
 {% block title %}{% trans "core.templates.upload_file.title" %}{% endblock %}
 
 {% block head %}
-  <link rel="stylesheet" type="text/css" href="{% static 'css/dropzone.min.css' %}"/>
+  <link rel="stylesheet" type="text/css" href="{% static 'dropzone/dist/min/dropzone.min.css' %}"/>
 {% endblock %}
 
 {% block content %}
@@ -37,7 +37,7 @@
 {% endblock %}
 
 {% block script %}
-  <script src="{% static 'js/dropzone.min.js' %}"></script>
+  <script src="{% static 'dropzone/dist/min/dropzone.min.js' %}"></script>
     <script>
       let maxFiles;
       let file_id;

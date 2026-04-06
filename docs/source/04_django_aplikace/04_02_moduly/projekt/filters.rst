@@ -35,7 +35,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filtr_katastr``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``distinct()``, proměnná ``queryset``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``distinct()``, proměnná ``queryset``.
 
    .. py:method:: filtr_katastr_kraj()
 
@@ -45,7 +45,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filtr_katastr_kraj``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``distinct()``.
+          :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: filtr_katastr_okres()
 
@@ -55,7 +55,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filtr_katastr_okres``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``distinct()``.
+          :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: filter_popisne_udaje()
 
@@ -65,7 +65,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``distinct()``.
+          :return: Vrací výsledek volání ``distinct()``.
 
 
 .. py:class:: ProjektFilter
@@ -80,7 +80,7 @@ Třídy
 
       :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
 
-      :return: Vrací proměnná ``queryset``.
+          :return: Vrací proměnná ``queryset``.
 
    .. py:method:: filter_planovane_zahajeni()
 
@@ -90,7 +90,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_planovane_zahajeni``.
       :param value: Parametr ``value`` předává se do volání ``DateRange()``, pracuje se s atributy ``start``, ``stop``, ovlivňuje větvení podmínek.
 
-      :return: Vrací výsledek volání ``filter()``.
+          :return: Vrací výsledek volání ``filter()``.
 
    .. py:method:: filter_popisne_udaje_akce()
 
@@ -100,7 +100,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje_akce``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``distinct()``.
+          :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: filter_has_positive_find()
 
@@ -110,7 +110,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_has_positive_find``.
       :param value: Parametr ``value`` ovlivňuje větvení podmínek.
 
-      :return: Vrací výsledek volání ``distinct()``.
+          :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: filter_by_oblast()
 
@@ -120,7 +120,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_by_oblast``.
       :param value: Parametr ``value`` ovlivňuje větvení podmínek.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``queryset``, výsledek volání ``filter()``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``queryset``, výsledek volání ``filter()``.
 
    .. py:method:: filter_announced_after()
 
@@ -130,7 +130,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_announced_after``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``filter()``.
+          :return: Vrací výsledek volání ``filter()``.
 
    .. py:method:: filter_announced_before()
 
@@ -140,7 +140,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_announced_before``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``filter()``.
+          :return: Vrací výsledek volání ``filter()``.
 
    .. py:method:: filter_approved_after()
 
@@ -150,7 +150,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_approved_after``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``filter()``.
+          :return: Vrací výsledek volání ``filter()``.
 
    .. py:method:: filter_approved_before()
 
@@ -160,7 +160,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_approved_before``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``filter()``.
+          :return: Vrací výsledek volání ``filter()``.
 
    .. py:method:: filter_akce_typ()
 
@@ -170,7 +170,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_akce_typ``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``distinct()``.
+          :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: filtr_akce_katastr()
 
@@ -180,7 +180,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filtr_akce_katastr``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``distinct()``, proměnná ``queryset``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``distinct()``, proměnná ``queryset``.
 
    .. py:method:: filtr_akce_katastr_kraj()
 
@@ -190,7 +190,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filtr_akce_katastr_kraj``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``distinct()``.
+          :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: filtr_akce_katastr_okres()
 
@@ -200,7 +200,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filtr_akce_katastr_okres``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``distinct()``.
+          :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: filtr_akce_vedouci()
 
@@ -210,7 +210,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filtr_akce_vedouci``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``queryset``, výsledek volání ``distinct()``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``queryset``, výsledek volání ``distinct()``.
 
    .. py:method:: filtr_akce_organizace()
 
@@ -220,7 +220,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filtr_akce_organizace``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``distinct()``, proměnná ``queryset``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``distinct()``, proměnná ``queryset``.
 
    .. py:method:: filtr_dokumenty_ident()
 
@@ -230,7 +230,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filtr_dokumenty_ident``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací výsledek volání ``distinct()``.
+          :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: __init__()
 

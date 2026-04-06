@@ -14,7 +14,7 @@ Funkce
    :param typ_vazby: Typ vazby, který určuje návratovou URL po uložení.
    :param ident_cely: Identifikátor upravované komponenty.
 
-   :return: Vrací proměnná ``response``.
+       :return: Vrací proměnná ``response``.
 
 .. py:function:: zapsat(request, typ_vazby, dj_ident_cely)
 
@@ -24,7 +24,7 @@ Funkce
    :param typ_vazby: Typ vazby určující, zda jde o dokument nebo dokumentační jednotku.
    :param dj_ident_cely: Identifikátor cílové dokumentační jednotky nebo části dokumentu.
 
-   :return: Vrací proměnná ``response``.
+       :return: Vrací proměnná ``response``.
 
 .. py:function:: smazat(request, typ_vazby, ident_cely)
 
@@ -34,4 +34,4 @@ Funkce
    :param typ_vazby: Typ vazby předaný URL konfigurací.
    :param ident_cely: Identifikátor mazané komponenty.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.

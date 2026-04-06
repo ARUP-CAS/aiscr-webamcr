@@ -143,7 +143,7 @@ class AkceTable(SearchTable):
 
     def order_vedouci_organizace(self, queryset, is_descending):
         """
-        Provádí operaci order vedouci organizace.
+        Seřadí queryset podle zkráceného názvu organizace vedoucího akce.
 
         :param queryset: Parametr ``queryset`` pracuje se s atributy ``annotate``, vstupuje do návratové hodnoty.
         :param is_descending: Parametr ``is_descending`` předává se do volání ``order_by()``.
@@ -230,7 +230,8 @@ class AkceTable(SearchTable):
         super(AkceTable, self).__init__(*args, **kwargs)
 
     def get_all_idents(self):
-        """Vrátí seznam identifikátorů archeologických záznamů pro akci.
+        """
+        Vrátí seznam identifikátorů archeologických záznamů pro akci.
 
         :return: Vrací výsledek volání ``join()``.
         """

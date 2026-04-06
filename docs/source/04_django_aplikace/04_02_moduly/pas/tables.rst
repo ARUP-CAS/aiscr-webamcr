@@ -19,7 +19,7 @@ Třídy
       :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
       :param record: Parametr ``record`` předává se do volání ``reverse()``, pracuje se s atributy ``nahled_soubor``, ``ident_cely``.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
 
    .. py:method:: __init__()
 
@@ -45,7 +45,7 @@ Třídy
       :param bound_column: Parametr ``bound_column`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``render()``, výsledek volání ``format_html()``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``render()``, výsledek volání ``format_html()``.
 
 
 .. py:class:: smazatColumn
@@ -64,7 +64,7 @@ Třídy
       :param bound_column: Parametr ``bound_column`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``render()``, výsledek volání ``format_html()``.
+          :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``render()``, výsledek volání ``format_html()``.
 
 
 .. py:class:: UzivatelSpolupraceTable

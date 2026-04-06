@@ -7,7 +7,7 @@ class NalezConfig(AppConfig):
     name = "nalez"
 
     def ready(self):
-        """Provádí operaci ready."""
+        """Načte signály aplikace nalez po spuštění Django."""
         super(NalezConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import nalez.signals
