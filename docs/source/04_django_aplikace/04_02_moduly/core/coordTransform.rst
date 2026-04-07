@@ -20,8 +20,8 @@ Funkce
    :param latitude: Zeměpisná šířka ve stupních (WGS-84).
    :param height: Výška nad elipsoidem v metrech (výchozí 0).
 
-       :return: Vrací seznam.
-       :raises Exception: Vyvolá se při splnění podmínky ``latitude < 40 or latitude > 60 or longitude < 5 or (longitude > 25)``.
+   :return: Vrací seznam.
+   :raises Exception: Vyvolá se při splnění podmínky ``latitude < 40 or latitude > 60 or longitude < 5 or (longitude > 25)``.
 
 .. py:function:: convertToWGS84(minusY, minusX, height)
 
@@ -31,8 +31,8 @@ Funkce
    :param minusX: Souřadnice X v S-JTSK (záporná hodnota; typicky v rozmezí -1230000 až -930000 m).
    :param height: Výška nad elipsoidem v metrech (výchozí 0).
 
-       :return: Vrací seznam.
-       :raises Exception: Vyvolá se při splnění podmínky ``minusY < -905000 or minusY > -400000 or minusX < -1230000 or (minusX > -930000)``.
+   :return: Vrací seznam.
+   :raises Exception: Vyvolá se při splnění podmínky ``minusY < -905000 or minusY > -400000 or minusX < -1230000 or (minusX > -930000)``.
 
 .. py:function:: wgs84_to_bessel(latitude, longitude, altitude)
 
@@ -42,7 +42,7 @@ Funkce
    :param longitude: Zeměpisná délka ve stupních (WGS-84).
    :param altitude: Výška nad elipsoidem WGS-84 v metrech (výchozí 0.0).
 
-       :return: Vrací seznam.
+   :return: Vrací seznam.
 
 .. py:function:: bessel_to_wgs84(latitude, longitude, altitude)
 
@@ -52,7 +52,7 @@ Funkce
    :param longitude: Zeměpisná délka ve stupních (Besselův elipsoid).
    :param altitude: Výška nad Besselovým elipsoidem v metrech (výchozí 0.0).
 
-       :return: Vrací seznam.
+   :return: Vrací seznam.
 
 .. py:function:: bessel_to_jtsk(B, L)
 
@@ -61,7 +61,7 @@ Funkce
    :param B: Zeměpisná šířka ve stupních na Besselově elipsoidu.
    :param L: Zeměpisná délka ve stupních na Besselově elipsoidu.
 
-       :return: Vrací seznam.
+   :return: Vrací seznam.
 
 .. py:function:: jtsk_to_bessel(X05, Y05)
 
@@ -70,7 +70,7 @@ Funkce
    :param X05: Souřadnice X v S-JTSK05 (vč. offsetu 5 000 000 m).
    :param Y05: Souřadnice Y v S-JTSK05 (vč. offsetu 5 000 000 m).
 
-       :return: Vrací seznam.
+   :return: Vrací seznam.
 
 .. py:function:: blht_to_geo_coords_wgs(b, l, h)
 
@@ -80,7 +80,7 @@ Funkce
    :param l: Zeměpisná délka v radiánech (WGS-84).
    :param h: Výška nad elipsoidem v metrech.
 
-       :return: Vrací seznam.
+   :return: Vrací seznam.
 
 .. py:function:: blht_to_geo_coords_bessel(b, l, h)
 
@@ -90,7 +90,7 @@ Funkce
    :param l: Zeměpisná délka v radiánech (Besselův elipsoid).
    :param h: Výška nad elipsoidem v metrech.
 
-       :return: Vrací seznam.
+   :return: Vrací seznam.
 
 .. py:function:: geo_coords_to_blh_bessel(X, Y, Z)
 
@@ -100,7 +100,7 @@ Funkce
    :param Y: Kartézská souřadnice Y v metrech.
    :param Z: Kartézská souřadnice Z v metrech.
 
-       :return: Vrací seznam.
+   :return: Vrací seznam.
 
 .. py:function:: geo_coords_to_blh_wgs(X, Y, Z)
 
@@ -110,7 +110,7 @@ Funkce
    :param Y: Kartézská souřadnice Y v metrech.
    :param Z: Kartézská souřadnice Z v metrech.
 
-       :return: Vrací seznam.
+   :return: Vrací seznam.
 
 .. py:function:: ETRF2JTSK05transform_coords(xs, ys, zs)
 
@@ -120,7 +120,7 @@ Funkce
    :param ys: Kartézská souřadnice Y ve vstupním systému ETRF89 v metrech.
    :param zs: Kartézská souřadnice Z ve vstupním systému ETRF89 v metrech.
 
-       :return: Vrací seznam.
+   :return: Vrací seznam.
 
 .. py:function:: JTSK052ETRFtransform_coords(xs, ys, zs)
 
@@ -130,7 +130,7 @@ Funkce
    :param ys: Kartézská souřadnice Y ve vstupním systému S-JTSK05 v metrech.
    :param zs: Kartézská souřadnice Z ve vstupním systému S-JTSK05 v metrech.
 
-       :return: Vrací seznam.
+   :return: Vrací seznam.
 
 .. py:function:: WGS2ETRFtransform_coords(xs, ys, zs)
 
@@ -140,7 +140,7 @@ Funkce
    :param ys: Kartézská souřadnice Y ve vstupním systému WGS-84 v metrech.
    :param zs: Kartézská souřadnice Z ve vstupním systému WGS-84 v metrech.
 
-       :return: Vrací seznam.
+   :return: Vrací seznam.
 
 .. py:function:: ETRF2WGStransform_coords(xs, ys, zs)
 
@@ -150,7 +150,7 @@ Funkce
    :param ys: Kartézská souřadnice Y ve vstupním systému ETRF89 v metrech.
    :param zs: Kartézská souřadnice Z ve vstupním systému ETRF89 v metrech.
 
-       :return: Vrací seznam.
+   :return: Vrací seznam.
 
 .. py:function:: jtsk05_to_jtsk(x05, y05)
 
@@ -159,7 +159,7 @@ Funkce
    :param x05: Souřadnice X v S-JTSK05 (vč. offsetu 5 000 000 m).
    :param y05: Souřadnice Y v S-JTSK05 (vč. offsetu 5 000 000 m).
 
-       :return: Vrací seznam.
+   :return: Vrací seznam.
 
 .. py:function:: jtsk_to_jtsk05(X, Y)
 
@@ -168,7 +168,7 @@ Funkce
    :param X: Souřadnice X v S-JTSK v metrech (bez offsetu).
    :param Y: Souřadnice Y v S-JTSK v metrech (bez offsetu).
 
-       :return: Vrací seznam.
+   :return: Vrací seznam.
 
 .. py:function:: get_multi_transform_to_sjtsk(wgs_points)
 
@@ -176,7 +176,7 @@ Funkce
 
    :param wgs_points: Seznam dvojic [zeměpisná délka, zeměpisná šířka] ve WGS-84 určených k hromadné transformaci.
 
-       :return: Vrací proměnná ``my``.
+   :return: Vrací proměnná ``my``.
 
 .. py:function:: get_multi_transform_to_wgs84(jtsk_points)
 
@@ -184,7 +184,7 @@ Funkce
 
    :param jtsk_points: Seznam dvojic [souřadnice Y, souřadnice X] v S-JTSK určených k hromadné transformaci.
 
-       :return: Vrací proměnná ``my``.
+   :return: Vrací proměnná ``my``.
 
 .. py:function:: contains_two_floats(text)
 
@@ -192,7 +192,7 @@ Funkce
 
    :param text: Textový řetězec, jehož formát se ověřuje.
 
-       :return: Vrací výsledek volání ``bool()``.
+   :return: Vrací výsledek volání ``bool()``.
 
 .. py:function:: transform_geom(geom, transFunc)
 
@@ -201,7 +201,7 @@ Funkce
    :param geom: Parametr ``geom`` předává se do volání ``isinstance()``, pracuje se s atributy ``find``, ``replace``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param transFunc: Funkce přijímající dvojici souřadnic (float, float) a vracející transformovanou dvojici.
 
-       :return: Vrací n-tici.
+   :return: Vrací n-tici.
 
 .. py:function:: transform_geom_to_sjtsk(geom)
 
@@ -209,7 +209,7 @@ Funkce
 
    :param geom: Parametr ``geom`` předává se do volání ``transform_geom()``, vstupuje do návratové hodnoty.
 
-       :return: Vrací výsledek volání ``transform_geom()``.
+   :return: Vrací výsledek volání ``transform_geom()``.
 
 .. py:function:: transform_geom_to_wgs84(geom)
 
@@ -217,4 +217,4 @@ Funkce
 
    :param geom: Parametr ``geom`` předává se do volání ``transform_geom()``, vstupuje do návratové hodnoty.
 
-       :return: Vrací výsledek volání ``transform_geom()``.
+   :return: Vrací výsledek volání ``transform_geom()``.

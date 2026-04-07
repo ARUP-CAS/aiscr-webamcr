@@ -30,7 +30,7 @@ Funkce
    :param instance: Parametr ``instance`` předává se do volání ``filter()``, ``check_container_deleted_or_not_exists()``, pracuje se s atributy ``id``, ``old``, ovlivňuje větvení podmínek.
    :param kwargs: Parametr ``kwargs`` se předává do volání ``len()``, ovlivňuje větvení podmínek.
 
-       :raises ValidationError: Vyvolá se při splnění podmínky ``not FedoraRepositoryConnector.check_container_deleted_or_not_exists(instance.ident_cely, 'uzivatel')``.
+   :raises ValidationError: Vyvolá se při splnění podmínky ``not FedoraRepositoryConnector.check_container_deleted_or_not_exists(instance.ident_cely, 'uzivatel')``.
 
 .. py:function:: user_post_save_method(sender, instance, created)
 

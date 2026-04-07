@@ -24,7 +24,7 @@ Třídy
 
       Textová reprezentace objektu.
 
-          :return: Vrací výsledek volání ``str()``.
+      :return: Vrací výsledek volání ``str()``.
 
    .. py:method:: get_create_user()
 

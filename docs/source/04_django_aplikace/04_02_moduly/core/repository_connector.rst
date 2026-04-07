@@ -55,7 +55,7 @@ Třídy
 
       :param url: Parametr ``url`` se předává do volání ``join()``, pracuje se s atributy ``split``, vstupuje do návratové hodnoty.
 
-          :return: Vrací výsledek volání ``join()``.
+      :return: Vrací výsledek volání ``join()``.
 
    .. py:method:: url_without_domain()
 
@@ -134,7 +134,7 @@ Třídy
       :param url: Parametr ``url`` se předává do volání ``_send_request()``.
       :return: Načtená data odpovídající zadaným vstupům.
 
-          :param only_uri: Parametr ``only_uri`` ovlivňuje větvení podmínek.
+      :param only_uri: Parametr ``only_uri`` ovlivňuje větvení podmínek.
 
    .. py:method:: _update_creator()
 
@@ -166,7 +166,7 @@ Třídy
 
       :param ident_cely: Parametr ``ident_cely`` se předává do volání ``_send_request()``.
 
-          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
    .. py:method:: check_container_deleted_or_not_exists()
 
@@ -175,7 +175,7 @@ Třídy
       :param ident_cely: Parametr ``ident_cely`` se předává do volání ``debug()``, ``send_request()``.
       :param model_name: Název modelu používaný pro cílení operace.
 
-          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
    .. py:method:: _get_auth()
 
@@ -194,8 +194,8 @@ Třídy
       :param data: Kolekce ``data`` zpracovávaná touto funkcí.
       :return: Textová reprezentace UID transakce.
 
-          :raises FedoraUpdatedByAnotherTransactionError: Vyvolá se při splnění podmínky ``response.status_code == 409``.
-          :raises FedoraError: Vyvolá se při splnění podmínky ``response.status_code == 409``.
+      :raises FedoraUpdatedByAnotherTransactionError: Vyvolá se při splnění podmínky ``response.status_code == 409``.
+      :raises FedoraError: Vyvolá se při splnění podmínky ``response.status_code == 409``.
 
    .. py:method:: _create_container()
 
@@ -264,7 +264,7 @@ Třídy
 
       :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
 
-          :return: Vrací atribut objektu.
+      :return: Vrací atribut objektu.
 
    .. py:method:: parse_historie()
 
@@ -272,7 +272,7 @@ Třídy
 
       :param response_text: Číselná hodnota ``response_text`` použitá při výpočtu nebo transformaci.
 
-          :return: Vrací proměnná ``result`` - list dictů: {"datetime": datetime, "timestamp": str}
+      :return: Vrací proměnná ``result`` - list dictů: {"datetime": datetime, "timestamp": str}
 
    .. py:method:: get_historie_metadat()
 
@@ -286,7 +286,7 @@ Třídy
 
       :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
 
-          :return: Vrací proměnná ``result``.
+      :return: Vrací proměnná ``result``.
 
    .. py:method:: save_metadata()
 
@@ -294,7 +294,7 @@ Třídy
 
       :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
 
-          :raises FedoraNoResponseError: Vyvolá se při splnění podmínky ``result is None``.
+      :raises FedoraNoResponseError: Vyvolá se při splnění podmínky ``result is None``.
 
    .. py:method:: save_binary_file()
 
@@ -314,7 +314,7 @@ Třídy
       :param file_content: Parametr ``file_content`` se předává do volání ``convert_from_bytes()``, ``__generate_thumb_from_icon()``, pracuje se s atributy ``getvalue``, vstupuje do návratové hodnoty.
       :param large: Parametr ``large`` se předává do volání ``debug()``, ``resize_image()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``thumbnail``, výsledek volání ``__generate_thumb_from_icon()``.
+      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``thumbnail``, výsledek volání ``__generate_thumb_from_icon()``.
 
    .. py:method:: save_thumbs()
 
@@ -508,7 +508,7 @@ Třídy
       :param suppress_message: Pokud ``True``, výsledek transakce se neukládá do Redis.
       :param redirect_on_error: Pokud ``True``, při chybě se použije přesměrování.
       :param redirect_url: URL pro přesměrování při chybě transakce.
-              :raises FedoraTransactionNoIDError: Pokud se nepodaří vytvořit transakci nebo získat její UID.
+      :raises FedoraTransactionNoIDError: Pokud se nepodaří vytvořit transakci nebo získat její UID.
 
    .. py:method:: __str__()
 
@@ -523,7 +523,7 @@ Třídy
       :param ident_cely: Parametr ``ident_cely`` vstupuje do návratové hodnoty.
       :param transaction_user_id: Identifikátor objektu ``transaction_user``.
 
-          :return: Vrací hodnotu podle větve zpracování.
+      :return: Vrací hodnotu podle větve zpracování.
 
    .. py:method:: _transaction_redis_key()
 
@@ -551,8 +551,8 @@ Třídy
       :param operation: Parametr ``operation`` se předává do volání ``FedoraTransactionUnsupportedOperationError()``, ovlivňuje větvení podmínek.
       :return: Textová reprezentace UID transakce.
 
-          :raises FedoraTransactionUnsupportedOperationError: Vyvolá se při splnění podmínky ``operation == FedoraTransactionOperation.ROLLBACK``.
-          :raises FedoraTransactionCommitFailedError: Vyvolá se při splnění podmínky ``not str(response.status_code).startswith('2')``.
+      :raises FedoraTransactionUnsupportedOperationError: Vyvolá se při splnění podmínky ``operation == FedoraTransactionOperation.ROLLBACK``.
+      :raises FedoraTransactionCommitFailedError: Vyvolá se při splnění podmínky ``not str(response.status_code).startswith('2')``.
 
    .. py:method:: rollback_transaction()
 

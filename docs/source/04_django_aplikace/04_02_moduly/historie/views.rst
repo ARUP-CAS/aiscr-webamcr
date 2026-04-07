@@ -26,7 +26,7 @@ Třídy
 
       :param qs: Queryset/filtr ``qs`` použitý při výběru záznamů.
 
-          :return: Vrací výsledek volání ``order_by()``.
+      :return: Vrací výsledek volání ``order_by()``.
 
    .. py:method:: add_extra_context()
 
@@ -61,7 +61,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_table()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: None, výsledek volání ``get_table()``.
+      :return: Vrací hodnotu podle větve zpracování, typicky: None, výsledek volání ``get_table()``.
 
    .. py:method:: get_context_data()
 
@@ -69,7 +69,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-          :return: Vrací proměnná ``context``.
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: render_to_response()
 
@@ -78,7 +78,7 @@ Třídy
       :param context: Parametr ``context`` se předává do volání ``render_to_response()``, pracuje se s atributy ``get``, vstupuje do návratové hodnoty.
       :param response_kwargs: Parametr ``response_kwargs`` se předává do volání ``render_to_response()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render_to_response()``, výsledek volání ``response()``.
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render_to_response()``, výsledek volání ``response()``.
 
 
 .. py:class:: ProjektHistorieListView
@@ -93,7 +93,7 @@ Třídy
 
       :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací slovník.
+      :return: Vrací slovník.
 
 
 .. py:class:: AkceHistorieListView
@@ -108,7 +108,7 @@ Třídy
 
       :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací slovník.
+      :return: Vrací slovník.
 
 
 .. py:class:: DokumentHistorieListView
@@ -123,7 +123,7 @@ Třídy
 
       :param context: Kontext pohledu obsahující ``ident_cely`` záznamu.
 
-          :return: Vrací slovník.
+      :return: Vrací slovník.
 
    .. py:method:: add_extra_context()
 
@@ -144,7 +144,7 @@ Třídy
 
       :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací slovník.
+      :return: Vrací slovník.
 
 
 .. py:class:: SpolupraceHistorieListView
@@ -159,7 +159,7 @@ Třídy
 
       :param context: Kontext pohledu (nevyužíván, odkaz je vždy na seznam spolupráce).
 
-          :return: Vrací slovník.
+      :return: Vrací slovník.
 
 
 .. py:class:: SouborHistorieListView
@@ -174,7 +174,7 @@ Třídy
 
       :param qs: Queryset záznamů Historie, který má být seřazen.
 
-          :return: Vrací výsledek volání ``order_by()``.
+      :return: Vrací výsledek volání ``order_by()``.
 
    .. py:method:: add_extra_context()
 
@@ -188,7 +188,7 @@ Třídy
 
       :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: slovník, None.
+      :return: Vrací hodnotu podle větve zpracování, typicky: slovník, None.
 
 
 .. py:class:: LokalitaHistorieListView
@@ -203,7 +203,7 @@ Třídy
 
       :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací slovník.
+      :return: Vrací slovník.
 
 
 .. py:class:: UzivatelHistorieListView
@@ -218,7 +218,7 @@ Třídy
 
       :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
 
-          :return: Vrací slovník.
+      :return: Vrací slovník.
 
 
 .. py:class:: ExterniZdrojHistorieListView
@@ -233,7 +233,7 @@ Třídy
 
       :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací slovník.
+      :return: Vrací slovník.
 
 
 .. py:class:: PianHistorieListView

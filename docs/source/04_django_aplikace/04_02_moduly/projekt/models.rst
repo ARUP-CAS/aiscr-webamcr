@@ -50,7 +50,7 @@ Třídy
 
       Textová reprezentace objektu.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
 
    .. py:method:: send_ep01()
 
@@ -155,7 +155,7 @@ Třídy
 
       Připojení akce musejí být ve stavu archivovaná.
 
-          :return: Vrací proměnná ``result``.
+      :return: Vrací proměnná ``result``.
 
    .. py:method:: check_pred_navrzeni_k_zruseni()
 
@@ -163,7 +163,7 @@ Třídy
 
       Projekt nesmí mít připojené akce.
 
-          :return: Vrací slovník.
+      :return: Vrací slovník.
 
    .. py:method:: check_pred_smazanim()
 
@@ -178,7 +178,7 @@ Třídy
 
       Projekt musí mít alespoň jednu akci, která projde svou kontrolou před odesláním.
 
-          :return: Vrací proměnná ``result``.
+      :return: Vrací proměnná ``result``.
 
    .. py:method:: check_pred_zahajenim_v_terenu()
 
@@ -186,13 +186,13 @@ Třídy
 
       Projekt musí mít lokalizaci.
 
-          :return: Vrací proměnná ``resp``.
+      :return: Vrací proměnná ``resp``.
 
    .. py:method:: parse_ident_cely()
 
       Metoda pro rozdělení identu na region, rok, pořadové číslo a informaci, zda je permanentní.
 
-          :return: Vrací n-tici.
+      :return: Vrací n-tici.
 
    .. py:method:: has_oznamovatel()
 
@@ -206,17 +206,17 @@ Třídy
 
       :param update_repository: Časový údaj ``update_repository`` použitý při filtrování nebo výpočtu.
 
-          :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.
-          :raises ValueError: Vyvolá se s textem "No Fedora transaction".
+      :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.
+      :raises ValueError: Vyvolá se s textem "No Fedora transaction".
 
    .. py:method:: _save_document()
 
              Uloží document.
 
-             :param creator: Parametr ``creator`` pracuje se s atributy ``build_document``.
-             :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``debug()``, pracuje se s atributy ``uid``.
-             :param user: Parametr ``user`` se předává do volání ``zaznamenej_nahrani()``, ovlivňuje větvení podmínek.
-             :param check_duplicate: Parametr ``check_duplicate`` ovlivňuje větvení podmínek.
+      :param creator: Parametr ``creator`` pracuje se s atributy ``build_document``.
+      :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``debug()``, pracuje se s atributy ``uid``.
+      :param user: Parametr ``user`` se předává do volání ``zaznamenej_nahrani()``, ovlivňuje větvení podmínek.
+      :param check_duplicate: Parametr ``check_duplicate`` ovlivňuje větvení podmínek.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: create_cancel_confirmation_document()
@@ -247,7 +247,7 @@ Třídy
 
       :param popup_parametry: Číselná hodnota ``popup_parametry`` použitá při výpočtu nebo transformaci.
 
-          :return: Vrací proměnná ``output``.
+      :return: Vrací proměnná ``output``.
 
    .. py:method:: should_generate_confirmation_document()
 
@@ -328,7 +328,7 @@ Třídy
 
       Textová reprezentace objektu.
 
-          :return: Vrací hodnotu podle větve zpracování.
+      :return: Vrací hodnotu podle větve zpracování.
 
 
 Funkce

@@ -20,6 +20,19 @@ class RedisConnector:
 
     r = None
     r_decode = None
+    IMPORT_DATA_LOCK_KEY = "import_data_lock"
+    _RELEASE_LOCK_SCRIPT = """
+if redis.call("get", KEYS[1]) == ARGV[1] then
+    return redis.call("del", KEYS[1])
+end
+return 0
+"""
+    _REFRESH_LOCK_SCRIPT = """
+if redis.call("get", KEYS[1]) == ARGV[1] then
+    return redis.call("expire", KEYS[1], ARGV[2])
+end
+return 0
+"""
 
     @classmethod
     def _create_connection(cls):
@@ -63,6 +76,41 @@ class RedisConnector:
         if not cls.r_decode:
             cls._create_connection_decode()
         return cls.r_decode
+
+    @classmethod
+    def acquire_import_lock(cls, connection: redis.Redis, token: str, ttl_seconds: int) -> bool:
+        """
+        Atomicky získá Redis lock pro běžící hromadný import.
+
+        :param connection: Redis spojení, přes které se lock zapisuje.
+        :param token: Jedinečný token vlastníka locku.
+        :param ttl_seconds: Doba expirace locku v sekundách.
+        :return: ``True``, pokud byl lock získán; jinak ``False``.
+        """
+        return bool(connection.set(cls.IMPORT_DATA_LOCK_KEY, token, nx=True, ex=ttl_seconds))
+
+    @classmethod
+    def refresh_import_lock(cls, connection: redis.Redis, token: str, ttl_seconds: int) -> bool:
+        """
+        Prodlouží expiraci importního locku pouze tehdy, pokud ho stále vlastní zadaný token.
+
+        :param connection: Redis spojení, přes které se lock obnovuje.
+        :param token: Jedinečný token vlastníka locku.
+        :param ttl_seconds: Nová doba expirace locku v sekundách.
+        :return: ``True``, pokud byl lock úspěšně obnoven; jinak ``False``.
+        """
+        return bool(connection.eval(cls._REFRESH_LOCK_SCRIPT, 1, cls.IMPORT_DATA_LOCK_KEY, token, ttl_seconds))
+
+    @classmethod
+    def release_import_lock(cls, connection: redis.Redis, token: str) -> bool:
+        """
+        Uvolní importní lock pouze tehdy, pokud ho stále vlastní zadaný token.
+
+        :param connection: Redis spojení, přes které se lock maže.
+        :param token: Jedinečný token vlastníka locku.
+        :return: ``True``, pokud byl lock odstraněn; jinak ``False``.
+        """
+        return bool(connection.eval(cls._RELEASE_LOCK_SCRIPT, 1, cls.IMPORT_DATA_LOCK_KEY, token))
 
     @staticmethod
     def prepare_model_for_redis(table):

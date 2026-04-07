@@ -18,6 +18,6 @@ Třídy
 
       :param user: Uživatelský objekt, jehož atribut ``is_active`` se ověřuje.
 
-          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-          :raises ValidationError: Vyvolá se při splnění podmínky ``user.is_active``.
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+      :raises ValidationError: Vyvolá se při splnění podmínky ``user.is_active``.
 

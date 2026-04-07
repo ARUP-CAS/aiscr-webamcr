@@ -12,7 +12,7 @@ Funkce
 
    :param doi: Řetězec s DOI identifikátorem, který má být ověřen.
 
-       :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+   :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
 .. py:function:: verify_orcid(orcid)
 
@@ -20,7 +20,7 @@ Funkce
 
    :param orcid: Řetězec s ORCID identifikátorem, který má být ověřen.
 
-       :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+   :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
 .. py:function:: verify_ror(ror)
 
@@ -28,7 +28,7 @@ Funkce
 
    :param ror: Řetězec s ROR identifikátorem, který má být ověřen.
 
-       :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+   :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
 .. py:function:: verify_wikidata(wikidata)
 
@@ -36,4 +36,4 @@ Funkce
 
    :param wikidata: Řetězec s identifikátorem nebo URL záznamu Wikidata, který má být ověřen.
 
-       :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+   :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.

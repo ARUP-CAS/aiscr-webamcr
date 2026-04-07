@@ -54,7 +54,7 @@ Třídy
 
       Je připojená aspoň jedna dokumentační jednotka se všemi relevantními relacemi.
 
-          :return: Vrací proměnná ``result``.
+      :return: Vrací proměnná ``result``.
 
    .. py:method:: check_pred_archivaci()
 
@@ -66,7 +66,7 @@ Třídy
 
       všechny DJ mají potvrzený pian
 
-          :return: Vrací n-tici.
+      :return: Vrací n-tici.
 
    .. py:method:: set_lokalita_permanent_ident_cely()
 
@@ -93,7 +93,7 @@ Třídy
 
       :param dj_ident_cely: Identifikátor dokumentační jednotky pro detail DJ varianty.
 
-          :return: Vrací výsledek volání ``reverse()``.
+      :return: Vrací výsledek volání ``reverse()``.
 
    .. py:method:: get_redirect()
 
@@ -101,7 +101,7 @@ Třídy
 
       :param dj_ident_cely: Identifikátor dokumentační jednotky pro detail DJ varianty.
 
-          :return: Vrací výsledek volání ``redirect()``.
+      :return: Vrací výsledek volání ``redirect()``.
 
    .. py:method:: __str__()
 
@@ -255,7 +255,7 @@ Třídy
 
       :param ident_cely: Identifikátor archeologického záznamu.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
 
 
 .. py:class:: AkceVedouci
@@ -296,7 +296,7 @@ Třídy
 
       :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
 
-          :return: Vrací atribut objektu.
+      :return: Vrací atribut objektu.
 
 
 .. py:class:: LokalitaSekvence
@@ -318,5 +318,5 @@ Funkce
 
    :param region: Identifikátor regionu použitého jako prefix sekvence akcí.
 
-       :return: Vrací hodnotu podle větve zpracování.
-       :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.
+   :return: Vrací hodnotu podle větve zpracování.
+   :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.

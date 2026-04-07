@@ -22,7 +22,7 @@ Třídy
 
       :param field: Parametr ``field`` předává se do volání ``get()``, pracuje se s atributy ``replace``, vstupuje do návratové hodnoty.
 
-          :return: Vrací výsledek volání ``get()``.
+      :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: get_context_data()
 
@@ -30,7 +30,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-          :return: Vrací proměnná ``context``.
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: get_queryset()
 
@@ -68,7 +68,7 @@ Třídy
 
       :param field: Parametr ``field`` předává se do volání ``get()``, pracuje se s atributy ``replace``, vstupuje do návratové hodnoty.
 
-          :return: Vrací výsledek volání ``get()``.
+      :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: get_queryset()
 
@@ -97,7 +97,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-          :return: Vrací proměnná ``context``.
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: render_to_response()
 
@@ -106,7 +106,7 @@ Třídy
       :param context: Parametr ``context`` se předává do volání ``render_to_response()``, ovlivňuje větvení podmínek.
       :param response_kwargs: Dodatečné argumenty předané voláním.
 
-          :return: Vrací proměnná ``response``.
+      :return: Vrací proměnná ``response``.
 
 
 .. py:class:: DokumentDetailView
@@ -123,7 +123,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací výsledek volání ``get()``.
+      :return: Vrací výsledek volání ``get()``.
 
 
 .. py:class:: DokumentCastDetailView
@@ -136,9 +136,9 @@ Třídy
 
              Provádí operaci dispatch.
 
-             :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-             :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-             :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_context_data()
@@ -147,7 +147,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-          :return: Vrací proměnná ``context``.
+      :return: Vrací proměnná ``context``.
 
 
 .. py:class:: DokumentCastEditView
@@ -162,7 +162,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-          :return: Vrací proměnná ``context``.
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: get_success_url()
 
@@ -176,7 +176,7 @@ Třídy
 
       :param queryset: Parametr ``queryset`` předává se do volání ``get_object()``.
 
-          :return: Vrací atribut objektu.
+      :return: Vrací atribut objektu.
 
    .. py:method:: post()
 
@@ -186,7 +186,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``post()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``post()``.
 
-          :return: Vrací výsledek volání ``JsonResponse()``.
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
    .. py:method:: form_invalid()
 
@@ -194,7 +194,7 @@ Třídy
 
       :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
 
-          :return: Vrací výsledek volání ``form_invalid()``.
+      :return: Vrací výsledek volání ``form_invalid()``.
 
 
 .. py:class:: KomponentaDokumentDetailView
@@ -207,9 +207,9 @@ Třídy
 
              Provádí operaci dispatch.
 
-             :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-             :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-             :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_context_data()
@@ -218,7 +218,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-          :return: Vrací proměnná ``context``.
+      :return: Vrací proměnná ``context``.
 
 
 .. py:class:: KomponentaDokumentCreateView
@@ -231,9 +231,9 @@ Třídy
 
              Provádí operaci dispatch.
 
-             :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-             :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-             :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_context_data()
@@ -242,7 +242,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-          :return: Vrací proměnná ``context``.
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: get()
 
@@ -252,7 +252,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací výsledek volání ``get()``.
+      :return: Vrací výsledek volání ``get()``.
 
 
 .. py:class:: TvarEditView
@@ -269,7 +269,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-          :return: Vrací výsledek volání ``redirect()``.
+      :return: Vrací výsledek volání ``redirect()``.
 
 
 .. py:class:: TvarSmazatView
@@ -282,9 +282,9 @@ Třídy
 
              Provádí operaci dispatch.
 
-             :param request: Parametr ``request`` předává se do volání ``add_message()``, ``dispatch()``, vstupuje do návratové hodnoty.
-             :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-             :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :param request: Parametr ``request`` předává se do volání ``add_message()``, ``dispatch()``, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_zaznam()
@@ -299,7 +299,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
 
-          :return: Vrací proměnná ``context``.
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: get()
 
@@ -309,7 +309,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-          :return: Vrací výsledek volání ``render_to_response()``.
+      :return: Vrací výsledek volání ``render_to_response()``.
 
    .. py:method:: post()
 
@@ -319,7 +319,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-          :return: Vrací výsledek volání ``JsonResponse()``.
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: VytvoritCastView
@@ -340,7 +340,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
 
-          :return: Vrací proměnná ``context``.
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: get()
 
@@ -350,7 +350,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-          :return: Vrací výsledek volání ``render_to_response()``.
+      :return: Vrací výsledek volání ``render_to_response()``.
 
    .. py:method:: post()
 
@@ -360,7 +360,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-          :return: Vrací výsledek volání ``JsonResponse()``.
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: TransakceView
@@ -394,7 +394,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``dispatch()``.
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``dispatch()``.
 
    .. py:method:: get()
 
@@ -404,7 +404,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-          :return: Vrací výsledek volání ``render_to_response()``.
+      :return: Vrací výsledek volání ``render_to_response()``.
 
    .. py:method:: post()
 
@@ -414,7 +414,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-          :return: Vrací výsledek volání ``JsonResponse()``.
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: DokumentCastPripojitAkciView
@@ -433,7 +433,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-          :return: Vrací proměnná ``context``.
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: post()
 
@@ -443,7 +443,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-          :return: Vrací výsledek volání ``JsonResponse()``.
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: DokumentCastPripojitProjektView
@@ -462,7 +462,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-          :return: Vrací proměnná ``context``.
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: post()
 
@@ -472,7 +472,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-          :return: Vrací výsledek volání ``JsonResponse()``.
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: DokumentCastOdpojitView
@@ -491,7 +491,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-          :return: Vrací proměnná ``context``.
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: post()
 
@@ -501,7 +501,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-          :return: Vrací výsledek volání ``JsonResponse()``.
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: DokumentCastSmazatView
@@ -522,7 +522,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-          :return: Vrací výsledek volání ``JsonResponse()``.
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: DokumentNeidentAkceSmazatView
@@ -541,7 +541,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-          :return: Vrací proměnná ``context``.
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: post()
 
@@ -551,7 +551,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-          :return: Vrací výsledek volání ``JsonResponse()``.
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: DokumentAutocomplete
@@ -566,7 +566,7 @@ Třídy
 
       :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
 
-          :return: Vrací hodnotu podle větve zpracování.
+      :return: Vrací hodnotu podle větve zpracování.
 
    .. py:method:: get_queryset()
 
@@ -589,7 +589,7 @@ Třídy
       :param typ_vazby: Parametr ``typ_vazby`` ovlivňuje větvení podmínek.
       :param ident_cely: Parametr ``ident_cely`` se předává do volání ``filter()``, ``get()``.
 
-          :return: Vrací výsledek volání ``HttpResponse()``.
+      :return: Vrací výsledek volání ``HttpResponse()``.
 
 
 Funkce
@@ -601,7 +601,7 @@ Funkce
 
    :param request: Parametr ``request`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
 
-       :return: Vrací výsledek volání ``render()``.
+   :return: Vrací výsledek volání ``render()``.
 
 .. py:function:: detail_model_3D(request, ident_cely)
 
@@ -610,8 +610,8 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``get_detail_template_shows()``, ``get_history_dates()``, pracuje se s atributy ``session``, ``user``, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``.
 
-       :return: Vrací výsledek volání ``render()``.
-       :raises UnexpectedDataRelations: Vyvolá se při splnění podmínky ``casti.count() != 1``; nebo při splnění podmínky ``komponenty.count() != 1``.
+   :return: Vrací výsledek volání ``render()``.
+   :raises UnexpectedDataRelations: Vyvolá se při splnění podmínky ``casti.count() != 1``; nebo při splnění podmínky ``komponenty.count() != 1``.
 
 .. py:function:: edit(request, ident_cely)
 
@@ -620,8 +620,8 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``create_transaction()``, ``EditDokumentForm()``, pracuje se s atributy ``user``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
-       :raises PermissionDenied: Vyvolá se při splnění podmínky ``dokument.stav == D_STAV_ARCHIVOVANY``.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
+   :raises PermissionDenied: Vyvolá se při splnění podmínky ``dokument.stav == D_STAV_ARCHIVOVANY``.
 
 .. py:function:: edit_model_3D(request, ident_cely)
 
@@ -630,8 +630,8 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``CreateModelDokumentForm()``, ``CreateModelExtraDataForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
-       :raises PermissionDenied: Vyvolá se při splnění podmínky ``dokument.stav == D_STAV_ARCHIVOVANY``.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
+   :raises PermissionDenied: Vyvolá se při splnění podmínky ``dokument.stav == D_STAV_ARCHIVOVANY``.
 
 .. py:function:: zapsat_do_akce(request, arch_z_ident_cely)
 
@@ -640,7 +640,7 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``zapsat()``, vstupuje do návratové hodnoty.
    :param arch_z_ident_cely: Identifikátor ``arch_z_ident_cely`` používaný pro dohledání cílového záznamu.
 
-       :return: Vrací výsledek volání ``zapsat()``.
+   :return: Vrací výsledek volání ``zapsat()``.
 
 .. py:function:: zapsat_do_projektu(request, proj_ident_cely)
 
@@ -649,7 +649,7 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``zapsat()``, vstupuje do návratové hodnoty.
    :param proj_ident_cely: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``zapsat()``.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``zapsat()``.
 
 .. py:function:: create_model_3D(request)
 
@@ -657,7 +657,7 @@ Funkce
 
    :param request: Parametr ``request`` se předává do volání ``CreateModelDokumentForm()``, ``CreateModelExtraDataForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
 
 .. py:function:: odeslat(request, ident_cely)
 
@@ -666,7 +666,7 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``debug()``, vstupuje do návratové hodnoty.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, proměnná ``returned_value``, výsledek volání ``render()``.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, proměnná ``returned_value``, výsledek volání ``render()``.
 
 .. py:function:: archivovat(request, ident_cely)
 
@@ -675,7 +675,7 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``debug()``, pracuje se s atributy ``startswith``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: vratit(request, ident_cely)
 
@@ -684,7 +684,7 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: smazat(request, ident_cely)
 
@@ -693,8 +693,8 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``create_transaction()``, pracuje se s atributy ``user``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
-       :raises ValueError: Vyvolá se s textem "dokument.views.smazat.deleted".
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+   :raises ValueError: Vyvolá se s textem "dokument.views.smazat.deleted".
 
 .. py:function:: get_hierarchie_dokument_typ()
 
@@ -725,7 +725,7 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``EditDokumentForm()``, ``create_transaction()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param zaznam: Parametr ``zaznam`` předává se do volání ``isinstance()``, ``DokumentCast()``, pracuje se s atributy ``ident_cely``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
 
 .. py:function:: odpojit(request, ident_doku, ident_zaznamu, zaznam)
 
@@ -736,7 +736,7 @@ Funkce
    :param ident_zaznamu: Identifikátor ``ident_zaznamu`` používaný pro dohledání cílového záznamu.
    :param zaznam: Parametr ``zaznam`` předává se do volání ``JsonResponse()``, ``isinstance()``, pracuje se s atributy ``get_absolute_url``, ``typ_zaznamu``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: pripojit(request, ident_zaznam, proj_ident_cely, typ)
 
@@ -747,7 +747,7 @@ Funkce
    :param proj_ident_cely: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
    :param typ: Parametr ``typ`` předává se do volání ``get_object_or_404()``.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: get_dokument_table_row(request)
 
@@ -755,7 +755,7 @@ Funkce
 
    :param request: Parametr ``request`` se předává do volání ``get()``, pracuje se s atributy ``GET``.
 
-       :return: Vrací výsledek volání ``HttpResponse()``.
+   :return: Vrací výsledek volání ``HttpResponse()``.
 
 .. py:function:: get_dokument_table_row_vratit(request)
 
@@ -763,8 +763,8 @@ Funkce
 
    :param request: Parametr ``request`` pracuje se s atributy ``GET``.
 
-       :return: Vrací výsledek volání ``HttpResponse()``.
-       :raises Http404: Vyvolá se s textem "Dokument neexistuje.".
+   :return: Vrací výsledek volání ``HttpResponse()``.
+   :raises Http404: Vyvolá se s textem "Dokument neexistuje.".
 
 .. py:function:: get_detail_view(ident_cely)
 
@@ -772,7 +772,7 @@ Funkce
 
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``redirect()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-       :return: Vrací výsledek volání ``redirect()``.
+   :return: Vrací výsledek volání ``redirect()``.
 
 .. py:function:: get_detail_json_view(ident_cely)
 
@@ -780,7 +780,7 @@ Funkce
 
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``reverse()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-       :return: Vrací výsledek volání ``reverse()``.
+   :return: Vrací výsledek volání ``reverse()``.
 
 .. py:function:: get_required_fields_model3D(zaznam, next)
 
@@ -808,7 +808,7 @@ Funkce
    :param komp_ident_cely: Identifikátor ``komp_ident_cely`` používaný pro dohledání cílového záznamu.
    :param session: Volitelná Django session pro načtení dat souběžné editace.
 
-       :return: Vrací proměnná ``komponenta_form_detail``.
+   :return: Vrací proměnná ``komponenta_form_detail``.
 
 .. py:function:: get_obdobi_choices()
 
@@ -828,7 +828,7 @@ Funkce
 
    :param request: Parametr ``request`` se předává do volání ``loads()``, ``get_3d_from_envelope()``, pracuje se s atributy ``body``.
 
-       :return: Vrací výsledek volání ``JsonResponse()``.
+   :return: Vrací výsledek volání ``JsonResponse()``.
 
 .. py:function:: zjisti_licenci_organizace(request)
 
@@ -836,4 +836,4 @@ Funkce
 
    :param request: Parametr ``request`` pracuje se s atributy ``GET``.
 
-       :return: Vrací výsledek volání ``JsonResponse()``.
+   :return: Vrací výsledek volání ``JsonResponse()``.

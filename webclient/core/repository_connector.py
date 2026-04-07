@@ -1066,9 +1066,19 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             self._update_creator(FedoraRequestType.METADATA_UPDATE_RDF_DATA)
         elif update is True:
             document, headers = generate_metadata()
-            url = self._get_request_url(FedoraRequestType.UPDATE_METADATA)
-            self._send_request(url, FedoraRequestType.UPDATE_METADATA, headers=headers, data=document)
-            self._update_creator(FedoraRequestType.METADATA_UPDATE_RDF_DATA)
+            try:
+                current_metadata = self.get_metadata()
+                metadata_changed = current_metadata != document
+            except FedoraError:
+                logger.warning(
+                    "core_repository_connector.save_metadata.get_metadata_failed_proceeding_with_update",
+                    extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
+                )
+                metadata_changed = True
+            if metadata_changed:
+                url = self._get_request_url(FedoraRequestType.UPDATE_METADATA)
+                self._send_request(url, FedoraRequestType.UPDATE_METADATA, headers=headers, data=document)
+                self._update_creator(FedoraRequestType.METADATA_UPDATE_RDF_DATA)
         logger.debug(
             "core_repository_connector.save_metadata.end",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},

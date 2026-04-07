@@ -33,7 +33,7 @@ Funkce
    :param spec_obj_choices: Parametr ``spec_obj_choices`` slouží jako vstup pro logiku funkce ``create_nalez_objekt_form``.
    :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
 
-       :return: Vrací proměnná ``CreateNalezObjektForm``.
+   :return: Vrací proměnná ``CreateNalezObjektForm``.
 
 .. py:function:: create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices, not_readonly)
 
@@ -43,4 +43,4 @@ Funkce
    :param specifikce_predmetu_choices: Parametr ``specifikce_predmetu_choices`` slouží jako vstup pro logiku funkce ``create_nalez_predmet_form``.
    :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
 
-       :return: Vrací proměnná ``CreateNalezPredmetForm``.
+   :return: Vrací proměnná ``CreateNalezPredmetForm``.

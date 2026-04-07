@@ -43,7 +43,7 @@ Třídy
 
       Textová reprezentace objektu.
 
-          :return: Vrací atribut objektu.
+      :return: Vrací atribut objektu.
 
    .. py:method:: display_name()
 
@@ -51,7 +51,7 @@ Třídy
 
       :param viewer: Uživatel nebo osoba ``viewer``, v jejímž kontextu se operace provádí.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``base``.
+      :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``base``.
 
    .. py:method:: moje_spolupracujici_organizace()
 
@@ -118,7 +118,7 @@ Třídy
       :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``isinstance()``, ``FedoraRepositoryConnector()``, pracuje se s atributy ``mark_transaction_as_closed``, ovlivňuje větvení podmínek.
       :param close_transaction: Parametr ``close_transaction`` ovlivňuje větvení podmínek.
 
-          :raises ValueError: Vyvolá se s textem "No Fedora transaction"; nebo s textem "fedora_transaction must be a FedoraTransaction class object".
+      :raises ValueError: Vyvolá se s textem "No Fedora transaction"; nebo s textem "fedora_transaction must be a FedoraTransaction class object".
 
    .. py:method:: can_see_users_details()
 
@@ -181,7 +181,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``save()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
 
-          :raises ValidationError: Vyvolá se při splnění podmínky ``FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'organizace')``.
+      :raises ValidationError: Vyvolá se při splnění podmínky ``FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'organizace')``.
 
    .. py:method:: __str__()
 
@@ -189,7 +189,7 @@ Třídy
 
       Textová reprezentace objektu.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
 
    .. py:method:: get_nazev()
 
@@ -211,7 +211,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``save()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
 
-          :raises ValidationError: Vyvolá se při splnění podmínky ``FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'osoba')``.
+      :raises ValidationError: Vyvolá se při splnění podmínky ``FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'osoba')``.
 
    .. py:method:: __str__()
 
@@ -219,7 +219,7 @@ Třídy
 
       Textová reprezentace objektu.
 
-          :return: Vrací atribut objektu.
+      :return: Vrací atribut objektu.
 
 
 .. py:class:: UserNotificationType
@@ -264,7 +264,7 @@ Třídy
 
       Textová reprezentace objektu.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``str()``, atribut objektu.
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``str()``, atribut objektu.
 
 
 .. py:class:: NotificationsLog

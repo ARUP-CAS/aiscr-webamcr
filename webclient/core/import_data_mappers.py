@@ -1,7 +1,9 @@
 import datetime
+import functools
 import re
 from abc import ABC
 from collections.abc import Iterable
+from contextvars import ContextVar
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -101,6 +103,7 @@ from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pian.models import Kladyzm, Pian, vytvor_pian
 from projekt.models import Projekt, ProjektKatastr
 from uzivatel.models import Organizace, Osoba, User, UserNotificationType
+from xml_generator.models import ModelWithMetadata
 
 
 @dataclass
@@ -120,6 +123,20 @@ class ImportDataValidationResult:
     primary_key_import: str = ""
     primary_key_table: str = ""
     validation_result: str = ""
+
+    def to_dict(self) -> dict:
+        """
+        Serializuje instanci do slovníku vhodného pro uložení jako JSON.
+
+        :return: Slovník s atributy instance.
+        """
+        return {
+            "item_order": self.item_order,
+            "file_name": self.file_name,
+            "primary_key_import": self.primary_key_import,
+            "primary_key_table": self.primary_key_table,
+            "validation_result": self.validation_result,
+        }
 
 
 class ImportDataError(Exception):
@@ -190,21 +207,28 @@ class ImportDataMissingReferencedValueError(ImportDataError):
     Výjimka vyvolaná při chybějící hodnotě referencovaného záznamu — buď v databázi, nebo v importovaných datech.
     """
 
-    def __init__(self, missing_value_id, missing_model_name=None):
+    def __init__(self, missing_value_id, missing_model_name=None, missing_field_name=None):
         """
         Inicializuje instanci třídy.
 
         :param missing_value_id: Identifikátor objektu ``missing_value``.
-        :param missing_model_name: Parametr ``missing_model_name`` předává se do volání ``__init__()``.
+        :param missing_model_name: Název modelu, ve kterém lookup selhal.
+        :param missing_field_name: Název pole, ve kterém lookup selhal.
         """
         self.missing_value_id = missing_value_id
         self.missing_model_name = missing_model_name
+        self.missing_field_name = missing_field_name
         super().__init__(
             f'{_("core_admin.ImportDataMissingReferencedValueError.message.part_1")} '
             + f'{missing_value_id} {_("core_admin.ImportDataMissingReferencedValueError.message.part_2")} '
             + (
                 f'{missing_model_name} {_("core_admin.ImportDataMissingReferencedValueError.message.part_3")} '
                 if missing_model_name
+                else ""
+            )
+            + (
+                f'{_("core_admin.ImportDataMissingReferencedValueError.message.part_4")} {missing_field_name}'
+                if missing_field_name
                 else ""
             )
         )
@@ -230,13 +254,12 @@ class ImportDataIntegrityError(ImportDataError):
         self.model_name = model_name
         self.performed_action = performed_action
         super().__init__(
-            "{} {} {} {} {} ({} {})".format(
+            "{} {} {} {} {} ({})".format(
                 _("core_admin.ImportDataIntegrityError.message.part_1"),
                 record_id,
                 _("core_admin.ImportDataIntegrityError.message.part_2"),
                 model_name,
                 _("core_admin.ImportDataIntegrityError.message.part_3"),
-                _("core_admin.ImportDataIntegrityError.message.part_4"),
                 performed_action,
             )
         )
@@ -255,12 +278,11 @@ class ImportDataLimitChoicesError(ImportDataError):
         self.record_id = record_id
         self.limit_choices_to = limit_choices_to
         super().__init__(
-            "{} {} {} {} {}".format(
+            "{} {} {} {}".format(
                 _("core_admin.ImportDataLimitChoicesError.message.part_1"),
                 record_id,
                 _("core_admin.ImportDataLimitChoicesError.message.part_2"),
                 ",".join(["{}: {}".format(k, v) for k, v in limit_choices_to.items()]),
-                _("core_admin.ImportDataLimitChoicesError.message.part_3"),
             )
         )
 
@@ -339,6 +361,51 @@ class ImportDataIncorrectPrimaryKeyFormatError(ImportDataError):
         )
 
 
+class ImportDataActiveUserCannotBeDeleted(ImportDataError):
+    """
+    Výjimka vyvolaná při snaze o smazání aktivního uživatele
+    """
+
+    def __init__(self, primary_key_value):
+        """
+        Inicializuje výjimku pro pokus o smazání právě aktivního uživatele.
+
+        :param primary_key_value: Hodnota ``ident_cely`` uživatele, který nesmí být smazán.
+        """
+        self.primary_key_value = primary_key_value
+        super().__init__(
+            "{} {}".format(
+                _("core_admin.ImportDataActiveUserCannotBeDeleted.message"),
+                primary_key_value,
+            )
+        )
+
+
+class ImportDataEmptyError(ImportDataError):
+    """
+    Výjimka vyvolaná při pokusu o import ZIP archivu bez platných záznamů.
+
+    Vyvolá se po dokončení validační smyčky, pokud žádný CSV soubor neobsahuje žádný
+    záznam k importu.
+    """
+
+    def __init__(self):
+        """Inicializuje výjimku pro prázdný import."""
+        super().__init__(_("core.admin.import_data.error.empty_import"))
+
+
+class ImportDataMissingFileError(ImportDataError):
+    """
+    Výjimka vyvolaná při pokusu o import bez přiloženého souboru.
+
+    Vyvolá se v případě, kdy formulář neobsahuje žádný nahraný soubor.
+    """
+
+    def __init__(self):
+        """Inicializuje výjimku pro chybějící soubor."""
+        super().__init__(_("core.admin.import_data.error.missing_file"))
+
+
 class BaseImportField:
     """
     Základní třída pro importní pole. Neprovádí žádnou validaci ani zpracování hodnoty.
@@ -407,6 +474,34 @@ class BaseImportField:
         return value
 
 
+class FileNameImportField(BaseImportField):
+    """Importní pole pro název souboru bez adresářových oddělovačů a skrytého prefixu."""
+
+    forbidden_separators = ("/", "\\")
+
+    def _process_value(self, value) -> str | None:
+        """
+        Ověří a normalizuje název souboru pro import.
+
+        Hodnotu typu ``bytes`` dekóduje jako UTF-8, ostatní ne-řetězcové typy převede na ``str``.
+        Odmítne názvy obsahující adresářové oddělovače (``/``, ``\\``) nebo začínající tečkou,
+        protože takové hodnoty by mohly vést k průchodu adresáři nebo skrytým souborům.
+
+        :param value: Název souboru k ověření; může být ``str``, ``bytes`` nebo jiný typ.
+        :return: Ověřený název souboru jako řetězec, nebo ``None`` pokud je vstup ``None``.
+        :raises ImportDataError: Vyvolá se, pokud název obsahuje ``/`` nebo ``\\``, nebo začíná tečkou.
+        """
+        if value is None:
+            return None
+        if isinstance(value, bytes):
+            value = value.decode("utf-8")
+        elif not isinstance(value, str):
+            value = str(value)
+        if any(separator in value for separator in self.forbidden_separators) or value.startswith("."):
+            raise ImportDataError(f"Invalid file name value: {value}")
+        return value
+
+
 class IntegerImportField(BaseImportField):
     """Importní pole pro hodnoty datového typu integer."""
 
@@ -428,11 +523,10 @@ class IntegerImportField(BaseImportField):
             value = str(value)
         elif isinstance(value, bytes):
             value = value.decode("utf-8")
-        value = self.pattern.search(value).group()
-        if value:
-            return int(value) if value is not None else None
-        else:
-            raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_integer_value')}: {value}")
+        match = self.pattern.search(value)
+        if match:
+            return int(match.group())
+        raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_integer_value')}: {value}")
 
 
 class PositiveIntegerImportField(BaseImportField):
@@ -458,7 +552,7 @@ class PositiveIntegerImportField(BaseImportField):
 class DecimalImportField(BaseImportField):
     """Importní pole pro desetinná čísla (float)."""
 
-    pattern = re.compile(r"\d+\.\d*")
+    pattern = re.compile(r"^-?\d+\.?\d*$")
 
     def _process_value(self, value) -> float | None:
         """
@@ -475,11 +569,10 @@ class DecimalImportField(BaseImportField):
             value = str(value)
         elif isinstance(value, bytes):
             value = value.decode("utf-8")
-        value = self.pattern.search(value).group()
-        if value:
-            return float(value) if value is not None else None
-        else:
-            raise ImportDataError(f"{_('core_admin.DecimalImportField.message.invalid_decimal_value')}: {value}")
+        match = self.pattern.fullmatch(value)
+        if match:
+            return float(match.group())
+        raise ImportDataError(f"{_('core_admin.DecimalImportField.message.invalid_decimal_value')}: {value}")
 
 
 class BooleanImportField(BaseImportField):
@@ -662,7 +755,8 @@ class DateRangeImportField(BaseImportField):
 class LookupImportField(BaseImportField):
     """Importní pole pro hodnoty odkazující na instanci jiného modelu (cizí klíč)."""
 
-    records = []
+    _records_context = ContextVar("lookup_import_field_records", default=None)
+    _lookup_cache_context = ContextVar("lookup_import_field_cache", default=None)
 
     def __init__(
         self, lookup_model_classes=None, lookup_field_name: str = "ident_cely", limit_choices_to: dict | None = None
@@ -691,6 +785,60 @@ class LookupImportField(BaseImportField):
             raise ValueError("limit_choices_to is only supported for Heslar model")
         self.limit_choices_to = limit_choices_to
 
+    @classmethod
+    def clear_cache(cls):
+        """
+        Vyčistí cache vyhledaných FK záznamů v aktuálním kontextu.
+
+        :return: Funkce nevrací žádnou hodnotu.
+        """
+        cls._lookup_cache_context.set({})
+
+    @classmethod
+    def clear_records(cls):
+        """
+        Vyčistí seznam importovaných záznamů v aktuálním kontextu.
+
+        :return: Funkce nevrací žádnou hodnotu.
+        """
+        cls._records_context.set([])
+
+    @classmethod
+    def set_records(cls, records):
+        """
+        Nastaví seznam dosud připravených importovaných záznamů pro aktuální kontext.
+
+        :param records: Seznam záznamů dostupný pro FK lookup při validaci importu.
+        :return: Funkce nevrací žádnou hodnotu.
+        """
+        cls._records_context.set(records)
+
+    @classmethod
+    def get_records(cls):
+        """
+        Vrátí seznam importovaných záznamů dostupný v aktuálním kontextu.
+
+        :return: Seznam záznamů nebo prázdný seznam, pokud ještě nebyl nastaven.
+        """
+        records = cls._records_context.get()
+        if records is None:
+            records = []
+            cls._records_context.set(records)
+        return records
+
+    @classmethod
+    def get_lookup_cache(cls):
+        """
+        Vrátí cache vyhledaných FK záznamů pro aktuální kontext.
+
+        :return: Slovník s cache lookup výsledků.
+        """
+        lookup_cache = cls._lookup_cache_context.get()
+        if lookup_cache is None:
+            lookup_cache = {}
+            cls._lookup_cache_context.set(lookup_cache)
+        return lookup_cache
+
     @property
     def instance_value(self):
         """
@@ -699,6 +847,35 @@ class LookupImportField(BaseImportField):
         :return: Vrací atribut objektu.
         """
         return self._instance_value
+
+    @staticmethod
+    def _get_record_lookup_value(record, lookup_field_name):
+        """
+        Vrátí hodnotu atributu z importovaného záznamu i pro lookup cesty s oddělovačem ``__``.
+
+        :param record: Parametr ``record`` předává se do volání ``getattr()``.
+        :param lookup_field_name: Textový název nebo klíč ``lookup_field_name`` používaný v rámci operace.
+
+        :return: Vrací hodnotu atributu nebo ``None``, pokud cestu nelze vyhodnotit.
+        """
+        value = record
+        for attribute in lookup_field_name.split("__"):
+            if value is None:
+                return None
+            value = getattr(value, attribute, None)
+        return value
+
+    @staticmethod
+    def _get_cache_key(model_class, lookup_field_name, value):
+        """
+        Sestaví klíč pro sdílenou cache vyhledaných instancí.
+
+        :param model_class: Třída modelu použitá pro lookup.
+        :param lookup_field_name: Název lookup pole.
+        :param value: Vyhledávaná hodnota.
+        :return: N-tice použitelná jako klíč cache.
+        """
+        return model_class, lookup_field_name, value
 
     def _check_limit_choices_to(self, record):
         """
@@ -728,23 +905,36 @@ class LookupImportField(BaseImportField):
 
         if str(value).lower() == "nan" or value is None or len(str(value)) == 0:
             return None
+        lookup_cache = self.get_lookup_cache()
+        records = self.get_records()
         for current_class in self.lookup_model_class_list:
-            saved_records_query = current_class.objects.filter(**{self.lookup_field_name: value})
-            if saved_records_query.exists():
-                self._check_limit_choices_to(saved_records_query.first())
-                self._instance_value = saved_records_query.first()
+            cache_key = self._get_cache_key(current_class, self.lookup_field_name, value)
+            record = lookup_cache.get(cache_key)
+            if record:
+                self._check_limit_choices_to(record)
+                self._instance_value = record
+                return value
+            record = current_class.objects.filter(**{self.lookup_field_name: value}).first()
+            if record:
+                lookup_cache[cache_key] = record
+                self._check_limit_choices_to(record)
+                self._instance_value = record
                 return value
             filtered_records = [
                 record
-                for record in self.records
-                if isinstance(record, current_class) and getattr(record, self.lookup_field_name, None) == value
+                for record in records
+                if isinstance(record, current_class)
+                and self._get_record_lookup_value(record, self.lookup_field_name) == value
             ]
             if len(filtered_records) == 1:
+                lookup_cache[cache_key] = filtered_records[0]
                 self._check_limit_choices_to(filtered_records[0])
                 self._instance_value = filtered_records[0]
                 return value
         raise ImportDataMissingReferencedValueError(
-            value, ", ".join([current_class.__name__ for current_class in self.lookup_model_class_list])
+            value,
+            ", ".join([current_class.__name__ for current_class in self.lookup_model_class_list]),
+            self.lookup_field_name,
         )
 
 
@@ -815,7 +1005,7 @@ class VazbaLookupImportField(LookupImportField):
         if len(filtered_records) == 1:
             self._instance_value = filtered_records[0].historie
             return value
-        raise ImportDataMissingReferencedValueError(value)
+        raise ImportDataMissingReferencedValueError(value, missing_field_name=self.lookup_field_name)
 
 
 class GeomImportField(BaseImportField):
@@ -855,6 +1045,10 @@ class GeomImportField(BaseImportField):
         if isinstance(value, str):
             value = GEOSGeometry(value, srid=self.srid)
         if isinstance(value, GEOSGeometry):
+            if value.srid != self.srid:
+                raise ImportDataError(
+                    f"{_('core_admin.GeomImportField.message.srid_mismatch')}: {value.srid} != {self.srid}"
+                )
             return value
         raise ImportDataError(f"{_('core_admin.GeomImportField.message.invalid_date_value')}: {value}")
 
@@ -883,27 +1077,35 @@ class GenericForeignKeyImportField(LookupImportField):
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``getattr()``, atribut objektu.
         """
         if self.serialized_attribute:
-            return getattr(self._value, self.serialized_attribute)
+            return getattr(self._instance_value, self.serialized_attribute)
         else:
-            return self._value.pk
+            return self._value
 
     def _process_value(self, value: str | int):
         """
-               Provádí operaci process value.
+        Vyhledá objekt generického cizího klíče v databázi a vrátí původní identifikátor.
 
-               :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``match()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-        :return: Výstup funkce odpovídající implementované logice.
+        Model instanci ukládá do ``self._instance_value`` — stejný kontrakt jako ``LookupImportField``.
+        Původní identifikátor (string nebo int) se vrací jako návratová hodnota, čímž je zachován
+        LSP kontrakt s rodičovskou třídou.
 
-            :raises ImportDataMissingReferencedValueError: Vyvolá se v konkrétních chybových větvích této funkce.
+        :param value: Identifikátor záznamu — string ve formátu ``"<prefix>-<číslo>"`` nebo číslo.
+        :return: Původní identifikátor po případné konverzi na int.
+        :raises ImportDataMissingReferencedValueError: Vyvolá se, pokud hodnota není nalezena v žádném z modelů.
         """
         if isinstance(value, str) and (match := re.match(r"(?:\w+-)?(\d+)", value)):
             value = int(match.group(1))
 
         for current_class in self.lookup_model_class_list:
-            if current_class.objects.filter(**{self.lookup_field_name: value}).exists():
-                return current_class.objects.get(**{self.lookup_field_name: value})
+            try:
+                self._instance_value = current_class.objects.get(**{self.lookup_field_name: value})
+                return value
+            except current_class.DoesNotExist:
+                continue
         raise ImportDataMissingReferencedValueError(
-            value, ", ".join([current_class.__name__ for current_class in self.lookup_model_class_list])
+            value,
+            ", ".join([current_class.__name__ for current_class in self.lookup_model_class_list]),
+            self.lookup_field_name,
         )
 
 
@@ -926,6 +1128,22 @@ class ImportModelMapper(ABC):
     primary_key_prefix = None
     allow_update = True
 
+    _registry: dict[str, type["ImportModelMapper"]] = {}
+
+    @classmethod
+    def register(cls, file_key: str):
+        """Dekorátor pro registraci třídy mapperu pod daným klíčem souboru.
+
+        :param file_key: Klíč (název souboru bez přípony), pod kterým se mapper registruje.
+        :return: Vrací dekorátor přijímající třídu mapperu.
+        """
+
+        def decorator(mapper_cls: type["ImportModelMapper"]) -> type["ImportModelMapper"]:
+            cls._registry[file_key] = mapper_cls
+            return mapper_cls
+
+        return decorator
+
     def __init__(self, value_dict):
         """
         Inicializuje instanci třídy.
@@ -941,55 +1159,10 @@ class ImportModelMapper(ABC):
         """
         Vrátí slovník mapující názvy importních souborů na příslušné třídy mapperů.
 
-        :return: Vrací slovník.
+        :return: Vrací slovník registrovaných mapperů.
         """
 
-        return {
-            "heslar": HeslarMapper,
-            "heslar_datace": HeslarDataceMapper,
-            "heslar_dokument_typ_material_rada": HeslarDokumentTypMaterialRadaMapper,
-            "heslar_hierarchie": HeslarHierarchieMapper,
-            "heslar_odkazy": HeslarOdkazMapper,
-            "organizace": OrganizaceMapper,
-            "osoby": OsobaMapper,
-            "projekty": ProjektMapper,
-            "projekty_katastry": ProjektKatastrMapper,
-            "projekty_oznamovatele": ProjektOznamovatelMapper,
-            "samostatne_nalezy": SamostatnyNalezMapper,
-            "az_akce": ArcheologickyZaznamAkceMapper,
-            "az_lokality": LokalitaMapper,
-            "az_akce_vedouci": AkceVedouciMapper,
-            "az_katastry": ArcheologickyZaznamKatastrMapper,
-            "az_pian": PianMapper,
-            "az_dokumentacni_jednotky": DokumentacniJednotkaMapper,
-            "az_adb": AdbMapper,
-            "az_adb_vyskove_body": AdbVyskovyBod,
-            "dokumenty_lety": DokumentLetMapper,
-            "dokumenty": DokumentMapper,
-            "dokumenty_autori": DokumentAutorMapper,
-            "dokumenty_jazyky": DokumentJazykMapper,
-            "dokumenty_osoby": DokumentOsobaMapper,
-            "dokumenty_posudky": DokumentPosudekMapper,
-            "dokumenty_tvary": TvarMapper,
-            "dokumenty_casti": DokumentCastMapper,
-            "dokumenty_neident_akce": NeidentAkceMapper,
-            "dokumenty_neident_akce_vedouci": NeidentAkceVedouciMapper,
-            "komponenty": KomponentaMapper,
-            "komponenty_aktivity": KomponentaAktivitaMapper,
-            "komponenty_nalezy_objekty": NalezObjektMapper,
-            "komponenty_nalezy_predmety": NalezPredmetMapper,
-            "externi_zdroje": ExterniZdrojMapper,
-            "externi_zdroje_autori": ExterniZdrojAutorMapper,
-            "externi_zdroje_editori": ExterniZdrojEditorMapper,
-            "externi_odkazy": ExterniOdkazMapper,
-            "uzivatele": UzivatelMapper,
-            "uzivatele_notifikace_projekty": UzivatelNotifikaceProjektMapper,
-            "uzivatele_spoluprace": UzivatelSpolupraceMapper,
-            "uzivatele_opravneni": UzivatelOpravneniMapper,
-            "uzivatele_notifikace": UzivatelNotifikaceMapper,
-            "soubory": SouborMapper,
-            "historie": HistorieMapper,
-        }
+        return cls._registry
 
     @classmethod
     def get_import_data_mapper(cls, file_name):
@@ -1002,6 +1175,16 @@ class ImportModelMapper(ABC):
         """
 
         return cls.get_import_data_mapper_dict().get(file_name.split(".")[0])
+
+    @classmethod
+    def get_file_name_for_mapper(cls, mapper_class):
+        """
+        Vrátí název souboru odpovídající zadané třídě mapperu.
+
+        :param mapper_class: Třída mapperu, podle které se vyhledá odpovídající název souboru.
+        """
+
+        return [k for k, v in cls.get_import_data_mapper_dict().items() if v == mapper_class][0]
 
     @classmethod
     def get_mapping(cls, include_primary_key=False) -> dict:
@@ -1023,6 +1206,20 @@ class ImportModelMapper(ABC):
                     if primary_key not in field_mapping:
                         field_mapping[primary_key] = cls.map_field(primary_key)
         return field_mapping
+
+    @classmethod
+    def load_record_from_db(cls, record):
+        """
+        Načte aktuální podobu záznamu z databáze podle jeho primárního klíče.
+
+        :param record: Instance modelu, jejíž aktuální stav má být z databáze znovu načten.
+        :return: Nalezený záznam z databáze, jinak ``None`` při chybě nebo nepodporovaném primárním klíči.
+        """
+        if isinstance(cls.primary_key, str):
+            try:
+                return cls.model_class.objects.get(pk=record.pk)
+            except Exception:
+                return None
 
     def _get_filter_kwargs_primary_key(self) -> dict | None:
         """
@@ -1193,13 +1390,15 @@ class ImportModelMapper(ABC):
             ]
         return []
 
-    def import_validation(self, performed_action) -> dict | None:
+    def import_validation(self, performed_action, *args, **kwargs) -> dict | None:
         """
         Provede validaci na základě primárního klíče. Při insertu záznam nesmí existovat,
 
         při updatu musí existovat. Vrátí slovník s primárními klíči, nebo vyvolá ImportDataIntegrityError.
 
         :param performed_action: Parametr ``performed_action`` předává se do volání ``ImportDataIntegrityError()``, ovlivňuje větvení podmínek.
+        :param args: Dodatečné poziční argumenty zachované kvůli jednotné signatuře, metoda je nepoužívá.
+        :param kwargs: Dodatečné pojmenované argumenty zachované kvůli jednotné signatuře, metoda je nepoužívá.
         :return: Vrací výsledek operace.
 
             :raises ImportDataIntegrityError: Vyvolá se při splnění podmínky ``performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and self.model_class.objects.filter(**self._get_filter_kwargs_primary_key())``; nebo při splnění podmínky ``performed_action in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE) and (not self.model_class.obj``.
@@ -1353,6 +1552,43 @@ class ImportModelMapper(ABC):
         """
         return record
 
+    @classmethod
+    def fedora_update_targets(cls, record) -> set:
+        """
+        Vrátí cíle pro následnou aktualizaci ve Fedoře odvozené z navázaných záznamů.
+
+        :param record: Záznam, po jehož změně se mají vyhledat dotčené objekty s ``ident_cely``.
+        :return: Množina dvojic ``(třída, primární_klíč)`` pro záznamy, které mají být ve Fedoře aktualizovány.
+        """
+        return {
+            (item.__class__, item.pk)
+            for item in cls._get_updated_ident_cely_record_list(record)
+            if item and getattr(item, "ident_cely", None)
+        }
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record) -> list:
+        """
+        Vrátí výchozí seznam záznamů, jejichž ``ident_cely`` se má po změně přegenerovat.
+
+        :param record: Záznam zpracovávaný importem.
+        :return: Seznam obsahující přímo ``record`` pro modely s metadaty, jinak prázdný seznam.
+        """
+        if isinstance(record, ModelWithMetadata):
+            return [record]
+        else:
+            return []
+
+    @staticmethod
+    def get_record_history(record):
+        """
+        Určí výchozí cíl pro zápis historie importované změny.
+
+        :param record: Záznam, pro který se má najít objekt určený pro historii.
+        :return: ``None``, pokud mapper nemá definovaný konkrétní cílový objekt historie.
+        """
+        return None
+
 
 class GeometryTransformMixin:
     """
@@ -1384,14 +1620,15 @@ class MultipleClassImportModelMapper(ImportModelMapper):
     foreign_key_fields = tuple()
     classes = tuple()
 
-    def import_validation(self, performed_action):
+    def import_validation(self, performed_action, *args, **kwargs):
         """
-        Načte validation. v aplikaci.
+        Ověří existenci více-modelového záznamu podle ``ident_cely`` hlavního archeologického záznamu.
 
-        :param performed_action: Parametr ``performed_action`` předává se do volání ``ImportDataIntegrityError()``, ovlivňuje větvení podmínek.
-
-            :return: Vrací výsledek volání ``_get_filter_kwargs_primary_key()``.
-            :raises ImportDataIntegrityError: Vyvolá se při splnění podmínky ``performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and self.value_dict.get('ident_cely') and self.model_class.objects.filter(id``; nebo při splnění podmínky ``performed_action in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE) and (not self.model_class.obj``.
+        :param performed_action: Typ prováděné operace importu.
+        :param args: Další poziční argumenty předané nadřazené implementaci.
+        :param kwargs: Další klíčové argumenty předané nadřazené implementaci.
+        :return: Slovník filtračních podmínek pro dohledání cílového záznamu.
+        :raises ImportDataIntegrityError: Vyvolá se, pokud záznam při insertu již existuje nebo při updatu či mazání chybí.
         """
         if (
             performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT
@@ -1470,6 +1707,7 @@ class MultipleClassImportModelMapper(ImportModelMapper):
         return False
 
 
+@ImportModelMapper.register("heslar")
 class HeslarMapper(ImportModelMapper):
     """Mapovač pro model Heslar."""
 
@@ -1499,6 +1737,7 @@ class HeslarMapper(ImportModelMapper):
         return field_mapping
 
 
+@ImportModelMapper.register("heslar_datace")
 class HeslarDataceMapper(ImportModelMapper):
     """Mapovač pro model HeslarDatace."""
 
@@ -1526,7 +1765,18 @@ class HeslarDataceMapper(ImportModelMapper):
         field_mapping["obdobi"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_OBDOBI})
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record) -> list:
+        """
+        Vrátí heslářové období navázané na importovanou dataci.
 
+        :param record: Záznam ``HeslarDatace`` po importu.
+        :return: Seznam s objektem ``obdobi``, jehož identifikátor se má případně aktualizovat.
+        """
+        return [record.obdobi]
+
+
+@ImportModelMapper.register("heslar_dokument_typ_material_rada")
 class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
     """Mapovač pro model HeslarDokumentTypMaterialRada."""
 
@@ -1555,7 +1805,18 @@ class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
         )
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: HeslarDokumentTypMaterialRada) -> list:
+        """
+        Vrátí dokumentovou řadu navázanou na importovanou kombinaci typu a materiálu.
 
+        :param record: Záznam ``HeslarDokumentTypMaterialRada`` po importu.
+        :return: Seznam s navázanou hodnotou ``dokument_rada``.
+        """
+        return [record.dokument_rada]
+
+
+@ImportModelMapper.register("heslar_hierarchie")
 class HeslarHierarchieMapper(ImportModelMapper):
     """Mapovač pro model HeslarHierarchie."""
 
@@ -1578,7 +1839,18 @@ class HeslarHierarchieMapper(ImportModelMapper):
         field_mapping["heslo_podrazene"] = LookupImportField(Heslar)
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: HeslarHierarchie) -> list:
+        """
+        Vrátí oba heslářové uzly propojené importovanou hierarchií.
 
+        :param record: Záznam ``HeslarHierarchie`` po importu.
+        :return: Seznam nadřazeného a podřazeného hesla.
+        """
+        return [record.heslo_nadrazene, record.heslo_podrazene]
+
+
+@ImportModelMapper.register("heslar_odkazy")
 class HeslarOdkazMapper(ImportModelMapper):
     """Mapovač pro model HeslarOdkaz."""
 
@@ -1607,7 +1879,18 @@ class HeslarOdkazMapper(ImportModelMapper):
         field_mapping["heslo"] = LookupImportField(Heslar)
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: HeslarOdkaz) -> list:
+        """
+        Vrátí heslo navázané na importovaný externí odkaz hesláře.
 
+        :param record: Záznam ``HeslarOdkaz`` po importu.
+        :return: Seznam s heslem, jehož metadata mohou být změnou odkazu dotčena.
+        """
+        return [record.heslo]
+
+
+@ImportModelMapper.register("organizace")
 class OrganizaceMapper(ImportModelMapper):
     """Mapovač pro model Organizace."""
 
@@ -1651,7 +1934,18 @@ class OrganizaceMapper(ImportModelMapper):
         field_mapping["licence"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_LICENCE})
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: Organizace) -> list:
+        """
+        Vrátí přímo importovanou organizaci jako cíl pro následné aktualizace.
 
+        :param record: Záznam ``Organizace`` po importu.
+        :return: Jednoprvkový seznam obsahující importovanou organizaci.
+        """
+        return [record]
+
+
+@ImportModelMapper.register("osoby")
 class OsobaMapper(ImportModelMapper):
     """Mapovač pro model Osoba."""
 
@@ -1671,6 +1965,7 @@ class OsobaMapper(ImportModelMapper):
     require_primary_key_value = True
 
 
+@ImportModelMapper.register("projekty")
 class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
     """Mapovač pro model Projekt."""
 
@@ -1729,7 +2024,18 @@ class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
         return self.transform_geometries(mapping_dict, performed_action)
 
+    @staticmethod
+    def get_record_history(record: Projekt):
+        """
+        Vrátí projekt jako cíl pro zápis historie.
 
+        :param record: Importovaný záznam ``Projekt``.
+        :return: Přímo předaný projekt.
+        """
+        return record
+
+
+@ImportModelMapper.register("projekty_katastry")
 class ProjektKatastrMapper(ImportModelMapper):
     """Mapovač pro model ProjektKatastr."""
 
@@ -1753,7 +2059,28 @@ class ProjektKatastrMapper(ImportModelMapper):
         field_mapping["katastr"] = RuianLookupImportField(RuianKatastr, "kod")
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: ProjektKatastr) -> list:
+        """
+        Vrátí projekt navázaný na importovanou vazbu ke katastru.
 
+        :param record: Záznam ``ProjektKatastr`` po importu.
+        :return: Seznam s projektem, jehož identifikátor je potřeba zohlednit.
+        """
+        return [record.projekt]
+
+    @staticmethod
+    def get_record_history(record: ProjektKatastr):
+        """
+        Vrátí projekt související s importovanou vazbou na katastr.
+
+        :param record: Záznam ``ProjektKatastr`` po importu.
+        :return: Projekt, do jehož historie má být změna propsána.
+        """
+        return record.projekt
+
+
+@ImportModelMapper.register("projekty_oznamovatele")
 class ProjektOznamovatelMapper(ImportModelMapper):
     """Mapovač pro model Oznamovatel."""
 
@@ -1775,7 +2102,28 @@ class ProjektOznamovatelMapper(ImportModelMapper):
         field_mapping["projekt"] = LookupImportField(Projekt)
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: Oznamovatel) -> list:
+        """
+        Vrátí projekt, k němuž patří importovaný oznamovatel.
 
+        :param record: Záznam ``Oznamovatel`` po importu.
+        :return: Seznam s navázaným projektem.
+        """
+        return [record.projekt]
+
+    @staticmethod
+    def get_record_history(record: Oznamovatel):
+        """
+        Vrátí projekt jako cíl pro historii změn oznamovatele.
+
+        :param record: Záznam ``Oznamovatel`` po importu.
+        :return: Projekt, k němuž se oznamovatel vztahuje.
+        """
+        return record.projekt
+
+
+@ImportModelMapper.register("samostatne_nalezy")
 class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
     """Mapovač pro model SamostatnyNalez."""
 
@@ -1838,7 +2186,28 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
         return self.transform_geometries(mapping_dict, performed_action)
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: SamostatnyNalez) -> list:
+        """
+        Vrátí samostatný nález a jeho projekt pro návaznou aktualizaci identifikátorů.
 
+        :param record: Záznam ``SamostatnyNalez`` po importu.
+        :return: Seznam obsahující nález a případně jeho projekt.
+        """
+        return [record, record.projekt]
+
+    @staticmethod
+    def get_record_history(record: SamostatnyNalez):
+        """
+        Vrátí samostatný nález jako cíl pro historii změn.
+
+        :param record: Záznam ``SamostatnyNalez`` po importu.
+        :return: Přímo předaný nález.
+        """
+        return record
+
+
+@ImportModelMapper.register("az_akce")
 class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
     """Mapovač pro modely ArcheologickyZaznam a Akce."""
 
@@ -1936,7 +2305,34 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
             record.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
         return super().record_postprocessing(record, performed_action, fedora_transaction)
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: Akce | ArcheologickyZaznam) -> list:
+        """
+        Vrátí archeologický záznam a projekt dotčené akce podle typu importovaného objektu.
 
+        :param record: Záznam ``Akce`` nebo ``ArcheologickyZaznam`` po importu.
+        :return: Seznam souvisejícího archeologického záznamu a projektu.
+        """
+        if isinstance(record, ArcheologickyZaznam):
+            return [record, record.akce.projekt]
+        elif isinstance(record, Akce):
+            return [record.archeologicky_zaznam, record.projekt]
+
+    @staticmethod
+    def get_record_history(record: Akce | ArcheologickyZaznam):
+        """
+        Vrátí archeologický záznam, do jehož historie se změna akce zapisuje.
+
+        :param record: Záznam ``Akce`` nebo ``ArcheologickyZaznam`` po importu.
+        :return: Archeologický záznam odpovídající importované akci.
+        """
+        if isinstance(record, ArcheologickyZaznam):
+            return record
+        elif isinstance(record, Akce):
+            return record.archeologicky_zaznam
+
+
+@ImportModelMapper.register("az_lokality")
 class LokalitaMapper(MultipleClassImportModelMapper):
     """Mapovač pro modely ArcheologickyZaznam a Lokalita."""
 
@@ -2008,7 +2404,21 @@ class LokalitaMapper(MultipleClassImportModelMapper):
         mapping_dict = mapping_dict | cls.lookup_fields_mapping
         return mapping_dict.get(field_name, BaseImportField())
 
+    @staticmethod
+    def get_record_history(record: ArcheologickyZaznam | Lokalita):
+        """
+        Vrátí archeologický záznam navázaný na lokalitu.
 
+        :param record: Záznam ``Lokalita`` nebo přímo ``ArcheologickyZaznam`` po importu.
+        :return: Archeologický záznam, ke kterému se historie váže.
+        """
+        if isinstance(record, Lokalita):
+            return record.archeologicky_zaznam
+        else:
+            return record
+
+
+@ImportModelMapper.register("az_akce_vedouci")
 class AkceVedouciMapper(ImportModelMapper):
     """Mapovač pro model AkceVedouci."""
 
@@ -2031,7 +2441,28 @@ class AkceVedouciMapper(ImportModelMapper):
         field_mapping["organizace"] = LookupImportField(Organizace)
         return field_mapping
 
+    @staticmethod
+    def get_record_history(record: AkceVedouci):
+        """
+        Vrátí archeologický záznam akce, k níž je vedoucí navázán.
 
+        :param record: Záznam ``AkceVedouci`` po importu.
+        :return: Archeologický záznam nadřazené akce.
+        """
+        return record.akce.archeologicky_zaznam
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: AkceVedouci) -> list:
+        """
+        Vrátí archeologický záznam dotčený změnou vedoucího akce.
+
+        :param record: Záznam ``AkceVedouci`` po importu.
+        :return: Seznam s archeologickým záznamem navázané akce.
+        """
+        return [record.akce.archeologicky_zaznam]
+
+
+@ImportModelMapper.register("az_katastry")
 class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
     """Mapovač pro model ArcheologickyZaznamKatastr."""
 
@@ -2055,7 +2486,28 @@ class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
         field_mapping["katastr"] = RuianLookupImportField(RuianKatastr, "kod")
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: ArcheologickyZaznamKatastr) -> list:
+        """
+        Vrátí archeologický záznam propojený s importovanou vazbou na katastr.
 
+        :param record: Záznam ``ArcheologickyZaznamKatastr`` po importu.
+        :return: Seznam s navázaným archeologickým záznamem.
+        """
+        return [record.archeologicky_zaznam]
+
+    @staticmethod
+    def get_record_history(record: ArcheologickyZaznamKatastr):
+        """
+        Vrátí archeologický záznam jako cíl pro historii vazby na katastr.
+
+        :param record: Záznam ``ArcheologickyZaznamKatastr`` po importu.
+        :return: Navázaný archeologický záznam.
+        """
+        return record.archeologicky_zaznam
+
+
+@ImportModelMapper.register("az_pian")
 class PianMapper(ImportModelMapper, GeometryTransformMixin):
     """Mapovač pro model Pian."""
 
@@ -2092,7 +2544,18 @@ class PianMapper(ImportModelMapper, GeometryTransformMixin):
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
         return self.transform_geometries(mapping_dict, performed_action)
 
+    @staticmethod
+    def get_record_history(record: Pian):
+        """
+        Vrátí přímo importovaný PIAN jako cíl pro historii.
 
+        :param record: Záznam ``Pian`` po importu.
+        :return: Přímo předaný záznam ``Pian``.
+        """
+        return record
+
+
+@ImportModelMapper.register("az_dokumentacni_jednotky")
 class DokumentacniJednotkaMapper(ImportModelMapper):
     """Mapovač pro model DokumentacniJednotka."""
 
@@ -2134,7 +2597,28 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
             record.pian = vytvor_pian(record.archeologicky_zaznam.hlavni_katastr, fedora_transaction)
         return record
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: DokumentacniJednotka) -> list:
+        """
+        Vrátí archeologický záznam navázaný na dokumentační jednotku.
 
+        :param record: Záznam ``DokumentacniJednotka`` po importu.
+        :return: Seznam s nadřazeným archeologickým záznamem.
+        """
+        return [record.archeologicky_zaznam]
+
+    @staticmethod
+    def get_record_history(record: DokumentacniJednotka):
+        """
+        Vrátí archeologický záznam jako cíl pro historii dokumentační jednotky.
+
+        :param record: Záznam ``DokumentacniJednotka`` po importu.
+        :return: Archeologický záznam navázaný na dokumentační jednotku.
+        """
+        return record.archeologicky_zaznam
+
+
+@ImportModelMapper.register("az_adb")
 class AdbMapper(ImportModelMapper):
     """Mapovač pro model Adb."""
 
@@ -2170,7 +2654,28 @@ class AdbMapper(ImportModelMapper):
         field_mapping["sm5"] = LookupImportField(Kladysm5, "mapno")
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: Adb) -> list:
+        """
+        Vrátí ADB záznam a jeho nadřazený archeologický záznam pro aktualizaci identifikátorů.
 
+        :param record: Záznam ``Adb`` po importu.
+        :return: Seznam obsahující ADB záznam a archeologický záznam dokumentační jednotky.
+        """
+        return [record, record.dokumentacni_jednotka.archeologicky_zaznam]
+
+    @staticmethod
+    def get_record_history(record: Adb):
+        """
+        Vrátí archeologický záznam nadřazený importovanému ADB záznamu.
+
+        :param record: Záznam ``Adb`` po importu.
+        :return: Archeologický záznam propojený přes dokumentační jednotku.
+        """
+        return record.dokumentacni_jednotka.archeologicky_zaznam
+
+
+@ImportModelMapper.register("az_adb_vyskove_body")
 class AdbVyskovyBod(ImportModelMapper):
     """Mapovač pro model VyskovyBod."""
 
@@ -2192,7 +2697,28 @@ class AdbVyskovyBod(ImportModelMapper):
         field_mapping["typ"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_VYSKOVY_BOD_TYP})
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: VyskovyBod) -> list:
+        """
+        Vrátí výškový bod nepřímo přes ADB záznam a jeho archeologický kontext.
 
+        :param record: Záznam ``VyskovyBod`` po importu.
+        :return: Seznam s ADB záznamem a nadřazeným archeologickým záznamem.
+        """
+        return [record.adb, record.adb.dokumentacni_jednotka.archeologicky_zaznam]
+
+    @staticmethod
+    def get_record_history(record: VyskovyBod):
+        """
+        Vrátí archeologický záznam navázaný na importovaný výškový bod.
+
+        :param record: Záznam ``VyskovyBod`` po importu.
+        :return: Archeologický záznam dostupný přes navázaný ADB záznam.
+        """
+        return record.adb.dokumentacni_jednotka.archeologicky_zaznam
+
+
+@ImportModelMapper.register("dokumenty_lety")
 class DokumentLetMapper(ImportModelMapper):
     """Mapovač pro model Let."""
 
@@ -2228,6 +2754,7 @@ class DokumentLetMapper(ImportModelMapper):
         return field_mapping
 
 
+@ImportModelMapper.register("dokumenty")
 class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
     """Mapovač pro modely Dokument a DokumentExtraData."""
 
@@ -2384,7 +2911,21 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
         return self.transform_geometries(mapping_dict, performed_action)
 
+    @staticmethod
+    def get_record_history(record: Dokument | DokumentExtraData):
+        """
+        Vrátí dokument, do jehož historie se má změna propsat.
 
+        :param record: Záznam ``Dokument`` nebo ``DokumentExtraData`` po importu.
+        :return: Přímo dokument nebo dokument navázaný přes extra data.
+        """
+        if isinstance(record, Dokument):
+            return record
+        else:
+            return record.dokument
+
+
+@ImportModelMapper.register("dokumenty_autori")
 class DokumentAutorMapper(ImportModelMapper):
     """Mapovač pro model DokumentAutor."""
 
@@ -2408,7 +2949,28 @@ class DokumentAutorMapper(ImportModelMapper):
         field_mapping["autor"] = LookupImportField(Osoba)
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: DokumentAutor) -> list:
+        """
+        Vrátí dokument dotčený změnou pořadí nebo vazby autora.
 
+        :param record: Záznam ``DokumentAutor`` po importu.
+        :return: Seznam s navázaným dokumentem.
+        """
+        return [record.dokument]
+
+    @staticmethod
+    def get_record_history(record: DokumentAutor):
+        """
+        Vrátí dokument jako cíl pro historii vazby autora.
+
+        :param record: Záznam ``DokumentAutor`` po importu.
+        :return: Navázaný dokument.
+        """
+        return record.dokument
+
+
+@ImportModelMapper.register("dokumenty_jazyky")
 class DokumentJazykMapper(ImportModelMapper):
     """Mapovač pro model DokumentJazyk."""
 
@@ -2431,7 +2993,28 @@ class DokumentJazykMapper(ImportModelMapper):
         field_mapping["jazyk"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_JAZYK})
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: DokumentJazyk) -> list:
+        """
+        Vrátí dokument dotčený změnou jazykové vazby.
 
+        :param record: Záznam ``DokumentJazyk`` po importu.
+        :return: Seznam s navázaným dokumentem.
+        """
+        return [record.dokument]
+
+    @staticmethod
+    def get_record_history(record: DokumentJazyk):
+        """
+        Vrátí dokument jako cíl pro historii jazykové vazby.
+
+        :param record: Záznam ``DokumentJazyk`` po importu.
+        :return: Navázaný dokument.
+        """
+        return record.dokument
+
+
+@ImportModelMapper.register("dokumenty_osoby")
 class DokumentOsobaMapper(ImportModelMapper):
     """Mapovač pro model DokumentOsoba."""
 
@@ -2454,7 +3037,28 @@ class DokumentOsobaMapper(ImportModelMapper):
         field_mapping["osoba"] = LookupImportField(Osoba)
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: DokumentOsoba) -> list:
+        """
+        Vrátí dokument dotčený změnou osobní vazby.
 
+        :param record: Záznam ``DokumentOsoba`` po importu.
+        :return: Seznam s navázaným dokumentem.
+        """
+        return [record.dokument]
+
+    @staticmethod
+    def get_record_history(record: DokumentOsoba):
+        """
+        Vrátí dokument jako cíl pro historii osobní vazby.
+
+        :param record: Záznam ``DokumentOsoba`` po importu.
+        :return: Navázaný dokument.
+        """
+        return record.dokument
+
+
+@ImportModelMapper.register("dokumenty_posudky")
 class DokumentPosudekMapper(ImportModelMapper):
     """Mapovač pro model DokumentPosudek."""
 
@@ -2477,7 +3081,28 @@ class DokumentPosudekMapper(ImportModelMapper):
         field_mapping["posudek"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_POSUDEK_TYP})
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: DokumentPosudek) -> list:
+        """
+        Vrátí dokument dotčený změnou vazby na posudek.
 
+        :param record: Záznam ``DokumentPosudek`` po importu.
+        :return: Seznam s navázaným dokumentem.
+        """
+        return [record.dokument]
+
+    @staticmethod
+    def get_record_history(record: DokumentPosudek):
+        """
+        Vrátí dokument jako cíl pro historii vazby na posudek.
+
+        :param record: Záznam ``DokumentPosudek`` po importu.
+        :return: Navázaný dokument.
+        """
+        return record.dokument
+
+
+@ImportModelMapper.register("dokumenty_tvary")
 class TvarMapper(ImportModelMapper):
     """Mapovač pro model Tvar."""
 
@@ -2500,7 +3125,28 @@ class TvarMapper(ImportModelMapper):
         field_mapping["tvar"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_LETFOTO_TVAR})
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: Tvar) -> list:
+        """
+        Vrátí dokument dotčený změnou tvaru leteckého snímku.
 
+        :param record: Záznam ``Tvar`` po importu.
+        :return: Seznam s dokumentem, ke kterému tvar patří.
+        """
+        return [record.dokument]
+
+    @staticmethod
+    def get_record_history(record: Tvar):
+        """
+        Vrátí dokument jako cíl pro historii tvaru.
+
+        :param record: Záznam ``Tvar`` po importu.
+        :return: Navázaný dokument.
+        """
+        return record.dokument
+
+
+@ImportModelMapper.register("dokumenty_casti")
 class DokumentCastMapper(ImportModelMapper):
     """Mapovač pro model DokumentCast."""
 
@@ -2524,7 +3170,28 @@ class DokumentCastMapper(ImportModelMapper):
         field_mapping["projekt"] = LookupImportField(Projekt)
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: DokumentCast) -> list:
+        """
+        Vrátí všechny hlavní entity navázané na importovanou část dokumentu.
 
+        :param record: Záznam ``DokumentCast`` po importu.
+        :return: Seznam dokumentu, archeologického záznamu a projektu, pokud jsou navázány.
+        """
+        return [record.dokument, record.archeologicky_zaznam, record.projekt]
+
+    @staticmethod
+    def get_record_history(record: DokumentCast):
+        """
+        Vrátí dokument jako cíl pro historii části dokumentu.
+
+        :param record: Záznam ``DokumentCast`` po importu.
+        :return: Nadřazený dokument.
+        """
+        return record.dokument
+
+
+@ImportModelMapper.register("dokumenty_neident_akce")
 class NeidentAkceMapper(ImportModelMapper):
     """Mapovač pro model NeidentAkce."""
 
@@ -2547,7 +3214,28 @@ class NeidentAkceMapper(ImportModelMapper):
         field_mapping["katastr"] = RuianLookupImportField(RuianKatastr, "kod")
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: NeidentAkce) -> list:
+        """
+        Vrátí dokument navázaný na neidentifikovanou akci přes část dokumentu.
 
+        :param record: Záznam ``NeidentAkce`` po importu.
+        :return: Seznam s nadřazeným dokumentem.
+        """
+        return [record.dokument_cast.dokument]
+
+    @staticmethod
+    def get_record_history(record: NeidentAkce):
+        """
+        Vrátí dokument jako cíl pro historii neidentifikované akce.
+
+        :param record: Záznam ``NeidentAkce`` po importu.
+        :return: Dokument navázaný přes část dokumentu.
+        """
+        return record.dokument_cast.dokument
+
+
+@ImportModelMapper.register("dokumenty_neident_akce_vedouci")
 class NeidentAkceVedouciMapper(ImportModelMapper):
     """Mapovač pro model NeidentAkceVedouci."""
 
@@ -2570,7 +3258,28 @@ class NeidentAkceVedouciMapper(ImportModelMapper):
         field_mapping["vedouci"] = LookupImportField(Osoba)
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: NeidentAkceVedouci) -> list:
+        """
+        Vrátí dokument dotčený změnou vedoucího neidentifikované akce.
 
+        :param record: Záznam ``NeidentAkceVedouci`` po importu.
+        :return: Seznam s dokumentem navázaným přes neidentifikovanou akci.
+        """
+        return [record.neident_akce.dokument_cast.dokument]
+
+    @staticmethod
+    def get_record_history(record: NeidentAkceVedouci):
+        """
+        Vrátí dokument jako cíl pro historii vedoucího neidentifikované akce.
+
+        :param record: Záznam ``NeidentAkceVedouci`` po importu.
+        :return: Dokument navázaný přes neidentifikovanou akci.
+        """
+        return record.neident_akce.dokument_cast.dokument
+
+
+@ImportModelMapper.register("komponenty")
 class KomponentaMapper(ImportModelMapper):
     """Mapovač pro model Komponenta."""
 
@@ -2595,7 +3304,44 @@ class KomponentaMapper(ImportModelMapper):
         field_mapping["areal"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_AREAL})
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: Komponenta) -> list:
+        """
+        Vrátí záznamy dotčené změnou komponenty podle typu navázaného objektu.
 
+        :param record: Záznam ``Komponenta`` po importu.
+        :return: Seznam archeologických záznamů nebo dokumentů odvozených z vazby komponenty.
+        """
+        record_list = []
+        navazany_objekt = record.komponenta_vazby.navazany_objekt
+        if isinstance(navazany_objekt, DokumentCast):
+            if navazany_objekt.archeologicky_zaznam:
+                record_list.append(navazany_objekt.archeologicky_zaznam)
+            elif navazany_objekt.dokument:
+                record_list.append(navazany_objekt.dokument)
+        elif isinstance(navazany_objekt, DokumentacniJednotka):
+            record_list.append(navazany_objekt.archeologicky_zaznam)
+        return record_list
+
+    @staticmethod
+    def get_record_history(record: Komponenta):
+        """
+        Vrátí objekt, do jehož historie se má změna komponenty propsat.
+
+        :param record: Záznam ``Komponenta`` po importu.
+        :return: Archeologický záznam nebo dokument odvozený z vazby komponenty.
+        """
+        navazany_objekt = record.komponenta_vazby.navazany_objekt
+        if isinstance(navazany_objekt, DokumentCast):
+            if navazany_objekt.archeologicky_zaznam:
+                return navazany_objekt.archeologicky_zaznam
+            elif navazany_objekt.dokument:
+                return navazany_objekt.dokument
+        elif isinstance(navazany_objekt, DokumentacniJednotka):
+            return navazany_objekt.archeologicky_zaznam
+
+
+@ImportModelMapper.register("komponenty_aktivity")
 class KomponentaAktivitaMapper(ImportModelMapper):
     """Mapovač pro model KomponentaAktivita."""
 
@@ -2618,6 +3364,28 @@ class KomponentaAktivitaMapper(ImportModelMapper):
         field_mapping["aktivita"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_AKTIVITA})
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: KomponentaAktivita) -> list:
+        """
+        Vrátí stejné cílové záznamy jako navázaná komponenta.
+
+        :param record: Záznam ``KomponentaAktivita`` po importu.
+        :return: Seznam záznamů odvozený z mapperu komponenty.
+        """
+        komponenta = record.komponenta
+        return KomponentaMapper._get_updated_ident_cely_record_list(komponenta)
+
+    @staticmethod
+    def get_record_history(record: KomponentaAktivita):
+        """
+        Vrátí objekt historie stejný jako u navázané komponenty.
+
+        :param record: Záznam ``KomponentaAktivita`` po importu.
+        :return: Cílový objekt historie odvozený z komponenty.
+        """
+        komponenta = record.komponenta
+        return KomponentaMapper.get_record_history(komponenta)
+
 
 class NalezMapper(ImportModelMapper):
     """Základní mapper pro nálezy."""
@@ -2625,7 +3393,30 @@ class NalezMapper(ImportModelMapper):
     fields = ("pocet", "poznamka")
     primary_key = "id"
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: NalezObjekt | NalezPredmet) -> list:
+        """
+        Vrátí cílové záznamy odvozené z komponenty, ke které nález patří.
 
+        :param record: Záznam ``NalezObjekt`` nebo ``NalezPredmet`` po importu.
+        :return: Seznam záznamů získaný z mapperu komponenty.
+        """
+        komponenta = record.komponenta
+        return KomponentaMapper._get_updated_ident_cely_record_list(komponenta)
+
+    @staticmethod
+    def get_record_history(record: NalezObjekt | NalezPredmet):
+        """
+        Vrátí objekt historie odvozený z komponenty navázané na nález.
+
+        :param record: Záznam ``NalezObjekt`` nebo ``NalezPredmet`` po importu.
+        :return: Cílový objekt historie získaný z mapperu komponenty.
+        """
+        komponenta = record.komponenta
+        return KomponentaMapper.get_record_history(komponenta)
+
+
+@ImportModelMapper.register("komponenty_nalezy_objekty")
 class NalezObjektMapper(NalezMapper):
     """Mapovač pro model NalezObjekt."""
 
@@ -2650,6 +3441,7 @@ class NalezObjektMapper(NalezMapper):
         return field_mapping
 
 
+@ImportModelMapper.register("komponenty_nalezy_predmety")
 class NalezPredmetMapper(NalezMapper):
     """Mapovač pro model NalezPredmet."""
 
@@ -2674,6 +3466,7 @@ class NalezPredmetMapper(NalezMapper):
         return field_mapping
 
 
+@ImportModelMapper.register("externi_zdroje")
 class ExterniZdrojMapper(ImportModelMapper):
     """Mapovač pro model ExterniZdroj."""
 
@@ -2716,7 +3509,18 @@ class ExterniZdrojMapper(ImportModelMapper):
         )
         return field_mapping
 
+    @staticmethod
+    def get_record_history(record: ExterniZdroj):
+        """
+        Vrátí přímo importovaný externí zdroj jako cíl pro historii.
 
+        :param record: Záznam ``ExterniZdroj`` po importu.
+        :return: Přímo předaný externí zdroj.
+        """
+        return record
+
+
+@ImportModelMapper.register("externi_zdroje_autori")
 class ExterniZdrojAutorMapper(ImportModelMapper):
     """Mapovač pro model ExterniZdrojAutor."""
 
@@ -2740,7 +3544,28 @@ class ExterniZdrojAutorMapper(ImportModelMapper):
         field_mapping["autor"] = LookupImportField(Osoba)
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: ExterniZdrojAutor) -> list:
+        """
+        Vrátí externí zdroj dotčený změnou pořadí nebo vazby autora.
 
+        :param record: Záznam ``ExterniZdrojAutor`` po importu.
+        :return: Seznam s navázaným externím zdrojem.
+        """
+        return [record.externi_zdroj]
+
+    @staticmethod
+    def get_record_history(record: ExterniZdrojAutor):
+        """
+        Vrátí externí zdroj jako cíl pro historii vazby autora.
+
+        :param record: Záznam ``ExterniZdrojAutor`` po importu.
+        :return: Navázaný externí zdroj.
+        """
+        return record.externi_zdroj
+
+
+@ImportModelMapper.register("externi_zdroje_editori")
 class ExterniZdrojEditorMapper(ImportModelMapper):
     """Mapovač pro model ExterniZdrojEditor."""
 
@@ -2764,7 +3589,28 @@ class ExterniZdrojEditorMapper(ImportModelMapper):
         field_mapping["editor"] = LookupImportField(Osoba)
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: ExterniZdrojEditor) -> list:
+        """
+        Vrátí externí zdroj dotčený změnou pořadí nebo vazby editora.
 
+        :param record: Záznam ``ExterniZdrojEditor`` po importu.
+        :return: Seznam s navázaným externím zdrojem.
+        """
+        return [record.externi_zdroj]
+
+    @staticmethod
+    def get_record_history(record: ExterniZdrojEditor):
+        """
+        Vrátí externí zdroj jako cíl pro historii vazby editora.
+
+        :param record: Záznam ``ExterniZdrojEditor`` po importu.
+        :return: Navázaný externí zdroj.
+        """
+        return record.externi_zdroj
+
+
+@ImportModelMapper.register("externi_odkazy")
 class ExterniOdkazMapper(ImportModelMapper):
     """Mapovač pro model ExterniOdkaz."""
 
@@ -2787,7 +3633,28 @@ class ExterniOdkazMapper(ImportModelMapper):
         field_mapping["externi_zdroj"] = LookupImportField(ExterniZdroj)
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: ExterniOdkaz) -> list:
+        """
+        Vrátí externí zdroj a archeologický záznam propojené importovaným odkazem.
 
+        :param record: Záznam ``ExterniOdkaz`` po importu.
+        :return: Seznam navázaného externího zdroje a archeologického záznamu.
+        """
+        return [record.externi_zdroj, record.archeologicky_zaznam]
+
+    @staticmethod
+    def get_record_history(record: ExterniOdkaz):
+        """
+        Vrátí externí zdroj jako cíl pro historii externího odkazu.
+
+        :param record: Záznam ``ExterniOdkaz`` po importu.
+        :return: Navázaný externí zdroj.
+        """
+        return record.externi_zdroj
+
+
+@ImportModelMapper.register("uzivatele")
 class UzivatelMapper(ImportModelMapper):
     """Mapovač pro model User."""
 
@@ -2822,7 +3689,34 @@ class UzivatelMapper(ImportModelMapper):
         field_mapping["organizace"] = LookupImportField(Organizace)
         return field_mapping
 
+    @staticmethod
+    def get_record_history(record: User):
+        """
+        Vrátí uživatele jako cíl pro historii změn.
 
+        :param record: Záznam ``User`` po importu.
+        :return: Přímo předaný uživatel.
+        """
+        return record
+
+    def import_validation(self, performed_action, user_id) -> dict | None:
+        """
+        Zabrání smazání aktivního uživatele a jinak deleguje běžnou validaci mapperu.
+
+        :param performed_action: Typ prováděné operace importu.
+        :param user_id: Primární klíč aktuálně přihlášeného uživatele.
+        :return: Filtrační podmínky primárního klíče nebo ``None`` podle standardní validace mapperu.
+        :raises ImportDataActiveUserCannotBeDeleted: Vyvolá se při pokusu smazat právě aktivního uživatele.
+        """
+        if (
+            performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE
+            and User.objects.get(pk=user_id).ident_cely == self.value_dict["ident_cely"]
+        ):
+            raise ImportDataActiveUserCannotBeDeleted(self.value_dict["ident_cely"])
+        return super().import_validation(performed_action)
+
+
+@ImportModelMapper.register("uzivatele_notifikace_projekty")
 class UzivatelNotifikaceProjektMapper(ImportModelMapper):
     """Mapovač pro model Pes (notifikace uživatele vázané na projekt či územní jednotku RUIAN)."""
 
@@ -2846,14 +3740,29 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
         field_mapping["ruian"] = GenericForeignKeyImportField([RuianKatastr, RuianOkres, RuianKraj], "kod", "kod")
         return field_mapping
 
+    @functools.cached_property
+    def _ruian_content_object(self) -> RuianKatastr | RuianOkres | RuianKraj:
+        """
+        Vrátí objekt RUIAN odpovídající hodnotě v importovaném záznamu.
+
+        Výsledek je cachován per-instance — DB dotaz proběhne nejvýše jednou za řádek CSV,
+        i když je ``_ruian_content_object`` voláno z více metod (``_get_filter_kwargs_primary_key``,
+        ``map``, ``create_records``).
+
+        :return: Instance modelu ``RuianKatastr``, ``RuianOkres`` nebo ``RuianKraj``.
+        :raises ImportDataMissingReferencedValueError: Vyvolá se, pokud hodnota není nalezena v žádném z modelů.
+        """
+        field = GenericForeignKeyImportField([RuianKatastr, RuianOkres, RuianKraj], "kod", "kod")
+        field.value = self.value_dict.get("ruian", self.value_dict.get("object_id"))
+        return field._instance_value
+
     def _get_filter_kwargs_primary_key(self) -> dict | None:
         """
         Vrací filter kwargs primary key.
 
         :return: Načtená data odpovídající zadaným vstupům.
         """
-        primary_key_import_field: GenericForeignKeyImportField = self.get_mapping()["ruian"]
-        content_object = primary_key_import_field._process_value(self.value_dict["ruian"])
+        content_object = self._ruian_content_object
         return {
             "user__ident_cely": self.value_dict["uzivatel"],
             "content_type": ContentType.objects.get_for_model(content_object),
@@ -2875,7 +3784,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
 
     def create_records(self, performed_action) -> list:
         """
-        Vytvoří records. v aplikaci.
+        Vytvoří záznamy v aplikaci.
 
         :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``.
         :return: Nově vytvořená hodnota připravená touto funkcí.
@@ -2883,10 +3792,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
         mapping_dict = self.map(performed_action, True)
         mapping_dict = {self.map_column_name_to_field_name(field): value for field, value in mapping_dict.items()}
         app_label, model = mapping_dict["content_type"].split(".")
-        primary_key_import_field: GenericForeignKeyImportField = self.get_mapping()["ruian"]
-        content_object = primary_key_import_field._process_value(
-            self.value_dict.get("ruian", self.value_dict.get("object_id"))
-        )
+        content_object = self._ruian_content_object
         return [
             Pes(
                 user=mapping_dict["user"],
@@ -2924,10 +3830,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
         :return: Výstup funkce odpovídající implementované logice.
         """
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
-        primary_key_import_field: GenericForeignKeyImportField = self.get_mapping()["ruian"]
-        content_object = primary_key_import_field._process_value(
-            self.value_dict.get("ruian", self.value_dict.get("object_id"))
-        )
+        content_object = self._ruian_content_object
         content_type: ContentType = ContentType.objects.get_for_model(content_object)
         return {
             "uzivatel": mapping_dict["uzivatel"],
@@ -2935,7 +3838,28 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
             "object_id": content_object.kod,
         }
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: Pes) -> list:
+        """
+        Vrátí uživatele dotčeného změnou projektové notifikace.
 
+        :param record: Záznam ``Pes`` po importu.
+        :return: Seznam s uživatelem navázaným na notifikaci.
+        """
+        return [record.user]
+
+    @staticmethod
+    def get_record_history(record: Pes):
+        """
+        Vrátí uživatele jako cíl pro historii projektové notifikace.
+
+        :param record: Záznam ``Pes`` po importu.
+        :return: Uživatel navázaný na notifikaci.
+        """
+        return record.user
+
+
+@ImportModelMapper.register("uzivatele_spoluprace")
 class UzivatelSpolupraceMapper(ImportModelMapper):
     """Mapovač pro model UzivatelSpoluprace."""
 
@@ -2958,7 +3882,28 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
         field_mapping["spolupracovnik"] = LookupImportField(User)
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: UzivatelSpoluprace) -> list:
+        """
+        Vrátí oba uživatele zapojené do spolupráce.
 
+        :param record: Záznam ``UzivatelSpoluprace`` po importu.
+        :return: Seznam vedoucího a spolupracovníka.
+        """
+        return [record.vedouci, record.spolupracovnik]
+
+    @staticmethod
+    def get_record_history(record: UzivatelSpoluprace):
+        """
+        Vrátí přímo vazbu spolupráce jako cíl pro historii.
+
+        :param record: Záznam ``UzivatelSpoluprace`` po importu.
+        :return: Přímo předaná vazba spolupráce.
+        """
+        return record
+
+
+@ImportModelMapper.register("uzivatele_opravneni")
 class UzivatelOpravneniMapper(ImportModelMapper):
     """Mapovač pro přiřazení skupinových oprávnění uživateli (model User)."""
 
@@ -2996,17 +3941,38 @@ class UzivatelOpravneniMapper(ImportModelMapper):
         """
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
-    def import_validation(self, performed_action):
+    def import_validation(self, *args, **kwargs):
         """
-        Načte validation. v aplikaci.
+        Vrátí filtrační podmínky uživatele bez další validační logiky.
 
-        :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``import_validation``.
-
-            :return: Vrací výsledek volání ``_get_filter_kwargs_primary_key()``.
+        :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
+        :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
+        :return: Slovník s podmínkou pro dohledání cílového uživatele.
         """
         return self._get_filter_kwargs_primary_key()
 
+    @staticmethod
+    def get_record_history(record: User):
+        """
+        Vrátí uživatele jako cíl pro historii změn oprávnění.
 
+        :param record: Záznam ``User`` po importu.
+        :return: Přímo předaný uživatel.
+        """
+        return record
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: User) -> list:
+        """
+        Vrátí uživatele dotčeného změnou skupinového oprávnění.
+
+        :param record: Záznam ``User`` po importu.
+        :return: Jednoprvkový seznam s uživatelem.
+        """
+        return [record]
+
+
+@ImportModelMapper.register("soubory")
 class SouborMapper(ImportModelMapper):
     """Mapovač pro model Soubor."""
 
@@ -3025,10 +3991,32 @@ class SouborMapper(ImportModelMapper):
             :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
+        field_mapping["nazev"] = FileNameImportField()
         field_mapping["vazba"] = VazbaLookupImportField(read_field_name="soubory")
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: Soubor) -> list:
+        """
+        Vrátí objekt navázaný na importovaný soubor.
 
+        :param record: Záznam ``Soubor`` po importu.
+        :return: Seznam s objektem dostupným přes vazbu souboru.
+        """
+        return [record.vazba.navazany_objekt]
+
+    @staticmethod
+    def get_record_history(record: Soubor):
+        """
+        Vrátí přímo soubor jako cíl pro historii změn.
+
+        :param record: Záznam ``Soubor`` po importu.
+        :return: Přímo předaný soubor.
+        """
+        return record
+
+
+@ImportModelMapper.register("uzivatele_notifikace")
 class UzivatelNotifikaceMapper(ImportModelMapper):
     """Mapovač pro přiřazení typů notifikací uživateli (model User)."""
 
@@ -3066,17 +4054,38 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
         """
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
-    def import_validation(self, performed_action):
+    def import_validation(self, *args, **kwargs):
         """
-        Načte validation. v aplikaci.
+        Vrátí filtrační podmínky uživatele bez další validační logiky.
 
-        :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``import_validation``.
-
-            :return: Vrací výsledek volání ``_get_filter_kwargs_primary_key()``.
+        :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
+        :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
+        :return: Slovník s podmínkou pro dohledání cílového uživatele.
         """
         return self._get_filter_kwargs_primary_key()
 
+    @staticmethod
+    def get_record_history(record: User):
+        """
+        Vrátí uživatele jako cíl pro historii notifikačních preferencí.
 
+        :param record: Záznam ``User`` po importu.
+        :return: Přímo předaný uživatel.
+        """
+        return record
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: User) -> list:
+        """
+        Vrátí uživatele dotčeného změnou typu notifikace.
+
+        :param record: Záznam ``User`` po importu.
+        :return: Jednoprvkový seznam s uživatelem.
+        """
+        return [record]
+
+
+@ImportModelMapper.register("historie")
 class HistorieMapper(ImportModelMapper):
     """Mapovač pro model Historie."""
 
@@ -3102,3 +4111,19 @@ class HistorieMapper(ImportModelMapper):
         field_mapping["vazba"] = VazbaLookupImportField(read_field_name="historie")
         field_mapping["uzivatel"] = LookupImportField(User)
         return field_mapping
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: Historie) -> list:
+        """
+        Vrátí objekty dotčené importovaným historickým záznamem podle typu vazby.
+
+        :param record: Záznam ``Historie`` po importu.
+        :return: Seznam objektů navázaných přes ``vazba``, jejichž identifikátory je třeba aktualizovat.
+        """
+        navazany_objekt = record.vazba.navazany_objekt
+        if isinstance(navazany_objekt, ModelWithMetadata) or isinstance(navazany_objekt, User):
+            return [navazany_objekt]
+        elif isinstance(navazany_objekt, UzivatelSpoluprace):
+            return [navazany_objekt.spolupracovnik, navazany_objekt.vedouci]
+        elif isinstance(navazany_objekt, Soubor):
+            return [navazany_objekt]

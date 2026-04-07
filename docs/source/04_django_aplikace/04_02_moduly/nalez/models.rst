@@ -25,7 +25,7 @@ Třídy
 
       Textová reprezentace objektu.
 
-          :return: Vrací atribut objektu.
+      :return: Vrací atribut objektu.
 
    .. py:method:: get_permission_object()
 
@@ -53,7 +53,7 @@ Třídy
 
       Textová reprezentace objektu.
 
-          :return: Vrací atribut objektu.
+      :return: Vrací atribut objektu.
 
    .. py:method:: get_permission_object()
 
