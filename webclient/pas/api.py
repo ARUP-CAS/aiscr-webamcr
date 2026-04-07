@@ -629,7 +629,8 @@ class SamostatnyNalezXmlImportView(APIView):
         xml_file.seek(0)
 
         try:
-            doc = etree.parse(xml_file)
+            parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
+            doc = etree.parse(xml_file, parser=parser)
         except etree.XMLSyntaxError as exc:
             logger.warning(
                 "pas.api.SamostatnyNalezXmlImportView.post.xml_syntax_error",
