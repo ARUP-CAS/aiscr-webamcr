@@ -996,7 +996,11 @@ class SamostatnyNalezXmlImportView(APIView):
 
                     :return: Vrací lokální soubor pro xml.xsd, jinak None.
                     """
-                    if "w3.org" in url and "xml.xsd" in url:
+                    allowed_urls = (
+                        "http://www.w3.org/2001/xml.xsd",
+                        "https://www.w3.org/2001/xml.xsd",
+                    )
+                    if url in allowed_urls:
                         return self.resolve_filename("xml_generator/definitions/xml.xsd", context)
                     return None
 
