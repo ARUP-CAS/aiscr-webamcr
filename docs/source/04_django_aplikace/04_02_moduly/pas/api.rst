@@ -181,8 +181,8 @@ Třídy
       :param format: Formát odpovědi.
 
       :return: Vrací ``Response`` se seznamem vytvořených ``ident_cely`` (HTTP 200),
-      nebo chybou syntaxe volání (HTTP 400), chybějícím projektem (HTTP 404),
-      nevalidním XML či datovými chybami (HTTP 422).
+               nebo chybou syntaxe volání (HTTP 400), chybějícím projektem (HTTP 404),
+               nevalidním XML či datovými chybami (HTTP 422).
 
    .. py:method:: _has_import_permissions()
 
@@ -351,23 +351,44 @@ Funkce
    Podporované záznamy:
 
    ``access_rules`` (``item_id="access_rules"``)
-   Seznam pravidel přístupu. Každé pravidlo je objekt s klíči:
+       Seznam pravidel přístupu. Každé pravidlo je objekt s klíči:
 
+       - ``rule_type`` *(povinný)* — typ pravidla; povolené hodnoty:
+         ``"ip_blacklist"``, ``"ip_whitelist"``, ``"user_blacklist"``, ``"user_whitelist"``
+       - ``value`` *(povinný)* — IP adresa, CIDR rozsah (např. ``"192.168.1.0/24"``)
+         nebo uživatelské jméno podle ``rule_type``
+       - ``active`` *(volitelný, výchozí* ``true``*)* — ``false`` pravidlo dočasně deaktivuje
 
-   ``access_rules`` (``item_id="access_rules"``)
-   Seznam pravidel přístupu. Každé pravidlo je objekt s klíči:
+       Příklad::
 
-   - ``rule_type`` *(povinný)* — typ pravidla; povolené hodnoty: ``"ip_blacklist"``, ``"ip_whitelist"``, ``"user_blacklist"``, ``"user_whitelist"``
-   - ``value`` *(povinný)* — IP adresa, CIDR rozsah (např. ``"192.168.1.0/24"``) nebo uživatelské jméno podle ``rule_type``
-   - ``active`` *(volitelný, výchozí* ``true``*)* — ``false`` pravidlo dočasně deaktivuje
+           [
+             {"rule_type": "ip_blacklist", "value": "1.2.3.4"},
+             {"rule_type": "ip_whitelist", "value": "10.0.0.0/8"},
+             {"rule_type": "user_blacklist", "value": "jan.novak", "active": false}
+           ]
 
    ``rate_limits`` (``item_id="rate_limits"``)
-   Seznam limitů počtu požadavků. Každý limit je objekt s klíči:
+       Seznam limitů počtu požadavků. Každý limit je objekt s klíči:
 
-   - ``scope`` *(povinný)* — rozsah pravidla; povolené hodnoty: ``"user"``, ``"ip"``
-   - ``value`` *(povinný)* — uživatelské jméno nebo IP adresa/CIDR rozsah
-   - ``rate`` *(povinný)* — limit ve formátu ``"počet/jednotka"``; jednotky: ``s`` (sekunda), ``m`` (minuta), ``h`` (hodina), ``d`` (den); např. ``"10/m"``, ``"100/h"``, ``"1000/d"``
-   - ``active`` *(volitelný, výchozí* ``true``*)* — ``false`` limit dočasně deaktivuje
+       - ``scope`` *(povinný)* — rozsah pravidla; povolené hodnoty: ``"user"``, ``"ip"``
+       - ``value`` *(povinný)* — uživatelské jméno nebo IP adresa/CIDR rozsah
+       - ``rate`` *(povinný)* — limit ve formátu ``"počet/jednotka"``;
+         jednotky: ``s`` (sekunda), ``m`` (minuta), ``h`` (hodina), ``d`` (den);
+         např. ``"10/m"``, ``"100/h"``, ``"1000/d"``
+       - ``active`` *(volitelný, výchozí* ``true``*)* — ``false`` limit dočasně deaktivuje
+
+       Příklad::
+
+           [
+             {"scope": "user", "value": "jan.novak", "rate": "10/m"},
+             {"scope": "ip", "value": "203.0.113.0/24", "rate": "50/h"}
+           ]
+
+   Změny v administraci se projeví do ``30`` sekund (TTL cache).
+
+   :param item_id: Identifikátor záznamu — ``"access_rules"`` nebo ``"rate_limits"``.
+
+   :return: Naparsovaný seznam nebo prázdný seznam při chybě či absenci záznamu.
 
 .. py:function:: _get_access_rules()
 

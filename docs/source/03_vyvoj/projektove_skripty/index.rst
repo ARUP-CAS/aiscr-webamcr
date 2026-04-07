@@ -16,13 +16,10 @@ Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``
    entrypoint_sh
    git_prod_deploy_sh
    healthcheck_sh
-   metadata_xml
    prod_deploy_sh
    restore_database_sh
    run_healthcheck_celery_sh
    run_healthcheck_sh
    start_selenium_tests_sh
    test_deploy_sh
-   test_pas_xml_import_py
-   test_sign_in_py
    uwsgi_site_ini
