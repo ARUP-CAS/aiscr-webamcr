@@ -13,4 +13,4 @@ Funkce
    :param view_func: View funkce obalená dekorátorem nebo middlewarem.
    :param additional_exceptions: Číselná hodnota ``additional_exceptions`` použitá při výpočtu nebo transformaci.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``decorator``, výsledek volání ``decorator()``.
+   :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``decorator``, výsledek volání ``decorator()``.

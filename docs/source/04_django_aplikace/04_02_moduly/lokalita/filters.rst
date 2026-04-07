@@ -18,7 +18,7 @@ Třídy
 
       :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
 
-          :return: Vrací proměnná ``queryset``.
+      :return: Vrací proměnná ``queryset``.
 
    .. py:method:: filter_popisne_udaje()
 
@@ -28,7 +28,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací výsledek volání ``distinct()``.
+      :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: __init__()
 

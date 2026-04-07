@@ -89,7 +89,7 @@ Třídy
 
       Samostaný nález má připojený alespoň jeden soubor.
 
-          :return: Vrací proměnná ``resp``.
+      :return: Vrací proměnná ``resp``.
 
    .. py:method:: nahled_soubor()
 
@@ -121,7 +121,7 @@ Třídy
 
       Textová reprezentace objektu.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
 
    .. py:method:: get_permission_object()
 
@@ -171,7 +171,7 @@ Třídy
 
       :param check_status: Parametr ``check_status`` předává se do volání ``delete_record()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací výsledek volání ``delete_record()``.
+      :return: Vrací výsledek volání ``delete_record()``.
 
    .. py:method:: igsn_hide()
 
@@ -179,7 +179,7 @@ Třídy
 
       :param check_status: Parametr ``check_status`` předává se do volání ``hide_record()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací výsledek volání ``hide_record()``.
+      :return: Vrací výsledek volání ``hide_record()``.
 
    .. py:method:: igsn_publish()
 
@@ -187,7 +187,7 @@ Třídy
 
       :param check_status: Parametr ``check_status`` předává se do volání ``publish_record()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací výsledek volání ``publish_record()``.
+      :return: Vrací výsledek volání ``publish_record()``.
 
    .. py:method:: igsn_update()
 
@@ -196,7 +196,7 @@ Třídy
       :param check_status: Parametr ``check_status`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
       :param reload_record: Parametr ``reload_record`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací výsledek volání ``update_record()``.
+      :return: Vrací výsledek volání ``update_record()``.
 
    .. py:method:: igsn_url()
 
@@ -239,7 +239,7 @@ Třídy
 
       Kontrola že stav není aktivný.
 
-          :return: Vrací proměnná ``result``.
+      :return: Vrací proměnná ``result``.
 
    .. py:method:: check_pred_deaktivaci()
 
@@ -247,7 +247,7 @@ Třídy
 
       Kontrola že stav není neaktivný.
 
-          :return: Vrací proměnná ``result``.
+      :return: Vrací proměnná ``result``.
 
    .. py:method:: __str__()
 
@@ -255,7 +255,7 @@ Třídy
 
       Textová reprezentace objektu.
 
-          :return: Vrací hodnotu podle větve zpracování.
+      :return: Vrací hodnotu podle větve zpracování.
 
    .. py:method:: get_create_user()
 
@@ -285,5 +285,5 @@ Třídy
 
       :param pk: Primární klíč zpracovávaného záznamu.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
 

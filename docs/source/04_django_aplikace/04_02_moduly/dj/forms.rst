@@ -21,7 +21,7 @@ Třídy
       :param typ_arch_z: Parametr ``typ_arch_z`` předává se do volání ``debug()``, ovlivňuje větvení podmínek.
       :param typ_akce: Parametr ``typ_akce`` předává se do volání ``debug()``, ovlivňuje větvení podmínek.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``filter()``, proměnná ``queryset``.
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``filter()``, proměnná ``queryset``.
 
    .. py:method:: __init__()
 

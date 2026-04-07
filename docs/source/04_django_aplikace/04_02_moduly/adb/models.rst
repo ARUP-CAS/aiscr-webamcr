@@ -47,7 +47,7 @@ Třídy
       :param error_message: Parametr ``error_message`` předává se do volání ``FedoraTransaction()``.
       :param main_record: Parametr ``main_record`` předává se do volání ``FedoraTransaction()``.
 
-          :return: Vrací atribut objektu.
+      :return: Vrací atribut objektu.
 
 
 .. py:class:: VyskovyBod
@@ -111,4 +111,4 @@ Funkce
    :param offset: Posun přičtený k poslednímu pořadí výškového bodu.
    :return: Vrací vypočtený identifikátor výškového bodu.
 
-       :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``vyskove_body.count() <= MAXIMAL_VYSKOVY_BOD + offset``.
+   :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``vyskove_body.count() <= MAXIMAL_VYSKOVY_BOD + offset``.

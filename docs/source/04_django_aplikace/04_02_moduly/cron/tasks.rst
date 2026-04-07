@@ -83,7 +83,7 @@ Funkce
    :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
    :param value: Parametr ``value`` předává se do volání ``set()``, vstupuje do návratové hodnoty.
 
-       :return: Vrací n-tici.
+   :return: Vrací n-tici.
 
 .. py:function:: call_digiarchiv_update_task()
 
@@ -97,4 +97,4 @@ Funkce
    :param user_id: Identifikátor objektu ``user``.
    :param lock_token: Token pro ověření vlastnictví importního zámku v Redis.
 
-       :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem "Missing required DIRECTORY_PATH setting".
+   :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem "Missing required DIRECTORY_PATH setting".

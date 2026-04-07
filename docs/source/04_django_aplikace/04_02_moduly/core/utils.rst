@@ -32,7 +32,7 @@ Třídy
       :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
       :param record: Parametr ``record`` předává se do volání ``reverse()``, pracuje se s atributy ``soubory``, ``ident_cely``, ovlivňuje větvení podmínek.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
 
    .. py:method:: get_all_idents()
 
@@ -149,7 +149,7 @@ Funkce
 
    :param geom: Parametr ``geom`` předává se do volání ``isinstance()``, ``append()``, pracuje se s atributy ``iloc``, ``copy``, ovlivňuje větvení podmínek.
 
-       :return: Vrací proměnná ``new_rows``.
+   :return: Vrací proměnná ``new_rows``.
 
 .. py:function:: get_mime_type(file_name)
 
@@ -157,7 +157,7 @@ Funkce
 
    :param file_name: Parametr ``file_name`` se předává do volání ``guess_type()``, pracuje se s atributy ``endswith``, ovlivňuje větvení podmínek.
 
-       :return: Vrací proměnná ``mime_type``.
+   :return: Vrací proměnná ``mime_type``.
 
 .. py:function:: get_cadastre_from_point(point)
 
@@ -165,7 +165,7 @@ Funkce
 
    :param point: Parametr ``point`` předává se do volání ``raw()``, ``debug()``.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``katastr``, None.
+   :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``katastr``, None.
 
 .. py:function:: get_cadastre_from_point_with_geometry(point)
 
@@ -173,7 +173,7 @@ Funkce
 
    :param point: Parametr ``point`` předává se do volání ``debug()``, ``execute()``.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: seznam, None.
+   :return: Vrací hodnotu podle větve zpracování, typicky: seznam, None.
 
 .. py:function:: get_all_pians_with_akce(ident_cely)
 
@@ -203,8 +203,8 @@ Funkce
    :param katastr: Parametr ``katastr`` předává se do volání ``debug()``, ``raw()``, pracuje se s atributy ``pk``.
    :param akce_ident_cely: Identifikátor ``akce_ident_cely`` používaný pro dohledání cílového záznamu.
 
-       :return: Vrací proměnná ``pians``.
-       :raises CannotFindCadasterCentre: Vyvolá se při zpracování zachycené výjimky typu ``IndexError``.
+   :return: Vrací proměnná ``pians``.
+   :raises CannotFindCadasterCentre: Vyvolá se při zpracování zachycené výjimky typu ``IndexError``.
 
 .. py:function:: get_dj_pians_centroid(ident_cely, lat, lng)
 
@@ -214,7 +214,7 @@ Funkce
    :param lat: Parametr ``lat`` se předává do volání ``raw()``.
    :param lng: Parametr ``lng`` se předává do volání ``raw()``.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``pians``, None.
+   :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``pians``, None.
 
 .. py:function:: get_num_pians_from_envelope(left, bottom, right, top)
 
@@ -225,7 +225,7 @@ Funkce
    :param right: Parametr ``right`` se předává do volání ``execute()``, ``debug()``.
    :param top: Parametr ``top`` se předává do volání ``execute()``, ``debug()``.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, None.
+   :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, None.
 
 .. py:function:: get_dj_pians_from_envelope(left, bottom, right, top, ident_cely)
 
@@ -260,7 +260,7 @@ Funkce
    :param stavy: Číselná hodnota ``stavy`` použitá při výpočtu nebo transformaci.
    :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_num_projects_from_envelope``.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``count()``, None.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``count()``, None.
 
 .. py:function:: get_projects_from_envelope(left, bottom, right, top, stavy, request)
 
@@ -275,7 +275,7 @@ Funkce
    :param stavy: Číselná hodnota ``stavy`` použitá při výpočtu nebo transformaci.
    :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_projects_from_envelope``.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``values()``, None.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``values()``, None.
 
 .. py:function:: get_project_pas_from_envelope(left, bottom, right, top, ident_cely)
 
@@ -310,7 +310,7 @@ Funkce
    :param top: Parametr ``top`` se předává do volání ``Q()``, ``from_bbox()``.
    :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_3d_from_envelope``.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``values()``, None.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``values()``, None.
 
 .. py:function:: get_num_pass_from_envelope(left, bottom, right, top, request)
 
@@ -324,7 +324,7 @@ Funkce
    :param top: Parametr ``top`` se předává do volání ``Q()``, ``from_bbox()``.
    :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_num_pass_from_envelope``.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``count()``, None.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``count()``, None.
 
 .. py:function:: get_pas_from_envelope(bounds, request)
 
@@ -335,7 +335,7 @@ Funkce
    :param bounds: Parametr ``bounds`` předává se do volání ``Q()``, ``Polygon()``.
    :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_pas_from_envelope``.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``only()``, None.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``only()``, None.
 
 .. py:function:: get_pian_from_envelope(bounds, zoom, request)
 
@@ -347,7 +347,7 @@ Funkce
    :param zoom: Parametr ``zoom`` ovlivňuje větvení podmínek.
    :param request: Parametr ``request`` pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
 
-       :return: Vrací n-tici.
+   :return: Vrací n-tici.
 
 .. py:function:: get_dj_akce_for_pian(pian_ident_cely, request)
 
@@ -356,7 +356,7 @@ Funkce
    :param pian_ident_cely: Identifikátor ``pian_ident_cely`` používaný pro dohledání cílového záznamu.
    :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_dj_akce_for_pian``.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``values()``, None.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``values()``, None.
 
 .. py:function:: dictfetchall(cursor)
 
@@ -364,7 +364,7 @@ Funkce
 
    :param cursor: Parametr ``cursor`` pracuje se s atributy ``description``, ``fetchall``, vstupuje do návratové hodnoty.
 
-       :return: Vrací hodnotu podle větve zpracování.
+   :return: Vrací hodnotu podle větve zpracování.
 
 .. py:function:: get_heatmap_pian(left, bottom, right, top, zoom)
 
@@ -376,7 +376,7 @@ Funkce
    :param top: Parametr ``top`` se předává do volání ``execute()``, ``debug()``.
    :param zoom: Parametr ``zoom`` ovlivňuje větvení podmínek.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``dictfetchall()``, None.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``dictfetchall()``, None.
 
 .. py:function:: get_heatmap_pas(left, bottom, right, top, zoom)
 
@@ -388,7 +388,7 @@ Funkce
    :param top: Parametr ``top`` se předává do volání ``execute()``, ``debug()``.
    :param zoom: Parametr ``zoom`` ovlivňuje větvení podmínek.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``dictfetchall()``, None.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``dictfetchall()``, None.
 
 .. py:function:: get_heatmap_project(left, bottom, right, top, zoom)
 
@@ -400,7 +400,7 @@ Funkce
    :param top: Parametr ``top`` se předává do volání ``execute()``, ``debug()``.
    :param zoom: Parametr ``zoom`` ovlivňuje větvení podmínek.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``dictfetchall()``, None.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``dictfetchall()``, None.
 
 .. py:function:: get_message(az, message)
 
@@ -409,7 +409,7 @@ Funkce
    :param az: Parametr ``az`` se předává do volání ``str()``, ``getattr()``, pracuje se s atributy ``typ_zaznamu``, vstupuje do návratové hodnoty.
    :param message: Parametr ``message`` předává se do volání ``str()``, ``getattr()``, vstupuje do návratové hodnoty.
 
-       :return: Vrací výsledek volání ``str()``.
+   :return: Vrací výsledek volání ``str()``.
 
 .. py:function:: find_pos_with_backup(lang, project_apps, django_apps, third_party_apps)
 
@@ -422,7 +422,7 @@ Funkce
    :param django_apps: Parametr ``django_apps`` ovlivňuje větvení podmínek.
    :param third_party_apps: Parametr ``third_party_apps`` ovlivňuje větvení podmínek.
 
-       :return: Vrací výsledek volání ``list()``.
+   :return: Vrací výsledek volání ``list()``.
 
 .. py:function:: replace_last(source_string, old, new)
 

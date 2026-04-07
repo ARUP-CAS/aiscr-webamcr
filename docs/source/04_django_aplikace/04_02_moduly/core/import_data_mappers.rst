@@ -243,7 +243,7 @@ Třídy
 
              Provádí operaci process value.
 
-             :param value: Parametr ``value`` vstupuje do návratové hodnoty.
+      :param value: Parametr ``value`` vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
 
@@ -276,10 +276,10 @@ Třídy
 
              Provádí operaci process value.
 
-             :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``str()``, pracuje se s atributy ``decode``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``str()``, pracuje se s atributy ``decode``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
-          :raises ImportDataError: Vyvolá se při splnění podmínky ``value``.
+      :raises ImportDataError: Vyvolá se při splnění podmínky ``value``.
 
 
 .. py:class:: PositiveIntegerImportField
@@ -292,10 +292,10 @@ Třídy
 
              Provádí operaci process value.
 
-             :param value: Parametr ``value`` předává se do volání ``_process_value()``, ``ImportDataError()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param value: Parametr ``value`` předává se do volání ``_process_value()``, ``ImportDataError()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
-          :raises ImportDataError: Vyvolá se při splnění podmínky ``value is not None and value < 0``.
+      :raises ImportDataError: Vyvolá se při splnění podmínky ``value is not None and value < 0``.
 
 
 .. py:class:: DecimalImportField
@@ -308,10 +308,10 @@ Třídy
 
              Provádí operaci process value.
 
-             :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``str()``, pracuje se s atributy ``decode``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``str()``, pracuje se s atributy ``decode``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
-          :raises ImportDataError: Vyvolá se při splnění podmínky ``value``.
+      :raises ImportDataError: Vyvolá se při splnění podmínky ``value``.
 
 
 .. py:class:: BooleanImportField
@@ -326,10 +326,10 @@ Třídy
 
               Převede řetězec na bool. Pokud hodnota není "true"/"1" ani "false"/"0", vyvolá ImportDataError.
 
-             :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``ImportDataError()``, pracuje se s atributy ``lower``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``ImportDataError()``, pracuje se s atributy ``lower``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
-          :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
+      :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
 
 
 .. py:class:: DateImportField
@@ -363,10 +363,10 @@ Třídy
              Převede řetězec na datum. Podporované formáty jsou "YYYY-MM-DD" a "DD.MM.YYYY".
              Pokud hodnota neodpovídá žádnému formátu, vyvolá ImportDataError.
 
-             :param value: Parametr ``value`` předává se do volání ``str()``, ``isinstance()``, pracuje se s atributy ``replace``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param value: Parametr ``value`` předává se do volání ``str()``, ``isinstance()``, pracuje se s atributy ``replace``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
-          :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
+      :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
 
 
 .. py:class:: DateTimeImportField
@@ -399,10 +399,10 @@ Třídy
 
              Provádí operaci process value.
 
-             :param value: Parametr ``value`` předává se do volání ``str()``, ``isinstance()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param value: Parametr ``value`` předává se do volání ``str()``, ``isinstance()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
-          :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
+      :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
 
 
 .. py:class:: DateRangeImportField
@@ -424,10 +424,10 @@ Třídy
              Převede řetězec na DateRange ve formátu "[YYYY-MM-DD, YYYY-MM-DD)".
              Pokud hodnota neodpovídá očekávanému formátu, vyvolá ImportDataError.
 
-             :param value: Parametr ``value`` předává se do volání ``str()``, ``isinstance()``, pracuje se s atributy ``strip``, ovlivňuje větvení podmínek.
+      :param value: Parametr ``value`` předává se do volání ``str()``, ``isinstance()``, pracuje se s atributy ``strip``, ovlivňuje větvení podmínek.
       :return: Výstup funkce odpovídající implementované logice.
 
-          :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
+      :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
 
 
 .. py:class:: LookupImportField
@@ -444,7 +444,7 @@ Třídy
       :param lookup_field_name: Textový název nebo klíč ``lookup_field_name`` používaný v rámci operace.
       :param limit_choices_to: Parametr ``limit_choices_to`` ovlivňuje větvení podmínek.
 
-          :raises ValueError: Vyvolá se s textem "limit_choices_to is only supported for Heslar model".
+      :raises ValueError: Vyvolá se s textem "limit_choices_to is only supported for Heslar model".
 
    .. py:method:: clear_cache()
 
@@ -508,7 +508,7 @@ Třídy
       :param record: Parametr ``record`` předává se do volání ``all()``, ``getattr()``, ovlivňuje větvení podmínek.
       :return: Vrací výsledek ověření nebo validačního pravidla.
 
-          :raises ImportDataLimitChoicesError: Vyvolá se při splnění podmínky ``not all((getattr(record, k).pk == v for k, v in self.limit_choices_to.items()))``.
+      :raises ImportDataLimitChoicesError: Vyvolá se při splnění podmínky ``not all((getattr(record, k).pk == v for k, v in self.limit_choices_to.items()))``.
 
    .. py:method:: _process_value()
 
@@ -517,10 +517,10 @@ Třídy
              Ověří existenci hodnoty v databázi nebo v importovaných záznamech a vrátí odpovídající záznam.
              Pokud referencovaný záznam neexistuje, vyvolá ImportDataMissingReferencedValueError.
 
-             :param value: Parametr ``value`` předává se do volání ``str()``, ``len()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param value: Parametr ``value`` předává se do volání ``str()``, ``len()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
-          :raises ImportDataMissingReferencedValueError: Vyvolá se v konkrétních chybových větvích této funkce.
+      :raises ImportDataMissingReferencedValueError: Vyvolá se v konkrétních chybových větvích této funkce.
 
 
 .. py:class:: RuianLookupImportField
@@ -554,10 +554,10 @@ Třídy
 
              Provádí operaci process value.
 
-             :param value: Parametr ``value`` předává se do volání ``get_record_from_ident()``, ``get()``, vstupuje do návratové hodnoty.
+      :param value: Parametr ``value`` předává se do volání ``get_record_from_ident()``, ``get()``, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
-          :raises ImportDataMissingReferencedValueError: Vyvolá se v konkrétních chybových větvích této funkce.
+      :raises ImportDataMissingReferencedValueError: Vyvolá se v konkrétních chybových větvích této funkce.
 
 
 .. py:class:: GeomImportField
@@ -584,10 +584,10 @@ Třídy
 
              Převede řetězec na objekt GEOSGeometry. Pokud převod selže, vyvolá ImportDataError.
 
-             :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``GEOSGeometry()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``GEOSGeometry()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
-          :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
+      :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
 
 
 .. py:class:: GenericForeignKeyImportField
@@ -656,7 +656,7 @@ Třídy
 
       :param file_name: Parametr ``file_name`` se předává do volání ``get()``, pracuje se s atributy ``split``, vstupuje do návratové hodnoty.
 
-          :return: Vrací výsledek volání ``get()``.
+      :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: get_file_name_for_mapper()
 
@@ -688,17 +688,17 @@ Třídy
 
              Zpracuje primary key.
 
-             :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``match()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``match()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
-          :raises ImportDataIncorrectPrimaryKeyFormatError: Vyvolá se při splnění podmínky ``match``.
+      :raises ImportDataIncorrectPrimaryKeyFormatError: Vyvolá se při splnění podmínky ``match``.
 
    .. py:method:: _parse_primary_key_custom_prefix()
 
              Zpracuje primary key custom prefix.
 
-             :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``int()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-             :param prefix: Číselná hodnota ``prefix`` použitá při výpočtu nebo transformaci.
+      :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``int()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param prefix: Číselná hodnota ``prefix`` použitá při výpočtu nebo transformaci.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: map_field()
@@ -707,8 +707,8 @@ Třídy
 
       :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``BaseImportField()``, výsledek volání ``IntegerImportField()``, výsledek volání ``PositiveIntegerImportField()``.
-          :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``BaseImportField()``, výsledek volání ``IntegerImportField()``, výsledek volání ``PositiveIntegerImportField()``.
+      :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
 
    .. py:method:: is_field_required()
 
@@ -724,7 +724,7 @@ Třídy
       :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ``ImportDataError()``, ovlivňuje větvení podmínek.
       :return: Nově vytvořená hodnota připravená touto funkcí.
 
-          :raises ImportDataError: Vyvolá se při splnění podmínky ``performed_action not in (ImportDataAdminForm.PERFORMED_ACTION_INSERT, ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFO``.
+      :raises ImportDataError: Vyvolá se při splnění podmínky ``performed_action not in (ImportDataAdminForm.PERFORMED_ACTION_INSERT, ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFO``.
 
    .. py:method:: import_validation()
 
@@ -737,7 +737,7 @@ Třídy
       :param kwargs: Dodatečné pojmenované argumenty zachované kvůli jednotné signatuře, metoda je nepoužívá.
       :return: Vrací výsledek operace.
 
-          :raises ImportDataIntegrityError: Vyvolá se při splnění podmínky ``performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and self.model_class.objects.filter(**self._get_filter_kwargs_primary_key())``; nebo při splnění podmínky ``performed_action in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE) and (not self.model_class.obj``.
+      :raises ImportDataIntegrityError: Vyvolá se při splnění podmínky ``performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and self.model_class.objects.filter(**self._get_filter_kwargs_primary_key())``; nebo při splnění podmínky ``performed_action in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE) and (not self.model_class.obj``.
 
    .. py:method:: _check_column_structure()
 
@@ -747,7 +747,7 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``set()``, ``get_mapping()``.
       :return: Vrací výsledek ověření nebo validačního pravidla.
 
-          :raises ImportDataIncorrectStructureError: Vyvolá se při splnění podmínky ``missing_columns or excess_columns``.
+      :raises ImportDataIncorrectStructureError: Vyvolá se při splnění podmínky ``missing_columns or excess_columns``.
 
    .. py:method:: map()
 
@@ -767,7 +767,7 @@ Třídy
 
       :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``check_required_fields``.
 
-          :raises ImportDataError: Vyvolá se při splnění podmínky ``required and (value is None or str(value).lower().strip() in ('nan', '') or pd.isna(value))``.
+      :raises ImportDataError: Vyvolá se při splnění podmínky ``required and (value is None or str(value).lower().strip() in ('nan', '') or pd.isna(value))``.
 
    .. py:method:: map_column_name_to_field_name()
 
@@ -778,7 +778,7 @@ Třídy
 
       :param column_name: Textový název nebo klíč ``column_name`` používaný v rámci operace.
 
-          :return: Vrací výsledek volání ``get()``.
+      :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: create_relations()
 
@@ -794,7 +794,7 @@ Třídy
       :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``record_postprocessing``.
       :param fedora_transaction: Parametr ``fedora_transaction`` slouží jako vstup pro logiku funkce ``record_postprocessing``.
 
-          :return: Vrací proměnná ``record``.
+      :return: Vrací proměnná ``record``.
 
    .. py:method:: fedora_update_targets()
 
@@ -833,7 +833,7 @@ Třídy
       :param mapping_dict: Parametr ``mapping_dict`` předává se do volání ``transform_geom_to_sjtsk()``, ``transform_geom_to_wgs84()``, pracuje se s atributy ``get``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :param performed_action: Parametr ``performed_action`` ovlivňuje větvení podmínek.
 
-          :return: Vrací proměnná ``mapping_dict``.
+      :return: Vrací proměnná ``mapping_dict``.
 
 
 .. py:class:: MultipleClassImportModelMapper
@@ -885,7 +885,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
 
 .. py:class:: HeslarDataceMapper
@@ -900,7 +900,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -922,7 +922,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -944,7 +944,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -966,7 +966,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -988,7 +988,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1015,16 +1015,16 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: map()
 
              Provádí operaci map.
 
-             :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ``transform_geometries()``, vstupuje do návratové hodnoty.
-             :param instance_values: Parametr ``instance_values`` předává se do volání ``map()``.
-             :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
-             :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
+      :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ``transform_geometries()``, vstupuje do návratové hodnoty.
+      :param instance_values: Parametr ``instance_values`` předává se do volání ``map()``.
+      :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
+      :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_record_history()
@@ -1047,7 +1047,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1076,7 +1076,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1105,16 +1105,16 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: map()
 
              Provádí operaci map.
 
-             :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ``transform_geometries()``, vstupuje do návratové hodnoty.
-             :param instance_values: Parametr ``instance_values`` předává se do volání ``map()``.
-             :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
-             :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
+      :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ``transform_geometries()``, vstupuje do návratové hodnoty.
+      :param instance_values: Parametr ``instance_values`` předává se do volání ``map()``.
+      :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
+      :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _get_updated_ident_cely_record_list()
@@ -1144,7 +1144,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: map_field()
 
@@ -1152,7 +1152,7 @@ Třídy
 
       :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
 
-          :return: Vrací výsledek volání ``get()``.
+      :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: record_postprocessing()
 
@@ -1162,7 +1162,7 @@ Třídy
       :param performed_action: Parametr ``performed_action`` předává se do volání ``record_postprocessing()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``record_postprocessing()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací výsledek volání ``record_postprocessing()``.
+      :return: Vrací výsledek volání ``record_postprocessing()``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1191,7 +1191,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: map_field()
 
@@ -1199,7 +1199,7 @@ Třídy
 
       :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
 
-          :return: Vrací výsledek volání ``get()``.
+      :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: get_record_history()
 
@@ -1221,7 +1221,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: get_record_history()
 
@@ -1250,7 +1250,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1279,16 +1279,16 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: map()
 
              Provádí operaci map.
 
-             :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ``transform_geometries()``, vstupuje do návratové hodnoty.
-             :param instance_values: Parametr ``instance_values`` předává se do volání ``map()``.
-             :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
-             :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
+      :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ``transform_geometries()``, vstupuje do návratové hodnoty.
+      :param instance_values: Parametr ``instance_values`` předává se do volání ``map()``.
+      :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
+      :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_record_history()
@@ -1311,7 +1311,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: record_postprocessing()
 
@@ -1321,7 +1321,7 @@ Třídy
       :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``record_postprocessing``.
       :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``vytvor_pian()``.
 
-          :return: Vrací proměnná ``record``.
+      :return: Vrací proměnná ``record``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1350,7 +1350,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1379,7 +1379,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1408,7 +1408,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
 
 .. py:class:: DokumentMapper
@@ -1423,7 +1423,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: map_field()
 
@@ -1431,7 +1431,7 @@ Třídy
 
       :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
 
-          :return: Vrací výsledek volání ``get()``.
+      :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: create_records()
 
@@ -1444,10 +1444,10 @@ Třídy
 
              Provádí operaci map.
 
-             :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ``transform_geometries()``, vstupuje do návratové hodnoty.
-             :param instance_values: Parametr ``instance_values`` předává se do volání ``map()``.
-             :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
-             :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
+      :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ``transform_geometries()``, vstupuje do návratové hodnoty.
+      :param instance_values: Parametr ``instance_values`` předává se do volání ``map()``.
+      :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
+      :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_record_history()
@@ -1470,7 +1470,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1499,7 +1499,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1528,7 +1528,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1557,7 +1557,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1586,7 +1586,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1615,7 +1615,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1644,7 +1644,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1673,7 +1673,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1702,7 +1702,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1731,7 +1731,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1781,7 +1781,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
 
 .. py:class:: NalezPredmetMapper
@@ -1796,7 +1796,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
 
 .. py:class:: ExterniZdrojMapper
@@ -1811,7 +1811,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: get_record_history()
 
@@ -1833,7 +1833,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1862,7 +1862,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1891,7 +1891,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1920,7 +1920,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: get_record_history()
 
@@ -1951,7 +1951,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _ruian_content_object()
 
@@ -1976,7 +1976,7 @@ Třídy
 
       :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
 
-          :return: Vrací výsledek volání ``map_field()``.
+      :return: Vrací výsledek volání ``map_field()``.
 
    .. py:method:: create_records()
 
@@ -1993,16 +1993,16 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``_check_column_structure``.
       :return: Vrací výsledek ověření nebo validačního pravidla.
 
-          :raises ImportDataIncorrectStructureContentObjectError: Vyvolá se při splnění podmínky ``mapping_column_set != expected_column_set_import and mapping_column_set != expected_column_set_job``.
+      :raises ImportDataIncorrectStructureContentObjectError: Vyvolá se při splnění podmínky ``mapping_column_set != expected_column_set_import and mapping_column_set != expected_column_set_job``.
 
    .. py:method:: map()
 
              Provádí operaci map.
 
-             :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``.
-             :param instance_values: Parametr ``instance_values`` předává se do volání ``map()``.
-             :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
-             :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
+      :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``.
+      :param instance_values: Parametr ``instance_values`` předává se do volání ``map()``.
+      :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
+      :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _get_updated_ident_cely_record_list()
@@ -2032,7 +2032,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -2061,7 +2061,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_filter_kwargs_primary_key()
 
@@ -2075,7 +2075,7 @@ Třídy
 
       :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``create_records``.
 
-          :return: Vrací seznam.
+      :return: Vrací seznam.
 
    .. py:method:: import_validation()
 
@@ -2112,7 +2112,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -2141,7 +2141,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_filter_kwargs_primary_key()
 
@@ -2155,7 +2155,7 @@ Třídy
 
       :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``create_records``.
 
-          :return: Vrací seznam.
+      :return: Vrací seznam.
 
    .. py:method:: import_validation()
 
@@ -2192,7 +2192,7 @@ Třídy
 
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
-          :return: Vrací proměnná ``field_mapping``.
+      :return: Vrací proměnná ``field_mapping``.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 

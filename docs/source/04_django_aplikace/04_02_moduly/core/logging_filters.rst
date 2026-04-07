@@ -18,5 +18,5 @@ Třídy
 
       :param record: Parametr ``record`` pracuje se s atributy ``url``, ``user_id``.
 
-          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
