@@ -3,6 +3,7 @@ import logging
 import math
 import os
 import re
+import secrets
 import tempfile
 import unicodedata
 import zipfile
@@ -57,6 +58,7 @@ from core.utils import (
     get_message,
     get_pas_from_envelope,
     get_pian_from_envelope,
+    is_maintenance_in_progress,
     replace_last,
 )
 from django.conf import settings
@@ -2374,14 +2376,21 @@ class DataImportProgress(LoginRequiredMixin, View):
         job_id = kwargs.get("job_id")
         redis_connector = RedisConnector().get_connection_decode()
         try:
-            record_count = int(redis_connector.get(f"import_data_count_{job_id}"))
-            import_data_progress_files = int(redis_connector.get(f"import_data_progress_files_{job_id}"))
+            record_count_raw = redis_connector.get(f"import_data_count_{job_id}") or 0
+            record_count = int(record_count_raw)
+            import_data_progress_files = int(redis_connector.get(f"import_data_progress_files_{job_id}") or 0)
             status_message = redis_connector.get(f"import_data_status_message_{job_id}")
             stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
 
-            import_data_primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}"))
-            serialized_results = json.loads(redis_connector.get(f"import_data_progress_{job_id}"))
-            serialized_results_files = json.loads(redis_connector.get(f"import_data_files_{job_id}"))
+            import_data_primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}") or "{}")
+            progress_ids = redis_connector.lrange(f"import_data_progress_ids_{job_id}", 0, -1)
+            progress_details = redis_connector.lrange(f"import_data_progress_details_{job_id}", 0, -1)
+            serialized_results = dict(zip(progress_ids, progress_details))
+            serialized_results_files = json.loads(redis_connector.get(f"import_data_files_{job_id}") or "[]")
+            import_history_record_result = json.loads(
+                redis_connector.get(f"import_data_history_record_result_{job_id}") or "{}"
+            )
+            import_fedora_update_result = json.loads(redis_connector.get(f"import_fedora_result_{job_id}") or "{}")
 
             progress_data = math.floor((len(serialized_results) / record_count) * 100)
             progress_files = math.floor(import_data_progress_files * 100)
@@ -2398,11 +2407,13 @@ class DataImportProgress(LoginRequiredMixin, View):
                 "finished_record_count": len(serialized_results),
                 "serialized_results": serialized_results,
                 "primary_keys": import_data_primary_keys,
+                "history_record_result": import_history_record_result,
+                "fedora_update_result": import_fedora_update_result,
                 "status": status,
                 "serialized_results_files": serialized_results_files,
-                "status_message": status_message,
+                "status_message": status_message or _("core.templates.admin.import_data.starting"),
             }
-        except (AttributeError, TypeError):
+        except (AttributeError, TypeError, ValueError, json.JSONDecodeError):
             progress_response = {
                 "status": "unknown",
                 "status_message": _("core.views.dataImportProgress.unknown_import_status"),
@@ -2431,12 +2442,74 @@ class DataImportStop(LoginRequiredMixin, View):
         return JsonResponse({"result": "ok"})
 
 
-class DataImportStart(LoginRequiredMixin, View):
-    """Implementuje komponentu ``DataImportStart`` v rámci aplikace."""
+class DataImportProgressReportView(LoginRequiredMixin, View):
+    """Exportuje výsledky importu dat jako soubor Excel."""
 
     def get(self, request, **kwargs):
         """
-        Vrací výsledek operace.
+        Sestaví a vrátí Excel report s výsledky validace a průběhu importu.
+
+        :param request: HTTP požadavek, ověřuje se právo superuživatele.
+        :param kwargs: Obsahuje ``job_id`` identifikující danou importní úlohu.
+        :return: Soubor Excel (``application/vnd.openxmlformats-officedocument.spreadsheetml.sheet``) ke stažení.
+        :raises PermissionDenied: Vyvolá se, pokud přihlášený uživatel není superuživatel.
+        """
+        if not request.user.is_superuser:
+            raise PermissionDenied
+        job_id = kwargs.get("job_id")
+        redis_connector = RedisConnector().get_connection_decode()
+
+        validation_results = json.loads(redis_connector.get(f"import_data_validation_results_{job_id}") or "[]")
+        primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}") or "{}")
+        progress_ids = redis_connector.lrange(f"import_data_progress_ids_{job_id}", 0, -1)
+        progress_details = redis_connector.lrange(f"import_data_progress_details_{job_id}", 0, -1)
+        serialized_results = dict(zip(progress_ids, progress_details))
+        history_record_result = json.loads(redis_connector.get(f"import_data_history_record_result_{job_id}") or "{}")
+        fedora_update_result = json.loads(redis_connector.get(f"import_fedora_result_{job_id}") or "{}")
+
+        def build_row(item):
+            """
+            Sestaví řádek reportu z jednoho záznamu výsledku validace.
+
+            :param item: Slovník s daty validačního výsledku záznamu importu.
+            :return: Slovník s přeloženými názvy sloupců a hodnotami pro export do Excelu.
+            """
+            i = item["item_order"]
+            return {
+                _("core.templates.admin.import_data.import_order"): i + 1,
+                _("core.templates.admin.import_data.fila_name"): item.get("file_name", ""),
+                _("core.templates.admin.import_data.primary_key_import"): item.get("primary_key_import", ""),
+                _("core.templates.admin.import_data.primary_key_database"): primary_keys.get(str(i), ""),
+                _("core.templates.admin.validation_result"): item.get("validation_result", ""),
+                _("core.templates.admin.status"): serialized_results.get(str(i), ""),
+                _("core.templates.admin.import_data.history_record_result"): history_record_result.get(str(i), ""),
+                _("core.templates.admin.import_data.fedora_update_result"): ", ".join(
+                    fedora_update_result.get(str(i), [])
+                ),
+            }
+
+        rows = [build_row(item) for item in validation_results]
+
+        df = pandas.DataFrame(rows)
+        output = BytesIO()
+        with pandas.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Import")
+        output.seek(0)
+
+        response = HttpResponse(
+            output.read(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        response["Content-Disposition"] = f'attachment; filename="import_report_{job_id}.xlsx"'
+        return response
+
+
+class DataImportStart(LoginRequiredMixin, View):
+    """Implementuje komponentu ``DataImportStart`` v rámci aplikace."""
+
+    def post(self, request, **kwargs):
+        """
+        Spustí Celery task pro import dat.
 
         :param request: Parametr ``request`` předává se do volání ``delay()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
         :param kwargs: Parametr ``kwargs`` pracuje se s atributy ``get``.
@@ -2446,8 +2519,38 @@ class DataImportStart(LoginRequiredMixin, View):
         """
         if not request.user.is_superuser:
             raise PermissionDenied
+        if not is_maintenance_in_progress():
+            return JsonResponse(
+                {
+                    "result": "error",
+                    "status_message": _("core.templates.admin.import_data.not_maintenance"),
+                },
+                status=403,
+            )
         job_id = kwargs.get("job_id")
         from cron import tasks
 
-        tasks.run_data_import.delay(job_id, request.user.id)
+        redis_connector = RedisConnector.get_connection_decode()
+        if redis_connector.get(f"import_data_valid_{job_id}") != "1":
+            return JsonResponse(
+                {
+                    "result": "error",
+                    "status_message": _("core.templates.admin.import_data.invalid_records"),
+                },
+                status=422,
+            )
+        lock_token = secrets.token_hex(16)
+        if not RedisConnector.acquire_import_lock(redis_connector, lock_token, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS):
+            return JsonResponse(
+                {
+                    "result": "already_running",
+                    "status_message": _("core.templates.admin.import_data.import_is_running"),
+                },
+                status=409,
+            )
+        try:
+            tasks.run_data_import.delay(job_id, request.user.id, lock_token)
+        except Exception:
+            RedisConnector.release_import_lock(redis_connector, lock_token)
+            raise
         return JsonResponse({"result": "ok"})

@@ -34,7 +34,7 @@ Třídy
       :param view_args: Dodatečné argumenty předané voláním.
       :param view_kwargs: Dodatečné argumenty předané voláním.
 
-          :raises PermissionDenied: Vyvolá se při splnění podmínky ``any(tested)``.
+      :raises PermissionDenied: Vyvolá se při splnění podmínky ``any(tested)``.
 
 
 .. py:class:: ErrorMiddleware

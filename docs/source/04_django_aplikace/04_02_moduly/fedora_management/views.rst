@@ -27,7 +27,7 @@ Třídy
       :param request: HTTP GET požadavek.
       :param kwargs: Klíčové argumenty včetně ``job_id`` identifikujícího dávkovou úlohu v Redis.
 
-          :return: Vrací výsledek volání ``JsonResponse()``.
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: ContinueMedataProcessing
@@ -44,5 +44,5 @@ Třídy
       :param result: Slovník s výsledky průběhu zpracování.
       :param kwargs: Další parametry předané z pohledu.
 
-          :return: Vrací proměnná ``result``.
+      :return: Vrací proměnná ``result``.
 

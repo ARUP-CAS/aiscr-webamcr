@@ -18,7 +18,7 @@ Třídy
 
       Textová reprezentace objektu.
 
-          :return: Vrací hodnotu podle větve zpracování.
+      :return: Vrací hodnotu podle větve zpracování.
 
    .. py:method:: get_ident_cely_link()
 
@@ -48,7 +48,7 @@ Třídy
       :param success_message: Parametr ``success_message`` předává se do volání ``FedoraTransaction()``.
       :param error_message: Parametr ``error_message`` předává se do volání ``FedoraTransaction()``.
 
-          :return: Vrací atribut objektu.
+      :return: Vrací atribut objektu.
 
    .. py:method:: metadata()
 
@@ -62,7 +62,7 @@ Třídy
 
       :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
 
-          :return: Vrací výsledek volání ``get_metadata_historicka()``.
+      :return: Vrací výsledek volání ``get_metadata_historicka()``.
 
    .. py:method:: get_historicke_verze()
 
@@ -93,7 +93,7 @@ Třídy
       :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``isinstance()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :return: Načtená data odpovídající zadaným vstupům.
 
-          :raises ValueError: Vyvolá se s textem "No Fedora transaction"; nebo s textem "fedora_transaction must be a FedoraTransaction class object".
+      :raises ValueError: Vyvolá se s textem "No Fedora transaction"; nebo s textem "fedora_transaction must be a FedoraTransaction class object".
 
    .. py:method:: record_deletion()
 
@@ -111,7 +111,7 @@ Třídy
       :param new_ident_cely: Identifikátor ``new_ident_cely`` používaný pro dohledání cílového záznamu.
       :param delete_container: Parametr ``delete_container`` předává se do volání ``record_ident_change()``.
 
-          :raises ValueError: Vyvolá se s textem "No Fedora transaction"; nebo s textem "fedora_transaction must be a FedoraTransaction class object".
+      :raises ValueError: Vyvolá se s textem "No Fedora transaction"; nebo s textem "fedora_transaction must be a FedoraTransaction class object".
 
    .. py:method:: get_by_ident_cely()
 
@@ -119,7 +119,7 @@ Třídy
 
       :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
 
 
 Funkce
@@ -133,4 +133,4 @@ Funkce
    :param pk: Primární klíč zpracovávaného záznamu.
    :param task_name: Textový název nebo klíč ``task_name`` používaný v rámci operace.
 
-       :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+   :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.

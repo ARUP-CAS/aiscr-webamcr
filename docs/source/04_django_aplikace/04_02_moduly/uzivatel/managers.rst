@@ -23,8 +23,8 @@ Třídy
       :param password: Heslo ``password`` používané při vytváření nebo aktualizaci účtu.
       :param extra_fields: Kolekce ``extra_fields`` zpracovávaná touto funkcí.
 
-          :return: Vrací proměnná ``user``.
-          :raises ValueError: Vyvolá se při splnění podmínky ``not email``.
+      :return: Vrací proměnná ``user``.
+      :raises ValueError: Vyvolá se při splnění podmínky ``not email``.
 
    .. py:method:: create_superuser()
 
@@ -34,6 +34,6 @@ Třídy
       :param password: Heslo ``password`` používané při vytváření nebo aktualizaci účtu.
       :param extra_fields: Kolekce ``extra_fields`` zpracovávaná touto funkcí.
 
-          :return: Vrací výsledek volání ``create_user()``.
-          :raises ValueError: Vyvolá se při splnění podmínky ``extra_fields.get('is_staff') is not True``; nebo při splnění podmínky ``extra_fields.get('is_superuser') is not True``.
+      :return: Vrací výsledek volání ``create_user()``.
+      :raises ValueError: Vyvolá se při splnění podmínky ``extra_fields.get('is_staff') is not True``; nebo při splnění podmínky ``extra_fields.get('is_superuser') is not True``.
 

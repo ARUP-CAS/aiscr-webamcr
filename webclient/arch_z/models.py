@@ -536,9 +536,12 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
         """
         if self.pk is not None:
-            previous = ArcheologickyZaznam.objects.get(pk=self.pk)
-            if previous.pristupnost != self.pristupnost:
-                self.initial_pristupnost = previous.pristupnost
+            try:
+                previous = ArcheologickyZaznam.objects.get(pk=self.pk)
+                if previous.pristupnost != self.pristupnost:
+                    self.initial_pristupnost = previous.pristupnost
+            except ObjectDoesNotExist:
+                self.initial_pristupnost = None
         super(ArcheologickyZaznam, self).save(*args, **kwargs)
 
     def igsn_lokalita_hide(self, check_status=True):
