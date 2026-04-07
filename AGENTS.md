@@ -194,6 +194,11 @@ Examples:
 6. Do not edit sensitive paths that are in `.gitignore` (e.g.
    `local_settings.py`, `secrets*.json`, `webclient_env_var.sh`); see
    [.agents/prompts/hooks_reference.md](.agents/prompts/hooks_reference.md) for the recommended PreToolUse rule.
+7. Temporary manual testing helpers that should not be committed must be
+   stored in `scripts/temp_manual_test_scripts/`. Agents may use this
+   directory for ad-hoc local scripts or sample payloads intended only
+   for manual verification, but must not move production code, tests, or
+   shared project scripts there.
 
 Note:
 

@@ -210,6 +210,17 @@ class AmcrCustomAdminSite(admin.AdminSite):
         if section:
             new_app_list.append(section)
 
+        # 10. Logy API
+        section = make_section(
+            _("core.admin_site.AmcrCustomAdminSite.logy_api"),
+            "logy_api",
+            [
+                find_model("core", "ApiRequestLog"),
+            ],
+        )
+        if section:
+            new_app_list.append(section)
+
         return new_app_list
 
     redis_connector = RedisConnector().get_connection_decode()

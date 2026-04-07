@@ -194,3 +194,12 @@ EPSG_WGS84 = 4326
 # Archive emails
 ARCHIVE_EMAIL_CECHY: Final = "amcr@arup.cas.cz"
 ARCHIVE_EMAIL_MORAVA: Final = "amcr@arub.cz"
+
+# ApiRequestLog — stavy požadavku.
+API_REQUEST_LOG_STATUS_RECEIVED: Final = "received"
+API_REQUEST_LOG_STATUS_PROCESSING: Final = "processing"
+API_REQUEST_LOG_STATUS_SUCCESS: Final = "success"
+API_REQUEST_LOG_STATUS_FAILURE: Final = "failure"
+
+# ApiRequestLog — cíle požadavku.
+API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT: Final = "samostatny_nalez_xml_import"

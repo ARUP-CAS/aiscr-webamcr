@@ -3,20 +3,34 @@ import hashlib
 import ipaddress
 import json
 import logging
+import re
+import threading
 import time
+import urllib.request
 from dataclasses import asdict, dataclass
 from enum import Enum
 
-from core.constants import ODESLANI_SN, POTVRZENI_SN, SN_ZAPSANY, ZAPSANI_SN
+import django.utils.timezone
+from core.constants import (
+    API_REQUEST_LOG_STATUS_FAILURE,
+    API_REQUEST_LOG_STATUS_PROCESSING,
+    API_REQUEST_LOG_STATUS_SUCCESS,
+    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT,
+    ODESLANI_SN,
+    POTVRZENI_SN,
+    SN_ZAPSANY,
+    ZAPSANI_SN,
+)
 from core.ident_cely import get_sn_ident
-from core.models import Permissions, check_permissions
+from core.models import ApiRequestLog, Permissions, check_permissions
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from core.setting_models import CustomAdminSettings
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils.translation import gettext as _
 from heslar.hesla import (
     HESLAR_NALEZOVE_OKOLNOSTI,
@@ -29,7 +43,7 @@ from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie
 from lxml import etree
 from projekt.models import Projekt
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
@@ -37,7 +51,7 @@ from rest_framework.throttling import BaseThrottle
 from rest_framework.views import APIView
 from uzivatel.models import Organizace, Osoba
 from uzivatel.views import TokenAuthenticationBearer
-from xml_generator.generator import AMCR_NAMESPACE_URL, AMCR_XSD_URL, DocumentGenerator
+from xml_generator.generator import AMCR_NAMESPACE_URL, AMCR_XSD_URL
 
 from .models import SamostatnyNalez
 
@@ -45,107 +59,424 @@ logger = logging.getLogger(__name__)
 
 _CACHE_KEY_ACCESS_RULES = "pas_api_access_rules"
 _CACHE_KEY_RATE_LIMITS = "pas_api_rate_limits"
+_CACHE_KEY_ACCESS_MODE = "pas_api_access_mode"
 _CACHE_TTL = 30  # sekund
 
 _PAS_API_GROUP = "pas_api"
 _ACCESS_RULES_ID = "access_rules"
 _RATE_LIMITS_ID = "rate_limits"
+_ACCESS_MODE_ID = "access_mode"
+_AMCR_SCHEMA_LOCK = threading.Lock()
+_ALLOWED_SCHEMA_URL_PATTERNS = (
+    re.compile(r"^https?://www\.w3\.org/2001/XMLSchema-instance(?:[?#].*)?$"),
+    re.compile(r"^https?://www\.w3\.org/2001/(?:03/)?xml\.xsd(?:[?#].*)?$"),
+    re.compile(r"^https://api\.aiscr\.cz/schema/amcr/\d+\.\d+/.*$"),
+    re.compile(r"^http://www\.opengis\.net/gml/.*$"),
+)
+_IPV4_OCTET_PATTERN = r"(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)"
+_IPV4_ADDRESS_PATTERN = rf"{_IPV4_OCTET_PATTERN}(?:\.{_IPV4_OCTET_PATTERN}){{3}}"
+_IP_RULE_VALUE_PATTERN = re.compile(
+    rf"^(?:{_IPV4_ADDRESS_PATTERN}|{_IPV4_ADDRESS_PATTERN}/(?:[0-9]|[12][0-9]|3[0-2])|"
+    rf"{_IPV4_ADDRESS_PATTERN}\s*-\s*{_IPV4_ADDRESS_PATTERN})$"
+)
 
 TYPE_IP_BLACKLIST = "ip_blacklist"
 TYPE_IP_WHITELIST = "ip_whitelist"
 TYPE_USER_BLACKLIST = "user_blacklist"
 TYPE_USER_WHITELIST = "user_whitelist"
+_ACCESS_RULE_TYPES = {
+    TYPE_IP_BLACKLIST,
+    TYPE_IP_WHITELIST,
+    TYPE_USER_BLACKLIST,
+    TYPE_USER_WHITELIST,
+}
 SCOPE_USER = "user"
 SCOPE_IP = "ip"
+ACCESS_MODE_OPEN = "open"
+ACCESS_MODE_WHITELIST_ONLY = "whitelist_only"
+ACCESS_MODE_CLOSED = "closed"
+_ACCESS_MODES = {ACCESS_MODE_OPEN, ACCESS_MODE_WHITELIST_ONLY, ACCESS_MODE_CLOSED}
+_PAS_API_ITEM_IDS = {_ACCESS_RULES_ID, _RATE_LIMITS_ID, _ACCESS_MODE_ID}
 
 
-def _load_json_setting(item_id: str) -> list:
-    """
-    Načte JSON seznam z ``CustomAdminSettings`` pro skupinu ``pas_api``.
+class PasApiPermissionMixin:
+    """Sdílené helpery pro permission a throttle logiku PAS XML API."""
 
-    Nastavení se konfiguruje v Django administraci přes model ``CustomAdminSettings``
-    (skupina ``pas_api``). Každý záznam musí mít pole ``value`` obsahující platný JSON seznam.
+    @staticmethod
+    def load_json_setting(item_id: str, raise_validation_error: bool = False):
+        """
+        Načte JSON hodnotu z ``CustomAdminSettings`` pro skupinu ``pas_api``.
 
-    Podporované záznamy:
+        Nastavení se konfiguruje v Django administraci přes model ``CustomAdminSettings``
+        (skupina ``pas_api``). Každý záznam musí mít pole ``value`` obsahující platný JSON.
 
-    ``access_rules`` (``item_id="access_rules"``)
-        Seznam pravidel přístupu. Každé pravidlo je objekt s klíči:
+        Podporované záznamy:
 
-        - ``rule_type`` *(povinný)* — typ pravidla; povolené hodnoty:
-          ``"ip_blacklist"``, ``"ip_whitelist"``, ``"user_blacklist"``, ``"user_whitelist"``
-        - ``value`` *(povinný)* — IP adresa, CIDR rozsah (např. ``"192.168.1.0/24"``)
-          nebo uživatelské jméno podle ``rule_type``
-        - ``active`` *(volitelný, výchozí* ``true``*)* — ``false`` pravidlo dočasně deaktivuje
+        ``access_rules`` (``item_id="access_rules"``)
+            Seznam pravidel přístupu. Každé pravidlo je objekt s klíči:
 
-        Příklad::
+            - ``rule_type`` *(povinný)* — typ pravidla; povolené hodnoty:
+              ``"ip_blacklist"``, ``"ip_whitelist"``, ``"user_blacklist"``, ``"user_whitelist"``
+            - ``value`` *(povinný)* — IP adresa, IP rozsah (např. ``"192.168.1.1-192.168.1.5"``),
+              CIDR rozsah (např. ``"192.168.1.0/24"``) nebo uživatelské jméno podle ``rule_type``
+            - ``active`` *(volitelný, výchozí* ``true``*)* — ``false`` pravidlo dočasně deaktivuje
 
-            [
-              {"rule_type": "ip_blacklist", "value": "1.2.3.4"},
-              {"rule_type": "ip_whitelist", "value": "10.0.0.0/8"},
-              {"rule_type": "user_blacklist", "value": "jan.novak", "active": false}
-            ]
+            Příklad::
 
-    ``rate_limits`` (``item_id="rate_limits"``)
-        Seznam limitů počtu požadavků. Každý limit je objekt s klíči:
+                [
+                  {"rule_type": "ip_blacklist", "value": "1.2.3.4"},
+                  {"rule_type": "ip_whitelist", "value": "10.0.0.0/8"},
+                  {"rule_type": "user_blacklist", "value": "jan.novak", "active": false}
+                ]
 
-        - ``scope`` *(povinný)* — rozsah pravidla; povolené hodnoty: ``"user"``, ``"ip"``
-        - ``value`` *(povinný)* — uživatelské jméno nebo IP adresa/CIDR rozsah
-        - ``rate`` *(povinný)* — limit ve formátu ``"počet/jednotka"``;
-          jednotky: ``s`` (sekunda), ``m`` (minuta), ``h`` (hodina), ``d`` (den);
-          např. ``"10/m"``, ``"100/h"``, ``"1000/d"``
-        - ``active`` *(volitelný, výchozí* ``true``*)* — ``false`` limit dočasně deaktivuje
+        ``rate_limits`` (``item_id="rate_limits"``)
+            Seznam limitů počtu požadavků. Každý limit je objekt s klíči:
 
-        Příklad::
+            - ``scope`` *(povinný)* — rozsah pravidla; povolené hodnoty: ``"user"``, ``"ip"``
+            - ``value`` *(povinný)* — uživatelské jméno nebo IP adresa, IP rozsah,
+              CIDR rozsah
+            - ``rate`` *(povinný)* — limit ve formátu ``"počet/jednotka"``;
+              jednotky: ``s`` (sekunda), ``m`` (minuta), ``h`` (hodina), ``d`` (den);
+              např. ``"10/m"``, ``"100/h"``, ``"1000/d"``
+            - ``active`` *(volitelný, výchozí* ``true``*)* — ``false`` limit dočasně deaktivuje
 
-            [
-              {"scope": "user", "value": "jan.novak", "rate": "10/m"},
-              {"scope": "ip", "value": "203.0.113.0/24", "rate": "50/h"}
-            ]
+            Příklad::
 
-    Změny v administraci se projeví do ``30`` sekund (TTL cache).
+                [
+                  {"scope": "user", "value": "jan.novak", "rate": "10/m"},
+                  {"scope": "ip", "value": "203.0.113.0/24", "rate": "50/h"}
+                ]
 
-    :param item_id: Identifikátor záznamu — ``"access_rules"`` nebo ``"rate_limits"``.
+        ``access_mode`` (``item_id="access_mode"``)
+            Režim globální dostupnosti API. Podporované hodnoty:
 
-    :return: Naparsovaný seznam nebo prázdný seznam při chybě či absenci záznamu.
-    """
-    try:
-        obj = CustomAdminSettings.objects.get(item_group=_PAS_API_GROUP, item_id=item_id)
-        return json.loads(obj.value)
-    except CustomAdminSettings.DoesNotExist:
-        return []
-    except (json.JSONDecodeError, TypeError):
-        logger.error("pas.api._load_json_setting.invalid_json", extra={"item_id": item_id})
-        return []
+            - ``"open"`` — API je otevřené; whitelist pravidla se neaplikují
+            - ``"whitelist_only"`` — API je dostupné pouze přes whitelist pravidla
+            - ``"closed"`` — API je úplně uzavřené
 
+            Příklad::
 
-def _get_access_rules() -> list[dict]:
-    """
-    Vrátí přístupová pravidla API z cache nebo ``CustomAdminSettings``.
+                "whitelist_only"
 
-    Každé pravidlo je slovník s klíči ``rule_type``, ``value`` a volitelně ``active`` (výchozí ``True``).
+        Změny v administraci se projeví do ``30`` sekund (TTL cache).
 
-    :return: Seznam aktivních pravidel.
-    """
-    rules = cache.get(_CACHE_KEY_ACCESS_RULES)
-    if rules is None:
-        rules = [r for r in _load_json_setting(_ACCESS_RULES_ID) if r.get("active", True)]
-        cache.set(_CACHE_KEY_ACCESS_RULES, rules, _CACHE_TTL)
-    return rules
+        :param item_id: Identifikátor záznamu — ``"access_rules"``, ``"rate_limits"`` nebo ``"access_mode"``.
 
+        :param raise_validation_error: Pokud je ``True``, nevalidní JSON vyhodí ``ValidationError``.
 
-def _get_rate_limits() -> list[dict]:
-    """
-    Vrátí limity počtu požadavků z cache nebo ``CustomAdminSettings``.
+        :return: Naparsovaná JSON hodnota nebo ``[]`` při chybě či absenci záznamu.
+        """
+        try:
+            obj = CustomAdminSettings.objects.get(item_group=_PAS_API_GROUP, item_id=item_id)
+            return json.loads(obj.value)
+        except CustomAdminSettings.DoesNotExist:
+            return []
+        except (json.JSONDecodeError, TypeError):
+            logger.error("pas.api._load_json_setting.invalid_json", extra={"item_id": item_id})
+            if raise_validation_error:
+                raise ValidationError(
+                    {"value": _("pas.api.PasApiPermissionMixin.load_json_setting.invalid_json").format(item_id=item_id)}
+                )
+            return []
 
-    Každý limit je slovník s klíči ``scope``, ``value``, ``rate`` a volitelně ``active`` (výchozí ``True``).
+    @classmethod
+    def get_access_rules(cls) -> list[dict]:
+        """
+        Vrátí přístupová pravidla API z cache nebo ``CustomAdminSettings``.
 
-    :return: Seznam aktivních limitů.
-    """
-    limits = cache.get(_CACHE_KEY_RATE_LIMITS)
-    if limits is None:
-        limits = [r for r in _load_json_setting(_RATE_LIMITS_ID) if r.get("active", True)]
-        cache.set(_CACHE_KEY_RATE_LIMITS, limits, _CACHE_TTL)
-    return limits
+        Každé pravidlo je slovník s klíči ``rule_type``, ``value`` a volitelně ``active`` (výchozí ``True``).
+
+        :raises ValidationError: Pokud nastavení nemá očekávanou strukturu nebo obsahuje nevalidní pravidlo.
+        :return: Seznam aktivních pravidel.
+        """
+        rules = cache.get(_CACHE_KEY_ACCESS_RULES)
+        if rules is None:
+            raw_rules = cls.load_json_setting(_ACCESS_RULES_ID, raise_validation_error=True)
+            cls.validate_access_rules(raw_rules)
+            rules = [r for r in raw_rules if r.get("active", True)]
+            cache.set(_CACHE_KEY_ACCESS_RULES, rules, _CACHE_TTL)
+        return rules
+
+    @staticmethod
+    def validate_access_rules(raw_rules) -> bool:
+        """
+        Ověří strukturu a obsah nastavení ``access_rules``.
+
+        :param raw_rules: Naparsovaná JSON hodnota nastavení ``access_rules``.
+
+        :raises ValidationError: Pokud struktura nebo obsah pravidel neodpovídá očekávání.
+        :return: ``True`` pokud je nastavení validní.
+        """
+        if not isinstance(raw_rules, list):
+            raise ValidationError({"value": _("pas.api.PasApiPermissionMixin.validate_access_rules.not_a_list")})
+
+        for index, rule in enumerate(raw_rules):
+            if not isinstance(rule, dict):
+                raise ValidationError(
+                    {
+                        "value": _("pas.api.PasApiPermissionMixin.validate_access_rules.item_not_a_dict").format(
+                            index=index
+                        )
+                    }
+                )
+            if "rule_type" not in rule or "value" not in rule:
+                raise ValidationError(
+                    {
+                        "value": _("pas.api.PasApiPermissionMixin.validate_access_rules.missing_required_keys").format(
+                            index=index
+                        )
+                    }
+                )
+            if rule.get("active") is not None and not isinstance(rule.get("active"), bool):
+                raise ValidationError(
+                    {
+                        "value": _("pas.api.PasApiPermissionMixin.validate_access_rules.invalid_active").format(
+                            index=index
+                        )
+                    }
+                )
+            if rule["rule_type"] not in _ACCESS_RULE_TYPES:
+                raise ValidationError(
+                    {
+                        "value": _("pas.api.PasApiPermissionMixin.validate_access_rules.unsupported_rule_type").format(
+                            index=index, rule_type=rule["rule_type"]
+                        )
+                    }
+                )
+            if rule["rule_type"] in {TYPE_IP_BLACKLIST, TYPE_IP_WHITELIST}:
+                if not isinstance(rule["value"], str) or not _IP_RULE_VALUE_PATTERN.match(rule["value"]):
+                    raise ValidationError(
+                        {
+                            "value": _("pas.api.PasApiPermissionMixin.validate_access_rules.invalid_ip_value").format(
+                                index=index, value=rule["value"]
+                            )
+                        }
+                    )
+
+        return True
+
+    @classmethod
+    def validate_custom_admin_setting(cls, instance: CustomAdminSettings) -> bool:
+        """
+        Ověří ``CustomAdminSettings`` záznam relevantní pro PAS API před uložením.
+
+        Pokud jde o skupinu ``pas_api``, ověří platnost ``item_id`` a podle něj
+        validuje JSON hodnotu příslušným validátorem.
+
+        :param instance: Ukládaný záznam ``CustomAdminSettings``.
+
+        :raises ValidationError: Pokud ``item_id`` není podporováno nebo JSON/struktura hodnoty nejsou validní.
+        :return: ``True`` pokud je záznam validní nebo se na něj validace nevztahuje.
+        """
+        if instance.item_group != _PAS_API_GROUP:
+            return True
+        if instance.item_id not in _PAS_API_ITEM_IDS:
+            raise ValidationError(
+                {
+                    "item_id": _("pas.api.PasApiPermissionMixin.validate_custom_admin_setting.invalid_item_id").format(
+                        item_group=instance.item_group, item_id=instance.item_id
+                    )
+                }
+            )
+        try:
+            raw_value = json.loads(instance.value)
+        except (json.JSONDecodeError, TypeError):
+            raise ValidationError(
+                {
+                    "value": _("pas.api.PasApiPermissionMixin.validate_custom_admin_setting.invalid_json").format(
+                        item_id=instance.item_id
+                    )
+                }
+            )
+
+        if instance.item_id == _ACCESS_RULES_ID:
+            cls.validate_access_rules(raw_value)
+        elif instance.item_id == _RATE_LIMITS_ID:
+            cls.validate_rate_limits(raw_value)
+        elif instance.item_id == _ACCESS_MODE_ID:
+            cls.validate_access_mode(raw_value)
+        return True
+
+    @classmethod
+    def get_rate_limits(cls) -> list[dict]:
+        """
+        Vrátí limity počtu požadavků z cache nebo ``CustomAdminSettings``.
+
+        Každý limit je slovník s klíči ``scope``, ``value``, ``rate`` a volitelně ``active`` (výchozí ``True``).
+
+        :raises ValidationError: Pokud nastavení nemá očekávanou strukturu nebo obsahuje nevalidní limit.
+        :return: Seznam aktivních limitů.
+        """
+        limits = cache.get(_CACHE_KEY_RATE_LIMITS)
+        if limits is None:
+            raw_limits = cls.load_json_setting(_RATE_LIMITS_ID, raise_validation_error=True)
+            cls.validate_rate_limits(raw_limits)
+            limits = [r for r in raw_limits if r.get("active", True)]
+            cache.set(_CACHE_KEY_RATE_LIMITS, limits, _CACHE_TTL)
+        return limits
+
+    @staticmethod
+    def validate_rate_limits(raw_limits) -> bool:
+        """
+        Ověří strukturu a obsah nastavení ``rate_limits``.
+
+        :param raw_limits: Naparsovaná JSON hodnota nastavení ``rate_limits``.
+
+        :raises ValidationError: Pokud struktura nebo obsah limitů neodpovídá očekávání.
+        :return: ``True`` pokud je nastavení validní.
+        """
+        if not isinstance(raw_limits, list):
+            raise ValidationError({"value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.not_a_list")})
+
+        for index, limit in enumerate(raw_limits):
+            if not isinstance(limit, dict):
+                raise ValidationError(
+                    {
+                        "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.item_not_a_dict").format(
+                            index=index
+                        )
+                    }
+                )
+            if "scope" not in limit or "value" not in limit or "rate" not in limit:
+                raise ValidationError(
+                    {
+                        "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.missing_required_keys").format(
+                            index=index
+                        )
+                    }
+                )
+            if limit.get("active") is not None and not isinstance(limit.get("active"), bool):
+                raise ValidationError(
+                    {
+                        "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.invalid_active").format(
+                            index=index
+                        )
+                    }
+                )
+            if limit["scope"] not in {SCOPE_USER, SCOPE_IP}:
+                raise ValidationError(
+                    {
+                        "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.unsupported_scope").format(
+                            index=index, scope=limit["scope"]
+                        )
+                    }
+                )
+            if limit["scope"] == SCOPE_IP:
+                if not isinstance(limit["value"], str) or not _IP_RULE_VALUE_PATTERN.match(limit["value"]):
+                    raise ValidationError(
+                        {
+                            "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.invalid_ip_value").format(
+                                index=index, value=limit["value"]
+                            )
+                        }
+                    )
+            if _parse_rate(limit["rate"]) is None:
+                raise ValidationError(
+                    {
+                        "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.invalid_rate").format(
+                            index=index, rate=limit["rate"]
+                        )
+                    }
+                )
+
+        return True
+
+    @classmethod
+    def get_access_mode(cls) -> str:
+        """
+        Vrátí globální režim dostupnosti PAS XML API.
+
+        Hodnota se načítá z ``CustomAdminSettings`` (``pas_api/access_mode``) a kešuje se.
+        Neplatná nebo chybějící hodnota znamená výchozí režim ``open``.
+
+        :raises ValidationError: Pokud nastavení neobsahuje podporovanou hodnotu.
+        :return: Jeden z režimů ``open``, ``whitelist_only`` nebo ``closed``.
+        """
+        access_mode = cache.get(_CACHE_KEY_ACCESS_MODE)
+        if access_mode is None:
+            value = cls.load_json_setting(_ACCESS_MODE_ID, raise_validation_error=True)
+            cls.validate_access_mode(value)
+            access_mode = value if value not in (None, []) else ACCESS_MODE_OPEN
+            if value not in (None, [], access_mode):
+                logger.error("pas.api._get_access_mode.invalid_value", extra={"value": value})
+            cache.set(_CACHE_KEY_ACCESS_MODE, access_mode, _CACHE_TTL)
+        return access_mode
+
+    @staticmethod
+    def validate_access_mode(value) -> bool:
+        """
+        Ověří hodnotu nastavení ``access_mode``.
+
+        :param value: Naparsovaná JSON hodnota nastavení ``access_mode``.
+
+        :raises ValidationError: Pokud hodnota není jedním z podporovaných režimů.
+        :return: ``True`` pokud je hodnota validní.
+        """
+        if value in (None, []):
+            return True
+        if not isinstance(value, str) or value not in _ACCESS_MODES:
+            raise ValidationError(
+                {"value": _("pas.api.PasApiPermissionMixin.validate_access_mode.invalid_value").format(value=value)}
+            )
+        return True
+
+    @staticmethod
+    def get_client_ip(request) -> str:
+        """
+        Vrátí IP adresu klienta z požadavku s ohledem na proxy hlavičky.
+
+        :param request: HTTP požadavek.
+
+        :return: IP adresa klienta jako řetězec.
+        """
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+        if x_forwarded_for:
+            return x_forwarded_for.split(",")[0].strip()
+        return request.META.get("REMOTE_ADDR", "")
+
+    @staticmethod
+    def get_user_identifier(user) -> str | None:
+        """
+        Vrátí identifikátor uživatele použitelný pro access-rules a rate-limity.
+
+        Projekt používá vlastní model uživatele s ``USERNAME_FIELD = "email"``.
+        Pro kompatibilitu helper preferuje ``email`` a fallbackuje na ``username``.
+
+        :param user: Uživatel navázaný na požadavek.
+
+        :return: Email, username nebo ``None`` pro neautentizovaného uživatele.
+        """
+        if not user or not getattr(user, "is_authenticated", False):
+            return None
+        return getattr(user, "email", None) or getattr(user, "username", None)
+
+    @staticmethod
+    def ip_matches(client_ip: str, pattern: str) -> bool:
+        """
+        Porovná IP adresu klienta s konkrétní adresou, IP rozsahem nebo CIDR rozsahem.
+
+        :param client_ip: IP adresa klienta.
+        :param pattern: IP adresa, IP rozsah (např. ``192.168.1.1-192.168.1.5``)
+                        nebo CIDR rozsah (např. ``192.168.1.0/24"``).
+
+        :return: ``True`` pokud adresa odpovídá vzoru.
+        """
+        try:
+            client = ipaddress.ip_address(client_ip)
+            if "-" in pattern and "/" not in pattern:
+                start_str, end_str = [part.strip() for part in pattern.split("-", 1)]
+                start = ipaddress.ip_address(start_str)
+                end = ipaddress.ip_address(end_str)
+                if client.version != start.version or client.version != end.version:
+                    return False
+                if start > end:
+                    start, end = end, start
+                return start <= client <= end
+            if "/" in pattern:
+                return client in ipaddress.ip_network(pattern, strict=False)
+            return client == ipaddress.ip_address(pattern)
+        except ValueError:
+            return False
 
 
 @receiver(post_save, sender=CustomAdminSettings)
@@ -155,59 +486,13 @@ def _invalidate_api_cache(sender, instance=None, **kwargs):
     if instance and instance.item_group == _PAS_API_GROUP:
         cache.delete(_CACHE_KEY_ACCESS_RULES)
         cache.delete(_CACHE_KEY_RATE_LIMITS)
+        cache.delete(_CACHE_KEY_ACCESS_MODE)
 
 
-def _get_client_ip(request) -> str:
-    """
-    Vrátí IP adresu klienta z požadavku s ohledem na proxy hlavičky.
-
-    :param request: HTTP požadavek.
-
-    :return: IP adresa klienta jako řetězec.
-    """
-    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-    if x_forwarded_for:
-        return x_forwarded_for.split(",")[0].strip()
-    return request.META.get("REMOTE_ADDR", "")
-
-
-def _get_user_identifier(user) -> str | None:
-    """
-    Vrátí identifikátor uživatele použitelný pro access-rules a rate-limity.
-
-    Projekt používá vlastní model uživatele s ``USERNAME_FIELD = "email"``.
-    Pro kompatibilitu helper preferuje ``email`` a fallbackuje na ``username``.
-
-    :param user: Uživatel navázaný na požadavek.
-
-    :return: Email, username nebo ``None`` pro neautentizovaného uživatele.
-    """
-    if not user or not getattr(user, "is_authenticated", False):
-        return None
-    return getattr(user, "email", None) or getattr(user, "username", None)
-
-
-def _ip_matches(client_ip: str, pattern: str) -> bool:
-    """
-    Porovná IP adresu klienta s konkrétní adresou nebo CIDR rozsahem.
-
-    :param client_ip: IP adresa klienta.
-    :param pattern: IP adresa nebo CIDR rozsah (např. ``192.168.1.0/24``).
-
-    :return: ``True`` pokud adresa odpovídá vzoru.
-    """
-    try:
-        if "/" in pattern:
-            return ipaddress.ip_address(client_ip) in ipaddress.ip_network(pattern, strict=False)
-        return client_ip == pattern
-    except ValueError:
-        return False
-
-
-class IpBlacklistPermission(BasePermission):
+class IpBlacklistPermission(PasApiPermissionMixin, BasePermission):
     """Zamítne přístup IP adresám uvedeným v blacklistu ``CustomAdminSettings`` (``pas_api/access_rules``)."""
 
-    def has_permission(self, request, view) -> bool:
+    def has_permission(self, request, view=None) -> bool:
         """
         Ověří, zda IP adresa klienta není na blacklistu.
 
@@ -216,10 +501,10 @@ class IpBlacklistPermission(BasePermission):
 
         :return: ``False`` pokud je IP na blacklistu, jinak ``True``.
         """
-        client_ip = _get_client_ip(request)
-        rules = _get_access_rules()
+        client_ip = self.get_client_ip(request)
+        rules = self.get_access_rules()
         for rule in rules:
-            if rule["rule_type"] == TYPE_IP_BLACKLIST and _ip_matches(client_ip, rule["value"]):
+            if rule["rule_type"] == TYPE_IP_BLACKLIST and self.ip_matches(client_ip, rule["value"]):
                 logger.warning(
                     "pas.api.IpBlacklistPermission.denied",
                     extra={"ip": client_ip, "rule": rule["value"]},
@@ -228,14 +513,14 @@ class IpBlacklistPermission(BasePermission):
         return True
 
 
-class IpWhitelistPermission(BasePermission):
+class IpWhitelistPermission(PasApiPermissionMixin, BasePermission):
     """
     Povolí přístup pouze IP adresám uvedeným ve whitelistu ``CustomAdminSettings`` (``pas_api/access_rules``).
 
     Pokud žádné aktivní whitelist pravidlo neexistuje, propustí všechny požadavky.
     """
 
-    def has_permission(self, request, view) -> bool:
+    def has_permission(self, request, view=None) -> bool:
         """
         Ověří, zda IP adresa klienta je na whitelistu (pokud je whitelist definován).
 
@@ -244,13 +529,15 @@ class IpWhitelistPermission(BasePermission):
 
         :return: ``True`` pokud whitelist není definován nebo IP na něm je, jinak ``False``.
         """
-        rules = _get_access_rules()
+        if self.get_access_mode() != ACCESS_MODE_WHITELIST_ONLY:
+            return True
+        rules = self.get_access_rules()
         whitelist = [r for r in rules if r["rule_type"] == TYPE_IP_WHITELIST]
         if not whitelist:
             return True
-        client_ip = _get_client_ip(request)
+        client_ip = self.get_client_ip(request)
         for rule in whitelist:
-            if _ip_matches(client_ip, rule["value"]):
+            if self.ip_matches(client_ip, rule["value"]):
                 return True
         logger.warning(
             "pas.api.IpWhitelistPermission.denied",
@@ -259,10 +546,10 @@ class IpWhitelistPermission(BasePermission):
         return False
 
 
-class UserBlacklistPermission(BasePermission):
+class UserBlacklistPermission(PasApiPermissionMixin, BasePermission):
     """Zamítne přístup uživatelům uvedeným v blacklistu ``CustomAdminSettings`` (``pas_api/access_rules``)."""
 
-    def has_permission(self, request, view) -> bool:
+    def has_permission(self, request, view=None) -> bool:
         """
         Ověří, zda přihlášený uživatel není na blacklistu.
 
@@ -273,8 +560,8 @@ class UserBlacklistPermission(BasePermission):
         """
         if not request.user or not request.user.is_authenticated:
             return True
-        user_identifier = _get_user_identifier(request.user)
-        rules = _get_access_rules()
+        user_identifier = self.get_user_identifier(request.user)
+        rules = self.get_access_rules()
         for rule in rules:
             if rule["rule_type"] == TYPE_USER_BLACKLIST and rule["value"] == user_identifier:
                 logger.warning(
@@ -285,14 +572,14 @@ class UserBlacklistPermission(BasePermission):
         return True
 
 
-class UserWhitelistPermission(BasePermission):
+class UserWhitelistPermission(PasApiPermissionMixin, BasePermission):
     """
     Povolí přístup pouze uživatelům uvedeným ve whitelistu ``CustomAdminSettings`` (``pas_api/access_rules``).
 
     Pokud žádné aktivní whitelist pravidlo neexistuje, propustí všechny požadavky.
     """
 
-    def has_permission(self, request, view) -> bool:
+    def has_permission(self, request, view=None) -> bool:
         """
         Ověří, zda přihlášený uživatel je na whitelistu (pokud je whitelist definován).
 
@@ -301,13 +588,15 @@ class UserWhitelistPermission(BasePermission):
 
         :return: ``True`` pokud whitelist není definován nebo uživatel na něm je, jinak ``False``.
         """
-        rules = _get_access_rules()
+        if self.get_access_mode() != ACCESS_MODE_WHITELIST_ONLY:
+            return True
+        rules = self.get_access_rules()
         whitelist = [r for r in rules if r["rule_type"] == TYPE_USER_WHITELIST]
         if not whitelist:
             return True
         if not request.user or not request.user.is_authenticated:
             return False
-        user_identifier = _get_user_identifier(request.user)
+        user_identifier = self.get_user_identifier(request.user)
         for rule in whitelist:
             if rule["value"] == user_identifier:
                 return True
@@ -315,6 +604,39 @@ class UserWhitelistPermission(BasePermission):
             "pas.api.UserWhitelistPermission.denied",
             extra={"user": user_identifier},
         )
+        return False
+
+
+class ApiAccessModePermission(PasApiPermissionMixin, BasePermission):
+    """Řídí globální dostupnost PAS XML API podle ``CustomAdminSettings`` (``pas_api/access_mode``)."""
+
+    def has_permission(self, request, view=None) -> bool:
+        """
+        Ověří globální režim dostupnosti API.
+
+        Režim ``open`` požadavek propustí. Režim ``closed`` vše zamítne.
+        Režim ``whitelist_only`` vyžaduje alespoň jedno aktivní whitelist pravidlo.
+
+        :param request: HTTP požadavek.
+        :param view: Pohled zpracovávající požadavek.
+
+        :return: ``True`` pokud režim přístup dovoluje, jinak ``False``.
+        """
+        access_mode = self.get_access_mode()
+        if access_mode == ACCESS_MODE_OPEN:
+            return True
+        if access_mode == ACCESS_MODE_CLOSED:
+            self.message = _("pas.api.ApiAccessModePermission.closed")
+            logger.warning("pas.api.ApiAccessModePermission.closed")
+            return False
+
+        rules = self.get_access_rules()
+        has_whitelist = any(rule["rule_type"] in {TYPE_IP_WHITELIST, TYPE_USER_WHITELIST} for rule in rules)
+        if has_whitelist:
+            return True
+
+        self.message = _("pas.api.ApiAccessModePermission.whitelist_only_without_rules")
+        logger.warning("pas.api.ApiAccessModePermission.whitelist_only_without_rules")
         return False
 
 
@@ -340,7 +662,7 @@ def _parse_rate(rate: str) -> tuple[int, int] | None:
         return None
 
 
-class ApiImportThrottle(BaseThrottle):
+class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
     """
     Throttle pro API import samostatného nálezu řízený záznamy ``CustomAdminSettings`` (``pas_api/rate_limits``).
 
@@ -349,7 +671,7 @@ class ApiImportThrottle(BaseThrottle):
     Pokud žádné pravidlo neexistuje, požadavek je povolen.
     """
 
-    def allow_request(self, request, view) -> bool:
+    def allow_request(self, request, view=None) -> bool:
         """
         Rozhodne, zda je požadavek povolen na základě nakonfigurovaných limitů.
 
@@ -358,14 +680,14 @@ class ApiImportThrottle(BaseThrottle):
 
         :return: ``True`` pokud limit nebyl překročen nebo neexistuje, jinak ``False``.
         """
-        limits = _get_rate_limits()
-        client_ip = _get_client_ip(request)
-        user_identifier = _get_user_identifier(request.user)
+        limits = self.get_rate_limits()
+        client_ip = self.get_client_ip(request)
+        user_identifier = self.get_user_identifier(request.user)
 
         for limit in limits:
             if limit["scope"] == SCOPE_USER and limit["value"] == user_identifier:
                 return self._check_limit(f"throttle_user_{user_identifier}", limit["rate"], request)
-            if limit["scope"] == SCOPE_IP and _ip_matches(client_ip, limit["value"]):
+            if limit["scope"] == SCOPE_IP and self.ip_matches(client_ip, limit["value"]):
                 return self._check_limit(f"throttle_ip_{client_ip}", limit["rate"], request)
         return True
 
@@ -495,7 +817,7 @@ class SamostatnyNalezXmlImportSerializer(serializers.ModelSerializer):
         queryset=Projekt.objects.all(),
     )
     katastr = serializers.SlugRelatedField(
-        slug_field="nazev",
+        slug_field="kod",
         queryset=RuianKatastr.objects.all(),
         required=False,
         allow_null=True,
@@ -572,13 +894,14 @@ class SamostatnyNalezXmlImportSerializer(serializers.ModelSerializer):
         ]
 
 
-class SamostatnyNalezXmlImportView(APIView):
+class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
     """Pohled pro import záznamu samostatného nálezu z XML souboru přes POST požadavek."""
 
     authentication_classes = [TokenAuthenticationBearer]
     permission_classes = [
         IsAuthenticated,
         IpBlacklistPermission,
+        ApiAccessModePermission,
         IpWhitelistPermission,
         UserBlacklistPermission,
         UserWhitelistPermission,
@@ -587,17 +910,80 @@ class SamostatnyNalezXmlImportView(APIView):
     parser_classes = [MultiPartParser]
     http_method_names = ["post"]
 
-    HTTP_200_OK = 200
-    HTTP_400_BAD_REQUEST = 400
-    HTTP_403_FORBIDDEN = 403
-    HTTP_404_NOT_FOUND = 404
-    HTTP_422_UNPROCESSABLE_ENTITY = 422
-
     _AMCR_NS = "https://api.aiscr.cz/schema/amcr/2.2/"
     _XML_NS = "http://www.w3.org/XML/1998/namespace"
     _XSI_NS = "http://www.w3.org/2001/XMLSchema-instance"
     _IMPORT_HISTORY_NOTE = _("pas.api.SamostatnyNalezXmlImportView.import_history_note")
-    _amcr_schema: etree.XMLSchema | None = None
+    _amcr_schema_cache: dict[str, etree.XMLSchema] = {}
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Zpracuje globální režim ``closed`` ještě před DRF permission vrstvou.
+
+        Tím je zajištěn návratový kód ``503 Service Unavailable`` bez zapojení
+        permission mechaniky DRF, která by jinak vracela ``403``.
+
+        :param request: Příchozí HTTP požadavek.
+        :param args: Dodatečné poziční argumenty.
+        :param kwargs: Dodatečné pojmenované argumenty.
+
+        :return: HTTP odpověď view nebo okamžitá odpověď ``503`` při vypnutém API.
+        """
+        if self.get_access_mode() == ACCESS_MODE_CLOSED:
+            logger.warning("pas.api.SamostatnyNalezXmlImportView.dispatch.closed")
+            return JsonResponse(
+                {"detail": _("pas.api.ApiAccessModePermission.closed")},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        return super().dispatch(request, *args, **kwargs)
+
+    @staticmethod
+    def _fail(log_entry: "ApiRequestLog", body: dict, status: int) -> Response:
+        """
+        Označí log záznam jako neúspěšný, vytvoří a vrátí chybovou odpověď.
+
+        :param log_entry: Záznam logu API požadavku.
+        :param body: Tělo odpovědi jako slovník.
+        :param status: HTTP stavový kód odpovědi.
+
+        :return: Chybová HTTP odpověď se zadaným tělem a stavovým kódem.
+        """
+        log_entry.status = API_REQUEST_LOG_STATUS_FAILURE
+        log_entry.finished_at = django.utils.timezone.now()
+        log_entry.save(update_fields=["status", "finished_at"])
+        return Response(body, status=status)
+
+    @staticmethod
+    def _success(
+        log_entry: "ApiRequestLog", instance: "SamostatnyNalez", metadata: bytes, notes: list[str]
+    ) -> HttpResponse:
+        """
+        Označí log záznam jako úspěšný, zaloguje výsledek a vrátí XML odpověď s metadaty.
+
+        :param log_entry: Záznam logu API požadavku.
+        :param instance: Uložený záznam samostatného nálezu.
+        :param metadata: XML metadata vrácená Fedora repozitářem.
+        :param notes: Seznam poznámek o ignorovaných atributech ``xml:lang``.
+
+        :return: HTTP odpověď s XML metadaty a stavovým kódem 200.
+        """
+        log_entry.status = API_REQUEST_LOG_STATUS_SUCCESS
+        log_entry.finished_at = django.utils.timezone.now()
+        log_entry.ident_cely = instance.ident_cely
+        log_entry.samostatny_nalez_id = instance.pk  # type: ignore[attr-defined]
+        log_entry.save(update_fields=["status", "finished_at", "ident_cely", "samostatny_nalez"])
+
+        user_pk = log_entry.user.pk if log_entry.user else None
+        logger.info(
+            "pas.api.SamostatnyNalezXmlImportView.post.created",
+            extra={"ident_cely": instance.ident_cely, "user": user_pk},
+        )
+        if notes:
+            logger.info(
+                "pas.api.SamostatnyNalezXmlImportView.post.ignored_lang_notes",
+                extra={"ident_cely": instance.ident_cely, "notes": notes, "user": user_pk},
+            )
+        return HttpResponse(metadata, content_type="application/xml", status=200)
 
     def post(self, request, format=None):
         """
@@ -605,47 +991,69 @@ class SamostatnyNalezXmlImportView(APIView):
 
         Přijímá soubor v parametru ``file`` (multipart/form-data). XML musí odpovídat
         schématu AMČR 2.2 (https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd).
-        Každý element ``amcr:samostatny_nalez`` v dokumentu je importován jako
-        samostatný záznam. Celá operace je atomická — při jakékoli chybě se
-        neuloží nic.
+        Dokument musí obsahovat právě jeden element ``amcr:samostatny_nalez``.
 
         :param request: HTTP požadavek obsahující XML soubor v poli ``file``.
         :param format: Formát odpovědi.
 
-        :return: Vrací ``Response`` se seznamem vytvořených ``ident_cely`` (HTTP 200),
+        :return: Vrací ``Response`` s metadaty vytvořeného záznamu (HTTP 200),
                  nebo chybou syntaxe volání (HTTP 400), chybějícím projektem (HTTP 404),
                  nevalidním XML či datovými chybami (HTTP 422).
         """
         xml_file = request.FILES.get("file")
+
+        log_entry = ApiRequestLog.objects.create(
+            user=request.user,
+            client_ip=self.get_client_ip(request),
+            request_target=API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT,
+            filename=xml_file.name if xml_file is not None else None,
+            file_size=xml_file.size if xml_file is not None else None,
+        )
+
         if xml_file is None:
-            return Response(
+            return self._fail(
+                log_entry,
                 {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.missing_file")},
-                status=self.HTTP_400_BAD_REQUEST,
+                status.HTTP_400_BAD_REQUEST,
             )
 
         digest_error = self._verify_content_digest(request, xml_file)
         if digest_error:
-            return Response({"detail": digest_error}, status=self.HTTP_400_BAD_REQUEST)
+            return self._fail(log_entry, {"detail": digest_error}, status.HTTP_400_BAD_REQUEST)
         xml_file.seek(0)
 
         try:
             parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
-            doc = etree.parse(xml_file, parser=parser)
+            # Read content into bytes first so etree.fromstring() receives a bytes value,
+            # not a file-like object. etree.parse() accepts both paths and file objects,
+            # causing CodeQL (py/path-injection) to flag it when the argument is
+            # user-supplied. etree.fromstring() only accepts str/bytes, breaking the taint
+            # path entirely without changing runtime behaviour.
+            doc = etree.ElementTree(etree.fromstring(xml_file.read(), parser=parser))
         except etree.XMLSyntaxError as exc:
             logger.warning(
                 "pas.api.SamostatnyNalezXmlImportView.post.xml_syntax_error",
                 extra={"error": str(exc), "user": request.user.pk},
             )
-            return Response(
+            return self._fail(
+                log_entry,
                 {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.invalid_xml_syntax")},
-                status=self.HTTP_400_BAD_REQUEST,
+                status.HTTP_400_BAD_REQUEST,
             )
 
         version_error = self._validate_declared_schema_version(doc)
         if version_error:
-            return Response({"detail": version_error}, status=self.HTTP_422_UNPROCESSABLE_ENTITY)
+            return self._fail(log_entry, {"detail": version_error}, status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-        schema = self._get_amcr_schema()
+        try:
+            schema = self._get_amcr_schema(doc)
+        except ImportValidationException as exc:
+            return self._fail(
+                log_entry,
+                {"validation_errors": [e.to_dict() for e in exc.import_errors]},
+                self._validation_status(exc.import_errors),
+            )
+
         validation_doc = self._build_schema_validation_doc(doc)
         if not schema.validate(validation_doc):
             errors = [
@@ -662,77 +1070,93 @@ class SamostatnyNalezXmlImportView(APIView):
                 "pas.api.SamostatnyNalezXmlImportView.post.schema_invalid",
                 extra={"errors": [error.to_dict() for error in errors], "user": request.user.pk},
             )
-            return Response(
-                {"schema_errors": [error.to_dict() for error in errors]}, status=self.HTTP_422_UNPROCESSABLE_ENTITY
+            return self._fail(
+                log_entry,
+                {"schema_errors": [error.to_dict() for error in errors]},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
         root = doc.getroot()
         root_children = list(root)
         nalez_elements = [child for child in root_children if child.tag == self._ns("samostatny_nalez")]
         if not root_children:
-            return Response(
+            return self._fail(
+                log_entry,
                 {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.missing_samostatny_nalez")},
-                status=self.HTTP_400_BAD_REQUEST,
+                status.HTTP_400_BAD_REQUEST,
             )
         if len(nalez_elements) > 1:
-            return Response(
+            return self._fail(
+                log_entry,
                 {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.multiple_samostatny_nalez")},
-                status=self.HTTP_422_UNPROCESSABLE_ENTITY,
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
-        if len(root_children) != 1 or len(nalez_elements) != 1:
-            return Response(
+        if len(root_children) != 1 or not nalez_elements:
+            return self._fail(
+                log_entry,
                 {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.invalid_root_content")},
-                status=self.HTTP_422_UNPROCESSABLE_ENTITY,
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
+
+        # XML je validní a obsahuje právě jeden záznam — přepneme stav na PROCESSING.
+        log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
+        log_entry.save(update_fields=["status"])
 
         elem = nalez_elements[0]
         notes = self._get_ignored_lang_notes(elem)
         try:
             self._validate_disallowed_elements(elem)
-            data, fedora_transaction = self._parse_nalez_element(elem, request.user)
+            data, nova_osoba = self._parse_nalez_element(elem, request.user)
         except ImportValidationException as exc:
-            return self._validation_error_response(exc.import_errors, request.user)
+            return self._fail(
+                log_entry,
+                {"validation_errors": [e.to_dict() for e in exc.import_errors]},
+                self._validation_status(exc.import_errors),
+            )
 
         if not self._has_import_permissions(request.user, data):
             logger.warning(
                 "pas.api.SamostatnyNalezXmlImportView.post.permission_denied",
                 extra={"user": request.user.pk, "projekt": data.get("projekt")},
             )
-            return Response(
+            return self._fail(
+                log_entry,
                 {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.permission_denied")},
-                status=self.HTTP_403_FORBIDDEN,
+                status.HTTP_403_FORBIDDEN,
             )
 
-        try:
-            serializer = SamostatnyNalezXmlImportSerializer(data=data)
-            if not serializer.is_valid():
-                raise ImportValidationException.from_serializer_errors(serializer.errors, line=elem.sourceline)
-            self._validate_heslar_value_matches(serializer.validated_data, elem)
-        except ImportValidationException as exc:
-            return self._validation_error_response(exc.import_errors, request.user)
-
-        instance = SamostatnyNalez(**serializer.validated_data)
-        if not instance.ident_cely:
-            instance.ident_cely = get_sn_ident(instance.projekt)
-        fedora_transaction = fedora_transaction or FedoraTransaction(instance, request.user)
-        instance.active_transaction = fedora_transaction
         with transaction.atomic():
+            fedora_transaction = FedoraTransaction(transaction_user=request.user)
+            serializer_data = dict(data)
+            if nova_osoba is not None:
+                nova_osoba.active_transaction = fedora_transaction
+                nova_osoba.save()
+                serializer_data["nalezce"] = nova_osoba.ident_cely
+
+            try:
+                serializer = SamostatnyNalezXmlImportSerializer(data=serializer_data)
+                if not serializer.is_valid():
+                    raise ImportValidationException.from_serializer_errors(serializer.errors, line=elem.sourceline)
+                self._validate_heslar_value_matches(serializer.validated_data, elem)
+            except ImportValidationException as exc:
+                return self._fail(
+                    log_entry,
+                    {"validation_errors": [e.to_dict() for e in exc.import_errors]},
+                    self._validation_status(exc.import_errors),
+                )
+
+            instance = SamostatnyNalez(**serializer.validated_data)
+            if not instance.ident_cely:
+                instance.ident_cely = get_sn_ident(instance.projekt)
+            instance.active_transaction = fedora_transaction
             instance.save()
             self._create_import_history_records(instance, request.user)
 
         fedora_transaction.mark_transaction_as_closed()
+
         metadata = FedoraRepositoryConnector(instance).get_metadata(update=False)
 
-        logger.info(
-            "pas.api.SamostatnyNalezXmlImportView.post.created",
-            extra={"ident_cely": instance.ident_cely, "user": request.user.pk},
-        )
-        if notes:
-            logger.info(
-                "pas.api.SamostatnyNalezXmlImportView.post.ignored_lang_notes",
-                extra={"ident_cely": instance.ident_cely, "notes": notes, "user": request.user.pk},
-            )
-        return HttpResponse(metadata, content_type="application/xml", status=self.HTTP_200_OK)
+        return self._success(log_entry, instance, metadata, notes)
 
     @staticmethod
     def _has_import_permissions(user, data: dict) -> bool:
@@ -742,8 +1166,11 @@ class SamostatnyNalezXmlImportView(APIView):
         :param user: Uživatel provádějící import.
         :param data: Data jednoho importovaného záznamu.
 
-        :return: Vrací ``True`` pokud má uživatel obě vyžadovaná oprávnění.
+        :return: Vrací ``True`` pokud má uživatel všechna vyžadovaná oprávnění.
         """
+        if not check_permissions(Permissions.actionChoices.pas_edit, user):
+            return False
+
         if not check_permissions(Permissions.actionChoices.pas_ulozeni_edit, user):
             return False
 
@@ -786,25 +1213,19 @@ class SamostatnyNalezXmlImportView(APIView):
             ]
         )
 
-    def _validation_error_response(self, errors: list[ImportValidationIssue], user) -> Response:
+    def _validation_status(self, errors: list[ImportValidationIssue]) -> int:
         """
-        Vytvoří HTTP odpověď pro validační chyby importu.
+        Určí HTTP stavový kód odpovědi na základě typů validačních chyb.
 
         :param errors: Seznam validačních chyb importu.
-        :param user: Uživatel provádějící import.
 
-        :return: HTTP odpověď se serializovanými chybami.
+        :return: HTTP stavový kód odpovídající nejzávažnějšímu typu chyby.
         """
-        serialized_errors = [error.to_dict() for error in errors]
-        logger.warning(
-            "pas.api.SamostatnyNalezXmlImportView.post.validation_errors",
-            extra={"errors": serialized_errors, "user": user.pk},
-        )
         if any(error.error_type == ImportErrorType.PERMISSION_ERROR for error in errors):
-            return Response({"validation_errors": serialized_errors}, status=self.HTTP_403_FORBIDDEN)
+            return status.HTTP_403_FORBIDDEN
         if any(error.error_type == ImportErrorType.RECORD_DOES_NOT_EXIST for error in errors):
-            return Response({"validation_errors": serialized_errors}, status=self.HTTP_404_NOT_FOUND)
-        return Response({"validation_errors": serialized_errors}, status=self.HTTP_422_UNPROCESSABLE_ENTITY)
+            return status.HTTP_404_NOT_FOUND
+        return status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @classmethod
     def _validate_disallowed_elements(cls, elem: etree._Element) -> None:
@@ -852,9 +1273,7 @@ class SamostatnyNalezXmlImportView(APIView):
             return tag
 
         parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
-        validation_doc = etree.ElementTree(
-            etree.fromstring(etree.tostring(doc.getroot()), parser=parser)
-        )
+        validation_doc = etree.ElementTree(etree.fromstring(etree.tostring(doc.getroot()), parser=parser))
         for elem in validation_doc.findall(f".//{cls._ns('samostatny_nalez')}"):
             if elem.find(cls._ns("stav")) is not None:
                 continue
@@ -979,13 +1398,29 @@ class SamostatnyNalezXmlImportView(APIView):
         return None
 
     @classmethod
-    def _get_amcr_schema(cls) -> etree.XMLSchema:
+    def _get_amcr_schema(cls, doc: etree._ElementTree) -> etree.XMLSchema:
         """
-        Vrátí zkompilované XSD schéma AMČR (singleton, načte se jednou).
+        Vrátí zkompilované XSD schéma AMČR podle URL deklarované v ``xsi:schemaLocation``.
+
+        :param doc: Naparsovaný XML dokument s deklarovaným ``xsi:schemaLocation``.
 
         :return: Vrací instanci ``etree.XMLSchema`` pro validaci importovaných XML dokumentů.
         """
-        if cls._amcr_schema is None:
+        root = doc.getroot()
+        amcr_namespace = root.nsmap.get("amcr")
+        schema_location = root.get(f"{{{cls._XSI_NS}}}schemaLocation", "")
+        schema_mapping = dict(zip(schema_location.split()[0::2], schema_location.split()[1::2]))
+        schema_url = schema_mapping[amcr_namespace]
+        cls._validate_schema_url_allowed(schema_url)
+
+        schema = cls._amcr_schema_cache.get(schema_url)
+        if schema is not None:
+            return schema
+
+        with _AMCR_SCHEMA_LOCK:
+            schema = cls._amcr_schema_cache.get(schema_url)
+            if schema is not None:
+                return schema
 
             class _LocalResolver(etree.Resolver):
                 """Resolver nahrazující vzdálené W3C URL lokálním souborem xml.xsd."""
@@ -1003,17 +1438,43 @@ class SamostatnyNalezXmlImportView(APIView):
                     allowed_urls = (
                         "http://www.w3.org/2001/xml.xsd",
                         "https://www.w3.org/2001/xml.xsd",
+                        "http://www.w3.org/2001/03/xml.xsd",
+                        "https://www.w3.org/2001/03/xml.xsd",
                     )
                     if url in allowed_urls:
                         return self.resolve_filename("xml_generator/definitions/xml.xsd", context)
+                    cls._validate_schema_url_allowed(url)
+                    if url.startswith("https://api.aiscr.cz/schema/amcr/"):
+                        return self.resolve_file(urllib.request.urlopen(url), context, base_url=url)
                     return None
 
-            parser = etree.XMLParser()
+            parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
             parser.resolvers.add(_LocalResolver())
-            with open(DocumentGenerator.get_path_to_schema(), "rb") as f:
-                schema_doc = etree.parse(f, parser)
-            cls._amcr_schema = etree.XMLSchema(schema_doc)
-        return cls._amcr_schema
+            with urllib.request.urlopen(schema_url) as response:
+                schema_doc = etree.parse(response, parser)
+            schema = etree.XMLSchema(schema_doc)
+            cls._amcr_schema_cache[schema_url] = schema
+            return schema
+
+    @staticmethod
+    def _validate_schema_url_allowed(url: str) -> None:
+        """
+        Ověří, že URL schématu patří mezi povolené URL prefixy.
+
+        :param url: URL schématu nebo importovaného XSD souboru.
+
+        :raises ImportValidationException: Pokud URL míří mimo povolené domény.
+        """
+        if not any(pattern.match(url) for pattern in _ALLOWED_SCHEMA_URL_PATTERNS):
+            raise ImportValidationException(
+                ImportValidationIssue(
+                    line=None,
+                    column=None,
+                    message=_("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.disallowed_schema_url")
+                    % {"url": url},
+                    error_type=ImportErrorType.INVALID_DATA,
+                )
+            )
 
     @classmethod
     def _ns(cls, tag: str) -> str:
@@ -1113,17 +1574,18 @@ class SamostatnyNalezXmlImportView(APIView):
         return child.get("id") or None
 
     @classmethod
-    def _parse_nalezce(cls, elem: etree._Element, user) -> tuple[str | None, FedoraTransaction | None]:
+    def _parse_nalezce(cls, elem: etree._Element, user) -> tuple[str | None, Osoba | None]:
         """
         Zpracuje element ``nalezce`` a vrátí ``ident_cely`` osoby pro import.
 
         Pokud má element atribut ``id=":tba"``, vytvoří se nová osoba z textu
-        ve formátu ``"Příjmení, Jméno"``.
+        ve formátu ``"Příjmení, Jméno"``. Nová osoba se zde pouze připraví,
+        ale uloží se až v transakci společně s ``SamostatnyNalez``.
 
         :param elem: Element ``amcr:samostatny_nalez``.
         :param user: Uživatel provádějící import.
 
-        :return: Dvojice ``(ident_cely_osoby, fedora_transaction)``.
+        :return: Dvojice ``(ident_cely_osoby, nova_osoba)``.
         """
 
         def build_osoba_vypis(prijmeni: str, jmeno: str) -> str:
@@ -1194,19 +1656,16 @@ class SamostatnyNalezXmlImportView(APIView):
 
         prijmeni, jmeno = casti
         jmeno = " ".join(jmeno.split())
-        fedora_transaction = FedoraTransaction(transaction_user=user)
         osoba = Osoba(
             prijmeni=prijmeni,
             jmeno=jmeno,
             vypis=build_osoba_vypis(prijmeni, jmeno),
             vypis_cely=f"{prijmeni}, {jmeno}",
         )
-        osoba.active_transaction = fedora_transaction
-        osoba.save()
-        return osoba.ident_cely, fedora_transaction
+        return None, osoba
 
     @classmethod
-    def _parse_nalez_element(cls, elem: etree._Element, user) -> tuple[dict, FedoraTransaction | None]:
+    def _parse_nalez_element(cls, elem: etree._Element, user) -> tuple[dict, Osoba | None]:
         """
         Převede element ``amcr:samostatny_nalez`` na slovník pro deserializaci.
 
@@ -1217,14 +1676,64 @@ class SamostatnyNalezXmlImportView(APIView):
         :param elem: Element ``amcr:samostatny_nalez`` z importovaného XML dokumentu.
         :param user: Uživatel provádějící import.
 
-        :return: Dvojice ``(data, fedora_transaction)`` připravená pro import.
+        :return: Dvojice ``(data, nova_osoba)`` připravená pro import.
         """
         chranene = elem.find(cls._ns("chranene_udaje"))
-        nalezce_ident, fedora_transaction = cls._parse_nalezce(elem, user)
+        nalezce_ident, nova_osoba = cls._parse_nalezce(elem, user)
+        projekt_ident = cls._id_attr(elem, "projekt")
+
+        if not projekt_ident:
+            raise ImportValidationException(
+                ImportValidationIssue(
+                    line=elem.sourceline,
+                    column=None,
+                    message="projekt: "
+                    + _("pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.missing_projekt"),
+                    error_type=ImportErrorType.INVALID_DATA,
+                )
+            )
+
+        def parse_ruian_katastr_kod(katastr_elem: etree._Element | None) -> int | None:
+            """
+            Převede atribut ``id`` ve formátu ``ruian-{kod}`` na číselný kód katastru.
+
+            :param katastr_elem: XML element ``katastr``.
+
+            :return: Kód katastru nebo ``None``, pokud element neexistuje.
+
+            :raises ImportValidationException: Pokud je atribut ``id`` v nevalidním formátu.
+            """
+            if katastr_elem is None:
+                return None
+
+            katastr_id = katastr_elem.get("id")
+            if not katastr_id:
+                return None
+            if not katastr_id.startswith("ruian-"):
+                raise ImportValidationException(
+                    ImportValidationIssue(
+                        line=katastr_elem.sourceline,
+                        column=None,
+                        message=f"katastr: {_('pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.invalid_katastr_id')}",
+                        error_type=ImportErrorType.INVALID_DATA,
+                    )
+                )
+
+            try:
+                return int(katastr_id.split("-", 1)[1])
+            except (IndexError, ValueError):
+                raise ImportValidationException(
+                    ImportValidationIssue(
+                        line=katastr_elem.sourceline,
+                        column=None,
+                        message=f"katastr: {_('pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.invalid_katastr_id')}",
+                        error_type=ImportErrorType.INVALID_DATA,
+                    )
+                )
 
         data = {
             "ident_cely": None if cls._text(elem, "ident_cely") == ":tba" else cls._text(elem, "ident_cely"),
-            "projekt": cls._id_attr(elem, "projekt"),
+            "projekt": projekt_ident,
             "evidencni_cislo": cls._text(elem, "evidencni_cislo"),
             "igsn": cls._text(elem, "igsn"),
             "hloubka": cls._text(elem, "hloubka"),
@@ -1245,6 +1754,7 @@ class SamostatnyNalezXmlImportView(APIView):
         }
 
         if chranene is not None:
+            data["katastr"] = parse_ruian_katastr_kod(chranene.find(cls._ns("katastr")))
             data["lokalizace"] = cls._text(chranene, "lokalizace")
             geom_wkt_elem = chranene.find(cls._ns("geom_wkt"))
             if geom_wkt_elem is not None and geom_wkt_elem.text:
@@ -1253,4 +1763,4 @@ class SamostatnyNalezXmlImportView(APIView):
             if geom_sjtsk_elem is not None and geom_sjtsk_elem.text:
                 data["geom_sjtsk"] = geom_sjtsk_elem.text.strip()
 
-        return {k: v for k, v in data.items() if v is not None}, fedora_transaction
+        return {k: v for k, v in data.items() if v is not None}, nova_osoba

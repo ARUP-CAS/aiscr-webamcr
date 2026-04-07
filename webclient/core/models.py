@@ -37,6 +37,11 @@ from xml_generator.models import ModelWithMetadata
 
 from .connectors import ClamdConnectionError, ClamdNetworkSocket, ClamdResponseError
 from .constants import (
+    API_REQUEST_LOG_STATUS_FAILURE,
+    API_REQUEST_LOG_STATUS_PROCESSING,
+    API_REQUEST_LOG_STATUS_RECEIVED,
+    API_REQUEST_LOG_STATUS_SUCCESS,
+    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT,
     DOKUMENT_RELATION_TYPE,
     NAHRANI_SBR,
     PROJEKT_RELATION_TYPE,
@@ -1370,3 +1375,88 @@ class PermissionsSkip(models.Model):
 
         verbose_name = _("core.model.permissionsSkip.modelTitle.label")
         verbose_name_plural = _("core.model.permissionsSkip.modelTitles.label")
+
+
+class ApiRequestLog(models.Model):
+    """Zaznamenává každý požadavek na API včetně stavu a výsledku."""
+
+    STATUS_CHOICES = (
+        (API_REQUEST_LOG_STATUS_RECEIVED, _("core.model.apiRequestLog.status.received")),
+        (API_REQUEST_LOG_STATUS_PROCESSING, _("core.model.apiRequestLog.status.processing")),
+        (API_REQUEST_LOG_STATUS_SUCCESS, _("core.model.apiRequestLog.status.success")),
+        (API_REQUEST_LOG_STATUS_FAILURE, _("core.model.apiRequestLog.status.failure")),
+    )
+
+    REQUEST_TARGET_CHOICES = (
+        (
+            API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT,
+            _("core.model.apiRequestLog.requestTarget.samostatnyNalezXmlImport"),
+        ),
+    )
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name=_("core.model.apiRequestLog.user"),
+    )
+    client_ip = models.GenericIPAddressField(
+        verbose_name=_("core.model.apiRequestLog.clientIp"),
+    )
+    received_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_("core.model.apiRequestLog.receivedAt"),
+    )
+    finished_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("core.model.apiRequestLog.finishedAt"),
+    )
+    request_target = models.CharField(
+        max_length=64,
+        choices=REQUEST_TARGET_CHOICES,
+        verbose_name=_("core.model.apiRequestLog.requestTarget"),
+    )
+    filename = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name=_("core.model.apiRequestLog.filename"),
+    )
+    file_size = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_("core.model.apiRequestLog.fileSize"),
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=STATUS_CHOICES,
+        default=API_REQUEST_LOG_STATUS_RECEIVED,
+        verbose_name=_("core.model.apiRequestLog.status"),
+    )
+    ident_cely = models.CharField(
+        max_length=64,
+        blank=True,
+        verbose_name=_("core.model.apiRequestLog.identCely"),
+    )
+    samostatny_nalez = models.ForeignKey(
+        "pas.SamostatnyNalez",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name=_("core.model.apiRequestLog.samostatnyNalez"),
+    )
+    errors = models.JSONField(
+        null=True,
+        blank=True,
+        verbose_name=_("core.model.apiRequestLog.errors"),
+    )
+
+    class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
+        db_table = "api_log_pozadavku"
+        ordering = ["-received_at"]
+        verbose_name = _("core.model.apiRequestLog.modelTitle.label")
+        verbose_name_plural = _("core.model.apiRequestLog.modelTitles.label")

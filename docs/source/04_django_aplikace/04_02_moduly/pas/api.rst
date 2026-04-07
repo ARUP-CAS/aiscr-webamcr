@@ -6,6 +6,172 @@ Modul api.
 Třídy
 ------
 
+.. py:class:: PasApiPermissionMixin
+
+   Sdílené helpery pro permission a throttle logiku PAS XML API.
+
+   **Metody:**
+
+   .. py:method:: load_json_setting()
+
+      Načte JSON hodnotu z ``CustomAdminSettings`` pro skupinu ``pas_api``.
+
+      Nastavení se konfiguruje v Django administraci přes model ``CustomAdminSettings``
+      (skupina ``pas_api``). Každý záznam musí mít pole ``value`` obsahující platný JSON.
+
+      Podporované záznamy:
+
+      ``access_rules`` (``item_id="access_rules"``)
+          Seznam pravidel přístupu. Každé pravidlo je objekt s klíči:
+
+          - ``rule_type`` *(povinný)* — typ pravidla; povolené hodnoty:
+            ``"ip_blacklist"``, ``"ip_whitelist"``, ``"user_blacklist"``, ``"user_whitelist"``
+          - ``value`` *(povinný)* — IP adresa, IP rozsah (např. ``"192.168.1.1-192.168.1.5"``),
+            CIDR rozsah (např. ``"192.168.1.0/24"``) nebo uživatelské jméno podle ``rule_type``
+          - ``active`` *(volitelný, výchozí* ``true``*)* — ``false`` pravidlo dočasně deaktivuje
+
+          Příklad::
+
+              [
+                {"rule_type": "ip_blacklist", "value": "1.2.3.4"},
+                {"rule_type": "ip_whitelist", "value": "10.0.0.0/8"},
+                {"rule_type": "user_blacklist", "value": "jan.novak", "active": false}
+              ]
+
+      ``rate_limits`` (``item_id="rate_limits"``)
+          Seznam limitů počtu požadavků. Každý limit je objekt s klíči:
+
+          - ``scope`` *(povinný)* — rozsah pravidla; povolené hodnoty: ``"user"``, ``"ip"``
+          - ``value`` *(povinný)* — uživatelské jméno nebo IP adresa, IP rozsah,
+            CIDR rozsah
+          - ``rate`` *(povinný)* — limit ve formátu ``"počet/jednotka"``;
+            jednotky: ``s`` (sekunda), ``m`` (minuta), ``h`` (hodina), ``d`` (den);
+            např. ``"10/m"``, ``"100/h"``, ``"1000/d"``
+          - ``active`` *(volitelný, výchozí* ``true``*)* — ``false`` limit dočasně deaktivuje
+
+          Příklad::
+
+              [
+                {"scope": "user", "value": "jan.novak", "rate": "10/m"},
+                {"scope": "ip", "value": "203.0.113.0/24", "rate": "50/h"}
+              ]
+
+      ``access_mode`` (``item_id="access_mode"``)
+          Režim globální dostupnosti API. Podporované hodnoty:
+
+          - ``"open"`` — API je otevřené; whitelist pravidla se neaplikují
+          - ``"whitelist_only"`` — API je dostupné pouze přes whitelist pravidla
+          - ``"closed"`` — API je úplně uzavřené
+
+          Příklad::
+
+              "whitelist_only"
+
+      Změny v administraci se projeví do ``30`` sekund (TTL cache).
+
+      :param item_id: Identifikátor záznamu — ``"access_rules"``, ``"rate_limits"`` nebo ``"access_mode"``.
+
+      :param raise_validation_error: Pokud je ``True``, nevalidní JSON vyhodí ``ValidationError``.
+
+      :return: Naparsovaná JSON hodnota nebo ``[]`` při chybě či absenci záznamu.
+
+   .. py:method:: get_access_rules()
+
+      Vrátí přístupová pravidla API z cache nebo ``CustomAdminSettings``.
+
+      Každé pravidlo je slovník s klíči ``rule_type``, ``value`` a volitelně ``active`` (výchozí ``True``).
+
+      :raises ValidationError: Pokud nastavení nemá očekávanou strukturu nebo obsahuje nevalidní pravidlo.
+      :return: Seznam aktivních pravidel.
+
+   .. py:method:: validate_access_rules()
+
+      Ověří strukturu a obsah nastavení ``access_rules``.
+
+      :param raw_rules: Naparsovaná JSON hodnota nastavení ``access_rules``.
+
+      :raises ValidationError: Pokud struktura nebo obsah pravidel neodpovídá očekávání.
+      :return: ``True`` pokud je nastavení validní.
+
+   .. py:method:: validate_custom_admin_setting()
+
+      Ověří ``CustomAdminSettings`` záznam relevantní pro PAS API před uložením.
+
+      Pokud jde o skupinu ``pas_api``, ověří platnost ``item_id`` a podle něj
+      validuje JSON hodnotu příslušným validátorem.
+
+      :param instance: Ukládaný záznam ``CustomAdminSettings``.
+
+      :raises ValidationError: Pokud ``item_id`` není podporováno nebo JSON/struktura hodnoty nejsou validní.
+      :return: ``True`` pokud je záznam validní nebo se na něj validace nevztahuje.
+
+   .. py:method:: get_rate_limits()
+
+      Vrátí limity počtu požadavků z cache nebo ``CustomAdminSettings``.
+
+      Každý limit je slovník s klíči ``scope``, ``value``, ``rate`` a volitelně ``active`` (výchozí ``True``).
+
+      :raises ValidationError: Pokud nastavení nemá očekávanou strukturu nebo obsahuje nevalidní limit.
+      :return: Seznam aktivních limitů.
+
+   .. py:method:: validate_rate_limits()
+
+      Ověří strukturu a obsah nastavení ``rate_limits``.
+
+      :param raw_limits: Naparsovaná JSON hodnota nastavení ``rate_limits``.
+
+      :raises ValidationError: Pokud struktura nebo obsah limitů neodpovídá očekávání.
+      :return: ``True`` pokud je nastavení validní.
+
+   .. py:method:: get_access_mode()
+
+      Vrátí globální režim dostupnosti PAS XML API.
+
+      Hodnota se načítá z ``CustomAdminSettings`` (``pas_api/access_mode``) a kešuje se.
+      Neplatná nebo chybějící hodnota znamená výchozí režim ``open``.
+
+      :raises ValidationError: Pokud nastavení neobsahuje podporovanou hodnotu.
+      :return: Jeden z režimů ``open``, ``whitelist_only`` nebo ``closed``.
+
+   .. py:method:: validate_access_mode()
+
+      Ověří hodnotu nastavení ``access_mode``.
+
+      :param value: Naparsovaná JSON hodnota nastavení ``access_mode``.
+
+      :raises ValidationError: Pokud hodnota není jedním z podporovaných režimů.
+      :return: ``True`` pokud je hodnota validní.
+
+   .. py:method:: get_client_ip()
+
+      Vrátí IP adresu klienta z požadavku s ohledem na proxy hlavičky.
+
+      :param request: HTTP požadavek.
+
+      :return: IP adresa klienta jako řetězec.
+
+   .. py:method:: get_user_identifier()
+
+      Vrátí identifikátor uživatele použitelný pro access-rules a rate-limity.
+
+      Projekt používá vlastní model uživatele s ``USERNAME_FIELD = "email"``.
+      Pro kompatibilitu helper preferuje ``email`` a fallbackuje na ``username``.
+
+      :param user: Uživatel navázaný na požadavek.
+
+      :return: Email, username nebo ``None`` pro neautentizovaného uživatele.
+
+   .. py:method:: ip_matches()
+
+      Porovná IP adresu klienta s konkrétní adresou, IP rozsahem nebo CIDR rozsahem.
+
+      :param client_ip: IP adresa klienta.
+      :param pattern: IP adresa, IP rozsah (např. ``192.168.1.1-192.168.1.5``)
+                      nebo CIDR rozsah (např. ``192.168.1.0/24"``).
+
+      :return: ``True`` pokud adresa odpovídá vzoru.
+
+
 .. py:class:: IpBlacklistPermission
 
    Zamítne přístup IP adresám uvedeným v blacklistu ``CustomAdminSettings`` (``pas_api/access_rules``).
@@ -72,6 +238,25 @@ Třídy
       :param view: Pohled zpracovávající požadavek.
 
       :return: ``True`` pokud whitelist není definován nebo uživatel na něm je, jinak ``False``.
+
+
+.. py:class:: ApiAccessModePermission
+
+   Řídí globální dostupnost PAS XML API podle ``CustomAdminSettings`` (``pas_api/access_mode``).
+
+   **Metody:**
+
+   .. py:method:: has_permission()
+
+      Ověří globální režim dostupnosti API.
+
+      Režim ``open`` požadavek propustí. Režim ``closed`` vše zamítne.
+      Režim ``whitelist_only`` vyžaduje alespoň jedno aktivní whitelist pravidlo.
+
+      :param request: HTTP požadavek.
+      :param view: Pohled zpracovávající požadavek.
+
+      :return: ``True`` pokud režim přístup dovoluje, jinak ``False``.
 
 
 .. py:class:: ApiImportThrottle
@@ -167,22 +352,54 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: dispatch()
+
+      Zpracuje globální režim ``closed`` ještě před DRF permission vrstvou.
+
+      Tím je zajištěn návratový kód ``503 Service Unavailable`` bez zapojení
+      permission mechaniky DRF, která by jinak vracela ``403``.
+
+      :param request: Příchozí HTTP požadavek.
+      :param args: Dodatečné poziční argumenty.
+      :param kwargs: Dodatečné pojmenované argumenty.
+
+      :return: HTTP odpověď view nebo okamžitá odpověď ``503`` při vypnutém API.
+
+   .. py:method:: _fail()
+
+      Označí log záznam jako neúspěšný, vytvoří a vrátí chybovou odpověď.
+
+      :param log_entry: Záznam logu API požadavku.
+      :param body: Tělo odpovědi jako slovník.
+      :param status: HTTP stavový kód odpovědi.
+
+      :return: Chybová HTTP odpověď se zadaným tělem a stavovým kódem.
+
+   .. py:method:: _success()
+
+      Označí log záznam jako úspěšný, zaloguje výsledek a vrátí XML odpověď s metadaty.
+
+      :param log_entry: Záznam logu API požadavku.
+      :param instance: Uložený záznam samostatného nálezu.
+      :param metadata: XML metadata vrácená Fedora repozitářem.
+      :param notes: Seznam poznámek o ignorovaných atributech ``xml:lang``.
+
+      :return: HTTP odpověď s XML metadaty a stavovým kódem 200.
+
    .. py:method:: post()
 
       Importuje nový záznam samostatného nálezu z XML souboru.
 
       Přijímá soubor v parametru ``file`` (multipart/form-data). XML musí odpovídat
       schématu AMČR 2.2 (https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd).
-      Každý element ``amcr:samostatny_nalez`` v dokumentu je importován jako
-      samostatný záznam. Celá operace je atomická — při jakékoli chybě se
-      neuloží nic.
+      Dokument musí obsahovat právě jeden element ``amcr:samostatny_nalez``.
 
       :param request: HTTP požadavek obsahující XML soubor v poli ``file``.
       :param format: Formát odpovědi.
 
-      :return: Vrací ``Response`` se seznamem vytvořených ``ident_cely`` (HTTP 200),
-      nebo chybou syntaxe volání (HTTP 400), chybějícím projektem (HTTP 404),
-      nevalidním XML či datovými chybami (HTTP 422).
+      :return: Vrací ``Response`` s metadaty vytvořeného záznamu (HTTP 200),
+               nebo chybou syntaxe volání (HTTP 400), chybějícím projektem (HTTP 404),
+               nevalidním XML či datovými chybami (HTTP 422).
 
    .. py:method:: _has_import_permissions()
 
@@ -191,7 +408,7 @@ Třídy
       :param user: Uživatel provádějící import.
       :param data: Data jednoho importovaného záznamu.
 
-      :return: Vrací ``True`` pokud má uživatel obě vyžadovaná oprávnění.
+      :return: Vrací ``True`` pokud má uživatel všechna vyžadovaná oprávnění.
 
    .. py:method:: _create_import_history_records()
 
@@ -200,14 +417,13 @@ Třídy
       :param instance: Vytvořený záznam samostatného nálezu.
       :param user: Uživatel, který provedl import.
 
-   .. py:method:: _validation_error_response()
+   .. py:method:: _validation_status()
 
-      Vytvoří HTTP odpověď pro validační chyby importu.
+      Určí HTTP stavový kód odpovědi na základě typů validačních chyb.
 
       :param errors: Seznam validačních chyb importu.
-      :param user: Uživatel provádějící import.
 
-      :return: HTTP odpověď se serializovanými chybami.
+      :return: HTTP stavový kód odpovídající nejzávažnějšímu typu chyby.
 
    .. py:method:: _validate_disallowed_elements()
 
@@ -260,9 +476,19 @@ Třídy
 
    .. py:method:: _get_amcr_schema()
 
-      Vrátí zkompilované XSD schéma AMČR (singleton, načte se jednou).
+      Vrátí zkompilované XSD schéma AMČR podle URL deklarované v ``xsi:schemaLocation``.
+
+      :param doc: Naparsovaný XML dokument s deklarovaným ``xsi:schemaLocation``.
 
       :return: Vrací instanci ``etree.XMLSchema`` pro validaci importovaných XML dokumentů.
+
+   .. py:method:: _validate_schema_url_allowed()
+
+      Ověří, že URL schématu patří mezi povolené URL prefixy.
+
+      :param url: URL schématu nebo importovaného XSD souboru.
+
+      :raises ImportValidationException: Pokud URL míří mimo povolené domény.
 
    .. py:method:: _ns()
 
@@ -317,12 +543,13 @@ Třídy
       Zpracuje element ``nalezce`` a vrátí ``ident_cely`` osoby pro import.
 
       Pokud má element atribut ``id=":tba"``, vytvoří se nová osoba z textu
-      ve formátu ``"Příjmení, Jméno"``.
+      ve formátu ``"Příjmení, Jméno"``. Nová osoba se zde pouze připraví,
+      ale uloží se až v transakci společně s ``SamostatnyNalez``.
 
       :param elem: Element ``amcr:samostatny_nalez``.
       :param user: Uživatel provádějící import.
 
-      :return: Dvojice ``(ident_cely_osoby, fedora_transaction)``.
+      :return: Dvojice ``(ident_cely_osoby, nova_osoba)``.
 
    .. py:method:: _parse_nalez_element()
 
@@ -335,87 +562,15 @@ Třídy
       :param elem: Element ``amcr:samostatny_nalez`` z importovaného XML dokumentu.
       :param user: Uživatel provádějící import.
 
-      :return: Dvojice ``(data, fedora_transaction)`` připravená pro import.
+      :return: Dvojice ``(data, nova_osoba)`` připravená pro import.
 
 
 Funkce
 ------
 
-.. py:function:: _load_json_setting(item_id)
-
-   Načte JSON seznam z ``CustomAdminSettings`` pro skupinu ``pas_api``.
-
-   Nastavení se konfiguruje v Django administraci přes model ``CustomAdminSettings``
-   (skupina ``pas_api``). Každý záznam musí mít pole ``value`` obsahující platný JSON seznam.
-
-   Podporované záznamy:
-
-   ``access_rules`` (``item_id="access_rules"``)
-   Seznam pravidel přístupu. Každé pravidlo je objekt s klíči:
-
-
-   ``access_rules`` (``item_id="access_rules"``)
-   Seznam pravidel přístupu. Každé pravidlo je objekt s klíči:
-
-   - ``rule_type`` *(povinný)* — typ pravidla; povolené hodnoty: ``"ip_blacklist"``, ``"ip_whitelist"``, ``"user_blacklist"``, ``"user_whitelist"``
-   - ``value`` *(povinný)* — IP adresa, CIDR rozsah (např. ``"192.168.1.0/24"``) nebo uživatelské jméno podle ``rule_type``
-   - ``active`` *(volitelný, výchozí* ``true``*)* — ``false`` pravidlo dočasně deaktivuje
-
-   ``rate_limits`` (``item_id="rate_limits"``)
-   Seznam limitů počtu požadavků. Každý limit je objekt s klíči:
-
-   - ``scope`` *(povinný)* — rozsah pravidla; povolené hodnoty: ``"user"``, ``"ip"``
-   - ``value`` *(povinný)* — uživatelské jméno nebo IP adresa/CIDR rozsah
-   - ``rate`` *(povinný)* — limit ve formátu ``"počet/jednotka"``; jednotky: ``s`` (sekunda), ``m`` (minuta), ``h`` (hodina), ``d`` (den); např. ``"10/m"``, ``"100/h"``, ``"1000/d"``
-   - ``active`` *(volitelný, výchozí* ``true``*)* — ``false`` limit dočasně deaktivuje
-
-.. py:function:: _get_access_rules()
-
-   Vrátí přístupová pravidla API z cache nebo ``CustomAdminSettings``.
-
-   Každé pravidlo je slovník s klíči ``rule_type``, ``value`` a volitelně ``active`` (výchozí ``True``).
-
-   :return: Seznam aktivních pravidel.
-
-.. py:function:: _get_rate_limits()
-
-   Vrátí limity počtu požadavků z cache nebo ``CustomAdminSettings``.
-
-   Každý limit je slovník s klíči ``scope``, ``value``, ``rate`` a volitelně ``active`` (výchozí ``True``).
-
-   :return: Seznam aktivních limitů.
-
 .. py:function:: _invalidate_api_cache(sender, instance)
 
    Vymaže cache pravidel API po změně záznamu ``CustomAdminSettings`` skupiny ``pas_api``.
-
-.. py:function:: _get_client_ip(request)
-
-   Vrátí IP adresu klienta z požadavku s ohledem na proxy hlavičky.
-
-   :param request: HTTP požadavek.
-
-   :return: IP adresa klienta jako řetězec.
-
-.. py:function:: _get_user_identifier(user)
-
-   Vrátí identifikátor uživatele použitelný pro access-rules a rate-limity.
-
-   Projekt používá vlastní model uživatele s ``USERNAME_FIELD = "email"``.
-   Pro kompatibilitu helper preferuje ``email`` a fallbackuje na ``username``.
-
-   :param user: Uživatel navázaný na požadavek.
-
-   :return: Email, username nebo ``None`` pro neautentizovaného uživatele.
-
-.. py:function:: _ip_matches(client_ip, pattern)
-
-   Porovná IP adresu klienta s konkrétní adresou nebo CIDR rozsahem.
-
-   :param client_ip: IP adresa klienta.
-   :param pattern: IP adresa nebo CIDR rozsah (např. ``192.168.1.0/24``).
-
-   :return: ``True`` pokud adresa odpovídá vzoru.
 
 .. py:function:: _parse_rate(rate)
 
