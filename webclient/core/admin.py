@@ -608,7 +608,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
 
         :param request: Parametr ``request`` předává se do volání ``get_app_list()``, ``each_context()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-            :return: Vrací výsledek volání ``TemplateResponse()``.
+        :return: Vrací výsledek volání ``TemplateResponse()``.
         """
         from pid.forms import UpdateDocumentObjectIdentifierFileForm
 
@@ -639,7 +639,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
 
         :param request: Parametr ``request`` předává se do volání ``get_app_list()``, ``each_context()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-            :return: Vrací výsledek volání ``TemplateResponse()``.
+        :return: Vrací výsledek volání ``TemplateResponse()``.
         """
         from fedora_management.forms import UpdateMetadataFileForm
 

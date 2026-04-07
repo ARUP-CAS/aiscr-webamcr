@@ -394,6 +394,18 @@ class ImportDataEmptyError(ImportDataError):
         super().__init__(_("core.admin.import_data.error.empty_import"))
 
 
+class ImportDataMissingFileError(ImportDataError):
+    """
+    Výjimka vyvolaná při pokusu o import bez přiloženého souboru.
+
+    Vyvolá se v případě, kdy formulář neobsahuje žádný nahraný soubor.
+    """
+
+    def __init__(self):
+        """Inicializuje výjimku pro chybějící soubor."""
+        super().__init__(_("core.admin.import_data.error.missing_file"))
+
+
 class BaseImportField:
     """
     Základní třída pro importní pole. Neprovádí žádnou validaci ani zpracování hodnoty.
@@ -540,7 +552,7 @@ class PositiveIntegerImportField(BaseImportField):
 class DecimalImportField(BaseImportField):
     """Importní pole pro desetinná čísla (float)."""
 
-    pattern = re.compile(r"\d+\.?\d*")
+    pattern = re.compile(r"^-?\d+\.?\d*$")
 
     def _process_value(self, value) -> float | None:
         """
@@ -557,7 +569,7 @@ class DecimalImportField(BaseImportField):
             value = str(value)
         elif isinstance(value, bytes):
             value = value.decode("utf-8")
-        match = self.pattern.search(value)
+        match = self.pattern.fullmatch(value)
         if match:
             return float(match.group())
         raise ImportDataError(f"{_('core_admin.DecimalImportField.message.invalid_decimal_value')}: {value}")
@@ -1034,7 +1046,9 @@ class GeomImportField(BaseImportField):
             value = GEOSGeometry(value, srid=self.srid)
         if isinstance(value, GEOSGeometry):
             if value.srid != self.srid:
-                value.transform(self.srid)
+                raise ImportDataError(
+                    f"{_('core_admin.GeomImportField.message.srid_mismatch')}: {value.srid} != {self.srid}"
+                )
             return value
         raise ImportDataError(f"{_('core_admin.GeomImportField.message.invalid_date_value')}: {value}")
 

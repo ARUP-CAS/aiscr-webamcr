@@ -517,6 +517,7 @@ def run_data_import(job_id, user_id, lock_token):
 
     :param job_id: Identifikátor objektu ``job``.
     :param user_id: Identifikátor objektu ``user``.
+    :param lock_token: Token pro ověření vlastnictví importního zámku v Redis.
 
         :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem "Missing required DIRECTORY_PATH setting".
     """

@@ -184,6 +184,19 @@ Třídy
       Inicializuje výjimku pro prázdný import.
 
 
+.. py:class:: ImportDataMissingFileError
+
+   Výjimka vyvolaná při pokusu o import bez přiloženého souboru.
+
+   Vyvolá se v případě, kdy formulář neobsahuje žádný nahraný soubor.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje výjimku pro chybějící soubor.
+
+
 .. py:class:: BaseImportField
 
    Základní třída pro importní pole. Neprovádí žádnou validaci ani zpracování hodnoty.

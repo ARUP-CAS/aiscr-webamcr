@@ -20,6 +20,7 @@ from .import_data_mappers import (
     ImportDataEmptyError,
     ImportDataError,
     ImportDataIntegrityError,
+    ImportDataMissingFileError,
     ImportDataUnsupportedFileError,
     ImportDataUnsupportedFilesError,
     ImportDataValidationResult,
@@ -245,6 +246,8 @@ class AmcrCustomAdminSite(admin.AdminSite):
                     extra={"error": err},
                 )
                 context["error"] = _("fedora_management.admin.YourCustomAdminSite.cannot_read_file")
+        if sheet is None:
+            return None
         if sheet.shape[1] != 1:
             context["error"] = _("fedora_management.admin.YourCustomAdminSite.too_many_columns")
             sheet = None
@@ -354,33 +357,34 @@ class AmcrCustomAdminSite(admin.AdminSite):
         if not is_maintenance_in_progress() or import_data_running:
             return TemplateResponse(request, "admin/import_data/import_data.html", context)
         if request.method == "POST" and request.user.is_superuser:
-            data_file = request.FILES["data_file"]
             form = ImportDataAdminForm(request.POST, request.FILES)
             if form.is_valid():
                 cleaned_data = form.cleaned_data
             else:
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
             context["form"] = form
-            file_bytes = data_file.read()
-            job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
-            context["url"] = reverse("core:data-import-progress", args=[job_id])
-            context["url_stop"] = reverse("core:data-import-stop", args=[job_id])
-            validation_results = []
-            records = []
-            record_id = 0  # index of valid records only — used as Redis key suffix and records_count
-            row_order = 0  # index of every CSV row (valid + invalid) — used as item_order in validation results
-            invalid_records = []
             performed_action = cleaned_data["performed_action"]
-            antivirus_result = Soubor.check_antivirus(io.BytesIO(file_bytes))
-            if antivirus_result == AntivirusCheckResult.VIRUS_FOUND:
-                context["error_message"] = _("core.admin.import_data.error.import_error")
-                context["error_message_details"] = _("core.admin.import_data.error.virus_found")
-                return TemplateResponse(request, "admin/import_data/import_data.html", context)
-            if antivirus_result == AntivirusCheckResult.CHECK_FAILED:
-                logger.warning("core.admin_sites.AmcrCustomAdminSite.import_data.antivirus_check_failed")
-            LookupImportField.set_records(records)
-            LookupImportField.clear_cache()
             try:
+                data_file = cleaned_data.get("data_file")
+                if not data_file:
+                    raise ImportDataMissingFileError()
+                file_bytes = data_file.read()
+                job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
+                context["url"] = reverse("core:data-import-progress", args=[job_id])
+                context["url_stop"] = reverse("core:data-import-stop", args=[job_id])
+                validation_results = []
+                records = []
+                record_id = 0  # index of valid records only — used as Redis key suffix and records_count
+                row_order = 0  # index of every CSV row (valid + invalid) — used as item_order in validation results
+                invalid_records = []
+                antivirus_result = Soubor.check_antivirus(io.BytesIO(file_bytes))
+                if antivirus_result == AntivirusCheckResult.VIRUS_FOUND:
+                    context["error_message"] = _("core.admin.import_data.error.import_error")
+                    context["error_message_details"] = _("core.admin.import_data.error.virus_found")
+                    return TemplateResponse(request, "admin/import_data/import_data.html", context)
+                if antivirus_result == AntivirusCheckResult.CHECK_FAILED:
+                    logger.warning("core.admin_sites.AmcrCustomAdminSite.import_data.antivirus_check_failed")
+                LookupImportField.set_records(records)
                 with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
                     file_names = [
                         name for name in zf.namelist() if not name.startswith("__MACOSX") and not name.endswith("/")
@@ -480,6 +484,10 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 context["error_message_details"] = str(err)
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
             except ImportDataEmptyError as err:
+                context["error_message"] = _("core.admin.import_data.error.import_error")
+                context["error_message_details"] = str(err)
+                return TemplateResponse(request, "admin/import_data/import_data.html", context)
+            except ImportDataMissingFileError as err:
                 context["error_message"] = _("core.admin.import_data.error.import_error")
                 context["error_message_details"] = str(err)
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
