@@ -935,7 +935,7 @@ class SamostatnyNalezXmlImportView(APIView):
 
         try:
             expected = base64.b64decode(header[len(prefix) : -1])
-        except Exception:
+        except (ValueError, TypeError):
             return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.invalid_base64")
 
         actual = hashlib.sha512(xml_file.read()).digest()
