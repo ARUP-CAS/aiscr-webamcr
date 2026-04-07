@@ -23,7 +23,7 @@ Pravidla a governance viz [AGENTS.md](../AGENTS.md).
     dependency_graph.json        — Graf interních a externích závislostí (T02)
     *_analysis.json              — Výstupy analýz per-task (ORM, Docker, security, …)
   reports/
-    review_reports/              — Reporty z jednotlivých tasků (<task_id>.md); final_audit.md obsahuje Changelog
+    review_reports/              — Reporty z jednotlivých tasků (<task_id>_<model_abbr>.md, např. T01_claude.md); final_audit.md obsahuje Changelog
     bugs.md                      — Evidence nalezených chyb
     refactoring_backlog.md       — Backlog strukturálních vylepšení
     claude_automation_recommendations.md  — Doporučení pro Claude Code automations

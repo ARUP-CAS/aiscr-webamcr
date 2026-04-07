@@ -65,6 +65,25 @@ In such cases agents should:
 All artefacts produced by AI agents must be stored in `.agents/`.
 For directory layout details, see [.agents/README.md](.agents/README.md).
 
+### Review file naming
+
+Review report files must include a short model abbreviation in their name so
+that different models do not overwrite each other's output.
+
+Format: `<task_id>_<model_abbr>.md`
+
+Examples:
+
+- `T01_claude.md` — task T01 review by Claude
+- `T01_gpt.md` — task T01 review by GPT-4o
+- `T03_gemini.md` — task T03 review by Gemini
+
+Suggested abbreviations: `claude`, `gpt`, `gemini`, `mistral`, `llama`.
+Use a more specific suffix (e.g. `claude_opus`, `gpt4o`) when running
+multiple variants of the same model family.
+
+This rule applies to all files under `.agents/reports/review_reports/`.
+
 Agent work must be committed to branches named:
 
 `agents/<agent_name>/<topic>`
