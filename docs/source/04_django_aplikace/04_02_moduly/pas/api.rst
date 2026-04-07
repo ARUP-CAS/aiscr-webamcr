@@ -354,16 +354,19 @@ Funkce
    Seznam pravidel přístupu. Každé pravidlo je objekt s klíči:
 
 
-   **- ``rule_type`` *(povinný)* — typ pravidla; povolené hodnoty:**
+   ``access_rules`` (``item_id="access_rules"``)
+   Seznam pravidel přístupu. Každé pravidlo je objekt s klíči:
 
-   - ``value`` *(povinný)* — IP adresa, CIDR rozsah (např. ``"192.168.1.0/24"``)
-     nebo uživatelské jméno podle ``rule_type``
+   - ``rule_type`` *(povinný)* — typ pravidla; povolené hodnoty: ``"ip_blacklist"``, ``"ip_whitelist"``, ``"user_blacklist"``, ``"user_whitelist"``
+   - ``value`` *(povinný)* — IP adresa, CIDR rozsah (např. ``"192.168.1.0/24"``) nebo uživatelské jméno podle ``rule_type``
    - ``active`` *(volitelný, výchozí* ``true``*)* — ``false`` pravidlo dočasně deaktivuje
+
+   ``rate_limits`` (``item_id="rate_limits"``)
+   Seznam limitů počtu požadavků. Každý limit je objekt s klíči:
+
    - ``scope`` *(povinný)* — rozsah pravidla; povolené hodnoty: ``"user"``, ``"ip"``
    - ``value`` *(povinný)* — uživatelské jméno nebo IP adresa/CIDR rozsah
-   - ``rate`` *(povinný)* — limit ve formátu ``"počet/jednotka"``;
-     jednotky: ``s`` (sekunda), ``m`` (minuta), ``h`` (hodina), ``d`` (den);
-     např. ``"10/m"``, ``"100/h"``, ``"1000/d"``
+   - ``rate`` *(povinný)* — limit ve formátu ``"počet/jednotka"``; jednotky: ``s`` (sekunda), ``m`` (minuta), ``h`` (hodina), ``d`` (den); např. ``"10/m"``, ``"100/h"``, ``"1000/d"``
    - ``active`` *(volitelný, výchozí* ``true``*)* — ``false`` limit dočasně deaktivuje
 
 .. py:function:: _get_access_rules()
