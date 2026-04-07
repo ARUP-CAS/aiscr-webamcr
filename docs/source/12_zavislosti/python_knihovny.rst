@@ -480,7 +480,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.2.1
+     - 1.2.2
      - MIT License
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
