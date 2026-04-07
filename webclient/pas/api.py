@@ -636,7 +636,7 @@ class SamostatnyNalezXmlImportView(APIView):
                 extra={"error": str(exc), "user": request.user.pk},
             )
             return Response(
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.invalid_xml_syntax") % {"error": exc}},
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.invalid_xml_syntax")},
                 status=self.HTTP_400_BAD_REQUEST,
             )
 
