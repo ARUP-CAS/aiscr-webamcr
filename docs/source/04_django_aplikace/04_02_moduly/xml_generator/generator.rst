@@ -51,7 +51,7 @@ Třídy
 
              Zpracuje schema.
 
-             :param model_name: Název modelu používaný pro cílení operace.
+      :param model_name: Název modelu používaný pro cílení operace.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _get_prefix()
@@ -65,7 +65,7 @@ Třídy
 
              Zpracuje comment.
 
-             :param comment_text: Číselná hodnota ``comment_text`` použitá při výpočtu nebo transformaci.
+      :param comment_text: Číselná hodnota ``comment_text`` použitá při výpočtu nebo transformaci.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _get_attribute_of_record()
@@ -113,27 +113,27 @@ Třídy
 
              Zpracuje scheme create element.
 
-             :param schema_element: Parametr ``schema_element`` se předává do volání ``_create_element()``, ``_parse_schema()``, pracuje se s atributy ``__class__``, ``getnext``, ovlivňuje větvení podmínek.
-             :param parent_element: Parametr ``parent_element`` předává se do volání ``_create_element()``, ``_parse_scheme_create_nested_element()``.
+      :param schema_element: Parametr ``schema_element`` se předává do volání ``_create_element()``, ``_parse_schema()``, pracuje se s atributy ``__class__``, ``getnext``, ovlivňuje větvení podmínek.
+      :param parent_element: Parametr ``parent_element`` předává se do volání ``_create_element()``, ``_parse_scheme_create_nested_element()``.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _iterate_unbound_records()
 
              Provádí operaci iterate unbound records.
 
-             :param related_records: Parametr ``related_records`` slouží jako vstup pro logiku funkce ``_iterate_unbound_records``.
-             :param schema_element: Parametr ``schema_element`` se předává do volání ``_parse_schema()``, ``_parse_scheme_create_nested_element()``, pracuje se s atributy ``attrib``.
-             :param parent_element: Parametr ``parent_element`` předává se do volání ``_parse_scheme_create_nested_element()``.
+      :param related_records: Parametr ``related_records`` slouží jako vstup pro logiku funkce ``_iterate_unbound_records``.
+      :param schema_element: Parametr ``schema_element`` se předává do volání ``_parse_schema()``, ``_parse_scheme_create_nested_element()``, pracuje se s atributy ``attrib``.
+      :param parent_element: Parametr ``parent_element`` předává se do volání ``_parse_scheme_create_nested_element()``.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _parse_scheme_create_nested_element()
 
              Zpracuje scheme create nested element.
 
-             :param schema_element: Parametr ``schema_element`` slouží jako vstup pro logiku funkce ``_parse_scheme_create_nested_element``.
-             :param parent_element: Parametr ``parent_element`` předává se do volání ``SubElement()``.
-             :param document_object: Parametr ``document_object`` předává se do volání ``_create_element()``, ``_get_attribute_of_record()``.
-             :param child_parent_element_name: Textový název nebo klíč ``child_parent_element_name`` používaný v rámci operace.
+      :param schema_element: Parametr ``schema_element`` slouží jako vstup pro logiku funkce ``_parse_scheme_create_nested_element``.
+      :param parent_element: Parametr ``parent_element`` předává se do volání ``SubElement()``.
+      :param document_object: Parametr ``document_object`` předává se do volání ``_create_element()``, ``_get_attribute_of_record()``.
+      :param child_parent_element_name: Textový název nebo klíč ``child_parent_element_name`` používaný v rámci operace.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_ref_type_attribute_name()
@@ -142,13 +142,13 @@ Třídy
 
       :param type_name: Parametr ``type_name`` předává se do volání ``get()``, pracuje se s atributy ``replace``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-          :return: Vrací výsledek volání ``get()``.
+      :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: _replace_redundant_namespaces()
 
              Provádí operaci replace redundant namespaces.
 
-             :param xml_string: Parametr ``xml_string`` se předává do volání ``sub()``, ``fromstring()``, pracuje se s atributy ``decode``, vstupuje do návratové hodnoty.
+      :param xml_string: Parametr ``xml_string`` se předává do volání ``sub()``, ``fromstring()``, pracuje se s atributy ``decode``, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: generate_document()

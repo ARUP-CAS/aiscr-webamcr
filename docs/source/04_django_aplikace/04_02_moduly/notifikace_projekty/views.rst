@@ -18,7 +18,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-          :return: Vrací proměnná ``context``.
+      :return: Vrací proměnná ``context``.
 
 
 .. py:class:: PesCreateView
@@ -35,7 +35,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-          :return: Vrací výsledek volání ``redirect()``.
+      :return: Vrací výsledek volání ``redirect()``.
 
 
 .. py:class:: PesSmazatView
@@ -62,7 +62,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
 
-          :return: Vrací proměnná ``context``.
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: get()
 
@@ -72,7 +72,7 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-          :return: Vrací výsledek volání ``render_to_response()``.
+      :return: Vrací výsledek volání ``render_to_response()``.
 
    .. py:method:: post()
 
@@ -82,5 +82,5 @@ Třídy
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-          :return: Vrací výsledek volání ``JsonResponse()``.
+      :return: Vrací výsledek volání ``JsonResponse()``.
 

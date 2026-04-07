@@ -12,7 +12,7 @@ Funkce
 
    :param instance: Parametr ``instance`` pracuje se s atributy ``active_transaction``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, výsledek volání ``FedoraTransaction()``.
+   :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, výsledek volání ``FedoraTransaction()``.
 
 .. py:function:: save_ident_cely(sender, instance)
 

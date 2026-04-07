@@ -40,7 +40,7 @@ Funkce
    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``initial_dokumenty``, ovlivňuje větvení podmínek.
    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``projekt_pre_delete``.
 
-       :raises Exception: Vyvolá se při splnění podmínky ``instance.soubory and instance.soubory.soubory.exists()``.
+   :raises Exception: Vyvolá se při splnění podmínky ``instance.soubory and instance.soubory.soubory.exists()``.
 
 .. py:function:: projekt_post_save(sender, instance)
 

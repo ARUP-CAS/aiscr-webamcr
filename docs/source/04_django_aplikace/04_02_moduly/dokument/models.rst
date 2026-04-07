@@ -25,7 +25,7 @@ Třídy
 
       Textová reprezentace objektu.
 
-          :return: Vrací atribut objektu.
+      :return: Vrací atribut objektu.
 
    .. py:method:: get_absolute_url()
 
@@ -47,13 +47,13 @@ Třídy
 
              Nastaví permanent identificator.
 
-             :param dokument: Parametr ``dokument`` předává se do volání ``get_dokument_rada()``, ``set_permanent_ident_cely()``, pracuje se s atributy ``ident_cely``, ``typ_dokumentu``.
-             :param request: Parametr ``request`` předává se do volání ``add_message()``.
-             :param messages: Parametr ``messages`` předává se do volání ``add_message()``, pracuje se s atributy ``add_message``, ``SUCCESS``.
-             :param fedora_transaction: Parametr ``fedora_transaction`` pracuje se s atributy ``rollback_transaction``.
+      :param dokument: Parametr ``dokument`` předává se do volání ``get_dokument_rada()``, ``set_permanent_ident_cely()``, pracuje se s atributy ``ident_cely``, ``typ_dokumentu``.
+      :param request: Parametr ``request`` předává se do volání ``add_message()``.
+      :param messages: Parametr ``messages`` předává se do volání ``add_message()``, pracuje se s atributy ``add_message``, ``SUCCESS``.
+      :param fedora_transaction: Parametr ``fedora_transaction`` pracuje se s atributy ``rollback_transaction``.
       Výsledek provedené změny nad cílovým objektem.
 
-          :return: Vrací hodnotu typu ``Optional[JsonResponse]`` (výsledek volání ``JsonResponse()``).
+      :return: Vrací hodnotu typu ``Optional[JsonResponse]`` (výsledek volání ``JsonResponse()``).
 
    .. py:method:: set_odeslany()
 
@@ -87,7 +87,7 @@ Třídy
 
       Dokument má aspoň jeden dokument.
 
-          :return: Vrací proměnná ``result``.
+      :return: Vrací proměnná ``result``.
 
    .. py:method:: check_pred_archivaci()
 
@@ -95,7 +95,7 @@ Třídy
 
       kontrola jako před odesláním
 
-          :return: Vrací proměnná ``result``.
+      :return: Vrací proměnná ``result``.
 
    .. py:method:: has_extra_data()
 
@@ -120,7 +120,7 @@ Třídy
       :param region: Parametr ``region`` se předává do volání ``get()``, ``create()``.
       :param rada: Parametr ``rada`` se předává do volání ``get()``, ``create()``, pracuje se s atributy ``zkratka``.
 
-          :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.
+      :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.
 
    .. py:method:: set_datum_zverejneni()
 
@@ -224,7 +224,7 @@ Třídy
       :param check_status: Zda ověřit status odpovědi serveru.
       :param reload_record: Zda znovu načíst data záznamu po aktualizaci.
 
-          :return: Vrací výsledek volání ``update_record()``.
+      :return: Vrací výsledek volání ``update_record()``.
 
    .. py:method:: doi_url()
 
@@ -278,7 +278,7 @@ Třídy
       :param success_message: Parametr ``success_message`` předává se do volání ``FedoraTransaction()``.
       :param error_message: Parametr ``error_message`` předává se do volání ``FedoraTransaction()``.
 
-          :return: Vrací atribut objektu.
+      :return: Vrací atribut objektu.
 
    .. py:method:: dokument_doi()
 
@@ -309,7 +309,7 @@ Třídy
 
       Textová reprezentace objektu.
 
-          :return: Vrací hodnotu podle větve zpracování.
+      :return: Vrací hodnotu podle větve zpracování.
 
 
 .. py:class:: DokumentOsoba
@@ -329,7 +329,7 @@ Třídy
 
       Textová reprezentace objektu.
 
-          :return: Vrací hodnotu podle větve zpracování.
+      :return: Vrací hodnotu podle větve zpracování.
 
 
 .. py:class:: Tvar
@@ -353,7 +353,7 @@ Třídy
       :param success_message: Parametr ``success_message`` předává se do volání ``FedoraTransaction()``.
       :param error_message: Parametr ``error_message`` předává se do volání ``FedoraTransaction()``.
 
-          :return: Vrací atribut objektu.
+      :return: Vrací atribut objektu.
 
 
 .. py:class:: DokumentSekvence
@@ -373,7 +373,7 @@ Třídy
 
       Textová reprezentace objektu.
 
-          :return: Vrací atribut objektu.
+      :return: Vrací atribut objektu.
 
    .. py:method:: save()
 
@@ -382,7 +382,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``save()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
 
-          :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'let')``.
+      :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'let')``.
 
    .. py:method:: get_absolute_url()
 
@@ -402,4 +402,4 @@ Funkce
    :param filename: Parametr ``filename`` se předává do volání ``splitext()``, vstupuje do návratové hodnoty.
    :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.
+   :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.

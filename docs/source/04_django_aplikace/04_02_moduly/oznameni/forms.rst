@@ -18,8 +18,8 @@ Třídy
 
       :param value: Parametr ``value`` předává se do volání ``isinstance()``, pracuje se s atributy ``split``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``value``, výsledek volání ``DateRange()``.
-          :raises ValidationError: Vyvolá se při splnění podmínky ``from_date is None or to_date is None``; nebo při zpracování zachycené výjimky typu ``Exception``.
+      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``value``, výsledek volání ``DateRange()``.
+      :raises ValidationError: Vyvolá se při splnění podmínky ``from_date is None or to_date is None``; nebo při zpracování zachycené výjimky typu ``Exception``.
 
 
 .. py:class:: DateRangeWidget
@@ -34,7 +34,7 @@ Třídy
 
       :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``str()``, pracuje se s atributy ``lower``, ``upper``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: None, hodnotu podle větve zpracování, výsledek volání ``str()``.
+      :return: Vrací hodnotu podle větve zpracování, typicky: None, hodnotu podle větve zpracování, výsledek volání ``str()``.
 
 
 .. py:class:: OznamovatelForm

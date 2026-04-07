@@ -68,7 +68,7 @@ Třídy
 
       :param table: Tabulka (django-tables2) obsahující jeden řádek s daty záznamu.
 
-          :return: Vrací proměnná ``data``.
+      :return: Vrací proměnná ``data``.
 
 
 .. py:class:: ClamdError
@@ -144,8 +144,8 @@ Třídy
 
              Používá prefix 'n' a ukončovač nového řádku podle doporučení `man clamd`.
 
-             :param cmd: Textový název, klíč nebo zpráva ``cmd`` používaná v rámci operace.
-             :param args: Parametr ``args`` se předává do volání ``join()``, ovlivňuje větvení podmínek.
+      :param cmd: Textový název, klíč nebo zpráva ``cmd`` používaná v rámci operace.
+      :param args: Parametr ``args`` se předává do volání ``join()``, ovlivňuje větvení podmínek.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _recv_response()

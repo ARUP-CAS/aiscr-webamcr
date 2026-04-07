@@ -1222,11 +1222,21 @@ def _looks_like_sphinx_fieldlist(docstring: str) -> bool:
     )
 
 
+# Řádky začínající Sphinx info polem — po ast.get_docstring() mohou mít zbytečné odsazení
+# (např. „:return:“ vnořené pod „:param:“), což dříve vedlo k cyklickým změnám v generovaném RST.
+_RST_INFO_FIELD_LINE = re.compile(
+    r"^\s*:(?:param|type|return|returns|raises|raise|yield|yields|rtype)\b",
+    re.I,
+)
+
+
 def _indent_docstring_lines(docstring: str, indent: str) -> List[str]:
     """Přidá ``indent`` k neprázdným řádkům; prázdné řádky ponechá prázdné."""
     out: List[str] = []
     for line in docstring.splitlines():
         if line.strip():
+            if _RST_INFO_FIELD_LINE.match(line):
+                line = line.lstrip()
             out.append(f"{indent}{line}")
         else:
             out.append("")

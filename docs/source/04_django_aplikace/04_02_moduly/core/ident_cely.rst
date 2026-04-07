@@ -34,7 +34,7 @@ Funkce
    :param project: Parametr ``project`` pracuje se s atributy ``ident_cely``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :return: Vrací výsledek operace.
 
-       :raises MaximalEventCount: Vyvolá se při splnění podmínky ``len(idents) < MAXIMAL_PROJECT_EVENTS``.
+   :raises MaximalEventCount: Vyvolá se při splnění podmínky ``len(idents) < MAXIMAL_PROJECT_EVENTS``.
 
 .. py:function:: get_dokument_rada(typ, material)
 
@@ -43,8 +43,8 @@ Funkce
    :param typ: Parametr ``typ`` předává se do volání ``filter()``, ``error()``, pracuje se s atributy ``id``.
    :param material: Parametr ``material`` se předává do volání ``filter()``, ``error()``, pracuje se s atributy ``id``.
 
-       :return: Vrací atribut objektu.
-       :raises NelzeZjistitRaduError: Vyvolá se při splnění podmínky ``len(instances) == 1``.
+   :return: Vrací atribut objektu.
+   :raises NelzeZjistitRaduError: Vyvolá se při splnění podmínky ``len(instances) == 1``.
 
 .. py:function:: get_temp_dokument_ident(rada, region)
 
@@ -56,7 +56,7 @@ Funkce
    :param rada: Parametr ``rada`` se předává do volání ``str()``.
    :param region: Parametr ``region`` se předává do volání ``str()``.
 
-       :return: Vrací hodnotu podle větve zpracování.
+   :return: Vrací hodnotu podle větve zpracování.
 
 .. py:function:: get_cast_dokumentu_ident(dokument)
 
@@ -69,7 +69,7 @@ Funkce
    :param dokument: Parametr ``dokument`` pracuje se s atributy ``casti``, ``ident_cely``.
    :return: Vrací výsledek operace.
 
-       :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``max_count < MAXIMUM``.
+   :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``max_count < MAXIMUM``.
 
 .. py:function:: get_dj_ident(event)
 
@@ -82,7 +82,7 @@ Funkce
    :param event: Parametr ``event`` pracuje se s atributy ``dokumentacni_jednotky_akce``, ``ident_cely``.
    :return: Vrací výsledek operace.
 
-       :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``max_count < MAXIMAL_EVENT_DJS``.
+   :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``max_count < MAXIMAL_EVENT_DJS``.
 
 .. py:function:: get_komponenta_ident(zaznam, fedora_transaction)
 
@@ -103,8 +103,8 @@ Funkce
 
    :param point: Parametr ``point`` předává se do volání ``filter()``, ``PianNotInKladysm5Error()``.
 
-       :return: Vrací proměnná ``mapovy_list``.
-       :raises PianNotInKladysm5Error: Vyvolá se při splnění podmínky ``mapovy_list.count() == 1``.
+   :return: Vrací proměnná ``mapovy_list``.
+   :raises PianNotInKladysm5Error: Vyvolá se při splnění podmínky ``mapovy_list.count() == 1``.
 
 .. py:function:: get_temporary_pian_ident(zm50)
 
@@ -127,7 +127,7 @@ Funkce
    :param projekt: Parametr ``projekt`` předává se do volání ``filter()``, pracuje se s atributy ``ident_cely``.
    :return: Vrací výsledek operace.
 
-       :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``max_count < MAXIMAL_FINDS``.
+   :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``max_count < MAXIMAL_FINDS``.
 
 .. py:function:: get_adb_ident(pian)
 
@@ -140,8 +140,8 @@ Funkce
    :param pian: Parametr ``pian`` předává se do volání ``isinstance()``, ``Centroid()``, pracuje se s atributy ``geom``, ovlivňuje větvení podmínek.
    :return: Vrací výsledek operace.
 
-       :raises NeznamaGeometrieError: Vyvolá se při splnění podmínky ``isinstance(pian.geom, Polygon)``.
-       :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence < MAXIMAL_ADBS``.
+   :raises NeznamaGeometrieError: Vyvolá se při splnění podmínky ``isinstance(pian.geom, Polygon)``.
+   :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence < MAXIMAL_ADBS``.
 
 .. py:function:: get_temp_lokalita_ident(typ, region)
 
@@ -154,7 +154,7 @@ Funkce
    :param typ: Parametr ``typ`` předává se do volání ``str()``.
    :param region: Parametr ``region`` se předává do volání ``str()``.
 
-       :return: Vrací hodnotu podle větve zpracování.
+   :return: Vrací hodnotu podle větve zpracování.
 
 .. py:function:: get_temp_akce_ident(region)
 
@@ -166,7 +166,7 @@ Funkce
 
    :param region: Parametr ``region`` se předává do volání ``str()``, vstupuje do návratové hodnoty.
 
-       :return: Vrací výsledek volání ``str()``.
+   :return: Vrací výsledek volání ``str()``.
 
 .. py:function:: get_temp_ez_ident()
 
@@ -176,7 +176,7 @@ Funkce
 
    Příklad: "X-BIB-000123456"
 
-       :return: Vrací výsledek volání ``str()``.
+   :return: Vrací výsledek volání ``str()``.
 
 .. py:function:: get_next_sequence_integrity_check(object_class)
 
@@ -215,4 +215,4 @@ Funkce
 
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``bool()``, ``fullmatch()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_object_or_404()``, None.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_object_or_404()``, None.

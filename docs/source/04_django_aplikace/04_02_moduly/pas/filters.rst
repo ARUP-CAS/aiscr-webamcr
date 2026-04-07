@@ -25,7 +25,7 @@ Třídy
 
       :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
 
-          :return: Vrací proměnná ``queryset``.
+      :return: Vrací proměnná ``queryset``.
 
    .. py:method:: filter_obdobi()
 
@@ -55,7 +55,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
       :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací výsledek volání ``filter()``.
+      :return: Vrací výsledek volání ``filter()``.
 
    .. py:method:: filter_by_oblast()
 
@@ -65,7 +65,7 @@ Třídy
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_by_oblast``.
       :param value: Parametr ``value`` ovlivňuje větvení podmínek.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``filter()``, proměnná ``queryset``.
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``filter()``, proměnná ``queryset``.
 
 
 .. py:class:: UzivatelSpolupraceFilter
@@ -87,7 +87,7 @@ Třídy
 
       :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
 
-          :return: Vrací proměnná ``queryset``.
+      :return: Vrací proměnná ``queryset``.
 
 
 .. py:class:: SamostatnyNalezFilterFormHelper

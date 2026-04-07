@@ -104,7 +104,7 @@ Funkce
    :param prvni_kat: Parametr ``prvni_kat`` se předává do volání ``filter()``.
    :param id: Identifikátor ``id`` používaný pro dohledání cílového záznamu.
 
-       :return: Vrací výsledek volání ``merge_heslare()``.
+   :return: Vrací výsledek volání ``merge_heslare()``.
 
 .. py:function:: zjisti_katastr_souradnic(request)
 
@@ -112,7 +112,7 @@ Funkce
 
    :param request: Parametr ``request`` se předává do volání ``filter()``, ``Point()``, pracuje se s atributy ``GET``.
 
-       :return: Vrací výsledek volání ``JsonResponse()``.
+   :return: Vrací výsledek volání ``JsonResponse()``.
 
 .. py:function:: zjisti_vychozi_hodnotu(request)
 
@@ -120,7 +120,7 @@ Funkce
 
    :param request: Parametr ``request`` se předává do volání ``int()``, pracuje se s atributy ``GET``.
 
-       :return: Vrací výsledek volání ``JsonResponse()``.
+   :return: Vrací výsledek volání ``JsonResponse()``.
 
 .. py:function:: zjisti_nadrazenou_hodnotu(request)
 
@@ -128,7 +128,7 @@ Funkce
 
    :param request: Parametr ``request`` se předává do volání ``int()``, pracuje se s atributy ``GET``.
 
-       :return: Vrací výsledek volání ``JsonResponse()``.
+   :return: Vrací výsledek volání ``JsonResponse()``.
 
 .. py:function:: heslar_list(heslo_nazev, filter, use_exclude)
 

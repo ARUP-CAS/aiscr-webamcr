@@ -32,7 +32,7 @@ Třídy
 
       :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
 
-          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
    .. py:method:: has_view_permission()
 
@@ -42,7 +42,7 @@ Třídy
       :param obj: Volitelný objekt modelu, na který se oprávnění vztahuje (není využit).
       :param args: Další poziční argumenty (nejsou využity).
 
-          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
    .. py:method:: has_add_permission()
 
@@ -51,7 +51,7 @@ Třídy
       :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
       :param args: Další poziční argumenty (nejsou využity).
 
-          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
    .. py:method:: has_change_permission()
 
@@ -61,7 +61,7 @@ Třídy
       :param obj: Volitelný objekt modelu, na který se oprávnění vztahuje (není využit).
       :param args: Další poziční argumenty (nejsou využity).
 
-          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
    .. py:method:: file_handler()
 
@@ -103,7 +103,7 @@ Třídy
 
       :param request: Parametr ``request`` se předává do volání ``message_user()``, ``each_context()``, pracuje se s atributy ``method``, ``FILES``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
 
    .. py:method:: import_success()
 
@@ -111,7 +111,7 @@ Třídy
 
       :param request: Parametr ``request`` se předává do volání ``each_context()``, ``message_user()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
 
    .. py:method:: reload_permissions()
 
@@ -119,7 +119,7 @@ Třídy
 
       :param request: Parametr ``request`` se předává do volání ``message_user()``, ``each_context()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
 
 
 .. py:class:: PermissionSkipAdmin
@@ -149,8 +149,8 @@ Třídy
 
       :param sheet: Parametr ``sheet`` pracuje se s atributy ``columns``, ovlivňuje větvení podmínek.
 
-          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-          :raises WrongCSVError: Vyvolá se při splnění podmínky ``not sheet.columns[0] == 'IDENT_CELY' or not sheet.columns[1] == 'IDENT_LIST'``.
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+      :raises WrongCSVError: Vyvolá se při splnění podmínky ``not sheet.columns[0] == 'IDENT_CELY' or not sheet.columns[1] == 'IDENT_LIST'``.
 
    .. py:method:: import_skip_file()
 
@@ -158,7 +158,7 @@ Třídy
 
       :param request: Parametr ``request`` se předává do volání ``message_user()``, ``each_context()``, pracuje se s atributy ``method``, ``FILES``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
 
    .. py:method:: check_save_row()
 
@@ -166,7 +166,7 @@ Třídy
 
       :param row: Parametr ``row`` předává se do volání ``create()``, ``get()``, pracuje se s atributy ``iloc``.
 
-          :return: Vrací str.
+      :return: Vrací str.
 
    .. py:method:: import_skip_success()
 
@@ -174,7 +174,7 @@ Třídy
 
       :param request: Parametr ``request`` se předává do volání ``each_context()``, ``message_user()``, vstupuje do návratové hodnoty.
 
-          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
 
    .. py:method:: export_as_csv()
 
