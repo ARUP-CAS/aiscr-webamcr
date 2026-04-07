@@ -277,9 +277,9 @@ class ExterniOdkazForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param type_arch: Parametr ``type_arch`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param args: Parametr ``args`` se předává do volání ``__init__()``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        :param type_arch: Typ archeologického záznamu (nevyužit v tomto formuláři, přijímán pro kompatibilitu).
+        :param args: Poziční argumenty předávané nadřízené třídě.
+        :param kwargs: Klíčové argumenty předávané nadřízené třídě.
         """
         super(ExterniOdkazForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)

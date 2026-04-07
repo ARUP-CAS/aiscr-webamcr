@@ -41,7 +41,8 @@ class Users(QuerySet):
     """Implementuje komponentu ``Users`` v rámci aplikace."""
 
     def active_processes(self):
-        """Provádí operaci active processes.
+        """
+        Provádí operaci active processes.
 
         :return: Vrací výsledek volání ``select_related()``.
         """

@@ -14,7 +14,8 @@ _ANONYMOUS = None
 
 
 def get_slow_request_settings():
-    """Vrací slow request settings.
+    """
+    Vrací slow request settings.
 
     :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, float.
     """
@@ -30,6 +31,11 @@ SLOW_REQUEST_THRESHOLD = get_slow_request_settings()
 
 
 def _get_anonymous():
+    """
+    Vrací identifikátor anonymního uživatele z cache nebo databáze.
+
+    :return: Identifikátor uživatele (ident_cely) nebo řetězec "anonymous".
+    """
     global _ANONYMOUS
     if _ANONYMOUS is None:
         from heslar.hesla_dynamicka import ADMIN_USER
@@ -40,7 +46,8 @@ def _get_anonymous():
 
 
 def _resolve_view_info(request) -> dict:
-    """Vrátí dict s informacemi o view: view_name, view_module, kwargs.
+    """
+    Vrátí dict s informacemi o view: view_name, view_module, kwargs.
 
     :param request: Parametr ``request`` předává se do volání ``resolve()``, pracuje se s atributy ``path_info``.
     :return: Vrací hodnotu typu ``dict`` (slovník).
@@ -81,12 +88,11 @@ class LogMiddleware:
 
     def __call__(self, request):
         """
-        Provádí operaci call.
+        Zpracuje požadavek a zaznamenává informace o volání (URL, uživatel, čas, výjimky).
 
-        :param request: Parametr ``request`` předává se do volání ``get_response()``, ``_resolve_view_info()``, pracuje se s atributy ``get_full_path``, ``user``.
-
-            :return: Vrací proměnná ``response``.
-            :raises Exception: Vyvolá se při zpracování zachycené výjimky typu ``Exception``.
+        :param request: Objekt požadavku Django.
+        :return: Objekt odpovědi Django.
+        :raises Exception: Jakákoliv výjimka zachycená během zpracování.
         """
         start = time.monotonic()
         log_request_data.url = request.get_full_path()
@@ -130,7 +136,8 @@ class LogMiddleware:
 
     @staticmethod
     def get_request_url():
-        """Vrací request url.
+        """
+        Vrací request url.
 
         :return: Vrací výsledek volání ``getattr()``.
         """
@@ -138,7 +145,8 @@ class LogMiddleware:
 
     @staticmethod
     def get_user_id():
-        """Vrací user id.
+        """
+        Vrací user id.
 
         :return: Vrací výsledek volání ``getattr()``.
         """

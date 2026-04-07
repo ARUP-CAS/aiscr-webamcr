@@ -21,7 +21,7 @@ def handle_fedora_error(view_func=None, additional_exceptions=tuple()):
 
     def decorator(func):
         """
-        Provádí operaci decorator.
+        Obalí pohledovou funkci obsluhou chyb Fedory a přesměrováním při výjimce.
 
         :param func: Funkce, která je obalena nebo volána wrapperem.
 
@@ -31,10 +31,10 @@ def handle_fedora_error(view_func=None, additional_exceptions=tuple()):
         @wraps(func)
         def _wrapped(*args, **kwargs):
             """
-                       Provádí operaci wrapped.
+            Zavolá obalenou funkci a při výjimce FedoraError nastaví uzavření transakce na rollback a přesměruje uživatele.
 
-                       :param args: Parametr ``args`` se předává do volání ``func()``, vstupuje do návratové hodnoty.
-                       :param kwargs: Parametr ``kwargs`` se předává do volání ``func()``, vstupuje do návratové hodnoty.
+            :param args: Poziční argumenty předané obalené funkci.
+            :param kwargs: Klíčové argumenty předané obalené funkci.
             :return: Výstup funkce odpovídající implementované logice.
             """
             try:

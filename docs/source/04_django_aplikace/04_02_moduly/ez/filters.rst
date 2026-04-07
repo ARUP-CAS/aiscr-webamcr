@@ -25,8 +25,8 @@ Třídy
       Metoda pro filtrování podle názvu, edice, sborníku, časopisu, isbn, issn, roku vydání a poznámek.
 
       :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
-      :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+      :param name: Název pole filtru (nevyužit přímo, předán Django filtersetem).
+      :param value: Hledaný řetězec, podle nějž se filtruje ve více textových polích externího zdroje.
 
       :return: Vrací výsledek volání ``filter()``.
 
@@ -35,8 +35,8 @@ Třídy
       Metoda pro filtrování podle identu celý akce.
 
       :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_akce_ident``.
-      :param value: Parametr ``value`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
+      :param name: Název pole filtru (nevyužit přímo, předán Django filtersetem).
+      :param value: Hledaný identifikátor akce, podle nějž se filtruje přes propojené archeologické záznamy typu akce.
 
       :return: Vrací výsledek volání ``filter()``.
 
@@ -45,8 +45,8 @@ Třídy
       Metoda pro filtrování podle identu celý lokality.
 
       :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_lokalita_ident``.
-      :param value: Parametr ``value`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
+      :param name: Název pole filtru (nevyužit přímo, předán Django filtersetem).
+      :param value: Hledaný identifikátor lokality, podle nějž se filtruje přes propojené archeologické záznamy typu lokalita.
 
       :return: Vrací výsledek volání ``filter()``.
 

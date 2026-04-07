@@ -21,7 +21,7 @@ Třídy
 
    .. py:method:: _instance_geom_wkt()
 
-      Provádí operaci instance geom wkt.
+             Provádí operaci instance geom wkt.
 
       :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
       :return: Výstup funkce odpovídající implementované logice.

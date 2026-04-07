@@ -2,7 +2,7 @@ from django.db import connection
 
 
 def my_custom_sql(self):
-    """Provádí operaci my custom sql."""
+    """Vytvoří databázovou roli cz_archeologickamapa_api_view s oprávněním SELECT na všechny tabulky schématu public."""
     with connection.cursor() as cursor:
         cursor.execute("""
             DO

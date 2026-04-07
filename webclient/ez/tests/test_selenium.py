@@ -17,15 +17,16 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
     """Implementuje komponentu ``AkceExterniZdroj`` v rámci aplikace."""
 
     def go_to_form_zapsat(self):
-        """Provádí operaci go to form zapsat."""
+        """Přejde na stránku formuláře pro zapsání nového externího zdroje."""
         self.goToAddress("/ext-zdroj/zapsat")
 
     def go_to_form_vybrat(self):
-        """Provádí operaci go to form vybrat."""
+        """Přejde na stránku výběru externího zdroje se zadaným řazením."""
         self.goToAddress("/ext-zdroj/vyber?sort=autori&sort=rok_vydani_vzniku&sort=nazev")
 
     def zapsat_zaznam(self):
-        """Provádí operaci zapsat zaznam.
+        """
+        Vyplní a odešle formulář pro zapsání nového externího zdroje a vrátí jeho identifikátor.
 
         :return: Vrací proměnná ``ident``.
         """

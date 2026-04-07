@@ -144,11 +144,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/asottile/cfgv
    * - charset-normalizer
-     - 3.4.6
+     - 3.4.7
      - MIT
      - https://github.com/jawah/charset_normalizer/blob/master/CHANGELOG.md
    * - click
-     - 8.3.1
+     - 8.3.2
      - BSD-3-Clause
      - https://github.com/pallets/click/
    * - click-didyoumean
@@ -380,7 +380,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache-2.0 OR BSD-2-Clause
      - https://github.com/pypa/packaging
    * - pandas
-     - 3.0.1
+     - 3.0.2
      - BSD License
      - https://pandas.pydata.org
    * - pdf2image
@@ -388,7 +388,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.26
+     - 9.0.27
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -516,7 +516,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://www.reportlab.com/
    * - requests
-     - 2.33.0
+     - 2.33.1
      - Apache Software License
      - https://github.com/psf/requests
    * - rjsmin
@@ -632,7 +632,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - PSF-2.0
      - https://github.com/python/typing_extensions
    * - tzdata
-     - 2025.3
+     - 2026.1
      - Apache-2.0
      - https://github.com/python/tzdata
    * - tzlocal
@@ -681,209 +681,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - http://www.python-excel.org/
 
 
-Knihovny vkládané jako statické soubory
----------------------------------------
+Ostatní knihovny a závislosti
+-------------------------------
 
-.. list-table:: Knihovny v jazyce Javascript
-   :widths: 25 25 25 25
-   :header-rows: 1
+Použité JavaScript knihovny a Docker image jsou uvedeny v samostatné části dokumentace.
 
-   * - Název knihovny
-     - Verze
-     - Licence
-     - Odkaz
-   * - Bootstrap
-     - 4.5.3
-     - MIT License
-     - https://getbootstrap.com/
-   * - Bootstrap Icons
-     - 1.5.0
-     - MIT License
-     - https://icons.getbootstrap.com/
-   * - Bootstrap Select
-     - 1.13.18
-     - MIT License
-     - https://developer.snapappointments.com/bootstrap-select/
-   * - Bootstrap Datepicker
-     - 1.10.0
-     - Apache License
-     - https://bootstrap-datepicker.readthedocs.io/en/latest/
-   * - Date Range Picker
-     - 3.1
-     - MIT License
-     - http://www.daterangepicker.com/
-   * - Django Autocomplete Light
-     -
-     - MIT License
-     - https://github.com/yourlabs/django-autocomplete-light
-   * - Dropzone
-     - 5.7.0
-     - MIT License
-     - https://www.dropzone.dev/
-   * - Easytimer
-     -
-     - MIT License
-     - https://albert-gonzalez.github.io/easytimer.js/
-   * - Google Tag Manager
-     -
-     -
-     - https://tagmanager.google.com/#/home
-   * - Heatmap.js
-     - 2.0.5
-     - MIT License
-     - https://www.patrick-wied.at/static/heatmapjs/
-   * - jQuery
-     - 3.7.1
-     - MIT License
-     - https://jquery.com/
-   * - Leaflet
-     - 1.9.4
-     - BSD License
-     - https://leafletjs.com/
-   * - Leaflet Context Menu
-     - 1.5.1
-     - MIT License
-     - https://github.com/aratcliffe/Leaflet.contextmenu
-   * - Leaflet Control Search
-     -
-     - MIT License
-     - https://github.com/stefanocudini/leaflet-search
-   * - Leaflet Coordinates
-     -
-     - Creative Commons Attribution 3.0 Unported License.
-     - https://github.com/MrMufflon/Leaflet.Coordinates/tree/master
-   * - Leaflet Draw
-     - 1.0.4
-     - MIT License
-     - https://github.com/Leaflet/Leaflet.draw
-   * - Leaflet Easy Button
-     - v1
-     - MIT License
-     - https://danielmontague.com/projects/easyButton.js/v1/examples/
-   * - Leaflet FeatureGroup SubGroup
-     -
-     - BSD License
-     - https://github.com/ghybs/Leaflet.FeatureGroup.SubGroup/tree/master
-   * - Leaflet Fullscreen
-     - 1.0.1
-     - ISC License
-     - https://github.com/Leaflet/Leaflet.fullscreen
-   * - Leaflet Heatmap Overlay
-     -
-     - MIT License
-     - https://www.patrick-wied.at/static/heatmapjs/plugin-leaflet-layer.html
-   * - Leaflet Marker Cluster
-     - 1.5.3
-     - MIT License
-     - https://github.com/Leaflet/Leaflet.markercluster
-   * - Leaflet Measure
-     -
-     - MIT License
-     - https://github.com/ljagis/leaflet-measure
-   * - Leaflet Spin
-     - 1.1.2
-     - MIT License
-     - https://github.com/makinacorpus/Leaflet.Spin
-   * - Leaflet TileLayer Grayscale
-     -
-     - WTFPL license
-     - https://github.com/Zverik/leaflet-grayscale
-   * - Leaflet Messagebox
-     - 1.1
-     - BSD License
-     - https://github.com/tinuzz/leaflet-messagebox
-   * - Moment.js
-     - 2.30.1
-     - MIT License
-     - https://momentjs.com
-   * - Select2
-     - 4.0.13
-     - MIT License
-     - https://github.com/select2/select2/tree/master
-   * - Spin
-     - 1.2.5
-     - MIT License
-     - https://github.com/fgnass/spin.js
-   * - html-to-rtf-browser
-     - 1.6.1
-     - MIT License
-     - https://github.com/antoniolucasnobar/html-to-rtf-browser; https://github.com/geraphl/javascript-html-to-rtf-browser
-
-
-Docker image
----------------------------------------
-
-.. list-table:: Image použité pro provoz
-   :widths: 25 25 25 25
-   :header-rows: 1
-
-   * - Název image
-     - Verze
-     - Licence
-     - Odkaz
-   * - celery-exporter
-     - 0.10.14
-     - MIT license
-     - https://github.com/danihodovic/celery-exporter
-   * - Elasticsearch
-     - 8.19.0
-     - SSPL, Elastic License 2.0, Apache License 2.0
-     - https://github.com/elastic/elasticsearch
-   * - Kibana
-     - 8.19.0
-     - SSPL, Elastic License 2.0, Apache License 2.0
-     - https://github.com/elastic/kibana
-   * - Logstash
-     - 8.19.0
-     - SSPL, Elastic License 2.0, Apache License 2.0
-     - https://github.com/elastic/logstash
-   * - rsync
-     - 3.0
-     - 
-     - https://github.com/eea/eea.docker.rsync
-   * - Cadvisor
-     - 0.55.1
-     - Apache License 2
-     - https://github.com/google/cadvisor
-   * - Fedora
-     - 6.5.1
-     - Apache-2.0 License
-     - https://github.com/fcrepo/fcrepo
-   * - gdal
-     - 3.12.1
-     - MIT License
-     - https://github.com/OSGeo/gdal/pkgs/container/gdal  
-   * - Grafana
-     - 12.3.1
-     - AGPL-3.0 License
-     - https://github.com/grafana/grafana
-   * - NGINX
-     - 1.27.3-alpine3.20
-     - BSD 2 License
-     - https://github.com/nginxinc/docker-nginx
-   * - PostGIS
-     - 16-3.4
-     - MIT License
-     - https://github.com/postgis/docker-postgis
-   * - Prometheus
-     - 3.8.1
-     - Apache-2.0 License
-     - https://github.com/prometheus/prometheus
-   * - PostgreSQL Server Exporter
-     - 0.18.1
-     - Apache-2.0 License
-     - https://github.com/prometheus-community/postgres_exporter
-   * - Redis
-     - 8.4.0
-     - RSALv2, SSPLv1
-     - https://github.com/redis/redis
-   * - Prometheus Valkey & Redis Metrics Exporter
-     - 1.80.1-alpine
-     - MIT license
-     - https://github.com/oliver006/redis_exporter
-   * - Selenium Grid Standalone with Chromium
-     - 143.0
-     - Apache License 2.0
-     - https://github.com/SeleniumHQ/docker-selenium
-
+:doc:`Docker image <12_zavislosti/docker_images>`.
+:doc:`JavaScript knihovny <12_zavislosti/javascript_knihovny>`.
 

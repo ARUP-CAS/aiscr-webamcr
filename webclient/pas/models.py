@@ -151,7 +151,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @property
     def initial_pristupnost(self):
-        """Provádí operaci initial pristupnost.
+        """
+        Vrací výchozí hodnotu dostupnosti.
 
         :return: Vrací atribut objektu.
         """
@@ -259,14 +260,16 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         self.save()
 
     def get_absolute_url(self):
-        """Metoda pro získaní absolut url záznamu podle identu.
+        """
+        Metoda pro získaní absolut url záznamu podle identu.
 
         :return: Vrací výsledek volání ``reverse()``.
         """
         return reverse("pas:detail", kwargs={"ident_cely": self.ident_cely})
 
     def check_pred_archivaci(self):
-        """Ověří pred archivaci.
+        """
+        Ověří pred archivaci.
 
         :return: Vrací proměnná ``resp``.
         """
@@ -277,7 +280,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         return resp
 
     def check_pred_potvrzenim(self):
-        """Ověří pred potvrzenim.
+        """
+        Ověří pred potvrzenim.
 
         :return: Vrací proměnná ``resp``.
         """
@@ -325,9 +329,11 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @property
     def nahled_soubor(self):
-        """Provádí operaci nahled soubor.
+        """
+        Vrací cestu k miniaturnímu náhledu souboru.
 
-        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``first()``, None.
+        :return: První soubor nebo None, pokud žádný neexistuje.
+
         """
         if self.soubory.soubory.count() > 0:
             return self.soubory.soubory.first()
@@ -336,7 +342,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @cached_property
     def large_thumbnail(self):
-        """Provádí operaci large thumbnail.
+        """
+        Vrací cestu k velké miniaturě obrázku.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, None.
         """
@@ -347,7 +354,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @cached_property
     def small_thumbnail(self):
-        """Provádí operaci small thumbnail.
+        """
+        Vrací cestu k malé miniaturě obrázku.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, None.
         """
@@ -357,7 +365,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         return None
 
     def generate_coord_forms_initial(self):
-        """Vygeneruje coord forms initial.
+        """
+        Vygeneruje coord forms initial.
 
         :return: Vrací slovník.
         """
@@ -418,14 +427,16 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
             return "Samostatny nalez [ident_cely not yet assigned]"
 
     def get_permission_object(self):
-        """Vrací permission object.
+        """
+        Vrací permission object.
 
         :return: Vrací proměnná ``self``.
         """
         return self
 
     def get_create_user(self):
-        """Vrací create user.
+        """
+        Vrací create user.
 
         :return: Vrací n-tici.
         """
@@ -435,24 +446,24 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
             return ()
 
     def get_create_org(self):
-        """Vrací create org.
+        """
+        Vrací create org.
 
         :return: Vrací n-tici.
         """
         return (self.projekt.organizace,)
 
-    @property
     def redis_snapshot_id(self):
-        """Provádí operaci redis snapshot id.
-
-        :return: Vrací hodnotu podle větve zpracování.
+        """
+        Vrací identifikátor snímku v Redisu.
         """
         from pas.views import SamostatnyNalezListView
 
         return f"{SamostatnyNalezListView.redis_snapshot_prefix}_{self.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Vygeneruje redis snapshot.
+        """
+        Vygeneruje redis snapshot.
 
         :return: Vrací n-tici.
         """
@@ -477,11 +488,9 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
         return DigitalObjectIdentifierClient(self)
 
-    @property
     def igsn_exists(self):
-        """Provádí operaci igsn exists.
-
-        :return: Vrací výsledek volání ``check_record_exists()``.
+        """
+        Určuje, zda existuje IGSN identifikátor.
         """
         return self._get_igsn_client().check_record_exists()
 
@@ -529,11 +538,9 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         if self.igsn:
             return self._get_igsn_client().update_record(check_status, reload_record)
 
-    @property
     def igsn_url(self):
-        """Provádí operaci igsn url.
-
-        :return: Vrací výsledek volání ``get_record_url()``.
+        """
+        Vrací URL odkaz na nález v IGSN databázi.
         """
         return self._get_igsn_client().get_record_url()
 
@@ -580,11 +587,9 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         self.active_transaction = None
         self.close_active_transaction_when_finished = False
 
-    @property
     def aktivni(self):
-        """Provádí operaci aktivni.
-
-        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
+        Vrací hodnotu určující, zda je spolupráce aktivní.
         """
         return self.stav == SPOLUPRACE_AKTIVNI
 
@@ -661,31 +666,32 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         return self.spolupracovnik.last_name + " + " + self.vedouci.last_name
 
     def get_create_user(self):
-        """Vrací create user.
+        """
+        Vrací create user.
 
         :return: Vrací n-tici.
         """
         return (self.spolupracovnik,)
 
     def get_create_org(self):
-        """Vrací create org.
+        """
+        Vrací create org.
 
         :return: Vrací n-tici.
         """
         return (self.vedouci.organizace,)
 
-    @property
     def redis_snapshot_id(self):
-        """Provádí operaci redis snapshot id.
-
-        :return: Vrací hodnotu podle větve zpracování.
+        """
+        Vrací identifikátor snímku v Redisu.
         """
         from pas.views import UzivatelSpolupraceListView
 
         return f"{UzivatelSpolupraceListView.redis_snapshot_prefix}_{self.pk}"
 
     def generate_redis_snapshot(self):
-        """Vygeneruje redis snapshot.
+        """
+        Vygeneruje redis snapshot.
 
         :return: Vrací n-tici.
         """

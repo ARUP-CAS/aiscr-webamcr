@@ -14,7 +14,7 @@ class CoreConfig(AppConfig):
     name = "core"
 
     def ready(self):
-        """Provádí operaci ready."""
+        """Registruje signály modulu core při startu aplikace."""
         super(CoreConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import core.signals

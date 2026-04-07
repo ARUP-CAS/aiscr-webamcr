@@ -57,10 +57,10 @@
 
 {% block content %}
   <div id="content-main">
-    {% if not request.user.is_superuser %}
-      <p>{% trans "core.templates.admin.import_data.not_superuser" %}</p>
-    {% elif not maintenance %}
+    {% if not maintenance %}
       <p>{% trans "core.templates.admin.import_data.not_maintenance" %}</p>
+    {% elif import_data_running %}
+      <p>{% trans "core.templates.admin.import_data.import_is_running" %}</p>
     {% elif error_message %}
       <p class="errornote">{{ error_message }}</p>
       {% if error_message_details %}
@@ -89,6 +89,8 @@
                  value="{% trans "core.templates.admin.import_data.start_import" %}"{% if invalid_records %} disabled{% endif %}>
           <input type="submit" id="stopRequests" class="default"
                  value="{% trans "core.templates.admin.import_data.stop_request" %}" disabled>
+          <input type="button" id="downloadReport" class="default"
+                 value="{% trans "core.templates.admin.import_data.download_report" %}">
         </p>
       </div>
       <p id="processFinishedParagraph" style="display: none">
@@ -107,14 +109,18 @@
           <th>{% trans "core.templates.admin.import_data.primary_key_database" %}</th>
           <th>{% trans "core.templates.admin.validation_result" %}</th>
           <th>{% trans "core.templates.admin.status" %}</th>
+          <th>{% trans "core.templates.admin.import_data.history_record_result" %}</th>
+          <th>{% trans "core.templates.admin.import_data.fedora_update_result" %}</th>
         </tr>
         {% for result in validation_results %}
           <tr>
-            <td>{{ result.item_order }}</td>
+            <td>{{ result.item_order|add:1 }}</td>
             <td>{{ result.file_name }}</td>
             <td>{{ result.primary_key_import }}</td>
             <td></td>
             <td>{{ result.validation_result }}</td>
+            <td></td>
+            <td></td>
             <td></td>
           </tr>
         {% endfor %}
@@ -164,10 +170,18 @@
       const translations = {
           "cron.tasks.run_data_import.success": "{% trans 'cron.tasks.run_data_import.success' %}",
           "cron.tasks.run_data_import.file": "{% trans 'cron.tasks.run_data_import.file' %}",
+          "cron.tasks.run_data_import.rolled_back": "{% trans 'cron.tasks.run_data_import.rolled_back' %}",
       }
       const requestUrl = "{{ url }}"
       const stopRequestUrl = "{{ url_stop }}"
+      {% if job_id %}
+      const downloadReportUrl = "{% url 'core:data-import-progress-report' job_id %}"
+      document.getElementById("downloadReport").addEventListener("click", () => {
+          window.location.href = downloadReportUrl
+      })
+      {% endif %}
       const startRequestUrl = "{{ url_start }}"
+      const csrfToken = document.cookie.split("; ").find(row => row.startsWith("csrftoken="))?.split("=")[1]
       let stopRequests = {% if stop_request is True %}true{% else %}false{% endif %}
       const startImportButton = document.getElementById("startImport")
       const stopRequestButton = document.getElementById("stopRequests")
@@ -178,7 +192,17 @@
                 stopRequestButton.disabled = false
             }
             document.getElementById("processCurrentStatus").textContent = "{% trans 'core.templates.admin.import_data.starting' %}"
-            await fetch(startRequestUrl)
+            const response = await fetch(startRequestUrl, {method: "POST", headers: {"X-CSRFToken": csrfToken}})
+            if (!response.ok) {
+                if (stopRequestButton) {
+                    stopRequestButton.disabled = true
+                }
+                startImportButton.disabled = false
+                const data = await response.json().catch(() => null)
+                document.getElementById("processCurrentStatus").textContent =
+                    data?.status_message || "{% trans 'core.templates.admin.import_data.import_is_running' %}"
+                return
+            }
             process()
         });
       }
@@ -239,8 +263,12 @@
               const table = document.getElementById("result_list");
               for (let i = 0; i < data.finished_record_count; i++) {
                   const row = table.rows[i + 1]
-                  row.cells[3].innerText = data.primary_keys[i]
+                  row.cells[3].innerText = data.primary_keys[i] || ""
                   row.cells[5].innerText = translations[data.serialized_results[i]] || data.serialized_results[i]
+                  row.cells[6].innerText = data.history_record_result[i] || ""
+                  const primaryKey = data.primary_keys[i] || ""
+                  const identCely = primaryKey.startsWith("ident_cely: ") ? primaryKey.slice("ident_cely: ".length) : primaryKey
+                  row.cells[7].innerText = (data.fedora_update_result[i] || []).join(", ")
               }
 
               const table_files = document.getElementById("result_list_files")
@@ -282,9 +310,18 @@
       }
 
       async function process() {
+          const MAX_TICKS = 3600;
+          let ticks = 0;
           do {
               await sendRequest(requestUrl);
               await new Promise(resolve => setTimeout(resolve, 1000));
+              ticks++;
+              if (ticks >= MAX_TICKS) {
+                  stopRequests = true;
+                  document.getElementById("stopRequests").disabled = true;
+                  document.getElementById("processCurrentStatus").textContent = "{% trans 'core.templates.admin.import_data.timeout_error' %}";
+                  console.error("Import polling timed out after", MAX_TICKS, "seconds.");
+              }
           } while (stopRequests === false);
       }
 

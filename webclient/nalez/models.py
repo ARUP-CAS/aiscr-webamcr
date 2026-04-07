@@ -67,7 +67,8 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
         return self.druh.heslo
 
     def get_permission_object(self):
-        """Vrací permission object.
+        """
+        Vrací permission object.
 
         :return: Vrací výsledek volání ``get_permission_object()``.
         """
@@ -135,7 +136,8 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
         return self.druh.heslo
 
     def get_permission_object(self):
-        """Vrací permission object.
+        """
+        Vrací permission object.
 
         :return: Vrací výsledek volání ``get_permission_object()``.
         """

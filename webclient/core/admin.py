@@ -2,6 +2,8 @@ import csv
 import json
 import logging
 import os
+import random
+import string
 
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -19,6 +21,7 @@ from django.utils.translation import gettext as _
 from polib import pofile
 from uzivatel.models import User
 
+from .connectors import RedisConnector
 from .constants import ROLE_NASTAVENI_ODSTAVKY
 from .exceptions import WrongCSVError, WrongSheetError
 from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
@@ -107,8 +110,8 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         Metoda pro určení práv na videní odstávky.
 
         :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
-        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_view_permission``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``has_view_permission``.
+        :param obj: Volitelný objekt modelu, na který se oprávnění vztahuje (není využit).
+        :param args: Další poziční argumenty (nejsou využity).
 
             :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -119,7 +122,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         Metoda pro určení práv na přidání odstávky. Není možné přidat více než jednu odstávku.
 
         :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+        :param args: Další poziční argumenty (nejsou využity).
 
             :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -132,8 +135,8 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         Metoda pro určení práv pro úpravu odstávky.
 
         :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
-        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_change_permission``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+        :param obj: Volitelný objekt modelu, na který se oprávnění vztahuje (není využit).
+        :param args: Další poziční argumenty (nejsou využity).
 
             :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -183,16 +186,18 @@ class PermissionAdmin(admin.ModelAdmin):
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = None) -> HttpResponse:
         """
-               Provádí operaci changelist view.
+        Zobrazí přehledovou stránku oprávnění s přidaným příznakem pro zobrazení tlačítka importu.
 
-               :param request: Parametr ``request`` předává se do volání ``changelist_view()``, vstupuje do návratové hodnoty.
-               :param extra_context: Kolekce ``extra_context`` zpracovávaná touto funkcí.
-        :return: Výstup funkce odpovídající implementované logice.
+        :param request: HTTP požadavek od klienta.
+        :param extra_context: Volitelný slovník s dalším kontextem předaným do šablony.
+
+        :return: HTTP odpověď s vyrenderovanou šablonou přehledové stránky.
         """
         return super().changelist_view(request, {"import_list": True})
 
     def get_urls(self):
-        """Metoda pri definici dodatečných url.
+        """
+        Metoda pri definici dodatečných url.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -375,16 +380,18 @@ class PermissionSkipAdmin(admin.ModelAdmin):
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = None) -> HttpResponse:
         """
-               Provádí operaci changelist view.
+        Zobrazí přehledovou stránku výjimek oprávnění s přidaným příznakem pro zobrazení tlačítka importu.
 
-               :param request: Parametr ``request`` předává se do volání ``changelist_view()``, vstupuje do návratové hodnoty.
-               :param extra_context: Kolekce ``extra_context`` zpracovávaná touto funkcí.
-        :return: Výstup funkce odpovídající implementované logice.
+        :param request: HTTP požadavek od klienta.
+        :param extra_context: Volitelný slovník s dalším kontextem předaným do šablony.
+
+        :return: HTTP odpověď s vyrenderovanou šablonou přehledové stránky.
         """
         return super().changelist_view(request, {"import_skip_list": True})
 
     def get_urls(self):
-        """Metoda pri definici dodatečných url.
+        """
+        Metoda pri definici dodatečných url.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -531,12 +538,12 @@ class PermissionSkipAdmin(admin.ModelAdmin):
 
     def export_as_csv(self, request, queryset):
         """
-        Exportuje as csv.
+        Exportuje vybrané záznamy PermissionsSkip do CSV souboru ke stažení.
 
-        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``export_as_csv``.
-        :param queryset: Parametr ``queryset`` slouží jako vstup pro logiku funkce ``export_as_csv``.
+        :param request: HTTP požadavek od klienta.
+        :param queryset: Queryset vybraných záznamů PermissionsSkip určených k exportu.
 
-            :return: Vrací proměnná ``response``.
+        :return: HTTP odpověď s CSV souborem ke stažení.
         """
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = "attachment; filename=opravneni_override.csv"
@@ -547,3 +554,130 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         return response
 
     export_as_csv.short_description = _("core.admin.permissionSkipAdmin.downloadAction_label")
+
+
+class FedoraCustomAdminSite(admin.AdminSite):
+    """Implementuje komponentu ``FedoraCustomAdminSite`` v rámci aplikace."""
+
+    redis_connector = RedisConnector().get_connection_decode()
+
+    @staticmethod
+    def _read_file(uploaded_file, context):
+        """
+        Načte file.
+
+        :param uploaded_file: Parametr ``uploaded_file`` se předává do volání ``read_csv()``, ``read_excel()``, pracuje se s atributy ``content_type``, ovlivňuje větvení podmínek.
+        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``_read_file``.
+        :return: Načtená data odpovídající zadaným vstupům.
+        """
+        sheet = None
+        if uploaded_file.content_type == "text/csv":
+            try:
+                sheet = pd.read_csv(uploaded_file, sep=",")
+            except Exception as err:
+                logger.debug(
+                    "fedora_management.admin.FedoraCustomAdminSite.update_metadata_file_upload" ".cannot_read_file",
+                    extra={"error": err},
+                )
+                context["error"] = _("fedora_management.admin.YourCustomAdminSite.cannot_read_file")
+        else:
+            try:
+                sheet = pd.read_excel(uploaded_file)
+            except Exception as err:
+                logger.debug(
+                    "fedora_management.admin.FedoraCustomAdminSite.update_metadata_file_upload" ".cannot_read_file",
+                    extra={"error": err},
+                )
+                context["error"] = _("fedora_management.admin.YourCustomAdminSite.cannot_read_file")
+        if not isinstance(sheet, pd.DataFrame):
+            return None
+        if sheet.shape[1] != 1:
+            context["error"] = _("fedora_management.admin.YourCustomAdminSite.too_many_columns")
+            return None
+        sheet.columns = [
+            "ident_cely",
+        ]
+        sheet["ident_cely"] = sheet["ident_cely"].astype(str).str.strip()
+        sheet = sheet[sheet["ident_cely"] != ""]
+        sheet = sheet.set_index("ident_cely")
+        return sheet
+
+    def update_doi(self, request):
+        """
+        Aktualizuje doi. v aplikaci.
+
+        :param request: Parametr ``request`` předává se do volání ``get_app_list()``, ``each_context()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+        :return: Vrací výsledek volání ``TemplateResponse()``.
+        """
+        from pid.forms import UpdateDocumentObjectIdentifierFileForm
+
+        context = {
+            "app_list": self.get_app_list(request),
+            **self.each_context(request),
+        }
+        if request.method == "POST" and request.user.is_superuser:
+            form = UpdateDocumentObjectIdentifierFileForm(request.POST, request.FILES)
+            context["form"] = form
+            if form.is_valid():
+                uploaded_file = request.FILES["ident_list_file"]
+                sheet = self._read_file(uploaded_file, context)
+                if isinstance(sheet, pd.DataFrame):
+                    job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
+                    job_id = f"update_pid_{job_id}"
+                    self.redis_connector.set(job_id, "0;" + ";".join(sheet.index.unique().tolist()))
+                    performed_action = form.cleaned_data["performed_action"]
+                    context["url"] = reverse("pid:continue-processing", args=[job_id, performed_action])
+            return TemplateResponse(request, "admin/update_running_job.html", context)
+        else:
+            context["form"] = UpdateDocumentObjectIdentifierFileForm()
+        return TemplateResponse(request, "admin/doi_management/update_doi.html", context)
+
+    def update_metadata_file_upload(self, request):
+        """
+        Aktualizuje metadata file upload.
+
+        :param request: Parametr ``request`` předává se do volání ``get_app_list()``, ``each_context()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+        :return: Vrací výsledek volání ``TemplateResponse()``.
+        """
+        from fedora_management.forms import UpdateMetadataFileForm
+
+        context = {
+            "app_list": self.get_app_list(request),
+            **self.each_context(request),
+        }
+        if request.method == "POST" and request.user.is_superuser:
+            form = UpdateMetadataFileForm(request.POST, request.FILES)
+            if form.is_valid():
+                uploaded_file = request.FILES["ident_list_file"]
+                sheet = self._read_file(uploaded_file, context)
+                if isinstance(sheet, pd.DataFrame):
+                    job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
+                    job_id = f"update_metadata_{job_id}"
+                    self.redis_connector.set(job_id, "0;" + ";".join(sheet.index.unique().tolist()))
+                    context["url"] = reverse("fedora:continue-processing", args=[job_id])
+            return TemplateResponse(request, "admin/update_running_job.html", context)
+        else:
+            context["form"] = UpdateMetadataFileForm()
+        return TemplateResponse(request, "admin/fedora_management/update_metadata.html", context)
+
+    def get_urls(
+        self,
+    ):
+        """Vrací urls. v aplikaci.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
+        return [
+            path(
+                "update-metadata/",
+                self.admin_view(self.update_metadata_file_upload),
+                name="update_metadata",
+            ),
+            path(
+                "update-doi/",
+                self.admin_view(self.update_doi),
+                name="update_doi",
+            ),
+        ] + super().get_urls()

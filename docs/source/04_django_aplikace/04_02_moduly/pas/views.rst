@@ -31,7 +31,7 @@ Třídy
 
    .. py:method:: _set_copy_source()
 
-      Nastaví copy source.
+             Nastaví copy source.
 
       :return: Výstup funkce odpovídající implementované logice.
 
@@ -108,7 +108,7 @@ Třídy
 
    .. py:method:: init_translations()
 
-      Provádí operaci init translations.
+      Inicializuje překlady pro zobrazení seznamu.
 
    .. py:method:: rename_field_for_ordering()
 
@@ -133,7 +133,7 @@ Třídy
 
    .. py:method:: init_translations()
 
-      Provádí operaci init translations.
+      Inicializuje překlady pro zobrazení seznamu.
 
    .. py:method:: rename_field_for_ordering()
 

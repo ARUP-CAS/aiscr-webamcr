@@ -288,9 +288,37 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
                 resp["uzivatel"] = transakce_list[0].uzivatel_protected(anonymized)
         return resp
 
+    def get_last_transaction_if_type(
+        self, transaction_type, anonymized: bool = True, user_protected: bool = True
+    ) -> dict:
+        """
+        Vrátí datum, poznámku a uživatele poslední transakce vazby, ale pouze pokud je jejím typem ``transaction_type``.
+
+        :param transaction_type: Typ transakce nebo seznam typů, které se mají kontrolovat.
+        :param anonymized: Příznak anonymizace uživatele.
+        :param user_protected: Příznak ochrany uživatele.
+        :return: Slovník s daty transakce, nebo prázdný slovník pokud poslední transakce není požadovaného typu.
+        """
+        last = self.historie_set.only("datum_zmeny", "poznamka", "typ_zmeny").order_by("-datum_zmeny").first()
+        if last is None:
+            return {}
+        types = transaction_type if isinstance(transaction_type, list) else [transaction_type]
+        if last.typ_zmeny not in types:
+            return {}
+        resp = {
+            "datum": last.datum_zmeny,
+            "poznamka": last.poznamka,
+        }
+        if user_protected is False and anonymized is False:
+            resp["uzivatel"] = last.uzivatel
+        else:
+            resp["uzivatel"] = last.uzivatel_protected(anonymized)
+        return resp
+
     @property
     def navazany_objekt(self):
-        """Vrátí objekt navázaný na danou vazbu historie.
+        """
+        Vrátí objekt navázaný na danou vazbu historie.
 
         :return: Vrací atribut objektu.
         """

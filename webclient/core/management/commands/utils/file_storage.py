@@ -20,7 +20,7 @@ def save_single_file_from_storage_impl(
     record_par: int | Soubor, storage_path: str, save_thumbs: bool = False, disable_antivirus: bool = False
 ) -> None:
     """
-    Společná implementace pro ukládání jednotlivého souboru ze storage do Fedora repozitáře.
+    Uloží jednotlivý soubor ze storage do Fedora repozitáře.
 
     Tato funkce načte soubor z lokálního úložiště, provede kontroly (MIME type, antivirus),
     a uloží jej do Fedora repozitáře včetně aktualizace metadat v databázi.
@@ -29,11 +29,12 @@ def save_single_file_from_storage_impl(
         >>> save_single_file_from_storage_impl(123, "/tmp/files", save_thumbs=True)
         >>> save_single_file_from_storage_impl(soubor_instance, "/var/storage")
 
-    :param record_par: Parametr ``record_par`` předává se do volání ``isinstance()``, ``get()``, ovlivňuje větvení podmínek. Instance modelu Soubor nebo jeho primární klíč
-    :param storage_path: Parametr ``storage_path`` se předává do volání ``find_matching_file()``, ``warning()``. Cesta k adresáři se soubory.
-    :param save_thumbs: Parametr ``save_thumbs`` předává se do volání ``update_binary_file()``, ``save_binary_file()``. Určuje, zda generovat náhledy pro obrazové soubory.
-    :param disable_antivirus: Parametr ``disable_antivirus`` ovlivňuje větvení podmínek. Určuje, zda přeskočit antivirovou kontrolu.
-        :raises core.models.Soubor.DoesNotExist: Pokud záznam s daným PK neexistuje.
+    :param record_par: Instance modelu Soubor nebo jeho primární klíč.
+    :param storage_path: Cesta k adresáři se soubory.
+    :param save_thumbs: Určuje, zda generovat náhledy pro obrazové soubory.
+    :param disable_antivirus: Určuje, zda přeskočit antivirovou kontrolu.
+    :return: None
+    :raises core.models.Soubor.DoesNotExist: Pokud záznam s daným PK neexistuje.
     """
     from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
     from xml_generator.models import ModelWithMetadata

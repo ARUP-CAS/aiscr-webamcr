@@ -16,7 +16,8 @@ class Pes(ExportModelOperationsMixin("pes"), models.Model):
 
     @property
     def ident_cely(self):
-        """Provádí operaci ident cely.
+        """
+        Provádí operaci ident cely.
 
         :return: Vrací výsledek volání ``getattr()``.
         """
@@ -44,7 +45,8 @@ class Pes(ExportModelOperationsMixin("pes"), models.Model):
         ]
 
     def get_create_user(self):
-        """Vrací create user.
+        """
+        Vrací create user.
 
         :return: Vrací n-tici.
         """

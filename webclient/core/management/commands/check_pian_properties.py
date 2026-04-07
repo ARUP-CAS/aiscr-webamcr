@@ -38,10 +38,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """
-        Zpracuje argumenty příkazu a zkontroluje konzistenci vlastností PIAN.
+        Zkontroluje a opraví konzistenci vlastností PIANů (typ geometrie, základní mapy).
 
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
-        :param options: Parametr ``options`` slouží jako vstup pro logiku funkce ``handle``.
+        :param args: Poziční argumenty příkazu (nepoužívá se).
+        :param options: Pojmenované argumenty ze příkazového řádku (nepoužívá se).
         """
         from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
         from heslar.models import Heslar

@@ -14,11 +14,10 @@ Třídy
 
    .. py:method:: clean()
 
-      Provádí operaci clean.
+      Očistí a seřadí seznam autorů podle zadaného pořadí.
 
-      :param value: Parametr ``value`` předává se do volání ``clean()``, ``debug()``, ovlivňuje větvení podmínek.
-
-      :return: Vrací proměnná ``qs``.
+      :param value: Seznam ID autorů.
+      :return: QuerySet autorů seřazený podle zadaného pořadí.
 
 
 .. py:class:: CoordinatesDokumentForm
@@ -34,13 +33,13 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje formulář pro editaci metadat dokumentu s kontrolou dostupnosti polí.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
-      :param required: Parametr ``required`` ovlivňuje větvení podmínek.
-      :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+      :param args: Poziční argumenty pro ModelForm.
+      :param readonly: Zda jsou pole jen pro čtení.
+      :param required: Která pole jsou povinná.
+      :param required_next: Která pole budou povinná v následující relaci.
+      :param kwargs: Pojmenované argumenty včetně rada, let, dok_osoby a edit.
 
 
 .. py:class:: EditDokumentForm
@@ -51,14 +50,14 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje formulář s kontrolou práv a dostupnosti polí.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
-      :param required: Parametr ``required`` ovlivňuje větvení podmínek.
-      :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param can_edit_datum_zverejneni: Parametr ``can_edit_datum_zverejneni`` ovlivňuje větvení podmínek.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+      :param args: Poziční argumenty pro ModelForm.
+      :param readonly: Zda jsou pole jen pro čtení.
+      :param required: Která pole jsou povinná.
+      :param required_next: Která pole budou povinná v následující relaci.
+      :param can_edit_datum_zverejneni: Zda lze editovat datum zveřejnění.
+      :param kwargs: Klíčové argumenty včetně create a region_not_required.
 
 
 .. py:class:: CreateModelDokumentForm
@@ -69,13 +68,13 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje formulář pro vytvoření 3D modelu s nastavením dostupných typů.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param required: Parametr ``required`` ovlivňuje větvení podmínek.
-      :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      :param args: Poziční argumenty pro ModelForm.
+      :param readonly: Zda jsou pole jen pro čtení.
+      :param required: Která pole jsou povinná.
+      :param required_next: Která pole budou povinná v následující relaci.
+      :param kwargs: Pojmenované argumenty pro ModelForm.
 
 
 .. py:class:: CreateModelExtraDataForm
@@ -86,13 +85,13 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje formulář pro zadání extra dat 3D modelu.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param required: Parametr ``required`` ovlivňuje větvení podmínek.
-      :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      :param args: Poziční argumenty pro ModelForm.
+      :param readonly: Zda jsou pole jen pro čtení.
+      :param required: Která pole jsou povinná.
+      :param required_next: Která pole budou povinná v následující relaci.
+      :param kwargs: Pojmenované argumenty pro ModelForm.
 
 
 .. py:class:: PripojitDokumentForm
@@ -118,11 +117,11 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje formulář pro editaci poznámky k součásti dokumentu.
 
-      :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      :param readonly: Zda jsou pole jen pro čtení.
+      :param args: Poziční argumenty pro ModelForm.
+      :param kwargs: Pojmenované argumenty pro ModelForm.
 
 
 .. py:class:: DokumentCastCreateForm

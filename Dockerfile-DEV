@@ -1,3 +1,10 @@
+FROM node:20-bookworm-slim AS node-modules
+
+WORKDIR /node_modules_build
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
+
 FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.3 AS python-builder
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -6,22 +13,22 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN echo $TZ > /etc/timezone && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-    python3-pip \
-    python3-dev \
-    build-essential \
-    gcc \
-    libpq-dev \
-    tzdata \
-    cron \
-    sudo \
-    nano \
-    libgdal-dev \
-    locales \
-    gettext \
-    poppler-utils \
-    unrar \
-    redis-tools \
-    libmagic1 && \
+        python3-pip \
+        python3-dev \
+        build-essential \
+        gcc \
+        libpq-dev \
+        tzdata \
+        cron \
+        sudo \
+        nano \
+        libgdal-dev \
+        locales \
+        gettext \
+        poppler-utils \
+        unrar \
+        redis-tools \
+        libmagic1 && \
     locale-gen cs_CZ.utf8 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -65,6 +72,9 @@ RUN echo $TZ > /etc/timezone && \
 COPY --from=python-builder /wheels /wheels
 RUN pip3 install --no-cache-dir --no-index --find-links=/wheels /wheels/* --break-system-packages --ignore-installed && \
     rm -rf /wheels ~/.cache/pip
+
+COPY --from=node-modules /node_modules_build/node_modules /node_modules
+COPY ./package.json ./package-lock.json /
 
 RUN echo -e "alias python=python3\nalias pip=pip3" >> /etc/bash.bashrc
 

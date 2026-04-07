@@ -12,11 +12,11 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=NeidentAkce, weak=False)
 def neident_akce_post_save(sender, instance: NeidentAkce, **kwargs):
     """
-    Provádí operaci neident akce post save.
+    Uloží metadata nadřazeného dokumentu po uložení neidentifikované akce.
 
-    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``neident_akce_post_save``.
-    :param instance: Parametr ``instance`` předává se do volání ``on_commit()``, pracuje se s atributy ``dokument_cast``, ``suppress_signal``, ovlivňuje větvení podmínek.
-    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``neident_akce_post_save``.
+    :param sender: Třída modelu, která signál vyslala.
+    :param instance: Ukládaná instance neidentifikované akce.
+    :param kwargs: Další parametry signálu.
     """
     if instance.dokument_cast and instance.dokument_cast.dokument and not instance.suppress_signal:
         fedora_transaction = FedoraTransaction()
@@ -32,11 +32,11 @@ def neident_akce_post_save(sender, instance: NeidentAkce, **kwargs):
 @receiver(post_delete, sender=NeidentAkce, weak=False)
 def neident_akce_post_delete(sender, instance: NeidentAkce, **kwargs):
     """
-    Provádí operaci neident akce post delete.
+    Aktualizuje metadata nadřazeného dokumentu po smazání neidentifikované akce.
 
-    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``neident_akce_post_delete``.
-    :param instance: Parametr ``instance`` předává se do volání ``on_commit()``, pracuje se s atributy ``dokument_cast``, ``suppress_signal``, ovlivňuje větvení podmínek.
-    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``neident_akce_post_delete``.
+    :param sender: Třída modelu, která signál vyslala.
+    :param instance: Smazaná instance neidentifikované akce.
+    :param kwargs: Další parametry signálu.
     """
     if instance.dokument_cast and instance.dokument_cast.dokument and not instance.suppress_signal:
         fedora_transaction = FedoraTransaction()

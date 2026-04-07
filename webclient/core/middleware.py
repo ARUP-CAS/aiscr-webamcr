@@ -16,23 +16,22 @@ logger = logging.getLogger(__name__)
 
 
 class PermissionMiddleware:
-    """Middleware třída užívaná pro kontrolu oprávnení."""
+    """Middleware třída užívaná pro kontrolu oprávnění."""
 
     def __init__(self, get_response):
         """
         Inicializuje instanci třídy.
 
-        :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
+        :param get_response: Callable ze WSGI řetězce middleware, který vrátí response.
         """
         self.get_response = get_response
 
     def __call__(self, request):
         """
-        Provádí operaci call.
+        Zpracovává příchozí HTTP požadavek a kontroluje oprávnění uživatele.
 
-        :param request: Parametr ``request`` předává se do volání ``get_response()``.
-
-            :return: Vrací proměnná ``response``.
+        :param request: HTTP požadavek ze strany klienta.
+        :return: HTTP response vygenerovaná aplikací.
         """
         response = self.get_response(request)
         return response
@@ -86,35 +85,33 @@ class PermissionMiddleware:
 
 
 class ErrorMiddleware:
-    """Implementuje komponentu ``ErrorMiddleware`` v rámci aplikace."""
+    """Implementuje komponentu pro zachycení a zpracování chyb (ErrorMiddleware) v rámci aplikace."""
 
     def __init__(self, get_response):
         """
         Inicializuje instanci třídy.
 
-        :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
+        :param get_response: Callable ze WSGI řetězce middleware, který vrátí response.
         """
         self.get_response = get_response
 
     def __call__(self, request):
         """
-        Provádí operaci call.
+        Zpracovává příchozí HTTP požadavek.
 
-        :param request: Parametr ``request`` předává se do volání ``get_response()``.
-
-            :return: Vrací proměnná ``response``.
+        :param request: HTTP požadavek ze strany klienta.
+        :return: HTTP response vygenerovaná aplikací.
         """
         response = self.get_response(request)
         return response
 
     def process_exception(self, request, exception):
         """
-        Provádí operaci process exception.
+        Zachycuje a zpracovává Fedora a databázové výjimky během zpracování požadavku.
 
-        :param request: Parametr ``request`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
-        :param exception: Číselná hodnota ``exception`` použitá při výpočtu nebo transformaci.
-
-            :return: Vrací výsledek volání ``render()``.
+        :param request: HTTP požadavek pro vykreslení chybové stránky.
+        :param exception: Vyvolená výjimka během zpracování požadavku.
+        :return: HTML error response nebo None pokud jde o neznámou výjimku.
         """
         if isinstance(exception, FedoraError):
             context = {"exception": exception}
@@ -170,7 +167,7 @@ class InactiveUserMiddleware:
 
 
 class StatusMessageMiddleware:
-    """Implementuje komponentu ``StatusMessageMiddleware`` v rámci aplikace."""
+    """Middleware pro zobrazení stavových zpráv z Fedora transakcí skrze Redis."""
 
     pattern = re.compile(r"[\w-]+\d+[A-Z]?")
 
@@ -178,7 +175,7 @@ class StatusMessageMiddleware:
         """
         Inicializuje instanci třídy.
 
-        :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
+        :param get_response: Callable ze WSGI řetězce middleware, který vrátí response.
         """
         self.get_response = get_response
         r = RedisConnector()
@@ -186,23 +183,21 @@ class StatusMessageMiddleware:
 
     def __call__(self, request):
         """
-        Provádí operaci call.
+        Zpracovává příchozí HTTP požadavek.
 
-        :param request: Parametr ``request`` předává se do volání ``get_response()``.
-
-            :return: Vrací proměnná ``response``.
+        :param request: HTTP požadavek ze strany klienta.
+        :return: HTTP response vygenerovaná aplikací.
         """
         response = self.get_response(request)
         return response
 
     def _show_message(self, value, request, redis_key):
         """
-               Provádí operaci show message.
+        Zobrazí stavovou zprávu uživateli na základě výsledku Fedora transakce.
 
-               :param value: Parametr ``value`` předává se do volání ``int()``, pracuje se s atributy ``decode``, ovlivňuje větvení podmínek.
-               :param request: Parametr ``request`` předává se do volání ``add_message()``.
-               :param redis_key: Textový název nebo klíč ``redis_key`` používaný v rámci operace.
-        :return: Výstup funkce odpovídající implementované logice.
+        :param value: Kódová hodnota stavu transakce z Redis (COMMITED nebo FAILED).
+        :param request: HTTP požadavek pro přidání zprávy do session.
+        :param redis_key: Klíč v Redis pro načtení stavových zpráv a smazání záznamu.
         """
         value = int(value.decode("utf-8"))
         if value == FedoraTransactionResult.COMMITED.value:
@@ -231,12 +226,12 @@ class StatusMessageMiddleware:
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         """
-        Provádí operaci process view.
+        Detekuje a zobrazuje stavové zprávy Fedora transakcí pro AMČR identifikátory v URL.
 
-        :param request: Parametr ``request`` předává se do volání ``findall()``, ``get_transaction_redis_key()``, pracuje se s atributy ``path``, ``user``.
-        :param view_func: View funkce obalená dekorátorem nebo middlewarem.
-        :param view_args: Dodatečné argumenty předané voláním.
-        :param view_kwargs: Dodatečné argumenty předané voláním.
+        :param request: HTTP požadavek obsahující cestu s potenciálním AMČR identifikátorem.
+        :param view_func: View funkce, kterou se chystá aplikace volat.
+        :param view_args: Poziční argumenty pro view funkci.
+        :param view_kwargs: Pojmenované argumenty pro view funkci.
         """
         regex_result = self.pattern.findall(request.path)
         for item in regex_result:

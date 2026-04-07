@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 @receiver(pre_save, sender=Soubor, weak=False)
 def soubor_get_rozsah(sender, instance, **kwargs):
     """
-    Provádí operaci soubor get rozsah.
+    Určí počet stran/snímků souboru (PDF, TIF) a uloží jej do ``rozsah``.
 
-    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``soubor_get_rozsah``.
-    :param instance: Parametr ``instance`` předává se do volání ``PdfReader()``, ``open()``, pracuje se s atributy ``binary_data``, ``nazev``, ovlivňuje větvení podmínek.
-    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``soubor_get_rozsah``.
+    :param sender: Model ``Soubor``, který signál vyslal.
+    :param instance: Instancia ``Soubor`` předaná k uložení.
+    :param kwargs: Dodatečné argumenty signálu.
     """
     if instance.binary_data:
         if instance.nazev.lower().endswith("pdf"):
@@ -44,11 +44,11 @@ def soubor_get_rozsah(sender, instance, **kwargs):
 @receiver(post_save, sender=Soubor, weak=False)
 def soubor_save_update_record_metadata(sender, instance: Soubor, **kwargs):
     """
-    Provádí operaci soubor save update record metadata.
+    Aktualizuje metadata nadřazeného archeologického záznamu po uložení souboru.
 
-    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``soubor_save_update_record_metadata``.
-    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``isinstance()``, pracuje se s atributy ``close_active_transaction_when_finished``, ``suppress_signal``, ovlivňuje větvení podmínek.
-    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``soubor_save_update_record_metadata``.
+    :param sender: Model ``Soubor``, který signál vyslal.
+    :param instance: Instancia ``Soubor`` která byla uložena.
+    :param kwargs: Dodatečné argumenty signálu.
     """
     logger.debug(
         "cron.signals.soubor_save_update_record_metadata.start",
@@ -79,11 +79,11 @@ def soubor_save_update_record_metadata(sender, instance: Soubor, **kwargs):
 @receiver(pre_delete, sender=Soubor, weak=False)
 def soubor_delete_connections(sender, instance: Soubor, **kwargs):
     """
-    Provádí operaci soubor delete connections.
+    Odstraní historii záznamu spojené se souborem před jeho fyzickým smazáním.
 
-    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``soubor_delete_connections``.
-    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``pk``, ``historie``, ovlivňuje větvení podmínek.
-    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``soubor_delete_connections``.
+    :param sender: Model ``Soubor``, který signál vyslal.
+    :param instance: Instancia ``Soubor`` určená ke smazání.
+    :param kwargs: Dodatečné argumenty signálu.
     """
     logger.debug("cron.signals.soubor_delete_connections.start", extra={"instance": instance.pk})
     if instance.historie and instance.historie.pk:
@@ -94,11 +94,11 @@ def soubor_delete_connections(sender, instance: Soubor, **kwargs):
 @receiver(post_delete, sender=Soubor, weak=False)
 def soubor_delete_update_metadata(sender, instance: Soubor, **kwargs):
     """
-    Provádí operaci soubor delete update metadata.
+    Aktualizuje metadata nadřazeného archeologického záznamu po smazání souboru.
 
-    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``soubor_delete_update_metadata``.
-    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``isinstance()``, pracuje se s atributy ``pk``, ``suppress_signal``, ovlivňuje větvení podmínek.
-    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``soubor_delete_update_metadata``.
+    :param sender: Model ``Soubor``, který signál vyslal.
+    :param instance: Instancia ``Soubor`` která byla smazána.
+    :param kwargs: Dodatečné argumenty signálu.
     """
     logger.debug("cron.signals.soubor_delete_update_metadata.start", extra={"instance": instance.pk})
     if instance.suppress_signal is True:

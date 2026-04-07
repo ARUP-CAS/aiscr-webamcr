@@ -61,22 +61,21 @@ class ApiView(autocomplete.Select2ListView):
     @classmethod
     def api_call(cls, q, use_cache=False):
         """
-        Provádí operaci api call.
+        Zavolá API dotaz pro autocomplete (abstraktní metoda).
 
-        :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-        :param use_cache: Parametr ``use_cache`` slouží jako vstup pro logiku funkce ``api_call``.
+        :param q: Vyhledávací dotaz od uživatele.
+        :param use_cache: Zda používat mezipaměť výsledků.
         """
         pass
 
     def get(self, request, *args, **kwargs):
         """
-        Vrací výsledek operace.
+        Vrací JSON odpověď s autocomplete výsledky.
 
-        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
-
-            :return: Vrací výsledek volání ``JsonResponse()``.
+        :param request: HTTP požadavek ze strany klienta.
+        :param args: Poziční argumenty z URL.
+        :param kwargs: Pojmenované argumenty z URL.
+        :return: JSON odpověď s výsledky.
         """
         if self.q:
             results = self.get_list()
@@ -87,16 +86,16 @@ class ApiView(autocomplete.Select2ListView):
 
     def autocomplete_results(self, results):
         """
-        Provádí operaci autocomplete results.
+        Transformuje výsledky API na formát autocomplete (id, text).
 
-        :param results: Kolekce ``results`` zpracovávaná touto funkcí.
-
-            :return: Vrací hodnotu podle větve zpracování.
+        :param results: Výsledky vrácené API voláním.
+        :return: Seznam tuples (id, text) pro autocomplete.
         """
         return [dict(id=x, text=y) for x, y in results]
 
     def get_list(self):
-        """Vrací list. v aplikaci.
+        """
+        Vrací list. v aplikaci.
 
         :return: Vrací výsledek volání ``api_call()``.
         """
@@ -112,10 +111,10 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
     @classmethod
     def _api_call_data_cite(cls, q):
         """
-               Provádí operaci api call data cite.
+        Vyhledá DOI v DataCite API.
 
-               :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-        :return: Výstup funkce odpovídající implementované logice.
+        :param q: Vyhledávací dotaz (DOI).
+        :return: Seznam [DOI, název] párů.
         """
         params = {
             "query": f"doi:*{q.upper()}*",
@@ -134,10 +133,10 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
     @classmethod
     def _api_call_cross_ref_doi(cls, q):
         """
-               Provádí operaci api call cross ref doi.
+        Vyhledá DOI v CrossRef API pomocí přímého DOI.
 
-               :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-        :return: Výstup funkce odpovídající implementované logice.
+        :param q: Vyhledávací dotaz (DOI).
+        :return: Seznam [DOI, název] párů.
         """
         base_url = f"https://api.crossref.org/works/{q}"
         response = requests.get(base_url)
@@ -167,10 +166,10 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
     @classmethod
     def _api_call_cross_ref_title(cls, q):
         """
-               Provádí operaci api call cross ref title.
+        Vyhledá DOI v CrossRef API pomocí názvu publikace.
 
-               :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-        :return: Výstup funkce odpovídající implementované logice.
+        :param q: Vyhledávací dotaz (název publikace).
+        :return: Seznam [DOI, název] párů.
         """
         base_url = f"https://api.crossref.org/works"
         params = {"query.title": q}
@@ -187,10 +186,10 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
     @classmethod
     def _doi_item_exists(cls, doi: str) -> list:
         """
-               Provádí operaci doi item exists.
+        Ověří existenci DOI pomocí HTTP HEAD požadavku.
 
-               :param doi: Textová hodnota `doi` používaná pro vyhledání, pojmenování nebo hlášení stavu.
-        :return: Výstup funkce odpovídající implementované logice.
+        :param doi: DOI identifikátor.
+        :return: Seznam [DOI, DOI] pokud existuje, jinak prázdný seznam.
         """
         url = f"https://doi.org/{doi}"
         resp = requests.head(url, allow_redirects=True, timeout=5)
@@ -202,12 +201,11 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
     @classmethod
     def api_call(cls, q, use_cache=False):
         """
-        Provádí operaci api call.
+        Vyhledá DOI v CrossRef a DataCite API.
 
-        :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-        :param use_cache: Parametr ``use_cache`` slouží jako vstup pro logiku funkce ``api_call``.
-
-            :return: Vrací proměnná ``results``.
+        :param q: Vyhledávací dotaz.
+        :param use_cache: Zda používat cache.
+        :return: Seznam [DOI, název] párů.
         """
         results = cls._api_call_cross_ref_doi(q)
         if not results:
@@ -227,12 +225,11 @@ class OrcidAutocompleteView(ApiView):
     @classmethod
     def api_call(cls, q, use_cache=True):
         """
-        Provádí operaci api call.
+        Vyhledá výzkumné pracovníky v ORCID API.
 
-        :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-        :param use_cache: Parametr ``use_cache`` ovlivňuje větvení podmínek.
-
-            :return: Vrací hodnotu podle větve zpracování, typicky: seznam, proměnná ``result_list``.
+        :param q: Vyhledávací dotaz.
+        :param use_cache: Zda používat cache.
+        :return: Seznam [ORCID ID, jméno] párů.
         """
         if use_cache:
             cached_value = cls._get_value_from_cache(q)
@@ -271,12 +268,11 @@ class RorAutocompleteView(LoginRequiredMixin, ApiView):
     @classmethod
     def api_call(cls, q, use_cache=False):
         """
-        Provádí operaci api call.
+        Vyhledá organizace v ROR API.
 
-        :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-        :param use_cache: Parametr ``use_cache`` slouží jako vstup pro logiku funkce ``api_call``.
-
-            :return: Vrací proměnná ``result_list``.
+        :param q: Vyhledávací dotaz.
+        :param use_cache: Zda používat cache.
+        :return: Seznam [ROR ID, jméno] párů.
         """
         params = {
             "query": q,
@@ -313,12 +309,11 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
     @classmethod
     def api_call(cls, q, use_cache=False):
         """
-        Provádí operaci api call.
+        Vyhledá osoby v WikiData SPARQL API.
 
-        :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-        :param use_cache: Parametr ``use_cache`` slouží jako vstup pro logiku funkce ``api_call``.
-
-            :return: Vrací hodnotu podle větve zpracování, typicky: seznam, proměnná ``result_list``.
+        :param q: Vyhledávací dotaz.
+        :param use_cache: Zda používat cache.
+        :return: Seznam [WikiData ID, jméno] párů.
         """
         if not q:
             return []
@@ -379,13 +374,13 @@ class ContinuePidProcessing(AdminRecordProcessingView):
     @staticmethod
     def _perform_client_action(record, attribute_name, publish_callable_method, set_callable_method=None):
         """
-               Provádí operaci perform client action.
+        Provede akci na záznamu a publikuje do DataCite.
 
-               :param record: Parametr ``record`` předává se do volání ``isinstance()``, pracuje se s atributy ``save``, ``lokalita``, ovlivňuje větvení podmínek.
-               :param attribute_name: Textový název nebo klíč ``attribute_name`` používaný v rámci operace.
-               :param publish_callable_method: Parametr ``publish_callable_method`` slouží jako vstup pro logiku funkce ``_perform_client_action``.
-               :param set_callable_method: Kolekce ``set_callable_method`` zpracovávaná touto funkcí.
-        :return: Výstup funkce odpovídající implementované logice.
+        :param record: Záznam k publikaci (Lokalita, SamostatnyNalez nebo Dokument).
+        :param attribute_name: Atribut záznamu pro uložení DOI.
+        :param publish_callable_method: Callable pro publikaci.
+        :param set_callable_method: Callable pro nastavení stavu.
+        :return: DOI nebo chybová zpráva.
         """
         try:
             result = publish_callable_method()
@@ -404,9 +399,10 @@ class ContinuePidProcessing(AdminRecordProcessingView):
 
     def process_record(self, record, result, **kwargs):
         """
-        Provádí operaci process record.
+        Zpracuje záznam pro publikaci/skrytí/smazání PID.
 
-        :param record: Parametr ``record`` předává se do volání ``isinstance()``, ``_perform_client_action()``, pracuje se s atributy ``active_transaction``, ``doi``, ovlivňuje větvení podmínek.
+        :param record: Záznam k publikaci.
+        :param result: Výsledek formuláře.
         :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
         :param kwargs: Parametr ``kwargs`` pracuje se s atributy ``get``.
 

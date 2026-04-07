@@ -47,23 +47,29 @@ def pian_save_metadata(sender, instance: Pian, **kwargs):
     if not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
         invalidate_arch_z_related_models()
-        if instance.update_all_azs:
-            for dj in instance.dokumentacni_jednotky_pianu.all():
-                dj: DokumentacniJednotka
-                dj.archeologicky_zaznam.save_metadata(fedora_transaction)
-                logger.debug(
-                    "pian.signals.pian_save_metadata.save_metadata",
-                    extra={"transaction": getattr(fedora_transaction, "uid", None)},
-                )
-        instance.save_metadata(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)
-        logger.debug(
-            "pian.signals.pian_save_metadata.end",
-            extra={
-                "instance": instance.ident_cely,
-                "transaction": getattr(fedora_transaction, "uid", None),
-                "close_transaction": instance.close_active_transaction_when_finished,
-            },
-        )
+        close_transaction = instance.close_active_transaction_when_finished
+
+        def save_metadata_callback():
+            """Uloží metadata pianu a navázaných arch. záznamů do Fedory po commitu DB transakce."""
+            if instance.update_all_azs:
+                for dj in instance.dokumentacni_jednotky_pianu.all():
+                    dj: DokumentacniJednotka
+                    dj.archeologicky_zaznam.save_metadata(fedora_transaction)
+                    logger.debug(
+                        "pian.signals.pian_save_metadata.save_metadata",
+                        extra={"transaction": getattr(fedora_transaction, "uid", None)},
+                    )
+            instance.save_metadata(fedora_transaction, close_transaction=close_transaction)
+            logger.debug(
+                "pian.signals.pian_save_metadata.end",
+                extra={
+                    "instance": instance.ident_cely,
+                    "transaction": getattr(fedora_transaction, "uid", None),
+                    "close_transaction": close_transaction,
+                },
+            )
+
+        transaction.on_commit(save_metadata_callback)
 
 
 @receiver(pre_delete, sender=Pian, weak=False)

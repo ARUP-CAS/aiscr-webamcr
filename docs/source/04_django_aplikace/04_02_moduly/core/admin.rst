@@ -39,8 +39,8 @@ Třídy
       Metoda pro určení práv na videní odstávky.
 
       :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
-      :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_view_permission``.
-      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``has_view_permission``.
+      :param obj: Volitelný objekt modelu, na který se oprávnění vztahuje (není využit).
+      :param args: Další poziční argumenty (nejsou využity).
 
       :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
@@ -49,7 +49,7 @@ Třídy
       Metoda pro určení práv na přidání odstávky. Není možné přidat více než jednu odstávku.
 
       :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
-      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+      :param args: Další poziční argumenty (nejsou využity).
 
       :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
@@ -58,8 +58,8 @@ Třídy
       Metoda pro určení práv pro úpravu odstávky.
 
       :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
-      :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_change_permission``.
-      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+      :param obj: Volitelný objekt modelu, na který se oprávnění vztahuje (není využit).
+      :param args: Další poziční argumenty (nejsou využity).
 
       :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
@@ -84,11 +84,12 @@ Třídy
 
    .. py:method:: changelist_view()
 
-      Provádí operaci changelist view.
+      Zobrazí přehledovou stránku oprávnění s přidaným příznakem pro zobrazení tlačítka importu.
 
-      :param request: Parametr ``request`` předává se do volání ``changelist_view()``, vstupuje do návratové hodnoty.
-      :param extra_context: Kolekce ``extra_context`` zpracovávaná touto funkcí.
-      :return: Výstup funkce odpovídající implementované logice.
+      :param request: HTTP požadavek od klienta.
+      :param extra_context: Volitelný slovník s dalším kontextem předaným do šablony.
+
+      :return: HTTP odpověď s vyrenderovanou šablonou přehledové stránky.
 
    .. py:method:: get_urls()
 
@@ -129,11 +130,12 @@ Třídy
 
    .. py:method:: changelist_view()
 
-      Provádí operaci changelist view.
+      Zobrazí přehledovou stránku výjimek oprávnění s přidaným příznakem pro zobrazení tlačítka importu.
 
-      :param request: Parametr ``request`` předává se do volání ``changelist_view()``, vstupuje do návratové hodnoty.
-      :param extra_context: Kolekce ``extra_context`` zpracovávaná touto funkcí.
-      :return: Výstup funkce odpovídající implementované logice.
+      :param request: HTTP požadavek od klienta.
+      :param extra_context: Volitelný slovník s dalším kontextem předaným do šablony.
+
+      :return: HTTP odpověď s vyrenderovanou šablonou přehledové stránky.
 
    .. py:method:: get_urls()
 
@@ -176,10 +178,47 @@ Třídy
 
    .. py:method:: export_as_csv()
 
-      Exportuje as csv.
+      Exportuje vybrané záznamy PermissionsSkip do CSV souboru ke stažení.
 
-      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``export_as_csv``.
-      :param queryset: Parametr ``queryset`` slouží jako vstup pro logiku funkce ``export_as_csv``.
+      :param request: HTTP požadavek od klienta.
+      :param queryset: Queryset vybraných záznamů PermissionsSkip určených k exportu.
 
-      :return: Vrací proměnná ``response``.
+      :return: HTTP odpověď s CSV souborem ke stažení.
+
+
+.. py:class:: FedoraCustomAdminSite
+
+   Implementuje komponentu ``FedoraCustomAdminSite`` v rámci aplikace.
+
+   **Metody:**
+
+   .. py:method:: _read_file()
+
+      Načte file.
+
+      :param uploaded_file: Parametr ``uploaded_file`` se předává do volání ``read_csv()``, ``read_excel()``, pracuje se s atributy ``content_type``, ovlivňuje větvení podmínek.
+      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``_read_file``.
+      :return: Načtená data odpovídající zadaným vstupům.
+
+   .. py:method:: update_doi()
+
+      Aktualizuje doi. v aplikaci.
+
+      :param request: Parametr ``request`` předává se do volání ``get_app_list()``, ``each_context()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``TemplateResponse()``.
+
+   .. py:method:: update_metadata_file_upload()
+
+      Aktualizuje metadata file upload.
+
+      :param request: Parametr ``request`` předává se do volání ``get_app_list()``, ``each_context()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``TemplateResponse()``.
+
+   .. py:method:: get_urls()
+
+      Vrací urls. v aplikaci.
+
+      :return: Vrací hodnotu podle větve zpracování.
 

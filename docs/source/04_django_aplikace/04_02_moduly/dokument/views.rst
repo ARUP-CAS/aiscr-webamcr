@@ -14,7 +14,7 @@ Třídy
 
    .. py:method:: init_translations()
 
-      Provádí operaci init translations.
+      Inicializuje přeložené texty pro seznam dokumentů.
 
    .. py:method:: rename_field_for_ordering()
 
@@ -52,15 +52,15 @@ Třídy
 
    .. py:method:: init_translations()
 
-      Provádí operaci init translations.
+      Inicializuje přeložené texty pro seznam dokumentů.
 
    .. py:method:: get_context_data()
 
-      Vrací context data.
+      Vytvoří kontext pro renderování šablony.
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací proměnná ``context``.
+      :return: kontext šablony
 
    .. py:method:: rename_field_for_ordering()
 
@@ -85,11 +85,11 @@ Třídy
 
    .. py:method:: get_cast()
 
-      Metoda pro získaní informací ohlědně části dokumentu.
+      Metoda pro získaní informací o součásti dokumentu.
 
-      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_cast``.
-      :param cast: Typ nebo hodnota použitá při převodu datového typu.
-      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_cast``.
+      :param context: Slovník kontextu pro aktualizaci.
+      :param cast: Součást dokumentu k zobrazení.
+      :param kwargs: Dodatečné pojmenované argumenty.
 
    .. py:method:: get_context_data()
 
@@ -134,7 +134,7 @@ Třídy
 
    .. py:method:: dispatch()
 
-      Provádí operaci dispatch.
+             Provádí operaci dispatch.
 
       :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
@@ -205,7 +205,7 @@ Třídy
 
    .. py:method:: dispatch()
 
-      Provádí operaci dispatch.
+             Provádí operaci dispatch.
 
       :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
@@ -229,7 +229,7 @@ Třídy
 
    .. py:method:: dispatch()
 
-      Provádí operaci dispatch.
+             Provádí operaci dispatch.
 
       :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
@@ -280,7 +280,7 @@ Třídy
 
    .. py:method:: dispatch()
 
-      Provádí operaci dispatch.
+             Provádí operaci dispatch.
 
       :param request: Parametr ``request`` předává se do volání ``add_message()``, ``dispatch()``, vstupuje do návratové hodnoty.
       :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
@@ -371,7 +371,7 @@ Třídy
 
    .. py:method:: init_translations()
 
-      Provádí operaci init translations.
+      Inicializuje přeložené texty pro seznam dokumentů.
 
    .. py:method:: get_zaznam()
 
@@ -381,11 +381,10 @@ Třídy
 
    .. py:method:: get_context_data()
 
-      Vrací context data.
+      Vytvoří kontext pro renderování šablony
 
-      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
-
-      :return: Vrací proměnná ``context``.
+      :param kwargs: Dodatečné položky kontextu předané z rodičovské metody.
+      :return: kontext šablony.
 
    .. py:method:: dispatch()
 
@@ -426,7 +425,7 @@ Třídy
 
    .. py:method:: init_translations()
 
-      Provádí operaci init translations.
+      Inicializuje přeložené texty pro seznam dokumentů.
 
    .. py:method:: get_context_data()
 
@@ -455,7 +454,7 @@ Třídy
 
    .. py:method:: init_translations()
 
-      Provádí operaci init translations.
+      Inicializuje přeložené texty pro seznam dokumentů.
 
    .. py:method:: get_context_data()
 
@@ -484,7 +483,7 @@ Třídy
 
    .. py:method:: init_translations()
 
-      Provádí operaci init translations.
+      Inicializuje přeložené texty pro seznam dokumentů.
 
    .. py:method:: get_context_data()
 
@@ -513,7 +512,7 @@ Třídy
 
    .. py:method:: init_translations()
 
-      Provádí operaci init translations.
+      Inicializuje přeložené texty pro seznam dokumentů.
 
    .. py:method:: post()
 
@@ -534,7 +533,7 @@ Třídy
 
    .. py:method:: init_translations()
 
-      Provádí operaci init translations.
+      Inicializuje přeložené texty pro seznam dokumentů.
 
    .. py:method:: get_context_data()
 

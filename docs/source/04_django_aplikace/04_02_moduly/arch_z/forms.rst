@@ -45,7 +45,7 @@ Třídy
 
    .. py:method:: year_only()
 
-      Provádí operaci year only.
+      Ověří, zda zadaná hodnota odpovídá formátu čtyřciferného roku.
 
       :param value: Parametr ``value`` předává se do volání ``fullmatch()``, vstupuje do návratové hodnoty.
 
