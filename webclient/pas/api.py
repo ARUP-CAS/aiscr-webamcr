@@ -851,7 +851,10 @@ class SamostatnyNalezXmlImportView(APIView):
                 return tag.split("}", 1)[1]
             return tag
 
-        validation_doc = etree.ElementTree(etree.fromstring(etree.tostring(doc.getroot())))
+        parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
+        validation_doc = etree.ElementTree(
+            etree.fromstring(etree.tostring(doc.getroot()), parser=parser)
+        )
         for elem in validation_doc.findall(f".//{cls._ns('samostatny_nalez')}"):
             if elem.find(cls._ns("stav")) is not None:
                 continue
