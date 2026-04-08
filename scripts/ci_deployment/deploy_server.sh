@@ -27,8 +27,8 @@ mkdir -p ${logpath}
 
 #Repo update
 git stash push -m "CI_autostash_${current_deployment_tag}_${d_stamp}"
-git fetch --all --tags --force --prune --prune-tags
-git checkout -f "refs/tags/v${current_deployment_tag}"
+git fetch --all --tags --force --prune --prune-tags || exit 1
+git checkout -f "refs/tags/v${current_deployment_tag}" || exit 1
 
 
 #Prints
