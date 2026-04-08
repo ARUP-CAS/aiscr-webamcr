@@ -147,7 +147,7 @@ class PasApiPermissionMixin:
                 # entry contains a configured trusted-proxy host/IP value, not a
                 # secret. Logging it is useful for troubleshooting DNS failures
                 # and incident-response evaluation.
-                # codeql[py/error-message-exposure]
+                # codeql[py/clear-text-logging-sensitive-data]
                 logger.warning(
                     "pas.api.PasApiPermissionMixin._resolve_trusted_networks.dns_failed", extra={"entry": entry}
                 )
@@ -240,7 +240,7 @@ class PasApiPermissionMixin:
             # It is not secret or user-controlled sensitive data; exposing it is
             # useful for troubleshooting and incident-response evaluation when an
             # admin setting contains invalid JSON.
-            # codeql[py/error-message-exposure]
+            # codeql[py/clear-text-logging-sensitive-data]
             logger.error("pas.api._load_json_setting.invalid_json", extra={"item_id": item_id})
             if raise_validation_error:
                 # item_id in the validation message is likewise intentional:
@@ -663,7 +663,7 @@ class IpBlacklistPermission(PasApiPermissionMixin, BasePermission):
                 # client_ip and the matched rule value are logged intentionally for
                 # access-control troubleshooting and incident investigation. They
                 # are operational context, not secrets.
-                # codeql[py/error-message-exposure]
+                # codeql[py/clear-text-logging-sensitive-data]
                 logger.warning(
                     "pas.api.IpBlacklistPermission.denied",
                     extra={"ip": client_ip, "rule": rule["value"]},
@@ -700,7 +700,7 @@ class IpWhitelistPermission(PasApiPermissionMixin, BasePermission):
                 return True
         # client_ip is logged intentionally for whitelist-denial troubleshooting
         # and incident investigation. It is operational context, not a secret.
-        # codeql[py/error-message-exposure]
+        # codeql[py/clear-text-logging-sensitive-data]
         logger.warning(
             "pas.api.IpWhitelistPermission.denied",
             extra={"ip": client_ip},
@@ -729,7 +729,7 @@ class UserBlacklistPermission(PasApiPermissionMixin, BasePermission):
                 # user_identifier is logged intentionally for access-control
                 # troubleshooting and incident investigation. It identifies the
                 # denied account and is operational context, not a secret.
-                # codeql[py/error-message-exposure]
+                # codeql[py/clear-text-logging-sensitive-data]
                 logger.warning(
                     "pas.api.UserBlacklistPermission.denied",
                     extra={"user": user_identifier},
@@ -769,7 +769,7 @@ class UserWhitelistPermission(PasApiPermissionMixin, BasePermission):
         # user_identifier is logged intentionally for whitelist-denial
         # troubleshooting and incident investigation. It is operational
         # context, not a secret.
-        # codeql[py/error-message-exposure]
+        # codeql[py/clear-text-logging-sensitive-data]
         logger.warning(
             "pas.api.UserWhitelistPermission.denied",
             extra={"user": user_identifier},
@@ -1160,7 +1160,7 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
         # ident_cely and user_pk are logged intentionally so successful imports
         # can be correlated during troubleshooting and incident investigation.
         # They are audit/operational identifiers, not secrets.
-        # codeql[py/error-message-exposure]
+        # codeql[py/clear-text-logging-sensitive-data]
         logger.info(
             "pas.api.SamostatnyNalezXmlImportView.post.created",
             extra={"ident_cely": instance.ident_cely, "user": user_pk},
@@ -1169,7 +1169,7 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
             # ident_cely, ignored xml:lang notes, and user_pk are logged
             # intentionally to support import diagnostics, troubleshooting, and
             # incident investigation. They are operational context, not secrets.
-            # codeql[py/error-message-exposure]
+            # codeql[py/clear-text-logging-sensitive-data]
             logger.info(
                 "pas.api.SamostatnyNalezXmlImportView.post.ignored_lang_notes",
                 extra={"ident_cely": instance.ident_cely, "notes": notes, "user": user_pk},
@@ -1225,7 +1225,7 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
             # The parser error text and user ID are logged intentionally for XML
             # troubleshooting and incident investigation. They are operational
             # diagnostics, not secrets.
-            # codeql[py/error-message-exposure]
+            # codeql[py/clear-text-logging-sensitive-data]
             logger.warning(
                 "pas.api.SamostatnyNalezXmlImportView.post.xml_syntax_error",
                 extra={"error": str(exc), "user": request.user.pk},
@@ -1264,7 +1264,7 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
             # Schema validation details and user ID are logged intentionally to
             # support import troubleshooting and incident investigation. These
             # are operational diagnostics, not secrets.
-            # codeql[py/error-message-exposure]
+            # codeql[py/clear-text-logging-sensitive-data]
             logger.warning(
                 "pas.api.SamostatnyNalezXmlImportView.post.schema_invalid",
                 extra={"errors": [error.to_dict() for error in errors], "user": request.user.pk},
@@ -1317,7 +1317,7 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
             # The denied user ID and referenced project are logged intentionally
             # for authorization troubleshooting and incident investigation.
             # They are audit/operational identifiers, not secrets.
-            # codeql[py/error-message-exposure]
+            # codeql[py/clear-text-logging-sensitive-data]
             logger.warning(
                 "pas.api.SamostatnyNalezXmlImportView.post.permission_denied",
                 extra={"user": request.user.pk, "projekt": data.get("projekt")},
