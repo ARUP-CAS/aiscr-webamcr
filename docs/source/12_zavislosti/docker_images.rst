@@ -130,7 +130,7 @@ Prometheus pro sběr a ukládání metrik. Slouží jako centrální systém pro
 docker.elastic.co/logstash/logstash
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 9.3.2
+- **Verze:** 9.3.3
 - **Licence:** SSPL, Elastic License 2.0, Apache License 2.0
 - **Odkaz:** https://github.com/elastic/logstash
 
