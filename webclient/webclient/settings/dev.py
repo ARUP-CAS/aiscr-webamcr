@@ -39,6 +39,12 @@ if "test" not in sys.argv:
 hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
 INTERNAL_IPS = [ip[:-1] + "1" for ip in ips] + ["127.0.0.1", "10.0.2.2"]
 
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    }
+}
+
 CRISPY_FAIL_SILENTLY = not DEBUG
 
 SILENCED_SYSTEM_CHECKS = ["captcha.recaptcha_test_key_error"]

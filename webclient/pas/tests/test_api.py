@@ -588,6 +588,36 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertEqual(len(exc_ctx.exception.import_errors), 1)
         self.assertEqual(exc_ctx.exception.import_errors[0].error_type, ImportErrorType.INVALID_DATA)
 
+    def test_local_resolver_rejects_disallowed_url_in_xsd_import(self):
+        """Resolver odmítne nepovolenou URL v ``xs:import`` uvnitř staženého XSD jako ``INVALID_DATA``."""
+        xsd_with_disallowed_import = io.BytesIO(
+            b'<?xml version="1.0" encoding="UTF-8"?>'
+            b'<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">'
+            b'  <xs:import namespace="urn:evil" schemaLocation="https://evil.example/evil.xsd"/>'
+            b"</xs:schema>"
+        )
+        doc = etree.ElementTree(
+            etree.fromstring(
+                self._minimal_nalez_xml(
+                    ident_cely="SN-XML-RESOLVER-BAD-001",
+                    projekt_ident=self.projekt.ident_cely,
+                    pristupnost_ident=self.pristupnost.ident_cely,
+                )
+            )
+        )
+
+        original_schema_cache = dict(SamostatnyNalezXmlImportView._amcr_schema_cache)
+        SamostatnyNalezXmlImportView._amcr_schema_cache = {}
+        try:
+            with patch("pas.api.urllib.request.urlopen", return_value=xsd_with_disallowed_import):
+                with self.assertRaises(ImportValidationException) as exc_ctx:
+                    SamostatnyNalezXmlImportView._get_amcr_schema(doc)
+        finally:
+            SamostatnyNalezXmlImportView._amcr_schema_cache = original_schema_cache
+
+        self.assertEqual(len(exc_ctx.exception.import_errors), 1)
+        self.assertEqual(exc_ctx.exception.import_errors[0].error_type, ImportErrorType.INVALID_DATA)
+
     def test_get_method_not_allowed(self):
         """GET požadavek na XML endpoint vrátí HTTP 405. Log záznam se nevytvoří — metoda je odmítnuta před view."""
         client = APIClient()

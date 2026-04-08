@@ -12,6 +12,17 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: _resolve_trusted_networks()
+
+      Přeloží seznam IP adres, CIDR rozsahů nebo DNS názvů na seznam ``ipaddress.IPv4Network`` objektů.
+
+      Výsledky jsou uloženy v cache po dobu ``_trusted_proxy_resolve_ttl`` sekund. Pro Docker service
+      jméno (např. ``"proxy"``) se IP adresa zjišťuje přes DNS pomocí ``socket.getaddrinfo``.
+
+      :param entries: Seznam CIDR řetězců, IP adres nebo DNS názvů.
+
+      :return: Seznam ``ipaddress.IPv4Network`` (nebo ``IPv6Network``) objektů.
+
    .. py:method:: load_json_setting()
 
       Načte JSON hodnotu z ``CustomAdminSettings`` pro skupinu ``pas_api``.
@@ -67,11 +78,21 @@ Třídy
 
               "whitelist_only"
 
+      ``trusted_proxies`` (``item_id="trusted_proxies"``)
+          Seznam důvěryhodných proxy serverů stojících před aplikací.
+          Každá položka je CIDR řetězec, IP adresa nebo DNS název (např. Docker service jméno).
+          Používá se pro správné určení IP adresy klienta z hlavičky ``X-Forwarded-For``.
+          Pokud nastavení chybí, použije se výchozí hodnota ``["10.0.1.0/24"]``.
+
+          Příklad::
+
+              ["10.0.1.0/24", "proxy"]
+
       Změny v administraci se projeví do ``30`` sekund (TTL cache).
 
       :param item_id: Identifikátor záznamu — ``"access_rules"``, ``"rate_limits"`` nebo ``"access_mode"``.
 
-      :param raise_validation_error: Pokud je ``True``, nevalidní JSON vyhodí ``ValidationError``.
+      :param raise_validation_error: Pokud je ``True`` (výchozí), nevalidní JSON vyhodí ``ValidationError``.
 
       :return: Naparsovaná JSON hodnota nebo ``[]`` při chybě či absenci záznamu.
 
@@ -142,9 +163,38 @@ Třídy
       :raises ValidationError: Pokud hodnota není jedním z podporovaných režimů.
       :return: ``True`` pokud je hodnota validní.
 
+   .. py:method:: get_trusted_proxies()
+
+      Vrátí seznam důvěryhodných proxy serverů z cache nebo ``CustomAdminSettings``.
+
+      Pokud nastavení ``trusted_proxies`` neexistuje, vrátí výchozí hodnotu
+      ``["10.0.1.0/24"]``.
+
+      :raises ValidationError: Pokud nastavení má neplatnou strukturu.
+      :return: Seznam řetězců — CIDR rozsahy, IP adresy nebo DNS názvy.
+
+   .. py:method:: validate_trusted_proxies()
+
+      Ověří strukturu nastavení ``trusted_proxies``.
+
+      Každá položka musí být neprázdný řetězec. Hodnoty CIDR rozsahů jsou ověřeny
+      pomocí ``ipaddress.ip_network``; ostatní řetězce jsou považovány za DNS názvy
+      a v administraci jsou přijaty bez DNS lookup (ten probíhá za běhu).
+
+      :param raw_proxies: Naparsovaná JSON hodnota nastavení ``trusted_proxies``.
+
+      :raises ValidationError: Pokud struktura nebo obsah neodpovídá očekávání.
+      :return: ``True`` pokud je nastavení validní.
+
    .. py:method:: get_client_ip()
 
-      Vrátí IP adresu klienta z požadavku s ohledem na proxy hlavičky.
+      Vrátí IP adresu klienta z požadavku.
+
+      Prochází hlavičku ``X-Forwarded-For`` zprava doleva a přeskakuje IP adresy
+      důvěryhodných proxy serverů (z nastavení ``pas_api/trusted_proxies``).
+      První nedůvěryhodná IP adresa je vrácena jako adresa klienta.
+
+      Pokud hlavička chybí nebo jsou všechny položky důvěryhodné, vrátí ``REMOTE_ADDR``.
 
       :param request: HTTP požadavek.
 
@@ -571,6 +621,14 @@ Funkce
 .. py:function:: _invalidate_api_cache(sender, instance)
 
    Vymaže cache pravidel API po změně záznamu ``CustomAdminSettings`` skupiny ``pas_api``.
+
+.. py:function:: _strip_namespace(tag)
+
+   Vrátí název XML tagu bez namespace prefixu.
+
+   :param tag: XML tag včetně namespace (např. ``{http://example.com}element``).
+
+   :return: Název tagu bez namespace (např. ``element``).
 
 .. py:function:: _parse_rate(rate)
 

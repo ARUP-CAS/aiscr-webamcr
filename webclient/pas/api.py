@@ -4,6 +4,7 @@ import ipaddress
 import json
 import logging
 import re
+import socket
 import threading
 import time
 import urllib.request
@@ -32,6 +33,7 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.http import HttpResponse, JsonResponse
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 from heslar.hesla import (
     HESLAR_NALEZOVE_OKOLNOSTI,
     HESLAR_OBDOBI,
@@ -60,12 +62,14 @@ logger = logging.getLogger(__name__)
 _CACHE_KEY_ACCESS_RULES = "pas_api_access_rules"
 _CACHE_KEY_RATE_LIMITS = "pas_api_rate_limits"
 _CACHE_KEY_ACCESS_MODE = "pas_api_access_mode"
+_CACHE_KEY_TRUSTED_PROXIES = "pas_api_trusted_proxies"
 _CACHE_TTL = 30  # sekund
 
 _PAS_API_GROUP = "pas_api"
 _ACCESS_RULES_ID = "access_rules"
 _RATE_LIMITS_ID = "rate_limits"
 _ACCESS_MODE_ID = "access_mode"
+_TRUSTED_PROXIES_ID = "trusted_proxies"
 _AMCR_SCHEMA_LOCK = threading.Lock()
 _ALLOWED_SCHEMA_URL_PATTERNS = (
     re.compile(r"^https?://www\.w3\.org/2001/XMLSchema-instance(?:[?#].*)?$"),
@@ -96,14 +100,60 @@ ACCESS_MODE_OPEN = "open"
 ACCESS_MODE_WHITELIST_ONLY = "whitelist_only"
 ACCESS_MODE_CLOSED = "closed"
 _ACCESS_MODES = {ACCESS_MODE_OPEN, ACCESS_MODE_WHITELIST_ONLY, ACCESS_MODE_CLOSED}
-_PAS_API_ITEM_IDS = {_ACCESS_RULES_ID, _RATE_LIMITS_ID, _ACCESS_MODE_ID}
+_PAS_API_ITEM_IDS = {_ACCESS_RULES_ID, _RATE_LIMITS_ID, _ACCESS_MODE_ID, _TRUSTED_PROXIES_ID}
+
+_DEFAULT_TRUSTED_PROXIES = ["10.0.1.0/24"]
 
 
 class PasApiPermissionMixin:
     """Sdílené helpery pro permission a throttle logiku PAS XML API."""
 
+    _trusted_proxy_resolve_lock: threading.Lock = threading.Lock()
+    _trusted_proxy_resolve_cache: dict[str, tuple[list, float]] = {}
+    _trusted_proxy_resolve_ttl: int = 30  # sekund
+
     @staticmethod
-    def load_json_setting(item_id: str, raise_validation_error: bool = False):
+    def _resolve_trusted_networks(entries: list[str]) -> list:
+        """
+        Přeloží seznam IP adres, CIDR rozsahů nebo DNS názvů na seznam ``ipaddress.IPv4Network`` objektů.
+
+        Výsledky jsou uloženy v cache po dobu ``_trusted_proxy_resolve_ttl`` sekund. Pro Docker service
+        jméno (např. ``"proxy"``) se IP adresa zjišťuje přes DNS pomocí ``socket.getaddrinfo``.
+
+        :param entries: Seznam CIDR řetězců, IP adres nebo DNS názvů.
+
+        :return: Seznam ``ipaddress.IPv4Network`` (nebo ``IPv6Network``) objektů.
+        """
+        cache_key = ",".join(sorted(entries))
+        now = time.time()
+        with PasApiPermissionMixin._trusted_proxy_resolve_lock:
+            cached = PasApiPermissionMixin._trusted_proxy_resolve_cache.get(cache_key)
+            if cached and now - cached[1] < PasApiPermissionMixin._trusted_proxy_resolve_ttl:
+                return cached[0]
+
+        networks = []
+        for entry in entries:
+            try:
+                networks.append(ipaddress.ip_network(entry, strict=False))
+                continue
+            except ValueError:
+                pass
+            try:
+                infos = socket.getaddrinfo(entry, None, proto=socket.IPPROTO_TCP)
+                for info in infos:
+                    addr = info[4][0]
+                    networks.append(ipaddress.ip_network(addr, strict=False))
+            except OSError:
+                logger.warning(
+                    "pas.api.PasApiPermissionMixin._resolve_trusted_networks.dns_failed", extra={"entry": entry}
+                )
+
+        with PasApiPermissionMixin._trusted_proxy_resolve_lock:
+            PasApiPermissionMixin._trusted_proxy_resolve_cache[cache_key] = (networks, time.time())
+        return networks
+
+    @staticmethod
+    def load_json_setting(item_id: str, raise_validation_error: bool = True):
         """
         Načte JSON hodnotu z ``CustomAdminSettings`` pro skupinu ``pas_api``.
 
@@ -158,11 +208,21 @@ class PasApiPermissionMixin:
 
                 "whitelist_only"
 
+        ``trusted_proxies`` (``item_id="trusted_proxies"``)
+            Seznam důvěryhodných proxy serverů stojících před aplikací.
+            Každá položka je CIDR řetězec, IP adresa nebo DNS název (např. Docker service jméno).
+            Používá se pro správné určení IP adresy klienta z hlavičky ``X-Forwarded-For``.
+            Pokud nastavení chybí, použije se výchozí hodnota ``["10.0.1.0/24"]``.
+
+            Příklad::
+
+                ["10.0.1.0/24", "proxy"]
+
         Změny v administraci se projeví do ``30`` sekund (TTL cache).
 
         :param item_id: Identifikátor záznamu — ``"access_rules"``, ``"rate_limits"`` nebo ``"access_mode"``.
 
-        :param raise_validation_error: Pokud je ``True``, nevalidní JSON vyhodí ``ValidationError``.
+        :param raise_validation_error: Pokud je ``True`` (výchozí), nevalidní JSON vyhodí ``ValidationError``.
 
         :return: Naparsovaná JSON hodnota nebo ``[]`` při chybě či absenci záznamu.
         """
@@ -191,7 +251,7 @@ class PasApiPermissionMixin:
         """
         rules = cache.get(_CACHE_KEY_ACCESS_RULES)
         if rules is None:
-            raw_rules = cls.load_json_setting(_ACCESS_RULES_ID, raise_validation_error=True)
+            raw_rules = cls.load_json_setting(_ACCESS_RULES_ID)
             cls.validate_access_rules(raw_rules)
             rules = [r for r in raw_rules if r.get("active", True)]
             cache.set(_CACHE_KEY_ACCESS_RULES, rules, _CACHE_TTL)
@@ -295,6 +355,8 @@ class PasApiPermissionMixin:
             cls.validate_rate_limits(raw_value)
         elif instance.item_id == _ACCESS_MODE_ID:
             cls.validate_access_mode(raw_value)
+        elif instance.item_id == _TRUSTED_PROXIES_ID:
+            cls.validate_trusted_proxies(raw_value)
         return True
 
     @classmethod
@@ -309,7 +371,7 @@ class PasApiPermissionMixin:
         """
         limits = cache.get(_CACHE_KEY_RATE_LIMITS)
         if limits is None:
-            raw_limits = cls.load_json_setting(_RATE_LIMITS_ID, raise_validation_error=True)
+            raw_limits = cls.load_json_setting(_RATE_LIMITS_ID)
             cls.validate_rate_limits(raw_limits)
             limits = [r for r in raw_limits if r.get("active", True)]
             cache.set(_CACHE_KEY_RATE_LIMITS, limits, _CACHE_TTL)
@@ -394,11 +456,9 @@ class PasApiPermissionMixin:
         """
         access_mode = cache.get(_CACHE_KEY_ACCESS_MODE)
         if access_mode is None:
-            value = cls.load_json_setting(_ACCESS_MODE_ID, raise_validation_error=True)
+            value = cls.load_json_setting(_ACCESS_MODE_ID)
             cls.validate_access_mode(value)
             access_mode = value if value not in (None, []) else ACCESS_MODE_OPEN
-            if value not in (None, [], access_mode):
-                logger.error("pas.api._get_access_mode.invalid_value", extra={"value": value})
             cache.set(_CACHE_KEY_ACCESS_MODE, access_mode, _CACHE_TTL)
         return access_mode
 
@@ -420,19 +480,99 @@ class PasApiPermissionMixin:
             )
         return True
 
-    @staticmethod
-    def get_client_ip(request) -> str:
+    @classmethod
+    def get_trusted_proxies(cls) -> list[str]:
         """
-        Vrátí IP adresu klienta z požadavku s ohledem na proxy hlavičky.
+        Vrátí seznam důvěryhodných proxy serverů z cache nebo ``CustomAdminSettings``.
+
+        Pokud nastavení ``trusted_proxies`` neexistuje, vrátí výchozí hodnotu
+        ``["10.0.1.0/24"]``.
+
+        :raises ValidationError: Pokud nastavení má neplatnou strukturu.
+        :return: Seznam řetězců — CIDR rozsahy, IP adresy nebo DNS názvy.
+        """
+        proxies = cache.get(_CACHE_KEY_TRUSTED_PROXIES)
+        if proxies is None:
+            raw = cls.load_json_setting(_TRUSTED_PROXIES_ID)
+            if not raw:
+                proxies = _DEFAULT_TRUSTED_PROXIES
+            else:
+                cls.validate_trusted_proxies(raw)
+                proxies = raw
+            cache.set(_CACHE_KEY_TRUSTED_PROXIES, proxies, _CACHE_TTL)
+        return proxies
+
+    @staticmethod
+    def validate_trusted_proxies(raw_proxies) -> bool:
+        """
+        Ověří strukturu nastavení ``trusted_proxies``.
+
+        Každá položka musí být neprázdný řetězec. Hodnoty CIDR rozsahů jsou ověřeny
+        pomocí ``ipaddress.ip_network``; ostatní řetězce jsou považovány za DNS názvy
+        a v administraci jsou přijaty bez DNS lookup (ten probíhá za běhu).
+
+        :param raw_proxies: Naparsovaná JSON hodnota nastavení ``trusted_proxies``.
+
+        :raises ValidationError: Pokud struktura nebo obsah neodpovídá očekávání.
+        :return: ``True`` pokud je nastavení validní.
+        """
+        if not isinstance(raw_proxies, list):
+            raise ValidationError({"value": _("pas.api.PasApiPermissionMixin.validate_trusted_proxies.not_a_list")})
+        for index, entry in enumerate(raw_proxies):
+            if not isinstance(entry, str) or not entry.strip():
+                raise ValidationError(
+                    {
+                        "value": _("pas.api.PasApiPermissionMixin.validate_trusted_proxies.invalid_entry").format(
+                            index=index
+                        )
+                    }
+                )
+            stripped = entry.strip()
+            if "/" in stripped or (re.match(r"^\d", stripped) and "." in stripped):
+                try:
+                    ipaddress.ip_network(stripped, strict=False)
+                except ValueError:
+                    raise ValidationError(
+                        {
+                            "value": _("pas.api.PasApiPermissionMixin.validate_trusted_proxies.invalid_cidr").format(
+                                index=index, value=stripped
+                            )
+                        }
+                    )
+        return True
+
+    @classmethod
+    def get_client_ip(cls, request) -> str:
+        """
+        Vrátí IP adresu klienta z požadavku.
+
+        Prochází hlavičku ``X-Forwarded-For`` zprava doleva a přeskakuje IP adresy
+        důvěryhodných proxy serverů (z nastavení ``pas_api/trusted_proxies``).
+        První nedůvěryhodná IP adresa je vrácena jako adresa klienta.
+
+        Pokud hlavička chybí nebo jsou všechny položky důvěryhodné, vrátí ``REMOTE_ADDR``.
 
         :param request: HTTP požadavek.
 
         :return: IP adresa klienta jako řetězec.
         """
-        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-        if x_forwarded_for:
-            return x_forwarded_for.split(",")[0].strip()
-        return request.META.get("REMOTE_ADDR", "")
+        remote_addr = request.META.get("REMOTE_ADDR", "")
+        trusted_entries = cls.get_trusted_proxies()
+        trusted_networks = cls._resolve_trusted_networks(trusted_entries)
+
+        def _is_trusted(ip_str: str) -> bool:
+            try:
+                addr = ipaddress.ip_address(ip_str.strip())
+                return any(addr in net for net in trusted_networks)
+            except ValueError:
+                return False
+
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR", "")
+        chain = [ip.strip() for ip in x_forwarded_for.split(",") if ip.strip()]
+        for ip in reversed(chain):
+            if not _is_trusted(ip):
+                return ip
+        return remote_addr
 
     @staticmethod
     def get_user_identifier(user) -> str | None:
@@ -487,6 +627,7 @@ def _invalidate_api_cache(sender, instance=None, **kwargs):
         cache.delete(_CACHE_KEY_ACCESS_RULES)
         cache.delete(_CACHE_KEY_RATE_LIMITS)
         cache.delete(_CACHE_KEY_ACCESS_MODE)
+        cache.delete(_CACHE_KEY_TRUSTED_PROXIES)
 
 
 class IpBlacklistPermission(PasApiPermissionMixin, BasePermission):
@@ -638,6 +779,19 @@ class ApiAccessModePermission(PasApiPermissionMixin, BasePermission):
         self.message = _("pas.api.ApiAccessModePermission.whitelist_only_without_rules")
         logger.warning("pas.api.ApiAccessModePermission.whitelist_only_without_rules")
         return False
+
+
+def _strip_namespace(tag: str) -> str:
+    """
+    Vrátí název XML tagu bez namespace prefixu.
+
+    :param tag: XML tag včetně namespace (např. ``{http://example.com}element``).
+
+    :return: Název tagu bez namespace (např. ``element``).
+    """
+    if "}" in tag:
+        return tag.split("}", 1)[1]
+    return tag
 
 
 def _parse_rate(rate: str) -> tuple[int, int] | None:
@@ -913,7 +1067,7 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
     _AMCR_NS = "https://api.aiscr.cz/schema/amcr/2.2/"
     _XML_NS = "http://www.w3.org/XML/1998/namespace"
     _XSI_NS = "http://www.w3.org/2001/XMLSchema-instance"
-    _IMPORT_HISTORY_NOTE = _("pas.api.SamostatnyNalezXmlImportView.import_history_note")
+    _IMPORT_HISTORY_NOTE = _l("pas.api.SamostatnyNalezXmlImportView.import_history_note")
     _amcr_schema_cache: dict[str, etree.XMLSchema] = {}
 
     def dispatch(self, request, *args, **kwargs):
@@ -1125,12 +1279,13 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
                 status.HTTP_403_FORBIDDEN,
             )
 
+        validation_error: tuple[dict, int] | None = None
         with transaction.atomic():
             fedora_transaction = FedoraTransaction(transaction_user=request.user)
             serializer_data = dict(data)
             if nova_osoba is not None:
                 nova_osoba.active_transaction = fedora_transaction
-                nova_osoba.save()
+                nova_osoba.save()  # Osoba must be saved to get ident_cely before the serializer validation
                 serializer_data["nalezce"] = nova_osoba.ident_cely
 
             try:
@@ -1139,18 +1294,24 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
                     raise ImportValidationException.from_serializer_errors(serializer.errors, line=elem.sourceline)
                 self._validate_heslar_value_matches(serializer.validated_data, elem)
             except ImportValidationException as exc:
-                return self._fail(
-                    log_entry,
+                # Store the error and mark the transaction for rollback. _fail() must be called
+                # outside the atomic() block — set_rollback(True) prevents any further DB queries.
+                validation_error = (
                     {"validation_errors": [e.to_dict() for e in exc.import_errors]},
                     self._validation_status(exc.import_errors),
                 )
+                transaction.set_rollback(True)
 
-            instance = SamostatnyNalez(**serializer.validated_data)
-            if not instance.ident_cely:
-                instance.ident_cely = get_sn_ident(instance.projekt)
-            instance.active_transaction = fedora_transaction
-            instance.save()
-            self._create_import_history_records(instance, request.user)
+            if validation_error is None:
+                instance = SamostatnyNalez(**serializer.validated_data)
+                if not instance.ident_cely:
+                    instance.ident_cely = get_sn_ident(instance.projekt)
+                instance.active_transaction = fedora_transaction
+                instance.save()
+                self._create_import_history_records(instance, request.user)
+
+        if validation_error is not None:
+            return self._fail(log_entry, *validation_error)
 
         fedora_transaction.mark_transaction_as_closed()
 
@@ -1260,18 +1421,6 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
         :return: Kopie XML dokumentu určená pro schema validaci.
         """
 
-        def strip_namespace(tag: str) -> str:
-            """
-            Vrátí název XML tagu bez namespace prefixu pro účely schema-validace.
-
-            :param tag: XML tag včetně namespace.
-
-            :return: Název tagu bez namespace.
-            """
-            if "}" in tag:
-                return tag.split("}", 1)[1]
-            return tag
-
         parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
         validation_doc = etree.ElementTree(etree.fromstring(etree.tostring(doc.getroot()), parser=parser))
         for elem in validation_doc.findall(f".//{cls._ns('samostatny_nalez')}"):
@@ -1291,7 +1440,7 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
             )
             insert_index = len(elem)
             for index, child in enumerate(elem):
-                if strip_namespace(child.tag) in insert_before_tags:
+                if _strip_namespace(child.tag) in insert_before_tags:
                     insert_index = index
                     break
             elem.insert(insert_index, stav_elem)
@@ -1425,6 +1574,10 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
             class _LocalResolver(etree.Resolver):
                 """Resolver nahrazující vzdálené W3C URL lokálním souborem xml.xsd."""
 
+                def __init__(self):
+                    super().__init__()
+                    self.blocked_exception: ImportValidationException | None = None
+
                 def resolve(self, url, id, context):
                     """
                     Přeloží URL na lokální cestu pro xml.xsd.
@@ -1443,16 +1596,29 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
                     )
                     if url in allowed_urls:
                         return self.resolve_filename("xml_generator/definitions/xml.xsd", context)
-                    cls._validate_schema_url_allowed(url)
                     if url.startswith("https://api.aiscr.cz/schema/amcr/"):
                         return self.resolve_file(urllib.request.urlopen(url), context, base_url=url)
+                    # Disallowed URL — store the exception for re-raising after XMLSchema()
+                    # because lxml swallows Python exceptions raised inside resolver callbacks.
+                    self.blocked_exception = ImportValidationException(
+                        ImportValidationIssue(
+                            line=None,
+                            column=None,
+                            message=_("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.disallowed_schema_url")
+                            % {"url": url},
+                            error_type=ImportErrorType.INVALID_DATA,
+                        )
+                    )
                     return None
 
             parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
-            parser.resolvers.add(_LocalResolver())
+            resolver = _LocalResolver()
+            parser.resolvers.add(resolver)
             with urllib.request.urlopen(schema_url) as response:
                 schema_doc = etree.parse(response, parser)
             schema = etree.XMLSchema(schema_doc)
+            if resolver.blocked_exception is not None:
+                raise resolver.blocked_exception
             cls._amcr_schema_cache[schema_url] = schema
             return schema
 
@@ -1497,18 +1663,6 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
         :return: Seznam textových poznámek.
         """
 
-        def strip_namespace(tag: str) -> str:
-            """
-            Vrátí název XML tagu bez namespace prefixu.
-
-            :param tag: XML tag včetně namespace.
-
-            :return: Název tagu bez namespace.
-            """
-            if "}" in tag:
-                return tag.split("}", 1)[1]
-            return tag
-
         notes = []
         lang_attr = f"{{{cls._XML_NS}}}lang"
         for child in elem.iter():
@@ -1516,7 +1670,7 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
             if lang_value and lang_value.lower() != "cs":
                 notes.append(
                     _("pas.api.SamostatnyNalezXmlImportView.post.ignored_lang_attribute")
-                    % {"element": strip_namespace(child.tag), "lang": lang_value}
+                    % {"element": _strip_namespace(child.tag), "lang": lang_value}
                 )
         return notes
 

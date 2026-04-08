@@ -16,6 +16,7 @@ from pas.api import (
     ApiImportThrottle,
     IpBlacklistPermission,
     IpWhitelistPermission,
+    PasApiPermissionMixin,
     UserBlacklistPermission,
     UserWhitelistPermission,
 )
@@ -641,3 +642,188 @@ class PasApiPermissionTests(TestCase):
             IpBlacklistPermission.validate_rate_limits(
                 [{"scope": "group", "value": "203.0.113.10", "rate": "1/m", "active": True}]
             )
+
+
+class GetClientIpTests(TestCase):
+    """Testy metody ``PasApiPermissionMixin.get_client_ip``."""
+
+    def setUp(self):
+        """Před každým testem vyčistí PAS API nastavení a DNS resolve cache."""
+        super().setUp()
+        CustomAdminSettings.objects.filter(item_group="pas_api").delete()
+        cache.clear()
+        PasApiPermissionMixin._trusted_proxy_resolve_cache.clear()
+
+    def tearDown(self):
+        """Po každém testu vyčistí PAS API nastavení a DNS resolve cache."""
+        CustomAdminSettings.objects.filter(item_group="pas_api").delete()
+        cache.clear()
+        PasApiPermissionMixin._trusted_proxy_resolve_cache.clear()
+        super().tearDown()
+
+    @staticmethod
+    def _build_request(remote_addr: str = "10.0.1.1", x_forwarded_for: str | None = None):
+        """
+        Vytvoří minimální request objekt pro testy ``get_client_ip``.
+
+        :param remote_addr: Hodnota ``REMOTE_ADDR`` (přímý spojovatel — typicky proxy).
+        :param x_forwarded_for: Hodnota hlavičky ``X-Forwarded-For``; ``None`` znamená chybějící hlavičku.
+
+        :return: Objekt s atributem ``META``.
+        """
+        meta = {"REMOTE_ADDR": remote_addr}
+        if x_forwarded_for is not None:
+            meta["HTTP_X_FORWARDED_FOR"] = x_forwarded_for
+        return SimpleNamespace(META=meta)
+
+    def _set_trusted_proxies(self, entries: list) -> None:
+        """
+        Uloží seznam důvěryhodných proxy do ``CustomAdminSettings``.
+
+        :param entries: Seznam CIDR řetězců, IP adres nebo DNS názvů.
+        """
+        CustomAdminSettings.objects.update_or_create(
+            item_group="pas_api",
+            item_id="trusted_proxies",
+            defaults={"value": json.dumps(entries)},
+        )
+
+    def test_returns_remote_addr_when_no_xff_header(self):
+        """Bez hlavičky ``X-Forwarded-For`` se vrátí ``REMOTE_ADDR``."""
+        self._set_trusted_proxies(["10.0.1.0/24"])
+        request = self._build_request(remote_addr="10.0.1.1")
+
+        self.assertEqual(PasApiPermissionMixin.get_client_ip(request), "10.0.1.1")
+
+    def test_returns_remote_addr_when_no_trusted_proxies_configured(self):
+        """Bez nastavení ``trusted_proxies`` se použije výchozí CIDR a ``REMOTE_ADDR`` je vráceno přímo."""
+        request = self._build_request(remote_addr="10.0.1.1", x_forwarded_for="203.0.113.5")
+
+        # Výchozí důvěryhodný rozsah je 10.0.1.0/24; REMOTE_ADDR 10.0.1.1 je důvěryhodný,
+        # proto se vrátí první nedůvěryhodná IP z XFF řetězu.
+        self.assertEqual(PasApiPermissionMixin.get_client_ip(request), "203.0.113.5")
+
+    def test_returns_client_ip_from_xff_skipping_trusted_proxy(self):
+        """Poslední nedůvěryhodná IP v XFF řetězu je identifikována jako klientská IP."""
+        self._set_trusted_proxies(["10.0.1.0/24"])
+        # XFF: klient → proxy mimo naši síť → naše proxy (10.0.1.1)
+        request = self._build_request(remote_addr="10.0.1.1", x_forwarded_for="203.0.113.5, 10.0.1.2")
+
+        self.assertEqual(PasApiPermissionMixin.get_client_ip(request), "203.0.113.5")
+
+    def test_xff_spoofing_is_ignored(self):
+        """Injektovaná IP na začátku XFF řetězu nemůže předstírat identitu klienta."""
+        self._set_trusted_proxies(["10.0.1.0/24"])
+        # Útočník přidá falešnou IP na začátek; naše proxy přidá skutečnou klientskou IP za ní.
+        request = self._build_request(
+            remote_addr="10.0.1.1",
+            x_forwarded_for="1.2.3.4, 203.0.113.5, 10.0.1.2",
+        )
+
+        self.assertEqual(PasApiPermissionMixin.get_client_ip(request), "203.0.113.5")
+
+    def test_returns_remote_addr_when_all_xff_ips_are_trusted(self):
+        """Pokud jsou všechny IP v XFF řetězu důvěryhodné, vrátí se ``REMOTE_ADDR``."""
+        self._set_trusted_proxies(["10.0.1.0/24"])
+        request = self._build_request(remote_addr="10.0.1.1", x_forwarded_for="10.0.1.2, 10.0.1.3")
+
+        self.assertEqual(PasApiPermissionMixin.get_client_ip(request), "10.0.1.1")
+
+    def test_single_trusted_proxy_cidr_exact_match(self):
+        """Přesná IP adresa v CIDR rozsahu důvěryhodných proxy je přeskočena."""
+        self._set_trusted_proxies(["172.16.0.1/32"])
+        request = self._build_request(remote_addr="172.16.0.1", x_forwarded_for="203.0.113.99")
+
+        self.assertEqual(PasApiPermissionMixin.get_client_ip(request), "203.0.113.99")
+
+    def test_untrusted_remote_addr_without_xff_is_returned_directly(self):
+        """``REMOTE_ADDR`` mimo důvěryhodný rozsah bez XFF hlavičky je vráceno jako klientská IP."""
+        self._set_trusted_proxies(["10.0.1.0/24"])
+        request = self._build_request(remote_addr="203.0.113.5")
+
+        self.assertEqual(PasApiPermissionMixin.get_client_ip(request), "203.0.113.5")
+
+    def test_validate_trusted_proxies_accepts_valid_list(self):
+        """Validní seznam CIDR rozsahů projde validací."""
+        self.assertTrue(PasApiPermissionMixin.validate_trusted_proxies(["10.0.1.0/24", "192.168.0.1"]))
+
+    def test_validate_trusted_proxies_accepts_hostname(self):
+        """DNS název (bez lomítka a bez čistě číselného tvaru) je přijat bez DNS lookup."""
+        self.assertTrue(PasApiPermissionMixin.validate_trusted_proxies(["proxy"]))
+
+    def test_validate_trusted_proxies_raises_for_non_list(self):
+        """``trusted_proxies`` musí být seznam."""
+        with self.assertRaisesRegex(
+            ValidationError,
+            "pas.api.PasApiPermissionMixin.validate_trusted_proxies.not_a_list",
+        ):
+            PasApiPermissionMixin.validate_trusted_proxies("10.0.1.0/24")
+
+    def test_validate_trusted_proxies_raises_for_empty_string_entry(self):
+        """Prázdný řetězec v seznamu ``trusted_proxies`` je odmítnut."""
+        with self.assertRaisesRegex(
+            ValidationError,
+            "pas.api.PasApiPermissionMixin.validate_trusted_proxies.invalid_entry",
+        ):
+            PasApiPermissionMixin.validate_trusted_proxies([""])
+
+    def test_validate_trusted_proxies_raises_for_invalid_cidr(self):
+        """Neplatný CIDR řetězec v ``trusted_proxies`` je odmítnut."""
+        with self.assertRaisesRegex(
+            ValidationError,
+            "pas.api.PasApiPermissionMixin.validate_trusted_proxies.invalid_cidr",
+        ):
+            PasApiPermissionMixin.validate_trusted_proxies(["999.999.999.999/24"])
+
+    def test_custom_admin_setting_full_clean_allows_valid_trusted_proxies(self):
+        """Validní ``trusted_proxies`` projdou ``full_clean()`` a lze je uložit."""
+        instance = CustomAdminSettings(
+            item_group="pas_api",
+            item_id="trusted_proxies",
+            value=json.dumps(["10.0.1.0/24", "proxy"]),
+        )
+
+        instance.full_clean()
+        instance.save()
+
+        self.assertTrue(
+            CustomAdminSettings.objects.filter(
+                item_group="pas_api",
+                item_id="trusted_proxies",
+            ).exists()
+        )
+
+    def test_custom_admin_setting_full_clean_raises_for_invalid_trusted_proxies(self):
+        """``full_clean()`` odmítne nevalidní ``trusted_proxies``."""
+        instance = CustomAdminSettings(
+            item_group="pas_api",
+            item_id="trusted_proxies",
+            value=json.dumps(["999.999.999.999/24"]),
+        )
+
+        with self.assertRaisesRegex(
+            ValidationError,
+            "pas.api.PasApiPermissionMixin.validate_trusted_proxies.invalid_cidr",
+        ):
+            instance.full_clean()
+
+    def test_get_trusted_proxies_returns_default_when_not_configured(self):
+        """Bez nastavení ``trusted_proxies`` se vrátí výchozí hodnota ``["10.0.1.0/24"]``."""
+        self.assertEqual(PasApiPermissionMixin.get_trusted_proxies(), ["10.0.1.0/24"])
+
+    def test_get_trusted_proxies_returns_configured_value(self):
+        """Nastavená hodnota ``trusted_proxies`` je vrácena z cache nebo databáze."""
+        self._set_trusted_proxies(["192.168.0.0/16"])
+
+        self.assertEqual(PasApiPermissionMixin.get_trusted_proxies(), ["192.168.0.0/16"])
+
+    def test_resolve_trusted_networks_dns_failure_is_logged_and_skipped(self):
+        """Neúspěšný DNS lookup je zalogován a daná položka je přeskočena."""
+        with patch("pas.api.socket.getaddrinfo", side_effect=OSError("DNS failure")):
+            with self.assertLogs("pas.api", level="WARNING") as log_ctx:
+                networks = PasApiPermissionMixin._resolve_trusted_networks(["nonexistent.internal"])
+
+        self.assertEqual(networks, [])
+        self.assertTrue(
+            any("pas.api.PasApiPermissionMixin._resolve_trusted_networks.dns_failed" in line for line in log_ctx.output)
+        )

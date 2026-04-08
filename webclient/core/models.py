@@ -1438,6 +1438,7 @@ class ApiRequestLog(models.Model):
     ident_cely = models.CharField(
         max_length=64,
         blank=True,
+        null=True,
         verbose_name=_("core.model.apiRequestLog.identCely"),
     )
     samostatny_nalez = models.ForeignKey(
