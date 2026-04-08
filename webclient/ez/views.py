@@ -12,6 +12,7 @@ from core.constants import (
     POTVRZENI_EXT_ZD,
     ROLE_ADMIN_ID,
     ROLE_ARCHIVAR_ID,
+    VRACENI_EXT_ZD,
     ZAPSANI_EXT_ZD,
 )
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -72,9 +73,9 @@ class ExterniZdrojIndexView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """
-        Metoda pro získaní kontextu podlehu.
+        Vrátí kontext šablony s názvem panelu nástrojů pro domovskou stránku externích zdrojů.
 
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+        :param kwargs: Dodatečné klíčové argumenty předávané nadřízené metodě.
 
             :return: Vrací proměnná ``context``.
         """
@@ -99,7 +100,7 @@ class ExterniZdrojListView(SearchListView):
     vypis_app = "ez"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Inicializuje přeložené popisky stránek a záhlaví pro seznam externích zdrojů."""
         super().init_translations()
         self.page_title = _("ez.templates.ExterniZdrojListView.pageTitle.text")
         self.search_sum = _("ez.templates.ExterniZdrojListView.search_sum.text")
@@ -114,9 +115,9 @@ class ExterniZdrojListView(SearchListView):
     @staticmethod
     def rename_field_for_ordering(field: str):
         """
-        Provádí operaci rename field for ordering.
+        Přeloží název pole z URL parametru na skutečný název databázového pole pro řazení.
 
-        :param field: Parametr ``field`` předává se do volání ``get()``, pracuje se s atributy ``replace``, vstupuje do návratové hodnoty.
+        :param field: Název pole z URL parametru řazení (může obsahovat prefix ``-`` pro sestupné řazení).
 
             :return: Vrací výsledek volání ``get()``.
         """
@@ -129,7 +130,8 @@ class ExterniZdrojListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací výsledek volání ``check_filter_permission()``.
         """
@@ -158,10 +160,10 @@ class ExterniZdrojListView(SearchListView):
 
     def add_accessibility_lookup(self, permission, qs):
         """
-        Provádí operaci add accessibility lookup.
+        Aplikuje filtrování přístupu na queryset externích zdrojů dle oprávnění uživatele.
 
-        :param permission: Parametr ``permission`` slouží jako vstup pro logiku funkce ``add_accessibility_lookup``.
-        :param qs: Parametr ``qs`` vstupuje do návratové hodnoty.
+        :param permission: Objekt oprávnění určující úroveň přístupu uživatele.
+        :param qs: Vstupní queryset externích zdrojů, který se filtruje.
 
             :return: Vrací proměnná ``qs``.
         """
@@ -177,9 +179,9 @@ class ExterniZdrojDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         """
-        Vrací context data.
+        Vrátí kontext šablony s daty pro detail externího zdroje včetně připojených akcí a lokalit.
 
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+        :param kwargs: Dodatečné klíčové argumenty předávané nadřízené metodě.
 
             :return: Vrací proměnná ``context``.
         """
@@ -216,7 +218,8 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
     form_class = ExterniZdrojForm
 
     def get_form_kwargs(self):
-        """Vrací form kwargs.
+        """
+        Vrací form kwargs.
 
         :return: Vrací proměnná ``kwargs``.
         """
@@ -243,9 +246,9 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         """
-        Provádí operaci form valid.
+        Uloží nový externí zdroj do databáze i Fedory a přesměruje na jeho detail.
 
-        :param form: Parametr ``form`` se předává do volání ``save_autor_editor()``, ``form_invalid()``, pracuje se s atributy ``save``, vstupuje do návratové hodnoty.
+        :param form: Validovaný formulář pro vytvoření externího zdroje.
 
             :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``HttpResponseRedirect()``, výsledek volání ``form_invalid()``.
         """
@@ -277,9 +280,9 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
 
     def form_invalid(self, form):
         """
-        Provádí operaci form invalid.
+        Zobrazí chybovou zprávu a znovu vykreslí formulář při neúspěšném vytvoření externího zdroje.
 
-        :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
+        :param form: Nevalidní formulář s chybami validace.
 
             :return: Vrací výsledek volání ``form_invalid()``.
         """
@@ -310,7 +313,8 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
     slug_field = "ident_cely"
 
     def get_form_kwargs(self):
-        """Vrací form kwargs.
+        """
+        Vrací form kwargs.
 
         :return: Vrací proměnná ``kwargs``.
         """
@@ -338,12 +342,19 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
     @method_decorator(handle_fedora_error)
     def form_valid(self, form):
         """
-        Provádí operaci form valid.
+        Uloží změny externího zdroje do databáze a Fedory a přesměruje na jeho detail.
 
-        :param form: Parametr ``form`` se předává do volání ``save_autor_editor()``, pracuje se s atributy ``save``.
+        :param form: Validovaný formulář pro editaci externího zdroje.
 
             :return: Vrací výsledek volání ``HttpResponseRedirect()``.
         """
+        conflicting_fields = form.get_conflicting_fields()
+        if conflicting_fields:
+            conflicting_labels = [str(form.fields[f].label) for f in conflicting_fields if f in form.fields]
+            context = self.get_context_data(form=form)
+            context["concurrent_changes"] = conflicting_labels
+            context["fresh_form_url"] = reverse("ez:edit", kwargs={"slug": self.object.ident_cely})
+            return self.render_to_response(context)
         self.object: ExterniZdroj = form.save(commit=False)
         self.object.active_transaction = self.object.create_transaction(self.request.user)
         self.object.active_transaction.redirect_on_error = True
@@ -357,9 +368,9 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         """
-        Provádí operaci form invalid.
+        Zobrazí chybovou zprávu a znovu vykreslí formulář při neúspěšné editaci externího zdroje.
 
-        :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
+        :param form: Nevalidní formulář s chybami validace.
 
             :return: Vrací výsledek volání ``form_invalid()``.
         """
@@ -406,7 +417,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     active_transaction = None
 
     def init_translation(self):
-        """Provádí operaci init translation."""
+        """Nastaví výchozí hodnoty popisků titulku a tlačítka pro modální dialog transakce."""
         self.title = "title"
         self.button = "button"
 
@@ -428,9 +439,9 @@ class TransakceView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """
-        Vrací context data.
+        Vrátí kontext šablony s daty pro modální dialog transakce externího zdroje.
 
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+        :param kwargs: Dodatečné klíčové argumenty předávané nadřízené metodě.
 
             :return: Vrací proměnná ``context``.
         """
@@ -448,11 +459,11 @@ class TransakceView(LoginRequiredMixin, TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         """
-        Provádí operaci dispatch.
+        Ověří, zda je stav externího zdroje povolený pro danou transakci, a zamítne přístup při neplatném stavu.
 
-        :param request: Parametr ``request`` předává se do volání ``add_message()``, ``check_stav_changed()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-        :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param request: HTTP požadavek obsahující informace o uživateli.
+        :param args: Dodatečné poziční argumenty předávané nadřízené metodě.
+        :param kwargs: Dodatečné klíčové argumenty předávané nadřízené metodě.
 
             :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``dispatch()``.
         """
@@ -473,11 +484,11 @@ class TransakceView(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         """
-        Vrací výsledek operace.
+        Zobrazí modální dialog pro transakci nad externím zdrojem.
 
-        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+        :param request: HTTP požadavek.
+        :param args: Dodatečné poziční argumenty.
+        :param kwargs: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
 
             :return: Vrací výsledek volání ``render_to_response()``.
         """
@@ -487,11 +498,11 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """
-        Obsluhuje HTTP metodu POST.
+        Provede transakci změny stavu externího zdroje a přesměruje na jeho detail.
 
-        :param request: Parametr ``request`` předává se do volání ``create_transaction()``, pracuje se s atributy ``user``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+        :param request: HTTP požadavek obsahující informace o přihlášeném uživateli.
+        :param args: Dodatečné poziční argumenty.
+        :param kwargs: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
 
             :return: Vrací výsledek volání ``JsonResponse()``.
         """
@@ -513,7 +524,7 @@ class ExterniZdrojOdeslatView(TransakceView):
     action = "set_odeslany"
 
     def init_translation(self):
-        """Provádí operaci init translation."""
+        """Nastaví přeložené popisky titulku, tlačítka a zprávy o úspěchu pro odeslání externího zdroje."""
         self.title = _("ez.templates.ExterniZdrojOdeslatView.title.text")
         self.button = _("ez.templates.ExterniZdrojOdeslatView.submitButton.text")
         self.success_message = EZ_USPESNE_ODESLAN
@@ -527,18 +538,18 @@ class ExterniZdrojPotvrditView(TransakceView):
     action = "set_potvrzeny"
 
     def init_translation(self):
-        """Provádí operaci init translation."""
+        """Nastaví přeložené popisky titulku, tlačítka a zprávy o úspěchu pro potvrzení externího zdroje."""
         self.title = _("ez.templates.ExterniZdrojPotvrditView.title.text")
         self.button = _("ez.templates.ExterniZdrojPotvrditView.submitButton.text")
         self.success_message = EZ_USPESNE_POTVRZEN
 
     def post(self, request, *args, **kwargs):
         """
-        Obsluhuje HTTP metodu POST.
+        Potvrdí externí zdroj a případně aktualizuje IGSN lokalit; při chybě provede rollback transakce.
 
-        :param request: Parametr ``request`` předává se do volání ``create_transaction()``, pracuje se s atributy ``user``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+        :param request: HTTP požadavek obsahující informace o přihlášeném uživateli.
+        :param args: Dodatečné poziční argumenty.
+        :param kwargs: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
 
             :return: Vrací výsledek volání ``JsonResponse()``.
         """
@@ -576,7 +587,7 @@ class ExterniZdrojSmazatView(TransakceView):
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
 
     def init_translation(self):
-        """Provádí operaci init translation."""
+        """Nastaví přeložené popisky titulku, tlačítka a zprávy o úspěchu pro smazání externího zdroje."""
         self.title = _("ez.templates.ExterniZdrojSmazatView.title.text")
         self.button = _("ez.templates.ExterniZdrojSmazatView.submitButton.text")
         self.success_message = ZAZNAM_USPESNE_SMAZAN
@@ -584,11 +595,11 @@ class ExterniZdrojSmazatView(TransakceView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """
-        Obsluhuje HTTP metodu POST.
+        Smaže externí zdroj z databáze i Fedory; při existenci navázaných záznamů zamítne smazání.
 
-        :param request: Parametr ``request`` předává se do volání ``create_transaction()``, ``add_message()``, pracuje se s atributy ``user``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+        :param request: HTTP požadavek obsahující informace o přihlášeném uživateli.
+        :param args: Dodatečné poziční argumenty.
+        :param kwargs: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
 
             :return: Vrací výsledek volání ``JsonResponse()``.
         """
@@ -621,18 +632,18 @@ class ExterniZdrojVratitView(TransakceView):
     action = "set_vraceny"
 
     def init_translation(self):
-        """Provádí operaci init translation."""
+        """Nastaví přeložené popisky titulku, tlačítka a zprávy o úspěchu pro vrácení externího zdroje."""
         self.title = _("ez.templates.ExterniZdrojVratitView.title.text")
         self.button = _("ez.templates.ExterniZdrojVratitView.submitButton.text")
         self.success_message = EZ_USPESNE_VRACENA
 
     def get(self, request, *args, **kwargs):
         """
-        Vrací výsledek operace.
+        Zobrazí modální dialog pro vrácení externího zdroje s formulářem pro zadání důvodu.
 
-        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+        :param request: HTTP požadavek.
+        :param args: Dodatečné poziční argumenty.
+        :param kwargs: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
 
             :return: Vrací výsledek volání ``render_to_response()``.
         """
@@ -644,11 +655,11 @@ class ExterniZdrojVratitView(TransakceView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """
-        Obsluhuje HTTP metodu POST.
+        Vrátí externí zdroj do předchozího stavu s důvodem; při neplatném formuláři znovu zobrazí dialog.
 
-        :param request: Parametr ``request`` předává se do volání ``create_transaction()``, ``VratitForm()``, pracuje se s atributy ``user``, ``POST``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+        :param request: HTTP požadavek obsahující POST data s důvodem vrácení.
+        :param args: Dodatečné poziční argumenty.
+        :param kwargs: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
 
             :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
         """
@@ -674,11 +685,12 @@ class ExterniOdkazOdpojitView(TransakceView):
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """
-               Provádí operaci dispatch.
+        Ověří, zda odpojovaný externí odkaz patří k danému externímu zdroji, a zamítne přístup při nesouladu.
 
-               :param request: Parametr ``request`` předává se do volání ``add_message()``, ``dispatch()``, vstupuje do návratové hodnoty.
-               :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-               :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param request: HTTP požadavek.
+        :param args: Dodatečné poziční argumenty předávané nadřízené metodě.
+        :param kwargs: Dodatečné klíčové argumenty předávané nadřízené metodě.
+
         :return: Výstup funkce odpovídající implementované logice.
         """
         eo = get_object_or_404(
@@ -692,7 +704,7 @@ class ExterniOdkazOdpojitView(TransakceView):
         return super().dispatch(request, *args, **kwargs)
 
     def init_translation(self):
-        """Provádí operaci init translation."""
+        """Nastaví přeložené popisky titulku, tlačítka a zprávy o úspěchu pro odpojení externího odkazu."""
         self.title = _("ez.templates.ExterniOdkazOdpojitView.title.text")
         self.button = _("ez.templates.ExterniOdkazOdpojitView.submitButton.text")
         self.success_message = EO_USPESNE_ODPOJEN
@@ -715,11 +727,11 @@ class ExterniOdkazOdpojitView(TransakceView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """
-        Obsluhuje HTTP metodu POST.
+        Odpojí externí odkaz od externího zdroje a případně aktualizuje IGSN archivované lokality.
 
-        :param request: Parametr ``request`` předává se do volání ``create_transaction()``, pracuje se s atributy ``user``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+        :param request: HTTP požadavek obsahující informace o přihlášeném uživateli.
+        :param args: Dodatečné poziční argumenty.
+        :param kwargs: Dodatečné klíčové argumenty.
 
             :return: Vrací výsledek volání ``JsonResponse()``.
         """
@@ -759,7 +771,7 @@ class ExterniOdkazPripojitView(TransakceView):
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
 
     def init_translation(self):
-        """Provádí operaci init translation."""
+        """Nastaví přeložené popisky titulku a tlačítka pro připojení externího odkazu k externímu zdroji."""
         self.title = _("ez.templates.ExterniOdkazPripojitView.title.text")
         self.button = _("ez.templates.ExterniOdkazPripojitView.submitButton.text")
 
@@ -783,11 +795,11 @@ class ExterniOdkazPripojitView(TransakceView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """
-        Obsluhuje HTTP metodu POST.
+        Připojí archeologický záznam k externímu zdroji vytvořením nového externího odkazu.
 
-        :param request: Parametr ``request`` předává se do volání ``PripojitArchZaznamForm()``, ``create_transaction()``, pracuje se s atributy ``POST``, ``user``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+        :param request: HTTP požadavek obsahující POST data s identifikátorem archeologického záznamu.
+        :param args: Dodatečné poziční argumenty.
+        :param kwargs: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
 
             :return: Vrací výsledek volání ``JsonResponse()``.
         """
@@ -828,11 +840,12 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """
-               Provádí operaci dispatch.
+        Ověří, zda editovaný externí odkaz patří k zadanému záznamu dle typu vazby, a zamítne přístup při nesouladu.
 
-               :param request: Parametr ``request`` předává se do volání ``add_message()``, ``dispatch()``, vstupuje do návratové hodnoty.
-               :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-               :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param request: HTTP požadavek.
+        :param args: Dodatečné poziční argumenty předávané nadřízené metodě.
+        :param kwargs: Dodatečné klíčové argumenty předávané nadřízené metodě.
+
         :return: Výstup funkce odpovídající implementované logice.
         """
         eo = self.get_object()
@@ -868,7 +881,8 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def get_success_url(self):
-        """Vrací success url.
+        """
+        Vrací success url.
 
         :return: Vrací proměnná ``response``.
         """
@@ -882,9 +896,9 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         """
-        Vrací object. v aplikaci.
+        Vrátí instanci externího odkazu a nastaví jí aktivní Fedora transakci, pokud existuje.
 
-        :param queryset: Parametr ``queryset`` slouží jako vstup pro logiku funkce ``get_object``.
+        :param queryset: Volitelný queryset pro vyhledání objektu; pokud není zadán, použije se výchozí.
 
             :return: Vrací proměnná ``object``.
         """
@@ -913,9 +927,9 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         """
-        Provádí operaci form valid.
+        Uloží změny externího odkazu a zobrazí zprávu o úspěšném uložení.
 
-        :param form: Parametr ``form`` se předává do volání ``form_valid()``, vstupuje do návratové hodnoty.
+        :param form: Validovaný formulář pro editaci externího odkazu.
 
             :return: Vrací výsledek volání ``form_valid()``.
         """
@@ -924,9 +938,9 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         """
-        Provádí operaci form invalid.
+        Zobrazí chybovou zprávu a znovu vykreslí formulář při neúspěšné editaci externího odkazu.
 
-        :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
+        :param form: Nevalidní formulář s chybami validace.
 
             :return: Vrací výsledek volání ``form_invalid()``.
         """
@@ -942,17 +956,18 @@ class ExterniOdkazOdpojitAZView(TransakceView):
     allowed_states = [AZ_STAV_ODESLANY, AZ_STAV_ZAPSANY, AZ_STAV_ARCHIVOVANY]
 
     def init_translation(self):
-        """Provádí operaci init translation."""
+        """Nastaví zprávu o úspěchu pro odpojení externího odkazu z archeologického záznamu."""
         super().init_translation()
         self.success_message = EO_USPESNE_ODPOJEN
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """
-               Provádí operaci dispatch.
+        Ověří, zda odpojovaný externí odkaz patří k danému archeologickému záznamu, a zamítne přístup při nesouladu.
 
-               :param request: Parametr ``request`` předává se do volání ``add_message()``, ``dispatch()``, vstupuje do návratové hodnoty.
-               :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-               :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param request: HTTP požadavek.
+        :param args: Dodatečné poziční argumenty předávané nadřízené metodě.
+        :param kwargs: Dodatečné klíčové argumenty předávané nadřízené metodě.
+
         :return: Výstup funkce odpovídající implementované logice.
         """
         eo = get_object_or_404(
@@ -966,7 +981,8 @@ class ExterniOdkazOdpojitAZView(TransakceView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_zaznam(self):
-        """Vrací zaznam. v aplikaci.
+        """
+        Vrací zaznam. v aplikaci.
 
         :return: Vrací výsledek volání ``get_object_or_404()``.
         """
@@ -1002,11 +1018,11 @@ class ExterniOdkazOdpojitAZView(TransakceView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """
-        Obsluhuje HTTP metodu POST.
+        Odpojí externí odkaz od archeologického záznamu a případně aktualizuje IGSN archivované lokality.
 
-        :param request: Parametr ``request`` předává se do volání ``create_transaction()``, pracuje se s atributy ``user``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+        :param request: HTTP požadavek obsahující informace o přihlášeném uživateli.
+        :param args: Dodatečné poziční argumenty.
+        :param kwargs: Dodatečné klíčové argumenty.
 
             :return: Vrací výsledek volání ``JsonResponse()``.
         """
@@ -1053,7 +1069,8 @@ class ExterniZdrojAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetV
         return f"{result.ident_cely} ({result.autori_snapshot} {result.rok_vydani_vzniku}: {result.nazev})"
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, výsledek volání ``check_filter_permission()``.
         """
@@ -1072,10 +1089,10 @@ class ExterniZdrojAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetV
 
     def add_accessibility_lookup(self, permission, qs):
         """
-        Provádí operaci add accessibility lookup.
+        Aplikuje filtrování přístupu na queryset externích zdrojů pro autocomplete dle oprávnění uživatele.
 
-        :param permission: Parametr ``permission`` slouží jako vstup pro logiku funkce ``add_accessibility_lookup``.
-        :param qs: Parametr ``qs`` vstupuje do návratové hodnoty.
+        :param permission: Objekt oprávnění určující úroveň přístupu uživatele.
+        :param qs: Vstupní queryset externích zdrojů, který se filtruje.
 
             :return: Vrací proměnná ``qs``.
         """
@@ -1107,7 +1124,8 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
 
     def get_zaznam(self):
-        """Vrací zaznam. v aplikaci.
+        """
+        Vrací zaznam. v aplikaci.
 
         :return: Vrací proměnná ``zaznam``.
         """
@@ -1145,11 +1163,11 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """
-        Obsluhuje HTTP metodu POST.
+        Připojí externí odkaz k archeologickému záznamu a uloží propojení do databáze a Fedory.
 
-        :param request: Parametr ``request`` předává se do volání ``create_transaction()``, ``PripojitExterniOdkazForm()``, pracuje se s atributy ``user``, ``POST``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+        :param request: HTTP požadavek obsahující POST data s identifikátorem externího zdroje a paginací.
+        :param args: Dodatečné poziční argumenty.
+        :param kwargs: Dodatečné klíčové argumenty.
 
             :return: Vrací výsledek volání ``JsonResponse()``.
         """
@@ -1188,6 +1206,7 @@ def get_history_dates(historie_vazby, request_user):
         "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_EXT_ZD, anonymized),
         "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_EXT_ZD, anonymized),
         "datum_potvrzeni": historie_vazby.get_last_transaction_date(POTVRZENI_EXT_ZD, anonymized),
+        "datum_vraceni": historie_vazby.get_last_transaction_if_type(VRACENI_EXT_ZD, anonymized),
     }
     return historie
 

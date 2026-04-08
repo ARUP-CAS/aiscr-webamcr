@@ -2,7 +2,7 @@ import logging
 
 from arch_z import validators
 from core.constants import PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_ZAHAJENY_V_TERENU
-from core.forms import BaseFilterForm
+from core.forms import BaseFilterForm, OptimisticLockingMixin
 from core.validators import validate_date_min_1600
 from core.widgets import AutocompleteListSelect2, AutocompleteModelSelect2Multiple
 from crispy_forms.bootstrap import AppendedText
@@ -157,7 +157,8 @@ class CreateProjektForm(forms.ModelForm):
                 self.fields[key].help_text = ""
 
     def clean(self):
-        """Provádí operaci clean.
+        """
+        Provádí operaci clean.
 
         :return: Vrací proměnná ``cleaned_data``.
         :raises forms.ValidationError: Vyvolá se při splnění podmínky ``not coordinate_x1 or not coordinate_x2``.
@@ -172,8 +173,10 @@ class CreateProjektForm(forms.ModelForm):
         return cleaned_data
 
 
-class EditProjektForm(forms.ModelForm):
+class EditProjektForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro editaci projektu."""
+
+    optimistic_lock_instance_fields = ["geom"]
 
     coordinate_x1 = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_x2 = forms.FloatField(required=False, widget=HiddenInput())
@@ -374,6 +377,7 @@ class EditProjektForm(forms.ModelForm):
                         Div("kulturni_pamatka_popis", css_class="col-sm-6"),
                         Div("coordinate_x1", css_class="hidden"),
                         Div("coordinate_x2", css_class="hidden"),
+                        Div("optimistic_lock_data", css_class="d-none"),
                         Div(
                             HTML('<span class="app-divider-label">'),
                             HTML(_("projekt.forms.editProjekt.terenniCast.divider")),
@@ -396,7 +400,8 @@ class EditProjektForm(forms.ModelForm):
         self.helper.form_tag = False
 
     def clean(self):
-        """Kontrola datumu zahájení a ukončení pri validaci formuláře.
+        """
+        Kontrola datumu zahájení a ukončení pri validaci formuláře.
 
         :return: Vrací atribut objektu.
         :raises forms.ValidationError: Vyvolá se s textem "Datum zahájení nemůže být po datu ukončení".
@@ -465,7 +470,8 @@ class NavrhnoutZruseniProjektForm(forms.Form):
         )
 
     def clean(self):
-        """Metoda na kontrolu obsahu důvodu pro zrušení.
+        """
+        Metoda na kontrolu obsahu důvodu pro zrušení.
 
         :return: Vrací atribut objektu.
         :raises forms.ValidationError: Vyvolá se při splnění podmínky ``not cleaned_data.get('projekt_id')``; nebo při splnění podmínky ``not cleaned_data.get('reason_text')``.
@@ -632,7 +638,8 @@ class ZahajitVTerenuForm(forms.ModelForm):
         )
 
     def clean(self):
-        """Provádí operaci clean.
+        """
+        Provádí operaci clean.
 
         :return: Vrací proměnná ``cleaned_data``.
         """
@@ -708,7 +715,8 @@ class UkoncitVTerenuForm(forms.ModelForm):
         )
 
     def clean(self):
-        """Metoda pro kontrolu datumu ukončení.
+        """
+        Metoda pro kontrolu datumu ukončení.
 
         :return: Vrací atribut objektu.
         :raises forms.ValidationError: Vyvolá se při splnění podmínky ``self.instance.datum_zahajeni > cleaned_data.get('datum_ukonceni')``.

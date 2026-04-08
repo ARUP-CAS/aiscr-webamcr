@@ -23,7 +23,7 @@ Třídy
 
    .. py:method:: navazany_objekt()
 
-      Provádí operaci navazany objekt.
+      Vrátí navázaný objekt (část dokumentu nebo dokumentační jednotku) podle typu vazby.
 
       :return: Vrací atribut objektu.
 
@@ -43,13 +43,13 @@ Třídy
 
    .. py:method:: ident_cely_safe()
 
-      Provádí operaci ident cely safe.
+      Vrátí identifikátor komponenty s pomlčkami nahrazenými podtržítky (vhodný pro použití v HTML atributech).
 
       :return: Vrací výsledek volání ``replace()``.
 
    .. py:method:: pocet_nalezu()
 
-      Provádí operaci pocet nalezu.
+      Vrátí celkový počet nálezů (objektů a předmětů) přiřazených ke komponentě.
 
       :return: Vrací hodnotu podle větve zpracování.
 

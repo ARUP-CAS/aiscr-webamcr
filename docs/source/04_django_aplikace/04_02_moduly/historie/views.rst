@@ -121,15 +121,15 @@ Třídy
 
       Vrací header config.
 
-      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+      :param context: Kontext pohledu obsahující ``ident_cely`` záznamu.
 
       :return: Vrací slovník.
 
    .. py:method:: add_extra_context()
 
-      Provádí operaci add extra context.
+      Doplní kontext o typ záznamu (dokument nebo knihovna_3d) podle identifikátoru.
 
-      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``add_extra_context``.
+      :param context: Kontext pohledu, do kterého jsou přidány klíče ``typ`` a ``entity``.
 
 
 .. py:class:: SamostatnyNalezHistorieListView
@@ -157,7 +157,7 @@ Třídy
 
       Vrací header config.
 
-      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+      :param context: Kontext pohledu (nevyužíván, odkaz je vždy na seznam spolupráce).
 
       :return: Vrací slovník.
 
@@ -170,17 +170,17 @@ Třídy
 
    .. py:method:: prepare_queryset()
 
-      Provádí operaci prepare queryset.
+      Seřadí queryset záznamů Historie souboru sestupně podle data změny.
 
-      :param qs: Parametr ``qs`` pracuje se s atributy ``order_by``, vstupuje do návratové hodnoty.
+      :param qs: Queryset záznamů Historie, který má být seřazen.
 
       :return: Vrací výsledek volání ``order_by()``.
 
    .. py:method:: add_extra_context()
 
-      Provádí operaci add extra context.
+      Doplní kontext o informace o projektu a předchozím objektu.
 
-      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``add_extra_context``.
+      :param context: Kontext pohledu, do kterého jsou přidány klíče ``projekt``, ``back_ident`` a ``back_model``.
 
    .. py:method:: get_header_config()
 
@@ -244,11 +244,11 @@ Třídy
 
    .. py:method:: get_header_config()
 
-      Vrací header config.
+      Vrací konfiguraci záhlaví pro historii Pianu.
 
-      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+      :param context: Kontext pohledu obsahující identifikátory akce a dokumentační jednotky.
 
-      :return: Vrací slovník.
+      :return: Vrací slovník s URL, ikonou a textem záhlaví.
 
 
 .. py:class:: PianLokalitaHistorieListView
@@ -259,11 +259,11 @@ Třídy
 
    .. py:method:: get_header_config()
 
-      Vrací header config.
+      Vrací konfiguraci záhlaví pro historii Pianu lokality.
 
-      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+      :param context: Kontext pohledu obsahující identifikátory lokality a dokumentační jednotky.
 
-      :return: Vrací slovník.
+      :return: Vrací slovník s URL, ikonou a textem záhlaví.
 
 
 .. py:class:: AdbHistorieListView
@@ -274,9 +274,9 @@ Třídy
 
    .. py:method:: get_header_config()
 
-      Vrací header config.
+      Vrací konfiguraci záhlaví pro historii ADB.
 
-      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+      :param context: Kontext pohledu obsahující identifikátory akce a dokumentační jednotky.
 
-      :return: Vrací slovník.
+      :return: Vrací slovník s URL, ikonou a textem záhlaví.
 

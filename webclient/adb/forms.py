@@ -2,6 +2,7 @@ import logging
 
 from adb.models import Adb, VyskovyBod
 from core.coordTransform import convertToJTSK
+from core.forms import OptimisticLockingMixin
 from core.widgets import AutocompleteModelSelect2
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
@@ -19,11 +20,10 @@ class AdbReadOnlyTextInput(forms.TextInput):
 
     def format_value(self, value):
         """
-        Provádí operaci format value.
+        Vrátí textový popis osoby (vypis_cely) pro zobrazení v read-only poli.
 
-        :param value: Parametr ``value`` předává se do volání ``filter()``, ovlivňuje větvení podmínek.
-
-            :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+        :param value: Primární klíč záznamu Osoba.
+        :return: Textový popis osoby nebo prázdný řetězec, pokud záznam neexistuje.
         """
         if value:
             osoba_query = Osoba.objects.filter(pk=value)
@@ -32,7 +32,7 @@ class AdbReadOnlyTextInput(forms.TextInput):
         return ""
 
 
-class CreateADBForm(forms.ModelForm):
+class CreateADBForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení ADB."""
 
     class Meta:
@@ -183,6 +183,8 @@ class CreateADBForm(forms.ModelForm):
             )
         self.helper.form_tag = False
         self.helper.include_media = False
+        if self.optimistic_lock_field_name in self.fields:
+            self.helper.layout[0].append(Div(self.optimistic_lock_field_name, css_class="d-none"))
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if self.fields[key].disabled is True:
@@ -220,8 +222,10 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
     :return: django model formulář VB.
     """
 
-    class CreateVyskovyBodForm(forms.ModelForm):
+    class CreateVyskovyBodForm(OptimisticLockingMixin, forms.ModelForm):
         """Hlavní formulář pro vytvoření, editaci a zobrazení VB."""
+
+        optimistic_lock_instance_fields = ["northing", "easting", "niveleta"]
 
         northing = forms.FloatField(
             label=_("adb.forms.createVyskovyBodForm.label.northing"),

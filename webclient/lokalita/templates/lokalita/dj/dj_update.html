@@ -5,6 +5,7 @@
 {% load template_filters %}
 
 {% block dj_form %}
+  {% with modal_id="ccm-dj-"|add:j.ident_cely %}{% include "core/concurrent_changes_modal.html" with concurrent_changes=j.concurrent_changes fresh_form_url=j.fresh_form_url modal_id=modal_id %}{% endwith %}
   <div class="card app-card-form" id="detail_dj_form_{{ j.ident_cely }}">
   <div class="card-header">
     <div class="app-fx app-left">

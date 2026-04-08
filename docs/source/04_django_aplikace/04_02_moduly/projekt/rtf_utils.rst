@@ -14,7 +14,7 @@ Třídy
 
    .. py:method:: _utf16_decimals()
 
-      Provádí operaci utf16 decimals.
+             Provádí operaci utf16 decimals.
 
       :param char: Parametr ``char`` pracuje se s atributy ``encode``.
       :param chunk_size: Parametr ``chunk_size`` se předává do volání ``range()``.
@@ -22,21 +22,21 @@ Třídy
 
    .. py:method:: _convert_text()
 
-      Převede text.
+             Převede text.
 
       :param text: Číselná hodnota ``text`` použitá při výpočtu nebo transformaci.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _format_akce_str()
 
-      Provádí operaci format akce str.
+             Provádí operaci format akce str.
 
       :param akce: Parametr ``akce`` předává se do volání ``str()``, pracuje se s atributy ``hlavni_typ``, ``vedlejsi_typ``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _format_akce()
 
-      Provádí operaci format akce.
+             Provádí operaci format akce.
 
       :param akce_all: Parametr ``akce_all`` pracuje se s atributy ``count``, ovlivňuje větvení podmínek.
       :return: Výstup funkce odpovídající implementované logice.
@@ -61,7 +61,7 @@ Třídy
 
    .. py:method:: _open_file()
 
-      Provádí operaci open file.
+             Provádí operaci open file.
 
       :param name: Parametr ``name`` předává se do volání ``open()``, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.

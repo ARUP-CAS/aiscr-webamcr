@@ -27,7 +27,7 @@ Třídy
 
    .. py:method:: _save_value_to_cache()
 
-      Uloží value to cache.
+             Uloží value to cache.
 
       :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
       :param value: Parametr ``value`` předává se do volání ``set()``.
@@ -35,28 +35,26 @@ Třídy
 
    .. py:method:: api_call()
 
-      Provádí operaci api call.
+      Zavolá API dotaz pro autocomplete (abstraktní metoda).
 
-      :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-      :param use_cache: Parametr ``use_cache`` slouží jako vstup pro logiku funkce ``api_call``.
+      :param q: Vyhledávací dotaz od uživatele.
+      :param use_cache: Zda používat mezipaměť výsledků.
 
    .. py:method:: get()
 
-      Vrací výsledek operace.
+      Vrací JSON odpověď s autocomplete výsledky.
 
-      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
-      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
-      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
-
-      :return: Vrací výsledek volání ``JsonResponse()``.
+      :param request: HTTP požadavek ze strany klienta.
+      :param args: Poziční argumenty z URL.
+      :param kwargs: Pojmenované argumenty z URL.
+      :return: JSON odpověď s výsledky.
 
    .. py:method:: autocomplete_results()
 
-      Provádí operaci autocomplete results.
+      Transformuje výsledky API na formát autocomplete (id, text).
 
-      :param results: Kolekce ``results`` zpracovávaná touto funkcí.
-
-      :return: Vrací hodnotu podle větve zpracování.
+      :param results: Výsledky vrácené API voláním.
+      :return: Seznam tuples (id, text) pro autocomplete.
 
    .. py:method:: get_list()
 
@@ -73,40 +71,39 @@ Třídy
 
    .. py:method:: _api_call_data_cite()
 
-      Provádí operaci api call data cite.
+      Vyhledá DOI v DataCite API.
 
-      :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-      :return: Výstup funkce odpovídající implementované logice.
+      :param q: Vyhledávací dotaz (DOI).
+      :return: Seznam [DOI, název] párů.
 
    .. py:method:: _api_call_cross_ref_doi()
 
-      Provádí operaci api call cross ref doi.
+      Vyhledá DOI v CrossRef API pomocí přímého DOI.
 
-      :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-      :return: Výstup funkce odpovídající implementované logice.
+      :param q: Vyhledávací dotaz (DOI).
+      :return: Seznam [DOI, název] párů.
 
    .. py:method:: _api_call_cross_ref_title()
 
-      Provádí operaci api call cross ref title.
+      Vyhledá DOI v CrossRef API pomocí názvu publikace.
 
-      :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-      :return: Výstup funkce odpovídající implementované logice.
+      :param q: Vyhledávací dotaz (název publikace).
+      :return: Seznam [DOI, název] párů.
 
    .. py:method:: _doi_item_exists()
 
-      Provádí operaci doi item exists.
+      Ověří existenci DOI pomocí HTTP HEAD požadavku.
 
-      :param doi: Textová hodnota `doi` používaná pro vyhledání, pojmenování nebo hlášení stavu.
-      :return: Výstup funkce odpovídající implementované logice.
+      :param doi: DOI identifikátor.
+      :return: Seznam [DOI, DOI] pokud existuje, jinak prázdný seznam.
 
    .. py:method:: api_call()
 
-      Provádí operaci api call.
+      Vyhledá DOI v CrossRef a DataCite API.
 
-      :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-      :param use_cache: Parametr ``use_cache`` slouží jako vstup pro logiku funkce ``api_call``.
-
-      :return: Vrací proměnná ``results``.
+      :param q: Vyhledávací dotaz.
+      :param use_cache: Zda používat cache.
+      :return: Seznam [DOI, název] párů.
 
 
 .. py:class:: OrcidAutocompleteView
@@ -117,12 +114,11 @@ Třídy
 
    .. py:method:: api_call()
 
-      Provádí operaci api call.
+      Vyhledá výzkumné pracovníky v ORCID API.
 
-      :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-      :param use_cache: Parametr ``use_cache`` ovlivňuje větvení podmínek.
-
-      :return: Vrací hodnotu podle větve zpracování, typicky: seznam, proměnná ``result_list``.
+      :param q: Vyhledávací dotaz.
+      :param use_cache: Zda používat cache.
+      :return: Seznam [ORCID ID, jméno] párů.
 
 
 .. py:class:: RorAutocompleteView
@@ -133,12 +129,11 @@ Třídy
 
    .. py:method:: api_call()
 
-      Provádí operaci api call.
+      Vyhledá organizace v ROR API.
 
-      :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-      :param use_cache: Parametr ``use_cache`` slouží jako vstup pro logiku funkce ``api_call``.
-
-      :return: Vrací proměnná ``result_list``.
+      :param q: Vyhledávací dotaz.
+      :param use_cache: Zda používat cache.
+      :return: Seznam [ROR ID, jméno] párů.
 
 
 .. py:class:: WikiDataAutocompleteView
@@ -149,12 +144,11 @@ Třídy
 
    .. py:method:: api_call()
 
-      Provádí operaci api call.
+      Vyhledá osoby v WikiData SPARQL API.
 
-      :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-      :param use_cache: Parametr ``use_cache`` slouží jako vstup pro logiku funkce ``api_call``.
-
-      :return: Vrací hodnotu podle větve zpracování, typicky: seznam, proměnná ``result_list``.
+      :param q: Vyhledávací dotaz.
+      :param use_cache: Zda používat cache.
+      :return: Seznam [WikiData ID, jméno] párů.
 
 
 .. py:class:: ContinuePidProcessing
@@ -165,19 +159,20 @@ Třídy
 
    .. py:method:: _perform_client_action()
 
-      Provádí operaci perform client action.
+      Provede akci na záznamu a publikuje do DataCite.
 
-      :param record: Parametr ``record`` předává se do volání ``isinstance()``, pracuje se s atributy ``save``, ``lokalita``, ovlivňuje větvení podmínek.
-      :param attribute_name: Textový název nebo klíč ``attribute_name`` používaný v rámci operace.
-      :param publish_callable_method: Parametr ``publish_callable_method`` slouží jako vstup pro logiku funkce ``_perform_client_action``.
-      :param set_callable_method: Kolekce ``set_callable_method`` zpracovávaná touto funkcí.
-      :return: Výstup funkce odpovídající implementované logice.
+      :param record: Záznam k publikaci (Lokalita, SamostatnyNalez nebo Dokument).
+      :param attribute_name: Atribut záznamu pro uložení DOI.
+      :param publish_callable_method: Callable pro publikaci.
+      :param set_callable_method: Callable pro nastavení stavu.
+      :return: DOI nebo chybová zpráva.
 
    .. py:method:: process_record()
 
-      Provádí operaci process record.
+      Zpracuje záznam pro publikaci/skrytí/smazání PID.
 
-      :param record: Parametr ``record`` předává se do volání ``isinstance()``, ``_perform_client_action()``, pracuje se s atributy ``active_transaction``, ``doi``, ovlivňuje větvení podmínek.
+      :param record: Záznam k publikaci.
+      :param result: Výsledek formuláře.
       :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
       :param kwargs: Parametr ``kwargs`` pracuje se s atributy ``get``.
 

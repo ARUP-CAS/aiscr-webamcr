@@ -73,12 +73,12 @@ Funkce
 
 .. py:function:: tvar_save(sender, instance, created)
 
-   Po uložení tvaru zajistí zápis metadat souvisejícího dokumentu.
+   Uloží metadata dokumentu při uložení tvaru.
 
-   :param sender: Model, který signal vyvolal.
+   :param sender: Model, který signal vyvolal (Tvar).
    :param instance: Uložená instance tvaru.
-   :param created: Parametr ``created`` slouží jako vstup pro logiku funkce ``tvar_save``.
-   :param kwargs: Dodatečné argumenty předané Django signalem.
+   :param created: Zda je nová instance nebo aktualizace.
+   :param kwargs: Dodatečné argumenty Djangoho signálu.
 
 .. py:function:: tvar_delete(sender, instance)
 

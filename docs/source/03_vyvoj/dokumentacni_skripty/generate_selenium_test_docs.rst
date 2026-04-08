@@ -3,6 +3,41 @@ Skript generate_selenium_test_docs
 
 Dokumentace skriptu ``docs/generate_selenium_test_docs.py``.
 
+Přehled modulu
+--------------
+
+Generátor dokumentace Selenium testů z Google‑style docstringů.
+
+Pravidla:
+- Každá testovací metoda Selenium (funkce začínající na `test_`) musí mít docstring.
+- Docstring musí obsahovat alespoň sekce `Steps:` a `Expected:` (neprázdné).
+- Testy se grupují podle Django appky (adresář před `/tests/`) a řadí podle čísla testu.
+- Výstup do RST:
+(A) Přehledová tabulka s odkazy na jednotlivé testy (bez sloupce „popis“ – popis je v tooltipu),
+(B) detailní textová dokumentace ke každému testu.
+
+Přehledová tabulka:
+- Test č.
+- Modul
+- Uživ. role (pokud je rolí více, každá se vypíše na vlastní řádek)
+- Název (odkaz; krátký popis se zobrazí po najetí myší)
+
+Doporučený formát docstringu (Google‑style):
+
+
+**def test_001_neco(self):**
+
+- Uživatel je přihlášen.
+- Libovolná data, která pomůžou test reprodukovat.
+1. Udělej toto
+2. Udělej tamto
+- Něco se stane
+
+**Poznámky:**
+
+- Volitelné poznámky
+"""
+
 Třídy
 ------
 

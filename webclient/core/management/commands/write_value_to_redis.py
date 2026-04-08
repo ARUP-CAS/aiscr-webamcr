@@ -27,9 +27,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """
-        Provádí operaci add arguments.
+        Registruje povinné argumenty pro Redis klíč a hodnotu.
 
-        :param parser: Parametr ``parser`` pracuje se s atributy ``add_argument``.
+        :param parser: Argumentový parser pro přidání nových parametrů příkazu.
         """
         parser.add_argument(
             "key",
@@ -44,10 +44,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         """
-        Zpracuje hodnotu. v aplikaci.
+        Asynchronně zapíše klíč-hodnotu pár do Redis (přes cron task).
 
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``handle``.
+        :param args: Poziční argumenty příkazu (nepoužívá se).
+        :param kwargs: Pojmenované argumenty (key, value) ze příkazového řádku.
         """
         logger.debug("core.management.commands.write_value_to_redis.start")
         key = kwargs["key"]

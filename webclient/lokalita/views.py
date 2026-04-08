@@ -127,7 +127,8 @@ class LokalitaListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací výsledek volání ``check_filter_permission()``.
         """
@@ -185,7 +186,8 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
         return self.render_to_response(context)
 
     def get_archeologicky_zaznam(self):
-        """Metoda pro získaní akce z db.
+        """
+        Metoda pro získaní akce z db.
 
         :return: Vrací atribut objektu.
         """
@@ -213,7 +215,8 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
         return context
 
     def get_shows(self):
-        """Vrací shows. v aplikaci.
+        """
+        Vrací shows. v aplikaci.
 
         :return: Vrací výsledek volání ``get_detail_template_shows()``.
         """
@@ -263,11 +266,10 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         """
-        Provádí operaci form valid.
+        Validuje data ve formuláři
 
-        :param form: Parametr ``form`` se předává do volání ``form_invalid()``, ``form_valid()``, pracuje se s atributy ``save``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``form_valid()``.
+        :param form: Instance vyplněného formuláře.
+        :return: HTTP odpověď.
         """
         logger.debug("lokalita.views.LokalitaCreateView.form_valid.start")
         form_az = CreateArchZForm(self.request.POST)
@@ -304,11 +306,10 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
 
     def form_invalid(self, form):
         """
-        Provádí operaci form invalid.
+        Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
 
-        :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``form_invalid()``.
+        :param form: Instance vyplněného formuláře.
+        :return: HTTP odpověď.
         """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
         logger.debug("main form is invalid")
@@ -382,15 +383,29 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         """
-        Provádí operaci form valid.
+        Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
 
-        :param form: Parametr ``form`` se předává do volání ``form_invalid()``, ``form_valid()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``form_valid()``.
+        :param form: Instance vyplněného formuláře.
+        :return: HTTP odpověď.
         """
         logger.debug("Lokalita.EditForm is valid")
         form_az = CreateArchZForm(self.request.POST, instance=self.object.archeologicky_zaznam)
-        if form_az.is_valid():
+        form_az_valid = form_az.is_valid()
+        conflicting_fields = form.get_conflicting_fields() + (form_az.get_conflicting_fields() if form_az_valid else [])
+        if conflicting_fields:
+            conflicting_labels = list(
+                dict.fromkeys(str(form.fields[f].label) for f in conflicting_fields if f in form.fields)
+            )
+            conflicting_labels += list(
+                dict.fromkeys(str(form_az.fields[f].label) for f in conflicting_fields if f in form_az.fields)
+            )
+            context = self.get_context_data(form=form)
+            context["concurrent_changes"] = conflicting_labels
+            context["fresh_form_url"] = reverse(
+                "lokalita:edit", kwargs={"slug": self.object.archeologicky_zaznam.ident_cely}
+            )
+            return self.render_to_response(context)
+        if form_az_valid:
             logger.debug("Lokalita.EditFormAz is valid")
             az = form_az.save(commit=False)
             az: ArcheologickyZaznam
@@ -407,11 +422,10 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         """
-        Provádí operaci form invalid.
+        Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
 
-        :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``form_invalid()``.
+        :param form: Instance vyplněného formuláře.
+        :return: HTTP odpověď.
         """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         logger.debug("main form is invalid")
@@ -459,11 +473,12 @@ class LokalitaDokumentacniJednotkaCreateView(LokalitaRelatedView):
 
     def get_context_data(self, **kwargs):
         """
-        Vrací context data.
+        Zpracuje dispečing požadavku.
 
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
-
-            :return: Vrací proměnná ``context``.
+        :param request: HTTP požadavek.
+        :param args: Poziční argumenty.
+        :param kwargs: Pojmenované argumenty.
+        :return: HTTP odpověď.
         """
         context = super().get_context_data(**kwargs)
         context["dj_form_create"] = CreateDJForm(typ_arch_z=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA)
@@ -502,7 +517,8 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_dokumentacni_jednotka(self):
-        """Vrací dokumentacni jednotka.
+        """
+        Vrací dokumentacni jednotka.
 
         :return: Vrací proměnná ``object``.
         """
@@ -542,7 +558,11 @@ class LokalitaDokumentacniJednotkaUpdateView(LokalitaDokumentacniJednotkaRelated
         """
         context = super().get_context_data(**kwargs)
         context["j"] = get_dj_form_detail(
-            "lokalita", self.get_dokumentacni_jednotka(), show=self.get_shows(), user=self.request.user
+            "lokalita",
+            self.get_dokumentacni_jednotka(),
+            show=self.get_shows(),
+            user=self.request.user,
+            session=self.request.session,
         )
         return context
 
@@ -568,13 +588,12 @@ class LokalitaKomponentaCreateView(LokalitaDokumentacniJednotkaRelatedView):
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         """
-        Vrací výsledek operace.
+        Zpracuje dispečing požadavku.
 
-        :param request: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
-        :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``get()``.
+        :param request: HTTP požadavek.
+        :param args: Poziční argumenty.
+        :param kwargs: Pojmenované argumenty.
+        :return: HTTP odpověď.
         """
         return super().get(request, *args, **kwargs)
 
@@ -609,7 +628,8 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_komponenta(self):
-        """Vrací komponenta. v aplikaci.
+        """
+        Vrací komponenta. v aplikaci.
 
         :return: Vrací proměnná ``object``.
         """
@@ -630,7 +650,9 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         old_nalez_post = self.request.session.pop("_old_nalez_post", None)
         komp_ident_cely = self.request.session.pop("komp_ident_cely", None)
         show = self.get_shows()
-        context["k"] = get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely)
+        context["k"] = get_komponenta_form_detail(
+            komponenta, show, old_nalez_post, komp_ident_cely, session=self.request.session
+        )
         context["j"] = self.get_dokumentacni_jednotka()
         context["active_komp_ident"] = komponenta.ident_cely
         return context
@@ -719,7 +741,8 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_pian(self):
-        """Vrací pian. v aplikaci.
+        """
+        Vrací pian. v aplikaci.
 
         :return: Vrací výsledek volání ``get_object_or_404()``.
         """
@@ -736,8 +759,13 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         """
         context = super().get_context_data(**kwargs)
         self.pian = self.get_pian()
-        context["pian_ident_cely"] = self.pian.ident_cely
+        pian_ident_cely = self.pian.ident_cely
+        context["pian_ident_cely"] = pian_ident_cely
         context["pian_form_update"] = PianCreateForm(instance=self.pian)
+        context["pian_concurrent_changes"] = self.request.session.pop(
+            f"pian_concurrent_changes_{pian_ident_cely}", None
+        )
+        context["pian_fresh_form_url"] = self.request.path
         return context
 
     def get(self, request, *args, **kwargs):

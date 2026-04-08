@@ -7,7 +7,7 @@ class AdbConfig(AppConfig):
     name = "adb"
 
     def ready(self):
-        """Provádí operaci ready."""
+        """Načte signály aplikace adb po spuštění Django."""
         super(AdbConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import adb.signals

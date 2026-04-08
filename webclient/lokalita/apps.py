@@ -8,7 +8,7 @@ class LokalitaConfig(AppConfig):
     name = "lokalita"
 
     def ready(self):
-        """Provádí operaci ready."""
+        """Načte signály aplikace lokalita po spuštění Django."""
         super(LokalitaConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import lokalita.signals

@@ -26,19 +26,19 @@ class AkceTestClass(BaseSeleniumTestClass):
     __test__ = False
 
     def go_to_Projekty_vyper(self):
-        """Provádí operaci go to Projekty vyper."""
+        """Přejde na stránku výběru projektů seřazených podle katastru a identifikátoru."""
         self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def go_to_Akce_zapsat(self):
-        """Provádí operaci go to Akce zapsat."""
+        """Přejde na stránku pro zapsání nové akce."""
         self.goToAddress("/arch-z/akce/zapsat")
 
     def go_to_Akce_vybrat(self):
-        """Provádí operaci go to Akce vybrat."""
+        """Přejde na stránku výběru akcí (samostatné akce, seřazené podle katastru a identifikátoru)."""
         self.goToAddress("/arch-z/akce/vyber?zahrnout_projektove=False&sort=hlavni_katastr&sort=ident_cely")
 
     def draw_polygon(self):
-        """Provádí operaci draw polygon."""
+        """Nakreslí testovací polygon na mapě dokumentační jednotky pomocí Selenium."""
         self.wait(1)
         self.driver.execute_script("""map.setZoom(16); return map.getZoom();""")
         self.wait(2)

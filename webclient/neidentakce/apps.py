@@ -7,7 +7,7 @@ class NeidentakceConfig(AppConfig):
     name = "neidentakce"
 
     def ready(self):
-        """Provádí operaci ready."""
+        """Načte signály aplikace neidentakce po spuštění Django."""
         super(NeidentakceConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import neidentakce.signals

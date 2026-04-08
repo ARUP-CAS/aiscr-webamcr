@@ -20,7 +20,7 @@ Třídy
 
    .. py:method:: ident_cely_safe()
 
-      Provádí operaci ident cely safe.
+      Vrátí identifikátor dokumentační jednotky s pomlčkami nahrazenými podtržítky (vhodný pro HTML atributy).
 
       :return: Vrací výsledek volání ``replace()``.
 

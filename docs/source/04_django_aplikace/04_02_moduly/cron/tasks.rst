@@ -62,8 +62,8 @@ Funkce
 
    :param rewrite_existing: Pokud je ``True``, přepíše i existující záznamy v Redis. Výchozí hodnota je ``False``.
    :param classes: Volitelný seznam tříd modelů, pro které se mají Redis snapshot záznamy aktualizovat.
-   Pokud není zadán, použijí se výchozí třídy
-   (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez).
+       Pokud není zadán, použijí se výchozí třídy
+       (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez).
 
 .. py:function:: update_single_redis_snapshot(class_name, record_pk)
 
@@ -87,13 +87,14 @@ Funkce
 
 .. py:function:: call_digiarchiv_update_task()
 
-   Provádí operaci call digiarchiv update task.
+   Zavolá URL digiarchívu pro spuštění aktualizace dat.
 
-.. py:function:: run_data_import(job_id, user_id)
+.. py:function:: run_data_import(job_id, user_id, lock_token)
 
    Spustí data import.
 
    :param job_id: Identifikátor objektu ``job``.
    :param user_id: Identifikátor objektu ``user``.
+   :param lock_token: Token pro ověření vlastnictví importního zámku v Redis.
 
    :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem "Missing required DIRECTORY_PATH setting".

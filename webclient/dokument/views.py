@@ -13,10 +13,12 @@ from core.constants import (
     D_STAV_ODESLANY,
     D_STAV_ZAPSANY,
     DOKUMENT_CAST_RELATION_TYPE,
+    DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
     IDENTIFIKATOR_DOCASNY_PREFIX,
     ODESLANI_DOK,
     ROLE_ADMIN_ID,
     ROLE_ARCHIVAR_ID,
+    VRACENI_DOK,
     ZAPSANI_DOK,
 )
 from core.coordTransform import convertToJTSK
@@ -161,6 +163,7 @@ def detail_model_3D(request, ident_cely):
     """
     context = {"warnings": request.session.pop("temp_data", None)}
     old_nalez_post = request.session.pop("_old_nalez_post", None)
+    request.session.pop("komp_ident_cely", None)
     dokument = get_object_or_404(
         Dokument.objects.select_related(
             "soubory",
@@ -209,6 +212,9 @@ def detail_model_3D(request, ident_cely):
     )
     context["dokument"] = dokument
     context["komponenta"] = komponenty[0]
+    context["nalez_concurrent_changes"] = request.session.pop(
+        f"komp_concurrent_changes_{komponenty[0].ident_cely}", None
+    )
     context["formDokument"] = CreateModelDokumentForm(instance=dokument, readonly=True)
     if dokument.extra_data.geom:
         geom = str(dokument.extra_data.geom).split("(")[1].replace(", ", ",").replace(")", "")
@@ -257,7 +263,7 @@ class Model3DListView(SearchListView):
     vypis_app = "model"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Inicializuje přeložené texty pro seznam dokumentů."""
         super().init_translations()
         self.page_title = _("dokument.views.Model3DListView.pageTitle.text")
         self.search_sum = _("dokument.views.Model3DListView.search_sum.text")
@@ -298,7 +304,8 @@ class Model3DListView(SearchListView):
         return context
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací výsledek volání ``check_filter_permission()``.
         """
@@ -341,7 +348,7 @@ class DokumentListView(SearchListView):
     vypis_app = "dokument"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Inicializuje přeložené texty pro seznam dokumentů."""
         super().init_translations()
         self.page_title = _("dokument.views.DokumentListView.pageTitle.text")
         self.search_sum = _("dokument.views.DokumentListView.search_sum.text")
@@ -354,11 +361,11 @@ class DokumentListView(SearchListView):
 
     def get_context_data(self, **kwargs):
         """
-        Vrací context data.
+        Vytvoří kontext pro renderování šablony.
 
         :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-            :return: Vrací proměnná ``context``.
+        :return: kontext šablony
         """
         context = super().get_context_data(**kwargs)
         context["is_3d"] = False
@@ -392,7 +399,8 @@ class DokumentListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací výsledek volání ``check_filter_permission()``.
         """
@@ -433,11 +441,11 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
 
     def get_cast(self, context, cast, **kwargs):
         """
-        Metoda pro získaní informací ohlědně části dokumentu.
+        Metoda pro získaní informací o součásti dokumentu.
 
-        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_cast``.
-        :param cast: Typ nebo hodnota použitá při převodu datového typu.
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_cast``.
+        :param context: Slovník kontextu pro aktualizaci.
+        :param cast: Součást dokumentu k zobrazení.
+        :param kwargs: Dodatečné pojmenované argumenty.
         """
         context["cast"] = cast
         cast_form = DokumentCastForm(
@@ -512,6 +520,9 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
             readonly=True,
         )
         show = get_detail_template_shows(dokument, self.request.user)
+        context["tvar_concurrent_changes"] = self.request.session.pop(
+            f"tvar_concurrent_changes_{dokument.ident_cely}", None
+        )
         if dokument.rada.zkratka in ["LD", "LN", "DL"]:
             TvarFormset = inlineformset_factory(
                 Dokument,
@@ -698,7 +709,8 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def get_success_url(self):
-        """Vrací success url.
+        """
+        Vrací success url.
 
         :return: Vrací výsledek volání ``get_absolute_url()``.
         """
@@ -799,7 +811,9 @@ class KomponentaDokumentDetailView(RelatedContext):
         old_nalez_post = self.request.session.pop("_old_nalez_post", None)
         komp_ident_cely = self.request.session.pop("komp_ident_cely", None)
 
-        context["k"] = get_komponenta_form_detail(komponenta, context["show"], old_nalez_post, komp_ident_cely)
+        context["k"] = get_komponenta_form_detail(
+            komponenta, context["show"], old_nalez_post, komp_ident_cely, session=self.request.session
+        )
         context["active_komp_ident"] = komponenta.ident_cely
         context["show"]["komponenta_smazat"] = check_permissions(
             p.actionChoices.komponenta_smazat_dok, self.request.user, context["dokument"].ident_cely
@@ -891,6 +905,20 @@ class TvarEditView(LoginRequiredMixin, View):
         )
         formset = TvarFormset(request.POST, instance=dokument, prefix=dokument.ident_cely + "_d")
         if formset.is_valid():
+            conflicting_fields = []
+            for fs_form in formset.forms:
+                conflicting_fields += fs_form.get_conflicting_fields()
+            if conflicting_fields:
+                conflicting_labels = list(
+                    dict.fromkeys(
+                        str(fs_form.fields[f].label)
+                        for fs_form in formset.forms
+                        for f in fs_form.get_conflicting_fields()
+                        if f in fs_form.fields
+                    )
+                )
+                self.request.session[f"tvar_concurrent_changes_{dokument.ident_cely}"] = conflicting_labels
+                return redirect(dokument.get_absolute_url())
             logger.debug("dokument.views.TvarEditView.form_valid")
             formset.save()
             if formset.has_changed():
@@ -929,7 +957,8 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_zaznam(self):
-        """Vrací zaznam. v aplikaci.
+        """
+        Vrací zaznam. v aplikaci.
 
         :return: Vrací výsledek volání ``get_object_or_404()``.
         """
@@ -1096,7 +1125,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     action = ""
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Inicializuje přeložené texty pro seznam dokumentů."""
         self.title = "title"
         self.button = "button"
 
@@ -1115,11 +1144,10 @@ class TransakceView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """
-        Vrací context data.
+        Vytvoří kontext pro renderování šablony
 
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
-
-            :return: Vrací proměnná ``context``.
+        :param kwargs: Dodatečné položky kontextu předané z rodičovské metody.
+        :return: kontext šablony.
         """
         self.init_translations()
         zaznam = self.get_zaznam()
@@ -1195,7 +1223,7 @@ class DokumentCastPripojitAkciView(TransakceView):
     id_tag = "pripojit-eo-form"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Inicializuje přeložené texty pro seznam dokumentů."""
         self.title = _("dokument.views.DokumentCastPripojitAkciView.title.text")
         self.button = _("dokument.views.DokumentCastPripojitAkciView.submitButton.text")
         self.success_message = DOKUMENT_AZ_USPESNE_PRIPOJEN
@@ -1255,7 +1283,7 @@ class DokumentCastPripojitProjektView(TransakceView):
     id_tag = "pripojit-projekt-form"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Inicializuje přeložené texty pro seznam dokumentů."""
         self.title = _("dokument.views.DokumentCastPripojitProjektView.title.text")
         self.button = _("dokument.views.DokumentCastPripojitProjektView.submitButton.text")
         self.success_message = DOKUMENT_PROJEKT_USPESNE_PRIPOJEN
@@ -1308,7 +1336,7 @@ class DokumentCastOdpojitView(TransakceView):
     id_tag = "odpojit-cast-form"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Inicializuje přeložené texty pro seznam dokumentů."""
         self.title = _("dokument.views.DokumentCastOdpojitView.title.text")
         self.button = _("dokument.views.DokumentCastOdpojitView.submitButton.text")
         self.success_message = DOKUMENT_CAST_USPESNE_ODPOJEN
@@ -1392,7 +1420,7 @@ class DokumentCastSmazatView(TransakceView):
     id_tag = "smazat-cast-form"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Inicializuje přeložené texty pro seznam dokumentů."""
         self.title = _("dokument.views.DokumentCastSmazatView.title.text")
         self.button = _("dokument.views.DokumentCastSmazatView.submitButton.text")
         self.success_message = DOKUMENT_CAST_USPESNE_SMAZANA
@@ -1460,7 +1488,7 @@ class DokumentNeidentAkceSmazatView(TransakceView):
     id_tag = "smazat-neident-akce-form"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Inicializuje přeložené texty pro seznam dokumentů."""
         self.title = _("dokument.views.DokumentNeidentAkceSmazatView.title.text")
         self.button = _("dokument.views.DokumentNeidentAkceSmazatView.submitButton.text")
         self.success_message = DOKUMENT_NEIDENT_AKCE_USPESNE_SMAZANA
@@ -1544,6 +1572,27 @@ def edit(request, ident_cely):
         )
         if form_d.is_valid() and form_extra.is_valid():
             logger.debug("dokument.views.edit.both_forms_valid")
+            conflicting_fields = form_d.get_conflicting_fields() + form_extra.get_conflicting_fields()
+            if conflicting_fields:
+                conflicting_labels = list(
+                    dict.fromkeys(str(form_d.fields[f].label) for f in conflicting_fields if f in form_d.fields)
+                )
+                conflicting_labels += list(
+                    dict.fromkeys(str(form_extra.fields[f].label) for f in conflicting_fields if f in form_extra.fields)
+                )
+                fedora_transaction.rollback_transaction()
+                return render(
+                    request,
+                    "dokument/edit.html",
+                    {
+                        "formDokument": form_d,
+                        "formExtraData": form_extra,
+                        "dokument": dokument,
+                        "hierarchie": get_hierarchie_dokument_typ(),
+                        "concurrent_changes": conflicting_labels,
+                        "fresh_form_url": reverse("dokument:edit", kwargs={"ident_cely": dokument.ident_cely}),
+                    },
+                )
             instance_d = form_d.save(commit=False)
             instance_d: Dokument
             instance_d.active_transaction = fedora_transaction
@@ -1665,6 +1714,35 @@ def edit_model_3D(request, ident_cely):
         except Exception:
             logger.debug("dokument.views.edit_model_3D.coord_error", extra={"X": x1, "Y": x2})
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
+            conflicting_fields = form_d.get_conflicting_fields() + form_komponenta.get_conflicting_fields()
+            geom_label = str(_("dokument.forms.createModelExtraDataForm.souradnice.label"))
+            extra_conflicting = [
+                geom_label if f == "geom" else str(form_extra.fields[f].label)
+                for f in form_extra.get_conflicting_fields()
+                if f == "geom" or f in form_extra.fields
+            ]
+            conflicting_labels = [
+                str(form_d.fields[f].label) if f in form_d.fields else str(form_komponenta.fields[f].label)
+                for f in conflicting_fields
+                if f in form_d.fields or f in form_komponenta.fields
+            ] + extra_conflicting
+            if conflicting_labels:
+                return render(
+                    request,
+                    "dokument/create_model_3D.html",
+                    {
+                        "object": dokument,
+                        "global_map_can_edit": True,
+                        "formDokument": form_d,
+                        "formExtraData": form_extra,
+                        "formKomponenta": form_komponenta,
+                        "title": _("dokument.views.edit_model_3D.title"),
+                        "header": _("dokument.views.edit_model_3D.header"),
+                        "button": _("dokument.views.edit_model_3D.submitButton.text"),
+                        "concurrent_changes": list(dict.fromkeys(conflicting_labels)),
+                        "fresh_form_url": reverse("dokument:edit-model-3D", kwargs={"ident_cely": ident_cely}),
+                    },
+                )
             # uloží autory v požadovaném pořadí
             fedora_transaction = dokument.create_transaction(request.user)
             dokument_from_form = form_d.save(commit=False)
@@ -2217,7 +2295,8 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
         return f"{result.ident_cely} ({result.autori_snapshot} {result.rok_vzniku})"
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, výsledek volání ``check_filter_permission()``.
         """
@@ -2237,7 +2316,8 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
 
 
 def get_hierarchie_dokument_typ():
-    """Funkce pro získaní hierarchie pro heslař.
+    """
+    Funkce pro získaní hierarchie pro heslař.
 
     :return: Vrací proměnná ``hierarchie``.
     """
@@ -2267,6 +2347,7 @@ def get_history_dates(historie_vazby, request_user):
         "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_DOK, anonymized),
         "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_DOK, anonymized),
         "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_DOK, anonymized),
+        "datum_vraceni": historie_vazby.get_last_transaction_if_type(VRACENI_DOK, anonymized),
     }
     return historie
 
@@ -2765,7 +2846,7 @@ def get_required_fields_dokument(zaznam=None, next=0):
     return required_fields
 
 
-def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely):
+def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely, session=None):
     """
     Funkce pro získaní formsetu predmetu a objektu pro komponentu.
 
@@ -2773,6 +2854,7 @@ def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely
     :param show: Parametr ``show`` se předává do volání ``inlineformset_factory()``, ``create_nalez_objekt_form()``.
     :param old_nalez_post: Parametr ``old_nalez_post`` se předává do volání ``NalezObjektFormset()``, ``NalezPredmetFormset()``.
     :param komp_ident_cely: Identifikátor ``komp_ident_cely`` používaný pro dohledání cílového záznamu.
+    :param session: Volitelná Django session pro načtení dat souběžné editace.
 
         :return: Vrací proměnná ``komponenta_form_detail``.
     """
@@ -2799,15 +2881,46 @@ def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely
         can_delete=False,
     )
 
+    concurrent_changes = session.pop(f"komp_concurrent_changes_{komponenta.ident_cely}", None) if session else None
+    post_data_dict = (
+        session.pop(f"komp_post_data_{komponenta.ident_cely}", None) if (session and concurrent_changes) else None
+    )
+    create_komp_form = CreateKomponentaForm(
+        get_obdobi_choices(),
+        get_areal_choices(),
+        instance=komponenta,
+        prefix=komponenta.ident_cely,
+        readonly=not show["editovat"],
+    )
+    if post_data_dict:
+        from django.http import QueryDict
+
+        post_qd = QueryDict(mutable=True)
+        post_qd.update(post_data_dict)
+        create_komp_form.data = post_qd
+        create_komp_form.files = {}
+        create_komp_form.is_bound = True
+    if komponenta.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
+        dj = komponenta.komponenta_vazby.dokumentacni_jednotka
+        if dj.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            fresh_form_url = reverse(
+                "arch_z:update-komponenta",
+                args=[dj.archeologicky_zaznam.ident_cely, dj.ident_cely, komponenta.ident_cely],
+            )
+        else:
+            fresh_form_url = reverse(
+                "lokalita:update-komponenta",
+                args=[dj.archeologicky_zaznam.ident_cely, dj.ident_cely, komponenta.ident_cely],
+            )
+    else:
+        cast = komponenta.komponenta_vazby.casti_dokumentu
+        fresh_form_url = reverse(
+            "dokument:detail-komponenta",
+            args=[cast.dokument.ident_cely, komponenta.ident_cely],
+        )
     komponenta_form_detail = {
         "ident_cely": komponenta.ident_cely,
-        "form": CreateKomponentaForm(
-            get_obdobi_choices(),
-            get_areal_choices(),
-            instance=komponenta,
-            prefix=komponenta.ident_cely,
-            readonly=not show["editovat"],
-        ),
+        "form": create_komp_form,
         "form_nalezy_objekty": (
             NalezObjektFormset(
                 old_nalez_post,
@@ -2828,12 +2941,15 @@ def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely
         ),
         "helper_predmet": NalezFormSetHelper(typ="predmet"),
         "helper_objekt": NalezFormSetHelper(typ="objekt"),
+        "concurrent_changes": concurrent_changes,
+        "fresh_form_url": fresh_form_url,
     }
     return komponenta_form_detail
 
 
 def get_obdobi_choices():
-    """Funkce která vrací dvou stupňový heslař pro období.
+    """
+    Funkce která vrací dvou stupňový heslař pro období.
 
     :return: Vrací výsledek volání ``heslar_12()``.
     """
@@ -2841,7 +2957,8 @@ def get_obdobi_choices():
 
 
 def get_areal_choices():
-    """Funkce která vrací dvou stupňový heslař pro areál.
+    """
+    Funkce která vrací dvou stupňový heslař pro areál.
 
     :return: Vrací výsledek volání ``heslar_12()``.
     """

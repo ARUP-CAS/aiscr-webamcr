@@ -36,9 +36,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """
-        Provádí operaci add arguments.
+        Registruje povinné a volitelné argumenty pro uložení jednoho souboru.
 
-        :param parser: Parametr ``parser`` pracuje se s atributy ``add_argument``.
+        :param parser: Argumentový parser pro přidání nových parametrů příkazu.
         """
         parser.add_argument(
             "pk",
@@ -65,10 +65,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """
-        Zpracuje hodnotu. v aplikaci.
+        Uloží jeden soubor ze skladiště do Fedora repozitáře a přiřadí jej AMČR záznamu.
 
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
-        :param options: Parametr ``options`` slouží jako vstup pro logiku funkce ``handle``.
+        :param args: Poziční argumenty příkazu (nepoužívá se).
+        :param options: Pojmenované argumenty (pk, storage_path, save_thumbs, disable_antivirus).
         """
         pk = options["pk"]
         storage_path = options["storage_path"]

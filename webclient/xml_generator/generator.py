@@ -124,7 +124,8 @@ class DocumentGenerator:
 
     @staticmethod
     def get_path_to_schema():
-        """Vrací path to schema.
+        """
+        Vrací path to schema.
 
         :return: Vrací výsledek volání ``join()``.
         """
@@ -651,7 +652,8 @@ class DocumentGenerator:
         return xml_string
 
     def generate_document(self):
-        """Vygeneruje document. v aplikaci.
+        """
+        Vygeneruje document. v aplikaci.
 
         :return: Vrací proměnná ``xml_string``.
         """

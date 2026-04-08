@@ -231,7 +231,83 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "webclient.urls"
 
-STATICFILES_DIRS = [BASE_DIR / "static"]
+# Záložní seznam balíčků pro ``collectstatic``, když chybí ``package.json`` (např. jen adresář
+# ``webclient/`` bez kořene repozitáře). Držte v souladu s ``dependencies`` v kořenovém
+# ``package.json`` repozitáře.
+_NPM_VENDOR_PACKAGE_NAMES = (
+    "bootstrap",
+    "bootstrap-datepicker",
+    "bootstrap-icons",
+    "bootstrap-select",
+    "daterangepicker",
+    "dropzone",
+    "jquery",
+    "leaflet",
+    "leaflet-draw",
+    "leaflet-fullscreen",
+    "leaflet-spin",
+    "leaflet.featuregroup.subgroup",
+    "leaflet.markercluster",
+    "moment",
+    "spin.js",
+)
+
+
+def _npm_staticfiles_dirs():
+    """
+    Vrací dvojice (prefix, cesta) pro přímé závislosti z ``package.json`` v ``node_modules``.
+
+    Omezí ``collectstatic`` jen na tyto adresáře místo celého stromu ``node_modules``.
+
+    ``package.json`` se hledá u kořene repozitáře (``BASE_DIR.parent``) nebo vedle projektu
+    (``BASE_DIR``). Chybí-li soubor nebo sekce ``dependencies``, použije se
+    ``_NPM_VENDOR_PACKAGE_NAMES``.
+
+    ``node_modules`` se hledá u ``BASE_DIR.parent``, u ``BASE_DIR`` a vedle nalezeného
+    ``package.json``.
+
+    :return: Seznam dvojic ``(jméno_balíčku, Path)`` pro existující adresáře; při chybě
+        ``node_modules`` prázdný seznam.
+    """
+    pkg_json = None
+    for candidate in (BASE_DIR.parent / "package.json", BASE_DIR / "package.json"):
+        if candidate.is_file():
+            pkg_json = candidate
+            break
+
+    node_root = None
+    for candidate in (BASE_DIR.parent / "node_modules", BASE_DIR / "node_modules"):
+        if candidate.is_dir():
+            node_root = candidate
+            break
+    if node_root is None and pkg_json is not None:
+        fallback_root = pkg_json.parent / "node_modules"
+        if fallback_root.is_dir():
+            node_root = fallback_root
+
+    if node_root is None:
+        return []
+
+    deps = {}
+    if pkg_json is not None:
+        try:
+            with open(pkg_json, encoding="utf-8") as f:
+                data = json.load(f)
+            deps = data.get("dependencies") or {}
+        except (OSError, json.JSONDecodeError):
+            deps = {}
+
+    names = sorted(deps) if deps else sorted(_NPM_VENDOR_PACKAGE_NAMES)
+
+    out = []
+    for name in names:
+        pkg_path = node_root / name
+        if pkg_path.is_dir():
+            out.append((name, pkg_path))
+    return out
+
+
+STATICFILES_DIRS = [BASE_DIR / "static", *_npm_staticfiles_dirs()]
 
 STORAGES = {
     "staticfiles": {

@@ -1,6 +1,7 @@
 import logging
 
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
+from core.forms import OptimisticLockingMixin
 from core.widgets import AutocompleteListSelect2, AutocompleteSelect2Multiple
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
@@ -18,7 +19,7 @@ from .models import ExterniZdroj
 logger = logging.getLogger(__name__)
 
 
-class ExterniZdrojForm(forms.ModelForm):
+class ExterniZdrojForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení externího zdroju."""
 
     autori = AutoriField(
@@ -213,6 +214,8 @@ class ExterniZdrojForm(forms.ModelForm):
             ),
         )
         self.helper.form_tag = False
+        if self.optimistic_lock_field_name in self.fields:
+            self.helper.layout[0].append(Div(self.optimistic_lock_field_name, css_class="d-none"))
         self.fields["autori"].widget.choices = list(
             Osoba.objects.filter(externizdrojautor__externi_zdroj__pk=self.instance.pk)
             .order_by("externizdrojautor__poradi")
@@ -274,9 +277,9 @@ class ExterniOdkazForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param type_arch: Parametr ``type_arch`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param args: Parametr ``args`` se předává do volání ``__init__()``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        :param type_arch: Typ archeologického záznamu (nevyužit v tomto formuláři, přijímán pro kompatibilitu).
+        :param args: Poziční argumenty předávané nadřízené třídě.
+        :param kwargs: Klíčové argumenty předávané nadřízené třídě.
         """
         super(ExterniOdkazForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)

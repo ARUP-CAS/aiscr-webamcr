@@ -28,11 +28,10 @@ Třídy
 
    .. py:method:: to_python()
 
-      Provádí operaci to python.
+      Konvertuje vybranou hodnotu na Python objekt Heslar.
 
-      :param selected_value: Kolekce nebo datová struktura `selected_value` zpracovávaná touto funkcí.
-
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
+      :param selected_value: ID vybraného hesláře.
+      :return: Instance Heslar objektu nebo None.
 
    .. py:method:: has_changed()
 
@@ -51,19 +50,17 @@ Třídy
 
    .. py:method:: clean()
 
-      Provádí operaci clean.
+      Vrátí instanci Heslar objektu nebo spustí standardní vyčištění pole.
 
-      :param selected_value: Kolekce nebo datová struktura `selected_value` zpracovávaná touto funkcí.
-
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, výsledek volání ``clean()``.
+      :param selected_value: ID vybraného hesláře.
+      :return: Instance Heslar objektu nebo výsledek ```super().clean()``.
 
    .. py:method:: to_python()
 
-      Provádí operaci to python.
+      Konvertuje vybranou hodnotu na Python objekt Heslar.
 
-      :param selected_value: Kolekce nebo datová struktura `selected_value` zpracovávaná touto funkcí.
-
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
+      :param selected_value: ID vybraného hesláře.
+      :return: Instance Heslar objektu nebo None.
 
    .. py:method:: has_changed()
 
@@ -94,10 +91,10 @@ Třídy
 
    .. py:method:: clean()
 
-      Provádí operaci clean.
+      Ověří, že se stav záznamu nezměnil mezi načtením a odesláním.
 
-      :return: Vrací proměnná ``cleaned_data``.
-      :raises forms.ValidationError: Vyvolá se s textem "State_changed".
+      :return: Ověřená data.
+      :raises forms.ValidationError: Vyvolá se s textem "State_changed" pokud se stav změnil.
 
 
 .. py:class:: VratitForm
@@ -151,11 +148,10 @@ Třídy
 
    .. py:method:: format_value()
 
-      Provádí operaci format value.
+      Zformátuje hodnotu na 3 desetinná místa.
 
-      :param value: Parametr ``value`` předává se do volání ``localize_input()``, ``str()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-
-      :return: Vrací hodnotu podle větve zpracování, typicky: None, výsledek volání ``localize_input()``, výsledek volání ``str()``.
+      :param value: Hodnota k zformátování.
+      :return: Zformátovaná hodnota nebo None.
 
 
 .. py:class:: OdstavkaSystemuForm
@@ -184,6 +180,54 @@ Třídy
    Implementuje komponentu ``PermissionSkipImportForm`` v rámci aplikace.
 
 
+.. py:class:: OptimisticLockingMixin
+
+   Mixin pro detekci souběžných úprav záznamu (optimistické zamykání).
+
+   Při inicializaci formuláře s existující instancí uloží aktuální hodnoty polí modelu
+   do skrytého pole (výchozí název ``optimistic_lock_data``, lze přepsat atributem
+   :attr:`optimistic_lock_field_name`). Při odeslání formuláře lze pomocí metody
+   :meth:`get_conflicting_fields` zjistit, která pole byla mezitím změněna v databázi.
+
+   Pokud je na jedné stránce více formulářů sdílejících jeden POST, je nutné v každé
+   podtřídě nastavit unikátní :attr:`optimistic_lock_field_name`, aby nedošlo ke kolizi.
+
+   Podtřída by měla skryté pole zahrnout do layoutu formuláře nebo ho vykreslit ručně v šabloně.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje mixin a přidá skryté pole pro optimistické zamykání.
+
+      :param args: Parametry předané do nadřazeného ``__init__``.
+      :param kwargs: Klíčové parametry předané do nadřazeného ``__init__``.
+
+   .. py:method:: _get_lock_fields()
+
+      Vrací seznam názvů polí formuláře zahrnutých do kontroly souběžných změn.
+
+      Zahrnuje DB modelová pole i pole z :attr:`optimistic_lock_instance_fields`.
+
+      :return: Seznam názvů polí, která jsou sledována a nejsou vyloučena.
+
+   .. py:method:: _serialize_instance_for_lock()
+
+      Serializuje hodnoty polí instance modelu do JSON řetězce.
+
+      :param instance: Instance modelu, jehož hodnoty se serializují.
+      :return: JSON řetězec s hodnotami polí pro pozdější porovnání.
+
+   .. py:method:: get_conflicting_fields()
+
+      Porovná původní stav polí se stavem v databázi a vrátí seznam konfliktních polí.
+
+      Načte čerstvý stav záznamu z databáze a porovná ho s hodnotami uloženými
+      při renderování formuláře v poli :attr:`optimistic_lock_field_name`.
+
+      :return: Seznam názvů polí, která byla mezitím změněna jinou úpravou.
+
+
 .. py:class:: BaseFilterForm
 
    Implementuje komponentu ``BaseFilterForm`` v rámci aplikace.
@@ -192,10 +236,10 @@ Třídy
 
    .. py:method:: clean()
 
-      Provádí operaci clean.
+      Validuje rozmezí datumů v historii — startovní datum musí být dříve než koncové.
 
-      :return: Vrací proměnná ``cleaned_data``.
-      :raises forms.ValidationError: Vyvolá se při splnění podmínky ``error_list``.
+      :return: Slovník s očistěnými daty formuláře.
+      :raises forms.ValidationError: Pokud je startovní datum pozdější než koncové.
 
 
 .. py:class:: TransaltionImportForm
@@ -206,10 +250,10 @@ Třídy
 
    .. py:method:: clean()
 
-      Provádí operaci clean.
+      Validuje nahraný PO soubor — kontroluje velikost a formát.
 
-      :return: Vrací proměnná ``cleaned_data``.
-      :raises forms.ValidationError: Vyvolá se při splnění podmínky ``file.size < 1000``; nebo při splnění podmínky ``file.name.split('.')[-1] != 'po'``.
+      :return: Slovník s očistěnými daty formuláře.
+      :raises forms.ValidationError: Pokud je soubor příliš malý (< 1000 B) nebo nemá příponu ``.po``.
 
 
 .. py:class:: ImportDataAdminForm

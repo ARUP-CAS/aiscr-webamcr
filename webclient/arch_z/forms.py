@@ -3,7 +3,7 @@ import logging
 import re
 
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
-from core.forms import BaseFilterForm, TwoLevelSelectField
+from core.forms import BaseFilterForm, OptimisticLockingMixin, TwoLevelSelectField
 from core.validators import validate_date_min_1600
 from core.widgets import AutocompleteModelSelect2, AutocompleteModelSelect2Multiple
 from crispy_forms.helper import FormHelper
@@ -46,11 +46,12 @@ def create_akce_vedouci_objekt_form(readonly=True):
     :return: Vnitřní ``ModelForm`` pro evidenci vedoucího akce.
     """
 
-    class CreateAkceVedouciObjektForm(forms.ModelForm):
+    class CreateAkceVedouciObjektForm(OptimisticLockingMixin, forms.ModelForm):
         """Implementuje komponentu ``CreateAkceVedouciObjektForm`` v rámci aplikace."""
 
         def clean(self):
-            """Provádí operaci clean.
+            """
+            Ověří, že vedoucí a organizace jsou buď oba vyplněni, nebo oba prázdní.
 
             :raises forms.ValidationError: Vyvolá se při splnění podmínky ``cleaned_data.get('vedouci', None) is None and cleaned_data.get('organizace', None) is not None or (cleaned_data.get('vedouci', None) is not ``.
             """
@@ -105,8 +106,10 @@ def create_akce_vedouci_objekt_form(readonly=True):
     return CreateAkceVedouciObjektForm
 
 
-class CreateArchZForm(forms.ModelForm):
+class CreateArchZForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení Archeologického záznamu."""
+
+    optimistic_lock_field_name = "optimistic_lock_data_az"
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
@@ -151,7 +154,8 @@ class CreateArchZForm(forms.ModelForm):
         readonly=False,
         **kwargs,
     ):
-        """Prepis init metody pro vyplnení init hodnot, nastanvení readonly.
+        """
+        Prepis init metody pro vyplnení init hodnot, nastanvení readonly.
 
         :param required: Parametr ``required`` ovlivňuje větvení podmínek.
         :param required_next: Parametr ``required_next`` ovlivňuje větvení podmínek.
@@ -252,7 +256,7 @@ class CustomDateInput(forms.DateField):
     @classmethod
     def year_only(cls, value):
         """
-        Provádí operaci year only.
+        Ověří, zda zadaná hodnota odpovídá formátu čtyřciferného roku.
 
         :param value: Parametr ``value`` předává se do volání ``fullmatch()``, vstupuje do návratové hodnoty.
 
@@ -304,8 +308,10 @@ class EndDateInput(CustomDateInput):
     year_only_day = 31
 
 
-class CreateAkceForm(forms.ModelForm):
+class CreateAkceForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení akce."""
+
+    optimistic_lock_field_name = "optimistic_lock_data_akce"
 
     datum_zahajeni = StartDateInput(
         help_text=_("arch_z.forms.CreateAkceForm.datum_zahajeni.tooltip"),
@@ -324,7 +330,8 @@ class CreateAkceForm(forms.ModelForm):
     )
 
     def clean(self):
-        """Přepis clean metody s custom oveřením datumu ukončení a zahájení.
+        """
+        Přepis clean metody s custom oveřením datumu ukončení a zahájení.
 
         :return: Vrací atribut objektu.
         :raises forms.ValidationError: Vyvolá se při splnění podmínky ``cleaned_data.get('datum_ukonceni') is not None and cleaned_data.get('datum_zahajeni') is None``; nebo při splnění podmínky ``cleaned_data.get('datum_zahajeni') > cleaned_data.get('datum_ukonceni')``.
@@ -533,7 +540,8 @@ class CreateAkceForm(forms.ModelForm):
                 self.fields[key].help_text = ""
 
     def clean_odlozena_nz(self):
-        """Custom clean metoda pro ověření že je_nz a odlozena_nz nejsou oba True.
+        """
+        Custom clean metoda pro ověření že je_nz a odlozena_nz nejsou oba True.
 
         :return: Vrací proměnná ``odlozena_nz``.
         :raises ValidationError: Vyvolá se při splnění podmínky ``odlozena_nz and je_nz``.

@@ -7,6 +7,9 @@ from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
 from core.exceptions import MaximalIdentNumberError
 from core.ident_cely import get_dj_ident
 from core.message_constants import (
+    DJ_TYP_CELEK_JIZ_EXISTUJE,
+    DJ_TYP_KATASTR_JIZ_EXISTUJE,
+    DJ_TYP_LOKALITA_JIZ_EXISTUJE,
     MAXIMUM_DJ_DOSAZENO,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
@@ -21,6 +24,7 @@ from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.db.models import Q, RestrictedError
 from django.forms import inlineformset_factory
 from django.http import JsonResponse
@@ -46,9 +50,9 @@ def detail(request, typ_vazby, ident_cely):
     """
     Funkce pohledu pro editaci dokumentační jednotky a ADB.
 
-    :param request: Parametr ``request`` se předává do volání ``create_transaction()``, ``CreateDJForm()``, pracuje se s atributy ``user``, ``POST``, ovlivňuje větvení podmínek.
-    :param typ_vazby: Parametr ``typ_vazby`` slouží jako vstup pro logiku funkce ``detail``.
-    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``CreateDJForm()``.
+    :param request: HTTP požadavek s daty formuláře DJ.
+    :param typ_vazby: Typ vazby dokumentační jednotky (DJ nebo dokument).
+    :param ident_cely: Identifikátor dokumentační jednotky.
 
         :return: Vrací proměnná ``response``.
     """
@@ -63,6 +67,13 @@ def detail(request, typ_vazby, ident_cely):
     old_typ = dj.typ.id
     form = CreateDJForm(request.POST, instance=dj, prefix=ident_cely)
     if form.is_valid():
+        conflicting_fields = form.get_conflicting_fields()
+        if conflicting_fields:
+            conflicting_labels = [str(form.fields[f].label) for f in conflicting_fields if f in form.fields]
+            request.session[f"dj_concurrent_changes_{ident_cely}"] = conflicting_labels
+            request.session[f"dj_post_data_{ident_cely}"] = request.POST.dict()
+            fedora_transaction.rollback_transaction()
+            return dj.archeologicky_zaznam.get_redirect(dj.ident_cely)
         logger.debug("dj.views.detail.form_is_valid", extra={"ident_cely": dj.ident_cely})
         dj: DokumentacniJednotka = form.save(commit=False)
         dj.active_transaction = fedora_transaction
@@ -157,6 +168,14 @@ def detail(request, typ_vazby, ident_cely):
                 "dj.views.detail.adb_detail.form_is_valid",
                 extra={"ident_cely": dj.ident_cely, "adb_ident_cely": ident_cely},
             )
+            conflicting_fields = form.get_conflicting_fields()
+            if conflicting_fields:
+                conflicting_labels = [str(form.fields[f].label) for f in conflicting_fields if f in form.fields]
+                request.session[f"adb_concurrent_changes_{ident_cely}"] = conflicting_labels
+                request.session["_old_adb_post"] = request.POST
+                request.session["adb_ident_cely"] = ident_cely
+                fedora_transaction.rollback_transaction()
+                return dj.archeologicky_zaznam.get_redirect(dj.ident_cely)
             adb = form.save(commit=False)
             adb.active_transaction = fedora_transaction
             adb.save()
@@ -188,6 +207,27 @@ def detail(request, typ_vazby, ident_cely):
                 "dj.views.detail.adb_zapsat_vyskove_body.form_set_is_valid",
                 extra={"ident_cely": dj.ident_cely, "adb_ident_cely": adb_ident_cely},
             )
+            conflicting_fields = []
+            for fs_form in formset.forms:
+                conflicting_fields += fs_form.get_conflicting_fields()
+            if not conflicting_fields:
+                for fs_form in formset.forms:
+                    if fs_form.errors.get("id"):
+                        conflicting_fields.append("typ")
+            if conflicting_fields:
+                conflicting_labels = list(
+                    dict.fromkeys(
+                        str(fs_form.fields[f].label)
+                        for fs_form in formset.forms
+                        for f in conflicting_fields
+                        if f in fs_form.fields
+                    )
+                )
+                request.session[f"adb_concurrent_changes_{adb_ident_cely}"] = conflicting_labels
+                request.session["_old_adb_post"] = request.POST
+                request.session["adb_ident_cely"] = adb_ident_cely
+                fedora_transaction.rollback_transaction()
+                return dj.archeologicky_zaznam.get_redirect(dj.ident_cely)
             instances = formset.save(commit=False)
             for i in range(0, len(instances)):
                 vyskovy_bod = instances[i]
@@ -237,31 +277,72 @@ def zapsat(request, arch_z_ident_cely):
         :return: Vrací proměnná ``redirect``.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
-    form = CreateDJForm(request.POST)
+    jednotky = DokumentacniJednotka.objects.filter(archeologicky_zaznam=az)
+    typ_arch_z = az.typ_zaznamu
+    typ_akce = None
+    try:
+        if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            typ_akce = az.akce.typ
+    except Exception as err:
+        logger.debug("dj.views.detail.zapsat.cannot_get_typ_akce", extra={"error": err})
+    form = CreateDJForm(request.POST, jednotky=jednotky, typ_arch_z=typ_arch_z, typ_akce=typ_akce)
     if form.is_valid():
         logger.debug("dj.views.detail.zapsat.form_valid")
-        vazba = KomponentaVazby(typ_vazby=DOKUMENTACNI_JEDNOTKA_RELATION_TYPE)
-        vazba.save()  # TODO: přesunout do signálů.
+        typ = form.cleaned_data.get("typ")
+        _unique_typy = {
+            TYP_DJ_CELEK: DJ_TYP_CELEK_JIZ_EXISTUJE,
+            TYP_DJ_KATASTR: DJ_TYP_KATASTR_JIZ_EXISTUJE,
+            TYP_DJ_LOKALITA: DJ_TYP_LOKALITA_JIZ_EXISTUJE,
+        }
+        with transaction.atomic():
+            if typ:
+                ArcheologickyZaznam.objects.select_for_update().get(pk=az.pk)
+                blocking_typ = (
+                    DokumentacniJednotka.objects.filter(
+                        archeologicky_zaznam=az, typ__id__in=[TYP_DJ_KATASTR, TYP_DJ_LOKALITA]
+                    )
+                    .values_list("typ__id", flat=True)
+                    .first()
+                )
+                if blocking_typ is not None:
+                    logger.debug(
+                        "dj.views.detail.zapsat.blocking_typ_exists",
+                        extra={"arch_z": arch_z_ident_cely, "blocking_typ": blocking_typ, "novy_typ": typ.id},
+                    )
+                    messages.add_message(request, messages.ERROR, _unique_typy.get(blocking_typ, _unique_typy[typ.id]))
+                    return az.get_redirect()
+                if (
+                    typ.id in _unique_typy
+                    and DokumentacniJednotka.objects.filter(archeologicky_zaznam=az, typ__id=typ.id).exists()
+                ):
+                    logger.debug(
+                        "dj.views.detail.zapsat.unique_typ_already_exists",
+                        extra={"arch_z": arch_z_ident_cely, "novy_typ": typ.id},
+                    )
+                    messages.add_message(request, messages.ERROR, _unique_typy[typ.id])
+                    return az.get_redirect()
+            vazba = KomponentaVazby(typ_vazby=DOKUMENTACNI_JEDNOTKA_RELATION_TYPE)
+            vazba.save()  # TODO: přesunout do signálů.
 
-        dj = form.save(commit=False)
-        try:
-            ident_cely = get_dj_ident(az)
-            dj.ident_cely = ident_cely
-            redirect = az.get_redirect(dj.ident_cely)
-        except MaximalIdentNumberError:
-            messages.add_message(request, messages.ERROR, MAXIMUM_DJ_DOSAZENO)
-            redirect = az.get_redirect()
-        else:
-            dj.komponenty = vazba
-            dj.archeologicky_zaznam = az
-            fedora_transaction = az.create_transaction(
-                request.user, ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_SE_NEPOVEDLO_VYTVORIT
-            )
-            fedora_transaction.redirect_url = az.get_redirect()
-            dj.active_transaction = fedora_transaction
-            dj.close_active_transaction_when_finished = True
-            resp = dj.save()
-            logger.debug("dj.views.detail.zapsat.dj_resp", {"value": resp})
+            dj = form.save(commit=False)
+            try:
+                ident_cely = get_dj_ident(az)
+                dj.ident_cely = ident_cely
+                redirect = az.get_redirect(dj.ident_cely)
+            except MaximalIdentNumberError:
+                messages.add_message(request, messages.ERROR, MAXIMUM_DJ_DOSAZENO)
+                redirect = az.get_redirect()
+            else:
+                dj.komponenty = vazba
+                dj.archeologicky_zaznam = az
+                fedora_transaction = az.create_transaction(
+                    request.user, ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_SE_NEPOVEDLO_VYTVORIT
+                )
+                fedora_transaction.redirect_url = az.get_redirect()
+                dj.active_transaction = fedora_transaction
+                dj.close_active_transaction_when_finished = True
+                resp = dj.save()
+                logger.debug("dj.views.detail.zapsat.dj_resp", {"value": resp})
     else:
         logger.debug("dj.views.detail.zapsat.form_not_valid", {"error": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
@@ -341,7 +422,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         """
         Vrací context data.
 
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+        :param kwargs: Další klíčové argumenty předané do základní třídy.
 
             :return: Vrací proměnná ``context``.
         """
@@ -360,9 +441,9 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         """
         Vrací výsledek operace.
 
-        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+        :param request: HTTP GET požadavek.
+        :param args: Poziční argumenty.
+        :param kwargs: Klíčové argumenty předané do ``get_context_data()``.
 
             :return: Vrací výsledek volání ``render_to_response()``.
         """
@@ -374,9 +455,9 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         """
         Obsluhuje HTTP metodu POST.
 
-        :param request: Parametr ``request`` předává se do volání ``ChangeKatastrForm()``, ``create_transaction()``, pracuje se s atributy ``POST``, ``user``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+        :param request: HTTP POST požadavek s daty formuláře pro změnu katastru.
+        :param args: Poziční argumenty.
+        :param kwargs: Klíčové argumenty.
 
             :return: Vrací výsledek volání ``JsonResponse()``.
         """

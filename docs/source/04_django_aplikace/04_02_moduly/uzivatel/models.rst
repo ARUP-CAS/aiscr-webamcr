@@ -21,7 +21,7 @@ Třídy
 
    .. py:method:: hlavni_role()
 
-      Provádí operaci hlavni role.
+             Provádí operaci hlavni role.
 
       :return: Výstup funkce odpovídající implementované logice.
 
@@ -39,7 +39,7 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
@@ -185,7 +185,7 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
@@ -215,7 +215,7 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
@@ -236,19 +236,19 @@ Třídy
 
    .. py:method:: zasilat_neaktivnim()
 
-      Provádí operaci zasilat neaktivnim.
+             Provádí operaci zasilat neaktivnim.
 
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: predmet()
 
-      Provádí operaci predmet.
+             Provádí operaci predmet.
 
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: cesta_sablony()
 
-      Provádí operaci cesta sablony.
+             Provádí operaci cesta sablony.
 
       :return: Výstup funkce odpovídající implementované logice.
 
@@ -260,7 +260,7 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 

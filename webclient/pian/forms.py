@@ -1,5 +1,6 @@
 import logging
 
+from core.forms import OptimisticLockingMixin
 from core.message_constants import (
     PIAN_NEVALIDNI_GEOMETRIE,
     PIAN_VALIDACE_VYPNUTA,
@@ -21,15 +22,20 @@ from pian.models import Pian, get_ZM_from_point
 logger = logging.getLogger(__name__)
 
 
-class PianCreateForm(forms.ModelForm):
+class PianCreateForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení pianu."""
+
+    optimistic_lock_exclude = ["geom_sjtsk", "geom_system"]
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
 
         model = Pian
         fields = ("presnost", "geom", "geom_sjtsk", "geom_system")
-        labels = {"presnost": _("pian.forms.pianCreateForm.presnost.label")}
+        labels = {
+            "presnost": _("pian.forms.pianCreateForm.presnost.label"),
+            "geom": _("pian.forms.pianCreateForm.geom.label"),
+        }
         help_texts = {
             "presnost": _("pian.forms.pianCreateForm.presnost.tooltip"),
         }
@@ -61,6 +67,7 @@ class PianCreateForm(forms.ModelForm):
                 Div("geom", css_class="col-sm-2"),
                 Div("geom_sjtsk", css_class="col-sm-2"),
                 Div("geom_system", css_class="col-sm-2"),
+                Div(self.optimistic_lock_field_name, css_class="d-none"),
                 css_class="row",
             ),
         )
@@ -78,7 +85,8 @@ class PianCreateForm(forms.ModelForm):
         return g.wkt if hasattr(g, "wkt") else str(g)
 
     def run_loaded_validation(self):
-        """Metoda pro validaci geometrií při potvrzení PIANu.
+        """
+        Metoda pro validaci geometrií při potvrzení PIANu.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -99,7 +107,8 @@ class PianCreateForm(forms.ModelForm):
         return not bool(self.errors)
 
     def clean(self):
-        """Provádí operaci clean.
+        """
+        Provádí operaci clean.
 
         :raises forms.ValidationError: Vyvolá se při splnění podmínky ``isinstance(geom, Polygon)``; nebo při splnění podmínky ``zm10 is not None and zm50 is not None``.
         """

@@ -39,5 +39,5 @@ Třídy
       :param value: Hodnota pole ``oznamovatel.oznamovatel`` z přidruženého záznamu.
       :param record: Instance projektu z aktuálního řádku tabulky.
       :return: Hodnota oznamovatele, přeložený label ``oznamovatel_oznamovatel.hidden`` pokud uživatel
-      nemá oprávnění ji zobrazit, nebo prázdný řetězec pokud projekt nemá oznamovatele.
+          nemá oprávnění ji zobrazit, nebo prázdný řetězec pokud projekt nemá oznamovatele.
 

@@ -20,7 +20,7 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
@@ -113,7 +113,7 @@ Třídy
 
    .. py:method:: __repr__()
 
-      Vrací reprezentaci objektu pro ladění.
+             Vrací reprezentaci objektu pro ladění.
 
       Textová reprezentace objektu.
 
@@ -121,7 +121,7 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 

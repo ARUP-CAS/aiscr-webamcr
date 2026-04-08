@@ -66,10 +66,12 @@ Třídy
 
    .. py:method:: set_ident()
 
-      Nastaví ident. v aplikaci.
+      Uloží identifikátor záznamu do session cache.
 
-      :param ident_cely: Parametr ``ident_cely`` se předává do volání ``set()``, ovlivňuje větvení podmínek.
-      :param timeout: Časový údaj ``timeout`` použitý při filtrování nebo výpočtu.
+      Při změně identifikátoru vymaže cache souborů.
+
+      :param ident_cely: Identifikátor záznamu ukládaný do cache.
+      :param timeout: Platnost hodnoty v cache v sekundách.
 
    .. py:method:: get_ident()
 
@@ -86,11 +88,9 @@ Třídy
 
    .. py:method:: file_exists()
 
-      Provádí operaci file exists.
+      Zjistí, zda je identifikátor mezi referencemi na soubory v session cache.
 
-      :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
-
-      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+      :param ident: Identifikátor souboru nebo záznamu k ověření.
 
    .. py:method:: remove_file_reference()
 
@@ -125,19 +125,17 @@ Funkce
 
 .. py:function:: file_validate_epsg(epsg)
 
-   Provádí operaci file validate epsg.
+   Ověří, zda je zadaný EPSG kód podporován (aktuálně pouze WGS-84/4326).
 
-   :param epsg: Parametr ``epsg`` ovlivňuje větvení podmínek.
-
-   :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+   :param epsg: EPSG kód souřadnicového systému k ověření.
+   :return: ``True`` pokud je EPSG=4326, ``False`` jinak.
 
 .. py:function:: balanced_parentheses(expression)
 
-   Provádí operaci balanced parentheses.
+   Ověří, zda má výraz vyrovnané závorky (stejný počet otevíracích a zavíracích).
 
-   :param expression: Číselná hodnota ``expression`` použitá při výpočtu nebo transformaci.
-
-   :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+   :param expression: Řetězec výrazu k ověření.
+   :return: ``True`` pokud jsou závorky vyrovnané, ``False`` jinak.
 
 .. py:function:: load_database_translation_strings()
 
@@ -193,10 +191,10 @@ Funkce
 
 .. py:function:: update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
 
-   Funkce pro update katastru u akce a lokalit.
+   Aktualizuje katastry pro všechny akce a lokality související s dokumentační jednotkou.
 
-   :param dj: Parametr ``dj`` pracuje se s atributy ``typ``, ``archeologicky_zaznam``, ovlivňuje větvení podmínek.
-   :param fedora_transaction: Parametr ``fedora_transaction`` slouží jako vstup pro logiku funkce ``update_all_katastr_within_akce_or_lokalita``.
+   :param dj: Dokumentační jednotka obsahující odkaz na akci/lokalitu.
+   :param fedora_transaction: Aktivní Fedora transakce pro uložení metadat.
 
 .. py:function:: get_pians_from_akce(katastr, akce_ident_cely)
 
@@ -428,13 +426,12 @@ Funkce
 
 .. py:function:: replace_last(source_string, old, new)
 
-   Provádí operaci replace last.
+   Nahradí poslední výskyt řetězce v textu novým řetězcem.
 
-   :param source_string: Textový nebo strukturální vstup `source_string` používaný při sestavení nebo zpracování obsahu.
-   :param old: Parametr ``old`` se předává do volání ``rfind()``, ``replace()``.
-   :param new: Nová hodnota porovnávaná nebo nastavovaná oproti původnímu stavu.
-
-   :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``source_string``.
+   :param source_string: Vstupní text.
+   :param old: Řetězec k nahrazení.
+   :param new: Nový řetězec.
+   :return: Text s nahrazeným poslední výskytem.
 
 .. py:function:: get_set_maintenance_in_cache()
 

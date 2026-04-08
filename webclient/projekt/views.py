@@ -527,6 +527,24 @@ def edit(request, ident_cely):
                             _("projekt.views.edit.typ_projektu_error.pruzkum"),
                         )
         if form.is_valid():
+            conflicting_fields = form.get_conflicting_fields()
+            if conflicting_fields:
+                geom_label = str(_("projekt.forms.editProjekt.souradnice.label"))
+                conflicting_labels = [
+                    geom_label if f == "geom" else str(form.fields[f].label)
+                    for f in conflicting_fields
+                    if f == "geom" or f in form.fields
+                ]
+                return render(
+                    request,
+                    "projekt/edit.html",
+                    {
+                        "form_projekt": form,
+                        "projekt": projekt,
+                        "edit_geom": edit_geom,
+                        "concurrent_changes": conflicting_labels,
+                    },
+                )
             if (form.fields["coordinate_x1"].disabled or form.fields["coordinate_x2"].disabled) and (
                 projekt.geom is not None and len(projekt.geom) > 0
             ):
@@ -780,7 +798,8 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
         return df
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací výsledek volání ``check_filter_permission()``.
         """
@@ -1805,7 +1824,8 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektP
         return f"{result.ident_cely} ({result.hlavni_katastr}; {result.vedouci_projektu})"
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, výsledek volání ``check_filter_permission()``.
         """
@@ -1985,7 +2005,8 @@ class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_zaznam(self):
-        """Vrací zaznam. v aplikaci.
+        """
+        Vrací zaznam. v aplikaci.
 
         :return: Vrací proměnná ``zaznam``.
         """
@@ -2047,7 +2068,8 @@ class ZadostOdhlaseniProjektuView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_zaznam(self):
-        """Vrací zaznam. v aplikaci.
+        """
+        Vrací zaznam. v aplikaci.
 
         :return: Vrací proměnná ``zaznam``.
         """
@@ -2109,7 +2131,8 @@ class ZadostZruseniProjektuView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_zaznam(self):
-        """Vrací zaznam. v aplikaci.
+        """
+        Vrací zaznam. v aplikaci.
 
         :return: Vrací proměnná ``zaznam``.
         """

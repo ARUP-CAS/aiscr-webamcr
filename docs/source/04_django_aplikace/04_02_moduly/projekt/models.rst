@@ -46,7 +46,7 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
@@ -211,7 +211,7 @@ Třídy
 
    .. py:method:: _save_document()
 
-      Uloží document.
+             Uloží document.
 
       :param creator: Parametr ``creator`` pracuje se s atributy ``build_document``.
       :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``debug()``, pracuje se s atributy ``uid``.
@@ -324,7 +324,7 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 

@@ -243,7 +243,8 @@ class Field:
         return getattr(instance, self.accessor)
 
     def get_label(self):
-        """Vrací label. v aplikaci.
+        """
+        Vrací label. v aplikaci.
 
         :return: Vrací atribut objektu.
         """
@@ -780,7 +781,8 @@ class RepeatableSectionField(RepeatableField):
     """Implementuje komponentu ``RepeatableSectionField`` v rámci aplikace."""
 
     def get_label(self):
-        """Vrací label. v aplikaci.
+        """
+        Vrací label. v aplikaci.
 
         :return: Vrací výsledek volání ``get_label()``.
         """
@@ -967,7 +969,8 @@ class SubSectionField:
         self.foreign_key = foreign_key
 
     def get_config(self):
-        """Vrací config. v aplikaci.
+        """
+        Vrací config. v aplikaci.
 
         :return: Vrací atribut objektu.
         """
@@ -1041,7 +1044,8 @@ class HistorieSubSectionField(SubSectionField):
         self.foreign_key = foreign_key
 
     def get_config(self):
-        """Vrací config. v aplikaci.
+        """
+        Vrací config. v aplikaci.
 
         :return: Vrací výsledek volání ``get_historie_config()``.
         """

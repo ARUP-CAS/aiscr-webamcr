@@ -66,7 +66,8 @@ class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
     """Třída pohledu pro získaní osob pro autocomplete."""
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací proměnná ``qs``.
         """
@@ -90,7 +91,8 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
         return result.display_name(viewer=self.request.user)
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací výsledek volání ``check_filter_permission()``.
         """
@@ -154,7 +156,8 @@ class UzivatelAutocompletePublic(LoginRequiredMixin, autocomplete.Select2QuerySe
         return result.display_name()
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací proměnná ``qs``.
         """

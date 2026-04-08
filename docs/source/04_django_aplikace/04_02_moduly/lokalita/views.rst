@@ -111,19 +111,17 @@ Třídy
 
    .. py:method:: form_valid()
 
-      Provádí operaci form valid.
+      Validuje data ve formuláři
 
-      :param form: Parametr ``form`` se předává do volání ``form_invalid()``, ``form_valid()``, pracuje se s atributy ``save``, vstupuje do návratové hodnoty.
-
-      :return: Vrací výsledek volání ``form_valid()``.
+      :param form: Instance vyplněného formuláře.
+      :return: HTTP odpověď.
 
    .. py:method:: form_invalid()
 
-      Provádí operaci form invalid.
+      Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
 
-      :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
-
-      :return: Vrací výsledek volání ``form_invalid()``.
+      :param form: Instance vyplněného formuláře.
+      :return: HTTP odpověď.
 
    .. py:method:: get()
 
@@ -162,19 +160,17 @@ Třídy
 
    .. py:method:: form_valid()
 
-      Provádí operaci form valid.
+      Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
 
-      :param form: Parametr ``form`` se předává do volání ``form_invalid()``, ``form_valid()``, vstupuje do návratové hodnoty.
-
-      :return: Vrací výsledek volání ``form_valid()``.
+      :param form: Instance vyplněného formuláře.
+      :return: HTTP odpověď.
 
    .. py:method:: form_invalid()
 
-      Provádí operaci form invalid.
+      Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
 
-      :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
-
-      :return: Vrací výsledek volání ``form_invalid()``.
+      :param form: Instance vyplněného formuláře.
+      :return: HTTP odpověď.
 
    .. py:method:: get()
 
@@ -210,11 +206,12 @@ Třídy
 
    .. py:method:: get_context_data()
 
-      Vrací context data.
+      Zpracuje dispečing požadavku.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
-
-      :return: Vrací proměnná ``context``.
+      :param request: HTTP požadavek.
+      :param args: Poziční argumenty.
+      :param kwargs: Pojmenované argumenty.
+      :return: HTTP odpověď.
 
 
 .. py:class:: LokalitaDokumentacniJednotkaRelatedView
@@ -279,13 +276,12 @@ Třídy
 
    .. py:method:: get()
 
-      Vrací výsledek operace.
+      Zpracuje dispečing požadavku.
 
-      :param request: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
-      :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
-
-      :return: Vrací výsledek volání ``get()``.
+      :param request: HTTP požadavek.
+      :param args: Poziční argumenty.
+      :param kwargs: Pojmenované argumenty.
+      :return: HTTP odpověď.
 
 
 .. py:class:: LokalitaKomponentaUpdateView

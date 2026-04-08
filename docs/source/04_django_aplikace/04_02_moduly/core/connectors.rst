@@ -36,11 +36,37 @@ Třídy
 
       :return: Načtená data odpovídající zadaným vstupům.
 
+   .. py:method:: acquire_import_lock()
+
+      Atomicky získá Redis lock pro běžící hromadný import.
+
+      :param connection: Redis spojení, přes které se lock zapisuje.
+      :param token: Jedinečný token vlastníka locku.
+      :param ttl_seconds: Doba expirace locku v sekundách.
+      :return: ``True``, pokud byl lock získán; jinak ``False``.
+
+   .. py:method:: refresh_import_lock()
+
+      Prodlouží expiraci importního locku pouze tehdy, pokud ho stále vlastní zadaný token.
+
+      :param connection: Redis spojení, přes které se lock obnovuje.
+      :param token: Jedinečný token vlastníka locku.
+      :param ttl_seconds: Nová doba expirace locku v sekundách.
+      :return: ``True``, pokud byl lock úspěšně obnoven; jinak ``False``.
+
+   .. py:method:: release_import_lock()
+
+      Uvolní importní lock pouze tehdy, pokud ho stále vlastní zadaný token.
+
+      :param connection: Redis spojení, přes které se lock maže.
+      :param token: Jedinečný token vlastníka locku.
+      :return: ``True``, pokud byl lock odstraněn; jinak ``False``.
+
    .. py:method:: prepare_model_for_redis()
 
-      Provádí operaci prepare model for redis.
+      Převede řádek Django-tables2 tabulky do slovníku pro uložení do Redis cache.
 
-      :param table: Parametr ``table`` pracuje se s atributy ``columns``, ``rows``.
+      :param table: Tabulka (django-tables2) obsahující jeden řádek s daty záznamu.
 
       :return: Vrací proměnná ``data``.
 
@@ -91,9 +117,10 @@ Třídy
 
    .. py:method:: _basic_command()
 
-      Provádí operaci basic command.
+      Odešle jednoduchý příkaz do clamd a vrátí jeho odpověď.
 
-      :param command: Textový název, klíč nebo zpráva ``command`` používaná v rámci operace.
+      :param command: Název příkazu zasílaného do clamd démona (např. 'PING', 'VERSION').
+
       :return: Výstup funkce odpovídající implementované logice.
 
       :raises ClamdResponseError: Vyvolá se při splnění podmínky ``len(response) > 1``.
@@ -113,9 +140,9 @@ Třídy
 
    .. py:method:: _send_command()
 
-      Odešle command.
+             Odešle command.
 
-      Používá prefix 'n' a ukončovač nového řádku podle doporučení `man clamd`.
+             Používá prefix 'n' a ukončovač nového řádku podle doporučení `man clamd`.
 
       :param cmd: Textový název, klíč nebo zpráva ``cmd`` používaná v rámci operace.
       :param args: Parametr ``args`` se předává do volání ``join()``, ovlivňuje větvení podmínek.

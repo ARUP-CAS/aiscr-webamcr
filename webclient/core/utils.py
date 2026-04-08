@@ -39,11 +39,10 @@ class CannotFindCadasterCentre(Exception):
 
 def file_validate_epsg(epsg):
     """
-    Provádí operaci file validate epsg.
+    Ověří, zda je zadaný EPSG kód podporován (aktuálně pouze WGS-84/4326).
 
-    :param epsg: Parametr ``epsg`` ovlivňuje větvení podmínek.
-
-        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+    :param epsg: EPSG kód souřadnicového systému k ověření.
+    :return: ``True`` pokud je EPSG=4326, ``False`` jinak.
     """
     if epsg == "4326":
         return True
@@ -55,11 +54,10 @@ def file_validate_epsg(epsg):
 
 def balanced_parentheses(expression):
     """
-    Provádí operaci balanced parentheses.
+    Ověří, zda má výraz vyrovnané závorky (stejný počet otevíracích a zavíracích).
 
-    :param expression: Číselná hodnota ``expression`` použitá při výpočtu nebo transformaci.
-
-        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+    :param expression: Řetězec výrazu k ověření.
+    :return: ``True`` pokud jsou závorky vyrovnané, ``False`` jinak.
     """
     stack = 0
     for char in expression:
@@ -75,7 +73,8 @@ def balanced_parentheses(expression):
 
 
 def load_database_translation_strings():
-    """Načte database translation strings.
+    """
+    Načte database translation strings.
 
     :return: Vrací seznam.
     """
@@ -342,10 +341,10 @@ def update_main_katastr_within_ku(ident_cely: str, katastr: RuianKatastr):
 
 def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction):
     """
-    Funkce pro update katastru u akce a lokalit.
+    Aktualizuje katastry pro všechny akce a lokality související s dokumentační jednotkou.
 
-    :param dj: Parametr ``dj`` pracuje se s atributy ``typ``, ``archeologicky_zaznam``, ovlivňuje větvení podmínek.
-    :param fedora_transaction: Parametr ``fedora_transaction`` slouží jako vstup pro logiku funkce ``update_all_katastr_within_akce_or_lokalita``.
+    :param dj: Dokumentační jednotka obsahující odkaz na akci/lokalitu.
+    :param fedora_transaction: Aktivní Fedora transakce pro uložení metadat.
     """
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.start")
     if dj.typ.id == TYP_DJ_KATASTR:
@@ -1046,7 +1045,8 @@ class SearchTable(ColumnShiftTableBootstrap4):
     column_excluded = ["ident_cely"]
 
     def get_column_default_show(self):
-        """Vrací column default show.
+        """
+        Vrací column default show.
 
         :return: Vrací výsledek volání ``get_column_default_show()``.
         """
@@ -1089,7 +1089,8 @@ class SearchTable(ColumnShiftTableBootstrap4):
         return ""
 
     def get_all_idents(self):
-        """Vrátí seznam identifikátorů záznamů tabulky.
+        """
+        Vrátí seznam identifikátorů záznamů tabulky.
 
         :return: Vrací výsledek volání ``join()``.
         """
@@ -1216,13 +1217,12 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
 
 def replace_last(source_string, old, new):
     """
-    Provádí operaci replace last.
+    Nahradí poslední výskyt řetězce v textu novým řetězcem.
 
-    :param source_string: Textový nebo strukturální vstup `source_string` používaný při sestavení nebo zpracování obsahu.
-    :param old: Parametr ``old`` se předává do volání ``rfind()``, ``replace()``.
-    :param new: Nová hodnota porovnávaná nebo nastavovaná oproti původnímu stavu.
-
-        :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``source_string``.
+    :param source_string: Vstupní text.
+    :param old: Řetězec k nahrazení.
+    :param new: Nový řetězec.
+    :return: Text s nahrazeným poslední výskytem.
     """
     index = source_string.rfind(old)
     if index != -1:
@@ -1262,10 +1262,12 @@ class SessionIdentifier:
 
     def set_ident(self, ident_cely, timeout=3600):
         """
-        Nastaví ident. v aplikaci.
+        Uloží identifikátor záznamu do session cache.
 
-        :param ident_cely: Parametr ``ident_cely`` se předává do volání ``set()``, ovlivňuje větvení podmínek.
-        :param timeout: Časový údaj ``timeout`` použitý při filtrování nebo výpočtu.
+        Při změně identifikátoru vymaže cache souborů.
+
+        :param ident_cely: Identifikátor záznamu ukládaný do cache.
+        :param timeout: Platnost hodnoty v cache v sekundách.
         """
         old_ident_cely = self.get_ident()
         if old_ident_cely != ident_cely:
@@ -1273,7 +1275,8 @@ class SessionIdentifier:
         cache.set(self.cache_key, ident_cely, timeout)
 
     def get_ident(self):
-        """Vrací ident. v aplikaci.
+        """
+        Vrací ident. v aplikaci.
 
         :return: Vrací výsledek volání ``get()``.
         """
@@ -1292,11 +1295,9 @@ class SessionIdentifier:
 
     def file_exists(self, ident):
         """
-        Provádí operaci file exists.
+        Zjistí, zda je identifikátor mezi referencemi na soubory v session cache.
 
-        :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
-
-            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        :param ident: Identifikátor souboru nebo záznamu k ověření.
         """
         files = cache.get(f"{self.cache_key}_files", set())
         if ident in files:
@@ -1315,7 +1316,8 @@ class SessionIdentifier:
             cache.set(f"{self.cache_key}_files", files)
 
     def get_cached_files(self):
-        """Vrací cached files.
+        """
+        Vrací cached files.
 
         :return: Vrací proměnná ``files``.
         """
@@ -1352,7 +1354,8 @@ class SessionIdentifier:
 
 
 def get_set_maintenance_in_cache():
-    """Funkce pro získání nastavení údržby z cache.
+    """
+    Funkce pro získání nastavení údržby z cache.
 
     :return: Vrací proměnná ``maintenance``.
     """
@@ -1374,7 +1377,8 @@ def get_set_maintenance_in_cache():
 
 
 def is_maintenance_in_progress():
-    """Funkce pro zjištění, zda je údržba v průběhu.
+    """
+    Funkce pro zjištění, zda je údržba v průběhu.
 
     :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
     """
@@ -1388,7 +1392,8 @@ def is_maintenance_in_progress():
 
 
 def get_timezone():
-    """Funkce pro získání časového pásma z nastavení.
+    """
+    Funkce pro získání časového pásma z nastavení.
 
     :return: Vrací výsledek volání ``timezone()``.
     """

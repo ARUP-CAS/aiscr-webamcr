@@ -15,6 +15,7 @@ from core.constants import (
     SPOLUPRACE_NEAKTIVNI,
     SPOLUPRACE_ZADOST,
     UZIVATEL_SPOLUPRACE_RELATION_TYPE,
+    VRACENI_SN,
     ZAPSANI_SN,
 )
 from core.exceptions import MaximalIdentNumberError
@@ -177,7 +178,8 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         self.copy_source = copy_source
 
     def get_form_kwargs(self):
-        """Vrací form kwargs.
+        """
+        Vrací form kwargs.
 
         :return: Vrací proměnná ``kwargs``.
         """
@@ -411,6 +413,26 @@ def edit(request, ident_cely):
             )
         if form.is_valid():
             logger.debug("pas.views.edit.form_valid")
+            conflicting_fields = form.get_conflicting_fields()
+            if conflicting_fields:
+                geom_label = str(_("pas.forms.createSamostatnyNalezForm.souradnice.label"))
+                conflicting_labels = [
+                    geom_label if f == "geom" else str(form.fields[f].label)
+                    for f in conflicting_fields
+                    if f == "geom" or f in form.fields
+                ]
+                return render(
+                    request,
+                    "pas/edit.html",
+                    {
+                        "sn": sn,
+                        "global_map_can_edit": True,
+                        "formCoor": form_coor,
+                        "form": form,
+                        "concurrent_changes": conflicting_labels,
+                        "fresh_form_url": reverse("pas:edit", kwargs={"ident_cely": ident_cely}),
+                    },
+                )
             sn.geom_system = form_coor.data.get("coordinate_system")
             if geom is not None:
                 sn.katastr = get_cadastre_from_point(geom)
@@ -787,7 +809,9 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
     vypis_app = "pas"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """
+        Inicializuje překlady pro zobrazení seznamu.
+        """
         super().init_translations()
         self.page_title = _("pas.views.samostatnyNalezListView.pageTitle")
         self.search_sum = _("pas.views.samostatnyNalezListView.pocetVyhledanych")
@@ -823,7 +847,8 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
         }.get(field, field)
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací výsledek volání ``check_filter_permission()``.
         """
@@ -1010,7 +1035,9 @@ class UzivatelSpolupraceListView(SearchListView):
     typ_zmeny_lookup = SPOLUPRACE_ZADOST
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """
+        Inicializuje překlady pro zobrazení seznamu.
+        """
         super().init_translations()
         self.page_title = _("pas.views.uzivatelSpolupraceListView.pageTitle")
         self.search_sum = _("pas.views.uzivatelSpolupraceListView.pocetVyhledanych")
@@ -1033,7 +1060,8 @@ class UzivatelSpolupraceListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací výsledek volání ``order_by()``.
         """
@@ -1104,7 +1132,8 @@ class UzivatelSpolupraceListView(SearchListView):
         return context
 
     def get_table_kwargs(self):
-        """Vrací table kwargs.
+        """
+        Vrací table kwargs.
 
         :return: Vrací slovník.
         """
@@ -1198,7 +1227,8 @@ class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_object(self):
-        """Vrací object. v aplikaci.
+        """
+        Vrací object. v aplikaci.
 
         :return: Vrací výsledek volání ``get_object_or_404()``.
         """
@@ -1349,6 +1379,7 @@ def get_history_dates(historie_vazby, request_user):
         "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_SN, anonymized),
         "datum_potvrzeni": historie_vazby.get_last_transaction_date(POTVRZENI_SN, anonymized),
         "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_SN, anonymized),
+        "datum_vraceni": historie_vazby.get_last_transaction_if_type(VRACENI_SN, anonymized),
     }
     return historie
 

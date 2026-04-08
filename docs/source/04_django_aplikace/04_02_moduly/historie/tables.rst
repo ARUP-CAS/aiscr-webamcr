@@ -44,17 +44,17 @@ Třídy
 
       Vyrenderuje url. v aplikaci.
 
-      :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_url``.
-      :param record: Parametr ``record`` předává se do volání ``format_html()``, vstupuje do návratové hodnoty.
+      :param value: Hodnota URL sloupce.
+      :param record: Slovník záznamu tabulky obsahující URL ke stažení.
 
       :return: Vrací výsledek volání ``format_html()``.
 
    .. py:method:: value_url()
 
-      Provádí operaci value url.
+      Vrátí absolutní URL záznamu Fedory včetně hostname pro export tabulky.
 
-      :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``value_url``.
-      :param record: Parametr ``record`` vstupuje do návratové hodnoty.
+      :param value: Hodnota URL sloupce.
+      :param record: Slovník záznamu tabulky obsahující relativní URL.
 
       :return: Vrací hodnotu podle větve zpracování.
 

@@ -312,7 +312,8 @@ class UzivatelSpolupraceTable(SearchTable):
         super(UzivatelSpolupraceTable, self).__init__(*args, **kwargs)
 
     def get_all_idents(self):
-        """Vrátí prázdnu hodnotu. Metoda je zde kvůli kompatibilitě s ostatními tabulkami.
+        """
+        Vrátí prázdnu hodnotu. Metoda je zde kvůli kompatibilitě s ostatními tabulkami.
 
         :return: Vrací str.
         """

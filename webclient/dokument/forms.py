@@ -1,7 +1,7 @@
 import logging
 
 from core.constants import COORDINATE_SYSTEM, D_STAV_ARCHIVOVANY, D_STAV_ODESLANY
-from core.forms import BaseFilterForm
+from core.forms import BaseFilterForm, OptimisticLockingMixin
 from core.widgets import AutocompleteModelSelect2Multiple, AutocompleteSelect2Multiple
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
@@ -45,11 +45,10 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
 
     def clean(self, value):
         """
-        Provádí operaci clean.
+        Očistí a seřadí seznam autorů podle zadaného pořadí.
 
-        :param value: Parametr ``value`` předává se do volání ``clean()``, ``debug()``, ovlivňuje větvení podmínek.
-
-            :return: Vrací proměnná ``qs``.
+        :param value: Seznam ID autorů.
+        :return: QuerySet autorů seřazený podle zadaného pořadí.
         """
         qs = super().clean(value)
         if value:
@@ -93,8 +92,10 @@ class CoordinatesDokumentForm(forms.Form):
     coordinate_system = forms.CharField(required=False, widget=HiddenInput(), initial="4326")
 
 
-class EditDokumentExtraDataForm(forms.ModelForm):
+class EditDokumentExtraDataForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení Extra dat u dokumentu a modelu 3D."""
+
+    optimistic_lock_field_name = "optimistic_lock_data_dok_extra"
 
     rada = forms.CharField(
         label=_("dokument.forms.editDokumentExtraDataForm.rada.label"),
@@ -223,13 +224,13 @@ class EditDokumentExtraDataForm(forms.ModelForm):
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
         """
-        Inicializuje instanci třídy.
+        Inicializuje formulář pro editaci metadat dokumentu s kontrolou dostupnosti polí.
 
-        :param args: Parametr ``args`` se předává do volání ``__init__()``.
-        :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
-        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
-        :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+        :param args: Poziční argumenty pro ModelForm.
+        :param readonly: Zda jsou pole jen pro čtení.
+        :param required: Která pole jsou povinná.
+        :param required_next: Která pole budou povinná v následující relaci.
+        :param kwargs: Pojmenované argumenty včetně rada, let, dok_osoby a edit.
         """
         rada = kwargs.pop("rada", None)
         let = kwargs.pop("let", "")
@@ -320,6 +321,8 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             ),
         )
         self.helper.form_tag = False
+        if self.optimistic_lock_field_name in self.fields:
+            self.helper.layout[0].append(Div(self.optimistic_lock_field_name, css_class="d-none"))
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
@@ -343,8 +346,10 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         self.fields["rada"].disabled = edit_prohibited
 
 
-class EditDokumentForm(forms.ModelForm):
+class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení Dokumentu."""
+
+    optimistic_lock_field_name = "optimistic_lock_data_dok"
 
     autori = AutoriField(
         Osoba.objects.all(),
@@ -465,14 +470,14 @@ class EditDokumentForm(forms.ModelForm):
         self, *args, readonly=False, required=None, required_next=None, can_edit_datum_zverejneni=False, **kwargs
     ):
         """
-        Inicializuje instanci třídy.
+        Inicializuje formulář s kontrolou práv a dostupnosti polí.
 
-        :param args: Parametr ``args`` se předává do volání ``__init__()``.
-        :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
-        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
-        :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param can_edit_datum_zverejneni: Parametr ``can_edit_datum_zverejneni`` ovlivňuje větvení podmínek.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+        :param args: Poziční argumenty pro ModelForm.
+        :param readonly: Zda jsou pole jen pro čtení.
+        :param required: Která pole jsou povinná.
+        :param required_next: Která pole budou povinná v následující relaci.
+        :param can_edit_datum_zverejneni: Zda lze editovat datum zveřejnění.
+        :param kwargs: Klíčové argumenty včetně create a region_not_required.
         """
         create = kwargs.pop("create", None)
         region_not_required = kwargs.pop("region_not_required", None)
@@ -531,6 +536,8 @@ class EditDokumentForm(forms.ModelForm):
                 css_class="row",
             ),
         )
+        if self.optimistic_lock_field_name in self.fields:
+            self.helper.layout[0].append(Div(self.optimistic_lock_field_name, css_class="d-none"))
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
@@ -567,8 +574,10 @@ class EditDokumentForm(forms.ModelForm):
             self.fields["region"].required = True
 
 
-class CreateModelDokumentForm(forms.ModelForm):
+class CreateModelDokumentForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení modelu 3D."""
+
+    optimistic_lock_field_name = "optimistic_lock_data_model_dok"
 
     autori = AutoriField(
         Osoba.objects.all(),
@@ -633,13 +642,13 @@ class CreateModelDokumentForm(forms.ModelForm):
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
         """
-        Inicializuje instanci třídy.
+        Inicializuje formulář pro vytvoření 3D modelu s nastavením dostupných typů.
 
-        :param args: Parametr ``args`` se předává do volání ``__init__()``.
-        :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
-        :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        :param args: Poziční argumenty pro ModelForm.
+        :param readonly: Zda jsou pole jen pro čtení.
+        :param required: Která pole jsou povinná.
+        :param required_next: Která pole budou povinná v následující relaci.
+        :param kwargs: Pojmenované argumenty pro ModelForm.
         """
         super(CreateModelDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
@@ -679,8 +688,11 @@ class CreateModelDokumentForm(forms.ModelForm):
         )
 
 
-class CreateModelExtraDataForm(forms.ModelForm):
+class CreateModelExtraDataForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení extra dat modelu 3D."""
+
+    optimistic_lock_field_name = "optimistic_lock_data_model_extra"
+    optimistic_lock_instance_fields = ["geom"]
 
     coordinate_wgs84_x1 = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_wgs84_x2 = forms.FloatField(required=False, widget=HiddenInput())
@@ -735,13 +747,13 @@ class CreateModelExtraDataForm(forms.ModelForm):
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
         """
-        Inicializuje instanci třídy.
+        Inicializuje formulář pro zadání extra dat 3D modelu.
 
-        :param args: Parametr ``args`` se předává do volání ``__init__()``.
-        :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
-        :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        :param args: Poziční argumenty pro ModelForm.
+        :param readonly: Zda jsou pole jen pro čtení.
+        :param required: Která pole jsou povinná.
+        :param required_next: Která pole budou povinná v následující relaci.
+        :param kwargs: Pojmenované argumenty pro ModelForm.
         """
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
         # self.fields["format"].required = True
@@ -815,11 +827,11 @@ class DokumentCastForm(forms.ModelForm):
 
     def __init__(self, readonly=False, *args, **kwargs):
         """
-        Inicializuje instanci třídy.
+        Inicializuje formulář pro editaci poznámky k součásti dokumentu.
 
-        :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param args: Parametr ``args`` se předává do volání ``__init__()``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        :param readonly: Zda jsou pole jen pro čtení.
+        :param args: Poziční argumenty pro ModelForm.
+        :param kwargs: Pojmenované argumenty pro ModelForm.
         """
         super(DokumentCastForm, self).__init__(*args, **kwargs)
 
@@ -865,7 +877,7 @@ def create_tvar_form(not_readonly=True):
         :return: Vrací proměnná ``TvarForm``.
     """
 
-    class TvarForm(forms.ModelForm):
+    class TvarForm(OptimisticLockingMixin, forms.ModelForm):
         """Implementuje komponentu ``TvarForm`` v rámci aplikace."""
 
         class Meta:

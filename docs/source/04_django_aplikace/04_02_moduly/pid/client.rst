@@ -3,6 +3,11 @@ PID client
 
 Modul client.
 
+Přehled modulu
+--------------
+
+Klient pro komunikaci s DataCite API při správě DOI/IGSN identifikátorů.
+
 Třídy
 ------
 
@@ -54,9 +59,9 @@ Třídy
 
    .. py:method:: hide_record()
 
-      Provádí operaci hide record.
+      Skryje existující záznam v DataCite pomocí serializovaného payloadu pro skrytí.
 
-      :param check_status: Parametr ``check_status`` předává se do volání ``check_record_exists()``, ovlivňuje větvení podmínek.
+      :param check_status: Příznak, zda má být ověřena existence záznamu a zkontrolován stavový kód odpovědi.
 
       :return: Vrací výsledek volání ``json()``.
       :raises DoiNoTransactionError: Vyvolá se při splnění podmínky ``not isinstance(self.record, Lokalita) and (not hasattr(self.record, 'active_transaction'))``.

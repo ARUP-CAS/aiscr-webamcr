@@ -27,7 +27,8 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
     prefix = "neident_modal"
 
     def get_form_kwargs(self):
-        """Vrací form kwargs.
+        """
+        Vrací form kwargs.
 
         :return: Vrací proměnná ``kwargs``.
         """
@@ -55,7 +56,8 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def get_success_url(self):
-        """Vrací success url.
+        """
+        Vrací success url.
 
         :return: Vrací výsledek volání ``reverse()``.
         """
@@ -84,9 +86,9 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         """
-        Provádí operaci form valid.
+        Zpracuje platný formulář editace neidentifikované akce a zobrazí zprávu o úspěchu.
 
-        :param form: Parametr ``form`` se předává do volání ``form_valid()``, vstupuje do návratové hodnoty.
+        :param form: Validovaný formulář editace.
 
             :return: Vrací výsledek volání ``form_valid()``.
         """
@@ -95,9 +97,9 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         """
-        Provádí operaci form invalid.
+        Zpracuje neplatný formulář editace neidentifikované akce a zobrazí chybovou zprávu.
 
-        :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
+        :param form: Nevalidní formulář s chybami.
 
             :return: Vrací výsledek volání ``form_invalid()``.
         """

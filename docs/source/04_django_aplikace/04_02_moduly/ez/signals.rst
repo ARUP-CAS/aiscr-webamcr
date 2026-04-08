@@ -12,22 +12,22 @@ Funkce
 
    Metoda se volá pred uložením záznamu.
 
-   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``create_ez_vazby``.
-   :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``pk``, ovlivňuje větvení podmínek.
-   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``create_ez_vazby``.
+   :param sender: Třída modelu, který signál vyslal (ExterniZdroj).
+   :param instance: Instance externího zdroje, pro niž se vytváří historická vazba při prvním uložení.
+   :param kwargs: Dodatečné argumenty předávané signálem Django.
 
 .. py:function:: externi_zdroj_save_metadata(sender, instance)
 
-   Provádí operaci externi zdroj save metadata.
+   Po uložení externího zdroje invaliduje cache a uloží metadata do Fedory, pokud není potlačen signál.
 
-   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``externi_zdroj_save_metadata``.
-   :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``on_commit()``, pracuje se s atributy ``ident_cely``, ``suppress_signal``, ovlivňuje větvení podmínek.
-   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``externi_zdroj_save_metadata``.
+   :param sender: Třída modelu, který signál vyslal (ExterniZdroj).
+   :param instance: Uložená instance externího zdroje, jejíž metadata se synchronizují s úložištěm.
+   :param kwargs: Dodatečné argumenty předávané signálem Django.
 
 .. py:function:: delete_externi_zdroj_repository_container(sender, instance)
 
    Odstraní externi zdroj repository container.
 
-   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``delete_externi_zdroj_repository_container``.
-   :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``record_deletion()``, pracuje se s atributy ``ident_cely``, ``active_transaction``, ovlivňuje větvení podmínek.
-   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_externi_zdroj_repository_container``.
+   :param sender: Třída modelu, který signál vyslal (ExterniZdroj).
+   :param instance: Instance externího zdroje, který je před smazáním odstraněn z úložiště Fedora spolu s jeho externími odkazy a historií.
+   :param kwargs: Dodatečné argumenty předávané signálem Django.

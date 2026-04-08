@@ -49,7 +49,7 @@ Třídy
 
    .. py:method:: _parse_schema()
 
-      Zpracuje schema.
+             Zpracuje schema.
 
       :param model_name: Název modelu používaný pro cílení operace.
       :return: Výstup funkce odpovídající implementované logice.
@@ -63,7 +63,7 @@ Třídy
 
    .. py:method:: _parse_comment()
 
-      Zpracuje comment.
+             Zpracuje comment.
 
       :param comment_text: Číselná hodnota ``comment_text`` použitá při výpočtu nebo transformaci.
       :return: Výstup funkce odpovídající implementované logice.
@@ -111,7 +111,7 @@ Třídy
 
    .. py:method:: _parse_scheme_create_element()
 
-      Zpracuje scheme create element.
+             Zpracuje scheme create element.
 
       :param schema_element: Parametr ``schema_element`` se předává do volání ``_create_element()``, ``_parse_schema()``, pracuje se s atributy ``__class__``, ``getnext``, ovlivňuje větvení podmínek.
       :param parent_element: Parametr ``parent_element`` předává se do volání ``_create_element()``, ``_parse_scheme_create_nested_element()``.
@@ -119,7 +119,7 @@ Třídy
 
    .. py:method:: _iterate_unbound_records()
 
-      Provádí operaci iterate unbound records.
+             Provádí operaci iterate unbound records.
 
       :param related_records: Parametr ``related_records`` slouží jako vstup pro logiku funkce ``_iterate_unbound_records``.
       :param schema_element: Parametr ``schema_element`` se předává do volání ``_parse_schema()``, ``_parse_scheme_create_nested_element()``, pracuje se s atributy ``attrib``.
@@ -128,7 +128,7 @@ Třídy
 
    .. py:method:: _parse_scheme_create_nested_element()
 
-      Zpracuje scheme create nested element.
+             Zpracuje scheme create nested element.
 
       :param schema_element: Parametr ``schema_element`` slouží jako vstup pro logiku funkce ``_parse_scheme_create_nested_element``.
       :param parent_element: Parametr ``parent_element`` předává se do volání ``SubElement()``.
@@ -146,7 +146,7 @@ Třídy
 
    .. py:method:: _replace_redundant_namespaces()
 
-      Provádí operaci replace redundant namespaces.
+             Provádí operaci replace redundant namespaces.
 
       :param xml_string: Parametr ``xml_string`` se předává do volání ``sub()``, ``fromstring()``, pracuje se s atributy ``decode``, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.

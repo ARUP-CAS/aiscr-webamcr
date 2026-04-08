@@ -1,4 +1,4 @@
-from core.forms import HeslarChoiceFieldField, TwoLevelSelectField
+from core.forms import HeslarChoiceFieldField, OptimisticLockingMixin, TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from django import forms
 from django.utils.translation import gettext_lazy as _
@@ -36,7 +36,7 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
         :return: Vrací proměnná ``CreateNalezObjektForm``.
     """
 
-    class CreateNalezObjektForm(forms.ModelForm):
+    class CreateNalezObjektForm(OptimisticLockingMixin, forms.ModelForm):
         """Implementuje komponentu ``CreateNalezObjektForm`` v rámci aplikace."""
 
         typ = forms.CharField(widget=forms.HiddenInput())
@@ -115,7 +115,7 @@ def create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices,
         :return: Vrací proměnná ``CreateNalezPredmetForm``.
     """
 
-    class CreateNalezPredmetForm(forms.ModelForm):
+    class CreateNalezPredmetForm(OptimisticLockingMixin, forms.ModelForm):
         """Implementuje komponentu ``CreateNalezPredmetForm`` v rámci aplikace."""
 
         typ = forms.CharField(widget=forms.HiddenInput())

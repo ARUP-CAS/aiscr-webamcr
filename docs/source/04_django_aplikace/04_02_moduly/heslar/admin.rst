@@ -193,11 +193,10 @@ Třídy
 
    .. py:method:: heslo_podrazene_ident_cely()
 
-      Provádí operaci heslo podrazene ident cely.
+      Vrací identifikátor podřazeného hesla.
 
-      :param obj: Parametr ``obj`` pracuje se s atributy ``heslo_podrazene``, vstupuje do návratové hodnoty.
-
-      :return: Vrací atribut objektu.
+      :param obj: Objekt hierarchie.
+      :return: Identifikátor.
 
 
 .. py:class:: OsobaAdmin

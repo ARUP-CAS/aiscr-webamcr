@@ -138,7 +138,7 @@ Třídy
 
    .. py:method:: _change_password()
 
-      Provádí operaci change password.
+             Provádí operaci change password.
 
       :param request: Parametr ``request`` předává se do volání ``Historie()``, ``add_message()``, pracuje se s atributy ``user``.
       :param request_data: Kolekce ``request_data`` zpracovávaná touto funkcí.
@@ -172,7 +172,7 @@ Třídy
 
    .. py:method:: dispatch()
 
-      Provádí operaci dispatch.
+             Provádí operaci dispatch.
 
       :param request: Parametr ``request`` předává se do volání ``dispatch()``, vstupuje do návratové hodnoty.
       :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
@@ -196,7 +196,7 @@ Třídy
 
    .. py:method:: dispatch()
 
-      Provádí operaci dispatch.
+             Provádí operaci dispatch.
 
       :param request: Parametr ``request`` předává se do volání ``dispatch()``, vstupuje do návratové hodnoty.
       :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
@@ -212,7 +212,7 @@ Třídy
 
    .. py:method:: dispatch()
 
-      Provádí operaci dispatch.
+             Provádí operaci dispatch.
 
       :param request: Parametr ``request`` předává se do volání ``dispatch()``, vstupuje do návratové hodnoty.
       :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.

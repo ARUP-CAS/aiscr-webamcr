@@ -1,6 +1,6 @@
 import logging
 
-from core.forms import TwoLevelSelectField
+from core.forms import OptimisticLockingMixin, TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from django import forms
@@ -12,7 +12,7 @@ from komponenta.models import Komponenta
 logger = logging.getLogger(__name__)
 
 
-class CreateKomponentaForm(forms.ModelForm):
+class CreateKomponentaForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení komponenty."""
 
     class Meta:
@@ -58,7 +58,7 @@ class CreateKomponentaForm(forms.ModelForm):
         :param obdobi_choices: Parametr ``obdobi_choices`` se předává do volání ``TwoLevelSelectField()``, ``Select()``.
         :param areal_choices: Parametr ``areal_choices`` předává se do volání ``TwoLevelSelectField()``, ``Select()``.
         :param args: Parametr ``args`` se předává do volání ``__init__()``.
-        :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param readonly: Příznak, zda mají být všechna pole formuláře zobrazena pouze pro čtení.
         :param required: Parametr ``required`` ovlivňuje větvení podmínek.
         :param required_next: Parametr ``required_next`` ovlivňuje větvení podmínek.
         :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
@@ -95,6 +95,8 @@ class CreateKomponentaForm(forms.ModelForm):
             ),
         )
         self.helper.form_tag = False
+        if self.optimistic_lock_field_name in self.fields:
+            self.helper.layout[0].append(Div(self.optimistic_lock_field_name, css_class="d-none"))
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if self.fields[key].disabled:
