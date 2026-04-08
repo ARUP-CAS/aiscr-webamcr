@@ -177,7 +177,7 @@ services:
       - prod-net
 
   prometheus:
-    image: prom/prometheus:v3.10.0
+    image: prom/prometheus:v3.11.1
     restart: always
     volumes:
       - ./prometheus:/etc/prometheus

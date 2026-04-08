@@ -152,7 +152,7 @@ services:
       - git-reverse-proxy
 
   prometheus:
-    image: prom/prometheus:v3.10.0
+    image: prom/prometheus:v3.11.1
     volumes:
       - ./prometheus:/etc/prometheus
     networks:
