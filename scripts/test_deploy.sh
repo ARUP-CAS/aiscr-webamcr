@@ -67,7 +67,7 @@ actualize_repo ()
 
     while [ "$valid_ans" = false ]; do
         
-        echo "Do you want to update the local repository to origin/dev first before creating a docker image? (y/n)"   
+        echo "Do you want to update the local repository to origin/main first before creating a docker image? (y/n)"
         read ans
 
         if [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
@@ -75,8 +75,8 @@ actualize_repo ()
             git fetch origin
             git clean -fd
             git restore .
-            git checkout -B dev origin/dev
-            git reset --hard origin/dev
+            git checkout -B main origin/main
+            git reset --hard origin/main
             valid_ans=true
         elif [ "$ans" = "n" ] || [ "$ans" = "N" ]; then
             echo "Continue without update."
