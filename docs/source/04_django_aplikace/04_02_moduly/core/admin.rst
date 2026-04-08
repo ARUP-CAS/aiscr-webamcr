@@ -145,6 +145,15 @@ Třídy
 
       :return: Vždy ``False``.
 
+   .. py:method:: has_delete_permission()
+
+      Zakáže mazání záznamů — logy jsou auditní záznamy určené k archivaci.
+
+      :param request: HTTP požadavek od klienta.
+      :param obj: Volitelný objekt záznamu.
+
+      :return: Vždy ``False``.
+
 
 .. py:class:: PermissionSkipAdmin
 

@@ -410,6 +410,17 @@ class ApiRequestLogAdmin(admin.ModelAdmin):
         """
         return False
 
+    def has_delete_permission(self, request: HttpRequest, obj=None) -> bool:
+        """
+        Zakáže mazání záznamů — logy jsou auditní záznamy určené k archivaci.
+
+        :param request: HTTP požadavek od klienta.
+        :param obj: Volitelný objekt záznamu.
+
+        :return: Vždy ``False``.
+        """
+        return False
+
 
 admin.site.register(ApiRequestLog, ApiRequestLogAdmin)
 

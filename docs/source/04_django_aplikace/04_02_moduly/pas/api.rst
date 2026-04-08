@@ -627,6 +627,19 @@ Třídy
 Funkce
 ------
 
+.. py:function:: _is_valid_ip_rule_value(value)
+
+   Ověří, zda je hodnota IP pravidla syntakticky platná adresa, CIDR prefix nebo IP rozsah.
+
+   Podporuje IPv4 i IPv6 ve všech třech formátech:
+   - jednotlivá adresa (``"192.0.2.1"``, ``"2001:db8::1"``)
+   - CIDR prefix (``"192.0.2.0/24"``, ``"2001:db8::/32"``)
+   - explicitní rozsah (``"192.168.1.1-192.168.1.5"``; pouze IPv4)
+
+   :param value: Řetězec z pole ``value`` v pravidle ``access_rules`` nebo ``rate_limits``.
+
+   :return: ``True`` pokud je hodnota syntakticky validní.
+
 .. py:function:: _invalidate_api_cache(sender, instance)
 
    Vymaže cache pravidel API po změně záznamu ``CustomAdminSettings`` skupiny ``pas_api``.

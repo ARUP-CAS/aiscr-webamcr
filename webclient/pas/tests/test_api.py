@@ -6,6 +6,7 @@ import io
 import json
 import logging
 import time
+import urllib.error
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -558,13 +559,14 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                     results = list(executor.map(lambda _: SamostatnyNalezXmlImportView._get_amcr_schema(doc), range(8)))
 
                 self.assertEqual(results, [schema_instance] * 8)
-                self.assertIs(SamostatnyNalezXmlImportView._amcr_schema_cache[schema_url], schema_instance)
-                urlopen_mock.assert_called_once_with(schema_url)
+                cached_schema, _ = SamostatnyNalezXmlImportView._amcr_schema_cache[schema_url]
+                self.assertIs(cached_schema, schema_instance)
+                urlopen_mock.assert_called_once_with(schema_url, timeout=10)
                 parse_mock.assert_called_once()
                 xmlschema_mock.assert_called_once_with(schema_doc)
 
                 self.assertIs(SamostatnyNalezXmlImportView._get_amcr_schema(doc), schema_instance)
-                urlopen_mock.assert_called_once_with(schema_url)
+                urlopen_mock.assert_called_once_with(schema_url, timeout=10)
                 parse_mock.assert_called_once()
                 xmlschema_mock.assert_called_once_with(schema_doc)
         finally:
@@ -1099,6 +1101,26 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         for url in allowed_urls:
             with self.subTest(url=url):
                 SamostatnyNalezXmlImportView._validate_schema_url_allowed(url)
+
+    def test_schema_fetch_network_error_returns_422(self):
+        """Síťová chyba při načítání XSD schématu vrátí HTTP 422 místo 500."""
+        xml = self._minimal_nalez_xml(
+            ident_cely="SN-XML-NETERR-001",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+        # Vyčistíme cache schématu, aby se urlopen skutečně zavolal.
+        SamostatnyNalezXmlImportView._amcr_schema_cache.clear()
+
+        with patch(
+            "pas.api.urllib.request.urlopen",
+            side_effect=urllib.error.URLError("simulated network failure"),
+        ):
+            response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self._assert_log_failure()
 
     def test_wrong_amcr_namespace_version_returns_422(self):
         """POST s deklarovaným AMČR namespace jiné verze vrátí HTTP 422."""

@@ -7,6 +7,7 @@ import re
 import socket
 import threading
 import time
+import urllib.error
 import urllib.request
 from dataclasses import asdict, dataclass
 from enum import Enum
@@ -72,18 +73,50 @@ _ACCESS_MODE_ID = "access_mode"
 # codeql[py/clear-text-logging-sensitive-data]
 _TRUSTED_PROXIES_ID = "trusted_proxies"
 _AMCR_SCHEMA_LOCK = threading.Lock()
+_AMCR_SCHEMA_FETCH_TIMEOUT = 10
+_AMCR_SCHEMA_CACHE_TTL = 3600  # sekund — schéma se znovu načte po 60 minutách
 _ALLOWED_SCHEMA_URL_PATTERNS = (
     re.compile(r"^https?://www\.w3\.org/2001/XMLSchema-instance(?:[?#].*)?$"),
     re.compile(r"^https?://www\.w3\.org/2001/(?:03/)?xml\.xsd(?:[?#].*)?$"),
     re.compile(r"^https://api\.aiscr\.cz/schema/amcr/\d+\.\d+/.*$"),
     re.compile(r"^http://www\.opengis\.net/gml/.*$"),
 )
-_IPV4_OCTET_PATTERN = r"(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)"
-_IPV4_ADDRESS_PATTERN = rf"{_IPV4_OCTET_PATTERN}(?:\.{_IPV4_OCTET_PATTERN}){{3}}"
-_IP_RULE_VALUE_PATTERN = re.compile(
-    rf"^(?:{_IPV4_ADDRESS_PATTERN}|{_IPV4_ADDRESS_PATTERN}/(?:[0-9]|[12][0-9]|3[0-2])|"
-    rf"{_IPV4_ADDRESS_PATTERN}\s*-\s*{_IPV4_ADDRESS_PATTERN})$"
-)
+
+
+def _is_valid_ip_rule_value(value: str) -> bool:
+    """
+    Ověří, zda je hodnota IP pravidla syntakticky platná adresa, CIDR prefix nebo IP rozsah.
+
+    Podporuje IPv4 i IPv6 ve všech třech formátech:
+    - jednotlivá adresa (``"192.0.2.1"``, ``"2001:db8::1"``)
+    - CIDR prefix (``"192.0.2.0/24"``, ``"2001:db8::/32"``)
+    - explicitní rozsah (``"192.168.1.1-192.168.1.5"``; pouze IPv4)
+
+    :param value: Řetězec z pole ``value`` v pravidle ``access_rules`` nebo ``rate_limits``.
+
+    :return: ``True`` pokud je hodnota syntakticky validní.
+    """
+    value = value.strip()
+    if "/" in value:
+        try:
+            ipaddress.ip_network(value, strict=False)
+            return True
+        except ValueError:
+            return False
+    if "-" in value:
+        parts = value.split("-", 1)
+        try:
+            start = ipaddress.ip_address(parts[0].strip())
+            end = ipaddress.ip_address(parts[1].strip())
+            return start.version == end.version
+        except ValueError:
+            return False
+    try:
+        ipaddress.ip_address(value)
+        return True
+    except ValueError:
+        return False
+
 
 TYPE_IP_BLACKLIST = "ip_blacklist"
 TYPE_IP_WHITELIST = "ip_whitelist"
@@ -309,7 +342,7 @@ class PasApiPermissionMixin:
                     }
                 )
             if rule["rule_type"] in {TYPE_IP_BLACKLIST, TYPE_IP_WHITELIST}:
-                if not isinstance(rule["value"], str) or not _IP_RULE_VALUE_PATTERN.match(rule["value"]):
+                if not isinstance(rule["value"], str) or not _is_valid_ip_rule_value(rule["value"]):
                     raise ValidationError(
                         {
                             "value": _("pas.api.PasApiPermissionMixin.validate_access_rules.invalid_ip_value").format(
@@ -429,7 +462,7 @@ class PasApiPermissionMixin:
                     }
                 )
             if limit["scope"] == SCOPE_IP:
-                if not isinstance(limit["value"], str) or not _IP_RULE_VALUE_PATTERN.match(limit["value"]):
+                if not isinstance(limit["value"], str) or not _is_valid_ip_rule_value(limit["value"]):
                     raise ValidationError(
                         {
                             "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.invalid_ip_value").format(
@@ -533,7 +566,7 @@ class PasApiPermissionMixin:
                     }
                 )
             stripped = entry.strip()
-            if "/" in stripped or (re.match(r"^\d", stripped) and "." in stripped):
+            if "/" in stripped or re.match(r"^[\d:]", stripped):
                 try:
                     ipaddress.ip_network(stripped, strict=False)
                 except ValueError:
@@ -1113,7 +1146,7 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
     _XML_NS = "http://www.w3.org/XML/1998/namespace"
     _XSI_NS = "http://www.w3.org/2001/XMLSchema-instance"
     _IMPORT_HISTORY_NOTE = _l("pas.api.SamostatnyNalezXmlImportView.import_history_note")
-    _amcr_schema_cache: dict[str, etree.XMLSchema] = {}
+    _amcr_schema_cache: dict[str, tuple[etree.XMLSchema, float]] = {}  # url -> (schema, inserted_at)
 
     def dispatch(self, request, *args, **kwargs):
         """
@@ -1661,14 +1694,15 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
         schema_url = schema_mapping[amcr_namespace]
         cls._validate_schema_url_allowed(schema_url)
 
-        schema = cls._amcr_schema_cache.get(schema_url)
-        if schema is not None:
-            return schema
+        now = time.time()
+        cached = cls._amcr_schema_cache.get(schema_url)
+        if cached is not None and now - cached[1] < _AMCR_SCHEMA_CACHE_TTL:
+            return cached[0]
 
         with _AMCR_SCHEMA_LOCK:
-            schema = cls._amcr_schema_cache.get(schema_url)
-            if schema is not None:
-                return schema
+            cached = cls._amcr_schema_cache.get(schema_url)
+            if cached is not None and time.time() - cached[1] < _AMCR_SCHEMA_CACHE_TTL:
+                return cached[0]
 
             class _LocalResolver(etree.Resolver):
                 """Resolver nahrazující vzdálené W3C URL lokálním souborem xml.xsd."""
@@ -1696,7 +1730,24 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
                     if url in allowed_urls:
                         return self.resolve_filename("xml_generator/definitions/xml.xsd", context)
                     if any(pattern.match(url) for pattern in _ALLOWED_SCHEMA_URL_PATTERNS):
-                        return self.resolve_file(urllib.request.urlopen(url), context, base_url=url)
+                        try:
+                            response = urllib.request.urlopen(url, timeout=_AMCR_SCHEMA_FETCH_TIMEOUT)  # noqa: S310
+                        except (urllib.error.URLError, TimeoutError) as exc:
+                            logger.error("Nepodařilo se načíst XSD schéma z URL %s: %s", url, exc)
+                            self.blocked_exception = ImportValidationException(
+                                ImportValidationIssue(
+                                    line=None,
+                                    column=None,
+                                    message=_(
+                                        "pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.schema_not_available"
+                                    )
+                                    % {"url": url},
+                                    error_type=ImportErrorType.INVALID_DATA,
+                                )
+                            )
+                            self.blocked_exception.__cause__ = exc
+                            return None
+                        return self.resolve_file(response, context, base_url=url)
                     # Disallowed URL — store the exception for re-raising after XMLSchema()
                     # because lxml swallows Python exceptions raised inside resolver callbacks.
                     self.blocked_exception = ImportValidationException(
@@ -1713,12 +1764,25 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
             parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
             resolver = _LocalResolver()
             parser.resolvers.add(resolver)
-            with urllib.request.urlopen(schema_url) as response:
+            try:
+                response = urllib.request.urlopen(schema_url, timeout=_AMCR_SCHEMA_FETCH_TIMEOUT)  # noqa: S310
+            except (urllib.error.URLError, TimeoutError) as exc:
+                logger.error("Nepodařilo se načíst XSD schéma z URL %s: %s", schema_url, exc)
+                raise ImportValidationException(
+                    ImportValidationIssue(
+                        line=None,
+                        column=None,
+                        message=_("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.schema_not_available")
+                        % {"url": schema_url},
+                        error_type=ImportErrorType.INVALID_DATA,
+                    )
+                ) from exc
+            with response:
                 schema_doc = etree.parse(response, parser)
             schema = etree.XMLSchema(schema_doc)
             if resolver.blocked_exception is not None:
                 raise resolver.blocked_exception
-            cls._amcr_schema_cache[schema_url] = schema
+            cls._amcr_schema_cache[schema_url] = (schema, time.time())
             return schema
 
     @staticmethod

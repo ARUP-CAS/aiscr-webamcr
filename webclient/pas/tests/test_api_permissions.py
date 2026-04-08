@@ -655,6 +655,105 @@ class PasApiPermissionTests(TestCase):
                 [{"scope": "group", "value": "203.0.113.10", "rate": "1/m", "active": True}]
             )
 
+    # --- IPv6 ---
+
+    def test_validate_access_rules_accepts_ipv6_address(self):
+        """IP pravidlo s IPv6 adresou projde validací."""
+        self.assertTrue(
+            IpBlacklistPermission.validate_access_rules(
+                [{"rule_type": "ip_blacklist", "value": "2001:db8::1", "active": True}]
+            )
+        )
+
+    def test_validate_access_rules_accepts_ipv6_cidr(self):
+        """IP pravidlo s IPv6 CIDR prefixem projde validací."""
+        self.assertTrue(
+            IpBlacklistPermission.validate_access_rules(
+                [{"rule_type": "ip_whitelist", "value": "2001:db8::/32", "active": True}]
+            )
+        )
+
+    def test_validate_rate_limits_accepts_ipv6_address(self):
+        """IP rate limit s IPv6 adresou projde validací."""
+        self.assertTrue(
+            IpBlacklistPermission.validate_rate_limits(
+                [{"scope": "ip", "value": "2001:db8::1", "rate": "10/m", "active": True}]
+            )
+        )
+
+    def test_validate_rate_limits_accepts_ipv6_cidr(self):
+        """IP rate limit s IPv6 CIDR prefixem projde validací."""
+        self.assertTrue(
+            IpBlacklistPermission.validate_rate_limits(
+                [{"scope": "ip", "value": "2001:db8::/32", "rate": "10/m", "active": True}]
+            )
+        )
+
+    def test_ip_blacklist_permission_blocks_ipv6_address(self):
+        """IPv6 adresa uvedená na blacklistu je odmítnuta."""
+        self._set_pas_api_setting(
+            "access_rules",
+            [{"rule_type": "ip_blacklist", "value": "2001:db8::1", "active": True}],
+        )
+        permission = IpBlacklistPermission()
+
+        self.assertFalse(permission.has_permission(self._build_request(ip="2001:db8::1")))
+
+    def test_ip_blacklist_permission_blocks_ipv6_cidr(self):
+        """IPv6 adresa spadající do CIDR rozsahu na blacklistu je odmítnuta."""
+        self._set_pas_api_setting(
+            "access_rules",
+            [{"rule_type": "ip_blacklist", "value": "2001:db8::/32", "active": True}],
+        )
+        permission = IpBlacklistPermission()
+
+        self.assertFalse(permission.has_permission(self._build_request(ip="2001:db8::cafe")))
+
+    def test_ip_blacklist_permission_allows_ipv6_outside_cidr(self):
+        """IPv6 adresa mimo CIDR rozsah na blacklistu je povolena."""
+        self._set_pas_api_setting(
+            "access_rules",
+            [{"rule_type": "ip_blacklist", "value": "2001:db8::/32", "active": True}],
+        )
+        permission = IpBlacklistPermission()
+
+        self.assertTrue(permission.has_permission(self._build_request(ip="2001:db9::1")))
+
+    def test_ip_whitelist_permission_allows_ipv6_in_whitelist_only(self):
+        """V režimu ``whitelist_only`` je whitelisted IPv6 adresa povolena."""
+        self._set_pas_api_setting("access_mode", ACCESS_MODE_WHITELIST_ONLY)
+        self._set_pas_api_setting(
+            "access_rules",
+            [{"rule_type": "ip_whitelist", "value": "2001:db8::/32", "active": True}],
+        )
+        permission = IpWhitelistPermission()
+
+        self.assertTrue(permission.has_permission(self._build_request(ip="2001:db8::1")))
+
+    def test_ip_whitelist_permission_blocks_ipv6_outside_whitelist_in_whitelist_only(self):
+        """V režimu ``whitelist_only`` je IPv6 adresa mimo whitelist CIDR odmítnuta."""
+        self._set_pas_api_setting("access_mode", ACCESS_MODE_WHITELIST_ONLY)
+        self._set_pas_api_setting(
+            "access_rules",
+            [{"rule_type": "ip_whitelist", "value": "2001:db8::/32", "active": True}],
+        )
+        permission = IpWhitelistPermission()
+
+        self.assertFalse(permission.has_permission(self._build_request(ip="2001:db9::1")))
+
+    def test_api_import_throttle_applies_to_ipv6_cidr(self):
+        """IP rate limit se aplikuje i na IPv6 klienta spadajícího do CIDR rozsahu."""
+        self._set_pas_api_setting(
+            "rate_limits",
+            [{"scope": "ip", "value": "2001:db8::/32", "rate": "1/m", "active": True}],
+        )
+        throttle = ApiImportThrottle()
+        request = self._build_request(ip="2001:db8::1")
+
+        with patch("pas.api.time.time", return_value=1000.0):
+            self.assertTrue(throttle.allow_request(request))
+            self.assertFalse(throttle.allow_request(request))
+
 
 class GetClientIpTests(TestCase):
     """Testy metody ``PasApiPermissionMixin.get_client_ip``."""
@@ -837,3 +936,28 @@ class GetClientIpTests(TestCase):
         self.assertTrue(
             any("pas.api.PasApiPermissionMixin._resolve_trusted_networks.dns_failed" in line for line in log_ctx.output)
         )
+
+    # --- IPv6 ---
+
+    def test_validate_trusted_proxies_accepts_ipv6_cidr(self):
+        """IPv6 CIDR prefix projde validací ``trusted_proxies``."""
+        self.assertTrue(PasApiPermissionMixin.validate_trusted_proxies(["2001:db8::/32"]))
+
+    def test_validate_trusted_proxies_accepts_ipv6_address(self):
+        """Jednotlivá IPv6 adresa projde validací ``trusted_proxies``."""
+        self.assertTrue(PasApiPermissionMixin.validate_trusted_proxies(["::1"]))
+
+    def test_validate_trusted_proxies_raises_for_invalid_ipv6_cidr(self):
+        """Neplatný IPv6 CIDR prefix v ``trusted_proxies`` je odmítnut."""
+        with self.assertRaisesRegex(
+            ValidationError,
+            "pas.api.PasApiPermissionMixin.validate_trusted_proxies.invalid_cidr",
+        ):
+            PasApiPermissionMixin.validate_trusted_proxies(["2001:db8::/200"])
+
+    def test_get_client_ip_skips_ipv6_trusted_proxy(self):
+        """IPv6 proxy v ``trusted_proxies`` je přeskočena a vrátí se klientská IP z XFF."""
+        self._set_trusted_proxies(["::1"])
+        request = self._build_request(remote_addr="::1", x_forwarded_for="2001:db8::cafe")
+
+        self.assertEqual(PasApiPermissionMixin.get_client_ip(request), "2001:db8::cafe")
