@@ -696,12 +696,10 @@ class GetClientIpTests(TestCase):
         self.assertEqual(PasApiPermissionMixin.get_client_ip(request), "10.0.1.1")
 
     def test_returns_remote_addr_when_no_trusted_proxies_configured(self):
-        """Bez nastavení ``trusted_proxies`` se použije výchozí CIDR a ``REMOTE_ADDR`` je vráceno přímo."""
+        """Bez nastavení ``trusted_proxies`` se ``X-Forwarded-For`` ignoruje a vrátí se ``REMOTE_ADDR``."""
         request = self._build_request(remote_addr="10.0.1.1", x_forwarded_for="203.0.113.5")
 
-        # Výchozí důvěryhodný rozsah je 10.0.1.0/24; REMOTE_ADDR 10.0.1.1 je důvěryhodný,
-        # proto se vrátí první nedůvěryhodná IP z XFF řetězu.
-        self.assertEqual(PasApiPermissionMixin.get_client_ip(request), "203.0.113.5")
+        self.assertEqual(PasApiPermissionMixin.get_client_ip(request), "10.0.1.1")
 
     def test_returns_client_ip_from_xff_skipping_trusted_proxy(self):
         """Poslední nedůvěryhodná IP v XFF řetězu je identifikována jako klientská IP."""
@@ -808,8 +806,8 @@ class GetClientIpTests(TestCase):
             instance.full_clean()
 
     def test_get_trusted_proxies_returns_default_when_not_configured(self):
-        """Bez nastavení ``trusted_proxies`` se vrátí výchozí hodnota ``["10.0.1.0/24"]``."""
-        self.assertEqual(PasApiPermissionMixin.get_trusted_proxies(), ["10.0.1.0/24"])
+        """Bez nastavení ``trusted_proxies`` se vrátí výchozí prázdný seznam."""
+        self.assertEqual(PasApiPermissionMixin.get_trusted_proxies(), [])
 
     def test_get_trusted_proxies_returns_configured_value(self):
         """Nastavená hodnota ``trusted_proxies`` je vrácena z cache nebo databáze."""

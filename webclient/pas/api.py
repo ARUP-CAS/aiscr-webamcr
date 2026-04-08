@@ -104,7 +104,7 @@ _ACCESS_MODES = {ACCESS_MODE_OPEN, ACCESS_MODE_WHITELIST_ONLY, ACCESS_MODE_CLOSE
 _PAS_API_ITEM_IDS = {_ACCESS_RULES_ID, _RATE_LIMITS_ID, _ACCESS_MODE_ID, _TRUSTED_PROXIES_ID}
 
 # codeql[py/clear-text-logging-sensitive-data]
-_DEFAULT_TRUSTED_PROXIES = ["10.0.1.0/24"]
+_DEFAULT_TRUSTED_PROXIES = []
 
 
 class PasApiPermissionMixin:
@@ -212,7 +212,7 @@ class PasApiPermissionMixin:
             Seznam důvěryhodných proxy serverů stojících před aplikací.
             Každá položka je CIDR řetězec, IP adresa nebo DNS název (např. Docker service jméno).
             Používá se pro správné určení IP adresy klienta z hlavičky ``X-Forwarded-For``.
-            Pokud nastavení chybí, použije se výchozí hodnota ``["10.0.1.0/24"]``.
+            Pokud nastavení chybí, použije se výchozí prázdný seznam ``[]``.
 
             Příklad::
 
@@ -491,7 +491,7 @@ class PasApiPermissionMixin:
         Vrátí seznam důvěryhodných proxy serverů z cache nebo ``CustomAdminSettings``.
 
         Pokud nastavení ``trusted_proxies`` neexistuje, vrátí výchozí hodnotu
-        ``["10.0.1.0/24"]``.
+        ``[]``.
 
         :raises ValidationError: Pokud nastavení má neplatnou strukturu.
         :return: Seznam řetězců — CIDR rozsahy, IP adresy nebo DNS názvy.
@@ -1637,7 +1637,7 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
                     )
                     if url in allowed_urls:
                         return self.resolve_filename("xml_generator/definitions/xml.xsd", context)
-                    if url.startswith("https://api.aiscr.cz/schema/amcr/"):
+                    if any(pattern.match(url) for pattern in _ALLOWED_SCHEMA_URL_PATTERNS):
                         return self.resolve_file(urllib.request.urlopen(url), context, base_url=url)
                     # Disallowed URL — store the exception for re-raising after XMLSchema()
                     # because lxml swallows Python exceptions raised inside resolver callbacks.

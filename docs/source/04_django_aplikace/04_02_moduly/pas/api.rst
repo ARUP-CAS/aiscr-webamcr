@@ -82,7 +82,7 @@ Třídy
           Seznam důvěryhodných proxy serverů stojících před aplikací.
           Každá položka je CIDR řetězec, IP adresa nebo DNS název (např. Docker service jméno).
           Používá se pro správné určení IP adresy klienta z hlavičky ``X-Forwarded-For``.
-          Pokud nastavení chybí, použije se výchozí hodnota ``["10.0.1.0/24"]``.
+          Pokud nastavení chybí, použije se výchozí prázdný seznam ``[]``.
 
           Příklad::
 
@@ -168,7 +168,7 @@ Třídy
       Vrátí seznam důvěryhodných proxy serverů z cache nebo ``CustomAdminSettings``.
 
       Pokud nastavení ``trusted_proxies`` neexistuje, vrátí výchozí hodnotu
-      ``["10.0.1.0/24"]``.
+      ``[]``.
 
       :raises ValidationError: Pokud nastavení má neplatnou strukturu.
       :return: Seznam řetězců — CIDR rozsahy, IP adresy nebo DNS názvy.
