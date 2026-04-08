@@ -369,7 +369,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         )
 
         from heslar.hesla import HESLAR_PROJEKT_TYP
-        from heslar.hesla_dynamicka import TYP_PROJEKTU_ZACHRANNY_ID
+        from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
         from heslar.models import RuianKatastr
 
         heslare_typ_projektu, _ = HeslarNazev.objects.get_or_create(
@@ -383,6 +383,16 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                 "zkratka": "Z",
                 "heslo": "Záchranný",
                 "heslo_en": "Rescue",
+            },
+        )
+        survey_typ_projektu, _ = Heslar.objects.get_or_create(
+            id=TYP_PROJEKTU_PRUZKUM_ID,
+            defaults={
+                "ident_cely": TYP_PROJEKTU_PRUZKUM_ID,
+                "nazev_heslare": heslare_typ_projektu,
+                "zkratka": "P",
+                "heslo": "Průzkum",
+                "heslo_en": "Survey",
             },
         )
 
@@ -434,10 +444,19 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                     defaults={
                         "organizace": cls.organizace,
                         "hlavni_katastr": katastr,
+                        "typ_projektu": survey_typ_projektu,
+                    },
+                )
+                Projekt.objects.get_or_create(
+                    ident_cely="M-202400099B",
+                    defaults={
+                        "organizace": cls.organizace,
+                        "hlavni_katastr": katastr,
                         "typ_projektu": typ_projektu,
                     },
                 )
         cls.projekt = Projekt.objects.get(ident_cely="M-202400099A")
+        cls.non_survey_projekt = Projekt.objects.get(ident_cely="M-202400099B")
 
     def test_access_mode_closed_returns_503(self):
         """Režim ``closed`` vrátí HTTP 503 ještě před vstupem do DRF permission vrstvy."""
@@ -756,6 +775,21 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         response = self._post_xml(xml)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertIn("validation_errors", response.data)
+        self._assert_log_failure()
+
+    def test_non_survey_projekt_returns_404(self):
+        """XML s projektem mimo typ ``průzkum`` vrátí HTTP 404 stejně jako neexistující projekt."""
+        xml = self._minimal_nalez_xml(
+            ident_cely="SN-XML-BAD-NON-SURVEY-001",
+            projekt_ident=self.non_survey_projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn("validation_errors", response.data)
+        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-BAD-NON-SURVEY-001").exists())
         self._assert_log_failure()
 
     def test_schema_invalid_xml_returns_422(self):

@@ -42,6 +42,7 @@ from heslar.hesla import (
     HESLAR_PREDMET_SPECIFIKACE,
     HESLAR_PRISTUPNOST,
 )
+from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie
 from lxml import etree
@@ -1046,7 +1047,7 @@ class SamostatnyNalezXmlImportSerializer(serializers.ModelSerializer):
     ident_cely = serializers.CharField(required=False, allow_null=True)
     projekt = serializers.SlugRelatedField(
         slug_field="ident_cely",
-        queryset=Projekt.objects.all(),
+        queryset=Projekt.objects.filter(typ_projektu=TYP_PROJEKTU_PRUZKUM_ID),
     )
     katastr = serializers.SlugRelatedField(
         slug_field="kod",
