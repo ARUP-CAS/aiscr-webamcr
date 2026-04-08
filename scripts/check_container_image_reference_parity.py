@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import io
-import os
 import re
 import sys
 from collections import defaultdict
@@ -63,15 +62,6 @@ def log_msg(message: str, *, verbose_only: bool = False, verbose: bool = False) 
     if verbose_only and not verbose:
         return
     print(f"{LOG_PREFIX} {message}", file=sys.stderr)
-
-
-def is_pre_commit() -> bool:
-    """
-    Zjistí, zda skript běží jako pre-commit hook (pro implicitní verbose).
-
-    :return: True, pokud je v prostředí nastavena proměnná ``PRE_COMMIT``.
-    """
-    return bool(os.environ.get("PRE_COMMIT"))
 
 
 def is_literal_image_ref(value: str) -> bool:
@@ -475,7 +465,9 @@ def apply_compose_cross_fix(
                 log_msg(
                     f"NOTE: {consumer_path}: repo {repo_key!r} má literál {img!r}, "
                     f"ale {COMPOSE_PRODUCTION[0]} neobsahuje srovnatelný literál pro stejný repozitář — "
-                    f"cross-file srovnání přeskočeno (zkontroluj ručně / proměnné v prod)."
+                    f"cross-file srovnání přeskočeno (zkontroluj ručně / proměnné v prod).",
+                    verbose_only=True,
+                    verbose=verbose,
                 )
     return errors, modified
 
@@ -587,11 +579,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument(
         "--verbose",
         action="store_true",
-        help="Podrobnější výstup (v pre-commit zapnuto implicitně).",
+        help="Podrobnější výstup.",
     )
     args = parser.parse_args(argv)
 
-    verbose = bool(args.verbose) or is_pre_commit()
+    verbose = bool(args.verbose)
     root = Path.cwd()
 
     all_errors: List[str] = []

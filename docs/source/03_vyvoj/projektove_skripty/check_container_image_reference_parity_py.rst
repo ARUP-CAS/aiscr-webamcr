@@ -32,12 +32,6 @@ Funkce
    :param verbose_only: Pokud True, vypíše jen při verbose režimu.
    :param verbose: Aktuální verbose příznak.
 
-.. py:function:: is_pre_commit()
-
-   Zjistí, zda skript běží jako pre-commit hook (pro implicitní verbose).
-
-   :return: True, pokud je v prostředí nastavena proměnná ``PRE_COMMIT``.
-
 .. py:function:: is_literal_image_ref(value)
 
    Určí, zda hodnota ``image:`` v compose lze použít pro porovnání pinů (bez rozšíření proměnných).

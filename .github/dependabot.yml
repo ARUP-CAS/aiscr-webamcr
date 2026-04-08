@@ -5,22 +5,22 @@
 
 version: 2
 updates:
-  - package-ecosystem: "pip" # See documentation for possible values
-    directory: "/webclient/" # Location of package manifests
+  - package-ecosystem: "pip"
+    directory: "/webclient/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 30
     target-branch: test
 
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "npm"
+    directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 30
     target-branch: test
     
-  - package-ecosystem: "docker" # See documentation for possible values
-    directories: # Location of package manifests
+  - package-ecosystem: "docker"
+    directories:
       - "/" 
       - "/fedora/"
       - "/redis/"
@@ -30,17 +30,23 @@ updates:
     open-pull-requests-limit: 30
     target-branch: test
     
-  - package-ecosystem: "docker-compose" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "docker-compose"
+    directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 30
     target-branch: test
 
-  - package-ecosystem: "github-actions" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 30
     target-branch: test
- 
+
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    target-branch: test 
