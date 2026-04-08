@@ -146,13 +146,7 @@ class PasApiPermissionMixin:
                     addr = info[4][0]
                     networks.append(ipaddress.ip_network(addr, strict=False))
             except OSError:
-                # entry contains a configured trusted-proxy host/IP value, not a
-                # secret. Logging it is useful for troubleshooting DNS failures
-                # and incident-response evaluation.
-                # codeql[py/clear-text-logging-sensitive-data]
-                logger.warning(
-                    "pas.api.PasApiPermissionMixin._resolve_trusted_networks.dns_failed", extra={"entry": entry}
-                )
+                logger.warning("pas.api.PasApiPermissionMixin._resolve_trusted_networks.dns_failed")
 
         with PasApiPermissionMixin._trusted_proxy_resolve_lock:
             PasApiPermissionMixin._trusted_proxy_resolve_cache[cache_key] = (networks, time.time())
@@ -238,12 +232,7 @@ class PasApiPermissionMixin:
         except CustomAdminSettings.DoesNotExist:
             return []
         except (json.JSONDecodeError, TypeError):
-            # item_id is one of this module's fixed PAS setting identifiers.
-            # It is not secret or user-controlled sensitive data; exposing it is
-            # useful for troubleshooting and incident-response evaluation when an
-            # admin setting contains invalid JSON.
-            # codeql[py/clear-text-logging-sensitive-data]
-            logger.error("pas.api._load_json_setting.invalid_json", extra={"item_id": item_id})
+            logger.error("pas.api._load_json_setting.invalid_json")
             if raise_validation_error:
                 # item_id in the validation message is likewise intentional:
                 # it identifies which PAS admin setting is malformed and helps
