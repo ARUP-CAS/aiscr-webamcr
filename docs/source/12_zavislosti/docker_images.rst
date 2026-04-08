@@ -139,7 +139,7 @@ Logstash pro zpracování a transformaci logů. Zajišťuje parsování a indexo
 docker.elastic.co/elasticsearch/elasticsearch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 9.3.2
+- **Verze:** 9.3.3
 - **Licence:** SSPL, Elastic License 2.0, Apache License 2.0
 - **Odkaz:** https://github.com/elastic/elasticsearch
 
