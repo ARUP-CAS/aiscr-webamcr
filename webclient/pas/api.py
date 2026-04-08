@@ -230,7 +230,10 @@ class PasApiPermissionMixin:
         except CustomAdminSettings.DoesNotExist:
             return []
         except (json.JSONDecodeError, TypeError):
-            logger.error("pas.api._load_json_setting.invalid_json", extra={"item_id": item_id})
+            logger.error(
+                "pas.api._load_json_setting.invalid_json",
+                extra={"item_id": "<redacted>"},
+            )
             if raise_validation_error:
                 raise ValidationError(
                     {"value": _("pas.api.PasApiPermissionMixin.load_json_setting.invalid_json").format(item_id=item_id)}
