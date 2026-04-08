@@ -52,7 +52,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Licence
      - Odkaz
    * - Django
-     - 5.2.12
+     - 5.2.13
      - BSD-3-Clause
      - https://www.djangoproject.com/
    * - Jinja2
@@ -144,11 +144,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/asottile/cfgv
    * - charset-normalizer
-     - 3.4.6
+     - 3.4.7
      - MIT
      - https://github.com/jawah/charset_normalizer/blob/master/CHANGELOG.md
    * - click
-     - 8.3.1
+     - 8.3.2
      - BSD-3-Clause
      - https://github.com/pallets/click/
    * - click-didyoumean
@@ -180,7 +180,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Salamek/cron-descriptor
    * - cryptography
-     - 46.0.6
+     - 46.0.7
      - Apache-2.0 OR BSD-3-Clause
      - https://github.com/pyca/cryptography
    * - defusedxml
@@ -480,7 +480,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.2.1
+     - 1.2.2
      - MIT License
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
@@ -632,7 +632,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - PSF-2.0
      - https://github.com/python/typing_extensions
    * - tzdata
-     - 2025.3
+     - 2026.1
      - Apache-2.0
      - https://github.com/python/tzdata
    * - tzlocal
