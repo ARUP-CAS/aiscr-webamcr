@@ -573,6 +573,9 @@ class PasApiPermissionMixin:
             except ValueError:
                 return False
 
+        if not _is_trusted(remote_addr):
+            return remote_addr
+
         x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR", "")
         chain = [ip.strip() for ip in x_forwarded_for.split(",") if ip.strip()]
         for ip in reversed(chain):
@@ -870,6 +873,10 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
         """
         Zkontroluje a aktualizuje počítadlo požadavků v cache pro daný klíč a rate.
 
+        Implementace používá fixní časové okno s atomickými operacemi ``cache.add()``
+        a ``cache.incr()``. Oproti původnímu ukládání seznamu timestampů tím odpadá
+        read-modify-write race condition při souběžných požadavcích.
+
         :param cache_key: Klíč pro uložení počítadla v cache.
         :param rate: Řetězec limitu ve formátu ``počet/jednotka``.
         :param request: HTTP požadavek (použit pro logování).
@@ -882,17 +889,34 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
             return True
         max_requests, window = parsed
         now = time.time()
-        history = cache.get(cache_key, [])
-        history = [t for t in history if now - t < window]
-        if len(history) >= max_requests:
-            self.wait_seconds = window - (now - history[0]) if history else 1
+        window_started_key = f"{cache_key}:window_started"
+
+        if cache.add(cache_key, 1, timeout=window):
+            cache.add(window_started_key, now, timeout=window)
+            self.wait_seconds = None
+            return True
+
+        try:
+            current_count = cache.incr(cache_key)
+        except ValueError:
+            # The counter expired between add() and incr(); restart the window.
+            cache.set(cache_key, 1, timeout=window)
+            cache.set(window_started_key, now, timeout=window)
+            self.wait_seconds = None
+            return True
+
+        if current_count > max_requests:
+            window_started = cache.get(window_started_key)
+            if window_started is None:
+                cache.add(window_started_key, now, timeout=window)
+                window_started = now
+            self.wait_seconds = max(window - (now - float(window_started)), 1)
             logger.warning(
                 "pas.api.ApiImportThrottle.throttled",
                 extra={"cache_key": cache_key, "rate": rate},
             )
             return False
-        history.append(now)
-        cache.set(cache_key, history, window)
+        self.wait_seconds = None
         return True
 
     def wait(self):
@@ -1113,20 +1137,20 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
         return super().dispatch(request, *args, **kwargs)
 
     @staticmethod
-    def _fail(log_entry: "ApiRequestLog", body: dict, status: int) -> Response:
+    def _fail(log_entry: "ApiRequestLog", body: dict, http_status: int) -> Response:
         """
         Označí log záznam jako neúspěšný, vytvoří a vrátí chybovou odpověď.
 
         :param log_entry: Záznam logu API požadavku.
         :param body: Tělo odpovědi jako slovník.
-        :param status: HTTP stavový kód odpovědi.
+        :param http_status: HTTP stavový kód odpovědi.
 
         :return: Chybová HTTP odpověď se zadaným tělem a stavovým kódem.
         """
         log_entry.status = API_REQUEST_LOG_STATUS_FAILURE
         log_entry.finished_at = django.utils.timezone.now()
         log_entry.save(update_fields=["status", "finished_at"])
-        return Response(body, status=status)
+        return Response(body, status=http_status)
 
     @staticmethod
     def _success(
@@ -1134,6 +1158,11 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
     ) -> HttpResponse:
         """
         Označí log záznam jako úspěšný, zaloguje výsledek a vrátí XML odpověď s metadaty.
+
+        Tato metoda vrací surové XML bajty přes ``HttpResponse`` místo DRF ``Response``,
+        aby nedošlo k zásahu rendererů DRF do XML výstupu. Chybové odpovědi v téže view
+        jsou vytvářeny metodou ``_fail()``, která používá DRF ``Response`` pro standardní
+        serializaci strukturovaného JSON těla.
 
         :param log_entry: Záznam logu API požadavku.
         :param instance: Uložený záznam samostatného nálezu.
@@ -1145,7 +1174,7 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
         log_entry.status = API_REQUEST_LOG_STATUS_SUCCESS
         log_entry.finished_at = django.utils.timezone.now()
         log_entry.ident_cely = instance.ident_cely
-        log_entry.samostatny_nalez_id = instance.pk  # type: ignore[attr-defined]
+        log_entry.samostatny_nalez = instance
         log_entry.save(update_fields=["status", "finished_at", "ident_cely", "samostatny_nalez"])
 
         user_pk = log_entry.user.pk if log_entry.user else None
@@ -1321,6 +1350,7 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
             )
 
         validation_error: tuple[dict, int] | None = None
+        instance = None
         with transaction.atomic():
             fedora_transaction = FedoraTransaction(transaction_user=request.user)
             serializer_data = dict(data)
@@ -1353,6 +1383,12 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
 
         if validation_error is not None:
             return self._fail(log_entry, *validation_error)
+        if instance is None:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.invalid_data")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
 
         fedora_transaction.mark_transaction_as_closed()
 

@@ -332,6 +332,10 @@ Třídy
 
       Zkontroluje a aktualizuje počítadlo požadavků v cache pro daný klíč a rate.
 
+      Implementace používá fixní časové okno s atomickými operacemi ``cache.add()``
+      a ``cache.incr()``. Oproti původnímu ukládání seznamu timestampů tím odpadá
+      read-modify-write race condition při souběžných požadavcích.
+
       :param cache_key: Klíč pro uložení počítadla v cache.
       :param rate: Řetězec limitu ve formátu ``počet/jednotka``.
       :param request: HTTP požadavek (použit pro logování).
@@ -421,13 +425,18 @@ Třídy
 
       :param log_entry: Záznam logu API požadavku.
       :param body: Tělo odpovědi jako slovník.
-      :param status: HTTP stavový kód odpovědi.
+      :param http_status: HTTP stavový kód odpovědi.
 
       :return: Chybová HTTP odpověď se zadaným tělem a stavovým kódem.
 
    .. py:method:: _success()
 
       Označí log záznam jako úspěšný, zaloguje výsledek a vrátí XML odpověď s metadaty.
+
+      Tato metoda vrací surové XML bajty přes ``HttpResponse`` místo DRF ``Response``,
+      aby nedošlo k zásahu rendererů DRF do XML výstupu. Chybové odpovědi v téže view
+      jsou vytvářeny metodou ``_fail()``, která používá DRF ``Response`` pro standardní
+      serializaci strukturovaného JSON těla.
 
       :param log_entry: Záznam logu API požadavku.
       :param instance: Uložený záznam samostatného nálezu.

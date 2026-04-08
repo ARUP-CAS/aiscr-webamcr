@@ -161,6 +161,18 @@ class PasApiPermissionTests(TestCase):
         self.assertTrue(throttle.allow_request(request))
         self.assertTrue(throttle.allow_request(request))
 
+    def test_api_import_throttle_uses_atomic_fixed_window_counter(self):
+        """Throttle používá atomický čítač ve fixním okně a nastaví wait čas při překročení limitu."""
+        throttle = ApiImportThrottle()
+        request = self._build_request(ip="203.0.113.10")
+
+        with patch("pas.api.time.time", return_value=1000.0):
+            self.assertTrue(throttle._check_limit("throttle_ip_203.0.113.10", "2/m", request))
+            self.assertTrue(throttle._check_limit("throttle_ip_203.0.113.10", "2/m", request))
+            self.assertFalse(throttle._check_limit("throttle_ip_203.0.113.10", "2/m", request))
+
+        self.assertEqual(throttle.wait_seconds, 60)
+
     def test_custom_admin_setting_full_clean_allows_valid_access_rules(self):
         """Validní `access_rules` projdou `full_clean()` a lze je uložit."""
         instance = CustomAdminSettings(
