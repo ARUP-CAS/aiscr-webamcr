@@ -69,6 +69,7 @@ _PAS_API_GROUP = "pas_api"
 _ACCESS_RULES_ID = "access_rules"
 _RATE_LIMITS_ID = "rate_limits"
 _ACCESS_MODE_ID = "access_mode"
+# codeql[py/clear-text-logging-sensitive-data]
 _TRUSTED_PROXIES_ID = "trusted_proxies"
 _AMCR_SCHEMA_LOCK = threading.Lock()
 _ALLOWED_SCHEMA_URL_PATTERNS = (
@@ -102,6 +103,7 @@ ACCESS_MODE_CLOSED = "closed"
 _ACCESS_MODES = {ACCESS_MODE_OPEN, ACCESS_MODE_WHITELIST_ONLY, ACCESS_MODE_CLOSED}
 _PAS_API_ITEM_IDS = {_ACCESS_RULES_ID, _RATE_LIMITS_ID, _ACCESS_MODE_ID, _TRUSTED_PROXIES_ID}
 
+# codeql[py/clear-text-logging-sensitive-data]
 _DEFAULT_TRUSTED_PROXIES = ["10.0.1.0/24"]
 
 
@@ -571,6 +573,7 @@ class PasApiPermissionMixin:
         :return: IP adresa klienta jako řetězec.
         """
         remote_addr = request.META.get("REMOTE_ADDR", "")
+        # codeql[py/clear-text-logging-sensitive-data]
         trusted_entries = cls.get_trusted_proxies()
         trusted_networks = cls._resolve_trusted_networks(trusted_entries)
 
