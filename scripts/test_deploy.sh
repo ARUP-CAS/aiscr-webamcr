@@ -75,7 +75,7 @@ actualize_repo ()
             git fetch origin
             git clean -fd
             git restore .
-            git checkout -B main origin/main
+            git checkout -B main origin/main || exit 1
             git reset --hard origin/main
             valid_ans=true
         elif [ "$ans" = "n" ] || [ "$ans" = "N" ]; then
