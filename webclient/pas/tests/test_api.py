@@ -73,10 +73,13 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self._clear_pas_api_settings()
         super().tearDown()
 
-    def _assert_log_failure(self) -> None:
-        """Ověří, že byl vytvořen jeden log záznam se stavem ``FAILURE``."""
+    def _assert_log_failure(self, expected_errors: dict | None = None) -> None:
+        """Ověří, že byl vytvořen jeden log záznam se stavem ``FAILURE`` a volitelně i uloženými chybami."""
         self.assertEqual(ApiRequestLog.objects.count(), 1)
-        self.assertEqual(ApiRequestLog.objects.get().status, API_REQUEST_LOG_STATUS_FAILURE)
+        log_entry = ApiRequestLog.objects.get()
+        self.assertEqual(log_entry.status, API_REQUEST_LOG_STATUS_FAILURE)
+        if expected_errors is not None:
+            self.assertEqual(log_entry.errors, expected_errors)
 
     def _assert_log_success(self) -> None:
         """Ověří, že byl vytvořen jeden log záznam se stavem ``SUCCESS``."""
@@ -521,7 +524,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         response = self._post_xml(self._load_xml("empty_document.xml"))
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("detail", response.data)
-        self._assert_log_failure()
+        self._assert_log_failure(response.data)
 
     def test_get_amcr_schema_initializes_schema_only_once_across_threads(self):
         """Paralelní volání ``_get_amcr_schema`` zkompiluje schéma právě jednou."""
@@ -641,7 +644,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         self.assertIn("validation_errors", response.data)
         self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-HES-MISMATCH-001").exists())
-        self._assert_log_failure()
+        self._assert_log_failure(response.data)
 
     def test_invalid_token_returns_401(self):
         """Požadavek s neplatným tokenem vrátí HTTP 401. Log záznam se nevytvoří — autentizace selže před view."""
@@ -974,6 +977,35 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self._assert_xml_success_response(response, "SN-XML-001")
         self.assertTrue(SamostatnyNalez.objects.filter(ident_cely="SN-XML-001").exists())
         self._assert_log_success()
+
+    def test_duplicate_ident_cely_returns_422(self):
+        """Opakovaný import stejného ``ident_cely`` vrátí validační chybu HTTP 422."""
+        xml = self._minimal_nalez_xml(
+            ident_cely="SN-XML-DUP-001",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+
+        first_response = self._post_xml(xml)
+
+        self._assert_xml_success_response(first_response, "SN-XML-DUP-001")
+        self.assertTrue(SamostatnyNalez.objects.filter(ident_cely="SN-XML-DUP-001").exists())
+
+        duplicate_response = self._post_xml(xml)
+
+        self.assertEqual(duplicate_response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", duplicate_response.data)
+        self.assertEqual(
+            duplicate_response.data["validation_errors"][0]["error_type"], ImportErrorType.INVALID_DATA.value
+        )
+        self.assertEqual(SamostatnyNalez.objects.filter(ident_cely="SN-XML-DUP-001").count(), 1)
+
+        logs = list(ApiRequestLog.objects.order_by("received_at", "id"))
+        self.assertEqual(len(logs), 2)
+        self.assertEqual(logs[0].status, API_REQUEST_LOG_STATUS_SUCCESS)
+        self.assertEqual(logs[1].status, API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIsNotNone(logs[1].finished_at)
+        self.assertEqual(logs[1].errors, duplicate_response.data)
 
     def test_valid_xml_links_katastr_by_ruian_id(self):
         """Import naváže ``katastr`` podle XML ``id="ruian-..."`` na unikátní RÚIAN kód."""

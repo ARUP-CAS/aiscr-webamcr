@@ -1149,7 +1149,8 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
         """
         log_entry.status = API_REQUEST_LOG_STATUS_FAILURE
         log_entry.finished_at = django.utils.timezone.now()
-        log_entry.save(update_fields=["status", "finished_at"])
+        log_entry.errors = body
+        log_entry.save(update_fields=["status", "finished_at", "errors"])
         return Response(body, status=http_status)
 
     @staticmethod
@@ -1372,6 +1373,27 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
                     self._validation_status(exc.import_errors),
                 )
                 transaction.set_rollback(True)
+
+            if validation_error is None:
+                if (
+                    serializer.validated_data.get("ident_cely")
+                    and SamostatnyNalez.objects.filter(ident_cely=serializer.validated_data["ident_cely"]).exists()
+                ):
+                    validation_error = (
+                        {
+                            "validation_errors": [
+                                ImportValidationIssue(
+                                    line=elem.sourceline,
+                                    column=None,
+                                    message="ident_cely: "
+                                    + _("pas.api.SamostatnyNalezXmlImportView.post.ident_cely_already_exists"),
+                                    error_type=ImportErrorType.INVALID_DATA,
+                                ).to_dict()
+                            ]
+                        },
+                        status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    )
+                    transaction.set_rollback(True)
 
             if validation_error is None:
                 instance = SamostatnyNalez(**serializer.validated_data)
