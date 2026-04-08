@@ -543,11 +543,11 @@ def run_data_import(job_id, user_id, lock_token):
         record_count = int(redis_connector.get(f"import_data_count_{job_id}").decode("utf-8"))
         performed_action = redis_connector.get(f"import_performed_action_{job_id}").decode("utf-8")
         redis_connector.delete(f"import_data_progress_ids_{job_id}", f"import_data_progress_details_{job_id}")
-        redis_connector.set(f"import_data_files_{job_id}", json.dumps([]), ex=IMPORT_DATA_EXPIRATION_SECONDS)
+        redis_connector.set(f"import_data_files_{job_id}", json.dumps([]), ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
         redis_connector.set(
-            f"import_data_history_record_result_{job_id}", json.dumps({}), ex=IMPORT_DATA_EXPIRATION_SECONDS
+            f"import_data_history_record_result_{job_id}", json.dumps({}), ex=IMPORT_DATA_RUNNING_TTL_SECONDS
         )
-        redis_connector.set(f"import_fedora_result_{job_id}", json.dumps({}), ex=IMPORT_DATA_EXPIRATION_SECONDS)
+        redis_connector.set(f"import_fedora_result_{job_id}", json.dumps({}), ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
         failed = False
         import_primary_keys = {}
         import_history_record_result = {}
