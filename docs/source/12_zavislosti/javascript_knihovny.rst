@@ -35,7 +35,7 @@ Knihovny instalované pomocí Node.js
      - MIT
      - https://github.com/dangrossman/daterangepicker
    * - dropzone
-     - 5.7.0
+     - 5.9.3
      - MIT
      - http://www.dropzonejs.com
    * - jquery
