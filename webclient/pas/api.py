@@ -144,9 +144,7 @@ class PasApiPermissionMixin:
                     addr = info[4][0]
                     networks.append(ipaddress.ip_network(addr, strict=False))
             except OSError:
-                logger.warning(
-                    "pas.api.PasApiPermissionMixin._resolve_trusted_networks.dns_failed"
-                )
+                logger.warning("pas.api.PasApiPermissionMixin._resolve_trusted_networks.dns_failed")
 
         with PasApiPermissionMixin._trusted_proxy_resolve_lock:
             PasApiPermissionMixin._trusted_proxy_resolve_cache[cache_key] = (networks, time.time())
