@@ -20,6 +20,7 @@ from core.constants import (
     ZAPSANI_SN,
 )
 from core.models import ApiRequestLog, Permissions
+from core.repository_connector import FedoraNoResponseError
 from core.setting_models import CustomAdminSettings
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -834,7 +835,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self._assert_log_success()
 
     def test_tba_nalezce_is_rolled_back_when_samostatny_nalez_save_fails(self):
-        """Při chybě ukládání nálezu se nově vytvořená osoba v rámci importu vrátí zpět rollbackem."""
+        """Při chybě ukládání nálezu se vrátí HTTP 500 a nově vytvořená osoba se vrátí rollbackem."""
         template = self._load_xml("nalez_tba_nalezce.xml").decode("utf-8")
         xml = template.format(
             IDENT_CELY="SN-XML-TBA-ROLLBACK-001",
@@ -852,11 +853,42 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         force_authenticate(request, user=self.user, token=self.token)
 
         with patch("pas.api.SamostatnyNalez.save", side_effect=RuntimeError("save failed")):
-            with self.assertRaises(RuntimeError):
-                SamostatnyNalezXmlImportView.as_view()(request)
+            response = SamostatnyNalezXmlImportView.as_view()(request)
 
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(
+            response.data,
+            {"detail": "pas.api.SamostatnyNalezXmlImportView.post.internal_error"},
+        )
         self.assertFalse(Osoba.objects.filter(prijmeni="Novák", jmeno="Jan").exists())
         self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-TBA-ROLLBACK-001").exists())
+        self._assert_log_failure(response.data)
+
+    def test_get_metadata_failure_returns_500_with_failed_log(self):
+        """Selhání čtení metadat z Fedory po uložení záznamu vrátí HTTP 500 a uzavře API log jako neúspěšný."""
+        xml = self._minimal_nalez_xml(
+            ident_cely="SN-XML-METADATA-FAIL-001",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+
+        connector = Mock()
+        connector.get_metadata.side_effect = FedoraNoResponseError(
+            "http://fedora.example/rest/record/SN-XML-METADATA-FAIL-001",
+            "No Fedora response",
+            None,
+        )
+
+        with patch("pas.api.FedoraRepositoryConnector", return_value=connector):
+            response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(
+            response.data,
+            {"detail": "pas.api.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving"},
+        )
+        self.assertTrue(SamostatnyNalez.objects.filter(ident_cely="SN-XML-METADATA-FAIL-001").exists())
+        self._assert_log_failure(response.data)
 
     def test_tba_nalezce_with_invalid_format_returns_422(self):
         """Import s ``nalezce id=":tba"`` a nevalidním formátem vrátí HTTP 422."""

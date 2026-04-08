@@ -25,11 +25,11 @@ from core.constants import (
 )
 from core.ident_cely import get_sn_ident
 from core.models import ApiRequestLog, Permissions, check_permissions
-from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
+from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction, FedoraTransactionStatus
 from core.setting_models import CustomAdminSettings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import DatabaseError, transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.http import HttpResponse, JsonResponse
@@ -1384,71 +1384,92 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
                 status.HTTP_403_FORBIDDEN,
             )
 
-        validation_error: tuple[dict, int] | None = None
         instance = None
-        with transaction.atomic():
-            fedora_transaction = FedoraTransaction(transaction_user=request.user)
-            serializer_data = dict(data)
-            if nova_osoba is not None:
-                nova_osoba.active_transaction = fedora_transaction
-                nova_osoba.save()  # Osoba must be saved to get ident_cely before the serializer validation
-                serializer_data["nalezce"] = nova_osoba.ident_cely
+        try:
+            with transaction.atomic():
+                fedora_transaction = FedoraTransaction(transaction_user=request.user)
+                serializer_data = dict(data)
+                if nova_osoba is not None:
+                    nova_osoba.active_transaction = fedora_transaction
+                    nova_osoba.save()  # Osoba must be saved to get ident_cely before the serializer validation
+                    serializer_data["nalezce"] = nova_osoba.ident_cely
 
-            try:
                 serializer = SamostatnyNalezXmlImportSerializer(data=serializer_data)
                 if not serializer.is_valid():
                     raise ImportValidationException.from_serializer_errors(serializer.errors, line=elem.sourceline)
                 self._validate_heslar_value_matches(serializer.validated_data, elem)
-            except ImportValidationException as exc:
-                # Store the error and mark the transaction for rollback. _fail() must be called
-                # outside the atomic() block — set_rollback(True) prevents any further DB queries.
-                validation_error = (
-                    {"validation_errors": [e.to_dict() for e in exc.import_errors]},
-                    self._validation_status(exc.import_errors),
-                )
-                transaction.set_rollback(True)
 
-            if validation_error is None:
                 if (
                     serializer.validated_data.get("ident_cely")
                     and SamostatnyNalez.objects.filter(ident_cely=serializer.validated_data["ident_cely"]).exists()
                 ):
-                    validation_error = (
-                        {
-                            "validation_errors": [
-                                ImportValidationIssue(
-                                    line=elem.sourceline,
-                                    column=None,
-                                    message="ident_cely: "
-                                    + _("pas.api.SamostatnyNalezXmlImportView.post.ident_cely_already_exists"),
-                                    error_type=ImportErrorType.INVALID_DATA,
-                                ).to_dict()
-                            ]
-                        },
-                        status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    raise ImportValidationException(
+                        ImportValidationIssue(
+                            line=elem.sourceline,
+                            column=None,
+                            message="ident_cely: "
+                            + _("pas.api.SamostatnyNalezXmlImportView.post.ident_cely_already_exists"),
+                            error_type=ImportErrorType.INVALID_DATA,
+                        )
                     )
-                    transaction.set_rollback(True)
 
-            if validation_error is None:
                 instance = SamostatnyNalez(**serializer.validated_data)
                 if not instance.ident_cely:
                     instance.ident_cely = get_sn_ident(instance.projekt)
                 instance.active_transaction = fedora_transaction
                 instance.save()
                 self._create_import_history_records(instance, request.user)
-
-        if validation_error is not None:
-            return self._fail(log_entry, *validation_error)
-        if instance is None:
+                fedora_transaction.mark_transaction_as_closed()
+        except ImportValidationException as exc:
+            logger.error("pas.api.SamostatnyNalezXmlImportView.post.import_validation_error", extra={"error": exc})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.invalid_data")},
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                {"validation_errors": [e.to_dict() for e in exc.import_errors]},
+                self._validation_status(exc.import_errors),
+            )
+        except FedoraError as err:
+            logger.error("pas.api.SamostatnyNalezXmlImportView.post.fedora_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except DatabaseError as err:
+            logger.error("pas.api.SamostatnyNalezXmlImportView.post.database_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except Exception as err:
+            logger.error("pas.api.SamostatnyNalezXmlImportView.post.unexpected_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        fedora_transaction.mark_transaction_as_closed()
-
-        metadata = FedoraRepositoryConnector(instance).get_metadata(update=False)
+        try:
+            metadata = FedoraRepositoryConnector(instance).get_metadata()
+        except FedoraError as err:
+            logger.error(
+                "pas.api.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving", extra={"error": err}
+            )
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         return self._success(log_entry, instance, metadata, notes)
 
