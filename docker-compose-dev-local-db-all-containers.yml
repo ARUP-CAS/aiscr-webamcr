@@ -113,7 +113,8 @@ services:
       - redis_host
     depends_on:
       - redis
-    entrypoint: ["/bin/sh", "-c", "export REDIS_ADDR=$$(cat /var/run/secrets/redis_host) ; export REDIS_PASSWORD=$$(cat /run/secrets/redis_pass) ; /redis_exporter"]
+    entrypoint: ["/bin/sh", "-c", "export REDIS_ADDR=$$(cat /var/run/secrets/redis_host)
+          ; export REDIS_PASSWORD=$$(cat /run/secrets/redis_pass) ; /redis_exporter"]
 
   grafana:
     image: grafana/grafana-enterprise:12.4.2
@@ -186,7 +187,8 @@ services:
       - "9808:9808"
     depends_on:
       - redis
-    entrypoint: ["/bin/sh", "-c", "export CE_BROKER_URL=\"redis://:$$(cat /var/run/secrets/redis_pass)@$$(cat /var/run/secrets/redis_host)\"; python /app/cli.py"]
+    entrypoint: ["/bin/sh", "-c", "export CE_BROKER_URL=\"redis://:$$(cat /var/run/secrets/redis_pass)@$$(cat
+          /var/run/secrets/redis_host)\"; python /app/cli.py"]
 
   selenium:
     image: selenium/standalone-chromium:145.0
@@ -219,7 +221,7 @@ services:
       - elasticsearch_volume:/usr/share/elasticsearch/data
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:9.3.2
+    image: docker.elastic.co/kibana/kibana:9.3.3
     restart: always
     ports:
       - 5601:5601
@@ -241,7 +243,8 @@ services:
     environment:
       - UMASK=002
       - TOMCAT_USERS_FILE=/var/run/secrets/tomcat_users
-      - JAVA_TOOL_OPTIONS=-Dfcrepo.config.file=/opt/fcrepo/conf/fcrepo.properties -Dfcrepo.log=DEBUG
+      - JAVA_TOOL_OPTIONS=-Dfcrepo.config.file=/opt/fcrepo/conf/fcrepo.properties
+        -Dfcrepo.log=DEBUG
     container_name: fcrepo
     logging:
       driver: "json-file"

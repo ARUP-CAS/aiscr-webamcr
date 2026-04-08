@@ -148,7 +148,7 @@ Elasticsearch pro fulltextové vyhledávání a analýzu logů. Ukládá a index
 docker.elastic.co/kibana/kibana
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 9.3.2
+- **Verze:** 9.3.3
 - **Licence:** SSPL, Elastic License 2.0, Apache License 2.0
 - **Odkaz:** https://github.com/elastic/kibana
 
