@@ -39,7 +39,7 @@ Knihovny instalované pomocí Node.js
      - MIT
      - http://www.dropzonejs.com
    * - jquery
-     - 3.7.1
+     - 4.0.0
      - MIT
      - https://jquery.com
    * - leaflet
