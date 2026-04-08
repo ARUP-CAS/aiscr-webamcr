@@ -730,7 +730,7 @@ def run_data_import(job_id, user_id, lock_token):
                         redis_connector.set(
                             f"import_data_primary_keys_{job_id}",
                             json.dumps(import_primary_keys),
-                            ex=IMPORT_DATA_EXPIRATION_SECONDS,
+                            ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
                         )
                     except Exception as err:
                         logger.info(
