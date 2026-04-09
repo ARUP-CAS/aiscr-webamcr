@@ -1968,6 +1968,8 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 serializer_data = dict(data)
                 if nova_osoba is not None:
                     nova_osoba.active_transaction = fedora_transaction
+                    # active_transaction is an attribute that defines a Fedora transaction attached to the objects,
+                    # not a database field, so there is no point in using it as an argument in the save method.
                     nova_osoba.save()  # Osoba must be saved to get ident_cely before the serializer validation
                     serializer_data["nalezce"] = nova_osoba.ident_cely
 
@@ -1994,6 +1996,8 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 if not instance.ident_cely:
                     instance.ident_cely = get_sn_ident(instance.projekt)
                 instance.active_transaction = fedora_transaction
+                # active_transaction is an attribute that defines a Fedora transaction attached to the objects,
+                # not a database field, so there is no point in using it as an argument in the save method.
                 instance.save()
                 self._create_import_history_records(instance, request.user)
                 fedora_transaction.mark_transaction_as_closed()
@@ -2137,19 +2141,24 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
         Aktualizuje pole ``evidencni_cislo`` záznamu samostatného nálezu.
 
         Přijímá ``ident_cely`` záznamu jako součást URL a novou hodnotu ``evidencni_cislo``
-        jako query parametr. Pro smazání hodnoty lze předat prázdný řetězec.
+        jako query parametr. Parametr ``evidencni_cislo`` je povinný a jeho
+        hodnota musí být neprázdná. Endpoint rozlišuje mezi chybějícím
+        parametrem a přítomným parametrem s prázdnou hodnotou, aby klient
+        mohl oba validační stavy zpracovat odlišně.
 
         Příklad volání::
 
             PATCH /pas/api/nalez/M-202400001-N00001/evidencni-cislo?evidencni_cislo=EC-2024-001
 
-        :param request: HTTP požadavek s query parametrem ``evidencni_cislo``.
+        :param request: HTTP požadavek s povinným query parametrem
+                        ``evidencni_cislo``, který nesmí být prázdný.
         :param ident_cely: Identifikátor záznamu samostatného nálezu.
         :param format: Formát odpovědi.
 
         :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
-                 nebo chybou syntaxe volání (HTTP 400), nenalezeným záznamem (HTTP 404),
-                 nedostatečnými oprávněními (HTTP 403),
+                 nebo chybou syntaxe volání (HTTP 400; chybějící parametr
+                 ``evidencni_cislo`` nebo prázdná hodnota), nenalezeným
+                 záznamem (HTTP 404), nedostatečnými oprávněními (HTTP 403),
                  nebo interní chybou (HTTP 500).
         """
         log_entry = ApiRequestLog.objects.create(
@@ -2158,7 +2167,7 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
             request_target=API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH,
         )
 
-        if "evidencni_cislo" not in request.query_params or not request.query_params["evidencni_cislo"]:
+        if "evidencni_cislo" not in request.query_params:
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.missing_evidencni_cislo")},
@@ -2166,6 +2175,16 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
             )
 
         evidencni_cislo = request.query_params["evidencni_cislo"]
+
+        # "Missing" and "empty" must stay separate so API clients can
+        # distinguish an omitted query parameter from an explicitly invalid
+        # empty value.
+        if evidencni_cislo == "":
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.empty_evidencni_cislo")},
+                status.HTTP_400_BAD_REQUEST,
+            )
 
         if len(evidencni_cislo) > self._MAX_EVIDENCNI_CISLO_LENGTH:
             return self._fail(
@@ -2207,6 +2226,8 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
             with transaction.atomic():
                 instance.evidencni_cislo = evidencni_cislo
                 instance.active_transaction = fedora_transaction
+                # active_transaction is an attribute that defines a Fedora transaction attached to the objects,
+                # not a database field, so there is no point in using it as an argument in the save method.
                 instance.save(update_fields=["evidencni_cislo"])
                 self._create_history_record(instance, request.user, old_evidencni_cislo, evidencni_cislo)
                 fedora_transaction.mark_transaction_as_closed()
@@ -2485,6 +2506,8 @@ class SamostatnyNalezXmlUpdateView(SamostatnyNalezXmlBaseView):
                 for field, new_val in serializer.validated_data.items():
                     setattr(instance, field, new_val)
                 instance.active_transaction = fedora_transaction
+                # active_transaction is an attribute that defines a Fedora transaction attached to the objects,
+                # not a database field, so there is no point in using it as an argument in the save method.
                 instance.save(update_fields=changed_fields)
                 self._create_history_record(instance, request.user, changed_fields)
                 fedora_transaction.mark_transaction_as_closed()

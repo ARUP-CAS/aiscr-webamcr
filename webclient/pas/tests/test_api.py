@@ -1532,7 +1532,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("detail", response.data)
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
-        self.assertIn("missing_evidencni_cislo", str(log.errors))
+        self.assertIn("empty_evidencni_cislo", str(log.errors))
 
     def test_evidencni_cislo_too_long_returns_400(self):
         """Příliš dlouhé ``evidencni_cislo`` (přes 255 znaků) vrátí HTTP 400 a log se stavem FAILURE."""

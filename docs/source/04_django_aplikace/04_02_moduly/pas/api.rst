@@ -651,19 +651,24 @@ Třídy
       Aktualizuje pole ``evidencni_cislo`` záznamu samostatného nálezu.
 
       Přijímá ``ident_cely`` záznamu jako součást URL a novou hodnotu ``evidencni_cislo``
-      jako query parametr. Pro smazání hodnoty lze předat prázdný řetězec.
+      jako query parametr. Parametr ``evidencni_cislo`` je povinný a jeho
+      hodnota musí být neprázdná. Endpoint rozlišuje mezi chybějícím
+      parametrem a přítomným parametrem s prázdnou hodnotou, aby klient
+      mohl oba validační stavy zpracovat odlišně.
 
       Příklad volání::
 
           PATCH /pas/api/nalez/M-202400001-N00001/evidencni-cislo?evidencni_cislo=EC-2024-001
 
-      :param request: HTTP požadavek s query parametrem ``evidencni_cislo``.
+      :param request: HTTP požadavek s povinným query parametrem
+                      ``evidencni_cislo``, který nesmí být prázdný.
       :param ident_cely: Identifikátor záznamu samostatného nálezu.
       :param format: Formát odpovědi.
 
       :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
-               nebo chybou syntaxe volání (HTTP 400), nenalezeným záznamem (HTTP 404),
-               nedostatečnými oprávněními (HTTP 403),
+               nebo chybou syntaxe volání (HTTP 400; chybějící parametr
+               ``evidencni_cislo`` nebo prázdná hodnota), nenalezeným
+               záznamem (HTTP 404), nedostatečnými oprávněními (HTTP 403),
                nebo interní chybou (HTTP 500).
 
    .. py:method:: _create_history_record()
