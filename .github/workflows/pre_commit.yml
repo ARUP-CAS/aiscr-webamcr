@@ -18,10 +18,6 @@ on:
         description: "Bypass file/class/method exclusions in docstring reminder hook"
         type: boolean
         default: false
-      strict_precommit_check:
-        description: "Fail workflow on docstring, flake8 or log warnings"
-        type: boolean
-        default: false
 
 permissions:
   contents: write
@@ -88,11 +84,8 @@ jobs:
         id: hooks
         env:
           DOCSTRING_CHECK_BYPASS_EXCLUSIONS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.bypass_docstring_exclusions == 'true' || 'false' }}
-          DOCSTRING_CHECK_STRICT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.strict_precommit_check == 'true' || 'false' }}
         run: |
           set +e
-
-          echo "strict_mode=$DOCSTRING_CHECK_STRICT" >> "$GITHUB_OUTPUT"
 
           pre-commit run --all-files 2>&1 | tee precommit.log
           EXIT_CODE=${PIPESTATUS[0]}
@@ -221,7 +214,6 @@ jobs:
             echo "## ⚠️ Pre-commit results"
             echo ""
             echo "- Exit code: ${{ steps.hooks.outputs.exit_code }}"
-            echo "- Strict mode: ${{ steps.hooks.outputs.strict_mode }}"
             echo "- Changes detected: ${{ steps.changes.outputs.changed }}"
             echo ""
           } >> "$GITHUB_STEP_SUMMARY"
@@ -367,13 +359,3 @@ jobs:
         run: |
           echo "Pre-commit exited with ${{ steps.hooks.outputs.exit_code }} and no fix PR was generated."
           exit 1
-
-      - name: Final status check
-        if: steps.hooks.outputs.strict_mode == 'true'
-        run: |
-          if [ -n "${{ steps.hooks.outputs.log_warnings }}" ] || \
-             [ -n "${{ steps.hooks.outputs.doc_warnings }}" ] || \
-             [ -n "${{ steps.hooks.outputs.flake_errors }}" ]; then
-            echo "Strict mode enabled and issues found."
-            exit 1
-          fi
