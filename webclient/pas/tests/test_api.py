@@ -1,4 +1,4 @@
-"""Jednotkové testy API pro import samostatného nálezu z XML."""
+"""Jednotkové testy API pro PAS endpoints."""
 
 import base64
 import hashlib
@@ -12,8 +12,11 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from core.constants import (
+    AKTUALIZACE_SN,
     API_REQUEST_LOG_STATUS_FAILURE,
     API_REQUEST_LOG_STATUS_SUCCESS,
+    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH,
+    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_UPDATE,
     ODESLANI_SN,
     POTVRZENI_SN,
     SN_ZAPSANY,
@@ -24,12 +27,20 @@ from core.repository_connector import FedoraNoResponseError
 from core.setting_models import CustomAdminSettings
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import DatabaseError
 from django.test import TestCase
 from django.urls import reverse
+from heslar.hesla import HESLAR_LICENCE, HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
+from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 from heslar.models import Heslar, HeslarNazev, RuianKatastr
 from historie.models import Historie
 from lxml import etree
-from pas.api import ImportErrorType, ImportValidationException, SamostatnyNalezXmlImportView
+from pas.api import (
+    ImportErrorType,
+    ImportValidationException,
+    SamostatnyNalezEvidencniCisloPatchView,
+    SamostatnyNalezXmlImportView,
+)
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from rest_framework import status
@@ -41,6 +52,9 @@ from uzivatel.models import Organizace, Osoba, User
 logger = logging.getLogger(__name__)
 
 XML_IMPORT_URL = reverse("pas:api-import-xml")
+PATCH_URL_NAME = "pas:api-patch-evidencni-cislo"
+XML_UPDATE_URL_NAME = "pas:api-update-xml"
+IDENT_CELY = "C-202600009-N00007"
 
 
 class SamostatnyNalezXmlImportViewTests(TestCase):
@@ -1256,3 +1270,919 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self._assert_xml_success_response(response, "SN-XML-LANG-001")
         self.assertTrue(SamostatnyNalez.objects.filter(ident_cely="SN-XML-LANG-001").exists())
         self._assert_log_success()
+
+
+class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
+    """Testy pro ``SamostatnyNalezEvidencniCisloPatchView``."""
+
+    databases = {"default", "urgent"}
+
+    def setUp(self):
+        """Připraví per-test mocky Fedora repozitáře."""
+        super().setUp()
+
+        patcher = patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+        self._fedora_transaction_counter = 0
+        transaction_patcher = patch("pas.api.FedoraTransaction", side_effect=self._build_mock_fedora_transaction)
+        transaction_patcher.start()
+        self.addCleanup(transaction_patcher.stop)
+
+        repository_connector_patcher = patch(
+            "pas.api.FedoraRepositoryConnector", side_effect=self._build_mock_repository_connector
+        )
+        repository_connector_patcher.start()
+        self.addCleanup(repository_connector_patcher.stop)
+
+    def _build_mock_fedora_transaction(self, *args, **kwargs):
+        """
+        Vytvoří mock Fedora transakce pro API testy.
+
+        :param args: Poziční argumenty předané při inicializaci ``FedoraTransaction``.
+        :param kwargs: Klíčové argumenty předané při inicializaci ``FedoraTransaction``.
+
+        :return: Mock objekt napodobující Fedora transakci.
+        """
+        self._fedora_transaction_counter += 1
+        transaction = Mock()
+        transaction.uid = f"test-fedora-transaction-{self._fedora_transaction_counter}"
+        transaction.status = Mock()
+        return transaction
+
+    def _build_mock_repository_connector(self, record, *args, **kwargs):
+        """
+        Vytvoří mock repository connector pro čtení XML metadat.
+
+        :param record: Záznam, pro který se metadata čtou.
+        :param args: Poziční argumenty předané při inicializaci connectoru.
+        :param kwargs: Klíčové argumenty předané při inicializaci connectoru.
+
+        :return: Mock objekt s metodou ``get_metadata``.
+        """
+        connector = Mock()
+        connector.record = record
+        connector.get_metadata.return_value = (
+            f"<amcr:amcr><amcr:samostatny_nalez><amcr:ident_cely>{record.ident_cely}</amcr:ident_cely>"
+            f"</amcr:samostatny_nalez></amcr:amcr>"
+        ).encode("utf-8")
+        return connector
+
+    def _patch(self, ident_cely: str, evidencni_cislo: str | None = "EC-TEST-001", token: str | None = None) -> object:
+        """
+        Odešle PATCH požadavek na endpoint pro aktualizaci evidencni_cislo.
+
+        :param ident_cely: Identifikátor záznamu samostatného nálezu v URL.
+        :param evidencni_cislo: Hodnota query parametru ``evidencni_cislo``; ``None`` parametr vynechá.
+        :param token: Bearer token; pokud ``None``, použije se ``self.token``.
+
+        :return: Vrací odpověď APIClient.
+        """
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION=f"Bearer {token or self.token.key}")
+        url = reverse(PATCH_URL_NAME, kwargs={"ident_cely": ident_cely})
+        params = []
+        if evidencni_cislo is not None:
+            params.append(f"evidencni_cislo={evidencni_cislo}")
+        if params:
+            url = f"{url}?{'&'.join(params)}"
+        return client.patch(url)
+
+    def _assert_log_entry(self, expected_status: str) -> ApiRequestLog:
+        """
+        Ověří, že existuje právě jeden log záznam s daným stavem a správným cílem požadavku.
+
+        :param expected_status: Očekávaný stav log záznamu.
+
+        :return: Nalezený log záznam.
+        """
+        self.assertEqual(ApiRequestLog.objects.count(), 1)
+        log_entry = ApiRequestLog.objects.get()
+        self.assertEqual(log_entry.status, expected_status)
+        self.assertEqual(log_entry.request_target, API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH)
+        return log_entry
+
+    @classmethod
+    def setUpTestData(cls):
+        """Připraví sdílená testovací data pro celou třídu."""
+        from core.constants import ROLE_BADATEL_ID
+        from django.contrib.auth.models import Group
+        from django.contrib.gis.geos import MultiPolygon, Point, Polygon
+        from heslar.hesla import HESLAR_PROJEKT_TYP
+        from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID
+        from heslar.models import RuianKatastr, RuianKraj, RuianOkres
+
+        heslare_typ_org, _ = HeslarNazev.objects.get_or_create(
+            id=HESLAR_ORGANIZACE_TYP, defaults={"nazev": "typ_organizace"}
+        )
+        cls.typ_organizace, _ = Heslar.objects.get_or_create(
+            nazev_heslare=heslare_typ_org,
+            zkratka="T",
+            defaults={"ident_cely": "HES-TYPORG-PATCH-001", "heslo": "Testovací typ"},
+        )
+        heslare_licence, _ = HeslarNazev.objects.get_or_create(id=HESLAR_LICENCE, defaults={"nazev": "licence"})
+        cls.licence, _ = Heslar.objects.get_or_create(
+            nazev_heslare=heslare_licence,
+            zkratka="L",
+            defaults={"ident_cely": "HES-LIC-PATCH-001", "heslo": "Testovací licence"},
+        )
+        heslare_pristupnost, _ = HeslarNazev.objects.get_or_create(
+            id=HESLAR_PRISTUPNOST, defaults={"nazev": "pristupnost"}
+        )
+        cls.pristupnost, _ = Heslar.objects.get_or_create(
+            nazev_heslare=heslare_pristupnost,
+            zkratka="A",
+            defaults={"ident_cely": "HES-PRST-PATCH-001", "heslo": "Veřejný"},
+        )
+        Heslar.objects.get_or_create(
+            id=PRISTUPNOST_ANONYM_ID,
+            defaults={
+                "ident_cely": "HES-000865",
+                "nazev_heslare": heslare_pristupnost,
+                "zkratka": "AN",
+                "heslo": "Anonym",
+                "heslo_en": "Anonymous",
+            },
+        )
+
+        with patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None):
+            cls.organizace, _ = Organizace.objects.get_or_create(
+                ident_cely="ORG-TEST-PATCH",
+                defaults={
+                    "nazev": "Testovací org PATCH",
+                    "nazev_zkraceny": "TOPC",
+                    "typ_organizace": cls.typ_organizace,
+                    "zverejneni_pristupnost": cls.pristupnost,
+                    "licence": cls.licence,
+                },
+            )
+
+        badatel_group, _ = Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
+
+        Permissions.objects.get_or_create(
+            main_role=badatel_group,
+            action=Permissions.actionChoices.pas_edit,
+            defaults={"address_in_app": "pas/api/nalez", "base": True},
+        )
+
+        with patch(
+            "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
+            return_value=True,
+        ):
+            cls.user = User.objects.create_user(  # type: ignore[attr-defined]
+                email="patchuser@example.cz",
+                password="pass",
+                is_active=True,
+                organizace=cls.organizace,
+            )
+        cls.token, _ = Token.objects.get_or_create(user=cls.user)
+
+        with patch(
+            "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
+            return_value=True,
+        ):
+            cls.outsider_user = User.objects.create_user(  # type: ignore[attr-defined]
+                email="patchoutsider@example.cz",
+                password="pass",
+                is_active=True,
+                organizace=cls.organizace,
+            )
+        cls.outsider_token, _ = Token.objects.get_or_create(user=cls.outsider_user)
+
+        kraj, _ = RuianKraj.objects.get_or_create(
+            kod=98,
+            defaults={
+                "nazev": "Testovací kraj PATCH",
+                "nazev_en": "Test Region PATCH",
+                "rada_id": "P",
+                "definicni_bod": Point(15.0, 50.0, srid=4326),
+                "hranice": MultiPolygon(Polygon(((15.0, 50.0), (15.1, 50.0), (15.1, 50.1), (15.0, 50.0))), srid=4326),
+            },
+        )
+        okres, _ = RuianOkres.objects.get_or_create(
+            kod=9998,
+            defaults={
+                "nazev": "Testovací okres PATCH",
+                "nazev_en": "Test District PATCH",
+                "spz": "TP",
+                "kraj": kraj,
+                "definicni_bod": Point(15.0, 50.0, srid=4326),
+                "hranice": MultiPolygon(Polygon(((15.0, 50.0), (15.1, 50.0), (15.1, 50.1), (15.0, 50.0))), srid=4326),
+            },
+        )
+        katastr, _ = RuianKatastr.objects.get_or_create(
+            kod=999998,
+            defaults={
+                "nazev": "Testovací katastr PATCH",
+                "okres": okres,
+                "definicni_bod": Point(15.0, 50.0, srid=4326),
+                "hranice": MultiPolygon(Polygon(((15.0, 50.0), (15.1, 50.0), (15.1, 50.1), (15.0, 50.0))), srid=4326),
+            },
+        )
+
+        heslare_typ_projektu, _ = HeslarNazev.objects.get_or_create(
+            id=HESLAR_PROJEKT_TYP, defaults={"nazev": "typ_projektu"}
+        )
+        survey_typ_projektu, _ = Heslar.objects.get_or_create(
+            id=TYP_PROJEKTU_PRUZKUM_ID,
+            defaults={
+                "ident_cely": TYP_PROJEKTU_PRUZKUM_ID,
+                "nazev_heslare": heslare_typ_projektu,
+                "zkratka": "P",
+                "heslo": "Průzkum",
+                "heslo_en": "Survey",
+            },
+        )
+        with patch("projekt.signals.projekt_post_save", lambda **kw: None), patch(
+            "xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None
+        ):
+            cls.projekt, _ = Projekt.objects.get_or_create(
+                ident_cely="M-202400098A",
+                defaults={
+                    "organizace": cls.organizace,
+                    "hlavni_katastr": katastr,
+                    "typ_projektu": survey_typ_projektu,
+                },
+            )
+
+        with patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None):
+            cls.nalez, _ = SamostatnyNalez.objects.get_or_create(
+                ident_cely=IDENT_CELY,
+                defaults={
+                    "projekt": cls.projekt,
+                    "pristupnost": cls.pristupnost,
+                    "stav": SN_ZAPSANY,
+                },
+            )
+
+    def test_missing_evidencni_cislo_param_returns_400(self):
+        """Chybějící query parametr ``evidencni_cislo`` vrátí HTTP 400 a log se stavem FAILURE."""
+        response = self._patch(IDENT_CELY, evidencni_cislo=None)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("missing_evidencni_cislo", str(log.errors))
+
+    def test_empty_evidencni_cislo_param_returns_400(self):
+        """Prázdný query parametr ``evidencni_cislo`` vrátí HTTP 400 a log se stavem FAILURE."""
+        response = self._patch(IDENT_CELY, evidencni_cislo="")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("missing_evidencni_cislo", str(log.errors))
+
+    def test_evidencni_cislo_too_long_returns_400(self):
+        """Příliš dlouhé ``evidencni_cislo`` (přes 255 znaků) vrátí HTTP 400 a log se stavem FAILURE."""
+        too_long = "X" * (SamostatnyNalezEvidencniCisloPatchView._MAX_EVIDENCNI_CISLO_LENGTH + 1)
+
+        response = self._patch(IDENT_CELY, evidencni_cislo=too_long)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("evidencni_cislo_too_long", str(log.errors))
+
+    def test_nonexistent_ident_cely_returns_404(self):
+        """Neexistující ``ident_cely`` vrátí HTTP 404 a log se stavem FAILURE."""
+        response = self._patch("C-000000000-N99999")
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("not_found", str(log.errors))
+
+    def test_user_without_pas_edit_permission_returns_403(self):
+        """Uživatel bez oprávnění ``pas_edit`` obdrží HTTP 403 a log se stavem FAILURE."""
+        with patch("pas.api.check_permissions", return_value=False):
+            response = self._patch(IDENT_CELY, token=self.outsider_token.key)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("permission_denied", str(log.errors))
+
+    def test_database_error_on_save_returns_500(self):
+        """Chyba databáze při ukládání vrátí HTTP 500 a log se stavem FAILURE. Hodnota se neuloží."""
+        original_value = self.nalez.evidencni_cislo
+
+        with patch("pas.api.SamostatnyNalez.save", side_effect=DatabaseError("db error")):
+            response = self._patch(IDENT_CELY)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("detail", response.data)
+        self.nalez.refresh_from_db()
+        self.assertEqual(self.nalez.evidencni_cislo, original_value)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("internal_error", str(log.errors))
+
+    def test_fedora_error_on_save_returns_500(self):
+        """Chyba Fedory při ukládání vrátí HTTP 500 a log se stavem FAILURE. Hodnota se neuloží."""
+        original_value = self.nalez.evidencni_cislo
+
+        with patch(
+            "pas.api.SamostatnyNalez.save",
+            side_effect=FedoraNoResponseError("http://fedora.example/", "No response", None),
+        ):
+            response = self._patch(IDENT_CELY)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("detail", response.data)
+        self.nalez.refresh_from_db()
+        self.assertEqual(self.nalez.evidencni_cislo, original_value)
+        self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+
+    def test_fedora_error_on_read_metadata_returns_500(self):
+        """Chyba Fedory při čtení metadat vrátí HTTP 500 a log se stavem FAILURE. Hodnota je uložena v DB."""
+        connector = Mock()
+        connector.get_metadata.side_effect = FedoraNoResponseError("http://fedora.example/", "No Fedora response", None)
+
+        with patch("pas.api.FedoraRepositoryConnector", return_value=connector):
+            response = self._patch(IDENT_CELY)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("detail", response.data)
+        self.nalez.refresh_from_db()
+        self.assertEqual(self.nalez.evidencni_cislo, "EC-TEST-001")
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("fedora_error_reading_metadata", str(log.errors))
+
+    def test_valid_request_updates_field_and_returns_200(self):
+        """Platný požadavek aktualizuje ``evidencni_cislo``, vrátí HTTP 200 s XML a log se stavem SUCCESS."""
+        old_value = self.nalez.evidencni_cislo
+        response = self._patch(IDENT_CELY, evidencni_cislo="EC-2024-NEW")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response["Content-Type"], "application/xml")
+        self.assertIn(IDENT_CELY, response.content.decode("utf-8"))
+
+        self.nalez.refresh_from_db()
+        self.assertEqual(self.nalez.evidencni_cislo, "EC-2024-NEW")
+
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
+        self.assertEqual(log.ident_cely, IDENT_CELY)
+
+        history = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=AKTUALIZACE_SN)
+        self.assertEqual(history.count(), 1)
+        self.assertEqual(history.get().poznamka, f"{old_value} -> EC-2024-NEW")
+
+
+class SamostatnyNalezXmlUpdateViewTests(TestCase):
+    """Testy pro ``SamostatnyNalezXmlUpdateView``."""
+
+    databases = {"default", "urgent"}
+    _DATA_DIR = Path(__file__).parent / "data"
+
+    def setUp(self):
+        """Připraví per-test mocky Fedora repozitáře."""
+        super().setUp()
+
+        patcher = patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+        self._fedora_transaction_counter = 0
+        transaction_patcher = patch("pas.api.FedoraTransaction", side_effect=self._build_mock_fedora_transaction)
+        transaction_patcher.start()
+        self.addCleanup(transaction_patcher.stop)
+
+        repository_connector_patcher = patch(
+            "pas.api.FedoraRepositoryConnector", side_effect=self._build_mock_repository_connector
+        )
+        repository_connector_patcher.start()
+        self.addCleanup(repository_connector_patcher.stop)
+
+    def _build_mock_fedora_transaction(self, *args, **kwargs):
+        """Vytvoří mock Fedora transakce pro API testy."""
+        self._fedora_transaction_counter += 1
+        transaction = Mock()
+        transaction.uid = f"test-fedora-transaction-{self._fedora_transaction_counter}"
+        transaction.status = Mock()
+        return transaction
+
+    def _build_mock_repository_connector(self, record, *args, **kwargs):
+        """Vytvoří mock repository connector pro čtení XML metadat."""
+        connector = Mock()
+        connector.record = record
+        connector.get_metadata.return_value = (
+            f"<amcr:amcr><amcr:samostatny_nalez><amcr:ident_cely>{record.ident_cely}</amcr:ident_cely>"
+            f"</amcr:samostatny_nalez></amcr:amcr>"
+        ).encode("utf-8")
+        return connector
+
+    @classmethod
+    def _load_xml(cls, filename: str) -> bytes:
+        """Načte XML soubor z adresáře ``data`` vedle tohoto modulu."""
+        return (cls._DATA_DIR / filename).read_bytes()
+
+    @classmethod
+    def _minimal_nalez_xml(
+        cls,
+        ident_cely: str,
+        projekt_ident: str,
+        pristupnost_ident: str,
+        lokalizace: str | None = None,
+    ) -> bytes:
+        """Sestaví minimální validní XML pro jeden ``amcr:samostatny_nalez``."""
+        template = cls._load_xml("minimal_nalez.xml").decode("utf-8")
+        xml = template.format(
+            IDENT_CELY=ident_cely,
+            PROJEKT_IDENT=projekt_ident,
+            PRISTUPNOST_IDENT=pristupnost_ident,
+            GEOM_SYSTEM="4326",
+            EPSG="4326",
+            GEOM_WKT="POINT(14.42 50.08)",
+        )
+        if lokalizace is not None:
+            xml = xml.replace(
+                "<amcr:chranene_udaje>\n      <amcr:geom_wkt",
+                f"<amcr:chranene_udaje>\n      <amcr:lokalizace>{lokalizace}</amcr:lokalizace>\n      <amcr:geom_wkt",
+            )
+        return xml.encode("utf-8")
+
+    @staticmethod
+    def _content_digest(xml_bytes: bytes) -> str:
+        """Vrátí hodnotu hlavičky ``Content-Digest`` pro XML payload."""
+        digest = base64.b64encode(hashlib.sha512(xml_bytes).digest()).decode("ascii")
+        return f"sha-512=:{digest}:"
+
+    def _post_xml(
+        self,
+        ident_cely: str,
+        xml_bytes: bytes | None,
+        token: str | None = None,
+        content_digest: str | None = None,
+        include_content_digest: bool = True,
+    ):
+        """
+        Odešle POST požadavek s XML souborem na endpoint pro XML update.
+
+        :param ident_cely: ``ident_cely`` záznamu v URL.
+        :param xml_bytes: XML dokument jako bajty nebo ``None`` pro požadavek bez souboru.
+        :param token: Bearer token; pokud ``None``, použije se ``self.token``.
+        :param content_digest: Explicitní hodnota hlavičky ``Content-Digest``.
+        :param include_content_digest: Pokud ``False``, hlavička se nepošle.
+
+        :return: Odpověď ``APIClient``.
+        """
+        client = APIClient()
+        resolved_token = self.token.key if token is None else token
+        client.credentials(HTTP_AUTHORIZATION=f"Bearer {resolved_token}")
+        if include_content_digest and xml_bytes is not None:
+            client.credentials(
+                HTTP_AUTHORIZATION=f"Bearer {resolved_token}",
+                HTTP_CONTENT_DIGEST=content_digest or self._content_digest(xml_bytes),
+            )
+
+        url = reverse(XML_UPDATE_URL_NAME, kwargs={"ident_cely": ident_cely})
+        data = {}
+        if xml_bytes is not None:
+            xml_file = io.BytesIO(xml_bytes)
+            xml_file.name = "update.xml"
+            data["file"] = xml_file
+        return client.post(url, data, format="multipart")
+
+    def _assert_log_entry(self, expected_status: str) -> ApiRequestLog:
+        """Ověří, že existuje právě jeden log záznam se zadaným stavem a cílem."""
+        self.assertEqual(ApiRequestLog.objects.count(), 1)
+        log_entry = ApiRequestLog.objects.get()
+        self.assertEqual(log_entry.status, expected_status)
+        self.assertEqual(log_entry.request_target, API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_UPDATE)
+        return log_entry
+
+    def _assert_update_history(self, expected_count: int, expected_note: str | None = None) -> None:
+        """Ověří počet a případně obsah update historie pro testovaný nález."""
+        history = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=AKTUALIZACE_SN).order_by("id")
+        self.assertEqual(history.count(), expected_count)
+        if expected_count == 1:
+            record = history.get()
+            self.assertEqual(record.uzivatel, self.user)
+            self.assertEqual(record.vazba, self.nalez.historie)
+            if expected_note is not None:
+                self.assertEqual(record.poznamka, expected_note)
+
+    @classmethod
+    def setUpTestData(cls):
+        """Připraví sdílená testovací data pro celou třídu."""
+        from core.constants import ROLE_BADATEL_ID
+        from django.contrib.auth.models import Group
+        from django.contrib.gis.geos import MultiPolygon, Point, Polygon
+        from heslar.hesla import HESLAR_PROJEKT_TYP
+        from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID
+        from heslar.models import RuianKatastr, RuianKraj, RuianOkres
+
+        heslare_typ_org, _ = HeslarNazev.objects.get_or_create(
+            id=HESLAR_ORGANIZACE_TYP, defaults={"nazev": "typ_organizace"}
+        )
+        cls.typ_organizace, _ = Heslar.objects.get_or_create(
+            nazev_heslare=heslare_typ_org,
+            zkratka="T",
+            defaults={"ident_cely": "HES-TYPORG-UPDATE-001", "heslo": "Testovací typ"},
+        )
+        heslare_licence, _ = HeslarNazev.objects.get_or_create(id=HESLAR_LICENCE, defaults={"nazev": "licence"})
+        cls.licence, _ = Heslar.objects.get_or_create(
+            nazev_heslare=heslare_licence,
+            zkratka="L",
+            defaults={"ident_cely": "HES-LIC-UPDATE-001", "heslo": "Testovací licence"},
+        )
+        heslare_pristupnost, _ = HeslarNazev.objects.get_or_create(
+            id=HESLAR_PRISTUPNOST, defaults={"nazev": "pristupnost"}
+        )
+        cls.pristupnost, _ = Heslar.objects.get_or_create(
+            nazev_heslare=heslare_pristupnost,
+            zkratka="A",
+            defaults={"ident_cely": "HES-PRST-UPDATE-001", "heslo": "Veřejný"},
+        )
+        Heslar.objects.get_or_create(
+            id=PRISTUPNOST_ANONYM_ID,
+            defaults={
+                "ident_cely": "HES-000865",
+                "nazev_heslare": heslare_pristupnost,
+                "zkratka": "AN",
+                "heslo": "Anonym",
+                "heslo_en": "Anonymous",
+            },
+        )
+
+        with patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None):
+            cls.organizace, _ = Organizace.objects.get_or_create(
+                ident_cely="ORG-TEST-UPDATE",
+                defaults={
+                    "nazev": "Testovací org UPDATE",
+                    "nazev_zkraceny": "TOUP",
+                    "typ_organizace": cls.typ_organizace,
+                    "zverejneni_pristupnost": cls.pristupnost,
+                    "licence": cls.licence,
+                },
+            )
+
+        badatel_group, _ = Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
+        Permissions.objects.get_or_create(
+            main_role=badatel_group,
+            action=Permissions.actionChoices.pas_edit,
+            defaults={"address_in_app": "pas/api/nalez", "base": True},
+        )
+
+        with patch(
+            "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
+            return_value=True,
+        ):
+            cls.user = User.objects.create_user(  # type: ignore[attr-defined]
+                email="xmlupdate@example.cz",
+                password="pass",
+                is_active=True,
+                organizace=cls.organizace,
+            )
+        cls.token, _ = Token.objects.get_or_create(user=cls.user)
+
+        with patch(
+            "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
+            return_value=True,
+        ):
+            cls.outsider_user = User.objects.create_user(  # type: ignore[attr-defined]
+                email="xmlupdate-outsider@example.cz",
+                password="pass",
+                is_active=True,
+                organizace=cls.organizace,
+            )
+        cls.outsider_token, _ = Token.objects.get_or_create(user=cls.outsider_user)
+
+        kraj, _ = RuianKraj.objects.get_or_create(
+            kod=97,
+            defaults={
+                "nazev": "Testovací kraj UPDATE",
+                "nazev_en": "Test Region UPDATE",
+                "rada_id": "U",
+                "definicni_bod": Point(15.0, 50.0, srid=4326),
+                "hranice": MultiPolygon(Polygon(((15.0, 50.0), (15.1, 50.0), (15.1, 50.1), (15.0, 50.0))), srid=4326),
+            },
+        )
+        okres, _ = RuianOkres.objects.get_or_create(
+            kod=9997,
+            defaults={
+                "nazev": "Testovací okres UPDATE",
+                "nazev_en": "Test District UPDATE",
+                "spz": "TU",
+                "kraj": kraj,
+                "definicni_bod": Point(15.0, 50.0, srid=4326),
+                "hranice": MultiPolygon(Polygon(((15.0, 50.0), (15.1, 50.0), (15.1, 50.1), (15.0, 50.0))), srid=4326),
+            },
+        )
+        katastr, _ = RuianKatastr.objects.get_or_create(
+            kod=999997,
+            defaults={
+                "nazev": "Testovací katastr UPDATE",
+                "okres": okres,
+                "definicni_bod": Point(15.0, 50.0, srid=4326),
+                "hranice": MultiPolygon(Polygon(((15.0, 50.0), (15.1, 50.0), (15.1, 50.1), (15.0, 50.0))), srid=4326),
+            },
+        )
+
+        heslare_typ_projektu, _ = HeslarNazev.objects.get_or_create(
+            id=HESLAR_PROJEKT_TYP, defaults={"nazev": "typ_projektu"}
+        )
+        survey_typ_projektu, _ = Heslar.objects.get_or_create(
+            id=TYP_PROJEKTU_PRUZKUM_ID,
+            defaults={
+                "ident_cely": TYP_PROJEKTU_PRUZKUM_ID,
+                "nazev_heslare": heslare_typ_projektu,
+                "zkratka": "P",
+                "heslo": "Průzkum",
+                "heslo_en": "Survey",
+            },
+        )
+        with patch("projekt.signals.projekt_post_save", lambda **kw: None), patch(
+            "xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None
+        ):
+            cls.projekt, _ = Projekt.objects.get_or_create(
+                ident_cely="M-202400097A",
+                defaults={
+                    "organizace": cls.organizace,
+                    "hlavni_katastr": katastr,
+                    "typ_projektu": survey_typ_projektu,
+                },
+            )
+
+        with patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None):
+            cls.nalez, _ = SamostatnyNalez.objects.get_or_create(
+                ident_cely=IDENT_CELY,
+                defaults={
+                    "projekt": cls.projekt,
+                    "pristupnost": cls.pristupnost,
+                    "geom": Point(14.42, 50.08, srid=4326),
+                    "geom_system": "4326",
+                    "stav": SN_ZAPSANY,
+                },
+            )
+
+    def test_missing_file_returns_400(self):
+        """POST bez souboru vrátí HTTP 400 a nevytvoří update historii."""
+        response = self._post_xml(IDENT_CELY, xml_bytes=None)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("missing_file", str(log.errors))
+        self._assert_update_history(0)
+
+    def test_nonexistent_ident_cely_returns_404(self):
+        """Neexistující ``ident_cely`` vrátí HTTP 404 a update historie nevznikne."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=IDENT_CELY,
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+
+        response = self._post_xml("C-000000000-N99999", xml)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("not_found", str(log.errors))
+        self._assert_update_history(0)
+
+    def test_content_digest_mismatch_returns_400(self):
+        """Neodpovídající ``Content-Digest`` vrátí HTTP 400 a update historie nevznikne."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=IDENT_CELY,
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+        wrong_digest = f"sha-512=:{base64.b64encode(hashlib.sha512(b'wrong').digest()).decode('ascii')}:"
+
+        response = self._post_xml(IDENT_CELY, xml, content_digest=wrong_digest)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("digest", str(log.errors))
+        self._assert_update_history(0)
+
+    def test_user_without_pas_edit_permission_returns_403(self):
+        """Uživatel bez oprávnění ``pas_edit`` obdrží HTTP 403 a update historie nevznikne."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=IDENT_CELY,
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            lokalizace="forbidden-update",
+        )
+
+        with patch("pas.api.check_permissions", return_value=False):
+            response = self._post_xml(IDENT_CELY, xml, token=self.outsider_token.key)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("permission_denied", str(log.errors))
+        self._assert_update_history(0)
+
+    def test_malformed_xml_returns_400(self):
+        """Poškozené XML vrátí HTTP 400 a update historie nevznikne."""
+        response = self._post_xml(IDENT_CELY, self._load_xml("malformed.xml"))
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("invalid_xml_syntax", str(log.errors))
+        self._assert_update_history(0)
+
+    def test_field_validation_failure_returns_422(self):
+        """Nevalidní hodnota pole vrátí HTTP 422 a update historie nevznikne."""
+        template = self._load_xml("valid_file.xml").decode("utf-8")
+        xml = template.format(
+            IDENT_CELY=IDENT_CELY,
+            PROJEKT_IDENT=self.projekt.ident_cely,
+            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+            PREDANO_ORGANIZACE_IDENT="ORG-DOES-NOT-EXIST",
+        ).encode("utf-8")
+        schema = Mock()
+        schema.validate.return_value = True
+
+        with patch("pas.api.SamostatnyNalezXmlUpdateView._get_amcr_schema", return_value=schema):
+            response = self._post_xml(IDENT_CELY, xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertEqual(log.errors, response.data)
+        self._assert_update_history(0)
+
+    def test_multiple_samostatny_nalez_elements_return_422(self):
+        """Více elementů ``amcr:samostatny_nalez`` vrátí HTTP 422 a update historie nevznikne."""
+        template = self._load_xml("multiple_samostatny_nalez.xml").decode("utf-8")
+        xml = template.format(
+            IDENT_CELY_1=IDENT_CELY,
+            IDENT_CELY_2=f"{IDENT_CELY}-COPY",
+            PROJEKT_IDENT=self.projekt.ident_cely,
+            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+        ).encode("utf-8")
+        schema = Mock()
+        schema.validate.return_value = True
+
+        with patch("pas.api.SamostatnyNalezXmlUpdateView._get_amcr_schema", return_value=schema):
+            response = self._post_xml(IDENT_CELY, xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("multiple_samostatny_nalez", str(log.errors))
+        self._assert_update_history(0)
+
+    def test_missing_samostatny_nalez_returns_400(self):
+        """XML bez elementu ``amcr:samostatny_nalez`` vrátí HTTP 400 a update historie nevznikne."""
+        schema = Mock()
+        schema.validate.return_value = True
+
+        with patch("pas.api.SamostatnyNalezXmlUpdateView._get_amcr_schema", return_value=schema):
+            response = self._post_xml(IDENT_CELY, self._load_xml("empty_document.xml"))
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("missing_samostatny_nalez", str(log.errors))
+        self._assert_update_history(0)
+
+    def test_invalid_root_content_returns_422(self):
+        """Kořen s jiným podřízeným tagem než ``amcr:samostatny_nalez`` vrátí HTTP 422."""
+        xml = (
+            '<?xml version="1.0" encoding="utf-8" ?>'
+            '<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
+            'xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" '
+            'xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ '
+            'https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">'
+            f'<amcr:projekt id="{self.projekt.ident_cely}">{self.projekt.ident_cely}</amcr:projekt>'
+            "</amcr:amcr>"
+        ).encode("utf-8")
+        schema = Mock()
+        schema.validate.return_value = True
+
+        with patch("pas.api.SamostatnyNalezXmlUpdateView._get_amcr_schema", return_value=schema):
+            response = self._post_xml(IDENT_CELY, xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("invalid_root_content", str(log.errors))
+        self._assert_update_history(0)
+
+    def test_same_xml_data_returns_422(self):
+        """XML se stejnými daty jako v databázi vrátí HTTP 422 a update historie nevznikne."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=IDENT_CELY,
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+        schema = Mock()
+        schema.validate.return_value = True
+
+        with patch("pas.api.SamostatnyNalezXmlUpdateView._get_amcr_schema", return_value=schema), patch(
+            "pas.api.SamostatnyNalezXmlUpdateView._parse_nalez_element",
+            return_value=({}, None),
+        ):
+            response = self._post_xml(IDENT_CELY, xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("no_changes", str(log.errors))
+        self._assert_update_history(0)
+
+    def test_database_error_on_save_returns_500(self):
+        """Chyba databáze při ukládání vrátí HTTP 500 a update historie nevznikne."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=IDENT_CELY,
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            lokalizace="db-failure",
+        )
+        schema = Mock()
+        schema.validate.return_value = True
+
+        with patch("pas.api.SamostatnyNalezXmlUpdateView._get_amcr_schema", return_value=schema), patch(
+            "pas.api.SamostatnyNalez.save", side_effect=DatabaseError("db error")
+        ):
+            response = self._post_xml(IDENT_CELY, xml)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("detail", response.data)
+        self.nalez.refresh_from_db()
+        self.assertIsNone(self.nalez.lokalizace)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("internal_error", str(log.errors))
+        self._assert_update_history(0)
+
+    def test_fedora_error_on_save_returns_500(self):
+        """Chyba Fedory při ukládání vrátí HTTP 500 a update historie nevznikne."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=IDENT_CELY,
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            lokalizace="fedora-failure",
+        )
+        schema = Mock()
+        schema.validate.return_value = True
+
+        with patch("pas.api.SamostatnyNalezXmlUpdateView._get_amcr_schema", return_value=schema), patch(
+            "pas.api.SamostatnyNalez.save",
+            side_effect=FedoraNoResponseError("http://fedora.example/", "No response", None),
+        ):
+            response = self._post_xml(IDENT_CELY, xml)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("detail", response.data)
+        self.nalez.refresh_from_db()
+        self.assertIsNone(self.nalez.lokalizace)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("internal_error", str(log.errors))
+        self._assert_update_history(0)
+
+    def test_fedora_error_on_read_metadata_returns_500(self):
+        """Chyba při čtení metadat z Fedory vrátí HTTP 500, ale update i historie zůstanou uloženy."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=IDENT_CELY,
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            lokalizace="metadata-failure",
+        )
+        schema = Mock()
+        schema.validate.return_value = True
+        connector = Mock()
+        connector.get_metadata.side_effect = FedoraNoResponseError("http://fedora.example/", "No Fedora response", None)
+
+        with patch("pas.api.SamostatnyNalezXmlUpdateView._get_amcr_schema", return_value=schema), patch(
+            "pas.api.FedoraRepositoryConnector", return_value=connector
+        ):
+            response = self._post_xml(IDENT_CELY, xml)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("detail", response.data)
+        self.nalez.refresh_from_db()
+        self.assertEqual(self.nalez.lokalizace, "metadata-failure")
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("fedora_error_reading_metadata", str(log.errors))
+        self._assert_update_history(1, expected_note="geom, lokalizace")
+
+    def test_success_returns_metadata_and_creates_history(self):
+        """Platný XML update vrátí metadata, uloží změnu a vytvoří update historii."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=IDENT_CELY,
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            lokalizace="updated-successfully",
+        )
+        schema = Mock()
+        schema.validate.return_value = True
+
+        with patch("pas.api.SamostatnyNalezXmlUpdateView._get_amcr_schema", return_value=schema):
+            response = self._post_xml(IDENT_CELY, xml)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response["Content-Type"], "application/xml")
+        self.assertIn(IDENT_CELY, response.content.decode("utf-8"))
+        self.nalez.refresh_from_db()
+        self.assertEqual(self.nalez.lokalizace, "updated-successfully")
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
+        self.assertEqual(log.ident_cely, IDENT_CELY)
+        self._assert_update_history(1, expected_note="geom, lokalizace")

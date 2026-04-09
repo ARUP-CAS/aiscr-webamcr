@@ -14,10 +14,13 @@ from enum import Enum
 
 import django.utils.timezone
 from core.constants import (
+    AKTUALIZACE_SN,
     API_REQUEST_LOG_STATUS_FAILURE,
     API_REQUEST_LOG_STATUS_PROCESSING,
     API_REQUEST_LOG_STATUS_SUCCESS,
+    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH,
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT,
+    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_UPDATE,
     ODESLANI_SN,
     POTVRZENI_SN,
     SN_ZAPSANY,
@@ -1127,8 +1130,8 @@ class SamostatnyNalezXmlImportSerializer(serializers.ModelSerializer):
         ]
 
 
-class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
-    """Pohled pro import záznamu samostatného nálezu z XML souboru přes POST požadavek."""
+class SamostatnyNalezXmlBaseView(PasApiPermissionMixin, APIView):
+    """Základní pohled pro XML import/aktualizaci záznamu samostatného nálezu."""
 
     authentication_classes = [TokenAuthenticationBearer]
     permission_classes = [
@@ -1146,7 +1149,6 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
     _AMCR_NS = "https://api.aiscr.cz/schema/amcr/2.2/"
     _XML_NS = "http://www.w3.org/XML/1998/namespace"
     _XSI_NS = "http://www.w3.org/2001/XMLSchema-instance"
-    _IMPORT_HISTORY_NOTE = _l("pas.api.SamostatnyNalezXmlImportView.import_history_note")
     _amcr_schema_cache: dict[str, tuple[etree.XMLSchema, float]] = {}  # url -> (schema, inserted_at)
 
     def dispatch(self, request, *args, **kwargs):
@@ -1163,7 +1165,7 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
         :return: HTTP odpověď view nebo okamžitá odpověď ``503`` při vypnutém API.
         """
         if self.get_access_mode() == ACCESS_MODE_CLOSED:
-            logger.warning("pas.api.SamostatnyNalezXmlImportView.dispatch.closed")
+            logger.warning("pas.api.SamostatnyNalezXmlBaseView.dispatch.closed")
             return JsonResponse(
                 {"detail": _("pas.api.ApiAccessModePermission.closed")},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -1186,6 +1188,537 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
         log_entry.errors = body
         log_entry.save(update_fields=["status", "finished_at", "errors"])
         return Response(body, status=http_status)
+
+    def _validation_status(self, errors: list[ImportValidationIssue]) -> int:
+        """
+        Určí HTTP stavový kód odpovědi na základě typů validačních chyb.
+
+        :param errors: Seznam validačních chyb importu.
+
+        :return: HTTP stavový kód odpovídající nejzávažnějšímu typu chyby.
+        """
+        if any(error.error_type == ImportErrorType.PERMISSION_ERROR for error in errors):
+            return status.HTTP_403_FORBIDDEN
+        if any(error.error_type == ImportErrorType.RECORD_DOES_NOT_EXIST for error in errors):
+            return status.HTTP_404_NOT_FOUND
+        return status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    @staticmethod
+    def _has_edit_permissions(user, ident_cely) -> bool:
+        """
+        Ověří, zda má uživatel oprávnění editovat zadaný samostatný nález.
+
+        :param user: Uživatel provádějící požadavek.
+        :param ident_cely: Identifikátor záznamu samostatného nálezu.
+
+        :return: Vrací ``True`` pokud má uživatel oprávnění ``pas_edit`` pro daný záznam.
+        """
+        if not check_permissions(Permissions.actionChoices.pas_edit, user, ident_cely):
+            return False
+        return True
+
+    @staticmethod
+    def _verify_content_digest(request, xml_file) -> str | None:
+        """
+        Ověří integritu souboru pomocí hlavičky ``Content-Digest`` (RFC 9530).
+
+        Očekávaný formát hlavičky: ``sha-512=:<base64>:``
+        Pokud hlavička chybí nebo neodpovídá skutečnému SHA-512 obsahu souboru,
+        vrátí chybovou zprávu.
+
+        :param request: HTTP požadavek obsahující hlavičku ``Content-Digest``.
+        :param xml_file: Nahraný soubor; po zavolání je pozice čtení na začátku.
+
+        :return: Chybová zpráva jako řetězec, nebo None pokud je digest v pořádku.
+        """
+        header = request.headers.get("Content-Digest")
+        if not header:
+            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.missing_digest")
+
+        prefix = "sha-512=:"
+        if not header.startswith(prefix) or not header.endswith(":"):
+            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.invalid_format")
+
+        try:
+            expected = base64.b64decode(header[len(prefix) : -1])
+        except (ValueError, TypeError):
+            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.invalid_base64")
+
+        actual = hashlib.sha512(xml_file.read()).digest()
+        if actual != expected:
+            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.digest_mismatch")
+
+        return None
+
+    @classmethod
+    def _validate_declared_schema_version(cls, doc: etree._ElementTree) -> str | None:
+        """
+        Ověří, že XML deklaruje podporovanou verzi AMČR schématu.
+
+        :param doc: Naparsovaný XML dokument.
+
+        :return: Chybová zpráva nebo ``None``, pokud deklarace odpovídá podporované verzi.
+        """
+        root = doc.getroot()
+        amcr_namespace = root.nsmap.get("amcr")
+        if amcr_namespace != AMCR_NAMESPACE_URL:
+            return _("pas.api.SamostatnyNalezXmlImportView._validate_declared_schema_version.unsupported_namespace")
+
+        schema_location = root.get(f"{{{cls._XSI_NS}}}schemaLocation")
+        if not schema_location:
+            return _("pas.api.SamostatnyNalezXmlImportView._validate_declared_schema_version.missing_schema_location")
+
+        schema_parts = schema_location.split()
+        if len(schema_parts) % 2 != 0:
+            return _("pas.api.SamostatnyNalezXmlImportView._validate_declared_schema_version.invalid_schema_location")
+
+        schema_mapping = dict(zip(schema_parts[0::2], schema_parts[1::2]))
+        declared_amcr_xsd = schema_mapping.get(amcr_namespace)
+        if declared_amcr_xsd != AMCR_XSD_URL:
+            return _(
+                "pas.api.SamostatnyNalezXmlImportView._validate_declared_schema_version.unsupported_schema_location"
+            )
+
+        return None
+
+    @classmethod
+    def _get_amcr_schema(cls, doc: etree._ElementTree) -> etree.XMLSchema:
+        """
+        Vrátí zkompilované XSD schéma AMČR podle URL deklarované v ``xsi:schemaLocation``.
+
+        :param doc: Naparsovaný XML dokument s deklarovaným ``xsi:schemaLocation``.
+
+        :return: Vrací instanci ``etree.XMLSchema`` pro validaci importovaných XML dokumentů.
+        """
+        root = doc.getroot()
+        amcr_namespace = root.nsmap.get("amcr")
+        schema_location = root.get(f"{{{cls._XSI_NS}}}schemaLocation", "")
+        schema_mapping = dict(zip(schema_location.split()[0::2], schema_location.split()[1::2]))
+        schema_url = schema_mapping[amcr_namespace]
+        cls._validate_schema_url_allowed(schema_url)
+
+        now = time.time()
+        cached = cls._amcr_schema_cache.get(schema_url)
+        if cached is not None and now - cached[1] < _AMCR_SCHEMA_CACHE_TTL:
+            return cached[0]
+
+        with _AMCR_SCHEMA_LOCK:
+            cached = cls._amcr_schema_cache.get(schema_url)
+            if cached is not None and time.time() - cached[1] < _AMCR_SCHEMA_CACHE_TTL:
+                return cached[0]
+
+            class _LocalResolver(etree.Resolver):
+                """Resolver nahrazující vzdálené W3C URL lokálním souborem xml.xsd."""
+
+                def __init__(self):
+                    super().__init__()
+                    self.blocked_exception: ImportValidationException | None = None
+
+                def resolve(self, url, id, context):
+                    """
+                    Přeloží URL na lokální cestu pro xml.xsd.
+
+                    :param url: URL požadovaného zdroje.
+                    :param id: Identifikátor kontextu parseru.
+                    :param context: Kontext resolveru.
+
+                    :return: Vrací lokální soubor pro xml.xsd, jinak None.
+                    """
+                    allowed_urls = (
+                        "http://www.w3.org/2001/xml.xsd",
+                        "https://www.w3.org/2001/xml.xsd",
+                        "http://www.w3.org/2001/03/xml.xsd",
+                        "https://www.w3.org/2001/03/xml.xsd",
+                    )
+                    if url in allowed_urls:
+                        return self.resolve_filename("xml_generator/definitions/xml.xsd", context)
+                    if any(pattern.match(url) for pattern in _ALLOWED_SCHEMA_URL_PATTERNS):
+                        try:
+                            response = urllib.request.urlopen(url, timeout=_AMCR_SCHEMA_FETCH_TIMEOUT)  # noqa: S310
+                        except (urllib.error.URLError, TimeoutError) as exc:
+                            logger.error("Nepodařilo se načíst XSD schéma z URL %s: %s", url, exc)
+                            self.blocked_exception = ImportValidationException(
+                                ImportValidationIssue(
+                                    line=None,
+                                    column=None,
+                                    message=_(
+                                        "pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.schema_not_available"
+                                    )
+                                    % {"url": url},
+                                    error_type=ImportErrorType.INVALID_DATA,
+                                )
+                            )
+                            self.blocked_exception.__cause__ = exc
+                            return None
+                        return self.resolve_file(response, context, base_url=url)
+                    # Disallowed URL — store the exception for re-raising after XMLSchema()
+                    # because lxml swallows Python exceptions raised inside resolver callbacks.
+                    self.blocked_exception = ImportValidationException(
+                        ImportValidationIssue(
+                            line=None,
+                            column=None,
+                            message=_("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.disallowed_schema_url")
+                            % {"url": url},
+                            error_type=ImportErrorType.INVALID_DATA,
+                        )
+                    )
+                    return None
+
+            parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
+            resolver = _LocalResolver()
+            parser.resolvers.add(resolver)
+            try:
+                response = urllib.request.urlopen(schema_url, timeout=_AMCR_SCHEMA_FETCH_TIMEOUT)  # noqa: S310
+            except (urllib.error.URLError, TimeoutError) as exc:
+                logger.error("Nepodařilo se načíst XSD schéma z URL %s: %s", schema_url, exc)
+                raise ImportValidationException(
+                    ImportValidationIssue(
+                        line=None,
+                        column=None,
+                        message=_("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.schema_not_available")
+                        % {"url": schema_url},
+                        error_type=ImportErrorType.INVALID_DATA,
+                    )
+                ) from exc
+            with response:
+                schema_doc = etree.parse(response, parser)
+            schema = etree.XMLSchema(schema_doc)
+            if resolver.blocked_exception is not None:
+                raise resolver.blocked_exception
+            cls._amcr_schema_cache[schema_url] = (schema, time.time())
+            return schema
+
+    @staticmethod
+    def _validate_schema_url_allowed(url: str) -> None:
+        """
+        Ověří, že URL schématu patří mezi povolené URL prefixy.
+
+        :param url: URL schématu nebo importovaného XSD souboru.
+
+        :raises ImportValidationException: Pokud URL míří mimo povolené domény.
+        """
+        if not any(pattern.match(url) for pattern in _ALLOWED_SCHEMA_URL_PATTERNS):
+            raise ImportValidationException(
+                ImportValidationIssue(
+                    line=None,
+                    column=None,
+                    message=_("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.disallowed_schema_url")
+                    % {"url": url},
+                    error_type=ImportErrorType.INVALID_DATA,
+                )
+            )
+
+    @classmethod
+    def _ns(cls, tag: str) -> str:
+        """
+        Vrátí tag s prefixem jmenného prostoru AMČR.
+
+        :param tag: Název elementu bez prefixu jmenného prostoru.
+
+        :return: Vrací řetězec ve tvaru ``{namespace}tag``.
+        """
+        return f"{{{cls._AMCR_NS}}}{tag}"
+
+    @classmethod
+    def _get_ignored_lang_notes(cls, elem: etree._Element) -> list[str]:
+        """
+        Vrátí seznam poznámek pro elementy s nepodporovaným ``xml:lang``.
+
+        :param elem: Importovaný element ``amcr:samostatny_nalez``.
+
+        :return: Seznam textových poznámek.
+        """
+
+        notes = []
+        lang_attr = f"{{{cls._XML_NS}}}lang"
+        for child in elem.iter():
+            lang_value = child.get(lang_attr)
+            if lang_value and lang_value.lower() != "cs":
+                notes.append(
+                    _("pas.api.SamostatnyNalezXmlImportView.post.ignored_lang_attribute")
+                    % {"element": _strip_namespace(child.tag), "lang": lang_value}
+                )
+        return notes
+
+    @staticmethod
+    def _parse_bool(value: str | None) -> bool | None:
+        """
+        Převede textovou hodnotu XML elementu na Python ``bool``, nebo ``None``.
+
+        Přijímá hodnoty ``"true"`` / ``"1"`` jako ``True`` a ``"false"`` / ``"0"`` jako ``False``
+        (bez ohledu na velikost písmen). Ostatní hodnoty a ``None`` vrátí ``None``.
+
+        :param value: Textová hodnota z XML elementu.
+
+        :return: ``True``, ``False``, nebo ``None``.
+        """
+        if value is None:
+            return None
+        if value.lower() in ("true", "1"):
+            return True
+        if value.lower() in ("false", "0"):
+            return False
+        return None
+
+    @classmethod
+    def _text(cls, elem: etree._Element, tag: str) -> str | None:
+        """
+        Vrátí textový obsah prvního podřízeného elementu se zadaným tagem, nebo None.
+
+        :param elem: Rodičovský element, ve kterém se hledá.
+        :param tag: Název hledaného podřízeného elementu (bez jmenného prostoru).
+
+        :return: Textový obsah elementu nebo None, pokud element neexistuje nebo je prázdný.
+        """
+        child = elem.find(cls._ns(tag))
+        if child is None:
+            return None
+        return (child.text or "").strip() or None
+
+    @classmethod
+    def _id_attr(cls, elem: etree._Element, tag: str) -> str | None:
+        """
+        Vrátí hodnotu atributu ``id`` prvního podřízeného elementu se zadaným tagem.
+
+        Používá se pro elementy typu ``refType`` a ``vocabType``, kde atribut ``id``
+        nese ``ident_cely`` odkazovaného záznamu.
+
+        :param elem: Rodičovský element, ve kterém se hledá.
+        :param tag: Název hledaného podřízeného elementu (bez jmenného prostoru).
+
+        :return: Hodnota atributu ``id`` nebo None, pokud element nebo atribut neexistuje.
+        """
+        child = elem.find(cls._ns(tag))
+        if child is None:
+            return None
+        return child.get("id") or None
+
+    @classmethod
+    def _validate_heslar_value_matches(cls, validated_data: dict, elem: etree._Element) -> None:
+        """
+        Ověří shodu textové hodnoty XML a ``heslo`` na navázaném hesláři.
+
+        :param validated_data: Validovaná data serializeru.
+        :param elem: Importovaný XML element.
+
+        :raises ImportValidationException: Pokud text elementu neodpovídá ``heslo``.
+        """
+        heslar_fields = ("okolnosti", "obdobi", "druh_nalezu", "specifikace")
+        errors = []
+        for field_name in heslar_fields:
+            field_elem = elem.find(cls._ns(field_name))
+            provided_value = cls._text(elem, field_name)
+            validated_heslar = validated_data.get(field_name)
+            if provided_value and validated_heslar and provided_value != validated_heslar.heslo:
+                errors.append(
+                    ImportValidationIssue(
+                        line=field_elem.sourceline if field_elem is not None else elem.sourceline,
+                        column=None,
+                        message=f"{field_name}: "
+                        + _(
+                            "pas.api.SamostatnyNalezXmlImportView._validate_heslar_value_matches.saved_provided_mismatch"
+                        )
+                        % {
+                            "provided": provided_value,
+                            "saved": validated_heslar.heslo,
+                        },
+                        error_type=ImportErrorType.SAVED_PROVIDED_MISMATCH,
+                    )
+                )
+        if errors:
+            raise ImportValidationException(errors)
+
+    @classmethod
+    def _parse_nalez_element(cls, elem: etree._Element, user) -> tuple[dict, Osoba | None]:
+        """
+        Převede element ``amcr:samostatny_nalez`` na slovník pro deserializaci.
+
+        Elementy typu ``refType`` a ``vocabType`` se mapují pomocí atributu ``id``,
+        který nese ``ident_cely`` odkazovaného záznamu. Geometrie jsou předány
+        jako WKT řetězce z elementů ``geom_wkt`` a ``geom_sjtsk_wkt``.
+
+        :param elem: Element ``amcr:samostatny_nalez`` z importovaného XML dokumentu.
+        :param user: Uživatel provádějící import.
+
+        :return: Dvojice ``(data, nova_osoba)`` připravená pro import.
+        """
+        chranene = elem.find(cls._ns("chranene_udaje"))
+        nalezce_ident, nova_osoba = cls._parse_nalezce(elem, user)
+        projekt_ident = cls._id_attr(elem, "projekt")
+
+        if not projekt_ident:
+            raise ImportValidationException(
+                ImportValidationIssue(
+                    line=elem.sourceline,
+                    column=None,
+                    message="projekt: "
+                    + _("pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.missing_projekt"),
+                    error_type=ImportErrorType.INVALID_DATA,
+                )
+            )
+
+        def parse_ruian_katastr_kod(katastr_elem: etree._Element | None) -> int | None:
+            """
+            Převede atribut ``id`` ve formátu ``ruian-{kod}`` na číselný kód katastru.
+
+            :param katastr_elem: XML element ``katastr``.
+
+            :return: Kód katastru nebo ``None``, pokud element neexistuje.
+
+            :raises ImportValidationException: Pokud je atribut ``id`` v nevalidním formátu.
+            """
+            if katastr_elem is None:
+                return None
+
+            katastr_id = katastr_elem.get("id")
+            if not katastr_id:
+                return None
+            if not katastr_id.startswith("ruian-"):
+                raise ImportValidationException(
+                    ImportValidationIssue(
+                        line=katastr_elem.sourceline,
+                        column=None,
+                        message=f"katastr: {_('pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.invalid_katastr_id')}",
+                        error_type=ImportErrorType.INVALID_DATA,
+                    )
+                )
+
+            try:
+                return int(katastr_id.split("-", 1)[1])
+            except (IndexError, ValueError):
+                raise ImportValidationException(
+                    ImportValidationIssue(
+                        line=katastr_elem.sourceline,
+                        column=None,
+                        message=f"katastr: {_('pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.invalid_katastr_id')}",
+                        error_type=ImportErrorType.INVALID_DATA,
+                    )
+                )
+
+        data = {
+            "ident_cely": None if cls._text(elem, "ident_cely") == ":tba" else cls._text(elem, "ident_cely"),
+            "projekt": projekt_ident,
+            "evidencni_cislo": cls._text(elem, "evidencni_cislo"),
+            "igsn": cls._text(elem, "igsn"),
+            "hloubka": cls._text(elem, "hloubka"),
+            "okolnosti": cls._id_attr(elem, "okolnosti"),
+            "obdobi": cls._id_attr(elem, "obdobi"),
+            "presna_datace": cls._text(elem, "presna_datace"),
+            "druh_nalezu": cls._id_attr(elem, "druh_nalezu"),
+            "specifikace": cls._id_attr(elem, "specifikace"),
+            "pocet": cls._text(elem, "pocet"),
+            "poznamka": cls._text(elem, "poznamka"),
+            "nalezce": nalezce_ident,
+            "datum_nalezu": cls._text(elem, "datum_nalezu"),
+            "stav": SN_ZAPSANY,
+            "predano": cls._parse_bool(cls._text(elem, "predano")),
+            "predano_organizace": cls._id_attr(elem, "predano_organizace"),
+            "geom_system": cls._text(elem, "geom_system"),
+            "pristupnost": cls._id_attr(elem, "pristupnost"),
+        }
+
+        if chranene is not None:
+            data["katastr"] = parse_ruian_katastr_kod(chranene.find(cls._ns("katastr")))
+            data["lokalizace"] = cls._text(chranene, "lokalizace")
+            geom_wkt_elem = chranene.find(cls._ns("geom_wkt"))
+            if geom_wkt_elem is not None and geom_wkt_elem.text:
+                data["geom"] = geom_wkt_elem.text.strip()
+            geom_sjtsk_elem = chranene.find(cls._ns("geom_sjtsk_wkt"))
+            if geom_sjtsk_elem is not None and geom_sjtsk_elem.text:
+                data["geom_sjtsk"] = geom_sjtsk_elem.text.strip()
+
+        return {k: v for k, v in data.items() if v is not None}, nova_osoba
+
+    @classmethod
+    def _parse_nalezce(cls, elem: etree._Element, user) -> tuple[str | None, Osoba | None]:
+        """
+        Zpracuje element ``nalezce`` a vrátí ``ident_cely`` osoby pro import.
+
+        Pokud má element atribut ``id=":tba"``, vytvoří se nová osoba z textu
+        ve formátu ``"Příjmení, Jméno"``. Nová osoba se zde pouze připraví,
+        ale uloží se až v transakci společně s ``SamostatnyNalez``.
+
+        :param elem: Element ``amcr:samostatny_nalez``.
+        :param user: Uživatel provádějící import.
+
+        :return: Dvojice ``(ident_cely_osoby, nova_osoba)``.
+        """
+
+        def build_osoba_vypis(prijmeni: str, jmeno: str) -> str:
+            """
+            Sestaví zkrácený výpis osoby ve formátu používaném aplikací.
+
+            :param prijmeni: Příjmení osoby.
+            :param jmeno: Jméno osoby.
+
+            :return: Zkrácený výpis osoby.
+            """
+            vypis = f"{prijmeni},"
+            for cast_jmena in jmeno.split():
+                if "-" in cast_jmena:
+                    iniciály = [f"{cast[0].upper()}." for cast in cast_jmena.split("-") if cast]
+                    vypis += f" {'-'.join(iniciály)}"
+                else:
+                    vypis += f" {cast_jmena.strip()[0].upper()}."
+            return vypis
+
+        def get_nalezce_format_error(nalezce_text: str, casti: list[str]) -> ImportValidationIssue:
+            """
+            Vrátí detail chyby pro nevalidní formát ``nalezce id=":tba"``.
+
+            :param nalezce_text: Původní text elementu ``nalezce``.
+            :param casti: Rozdělené části textu podle první čárky.
+
+            :return: Detail chyby s kódem ``invalid_data``.
+            """
+            if "," not in nalezce_text:
+                message = _("pas.api.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format_missing_separator")
+            elif len(casti) < 2 or not casti[0]:
+                message = _("pas.api.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format_missing_surname")
+            elif not casti[1]:
+                message = _("pas.api.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format_missing_name")
+            else:
+                message = _("pas.api.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format")
+            return ImportValidationIssue(
+                line=nalezce_elem.sourceline if nalezce_elem is not None else elem.sourceline,
+                column=None,
+                message=f"nalezce: {message}",
+                error_type=ImportErrorType.INVALID_DATA,
+            )
+
+        nalezce_elem = elem.find(cls._ns("nalezce"))
+        if nalezce_elem is None:
+            return None, None
+
+        nalezce_id = nalezce_elem.get("id")
+        if nalezce_id != ":tba":
+            return nalezce_id or None, None
+
+        nalezce_text = (nalezce_elem.text or "").strip()
+        casti = [cast.strip() for cast in nalezce_text.split(",", 1)]
+        if len(casti) != 2 or not casti[0] or not casti[1]:
+            raise ImportValidationException(get_nalezce_format_error(nalezce_text, casti))
+
+        if not check_permissions(Permissions.actionChoices.model_edit, user):
+            raise ImportValidationException(
+                ImportValidationIssue(
+                    line=nalezce_elem.sourceline if nalezce_elem is not None else elem.sourceline,
+                    column=None,
+                    message="nalezce: "
+                    + _("pas.api.SamostatnyNalezXmlImportView._parse_nalezce.missing_edit_osoba_permission"),
+                    error_type=ImportErrorType.PERMISSION_ERROR,
+                )
+            )
+
+        prijmeni, jmeno = casti
+        jmeno = " ".join(jmeno.split())
+        osoba = Osoba(
+            prijmeni=prijmeni,
+            jmeno=jmeno,
+            vypis=build_osoba_vypis(prijmeni, jmeno),
+            vypis_cely=f"{prijmeni}, {jmeno}",
+        )
+        return None, osoba
 
     @staticmethod
     def _success(
@@ -1231,6 +1764,50 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
                 extra={"ident_cely": instance.ident_cely, "notes": notes, "user": user_pk},
             )
         return HttpResponse(metadata, content_type="application/xml", status=200)
+
+    @classmethod
+    def _build_schema_validation_doc(cls, doc: etree._ElementTree) -> etree._ElementTree:
+        """
+        Vytvoří kopii dokumentu upravenou pro validaci proti XSD schématu.
+
+        XSD vyžaduje element ``stav``. Pokud v dokumentu chybí, doplní se do kopie
+        pro účely validace; originální dokument zůstává nezměněn.
+
+        :param doc: Původní XML dokument.
+
+        :return: Kopie XML dokumentu určená pro schema validaci.
+        """
+        parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
+        validation_doc = etree.ElementTree(etree.fromstring(etree.tostring(doc.getroot()), parser=parser))
+        for elem in validation_doc.findall(f".//{cls._ns('samostatny_nalez')}"):
+            if elem.find(cls._ns("stav")) is not None:
+                continue
+
+            stav_elem = etree.Element(cls._ns("stav"))
+            stav_elem.text = str(SN_ZAPSANY)
+            insert_before_tags = (
+                "predano",
+                "predano_organizace",
+                "geom_system",
+                "pristupnost",
+                "chranene_udaje",
+                "historie",
+                "soubor",
+            )
+            insert_index = len(elem)
+            for index, child in enumerate(elem):
+                if _strip_namespace(child.tag) in insert_before_tags:
+                    insert_index = index
+                    break
+            elem.insert(insert_index, stav_elem)
+
+        return validation_doc
+
+
+class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
+    """Pohled pro import záznamu samostatného nálezu z XML souboru přes POST požadavek."""
+
+    _IMPORT_HISTORY_NOTE = _l("pas.api.SamostatnyNalezXmlImportView.import_history_note")
 
     def post(self, request, format=None):
         """
@@ -1528,20 +2105,6 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
             ]
         )
 
-    def _validation_status(self, errors: list[ImportValidationIssue]) -> int:
-        """
-        Určí HTTP stavový kód odpovědi na základě typů validačních chyb.
-
-        :param errors: Seznam validačních chyb importu.
-
-        :return: HTTP stavový kód odpovídající nejzávažnějšímu typu chyby.
-        """
-        if any(error.error_type == ImportErrorType.PERMISSION_ERROR for error in errors):
-            return status.HTTP_403_FORBIDDEN
-        if any(error.error_type == ImportErrorType.RECORD_DOES_NOT_EXIST for error in errors):
-            return status.HTTP_404_NOT_FOUND
-        return status.HTTP_422_UNPROCESSABLE_ENTITY
-
     @classmethod
     def _validate_disallowed_elements(cls, elem: etree._Element) -> None:
         """
@@ -1562,544 +2125,418 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
                 )
             )
 
-    @classmethod
-    def _build_schema_validation_doc(cls, doc: etree._ElementTree) -> etree._ElementTree:
+
+class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
+    """Pohled pro aktualizaci pole ``evidencni_cislo`` záznamu samostatného nálezu přes PATCH požadavek."""
+
+    http_method_names = ["patch"]
+    _MAX_EVIDENCNI_CISLO_LENGTH = 255
+
+    def patch(self, request, ident_cely: str, format=None):
         """
-        Vytvoří kopii dokumentu upravenou pro validaci proti XSD schématu.
+        Aktualizuje pole ``evidencni_cislo`` záznamu samostatného nálezu.
 
-        Importní API nepovoluje element ``stav``, ale XSD jej vyžaduje.
-        Pro validaci proto doplní chybějící ``stav`` do kopie dokumentu.
+        Přijímá ``ident_cely`` záznamu jako součást URL a novou hodnotu ``evidencni_cislo``
+        jako query parametr. Pro smazání hodnoty lze předat prázdný řetězec.
 
-        :param doc: Původní XML dokument.
+        Příklad volání::
 
-        :return: Kopie XML dokumentu určená pro schema validaci.
+            PATCH /pas/api/nalez/M-202400001-N00001/evidencni-cislo?evidencni_cislo=EC-2024-001
+
+        :param request: HTTP požadavek s query parametrem ``evidencni_cislo``.
+        :param ident_cely: Identifikátor záznamu samostatného nálezu.
+        :param format: Formát odpovědi.
+
+        :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
+                 nebo chybou syntaxe volání (HTTP 400), nenalezeným záznamem (HTTP 404),
+                 nedostatečnými oprávněními (HTTP 403),
+                 nebo interní chybou (HTTP 500).
         """
+        log_entry = ApiRequestLog.objects.create(
+            user=request.user,
+            client_ip=self.get_client_ip(request),
+            request_target=API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH,
+        )
 
-        parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
-        validation_doc = etree.ElementTree(etree.fromstring(etree.tostring(doc.getroot()), parser=parser))
-        for elem in validation_doc.findall(f".//{cls._ns('samostatny_nalez')}"):
-            if elem.find(cls._ns("stav")) is not None:
-                continue
-
-            stav_elem = etree.Element(cls._ns("stav"))
-            stav_elem.text = str(SN_ZAPSANY)
-            insert_before_tags = (
-                "predano",
-                "predano_organizace",
-                "geom_system",
-                "pristupnost",
-                "chranene_udaje",
-                "historie",
-                "soubor",
+        if "evidencni_cislo" not in request.query_params or not request.query_params["evidencni_cislo"]:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.missing_evidencni_cislo")},
+                status.HTTP_400_BAD_REQUEST,
             )
-            insert_index = len(elem)
-            for index, child in enumerate(elem):
-                if _strip_namespace(child.tag) in insert_before_tags:
-                    insert_index = index
-                    break
-            elem.insert(insert_index, stav_elem)
 
-        return validation_doc
+        evidencni_cislo = request.query_params["evidencni_cislo"]
 
-    @classmethod
-    def _validate_heslar_value_matches(cls, validated_data: dict, elem: etree._Element) -> None:
-        """
-        Ověří shodu textové hodnoty XML a ``heslo`` na navázaném hesláři.
-
-        :param validated_data: Validovaná data serializeru.
-        :param elem: Importovaný XML element.
-
-        :raises ImportValidationException: Pokud text elementu neodpovídá ``heslo``.
-        """
-        heslar_fields = ("okolnosti", "obdobi", "druh_nalezu", "specifikace")
-        errors = []
-        for field_name in heslar_fields:
-            field_elem = elem.find(cls._ns(field_name))
-            provided_value = cls._text(elem, field_name)
-            validated_heslar = validated_data.get(field_name)
-            if provided_value and validated_heslar and provided_value != validated_heslar.heslo:
-                errors.append(
-                    ImportValidationIssue(
-                        line=field_elem.sourceline if field_elem is not None else elem.sourceline,
-                        column=None,
-                        message=f"{field_name}: "
-                        + _(
-                            "pas.api.SamostatnyNalezXmlImportView._validate_heslar_value_matches.saved_provided_mismatch"
-                        )
-                        % {
-                            "provided": provided_value,
-                            "saved": validated_heslar.heslo,
-                        },
-                        error_type=ImportErrorType.SAVED_PROVIDED_MISMATCH,
-                    )
-                )
-        if errors:
-            raise ImportValidationException(errors)
-
-    @staticmethod
-    def _verify_content_digest(request, xml_file) -> str | None:
-        """
-        Ověří integritu souboru pomocí hlavičky ``Content-Digest`` (RFC 9530).
-
-        Očekávaný formát hlavičky: ``sha-512=:<base64>:``
-        Pokud hlavička chybí nebo neodpovídá skutečnému SHA-512 obsahu souboru,
-        vrátí chybovou zprávu.
-
-        :param request: HTTP požadavek obsahující hlavičku ``Content-Digest``.
-        :param xml_file: Nahraný soubor; po zavolání je pozice čtení na začátku.
-
-        :return: Chybová zpráva jako řetězec, nebo None pokud je digest v pořádku.
-        """
-        header = request.headers.get("Content-Digest")
-        if not header:
-            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.missing_digest")
-
-        prefix = "sha-512=:"
-        if not header.startswith(prefix) or not header.endswith(":"):
-            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.invalid_format")
+        if len(evidencni_cislo) > self._MAX_EVIDENCNI_CISLO_LENGTH:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.evidencni_cislo_too_long")},
+                status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
-            expected = base64.b64decode(header[len(prefix) : -1])
-        except (ValueError, TypeError):
-            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.invalid_base64")
-
-        actual = hashlib.sha512(xml_file.read()).digest()
-        if actual != expected:
-            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.digest_mismatch")
-
-        return None
-
-    @classmethod
-    def _validate_declared_schema_version(cls, doc: etree._ElementTree) -> str | None:
-        """
-        Ověří, že XML deklaruje podporovanou verzi AMČR schématu.
-
-        :param doc: Naparsovaný XML dokument.
-
-        :return: Chybová zpráva nebo ``None``, pokud deklarace odpovídá podporované verzi.
-        """
-        root = doc.getroot()
-        amcr_namespace = root.nsmap.get("amcr")
-        if amcr_namespace != AMCR_NAMESPACE_URL:
-            return _("pas.api.SamostatnyNalezXmlImportView._validate_declared_schema_version.unsupported_namespace")
-
-        schema_location = root.get(f"{{{cls._XSI_NS}}}schemaLocation")
-        if not schema_location:
-            return _("pas.api.SamostatnyNalezXmlImportView._validate_declared_schema_version.missing_schema_location")
-
-        schema_parts = schema_location.split()
-        if len(schema_parts) % 2 != 0:
-            return _("pas.api.SamostatnyNalezXmlImportView._validate_declared_schema_version.invalid_schema_location")
-
-        schema_mapping = dict(zip(schema_parts[0::2], schema_parts[1::2]))
-        declared_amcr_xsd = schema_mapping.get(amcr_namespace)
-        if declared_amcr_xsd != AMCR_XSD_URL:
-            return _(
-                "pas.api.SamostatnyNalezXmlImportView._validate_declared_schema_version.unsupported_schema_location"
+            instance = SamostatnyNalez.objects.get(ident_cely=ident_cely)
+        except SamostatnyNalez.DoesNotExist:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.not_found")},
+                status.HTTP_404_NOT_FOUND,
             )
 
-        return None
+        if not self._has_edit_permissions(request.user, ident_cely):
+            # The denied user ID and ident_cely are logged intentionally for
+            # authorization troubleshooting and incident investigation.
+            # They are audit/operational identifiers, not secrets.
+            # codeql[py/clear-text-logging-sensitive-data]
+            logger.warning(
+                "pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.permission_denied",
+                extra={"user": request.user.pk, "ident_cely": ident_cely},
+            )
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.permission_denied")},
+                status.HTTP_403_FORBIDDEN,
+            )
 
-    @classmethod
-    def _get_amcr_schema(cls, doc: etree._ElementTree) -> etree.XMLSchema:
-        """
-        Vrátí zkompilované XSD schéma AMČR podle URL deklarované v ``xsi:schemaLocation``.
+        log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
+        log_entry.save(update_fields=["status"])
 
-        :param doc: Naparsovaný XML dokument s deklarovaným ``xsi:schemaLocation``.
+        old_evidencni_cislo = instance.evidencni_cislo
+        fedora_transaction = FedoraTransaction(transaction_user=request.user)
+        try:
+            with transaction.atomic():
+                instance.evidencni_cislo = evidencni_cislo
+                instance.active_transaction = fedora_transaction
+                instance.save(update_fields=["evidencni_cislo"])
+                self._create_history_record(instance, request.user, old_evidencni_cislo, evidencni_cislo)
+                fedora_transaction.mark_transaction_as_closed()
+        except FedoraError as err:
+            logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except DatabaseError as err:
+            logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.database_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except Exception as err:
+            logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.unexpected_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
-        :return: Vrací instanci ``etree.XMLSchema`` pro validaci importovaných XML dokumentů.
-        """
-        root = doc.getroot()
-        amcr_namespace = root.nsmap.get("amcr")
-        schema_location = root.get(f"{{{cls._XSI_NS}}}schemaLocation", "")
-        schema_mapping = dict(zip(schema_location.split()[0::2], schema_location.split()[1::2]))
-        schema_url = schema_mapping[amcr_namespace]
-        cls._validate_schema_url_allowed(schema_url)
+        try:
+            metadata = FedoraRepositoryConnector(instance).get_metadata()
+        except FedoraError as err:
+            logger.error(
+                "pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error_reading_metadata",
+                extra={"error": err},
+            )
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error_reading_metadata")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
-        now = time.time()
-        cached = cls._amcr_schema_cache.get(schema_url)
-        if cached is not None and now - cached[1] < _AMCR_SCHEMA_CACHE_TTL:
-            return cached[0]
-
-        with _AMCR_SCHEMA_LOCK:
-            cached = cls._amcr_schema_cache.get(schema_url)
-            if cached is not None and time.time() - cached[1] < _AMCR_SCHEMA_CACHE_TTL:
-                return cached[0]
-
-            class _LocalResolver(etree.Resolver):
-                """Resolver nahrazující vzdálené W3C URL lokálním souborem xml.xsd."""
-
-                def __init__(self):
-                    super().__init__()
-                    self.blocked_exception: ImportValidationException | None = None
-
-                def resolve(self, url, id, context):
-                    """
-                    Přeloží URL na lokální cestu pro xml.xsd.
-
-                    :param url: URL požadovaného zdroje.
-                    :param id: Identifikátor kontextu parseru.
-                    :param context: Kontext resolveru.
-
-                    :return: Vrací lokální soubor pro xml.xsd, jinak None.
-                    """
-                    allowed_urls = (
-                        "http://www.w3.org/2001/xml.xsd",
-                        "https://www.w3.org/2001/xml.xsd",
-                        "http://www.w3.org/2001/03/xml.xsd",
-                        "https://www.w3.org/2001/03/xml.xsd",
-                    )
-                    if url in allowed_urls:
-                        return self.resolve_filename("xml_generator/definitions/xml.xsd", context)
-                    if any(pattern.match(url) for pattern in _ALLOWED_SCHEMA_URL_PATTERNS):
-                        try:
-                            response = urllib.request.urlopen(url, timeout=_AMCR_SCHEMA_FETCH_TIMEOUT)  # noqa: S310
-                        except (urllib.error.URLError, TimeoutError) as exc:
-                            logger.error("Nepodařilo se načíst XSD schéma z URL %s: %s", url, exc)
-                            self.blocked_exception = ImportValidationException(
-                                ImportValidationIssue(
-                                    line=None,
-                                    column=None,
-                                    message=_(
-                                        "pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.schema_not_available"
-                                    )
-                                    % {"url": url},
-                                    error_type=ImportErrorType.INVALID_DATA,
-                                )
-                            )
-                            self.blocked_exception.__cause__ = exc
-                            return None
-                        return self.resolve_file(response, context, base_url=url)
-                    # Disallowed URL — store the exception for re-raising after XMLSchema()
-                    # because lxml swallows Python exceptions raised inside resolver callbacks.
-                    self.blocked_exception = ImportValidationException(
-                        ImportValidationIssue(
-                            line=None,
-                            column=None,
-                            message=_("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.disallowed_schema_url")
-                            % {"url": url},
-                            error_type=ImportErrorType.INVALID_DATA,
-                        )
-                    )
-                    return None
-
-            parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
-            resolver = _LocalResolver()
-            parser.resolvers.add(resolver)
-            try:
-                response = urllib.request.urlopen(schema_url, timeout=_AMCR_SCHEMA_FETCH_TIMEOUT)  # noqa: S310
-            except (urllib.error.URLError, TimeoutError) as exc:
-                logger.error("Nepodařilo se načíst XSD schéma z URL %s: %s", schema_url, exc)
-                raise ImportValidationException(
-                    ImportValidationIssue(
-                        line=None,
-                        column=None,
-                        message=_("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.schema_not_available")
-                        % {"url": schema_url},
-                        error_type=ImportErrorType.INVALID_DATA,
-                    )
-                ) from exc
-            with response:
-                schema_doc = etree.parse(response, parser)
-            schema = etree.XMLSchema(schema_doc)
-            if resolver.blocked_exception is not None:
-                raise resolver.blocked_exception
-            cls._amcr_schema_cache[schema_url] = (schema, time.time())
-            return schema
+        return self._success(log_entry, instance, metadata, [])
 
     @staticmethod
-    def _validate_schema_url_allowed(url: str) -> None:
+    def _create_history_record(instance: SamostatnyNalez, user, old_value: str | None, new_value: str | None) -> None:
         """
-        Ověří, že URL schématu patří mezi povolené URL prefixy.
+        Vytvoří záznam historie pro aktualizaci pole ``evidencni_cislo``.
 
-        :param url: URL schématu nebo importovaného XSD souboru.
+        Poznámka záznamu má formát ``old_value -> new_value``.
 
-        :raises ImportValidationException: Pokud URL míří mimo povolené domény.
+        :param instance: Aktualizovaný záznam samostatného nálezu.
+        :param user: Uživatel, který provedl aktualizaci.
+        :param old_value: Původní hodnota pole ``evidencni_cislo``.
+        :param new_value: Nová hodnota pole ``evidencni_cislo``.
         """
-        if not any(pattern.match(url) for pattern in _ALLOWED_SCHEMA_URL_PATTERNS):
-            raise ImportValidationException(
-                ImportValidationIssue(
-                    line=None,
-                    column=None,
-                    message=_("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.disallowed_schema_url")
-                    % {"url": url},
-                    error_type=ImportErrorType.INVALID_DATA,
-                )
-            )
-
-    @classmethod
-    def _ns(cls, tag: str) -> str:
-        """
-        Vrátí tag s prefixem jmenného prostoru AMČR.
-
-        :param tag: Název elementu bez prefixu jmenného prostoru.
-
-        :return: Vrací řetězec ve tvaru ``{namespace}tag``.
-        """
-        return f"{{{cls._AMCR_NS}}}{tag}"
-
-    @classmethod
-    def _get_ignored_lang_notes(cls, elem: etree._Element) -> list[str]:
-        """
-        Vrátí seznam poznámek pro elementy s nepodporovaným ``xml:lang``.
-
-        :param elem: Importovaný element ``amcr:samostatny_nalez``.
-
-        :return: Seznam textových poznámek.
-        """
-
-        notes = []
-        lang_attr = f"{{{cls._XML_NS}}}lang"
-        for child in elem.iter():
-            lang_value = child.get(lang_attr)
-            if lang_value and lang_value.lower() != "cs":
-                notes.append(
-                    _("pas.api.SamostatnyNalezXmlImportView.post.ignored_lang_attribute")
-                    % {"element": _strip_namespace(child.tag), "lang": lang_value}
-                )
-        return notes
-
-    @staticmethod
-    def _parse_bool(value: str | None) -> bool | None:
-        """
-        Převede textovou hodnotu XML elementu na Python ``bool``, nebo ``None``.
-
-        Přijímá hodnoty ``"true"`` / ``"1"`` jako ``True`` a ``"false"`` / ``"0"`` jako ``False``
-        (bez ohledu na velikost písmen). Ostatní hodnoty a ``None`` vrátí ``None``.
-
-        :param value: Textová hodnota z XML elementu.
-
-        :return: ``True``, ``False``, nebo ``None``.
-        """
-        if value is None:
-            return None
-        if value.lower() in ("true", "1"):
-            return True
-        if value.lower() in ("false", "0"):
-            return False
-        return None
-
-    @classmethod
-    def _text(cls, elem: etree._Element, tag: str) -> str | None:
-        """
-        Vrátí textový obsah prvního podřízeného elementu se zadaným tagem, nebo None.
-
-        :param elem: Rodičovský element, ve kterém se hledá.
-        :param tag: Název hledaného podřízeného elementu (bez jmenného prostoru).
-
-        :return: Textový obsah elementu nebo None, pokud element neexistuje nebo je prázdný.
-        """
-        child = elem.find(cls._ns(tag))
-        if child is None:
-            return None
-        return (child.text or "").strip() or None
-
-    @classmethod
-    def _id_attr(cls, elem: etree._Element, tag: str) -> str | None:
-        """
-        Vrátí hodnotu atributu ``id`` prvního podřízeného elementu se zadaným tagem.
-
-        Používá se pro elementy typu ``refType`` a ``vocabType``, kde atribut ``id``
-        nese ``ident_cely`` odkazovaného záznamu.
-
-        :param elem: Rodičovský element, ve kterém se hledá.
-        :param tag: Název hledaného podřízeného elementu (bez jmenného prostoru).
-
-        :return: Hodnota atributu ``id`` nebo None, pokud element nebo atribut neexistuje.
-        """
-        child = elem.find(cls._ns(tag))
-        if child is None:
-            return None
-        return child.get("id") or None
-
-    @classmethod
-    def _parse_nalezce(cls, elem: etree._Element, user) -> tuple[str | None, Osoba | None]:
-        """
-        Zpracuje element ``nalezce`` a vrátí ``ident_cely`` osoby pro import.
-
-        Pokud má element atribut ``id=":tba"``, vytvoří se nová osoba z textu
-        ve formátu ``"Příjmení, Jméno"``. Nová osoba se zde pouze připraví,
-        ale uloží se až v transakci společně s ``SamostatnyNalez``.
-
-        :param elem: Element ``amcr:samostatny_nalez``.
-        :param user: Uživatel provádějící import.
-
-        :return: Dvojice ``(ident_cely_osoby, nova_osoba)``.
-        """
-
-        def build_osoba_vypis(prijmeni: str, jmeno: str) -> str:
-            """
-            Sestaví zkrácený výpis osoby ve formátu používaném aplikací.
-
-            :param prijmeni: Příjmení osoby.
-            :param jmeno: Jméno osoby.
-
-            :return: Zkrácený výpis osoby.
-            """
-            vypis = f"{prijmeni},"
-            for cast_jmena in jmeno.split():
-                if "-" in cast_jmena:
-                    iniciály = [f"{cast[0].upper()}." for cast in cast_jmena.split("-") if cast]
-                    vypis += f" {'-'.join(iniciály)}"
-                else:
-                    vypis += f" {cast_jmena.strip()[0].upper()}."
-            return vypis
-
-        def get_nalezce_format_error(nalezce_text: str, casti: list[str]) -> ImportValidationIssue:
-            """
-            Vrátí detail chyby pro nevalidní formát ``nalezce id=":tba"``.
-
-            :param nalezce_text: Původní text elementu ``nalezce``.
-            :param casti: Rozdělené části textu podle první čárky.
-
-            :return: Detail chyby s kódem ``invalid_data``.
-            """
-            if "," not in nalezce_text:
-                message = _("pas.api.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format_missing_separator")
-            elif len(casti) < 2 or not casti[0]:
-                message = _("pas.api.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format_missing_surname")
-            elif not casti[1]:
-                message = _("pas.api.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format_missing_name")
-            else:
-                message = _("pas.api.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format")
-            return ImportValidationIssue(
-                line=nalezce_elem.sourceline if nalezce_elem is not None else elem.sourceline,
-                column=None,
-                message=f"nalezce: {message}",
-                error_type=ImportErrorType.INVALID_DATA,
-            )
-
-        nalezce_elem = elem.find(cls._ns("nalezce"))
-        if nalezce_elem is None:
-            return None, None
-
-        nalezce_id = nalezce_elem.get("id")
-        if nalezce_id != ":tba":
-            return nalezce_id or None, None
-
-        nalezce_text = (nalezce_elem.text or "").strip()
-        casti = [cast.strip() for cast in nalezce_text.split(",", 1)]
-        if len(casti) != 2 or not casti[0] or not casti[1]:
-            raise ImportValidationException(get_nalezce_format_error(nalezce_text, casti))
-
-        if not check_permissions(Permissions.actionChoices.model_edit, user):
-            raise ImportValidationException(
-                ImportValidationIssue(
-                    line=nalezce_elem.sourceline if nalezce_elem is not None else elem.sourceline,
-                    column=None,
-                    message="nalezce: "
-                    + _("pas.api.SamostatnyNalezXmlImportView._parse_nalezce.missing_edit_osoba_permission"),
-                    error_type=ImportErrorType.PERMISSION_ERROR,
-                )
-            )
-
-        prijmeni, jmeno = casti
-        jmeno = " ".join(jmeno.split())
-        osoba = Osoba(
-            prijmeni=prijmeni,
-            jmeno=jmeno,
-            vypis=build_osoba_vypis(prijmeni, jmeno),
-            vypis_cely=f"{prijmeni}, {jmeno}",
+        Historie.objects.create(
+            typ_zmeny=AKTUALIZACE_SN,
+            uzivatel=user,
+            vazba=instance.historie,
+            poznamka=f"{old_value} -> {new_value}",
         )
-        return None, osoba
 
-    @classmethod
-    def _parse_nalez_element(cls, elem: etree._Element, user) -> tuple[dict, Osoba | None]:
+
+# Fields that must never be updated via the XML update endpoint.
+_XML_UPDATE_READONLY_FIELDS = frozenset({"ident_cely", "stav"})
+
+
+class SamostatnyNalezXmlUpdateView(SamostatnyNalezXmlBaseView):
+    """Pohled pro aktualizaci záznamu samostatného nálezu z XML souboru přes POST požadavek."""
+
+    @staticmethod
+    def _create_history_record(instance: SamostatnyNalez, user, changed_fields: list[str]) -> None:
         """
-        Převede element ``amcr:samostatny_nalez`` na slovník pro deserializaci.
+        Vytvoří záznam historie pro XML aktualizaci samostatného nálezu.
 
-        Elementy typu ``refType`` a ``vocabType`` se mapují pomocí atributu ``id``,
-        který nese ``ident_cely`` odkazovaného záznamu. Geometrie jsou předány
-        jako WKT řetězce z elementů ``geom_wkt`` a ``geom_sjtsk_wkt``.
+        Poznámka záznamu obsahuje čárkou oddělený seznam změněných polí v deterministickém pořadí.
 
-        :param elem: Element ``amcr:samostatny_nalez`` z importovaného XML dokumentu.
-        :param user: Uživatel provádějící import.
-
-        :return: Dvojice ``(data, nova_osoba)`` připravená pro import.
+        :param instance: Aktualizovaný záznam samostatného nálezu.
+        :param user: Uživatel, který provedl aktualizaci.
+        :param changed_fields: Seznam názvů polí změněných požadavkem.
         """
-        chranene = elem.find(cls._ns("chranene_udaje"))
-        nalezce_ident, nova_osoba = cls._parse_nalezce(elem, user)
-        projekt_ident = cls._id_attr(elem, "projekt")
+        Historie.objects.create(
+            typ_zmeny=AKTUALIZACE_SN,
+            uzivatel=user,
+            vazba=instance.historie,
+            poznamka=", ".join(sorted(changed_fields)),
+        )
 
-        if not projekt_ident:
-            raise ImportValidationException(
-                ImportValidationIssue(
-                    line=elem.sourceline,
-                    column=None,
-                    message="projekt: "
-                    + _("pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.missing_projekt"),
-                    error_type=ImportErrorType.INVALID_DATA,
-                )
+    def post(self, request, ident_cely: str, format=None):
+        """
+        Aktualizuje existující záznam samostatného nálezu z XML souboru.
+
+        Přijímá ``ident_cely`` záznamu jako součást URL a XML soubor v parametru ``file``
+        (multipart/form-data). XML musí odpovídat schématu AMČR 2.2. Dokument musí
+        obsahovat právě jeden element ``amcr:samostatny_nalez``. Pole ``ident_cely``
+        a ``stav`` jsou ignorovány — jejich hodnoty nelze přes tento endpoint měnit.
+        Pokud XML neobsahuje žádnou změnu oproti DB záznamu, požadavek selže s HTTP 422.
+
+        :param request: HTTP požadavek obsahující XML soubor v poli ``file``.
+        :param ident_cely: Identifikátor aktualizovaného záznamu samostatného nálezu.
+        :param format: Formát odpovědi.
+
+        :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
+                 nebo chybou syntaxe volání (HTTP 400), nenalezeným záznamem (HTTP 404),
+                 nevalidním XML či žádnou změnou (HTTP 422),
+                 nebo interní chybou (HTTP 500).
+        """
+        xml_file = request.FILES.get("file")
+
+        log_entry = ApiRequestLog.objects.create(
+            user=request.user,
+            client_ip=self.get_client_ip(request),
+            request_target=API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_UPDATE,
+            filename=xml_file.name if xml_file is not None else None,
+            file_size=xml_file.size if xml_file is not None else None,
+        )
+
+        try:
+            instance = SamostatnyNalez.objects.get(ident_cely=ident_cely)
+        except SamostatnyNalez.DoesNotExist:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.not_found")},
+                status.HTTP_404_NOT_FOUND,
             )
 
-        def parse_ruian_katastr_kod(katastr_elem: etree._Element | None) -> int | None:
-            """
-            Převede atribut ``id`` ve formátu ``ruian-{kod}`` na číselný kód katastru.
+        if not self._has_edit_permissions(request.user, ident_cely):
+            # The denied user ID and ident_cely are logged intentionally for
+            # authorization troubleshooting and incident investigation.
+            # They are audit/operational identifiers, not secrets.
+            # codeql[py/clear-text-logging-sensitive-data]
+            logger.warning(
+                "pas.api.SamostatnyNalezXmlUpdateView.post.permission_denied",
+                extra={"user": request.user.pk, "ident_cely": ident_cely},
+            )
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.permission_denied")},
+                status.HTTP_403_FORBIDDEN,
+            )
 
-            :param katastr_elem: XML element ``katastr``.
+        if xml_file is None:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.missing_file")},
+                status.HTTP_400_BAD_REQUEST,
+            )
 
-            :return: Kód katastru nebo ``None``, pokud element neexistuje.
+        digest_error = self._verify_content_digest(request, xml_file)
+        if digest_error:
+            return self._fail(log_entry, {"detail": digest_error}, status.HTTP_400_BAD_REQUEST)
+        xml_file.seek(0)
 
-            :raises ImportValidationException: Pokud je atribut ``id`` v nevalidním formátu.
-            """
-            if katastr_elem is None:
-                return None
+        try:
+            parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
+            doc = etree.ElementTree(etree.fromstring(xml_file.read(), parser=parser))
+        except etree.XMLSyntaxError as exc:
+            # codeql[py/clear-text-logging-sensitive-data]
+            logger.warning(
+                "pas.api.SamostatnyNalezXmlUpdateView.post.xml_syntax_error",
+                extra={"error": str(exc), "user": request.user.pk},
+            )
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.invalid_xml_syntax")},
+                status.HTTP_400_BAD_REQUEST,
+            )
 
-            katastr_id = katastr_elem.get("id")
-            if not katastr_id:
-                return None
-            if not katastr_id.startswith("ruian-"):
-                raise ImportValidationException(
-                    ImportValidationIssue(
-                        line=katastr_elem.sourceline,
-                        column=None,
-                        message=f"katastr: {_('pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.invalid_katastr_id')}",
-                        error_type=ImportErrorType.INVALID_DATA,
-                    )
+        version_error = self._validate_declared_schema_version(doc)
+        if version_error:
+            return self._fail(log_entry, {"detail": version_error}, status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+        try:
+            schema = self._get_amcr_schema(doc)
+        except ImportValidationException as exc:
+            return self._fail(
+                log_entry,
+                {"validation_errors": [e.to_dict() for e in exc.import_errors]},
+                self._validation_status(exc.import_errors),
+            )
+
+        validation_doc = self._build_schema_validation_doc(doc)
+        if not schema.validate(validation_doc):
+            errors = [
+                ImportValidationIssue(
+                    line=e.line,
+                    column=e.column,
+                    message=_("pas.api.SamostatnyNalezXmlUpdateView.post.schema_error_item")
+                    % {"line": e.line, "column": e.column, "message": e.message},
+                    error_type=ImportErrorType.INVALID_DATA,
                 )
+                for e in schema.error_log
+            ]
+            # codeql[py/clear-text-logging-sensitive-data]
+            logger.warning(
+                "pas.api.SamostatnyNalezXmlUpdateView.post.schema_invalid",
+                extra={"errors": [error.to_dict() for error in errors], "user": request.user.pk},
+            )
+            return self._fail(
+                log_entry,
+                {"schema_errors": [error.to_dict() for error in errors]},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
 
-            try:
-                return int(katastr_id.split("-", 1)[1])
-            except (IndexError, ValueError):
-                raise ImportValidationException(
-                    ImportValidationIssue(
-                        line=katastr_elem.sourceline,
-                        column=None,
-                        message=f"katastr: {_('pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.invalid_katastr_id')}",
-                        error_type=ImportErrorType.INVALID_DATA,
-                    )
-                )
+        root = doc.getroot()
+        root_children = list(root)
+        nalez_elements = [child for child in root_children if child.tag == self._ns("samostatny_nalez")]
+        if not root_children:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.missing_samostatny_nalez")},
+                status.HTTP_400_BAD_REQUEST,
+            )
+        if len(nalez_elements) > 1:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.multiple_samostatny_nalez")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        if len(root_children) != 1 or not nalez_elements:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.invalid_root_content")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
 
-        data = {
-            "ident_cely": None if cls._text(elem, "ident_cely") == ":tba" else cls._text(elem, "ident_cely"),
-            "projekt": projekt_ident,
-            "evidencni_cislo": cls._text(elem, "evidencni_cislo"),
-            "igsn": cls._text(elem, "igsn"),
-            "hloubka": cls._text(elem, "hloubka"),
-            "okolnosti": cls._id_attr(elem, "okolnosti"),
-            "obdobi": cls._id_attr(elem, "obdobi"),
-            "presna_datace": cls._text(elem, "presna_datace"),
-            "druh_nalezu": cls._id_attr(elem, "druh_nalezu"),
-            "specifikace": cls._id_attr(elem, "specifikace"),
-            "pocet": cls._text(elem, "pocet"),
-            "poznamka": cls._text(elem, "poznamka"),
-            "nalezce": nalezce_ident,
-            "datum_nalezu": cls._text(elem, "datum_nalezu"),
-            "stav": SN_ZAPSANY,
-            "predano": cls._parse_bool(cls._text(elem, "predano")),
-            "predano_organizace": cls._id_attr(elem, "predano_organizace"),
-            "geom_system": cls._text(elem, "geom_system"),
-            "pristupnost": cls._id_attr(elem, "pristupnost"),
-        }
+        log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
+        log_entry.save(update_fields=["status"])
 
-        if chranene is not None:
-            data["katastr"] = parse_ruian_katastr_kod(chranene.find(cls._ns("katastr")))
-            data["lokalizace"] = cls._text(chranene, "lokalizace")
-            geom_wkt_elem = chranene.find(cls._ns("geom_wkt"))
-            if geom_wkt_elem is not None and geom_wkt_elem.text:
-                data["geom"] = geom_wkt_elem.text.strip()
-            geom_sjtsk_elem = chranene.find(cls._ns("geom_sjtsk_wkt"))
-            if geom_sjtsk_elem is not None and geom_sjtsk_elem.text:
-                data["geom_sjtsk"] = geom_sjtsk_elem.text.strip()
+        elem = nalez_elements[0]
+        notes = self._get_ignored_lang_notes(elem)
+        try:
+            data = self._parse_nalez_element(elem, request.user)[0]
+        except ImportValidationException as exc:
+            return self._fail(
+                log_entry,
+                {"validation_errors": [e.to_dict() for e in exc.import_errors]},
+                self._validation_status(exc.import_errors),
+            )
 
-        return {k: v for k, v in data.items() if v is not None}, nova_osoba
+        # Strip read-only fields — ident_cely and stav are never updated.
+        for field in _XML_UPDATE_READONLY_FIELDS:
+            data.pop(field, None)
+
+        serializer = SamostatnyNalezXmlImportSerializer(instance, data=data, partial=True)
+        try:
+            if not serializer.is_valid():
+                raise ImportValidationException.from_serializer_errors(serializer.errors, line=elem.sourceline)
+            self._validate_heslar_value_matches(serializer.validated_data, elem)
+        except ImportValidationException as exc:
+            return self._fail(
+                log_entry,
+                {"validation_errors": [e.to_dict() for e in exc.import_errors]},
+                self._validation_status(exc.import_errors),
+            )
+
+        # Compute which fields actually changed.
+        changed_fields = [
+            field for field, new_val in serializer.validated_data.items() if getattr(instance, field) != new_val
+        ]
+        if not changed_fields:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.no_changes")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        fedora_transaction = FedoraTransaction(transaction_user=request.user)
+        try:
+            with transaction.atomic():
+                for field, new_val in serializer.validated_data.items():
+                    setattr(instance, field, new_val)
+                instance.active_transaction = fedora_transaction
+                instance.save(update_fields=changed_fields)
+                self._create_history_record(instance, request.user, changed_fields)
+                fedora_transaction.mark_transaction_as_closed()
+        except ImportValidationException as exc:
+            logger.error("pas.api.SamostatnyNalezXmlUpdateView.post.import_validation_error", extra={"error": exc})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"validation_errors": [e.to_dict() for e in exc.import_errors]},
+                self._validation_status(exc.import_errors),
+            )
+        except FedoraError as err:
+            logger.error("pas.api.SamostatnyNalezXmlUpdateView.post.fedora_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except DatabaseError as err:
+            logger.error("pas.api.SamostatnyNalezXmlUpdateView.post.database_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except Exception as err:
+            logger.error("pas.api.SamostatnyNalezXmlUpdateView.post.unexpected_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        try:
+            metadata = FedoraRepositoryConnector(instance).get_metadata()
+        except FedoraError as err:
+            logger.error(
+                "pas.api.SamostatnyNalezXmlUpdateView.post.fedora_error_reading_metadata", extra={"error": err}
+            )
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.fedora_error_reading_metadata")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return self._success(log_entry, instance, metadata, notes)

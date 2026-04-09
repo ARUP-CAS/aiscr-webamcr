@@ -400,9 +400,9 @@ Třídy
    Serializer pro import záznamu samostatného nálezu z XML; FK pole jsou identifikována přes ident_cely.
 
 
-.. py:class:: SamostatnyNalezXmlImportView
+.. py:class:: SamostatnyNalezXmlBaseView
 
-   Pohled pro import záznamu samostatného nálezu z XML souboru přes POST požadavek.
+   Základní pohled pro XML import/aktualizaci záznamu samostatného nálezu.
 
    **Metody:**
 
@@ -429,53 +429,6 @@ Třídy
 
       :return: Chybová HTTP odpověď se zadaným tělem a stavovým kódem.
 
-   .. py:method:: _success()
-
-      Označí log záznam jako úspěšný, zaloguje výsledek a vrátí XML odpověď s metadaty.
-
-      Tato metoda vrací surové XML bajty přes ``HttpResponse`` místo DRF ``Response``,
-      aby nedošlo k zásahu rendererů DRF do XML výstupu. Chybové odpovědi v téže view
-      jsou vytvářeny metodou ``_fail()``, která používá DRF ``Response`` pro standardní
-      serializaci strukturovaného JSON těla.
-
-      :param log_entry: Záznam logu API požadavku.
-      :param instance: Uložený záznam samostatného nálezu.
-      :param metadata: XML metadata vrácená Fedora repozitářem.
-      :param notes: Seznam poznámek o ignorovaných atributech ``xml:lang``.
-
-      :return: HTTP odpověď s XML metadaty a stavovým kódem 200.
-
-   .. py:method:: post()
-
-      Importuje nový záznam samostatného nálezu z XML souboru.
-
-      Přijímá soubor v parametru ``file`` (multipart/form-data). XML musí odpovídat
-      schématu AMČR 2.2 (https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd).
-      Dokument musí obsahovat právě jeden element ``amcr:samostatny_nalez``.
-
-      :param request: HTTP požadavek obsahující XML soubor v poli ``file``.
-      :param format: Formát odpovědi.
-
-      :return: Vrací ``Response`` s metadaty vytvořeného záznamu (HTTP 200),
-               nebo chybou syntaxe volání (HTTP 400), chybějícím projektem (HTTP 404),
-               nevalidním XML či datovými chybami (HTTP 422).
-
-   .. py:method:: _has_import_permissions()
-
-      Ověří oprávnění potřebná pro import samostatného nálezu.
-
-      :param user: Uživatel provádějící import.
-      :param data: Data jednoho importovaného záznamu.
-
-      :return: Vrací ``True`` pokud má uživatel všechna vyžadovaná oprávnění.
-
-   .. py:method:: _create_import_history_records()
-
-      Vytvoří historii pro importovaný záznam samostatného nálezu.
-
-      :param instance: Vytvořený záznam samostatného nálezu.
-      :param user: Uživatel, který provedl import.
-
    .. py:method:: _validation_status()
 
       Určí HTTP stavový kód odpovědi na základě typů validačních chyb.
@@ -484,33 +437,14 @@ Třídy
 
       :return: HTTP stavový kód odpovídající nejzávažnějšímu typu chyby.
 
-   .. py:method:: _validate_disallowed_elements()
+   .. py:method:: _has_edit_permissions()
 
-      Ověří, že importovaný element neobsahuje nepovolené podřízené elementy.
+      Ověří, zda má uživatel oprávnění editovat zadaný samostatný nález.
 
-      :param elem: Importovaný element ``amcr:samostatny_nalez``.
+      :param user: Uživatel provádějící požadavek.
+      :param ident_cely: Identifikátor záznamu samostatného nálezu.
 
-      :raises ImportValidationException: Pokud je nalezen nepovolený element.
-
-   .. py:method:: _build_schema_validation_doc()
-
-      Vytvoří kopii dokumentu upravenou pro validaci proti XSD schématu.
-
-      Importní API nepovoluje element ``stav``, ale XSD jej vyžaduje.
-      Pro validaci proto doplní chybějící ``stav`` do kopie dokumentu.
-
-      :param doc: Původní XML dokument.
-
-      :return: Kopie XML dokumentu určená pro schema validaci.
-
-   .. py:method:: _validate_heslar_value_matches()
-
-      Ověří shodu textové hodnoty XML a ``heslo`` na navázaném hesláři.
-
-      :param validated_data: Validovaná data serializeru.
-      :param elem: Importovaný XML element.
-
-      :raises ImportValidationException: Pokud text elementu neodpovídá ``heslo``.
+      :return: Vrací ``True`` pokud má uživatel oprávnění ``pas_edit`` pro daný záznam.
 
    .. py:method:: _verify_content_digest()
 
@@ -597,18 +531,14 @@ Třídy
 
       :return: Hodnota atributu ``id`` nebo None, pokud element nebo atribut neexistuje.
 
-   .. py:method:: _parse_nalezce()
+   .. py:method:: _validate_heslar_value_matches()
 
-      Zpracuje element ``nalezce`` a vrátí ``ident_cely`` osoby pro import.
+      Ověří shodu textové hodnoty XML a ``heslo`` na navázaném hesláři.
 
-      Pokud má element atribut ``id=":tba"``, vytvoří se nová osoba z textu
-      ve formátu ``"Příjmení, Jméno"``. Nová osoba se zde pouze připraví,
-      ale uloží se až v transakci společně s ``SamostatnyNalez``.
+      :param validated_data: Validovaná data serializeru.
+      :param elem: Importovaný XML element.
 
-      :param elem: Element ``amcr:samostatny_nalez``.
-      :param user: Uživatel provádějící import.
-
-      :return: Dvojice ``(ident_cely_osoby, nova_osoba)``.
+      :raises ImportValidationException: Pokud text elementu neodpovídá ``heslo``.
 
    .. py:method:: _parse_nalez_element()
 
@@ -622,6 +552,166 @@ Třídy
       :param user: Uživatel provádějící import.
 
       :return: Dvojice ``(data, nova_osoba)`` připravená pro import.
+
+   .. py:method:: _parse_nalezce()
+
+      Zpracuje element ``nalezce`` a vrátí ``ident_cely`` osoby pro import.
+
+      Pokud má element atribut ``id=":tba"``, vytvoří se nová osoba z textu
+      ve formátu ``"Příjmení, Jméno"``. Nová osoba se zde pouze připraví,
+      ale uloží se až v transakci společně s ``SamostatnyNalez``.
+
+      :param elem: Element ``amcr:samostatny_nalez``.
+      :param user: Uživatel provádějící import.
+
+      :return: Dvojice ``(ident_cely_osoby, nova_osoba)``.
+
+   .. py:method:: _success()
+
+      Označí log záznam jako úspěšný, zaloguje výsledek a vrátí XML odpověď s metadaty.
+
+      Tato metoda vrací surové XML bajty přes ``HttpResponse`` místo DRF ``Response``,
+      aby nedošlo k zásahu rendererů DRF do XML výstupu. Chybové odpovědi v téže view
+      jsou vytvářeny metodou ``_fail()``, která používá DRF ``Response`` pro standardní
+      serializaci strukturovaného JSON těla.
+
+      :param log_entry: Záznam logu API požadavku.
+      :param instance: Uložený záznam samostatného nálezu.
+      :param metadata: XML metadata vrácená Fedora repozitářem.
+      :param notes: Seznam poznámek o ignorovaných atributech ``xml:lang``.
+
+      :return: HTTP odpověď s XML metadaty a stavovým kódem 200.
+
+   .. py:method:: _build_schema_validation_doc()
+
+      Vytvoří kopii dokumentu upravenou pro validaci proti XSD schématu.
+
+      XSD vyžaduje element ``stav``. Pokud v dokumentu chybí, doplní se do kopie
+      pro účely validace; originální dokument zůstává nezměněn.
+
+      :param doc: Původní XML dokument.
+
+      :return: Kopie XML dokumentu určená pro schema validaci.
+
+
+.. py:class:: SamostatnyNalezXmlImportView
+
+   Pohled pro import záznamu samostatného nálezu z XML souboru přes POST požadavek.
+
+   **Metody:**
+
+   .. py:method:: post()
+
+      Importuje nový záznam samostatného nálezu z XML souboru.
+
+      Přijímá soubor v parametru ``file`` (multipart/form-data). XML musí odpovídat
+      schématu AMČR 2.2 (https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd).
+      Dokument musí obsahovat právě jeden element ``amcr:samostatny_nalez``.
+
+      :param request: HTTP požadavek obsahující XML soubor v poli ``file``.
+      :param format: Formát odpovědi.
+
+      :return: Vrací ``Response`` s metadaty vytvořeného záznamu (HTTP 200),
+               nebo chybou syntaxe volání (HTTP 400), chybějícím projektem (HTTP 404),
+               nevalidním XML či datovými chybami (HTTP 422).
+
+   .. py:method:: _has_import_permissions()
+
+      Ověří oprávnění potřebná pro import samostatného nálezu.
+
+      :param user: Uživatel provádějící import.
+      :param data: Data jednoho importovaného záznamu.
+
+      :return: Vrací ``True`` pokud má uživatel všechna vyžadovaná oprávnění.
+
+   .. py:method:: _create_import_history_records()
+
+      Vytvoří historii pro importovaný záznam samostatného nálezu.
+
+      :param instance: Vytvořený záznam samostatného nálezu.
+      :param user: Uživatel, který provedl import.
+
+   .. py:method:: _validate_disallowed_elements()
+
+      Ověří, že importovaný element neobsahuje nepovolené podřízené elementy.
+
+      :param elem: Importovaný element ``amcr:samostatny_nalez``.
+
+      :raises ImportValidationException: Pokud je nalezen nepovolený element.
+
+
+.. py:class:: SamostatnyNalezEvidencniCisloPatchView
+
+   Pohled pro aktualizaci pole ``evidencni_cislo`` záznamu samostatného nálezu přes PATCH požadavek.
+
+   **Metody:**
+
+   .. py:method:: patch()
+
+      Aktualizuje pole ``evidencni_cislo`` záznamu samostatného nálezu.
+
+      Přijímá ``ident_cely`` záznamu jako součást URL a novou hodnotu ``evidencni_cislo``
+      jako query parametr. Pro smazání hodnoty lze předat prázdný řetězec.
+
+      Příklad volání::
+
+          PATCH /pas/api/nalez/M-202400001-N00001/evidencni-cislo?evidencni_cislo=EC-2024-001
+
+      :param request: HTTP požadavek s query parametrem ``evidencni_cislo``.
+      :param ident_cely: Identifikátor záznamu samostatného nálezu.
+      :param format: Formát odpovědi.
+
+      :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
+               nebo chybou syntaxe volání (HTTP 400), nenalezeným záznamem (HTTP 404),
+               nedostatečnými oprávněními (HTTP 403),
+               nebo interní chybou (HTTP 500).
+
+   .. py:method:: _create_history_record()
+
+      Vytvoří záznam historie pro aktualizaci pole ``evidencni_cislo``.
+
+      Poznámka záznamu má formát ``old_value -> new_value``.
+
+      :param instance: Aktualizovaný záznam samostatného nálezu.
+      :param user: Uživatel, který provedl aktualizaci.
+      :param old_value: Původní hodnota pole ``evidencni_cislo``.
+      :param new_value: Nová hodnota pole ``evidencni_cislo``.
+
+
+.. py:class:: SamostatnyNalezXmlUpdateView
+
+   Pohled pro aktualizaci záznamu samostatného nálezu z XML souboru přes POST požadavek.
+
+   **Metody:**
+
+   .. py:method:: _create_history_record()
+
+      Vytvoří záznam historie pro XML aktualizaci samostatného nálezu.
+
+      Poznámka záznamu obsahuje čárkou oddělený seznam změněných polí v deterministickém pořadí.
+
+      :param instance: Aktualizovaný záznam samostatného nálezu.
+      :param user: Uživatel, který provedl aktualizaci.
+      :param changed_fields: Seznam názvů polí změněných požadavkem.
+
+   .. py:method:: post()
+
+      Aktualizuje existující záznam samostatného nálezu z XML souboru.
+
+      Přijímá ``ident_cely`` záznamu jako součást URL a XML soubor v parametru ``file``
+      (multipart/form-data). XML musí odpovídat schématu AMČR 2.2. Dokument musí
+      obsahovat právě jeden element ``amcr:samostatny_nalez``. Pole ``ident_cely``
+      a ``stav`` jsou ignorovány — jejich hodnoty nelze přes tento endpoint měnit.
+      Pokud XML neobsahuje žádnou změnu oproti DB záznamu, požadavek selže s HTTP 422.
+
+      :param request: HTTP požadavek obsahující XML soubor v poli ``file``.
+      :param ident_cely: Identifikátor aktualizovaného záznamu samostatného nálezu.
+      :param format: Formát odpovědi.
+
+      :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
+               nebo chybou syntaxe volání (HTTP 400), nenalezeným záznamem (HTTP 404),
+               nevalidním XML či žádnou změnou (HTTP 422),
+               nebo interní chybou (HTTP 500).
 
 
 Funkce

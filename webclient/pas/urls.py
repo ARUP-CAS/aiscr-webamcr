@@ -1,6 +1,6 @@
 from django.urls import path
 from pas import views
-from pas.api import SamostatnyNalezXmlImportView
+from pas.api import SamostatnyNalezEvidencniCisloPatchView, SamostatnyNalezXmlImportView, SamostatnyNalezXmlUpdateView
 from pas.views import ProjektPasTableView, SamostatnyNalezListView, UzivatelSpolupraceListView
 
 app_name = "pas"
@@ -49,4 +49,14 @@ urlpatterns = [
         name="get_projekt_pas_table",
     ),
     path("api/import-xml", SamostatnyNalezXmlImportView.as_view(), name="api-import-xml"),
+    path(
+        "api/nalez/<str:ident_cely>/evidencni-cislo",
+        SamostatnyNalezEvidencniCisloPatchView.as_view(),
+        name="api-patch-evidencni-cislo",
+    ),
+    path(
+        "api/nalez/<str:ident_cely>/update-xml",
+        SamostatnyNalezXmlUpdateView.as_view(),
+        name="api-update-xml",
+    ),
 ]
