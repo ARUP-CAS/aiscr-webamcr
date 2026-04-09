@@ -438,32 +438,6 @@ def extract_prod_literal_map(data: Any) -> Dict[str, str]:
     return out
 
 
-def extract_prod_service_aliases(data: Any) -> Set[str]:
-    """
-    Z produkčního compose vytvoří množinu aliasů služeb, které mají neliterální ``image``.
-
-    To umožní rozpoznat, že spotřebitelský compose používá stejný repozitář jako
-    produkce, jen produkční hodnota je dodána přes proměnnou (např. ``redis`` ->
-    ``${redis_image}``).
-
-    :param data: Parsovaný ``docker-compose.yml`` (nebo ekvivalent).
-    :return: Množina aliasů odvozených z názvů služeb.
-    """
-    out: Set[str] = set()
-    if not isinstance(data, dict):
-        return out
-    services = data.get("services")
-    if not isinstance(services, dict):
-        return out
-    for svc_name, spec in services.items():
-        if not isinstance(spec, dict):
-            continue
-        img = spec.get("image")
-        if isinstance(img, str) and not is_literal_image_ref(img):
-            out.add(str(svc_name).strip().lower())
-    return out
-
-
 def extract_dockerfile_repo_map(root: Path) -> Dict[str, str]:
     """
     Vytvoří mapu ``repo_key`` -> display reference ze zdrojových lokálních Dockerfile.
