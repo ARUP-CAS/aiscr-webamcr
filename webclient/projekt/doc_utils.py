@@ -45,7 +45,7 @@ try:
     )
 except Exception:
     # Toto se spustí během `collectstatic`.
-    logger.error("doc_utils.font.error", extra={"info": path})
+    logger.debug("doc_utils.font.error", extra={"info": path})
 
 Title = "Hello world"
 pageinfo = "platypus example"

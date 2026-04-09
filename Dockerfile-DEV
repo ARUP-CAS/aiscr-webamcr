@@ -1,4 +1,4 @@
-FROM node:20-bookworm-slim AS node-modules
+FROM node:25-bookworm-slim AS node-modules
 
 WORKDIR /node_modules_build
 COPY package.json package-lock.json ./

@@ -8,7 +8,7 @@ Archeologická mapa České republiky (AMČR) je informační systém pro sběr,
 
 ## Odkazy
 
-- **Dokumentace:** <https://aiscr-webamcr.readthedocs.io/cs/stable/>
+- **Dokumentace:** <https://aiscr-webamcr.readthedocs.io/>
 - **Changelog:** <https://github.com/ARUP-CAS/aiscr-webamcr/wiki/Changelog>
 - **Produkční aplikace:** <https://amcr.aiscr.cz/>
 - **AIS CR:** <https://www.aiscr.cz/>
@@ -93,7 +93,7 @@ celery -A webclient worker -l info
 ```
 
 Podrobná instalační příručka:  
-<https://aiscr-webamcr.readthedocs.io/cs/stable/>
+<https://aiscr-webamcr.readthedocs.io/>
 
 ---
 
