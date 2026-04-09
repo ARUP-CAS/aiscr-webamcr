@@ -24,5 +24,7 @@ class NonStrictManifestStaticFilesStorage(ManifestStaticFilesStorage):
         """
         try:
             return super().hashed_name(name, content, filename)
-        except ValueError:
-            return name
+        except ValueError as exc:
+            if "could not be found" in str(exc):
+                return name
+            raise
