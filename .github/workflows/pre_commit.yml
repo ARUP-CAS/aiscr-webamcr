@@ -35,6 +35,7 @@ jobs:
   pre-commit:
     if: |
       github.actor != 'github-actions[bot]' &&
+      github.actor != 'dependabot[bot]' &&
       !startsWith(github.ref_name, 'pre-commit-fixes/')
 
     runs-on: ubuntu-latest
