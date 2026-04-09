@@ -311,10 +311,7 @@ STATICFILES_DIRS = [BASE_DIR / "static", *_npm_staticfiles_dirs()]
 
 STORAGES = {
     "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
-        "OPTIONS": {
-            "manifest_strict": False,
-        },
+        "BACKEND": "core.storage.NonStrictManifestStaticFilesStorage",
     },
 }
 
