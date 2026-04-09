@@ -15,9 +15,9 @@ if [ ! -s "$redis_pass_file" ]; then
 fi
 
 redis_host="$(cat "$redis_host_file")"
-redis_pass="$(cat "$redis_pass_file")"
+redis_pass_encoded=$(python -c 'import sys; from urllib.parse import quote; print(quote(sys.stdin.read().strip()))' < "$redis_pass_file")
 
-CE_BROKER_URL="redis://:${redis_pass}@${redis_host}"
+CE_BROKER_URL="redis://:${redis_pass_encoded}@${redis_host}"
 
 export CE_BROKER_URL
 
