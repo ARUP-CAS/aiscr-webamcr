@@ -73,8 +73,10 @@ services:
       - redis
     networks:
       - prod-net
-    volumes:
-      - ./scripts/redis_exporter_entrypoint.sh:/docker-entrypoint.d/redis_exporter_entrypoint.sh:ro
+    configs:
+      - source: redis_exporter_entrypoint
+        target: /docker-entrypoint.d/redis_exporter_entrypoint.sh
+        mode: 0555
     entrypoint: ["/bin/sh", "/docker-entrypoint.d/redis_exporter_entrypoint.sh"]
 
 
@@ -139,8 +141,10 @@ services:
       - "9808:9808"
     depends_on:
       - redis
-    volumes:
-      - ./scripts/celery_exporter_entrypoint.sh:/docker-entrypoint.d/celery_exporter_entrypoint.sh:ro
+    configs:
+      - source: celery_exporter_entrypoint
+        target: /docker-entrypoint.d/celery_exporter_entrypoint.sh
+        mode: 0555
     entrypoint: ["/bin/sh", "/docker-entrypoint.d/celery_exporter_entrypoint.sh"]
 
   grafana:
@@ -312,3 +316,9 @@ secrets:
     external: true
   logstash_elastic_host:
     external: true
+
+configs:
+  redis_exporter_entrypoint:
+    file: scripts/redis_exporter_entrypoint.sh
+  celery_exporter_entrypoint:
+    file: scripts/celery_exporter_entrypoint.sh

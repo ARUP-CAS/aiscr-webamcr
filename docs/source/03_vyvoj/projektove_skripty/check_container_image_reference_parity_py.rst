@@ -133,17 +133,6 @@ Funkce
    :param data: Parsovaný ``docker-compose.yml`` (nebo ekvivalent).
    :return: Slovník pro cross-file srovnání se spotřebitelskými compose.
 
-.. py:function:: extract_prod_service_aliases(data)
-
-   Z produkčního compose vytvoří množinu aliasů služeb, které mají neliterální ``image``.
-
-   To umožní rozpoznat, že spotřebitelský compose používá stejný repozitář jako
-   produkce, jen produkční hodnota je dodána přes proměnnou (např. ``redis`` ->
-   ``${redis_image}``).
-
-   :param data: Parsovaný ``docker-compose.yml`` (nebo ekvivalent).
-   :return: Množina aliasů odvozených z názvů služeb.
-
 .. py:function:: extract_dockerfile_repo_map(root)
 
    Vytvoří mapu ``repo_key`` -> display reference ze zdrojových lokálních Dockerfile.
