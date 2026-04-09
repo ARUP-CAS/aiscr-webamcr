@@ -21,10 +21,12 @@ Třídy
       Vrací hašovaný název souboru, nebo původní název pokud soubor neexistuje.
 
       Zachycuje :exc:`ValueError` při post-processingu JS/CSS souborů, které odkazují
-      na soubory chybějící v kolekci (typicky ``.map`` soubory z npm balíčků).
+      na zdrojové mapy (``.map``) chybějící v kolekci. Pro ostatní chybějící soubory
+      je výjimka znovu vyhozena, aby selhání bylo viditelné při spuštění collectstatic.
 
       :param name: Relativní cesta k souboru.
       :param content: Obsah souboru, nebo ``None`` při vyhledávání v manifestu.
       :param filename: Název souboru pro hašování, pokud se liší od ``name``.
-      :return: Hašovaný název souboru, nebo ``name`` pokud soubor nebyl nalezen.
+      :return: Hašovaný název souboru, nebo ``name`` pokud chybějící soubor je zdrojová
+          mapa (``.map``). Pro ostatní chybějící soubory je výjimka znovu vyhozena.
 
