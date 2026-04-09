@@ -3,7 +3,7 @@ name: Docker Scout
 on:
   pull_request:
     branches:
-      - "dev"
+      - "main"
 
 concurrency:
   group: scout-${{ github.repository }}/${{ github.ref }}

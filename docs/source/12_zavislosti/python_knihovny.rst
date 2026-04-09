@@ -88,7 +88,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-2-Clause
      - https://www.sphinx-doc.org/
    * - Werkzeug
-     - 3.1.7
+     - 3.1.8
      - BSD-3-Clause
      - https://github.com/pallets/werkzeug/
    * - alabaster
@@ -408,7 +408,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/raimon49/pip-licenses
    * - platformdirs
-     - 4.9.4
+     - 4.9.6
      - MIT
      - https://github.com/tox-dev/platformdirs
    * - polib

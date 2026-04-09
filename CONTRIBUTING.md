@@ -12,13 +12,13 @@ Tento dokument popisuje vývojový postup, konvence a pravidla pro přispěvatel
 | Větev | Prostředí | Pravidlo |
 | --- | --- | --- |
 | `test` | Staging | Základna pro veškerý vývoj. Vždy větvete od `test`. |
-| `dev` | Stabilní / integrace | Merguje výhradně lidský reviewer. Nevytvářejte PR přímo do `dev`. |
+| `main` | Stabilní / integrace | Merguje výhradně lidský reviewer. Nevytvářejte PR přímo do `main`. |
 
 ```text
 test  ←  feature/<issue>
 test  ←  bugfix/<issue>
 test  ←  agents/{agent_name}/<topic>   # větve generované AI agenty
-dev   ←  (pouze humans, po stabilizaci test)
+main  ←  (pouze humans, po stabilizaci test)
 ```
 
 ---
@@ -30,7 +30,7 @@ dev   ←  (pouze humans, po stabilizaci test)
 | Nová funkce | `feature/<issue>` | `feature/142-import-pas` |
 | Oprava chyby | `bugfix/<issue>` | `bugfix/98-migration-error` |
 | Agentní obsah | `agents/{agent_name}/<topic>` | `agents/codex/orm-audit` |
-| Hotfix na dev | `hotfix/<issue>` | `hotfix/200-critical-security` |
+| Hotfix na main | `hotfix/<issue>` | `hotfix/200-critical-security` |
 
 ---
 
@@ -62,7 +62,7 @@ PR musí obsahovat:
 
 Použijte **Draft PR**, pokud práce není připravena k review.
 
-**Nevytvářejte PR do `dev`** — mergování do `dev` je výhradně v kompetenci maintainerů.
+**Nevytvářejte PR do `main`** — mergování do `main` je výhradně v kompetenci maintainerů.
 
 ---
 
@@ -252,7 +252,7 @@ agents/{agent_name}/<topic>
 
 se větví od `test` a mergují do `test` **výhradně po lidském review**.
 
-Agenti **nesmějí** cílit PR do `dev`.
+Agenti **nesmějí** cílit PR do `main`.
 
 Podrobnosti o chování agentů viz `AGENTS.md`.
 

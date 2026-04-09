@@ -73,7 +73,11 @@ services:
       - redis
     networks:
       - prod-net
-    entrypoint: [ '/bin/sh', '-c', 'export REDIS_ADDR=$$(cat /var/run/secrets/redis_host) ; export REDIS_PASSWORD=$$(cat /run/secrets/redis_pass) ; /redis_exporter' ]
+    configs:
+      - source: redis_exporter_entrypoint
+        target: /docker-entrypoint.d/redis_exporter_entrypoint.sh
+        mode: 0555
+    entrypoint: ["/bin/sh", "/docker-entrypoint.d/redis_exporter_entrypoint.sh"]
 
 
   celery_worker:
@@ -137,7 +141,11 @@ services:
       - "9808:9808"
     depends_on:
       - redis
-    entrypoint: [ '/bin/sh', '-c', 'export CE_BROKER_URL="redis://:$$(cat /var/run/secrets/redis_pass)@$$(cat /var/run/secrets/redis_host)"; python /app/cli.py' ] 
+    configs:
+      - source: celery_exporter_entrypoint
+        target: /docker-entrypoint.d/celery_exporter_entrypoint.sh
+        mode: 0555
+    entrypoint: ["/bin/sh", "/docker-entrypoint.d/celery_exporter_entrypoint.sh"]
 
   grafana:
     image: grafana/grafana-enterprise:12.4.2
@@ -174,7 +182,7 @@ services:
       - "--web.enable-admin-api"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:9.3.2
+    image: docker.elastic.co/logstash/logstash:9.3.3
     restart: always
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
@@ -189,7 +197,7 @@ services:
       - logstash_elastic_host
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.3
     hostname: elasticsearch
     restart: always
     environment:
@@ -215,7 +223,7 @@ services:
           memory: "2G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:9.3.2
+    image: docker.elastic.co/kibana/kibana:9.3.3
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
@@ -308,3 +316,9 @@ secrets:
     external: true
   logstash_elastic_host:
     external: true
+
+configs:
+  redis_exporter_entrypoint:
+    file: scripts/redis_exporter_entrypoint.sh
+  celery_exporter_entrypoint:
+    file: scripts/celery_exporter_entrypoint.sh
