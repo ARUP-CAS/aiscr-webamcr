@@ -32,7 +32,7 @@ class NonStrictManifestStaticFilesStorage(ManifestStaticFilesStorage):
             return super().hashed_name(name, content, filename)
         except ValueError as exc:
             target = filename or name
-            if not self.exists(target) and target.endswith(".map"):
+            if not self.exists(target) and target.lower().endswith(".map"):
                 logger.warning(
                     "Statický soubor nenalezen při post-processingu, přeskočen: name=%s filename=%s chyba=%s",
                     name,
