@@ -27,11 +27,11 @@ Django project root is `webclient/` — `manage.py` and `requirements.txt` live 
 ## Branch Workflow
 
 ```
-feature / bugfix / docs / agents branches → test → dev → main
+feature / bugfix / docs / agents branches → test → main
 ```
 
 - Always branch from `test`; PR to `test`
-- Never push directly to `test`, `dev`, or `main`
+- Never push directly to `test` or `main`
 - Agent branches: `agents/<agent>/<topic>`
 
 ## Key Paths

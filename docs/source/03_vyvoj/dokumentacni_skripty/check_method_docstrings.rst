@@ -71,4 +71,4 @@ Funkce
 
    Spustí kontrolu docstringů nad zadanými Python soubory.
 
-   :return: Návratový kód procesu (0 při úspěchu, jinak 1 ve strict režimu).
+   :return: Návratový kód procesu (0 při úspěchu, 1 při nalezení nedostatků).
