@@ -111,6 +111,13 @@ Třídy
 Funkce
 ------
 
+.. py:function:: vprint()
+
+   Vypíše zprávu pouze ve verbose režimu.
+
+   :param args: Poziční argumenty předané do ``print()``.
+   :param kwargs: Klíčové argumenty předané do ``print()``.
+
 .. py:function:: check_content_changed(content, output_file)
 
    Zkontroluje, zda se obsah liší od existujícího souboru.

@@ -6,7 +6,7 @@ The Archaeological Map of the Czech Republic (AMCR) is an information system for
 
 ## Links
 
-- **Documentation:** <https://aiscr-webamcr.readthedocs.io/cs/stable/>
+- **Documentation:** <https://aiscr-webamcr.readthedocs.io/>
 - **Changelog:** <https://github.com/ARUP-CAS/aiscr-webamcr/wiki/Changelog>
 - **Production application:** <https://amcr.aiscr.cz/>
 - **AIS CR:** <https://www.aiscr.cz/>
@@ -91,7 +91,7 @@ celery -A webclient worker -l info
 ```
 
 Detailed installation guide:  
-<https://aiscr-webamcr.readthedocs.io/cs/stable/>
+<https://aiscr-webamcr.readthedocs.io/>
 
 ---
 

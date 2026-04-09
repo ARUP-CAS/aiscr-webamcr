@@ -62,6 +62,20 @@ SKIP_DIRS = {"static", "templates", "locale", "__pycache__", "services"}
 # Sleduje, zda došlo ke změně souborů.
 changes_detected = False
 
+# Verbose výstup (zapnuto přes --verbose).
+VERBOSE: bool = False
+
+
+def vprint(*args, **kwargs) -> None:
+    """Vypíše zprávu pouze ve verbose režimu.
+
+    :param args: Poziční argumenty předané do ``print()``.
+    :param kwargs: Klíčové argumenty předané do ``print()``.
+    """
+    if VERBOSE:
+        print(*args, **kwargs)
+
+
 # Běžné popisy typů souborů
 FILE_TYPE_INFO = {
     "models.py": {"suffix": "modely", "description": "Definice modelů."},
@@ -199,8 +213,8 @@ def generate_url_routing_rst() -> bool:
     global changes_detected
     output_file = docs_dir / "source/04_django_aplikace/04_01_core/url_routing.rst"
 
-    print("\n  Generating URL routing documentation")
-    print(f"  Output: {output_file}")
+    vprint("\n  Generating URL routing documentation")
+    vprint(f"  Output: {output_file}")
 
     rst_lines = ["URL Routing", "===========", "", "Dokumentace všech URL adres v aplikaci.", ""]
 
@@ -216,7 +230,7 @@ def generate_url_routing_rst() -> bool:
                 modules.append((item.name, urls_file))
 
     if not modules:
-        print("  ⊝ No urls.py files found")
+        vprint("  ⊝ No urls.py files found")
         return False
 
     # Process each module
@@ -254,7 +268,7 @@ def generate_url_routing_rst() -> bool:
                 ]
             )
 
-        print(f"    ✓ {module_name}: {len(url_patterns)} URLs")
+        vprint(f"    ✓ {module_name}: {len(url_patterns)} URLs")
 
     # Zapíše soubor.
     try:
@@ -265,7 +279,7 @@ def generate_url_routing_rst() -> bool:
             print("    ⚠ URL routing documentation needs update")
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(new_content)
-        print("    ✓ URL routing documentation generated")
+        vprint("    ✓ URL routing documentation generated")
         return True
     except Exception as e:
         print(f"    ✗ Error writing URL routing documentation: {e}")
@@ -348,8 +362,8 @@ def generate_signals_rst() -> bool:
     global changes_detected
     output_file = docs_dir / "source/04_django_aplikace/04_01_core/signals.rst"
 
-    print("\n  Generating signals documentation")
-    print(f"  Output: {output_file}")
+    vprint("\n  Generating signals documentation")
+    vprint(f"  Output: {output_file}")
 
     rst_lines = ["Signály", "=======", "", "Dokumentace všech signálů v aplikaci.", ""]
 
@@ -365,7 +379,7 @@ def generate_signals_rst() -> bool:
                 modules.append((item.name, signals_file))
 
     if not modules:
-        print("  ⊝ No signals.py files found")
+        vprint("  ⊝ No signals.py files found")
         return False
 
     # Process each module
@@ -403,7 +417,7 @@ def generate_signals_rst() -> bool:
                 ]
             )
 
-        print(f"    ✓ {module_name}: {len(signals_list)} signals")
+        vprint(f"    ✓ {module_name}: {len(signals_list)} signals")
 
     # Zapíše soubor.
     try:
@@ -414,7 +428,7 @@ def generate_signals_rst() -> bool:
             print("    ⚠ Signals documentation needs update")
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(new_content)
-        print("    ✓ Signals documentation generated")
+        vprint("    ✓ Signals documentation generated")
         return True
     except Exception as e:
         print(f"    ✗ Error writing signals documentation: {e}")
@@ -472,20 +486,20 @@ def generate_permissions_rst() -> bool:
     global changes_detected
     output_file = docs_dir / "source/04_django_aplikace/04_01_core/permissions.rst"
 
-    print("\n  Generating permissions documentation")
-    print(f"  Output: {output_file}")
+    vprint("\n  Generating permissions documentation")
+    vprint(f"  Output: {output_file}")
 
     # Find core/models.py
     models_file = webclient_dir / "core" / "models.py"
     if not models_file.exists():
-        print("  ⊝ core/models.py not found")
+        vprint("  ⊝ core/models.py not found")
         return False
 
     # Extract actions
     actions = extract_permissions(models_file)
 
     if not actions:
-        print("  ⊝ No actions found in Permissions.actionChoices")
+        vprint("  ⊝ No actions found in Permissions.actionChoices")
         return False
 
     # Načte existující obsah, pokud soubor existuje.
@@ -542,8 +556,8 @@ def generate_permissions_rst() -> bool:
             print("    ⚠ Permissions documentation needs update")
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(final_text)
-        print(f"    ✓ Found {len(actions)} actions")
-        print("    ✓ Permissions documentation updated (preserved existing content)")
+        vprint(f"    ✓ Found {len(actions)} actions")
+        vprint("    ✓ Permissions documentation updated (preserved existing content)")
         return True
     except Exception as e:
         print(f"    ✗ Error writing permissions documentation: {e}")
@@ -831,12 +845,12 @@ def generate_management_commands_rst() -> bool:
     output_file = docs_dir / "source/04_django_aplikace/04_01_core/management_commands.rst"
     commands_dir = webclient_dir / "core" / "management" / "commands"
 
-    print("\n  Generating management commands documentation")
-    print(f"  Source: {commands_dir}")
-    print(f"  Output: {output_file}")
+    vprint("\n  Generating management commands documentation")
+    vprint(f"  Source: {commands_dir}")
+    vprint(f"  Output: {output_file}")
 
     if not commands_dir.exists():
-        print("  ⊝ Commands directory not found")
+        vprint("  ⊝ Commands directory not found")
         return False
 
     # Get all command files
@@ -846,7 +860,7 @@ def generate_management_commands_rst() -> bool:
             command_files.append(item)
 
     if not command_files:
-        print("  ⊝ No command files found")
+        vprint("  ⊝ No command files found")
         return False
 
     rst_lines = [
@@ -973,7 +987,7 @@ def generate_management_commands_rst() -> bool:
 
             rst_lines.append("")
 
-        print(f"    ✓ {command_info['name']}")
+        vprint(f"    ✓ {command_info['name']}")
 
     # Zapíše soubor.
     try:
@@ -984,8 +998,8 @@ def generate_management_commands_rst() -> bool:
             print("    ⚠ Management commands documentation needs update")
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(new_content)
-        print(f"    ✓ Found {len(command_files)} commands")
-        print("    ✓ Management commands documentation generated")
+        vprint(f"    ✓ Found {len(command_files)} commands")
+        vprint("    ✓ Management commands documentation generated")
         return True
     except Exception as e:
         print(f"    ✗ Error writing management commands documentation: {e}")
@@ -1001,12 +1015,12 @@ def generate_export_structure_rst() -> bool:
     xsd_file = project_root / "webclient/xml_generator/definitions/amcr.xsd"
     output_file = docs_dir / "source/05_integrace/export_structure.rst"
 
-    print("\n  Generating export structure documentation")
-    print(f"  Source: {xsd_file}")
-    print(f"  Output: {output_file}")
+    vprint("\n  Generating export structure documentation")
+    vprint(f"  Source: {xsd_file}")
+    vprint(f"  Output: {output_file}")
 
     if not xsd_file.exists():
-        print("  ⊝ XSD schema not found")
+        vprint("  ⊝ XSD schema not found")
         return False
 
     try:
@@ -1018,7 +1032,7 @@ def generate_export_structure_rst() -> bool:
 
     schema_root = tree.getroot()
     xsd_version = extract_xsd_version(schema_root)
-    print(f"    XSD schema version: {xsd_version}")
+    vprint(f"    XSD schema version: {xsd_version}")
     model_mappings = extract_model_mappings(schema_root)
 
     documented_complex_types: List[ET.Element] = []
@@ -1143,7 +1157,7 @@ def generate_export_structure_rst() -> bool:
             print("    ⚠ Export structure documentation needs update")
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(new_content)
-        print("    ✓ Export structure documentation generated")
+        vprint("    ✓ Export structure documentation generated")
         return True
     except Exception as exc:
         print(f"    ✗ Error writing export structure documentation: {exc}")
@@ -1726,7 +1740,7 @@ def generate_rst_for_file(source_file: Path, module_dir_name: str, output_dir: P
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(rst_content)
 
-        print(f"    ✓ {output_file.name}")
+        vprint(f"    ✓ {output_file.name}")
         return True
 
     except Exception as e:
@@ -1799,7 +1813,7 @@ Dokumentace modulu {module_dir_name}.
             changes_detected = True
         with open(index_file, "w", encoding="utf-8") as f:
             f.write(index_content)
-        print("    ✓ index.rst")
+        vprint("    ✓ index.rst")
         return True
     except Exception as e:
         print(f"    ✗ Error updating index.rst: {e}")
@@ -1818,15 +1832,15 @@ def process_module(module_dir_name: str, mode: str = "autodoc") -> bool:
 
     # Ověří, zda existuje zdrojový adresář.
     if not source_dir.exists() or not source_dir.is_dir():
-        print(f"  ⊝ Skipping {module_dir_name}: source directory not found")
+        vprint(f"  ⊝ Skipping {module_dir_name}: source directory not found")
         return False
 
     # Vytvoří výstupní adresář, pokud neexistuje.
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"\n  Processing module: {module_dir_name}")
-    print(f"  Source: {source_dir}")
-    print(f"  Output: {output_dir}")
+    vprint(f"\n  Processing module: {module_dir_name}")
+    vprint(f"  Source: {source_dir}")
+    vprint(f"  Output: {output_dir}")
 
     generated_files = []
     skipped_files = []
@@ -1835,7 +1849,7 @@ def process_module(module_dir_name: str, mode: str = "autodoc") -> bool:
     py_files = sorted(source_dir.glob("*.py"))
 
     if not py_files:
-        print("    ⊝ No Python files found")
+        vprint("    ⊝ No Python files found")
         return False
 
     for source_file in py_files:
@@ -1859,7 +1873,7 @@ def process_module(module_dir_name: str, mode: str = "autodoc") -> bool:
     if generated_files:
         generate_index_rst(module_dir_name, generated_files, output_dir)
 
-    print(f"    Generated: {len(generated_files)}, Skipped: {len(skipped_files)}")
+    vprint(f"    Generated: {len(generated_files)}, Skipped: {len(skipped_files)}")
 
     return len(generated_files) > 0
 
@@ -1886,9 +1900,9 @@ def generate_all_modules(mode: str = "autodoc", specific_module: Optional[str] =
     :return: True, pokud byla vygenerována nějaká dokumentace.
     """
     print("Generating documentation for webclient modules")
-    print(f"Mode: {mode}")
-    print(f"Output base directory: {output_base_dir}")
-    print("=" * 60)
+    vprint(f"Mode: {mode}")
+    vprint(f"Output base directory: {output_base_dir}")
+    vprint("=" * 60)
 
     if specific_module:
         modules = [specific_module]
@@ -1910,7 +1924,7 @@ def generate_all_modules(mode: str = "autodoc", specific_module: Optional[str] =
             print(f"  ✗ Error processing module {module_name}: {e}")
             failed_modules.append(module_name)
 
-    print("\n" + "=" * 60)
+    vprint("\n" + "=" * 60)
     print("\nSummary:")
     print(f"  Modules processed successfully: {len(successful_modules)}")
     if failed_modules:
@@ -1918,7 +1932,7 @@ def generate_all_modules(mode: str = "autodoc", specific_module: Optional[str] =
         for m in failed_modules:
             print(f"    - {m}")
 
-    if successful_modules:
+    if VERBOSE and successful_modules:
         print("\n  Successfully processed modules:")
         for m in successful_modules:
             print(f"    - {m}")
@@ -1952,7 +1966,7 @@ def generate_rst_for_docs_script(source_file: Path, output_dir: Path, mode: str 
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(rst_content)
 
-        print(f"    ✓ {output_file.name}")
+        vprint(f"    ✓ {output_file.name}")
         return True
 
     except Exception as e:
@@ -1993,7 +2007,7 @@ Tato sekce obsahuje technickou dokumentaci Python skriptů v adresáři ``docs/`
             changes_detected = True
         with open(index_file, "w", encoding="utf-8") as f:
             f.write(index_content)
-        print("    ✓ index.rst")
+        vprint("    ✓ index.rst")
         return True
     except Exception as e:
         print(f"    ✗ Error updating docs scripts index.rst: {e}")
@@ -2009,17 +2023,17 @@ def generate_docs_scripts_docs(mode: str = "autodoc") -> bool:
     output_dir = docs_scripts_output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print("\nGenerating documentation for docs/*.py scripts")
-    print(f"Mode: {mode}")
-    print(f"Source: {docs_dir}")
-    print(f"Output: {output_dir}")
+    vprint("\nGenerating documentation for docs/*.py scripts")
+    vprint(f"Mode: {mode}")
+    vprint(f"Source: {docs_dir}")
+    vprint(f"Output: {output_dir}")
 
     generated_files = []
     skipped_files = []
 
     py_files = sorted(docs_dir.glob("*.py"))
     if not py_files:
-        print("  ⊝ No Python scripts found in docs/")
+        vprint("  ⊝ No Python scripts found in docs/")
         return False
 
     for source_file in py_files:
@@ -2037,7 +2051,7 @@ def generate_docs_scripts_docs(mode: str = "autodoc") -> bool:
     if generated_files:
         generate_docs_scripts_index_rst(generated_files, output_dir)
 
-    print(f"  Generated: {len(generated_files)}, Skipped: {len(skipped_files)}")
+    vprint(f"  Generated: {len(generated_files)}, Skipped: {len(skipped_files)}")
     return len(generated_files) > 0
 
 
@@ -2127,7 +2141,7 @@ Automaticky generovaná dokumentace skriptu ``scripts/{source_file.name}``.
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(rst_content)
 
-        print(f"    ✓ {output_file.name}")
+        vprint(f"    ✓ {output_file.name}")
         return True
     except Exception as e:
         print(f"    ✗ Error generating RST for project script {source_file.name}: {e}")
@@ -2163,7 +2177,7 @@ Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``
             changes_detected = True
         with open(index_file, "w", encoding="utf-8") as f:
             f.write(index_content)
-        print("    ✓ index.rst")
+        vprint("    ✓ index.rst")
         return True
     except Exception as e:
         print(f"    ✗ Error updating project scripts index.rst: {e}")
@@ -2178,18 +2192,18 @@ def generate_project_scripts_docs() -> bool:
     output_dir = project_scripts_output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print("\nGenerating documentation for scripts/* files")
-    print(f"Source: {project_scripts_dir}")
-    print(f"Output: {output_dir}")
+    vprint("\nGenerating documentation for scripts/* files")
+    vprint(f"Source: {project_scripts_dir}")
+    vprint(f"Output: {output_dir}")
 
     if not project_scripts_dir.exists() or not project_scripts_dir.is_dir():
-        print("  ⊝ scripts/ directory not found")
+        vprint("  ⊝ scripts/ directory not found")
         return False
 
     generated_entries = []
     script_files = sorted([f for f in project_scripts_dir.iterdir() if f.is_file() and not f.name.startswith(".")])
     if not script_files:
-        print("  ⊝ No files found in scripts/")
+        vprint("  ⊝ No files found in scripts/")
         return False
 
     for source_file in script_files:
@@ -2200,7 +2214,7 @@ def generate_project_scripts_docs() -> bool:
     if generated_entries:
         generate_project_scripts_index_rst(generated_entries, output_dir)
 
-    print(f"  Generated: {len(generated_entries)}, Skipped: {len(script_files) - len(generated_entries)}")
+    vprint(f"  Generated: {len(generated_entries)}, Skipped: {len(script_files) - len(generated_entries)}")
     return len(generated_entries) > 0
 
 
@@ -2217,7 +2231,7 @@ def build_docs() -> bool:
             print("✓ Documentation built successfully!")
             html_dir = Path(docs_dir) / "build/html/04_django_aplikace/04_02_moduly"
             if html_dir.exists():
-                print(f"✓ Generated HTML files in: {html_dir}")
+                vprint(f"✓ Generated HTML files in: {html_dir}")
             return True
         else:
             print(f"✗ Build failed with return code {result.returncode}")
@@ -2480,7 +2494,7 @@ def _fetch_missing_links(image_keys: List[str], cache: Dict[str, str]) -> Dict[s
     if not missing:
         return cache
 
-    print(f"  Fetching DockerHub links for {len(missing)} new images...")
+    vprint(f"  Fetching DockerHub links for {len(missing)} new images...")
 
     with ThreadPoolExecutor(max_workers=10) as executor:
         futures = {executor.submit(_fetch_dockerhub_odkaz, img): img for img in missing}
@@ -2506,18 +2520,18 @@ def generate_docker_images_rst() -> bool:
     output_file = docs_dir / "source/12_zavislosti/docker_images.rst"
     meta_file = docs_dir / "docker_images_meta.yaml"
 
-    print("\n  Generating Docker images documentation")
-    print(f"  Output: {output_file}")
+    vprint("\n  Generating Docker images documentation")
+    vprint(f"  Output: {output_file}")
 
     if not meta_file.exists():
-        print(f"  ⊝ {meta_file} not found, skipping")
+        vprint(f"  ⊝ {meta_file} not found, skipping")
         return False
 
     meta_data = yaml.safe_load(meta_file.read_text(encoding="utf-8"))
     images_meta: List[Dict[str, str]] = meta_data.get("images", [])
 
     if not images_meta:
-        print("  ⊝ No image entries found in docker_images_meta.yaml")
+        vprint("  ⊝ No image entries found in docker_images_meta.yaml")
         return False
 
     versions = _parse_compose_versions(project_root)
@@ -2569,10 +2583,10 @@ def generate_docker_images_rst() -> bool:
     if check_content_changed(new_content, output_file):
         output_file.parent.mkdir(parents=True, exist_ok=True)
         output_file.write_text(new_content, encoding="utf-8")
-        print(f"  ✓ Updated {output_file.name} with {len(images_meta)} Docker images")
+        vprint(f"  ✓ Updated {output_file.name} with {len(images_meta)} Docker images")
         changes_detected = True
     else:
-        print(f"  ⊝ {output_file.name} unchanged")
+        vprint(f"  ⊝ {output_file.name} unchanged")
 
     return True
 
@@ -3001,11 +3015,11 @@ def generate_js_libraries_rst() -> bool:
     package_json_file = project_root / "package.json"
     package_lock_file = project_root / "package-lock.json"
 
-    print("\n  Generating Node.js JavaScript libraries documentation")
-    print(f"  Output: {output_file}")
+    vprint("\n  Generating Node.js JavaScript libraries documentation")
+    vprint(f"  Output: {output_file}")
 
     if not package_json_file.exists():
-        print(f"  ⊝ {package_json_file} not found, skipping")
+        vprint(f"  ⊝ {package_json_file} not found, skipping")
         return False
 
     package_json = load_json(package_json_file)
@@ -3013,7 +3027,7 @@ def generate_js_libraries_rst() -> bool:
     dependencies = load_dependencies(package_json)
 
     if not dependencies:
-        print("  ⊝ No dependencies found in package.json")
+        vprint("  ⊝ No dependencies found in package.json")
         return False
 
     lock_licenses = load_lock_licenses(package_lock_file)
@@ -3034,12 +3048,12 @@ def generate_js_libraries_rst() -> bool:
         output_file.parent.mkdir(parents=True, exist_ok=True)
         output_file.write_text(new_content, encoding="utf-8")
 
-        print(f"  ✓ Updated {output_file.name} with {len(rows)} Node.js packages")
+        vprint(f"  ✓ Updated {output_file.name} with {len(rows)} Node.js packages")
 
         changes_detected = True
 
     else:
-        print(f"  ⊝ {output_file.name} unchanged")
+        vprint(f"  ⊝ {output_file.name} unchanged")
 
     return True
 
@@ -3061,7 +3075,14 @@ def main() -> None:
         action="store_true",
         help="Only regenerate docs/source/12_zavislosti/docker_images.rst (compose + docker_images_meta.yaml).",
     )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Podrobnější výstup (průběh zpracování jednotlivých souborů a modulů).",
+    )
     args = parser.parse_args()
+    global VERBOSE
+    VERBOSE = args.verbose
 
     if args.docker_images_only:
         generate_docker_images_rst()
@@ -3109,14 +3130,14 @@ def main() -> None:
         if not build_docs():
             sys.exit(1)
     else:
-        print("\nNext steps:")
-        print("1. To build the HTML documentation, run:")
-        print("   source .venv/bin/activate")
-        print("   cd docs && make html")
-        print("\n2. Or run this script with --build flag:")
-        print("   cd docs && source ../.venv/bin/activate && python3 generate_module_docs.py --build")
-        print("\n3. To view the generated documentation:")
-        print("   open build/html/04_django_aplikace/04_02_moduly/")
+        vprint("\nNext steps:")
+        vprint("1. To build the HTML documentation, run:")
+        vprint("   source .venv/bin/activate")
+        vprint("   cd docs && make html")
+        vprint("\n2. Or run this script with --build flag:")
+        vprint("   cd docs && source ../.venv/bin/activate && python3 generate_module_docs.py --build")
+        vprint("\n3. To view the generated documentation:")
+        vprint("   open build/html/04_django_aplikace/04_02_moduly/")
 
     # Ukončí se s kódem 1, pokud byly detekovány změny.
     if changes_detected:

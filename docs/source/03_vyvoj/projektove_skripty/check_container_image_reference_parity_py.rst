@@ -32,12 +32,6 @@ Funkce
    :param verbose_only: Pokud True, vypíše jen při verbose režimu.
    :param verbose: Aktuální verbose příznak.
 
-.. py:function:: is_pre_commit()
-
-   Zjistí, zda skript běží jako pre-commit hook (pro implicitní verbose).
-
-   :return: True, pokud je v prostředí nastavena proměnná ``PRE_COMMIT``.
-
 .. py:function:: is_literal_image_ref(value)
 
    Určí, zda hodnota ``image:`` v compose lze použít pro porovnání pinů (bez rozšíření proměnných).
@@ -139,13 +133,40 @@ Funkce
    :param data: Parsovaný ``docker-compose.yml`` (nebo ekvivalent).
    :return: Slovník pro cross-file srovnání se spotřebitelskými compose.
 
-.. py:function:: apply_compose_cross_fix(consumer_data, consumer_path, prod_map, fix, verbose)
+.. py:function:: extract_prod_service_aliases(data)
+
+   Z produkčního compose vytvoří množinu aliasů služeb, které mají neliterální ``image``.
+
+   To umožní rozpoznat, že spotřebitelský compose používá stejný repozitář jako
+   produkce, jen produkční hodnota je dodána přes proměnnou (např. ``redis`` ->
+   ``${redis_image}``).
+
+   :param data: Parsovaný ``docker-compose.yml`` (nebo ekvivalent).
+   :return: Množina aliasů odvozených z názvů služeb.
+
+.. py:function:: extract_dockerfile_repo_map(root)
+
+   Vytvoří mapu ``repo_key`` -> display reference ze zdrojových lokálních Dockerfile.
+
+   Používá se pro případy, kdy konkrétní compose repo nemá být porovnáváno proti
+   produkčnímu compose literálu, ale proti základnímu ``FROM`` v lokálním Dockerfile.
+
+   :param root: Kořen repozitáře.
+   :return: Mapa ``repo_key`` -> referenční image string.
+
+.. py:function:: apply_compose_cross_fix(consumer_data, consumer_path, prod_map, dockerfile_source_map, fix, verbose)
 
    Porovná literální image ve spotřebitelském compose s mapou z produkce a případně je srovná.
+
+   Repozitáře bez produkčního literálu jsou povolené jen tehdy, když jsou
+   explicitně uvedené v ``COMPOSE_CROSS_FILE_WHITELIST`` pro daný consumer
+   compose, nebo když mají explicitní zdroj pravdy v ``COMPOSE_DOCKERFILE_SOURCES``.
+   Ostatní případy jsou chyba i bez ``--verbose``.
 
    :param consumer_data: Parsovaný compose spotřebitele (mění se in-place při ``fix=True``).
    :param consumer_path: Cesta k souboru spotřebitele (logy a chyby).
    :param prod_map: Výstup :func:`extract_prod_literal_map` z ``docker-compose.yml``.
+   :param dockerfile_source_map: Mapa ``repo_key`` -> referenční image z lokálního Dockerfile.
    :param fix: Pokud True, přepíše ``image`` na hodnotu z prod při nesouladu pinu.
    :param verbose: Zapíná podrobné SKIP logy u neliterálních image (přes ``log_msg``).
    :return: ``(seznam_chyb při fix=False, byl_proveden_zápis)``.
