@@ -34,7 +34,7 @@ class NonStrictManifestStaticFilesStorage(ManifestStaticFilesStorage):
             target = filename or name
             if not self.exists(target) and target.endswith(".map"):
                 logger.warning(
-                    "Statický soubor nenalezen při post-processingu, přeskočen: " "name=%s filename=%s chyba=%s",
+                    "Statický soubor nenalezen při post-processingu, přeskočen: name=%s filename=%s chyba=%s",
                     name,
                     filename,
                     exc,
