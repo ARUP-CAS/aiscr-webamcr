@@ -9,7 +9,9 @@ print_d1 () {
 
 stack_name="swarm_webamcr"
 
-current_deployment_tag=${1}
+raw_deployment_tag=${1}
+current_deployment_tag="${raw_deployment_tag#v}"
+git_deployment_tag="v${current_deployment_tag}"
 deployment_root=${2}
 image_source=${3}
 
@@ -28,7 +30,7 @@ mkdir -p ${logpath}
 #Repo update
 git stash push -m "CI_autostash_${current_deployment_tag}_${d_stamp}"
 git fetch --all --tags --force --prune --prune-tags || exit 1
-git checkout -f "refs/tags/v${current_deployment_tag}" || exit 1
+git checkout -f "refs/tags/${git_deployment_tag}" || exit 1
 
 
 #Prints
