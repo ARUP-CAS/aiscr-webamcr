@@ -42,6 +42,29 @@ COMPOSE_CONSUMERS = [
     "git_docker-compose.yml",
 ]
 
+# Repozitáře image, které jsou záměrně jen v konkrétních spotřebitelských compose
+# a nemají odpovídající literál v produkčním compose.
+COMPOSE_CROSS_FILE_WHITELIST: Dict[str, Set[str]] = {
+    "docker-compose-dev-local-db-all-containers.yml": {
+        "dpage/pgadmin4",
+        "memcached",
+        "fcrepo/fcrepo",
+        "postgres",
+    },
+    "docker-compose-test.yml": {
+        "docker.io/library/test_prod",
+        "docker.io/library/test_proxy",
+        "docker.io/library/test_redis",
+    },
+    "git_docker-compose.yml": {
+        "postgis/postgis",
+    },
+}
+
+COMPOSE_DOCKERFILE_SOURCES: Dict[str, str] = {
+    "redis": "redis/Dockerfile",
+}
+
 FROM_LINE = re.compile(r"^FROM\s+(?P<rest>.+?)\s*(?:#.*)?$", re.IGNORECASE)
 AS_SUFFIX = re.compile(r"\s+AS\s+(\S+)\s*$", re.IGNORECASE)
 # FROM s nahraditelným image tokenem (image bez komentáře na konci řádku zvlášť).
@@ -415,26 +438,87 @@ def extract_prod_literal_map(data: Any) -> Dict[str, str]:
     return out
 
 
+def extract_prod_service_aliases(data: Any) -> Set[str]:
+    """
+    Z produkčního compose vytvoří množinu aliasů služeb, které mají neliterální ``image``.
+
+    To umožní rozpoznat, že spotřebitelský compose používá stejný repozitář jako
+    produkce, jen produkční hodnota je dodána přes proměnnou (např. ``redis`` ->
+    ``${redis_image}``).
+
+    :param data: Parsovaný ``docker-compose.yml`` (nebo ekvivalent).
+    :return: Množina aliasů odvozených z názvů služeb.
+    """
+    out: Set[str] = set()
+    if not isinstance(data, dict):
+        return out
+    services = data.get("services")
+    if not isinstance(services, dict):
+        return out
+    for svc_name, spec in services.items():
+        if not isinstance(spec, dict):
+            continue
+        img = spec.get("image")
+        if isinstance(img, str) and not is_literal_image_ref(img):
+            out.add(str(svc_name).strip().lower())
+    return out
+
+
+def extract_dockerfile_repo_map(root: Path) -> Dict[str, str]:
+    """
+    Vytvoří mapu ``repo_key`` -> display reference ze zdrojových lokálních Dockerfile.
+
+    Používá se pro případy, kdy konkrétní compose repo nemá být porovnáváno proti
+    produkčnímu compose literálu, ale proti základnímu ``FROM`` v lokálním Dockerfile.
+
+    :param root: Kořen repozitáře.
+    :return: Mapa ``repo_key`` -> referenční image string.
+    """
+    out: Dict[str, str] = {}
+    for repo_key, rel_path in COMPOSE_DOCKERFILE_SOURCES.items():
+        path = root / rel_path
+        if not path.is_file():
+            continue
+        scan = scan_dockerfile(path.read_text(encoding="utf-8"))
+        pins = scan.pins_by_repo.get(repo_key, set())
+        if not pins:
+            continue
+        win = choose_canonical_pin(set(pins))
+        out[repo_key] = pick_display_ref_for_pin(
+            {k: list(v) for k, v in scan.refs_by_repo_pin[repo_key].items()},
+            win,
+        )
+    return out
+
+
 def apply_compose_cross_fix(
     consumer_data: Any,
     consumer_path: Path,
     prod_map: Dict[str, str],
+    dockerfile_source_map: Dict[str, str],
     fix: bool,
     verbose: bool,
 ) -> Tuple[List[str], bool]:
     """
     Porovná literální image ve spotřebitelském compose s mapou z produkce a případně je srovná.
 
+    Repozitáře bez produkčního literálu jsou povolené jen tehdy, když jsou
+    explicitně uvedené v ``COMPOSE_CROSS_FILE_WHITELIST`` pro daný consumer
+    compose, nebo když mají explicitní zdroj pravdy v ``COMPOSE_DOCKERFILE_SOURCES``.
+    Ostatní případy jsou chyba i bez ``--verbose``.
+
     :param consumer_data: Parsovaný compose spotřebitele (mění se in-place při ``fix=True``).
     :param consumer_path: Cesta k souboru spotřebitele (logy a chyby).
     :param prod_map: Výstup :func:`extract_prod_literal_map` z ``docker-compose.yml``.
+    :param dockerfile_source_map: Mapa ``repo_key`` -> referenční image z lokálního Dockerfile.
     :param fix: Pokud True, přepíše ``image`` na hodnotu z prod při nesouladu pinu.
     :param verbose: Zapíná podrobné SKIP logy u neliterálních image (přes ``log_msg``).
     :return: ``(seznam_chyb při fix=False, byl_proveden_zápis)``.
     """
     errors: List[str] = []
     modified = False
-    seen_deferred: Set[Tuple[str, str]] = set()
+    seen_missing_prod: Set[Tuple[str, str]] = set()
+    whitelist = COMPOSE_CROSS_FILE_WHITELIST.get(consumer_path.name, set())
 
     for svc_name, img, spec in iter_compose_service_images(consumer_data):
         if not is_literal_image_ref(img):
@@ -458,17 +542,39 @@ def apply_compose_cross_fix(
                     log_msg(f"FIX: {consumer_path} {svc_name!r}: {img!r} → {prod_ref!r} (prod)")
                     spec["image"] = prod_ref
                     modified = True
+        elif repo_key in dockerfile_source_map:
+            source_ref = dockerfile_source_map[repo_key]
+            _, source_pin = repository_and_pin(source_ref)
+            if pin_key != source_pin:
+                msg = (
+                    f"{consumer_path}: služba {svc_name!r}: {img!r} != Dockerfile source {source_ref!r} "
+                    f"(repo {repo_key!r})"
+                )
+                if not fix:
+                    errors.append(msg)
+                    log_msg(f"ERROR: {msg}")
+                else:
+                    log_msg(f"FIX: {consumer_path} {svc_name!r}: {img!r} → {source_ref!r} (Dockerfile)")
+                    spec["image"] = source_ref
+                    modified = True
         else:
             key = (repo_key, str(consumer_path))
-            if key not in seen_deferred:
-                seen_deferred.add(key)
+            if key in seen_missing_prod:
+                continue
+            seen_missing_prod.add(key)
+            if repo_key in whitelist:
                 log_msg(
                     f"NOTE: {consumer_path}: repo {repo_key!r} má literál {img!r}, "
-                    f"ale {COMPOSE_PRODUCTION[0]} neobsahuje srovnatelný literál pro stejný repozitář — "
-                    f"cross-file srovnání přeskočeno (zkontroluj ručně / proměnné v prod).",
-                    verbose_only=True,
-                    verbose=verbose,
+                    "ale je explicitně povolený jako dev-only výjimka mimo produkční compose."
                 )
+                continue
+            msg = (
+                f"{consumer_path}: repo {repo_key!r} má literál {img!r}, "
+                f"ale {COMPOSE_PRODUCTION[0]} neobsahuje srovnatelný literál pro stejný repozitář "
+                "(cross-file srovnání vyžaduje whitelist nebo produkční literál)"
+            )
+            errors.append(msg)
+            log_msg(f"ERROR: {msg}")
     return errors, modified
 
 
@@ -539,6 +645,7 @@ def process_compose_files(root: Path, fix: bool, verbose: bool) -> Tuple[List[st
 
     prod_path = root / COMPOSE_PRODUCTION[0]
     prod_map: Dict[str, str] = {}
+    dockerfile_source_map = extract_dockerfile_repo_map(root)
     if prod_path in loaded:
         prod_map = extract_prod_literal_map(loaded[prod_path])
 
@@ -546,7 +653,7 @@ def process_compose_files(root: Path, fix: bool, verbose: bool) -> Tuple[List[st
         path = root / rel
         if path not in loaded:
             continue
-        errs, cross_mod = apply_compose_cross_fix(loaded[path], path, prod_map, fix, verbose)
+        errs, cross_mod = apply_compose_cross_fix(loaded[path], path, prod_map, dockerfile_source_map, fix, verbose)
         errors.extend(errs)
         if cross_mod:
             compose_dirty.add(path)
