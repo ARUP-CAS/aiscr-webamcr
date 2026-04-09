@@ -94,7 +94,9 @@ services:
       - redis
     networks:
       - prod-net
-    entrypoint: [ '/bin/sh', '-c', 'export REDIS_ADDR=$$(cat /var/run/secrets/redis_host) ; export REDIS_PASSWORD=$$(cat /run/secrets/redis_pass) ; /redis_exporter' ]
+    volumes:
+      - ./scripts/redis_exporter_entrypoint.sh:/docker-entrypoint.d/redis_exporter_entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/docker-entrypoint.d/redis_exporter_entrypoint.sh"]
 
   celery_worker:
     image: docker.io/library/test_prod
@@ -157,7 +159,9 @@ services:
       - "9808:9808"
     depends_on:
       - redis
-    entrypoint: [ '/bin/sh', '-c', 'export CE_BROKER_URL="redis://:$$(cat /var/run/secrets/redis_pass)@$$(cat /var/run/secrets/redis_host)"; python /app/cli.py' ] 
+    volumes:
+      - ./scripts/celery_exporter_entrypoint.sh:/docker-entrypoint.d/celery_exporter_entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/docker-entrypoint.d/celery_exporter_entrypoint.sh"]
 
   grafana:
     image: grafana/grafana-enterprise:12.4.2

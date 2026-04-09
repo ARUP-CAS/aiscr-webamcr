@@ -226,10 +226,9 @@ class MethodDocstringChecker(ast.NodeVisitor):
 def main() -> int:
     """Spustí kontrolu docstringů nad zadanými Python soubory.
 
-    :return: Návratový kód procesu (0 při úspěchu, jinak 1 ve strict režimu).
+    :return: Návratový kód procesu (0 při úspěchu, 1 při nalezení nedostatků).
     """
     bypass_exclusions = env_flag("DOCSTRING_CHECK_BYPASS_EXCLUSIONS")
-    strict_mode = env_flag("DOCSTRING_CHECK_STRICT")
 
     input_paths = sys.argv[1:] if len(sys.argv) > 1 else ["."]
     files = list(iter_python_files(input_paths, bypass_exclusions))
@@ -263,9 +262,8 @@ def main() -> int:
         print("Prosím upravte docstringy dle dokumentace:")
         print("docs/source/04_django_aplikace/04_01_core/docstring_style_guide.rst")
 
-        return 1 if strict_mode else 0
+        return 1
 
-    print("✅ Všechny docstringy odpovídají standardu.")
     return 0
 
 
