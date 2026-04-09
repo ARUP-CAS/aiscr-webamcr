@@ -31,5 +31,6 @@ Dokumentace modulu core.
    repository_connector
    services
    setting_models
+   storage
    utils
    validators

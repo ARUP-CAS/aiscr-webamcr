@@ -58,7 +58,7 @@ Tyto image jsou standardní open-source image používané pro provoz podpůrný
 redis
 ~~~~~
 
-- **Verze:** 8.6.2
+- **Verze:** 7
 - **Licence:** RSALv2, SSPLv1
 - **Odkaz:** https://github.com/redis/redis
 
@@ -76,7 +76,7 @@ PostgreSQL databáze s PostGIS rozšířením pro geografická data. Používá 
 postgres
 ~~~~~~~~
 
-- **Verze:** 12.3
+- **Verze:** 13.16
 - **Licence:** PostgreSQL License
 - **Odkaz:** https://github.com/docker-library/postgres
 
