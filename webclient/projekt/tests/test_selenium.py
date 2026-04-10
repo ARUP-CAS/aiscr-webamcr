@@ -39,7 +39,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         :return: Načtená data odpovídající zadaným vstupům.
         """
         elements = table.find_elements(By.TAG_NAME, "th")
-        return [e.find_element(By.TAG_NAME, "a").text for e in elements]
+        return [links[0].text for e in elements for links in [e.find_elements(By.TAG_NAME, "a")] if links]
 
     def _check_column_hiding(self, element_id_initial, column_header_text, initial=True):
         """
@@ -415,8 +415,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         self.ElementClick(By.CSS_SELECTOR, "#div_id_typ_dokumentu .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_material_originalu .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-0 > .text")
+        self.select_nth_selectpicker_option("id_material_originalu")
         self.ElementClick(By.ID, "id_popis")
         self.ElementSendKeys(By.ID, "id_popis", "test")
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")

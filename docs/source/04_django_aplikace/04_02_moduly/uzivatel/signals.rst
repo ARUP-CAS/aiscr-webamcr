@@ -77,19 +77,35 @@ Funkce
 
 .. py:function:: osoba_delete_repository_container(sender, instance)
 
-   Provádí operaci osoba delete repository container.
+   Zaznamená smazání osoby v repozitáři před odstraněním záznamu z databáze.
 
    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``osoba_delete_repository_container``.
-   :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``get_or_create_transaction()``, pracuje se s atributy ``ident_cely``, ``record_deletion``.
+   :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``active_transaction``, ``close_active_transaction_when_finished``, ``record_deletion``.
    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``osoba_delete_repository_container``.
+
+.. py:function:: osoba_close_repository_transaction(sender, instance)
+
+   Uzavře Fedora transakci po potvrzení smazání osoby v databázi.
+
+   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``osoba_close_repository_transaction``.
+   :param instance: Parametr ``instance`` pracuje se s atributy ``ident_cely``, ``close_active_transaction_when_finished``, ``active_transaction``.
+   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``osoba_close_repository_transaction``.
 
 .. py:function:: organizace_delete_repository_container(sender, instance)
 
-   Provádí operaci organizace delete repository container.
+   Zaznamená smazání organizace v repozitáři před odstraněním záznamu z databáze.
 
    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``organizace_delete_repository_container``.
-   :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``get_or_create_transaction()``, pracuje se s atributy ``ident_cely``, ``record_deletion``.
+   :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``active_transaction``, ``close_active_transaction_when_finished``, ``record_deletion``.
    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``organizace_delete_repository_container``.
+
+.. py:function:: organizace_close_repository_transaction(sender, instance)
+
+   Uzavře Fedora transakci po potvrzení smazání organizace v databázi.
+
+   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``organizace_close_repository_transaction``.
+   :param instance: Parametr ``instance`` pracuje se s atributy ``ident_cely``, ``close_active_transaction_when_finished``, ``active_transaction``.
+   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``organizace_close_repository_transaction``.
 
 .. py:function:: log_user_signin(sender, user, request)
 

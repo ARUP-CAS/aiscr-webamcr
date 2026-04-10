@@ -1618,6 +1618,22 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
         )
 
+    def add_replaces_triple(self, ident_cely_old, ident_cely_new=None):
+        """
+        Přidá trojici ``dcterms:replaces`` do záznamu nového identifikátoru.
+
+        :param ident_cely_old: Starý identifikátor, na který má nový záznam odkazovat.
+        :param ident_cely_new: Nový identifikátor; pokud není zadán, použije se ``self.record.ident_cely``.
+        """
+        ident_cely_new = ident_cely_new or self.record.ident_cely
+        data = (
+            f"INSERT DATA {{<> <http://purl.org/dc/terms/replaces> "
+            f"<info:fedora/{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}>}}"
+        )
+        headers = {"Content-Type": "application/sparql-update"}
+        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2, ident_cely=ident_cely_new)
+        self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2, headers=headers, data=data)
+
     def record_ident_change(self, ident_cely_old, delete_container=True):
         """
         Přejmenuje kontejner v Fedoře na základě změny identifikátoru záznamu.
@@ -1640,14 +1656,6 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
                 extra={"ident_cely": self.record.ident_cely, "ident_cely_old": ident_cely_old},
             )
             raise IdentChangeFedoraError()
-        ident_cely_new = self.record.ident_cely
-        data = (
-            f"INSERT DATA {{<> <http://purl.org/dc/terms/replaces> "
-            f"<info:fedora/{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}>}}"
-        )
-        headers = {"Content-Type": "application/sparql-update"}
-        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2, ident_cely=ident_cely_new)
-        self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2, headers=headers, data=data)
         headers = {"Slug": ident_cely_old, "Content-Type": "text/turtle"}
         data = (
             "@prefix ore: <http://www.openarchives.org/ore/terms/> . "

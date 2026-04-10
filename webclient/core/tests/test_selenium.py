@@ -922,6 +922,24 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         return USERS[type]["PASSWORD"]
 
+    def select_nth_selectpicker_option(self, field_id, index=0):
+        """
+        Vybere neprázdnou, neskrytou volbu v selectpickeru na zadané pozici.
+
+        :param field_id: HTML id atribut podkladového ``<select>`` elementu (bez ``#``).
+        :param index: Index volby mezi neprázdnými neskrytými volbami (výchozí 0 = první).
+        """
+        self.driver.execute_script(
+            """
+            var sel = document.getElementById(arguments[0]);
+            var opts = Array.from(sel.options).filter(function(o) { return !o.hidden && o.value !== ''; });
+            var idx = arguments[1];
+            if (idx < opts.length) { $(sel).selectpicker('val', opts[idx].value); }
+            """,
+            field_id,
+            index,
+        )
+
     def _select_value_select_picker(self, field_id, selected_value):
         """
                Provádí operaci select value select picker.
