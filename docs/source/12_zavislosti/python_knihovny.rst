@@ -424,7 +424,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://github.com/prettytable/prettytable
    * - prometheus_client
-     - 0.24.1
+     - 0.25.0
      - Apache-2.0 AND BSD-2-Clause
      - https://github.com/prometheus/client_python
    * - prompt_toolkit
@@ -528,7 +528,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0BSD OR CC0-1.0
      - https://github.com/AA-Turner/roman-numerals/blob/master/CHANGES.rst
    * - selenium
-     - 4.41.0
+     - 4.42.0
      - Apache-2.0
      - https://www.selenium.dev
    * - setuptools
@@ -652,7 +652,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.2.0
+     - 21.2.1
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
