@@ -71,8 +71,8 @@ Knihovny instalované pomocí Node.js
      - MIT
      - https://momentjs.com
    * - spin.js
-     - 4.1.2
-     - MIT
+     - 2.3.2
+     - BSD-2-Clause
      - https://github.com/fgnass/spin.js
 
 .. END GENERATED NODEJS LIBRARIES
