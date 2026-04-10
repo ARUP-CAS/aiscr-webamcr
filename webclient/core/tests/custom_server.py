@@ -30,7 +30,8 @@ class WerkzeugServerThread(Thread):
         """
         Nainstaluje SSL certifikáty a klíče pro HTTPS testovacího serveru.
 
-        :return: Cesta k certifikátu.
+        Při úspěchu vytvoří TLS kontext a uloží jej do ``self.ssl_context``.
+        Při výjimce nastaví ``self.error`` na text chyby; výjimka se nepropaguje.
         """
         try:
             cert_path, key_path = make_ssl_devcert("./core/tests/resources/ssl", host="localhost")
