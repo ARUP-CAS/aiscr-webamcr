@@ -116,6 +116,10 @@
   padding: 0;
 }
 
+.dropdown-menu {
+  --bs-dropdown-zindex: 1010;
+}
+
 .input-osoba .mb-3#div_id_vedouci_projektu .input-group {
   flex-wrap: nowrap;
 
@@ -747,9 +751,11 @@ input.coordInput {
 
     }
   }
+
   th.col-no-orderable {
     color: white !important;
   }
+
   &.app-entity-historie.app-entity-soubor {
     //height: 85% !important;
     padding-bottom: 59px;
