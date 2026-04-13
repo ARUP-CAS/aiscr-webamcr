@@ -128,18 +128,18 @@ class CreateADBForm(OptimisticLockingMixin, forms.ModelForm):
             self.fields["autor_revize"].widget = AdbReadOnlyTextInput(attrs={"readonly": "readonly"})
             self.helper.layout = Layout(
                 Div(
-                    Div("typ_sondy", css_class="col-sm-2"),
-                    Div("podnet", css_class="col-sm-2"),
-                    Div("uzivatelske_oznaceni_sondy", css_class="col-sm-2"),
-                    Div("trat", css_class="col-sm-2"),
-                    Div("cislo_popisne", css_class="col-sm-2"),
-                    Div("parcelni_cislo", css_class="col-sm-2"),
-                    Div("stratigraficke_jednotky", css_class="col-sm-2"),
-                    Div(css_class="col-sm-2"),
-                    Div("autor_popisu", css_class="col-sm-2"),
-                    Div("rok_popisu", css_class="col-sm-2"),
-                    Div("autor_revize", css_class="col-sm-2"),
-                    Div("rok_revize", css_class="col-sm-2"),
+                    Div("typ_sondy", css_class="col-sm-6 col-lg-2"),
+                    Div("podnet", css_class="col-sm-6 col-lg-2"),
+                    Div("uzivatelske_oznaceni_sondy", css_class="col-sm-6 col-lg-2"),
+                    Div("trat", css_class="col-sm-6 col-lg-2"),
+                    Div("cislo_popisne", css_class="col-sm-6 col-lg-2"),
+                    Div("parcelni_cislo", css_class="col-sm-6 col-lg-2"),
+                    Div("stratigraficke_jednotky", css_class="col-sm-6 col-lg-2"),
+                    Div(css_class="col-sm-6 col-lg-2"),
+                    Div("autor_popisu", css_class="col-sm-6 col-lg-2"),
+                    Div("rok_popisu", css_class="col-sm-6 col-lg-2"),
+                    Div("autor_revize", css_class="col-sm-6 col-lg-2"),
+                    Div("rok_revize", css_class="col-sm-6 col-lg-2"),
                     Div("poznamka", css_class="col-sm-12"),
                     css_class="row",
                 ),
@@ -147,14 +147,14 @@ class CreateADBForm(OptimisticLockingMixin, forms.ModelForm):
         else:
             self.helper.layout = Layout(
                 Div(
-                    Div("typ_sondy", css_class="col-sm-2"),
-                    Div("podnet", css_class="col-sm-2"),
-                    Div("uzivatelske_oznaceni_sondy", css_class="col-sm-2"),
-                    Div("trat", css_class="col-sm-2"),
-                    Div("cislo_popisne", css_class="col-sm-2"),
-                    Div("parcelni_cislo", css_class="col-sm-2"),
-                    Div("stratigraficke_jednotky", css_class="col-sm-2"),
-                    Div(css_class="col-sm-2"),
+                    Div("typ_sondy", css_class="col-sm-6 col-lg-2"),
+                    Div("podnet", css_class="col-sm-6 col-lg-2"),
+                    Div("uzivatelske_oznaceni_sondy", css_class="col-sm-6 col-lg-2"),
+                    Div("trat", css_class="col-sm-6 col-lg-2"),
+                    Div("cislo_popisne", css_class="col-sm-6 col-lg-2"),
+                    Div("parcelni_cislo", css_class="col-sm-6 col-lg-2"),
+                    Div("stratigraficke_jednotky", css_class="col-sm-6 col-lg-2"),
+                    Div(css_class="col-sm-6 col-lg-2"),
                     Div(
                         AppendedText(
                             "autor_popisu",
@@ -162,10 +162,10 @@ class CreateADBForm(OptimisticLockingMixin, forms.ModelForm):
                                 '<button id="create-autor-popisu" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                             ),
                         ),
-                        css_class="col-sm-2 input-osoba select2-input form-group",
+                        css_class="col-sm-6 col-lg-2 input-osoba select2-input form-group",
                     ),
                     # Div("autor_popisu", css_class="col-sm-2"),
-                    Div("rok_popisu", css_class="col-sm-2"),
+                    Div("rok_popisu", css_class="col-sm-6 col-lg-2"),
                     Div(
                         AppendedText(
                             "autor_revize",
@@ -173,10 +173,10 @@ class CreateADBForm(OptimisticLockingMixin, forms.ModelForm):
                                 '<button id="create-autor-revize" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                             ),
                         ),
-                        css_class="col-sm-2 input-osoba select2-input form-group",
+                        css_class="col-sm-6 col-lg-2 input-osoba select2-input form-group",
                     ),
                     # Div("autor_revize", css_class="col-sm-2"),
-                    Div("rok_revize", css_class="col-sm-2"),
+                    Div("rok_revize", css_class="col-sm-6 col-lg-2"),
                     Div("poznamka", css_class="col-sm-12"),
                     css_class="row",
                 ),
