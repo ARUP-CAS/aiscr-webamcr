@@ -177,7 +177,8 @@ class AkceDokumenty(BaseSeleniumTestClass):
         id = Dokument.objects.filter(ident_cely="X-C-TX-000000003").first().id
         self.goToAddress("/dokument/detail/X-C-TX-000000003")
         self.ElementClick(By.ID, "NahratSoubory")
-        self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
+        with WaitForPageLoad(self.driver):
+            self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         self.ElementClick(By.CSS_SELECTOR, "#dokument-odeslat > .app-controls-button-text")
@@ -259,7 +260,8 @@ class AkceDokumenty(BaseSeleniumTestClass):
         id = Dokument.objects.filter(ident_cely="X-C-TX-202413020").first().id
         self.goToAddress("/dokument/detail/X-C-TX-202413020")
         self.ElementClick(By.ID, "NahratSoubory")
-        self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
+        with WaitForPageLoad(self.driver):
+            self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
 
@@ -633,7 +635,8 @@ class AkceDokumenty(BaseSeleniumTestClass):
         DBid = Dokument.objects.filter(ident_cely="X-C-TX-000000002").first().id
         self.goToAddress("/dokument/detail/X-C-TX-000000002")
         self.ElementClick(By.ID, "NahratSoubory")
-        self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
+        with WaitForPageLoad(self.driver):
+            self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         self.ElementClick(By.CSS_SELECTOR, "#dokument-odeslat > .app-controls-button-text")
@@ -888,7 +891,8 @@ class AkceDokumenty(BaseSeleniumTestClass):
         # Vytvoření souboru
         time = self.getTime()
         self.ElementClick(By.ID, "NahratSoubory")
-        self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
+        with WaitForPageLoad(self.driver):
+            self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/create_soubor")
@@ -1002,7 +1006,8 @@ class AkceDokumenty(BaseSeleniumTestClass):
         time = self.getTime()
         file = Soubor.objects.filter(vazba__dokument_souboru__ident_cely=new_ident).first().pk
         self.ElementClick(By.ID, f"file-upgrade-{file}")
-        self.upload_file("dokument/tests/resources/test1.jpg", "test.jpg")
+        with WaitForPageLoad(self.driver):
+            self.upload_file("dokument/tests/resources/test1.jpg", "test.jpg")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/update_soubor")
@@ -1055,7 +1060,8 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.createFedoraRecord("C-LET-00010", "archivar")
         self.goToAddress("/id/X-C-TX-201801164")
         self.ElementClick(By.ID, "NahratSoubory")
-        self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
+        with WaitForPageLoad(self.driver):
+            self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         time = self.getTime()
@@ -1326,7 +1332,8 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
         self.ElementClick(By.ID, "buttonUpload")
-        self.upload_file("dokument/tests/resources/del.zip", "del.zip", "application/zip")
+        with WaitForPageLoad(self.driver):
+            self.upload_file("dokument/tests/resources/del.zip", "del.zip", "application/zip")
         self.ElementClick(By.ID, "buttonUploadSubmit")
         self.ElementClick(By.ID, "dokument-odeslat")
         with WaitForPageLoad(self.driver):
@@ -1591,7 +1598,8 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         count_old = Soubor.objects.filter(vazba__dokument_souboru__ident_cely="X-C-3D-000000005").count()
         self.goToAddress("/dokument/model/detail/X-C-3D-000000005")
         self.ElementClick(By.ID, "buttonUpload")
-        self.upload_file("dokument/tests/resources/del.zip", "del.zip", "application/zip")
+        with WaitForPageLoad(self.driver):
+            self.upload_file("dokument/tests/resources/del.zip", "del.zip", "application/zip")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         count_new = Soubor.objects.filter(vazba__dokument_souboru__ident_cely="X-C-3D-000000005").count()
@@ -1858,7 +1866,8 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.goToAddress("/dokument/model/detail/X-C-3D-000000006")
 
         self.ElementClick(By.ID, "buttonUpload")
-        self.upload_file("dokument/tests/resources/del.zip", "del.zip", "application/zip")
+        with WaitForPageLoad(self.driver):
+            self.upload_file("dokument/tests/resources/del.zip", "del.zip", "application/zip")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         count_new = Soubor.objects.filter(vazba__dokument_souboru__ident_cely="X-C-3D-000000006").count()
@@ -1957,7 +1966,8 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         time = self.getTime()
         self.goToAddress(f"/id/{ident}")
         self.ElementClick(By.ID, "buttonUpload")
-        self.upload_file("dokument/tests/resources/del.zip", "del.zip", "application/zip")
+        with WaitForPageLoad(self.driver):
+            self.upload_file("dokument/tests/resources/del.zip", "del.zip", "application/zip")
         self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "dokument/tests/resources/test_144/create_soubor")
 
@@ -1965,7 +1975,8 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         time = self.getTime()
         file = Soubor.objects.filter(vazba__dokument_souboru__ident_cely=ident).first().pk
         self.ElementClick(By.ID, f"file-upgrade-{file}")
-        self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
+        with WaitForPageLoad(self.driver):
+            self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
         self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "dokument/tests/resources/test_144/update_soubor")
 
