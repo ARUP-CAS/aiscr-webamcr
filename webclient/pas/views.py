@@ -76,7 +76,7 @@ from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
 from pid.exceptions import DoiWriteError
 from projekt.models import Projekt
 from services.mailer import Mailer
-from uzivatel.models import Organizace, User
+from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -244,7 +244,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         sn.create_transaction(self.request.user, ZAZNAM_USPESNE_VYTVOREN)
         sn.stav = SN_ZAPSANY
         sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
-        sn.predano_organizace = sn.projekt.organizace
+        sn.predano_organizace = None
         sn.geom_system = form_coor.data.get("coordinate_system")
 
         if geom is not None:
@@ -483,6 +483,8 @@ def edit_ulozeni(request, ident_cely):
     """
     Funkce pohledu pro editaci uložení samostatného nálezu pomocí modalu.
 
+    Pole ``predano_organizace`` je zobrazeno jako editovatelné; archeolog může zvolit cílovou organizaci (muzeum) nezávisle na organizaci projektu.
+
     :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``PotvrditNalezForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
     :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
@@ -501,7 +503,6 @@ def edit_ulozeni(request, ident_cely):
             logger.debug("pas.views.edit_ulozeni.form_valid")
             sn: SamostatnyNalez = form.save(commit=False)
             sn.create_transaction(request.user)
-            sn.predano_organizace = get_object_or_404(Organizace, id=sn.projekt.organizace_id)
             sn.close_active_transaction_when_finished = True
             sn.save()
             if form.changed_data:
@@ -520,7 +521,7 @@ def edit_ulozeni(request, ident_cely):
             instance=sn,
             predano_required=predano_required,
             initial={"old_stav": sn.stav},
-            predano_hidden=True,
+            predano_hidden=False,
         )
     context = {
         "object": sn,
@@ -660,6 +661,8 @@ def potvrdit(request, ident_cely):
     """
     Funkce pohledu pro potvrzení samostatného nálezu pomocí modalu.
 
+    Při potvrzení zobrazí formulář včetně pole ``predano_organizace``, které archeolog může vyplnit výběrem cílové organizace. Hodnota není odvozena od organizace projektu, ale uložena přímo z formuláře.
+
     :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``session``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
     :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
@@ -692,14 +695,13 @@ def potvrdit(request, ident_cely):
             form_obj: SamostatnyNalez = form.save(commit=False)
             form_obj.create_transaction(request.user, SAMOSTATNY_NALEZ_POTVRZEN)
             form_obj.set_potvrzeny(request.user)
-            form_obj.predano_organizace = get_object_or_404(Organizace, id=sn.projekt.organizace_id)
             form_obj.close_active_transaction_when_finished = True
             form_obj.save()
             return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
         else:
             logger.info("pas.views.potvrdit.form_invalid", extra={"error": form.errors})
     else:
-        form = PotvrditNalezForm(instance=sn, initial={"old_stav": sn.stav}, predano_hidden=True)
+        form = PotvrditNalezForm(instance=sn, initial={"old_stav": sn.stav}, predano_hidden=False)
     context = {
         "object": sn,
         "form": form,
@@ -780,6 +782,8 @@ class PasPermissionFilterMixin(PermissionFilterMixin):
         """
         Provádí operaci add ownership lookup.
 
+        Pro vlastnictví ``ours`` vrací podmínku pokrývající jak organizaci projektu (``projekt__organizace``), tak cílovou organizaci nálezu (``predano_organizace``).
+
         :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
         :param qs: Parametr ``qs`` slouží jako vstup pro logiku funkce ``add_ownership_lookup``.
 
@@ -788,7 +792,9 @@ class PasPermissionFilterMixin(PermissionFilterMixin):
         filter_historie = {"uzivatel": self.request.user}
         filtered_my = Historie.objects.filter(**filter_historie)
         if ownership == p.ownershipChoices.our:
-            return Q(**{"projekt__organizace": self.request.user.organizace})
+            return Q(**{"projekt__organizace": self.request.user.organizace}) | Q(
+                **{"predano_organizace": self.request.user.organizace}
+            )
         else:
             return Q(**{"historie_zapsat__in": filtered_my})
 
