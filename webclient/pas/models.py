@@ -453,8 +453,11 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
         :return: Vrací n-tici.
         """
-        orgs = [self.projekt.organizace]
-        if self.predano_organizace and self.predano_organizace != self.projekt.organizace:
+        orgs = []
+        proj_org = self.projekt.organizace
+        if proj_org:
+            orgs.append(proj_org)
+        if self.predano_organizace and self.predano_organizace != proj_org:
             orgs.append(self.predano_organizace)
         return tuple(orgs)
 
