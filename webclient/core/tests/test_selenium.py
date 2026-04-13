@@ -40,6 +40,7 @@ from selenium.common.exceptions import (
 )
 from selenium.webdriver.chrome.webdriver import WebDriver as ChromeDriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
 from uzivatel.models import User
 from xml_generator.generator import DocumentGenerator
 from xml_generator.models import ModelWithMetadata
@@ -720,6 +721,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 extra={"error": exc},
             )
 
+        try:
+            WebDriverWait(self.driver, 5).until(
+                lambda d: d.execute_script("return typeof jQuery === 'undefined' || jQuery.active == 0")
+            )
+        except Exception:
+            pass
         try:
             self.driver.quit()
         except Exception:
