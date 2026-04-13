@@ -936,16 +936,21 @@ return new Date('2025-06-28T12:00:00Z');}};
         :param field_id: HTML id atribut podkladového ``<select>`` elementu (bez ``#``).
         :param index: Index volby mezi neprázdnými neskrytými volbami (výchozí 0 = první).
         """
-        self.driver.execute_script(
+        result = self.driver.execute_script(
             """
             var sel = document.getElementById(arguments[0]);
+            if (!sel) { return 'element not found: ' + arguments[0]; }
             var opts = Array.from(sel.options).filter(function(o) { return !o.hidden && o.value !== ''; });
             var idx = arguments[1];
-            if (idx < opts.length) { $(sel).selectpicker('val', opts[idx].value); }
+            if (idx >= opts.length) { return 'index ' + idx + ' out of range, ' + opts.length + ' options available'; }
+            $(sel).selectpicker('val', opts[idx].value).trigger('change');
+            return null;
             """,
             field_id,
             index,
         )
+        if result:
+            raise AssertionError(f"select_nth_selectpicker_option('{field_id}', {index}): {result}")
 
     def _select_value_select_picker(self, field_id, selected_value):
         """

@@ -39,7 +39,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         :return: Načtená data odpovídající zadaným vstupům.
         """
         elements = table.find_elements(By.TAG_NAME, "th")
-        return [links[0].text for e in elements for links in [e.find_elements(By.TAG_NAME, "a")] if links]
+        return [e.text.strip() for e in elements]
 
     def _check_column_hiding(self, element_id_initial, column_header_text, initial=True):
         """

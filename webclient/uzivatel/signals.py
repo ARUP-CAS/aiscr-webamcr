@@ -265,10 +265,10 @@ def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
         fedora_transaction = FedoraTransaction()
         instance.active_transaction = fedora_transaction
         instance.close_active_transaction_when_finished = True
-    instance.record_deletion(fedora_transaction, close_transaction=False)
+    instance.record_deletion(fedora_transaction)
     logger.debug(
         "uzivatel.signals.osoba_delete_repository_container.end",
-        extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction},
+        extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid},
     )
 
 
@@ -306,10 +306,10 @@ def organizace_delete_repository_container(sender, instance: Organizace, **kwarg
         fedora_transaction = FedoraTransaction()
         instance.active_transaction = fedora_transaction
         instance.close_active_transaction_when_finished = True
-    instance.record_deletion(fedora_transaction, close_transaction=False)
+    instance.record_deletion(fedora_transaction)
     logger.debug(
         "uzivatel.signals.organizace_delete_repository_container.end",
-        extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction},
+        extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid},
     )
 
 
