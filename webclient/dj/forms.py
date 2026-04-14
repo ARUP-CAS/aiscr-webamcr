@@ -185,11 +185,11 @@ class CreateDJForm(OptimisticLockingMixin, forms.ModelForm):
         self.helper.include_media = False
         self.helper.layout = Layout(
             Div(
-                Div("typ", css_class="col-sm-2"),
-                Div("pian", css_class="col-sm-2", style="display:none", id="pian_select"),
-                Div("pian_text", css_class="col-sm-2", id="pian_text"),
-                Div("nazev", css_class="col-sm-4"),
-                Div("negativni_jednotka", css_class="col-sm-2"),
+                Div("typ", css_class="col-sm-6 col-lg-2"),
+                Div("pian", css_class="col-sm-6 col-lg-2", style="display:none", id="pian_select"),
+                Div("pian_text", css_class="col-sm-6 col-lg-2", id="pian_text"),
+                Div("nazev", css_class="col-sm-6 col-lg-4"),
+                Div("negativni_jednotka", css_class="col-sm-6 col-lg-2"),
                 css_class="row",
             ),
         )
