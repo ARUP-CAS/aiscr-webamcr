@@ -188,6 +188,7 @@ STARY_PROJEKT_ZRUSEN = "Automatické zrušení projektů starších tří let, u
 PRISTUPNOST_MIN_RAZENI = 1  # Nejnižší hodnota přístupnosti podle řazení.
 
 MAX_POCET_SOUBORU_PROJEKTU = 40
+MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES = 25 * 1024 * 1024  # 25 MiB pro jednu PAS fotografii přes API
 
 LIMIT_PRVKU_ZOBRAZENI_HEATMAP = 7_000  # Počet prvků v mapovém výřezu, při kterém se už má zobrazit heatmap
 
@@ -205,4 +206,4 @@ API_REQUEST_LOG_STATUS_FAILURE: Final = "failure"
 # ApiRequestLog — cíle požadavku.
 API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT: Final = "samostatny_nalez_xml_import"
 API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH: Final = "samostatny_nalez_evidencni_cislo_patch"
-API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_UPDATE: Final = "samostatny_nalez_xml_update"
+API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_API_UPDATE: Final = "samostatny_nalez_api_update"

@@ -41,9 +41,9 @@ from .constants import (
     API_REQUEST_LOG_STATUS_PROCESSING,
     API_REQUEST_LOG_STATUS_RECEIVED,
     API_REQUEST_LOG_STATUS_SUCCESS,
+    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_API_UPDATE,
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH,
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT,
-    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_UPDATE,
     DOKUMENT_RELATION_TYPE,
     NAHRANI_SBR,
     PROJEKT_RELATION_TYPE,
@@ -574,7 +574,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             mime = set()
             mime.add(mime_str)
         mime: set
-        if "soubor/nahrat/pas/" in source_url:
+        if "soubor/nahrat/pas/" in source_url or "pas/api/nalez/" in source_url:
             for item in mime:
                 item: str
                 if not item.startswith("image/"):
@@ -1143,13 +1143,15 @@ class Permissions(models.Model):
         verbose_name = _("core.model.permissions.modelTitle.label")
         verbose_name_plural = _("core.model.permissions.modelTitles.label")
 
-    def check_concrete_permission(self, user, ident=None, typ=None):
+    def check_concrete_permission(self, user, ident=None, typ=None, skip_status=False):
         """
         Ověří, zda má uživatel konkrétní oprávnění na daný záznam a typ.
 
         :param user: Uživatel, pro kterého se kontroluje oprávnění.
         :param ident: Identifikátor archeologického záznamu (např. C-XX-YYYYNNNNN).
         :param typ: Typ objektu, pro který se kontroluje oprávnění (např. projekt, lokalita).
+        :param skip_status: Pokud ``True``, přeskočí stavovou podmínku oprávnění a vyhodnotí pouze
+            základ, vlastnictví a přístupnost.
         :return: ``True`` pokud má uživatel oprávnění, ``False`` jinak.
         """
         self.typ = typ
@@ -1162,7 +1164,10 @@ class Permissions(models.Model):
             logger.debug("core.model.Permissions.check_concrete_permission.base_false")
             return False
         if self.ident is not None:
-            perm_check = status_check = self.check_status()
+            if skip_status:
+                perm_check = status_check = True
+            else:
+                perm_check = status_check = self.check_status()
             if perm_check and not self.check_ownership(self.ownership):
                 logger.debug("core.model.Permissions.check_concrete_permission.ownership_false")
                 perm_check = False
@@ -1341,13 +1346,14 @@ class Permissions(models.Model):
                 return False
 
 
-def check_permissions(action, user, ident=None):
+def check_permissions(action, user, ident=None, skip_status=False):
     """
     Ověří permissions. v aplikaci.
 
     :param action: Identifikátor akce, která se má provést.
     :param user: Parametr ``user`` se předává do volání ``filter()``, ``append()``, pracuje se s atributy ``hlavni_role``.
     :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
+    :param skip_status: Pokud ``True``, přeskočí stavovou podmínku při vyhodnocení konkrétního oprávnění.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
     """
@@ -1360,7 +1366,7 @@ def check_permissions(action, user, ident=None):
     if permission_set.count() > 0:
         tested = []
         for concrete_permission in permission_set:
-            tested.append(concrete_permission.check_concrete_permission(user, ident))
+            tested.append(concrete_permission.check_concrete_permission(user, ident, skip_status=skip_status))
         if not any(tested):
             return False
     return True
@@ -1399,8 +1405,8 @@ class ApiRequestLog(models.Model):
             _("core.model.apiRequestLog.requestTarget.samostatnyNalezEvidencniCisloPatch"),
         ),
         (
-            API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_UPDATE,
-            _("core.model.apiRequestLog.requestTarget.samostatnyNalezXmlUpdate"),
+            API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_API_UPDATE,
+            _("core.model.apiRequestLog.requestTarget.samostatnyNalezApiUpdate"),
         ),
     )
 

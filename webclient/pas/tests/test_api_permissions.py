@@ -4,6 +4,8 @@ import json
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from core.constants import ROLE_ARCHEOLOG_ID, ROLE_BADATEL_ID
+from core.models import Permissions
 from core.setting_models import CustomAdminSettings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -17,6 +19,7 @@ from pas.api import (
     IpBlacklistPermission,
     IpWhitelistPermission,
     PasApiPermissionMixin,
+    SamostatnyNalezEvidencniCisloPatchView,
     UserBlacklistPermission,
     UserWhitelistPermission,
 )
@@ -172,6 +175,21 @@ class PasApiPermissionTests(TestCase):
             self.assertFalse(throttle._check_limit("throttle_ip_203.0.113.10", "2/m", request))
 
         self.assertEqual(throttle.wait_seconds, 60)
+
+    def test_api_import_throttle_applies_record_scope_independently_of_user_and_ip(self):
+        """Record scope omezuje ident_cely samostatně bez ohledu na user/IP scope."""
+        self._set_pas_api_setting(
+            "rate_limits",
+            [{"scope": "record", "rate": "1/m", "active": True}],
+        )
+        throttle = ApiImportThrottle()
+        first_request = self._build_request(ip="203.0.113.10", user=self._build_user("first@example.com"))
+        second_request = self._build_request(ip="203.0.113.11", user=self._build_user("second@example.com"))
+        view = SimpleNamespace(kwargs={"ident_cely": "C-202600009-N00007"})
+
+        with patch("pas.api.time.time", return_value=1000.0):
+            self.assertTrue(throttle.allow_request(first_request, view))
+            self.assertFalse(throttle.allow_request(second_request, view))
 
     def test_custom_admin_setting_full_clean_allows_valid_access_rules(self):
         """Validní `access_rules` projdou `full_clean()` a lze je uložit."""
@@ -646,7 +664,7 @@ class PasApiPermissionTests(TestCase):
             IpBlacklistPermission.validate_rate_limits({"scope": "ip", "value": "203.0.113.10", "rate": "1/m"})
 
     def test_validate_rate_limits_raises_for_unsupported_scope(self):
-        """`scope` v `rate_limits` musí být `user` nebo `ip`."""
+        """`scope` v `rate_limits` musí být `user`, `ip` nebo `record`."""
         with self.assertRaisesRegex(
             ValidationError,
             "pas.api.PasApiPermissionMixin.validate_rate_limits.unsupported_scope",
@@ -654,6 +672,12 @@ class PasApiPermissionTests(TestCase):
             IpBlacklistPermission.validate_rate_limits(
                 [{"scope": "group", "value": "203.0.113.10", "rate": "1/m", "active": True}]
             )
+
+    def test_validate_rate_limits_accepts_record_scope_without_value(self):
+        """Record scope nepotřebuje `value`; limit se vztahuje na každé `ident_cely` zvlášť."""
+        self.assertTrue(
+            IpBlacklistPermission.validate_rate_limits([{"scope": "record", "rate": "10/m", "active": True}])
+        )
 
     # --- IPv6 ---
 
@@ -961,3 +985,48 @@ class GetClientIpTests(TestCase):
         request = self._build_request(remote_addr="::1", x_forwarded_for="2001:db8::cafe")
 
         self.assertEqual(PasApiPermissionMixin.get_client_ip(request), "2001:db8::cafe")
+
+
+class SamostatnyNalezEvidencniCisloPatchPermissionTests(TestCase):
+    """Jednotkové testy autorizace pro PATCH evidenčního čísla samostatného nálezu."""
+
+    @staticmethod
+    def _build_user(role_id: int):
+        """
+        Vytvoří minimální uživatelský objekt kompatibilní s helperem ``_has_edit_permissions``.
+
+        :param role_id: ID hlavní role uživatele.
+
+        :return: Objekt s atributem ``hlavni_role.pk``.
+        """
+        return SimpleNamespace(hlavni_role=SimpleNamespace(pk=role_id))
+
+    def test_evidencni_cislo_patch_permission_denies_badatel_even_when_pas_edit_passes(self):
+        """Badatel nikdy není autorizován, i když základní ``pas_edit`` kontrola vrátí ``True``."""
+        user = self._build_user(ROLE_BADATEL_ID)
+        ident_cely = "C-202600009-N00007"
+
+        with patch("pas.api.check_permissions", return_value=True) as mock_check_permissions:
+            self.assertFalse(SamostatnyNalezEvidencniCisloPatchView._has_edit_permissions(user, ident_cely))
+
+        mock_check_permissions.assert_called_once_with(
+            Permissions.actionChoices.pas_edit,
+            user,
+            ident_cely,
+            skip_status=True,
+        )
+
+    def test_evidencni_cislo_patch_permission_allows_archeolog_when_pas_edit_ignores_status(self):
+        """Autorizovaný archeolog projde, protože helper vyhodnocuje ``pas_edit`` se ``skip_status=True``."""
+        user = self._build_user(ROLE_ARCHEOLOG_ID)
+        ident_cely = "C-202600009-N00007"
+
+        with patch("pas.api.check_permissions", return_value=True) as mock_check_permissions:
+            self.assertTrue(SamostatnyNalezEvidencniCisloPatchView._has_edit_permissions(user, ident_cely))
+
+        mock_check_permissions.assert_called_once_with(
+            Permissions.actionChoices.pas_edit,
+            user,
+            ident_cely,
+            skip_status=True,
+        )

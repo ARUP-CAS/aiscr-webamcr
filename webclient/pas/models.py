@@ -451,7 +451,12 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
         :return: Vrací n-tici.
         """
-        return (self.projekt.organizace,)
+        create_orgs = []
+        if self.projekt.organizace_id:
+            create_orgs.append(self.projekt.organizace)
+        if self.predano_organizace_id and self.predano_organizace_id != self.projekt.organizace_id:
+            create_orgs.append(self.predano_organizace)
+        return tuple(create_orgs)
 
     def redis_snapshot_id(self):
         """

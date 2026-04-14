@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import io
 import ipaddress
 import json
 import logging
@@ -18,10 +19,11 @@ from core.constants import (
     API_REQUEST_LOG_STATUS_FAILURE,
     API_REQUEST_LOG_STATUS_PROCESSING,
     API_REQUEST_LOG_STATUS_SUCCESS,
+    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_API_UPDATE,
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH,
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT,
-    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_UPDATE,
     ARCHIVACE_SN,
+    MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES,
     ODESLANI_SN,
     POTVRZENI_SN,
     SN_ARCHIVOVANY,
@@ -29,9 +31,10 @@ from core.constants import (
     ZAPSANI_SN,
 )
 from core.ident_cely import get_sn_ident
-from core.models import ApiRequestLog, Permissions, check_permissions
+from core.models import AntivirusCheckResult, ApiRequestLog, Permissions, Soubor, check_permissions
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction, FedoraTransactionStatus
 from core.setting_models import CustomAdminSettings
+from core.views import get_finds_soubor_name
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, transaction
@@ -137,6 +140,7 @@ _ACCESS_RULE_TYPES = {
 }
 SCOPE_USER = "user"
 SCOPE_IP = "ip"
+SCOPE_RECORD = "record"
 ACCESS_MODE_OPEN = "open"
 ACCESS_MODE_WHITELIST_ONLY = "whitelist_only"
 ACCESS_MODE_CLOSED = "closed"
@@ -409,7 +413,8 @@ class PasApiPermissionMixin:
         """
         Vrátí limity počtu požadavků z cache nebo ``CustomAdminSettings``.
 
-        Každý limit je slovník s klíči ``scope``, ``value``, ``rate`` a volitelně ``active`` (výchozí ``True``).
+        Každý limit je slovník s klíči ``scope``, ``rate`` a volitelně ``active`` (výchozí ``True``).
+        Pro scope ``user`` a ``ip`` je navíc povinný klíč ``value``.
 
         :raises ValidationError: Pokud nastavení nemá očekávanou strukturu nebo obsahuje nevalidní limit.
         :return: Seznam aktivních limitů.
@@ -444,7 +449,7 @@ class PasApiPermissionMixin:
                         )
                     }
                 )
-            if "scope" not in limit or "value" not in limit or "rate" not in limit:
+            if "scope" not in limit or "rate" not in limit:
                 raise ValidationError(
                     {
                         "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.missing_required_keys").format(
@@ -460,11 +465,19 @@ class PasApiPermissionMixin:
                         )
                     }
                 )
-            if limit["scope"] not in {SCOPE_USER, SCOPE_IP}:
+            if limit["scope"] not in {SCOPE_USER, SCOPE_IP, SCOPE_RECORD}:
                 raise ValidationError(
                     {
                         "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.unsupported_scope").format(
                             index=index, scope=limit["scope"]
+                        )
+                    }
+                )
+            if limit["scope"] in {SCOPE_USER, SCOPE_IP} and "value" not in limit:
+                raise ValidationError(
+                    {
+                        "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.missing_required_keys").format(
+                            index=index
                         )
                     }
                 )
@@ -884,9 +897,9 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
     """
     Throttle pro API import samostatného nálezu řízený záznamy ``CustomAdminSettings`` (``pas_api/rate_limits``).
 
-    Pravidla jsou načítána z databáze (s cache) a aplikována v pořadí:
-    nejdříve pravidlo pro konkrétního uživatele, pak pro IP adresu.
-    Pokud žádné pravidlo neexistuje, požadavek je povolen.
+    Pravidla jsou načítána z databáze (s cache) a vyhodnocují se nezávisle podle scope:
+    ``user``, ``ip`` a ``record``. Požadavek je povolen pouze tehdy, pokud projde všemi
+    relevantními limity pro dané volání.
     """
 
     def allow_request(self, request, view=None) -> bool:
@@ -896,17 +909,24 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
         :param request: HTTP požadavek.
         :param view: Pohled zpracovávající požadavek.
 
-        :return: ``True`` pokud limit nebyl překročen nebo neexistuje, jinak ``False``.
+        :return: ``True`` pokud nebyl překročen žádný relevantní limit, jinak ``False``.
         """
         limits = self.get_rate_limits()
         client_ip = self.get_client_ip(request)
         user_identifier = self.get_user_identifier(request.user)
 
+        ident_cely = getattr(view, "kwargs", {}).get("ident_cely") if view is not None else None
+
         for limit in limits:
             if limit["scope"] == SCOPE_USER and limit["value"] == user_identifier:
-                return self._check_limit(f"throttle_user_{user_identifier}", limit["rate"], request)
+                if not self._check_limit(f"throttle_user_{user_identifier}", limit["rate"], request):
+                    return False
             if limit["scope"] == SCOPE_IP and self.ip_matches(client_ip, limit["value"]):
-                return self._check_limit(f"throttle_ip_{client_ip}", limit["rate"], request)
+                if not self._check_limit(f"throttle_ip_{client_ip}", limit["rate"], request):
+                    return False
+            if limit["scope"] == SCOPE_RECORD and ident_cely:
+                if not self._check_limit(f"throttle_record_{ident_cely}", limit["rate"], request):
+                    return False
         return True
 
     def _check_limit(self, cache_key: str, rate: str, request) -> bool:
@@ -995,15 +1015,6 @@ class ImportValidationIssue:
         data = asdict(self)
         data["error_type"] = self.error_type.value
         return data
-
-
-@dataclass(frozen=True)
-class ChangedField:
-    """Pole záznamu, jehož hodnota byla změněna XML aktualizací."""
-
-    field_name: str
-    old_value: object
-    new_value: object
 
 
 class ImportValidationException(serializers.ValidationError):
@@ -1230,21 +1241,23 @@ class SamostatnyNalezXmlBaseView(PasApiPermissionMixin, APIView):
         return True
 
     @staticmethod
-    def _republish_igsn_if_archived(instance: "SamostatnyNalez") -> None:
+    def _update_igsn_if_archived(instance: "SamostatnyNalez") -> None:
         """
-        Pokud je záznam ve stavu SN4 (archivovaný), znovu publikuje jeho IGSN metadata.
+        Pokud je záznam ve stavu SN4 (archivovaný), aktualizuje jeho IGSN metadata.
 
         Volat po uzavření Fedora transakce, mimo atomický blok.
 
         :param instance: Aktualizovaný záznam samostatného nálezu.
 
-        :raises DoiWriteError: Pokud publikování IGSN selže.
+        :raises DoiWriteError: Pokud aktualizace IGSN selže.
         """
         if instance.stav == SN_ARCHIVOVANY:
-            instance.igsn_publish()
+            instance.igsn_update(False, True)
 
     @staticmethod
-    def _verify_content_digest(request, xml_file) -> str | None:
+    def _verify_content_digest(
+        request, uploaded_file, mismatch_status: int = status.HTTP_400_BAD_REQUEST
+    ) -> tuple[str, int] | None:
         """
         Ověří integritu souboru pomocí hlavičky ``Content-Digest`` (RFC 9530).
 
@@ -1253,26 +1266,36 @@ class SamostatnyNalezXmlBaseView(PasApiPermissionMixin, APIView):
         vrátí chybovou zprávu.
 
         :param request: HTTP požadavek obsahující hlavičku ``Content-Digest``.
-        :param xml_file: Nahraný soubor; po zavolání je pozice čtení na začátku.
+        :param uploaded_file: Nahraný soubor; po zavolání je pozice čtení na začátku.
+        :param mismatch_status: Stavový kód použitý při neodpovídajícím SHA-512 hashi.
 
-        :return: Chybová zpráva jako řetězec, nebo None pokud je digest v pořádku.
+        :return: Dvojice ``(zpráva, status)`` nebo ``None`` pokud je digest v pořádku.
         """
         header = request.headers.get("Content-Digest")
         if not header:
-            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.missing_digest")
+            return (
+                _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.missing_digest"),
+                status.HTTP_400_BAD_REQUEST,
+            )
 
         prefix = "sha-512=:"
         if not header.startswith(prefix) or not header.endswith(":"):
-            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.invalid_format")
+            return (
+                _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.invalid_format"),
+                status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             expected = base64.b64decode(header[len(prefix) : -1])
         except (ValueError, TypeError):
-            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.invalid_base64")
+            return (
+                _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.invalid_base64"),
+                status.HTTP_400_BAD_REQUEST,
+            )
 
-        actual = hashlib.sha512(xml_file.read()).digest()
+        actual = hashlib.sha512(uploaded_file.read()).digest()
         if actual != expected:
-            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.digest_mismatch")
+            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.digest_mismatch"), mismatch_status
 
         return None
 
@@ -1869,7 +1892,8 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
 
         digest_error = self._verify_content_digest(request, xml_file)
         if digest_error:
-            return self._fail(log_entry, {"detail": digest_error}, status.HTTP_400_BAD_REQUEST)
+            digest_message, digest_status = digest_error
+            return self._fail(log_entry, {"detail": digest_message}, digest_status)
         xml_file.seek(0)
 
         try:
@@ -2167,9 +2191,10 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
         """
         Ověří, zda má uživatel oprávnění editovat evidenční číslo záznamu samostatného nálezu.
 
-        Nejprve volá rodičovskou implementaci. Pokud ta vrátí ``False``,
-        výsledek je zamítnut okamžitě. Pokud vrátí ``True``, ověří navíc,
-        že hlavní role uživatele odpovídá roli Archeolog nebo vyšší.
+        Pro tento endpoint se použijí standardní pravidla ``pas_edit`` s tím rozdílem,
+        že se ignoruje stav záznamu. Tím je umožněno, aby archeolog a vyšší mohl
+        aktualizovat evidenční číslo i u archivovaného nálezu. Následně se ještě
+        explicitně ověří, že hlavní role uživatele odpovídá roli Archeolog nebo vyšší.
 
         :param user: Uživatel provádějící požadavek.
         :param ident_cely: Identifikátor záznamu samostatného nálezu.
@@ -2177,7 +2202,7 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
         :return: Vrací ``True`` pokud má uživatel oprávnění ``pas_edit`` pro daný záznam
                  a zároveň je jeho hlavní role Archeolog nebo vyšší.
         """
-        if not SamostatnyNalezXmlBaseView._has_edit_permissions(user, ident_cely):
+        if not check_permissions(Permissions.actionChoices.pas_edit, user, ident_cely, skip_status=True):
             return False
         return user.hlavni_role.pk >= ROLE_ARCHEOLOG_ID
 
@@ -2202,7 +2227,8 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
 
         :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
                  nebo chybou syntaxe volání (HTTP 400; chybějící parametr
-                 ``evidencni_cislo`` nebo prázdná hodnota), nenalezeným
+                 ``evidencni_cislo``), chybou dat (HTTP 422; prázdná nebo
+                 příliš dlouhá hodnota), nenalezeným
                  záznamem (HTTP 404), nedostatečnými oprávněními (HTTP 403),
                  nebo interní chybou (HTTP 500).
         """
@@ -2228,14 +2254,14 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.empty_evidencni_cislo")},
-                status.HTTP_400_BAD_REQUEST,
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
         if len(evidencni_cislo) > self._MAX_EVIDENCNI_CISLO_LENGTH:
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.evidencni_cislo_too_long")},
-                status.HTTP_400_BAD_REQUEST,
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
         try:
@@ -2305,7 +2331,7 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
             )
 
         try:
-            self._republish_igsn_if_archived(instance)
+            self._update_igsn_if_archived(instance)
         except DoiWriteError as err:
             logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.igsn_error", extra={"error": err})
             return self._fail(
@@ -2358,35 +2384,29 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
             )
 
 
-# Fields that must never be updated via the XML update endpoint.
-_XML_UPDATE_READONLY_FIELDS = frozenset({"ident_cely", "stav"})
-
-
-class SamostatnyNalezXmlUpdateView(SamostatnyNalezXmlBaseView):
-    """Pohled pro aktualizaci záznamu samostatného nálezu z XML souboru přes POST požadavek."""
+class SamostatnyNalezFotografieUploadView(SamostatnyNalezXmlBaseView):
+    """Pohled pro nahrání jedné fotografie k existujícímu samostatnému nálezu."""
 
     @staticmethod
-    def _create_history_record(instance: SamostatnyNalez, user, changed_fields: list[ChangedField]) -> None:
+    def _has_upload_permissions(user, ident_cely) -> bool:
         """
-        Vytvoří záznam historie pro XML aktualizaci samostatného nálezu.
+        Ověří, zda má uživatel oprávnění nahrát fotografii k danému nálezu.
 
-        Poznámka záznamu obsahuje čárkou oddělený seznam změn ve formátu ``old_value -> new_value``.
-        Je-li záznam ve stavu SN4 (archivovaný), zapíše se navíc záznam ``SN34``,
-        který obnoví datum archivace.
+        :param user: Uživatel provádějící požadavek.
+        :param ident_cely: Identifikátor záznamu samostatného nálezu.
+
+        :return: ``True`` pokud má uživatel oprávnění ``soubor_nahrat_pas``.
+        """
+        return check_permissions(Permissions.actionChoices.soubor_nahrat_pas, user, ident_cely)
+
+    @staticmethod
+    def _create_rearchive_history_record(instance: SamostatnyNalez, user) -> None:
+        """
+        Pro archivovaný nález zapíše do historie tichou reachivaci ``SN34``.
 
         :param instance: Aktualizovaný záznam samostatného nálezu.
-        :param user: Uživatel, který provedl aktualizaci.
-        :param changed_fields: Seznam změněných polí záznamu.
+        :param user: Uživatel, který provedl upload fotografie.
         """
-        poznamka = ", ".join(
-            f"{cf.old_value} -> {cf.new_value}" for cf in sorted(changed_fields, key=lambda cf: cf.field_name)
-        )
-        Historie.objects.create(
-            typ_zmeny=AKTUALIZACE_SN,
-            uzivatel=user,
-            vazba=instance.historie,
-            poznamka=poznamka,
-        )
         if instance.stav == SN_ARCHIVOVANY:
             Historie.objects.create(
                 typ_zmeny=ARCHIVACE_SN,
@@ -2396,31 +2416,29 @@ class SamostatnyNalezXmlUpdateView(SamostatnyNalezXmlBaseView):
 
     def post(self, request, ident_cely: str, format=None):
         """
-        Aktualizuje existující záznam samostatného nálezu z XML souboru.
+        Nahraje fotografii k existujícímu záznamu samostatného nálezu.
 
-        Přijímá ``ident_cely`` záznamu jako součást URL a XML soubor v parametru ``file``
-        (multipart/form-data). XML musí odpovídat schématu AMČR 2.2. Dokument musí
-        obsahovat právě jeden element ``amcr:samostatny_nalez``. Pole ``ident_cely``
-        a ``stav`` jsou ignorovány — jejich hodnoty nelze přes tento endpoint měnit.
-        Pokud XML neobsahuje žádnou změnu oproti DB záznamu, požadavek selže s HTTP 422.
+        Přijímá ``ident_cely`` záznamu jako součást URL a jeden binární soubor v parametru
+        ``file`` (multipart/form-data). Soubor musí projít kontrolou ``Content-Digest``,
+        MIME typu a antiviru. Úspěšný upload uloží fotografii do Fedora repository,
+        založí záznam ``Soubor`` navázaný na nález a vrátí aktualizovaná XML metadata z Fedory.
 
-        :param request: HTTP požadavek obsahující XML soubor v poli ``file``.
+        :param request: HTTP požadavek obsahující fotografii v poli ``file``.
         :param ident_cely: Identifikátor aktualizovaného záznamu samostatného nálezu.
         :param format: Formát odpovědi.
 
         :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
-                 nebo chybou syntaxe volání (HTTP 400), nenalezeným záznamem (HTTP 404),
-                 nevalidním XML či žádnou změnou (HTTP 422),
-                 nebo interní chybou (HTTP 500).
+                 nebo chybu syntaxe volání (HTTP 400), nenalezený záznam (HTTP 404),
+                 validační chybu souboru (HTTP 422), nebo interní chybu (HTTP 500).
         """
-        xml_file = request.FILES.get("file")
+        uploaded_file = request.FILES.get("file")
 
         log_entry = ApiRequestLog.objects.create(
             user=request.user,
             client_ip=self.get_client_ip(request),
-            request_target=API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_UPDATE,
-            filename=xml_file.name if xml_file is not None else None,
-            file_size=xml_file.size if xml_file is not None else None,
+            request_target=API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_API_UPDATE,
+            filename=uploaded_file.name if uploaded_file is not None else None,
+            file_size=uploaded_file.size if uploaded_file is not None else None,
         )
 
         try:
@@ -2432,13 +2450,13 @@ class SamostatnyNalezXmlUpdateView(SamostatnyNalezXmlBaseView):
                 status.HTTP_404_NOT_FOUND,
             )
 
-        if not self._has_edit_permissions(request.user, ident_cely):
+        if not self._has_upload_permissions(request.user, ident_cely):
             # The denied user ID and ident_cely are logged intentionally for
             # authorization troubleshooting and incident investigation.
             # They are audit/operational identifiers, not secrets.
             # codeql[py/clear-text-logging-sensitive-data]
             logger.warning(
-                "pas.api.SamostatnyNalezXmlUpdateView.post.permission_denied",
+                "pas.api.SamostatnyNalezFotografieUploadView.post.permission_denied",
                 extra={"user": request.user.pk, "ident_cely": ident_cely},
             )
             return self._fail(
@@ -2447,156 +2465,118 @@ class SamostatnyNalezXmlUpdateView(SamostatnyNalezXmlBaseView):
                 status.HTTP_403_FORBIDDEN,
             )
 
-        if xml_file is None:
+        if uploaded_file is None:
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.missing_file")},
                 status.HTTP_400_BAD_REQUEST,
             )
 
-        digest_error = self._verify_content_digest(request, xml_file)
+        if uploaded_file.size > MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.file_too_large")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        mime_check = Soubor.check_mime_for_url(uploaded_file, request.path)
+        if mime_check == "encrypted":
+            return self._fail(
+                log_entry,
+                {"detail": _("core.views.post_upload.encrypted")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        if mime_check is False:
+            return self._fail(
+                log_entry,
+                {"detail": _("core.views.post_upload.mime_check_failed")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        digest_error = self._verify_content_digest(
+            request,
+            uploaded_file,
+            mismatch_status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
         if digest_error:
-            return self._fail(log_entry, {"detail": digest_error}, status.HTTP_400_BAD_REQUEST)
-        xml_file.seek(0)
+            digest_message, digest_status = digest_error
+            return self._fail(log_entry, {"detail": digest_message}, digest_status)
+        uploaded_file.seek(0)
 
-        try:
-            parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
-            doc = etree.ElementTree(etree.fromstring(xml_file.read(), parser=parser))
-        except etree.XMLSyntaxError as exc:
-            # codeql[py/clear-text-logging-sensitive-data]
-            logger.warning(
-                "pas.api.SamostatnyNalezXmlUpdateView.post.xml_syntax_error",
-                extra={"error": str(exc), "user": request.user.pk},
-            )
+        binary_data = io.BytesIO(uploaded_file.read())
+        antivirus_result = Soubor.check_antivirus(binary_data)
+        if antivirus_result == AntivirusCheckResult.VIRUS_FOUND:
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.invalid_xml_syntax")},
-                status.HTTP_400_BAD_REQUEST,
-            )
-
-        version_error = self._validate_declared_schema_version(doc)
-        if version_error:
-            return self._fail(log_entry, {"detail": version_error}, status.HTTP_422_UNPROCESSABLE_ENTITY)
-
-        try:
-            schema = self._get_amcr_schema(doc)
-        except ImportValidationException as exc:
-            return self._fail(
-                log_entry,
-                {"validation_errors": [e.to_dict() for e in exc.import_errors]},
-                self._validation_status(exc.import_errors),
-            )
-
-        validation_doc = self._build_schema_validation_doc(doc)
-        if not schema.validate(validation_doc):
-            errors = [
-                ImportValidationIssue(
-                    line=e.line,
-                    column=e.column,
-                    message=_("pas.api.SamostatnyNalezXmlUpdateView.post.schema_error_item")
-                    % {"line": e.line, "column": e.column, "message": e.message},
-                    error_type=ImportErrorType.INVALID_DATA,
-                )
-                for e in schema.error_log
-            ]
-            # codeql[py/clear-text-logging-sensitive-data]
-            logger.warning(
-                "pas.api.SamostatnyNalezXmlUpdateView.post.schema_invalid",
-                extra={"errors": [error.to_dict() for error in errors], "user": request.user.pk},
-            )
-            return self._fail(
-                log_entry,
-                {"schema_errors": [error.to_dict() for error in errors]},
+                {"detail": _("core.views.post_upload.antivirus_check.virus_found")},
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
-
-        root = doc.getroot()
-        root_children = list(root)
-        nalez_elements = [child for child in root_children if child.tag == self._ns("samostatny_nalez")]
-        if not root_children:
+        if antivirus_result == AntivirusCheckResult.CHECK_FAILED:
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.missing_samostatny_nalez")},
-                status.HTTP_400_BAD_REQUEST,
+                {"detail": _("core.views.post_upload.antivirus_check.check_failed")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-        if len(nalez_elements) > 1:
-            return self._fail(
-                log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.multiple_samostatny_nalez")},
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-        if len(root_children) != 1 or not nalez_elements:
-            return self._fail(
-                log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.invalid_root_content")},
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
+        binary_data.seek(0)
+        uploaded_file.seek(0)
 
         log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
         log_entry.save(update_fields=["status"])
 
-        elem = nalez_elements[0]
-        notes = self._get_ignored_lang_notes(elem)
-        try:
-            data = self._parse_nalez_element(elem, request.user)[0]
-        except ImportValidationException as exc:
+        mimetype = Soubor.get_mime_types(uploaded_file)
+        mime_extensions = Soubor.get_file_extension_by_mime(uploaded_file)
+        if len(mime_extensions) == 0:
             return self._fail(
                 log_entry,
-                {"validation_errors": [e.to_dict() for e in exc.import_errors]},
-                self._validation_status(exc.import_errors),
-            )
-
-        # Strip read-only fields — ident_cely and stav are never updated.
-        for field in _XML_UPDATE_READONLY_FIELDS:
-            data.pop(field, None)
-
-        serializer = SamostatnyNalezXmlImportSerializer(instance, data=data, partial=True)
-        try:
-            if not serializer.is_valid():
-                raise ImportValidationException.from_serializer_errors(serializer.errors, line=elem.sourceline)
-            self._validate_heslar_value_matches(serializer.validated_data, elem)
-        except ImportValidationException as exc:
-            return self._fail(
-                log_entry,
-                {"validation_errors": [e.to_dict() for e in exc.import_errors]},
-                self._validation_status(exc.import_errors),
-            )
-
-        # Compute which fields actually changed.
-        changed_fields = [
-            ChangedField(field_name=field, old_value=getattr(instance, field), new_value=new_val)
-            for field, new_val in serializer.validated_data.items()
-            if getattr(instance, field) != new_val
-        ]
-        if not changed_fields:
-            return self._fail(
-                log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.no_changes")},
+                {"detail": _("core.views.post_upload.mime_rename_failed")},
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
-        fedora_transaction = FedoraTransaction(transaction_user=request.user)
-        try:
-            with transaction.atomic():
-                for changed_field in changed_fields:
-                    setattr(instance, changed_field.field_name, changed_field.new_value)
-                instance.active_transaction = fedora_transaction
-                # active_transaction is an attribute that defines a Fedora transaction attached to the objects,
-                # not a database field, so there is no point in using it as an argument in the save method.
-                instance.save(update_fields=[cf.field_name for cf in changed_fields])
-                self._create_history_record(instance, request.user, changed_fields)
-                fedora_transaction.mark_transaction_as_closed()
-        except ImportValidationException as exc:
-            logger.error("pas.api.SamostatnyNalezXmlUpdateView.post.import_validation_error", extra={"error": exc})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+        new_name = get_finds_soubor_name(instance, uploaded_file.name)
+        if new_name is False:
             return self._fail(
                 log_entry,
-                {"validation_errors": [e.to_dict() for e in exc.import_errors]},
-                self._validation_status(exc.import_errors),
+                {
+                    "detail": (
+                        _("core.views.post_upload.error.maximal_file_name_exceeded_part_1")
+                        + f" {ident_cely} "
+                        + _("core.views.post_upload.error.maximal_file_name_exceeded_part_2")
+                    )
+                },
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
+
+        current_extension = new_name.rsplit(".", 1)[-1].lower() if "." in new_name else ""
+        if current_extension not in mime_extensions:
+            base_name = new_name.rsplit(".", 1)[0] if "." in new_name else new_name
+            new_name = f"{base_name}.{mime_extensions[0]}"
+
+        if mimetype in ["image/png", "image/jpeg", "image/tiff"]:
+            binary_data = Soubor.remove_gps_data(binary_data)
+        binary_data.seek(0)
+
+        fedora_transaction = FedoraTransaction(transaction_user=request.user)
+        try:
+            connector = FedoraRepositoryConnector(instance, fedora_transaction, skip_container_check=False)
+            rep_bin_file = connector.save_binary_file(new_name, mimetype, binary_data)
+            soubor_instance = Soubor(
+                vazba=instance.soubory,
+                nazev=new_name,
+                mimetype=mimetype,
+                size_mb=rep_bin_file.size_mb,
+                path=rep_bin_file.url_without_domain,
+                sha_512=rep_bin_file.sha_512,
+            )
+            soubor_instance.active_transaction = fedora_transaction
+            soubor_instance.binary_data = binary_data
+            with transaction.atomic():
+                soubor_instance.save()
+                soubor_instance.zaznamenej_nahrani(request.user, uploaded_file.name)
+                self._create_rearchive_history_record(instance, request.user)
+                soubor_instance.close_active_transaction_when_finished = True
+                soubor_instance.save()
         except FedoraError as err:
-            logger.error("pas.api.SamostatnyNalezXmlUpdateView.post.fedora_error", extra={"error": err})
+            logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.fedora_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             return self._fail(
@@ -2605,7 +2585,7 @@ class SamostatnyNalezXmlUpdateView(SamostatnyNalezXmlBaseView):
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         except DatabaseError as err:
-            logger.error("pas.api.SamostatnyNalezXmlUpdateView.post.database_error", extra={"error": err})
+            logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.database_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             return self._fail(
@@ -2614,7 +2594,7 @@ class SamostatnyNalezXmlUpdateView(SamostatnyNalezXmlBaseView):
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         except Exception as err:
-            logger.error("pas.api.SamostatnyNalezXmlUpdateView.post.unexpected_error", extra={"error": err})
+            logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.unexpected_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             return self._fail(
@@ -2624,9 +2604,9 @@ class SamostatnyNalezXmlUpdateView(SamostatnyNalezXmlBaseView):
             )
 
         try:
-            self._republish_igsn_if_archived(instance)
+            self._update_igsn_if_archived(instance)
         except DoiWriteError as err:
-            logger.error("pas.api.SamostatnyNalezXmlUpdateView.post.igsn_error", extra={"error": err})
+            logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.igsn_error", extra={"error": err})
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.internal_error")},
@@ -2637,7 +2617,7 @@ class SamostatnyNalezXmlUpdateView(SamostatnyNalezXmlBaseView):
             metadata = FedoraRepositoryConnector(instance).get_metadata()
         except FedoraError as err:
             logger.error(
-                "pas.api.SamostatnyNalezXmlUpdateView.post.fedora_error_reading_metadata", extra={"error": err}
+                "pas.api.SamostatnyNalezFotografieUploadView.post.fedora_error_reading_metadata", extra={"error": err}
             )
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
@@ -2647,4 +2627,4 @@ class SamostatnyNalezXmlUpdateView(SamostatnyNalezXmlBaseView):
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        return self._success(log_entry, instance, metadata, notes)
+        return self._success(log_entry, instance, metadata, [])

@@ -130,7 +130,8 @@ Třídy
 
       Vrátí limity počtu požadavků z cache nebo ``CustomAdminSettings``.
 
-      Každý limit je slovník s klíči ``scope``, ``value``, ``rate`` a volitelně ``active`` (výchozí ``True``).
+      Každý limit je slovník s klíči ``scope``, ``rate`` a volitelně ``active`` (výchozí ``True``).
+      Pro scope ``user`` a ``ip`` je navíc povinný klíč ``value``.
 
       :raises ValidationError: Pokud nastavení nemá očekávanou strukturu nebo obsahuje nevalidní limit.
       :return: Seznam aktivních limitů.
@@ -313,9 +314,9 @@ Třídy
 
    Throttle pro API import samostatného nálezu řízený záznamy ``CustomAdminSettings`` (``pas_api/rate_limits``).
 
-   Pravidla jsou načítána z databáze (s cache) a aplikována v pořadí:
-   nejdříve pravidlo pro konkrétního uživatele, pak pro IP adresu.
-   Pokud žádné pravidlo neexistuje, požadavek je povolen.
+   Pravidla jsou načítána z databáze (s cache) a vyhodnocují se nezávisle podle scope:
+   ``user``, ``ip`` a ``record``. Požadavek je povolen pouze tehdy, pokud projde všemi
+   relevantními limity pro dané volání.
 
    **Metody:**
 
@@ -326,7 +327,7 @@ Třídy
       :param request: HTTP požadavek.
       :param view: Pohled zpracovávající požadavek.
 
-      :return: ``True`` pokud limit nebyl překročen nebo neexistuje, jinak ``False``.
+      :return: ``True`` pokud nebyl překročen žádný relevantní limit, jinak ``False``.
 
    .. py:method:: _check_limit()
 
@@ -365,11 +366,6 @@ Třídy
       Převede chybu na slovník pro API odpověď.
 
       :return: Slovníková reprezentace chyby.
-
-
-.. py:class:: ChangedField
-
-   Pole záznamu, jehož hodnota byla změněna XML aktualizací.
 
 
 .. py:class:: ImportValidationException
@@ -451,15 +447,15 @@ Třídy
 
       :return: Vrací ``True`` pokud má uživatel oprávnění ``pas_edit`` pro daný záznam.
 
-   .. py:method:: _republish_igsn_if_archived()
+   .. py:method:: _update_igsn_if_archived()
 
-      Pokud je záznam ve stavu SN4 (archivovaný), znovu publikuje jeho IGSN metadata.
+      Pokud je záznam ve stavu SN4 (archivovaný), aktualizuje jeho IGSN metadata.
 
       Volat po uzavření Fedora transakce, mimo atomický blok.
 
       :param instance: Aktualizovaný záznam samostatného nálezu.
 
-      :raises DoiWriteError: Pokud publikování IGSN selže.
+      :raises DoiWriteError: Pokud aktualizace IGSN selže.
 
    .. py:method:: _verify_content_digest()
 
@@ -470,9 +466,10 @@ Třídy
       vrátí chybovou zprávu.
 
       :param request: HTTP požadavek obsahující hlavičku ``Content-Digest``.
-      :param xml_file: Nahraný soubor; po zavolání je pozice čtení na začátku.
+      :param uploaded_file: Nahraný soubor; po zavolání je pozice čtení na začátku.
+      :param mismatch_status: Stavový kód použitý při neodpovídajícím SHA-512 hashi.
 
-      :return: Chybová zpráva jako řetězec, nebo None pokud je digest v pořádku.
+      :return: Dvojice ``(zpráva, status)`` nebo ``None`` pokud je digest v pořádku.
 
    .. py:method:: _validate_declared_schema_version()
 
@@ -665,9 +662,10 @@ Třídy
 
       Ověří, zda má uživatel oprávnění editovat evidenční číslo záznamu samostatného nálezu.
 
-      Nejprve volá rodičovskou implementaci. Pokud ta vrátí ``False``,
-      výsledek je zamítnut okamžitě. Pokud vrátí ``True``, ověří navíc,
-      že hlavní role uživatele odpovídá roli Archeolog nebo vyšší.
+      Pro tento endpoint se použijí standardní pravidla ``pas_edit`` s tím rozdílem,
+      že se ignoruje stav záznamu. Tím je umožněno, aby archeolog a vyšší mohl
+      aktualizovat evidenční číslo i u archivovaného nálezu. Následně se ještě
+      explicitně ověří, že hlavní role uživatele odpovídá roli Archeolog nebo vyšší.
 
       :param user: Uživatel provádějící požadavek.
       :param ident_cely: Identifikátor záznamu samostatného nálezu.
@@ -696,7 +694,8 @@ Třídy
 
       :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
                nebo chybou syntaxe volání (HTTP 400; chybějící parametr
-               ``evidencni_cislo`` nebo prázdná hodnota), nenalezeným
+               ``evidencni_cislo``), chybou dat (HTTP 422; prázdná nebo
+               příliš dlouhá hodnota), nenalezeným
                záznamem (HTTP 404), nedostatečnými oprávněními (HTTP 403),
                nebo interní chybou (HTTP 500).
 
@@ -713,42 +712,44 @@ Třídy
       :param new_value: Nová hodnota pole ``evidencni_cislo``.
 
 
-.. py:class:: SamostatnyNalezXmlUpdateView
+.. py:class:: SamostatnyNalezFotografieUploadView
 
-   Pohled pro aktualizaci záznamu samostatného nálezu z XML souboru přes POST požadavek.
+   Pohled pro nahrání jedné fotografie k existujícímu samostatnému nálezu.
 
    **Metody:**
 
-   .. py:method:: _create_history_record()
+   .. py:method:: _has_upload_permissions()
 
-      Vytvoří záznam historie pro XML aktualizaci samostatného nálezu.
+      Ověří, zda má uživatel oprávnění nahrát fotografii k danému nálezu.
 
-      Poznámka záznamu obsahuje čárkou oddělený seznam změn ve formátu ``old_value -> new_value``.
-      Je-li záznam ve stavu SN4 (archivovaný), zapíše se navíc záznam ``SN34``,
-      který obnoví datum archivace.
+      :param user: Uživatel provádějící požadavek.
+      :param ident_cely: Identifikátor záznamu samostatného nálezu.
+
+      :return: ``True`` pokud má uživatel oprávnění ``soubor_nahrat_pas``.
+
+   .. py:method:: _create_rearchive_history_record()
+
+      Pro archivovaný nález zapíše do historie tichou reachivaci ``SN34``.
 
       :param instance: Aktualizovaný záznam samostatného nálezu.
-      :param user: Uživatel, který provedl aktualizaci.
-      :param changed_fields: Seznam změněných polí záznamu.
+      :param user: Uživatel, který provedl upload fotografie.
 
    .. py:method:: post()
 
-      Aktualizuje existující záznam samostatného nálezu z XML souboru.
+      Nahraje fotografii k existujícímu záznamu samostatného nálezu.
 
-      Přijímá ``ident_cely`` záznamu jako součást URL a XML soubor v parametru ``file``
-      (multipart/form-data). XML musí odpovídat schématu AMČR 2.2. Dokument musí
-      obsahovat právě jeden element ``amcr:samostatny_nalez``. Pole ``ident_cely``
-      a ``stav`` jsou ignorovány — jejich hodnoty nelze přes tento endpoint měnit.
-      Pokud XML neobsahuje žádnou změnu oproti DB záznamu, požadavek selže s HTTP 422.
+      Přijímá ``ident_cely`` záznamu jako součást URL a jeden binární soubor v parametru
+      ``file`` (multipart/form-data). Soubor musí projít kontrolou ``Content-Digest``,
+      MIME typu a antiviru. Úspěšný upload uloží fotografii do Fedora repository,
+      založí záznam ``Soubor`` navázaný na nález a vrátí aktualizovaná XML metadata z Fedory.
 
-      :param request: HTTP požadavek obsahující XML soubor v poli ``file``.
+      :param request: HTTP požadavek obsahující fotografii v poli ``file``.
       :param ident_cely: Identifikátor aktualizovaného záznamu samostatného nálezu.
       :param format: Formát odpovědi.
 
       :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
-               nebo chybou syntaxe volání (HTTP 400), nenalezeným záznamem (HTTP 404),
-               nevalidním XML či žádnou změnou (HTTP 422),
-               nebo interní chybou (HTTP 500).
+               nebo chybu syntaxe volání (HTTP 400), nenalezený záznam (HTTP 404),
+               validační chybu souboru (HTTP 422), nebo interní chybu (HTTP 500).
 
 
 Funkce

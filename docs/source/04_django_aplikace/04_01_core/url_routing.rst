@@ -762,7 +762,7 @@ PAS
      - ``SamostatnyNalezEvidencniCisloPatchView.as_view()``
    * - ``api-update-xml``
      - ``api/nalez/<str:ident_cely>/update-xml``
-     - ``SamostatnyNalezXmlUpdateView.as_view()``
+     - ``SamostatnyNalezFotografieUploadView.as_view()``
 
 PIAN
 ----

@@ -1,6 +1,10 @@
 from django.urls import path
 from pas import views
-from pas.api import SamostatnyNalezEvidencniCisloPatchView, SamostatnyNalezXmlImportView, SamostatnyNalezXmlUpdateView
+from pas.api import (
+    SamostatnyNalezEvidencniCisloPatchView,
+    SamostatnyNalezFotografieUploadView,
+    SamostatnyNalezXmlImportView,
+)
 from pas.views import ProjektPasTableView, SamostatnyNalezListView, UzivatelSpolupraceListView
 
 app_name = "pas"
@@ -56,7 +60,7 @@ urlpatterns = [
     ),
     path(
         "api/nalez/<str:ident_cely>/update-xml",
-        SamostatnyNalezXmlUpdateView.as_view(),
+        SamostatnyNalezFotografieUploadView.as_view(),
         name="api-update-xml",
     ),
 ]
