@@ -367,6 +367,11 @@ Třídy
       :return: Slovníková reprezentace chyby.
 
 
+.. py:class:: ChangedField
+
+   Pole záznamu, jehož hodnota byla změněna XML aktualizací.
+
+
 .. py:class:: ImportValidationException
 
    Validační chyba importu nesoucí již vytvořené ``ImportValidationIssue`` instance.
@@ -445,6 +450,16 @@ Třídy
       :param ident_cely: Identifikátor záznamu samostatného nálezu.
 
       :return: Vrací ``True`` pokud má uživatel oprávnění ``pas_edit`` pro daný záznam.
+
+   .. py:method:: _republish_igsn_if_archived()
+
+      Pokud je záznam ve stavu SN4 (archivovaný), znovu publikuje jeho IGSN metadata.
+
+      Volat po uzavření Fedora transakce, mimo atomický blok.
+
+      :param instance: Aktualizovaný záznam samostatného nálezu.
+
+      :raises DoiWriteError: Pokud publikování IGSN selže.
 
    .. py:method:: _verify_content_digest()
 
@@ -646,6 +661,20 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: _has_edit_permissions()
+
+      Ověří, zda má uživatel oprávnění editovat evidenční číslo záznamu samostatného nálezu.
+
+      Nejprve volá rodičovskou implementaci. Pokud ta vrátí ``False``,
+      výsledek je zamítnut okamžitě. Pokud vrátí ``True``, ověří navíc,
+      že hlavní role uživatele odpovídá roli Archeolog nebo vyšší.
+
+      :param user: Uživatel provádějící požadavek.
+      :param ident_cely: Identifikátor záznamu samostatného nálezu.
+
+      :return: Vrací ``True`` pokud má uživatel oprávnění ``pas_edit`` pro daný záznam
+               a zároveň je jeho hlavní role Archeolog nebo vyšší.
+
    .. py:method:: patch()
 
       Aktualizuje pole ``evidencni_cislo`` záznamu samostatného nálezu.
@@ -675,7 +704,8 @@ Třídy
 
       Vytvoří záznam historie pro aktualizaci pole ``evidencni_cislo``.
 
-      Poznámka záznamu má formát ``old_value -> new_value``.
+      Poznámka záznamu má formát ``old_value -> new_value``. Je-li záznam ve stavu
+      SN4 (archivovaný), zapíše se navíc záznam ``SN34``, který obnoví datum archivace.
 
       :param instance: Aktualizovaný záznam samostatného nálezu.
       :param user: Uživatel, který provedl aktualizaci.
@@ -693,11 +723,13 @@ Třídy
 
       Vytvoří záznam historie pro XML aktualizaci samostatného nálezu.
 
-      Poznámka záznamu obsahuje čárkou oddělený seznam změněných polí v deterministickém pořadí.
+      Poznámka záznamu obsahuje čárkou oddělený seznam změn ve formátu ``old_value -> new_value``.
+      Je-li záznam ve stavu SN4 (archivovaný), zapíše se navíc záznam ``SN34``,
+      který obnoví datum archivace.
 
       :param instance: Aktualizovaný záznam samostatného nálezu.
       :param user: Uživatel, který provedl aktualizaci.
-      :param changed_fields: Seznam názvů polí změněných požadavkem.
+      :param changed_fields: Seznam změněných polí záznamu.
 
    .. py:method:: post()
 

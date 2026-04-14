@@ -17,8 +17,10 @@ from core.constants import (
     API_REQUEST_LOG_STATUS_SUCCESS,
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH,
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_UPDATE,
+    ARCHIVACE_SN,
     ODESLANI_SN,
     POTVRZENI_SN,
+    SN_ARCHIVOVANY,
     SN_ZAPSANY,
     ZAPSANI_SN,
 )
@@ -1366,7 +1368,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         """Připraví sdílená testovací data pro celou třídu."""
-        from core.constants import ROLE_BADATEL_ID
+        from core.constants import ROLE_ARCHEOLOG_ID, ROLE_BADATEL_ID
         from django.contrib.auth.models import Group
         from django.contrib.gis.geos import MultiPolygon, Point, Polygon
         from heslar.hesla import HESLAR_PROJEKT_TYP
@@ -1419,9 +1421,15 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
             )
 
         badatel_group, _ = Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
+        archeolog_group, _ = Group.objects.get_or_create(id=ROLE_ARCHEOLOG_ID, defaults={"name": "archeolog"})
 
         Permissions.objects.get_or_create(
             main_role=badatel_group,
+            action=Permissions.actionChoices.pas_edit,
+            defaults={"address_in_app": "pas/api/nalez", "base": True},
+        )
+        Permissions.objects.get_or_create(
+            main_role=archeolog_group,
             action=Permissions.actionChoices.pas_edit,
             defaults={"address_in_app": "pas/api/nalez", "base": True},
         )
@@ -1436,6 +1444,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
                 is_active=True,
                 organizace=cls.organizace,
             )
+        cls.user.groups.add(archeolog_group)
         cls.token, _ = Token.objects.get_or_create(user=cls.user)
 
         with patch(
@@ -1564,6 +1573,16 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("permission_denied", str(log.errors))
 
+    def test_badatel_with_pas_edit_permission_returns_403(self):
+        """Uživatel s rolí Badatel obdrží HTTP 403, i když má oprávnění ``pas_edit``."""
+        with patch("pas.api.check_permissions", return_value=True):
+            response = self._patch(IDENT_CELY, token=self.outsider_token.key)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("permission_denied", str(log.errors))
+
     def test_database_error_on_save_returns_500(self):
         """Chyba databáze při ukládání vrátí HTTP 500 a log se stavem FAILURE. Hodnota se neuloží."""
         original_value = self.nalez.evidencni_cislo
@@ -1627,6 +1646,33 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         history = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=AKTUALIZACE_SN)
         self.assertEqual(history.count(), 1)
         self.assertEqual(history.get().poznamka, f"{old_value} -> EC-2024-NEW")
+
+    def test_igsn_publish_called_when_stav_is_sn_archivovany(self):
+        """Úspěšný požadavek na archivovaný záznam (SN4) zavolá ``igsn_publish`` a vytvoří záznam ``SN34``."""
+        self.nalez.stav = SN_ARCHIVOVANY
+        self.nalez.save(update_fields=["stav"])
+
+        with patch("pas.models.SamostatnyNalez.igsn_publish") as mock_igsn:
+            response = self._patch(IDENT_CELY, evidencni_cislo="EC-ARCHIV-001")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_igsn.assert_called_once_with()
+        self.nalez.refresh_from_db()
+        self.assertEqual(self.nalez.evidencni_cislo, "EC-ARCHIV-001")
+        archivace = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN)
+        self.assertEqual(archivace.count(), 1)
+        self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
+
+    def test_igsn_publish_not_called_when_stav_is_not_sn_archivovany(self):
+        """Úspěšný požadavek na nezarchivovaný záznam nevolá ``igsn_publish`` ani nevytváří záznam ``SN34``."""
+        with patch("pas.models.SamostatnyNalez.igsn_publish") as mock_igsn:
+            response = self._patch(IDENT_CELY, evidencni_cislo="EC-NEZARCHIV-001")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_igsn.assert_not_called()
+        archivace = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN)
+        self.assertEqual(archivace.count(), 0)
+        self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
 
 
 class SamostatnyNalezXmlUpdateViewTests(TestCase):
@@ -1766,7 +1812,7 @@ class SamostatnyNalezXmlUpdateViewTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         """Připraví sdílená testovací data pro celou třídu."""
-        from core.constants import ROLE_BADATEL_ID
+        from core.constants import ROLE_ARCHEOLOG_ID, ROLE_BADATEL_ID
         from django.contrib.auth.models import Group
         from django.contrib.gis.geos import MultiPolygon, Point, Polygon
         from heslar.hesla import HESLAR_PROJEKT_TYP
@@ -1819,8 +1865,15 @@ class SamostatnyNalezXmlUpdateViewTests(TestCase):
             )
 
         badatel_group, _ = Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
+        archeolog_group, _ = Group.objects.get_or_create(id=ROLE_ARCHEOLOG_ID, defaults={"name": "archeolog"})
+
         Permissions.objects.get_or_create(
             main_role=badatel_group,
+            action=Permissions.actionChoices.pas_edit,
+            defaults={"address_in_app": "pas/api/nalez", "base": True},
+        )
+        Permissions.objects.get_or_create(
+            main_role=archeolog_group,
             action=Permissions.actionChoices.pas_edit,
             defaults={"address_in_app": "pas/api/nalez", "base": True},
         )
@@ -1835,6 +1888,7 @@ class SamostatnyNalezXmlUpdateViewTests(TestCase):
                 is_active=True,
                 organizace=cls.organizace,
             )
+        cls.user.groups.add(archeolog_group)
         cls.token, _ = Token.objects.get_or_create(user=cls.user)
 
         with patch(
@@ -2162,7 +2216,9 @@ class SamostatnyNalezXmlUpdateViewTests(TestCase):
         self.assertEqual(self.nalez.lokalizace, "metadata-failure")
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("fedora_error_reading_metadata", str(log.errors))
-        self._assert_update_history(1, expected_note="geom, lokalizace")
+        self._assert_update_history(
+            1, expected_note="SRID=4326;POINT (14.42 50.08) -> POINT(14.42 50.08), None -> metadata-failure"
+        )
 
     def test_success_returns_metadata_and_creates_history(self):
         """Platný XML update vrátí metadata, uloží změnu a vytvoří update historii."""
@@ -2185,4 +2241,53 @@ class SamostatnyNalezXmlUpdateViewTests(TestCase):
         self.assertEqual(self.nalez.lokalizace, "updated-successfully")
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
         self.assertEqual(log.ident_cely, IDENT_CELY)
-        self._assert_update_history(1, expected_note="geom, lokalizace")
+        self._assert_update_history(
+            1, expected_note="SRID=4326;POINT (14.42 50.08) -> POINT(14.42 50.08), None -> updated-successfully"
+        )
+
+    def test_igsn_publish_called_when_stav_is_sn_archivovany(self):
+        """Úspěšný XML update archivovaného záznamu (SN4) zavolá ``igsn_publish`` a vytvoří záznam ``SN34``."""
+        self.nalez.stav = SN_ARCHIVOVANY
+        self.nalez.save(update_fields=["stav"])
+
+        xml = self._minimal_nalez_xml(
+            ident_cely=IDENT_CELY,
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            lokalizace="archivovany-update",
+        )
+        schema = Mock()
+        schema.validate.return_value = True
+
+        with patch("pas.api.SamostatnyNalezXmlUpdateView._get_amcr_schema", return_value=schema), patch(
+            "pas.models.SamostatnyNalez.igsn_publish"
+        ) as mock_igsn:
+            response = self._post_xml(IDENT_CELY, xml)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_igsn.assert_called_once_with()
+        archivace = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN)
+        self.assertEqual(archivace.count(), 1)
+        self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
+
+    def test_igsn_publish_not_called_when_stav_is_not_sn_archivovany(self):
+        """Úspěšný XML update nezarchivovaného záznamu nevolá ``igsn_publish`` ani nevytváří záznam ``SN34``."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=IDENT_CELY,
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            lokalizace="nezarchivovany-update",
+        )
+        schema = Mock()
+        schema.validate.return_value = True
+
+        with patch("pas.api.SamostatnyNalezXmlUpdateView._get_amcr_schema", return_value=schema), patch(
+            "pas.models.SamostatnyNalez.igsn_publish"
+        ) as mock_igsn:
+            response = self._post_xml(IDENT_CELY, xml)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_igsn.assert_not_called()
+        archivace = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN)
+        self.assertEqual(archivace.count(), 0)
+        self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)

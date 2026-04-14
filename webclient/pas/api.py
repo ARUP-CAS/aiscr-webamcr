@@ -21,8 +21,10 @@ from core.constants import (
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH,
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT,
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_UPDATE,
+    ARCHIVACE_SN,
     ODESLANI_SN,
     POTVRZENI_SN,
+    SN_ARCHIVOVANY,
     SN_ZAPSANY,
     ZAPSANI_SN,
 )
@@ -49,6 +51,7 @@ from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie
 from lxml import etree
+from pid.exceptions import DoiWriteError
 from projekt.models import Projekt
 from rest_framework import serializers, status
 from rest_framework.parsers import MultiPartParser
@@ -56,7 +59,7 @@ from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import BaseThrottle
 from rest_framework.views import APIView
-from uzivatel.models import Organizace, Osoba
+from uzivatel.models import ROLE_ARCHEOLOG_ID, Organizace, Osoba
 from uzivatel.views import TokenAuthenticationBearer
 from xml_generator.generator import AMCR_NAMESPACE_URL, AMCR_XSD_URL
 
@@ -994,6 +997,15 @@ class ImportValidationIssue:
         return data
 
 
+@dataclass(frozen=True)
+class ChangedField:
+    """Pole záznamu, jehož hodnota byla změněna XML aktualizací."""
+
+    field_name: str
+    old_value: object
+    new_value: object
+
+
 class ImportValidationException(serializers.ValidationError):
     """Validační chyba importu nesoucí již vytvořené ``ImportValidationIssue`` instance."""
 
@@ -1216,6 +1228,20 @@ class SamostatnyNalezXmlBaseView(PasApiPermissionMixin, APIView):
         if not check_permissions(Permissions.actionChoices.pas_edit, user, ident_cely):
             return False
         return True
+
+    @staticmethod
+    def _republish_igsn_if_archived(instance: "SamostatnyNalez") -> None:
+        """
+        Pokud je záznam ve stavu SN4 (archivovaný), znovu publikuje jeho IGSN metadata.
+
+        Volat po uzavření Fedora transakce, mimo atomický blok.
+
+        :param instance: Aktualizovaný záznam samostatného nálezu.
+
+        :raises DoiWriteError: Pokud publikování IGSN selže.
+        """
+        if instance.stav == SN_ARCHIVOVANY:
+            instance.igsn_publish()
 
     @staticmethod
     def _verify_content_digest(request, xml_file) -> str | None:
@@ -2136,6 +2162,25 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
     http_method_names = ["patch"]
     _MAX_EVIDENCNI_CISLO_LENGTH = 255
 
+    @staticmethod
+    def _has_edit_permissions(user, ident_cely) -> bool:
+        """
+        Ověří, zda má uživatel oprávnění editovat evidenční číslo záznamu samostatného nálezu.
+
+        Nejprve volá rodičovskou implementaci. Pokud ta vrátí ``False``,
+        výsledek je zamítnut okamžitě. Pokud vrátí ``True``, ověří navíc,
+        že hlavní role uživatele odpovídá roli Archeolog nebo vyšší.
+
+        :param user: Uživatel provádějící požadavek.
+        :param ident_cely: Identifikátor záznamu samostatného nálezu.
+
+        :return: Vrací ``True`` pokud má uživatel oprávnění ``pas_edit`` pro daný záznam
+                 a zároveň je jeho hlavní role Archeolog nebo vyšší.
+        """
+        if not SamostatnyNalezXmlBaseView._has_edit_permissions(user, ident_cely):
+            return False
+        return user.hlavni_role.pk >= ROLE_ARCHEOLOG_ID
+
     def patch(self, request, ident_cely: str, format=None):
         """
         Aktualizuje pole ``evidencni_cislo`` záznamu samostatného nálezu.
@@ -2260,6 +2305,16 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
             )
 
         try:
+            self._republish_igsn_if_archived(instance)
+        except DoiWriteError as err:
+            logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.igsn_error", extra={"error": err})
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.doi_update_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        try:
             metadata = FedoraRepositoryConnector(instance).get_metadata()
         except FedoraError as err:
             logger.error(
@@ -2281,7 +2336,8 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
         """
         Vytvoří záznam historie pro aktualizaci pole ``evidencni_cislo``.
 
-        Poznámka záznamu má formát ``old_value -> new_value``.
+        Poznámka záznamu má formát ``old_value -> new_value``. Je-li záznam ve stavu
+        SN4 (archivovaný), zapíše se navíc záznam ``SN34``, který obnoví datum archivace.
 
         :param instance: Aktualizovaný záznam samostatného nálezu.
         :param user: Uživatel, který provedl aktualizaci.
@@ -2294,6 +2350,12 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
             vazba=instance.historie,
             poznamka=f"{old_value} -> {new_value}",
         )
+        if instance.stav == SN_ARCHIVOVANY:
+            Historie.objects.create(
+                typ_zmeny=ARCHIVACE_SN,
+                uzivatel=user,
+                vazba=instance.historie,
+            )
 
 
 # Fields that must never be updated via the XML update endpoint.
@@ -2304,22 +2366,33 @@ class SamostatnyNalezXmlUpdateView(SamostatnyNalezXmlBaseView):
     """Pohled pro aktualizaci záznamu samostatného nálezu z XML souboru přes POST požadavek."""
 
     @staticmethod
-    def _create_history_record(instance: SamostatnyNalez, user, changed_fields: list[str]) -> None:
+    def _create_history_record(instance: SamostatnyNalez, user, changed_fields: list[ChangedField]) -> None:
         """
         Vytvoří záznam historie pro XML aktualizaci samostatného nálezu.
 
-        Poznámka záznamu obsahuje čárkou oddělený seznam změněných polí v deterministickém pořadí.
+        Poznámka záznamu obsahuje čárkou oddělený seznam změn ve formátu ``old_value -> new_value``.
+        Je-li záznam ve stavu SN4 (archivovaný), zapíše se navíc záznam ``SN34``,
+        který obnoví datum archivace.
 
         :param instance: Aktualizovaný záznam samostatného nálezu.
         :param user: Uživatel, který provedl aktualizaci.
-        :param changed_fields: Seznam názvů polí změněných požadavkem.
+        :param changed_fields: Seznam změněných polí záznamu.
         """
+        poznamka = ", ".join(
+            f"{cf.old_value} -> {cf.new_value}" for cf in sorted(changed_fields, key=lambda cf: cf.field_name)
+        )
         Historie.objects.create(
             typ_zmeny=AKTUALIZACE_SN,
             uzivatel=user,
             vazba=instance.historie,
-            poznamka=", ".join(sorted(changed_fields)),
+            poznamka=poznamka,
         )
+        if instance.stav == SN_ARCHIVOVANY:
+            Historie.objects.create(
+                typ_zmeny=ARCHIVACE_SN,
+                uzivatel=user,
+                vazba=instance.historie,
+            )
 
     def post(self, request, ident_cely: str, format=None):
         """
@@ -2491,7 +2564,9 @@ class SamostatnyNalezXmlUpdateView(SamostatnyNalezXmlBaseView):
 
         # Compute which fields actually changed.
         changed_fields = [
-            field for field, new_val in serializer.validated_data.items() if getattr(instance, field) != new_val
+            ChangedField(field_name=field, old_value=getattr(instance, field), new_value=new_val)
+            for field, new_val in serializer.validated_data.items()
+            if getattr(instance, field) != new_val
         ]
         if not changed_fields:
             return self._fail(
@@ -2503,12 +2578,12 @@ class SamostatnyNalezXmlUpdateView(SamostatnyNalezXmlBaseView):
         fedora_transaction = FedoraTransaction(transaction_user=request.user)
         try:
             with transaction.atomic():
-                for field, new_val in serializer.validated_data.items():
-                    setattr(instance, field, new_val)
+                for changed_field in changed_fields:
+                    setattr(instance, changed_field.field_name, changed_field.new_value)
                 instance.active_transaction = fedora_transaction
                 # active_transaction is an attribute that defines a Fedora transaction attached to the objects,
                 # not a database field, so there is no point in using it as an argument in the save method.
-                instance.save(update_fields=changed_fields)
+                instance.save(update_fields=[cf.field_name for cf in changed_fields])
                 self._create_history_record(instance, request.user, changed_fields)
                 fedora_transaction.mark_transaction_as_closed()
         except ImportValidationException as exc:
@@ -2542,6 +2617,16 @@ class SamostatnyNalezXmlUpdateView(SamostatnyNalezXmlBaseView):
             logger.error("pas.api.SamostatnyNalezXmlUpdateView.post.unexpected_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        try:
+            self._republish_igsn_if_archived(instance)
+        except DoiWriteError as err:
+            logger.error("pas.api.SamostatnyNalezXmlUpdateView.post.igsn_error", extra={"error": err})
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.internal_error")},
