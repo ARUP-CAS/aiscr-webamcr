@@ -760,8 +760,8 @@ PAS
    * - ``api-patch-evidencni-cislo``
      - ``api/nalez/<str:ident_cely>/evidencni-cislo``
      - ``SamostatnyNalezEvidencniCisloPatchView.as_view()``
-   * - ``api-update-xml``
-     - ``api/nalez/<str:ident_cely>/update-xml``
+   * - ``api-upload-foto``
+     - ``api/nalez/<str:ident_cely>/upload-foto``
      - ``SamostatnyNalezFotografieUploadView.as_view()``
 
 PIAN

@@ -59,8 +59,8 @@ urlpatterns = [
         name="api-patch-evidencni-cislo",
     ),
     path(
-        "api/nalez/<str:ident_cely>/update-xml",
+        "api/nalez/<str:ident_cely>/upload-foto",
         SamostatnyNalezFotografieUploadView.as_view(),
-        name="api-update-xml",
+        name="api-upload-foto",
     ),
 ]

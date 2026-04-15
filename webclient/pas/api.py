@@ -2012,9 +2012,9 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
             )
 
         instance = None
+        fedora_transaction = FedoraTransaction(transaction_user=request.user)
         try:
             with transaction.atomic():
-                fedora_transaction = FedoraTransaction(transaction_user=request.user)
                 serializer_data = dict(data)
                 if nova_osoba is not None:
                     nova_osoba.active_transaction = fedora_transaction
@@ -2050,7 +2050,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 # not a database field, so there is no point in using it as an argument in the save method.
                 instance.save()
                 self._create_import_history_records(instance, request.user)
-                fedora_transaction.mark_transaction_as_closed()
+                transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
         except ImportValidationException as exc:
             logger.error("pas.api.SamostatnyNalezXmlImportView.post.import_validation_error", extra={"error": exc})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
@@ -2301,7 +2301,7 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
                 # not a database field, so there is no point in using it as an argument in the save method.
                 instance.save(update_fields=["evidencni_cislo"])
                 self._create_history_record(instance, request.user, old_evidencni_cislo, evidencni_cislo)
-                fedora_transaction.mark_transaction_as_closed()
+                transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
         except FedoraError as err:
             logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
@@ -2446,7 +2446,7 @@ class SamostatnyNalezFotografieUploadView(SamostatnyNalezXmlBaseView):
         except SamostatnyNalez.DoesNotExist:
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.not_found")},
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.not_found")},
                 status.HTTP_404_NOT_FOUND,
             )
 
@@ -2461,14 +2461,14 @@ class SamostatnyNalezFotografieUploadView(SamostatnyNalezXmlBaseView):
             )
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.permission_denied")},
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.permission_denied")},
                 status.HTTP_403_FORBIDDEN,
             )
 
         if uploaded_file is None:
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.missing_file")},
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.missing_file")},
                 status.HTTP_400_BAD_REQUEST,
             )
 
@@ -2581,7 +2581,7 @@ class SamostatnyNalezFotografieUploadView(SamostatnyNalezXmlBaseView):
                 fedora_transaction.rollback_transaction()
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.internal_error")},
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         except DatabaseError as err:
@@ -2590,7 +2590,7 @@ class SamostatnyNalezFotografieUploadView(SamostatnyNalezXmlBaseView):
                 fedora_transaction.rollback_transaction()
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.internal_error")},
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         except Exception as err:
@@ -2599,7 +2599,7 @@ class SamostatnyNalezFotografieUploadView(SamostatnyNalezXmlBaseView):
                 fedora_transaction.rollback_transaction()
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.internal_error")},
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -2609,7 +2609,7 @@ class SamostatnyNalezFotografieUploadView(SamostatnyNalezXmlBaseView):
             logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.igsn_error", extra={"error": err})
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.internal_error")},
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -2623,7 +2623,7 @@ class SamostatnyNalezFotografieUploadView(SamostatnyNalezXmlBaseView):
                 fedora_transaction.rollback_transaction()
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlUpdateView.post.fedora_error_reading_metadata")},
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.fedora_error_reading_metadata")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 

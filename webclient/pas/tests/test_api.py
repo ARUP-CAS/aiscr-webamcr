@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 
 XML_IMPORT_URL = reverse("pas:api-import-xml")
 PATCH_URL_NAME = "pas:api-patch-evidencni-cislo"
-XML_UPDATE_URL_NAME = "pas:api-update-xml"
+FOTO_UPLOAD_URL_NAME = "pas:api-upload-foto"
 IDENT_CELY = "C-202600009-N00007"
 
 
@@ -1274,6 +1274,24 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertTrue(SamostatnyNalez.objects.filter(ident_cely="SN-XML-LANG-001").exists())
         self._assert_log_success()
 
+    def test_import_closes_fedora_transaction_via_on_commit(self):
+        """Import registruje uzavření Fedora transakce přes ``transaction.on_commit()``."""
+        xml = self._minimal_nalez_xml(
+            ident_cely="SN-XML-ON-COMMIT-001",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+        fedora_transaction = Mock()
+
+        with patch("pas.api.FedoraTransaction", return_value=fedora_transaction), patch(
+            "pas.api.transaction.on_commit"
+        ) as mock_on_commit:
+            response = self._post_xml(xml)
+
+        self._assert_xml_success_response(response, "SN-XML-ON-COMMIT-001")
+        mock_on_commit.assert_called_once_with(fedora_transaction.mark_transaction_as_closed)
+        fedora_transaction.mark_transaction_as_closed.assert_not_called()
+
 
 class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
     """Testy pro ``SamostatnyNalezEvidencniCisloPatchView``."""
@@ -1755,6 +1773,19 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.assertEqual(history.count(), 1)
         self.assertEqual(history.get().poznamka, f"{old_value} -> EC-2024-NEW")
 
+    def test_patch_closes_fedora_transaction_via_on_commit(self):
+        """PATCH registruje uzavření Fedora transakce přes ``transaction.on_commit()``."""
+        fedora_transaction = Mock()
+
+        with patch("pas.api.FedoraTransaction", return_value=fedora_transaction), patch(
+            "pas.api.transaction.on_commit"
+        ) as mock_on_commit:
+            response = self._patch(IDENT_CELY, evidencni_cislo="EC-ON-COMMIT-001")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_on_commit.assert_called_once_with(fedora_transaction.mark_transaction_as_closed)
+        fedora_transaction.mark_transaction_as_closed.assert_not_called()
+
     def test_igsn_update_called_when_stav_is_sn_archivovany(self):
         """Úspěšný požadavek na archivovaný záznam (SN4) zavolá ``igsn_update`` a vytvoří záznam ``SN34``."""
         self.nalez.stav = SN_ARCHIVOVANY
@@ -1927,7 +1958,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
                 HTTP_CONTENT_DIGEST=content_digest or self._content_digest(file_bytes),
             )
 
-        url = reverse(XML_UPDATE_URL_NAME, kwargs={"ident_cely": ident_cely})
+        url = reverse(FOTO_UPLOAD_URL_NAME, kwargs={"ident_cely": ident_cely})
         data = {}
         if file_bytes is not None:
             data["file"] = SimpleUploadedFile(filename, file_bytes, content_type="application/octet-stream")
@@ -2059,7 +2090,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         Permissions.objects.get_or_create(
             main_role=archeolog_group,
             action=Permissions.actionChoices.soubor_nahrat_pas,
-            defaults={"address_in_app": "pas/api/nalez/update-xml", "base": True},
+            defaults={"address_in_app": "pas/api/nalez/upload-foto", "base": True},
         )
 
         with patch(
@@ -2277,7 +2308,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
     def test_mime_validation_uses_pas_api_path(self):
         """Upload předá ``check_mime_for_url`` skutečnou cestu PAS API endpointu."""
         photo = self._minimal_photo_bytes()
-        expected_path = reverse(XML_UPDATE_URL_NAME, kwargs={"ident_cely": IDENT_CELY})
+        expected_path = reverse(FOTO_UPLOAD_URL_NAME, kwargs={"ident_cely": IDENT_CELY})
 
         with patch("pas.api.Soubor.check_mime_for_url", return_value=True) as mock_mime:
             response = self._post_file(IDENT_CELY, photo)
