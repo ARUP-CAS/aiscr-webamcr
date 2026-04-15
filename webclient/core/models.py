@@ -41,8 +41,8 @@ from .constants import (
     API_REQUEST_LOG_STATUS_PROCESSING,
     API_REQUEST_LOG_STATUS_RECEIVED,
     API_REQUEST_LOG_STATUS_SUCCESS,
-    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_API_UPDATE,
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH,
+    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_FOTOGRAFIE_UPLOAD,
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT,
     DOKUMENT_RELATION_TYPE,
     NAHRANI_SBR,
@@ -1405,8 +1405,8 @@ class ApiRequestLog(models.Model):
             _("core.model.apiRequestLog.requestTarget.samostatnyNalezEvidencniCisloPatch"),
         ),
         (
-            API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_API_UPDATE,
-            _("core.model.apiRequestLog.requestTarget.samostatnyNalezApiUpdate"),
+            API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_FOTOGRAFIE_UPLOAD,
+            _("core.model.apiRequestLog.requestTarget.samostatnyNalezFotografieUpload"),
         ),
     )
 

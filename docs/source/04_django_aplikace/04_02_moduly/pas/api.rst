@@ -318,6 +318,10 @@ Třídy
    ``user``, ``ip`` a ``record``. Požadavek je povolen pouze tehdy, pokud projde všemi
    relevantními limity pro dané volání.
 
+   Scope ``record`` používá ``ident_cely`` z URL jako stabilní identifikátor konkrétního
+   záznamu. To je záměrné: jeden limit se tak sdílí mezi různými endpointy a akcemi nad
+   týmž ``SamostatnyNalez`` a nelze jej obejít střídáním například PATCH a upload endpointu.
+
    **Metody:**
 
    .. py:method:: allow_request()

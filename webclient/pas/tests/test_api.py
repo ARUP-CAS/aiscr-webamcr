@@ -15,8 +15,8 @@ from core.constants import (
     AKTUALIZACE_SN,
     API_REQUEST_LOG_STATUS_FAILURE,
     API_REQUEST_LOG_STATUS_SUCCESS,
-    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_API_UPDATE,
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH,
+    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_FOTOGRAFIE_UPLOAD,
     ARCHIVACE_SN,
     NAHRANI_SBR,
     ODESLANI_SN,
@@ -1989,7 +1989,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         self.assertEqual(ApiRequestLog.objects.count(), 1)
         log_entry = ApiRequestLog.objects.get()
         self.assertEqual(log_entry.status, expected_status)
-        self.assertEqual(log_entry.request_target, API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_API_UPDATE)
+        self.assertEqual(log_entry.request_target, API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_FOTOGRAFIE_UPLOAD)
         return log_entry
 
     def _assert_attached_files(

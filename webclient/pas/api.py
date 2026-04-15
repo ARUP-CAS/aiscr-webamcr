@@ -19,8 +19,8 @@ from core.constants import (
     API_REQUEST_LOG_STATUS_FAILURE,
     API_REQUEST_LOG_STATUS_PROCESSING,
     API_REQUEST_LOG_STATUS_SUCCESS,
-    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_API_UPDATE,
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH,
+    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_FOTOGRAFIE_UPLOAD,
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT,
     ARCHIVACE_SN,
     MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES,
@@ -900,6 +900,10 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
     Pravidla jsou načítána z databáze (s cache) a vyhodnocují se nezávisle podle scope:
     ``user``, ``ip`` a ``record``. Požadavek je povolen pouze tehdy, pokud projde všemi
     relevantními limity pro dané volání.
+
+    Scope ``record`` používá ``ident_cely`` z URL jako stabilní identifikátor konkrétního
+    záznamu. To je záměrné: jeden limit se tak sdílí mezi různými endpointy a akcemi nad
+    týmž ``SamostatnyNalez`` a nelze jej obejít střídáním například PATCH a upload endpointu.
     """
 
     def allow_request(self, request, view=None) -> bool:
@@ -924,6 +928,8 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
             if limit["scope"] == SCOPE_IP and self.ip_matches(client_ip, limit["value"]):
                 if not self._check_limit(f"throttle_ip_{client_ip}", limit["rate"], request):
                     return False
+            # Record-level throttle is intentionally keyed by ident_cely so the same
+            # limit bucket is shared across different actions/endpoints for one record.
             if limit["scope"] == SCOPE_RECORD and ident_cely:
                 if not self._check_limit(f"throttle_record_{ident_cely}", limit["rate"], request):
                     return False
@@ -2436,7 +2442,7 @@ class SamostatnyNalezFotografieUploadView(SamostatnyNalezXmlBaseView):
         log_entry = ApiRequestLog.objects.create(
             user=request.user,
             client_ip=self.get_client_ip(request),
-            request_target=API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_API_UPDATE,
+            request_target=API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_FOTOGRAFIE_UPLOAD,
             filename=uploaded_file.name if uploaded_file is not None else None,
             file_size=uploaded_file.size if uploaded_file is not None else None,
         )
