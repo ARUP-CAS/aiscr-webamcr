@@ -45,6 +45,7 @@ from pas.api import (
     SamostatnyNalezXmlImportView,
 )
 from pas.models import SamostatnyNalez
+from pid.exceptions import DoiWriteError
 from projekt.models import Projekt
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -557,6 +558,20 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertIn("detail", response.data)
         self._assert_log_failure()
 
+    def test_content_digest_invalid_format_returns_400(self):
+        """POST s hlavičkou ``Content-Digest`` v neplatném formátu vrátí HTTP 400."""
+        xml = self._minimal_nalez_xml(
+            ident_cely="SN-XML-BADDIGEST-FORMAT-001",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+
+        response = self._post_xml(xml, content_digest="sha-512=invalid")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("detail", response.data)
+        self._assert_log_failure()
+
     def test_empty_document_returns_400(self):
         """XML bez elementu ``amcr:samostatny_nalez`` vrátí HTTP 400."""
         response = self._post_xml(self._load_xml("empty_document.xml"))
@@ -754,6 +769,29 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-MULTI-001").exists())
         self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-MULTI-002").exists())
         self._assert_log_failure()
+
+    def test_invalid_root_content_returns_422(self):
+        """XML s dalším kořenovým potomkem kromě ``amcr:samostatny_nalez`` vrátí HTTP 422."""
+        xml = self._minimal_nalez_xml(
+            ident_cely="SN-XML-ROOT-001",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        ).decode("utf-8")
+        xml = xml.replace(
+            "</amcr:amcr>",
+            '  <amcr:unexpected xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/"/>\n</amcr:amcr>',
+        ).encode("utf-8")
+        schema = Mock()
+        schema.validate.return_value = True
+        schema.error_log = []
+
+        with patch("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema", return_value=schema):
+            response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("detail", response.data)
+        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-ROOT-001").exists())
+        self._assert_log_failure(response.data)
 
     def test_nonexistent_nalezce_returns_404(self):
         """XML s neexistujícím ``nalezce`` vrátí HTTP 404."""
@@ -980,6 +1018,31 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertIn("detail", response.data)
         self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-FORBIDDEN-002").exists())
+        self._assert_log_failure()
+
+    def test_user_without_pas_ulozeni_edit_permission_returns_403(self):
+        """Uživatel bez oprávnění ``pas_ulozeni_edit`` obdrží HTTP 403."""
+        xml = self._minimal_nalez_xml(
+            ident_cely="SN-XML-FORBIDDEN-ULOZENI-001",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+
+        def permission_side_effect(action, user, ident=None):
+            if action == "pas_edit":
+                return True
+            if action == "pas_ulozeni_edit":
+                return False
+            if action == "pas_zapsat_do_projektu" and ident == self.projekt.ident_cely:
+                return True
+            return True
+
+        with patch("pas.api.check_permissions", side_effect=permission_side_effect):
+            response = self._post_xml(xml, token=self.outsider_token.key)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("detail", response.data)
+        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-FORBIDDEN-ULOZENI-001").exists())
         self._assert_log_failure()
 
     def test_user_without_project_permission_returns_403(self):
@@ -1818,6 +1881,24 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.assertEqual(archivace.count(), 1)
         self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
 
+    def test_doi_write_error_on_archived_record_returns_500(self):
+        """Selhání IGSN aktualizace při PATCH na archivovaném záznamu vrátí HTTP 500 a vše vrátí rollbackem."""
+        self.nalez.stav = SN_ARCHIVOVANY
+        self.nalez.evidencni_cislo = "EC-DOI-OLD-001"
+        self.nalez.save(update_fields=["stav", "evidencni_cislo"])
+
+        with patch("pas.models.SamostatnyNalez.igsn_update", side_effect=DoiWriteError("doi write failed")):
+            response = self._patch(IDENT_CELY, evidencni_cislo="EC-DOI-NEW-001")
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("detail", response.data)
+        self.nalez.refresh_from_db()
+        self.assertEqual(self.nalez.evidencni_cislo, "EC-DOI-OLD-001")
+        self.assertEqual(Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=AKTUALIZACE_SN).count(), 0)
+        self.assertEqual(Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN).count(), 0)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("doi_update_error", str(log.errors))
+
     def test_target_organization_archeolog_can_patch_via_predano_organizace(self):
         """Archeolog cílového muzea je autorizován přes ``predano_organizace``."""
         response = self._patch(IDENT_CELY, evidencni_cislo="EC-TARGET-001", token=self.target_token.key)
@@ -2463,6 +2544,22 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         self.assertEqual(archivace.count(), 1)
         self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
         self._assert_attached_files(self.nalez, 1, expected_name="C202600009N00007F01.png")
+
+    def test_doi_write_error_on_archived_record_returns_500(self):
+        """Selhání IGSN aktualizace při uploadu na archivovaný záznam vrátí HTTP 500 a soubor se neuloží."""
+        self.nalez.stav = SN_ARCHIVOVANY
+        self.nalez.save(update_fields=["stav"])
+        photo = self._minimal_photo_bytes()
+
+        with patch("pas.models.SamostatnyNalez.igsn_update", side_effect=DoiWriteError("doi write failed")):
+            response = self._post_file(IDENT_CELY, photo)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("detail", response.data)
+        self._assert_attached_files(self.nalez, 0)
+        self.assertEqual(Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN).count(), 0)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("internal_error", str(log.errors))
 
     def test_igsn_update_not_called_when_stav_is_not_sn_archivovany(self):
         """Úspěšný upload nezarchivovaného záznamu nevolá ``igsn_update`` ani nevytváří ``SN34``."""
