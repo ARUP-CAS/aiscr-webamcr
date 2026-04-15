@@ -40,6 +40,7 @@ from selenium.common.exceptions import (
 )
 from selenium.webdriver.chrome.webdriver import WebDriver as ChromeDriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
 from uzivatel.models import User
 from xml_generator.generator import DocumentGenerator
 from xml_generator.models import ModelWithMetadata
@@ -721,6 +722,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
 
         try:
+            WebDriverWait(self.driver, 5).until(
+                lambda d: d.execute_script("return typeof jQuery === 'undefined' || jQuery.active == 0")
+            )
+        except Exception:
+            pass
+        try:
             self.driver.quit()
         except Exception:
             pass
@@ -921,6 +928,29 @@ return new Date('2025-06-28T12:00:00Z');}};
         :return: Výstup funkce odpovídající implementované logice.
         """
         return USERS[type]["PASSWORD"]
+
+    def select_nth_selectpicker_option(self, field_id, index=0):
+        """
+        Vybere neprázdnou, neskrytou volbu v selectpickeru na zadané pozici.
+
+        :param field_id: HTML id atribut podkladového ``<select>`` elementu (bez ``#``).
+        :param index: Index volby mezi neprázdnými neskrytými volbami (výchozí 0 = první).
+        """
+        result = self.driver.execute_script(
+            """
+            var sel = document.getElementById(arguments[0]);
+            if (!sel) { return 'element not found: ' + arguments[0]; }
+            var opts = Array.from(sel.options).filter(function(o) { return !o.hidden && o.value !== ''; });
+            var idx = arguments[1];
+            if (idx >= opts.length) { return 'index ' + idx + ' out of range, ' + opts.length + ' options available'; }
+            $(sel).selectpicker('val', opts[idx].value).trigger('change');
+            return null;
+            """,
+            field_id,
+            index,
+        )
+        if result:
+            raise AssertionError(f"select_nth_selectpicker_option('{field_id}', {index}): {result}")
 
     def _select_value_select_picker(self, field_id, selected_value):
         """
