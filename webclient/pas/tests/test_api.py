@@ -2626,3 +2626,178 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         self.assertEqual(upload_response.status_code, status.HTTP_200_OK)
         self.assertEqual(throttled_patch_response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
         self.assertEqual(other_record_patch_response.status_code, status.HTTP_200_OK)
+
+
+class SamostatnyNalezGetCreateOrgTests(TestCase):
+    """Testy pro ``SamostatnyNalez.get_create_org``."""
+
+    databases = {"default", "urgent"}
+
+    @classmethod
+    def setUpTestData(cls):
+        """Připraví sdílená testovací data pro celou třídu."""
+        from django.contrib.gis.geos import MultiPolygon, Point, Polygon
+        from heslar.hesla import HESLAR_PROJEKT_TYP
+        from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, TYP_PROJEKTU_PRUZKUM_ID
+        from heslar.models import RuianKatastr, RuianKraj, RuianOkres
+
+        heslare_typ_org, _ = HeslarNazev.objects.get_or_create(
+            id=HESLAR_ORGANIZACE_TYP, defaults={"nazev": "typ_organizace"}
+        )
+        typ_organizace, _ = Heslar.objects.get_or_create(
+            nazev_heslare=heslare_typ_org,
+            zkratka="T",
+            defaults={"ident_cely": "HES-TYPORG-GCORG-001", "heslo": "Testovací typ"},
+        )
+        heslare_licence, _ = HeslarNazev.objects.get_or_create(id=HESLAR_LICENCE, defaults={"nazev": "licence"})
+        licence, _ = Heslar.objects.get_or_create(
+            nazev_heslare=heslare_licence,
+            zkratka="L",
+            defaults={"ident_cely": "HES-LIC-GCORG-001", "heslo": "Testovací licence"},
+        )
+        heslare_pristupnost, _ = HeslarNazev.objects.get_or_create(
+            id=HESLAR_PRISTUPNOST, defaults={"nazev": "pristupnost"}
+        )
+        cls.pristupnost, _ = Heslar.objects.get_or_create(
+            nazev_heslare=heslare_pristupnost,
+            zkratka="A",
+            defaults={"ident_cely": "HES-PRST-GCORG-001", "heslo": "Veřejný"},
+        )
+        Heslar.objects.get_or_create(
+            id=PRISTUPNOST_ANONYM_ID,
+            defaults={
+                "ident_cely": "HES-000865",
+                "nazev_heslare": heslare_pristupnost,
+                "zkratka": "AN",
+                "heslo": "Anonym",
+                "heslo_en": "Anonymous",
+            },
+        )
+
+        with patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None):
+            cls.org_a, _ = Organizace.objects.get_or_create(
+                ident_cely="ORG-GCORG-A",
+                defaults={
+                    "nazev": "Testovací org A",
+                    "nazev_zkraceny": "TORA",
+                    "typ_organizace": typ_organizace,
+                    "zverejneni_pristupnost": cls.pristupnost,
+                    "licence": licence,
+                },
+            )
+            cls.org_b, _ = Organizace.objects.get_or_create(
+                ident_cely="ORG-GCORG-B",
+                defaults={
+                    "nazev": "Testovací org B",
+                    "nazev_zkraceny": "TORB",
+                    "typ_organizace": typ_organizace,
+                    "zverejneni_pristupnost": cls.pristupnost,
+                    "licence": licence,
+                },
+            )
+
+        kraj, _ = RuianKraj.objects.get_or_create(
+            kod=96,
+            defaults={
+                "nazev": "Testovací kraj GCORG",
+                "nazev_en": "Test Region GCORG",
+                "rada_id": "G",
+                "definicni_bod": Point(15.0, 50.0, srid=4326),
+                "hranice": MultiPolygon(Polygon(((15.0, 50.0), (15.1, 50.0), (15.1, 50.1), (15.0, 50.0))), srid=4326),
+            },
+        )
+        okres, _ = RuianOkres.objects.get_or_create(
+            kod=9996,
+            defaults={
+                "nazev": "Testovací okres GCORG",
+                "nazev_en": "Test District GCORG",
+                "spz": "TG",
+                "kraj": kraj,
+                "definicni_bod": Point(15.0, 50.0, srid=4326),
+                "hranice": MultiPolygon(Polygon(((15.0, 50.0), (15.1, 50.0), (15.1, 50.1), (15.0, 50.0))), srid=4326),
+            },
+        )
+        katastr, _ = RuianKatastr.objects.get_or_create(
+            kod=999996,
+            defaults={
+                "nazev": "Testovací katastr GCORG",
+                "okres": okres,
+                "definicni_bod": Point(15.0, 50.0, srid=4326),
+                "hranice": MultiPolygon(Polygon(((15.0, 50.0), (15.1, 50.0), (15.1, 50.1), (15.0, 50.0))), srid=4326),
+            },
+        )
+
+        heslare_typ_projektu, _ = HeslarNazev.objects.get_or_create(
+            id=HESLAR_PROJEKT_TYP, defaults={"nazev": "typ_projektu"}
+        )
+        survey_typ_projektu, _ = Heslar.objects.get_or_create(
+            id=TYP_PROJEKTU_PRUZKUM_ID,
+            defaults={
+                "ident_cely": TYP_PROJEKTU_PRUZKUM_ID,
+                "nazev_heslare": heslare_typ_projektu,
+                "zkratka": "P",
+                "heslo": "Průzkum",
+                "heslo_en": "Survey",
+            },
+        )
+
+        with patch("projekt.signals.projekt_post_save", lambda **kw: None), patch(
+            "xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None
+        ):
+            cls.projekt_with_org, _ = Projekt.objects.get_or_create(
+                ident_cely="M-202400096A",
+                defaults={
+                    "organizace": cls.org_a,
+                    "hlavni_katastr": katastr,
+                    "typ_projektu": survey_typ_projektu,
+                },
+            )
+            cls.projekt_without_org, _ = Projekt.objects.get_or_create(
+                ident_cely="M-202400096B",
+                defaults={
+                    "organizace": None,
+                    "hlavni_katastr": katastr,
+                    "typ_projektu": survey_typ_projektu,
+                },
+            )
+
+    def _make_nalez(self, ident_cely, projekt, predano_organizace=None):
+        """Vytvoří instanci ``SamostatnyNalez`` bez uložení do DB."""
+        nalez = SamostatnyNalez.__new__(SamostatnyNalez)
+        nalez.projekt = projekt
+        nalez.predano_organizace = predano_organizace
+        nalez.predano_organizace_id = predano_organizace.pk if predano_organizace else None
+        nalez.projekt_id = projekt.pk
+        return nalez
+
+    def test_projekt_without_organizace_returns_empty_tuple(self):
+        """``get_create_org`` vrátí prázdnou n-tici, pokud projekt nemá organizaci."""
+        nalez = self._make_nalez("GCORG-001", self.projekt_without_org)
+
+        result = nalez.get_create_org()
+
+        self.assertEqual(result, ())
+
+    def test_projekt_with_organizace_and_no_predano_returns_single_org(self):
+        """``get_create_org`` vrátí n-tici s jednou organizací projektu, pokud není nastavena ``predano_organizace``."""
+        nalez = self._make_nalez("GCORG-002", self.projekt_with_org)
+
+        result = nalez.get_create_org()
+
+        self.assertEqual(result, (self.org_a,))
+
+    def test_same_predano_organizace_as_projekt_returns_single_org(self):
+        """``get_create_org`` nevrátí duplikát, pokud ``predano_organizace`` je shodná s organizací projektu."""
+        nalez = self._make_nalez("GCORG-003", self.projekt_with_org, predano_organizace=self.org_a)
+
+        result = nalez.get_create_org()
+
+        self.assertEqual(result, (self.org_a,))
+
+    def test_different_predano_organizace_returns_both_orgs(self):
+        """``get_create_org`` vrátí obě organizace, pokud ``predano_organizace`` se liší od organizace projektu."""
+        nalez = self._make_nalez("GCORG-004", self.projekt_with_org, predano_organizace=self.org_b)
+
+        result = nalez.get_create_org()
+
+        self.assertEqual(result, (self.org_a, self.org_b))

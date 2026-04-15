@@ -481,6 +481,14 @@ class PasApiPermissionMixin:
                         )
                     }
                 )
+            if limit["scope"] == SCOPE_RECORD and "value" in limit:
+                raise ValidationError(
+                    {
+                        "value": _(
+                            "pas.api.PasApiPermissionMixin.validate_rate_limits.record_scope_unexpected_value"
+                        ).format(index=index)
+                    }
+                )
             if limit["scope"] == SCOPE_IP:
                 if not isinstance(limit["value"], str) or not _is_valid_ip_rule_value(limit["value"]):
                     raise ValidationError(
@@ -1212,8 +1220,8 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
         log_entry.save(update_fields=["status", "finished_at", "errors"])
         return Response(body, status=http_status)
 
-    @staticmethod
-    def _has_edit_permissions(user, ident_cely) -> bool:
+    @classmethod
+    def _has_edit_permissions(cls, user, ident_cely) -> bool:
         """
         Ověří, zda má uživatel oprávnění editovat zadaný samostatný nález.
 
@@ -1258,14 +1266,14 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
         header = request.headers.get("Content-Digest")
         if not header:
             return (
-                _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.missing_digest"),
+                _("pas.api.PasApiBaseView._verify_content_digest.missing_digest"),
                 status.HTTP_400_BAD_REQUEST,
             )
 
         prefix = "sha-512=:"
         if not header.startswith(prefix) or not header.endswith(":"):
             return (
-                _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.invalid_format"),
+                _("pas.api.PasApiBaseView._verify_content_digest.invalid_format"),
                 status.HTTP_400_BAD_REQUEST,
             )
 
@@ -1273,13 +1281,14 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
             expected = base64.b64decode(header[len(prefix) : -1])
         except (ValueError, TypeError):
             return (
-                _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.invalid_base64"),
+                _("pas.api.PasApiBaseView._verify_content_digest.invalid_base64"),
                 status.HTTP_400_BAD_REQUEST,
             )
 
         actual = hashlib.sha512(uploaded_file.read()).digest()
+        uploaded_file.seek(0)
         if actual != expected:
-            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.digest_mismatch"), mismatch_status
+            return _("pas.api.PasApiBaseView._verify_content_digest.digest_mismatch"), mismatch_status
 
         return None
 
@@ -1903,7 +1912,6 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
         if digest_error:
             digest_message, digest_status = digest_error
             return self._fail(log_entry, {"detail": digest_message}, digest_status)
-        xml_file.seek(0)
 
         try:
             parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
@@ -2199,8 +2207,8 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
     # 255 is an API-level policy limit enforced here, not derived from the model field.
     _MAX_EVIDENCNI_CISLO_LENGTH = 255
 
-    @staticmethod
-    def _has_edit_permissions(user, ident_cely) -> bool:
+    @classmethod
+    def _has_edit_permissions(cls, user, ident_cely) -> bool:
         """
         Ověří, zda má uživatel oprávnění editovat evidenční číslo záznamu samostatného nálezu.
 
@@ -2501,6 +2509,8 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
                 status.HTTP_403_FORBIDDEN,
             )
 
+        # File presence is checked after the permission check intentionally: returning 403
+        # before 400 avoids leaking whether the endpoint accepts files to unauthorized callers.
         if uploaded_file is None:
             return self._fail(
                 log_entry,
@@ -2537,7 +2547,6 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
         if digest_error:
             digest_message, digest_status = digest_error
             return self._fail(log_entry, {"detail": digest_message}, digest_status)
-        uploaded_file.seek(0)
 
         binary_data = io.BytesIO(uploaded_file.read())
         antivirus_result = Soubor.check_antivirus(binary_data)

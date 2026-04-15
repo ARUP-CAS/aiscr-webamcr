@@ -679,6 +679,16 @@ class PasApiPermissionTests(TestCase):
             IpBlacklistPermission.validate_rate_limits([{"scope": "record", "rate": "10/m", "active": True}])
         )
 
+    def test_validate_rate_limits_raises_for_record_scope_with_value(self):
+        """`record` scope nesmí obsahovat klíč `value` — pravděpodobná záměna s `user` nebo `ip`."""
+        with self.assertRaisesRegex(
+            ValidationError,
+            "pas.api.PasApiPermissionMixin.validate_rate_limits.record_scope_unexpected_value",
+        ):
+            IpBlacklistPermission.validate_rate_limits(
+                [{"scope": "record", "value": "some-user", "rate": "10/m", "active": True}]
+            )
+
     # --- IPv6 ---
 
     def test_validate_access_rules_accepts_ipv6_address(self):
