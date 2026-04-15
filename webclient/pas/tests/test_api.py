@@ -1682,6 +1682,21 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("evidencni_cislo_too_long", str(log.errors))
 
+    def test_same_evidencni_cislo_value_returns_422(self):
+        """Odeslaná hodnota shodná s aktuální vrátí HTTP 422 a log se stavem FAILURE bez zápisu."""
+        self.nalez.evidencni_cislo = "EC-SAME-001"
+        self.nalez.save(update_fields=["evidencni_cislo"])
+
+        response = self._patch(IDENT_CELY, evidencni_cislo="EC-SAME-001")
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("no_change", str(log.errors))
+        self.nalez.refresh_from_db()
+        self.assertEqual(self.nalez.evidencni_cislo, "EC-SAME-001")
+        self.assertEqual(Historie.objects.filter(vazba=self.nalez.historie).count(), 0)
+
     def test_nonexistent_ident_cely_returns_404(self):
         """Neexistující ``ident_cely`` vrátí HTTP 404 a log se stavem FAILURE."""
         response = self._patch("C-000000000-N99999")
@@ -1843,6 +1858,33 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.assertEqual(self.nalez.evidencni_cislo, "EC-RATE-001")
         self.assertEqual(self.nalez_second.evidencni_cislo, "EC-RATE-002")
         self.assertEqual(ApiRequestLog.objects.count(), 2)
+
+    def test_archeolog_can_patch_archived_record(self):
+        """Archeolog smí aktualizovat evidenční číslo záznamu ve stavu SN4 (skip_status=True)."""
+        self.nalez.stav = SN_ARCHIVOVANY
+        self.nalez.save(update_fields=["stav"])
+
+        with patch("pas.models.SamostatnyNalez.igsn_update"):
+            response = self._patch(IDENT_CELY, evidencni_cislo="EC-ARCHIV-SKIP-001")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.nalez.refresh_from_db()
+        self.assertEqual(self.nalez.evidencni_cislo, "EC-ARCHIV-SKIP-001")
+        self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
+
+    def test_badatel_cannot_patch_archived_record(self):
+        """Badatel nesmí aktualizovat evidenční číslo záznamu ve stavu SN4, i když splňuje vlastnictví."""
+        self.nalez.stav = SN_ARCHIVOVANY
+        self.nalez.save(update_fields=["stav"])
+
+        response = self._patch(IDENT_CELY, token=self.badatel_token.key, evidencni_cislo="EC-ARCHIV-BADATEL-001")
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("permission_denied", str(log.errors))
+        self.nalez.refresh_from_db()
+        self.assertNotEqual(self.nalez.evidencni_cislo, "EC-ARCHIV-BADATEL-001")
 
 
 class SamostatnyNalezFotografieUploadViewTests(TestCase):

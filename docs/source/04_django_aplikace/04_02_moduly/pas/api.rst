@@ -405,9 +405,9 @@ Třídy
    Serializer pro import záznamu samostatného nálezu z XML; FK pole jsou identifikována přes ident_cely.
 
 
-.. py:class:: SamostatnyNalezXmlBaseView
+.. py:class:: PasApiBaseView
 
-   Základní pohled pro XML import/aktualizaci záznamu samostatného nálezu.
+   Základní pohled sdílený všemi PAS API endpointy.
 
    **Metody:**
 
@@ -434,14 +434,6 @@ Třídy
 
       :return: Chybová HTTP odpověď se zadaným tělem a stavovým kódem.
 
-   .. py:method:: _validation_status()
-
-      Určí HTTP stavový kód odpovědi na základě typů validačních chyb.
-
-      :param errors: Seznam validačních chyb importu.
-
-      :return: HTTP stavový kód odpovídající nejzávažnějšímu typu chyby.
-
    .. py:method:: _has_edit_permissions()
 
       Ověří, zda má uživatel oprávnění editovat zadaný samostatný nález.
@@ -454,8 +446,6 @@ Třídy
    .. py:method:: _update_igsn_if_archived()
 
       Pokud je záznam ve stavu SN4 (archivovaný), aktualizuje jeho IGSN metadata.
-
-      Volat po uzavření Fedora transakce, mimo atomický blok.
 
       :param instance: Aktualizovaný záznam samostatného nálezu.
 
@@ -474,6 +464,37 @@ Třídy
       :param mismatch_status: Stavový kód použitý při neodpovídajícím SHA-512 hashi.
 
       :return: Dvojice ``(zpráva, status)`` nebo ``None`` pokud je digest v pořádku.
+
+   .. py:method:: _success()
+
+      Označí log záznam jako úspěšný, zaloguje výsledek a vrátí XML odpověď s metadaty.
+
+      Tato metoda vrací surové XML bajty přes ``HttpResponse`` místo DRF ``Response``,
+      aby nedošlo k zásahu rendererů DRF do XML výstupu. Chybové odpovědi v téže view
+      jsou vytvářeny metodou ``_fail()``, která používá DRF ``Response`` pro standardní
+      serializaci strukturovaného JSON těla.
+
+      :param log_entry: Záznam logu API požadavku.
+      :param instance: Uložený záznam samostatného nálezu.
+      :param metadata: XML metadata vrácená Fedora repozitářem.
+      :param notes: Seznam poznámek o ignorovaných atributech ``xml:lang``.
+
+      :return: HTTP odpověď s XML metadaty a stavovým kódem 200.
+
+
+.. py:class:: SamostatnyNalezXmlBaseView
+
+   Základní pohled pro XML import záznamu samostatného nálezu.
+
+   **Metody:**
+
+   .. py:method:: _validation_status()
+
+      Určí HTTP stavový kód odpovědi na základě typů validačních chyb.
+
+      :param errors: Seznam validačních chyb importu.
+
+      :return: HTTP stavový kód odpovídající nejzávažnějšímu typu chyby.
 
    .. py:method:: _validate_declared_schema_version()
 
@@ -582,22 +603,6 @@ Třídy
 
       :return: Dvojice ``(ident_cely_osoby, nova_osoba)``.
 
-   .. py:method:: _success()
-
-      Označí log záznam jako úspěšný, zaloguje výsledek a vrátí XML odpověď s metadaty.
-
-      Tato metoda vrací surové XML bajty přes ``HttpResponse`` místo DRF ``Response``,
-      aby nedošlo k zásahu rendererů DRF do XML výstupu. Chybové odpovědi v téže view
-      jsou vytvářeny metodou ``_fail()``, která používá DRF ``Response`` pro standardní
-      serializaci strukturovaného JSON těla.
-
-      :param log_entry: Záznam logu API požadavku.
-      :param instance: Uložený záznam samostatného nálezu.
-      :param metadata: XML metadata vrácená Fedora repozitářem.
-      :param notes: Seznam poznámek o ignorovaných atributech ``xml:lang``.
-
-      :return: HTTP odpověď s XML metadaty a stavovým kódem 200.
-
    .. py:method:: _build_schema_validation_doc()
 
       Vytvoří kopii dokumentu upravenou pro validaci proti XSD schématu.
@@ -666,10 +671,12 @@ Třídy
 
       Ověří, zda má uživatel oprávnění editovat evidenční číslo záznamu samostatného nálezu.
 
-      Pro tento endpoint se použijí standardní pravidla ``pas_edit`` s tím rozdílem,
-      že se ignoruje stav záznamu. Tím je umožněno, aby archeolog a vyšší mohl
-      aktualizovat evidenční číslo i u archivovaného nálezu. Následně se ještě
-      explicitně ověří, že hlavní role uživatele odpovídá roli Archeolog nebo vyšší.
+      Oprávněný je takový uživatel, který splňuje standardní pravidla pro editaci nálezu
+      s těmito úpravami:
+
+      - pro aktualizaci ev. čísla nikdy není autorizován badatel (operaci může užívat
+        pouze archeolog a výše)
+      - pokud je autorizován archeolog, nález může být v libovolném stavu (vč. archivovaného)
 
       :param user: Uživatel provádějící požadavek.
       :param ident_cely: Identifikátor záznamu samostatného nálezu.
@@ -698,8 +705,8 @@ Třídy
 
       :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
                nebo chybou syntaxe volání (HTTP 400; chybějící parametr
-               ``evidencni_cislo``), chybou dat (HTTP 422; prázdná nebo
-               příliš dlouhá hodnota), nenalezeným
+               ``evidencni_cislo``), chybou dat (HTTP 422; prázdná, příliš
+               dlouhá nebo shodná hodnota), nenalezeným
                záznamem (HTTP 404), nedostatečnými oprávněními (HTTP 403),
                nebo interní chybou (HTTP 500).
 
@@ -726,10 +733,18 @@ Třídy
 
       Ověří, zda má uživatel oprávnění nahrát fotografii k danému nálezu.
 
+      Oprávněný je takový uživatel, který splňuje standardní pravidla pro editaci nálezu
+      s těmito úpravami:
+
+      - pro nahrání fotografie nikdy není autorizován badatel (operaci může užívat
+        pouze archeolog a výše)
+      - pokud je autorizován archeolog, nález může být v libovolném stavu (vč. archivovaného)
+
       :param user: Uživatel provádějící požadavek.
       :param ident_cely: Identifikátor záznamu samostatného nálezu.
 
-      :return: ``True`` pokud má uživatel oprávnění ``soubor_nahrat_pas``.
+      :return: ``True`` pokud má uživatel oprávnění ``soubor_nahrat_pas`` pro daný záznam
+               a zároveň je jeho hlavní role Archeolog nebo vyšší.
 
    .. py:method:: _create_rearchive_history_record()
 

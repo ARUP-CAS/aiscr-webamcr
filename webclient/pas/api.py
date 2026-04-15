@@ -1159,8 +1159,8 @@ class SamostatnyNalezXmlImportSerializer(serializers.ModelSerializer):
         ]
 
 
-class SamostatnyNalezXmlBaseView(PasApiPermissionMixin, APIView):
-    """Základní pohled pro XML import/aktualizaci záznamu samostatného nálezu."""
+class PasApiBaseView(PasApiPermissionMixin, APIView):
+    """Základní pohled sdílený všemi PAS API endpointy."""
 
     authentication_classes = [TokenAuthenticationBearer]
     permission_classes = [
@@ -1173,12 +1173,6 @@ class SamostatnyNalezXmlBaseView(PasApiPermissionMixin, APIView):
     ]
     throttle_classes = [ApiImportThrottle]
     parser_classes = [MultiPartParser]
-    http_method_names = ["post"]
-
-    _AMCR_NS = "https://api.aiscr.cz/schema/amcr/2.2/"
-    _XML_NS = "http://www.w3.org/XML/1998/namespace"
-    _XSI_NS = "http://www.w3.org/2001/XMLSchema-instance"
-    _amcr_schema_cache: dict[str, tuple[etree.XMLSchema, float]] = {}  # url -> (schema, inserted_at)
 
     def dispatch(self, request, *args, **kwargs):
         """
@@ -1194,7 +1188,7 @@ class SamostatnyNalezXmlBaseView(PasApiPermissionMixin, APIView):
         :return: HTTP odpověď view nebo okamžitá odpověď ``503`` při vypnutém API.
         """
         if self.get_access_mode() == ACCESS_MODE_CLOSED:
-            logger.warning("pas.api.SamostatnyNalezXmlBaseView.dispatch.closed")
+            logger.warning("pas.api.PasApiBaseView.dispatch.closed")
             return JsonResponse(
                 {"detail": _("pas.api.ApiAccessModePermission.closed")},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -1218,20 +1212,6 @@ class SamostatnyNalezXmlBaseView(PasApiPermissionMixin, APIView):
         log_entry.save(update_fields=["status", "finished_at", "errors"])
         return Response(body, status=http_status)
 
-    def _validation_status(self, errors: list[ImportValidationIssue]) -> int:
-        """
-        Určí HTTP stavový kód odpovědi na základě typů validačních chyb.
-
-        :param errors: Seznam validačních chyb importu.
-
-        :return: HTTP stavový kód odpovídající nejzávažnějšímu typu chyby.
-        """
-        if any(error.error_type == ImportErrorType.PERMISSION_ERROR for error in errors):
-            return status.HTTP_403_FORBIDDEN
-        if any(error.error_type == ImportErrorType.RECORD_DOES_NOT_EXIST for error in errors):
-            return status.HTTP_404_NOT_FOUND
-        return status.HTTP_422_UNPROCESSABLE_ENTITY
-
     @staticmethod
     def _has_edit_permissions(user, ident_cely) -> bool:
         """
@@ -1250,8 +1230,6 @@ class SamostatnyNalezXmlBaseView(PasApiPermissionMixin, APIView):
     def _update_igsn_if_archived(instance: "SamostatnyNalez") -> None:
         """
         Pokud je záznam ve stavu SN4 (archivovaný), aktualizuje jeho IGSN metadata.
-
-        Volat po uzavření Fedora transakce, mimo atomický blok.
 
         :param instance: Aktualizovaný záznam samostatného nálezu.
 
@@ -1304,6 +1282,76 @@ class SamostatnyNalezXmlBaseView(PasApiPermissionMixin, APIView):
             return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.digest_mismatch"), mismatch_status
 
         return None
+
+    @staticmethod
+    def _success(
+        log_entry: "ApiRequestLog", instance: "SamostatnyNalez", metadata: bytes, notes: list[str]
+    ) -> HttpResponse:
+        """
+        Označí log záznam jako úspěšný, zaloguje výsledek a vrátí XML odpověď s metadaty.
+
+        Tato metoda vrací surové XML bajty přes ``HttpResponse`` místo DRF ``Response``,
+        aby nedošlo k zásahu rendererů DRF do XML výstupu. Chybové odpovědi v téže view
+        jsou vytvářeny metodou ``_fail()``, která používá DRF ``Response`` pro standardní
+        serializaci strukturovaného JSON těla.
+
+        :param log_entry: Záznam logu API požadavku.
+        :param instance: Uložený záznam samostatného nálezu.
+        :param metadata: XML metadata vrácená Fedora repozitářem.
+        :param notes: Seznam poznámek o ignorovaných atributech ``xml:lang``.
+
+        :return: HTTP odpověď s XML metadaty a stavovým kódem 200.
+        """
+        log_entry.status = API_REQUEST_LOG_STATUS_SUCCESS
+        log_entry.finished_at = django.utils.timezone.now()
+        log_entry.ident_cely = instance.ident_cely
+        log_entry.samostatny_nalez = instance
+        log_entry.save(update_fields=["status", "finished_at", "ident_cely", "samostatny_nalez"])
+
+        user_pk = log_entry.user.pk if log_entry.user else None
+        # ident_cely and user_pk are logged intentionally so successful imports
+        # can be correlated during troubleshooting and incident investigation.
+        # They are audit/operational identifiers, not secrets.
+        # codeql[py/clear-text-logging-sensitive-data]
+        logger.info(
+            "pas.api.PasApiBaseView.success",
+            extra={"ident_cely": instance.ident_cely, "user": user_pk},
+        )
+        if notes:
+            # ident_cely, ignored xml:lang notes, and user_pk are logged
+            # intentionally to support import diagnostics, troubleshooting, and
+            # incident investigation. They are operational context, not secrets.
+            # codeql[py/clear-text-logging-sensitive-data]
+            logger.info(
+                "pas.api.PasApiBaseView.success.ignored_lang_notes",
+                extra={"ident_cely": instance.ident_cely, "notes": notes, "user": user_pk},
+            )
+        return HttpResponse(metadata, content_type="application/xml", status=200)
+
+
+class SamostatnyNalezXmlBaseView(PasApiBaseView):
+    """Základní pohled pro XML import záznamu samostatného nálezu."""
+
+    http_method_names = ["post"]
+
+    _AMCR_NS = "https://api.aiscr.cz/schema/amcr/2.2/"
+    _XML_NS = "http://www.w3.org/XML/1998/namespace"
+    _XSI_NS = "http://www.w3.org/2001/XMLSchema-instance"
+    _amcr_schema_cache: dict[str, tuple[etree.XMLSchema, float]] = {}  # url -> (schema, inserted_at)
+
+    def _validation_status(self, errors: list[ImportValidationIssue]) -> int:
+        """
+        Určí HTTP stavový kód odpovědi na základě typů validačních chyb.
+
+        :param errors: Seznam validačních chyb importu.
+
+        :return: HTTP stavový kód odpovídající nejzávažnějšímu typu chyby.
+        """
+        if any(error.error_type == ImportErrorType.PERMISSION_ERROR for error in errors):
+            return status.HTTP_403_FORBIDDEN
+        if any(error.error_type == ImportErrorType.RECORD_DOES_NOT_EXIST for error in errors):
+            return status.HTTP_404_NOT_FOUND
+        return status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @classmethod
     def _validate_declared_schema_version(cls, doc: etree._ElementTree) -> str | None:
@@ -1775,51 +1823,6 @@ class SamostatnyNalezXmlBaseView(PasApiPermissionMixin, APIView):
         )
         return None, osoba
 
-    @staticmethod
-    def _success(
-        log_entry: "ApiRequestLog", instance: "SamostatnyNalez", metadata: bytes, notes: list[str]
-    ) -> HttpResponse:
-        """
-        Označí log záznam jako úspěšný, zaloguje výsledek a vrátí XML odpověď s metadaty.
-
-        Tato metoda vrací surové XML bajty přes ``HttpResponse`` místo DRF ``Response``,
-        aby nedošlo k zásahu rendererů DRF do XML výstupu. Chybové odpovědi v téže view
-        jsou vytvářeny metodou ``_fail()``, která používá DRF ``Response`` pro standardní
-        serializaci strukturovaného JSON těla.
-
-        :param log_entry: Záznam logu API požadavku.
-        :param instance: Uložený záznam samostatného nálezu.
-        :param metadata: XML metadata vrácená Fedora repozitářem.
-        :param notes: Seznam poznámek o ignorovaných atributech ``xml:lang``.
-
-        :return: HTTP odpověď s XML metadaty a stavovým kódem 200.
-        """
-        log_entry.status = API_REQUEST_LOG_STATUS_SUCCESS
-        log_entry.finished_at = django.utils.timezone.now()
-        log_entry.ident_cely = instance.ident_cely
-        log_entry.samostatny_nalez = instance
-        log_entry.save(update_fields=["status", "finished_at", "ident_cely", "samostatny_nalez"])
-
-        user_pk = log_entry.user.pk if log_entry.user else None
-        # ident_cely and user_pk are logged intentionally so successful imports
-        # can be correlated during troubleshooting and incident investigation.
-        # They are audit/operational identifiers, not secrets.
-        # codeql[py/clear-text-logging-sensitive-data]
-        logger.info(
-            "pas.api.SamostatnyNalezXmlImportView.post.created",
-            extra={"ident_cely": instance.ident_cely, "user": user_pk},
-        )
-        if notes:
-            # ident_cely, ignored xml:lang notes, and user_pk are logged
-            # intentionally to support import diagnostics, troubleshooting, and
-            # incident investigation. They are operational context, not secrets.
-            # codeql[py/clear-text-logging-sensitive-data]
-            logger.info(
-                "pas.api.SamostatnyNalezXmlImportView.post.ignored_lang_notes",
-                extra={"ident_cely": instance.ident_cely, "notes": notes, "user": user_pk},
-            )
-        return HttpResponse(metadata, content_type="application/xml", status=200)
-
     @classmethod
     def _build_schema_validation_doc(cls, doc: etree._ElementTree) -> etree._ElementTree:
         """
@@ -2094,14 +2097,16 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+        metadata_transaction = None
         try:
-            metadata = FedoraRepositoryConnector(instance).get_metadata()
+            metadata_transaction = FedoraTransaction(transaction_user=request.user)
+            metadata = FedoraRepositoryConnector(instance, metadata_transaction).get_metadata()
         except FedoraError as err:
             logger.error(
                 "pas.api.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving", extra={"error": err}
             )
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            if metadata_transaction is not None and metadata_transaction.status == FedoraTransactionStatus.ACTIVE:
+                metadata_transaction.rollback_transaction()
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving")},
@@ -2186,10 +2191,12 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
             )
 
 
-class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
+class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
     """Pohled pro aktualizaci pole ``evidencni_cislo`` záznamu samostatného nálezu přes PATCH požadavek."""
 
     http_method_names = ["patch"]
+    # SamostatnyNalez.evidencni_cislo is a TextField (no max_length in the DB schema).
+    # 255 is an API-level policy limit enforced here, not derived from the model field.
     _MAX_EVIDENCNI_CISLO_LENGTH = 255
 
     @staticmethod
@@ -2197,10 +2204,12 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
         """
         Ověří, zda má uživatel oprávnění editovat evidenční číslo záznamu samostatného nálezu.
 
-        Pro tento endpoint se použijí standardní pravidla ``pas_edit`` s tím rozdílem,
-        že se ignoruje stav záznamu. Tím je umožněno, aby archeolog a vyšší mohl
-        aktualizovat evidenční číslo i u archivovaného nálezu. Následně se ještě
-        explicitně ověří, že hlavní role uživatele odpovídá roli Archeolog nebo vyšší.
+        Oprávněný je takový uživatel, který splňuje standardní pravidla pro editaci nálezu
+        s těmito úpravami:
+
+        - pro aktualizaci ev. čísla nikdy není autorizován badatel (operaci může užívat
+          pouze archeolog a výše)
+        - pokud je autorizován archeolog, nález může být v libovolném stavu (vč. archivovaného)
 
         :param user: Uživatel provádějící požadavek.
         :param ident_cely: Identifikátor záznamu samostatného nálezu.
@@ -2233,8 +2242,8 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
 
         :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
                  nebo chybou syntaxe volání (HTTP 400; chybějící parametr
-                 ``evidencni_cislo``), chybou dat (HTTP 422; prázdná nebo
-                 příliš dlouhá hodnota), nenalezeným
+                 ``evidencni_cislo``), chybou dat (HTTP 422; prázdná, příliš
+                 dlouhá nebo shodná hodnota), nenalezeným
                  záznamem (HTTP 404), nedostatečnými oprávněními (HTTP 403),
                  nebo interní chybou (HTTP 500).
         """
@@ -2294,6 +2303,13 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
                 status.HTTP_403_FORBIDDEN,
             )
 
+        if evidencni_cislo == instance.evidencni_cislo:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.no_change")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
         log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
         log_entry.save(update_fields=["status"])
 
@@ -2307,7 +2323,17 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
                 # not a database field, so there is no point in using it as an argument in the save method.
                 instance.save(update_fields=["evidencni_cislo"])
                 self._create_history_record(instance, request.user, old_evidencni_cislo, evidencni_cislo)
+                self._update_igsn_if_archived(instance)
                 transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
+        except DoiWriteError as err:
+            logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.igsn_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.doi_update_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
         except FedoraError as err:
             logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
@@ -2336,25 +2362,17 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+        metadata_transaction = None
         try:
-            self._update_igsn_if_archived(instance)
-        except DoiWriteError as err:
-            logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.igsn_error", extra={"error": err})
-            return self._fail(
-                log_entry,
-                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.doi_update_error")},
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-        try:
-            metadata = FedoraRepositoryConnector(instance).get_metadata()
+            metadata_transaction = FedoraTransaction(transaction_user=request.user)
+            metadata = FedoraRepositoryConnector(instance, metadata_transaction).get_metadata()
         except FedoraError as err:
             logger.error(
                 "pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error_reading_metadata",
                 extra={"error": err},
             )
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            if metadata_transaction is not None and metadata_transaction.status == FedoraTransactionStatus.ACTIVE:
+                metadata_transaction.rollback_transaction()
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error_reading_metadata")},
@@ -2390,20 +2408,32 @@ class SamostatnyNalezEvidencniCisloPatchView(SamostatnyNalezXmlBaseView):
             )
 
 
-class SamostatnyNalezFotografieUploadView(SamostatnyNalezXmlBaseView):
+class SamostatnyNalezFotografieUploadView(PasApiBaseView):
     """Pohled pro nahrání jedné fotografie k existujícímu samostatnému nálezu."""
+
+    http_method_names = ["post"]
 
     @staticmethod
     def _has_upload_permissions(user, ident_cely) -> bool:
         """
         Ověří, zda má uživatel oprávnění nahrát fotografii k danému nálezu.
 
+        Oprávněný je takový uživatel, který splňuje standardní pravidla pro editaci nálezu
+        s těmito úpravami:
+
+        - pro nahrání fotografie nikdy není autorizován badatel (operaci může užívat
+          pouze archeolog a výše)
+        - pokud je autorizován archeolog, nález může být v libovolném stavu (vč. archivovaného)
+
         :param user: Uživatel provádějící požadavek.
         :param ident_cely: Identifikátor záznamu samostatného nálezu.
 
-        :return: ``True`` pokud má uživatel oprávnění ``soubor_nahrat_pas``.
+        :return: ``True`` pokud má uživatel oprávnění ``soubor_nahrat_pas`` pro daný záznam
+                 a zároveň je jeho hlavní role Archeolog nebo vyšší.
         """
-        return check_permissions(Permissions.actionChoices.soubor_nahrat_pas, user, ident_cely)
+        if not check_permissions(Permissions.actionChoices.soubor_nahrat_pas, user, ident_cely, skip_status=True):
+            return False
+        return user.hlavni_role.pk >= ROLE_ARCHEOLOG_ID
 
     @staticmethod
     def _create_rearchive_history_record(instance: SamostatnyNalez, user) -> None:
@@ -2559,7 +2589,6 @@ class SamostatnyNalezFotografieUploadView(SamostatnyNalezXmlBaseView):
 
         if mimetype in ["image/png", "image/jpeg", "image/tiff"]:
             binary_data = Soubor.remove_gps_data(binary_data)
-        binary_data.seek(0)
 
         fedora_transaction = FedoraTransaction(transaction_user=request.user)
         try:
@@ -2579,8 +2608,18 @@ class SamostatnyNalezFotografieUploadView(SamostatnyNalezXmlBaseView):
                 soubor_instance.save()
                 soubor_instance.zaznamenej_nahrani(request.user, uploaded_file.name)
                 self._create_rearchive_history_record(instance, request.user)
+                self._update_igsn_if_archived(instance)
                 soubor_instance.close_active_transaction_when_finished = True
                 soubor_instance.save()
+        except DoiWriteError as err:
+            logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.igsn_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
         except FedoraError as err:
             logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.fedora_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
@@ -2609,24 +2648,16 @@ class SamostatnyNalezFotografieUploadView(SamostatnyNalezXmlBaseView):
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+        metadata_transaction = None
         try:
-            self._update_igsn_if_archived(instance)
-        except DoiWriteError as err:
-            logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.igsn_error", extra={"error": err})
-            return self._fail(
-                log_entry,
-                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-        try:
-            metadata = FedoraRepositoryConnector(instance).get_metadata()
+            metadata_transaction = FedoraTransaction(transaction_user=request.user)
+            metadata = FedoraRepositoryConnector(instance, metadata_transaction).get_metadata()
         except FedoraError as err:
             logger.error(
                 "pas.api.SamostatnyNalezFotografieUploadView.post.fedora_error_reading_metadata", extra={"error": err}
             )
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            if metadata_transaction is not None and metadata_transaction.status == FedoraTransactionStatus.ACTIVE:
+                metadata_transaction.rollback_transaction()
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.fedora_error_reading_metadata")},
