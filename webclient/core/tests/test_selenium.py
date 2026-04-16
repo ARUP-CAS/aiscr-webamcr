@@ -725,8 +725,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             WebDriverWait(self.driver, 5).until(
                 lambda d: d.execute_script("return typeof jQuery === 'undefined' || jQuery.active == 0")
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug(
+                "core.tests.test_selenium.BaseSeleniumTestClass.tearDown.jquery_wait_ignored",
+                extra={"error": exc},
+            )
         try:
             self.driver.quit()
         except Exception:
