@@ -852,34 +852,48 @@ def schvalit(request, ident_cely):
         logger.debug("projekt.views.schvalit.post.start", extra={"ident_cely": ident_cely})
         old_ident = projekt.ident_cely
         fedora_transaction = projekt.create_transaction(request.user, PROJEKT_USPESNE_SCHVALEN)
-        if projekt.ident_cely[0] == "X":
-            try:
-                projekt.set_permanent_ident_cely()
-            except MaximalIdentNumberError:
-                logger.debug("projekt.views.schvalit.post.max_error", extra={"ident_cely": ident_cely})
-                fedora_transaction.error_message = MAXIMUM_IDENT_DOSAZEN
-                fedora_transaction.rollback_transaction()
-                return JsonResponse(
-                    {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
-                    status=403,
-                )
-            else:
-                logger.debug(
-                    "projekt.views.schvalit.perm_ident",
-                    extra={"ident_cely_old": old_ident, "ident_cely": projekt.ident_cely},
-                )
-        projekt.set_schvaleny(request.user, old_ident)
-        form = NeodeslatMailForm(request.POST)
-        if form.is_valid():
-            send_mail = form.cleaned_data["send_mail"]  # Získání hodnoty checkboxu
-            if send_mail:
-                if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
-                    rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
+        try:
+            if projekt.ident_cely[0] == "X":
+                try:
+                    projekt.set_permanent_ident_cely()
+                except MaximalIdentNumberError:
+                    logger.debug("projekt.views.schvalit.post.max_error", extra={"ident_cely": ident_cely})
+                    fedora_transaction.error_message = MAXIMUM_IDENT_DOSAZEN
+                    fedora_transaction.rollback_transaction()
+                    return JsonResponse(
+                        {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+                        status=403,
+                    )
                 else:
-                    rep_bin_file = None
-                projekt.send_ep01(rep_bin_file)
-        projekt.close_active_transaction_when_finished = True
-        projekt.save()
+                    logger.debug(
+                        "projekt.views.schvalit.perm_ident",
+                        extra={"ident_cely_old": old_ident, "ident_cely": projekt.ident_cely},
+                    )
+            projekt.set_schvaleny(request.user, old_ident)
+            form = NeodeslatMailForm(request.POST)
+            if form.is_valid():
+                send_mail = form.cleaned_data["send_mail"]  # Získání hodnoty checkboxu
+                if send_mail:
+                    if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
+                        rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
+                    else:
+                        rep_bin_file = None
+                    projekt.send_ep01(rep_bin_file)
+            projekt.close_active_transaction_when_finished = True
+            projekt.save()
+        except Exception:
+            logger.exception(
+                "projekt.views.schvalit.post.error",
+                extra={"ident_cely": ident_cely, "transaction": fedora_transaction.uid},
+            )
+            try:
+                fedora_transaction.rollback_transaction()
+            except Exception:
+                logger.exception(
+                    "projekt.views.schvalit.post.rollback_error",
+                    extra={"ident_cely": ident_cely, "transaction": fedora_transaction.uid},
+                )
+            raise
         logger.debug(
             "projekt.views.schvalit.post.done",
             extra={"ident_cely_old": old_ident, "ident_cely": ident_cely, "transaction": fedora_transaction.uid},

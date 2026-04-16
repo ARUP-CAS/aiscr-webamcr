@@ -93,6 +93,7 @@ def smazat(request, ident_cely):
     if request.method == "POST":
         dj: DokumentacniJednotka = adb.dokumentacni_jednotka
         fedora_transaction = adb.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT, dj)
+        adb.close_active_transaction_when_finished = True
         for vb in adb.vyskove_body.all():
             vb.active_transaction = fedora_transaction
             vb.delete()

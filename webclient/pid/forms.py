@@ -12,7 +12,7 @@ class FormWithOrcid:
         :return: Vrací hodnotu podle větve zpracování.
         """
         data = self.cleaned_data["orcid"]
-        return "https://orcid.org/" + data if len(data) > 0 else None
+        return "https://orcid.org/" + data if data and len(data) > 0 else None
 
 
 class FormWithWikidata:
@@ -25,7 +25,7 @@ class FormWithWikidata:
         :return: Vrací hodnotu podle větve zpracování.
         """
         data = self.cleaned_data["wikidata"]
-        return "https://www.wikidata.org/entity/" + data if len(data) > 0 else None
+        return "https://www.wikidata.org/entity/" + data if data and len(data) > 0 else None
 
 
 class UpdateDocumentObjectIdentifierFileForm(forms.Form):
