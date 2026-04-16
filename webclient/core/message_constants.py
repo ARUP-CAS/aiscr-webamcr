@@ -126,6 +126,9 @@ DOKUMENT_SE_NEPODARILO_VRATIT: Final = _(
 )  # Dokument se nepodařilo vrátit.
 DOKUMENT_NELZE_ODESLAT: Final = _("common.message.DOKUMENT_NELZE_ODESLAT.text")  # Dokument nelze odeslat.
 DOKUMENT_NELZE_ARCHIVOVAT: Final = _("common.message.DOKUMENT_NELZE_ARCHIVOVAT.text")  # Dokument nelze archivovat.
+DOKUMENT_NELZE_VYTVORIT_RADA: Final = _(
+    "core.message_constants.dokumentNelzeVytvoriteRada.text"
+)  # Dokument nelze vytvořit: nelze určit řadu dokumentu pro zadanou kombinaci typu a materiálu.
 DOKUMENT_NELZE_ARCHIVOVAT_CHYBY_SOUBOR: Final = _("core.message_constants.dokumentNelzeArchivovatChybaSouboru.text")
 DOKUMENT_USPESNE_PRIPOJEN: Final = _("common.message.DOKUMENT_USPESNE_PRIPOJEN.text")  # Dokument úspěšně připojen.
 DOKUMENT_JIZ_BYL_PRIPOJEN: Final = _("common.message.DOKUMENT_JIZ_BYL_PRIPOJEN.text")  # Dokument již byl připojen!
