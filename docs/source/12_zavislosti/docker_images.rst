@@ -157,7 +157,7 @@ Kibana pro vizualizaci a analýzu logů z Elasticsearch. Poskytuje webové rozhr
 selenium/standalone-chromium
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 145.0
+- **Verze:** 147.0
 - **Licence:** Apache License 2.0
 - **Odkaz:** https://github.com/SeleniumHQ/docker-selenium
 

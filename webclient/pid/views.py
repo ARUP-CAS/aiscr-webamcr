@@ -107,6 +107,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
     API_URL = settings.DATACITE_URL
     CACHE_PREFIX = "DOI"
+    CROSSREF_DOI_REGEX = re.compile(r"^10\.\d{4,9}/.*$", re.IGNORECASE)
 
     @classmethod
     def _api_call_data_cite(cls, q):
@@ -116,9 +117,14 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         :param q: Vyhledávací dotaz (DOI).
         :return: Seznam [DOI, název] párů.
         """
-        params = {
-            "query": f"doi:*{q.upper()}*",
-        }
+        if "-" in q:
+            params = {
+                "query": f'titles.title:"*{q}*"',
+            }
+        else:
+            params = {
+                "query": f"titles.title:*{q}*",
+            }
         results = []
         response = requests.get(cls.API_URL, params=params)
         if response.status_code == 200:
@@ -207,7 +213,10 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         :param use_cache: Zda používat cache.
         :return: Seznam [DOI, název] párů.
         """
-        results = cls._api_call_cross_ref_doi(q)
+        if cls.CROSSREF_DOI_REGEX.match(q):
+            results = cls._api_call_cross_ref_doi(q)
+        else:
+            results = []
         if not results:
             results = cls._api_call_data_cite(q) + cls._api_call_cross_ref_title(q)
         if not any([i for i in results if i[0] == str(q)]):
