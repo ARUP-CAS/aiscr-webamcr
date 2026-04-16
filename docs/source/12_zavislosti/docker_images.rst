@@ -112,7 +112,7 @@ Exportér metrik pro Celery úlohy pro Prometheus. Monitoruje stav a výkon asyn
 grafana/grafana-enterprise
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 12.4.2
+- **Verze:** 13.0.0
 - **Licence:** AGPL-3.0 License
 - **Odkaz:** https://github.com/grafana/grafana
 
@@ -121,7 +121,7 @@ Grafana Enterprise pro vizualizaci metrik a monitoringu. Poskytuje dashboardy pr
 prom/prometheus
 ~~~~~~~~~~~~~~~
 
-- **Verze:** v3.10.0
+- **Verze:** v3.11.2
 - **Licence:** Apache-2.0 License
 - **Odkaz:** https://github.com/prometheus/prometheus
 
@@ -157,7 +157,7 @@ Kibana pro vizualizaci a analýzu logů z Elasticsearch. Poskytuje webové rozhr
 selenium/standalone-chromium
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 145.0
+- **Verze:** 147.0
 - **Licence:** Apache License 2.0
 - **Odkaz:** https://github.com/SeleniumHQ/docker-selenium
 
