@@ -68,7 +68,7 @@ class WerkzeugServerThread(Thread):
             run_simple(self.host, self.port, application, ssl_context=self.ssl_context, threaded=True)
         except Exception as e:
             self.error = str(e)
-            logger.error("Chyba při spuštění serveru: %s", self.error)
+            logger.exception("Chyba při spuštění serveru")
         finally:
             if not self.is_ready.is_set():
                 self.is_ready.set()
