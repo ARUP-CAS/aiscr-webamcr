@@ -251,3 +251,8 @@ APPLICATION_RESTART_SUCCESS: Final = _("core.message_constants.applicationRestar
 
 # uzivatel
 ZADOST_SMAZANI_UZIVATELE_SUCCESS: Final = _("core.message.ZADOST_SMAZANI_UZIVATELE_SUCCESS.text")
+
+# Fedora repozitář
+CHYBA_SPOJENI_REPOZITAR: Final = _(
+    "common.message.CHYBA_SPOJENI_REPOZITAR.text"
+)  # Operaci nelze dokončit: repozitář není dostupný. Zkuste akci opakovat za chvíli.
