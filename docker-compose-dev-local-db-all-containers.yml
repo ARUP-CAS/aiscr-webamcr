@@ -118,7 +118,7 @@ services:
     entrypoint: ["/bin/sh", "/docker-entrypoint.d/redis_exporter_entrypoint.sh"]
 
   grafana:
-    image: grafana/grafana-enterprise:12.4.2
+    image: grafana/grafana-enterprise:13.0.0
     restart: always
     depends_on:
       - prometheus
@@ -133,7 +133,7 @@ services:
       - "3000:3000"
 
   prometheus:
-    image: prom/prometheus:v3.10.0
+    image: prom/prometheus:v3.11.2
     volumes:
       - ./prometheus:/etc/prometheus
     ports:
@@ -193,7 +193,7 @@ services:
     entrypoint: ["/bin/sh", "/docker-entrypoint.d/celery_exporter_entrypoint.sh"]
 
   selenium:
-    image: selenium/standalone-chromium:145.0
+    image: selenium/standalone-chromium:147.0
     ports:
       - 4444:4444
       - 5900:5900

@@ -128,7 +128,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/google/brotli
    * - celery
-     - 5.6.2
+     - 5.6.3
      - BSD-3-Clause
      - https://docs.celeryq.dev/
    * - certifi
@@ -220,7 +220,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/django-crispy-forms/django-crispy-forms
    * - django-debug-toolbar
-     - 6.2.0
+     - 6.3.0
      - BSD License
      - https://github.com/django-commons/django-debug-toolbar
    * - django-debug-toolbar-template-profiler
@@ -268,7 +268,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/mbi/django-rosetta
    * - django-tables2
-     - 2.8.0
+     - 3.0.0
      - BSD License
      - https://github.com/jieter/django-tables2/
    * - django-tables2-column-shifter
@@ -308,7 +308,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.25.2
+     - 3.28.0
      - MIT
      - https://github.com/tox-dev/py-filelock
    * - freezegun
@@ -348,7 +348,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://sass.github.io/libsass-python/
    * - lxml
-     - 6.0.2
+     - 6.0.4
      - BSD-3-Clause
      - https://lxml.de/
    * - multivolumefile
@@ -376,7 +376,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; MIT License
      - https://github.com/python-trio/outcome
    * - packaging
-     - 26.0
+     - 26.1
      - Apache-2.0 OR BSD-2-Clause
      - https://github.com/pypa/packaging
    * - pandas
@@ -388,7 +388,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.27
+     - 9.0.28
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -396,7 +396,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/hMatoba/Piexif
    * - pillow
-     - 12.1.1
+     - 12.2.0
      - MIT-CMU
      - https://python-pillow.github.io
    * - pip
@@ -464,7 +464,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 6.9.2
+     - 6.10.2
      - BSD-3-Clause
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -528,7 +528,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0BSD OR CC0-1.0
      - https://github.com/AA-Turner/roman-numerals/blob/master/CHANGES.rst
    * - selenium
-     - 4.42.0
+     - 4.43.0
      - Apache-2.0
      - https://www.selenium.dev
    * - setuptools
@@ -652,7 +652,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.2.1
+     - 21.2.4
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
