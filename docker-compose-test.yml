@@ -164,7 +164,7 @@ services:
     entrypoint: ["/bin/sh", "/docker-entrypoint.d/celery_exporter_entrypoint.sh"]
 
   grafana:
-    image: grafana/grafana-enterprise:12.4.2
+    image: grafana/grafana-enterprise:13.0.0
     restart: always
     depends_on:
       - prometheus
