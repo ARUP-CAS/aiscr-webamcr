@@ -8,6 +8,8 @@ from django.contrib.staticfiles.handlers import StaticFilesHandler
 from django.core.wsgi import get_wsgi_application
 from werkzeug.serving import make_ssl_devcert, run_simple
 
+logger = logging.getLogger(__name__)
+
 
 class WerkzeugServerThread(Thread):
     """Implementuje komponentu ``WerkzeugServerThread`` v rámci aplikace."""
@@ -42,7 +44,7 @@ class WerkzeugServerThread(Thread):
             self.ssl_context = context
         except Exception as e:
             self.error = str(e)
-            print(f"Chyba při nastavování SSL: {self.error}")
+            logger.exception("Chyba při nastavování SSL")
 
     def run(self):
         """
@@ -66,7 +68,7 @@ class WerkzeugServerThread(Thread):
             run_simple(self.host, self.port, application, ssl_context=self.ssl_context, threaded=True)
         except Exception as e:
             self.error = str(e)
-            print(f"Chyba při spuštění serveru: {self.error}")
+            logger.exception("Chyba při spuštění serveru")
         finally:
             if not self.is_ready.is_set():
                 self.is_ready.set()
