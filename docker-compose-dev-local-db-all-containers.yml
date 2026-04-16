@@ -193,7 +193,7 @@ services:
     entrypoint: ["/bin/sh", "/docker-entrypoint.d/celery_exporter_entrypoint.sh"]
 
   selenium:
-    image: selenium/standalone-chromium:145.0
+    image: selenium/standalone-chromium:147.0
     ports:
       - 4444:4444
       - 5900:5900
