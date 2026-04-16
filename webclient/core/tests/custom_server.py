@@ -44,7 +44,7 @@ class WerkzeugServerThread(Thread):
             self.ssl_context = context
         except Exception as e:
             self.error = str(e)
-            logger.error("Chyba při nastavování SSL: %s", self.error)
+            logger.exception("Chyba při nastavování SSL")
 
     def run(self):
         """
