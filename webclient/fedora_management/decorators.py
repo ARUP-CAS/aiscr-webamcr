@@ -1,8 +1,11 @@
 import logging
 from functools import wraps
 
-from core.repository_connector import FedoraError
+from core.message_constants import CHYBA_SPOJENI_REPOZITAR
+from core.repository_connector import FedoraError, FedoraNoResponseError
+from django.contrib import messages
 from django.db import transaction
+from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 
@@ -32,6 +35,7 @@ def handle_fedora_error(view_func=None, additional_exceptions=tuple()):
         def _wrapped(*args, **kwargs):
             """
             Zavolá obalenou funkci a při výjimce FedoraError nastaví uzavření transakce na rollback a přesměruje uživatele.
+            Při výjimce FedoraNoResponseError (nedostupný repozitář) zobrazí uživateli chybovou zprávu.
 
             :param args: Poziční argumenty předané obalené funkci.
             :param kwargs: Klíčové argumenty předané obalené funkci.
@@ -42,8 +46,22 @@ def handle_fedora_error(view_func=None, additional_exceptions=tuple()):
             except (FedoraError,) + additional_exceptions as err:
                 logger.info("fedora_management.decorators.handle_fedora_error", extra={"error": err})
                 if err.fedora_transaction:
-                    err.fedora_transaction.rollback_transaction()
+                    try:
+                        err.fedora_transaction.rollback_transaction()
+                    except Exception as rollback_err:
+                        logger.warning(
+                            "fedora_management.decorators.handle_fedora_error.rollback_failed",
+                            extra={"error": err, "rollback_error": rollback_err},
+                        )
                 transaction.set_rollback(True)
+                if isinstance(err, FedoraNoResponseError):
+                    request = args[0]
+                    messages.add_message(request, messages.ERROR, CHYBA_SPOJENI_REPOZITAR)
+                    if request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest":
+                        return JsonResponse({"error": "connection_failed"}, status=503)
+                    if err.ident_cely:
+                        return redirect(reverse("core:redirect_ident", kwargs={"ident_cely": err.ident_cely}))
+                    return redirect(reverse("core:home"))
                 if err.redirect or err.redirect_url:
                     if err.redirect_url:
                         return redirect(err.redirect_url)
