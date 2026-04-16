@@ -108,6 +108,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
     API_URL = settings.DATACITE_URL
     CACHE_PREFIX = "DOI"
     CROSSREF_DOI_REGEX = re.compile(r"^10\.\d{4,9}/.*$", re.IGNORECASE)
+    DATACITE_LUCENE_SPECIAL_CHARS = frozenset(r'+-=&|><!(){}[]^"~*?:\/')
 
     @classmethod
     def _api_call_data_cite(cls, q):
@@ -122,10 +123,9 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         :param q: Vyhledávací dotaz (název nebo část názvu publikace).
         :return: Seznam [DOI, název] párů.
         """
-        special_chars = set(r'+-=&|><!(){}[]^"~*?:\/')
         clauses = []
         for token in q.split():
-            if any(c in special_chars for c in token):
+            if any(c in cls.DATACITE_LUCENE_SPECIAL_CHARS for c in token):
                 clauses.append(f'titles.title:"*{token}*"')
             else:
                 clauses.append(f"titles.title:*{token}*")
