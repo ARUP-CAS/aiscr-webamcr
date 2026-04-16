@@ -23,7 +23,7 @@ Knihovny instalované pomocí Node.js
      - Apache-2.0
      - https://github.com/uxsolutions/bootstrap-datepicker
    * - bootstrap-icons
-     - 1.5.0
+     - 1.13.1
      - MIT
      - https://icons.getbootstrap.com/
    * - bootstrap-select
@@ -35,7 +35,7 @@ Knihovny instalované pomocí Node.js
      - MIT
      - https://github.com/dangrossman/daterangepicker
    * - dropzone
-     - 5.7.0
+     - 5.9.3
      - MIT
      - http://www.dropzonejs.com
    * - jquery
