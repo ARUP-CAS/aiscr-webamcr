@@ -112,19 +112,26 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
     @classmethod
     def _api_call_data_cite(cls, q):
         """
-        Vyhledá DOI v DataCite API.
+        Vyhledá DOI v DataCite API podle názvu.
 
-        :param q: Vyhledávací dotaz (DOI).
+        Dotaz je rozdělen na tokeny podle mezer. Tokeny obsahující rezervované znaky
+        Lucene (např. ``-``, ``:``, ``(``) jsou obaleny uvozovkami, aby byly interpretovány
+        doslovně. Ostatní tokeny jsou ponechány bez uvozovek. Tokeny jsou spojeny operátorem
+        ``AND``, takže všechna slova musí být přítomna v názvu, ale nemusí být sousední.
+
+        :param q: Vyhledávací dotaz (název nebo část názvu publikace).
         :return: Seznam [DOI, název] párů.
         """
-        if "-" in q:
-            params = {
-                "query": f'titles.title:"*{q}*"',
-            }
-        else:
-            params = {
-                "query": f"titles.title:*{q}*",
-            }
+        special_chars = set(r'+-=&|><!(){}[]^"~*?:\/')
+        clauses = []
+        for token in q.split():
+            if any(c in special_chars for c in token):
+                clauses.append(f'titles.title:"*{token}*"')
+            else:
+                clauses.append(f"titles.title:*{token}*")
+        params = {
+            "query": " AND ".join(clauses),
+        }
         results = []
         response = requests.get(cls.API_URL, params=params)
         if response.status_code == 200:
