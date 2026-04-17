@@ -1,181 +1,385 @@
-// --- LOGIN ---
+// --- AUTH (shared across all auth pages: login, register, password reset, activation) ---
 
-&.app-accounts {
-  //background-color: $app-sidebar-bg;
-  background-image: url('img/login-bg-light.svg');
-  background-repeat: no-repeat;
-  background-size: calc(45% - 100px);
-  background-position: center 100px;
+&.app-auth-v2 {
+    background-image: none;
 
-  .app-login-wrapper {
-    @extend .d-flex;
-    flex-direction: column;
-    min-height: calc(100vh - (#{$spacer-4} * 2));
-    justify-content: center;
-    padding-top: 50px;
-    padding-bottom: 50px;
+    // ── Header bar ──
+    .login-header {
+        background-color: #6b2529;
+        padding: 1.5rem 0;
 
-    .card.login-card {
-      border: 2px solid #d2d2d24f !important;
-      border-radius: 8px;
-    }
+        .login-logo {
+            height: 4rem;
+            filter: brightness(0) invert(1);
+            margin-left: 10rem;
 
-    .app-logo {
-      @extend .mb-4, .d-flex;
-      width: 100%;
-      max-width: 450px;
-      margin-left: auto;
-      margin-right: auto;
-      filter: invert(0.9);
-    }
-
-    h1 {
-      @extend .text-dark;
-      text-align: center;
-    }
-
-    .card {
-      @extend .border-0;
-      text-align: center;
-
-      h1 {
-        @extend .app-heading-thin;
-      }
-
-      form {
-        ul {
-          @extend .text-start;
+            @media (max-width: 1200px) {
+                margin-left: 1rem;
+            }
         }
 
-        input {
+        .login-logo-text {
+            color: $white;
+            font-family: 'museo', sans-serif;
+            font-weight: 700;
+            font-size: 3rem;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+        }
+    }
 
-          &[type="text"],
-          &[type="password"],
-          &[type="email"] {
-            @extend .form-control;
-          }
+    // ── Container ──
+    .login-container {
+        max-width: none;
+        margin: 0 auto;
+        padding-left: 5rem;
+        padding-right: 5rem;
+    }
+
+    // ── Main content area ──
+    .login-main {
+        padding: 0 10rem;
+
+        @media (max-width: 1200px) {
+            padding: 0 1rem;
         }
 
-        // in register -> /accounts/register/
-        .form-group {
-          label {
-            font-weight: normal;
-            font-size: inherit;
-            margin-bottom: .5rem;
-          }
+        .login-col-form {
+            margin-bottom: 2rem;
 
-          #hint_id_password1,
-          #hint_id_password2 {
-            @extend .mt-2;
+            @media #{$gt-md} {
+                margin-bottom: 0;
+            }
+        }
+    }
+
+    // ── Card ──
+    .login-card {
+        border: 1px solid $gray-600 !important;
+        border-radius: 8px;
+        box-shadow: $app-card-shadow;
+        max-width: 600px;
+
+        .card-body {
+            padding: 4rem;
+            margin: 2rem 3rem;
+        }
+
+        .login-form-heading {
+            text-align: center;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .login-form-subtext {
+            text-align: center;
+            color: $gray-600;
+            margin-bottom: 1.5rem;
+        }
+
+        .login-submit {
+            font-size: 1rem;
+            padding: 0.6rem;
+        }
+
+        .login-password-reset {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid $gray-300;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+
+            .login-password-reset-icon {
+                font-size: 1.25rem;
+                color: $gray-600;
+                flex-shrink: 0;
+            }
+
+            a {
+                text-decoration: underline;
+            }
+        }
+
+        .login-register-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.6rem 0.75rem;
+            margin-bottom: 1rem;
+
+            a {
+                text-decoration: underline;
+            }
+        }
+
+        .login-register-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid $gray-300;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+
+            .login-register-icon {
+                font-size: 1.25rem;
+                color: $gray-600;
+                flex-shrink: 0;
+            }
+
+            a {
+                text-decoration: underline;
+            }
+        }
+
+        form {
+            input {
+
+                &[type="text"],
+                &[type="password"],
+                &[type="email"] {
+                    @extend .form-control;
+                }
+            }
 
             ul {
-              @extend .mb-0;
+                @extend .text-start;
             }
-          }
         }
-      }
 
-      .app-controls {
+        .app-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+
+            .app-flags {
+                display: flex;
+                gap: 0.5rem;
+
+                button {
+                    text-decoration: unset;
+                    background: transparent;
+                    border: 0;
+                    padding: 0.5rem;
+                    cursor: pointer;
+
+                    &:not(.app-active) {
+                        @extend .app-flag-inactive;
+                    }
+
+                    &:hover {
+                        filter: grayscale(100%);
+                        opacity: 80%;
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Override base layout ──
+    // Must match specificity of body.app-accounts:not(.app-edit) in _app-layout.scss
+    &.app-accounts:not(.app-edit) {
+        #app-page-wrapper {
+            .container-fluid {
+                max-width: none;
+                padding: 0;
+                background-image: url('img/login-bg-new.png');
+                background-size: 2500px;
+                background-position: center top;
+                background-repeat: no-repeat;
+
+                @media (max-width: 800px) {
+                    background-position: center 5rem !important;
+                }
+            }
+        }
+    }
+}
+
+// --- AUTH FORM PAGES (password reset, registration, activation — extra top spacing) ---
+
+&.app-auth-v2:not(.app-login) {
+    .login-main {
+        padding-top: 3rem;
+        min-height: calc(100vh - 7rem); // 7rem ≈ header height
+    }
+
+    .login-col-info {
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 8px;
+        padding: 2rem;
+    }
+}
+
+// --- LOGIN (login-specific: hero, welcome column, accordion, news) ---
+
+&.app-login {
+
+    // ── Hero section ──
+    .login-title {
+        padding: 5rem 0 2rem;
+        position: relative;
+
+        &::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+        }
+
+        .login-title-text {
+            position: relative;
+            color: #6b2529;
+            font-family: 'museo', sans-serif;
+            font-weight: 700;
+            font-size: 3rem;
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+        }
+    }
+
+    .login-subtitle {
+        padding: 0rem 0 2rem;
+        position: relative;
+
+        &::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+        }
+
+        .login-subtitle-text {
+            position: relative;
+            color: $gray-800;
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 0;
+        }
+    }
+
+    // ── Right column ──
+    .login-col-info {
+        @media #{$gt-md} {
+            padding-left: 8rem;
+        }
+    }
+
+    .login-welcome-heading {
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+
+    // ── Info cards ──
+    .login-info-card {
         display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0;
-        justify-content: center;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 1rem 1.25rem;
+        border: 1px solid $gray-600;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        background: $white;
 
-        .app-control-btn {
-          background: transparent;
-          border: 0;
-          padding: 0.5rem;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          .material-icons {
-            font-size: 1.25rem;
-          }
-
-          &:hover {
-            filter: opacity(0.7);
-          }
+        .login-info-icon {
+            font-size: 1.5rem;
+            color: $gray-600;
+            flex-shrink: 0;
+            margin-top: 2px;
         }
 
-        .app-flags {
-          display: flex;
-          gap: 0.5rem;
+        a {
+            word-break: break-all;
+        }
+    }
 
-          button {
-            text-decoration: unset;
-            background: transparent;
-            border: 0;
-            padding: 0.5rem;
-            cursor: pointer;
+    // ── Accordion ──
+    .login-accordion {
+        margin-top: 2rem;
+        border: none;
 
-            &:not(.app-active) {
-              @extend .app-flag-inactive;
-            }
+        .accordion-item {
+            border: none;
+            border-bottom: 1px solid $gray-600;
+            background: rgba(255, 255, 255, 0.7);
 
             &:first-child {
-              margin-right: .5rem;
+                border-top: 1px solid $gray-600;
             }
 
-            &:hover {
-              filter: grayscale(100%);
-              -webkit-filter: grayscale(100%);
-              opacity: 80%;
+            &:last-child {
+                border-bottom: 1px solid $gray-600;
             }
-          }
         }
-      }
+
+        .accordion-button {
+            font-weight: 600;
+            padding: 1rem 1rem;
+            background: transparent;
+            box-shadow: none;
+            gap: 0.75rem;
+
+            &:not(.collapsed) {
+                background: transparent;
+                color: inherit;
+            }
+
+            &::after {
+                margin-left: auto;
+            }
+        }
+
+        .login-acc-icon {
+            font-size: 1.5rem;
+            color: $gray-700;
+        }
+
+        .accordion-body {
+            padding: 0 0 1rem 2.75rem;
+        }
     }
 
-    .app-col-desc {
-      .app-inner {
-        margin-top: 30px;
-        background-color: #d2d2d24f;
+    // ── Inspirational text ──
+    .login-inspiration {
+        padding: 2rem 0;
 
-        @media #{$gt-md} {
-          height: 100%;
-          border-left: 1px solid $app-login-border-color;
-          padding: $spacer-3 $spacer-4;
-          margin-top: 0;
+        .login-inspiration-text {
+            color: #6b2529;
+            font-weight: 700;
+            font-size: 1.15rem;
+            margin-bottom: 0;
         }
-
-        hr {
-          border-color: $app-login-border-color;
-        }
-
-        .card {
-          @extend .bg-transparent, .w-100;
-          text-align: left;
-
-          .card-body {
-            @extend .p-0, .pe-3 !optional;
-
-            h3 {
-              @extend .app-heading-thin;
-              margin-top: 0;
-            }
-
-            p {
-              &:last-child {
-                margin-bottom: 5px;
-              }
-
-              .app-pipe {
-                border-color: rgba($app-login-desc-color, .4);
-              }
-
-              span {
-                &:not(.app-pipe) {
-                  font-weight: normal;
-                  color: rgba($app-login-desc-color, .6);
-                }
-              }
-            }
-          }
-        }
-      }
     }
-  }
+
+    // ── News section ──
+    .login-news {
+        padding: 0 0 3rem;
+        background: rgba(255, 255, 255, 0.7) !important;
+
+        .login-news-heading {
+            font-weight: 700;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid $gray-300;
+        }
+
+        .login-news-content {
+            background: rgba(255, 255, 255, 0.7);
+
+            h4,
+            .h4 {
+                font-weight: 700;
+                font-size: 1rem;
+                margin-top: 1.5rem;
+            }
+
+            hr {
+                border-color: $gray-300;
+            }
+        }
+    }
 }

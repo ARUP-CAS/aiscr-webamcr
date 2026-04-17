@@ -39,13 +39,15 @@
 
       dropdown.add(newOption);
       
-      $('#id_vedouci_projektu').selectpicker('refresh');
-      $('#id_vedouci_projektu').selectpicker('val', response.value);
-      dropdown.value = response.value;
+      var val = String(response.value);
+      $('#id_vedouci_projektu').selectpicker('destroy');
+      $('#id_vedouci_projektu').selectpicker();
+      $('#id_vedouci_projektu').selectpicker('val', val);
+      dropdown.value = val;
       $(settings.modalIDD).modal("hide");
-      $("#id_vedouci_projektu").getElementById("#loader-spinner").hide()
-      $("#id_vedouci_projektu").getElementById("#submit-btn").prop("disabled", false);
-      $("#id_vedouci_projektu").getElementById("#submit-btn").siblings('button').prop("disabled", false);
+      $("#loader-spinner").hide();
+      $("#submit-btn").prop("disabled", false);
+      $("#submit-btn").siblings('button').prop("disabled", false);
     };
     window.addEventListener("modalLoaded", function() {
       const options = Object.assign(Object.create(defaults), {
