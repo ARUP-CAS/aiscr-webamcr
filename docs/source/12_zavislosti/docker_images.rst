@@ -112,7 +112,7 @@ Exportér metrik pro Celery úlohy pro Prometheus. Monitoruje stav a výkon asyn
 grafana/grafana-enterprise
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 13.0.0
+- **Verze:** 13.0
 - **Licence:** AGPL-3.0 License
 - **Odkaz:** https://github.com/grafana/grafana
 
