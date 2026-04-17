@@ -5,18 +5,22 @@
     <div class="app-entity-title">
       <a href="{% url 'pas:index' %}"><span class="material-icons">location_on</span><span class="app-controls-button-text">{% trans "templates.toolbarPas.toolbarName" %}</span></a>
     </div>
-    <div id="id-app-entity-item" class="app-entity-item">
+    <div id="id-app-entity-item" class="app-entity-item {% if sn.igsn or show.backtoprojekt %}app-pipe-right{% endif %}">
       {{ sn.ident_cely }}
       {% if sn.ident_cely %}
-        <button>
+        <button >
           <span class="material-icons" onclick="copy_ident_link('{{sn.ident_cely}}')" rel="tooltip" title="{% trans 'templates.toolbarPas.copyIdentLink.label' %}">content_copy</span>
         </button>
       {% endif %}
-      {% if sn.igsn %}
-        <span style="font-weight: normal">({{ sn.igsn }})</span>
-      {% endif %}
-      {% if show.backtoprojekt %}<span class="app-pipe"></span><a href="{% url 'projekt:detail' sn.projekt.ident_cely %}" class="app-entity-color font-weight-normal">{% trans "templates.toolbarPas.backToProjekt.label" %}</a>{% endif %}
     </div>
+    {% if sn.igsn %}
+      <div class="align-self-center app-entity-color{% if show.backtoprojekt %} app-pipe-right pr-5{% endif %}">
+        <span style="font-weight: normal">({{ sn.igsn }})</span>
+        </div>
+      {% endif %}
+    {% if show.backtoprojekt %}
+      <div class="align-self-center"><a href="{% url 'projekt:detail' sn.projekt.ident_cely %}" class="app-entity-color font-weight-normal">{% trans "templates.toolbarPas.backToProjekt.label" %}</a></div>
+    {% endif %}
   </div>
   {% if showcontrols %}
     <div class="app-right app-controls">

@@ -3,41 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link rel="stylesheet" href="/static/static/css/error_page.css" type="text/css" media="screen">
-  <link rel="shortcut icon" id="dynamic-favicon" href="/static/static/loga/favicon.png">
-  <title>AMČR - Login</title>
-  <script>
-    // Detect browser dark mode preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-      document.documentElement.setAttribute('data-theme', 'light');
-    }
-  </script>
+  <link rel="stylesheet" href="/static/css/error_page.css" type="text/css" media="screen">
+  <link rel="shortcut icon" id="dynamic-favicon" href="/static/loga/favicon.png">
+  <title>AMČR - 502 Bad Gateway</title>
 </head>
 
-<body class="app-error app-login">
-  <div class="d-flex" id="app-wrapper">
-    <div id="app-page-wrapper">
-      <div class="container-fluid ">
-        <div class="app-login-wrapper">
-          <div class="row">
-            <div class="col-lg-4">
-            </div>
-            <div class="col-lg-4">
-              <img class="mb-4 app-logo" src="/static/static/img/logo-amcr-cs.svg"
-                alt="Archeologická mapa České republiky">
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-lg-2">
-            </div>
-            <div class="col-lg-8">
-              <h1>502 Bad Gateway</h1>
-            </div>
-          </div>
-        </div>
-      </div>
+<body class="app-error">
+  <div class="error-header">
+    <div class="error-header-inner">
+      <img class="error-header-logo" src="/static/img/logo-am-mark.png" alt="AMČR">
+      <span class="error-header-text">AMČR</span>
+    </div>
+  </div>
+  <div class="error-main">
+    <div class="error-card">
+      <h1>502 Bad Gateway</h1>
+      <p>The server is currently unavailable. Please try again later.</p>
     </div>
   </div>
 </body>

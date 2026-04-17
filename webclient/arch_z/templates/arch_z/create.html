@@ -38,49 +38,49 @@
         {{ formAkce|as_crispy_errors }}
         <div class="row">
           {% if create_akce %}
-          <div class="form-group col-sm-2" >
+          <div class="form-group col-sm-6 col-lg-2" >
             {{ formAZ.hlavni_katastr|as_crispy_field }}
           </div>
           {% else %}
-          <div class="form-group col-sm-2" style="display:none">
+          <div class="form-group col-sm-6 col-lg-2" style="display:none">
             {{ formAZ.hlavni_katastr|as_crispy_field }}
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-6 col-lg-2">
             {{ formAZ.hlavni_katastr_show|as_crispy_field }}
           </div>
           {% endif %}
-          <div class="form-group col-sm-4" >
+          <div class="form-group col-sm-6 col-lg-4" >
             {% if formAZ.katastry %}
               {{ formAZ.katastry|as_crispy_field }}
             {% elif formAZ.katastry_show %}
                 {{ formAZ.katastry_show|as_crispy_field }}
             {% endif %}
           </div>
-          <div class="input-osoba form-group col-sm-2 select2-input">
+          <div class="input-osoba form-group col-sm-6 col-lg-2 select2-input">
             {% crispy_addon formAkce.hlavni_vedouci append='<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>' %}
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-6 col-lg-2">
             {{ formAkce.organizace|as_crispy_field }}
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-6 col-lg-2">
             {{ formAZ.uzivatelske_oznaceni|as_crispy_field }}
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-6 col-lg-2">
             {{ formAkce.hlavni_typ|as_crispy_field }}
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-6 col-lg-2">
             {{ formAkce.vedlejsi_typ|as_crispy_field }}
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-6 col-lg-2">
             
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-6 col-lg-2">
             {{ formAkce.specifikace_data|as_crispy_field }}
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-6 col-lg-2">
             {{ formAkce.datum_zahajeni|as_crispy_field }}
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-6 col-lg-2">
             {{ formAkce.datum_ukonceni|as_crispy_field }}
           </div>
           <div class="form-group col-sm-12">
@@ -89,20 +89,20 @@
           <div class="form-group col-sm-12">
             {{ formAkce.souhrn_upresneni|as_crispy_field }}
           </div>
-          <div class="form-group col-sm-4">
+          <div class="form-group col-sm-6 col-lg-4">
             {{ formAkce.ulozeni_nalezu|as_crispy_field }}
           </div>
-          <div class="form-group col-sm-4">
+          <div class="form-group col-sm-6 col-lg-4">
             {{ formAkce.ulozeni_dokumentace|as_crispy_field }}
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-6 col-lg-2">
             {{ formAZ.pristupnost|as_crispy_field }}
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-6 col-lg-2">
             {{ formAkce.je_nz|as_crispy_field }}
           </div>
           {% if  sam_akce %}
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-6 col-lg-2">
             {{ formAkce.odlozena_nz|as_crispy_field }}
           </div>
           {% endif %}
