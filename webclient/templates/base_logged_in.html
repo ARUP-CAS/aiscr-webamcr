@@ -750,26 +750,29 @@
       })
     })
 
-  //Fix for select2 multiple select, when clicking on x to remove selected item, 
-  //the item is removed from select2 but not from select element, 
+  //Fix for select2 multiple select, when clicking on x to remove selected item,
+  //the item is removed from select2 but not from select element,
   //so we need to trigger change event on select element to update the select2
   $(document).on('mousedown', '.select2-selection__choice__remove', function(e) {
       e.preventDefault();
       e.stopImmediatePropagation();
 
       var $choice = $(this).closest('.select2-selection__choice');
-      var val = $choice.data('select2-id'); // or use the title attribute
 
       // Find the bound select element and deselect the value
       var $select = $(this).closest('.select2-container').prev('select');
-      // OR: var $select = $('#your-select-id');
 
       var choiceText = $choice.attr('title');
-      $select.find('option').filter(function() {
+      var $option = $select.find('option').filter(function() {
           return $(this).text() === choiceText || $(this).val() === choiceText;
-      }).prop('selected', false);
+      });
+      var optionId = $option.val();
+      var optionText = $option.text();
+      $option.prop('selected', false);
 
       $select.trigger('change');
+      // Also trigger select2:unselect so handlers bound via .on('select2:unselect', ...) still fire
+      $select.trigger({ type: 'select2:unselect', params: { data: { id: optionId, text: optionText } } });
   });
 
   $('.selectpicker.form-select').on('show.bs.select', function () {
