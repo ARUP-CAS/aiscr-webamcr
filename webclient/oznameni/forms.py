@@ -251,7 +251,7 @@ class OznamovatelProjektCreateForm(OznamovatelProjektForm):
                 Div("adresa", css_class="col-sm-6"),
                 Div("telefon", css_class="col-sm-6 col-md-2"),
                 Div("email", css_class="col-sm-6 col-md-2"),
-                Div("send_mail", css_class="col-sm-6 col-md-2 align-items-center"),
+                Div("send_mail", css_class="col-sm-6 col-md-2 d-flex align-items-center"),
                 Div("poznamka", css_class="col-sm-12"),
                 css_class="row",
             ),

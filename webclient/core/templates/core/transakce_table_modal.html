@@ -133,12 +133,13 @@
             }
         });
 
-        if (idTag === "vratit-akci-form") {
-            $('input[name="form-TOTAL_FORMS"]').val($(cl + " table tbody tr").length);
-        }
-        if ($(cl + " table tbody tr").length === 0) {
-            $(cl).css("display", "none");
-        }
+        const rowCount = $(cl + " table tbody tr").length;  
+        if (idTag === "vratit-akci-form") {  
+            $('input[name="form-TOTAL_FORMS"]').val(rowCount);  
+        }  
+        if (rowCount === 0) {  
+            $(cl).css("display", "none");  
+        }  
     };
 
     // ZABRÁNÍ opakovanému nabindování při opakovaném otevření modalu
@@ -163,7 +164,6 @@
         });
     });
     tag.off('select2:unselect.modalrow').on('select2:unselect.modalrow', function (e) {
-        console.log("unselect", e.params.data);
         $("#modaldoc" + e.params.data.id).remove();
         syncRowsWithSelection();
     });
