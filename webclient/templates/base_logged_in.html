@@ -356,12 +356,14 @@
             </button>
           </form>
         </li>
+        {% if show_dark_mode %}
         <li class="nav-item app-pipe"></li>
         <li class="nav-item">
           <button class="nav-link" id="theme-toggle-btn" rel="tooltip" data-bs-placement="top" title="{% trans 'templates.baseLogedIn.navbar.toggleTheme' %}">
             <span class="material-icons">dark_mode</span>
           </button>
         </li>
+        {% endif %}
         <li class="nav-item app-pipe"></li>
         <li class="nav-item app-flags">
           <button id="czech" class="nav-link {% if "cs" in LANGUAGE_CODE  %}app-active{% endif %}" >
