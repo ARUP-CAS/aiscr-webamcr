@@ -1,155 +1,19 @@
-body {
-    margin: 0;
-    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.5;
-    color: #212529;
-    text-align: left;
-    overflow-x: hidden;
-    display: block;
-}
-
-body.app-error {
-    padding: 1.5rem 1rem;
-    background-color: #ffffff;
-    background-image: url('../img/login-bg-light.svg');
-    background-repeat: no-repeat;
-    background-size: 700px;
-    background-position: center 50px;
-    color: #212529;
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* Dark theme for error pages */
-html[data-theme="dark"] body.app-error {
-    background-color: #1a1a1a;
-    background-image: url('../img/login-bg-dark.svg');
-    color: #e0e0e0;
-}
-
-html[data-theme="dark"] body.app-error h1 {
-    color: #e0e0e0;
-}
-
-html[data-theme="dark"] body.app-error p {
-    color: #b0b0b0;
-}
-
-body.app-error.oznameni {
-    background-color: #fff;
-}
-
+/* ── Base reset ── */
 * {
     box-sizing: border-box;
 }
 
-.d-flex{
-    display: flex!important;
-}
-
-#app-page-wrapper {
-    min-width: 100vh;
-    width: 100%;
-    -webkit-transition: margin .25s ease-out;
-    -moz-transition: margin .25s ease-out;
-    -o-transition: margin .25s ease-out;
-    transition: margin .25s ease-out;
-    position: relative;
-}
-
-body.app-error #app-page-wrapper .container-fluid {
-    max-width: 1140px;
-    width: 100%;
-    padding-right: 15px;
-    padding-left: 15px;
-    margin-right: auto;
-    margin-left: auto;
-}
-
-.app-header {
-    margin-bottom: 1.5rem!important;
-}
-
-.app-left a img {
-    max-height: 60px;
-}
-
-body.app-error .app-login-wrapper {
-    flex-direction: column;
-    min-height: calc(100vh - (1.5rem * 2));
-    justify-content: center;
-    display: flex!important;
-    .amcr-logo {
-        filter: invert(0.9);
-    }
-}
-
-.app-right {
-    align-items: center!important;
-    justify-content: flex-end!important;
-    display: flex!important;
-}
-
-.app-right a img {
-    opacity: .5;
-    filter: grayscale(100%);
-    max-height: calc(60px - 20px);
-    vertical-align: middle;
-    border-style: none;
-}
-
-.jumbotron {
-    padding: 1.5rem!important;
-    border-radius: 0.3rem;
-}
-
-.jumbotron h1 {
-    font-weight: 200!important;
-    line-height: 1.2;
-    margin-bottom: 0.5rem;
-    color: black;
-    font-size: 3.5rem;
-        margin-top: 0;
-}
-
-.row {
-    display: flex;
-    flex-wrap: wrap;
-    margin-right: -15px;
-    margin-left: -15px;
-}
-
-@media (min-width: 576px){
-.col-sm-8 {
-    flex: 0 0 66.66667%;
-    max-width: 66.66667%;
-}
-}
-
-@media (min-width: 992px){
-.col-lg-4 {
-    flex: 0 0 33.33333%;
-    max-width: 33.33333%;
-}
-}
-
-.col-lg-4, .col-lg-2, .col-lg-8, .col-sm-4 ,.col-sm-8{
-    position: relative;
-    width: 100%;
-    padding-right: 15px;
-    padding-left: 15px;
-}
-
-@media (min-width: 576px){
-.col-sm-4 {
-    flex: 0 0 33.33333%;
-    max-width: 33.33333%;
-}
-}
-
-.mb-4{
-    margin-bottom: 1.5rem!important;
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", sans-serif,
+        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    overflow-x: hidden;
+    background-color: #ffffff;
 }
 
 img {
@@ -157,50 +21,130 @@ img {
     border-style: none;
 }
 
-@media (min-width: 992px){
-.col-lg-2 {
-    flex: 0 0 16.66667%;
-    max-width: 16.66667%;
-}
-}
-
-@media (min-width: 992px){
-.col-lg-8 {
-    flex: 0 0 66.66667%;
-    max-width: 66.66667%;
-}
+/* ── Error header bar (matches auth v2) ── */
+.error-header {
+    background-color: #6b2529;
+    padding: 1.5rem 0;
 }
 
-.mb-0 {
-    margin-bottom: 0!important;
+.error-header-inner {
+    padding: 0 5rem;
+    display: flex;
+    align-items: center;
 }
 
-h1, .h1 {
+.error-header-logo {
+    height: 4rem;
+    filter: brightness(0) invert(1);
+    margin-left: 1rem;
+}
+
+.error-header-text {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 3rem;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+}
+
+/* ── Main content area ── */
+.error-main {
+    min-height: calc(100vh - 7rem);
+    padding: 3rem 10rem;
+    background-image: url('../img/login-bg-new.png');
+    background-size: 2500px;
+    background-position: center top;
+    background-repeat: no-repeat;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+/* ── Error card ── */
+.error-card {
+    background: #ffffff;
+    border: 1px solid #868e96;
+    border-radius: 8px;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+    max-width: 700px;
+    width: 100%;
+    padding: 4rem;
+    text-align: center;
+}
+
+.error-card h1 {
+    font-weight: 700;
     font-size: 2.5rem;
-}
-
-h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    line-height: 1.2;
-}
-h1, h2, h3, h4, h5, h6 {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-}
-
-h1 {
-    display: block;
-    font-size: 2em;
-    margin-block-start: 0.67em;
-    margin-block-end: 0.67em;
-    margin-inline-start: 0px;
-    margin-inline-end: 0px;
+    margin: 0 0 1rem 0;
     color: #212529;
-    text-align: center;
 }
 
-p {
-    color: #212529;
-    text-align: center;
+.error-card p {
+    color: #495057;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* ── Oznameni error pages ── */
+body.oznameni .error-header {
+    display: none;
+}
+
+.oznameni-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 1rem 2rem;
+    margin-bottom: 1rem;
+}
+
+.oznameni-left {
+    flex: 0 0 33.33%;
+}
+
+.oznameni-left img {
+    max-height: 60px;
+}
+
+.oznameni-right {
+    flex: 0 0 66.66%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.oznameni-right img {
+    opacity: 0.5;
+    filter: grayscale(100%);
+    max-height: 40px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1200px) {
+    .error-main {
+        padding: 3rem 1rem;
+    }
+
+    .error-header-inner {
+        padding: 0 1rem;
+    }
+
+    .error-header-logo {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .error-card {
+        padding: 2rem 1.5rem;
+    }
+
+    .error-card h1 {
+        font-size: 1.8rem;
+    }
+
+    .error-header-text {
+        font-size: 2rem;
+    }
 }

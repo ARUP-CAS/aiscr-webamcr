@@ -1,15 +1,16 @@
 // --- BREADCRUMB ---
 
 .app-toolbar {
-  @extend .d-flex, .pe-3  !optional;
-  height: $app-toolbar-height;
+  @extend .d-flex, .pe-3 !optional;
+  min-height: $app-toolbar-height;
   margin: -#{$spacer-3} -#{$spacer-3} #{$spacer-3} -#{$spacer-3};
 
-  .app-controls-button-text{
+  .app-controls-button-text {
     @media (max-width: 768px) {
       display: none;
     }
   }
+
   .app-controls-other-menu-icon {
     @media (min-width: 576px) {
       display: none;
@@ -34,12 +35,11 @@
         display: block;
         position: absolute;
         top: 0;
-        right: calc(-#{$app-toolbar-height} / 2);
-        width: 0;
-        height: 0;
-        border-top: calc(#{$app-toolbar-height} / 2) solid transparent;
-        border-left: calc(#{$app-toolbar-height} / 2) solid;
-        border-bottom: calc(#{$app-toolbar-height} / 2) solid transparent;
+        bottom: 0;
+        left: 99%;
+        aspect-ratio: 1 / 2;
+        background-color: currentColor;
+        clip-path: polygon(0 0, 0% 100%, 100% 50%);
       }
 
       .material-icons {
@@ -58,14 +58,17 @@
     .app-entity-item {
       @extend .align-self-center;
       font-weight: 600;
+
       @media (max-width: 768px) {
         display: none;
       }
+
       button {
         background: 100%;
         border: 0;
-        padding-left:2px;
-        .material-icons{
+        padding-left: 2px;
+
+        .material-icons {
           vertical-align: text-bottom;
           font-size: 1rem;
         }
@@ -81,21 +84,21 @@
         @extend .d-flex;
 
         .btn {
-          @extend .d-flex, .rounded-0, .ps-3, .pe-3  !optional;
+          @extend .d-flex, .rounded-0, .ps-3, .pe-3 !optional;
           border: 0;
           align-items: center;
           border-left: 1px solid;
 
           @media (max-width: 576px) {
-            padding-left: 0.5rem!important;
-            padding-right: 0!important;
+            padding-left: 0.5rem !important;
+            padding-right: 0 !important;
           }
 
           .material-icons {
             @extend .me-2 !optional;
           }
         }
-      } 
+      }
     }
   }
 }

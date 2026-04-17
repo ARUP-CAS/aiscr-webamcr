@@ -36,6 +36,17 @@
   margin: 0 $spacer-2;
 }
 
+.app-pipe-right {
+  border-right: 1px solid $gray-500;
+  margin: 0 $spacer-2 0 0;
+  height: 90%;
+  align-content: center;
+}
+
+.pr-5 {
+  padding-right: 0.5rem !important;
+}
+
 .app-flag {
   width: $app-flag-width;
 }
