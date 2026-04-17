@@ -766,13 +766,17 @@
       var $option = $select.find('option').filter(function() {
           return $(this).text() === choiceText || $(this).val() === choiceText;
       });
-      var optionId = $option.val();
-      var optionText = $option.text();
-      $option.prop('selected', false);
 
-      $select.trigger('change');
-      // Also trigger select2:unselect so handlers bound via .on('select2:unselect', ...) still fire
-      $select.trigger({ type: 'select2:unselect', params: { data: { id: optionId, text: optionText } } });
+      if ($option.length > 0) {
+          var $firstOption = $option.first();
+          var optionId = $firstOption.val();
+          var optionText = $firstOption.text();
+          $option.prop('selected', false);
+
+          $select.trigger('change');
+          // Also trigger select2:unselect so handlers bound via .on('select2:unselect', ...) still fire
+          $select.trigger({ type: 'select2:unselect', params: { data: { id: optionId, text: optionText, element: $firstOption[0] } } });
+      }
   });
 
   $('.selectpicker.form-select').on('show.bs.select', function () {
