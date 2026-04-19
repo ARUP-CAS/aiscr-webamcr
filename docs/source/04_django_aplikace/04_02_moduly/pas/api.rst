@@ -88,6 +88,20 @@ Třídy
 
               ["10.0.1.0/24", "proxy"]
 
+      ``record_lock_params`` (``item_id="record_lock_params"``)
+          Parametry Redis zámku záznamu. Objekt s klíči:
+
+          - ``retry_delay`` *(volitelný, výchozí* ``0.5``*)* — čekací interval v sekundách
+            mezi pokusy o získání zámku; musí být kladné číslo (``float``)
+          - ``max_retries`` *(volitelný, výchozí* ``10``*)* — maximální počet pokusů;
+            musí být kladné celé číslo (``int``)
+
+          Pokud nastavení chybí, použijí se výchozí hodnoty.
+
+          Příklad::
+
+              {"retry_delay": 1.0, "max_retries": 5}
+
       Změny v administraci se projeví do ``30`` sekund (TTL cache).
 
       :param item_id: Identifikátor záznamu — ``"access_rules"``, ``"rate_limits"`` nebo ``"access_mode"``.
@@ -119,7 +133,9 @@ Třídy
       Ověří ``CustomAdminSettings`` záznam relevantní pro PAS API před uložením.
 
       Pokud jde o skupinu ``pas_api``, ověří platnost ``item_id`` a podle něj
-      validuje JSON hodnotu příslušným validátorem.
+      validuje JSON hodnotu příslušným validátorem. Podporovaná ``item_id``:
+      ``"access_rules"``, ``"rate_limits"``, ``"access_mode"``, ``"trusted_proxies"``,
+      ``"record_lock_params"``.
 
       :param instance: Ukládaný záznam ``CustomAdminSettings``.
 
@@ -185,6 +201,28 @@ Třídy
       :param raw_proxies: Naparsovaná JSON hodnota nastavení ``trusted_proxies``.
 
       :raises ValidationError: Pokud struktura nebo obsah neodpovídá očekávání.
+      :return: ``True`` pokud je nastavení validní.
+
+   .. py:method:: get_record_lock_params()
+
+      Vrátí parametry Redis zámku záznamu z cache nebo ``CustomAdminSettings``.
+
+      Pokud nastavení ``record_lock_params`` neexistuje, vrátí výchozí hodnoty
+      ``(_RECORD_LOCK_DEFAULT_RETRY_DELAY, _RECORD_LOCK_DEFAULT_MAX_RETRIES)``.
+
+      :raises ValidationError: Pokud nastavení má neplatnou strukturu.
+      :return: Dvojice ``(retry_delay, max_retries)``.
+
+   .. py:method:: validate_record_lock_params()
+
+      Ověří strukturu a obsah nastavení ``record_lock_params``.
+
+      Očekávaný formát je objekt s nepovinnými klíči ``retry_delay`` (kladné ``float``)
+      a ``max_retries`` (kladné celé číslo ``int``).
+
+      :param raw_params: Naparsovaná JSON hodnota nastavení ``record_lock_params``.
+
+      :raises ValidationError: Pokud struktura nebo hodnoty neodpovídají očekávání.
       :return: ``True`` pokud je nastavení validní.
 
    .. py:method:: get_client_ip()
@@ -450,6 +488,27 @@ Třídy
       :param instance: Aktualizovaný záznam samostatného nálezu.
 
       :raises DoiWriteError: Pokud aktualizace IGSN selže.
+
+   .. py:method:: _acquire_record_lock()
+
+      Pokusí se získat zámek záznamu v Redis.
+
+      Kombinuje in-process ``threading.Lock`` (``_record_lock_thread_lock``) pro serializaci
+      vláken v rámci jednoho Django workeru s atomickým ``cache.add`` pro koordinaci
+      mezi více procesy. Pokud klíč neexistuje nebo má hodnotu ``0`` (uvolněno), zámek je
+      získán nastavením hodnoty na ``1``. Pokud je klíč ``1`` (zamčeno jiným workerem),
+      čeká ``_RECORD_LOCK_RETRY_DELAY`` sekund a zkusí znovu, nejvýše
+      ``_RECORD_LOCK_MAX_RETRIES``-krát.
+
+      :param ident_cely: Identifikátor záznamu, jehož zámek se má získat.
+
+      :return: ``True`` pokud byl zámek úspěšně získán, jinak ``False``.
+
+   .. py:method:: _release_record_lock()
+
+      Uvolní zámek záznamu nastavením Redis hodnoty na ``0``.
+
+      :param ident_cely: Identifikátor záznamu, jehož zámek se má uvolnit.
 
    .. py:method:: _verify_content_digest()
 

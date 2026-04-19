@@ -76,15 +76,28 @@ _CACHE_KEY_ACCESS_MODE = "pas_api_access_mode"
 _CACHE_KEY_TRUSTED_PROXIES = "pas_api_trusted_proxies"
 _CACHE_TTL = 30  # sekund
 
+_RECORD_LOCK_PREFIX = "pas_api_record_lock_"
+_RECORD_LOCK_TTL = 300  # sekund — zámek záznamu vyprší po 5 minutách
+_RECORD_LOCK_DEFAULT_RETRY_DELAY = 0.5  # sekund — výchozí čekací interval mezi pokusy
+_RECORD_LOCK_DEFAULT_MAX_RETRIES = 10  # výchozí maximální počet pokusů o získání zámku
+_CACHE_KEY_RECORD_LOCK_PARAMS = "pas_api_record_lock_params"
+
 _PAS_API_GROUP = "pas_api"
 _ACCESS_RULES_ID = "access_rules"
 _RATE_LIMITS_ID = "rate_limits"
 _ACCESS_MODE_ID = "access_mode"
 # codeql[py/clear-text-logging-sensitive-data]
 _TRUSTED_PROXIES_ID = "trusted_proxies"
+_RECORD_LOCK_PARAMS_ID = "record_lock_params"
 _AMCR_SCHEMA_LOCK = threading.Lock()
 _AMCR_SCHEMA_FETCH_TIMEOUT = 10
 _AMCR_SCHEMA_CACHE_TTL = 3600  # sekund — schéma se znovu načte po 60 minutách
+_ALLOWED_XML_XSD_URLS = (
+    "http://www.w3.org/2001/xml.xsd",
+    "https://www.w3.org/2001/xml.xsd",
+    "http://www.w3.org/2001/03/xml.xsd",
+    "https://www.w3.org/2001/03/xml.xsd",
+)
 _ALLOWED_SCHEMA_URL_PATTERNS = (
     re.compile(r"^https?://www\.w3\.org/2001/XMLSchema-instance(?:[?#].*)?$"),
     re.compile(r"^https?://www\.w3\.org/2001/(?:03/)?xml\.xsd(?:[?#].*)?$"),
@@ -145,7 +158,7 @@ ACCESS_MODE_OPEN = "open"
 ACCESS_MODE_WHITELIST_ONLY = "whitelist_only"
 ACCESS_MODE_CLOSED = "closed"
 _ACCESS_MODES = {ACCESS_MODE_OPEN, ACCESS_MODE_WHITELIST_ONLY, ACCESS_MODE_CLOSED}
-_PAS_API_ITEM_IDS = {_ACCESS_RULES_ID, _RATE_LIMITS_ID, _ACCESS_MODE_ID, _TRUSTED_PROXIES_ID}
+_PAS_API_ITEM_IDS = {_ACCESS_RULES_ID, _RATE_LIMITS_ID, _ACCESS_MODE_ID, _TRUSTED_PROXIES_ID, _RECORD_LOCK_PARAMS_ID}
 
 # codeql[py/clear-text-logging-sensitive-data]
 _DEFAULT_TRUSTED_PROXIES = []
@@ -262,6 +275,20 @@ class PasApiPermissionMixin:
 
                 ["10.0.1.0/24", "proxy"]
 
+        ``record_lock_params`` (``item_id="record_lock_params"``)
+            Parametry Redis zámku záznamu. Objekt s klíči:
+
+            - ``retry_delay`` *(volitelný, výchozí* ``0.5``*)* — čekací interval v sekundách
+              mezi pokusy o získání zámku; musí být kladné číslo (``float``)
+            - ``max_retries`` *(volitelný, výchozí* ``10``*)* — maximální počet pokusů;
+              musí být kladné celé číslo (``int``)
+
+            Pokud nastavení chybí, použijí se výchozí hodnoty.
+
+            Příklad::
+
+                {"retry_delay": 1.0, "max_retries": 5}
+
         Změny v administraci se projeví do ``30`` sekund (TTL cache).
 
         :param item_id: Identifikátor záznamu — ``"access_rules"``, ``"rate_limits"`` nebo ``"access_mode"``.
@@ -370,7 +397,9 @@ class PasApiPermissionMixin:
         Ověří ``CustomAdminSettings`` záznam relevantní pro PAS API před uložením.
 
         Pokud jde o skupinu ``pas_api``, ověří platnost ``item_id`` a podle něj
-        validuje JSON hodnotu příslušným validátorem.
+        validuje JSON hodnotu příslušným validátorem. Podporovaná ``item_id``:
+        ``"access_rules"``, ``"rate_limits"``, ``"access_mode"``, ``"trusted_proxies"``,
+        ``"record_lock_params"``.
 
         :param instance: Ukládaný záznam ``CustomAdminSettings``.
 
@@ -406,6 +435,8 @@ class PasApiPermissionMixin:
             cls.validate_access_mode(raw_value)
         elif instance.item_id == _TRUSTED_PROXIES_ID:
             cls.validate_trusted_proxies(raw_value)
+        elif instance.item_id == _RECORD_LOCK_PARAMS_ID:
+            cls.validate_record_lock_params(raw_value)
         return True
 
     @classmethod
@@ -608,6 +639,59 @@ class PasApiPermissionMixin:
         return True
 
     @classmethod
+    def get_record_lock_params(cls) -> tuple[float, int]:
+        """
+        Vrátí parametry Redis zámku záznamu z cache nebo ``CustomAdminSettings``.
+
+        Pokud nastavení ``record_lock_params`` neexistuje, vrátí výchozí hodnoty
+        ``(_RECORD_LOCK_DEFAULT_RETRY_DELAY, _RECORD_LOCK_DEFAULT_MAX_RETRIES)``.
+
+        :raises ValidationError: Pokud nastavení má neplatnou strukturu.
+        :return: Dvojice ``(retry_delay, max_retries)``.
+        """
+        params = cache.get(_CACHE_KEY_RECORD_LOCK_PARAMS)
+        if params is None:
+            raw = cls.load_json_setting(_RECORD_LOCK_PARAMS_ID)
+            if not raw:
+                params = (_RECORD_LOCK_DEFAULT_RETRY_DELAY, _RECORD_LOCK_DEFAULT_MAX_RETRIES)
+            else:
+                cls.validate_record_lock_params(raw)
+                retry_delay = float(raw.get("retry_delay", _RECORD_LOCK_DEFAULT_RETRY_DELAY))
+                max_retries = int(raw.get("max_retries", _RECORD_LOCK_DEFAULT_MAX_RETRIES))
+                params = (retry_delay, max_retries)
+            cache.set(_CACHE_KEY_RECORD_LOCK_PARAMS, params, _CACHE_TTL)
+        return params
+
+    @staticmethod
+    def validate_record_lock_params(raw_params) -> bool:
+        """
+        Ověří strukturu a obsah nastavení ``record_lock_params``.
+
+        Očekávaný formát je objekt s nepovinnými klíči ``retry_delay`` (kladné ``float``)
+        a ``max_retries`` (kladné celé číslo ``int``).
+
+        :param raw_params: Naparsovaná JSON hodnota nastavení ``record_lock_params``.
+
+        :raises ValidationError: Pokud struktura nebo hodnoty neodpovídají očekávání.
+        :return: ``True`` pokud je nastavení validní.
+        """
+        if not isinstance(raw_params, dict):
+            raise ValidationError({"value": _("pas.api.PasApiPermissionMixin.validate_record_lock_params.not_a_dict")})
+        if "retry_delay" in raw_params:
+            retry_delay = raw_params["retry_delay"]
+            if not isinstance(retry_delay, (int, float)) or isinstance(retry_delay, bool) or retry_delay <= 0:
+                raise ValidationError(
+                    {"value": _("pas.api.PasApiPermissionMixin.validate_record_lock_params.invalid_retry_delay")}
+                )
+        if "max_retries" in raw_params:
+            max_retries = raw_params["max_retries"]
+            if not isinstance(max_retries, int) or isinstance(max_retries, bool) or max_retries <= 0:
+                raise ValidationError(
+                    {"value": _("pas.api.PasApiPermissionMixin.validate_record_lock_params.invalid_max_retries")}
+                )
+        return True
+
+    @classmethod
     def get_client_ip(cls, request) -> str:
         """
         Vrátí IP adresu klienta z požadavku.
@@ -698,6 +782,7 @@ def _invalidate_api_cache(sender, instance=None, **kwargs):
         cache.delete(_CACHE_KEY_RATE_LIMITS)
         cache.delete(_CACHE_KEY_ACCESS_MODE)
         cache.delete(_CACHE_KEY_TRUSTED_PROXIES)
+        cache.delete(_CACHE_KEY_RECORD_LOCK_PARAMS)
 
 
 class IpBlacklistPermission(PasApiPermissionMixin, BasePermission):
@@ -1170,6 +1255,8 @@ class SamostatnyNalezXmlImportSerializer(serializers.ModelSerializer):
 class PasApiBaseView(PasApiPermissionMixin, APIView):
     """Základní pohled sdílený všemi PAS API endpointy."""
 
+    _record_lock_thread_lock: threading.Lock = threading.Lock()
+
     authentication_classes = [TokenAuthenticationBearer]
     permission_classes = [
         IsAuthenticated,
@@ -1245,6 +1332,44 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
         """
         if instance.stav == SN_ARCHIVOVANY:
             instance.igsn_update(False, True)
+
+    @staticmethod
+    def _acquire_record_lock(ident_cely: str) -> bool:
+        """
+        Pokusí se získat zámek záznamu v Redis.
+
+        Kombinuje in-process ``threading.Lock`` (``_record_lock_thread_lock``) pro serializaci
+        vláken v rámci jednoho Django workeru s atomickým ``cache.add`` pro koordinaci
+        mezi více procesy. Pokud klíč neexistuje nebo má hodnotu ``0`` (uvolněno), zámek je
+        získán nastavením hodnoty na ``1``. Pokud je klíč ``1`` (zamčeno jiným workerem),
+        čeká ``_RECORD_LOCK_RETRY_DELAY`` sekund a zkusí znovu, nejvýše
+        ``_RECORD_LOCK_MAX_RETRIES``-krát.
+
+        :param ident_cely: Identifikátor záznamu, jehož zámek se má získat.
+
+        :return: ``True`` pokud byl zámek úspěšně získán, jinak ``False``.
+        """
+        retry_delay, max_retries = PasApiBaseView.get_record_lock_params()
+        cache_key = f"{_RECORD_LOCK_PREFIX}{ident_cely}"
+        for _ in range(max_retries):  # noqa: F402
+            with PasApiBaseView._record_lock_thread_lock:
+                if cache.add(cache_key, 1, timeout=_RECORD_LOCK_TTL):
+                    return True
+                if cache.get(cache_key) != 1:
+                    cache.set(cache_key, 1, timeout=_RECORD_LOCK_TTL)
+                    return True
+            time.sleep(retry_delay)
+        return False
+
+    @staticmethod
+    def _release_record_lock(ident_cely: str) -> None:
+        """
+        Uvolní zámek záznamu nastavením Redis hodnoty na ``0``.
+
+        :param ident_cely: Identifikátor záznamu, jehož zámek se má uvolnit.
+        """
+        cache_key = f"{_RECORD_LOCK_PREFIX}{ident_cely}"
+        cache.set(cache_key, 0, timeout=_RECORD_LOCK_TTL)
 
     @staticmethod
     def _verify_content_digest(
@@ -1436,12 +1561,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
 
                     :return: Vrací lokální soubor pro xml.xsd, jinak None.
                     """
-                    allowed_urls = (
-                        "http://www.w3.org/2001/xml.xsd",
-                        "https://www.w3.org/2001/xml.xsd",
-                        "http://www.w3.org/2001/03/xml.xsd",
-                        "https://www.w3.org/2001/03/xml.xsd",
-                    )
+                    allowed_urls = _ALLOWED_XML_XSD_URLS
                     if url in allowed_urls:
                         return self.resolve_filename("xml_generator/definitions/xml.xsd", context)
                     if any(pattern.match(url) for pattern in _ALLOWED_SCHEMA_URL_PATTERNS):
@@ -2318,6 +2438,13 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
+        if not self._acquire_record_lock(ident_cely):
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.PasApiBaseView.record_locked")},
+                status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+
         log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
         log_entry.save(update_fields=["status"])
 
@@ -2332,11 +2459,11 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
                 instance.save(update_fields=["evidencni_cislo"])
                 self._create_history_record(instance, request.user, old_evidencni_cislo, evidencni_cislo)
                 self._update_igsn_if_archived(instance)
-                transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
         except DoiWriteError as err:
             logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.igsn_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.doi_update_error")},
@@ -2346,6 +2473,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
@@ -2355,6 +2483,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.database_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
@@ -2364,11 +2493,14 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.unexpected_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+        fedora_transaction.mark_transaction_as_closed()
 
         metadata_transaction = None
         try:
@@ -2381,12 +2513,14 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             )
             if metadata_transaction is not None and metadata_transaction.status == FedoraTransactionStatus.ACTIVE:
                 metadata_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error_reading_metadata")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+        self._release_record_lock(ident_cely)
         return self._success(log_entry, instance, metadata, [])
 
     @staticmethod
@@ -2565,12 +2699,20 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
         binary_data.seek(0)
         uploaded_file.seek(0)
 
+        if not self._acquire_record_lock(ident_cely):
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.PasApiBaseView.record_locked")},
+                status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+
         log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
         log_entry.save(update_fields=["status"])
 
         mimetype = Soubor.get_mime_types(uploaded_file)
         mime_extensions = Soubor.get_file_extension_by_mime(uploaded_file)
         if len(mime_extensions) == 0:
+            self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
                 {"detail": _("core.views.post_upload.mime_rename_failed")},
@@ -2579,6 +2721,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
 
         new_name = get_finds_soubor_name(instance, uploaded_file.name)
         if new_name is False:
+            self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
                 {
@@ -2618,12 +2761,12 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
                 soubor_instance.zaznamenej_nahrani(request.user, uploaded_file.name)
                 self._create_rearchive_history_record(instance, request.user)
                 self._update_igsn_if_archived(instance)
-                soubor_instance.close_active_transaction_when_finished = True
                 soubor_instance.save()
         except DoiWriteError as err:
             logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.igsn_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
@@ -2633,6 +2776,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.fedora_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
@@ -2642,6 +2786,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.database_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
@@ -2651,11 +2796,14 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.unexpected_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+        fedora_transaction.mark_transaction_as_closed()
 
         metadata_transaction = None
         try:
@@ -2667,10 +2815,12 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             )
             if metadata_transaction is not None and metadata_transaction.status == FedoraTransactionStatus.ACTIVE:
                 metadata_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.fedora_error_reading_metadata")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+        self._release_record_lock(ident_cely)
         return self._success(log_entry, instance, metadata, [])

@@ -39,6 +39,7 @@ from heslar.models import Heslar, HeslarNazev, RuianKatastr
 from historie.models import Historie
 from lxml import etree
 from pas.api import (
+    _RECORD_LOCK_PREFIX,
     ImportErrorType,
     ImportValidationException,
     SamostatnyNalezEvidencniCisloPatchView,
@@ -1718,24 +1719,29 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
 
     def test_missing_evidencni_cislo_param_returns_400(self):
         """Chybějící query parametr ``evidencni_cislo`` vrátí HTTP 400 a log se stavem FAILURE."""
+
         response = self._patch(IDENT_CELY, evidencni_cislo=None)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("detail", response.data)
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("missing_evidencni_cislo", str(log.errors))
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_empty_evidencni_cislo_param_returns_422(self):
         """Prázdný query parametr ``evidencni_cislo`` vrátí HTTP 422 a log se stavem FAILURE."""
+
         response = self._patch(IDENT_CELY, evidencni_cislo="")
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         self.assertIn("detail", response.data)
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("empty_evidencni_cislo", str(log.errors))
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_evidencni_cislo_too_long_returns_422(self):
         """Příliš dlouhé ``evidencni_cislo`` (přes 255 znaků) vrátí HTTP 422 a log se stavem FAILURE."""
+
         too_long = "X" * (SamostatnyNalezEvidencniCisloPatchView._MAX_EVIDENCNI_CISLO_LENGTH + 1)
 
         response = self._patch(IDENT_CELY, evidencni_cislo=too_long)
@@ -1744,9 +1750,11 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.assertIn("detail", response.data)
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("evidencni_cislo_too_long", str(log.errors))
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_same_evidencni_cislo_value_returns_422(self):
         """Odeslaná hodnota shodná s aktuální vrátí HTTP 422 a log se stavem FAILURE bez zápisu."""
+
         self.nalez.evidencni_cislo = "EC-SAME-001"
         self.nalez.save(update_fields=["evidencni_cislo"])
 
@@ -1759,36 +1767,44 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.nalez.refresh_from_db()
         self.assertEqual(self.nalez.evidencni_cislo, "EC-SAME-001")
         self.assertEqual(Historie.objects.filter(vazba=self.nalez.historie).count(), 0)
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_nonexistent_ident_cely_returns_404(self):
         """Neexistující ``ident_cely`` vrátí HTTP 404 a log se stavem FAILURE."""
+
         response = self._patch("C-000000000-N99999")
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertIn("detail", response.data)
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("not_found", str(log.errors))
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}C-000000000-N99999"), 1)
 
     def test_user_without_pas_edit_permission_returns_403(self):
         """Archeolog mimo vlastnické organizace obdrží HTTP 403 a log se stavem FAILURE."""
+
         response = self._patch(IDENT_CELY, token=self.outsider_token.key)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertIn("detail", response.data)
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("permission_denied", str(log.errors))
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_badatel_with_pas_edit_permission_returns_403(self):
         """Uživatel s rolí Badatel obdrží HTTP 403, i když splňuje vlastnictví i stav ``pas_edit``."""
+
         response = self._patch(IDENT_CELY, token=self.badatel_token.key)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertIn("detail", response.data)
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("permission_denied", str(log.errors))
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_database_error_on_save_returns_500(self):
         """Chyba databáze při ukládání vrátí HTTP 500 a log se stavem FAILURE. Hodnota se neuloží."""
+
         original_value = self.nalez.evidencni_cislo
 
         with patch("pas.api.SamostatnyNalez.save", side_effect=DatabaseError("db error")):
@@ -1800,9 +1816,11 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.assertEqual(self.nalez.evidencni_cislo, original_value)
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("internal_error", str(log.errors))
+        self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
 
     def test_fedora_error_on_save_returns_500(self):
         """Chyba Fedory při ukládání vrátí HTTP 500 a log se stavem FAILURE. Hodnota se neuloží."""
+
         original_value = self.nalez.evidencni_cislo
 
         with patch(
@@ -1816,9 +1834,11 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.nalez.refresh_from_db()
         self.assertEqual(self.nalez.evidencni_cislo, original_value)
         self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
 
     def test_fedora_error_on_read_metadata_returns_500(self):
         """Chyba Fedory při čtení metadat vrátí HTTP 500 a log se stavem FAILURE. Hodnota je uložena v DB."""
+
         connector = Mock()
         connector.get_metadata.side_effect = FedoraNoResponseError("http://fedora.example/", "No Fedora response", None)
 
@@ -1831,6 +1851,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.assertEqual(self.nalez.evidencni_cislo, "EC-TEST-001")
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("fedora_error_reading_metadata", str(log.errors))
+        self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
 
     def test_valid_request_updates_field_and_returns_200(self):
         """Platný požadavek aktualizuje ``evidencni_cislo``, vrátí HTTP 200 s XML a log se stavem SUCCESS."""
@@ -1851,18 +1872,15 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.assertEqual(history.count(), 1)
         self.assertEqual(history.get().poznamka, f"{old_value} -> EC-2024-NEW")
 
-    def test_patch_closes_fedora_transaction_via_on_commit(self):
-        """PATCH registruje uzavření Fedora transakce přes ``transaction.on_commit()``."""
+    def test_patch_closes_fedora_transaction_explicitly(self):
+        """PATCH uzavře Fedora transakci explicitním voláním ``mark_transaction_as_closed()`` po commitu."""
         fedora_transaction = Mock()
 
-        with patch("pas.api.FedoraTransaction", return_value=fedora_transaction), patch(
-            "pas.api.transaction.on_commit"
-        ) as mock_on_commit:
+        with patch("pas.api.FedoraTransaction", return_value=fedora_transaction):
             response = self._patch(IDENT_CELY, evidencni_cislo="EC-ON-COMMIT-001")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        mock_on_commit.assert_called_once_with(fedora_transaction.mark_transaction_as_closed)
-        fedora_transaction.mark_transaction_as_closed.assert_not_called()
+        fedora_transaction.mark_transaction_as_closed.assert_called_once()
 
     def test_igsn_update_called_when_stav_is_sn_archivovany(self):
         """Úspěšný požadavek na archivovaný záznam (SN4) zavolá ``igsn_update`` a vytvoří záznam ``SN34``."""
@@ -1883,6 +1901,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
 
     def test_doi_write_error_on_archived_record_returns_500(self):
         """Selhání IGSN aktualizace při PATCH na archivovaném záznamu vrátí HTTP 500 a vše vrátí rollbackem."""
+
         self.nalez.stav = SN_ARCHIVOVANY
         self.nalez.evidencni_cislo = "EC-DOI-OLD-001"
         self.nalez.save(update_fields=["stav", "evidencni_cislo"])
@@ -1898,6 +1917,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.assertEqual(Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN).count(), 0)
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("doi_update_error", str(log.errors))
+        self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
 
     def test_target_organization_archeolog_can_patch_via_predano_organizace(self):
         """Archeolog cílového muzea je autorizován přes ``predano_organizace``."""
@@ -1955,6 +1975,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
 
     def test_badatel_cannot_patch_archived_record(self):
         """Badatel nesmí aktualizovat evidenční číslo záznamu ve stavu SN4, i když splňuje vlastnictví."""
+
         self.nalez.stav = SN_ARCHIVOVANY
         self.nalez.save(update_fields=["stav"])
 
@@ -1966,6 +1987,48 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.assertIn("permission_denied", str(log.errors))
         self.nalez.refresh_from_db()
         self.assertNotEqual(self.nalez.evidencni_cislo, "EC-ARCHIV-BADATEL-001")
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
+
+    def test_locked_record_returns_429_on_patch(self):
+        """PATCH na zamčený záznam vrátí HTTP 429 a nebude čekat ani měnit stav záznamu."""
+
+        self._set_pas_api_setting("record_lock_params", {"max_retries": 1, "retry_delay": 0.001})
+        lock_key = f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"
+        cache.set(lock_key, 1, timeout=300)
+
+        response = self._patch(IDENT_CELY, evidencni_cislo="EC-LOCKED-001")
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertIn("detail", response.data)
+        self.assertIn("record_locked", str(response.data["detail"]))
+        self.nalez.refresh_from_db()
+        self.assertNotEqual(self.nalez.evidencni_cislo, "EC-LOCKED-001")
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("record_locked", str(log.errors))
+
+    def test_lock_is_released_after_successful_patch(self):
+        """Po úspěšném PATCH je Redis zámek uvolněn (hodnota 0)."""
+
+        response = self._patch(IDENT_CELY, evidencni_cislo="EC-UNLOCK-001")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        lock_key = f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"
+        self.assertEqual(cache.get(lock_key), 0)
+
+    def test_patch_on_different_record_succeeds_while_one_is_locked(self):
+        """Zamčení jednoho záznamu neblokuje PATCH na jiný záznam."""
+
+        self._set_pas_api_setting("record_lock_params", {"max_retries": 1, "retry_delay": 0.001})
+        lock_key = f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"
+        cache.set(lock_key, 1, timeout=300)
+
+        response = self._patch(self.nalez_second.ident_cely, evidencni_cislo="EC-OTHER-001")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.nalez_second.refresh_from_db()
+        self.assertEqual(self.nalez_second.evidencni_cislo, "EC-OTHER-001")
+        self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{self.nalez_second.ident_cely}"), 0)
+        self.assertEqual(cache.get(lock_key), 1)
 
 
 class SamostatnyNalezFotografieUploadViewTests(TestCase):
@@ -2347,6 +2410,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
     def test_missing_file_returns_400(self):
         """POST bez souboru vrátí HTTP 400 a nic nepřipojí."""
+
         response = self._post_file(IDENT_CELY, file_bytes=None)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -2354,9 +2418,11 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("missing_file", str(log.errors))
         self._assert_attached_files(self.nalez, 0)
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_nonexistent_ident_cely_returns_404(self):
         """Neexistující ``ident_cely`` vrátí HTTP 404 a fotografii nevytvoří."""
+
         photo = self._minimal_photo_bytes()
 
         response = self._post_file("C-000000000-N99999", photo)
@@ -2366,9 +2432,11 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("not_found", str(log.errors))
         self._assert_attached_files(self.nalez, 0)
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}C-000000000-N99999"), 1)
 
     def test_content_digest_mismatch_returns_422(self):
         """Neodpovídající ``Content-Digest`` vrátí HTTP 422 a fotografii nevytvoří."""
+
         photo = self._minimal_photo_bytes()
         wrong_digest = f"sha-512=:{base64.b64encode(hashlib.sha512(b'wrong').digest()).decode('ascii')}:"
 
@@ -2379,9 +2447,11 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("digest", str(log.errors))
         self._assert_attached_files(self.nalez, 0)
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_missing_content_digest_returns_400(self):
         """Chybějící hlavička ``Content-Digest`` vrátí HTTP 400 a fotografii nevytvoří."""
+
         photo = self._minimal_photo_bytes()
 
         response = self._post_file(IDENT_CELY, photo, include_content_digest=False)
@@ -2391,9 +2461,11 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("digest", str(log.errors))
         self._assert_attached_files(self.nalez, 0)
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_file_too_large_returns_422(self):
         """Soubor přes limit velikosti vrátí HTTP 422 a fotografii nevytvoří."""
+
         photo = self._minimal_photo_bytes()
 
         with patch("pas.api.MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES", 1):
@@ -2404,9 +2476,11 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("file_too_large", str(log.errors))
         self._assert_attached_files(self.nalez, 0)
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_user_without_file_upload_permission_returns_403(self):
         """Uživatel bez oprávnění ``soubor_nahrat_pas`` obdrží HTTP 403."""
+
         photo = self._minimal_photo_bytes()
 
         with patch("pas.api.check_permissions", return_value=False):
@@ -2417,9 +2491,11 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("permission_denied", str(log.errors))
         self._assert_attached_files(self.nalez, 0)
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_non_image_file_returns_422(self):
         """Soubor s nepovoleným MIME typem vrátí HTTP 422."""
+
         response = self._post_file(IDENT_CELY, b"plain-text", filename="note.txt")
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
@@ -2427,6 +2503,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("mime", str(log.errors))
         self._assert_attached_files(self.nalez, 0)
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_mime_validation_uses_pas_api_path(self):
         """Upload předá ``check_mime_for_url`` skutečnou cestu PAS API endpointu."""
@@ -2442,6 +2519,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
     def test_antivirus_virus_found_returns_422(self):
         """Soubor označený antivirem jako škodlivý vrátí HTTP 422."""
+
         photo = self._minimal_photo_bytes()
 
         with patch("pas.api.Soubor.check_antivirus", return_value=AntivirusCheckResult.VIRUS_FOUND):
@@ -2452,9 +2530,11 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("virus", str(log.errors))
         self._assert_attached_files(self.nalez, 0)
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_antivirus_check_failure_returns_500(self):
         """Selhání antivirové kontroly vrátí HTTP 500."""
+
         photo = self._minimal_photo_bytes()
 
         with patch("pas.api.Soubor.check_antivirus", return_value=AntivirusCheckResult.CHECK_FAILED):
@@ -2465,9 +2545,11 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("check_failed", str(log.errors))
         self._assert_attached_files(self.nalez, 0)
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_database_error_on_soubor_save_returns_500(self):
         """Chyba databáze při uložení ``Soubor`` vrátí HTTP 500 a fotografii nevytvoří."""
+
         photo = self._minimal_photo_bytes()
 
         with patch("core.models.Soubor.save", side_effect=DatabaseError("db error")):
@@ -2478,9 +2560,11 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("internal_error", str(log.errors))
         self._assert_attached_files(self.nalez, 0)
+        self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
 
     def test_fedora_error_on_save_returns_500(self):
         """Chyba Fedory při ukládání fotografie vrátí HTTP 500."""
+
         photo = self._minimal_photo_bytes()
         connector = self._build_mock_repository_connector(self.nalez)
         connector.save_binary_file.side_effect = FedoraNoResponseError("http://fedora.example/", "No response", None)
@@ -2493,9 +2577,11 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("internal_error", str(log.errors))
         self._assert_attached_files(self.nalez, 0)
+        self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
 
     def test_fedora_error_on_read_metadata_returns_500(self):
         """Chyba při čtení metadat z Fedory vrátí HTTP 500, ale fotografie zůstane připojena."""
+
         photo = self._minimal_photo_bytes()
         save_connector = self._build_mock_repository_connector(self.nalez)
         metadata_connector = Mock()
@@ -2512,6 +2598,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         self.assertIn("fedora_error_reading_metadata", str(log.errors))
         self._assert_attached_files(self.nalez, 1, expected_name="C202600009N00007F01.png")
         self._assert_file_upload_history(1, expected_note="photo.png")
+        self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
 
     def test_success_returns_metadata_and_attaches_photo(self):
         """Platný upload vrátí metadata, uloží fotografii a zapíše historii souboru."""
@@ -2547,6 +2634,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
     def test_doi_write_error_on_archived_record_returns_500(self):
         """Selhání IGSN aktualizace při uploadu na archivovaný záznam vrátí HTTP 500 a soubor se neuloží."""
+
         self.nalez.stav = SN_ARCHIVOVANY
         self.nalez.save(update_fields=["stav"])
         photo = self._minimal_photo_bytes()
@@ -2560,6 +2648,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         self.assertEqual(Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN).count(), 0)
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("internal_error", str(log.errors))
+        self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
 
     def test_igsn_update_not_called_when_stav_is_not_sn_archivovany(self):
         """Úspěšný upload nezarchivovaného záznamu nevolá ``igsn_update`` ani nevytváří ``SN34``."""
@@ -2626,6 +2715,48 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         self.assertEqual(upload_response.status_code, status.HTTP_200_OK)
         self.assertEqual(throttled_patch_response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
         self.assertEqual(other_record_patch_response.status_code, status.HTTP_200_OK)
+
+    def test_locked_record_returns_429_on_upload(self):
+        """Upload na zamčený záznam vrátí HTTP 429 a neuloží žádný soubor."""
+
+        self._set_pas_api_setting("record_lock_params", {"max_retries": 1, "retry_delay": 0.001})
+        lock_key = f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"
+        cache.set(lock_key, 1, timeout=300)
+        photo = self._minimal_photo_bytes()
+
+        response = self._post_file(IDENT_CELY, photo)
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertIn("detail", response.data)
+        self.assertIn("record_locked", str(response.data["detail"]))
+        self._assert_attached_files(self.nalez, 0)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("record_locked", str(log.errors))
+
+    def test_lock_is_released_after_successful_upload(self):
+        """Po úspěšném uploadu je Redis zámek uvolněn (hodnota 0)."""
+
+        photo = self._minimal_photo_bytes()
+        response = self._post_file(IDENT_CELY, photo)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        lock_key = f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"
+        self.assertEqual(cache.get(lock_key), 0)
+
+    def test_upload_on_different_record_succeeds_while_one_is_locked(self):
+        """Zamčení jednoho záznamu neblokuje upload na jiný záznam."""
+
+        self._set_pas_api_setting("record_lock_params", {"max_retries": 1, "retry_delay": 0.001})
+        lock_key = f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"
+        cache.set(lock_key, 1, timeout=300)
+        photo = self._minimal_photo_bytes()
+
+        response = self._post_file(self.nalez_second.ident_cely, photo, filename="other.png")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self._assert_attached_files(self.nalez_second, 1)
+        self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{self.nalez_second.ident_cely}"), 0)
+        self.assertEqual(cache.get(lock_key), 1)
 
 
 class SamostatnyNalezGetCreateOrgTests(TestCase):
@@ -2763,11 +2894,9 @@ class SamostatnyNalezGetCreateOrgTests(TestCase):
 
     def _make_nalez(self, ident_cely, projekt, predano_organizace=None):
         """Vytvoří instanci ``SamostatnyNalez`` bez uložení do DB."""
-        nalez = SamostatnyNalez.__new__(SamostatnyNalez)
-        nalez.projekt = projekt
-        nalez.predano_organizace = predano_organizace
-        nalez.predano_organizace_id = predano_organizace.pk if predano_organizace else None
+        nalez = SamostatnyNalez()
         nalez.projekt_id = projekt.pk
+        nalez.predano_organizace_id = predano_organizace.pk if predano_organizace else None
         return nalez
 
     def test_projekt_without_organizace_returns_empty_tuple(self):
