@@ -16,7 +16,7 @@ from core.constants import (
     API_REQUEST_LOG_STATUS_SUCCESS,
     ODESLANI_SN,
     POTVRZENI_SN,
-    SN_ZAPSANY,
+    SN_POTVRZENY,
     ZAPSANI_SN,
 )
 from core.models import ApiRequestLog, Permissions
@@ -1010,7 +1010,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertAlmostEqual(nalez.geom.y, 49.9914407, places=5)
         self.assertAlmostEqual(nalez.geom_sjtsk.x, -828708.49, places=1)
         self.assertAlmostEqual(nalez.geom_sjtsk.y, -1041287.69, places=1)
-        self.assertEqual(nalez.stav, SN_ZAPSANY)
+        self.assertEqual(nalez.stav, SN_POTVRZENY)
         self._assert_log_success()
 
     def test_valid_xml_creates_import_history_records(self):

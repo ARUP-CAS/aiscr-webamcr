@@ -20,6 +20,7 @@ from core.constants import (
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT,
     ODESLANI_SN,
     POTVRZENI_SN,
+    SN_POTVRZENY,
     SN_ZAPSANY,
     ZAPSANI_SN,
 )
@@ -2085,7 +2086,7 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
             "poznamka": cls._text(elem, "poznamka"),
             "nalezce": nalezce_ident,
             "datum_nalezu": cls._text(elem, "datum_nalezu"),
-            "stav": SN_ZAPSANY,
+            "stav": SN_POTVRZENY,
             "predano": cls._parse_bool(cls._text(elem, "predano")),
             "predano_organizace": cls._id_attr(elem, "predano_organizace"),
             "geom_system": cls._text(elem, "geom_system"),
