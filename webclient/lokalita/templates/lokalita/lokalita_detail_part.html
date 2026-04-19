@@ -29,46 +29,46 @@
     {% endif %}
       <div class="row">
         {% if create and not edit_view%}
-        <div class="col-sm-2">
+        <div class="col-sm-6 col-lg-2">
           {{ arch_z_form.hlavni_katastr|as_crispy_field }}
         </div>
         {% else %}
-        <div class="col-sm-2">
+        <div class="col-sm-6 col-lg-2">
           {{ arch_z_form.hlavni_katastr_show|as_crispy_field }}
         </div>
-        <div class="col-sm-2" style="display:none">
+        <div class="col-sm-6 col-lg-2" style="display:none">
           {{ arch_z_form.hlavni_katastr|as_crispy_field }}
         </div>
         {% endif %}        
-        <div class="form-group col-sm-4" >
+        <div class="form-group col-sm-6 col-lg-4" >
           {% if arch_z_form.katastry %}
             {{ arch_z_form.katastry|as_crispy_field }}
           {% elif arch_z_form.katastry_show %}
             {{ arch_z_form.katastry_show|as_crispy_field }}
           {% endif %}
         </div>
-        <div class="col-sm-2 visually-hidden" aria-hidden="true">
+        <div class="col-sm-6 col-lg-2 visually-hidden" aria-hidden="true">
           {{ form.typ_lokality|as_crispy_field }}
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-6 col-lg-2">
           {{ form.typ_lokality_disp|as_crispy_field }}
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-6 col-lg-2">
           {{ form.druh|as_crispy_field }}
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-6 col-lg-2">
           {{ arch_z_form.uzivatelske_oznaceni|as_crispy_field }}
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-6 col-lg-2">
           {{ form.nazev|as_crispy_field }}
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-6 col-lg-2">
           {{ form.zachovalost|as_crispy_field }}
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-6 col-lg-2">
           {{ form.jistota|as_crispy_field }}
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-6 col-lg-2">
           {{ arch_z_form.pristupnost|as_crispy_field }}
         </div>
         <div class="col-sm-12">

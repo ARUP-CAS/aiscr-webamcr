@@ -2,24 +2,26 @@
 
 // set icon size
 @mixin setIcon($size: null, $color: null, $position: null) {
-  @if ($size != null) {
+  @if ($size !=null) {
     font-size: #{$size}px;
     height: #{$size}px;
-    width: #{$size}px;  
+    width: #{$size}px;
   }
-  @if ($color != null) {
+
+  @if ($color !=null) {
     color: $color !important;
   }
-  @if ($position != null) {
-    vertical-align: $position !important;  
+
+  @if ($position !=null) {
+    vertical-align: $position !important;
   }
-  
+
 }
 
 // set entity color
 @mixin setEntityColor($type) {
   @each $entity, $color in $entities {
-    @if ($type == card) {
+    @if ($type ==card) {
       &.app-entity-#{$entity} {
         background-color: $color;
 
@@ -27,7 +29,7 @@
           background-color: $white;
           color: $color;
         }
-      } 
+      }
     }
   }
 }
@@ -36,6 +38,7 @@
 @mixin setEntityElementsColor() {
   @each $entity, $color in $entities {
     .app-entity-#{$entity} {
+
       // common
       .app-entity-color {
         color: $color;
@@ -48,9 +51,9 @@
         .app-left {
           .app-entity-title {
             background-color: $color;
-  
+
             &:after {
-              border-left-color: $color;
+              background-color: $color;
             }
           }
 
@@ -60,7 +63,7 @@
             button span.material-icons {
               color: $color;
             }
-            
+
           }
         }
 
@@ -68,11 +71,11 @@
           .btn {
             color: $color;
             border-left-color: rgba($color, .3) !important;
-  
+
             &:hover {
               background-color: $color;
               color: $white;
-            } 
+            }
           }
         }
       }
@@ -80,15 +83,16 @@
       // stepper
       .bs-stepper {
         overflow-x: auto;
+
         .step {
           &.active {
             .bs-stepper-circle {
               background-color: $gray-100;
               color: $color;
               font-weight: bold;
-              box-shadow: inset 0 0 0 5.4px $color;              
+              box-shadow: inset 0 0 0 5.4px $color;
             }
-    
+
             .bs-stepper-label {
               color: $color;
             }
@@ -98,9 +102,9 @@
 
       // card header button
       .card {
-        &.app-card-form  {
+        &.app-card-form {
           .card-header {
-            background-color: rgba($color, 1.0) ;
+            background-color: rgba($color, 1.0);
             color: #fff;
 
             .btn-group {
@@ -138,11 +142,12 @@
       }
 
       // check box color
-      .custom-control-input:checked ~ .custom-control-label::before {
+      .custom-control-input:checked~.custom-control-label::before {
         border-color: $color;
         background-color: $color;
       }
-      .form-check-input:checked{
+
+      .form-check-input:checked {
         background-color: $color;
         border-color: $color;
       }
@@ -159,11 +164,12 @@
             position: sticky;
             top: 0;
             --bs-table-bg: #{$color} !important;
-      
+
             a {
               color: $white;
             }
-            .white{
+
+            .white {
               color: $white;
             }
           }
@@ -172,9 +178,11 @@
             a {
               color: $color;
             }
+
             button {
               color: $color;
             }
+
             td {
               vertical-align: middle;
             }
@@ -190,14 +198,14 @@
               background-color: $color;
               border: $color;
               color: $white;
-              display:flex;
+              display: flex;
               border: 1px solid #dee2e6;
             }
           }
 
           .page-link {
             color: $color;
-            display:flex;
+            display: flex;
           }
         }
       }
@@ -232,6 +240,7 @@
             &.app-cell-badge {
               padding-left: 0;
             }
+
             .badge {
               background-color: $color !important;
               color: $white;
@@ -258,11 +267,15 @@
   color: $color;
 
   &:hover {
-    @if ($shade == 'd') {
+    @if ($shade =='d') {
       color: darken($color, $val);
-    } @else if ($shade == 'l') {
+    }
+
+    @else if ($shade =='l') {
       color: lighten($color, $val);
-    } @else if ($shade == none) {
+    }
+
+    @else if ($shade ==none) {
       color: $colorH;
     }
   }

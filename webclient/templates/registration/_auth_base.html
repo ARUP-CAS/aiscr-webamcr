@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block body_class %}app-auth-v2{% endblock %}
+{% block title %}{% block auth_title %}{% endblock %}{% endblock %}
+
+{% block head %}
+  {{ block.super }}
+{% endblock %}
+
+{% block content %}
+  {# ── Header bar ── #}
+  <div class="login-header">
+    <div class="container-fluid login-container">
+      <img class="login-logo" src="{% static 'img/AMCR-logo-new.png' %}" alt="AMČR">
+    </div>
+  </div>
+
+  {# ── Main content ── #}
+  <div class="login-main">
+    <div class="container-fluid login-container">
+      <div class="row justify-content-center">
+        {# Form column #}
+        <div class="col-md-12 col-lg-4 login-col-form">
+          <div class="card login-card">
+            <div class="card-body">
+              {% block auth_form %}{% endblock %}
+              <hr/>
+              <div class="app-controls">
+                <div class="app-flags">
+                  {% get_current_language as LANGUAGE_CODE %}
+                  <button id="czech" class="{% if 'cs' in LANGUAGE_CODE or 'en' not in LANGUAGE_CODE %}app-active{% endif %}">
+                    <img src="{% static 'img/flag-cs.svg' %}" alt="" class="app-flag" />
+                  </button>
+                  <button id="english" class="{% if 'en' in LANGUAGE_CODE %}app-active{% endif %}">
+                    <img src="{% static 'img/flag-en.svg' %}" alt="" class="app-flag" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {# Optional sidebar column #}
+        {% block auth_sidebar %}{% endblock %}
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block script %}
+  {% block auth_script %}{% endblock %}
+{% endblock %}

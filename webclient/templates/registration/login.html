@@ -2,95 +2,180 @@
 {% load i18n %}
 {% load static %}
 {% load crispy_forms_tags %}
-{% load template_tags%}
-{% load cache %}
+{% load template_tags %}
 
+{% block body_class %}app-auth-v2{% endblock %}
 {% block title %}{% trans "templates.registration.login.title" %}{% endblock %}
 
 {% block head %}
   {{ block.super }}
-  <script src="{% static 'js/theme-toggle.js' %}"></script>
 {% endblock %}
 
 {% block content %}
-  <div class="app-login-wrapper">
-    <div class="row">
-      <div class="col-lg-4">
-        <img class="mb-4 app-logo" src="{% static 'img/logo-amcr-cs.svg' %}" alt="{% trans 'templates.registration.login.logo.alt' %}">
-        <div class="card login-card">
-          <div class="card-body">
-            <form method="post">
-              <h1 class="h3 mb-3 font-weight-normal text-dark">{% trans "templates.registration.login.prihlaseni.header" %}</h1>
-              {% csrf_token %}
-              {% crispy form %}
-              <div class="mb-3">
-                <a href="{% url 'password_reset' %}" title="{% trans 'templates.registration.login.forgottenPassword.title' %}?">{% trans "templates.registration.login.forgottenPassword.text" %}?</a>
-              </div>
-              <button class="btn btn-primary w-100" type="submit">{% trans "templates.registration.login.submitButton.prihlasit" %}</button>
-              <p class="mt-3 mb-3 text-muted">
-                {% trans "templates.registration.login.noAccount.header" %}?
-                <a href="/accounts/register" target="_blank" title="{% trans 'templates.registration.login.register.title' %}">{% trans "templates.registration.login.register.text" %}</a>
-              </p>
-              <hr />
-            </form>
-            <div class="app-controls">
-              <button class="app-control-btn" id="theme-toggle-btn" title="{% trans 'templates.registration.login.toggleTheme.title' %}">
-                <span class="material-icons">dark_mode</span>
-              </button>
-              <div class="app-flags">
-              {% get_current_language as LANGUAGE_CODE %}
-              <button id="czech" class=" {% if "cs" in LANGUAGE_CODE or "en" not in LANGUAGE_CODE  %}app-active{% endif %}" >
-                <img src="{% static 'img/flag-cs.svg' %}" alt="" class="app-flag" />
-              </button>
-              <button id="english" class=" {% if "en" in LANGUAGE_CODE %}app-active{% endif %}">
-                <img src="{% static 'img/flag-en.svg' %}" alt="" class="app-flag" />
-              </button>
-            </div>
-            </div>
+  {# ── Header bar ── #}
+  <div class="login-header">
+    <div class="container-fluid login-container">
+      <img class="login-logo" src="{% static 'img/AMCR-logo-new.png' %}" alt="AMČR">
+    </div>
+  </div>  
+
+  {# ── Main two-column area ── #}
+  <div class="login-main">
+    <div class="container-fluid login-container">
+      <div class="row">
+        {# Left column: login form #}
+        <div class="col-md-12 col-lg-4 login-col-form">
+            <div class="login-title">
+                <h1 class="login-title-text">{% trans "templates.registration.login.heading" %}</h1>
             </div>
         </div>
-      </div>
-      <div class="col-lg-8 app-col-desc">
-        <div class="app-inner">
-          <div class="card app-desc">
-            <div class="card-body">
-              <h3>{% trans "templates.registration.login.popisProjektu.header" %}</h3>
-              {% trans "templates.registration.login.popisProjektu.text" %}
+        <div class="col-md-12 col-lg-8">
+        </div>
+        <div class="col-md-12 col-lg-4 login-col-form">
+            <div class="login-subtitle">
+                <p class="login-subtitle-text">{% trans "templates.registration.login.subtitle" %}</p>
             </div>
-          </div>
-          <hr />
-          <div class="card">
+            <div class="card login-card">
             <div class="card-body">
-              <h3>{% trans "templates.registration.login.novinky.header" %}</h3>
-              <div>
-                {% trans "templates.registration.login.novinky.text" %}
+              <form method="post">
+                <h2 class="login-form-heading">{% trans "templates.registration.login.prihlaseni.header" %}</h2>
+                <p class="login-form-subtext">{% trans "templates.registration.login.form.subtext" %}</p>
+                {% csrf_token %}
+                {% crispy form %}
+                <button class="btn btn-dark w-100 login-submit" type="submit">{% trans "templates.registration.login.submitButton.prihlasit" %}</button>
+                <hr />
+                <div class="login-password-reset">
+                    <span class="material-symbols-outlined login-password-reset-icon">link_2</span>
+                    <a href="{% url 'password_reset' %}" title="{% trans 'templates.registration.login.forgottenPassword.title' %}?">{% trans "templates.registration.login.forgottenPassword.text" %}?</a>
+                </div>
+                <p class="mt-3 mb-3 text-muted login-register-link">
+                  {% trans "templates.registration.login.noAccount.header" %}?
+                  <a href="/accounts/register" target="_blank" title="{% trans 'templates.registration.login.register.title' %}">{% trans "templates.registration.login.register.text" %}</a>
+                </p>
+              </form>
+              <div class="app-controls">
+                <div class="app-flags">
+                  {% get_current_language as LANGUAGE_CODE %}
+                  <button id="czech" class="{% if 'cs' in LANGUAGE_CODE or 'en' not in LANGUAGE_CODE %}app-active{% endif %}">
+                    <img src="{% static 'img/flag-cs.svg' %}" alt="" class="app-flag" />
+                  </button>
+                  <button id="english" class="{% if 'en' in LANGUAGE_CODE %}app-active{% endif %}">
+                    <img src="{% static 'img/flag-en.svg' %}" alt="" class="app-flag" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
+        </div>
+
+        {# Right column: welcome + info cards + accordion #}
+        <div class="col-md-12 col-lg-8 login-col-info">
+          <h2 class="login-welcome-heading">{% trans "templates.registration.login.welcome.title" %}</h2>
+
+          {# Info cards #}
+          <div class="login-info-card">
+            <span class="material-symbols-outlined login-info-icon">chat_info</span>
+            <div>
+              {% trans "templates.registration.login.info.oznameni" %}
+              <a href="https://amcr.aiscr.cz/oznameni" target="_blank" rel="noopener">https://amcr.aiscr.cz/oznameni</a>
+            </div>
+          </div>
+          <div class="login-info-card">
+            <span class="material-symbols-outlined login-info-icon">document_search</span>
+            <div>
+              {% trans "templates.registration.login.info.digiarchiv" %}
+              <a href="https://digiarchiv.aiscr.cz/" target="_blank" rel="noopener">https://digiarchiv.aiscr.cz/</a>
+            </div>
+          </div>
+
+          {# Accordion #}
+          <div class="accordion login-accordion" id="loginAccordion">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingExpect">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExpect" aria-expanded="false" aria-controls="collapseExpect">
+                  <span class="material-symbols-outlined login-acc-icon">featured_seasonal_and_gifts</span>
+                  {% trans "templates.registration.login.accordion.co_muze_cekat.title" %}
+                </button>
+              </h2>
+              <div id="collapseExpect" class="accordion-collapse collapse" aria-labelledby="headingExpect" data-bs-parent="#loginAccordion">
+                <div class="accordion-body">{% trans "templates.registration.login.accordion.co_muze_cekat" %}</div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingWho">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWho" aria-expanded="false" aria-controls="collapseWho">
+                  <span class="material-icons-outlined login-acc-icon">psychology_alt</span>
+                  {% trans "templates.registration.login.accordion.komu_je_urcena.title" %}
+                </button>
+              </h2>
+              <div id="collapseWho" class="accordion-collapse collapse" aria-labelledby="headingWho" data-bs-parent="#loginAccordion">
+                <div class="accordion-body">{% trans "templates.registration.login.accordion.komu_je_urcena" %}</div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingOperator">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOperator" aria-expanded="false" aria-controls="collapseOperator">
+                  <span class="material-icons-outlined login-acc-icon">assured_workload</span>
+                  {% trans "templates.registration.login.accordion.kdo_provozuje.title" %}
+                </button>
+              </h2>
+              <div id="collapseOperator" class="accordion-collapse collapse" aria-labelledby="headingOperator" data-bs-parent="#loginAccordion">
+                <div class="accordion-body">{% trans "templates.registration.login.accordion.kdo_provozuje" %}</div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingHelp">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHelp" aria-expanded="false" aria-controls="collapseHelp">
+                  <span class="material-icons-outlined login-acc-icon">support</span>
+                  {% trans "templates.registration.login.accordion.help.title" %}
+                </button>
+              </h2>
+              <div id="collapseHelp" class="accordion-collapse collapse" aria-labelledby="headingHelp" data-bs-parent="#loginAccordion">
+                <div class="accordion-body">{% trans "templates.registration.login.accordion.help" %}</div>
+              </div>
+            </div>
+          </div>
+          {# ── Inspirational text ── #}
+  <div class="login-inspiration">
+    <div class="container-fluid login-container">
+      <p class="login-inspiration-text">{% trans "templates.registration.login.inspiration.text" %}</p>
+    </div>
+  </div>
+
+  {# ── News section ── #}
+  <div class="login-news">
+    <div class="container-fluid login-container">
+      <h3 class="login-news-heading">{% trans "templates.registration.login.novinky.header" %}</h3>
+      <div class="login-news-content">
+        {% trans "templates.registration.login.novinky.text" %}
+      </div>
+    </div>
+  </div>
         </div>
       </div>
     </div>
   </div>
+
+  
 {% endblock %}
+
 {% block script %}
   <script>
     document.getElementById("id_username").addEventListener("change", function () {
-      this.value = this.value.toLowerCase(); 
+      this.value = this.value.toLowerCase();
     });
   </script>
   <script>
     window.addEventListener("DOMContentLoaded", function() {
-    const togglePassword = document.querySelector("#togglePassword");
-    const password = document.querySelector("#id_password");
-
-    togglePassword.addEventListener("click", function () {
-        // toggle the type attribute
-        const type = password.getAttribute("type") === "password" ? "text" : "password";
-        password.setAttribute("type", type);
-        
-        // toggle the icon
-        this.classList.toggle("bi-eye");
+      const togglePassword = document.querySelector("#togglePassword");
+      const password = document.querySelector("#id_password");
+      if (togglePassword && password) {
+        togglePassword.addEventListener("click", function () {
+          const type = password.getAttribute("type") === "password" ? "text" : "password";
+          password.setAttribute("type", type);
+          this.classList.toggle("bi-eye");
+        });
+      }
     });
-  });
   </script>
 {% endblock %}

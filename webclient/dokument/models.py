@@ -862,7 +862,7 @@ class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), model
         related_name="extra_data_nahrada",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_NAHRADA},
     )
-    pocet_variant_originalu = models.IntegerField(blank=True, null=True)
+    pocet_variant_originalu = models.IntegerField(blank=True, null=True, validators=[MinValueValidator(1)])
     odkaz = models.TextField(blank=True, null=True)
     format = models.ForeignKey(
         Heslar,
@@ -874,8 +874,8 @@ class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), model
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_FORMAT},
     )
     meritko = models.TextField(blank=True, null=True)
-    vyska = models.IntegerField(blank=True, null=True)
-    sirka = models.IntegerField(blank=True, null=True)
+    vyska = models.IntegerField(blank=True, null=True, validators=[MinValueValidator(1)])
+    sirka = models.IntegerField(blank=True, null=True, validators=[MinValueValidator(1)])
     cislo_objektu = models.TextField(blank=True, null=True)
     zeme = models.ForeignKey(
         Heslar,

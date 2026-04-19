@@ -173,7 +173,7 @@ class ExterniZdrojForm(OptimisticLockingMixin, forms.ModelForm):
                         '<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                     ),
                 ),
-                css_class="col-sm-4 input-osoba select2-input form-group",
+                css_class="col-sm-6 col-lg-4 input-osoba select2-input form-group",
             )
             editori = Div(
                 AppendedText(
@@ -182,31 +182,31 @@ class ExterniZdrojForm(OptimisticLockingMixin, forms.ModelForm):
                         '<button id="create-editor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                     ),
                 ),
-                css_class="col-sm-4 input-osoba select2-input form-group",
+                css_class="col-sm-6 col-lg-4 input-osoba select2-input form-group",
             )
 
         self.helper.layout = Layout(
             Div(
-                Div("typ", css_class="col-sm-2"),
+                Div("typ", css_class="col-sm-6 col-lg-2"),
                 autori,
                 editori,
-                Div("rok_vydani_vzniku", css_class="col-sm-2"),
+                Div("rok_vydani_vzniku", css_class="col-sm-6 col-lg-2"),
                 Div("nazev", css_class="col-sm-12"),
                 Div("casopis_denik_nazev", css_class="col-sm-6"),
                 Div(
                     "casopis_rocnik",
-                    css_class="col-sm-2",
+                    css_class="col-sm-6 col-lg-2",
                 ),
-                Div("datum_rd", css_class="col-sm-2"),
-                Div("paginace_titulu", css_class="col-sm-2"),
+                Div("datum_rd", css_class="col-sm-6 col-lg-2"),
+                Div("paginace_titulu", css_class="col-sm-6 col-lg-2"),
                 Div("sbornik_nazev", css_class="col-sm-12"),
-                Div("edice_rada", css_class="col-sm-4"),
-                Div("misto", css_class="col-sm-2"),
-                Div("vydavatel", css_class="col-sm-2"),
-                Div("isbn", css_class="col-sm-2"),
-                Div("issn", css_class="col-sm-2"),
-                Div("typ_dokumentu", css_class="col-sm-2"),
-                Div("organizace", css_class="col-sm-2"),
+                Div("edice_rada", css_class="col-sm-6 col-lg-4"),
+                Div("misto", css_class="col-sm-6 col-lg-2"),
+                Div("vydavatel", css_class="col-sm-6 col-lg-2"),
+                Div("isbn", css_class="col-sm-6 col-lg-2"),
+                Div("issn", css_class="col-sm-6 col-lg-2"),
+                Div("typ_dokumentu", css_class="col-sm-6 col-lg-2"),
+                Div("organizace", css_class="col-sm-6 col-lg-2"),
                 Div("link", css_class="col-sm-8"),
                 Div("poznamka", css_class="col-sm-9"),
                 Div("doi", css_class="col-sm-3"),

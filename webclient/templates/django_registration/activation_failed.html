@@ -1,44 +1,11 @@
-{% extends "base.html" %}
+{% extends "registration/_auth_base.html" %}
 {% load i18n %}
-{% load static %}
-{% load crispy_forms_tags %}
 
-{% block title %}{% trans "templates.djangoRegistration.activationFailed.title" %}{% endblock %}
-{% block head %}
-  <script src="{% static 'js/theme-toggle.js' %}"></script>
-{% endblock %}
+{% block auth_title %}{% trans "templates.djangoRegistration.activationFailed.title" %}{% endblock %}
 
-{% block content %}
-  <div class="app-login-wrapper">
-    <div class="row justify-content-center">
-      <div class="col-lg-4">
-        <img class="mb-4 app-logo" src="{% static 'img/logo-amcr-cs.svg' %}" alt="{% trans 'templates.djangoRegistration.activationFailed.logo.alt' %}">
-        <div class="card">
-          <div class="card-body">
-            <h1 class="h3 mb-3 font-weight-normal">{% trans "templates.djangoRegistration.activationFailed.text" %}</h1>
-            <div class="alert alert-danger mb-0" role="alert">
-              {{ activation_error }}
-            </div>  
-            <hr/>
-            <div class="app-controls">
-              <button class="app-control-btn" id="theme-toggle-btn" title="{% trans 'templates.registration.login.toggleTheme.title' %}">
-                <span class="material-icons">dark_mode</span>
-              </button>
-              <div class="app-flags">
-                {% get_current_language as LANGUAGE_CODE %}
-                <button id="czech" class=" {% if "cs" in LANGUAGE_CODE or "en" not in LANGUAGE_CODE  %}app-active{% endif %}" >
-                  <img src="{% static 'img/flag-cs.svg' %}" alt="" class="app-flag" />
-                </button>
-                <button id="english" class=" {% if "en" in LANGUAGE_CODE %}app-active{% endif %}">
-                  <img src="{% static 'img/flag-en.svg' %}" alt="" class="app-flag" />
-                </button>
-              </div>
-            </div>
-        </div>
-      </div>
-    </div>
+{% block auth_form %}
+  <h1 class="h3 mb-3 font-weight-normal">{% trans "templates.djangoRegistration.activationFailed.text" %}</h1>
+  <div class="alert alert-danger mb-0" role="alert">
+    {{ activation_error }}
   </div>
-{% endblock %}
-
-{% block script %}
 {% endblock %}

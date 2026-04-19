@@ -9,7 +9,7 @@
         <a href="{% url 'dokument:index' %}"><span class="material-icons">description</span> <span class="app-controls-button-text app-controls-button-text"> {% trans "templates.toolbarDokument.dokument.title" %}</span></a>
       {% endif %}
     </div>
-    <div id="id-app-entity-item" class="app-entity-item">
+    <div id="id-app-entity-item" class="app-entity-item {% if d.doi or showback %}app-pipe-right{% endif %}">
       {% if d.ident_cely %}
         {{ d.ident_cely }}
         {% if d.ident_cely %}
@@ -17,15 +17,17 @@
           <span class="material-icons" onclick="copy_ident_link('{{d.ident_cely}}')" rel="tooltip" title="{% trans 'templates.toolbarDokument.copyIdentLink.label' %}">content_copy</span>
         </button>
         {% endif %}
-        {% if d.doi %}
-          <span style="font-weight: normal">({{ d.doi }})</span>
-        {% endif %}
-        {% if showback %}<div id="document-back" style="display:none"><span class="app-pipe"></span><a href="" class="app-entity-color font-weight-normal"></a></div>{% endif %}
         {% elif index%}
         {% else %}
         {% if toolbar_label %}{{toolbar_label}}{% endif %}
         {% endif %}
-    </div>
+      </div>
+      {% if d.doi %}
+      <div class="align-self-center app-entity-color{% if showback %} app-pipe-right pr-5{% endif %}">
+          <span style="font-weight: normal">({{ d.doi }})</span>
+          </div>
+        {% endif %}
+      {% if showback %}<div id="document-back" class="align-self-center"><a href="" class="app-entity-color font-weight-normal"></a></div>{% endif %}
   </div>
   {% if showcontrols %}
     <div class="app-right app-controls">
