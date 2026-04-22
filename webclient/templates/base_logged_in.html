@@ -276,9 +276,9 @@
       {% elif app == "lokalita" %}
         <span class="navbar-mobile-header-ident-lokalita">{{ zaznam.ident_cely }}</span>
       {% elif app == "pas" %}
-        <span class="navbar-mobile-header-ident-pas row justify-content-center">{{ sn.ident_cely }}</span>
+        <span class="navbar-mobile-header-ident-pas d-flex justify-content-center">{{ sn.ident_cely }}</span>
         {% if sn.igsn %}
-        <span class="navbar-mobile-header-ident-pas row justify-content-center">({{ sn.igsn }})</span>
+        <span class="navbar-mobile-header-ident-pas d-flex justify-content-center">({{ sn.igsn }})</span>
       {% endif %}
       {% elif dokument %}
         {% if not "3D" in dokument.ident_cely %}

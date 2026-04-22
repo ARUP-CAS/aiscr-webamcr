@@ -254,12 +254,12 @@
         }
 
         .login-subtitle-text {
-            color: #9e5656;
+            color: $app-login-accent-color;
             position: relative;
             font-size: 1.5rem;
             font-weight: 500;
             margin-bottom: 0;
-            background: rgba(255, 255, 255, 0.3);
+            background: $app-login-frosted-bg;
             border-radius: 6px;
         }
     }
@@ -272,10 +272,10 @@
     }
 
     .login-welcome-heading {
-        color: #9e5656;
+        color: $app-login-accent-color;
         font-weight: 700;
         margin-bottom: 1.5rem;
-        background: rgba(255, 255, 255, 0.3);
+        background: $app-login-frosted-bg;
         border-radius: 6px;
     }
 

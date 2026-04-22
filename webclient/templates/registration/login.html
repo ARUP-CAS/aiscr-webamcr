@@ -199,10 +199,6 @@
         return;
       }
 
-      if (newsContent.scrollHeight <= collapsedHeight) {
-        return;
-      }
-
       const setCollapsedState = function () {
         newsContent.classList.add("is-collapsed");
         newsContent.classList.remove("is-expanded");
@@ -219,8 +215,22 @@
         newsToggle.setAttribute("aria-expanded", "true");
       };
 
-      setCollapsedState();
-      newsToggle.classList.remove("d-none");
+      const updateToggleVisibility = function () {
+        if (newsContent.scrollHeight > collapsedHeight) {
+          if (newsToggle.classList.contains("d-none")) {
+            setCollapsedState();
+            newsToggle.classList.remove("d-none");
+          } else if (newsContent.classList.contains("is-expanded")) {
+            newsContent.style.maxHeight = newsContent.scrollHeight + "px";
+          }
+        } else {
+          newsToggle.classList.add("d-none");
+          newsContent.style.maxHeight = "";
+          newsContent.classList.remove("is-collapsed", "is-expanded");
+        }
+      };
+
+      updateToggleVisibility();
 
       newsToggle.addEventListener("click", function () {
         if (newsContent.classList.contains("is-collapsed")) {
@@ -231,11 +241,7 @@
         setCollapsedState();
       });
 
-      window.addEventListener("resize", function () {
-        if (newsContent.classList.contains("is-expanded")) {
-          newsContent.style.maxHeight = newsContent.scrollHeight + "px";
-        }
-      });
+      window.addEventListener("resize", updateToggleVisibility);
     });
   </script>
 {% endblock %}
