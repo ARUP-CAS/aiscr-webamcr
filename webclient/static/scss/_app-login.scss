@@ -254,11 +254,13 @@
         }
 
         .login-subtitle-text {
+            color: #9e5656;
             position: relative;
-            color: $gray-800;
             font-size: 1.5rem;
             font-weight: 500;
             margin-bottom: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
         }
     }
 
@@ -270,8 +272,11 @@
     }
 
     .login-welcome-heading {
+        color: #9e5656;
         font-weight: 700;
         margin-bottom: 1.5rem;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 6px;
     }
 
     // ── Info cards ──
@@ -360,6 +365,10 @@
         padding: 0 0 3rem;
         background: rgba(255, 255, 255, 0.7) !important;
 
+        .container-fluid.login-container {
+            background: rgba(255, 255, 255, 0.7) !important;
+        }
+
         .login-news-heading {
             font-weight: 700;
             margin-bottom: 1rem;
@@ -369,6 +378,23 @@
 
         .login-news-content {
             background: rgba(255, 255, 255, 0.7);
+            overflow: hidden;
+            transition: max-height 0.25s ease;
+
+            &.is-collapsed {
+                position: relative;
+
+                &::after {
+                    content: "";
+                    position: absolute;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    height: 4.5rem;
+                    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.95));
+                    pointer-events: none;
+                }
+            }
 
             h4,
             .h4 {
@@ -380,6 +406,15 @@
             hr {
                 border-color: $gray-300;
             }
+        }
+
+        .login-news-toggle {
+            display: inline-flex;
+            margin-top: 0.0rem;
+            padding: 0;
+            font-weight: 700;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.7);
         }
     }
 }
