@@ -70,6 +70,7 @@ def handle_fedora_error(view_func=None, additional_exceptions=tuple()):
                         return redirect(redirect_url)
                     if ident_cely:
                         return redirect(reverse("core:redirect_ident", kwargs={"ident_cely": ident_cely}))
+                    return redirect(reverse("core:home"))
                 raise
 
         return _wrapped
