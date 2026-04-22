@@ -837,9 +837,12 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         Ověří existenci odkazu na kontejner v repositáři.
 
         :return: True pokud odkaz existuje, False pokud byl smazán.
+        :raises FedoraNoResponseError: Vyvolá se, pokud repozitář nevrátí odpověď.
         """
         url = self._get_request_url(FedoraRequestType.GET_LINK)
         result = self._send_request(url, FedoraRequestType.GET_LINK)
+        if result is None:
+            raise FedoraNoResponseError(url, "No Fedora response", None, fedora_transaction=self.transaction)
         return result.status_code != 404
 
     def _check_container(self):

@@ -45,9 +45,10 @@ def handle_fedora_error(view_func=None, additional_exceptions=tuple()):
                 return func(*args, **kwargs)
             except (FedoraError,) + additional_exceptions as err:
                 logger.info("fedora_management.decorators.handle_fedora_error", extra={"error": err})
-                if err.fedora_transaction:
+                fedora_transaction = getattr(err, "fedora_transaction", None)
+                if fedora_transaction:
                     try:
-                        err.fedora_transaction.rollback_transaction()
+                        fedora_transaction.rollback_transaction()
                     except Exception as rollback_err:
                         logger.warning(
                             "fedora_management.decorators.handle_fedora_error.rollback_failed",
@@ -62,11 +63,14 @@ def handle_fedora_error(view_func=None, additional_exceptions=tuple()):
                     if err.ident_cely:
                         return redirect(reverse("core:redirect_ident", kwargs={"ident_cely": err.ident_cely}))
                     return redirect(reverse("core:home"))
-                if err.redirect or err.redirect_url:
-                    if err.redirect_url:
-                        return redirect(err.redirect_url)
-                    if err.ident_cely:
-                        return redirect(reverse("core:redirect_ident", kwargs={"ident_cely": err.ident_cely}))
+                redirect_url = getattr(err, "redirect_url", None)
+                ident_cely = getattr(err, "ident_cely", None)
+                if getattr(err, "redirect", None) or redirect_url:
+                    if redirect_url:
+                        return redirect(redirect_url)
+                    if ident_cely:
+                        return redirect(reverse("core:redirect_ident", kwargs={"ident_cely": ident_cely}))
+                raise
 
         return _wrapped
 
