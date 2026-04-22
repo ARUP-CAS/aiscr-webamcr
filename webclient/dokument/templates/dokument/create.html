@@ -104,22 +104,26 @@
           }
       }
 
+      function reinitMaterialSelect() {
+          // Místo refresh se používá destroy+reinit, aby se předešlo chybě bootstrap-select 1.14.0-beta3,
+          // kdy buildData() přidává data do main.data místo jejich nahrazení.
+          $('#id_material_originalu').selectpicker('destroy').selectpicker();
+      }
+
       // Je potřeba zakázat možnosti, které nejsou povoleny, pokud je položka vybrána
       $("#id_typ_dokumentu").on("changed.bs.select",
           function (e, clickedIndex, newValue, oldValue) {
               disable_disallowed(this.value)
               // Při každé změně typ_dokumentu je také nutné resetovat hodnotu material_originalu.
-              // Místo refresh se používá destroy+reinit, aby se předešlo chybě bootstrap-select 1.14.0-beta3,
-              // kdy buildData() přidává data do main.data místo jejich nahrazení.
               $('#id_material_originalu').selectpicker('val', '');
-              $('#id_material_originalu').selectpicker('destroy').selectpicker();
+              reinitMaterialSelect();
           });
 
-      // Zkontrolovat, zda je vybrán typ_dokumentu. Pokud ano, při editaci musí být zakázány všechny nedostupné materiály
+      // Zkontrolovat, zda je vybrán typ_dokumentu a zakázat nedostupné materiály po načtení
       $('#id_typ_dokumentu').on('loaded.bs.select',
           function (e, clickedIndex, isSelected, previousValue) {
               disable_disallowed(this.value)
-              $('#id_material_originalu').selectpicker('destroy').selectpicker();
+              reinitMaterialSelect();
           });
           {% if samostatny %}
           document.addEventListener('DOMContentLoaded', function (event) {
