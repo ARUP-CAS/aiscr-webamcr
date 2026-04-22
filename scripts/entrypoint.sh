@@ -69,8 +69,8 @@ python3 manage.py migrate
 python3 manage.py shell < data_management.py
 python3 manage.py import_permissions
 
-# copy custom_html to volume nginx_data
-cp -r /custom_html/* /vol/web/nginx/data
+# copy custom_html to volume nginx_data, preserving existing h1 content
+python3 /scripts/copy_custom_html.py
 
 #Copy locale from volume, create new one/update old, copy locale to volume and remove from app. Move has permission denied.
 
