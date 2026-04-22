@@ -1,18 +1,24 @@
 import logging
 import re
+import time
 
 from core.connectors import RedisConnector
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
 from core.repository_connector import FedoraError, FedoraTransaction, FedoraTransactionResult
+from django.conf import settings
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.contrib.auth import SESSION_KEY, get_user_model
+from django.core.exceptions import PermissionDenied
 from django.db.utils import OperationalError
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext_lazy
+from django.utils.translation import gettext_lazy as _
 
 from redis import ResponseError
 
 logger = logging.getLogger(__name__)
+
+_INACTIVE_CHECK_SESSION_KEY = "_inactive_user_check"
 
 
 class PermissionMiddleware:
@@ -124,12 +130,14 @@ class ErrorMiddleware:
 
 class InactiveUserMiddleware:
     """
-    Middleware zachytávající ``ValidationError`` s kódem ``inactive``,
-    která může vzniknout při vyhodnocení ``request.user`` u deaktivovaného
-    uživatele s stále aktivní session.
+    Middleware detekující deaktivovaného uživatele s aktivní session.
 
-    Pokud k této chybě dojde, session se zruší a uživatel je přesměrován
-    na přihlašovací stránku s varovnou hláškou.
+    Před předáním požadavku do řetězce middleware zkontroluje, zda session
+    obsahuje ID uživatele, který byl mezitím deaktivován. Pokud ano, session
+    se zruší a uživatel je přesměrován na přihlašovací stránku s varovnou hláškou.
+
+    Aby se snížila zátěž databáze, stav ``is_active`` se ověřuje nejvýše jednou
+    za ``_INACTIVE_CHECK_INTERVAL`` sekund; čas poslední kontroly je uložen v session.
     """
 
     def __init__(self, get_response):
@@ -143,27 +151,30 @@ class InactiveUserMiddleware:
 
     def __call__(self, request):
         """
-        Obalí zpracování požadavku a zachytí ``ValidationError`` s kódem
-        ``inactive``, která může vzniknout při vyhodnocení ``request.user``.
+        Před zpracováním požadavku ověří, zda uživatel v session není deaktivován.
 
-        Pokud je chyba zachycena, session se zruší a uživatel je
-        přesměrován na přihlašovací stránku.
+        Pokud session obsahuje ID neaktivního uživatele, session se zruší a
+        uživatel je přesměrován na přihlašovací stránku.
 
         :param request: Instance ``HttpRequest``.
         :return: Standardní ``response`` nebo přesměrování na login.
         """
-        try:
-            return self.get_response(request)
+        if SESSION_KEY in request.session:
+            now = time.time()
+            last_check = request.session.get(_INACTIVE_CHECK_SESSION_KEY, 0)
+            if now - last_check >= getattr(settings, "INACTIVE_USER_CHECK_INTERVAL", 60):
+                UserModel = get_user_model()
+                try:
+                    user = UserModel._default_manager.only("is_active").get(pk=request.session[SESSION_KEY])
+                    if not user.is_active:
+                        request.session.flush()
+                        messages.warning(request, str(_("core.authenticators.user_can_authenticate")))
+                        return redirect("django_authentication_login")
+                except UserModel.DoesNotExist:
+                    pass
+                request.session[_INACTIVE_CHECK_SESSION_KEY] = now
 
-        except ValidationError as e:
-            if getattr(e, "code", None) == "inactive" or any(
-                err.code == "inactive" for err in getattr(e, "error_list", [])
-            ):
-                request.session.flush()
-                messages.warning(request, str(e))
-                return redirect("django_authentication_login")
-
-            raise
+        return self.get_response(request)
 
 
 class StatusMessageMiddleware:

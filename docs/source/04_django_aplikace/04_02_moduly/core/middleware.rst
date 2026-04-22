@@ -67,12 +67,14 @@ Třídy
 
 .. py:class:: InactiveUserMiddleware
 
-   Middleware zachytávající ``ValidationError`` s kódem ``inactive``,
-   která může vzniknout při vyhodnocení ``request.user`` u deaktivovaného
-   uživatele s stále aktivní session.
+   Middleware detekující deaktivovaného uživatele s aktivní session.
 
-   Pokud k této chybě dojde, session se zruší a uživatel je přesměrován
-   na přihlašovací stránku s varovnou hláškou.
+   Před předáním požadavku do řetězce middleware zkontroluje, zda session
+   obsahuje ID uživatele, který byl mezitím deaktivován. Pokud ano, session
+   se zruší a uživatel je přesměrován na přihlašovací stránku s varovnou hláškou.
+
+   Aby se snížila zátěž databáze, stav ``is_active`` se ověřuje nejvýše jednou
+   za ``_INACTIVE_CHECK_INTERVAL`` sekund; čas poslední kontroly je uložen v session.
 
    **Metody:**
 
@@ -85,11 +87,10 @@ Třídy
 
    .. py:method:: __call__()
 
-      Obalí zpracování požadavku a zachytí ``ValidationError`` s kódem
-      ``inactive``, která může vzniknout při vyhodnocení ``request.user``.
+      Před zpracováním požadavku ověří, zda uživatel v session není deaktivován.
 
-      Pokud je chyba zachycena, session se zruší a uživatel je
-      přesměrován na přihlašovací stránku.
+      Pokud session obsahuje ID neaktivního uživatele, session se zruší a
+      uživatel je přesměrován na přihlašovací stránku.
 
       :param request: Instance ``HttpRequest``.
       :return: Standardní ``response`` nebo přesměrování na login.

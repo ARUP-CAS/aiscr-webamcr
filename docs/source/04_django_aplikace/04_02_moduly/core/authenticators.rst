@@ -12,12 +12,19 @@ Třídy
 
    **Metody:**
 
-   .. py:method:: user_can_authenticate()
+   .. py:method:: authenticate()
 
-      Ověří, zda se uživatel může přihlásit; vrátí True, nebo vyvolá ValidationError, pokud je neaktivní.
+      Ověří přihlašovací údaje uživatele.
 
-      :param user: Uživatelský objekt, jehož atribut ``is_active`` se ověřuje.
+      Pokud jsou přihlašovací údaje správné, ale účet není aktivní, vyvolá
+      ``ValidationError`` s kódem ``inactive``, aby bylo možné zobrazit
+      srozumitelnou chybovou zprávu v přihlašovacím formuláři.
 
-      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-      :raises ValidationError: Vyvolá se při splnění podmínky ``user.is_active``.
+      :param request: HTTP požadavek.
+      :param username: Přihlašovací jméno uživatele.
+      :param password: Heslo uživatele.
+      :param kwargs: Dodatečné argumenty; může obsahovat ``USERNAME_FIELD`` jako klíč.
+      :return: Instance uživatele při úspěšném ověření, jinak ``None``.
+      :raises ValidationError: Vyvolá se pokud jsou přihlašovací údaje správné,
+                               ale účet není aktivní.
 
