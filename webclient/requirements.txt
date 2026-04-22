@@ -1,5 +1,5 @@
 Django==5.2.13
-psycopg2-binary==2.9.11
+psycopg2-binary==2.9.12
 simplejson==3.20.2
 django-crispy-forms==2.6
 crispy-bootstrap5==2026.3
