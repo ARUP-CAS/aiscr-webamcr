@@ -603,8 +603,6 @@ DIGI_LINKS = {
     "ARUB_MAIL": "<a href='mailto:oznameni@arub.cz'>oznameni@arub.cz</a>",
 }
 
-# inactive user session check interval (seconds)
-INACTIVE_USER_CHECK_INTERVAL = 60
 
 # auto logout settings
 AUTO_LOGOUT = {
