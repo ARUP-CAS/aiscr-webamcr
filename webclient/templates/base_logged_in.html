@@ -856,5 +856,7 @@
 
 </script>
 <script src="{% static 'js/copyIdentLink.js' %}"></script>
+{% if show_dark_mode %}
 <script src="{% static 'js/theme-toggle.js' %}"></script>
+{% endif %}
 {% endblock %}
