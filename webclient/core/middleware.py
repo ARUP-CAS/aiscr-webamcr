@@ -130,8 +130,6 @@ class InactiveUserMiddleware:
     obsahuje ID uživatele, který byl mezitím deaktivován. Pokud ano, session
     se zruší a uživatel je přesměrován na přihlašovací stránku s varovnou hláškou.
 
-    Aby se snížila zátěž databáze, stav ``is_active`` se ověřuje nejvýše jednou
-    za ``_INACTIVE_CHECK_INTERVAL`` sekund; čas poslední kontroly je uložen v session.
     """
 
     def __init__(self, get_response):
