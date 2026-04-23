@@ -1,24 +1,18 @@
 import logging
 import re
-import time
 
 from core.connectors import RedisConnector
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
 from core.repository_connector import FedoraError, FedoraTransaction, FedoraTransactionResult
-from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import SESSION_KEY, get_user_model
 from django.core.exceptions import PermissionDenied
 from django.db.utils import OperationalError
 from django.shortcuts import redirect, render
-from django.utils.translation import gettext_lazy
 from django.utils.translation import gettext_lazy as _
 
 from redis import ResponseError
 
 logger = logging.getLogger(__name__)
-
-_INACTIVE_CHECK_SESSION_KEY = "_inactive_user_check"
 
 
 class PermissionMiddleware:
@@ -151,30 +145,36 @@ class InactiveUserMiddleware:
 
     def __call__(self, request):
         """
+        Zpracovává příchozí HTTP požadavek.
+
+        :param request: HTTP požadavek ze strany klienta.
+        :return: HTTP response vygenerovaná aplikací.
+        """
+        response = self.get_response(request)
+        return response
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        """
         Před zpracováním požadavku ověří, zda uživatel v session není deaktivován.
 
         Pokud session obsahuje ID neaktivního uživatele, session se zruší a
         uživatel je přesměrován na přihlašovací stránku.
 
         :param request: Instance ``HttpRequest``.
-        :return: Standardní ``response`` nebo přesměrování na login.
+        :param view_func: View funkce, kterou se chystá aplikace volat.
+        :param view_args: Poziční argumenty pro view funkci.
+        :param view_kwargs: Pojmenované argumenty pro view funkci.
+        :return: přesměrování na login nebo žádná akce.
         """
-        if SESSION_KEY in request.session:
-            now = time.time()
-            last_check = request.session.get(_INACTIVE_CHECK_SESSION_KEY, 0)
-            if now - last_check >= getattr(settings, "INACTIVE_USER_CHECK_INTERVAL", 60):
-                UserModel = get_user_model()
-                try:
-                    user = UserModel._default_manager.only("is_active").get(pk=request.session[SESSION_KEY])
-                    if not user.is_active:
-                        request.session.flush()
-                        messages.warning(request, str(_("core.authenticators.user_can_authenticate")))
-                        return redirect("django_authentication_login")
-                except UserModel.DoesNotExist:
-                    pass
-                request.session[_INACTIVE_CHECK_SESSION_KEY] = now
+        if not request.user.is_active and not request.user.is_anonymous:
+            logger.warning(
+                "InactiveUserMiddleware: Deaktivovaný uživatel %s se pokusil o přístup k %s", request.user, request.path
+            )
+            request.session.flush()
+            messages.warning(request, _("core.authenticators.user_can_authenticate"))
+            return redirect("django_authentication_login")
 
-        return self.get_response(request)
+        return None
 
 
 class StatusMessageMiddleware:
@@ -218,7 +218,7 @@ class StatusMessageMiddleware:
                 logger.warning("core.middleware._show_message.success.error", extra={"error": err})
                 success_message = None
             if success_message:
-                success_message = gettext_lazy(success_message.decode("utf-8"))
+                success_message = _(success_message.decode("utf-8"))
             else:
                 success_message = ZAZNAM_USPESNE_EDITOVAN
             messages.add_message(request, messages.SUCCESS, success_message)
@@ -229,7 +229,7 @@ class StatusMessageMiddleware:
                 logger.warning("core.middleware._show_message.error.error", extra={"error": err})
                 error_message = None
             if error_message:
-                error_message = gettext_lazy(error_message.decode("utf-8"))
+                error_message = _(error_message.decode("utf-8"))
             else:
                 error_message = ZAZNAM_SE_NEPOVEDLO_EDITOVAT
             messages.add_message(request, messages.ERROR, error_message)

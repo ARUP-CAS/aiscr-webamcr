@@ -87,13 +87,23 @@ Třídy
 
    .. py:method:: __call__()
 
+      Zpracovává příchozí HTTP požadavek.
+
+      :param request: HTTP požadavek ze strany klienta.
+      :return: HTTP response vygenerovaná aplikací.
+
+   .. py:method:: process_view()
+
       Před zpracováním požadavku ověří, zda uživatel v session není deaktivován.
 
       Pokud session obsahuje ID neaktivního uživatele, session se zruší a
       uživatel je přesměrován na přihlašovací stránku.
 
       :param request: Instance ``HttpRequest``.
-      :return: Standardní ``response`` nebo přesměrování na login.
+      :param view_func: View funkce, kterou se chystá aplikace volat.
+      :param view_args: Poziční argumenty pro view funkci.
+      :param view_kwargs: Pojmenované argumenty pro view funkci.
+      :return: přesměrování na login nebo žádná akce.
 
 
 .. py:class:: StatusMessageMiddleware
