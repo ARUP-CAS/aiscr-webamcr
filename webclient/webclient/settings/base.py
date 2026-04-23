@@ -603,7 +603,6 @@ DIGI_LINKS = {
     "ARUB_MAIL": "<a href='mailto:oznameni@arub.cz'>oznameni@arub.cz</a>",
 }
 
-
 # auto logout settings
 AUTO_LOGOUT = {
     "IDLE_TIME": 3600,
