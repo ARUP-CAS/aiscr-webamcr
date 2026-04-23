@@ -818,12 +818,13 @@ Funkce
 
    :return: Vrací hodnotu podle větve zpracování, typicky: bool, hodnotu podle větve zpracování.
 
-.. py:function:: check_stav_changed(request, zaznam)
+.. py:function:: check_stav_changed(request, zaznam, prefix)
 
    Ověří, zda se stav záznamu mezitím změnil oproti hodnotě odeslané ve formuláři.
 
    :param request: Parametr ``request`` předává se do volání ``CheckStavNotChangedForm()``, ``add_message()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek.
    :param zaznam: Ukládaný záznam, jehož stav se porovnává.
+   :param prefix: Volitelný prefix formuláře použitý při renderování, nutný pro správné načtení ``old_stav`` z POST dat.
 
    :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 

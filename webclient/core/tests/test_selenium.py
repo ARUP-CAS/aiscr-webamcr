@@ -39,6 +39,7 @@ from selenium.common.exceptions import (
     WebDriverException,
 )
 from selenium.webdriver.chrome.webdriver import WebDriver as ChromeDriver
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from uzivatel.models import User
@@ -826,9 +827,15 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         attempts = 0
         while attempts < 10:
             try:
-                self.driver.find_element(by, value).click()
+                element = self.driver.find_element(by, value)
+                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
+                time.sleep(0.3)
+                try:
+                    element.click()
+                except (ElementClickInterceptedException, ElementNotInteractableException):
+                    self.driver.execute_script("arguments[0].click();", element)
                 return
-            except (StaleElementReferenceException, ElementClickInterceptedException, ElementNotInteractableException):
+            except StaleElementReferenceException:
                 attempts += 1
                 time.sleep(0.5)
 
@@ -881,7 +888,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         :param position_x: Číselná hodnota ``position_x`` použitá při výpočtu nebo transformaci.
         :param position_y: Číselná hodnota ``position_y`` použitá při výpočtu nebo transformaci.
         """
-        action = webdriver.common.action_chains.ActionChains(self.driver)
+        action = ActionChains(self.driver)
         action.move_to_element_with_offset(el, position_x, position_y)
         action.click()
         action.perform()
