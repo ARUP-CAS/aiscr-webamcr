@@ -31,8 +31,6 @@ from PIL import Image, ImageChops
 from rdflib import XSD, Graph, Literal, URIRef
 from selenium import webdriver
 from selenium.common.exceptions import (
-    ElementClickInterceptedException,
-    ElementNotInteractableException,
     InvalidSessionIdException,
     NoSuchElementException,
     StaleElementReferenceException,
@@ -829,11 +827,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             try:
                 element = self.driver.find_element(by, value)
                 self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
-                time.sleep(0.3)
-                try:
-                    element.click()
-                except (ElementClickInterceptedException, ElementNotInteractableException):
-                    self.driver.execute_script("arguments[0].click();", element)
+                element.click()
                 return
             except StaleElementReferenceException:
                 attempts += 1
