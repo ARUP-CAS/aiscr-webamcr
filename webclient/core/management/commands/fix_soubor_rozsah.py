@@ -77,6 +77,14 @@ class Command(BaseCommand):
 
             try:
                 related_record = soubor.vazba.navazany_objekt
+                if related_record is None:
+                    error_count += 1
+                    logger.warning(
+                        "core.management.commands.fix_soubor_rozsah.orphaned_soubor",
+                        extra={"pk": soubor.pk, "path": soubor.path},
+                    )
+                    self.stdout.write(self.style.WARNING(f"\nOsirely soubor pk={soubor.pk}, preskoceno."))
+                    continue
                 conn = FedoraRepositoryConnector(related_record, None)
                 rep_bin_file = conn.get_binary_file(soubor.repository_uuid)
 
@@ -100,7 +108,7 @@ class Command(BaseCommand):
                     except Exception:
                         rozsah = 1
                         fallback_count += 1
-                elif nazev.endswith(".tif"):
+                elif nazev.endswith((".tif", ".tiff")):
                     try:
                         img = Image.open(content)
                         rozsah = img.n_frames  # type: ignore[attr-defined]
