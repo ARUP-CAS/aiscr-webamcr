@@ -188,7 +188,7 @@ class StatusMessageMiddleware:
         """
         self.get_response = get_response
         r = RedisConnector()
-        self.redis_connection = r.get_connection()
+        self.redis_connection = r.get_connection_decode()
 
     def __call__(self, request):
         """
@@ -216,7 +216,7 @@ class StatusMessageMiddleware:
                 logger.warning("core.middleware._show_message.success.error", extra={"error": err})
                 success_message = None
             if success_message:
-                success_message = _(success_message.decode("utf-8"))
+                success_message = _(success_message)
             else:
                 success_message = ZAZNAM_USPESNE_EDITOVAN
             messages.add_message(request, messages.SUCCESS, success_message)
@@ -227,7 +227,7 @@ class StatusMessageMiddleware:
                 logger.warning("core.middleware._show_message.error.error", extra={"error": err})
                 error_message = None
             if error_message:
-                error_message = _(error_message.decode("utf-8"))
+                error_message = _(error_message)
             else:
                 error_message = ZAZNAM_SE_NEPOVEDLO_EDITOVAT
             messages.add_message(request, messages.ERROR, error_message)
