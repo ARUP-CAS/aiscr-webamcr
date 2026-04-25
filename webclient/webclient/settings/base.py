@@ -615,7 +615,7 @@ AUTO_LOGOUT = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
-SHOW_DARK_MODE = True
+SHOW_DARK_MODE = get_secret("SHOW_DARK_MODE", "True") == "True"
 
 COMPRESS_REBUILD_TIMEOUT = 3600
 
