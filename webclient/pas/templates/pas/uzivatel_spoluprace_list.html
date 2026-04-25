@@ -34,28 +34,27 @@
           new Modal(options, elements.item(i).id);
         }
       }
-      $("tbody tr").each(function() {
-        const item = $(this).find(".aktivace.spoluprace ");
-        item.attr('data-original-title' , item.children().text());
-        const item_smazani = $(this).find(".smazani.spoluprace ");
-        item_smazani.attr('data-original-title' , item_smazani.children().text());
-      });
+      const normalizeTooltipText = (text) => text.replace(/\s+/g, ' ').trim();
 
-      const add_tooltips = (element_selector, tooltip_list) => {
+      const syncActionTooltip = (element_selector) => {
         const elements = document.querySelectorAll(element_selector);
         elements.forEach((td) => {
-          const originalTitle = td.getAttribute('data-original-title');
-          if (originalTitle) {
-            tooltip_list.forEach((item) => {
-              if (originalTitle.includes(item)) {
-                td.setAttribute('data-original-title', item + " " + originalTitle);
-              }
-            })
+          const button = td.querySelector('button');
+          if (!button) {
+            return;
           }
+
+          const tooltipText = normalizeTooltipText(button.textContent || '');
+          if (!tooltipText) {
+            return;
+          }
+
+          td.setAttribute('data-bs-original-title', tooltipText);
         });
       }
-      add_tooltips("td.aktivace", ["{{ trans_deaktivovat }}", "{{ trans_aktivovat }}"]);
-      add_tooltips("td.smazani", ["{{ trans_smazat }}"]);
+
+      syncActionTooltip("td.aktivace");
+      syncActionTooltip("td.smazani");
   });
   </script>
 {% endblock %}

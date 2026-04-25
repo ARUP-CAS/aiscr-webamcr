@@ -27,6 +27,7 @@
   {% endif %}
   <!-- Material icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <!-- Optional JavaScript; choose one of the two! -->
   <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
   <script src="{% static 'jquery/dist/jquery.min.js' %}"></script>
@@ -92,7 +93,7 @@
   </style>
   {% block head %}{% endblock %}
 </head>
-<body class="{{ request.path|url_to_classes }}">
+<body class="{{ request.path|url_to_classes }} {% block body_class %}{% endblock %}">
   
   <div class="d-flex" id="app-wrapper">
   {% block sidebar %}{% endblock %}

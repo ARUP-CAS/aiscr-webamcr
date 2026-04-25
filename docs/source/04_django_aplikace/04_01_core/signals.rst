@@ -424,9 +424,15 @@ UZIVATEL
    * - ``Osoba``
      - ``pre_delete``
      - ``osoba_delete_repository_container``
+   * - ``Osoba``
+     - ``post_delete``
+     - ``osoba_close_repository_transaction``
    * - ``Organizace``
      - ``pre_delete``
      - ``organizace_delete_repository_container``
+   * - ``Organizace``
+     - ``post_delete``
+     - ``organizace_close_repository_transaction``
    * - ``N/A``
      - ``user_logged_in``
      - ``log_user_signin``

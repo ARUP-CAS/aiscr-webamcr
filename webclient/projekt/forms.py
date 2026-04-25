@@ -319,7 +319,7 @@ class EditProjektForm(OptimisticLockingMixin, forms.ModelForm):
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
         if self.fields["vedouci_projektu"].disabled is True:
-            helper_vedouci_projektu = Div("vedouci_projektu", css_class="col-sm-4")
+            helper_vedouci_projektu = Div("vedouci_projektu", css_class="col-sm-6 col-lg-4")
         else:
             helper_vedouci_projektu = Div(
                 AppendedText(
@@ -328,7 +328,7 @@ class EditProjektForm(OptimisticLockingMixin, forms.ModelForm):
                         '<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                     ),
                 ),
-                css_class="col-sm-4 input-osoba form-group",
+                css_class="col-sm-6 col-lg-4 input-osoba form-group",
             )
         self.helper.layout = Layout(
             Div(
@@ -353,11 +353,11 @@ class EditProjektForm(OptimisticLockingMixin, forms.ModelForm):
                                 Div("planovane_zahajeni", css_class="col-sm-3"),
                                 css_class="row",
                             ),
-                            css_class="col-sm-6",
+                            css_class="col-sm-12 col-lg-6",
                         ),
                         Div(
                             Div(id="projectMap"),
-                            css_class="col-sm-6",
+                            css_class="col-sm-12 col-lg-6",
                         ),
                         css_class="row",
                     ),
@@ -370,11 +370,11 @@ class EditProjektForm(OptimisticLockingMixin, forms.ModelForm):
                             css_class="col-sm-12",
                         ),
                         helper_vedouci_projektu,
-                        Div("organizace", css_class="col-sm-4"),
-                        Div("uzivatelske_oznaceni", css_class="col-sm-4"),
-                        Div("kulturni_pamatka", css_class="col-sm-3"),
-                        Div("kulturni_pamatka_cislo", css_class="col-sm-3"),
-                        Div("kulturni_pamatka_popis", css_class="col-sm-6"),
+                        Div("organizace", css_class="col-sm-6 col-lg-4"),
+                        Div("uzivatelske_oznaceni", css_class="col-sm-6 col-lg-4"),
+                        Div("kulturni_pamatka", css_class="col-sm-6 col-lg-4"),
+                        Div("kulturni_pamatka_cislo", css_class="col-sm-6 col-lg-4"),
+                        Div("kulturni_pamatka_popis", css_class="col-sm-6 col-lg-4"),
                         Div("coordinate_x1", css_class="hidden"),
                         Div("coordinate_x2", css_class="hidden"),
                         Div("optimistic_lock_data", css_class="d-none"),
@@ -552,13 +552,13 @@ class PrihlaseniProjektForm(forms.ModelForm):
                             '<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                         ),
                     ),
-                    css_class="col-sm-4 input-osoba form-group",
+                    css_class="col-sm-6 col-lg-4 input-osoba form-group",
                 ),
-                Div("organizace", css_class="col-sm-4"),
-                Div("uzivatelske_oznaceni", css_class="col-sm-4"),
-                Div("kulturni_pamatka", css_class="col-sm-4"),
-                Div("kulturni_pamatka_cislo", css_class="col-sm-4"),
-                Div("kulturni_pamatka_popis", css_class="col-sm-4"),
+                Div("organizace", css_class="col-sm-6 col-lg-4"),
+                Div("uzivatelske_oznaceni", css_class="col-sm-6 col-lg-4"),
+                Div("kulturni_pamatka", css_class="col-sm-6 col-lg-4"),
+                Div("kulturni_pamatka_cislo", css_class="col-sm-6 col-lg-4"),
+                Div("kulturni_pamatka_popis", css_class="col-sm-6 col-lg-4"),
                 Div("old_stav"),
                 css_class="row",
             ),
@@ -629,9 +629,9 @@ class ZahajitVTerenuForm(forms.ModelForm):
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Div(
-                Div("datum_zahajeni", css_class="col-sm-4"),
-                Div("poslat_email_kraj", css_class="col-sm-4"),
-                Div("info_text", css_class="col-sm-4"),
+                Div("datum_zahajeni", css_class="col-sm-6 col-lg-4"),
+                Div("poslat_email_kraj", css_class="col-sm-6 col-lg-4"),
+                Div("info_text", css_class="col-sm-12 col-lg-4"),
                 Div("old_stav"),
                 css_class="row",
             ),
@@ -706,9 +706,9 @@ class UkoncitVTerenuForm(forms.ModelForm):
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Div(
-                Div("datum_ukonceni", css_class="col-sm-4"),
-                Div("poslat_email_kraj", css_class="col-sm-4"),
-                Div("info_text", css_class="col-sm-4"),
+                Div("datum_ukonceni", css_class="col-sm-6 col-lg-4"),
+                Div("poslat_email_kraj", css_class="col-sm-6 col-lg-4"),
+                Div("info_text", css_class="col-sm-12 col-lg-4"),
                 Div("old_stav"),
                 css_class="row",
             ),

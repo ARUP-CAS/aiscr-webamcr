@@ -897,8 +897,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         self.ElementClick(By.CSS_SELECTOR, "#div_id_typ_dokumentu .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_material_originalu .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-0 > .text")
+        self.select_nth_selectpicker_option("id_material_originalu")
         self.ElementClick(By.ID, "id_popis")
         self.ElementSendKeys(By.ID, "id_popis", "test")
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
@@ -909,7 +908,8 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
         # nahrat soubor
         self.ElementClick(By.ID, "NahratSoubory")
-        self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
+        with WaitForPageLoad(self.driver):
+            self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/create_dokument_cast")

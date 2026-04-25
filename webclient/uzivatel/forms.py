@@ -251,14 +251,14 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Div(
-                Div("first_name", css_class="col-sm-3"),
-                Div("last_name", css_class="col-sm-3"),
-                Div("email", css_class="col-sm-3"),
-                Div("ident_cely", css_class="col-sm-3"),
-                Div("date_joined", css_class="col-sm-3"),
-                Div("organizace", css_class="col-sm-3"),
-                Div("hlavni_role", css_class="col-sm-3"),
-                Div("groups", css_class="col-sm-3"),
+                Div("first_name", css_class="col-sm-6 col-lg-3"),
+                Div("last_name", css_class="col-sm-6 col-lg-3"),
+                Div("email", css_class="col-sm-6 col-lg-3"),
+                Div("ident_cely", css_class="col-sm-6 col-lg-3"),
+                Div("date_joined", css_class="col-sm-6 col-lg-3"),
+                Div("organizace", css_class="col-sm-6 col-lg-3"),
+                Div("hlavni_role", css_class="col-sm-6 col-lg-3"),
+                Div("groups", css_class="col-sm-6 col-lg-3"),
                 css_class="row",
             )
         )
@@ -388,6 +388,11 @@ class UpdatePasswordSettings(forms.ModelForm):
 class AuthUserLoginForm(AuthenticationForm):
     """Formulář pro prihlášení uživatele."""
 
+    error_messages = {
+        "invalid_login": _("uzivatel.forms.login.error"),
+        "inactive": _("core.authenticators.user_can_authenticate"),
+    }
+
     def __init__(self, *args, **kwargs):
         """
         Inicializuje instanci třídy.
@@ -407,17 +412,6 @@ class AuthUserLoginForm(AuthenticationForm):
                 mark_safe('<i class="bi bi-eye-slash" id="togglePassword"> </i>'),
                 input_size="input-group-sm",
             ),
-        )
-
-    def get_invalid_login_error(self):
-        """
-        Vrací invalid login error.
-
-        :return: Vrací výsledek volání ``ValidationError()``.
-        """
-        return ValidationError(
-            _("uzivatel.forms.login.error"),
-            code="invalid_login",
         )
 
 
