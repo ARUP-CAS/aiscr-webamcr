@@ -35,7 +35,7 @@ def copy_with_preserved_h1(src: str, dst: str) -> None:
             # Save existing h1 content if destination exists
             h1_text = None
             if os.path.exists(dst_file):
-                with open(dst_file, encoding='utf-8') as fp:
+                with open(dst_file, encoding="utf-8") as fp:
                     soup = BeautifulSoup(fp, "html.parser")
                     h1 = soup.find("h1")
                     if h1 and h1.string:
@@ -47,12 +47,12 @@ def copy_with_preserved_h1(src: str, dst: str) -> None:
 
             # Restore h1 content if it was saved
             if h1_text is not None:
-                with open(dst_file, encoding='utf-8') as fp:
+                with open(dst_file, encoding="utf-8") as fp:
                     soup = BeautifulSoup(fp, "html.parser")
                 h1 = soup.find("h1")
                 if h1:
                     h1.string.replace_with(h1_text)
-                with open(dst_file, "w", encoding='utf-8') as fp:
+                with open(dst_file, "w", encoding="utf-8") as fp:
                     fp.write(str(soup))
 
 
