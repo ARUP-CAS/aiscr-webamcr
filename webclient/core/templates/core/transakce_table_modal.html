@@ -183,9 +183,36 @@
                             syncRowsWithSelection();
                         }
                     };
-                    // Some Select2/DAL initializations are async; clear twice to avoid stale value flicker.
+                    const runClearAfterInitialization = function () {
+                        clearOrphanSelection();
+                        $(document).off('dal-element-initialized.modalrowInit');
+                        tag.off('select2:open.modalrowInit');
+                    };
+
+                    // DAL/Select2 initialization can be async, so re-run cleanup when
+                    // the component reports it has initialized instead of using a timeout.
+                    $(document)
+                        .off('dal-element-initialized.modalrowInit')
+                        .on('dal-element-initialized.modalrowInit', function (e) {
+                            const initializedElement = e.detail && e.detail.element ? e.detail.element : null;
+                            if (initializedElement === tag[0]) {
+                                runClearAfterInitialization();
+                            }
+                        });
+                    tag
+                        .off('select2:open.modalrowInit')
+                        .one('select2:open.modalrowInit', runClearAfterInitialization);
+
+                    // Pokud je modal zavřen dříve, než dojde k inicializaci, odstraní
+                    // zombie posluchač z document, aby nedocházelo k hromadění při opakovaném otevírání.
+                    $('#modal-form')
+                        .off('hidden.bs.modal.modalrowInit')
+                        .one('hidden.bs.modal.modalrowInit', function () {
+                            $(document).off('dal-element-initialized.modalrowInit');
+                            tag.off('select2:open.modalrowInit');
+                        });
+
                     clearOrphanSelection();
-                    setTimeout(clearOrphanSelection, 300);
                 }
             }
             $(document).off('focusin.modal');
