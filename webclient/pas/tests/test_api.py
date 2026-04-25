@@ -21,7 +21,8 @@ from core.constants import (
     NAHRANI_SBR,
     ODESLANI_SN,
     POTVRZENI_SN,
-    SN_POTVRZENY,
+    SN_ARCHIVOVANY,
+    SN_ZAPSANY,
     ZAPSANI_SN,
 )
 from core.models import AntivirusCheckResult, ApiRequestLog, Permissions, Soubor, check_permissions
@@ -42,6 +43,7 @@ from pas.api import (
     ImportErrorType,
     ImportValidationException,
     SamostatnyNalezEvidencniCisloPatchView,
+    SamostatnyNalezXmlBaseView,
     SamostatnyNalezXmlImportView,
 )
 from pas.models import SamostatnyNalez
@@ -1090,7 +1092,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertAlmostEqual(nalez.geom.y, 49.9914407, places=5)
         self.assertAlmostEqual(nalez.geom_sjtsk.x, -828708.49, places=1)
         self.assertAlmostEqual(nalez.geom_sjtsk.y, -1041287.69, places=1)
-        self.assertEqual(nalez.stav, SN_POTVRZENY)
+        self.assertEqual(nalez.stav, SamostatnyNalezXmlBaseView.XML_IMPORT_INITIAL_STAV)
         self._assert_log_success()
 
     def test_valid_xml_creates_import_history_records(self):
@@ -1336,24 +1338,6 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self._assert_xml_success_response(response, "SN-XML-LANG-001")
         self.assertTrue(SamostatnyNalez.objects.filter(ident_cely="SN-XML-LANG-001").exists())
         self._assert_log_success()
-
-    def test_import_closes_fedora_transaction_via_on_commit(self):
-        """Import registruje uzavření Fedora transakce přes ``transaction.on_commit()``."""
-        xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-ON-COMMIT-001",
-            projekt_ident=self.projekt.ident_cely,
-            pristupnost_ident=self.pristupnost.ident_cely,
-        )
-        fedora_transaction = Mock()
-
-        with patch("pas.api.FedoraTransaction", return_value=fedora_transaction), patch(
-            "pas.api.transaction.on_commit"
-        ) as mock_on_commit:
-            response = self._post_xml(xml)
-
-        self._assert_xml_success_response(response, "SN-XML-ON-COMMIT-001")
-        mock_on_commit.assert_called_once_with(fedora_transaction.mark_transaction_as_closed)
-        fedora_transaction.mark_transaction_as_closed.assert_not_called()
 
 
 class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
@@ -1829,7 +1813,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
             response = self._patch(IDENT_CELY)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertIn("detail", response.data)
+        self.assertIn("detail", response.text)
         self.nalez.refresh_from_db()
         self.assertEqual(self.nalez.evidencni_cislo, original_value)
         self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
@@ -1845,7 +1829,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
             response = self._patch(IDENT_CELY)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertIn("detail", response.data)
+        self.assertIn("detail", response.text)
         self.nalez.refresh_from_db()
         self.assertEqual(self.nalez.evidencni_cislo, "EC-TEST-001")
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)

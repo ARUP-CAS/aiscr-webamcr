@@ -26,8 +26,8 @@ from core.constants import (
     MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES,
     ODESLANI_SN,
     POTVRZENI_SN,
+    SN_ARCHIVOVANY,
     SN_POTVRZENY,
-    SN_ZAPSANY,
     ZAPSANI_SN,
 )
 from core.ident_cely import get_sn_ident
@@ -1472,6 +1472,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
     _XML_NS = "http://www.w3.org/XML/1998/namespace"
     _XSI_NS = "http://www.w3.org/2001/XMLSchema-instance"
     _amcr_schema_cache: dict[str, tuple[etree.XMLSchema, float]] = {}  # url -> (schema, inserted_at)
+    XML_IMPORT_INITIAL_STAV: int = SN_POTVRZENY
 
     def _validation_status(self, errors: list[ImportValidationIssue]) -> int:
         """
@@ -1842,7 +1843,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
             "poznamka": cls._text(elem, "poznamka"),
             "nalezce": nalezce_ident,
             "datum_nalezu": cls._text(elem, "datum_nalezu"),
-            "stav": SN_ZAPSANY,
+            "stav": cls.XML_IMPORT_INITIAL_STAV,
             "predano": cls._parse_bool(cls._text(elem, "predano")),
             "predano_organizace": cls._id_attr(elem, "predano_organizace"),
             "geom_system": cls._text(elem, "geom_system"),
@@ -1971,7 +1972,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                 continue
 
             stav_elem = etree.Element(cls._ns("stav"))
-            stav_elem.text = str(SN_ZAPSANY)
+            stav_elem.text = str(cls.XML_IMPORT_INITIAL_STAV)
             insert_before_tags = (
                 "predano",
                 "predano_organizace",
@@ -2734,28 +2735,6 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
                 },
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
-
-        data = {
-            "ident_cely": None if cls._text(elem, "ident_cely") == ":tba" else cls._text(elem, "ident_cely"),
-            "projekt": projekt_ident,
-            "evidencni_cislo": cls._text(elem, "evidencni_cislo"),
-            "igsn": cls._text(elem, "igsn"),
-            "hloubka": cls._text(elem, "hloubka"),
-            "okolnosti": cls._id_attr(elem, "okolnosti"),
-            "obdobi": cls._id_attr(elem, "obdobi"),
-            "presna_datace": cls._text(elem, "presna_datace"),
-            "druh_nalezu": cls._id_attr(elem, "druh_nalezu"),
-            "specifikace": cls._id_attr(elem, "specifikace"),
-            "pocet": cls._text(elem, "pocet"),
-            "poznamka": cls._text(elem, "poznamka"),
-            "nalezce": nalezce_ident,
-            "datum_nalezu": cls._text(elem, "datum_nalezu"),
-            "stav": SN_POTVRZENY,
-            "predano": cls._parse_bool(cls._text(elem, "predano")),
-            "predano_organizace": cls._id_attr(elem, "predano_organizace"),
-            "geom_system": cls._text(elem, "geom_system"),
-            "pristupnost": cls._id_attr(elem, "pristupnost"),
-        }
 
         if mimetype in ["image/png", "image/jpeg", "image/tiff"]:
             binary_data = Soubor.remove_gps_data(binary_data)
