@@ -26,7 +26,7 @@ from core.constants import (
     MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES,
     ODESLANI_SN,
     POTVRZENI_SN,
-    SN_ARCHIVOVANY,
+    SN_POTVRZENY,
     SN_ZAPSANY,
     ZAPSANI_SN,
 )
@@ -2734,10 +2734,27 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
-        current_extension = new_name.rsplit(".", 1)[-1].lower() if "." in new_name else ""
-        if current_extension not in mime_extensions:
-            base_name = new_name.rsplit(".", 1)[0] if "." in new_name else new_name
-            new_name = f"{base_name}.{mime_extensions[0]}"
+        data = {
+            "ident_cely": None if cls._text(elem, "ident_cely") == ":tba" else cls._text(elem, "ident_cely"),
+            "projekt": projekt_ident,
+            "evidencni_cislo": cls._text(elem, "evidencni_cislo"),
+            "igsn": cls._text(elem, "igsn"),
+            "hloubka": cls._text(elem, "hloubka"),
+            "okolnosti": cls._id_attr(elem, "okolnosti"),
+            "obdobi": cls._id_attr(elem, "obdobi"),
+            "presna_datace": cls._text(elem, "presna_datace"),
+            "druh_nalezu": cls._id_attr(elem, "druh_nalezu"),
+            "specifikace": cls._id_attr(elem, "specifikace"),
+            "pocet": cls._text(elem, "pocet"),
+            "poznamka": cls._text(elem, "poznamka"),
+            "nalezce": nalezce_ident,
+            "datum_nalezu": cls._text(elem, "datum_nalezu"),
+            "stav": SN_POTVRZENY,
+            "predano": cls._parse_bool(cls._text(elem, "predano")),
+            "predano_organizace": cls._id_attr(elem, "predano_organizace"),
+            "geom_system": cls._text(elem, "geom_system"),
+            "pristupnost": cls._id_attr(elem, "pristupnost"),
+        }
 
         if mimetype in ["image/png", "image/jpeg", "image/tiff"]:
             binary_data = Soubor.remove_gps_data(binary_data)

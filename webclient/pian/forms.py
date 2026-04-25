@@ -62,15 +62,16 @@ class PianCreateForm(OptimisticLockingMixin, forms.ModelForm):
             Div(
                 Div(
                     "presnost",
-                    css_class="col-sm-2",
+                    css_class="col-sm-6 col-lg-2",
                 ),
-                Div("geom", css_class="col-sm-2"),
-                Div("geom_sjtsk", css_class="col-sm-2"),
-                Div("geom_system", css_class="col-sm-2"),
-                Div(self.optimistic_lock_field_name, css_class="d-none"),
+                Div("geom", css_class="col-sm-6 col-lg-2"),
+                Div("geom_sjtsk", css_class="col-sm-6 col-lg-2"),
+                Div("geom_system", css_class="col-sm-6 col-lg-2"),
                 css_class="row",
             ),
         )
+        if self.optimistic_lock_field_name in self.fields:
+            self.helper.layout[0].append(Div(self.optimistic_lock_field_name, css_class="d-none"))
 
     def _instance_geom_wkt(self, field_name):
         """

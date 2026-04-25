@@ -190,9 +190,11 @@
 
       dropdown.add(newOption);
 
-      $('#id_vedouci_projektu').selectpicker('refresh');
-      $('#id_vedouci_projektu').selectpicker('val', response.value);
-      dropdown.value = response.value;
+      var val = String(response.value);
+      $('#id_vedouci_projektu').selectpicker('destroy');
+      $('#id_vedouci_projektu').selectpicker();
+      $('#id_vedouci_projektu').selectpicker('val', val);
+      dropdown.value = val;
       $(settings.modalIDD).modal("hide");
     };
     $('#create-osoba').on('click', function () {

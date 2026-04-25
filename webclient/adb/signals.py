@@ -4,6 +4,7 @@ from adb.models import Adb, VyskovyBod
 from arch_z.signals import invalidate_arch_z_related_models
 from core.repository_connector import FedoraTransaction
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
@@ -88,7 +89,9 @@ def adb_delete_repository_container(sender, instance: Adb, **kwargs):
             extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid, "error": err},
         )
     close_transaction = instance.close_active_transaction_when_finished
-    instance.record_deletion(fedora_transaction, close_transaction=close_transaction)
+    instance.record_deletion(fedora_transaction)
+    if close_transaction:
+        transaction.on_commit(lambda: fedora_transaction.mark_transaction_as_closed())
 
     logger.debug(
         "adb.signals.adb_delete_repository_container.end",

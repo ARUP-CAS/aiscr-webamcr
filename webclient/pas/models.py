@@ -592,6 +592,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         self.active_transaction = None
         self.close_active_transaction_when_finished = False
 
+    @property
     def aktivni(self):
         """
         Vrací hodnotu určující, zda je spolupráce aktivní.

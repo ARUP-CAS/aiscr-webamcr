@@ -36,6 +36,17 @@
   margin: 0 $spacer-2;
 }
 
+.app-pipe-right {
+  border-right: 1px solid $gray-500;
+  margin: 0 $spacer-2 0 0;
+  height: 90%;
+  align-content: center;
+}
+
+.pr-5 {
+  padding-right: 0.5rem !important;
+}
+
 .app-flag {
   width: $app-flag-width;
 }
@@ -114,6 +125,10 @@
 .btn-prolong {
   background: transparent;
   padding: 0;
+}
+
+.dropdown-menu {
+  --bs-dropdown-zindex: 1010;
 }
 
 .input-osoba .mb-3#div_id_vedouci_projektu .input-group {
@@ -747,9 +762,11 @@ input.coordInput {
 
     }
   }
+
   th.col-no-orderable {
     color: white !important;
   }
+
   &.app-entity-historie.app-entity-soubor {
     //height: 85% !important;
     padding-bottom: 59px;

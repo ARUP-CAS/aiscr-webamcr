@@ -7,7 +7,9 @@
 {% block title %}{% trans "oznameni.templates.oznameni.index_2.title" %}{% endblock %}
 
 {% block head %}
+  {% if show_dark_mode %}
   <script src="{% static 'js/theme-toggle.js' %}"></script>
+  {% endif %}
   <script>
   let maxFiles = 40;
   let object_id = "{{ ident_cely }}";

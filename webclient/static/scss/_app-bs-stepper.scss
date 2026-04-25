@@ -8,6 +8,15 @@
     .step {
       margin-right: -15px;
       margin-left: -15px;
+
+      &:first-child {
+        margin-left: 0;
+      }
+
+      &:last-child {
+        margin-right: 0;
+      }
+
       &.active {
         .bs-stepper-label {
           color: $blue;
@@ -21,17 +30,19 @@
 
       .step-trigger {
         cursor: unset;
-    
+
         &:hover {
           @extend .bg-transparent;
         }
-    
+
         &:focus {
           color: currentColor;
         }
-        &.historie-link{
+
+        &.historie-link {
           cursor: pointer;
         }
+
         font-weight: normal;
       }
 
@@ -41,6 +52,7 @@
         color: inherit;
         font-size: 13px;
       }
+
       .app-stepper-date-container {
         line-height: 1;
       }
@@ -48,14 +60,14 @@
   }
 }
 
-.step-trigger { 
+.step-trigger {
   &.projekt {
-  padding: 10px;
+    padding: 10px;
   }
 }
 
 .line {
-  &.projekt{
-  flex: 1 0 12px;
+  &.projekt {
+    flex: 1 0 12px;
   }
 }

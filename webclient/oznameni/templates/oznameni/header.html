@@ -30,11 +30,13 @@
             <img src="{% static 'img/flag-en.svg' %}" alt="" class="app-flag" />
           </button>
       </div>
+      {% if show_dark_mode %}
       <div class="col mt-3 nav-item app-theme-toggle">
         <button class="app-theme-toggle" id="theme-toggle-btn" title="{% trans 'templates.registration.login.toggleTheme.title' %}">
           <span class="material-icons">dark_mode</span>
         </button>
       </div>
+      {% endif %}
     </div>
   </div>
 </div>

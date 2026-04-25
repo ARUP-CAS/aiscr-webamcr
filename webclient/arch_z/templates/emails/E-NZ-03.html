@@ -1,0 +1,31 @@
+{% extends 'core/email.html' %}
+{% load i18n %}
+{% load template_tags %}
+{% block content %}
+<p>
+    Dobrý den,
+</p>
+<p>
+    v aplikaci AMČR vypršela lhůta pro kontrolu záznamu <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> odeslaného k archivaci na katastru <b>{{ katastr }}</b> organizací <b>{{ organizace }}</b>.
+</p>
+<p>
+    Záznam je třeba obratem vypořádat, nebo informovat odesílatele (<b>{{ sender_name }} {{ sender_surname }}</b> - <a href="mailto:{{ sender_email }}">{{ sender_email }}</a>) o odkladu kontroly s relevantním odůvodněním.
+</p>
+<p>
+    Detaily o záznamu zjistíte po přihlášení do AMČR.
+</p>
+{% endblock %}
+{% block content_en %}
+<p>
+    Hello,
+</p>
+<p>
+    in the AMCR application, the deadline for validation of record <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> sent for archiving on the cadastral area <b>{{ katastr }}</b> by organization <b>{{ organizace }}</b> has expired.
+</p>
+<p>
+    The record must be processed immediately, or the sender (<b>{{ sender_name }} {{ sender_surname }}</b> - <a href="mailto:{{ sender_email }}">{{ sender_email }}</a>) must be informed about the delay in validation with a relevant reason.
+</p>
+<p>
+    You can find out the details of the record after logging into AMCR.
+</p>
+{% endblock %}

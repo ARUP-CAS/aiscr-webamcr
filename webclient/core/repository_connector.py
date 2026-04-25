@@ -576,9 +576,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 )
             if request_type.value < 1000:
                 self.transaction.changes_count += 1
-        if request_type in (FedoraRequestType.CREATE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
-            response = requests.post(url, headers=headers, data=data, auth=auth, verify=False)
-        elif request_type in (
+        if request_type in (
             FedoraRequestType.GET_CONTAINER,
             FedoraRequestType.GET_METADATA,
             FedoraRequestType.GET_BINARY_FILE_CONTAINER,
@@ -593,54 +591,68 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         ):
             try:
                 response = requests.get(url, headers=headers, auth=auth, verify=False)
-            except requests.exceptions.RequestException:
+            except requests.exceptions.RequestException as exc:
+                logger.warning(
+                    "core_repository_connector._send_request.get_request_failed",
+                    extra={"url": url, "request_type": request_type, "error": exc},
+                )
                 return None
-        elif request_type in (
-            FedoraRequestType.CREATE_METADATA,
-            FedoraRequestType.RECORD_DELETION_ADD_MARK,
-            FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4,
-            FedoraRequestType.CREATE_LINK,
-        ):
-            response = requests.post(url, headers=headers, data=data, auth=auth, verify=False)
-        elif request_type in (
-            FedoraRequestType.CREATE_BINARY_FILE_CONTENT,
-            FedoraRequestType.CREATE_BINARY_FILE_THUMB,
-            FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE,
-        ):
-            response = requests.post(url, headers=headers, data=data, auth=auth, verify=False, timeout=10)
-        elif request_type in (
-            FedoraRequestType.UPDATE_METADATA,
-            FedoraRequestType.UPDATE_BINARY_FILE_CONTENT,
-            FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB,
-            FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE,
-        ):
-            response = requests.put(url, headers=headers, data=data, auth=auth, verify=False)
-        elif request_type == FedoraRequestType.CREATE_BINARY_FILE:
-            response = requests.post(url, headers=headers, auth=auth, data=data, verify=False)
-        elif request_type in (
-            FedoraRequestType.DELETE_CONTAINER,
-            FedoraRequestType.DELETE_TOMBSTONE,
-            FedoraRequestType.DELETE_LINK_CONTAINER,
-            FedoraRequestType.DELETE_LINK_TOMBSTONE,
-            FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY,
-            FedoraRequestType.CONNECT_DELETED_RECORD_3,
-            FedoraRequestType.CONNECT_DELETED_RECORD_4,
-            FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5,
-        ):
-            response = requests.delete(url, headers=headers, auth=auth)
-        elif request_type in (
-            FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
-            FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
-            FedoraRequestType.DELETE_BINARY_FILE,
-            FedoraRequestType.CONNECT_DELETED_RECORD_1,
-            FedoraRequestType.CONNECT_DELETED_RECORD_2,
-            FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_6,
-            FedoraRequestType.METADATA_UPDATE_RDF_DATA,
-            FedoraRequestType.FILE_CONTENT_UPDATE_RDF_DATA,
-            FedoraRequestType.THUMB_CONTENT_UPDATE_RDF_DATA,
-            FedoraRequestType.THUMB_LARGE_CONTENT_UPDATE_RDF_DATA,
-        ):
-            response = requests.patch(url, auth=auth, headers=headers, data=data)
+        else:
+            try:
+                if request_type in (FedoraRequestType.CREATE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
+                    response = requests.post(url, headers=headers, data=data, auth=auth, verify=False)
+                elif request_type in (
+                    FedoraRequestType.CREATE_METADATA,
+                    FedoraRequestType.RECORD_DELETION_ADD_MARK,
+                    FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4,
+                    FedoraRequestType.CREATE_LINK,
+                ):
+                    response = requests.post(url, headers=headers, data=data, auth=auth, verify=False)
+                elif request_type in (
+                    FedoraRequestType.CREATE_BINARY_FILE_CONTENT,
+                    FedoraRequestType.CREATE_BINARY_FILE_THUMB,
+                    FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE,
+                ):
+                    response = requests.post(url, headers=headers, data=data, auth=auth, verify=False, timeout=10)
+                elif request_type in (
+                    FedoraRequestType.UPDATE_METADATA,
+                    FedoraRequestType.UPDATE_BINARY_FILE_CONTENT,
+                    FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB,
+                    FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE,
+                ):
+                    response = requests.put(url, headers=headers, data=data, auth=auth, verify=False)
+                elif request_type == FedoraRequestType.CREATE_BINARY_FILE:
+                    response = requests.post(url, headers=headers, auth=auth, data=data, verify=False)
+                elif request_type in (
+                    FedoraRequestType.DELETE_CONTAINER,
+                    FedoraRequestType.DELETE_TOMBSTONE,
+                    FedoraRequestType.DELETE_LINK_CONTAINER,
+                    FedoraRequestType.DELETE_LINK_TOMBSTONE,
+                    FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY,
+                    FedoraRequestType.CONNECT_DELETED_RECORD_3,
+                    FedoraRequestType.CONNECT_DELETED_RECORD_4,
+                    FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5,
+                ):
+                    response = requests.delete(url, headers=headers, auth=auth)
+                elif request_type in (
+                    FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
+                    FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
+                    FedoraRequestType.DELETE_BINARY_FILE,
+                    FedoraRequestType.CONNECT_DELETED_RECORD_1,
+                    FedoraRequestType.CONNECT_DELETED_RECORD_2,
+                    FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_6,
+                    FedoraRequestType.METADATA_UPDATE_RDF_DATA,
+                    FedoraRequestType.FILE_CONTENT_UPDATE_RDF_DATA,
+                    FedoraRequestType.THUMB_CONTENT_UPDATE_RDF_DATA,
+                    FedoraRequestType.THUMB_LARGE_CONTENT_UPDATE_RDF_DATA,
+                ):
+                    response = requests.patch(url, auth=auth, headers=headers, data=data)
+            except requests.exceptions.ConnectionError as exc:
+                logger.error(
+                    "core_repository_connector._send_request.connection_error",
+                    extra={"url": url, "request_type": request_type, "transaction": self.transaction_uid, "error": exc},
+                )
+                raise FedoraNoResponseError(url, str(exc), None, fedora_transaction=self.transaction)
         extra["status_code"] = response.status_code
 
         if request_type in (
@@ -1618,6 +1630,22 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
         )
 
+    def add_replaces_triple(self, ident_cely_old, ident_cely_new=None):
+        """
+        Přidá trojici ``dcterms:replaces`` do záznamu nového identifikátoru.
+
+        :param ident_cely_old: Starý identifikátor, na který má nový záznam odkazovat.
+        :param ident_cely_new: Nový identifikátor; pokud není zadán, použije se ``self.record.ident_cely``.
+        """
+        ident_cely_new = ident_cely_new or self.record.ident_cely
+        data = (
+            f"INSERT DATA {{<> <http://purl.org/dc/terms/replaces> "
+            f"<info:fedora/{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}>}}"
+        )
+        headers = {"Content-Type": "application/sparql-update"}
+        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2, ident_cely=ident_cely_new)
+        self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2, headers=headers, data=data)
+
     def record_ident_change(self, ident_cely_old, delete_container=True):
         """
         Přejmenuje kontejner v Fedoře na základě změny identifikátoru záznamu.
@@ -1640,14 +1668,6 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
                 extra={"ident_cely": self.record.ident_cely, "ident_cely_old": ident_cely_old},
             )
             raise IdentChangeFedoraError()
-        ident_cely_new = self.record.ident_cely
-        data = (
-            f"INSERT DATA {{<> <http://purl.org/dc/terms/replaces> "
-            f"<info:fedora/{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}>}}"
-        )
-        headers = {"Content-Type": "application/sparql-update"}
-        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2, ident_cely=ident_cely_new)
-        self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2, headers=headers, data=data)
         headers = {"Slug": ident_cely_old, "Content-Type": "text/turtle"}
         data = (
             "@prefix ore: <http://www.openarchives.org/ore/terms/> . "
@@ -2041,7 +2061,14 @@ class FedoraTransaction(BaseFedoraTransaction):
             f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/fcr:tx"
         )
         auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
-        response = requests.post(url, auth=auth, verify=False)
+        try:
+            response = requests.post(url, auth=auth, verify=False)
+        except requests.exceptions.ConnectionError as exc:
+            logger.error(
+                "core_repository_connector.FedoraTransaction.__create_transaction.connection_error",
+                extra={"url": url, "error": exc},
+            )
+            raise FedoraNoResponseError(url, str(exc), None, fedora_transaction=None)
         if not str(response.status_code).startswith("2"):
             logger.error(
                 "core_repository_connector.FedoraTransaction.__create_transaction.failed",

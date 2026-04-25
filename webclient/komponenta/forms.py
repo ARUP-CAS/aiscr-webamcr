@@ -85,11 +85,11 @@ class CreateKomponentaForm(OptimisticLockingMixin, forms.ModelForm):
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div("obdobi", css_class="col-sm-2"),
-                Div("jistota", css_class="col-sm-2"),
-                Div("presna_datace", css_class="col-sm-2"),
-                Div("areal", css_class="col-sm-2"),
-                Div("aktivity", css_class="col-sm-4"),
+                Div("obdobi", css_class="col-sm-6 col-lg-2"),
+                Div("jistota", css_class="col-sm-6 col-lg-2"),
+                Div("presna_datace", css_class="col-sm-6 col-lg-2"),
+                Div("areal", css_class="col-sm-6 col-lg-2"),
+                Div("aktivity", css_class="col-sm-6 col-lg-4"),
                 Div("poznamka", css_class="col-sm-12"),
                 css_class="row",
             ),

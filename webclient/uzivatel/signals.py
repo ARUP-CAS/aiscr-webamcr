@@ -252,40 +252,84 @@ def delete_profile(sender, instance: User, *args, **kwargs):
 @receiver(pre_delete, sender=Osoba, weak=False)
 def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
     """
-    Provádí operaci osoba delete repository container.
+    Zaznamená smazání osoby v repozitáři před odstraněním záznamu z databáze.
 
     :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``osoba_delete_repository_container``.
-    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``get_or_create_transaction()``, pracuje se s atributy ``ident_cely``, ``record_deletion``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``active_transaction``, ``close_active_transaction_when_finished``, ``record_deletion``.
     :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``osoba_delete_repository_container``.
     """
     logger.debug("uzivatel.signals.osoba_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
-    fedora_transaction = get_or_create_transaction(instance)
-    close_transaction = instance.close_active_transaction_when_finished
-    instance.record_deletion(fedora_transaction, close_transaction=close_transaction)
+    if instance.active_transaction:
+        fedora_transaction = instance.active_transaction
+    else:
+        fedora_transaction = FedoraTransaction()
+        instance.active_transaction = fedora_transaction
+        instance.close_active_transaction_when_finished = True
+    instance.record_deletion(fedora_transaction)
     logger.debug(
         "uzivatel.signals.osoba_delete_repository_container.end",
-        extra={"ident_cely": instance.ident_cely, "transaction": transaction},
+        extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid},
     )
+
+
+@receiver(post_delete, sender=Osoba, weak=False)
+def osoba_close_repository_transaction(sender, instance: Osoba, **kwargs):
+    """
+    Uzavře Fedora transakci po potvrzení smazání osoby v databázi.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``osoba_close_repository_transaction``.
+    :param instance: Parametr ``instance`` pracuje se s atributy ``ident_cely``, ``close_active_transaction_when_finished``, ``active_transaction``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``osoba_close_repository_transaction``.
+    """
+    logger.debug("uzivatel.signals.osoba_close_repository_transaction.start", extra={"ident_cely": instance.ident_cely})
+    if instance.close_active_transaction_when_finished:
+        fedora_transaction = instance.active_transaction
+        transaction.on_commit(lambda: fedora_transaction.mark_transaction_as_closed())
+    logger.debug("uzivatel.signals.osoba_close_repository_transaction.end", extra={"ident_cely": instance.ident_cely})
 
 
 @receiver(pre_delete, sender=Organizace, weak=False)
 def organizace_delete_repository_container(sender, instance: Organizace, **kwargs):
     """
-    Provádí operaci organizace delete repository container.
+    Zaznamená smazání organizace v repozitáři před odstraněním záznamu z databáze.
 
     :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``organizace_delete_repository_container``.
-    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``get_or_create_transaction()``, pracuje se s atributy ``ident_cely``, ``record_deletion``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``active_transaction``, ``close_active_transaction_when_finished``, ``record_deletion``.
     :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``organizace_delete_repository_container``.
     """
     logger.debug(
         "uzivatel.signals.organizace_delete_repository_container.start", extra={"ident_cely": instance.ident_cely}
     )
-    fedora_transaction = get_or_create_transaction(instance)
-    close_transaction = instance.close_active_transaction_when_finished
-    instance.record_deletion(fedora_transaction, close_transaction=close_transaction)
+    if instance.active_transaction:
+        fedora_transaction = instance.active_transaction
+    else:
+        fedora_transaction = FedoraTransaction()
+        instance.active_transaction = fedora_transaction
+        instance.close_active_transaction_when_finished = True
+    instance.record_deletion(fedora_transaction)
     logger.debug(
         "uzivatel.signals.organizace_delete_repository_container.end",
-        extra={"ident_cely": instance.ident_cely, "transaction": transaction},
+        extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid},
+    )
+
+
+@receiver(post_delete, sender=Organizace, weak=False)
+def organizace_close_repository_transaction(sender, instance: Organizace, **kwargs):
+    """
+    Uzavře Fedora transakci po potvrzení smazání organizace v databázi.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``organizace_close_repository_transaction``.
+    :param instance: Parametr ``instance`` pracuje se s atributy ``ident_cely``, ``close_active_transaction_when_finished``, ``active_transaction``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``organizace_close_repository_transaction``.
+    """
+    logger.debug(
+        "uzivatel.signals.organizace_close_repository_transaction.start", extra={"ident_cely": instance.ident_cely}
+    )
+    if instance.close_active_transaction_when_finished:
+        fedora_transaction = instance.active_transaction
+        transaction.on_commit(lambda: fedora_transaction.mark_transaction_as_closed())
+    logger.debug(
+        "uzivatel.signals.organizace_close_repository_transaction.end", extra={"ident_cely": instance.ident_cely}
     )
 
 
