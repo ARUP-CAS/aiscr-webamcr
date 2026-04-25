@@ -397,6 +397,7 @@ class ModelWithMetadata(BaseAmcrModel):
                 self, fedora_transaction, skip_container_check=self.skip_container_check
             )
             connector.record_ident_change(old_ident_cely, delete_container)
+            transaction.on_commit(lambda: connector.add_replaces_triple(old_ident_cely))
             logger.debug(
                 "cron.record_ident_change.do.end",
                 extra={
@@ -543,7 +544,7 @@ class ModelWithMetadata(BaseAmcrModel):
                         item.archeologicky_zaznam.save_metadata(fedora_transaction)
 
                 self: Pian
-                save_metadata(self)
+                transaction.on_commit(lambda: save_metadata(self))
 
             from core.repository_connector import FedoraTransactionPostCommitTasks
 

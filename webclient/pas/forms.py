@@ -127,10 +127,10 @@ class PotvrditNalezForm(forms.ModelForm):
         if not predano_hidden:
             self.helper.layout = Layout(
                 Div(
-                    Div("predano_organizace", css_class="col-sm-3"),
-                    Div("evidencni_cislo", css_class="col-sm-3"),
-                    Div("predano", css_class="col-sm-3"),
-                    Div("pristupnost", css_class="col-sm-3"),
+                    Div("predano_organizace", css_class="col-sm-6 col-lg-3"),
+                    Div("evidencni_cislo", css_class="col-sm-6 col-lg-3"),
+                    Div("predano", css_class="col-sm-6 col-lg-3"),
+                    Div("pristupnost", css_class="col-sm-6 col-lg-3"),
                     Div("old_stav"),
                     css_class="row",
                 ),
@@ -138,9 +138,9 @@ class PotvrditNalezForm(forms.ModelForm):
         else:
             self.helper.layout = Layout(
                 Div(
-                    Div("evidencni_cislo", css_class="col-sm-3"),
-                    Div("predano", css_class="col-sm-3"),
-                    Div("pristupnost", css_class="col-sm-3"),
+                    Div("evidencni_cislo", css_class="col-sm-6 col-lg-3"),
+                    Div("predano", css_class="col-sm-6 col-lg-3"),
+                    Div("pristupnost", css_class="col-sm-6 col-lg-3"),
                     Div("old_stav"),
                     css_class="row",
                 ),
@@ -302,24 +302,24 @@ class CreateSamostatnyNalezForm(OptimisticLockingMixin, forms.ModelForm):
                         '<button id="create-nalezce-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                     ),
                 ),
-                css_class="col-sm-4 input-osoba select2-input",
+                css_class="col-sm-6 col-lg-4 input-osoba select2-input",
             )
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div("projekt", css_class="col-sm-4"),
+                Div("projekt", css_class="col-sm-6 col-lg-4"),
                 nalezce_div,
-                Div("datum_nalezu", css_class="col-sm-4"),
-                Div("lokalizace", css_class="col-sm-8"),
-                Div("katastr", css_class="col-sm-4"),
-                Div("okolnosti", css_class="col-sm-6"),
-                Div("hloubka", css_class="col-sm-6"),
-                Div("obdobi", css_class="col-sm-4"),
-                Div("druh_nalezu", css_class="col-sm-4"),
-                Div("pocet", css_class="col-sm-4"),
-                Div("presna_datace", css_class="col-sm-4"),
-                Div("specifikace", css_class="col-sm-4"),
-                Div("poznamka", css_class="col-sm-4"),
+                Div("datum_nalezu", css_class="col-sm-6 col-lg-4"),
+                Div("lokalizace", css_class="col-sm-12 col-lg-8"),
+                Div("katastr", css_class="col-sm-6 col-lg-4"),
+                Div("okolnosti", css_class="col-sm-6 col-lg-6"),
+                Div("hloubka", css_class="col-sm-6 col-lg-4"),
+                Div("obdobi", css_class="col-sm-6 col-lg-4"),
+                Div("druh_nalezu", css_class="col-sm-4 col-lg-4"),
+                Div("pocet", css_class="col-sm-4 col-lg-4"),
+                Div("presna_datace", css_class="col-sm-4 col-lg-4"),
+                Div("specifikace", css_class="col-sm-4 col-lg-4"),
+                Div("poznamka", css_class="col-sm-4 col-lg-4"),
                 css_class="row",
             ),
         )

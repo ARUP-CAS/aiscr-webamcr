@@ -5,7 +5,9 @@
 {% block title %}{% trans "oznameni.templates.oznameni.sucess.title" %}{% endblock %}
 
 {% block head %}
+  {% if show_dark_mode %}
   <script src="{% static 'js/theme-toggle.js' %}"></script>
+  {% endif %}
   <link rel="stylesheet" type="text/css" href="{% static 'css/bs-stepper.min.css' %}" />
 {% endblock %}
 

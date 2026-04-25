@@ -10,10 +10,25 @@
       transition: all 0.4s ease;
       transform: rotateZ(0deg);
     }
+
     .toggled & {
       .material-icons {
         transition: all 0.4s ease;
         transform: rotateZ(180deg);
+      }
+    }
+
+    // On narrow screens .toggled has the opposite meaning (shown instead of hidden),
+    // so invert the icon rotation to keep the visual state consistent.
+    @media (max-width: 1140px) {
+      .material-icons {
+        transform: rotateZ(180deg);
+      }
+
+      .toggled & {
+        .material-icons {
+          transform: rotateZ(0deg);
+        }
       }
     }
   }
@@ -25,6 +40,7 @@
           background: transparent;
           border: 0;
         }
+
         .nav-link {
           display: inline-block;
 
@@ -37,11 +53,13 @@
           }
         }
       }
+
       &.app-logout {
         button {
           background: transparent;
           border: 0;
         }
+
         .nav-link {
           display: inline-block;
 
@@ -51,7 +69,7 @@
       &.app-pipe {
         margin-top: 8px !important;
         margin-bottom: 8px !important;
-        
+
         @media #{$lt-lg} {
           border-left: 0;
           border-bottom: 1px solid $gray-300;
@@ -66,31 +84,41 @@
     @media (min-width: 768px) {
       display: none;
     }
+
     font-weight: 600;
+
     .navbar-mobile-header-ident-projekt {
       color: #F39225;
     }
+
     .navbar-mobile-header-ident-arch-z {
       color: #247e4b;
     }
+
     .navbar-mobile-header-ident-lokalita {
       color: #951E7A;
     }
+
     .navbar-mobile-header-ident-pas {
       color: #85140E;
     }
+
     .navbar-mobile-header-ident-dokument {
       color: #5882c4;
     }
+
     .navbar-mobile-header-ident-3d {
       color: #778e98;
     }
+
     .navbar-mobile-header-ident-ez {
       color: #E7302A;
     }
+
     .navbar-mobile-header-ident-file {
       color: #6c697b;
     }
+
     .navbar-mobile-header-ident-ez {
       color: #6c697b;
     }
@@ -104,6 +132,3 @@
     }
   }
 }
-
-
-

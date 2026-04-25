@@ -22,6 +22,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.forms.renderers import BaseRenderer
@@ -197,9 +198,10 @@ def create_osoba(request):
                 osoba.jmeno = " ".join(osoba.jmeno.split())
                 osoba.save()
                 messages.add_message(request, messages.SUCCESS, OSOBA_USPESNE_PRIDANA)
-            except IntegrityError as ex:
+            except (IntegrityError, ValidationError) as ex:
                 logger.debug(str(ex))
                 messages.add_message(request, messages.WARNING, OSOBA_JIZ_EXISTUJE)
+                form.add_error(None, OSOBA_JIZ_EXISTUJE)
                 return render(request, "uzivatel/create_osoba.html", {"form": form})
 
             # Vrátí JSON odpověď pro aktualizaci rozbalovací nabídky, výběru a zprávy.

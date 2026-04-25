@@ -387,6 +387,13 @@ Třídy
 
       Označí záznam jako smazaný v Fedoře přidáním 'deleted' markeru.
 
+   .. py:method:: add_replaces_triple()
+
+      Přidá trojici ``dcterms:replaces`` do záznamu nového identifikátoru.
+
+      :param ident_cely_old: Starý identifikátor, na který má nový záznam odkazovat.
+      :param ident_cely_new: Nový identifikátor; pokud není zadán, použije se ``self.record.ident_cely``.
+
    .. py:method:: record_ident_change()
 
       Přejmenuje kontejner v Fedoře na základě změny identifikátoru záznamu.
