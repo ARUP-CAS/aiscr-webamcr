@@ -2187,7 +2187,9 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 # not a database field, so there is no point in using it as an argument in the save method.
                 instance.save()
                 self._create_import_history_records(instance, request.user)
-                transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
+                # Do not set close_active_transaction_when_finished so that fedora_transaction
+                # stays open after the DB commit, allowing us to verify the Fedora write below.
+                instance.save()
         except ImportValidationException as exc:
             logger.error("pas.api.SamostatnyNalezXmlImportView.post.import_validation_error", extra={"error": exc})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
@@ -2225,16 +2227,18 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        metadata_transaction = None
+        # The DB transaction has committed. fedora_transaction is still open because
+        # close_active_transaction_when_finished was not set. Read the metadata back from
+        # Fedora within the same transaction to verify the save, then commit.
         try:
-            metadata_transaction = FedoraTransaction(transaction_user=request.user)
-            metadata = FedoraRepositoryConnector(instance, metadata_transaction).get_metadata()
+            metadata = FedoraRepositoryConnector(instance, fedora_transaction).get_metadata()
+            fedora_transaction.mark_transaction_as_closed()
         except FedoraError as err:
             logger.error(
                 "pas.api.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving", extra={"error": err}
             )
-            if metadata_transaction is not None and metadata_transaction.status == FedoraTransactionStatus.ACTIVE:
-                metadata_transaction.rollback_transaction()
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
             return self._fail(
                 log_entry,
                 {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving")},
@@ -2500,19 +2504,16 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        fedora_transaction.mark_transaction_as_closed()
-
-        metadata_transaction = None
         try:
-            metadata_transaction = FedoraTransaction(transaction_user=request.user)
-            metadata = FedoraRepositoryConnector(instance, metadata_transaction).get_metadata()
+            metadata = FedoraRepositoryConnector(instance, fedora_transaction).get_metadata()
+            fedora_transaction.mark_transaction_as_closed()
         except FedoraError as err:
             logger.error(
                 "pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error_reading_metadata",
                 extra={"error": err},
             )
-            if metadata_transaction is not None and metadata_transaction.status == FedoraTransactionStatus.ACTIVE:
-                metadata_transaction.rollback_transaction()
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
             self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
@@ -2820,18 +2821,15 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        fedora_transaction.mark_transaction_as_closed()
-
-        metadata_transaction = None
         try:
-            metadata_transaction = FedoraTransaction(transaction_user=request.user)
-            metadata = FedoraRepositoryConnector(instance, metadata_transaction).get_metadata()
+            metadata = FedoraRepositoryConnector(instance, fedora_transaction).get_metadata()
+            fedora_transaction.mark_transaction_as_closed()
         except FedoraError as err:
             logger.error(
                 "pas.api.SamostatnyNalezFotografieUploadView.post.fedora_error_reading_metadata", extra={"error": err}
             )
-            if metadata_transaction is not None and metadata_transaction.status == FedoraTransactionStatus.ACTIVE:
-                metadata_transaction.rollback_transaction()
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
             self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
