@@ -11,14 +11,12 @@
     --body-quiet-color: #666;
     --body-loud-color: #000;
 
+    --bs-body-font-size: 0.875rem;
+
     --header-color: #ffc;
     --header-branding-color: var(--accent);
     --header-bg: var(--secondary);
     --header-link-color: var(--primary-fg);
-
-    --breadcrumbs-fg: #c4dce8;
-    --breadcrumbs-link-fg: var(--body-bg);
-    --breadcrumbs-bg: var(--primary);
 
     --link-fg: #417893;
     --link-hover-color: #036;
@@ -86,10 +84,6 @@
         "Noto Color Emoji";
 }
 
-
-#header {
-    background: color(display-p3 0.2039 0.4706 0.9647)
-}
 
 .material-icons {
     vertical-align: bottom !important;

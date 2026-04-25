@@ -121,6 +121,27 @@
     // bezpečnost: když prvek neexistuje, skonči (např. když modal ještě není v DOMu)
     if (!tag.length) return;
 
+    const syncRowsWithSelection = function () {
+        const selectedValues = tag.val() || [];
+        const selectedIds = new Set(selectedValues.map(String));
+
+        $(cl + " table tbody tr[id^='modaldoc']").each(function () {
+            const rowId = this.id || '';
+            const docId = rowId.replace('modaldoc', '');
+            if (!selectedIds.has(String(docId))) {
+                $(this).remove();
+            }
+        });
+
+        const rowCount = $(cl + " table tbody tr").length;  
+        if (idTag === "vratit-akci-form") {  
+            $('input[name="form-TOTAL_FORMS"]').val(rowCount);  
+        }  
+        if (rowCount === 0) {  
+            $(cl).css("display", "none");  
+        }  
+    };
+
     // ZABRÁNÍ opakovanému nabindování při opakovaném otevření modalu
     tag.off('select2:select.modalrow').on('select2:select.modalrow', function (e) {
         const data = e.params.data;
@@ -144,16 +165,56 @@
     });
     tag.off('select2:unselect.modalrow').on('select2:unselect.modalrow', function (e) {
         $("#modaldoc" + e.params.data.id).remove();
-        if (idTag === "vratit-akci-form") {
-            $('input[name="form-TOTAL_FORMS"]').val($(cl + " table tbody tr").length);
-        }
-        if ($(cl + " table tbody tr").length === 0) {
-            $(cl).css("display", "none");
-        }
+        syncRowsWithSelection();
     });
+    tag.off('select2:clear.modalrow').on('select2:clear.modalrow', syncRowsWithSelection);
+    tag.off('change.modalrow').on('change.modalrow', syncRowsWithSelection);
     $('#modal-form')
         .off('shown.bs.modal.modalrow')
         .on('shown.bs.modal.modalrow', function () {
+            if (idTag === "vratit-akci-form") {
+                const rowsCount = $(cl + " table tbody tr").length;
+                if (rowsCount === 0) {
+                    const clearOrphanSelection = function () {
+                        const selectedValues = tag.val();
+                        if (selectedValues && selectedValues.length) {
+                            tag.find('option:selected').prop('selected', false);
+                            tag.val(null).trigger('change.select2').trigger('change');
+                            syncRowsWithSelection();
+                        }
+                    };
+                    const runClearAfterInitialization = function () {
+                        clearOrphanSelection();
+                        $(document).off('dal-element-initialized.modalrowInit');
+                        tag.off('select2:open.modalrowInit');
+                    };
+
+                    // DAL/Select2 initialization can be async, so re-run cleanup when
+                    // the component reports it has initialized instead of using a timeout.
+                    $(document)
+                        .off('dal-element-initialized.modalrowInit')
+                        .on('dal-element-initialized.modalrowInit', function (e) {
+                            const initializedElement = e.detail && e.detail.element ? e.detail.element : null;
+                            if (initializedElement === tag[0]) {
+                                runClearAfterInitialization();
+                            }
+                        });
+                    tag
+                        .off('select2:open.modalrowInit')
+                        .one('select2:open.modalrowInit', runClearAfterInitialization);
+
+                    // Pokud je modal zavřen dříve, než dojde k inicializaci, odstraní
+                    // zombie posluchač z document, aby nedocházelo k hromadění při opakovaném otevírání.
+                    $('#modal-form')
+                        .off('hidden.bs.modal.modalrowInit')
+                        .one('hidden.bs.modal.modalrowInit', function () {
+                            $(document).off('dal-element-initialized.modalrowInit');
+                            tag.off('select2:open.modalrowInit');
+                        });
+
+                    clearOrphanSelection();
+                }
+            }
             $(document).off('focusin.modal');
         });
 

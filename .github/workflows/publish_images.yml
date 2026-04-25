@@ -193,7 +193,7 @@ jobs:
       - name: Generate SBOM
         continue-on-error: true
         id: sbom
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.digests.outputs.github }}
           format: spdx-json
@@ -224,7 +224,7 @@ jobs:
       - name: Vulnerability scan
         continue-on-error: true
         id: vulnscan
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.digests.outputs.github }}
           format: sarif

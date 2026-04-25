@@ -152,11 +152,13 @@ table th {
 .bootstrap-select {
   .filter-option {
     margin-top: -0.225rem !important;
+    max-width: calc(100% - var(--bs-dropdown-toggle-after-width, 0.6em));
   }
 
   .dropdown-toggle {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
+    --bs-dropdown-toggle-after-width: 0.8em;
   }
 }
 

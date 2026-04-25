@@ -62,11 +62,11 @@ class PianCreateForm(OptimisticLockingMixin, forms.ModelForm):
             Div(
                 Div(
                     "presnost",
-                    css_class="col-sm-2",
+                    css_class="col-sm-6 col-lg-2",
                 ),
-                Div("geom", css_class="col-sm-2"),
-                Div("geom_sjtsk", css_class="col-sm-2"),
-                Div("geom_system", css_class="col-sm-2"),
+                Div("geom", css_class="col-sm-6 col-lg-2"),
+                Div("geom_sjtsk", css_class="col-sm-6 col-lg-2"),
+                Div("geom_system", css_class="col-sm-6 col-lg-2"),
                 css_class="row",
             ),
         )

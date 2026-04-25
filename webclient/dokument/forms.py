@@ -272,7 +272,7 @@ class EditDokumentExtraDataForm(OptimisticLockingMixin, forms.ModelForm):
         if readonly:
             dok_osoby_div = Div(
                 "dokument_osoba",
-                css_class="col-sm-2",
+                css_class="col-sm-6 col-lg-2",
             )
         else:
             dok_osoby_div = Div(
@@ -282,7 +282,7 @@ class EditDokumentExtraDataForm(OptimisticLockingMixin, forms.ModelForm):
                         '<button id="create-dok-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                     ),
                 ),
-                css_class="col-sm-2 input-osoba select2-input form-group",
+                css_class="col-sm-6 col-lg-2 input-osoba select2-input form-group",
             )
         self.fields["meritko"].widget.attrs["rows"] = 1
         self.fields["cislo_objektu"].widget.attrs["rows"] = 1
@@ -297,24 +297,24 @@ class EditDokumentExtraDataForm(OptimisticLockingMixin, forms.ModelForm):
         )
         self.helper.layout = Layout(
             Div(
-                Div("rada", css_class="col-sm-2"),
-                Div("let", css_class="col-sm-2"),
-                Div("datum_vzniku", css_class="col-sm-2"),
-                Div("zachovalost", css_class="col-sm-2"),
-                Div("nahrada", css_class="col-sm-2"),
-                Div("pocet_variant_originalu", css_class="col-sm-2"),
-                Div("format", css_class="col-sm-2"),
-                Div("meritko", css_class="col-sm-2"),
-                Div("vyska", css_class="col-sm-2"),
-                Div("sirka", css_class="col-sm-2"),
-                Div("cislo_objektu", css_class="col-sm-4"),
-                Div("zeme", css_class="col-sm-2"),
-                Div("region_extra", css_class="col-sm-2"),
-                Div("udalost", css_class="col-sm-2"),
-                Div("udalost_typ", css_class="col-sm-2"),
-                Div("rok_od", css_class="col-sm-2"),
-                Div("rok_do", css_class="col-sm-2"),
-                Div("duveryhodnost", css_class="col-sm-2"),
+                Div("rada", css_class="col-sm-6 col-lg-2"),
+                Div("let", css_class="col-sm-6 col-lg-2"),
+                Div("datum_vzniku", css_class="col-sm-6 col-lg-2"),
+                Div("zachovalost", css_class="col-sm-6 col-lg-2"),
+                Div("nahrada", css_class="col-sm-6 col-lg-2"),
+                Div("pocet_variant_originalu", css_class="col-sm-6 col-lg-2"),
+                Div("format", css_class="col-sm-6 col-lg-2"),
+                Div("meritko", css_class="col-sm-6 col-lg-2"),
+                Div("vyska", css_class="col-sm-6 col-lg-2"),
+                Div("sirka", css_class="col-sm-6 col-lg-2"),
+                Div("cislo_objektu", css_class="col-sm-6 col-lg-4"),
+                Div("zeme", css_class="col-sm-6 col-lg-2"),
+                Div("region_extra", css_class="col-sm-6 col-lg-2"),
+                Div("udalost", css_class="col-sm-6 col-lg-2"),
+                Div("udalost_typ", css_class="col-sm-6 col-lg-2"),
+                Div("rok_od", css_class="col-sm-6 col-lg-2"),
+                Div("rok_do", css_class="col-sm-6 col-lg-2"),
+                Div("duveryhodnost", css_class="col-sm-6 col-lg-2"),
                 dok_osoby_div,
                 Div("odkaz", css_class="col-sm-8"),
                 css_class="row",
@@ -519,19 +519,19 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 autori_div,
-                Div("rok_vzniku", css_class="col-sm-2"),
-                Div("organizace", css_class="col-sm-2"),
-                Div("typ_dokumentu", css_class="col-sm-2"),
-                Div("material_originalu", css_class="col-sm-2"),
-                Div("jazyky", css_class="col-sm-2"),
+                Div("rok_vzniku", css_class="col-sm-6 col-lg-2"),
+                Div("organizace", css_class="col-sm-6 col-lg-2"),
+                Div("typ_dokumentu", css_class="col-sm-6 col-lg-2"),
+                Div("material_originalu", css_class="col-sm-6 col-lg-2"),
+                Div("jazyky", css_class="col-sm-6 col-lg-2"),
                 Div("popis", css_class="col-sm-12"),
                 Div("poznamka", css_class="col-sm-12"),
-                Div("ulozeni_originalu", css_class="col-sm-2"),
-                Div("oznaceni_originalu", css_class="col-sm-2"),
-                Div("posudky", css_class="col-sm-2"),
-                Div("pristupnost", css_class="col-sm-2"),
-                Div("licence", css_class="col-sm-2"),
-                Div("datum_zverejneni", css_class="col-sm-2"),
+                Div("ulozeni_originalu", css_class="col-sm-6 col-lg-2"),
+                Div("oznaceni_originalu", css_class="col-sm-6 col-lg-2"),
+                Div("posudky", css_class="col-sm-6 col-lg-2"),
+                Div("pristupnost", css_class="col-sm-6 col-lg-2"),
+                Div("licence", css_class="col-sm-6 col-lg-2"),
+                Div("datum_zverejneni", css_class="col-sm-6 col-lg-2"),
                 Div("region", style="display: none"),
                 css_class="row",
             ),
