@@ -114,12 +114,6 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``__init__()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
-   .. py:method:: get_invalid_login_error()
-
-      Vrací invalid login error.
-
-      :return: Vrací výsledek volání ``ValidationError()``.
-
 
 .. py:class:: UserPasswordResetForm
 
