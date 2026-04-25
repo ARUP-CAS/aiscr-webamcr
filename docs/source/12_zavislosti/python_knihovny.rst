@@ -132,7 +132,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://docs.celeryq.dev/
    * - certifi
-     - 2026.2.25
+     - 2026.4.22
      - Mozilla Public License 2.0 (MPL 2.0)
      - https://github.com/certifi/python-certifi
    * - cffi
@@ -148,7 +148,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/jawah/charset_normalizer/blob/master/CHANGELOG.md
    * - click
-     - 8.3.2
+     - 8.3.3
      - BSD-3-Clause
      - https://github.com/pallets/click/
    * - click-didyoumean
@@ -308,7 +308,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.28.0
+     - 3.29.0
      - MIT
      - https://github.com/tox-dev/py-filelock
    * - freezegun
@@ -328,7 +328,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pre-commit/identify
    * - idna
-     - 3.11
+     - 3.13
      - BSD-3-Clause
      - https://github.com/kjd/idna
    * - imagesize
@@ -348,7 +348,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://sass.github.io/libsass-python/
    * - lxml
-     - 6.0.4
+     - 6.1.0
      - BSD-3-Clause
      - https://lxml.de/
    * - multivolumefile
@@ -376,7 +376,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; MIT License
      - https://github.com/python-trio/outcome
    * - packaging
-     - 26.1
+     - 26.2
      - Apache-2.0 OR BSD-2-Clause
      - https://github.com/pypa/packaging
    * - pandas
@@ -416,7 +416,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/izimobil/polib/
    * - pre_commit
-     - 4.5.1
+     - 4.6.0
      - MIT
      - https://github.com/pre-commit/pre-commit
    * - prettytable
@@ -436,7 +436,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://github.com/giampaolo/psutil
    * - psycopg2-binary
-     - 2.9.11
+     - 2.9.12
      - GNU Library or Lesser General Public License (LGPL)
      - https://psycopg.org/
    * - py7zr
@@ -536,8 +536,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pypa/setuptools
    * - simplejson
-     - 3.20.2
-     - Academic Free License (AFL); MIT License
+     - 4.1.0
+     - MIT OR AFL-2.1
      - https://github.com/simplejson/simplejson
    * - six
      - 1.17.0
@@ -632,7 +632,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - PSF-2.0
      - https://github.com/python/typing_extensions
    * - tzdata
-     - 2026.1
+     - 2026.2
      - Apache-2.0
      - https://github.com/python/tzdata
    * - tzlocal
