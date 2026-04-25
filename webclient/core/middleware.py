@@ -5,10 +5,10 @@ from core.connectors import RedisConnector
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
 from core.repository_connector import FedoraError, FedoraTransaction, FedoraTransactionResult
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import PermissionDenied
 from django.db.utils import OperationalError
 from django.shortcuts import redirect, render
-from django.utils.translation import gettext_lazy
+from django.utils.translation import gettext_lazy as _
 
 from redis import ResponseError
 
@@ -124,12 +124,12 @@ class ErrorMiddleware:
 
 class InactiveUserMiddleware:
     """
-    Middleware zachytávající ``ValidationError`` s kódem ``inactive``,
-    která může vzniknout při vyhodnocení ``request.user`` u deaktivovaného
-    uživatele s stále aktivní session.
+    Middleware detekující deaktivovaného uživatele s aktivní session.
 
-    Pokud k této chybě dojde, session se zruší a uživatel je přesměrován
-    na přihlašovací stránku s varovnou hláškou.
+    Před předáním požadavku do řetězce middleware zkontroluje, zda session
+    obsahuje ID uživatele, který byl mezitím deaktivován. Pokud ano, session
+    se zruší a uživatel je přesměrován na přihlašovací stránku s varovnou hláškou.
+
     """
 
     def __init__(self, get_response):
@@ -143,27 +143,36 @@ class InactiveUserMiddleware:
 
     def __call__(self, request):
         """
-        Obalí zpracování požadavku a zachytí ``ValidationError`` s kódem
-        ``inactive``, která může vzniknout při vyhodnocení ``request.user``.
+        Zpracovává příchozí HTTP požadavek.
 
-        Pokud je chyba zachycena, session se zruší a uživatel je
-        přesměrován na přihlašovací stránku.
+        :param request: HTTP požadavek ze strany klienta.
+        :return: HTTP response vygenerovaná aplikací.
+        """
+        response = self.get_response(request)
+        return response
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        """
+        Před zpracováním požadavku ověří, zda uživatel v session není deaktivován.
+
+        Pokud session obsahuje ID neaktivního uživatele, session se zruší a
+        uživatel je přesměrován na přihlašovací stránku.
 
         :param request: Instance ``HttpRequest``.
-        :return: Standardní ``response`` nebo přesměrování na login.
+        :param view_func: View funkce, kterou se chystá aplikace volat.
+        :param view_args: Poziční argumenty pro view funkci.
+        :param view_kwargs: Pojmenované argumenty pro view funkci.
+        :return: přesměrování na login nebo žádná akce.
         """
-        try:
-            return self.get_response(request)
+        if not request.user.is_active and not request.user.is_anonymous:
+            logger.warning(
+                "InactiveUserMiddleware: Deaktivovaný uživatel %s se pokusil o přístup k %s", request.user, request.path
+            )
+            request.session.flush()
+            messages.warning(request, _("core.authenticators.user_can_authenticate"))
+            return redirect("django_authentication_login")
 
-        except ValidationError as e:
-            if getattr(e, "code", None) == "inactive" or any(
-                err.code == "inactive" for err in getattr(e, "error_list", [])
-            ):
-                request.session.flush()
-                messages.warning(request, str(e))
-                return redirect("django_authentication_login")
-
-            raise
+        return None
 
 
 class StatusMessageMiddleware:
@@ -179,7 +188,7 @@ class StatusMessageMiddleware:
         """
         self.get_response = get_response
         r = RedisConnector()
-        self.redis_connection = r.get_connection()
+        self.redis_connection = r.get_connection_decode()
 
     def __call__(self, request):
         """
@@ -207,7 +216,7 @@ class StatusMessageMiddleware:
                 logger.warning("core.middleware._show_message.success.error", extra={"error": err})
                 success_message = None
             if success_message:
-                success_message = gettext_lazy(success_message.decode("utf-8"))
+                success_message = _(success_message)
             else:
                 success_message = ZAZNAM_USPESNE_EDITOVAN
             messages.add_message(request, messages.SUCCESS, success_message)
@@ -218,7 +227,7 @@ class StatusMessageMiddleware:
                 logger.warning("core.middleware._show_message.error.error", extra={"error": err})
                 error_message = None
             if error_message:
-                error_message = gettext_lazy(error_message.decode("utf-8"))
+                error_message = _(error_message)
             else:
                 error_message = ZAZNAM_SE_NEPOVEDLO_EDITOVAT
             messages.add_message(request, messages.ERROR, error_message)

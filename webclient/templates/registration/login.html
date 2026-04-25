@@ -20,16 +20,15 @@
   </div>  
 
   {# ── Main two-column area ── #}
+  <div class="login-main-part">
   <div class="login-main">
-    <div class="container-fluid login-container">
+    <div class="container-fluid login-container ">
       <div class="row">
         {# Left column: login form #}
-        <div class="col-md-12 col-lg-4 login-col-form">
+        <div class="col-md-12 login-col-form">
             <div class="login-title">
                 <h1 class="login-title-text">{% trans "templates.registration.login.heading" %}</h1>
             </div>
-        </div>
-        <div class="col-md-12 col-lg-8">
         </div>
         <div class="col-md-12 col-lg-4 login-col-form">
             <div class="login-subtitle">
@@ -146,14 +145,28 @@
   <div class="login-news">
     <div class="container-fluid login-container">
       <h3 class="login-news-heading">{% trans "templates.registration.login.novinky.header" %}</h3>
-      <div class="login-news-content">
-        {% trans "templates.registration.login.novinky.text" %}
+      <div class="login-news-content-wrapper">
+        <div class="login-news-content" id="loginNewsContent">
+          {% trans "templates.registration.login.novinky.text" %}
+        </div>
+        <button
+          type="button"
+          id="loginNewsToggle"
+          class="btn btn-link login-news-toggle d-none col-md-12"
+          aria-controls="loginNewsContent"
+          aria-expanded="false"
+          data-more-label="{% trans 'templates.registration.login.novinky.showMore' %}"
+          data-less-label="{% trans 'templates.registration.login.novinky.showLess' %}"
+        >
+          {% trans "templates.registration.login.novinky.showMore" %}
+        </button>
       </div>
     </div>
   </div>
         </div>
       </div>
     </div>
+  </div>
   </div>
 
   
@@ -176,6 +189,61 @@
           this.classList.toggle("bi-eye");
         });
       }
+    });
+  </script>
+  <script>
+    window.addEventListener("DOMContentLoaded", function () {
+      const collapsedHeight = 300;
+      const newsContent = document.querySelector("#loginNewsContent");
+      const newsToggle = document.querySelector("#loginNewsToggle");
+
+      if (!newsContent || !newsToggle) {
+        return;
+      }
+
+      const setCollapsedState = function () {
+        newsContent.classList.add("is-collapsed");
+        newsContent.classList.remove("is-expanded");
+        newsContent.style.maxHeight = collapsedHeight + "px";
+        newsToggle.textContent = newsToggle.dataset.moreLabel;
+        newsToggle.setAttribute("aria-expanded", "false");
+      };
+
+      const setExpandedState = function () {
+        newsContent.classList.add("is-expanded");
+        newsContent.classList.remove("is-collapsed");
+        newsContent.style.maxHeight = newsContent.scrollHeight + "px";
+        newsToggle.textContent = newsToggle.dataset.lessLabel;
+        newsToggle.setAttribute("aria-expanded", "true");
+      };
+
+      const updateToggleVisibility = function () {
+        if (newsContent.scrollHeight > collapsedHeight) {
+          if (newsToggle.classList.contains("d-none")) {
+            setCollapsedState();
+            newsToggle.classList.remove("d-none");
+          } else if (newsContent.classList.contains("is-expanded")) {
+            newsContent.style.maxHeight = newsContent.scrollHeight + "px";
+          }
+        } else {
+          newsToggle.classList.add("d-none");
+          newsContent.style.maxHeight = "";
+          newsContent.classList.remove("is-collapsed", "is-expanded");
+        }
+      };
+
+      updateToggleVisibility();
+
+      newsToggle.addEventListener("click", function () {
+        if (newsContent.classList.contains("is-collapsed")) {
+          setExpandedState();
+          return;
+        }
+
+        setCollapsedState();
+      });
+
+      window.addEventListener("resize", updateToggleVisibility);
     });
   </script>
 {% endblock %}
