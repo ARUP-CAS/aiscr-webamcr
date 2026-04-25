@@ -210,12 +210,16 @@ class Modal {
 
     resetScripts() {
         var $sp = $(this.modalIDD).find('.selectpicker');
-        $sp.selectpicker('destroy');
-        $sp.selectpicker();
+        var $spInitialized = $sp.filter('.bs-select-hidden');
+        var $spNew = $sp.not('.bs-select-hidden');
+        $spNew.selectpicker();
+        $spInitialized.selectpicker('refresh');
         // Fix bootstrap-select 1.14.0-beta3 single-select: ensure only one
         // option stays selected after each change by deselecting all others
         // in both the plugin data and the DOM.
-        $sp.filter(':not([multiple])').on('changed.bs.select', function () {
+        $sp.filter(':not([multiple])')
+            .off('changed.bs.select.modalSingleSelectFix')
+            .on('changed.bs.select.modalSingleSelectFix', function () {
             var sel = this;
             var sp = $(sel).data('selectpicker');
             if (sp && !sel.multiple) {
