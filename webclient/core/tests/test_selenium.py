@@ -826,7 +826,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         while attempts < 10:
             try:
                 element = self.driver.find_element(by, value)
-                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
+                self.driver.execute_script(
+                    "arguments[0].scrollIntoView({block: 'center', behavior: 'instant'});", element
+                )
                 element.click()
                 return
             except StaleElementReferenceException:
