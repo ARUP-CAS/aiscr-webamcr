@@ -6,10 +6,10 @@ Automaticky generovaná dokumentace skriptu ``scripts/copy_custom_html.py``.
 Přehled modulu
 --------------
 
-Copy custom HTML templates to the nginx data volume, preserving existing h1 content.
+Zkopíruje vlastní HTML šablony do datového svazku nginx a zachová stávající obsah nadpisů h1.
 
-For each HTML file in the source directory, if a destination file already exists,
-its h1 text is saved and restored into the newly copied template.
+U každého souboru HTML ve zdrojovém adresáři, pokud již cílový soubor existuje,
+se text nadpisu h1 uloží a obnoví v nově zkopírované šabloně.
 
 Funkce
 ------
