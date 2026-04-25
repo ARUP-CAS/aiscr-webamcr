@@ -276,7 +276,10 @@
       {% elif app == "lokalita" %}
         <span class="navbar-mobile-header-ident-lokalita">{{ zaznam.ident_cely }}</span>
       {% elif app == "pas" %}
-        <span class="navbar-mobile-header-ident-pas">{{ sn.ident_cely }}</span>
+        <span class="navbar-mobile-header-ident-pas d-flex justify-content-center">{{ sn.ident_cely }}</span>
+        {% if sn.igsn %}
+        <span class="navbar-mobile-header-ident-pas d-flex justify-content-center">({{ sn.igsn }})</span>
+      {% endif %}
       {% elif dokument %}
         {% if not "3D" in dokument.ident_cely %}
           <span class="navbar-mobile-header-ident-dokument">{{ dokument.ident_cely }}</span>
@@ -853,5 +856,7 @@
 
 </script>
 <script src="{% static 'js/copyIdentLink.js' %}"></script>
+{% if show_dark_mode %}
 <script src="{% static 'js/theme-toggle.js' %}"></script>
+{% endif %}
 {% endblock %}

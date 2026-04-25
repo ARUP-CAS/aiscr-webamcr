@@ -87,6 +87,8 @@ $app-footer-bottom-bg: lighten($app-sidebar-bg, 65) !default;
 $app-login-desc-color: lighten($app-sidebar-bg, 50) !default;
 $app-login-border-color: rgba($white, .12) !default;
 $app-login-news-max-height: 280px !default;
+$app-login-accent-color: #9e5656 !default;
+$app-login-frosted-bg: rgba($white, 0.3) !default;
 
 // mq break point
 $xxs: 'only screen and (min-width: 400px) and (max-width: 575px)';
