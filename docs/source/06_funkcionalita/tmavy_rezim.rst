@@ -44,14 +44,8 @@ a nachází se v:
 
 - **Přihlášené rozložení:** ``webclient/templates/base_logged_in.html``
   (navbar, ``#theme-toggle-btn``)
-- **Přihlašovací / registrační stránky:** ``webclient/templates/registration/login.html``,
-  ``password_reset_*.html``, ``django_registration/*.html``
 - **Oznámení (veřejné stránky):** ``webclient/oznameni/templates/oznameni/header.html``,
   ``index.html``, ``index_2.html``, ``success.html``
-- **Chybové stránky proxy (statické HTML):** ``proxy/custom_html/{cs,en}/*.html``
-  - obsahují inline JS, který používá pouze
-    ``window.matchMedia('(prefers-color-scheme: dark)')`` a podle něj nastaví
-    ``data-theme``; ``app-theme`` z ``localStorage`` nečtou.
 
 Struktura souborů
 -----------------

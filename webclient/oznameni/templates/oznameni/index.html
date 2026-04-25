@@ -6,7 +6,9 @@
 {% block title %}{% trans "oznameni.templates.oznameni.index.title" %}{% endblock %}
 
 {% block head %}
+  {% if show_dark_mode %}
   <script src="{% static 'js/theme-toggle.js' %}"></script>
+  {% endif %}
   <script>
       const global_csrftoken = '{{ csrf_token }}';
   </script>

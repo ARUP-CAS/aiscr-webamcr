@@ -197,7 +197,8 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
 
         self.goToAddress("/pas/detail/M-202105907-N00091")
         self.ElementClick(By.CSS_SELECTOR, ".app-entity-dokument > .material-icons")
-        self.upload_file("pas/tests/resources/test_foto_1.jpg", "test_foto_1.jpg")
+        with WaitForPageLoad(self.driver):
+            self.upload_file("pas/tests/resources/test_foto_1.jpg", "test_foto_1.jpg")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
 
@@ -594,7 +595,8 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         # Vytvoření souboru
         time = self.getTime()
         self.ElementClick(By.ID, "NahratSoubory")
-        self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
+        with WaitForPageLoad(self.driver):
+            self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "pas/tests/resources/test_147/create_soubor")
@@ -603,7 +605,8 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         time = self.getTime()
         file = Soubor.objects.filter(vazba__samostatny_nalez_souboru__ident_cely=ident).first().pk
         self.ElementClick(By.ID, f"file-upgrade-{file}")
-        self.upload_file("dokument/tests/resources/test1.jpg", "test1.jpg")
+        with WaitForPageLoad(self.driver):
+            self.upload_file("dokument/tests/resources/test1.jpg", "test1.jpg")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "pas/tests/resources/test_147/update_soubor")

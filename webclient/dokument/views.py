@@ -22,7 +22,7 @@ from core.constants import (
     ZAPSANI_DOK,
 )
 from core.coordTransform import convertToJTSK
-from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
+from core.exceptions import MaximalIdentNumberError, NelzeZjistitRaduError, UnexpectedDataRelations
 from core.forms import CheckStavNotChangedForm, VratitForm, VratitFormDokument
 from core.ident_cely import get_cast_dokumentu_ident, get_dokument_rada, get_temp_dokument_ident
 from core.message_constants import (
@@ -33,6 +33,7 @@ from core.message_constants import (
     DOKUMENT_NEIDENT_AKCE_USPESNE_SMAZANA,
     DOKUMENT_NELZE_ARCHIVOVAT,
     DOKUMENT_NELZE_ODESLAT,
+    DOKUMENT_NELZE_VYTVORIT_RADA,
     DOKUMENT_ODPOJ_ZADNE_RELACE,
     DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM,
     DOKUMENT_PROJEKT_USPESNE_PRIPOJEN,
@@ -2426,10 +2427,10 @@ def zapsat(request, zaznam=None):
             fedora_transaction = dokument.create_transaction(
                 request.user, ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_SE_NEPOVEDLO_VYTVORIT
             )
-            dokument.rada = get_dokument_rada(dokument.typ_dokumentu, dokument.material_originalu)
             if isinstance(zaznam, Projekt):
                 dokument.datum_zverejneni = datetime.now().date() + timedelta(days=365 * 100)
             try:
+                dokument.rada = get_dokument_rada(dokument.typ_dokumentu, dokument.material_originalu)
                 if zaznam:
                     prefix = zaznam.ident_cely[0] + "-"
                     if isinstance(zaznam, ArcheologickyZaznam):
@@ -2439,6 +2440,9 @@ def zapsat(request, zaznam=None):
                 else:
                     prefix = form_d.cleaned_data["region"]
                 dokument.ident_cely = get_temp_dokument_ident(rada=dokument.rada.zkratka, region=prefix)
+            except NelzeZjistitRaduError:
+                fedora_transaction.rollback_transaction()
+                messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_VYTVORIT_RADA)
             except MaximalIdentNumberError:
                 fedora_transaction.error_message = MAXIMUM_IDENT_DOSAZEN
                 fedora_transaction.rollback_transaction()

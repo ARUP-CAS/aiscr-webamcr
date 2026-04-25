@@ -154,6 +154,7 @@ def main_shows(request):
         :return: Vrací proměnná ``main_show``.
     """
     main_show = {}
+    main_show["show_dark_mode"] = getattr(settings, "SHOW_DARK_MODE", True)
     if request.user.is_authenticated:
         if request.user.hlavni_role.id == ROLE_ADMIN_ID:
             main_show["show_administrace"] = True
