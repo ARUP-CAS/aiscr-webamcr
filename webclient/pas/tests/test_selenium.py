@@ -296,15 +296,10 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.goToAddress("/pas/detail/C-202211308-N00213")
         self.ElementClick(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text")
         self.wait(1)
-        self.ElementClick(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo")
-        self.driver.find_element(
-            By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo"
-        ).send_keys("123")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_predano .filter-option-inner-inner")
-        self.ElementClick(By.ID, "bs-select-1-0")
-
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-3 > .text")
+        self.ElementClick(By.ID, "id_potvrdit-evidencni_cislo")
+        self.driver.find_element(By.ID, "id_potvrdit-evidencni_cislo").send_keys("123")
+        self.select_nth_selectpicker_option("id_potvrdit-predano")
+        self.select_nth_selectpicker_option("id_potvrdit-pristupnost")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
 
@@ -348,15 +343,10 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.goToAddress("/pas/detail/C-202211308-N00213")
         self.ElementClick(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text")
         self.wait(1)
-        self.ElementClick(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo")
-        self.driver.find_element(
-            By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo"
-        ).send_keys("123")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_predano .filter-option-inner-inner")
-        # self.ElementClick(By.ID, "bs-select-1-0")
-
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-3 > .text")
+        self.ElementClick(By.ID, "id_potvrdit-evidencni_cislo")
+        self.driver.find_element(By.ID, "id_potvrdit-evidencni_cislo").send_keys("123")
+        # self.select_nth_selectpicker_option("id_potvrdit-predano")
+        self.select_nth_selectpicker_option("id_potvrdit-pristupnost")
         try:
             with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
@@ -402,14 +392,10 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
 
         self.goToAddress("/pas/detail/C-202211308-N00213")
         self.ElementClick(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text")
-        # self.ElementClick(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo")
-        # self.driver.find_element(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo").send_keys("123")
-        self.wait(1)
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_predano .filter-option-inner-inner")
-        self.ElementClick(By.ID, "bs-select-1-0")
-
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-3 > .text")
+        self.ElementClick(By.ID, "id_potvrdit-evidencni_cislo")
+        # self.driver.find_element(By.ID, "id_potvrdit-evidencni_cislo").send_keys("123")
+        self.select_nth_selectpicker_option("id_potvrdit-predano")
+        self.select_nth_selectpicker_option("id_potvrdit-pristupnost")
         try:
             with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
@@ -626,9 +612,9 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         # Úprava uložení
         time = self.getTime()
         self.ElementClick(By.ID, "pas-edit-ulozeni")
-        self.ElementSendKeys(By.CSS_SELECTOR, ".modal-body #id_evidencni_cislo", "1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .btn")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
+        self.ElementClick(By.ID, "id_edit-ulozeni-evidencni_cislo")
+        self.driver.find_element(By.ID, "id_edit-ulozeni-evidencni_cislo").send_keys("1")
+        self.select_nth_selectpicker_option("id_edit-ulozeni-pristupnost")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "pas/tests/resources/test_147/update_ulozeni")

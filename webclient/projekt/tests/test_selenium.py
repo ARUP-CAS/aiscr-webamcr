@@ -439,9 +439,9 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         # zmena pristupnosti PAS
         time = self.getTime()
         self.ElementClick(By.ID, "pas-edit-ulozeni")
-        self.ElementSendKeys(By.CSS_SELECTOR, ".modal-body #id_evidencni_cislo", "1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .btn")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
+        self.ElementClick(By.ID, "id_edit-ulozeni-evidencni_cislo")
+        self.driver.find_element(By.ID, "id_edit-ulozeni-evidencni_cislo").send_keys("1")
+        self.select_nth_selectpicker_option("id_edit-ulozeni-pristupnost")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "projekt/tests/resources/test_146/zmena_pristupnosti")
