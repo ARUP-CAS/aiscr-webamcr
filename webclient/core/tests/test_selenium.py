@@ -31,6 +31,7 @@ from PIL import Image, ImageChops
 from rdflib import XSD, Graph, Literal, URIRef
 from selenium import webdriver
 from selenium.common.exceptions import (
+    ElementClickInterceptedException,
     InvalidSessionIdException,
     NoSuchElementException,
     StaleElementReferenceException,
@@ -823,7 +824,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             raise Exception("ElementIsNotClickableError")
 
         attempts = 0
-        while attempts < 10:
+        while attempts < 15:
             try:
                 element = self.driver.find_element(by, value)
                 self.driver.execute_script(
@@ -831,9 +832,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 )
                 element.click()
                 return
-            except StaleElementReferenceException:
+            except (StaleElementReferenceException, ElementClickInterceptedException):
                 attempts += 1
-                time.sleep(0.5)
+                time.sleep(0.3)
 
         logger.warning("BaseSeleniumTestClass.ElementClick.failedAfterRetries", extra={"filed": by, "value": value})
         raise Exception("ElementClickError")
