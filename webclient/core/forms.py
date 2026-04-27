@@ -558,7 +558,7 @@ class OptimisticLockingMixin:
                 continue
             if model_field.many_to_many:
                 m2m_manager = getattr(instance, field_name, None)
-                data[field_name] = sorted([obj.pk for obj in m2m_manager.all()]) if m2m_manager is not None else []
+                data[field_name] = sorted(m2m_manager.values_list("pk", flat=True)) if m2m_manager is not None else []
             elif model_field.is_relation:
                 data[field_name] = getattr(instance, f"{field_name}_id", None)
             else:

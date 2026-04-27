@@ -132,7 +132,12 @@ def odpojit(request, dj_ident_cely):
     pian: Pian
     if request.method == "POST":
         odpojit_form = PianOdpojitForm(data=request.POST, dj=dj)
-        odpojit_form.is_valid()
+        if not odpojit_form.is_valid():
+            logger.info(
+                "pian.views.odpojit.form.not_valid",
+                extra={"ident_cely": dj.ident_cely, "errors": odpojit_form.errors},
+            )
+            return JsonResponse({"redirect": dj.get_absolute_url()})
         dj_conflicting_fields = odpojit_form.get_dj_conflicting_fields()
         if dj_conflicting_fields:
             from dj.forms import CreateDJForm
