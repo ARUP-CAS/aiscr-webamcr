@@ -22,6 +22,15 @@ from pian.models import Pian, get_ZM_from_point
 logger = logging.getLogger(__name__)
 
 
+#: Pole DJ, která mohou být přepsána při ``dj.save()`` v operacích nad PIANem
+#: (vytvoření, odpojení). Snapshot těchto polí se ukládá do skrytého pole formuláře
+#: a kontroluje před uložením, aby se zabránilo tichému přepsání souběžné editace DJ.
+DJ_LOCK_FIELDS = ["typ", "nazev", "negativni_jednotka", "pian"]
+
+#: Název skrytého pole pro secondary lock proti instanci DJ.
+DJ_LOCK_FIELD_NAME = "optimistic_lock_data_dj"
+
+
 class PianCreateForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení pianu."""
 
@@ -48,14 +57,17 @@ class PianCreateForm(OptimisticLockingMixin, forms.ModelForm):
             ),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, dj=None, **kwargs):
         """
         Inicializuje instanci třídy.
 
         :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param dj: Volitelná instance dokumentační jednotky pro secondary lock — sleduje
+            souběžné změny polí DJ, které by mohly být přepsány při ``dj.save()``.
         :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(PianCreateForm, self).__init__(*args, **kwargs)
+        self.add_secondary_lock(dj, DJ_LOCK_FIELD_NAME, DJ_LOCK_FIELDS)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(
@@ -70,8 +82,21 @@ class PianCreateForm(OptimisticLockingMixin, forms.ModelForm):
                 css_class="row",
             ),
         )
+        hidden_fields = []
         if self.optimistic_lock_field_name in self.fields:
-            self.helper.layout[0].append(Div(self.optimistic_lock_field_name, css_class="d-none"))
+            hidden_fields.append(self.optimistic_lock_field_name)
+        if DJ_LOCK_FIELD_NAME in self.fields:
+            hidden_fields.append(DJ_LOCK_FIELD_NAME)
+        if hidden_fields:
+            self.helper.layout[0].append(Div(*hidden_fields, css_class="d-none"))
+
+    def get_dj_conflicting_fields(self):
+        """
+        Vrátí seznam polí DJ, která byla v DB změněna od renderu formuláře.
+
+        :return: Seznam názvů polí (``typ``, ``nazev``, ``negativni_jednotka``, ``pian``).
+        """
+        return self.get_secondary_conflicting_fields(DJ_LOCK_FIELD_NAME)
 
     def _instance_geom_wkt(self, field_name):
         """
@@ -167,3 +192,34 @@ class PianCreateForm(OptimisticLockingMixin, forms.ModelForm):
                 _(validation_results),
             )
         logger.debug("pian.forms.validate_geom.form_valid")
+
+
+class PianOdpojitForm(OptimisticLockingMixin, forms.Form):
+    """
+    Minimální formulář pro modál odpojení PIANu od DJ.
+
+    Nese pouze secondary lock proti instanci DJ, aby šlo detekovat souběžnou editaci
+    polí DJ (např. ``typ``) předtím, než je v ``pian/views.py:odpojit`` zavolán
+    ``dj.save()``.
+    """
+
+    def __init__(self, *args, dj=None, **kwargs):
+        """
+        Inicializuje formulář se snapshotem polí DJ.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param dj: Volitelná instance dokumentační jednotky pro secondary lock.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
+        super().__init__(*args, **kwargs)
+        self.add_secondary_lock(dj, DJ_LOCK_FIELD_NAME, DJ_LOCK_FIELDS)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+    def get_dj_conflicting_fields(self):
+        """
+        Vrátí seznam polí DJ, která byla v DB změněna od renderu formuláře.
+
+        :return: Seznam názvů polí (``typ``, ``nazev``, ``negativni_jednotka``, ``pian``).
+        """
+        return self.get_secondary_conflicting_fields(DJ_LOCK_FIELD_NAME)

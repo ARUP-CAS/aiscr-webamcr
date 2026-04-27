@@ -409,6 +409,7 @@ class OptimisticLockingMixin:
         :param kwargs: Klíčové parametry předané do nadřazeného ``__init__``.
         """
         super().__init__(*args, **kwargs)
+        self._secondary_locks = {}
         instance = kwargs.get("instance")
         if instance and instance.pk:
             self.fields[self.optimistic_lock_field_name] = forms.CharField(
@@ -507,6 +508,94 @@ class OptimisticLockingMixin:
             field_name
             for field_name, original_value in original_data.items()
             if field_name in current_data and current_data[field_name] != original_value
+        ]
+
+    def add_secondary_lock(self, instance, field_name, lock_fields):
+        """
+        Přidá skryté pole se snapshotem stavu jiné instance modelu (secondary lock).
+
+        Použití: formulář pro vytvoření PIANu chrání i editaci souvisejícího DJ.
+        Lze volat opakovaně s různými ``field_name`` a uzamknout tak formulář
+        proti více souvisejícím modelům najednou.
+
+        :param instance: Instance modelu, jejíž stav má být sledován.
+        :param field_name: Unikátní název skrytého pole pro snapshot.
+        :param lock_fields: Seznam DB polí instance pro porovnání (FK se serializují přes ``*_id``).
+        """
+        if instance is None or instance.pk is None:
+            return
+        self._secondary_locks[field_name] = {
+            "instance": instance,
+            "lock_fields": list(lock_fields),
+        }
+        self.fields[field_name] = forms.CharField(
+            widget=forms.HiddenInput(),
+            required=False,
+            label="",
+        )
+        if not self.is_bound:
+            self.initial[field_name] = self._serialize_fields_for_lock(instance, lock_fields)
+
+    def _serialize_fields_for_lock(self, instance, lock_fields):
+        """
+        Serializuje vybraná DB pole instance modelu do JSON řetězce.
+
+        Pole, která nejsou DB pole modelu, jsou ignorována. M2M pole se ukládají jako
+        seřazený seznam PK, FK jako ``*_id`` hodnota, datetime přes ``isoformat()``.
+
+        :param instance: Instance modelu, jehož pole se serializují.
+        :param lock_fields: Seznam DB polí, která se mají serializovat.
+        :return: JSON řetězec s hodnotami polí pro pozdější porovnání.
+        """
+        from django.core.exceptions import FieldDoesNotExist
+
+        Model = type(instance)
+        data = {}
+        for field_name in lock_fields:
+            try:
+                model_field = Model._meta.get_field(field_name)
+            except FieldDoesNotExist:
+                continue
+            if model_field.many_to_many:
+                m2m_manager = getattr(instance, field_name, None)
+                data[field_name] = sorted(m2m_manager.values_list("pk", flat=True)) if m2m_manager is not None else []
+            elif model_field.is_relation:
+                data[field_name] = getattr(instance, f"{field_name}_id", None)
+            else:
+                value = getattr(instance, field_name, None)
+                if value is None:
+                    data[field_name] = None
+                elif hasattr(value, "isoformat"):
+                    data[field_name] = value.isoformat()
+                else:
+                    data[field_name] = value if isinstance(value, (int, float, bool)) else str(value)
+        return json.dumps(data, default=str)
+
+    def get_secondary_conflicting_fields(self, field_name):
+        """
+        Vrátí seznam polí instance pod daným secondary lockem, která byla v DB mezitím změněna.
+
+        :param field_name: Název skrytého pole použitý při :meth:`add_secondary_lock`.
+        :return: Seznam názvů polí, která byla mezitím změněna jinou úpravou.
+        """
+        lock = self._secondary_locks.get(field_name)
+        if not lock or not lock["instance"] or not lock["instance"].pk:
+            return []
+        lock_data_str = self.data.get(self.add_prefix(field_name), "")
+        if not lock_data_str:
+            return []
+        try:
+            original_data = json.loads(lock_data_str)
+        except (json.JSONDecodeError, ValueError):
+            return []
+        Model = type(lock["instance"])
+        try:
+            fresh_instance = Model.objects.get(pk=lock["instance"].pk)
+        except Model.DoesNotExist:
+            return list(original_data.keys())
+        current_data = json.loads(self._serialize_fields_for_lock(fresh_instance, lock["lock_fields"]))
+        return [
+            f for f, original_value in original_data.items() if f in current_data and current_data[f] != original_value
         ]
 
 
