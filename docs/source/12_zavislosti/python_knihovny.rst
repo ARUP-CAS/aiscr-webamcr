@@ -400,7 +400,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT-CMU
      - https://python-pillow.github.io
    * - pip
-     - 26.0.1
+     - 26.1
      - MIT
      - https://pip.pypa.io/
    * - pip-licenses
@@ -652,7 +652,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.2.4
+     - 21.3.0
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
