@@ -560,8 +560,9 @@ class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
-        context["j"] = self.get_dokumentacni_jednotka()
-        context["pian_form_create"] = PianCreateForm()
+        dj = self.get_dokumentacni_jednotka()
+        context["j"] = dj
+        context["pian_form_create"] = PianCreateForm(dj=dj)
         return context
 
     @method_decorator(never_cache)
@@ -638,9 +639,10 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
-        context["j"] = self.get_dokumentacni_jednotka()
-        pian = context["j"].pian
-        context["pian_form_update"] = PianCreateForm(instance=pian)
+        dj = self.get_dokumentacni_jednotka()
+        context["j"] = dj
+        pian = dj.pian
+        context["pian_form_update"] = PianCreateForm(instance=pian, dj=dj)
         pian_ident_cely = pian.ident_cely
         context["pian_concurrent_changes"] = self.request.session.pop(
             f"pian_concurrent_changes_{pian_ident_cely}", None
