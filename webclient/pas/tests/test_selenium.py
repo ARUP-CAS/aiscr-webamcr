@@ -36,7 +36,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.wait(self.wait_interval)
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "select2-id_nalezce-container")
-        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Omelka, Zdeněk")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Badatel, Zdeněk")
         self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.driver.find_element(By.ID, "id_datum_nalezu").send_keys("18.10.2023")
@@ -132,7 +132,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         # self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
 
         self.ElementClick(By.ID, "select2-id_nalezce-container")
-        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Omelka, Zdeněk")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Badatel, Zdeněk")
         self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.driver.find_element(By.ID, "id_datum_nalezu").send_keys("18.10.2023")

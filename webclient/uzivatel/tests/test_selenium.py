@@ -48,7 +48,7 @@ class AkceUzivatel(BaseSeleniumTestClass):
         time = self.getTime()
         self.ElementSendKeys(By.ID, "id_first_name", "Jan")
         self.ElementSendKeys(By.ID, "id_last_name", "Havrlant")
-        self.ElementSendKeys(By.ID, "id_email", "jan.havrlant@centrum.cz")
+        self.ElementSendKeys(By.ID, "id_email", "uzivatel@centrum.cz")
         self.ElementClick(By.ID, "id_organizace")
         self.ElementClick(By.CSS_SELECTOR, "option:nth-child(30)")
         self.ElementSendKeys(By.ID, "id_password1", "te0s0t001")
@@ -80,7 +80,7 @@ class AkceUzivatel(BaseSeleniumTestClass):
         # Vytvoření uživatele v administraci
         time = self.getTime()
         self.goToAddress("/admin/uzivatel/user/add/")
-        self.ElementSendKeys(By.ID, "id_email", "jan.havrlant2@centrum.cz")
+        self.ElementSendKeys(By.ID, "id_email", "uzivatel2@centrum.cz")
         self.ElementClick(By.ID, "id_organizace")
         self.ElementClick(By.CSS_SELECTOR, "#id_organizace > option:nth-child(30)")
         self.ElementSendKeys(By.ID, "id_password1", "te0s0t001")
@@ -98,7 +98,7 @@ class AkceUzivatel(BaseSeleniumTestClass):
 
         # Úprava uživatele v administraci
         time = self.getTime()
-        pk = User.objects.filter(email="jan.havrlant2@centrum.cz").first().pk
+        pk = User.objects.filter(email="uzivatel2@centrum.cz").first().pk
         self.goToAddress(f"/admin/uzivatel/user/{pk}/change/")
         self.ElementSendKeys(By.ID, "id_first_name", "Jan")
         with WaitForPageLoad(self.driver):
@@ -175,8 +175,8 @@ class AkceUzivatel(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#user_form div.submit-row > a")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, "input[type=submit]:nth-child(2)")
-        User.objects.filter(email="jan.havrlant2@centrum.cz").count()
-        self.assertEqual(User.objects.filter(email="jan.havrlant2@centrum.cz").count(), 0)
+        User.objects.filter(email="uzivatel2@centrum.cz").count()
+        self.assertEqual(User.objects.filter(email="uzivatel2@centrum.cz").count(), 0)
         self.check_fedora_change(time, "uzivatel/tests/resources/test_148/delete_uzivatel")
 
         logger.info("AkceUzivatel.test_148_test_Fedora_uzivatel_001.end")
