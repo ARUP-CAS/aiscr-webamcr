@@ -57,7 +57,7 @@ class Command(BaseCommand):
         dry_run = options["dry_run"]
         limit = options["limit"]
 
-        qs = Soubor.objects.filter(rozsah__isnull=True).exclude(path__isnull=True).select_related('vazba')
+        qs = Soubor.objects.filter(rozsah__isnull=True).exclude(path__isnull=True).select_related("vazba")
         if limit:
             qs = qs[:limit]
 
