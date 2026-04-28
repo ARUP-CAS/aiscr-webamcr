@@ -543,12 +543,12 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         - Record container je tombstone
         """
         logger.info("ProjektSeleniumTest.test_163_delete_unsubmited_projects_001.start")
-        with freeze_time("2026-04-27 00:00:01", ignore=["core.tests.test_selenium"]):
+        time = self.getTime()
+        with freeze_time("2026-04-28 11:00:01", ignore=["core.tests.test_selenium"]):
             OznameniSeleniumTest.oznameni_projektu_strana1(self)
-
             OznameniSeleniumTest.oznameni_projektu_strana1(self)
             OznameniSeleniumTest.oznameni_projektu_strana2(self)
-
+        self.check_fedora_change(time, "projekt/tests/resources/test_163/create_unsubmited_projekt")
         self.assertEqual(Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY).count(), 2)
         time = self.getTime()
         with freeze_time("2026-04-29 00:00:01", ignore=["core.tests.test_selenium"]):
