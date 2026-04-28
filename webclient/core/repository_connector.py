@@ -1554,13 +1554,15 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             },
         )
 
-    def delete_container(self, delete_tombstone=True):
+    def delete_container(self, delete_tombstone=True, delete_link=True):
         """
         Odstraní container. v aplikaci.
 
-        :param delete_tombstone: Parametr ``delete_tombstone`` ovlivňuje větvení podmínek.
+        :param delete_tombstone: Pokud ``True``, smaže i tombstone záznamu.
+        :param delete_link: Pokud ``True``, odstraní také link kontejner v ``/model/<typ>/member/`` i jeho tombstone.
         """
-        self._delete_link()
+        if delete_link:
+            self._delete_link()
         logger.debug(
             "core_repository_connector.delete_container.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},

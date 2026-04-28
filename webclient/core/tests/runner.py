@@ -12,6 +12,7 @@ USERS = {
     "badatel": {"USERNAME": "badatel2@arup.cas.cz", "PASSWORD": "afsd15Easd2"},
     "badatel1": {"USERNAME": "zdenek.omelka@email.cz", "PASSWORD": "afsd15Easd3"},
     "administrator": {"USERNAME": "administrator1@arup.cas.cz", "PASSWORD": "afsd15Easd1"},
+    "ADMIN_USER": {"USERNAME": "amcr@arup.cas.cz", "PASSWORD": ""},
 }
 TYP_DJ_CELEK_AKCE_ID = ""
 
