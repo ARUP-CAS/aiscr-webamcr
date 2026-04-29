@@ -5,7 +5,7 @@ COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci
 
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.3 AS python-builder
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.4 AS python-builder
 
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ="Europe/Prague"
@@ -37,7 +37,7 @@ COPY ./webclient/requirements.txt /tmp/requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt
 
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.3 AS runtime
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.4 AS runtime
 
 ARG VERSION_APP
 ARG TAG_APP
