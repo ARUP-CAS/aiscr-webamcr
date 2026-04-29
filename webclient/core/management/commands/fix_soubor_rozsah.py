@@ -58,7 +58,7 @@ class Command(BaseCommand):
         limit = options["limit"]
 
         qs = Soubor.objects.filter(rozsah__isnull=True).exclude(path__isnull=True).select_related("vazba")
-        if limit:
+        if limit is not None:
             qs = qs[:limit]
 
         total = qs.count()
