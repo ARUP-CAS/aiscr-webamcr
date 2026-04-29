@@ -161,6 +161,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_FAILED"),
         ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_SOCKET_NOT_CONNECTED"),
         ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_CONNECTION_ABORTED"),
+        ("", "Framing 'https://www.google.com/' violates the following report-only Content Security Policy"),
     ]
 
     @classmethod

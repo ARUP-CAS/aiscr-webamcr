@@ -27,11 +27,11 @@
       <amcr:typ_zmeny>DEL</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:oznamovatel>
-      <amcr:oznamovatel>Město Brtnice</amcr:oznamovatel>
-      <amcr:odpovedna_osoba>Jan Přibyl</amcr:odpovedna_osoba>
-      <amcr:adresa>nám. Svobody 379, 588 32 Brtnice</amcr:adresa>
-      <amcr:telefon>724387837</amcr:telefon>
-      <amcr:email>starosta@brtnice.cz</amcr:email>
+      <amcr:oznamovatel>Město Test</amcr:oznamovatel>
+      <amcr:odpovedna_osoba>Jan Test</amcr:odpovedna_osoba>
+      <amcr:adresa>Test 111, 555 55 Test</amcr:adresa>
+      <amcr:telefon>724123123</amcr:telefon>
+      <amcr:email>test@test.cz</amcr:email>
     </amcr:oznamovatel>
   </amcr:projekt>
 </amcr:amcr>

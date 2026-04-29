@@ -38,11 +38,11 @@
       <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:oznamovatel>
-      <amcr:oznamovatel>WSB Koncept s.r.o.</amcr:oznamovatel>
-      <amcr:odpovedna_osoba>Ing. arch. Lumír Pašek</amcr:odpovedna_osoba>
-      <amcr:adresa>Tovaryšský Vrch 1358/3, 110 00 Liberec 1</amcr:adresa>
-      <amcr:telefon>775606345</amcr:telefon>
-      <amcr:email>lumir.pasek@wsb.eu</amcr:email>
+      <amcr:oznamovatel>Test s.r.o.</amcr:oznamovatel>
+      <amcr:odpovedna_osoba>Lumír Test4</amcr:odpovedna_osoba>
+      <amcr:adresa>Test 55, 110 00 Ltest</amcr:adresa>
+      <amcr:telefon>775123123</amcr:telefon>
+      <amcr:email>test@test.eu</amcr:email>
     </amcr:oznamovatel>
     <amcr:archeologicky_zaznam id="C-201121404A">C-201121404A</amcr:archeologicky_zaznam>
   </amcr:projekt>
