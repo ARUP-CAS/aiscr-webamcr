@@ -151,12 +151,16 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         """
         with open("/vol/web/nginx/data/" + language + "/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
-            soup.find("p").string.replace_with(form.cleaned_data["error_text_" + language])
+            p_tag = soup.find("p")
+            if p_tag:
+                p_tag.string = form.cleaned_data["error_text_" + language]
         with open("/vol/web/nginx/data/" + language + "/custom_503.html", "w") as fp:
             fp.write(str(soup))
         with open("/vol/web/nginx/data/" + language + "/oznameni/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
-            soup.find("p").string.replace_with(form.cleaned_data["error_text_oznam_" + language])
+            p_tag = soup.find("p")
+            if p_tag:
+                p_tag.string = form.cleaned_data["error_text_oznam_" + language]
         with open("/vol/web/nginx/data/" + language + "/oznameni/custom_503.html", "w") as fp:
             fp.write(str(soup))
 

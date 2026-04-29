@@ -51,7 +51,7 @@ def copy_with_preserved_p(src: str, dst: str) -> None:
                     soup = BeautifulSoup(fp, "html.parser")
                 p = soup.find("p")
                 if p:
-                    p.string.replace_with(p_text)
+                    p.string = p_text
                 with open(dst_file, "w", encoding="utf-8") as fp:
                     fp.write(str(soup))
 
