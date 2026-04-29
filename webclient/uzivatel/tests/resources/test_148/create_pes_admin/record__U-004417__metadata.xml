@@ -3,8 +3,8 @@
   <amcr:uzivatel>
     <amcr:ident_cely>U-004417</amcr:ident_cely>
     <amcr:jmeno>JanJan</amcr:jmeno>
-    <amcr:prijmeni>Havrlant</amcr:prijmeni>
-    <amcr:email>jan.havrlant2@centrum.cz</amcr:email>
+    <amcr:prijmeni>Test6</amcr:prijmeni>
+    <amcr:email>uzivatel2@centrum.cz</amcr:email>
     <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
     <amcr:jazyk>cs</amcr:jazyk>
     <amcr:aktivni>true</amcr:aktivni>
@@ -26,7 +26,7 @@
       <amcr:id>hist-0000001</amcr:id>
       <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
-      <amcr:poznamka>email: jan.havrlant2@centrum.cz, is_active: True, organizace: Archeologický ústav Praha, first_name: Jan, last_name: Havrlant</amcr:poznamka>
+      <amcr:poznamka>email: uzivatel2@centrum.cz, is_active: True, organizace: Archeologický ústav Praha, first_name: Jan, last_name: Test6</amcr:poznamka>
       <amcr:typ_zmeny>ZUA</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>

@@ -278,23 +278,28 @@ def delete_unsubmited_projects():
         .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours)
         .distinct("id")
     )
+    admin_user = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
     for item in projekt_query:
         item: Projekt
         logger.debug("core.cron.delete_unsubmited_projects.delete_projekt", extra={"ident_cely": item.ident_cely})
-        fedora_transaction = FedoraTransaction()
+        fedora_transaction = FedoraTransaction(main_record=item, transaction_user=admin_user, suppress_message=True)
         item.active_transaction = fedora_transaction
+        item.deleted_by_user = admin_user
         try:
+            con = FedoraRepositoryConnector(item, fedora_transaction)
+            if con.container_exists():
+                # Vytvoří proxy /model/deleted/member/X-... ukazující na record/X-...
+                con.record_deletion()
+                # Tombstone record/X-...; /model/projekt/member/X-... zůstává nedotčen.
+                con.delete_container(delete_tombstone=False, delete_link=False)
             if isinstance(item.soubory, SouborVazby):
                 for item_file in item.soubory.soubory.all():
-                    item.active_transaction = fedora_transaction
+                    item_file.suppress_signal = True
                     item_file.delete()
                 item.soubory.delete()
                 item.soubory = None
             item.suppress_signal = True
             item.delete()
-            con = FedoraRepositoryConnector(item, fedora_transaction)
-            if con.container_exists():
-                con.delete_container(delete_tombstone=False)
             fedora_transaction.mark_transaction_as_closed()
         except Exception as err:
             fedora_transaction.rollback_transaction()

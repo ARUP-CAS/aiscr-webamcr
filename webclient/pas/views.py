@@ -490,13 +490,13 @@ def edit_ulozeni(request, ident_cely):
     """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     predano_required = True if sn.stav == SN_POTVRZENY else False
-    if check_stav_changed(request, sn):
+    if check_stav_changed(request, sn, prefix="edit-ulozeni"):
         return JsonResponse(
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
     if request.method == "POST":
-        form = PotvrditNalezForm(request.POST, instance=sn, predano_required=predano_required)
+        form = PotvrditNalezForm(request.POST, instance=sn, predano_required=predano_required, prefix="edit-ulozeni")
         if form.is_valid():
             logger.debug("pas.views.edit_ulozeni.form_valid")
             sn: SamostatnyNalez = form.save(commit=False)
@@ -521,6 +521,7 @@ def edit_ulozeni(request, ident_cely):
             predano_required=predano_required,
             initial={"old_stav": sn.stav},
             predano_hidden=True,
+            prefix="edit-ulozeni",
         )
     context = {
         "object": sn,
@@ -672,7 +673,7 @@ def potvrdit(request, ident_cely):
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
-    if check_stav_changed(request, sn):
+    if check_stav_changed(request, sn, prefix="potvrdit"):
         return JsonResponse(
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
@@ -687,7 +688,7 @@ def potvrdit(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        form = PotvrditNalezForm(request.POST, instance=sn, predano_required=True)
+        form = PotvrditNalezForm(request.POST, instance=sn, predano_required=True, prefix="potvrdit")
         if form.is_valid():
             form_obj: SamostatnyNalez = form.save(commit=False)
             form_obj.create_transaction(request.user, SAMOSTATNY_NALEZ_POTVRZEN)
@@ -699,7 +700,7 @@ def potvrdit(request, ident_cely):
         else:
             logger.info("pas.views.potvrdit.form_invalid", extra={"error": form.errors})
     else:
-        form = PotvrditNalezForm(instance=sn, initial={"old_stav": sn.stav}, predano_hidden=True)
+        form = PotvrditNalezForm(instance=sn, initial={"old_stav": sn.stav}, predano_hidden=True, prefix="potvrdit")
     context = {
         "object": sn,
         "form": form,
