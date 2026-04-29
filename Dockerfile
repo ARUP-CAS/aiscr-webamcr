@@ -5,7 +5,7 @@ COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci
 
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.3 AS python-builder
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.4 AS python-builder
 
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ="Europe/Prague"
@@ -49,7 +49,7 @@ WORKDIR /code
 
 RUN python3 -m compileall -b /code
 
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.3 AS runtime
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.4 AS runtime
 
 ARG VERSION_APP
 ARG TAG_APP
