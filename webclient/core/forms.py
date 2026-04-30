@@ -335,7 +335,7 @@ class OdstavkaSystemuForm(forms.ModelForm):
         self.fields["error_text_oznam_cs"].initial = soup.find("p").get_text() if soup.find("p") else ""
         with open("/vol/web/nginx/data/en/oznameni/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
-        self.fields["error_text_oznam_en"].initial = soup.find("p").string
+        self.fields["error_text_oznam_en"].initial = soup.find("p").get_text() if soup.find("p") else ""
         locale_path = settings.LOCALE_PATHS[0]
         languages = settings.LANGUAGES
         for code, lang in languages:
