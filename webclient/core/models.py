@@ -1052,6 +1052,9 @@ class Permissions(models.Model):
             "core.models.permissions.actionChoices.spoluprace_deaktivovat"
         )
         spoluprace_smazat = "spoluprace_smazat", _("core.models.permissions.actionChoices.spoluprace_smazat")
+        spoluprace_edit_projekty = "spoluprace_edit_projekty", _(
+            "core.models.permissions.actionChoices.spoluprace_edit_projekty"
+        )
         pian_import_new = "pian_import_new", "core.models.permissions.actionChoices.pian_import_new"
         pian_import_change = "pian_import_change", "core.models.permissions.actionChoices.pian_import_change"
         akce_dj_zakladni = "akce_dj_zakladni", "core.models.permissions.actionChoices.akce_dj_zakladni"

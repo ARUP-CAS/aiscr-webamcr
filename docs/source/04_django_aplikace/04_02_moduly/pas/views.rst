@@ -177,7 +177,7 @@ Třídy
 
    .. py:method:: get_table_kwargs()
 
-      Vrací table kwargs.
+      Vrací table kwargs s případným vyloučením sloupce ``smazani`` u neadminů a předáním uživatele.
 
       :return: Vrací slovník.
 
@@ -239,6 +239,48 @@ Třídy
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
       :return: Vrací výsledek volání ``redirect()``.
+
+
+.. py:class:: EditSpolupraceProjekyView
+
+   Pohled pro editaci projektů přiřazených ke spolupráci v modálním dialogu.
+
+   **Metody:**
+
+   .. py:method:: get_object()
+
+      Vrací objekt spolupráce.
+
+      :return: Vrací výsledek volání ``get_object_or_404()``.
+
+   .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get_context_data``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+
+      :return: Vrací proměnná ``context``.
+
+   .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Parametr ``request`` předává se do volání ``add_message()``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
+
+   .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Parametr ``request`` předává se do volání ``EditSpolupraceProjekyForm()``, pracuje se s atributy ``POST``, ``user``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``.
 
 
 .. py:class:: ProjektPasTableView

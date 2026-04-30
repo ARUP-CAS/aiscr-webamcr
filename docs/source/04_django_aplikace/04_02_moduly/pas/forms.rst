@@ -90,6 +90,21 @@ Třídy
       :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
+.. py:class:: EditSpolupraceProjekyForm
+
+   Formulář pro editaci přiřazených projektů ke spolupráci.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param vedouci_organizace: Organizace vedoucího spolupráce pro filtrování dostupných projektů.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
+
 Funkce
 ------
 

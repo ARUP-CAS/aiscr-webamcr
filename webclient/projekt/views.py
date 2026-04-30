@@ -93,6 +93,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Q
 from django.db.models.functions import Length
@@ -1899,11 +1900,28 @@ class ProjectTableRowView(LoginRequiredMixin, View):
         """
         Vrací výsledek operace.
 
-        :param request: Parametr ``request`` předává se do volání ``get()``, pracuje se s atributy ``GET``.
+        Archeologové vidí pouze projekty průzkumového typu ze své organizace
+        v aktivním stavu (zahájený nebo ukončený v terénu).
+
+        :param request: Parametr ``request`` předává se do volání ``get()``, pracuje se s atributy ``GET``, ``user``.
 
             :return: Vrací výsledek volání ``HttpResponse()``.
+            :raises PermissionDenied: Pokud archeolog žádá projekt mimo svou organizaci nebo mimo povolené stavy.
         """
-        context = {"p": Projekt.objects.get(id=request.GET.get("id", ""))}
+        projekt_id = request.GET.get("id", "")
+        if request.user.hlavni_role and request.user.hlavni_role.pk == ROLE_ARCHEOLOG_ID:
+            qs = Projekt.objects.filter(
+                id=projekt_id,
+                typ_projektu=TYP_PROJEKTU_PRUZKUM_ID,
+                organizace=request.user.organizace,
+                stav__in=[PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_UKONCENY_V_TERENU],
+            )
+            if not qs.exists():
+                raise PermissionDenied
+            p = qs.get()
+        else:
+            p = Projekt.objects.get(id=projekt_id)
+        context = {"p": p}
         return HttpResponse(render_to_string("projekt/projekt_table_row.html", context))
 
 

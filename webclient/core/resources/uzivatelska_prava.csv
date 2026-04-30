@@ -238,6 +238,7 @@ pas,smazat/<str:ident_cely>,pas_smazat,X,*,*,*,*,SN1,<SN3,<SN4,<SN4,SN.my,SN.our
 pas,spoluprace/aktivace-email/<int:pk>,,X,X,*,*,*,X,US1,US1,US1,X,US.ours,*,*,X,*,*,*,
 pas,spoluprace/aktivovat/<int:pk>,spoluprace_aktivovat,X,X,*,*,*,X,US1,US1,US1,X,US.ours,*,*,X,*,*,*,
 pas,spoluprace/deaktivovat/<int:pk>,spoluprace_deaktivovat,X,*,*,*,*,US2,US2,US2,US2,US.my,US.ours,*,*,*,*,*,*,
+pas,spoluprace/projekty/<int:pk>,spoluprace_edit_projekty,X,X,*,*,*,X,US2,US2,US2,X,US.ours,*,*,X,*,*,*,
 pas,spoluprace/smazat/<int:pk>,spoluprace_smazat,X,X,X,X,*,X,X,X,US1,X,X,X,*,X,X,X,*,
 pas,spoluprace/vyber,,X,*,*,*,*,*,*,*,*,US.my,US.ours,*,*,*,*,*,*,
 pas,spoluprace/zadost,spoluprace_zadost,X,*,X,X,X,*,X,X,X,*,X,X,X,*,X,X,X,
@@ -280,7 +281,7 @@ projekt,mapa-projekty,,X,X,*,*,*,X,*,*,*,X,*,*,*,X,P (ours),*,*,
 projekt,oznamovatel/edit/<str:ident_cely>,,X,X,X,*,*,X,X,<P6 | >P6,<P6 | >P6,X,X,*,*,X,X,*,*,
 projekt,oznamovatel/edit/<str:ident_cely>,projekt_oznamovatel_edit,X,X,X,*,*,X,X,<P6 | >P6,<P6 | >P6,X,X,*,*,X,X,*,*,
 projekt,oznamovatel/zapsat/<str:ident_cely>,projekt_oznamovatel_zapsat,X,X,X,*,*,X,X,<P6 | >P6,<P6 | >P6,X,X,*,*,X,X,*,*,
-projekt,radek-tabulky-odkaz,,X,X,X,*,*,X,X,*,*,X,X,*,*,X,X,*,*,pouze typ průzkum
+projekt,radek-tabulky-odkaz,,X,X,*,*,*,X,*,*,*,X,*,*,*,X,*,*,*,pouze typ průzkum
 projekt,smazat/<str:ident_cely>,projekt_smazat,X,X,X,*,*,X,X,P0,<P6 | >P6,X,X,*,*,X,X,*,*,
 projekt,stav/archivovat/<str:ident_cely>,projekt_archivovat,X,X,X,*,*,X,X,P5,P5,X,X,*,*,X,X,*,*,
 projekt,stav/navrhnout-ke-zruseni/<str:ident_cely>,projekt_navrh_ke_zruseni,X,X,*,*,*,X,P1 | P2,P1-P5,P1-P5,X,* | P.ours,*,*,X,*,*,*,

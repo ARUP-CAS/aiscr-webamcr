@@ -10,11 +10,13 @@ from core.constants import (
     ROLE_ADMIN_ID,
     ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID,
+    ROLE_BADATEL_ID,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
+    SPOLUPRACE_AKTIVNI,
     UZIVATEL_SPOLUPRACE_RELATION_TYPE,
 )
 from core.forms import SelectMultipleSeparator
-from core.widgets import AutocompleteModelSelect2Multiple
+from core.widgets import AutocompleteModelSelect2Multiple, AutocompleteSelect2Multiple
 from crispy_forms.layout import HTML, Div, Layout
 from django.contrib.auth.models import Group
 from django.db import utils
@@ -39,11 +41,13 @@ from heslar.hesla import (
     HESLAR_PREDMET_SPECIFIKACE,
     HESLAR_PRISTUPNOST,
 )
+from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 from heslar.models import Heslar, RuianKatastr, RuianKraj, RuianOkres
 from heslar.views import heslar_12
 from historie.models import Historie
 from pas.forms import PasFilterForm
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
+from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
@@ -397,6 +401,13 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
         ),
     )
 
+    projekty = ModelMultipleChoiceFilter(
+        queryset=Projekt.objects.none(),
+        field_name="projekty",
+        label=_("pas.filters.uzivatelSpolupraceFilter.projekty.label"),
+        widget=AutocompleteSelect2Multiple(),
+    )
+
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
 
@@ -412,6 +423,25 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
         """
         super(UzivatelSpolupraceFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
+        if user.hlavni_role.pk == ROLE_BADATEL_ID:
+            projekt_qs = Projekt.objects.filter(
+                typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID,
+                spoluprace_projektu__spolupracovnik=user,
+                spoluprace_projektu__stav=SPOLUPRACE_AKTIVNI,
+            ).distinct()
+        elif user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
+            projekt_qs = Projekt.objects.filter(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID).order_by("ident_cely")
+        else:
+            projekt_qs = Projekt.objects.filter(
+                typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID,
+                organizace__in=user.moje_spolupracujici_organizace(),
+                stav__in=user.moje_stavy_pruzkumnych_projektu(),
+            ).order_by("ident_cely")
+        self.filters["projekty"].queryset = projekt_qs
+        self.filters["projekty"].field.label_from_instance = lambda obj: "%s (%s)" % (
+            obj.ident_cely,
+            obj.vedouci_projektu,
+        )
         if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
             self.filters["vedouci"] = ModelMultipleChoiceFilter(
                 queryset=User.objects.select_related("organizace"),
@@ -561,9 +591,10 @@ class UzivatelSpolupraceFilterFormHelper(crispy_forms.helper.FormHelper):
         self.layout = Layout(
             Div(
                 Div(
-                    Div("vedouci", css_class="col-sm-4"),
-                    Div("spolupracovnik", css_class="col-sm-4"),
-                    Div("stav", css_class="col-sm-4"),
+                    Div("vedouci", css_class="col-sm-3"),
+                    Div("spolupracovnik", css_class="col-sm-3"),
+                    Div("projekty", css_class="col-sm-3"),
+                    Div("stav", css_class="col-sm-3"),
                     css_class="row",
                 ),
                 Div(

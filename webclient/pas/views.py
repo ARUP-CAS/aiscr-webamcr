@@ -70,7 +70,13 @@ from heslar.hesla_dynamicka import PRISTUPNOST_ARCHEOLOG_ID, TYP_PROJEKTU_PRUZKU
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from pas.filters import SamostatnyNalezFilter, UzivatelSpolupraceFilter
-from pas.forms import CreateSamostatnyNalezForm, CreateZadostForm, DeaktivovatSpolupraciForm, PotvrditNalezForm
+from pas.forms import (
+    CreateSamostatnyNalezForm,
+    CreateZadostForm,
+    DeaktivovatSpolupraciForm,
+    EditSpolupraceProjekyForm,
+    PotvrditNalezForm,
+)
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
 from pid.exceptions import DoiWriteError
@@ -1087,7 +1093,7 @@ class UzivatelSpolupraceListView(SearchListView):
             "vedouci__organizace",
             "historie",
             "spolupracovnik__organizace",
-        )
+        ).prefetch_related("projekty")
         return self.check_filter_permission(qs).order_by("id")
 
     def add_ownership_lookup(self, ownership, qs=None):
@@ -1134,13 +1140,14 @@ class UzivatelSpolupraceListView(SearchListView):
 
     def get_table_kwargs(self):
         """
-        Vrací table kwargs.
+        Vrací table kwargs s případným vyloučením sloupce ``smazani`` u neadminů a předáním uživatele.
 
         :return: Vrací slovník.
         """
+        kwargs: dict = {"user": self.request.user}
         if self.request.user.hlavni_role.id != ROLE_ADMIN_ID:
-            return {"exclude": ("smazani",)}
-        return {}
+            kwargs["exclude"] = ("smazani",)
+        return kwargs
 
 
 @login_required
@@ -1364,6 +1371,79 @@ def smazat_spolupraci(request, pk):
             "button": _("pas.views.smazatSpolupraci.submitButton.text"),
         }
     return render(request, "core/transakce_modal.html", context)
+
+
+class EditSpolupraceProjekyView(LoginRequiredMixin, TemplateView):
+    """Pohled pro editaci projektů přiřazených ke spolupráci v modálním dialogu."""
+
+    template_name = "core/transakce_table_modal.html"
+
+    def get_object(self):
+        """Vrací objekt spolupráce.
+
+        :return: Vrací výsledek volání ``get_object_or_404()``.
+        """
+        return get_object_or_404(UzivatelSpoluprace, id=self.kwargs["pk"])
+
+    def get_context_data(self, *args, **kwargs):
+        """
+        Vrací context data.
+
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get_context_data``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+
+            :return: Vrací proměnná ``context``.
+        """
+        obj: UzivatelSpoluprace = self.get_object()
+        form = EditSpolupraceProjekyForm(instance=obj, vedouci_organizace=obj.vedouci.organizace)
+        return {
+            "object": obj,
+            "title": _("pas.views.editSpolupraceProjeky.title"),
+            "id_tag": "edit-spoluprace-projekty-form",
+            "button": _("pas.views.editSpolupraceProjeky.submitButton.text"),
+            "form": form,
+            "selected_projekty": obj.projekty.all(),
+        }
+
+    def get(self, request, *args, **kwargs):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` předává se do volání ``add_message()``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
+        """
+        obj: UzivatelSpoluprace = self.get_object()
+        if not check_permissions(p.actionChoices.spoluprace_edit_projekty, request.user, obj.id):
+            messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+            return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
+        context = self.get_context_data()
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Obsluhuje HTTP metodu POST.
+
+        :param request: Parametr ``request`` předává se do volání ``EditSpolupraceProjekyForm()``, pracuje se s atributy ``POST``, ``user``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``.
+        """
+        obj: UzivatelSpoluprace = self.get_object()
+        if not check_permissions(p.actionChoices.spoluprace_edit_projekty, request.user, obj.id):
+            messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+            return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
+        form = EditSpolupraceProjekyForm(request.POST, instance=obj, vedouci_organizace=obj.vedouci.organizace)
+        if form.is_valid():
+            form.save()
+            messages.add_message(request, messages.SUCCESS, _("pas.views.editSpolupraceProjeky.success"))
+        else:
+            messages.add_message(request, messages.ERROR, FORM_NOT_VALID)
+        redirect_url = request.META.get("HTTP_REFERER") or reverse("pas:spoluprace_list")
+        return JsonResponse({"redirect": redirect_url})
 
 
 def get_history_dates(historie_vazby, request_user):

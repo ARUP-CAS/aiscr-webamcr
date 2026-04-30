@@ -751,6 +751,9 @@ PAS
    * - ``spoluprace_smazani``
      - ``spoluprace/smazat/<int:pk>``
      - ``views.smazat_spolupraci``
+   * - ``spoluprace_edit_projekty``
+     - ``spoluprace/projekty/<int:pk>``
+     - ``views.EditSpolupraceProjekyView.as_view()``
    * - ``get_projekt_pas_table``
      - ``projekt-pas-tabulka/<str:ident_cely>``
      - ``ProjektPasTableView.as_view()``

@@ -43,6 +43,11 @@ urlpatterns = [
     ),
     path("spoluprace/smazat/<int:pk>", views.smazat_spolupraci, name="spoluprace_smazani"),
     path(
+        "spoluprace/projekty/<int:pk>",
+        views.EditSpolupraceProjekyView.as_view(),
+        name="spoluprace_edit_projekty",
+    ),
+    path(
         "projekt-pas-tabulka/<str:ident_cely>",
         ProjektPasTableView.as_view(),
         name="get_projekt_pas_table",
