@@ -326,7 +326,7 @@ class OdstavkaSystemuForm(forms.ModelForm):
         super(OdstavkaSystemuForm, self).__init__(*args, **kwargs)
         with open("/vol/web/nginx/data/cs/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
-        self.fields["error_text_cs"].initial = soup.find("p").string
+        self.fields["error_text_cs"].initial = soup.find("p").get_text() if soup.find("p") else ""
         with open("/vol/web/nginx/data/en/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
         self.fields["error_text_en"].initial = soup.find("p").string
