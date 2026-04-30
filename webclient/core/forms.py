@@ -326,16 +326,16 @@ class OdstavkaSystemuForm(forms.ModelForm):
         super(OdstavkaSystemuForm, self).__init__(*args, **kwargs)
         with open("/vol/web/nginx/data/cs/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
-        self.fields["error_text_cs"].initial = soup.find("p").get_text() if soup.find("p") else ""
+        self.fields["error_text_cs"].initial = p.get_text(strip=True) if (p := soup.find("p")) else ""
         with open("/vol/web/nginx/data/en/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
-        self.fields["error_text_en"].initial = soup.find("p").get_text() if soup.find("p") else ""
+        self.fields["error_text_en"].initial = p.get_text(strip=True) if (p := soup.find("p")) else ""
         with open("/vol/web/nginx/data/cs/oznameni/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
-        self.fields["error_text_oznam_cs"].initial = soup.find("p").get_text() if soup.find("p") else ""
+        self.fields["error_text_oznam_cs"].initial = p.get_text(strip=True) if (p := soup.find("p")) else ""
         with open("/vol/web/nginx/data/en/oznameni/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
-        self.fields["error_text_oznam_en"].initial = soup.find("p").get_text() if soup.find("p") else ""
+        self.fields["error_text_oznam_en"].initial = p.get_text(strip=True) if (p := soup.find("p")) else ""
         locale_path = settings.LOCALE_PATHS[0]
         languages = settings.LANGUAGES
         for code, lang in languages:
