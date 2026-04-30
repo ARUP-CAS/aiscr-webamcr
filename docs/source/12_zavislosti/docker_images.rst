@@ -121,7 +121,7 @@ Grafana Enterprise pro vizualizaci metrik a monitoringu. Poskytuje dashboardy pr
 prom/prometheus
 ~~~~~~~~~~~~~~~
 
-- **Verze:** v3.11.2
+- **Verze:** v3.11.3
 - **Licence:** Apache-2.0 License
 - **Odkaz:** https://github.com/prometheus/prometheus
 
