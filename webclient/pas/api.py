@@ -2109,8 +2109,19 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 instance = SamostatnyNalez(**serializer.validated_data)
                 if not instance.ident_cely:
                     instance.ident_cely = get_sn_ident(instance.projekt)
+                if instance.geom is None and instance.geom_sjtsk is None:
+                    raise ImportValidationException(
+                        ImportValidationIssue(
+                            line=elem.sourceline,
+                            column=None,
+                            message=_("pas.api.SamostatnyNalezXmlImportView.post.missing_geom"),
+                            error_type=ImportErrorType.INVALID_DATA,
+                        )
+                    )
                 geom_wgs84 = instance.geom
                 if geom_wgs84 is None and instance.geom_sjtsk is not None:
+                    # Clone so that the stored geom_sjtsk field is never mutated; WGS-84 is
+                    # only needed transiently to identify the cadastre.
                     geom_wgs84 = instance.geom_sjtsk.clone()
                     geom_wgs84.transform(4326)
                 if geom_wgs84:

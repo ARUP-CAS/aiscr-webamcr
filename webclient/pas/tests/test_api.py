@@ -1182,6 +1182,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             IDENT_CELY="SN-XML-KATASTR-SJTSK-001",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+            # Transforms to WGS-84 POINT(14.0667 50.0333) — inside the test fixture polygon for kod=999999.
             GEOM_SJTSK_WKT="POINT(-768785.47 -1045458.60)",
         ).encode("utf-8")
 
@@ -1191,6 +1192,25 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         nalez = SamostatnyNalez.objects.get(ident_cely="SN-XML-KATASTR-SJTSK-001")
         self.assertEqual(nalez.katastr, RuianKatastr.objects.get(kod=999999))
         self._assert_log_success()
+
+    def test_missing_geometry_returns_422(self):
+        """Import vrátí HTTP 422, pokud XML neobsahuje žádnou geometrii."""
+        xml = self._minimal_nalez_xml(
+            ident_cely="SN-XML-NO-GEOM-001",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        ).decode("utf-8")
+        xml = xml.replace(
+            '<amcr:chranene_udaje>\n      <amcr:geom_wkt EPSG="4326">POINT(14.42 50.08)</amcr:geom_wkt>\n    </amcr:chranene_udaje>',
+            "<amcr:chranene_udaje>\n    </amcr:chranene_udaje>",
+        ).encode("utf-8")
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-NO-GEOM-001").exists())
+        self._assert_log_failure(response.data)
 
     def test_valid_xml_with_known_nalezce_links_existing_osoba(self):
         """Import s existujícím ``nalezce`` naváže záznam na existující osobu."""
