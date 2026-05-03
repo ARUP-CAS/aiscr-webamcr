@@ -160,12 +160,16 @@ XML musí projít validací schématu. Pro import se však využívá primárně
 ověřuje, že zadaná hodnota ``id`` patří do správného typu (např. nelze do pole
 ``obdobi`` uvést kód hesláře pro druh nálezu).
 
-Elementy ``amcr:okres``, ``amcr:katastr``, ``amcr:stav``, ``amcr:igsn``, ``amcr:historie``
-a ``amcr:soubor`` jsou v importu zakázány nebo se stanoví automaticky:
+Elementy ``amcr:stav``, ``amcr:historie`` a ``amcr:soubor`` jsou v importu zakázány nebo
+se stanoví automaticky:
 
-- ``amcr:okres`` a ``amcr:katastr`` — určí systém automaticky podle souřadnic.
+- ``amcr:okres`` — určí systém automaticky podle souřadnic; v importu není povolen.
+- ``amcr:katastr`` — lze uvést v importu; pokud je přítomen, musí mít atribut ``id`` ve formátu
+  ``ruian-{kod}``. Pokud element chybí a ``geom_system`` je ``4326``, systém katastr odvodí
+  ze souřadnic ``geom_wkt``; jinak pole zůstane nevyplněno.
 - ``amcr:stav`` — přiděluje systém; v importu není povolen.
-- ``amcr:igsn``, ``amcr:historie``, ``amcr:soubor`` — pouze pro export.
+- ``amcr:igsn`` — lze uvést v importu; systém hodnotu přijme a uloží.
+- ``amcr:historie``, ``amcr:soubor`` — pouze pro export.
 
 Prvky označené v XSD ukázce jako komentáře jsou při importu zcela ignorovány,
 i pokud jsou v dokumentu přítomny.

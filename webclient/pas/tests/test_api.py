@@ -1176,6 +1176,56 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertEqual(nalez.katastr, RuianKatastr.objects.get(kod=999999))
         self._assert_log_success()
 
+    def test_missing_katastr_filled_from_geom(self):
+        """Import bez ``amcr:katastr`` doplní katastr ze souřadnic ``geom_wkt``."""
+        xml = self._minimal_nalez_xml(
+            ident_cely="SN-XML-KATASTR-GEOM-001",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            geom_wkt="POINT(14.05 50.05)",
+        )
+
+        response = self._post_xml(xml)
+
+        self._assert_xml_success_response(response, "SN-XML-KATASTR-GEOM-001")
+        nalez = SamostatnyNalez.objects.get(ident_cely="SN-XML-KATASTR-GEOM-001")
+        self.assertEqual(nalez.katastr, RuianKatastr.objects.get(kod=999999))
+        self._assert_log_success()
+
+    def test_explicit_katastr_not_overwritten_by_geom(self):
+        """Import s explicitním ``amcr:katastr`` ho nenahradí hodnotou ze souřadnic."""
+        from django.contrib.gis.geos import MultiPolygon, Point, Polygon
+
+        other_katastr, _ = RuianKatastr.objects.get_or_create(
+            kod=888888,
+            defaults={
+                "nazev": "Jiný katastr",
+                "okres": RuianKatastr.objects.get(kod=999999).okres,
+                "definicni_bod": Point(15.0, 49.0, srid=4326),
+                "hranice": MultiPolygon(
+                    Polygon(((15.0, 49.0), (15.1, 49.0), (15.1, 49.1), (15.0, 49.0))),
+                    srid=4326,
+                ),
+            },
+        )
+        xml = self._minimal_nalez_xml(
+            ident_cely="SN-XML-KATASTR-EXPL-001",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            geom_wkt="POINT(14.05 50.05)",
+        ).decode("utf-8")
+        xml = xml.replace(
+            "<amcr:chranene_udaje>\n      <amcr:geom_wkt",
+            '<amcr:chranene_udaje>\n      <amcr:katastr id="ruian-888888" xml:lang="cs">Jiný katastr</amcr:katastr>\n      <amcr:geom_wkt',
+        ).encode("utf-8")
+
+        response = self._post_xml(xml)
+
+        self._assert_xml_success_response(response, "SN-XML-KATASTR-EXPL-001")
+        nalez = SamostatnyNalez.objects.get(ident_cely="SN-XML-KATASTR-EXPL-001")
+        self.assertEqual(nalez.katastr, other_katastr)
+        self._assert_log_success()
+
     def test_valid_xml_with_known_nalezce_links_existing_osoba(self):
         """Import s existujícím ``nalezce`` naváže záznam na existující osobu."""
         template = self._load_xml("nalez_known_nalezce.xml").decode("utf-8")

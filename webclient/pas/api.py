@@ -34,6 +34,7 @@ from core.ident_cely import get_sn_ident
 from core.models import AntivirusCheckResult, ApiRequestLog, Permissions, Soubor, check_permissions
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction, FedoraTransactionStatus
 from core.setting_models import CustomAdminSettings
+from core.utils import get_cadastre_from_point
 from core.views import get_finds_soubor_name
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -2183,6 +2184,8 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 instance = SamostatnyNalez(**serializer.validated_data)
                 if not instance.ident_cely:
                     instance.ident_cely = get_sn_ident(instance.projekt)
+                if not instance.katastr and instance.geom:
+                    instance.katastr = get_cadastre_from_point(instance.geom)
                 instance.active_transaction = fedora_transaction
                 # active_transaction is an attribute that defines a Fedora transaction attached to the objects,
                 # not a database field, so there is no point in using it as an argument in the save method.
