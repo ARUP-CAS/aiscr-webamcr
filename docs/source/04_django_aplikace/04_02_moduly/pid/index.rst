@@ -13,4 +13,5 @@ Dokumentace modulu pid.
    exceptions
    fields
    model_serializers
+   tests
    verificators

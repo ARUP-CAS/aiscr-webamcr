@@ -1,5 +1,6 @@
 # flake8: noqa: E201, E202
 import asyncio
+import concurrent.futures
 import re
 import unicodedata
 from urllib.parse import quote_plus
@@ -111,6 +112,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
     CACHE_PREFIX = "DOI"
     CROSSREF_DOI_REGEX = re.compile(r"^10\.\d{4,9}/.*$", re.IGNORECASE)
     DATACITE_LUCENE_SPECIAL_CHARS = frozenset(r'+-=&|><!(){}[]^"~*?:\/')
+    HTTP_TIMEOUT = 5
 
     @classmethod
     async def _api_call_data_cite(cls, q):
@@ -131,11 +133,13 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
                 clauses.append(f'titles.title:"*{token}*"')
             else:
                 clauses.append(f"titles.title:*{token}*")
+        if not clauses:
+            return []
         params = {
             "query": " AND ".join(clauses),
         }
         results = []
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=cls.HTTP_TIMEOUT) as client:
             response = await client.get(cls.API_URL, params=params)
         if response.status_code == 200:
             data = response.json().get("data", [])
@@ -153,11 +157,13 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         :param q: Vyhledávací dotaz (DOI nebo část DOI).
         :return: Seznam [DOI, název] párů.
         """
+        if not q or not q.strip():
+            return []
         params = {
             "query": f"doi:*{q.upper()}*",
         }
         results = []
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=cls.HTTP_TIMEOUT) as client:
             response = await client.get(cls.API_URL, params=params)
         if response.status_code == 200:
             data = response.json().get("data", [])
@@ -176,7 +182,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         :return: Seznam [DOI, název] párů.
         """
         base_url = f"https://api.crossref.org/works/{q}"
-        response = requests.get(base_url)
+        response = requests.get(base_url, timeout=cls.HTTP_TIMEOUT)
         if response.status_code == 200:
             response = response.json()
             if response.get("message").get("title"):
@@ -187,7 +193,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
             return [[id, f"{title} ({id})"]]
         else:
             base_url = f"https://api.crossref.org/works?query.title={quote_plus(q)}&sort=relevance&rows=50"
-            response = requests.get(base_url)
+            response = requests.get(base_url, timeout=cls.HTTP_TIMEOUT)
             results = []
             if response.status_code == 200:
                 response = response.json()
@@ -210,7 +216,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         """
         params = {"query.title": q}
         results = []
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=cls.HTTP_TIMEOUT) as client:
             response = await client.get("https://api.crossref.org/works", params=params)
         if response.status_code == 200:
             for record in response.json().get("message").get("items", []):
@@ -228,7 +234,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         :return: Seznam [DOI, DOI] pokud existuje, jinak prázdný seznam.
         """
         url = f"https://doi.org/{doi}"
-        resp = requests.head(url, allow_redirects=True, timeout=5)
+        resp = requests.head(url, allow_redirects=True, timeout=cls.HTTP_TIMEOUT)
         if resp.status_code < 400:
             return [[doi, doi]]
         else:
@@ -256,7 +262,15 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
                     cls._api_call_cross_ref_title(q),
                 )
 
-            doi_results, title_results, crossref_results = asyncio.run(_fetch_all())
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None
+            if loop and loop.is_running():
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                    doi_results, title_results, crossref_results = pool.submit(asyncio.run, _fetch_all()).result()
+            else:
+                doi_results, title_results, crossref_results = asyncio.run(_fetch_all())
             results = doi_results + title_results + crossref_results
         if not any([i for i in results if i[0] == str(q)]):
             results = cls._doi_item_exists(q) + results
