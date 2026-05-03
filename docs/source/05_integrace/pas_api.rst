@@ -113,7 +113,7 @@ třech je jako poznámka uvedeno, že záznam pochází z importu z externího z
      - Typ
      - Poznámka
    * - ``amcr:ident_cely``
-     - —
+     - ``xs:string``
      - Buď konkrétní identifikátor (záznam s ním nesmí v systému existovat), nebo ``:tba`` — v takovém případě jej systém přidělí automaticky podle platných pravidel.
    * - ``amcr:projekt``
      - ``xs:string``
