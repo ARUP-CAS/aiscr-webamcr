@@ -219,15 +219,22 @@ class ImportDataMissingReferencedValueError(ImportDataError):
         self.missing_model_name = missing_model_name
         self.missing_field_name = missing_field_name
         super().__init__(
-            f'{_("core_admin.ImportDataMissingReferencedValueError.message.part_1")} '
-            + f'{missing_value_id} {_("core_admin.ImportDataMissingReferencedValueError.message.part_2")} '
+            _("core_admin.ImportDataMissingReferencedValueError.message.part_1")
+            + " "
+            + str(missing_value_id)
+            + " "
+            + _("core_admin.ImportDataMissingReferencedValueError.message.part_2")
+            + " "
             + (
-                f'{missing_model_name} {_("core_admin.ImportDataMissingReferencedValueError.message.part_3")} '
+                str(missing_model_name)
+                + " "
+                + _("core_admin.ImportDataMissingReferencedValueError.message.part_3")
+                + " "
                 if missing_model_name
                 else ""
             )
             + (
-                f'{_("core_admin.ImportDataMissingReferencedValueError.message.part_4")} {missing_field_name}'
+                _("core_admin.ImportDataMissingReferencedValueError.message.part_4") + " " + str(missing_field_name)
                 if missing_field_name
                 else ""
             )
@@ -597,7 +604,7 @@ class BooleanImportField(BaseImportField):
                 return True
             elif value.lower() in ("false", "0"):
                 return False
-        raise ImportDataError(f"{_('core_admin.BooleanImportField.message.invalid_boolean_value')}: {value}")
+        raise ImportDataError(_("core_admin.BooleanImportField.message.invalid_boolean_value") + ": " + str(value))
 
 
 class DateImportField(BaseImportField):
