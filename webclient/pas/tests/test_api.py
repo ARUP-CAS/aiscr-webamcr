@@ -179,7 +179,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         projekt_ident: str,
         pristupnost_ident: str,
         geom_system: str = "4326",
-        geom_wkt: str = "POINT(14.42 50.08)",
+        geom_wkt: str = "POINT(14.0667 50.0333)",
     ) -> bytes:
         """
         Sestaví minimální validní XML pro jeden ``amcr:samostatny_nalez`` ze šablony.
@@ -429,7 +429,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                     "rada_id": "T",
                     "definicni_bod": Point(14.0, 50.0, srid=4326),
                     "hranice": MultiPolygon(
-                        Polygon(((14.0, 50.0), (14.1, 50.0), (14.1, 50.1), (14.0, 50.0))), srid=4326
+                        Polygon(((13.0, 49.9), (14.5, 49.9), (14.5, 50.2), (13.0, 50.2), (13.0, 49.9))), srid=4326
                     ),
                 },
             )
@@ -442,7 +442,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                     "kraj": kraj,
                     "definicni_bod": Point(14.0, 50.0, srid=4326),
                     "hranice": MultiPolygon(
-                        Polygon(((14.0, 50.0), (14.1, 50.0), (14.1, 50.1), (14.0, 50.0))), srid=4326
+                        Polygon(((13.0, 49.9), (14.5, 49.9), (14.5, 50.2), (13.0, 50.2), (13.0, 49.9))), srid=4326
                     ),
                 },
             )
@@ -453,7 +453,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                     "okres": okres,
                     "definicni_bod": Point(14.0, 50.0, srid=4326),
                     "hranice": MultiPolygon(
-                        Polygon(((14.0, 50.0), (14.1, 50.0), (14.1, 50.1), (14.0, 50.0))), srid=4326
+                        Polygon(((13.0, 49.9), (14.5, 49.9), (14.5, 50.2), (13.0, 50.2), (13.0, 49.9))), srid=4326
                     ),
                 },
             )
@@ -1195,14 +1195,11 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
     def test_missing_geometry_returns_422(self):
         """Import vrátí HTTP 422, pokud XML neobsahuje žádnou geometrii."""
-        xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-NO-GEOM-001",
-            projekt_ident=self.projekt.ident_cely,
-            pristupnost_ident=self.pristupnost.ident_cely,
-        ).decode("utf-8")
-        xml = xml.replace(
-            '<amcr:chranene_udaje>\n      <amcr:geom_wkt EPSG="4326">POINT(14.42 50.08)</amcr:geom_wkt>\n    </amcr:chranene_udaje>',
-            "<amcr:chranene_udaje>\n    </amcr:chranene_udaje>",
+        template = self._load_xml("minimal_nalez_no_geom.xml").decode("utf-8")
+        xml = template.format(
+            IDENT_CELY="SN-XML-NO-GEOM-001",
+            PROJEKT_IDENT=self.projekt.ident_cely,
+            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
         ).encode("utf-8")
 
         response = self._post_xml(xml)
@@ -1210,6 +1207,23 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         self.assertIn("validation_errors", response.data)
         self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-NO-GEOM-001").exists())
+        self._assert_log_failure(response.data)
+
+    def test_geom_outside_cadastre_returns_422(self):
+        """Import vrátí HTTP 422, pokud souřadnice nespadají do žádného katastru."""
+        xml = self._minimal_nalez_xml(
+            ident_cely="SN-XML-NO-KATASTR-001",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            # Coordinates in the Atlantic Ocean — outside any cadastre polygon.
+            geom_wkt="POINT(0.0 0.0)",
+        )
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-NO-KATASTR-001").exists())
         self._assert_log_failure(response.data)
 
     def test_valid_xml_with_known_nalezce_links_existing_osoba(self):

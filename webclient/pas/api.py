@@ -2126,6 +2126,15 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                     geom_wgs84.transform(4326)
                 if geom_wgs84:
                     instance.katastr = get_cadastre_from_point(geom_wgs84)
+                    if instance.katastr is None:
+                        raise ImportValidationException(
+                            ImportValidationIssue(
+                                line=elem.sourceline,
+                                column=None,
+                                message=_("pas.api.SamostatnyNalezXmlImportView.post.katastr_not_found"),
+                                error_type=ImportErrorType.INVALID_DATA,
+                            )
+                        )
                 instance.active_transaction = fedora_transaction
                 # active_transaction is an attribute that defines a Fedora transaction attached to the objects,
                 # not a database field, so there is no point in using it as an argument in the save method.

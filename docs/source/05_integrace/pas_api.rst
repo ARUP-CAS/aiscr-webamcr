@@ -187,6 +187,7 @@ se stanoví automaticky:
 - ``amcr:okres``, ``amcr:katastr`` — určí systém automaticky podle souřadnic; v importu nejsou povoleny.
   Při ``geom_system=4326`` se katastr odvozuje z ``geom_wkt``, při ``geom_system=5514`` se ``geom_sjtsk_wkt``
   nejprve transformuje do WGS-84 a katastr se odvozuje z výsledku.
+  Pokud souřadnice nespadají do žádného katastru (např. bod mimo území ČR), import selže s HTTP 422.
 - ``amcr:stav`` — přiděluje systém; v importu není povolen.
 - ``amcr:igsn``, ``amcr:evidencni_cislo`` — lze uvést v importu; systém hodnoty přijme a uloží.
 - ``amcr:historie``, ``amcr:soubor`` — pouze pro export.
@@ -204,6 +205,7 @@ i pokud jsou v dokumentu přítomny.
      - Popis
    * - ``200``
      - Záznam byl úspěšně vytvořen; tělo obsahuje XML metadata nového záznamu.
+       (Endpoint vrací ``200`` i při vytvoření záznamu, nikoliv ``201``.)
    * - ``400``
      - Chybí soubor ``file``, neplatná syntaxe XML nebo neplatná hlavička ``Content-Digest``.
    * - ``401`` / ``403``
@@ -211,7 +213,7 @@ i pokud jsou v dokumentu přítomny.
    * - ``404``
      - Projekt zadaný v XML nebyl nalezen.
    * - ``422``
-     - XML neodpovídá XSD schématu nebo obsahuje neplatná datová pole.
+     - XML neodpovídá XSD schématu, obsahuje neplatná datová pole, chybí geometrie nebo souřadnice nespadají do žádného katastru.
    * - ``429``
      - Překročen povolený počet požadavků; zkuste to znovu za chvíli.
    * - ``503``
