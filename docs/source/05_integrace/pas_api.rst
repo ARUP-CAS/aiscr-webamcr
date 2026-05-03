@@ -155,9 +155,9 @@ třech je jako poznámka uvedeno, že záznam pochází z importu z externího z
 U elementů s atributem ``xml:lang`` se očekává hodnota ``cs``; atribut lze vynechat.
 
 Elementy odkazující na heslář (``okolnosti``, ``obdobi``, ``druh_nalezu``, ``specifikace``,
-``predano_organizace``, ``pristupnost``) se uvádějí celé včetně textové hodnoty, protože
-XML musí projít validací schématu. Pro import se však využívá pouze atribut ``id``; systém
-ověřuje, že zadaná hodnota ``id`` patří do správného typu hesláře (např. nelze do pole
+``pristupnost``) a na organizaci (``predano_organizace``) se uvádějí celé včetně textové hodnoty, protože
+XML musí projít validací schématu. Pro import se však využívá primárně atribut ``id``; systém
+ověřuje, že zadaná hodnota ``id`` patří do správného typu (např. nelze do pole
 ``obdobi`` uvést kód hesláře pro druh nálezu).
 
 Elementy ``amcr:okres``, ``amcr:katastr``, ``amcr:stav``, ``amcr:igsn``, ``amcr:historie``
