@@ -17,7 +17,15 @@ Třídy
       Inicializuje instanci třídy.
 
       :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param dj: Volitelná instance dokumentační jednotky pro secondary lock — sleduje
+          souběžné změny polí DJ, které by mohly být přepsány při ``dj.save()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
+   .. py:method:: get_dj_conflicting_fields()
+
+      Vrátí seznam polí DJ, která byla v DB změněna od renderu formuláře.
+
+      :return: Seznam názvů polí (``typ``, ``nazev``, ``negativni_jednotka``, ``pian``).
 
    .. py:method:: _instance_geom_wkt()
 
@@ -46,4 +54,29 @@ Třídy
       :param epsg: Parametr ``epsg`` se předává do volání ``callproc()``.
 
       :raises forms.ValidationError: Vyvolá se při zpracování zachycené výjimky typu ``Exception``; nebo při splnění podmínky ``validation_results != 'valid'``.
+
+
+.. py:class:: PianOdpojitForm
+
+   Minimální formulář pro modál odpojení PIANu od DJ.
+
+   Nese pouze secondary lock proti instanci DJ, aby šlo detekovat souběžnou editaci
+   polí DJ (např. ``typ``) předtím, než je v ``pian/views.py:odpojit`` zavolán
+   ``dj.save()``.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje formulář se snapshotem polí DJ.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param dj: Volitelná instance dokumentační jednotky pro secondary lock.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
+   .. py:method:: get_dj_conflicting_fields()
+
+      Vrátí seznam polí DJ, která byla v DB změněna od renderu formuláře.
+
+      :return: Seznam názvů polí (``typ``, ``nazev``, ``negativni_jednotka``, ``pian``).
 

@@ -735,6 +735,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 size_mb=rep_bin_file.size_mb,
                 sha_512=rep_bin_file.sha_512,
             )
+            soubor.binary_data = rep_bin_file.content
             soubor.active_transaction = fedora_transaction
             soubor.save()
             logger.debug(

@@ -227,6 +227,36 @@ Třídy
 
       :return: Seznam názvů polí, která byla mezitím změněna jinou úpravou.
 
+   .. py:method:: add_secondary_lock()
+
+      Přidá skryté pole se snapshotem stavu jiné instance modelu (secondary lock).
+
+      Použití: formulář pro vytvoření PIANu chrání i editaci souvisejícího DJ.
+      Lze volat opakovaně s různými ``field_name`` a uzamknout tak formulář
+      proti více souvisejícím modelům najednou.
+
+      :param instance: Instance modelu, jejíž stav má být sledován.
+      :param field_name: Unikátní název skrytého pole pro snapshot.
+      :param lock_fields: Seznam DB polí instance pro porovnání (FK se serializují přes ``*_id``).
+
+   .. py:method:: _serialize_fields_for_lock()
+
+      Serializuje vybraná DB pole instance modelu do JSON řetězce.
+
+      Pole, která nejsou DB pole modelu, jsou ignorována. M2M pole se ukládají jako
+      seřazený seznam PK, FK jako ``*_id`` hodnota, datetime přes ``isoformat()``.
+
+      :param instance: Instance modelu, jehož pole se serializují.
+      :param lock_fields: Seznam DB polí, která se mají serializovat.
+      :return: JSON řetězec s hodnotami polí pro pozdější porovnání.
+
+   .. py:method:: get_secondary_conflicting_fields()
+
+      Vrátí seznam polí instance pod daným secondary lockem, která byla v DB mezitím změněna.
+
+      :param field_name: Název skrytého pole použitý při :meth:`add_secondary_lock`.
+      :return: Seznam názvů polí, která byla mezitím změněna jinou úpravou.
+
 
 .. py:class:: BaseFilterForm
 

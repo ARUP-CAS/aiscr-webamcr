@@ -65,7 +65,9 @@ window.onload = function () {
         init: function () {
             this.on("success", function (file, response) {
                 file.id = response.id
-                file.previewElement.lastChild.style.display = null
+                if (file.previewElement && file.previewElement.lastElementChild) {
+                    file.previewElement.lastElementChild.style.display = null;
+                }
                 show_upload_successful_message(file, UploadResultsEnum.success);
                 $("#my-awesome-dropzone").attr('style','display:none !important');
                 $("#import-helptext").attr('style','display:none !important');
@@ -74,7 +76,9 @@ window.onload = function () {
                 this.removeFile(file);
             });
             this.on("sending", function (file) {
-                file.previewElement.lastChild.style.display = "none"
+                if (file.previewElement && file.previewElement.lastElementChild) {
+                    file.previewElement.lastElementChild.style.display = "none";
+                }
             });
 
         },
