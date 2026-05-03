@@ -1,8 +1,10 @@
 # flake8: noqa: E201, E202
+import asyncio
 import re
 import unicodedata
 from urllib.parse import quote_plus
 
+import httpx
 import requests
 from arch_z.models import ArcheologickyZaznam
 from core.connectors import RedisConnector
@@ -111,7 +113,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
     DATACITE_LUCENE_SPECIAL_CHARS = frozenset(r'+-=&|><!(){}[]^"~*?:\/')
 
     @classmethod
-    def _api_call_data_cite(cls, q):
+    async def _api_call_data_cite(cls, q):
         """
         Vyhledá DOI v DataCite API podle názvu.
 
@@ -133,10 +135,32 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
             "query": " AND ".join(clauses),
         }
         results = []
-        response = requests.get(cls.API_URL, params=params)
+        async with httpx.AsyncClient() as client:
+            response = await client.get(cls.API_URL, params=params)
         if response.status_code == 200:
-            response = response.json()
-            data = response.get("data", [])
+            data = response.json().get("data", [])
+            for record in data:
+                title = record.get("attributes").get("titles")[0].get("title") or record.get("id")
+                id = record.get("id")
+                results.append([id, f"{title} ({id})"])
+        return results
+
+    @classmethod
+    async def _api_call_data_cite_doi(cls, q):
+        """
+        Vyhledá DOI v DataCite API pomocí přímého DOI vzoru.
+
+        :param q: Vyhledávací dotaz (DOI nebo část DOI).
+        :return: Seznam [DOI, název] párů.
+        """
+        params = {
+            "query": f"doi:*{q.upper()}*",
+        }
+        results = []
+        async with httpx.AsyncClient() as client:
+            response = await client.get(cls.API_URL, params=params)
+        if response.status_code == 200:
+            data = response.json().get("data", [])
             for record in data:
                 title = record.get("attributes").get("titles")[0].get("title") or record.get("id")
                 id = record.get("id")
@@ -177,20 +201,19 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         return []
 
     @classmethod
-    def _api_call_cross_ref_title(cls, q):
+    async def _api_call_cross_ref_title(cls, q):
         """
         Vyhledá DOI v CrossRef API pomocí názvu publikace.
 
         :param q: Vyhledávací dotaz (název publikace).
         :return: Seznam [DOI, název] párů.
         """
-        base_url = f"https://api.crossref.org/works"
         params = {"query.title": q}
-        response = requests.get(base_url, params=params)
         results = []
+        async with httpx.AsyncClient() as client:
+            response = await client.get("https://api.crossref.org/works", params=params)
         if response.status_code == 200:
-            response = response.json()
-            for record in response.get("message").get("items", []):
+            for record in response.json().get("message").get("items", []):
                 title = record.get("title")[0] if record.get("title") else record.get("id")
                 id = record.get("DOI")
                 results.append([id, f"{title} ({id})"])
@@ -225,9 +248,20 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         else:
             results = []
         if not results:
-            results = cls._api_call_data_cite(q) + cls._api_call_cross_ref_title(q)
+
+            async def _fetch_all():
+                return await asyncio.gather(
+                    cls._api_call_data_cite_doi(q),
+                    cls._api_call_data_cite(q),
+                    cls._api_call_cross_ref_title(q),
+                )
+
+            doi_results, title_results, crossref_results = asyncio.run(_fetch_all())
+            results = doi_results + title_results + crossref_results
         if not any([i for i in results if i[0] == str(q)]):
             results = cls._doi_item_exists(q) + results
+        seen = set()
+        results = [r for r in results if not (r[0] in seen or seen.add(r[0]))]
         return results
 
 

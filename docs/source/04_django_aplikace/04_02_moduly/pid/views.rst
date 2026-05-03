@@ -69,30 +69,11 @@ Třídy
 
    **Metody:**
 
-   .. py:method:: _api_call_data_cite()
-
-      Vyhledá DOI v DataCite API podle názvu.
-
-      Dotaz je rozdělen na tokeny podle mezer. Tokeny obsahující rezervované znaky
-      Lucene (např. ``-``, ``:``, ``(``) jsou obaleny uvozovkami, aby byly interpretovány
-      doslovně. Ostatní tokeny jsou ponechány bez uvozovek. Tokeny jsou spojeny operátorem
-      ``AND``, takže všechna slova musí být přítomna v názvu, ale nemusí být sousední.
-
-      :param q: Vyhledávací dotaz (název nebo část názvu publikace).
-      :return: Seznam [DOI, název] párů.
-
    .. py:method:: _api_call_cross_ref_doi()
 
       Vyhledá DOI v CrossRef API pomocí přímého DOI.
 
       :param q: Vyhledávací dotaz (DOI).
-      :return: Seznam [DOI, název] párů.
-
-   .. py:method:: _api_call_cross_ref_title()
-
-      Vyhledá DOI v CrossRef API pomocí názvu publikace.
-
-      :param q: Vyhledávací dotaz (název publikace).
       :return: Seznam [DOI, název] párů.
 
    .. py:method:: _doi_item_exists()
