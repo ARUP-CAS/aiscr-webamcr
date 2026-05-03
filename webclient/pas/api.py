@@ -1094,7 +1094,6 @@ class ImportErrorType(Enum):
     RECORD_DOES_NOT_EXIST = 1
     INVALID_DATA = 2
     PERMISSION_ERROR = 3
-    SAVED_PROVIDED_MISMATCH = 4
 
 
 @dataclass(frozen=True)
@@ -1757,44 +1756,6 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                 )
             )
 
-        def parse_ruian_katastr_kod(katastr_elem: etree._Element | None) -> int | None:
-            """
-            Převede atribut ``id`` ve formátu ``ruian-{kod}`` na číselný kód katastru.
-
-            :param katastr_elem: XML element ``katastr``.
-
-            :return: Kód katastru nebo ``None``, pokud element neexistuje.
-
-            :raises ImportValidationException: Pokud je atribut ``id`` v nevalidním formátu.
-            """
-            if katastr_elem is None:
-                return None
-
-            katastr_id = katastr_elem.get("id")
-            if not katastr_id:
-                return None
-            if not katastr_id.startswith("ruian-"):
-                raise ImportValidationException(
-                    ImportValidationIssue(
-                        line=katastr_elem.sourceline,
-                        column=None,
-                        message=f"katastr: {_('pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.invalid_katastr_id')}",
-                        error_type=ImportErrorType.INVALID_DATA,
-                    )
-                )
-
-            try:
-                return int(katastr_id.split("-", 1)[1])
-            except (IndexError, ValueError):
-                raise ImportValidationException(
-                    ImportValidationIssue(
-                        line=katastr_elem.sourceline,
-                        column=None,
-                        message=f"katastr: {_('pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.invalid_katastr_id')}",
-                        error_type=ImportErrorType.INVALID_DATA,
-                    )
-                )
-
         data = {
             "ident_cely": None if cls._text(elem, "ident_cely") == ":tba" else cls._text(elem, "ident_cely"),
             "projekt": projekt_ident,
@@ -1818,7 +1779,6 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
         }
 
         if chranene is not None:
-            data["katastr"] = parse_ruian_katastr_kod(chranene.find(cls._ns("katastr")))
             data["lokalizace"] = cls._text(chranene, "lokalizace")
             geom_wkt_elem = chranene.find(cls._ns("geom_wkt"))
             if geom_wkt_elem is not None and geom_wkt_elem.text:
@@ -2149,8 +2109,12 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 instance = SamostatnyNalez(**serializer.validated_data)
                 if not instance.ident_cely:
                     instance.ident_cely = get_sn_ident(instance.projekt)
-                if not instance.katastr and instance.geom:
-                    instance.katastr = get_cadastre_from_point(instance.geom)
+                geom_wgs84 = instance.geom
+                if geom_wgs84 is None and instance.geom_sjtsk is not None:
+                    geom_wgs84 = instance.geom_sjtsk.clone()
+                    geom_wgs84.transform(4326)
+                if geom_wgs84:
+                    instance.katastr = get_cadastre_from_point(geom_wgs84)
                 instance.active_transaction = fedora_transaction
                 # active_transaction is an attribute that defines a Fedora transaction attached to the objects,
                 # not a database field, so there is no point in using it as an argument in the save method.
