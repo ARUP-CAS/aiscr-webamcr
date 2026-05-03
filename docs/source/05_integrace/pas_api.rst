@@ -138,7 +138,7 @@ třech je jako poznámka uvedeno, že záznam pochází z importu z externího z
        oprávnění ``model_edit``.
    * - ``amcr:predano_organizace``
      - ``xs:string``
-     - Hodnota z číselníku; atribut ``id`` obsahuje kód hesláře.
+     - Atribut ``id`` obsahuje ``ident_cely`` organizace (např. ``ORG-000123``).
    * - ``amcr:geom_system``
      - ``xs:integer``
      - Kód souřadnicového systému: ``4326`` (WGS 84) nebo ``5514`` (S-JTSK).
@@ -156,9 +156,9 @@ U elementů s atributem ``xml:lang`` se očekává hodnota ``cs``; atribut lze v
 
 Elementy odkazující na heslář (``okolnosti``, ``obdobi``, ``druh_nalezu``, ``specifikace``,
 ``pristupnost``) a na organizaci (``predano_organizace``) se uvádějí celé včetně textové hodnoty, protože
-XML musí projít validací schématu. Pro import se však využívá primárně atribut ``id``; systém
-ověřuje, že zadaná hodnota ``id`` patří do správného typu (např. nelze do pole
-``obdobi`` uvést kód hesláře pro druh nálezu).
+XML musí projít validací schématu. Pro import se využívá atribut ``id``; systém ověřuje, že zadaná
+hodnota ``id`` patří do správného typu hesláře (např. nelze do pole ``obdobi`` uvést kód hesláře
+pro druh nálezu). Textový obsah elementu se při importu ignoruje.
 
 Elementy ``amcr:stav``, ``amcr:historie`` a ``amcr:soubor`` jsou v importu zakázány nebo
 se stanoví automaticky:

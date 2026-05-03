@@ -627,15 +627,6 @@ Třídy
 
       :return: Hodnota atributu ``id`` nebo None, pokud element nebo atribut neexistuje.
 
-   .. py:method:: _validate_heslar_value_matches()
-
-      Ověří shodu textové hodnoty XML a ``heslo`` na navázaném hesláři.
-
-      :param validated_data: Validovaná data serializeru.
-      :param elem: Importovaný XML element.
-
-      :raises ImportValidationException: Pokud text elementu neodpovídá ``heslo``.
-
    .. py:method:: _parse_nalez_element()
 
       Převede element ``amcr:samostatny_nalez`` na slovník pro deserializaci.

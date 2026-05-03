@@ -1728,40 +1728,6 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
         return child.get("id") or None
 
     @classmethod
-    def _validate_heslar_value_matches(cls, validated_data: dict, elem: etree._Element) -> None:
-        """
-        Ověří shodu textové hodnoty XML a ``heslo`` na navázaném hesláři.
-
-        :param validated_data: Validovaná data serializeru.
-        :param elem: Importovaný XML element.
-
-        :raises ImportValidationException: Pokud text elementu neodpovídá ``heslo``.
-        """
-        heslar_fields = ("okolnosti", "obdobi", "druh_nalezu", "specifikace")
-        errors = []
-        for field_name in heslar_fields:
-            field_elem = elem.find(cls._ns(field_name))
-            provided_value = cls._text(elem, field_name)
-            validated_heslar = validated_data.get(field_name)
-            if provided_value and validated_heslar and provided_value != validated_heslar.heslo:
-                errors.append(
-                    ImportValidationIssue(
-                        line=field_elem.sourceline if field_elem is not None else elem.sourceline,
-                        column=None,
-                        message=f"{field_name}: "
-                        + _(
-                            "pas.api.SamostatnyNalezXmlImportView._validate_heslar_value_matches.saved_provided_mismatch"
-                        )
-                        % {
-                            "provided": provided_value,
-                            "saved": validated_heslar.heslo,
-                        },
-                        error_type=ImportErrorType.SAVED_PROVIDED_MISMATCH,
-                    )
-                )
-        if errors:
-            raise ImportValidationException(errors)
-
     @classmethod
     def _parse_nalez_element(cls, elem: etree._Element, user) -> tuple[dict, Osoba | None]:
         """
@@ -2165,7 +2131,6 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 serializer = SamostatnyNalezXmlImportSerializer(data=serializer_data)
                 if not serializer.is_valid():
                     raise ImportValidationException.from_serializer_errors(serializer.errors, line=elem.sourceline)
-                self._validate_heslar_value_matches(serializer.validated_data, elem)
 
                 if (
                     serializer.validated_data.get("ident_cely")
