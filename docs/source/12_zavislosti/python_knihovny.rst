@@ -112,7 +112,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://babel.pocoo.org/
    * - backports.zstd
-     - 1.3.0
+     - 1.4.0
      - PSF-2.0
      - https://github.com/rogdham/backports.zstd
    * - beautifulsoup4
@@ -656,7 +656,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
-     - 0.6.0
+     - 0.7.0
      - MIT
      - https://github.com/jquast/wcwidth
    * - websocket-client
