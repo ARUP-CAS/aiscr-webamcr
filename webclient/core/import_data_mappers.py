@@ -599,11 +599,13 @@ class BooleanImportField(BaseImportField):
 
         if isinstance(value, bool):
             return value
-        if isinstance(value, str):
-            if value.lower() in ("true", "1"):
-                return True
-            elif value.lower() in ("false", "0"):
-                return False
+        if isinstance(value, bytes):
+            value = value.decode("utf-8")
+        normalized_value = str(value).strip().lower()
+        if normalized_value in ("true", "1", "-1"):
+            return True
+        if normalized_value in ("false", "0"):
+            return False
         raise ImportDataError(_("core_admin.BooleanImportField.message.invalid_boolean_value") + ": " + str(value))
 
 
@@ -996,7 +998,12 @@ class VazbaLookupImportField(LookupImportField):
                     self._instance_value = record
                     return value
                 elif DokumentCast in self.lookup_model_class_list:
-                    self._instance_value = DokumentCast.objects.get(ident_cely=value)
+                    dokument_cast = DokumentCast.objects.get(ident_cely=value)
+                    self._instance_value = (
+                        getattr(dokument_cast, self.read_field_name)
+                        if self.read_field_name and hasattr(dokument_cast, self.read_field_name)
+                        else dokument_cast
+                    )
                     return value
                 elif DokumentacniJednotka in self.lookup_model_class_list:
                     self._instance_value = DokumentacniJednotka.objects.get(ident_cely=value)
@@ -3291,6 +3298,7 @@ class KomponentaMapper(ImportModelMapper):
     """Mapovač pro model Komponenta."""
 
     fields = ("ident_cely", "jistota", "presna_datace", "poznamka")
+    column_to_field_mapping = {"vazba": "komponenta_vazby"}
     model_class = Komponenta
     require_primary_key_value = True
 
