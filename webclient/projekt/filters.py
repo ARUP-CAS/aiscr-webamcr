@@ -550,7 +550,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
                 queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
             if "poznamka__icontains" in historie:
                 queryset_history &= Q(historie__historie__poznamka__icontains=historie["poznamka__icontains"])
-            queryset = queryset.filter(queryset_history)
+            queryset = queryset.filter(queryset_history).distinct()
 
         return queryset
 
