@@ -588,7 +588,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - http://sphinx-doc.org/
    * - sphinxcontrib-mermaid
-     - 2.0.1
+     - 2.0.2
      - BSD License
      - https://github.com/mgaitan/sphinxcontrib-mermaid
    * - sphinxcontrib-qthelp
