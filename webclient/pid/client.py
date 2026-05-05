@@ -81,7 +81,7 @@ class DigitalObjectIdentifierClient:
             :return: Vrací výsledek volání ``startswith()``.
             :raises DoiConnectionError: Vyvolá se při splnění podmínky ``str(response.status_code).startswith('5') and check_status``.
         """
-        response = requests.get(self.get_record_url(), auth=self.auth)
+        response = requests.get(self.get_record_url(), auth=self.auth, timeout=10)
         if str(response.status_code).startswith("5") and check_status:
             logger.error(
                 "doi.client.DigitalObjectIdentifierClient.check_record_exists.error",
