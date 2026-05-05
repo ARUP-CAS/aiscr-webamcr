@@ -1,6 +1,7 @@
 import logging
 from enum import Enum
 
+import requests
 import simplejson as json
 from core.constants import (
     ARCHIVACE_SN,
@@ -73,7 +74,7 @@ from pas.filters import SamostatnyNalezFilter, UzivatelSpolupraceFilter
 from pas.forms import CreateSamostatnyNalezForm, CreateZadostForm, DeaktivovatSpolupraciForm, PotvrditNalezForm
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
-from pid.exceptions import DoiWriteError
+from pid.exceptions import DoiConnectionError, DoiWriteError
 from projekt.models import Projekt
 from services.mailer import Mailer
 from uzivatel.models import Organizace, User
@@ -762,7 +763,14 @@ def archivovat(request, ident_cely):
         return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
     else:
         # TODO: doplnit případné kontroly (warnings = sn.check_pred_archivaci()).
-        igsn_confirmation = sn.igsn_exists and sn.igsn is None
+        try:
+            igsn_confirmation = sn.igsn_exists() and sn.igsn is None
+        except (DoiConnectionError, requests.RequestException) as err:
+            logger.warning(
+                "pas.views.archivovat.igsn_exists_check_failed",
+                extra={"ident_cely": sn.ident_cely, "error": str(err)},
+            )
+            igsn_confirmation = False
         form_check = CheckStavNotChangedForm(require_confirmation=igsn_confirmation, initial={"old_stav": sn.stav})
         context = {
             "object": sn,

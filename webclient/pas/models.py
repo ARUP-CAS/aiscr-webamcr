@@ -488,7 +488,6 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
         return DigitalObjectIdentifierClient(self)
 
-    @property
     def igsn_exists(self):
         """
         Určuje, zda existuje IGSN identifikátor.
