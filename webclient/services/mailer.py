@@ -257,8 +257,10 @@ class Mailer:
             )
             if attachment:
                 attachment.content.seek(0)
-                email.attach(attachment.filename, attachment.content.read(), mimetype=attachment.mime_type)
-                attachment.content.seek(0)
+                try:
+                    email.attach(attachment.filename, attachment.content.read(), mimetype=attachment.mime_type)
+                finally:
+                    attachment.content.seek(0)
             try:
                 email.send()
                 status = "OK"
