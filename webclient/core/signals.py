@@ -24,19 +24,31 @@ def soubor_get_rozsah(sender, instance, **kwargs):
     if instance.binary_data:
         if instance.nazev.lower().endswith("pdf"):
             try:
+                instance.binary_data.seek(0)
                 reader = PdfReader(instance.binary_data)
                 instance.rozsah = len(reader.pages)
             except Exception:
                 logger.debug("core.models.Soubor.save_error_reading_pdf")
                 instance.rozsah = 1
+            finally:
+                try:
+                    instance.binary_data.seek(0)
+                except Exception:
+                    pass
         elif instance.nazev.lower().endswith("tif"):
             try:
+                instance.binary_data.seek(0)
                 img = Image.open(instance.binary_data)
             except Exception:
                 logger.debug("core.models.Soubor.save_error_reading_tif")
                 instance.rozsah = 1
             else:
                 instance.rozsah = img.n_frames
+            finally:
+                try:
+                    instance.binary_data.seek(0)
+                except Exception:
+                    pass
         else:
             instance.rozsah = 1
 
