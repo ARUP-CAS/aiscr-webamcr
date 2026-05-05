@@ -174,7 +174,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         copy_source.historie = None
         copy_source.evidencni_cislo = None
         copy_source.predano_organizace = None
-        copy_source.predano = None
+        copy_source.predano = False
         copy_source.pristupnost = None
         copy_source.igsn = None
         self.copy_source = copy_source
