@@ -92,7 +92,7 @@ class LokalitaFilter(ArchZaznamFilter):
                 )
             queryset = queryset.filter(queryset_history)
 
-        return queryset
+        return queryset.distinct()
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
