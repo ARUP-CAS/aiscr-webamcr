@@ -837,8 +837,8 @@ class AkceFilter(ArchZaznamFilter):
                 queryset_history &= Q(
                     archeologicky_zaznam__historie__historie__poznamka__icontains=historie["poznamka__icontains"]
                 )
-            queryset = queryset.filter(queryset_history).distinct()
-        return queryset
+            queryset = queryset.filter(queryset_history)
+        return queryset.distinct()
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
