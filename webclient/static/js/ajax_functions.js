@@ -28,8 +28,8 @@ get_vychozi_licence = function (organizaceID, licenceID, start_url) {
             xhttp.onload = function () {
                 // Místo refresh se používá destroy+reinit, aby se předešlo chybě bootstrap-select 1.14.0-beta3,
                 // kdy buildData() přidává data do main.data místo jejich nahrazení (vizuálně se hodnoty řetězí).
-                if (this.status == 200) {
-                    let data = JSON.parse(this.responseText)
+                if (this.status === 200) {
+                    const data = JSON.parse(this.responseText)
                     $(licenceID).val(String(data.licence));
                 }
                 else {
