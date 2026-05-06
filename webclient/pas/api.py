@@ -1727,7 +1727,6 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
         return child.get("id") or None
 
     @classmethod
-    @classmethod
     def _parse_nalez_element(cls, elem: etree._Element, user) -> tuple[dict, Osoba | None]:
         """
         Převede element ``amcr:samostatny_nalez`` na slovník pro deserializaci.
