@@ -132,6 +132,7 @@
 {% endblock %}
 
 {% block script %}
+  <script src="{% static 'js/oznameni_csrf_refresh.js' %}"></script>
   <script src="{% static 'dropzone/dist/min/dropzone.min.js' %}"></script>
   <script>object_id = "{{ projekt.ident_cely }}";</script>
   {% if file_id %}

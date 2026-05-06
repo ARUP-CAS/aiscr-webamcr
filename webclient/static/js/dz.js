@@ -289,7 +289,16 @@ window.onload = function () {
                     location.reload();
                 }, 1000);
             });
-            this.on("sending", function (file, xhr /*, formData */) {
+            this.on("sending", function (file, xhr, formData) {
+                // Oznámení je anonymní flow — pokud se uživatel mezitím přihlásil v jiném okně,
+                // Django rotuje CSRF cookie a token zapsaný v HTML formuláři by již nesouhlasil.
+                // Dropzone kopíruje hidden inputy do formData až po této události
+                // (v _addFormElementData), proto musíme přepsat hodnotu v DOMu.
+                if (currentLocation.startsWith("/oznameni/")) {
+                    const token = csrfcookie();
+                    const input = uploader.querySelector('input[name="csrfmiddlewaretoken"]');
+                    if (token && input) input.value = token;
+                }
                 // před odesláním: ještě povol cancel (tlačítko nezamykáme)
                 file._awaitingServerResponseAfterUpload = false;
                 updateRemoveLocks();

@@ -3,9 +3,9 @@
   <amcr:uzivatel>
     <amcr:ident_cely>U-000408</amcr:ident_cely>
     <amcr:jmeno>Zdeněk</amcr:jmeno>
-    <amcr:prijmeni>Omelka</amcr:prijmeni>
-    <amcr:email>zdenek.omelka@email.cz</amcr:email>
-    <amcr:osoba id="OS-001507">Omelka, Zdeněk</amcr:osoba>
+    <amcr:prijmeni>Badatel</amcr:prijmeni>
+    <amcr:email>badatel1@email.cz</amcr:email>
+    <amcr:osoba id="OS-001507">Badatel, Zdeněk</amcr:osoba>
     <amcr:organizace xml:lang="cs" id="ORG-000011">[amaterský archeolog/zájemce]</amcr:organizace>
     <amcr:jazyk>cs</amcr:jazyk>
     <amcr:aktivni>true</amcr:aktivni>

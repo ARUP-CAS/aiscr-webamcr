@@ -1207,18 +1207,19 @@ def get_projekt_soubor_name(projekt: Projekt, file_name):
     # Potřebné odstranit omezení `soubor_filepath_key`.
 
 
-def check_stav_changed(request, zaznam):
+def check_stav_changed(request, zaznam, prefix=None):
     """
     Ověří, zda se stav záznamu mezitím změnil oproti hodnotě odeslané ve formuláři.
 
     :param request: Parametr ``request`` předává se do volání ``CheckStavNotChangedForm()``, ``add_message()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek.
     :param zaznam: Ukládaný záznam, jehož stav se porovnává.
+    :param prefix: Volitelný prefix formuláře použitý při renderování, nutný pro správné načtení ``old_stav`` z POST dat.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
     """
     logger.debug("core.views.check_stav_changed.start", extra={"pk": zaznam.pk})
     if request.method == "POST":
-        form_check = CheckStavNotChangedForm(data=request.POST, db_stav=zaznam.stav)
+        form_check = CheckStavNotChangedForm(data=request.POST, db_stav=zaznam.stav, prefix=prefix)
         if form_check.is_valid():
             pass
         else:

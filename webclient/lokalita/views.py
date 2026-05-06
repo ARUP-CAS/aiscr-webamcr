@@ -672,7 +672,7 @@ class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
             :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
-        context["pian_form_create"] = PianCreateForm()
+        context["pian_form_create"] = PianCreateForm(dj=self.get_dokumentacni_jednotka())
         return context
 
     def get(self, request, *args, **kwargs):
@@ -761,7 +761,7 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         self.pian = self.get_pian()
         pian_ident_cely = self.pian.ident_cely
         context["pian_ident_cely"] = pian_ident_cely
-        context["pian_form_update"] = PianCreateForm(instance=self.pian)
+        context["pian_form_update"] = PianCreateForm(instance=self.pian, dj=self.get_dokumentacni_jednotka())
         context["pian_concurrent_changes"] = self.request.session.pop(
             f"pian_concurrent_changes_{pian_ident_cely}", None
         )
