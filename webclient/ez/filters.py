@@ -145,7 +145,7 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
                 queryset_history &= Q(historie__historie__poznamka__icontains=historie["poznamka__icontains"])
             queryset = queryset.filter(queryset_history)
 
-        return queryset
+        return queryset.distinct()
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
