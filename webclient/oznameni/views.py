@@ -385,7 +385,7 @@ def post_poi2kat(request):
         geom = Point(float(body["x1"]), float(body["x2"]))
     except (json.JSONDecodeError, UnicodeDecodeError, KeyError, TypeError, ValueError) as e:
         logger.warning("post_poi2kat: neplatný požadavek: %s", e)
-        return JsonResponse({"cadastre": ""}, status=200)
+        return JsonResponse({"cadastre": ""}, status=400)
     katastr = get_cadastre_from_point(geom)
     if len(str(katastr)) > 0:
         return JsonResponse({"cadastre": str(katastr)}, status=200)
