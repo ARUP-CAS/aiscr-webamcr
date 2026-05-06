@@ -168,7 +168,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
 
         :return: Výstup funkce odpovídající implementované logice.
         """
-        copy_source = SamostatnyNalez.objects.get(ident_cely=self.kwargs["ident_cely"])
+        copy_source = get_object_or_404(SamostatnyNalez, ident_cely=self.kwargs["ident_cely"])
         copy_source.id = None
         copy_source.soubory = None
         copy_source.historie = None
