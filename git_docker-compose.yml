@@ -190,7 +190,7 @@ services:
       - logstash_elastic_host
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.3
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.4.0
     hostname: elasticsearch
     environment:
       - discovery.type=single-node
