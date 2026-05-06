@@ -168,7 +168,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
 
         :return: Výstup funkce odpovídající implementované logice.
         """
-        copy_source = SamostatnyNalez.objects.get(ident_cely=self.kwargs["ident_cely"])
+        copy_source = get_object_or_404(SamostatnyNalez, ident_cely=self.kwargs["ident_cely"])
         copy_source.id = None
         copy_source.soubory = None
         copy_source.historie = None
@@ -768,7 +768,8 @@ def archivovat(request, ident_cely):
         except (DoiConnectionError, requests.RequestException) as err:
             logger.warning(
                 "pas.views.archivovat.igsn_exists_check_failed",
-                extra={"ident_cely": sn.ident_cely, "error": str(err)},
+                extra={"ident_cely": sn.ident_cely, "error": err},
+                exc_info=True,
             )
             igsn_confirmation = False
         form_check = CheckStavNotChangedForm(require_confirmation=igsn_confirmation, initial={"old_stav": sn.stav})

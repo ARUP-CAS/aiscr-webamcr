@@ -26,16 +26,16 @@ get_vychozi_licence = function (organizaceID, licenceID, start_url) {
         function (e, clickedIndex, newValue, oldValue) {
             const xhttp = new XMLHttpRequest();
             xhttp.onload = function () {
-                if (this.status == 200) {
-                    let data = JSON.parse(this.responseText)
-                    console.log(data.licence)
-                    $(licenceID).selectpicker('val', String(data.licence));
-                    $(licenceID).selectpicker('refresh');
+                // Místo refresh se používá destroy+reinit, aby se předešlo chybě bootstrap-select 1.14.0-beta3,
+                // kdy buildData() přidává data do main.data místo jejich nahrazení (vizuálně se hodnoty řetězí).
+                if (this.status === 200) {
+                    const data = JSON.parse(this.responseText)
+                    $(licenceID).val(String(data.licence));
                 }
                 else {
-                    $(licenceID).selectpicker('val', "");
-                    $(licenceID).selectpicker('refresh');
+                    $(licenceID).val("");
                 }
+                $(licenceID).selectpicker('destroy').selectpicker();
             }
             const next_url = start_url + this.value
             xhttp.open("GET", next_url);
