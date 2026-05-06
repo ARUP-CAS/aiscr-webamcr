@@ -380,11 +380,13 @@ def post_poi2kat(request):
 
         :return: Vrací výsledek volání ``JsonResponse()``.
     """
-    body = json.loads(request.body.decode("utf-8"))
-    # logger.debug(body)
-    geom = Point(float(body["x1"]), float(body["x2"]))
+    try:
+        body = json.loads(request.body.decode("utf-8"))
+        geom = Point(float(body["x1"]), float(body["x2"]))
+    except (json.JSONDecodeError, UnicodeDecodeError, KeyError, TypeError, ValueError) as e:
+        logger.warning("post_poi2kat: neplatný požadavek: %s", e)
+        return JsonResponse({"cadastre": ""}, status=200)
     katastr = get_cadastre_from_point(geom)
-    # logger.debug(katastr)
     if len(str(katastr)) > 0:
         return JsonResponse({"cadastre": str(katastr)}, status=200)
     else:
