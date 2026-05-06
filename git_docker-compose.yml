@@ -63,7 +63,7 @@ services:
       - redis_data:/data
 
   redis-exporter:
-    image: oliver006/redis_exporter:v1.82.0-alpine
+    image: oliver006/redis_exporter:v1.83.0-alpine
     ports:
       - "9121:9121"
     secrets:
