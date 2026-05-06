@@ -1395,6 +1395,14 @@ Přehled testů
        
           <a class="reference internal" href="#selenium-test-dokument-162-test-162-smaz-n-dokumentu-pozitivn-sc-n-1" title="Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat">Smazání dokumentu (pozitivní scénář 1)</a>
 
+   * - 163
+     - projekt
+     - 
+     -
+       .. raw:: html
+       
+          <a class="reference internal" href="#selenium-test-projekt-163-test-163-cron-pro-maz-n-neodeslan-ch-projekt" title="Ověřuje, že delete_unsubmited_projects() pro projekt ve stavu VYTVORENY">Cron pro mazání neodeslaných projektů</a>
+
 Arch Z
 ------
 
@@ -8128,6 +8136,47 @@ Stav testu
 
 Implementován v
 ``webclient.projekt.tests.test_selenium.ProjektZrusitSeleniumTest.test_155_smazani_projektu_p_001``.
+
+
+.. _selenium-test-projekt-163-test-163-cron-pro-maz-n-neodeslan-ch-projekt:
+
+Test 163 Cron pro mazání neodeslaných projektů
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Ověřuje, že delete_unsubmited_projects() pro projekt ve stavu VYTVORENY
+starší než 12 hodin vytvoří proxy /model/deleted/member/X-C-..., zachová
+/model/projekt/member/X-C-... a record container ponechá jen tombstone.
+
+Uživatelská role
+^^^^^^^^^^^^^^^^
+
+-
+
+Testovací data
+^^^^^^^^^^^^^^
+
+-
+
+Uživatelské kroky
+^^^^^^^^^^^^^^^^^
+
+- Vytvoření 1 oznámení se souborem a jedno bez
+- Spuštění cron tasku delete_unsubmited_projects
+- Ověření stavu Fedory podle fixtur
+
+Očekávané výsledky
+^^^^^^^^^^^^^^^^^^
+
+- Projekt je smazán z DB
+- Vznikla proxy /model/deleted/member/X-C-...
+- Link /model/projekt/member/X-C-... zůstal zachován
+- Record container je tombstone
+
+Stav testu
+^^^^^^^^^^
+
+Implementován v
+``webclient.projekt.tests.test_selenium.ProjektSeleniumTest.test_163_delete_unsubmited_projects_001``.
 
 
 Uzivatel

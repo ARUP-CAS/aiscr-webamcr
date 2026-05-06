@@ -16,4 +16,4 @@ COMPRESS_ENABLED = True
 CLAMD_HOST = get_secret("CLAMD_HOST")
 CLAMD_PORT = 3310
 
-SHOW_DARK_MODE = False
+SHOW_DARK_MODE = get_secret("SHOW_DARK_MODE", "False") == "True"

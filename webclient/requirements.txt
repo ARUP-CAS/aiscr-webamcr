@@ -1,6 +1,6 @@
 Django==5.2.13
 psycopg2-binary==2.9.12
-simplejson==4.1.0
+simplejson==4.1.1
 django-crispy-forms==2.6
 crispy-bootstrap5==2026.3
 django-recaptcha==4.1.0
@@ -35,7 +35,7 @@ djangorestframework-xml==2.0.0
 lxml==6.1.0
 python-magic==0.4.27
 pdf2image==1.17.0
-phonenumbers==9.0.28
+phonenumbers==9.0.29
 py7zr==1.1.2
 rarfile==4.2
 django-cacheops==7.2
@@ -47,7 +47,7 @@ coverage==7.13.5
 django-debug-toolbar==6.3.0
 django-livereload-server==0.5.1
 django-debug-toolbar-template-profiler==2.1.0
-django-object-actions==5.0.0
+django-object-actions==5.0.1
 uWSGI==2.0.31
 requests==2.33.1
 polib==1.2.0
@@ -55,7 +55,7 @@ pytz==2026.1.post1
 python-dateutil==2.9.0.post0
 setuptools==82.0.1
 Werkzeug==3.1.8
-pyOpenSSL==26.0.0
+pyOpenSSL==26.1.0
 sphinxcontrib-googleanalytics==0.5
 sphinxcontrib-mermaid
 SPARQLWrapper==2.0.0

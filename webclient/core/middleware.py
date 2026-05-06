@@ -208,7 +208,7 @@ class StatusMessageMiddleware:
         :param request: HTTP požadavek pro přidání zprávy do session.
         :param redis_key: Klíč v Redis pro načtení stavových zpráv a smazání záznamu.
         """
-        value = int(value.decode("utf-8"))
+        value = int(value)
         if value == FedoraTransactionResult.COMMITED.value:
             try:
                 success_message = self.redis_connection.hget(redis_key, "success_message")

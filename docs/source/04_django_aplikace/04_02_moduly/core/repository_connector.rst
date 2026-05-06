@@ -226,6 +226,7 @@ Třídy
       Ověří existenci odkazu na kontejner v repositáři.
 
       :return: True pokud odkaz existuje, False pokud byl smazán.
+      :raises FedoraNoResponseError: Vyvolá se, pokud repozitář nevrátí odpověď.
 
    .. py:method:: _check_container()
 
@@ -374,7 +375,8 @@ Třídy
 
       Odstraní container. v aplikaci.
 
-      :param delete_tombstone: Parametr ``delete_tombstone`` ovlivňuje větvení podmínek.
+      :param delete_tombstone: Pokud ``True``, smaže i tombstone záznamu.
+      :param delete_link: Pokud ``True``, odstraní také link kontejner v ``/model/<typ>/member/`` i jeho tombstone.
 
    .. py:method:: _delete_link()
 

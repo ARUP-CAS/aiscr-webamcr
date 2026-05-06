@@ -112,7 +112,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://babel.pocoo.org/
    * - backports.zstd
-     - 1.3.0
+     - 1.4.0
      - PSF-2.0
      - https://github.com/rogdham/backports.zstd
    * - beautifulsoup4
@@ -180,7 +180,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Salamek/cron-descriptor
    * - cryptography
-     - 46.0.7
+     - 47.0.0
      - Apache-2.0 OR BSD-3-Clause
      - https://github.com/pyca/cryptography
    * - defusedxml
@@ -248,7 +248,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/jazzband/django-model-utils
    * - django-object-actions
-     - 5.0.0
+     - 5.0.1
      - Apache Software License
      - https://github.com/crccheck/django-object-actions
    * - django-prometheus
@@ -388,7 +388,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.28
+     - 9.0.29
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -400,7 +400,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT-CMU
      - https://python-pillow.github.io
    * - pip
-     - 26.0.1
+     - 26.1.1
      - MIT
      - https://pip.pypa.io/
    * - pip-licenses
@@ -444,7 +444,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - LGPL-2.1-or-later
      - https://py7zr.readthedocs.io/
    * - pyOpenSSL
-     - 26.0.0
+     - 26.1.0
      - Apache Software License
      - https://pyopenssl.org/
    * - pybcj
@@ -480,7 +480,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.2.2
+     - 1.3.0
      - MIT License
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
@@ -536,7 +536,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pypa/setuptools
    * - simplejson
-     - 4.1.0
+     - 4.1.1
      - MIT OR AFL-2.1
      - https://github.com/simplejson/simplejson
    * - six
@@ -588,7 +588,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - http://sphinx-doc.org/
    * - sphinxcontrib-mermaid
-     - 2.0.1
+     - 2.0.2
      - BSD License
      - https://github.com/mgaitan/sphinxcontrib-mermaid
    * - sphinxcontrib-qthelp
@@ -652,11 +652,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.2.4
+     - 21.3.1
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
-     - 0.6.0
+     - 0.7.0
      - MIT
      - https://github.com/jquast/wcwidth
    * - websocket-client

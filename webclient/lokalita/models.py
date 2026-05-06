@@ -124,7 +124,6 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
         return DigitalObjectIdentifierClient(self)
 
-    @property
     def igsn_exists(self):
         """
         Ověří existenci IGSN identifikátoru.
