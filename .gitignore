@@ -119,7 +119,6 @@ logstash/logstash.conf
 /webclient/core/tests/resources/ssl.key
 
 # agents
-.agents/reviews/
 .codex/
 .claude/
 .cursor/
