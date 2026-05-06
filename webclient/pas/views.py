@@ -768,7 +768,8 @@ def archivovat(request, ident_cely):
         except (DoiConnectionError, requests.RequestException) as err:
             logger.warning(
                 "pas.views.archivovat.igsn_exists_check_failed",
-                extra={"ident_cely": sn.ident_cely, "error": str(err)},
+                extra={"ident_cely": sn.ident_cely, "error": err},
+                exc_info=True,
             )
             igsn_confirmation = False
         form_check = CheckStavNotChangedForm(require_confirmation=igsn_confirmation, initial={"old_stav": sn.stav})

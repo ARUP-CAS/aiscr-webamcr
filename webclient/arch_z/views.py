@@ -98,7 +98,7 @@ from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta
 from pian.forms import PianCreateForm
 from pian.models import Pian
-from pid.exceptions import DoiWriteError
+from pid.exceptions import DoiConnectionError, DoiWriteError
 from projekt.forms import PripojitProjektForm
 from projekt.models import Projekt
 from services.mailer import Mailer
@@ -995,11 +995,12 @@ def archivovat(request, ident_cely):
                 status=403,
             )
     try:
-        if az.lokalita.igsn_exists:
-            doi_confirmation = az.lokalita and az.lokalita.igsn_exists and not az.lokalita.igsn
-        else:
-            doi_confirmation = False
+        igsn_exists = bool(az.lokalita and az.lokalita.igsn_exists())
+        doi_confirmation = igsn_exists and not az.lokalita.igsn
     except ObjectDoesNotExist:
+        doi_confirmation = False
+    except DoiConnectionError as err:
+        logger.warning("arch_z.views.archivovat.igsn_exists.connection_error", extra={"error": str(err)})
         doi_confirmation = False
     form_check = CheckStavNotChangedForm(
         require_confirmation=doi_confirmation, dokument_warnings=docs_warings, initial={"old_stav": az.stav}

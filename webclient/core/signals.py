@@ -5,8 +5,9 @@ from core.repository_connector import FedoraTransaction
 from django.db import transaction
 from django.db.models.signals import post_delete, post_save, pre_delete, pre_save
 from django.dispatch import receiver
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from pypdf import PdfReader
+from pypdf.errors import PdfReadError
 from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
@@ -28,7 +29,7 @@ def soubor_get_rozsah(sender, instance, **kwargs):
                     instance.binary_data.seek(0)
                     reader = PdfReader(instance.binary_data)
                     instance.rozsah = len(reader.pages)
-                except Exception:
+                except (PdfReadError, OSError, ValueError):
                     logger.debug("core.models.Soubor.save_error_reading_pdf")
                     instance.rozsah = 1
             elif instance.nazev.lower().endswith("tif"):
@@ -36,7 +37,7 @@ def soubor_get_rozsah(sender, instance, **kwargs):
                     instance.binary_data.seek(0)
                     img = Image.open(instance.binary_data)
                     instance.rozsah = img.n_frames
-                except Exception:
+                except (UnidentifiedImageError, OSError, ValueError):
                     logger.debug("core.models.Soubor.save_error_reading_tif")
                     instance.rozsah = 1
             else:
