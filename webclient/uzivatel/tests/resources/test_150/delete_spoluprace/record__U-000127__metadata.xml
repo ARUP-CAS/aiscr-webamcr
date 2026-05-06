@@ -3,12 +3,12 @@
   <amcr:uzivatel>
     <amcr:ident_cely>U-000127</amcr:ident_cely>
     <amcr:jmeno>Kateřina</amcr:jmeno>
-    <amcr:prijmeni>Blažková</amcr:prijmeni>
-    <amcr:email>archeolog@muzeumtgm.cz</amcr:email>
-    <amcr:osoba id="OS-001853">Blažková, Kateřina</amcr:osoba>
-    <amcr:organizace xml:lang="cs" id="ORG-000190">Muzeum T.G.M. Rakovník, p.o.</amcr:organizace>
+    <amcr:prijmeni>Test2</amcr:prijmeni>
+    <amcr:email>archeolog@test11.cz</amcr:email>
+    <amcr:osoba id="OS-001853">Test2, Kateřina</amcr:osoba>
+    <amcr:organizace xml:lang="cs" id="ORG-000190">Test Rakovník</amcr:organizace>
     <amcr:jazyk>cs</amcr:jazyk>
-    <amcr:telefon>731449321 </amcr:telefon>
+    <amcr:telefon>731123446</amcr:telefon>
     <amcr:aktivni>true</amcr:aktivni>
     <amcr:admin>false</amcr:admin>
     <amcr:superadmin>false</amcr:superadmin>

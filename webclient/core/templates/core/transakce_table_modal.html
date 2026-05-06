@@ -122,7 +122,7 @@
     if (!tag.length) return;
 
     const syncRowsWithSelection = function () {
-        const selectedValues = tag.val() || [];
+        const selectedValues = [].concat(tag.val() || []);
         const selectedIds = new Set(selectedValues.map(String));
 
         $(cl + " table tbody tr[id^='modaldoc']").each(function () {

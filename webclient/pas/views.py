@@ -1,6 +1,7 @@
 import logging
 from enum import Enum
 
+import requests
 import simplejson as json
 from core.constants import (
     ARCHIVACE_SN,
@@ -73,7 +74,7 @@ from pas.filters import SamostatnyNalezFilter, UzivatelSpolupraceFilter
 from pas.forms import CreateSamostatnyNalezForm, CreateZadostForm, DeaktivovatSpolupraciForm, PotvrditNalezForm
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
-from pid.exceptions import DoiWriteError
+from pid.exceptions import DoiConnectionError, DoiWriteError
 from projekt.models import Projekt
 from services.mailer import Mailer
 from uzivatel.models import Organizace, User
@@ -173,8 +174,9 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         copy_source.historie = None
         copy_source.evidencni_cislo = None
         copy_source.predano_organizace = None
-        copy_source.predano = None
+        copy_source.predano = False
         copy_source.pristupnost = None
+        copy_source.igsn = None
         self.copy_source = copy_source
 
     def get_form_kwargs(self):
@@ -490,13 +492,13 @@ def edit_ulozeni(request, ident_cely):
     """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     predano_required = True if sn.stav == SN_POTVRZENY else False
-    if check_stav_changed(request, sn):
+    if check_stav_changed(request, sn, prefix="edit-ulozeni"):
         return JsonResponse(
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
     if request.method == "POST":
-        form = PotvrditNalezForm(request.POST, instance=sn, predano_required=predano_required)
+        form = PotvrditNalezForm(request.POST, instance=sn, predano_required=predano_required, prefix="edit-ulozeni")
         if form.is_valid():
             logger.debug("pas.views.edit_ulozeni.form_valid")
             sn: SamostatnyNalez = form.save(commit=False)
@@ -521,6 +523,7 @@ def edit_ulozeni(request, ident_cely):
             predano_required=predano_required,
             initial={"old_stav": sn.stav},
             predano_hidden=True,
+            prefix="edit-ulozeni",
         )
     context = {
         "object": sn,
@@ -672,7 +675,7 @@ def potvrdit(request, ident_cely):
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
-    if check_stav_changed(request, sn):
+    if check_stav_changed(request, sn, prefix="potvrdit"):
         return JsonResponse(
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
@@ -687,7 +690,7 @@ def potvrdit(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        form = PotvrditNalezForm(request.POST, instance=sn, predano_required=True)
+        form = PotvrditNalezForm(request.POST, instance=sn, predano_required=True, prefix="potvrdit")
         if form.is_valid():
             form_obj: SamostatnyNalez = form.save(commit=False)
             form_obj.create_transaction(request.user, SAMOSTATNY_NALEZ_POTVRZEN)
@@ -699,7 +702,7 @@ def potvrdit(request, ident_cely):
         else:
             logger.info("pas.views.potvrdit.form_invalid", extra={"error": form.errors})
     else:
-        form = PotvrditNalezForm(instance=sn, initial={"old_stav": sn.stav}, predano_hidden=True)
+        form = PotvrditNalezForm(instance=sn, initial={"old_stav": sn.stav}, predano_hidden=True, prefix="potvrdit")
     context = {
         "object": sn,
         "form": form,
@@ -760,7 +763,14 @@ def archivovat(request, ident_cely):
         return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
     else:
         # TODO: doplnit případné kontroly (warnings = sn.check_pred_archivaci()).
-        igsn_confirmation = sn.igsn_exists and sn.igsn is None
+        try:
+            igsn_confirmation = sn.igsn_exists() and sn.igsn is None
+        except (DoiConnectionError, requests.RequestException) as err:
+            logger.warning(
+                "pas.views.archivovat.igsn_exists_check_failed",
+                extra={"ident_cely": sn.ident_cely, "error": str(err)},
+            )
+            igsn_confirmation = False
         form_check = CheckStavNotChangedForm(require_confirmation=igsn_confirmation, initial={"old_stav": sn.stav})
         context = {
             "object": sn,
