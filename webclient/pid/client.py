@@ -89,8 +89,9 @@ class DigitalObjectIdentifierClient:
                 "doi.client.DigitalObjectIdentifierClient.check_record_exists.connection_error",
                 extra={
                     "ident_cely": self.serializer.get_ident_cely(),
-                    "error": str(exc),
+                    "error": exc,
                 },
+                exc_info=True,
             )
             raise DoiConnectionError(None, str(exc), url) from exc
         if str(response.status_code).startswith("5") and check_status:

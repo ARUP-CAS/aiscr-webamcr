@@ -1000,7 +1000,11 @@ def archivovat(request, ident_cely):
     except ObjectDoesNotExist:
         doi_confirmation = False
     except DoiConnectionError as err:
-        logger.warning("arch_z.views.archivovat.igsn_exists.connection_error", extra={"error": str(err)})
+        logger.warning(
+            "arch_z.views.archivovat.igsn_exists.connection_error",
+            extra={"error": err},
+            exc_info=True,
+        )
         doi_confirmation = False
     form_check = CheckStavNotChangedForm(
         require_confirmation=doi_confirmation, dokument_warnings=docs_warings, initial={"old_stav": az.stav}
