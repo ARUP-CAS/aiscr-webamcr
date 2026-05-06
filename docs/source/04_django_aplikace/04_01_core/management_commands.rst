@@ -74,6 +74,33 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
    :undoc-members:
 
 
+``fix_soubor_rozsah``
+---------------------
+
+.. automodule:: core.management.commands.fix_soubor_rozsah
+   :members: Command
+   :undoc-members:
+
+**Parametry:**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 20 20 30
+
+   * - Název
+     - Typ
+     - Výchozí hodnota
+     - Popis
+   * - ``--dry-run``
+     - 
+     - ``False``
+     - Pouze zobrazí kolik záznamů by bylo opraveno, nic neuloží.
+   * - ``--limit``
+     - ``int``
+     - ``None``
+     - Maximální počet zpracovaných souborů.
+
+
 ``generate_metadata``
 ---------------------
 

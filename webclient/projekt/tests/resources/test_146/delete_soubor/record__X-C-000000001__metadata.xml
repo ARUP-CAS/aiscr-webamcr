@@ -33,11 +33,11 @@
       <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:oznamovatel>
-      <amcr:oznamovatel>Jan Havrlant</amcr:oznamovatel>
-      <amcr:odpovedna_osoba>Jan Havrlant</amcr:odpovedna_osoba>
-      <amcr:adresa>Hilbertova 59</amcr:adresa>
-      <amcr:telefon>608643071</amcr:telefon>
-      <amcr:email>jhavrlant@arup.cas.cz</amcr:email>
+      <amcr:oznamovatel>Jan Test6</amcr:oznamovatel>
+      <amcr:odpovedna_osoba>Jan Test6</amcr:odpovedna_osoba>
+      <amcr:adresa>Test 60</amcr:adresa>
+      <amcr:telefon>608123123</amcr:telefon>
+      <amcr:email>test@arup.cas.cz</amcr:email>
     </amcr:oznamovatel>
   </amcr:projekt>
 </amcr:amcr>

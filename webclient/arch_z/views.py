@@ -98,7 +98,7 @@ from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta
 from pian.forms import PianCreateForm
 from pian.models import Pian
-from pid.exceptions import DoiWriteError
+from pid.exceptions import DoiConnectionError, DoiWriteError
 from projekt.forms import PripojitProjektForm
 from projekt.models import Projekt
 from services.mailer import Mailer
@@ -560,8 +560,9 @@ class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
-        context["j"] = self.get_dokumentacni_jednotka()
-        context["pian_form_create"] = PianCreateForm()
+        dj = self.get_dokumentacni_jednotka()
+        context["j"] = dj
+        context["pian_form_create"] = PianCreateForm(dj=dj)
         return context
 
     @method_decorator(never_cache)
@@ -638,9 +639,10 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
-        context["j"] = self.get_dokumentacni_jednotka()
-        pian = context["j"].pian
-        context["pian_form_update"] = PianCreateForm(instance=pian)
+        dj = self.get_dokumentacni_jednotka()
+        context["j"] = dj
+        pian = dj.pian
+        context["pian_form_update"] = PianCreateForm(instance=pian, dj=dj)
         pian_ident_cely = pian.ident_cely
         context["pian_concurrent_changes"] = self.request.session.pop(
             f"pian_concurrent_changes_{pian_ident_cely}", None
@@ -993,11 +995,16 @@ def archivovat(request, ident_cely):
                 status=403,
             )
     try:
-        if az.lokalita.igsn_exists:
-            doi_confirmation = az.lokalita and az.lokalita.igsn_exists and not az.lokalita.igsn
-        else:
-            doi_confirmation = False
+        igsn_exists = bool(az.lokalita and az.lokalita.igsn_exists())
+        doi_confirmation = igsn_exists and not az.lokalita.igsn
     except ObjectDoesNotExist:
+        doi_confirmation = False
+    except DoiConnectionError as err:
+        logger.warning(
+            "arch_z.views.archivovat.igsn_exists.connection_error",
+            extra={"error": err},
+            exc_info=True,
+        )
         doi_confirmation = False
     form_check = CheckStavNotChangedForm(
         require_confirmation=doi_confirmation, dokument_warnings=docs_warings, initial={"old_stav": az.stav}

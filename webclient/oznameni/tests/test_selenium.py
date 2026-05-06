@@ -16,24 +16,23 @@ class OznameniSeleniumTest(BaseSeleniumTestClass):
     """Implementuje komponentu ``OznameniSeleniumTest`` v rámci aplikace."""
 
     @staticmethod
-    def oznameni_projektu(self):
+    def oznameni_projektu_strana1(self):
         """
-        Provádí operaci oznameni projektu.
+        Vyplní 1. stranu oznameni projektu.
 
-        :return: Vrací hodnotu podle větve zpracování.
         """
         port = self.server_thread.port
         self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}/oznameni")
         self.ElementClick(By.ID, "id_oznamovatel")
-        self.driver.find_element(By.ID, "id_oznamovatel").send_keys("Jan Havrlant")
+        self.driver.find_element(By.ID, "id_oznamovatel").send_keys("Jan Test6")
         self.ElementClick(By.ID, "id_odpovedna_osoba")
-        self.driver.find_element(By.ID, "id_odpovedna_osoba").send_keys("Jan Havrlant")
+        self.driver.find_element(By.ID, "id_odpovedna_osoba").send_keys("Jan Test6")
         self.ElementClick(By.ID, "id_adresa")
-        self.driver.find_element(By.ID, "id_adresa").send_keys("Hilbertova 59")
+        self.driver.find_element(By.ID, "id_adresa").send_keys("Test 60")
         self.ElementClick(By.ID, "id_telefon")
-        self.driver.find_element(By.ID, "id_telefon").send_keys("608643071")
+        self.driver.find_element(By.ID, "id_telefon").send_keys("608123123")
         self.ElementClick(By.ID, "id_email")
-        self.driver.find_element(By.ID, "id_email").send_keys("jhavrlant@arup.cas.cz")
+        self.driver.find_element(By.ID, "id_email").send_keys("test@arup.cas.cz")
         self.driver.execute_script("$(window).scrollTop(1500 );")
         self.driver.execute_script("""map.setZoom(17); return map.getZoom();""")
         self.wait(0.5)
@@ -51,8 +50,25 @@ class OznameniSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "id_souhlas")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-id-save")
+
+    @staticmethod
+    def oznameni_projektu_strana2(self):
+        """
+        Vyplní 2. stranu oznameni projektu.
+
+        """
         with WaitForPageLoad(self.driver):
             self.upload_file("oznameni/tests/resources/test_foto_1.jpg", "test_foto_1.jpg")
+
+    @staticmethod
+    def oznameni_projektu(self):
+        """
+        Provádí operaci oznameni projektu.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
+        OznameniSeleniumTest.oznameni_projektu_strana1(self)
+        OznameniSeleniumTest.oznameni_projektu_strana2(self)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit_btn")
             self.driver.switch_to.alert.accept()

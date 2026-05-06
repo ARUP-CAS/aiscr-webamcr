@@ -32,13 +32,13 @@ from rdflib import XSD, Graph, Literal, URIRef
 from selenium import webdriver
 from selenium.common.exceptions import (
     ElementClickInterceptedException,
-    ElementNotInteractableException,
     InvalidSessionIdException,
     NoSuchElementException,
     StaleElementReferenceException,
     WebDriverException,
 )
 from selenium.webdriver.chrome.webdriver import WebDriver as ChromeDriver
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from uzivatel.models import User
@@ -161,6 +161,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_FAILED"),
         ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_SOCKET_NOT_CONNECTED"),
         ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_CONNECTION_ABORTED"),
+        ("", "Framing 'https://www.google.com/' violates the following report-only Content Security Policy"),
     ]
 
     @classmethod
@@ -824,13 +825,17 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             raise Exception("ElementIsNotClickableError")
 
         attempts = 0
-        while attempts < 10:
+        while attempts < 15:
             try:
-                self.driver.find_element(by, value).click()
+                element = self.driver.find_element(by, value)
+                self.driver.execute_script(
+                    "arguments[0].scrollIntoView({block: 'center', behavior: 'instant'});", element
+                )
+                element.click()
                 return
-            except (StaleElementReferenceException, ElementClickInterceptedException, ElementNotInteractableException):
+            except (StaleElementReferenceException, ElementClickInterceptedException):
                 attempts += 1
-                time.sleep(0.5)
+                time.sleep(0.3)
 
         logger.warning("BaseSeleniumTestClass.ElementClick.failedAfterRetries", extra={"filed": by, "value": value})
         raise Exception("ElementClickError")
@@ -881,7 +886,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         :param position_x: Číselná hodnota ``position_x`` použitá při výpočtu nebo transformaci.
         :param position_y: Číselná hodnota ``position_y`` použitá při výpočtu nebo transformaci.
         """
-        action = webdriver.common.action_chains.ActionChains(self.driver)
+        action = ActionChains(self.driver)
         action.move_to_element_with_offset(el, position_x, position_y)
         action.click()
         action.perform()

@@ -65,25 +65,6 @@ In such cases agents should:
 All artefacts produced by AI agents must be stored in `.agents/`.
 For directory layout details, see [.agents/README.md](.agents/README.md).
 
-### Review file naming
-
-Review report files must include a short model abbreviation in their name so
-that different models do not overwrite each other's output.
-
-Format: `<task_id>_<model_abbr>.md`
-
-Examples:
-
-- `T01_claude.md` — task T01 review by Claude
-- `T01_gpt.md` — task T01 review by GPT-4o
-- `T03_gemini.md` — task T03 review by Gemini
-
-Suggested abbreviations: `claude`, `gpt`, `gemini`, `mistral`, `llama`.
-Use a more specific suffix (e.g. `claude_opus`, `gpt4o`) when running
-multiple variants of the same model family.
-
-This rule applies to all files under `.agents/reports/review_reports/`.
-
 Agent work must be committed to branches named:
 
 `agents/<agent_name>/<topic>`
@@ -213,11 +194,6 @@ Examples:
 6. Do not edit sensitive paths that are in `.gitignore` (e.g.
    `local_settings.py`, `secrets*.json`, `webclient_env_var.sh`); see
    [.agents/prompts/hooks_reference.md](.agents/prompts/hooks_reference.md) for the recommended PreToolUse rule.
-7. Temporary manual testing helpers that should not be committed must be
-   stored in `scripts/temp_manual_test_scripts/`. Agents may use this
-   directory for ad-hoc local scripts or sample payloads intended only
-   for manual verification, but must not move production code, tests, or
-   shared project scripts there.
 
 Note:
 

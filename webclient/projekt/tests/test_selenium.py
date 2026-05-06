@@ -9,12 +9,14 @@ from core.constants import (
     PROJEKT_STAV_PRIHLASENY,
     PROJEKT_STAV_UKONCENY_V_TERENU,
     PROJEKT_STAV_UZAVRENY,
+    PROJEKT_STAV_VYTVORENY,
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY,
 )
 from core.models import Soubor
 from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
+from cron.tasks import delete_unsubmited_projects
 from django.conf import settings
 from django.core import mail
 from django.utils.translation import gettext as _
@@ -439,9 +441,9 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         # zmena pristupnosti PAS
         time = self.getTime()
         self.ElementClick(By.ID, "pas-edit-ulozeni")
-        self.ElementSendKeys(By.CSS_SELECTOR, ".modal-body #id_evidencni_cislo", "1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .btn")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
+        self.ElementClick(By.ID, "id_edit-ulozeni-evidencni_cislo")
+        self.driver.find_element(By.ID, "id_edit-ulozeni-evidencni_cislo").send_keys("1")
+        self.select_nth_selectpicker_option("id_edit-ulozeni-pristupnost")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "projekt/tests/resources/test_146/zmena_pristupnosti")
@@ -514,6 +516,47 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.check_fedora_change(time, "projekt/tests/resources/test_146/create_dokument_cast_1")
 
         logger.info("ProjektSeleniumTest.test_146_test_Fedora_projekt_002.end")
+
+    def test_163_delete_unsubmited_projects_001(self):
+        """
+        Test 163 Cron pro mazání neodeslaných projektů
+
+        Ověřuje, že delete_unsubmited_projects() pro projekt ve stavu VYTVORENY
+        starší než 12 hodin vytvoří proxy /model/deleted/member/X-C-..., zachová
+        /model/projekt/member/X-C-... a record container ponechá jen tombstone.
+
+        Role:
+        -
+
+        TestData:
+        -
+
+        Steps:
+        - Vytvoření 1 oznámení se souborem a jedno bez
+        - Spuštění cron tasku delete_unsubmited_projects
+        - Ověření stavu Fedory podle fixtur
+
+        Expected:
+        - Projekt je smazán z DB
+        - Vznikla proxy /model/deleted/member/X-C-...
+        - Link /model/projekt/member/X-C-... zůstal zachován
+        - Record container je tombstone
+        """
+        logger.info("ProjektSeleniumTest.test_163_delete_unsubmited_projects_001.start")
+        time = self.getTime()
+        with freeze_time("2026-04-28 11:00:01", ignore=["core.tests.test_selenium"]):
+            OznameniSeleniumTest.oznameni_projektu_strana1(self)
+            OznameniSeleniumTest.oznameni_projektu_strana1(self)
+            OznameniSeleniumTest.oznameni_projektu_strana2(self)
+        self.check_fedora_change(time, "projekt/tests/resources/test_163/create_unsubmited_projekt")
+        self.assertEqual(Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY).count(), 2)
+        time = self.getTime()
+        with freeze_time("2026-04-29 00:00:01", ignore=["core.tests.test_selenium"]):
+            delete_unsubmited_projects()
+        self.check_fedora_change(time, "projekt/tests/resources/test_163/delete_unsubmited_projekt")
+        self.check_fedora_delete(["record/X-C-000000002"])
+        self.assertEqual(Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY).count(), 0)
+        logger.info("ProjektSeleniumTest.test_163_delete_unsubmited_projects_001.end")
 
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
