@@ -42,7 +42,7 @@ from fedora_management.decorators import handle_fedora_error
 from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.models import Heslar
 from historie.models import Historie
-from pian.forms import PianCreateForm
+from pian.forms import PianCreateForm, PianOdpojitForm
 from pian.models import Pian
 
 logger = logging.getLogger(__name__)
@@ -69,6 +69,7 @@ def detail(request, ident_cely):
     form = PianCreateForm(
         data=request.POST,
         instance=pian,
+        dj=dj,
     )
     if form.is_valid():
         conflicting_fields = form.get_conflicting_fields()
@@ -76,6 +77,20 @@ def detail(request, ident_cely):
             conflicting_labels = [str(form.fields[f].label) for f in conflicting_fields if f in form.fields]
             request.session[f"pian_concurrent_changes_{pian.ident_cely}"] = conflicting_labels
             return redirect(dj.get_absolute_url() + "/pian/edit/" + str(ident_cely))
+        dj_conflicting_fields = form.get_dj_conflicting_fields()
+        if dj_conflicting_fields:
+            from dj.forms import CreateDJForm
+
+            dj_form_for_labels = CreateDJForm(instance=dj, prefix=dj.ident_cely)
+            conflicting_labels = [
+                str(dj_form_for_labels.fields[f].label) for f in dj_conflicting_fields if f in dj_form_for_labels.fields
+            ]
+            request.session[f"dj_concurrent_changes_{dj.ident_cely}"] = conflicting_labels
+            logger.info(
+                "pian.views.detail.dj_concurrent_changes",
+                extra={"ident_cely": dj.ident_cely, "fields": dj_conflicting_fields},
+            )
+            return redirect(dj.get_absolute_url())
         logger.debug("pian.views.detail.form.valid", extra={"ident_cely": pian.ident_cely})
         pian = form.save(commit=False)
         fedora_transaction = pian.create_transaction(request.user)
@@ -116,6 +131,27 @@ def odpojit(request, dj_ident_cely):
     pian = dj.pian
     pian: Pian
     if request.method == "POST":
+        odpojit_form = PianOdpojitForm(data=request.POST, dj=dj)
+        if not odpojit_form.is_valid():
+            logger.info(
+                "pian.views.odpojit.form.not_valid",
+                extra={"ident_cely": dj.ident_cely, "errors": odpojit_form.errors},
+            )
+            return JsonResponse({"redirect": dj.get_absolute_url()})
+        dj_conflicting_fields = odpojit_form.get_dj_conflicting_fields()
+        if dj_conflicting_fields:
+            from dj.forms import CreateDJForm
+
+            dj_form_for_labels = CreateDJForm(instance=dj, prefix=dj.ident_cely)
+            conflicting_labels = [
+                str(dj_form_for_labels.fields[f].label) for f in dj_conflicting_fields if f in dj_form_for_labels.fields
+            ]
+            request.session[f"dj_concurrent_changes_{dj.ident_cely}"] = conflicting_labels
+            logger.info(
+                "pian.views.odpojit.dj_concurrent_changes",
+                extra={"ident_cely": dj.ident_cely, "fields": dj_conflicting_fields},
+            )
+            return JsonResponse({"redirect": dj.get_absolute_url()})
         fedora_transaction = dj.archeologicky_zaznam.create_transaction(request.user)
         fedora_transaction.redirect_url = dj.get_absolute_url()
         fedora_transaction.main_record = dj
@@ -163,6 +199,7 @@ def odpojit(request, dj_ident_cely):
             + _("pian.views.odpojit.text.part2")
             + dj.ident_cely
             + "?",
+            "form": PianOdpojitForm(dj=dj),
         }
         return render(request, "core/transakce_modal.html", context)
 
@@ -246,8 +283,23 @@ def create(request, dj_ident_cely):
     """
     logger.debug("pian.views.create.start")
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
-    form = PianCreateForm(data=request.POST)
+    form = PianCreateForm(data=request.POST, dj=dj)
     if form.is_valid():
+        dj_conflicting_fields = form.get_dj_conflicting_fields()
+        if dj_conflicting_fields:
+            from dj.forms import CreateDJForm
+
+            dj_form_for_labels = CreateDJForm(instance=dj, prefix=dj.ident_cely)
+            conflicting_labels = [
+                str(dj_form_for_labels.fields[f].label) for f in dj_conflicting_fields if f in dj_form_for_labels.fields
+            ]
+            request.session[f"dj_concurrent_changes_{dj.ident_cely}"] = conflicting_labels
+            logger.info(
+                "pian.views.create.dj_concurrent_changes",
+                extra={"ident_cely": dj.ident_cely, "fields": dj_conflicting_fields},
+            )
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
+            return redirect(dj.get_absolute_url())
         logger.debug("pian.views.create.form_valid")
         pian: Pian = form.save(commit=False)
         try:

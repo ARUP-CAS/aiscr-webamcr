@@ -537,6 +537,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             FedoraRequestType.DELETE_TOMBSTONE,
             FedoraRequestType.DELETE_LINK_CONTAINER,
             FedoraRequestType.DELETE_LINK_TOMBSTONE,
+            FedoraRequestType.CONNECT_DELETED_RECORD_3,
+            FedoraRequestType.CONNECT_DELETED_RECORD_4,
         ):
             auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
         else:
@@ -837,9 +839,12 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         Ověří existenci odkazu na kontejner v repositáři.
 
         :return: True pokud odkaz existuje, False pokud byl smazán.
+        :raises FedoraNoResponseError: Vyvolá se, pokud repozitář nevrátí odpověď.
         """
         url = self._get_request_url(FedoraRequestType.GET_LINK)
         result = self._send_request(url, FedoraRequestType.GET_LINK)
+        if result is None:
+            raise FedoraNoResponseError(url, "No Fedora response", None, fedora_transaction=self.transaction)
         return result.status_code != 404
 
     def _check_container(self):
@@ -1551,13 +1556,15 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             },
         )
 
-    def delete_container(self, delete_tombstone=True):
+    def delete_container(self, delete_tombstone=True, delete_link=True):
         """
         Odstraní container. v aplikaci.
 
-        :param delete_tombstone: Parametr ``delete_tombstone`` ovlivňuje větvení podmínek.
+        :param delete_tombstone: Pokud ``True``, smaže i tombstone záznamu.
+        :param delete_link: Pokud ``True``, odstraní také link kontejner v ``/model/<typ>/member/`` i jeho tombstone.
         """
-        self._delete_link()
+        if delete_link:
+            self._delete_link()
         logger.debug(
             "core_repository_connector.delete_container.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},

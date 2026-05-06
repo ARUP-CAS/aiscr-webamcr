@@ -3,12 +3,12 @@
   <amcr:uzivatel>
     <amcr:ident_cely>U-003726</amcr:ident_cely>
     <amcr:jmeno>Michal</amcr:jmeno>
-    <amcr:prijmeni>Bárta</amcr:prijmeni>
-    <amcr:email>mischino@seznam.cz</amcr:email>
-    <amcr:osoba id="OS-000552">Bárta, Michal</amcr:osoba>
+    <amcr:prijmeni>Test1</amcr:prijmeni>
+    <amcr:email>test@seznam.cz</amcr:email>
+    <amcr:osoba id="OS-000552">Test1, Michal</amcr:osoba>
     <amcr:organizace xml:lang="cs" id="ORG-000011">[amaterský archeolog/zájemce]</amcr:organizace>
     <amcr:jazyk>cs</amcr:jazyk>
-    <amcr:telefon>+420 603288850</amcr:telefon>
+    <amcr:telefon>+420 608456456</amcr:telefon>
     <amcr:aktivni>true</amcr:aktivni>
     <amcr:admin>false</amcr:admin>
     <amcr:superadmin>false</amcr:superadmin>
