@@ -114,13 +114,13 @@ třech je jako poznámka uvedeno, že záznam pochází z importu z externího z
      - Poznámka
    * - ``amcr:ident_cely``
      - ``xs:string``
-     - Buď konkrétní identifikátor (záznam s ním nesmí v systému existovat), nebo ``:tba`` — v takovém případě jej systém přidělí automaticky podle platných pravidel.
+     - Vždy ``:tba`` — systém jej přidělí automaticky podle platných pravidel.
    * - ``amcr:projekt``
      - ``xs:string``
-     - Identifikátor projektu; ověřuje se oprávnění přihlášeného uživatele.
+     - Identifikátor projektu; ověřuje se oprávnění přihlášeného uživatele a odvozuje se ``amcr:ident_cely``.
    * - ``amcr:hloubka``
      - ``xs:integer``
-     - Hloubka nálezu v centimetrech; volitelné.
+     - Hloubka nálezu v centimetrech.
    * - ``amcr:okolnosti``
      - ``xs:string``
      - Hodnota z číselníku; atribut ``id`` obsahuje kód hesláře.
@@ -146,26 +146,25 @@ třech je jako poznámka uvedeno, že záznam pochází z importu z externího z
      - ``xs:string``
      - Atribut ``id`` obsahuje identifikátor osoby z hesláře. Pokud osoba v hesláři neexistuje,
        uvede se ``id=":tba"`` a tělo elementu obsahuje jméno ve formátu ``Příjmení, Jméno`` —
-       osoba bude automaticky vytvořena jako nová položka hesláře. Vytvoření nové osoby vyžaduje
-       oprávnění ``model_edit``.
+       osoba bude automaticky vytvořena jako nová položka hesláře.
    * - ``amcr:datum_nalezu``
      - ``xs:date``
-     - Datum nálezu ve formátu ``YYYY-MM-DD``; volitelné.
+     - Datum nálezu ve formátu ``YYYY-MM-DD``.
    * - ``amcr:predano``
      - ``xs:boolean``
-     - Příznak předání nálezu; volitelné.
+     - Příznak předání nálezu.
    * - ``amcr:predano_organizace``
      - ``xs:string``
      - Atribut ``id`` obsahuje ``ident_cely`` organizace (např. ``ORG-000123``).
    * - ``amcr:geom_system``
      - ``xs:integer``
-     - Kód souřadnicového systému: ``4326`` (WGS 84) nebo ``5514`` (S-JTSK).
+     - EPSG kód souřadnicového systému: ``4326`` (WGS 84) nebo ``5514`` (S-JTSK).
    * - ``amcr:pristupnost``
      - ``xs:string``
      - Hodnota z číselníku; atribut ``id`` obsahuje kód hesláře.
    * - ``amcr:chranene_udaje/amcr:lokalizace``
      - ``xs:string``
-     - Textový popis lokalizace nálezu; volitelné.
+     - Textový popis lokalizace nálezu.
    * - ``amcr:chranene_udaje/amcr:geom_wkt``
      - ``xs:string``
      - Použije se, pokud ``amcr:geom_system`` je ``4326``; atribut ``EPSG`` obsahuje kód souřadnicového systému.
@@ -173,7 +172,7 @@ třech je jako poznámka uvedeno, že záznam pochází z importu z externího z
      - ``xs:string``
      - Použije se, pokud ``amcr:geom_system`` je ``5514``; atribut ``EPSG`` obsahuje kód souřadnicového systému.
 
-U elementů s atributem ``xml:lang`` se očekává hodnota ``cs``; atribut lze vynechat.
+U elementů s atributem ``xml:lang`` se očekává hodnota ``cs``; v praxi však import hodnotu ignoruje.
 
 Elementy odkazující na heslář (``okolnosti``, ``obdobi``, ``druh_nalezu``, ``specifikace``,
 ``pristupnost``) a na organizaci (``predano_organizace``) se uvádějí celé včetně textové hodnoty, protože
@@ -189,7 +188,7 @@ se stanoví automaticky:
   nejprve transformuje do WGS-84 a katastr se odvozuje z výsledku.
   Pokud souřadnice nespadají do žádného katastru (např. bod mimo území ČR), import selže s HTTP 422.
 - ``amcr:stav`` — přiděluje systém; v importu není povolen.
-- ``amcr:igsn``, ``amcr:evidencni_cislo`` — lze uvést v importu; systém hodnoty přijme a uloží.
+- ``amcr:evidencni_cislo`` — lze uvést v importu; systém hodnotu přijme a uloží.
 - ``amcr:historie``, ``amcr:soubor`` — pouze pro export.
 
 Prvky označené v XSD ukázce jako komentáře jsou při importu zcela ignorovány,
@@ -294,4 +293,4 @@ Vyžaduje roli Archeolog nebo vyšší; badatel není oprávněn.
    * - ``404``
      - Záznam se zadaným ``ident_cely`` nebyl nalezen.
    * - ``422``
-     - Nepodporovaný formát souboru nebo soubor je příliš velký.
+     - Nepodporovaný formát souboru nebo je soubor příliš velký.
