@@ -188,7 +188,7 @@ STARY_PROJEKT_ZRUSEN = "Automatické zrušení projektů starších tří let, u
 PRISTUPNOST_MIN_RAZENI = 1  # Nejnižší hodnota přístupnosti podle řazení.
 
 MAX_POCET_SOUBORU_PROJEKTU = 40
-MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES = 250 * 1024 * 1024  # 25 MiB pro jednu PAS fotografii přes API
+MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES = 250 * 1024 * 1024  # 250 MB pro jednu PAS fotografii přes API
 
 LIMIT_PRVKU_ZOBRAZENI_HEATMAP = 7_000  # Počet prvků v mapovém výřezu, při kterém se už má zobrazit heatmap
 
