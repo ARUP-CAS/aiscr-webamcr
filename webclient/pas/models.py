@@ -449,14 +449,17 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         """
         Vrací create org.
 
+        Zahrnuje organizaci projektu i cílovou organizaci nálezu (``predano_organizace``), pokud je nastavena.
+
         :return: Vrací n-tici.
         """
-        create_orgs = []
-        if self.projekt.organizace_id:
-            create_orgs.append(self.projekt.organizace)
-        if self.predano_organizace_id and self.predano_organizace_id != self.projekt.organizace_id:
-            create_orgs.append(self.predano_organizace)
-        return tuple(create_orgs)
+        orgs = []
+        proj_org = self.projekt.organizace
+        if proj_org:
+            orgs.append(proj_org)
+        if self.predano_organizace and self.predano_organizace != proj_org:
+            orgs.append(self.predano_organizace)
+        return tuple(orgs)
 
     def redis_snapshot_id(self):
         """
