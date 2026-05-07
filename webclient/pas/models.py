@@ -582,6 +582,13 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         null=True,
         related_name="spoluprace_historie",
     )
+    projekty = models.ManyToManyField(
+        "projekt.Projekt",
+        blank=True,
+        related_name="spoluprace_projektu",
+        limit_choices_to={"typ_projektu": TYP_PROJEKTU_PRUZKUM_ID},
+        verbose_name=_("pas.models.uzivatelSpoluprace.projekty.label"),
+    )
 
     def __init__(self, *args, **kwargs):
         """

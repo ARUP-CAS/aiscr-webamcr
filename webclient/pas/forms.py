@@ -1,8 +1,16 @@
 import logging
 
-from core.constants import ROLE_ADMIN_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
+from core.constants import (
+    PROJEKT_STAV_UKONCENY_V_TERENU,
+    PROJEKT_STAV_ZAHAJENY_V_TERENU,
+    ROLE_ADMIN_ID,
+    ROLE_ARCHEOLOG_ID,
+    ROLE_ARCHIVAR_ID,
+    ROLE_BADATEL_ID,
+    SPOLUPRACE_AKTIVNI,
+)
 from core.forms import BaseFilterForm, OptimisticLockingMixin, TwoLevelSelectField
-from core.widgets import AutocompleteModelSelect2
+from core.widgets import AutocompleteModelSelect2, AutocompleteSelect2Multiple
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
@@ -15,7 +23,7 @@ from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_OBDOBI, HESLAR_OBDOBI_KAT, HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT
 from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 from heslar.views import heslar_12
-from pas.models import SamostatnyNalez
+from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from projekt.models import Projekt
 from uzivatel.models import User
 
@@ -251,18 +259,32 @@ class CreateSamostatnyNalezForm(OptimisticLockingMixin, forms.ModelForm):
         :param project_ident: Identifikátor ``project_ident`` používaný pro dohledání cílového záznamu.
         :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
         """
-        projekt_disabed = kwargs.pop("projekt_disabled", False)
+        projekt_disabled = kwargs.pop("projekt_disabled", False)
         super(CreateSamostatnyNalezForm, self).__init__(*args, **kwargs)
         self.fields["lokalizace"].widget.attrs["rows"] = 2
         self.fields["pocet"].widget.attrs["rows"] = 1
         self.fields["presna_datace"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
-        self.fields["projekt"] = ProjectModelChoiceField(
-            queryset=Projekt.objects.filter(
+        if user is None:
+            projekt_qs = Projekt.objects.none()
+        elif user.hlavni_role and user.hlavni_role.pk == ROLE_BADATEL_ID:
+            projekt_qs = (
+                Projekt.objects.filter(
+                    typ_projektu=TYP_PROJEKTU_PRUZKUM_ID,
+                    spoluprace_projektu__spolupracovnik=user,
+                    spoluprace_projektu__stav=SPOLUPRACE_AKTIVNI,
+                )
+                .select_related("vedouci_projektu")
+                .distinct()
+            )
+        else:
+            projekt_qs = Projekt.objects.filter(
                 typ_projektu=TYP_PROJEKTU_PRUZKUM_ID,
                 organizace__in=user.moje_spolupracujici_organizace(),
                 stav__in=user.moje_stavy_pruzkumnych_projektu(),
-            ).select_related("vedouci_projektu"),
+            ).select_related("vedouci_projektu")
+        self.fields["projekt"] = ProjectModelChoiceField(
+            queryset=projekt_qs,
             widget=forms.Select(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
@@ -343,8 +365,8 @@ class CreateSamostatnyNalezForm(OptimisticLockingMixin, forms.ModelForm):
                     )
                 else:
                     self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""
-        if projekt_disabed:
-            self.fields["projekt"].disabled = projekt_disabed
+        if projekt_disabled:
+            self.fields["projekt"].disabled = projekt_disabled
         if self.instance is not None:
             self.fields["katastr"].initial = self.instance.katastr
 
@@ -401,5 +423,40 @@ class DeaktivovatSpolupraciForm(forms.Form):
         :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(DeaktivovatSpolupraciForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class EditSpolupraceProjektyForm(forms.ModelForm):
+    """Formulář pro editaci přiřazených projektů ke spolupráci."""
+
+    class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
+        model = UzivatelSpoluprace
+        fields = ("projekty",)
+
+    def __init__(self, *args, vedouci_organizace=None, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param vedouci_organizace: Organizace vedoucího spolupráce pro filtrování dostupných projektů.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
+        super().__init__(*args, **kwargs)
+        if vedouci_organizace is not None:
+            qs = Projekt.objects.filter(
+                typ_projektu=TYP_PROJEKTU_PRUZKUM_ID,
+                organizace=vedouci_organizace,
+                stav__in=[PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_UKONCENY_V_TERENU],
+            ).order_by("ident_cely")
+        else:
+            qs = Projekt.objects.none()
+        self.fields["projekty"].widget = AutocompleteSelect2Multiple()
+        self.fields["projekty"].queryset = qs
+        self.fields["projekty"].required = False
+        self.fields["projekty"].label = _("pas.forms.editSpolupraceProjekyForm.projekty.label")
+        self.fields["projekty"].help_text = _("pas.forms.editSpolupraceProjekyForm.projekty.tooltip")
         self.helper = FormHelper(self)
         self.helper.form_tag = False

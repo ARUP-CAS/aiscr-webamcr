@@ -259,6 +259,7 @@ Používá se pro bližší specifikaci akce či součásti view, pro které se 
 - ``spoluprace_aktivovat``
 - ``spoluprace_deaktivovat``
 - ``spoluprace_smazat``
+- ``spoluprace_edit_projekty``
 - ``pian_import_new``
 - ``pian_import_change``
 - ``akce_dj_zakladni``
@@ -278,4 +279,4 @@ Používá se pro bližší specifikaci akce či součásti view, pro které se 
 - ``vypis_ez``
 - ``historie_fedora``
 
-**Celkem:** 148 akcí
+**Celkem:** 149 akcí
