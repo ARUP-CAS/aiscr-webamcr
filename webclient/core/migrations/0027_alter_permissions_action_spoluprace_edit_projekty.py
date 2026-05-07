@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("core", "0024_alter_permissions_action"),
+        ("core", "0026_apirequestlog_ident_cely_null"),
     ]
 
     operations = [
