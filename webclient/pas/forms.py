@@ -260,7 +260,7 @@ class CreateSamostatnyNalezForm(OptimisticLockingMixin, forms.ModelForm):
         :param project_ident: Identifikátor ``project_ident`` používaný pro dohledání cílového záznamu.
         :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
         """
-        projekt_disabed = kwargs.pop("projekt_disabled", False)
+        projekt_disabled = kwargs.pop("projekt_disabled", False)
         super(CreateSamostatnyNalezForm, self).__init__(*args, **kwargs)
         self.fields["lokalizace"].widget.attrs["rows"] = 2
         self.fields["pocet"].widget.attrs["rows"] = 1
@@ -366,8 +366,8 @@ class CreateSamostatnyNalezForm(OptimisticLockingMixin, forms.ModelForm):
                     )
                 else:
                     self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""
-        if projekt_disabed:
-            self.fields["projekt"].disabled = projekt_disabed
+        if projekt_disabled:
+            self.fields["projekt"].disabled = projekt_disabled
         if self.instance is not None:
             self.fields["katastr"].initial = self.instance.katastr
 
