@@ -2060,7 +2060,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 self._validation_status(exc.import_errors),
             )
 
-         if not self._has_import_permissions(request.user, data):
+        if not self._has_import_permissions(request.user, data):
             # The denied user ID and referenced project are logged intentionally
             # for authorization troubleshooting and incident investigation.
             # They are audit/operational identifiers, not secrets.
