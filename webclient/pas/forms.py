@@ -115,7 +115,7 @@ class PotvrditNalezForm(forms.ModelForm):
         :param args: Parametr ``args`` se předává do volání ``__init__()``.
         :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
         :param predano_required: Parametr ``predano_required`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param predano_hidden: Parametr ``predano_hidden`` ovlivňuje větvení podmínek.
+        :param predano_hidden: Parametr ``predano_hidden`` ovlivňuje větvení podmínek; pokud je ``True``, pole ``predano_organizace`` se nezahrne do layoutu formuláře.
         :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(PotvrditNalezForm, self).__init__(*args, **kwargs)
@@ -148,7 +148,6 @@ class PotvrditNalezForm(forms.ModelForm):
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
         self.helper.form_tag = False
-        self.fields["predano_organizace"].disabled = True
         for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""

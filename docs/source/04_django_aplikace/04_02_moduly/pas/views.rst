@@ -94,6 +94,8 @@ Třídy
 
       Provádí operaci add ownership lookup.
 
+      Pro vlastnictví ``ours`` vrací podmínku pokrývající jak organizaci projektu (``projekt__organizace``), tak cílovou organizaci nálezu (``predano_organizace``).
+
       :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
       :param qs: Parametr ``qs`` slouží jako vstup pro logiku funkce ``add_ownership_lookup``.
 
@@ -300,6 +302,8 @@ Funkce
 
    Funkce pohledu pro editaci uložení samostatného nálezu pomocí modalu.
 
+   Pole ``predano_organizace`` je zobrazeno jako editovatelné; archeolog může zvolit cílovou organizaci (muzeum) nezávisle na organizaci projektu.
+
    :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``PotvrditNalezForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
@@ -326,6 +330,8 @@ Funkce
 .. py:function:: potvrdit(request, ident_cely)
 
    Funkce pohledu pro potvrzení samostatného nálezu pomocí modalu.
+
+   Při potvrzení zobrazí formulář včetně pole ``predano_organizace``, které archeolog může vyplnit výběrem cílové organizace. Hodnota není odvozena od organizace projektu, ale uložena přímo z formuláře.
 
    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``session``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.

@@ -120,7 +120,7 @@ Stejná organizace:
 * u **archeologického záznamu**, **dokumentu** či **exteního zdroje** (a jejich potomků) = uživatel (archeolog) s totožnou organizací, jako je organizace uživatele, který zapsal záznam
 * u **projektu** = uživatel (archeolog) s totožnou organizací, jako je v poli projekt.organizace
 * u **PIAN** = uživatel (archeolog) s totožnou organizací, jako je organizace uživatele, který PIAN vytvořil nebo zapsal archeologický záznam spojený s PIAN nebo patří k organizaci souvisejícího projektu
-* u **samostatného nálezu** = uživatel (archeolog) s totožnou organizací, jako je organizace u projektu, ke kterému je samostatný nález připojený
+* u **samostatného nálezu** = uživatel (archeolog) s totožnou organizací, jako je organizace u projektu, ke kterému je samostatný nález připojený (``projekt.organizace``), nebo s totožnou organizací jako je cílová organizace, které byl nález předán (``predano_organizace``)
 * u **spolupráce** = uživatel (archeolog) s totožnou organizací, jako je organizace dotčeného vedoucího
 * u **uživatele** = nepoužívá se
 
