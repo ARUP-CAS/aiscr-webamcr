@@ -75,7 +75,7 @@ Třídy
 
    .. py:method:: render()
 
-      Vyrenderuje hodnotu. v aplikaci.
+      Vyrenderuje hodnotu v aplikaci.
 
       :param record: Parametr ``record`` předává se do volání ``check_permissions()``, ``render()``, pracuje se s atributy ``id``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :param table: Parametr ``table`` předává se do volání ``hasattr()``, ``check_permissions()``, pracuje se s atributy ``request``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
