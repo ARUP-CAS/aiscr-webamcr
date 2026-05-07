@@ -281,7 +281,7 @@ projekt,mapa-projekty,,X,X,*,*,*,X,*,*,*,X,*,*,*,X,P (ours),*,*,
 projekt,oznamovatel/edit/<str:ident_cely>,,X,X,X,*,*,X,X,<P6 | >P6,<P6 | >P6,X,X,*,*,X,X,*,*,
 projekt,oznamovatel/edit/<str:ident_cely>,projekt_oznamovatel_edit,X,X,X,*,*,X,X,<P6 | >P6,<P6 | >P6,X,X,*,*,X,X,*,*,
 projekt,oznamovatel/zapsat/<str:ident_cely>,projekt_oznamovatel_zapsat,X,X,X,*,*,X,X,<P6 | >P6,<P6 | >P6,X,X,*,*,X,X,*,*,
-projekt,radek-tabulky-odkaz,,X,X,*,*,*,X,*,*,*,X,*,*,*,X,*,*,*,pouze typ průzkum
+projekt,radek-tabulky-odkaz,,X,X,*,*,*,X,P2-P4,*,*,X,P.ours,*,*,X,*,*,*,pouze typ průzkum
 projekt,smazat/<str:ident_cely>,projekt_smazat,X,X,X,*,*,X,X,P0,<P6 | >P6,X,X,*,*,X,X,*,*,
 projekt,stav/archivovat/<str:ident_cely>,projekt_archivovat,X,X,X,*,*,X,X,P5,P5,X,X,*,*,X,X,*,*,
 projekt,stav/navrhnout-ke-zruseni/<str:ident_cely>,projekt_navrh_ke_zruseni,X,X,*,*,*,X,P1 | P2,P1-P5,P1-P5,X,* | P.ours,*,*,X,*,*,*,
