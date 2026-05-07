@@ -537,6 +537,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             FedoraRequestType.DELETE_TOMBSTONE,
             FedoraRequestType.DELETE_LINK_CONTAINER,
             FedoraRequestType.DELETE_LINK_TOMBSTONE,
+            FedoraRequestType.CONNECT_DELETED_RECORD_3,
+            FedoraRequestType.CONNECT_DELETED_RECORD_4,
         ):
             auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
         else:

@@ -449,9 +449,17 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         """
         Vrací create org.
 
+        Zahrnuje organizaci projektu i cílovou organizaci nálezu (``predano_organizace``), pokud je nastavena.
+
         :return: Vrací n-tici.
         """
-        return (self.projekt.organizace,)
+        orgs = []
+        proj_org = self.projekt.organizace
+        if proj_org:
+            orgs.append(proj_org)
+        if self.predano_organizace and self.predano_organizace != proj_org:
+            orgs.append(self.predano_organizace)
+        return tuple(orgs)
 
     def redis_snapshot_id(self):
         """
@@ -573,6 +581,13 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         blank=True,
         null=True,
         related_name="spoluprace_historie",
+    )
+    projekty = models.ManyToManyField(
+        "projekt.Projekt",
+        blank=True,
+        related_name="spoluprace_projektu",
+        limit_choices_to={"typ_projektu": TYP_PROJEKTU_PRUZKUM_ID},
+        verbose_name=_("pas.models.uzivatelSpoluprace.projekty.label"),
     )
 
     def __init__(self, *args, **kwargs):
