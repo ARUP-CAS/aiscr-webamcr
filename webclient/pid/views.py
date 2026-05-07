@@ -171,9 +171,9 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
             if isinstance(first, str) and first.strip():
                 return first.strip()
         doi = item.get("DOI")
-        if isinstance(doi, str) and doi.strip():
+        if isinstance(doi, str):
             return doi.strip()
-        return str(doi).strip() if doi is not None else ""
+        return ""
 
     @classmethod
     async def _api_call_data_cite(cls, q):

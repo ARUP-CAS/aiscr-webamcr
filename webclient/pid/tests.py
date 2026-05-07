@@ -184,4 +184,6 @@ class DoiAutocompleteViewApiCallTest(TestCase):
 
         self.assertEqual(results, [])
         mock_dc_doi.assert_not_called()
+        mock_dc_title.assert_not_called()
+        mock_cr_title.assert_not_called()
         mock_exists.assert_not_called()
