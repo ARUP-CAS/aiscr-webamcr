@@ -3,7 +3,7 @@ import asyncio
 import concurrent.futures
 import re
 import unicodedata
-from urllib.parse import quote_plus
+from urllib.parse import quote, quote_plus
 
 import httpx
 import requests
@@ -75,12 +75,14 @@ class ApiView(autocomplete.Select2ListView):
         """
         Vrací JSON odpověď s autocomplete výsledky.
 
+        Při dotazu tvořeném jen mezerami vrátí prázdný seznam výsledků.
+
         :param request: HTTP požadavek ze strany klienta.
         :param args: Poziční argumenty z URL.
         :param kwargs: Pojmenované argumenty z URL.
         :return: JSON odpověď s výsledky.
         """
-        if self.q:
+        if self.q and str(self.q).strip():
             results = self.get_list()
             results = self.autocomplete_results(results)
             return JsonResponse({"results": results})
@@ -110,9 +112,68 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
     API_URL = settings.DATACITE_URL
     CACHE_PREFIX = "DOI"
-    CROSSREF_DOI_REGEX = re.compile(r"^10\.\d{4,9}/.*$", re.IGNORECASE)
+    # Přísný tvar: prefix 10., registrant 4–9 číslic, lomítko, sufix bez bílých znaků (\S+).
+    # Nevyhovují např. některé starší DOI s kratším registrantem — ty jdou jen přes paralelní hledání.
+    CROSSREF_DOI_REGEX = re.compile(r"^10\.\d{4,9}/\S+$", re.IGNORECASE)
     DATACITE_LUCENE_SPECIAL_CHARS = frozenset(r'+-=&|><!(){}[]^"~*?:\/')
     HTTP_TIMEOUT = 5
+
+    @staticmethod
+    def _datacite_token_for_quoted_lucene(token: str) -> str:
+        """
+        Escapuje znaky v tokenu vkládaném do Lucene fráze v uvozovkách.
+
+        :param token: Část uživatelského dotazu.
+        :return: Řetězec bezpečný pro vložení do ``"...*token*..."``.
+        """
+        return token.replace("\\", "\\\\").replace('"', '\\"')
+
+    @classmethod
+    def _datacite_record_label(cls, record) -> str:
+        """
+        Vrátí zobrazený název záznamu DataCite nebo ID záznamu.
+
+        Ošetřuje záznamy bez ``attributes``, bez ``titles`` nebo s prázdným seznamem titulků
+        a nekanonické typy polí v odpovědi API.
+
+        :param record: Položka z pole ``data`` odpovědi API.
+        :return: Titulek, případně DOI z ``id``; prázdný řetězec, pokud nelze nic odvodit.
+        """
+        if not isinstance(record, dict):
+            return ""
+        attrs = record.get("attributes")
+        if not isinstance(attrs, dict):
+            attrs = {}
+        titles = attrs.get("titles")
+        if not isinstance(titles, list):
+            titles = []
+        title = None
+        if titles:
+            first = titles[0]
+            if isinstance(first, dict):
+                title = first.get("title")
+        doi_id = record.get("id")
+        return title or doi_id or ""
+
+    @classmethod
+    def _crossref_item_display_title(cls, item) -> str:
+        """
+        Vrátí zobrazený název z položky odpovědi CrossRef ``/works`` (objekt v ``items``).
+
+        :param item: Slovník s poli ``title`` a ``DOI`` dle API (DOI se v odpovědi předpokládá vždy).
+        :return: První textový titulek, jinak řetězec DOI.
+        """
+        if not isinstance(item, dict):
+            return ""
+        raw = item.get("title")
+        if isinstance(raw, list) and raw:
+            first = raw[0]
+            if isinstance(first, str) and first.strip():
+                return first.strip()
+        doi = item.get("DOI")
+        if isinstance(doi, str) and doi.strip():
+            return doi.strip()
+        return str(doi).strip() if doi is not None else ""
 
     @classmethod
     async def _api_call_data_cite(cls, q):
@@ -123,6 +184,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         Lucene (např. ``-``, ``:``, ``(``) jsou obaleny uvozovkami, aby byly interpretovány
         doslovně. Ostatní tokeny jsou ponechány bez uvozovek. Tokeny jsou spojeny operátorem
         ``AND``, takže všechna slova musí být přítomna v názvu, ale nemusí být sousední.
+        U každé položky ve ``data`` se předpokládá neprázdné pole ``id`` (DOI).
 
         :param q: Vyhledávací dotaz (název nebo část názvu publikace).
         :return: Seznam [DOI, název] párů.
@@ -130,7 +192,8 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         clauses = []
         for token in q.split():
             if any(c in cls.DATACITE_LUCENE_SPECIAL_CHARS for c in token):
-                clauses.append(f'titles.title:"*{token}*"')
+                safe = cls._datacite_token_for_quoted_lucene(token)
+                clauses.append(f'titles.title:"*{safe}*"')
             else:
                 clauses.append(f"titles.title:*{token}*")
         if not clauses:
@@ -139,20 +202,30 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
             "query": " AND ".join(clauses),
         }
         results = []
-        async with httpx.AsyncClient(timeout=cls.HTTP_TIMEOUT) as client:
-            response = await client.get(cls.API_URL, params=params)
+        try:
+            async with httpx.AsyncClient(timeout=cls.HTTP_TIMEOUT) as client:
+                response = await client.get(cls.API_URL, params=params)
+        except httpx.RequestError:
+            return []
         if response.status_code == 200:
-            data = response.json().get("data", [])
+            try:
+                data = response.json().get("data", [])
+            except ValueError:
+                return []
             for record in data:
-                title = record.get("attributes").get("titles")[0].get("title") or record.get("id")
-                id = record.get("id")
-                results.append([id, f"{title} ({id})"])
+                if not isinstance(record, dict):
+                    continue
+                doi_id = record.get("id")
+                label = cls._datacite_record_label(record) or doi_id
+                results.append([doi_id, f"{label} ({doi_id})"])
         return results
 
     @classmethod
     async def _api_call_data_cite_doi(cls, q):
         """
         Vyhledá DOI v DataCite API pomocí přímého DOI vzoru.
+
+        U každé položky ve ``data`` se předpokládá neprázdné pole ``id`` (DOI).
 
         :param q: Vyhledávací dotaz (DOI nebo část DOI).
         :return: Seznam [DOI, název] párů.
@@ -163,14 +236,22 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
             "query": f"doi:*{q.upper()}*",
         }
         results = []
-        async with httpx.AsyncClient(timeout=cls.HTTP_TIMEOUT) as client:
-            response = await client.get(cls.API_URL, params=params)
+        try:
+            async with httpx.AsyncClient(timeout=cls.HTTP_TIMEOUT) as client:
+                response = await client.get(cls.API_URL, params=params)
+        except httpx.RequestError:
+            return []
         if response.status_code == 200:
-            data = response.json().get("data", [])
+            try:
+                data = response.json().get("data", [])
+            except ValueError:
+                return []
             for record in data:
-                title = record.get("attributes").get("titles")[0].get("title") or record.get("id")
-                id = record.get("id")
-                results.append([id, f"{title} ({id})"])
+                if not isinstance(record, dict):
+                    continue
+                doi_id = record.get("id")
+                label = cls._datacite_record_label(record) or doi_id
+                results.append([doi_id, f"{label} ({doi_id})"])
         return results
 
     @classmethod
@@ -178,31 +259,47 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         """
         Vyhledá DOI v CrossRef API pomocí přímého DOI.
 
+        U objektu ``message`` (jedna práce i položky ve výsledném seznamu) se předpokládá vždy pole ``DOI``.
+
         :param q: Vyhledávací dotaz (DOI).
         :return: Seznam [DOI, název] párů.
         """
-        base_url = f"https://api.crossref.org/works/{q}"
-        response = requests.get(base_url, timeout=cls.HTTP_TIMEOUT)
-        if response.status_code == 200:
-            response = response.json()
-            if response.get("message").get("title"):
-                title = response.get("message").get("title")[0]
-            else:
-                title = response.get("message").get("DOI")
-            id = response.get("message").get("DOI")
-            return [[id, f"{title} ({id})"]]
-        else:
-            base_url = f"https://api.crossref.org/works?query.title={quote_plus(q)}&sort=relevance&rows=50"
+        q = (q or "").strip()
+        if not q:
+            return []
+        doi_path = quote(q, safe="")
+        base_url = f"https://api.crossref.org/works/{doi_path}"
+        try:
             response = requests.get(base_url, timeout=cls.HTTP_TIMEOUT)
+        except requests.RequestException:
+            response = None
+        if response is not None and response.status_code == 200:
+            try:
+                payload = response.json()
+            except ValueError:
+                return []
+            msg = payload.get("message") or {}
+            doi_id = msg.get("DOI")
+            title = cls._crossref_item_display_title(msg) or doi_id
+            return [[doi_id, f"{title} ({doi_id})"]]
+        else:
+            list_url = f"https://api.crossref.org/works?query.title={quote_plus(q)}&sort=relevance&rows=50"
+            try:
+                response = requests.get(list_url, timeout=cls.HTTP_TIMEOUT)
+            except requests.RequestException:
+                return []
             results = []
             if response.status_code == 200:
-                response = response.json()
-                for item in response.get("message", {}).get("items", []):
-                    if item.get("title"):
-                        title = item["title"][0]
-                    else:
-                        title = item.get("id")
-                    results.append([item.get("DOI"), f"{title} ({item.get('DOI')})"])
+                try:
+                    payload = response.json()
+                except ValueError:
+                    return []
+                for item in payload.get("message", {}).get("items", []):
+                    if not isinstance(item, dict):
+                        continue
+                    doi = item.get("DOI")
+                    label = cls._crossref_item_display_title(item) or doi
+                    results.append([doi, f"{label} ({doi})"])
                 return results
         return []
 
@@ -211,18 +308,30 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         """
         Vyhledá DOI v CrossRef API pomocí názvu publikace.
 
+        U položek v ``message.items`` se předpokládá vždy pole ``DOI``.
+
         :param q: Vyhledávací dotaz (název publikace).
         :return: Seznam [DOI, název] párů.
         """
         params = {"query.title": q}
         results = []
-        async with httpx.AsyncClient(timeout=cls.HTTP_TIMEOUT) as client:
-            response = await client.get("https://api.crossref.org/works", params=params)
+        try:
+            async with httpx.AsyncClient(timeout=cls.HTTP_TIMEOUT) as client:
+                response = await client.get("https://api.crossref.org/works", params=params)
+        except httpx.RequestError:
+            return []
         if response.status_code == 200:
-            for record in response.json().get("message").get("items", []):
-                title = record.get("title")[0] if record.get("title") else record.get("id")
-                id = record.get("DOI")
-                results.append([id, f"{title} ({id})"])
+            try:
+                body = response.json()
+            except ValueError:
+                return []
+            payload = body.get("message") or {}
+            for record in payload.get("items", []):
+                if not isinstance(record, dict):
+                    continue
+                doi = record.get("DOI")
+                label = cls._crossref_item_display_title(record) or doi
+                results.append([doi, f"{label} ({doi})"])
         return results
 
     @classmethod
@@ -230,13 +339,20 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         """
         Ověří existenci DOI pomocí HTTP HEAD požadavku.
 
-        :param doi: DOI identifikátor.
+        :param doi: Řetězec DOI předaný z ``api_call`` po shodě vstupu s ``CROSSREF_DOI_REGEX``.
         :return: Seznam [DOI, DOI] pokud existuje, jinak prázdný seznam.
         """
-        url = f"https://doi.org/{doi}"
-        resp = requests.head(url, allow_redirects=True, timeout=cls.HTTP_TIMEOUT)
+        doi_clean = (doi or "").strip()
+        if not doi_clean:
+            return []
+        path = quote(doi_clean, safe="")
+        url = f"https://doi.org/{path}"
+        try:
+            resp = requests.head(url, allow_redirects=True, timeout=cls.HTTP_TIMEOUT)
+        except requests.RequestException:
+            return []
         if resp.status_code < 400:
-            return [[doi, doi]]
+            return [[doi_clean, doi_clean]]
         else:
             return []
 
@@ -245,10 +361,18 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         """
         Vyhledá DOI v CrossRef a DataCite API.
 
+        Dotaz je na začátku ořezán funkcí ``str.strip()``; prázdný řetězec vrátí prázdný seznam
+        bez volání externích služeb. Ověření existence přes ``doi.org`` (``_doi_item_exists``)
+        proběhne jen pro vstup odpovídající ``CROSSREF_DOI_REGEX``.
+
         :param q: Vyhledávací dotaz.
-        :param use_cache: Zda používat cache.
+        :param use_cache: Parametr se kvůli shodné signatuře s ``ApiView.api_call`` předává z
+            ``PidAutocompleteField``, ale u této třídy se **nepoužívá** (mezipaměť Redis se nečte ani neukládá).
         :return: Seznam [DOI, název] párů.
         """
+        q = (q or "").strip()
+        if not q:
+            return []
         if cls.CROSSREF_DOI_REGEX.match(q):
             results = cls._api_call_cross_ref_doi(q)
         else:
@@ -272,7 +396,9 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
             else:
                 doi_results, title_results, crossref_results = asyncio.run(_fetch_all())
             results = doi_results + title_results + crossref_results
-        if not any([i for i in results if i[0] == str(q)]):
+        if cls.CROSSREF_DOI_REGEX.match(q) and not any(
+            i and len(i) > 0 and i[0] is not None and str(i[0]).lower() == q.lower() for i in results
+        ):
             results = cls._doi_item_exists(q) + results
         seen = set()
         results = [r for r in results if not (r[0] in seen or seen.add(r[0]))]
