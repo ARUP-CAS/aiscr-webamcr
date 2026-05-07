@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<amcr:amcr xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:samostatny_nalez>
+    <amcr:neexistujici_pole>x</amcr:neexistujici_pole>
+  </amcr:samostatny_nalez>
+</amcr:amcr>

@@ -139,6 +139,8 @@ Třídy
 
       Vrací create org.
 
+      Zahrnuje organizaci projektu i cílovou organizaci nálezu (``predano_organizace``), pokud je nastavena.
+
       :return: Vrací n-tici.
 
    .. py:method:: redis_snapshot_id()

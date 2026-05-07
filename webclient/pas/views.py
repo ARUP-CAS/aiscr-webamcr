@@ -61,6 +61,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
@@ -71,13 +72,19 @@ from heslar.hesla_dynamicka import PRISTUPNOST_ARCHEOLOG_ID, TYP_PROJEKTU_PRUZKU
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from pas.filters import SamostatnyNalezFilter, UzivatelSpolupraceFilter
-from pas.forms import CreateSamostatnyNalezForm, CreateZadostForm, DeaktivovatSpolupraciForm, PotvrditNalezForm
+from pas.forms import (
+    CreateSamostatnyNalezForm,
+    CreateZadostForm,
+    DeaktivovatSpolupraciForm,
+    EditSpolupraceProjektyForm,
+    PotvrditNalezForm,
+)
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
 from pid.exceptions import DoiConnectionError, DoiWriteError
 from projekt.models import Projekt
 from services.mailer import Mailer
-from uzivatel.models import Organizace, User
+from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +175,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
 
         :return: Výstup funkce odpovídající implementované logice.
         """
-        copy_source = SamostatnyNalez.objects.get(ident_cely=self.kwargs["ident_cely"])
+        copy_source = get_object_or_404(SamostatnyNalez, ident_cely=self.kwargs["ident_cely"])
         copy_source.id = None
         copy_source.soubory = None
         copy_source.historie = None
@@ -246,7 +253,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         sn.create_transaction(self.request.user, ZAZNAM_USPESNE_VYTVOREN)
         sn.stav = SN_ZAPSANY
         sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
-        sn.predano_organizace = sn.projekt.organizace
+        sn.predano_organizace = None
         sn.geom_system = form_coor.data.get("coordinate_system")
 
         if geom is not None:
@@ -485,6 +492,8 @@ def edit_ulozeni(request, ident_cely):
     """
     Funkce pohledu pro editaci uložení samostatného nálezu pomocí modalu.
 
+    Pole ``predano_organizace`` je zobrazeno jako editovatelné; archeolog může zvolit cílovou organizaci (muzeum) nezávisle na organizaci projektu.
+
     :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``PotvrditNalezForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
     :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
@@ -503,7 +512,6 @@ def edit_ulozeni(request, ident_cely):
             logger.debug("pas.views.edit_ulozeni.form_valid")
             sn: SamostatnyNalez = form.save(commit=False)
             sn.create_transaction(request.user)
-            sn.predano_organizace = get_object_or_404(Organizace, id=sn.projekt.organizace_id)
             sn.close_active_transaction_when_finished = True
             sn.save()
             if form.changed_data:
@@ -522,7 +530,7 @@ def edit_ulozeni(request, ident_cely):
             instance=sn,
             predano_required=predano_required,
             initial={"old_stav": sn.stav},
-            predano_hidden=True,
+            predano_hidden=False,
             prefix="edit-ulozeni",
         )
     context = {
@@ -663,6 +671,8 @@ def potvrdit(request, ident_cely):
     """
     Funkce pohledu pro potvrzení samostatného nálezu pomocí modalu.
 
+    Při potvrzení zobrazí formulář včetně pole ``predano_organizace``, které archeolog může vyplnit výběrem cílové organizace. Hodnota není odvozena od organizace projektu, ale uložena přímo z formuláře.
+
     :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``session``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
     :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
@@ -695,14 +705,13 @@ def potvrdit(request, ident_cely):
             form_obj: SamostatnyNalez = form.save(commit=False)
             form_obj.create_transaction(request.user, SAMOSTATNY_NALEZ_POTVRZEN)
             form_obj.set_potvrzeny(request.user)
-            form_obj.predano_organizace = get_object_or_404(Organizace, id=sn.projekt.organizace_id)
             form_obj.close_active_transaction_when_finished = True
             form_obj.save()
             return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
         else:
             logger.info("pas.views.potvrdit.form_invalid", extra={"error": form.errors})
     else:
-        form = PotvrditNalezForm(instance=sn, initial={"old_stav": sn.stav}, predano_hidden=True, prefix="potvrdit")
+        form = PotvrditNalezForm(instance=sn, initial={"old_stav": sn.stav}, predano_hidden=False, prefix="potvrdit")
     context = {
         "object": sn,
         "form": form,
@@ -768,7 +777,8 @@ def archivovat(request, ident_cely):
         except (DoiConnectionError, requests.RequestException) as err:
             logger.warning(
                 "pas.views.archivovat.igsn_exists_check_failed",
-                extra={"ident_cely": sn.ident_cely, "error": str(err)},
+                extra={"ident_cely": sn.ident_cely, "error": err},
+                exc_info=True,
             )
             igsn_confirmation = False
         form_check = CheckStavNotChangedForm(require_confirmation=igsn_confirmation, initial={"old_stav": sn.stav})
@@ -790,6 +800,8 @@ class PasPermissionFilterMixin(PermissionFilterMixin):
         """
         Provádí operaci add ownership lookup.
 
+        Pro vlastnictví ``ours`` vrací podmínku pokrývající jak organizaci projektu (``projekt__organizace``), tak cílovou organizaci nálezu (``predano_organizace``).
+
         :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
         :param qs: Parametr ``qs`` slouží jako vstup pro logiku funkce ``add_ownership_lookup``.
 
@@ -798,7 +810,9 @@ class PasPermissionFilterMixin(PermissionFilterMixin):
         filter_historie = {"uzivatel": self.request.user}
         filtered_my = Historie.objects.filter(**filter_historie)
         if ownership == p.ownershipChoices.our:
-            return Q(**{"projekt__organizace": self.request.user.organizace})
+            return Q(projekt__organizace=self.request.user.organizace) | Q(
+                predano_organizace=self.request.user.organizace
+            )
         else:
             return Q(**{"historie_zapsat__in": filtered_my})
 
@@ -1096,7 +1110,7 @@ class UzivatelSpolupraceListView(SearchListView):
             "vedouci__organizace",
             "historie",
             "spolupracovnik__organizace",
-        )
+        ).prefetch_related("projekty")
         return self.check_filter_permission(qs).order_by("id")
 
     def add_ownership_lookup(self, ownership, qs=None):
@@ -1143,13 +1157,14 @@ class UzivatelSpolupraceListView(SearchListView):
 
     def get_table_kwargs(self):
         """
-        Vrací table kwargs.
+        Vrací table kwargs s případným vyloučením sloupce ``smazani`` u neadminů a předáním uživatele.
 
         :return: Vrací slovník.
         """
+        kwargs: dict = {"user": self.request.user}
         if self.request.user.hlavni_role.id != ROLE_ADMIN_ID:
-            return {"exclude": ("smazani",)}
-        return {}
+            kwargs["exclude"] = ("smazani",)
+        return kwargs
 
 
 @login_required
@@ -1373,6 +1388,85 @@ def smazat_spolupraci(request, pk):
             "button": _("pas.views.smazatSpolupraci.submitButton.text"),
         }
     return render(request, "core/transakce_modal.html", context)
+
+
+class EditSpolupraceProjektyView(LoginRequiredMixin, TemplateView):
+    """Pohled pro editaci projektů přiřazených ke spolupráci v modálním dialogu."""
+
+    template_name = "core/transakce_table_modal.html"
+
+    def get_object(self):
+        """Vrací objekt spolupráce.
+
+        :return: Vrací výsledek volání ``get_object_or_404()``.
+        """
+        return get_object_or_404(UzivatelSpoluprace, id=self.kwargs["pk"])
+
+    def get_context_data(self, *args, **kwargs):
+        """
+        Vrací context data.
+
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get_context_data``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+
+            :return: Vrací proměnná ``context``.
+        """
+        obj: UzivatelSpoluprace = self.get_object()
+        form = EditSpolupraceProjektyForm(instance=obj, vedouci_organizace=obj.vedouci.organizace)
+        return {
+            "object": obj,
+            "title": _("pas.views.editSpolupraceProjeky.title"),
+            "id_tag": "edit-spoluprace-projekty-form",
+            "button": _("pas.views.editSpolupraceProjeky.submitButton.text"),
+            "form": form,
+            "selected_projekty": obj.projekty.all(),
+        }
+
+    def get(self, request, *args, **kwargs):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` předává se do volání ``add_message()``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
+        """
+        obj: UzivatelSpoluprace = self.get_object()
+        if not check_permissions(p.actionChoices.spoluprace_edit_projekty, request.user, obj.id):
+            messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+            return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
+        context = self.get_context_data()
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Obsluhuje HTTP metodu POST.
+
+        :param request: Parametr ``request`` předává se do volání ``EditSpolupraceProjektyForm()``, pracuje se s atributy ``POST``, ``user``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``.
+        """
+        obj: UzivatelSpoluprace = self.get_object()
+        if not check_permissions(p.actionChoices.spoluprace_edit_projekty, request.user, obj.id):
+            messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+            return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
+        form = EditSpolupraceProjektyForm(request.POST, instance=obj, vedouci_organizace=obj.vedouci.organizace)
+        if form.is_valid():
+            form.save()
+            messages.add_message(request, messages.SUCCESS, _("pas.views.editSpolupraceProjeky.success"))
+        else:
+            messages.add_message(request, messages.ERROR, FORM_NOT_VALID)
+        referer = request.META.get("HTTP_REFERER", "")
+        if referer and url_has_allowed_host_and_scheme(
+            referer, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+        ):
+            redirect_url = referer
+        else:
+            redirect_url = reverse("pas:spoluprace_list")
+        return JsonResponse({"redirect": redirect_url})
 
 
 def get_history_dates(historie_vazby, request_user):

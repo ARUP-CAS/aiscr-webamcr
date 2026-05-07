@@ -3,6 +3,7 @@ from typing import Union
 
 from core.constants import (
     ADMIN_UPDATE,
+    AKTUALIZACE_SN,
     ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE,
     ARCHIVACE_AZ,
     ARCHIVACE_DOK,
@@ -103,6 +104,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         (POTVRZENI_SN, _("historie.models.historieStav.sn.SN23")),
         (ARCHIVACE_SN, _("historie.models.historieStav.sn.SN34")),
         (VRACENI_SN, _("historie.models.historieStav.sn.SN-1")),
+        (AKTUALIZACE_SN, _("historie.models.historieStav.sn.SN-UPD")),
         # Uživatel.
         (ZMENA_HLAVNI_ROLE, _("historie.models.historieStav.uzivatel.HR")),
         (ZMENA_UDAJU_ADMIN, _("historie.models.historieStav.uzivatel.ZUA")),

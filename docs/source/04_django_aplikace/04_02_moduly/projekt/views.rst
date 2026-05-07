@@ -166,9 +166,13 @@ Třídy
 
       Vrací výsledek operace.
 
-      :param request: Parametr ``request`` předává se do volání ``get()``, pracuje se s atributy ``GET``.
+      Archeologové vidí pouze projekty průzkumového typu ze své organizace
+      v aktivním stavu (zahájený nebo ukončený v terénu).
+
+      :param request: Parametr ``request`` předává se do volání ``get()``, pracuje se s atributy ``GET``, ``user``.
 
       :return: Vrací výsledek volání ``HttpResponse()``.
+      :raises PermissionDenied: Pokud archeolog žádá projekt mimo svou organizaci nebo mimo povolené stavy.
 
 
 .. py:class:: UpravitDatumOznameniView

@@ -52,7 +52,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Licence
      - Odkaz
    * - Django
-     - 5.2.13
+     - 5.2.14
      - BSD-3-Clause
      - https://www.djangoproject.com/
    * - Jinja2
@@ -480,7 +480,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.2.2
+     - 1.3.0
      - MIT License
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
@@ -512,7 +512,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/redis/redis-py
    * - reportlab
-     - 4.4.10
+     - 4.5.0
      - BSD License
      - https://www.reportlab.com/
    * - requests
@@ -644,7 +644,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU General Public License v2 or later (GPLv2+)
      - https://uwsgi-docs.readthedocs.io/en/latest/
    * - urllib3
-     - 2.6.3
+     - 2.7.0
      - MIT
      - https://github.com/urllib3/urllib3/blob/main/CHANGES.rst
    * - vine

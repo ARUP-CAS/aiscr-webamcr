@@ -37,6 +37,13 @@ from xml_generator.models import ModelWithMetadata
 
 from .connectors import ClamdConnectionError, ClamdNetworkSocket, ClamdResponseError
 from .constants import (
+    API_REQUEST_LOG_STATUS_FAILURE,
+    API_REQUEST_LOG_STATUS_PROCESSING,
+    API_REQUEST_LOG_STATUS_RECEIVED,
+    API_REQUEST_LOG_STATUS_SUCCESS,
+    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH,
+    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_FOTOGRAFIE_UPLOAD,
+    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT,
     DOKUMENT_RELATION_TYPE,
     NAHRANI_SBR,
     PROJEKT_RELATION_TYPE,
@@ -567,7 +574,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             mime = set()
             mime.add(mime_str)
         mime: set
-        if "soubor/nahrat/pas/" in source_url:
+        if "soubor/nahrat/pas/" in source_url or "pas/api/nalez/" in source_url:
             for item in mime:
                 item: str
                 if not item.startswith("image/"):
@@ -1052,6 +1059,9 @@ class Permissions(models.Model):
             "core.models.permissions.actionChoices.spoluprace_deaktivovat"
         )
         spoluprace_smazat = "spoluprace_smazat", _("core.models.permissions.actionChoices.spoluprace_smazat")
+        spoluprace_edit_projekty = "spoluprace_edit_projekty", _(
+            "core.models.permissions.actionChoices.spoluprace_edit_projekty"
+        )
         pian_import_new = "pian_import_new", "core.models.permissions.actionChoices.pian_import_new"
         pian_import_change = "pian_import_change", "core.models.permissions.actionChoices.pian_import_change"
         akce_dj_zakladni = "akce_dj_zakladni", "core.models.permissions.actionChoices.akce_dj_zakladni"
@@ -1136,13 +1146,15 @@ class Permissions(models.Model):
         verbose_name = _("core.model.permissions.modelTitle.label")
         verbose_name_plural = _("core.model.permissions.modelTitles.label")
 
-    def check_concrete_permission(self, user, ident=None, typ=None):
+    def check_concrete_permission(self, user, ident=None, typ=None, skip_status=False):
         """
         Ověří, zda má uživatel konkrétní oprávnění na daný záznam a typ.
 
         :param user: Uživatel, pro kterého se kontroluje oprávnění.
         :param ident: Identifikátor archeologického záznamu (např. C-XX-YYYYNNNNN).
         :param typ: Typ objektu, pro který se kontroluje oprávnění (např. projekt, lokalita).
+        :param skip_status: Pokud ``True``, přeskočí stavovou podmínku oprávnění a vyhodnotí pouze
+            základ, vlastnictví a přístupnost.
         :return: ``True`` pokud má uživatel oprávnění, ``False`` jinak.
         """
         self.typ = typ
@@ -1155,7 +1167,10 @@ class Permissions(models.Model):
             logger.debug("core.model.Permissions.check_concrete_permission.base_false")
             return False
         if self.ident is not None:
-            perm_check = status_check = self.check_status()
+            if skip_status:
+                perm_check = status_check = True
+            else:
+                perm_check = status_check = self.check_status()
             if perm_check and not self.check_ownership(self.ownership):
                 logger.debug("core.model.Permissions.check_concrete_permission.ownership_false")
                 perm_check = False
@@ -1334,13 +1349,14 @@ class Permissions(models.Model):
                 return False
 
 
-def check_permissions(action, user, ident=None):
+def check_permissions(action, user, ident=None, skip_status=False):
     """
     Ověří permissions. v aplikaci.
 
     :param action: Identifikátor akce, která se má provést.
     :param user: Parametr ``user`` se předává do volání ``filter()``, ``append()``, pracuje se s atributy ``hlavni_role``.
     :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
+    :param skip_status: Pokud ``True``, přeskočí stavovou podmínku při vyhodnocení konkrétního oprávnění.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
     """
@@ -1353,7 +1369,7 @@ def check_permissions(action, user, ident=None):
     if permission_set.count() > 0:
         tested = []
         for concrete_permission in permission_set:
-            tested.append(concrete_permission.check_concrete_permission(user, ident))
+            tested.append(concrete_permission.check_concrete_permission(user, ident, skip_status=skip_status))
         if not any(tested):
             return False
     return True
@@ -1370,3 +1386,97 @@ class PermissionsSkip(models.Model):
 
         verbose_name = _("core.model.permissionsSkip.modelTitle.label")
         verbose_name_plural = _("core.model.permissionsSkip.modelTitles.label")
+
+
+class ApiRequestLog(models.Model):
+    """Zaznamenává každý požadavek na API včetně stavu a výsledku."""
+
+    STATUS_CHOICES = (
+        (API_REQUEST_LOG_STATUS_RECEIVED, _("core.model.apiRequestLog.status.received")),
+        (API_REQUEST_LOG_STATUS_PROCESSING, _("core.model.apiRequestLog.status.processing")),
+        (API_REQUEST_LOG_STATUS_SUCCESS, _("core.model.apiRequestLog.status.success")),
+        (API_REQUEST_LOG_STATUS_FAILURE, _("core.model.apiRequestLog.status.failure")),
+    )
+
+    REQUEST_TARGET_CHOICES = (
+        (
+            API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT,
+            _("core.model.apiRequestLog.requestTarget.samostatnyNalezXmlImport"),
+        ),
+        (
+            API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH,
+            _("core.model.apiRequestLog.requestTarget.samostatnyNalezEvidencniCisloPatch"),
+        ),
+        (
+            API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_FOTOGRAFIE_UPLOAD,
+            _("core.model.apiRequestLog.requestTarget.samostatnyNalezFotografieUpload"),
+        ),
+    )
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name=_("core.model.apiRequestLog.user"),
+    )
+    client_ip = models.GenericIPAddressField(
+        verbose_name=_("core.model.apiRequestLog.clientIp"),
+    )
+    received_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_("core.model.apiRequestLog.receivedAt"),
+    )
+    finished_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("core.model.apiRequestLog.finishedAt"),
+    )
+    request_target = models.CharField(
+        max_length=64,
+        choices=REQUEST_TARGET_CHOICES,
+        verbose_name=_("core.model.apiRequestLog.requestTarget"),
+    )
+    filename = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name=_("core.model.apiRequestLog.filename"),
+    )
+    file_size = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_("core.model.apiRequestLog.fileSize"),
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=STATUS_CHOICES,
+        default=API_REQUEST_LOG_STATUS_RECEIVED,
+        verbose_name=_("core.model.apiRequestLog.status"),
+    )
+    ident_cely = models.CharField(
+        max_length=64,
+        blank=True,
+        null=True,
+        verbose_name=_("core.model.apiRequestLog.identCely"),
+    )
+    samostatny_nalez = models.ForeignKey(
+        "pas.SamostatnyNalez",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name=_("core.model.apiRequestLog.samostatnyNalez"),
+    )
+    errors = models.JSONField(
+        null=True,
+        blank=True,
+        verbose_name=_("core.model.apiRequestLog.errors"),
+    )
+
+    class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
+        db_table = "api_log_pozadavku"
+        ordering = ["-received_at"]
+        verbose_name = _("core.model.apiRequestLog.modelTitle.label")
+        verbose_name_plural = _("core.model.apiRequestLog.modelTitles.label")
