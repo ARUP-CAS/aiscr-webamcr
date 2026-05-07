@@ -1,0 +1,10 @@
+[bootstrap]
+schema_in_use = "spec-driven"
+last_aligned_at = "2026-05-06"
+last_aligned_hub_revision = "5e329c8e15201be35353cd893f79cd612a3722e0"
+mode = "bootstrap-mode-align + bootstrap-mode-introduce-openspec"
+target_branch = "DN-agents-setup-review"
+
+[bootstrap.notes]
+summary = "OpenSpec adopted and root governance aligned for tracked hub-synchronized vendor surfaces. Sync apply remains separate and approval-gated."
+

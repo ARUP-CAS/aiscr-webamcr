@@ -1,0 +1,19 @@
+# aiscr:canonical=.agents/canonical_configs/workflow_skills/aiscr-plans-validation.md
+description = "Run the aiscr-management validation suite (plan schema, doc discovery, link check). Read-only; reports findings without modifying files."
+prompt = """
+<!-- aiscr:canonical=.agents/canonical_configs/workflow_skills/aiscr-plans-validation.md -->
+
+<!-- aiscr:stop-anchor -->
+**Entry scope**
+
+- Stay in this `.gemini/commands/aiscr/` surface and its same-vendor pointers first.
+- Do not open parallel vendor trees by default just in case.
+- Cross into another vendor tree only for explicit parity checks, generator work, or governance maintenance.
+
+Run the aiscr-management validation suite (plan schema, doc discovery, link check). Read-only; reports findings without modifying files.
+
+**Skill body (authoritative):** `.gemini/skills/aiscr-plans-validation/SKILL.md` — load that file for the full workflow body, guardrails, and verification.
+
+`.agents/plans/plans-validation.plan.md`
+Run python .agents/scripts/run_validation_all.py (or individual scripts) per plan; no sync without approval.
+"""
