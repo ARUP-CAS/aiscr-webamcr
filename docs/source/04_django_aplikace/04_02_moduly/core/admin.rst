@@ -122,6 +122,39 @@ Třídy
       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
 
 
+.. py:class:: ApiRequestLogAdmin
+
+   Třída admin panelu pro zobrazení logů API požadavků.
+
+   **Metody:**
+
+   .. py:method:: has_add_permission()
+
+      Zakáže ruční vytváření záznamů — logy se vytvářejí pouze automaticky.
+
+      :param request: HTTP požadavek od klienta.
+
+      :return: Vždy ``False``.
+
+   .. py:method:: has_change_permission()
+
+      Zakáže editaci záznamů — logy jsou pouze pro čtení.
+
+      :param request: HTTP požadavek od klienta.
+      :param obj: Volitelný objekt záznamu.
+
+      :return: Vždy ``False``.
+
+   .. py:method:: has_delete_permission()
+
+      Zakáže mazání záznamů — logy jsou auditní záznamy určené k archivaci.
+
+      :param request: HTTP požadavek od klienta.
+      :param obj: Volitelný objekt záznamu.
+
+      :return: Vždy ``False``.
+
+
 .. py:class:: PermissionSkipAdmin
 
    Třída admin panelu pro zobrazení a správu proskakovani oprávnení.
