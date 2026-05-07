@@ -19,3 +19,17 @@ class CustomAdminSettings(ExportModelOperationsMixin("custom_admin_settings"), m
 
         verbose_name = _("core.model.CustomAdminSettings.modelTitle.label")
         verbose_name_plural = _("core.model.CustomAdminSettings.modelTitles.label")
+
+    def clean(self):
+        """
+        Ověří konzistenci hodnoty nastavení před validací formuláře a uložením.
+
+        Pro skupinu ``pas_api`` deleguje validaci na helper v aplikaci PAS, aby se stejná
+        pravidla používala v administraci i za běhu API.
+
+        :raises ValidationError: Pokud hodnota nastavení neodpovídá očekávanému formátu.
+        """
+        super().clean()
+        from pas.api import PasApiPermissionMixin
+
+        PasApiPermissionMixin.validate_custom_admin_setting(self)
