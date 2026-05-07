@@ -191,8 +191,48 @@ se stanoví automaticky:
 - ``amcr:evidencni_cislo`` — lze uvést v importu; systém hodnotu přijme a uloží.
 - ``amcr:historie``, ``amcr:soubor`` — pouze pro export.
 
-Prvky označené v XSD ukázce jako komentáře jsou při importu zcela ignorovány,
+**Šablona vstupního XML**
+
+Prvky označené v ukázce XML jako komentáře jsou při importu zcela ignorovány,
 i pokud jsou v dokumentu přítomny.
+
+.. code-block:: xml
+
+    <?xml version="1.0" encoding="utf-8" ?>
+    <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xmlns:gml="http://www.opengis.net/gml/3.2" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd">
+      <amcr:samostatny_nalez>
+        <amcr:ident_cely>:tba</amcr:ident_cely>
+        <amcr:evidencni_cislo>xs:string</amcr:evidencni_cislo>
+        <!-- <amcr:igsn>xs:string</amcr:igsn> -->
+        <amcr:projekt id="xs:string">xs:string</amcr:projekt> <!-- kontrola autorizace -->
+        <!-- <amcr:okres id="xs:string" xml:lang="cs">xs:string</amcr:okres> --> <!-- stanoví se podle souřadnic automaticky -->
+        <amcr:hloubka>xs:integer</amcr:hloubka>
+        <amcr:okolnosti id="xs:string" xml:lang="cs">xs:string</amcr:okolnosti>
+        <amcr:obdobi id="xs:string" xml:lang="cs">xs:string</amcr:obdobi>
+        <amcr:presna_datace>xs:string</amcr:presna_datace>
+        <amcr:druh_nalezu id="xs:string" xml:lang="cs">xs:string</amcr:druh_nalezu>
+        <amcr:specifikace id="xs:string" xml:lang="cs">xs:string</amcr:specifikace>
+        <amcr:pocet>xs:string</amcr:pocet>
+        <amcr:poznamka>xs:string</amcr:poznamka>
+        <amcr:nalezce id="xs:string">xs:string, xs:string</amcr:nalezce>
+        <amcr:datum_nalezu>xs:date</amcr:datum_nalezu>
+        <!-- <amcr:stav>xs:integer</amcr:stav> -->
+        <amcr:predano>xs:boolean</amcr:predano>
+        <amcr:predano_organizace id="xs:string" xml:lang="cs">xs:string</amcr:predano_organizace>
+        <amcr:geom_system>xs:integer</amcr:geom_system>
+        <amcr:pristupnost id="xs:string" xml:lang="cs">xs:string</amcr:pristupnost>
+        <amcr:chranene_udaje>
+          <!-- <amcr:katastr id="xs:string" xml:lang="cs">xs:string</amcr:katastr> --> <!-- stanoví se podle souřadnic automaticky -->
+          <amcr:lokalizace>xs:string</amcr:lokalizace>
+          <!-- <amcr:geom_gml><gml:*></amcr:geom_gml> -->
+          <amcr:geom_wkt EPSG="xs:integer">xs:string</amcr:geom_wkt> <!-- použije se, pokud amcr:geom_system je 4326 -->
+          <!-- <amcr:geom_sjtsk_gml><gml:*></amcr:geom_sjtsk_gml> -->
+          <amcr:geom_sjtsk_wkt EPSG="xs:integer">xs:string</amcr:geom_sjtsk_wkt> <!-- použije se, pokud amcr:geom_system je 5514 -->
+        </amcr:chranene_udaje>
+        <!-- <amcr:historie><amcr:*></amcr:historie> -->
+        <!-- <amcr:soubor><amcr:*></amcr:soubor> -->
+      </amcr:samostatny_nalez>
+    </amcr:amcr>
 
 **Odpovědi**
 
