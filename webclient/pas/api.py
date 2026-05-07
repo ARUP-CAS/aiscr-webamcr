@@ -2060,20 +2060,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 self._validation_status(exc.import_errors),
             )
 
-        if not self._has_import_permissions(request.user, data):
-            # The denied user ID and referenced project are logged intentionally
-            # for authorization troubleshooting and incident investigation.
-            # They are audit/operational identifiers, not secrets.
-            # codeql[py/clear-text-logging-sensitive-data]
-            logger.warning(
-                "pas.api.SamostatnyNalezXmlImportView.post.permission_denied",
-                extra={"user": request.user.pk, "projekt": data.get("projekt")},
-            )
-            return self._fail(
-                log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.permission_denied")},
-                status.HTTP_403_FORBIDDEN,
-            )
+        :param doc: Naparsovaný XML dokument s deklarovaným ``xsi:schemaLocation``.
 
         instance = None
         fedora_transaction = FedoraTransaction(transaction_user=request.user)
@@ -2091,19 +2078,62 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 if not serializer.is_valid():
                     raise ImportValidationException.from_serializer_errors(serializer.errors, line=elem.sourceline)
 
-                if (
-                    serializer.validated_data.get("ident_cely")
-                    and SamostatnyNalez.objects.filter(ident_cely=serializer.validated_data["ident_cely"]).exists()
-                ):
-                    raise ImportValidationException(
+        with _AMCR_SCHEMA_LOCK:
+            cached = cls._amcr_schema_cache.get(schema_url)
+            if cached is not None and time.time() - cached[1] < _AMCR_SCHEMA_CACHE_TTL:
+                return cached[0]
+
+            class _LocalResolver(etree.Resolver):
+                """Resolver nahrazující vzdálené W3C URL lokálním souborem xml.xsd."""
+
+                def __init__(self):
+                    super().__init__()
+                    self.blocked_exception: ImportValidationException | None = None
+
+                def resolve(self, url, id, context):
+                    """
+                    Přeloží URL na lokální cestu pro xml.xsd.
+
+                    :param url: URL požadovaného zdroje.
+                    :param id: Identifikátor kontextu parseru.
+                    :param context: Kontext resolveru.
+
+                    :return: Vrací lokální soubor pro xml.xsd, jinak None.
+                    """
+                    allowed_urls = _ALLOWED_XML_XSD_URLS
+                    if url in allowed_urls:
+                        return self.resolve_filename("xml_generator/definitions/xml.xsd", context)
+                    if any(pattern.match(url) for pattern in _ALLOWED_SCHEMA_URL_PATTERNS):
+                        try:
+                            response = urllib.request.urlopen(url, timeout=_AMCR_SCHEMA_FETCH_TIMEOUT)  # noqa: S310
+                        except (urllib.error.URLError, TimeoutError) as exc:
+                            logger.error("Nepodařilo se načíst XSD schéma z URL %s: %s", url, exc)
+                            self.blocked_exception = ImportValidationException(
+                                ImportValidationIssue(
+                                    line=None,
+                                    column=None,
+                                    message=_(
+                                        "pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.schema_not_available"
+                                    )
+                                    % {"url": url},
+                                    error_type=ImportErrorType.INVALID_DATA,
+                                )
+                            )
+                            self.blocked_exception.__cause__ = exc
+                            return None
+                        return self.resolve_file(response, context, base_url=url)
+                    # Disallowed URL — store the exception for re-raising after XMLSchema()
+                    # because lxml swallows Python exceptions raised inside resolver callbacks.
+                    self.blocked_exception = ImportValidationException(
                         ImportValidationIssue(
-                            line=elem.sourceline,
+                            line=None,
                             column=None,
-                            message="ident_cely: "
-                            + _("pas.api.SamostatnyNalezXmlImportView.post.ident_cely_already_exists"),
+                            message=_("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.disallowed_schema_url")
+                            % {"url": url},
                             error_type=ImportErrorType.INVALID_DATA,
                         )
                     )
+                    return None
 
                 instance = SamostatnyNalez(**serializer.validated_data)
                 if not instance.ident_cely:
@@ -2200,20 +2230,29 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
         return self._success(log_entry, instance, metadata, notes)
 
     @staticmethod
-    def _has_import_permissions(user, data: dict) -> bool:
+    def _validate_schema_url_allowed(url: str) -> None:
         """
-        Ověří oprávnění potřebná pro import samostatného nálezu.
+        Ověří, že URL schématu patří mezi povolené URL prefixy.
 
-        :param user: Uživatel provádějící import.
-        :param data: Data jednoho importovaného záznamu.
+        :param url: URL schématu nebo importovaného XSD souboru.
 
-        :return: Vrací ``True`` pokud má uživatel všechna vyžadovaná oprávnění.
+        :raises ImportValidationException: Pokud URL míří mimo povolené domény.
         """
-        if not check_permissions(Permissions.actionChoices.pas_edit, user):
-            return False
+        if not any(pattern.match(url) for pattern in _ALLOWED_SCHEMA_URL_PATTERNS):
+            raise ImportValidationException(
+                ImportValidationIssue(
+                    line=None,
+                    column=None,
+                    message=_("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.disallowed_schema_url")
+                    % {"url": url},
+                    error_type=ImportErrorType.INVALID_DATA,
+                )
+            )
 
-        if not check_permissions(Permissions.actionChoices.pas_ulozeni_edit, user):
-            return False
+    @classmethod
+    def _ns(cls, tag: str) -> str:
+        """
+        Vrátí tag s prefixem jmenného prostoru AMČR.
 
         projekt_ident = data.get("projekt")
         if projekt_ident and not check_permissions(
