@@ -12,5 +12,4 @@ Dokumentace modulu pas.
    views
    signals
    filters
-   api
    tables

@@ -429,9 +429,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                     "rada_id": "T",
                     "definicni_bod": Point(14.0, 50.0, srid=4326),
                     "hranice": MultiPolygon(
-                        Polygon(
-                            ((13.0, 49.9), (14.5, 49.9), (14.5, 50.2), (13.0, 50.2), (13.0, 49.9))
-                        ), srid=4326
+                        Polygon(((13.0, 49.9), (14.5, 49.9), (14.5, 50.2), (13.0, 50.2), (13.0, 49.9))), srid=4326
                     ),
                 },
             )
@@ -444,9 +442,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                     "kraj": kraj,
                     "definicni_bod": Point(14.0, 50.0, srid=4326),
                     "hranice": MultiPolygon(
-                        Polygon(
-                            ((13.0, 49.9), (14.5, 49.9), (14.5, 50.2), (13.0, 50.2), (13.0, 49.9))
-                        ), srid=4326
+                        Polygon(((13.0, 49.9), (14.5, 49.9), (14.5, 50.2), (13.0, 50.2), (13.0, 49.9))), srid=4326
                     ),
                 },
             )
@@ -457,9 +453,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                     "okres": okres,
                     "definicni_bod": Point(14.0, 50.0, srid=4326),
                     "hranice": MultiPolygon(
-                        Polygon(
-                            ((13.0, 49.9), (14.5, 49.9), (14.5, 50.2), (13.0, 50.2), (13.0, 49.9))
-                        ), srid=4326
+                        Polygon(((13.0, 49.9), (14.5, 49.9), (14.5, 50.2), (13.0, 50.2), (13.0, 49.9))), srid=4326
                     ),
                 },
             )
