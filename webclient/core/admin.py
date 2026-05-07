@@ -376,7 +376,17 @@ class PermissionAdmin(admin.ModelAdmin):
 class ApiRequestLogAdmin(admin.ModelAdmin):
     """Třída admin panelu pro zobrazení logů API požadavků."""
 
-    list_display = ["received_at", "user", "client_ip", "request_target", "status", "ident_cely", "filename", "file_size", "finished_at"]
+    list_display = [
+        "received_at",
+        "user",
+        "client_ip",
+        "request_target",
+        "status",
+        "ident_cely",
+        "filename",
+        "file_size",
+        "finished_at",
+    ]
     list_filter = ["status", "request_target"]
     search_fields = ["user__email", "client_ip", "ident_cely"]
     readonly_fields = [
