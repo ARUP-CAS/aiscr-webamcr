@@ -90,7 +90,7 @@ Třídy
       :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
-.. py:class:: EditSpolupraceProjekyForm
+.. py:class:: EditSpolupraceProjektyForm
 
    Formulář pro editaci přiřazených projektů ke spolupráci.
 

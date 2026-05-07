@@ -266,7 +266,9 @@ class CreateSamostatnyNalezForm(OptimisticLockingMixin, forms.ModelForm):
         self.fields["pocet"].widget.attrs["rows"] = 1
         self.fields["presna_datace"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
-        if user.hlavni_role.pk == ROLE_BADATEL_ID:
+        if user is None:
+            projekt_qs = Projekt.objects.none()
+        elif user.hlavni_role and user.hlavni_role.pk == ROLE_BADATEL_ID:
             projekt_qs = (
                 Projekt.objects.filter(
                     typ_projektu=TYP_PROJEKTU_PRUZKUM_ID,
@@ -426,7 +428,7 @@ class DeaktivovatSpolupraciForm(forms.Form):
         self.helper.form_tag = False
 
 
-class EditSpolupraceProjekyForm(forms.ModelForm):
+class EditSpolupraceProjektyForm(forms.ModelForm):
     """Formulář pro editaci přiřazených projektů ke spolupráci."""
 
     class Meta:

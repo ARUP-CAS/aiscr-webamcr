@@ -35,7 +35,7 @@
         }
       }
       const normalizeTooltipText = (text) => text.replace(/\s+/g, ' ').trim();
-      if (document.getElementsByClassName("spoluprace-edit-projekty-btn")){
+      if (document.getElementsByClassName("spoluprace-edit-projekty-btn").length > 0){
         const elements = document.getElementsByClassName("spoluprace-edit-projekty-btn")
         for (let i = 0; i < elements.length; i++){
           const options = Object.assign(Object.create(defaults), {modalID: "modal-form",

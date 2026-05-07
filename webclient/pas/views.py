@@ -61,6 +61,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
@@ -75,7 +76,7 @@ from pas.forms import (
     CreateSamostatnyNalezForm,
     CreateZadostForm,
     DeaktivovatSpolupraciForm,
-    EditSpolupraceProjekyForm,
+    EditSpolupraceProjektyForm,
     PotvrditNalezForm,
 )
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
@@ -1383,7 +1384,7 @@ def smazat_spolupraci(request, pk):
     return render(request, "core/transakce_modal.html", context)
 
 
-class EditSpolupraceProjekyView(LoginRequiredMixin, TemplateView):
+class EditSpolupraceProjektyView(LoginRequiredMixin, TemplateView):
     """Pohled pro editaci projektů přiřazených ke spolupráci v modálním dialogu."""
 
     template_name = "core/transakce_table_modal.html"
@@ -1405,7 +1406,7 @@ class EditSpolupraceProjekyView(LoginRequiredMixin, TemplateView):
             :return: Vrací proměnná ``context``.
         """
         obj: UzivatelSpoluprace = self.get_object()
-        form = EditSpolupraceProjekyForm(instance=obj, vedouci_organizace=obj.vedouci.organizace)
+        form = EditSpolupraceProjektyForm(instance=obj, vedouci_organizace=obj.vedouci.organizace)
         return {
             "object": obj,
             "title": _("pas.views.editSpolupraceProjeky.title"),
@@ -1436,7 +1437,7 @@ class EditSpolupraceProjekyView(LoginRequiredMixin, TemplateView):
         """
         Obsluhuje HTTP metodu POST.
 
-        :param request: Parametr ``request`` předává se do volání ``EditSpolupraceProjekyForm()``, pracuje se s atributy ``POST``, ``user``.
+        :param request: Parametr ``request`` předává se do volání ``EditSpolupraceProjektyForm()``, pracuje se s atributy ``POST``, ``user``.
         :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
         :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
@@ -1446,13 +1447,19 @@ class EditSpolupraceProjekyView(LoginRequiredMixin, TemplateView):
         if not check_permissions(p.actionChoices.spoluprace_edit_projekty, request.user, obj.id):
             messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
             return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
-        form = EditSpolupraceProjekyForm(request.POST, instance=obj, vedouci_organizace=obj.vedouci.organizace)
+        form = EditSpolupraceProjektyForm(request.POST, instance=obj, vedouci_organizace=obj.vedouci.organizace)
         if form.is_valid():
             form.save()
             messages.add_message(request, messages.SUCCESS, _("pas.views.editSpolupraceProjeky.success"))
         else:
             messages.add_message(request, messages.ERROR, FORM_NOT_VALID)
-        redirect_url = request.META.get("HTTP_REFERER") or reverse("pas:spoluprace_list")
+        referer = request.META.get("HTTP_REFERER", "")
+        if referer and url_has_allowed_host_and_scheme(
+            referer, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+        ):
+            redirect_url = referer
+        else:
+            redirect_url = reverse("pas:spoluprace_list")
         return JsonResponse({"redirect": redirect_url})
 
 

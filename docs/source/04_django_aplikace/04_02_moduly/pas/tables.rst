@@ -67,9 +67,9 @@ Třídy
       :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``render()``, výsledek volání ``format_html()``.
 
 
-.. py:class:: EditProjekyColumn
+.. py:class:: EditProjektyColumn
 
-   Implementuje komponentu ``EditProjekyColumn`` pro editaci projektů spolupráce.
+   Implementuje komponentu ``EditProjektyColumn`` pro editaci projektů spolupráce.
 
    **Metody:**
 

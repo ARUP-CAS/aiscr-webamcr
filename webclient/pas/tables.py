@@ -226,8 +226,8 @@ class smazatColumn(tables.TemplateColumn):
             return format_html("")
 
 
-class EditProjekyColumn(tables.TemplateColumn):
-    """Implementuje komponentu ``EditProjekyColumn`` pro editaci projektů spolupráce."""
+class EditProjektyColumn(tables.TemplateColumn):
+    """Implementuje komponentu ``EditProjektyColumn`` pro editaci projektů spolupráce."""
 
     def render(self, record, table, value, bound_column, **kwargs):
         """
@@ -300,7 +300,7 @@ class UzivatelSpolupraceTable(SearchTable):
         orderable=False,
         verbose_name=_("pas.tables.spolupraceTable.aktivace.label"),
     )
-    edit_projekty = EditProjekyColumn(
+    edit_projekty = EditProjektyColumn(
         attrs={
             "th": {"class": "orderable ", "style": "color:#fff"},
             "td": {"data-no-tooltip": "true"},

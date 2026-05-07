@@ -97,7 +97,7 @@ from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Q
 from django.db.models.functions import Length
-from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
+from django.http import Http404, HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -1908,7 +1908,9 @@ class ProjectTableRowView(LoginRequiredMixin, View):
             :return: Vrací výsledek volání ``HttpResponse()``.
             :raises PermissionDenied: Pokud archeolog žádá projekt mimo svou organizaci nebo mimo povolené stavy.
         """
-        projekt_id = request.GET.get("id", "")
+        projekt_id = request.GET.get("id")
+        if not projekt_id:
+            raise Http404
         if request.user.hlavni_role and request.user.hlavni_role.pk == ROLE_ARCHEOLOG_ID:
             qs = Projekt.objects.filter(
                 id=projekt_id,
@@ -1920,7 +1922,7 @@ class ProjectTableRowView(LoginRequiredMixin, View):
                 raise PermissionDenied
             p = qs.get()
         else:
-            p = Projekt.objects.get(id=projekt_id)
+            p = get_object_or_404(Projekt, id=projekt_id)
         context = {"p": p}
         return HttpResponse(render_to_string("projekt/projekt_table_row.html", context))
 

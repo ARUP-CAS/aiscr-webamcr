@@ -241,7 +241,7 @@ Třídy
       :return: Vrací výsledek volání ``redirect()``.
 
 
-.. py:class:: EditSpolupraceProjekyView
+.. py:class:: EditSpolupraceProjektyView
 
    Pohled pro editaci projektů přiřazených ke spolupráci v modálním dialogu.
 
@@ -276,7 +276,7 @@ Třídy
 
       Obsluhuje HTTP metodu POST.
 
-      :param request: Parametr ``request`` předává se do volání ``EditSpolupraceProjekyForm()``, pracuje se s atributy ``POST``, ``user``.
+      :param request: Parametr ``request`` předává se do volání ``EditSpolupraceProjektyForm()``, pracuje se s atributy ``POST``, ``user``.
       :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
       :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
