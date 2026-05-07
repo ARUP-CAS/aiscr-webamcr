@@ -8,5 +8,6 @@ Tato sekce popisuje integrace s externími systémy a službami.
    :caption: Obsah:
 
    fedora_repository
+   pas_api
 
 

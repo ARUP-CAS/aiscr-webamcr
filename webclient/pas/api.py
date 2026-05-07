@@ -34,6 +34,7 @@ from core.ident_cely import get_sn_ident
 from core.models import AntivirusCheckResult, ApiRequestLog, Permissions, Soubor, check_permissions
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction, FedoraTransactionStatus
 from core.setting_models import CustomAdminSettings
+from core.utils import get_cadastre_from_point
 from core.views import get_finds_soubor_name
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -1093,7 +1094,6 @@ class ImportErrorType(Enum):
     RECORD_DOES_NOT_EXIST = 1
     INVALID_DATA = 2
     PERMISSION_ERROR = 3
-    SAVED_PROVIDED_MISMATCH = 4
 
 
 @dataclass(frozen=True)
@@ -1727,41 +1727,6 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
         return child.get("id") or None
 
     @classmethod
-    def _validate_heslar_value_matches(cls, validated_data: dict, elem: etree._Element) -> None:
-        """
-        Ověří shodu textové hodnoty XML a ``heslo`` na navázaném hesláři.
-
-        :param validated_data: Validovaná data serializeru.
-        :param elem: Importovaný XML element.
-
-        :raises ImportValidationException: Pokud text elementu neodpovídá ``heslo``.
-        """
-        heslar_fields = ("okolnosti", "obdobi", "druh_nalezu", "specifikace")
-        errors = []
-        for field_name in heslar_fields:
-            field_elem = elem.find(cls._ns(field_name))
-            provided_value = cls._text(elem, field_name)
-            validated_heslar = validated_data.get(field_name)
-            if provided_value and validated_heslar and provided_value != validated_heslar.heslo:
-                errors.append(
-                    ImportValidationIssue(
-                        line=field_elem.sourceline if field_elem is not None else elem.sourceline,
-                        column=None,
-                        message=f"{field_name}: "
-                        + _(
-                            "pas.api.SamostatnyNalezXmlImportView._validate_heslar_value_matches.saved_provided_mismatch"
-                        )
-                        % {
-                            "provided": provided_value,
-                            "saved": validated_heslar.heslo,
-                        },
-                        error_type=ImportErrorType.SAVED_PROVIDED_MISMATCH,
-                    )
-                )
-        if errors:
-            raise ImportValidationException(errors)
-
-    @classmethod
     def _parse_nalez_element(cls, elem: etree._Element, user) -> tuple[dict, Osoba | None]:
         """
         Převede element ``amcr:samostatny_nalez`` na slovník pro deserializaci.
@@ -1790,44 +1755,6 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                 )
             )
 
-        def parse_ruian_katastr_kod(katastr_elem: etree._Element | None) -> int | None:
-            """
-            Převede atribut ``id`` ve formátu ``ruian-{kod}`` na číselný kód katastru.
-
-            :param katastr_elem: XML element ``katastr``.
-
-            :return: Kód katastru nebo ``None``, pokud element neexistuje.
-
-            :raises ImportValidationException: Pokud je atribut ``id`` v nevalidním formátu.
-            """
-            if katastr_elem is None:
-                return None
-
-            katastr_id = katastr_elem.get("id")
-            if not katastr_id:
-                return None
-            if not katastr_id.startswith("ruian-"):
-                raise ImportValidationException(
-                    ImportValidationIssue(
-                        line=katastr_elem.sourceline,
-                        column=None,
-                        message=f"katastr: {_('pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.invalid_katastr_id')}",
-                        error_type=ImportErrorType.INVALID_DATA,
-                    )
-                )
-
-            try:
-                return int(katastr_id.split("-", 1)[1])
-            except (IndexError, ValueError):
-                raise ImportValidationException(
-                    ImportValidationIssue(
-                        line=katastr_elem.sourceline,
-                        column=None,
-                        message=f"katastr: {_('pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.invalid_katastr_id')}",
-                        error_type=ImportErrorType.INVALID_DATA,
-                    )
-                )
-
         data = {
             "ident_cely": None if cls._text(elem, "ident_cely") == ":tba" else cls._text(elem, "ident_cely"),
             "projekt": projekt_ident,
@@ -1851,7 +1778,6 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
         }
 
         if chranene is not None:
-            data["katastr"] = parse_ruian_katastr_kod(chranene.find(cls._ns("katastr")))
             data["lokalizace"] = cls._text(chranene, "lokalizace")
             geom_wkt_elem = chranene.find(cls._ns("geom_wkt"))
             if geom_wkt_elem is not None and geom_wkt_elem.text:
@@ -2164,7 +2090,6 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 serializer = SamostatnyNalezXmlImportSerializer(data=serializer_data)
                 if not serializer.is_valid():
                     raise ImportValidationException.from_serializer_errors(serializer.errors, line=elem.sourceline)
-                self._validate_heslar_value_matches(serializer.validated_data, elem)
 
                 if (
                     serializer.validated_data.get("ident_cely")
@@ -2183,6 +2108,32 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 instance = SamostatnyNalez(**serializer.validated_data)
                 if not instance.ident_cely:
                     instance.ident_cely = get_sn_ident(instance.projekt)
+                if instance.geom is None and instance.geom_sjtsk is None:
+                    raise ImportValidationException(
+                        ImportValidationIssue(
+                            line=elem.sourceline,
+                            column=None,
+                            message=_("pas.api.SamostatnyNalezXmlImportView.post.missing_geom"),
+                            error_type=ImportErrorType.INVALID_DATA,
+                        )
+                    )
+                geom_wgs84 = instance.geom
+                if geom_wgs84 is None and instance.geom_sjtsk is not None:
+                    # Clone so that the stored geom_sjtsk field is never mutated; WGS-84 is
+                    # only needed transiently to identify the cadastre.
+                    geom_wgs84 = instance.geom_sjtsk.clone()
+                    geom_wgs84.transform(4326)
+                if geom_wgs84:
+                    instance.katastr = get_cadastre_from_point(geom_wgs84)
+                    if instance.katastr is None:
+                        raise ImportValidationException(
+                            ImportValidationIssue(
+                                line=elem.sourceline,
+                                column=None,
+                                message=_("pas.api.SamostatnyNalezXmlImportView.post.katastr_not_found"),
+                                error_type=ImportErrorType.INVALID_DATA,
+                            )
+                        )
                 instance.active_transaction = fedora_transaction
                 # active_transaction is an attribute that defines a Fedora transaction attached to the objects,
                 # not a database field, so there is no point in using it as an argument in the save method.

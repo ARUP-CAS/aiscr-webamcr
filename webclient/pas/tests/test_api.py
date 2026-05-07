@@ -179,7 +179,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         projekt_ident: str,
         pristupnost_ident: str,
         geom_system: str = "4326",
-        geom_wkt: str = "POINT(14.42 50.08)",
+        geom_wkt: str = "POINT(14.0667 50.0333)",
     ) -> bytes:
         """
         Sestaví minimální validní XML pro jeden ``amcr:samostatny_nalez`` ze šablony.
@@ -429,7 +429,9 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                     "rada_id": "T",
                     "definicni_bod": Point(14.0, 50.0, srid=4326),
                     "hranice": MultiPolygon(
-                        Polygon(((14.0, 50.0), (14.1, 50.0), (14.1, 50.1), (14.0, 50.0))), srid=4326
+                        Polygon(
+                            ((13.0, 49.9), (14.5, 49.9), (14.5, 50.2), (13.0, 50.2), (13.0, 49.9))
+                        ), srid=4326
                     ),
                 },
             )
@@ -442,7 +444,9 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                     "kraj": kraj,
                     "definicni_bod": Point(14.0, 50.0, srid=4326),
                     "hranice": MultiPolygon(
-                        Polygon(((14.0, 50.0), (14.1, 50.0), (14.1, 50.1), (14.0, 50.0))), srid=4326
+                        Polygon(
+                            ((13.0, 49.9), (14.5, 49.9), (14.5, 50.2), (13.0, 50.2), (13.0, 49.9))
+                        ), srid=4326
                     ),
                 },
             )
@@ -453,7 +457,9 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                     "okres": okres,
                     "definicni_bod": Point(14.0, 50.0, srid=4326),
                     "hranice": MultiPolygon(
-                        Polygon(((14.0, 50.0), (14.1, 50.0), (14.1, 50.1), (14.0, 50.0))), srid=4326
+                        Polygon(
+                            ((13.0, 49.9), (14.5, 49.9), (14.5, 50.2), (13.0, 50.2), (13.0, 49.9))
+                        ), srid=4326
                     ),
                 },
             )
@@ -685,21 +691,23 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertEqual(response.status_code, 405)
         self.assertEqual(ApiRequestLog.objects.count(), 0)
 
-    def test_heslar_value_mismatch_returns_422(self):
-        """Import vrátí HTTP 422, pokud text hodnoty neodpovídá ``heslo`` na odkazovaném hesláři."""
-        template = self._load_xml("nalez_heslar_mismatch.xml").decode("utf-8")
-        xml = template.format(
-            IDENT_CELY="SN-XML-HES-MISMATCH-001",
-            PROJEKT_IDENT=self.projekt.ident_cely,
-            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
-            OBDOBI_IDENT=self.obdobi.ident_cely,
+    def test_heslar_wrong_group_returns_422(self):
+        """Import vrátí HTTP 422, pokud atribut ``id`` odkazuje na položku z jiné skupiny hesláře."""
+        xml = self._minimal_nalez_xml(
+            ident_cely="SN-XML-HES-GROUP-001",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        ).decode("utf-8")
+        xml = xml.replace(
+            "<amcr:geom_system>",
+            f'<amcr:okolnosti id="{self.obdobi.ident_cely}" xml:lang="cs">{self.obdobi.heslo}</amcr:okolnosti>\n    <amcr:geom_system>',
         ).encode("utf-8")
 
         response = self._post_xml(xml)
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         self.assertIn("validation_errors", response.data)
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-HES-MISMATCH-001").exists())
+        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-HES-GROUP-001").exists())
         self._assert_log_failure(response.data)
 
     def test_invalid_token_returns_401(self):
@@ -1157,24 +1165,72 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertIsNotNone(logs[1].finished_at)
         self.assertEqual(logs[1].errors, duplicate_response.data)
 
-    def test_valid_xml_links_katastr_by_ruian_id(self):
-        """Import naváže ``katastr`` podle XML ``id="ruian-..."`` na unikátní RÚIAN kód."""
+    def test_katastr_filled_from_geom_wkt(self):
+        """Import s ``geom_system=4326`` doplní katastr ze souřadnic ``geom_wkt``."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-KATASTR-001",
+            ident_cely="SN-XML-KATASTR-GEOM-001",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
-        ).decode("utf-8")
-        xml = xml.replace(
-            "<amcr:chranene_udaje>\n      <amcr:geom_wkt",
-            '<amcr:chranene_udaje>\n      <amcr:katastr id="ruian-999999" xml:lang="cs">Testovací katastr</amcr:katastr>\n      <amcr:geom_wkt',
+            geom_wkt="POINT(14.0667 50.0333)",
+        )
+
+        response = self._post_xml(xml)
+
+        self._assert_xml_success_response(response, "SN-XML-KATASTR-GEOM-001")
+        nalez = SamostatnyNalez.objects.get(ident_cely="SN-XML-KATASTR-GEOM-001")
+        self.assertEqual(nalez.katastr, RuianKatastr.objects.get(kod=999999))
+        self._assert_log_success()
+
+    def test_katastr_filled_from_geom_sjtsk_wkt(self):
+        """Import s ``geom_system=5514`` doplní katastr transformací ``geom_sjtsk_wkt`` do WGS-84."""
+        template = self._load_xml("minimal_nalez_sjtsk.xml").decode("utf-8")
+        xml = template.format(
+            IDENT_CELY="SN-XML-KATASTR-SJTSK-001",
+            PROJEKT_IDENT=self.projekt.ident_cely,
+            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+            # Transforms to WGS-84 POINT(14.0667 50.0333) — inside the test fixture polygon for kod=999999.
+            GEOM_SJTSK_WKT="POINT(-768785.47 -1045458.60)",
         ).encode("utf-8")
 
         response = self._post_xml(xml)
 
-        self._assert_xml_success_response(response, "SN-XML-KATASTR-001")
-        nalez = SamostatnyNalez.objects.get(ident_cely="SN-XML-KATASTR-001")
+        self._assert_xml_success_response(response, "SN-XML-KATASTR-SJTSK-001")
+        nalez = SamostatnyNalez.objects.get(ident_cely="SN-XML-KATASTR-SJTSK-001")
         self.assertEqual(nalez.katastr, RuianKatastr.objects.get(kod=999999))
         self._assert_log_success()
+
+    def test_missing_geometry_returns_422(self):
+        """Import vrátí HTTP 422, pokud XML neobsahuje žádnou geometrii."""
+        template = self._load_xml("minimal_nalez_no_geom.xml").decode("utf-8")
+        xml = template.format(
+            IDENT_CELY="SN-XML-NO-GEOM-001",
+            PROJEKT_IDENT=self.projekt.ident_cely,
+            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+        ).encode("utf-8")
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-NO-GEOM-001").exists())
+        self._assert_log_failure(response.data)
+
+    def test_geom_outside_cadastre_returns_422(self):
+        """Import vrátí HTTP 422, pokud souřadnice nespadají do žádného katastru."""
+        xml = self._minimal_nalez_xml(
+            ident_cely="SN-XML-NO-KATASTR-001",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            # Coordinates in the Atlantic Ocean — outside any cadastre polygon.
+            geom_wkt="POINT(0.0 0.0)",
+        )
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-NO-KATASTR-001").exists())
+        self._assert_log_failure(response.data)
 
     def test_valid_xml_with_known_nalezce_links_existing_osoba(self):
         """Import s existujícím ``nalezce`` naváže záznam na existující osobu."""

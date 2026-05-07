@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/"
+           xmlns:gml="http://www.opengis.net/gml/3.2"
+           xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd
+                               http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd">
+  <amcr:samostatny_nalez>
+    <amcr:ident_cely>{IDENT_CELY}</amcr:ident_cely>
+    <amcr:projekt id="{PROJEKT_IDENT}">{PROJEKT_IDENT}</amcr:projekt>
+    <amcr:geom_system>5514</amcr:geom_system>
+    <amcr:pristupnost id="{PRISTUPNOST_IDENT}" xml:lang="cs">{PRISTUPNOST_IDENT}</amcr:pristupnost>
+    <amcr:chranene_udaje>
+      <amcr:geom_sjtsk_wkt EPSG="5514">{GEOM_SJTSK_WKT}</amcr:geom_sjtsk_wkt>
+    </amcr:chranene_udaje>
+  </amcr:samostatny_nalez>
+</amcr:amcr>
