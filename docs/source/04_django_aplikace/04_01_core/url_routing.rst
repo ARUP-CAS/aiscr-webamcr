@@ -757,6 +757,12 @@ PAS
    * - ``api-import-xml``
      - ``api/import-xml``
      - ``SamostatnyNalezXmlImportView.as_view()``
+   * - ``api-patch-evidencni-cislo``
+     - ``api/nalez/<str:ident_cely>/evidencni-cislo``
+     - ``SamostatnyNalezEvidencniCisloPatchView.as_view()``
+   * - ``api-upload-foto``
+     - ``api/nalez/<str:ident_cely>/upload-foto``
+     - ``SamostatnyNalezFotografieUploadView.as_view()``
 
 PIAN
 ----

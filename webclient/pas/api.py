@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import io
 import ipaddress
 import json
 import logging
@@ -14,20 +15,26 @@ from enum import Enum
 
 import django.utils.timezone
 from core.constants import (
+    AKTUALIZACE_SN,
     API_REQUEST_LOG_STATUS_FAILURE,
     API_REQUEST_LOG_STATUS_PROCESSING,
     API_REQUEST_LOG_STATUS_SUCCESS,
+    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH,
+    API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_FOTOGRAFIE_UPLOAD,
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT,
+    ARCHIVACE_SN,
+    MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES,
     ODESLANI_SN,
     POTVRZENI_SN,
+    SN_ARCHIVOVANY,
     SN_POTVRZENY,
-    SN_ZAPSANY,
     ZAPSANI_SN,
 )
 from core.ident_cely import get_sn_ident
-from core.models import ApiRequestLog, Permissions, check_permissions
+from core.models import AntivirusCheckResult, ApiRequestLog, Permissions, Soubor, check_permissions
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction, FedoraTransactionStatus
 from core.setting_models import CustomAdminSettings
+from core.views import get_finds_soubor_name
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, transaction
@@ -47,6 +54,7 @@ from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie
 from lxml import etree
+from pid.exceptions import DoiWriteError
 from projekt.models import Projekt
 from rest_framework import serializers, status
 from rest_framework.parsers import MultiPartParser
@@ -54,7 +62,7 @@ from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import BaseThrottle
 from rest_framework.views import APIView
-from uzivatel.models import Organizace, Osoba
+from uzivatel.models import ROLE_ARCHEOLOG_ID, Organizace, Osoba
 from uzivatel.views import TokenAuthenticationBearer
 from xml_generator.generator import AMCR_NAMESPACE_URL, AMCR_XSD_URL
 
@@ -68,15 +76,28 @@ _CACHE_KEY_ACCESS_MODE = "pas_api_access_mode"
 _CACHE_KEY_TRUSTED_PROXIES = "pas_api_trusted_proxies"
 _CACHE_TTL = 30  # sekund
 
+_RECORD_LOCK_PREFIX = "pas_api_record_lock_"
+_RECORD_LOCK_TTL = 300  # sekund — zámek záznamu vyprší po 5 minutách
+_RECORD_LOCK_DEFAULT_RETRY_DELAY = 0.5  # sekund — výchozí čekací interval mezi pokusy
+_RECORD_LOCK_DEFAULT_MAX_RETRIES = 10  # výchozí maximální počet pokusů o získání zámku
+_CACHE_KEY_RECORD_LOCK_PARAMS = "pas_api_record_lock_params"
+
 _PAS_API_GROUP = "pas_api"
 _ACCESS_RULES_ID = "access_rules"
 _RATE_LIMITS_ID = "rate_limits"
 _ACCESS_MODE_ID = "access_mode"
 # codeql[py/clear-text-logging-sensitive-data]
 _TRUSTED_PROXIES_ID = "trusted_proxies"
+_RECORD_LOCK_PARAMS_ID = "record_lock_params"
 _AMCR_SCHEMA_LOCK = threading.Lock()
 _AMCR_SCHEMA_FETCH_TIMEOUT = 10
 _AMCR_SCHEMA_CACHE_TTL = 3600  # sekund — schéma se znovu načte po 60 minutách
+_ALLOWED_XML_XSD_URLS = (
+    "http://www.w3.org/2001/xml.xsd",
+    "https://www.w3.org/2001/xml.xsd",
+    "http://www.w3.org/2001/03/xml.xsd",
+    "https://www.w3.org/2001/03/xml.xsd",
+)
 _ALLOWED_SCHEMA_URL_PATTERNS = (
     re.compile(r"^https?://www\.w3\.org/2001/XMLSchema-instance(?:[?#].*)?$"),
     re.compile(r"^https?://www\.w3\.org/2001/(?:03/)?xml\.xsd(?:[?#].*)?$"),
@@ -132,11 +153,12 @@ _ACCESS_RULE_TYPES = {
 }
 SCOPE_USER = "user"
 SCOPE_IP = "ip"
+SCOPE_RECORD = "record"
 ACCESS_MODE_OPEN = "open"
 ACCESS_MODE_WHITELIST_ONLY = "whitelist_only"
 ACCESS_MODE_CLOSED = "closed"
 _ACCESS_MODES = {ACCESS_MODE_OPEN, ACCESS_MODE_WHITELIST_ONLY, ACCESS_MODE_CLOSED}
-_PAS_API_ITEM_IDS = {_ACCESS_RULES_ID, _RATE_LIMITS_ID, _ACCESS_MODE_ID, _TRUSTED_PROXIES_ID}
+_PAS_API_ITEM_IDS = {_ACCESS_RULES_ID, _RATE_LIMITS_ID, _ACCESS_MODE_ID, _TRUSTED_PROXIES_ID, _RECORD_LOCK_PARAMS_ID}
 
 # codeql[py/clear-text-logging-sensitive-data]
 _DEFAULT_TRUSTED_PROXIES = []
@@ -253,6 +275,20 @@ class PasApiPermissionMixin:
 
                 ["10.0.1.0/24", "proxy"]
 
+        ``record_lock_params`` (``item_id="record_lock_params"``)
+            Parametry Redis zámku záznamu. Objekt s klíči:
+
+            - ``retry_delay`` *(volitelný, výchozí* ``0.5``*)* — čekací interval v sekundách
+              mezi pokusy o získání zámku; musí být kladné číslo (``float``)
+            - ``max_retries`` *(volitelný, výchozí* ``10``*)* — maximální počet pokusů;
+              musí být kladné celé číslo (``int``)
+
+            Pokud nastavení chybí, použijí se výchozí hodnoty.
+
+            Příklad::
+
+                {"retry_delay": 1.0, "max_retries": 5}
+
         Změny v administraci se projeví do ``30`` sekund (TTL cache).
 
         :param item_id: Identifikátor záznamu — ``"access_rules"``, ``"rate_limits"`` nebo ``"access_mode"``.
@@ -361,7 +397,9 @@ class PasApiPermissionMixin:
         Ověří ``CustomAdminSettings`` záznam relevantní pro PAS API před uložením.
 
         Pokud jde o skupinu ``pas_api``, ověří platnost ``item_id`` a podle něj
-        validuje JSON hodnotu příslušným validátorem.
+        validuje JSON hodnotu příslušným validátorem. Podporovaná ``item_id``:
+        ``"access_rules"``, ``"rate_limits"``, ``"access_mode"``, ``"trusted_proxies"``,
+        ``"record_lock_params"``.
 
         :param instance: Ukládaný záznam ``CustomAdminSettings``.
 
@@ -397,6 +435,8 @@ class PasApiPermissionMixin:
             cls.validate_access_mode(raw_value)
         elif instance.item_id == _TRUSTED_PROXIES_ID:
             cls.validate_trusted_proxies(raw_value)
+        elif instance.item_id == _RECORD_LOCK_PARAMS_ID:
+            cls.validate_record_lock_params(raw_value)
         return True
 
     @classmethod
@@ -404,7 +444,8 @@ class PasApiPermissionMixin:
         """
         Vrátí limity počtu požadavků z cache nebo ``CustomAdminSettings``.
 
-        Každý limit je slovník s klíči ``scope``, ``value``, ``rate`` a volitelně ``active`` (výchozí ``True``).
+        Každý limit je slovník s klíči ``scope``, ``rate`` a volitelně ``active`` (výchozí ``True``).
+        Pro scope ``user`` a ``ip`` je navíc povinný klíč ``value``.
 
         :raises ValidationError: Pokud nastavení nemá očekávanou strukturu nebo obsahuje nevalidní limit.
         :return: Seznam aktivních limitů.
@@ -439,7 +480,7 @@ class PasApiPermissionMixin:
                         )
                     }
                 )
-            if "scope" not in limit or "value" not in limit or "rate" not in limit:
+            if "scope" not in limit or "rate" not in limit:
                 raise ValidationError(
                     {
                         "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.missing_required_keys").format(
@@ -455,12 +496,28 @@ class PasApiPermissionMixin:
                         )
                     }
                 )
-            if limit["scope"] not in {SCOPE_USER, SCOPE_IP}:
+            if limit["scope"] not in {SCOPE_USER, SCOPE_IP, SCOPE_RECORD}:
                 raise ValidationError(
                     {
                         "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.unsupported_scope").format(
                             index=index, scope=limit["scope"]
                         )
+                    }
+                )
+            if limit["scope"] in {SCOPE_USER, SCOPE_IP} and "value" not in limit:
+                raise ValidationError(
+                    {
+                        "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.missing_required_keys").format(
+                            index=index
+                        )
+                    }
+                )
+            if limit["scope"] == SCOPE_RECORD and "value" in limit:
+                raise ValidationError(
+                    {
+                        "value": _(
+                            "pas.api.PasApiPermissionMixin.validate_rate_limits.record_scope_unexpected_value"
+                        ).format(index=index)
                     }
                 )
             if limit["scope"] == SCOPE_IP:
@@ -582,6 +639,59 @@ class PasApiPermissionMixin:
         return True
 
     @classmethod
+    def get_record_lock_params(cls) -> tuple[float, int]:
+        """
+        Vrátí parametry Redis zámku záznamu z cache nebo ``CustomAdminSettings``.
+
+        Pokud nastavení ``record_lock_params`` neexistuje, vrátí výchozí hodnoty
+        ``(_RECORD_LOCK_DEFAULT_RETRY_DELAY, _RECORD_LOCK_DEFAULT_MAX_RETRIES)``.
+
+        :raises ValidationError: Pokud nastavení má neplatnou strukturu.
+        :return: Dvojice ``(retry_delay, max_retries)``.
+        """
+        params = cache.get(_CACHE_KEY_RECORD_LOCK_PARAMS)
+        if params is None:
+            raw = cls.load_json_setting(_RECORD_LOCK_PARAMS_ID)
+            if not raw:
+                params = (_RECORD_LOCK_DEFAULT_RETRY_DELAY, _RECORD_LOCK_DEFAULT_MAX_RETRIES)
+            else:
+                cls.validate_record_lock_params(raw)
+                retry_delay = float(raw.get("retry_delay", _RECORD_LOCK_DEFAULT_RETRY_DELAY))
+                max_retries = int(raw.get("max_retries", _RECORD_LOCK_DEFAULT_MAX_RETRIES))
+                params = (retry_delay, max_retries)
+            cache.set(_CACHE_KEY_RECORD_LOCK_PARAMS, params, _CACHE_TTL)
+        return params
+
+    @staticmethod
+    def validate_record_lock_params(raw_params) -> bool:
+        """
+        Ověří strukturu a obsah nastavení ``record_lock_params``.
+
+        Očekávaný formát je objekt s nepovinnými klíči ``retry_delay`` (kladné ``float``)
+        a ``max_retries`` (kladné celé číslo ``int``).
+
+        :param raw_params: Naparsovaná JSON hodnota nastavení ``record_lock_params``.
+
+        :raises ValidationError: Pokud struktura nebo hodnoty neodpovídají očekávání.
+        :return: ``True`` pokud je nastavení validní.
+        """
+        if not isinstance(raw_params, dict):
+            raise ValidationError({"value": _("pas.api.PasApiPermissionMixin.validate_record_lock_params.not_a_dict")})
+        if "retry_delay" in raw_params:
+            retry_delay = raw_params["retry_delay"]
+            if not isinstance(retry_delay, (int, float)) or isinstance(retry_delay, bool) or retry_delay <= 0:
+                raise ValidationError(
+                    {"value": _("pas.api.PasApiPermissionMixin.validate_record_lock_params.invalid_retry_delay")}
+                )
+        if "max_retries" in raw_params:
+            max_retries = raw_params["max_retries"]
+            if not isinstance(max_retries, int) or isinstance(max_retries, bool) or max_retries <= 0:
+                raise ValidationError(
+                    {"value": _("pas.api.PasApiPermissionMixin.validate_record_lock_params.invalid_max_retries")}
+                )
+        return True
+
+    @classmethod
     def get_client_ip(cls, request) -> str:
         """
         Vrátí IP adresu klienta z požadavku.
@@ -672,6 +782,7 @@ def _invalidate_api_cache(sender, instance=None, **kwargs):
         cache.delete(_CACHE_KEY_RATE_LIMITS)
         cache.delete(_CACHE_KEY_ACCESS_MODE)
         cache.delete(_CACHE_KEY_TRUSTED_PROXIES)
+        cache.delete(_CACHE_KEY_RECORD_LOCK_PARAMS)
 
 
 class IpBlacklistPermission(PasApiPermissionMixin, BasePermission):
@@ -879,9 +990,13 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
     """
     Throttle pro API import samostatného nálezu řízený záznamy ``CustomAdminSettings`` (``pas_api/rate_limits``).
 
-    Pravidla jsou načítána z databáze (s cache) a aplikována v pořadí:
-    nejdříve pravidlo pro konkrétního uživatele, pak pro IP adresu.
-    Pokud žádné pravidlo neexistuje, požadavek je povolen.
+    Pravidla jsou načítána z databáze (s cache) a vyhodnocují se nezávisle podle scope:
+    ``user``, ``ip`` a ``record``. Požadavek je povolen pouze tehdy, pokud projde všemi
+    relevantními limity pro dané volání.
+
+    Scope ``record`` používá ``ident_cely`` z URL jako stabilní identifikátor konkrétního
+    záznamu. To je záměrné: jeden limit se tak sdílí mezi různými endpointy a akcemi nad
+    týmž ``SamostatnyNalez`` a nelze jej obejít střídáním například PATCH a upload endpointu.
     """
 
     def allow_request(self, request, view=None) -> bool:
@@ -891,17 +1006,26 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
         :param request: HTTP požadavek.
         :param view: Pohled zpracovávající požadavek.
 
-        :return: ``True`` pokud limit nebyl překročen nebo neexistuje, jinak ``False``.
+        :return: ``True`` pokud nebyl překročen žádný relevantní limit, jinak ``False``.
         """
         limits = self.get_rate_limits()
         client_ip = self.get_client_ip(request)
         user_identifier = self.get_user_identifier(request.user)
 
+        ident_cely = getattr(view, "kwargs", {}).get("ident_cely") if view is not None else None
+
         for limit in limits:
             if limit["scope"] == SCOPE_USER and limit["value"] == user_identifier:
-                return self._check_limit(f"throttle_user_{user_identifier}", limit["rate"], request)
+                if not self._check_limit(f"throttle_user_{user_identifier}", limit["rate"], request):
+                    return False
             if limit["scope"] == SCOPE_IP and self.ip_matches(client_ip, limit["value"]):
-                return self._check_limit(f"throttle_ip_{client_ip}", limit["rate"], request)
+                if not self._check_limit(f"throttle_ip_{client_ip}", limit["rate"], request):
+                    return False
+            # Record-level throttle is intentionally keyed by ident_cely so the same
+            # limit bucket is shared across different actions/endpoints for one record.
+            if limit["scope"] == SCOPE_RECORD and ident_cely:
+                if not self._check_limit(f"throttle_record_{ident_cely}", limit["rate"], request):
+                    return False
         return True
 
     def _check_limit(self, cache_key: str, rate: str, request) -> bool:
@@ -1128,8 +1252,10 @@ class SamostatnyNalezXmlImportSerializer(serializers.ModelSerializer):
         ]
 
 
-class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
-    """Pohled pro import záznamu samostatného nálezu z XML souboru přes POST požadavek."""
+class PasApiBaseView(PasApiPermissionMixin, APIView):
+    """Základní pohled sdílený všemi PAS API endpointy."""
+
+    _record_lock_thread_lock: threading.Lock = threading.Lock()
 
     authentication_classes = [TokenAuthenticationBearer]
     permission_classes = [
@@ -1142,13 +1268,6 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
     ]
     throttle_classes = [ApiImportThrottle]
     parser_classes = [MultiPartParser]
-    http_method_names = ["post"]
-
-    _AMCR_NS = "https://api.aiscr.cz/schema/amcr/2.2/"
-    _XML_NS = "http://www.w3.org/XML/1998/namespace"
-    _XSI_NS = "http://www.w3.org/2001/XMLSchema-instance"
-    _IMPORT_HISTORY_NOTE = _l("pas.api.SamostatnyNalezXmlImportView.import_history_note")
-    _amcr_schema_cache: dict[str, tuple[etree.XMLSchema, float]] = {}  # url -> (schema, inserted_at)
 
     def dispatch(self, request, *args, **kwargs):
         """
@@ -1164,7 +1283,7 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
         :return: HTTP odpověď view nebo okamžitá odpověď ``503`` při vypnutém API.
         """
         if self.get_access_mode() == ACCESS_MODE_CLOSED:
-            logger.warning("pas.api.SamostatnyNalezXmlImportView.dispatch.closed")
+            logger.warning("pas.api.PasApiBaseView.dispatch.closed")
             return JsonResponse(
                 {"detail": _("pas.api.ApiAccessModePermission.closed")},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -1187,6 +1306,116 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
         log_entry.errors = body
         log_entry.save(update_fields=["status", "finished_at", "errors"])
         return Response(body, status=http_status)
+
+    @classmethod
+    def _has_edit_permissions(cls, user, ident_cely) -> bool:
+        """
+        Ověří, zda má uživatel oprávnění editovat zadaný samostatný nález.
+
+        :param user: Uživatel provádějící požadavek.
+        :param ident_cely: Identifikátor záznamu samostatného nálezu.
+
+        :return: Vrací ``True`` pokud má uživatel oprávnění ``pas_edit`` pro daný záznam.
+        """
+        if not check_permissions(Permissions.actionChoices.pas_edit, user, ident_cely):
+            return False
+        return True
+
+    @staticmethod
+    def _update_igsn_if_archived(instance: "SamostatnyNalez") -> None:
+        """
+        Pokud je záznam ve stavu SN4 (archivovaný), aktualizuje jeho IGSN metadata.
+
+        :param instance: Aktualizovaný záznam samostatného nálezu.
+
+        :raises DoiWriteError: Pokud aktualizace IGSN selže.
+        """
+        if instance.stav == SN_ARCHIVOVANY:
+            instance.igsn_update(False, True)
+
+    @staticmethod
+    def _acquire_record_lock(ident_cely: str) -> bool:
+        """
+        Pokusí se získat zámek záznamu v Redis.
+
+        Kombinuje in-process ``threading.Lock`` (``_record_lock_thread_lock``) pro serializaci
+        vláken v rámci jednoho Django workeru s atomickým ``cache.add`` pro koordinaci
+        mezi více procesy. Pokud klíč neexistuje nebo má hodnotu ``0`` (uvolněno), zámek je
+        získán nastavením hodnoty na ``1``. Pokud je klíč ``1`` (zamčeno jiným workerem),
+        čeká ``_RECORD_LOCK_RETRY_DELAY`` sekund a zkusí znovu, nejvýše
+        ``_RECORD_LOCK_MAX_RETRIES``-krát.
+
+        :param ident_cely: Identifikátor záznamu, jehož zámek se má získat.
+
+        :return: ``True`` pokud byl zámek úspěšně získán, jinak ``False``.
+        """
+        retry_delay, max_retries = PasApiBaseView.get_record_lock_params()
+        cache_key = f"{_RECORD_LOCK_PREFIX}{ident_cely}"
+        for _ in range(max_retries):  # noqa: F402
+            with PasApiBaseView._record_lock_thread_lock:
+                if cache.add(cache_key, 1, timeout=_RECORD_LOCK_TTL):
+                    return True
+                if cache.get(cache_key) != 1:
+                    cache.set(cache_key, 1, timeout=_RECORD_LOCK_TTL)
+                    return True
+            time.sleep(retry_delay)
+        return False
+
+    @staticmethod
+    def _release_record_lock(ident_cely: str) -> None:
+        """
+        Uvolní zámek záznamu nastavením Redis hodnoty na ``0``.
+
+        :param ident_cely: Identifikátor záznamu, jehož zámek se má uvolnit.
+        """
+        cache_key = f"{_RECORD_LOCK_PREFIX}{ident_cely}"
+        cache.set(cache_key, 0, timeout=_RECORD_LOCK_TTL)
+
+    @staticmethod
+    def _verify_content_digest(
+        request, uploaded_file, mismatch_status: int = status.HTTP_400_BAD_REQUEST
+    ) -> tuple[str, int] | None:
+        """
+        Ověří integritu souboru pomocí hlavičky ``Content-Digest`` (RFC 9530).
+
+        Očekávaný formát hlavičky: ``sha-512=:<base64>:``
+        Pokud hlavička chybí nebo neodpovídá skutečnému SHA-512 obsahu souboru,
+        vrátí chybovou zprávu.
+
+        :param request: HTTP požadavek obsahující hlavičku ``Content-Digest``.
+        :param uploaded_file: Nahraný soubor; po zavolání je pozice čtení na začátku.
+        :param mismatch_status: Stavový kód použitý při neodpovídajícím SHA-512 hashi.
+
+        :return: Dvojice ``(zpráva, status)`` nebo ``None`` pokud je digest v pořádku.
+        """
+        header = request.headers.get("Content-Digest")
+        if not header:
+            return (
+                _("pas.api.PasApiBaseView._verify_content_digest.missing_digest"),
+                status.HTTP_400_BAD_REQUEST,
+            )
+
+        prefix = "sha-512=:"
+        if not header.startswith(prefix) or not header.endswith(":"):
+            return (
+                _("pas.api.PasApiBaseView._verify_content_digest.invalid_format"),
+                status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            expected = base64.b64decode(header[len(prefix) : -1])
+        except (ValueError, TypeError):
+            return (
+                _("pas.api.PasApiBaseView._verify_content_digest.invalid_base64"),
+                status.HTTP_400_BAD_REQUEST,
+            )
+
+        actual = hashlib.sha512(uploaded_file.read()).digest()
+        uploaded_file.seek(0)
+        if actual != expected:
+            return _("pas.api.PasApiBaseView._verify_content_digest.digest_mismatch"), mismatch_status
+
+        return None
 
     @staticmethod
     def _success(
@@ -1219,7 +1448,7 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
         # They are audit/operational identifiers, not secrets.
         # codeql[py/clear-text-logging-sensitive-data]
         logger.info(
-            "pas.api.SamostatnyNalezXmlImportView.post.created",
+            "pas.api.PasApiBaseView.success",
             extra={"ident_cely": instance.ident_cely, "user": user_pk},
         )
         if notes:
@@ -1228,306 +1457,22 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
             # incident investigation. They are operational context, not secrets.
             # codeql[py/clear-text-logging-sensitive-data]
             logger.info(
-                "pas.api.SamostatnyNalezXmlImportView.post.ignored_lang_notes",
+                "pas.api.PasApiBaseView.success.ignored_lang_notes",
                 extra={"ident_cely": instance.ident_cely, "notes": notes, "user": user_pk},
             )
         return HttpResponse(metadata, content_type="application/xml", status=200)
 
-    def post(self, request, format=None):
-        """
-        Importuje nový záznam samostatného nálezu z XML souboru.
 
-        Přijímá soubor v parametru ``file`` (multipart/form-data). XML musí odpovídat
-        schématu AMČR 2.2 (https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd).
-        Dokument musí obsahovat právě jeden element ``amcr:samostatny_nalez``.
+class SamostatnyNalezXmlBaseView(PasApiBaseView):
+    """Základní pohled pro XML import záznamu samostatného nálezu."""
 
-        :param request: HTTP požadavek obsahující XML soubor v poli ``file``.
-        :param format: Formát odpovědi.
+    http_method_names = ["post"]
 
-        :return: Vrací ``Response`` s metadaty vytvořeného záznamu (HTTP 200),
-                 nebo chybou syntaxe volání (HTTP 400), chybějícím projektem (HTTP 404),
-                 nevalidním XML či datovými chybami (HTTP 422).
-        """
-        xml_file = request.FILES.get("file")
-
-        log_entry = ApiRequestLog.objects.create(
-            user=request.user,
-            client_ip=self.get_client_ip(request),
-            request_target=API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT,
-            filename=xml_file.name if xml_file is not None else None,
-            file_size=xml_file.size if xml_file is not None else None,
-        )
-
-        if xml_file is None:
-            return self._fail(
-                log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.missing_file")},
-                status.HTTP_400_BAD_REQUEST,
-            )
-
-        digest_error = self._verify_content_digest(request, xml_file)
-        if digest_error:
-            return self._fail(log_entry, {"detail": digest_error}, status.HTTP_400_BAD_REQUEST)
-        xml_file.seek(0)
-
-        try:
-            parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
-            # Read content into bytes first so etree.fromstring() receives a bytes value,
-            # not a file-like object. etree.parse() accepts both paths and file objects,
-            # causing CodeQL (py/path-injection) to flag it when the argument is
-            # user-supplied. etree.fromstring() only accepts str/bytes, breaking the taint
-            # path entirely without changing runtime behaviour.
-            doc = etree.ElementTree(etree.fromstring(xml_file.read(), parser=parser))
-        except etree.XMLSyntaxError as exc:
-            # The parser error text and user ID are logged intentionally for XML
-            # troubleshooting and incident investigation. They are operational
-            # diagnostics, not secrets.
-            # codeql[py/clear-text-logging-sensitive-data]
-            logger.warning(
-                "pas.api.SamostatnyNalezXmlImportView.post.xml_syntax_error",
-                extra={"error": str(exc), "user": request.user.pk},
-            )
-            return self._fail(
-                log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.invalid_xml_syntax")},
-                status.HTTP_400_BAD_REQUEST,
-            )
-
-        version_error = self._validate_declared_schema_version(doc)
-        if version_error:
-            return self._fail(log_entry, {"detail": version_error}, status.HTTP_422_UNPROCESSABLE_ENTITY)
-
-        try:
-            schema = self._get_amcr_schema(doc)
-        except ImportValidationException as exc:
-            return self._fail(
-                log_entry,
-                {"validation_errors": [e.to_dict() for e in exc.import_errors]},
-                self._validation_status(exc.import_errors),
-            )
-
-        validation_doc = self._build_schema_validation_doc(doc)
-        if not schema.validate(validation_doc):
-            errors = [
-                ImportValidationIssue(
-                    line=e.line,
-                    column=e.column,
-                    message=_("pas.api.SamostatnyNalezXmlImportView.post.schema_error_item")
-                    % {"line": e.line, "column": e.column, "message": e.message},
-                    error_type=ImportErrorType.INVALID_DATA,
-                )
-                for e in schema.error_log
-            ]
-            # Schema validation details and user ID are logged intentionally to
-            # support import troubleshooting and incident investigation. These
-            # are operational diagnostics, not secrets.
-            # codeql[py/clear-text-logging-sensitive-data]
-            logger.warning(
-                "pas.api.SamostatnyNalezXmlImportView.post.schema_invalid",
-                extra={"errors": [error.to_dict() for error in errors], "user": request.user.pk},
-            )
-            return self._fail(
-                log_entry,
-                {"schema_errors": [error.to_dict() for error in errors]},
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-
-        root = doc.getroot()
-        root_children = list(root)
-        nalez_elements = [child for child in root_children if child.tag == self._ns("samostatny_nalez")]
-        if not root_children:
-            return self._fail(
-                log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.missing_samostatny_nalez")},
-                status.HTTP_400_BAD_REQUEST,
-            )
-        if len(nalez_elements) > 1:
-            return self._fail(
-                log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.multiple_samostatny_nalez")},
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-        if len(root_children) != 1 or not nalez_elements:
-            return self._fail(
-                log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.invalid_root_content")},
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-
-        # XML je validní a obsahuje právě jeden záznam — přepneme stav na PROCESSING.
-        log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
-        log_entry.save(update_fields=["status"])
-
-        elem = nalez_elements[0]
-        notes = self._get_ignored_lang_notes(elem)
-        try:
-            self._validate_disallowed_elements(elem)
-            data, nova_osoba = self._parse_nalez_element(elem, request.user)
-        except ImportValidationException as exc:
-            return self._fail(
-                log_entry,
-                {"validation_errors": [e.to_dict() for e in exc.import_errors]},
-                self._validation_status(exc.import_errors),
-            )
-
-        if not self._has_import_permissions(request.user, data):
-            # The denied user ID and referenced project are logged intentionally
-            # for authorization troubleshooting and incident investigation.
-            # They are audit/operational identifiers, not secrets.
-            # codeql[py/clear-text-logging-sensitive-data]
-            logger.warning(
-                "pas.api.SamostatnyNalezXmlImportView.post.permission_denied",
-                extra={"user": request.user.pk, "projekt": data.get("projekt")},
-            )
-            return self._fail(
-                log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.permission_denied")},
-                status.HTTP_403_FORBIDDEN,
-            )
-
-        instance = None
-        try:
-            with transaction.atomic():
-                fedora_transaction = FedoraTransaction(transaction_user=request.user)
-                serializer_data = dict(data)
-                if nova_osoba is not None:
-                    nova_osoba.active_transaction = fedora_transaction
-                    nova_osoba.save()  # Osoba must be saved to get ident_cely before the serializer validation
-                    serializer_data["nalezce"] = nova_osoba.ident_cely
-
-                serializer = SamostatnyNalezXmlImportSerializer(data=serializer_data)
-                if not serializer.is_valid():
-                    raise ImportValidationException.from_serializer_errors(serializer.errors, line=elem.sourceline)
-                self._validate_heslar_value_matches(serializer.validated_data, elem)
-
-                if (
-                    serializer.validated_data.get("ident_cely")
-                    and SamostatnyNalez.objects.filter(ident_cely=serializer.validated_data["ident_cely"]).exists()
-                ):
-                    raise ImportValidationException(
-                        ImportValidationIssue(
-                            line=elem.sourceline,
-                            column=None,
-                            message="ident_cely: "
-                            + _("pas.api.SamostatnyNalezXmlImportView.post.ident_cely_already_exists"),
-                            error_type=ImportErrorType.INVALID_DATA,
-                        )
-                    )
-
-                instance = SamostatnyNalez(**serializer.validated_data)
-                if not instance.ident_cely:
-                    instance.ident_cely = get_sn_ident(instance.projekt)
-                instance.active_transaction = fedora_transaction
-                instance.save()
-                self._create_import_history_records(instance, request.user)
-                fedora_transaction.mark_transaction_as_closed()
-        except ImportValidationException as exc:
-            logger.error("pas.api.SamostatnyNalezXmlImportView.post.import_validation_error", extra={"error": exc})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
-            return self._fail(
-                log_entry,
-                {"validation_errors": [e.to_dict() for e in exc.import_errors]},
-                self._validation_status(exc.import_errors),
-            )
-        except FedoraError as err:
-            logger.error("pas.api.SamostatnyNalezXmlImportView.post.fedora_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
-            return self._fail(
-                log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.internal_error")},
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-        except DatabaseError as err:
-            logger.error("pas.api.SamostatnyNalezXmlImportView.post.database_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
-            return self._fail(
-                log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.internal_error")},
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-        except Exception as err:
-            logger.error("pas.api.SamostatnyNalezXmlImportView.post.unexpected_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
-            return self._fail(
-                log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.internal_error")},
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-        try:
-            metadata = FedoraRepositoryConnector(instance).get_metadata()
-        except FedoraError as err:
-            logger.error(
-                "pas.api.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving", extra={"error": err}
-            )
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
-            return self._fail(
-                log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving")},
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-        return self._success(log_entry, instance, metadata, notes)
-
-    @staticmethod
-    def _has_import_permissions(user, data: dict) -> bool:
-        """
-        Ověří oprávnění potřebná pro import samostatného nálezu.
-
-        :param user: Uživatel provádějící import.
-        :param data: Data jednoho importovaného záznamu.
-
-        :return: Vrací ``True`` pokud má uživatel všechna vyžadovaná oprávnění.
-        """
-        if not check_permissions(Permissions.actionChoices.pas_edit, user):
-            return False
-
-        if not check_permissions(Permissions.actionChoices.pas_ulozeni_edit, user):
-            return False
-
-        projekt_ident = data.get("projekt")
-        if projekt_ident and not check_permissions(
-            Permissions.actionChoices.pas_zapsat_do_projektu, user, projekt_ident
-        ):
-            return False
-
-        return True
-
-    @classmethod
-    def _create_import_history_records(cls, instance: SamostatnyNalez, user) -> None:
-        """
-        Vytvoří historii pro importovaný záznam samostatného nálezu.
-
-        :param instance: Vytvořený záznam samostatného nálezu.
-        :param user: Uživatel, který provedl import.
-        """
-        Historie.objects.bulk_create(
-            [
-                Historie(
-                    typ_zmeny=ZAPSANI_SN,
-                    uzivatel=user,
-                    vazba=instance.historie,
-                    poznamka=cls._IMPORT_HISTORY_NOTE,
-                ),
-                Historie(
-                    typ_zmeny=ODESLANI_SN,
-                    uzivatel=user,
-                    vazba=instance.historie,
-                    poznamka=cls._IMPORT_HISTORY_NOTE,
-                ),
-                Historie(
-                    typ_zmeny=POTVRZENI_SN,
-                    uzivatel=user,
-                    vazba=instance.historie,
-                    poznamka=cls._IMPORT_HISTORY_NOTE,
-                ),
-            ]
-        )
+    _AMCR_NS = "https://api.aiscr.cz/schema/amcr/2.2/"
+    _XML_NS = "http://www.w3.org/XML/1998/namespace"
+    _XSI_NS = "http://www.w3.org/2001/XMLSchema-instance"
+    _amcr_schema_cache: dict[str, tuple[etree.XMLSchema, float]] = {}  # url -> (schema, inserted_at)
+    XML_IMPORT_INITIAL_STAV: int = SN_POTVRZENY
 
     def _validation_status(self, errors: list[ImportValidationIssue]) -> int:
         """
@@ -1542,133 +1487,6 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
         if any(error.error_type == ImportErrorType.RECORD_DOES_NOT_EXIST for error in errors):
             return status.HTTP_404_NOT_FOUND
         return status.HTTP_422_UNPROCESSABLE_ENTITY
-
-    @classmethod
-    def _validate_disallowed_elements(cls, elem: etree._Element) -> None:
-        """
-        Ověří, že importovaný element neobsahuje nepovolené podřízené elementy.
-
-        :param elem: Importovaný element ``amcr:samostatny_nalez``.
-
-        :raises ImportValidationException: Pokud je nalezen nepovolený element.
-        """
-        stav_elem = elem.find(cls._ns("stav"))
-        if stav_elem is not None:
-            raise ImportValidationException(
-                ImportValidationIssue(
-                    line=stav_elem.sourceline,
-                    column=None,
-                    message="stav: " + _("pas.api.SamostatnyNalezXmlImportView.post.stav_element_not_allowed"),
-                    error_type=ImportErrorType.INVALID_DATA,
-                )
-            )
-
-    @classmethod
-    def _build_schema_validation_doc(cls, doc: etree._ElementTree) -> etree._ElementTree:
-        """
-        Vytvoří kopii dokumentu upravenou pro validaci proti XSD schématu.
-
-        Importní API nepovoluje element ``stav``, ale XSD jej vyžaduje.
-        Pro validaci proto doplní chybějící ``stav`` do kopie dokumentu.
-
-        :param doc: Původní XML dokument.
-
-        :return: Kopie XML dokumentu určená pro schema validaci.
-        """
-
-        parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
-        validation_doc = etree.ElementTree(etree.fromstring(etree.tostring(doc.getroot()), parser=parser))
-        for elem in validation_doc.findall(f".//{cls._ns('samostatny_nalez')}"):
-            if elem.find(cls._ns("stav")) is not None:
-                continue
-
-            stav_elem = etree.Element(cls._ns("stav"))
-            stav_elem.text = str(SN_ZAPSANY)
-            insert_before_tags = (
-                "predano",
-                "predano_organizace",
-                "geom_system",
-                "pristupnost",
-                "chranene_udaje",
-                "historie",
-                "soubor",
-            )
-            insert_index = len(elem)
-            for index, child in enumerate(elem):
-                if _strip_namespace(child.tag) in insert_before_tags:
-                    insert_index = index
-                    break
-            elem.insert(insert_index, stav_elem)
-
-        return validation_doc
-
-    @classmethod
-    def _validate_heslar_value_matches(cls, validated_data: dict, elem: etree._Element) -> None:
-        """
-        Ověří shodu textové hodnoty XML a ``heslo`` na navázaném hesláři.
-
-        :param validated_data: Validovaná data serializeru.
-        :param elem: Importovaný XML element.
-
-        :raises ImportValidationException: Pokud text elementu neodpovídá ``heslo``.
-        """
-        heslar_fields = ("okolnosti", "obdobi", "druh_nalezu", "specifikace")
-        errors = []
-        for field_name in heslar_fields:
-            field_elem = elem.find(cls._ns(field_name))
-            provided_value = cls._text(elem, field_name)
-            validated_heslar = validated_data.get(field_name)
-            if provided_value and validated_heslar and provided_value != validated_heslar.heslo:
-                errors.append(
-                    ImportValidationIssue(
-                        line=field_elem.sourceline if field_elem is not None else elem.sourceline,
-                        column=None,
-                        message=f"{field_name}: "
-                        + _(
-                            "pas.api.SamostatnyNalezXmlImportView._validate_heslar_value_matches.saved_provided_mismatch"
-                        )
-                        % {
-                            "provided": provided_value,
-                            "saved": validated_heslar.heslo,
-                        },
-                        error_type=ImportErrorType.SAVED_PROVIDED_MISMATCH,
-                    )
-                )
-        if errors:
-            raise ImportValidationException(errors)
-
-    @staticmethod
-    def _verify_content_digest(request, xml_file) -> str | None:
-        """
-        Ověří integritu souboru pomocí hlavičky ``Content-Digest`` (RFC 9530).
-
-        Očekávaný formát hlavičky: ``sha-512=:<base64>:``
-        Pokud hlavička chybí nebo neodpovídá skutečnému SHA-512 obsahu souboru,
-        vrátí chybovou zprávu.
-
-        :param request: HTTP požadavek obsahující hlavičku ``Content-Digest``.
-        :param xml_file: Nahraný soubor; po zavolání je pozice čtení na začátku.
-
-        :return: Chybová zpráva jako řetězec, nebo None pokud je digest v pořádku.
-        """
-        header = request.headers.get("Content-Digest")
-        if not header:
-            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.missing_digest")
-
-        prefix = "sha-512=:"
-        if not header.startswith(prefix) or not header.endswith(":"):
-            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.invalid_format")
-
-        try:
-            expected = base64.b64decode(header[len(prefix) : -1])
-        except (ValueError, TypeError):
-            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.invalid_base64")
-
-        actual = hashlib.sha512(xml_file.read()).digest()
-        if actual != expected:
-            return _("pas.api.SamostatnyNalezXmlImportView._verify_content_digest.digest_mismatch")
-
-        return None
 
     @classmethod
     def _validate_declared_schema_version(cls, doc: etree._ElementTree) -> str | None:
@@ -1744,12 +1562,7 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
 
                     :return: Vrací lokální soubor pro xml.xsd, jinak None.
                     """
-                    allowed_urls = (
-                        "http://www.w3.org/2001/xml.xsd",
-                        "https://www.w3.org/2001/xml.xsd",
-                        "http://www.w3.org/2001/03/xml.xsd",
-                        "https://www.w3.org/2001/03/xml.xsd",
-                    )
+                    allowed_urls = _ALLOWED_XML_XSD_URLS
                     if url in allowed_urls:
                         return self.resolve_filename("xml_generator/definitions/xml.xsd", context)
                     if any(pattern.match(url) for pattern in _ALLOWED_SCHEMA_URL_PATTERNS):
@@ -1914,6 +1727,142 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
         return child.get("id") or None
 
     @classmethod
+    def _validate_heslar_value_matches(cls, validated_data: dict, elem: etree._Element) -> None:
+        """
+        Ověří shodu textové hodnoty XML a ``heslo`` na navázaném hesláři.
+
+        :param validated_data: Validovaná data serializeru.
+        :param elem: Importovaný XML element.
+
+        :raises ImportValidationException: Pokud text elementu neodpovídá ``heslo``.
+        """
+        heslar_fields = ("okolnosti", "obdobi", "druh_nalezu", "specifikace")
+        errors = []
+        for field_name in heslar_fields:
+            field_elem = elem.find(cls._ns(field_name))
+            provided_value = cls._text(elem, field_name)
+            validated_heslar = validated_data.get(field_name)
+            if provided_value and validated_heslar and provided_value != validated_heslar.heslo:
+                errors.append(
+                    ImportValidationIssue(
+                        line=field_elem.sourceline if field_elem is not None else elem.sourceline,
+                        column=None,
+                        message=f"{field_name}: "
+                        + _(
+                            "pas.api.SamostatnyNalezXmlImportView._validate_heslar_value_matches.saved_provided_mismatch"
+                        )
+                        % {
+                            "provided": provided_value,
+                            "saved": validated_heslar.heslo,
+                        },
+                        error_type=ImportErrorType.SAVED_PROVIDED_MISMATCH,
+                    )
+                )
+        if errors:
+            raise ImportValidationException(errors)
+
+    @classmethod
+    def _parse_nalez_element(cls, elem: etree._Element, user) -> tuple[dict, Osoba | None]:
+        """
+        Převede element ``amcr:samostatny_nalez`` na slovník pro deserializaci.
+
+        Elementy typu ``refType`` a ``vocabType`` se mapují pomocí atributu ``id``,
+        který nese ``ident_cely`` odkazovaného záznamu. Geometrie jsou předány
+        jako WKT řetězce z elementů ``geom_wkt`` a ``geom_sjtsk_wkt``.
+
+        :param elem: Element ``amcr:samostatny_nalez`` z importovaného XML dokumentu.
+        :param user: Uživatel provádějící import.
+
+        :return: Dvojice ``(data, nova_osoba)`` připravená pro import.
+        """
+        chranene = elem.find(cls._ns("chranene_udaje"))
+        nalezce_ident, nova_osoba = cls._parse_nalezce(elem, user)
+        projekt_ident = cls._id_attr(elem, "projekt")
+
+        if not projekt_ident:
+            raise ImportValidationException(
+                ImportValidationIssue(
+                    line=elem.sourceline,
+                    column=None,
+                    message="projekt: "
+                    + _("pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.missing_projekt"),
+                    error_type=ImportErrorType.INVALID_DATA,
+                )
+            )
+
+        def parse_ruian_katastr_kod(katastr_elem: etree._Element | None) -> int | None:
+            """
+            Převede atribut ``id`` ve formátu ``ruian-{kod}`` na číselný kód katastru.
+
+            :param katastr_elem: XML element ``katastr``.
+
+            :return: Kód katastru nebo ``None``, pokud element neexistuje.
+
+            :raises ImportValidationException: Pokud je atribut ``id`` v nevalidním formátu.
+            """
+            if katastr_elem is None:
+                return None
+
+            katastr_id = katastr_elem.get("id")
+            if not katastr_id:
+                return None
+            if not katastr_id.startswith("ruian-"):
+                raise ImportValidationException(
+                    ImportValidationIssue(
+                        line=katastr_elem.sourceline,
+                        column=None,
+                        message=f"katastr: {_('pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.invalid_katastr_id')}",
+                        error_type=ImportErrorType.INVALID_DATA,
+                    )
+                )
+
+            try:
+                return int(katastr_id.split("-", 1)[1])
+            except (IndexError, ValueError):
+                raise ImportValidationException(
+                    ImportValidationIssue(
+                        line=katastr_elem.sourceline,
+                        column=None,
+                        message=f"katastr: {_('pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.invalid_katastr_id')}",
+                        error_type=ImportErrorType.INVALID_DATA,
+                    )
+                )
+
+        data = {
+            "ident_cely": None if cls._text(elem, "ident_cely") == ":tba" else cls._text(elem, "ident_cely"),
+            "projekt": projekt_ident,
+            "evidencni_cislo": cls._text(elem, "evidencni_cislo"),
+            "igsn": cls._text(elem, "igsn"),
+            "hloubka": cls._text(elem, "hloubka"),
+            "okolnosti": cls._id_attr(elem, "okolnosti"),
+            "obdobi": cls._id_attr(elem, "obdobi"),
+            "presna_datace": cls._text(elem, "presna_datace"),
+            "druh_nalezu": cls._id_attr(elem, "druh_nalezu"),
+            "specifikace": cls._id_attr(elem, "specifikace"),
+            "pocet": cls._text(elem, "pocet"),
+            "poznamka": cls._text(elem, "poznamka"),
+            "nalezce": nalezce_ident,
+            "datum_nalezu": cls._text(elem, "datum_nalezu"),
+            "stav": cls.XML_IMPORT_INITIAL_STAV,
+            "predano": cls._parse_bool(cls._text(elem, "predano")),
+            "predano_organizace": cls._id_attr(elem, "predano_organizace"),
+            "geom_system": cls._text(elem, "geom_system"),
+            "pristupnost": cls._id_attr(elem, "pristupnost"),
+        }
+
+        if chranene is not None:
+            data["katastr"] = parse_ruian_katastr_kod(chranene.find(cls._ns("katastr")))
+            data["lokalizace"] = cls._text(chranene, "lokalizace")
+            geom_wkt_elem = chranene.find(cls._ns("geom_wkt"))
+            if geom_wkt_elem is not None and geom_wkt_elem.text:
+                data["geom"] = geom_wkt_elem.text.strip()
+            geom_sjtsk_elem = chranene.find(cls._ns("geom_sjtsk_wkt"))
+            if geom_sjtsk_elem is not None and geom_sjtsk_elem.text:
+                data["geom_sjtsk"] = geom_sjtsk_elem.text.strip()
+
+        return {k: v for k, v in data.items() if v is not None}, nova_osoba
+
+    @classmethod
     def _parse_nalezce(cls, elem: etree._Element, user) -> tuple[str | None, Osoba | None]:
         """
         Zpracuje element ``nalezce`` a vrátí ``ident_cely`` osoby pro import.
@@ -2005,102 +1954,867 @@ class SamostatnyNalezXmlImportView(PasApiPermissionMixin, APIView):
         return None, osoba
 
     @classmethod
-    def _parse_nalez_element(cls, elem: etree._Element, user) -> tuple[dict, Osoba | None]:
+    def _build_schema_validation_doc(cls, doc: etree._ElementTree) -> etree._ElementTree:
         """
-        Převede element ``amcr:samostatny_nalez`` na slovník pro deserializaci.
+        Vytvoří kopii dokumentu upravenou pro validaci proti XSD schématu.
 
-        Elementy typu ``refType`` a ``vocabType`` se mapují pomocí atributu ``id``,
-        který nese ``ident_cely`` odkazovaného záznamu. Geometrie jsou předány
-        jako WKT řetězce z elementů ``geom_wkt`` a ``geom_sjtsk_wkt``.
+        XSD vyžaduje element ``stav``. Pokud v dokumentu chybí, doplní se do kopie
+        pro účely validace; originální dokument zůstává nezměněn.
 
-        :param elem: Element ``amcr:samostatny_nalez`` z importovaného XML dokumentu.
+        :param doc: Původní XML dokument.
+
+        :return: Kopie XML dokumentu určená pro schema validaci.
+        """
+        parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
+        validation_doc = etree.ElementTree(etree.fromstring(etree.tostring(doc.getroot()), parser=parser))
+        for elem in validation_doc.findall(f".//{cls._ns('samostatny_nalez')}"):
+            if elem.find(cls._ns("stav")) is not None:
+                continue
+
+            stav_elem = etree.Element(cls._ns("stav"))
+            stav_elem.text = str(cls.XML_IMPORT_INITIAL_STAV)
+            insert_before_tags = (
+                "predano",
+                "predano_organizace",
+                "geom_system",
+                "pristupnost",
+                "chranene_udaje",
+                "historie",
+                "soubor",
+            )
+            insert_index = len(elem)
+            for index, child in enumerate(elem):
+                if _strip_namespace(child.tag) in insert_before_tags:
+                    insert_index = index
+                    break
+            elem.insert(insert_index, stav_elem)
+
+        return validation_doc
+
+
+class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
+    """Pohled pro import záznamu samostatného nálezu z XML souboru přes POST požadavek."""
+
+    _IMPORT_HISTORY_NOTE = _l("pas.api.SamostatnyNalezXmlImportView.import_history_note")
+
+    def post(self, request, format=None):
+        """
+        Importuje nový záznam samostatného nálezu z XML souboru.
+
+        Přijímá soubor v parametru ``file`` (multipart/form-data). XML musí odpovídat
+        schématu AMČR 2.2 (https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd).
+        Dokument musí obsahovat právě jeden element ``amcr:samostatny_nalez``.
+
+        :param request: HTTP požadavek obsahující XML soubor v poli ``file``.
+        :param format: Formát odpovědi.
+
+        :return: Vrací ``Response`` s metadaty vytvořeného záznamu (HTTP 200),
+                 nebo chybou syntaxe volání (HTTP 400), chybějícím projektem (HTTP 404),
+                 nevalidním XML či datovými chybami (HTTP 422).
+        """
+        xml_file = request.FILES.get("file")
+
+        log_entry = ApiRequestLog.objects.create(
+            user=request.user,
+            client_ip=self.get_client_ip(request),
+            request_target=API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT,
+            filename=xml_file.name if xml_file is not None else None,
+            file_size=xml_file.size if xml_file is not None else None,
+        )
+
+        if xml_file is None:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.missing_file")},
+                status.HTTP_400_BAD_REQUEST,
+            )
+
+        digest_error = self._verify_content_digest(request, xml_file)
+        if digest_error:
+            digest_message, digest_status = digest_error
+            return self._fail(log_entry, {"detail": digest_message}, digest_status)
+
+        try:
+            parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
+            # Read content into bytes first so etree.fromstring() receives a bytes value,
+            # not a file-like object. etree.parse() accepts both paths and file objects,
+            # causing CodeQL (py/path-injection) to flag it when the argument is
+            # user-supplied. etree.fromstring() only accepts str/bytes, breaking the taint
+            # path entirely without changing runtime behaviour.
+            doc = etree.ElementTree(etree.fromstring(xml_file.read(), parser=parser))
+        except etree.XMLSyntaxError as exc:
+            # The parser error text and user ID are logged intentionally for XML
+            # troubleshooting and incident investigation. They are operational
+            # diagnostics, not secrets.
+            # codeql[py/clear-text-logging-sensitive-data]
+            logger.warning(
+                "pas.api.SamostatnyNalezXmlImportView.post.xml_syntax_error",
+                extra={"error": str(exc), "user": request.user.pk},
+            )
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.invalid_xml_syntax")},
+                status.HTTP_400_BAD_REQUEST,
+            )
+
+        version_error = self._validate_declared_schema_version(doc)
+        if version_error:
+            return self._fail(log_entry, {"detail": version_error}, status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+        try:
+            schema = self._get_amcr_schema(doc)
+        except ImportValidationException as exc:
+            return self._fail(
+                log_entry,
+                {"validation_errors": [e.to_dict() for e in exc.import_errors]},
+                self._validation_status(exc.import_errors),
+            )
+
+        validation_doc = self._build_schema_validation_doc(doc)
+        if not schema.validate(validation_doc):
+            errors = [
+                ImportValidationIssue(
+                    line=e.line,
+                    column=e.column,
+                    message=_("pas.api.SamostatnyNalezXmlImportView.post.schema_error_item")
+                    % {"line": e.line, "column": e.column, "message": e.message},
+                    error_type=ImportErrorType.INVALID_DATA,
+                )
+                for e in schema.error_log
+            ]
+            # Schema validation details and user ID are logged intentionally to
+            # support import troubleshooting and incident investigation. These
+            # are operational diagnostics, not secrets.
+            # codeql[py/clear-text-logging-sensitive-data]
+            logger.warning(
+                "pas.api.SamostatnyNalezXmlImportView.post.schema_invalid",
+                extra={"errors": [error.to_dict() for error in errors], "user": request.user.pk},
+            )
+            return self._fail(
+                log_entry,
+                {"schema_errors": [error.to_dict() for error in errors]},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        root = doc.getroot()
+        root_children = list(root)
+        nalez_elements = [child for child in root_children if child.tag == self._ns("samostatny_nalez")]
+        if not root_children:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.missing_samostatny_nalez")},
+                status.HTTP_400_BAD_REQUEST,
+            )
+        if len(nalez_elements) > 1:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.multiple_samostatny_nalez")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        if len(root_children) != 1 or not nalez_elements:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.invalid_root_content")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        # XML je validní a obsahuje právě jeden záznam — přepneme stav na PROCESSING.
+        log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
+        log_entry.save(update_fields=["status"])
+
+        elem = nalez_elements[0]
+        notes = self._get_ignored_lang_notes(elem)
+        try:
+            self._validate_disallowed_elements(elem)
+            data, nova_osoba = self._parse_nalez_element(elem, request.user)
+        except ImportValidationException as exc:
+            return self._fail(
+                log_entry,
+                {"validation_errors": [e.to_dict() for e in exc.import_errors]},
+                self._validation_status(exc.import_errors),
+            )
+
+        if not self._has_import_permissions(request.user, data):
+            # The denied user ID and referenced project are logged intentionally
+            # for authorization troubleshooting and incident investigation.
+            # They are audit/operational identifiers, not secrets.
+            # codeql[py/clear-text-logging-sensitive-data]
+            logger.warning(
+                "pas.api.SamostatnyNalezXmlImportView.post.permission_denied",
+                extra={"user": request.user.pk, "projekt": data.get("projekt")},
+            )
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.permission_denied")},
+                status.HTTP_403_FORBIDDEN,
+            )
+
+        instance = None
+        fedora_transaction = FedoraTransaction(transaction_user=request.user)
+        try:
+            with transaction.atomic():
+                serializer_data = dict(data)
+                if nova_osoba is not None:
+                    nova_osoba.active_transaction = fedora_transaction
+                    # active_transaction is an attribute that defines a Fedora transaction attached to the objects,
+                    # not a database field, so there is no point in using it as an argument in the save method.
+                    nova_osoba.save()  # Osoba must be saved to get ident_cely before the serializer validation
+                    serializer_data["nalezce"] = nova_osoba.ident_cely
+
+                serializer = SamostatnyNalezXmlImportSerializer(data=serializer_data)
+                if not serializer.is_valid():
+                    raise ImportValidationException.from_serializer_errors(serializer.errors, line=elem.sourceline)
+                self._validate_heslar_value_matches(serializer.validated_data, elem)
+
+                if (
+                    serializer.validated_data.get("ident_cely")
+                    and SamostatnyNalez.objects.filter(ident_cely=serializer.validated_data["ident_cely"]).exists()
+                ):
+                    raise ImportValidationException(
+                        ImportValidationIssue(
+                            line=elem.sourceline,
+                            column=None,
+                            message="ident_cely: "
+                            + _("pas.api.SamostatnyNalezXmlImportView.post.ident_cely_already_exists"),
+                            error_type=ImportErrorType.INVALID_DATA,
+                        )
+                    )
+
+                instance = SamostatnyNalez(**serializer.validated_data)
+                if not instance.ident_cely:
+                    instance.ident_cely = get_sn_ident(instance.projekt)
+                instance.active_transaction = fedora_transaction
+                # active_transaction is an attribute that defines a Fedora transaction attached to the objects,
+                # not a database field, so there is no point in using it as an argument in the save method.
+                instance.save()
+                self._create_import_history_records(instance, request.user)
+                # Do not set close_active_transaction_when_finished so that fedora_transaction
+                # stays open after the DB commit, allowing us to verify the Fedora write below.
+                instance.save()
+        except ImportValidationException as exc:
+            logger.error("pas.api.SamostatnyNalezXmlImportView.post.import_validation_error", extra={"error": exc})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"validation_errors": [e.to_dict() for e in exc.import_errors]},
+                self._validation_status(exc.import_errors),
+            )
+        except FedoraError as err:
+            logger.error("pas.api.SamostatnyNalezXmlImportView.post.fedora_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except DatabaseError as err:
+            logger.error("pas.api.SamostatnyNalezXmlImportView.post.database_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except Exception as err:
+            logger.error("pas.api.SamostatnyNalezXmlImportView.post.unexpected_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        # The DB transaction has committed. fedora_transaction is still open because
+        # close_active_transaction_when_finished was not set. Read the metadata back from
+        # Fedora within the same transaction to verify the save, then commit.
+        try:
+            metadata = FedoraRepositoryConnector(instance, fedora_transaction).get_metadata()
+            fedora_transaction.mark_transaction_as_closed()
+        except FedoraError as err:
+            logger.error(
+                "pas.api.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving", extra={"error": err}
+            )
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return self._success(log_entry, instance, metadata, notes)
+
+    @staticmethod
+    def _has_import_permissions(user, data: dict) -> bool:
+        """
+        Ověří oprávnění potřebná pro import samostatného nálezu.
+
         :param user: Uživatel provádějící import.
+        :param data: Data jednoho importovaného záznamu.
 
-        :return: Dvojice ``(data, nova_osoba)`` připravená pro import.
+        :return: Vrací ``True`` pokud má uživatel všechna vyžadovaná oprávnění.
         """
-        chranene = elem.find(cls._ns("chranene_udaje"))
-        nalezce_ident, nova_osoba = cls._parse_nalezce(elem, user)
-        projekt_ident = cls._id_attr(elem, "projekt")
+        if not check_permissions(Permissions.actionChoices.pas_edit, user):
+            return False
 
-        if not projekt_ident:
+        if not check_permissions(Permissions.actionChoices.pas_ulozeni_edit, user):
+            return False
+
+        projekt_ident = data.get("projekt")
+        if projekt_ident and not check_permissions(
+            Permissions.actionChoices.pas_zapsat_do_projektu, user, projekt_ident
+        ):
+            return False
+
+        return True
+
+    @classmethod
+    def _create_import_history_records(cls, instance: SamostatnyNalez, user) -> None:
+        """
+        Vytvoří historii pro importovaný záznam samostatného nálezu.
+
+        :param instance: Vytvořený záznam samostatného nálezu.
+        :param user: Uživatel, který provedl import.
+        """
+        Historie.objects.bulk_create(
+            [
+                Historie(
+                    typ_zmeny=ZAPSANI_SN,
+                    uzivatel=user,
+                    vazba=instance.historie,
+                    poznamka=cls._IMPORT_HISTORY_NOTE,
+                ),
+                Historie(
+                    typ_zmeny=ODESLANI_SN,
+                    uzivatel=user,
+                    vazba=instance.historie,
+                    poznamka=cls._IMPORT_HISTORY_NOTE,
+                ),
+                Historie(
+                    typ_zmeny=POTVRZENI_SN,
+                    uzivatel=user,
+                    vazba=instance.historie,
+                    poznamka=cls._IMPORT_HISTORY_NOTE,
+                ),
+            ]
+        )
+
+    @classmethod
+    def _validate_disallowed_elements(cls, elem: etree._Element) -> None:
+        """
+        Ověří, že importovaný element neobsahuje nepovolené podřízené elementy.
+
+        :param elem: Importovaný element ``amcr:samostatny_nalez``.
+
+        :raises ImportValidationException: Pokud je nalezen nepovolený element.
+        """
+        stav_elem = elem.find(cls._ns("stav"))
+        if stav_elem is not None:
             raise ImportValidationException(
                 ImportValidationIssue(
-                    line=elem.sourceline,
+                    line=stav_elem.sourceline,
                     column=None,
-                    message="projekt: "
-                    + _("pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.missing_projekt"),
+                    message="stav: " + _("pas.api.SamostatnyNalezXmlImportView.post.stav_element_not_allowed"),
                     error_type=ImportErrorType.INVALID_DATA,
                 )
             )
 
-        def parse_ruian_katastr_kod(katastr_elem: etree._Element | None) -> int | None:
-            """
-            Převede atribut ``id`` ve formátu ``ruian-{kod}`` na číselný kód katastru.
 
-            :param katastr_elem: XML element ``katastr``.
+class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
+    """Pohled pro aktualizaci pole ``evidencni_cislo`` záznamu samostatného nálezu přes PATCH požadavek."""
 
-            :return: Kód katastru nebo ``None``, pokud element neexistuje.
+    http_method_names = ["patch"]
+    # SamostatnyNalez.evidencni_cislo is a TextField (no max_length in the DB schema).
+    # 255 is an API-level policy limit enforced here, not derived from the model field.
+    _MAX_EVIDENCNI_CISLO_LENGTH = 255
 
-            :raises ImportValidationException: Pokud je atribut ``id`` v nevalidním formátu.
-            """
-            if katastr_elem is None:
-                return None
+    @classmethod
+    def _has_edit_permissions(cls, user, ident_cely) -> bool:
+        """
+        Ověří, zda má uživatel oprávnění editovat evidenční číslo záznamu samostatného nálezu.
 
-            katastr_id = katastr_elem.get("id")
-            if not katastr_id:
-                return None
-            if not katastr_id.startswith("ruian-"):
-                raise ImportValidationException(
-                    ImportValidationIssue(
-                        line=katastr_elem.sourceline,
-                        column=None,
-                        message=f"katastr: {_('pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.invalid_katastr_id')}",
-                        error_type=ImportErrorType.INVALID_DATA,
+        Oprávněný je takový uživatel, který splňuje standardní pravidla pro editaci nálezu
+        s těmito úpravami:
+
+        - pro aktualizaci ev. čísla nikdy není autorizován badatel (operaci může užívat
+          pouze archeolog a výše)
+        - pokud je autorizován archeolog, nález může být v libovolném stavu (vč. archivovaného)
+
+        :param user: Uživatel provádějící požadavek.
+        :param ident_cely: Identifikátor záznamu samostatného nálezu.
+
+        :return: Vrací ``True`` pokud má uživatel oprávnění ``pas_edit`` pro daný záznam
+                 a zároveň je jeho hlavní role Archeolog nebo vyšší.
+        """
+        if not check_permissions(Permissions.actionChoices.pas_edit, user, ident_cely, skip_status=True):
+            return False
+        return user.hlavni_role.pk >= ROLE_ARCHEOLOG_ID
+
+    def patch(self, request, ident_cely: str, format=None):
+        """
+        Aktualizuje pole ``evidencni_cislo`` záznamu samostatného nálezu.
+
+        Přijímá ``ident_cely`` záznamu jako součást URL a novou hodnotu ``evidencni_cislo``
+        jako query parametr. Parametr ``evidencni_cislo`` je povinný a jeho
+        hodnota musí být neprázdná. Endpoint rozlišuje mezi chybějícím
+        parametrem a přítomným parametrem s prázdnou hodnotou, aby klient
+        mohl oba validační stavy zpracovat odlišně.
+
+        Příklad volání::
+
+            PATCH /pas/api/nalez/M-202400001-N00001/evidencni-cislo?evidencni_cislo=EC-2024-001
+
+        :param request: HTTP požadavek s povinným query parametrem
+                        ``evidencni_cislo``, který nesmí být prázdný.
+        :param ident_cely: Identifikátor záznamu samostatného nálezu.
+        :param format: Formát odpovědi.
+
+        :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
+                 nebo chybou syntaxe volání (HTTP 400; chybějící parametr
+                 ``evidencni_cislo``), chybou dat (HTTP 422; prázdná, příliš
+                 dlouhá nebo shodná hodnota), nenalezeným
+                 záznamem (HTTP 404), nedostatečnými oprávněními (HTTP 403),
+                 nebo interní chybou (HTTP 500).
+        """
+        log_entry = ApiRequestLog.objects.create(
+            user=request.user,
+            client_ip=self.get_client_ip(request),
+            request_target=API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH,
+        )
+
+        if "evidencni_cislo" not in request.query_params:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.missing_evidencni_cislo")},
+                status.HTTP_400_BAD_REQUEST,
+            )
+
+        evidencni_cislo = request.query_params["evidencni_cislo"]
+
+        # "Missing" and "empty" must stay separate so API clients can
+        # distinguish an omitted query parameter from an explicitly invalid
+        # empty value.
+        if evidencni_cislo == "":
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.empty_evidencni_cislo")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        if len(evidencni_cislo) > self._MAX_EVIDENCNI_CISLO_LENGTH:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.evidencni_cislo_too_long")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        try:
+            instance = SamostatnyNalez.objects.get(ident_cely=ident_cely)
+        except SamostatnyNalez.DoesNotExist:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.not_found")},
+                status.HTTP_404_NOT_FOUND,
+            )
+
+        if not self._has_edit_permissions(request.user, ident_cely):
+            # The denied user ID and ident_cely are logged intentionally for
+            # authorization troubleshooting and incident investigation.
+            # They are audit/operational identifiers, not secrets.
+            # codeql[py/clear-text-logging-sensitive-data]
+            logger.warning(
+                "pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.permission_denied",
+                extra={"user": request.user.pk, "ident_cely": ident_cely},
+            )
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.permission_denied")},
+                status.HTTP_403_FORBIDDEN,
+            )
+
+        if evidencni_cislo == instance.evidencni_cislo:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.no_change")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        if not self._acquire_record_lock(ident_cely):
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.PasApiBaseView.record_locked")},
+                status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+
+        log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
+        log_entry.save(update_fields=["status"])
+
+        old_evidencni_cislo = instance.evidencni_cislo
+        fedora_transaction = FedoraTransaction(transaction_user=request.user)
+        try:
+            with transaction.atomic():
+                instance.evidencni_cislo = evidencni_cislo
+                instance.active_transaction = fedora_transaction
+                # active_transaction is an attribute that defines a Fedora transaction attached to the objects,
+                # not a database field, so there is no point in using it as an argument in the save method.
+                instance.save(update_fields=["evidencni_cislo"])
+                self._create_history_record(instance, request.user, old_evidencni_cislo, evidencni_cislo)
+                self._update_igsn_if_archived(instance)
+        except DoiWriteError as err:
+            logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.igsn_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.doi_update_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except FedoraError as err:
+            logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except DatabaseError as err:
+            logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.database_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except Exception as err:
+            logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.unexpected_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        try:
+            metadata = FedoraRepositoryConnector(instance, fedora_transaction).get_metadata()
+            fedora_transaction.mark_transaction_as_closed()
+        except FedoraError as err:
+            logger.error(
+                "pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error_reading_metadata",
+                extra={"error": err},
+            )
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error_reading_metadata")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        self._release_record_lock(ident_cely)
+        return self._success(log_entry, instance, metadata, [])
+
+    @staticmethod
+    def _create_history_record(instance: SamostatnyNalez, user, old_value: str | None, new_value: str | None) -> None:
+        """
+        Vytvoří záznam historie pro aktualizaci pole ``evidencni_cislo``.
+
+        Poznámka záznamu má formát ``old_value -> new_value``. Je-li záznam ve stavu
+        SN4 (archivovaný), zapíše se navíc záznam ``SN34``, který obnoví datum archivace.
+
+        :param instance: Aktualizovaný záznam samostatného nálezu.
+        :param user: Uživatel, který provedl aktualizaci.
+        :param old_value: Původní hodnota pole ``evidencni_cislo``.
+        :param new_value: Nová hodnota pole ``evidencni_cislo``.
+        """
+        Historie.objects.create(
+            typ_zmeny=AKTUALIZACE_SN,
+            uzivatel=user,
+            vazba=instance.historie,
+            poznamka=f"{old_value} -> {new_value}",
+        )
+        if instance.stav == SN_ARCHIVOVANY:
+            Historie.objects.create(
+                typ_zmeny=ARCHIVACE_SN,
+                uzivatel=user,
+                vazba=instance.historie,
+            )
+
+
+class SamostatnyNalezFotografieUploadView(PasApiBaseView):
+    """Pohled pro nahrání jedné fotografie k existujícímu samostatnému nálezu."""
+
+    http_method_names = ["post"]
+
+    @staticmethod
+    def _has_upload_permissions(user, ident_cely) -> bool:
+        """
+        Ověří, zda má uživatel oprávnění nahrát fotografii k danému nálezu.
+
+        Oprávněný je takový uživatel, který splňuje standardní pravidla pro editaci nálezu
+        s těmito úpravami:
+
+        - pro nahrání fotografie nikdy není autorizován badatel (operaci může užívat
+          pouze archeolog a výše)
+        - pokud je autorizován archeolog, nález může být v libovolném stavu (vč. archivovaného)
+
+        :param user: Uživatel provádějící požadavek.
+        :param ident_cely: Identifikátor záznamu samostatného nálezu.
+
+        :return: ``True`` pokud má uživatel oprávnění ``soubor_nahrat_pas`` pro daný záznam
+                 a zároveň je jeho hlavní role Archeolog nebo vyšší.
+        """
+        if not check_permissions(Permissions.actionChoices.soubor_nahrat_pas, user, ident_cely, skip_status=True):
+            return False
+        return user.hlavni_role.pk >= ROLE_ARCHEOLOG_ID
+
+    @staticmethod
+    def _create_rearchive_history_record(instance: SamostatnyNalez, user) -> None:
+        """
+        Pro archivovaný nález zapíše do historie tichou reachivaci ``SN34``.
+
+        :param instance: Aktualizovaný záznam samostatného nálezu.
+        :param user: Uživatel, který provedl upload fotografie.
+        """
+        if instance.stav == SN_ARCHIVOVANY:
+            Historie.objects.create(
+                typ_zmeny=ARCHIVACE_SN,
+                uzivatel=user,
+                vazba=instance.historie,
+            )
+
+    def post(self, request, ident_cely: str, format=None):
+        """
+        Nahraje fotografii k existujícímu záznamu samostatného nálezu.
+
+        Přijímá ``ident_cely`` záznamu jako součást URL a jeden binární soubor v parametru
+        ``file`` (multipart/form-data). Soubor musí projít kontrolou ``Content-Digest``,
+        MIME typu a antiviru. Úspěšný upload uloží fotografii do Fedora repository,
+        založí záznam ``Soubor`` navázaný na nález a vrátí aktualizovaná XML metadata z Fedory.
+
+        :param request: HTTP požadavek obsahující fotografii v poli ``file``.
+        :param ident_cely: Identifikátor aktualizovaného záznamu samostatného nálezu.
+        :param format: Formát odpovědi.
+
+        :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
+                 nebo chybu syntaxe volání (HTTP 400), nenalezený záznam (HTTP 404),
+                 validační chybu souboru (HTTP 422), nebo interní chybu (HTTP 500).
+        """
+        uploaded_file = request.FILES.get("file")
+
+        log_entry = ApiRequestLog.objects.create(
+            user=request.user,
+            client_ip=self.get_client_ip(request),
+            request_target=API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_FOTOGRAFIE_UPLOAD,
+            filename=uploaded_file.name if uploaded_file is not None else None,
+            file_size=uploaded_file.size if uploaded_file is not None else None,
+        )
+
+        try:
+            instance = SamostatnyNalez.objects.get(ident_cely=ident_cely)
+        except SamostatnyNalez.DoesNotExist:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.not_found")},
+                status.HTTP_404_NOT_FOUND,
+            )
+
+        if not self._has_upload_permissions(request.user, ident_cely):
+            # The denied user ID and ident_cely are logged intentionally for
+            # authorization troubleshooting and incident investigation.
+            # They are audit/operational identifiers, not secrets.
+            # codeql[py/clear-text-logging-sensitive-data]
+            logger.warning(
+                "pas.api.SamostatnyNalezFotografieUploadView.post.permission_denied",
+                extra={"user": request.user.pk, "ident_cely": ident_cely},
+            )
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.permission_denied")},
+                status.HTTP_403_FORBIDDEN,
+            )
+
+        # File presence is checked after the permission check intentionally: returning 403
+        # before 400 avoids leaking whether the endpoint accepts files to unauthorized callers.
+        if uploaded_file is None:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.missing_file")},
+                status.HTTP_400_BAD_REQUEST,
+            )
+
+        if uploaded_file.size > MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES:
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.file_too_large")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        mime_check = Soubor.check_mime_for_url(uploaded_file, request.path)
+        if mime_check == "encrypted":
+            return self._fail(
+                log_entry,
+                {"detail": _("core.views.post_upload.encrypted")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        if mime_check is False:
+            return self._fail(
+                log_entry,
+                {"detail": _("core.views.post_upload.mime_check_failed")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        digest_error = self._verify_content_digest(
+            request,
+            uploaded_file,
+            mismatch_status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+        if digest_error:
+            digest_message, digest_status = digest_error
+            return self._fail(log_entry, {"detail": digest_message}, digest_status)
+
+        binary_data = io.BytesIO(uploaded_file.read())
+        antivirus_result = Soubor.check_antivirus(binary_data)
+        if antivirus_result == AntivirusCheckResult.VIRUS_FOUND:
+            return self._fail(
+                log_entry,
+                {"detail": _("core.views.post_upload.antivirus_check.virus_found")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        if antivirus_result == AntivirusCheckResult.CHECK_FAILED:
+            return self._fail(
+                log_entry,
+                {"detail": _("core.views.post_upload.antivirus_check.check_failed")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        binary_data.seek(0)
+        uploaded_file.seek(0)
+
+        if not self._acquire_record_lock(ident_cely):
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.PasApiBaseView.record_locked")},
+                status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+
+        log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
+        log_entry.save(update_fields=["status"])
+
+        mimetype = Soubor.get_mime_types(uploaded_file)
+        mime_extensions = Soubor.get_file_extension_by_mime(uploaded_file)
+        if len(mime_extensions) == 0:
+            self._release_record_lock(ident_cely)
+            return self._fail(
+                log_entry,
+                {"detail": _("core.views.post_upload.mime_rename_failed")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        new_name = get_finds_soubor_name(instance, uploaded_file.name)
+        if new_name is False:
+            self._release_record_lock(ident_cely)
+            return self._fail(
+                log_entry,
+                {
+                    "detail": (
+                        _("core.views.post_upload.error.maximal_file_name_exceeded_part_1")
+                        + f" {ident_cely} "
+                        + _("core.views.post_upload.error.maximal_file_name_exceeded_part_2")
                     )
-                )
+                },
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
 
-            try:
-                return int(katastr_id.split("-", 1)[1])
-            except (IndexError, ValueError):
-                raise ImportValidationException(
-                    ImportValidationIssue(
-                        line=katastr_elem.sourceline,
-                        column=None,
-                        message=f"katastr: {_('pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.invalid_katastr_id')}",
-                        error_type=ImportErrorType.INVALID_DATA,
-                    )
-                )
+        if mimetype in ["image/png", "image/jpeg", "image/tiff"]:
+            binary_data = Soubor.remove_gps_data(binary_data)
 
-        data = {
-            "ident_cely": None if cls._text(elem, "ident_cely") == ":tba" else cls._text(elem, "ident_cely"),
-            "projekt": projekt_ident,
-            "evidencni_cislo": cls._text(elem, "evidencni_cislo"),
-            "igsn": cls._text(elem, "igsn"),
-            "hloubka": cls._text(elem, "hloubka"),
-            "okolnosti": cls._id_attr(elem, "okolnosti"),
-            "obdobi": cls._id_attr(elem, "obdobi"),
-            "presna_datace": cls._text(elem, "presna_datace"),
-            "druh_nalezu": cls._id_attr(elem, "druh_nalezu"),
-            "specifikace": cls._id_attr(elem, "specifikace"),
-            "pocet": cls._text(elem, "pocet"),
-            "poznamka": cls._text(elem, "poznamka"),
-            "nalezce": nalezce_ident,
-            "datum_nalezu": cls._text(elem, "datum_nalezu"),
-            "stav": SN_POTVRZENY,
-            "predano": cls._parse_bool(cls._text(elem, "predano")),
-            "predano_organizace": cls._id_attr(elem, "predano_organizace"),
-            "geom_system": cls._text(elem, "geom_system"),
-            "pristupnost": cls._id_attr(elem, "pristupnost"),
-        }
+        fedora_transaction = FedoraTransaction(transaction_user=request.user)
+        try:
+            connector = FedoraRepositoryConnector(instance, fedora_transaction, skip_container_check=False)
+            rep_bin_file = connector.save_binary_file(new_name, mimetype, binary_data)
+            soubor_instance = Soubor(
+                vazba=instance.soubory,
+                nazev=new_name,
+                mimetype=mimetype,
+                size_mb=rep_bin_file.size_mb,
+                path=rep_bin_file.url_without_domain,
+                sha_512=rep_bin_file.sha_512,
+            )
+            soubor_instance.active_transaction = fedora_transaction
+            soubor_instance.binary_data = binary_data
+            with transaction.atomic():
+                soubor_instance.save()
+                soubor_instance.zaznamenej_nahrani(request.user, uploaded_file.name)
+                self._create_rearchive_history_record(instance, request.user)
+                self._update_igsn_if_archived(instance)
+                soubor_instance.save()
+        except DoiWriteError as err:
+            logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.igsn_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except FedoraError as err:
+            logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.fedora_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except DatabaseError as err:
+            logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.database_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except Exception as err:
+            logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.unexpected_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
-        if chranene is not None:
-            data["katastr"] = parse_ruian_katastr_kod(chranene.find(cls._ns("katastr")))
-            data["lokalizace"] = cls._text(chranene, "lokalizace")
-            geom_wkt_elem = chranene.find(cls._ns("geom_wkt"))
-            if geom_wkt_elem is not None and geom_wkt_elem.text:
-                data["geom"] = geom_wkt_elem.text.strip()
-            geom_sjtsk_elem = chranene.find(cls._ns("geom_sjtsk_wkt"))
-            if geom_sjtsk_elem is not None and geom_sjtsk_elem.text:
-                data["geom_sjtsk"] = geom_sjtsk_elem.text.strip()
+        try:
+            metadata = FedoraRepositoryConnector(instance, fedora_transaction).get_metadata()
+            fedora_transaction.mark_transaction_as_closed()
+        except FedoraError as err:
+            logger.error(
+                "pas.api.SamostatnyNalezFotografieUploadView.post.fedora_error_reading_metadata", extra={"error": err}
+            )
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely)
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.fedora_error_reading_metadata")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
-        return {k: v for k, v in data.items() if v is not None}, nova_osoba
+        self._release_record_lock(ident_cely)
+        return self._success(log_entry, instance, metadata, [])

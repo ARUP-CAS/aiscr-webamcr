@@ -73,6 +73,7 @@ ODESLANI_SN: Final = "SN12"  # 2
 POTVRZENI_SN: Final = "SN23"  # 3
 ARCHIVACE_SN: Final = "SN34"  # 4
 VRACENI_SN: Final = "SN-1"  # 5
+AKTUALIZACE_SN: Final = "SN-UPD"  # update jednotlivého pole
 # Soubory.
 NAHRANI_SBR: Final = "SBR0"  # 0
 # Uživatel.
@@ -187,6 +188,7 @@ STARY_PROJEKT_ZRUSEN = "Automatické zrušení projektů starších tří let, u
 PRISTUPNOST_MIN_RAZENI = 1  # Nejnižší hodnota přístupnosti podle řazení.
 
 MAX_POCET_SOUBORU_PROJEKTU = 40
+MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES = 250 * 1024 * 1024  # 250 MB pro jednu PAS fotografii přes API
 
 LIMIT_PRVKU_ZOBRAZENI_HEATMAP = 7_000  # Počet prvků v mapovém výřezu, při kterém se už má zobrazit heatmap
 
@@ -203,3 +205,5 @@ API_REQUEST_LOG_STATUS_FAILURE: Final = "failure"
 
 # ApiRequestLog — cíle požadavku.
 API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_XML_IMPORT: Final = "samostatny_nalez_xml_import"
+API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH: Final = "samostatny_nalez_evidencni_cislo_patch"
+API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_FOTOGRAFIE_UPLOAD: Final = "samostatny_nalez_fotografie_upload"

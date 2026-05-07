@@ -88,6 +88,20 @@ Třídy
 
               ["10.0.1.0/24", "proxy"]
 
+      ``record_lock_params`` (``item_id="record_lock_params"``)
+          Parametry Redis zámku záznamu. Objekt s klíči:
+
+          - ``retry_delay`` *(volitelný, výchozí* ``0.5``*)* — čekací interval v sekundách
+            mezi pokusy o získání zámku; musí být kladné číslo (``float``)
+          - ``max_retries`` *(volitelný, výchozí* ``10``*)* — maximální počet pokusů;
+            musí být kladné celé číslo (``int``)
+
+          Pokud nastavení chybí, použijí se výchozí hodnoty.
+
+          Příklad::
+
+              {"retry_delay": 1.0, "max_retries": 5}
+
       Změny v administraci se projeví do ``30`` sekund (TTL cache).
 
       :param item_id: Identifikátor záznamu — ``"access_rules"``, ``"rate_limits"`` nebo ``"access_mode"``.
@@ -119,7 +133,9 @@ Třídy
       Ověří ``CustomAdminSettings`` záznam relevantní pro PAS API před uložením.
 
       Pokud jde o skupinu ``pas_api``, ověří platnost ``item_id`` a podle něj
-      validuje JSON hodnotu příslušným validátorem.
+      validuje JSON hodnotu příslušným validátorem. Podporovaná ``item_id``:
+      ``"access_rules"``, ``"rate_limits"``, ``"access_mode"``, ``"trusted_proxies"``,
+      ``"record_lock_params"``.
 
       :param instance: Ukládaný záznam ``CustomAdminSettings``.
 
@@ -130,7 +146,8 @@ Třídy
 
       Vrátí limity počtu požadavků z cache nebo ``CustomAdminSettings``.
 
-      Každý limit je slovník s klíči ``scope``, ``value``, ``rate`` a volitelně ``active`` (výchozí ``True``).
+      Každý limit je slovník s klíči ``scope``, ``rate`` a volitelně ``active`` (výchozí ``True``).
+      Pro scope ``user`` a ``ip`` je navíc povinný klíč ``value``.
 
       :raises ValidationError: Pokud nastavení nemá očekávanou strukturu nebo obsahuje nevalidní limit.
       :return: Seznam aktivních limitů.
@@ -184,6 +201,28 @@ Třídy
       :param raw_proxies: Naparsovaná JSON hodnota nastavení ``trusted_proxies``.
 
       :raises ValidationError: Pokud struktura nebo obsah neodpovídá očekávání.
+      :return: ``True`` pokud je nastavení validní.
+
+   .. py:method:: get_record_lock_params()
+
+      Vrátí parametry Redis zámku záznamu z cache nebo ``CustomAdminSettings``.
+
+      Pokud nastavení ``record_lock_params`` neexistuje, vrátí výchozí hodnoty
+      ``(_RECORD_LOCK_DEFAULT_RETRY_DELAY, _RECORD_LOCK_DEFAULT_MAX_RETRIES)``.
+
+      :raises ValidationError: Pokud nastavení má neplatnou strukturu.
+      :return: Dvojice ``(retry_delay, max_retries)``.
+
+   .. py:method:: validate_record_lock_params()
+
+      Ověří strukturu a obsah nastavení ``record_lock_params``.
+
+      Očekávaný formát je objekt s nepovinnými klíči ``retry_delay`` (kladné ``float``)
+      a ``max_retries`` (kladné celé číslo ``int``).
+
+      :param raw_params: Naparsovaná JSON hodnota nastavení ``record_lock_params``.
+
+      :raises ValidationError: Pokud struktura nebo hodnoty neodpovídají očekávání.
       :return: ``True`` pokud je nastavení validní.
 
    .. py:method:: get_client_ip()
@@ -313,9 +352,13 @@ Třídy
 
    Throttle pro API import samostatného nálezu řízený záznamy ``CustomAdminSettings`` (``pas_api/rate_limits``).
 
-   Pravidla jsou načítána z databáze (s cache) a aplikována v pořadí:
-   nejdříve pravidlo pro konkrétního uživatele, pak pro IP adresu.
-   Pokud žádné pravidlo neexistuje, požadavek je povolen.
+   Pravidla jsou načítána z databáze (s cache) a vyhodnocují se nezávisle podle scope:
+   ``user``, ``ip`` a ``record``. Požadavek je povolen pouze tehdy, pokud projde všemi
+   relevantními limity pro dané volání.
+
+   Scope ``record`` používá ``ident_cely`` z URL jako stabilní identifikátor konkrétního
+   záznamu. To je záměrné: jeden limit se tak sdílí mezi různými endpointy a akcemi nad
+   týmž ``SamostatnyNalez`` a nelze jej obejít střídáním například PATCH a upload endpointu.
 
    **Metody:**
 
@@ -326,7 +369,7 @@ Třídy
       :param request: HTTP požadavek.
       :param view: Pohled zpracovávající požadavek.
 
-      :return: ``True`` pokud limit nebyl překročen nebo neexistuje, jinak ``False``.
+      :return: ``True`` pokud nebyl překročen žádný relevantní limit, jinak ``False``.
 
    .. py:method:: _check_limit()
 
@@ -400,9 +443,9 @@ Třídy
    Serializer pro import záznamu samostatného nálezu z XML; FK pole jsou identifikována přes ident_cely.
 
 
-.. py:class:: SamostatnyNalezXmlImportView
+.. py:class:: PasApiBaseView
 
-   Pohled pro import záznamu samostatného nálezu z XML souboru přes POST požadavek.
+   Základní pohled sdílený všemi PAS API endpointy.
 
    **Metody:**
 
@@ -429,6 +472,58 @@ Třídy
 
       :return: Chybová HTTP odpověď se zadaným tělem a stavovým kódem.
 
+   .. py:method:: _has_edit_permissions()
+
+      Ověří, zda má uživatel oprávnění editovat zadaný samostatný nález.
+
+      :param user: Uživatel provádějící požadavek.
+      :param ident_cely: Identifikátor záznamu samostatného nálezu.
+
+      :return: Vrací ``True`` pokud má uživatel oprávnění ``pas_edit`` pro daný záznam.
+
+   .. py:method:: _update_igsn_if_archived()
+
+      Pokud je záznam ve stavu SN4 (archivovaný), aktualizuje jeho IGSN metadata.
+
+      :param instance: Aktualizovaný záznam samostatného nálezu.
+
+      :raises DoiWriteError: Pokud aktualizace IGSN selže.
+
+   .. py:method:: _acquire_record_lock()
+
+      Pokusí se získat zámek záznamu v Redis.
+
+      Kombinuje in-process ``threading.Lock`` (``_record_lock_thread_lock``) pro serializaci
+      vláken v rámci jednoho Django workeru s atomickým ``cache.add`` pro koordinaci
+      mezi více procesy. Pokud klíč neexistuje nebo má hodnotu ``0`` (uvolněno), zámek je
+      získán nastavením hodnoty na ``1``. Pokud je klíč ``1`` (zamčeno jiným workerem),
+      čeká ``_RECORD_LOCK_RETRY_DELAY`` sekund a zkusí znovu, nejvýše
+      ``_RECORD_LOCK_MAX_RETRIES``-krát.
+
+      :param ident_cely: Identifikátor záznamu, jehož zámek se má získat.
+
+      :return: ``True`` pokud byl zámek úspěšně získán, jinak ``False``.
+
+   .. py:method:: _release_record_lock()
+
+      Uvolní zámek záznamu nastavením Redis hodnoty na ``0``.
+
+      :param ident_cely: Identifikátor záznamu, jehož zámek se má uvolnit.
+
+   .. py:method:: _verify_content_digest()
+
+      Ověří integritu souboru pomocí hlavičky ``Content-Digest`` (RFC 9530).
+
+      Očekávaný formát hlavičky: ``sha-512=:<base64>:``
+      Pokud hlavička chybí nebo neodpovídá skutečnému SHA-512 obsahu souboru,
+      vrátí chybovou zprávu.
+
+      :param request: HTTP požadavek obsahující hlavičku ``Content-Digest``.
+      :param uploaded_file: Nahraný soubor; po zavolání je pozice čtení na začátku.
+      :param mismatch_status: Stavový kód použitý při neodpovídajícím SHA-512 hashi.
+
+      :return: Dvojice ``(zpráva, status)`` nebo ``None`` pokud je digest v pořádku.
+
    .. py:method:: _success()
 
       Označí log záznam jako úspěšný, zaloguje výsledek a vrátí XML odpověď s metadaty.
@@ -445,36 +540,12 @@ Třídy
 
       :return: HTTP odpověď s XML metadaty a stavovým kódem 200.
 
-   .. py:method:: post()
 
-      Importuje nový záznam samostatného nálezu z XML souboru.
+.. py:class:: SamostatnyNalezXmlBaseView
 
-      Přijímá soubor v parametru ``file`` (multipart/form-data). XML musí odpovídat
-      schématu AMČR 2.2 (https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd).
-      Dokument musí obsahovat právě jeden element ``amcr:samostatny_nalez``.
+   Základní pohled pro XML import záznamu samostatného nálezu.
 
-      :param request: HTTP požadavek obsahující XML soubor v poli ``file``.
-      :param format: Formát odpovědi.
-
-      :return: Vrací ``Response`` s metadaty vytvořeného záznamu (HTTP 200),
-               nebo chybou syntaxe volání (HTTP 400), chybějícím projektem (HTTP 404),
-               nevalidním XML či datovými chybami (HTTP 422).
-
-   .. py:method:: _has_import_permissions()
-
-      Ověří oprávnění potřebná pro import samostatného nálezu.
-
-      :param user: Uživatel provádějící import.
-      :param data: Data jednoho importovaného záznamu.
-
-      :return: Vrací ``True`` pokud má uživatel všechna vyžadovaná oprávnění.
-
-   .. py:method:: _create_import_history_records()
-
-      Vytvoří historii pro importovaný záznam samostatného nálezu.
-
-      :param instance: Vytvořený záznam samostatného nálezu.
-      :param user: Uživatel, který provedl import.
+   **Metody:**
 
    .. py:method:: _validation_status()
 
@@ -483,47 +554,6 @@ Třídy
       :param errors: Seznam validačních chyb importu.
 
       :return: HTTP stavový kód odpovídající nejzávažnějšímu typu chyby.
-
-   .. py:method:: _validate_disallowed_elements()
-
-      Ověří, že importovaný element neobsahuje nepovolené podřízené elementy.
-
-      :param elem: Importovaný element ``amcr:samostatny_nalez``.
-
-      :raises ImportValidationException: Pokud je nalezen nepovolený element.
-
-   .. py:method:: _build_schema_validation_doc()
-
-      Vytvoří kopii dokumentu upravenou pro validaci proti XSD schématu.
-
-      Importní API nepovoluje element ``stav``, ale XSD jej vyžaduje.
-      Pro validaci proto doplní chybějící ``stav`` do kopie dokumentu.
-
-      :param doc: Původní XML dokument.
-
-      :return: Kopie XML dokumentu určená pro schema validaci.
-
-   .. py:method:: _validate_heslar_value_matches()
-
-      Ověří shodu textové hodnoty XML a ``heslo`` na navázaném hesláři.
-
-      :param validated_data: Validovaná data serializeru.
-      :param elem: Importovaný XML element.
-
-      :raises ImportValidationException: Pokud text elementu neodpovídá ``heslo``.
-
-   .. py:method:: _verify_content_digest()
-
-      Ověří integritu souboru pomocí hlavičky ``Content-Digest`` (RFC 9530).
-
-      Očekávaný formát hlavičky: ``sha-512=:<base64>:``
-      Pokud hlavička chybí nebo neodpovídá skutečnému SHA-512 obsahu souboru,
-      vrátí chybovou zprávu.
-
-      :param request: HTTP požadavek obsahující hlavičku ``Content-Digest``.
-      :param xml_file: Nahraný soubor; po zavolání je pozice čtení na začátku.
-
-      :return: Chybová zpráva jako řetězec, nebo None pokud je digest v pořádku.
 
    .. py:method:: _validate_declared_schema_version()
 
@@ -597,18 +627,14 @@ Třídy
 
       :return: Hodnota atributu ``id`` nebo None, pokud element nebo atribut neexistuje.
 
-   .. py:method:: _parse_nalezce()
+   .. py:method:: _validate_heslar_value_matches()
 
-      Zpracuje element ``nalezce`` a vrátí ``ident_cely`` osoby pro import.
+      Ověří shodu textové hodnoty XML a ``heslo`` na navázaném hesláři.
 
-      Pokud má element atribut ``id=":tba"``, vytvoří se nová osoba z textu
-      ve formátu ``"Příjmení, Jméno"``. Nová osoba se zde pouze připraví,
-      ale uloží se až v transakci společně s ``SamostatnyNalez``.
+      :param validated_data: Validovaná data serializeru.
+      :param elem: Importovaný XML element.
 
-      :param elem: Element ``amcr:samostatny_nalez``.
-      :param user: Uživatel provádějící import.
-
-      :return: Dvojice ``(ident_cely_osoby, nova_osoba)``.
+      :raises ImportValidationException: Pokud text elementu neodpovídá ``heslo``.
 
    .. py:method:: _parse_nalez_element()
 
@@ -622,6 +648,186 @@ Třídy
       :param user: Uživatel provádějící import.
 
       :return: Dvojice ``(data, nova_osoba)`` připravená pro import.
+
+   .. py:method:: _parse_nalezce()
+
+      Zpracuje element ``nalezce`` a vrátí ``ident_cely`` osoby pro import.
+
+      Pokud má element atribut ``id=":tba"``, vytvoří se nová osoba z textu
+      ve formátu ``"Příjmení, Jméno"``. Nová osoba se zde pouze připraví,
+      ale uloží se až v transakci společně s ``SamostatnyNalez``.
+
+      :param elem: Element ``amcr:samostatny_nalez``.
+      :param user: Uživatel provádějící import.
+
+      :return: Dvojice ``(ident_cely_osoby, nova_osoba)``.
+
+   .. py:method:: _build_schema_validation_doc()
+
+      Vytvoří kopii dokumentu upravenou pro validaci proti XSD schématu.
+
+      XSD vyžaduje element ``stav``. Pokud v dokumentu chybí, doplní se do kopie
+      pro účely validace; originální dokument zůstává nezměněn.
+
+      :param doc: Původní XML dokument.
+
+      :return: Kopie XML dokumentu určená pro schema validaci.
+
+
+.. py:class:: SamostatnyNalezXmlImportView
+
+   Pohled pro import záznamu samostatného nálezu z XML souboru přes POST požadavek.
+
+   **Metody:**
+
+   .. py:method:: post()
+
+      Importuje nový záznam samostatného nálezu z XML souboru.
+
+      Přijímá soubor v parametru ``file`` (multipart/form-data). XML musí odpovídat
+      schématu AMČR 2.2 (https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd).
+      Dokument musí obsahovat právě jeden element ``amcr:samostatny_nalez``.
+
+      :param request: HTTP požadavek obsahující XML soubor v poli ``file``.
+      :param format: Formát odpovědi.
+
+      :return: Vrací ``Response`` s metadaty vytvořeného záznamu (HTTP 200),
+               nebo chybou syntaxe volání (HTTP 400), chybějícím projektem (HTTP 404),
+               nevalidním XML či datovými chybami (HTTP 422).
+
+   .. py:method:: _has_import_permissions()
+
+      Ověří oprávnění potřebná pro import samostatného nálezu.
+
+      :param user: Uživatel provádějící import.
+      :param data: Data jednoho importovaného záznamu.
+
+      :return: Vrací ``True`` pokud má uživatel všechna vyžadovaná oprávnění.
+
+   .. py:method:: _create_import_history_records()
+
+      Vytvoří historii pro importovaný záznam samostatného nálezu.
+
+      :param instance: Vytvořený záznam samostatného nálezu.
+      :param user: Uživatel, který provedl import.
+
+   .. py:method:: _validate_disallowed_elements()
+
+      Ověří, že importovaný element neobsahuje nepovolené podřízené elementy.
+
+      :param elem: Importovaný element ``amcr:samostatny_nalez``.
+
+      :raises ImportValidationException: Pokud je nalezen nepovolený element.
+
+
+.. py:class:: SamostatnyNalezEvidencniCisloPatchView
+
+   Pohled pro aktualizaci pole ``evidencni_cislo`` záznamu samostatného nálezu přes PATCH požadavek.
+
+   **Metody:**
+
+   .. py:method:: _has_edit_permissions()
+
+      Ověří, zda má uživatel oprávnění editovat evidenční číslo záznamu samostatného nálezu.
+
+      Oprávněný je takový uživatel, který splňuje standardní pravidla pro editaci nálezu
+      s těmito úpravami:
+
+      - pro aktualizaci ev. čísla nikdy není autorizován badatel (operaci může užívat
+        pouze archeolog a výše)
+      - pokud je autorizován archeolog, nález může být v libovolném stavu (vč. archivovaného)
+
+      :param user: Uživatel provádějící požadavek.
+      :param ident_cely: Identifikátor záznamu samostatného nálezu.
+
+      :return: Vrací ``True`` pokud má uživatel oprávnění ``pas_edit`` pro daný záznam
+               a zároveň je jeho hlavní role Archeolog nebo vyšší.
+
+   .. py:method:: patch()
+
+      Aktualizuje pole ``evidencni_cislo`` záznamu samostatného nálezu.
+
+      Přijímá ``ident_cely`` záznamu jako součást URL a novou hodnotu ``evidencni_cislo``
+      jako query parametr. Parametr ``evidencni_cislo`` je povinný a jeho
+      hodnota musí být neprázdná. Endpoint rozlišuje mezi chybějícím
+      parametrem a přítomným parametrem s prázdnou hodnotou, aby klient
+      mohl oba validační stavy zpracovat odlišně.
+
+      Příklad volání::
+
+          PATCH /pas/api/nalez/M-202400001-N00001/evidencni-cislo?evidencni_cislo=EC-2024-001
+
+      :param request: HTTP požadavek s povinným query parametrem
+                      ``evidencni_cislo``, který nesmí být prázdný.
+      :param ident_cely: Identifikátor záznamu samostatného nálezu.
+      :param format: Formát odpovědi.
+
+      :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
+               nebo chybou syntaxe volání (HTTP 400; chybějící parametr
+               ``evidencni_cislo``), chybou dat (HTTP 422; prázdná, příliš
+               dlouhá nebo shodná hodnota), nenalezeným
+               záznamem (HTTP 404), nedostatečnými oprávněními (HTTP 403),
+               nebo interní chybou (HTTP 500).
+
+   .. py:method:: _create_history_record()
+
+      Vytvoří záznam historie pro aktualizaci pole ``evidencni_cislo``.
+
+      Poznámka záznamu má formát ``old_value -> new_value``. Je-li záznam ve stavu
+      SN4 (archivovaný), zapíše se navíc záznam ``SN34``, který obnoví datum archivace.
+
+      :param instance: Aktualizovaný záznam samostatného nálezu.
+      :param user: Uživatel, který provedl aktualizaci.
+      :param old_value: Původní hodnota pole ``evidencni_cislo``.
+      :param new_value: Nová hodnota pole ``evidencni_cislo``.
+
+
+.. py:class:: SamostatnyNalezFotografieUploadView
+
+   Pohled pro nahrání jedné fotografie k existujícímu samostatnému nálezu.
+
+   **Metody:**
+
+   .. py:method:: _has_upload_permissions()
+
+      Ověří, zda má uživatel oprávnění nahrát fotografii k danému nálezu.
+
+      Oprávněný je takový uživatel, který splňuje standardní pravidla pro editaci nálezu
+      s těmito úpravami:
+
+      - pro nahrání fotografie nikdy není autorizován badatel (operaci může užívat
+        pouze archeolog a výše)
+      - pokud je autorizován archeolog, nález může být v libovolném stavu (vč. archivovaného)
+
+      :param user: Uživatel provádějící požadavek.
+      :param ident_cely: Identifikátor záznamu samostatného nálezu.
+
+      :return: ``True`` pokud má uživatel oprávnění ``soubor_nahrat_pas`` pro daný záznam
+               a zároveň je jeho hlavní role Archeolog nebo vyšší.
+
+   .. py:method:: _create_rearchive_history_record()
+
+      Pro archivovaný nález zapíše do historie tichou reachivaci ``SN34``.
+
+      :param instance: Aktualizovaný záznam samostatného nálezu.
+      :param user: Uživatel, který provedl upload fotografie.
+
+   .. py:method:: post()
+
+      Nahraje fotografii k existujícímu záznamu samostatného nálezu.
+
+      Přijímá ``ident_cely`` záznamu jako součást URL a jeden binární soubor v parametru
+      ``file`` (multipart/form-data). Soubor musí projít kontrolou ``Content-Digest``,
+      MIME typu a antiviru. Úspěšný upload uloží fotografii do Fedora repository,
+      založí záznam ``Soubor`` navázaný na nález a vrátí aktualizovaná XML metadata z Fedory.
+
+      :param request: HTTP požadavek obsahující fotografii v poli ``file``.
+      :param ident_cely: Identifikátor aktualizovaného záznamu samostatného nálezu.
+      :param format: Formát odpovědi.
+
+      :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
+               nebo chybu syntaxe volání (HTTP 400), nenalezený záznam (HTTP 404),
+               validační chybu souboru (HTTP 422), nebo interní chybu (HTTP 500).
 
 
 Funkce
