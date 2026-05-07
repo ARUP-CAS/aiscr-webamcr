@@ -292,6 +292,11 @@ Třídy
    Implementuje komponentu ``PermissionsSkip`` v rámci aplikace.
 
 
+.. py:class:: ApiRequestLog
+
+   Zaznamenává každý požadavek na API včetně stavu a výsledku.
+
+
 Funkce
 ------
 

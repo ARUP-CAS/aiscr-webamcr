@@ -754,6 +754,9 @@ PAS
    * - ``get_projekt_pas_table``
      - ``projekt-pas-tabulka/<str:ident_cely>``
      - ``ProjektPasTableView.as_view()``
+   * - ``api-import-xml``
+     - ``api/import-xml``
+     - ``SamostatnyNalezXmlImportView.as_view()``
 
 PIAN
 ----
