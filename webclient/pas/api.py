@@ -2060,7 +2060,20 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 self._validation_status(exc.import_errors),
             )
 
-        :param doc: Naparsovaný XML dokument s deklarovaným ``xsi:schemaLocation``.
+         if not self._has_import_permissions(request.user, data):
+            # The denied user ID and referenced project are logged intentionally
+            # for authorization troubleshooting and incident investigation.
+            # They are audit/operational identifiers, not secrets.
+            # codeql[py/clear-text-logging-sensitive-data]
+            logger.warning(
+                "pas.api.SamostatnyNalezXmlImportView.post.permission_denied",
+                extra={"user": request.user.pk, "projekt": data.get("projekt")},
+            )
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.permission_denied")},
+                status.HTTP_403_FORBIDDEN,
+            )
 
         instance = None
         fedora_transaction = FedoraTransaction(transaction_user=request.user)
