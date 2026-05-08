@@ -17,15 +17,6 @@ Třídy
 
    **Metody:**
 
-   .. py:method:: _patch_async()
-
-      Nahradí async metody pomocí AsyncMock vracejícími zadané výsledky.
-
-      :param doi_results: Výsledky pro ``_api_call_data_cite_doi``.
-      :param title_results: Výsledky pro ``_api_call_data_cite``.
-      :param crossref_results: Výsledky pro ``_api_call_cross_ref_title``.
-      :return: Slovník patcherů pro použití v ``patch.multiple``.
-
    .. py:method:: test_title_search_returns_doi_wildcard_results_first()
 
       Výsledky DOI wildcard dotazu jsou vráceny jako první.
@@ -84,25 +75,19 @@ Třídy
 
    .. py:method:: test_empty_query_returns_empty_list()
 
-      Prázdný dotaz vrátí prázdný seznam bez volání API.
+      Prázdný nebo jen mezerami tvořený dotaz vrátí prázdný seznam bez volání backendu.
 
       :param mock_dc_doi: Mock pro ``_api_call_data_cite_doi``.
       :param mock_dc_title: Mock pro ``_api_call_data_cite``.
       :param mock_cr_title: Mock pro ``_api_call_cross_ref_title``.
       :param mock_exists: Mock pro ``_doi_item_exists``.
 
+   .. py:method:: test_none_query_returns_empty_list()
 
-Funkce
-------
+      ``None`` jako dotaz vrátí prázdný seznam bez volání backendu.
 
-.. py:function:: _make_datacite_response(records)
+      :param mock_dc_doi: Mock pro ``_api_call_data_cite_doi``.
+      :param mock_dc_title: Mock pro ``_api_call_data_cite``.
+      :param mock_cr_title: Mock pro ``_api_call_cross_ref_title``.
+      :param mock_exists: Mock pro ``_doi_item_exists``.
 
-   Sestaví falešnou odpověď DataCite API.
-
-.. py:function:: _make_crossref_response(records)
-
-   Sestaví falešnou odpověď CrossRef API.
-
-.. py:function:: _make_failed_response()
-
-   Sestaví falešnou neúspěšnou HTTP odpověď.

@@ -1,53 +1,13 @@
 """Testy aplikace PID."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from django.test import TestCase
 from pid.views import DoiAutocompleteView
 
 
-def _make_datacite_response(records):
-    """Sestaví falešnou odpověď DataCite API."""
-    mock = MagicMock()
-    mock.status_code = 200
-    mock.json.return_value = {
-        "data": [{"id": doi, "attributes": {"titles": [{"title": title}]}} for doi, title in records]
-    }
-    return mock
-
-
-def _make_crossref_response(records):
-    """Sestaví falešnou odpověď CrossRef API."""
-    mock = MagicMock()
-    mock.status_code = 200
-    mock.json.return_value = {"message": {"items": [{"DOI": doi, "title": [title]} for doi, title in records]}}
-    return mock
-
-
-def _make_failed_response():
-    """Sestaví falešnou neúspěšnou HTTP odpověď."""
-    mock = MagicMock()
-    mock.status_code = 404
-    return mock
-
-
 class DoiAutocompleteViewApiCallTest(TestCase):
     """Testy metody ``api_call`` třídy ``DoiAutocompleteView``."""
-
-    def _patch_async(self, doi_results, title_results, crossref_results):
-        """
-        Nahradí async metody pomocí AsyncMock vracejícími zadané výsledky.
-
-        :param doi_results: Výsledky pro ``_api_call_data_cite_doi``.
-        :param title_results: Výsledky pro ``_api_call_data_cite``.
-        :param crossref_results: Výsledky pro ``_api_call_cross_ref_title``.
-        :return: Slovník patcherů pro použití v ``patch.multiple``.
-        """
-        return {
-            "_api_call_data_cite_doi": AsyncMock(return_value=doi_results),
-            "_api_call_data_cite": AsyncMock(return_value=title_results),
-            "_api_call_cross_ref_title": AsyncMock(return_value=crossref_results),
-        }
 
     @patch.object(DoiAutocompleteView, "_doi_item_exists", return_value=[])
     @patch.object(DoiAutocompleteView, "_api_call_cross_ref_title", new_callable=AsyncMock, return_value=[])
@@ -68,6 +28,7 @@ class DoiAutocompleteViewApiCallTest(TestCase):
 
         self.assertEqual(results[0][0], "10.1/aaa")
         self.assertEqual(results[1][0], "10.1/bbb")
+        mock_exists.assert_not_called()
 
     @patch.object(DoiAutocompleteView, "_doi_item_exists", return_value=[])
     @patch.object(DoiAutocompleteView, "_api_call_cross_ref_title", new_callable=AsyncMock)
@@ -178,12 +139,12 @@ class DoiAutocompleteViewApiCallTest(TestCase):
         :param mock_cr_title: Mock pro ``_api_call_cross_ref_title``.
         :param mock_exists: Mock pro ``_doi_item_exists``.
         """
-        mock_exists.return_value = [["10.1/exact", "10.1/exact"]]
+        mock_exists.return_value = [["10.1234/exact", "10.1234/exact"]]
 
-        results = DoiAutocompleteView.api_call("10.1/exact")
+        results = DoiAutocompleteView.api_call("10.1234/exact")
 
-        self.assertEqual(results[0][0], "10.1/exact")
-        mock_exists.assert_called_once_with("10.1/exact")
+        self.assertEqual(results[0][0], "10.1234/exact")
+        mock_exists.assert_called_once_with("10.1234/exact")
 
     @patch.object(DoiAutocompleteView, "_doi_item_exists", return_value=[])
     @patch.object(DoiAutocompleteView, "_api_call_cross_ref_title", new_callable=AsyncMock, return_value=[])
@@ -191,7 +152,7 @@ class DoiAutocompleteViewApiCallTest(TestCase):
     @patch.object(DoiAutocompleteView, "_api_call_data_cite_doi", new_callable=AsyncMock, return_value=[])
     def test_empty_query_returns_empty_list(self, mock_dc_doi, mock_dc_title, mock_cr_title, mock_exists):
         """
-        Prázdný dotaz vrátí prázdný seznam bez volání API.
+        Prázdný nebo jen mezerami tvořený dotaz vrátí prázdný seznam bez volání backendu.
 
         :param mock_dc_doi: Mock pro ``_api_call_data_cite_doi``.
         :param mock_dc_title: Mock pro ``_api_call_data_cite``.
@@ -201,3 +162,28 @@ class DoiAutocompleteViewApiCallTest(TestCase):
         results = DoiAutocompleteView.api_call("   ")
 
         self.assertEqual(results, [])
+        mock_dc_doi.assert_not_called()
+        mock_dc_title.assert_not_called()
+        mock_cr_title.assert_not_called()
+        mock_exists.assert_not_called()
+
+    @patch.object(DoiAutocompleteView, "_doi_item_exists", return_value=[])
+    @patch.object(DoiAutocompleteView, "_api_call_cross_ref_title", new_callable=AsyncMock, return_value=[])
+    @patch.object(DoiAutocompleteView, "_api_call_data_cite", new_callable=AsyncMock, return_value=[])
+    @patch.object(DoiAutocompleteView, "_api_call_data_cite_doi", new_callable=AsyncMock, return_value=[])
+    def test_none_query_returns_empty_list(self, mock_dc_doi, mock_dc_title, mock_cr_title, mock_exists):
+        """
+        ``None`` jako dotaz vrátí prázdný seznam bez volání backendu.
+
+        :param mock_dc_doi: Mock pro ``_api_call_data_cite_doi``.
+        :param mock_dc_title: Mock pro ``_api_call_data_cite``.
+        :param mock_cr_title: Mock pro ``_api_call_cross_ref_title``.
+        :param mock_exists: Mock pro ``_doi_item_exists``.
+        """
+        results = DoiAutocompleteView.api_call(None)
+
+        self.assertEqual(results, [])
+        mock_dc_doi.assert_not_called()
+        mock_dc_title.assert_not_called()
+        mock_cr_title.assert_not_called()
+        mock_exists.assert_not_called()
