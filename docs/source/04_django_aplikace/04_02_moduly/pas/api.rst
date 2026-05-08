@@ -39,7 +39,7 @@ Třídy
             ``"ip_blacklist"``, ``"ip_whitelist"``, ``"user_blacklist"``, ``"user_whitelist"``
           - ``value`` *(povinný)* — IP adresa, IP rozsah (např. ``"192.168.1.1-192.168.1.5"``),
             CIDR rozsah (např. ``"192.168.1.0/24"``) nebo uživatelské jméno podle ``rule_type``
-          - ``active`` *(volitelný, výchozí* ``true``*)* — ``false`` pravidlo dočasně deaktivuje
+          - ``active`` *(volitelný, výchozí ``true``)* — ``false`` pravidlo dočasně deaktivuje
 
           Příklad::
 
@@ -58,7 +58,7 @@ Třídy
           - ``rate`` *(povinný)* — limit ve formátu ``"počet/jednotka"``;
             jednotky: ``s`` (sekunda), ``m`` (minuta), ``h`` (hodina), ``d`` (den);
             např. ``"10/m"``, ``"100/h"``, ``"1000/d"``
-          - ``active`` *(volitelný, výchozí* ``true``*)* — ``false`` limit dočasně deaktivuje
+          - ``active`` *(volitelný, výchozí ``true``)* — ``false`` limit dočasně deaktivuje
 
           Příklad::
 
@@ -91,9 +91,9 @@ Třídy
       ``record_lock_params`` (``item_id="record_lock_params"``)
           Parametry Redis zámku záznamu. Objekt s klíči:
 
-          - ``retry_delay`` *(volitelný, výchozí* ``0.5``*)* — čekací interval v sekundách
+          - ``retry_delay`` *(volitelný, výchozí ``0.5``)* — čekací interval v sekundách
             mezi pokusy o získání zámku; musí být kladné číslo (``float``)
-          - ``max_retries`` *(volitelný, výchozí* ``10``*)* — maximální počet pokusů;
+          - ``max_retries`` *(volitelný, výchozí ``10``)* — maximální počet pokusů;
             musí být kladné celé číslo (``int``)
 
           Pokud nastavení chybí, použijí se výchozí hodnoty.
@@ -104,7 +104,8 @@ Třídy
 
       Změny v administraci se projeví do ``30`` sekund (TTL cache).
 
-      :param item_id: Identifikátor záznamu — ``"access_rules"``, ``"rate_limits"`` nebo ``"access_mode"``.
+      :param item_id: Identifikátor záznamu — ``"access_rules"``, ``"rate_limits"``, ``"access_mode"``,
+          ``"trusted_proxies"`` nebo ``"record_lock_params"``.
 
       :param raise_validation_error: Pokud je ``True`` (výchozí), nevalidní JSON vyhodí ``ValidationError``.
 
