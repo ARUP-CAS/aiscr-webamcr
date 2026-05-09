@@ -678,6 +678,8 @@ Třídy
       - ``geom_system=5514`` — zdrojem je ``geom_sjtsk_wkt``; ``geom`` se vypočítá
         konverzí do WGS-84, element ``geom_wkt`` se ignoruje.
 
+      ``stav`` — musí být jedna z povolených hodnot (1, 2, 3); určuje cílový stav záznamu po importu.
+
       Následující elementy jsou v XML povoleny, ale při importu se ignorují:
 
       - ``igsn`` — přiděluje se automaticky po archivaci záznamu.
@@ -687,7 +689,6 @@ Třídy
       - ``geom_sjtsk_gml`` (v ``chranene_udaje``) — geometrie se přebírá z ``geom_sjtsk_wkt``.
       - ``geom_sjtsk_wkt`` (v ``chranene_udaje``) — ignoruje se, pokud ``geom_system=4326``.
       - ``geom_wkt`` (v ``chranene_udaje``) — ignoruje se, pokud ``geom_system=5514``.
-      - ``stav`` — musí být jedna z povolených hodnot (1, 2, 3); určuje cílový stav záznamu po importu.
       - ``historie`` — generuje se automaticky systémem.
       - ``soubor`` — soubory se nahrávají samostatným endpointem.
 
@@ -722,6 +723,7 @@ Třídy
       Teprve pokud záznam neexistuje, vytvoří se nová osoba z textu ve formátu
       ``"Příjmení, Jméno"``. Nová osoba se zde pouze připraví, ale uloží se až
       v transakci společně s ``SamostatnyNalez``.
+      Vytvoření nové osoby tímto importním tokem nevyžaduje samostatné oprávnění.
 
       :param elem: Element ``amcr:samostatny_nalez``.
       :param user: Uživatel provádějící import.
@@ -739,8 +741,11 @@ Třídy
 
       Importuje nový záznam samostatného nálezu z XML souboru.
 
-      Přijímá soubor v parametru ``file`` (multipart/form-data). XML musí odpovídat
-      schématu AMČR 2.2 (https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd).
+      Přijímá soubor v parametru ``file`` (multipart/form-data). XML musí projít validací
+      proti XSD schématu AMČR deklarovanému v dokumentu (verze 2.2 na URL
+      ``https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd`` nebo novější). Volitelné nastavení administrace
+      ``allowed_schema_versions`` může omezit povolené číslo verze schématu v namespace
+      dokumentu (viz ``PasApiPermissionMixin.get_allowed_schema_versions``).
       Dokument musí obsahovat právě jeden element ``amcr:samostatny_nalez``.
 
       :param request: HTTP požadavek obsahující XML soubor v poli ``file``.
