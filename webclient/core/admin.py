@@ -373,6 +373,7 @@ class PermissionAdmin(admin.ModelAdmin):
         )
 
 
+@admin.register(ApiRequestLog)
 class ApiRequestLogAdmin(admin.ModelAdmin):
     """Třída admin panelu pro zobrazení logů API požadavků."""
 
@@ -434,9 +435,6 @@ class ApiRequestLogAdmin(admin.ModelAdmin):
         :return: Vždy ``False``.
         """
         return False
-
-
-admin.site.register(ApiRequestLog, ApiRequestLogAdmin)
 
 
 @admin.register(PermissionsSkip)

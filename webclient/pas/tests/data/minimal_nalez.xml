@@ -7,6 +7,7 @@
   <amcr:samostatny_nalez>
     <amcr:ident_cely>{IDENT_CELY}</amcr:ident_cely>
     <amcr:projekt id="{PROJEKT_IDENT}">{PROJEKT_IDENT}</amcr:projekt>
+    <amcr:stav>{STAV}</amcr:stav>
     <amcr:geom_system>{GEOM_SYSTEM}</amcr:geom_system>
     <amcr:pristupnost id="{PRISTUPNOST_IDENT}" xml:lang="cs">{PRISTUPNOST_IDENT}</amcr:pristupnost>
     <amcr:chranene_udaje>

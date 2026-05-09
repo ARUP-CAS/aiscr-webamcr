@@ -27,23 +27,28 @@ from core.constants import (
     ODESLANI_SN,
     POTVRZENI_SN,
     SN_ARCHIVOVANY,
+    SN_ODESLANY,
     SN_POTVRZENY,
+    SN_ZAPSANY,
     ZAPSANI_SN,
 )
+from core.coordTransform import transform_geom_to_sjtsk, transform_geom_to_wgs84
 from core.ident_cely import get_sn_ident
 from core.models import AntivirusCheckResult, ApiRequestLog, Permissions, Soubor, check_permissions
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction, FedoraTransactionStatus
 from core.setting_models import CustomAdminSettings
 from core.utils import get_cadastre_from_point
 from core.views import get_finds_soubor_name
+from django.contrib.gis.geos import GEOSException, GEOSGeometry
+from django.contrib.gis.geos import Point as GEOSPoint
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.db import DatabaseError, transaction
+from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.http import HttpResponse, JsonResponse
 from django.utils.translation import gettext as _
-from django.utils.translation import gettext_lazy as _l
+from django.utils.translation import gettext_lazy
 from heslar.hesla import (
     HESLAR_NALEZOVE_OKOLNOSTI,
     HESLAR_OBDOBI,
@@ -82,6 +87,8 @@ _RECORD_LOCK_TTL = 300  # sekund — zámek záznamu vyprší po 5 minutách
 _RECORD_LOCK_DEFAULT_RETRY_DELAY = 0.5  # sekund — výchozí čekací interval mezi pokusy
 _RECORD_LOCK_DEFAULT_MAX_RETRIES = 10  # výchozí maximální počet pokusů o získání zámku
 _CACHE_KEY_RECORD_LOCK_PARAMS = "pas_api_record_lock_params"
+_CACHE_KEY_ALLOWED_SCHEMA_VERSIONS = "pas_api_allowed_schema_versions"
+_NOT_CONFIGURED = "__pas_api_not_configured__"  # sentinel: nastavení neexistuje (odliší se od None = cache miss)
 
 _PAS_API_GROUP = "pas_api"
 _ACCESS_RULES_ID = "access_rules"
@@ -90,14 +97,17 @@ _ACCESS_MODE_ID = "access_mode"
 # codeql[py/clear-text-logging-sensitive-data]
 _TRUSTED_PROXIES_ID = "trusted_proxies"
 _RECORD_LOCK_PARAMS_ID = "record_lock_params"
+_ALLOWED_SCHEMA_VERSIONS_ID = "allowed_schema_versions"
 _AMCR_SCHEMA_LOCK = threading.Lock()
 _AMCR_SCHEMA_FETCH_TIMEOUT = 10
 _AMCR_SCHEMA_CACHE_TTL = 3600  # sekund — schéma se znovu načte po 60 minutách
-_ALLOWED_XML_XSD_URLS = (
-    "http://www.w3.org/2001/xml.xsd",
-    "https://www.w3.org/2001/xml.xsd",
-    "http://www.w3.org/2001/03/xml.xsd",
-    "https://www.w3.org/2001/03/xml.xsd",
+_ALLOWED_XML_XSD_URLS = frozenset(
+    (
+        "http://www.w3.org/2001/xml.xsd",
+        "https://www.w3.org/2001/xml.xsd",
+        "http://www.w3.org/2001/03/xml.xsd",
+        "https://www.w3.org/2001/03/xml.xsd",
+    )
 )
 _ALLOWED_SCHEMA_URL_PATTERNS = (
     re.compile(r"^https?://www\.w3\.org/2001/XMLSchema-instance(?:[?#].*)?$"),
@@ -105,6 +115,63 @@ _ALLOWED_SCHEMA_URL_PATTERNS = (
     re.compile(r"^https://api\.aiscr\.cz/schema/amcr/\d+\.\d+/.*$"),
     re.compile(r"^http://www\.opengis\.net/gml/.*$"),
 )
+
+
+_XSD_BYTES_CACHE: dict[str, bytes] = {}
+_XSD_BYTES_CACHE_LOCK = threading.Lock()
+
+
+def _xsd_redis_key(url: str) -> str:
+    """
+    Sestaví klíč pro Redis cache pro XSD schéma na zadané URL.
+
+    Pro URL AMČR schématu (obsahující ``/schema/amcr/<verze>/``) je klíč ve tvaru
+    ``xsd_schema:amcr:<verze>:<url>``, jinak ``xsd_schema:<url>``.
+
+    :param url: URL XSD souboru.
+
+    :return: Řetězec klíče pro Redis cache.
+    """
+    m = re.search(r"/schema/amcr/(\d+\.\d+)/", url)
+    if m:
+        return f"xsd_schema:amcr:{m.group(1)}:{url}"
+    return f"xsd_schema:{url}"
+
+
+def _fetch_xsd_bytes(url: str) -> bytes:
+    """
+    Načte bajty XSD schématu ze zadaného URL.
+
+    Pořadí vyhledávání: in-process slovník → Redis → síť. Výsledek se uloží
+    do obou úložišť, takže každá URL je v rámci procesu načtena nejvýše jednou.
+
+    :param url: URL XSD souboru ke stažení.
+
+    :return: Bajty XSD schématu.
+
+    :raises urllib.error.URLError: Pokud se nepodaří navázat spojení s URL.
+    :raises TimeoutError: Pokud vyprší časový limit požadavku.
+    :raises ValueError: Pokud server vrátí prázdné tělo odpovědi.
+    """
+    if url in _XSD_BYTES_CACHE:
+        return _XSD_BYTES_CACHE[url]
+    with _XSD_BYTES_CACHE_LOCK:
+        if url in _XSD_BYTES_CACHE:
+            return _XSD_BYTES_CACHE[url]
+        cache_key = _xsd_redis_key(url)
+        cached = cache.get(cache_key)
+        if cached is not None:
+            _XSD_BYTES_CACHE[url] = cached
+            return cached
+        response = urllib.request.urlopen(url, timeout=_AMCR_SCHEMA_FETCH_TIMEOUT)  # noqa: S310
+        with response:
+            content = response.read()
+        if not content:
+            logger.warning("pas.api._fetch_xsd_bytes.empty_response", extra={"url": url})
+            raise ValueError(f"pas.api._fetch_xsd_bytes.empty_response: {url}")
+        cache.set(cache_key, content, timeout=_AMCR_SCHEMA_CACHE_TTL)
+        _XSD_BYTES_CACHE[url] = content
+        return content
 
 
 def _is_valid_ip_rule_value(value: str) -> bool:
@@ -159,7 +226,14 @@ ACCESS_MODE_OPEN = "open"
 ACCESS_MODE_WHITELIST_ONLY = "whitelist_only"
 ACCESS_MODE_CLOSED = "closed"
 _ACCESS_MODES = {ACCESS_MODE_OPEN, ACCESS_MODE_WHITELIST_ONLY, ACCESS_MODE_CLOSED}
-_PAS_API_ITEM_IDS = {_ACCESS_RULES_ID, _RATE_LIMITS_ID, _ACCESS_MODE_ID, _TRUSTED_PROXIES_ID, _RECORD_LOCK_PARAMS_ID}
+_PAS_API_ITEM_IDS = {
+    _ACCESS_RULES_ID,
+    _RATE_LIMITS_ID,
+    _ACCESS_MODE_ID,
+    _TRUSTED_PROXIES_ID,
+    _RECORD_LOCK_PARAMS_ID,
+    _ALLOWED_SCHEMA_VERSIONS_ID,
+}
 
 # codeql[py/clear-text-logging-sensitive-data]
 _DEFAULT_TRUSTED_PROXIES = []
@@ -305,7 +379,7 @@ class PasApiPermissionMixin:
         except CustomAdminSettings.DoesNotExist:
             return []
         except (json.JSONDecodeError, TypeError):
-            logger.error("pas.api._load_json_setting.invalid_json")
+            logger.warning("pas.api._load_json_setting.invalid_json")
             if raise_validation_error:
                 # item_id in the validation message is likewise intentional:
                 # it identifies which PAS admin setting is malformed and helps
@@ -439,6 +513,8 @@ class PasApiPermissionMixin:
             cls.validate_trusted_proxies(raw_value)
         elif instance.item_id == _RECORD_LOCK_PARAMS_ID:
             cls.validate_record_lock_params(raw_value)
+        elif instance.item_id == _ALLOWED_SCHEMA_VERSIONS_ID:
+            cls.validate_allowed_schema_versions(raw_value)
         return True
 
     @classmethod
@@ -693,6 +769,55 @@ class PasApiPermissionMixin:
                 )
         return True
 
+    @staticmethod
+    def validate_allowed_schema_versions(raw_versions) -> bool:
+        """
+        Ověří strukturu a obsah nastavení ``allowed_schema_versions``.
+
+        Očekávaný formát je neprázdný seznam čísel (``float`` nebo ``int``),
+        například ``[2.2]`` nebo ``[2.2, 2.3]``. Záporné nebo nulové hodnoty nejsou povoleny.
+
+        :param raw_versions: Naparsovaná JSON hodnota nastavení ``allowed_schema_versions``.
+
+        :raises ValidationError: Pokud hodnota není neprázdný seznam kladných čísel.
+        :return: ``True`` pokud je nastavení validní.
+        """
+        if not isinstance(raw_versions, list) or not raw_versions:
+            raise ValidationError(
+                {"value": _("pas.api.PasApiPermissionMixin.validate_allowed_schema_versions.not_a_nonempty_list")}
+            )
+        for item in raw_versions:
+            if isinstance(item, bool) or not isinstance(item, (int, float)) or item <= 0:
+                raise ValidationError(
+                    {"value": _("pas.api.PasApiPermissionMixin.validate_allowed_schema_versions.invalid_version")}
+                )
+        return True
+
+    @classmethod
+    def get_allowed_schema_versions(cls) -> list[float] | None:
+        """
+        Vrátí seznam povolených verzí AMČR XSD schématu z cache nebo ``CustomAdminSettings``.
+
+        Pokud nastavení ``allowed_schema_versions`` neexistuje, vrátí ``None`` (povoleny jsou
+        všechny verze, které projdou ostatními kontrolami). Pokud nastavení existuje, vrátí
+        seznam hodnot jako ``float``.
+
+        :return: Seznam povolených verzí nebo ``None``, pokud nastavení není nakonfigurováno.
+        """
+        versions = cache.get(_CACHE_KEY_ALLOWED_SCHEMA_VERSIONS)
+        if versions is None:
+            raw = cls.load_json_setting(_ALLOWED_SCHEMA_VERSIONS_ID, raise_validation_error=False)
+            if not raw:
+                cache.set(_CACHE_KEY_ALLOWED_SCHEMA_VERSIONS, _NOT_CONFIGURED, _CACHE_TTL)
+                return None
+            cls.validate_allowed_schema_versions(raw)
+            versions = [float(v) for v in raw]
+            cache.set(_CACHE_KEY_ALLOWED_SCHEMA_VERSIONS, versions, _CACHE_TTL)
+            return versions
+        if versions == _NOT_CONFIGURED:
+            return None
+        return versions
+
     @classmethod
     def get_client_ip(cls, request) -> str:
         """
@@ -785,6 +910,7 @@ def _invalidate_api_cache(sender, instance=None, **kwargs):
         cache.delete(_CACHE_KEY_ACCESS_MODE)
         cache.delete(_CACHE_KEY_TRUSTED_PROXIES)
         cache.delete(_CACHE_KEY_RECORD_LOCK_PARAMS)
+        cache.delete(_CACHE_KEY_ALLOWED_SCHEMA_VERSIONS)
 
 
 class IpBlacklistPermission(PasApiPermissionMixin, BasePermission):
@@ -1046,7 +1172,7 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
         """
         parsed = _parse_rate(rate)
         if parsed is None:
-            logger.error("pas.api.ApiImportThrottle.invalid_rate", extra={"rate": rate})
+            logger.warning("pas.api.ApiImportThrottle.invalid_rate", extra={"rate": rate})
             return True
         max_requests, window = parsed
         now = time.time()
@@ -1473,7 +1599,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
     _XML_NS = "http://www.w3.org/XML/1998/namespace"
     _XSI_NS = "http://www.w3.org/2001/XMLSchema-instance"
     _amcr_schema_cache: dict[str, tuple[etree.XMLSchema, float]] = {}  # url -> (schema, inserted_at)
-    XML_IMPORT_INITIAL_STAV: int = SN_POTVRZENY
+    _VALID_IMPORT_STAVS: tuple[int, ...] = (SN_ZAPSANY, SN_ODESLANY, SN_POTVRZENY)
 
     def _validation_status(self, errors: list[ImportValidationIssue]) -> int:
         """
@@ -1490,11 +1616,17 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
         return status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @classmethod
-    def _validate_declared_schema_version(cls, doc: etree._ElementTree) -> str | None:
+    def _validate_declared_schema_version(
+        cls, doc: etree._ElementTree, allowed_versions: list[float] | None = None
+    ) -> str | None:
         """
         Ověří, že XML deklaruje podporovanou verzi AMČR schématu.
 
+        Pokud je předán parametr ``allowed_versions``, zkontroluje navíc, zda verze schématu
+        v dokumentu patří mezi povolené verze nakonfigurované v nastavení ``allowed_schema_versions``.
+
         :param doc: Naparsovaný XML dokument.
+        :param allowed_versions: Seznam povolených verzí schématu nebo ``None`` (bez omezení).
 
         :return: Chybová zpráva nebo ``None``, pokud deklarace odpovídá podporované verzi.
         """
@@ -1517,6 +1649,18 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
             return _(
                 "pas.api.SamostatnyNalezXmlImportView._validate_declared_schema_version.unsupported_schema_location"
             )
+
+        if allowed_versions is not None:
+            m = re.search(r"/schema/amcr/(\d+\.\d+)/", amcr_namespace)
+            if m is None:
+                return _(
+                    "pas.api.SamostatnyNalezXmlImportView._validate_declared_schema_version.version_not_extractable"
+                )
+            version = float(m.group(1))
+            if version not in allowed_versions:
+                return _(
+                    "pas.api.SamostatnyNalezXmlImportView._validate_declared_schema_version.version_not_allowed"
+                ) % {"version": version}
 
         return None
 
@@ -1555,22 +1699,24 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
 
                 def resolve(self, url, id, context):
                     """
-                    Přeloží URL na lokální cestu pro xml.xsd.
+                    Načte URL XSD schématu ze sítě nebo Redis cache a vrátí obsah resolveru.
 
                     :param url: URL požadovaného zdroje.
                     :param id: Identifikátor kontextu parseru.
                     :param context: Kontext resolveru.
 
-                    :return: Vrací lokální soubor pro xml.xsd, jinak None.
+                    :return: Vrací obsah XSD schématu pro povolená URL, jinak None.
                     """
-                    allowed_urls = _ALLOWED_XML_XSD_URLS
-                    if url in allowed_urls:
-                        return self.resolve_filename("xml_generator/definitions/xml.xsd", context)
-                    if any(pattern.match(url) for pattern in _ALLOWED_SCHEMA_URL_PATTERNS):
+                    if url in _ALLOWED_XML_XSD_URLS or any(
+                        pattern.match(url) for pattern in _ALLOWED_SCHEMA_URL_PATTERNS
+                    ):
+                        # W3C xml.xsd and all other allowed schema URLs are fetched from the network
+                        # (cached in Redis after first fetch). If the remote is unavailable, the import
+                        # endpoint returns 422 — this is intentional: we do not bundle local copies.
                         try:
-                            response = urllib.request.urlopen(url, timeout=_AMCR_SCHEMA_FETCH_TIMEOUT)  # noqa: S310
-                        except (urllib.error.URLError, TimeoutError) as exc:
-                            logger.error("Nepodařilo se načíst XSD schéma z URL %s: %s", url, exc)
+                            content = _fetch_xsd_bytes(url)
+                        except (urllib.error.URLError, TimeoutError, ValueError) as exc:
+                            logger.warning("Nepodařilo se načíst XSD schéma z URL %s: %s", url, exc)
                             self.blocked_exception = ImportValidationException(
                                 ImportValidationIssue(
                                     line=None,
@@ -1584,7 +1730,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                             )
                             self.blocked_exception.__cause__ = exc
                             return None
-                        return self.resolve_file(response, context, base_url=url)
+                        return self.resolve_string(content, context, base_url=url)
                     # Disallowed URL — store the exception for re-raising after XMLSchema()
                     # because lxml swallows Python exceptions raised inside resolver callbacks.
                     self.blocked_exception = ImportValidationException(
@@ -1602,9 +1748,9 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
             resolver = _LocalResolver()
             parser.resolvers.add(resolver)
             try:
-                response = urllib.request.urlopen(schema_url, timeout=_AMCR_SCHEMA_FETCH_TIMEOUT)  # noqa: S310
-            except (urllib.error.URLError, TimeoutError) as exc:
-                logger.error("Nepodařilo se načíst XSD schéma z URL %s: %s", schema_url, exc)
+                xsd_bytes = _fetch_xsd_bytes(schema_url)
+            except (urllib.error.URLError, TimeoutError, ValueError) as exc:
+                logger.warning("Nepodařilo se načíst XSD schéma z URL %s: %s", schema_url, exc)
                 raise ImportValidationException(
                     ImportValidationIssue(
                         line=None,
@@ -1614,8 +1760,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                         error_type=ImportErrorType.INVALID_DATA,
                     )
                 ) from exc
-            with response:
-                schema_doc = etree.parse(response, parser)
+            schema_doc = etree.ElementTree(etree.fromstring(xsd_bytes, parser))
             schema = etree.XMLSchema(schema_doc)
             if resolver.blocked_exception is not None:
                 raise resolver.blocked_exception
@@ -1728,13 +1873,75 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
         return child.get("id") or None
 
     @classmethod
+    def _parse_point_wkt(cls, elem: etree._Element, field_name: str) -> str:
+        """
+        Ověří, že text XML elementu obsahuje platné WKT geometrie typu ``Point``.
+
+        :param elem: XML element obsahující WKT text.
+        :param field_name: Název pole pro chybovou zprávu (``"geom_wkt"`` nebo ``"geom_sjtsk_wkt"``).
+
+        :return: WKT řetězec geometrie.
+
+        :raises ImportValidationException: Pokud je WKT syntakticky neplatné, prázdné nebo není typu ``Point``.
+        """
+        wkt = (elem.text or "").strip()
+        if not wkt:
+            raise ImportValidationException(
+                ImportValidationIssue(
+                    line=elem.sourceline,
+                    column=None,
+                    message=f"{field_name}: " + _("pas.api.SamostatnyNalezXmlBaseView._parse_point_wkt.empty_wkt"),
+                    error_type=ImportErrorType.INVALID_DATA,
+                )
+            )
+        try:
+            geom = GEOSGeometry(wkt)
+        except (GEOSException, ValueError):
+            raise ImportValidationException(
+                ImportValidationIssue(
+                    line=elem.sourceline,
+                    column=None,
+                    message=f"{field_name}: " + _("pas.api.SamostatnyNalezXmlBaseView._parse_point_wkt.invalid_wkt"),
+                    error_type=ImportErrorType.INVALID_DATA,
+                )
+            ) from None
+        if not isinstance(geom, GEOSPoint):
+            raise ImportValidationException(
+                ImportValidationIssue(
+                    line=elem.sourceline,
+                    column=None,
+                    message=f"{field_name}: " + _("pas.api.SamostatnyNalezXmlBaseView._parse_point_wkt.not_a_point"),
+                    error_type=ImportErrorType.INVALID_DATA,
+                )
+            )
+        return wkt
+
+    @classmethod
     def _parse_nalez_element(cls, elem: etree._Element, user) -> tuple[dict, Osoba | None]:
         """
         Převede element ``amcr:samostatny_nalez`` na slovník pro deserializaci.
 
         Elementy typu ``refType`` a ``vocabType`` se mapují pomocí atributu ``id``,
-        který nese ``ident_cely`` odkazovaného záznamu. Geometrie jsou předány
-        jako WKT řetězce z elementů ``geom_wkt`` a ``geom_sjtsk_wkt``.
+        který nese ``ident_cely`` odkazovaného záznamu. Geometrie se určují vždy
+        z jednoho zdrojového elementu podle ``geom_system``:
+
+        - ``geom_system=4326`` — zdrojem je ``geom_wkt``; ``geom_sjtsk`` se vypočítá
+          konverzí do S-JTSK, element ``geom_sjtsk_wkt`` se ignoruje.
+        - ``geom_system=5514`` — zdrojem je ``geom_sjtsk_wkt``; ``geom`` se vypočítá
+          konverzí do WGS-84, element ``geom_wkt`` se ignoruje.
+
+        Následující elementy jsou v XML povoleny, ale při importu se ignorují:
+
+        - ``igsn`` — přiděluje se automaticky po archivaci záznamu.
+        - ``okres`` — stanoví se automaticky podle souřadnic.
+        - ``katastr`` (v ``chranene_udaje``) — stanoví se automaticky podle souřadnic.
+        - ``geom_gml`` (v ``chranene_udaje``) — geometrie se přebírá z ``geom_wkt``.
+        - ``geom_sjtsk_gml`` (v ``chranene_udaje``) — geometrie se přebírá z ``geom_sjtsk_wkt``.
+        - ``geom_sjtsk_wkt`` (v ``chranene_udaje``) — ignoruje se, pokud ``geom_system=4326``.
+        - ``geom_wkt`` (v ``chranene_udaje``) — ignoruje se, pokud ``geom_system=5514``.
+        - ``stav`` — musí být jedna z povolených hodnot (1, 2, 3); určuje cílový stav záznamu po importu.
+        - ``historie`` — generuje se automaticky systémem.
+        - ``soubor`` — soubory se nahrávají samostatným endpointem.
 
         :param elem: Element ``amcr:samostatny_nalez`` z importovaného XML dokumentu.
         :param user: Uživatel provádějící import.
@@ -1756,11 +1963,39 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                 )
             )
 
+        raw_ident_cely = cls._text(elem, "ident_cely")
+        if raw_ident_cely is not None and raw_ident_cely != ":tba":
+            ident_cely_elem = elem.find(cls._ns("ident_cely"))
+            raise ImportValidationException(
+                ImportValidationIssue(
+                    line=ident_cely_elem.sourceline if ident_cely_elem is not None else elem.sourceline,
+                    column=None,
+                    message="ident_cely: "
+                    + _("pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.ident_cely_must_be_tba"),
+                    error_type=ImportErrorType.INVALID_DATA,
+                )
+            )
+
+        raw_stav = cls._text(elem, "stav")
+        try:
+            stav = int(raw_stav) if raw_stav is not None else None
+        except (ValueError, TypeError):
+            stav = None
+        if stav not in cls._VALID_IMPORT_STAVS:
+            stav_elem = elem.find(cls._ns("stav"))
+            raise ImportValidationException(
+                ImportValidationIssue(
+                    line=stav_elem.sourceline if stav_elem is not None else elem.sourceline,
+                    column=None,
+                    message="stav: " + _("pas.api.SamostatnyNalezXmlBaseView._parse_nalez_element.unsupported_stav"),
+                    error_type=ImportErrorType.INVALID_DATA,
+                )
+            )
+
         data = {
-            "ident_cely": None if cls._text(elem, "ident_cely") == ":tba" else cls._text(elem, "ident_cely"),
+            "ident_cely": None,
             "projekt": projekt_ident,
             "evidencni_cislo": cls._text(elem, "evidencni_cislo"),
-            "igsn": cls._text(elem, "igsn"),
             "hloubka": cls._text(elem, "hloubka"),
             "okolnosti": cls._id_attr(elem, "okolnosti"),
             "obdobi": cls._id_attr(elem, "obdobi"),
@@ -1771,32 +2006,123 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
             "poznamka": cls._text(elem, "poznamka"),
             "nalezce": nalezce_ident,
             "datum_nalezu": cls._text(elem, "datum_nalezu"),
-            "stav": cls.XML_IMPORT_INITIAL_STAV,
+            "stav": stav,
             "predano": cls._parse_bool(cls._text(elem, "predano")),
             "predano_organizace": cls._id_attr(elem, "predano_organizace"),
             "geom_system": cls._text(elem, "geom_system"),
             "pristupnost": cls._id_attr(elem, "pristupnost"),
         }
 
+        geom_system = data.get("geom_system")
+        if geom_system is not None and geom_system not in ("4326", "5514"):
+            geom_system_elem = elem.find(cls._ns("geom_system"))
+            raise ImportValidationException(
+                ImportValidationIssue(
+                    line=geom_system_elem.sourceline if geom_system_elem is not None else elem.sourceline,
+                    column=None,
+                    message="geom_system: "
+                    + _("pas.api.SamostatnyNalezXmlBaseView._parse_nalez_element.unsupported_geom_system"),
+                    error_type=ImportErrorType.INVALID_DATA,
+                )
+            )
+
         if chranene is not None:
+            if geom_system not in ("4326", "5514"):
+                geom_system_elem = elem.find(cls._ns("geom_system"))
+                raise ImportValidationException(
+                    ImportValidationIssue(
+                        line=geom_system_elem.sourceline if geom_system_elem is not None else elem.sourceline,
+                        column=None,
+                        message="geom_system: "
+                        + _("pas.api.SamostatnyNalezXmlBaseView._parse_nalez_element.unsupported_geom_system"),
+                        error_type=ImportErrorType.INVALID_DATA,
+                    )
+                )
             data["lokalizace"] = cls._text(chranene, "lokalizace")
-            geom_wkt_elem = chranene.find(cls._ns("geom_wkt"))
-            if geom_wkt_elem is not None and geom_wkt_elem.text:
-                data["geom"] = geom_wkt_elem.text.strip()
-            geom_sjtsk_elem = chranene.find(cls._ns("geom_sjtsk_wkt"))
-            if geom_sjtsk_elem is not None and geom_sjtsk_elem.text:
-                data["geom_sjtsk"] = geom_sjtsk_elem.text.strip()
+            geom, geom_sjtsk = cls._parse_geom_fields(chranene, geom_system)
+            if geom is not None:
+                data["geom"] = geom
+            if geom_sjtsk is not None:
+                data["geom_sjtsk"] = geom_sjtsk
 
         return {k: v for k, v in data.items() if v is not None}, nova_osoba
+
+    @classmethod
+    def _parse_geom_fields(cls, chranene: etree._Element, geom_system: str | None) -> tuple[str | None, str | None]:
+        """
+        Načte a převede geometrie podle ``geom_system``.
+
+        Při ``geom_system="4326"`` se jako zdroj použije ``geom_wkt`` a výsledek se
+        konvertuje do S-JTSK (5514). Element ``geom_sjtsk_wkt`` se ignoruje.
+        Při ``geom_system="5514"`` se jako zdroj použije ``geom_sjtsk_wkt`` a výsledek
+        se konvertuje do WGS-84 (4326). Element ``geom_wkt`` se ignoruje.
+
+        :param chranene: Element ``amcr:chranene_udaje``.
+        :param geom_system: Hodnota elementu ``geom_system`` z importovaného dokumentu.
+
+        :return: Dvojice ``(geom_wgs84, geom_sjtsk)`` nebo ``None`` pro každou hodnotu,
+            která nebyla nalezena nebo nebyla poskytnuta.
+
+        :raises ImportValidationException: Pokud konverze souřadnic selže.
+        """
+        if geom_system == "4326":
+            wkt_elem = chranene.find(cls._ns("geom_wkt"))
+            if wkt_elem is None or not wkt_elem.text:
+                return None, None
+            wkt = cls._parse_point_wkt(wkt_elem, "geom_wkt")
+            try:
+                converted, result_status = transform_geom_to_sjtsk(wkt)
+                ok = result_status == "OK"
+            except Exception as exc:
+                logger.warning("pas.api._parse_geom_fields.sjtsk_conversion_failed", extra={"exc": str(exc)})
+                ok = False
+            if not ok:
+                raise ImportValidationException(
+                    ImportValidationIssue(
+                        line=wkt_elem.sourceline,
+                        column=None,
+                        message="geom_wkt: "
+                        + _("pas.api.SamostatnyNalezXmlBaseView._parse_geom_fields.conversion_error"),
+                        error_type=ImportErrorType.INVALID_DATA,
+                    )
+                )
+            return wkt, converted
+
+        if geom_system == "5514":
+            sjtsk_elem = chranene.find(cls._ns("geom_sjtsk_wkt"))
+            if sjtsk_elem is None or not sjtsk_elem.text:
+                return None, None
+            wkt_sjtsk = cls._parse_point_wkt(sjtsk_elem, "geom_sjtsk_wkt")
+            try:
+                converted, result_status = transform_geom_to_wgs84(wkt_sjtsk)
+                ok = result_status == "OK"
+            except Exception as exc:
+                logger.warning("pas.api._parse_geom_fields.wgs84_conversion_failed", extra={"exc": str(exc)})
+                ok = False
+            if not ok:
+                raise ImportValidationException(
+                    ImportValidationIssue(
+                        line=sjtsk_elem.sourceline,
+                        column=None,
+                        message="geom_sjtsk_wkt: "
+                        + _("pas.api.SamostatnyNalezXmlBaseView._parse_geom_fields.conversion_error"),
+                        error_type=ImportErrorType.INVALID_DATA,
+                    )
+                )
+            return converted, wkt_sjtsk
+
+        return None, None
 
     @classmethod
     def _parse_nalezce(cls, elem: etree._Element, user) -> tuple[str | None, Osoba | None]:
         """
         Zpracuje element ``nalezce`` a vrátí ``ident_cely`` osoby pro import.
 
-        Pokud má element atribut ``id=":tba"``, vytvoří se nová osoba z textu
-        ve formátu ``"Příjmení, Jméno"``. Nová osoba se zde pouze připraví,
-        ale uloží se až v transakci společně s ``SamostatnyNalez``.
+        Pokud má element atribut ``id=":tba"``, nejprve se prohledá databáze podle
+        ``prijmeni`` a ``jmeno``. Pokud osoba existuje, použije se její ``ident_cely``.
+        Teprve pokud záznam neexistuje, vytvoří se nová osoba z textu ve formátu
+        ``"Příjmení, Jméno"``. Nová osoba se zde pouze připraví, ale uloží se až
+        v transakci společně s ``SamostatnyNalez``.
 
         :param elem: Element ``amcr:samostatny_nalez``.
         :param user: Uživatel provádějící import.
@@ -1859,70 +2185,27 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
         if len(casti) != 2 or not casti[0] or not casti[1]:
             raise ImportValidationException(get_nalezce_format_error(nalezce_text, casti))
 
-        if not check_permissions(Permissions.actionChoices.model_edit, user):
-            raise ImportValidationException(
-                ImportValidationIssue(
-                    line=nalezce_elem.sourceline if nalezce_elem is not None else elem.sourceline,
-                    column=None,
-                    message="nalezce: "
-                    + _("pas.api.SamostatnyNalezXmlImportView._parse_nalezce.missing_edit_osoba_permission"),
-                    error_type=ImportErrorType.PERMISSION_ERROR,
-                )
-            )
-
         prijmeni, jmeno = casti
         jmeno = " ".join(jmeno.split())
+
+        existing = Osoba.objects.filter(prijmeni=prijmeni, jmeno=jmeno).first()
+        if existing is not None:
+            return existing.ident_cely, None
+
         osoba = Osoba(
             prijmeni=prijmeni,
             jmeno=jmeno,
             vypis=build_osoba_vypis(prijmeni, jmeno),
             vypis_cely=f"{prijmeni}, {jmeno}",
         )
+        osoba.suppress_signal = True
         return None, osoba
-
-    @classmethod
-    def _build_schema_validation_doc(cls, doc: etree._ElementTree) -> etree._ElementTree:
-        """
-        Vytvoří kopii dokumentu upravenou pro validaci proti XSD schématu.
-
-        XSD vyžaduje element ``stav``. Pokud v dokumentu chybí, doplní se do kopie
-        pro účely validace; originální dokument zůstává nezměněn.
-
-        :param doc: Původní XML dokument.
-
-        :return: Kopie XML dokumentu určená pro schema validaci.
-        """
-        parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
-        validation_doc = etree.ElementTree(etree.fromstring(etree.tostring(doc.getroot()), parser=parser))
-        for elem in validation_doc.findall(f".//{cls._ns('samostatny_nalez')}"):
-            if elem.find(cls._ns("stav")) is not None:
-                continue
-
-            stav_elem = etree.Element(cls._ns("stav"))
-            stav_elem.text = str(cls.XML_IMPORT_INITIAL_STAV)
-            insert_before_tags = (
-                "predano",
-                "predano_organizace",
-                "geom_system",
-                "pristupnost",
-                "chranene_udaje",
-                "historie",
-                "soubor",
-            )
-            insert_index = len(elem)
-            for index, child in enumerate(elem):
-                if _strip_namespace(child.tag) in insert_before_tags:
-                    insert_index = index
-                    break
-            elem.insert(insert_index, stav_elem)
-
-        return validation_doc
 
 
 class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
     """Pohled pro import záznamu samostatného nálezu z XML souboru přes POST požadavek."""
 
-    _IMPORT_HISTORY_NOTE = _l("pas.api.SamostatnyNalezXmlImportView.import_history_note")
+    _IMPORT_HISTORY_NOTE = gettext_lazy("pas.api.SamostatnyNalezXmlImportView.import_history_note")
 
     def post(self, request, format=None):
         """
@@ -1984,7 +2267,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 status.HTTP_400_BAD_REQUEST,
             )
 
-        version_error = self._validate_declared_schema_version(doc)
+        version_error = self._validate_declared_schema_version(doc, allowed_versions=self.get_allowed_schema_versions())
         if version_error:
             return self._fail(log_entry, {"detail": version_error}, status.HTTP_422_UNPROCESSABLE_ENTITY)
 
@@ -1997,8 +2280,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 self._validation_status(exc.import_errors),
             )
 
-        validation_doc = self._build_schema_validation_doc(doc)
-        if not schema.validate(validation_doc):
+        if not schema.validate(doc):
             errors = [
                 ImportValidationIssue(
                     line=e.line,
@@ -2052,7 +2334,6 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
         elem = nalez_elements[0]
         notes = self._get_ignored_lang_notes(elem)
         try:
-            self._validate_disallowed_elements(elem)
             data, nova_osoba = self._parse_nalez_element(elem, request.user)
         except ImportValidationException as exc:
             return self._fail(
@@ -2092,20 +2373,6 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 if not serializer.is_valid():
                     raise ImportValidationException.from_serializer_errors(serializer.errors, line=elem.sourceline)
 
-                if (
-                    serializer.validated_data.get("ident_cely")
-                    and SamostatnyNalez.objects.filter(ident_cely=serializer.validated_data["ident_cely"]).exists()
-                ):
-                    raise ImportValidationException(
-                        ImportValidationIssue(
-                            line=elem.sourceline,
-                            column=None,
-                            message="ident_cely: "
-                            + _("pas.api.SamostatnyNalezXmlImportView.post.ident_cely_already_exists"),
-                            error_type=ImportErrorType.INVALID_DATA,
-                        )
-                    )
-
                 instance = SamostatnyNalez(**serializer.validated_data)
                 if not instance.ident_cely:
                     instance.ident_cely = get_sn_ident(instance.projekt)
@@ -2118,6 +2385,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                             error_type=ImportErrorType.INVALID_DATA,
                         )
                     )
+
                 geom_wgs84 = instance.geom
                 if geom_wgs84 is None and instance.geom_sjtsk is not None:
                     # Clone so that the stored geom_sjtsk field is never mutated; WGS-84 is
@@ -2144,13 +2412,27 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 # stays open after the DB commit, allowing us to verify the Fedora write below.
                 instance.save()
         except ImportValidationException as exc:
-            logger.error("pas.api.SamostatnyNalezXmlImportView.post.import_validation_error", extra={"error": exc})
+            logger.warning("pas.api.SamostatnyNalezXmlImportView.post.import_validation_error", extra={"error": exc})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             return self._fail(
                 log_entry,
                 {"validation_errors": [e.to_dict() for e in exc.import_errors]},
                 self._validation_status(exc.import_errors),
+            )
+        except IntegrityError as err:
+            logger.warning("pas.api.SamostatnyNalezXmlImportView.post.integrity_error", extra={"error": err})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            constraint = getattr(getattr(err.__cause__, "diag", None), "constraint_name", None)
+            if constraint == "osoba_jmeno_prijmeni_key":
+                detail = _("pas.api.SamostatnyNalezXmlImportView.post.nalezce_already_exists")
+            else:
+                detail = _("pas.api.SamostatnyNalezXmlImportView.post.integrity_error")
+            return self._fail(
+                log_entry,
+                {"detail": detail},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         except FedoraError as err:
             logger.error("pas.api.SamostatnyNalezXmlImportView.post.fedora_error", extra={"error": err})
@@ -2227,53 +2509,32 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
     @classmethod
     def _create_import_history_records(cls, instance: SamostatnyNalez, user) -> None:
         """
-        Vytvoří historii pro importovaný záznam samostatného nálezu.
+        Vytvoří záznamy historie pro importovaný samostatný nález.
+
+        Vytvoří pouze záznamy odpovídající přechodům až do cílového stavu záznamu:
+        stav 1 → ZAPSANI_SN, stav 2 → ZAPSANI_SN + ODESLANI_SN,
+        stav 3 → ZAPSANI_SN + ODESLANI_SN + POTVRZENI_SN.
 
         :param instance: Vytvořený záznam samostatného nálezu.
         :param user: Uživatel, který provedl import.
         """
+        _all_transitions = [
+            (SN_ZAPSANY, ZAPSANI_SN),
+            (SN_ODESLANY, ODESLANI_SN),
+            (SN_POTVRZENY, POTVRZENI_SN),
+        ]
         Historie.objects.bulk_create(
             [
                 Historie(
-                    typ_zmeny=ZAPSANI_SN,
+                    typ_zmeny=typ_zmeny,
                     uzivatel=user,
                     vazba=instance.historie,
                     poznamka=cls._IMPORT_HISTORY_NOTE,
-                ),
-                Historie(
-                    typ_zmeny=ODESLANI_SN,
-                    uzivatel=user,
-                    vazba=instance.historie,
-                    poznamka=cls._IMPORT_HISTORY_NOTE,
-                ),
-                Historie(
-                    typ_zmeny=POTVRZENI_SN,
-                    uzivatel=user,
-                    vazba=instance.historie,
-                    poznamka=cls._IMPORT_HISTORY_NOTE,
-                ),
+                )
+                for stav_threshold, typ_zmeny in _all_transitions
+                if instance.stav >= stav_threshold
             ]
         )
-
-    @classmethod
-    def _validate_disallowed_elements(cls, elem: etree._Element) -> None:
-        """
-        Ověří, že importovaný element neobsahuje nepovolené podřízené elementy.
-
-        :param elem: Importovaný element ``amcr:samostatny_nalez``.
-
-        :raises ImportValidationException: Pokud je nalezen nepovolený element.
-        """
-        stav_elem = elem.find(cls._ns("stav"))
-        if stav_elem is not None:
-            raise ImportValidationException(
-                ImportValidationIssue(
-                    line=stav_elem.sourceline,
-                    column=None,
-                    message="stav: " + _("pas.api.SamostatnyNalezXmlImportView.post.stav_element_not_allowed"),
-                    error_type=ImportErrorType.INVALID_DATA,
-                )
-            )
 
 
 class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
