@@ -215,7 +215,7 @@ i pokud jsou v dokumentu přítomny.
         <amcr:poznamka>xs:string</amcr:poznamka>
         <amcr:nalezce id="xs:string">xs:string, xs:string</amcr:nalezce>
         <amcr:datum_nalezu>xs:date</amcr:datum_nalezu>
-        <amcr:stav>xs:integer</amcr:stav> <!-- povinné XSD; hodnota se ignoruje, systém nastaví stav automaticky -->
+        <amcr:stav>xs:integer</amcr:stav>
         <amcr:predano>xs:boolean</amcr:predano>
         <amcr:predano_organizace id="xs:string" xml:lang="cs">xs:string</amcr:predano_organizace>
         <amcr:geom_system>xs:integer</amcr:geom_system>
