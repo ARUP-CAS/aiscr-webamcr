@@ -988,6 +988,8 @@ class VazbaLookupImportField(LookupImportField):
 
             :raises ImportDataMissingReferencedValueError: Vyvolá se v konkrétních chybových větvích této funkce.
         """
+        if value is None:
+            return None
         try:
             record = get_record_from_ident(value)
         except Exception:

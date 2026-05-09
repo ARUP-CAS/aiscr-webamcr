@@ -18,6 +18,14 @@ VALID_ROW = {
     "projekt": None,
 }
 
+MAP_SAFE_ROW = {
+    "ident_cely": "DC-C-TX-000001-D01",
+    "poznamka": "testovací poznámka",
+    "dokument": None,
+    "archeologicky_zaznam": None,
+    "projekt": None,
+}
+
 
 class DokumentCastMapperInvalidStructureTest(TestCase):
     """Testy pro DokumentCastMapper — neplatná struktura dat."""
@@ -100,3 +108,20 @@ class DokumentCastMapperCheckRequiredFieldsTest(TestCase):
         row["projekt"] = None
         mapper = DokumentCastMapper(row)
         mapper.check_required_fields(INSERT)
+
+
+class DokumentCastMapperMapValidTest(TestCase):
+    """Testy pro DokumentCastMapper — platný dataset pro map()."""
+
+    def test_map_returns_dict(self):
+        """map() vrátí slovník pro platný řádek."""
+        mapper = DokumentCastMapper(MAP_SAFE_ROW.copy())
+        result = mapper.map(INSERT, serialize=True, include_primary_key=True)
+        self.assertIsInstance(result, dict)
+
+    def test_map_includes_all_expected_keys(self):
+        """map() vrátí všechny očekávané klíče."""
+        mapper = DokumentCastMapper(MAP_SAFE_ROW.copy())
+        result = mapper.map(INSERT, serialize=True, include_primary_key=True)
+        expected_keys = {"ident_cely", "poznamka", "dokument", "archeologicky_zaznam", "projekt"}
+        self.assertEqual(set(result.keys()), expected_keys)

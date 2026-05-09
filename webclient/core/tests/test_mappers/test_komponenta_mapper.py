@@ -19,6 +19,16 @@ VALID_ROW = {
     "areal": "HES-AREAL-001",
 }
 
+MAP_SAFE_ROW = {
+    "ident_cely": "C-AZ-999999999-D01-K001",
+    "jistota": "true",
+    "presna_datace": "středověk",
+    "poznamka": "test",
+    "vazba": None,
+    "obdobi": None,
+    "areal": None,
+}
+
 
 class KomponentaMapperInvalidStructureTest(TestCase):
     """Testy pro KomponentaMapper — neplatná struktura dat."""
@@ -86,3 +96,20 @@ class KomponentaMapperCheckRequiredFieldsTest(TestCase):
         row["obdobi"] = None
         mapper = KomponentaMapper(row)
         mapper.check_required_fields(INSERT)
+
+
+class KomponentaMapperMapValidTest(TestCase):
+    """Testy pro KomponentaMapper — platný dataset pro map()."""
+
+    def test_map_returns_dict(self):
+        """map() vrátí slovník pro platný řádek."""
+        mapper = KomponentaMapper(MAP_SAFE_ROW.copy())
+        result = mapper.map(INSERT, serialize=True, include_primary_key=True)
+        self.assertIsInstance(result, dict)
+
+    def test_map_includes_all_expected_keys(self):
+        """map() vrátí všechny očekávané klíče."""
+        mapper = KomponentaMapper(MAP_SAFE_ROW.copy())
+        result = mapper.map(INSERT, serialize=True, include_primary_key=True)
+        expected_keys = {"ident_cely", "jistota", "presna_datace", "poznamka", "vazba", "obdobi", "areal"}
+        self.assertEqual(set(result.keys()), expected_keys)

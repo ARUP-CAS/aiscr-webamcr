@@ -90,3 +90,30 @@ class PianMapperCheckRequiredFieldsTest(TestCase):
         mapper = PianMapper(row)
         with self.assertRaises(ImportDataError):
             mapper.check_required_fields(INSERT)
+
+
+class PianMapperMapValidTest(TestCase):
+    """Testy pro PianMapper — platný dataset pro map()."""
+
+    def test_map_returns_dict(self):
+        """map() vrátí slovník pro platný řádek."""
+        row = VALID_ROW.copy()
+        row["typ"] = None
+        row["presnost"] = None
+        row["zm10"] = None
+        row["zm50"] = None
+        mapper = PianMapper(row)
+        result = mapper.map(INSERT, serialize=True, include_primary_key=True)
+        self.assertIsInstance(result, dict)
+
+    def test_map_includes_all_expected_keys(self):
+        """map() vrátí všechny očekávané klíče."""
+        row = VALID_ROW.copy()
+        row["typ"] = None
+        row["presnost"] = None
+        row["zm10"] = None
+        row["zm50"] = None
+        mapper = PianMapper(row)
+        result = mapper.map(INSERT, serialize=True, include_primary_key=True)
+        expected_keys = {"ident_cely", "stav", "geom_system", "geom", "geom_sjtsk", "typ", "presnost", "zm10", "zm50"}
+        self.assertEqual(set(result.keys()), expected_keys)

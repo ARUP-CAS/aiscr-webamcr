@@ -17,6 +17,14 @@ VALID_ROW = {
     "specifikace": "HES-OBJSPEC-001",
 }
 
+MAP_SAFE_ROW = {
+    "pocet": "5",
+    "poznamka": "test",
+    "komponenta": None,
+    "druh": None,
+    "specifikace": None,
+}
+
 
 class NalezObjektMapperInvalidStructureTest(TestCase):
     """Testy pro NalezObjektMapper — neplatná struktura dat."""
@@ -97,3 +105,20 @@ class NalezObjektMapperCheckRequiredFieldsTest(TestCase):
         row["poznamka"] = None
         mapper = NalezObjektMapper(row)
         mapper.check_required_fields(INSERT)
+
+
+class NalezObjektMapperMapValidTest(TestCase):
+    """Testy pro NalezObjektMapper — platný dataset pro map()."""
+
+    def test_map_returns_dict(self):
+        """map() vrátí slovník pro platný řádek."""
+        mapper = NalezObjektMapper(MAP_SAFE_ROW.copy())
+        result = mapper.map(INSERT, serialize=True, include_primary_key=True)
+        self.assertIsInstance(result, dict)
+
+    def test_map_includes_all_expected_keys(self):
+        """map() vrátí všechny očekávané klíče."""
+        mapper = NalezObjektMapper(MAP_SAFE_ROW.copy())
+        result = mapper.map(INSERT, serialize=True, include_primary_key=True)
+        expected_keys = {"pocet", "poznamka", "komponenta", "druh", "specifikace"}
+        self.assertEqual(set(result.keys()), expected_keys)

@@ -33,6 +33,30 @@ VALID_ROW = {
     "kulturni_pamatka": None,
 }
 
+MAP_SAFE_ROW = {
+    "ident_cely": "C-202401-000001",
+    "stav": "1",
+    "lokalizace": "Pole za vsí",
+    "parcelni_cislo": "1234/5",
+    "geom": None,
+    "geom_system": "wgs84",
+    "geom_sjtsk": None,
+    "podnet": None,
+    "planovane_zahajeni": None,
+    "uzivatelske_oznaceni": None,
+    "oznaceni_stavby": None,
+    "kulturni_pamatka_cislo": None,
+    "kulturni_pamatka_popis": None,
+    "datum_zahajeni": None,
+    "datum_ukonceni": None,
+    "termin_odevzdani_nz": None,
+    "typ_projektu": None,
+    "hlavni_katastr": None,
+    "vedouci_projektu": None,
+    "organizace": None,
+    "kulturni_pamatka": None,
+}
+
 
 class ProjektMapperInvalidStructureTest(TestCase):
     """Testy pro ProjektMapper — neplatná struktura dat."""
@@ -108,3 +132,20 @@ class ProjektMapperCheckRequiredFieldsTest(TestCase):
         row["vedouci_projektu"] = None
         mapper = ProjektMapper(row)
         mapper.check_required_fields(INSERT)
+
+
+class ProjektMapperMapValidTest(TestCase):
+    """Testy pro ProjektMapper — platný dataset pro map()."""
+
+    def test_map_returns_dict(self):
+        """map() vrátí slovník pro platný řádek."""
+        mapper = ProjektMapper(MAP_SAFE_ROW.copy())
+        result = mapper.map(INSERT, serialize=False, include_primary_key=True)
+        self.assertIsInstance(result, dict)
+
+    def test_map_includes_all_expected_keys(self):
+        """map() vrátí všechny očekávané klíče."""
+        mapper = ProjektMapper(MAP_SAFE_ROW.copy())
+        result = mapper.map(INSERT, serialize=False, include_primary_key=True)
+        expected_keys = set(MAP_SAFE_ROW.keys())
+        self.assertEqual(set(result.keys()), expected_keys)
