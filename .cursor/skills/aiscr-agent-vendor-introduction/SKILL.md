@@ -1,7 +1,7 @@
 ---
 name: aiscr-agent-vendor-introduction
 description: 'Introduce or remediate an agent-tool vendor in the AIS CR hub: matrix/TOML,
-  sync policy (AGENT_FOLDERS and repo-root REPO_ROOT_SYNC_IDS), parity, local_configs;
+  sync policy (AGENT_FOLDERS and repo-root REPO_ROOT_SYNC_IDS), parity, direct bundles;
   optional cross-tool aiscr-* workflow registration when the session charter requires
   it.'
 disable-model-invocation: true
@@ -52,9 +52,9 @@ escalate scope beyond the approved task boundary.
 
 ## Mechanical truth (hub vs CI)
 
-- **Matrix prose alone is not proof of completion.** Record evidence as passing validators and on-disk artefacts under **committed** paths (`local_configs`, hub-root entry docs, generated vendor trees).
-- **Gitignored assistant roots** (common examples: entries under `/.cursor/`, tool-specific dirs in root `.gitignore`): clean clones and CI often have **no** repo-root tool directories. The **authoritative** hub baseline for parity is **`.agents/local_configs/<repo>/…`**. Do **not** infer completion from missing folders at the repo root alone—open **`local_configs`** and the matrix **hub paths** for that product.
-- **Committed `aiscr-*` workflow skills:** Where the matrix + `canonical_workflows_context` map registry slugs to a product’s committed skills tree, `validate_tool_parity.py` enforces **`SKILL.md` per slug** under the **hub `local_configs`** path for that product (stable id **`parity.registry-slug-skills-complete`** among others). Run **`generate_workflow_skills.py`** with the **default `--tools`** so **every** generator-backed assistant root that emits those mirrors is updated—**narrow `--tools` only when the charter explicitly limits scope** and you accept stale trees for omitted tools.
+- **Matrix prose alone is not proof of completion.** Record evidence as passing validators and on-disk artefacts under **committed** paths (hub-root entry docs, generated vendor trees, and direct-bundle reports).
+- **Sibling assistant roots:** Direct-bundle siblings should commit governed vendor roots unless repo policy marks a path runtime-only. Do **not** infer completion from missing folders at the repo root alone; open the direct-bundle inspect/dry-run report and the matrix **hub paths** for that product.
+- **Committed `aiscr-*` workflow skills:** Where the matrix + `canonical_workflows_context` map registry slugs to a product’s committed skills tree, `validate_tool_parity.py` enforces **`SKILL.md` per slug** under the hub vendor path for that product (stable id **`parity.registry-slug-skills-complete`** among others). Run **`generate_workflow_skills.py`** with the **default `--tools`** so **every** generator-backed assistant root that emits those mirrors is updated—**narrow `--tools` only when the charter explicitly limits scope** and you accept stale trees for omitted tools.
 - **Sibling repos:** The hub holds **full** baselines where parity and **`repos.toml`** require them. Siblings usually carry **subset** trees per **profile, sync recipes, and ESS**—do not copy the entire hub workflow surface into every sibling unless the **charter** or **`ecosystem-sibling-workflow-mirror`** (and related repo policy) explicitly requires it.
 
 **Product registry semantics**
@@ -84,16 +84,16 @@ Treat rows below as **patterns**; confirm each product against **`agent_tool_fea
 | Pattern | Hub committed `aiscr-*` workflow skills when matrix says so? | Primary mechanism |
 | --- | --- | --- |
 | `AGENT_FOLDERS` products (see `sync_policy.AGENT_FOLDERS`) | Yes — every registry slug for mirrored roots | `generate_workflow_skills.py` + `validate_tool_parity.py` |
-| Additional products whose **skills** row maps to the same registry under **`local_configs`** (any extra generator **tool** id) | Yes — same slugs under that product’s **`local_configs`** skills path | Same generator; **include that tool** in the regen (default `--tools` does this) |
+| Additional products whose **skills** row maps to the same registry under a committed vendor path (any extra generator **tool** id) | Yes — same slugs under that product’s skills path | Same generator; **include that tool** in the regen (default `--tools` does this) |
 | Products whose **skills** row is **N/A** or third-party marketplace installs | **No** — not the hub **`aiscr-*`** baseline | Matrix **`na_reason`** + TOML; no `generate_workflow_skills.py` for those rows unless charter says otherwise |
 | Products with **rules / entry docs only** (no committed `aiscr-*` skills path) | **No** `aiscr-*` skills row | Paths per matrix/TOML; see **`REPO_ROOT_*`** / **`AGENT_FOLDERS`** as applicable |
 
 ## Matrix cell coverage (TOML vs disk)
 
 - **Machine grid:** `mandatory_vendor_doc_urls.toml` is one row per **(product, asset_type)** matching **`agent_tool_feature_matrix.md`**. **`validate_agent_tool_feature_matrix.py`** checks each non-empty **`hub_committed_path`** against the management repo root (the single source of truth for hub assistant trees and other hub-only paths).
-- **Sibling `local_configs`:** **`validate_matrix_local_configs_cells.py`** reads the same TOML and, for each **`repos.toml`** row, checks every **non-review** matrix path whose first segment matches a **`sync`** token (**.cursor**, **.claude**, **.codex**, **.gemini**, **.qodo**). It validates directories/files exist and minimal content (rules/agents/hooks files, **Gemini** triple, **Qodo** README pair). **`asset_type == review`** is **skipped** (review services are wired separately). Messages use **`parity.matrix-local-configs-vendor-cells`**. **Skills:** full **`aiscr-*`** registry closure remains **`validate_tool_parity.py`** on the hub; siblings keep a **`*/skills/`** README stub unless **`ecosystem-sibling-workflow-mirror`** ships real **`SKILL.md`** trees.
-- **New vendor or new `REPO_ROOT_SYNC_IDS` token:** extend **`validate_matrix_local_configs_cells.py`** when new path shapes need extra checks; keep TOML **`hub_committed_path`** honest.
-- **Gemini governance files:** after canonical **`governance_rules/<stem>.md`** or the governance stem registry changes, run **`python .agents/scripts/generate_governance_rules.py`**. The unified generator refreshes **`.gemini/context/<stem>.md`** and committed **`.gemini/settings.json`** **`context`** + advisory **`hooks`** (intent parity with Cursor/Claude via **`gemini_cli_hooks.py`** — stdout JSON only) in the hub root and sibling `local_configs` entries.
+- **Sibling direct bundles:** `orchestrate_local_agent_sync.py inspect` / `dry-run` reads `.agents/sync/repos.toml` and `.agents/sync/specialized_sync_assets.toml`, resolves expected assets from hub/source roots, and reports vendor, surface class, capability, source, target, policy reason, support state, missing sources, and ignored target paths.
+- **New vendor or new `REPO_ROOT_SYNC_IDS` token:** extend direct-bundle metadata and tests when new path shapes need extra checks; keep TOML **`hub_committed_path`** honest.
+- **Gemini governance files:** after canonical **`governance_rules/<stem>.md`** or the governance stem registry changes, run **`python .agents/scripts/generate_governance_rules.py`**. The unified generator refreshes **`.gemini/context/<stem>.md`** and committed **`.gemini/settings.json`** **`context`** + advisory **`hooks`** (intent parity with Cursor/Claude via **`gemini_cli_hooks.py`** — stdout JSON only) in the hub root; siblings receive selected surfaces through direct-bundle sync.
 
 ## TOML `hub_committed_path` — avoid silent deferrals
 
@@ -108,7 +108,7 @@ Keep **`agent_tool_feature_matrix.md`** and TOML aligned: if the matrix or vendo
 
 **IRON LAW:** `NEVER CLAIM VENDOR INTRODUCTION COMPLETE WITHOUT ALL COMPLETION GATES FOR THAT VENDOR CLASS AND SESSION CHARTER.`
 
-**Standard assistants (`AGENT_FOLDERS` vendors):** matrix + TOML, **`repos.toml` `sync`**, `local_configs`, **`validate_tool_parity.py`**.
+**Standard assistants (`AGENT_FOLDERS` vendors):** matrix + TOML, **`.agents/sync/repos.toml` `sync`**, direct-bundle inspect/dry-run, **`validate_tool_parity.py`**.
 
 **Repo-root vendors (no new `AGENT_FOLDERS` root):** **Full matrix** + TOML; separate **`REPO_ROOT_HUB_ENTRY_DOCS`** from **`REPO_ROOT_SYNC_IDS`** + `repos.toml` `sync`; hub root is the single source of truth. Do **not** invent a fake `AGENT_FOLDERS` root.
 
@@ -123,7 +123,7 @@ Keep **`agent_tool_feature_matrix.md`** and TOML aligned: if the matrix or vendo
 | "I'll run `sync_agent_configs.py apply` after the dry-run — the dry-run looked clean" | Explicit user approval is required before every apply, even after a clean dry-run. |
 | "I'll register a new `aiscr-*` workflow without charter approval" | Phase 6 only when the **planning session** explicitly puts a new or renamed **`aiscr-*`** slug in scope. |
 | "I'll run `generate_workflow_skills.py` with a short `--tools` list to save time" | Use **default `--tools`** for hub registry maintenance unless the charter documents a deliberate omission; dropping a tool skips that product’s committed **`aiscr-*`** mirrors. |
-| "Repo root has no `<vendor>/skills` so workflow skills are missing" | Check **matrix hub path** under **`.agents/local_configs/<repo>/…`**; many roots are gitignored at repo root. |
+| "Repo root has no `<vendor>/skills` so workflow skills are missing" | Check the matrix hub path and direct-bundle report; missing required source or target paths must be explicit blockers. |
 | "Empty `hub_committed_path` is fine — the matrix table already says 'same'" | Non-empty path is required wherever the hub **commits** the artefact; empty skips the validator for that **(product, asset_type)** row. |
 
 ## Verification before completion
@@ -136,13 +136,13 @@ Keep **`agent_tool_feature_matrix.md`** and TOML aligned: if the matrix or vendo
 **Sync registry**
 
 - [ ] **`AGENT_FOLDERS` vendor:** `repos.toml` `sync` includes intended roots.
-- [ ] **Repo-root vendor:** `REPO_ROOT_HUB_ENTRY_DOCS` vs `REPO_ROOT_SYNC_IDS` + `repos.toml` sync recipes / overrides; no entry docs under `local_configs`; no spurious `AGENT_FOLDERS` row.
+- [ ] **Repo-root vendor:** `REPO_ROOT_HUB_ENTRY_DOCS` vs `REPO_ROOT_SYNC_IDS` + `.agents/sync/repos.toml` sync recipes / overrides; no entry docs under legacy `local_configs`; no spurious `AGENT_FOLDERS` row.
 
 **Mechanical closure (run from repo root, `.venv` on)**
 
 - [ ] `python .agents/scripts/validate_agent_tool_feature_matrix.py` (add `--strict-url-check` before release merge if URLs changed).
-- [ ] `python .agents/scripts/validate_matrix_local_configs_cells.py` (TOML × **`local_configs`** per **`sync`**; **`parity.matrix-local-configs-vendor-cells`**).
-- [ ] `python .agents/scripts/report_local_configs_sync_matrix.py --strict`
+- [ ] `python .agents/scripts/orchestrate_local_agent_sync.py inspect --repos <affected-repo>`
+- [ ] `python .agents/scripts/orchestrate_local_agent_sync.py dry-run --repos <affected-repo>`
 - [ ] `python .agents/scripts/validate_tool_parity.py` (and `--strict` if branch policy requires it).
 - [ ] If **`repos.toml` `sync`** tokens for tool folders changed: `python .agents/scripts/validate_assistant_runtime_gitignore.py`
 - [ ] If **canonical governance fragments** or ecosystem stem changed: `python .agents/scripts/generate_governance_rules.py`

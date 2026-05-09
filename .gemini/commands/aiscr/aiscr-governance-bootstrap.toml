@@ -1,5 +1,5 @@
 # aiscr:canonical=.agents/canonical_configs/workflow_skills/aiscr-governance-bootstrap.md
-description = "Bootstrap AIS CR-style governance and .agents/ in a new or existing repo; optionally port assets from a mature source repo, run redundant-assets cleanup, or register in local_configs and run sync (with approval)."
+description = "Bootstrap AIS CR-style governance and .agents/ in a new or existing repo; optionally port assets from a mature source repo, run redundant-assets cleanup, or register in .agents/sync and run direct-bundle sync (with approval)."
 prompt = """
 <!-- aiscr:canonical=.agents/canonical_configs/workflow_skills/aiscr-governance-bootstrap.md -->
 
@@ -10,7 +10,7 @@ prompt = """
 - Do not open parallel vendor trees by default just in case.
 - Cross into another vendor tree only for explicit parity checks, generator work, or governance maintenance.
 
-Bootstrap AIS CR-style governance and .agents/ in a new or existing repo; optionally port assets from a mature source repo, run redundant-assets cleanup, or register in local_configs and run sync (with approval).
+Bootstrap AIS CR-style governance and .agents/ in a new or existing repo; optionally port assets from a mature source repo, run redundant-assets cleanup, or register in .agents/sync and run direct-bundle sync (with approval).
 
 **Skill body (authoritative):** `.gemini/skills/aiscr-governance-bootstrap/SKILL.md` — load that file for the full workflow body, guardrails, and verification.
 

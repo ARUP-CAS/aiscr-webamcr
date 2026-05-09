@@ -10,9 +10,9 @@ context: |
   Claude Code usage, CONTRIBUTING.md owns human contribution workflow.
   Agent vendor surfaces are tracked repository content when materialized
   from the aiscr-management hub sync baseline.
-  Hub baseline: aiscr-management .agents/local_configs/aiscr-webamcr/
-  declares synchronized agent-vendor folders and repo-root integration
-  assets for this repository.
+  Hub baseline: aiscr-management .agents/sync/repos.toml and
+  .agents/sync/specialized_sync_assets.toml declare synchronized
+  agent-vendor folders and repo-root integration assets for this repository.
 
 rules:
   proposal:

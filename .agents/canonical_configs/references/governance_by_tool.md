@@ -45,9 +45,9 @@ flowchart LR
 
 | Tier | Meaning | Examples (this hub) |
 | --- | --- | --- |
-| **1 - Hub-root entry docs** | Committed at repo root; not under `local_configs`; not on `repos.toml` `sync` lists; apply/pull may copy hub root to sibling when the sync layer routes them | `GEMINI.md`, `.pr_agent.toml` |
-| **2 - Synced repo-root vendor trees** | Baselined under `.agents/local_configs/<repo>/` for sibling repos; often gitignored on sibling workstations; hub root is the single source of truth for its own assistant trees | `.gemini/`, `.qodo/` |
-| **3 - `AGENT_FOLDERS` assistant roots** | Full profile-based sync (rules, skills, agents, settings, ...) per `sync_policy.py` and `repos.toml` repo policy | `.cursor`, `.claude`, `.codex` |
+| **1 - Hub-root entry docs** | Committed at repo root; selected for siblings by direct-bundle policy rather than payload mirrors | `GEMINI.md`, `.pr_agent.toml` |
+| **2 - Repo-root vendor trees** | Generated or maintained at the hub root, then selected for siblings by `.agents/sync/repos.toml` and direct-bundle policy | `.gemini/`, `.qodo/` |
+| **3 - `AGENT_FOLDERS` assistant roots** | Full profile-based sync (rules, skills, agents, settings, ...) per `sync_policy.py` and `.agents/sync/repos.toml` repo policy | `.cursor`, `.claude`, `.codex` |
 
 **Repo-root and digest vendors - where governance loads**
 
@@ -63,7 +63,7 @@ flowchart LR
 ## Suggested Governance Load Order (Non-Cursor Tools)
 
 1. `AGENTS.md`, `CONTRIBUTING.md`, `.agents/README_en.md`
-2. Tool entry doc (`CLAUDE.md`, `CODEX.md`, `GEMINI.md`) and short hub pointers under `local_configs` where applicable
+2. Tool entry doc (`CLAUDE.md`, `CODEX.md`, `GEMINI.md`) and short generated or direct-bundle vendor pointers where applicable
 3. Topics in the table above: open the assistant-specific stub for orientation, then load the linked `.cursor/rules/<stem>.mdc` full reader when the task touches that rule's details
 
 **Cursor:** primary project context is `AGENTS.md` plus `.cursor/rules/*.mdc`; use `.cursor/README_en.md` for assistant-specific routing.

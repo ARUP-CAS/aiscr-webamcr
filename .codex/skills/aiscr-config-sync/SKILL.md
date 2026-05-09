@@ -1,8 +1,8 @@
 ---
 name: aiscr-config-sync
 description: 'Master script-first sync orchestration: sibling branch audit pre-flight,
-  repo-policy evaluation (matrix + peer alignment), inspect drift, populate local_configs,
-  dry-run proposals, guarded sync apply against sibling repos.'
+  repo-policy evaluation (matrix + peer alignment), inspect drift, resolve direct
+  bundle, dry-run proposals, guarded sync apply against sibling repos.'
 ---
 
 <!-- aiscr:canonical=.agents/canonical_configs/workflow_skills/aiscr-config-sync.md -->
@@ -18,15 +18,15 @@ description: 'Master script-first sync orchestration: sibling branch audit pre-f
 
 ## Topic summary
 
-Master script-first sync orchestration: sibling branch audit pre-flight, repo-policy evaluation (matrix + peer alignment), inspect drift, populate local_configs, dry-run proposals, guarded sync apply against sibling repos.
+Master script-first sync orchestration: sibling branch audit pre-flight, repo-policy evaluation (matrix + peer alignment), inspect drift, resolve direct bundle, dry-run proposals, guarded sync apply against sibling repos.
 
 Preferred flow:
 
 - **Requirement authority** - `openspec/specs/agent-config-distribution/spec.md`
 - **Sibling branch audit** - read-only pre-flight (`sibling_repos_branch_audit.py`); fetch/prune local remote-tracking refs; report unpublished/upstream-gone branches
-- **Repo-policy evaluation** - `report_local_configs_sync_matrix.py` (fix `ERROR` lines); optional peer compare of resolved recipe/override policy across repos sharing the same `type` in `repos.toml`; `--strict` before commit or after repo-policy/asset-registry edits; after **human-approved** policy changes, `populate --apply --repos <repo>` then matrix `--strict`
+- **Repo-policy evaluation** - inspect `.agents/sync/repos.toml` and `.agents/sync/specialized_sync_assets.toml`; optional peer compare of resolved recipe/override policy across repos sharing the same `type` in `repos.toml`; after policy edits, run direct-bundle inspect/dry-run for an affected representative repo
 - **Inspect** - branch, drift, and parity audit
-- **Populate** - scope-aware local_configs preparation
+- **Direct bundle** - scope-aware expected bundle resolution from canonical hub/source roots
 - **Dry-run** - proposed sync batch
 - **Apply** - explicit guarded sync
 

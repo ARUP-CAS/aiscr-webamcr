@@ -2,7 +2,7 @@
 name: aiscr-governance-bootstrap
 description: Bootstrap AIS CR-style governance and .agents/ in a new or existing repo;
   optionally port assets from a mature source repo, run redundant-assets cleanup,
-  or register in local_configs and run sync (with approval).
+  or register in .agents/sync and run direct-bundle sync (with approval).
 disable-model-invocation: true
 ---
 
@@ -19,7 +19,7 @@ disable-model-invocation: true
 
 ## Topic summary
 
-Bootstrap AIS CR-style governance and .agents/ in a new or existing repo; optionally port assets from a mature source repo, run redundant-assets cleanup, or register in local_configs and run sync (with approval).
+Bootstrap AIS CR-style governance and .agents/ in a new or existing repo; optionally port assets from a mature source repo, run redundant-assets cleanup, or register in .agents/sync and run direct-bundle sync (with approval).
 
 Bootstrap AIS CR-style governance and `.agents/` structure in a new or existing repository.
 

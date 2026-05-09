@@ -1,7 +1,7 @@
 ---
 name: aiscr-agent-vendor-introduction
 description: 'Introduce or remediate an agent-tool vendor in the AIS CR hub: matrix/TOML,
-  sync policy (AGENT_FOLDERS and repo-root REPO_ROOT_SYNC_IDS), parity, local_configs;
+  sync policy (AGENT_FOLDERS and repo-root REPO_ROOT_SYNC_IDS), parity, direct bundles;
   optional cross-tool aiscr-* workflow registration when the session charter requires
   it.'
 disable-model-invocation: true
@@ -22,7 +22,7 @@ argument-hint: <vendor>
 
 ## Topic summary
 
-Introduce or remediate an agent-tool vendor in the AIS CR hub: matrix/TOML, sync policy (AGENT_FOLDERS and repo-root REPO_ROOT_SYNC_IDS), parity, local_configs; optional cross-tool aiscr-* workflow registration when the session charter requires it.
+Introduce or remediate an agent-tool vendor in the AIS CR hub: matrix/TOML, sync policy (AGENT_FOLDERS and repo-root REPO_ROOT_SYNC_IDS), parity, direct bundles; optional cross-tool aiscr-* workflow registration when the session charter requires it.
 
 ## Phase awareness
 

@@ -43,11 +43,11 @@ escalate scope beyond the approved task boundary.
 1. Ask the user:
    - **Target repo** (e.g. `aiscr-webamcr`, `aiscr-digiarchiv-2`)
    - **Mode**: single release (tag), date-range, or backfill missing past releases (skip pre-releases)
-   - **Optional**: update GitHub release body after generating? (opt-in; requires `gh` CLI or GitHub MCP)
+   - **Optional**: update GitHub release body after generating? (opt-in; requires `gh` CLI by default; optional GitHub-capable MCP/plugin only when the operator added one)
 
 2. Load ecosystem context: read `.agents/canonical_configs/references/ecosystem_map.md` for the target repo's path and tech stack.
 
-3. Collect sources using `gh` CLI or GitHub MCP:
+3. Collect sources using `gh` CLI by default; if an optional GitHub-capable MCP or plugin is available on the workstation, it may be used instead for the same GitHub API operations:
    - Issues (full thread for context)
    - Pull requests merged in scope
    - Commits in scope

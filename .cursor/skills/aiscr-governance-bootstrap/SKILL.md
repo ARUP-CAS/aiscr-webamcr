@@ -2,7 +2,7 @@
 name: aiscr-governance-bootstrap
 description: Bootstrap AIS CR-style governance and .agents/ in a new or existing repo;
   optionally port assets from a mature source repo, run redundant-assets cleanup,
-  or register in local_configs and run sync (with approval).
+  or register in .agents/sync and run direct-bundle sync (with approval).
 disable-model-invocation: true
 ---
 
@@ -42,7 +42,7 @@ Mode auto-detection is a **recommendation**, not a decision — always obtain ex
 3. `.agents/README.md` — structure of `.agents/`
 4. `.agents/plans/governance-bootstrap.plan.md` — execution-layer runbook organised as bootstrap packages (`pkg.detect`, `pkg.greenfield.*`, `pkg.introduce-openspec.any`, `pkg.align.any`, `pkg.audit.any`, `pkg.reverse-surface.any`, plus cross-cutting packages); see its **Canonical sources** and **Vendor coverage** tables for path resolution.
 5. `.agents/prompts/repository_setup.md` — generation-time prose for what bootstrap generates inside the target (reverse-flow backlog body template, `.agents/local_overrides.toml` shape, mode-aware generation rules)
-6. `.agents/canonical_configs/references/ecosystem_map.md` and `.agents/local_configs/repos.toml` — sibling registry (human / machine)
+6. `.agents/canonical_configs/references/ecosystem_map.md` and `.agents/sync/repos.toml` - sibling registry (human / machine)
 7. `.agents/canonical_configs/references/governance_stable_ids.md` — Bootstrap modes section (stable ids)
 8. `.agents/canonical_configs/references/agent_tool_feature_matrix.md` and `.agents/canonical_configs/references/mandatory_vendor_doc_urls.toml` — active assistant-integration matrix; reference rather than inline vendor lists
 
@@ -51,7 +51,7 @@ Mode auto-detection is a **recommendation**, not a decision — always obtain ex
 - Presence/absence of target's `openspec/` directory and `openspec/config.yaml` (schema and context when present)
 - Presence/absence of target's `.agents/local_overrides.toml` (declared `[bootstrap]` metadata and override paths when present)
 - Hub baseline reference: the committed state of `.agents/canonical_configs/`, workflow skills, governance rules, and canonical references in `aiscr-management` at session start
-- `.agents/local_configs/repos.toml` entry for the target (when registered for sync)
+- `.agents/sync/repos.toml` entry for the target (when registered for sync)
 
 ## Phases (load prompts only when entering that phase)
 
@@ -70,7 +70,7 @@ Mode auto-detection is a **recommendation**, not a decision — always obtain ex
    - `bootstrap-mode-audit`: `pkg.audit.any` (read-only; no writes).
    - `bootstrap-mode-reverse-surface`: `pkg.reverse-surface.any` (no hub-side writes; user invokes `/aiscr-note-idea <slug>` in the hub).
 5. **Dependency install hygiene (greenfield / align when repo uses Node / Python / Docker):** align `CONTRIBUTING.md` / tech guidance with `.agents/prompts/repository_setup.md` (Dependency and install hygiene): committed lockfiles, frozen-lockfile CI installs where applicable, digest-pinned images, post-incident lockfile / `npm ls` re-verification.
-6. **Propagation (greenfield / align only, optional):** run `pkg.propagation-and-sync` — register in `local_configs`, populate skeleton with canonical agents (`generate_agent_definitions.py`, dry-run first), then `ApplyLocalConfigsToRepos --dry-run` first; state branch per target repo and obtain explicit user confirmation.
+6. **Propagation (greenfield / align only, optional):** run `pkg.propagation-and-sync` - register in `.agents/sync/repos.toml`, run direct-bundle inspect/dry-run, then apply only with explicit user approval; state branch per target repo and obtain explicit user confirmation.
 7. **Validation (mode-aware):** `pkg.validation` — hub-required minimums always (planning, usage logging, model logging, sync registration when applicable, `.agents/local_overrides.toml` `[bootstrap]` integrity). Add adopted-capability checks when relevant: `npx openspec validate --specs --strict` for OpenSpec-adopter targets; `python .agents/scripts/run_validation_all.py` in the hub.
 8. **Close-out:** `pkg.feedback-and-usage-log` — update the single rolling usage log entry for the current uncommitted change set per `.agents/canonical_configs/governance_rules/aiscr-usage-logging.md`. Include agent / runtime, model / backend, subagents used, MCP servers used, mode(s) and packages executed, target repo, impacted paths.
 

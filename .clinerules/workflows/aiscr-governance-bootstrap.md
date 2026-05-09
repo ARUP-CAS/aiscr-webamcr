@@ -2,7 +2,7 @@
 
 # aiscr-governance-bootstrap
 
-Bootstrap AIS CR-style governance and .agents/ in a new or existing repo; optionally port assets from a mature source repo, run redundant-assets cleanup, or register in local_configs and run sync (with approval).
+Bootstrap AIS CR-style governance and .agents/ in a new or existing repo; optionally port assets from a mature source repo, run redundant-assets cleanup, or register in .agents/sync and run direct-bundle sync (with approval).
 
 **Route**: Load [`.claude/skills/aiscr-governance-bootstrap/SKILL.md`](.claude/skills/aiscr-governance-bootstrap/SKILL.md) for the full workflow body, guardrails, and steps, then follow the instructions there.
 

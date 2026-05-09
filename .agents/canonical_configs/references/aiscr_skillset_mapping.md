@@ -4,7 +4,7 @@ This document sketches a **mapping** between:
 
 - reusable **plans** in `.agents/plans/`,
 - execution **prompts** in `.agents/prompts/`,
-- and potential shared **skills** (same `aiscr-<name>` slug under each assistant product's native `skills/` tree; Cursor carries the full reader, non-Cursor skill files route to that reader, and managed sibling payloads live under `.agents/local_configs/<repo>/`; see `canonical_workflows_context.md` and `agent_tool_feature_matrix.md`).
+- and potential shared **skills** (same `aiscr-<name>` slug under each assistant product's native `skills/` tree; Cursor carries the full reader, non-Cursor skill files route to that reader, and managed sibling delivery is resolved from `.agents/sync/repos.toml` plus the direct expected bundle; see `canonical_workflows_context.md` and `agent_tool_feature_matrix.md`).
 
 It does **not** implement skills directly; it defines interfaces and responsibilities so that a future skillset can be created safely.
 
@@ -63,7 +63,7 @@ The following entries are plan-backed skills (each has a plan in `.agents/plans/
 - **OpenSpec capability**: `openspec/specs/repository-governance-setup/spec.md`
 - **Plan**: `governance-bootstrap.plan.md` as the execution-layer workflow and operator runbook (Step 1 mode detection + confirmation; mode-specific Steps 3x/3y/3z/3w; idempotency contract; edge-case guardrails)
 - **Prompts**: `.agents/prompts/repository_setup.md` (mode-aware generation rules, reverse-flow body template, `.agents/local_overrides.toml` shape); when entering optional phases, `.agents/prompts/asset_port_instructions.md` and/or `.agents/prompts/redundant_assets_cleanup_instructions.md` (plan specifies which context to load per phase).
-- **Canonical sibling list**: `.agents/canonical_configs/references/ecosystem_map.md`. Load when generating Ecosystem connection or listing related repos; after adding a repo to local_configs, update the map (Step 8 or use aiscr-ecosystem-mapper skill).
+- **Canonical sibling list**: `.agents/canonical_configs/references/ecosystem_map.md`. Load when generating Ecosystem connection or listing related repos; after adding a repo to `.agents/sync/repos.toml`, update the map (Step 8 or use aiscr-ecosystem-mapper skill).
 - **Mode-detection inputs (target-side):** target's `openspec/config.yaml` and `.agents/local_overrides.toml` when present. **Hub baseline reference:** committed state of `.agents/canonical_configs/`, `workflow_skills/`, `governance_rules/`, and canonical references at session start.
 - **Inputs/Outputs:** repository path/type, desired intent (fresh/introduce/align/audit/surface), create/overwrite confirmation, optional SOURCE/cleanup/propagation → (greenfield) updated `README*`, `CONTRIBUTING.md`, `AGENTS.md`, `.agents/` tree; (introduce-openspec) new `openspec/` tree only; (align) surgical per-path fixes + refreshed `.agents/local_overrides.toml`; (audit) drift and conformance report (stdout or optional persisted `.agents/reports/conformance/`); (reverse-surface) drafted backlog body for user-invoked `/aiscr-note-idea <slug>` in hub; optional ported assets and cleanup/propagation reports.
 - **Iron laws:** never target the hub from itself; never write to hub paths from a sibling-side run; never auto-invoke `/aiscr-note-idea`; never proceed past mode proposal without explicit user confirmation; never honour an override that weakens a hub-required minimum.
@@ -86,7 +86,7 @@ The following entries are plan-backed skills (each has a plan in `.agents/plans/
 #### 4. `aiscr-api-doc-alignment`
 
 - **Purpose**: Align API specs and documentation in API‑focused repos.
-- **Canonical sibling list**: `.agents/canonical_configs/references/ecosystem_map.md`. Load when listing in-scope API/docs-api and consumer repos; align plan `relatedRepos` with the map. After run, if local_configs or related repos changed, update the map (use aiscr-ecosystem-mapper or procedure in ecosystem_map.md), keep plan `relatedRepos` in sync, and update canonical_workflows_context and this mapping if the API doc alignment workflow context or outputs changed.
+- **Canonical sibling list**: `.agents/canonical_configs/references/ecosystem_map.md`. Load when listing in-scope API/docs-api and consumer repos; align plan `relatedRepos` with the map. After run, if `.agents/sync/repos.toml` or related repos changed, update the map (use aiscr-ecosystem-mapper or procedure in ecosystem_map.md), keep plan `relatedRepos` in sync, and update canonical_workflows_context and this mapping if the API doc alignment workflow context or outputs changed.
 - **Plan**: `api-doc-alignment.plan.md`
 - **Prompts**: none specific; may use ad‑hoc instructions.
 - **Inputs/Outputs:** API repo path and OpenAPI/docs entry points → updated docs/specs and governance notes on canonical sources.
@@ -124,7 +124,7 @@ The following entries are plan-backed skills (each has a plan in `.agents/plans/
 
 - **Purpose**: Enable and use relevant plugins (MCP, skills, hooks) across IDE assistants; document and apply fallbacks when a plugin is not installed or unavailable while the durable behavioral contract lives in `openspec/specs/plugin-coverage/spec.md`.
 - **OpenSpec capability**: `openspec/specs/plugin-coverage/spec.md`
-- **Implemented**: Canonical workflow skill sources under `.agents/canonical_configs/workflow_skills/`, generated into repo-root assistant `skills/` trees; propagate to sibling repos via `sync_agent_configs.py ApplyLocalConfigsToRepos` (run with `--dry-run` first).
+- **Implemented**: Canonical workflow skill sources under `.agents/canonical_configs/workflow_skills/`, generated into repo-root assistant `skills/` trees; propagate to sibling repos via `orchestrate_local_agent_sync.py inspect → dry-run → apply --approve`.
 - **Plan**: `plugins-enablement.plan.md` as the execution-layer runbook for Mode A/B/C workflow, audit steps, and validation.
 - **Prompts**: none specific; plan and `plugin_enablement_and_fallback.md` drive execution.
 - **Inputs/Outputs:** target repo/scope and tooling focus → updated `plugin_enablement_and_fallback.md`, automation_recommendations cross-links, optional hooks-governance references.
@@ -134,11 +134,11 @@ The following entries are plan-backed skills (each has a plan in `.agents/plans/
 - **Purpose**: Execute the management-hub config-distribution workflow while the durable behavioral contract lives in `openspec/specs/agent-config-distribution/spec.md`.
 - **OpenSpec capability**: `openspec/specs/agent-config-distribution/spec.md`
 - **Pre-flight**: Before `orchestrate_local_agent_sync.py` **inspect** or **apply**, run **`aiscr-sibling-branch-audit`** (`sibling_repos_branch_audit.py`) so siblings get `git fetch --prune` locally and unpublished/upstream-gone branches are surfaced; inspect alone does not replace this.
-- **Canonical sibling list**: `.agents/canonical_configs/references/ecosystem_map.md`. When listing in-scope repos, align with the map; after local_configs subfolders change, refresh the map (see plan After run / Validation or use aiscr-ecosystem-mapper skill).
+- **Canonical sibling list**: `.agents/canonical_configs/references/ecosystem_map.md`. When listing in-scope repos, align with the map; after `.agents/sync/repos.toml` entries change, refresh the map (see plan After run / Validation or use aiscr-ecosystem-mapper skill).
 - **Plan**: `config-sync.plan.md` as the execution-layer orchestration and operator runbook.
-- **Scripts**: `sibling_repos_branch_audit.py` (pre-flight), `orchestrate_local_agent_sync.py`, `sync_agent_configs.py`, `report_local_configs_sync_matrix.py`; see `.agents/scripts/README.md`.
-- **Repo-policy evaluation:** After branch audit, run `report_local_configs_sync_matrix.py` before inspect; optionally compare resolved `repos.toml` sync recipes or overrides across repos sharing the same `type` in `repos.toml` for commendable peer alignment; approve repo-policy changes before `populate --apply`; re-run `--strict` after repo-policy edits. See `config-sync.plan.md` for the execution-layer runbook. When **`mandatory_vendor_doc_urls.toml`** or **`agent_tool_feature_matrix.md`** changes in the same work, also run **`validate_agent_tool_feature_matrix.py`** and **`validate_matrix_local_configs_cells.py`** (sync matrix alone does not cover every TOML cell).
-- **References**: `.agents/canonical_configs/references/specialized_sync_assets.toml`, `.agents/canonical_configs/references/plan_demotion_policy.md` (sync-adjacent decisions and criteria; full plan inventory workflow: **`aiscr-plans-validation`** / `plans-validation.plan.md` Step 8).
+- **Scripts**: `sibling_repos_branch_audit.py` (pre-flight), `orchestrate_local_agent_sync.py`, legacy `sync_agent_configs.py`, direct-bundle policy validators; see `.agents/scripts/README.md`.
+- **Repo-policy evaluation:** After branch audit, inspect the resolved direct bundle before dry-run; optionally compare resolved `.agents/sync/repos.toml` sync recipes or overrides across repos sharing the same `type` for peer alignment; approve repo-policy changes before apply; re-run strict policy validation after repo-policy edits. See `config-sync.plan.md` for the execution-layer runbook. When **`mandatory_vendor_doc_urls.toml`** or **`agent_tool_feature_matrix.md`** changes in the same work, also run **`validate_agent_tool_feature_matrix.py`** and the direct-bundle inspect/dry-run gates.
+- **References**: `.agents/sync/specialized_sync_assets.toml`, `.agents/canonical_configs/references/plan_demotion_policy.md` (sync-adjacent decisions and criteria; full plan inventory workflow: **`aiscr-plans-validation`** / `plans-validation.plan.md` Step 8).
 - **Plan inventory / demotion**: **`aiscr-plans-validation`** / `plans-validation.plan.md` **Step 8** and `plan_demotion_policy.md`.
 - **Prompts**: `.agents/prompts/sync_cleanup_review.md`, `.agents/prompts/specialized_asset_review.md`.
 - **Core rules (summary):** Default automation: inspect and dry-run; apply stays human-approved; same-name intended mirrors stay byte-identical; specialization must be registry-backed.
@@ -152,14 +152,14 @@ The following entries are plan-backed skills (each has a plan in `.agents/plans/
 - **Registry**: `agent_tool_feature_matrix.md`, `mandatory_vendor_doc_urls.toml`
 - **Sync policy**: `sync_policy.py` — `AGENT_FOLDERS`, `REPO_ROOT_HUB_ENTRY_DOCS`, `REPO_ROOT_SYNC_IDS`
 - **References**: `config-sync.plan.md` (sync vocabulary), `.agents/canonical_configs/governance_rules/aiscr-ecosystem-governance.md` (**Cross-tool entry-point anti-drift** when chartered), `governance_stable_ids.md`
-- **Scripts**: `generate_workflow_skills.py`, `generate_agent_definitions.py`, `generate_governance_rules.py`, `validate_tool_parity.py`, `validate_agent_tool_feature_matrix.py`, `validate_matrix_local_configs_cells.py`
+- **Scripts**: `generate_workflow_skills.py`, `generate_agent_definitions.py`, `generate_governance_rules.py`, `validate_tool_parity.py`, `validate_agent_tool_feature_matrix.py`, direct-bundle sync validation in `orchestrate_local_agent_sync.py`
 - **Session charter**: Records vendor class, surfaces in scope, and whether Phase 6 (cross-tool **`aiscr-*`** registration) applies.
 - **Core rules (summary)**: Charter records vendor class and surfaces; matrix rows honest; sync policy aligned; validation suite passes; Phase 6 only when chartered.
 
 #### 10b. `aiscr-ecosystem-mapper`
 
-- **Purpose**: Create, refresh, or update `.agents/canonical_configs/references/ecosystem_map.md` so it stays the single source of truth for AIS CR siblings; optionally check consistency between the map and `.agents/local_configs/` subdirs.
-- **Rule**: The map includes **only** repos that have a subfolder under `.agents/local_configs/`. Do not add repos that merely exist in Git or are mentioned in plans; add a repo to the map only after it has been added to local_configs.
+- **Purpose**: Create, refresh, or update `.agents/canonical_configs/references/ecosystem_map.md` so it stays the human-readable twin for AIS CR siblings; optionally check consistency between the map and `.agents/sync/repos.toml`.
+- **Rule**: The map includes **only** repos registered in `.agents/sync/repos.toml`. Do not add repos that merely exist in Git or are mentioned in plans; add a repo to the map only after it has been added to the sync registry.
 - **Plan**: No separate plan file; procedure in `.agents/canonical_configs/references/ecosystem_map.md` (“When to refresh”, “How to use”) and ecosystem-map-and-cleanup-improvements plan. **Artefact**: `.agents/canonical_configs/references/ecosystem_map.md`.
 - **Inputs/Outputs:** add | remove | refresh | check; optional repo metadata when adding → updated `ecosystem_map.md`, optional consistency report.
 - **Governance**: Skill only edits ecosystem_map.md and optionally runs read-only checks; no high-impact scripts. Log usage when updating the map (`model-logging.md`, `usage-logging.md`).

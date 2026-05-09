@@ -2,7 +2,7 @@
 
 # aiscr-config-sync
 
-Master script-first sync orchestration: sibling branch audit pre-flight, repo-policy evaluation (matrix + peer alignment), inspect drift, populate local_configs, dry-run proposals, guarded sync apply against sibling repos.
+Master script-first sync orchestration: sibling branch audit pre-flight, repo-policy evaluation (matrix + peer alignment), inspect drift, resolve direct bundle, dry-run proposals, guarded sync apply against sibling repos.
 
 **Route**: Load [`.claude/skills/aiscr-config-sync/SKILL.md`](.claude/skills/aiscr-config-sync/SKILL.md) for the full workflow body, guardrails, and steps, then follow the instructions there.
 
