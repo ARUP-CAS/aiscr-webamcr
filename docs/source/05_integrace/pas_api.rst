@@ -186,8 +186,7 @@ Některé elementy systém stanoví nebo generuje automaticky a v importu se ign
   Při ``geom_system=4326`` se katastr odvozuje z ``geom_wkt``, při ``geom_system=5514`` se ``geom_sjtsk_wkt``
   nejprve transformuje do WGS-84 a katastr se odvozuje z výsledku.
   Pokud souřadnice nespadají do žádného katastru (např. bod mimo území ČR), import selže s HTTP 422.
-- ``amcr:stav`` — povinný element vyžadovaný XSD schématem; hodnota v XML se ignoruje a systém nastaví
-  stav automaticky (záznam vstupuje do systému ve stavu **Potvrzený**).
+- ``amcr:stav`` — musí být jedna z povolených hodnot (1, 2, 3); určuje cílový stav záznamu po importu.
 - ``amcr:evidencni_cislo`` — lze uvést v importu; systém hodnotu přijme a uloží.
 - ``amcr:historie``, ``amcr:soubor`` — pouze pro export.
 
