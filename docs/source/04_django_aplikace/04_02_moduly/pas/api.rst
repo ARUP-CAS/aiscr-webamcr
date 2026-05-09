@@ -678,6 +678,8 @@ Třídy
       - ``geom_system=5514`` — zdrojem je ``geom_sjtsk_wkt``; ``geom`` se vypočítá
         konverzí do WGS-84, element ``geom_wkt`` se ignoruje.
 
+      ``stav`` — musí být jedna z povolených hodnot (1, 2, 3); určuje cílový stav záznamu po importu.
+
       Následující elementy jsou v XML povoleny, ale při importu se ignorují:
 
       - ``igsn`` — přiděluje se automaticky po archivaci záznamu.
@@ -687,7 +689,6 @@ Třídy
       - ``geom_sjtsk_gml`` (v ``chranene_udaje``) — geometrie se přebírá z ``geom_sjtsk_wkt``.
       - ``geom_sjtsk_wkt`` (v ``chranene_udaje``) — ignoruje se, pokud ``geom_system=4326``.
       - ``geom_wkt`` (v ``chranene_udaje``) — ignoruje se, pokud ``geom_system=5514``.
-      - ``stav`` — musí být jedna z povolených hodnot (1, 2, 3); určuje cílový stav záznamu po importu.
       - ``historie`` — generuje se automaticky systémem.
       - ``soubor`` — soubory se nahrávají samostatným endpointem.
 
