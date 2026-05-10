@@ -41,14 +41,14 @@ from heslar.models import Heslar, HeslarNazev, RuianKatastr
 from historie.models import Historie
 from lxml import etree
 from pas.api import (
-    _fetch_xsd_bytes,
     _RECORD_LOCK_PREFIX,
     _XSD_BYTES_CACHE,
-    _xsd_redis_key,
     ImportErrorType,
     ImportValidationException,
     SamostatnyNalezEvidencniCisloPatchView,
     SamostatnyNalezXmlImportView,
+    _fetch_xsd_bytes,
+    _xsd_redis_key,
 )
 from pas.models import SamostatnyNalez
 from pid.exceptions import DoiWriteError
