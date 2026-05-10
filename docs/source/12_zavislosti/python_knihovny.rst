@@ -99,6 +99,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 5.3.1
      - BSD License
      - http://github.com/celery/py-amqp
+   * - anyio
+     - 4.13.0
+     - MIT
+     - https://anyio.readthedocs.io/en/stable/versionhistory.html
    * - asgiref
      - 3.11.1
      - BSD License
@@ -323,6 +327,14 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0.16.0
      - MIT License
      - https://github.com/python-hyper/h11
+   * - httpcore
+     - 1.0.9
+     - BSD-3-Clause
+     - https://www.encode.io/httpcore/
+   * - httpx
+     - 0.28.1
+     - BSD License
+     - https://github.com/encode/httpx
    * - identify
      - 2.6.19
      - MIT
