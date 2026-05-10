@@ -41,6 +41,7 @@ from heslar.models import Heslar, HeslarNazev, RuianKatastr
 from historie.models import Historie
 from lxml import etree
 from pas.api import (
+    _fetch_xsd_bytes,
     _RECORD_LOCK_PREFIX,
     _XSD_BYTES_CACHE,
     _xsd_redis_key,
@@ -1684,7 +1685,6 @@ class FetchXsdBytesTests(TestCase):
 
     def test_returns_bytes_from_network_on_cache_miss(self):
         """Při absenci záznamu v cache se bajty stáhnou ze sítě."""
-        from pas.api import _fetch_xsd_bytes
 
         expected = b"<schema/>"
         mock_response = io.BytesIO(expected)
@@ -1696,7 +1696,6 @@ class FetchXsdBytesTests(TestCase):
 
     def test_stores_bytes_in_cache_after_network_fetch(self):
         """Po stažení ze sítě se bajty uloží do cache."""
-        from pas.api import _fetch_xsd_bytes, _xsd_redis_key
 
         url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
         expected = b"<schema/>"
@@ -1707,7 +1706,6 @@ class FetchXsdBytesTests(TestCase):
 
     def test_returns_cached_bytes_without_network_call(self):
         """Při zásahu cache se síť nevolá."""
-        from pas.api import _fetch_xsd_bytes, _xsd_redis_key
 
         url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
         cached_bytes = b"<cached/>"
@@ -1721,7 +1719,6 @@ class FetchXsdBytesTests(TestCase):
 
     def test_cache_hit_for_non_amcr_url(self):
         """Cache funguje i pro W3C URL bez verze v klíči."""
-        from pas.api import _fetch_xsd_bytes, _xsd_redis_key
 
         url = "https://www.w3.org/2001/xml.xsd"
         cached_bytes = b"<xml-schema/>"
@@ -1735,7 +1732,6 @@ class FetchXsdBytesTests(TestCase):
 
     def test_propagates_url_error(self):
         """Síťová chyba se propaguje jako ``urllib.error.URLError``."""
-        from pas.api import _fetch_xsd_bytes
 
         with patch(
             "pas.api.urllib.request.urlopen",
@@ -1746,7 +1742,6 @@ class FetchXsdBytesTests(TestCase):
 
     def test_propagates_timeout_error(self):
         """Vypršení časového limitu se propaguje jako ``TimeoutError``."""
-        from pas.api import _fetch_xsd_bytes
 
         with patch("pas.api.urllib.request.urlopen", side_effect=TimeoutError()):
             with self.assertRaises(TimeoutError):
@@ -1754,7 +1749,6 @@ class FetchXsdBytesTests(TestCase):
 
     def test_network_error_does_not_populate_cache(self):
         """Při síťové chybě se do cache nic neuloží."""
-        from pas.api import _fetch_xsd_bytes, _xsd_redis_key
 
         url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
         with patch("pas.api.urllib.request.urlopen", side_effect=urllib.error.URLError("err")):
@@ -1765,7 +1759,6 @@ class FetchXsdBytesTests(TestCase):
 
     def test_second_call_uses_cache(self):
         """Druhé volání se stejnou URL neotevře síťové spojení znovu."""
-        from pas.api import _fetch_xsd_bytes
 
         url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
         content = b"<schema/>"
