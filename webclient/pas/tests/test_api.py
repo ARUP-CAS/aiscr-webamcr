@@ -43,6 +43,7 @@ from lxml import etree
 from pas.api import (
     _RECORD_LOCK_PREFIX,
     _XSD_BYTES_CACHE,
+    _xsd_redis_key,
     ImportErrorType,
     ImportValidationException,
     SamostatnyNalezEvidencniCisloPatchView,
@@ -1650,43 +1651,33 @@ class FetchXsdBytesTests(TestCase):
 
     def setUp(self):
         """Vyčistí Redis cache a in-process slovník před každým testem."""
-        import pas.api
-
         cache.clear()
-        pas.api._XSD_BYTES_CACHE.clear()
+        _XSD_BYTES_CACHE.clear()
 
     def tearDown(self):
-        """Vyčistí Redis cache a in-process slovník po každém testu."""
-        import pas.api
-
+        """Vyčistí Redis cache a in-process slovník po každým testu."""
         cache.clear()
-        pas.api._XSD_BYTES_CACHE.clear()
+        _XSD_BYTES_CACHE.clear()
 
     # --- _xsd_redis_key ---
 
     def test_redis_key_amcr_url_includes_version(self):
         """Klíč pro AMČR URL obsahuje číslo verze."""
-        import pas.api
-
-        key = pas.api._xsd_redis_key("https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
+        key = _xsd_redis_key("https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
         self.assertEqual(key, "xsd_schema:amcr:2.2:https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
 
     def test_redis_key_amcr_url_different_version(self):
         """Klíče pro různé verze AMČR schématu se liší."""
-        import pas.api
-
-        key_22 = pas.api._xsd_redis_key("https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
-        key_23 = pas.api._xsd_redis_key("https://api.aiscr.cz/schema/amcr/2.3/amcr.xsd")
+        key_22 = _xsd_redis_key("https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
+        key_23 = _xsd_redis_key("https://api.aiscr.cz/schema/amcr/2.3/amcr.xsd")
         self.assertNotEqual(key_22, key_23)
         self.assertIn("2.2", key_22)
         self.assertIn("2.3", key_23)
 
     def test_redis_key_non_amcr_url_uses_full_url(self):
         """Klíč pro W3C URL neobsahuje prefix verze."""
-        import pas.api
-
         url = "https://www.w3.org/2001/xml.xsd"
-        key = pas.api._xsd_redis_key(url)
+        key = _xsd_redis_key(url)
         self.assertEqual(key, f"xsd_schema:{url}")
 
     # --- _fetch_xsd_bytes ---
