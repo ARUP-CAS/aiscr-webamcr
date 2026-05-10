@@ -226,6 +226,28 @@ Třídy
       :raises ValidationError: Pokud struktura nebo hodnoty neodpovídají očekávání.
       :return: ``True`` pokud je nastavení validní.
 
+   .. py:method:: validate_allowed_schema_versions()
+
+      Ověří strukturu a obsah nastavení ``allowed_schema_versions``.
+
+      Očekávaný formát je neprázdný seznam čísel (``float`` nebo ``int``),
+      například ``[2.2]`` nebo ``[2.2, 2.3]``. Záporné nebo nulové hodnoty nejsou povoleny.
+
+      :param raw_versions: Naparsovaná JSON hodnota nastavení ``allowed_schema_versions``.
+
+      :raises ValidationError: Pokud hodnota není neprázdný seznam kladných čísel.
+      :return: ``True`` pokud je nastavení validní.
+
+   .. py:method:: get_allowed_schema_versions()
+
+      Vrátí seznam povolených verzí AMČR XSD schématu z cache nebo ``CustomAdminSettings``.
+
+      Pokud nastavení ``allowed_schema_versions`` neexistuje, vrátí ``None`` (povoleny jsou
+      všechny verze, které projdou ostatními kontrolami). Pokud nastavení existuje, vrátí
+      seznam hodnot jako ``float``.
+
+      :return: Seznam povolených verzí nebo ``None``, pokud nastavení není nakonfigurováno.
+
    .. py:method:: get_client_ip()
 
       Vrátí IP adresu klienta z požadavku.
@@ -560,7 +582,11 @@ Třídy
 
       Ověří, že XML deklaruje podporovanou verzi AMČR schématu.
 
+      Pokud je předán parametr ``allowed_versions``, zkontroluje navíc, zda verze schématu
+      v dokumentu patří mezi povolené verze nakonfigurované v nastavení ``allowed_schema_versions``.
+
       :param doc: Naparsovaný XML dokument.
+      :param allowed_versions: Seznam povolených verzí schématu nebo ``None`` (bez omezení).
 
       :return: Chybová zpráva nebo ``None``, pokud deklarace odpovídá podporované verzi.
 
@@ -628,42 +654,81 @@ Třídy
 
       :return: Hodnota atributu ``id`` nebo None, pokud element nebo atribut neexistuje.
 
+   .. py:method:: _parse_point_wkt()
+
+      Ověří, že text XML elementu obsahuje platné WKT geometrie typu ``Point``.
+
+      :param elem: XML element obsahující WKT text.
+      :param field_name: Název pole pro chybovou zprávu (``"geom_wkt"`` nebo ``"geom_sjtsk_wkt"``).
+
+      :return: WKT řetězec geometrie.
+
+      :raises ImportValidationException: Pokud je WKT syntakticky neplatné, prázdné nebo není typu ``Point``.
+
    .. py:method:: _parse_nalez_element()
 
       Převede element ``amcr:samostatny_nalez`` na slovník pro deserializaci.
 
       Elementy typu ``refType`` a ``vocabType`` se mapují pomocí atributu ``id``,
-      který nese ``ident_cely`` odkazovaného záznamu. Geometrie jsou předány
-      jako WKT řetězce z elementů ``geom_wkt`` a ``geom_sjtsk_wkt``.
+      který nese ``ident_cely`` odkazovaného záznamu. Geometrie se určují vždy
+      z jednoho zdrojového elementu podle ``geom_system``:
+
+      - ``geom_system=4326`` — zdrojem je ``geom_wkt``; ``geom_sjtsk`` se vypočítá
+        konverzí do S-JTSK, element ``geom_sjtsk_wkt`` se ignoruje.
+      - ``geom_system=5514`` — zdrojem je ``geom_sjtsk_wkt``; ``geom`` se vypočítá
+        konverzí do WGS-84, element ``geom_wkt`` se ignoruje.
+
+      ``stav`` — musí být jedna z povolených hodnot (1, 2, 3); určuje cílový stav záznamu po importu.
+
+      Následující elementy jsou v XML povoleny, ale při importu se ignorují:
+
+      - ``igsn`` — přiděluje se automaticky po archivaci záznamu.
+      - ``okres`` — stanoví se automaticky podle souřadnic.
+      - ``katastr`` (v ``chranene_udaje``) — stanoví se automaticky podle souřadnic.
+      - ``geom_gml`` (v ``chranene_udaje``) — geometrie se přebírá z ``geom_wkt``.
+      - ``geom_sjtsk_gml`` (v ``chranene_udaje``) — geometrie se přebírá z ``geom_sjtsk_wkt``.
+      - ``geom_sjtsk_wkt`` (v ``chranene_udaje``) — ignoruje se, pokud ``geom_system=4326``.
+      - ``geom_wkt`` (v ``chranene_udaje``) — ignoruje se, pokud ``geom_system=5514``.
+      - ``historie`` — generuje se automaticky systémem.
+      - ``soubor`` — soubory se nahrávají samostatným endpointem.
 
       :param elem: Element ``amcr:samostatny_nalez`` z importovaného XML dokumentu.
       :param user: Uživatel provádějící import.
 
       :return: Dvojice ``(data, nova_osoba)`` připravená pro import.
 
+   .. py:method:: _parse_geom_fields()
+
+      Načte a převede geometrie podle ``geom_system``.
+
+      Při ``geom_system="4326"`` se jako zdroj použije ``geom_wkt`` a výsledek se
+      konvertuje do S-JTSK (5514). Element ``geom_sjtsk_wkt`` se ignoruje.
+      Při ``geom_system="5514"`` se jako zdroj použije ``geom_sjtsk_wkt`` a výsledek
+      se konvertuje do WGS-84 (4326). Element ``geom_wkt`` se ignoruje.
+
+      :param chranene: Element ``amcr:chranene_udaje``.
+      :param geom_system: Hodnota elementu ``geom_system`` z importovaného dokumentu.
+
+      :return: Dvojice ``(geom_wgs84, geom_sjtsk)`` nebo ``None`` pro každou hodnotu,
+          která nebyla nalezena nebo nebyla poskytnuta.
+
+      :raises ImportValidationException: Pokud konverze souřadnic selže.
+
    .. py:method:: _parse_nalezce()
 
       Zpracuje element ``nalezce`` a vrátí ``ident_cely`` osoby pro import.
 
-      Pokud má element atribut ``id=":tba"``, vytvoří se nová osoba z textu
-      ve formátu ``"Příjmení, Jméno"``. Nová osoba se zde pouze připraví,
-      ale uloží se až v transakci společně s ``SamostatnyNalez``.
+      Pokud má element atribut ``id=":tba"``, nejprve se prohledá databáze podle
+      ``prijmeni`` a ``jmeno``. Pokud osoba existuje, použije se její ``ident_cely``.
+      Teprve pokud záznam neexistuje, vytvoří se nová osoba z textu ve formátu
+      ``"Příjmení, Jméno"``. Nová osoba se zde pouze připraví, ale uloží se až
+      v transakci společně s ``SamostatnyNalez``.
+      Vytvoření nové osoby tímto importním tokem nevyžaduje samostatné oprávnění.
 
       :param elem: Element ``amcr:samostatny_nalez``.
       :param user: Uživatel provádějící import.
 
       :return: Dvojice ``(ident_cely_osoby, nova_osoba)``.
-
-   .. py:method:: _build_schema_validation_doc()
-
-      Vytvoří kopii dokumentu upravenou pro validaci proti XSD schématu.
-
-      XSD vyžaduje element ``stav``. Pokud v dokumentu chybí, doplní se do kopie
-      pro účely validace; originální dokument zůstává nezměněn.
-
-      :param doc: Původní XML dokument.
-
-      :return: Kopie XML dokumentu určená pro schema validaci.
 
 
 .. py:class:: SamostatnyNalezXmlImportView
@@ -676,8 +741,11 @@ Třídy
 
       Importuje nový záznam samostatného nálezu z XML souboru.
 
-      Přijímá soubor v parametru ``file`` (multipart/form-data). XML musí odpovídat
-      schématu AMČR 2.2 (https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd).
+      Přijímá soubor v parametru ``file`` (multipart/form-data). XML musí projít validací
+      proti XSD schématu AMČR deklarovanému v dokumentu (verze 2.2 na URL
+      ``https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd`` nebo novější). Volitelné nastavení administrace
+      ``allowed_schema_versions`` může omezit povolené číslo verze schématu v namespace
+      dokumentu (viz ``PasApiPermissionMixin.get_allowed_schema_versions``).
       Dokument musí obsahovat právě jeden element ``amcr:samostatny_nalez``.
 
       :param request: HTTP požadavek obsahující XML soubor v poli ``file``.
@@ -698,18 +766,14 @@ Třídy
 
    .. py:method:: _create_import_history_records()
 
-      Vytvoří historii pro importovaný záznam samostatného nálezu.
+      Vytvoří záznamy historie pro importovaný samostatný nález.
+
+      Vytvoří pouze záznamy odpovídající přechodům až do cílového stavu záznamu:
+      stav 1 → ZAPSANI_SN, stav 2 → ZAPSANI_SN + ODESLANI_SN,
+      stav 3 → ZAPSANI_SN + ODESLANI_SN + POTVRZENI_SN.
 
       :param instance: Vytvořený záznam samostatného nálezu.
       :param user: Uživatel, který provedl import.
-
-   .. py:method:: _validate_disallowed_elements()
-
-      Ověří, že importovaný element neobsahuje nepovolené podřízené elementy.
-
-      :param elem: Importovaný element ``amcr:samostatny_nalez``.
-
-      :raises ImportValidationException: Pokud je nalezen nepovolený element.
 
 
 .. py:class:: SamostatnyNalezEvidencniCisloPatchView
@@ -824,6 +888,32 @@ Třídy
 
 Funkce
 ------
+
+.. py:function:: _xsd_redis_key(url)
+
+   Sestaví klíč pro Redis cache pro XSD schéma na zadané URL.
+
+   Pro URL AMČR schématu (obsahující ``/schema/amcr/<verze>/``) je klíč ve tvaru
+   ``xsd_schema:amcr:<verze>:<url>``, jinak ``xsd_schema:<url>``.
+
+   :param url: URL XSD souboru.
+
+   :return: Řetězec klíče pro Redis cache.
+
+.. py:function:: _fetch_xsd_bytes(url)
+
+   Načte bajty XSD schématu ze zadaného URL.
+
+   Pořadí vyhledávání: in-process slovník → Redis → síť. Výsledek se uloží
+   do obou úložišť, takže každá URL je v rámci procesu načtena nejvýše jednou.
+
+   :param url: URL XSD souboru ke stažení.
+
+   :return: Bajty XSD schématu.
+
+   :raises urllib.error.URLError: Pokud se nepodaří navázat spojení s URL.
+   :raises TimeoutError: Pokud vyprší časový limit požadavku.
+   :raises ValueError: Pokud server vrátí prázdné tělo odpovědi.
 
 .. py:function:: _is_valid_ip_rule_value(value)
 
