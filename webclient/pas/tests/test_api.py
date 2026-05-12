@@ -42,10 +42,13 @@ from historie.models import Historie
 from lxml import etree
 from pas.api import (
     _RECORD_LOCK_PREFIX,
+    _XSD_BYTES_CACHE,
     ImportErrorType,
     ImportValidationException,
     SamostatnyNalezEvidencniCisloPatchView,
     SamostatnyNalezXmlImportView,
+    _fetch_xsd_bytes,
+    _xsd_redis_key,
 )
 from pas.models import SamostatnyNalez
 from pid.exceptions import DoiWriteError
@@ -157,14 +160,12 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
     def _clear_pas_api_settings(self) -> None:
         """Vyčistí testovací ``CustomAdminSettings``, cache a in-process slovník XSD pro PAS API."""
-        import pas.api
-
         CustomAdminSettings.objects.filter(item_group="pas_api").delete()
         cache.delete("pas_api_access_rules")
         cache.delete("pas_api_rate_limits")
         cache.delete("pas_api_access_mode")
         cache.delete("pas_api_allowed_schema_versions")
-        pas.api._XSD_BYTES_CACHE.clear()
+        _XSD_BYTES_CACHE.clear()
 
     @classmethod
     def _load_xml(cls, filename: str) -> bytes:
@@ -1757,31 +1758,23 @@ class FetchXsdBytesTests(TestCase):
 
     def setUp(self):
         """Vyčistí Redis cache a in-process slovník před každým testem."""
-        import pas.api
-
         cache.clear()
-        pas.api._XSD_BYTES_CACHE.clear()
+        _XSD_BYTES_CACHE.clear()
 
     def tearDown(self):
-        """Vyčistí Redis cache a in-process slovník po každém testu."""
-        import pas.api
-
+        """Vyčistí Redis cache a in-process slovník po každým testu."""
         cache.clear()
-        pas.api._XSD_BYTES_CACHE.clear()
+        _XSD_BYTES_CACHE.clear()
 
     # --- _xsd_redis_key ---
 
     def test_redis_key_amcr_url_includes_version(self):
         """Klíč pro AMČR URL obsahuje číslo verze."""
-        from pas.api import _xsd_redis_key
-
         key = _xsd_redis_key("https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
         self.assertEqual(key, "xsd_schema:amcr:2.2:https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
 
     def test_redis_key_amcr_url_different_version(self):
         """Klíče pro různé verze AMČR schématu se liší."""
-        from pas.api import _xsd_redis_key
-
         key_22 = _xsd_redis_key("https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
         key_23 = _xsd_redis_key("https://api.aiscr.cz/schema/amcr/2.3/amcr.xsd")
         self.assertNotEqual(key_22, key_23)
@@ -1790,8 +1783,6 @@ class FetchXsdBytesTests(TestCase):
 
     def test_redis_key_non_amcr_url_uses_full_url(self):
         """Klíč pro W3C URL neobsahuje prefix verze."""
-        from pas.api import _xsd_redis_key
-
         url = "https://www.w3.org/2001/xml.xsd"
         key = _xsd_redis_key(url)
         self.assertEqual(key, f"xsd_schema:{url}")
@@ -1800,7 +1791,6 @@ class FetchXsdBytesTests(TestCase):
 
     def test_returns_bytes_from_network_on_cache_miss(self):
         """Při absenci záznamu v cache se bajty stáhnou ze sítě."""
-        from pas.api import _fetch_xsd_bytes
 
         expected = b"<schema/>"
         mock_response = io.BytesIO(expected)
@@ -1812,7 +1802,6 @@ class FetchXsdBytesTests(TestCase):
 
     def test_stores_bytes_in_cache_after_network_fetch(self):
         """Po stažení ze sítě se bajty uloží do cache."""
-        from pas.api import _fetch_xsd_bytes, _xsd_redis_key
 
         url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
         expected = b"<schema/>"
@@ -1823,7 +1812,6 @@ class FetchXsdBytesTests(TestCase):
 
     def test_returns_cached_bytes_without_network_call(self):
         """Při zásahu cache se síť nevolá."""
-        from pas.api import _fetch_xsd_bytes, _xsd_redis_key
 
         url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
         cached_bytes = b"<cached/>"
@@ -1837,7 +1825,6 @@ class FetchXsdBytesTests(TestCase):
 
     def test_cache_hit_for_non_amcr_url(self):
         """Cache funguje i pro W3C URL bez verze v klíči."""
-        from pas.api import _fetch_xsd_bytes, _xsd_redis_key
 
         url = "https://www.w3.org/2001/xml.xsd"
         cached_bytes = b"<xml-schema/>"
@@ -1851,7 +1838,6 @@ class FetchXsdBytesTests(TestCase):
 
     def test_propagates_url_error(self):
         """Síťová chyba se propaguje jako ``urllib.error.URLError``."""
-        from pas.api import _fetch_xsd_bytes
 
         with patch(
             "pas.api.urllib.request.urlopen",
@@ -1862,7 +1848,6 @@ class FetchXsdBytesTests(TestCase):
 
     def test_propagates_timeout_error(self):
         """Vypršení časového limitu se propaguje jako ``TimeoutError``."""
-        from pas.api import _fetch_xsd_bytes
 
         with patch("pas.api.urllib.request.urlopen", side_effect=TimeoutError()):
             with self.assertRaises(TimeoutError):
@@ -1870,20 +1855,16 @@ class FetchXsdBytesTests(TestCase):
 
     def test_network_error_does_not_populate_cache(self):
         """Při síťové chybě se do cache nic neuloží."""
-        from pas.api import _fetch_xsd_bytes, _xsd_redis_key
 
         url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
         with patch("pas.api.urllib.request.urlopen", side_effect=urllib.error.URLError("err")):
-            try:
+            with self.assertRaises(urllib.error.URLError):
                 _fetch_xsd_bytes(url)
-            except urllib.error.URLError:
-                pass
 
         self.assertIsNone(cache.get(_xsd_redis_key(url)))
 
     def test_second_call_uses_cache(self):
         """Druhé volání se stejnou URL neotevře síťové spojení znovu."""
-        from pas.api import _fetch_xsd_bytes
 
         url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
         content = b"<schema/>"
