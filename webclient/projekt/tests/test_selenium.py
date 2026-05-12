@@ -423,8 +423,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.ElementSendKeys(By.ID, "id_popis", "test")
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
         self.ElementClick(By.ID, "bs-select-7-1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_licence .btn")
-        self.ElementClick(By.ID, "bs-select-8-1")
+        self.select_nth_selectpicker_option("id_licence")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
         self.check_fedora_change(time, "projekt/tests/resources/test_146/create_dokument_cast")
