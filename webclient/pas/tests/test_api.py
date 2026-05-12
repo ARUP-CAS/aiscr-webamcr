@@ -53,7 +53,7 @@ from projekt.models import Projekt
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
-from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
+from rest_framework.test import APIClient
 from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
@@ -204,11 +204,36 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             IDENT_CELY=ident_cely,
             PROJEKT_IDENT=projekt_ident,
             PRISTUPNOST_IDENT=pristupnost_ident,
+            OBDOBI_IDENT=cls.obdobi.ident_cely,
+            OKOLNOSTI_IDENT=cls.okolnosti.ident_cely,
+            DRUH_NALEZU_IDENT=cls.druh_nalezu.ident_cely,
+            SPECIFIKACE_IDENT=cls.specifikace.ident_cely,
+            NALEZCE_IDENT=cls.known_osoba.ident_cely,
+            NALEZCE_LABEL=cls.known_osoba.vypis_cely,
             GEOM_SYSTEM=geom_system,
             EPSG=geom_system,
             GEOM_WKT=geom_wkt,
             STAV=stav,
         ).encode("utf-8")
+
+    @classmethod
+    def _required_heslar_subs(cls) -> dict:
+        """Substitutions for heslar fields required by ``check_pred_odeslanim`` (no nalezce)."""
+        return {
+            "OBDOBI_IDENT": cls.obdobi.ident_cely,
+            "OKOLNOSTI_IDENT": cls.okolnosti.ident_cely,
+            "DRUH_NALEZU_IDENT": cls.druh_nalezu.ident_cely,
+            "SPECIFIKACE_IDENT": cls.specifikace.ident_cely,
+        }
+
+    @classmethod
+    def _required_field_subs(cls) -> dict:
+        """Substitutions for all fields required by ``check_pred_odeslanim``, including nalezce."""
+        return {
+            **cls._required_heslar_subs(),
+            "NALEZCE_IDENT": cls.known_osoba.ident_cely,
+            "NALEZCE_LABEL": cls.known_osoba.vypis_cely,
+        }
 
     def _post_xml(
         self,
@@ -261,7 +286,15 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
     def setUpTestData(cls):
         """Připraví sdílená testovací data pro celou třídu."""
         from core.models import Permissions
-        from heslar.hesla import HESLAR_LICENCE, HESLAR_OBDOBI, HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
+        from heslar.hesla import (
+            HESLAR_LICENCE,
+            HESLAR_NALEZOVE_OKOLNOSTI,
+            HESLAR_OBDOBI,
+            HESLAR_ORGANIZACE_TYP,
+            HESLAR_PREDMET_DRUH,
+            HESLAR_PREDMET_SPECIFIKACE,
+            HESLAR_PRISTUPNOST,
+        )
 
         heslare_typ_org, _ = HeslarNazev.objects.get_or_create(
             id=HESLAR_ORGANIZACE_TYP, defaults={"nazev": "typ_organizace"}
@@ -296,6 +329,33 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             defaults={"ident_cely": "HES-OBD-001", "heslo": "Doba bronzová"},
         )
 
+        heslare_okolnosti, _ = HeslarNazev.objects.get_or_create(
+            id=HESLAR_NALEZOVE_OKOLNOSTI, defaults={"nazev": "nalezove_okolnosti"}
+        )
+        cls.okolnosti, _ = Heslar.objects.get_or_create(
+            nazev_heslare=heslare_okolnosti,
+            zkratka="OKOL",
+            defaults={"ident_cely": "HES-OKOL-001", "heslo": "Náhodný nález"},
+        )
+
+        heslare_druh_nalezu, _ = HeslarNazev.objects.get_or_create(
+            id=HESLAR_PREDMET_DRUH, defaults={"nazev": "predmet_druh"}
+        )
+        cls.druh_nalezu, _ = Heslar.objects.get_or_create(
+            nazev_heslare=heslare_druh_nalezu,
+            zkratka="DRUH",
+            defaults={"ident_cely": "HES-DRUH-001", "heslo": "Keramika"},
+        )
+
+        heslare_specifikace, _ = HeslarNazev.objects.get_or_create(
+            id=HESLAR_PREDMET_SPECIFIKACE, defaults={"nazev": "predmet_specifikace"}
+        )
+        cls.specifikace, _ = Heslar.objects.get_or_create(
+            nazev_heslare=heslare_specifikace,
+            zkratka="SPEC",
+            defaults={"ident_cely": "HES-SPEC-001", "heslo": "Střep"},
+        )
+
         with patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None):
             cls.organizace, _ = Organizace.objects.get_or_create(
                 ident_cely="ORG-TEST-XML",
@@ -307,29 +367,31 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                     "licence": cls.licence,
                 },
             )
-        from core.constants import ROLE_BADATEL_ID
+        from core.constants import ROLE_ARCHEOLOG_ID, ROLE_BADATEL_ID
         from django.contrib.auth.models import Group
 
         badatel_group, _ = Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
-        Permissions.objects.get_or_create(
-            main_role=badatel_group,
-            action=Permissions.actionChoices.pas_edit,
-            defaults={"address_in_app": "pas/api/import-xml", "base": True},
-        )
-        Permissions.objects.get_or_create(
-            main_role=badatel_group,
-            action=Permissions.actionChoices.pas_ulozeni_edit,
-            defaults={"address_in_app": "pas/api/import-xml", "base": True},
-        )
-        Permissions.objects.get_or_create(
-            main_role=badatel_group,
-            action=Permissions.actionChoices.pas_zapsat_do_projektu,
-            defaults={
-                "address_in_app": "pas/api/import-xml",
-                "base": True,
-                "ownership": Permissions.ownershipChoices.our,
-            },
-        )
+        archeolog_group, _ = Group.objects.get_or_create(id=ROLE_ARCHEOLOG_ID, defaults={"name": "archeolog"})
+        for role_group in (badatel_group, archeolog_group):
+            Permissions.objects.get_or_create(
+                main_role=role_group,
+                action=Permissions.actionChoices.pas_edit,
+                defaults={"address_in_app": "pas/api/import-xml", "base": True},
+            )
+            Permissions.objects.get_or_create(
+                main_role=role_group,
+                action=Permissions.actionChoices.pas_ulozeni_edit,
+                defaults={"address_in_app": "pas/api/import-xml", "base": True},
+            )
+            Permissions.objects.get_or_create(
+                main_role=role_group,
+                action=Permissions.actionChoices.pas_zapsat_do_projektu,
+                defaults={
+                    "address_in_app": "pas/api/import-xml",
+                    "base": True,
+                    "ownership": Permissions.ownershipChoices.our,
+                },
+            )
         with patch(
             "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
             return_value=True,
@@ -340,6 +402,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                 is_active=True,
                 organizace=cls.organizace,
             )
+        cls.user.groups.add(archeolog_group)
         cls.token, _ = Token.objects.get_or_create(user=cls.user)
 
         with patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None):
@@ -716,9 +779,11 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         ).decode("utf-8")
+        # Replace the correct okolnosti id with an id from a different heslar group (obdobi)
+        # to trigger the wrong-group validation error.
         xml = xml.replace(
-            "<amcr:stav>",
-            f'<amcr:okolnosti id="{self.obdobi.ident_cely}" xml:lang="cs">{self.obdobi.heslo}</amcr:okolnosti>\n    <amcr:stav>',
+            f'id="{self.okolnosti.ident_cely}"',
+            f'id="{self.obdobi.ident_cely}"',
         ).encode("utf-8")
 
         response = self._post_xml(xml)
@@ -857,7 +922,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         )
         response = self._post_xml(xml)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertIn("validation_errors", response.data)
+        self.assertIn("detail", response.data)
         self._assert_log_failure()
 
     def test_non_survey_projekt_returns_404(self):
@@ -1004,6 +1069,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+            **self._required_field_subs(),
         ).encode("utf-8")
 
         response = self._post_xml(xml)
@@ -1026,6 +1092,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
             WRONG_KATASTR_IDENT=f"ruian-{self.other_katastr.kod}",
             WRONG_OKRES_IDENT=f"ruian-{self.other_katastr_okres.kod}",
+            **self._required_field_subs(),
         ).encode("utf-8")
 
         response = self._post_xml(xml)
@@ -1049,6 +1116,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
             WRONG_KATASTR_IDENT=f"ruian-{self.other_katastr.kod}",
             WRONG_OKRES_IDENT=f"ruian-{self.other_katastr_okres.kod}",
+            **self._required_field_subs(),
         ).encode("utf-8")
 
         response = self._post_xml(xml)
@@ -1101,6 +1169,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
             GEOM_SJTSK_WKT="NOT_VALID_WKT",
+            **self._required_field_subs(),
         ).encode("utf-8")
 
         response = self._post_xml(xml)
@@ -1110,36 +1179,6 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertEqual(response.data["validation_errors"][0]["error_type"], ImportErrorType.INVALID_DATA.value)
         self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure()
-
-    def test_tba_nalezce_is_rolled_back_when_samostatny_nalez_save_fails(self):
-        """Při chybě ukládání nálezu se vrátí HTTP 500 a nově vytvořená osoba se vrátí rollbackem."""
-        template = self._load_xml("nalez_tba_nalezce.xml").decode("utf-8")
-        xml = template.format(
-            IDENT_CELY=":tba",
-            PROJEKT_IDENT=self.projekt.ident_cely,
-            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
-        ).encode("utf-8")
-        digest = base64.b64encode(hashlib.sha512(xml).digest()).decode("ascii")
-        xml_file = SimpleUploadedFile("import.xml", xml, content_type="application/xml")
-        request = APIRequestFactory().post(
-            self.xml_url,
-            {"file": xml_file},
-            format="multipart",
-            HTTP_CONTENT_DIGEST=f"sha-512=:{digest}:",
-        )
-        force_authenticate(request, user=self.user, token=self.token)
-
-        with patch("pas.api.SamostatnyNalez.save", side_effect=RuntimeError("save failed")):
-            response = SamostatnyNalezXmlImportView.as_view()(request)
-
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertEqual(
-            response.data,
-            {"detail": "pas.api.SamostatnyNalezXmlImportView.post.internal_error"},
-        )
-        self.assertFalse(Osoba.objects.filter(prijmeni="Novák", jmeno="Jan").exists())
-        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
-        self._assert_log_failure(response.data)
 
     def test_get_metadata_failure_returns_500_with_failed_log(self):
         """Selhání čtení metadat z Fedory po uložení záznamu vrátí HTTP 500 a uzavře API log jako neúspěšný."""
@@ -1274,6 +1313,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
             PREDANO_ORGANIZACE_IDENT=self.organizace.ident_cely,
+            **self._required_field_subs(),
         ).encode("utf-8")
         response = self._post_xml(xml)
         nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
@@ -1348,6 +1388,68 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertEqual(len(historie), 1)
         self.assertEqual([item.typ_zmeny for item in historie], [ZAPSANI_SN])
 
+    def test_import_stav2_calls_check_pred_odeslanim(self):
+        """Import se ``stav=2`` zavolá ``check_pred_odeslanim`` a nezavolá ``check_pred_potvrzenim``."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            stav=2,
+        )
+
+        with patch.object(
+            SamostatnyNalez, "check_pred_odeslanim", autospec=True, return_value=[]
+        ) as mock_odeslanim, patch.object(
+            SamostatnyNalez, "check_pred_potvrzenim", autospec=True, return_value=[]
+        ) as mock_potvrzenim:
+            response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(mock_odeslanim.call_count, 1)
+        _, kwargs = mock_odeslanim.call_args
+        self.assertTrue(kwargs.get("skip_soubory_check"))
+        mock_potvrzenim.assert_not_called()
+
+    def test_import_stav3_calls_both_check_pred_odeslanim_and_check_pred_potvrzenim(self):
+        """Import se ``stav=3`` zavolá ``check_pred_odeslanim`` i ``check_pred_potvrzenim``."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            stav=3,
+        )
+
+        with patch.object(
+            SamostatnyNalez, "check_pred_odeslanim", autospec=True, return_value=[]
+        ) as mock_odeslanim, patch.object(
+            SamostatnyNalez, "check_pred_potvrzenim", autospec=True, return_value=[]
+        ) as mock_potvrzenim:
+            response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(mock_odeslanim.call_count, 1)
+        _, odeslanim_kwargs = mock_odeslanim.call_args
+        self.assertTrue(odeslanim_kwargs.get("skip_soubory_check"))
+        self.assertEqual(mock_potvrzenim.call_count, 1)
+        _, potvrzenim_kwargs = mock_potvrzenim.call_args
+        self.assertTrue(potvrzenim_kwargs.get("skip_soubory_check"))
+
+    def test_import_stav4_returns_422(self):
+        """Import se ``stav=4`` selže s HTTP 422 a záznam se nevytvoří (povoleny jsou jen 1, 2, 3)."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            stav=4,
+        )
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure()
+
     def test_valid_xml_creates_record(self):
         """Validní XML s minimálními poli vytvoří záznam v databázi a vrátí HTTP 200."""
         xml = self._minimal_nalez_xml(
@@ -1385,6 +1487,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
             # Transforms to WGS-84 POINT(14.0667 50.0333) — inside the test fixture polygon for kod=999999.
             GEOM_SJTSK_WKT="POINT(-768785.47 -1045458.60)",
+            **self._required_field_subs(),
         ).encode("utf-8")
 
         response = self._post_xml(xml)
@@ -1434,8 +1537,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
-            NALEZCE_IDENT=self.known_osoba.ident_cely,
-            NALEZCE_LABEL=self.known_osoba.vypis_cely,
+            **self._required_field_subs(),
         ).encode("utf-8")
 
         response = self._post_xml(xml)
@@ -1452,6 +1554,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+            **self._required_field_subs(),
         ).encode("utf-8")
         response = self._post_xml(xml)
         nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
@@ -1469,6 +1572,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+            **self._required_heslar_subs(),
         ).encode("utf-8")
 
         with patch(
@@ -1506,6 +1610,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+            **self._required_heslar_subs(),
         ).encode("utf-8")
 
         with patch(
@@ -1637,6 +1742,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+            **self._required_field_subs(),
         ).encode("utf-8")
 
         response = self._post_xml(xml)

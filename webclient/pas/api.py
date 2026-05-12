@@ -26,6 +26,7 @@ from core.constants import (
     MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES,
     ODESLANI_SN,
     POTVRZENI_SN,
+    ROLE_BADATEL_ID,
     SN_ARCHIVOVANY,
     SN_ODESLANY,
     SN_POTVRZENY,
@@ -2347,6 +2348,14 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 self._validation_status(exc.import_errors),
             )
 
+        projekt_ident = data.get("projekt")
+        if projekt_ident and not Projekt.objects.filter(ident_cely=projekt_ident).exists():
+            return self._fail(
+                log_entry,
+                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.projekt_not_found")},
+                status.HTTP_404_NOT_FOUND,
+            )
+
         if not self._has_import_permissions(request.user, data):
             # The denied user ID and referenced project are logged intentionally
             # for authorization troubleshooting and incident investigation.
@@ -2408,6 +2417,33 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                                 error_type=ImportErrorType.INVALID_DATA,
                             )
                         )
+                if instance.stav in (SN_ODESLANY, SN_POTVRZENY):
+                    pred_odeslanim_errors = instance.check_pred_odeslanim(skip_soubory_check=True)
+                    if pred_odeslanim_errors:
+                        raise ImportValidationException(
+                            ImportValidationIssue(
+                                line=elem.sourceline,
+                                column=None,
+                                message=_("pas.api.SamostatnyNalezXmlImportView.post.check_pred_odeslanim_failed")
+                                + " "
+                                + "; ".join(pred_odeslanim_errors),
+                                error_type=ImportErrorType.INVALID_DATA,
+                            )
+                        )
+                if instance.stav == SN_POTVRZENY:
+                    pred_potvrzenim_errors = instance.check_pred_potvrzenim(skip_soubory_check=True)
+                    if pred_potvrzenim_errors:
+                        raise ImportValidationException(
+                            ImportValidationIssue(
+                                line=elem.sourceline,
+                                column=None,
+                                message=_("pas.api.SamostatnyNalezXmlImportView.post.check_pred_potvrzenim_failed")
+                                + " "
+                                + "; ".join(pred_potvrzenim_errors),
+                                error_type=ImportErrorType.INVALID_DATA,
+                            )
+                        )
+
                 instance.active_transaction = fedora_transaction
                 # active_transaction is an attribute that defines a Fedora transaction attached to the objects,
                 # not a database field, so there is no point in using it as an argument in the save method.
@@ -2495,21 +2531,28 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
         :param user: Uživatel provádějící import.
         :param data: Data jednoho importovaného záznamu.
 
-        :return: Vrací ``True`` pokud má uživatel všechna vyžadovaná oprávnění.
+        :return: Vrací ``True`` pokud má uživatel oprávnění ``pas_zapsat_do_projektu``
+                 nebo ``spoluprace_edit_projekty`` pro daný projekt a stav importovaného
+                 záznamu odpovídá roli uživatele (badatel max. stav 1, archeolog a výše max. stav 3).
         """
-        if not check_permissions(Permissions.actionChoices.pas_edit, user):
+
+        stav = data.get("stav")
+
+        if stav is None or stav > 3:
             return False
 
-        if not check_permissions(Permissions.actionChoices.pas_ulozeni_edit, user):
+        if user.hlavni_role.pk == ROLE_BADATEL_ID and stav > 1:
             return False
 
         projekt_ident = data.get("projekt")
-        if projekt_ident and not check_permissions(
-            Permissions.actionChoices.pas_zapsat_do_projektu, user, projekt_ident
+        if projekt_ident and check_permissions(Permissions.actionChoices.pas_zapsat_do_projektu, user, projekt_ident):
+            return True
+        elif projekt_ident and check_permissions(
+            Permissions.actionChoices.spoluprace_edit_projekty, user, projekt_ident
         ):
-            return False
+            return True
 
-        return True
+        return False
 
     @classmethod
     def _create_import_history_records(cls, instance: SamostatnyNalez, user) -> None:

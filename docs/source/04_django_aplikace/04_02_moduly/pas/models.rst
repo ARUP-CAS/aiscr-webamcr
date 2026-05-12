@@ -79,6 +79,10 @@ Třídy
 
       Ověří pred potvrzenim.
 
+      :param skip_soubory_check: Pokud ``True``, kontrola přítomnosti souborů se přeskočí,
+          což prakticky způsobí, že metoda neprovede žádnou kontrolu. Parametr je přidán
+          pro zachování konzistence s :meth:`check_pred_odeslanim` a může být užitečný
+          v budoucnu.
       :return: Vrací proměnná ``resp``.
 
    .. py:method:: check_pred_odeslanim()
@@ -87,7 +91,9 @@ Třídy
 
       polia: obdobi, datum_nalezu, lokalizace, okolnosti, specifikace, druh_nalezu, nalezce, geom, hloubka, katastr jsou vyplněna.
 
-      Samostaný nález má připojený alespoň jeden soubor.
+      Samostaný nález má připojený alespoň jeden soubor (pokud ``skip_soubory_check`` není ``True``).
+
+      :param skip_soubory_check: Pokud ``True``, kontrola přítomnosti souborů se přeskočí.
 
       :return: Vrací proměnná ``resp``.
 
