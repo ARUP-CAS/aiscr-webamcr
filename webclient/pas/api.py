@@ -1761,7 +1761,19 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                         error_type=ImportErrorType.INVALID_DATA,
                     )
                 ) from exc
-            schema_doc = etree.ElementTree(etree.fromstring(xsd_bytes, parser))
+            try:
+                schema_doc = etree.ElementTree(etree.fromstring(xsd_bytes, parser))
+            except etree.XMLSyntaxError as exc:
+                logger.warning("Stažené XSD schéma z URL %s není validní XML: %s", schema_url, exc)
+                raise ImportValidationException(
+                    ImportValidationIssue(
+                        line=None,
+                        column=None,
+                        message=_("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.schema_invalid_xml")
+                        % {"url": schema_url},
+                        error_type=ImportErrorType.INVALID_DATA,
+                    )
+                ) from exc
             schema = etree.XMLSchema(schema_doc)
             if resolver.blocked_exception is not None:
                 raise resolver.blocked_exception
