@@ -13,7 +13,7 @@ services:
       - nginx_data:/vol/web/nginx/data
       - /home/migrace:/vol/data-migrace
       - /opt/selenium_test:/vol/web/selenium_test
-      - /opt/fcrepo/fcrepo-home/data:/vol/fcrepo
+      - /opt/fcrepo_test/fcrepo-home/data:/vol/fcrepo
     environment:
       - IMAGE_TAG=${IMAGE_TAG}
     networks:
