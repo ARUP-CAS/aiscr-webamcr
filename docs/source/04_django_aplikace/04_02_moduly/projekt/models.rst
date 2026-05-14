@@ -56,8 +56,10 @@ Třídy
 
       Vrací queryset průzkumných projektů dostupných pro daného uživatele.
 
-      Pro badatele jsou to projekty s aktivní spoluprací, ve které je uveden jako spolupracovník.
-      Pro ostatní role projekty spolupracujících organizací uživatele v relevantních stavech.
+      Pro badatele jsou to projekty v relevantních stavech s aktivní spoluprací,
+      ve které je uveden badatel jako spolupracovník.
+      Pro archeology jsou to projekty vlastní organizace v relevantních stavech.
+      Pro archiváře a administrátory všechny projekty průzkumu.
 
       :param user: Uživatel, pro kterého se vrací dostupné projekty. Pokud je ``None``, vrací prázdný queryset.
       :return: Queryset modelu ``Projekt`` s předvybraným ``vedouci_projektu``.
