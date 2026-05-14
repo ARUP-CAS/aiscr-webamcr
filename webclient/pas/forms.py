@@ -15,6 +15,7 @@ from crispy_forms.layout import Div, Layout
 from django import forms
 from django.contrib.auth.models import Group
 from django.contrib.gis.forms import ValidationError
+from django.db.models import Q
 from django.forms import ModelChoiceField
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -265,9 +266,9 @@ class CreateSamostatnyNalezForm(OptimisticLockingMixin, forms.ModelForm):
         self.fields["poznamka"].widget.attrs["rows"] = 1
         projekt_qs = Projekt.get_pruzkum_projekty_pro_uzivatele(user)
         if getattr(self.instance, "projekt_id", None):
-            projekt_ids = set(projekt_qs.values_list("pk", flat=True))
-            projekt_ids.add(self.instance.projekt_id)
-            projekt_qs = Projekt.objects.filter(pk__in=projekt_ids).select_related("vedouci_projektu")
+            projekt_qs = Projekt.objects.filter(
+                Q(pk__in=projekt_qs.values("pk")) | Q(pk=self.instance.projekt_id)
+            ).select_related("vedouci_projektu")
         self.fields["projekt"] = ProjectModelChoiceField(
             queryset=projekt_qs,
             widget=forms.Select(

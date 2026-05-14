@@ -1465,7 +1465,7 @@ class EditSpolupraceProjektyView(LoginRequiredMixin, TemplateView):
             messages.add_message(request, messages.SUCCESS, _("pas.views.editSpolupraceProjeky.success"))
         else:
             messages.add_message(request, messages.ERROR, FORM_NOT_VALID)
-        next_url = request.POST.get("next") or request.META.get("HTTP_REFERER", "")
+        next_url = request.POST.get("next") or request.GET.get("next") or request.META.get("HTTP_REFERER", "")
         if next_url and url_has_allowed_host_and_scheme(
             next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
         ):
