@@ -52,6 +52,16 @@ Třídy
 
       :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
 
+   .. py:method:: get_pruzkum_projekty_pro_uzivatele()
+
+      Vrací queryset průzkumných projektů dostupných pro daného uživatele.
+
+      Pro badatele jsou to projekty s aktivní spoluprací, ve které je uveden jako spolupracovník.
+      Pro ostatní role projekty spolupracujících organizací uživatele v relevantních stavech.
+
+      :param user: Uživatel, pro kterého se vrací dostupné projekty. Pokud je ``None``, vrací prázdný queryset.
+      :return: Queryset modelu ``Projekt`` s předvybraným ``vedouci_projektu``.
+
    .. py:method:: send_ep01()
 
       Odešle ep01. v aplikaci.
