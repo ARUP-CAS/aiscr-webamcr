@@ -21,8 +21,10 @@ from core.constants import (
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY,
     ROLE_ARCHEOLOG_ID,
+    ROLE_BADATEL_ID,
     RUSENI_PROJ,
     SCHVALENI_OZNAMENI_PROJ,
+    SPOLUPRACE_AKTIVNI,
     UKONCENI_V_TERENU_PROJ,
     UZAVRENI_PROJ,
     VRACENI_NAVRHU_ZRUSENI,
@@ -252,6 +254,35 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
         db_table = "projekt"
         verbose_name = "projekty"
+
+    @classmethod
+    def get_pruzkum_projekty_pro_uzivatele(cls, user):
+        """
+        Vrací queryset průzkumných projektů dostupných pro daného uživatele.
+
+        Pro badatele jsou to projekty s aktivní spoluprací, ve které je uveden jako spolupracovník.
+        Pro ostatní role projekty spolupracujících organizací uživatele v relevantních stavech.
+
+        :param user: Uživatel, pro kterého se vrací dostupné projekty. Pokud je ``None``, vrací prázdný queryset.
+        :return: Queryset modelu ``Projekt`` s předvybraným ``vedouci_projektu``.
+        """
+        if user is None:
+            return cls.objects.none()
+        if user.hlavni_role and user.hlavni_role.pk == ROLE_BADATEL_ID:
+            return (
+                cls.objects.filter(
+                    typ_projektu=TYP_PROJEKTU_PRUZKUM_ID,
+                    spoluprace_projektu__spolupracovnik=user,
+                    spoluprace_projektu__stav=SPOLUPRACE_AKTIVNI,
+                )
+                .select_related("vedouci_projektu")
+                .distinct()
+            )
+        return cls.objects.filter(
+            typ_projektu=TYP_PROJEKTU_PRUZKUM_ID,
+            organizace__in=user.moje_spolupracujici_organizace(),
+            stav__in=user.moje_stavy_pruzkumnych_projektu(),
+        ).select_related("vedouci_projektu")
 
     def send_ep01(self, rep_bin_file=None):
         """

@@ -6,8 +6,6 @@ from core.constants import (
     ROLE_ADMIN_ID,
     ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID,
-    ROLE_BADATEL_ID,
-    SPOLUPRACE_AKTIVNI,
 )
 from core.forms import BaseFilterForm, OptimisticLockingMixin, TwoLevelSelectField
 from core.widgets import AutocompleteModelSelect2, AutocompleteSelect2Multiple
@@ -128,7 +126,7 @@ class PotvrditNalezForm(forms.ModelForm):
         """
         super(PotvrditNalezForm, self).__init__(*args, **kwargs)
         self.fields["evidencni_cislo"].required = True
-        self.fields["predano_organizace"].required = False
+        self.fields["predano_organizace"].required = predano_required
         self.fields["predano"].required = predano_required
         self.fields["pristupnost"].required = True
         self.helper = FormHelper(self)
@@ -265,24 +263,11 @@ class CreateSamostatnyNalezForm(OptimisticLockingMixin, forms.ModelForm):
         self.fields["pocet"].widget.attrs["rows"] = 1
         self.fields["presna_datace"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
-        if user is None:
-            projekt_qs = Projekt.objects.none()
-        elif user.hlavni_role and user.hlavni_role.pk == ROLE_BADATEL_ID:
-            projekt_qs = (
-                Projekt.objects.filter(
-                    typ_projektu=TYP_PROJEKTU_PRUZKUM_ID,
-                    spoluprace_projektu__spolupracovnik=user,
-                    spoluprace_projektu__stav=SPOLUPRACE_AKTIVNI,
-                )
-                .select_related("vedouci_projektu")
-                .distinct()
-            )
-        else:
-            projekt_qs = Projekt.objects.filter(
-                typ_projektu=TYP_PROJEKTU_PRUZKUM_ID,
-                organizace__in=user.moje_spolupracujici_organizace(),
-                stav__in=user.moje_stavy_pruzkumnych_projektu(),
-            ).select_related("vedouci_projektu")
+        projekt_qs = Projekt.get_pruzkum_projekty_pro_uzivatele(user)
+        if getattr(self.instance, "projekt_id", None):
+            projekt_ids = set(projekt_qs.values_list("pk", flat=True))
+            projekt_ids.add(self.instance.projekt_id)
+            projekt_qs = Projekt.objects.filter(pk__in=projekt_ids).select_related("vedouci_projektu")
         self.fields["projekt"] = ProjectModelChoiceField(
             queryset=projekt_qs,
             widget=forms.Select(
