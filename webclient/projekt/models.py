@@ -274,6 +274,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                     typ_projektu=TYP_PROJEKTU_PRUZKUM_ID,
                     spoluprace_projektu__spolupracovnik=user,
                     spoluprace_projektu__stav=SPOLUPRACE_AKTIVNI,
+                    stav__in=user.moje_stavy_pruzkumnych_projektu(),
                 )
                 .select_related("vedouci_projektu")
                 .distinct()
