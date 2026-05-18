@@ -38,6 +38,7 @@ from selenium.common.exceptions import (
     InvalidSessionIdException,
     NoSuchElementException,
     StaleElementReferenceException,
+    TimeoutException,
     WebDriverException,
 )
 from selenium.webdriver.chrome.webdriver import WebDriver as ChromeDriver
@@ -978,6 +979,70 @@ return new Date('2025-06-28T12:00:00Z');}};
         )
         if result:
             raise AssertionError(f"select_nth_selectpicker_option('{field_id}', {index}): {result}")
+
+    def select_dynamic_selectpicker_option(self, field_id, search_text, index=0, timeout=10):
+        """
+        Vybere volbu v selectpickeru podle textu její nabídky.
+
+        Počká (až ``timeout`` sekund) na to, až je v podkladovém ``<select>`` k dispozici
+        alespoň ``index + 1`` neskrytých voleb, jejichž text obsahuje ``search_text``
+        (case-insensitive), a vybere ``index``-tou v pořadí. Vhodné jak pro běžné
+        selectpickery, tak pro varianty, které si volby donačítají ze serveru – v takovém
+        případě musí být načtení voleb vyvoláno před voláním této metody.
+
+        :param field_id: HTML id atribut podkladového ``<select>`` elementu (bez ``#``).
+        :param search_text: Řetězec hledaný v textu volby.
+        :param index: Pořadí shody mezi vyhovujícími volbami (výchozí 0 = první).
+        :param timeout: Maximální doba čekání na načtení voleb v sekundách.
+        """
+
+        def _option_present(driver):
+            return driver.execute_script(
+                """
+                var sel = document.getElementById(arguments[0]);
+                if (!sel) { return false; }
+                var needle = arguments[1].toLowerCase();
+                var matches = Array.from(sel.options).filter(function(o) {
+                    return !o.hidden && o.value !== '' && (o.text || '').toLowerCase().indexOf(needle) !== -1;
+                });
+                return matches.length > arguments[2];
+                """,
+                field_id,
+                search_text,
+                index,
+            )
+
+        try:
+            WebDriverWait(self.driver, timeout).until(_option_present)
+        except TimeoutException:
+            raise AssertionError(
+                f"select_dynamic_selectpicker_option('{field_id}', '{search_text}', {index}): "
+                f"no matching option at index {index} loaded within {timeout}s"
+            )
+
+        result = self.driver.execute_script(
+            """
+            var sel = document.getElementById(arguments[0]);
+            if (!sel) { return 'element not found: ' + arguments[0]; }
+            var needle = arguments[1].toLowerCase();
+            var idx = arguments[2];
+            var matches = Array.from(sel.options).filter(function(o) {
+                return !o.hidden && o.value !== '' && (o.text || '').toLowerCase().indexOf(needle) !== -1;
+            });
+            if (idx >= matches.length) {
+                return 'index ' + idx + ' out of range, ' + matches.length + ' matches for: ' + arguments[1];
+            }
+            $(sel).selectpicker('val', matches[idx].value).trigger('change');
+            return null;
+            """,
+            field_id,
+            search_text,
+            index,
+        )
+        if result:
+            raise AssertionError(
+                f"select_dynamic_selectpicker_option('{field_id}', '{search_text}', {index}): {result}"
+            )
 
     def _select_value_select_picker(self, field_id, selected_value):
         """
