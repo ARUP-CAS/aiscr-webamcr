@@ -711,7 +711,13 @@ def potvrdit(request, ident_cely):
         else:
             logger.info("pas.views.potvrdit.form_invalid", extra={"error": form.errors})
     else:
-        form = PotvrditNalezForm(instance=sn, initial={"old_stav": sn.stav}, predano_hidden=False, prefix="potvrdit")
+        form = PotvrditNalezForm(
+            instance=sn,
+            initial={"old_stav": sn.stav},
+            predano_hidden=False,
+            predano_required=True,
+            prefix="potvrdit",
+        )
     context = {
         "object": sn,
         "form": form,
@@ -1459,11 +1465,11 @@ class EditSpolupraceProjektyView(LoginRequiredMixin, TemplateView):
             messages.add_message(request, messages.SUCCESS, _("pas.views.editSpolupraceProjeky.success"))
         else:
             messages.add_message(request, messages.ERROR, FORM_NOT_VALID)
-        referer = request.META.get("HTTP_REFERER", "")
-        if referer and url_has_allowed_host_and_scheme(
-            referer, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+        next_url = request.POST.get("next") or request.GET.get("next") or request.META.get("HTTP_REFERER", "")
+        if next_url and url_has_allowed_host_and_scheme(
+            next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
         ):
-            redirect_url = referer
+            redirect_url = next_url
         else:
             redirect_url = reverse("pas:spoluprace_list")
         return JsonResponse({"redirect": redirect_url})
