@@ -69,6 +69,8 @@ DATABASES["default"]["TEST"] = {"MIGRATE": False}
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 LOGGING["handlers"]["console"]["level"] = "ERROR"
+LOGGING["filters"]["dropped_test_db_filter"] = {"()": "core.logging_filters.DroppedTestDatabaseFilter"}
+LOGGING["loggers"]["django.request"]["filters"] = ["dropped_test_db_filter"]
 SILENCED_SYSTEM_CHECKS = ["django_recaptcha.recaptcha_test_key_error"]
 AUTO_LOGOUT = {}
 

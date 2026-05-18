@@ -564,11 +564,37 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
             admin_conn.autocommit = True
             admin_cursor = admin_conn.cursor()
-            admin_cursor.execute(
-                f"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity "
-                f"WHERE pg_stat_activity.datname IN ('{db_name}', '{template_name}') AND pid <> pg_backend_pid();"
-            )
-            admin_cursor.execute(f"DROP DATABASE IF EXISTS {db_name};")
+            last_err = None
+            for attempt in range(1, 11):
+                admin_cursor.execute(
+                    f"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity "
+                    f"WHERE pg_stat_activity.datname IN ('{db_name}', '{template_name}') "
+                    f"AND pid <> pg_backend_pid();"
+                )
+                admin_cursor.execute(
+                    f"SELECT pid, application_name, client_addr, state FROM pg_stat_activity "
+                    f"WHERE datname = '{db_name}' AND pid <> pg_backend_pid();"
+                )
+                remaining = admin_cursor.fetchall()
+                if remaining:
+                    logger.warning(
+                        "clone_Fedora_database: k DB %s je stále připojeno %d sezení (pokus %d/10): %s",
+                        db_name,
+                        len(remaining),
+                        attempt,
+                        remaining,
+                    )
+                    time.sleep(0.1)
+                    continue
+                try:
+                    admin_cursor.execute(f"DROP DATABASE IF EXISTS {db_name};")
+                    last_err = None
+                    break
+                except psycopg2.errors.ObjectInUse as err:
+                    last_err = err
+                    logger.warning("clone_Fedora_database: DROP DATABASE selhal (pokus %d/10): %s", attempt, err)
+            if last_err is not None:
+                raise last_err
             admin_cursor.execute(f"CREATE DATABASE {db_name} WITH TEMPLATE {template_name};")
         except Exception as err:
             logger.error(
