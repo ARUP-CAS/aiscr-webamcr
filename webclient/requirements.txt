@@ -25,7 +25,7 @@ django-extensions==4.1
 celery==5.6.3
 django-add-default-value==0.10.0
 redis==7.4.0
-selenium==4.43.0
+selenium==4.44.0
 django-celery-beat==2.9.0
 django-celery-results==2.6.0
 django-prometheus==2.4.1
@@ -52,11 +52,11 @@ uWSGI==2.0.31
 requests==2.34.1
 httpx==0.28.1
 polib==1.2.0
-pytz==2026.1.post1
+pytz==2026.2
 python-dateutil==2.9.0.post0
 setuptools==82.0.1
 Werkzeug==3.1.8
-pyOpenSSL==26.1.0
+pyOpenSSL==26.2.0
 sphinxcontrib-googleanalytics==0.5
 sphinxcontrib-mermaid
 SPARQLWrapper==2.0.0

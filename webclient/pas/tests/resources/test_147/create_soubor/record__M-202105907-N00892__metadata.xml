@@ -12,7 +12,6 @@
     <amcr:datum_nalezu>2023-10-18</amcr:datum_nalezu>
     <amcr:stav>1</amcr:stav>
     <amcr:predano>false</amcr:predano>
-    <amcr:predano_organizace xml:lang="cs" id="ORG-000105">Archeologický ústav AV ČR, Brno, v.v.i. - detašované pracoviště Dolní Dunajovice</amcr:predano_organizace>
     <amcr:geom_system>4326</amcr:geom_system>
     <amcr:pristupnost xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost>
     <amcr:chranene_udaje>
