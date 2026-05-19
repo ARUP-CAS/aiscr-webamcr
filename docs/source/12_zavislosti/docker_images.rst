@@ -58,7 +58,7 @@ Tyto image jsou standardní open-source image používané pro provoz podpůrný
 redis
 ~~~~~
 
-- **Verze:** 8.6.2
+- **Verze:** 8.6.3
 - **Licence:** RSALv2, SSPLv1
 - **Odkaz:** https://github.com/redis/redis
 
@@ -94,7 +94,7 @@ Image pro synchronizaci souborů pomocí rsync. Používá se pro zálohování 
 oliver006/redis_exporter
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** v1.82.0-alpine
+- **Verze:** v1.83.0-alpine
 - **Licence:** MIT license
 - **Odkaz:** https://github.com/oliver006/redis_exporter
 
@@ -130,7 +130,7 @@ Prometheus pro sběr a ukládání metrik. Slouží jako centrální systém pro
 docker.elastic.co/logstash/logstash
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 9.3.3
+- **Verze:** 9.4.1
 - **Licence:** SSPL, Elastic License 2.0, Apache License 2.0
 - **Odkaz:** https://github.com/elastic/logstash
 
@@ -139,7 +139,7 @@ Logstash pro zpracování a transformaci logů. Zajišťuje parsování a indexo
 docker.elastic.co/elasticsearch/elasticsearch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 9.3.3
+- **Verze:** 9.4.1
 - **Licence:** SSPL, Elastic License 2.0, Apache License 2.0
 - **Odkaz:** https://github.com/elastic/elasticsearch
 
@@ -148,7 +148,7 @@ Elasticsearch pro fulltextové vyhledávání a analýzu logů. Ukládá a index
 docker.elastic.co/kibana/kibana
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 9.3.3
+- **Verze:** 9.4.1
 - **Licence:** SSPL, Elastic License 2.0, Apache License 2.0
 - **Odkaz:** https://github.com/elastic/kibana
 

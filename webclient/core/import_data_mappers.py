@@ -219,15 +219,22 @@ class ImportDataMissingReferencedValueError(ImportDataError):
         self.missing_model_name = missing_model_name
         self.missing_field_name = missing_field_name
         super().__init__(
-            f'{_("core_admin.ImportDataMissingReferencedValueError.message.part_1")} '
-            + f'{missing_value_id} {_("core_admin.ImportDataMissingReferencedValueError.message.part_2")} '
+            _("core_admin.ImportDataMissingReferencedValueError.message.part_1")
+            + " "
+            + str(missing_value_id)
+            + " "
+            + _("core_admin.ImportDataMissingReferencedValueError.message.part_2")
+            + " "
             + (
-                f'{missing_model_name} {_("core_admin.ImportDataMissingReferencedValueError.message.part_3")} '
+                str(missing_model_name)
+                + " "
+                + _("core_admin.ImportDataMissingReferencedValueError.message.part_3")
+                + " "
                 if missing_model_name
                 else ""
             )
             + (
-                f'{_("core_admin.ImportDataMissingReferencedValueError.message.part_4")} {missing_field_name}'
+                _("core_admin.ImportDataMissingReferencedValueError.message.part_4") + " " + str(missing_field_name)
                 if missing_field_name
                 else ""
             )
@@ -592,12 +599,14 @@ class BooleanImportField(BaseImportField):
 
         if isinstance(value, bool):
             return value
-        if isinstance(value, str):
-            if value.lower() in ("true", "1"):
-                return True
-            elif value.lower() in ("false", "0"):
-                return False
-        raise ImportDataError(f"{_('core_admin.BooleanImportField.message.invalid_boolean_value')}: {value}")
+        if isinstance(value, bytes):
+            value = value.decode("utf-8")
+        normalized_value = str(value).strip().lower()
+        if normalized_value in ("true", "1", "-1"):
+            return True
+        if normalized_value in ("false", "0"):
+            return False
+        raise ImportDataError(_("core_admin.BooleanImportField.message.invalid_boolean_value") + ": " + str(value))
 
 
 class DateImportField(BaseImportField):
@@ -979,6 +988,8 @@ class VazbaLookupImportField(LookupImportField):
 
             :raises ImportDataMissingReferencedValueError: Vyvolá se v konkrétních chybových větvích této funkce.
         """
+        if value is None:
+            return None
         try:
             record = get_record_from_ident(value)
         except Exception:
@@ -989,7 +1000,12 @@ class VazbaLookupImportField(LookupImportField):
                     self._instance_value = record
                     return value
                 elif DokumentCast in self.lookup_model_class_list:
-                    self._instance_value = DokumentCast.objects.get(ident_cely=value)
+                    dokument_cast = DokumentCast.objects.get(ident_cely=value)
+                    self._instance_value = (
+                        getattr(dokument_cast, self.read_field_name)
+                        if self.read_field_name and hasattr(dokument_cast, self.read_field_name)
+                        else dokument_cast
+                    )
                     return value
                 elif DokumentacniJednotka in self.lookup_model_class_list:
                     self._instance_value = DokumentacniJednotka.objects.get(ident_cely=value)
@@ -3284,6 +3300,7 @@ class KomponentaMapper(ImportModelMapper):
     """Mapovač pro model Komponenta."""
 
     fields = ("ident_cely", "jistota", "presna_datace", "poznamka")
+    column_to_field_mapping = {"vazba": "komponenta_vazby"}
     model_class = Komponenta
     require_primary_key_value = True
 
