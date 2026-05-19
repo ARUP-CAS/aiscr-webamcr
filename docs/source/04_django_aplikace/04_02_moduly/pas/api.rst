@@ -762,7 +762,9 @@ Třídy
       :param user: Uživatel provádějící import.
       :param data: Data jednoho importovaného záznamu.
 
-      :return: Vrací ``True`` pokud má uživatel všechna vyžadovaná oprávnění.
+      :return: Vrací ``True`` pokud má uživatel oprávnění ``pas_zapsat_do_projektu``
+               nebo ``spoluprace_edit_projekty`` pro daný projekt a stav importovaného
+               záznamu odpovídá roli uživatele (badatel max. stav 1, archeolog a výše max. stav 3).
 
    .. py:method:: _create_import_history_records()
 

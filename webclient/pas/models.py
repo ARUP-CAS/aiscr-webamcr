@@ -279,25 +279,31 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         resp = [str(x) for x in resp]
         return resp
 
-    def check_pred_potvrzenim(self):
+    def check_pred_potvrzenim(self, skip_soubory_check: bool = False):
         """
         Ověří pred potvrzenim.
 
+        :param skip_soubory_check: Pokud ``True``, kontrola přítomnosti souborů se přeskočí,
+            což prakticky způsobí, že metoda neprovede žádnou kontrolu. Parametr je přidán
+            pro zachování konzistence s :meth:`check_pred_odeslanim` a může být užitečný
+            v budoucnu.
         :return: Vrací proměnná ``resp``.
         """
         resp = []
-        if not self.soubory.soubory.exists():
+        if not skip_soubory_check and not self.soubory.soubory.exists():
             resp.append(_("pas.models.samostatnyNalez.checkPredPotvrzenim.soubory.text"))
         resp = [str(x) for x in resp]
         return resp
 
-    def check_pred_odeslanim(self):
+    def check_pred_odeslanim(self, skip_soubory_check: bool = False):
         """
         Metoda na kontrolu prerekvizit pred posunem do stavu odeslaný:
 
         polia: obdobi, datum_nalezu, lokalizace, okolnosti, specifikace, druh_nalezu, nalezce, geom, hloubka, katastr jsou vyplněna.
 
-        Samostaný nález má připojený alespoň jeden soubor.
+        Samostaný nález má připojený alespoň jeden soubor (pokud ``skip_soubory_check`` není ``True``).
+
+        :param skip_soubory_check: Pokud ``True``, kontrola přítomnosti souborů se přeskočí.
 
             :return: Vrací proměnná ``resp``.
         """
@@ -322,7 +328,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
             resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.hloubka.text"))
         if not self.katastr:
             resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.katastr.text"))
-        if not self.soubory.soubory.exists():
+        if not skip_soubory_check and not self.soubory.soubory.exists():
             resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.soubory.text"))
         resp = [str(x) for x in resp]
         return resp
