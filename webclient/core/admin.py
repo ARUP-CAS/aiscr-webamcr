@@ -25,7 +25,7 @@ from .connectors import RedisConnector
 from .constants import ROLE_NASTAVENI_ODSTAVKY
 from .exceptions import WrongCSVError, WrongSheetError
 from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
-from .models import OdstavkaSystemu, Permissions, PermissionsSkip
+from .models import ApiRequestLog, OdstavkaSystemu, Permissions, PermissionsSkip
 from .setting_models import CustomAdminSettings
 
 logger = logging.getLogger(__name__)
@@ -371,6 +371,70 @@ class PermissionAdmin(admin.ModelAdmin):
             "core/permission_import_success.html",
             payload,
         )
+
+
+@admin.register(ApiRequestLog)
+class ApiRequestLogAdmin(admin.ModelAdmin):
+    """Třída admin panelu pro zobrazení logů API požadavků."""
+
+    list_display = [
+        "received_at",
+        "user",
+        "client_ip",
+        "request_target",
+        "status",
+        "ident_cely",
+        "filename",
+        "file_size",
+        "finished_at",
+    ]
+    list_filter = ["status", "request_target"]
+    search_fields = ["user__email", "client_ip", "ident_cely"]
+    readonly_fields = [
+        "user",
+        "client_ip",
+        "received_at",
+        "finished_at",
+        "request_target",
+        "filename",
+        "file_size",
+        "status",
+        "ident_cely",
+        "samostatny_nalez",
+        "errors",
+    ]
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        """
+        Zakáže ruční vytváření záznamů — logy se vytvářejí pouze automaticky.
+
+        :param request: HTTP požadavek od klienta.
+
+        :return: Vždy ``False``.
+        """
+        return False
+
+    def has_change_permission(self, request: HttpRequest, obj=None) -> bool:
+        """
+        Zakáže editaci záznamů — logy jsou pouze pro čtení.
+
+        :param request: HTTP požadavek od klienta.
+        :param obj: Volitelný objekt záznamu.
+
+        :return: Vždy ``False``.
+        """
+        return False
+
+    def has_delete_permission(self, request: HttpRequest, obj=None) -> bool:
+        """
+        Zakáže mazání záznamů — logy jsou auditní záznamy určené k archivaci.
+
+        :param request: HTTP požadavek od klienta.
+        :param obj: Volitelný objekt záznamu.
+
+        :return: Vždy ``False``.
+        """
+        return False
 
 
 @admin.register(PermissionsSkip)

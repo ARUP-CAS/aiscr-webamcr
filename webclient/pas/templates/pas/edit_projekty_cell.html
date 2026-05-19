@@ -1,0 +1,8 @@
+{% load i18n %}
+<div class="container pl-0">
+  <span class="badge-span">
+    <button id="spoluprace-edit-projekty-{{record.id}}" class="btn btn-sm btn-spoluprace-vyber spoluprace-edit-projekty-btn m-0" style="line-height: 1" type="button" name="button" href="{% url 'pas:spoluprace_edit_projekty' record.id %}?next={{ request.get_full_path|urlencode }}">
+      {% trans 'pas.templates.edit_projekty_cell.editovat' %}
+    </button>
+  </span>
+</div>

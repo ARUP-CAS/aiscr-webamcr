@@ -34,7 +34,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``__init__()``.
       :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
       :param predano_required: Parametr ``predano_required`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param predano_hidden: Parametr ``predano_hidden`` ovlivňuje větvení podmínek.
+      :param predano_hidden: Parametr ``predano_hidden`` ovlivňuje větvení podmínek; pokud je ``True``, pole ``predano_organizace`` se nezahrne do layoutu formuláře.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
@@ -87,6 +87,21 @@ Třídy
       Inicializuje instanci třídy.
 
       :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
+
+.. py:class:: EditSpolupraceProjektyForm
+
+   Formulář pro editaci přiřazených projektů ke spolupráci.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param vedouci_organizace: Organizace vedoucího spolupráce pro filtrování dostupných projektů.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 

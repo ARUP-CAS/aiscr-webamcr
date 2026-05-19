@@ -50,7 +50,7 @@ services:
 
   redis:
     build: ./redis
-    image: redis:8.6.2
+    image: redis:8.6.3
     ports:
       - "6379:6379"
     secrets:
@@ -63,7 +63,7 @@ services:
       - redis_data:/data
 
   redis-exporter:
-    image: oliver006/redis_exporter:v1.82.0-alpine
+    image: oliver006/redis_exporter:v1.83.0-alpine
     ports:
       - "9121:9121"
     secrets:
@@ -174,7 +174,7 @@ services:
       - "--web.enable-admin-api"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:9.3.3
+    image: docker.elastic.co/logstash/logstash:9.4.1
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
     volumes:
@@ -190,7 +190,7 @@ services:
       - logstash_elastic_host
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.3
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.4.1
     hostname: elasticsearch
     environment:
       - discovery.type=single-node
@@ -216,7 +216,7 @@ services:
           memory: "2G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:9.3.3
+    image: docker.elastic.co/kibana/kibana:9.4.1
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200

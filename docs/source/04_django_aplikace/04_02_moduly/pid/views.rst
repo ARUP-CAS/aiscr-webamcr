@@ -44,6 +44,8 @@ Třídy
 
       Vrací JSON odpověď s autocomplete výsledky.
 
+      Při dotazu tvořeném jen mezerami vrátí prázdný seznam výsledků.
+
       :param request: HTTP požadavek ze strany klienta.
       :param args: Poziční argumenty z URL.
       :param kwargs: Pojmenované argumenty z URL.
@@ -69,40 +71,57 @@ Třídy
 
    **Metody:**
 
-   .. py:method:: _api_call_data_cite()
+   .. py:method:: _datacite_token_for_quoted_lucene()
 
-      Vyhledá DOI v DataCite API.
+      Escapuje znaky v tokenu vkládaném do Lucene fráze v uvozovkách.
 
-      :param q: Vyhledávací dotaz (DOI).
-      :return: Seznam [DOI, název] párů.
+      :param token: Část uživatelského dotazu.
+      :return: Řetězec bezpečný pro vložení do ``"...*token*..."``.
+
+   .. py:method:: _datacite_record_label()
+
+      Vrátí zobrazený název záznamu DataCite nebo ID záznamu.
+
+      Ošetřuje záznamy bez ``attributes``, bez ``titles`` nebo s prázdným seznamem titulků
+      a nekanonické typy polí v odpovědi API.
+
+      :param record: Položka z pole ``data`` odpovědi API.
+      :return: Titulek, případně DOI z ``id``; prázdný řetězec, pokud nelze nic odvodit.
+
+   .. py:method:: _crossref_item_display_title()
+
+      Vrátí zobrazený název z položky odpovědi CrossRef ``/works`` (objekt v ``items``).
+
+      :param item: Slovník s poli ``title`` a ``DOI`` dle API (DOI se v odpovědi předpokládá vždy).
+      :return: První textový titulek, jinak řetězec DOI.
 
    .. py:method:: _api_call_cross_ref_doi()
 
       Vyhledá DOI v CrossRef API pomocí přímého DOI.
 
+      U objektu ``message`` (jedna práce i položky ve výsledném seznamu) se předpokládá vždy pole ``DOI``.
+
       :param q: Vyhledávací dotaz (DOI).
-      :return: Seznam [DOI, název] párů.
-
-   .. py:method:: _api_call_cross_ref_title()
-
-      Vyhledá DOI v CrossRef API pomocí názvu publikace.
-
-      :param q: Vyhledávací dotaz (název publikace).
       :return: Seznam [DOI, název] párů.
 
    .. py:method:: _doi_item_exists()
 
       Ověří existenci DOI pomocí HTTP HEAD požadavku.
 
-      :param doi: DOI identifikátor.
+      :param doi: Řetězec DOI předaný z ``api_call`` po shodě vstupu s ``CROSSREF_DOI_REGEX``.
       :return: Seznam [DOI, DOI] pokud existuje, jinak prázdný seznam.
 
    .. py:method:: api_call()
 
       Vyhledá DOI v CrossRef a DataCite API.
 
+      Dotaz je na začátku ořezán funkcí ``str.strip()``; prázdný řetězec vrátí prázdný seznam
+      bez volání externích služeb. Ověření existence přes ``doi.org`` (``_doi_item_exists``)
+      proběhne jen pro vstup odpovídající ``CROSSREF_DOI_REGEX``.
+
       :param q: Vyhledávací dotaz.
-      :param use_cache: Zda používat cache.
+      :param use_cache: Parametr se kvůli shodné signatuře s ``ApiView.api_call`` předává z
+          ``PidAutocompleteField``, ale u této třídy se **nepoužívá** (mezipaměť Redis se nečte ani neukládá).
       :return: Seznam [DOI, název] párů.
 
 

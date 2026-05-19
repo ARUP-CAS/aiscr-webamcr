@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/"
+           xmlns:gml="http://www.opengis.net/gml/3.2"
+           xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd
+                               http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd">
+  <amcr:samostatny_nalez>
+    <amcr:ident_cely>{IDENT_CELY}</amcr:ident_cely>
+    <amcr:projekt id="{PROJEKT_IDENT}">{PROJEKT_IDENT}</amcr:projekt>
+    <amcr:hloubka>42</amcr:hloubka>
+    <amcr:presna_datace>raný středověk</amcr:presna_datace>
+    <amcr:pocet>3</amcr:pocet>
+    <amcr:poznamka>testovací poznámka</amcr:poznamka>
+    <amcr:datum_nalezu>2024-06-01</amcr:datum_nalezu>
+    <amcr:stav>3</amcr:stav>
+    <amcr:geom_system>4326</amcr:geom_system>
+    <amcr:pristupnost id="{PRISTUPNOST_IDENT}" xml:lang="cs">{PRISTUPNOST_IDENT}</amcr:pristupnost>
+    <amcr:chranene_udaje>
+      <amcr:lokalizace>u lesa</amcr:lokalizace>
+      <amcr:geom_wkt EPSG="4326">POINT(14.42 50.08)</amcr:geom_wkt>
+    </amcr:chranene_udaje>
+  </amcr:samostatny_nalez>
+</amcr:amcr>

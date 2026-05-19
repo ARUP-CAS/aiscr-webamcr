@@ -94,6 +94,8 @@ Třídy
 
       Provádí operaci add ownership lookup.
 
+      Pro vlastnictví ``ours`` vrací podmínku pokrývající jak organizaci projektu (``projekt__organizace``), tak cílovou organizaci nálezu (``predano_organizace``).
+
       :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
       :param qs: Parametr ``qs`` slouží jako vstup pro logiku funkce ``add_ownership_lookup``.
 
@@ -177,7 +179,7 @@ Třídy
 
    .. py:method:: get_table_kwargs()
 
-      Vrací table kwargs.
+      Vrací table kwargs s případným vyloučením sloupce ``smazani`` u neadminů a předáním uživatele.
 
       :return: Vrací slovník.
 
@@ -241,6 +243,48 @@ Třídy
       :return: Vrací výsledek volání ``redirect()``.
 
 
+.. py:class:: EditSpolupraceProjektyView
+
+   Pohled pro editaci projektů přiřazených ke spolupráci v modálním dialogu.
+
+   **Metody:**
+
+   .. py:method:: get_object()
+
+      Vrací objekt spolupráce.
+
+      :return: Vrací výsledek volání ``get_object_or_404()``.
+
+   .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get_context_data``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+
+      :return: Vrací proměnná ``context``.
+
+   .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Parametr ``request`` předává se do volání ``add_message()``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
+
+   .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Parametr ``request`` předává se do volání ``EditSpolupraceProjektyForm()``, pracuje se s atributy ``POST``, ``user``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``.
+
+
 .. py:class:: ProjektPasTableView
 
    Třída pohledu pro zobrazení řádku tabulky samostatných nálezů.
@@ -300,6 +344,8 @@ Funkce
 
    Funkce pohledu pro editaci uložení samostatného nálezu pomocí modalu.
 
+   Pole ``predano_organizace`` je zobrazeno jako editovatelné; archeolog může zvolit cílovou organizaci (muzeum) nezávisle na organizaci projektu.
+
    :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``PotvrditNalezForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
@@ -326,6 +372,8 @@ Funkce
 .. py:function:: potvrdit(request, ident_cely)
 
    Funkce pohledu pro potvrzení samostatného nálezu pomocí modalu.
+
+   Při potvrzení zobrazí formulář včetně pole ``predano_organizace``, které archeolog může vyplnit výběrem cílové organizace. Hodnota není odvozena od organizace projektu, ale uložena přímo z formuláře.
 
    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``session``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.

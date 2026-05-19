@@ -1,11 +1,13 @@
 import logging
 
 import django_tables2 as tables
+from core.constants import ROLE_BADATEL_ID
 from core.models import Permissions as p
 from core.models import Soubor, check_permissions
 from core.utils import SearchTable
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django_tables2.utils import A
 
@@ -224,6 +226,28 @@ class smazatColumn(tables.TemplateColumn):
             return format_html("")
 
 
+class EditProjektyColumn(tables.TemplateColumn):
+    """Implementuje komponentu ``EditProjektyColumn`` pro editaci projektů spolupráce."""
+
+    def render(self, record, table, value, bound_column, **kwargs):
+        """
+        Vyrenderuje hodnotu v aplikaci.
+
+        :param record: Parametr ``record`` předává se do volání ``check_permissions()``, ``render()``, pracuje se s atributy ``id``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param table: Parametr ``table`` předává se do volání ``hasattr()``, ``check_permissions()``, pracuje se s atributy ``request``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param value: Parametr ``value`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+        :param bound_column: Parametr ``bound_column`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``render()``, výsledek volání ``format_html()``.
+        """
+        if not hasattr(table, "request"):
+            return ""
+        if check_permissions(p.actionChoices.spoluprace_edit_projekty, table.request.user, record.id):
+            return super().render(record, table, value, bound_column, **kwargs)
+        return ""
+
+
 class UzivatelSpolupraceTable(SearchTable):
     """Definuje tabulku uživatelských spoluprací pro přehled i export."""
 
@@ -261,6 +285,13 @@ class UzivatelSpolupraceTable(SearchTable):
         orderable=False,
         verbose_name=_("pas.tables.spolupraceTable.historie.label"),
     )
+    projekty = tables.Column(
+        verbose_name=_("pas.tables.spolupraceTable.projekty.label"),
+        orderable=False,
+        default="",
+        attrs={"th": {"style": "color:white"}, "td": {"data-no-tooltip": "true"}},
+        exclude_from_export=True,
+    )
     aktivace = AktivaceDeaktivaceColumn(
         attrs={
             "th": {"class": "orderable ", "style": "color:#fff"},
@@ -268,6 +299,16 @@ class UzivatelSpolupraceTable(SearchTable):
         template_name="pas/aktivace_deaktivace_cell.html",
         orderable=False,
         verbose_name=_("pas.tables.spolupraceTable.aktivace.label"),
+    )
+    edit_projekty = EditProjektyColumn(
+        attrs={
+            "th": {"class": "orderable ", "style": "color:#fff"},
+            "td": {"data-no-tooltip": "true"},
+        },
+        template_name="pas/edit_projekty_cell.html",
+        exclude_from_export=True,
+        orderable=False,
+        verbose_name=_("pas.tables.spolupraceTable.editProjeky.label"),
     )
     smazani = smazatColumn(
         attrs={
@@ -290,6 +331,7 @@ class UzivatelSpolupraceTable(SearchTable):
             "organizace_vedouci",
             "spolupracovnik",
             "organizace_spolupracovnik",
+            "projekty",
         )
         sequence = (
             "stav",
@@ -297,19 +339,47 @@ class UzivatelSpolupraceTable(SearchTable):
             "organizace_vedouci",
             "spolupracovnik",
             "organizace_spolupracovnik",
+            "projekty",
             "historie",
             "aktivace",
+            "edit_projekty",
             "smazani",
         )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         """
         Inicializuje instanci třídy.
 
         :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param user: Přihlášený uživatel; pro roli Badatel se sloupec ``edit_projekty`` z tabulky odstraní.
         :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
+        if user is not None and user.is_authenticated and user.hlavni_role.pk == ROLE_BADATEL_ID:
+            kwargs["exclude"] = (*kwargs.get("exclude", ()), "edit_projekty")
         super(UzivatelSpolupraceTable, self).__init__(*args, **kwargs)
+
+    def render_projekty(self, value, record):
+        """
+        Vyrenderuje seznam projektů přiřazených ke spolupráci jako klikatelné odkazy.
+
+        :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_projekty``.
+        :param record: Parametr ``record`` předává se do volání ``record.projekty.all()``.
+
+            :return: Vrací výsledek volání ``format_html()``.
+        """
+        projekt_list = record.projekty.all()
+        if not projekt_list:
+            return format_html('<span class="text-muted">&mdash;</span>')
+        tooltip = ", ".join(proj.ident_cely for proj in projekt_list)
+        links = [
+            format_html('<a href="{}">{}</a>', reverse("projekt:detail", args=[proj.ident_cely]), proj.ident_cely)
+            for proj in projekt_list
+        ]
+        return format_html(
+            '<div rel="tooltip" title="{}" style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis">{}</div>',
+            tooltip,
+            mark_safe(", ".join(str(link) for link in links)),
+        )
 
     def get_all_idents(self):
         """

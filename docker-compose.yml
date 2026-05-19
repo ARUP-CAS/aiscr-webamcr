@@ -63,7 +63,7 @@ services:
       start_period: 30s
   
   redis-exporter:
-    image: oliver006/redis_exporter:v1.82.0-alpine
+    image: oliver006/redis_exporter:v1.83.0-alpine
     ports:
       - "9121:9121"
     secrets:
@@ -182,7 +182,7 @@ services:
       - "--web.enable-admin-api"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:9.3.3
+    image: docker.elastic.co/logstash/logstash:9.4.1
     restart: always
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
@@ -197,15 +197,21 @@ services:
       - logstash_elastic_host
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.3
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.4.1
     hostname: elasticsearch
     restart: always
     environment:
+      # ES 7.11+ alokuje JVM heap automaticky na ~50 % memory limitu kontejneru;
+      # ruční ES_JAVA_OPTS se proto neuvádí.
       - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms750m -Xmx750m
       - http.host=0.0.0.0
       - XPACK_MONITORING_ENABLED=false
       - ELASTIC_PASSWORD=elastic_pass
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     volumes:
       - /opt/docker_logs/elastic_data:/usr/share/elasticsearch/data
       - /opt/docker_logs/elastic_backup:/usr/share/elasticsearch/backup
@@ -219,11 +225,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1"
-          memory: "2G"
+          cpus: "2"
+          memory: "4G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:9.3.3
+    image: docker.elastic.co/kibana/kibana:9.4.1
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200

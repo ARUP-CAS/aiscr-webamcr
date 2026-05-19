@@ -751,9 +751,21 @@ PAS
    * - ``spoluprace_smazani``
      - ``spoluprace/smazat/<int:pk>``
      - ``views.smazat_spolupraci``
+   * - ``spoluprace_edit_projekty``
+     - ``spoluprace/projekty/<int:pk>``
+     - ``views.EditSpolupraceProjektyView.as_view()``
    * - ``get_projekt_pas_table``
      - ``projekt-pas-tabulka/<str:ident_cely>``
      - ``ProjektPasTableView.as_view()``
+   * - ``api-import-xml``
+     - ``api/import-xml``
+     - ``SamostatnyNalezXmlImportView.as_view()``
+   * - ``api-patch-evidencni-cislo``
+     - ``api/nalez/<str:ident_cely>/evidencni-cislo``
+     - ``SamostatnyNalezEvidencniCisloPatchView.as_view()``
+   * - ``api-upload-foto``
+     - ``api/nalez/<str:ident_cely>/upload-foto``
+     - ``SamostatnyNalezFotografieUploadView.as_view()``
 
 PIAN
 ----

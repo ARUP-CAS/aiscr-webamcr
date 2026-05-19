@@ -242,6 +242,8 @@ Třídy
       :param user: Uživatel, pro kterého se kontroluje oprávnění.
       :param ident: Identifikátor archeologického záznamu (např. C-XX-YYYYNNNNN).
       :param typ: Typ objektu, pro který se kontroluje oprávnění (např. projekt, lokalita).
+      :param skip_status: Pokud ``True``, přeskočí stavovou podmínku oprávnění a vyhodnotí pouze
+          základ, vlastnictví a přístupnost.
       :return: ``True`` pokud má uživatel oprávnění, ``False`` jinak.
 
    .. py:method:: check_base()
@@ -292,6 +294,11 @@ Třídy
    Implementuje komponentu ``PermissionsSkip`` v rámci aplikace.
 
 
+.. py:class:: ApiRequestLog
+
+   Zaznamenává každý požadavek na API včetně stavu a výsledku.
+
+
 Funkce
 ------
 
@@ -303,12 +310,13 @@ Funkce
    :param filename: Název souboru.
    :return: Cesta pro uložení souboru.
 
-.. py:function:: check_permissions(action, user, ident)
+.. py:function:: check_permissions(action, user, ident, skip_status)
 
    Ověří permissions. v aplikaci.
 
    :param action: Identifikátor akce, která se má provést.
    :param user: Parametr ``user`` se předává do volání ``filter()``, ``append()``, pracuje se s atributy ``hlavni_role``.
    :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
+   :param skip_status: Pokud ``True``, přeskočí stavovou podmínku při vyhodnocení konkrétního oprávnění.
 
    :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
