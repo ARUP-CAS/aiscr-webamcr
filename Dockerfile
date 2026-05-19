@@ -29,7 +29,8 @@ RUN echo $TZ > /etc/timezone && \
         jq \
         postgresql-client \
         libmagic1 \
-        redis-tools && \
+        redis-tools \
+        libcrypt-dev && \
     locale-gen cs_CZ.utf8 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

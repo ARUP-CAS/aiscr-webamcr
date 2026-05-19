@@ -28,7 +28,8 @@ RUN echo $TZ > /etc/timezone && \
         poppler-utils \
         unrar \
         redis-tools \
-        libmagic1 && \
+        libmagic1 \
+        libcrypt-dev && \
     locale-gen cs_CZ.utf8 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
