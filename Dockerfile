@@ -5,7 +5,7 @@ COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci
 
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.4 AS python-builder
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.13.0 AS python-builder
 
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ="Europe/Prague"
@@ -29,7 +29,8 @@ RUN echo $TZ > /etc/timezone && \
         jq \
         postgresql-client \
         libmagic1 \
-        redis-tools && \
+        redis-tools \
+        libcrypt-dev && \
     locale-gen cs_CZ.utf8 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -49,7 +50,7 @@ WORKDIR /code
 
 RUN python3 -m compileall -b /code
 
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.4 AS runtime
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.13.0 AS runtime
 
 ARG VERSION_APP
 ARG TAG_APP

@@ -5,7 +5,7 @@ COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci
 
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.4 AS python-builder
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.13.0 AS python-builder
 
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ="Europe/Prague"
@@ -28,7 +28,8 @@ RUN echo $TZ > /etc/timezone && \
         poppler-utils \
         unrar \
         redis-tools \
-        libmagic1 && \
+        libmagic1 \
+        libcrypt-dev && \
     locale-gen cs_CZ.utf8 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -37,7 +38,7 @@ COPY ./webclient/requirements.txt /tmp/requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt
 
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.4 AS runtime
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.13.0 AS runtime
 
 ARG VERSION_APP
 ARG TAG_APP
