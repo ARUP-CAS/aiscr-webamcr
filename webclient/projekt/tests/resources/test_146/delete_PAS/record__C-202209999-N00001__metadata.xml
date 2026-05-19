@@ -6,7 +6,6 @@
     <amcr:projekt id="C-202209999">C-202209999</amcr:projekt>
     <amcr:stav>1</amcr:stav>
     <amcr:predano>false</amcr:predano>
-    <amcr:predano_organizace xml:lang="cs" id="ORG-000126">Městské muzeum v Čelákovicích, p.o.</amcr:predano_organizace>
     <amcr:geom_system>4326</amcr:geom_system>
     <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
     <amcr:chranene_udaje/>

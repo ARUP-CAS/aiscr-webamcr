@@ -5,8 +5,11 @@ import logging
 import os
 import os.path
 import re
+import shutil
 import time
+import zipfile
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from io import BytesIO
 from typing import Optional
@@ -35,6 +38,7 @@ from selenium.common.exceptions import (
     InvalidSessionIdException,
     NoSuchElementException,
     StaleElementReferenceException,
+    TimeoutException,
     WebDriverException,
 )
 from selenium.webdriver.chrome.webdriver import WebDriver as ChromeDriver
@@ -213,8 +217,21 @@ class BaseSeleniumTestClass(LiveServerTestCase):
     def setUp(self):
         """Provádí operaci setUp."""
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.setup.start")
-        self.wipe_Fedora()
-        self.clone_Database()
+        # Pojistku voláme před paralelním blokem — clone_Fedora_database termuje fcrepo DB
+        # connections, což může souběžné HEAD volání vrátit 500 místo očekávaného 404.
+        self._assert_test_fedora()
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            futures = [
+                executor.submit(self.reset_Fedora_ocfl),
+                executor.submit(self.clone_Database),
+                executor.submit(self.clone_Fedora_database),
+            ]
+            for future in futures:
+                future.result()
+        # Django connection je thread-local — connection.connect() v worker threadu nestačí,
+        # main thread by jinak používal staré spojení na DROPnutou DB.
+        connection.close()
+        self._invalidate_Fedora_caches()
 
         # options = webdriver.FirefoxOptions()
         options = webdriver.ChromeOptions()
@@ -409,77 +426,6 @@ class BaseSeleniumTestClass(LiveServerTestCase):
     api_url = f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
     auth = requests.auth.HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
 
-    def purge_container(self, container_path):
-        """
-        Provádí operaci purge container.
-
-        :param container_path: Parametr ``container_path`` se předává do volání ``delete()``.
-        """
-        response = requests.delete(container_path + "/fcr:tombstone", auth=self.auth)
-        if not str(response.status_code).startswith("2"):
-            logger.error(
-                "core.tests.test_selenium.BaseSeleniumTestClass.purge_container.failed",
-                extra={"response": response.text},
-            )
-
-    def delete_container(self, container_path):
-        """
-        Odstraní zadaný kontejner ve Fedora repozitáři pro účely testu.
-
-        :param container_path: Parametr ``container_path`` se předává do volání ``delete()``.
-        """
-        response = requests.delete(container_path, auth=self.auth)
-        if not str(response.status_code).startswith("2"):
-            logger.error(
-                "core.tests.test_selenium.BaseSeleniumTestClass.delete_container.failed",
-                extra={"response": response.text},
-            )
-
-    def wipe_Fedora_dir(self, name, deep):
-        """
-        Vymaže kontejner v repositáři.
-
-        :param name: Parametr ``name`` předává se do volání ``get_container_content()``.
-        :param deep: Parametr ``deep`` předává se do volání ``wipe_Fedora_dir()``, ovlivňuje větvení podmínek.
-        """
-        mem = self.get_container_content(name)
-        for item in mem:
-            self.wipe_Fedora_dir(item, deep + 1)
-            if deep > 1:
-                self.delete_container(item)
-
-    def find_files(self, directory, filename):
-        """
-        Provádí operaci find files.
-
-        :param directory: Číselná hodnota ``directory`` použitá při výpočtu nebo transformaci.
-        :param filename: Parametr ``filename`` se předává do volání ``append()``, ``join()``, ovlivňuje větvení podmínek.
-
-            :return: Vrací proměnná ``matches``.
-        """
-        matches = []
-        for root, _, files in os.walk(directory):
-            if filename in files:
-                matches.append(os.path.join(root, filename))
-        return matches
-
-    def delete_tombstones(self, url, name, dir):
-        """
-        Odstraní tombstone záznamy vytvořené během testovacího běhu.
-
-        :param url: Parametr ``url`` se předává do volání ``purge_container()``.
-        :param name: Parametr ``name`` ovlivňuje větvení podmínek.
-        :param dir: Parametr ``dir`` se předává do volání ``find_files()``.
-        """
-        results = self.find_files(dir, "fcr-root.json")
-        for res in results:
-            if os.path.isfile(res):
-                with open(res, "r", encoding="utf-8") as file:
-                    data = json.load(file)
-                if data["deleted"] is True and name in data["id"]:
-                    matches = data["id"][data["id"].find("/") + 1 :]
-                    self.purge_container(f"{url}{matches}")
-
     def save_fedora_change(self, time, path):
         """
         Uloží fedora change.
@@ -556,11 +502,111 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
             self.assertIn(response.status_code, [410, 404])
 
-    def wipe_Fedora(self):
-        """Provádí operaci wipe Fedora."""
-        self.wipe_Fedora_dir(f"{self.api_url}{settings.FEDORA_SERVER_NAME}/model", 0)
-        self.wipe_Fedora_dir(f"{self.api_url}{settings.FEDORA_SERVER_NAME}/record", 2)
-        self.delete_tombstones(self.api_url, settings.FEDORA_SERVER_NAME, settings.FEDORA_PATH)
+    def reset_Fedora_ocfl(self):
+        """Smaže obsah FEDORA_PATH/ocfl-root a rozbalí výchozí stav z ocfl-root.zip.
+
+        Předpokládá, že volající už ověřil cílovou Fedoru přes _assert_test_fedora.
+        Invalidaci Fedora cache je nutné zavolat samostatně až po dokončení všech klonů
+        (OCFL souborů + Fedora DB + Django DB), aby cache nezachytila smíšený stav.
+        """
+        target_dir = os.path.join(settings.FEDORA_PATH, "ocfl-root")
+        if os.path.isdir(target_dir):
+            for entry in os.listdir(target_dir):
+                entry_path = os.path.join(target_dir, entry)
+                if os.path.isdir(entry_path) and not os.path.islink(entry_path):
+                    shutil.rmtree(entry_path)
+                else:
+                    os.remove(entry_path)
+        else:
+            os.makedirs(target_dir, exist_ok=True)
+        zip_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources", "ocfl-root.zip")
+        with zipfile.ZipFile(zip_path, "r") as zf:
+            zf.extractall(settings.FEDORA_PATH)
+
+    def _assert_test_fedora(self):
+        """Pojistka proti smazání produkční Fedory: ověří, že běží testová instance."""
+        test_url = f"{self.api_url}AMCR-selenium-test"
+        prod_url = f"{self.api_url}AMCR"
+        test_resp = requests.head(test_url, auth=self.auth)
+        if test_resp.status_code != 200:
+            raise RuntimeError(
+                f"reset_Fedora_ocfl odmítnut: {test_url} vrátilo {test_resp.status_code}, "
+                "testová Fedora instance nebyla nalezena."
+            )
+        prod_resp = requests.head(prod_url, auth=self.auth)
+        if prod_resp.status_code != 404:
+            raise RuntimeError(
+                f"reset_Fedora_ocfl odmítnut: {prod_url} vrátilo {prod_resp.status_code} "
+                "(očekáváno 404) — vypadá to jako produkční Fedora, mazání zastaveno."
+            )
+
+    def _invalidate_Fedora_caches(self):
+        """Zavolá custom endpoint /fcr:invalidate-caches (patch v bin/fedora/fcrepo-http-api-*.jar)."""
+        response = requests.post(f"{self.api_url}fcr:invalidate-caches", auth=self.auth)
+        if response.status_code != 204:
+            logger.warning("fcr:invalidate-caches vrátil %s: %s", response.status_code, response.text)
+
+    @staticmethod
+    def clone_Fedora_database():
+        """Naklonuje čistou Fedora postgres DB ze šablony, ať se srovná s baseline OCFL."""
+        logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.clone_Fedora_database")
+        db_name = settings.FEDORA_DB_NAME
+        template_name = settings.FEDORA_DB_TEMPLATE_NAME
+        admin_conn = None
+        admin_cursor = None
+        try:
+            admin_conn = psycopg2.connect(
+                host=settings.FEDORA_DB_HOST,
+                database="postgres",
+                user=settings.FEDORA_DB_USER,
+                password=settings.FEDORA_DB_PASS,
+                port=settings.FEDORA_DB_PORT,
+            )
+            admin_conn.autocommit = True
+            admin_cursor = admin_conn.cursor()
+            last_err = None
+            for attempt in range(1, 11):
+                admin_cursor.execute(
+                    f"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity "
+                    f"WHERE pg_stat_activity.datname IN ('{db_name}', '{template_name}') "
+                    f"AND pid <> pg_backend_pid();"
+                )
+                admin_cursor.execute(
+                    f"SELECT pid, application_name, client_addr, state FROM pg_stat_activity "
+                    f"WHERE datname = '{db_name}' AND pid <> pg_backend_pid();"
+                )
+                remaining = admin_cursor.fetchall()
+                if remaining:
+                    logger.warning(
+                        "clone_Fedora_database: k DB %s je stále připojeno %d sezení (pokus %d/10): %s",
+                        db_name,
+                        len(remaining),
+                        attempt,
+                        remaining,
+                    )
+                    time.sleep(0.1)
+                    continue
+                try:
+                    admin_cursor.execute(f"DROP DATABASE IF EXISTS {db_name};")
+                    last_err = None
+                    break
+                except psycopg2.errors.ObjectInUse as err:
+                    last_err = err
+                    logger.warning("clone_Fedora_database: DROP DATABASE selhal (pokus %d/10): %s", attempt, err)
+            if last_err is not None:
+                raise last_err
+            admin_cursor.execute(f"CREATE DATABASE {db_name} WITH TEMPLATE {template_name};")
+        except Exception as err:
+            logger.error(
+                "core.tests.test_selenium.BaseSeleniumTestClass.clone_Fedora_database.general_exception",
+                extra={"error": err},
+            )
+            raise
+        finally:
+            if admin_cursor is not None:
+                admin_cursor.close()
+            if admin_conn is not None:
+                admin_conn.close()
 
     @staticmethod
     def clone_Database():
@@ -959,6 +1005,70 @@ return new Date('2025-06-28T12:00:00Z');}};
         )
         if result:
             raise AssertionError(f"select_nth_selectpicker_option('{field_id}', {index}): {result}")
+
+    def select_dynamic_selectpicker_option(self, field_id, search_text, index=0, timeout=10):
+        """
+        Vybere volbu v selectpickeru podle textu její nabídky.
+
+        Počká (až ``timeout`` sekund) na to, až je v podkladovém ``<select>`` k dispozici
+        alespoň ``index + 1`` neskrytých voleb, jejichž text obsahuje ``search_text``
+        (case-insensitive), a vybere ``index``-tou v pořadí. Vhodné jak pro běžné
+        selectpickery, tak pro varianty, které si volby donačítají ze serveru – v takovém
+        případě musí být načtení voleb vyvoláno před voláním této metody.
+
+        :param field_id: HTML id atribut podkladového ``<select>`` elementu (bez ``#``).
+        :param search_text: Řetězec hledaný v textu volby.
+        :param index: Pořadí shody mezi vyhovujícími volbami (výchozí 0 = první).
+        :param timeout: Maximální doba čekání na načtení voleb v sekundách.
+        """
+
+        def _option_present(driver):
+            return driver.execute_script(
+                """
+                var sel = document.getElementById(arguments[0]);
+                if (!sel) { return false; }
+                var needle = arguments[1].toLowerCase();
+                var matches = Array.from(sel.options).filter(function(o) {
+                    return !o.hidden && o.value !== '' && (o.text || '').toLowerCase().indexOf(needle) !== -1;
+                });
+                return matches.length > arguments[2];
+                """,
+                field_id,
+                search_text,
+                index,
+            )
+
+        try:
+            WebDriverWait(self.driver, timeout).until(_option_present)
+        except TimeoutException:
+            raise AssertionError(
+                f"select_dynamic_selectpicker_option('{field_id}', '{search_text}', {index}): "
+                f"no matching option at index {index} loaded within {timeout}s"
+            )
+
+        result = self.driver.execute_script(
+            """
+            var sel = document.getElementById(arguments[0]);
+            if (!sel) { return 'element not found: ' + arguments[0]; }
+            var needle = arguments[1].toLowerCase();
+            var idx = arguments[2];
+            var matches = Array.from(sel.options).filter(function(o) {
+                return !o.hidden && o.value !== '' && (o.text || '').toLowerCase().indexOf(needle) !== -1;
+            });
+            if (idx >= matches.length) {
+                return 'index ' + idx + ' out of range, ' + matches.length + ' matches for: ' + arguments[1];
+            }
+            $(sel).selectpicker('val', matches[idx].value).trigger('change');
+            return null;
+            """,
+            field_id,
+            search_text,
+            index,
+        )
+        if result:
+            raise AssertionError(
+                f"select_dynamic_selectpicker_option('{field_id}', '{search_text}', {index}): {result}"
+            )
 
     def _select_value_select_picker(self, field_id, selected_value):
         """
