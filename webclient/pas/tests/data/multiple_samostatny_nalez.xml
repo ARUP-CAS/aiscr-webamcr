@@ -7,6 +7,7 @@
   <amcr:samostatny_nalez>
     <amcr:ident_cely>{IDENT_CELY_1}</amcr:ident_cely>
     <amcr:projekt id="{PROJEKT_IDENT}">{PROJEKT_IDENT}</amcr:projekt>
+    <amcr:stav>3</amcr:stav>
     <amcr:geom_system>4326</amcr:geom_system>
     <amcr:pristupnost id="{PRISTUPNOST_IDENT}" xml:lang="cs">{PRISTUPNOST_IDENT}</amcr:pristupnost>
     <amcr:chranene_udaje>
@@ -16,6 +17,7 @@
   <amcr:samostatny_nalez>
     <amcr:ident_cely>{IDENT_CELY_2}</amcr:ident_cely>
     <amcr:projekt id="{PROJEKT_IDENT}">{PROJEKT_IDENT}</amcr:projekt>
+    <amcr:stav>3</amcr:stav>
     <amcr:geom_system>4326</amcr:geom_system>
     <amcr:pristupnost id="{PRISTUPNOST_IDENT}" xml:lang="cs">{PRISTUPNOST_IDENT}</amcr:pristupnost>
     <amcr:chranene_udaje>

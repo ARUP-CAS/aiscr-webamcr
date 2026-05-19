@@ -5,7 +5,6 @@
     <amcr:projekt id="M-202302810">M-202302810</amcr:projekt>
     <amcr:stav>1</amcr:stav>
     <amcr:predano>false</amcr:predano>
-    <amcr:predano_organizace xml:lang="cs" id="ORG-000084">Archeologický ústav AV ČR, Brno, v.v.i. - detašované pracoviště Opava</amcr:predano_organizace>
     <amcr:geom_system>4326</amcr:geom_system>
     <amcr:pristupnost xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost>
     <amcr:chranene_udaje/>

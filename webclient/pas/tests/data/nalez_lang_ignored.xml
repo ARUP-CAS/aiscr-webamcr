@@ -3,6 +3,7 @@
   <amcr:samostatny_nalez>
     <amcr:ident_cely>{IDENT_CELY}</amcr:ident_cely>
     <amcr:projekt id="{PROJEKT_IDENT}">{PROJEKT_IDENT}</amcr:projekt>
+    <amcr:stav>3</amcr:stav>
     <amcr:geom_system>4326</amcr:geom_system>
     <amcr:pristupnost xml:lang="en" id="{PRISTUPNOST_IDENT}">{PRISTUPNOST_IDENT}</amcr:pristupnost>
     <amcr:chranene_udaje>

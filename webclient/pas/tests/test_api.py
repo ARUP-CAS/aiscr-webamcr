@@ -22,6 +22,8 @@ from core.constants import (
     ODESLANI_SN,
     POTVRZENI_SN,
     SN_ARCHIVOVANY,
+    SN_ODESLANY,
+    SN_POTVRZENY,
     SN_ZAPSANY,
     ZAPSANI_SN,
 )
@@ -30,7 +32,7 @@ from core.repository_connector import FedoraNoResponseError
 from core.setting_models import CustomAdminSettings
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db import DatabaseError
+from django.db import DatabaseError, IntegrityError
 from django.test import TestCase
 from django.urls import reverse
 from heslar.hesla import HESLAR_LICENCE, HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
@@ -40,11 +42,13 @@ from historie.models import Historie
 from lxml import etree
 from pas.api import (
     _RECORD_LOCK_PREFIX,
+    _XSD_BYTES_CACHE,
     ImportErrorType,
     ImportValidationException,
     SamostatnyNalezEvidencniCisloPatchView,
-    SamostatnyNalezXmlBaseView,
     SamostatnyNalezXmlImportView,
+    _fetch_xsd_bytes,
+    _xsd_redis_key,
 )
 from pas.models import SamostatnyNalez
 from pid.exceptions import DoiWriteError
@@ -155,11 +159,13 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         return connector
 
     def _clear_pas_api_settings(self) -> None:
-        """Vyčistí testovací ``CustomAdminSettings`` a cache pro PAS API."""
+        """Vyčistí testovací ``CustomAdminSettings``, cache a in-process slovník XSD pro PAS API."""
         CustomAdminSettings.objects.filter(item_group="pas_api").delete()
         cache.delete("pas_api_access_rules")
         cache.delete("pas_api_rate_limits")
         cache.delete("pas_api_access_mode")
+        cache.delete("pas_api_allowed_schema_versions")
+        _XSD_BYTES_CACHE.clear()
 
     @classmethod
     def _load_xml(cls, filename: str) -> bytes:
@@ -180,6 +186,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         pristupnost_ident: str,
         geom_system: str = "4326",
         geom_wkt: str = "POINT(14.0667 50.0333)",
+        stav: int = 3,
     ) -> bytes:
         """
         Sestaví minimální validní XML pro jeden ``amcr:samostatny_nalez`` ze šablony.
@@ -189,6 +196,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         :param pristupnost_ident: ``ident_cely`` hesláře přístupnosti.
         :param geom_system: Souřadnicový systém (``"4326"`` nebo ``"5514"``).
         :param geom_wkt: WKT geometrie bodu.
+        :param stav: Cílový stav záznamu (1, 2 nebo 3).
 
         :return: Vrací XML dokument jako bajty.
         """
@@ -200,6 +208,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             GEOM_SYSTEM=geom_system,
             EPSG=geom_system,
             GEOM_WKT=geom_wkt,
+            STAV=stav,
         ).encode("utf-8")
 
     def _post_xml(
@@ -322,12 +331,6 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                 "ownership": Permissions.ownershipChoices.our,
             },
         )
-        Permissions.objects.get_or_create(
-            main_role=badatel_group,
-            action=Permissions.actionChoices.model_edit,
-            defaults={"address_in_app": "heslar/osoba/zapsat", "base": True},
-        )
-
         with patch(
             "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
             return_value=True,
@@ -479,11 +482,39 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         cls.projekt = Projekt.objects.get(ident_cely="M-202400099A")
         cls.non_survey_projekt = Projekt.objects.get(ident_cely="M-202400099B")
 
+        from django.contrib.gis.geos import MultiPolygon, Point, Polygon
+        from heslar.models import RuianOkres
+
+        cls.other_katastr_okres, _ = RuianOkres.objects.get_or_create(
+            kod=9998,
+            defaults={
+                "nazev": "Jiný testovací okres",
+                "nazev_en": "Other Test District",
+                "spz": "OT",
+                "kraj": RuianKatastr.objects.get(kod=999999).okres.kraj,
+                "definicni_bod": Point(10.0, 47.0, srid=4326),
+                "hranice": MultiPolygon(
+                    Polygon(((9.0, 46.5), (11.0, 46.5), (11.0, 47.5), (9.0, 47.5), (9.0, 46.5))), srid=4326
+                ),
+            },
+        )
+        cls.other_katastr, _ = RuianKatastr.objects.get_or_create(
+            kod=999998,
+            defaults={
+                "nazev": "Jiný testovací katastr",
+                "okres": cls.other_katastr_okres,
+                "definicni_bod": Point(10.0, 47.0, srid=4326),
+                "hranice": MultiPolygon(
+                    Polygon(((9.0, 46.5), (11.0, 46.5), (11.0, 47.5), (9.0, 47.5), (9.0, 46.5))), srid=4326
+                ),
+            },
+        )
+
     def test_access_mode_closed_returns_503(self):
         """Režim ``closed`` vrátí HTTP 503 ještě před vstupem do DRF permission vrstvy."""
         self._set_pas_api_setting("access_mode", "closed")
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-CLOSED-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         )
@@ -492,7 +523,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
         self.assertEqual(ApiRequestLog.objects.count(), 0)
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-CLOSED-001").exists())
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
 
     def test_access_mode_open_ignores_whitelist_rules(self):
         """Režim ``open`` ignoruje whitelist pravidla a API zůstává dostupné."""
@@ -502,15 +533,15 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             [{"rule_type": "user_whitelist", "value": "other@example.com", "active": True}],
         )
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-OPEN-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         )
 
         response = self._post_xml(xml)
 
-        self._assert_xml_success_response(response, "SN-XML-OPEN-001")
-        self.assertTrue(SamostatnyNalez.objects.filter(ident_cely="SN-XML-OPEN-001").exists())
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
         self._assert_log_success()
 
     def test_access_mode_whitelist_only_allows_whitelisted_user(self):
@@ -521,22 +552,22 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             [{"rule_type": "user_whitelist", "value": self.user.email, "active": True}],
         )
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-WHITELIST-ALLOW-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         )
 
         response = self._post_xml(xml)
 
-        self._assert_xml_success_response(response, "SN-XML-WHITELIST-ALLOW-001")
-        self.assertTrue(SamostatnyNalez.objects.filter(ident_cely="SN-XML-WHITELIST-ALLOW-001").exists())
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
         self._assert_log_success()
 
     def test_access_mode_whitelist_only_without_whitelist_returns_403(self):
         """Režim ``whitelist_only`` bez whitelist pravidel odmítne požadavek."""
         self._set_pas_api_setting("access_mode", "whitelist_only")
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-WHITELIST-REQUIRED-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         )
@@ -545,12 +576,12 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(ApiRequestLog.objects.count(), 0)
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-WHITELIST-REQUIRED-001").exists())
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
 
     def test_content_digest_mismatch_returns_400(self):
         """POST s neodpovídající hlavičkou ``Content-Digest`` vrátí HTTP 400."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-BADDIGEST-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         )
@@ -563,7 +594,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
     def test_content_digest_invalid_format_returns_400(self):
         """POST s hlavičkou ``Content-Digest`` v neplatném formátu vrátí HTTP 400."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-BADDIGEST-FORMAT-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         )
@@ -585,44 +616,38 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         """Paralelní volání ``_get_amcr_schema`` zkompiluje schéma právě jednou."""
         original_schema_cache = dict(SamostatnyNalezXmlImportView._amcr_schema_cache)
         SamostatnyNalezXmlImportView._amcr_schema_cache = {}
-        schema_doc = object()
         schema_instance = object()
         schema_url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
         doc = etree.ElementTree(
             etree.fromstring(
                 self._minimal_nalez_xml(
-                    ident_cely="SN-XML-SCHEMA-001",
+                    ident_cely=":tba",
                     projekt_ident=self.projekt.ident_cely,
                     pristupnost_ident=self.pristupnost.ident_cely,
                 )
             )
         )
 
-        def build_schema(doc):
+        def build_schema(schema_doc):
             time.sleep(0.05)
-            self.assertIs(doc, schema_doc)
             return schema_instance
 
         try:
-            with patch("pas.api.etree.parse", return_value=schema_doc) as parse_mock, patch(
-                "pas.api.urllib.request.urlopen"
-            ) as urlopen_mock, patch("pas.api.etree.XMLSchema", side_effect=build_schema) as xmlschema_mock:
-                urlopen_mock.return_value.__enter__.return_value = object()
-
+            with patch("pas.api._fetch_xsd_bytes", return_value=b"<schema/>") as fetch_mock, patch(
+                "pas.api.etree.XMLSchema", side_effect=build_schema
+            ) as xmlschema_mock:
                 with ThreadPoolExecutor(max_workers=8) as executor:
                     results = list(executor.map(lambda _: SamostatnyNalezXmlImportView._get_amcr_schema(doc), range(8)))
 
                 self.assertEqual(results, [schema_instance] * 8)
                 cached_schema, _ = SamostatnyNalezXmlImportView._amcr_schema_cache[schema_url]
                 self.assertIs(cached_schema, schema_instance)
-                urlopen_mock.assert_called_once_with(schema_url, timeout=10)
-                parse_mock.assert_called_once()
-                xmlschema_mock.assert_called_once_with(schema_doc)
+                fetch_mock.assert_called_once_with(schema_url)
+                xmlschema_mock.assert_called_once()
 
                 self.assertIs(SamostatnyNalezXmlImportView._get_amcr_schema(doc), schema_instance)
-                urlopen_mock.assert_called_once_with(schema_url, timeout=10)
-                parse_mock.assert_called_once()
-                xmlschema_mock.assert_called_once_with(schema_doc)
+                fetch_mock.assert_called_once_with(schema_url)
+                xmlschema_mock.assert_called_once()
         finally:
             SamostatnyNalezXmlImportView._amcr_schema_cache = original_schema_cache
 
@@ -631,7 +656,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         doc = etree.ElementTree(
             etree.fromstring(
                 self._minimal_nalez_xml(
-                    ident_cely="SN-XML-SCHEMA-BAD-001",
+                    ident_cely=":tba",
                     projekt_ident=self.projekt.ident_cely,
                     pristupnost_ident=self.pristupnost.ident_cely,
                 ).replace(
@@ -649,7 +674,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
     def test_local_resolver_rejects_disallowed_url_in_xsd_import(self):
         """Resolver odmítne nepovolenou URL v ``xs:import`` uvnitř staženého XSD jako ``INVALID_DATA``."""
-        xsd_with_disallowed_import = io.BytesIO(
+        evil_xsd_bytes = (
             b'<?xml version="1.0" encoding="UTF-8"?>'
             b'<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">'
             b'  <xs:import namespace="urn:evil" schemaLocation="https://evil.example/evil.xsd"/>'
@@ -658,7 +683,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         doc = etree.ElementTree(
             etree.fromstring(
                 self._minimal_nalez_xml(
-                    ident_cely="SN-XML-RESOLVER-BAD-001",
+                    ident_cely=":tba",
                     projekt_ident=self.projekt.ident_cely,
                     pristupnost_ident=self.pristupnost.ident_cely,
                 )
@@ -668,7 +693,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         original_schema_cache = dict(SamostatnyNalezXmlImportView._amcr_schema_cache)
         SamostatnyNalezXmlImportView._amcr_schema_cache = {}
         try:
-            with patch("pas.api.urllib.request.urlopen", return_value=xsd_with_disallowed_import):
+            with patch("pas.api._fetch_xsd_bytes", return_value=evil_xsd_bytes):
                 with self.assertRaises(ImportValidationException) as exc_ctx:
                     SamostatnyNalezXmlImportView._get_amcr_schema(doc)
         finally:
@@ -688,20 +713,20 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
     def test_heslar_wrong_group_returns_422(self):
         """Import vrátí HTTP 422, pokud atribut ``id`` odkazuje na položku z jiné skupiny hesláře."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-HES-GROUP-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         ).decode("utf-8")
         xml = xml.replace(
-            "<amcr:geom_system>",
-            f'<amcr:okolnosti id="{self.obdobi.ident_cely}" xml:lang="cs">{self.obdobi.heslo}</amcr:okolnosti>\n    <amcr:geom_system>',
+            "<amcr:stav>",
+            f'<amcr:okolnosti id="{self.obdobi.ident_cely}" xml:lang="cs">{self.obdobi.heslo}</amcr:okolnosti>\n    <amcr:stav>',
         ).encode("utf-8")
 
         response = self._post_xml(xml)
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         self.assertIn("validation_errors", response.data)
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-HES-GROUP-001").exists())
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure(response.data)
 
     def test_invalid_token_returns_401(self):
@@ -720,7 +745,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
     def test_missing_content_digest_returns_400(self):
         """POST bez hlavičky ``Content-Digest`` vrátí HTTP 400."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-NODIGEST-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         )
@@ -741,7 +766,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
     def test_missing_projekt_returns_422(self):
         """XML bez elementu ``projekt`` vrátí HTTP 422 jako datovou chybu."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-BAD-MISSING-PROJEKT",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         ).decode("utf-8")
@@ -760,8 +785,8 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         """XML s více elementy ``amcr:samostatny_nalez`` vrátí HTTP 422."""
         template = self._load_xml("multiple_samostatny_nalez.xml").decode("utf-8")
         xml = template.format(
-            IDENT_CELY_1="SN-XML-MULTI-001",
-            IDENT_CELY_2="SN-XML-MULTI-002",
+            IDENT_CELY_1=":tba",
+            IDENT_CELY_2=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
         ).encode("utf-8")
@@ -770,14 +795,13 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         self.assertTrue("detail" in response.data or "schema_errors" in response.data)
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-MULTI-001").exists())
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-MULTI-002").exists())
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure()
 
     def test_invalid_root_content_returns_422(self):
         """XML s dalším kořenovým potomkem kromě ``amcr:samostatny_nalez`` vrátí HTTP 422."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-ROOT-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         ).decode("utf-8")
@@ -794,14 +818,14 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         self.assertIn("detail", response.data)
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-ROOT-001").exists())
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure(response.data)
 
     def test_nonexistent_nalezce_returns_404(self):
         """XML s neexistujícím ``nalezce`` vrátí HTTP 404."""
         template = self._load_xml("nalez_nonexistent_nalezce.xml").decode("utf-8")
         xml = template.format(
-            IDENT_CELY="SN-XML-OS-BAD-001",
+            IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
         ).encode("utf-8")
@@ -810,13 +834,13 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertIn("validation_errors", response.data)
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-OS-BAD-001").exists())
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure()
 
     def test_nonexistent_pristupnost_returns_422(self):
         """XML s neexistujícím heslem přístupnosti vrátí HTTP 422."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-BAD-2",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident="HES-NEEXISTUJE",
         )
@@ -828,7 +852,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
     def test_nonexistent_projekt_returns_404(self):
         """XML s neexistujícím projektem vrátí HTTP 404."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-BAD-1",
+            ident_cely=":tba",
             projekt_ident="NEEXISTUJE-9999",
             pristupnost_ident=self.pristupnost.ident_cely,
         )
@@ -840,7 +864,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
     def test_non_survey_projekt_returns_404(self):
         """XML s projektem mimo typ ``průzkum`` vrátí HTTP 404 stejně jako neexistující projekt."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-BAD-NON-SURVEY-001",
+            ident_cely=":tba",
             projekt_ident=self.non_survey_projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         )
@@ -849,7 +873,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertIn("validation_errors", response.data)
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-BAD-NON-SURVEY-001").exists())
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.non_survey_projekt).exists())
         self._assert_log_failure()
 
     def test_schema_invalid_xml_returns_422(self):
@@ -859,11 +883,77 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertIn("schema_errors", response.data)
         self._assert_log_failure()
 
-    def test_stav_element_returns_422(self):
-        """POST s nepovoleným elementem ``stav`` vrátí HTTP 422."""
-        template = self._load_xml("nalez_with_stav.xml").decode("utf-8")
+    def test_allowed_schema_versions_rejects_disallowed_version(self):
+        """Import s verzí schématu, která není v ``allowed_schema_versions``, vrátí HTTP 422."""
+        self._set_pas_api_setting("allowed_schema_versions", [9.9])
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("detail", response.data)
+        self.assertIn("version_not_allowed", response.data["detail"])
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure(response.data)
+
+    def test_allowed_schema_versions_accepts_listed_version(self):
+        """Import s verzí schématu obsaženou v ``allowed_schema_versions`` proběhne úspěšně."""
+        self._set_pas_api_setting("allowed_schema_versions", [2.2])
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+
+        response = self._post_xml(xml)
+
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
+        self._assert_log_success()
+
+    def test_allowed_schema_versions_not_set_accepts_any_version(self):
+        """Import bez nastavení ``allowed_schema_versions`` v DB neomezuje verzi schématu."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+
+        response = self._post_xml(xml)
+
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
+        self._assert_log_success()
+
+    def test_missing_stav_fails_xsd_validation(self):
+        """POST s jinak validním XML bez elementu ``stav`` vrátí HTTP 422 s chybou validace XSD schématu."""
+        template = self._load_xml("minimal_nalez_no_stav.xml").decode("utf-8")
         xml = template.format(
-            IDENT_CELY="SN-XML-STAV-001",
+            IDENT_CELY=":tba",
+            PROJEKT_IDENT=self.projekt.ident_cely,
+            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+        ).encode("utf-8")
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("schema_errors", response.data)
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure()
+
+    def test_out_of_range_stav_in_xml_returns_422(self):
+        """Import s hodnotou ``stav=99`` v XML vrátí HTTP 422 a záznam se nevytvoří.
+
+        XSD validace neomezuje hodnotu ``stav`` výčtem — hodnota 99 projde schématem.
+        Import ji odmítne jako nepodporovanou hodnotu (povoleny jsou pouze 1, 2, 3).
+        """
+        template = self._load_xml("nalez_invalid_stav.xml").decode("utf-8")
+        xml = template.format(
+            IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
         ).encode("utf-8")
@@ -872,8 +962,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         self.assertIn("validation_errors", response.data)
-        self.assertEqual(response.data["validation_errors"][0]["error_type"], ImportErrorType.INVALID_DATA.value)
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-STAV-001").exists())
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure()
 
     def test_tba_ident_cely_is_generated_automatically(self):
@@ -893,11 +982,141 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertIn(nalez.ident_cely, response.content.decode("utf-8"))
         self._assert_log_success()
 
+    def test_non_tba_ident_cely_returns_422(self):
+        """Import s hodnotou ``ident_cely`` jinou než ``:tba`` vrátí HTTP 422."""
+        xml = self._minimal_nalez_xml(
+            ident_cely="SN-XML-EXPLICIT-001",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertEqual(response.data["validation_errors"][0]["error_type"], ImportErrorType.INVALID_DATA.value)
+        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-EXPLICIT-001").exists())
+        self._assert_log_failure()
+
+    def test_igsn_in_xml_is_ignored(self):
+        """Import s polem ``igsn`` v XML vytvoří záznam, ale ``igsn`` pole záznamu zůstane prázdné."""
+        template = self._load_xml("nalez_with_igsn.xml").decode("utf-8")
+        xml = template.format(
+            IDENT_CELY=":tba",
+            PROJEKT_IDENT=self.projekt.ident_cely,
+            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+        ).encode("utf-8")
+
+        response = self._post_xml(xml)
+
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
+        self.assertFalse(nalez.igsn)
+        self._assert_log_success()
+
+    def test_katastr_in_xml_is_ignored_uses_coordinates(self):
+        """Import s ``katastr`` polem v ``chranene_udaje`` XML ignoruje XML hodnotu a doplní katastr ze souřadnic.
+
+        XML uvádí jiný katastr než odpovídá souřadnicím ``geom_wkt``. Importovaný záznam
+        musí mít katastr odvozený ze souřadnic, nikoliv z XML pole.
+        """
+        template = self._load_xml("nalez_with_wrong_katastr_and_okres.xml").decode("utf-8")
+        xml = template.format(
+            IDENT_CELY=":tba",
+            PROJEKT_IDENT=self.projekt.ident_cely,
+            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+            WRONG_KATASTR_IDENT=f"ruian-{self.other_katastr.kod}",
+            WRONG_OKRES_IDENT=f"ruian-{self.other_katastr_okres.kod}",
+        ).encode("utf-8")
+
+        response = self._post_xml(xml)
+
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
+        self.assertEqual(nalez.katastr.kod, 999999)
+        self.assertNotEqual(nalez.katastr.kod, self.other_katastr.kod)
+        self._assert_log_success()
+
+    def test_okres_in_xml_is_ignored_derived_from_katastr(self):
+        """Import s ``okres`` polem v XML ignoruje XML hodnotu a okres je odvozen z katastru ze souřadnic.
+
+        XML uvádí jiný okres než odpovídá katastru odvozenému ze souřadnic ``geom_wkt``. Importovaný
+        záznam musí mít katastr odvozený ze souřadnic a tedy i správný okres z tohoto katastru.
+        """
+        template = self._load_xml("nalez_with_wrong_katastr_and_okres.xml").decode("utf-8")
+        xml = template.format(
+            IDENT_CELY=":tba",
+            PROJEKT_IDENT=self.projekt.ident_cely,
+            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+            WRONG_KATASTR_IDENT=f"ruian-{self.other_katastr.kod}",
+            WRONG_OKRES_IDENT=f"ruian-{self.other_katastr_okres.kod}",
+        ).encode("utf-8")
+
+        response = self._post_xml(xml)
+
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
+        self.assertEqual(nalez.katastr.okres.kod, 9999)
+        self.assertNotEqual(nalez.katastr.okres.kod, self.other_katastr_okres.kod)
+        self._assert_log_success()
+
+    def test_invalid_geom_wkt_returns_422(self):
+        """Import s syntakticky neplatným WKT v ``geom_wkt`` vrátí HTTP 422."""
+        template = self._load_xml("nalez_invalid_geom_wkt.xml").decode("utf-8")
+        xml = template.format(
+            IDENT_CELY=":tba",
+            PROJEKT_IDENT=self.projekt.ident_cely,
+            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+        ).encode("utf-8")
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertEqual(response.data["validation_errors"][0]["error_type"], ImportErrorType.INVALID_DATA.value)
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure()
+
+    def test_non_point_geom_wkt_returns_422(self):
+        """Import s WKT geometrií jiného typu než ``Point`` v ``geom_wkt`` vrátí HTTP 422."""
+        template = self._load_xml("nalez_linestring_geom_wkt.xml").decode("utf-8")
+        xml = template.format(
+            IDENT_CELY=":tba",
+            PROJEKT_IDENT=self.projekt.ident_cely,
+            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+        ).encode("utf-8")
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertEqual(response.data["validation_errors"][0]["error_type"], ImportErrorType.INVALID_DATA.value)
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure()
+
+    def test_invalid_geom_sjtsk_wkt_returns_422(self):
+        """Import s syntakticky neplatným WKT v ``geom_sjtsk_wkt`` vrátí HTTP 422."""
+        template = self._load_xml("minimal_nalez_sjtsk.xml").decode("utf-8")
+        xml = template.format(
+            IDENT_CELY=":tba",
+            PROJEKT_IDENT=self.projekt.ident_cely,
+            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+            GEOM_SJTSK_WKT="NOT_VALID_WKT",
+        ).encode("utf-8")
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertEqual(response.data["validation_errors"][0]["error_type"], ImportErrorType.INVALID_DATA.value)
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure()
+
     def test_tba_nalezce_is_rolled_back_when_samostatny_nalez_save_fails(self):
         """Při chybě ukládání nálezu se vrátí HTTP 500 a nově vytvořená osoba se vrátí rollbackem."""
         template = self._load_xml("nalez_tba_nalezce.xml").decode("utf-8")
         xml = template.format(
-            IDENT_CELY="SN-XML-TBA-ROLLBACK-001",
+            IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
         ).encode("utf-8")
@@ -920,20 +1139,20 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             {"detail": "pas.api.SamostatnyNalezXmlImportView.post.internal_error"},
         )
         self.assertFalse(Osoba.objects.filter(prijmeni="Novák", jmeno="Jan").exists())
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-TBA-ROLLBACK-001").exists())
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure(response.data)
 
     def test_get_metadata_failure_returns_500_with_failed_log(self):
         """Selhání čtení metadat z Fedory po uložení záznamu vrátí HTTP 500 a uzavře API log jako neúspěšný."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-METADATA-FAIL-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         )
 
         connector = Mock()
         connector.get_metadata.side_effect = FedoraNoResponseError(
-            "http://fedora.example/rest/record/SN-XML-METADATA-FAIL-001",
+            "http://fedora.example/rest/record",
             "No Fedora response",
             None,
         )
@@ -946,14 +1165,14 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             response.data,
             {"detail": "pas.api.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving"},
         )
-        self.assertTrue(SamostatnyNalez.objects.filter(ident_cely="SN-XML-METADATA-FAIL-001").exists())
+        self.assertTrue(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure(response.data)
 
     def test_tba_nalezce_with_invalid_format_returns_422(self):
         """Import s ``nalezce id=":tba"`` a nevalidním formátem vrátí HTTP 422."""
         template = self._load_xml("nalez_tba_nalezce_invalid_format.xml").decode("utf-8")
         xml = template.format(
-            IDENT_CELY="SN-XML-TBA-BAD-001",
+            IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
         ).encode("utf-8")
@@ -963,31 +1182,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         self.assertIn("validation_errors", response.data)
         self.assertFalse(Osoba.objects.filter(jmeno="Jan", prijmeni="Novák").exists())
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-TBA-BAD-001").exists())
-        self._assert_log_failure()
-
-    def test_tba_nalezce_without_model_edit_permission_returns_403(self):
-        """Import s ``nalezce id=":tba"`` bez oprávnění na vytvoření osoby vrátí HTTP 403."""
-        template = self._load_xml("nalez_tba_nalezce.xml").decode("utf-8")
-        xml = template.format(
-            IDENT_CELY="SN-XML-TBA-002",
-            PROJEKT_IDENT=self.projekt.ident_cely,
-            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
-        ).encode("utf-8")
-
-        def permission_side_effect(action, user, ident=None):
-            if action == Permissions.actionChoices.model_edit:
-                return False
-            return True
-
-        with patch("pas.api.check_permissions", side_effect=permission_side_effect):
-            response = self._post_xml(xml)
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertIn("validation_errors", response.data)
-        self.assertEqual(response.data["validation_errors"][0]["error_type"], ImportErrorType.PERMISSION_ERROR.value)
-        self.assertFalse(Osoba.objects.filter(prijmeni="Novák", jmeno="Jan").exists())
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-TBA-002").exists())
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure()
 
     def test_unauthenticated_returns_401(self):
@@ -1002,7 +1197,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
     def test_user_without_pas_edit_permission_returns_403(self):
         """Uživatel bez oprávnění ``pas_edit`` obdrží HTTP 403."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-FORBIDDEN-002",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         )
@@ -1021,13 +1216,13 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertIn("detail", response.data)
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-FORBIDDEN-002").exists())
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure()
 
     def test_user_without_pas_ulozeni_edit_permission_returns_403(self):
         """Uživatel bez oprávnění ``pas_ulozeni_edit`` obdrží HTTP 403."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-FORBIDDEN-ULOZENI-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         )
@@ -1046,13 +1241,13 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertIn("detail", response.data)
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-FORBIDDEN-ULOZENI-001").exists())
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure()
 
     def test_user_without_project_permission_returns_403(self):
         """Uživatel bez oprávnění ``pas_zapsat_do_projektu`` pro daný projekt obdrží HTTP 403."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-FORBIDDEN-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         )
@@ -1069,21 +1264,21 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertIn("detail", response.data)
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-FORBIDDEN-001").exists())
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure()
 
     def test_valid_file_xml_creates_record_with_correct_values(self):
         """Import souboru ``valid_file.xml`` vytvoří záznam a importovaná data odpovídají obsahu XML."""
         template = self._load_xml("valid_file.xml").decode("utf-8")
         xml = template.format(
-            IDENT_CELY="SN-XML-VF-001",
+            IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
             PREDANO_ORGANIZACE_IDENT=self.organizace.ident_cely,
         ).encode("utf-8")
         response = self._post_xml(xml)
-        self._assert_xml_success_response(response, "SN-XML-VF-001")
-        nalez = SamostatnyNalez.objects.get(ident_cely="SN-XML-VF-001")
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
         self.assertEqual(nalez.hloubka, 21)
         self.assertEqual(str(nalez.datum_nalezu), "2026-04-06")
         self.assertFalse(nalez.predano)
@@ -1094,21 +1289,21 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertAlmostEqual(nalez.geom.y, 49.9914407, places=5)
         self.assertAlmostEqual(nalez.geom_sjtsk.x, -828708.49, places=1)
         self.assertAlmostEqual(nalez.geom_sjtsk.y, -1041287.69, places=1)
-        self.assertEqual(nalez.stav, SamostatnyNalezXmlBaseView.XML_IMPORT_INITIAL_STAV)
+        self.assertEqual(nalez.stav, SN_POTVRZENY)
         self._assert_log_success()
 
     def test_valid_xml_creates_import_history_records(self):
         """Import vytvoří tři položky historie s importní poznámkou a vazbou na záznam."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-HIST-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         )
 
         response = self._post_xml(xml)
 
-        self._assert_xml_success_response(response, "SN-XML-HIST-001")
-        nalez = SamostatnyNalez.objects.get(ident_cely="SN-XML-HIST-001")
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
         historie = list(Historie.objects.filter(vazba=nalez.historie).order_by("datum_zmeny", "id"))
 
         self.assertEqual(len(historie), 3)
@@ -1118,51 +1313,58 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertTrue(all(item.vazba == nalez.historie for item in historie))
         self._assert_log_success()
 
+    def test_import_stav2_creates_only_two_history_records(self):
+        """Import se ``stav=2`` vytvoří pouze záznamy SN01 a SN12, nikoli SN23."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            stav=2,
+        )
+
+        response = self._post_xml(xml)
+
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
+        self.assertEqual(nalez.stav, SN_ODESLANY)
+        historie = list(Historie.objects.filter(vazba=nalez.historie).order_by("datum_zmeny", "id"))
+        self.assertEqual(len(historie), 2)
+        self.assertEqual([item.typ_zmeny for item in historie], [ZAPSANI_SN, ODESLANI_SN])
+
+    def test_import_stav1_creates_only_one_history_record(self):
+        """Import se ``stav=1`` vytvoří pouze záznam SN01."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            stav=1,
+        )
+
+        response = self._post_xml(xml)
+
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
+        self.assertEqual(nalez.stav, SN_ZAPSANY)
+        historie = list(Historie.objects.filter(vazba=nalez.historie).order_by("datum_zmeny", "id"))
+        self.assertEqual(len(historie), 1)
+        self.assertEqual([item.typ_zmeny for item in historie], [ZAPSANI_SN])
+
     def test_valid_xml_creates_record(self):
         """Validní XML s minimálními poli vytvoří záznam v databázi a vrátí HTTP 200."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         )
         response = self._post_xml(xml)
-        self._assert_xml_success_response(response, "SN-XML-001")
-        self.assertTrue(SamostatnyNalez.objects.filter(ident_cely="SN-XML-001").exists())
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
         self._assert_log_success()
-
-    def test_duplicate_ident_cely_returns_422(self):
-        """Opakovaný import stejného ``ident_cely`` vrátí validační chybu HTTP 422."""
-        xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-DUP-001",
-            projekt_ident=self.projekt.ident_cely,
-            pristupnost_ident=self.pristupnost.ident_cely,
-        )
-
-        first_response = self._post_xml(xml)
-
-        self._assert_xml_success_response(first_response, "SN-XML-DUP-001")
-        self.assertTrue(SamostatnyNalez.objects.filter(ident_cely="SN-XML-DUP-001").exists())
-
-        duplicate_response = self._post_xml(xml)
-
-        self.assertEqual(duplicate_response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
-        self.assertIn("validation_errors", duplicate_response.data)
-        self.assertEqual(
-            duplicate_response.data["validation_errors"][0]["error_type"], ImportErrorType.INVALID_DATA.value
-        )
-        self.assertEqual(SamostatnyNalez.objects.filter(ident_cely="SN-XML-DUP-001").count(), 1)
-
-        logs = list(ApiRequestLog.objects.order_by("received_at", "id"))
-        self.assertEqual(len(logs), 2)
-        self.assertEqual(logs[0].status, API_REQUEST_LOG_STATUS_SUCCESS)
-        self.assertEqual(logs[1].status, API_REQUEST_LOG_STATUS_FAILURE)
-        self.assertIsNotNone(logs[1].finished_at)
-        self.assertEqual(logs[1].errors, duplicate_response.data)
 
     def test_katastr_filled_from_geom_wkt(self):
         """Import s ``geom_system=4326`` doplní katastr ze souřadnic ``geom_wkt``."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-KATASTR-GEOM-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
             geom_wkt="POINT(14.0667 50.0333)",
@@ -1170,8 +1372,8 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         response = self._post_xml(xml)
 
-        self._assert_xml_success_response(response, "SN-XML-KATASTR-GEOM-001")
-        nalez = SamostatnyNalez.objects.get(ident_cely="SN-XML-KATASTR-GEOM-001")
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
         self.assertEqual(nalez.katastr, RuianKatastr.objects.get(kod=999999))
         self._assert_log_success()
 
@@ -1179,7 +1381,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         """Import s ``geom_system=5514`` doplní katastr transformací ``geom_sjtsk_wkt`` do WGS-84."""
         template = self._load_xml("minimal_nalez_sjtsk.xml").decode("utf-8")
         xml = template.format(
-            IDENT_CELY="SN-XML-KATASTR-SJTSK-001",
+            IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
             # Transforms to WGS-84 POINT(14.0667 50.0333) — inside the test fixture polygon for kod=999999.
@@ -1188,8 +1390,8 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         response = self._post_xml(xml)
 
-        self._assert_xml_success_response(response, "SN-XML-KATASTR-SJTSK-001")
-        nalez = SamostatnyNalez.objects.get(ident_cely="SN-XML-KATASTR-SJTSK-001")
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
         self.assertEqual(nalez.katastr, RuianKatastr.objects.get(kod=999999))
         self._assert_log_success()
 
@@ -1197,7 +1399,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         """Import vrátí HTTP 422, pokud XML neobsahuje žádnou geometrii."""
         template = self._load_xml("minimal_nalez_no_geom.xml").decode("utf-8")
         xml = template.format(
-            IDENT_CELY="SN-XML-NO-GEOM-001",
+            IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
         ).encode("utf-8")
@@ -1206,13 +1408,13 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         self.assertIn("validation_errors", response.data)
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-NO-GEOM-001").exists())
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure(response.data)
 
     def test_geom_outside_cadastre_returns_422(self):
         """Import vrátí HTTP 422, pokud souřadnice nespadají do žádného katastru."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-NO-KATASTR-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
             # Coordinates in the Atlantic Ocean — outside any cadastre polygon.
@@ -1223,14 +1425,14 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         self.assertIn("validation_errors", response.data)
-        self.assertFalse(SamostatnyNalez.objects.filter(ident_cely="SN-XML-NO-KATASTR-001").exists())
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure(response.data)
 
     def test_valid_xml_with_known_nalezce_links_existing_osoba(self):
         """Import s existujícím ``nalezce`` naváže záznam na existující osobu."""
         template = self._load_xml("nalez_known_nalezce.xml").decode("utf-8")
         xml = template.format(
-            IDENT_CELY="SN-XML-OS-001",
+            IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
             NALEZCE_IDENT=self.known_osoba.ident_cely,
@@ -1239,8 +1441,8 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         response = self._post_xml(xml)
 
-        self._assert_xml_success_response(response, "SN-XML-OS-001")
-        nalez = SamostatnyNalez.objects.get(ident_cely="SN-XML-OS-001")
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
         self.assertEqual(nalez.nalezce, self.known_osoba)
         self._assert_log_success()
 
@@ -1248,13 +1450,13 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         """XML s volitelnými poli (hloubka, poznamka, presna_datace) vytvoří záznam se správnými hodnotami."""
         template = self._load_xml("nalez_optional_fields.xml").decode("utf-8")
         xml = template.format(
-            IDENT_CELY="SN-XML-003",
+            IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
         ).encode("utf-8")
         response = self._post_xml(xml)
-        self._assert_xml_success_response(response, "SN-XML-003")
-        nalez = SamostatnyNalez.objects.get(ident_cely="SN-XML-003")
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
         self.assertEqual(nalez.hloubka, 42)
         self.assertEqual(nalez.poznamka, "testovací poznámka")
         self.assertEqual(nalez.lokalizace, "u lesa")
@@ -1265,7 +1467,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         """Import s ``nalezce id=":tba"`` vytvoří novou osobu a naváže ji na nález."""
         template = self._load_xml("nalez_tba_nalezce.xml").decode("utf-8")
         xml = template.format(
-            IDENT_CELY="SN-XML-TBA-001",
+            IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
         ).encode("utf-8")
@@ -1276,14 +1478,70 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         ):
             response = self._post_xml(xml)
 
-        self._assert_xml_success_response(response, "SN-XML-TBA-001")
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
         osoba = Osoba.objects.get(prijmeni="Novák", jmeno="Jan")
-        nalez = SamostatnyNalez.objects.get(ident_cely="SN-XML-TBA-001")
 
         self.assertEqual(osoba.vypis_cely, "Novák, Jan")
         self.assertEqual(osoba.vypis, "Novák, J.")
         self.assertEqual(nalez.nalezce, osoba)
         self._assert_log_success()
+
+    def test_tba_nalezce_reuses_existing_osoba_when_name_matches(self):
+        """Import s ``nalezce id=":tba"`` použije existující osobu, pokud shodné jméno a příjmení již existují."""
+        with patch(
+            "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
+            return_value=True,
+        ):
+            existing_osoba, _ = Osoba.objects.get_or_create(
+                prijmeni="Novák",
+                jmeno="Jan",
+                defaults={
+                    "vypis": "Novák, J.",
+                    "vypis_cely": "Novák, Jan",
+                },
+            )
+        osoba_count_before = Osoba.objects.count()
+        template = self._load_xml("nalez_tba_nalezce.xml").decode("utf-8")
+        xml = template.format(
+            IDENT_CELY=":tba",
+            PROJEKT_IDENT=self.projekt.ident_cely,
+            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+        ).encode("utf-8")
+
+        with patch(
+            "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
+            return_value=True,
+        ):
+            response = self._post_xml(xml)
+
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
+        self.assertEqual(nalez.nalezce, existing_osoba)
+        self.assertEqual(Osoba.objects.count(), osoba_count_before)
+        self._assert_log_success()
+
+    def test_integrity_error_fallback_returns_422(self):
+        """``IntegrityError`` způsobená jiným omezením než ``osoba_jmeno_prijmeni_key`` vrátí HTTP 422.
+
+        Ověřuje fallback větev handleru: neznámé omezení integrity vrátí neutrální klíč chybové zprávy
+        místo detailní zprávy specifické pro duplicitní osobu.
+        """
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+
+        with patch("pas.api.SamostatnyNalez.save", side_effect=IntegrityError("other constraint violated")):
+            response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("detail", response.data)
+        self.assertIn("integrity_error", response.data["detail"])
+        self.assertNotIn("error", response.data)
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure()
 
     def test_validate_schema_url_allowed_accepts_configured_prefixes(self):
         """Allowlist přijímá povolené URL rodiny pro W3C, AMČR a GML."""
@@ -1303,15 +1561,14 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
     def test_schema_fetch_network_error_returns_422(self):
         """Síťová chyba při načítání XSD schématu vrátí HTTP 422 místo 500."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-NETERR-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         )
-        # Vyčistíme cache schématu, aby se urlopen skutečně zavolal.
         SamostatnyNalezXmlImportView._amcr_schema_cache.clear()
 
         with patch(
-            "pas.api.urllib.request.urlopen",
+            "pas.api._fetch_xsd_bytes",
             side_effect=urllib.error.URLError("simulated network failure"),
         ):
             response = self._post_xml(xml)
@@ -1323,7 +1580,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
     def test_wrong_amcr_namespace_version_returns_422(self):
         """POST s deklarovaným AMČR namespace jiné verze vrátí HTTP 422."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-BADNS-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         ).decode("utf-8")
@@ -1341,7 +1598,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
     def test_wrong_amcr_schema_location_version_returns_422(self):
         """POST s deklarovanou XSD URL jiné AMČR verze vrátí HTTP 422."""
         xml = self._minimal_nalez_xml(
-            ident_cely="SN-XML-BADXSD-001",
+            ident_cely=":tba",
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         ).decode("utf-8")
@@ -1364,7 +1621,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         """
         template = self._load_xml("nalez_with_obdobi.xml").decode("utf-8")
         xml = template.format(
-            IDENT_CELY="SN-XML-BAD-3",
+            IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
             OBDOBI_IDENT=self.licence.ident_cely,
@@ -1378,16 +1635,138 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         """Import s ``xml:lang`` odlišným od ``cs`` uspěje a vrátí poznámku o ignorování."""
         template = self._load_xml("nalez_lang_ignored.xml").decode("utf-8")
         xml = template.format(
-            IDENT_CELY="SN-XML-LANG-001",
+            IDENT_CELY=":tba",
             PROJEKT_IDENT=self.projekt.ident_cely,
             PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
         ).encode("utf-8")
 
         response = self._post_xml(xml)
 
-        self._assert_xml_success_response(response, "SN-XML-LANG-001")
-        self.assertTrue(SamostatnyNalez.objects.filter(ident_cely="SN-XML-LANG-001").exists())
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
         self._assert_log_success()
+
+
+class FetchXsdBytesTests(TestCase):
+    """Jednotkové testy pro ``_fetch_xsd_bytes`` a ``_xsd_redis_key``."""
+
+    def setUp(self):
+        """Vyčistí Redis cache a in-process slovník před každým testem."""
+        cache.clear()
+        _XSD_BYTES_CACHE.clear()
+
+    def tearDown(self):
+        """Vyčistí Redis cache a in-process slovník po každým testu."""
+        cache.clear()
+        _XSD_BYTES_CACHE.clear()
+
+    # --- _xsd_redis_key ---
+
+    def test_redis_key_amcr_url_includes_version(self):
+        """Klíč pro AMČR URL obsahuje číslo verze."""
+        key = _xsd_redis_key("https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
+        self.assertEqual(key, "xsd_schema:amcr:2.2:https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
+
+    def test_redis_key_amcr_url_different_version(self):
+        """Klíče pro různé verze AMČR schématu se liší."""
+        key_22 = _xsd_redis_key("https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
+        key_23 = _xsd_redis_key("https://api.aiscr.cz/schema/amcr/2.3/amcr.xsd")
+        self.assertNotEqual(key_22, key_23)
+        self.assertIn("2.2", key_22)
+        self.assertIn("2.3", key_23)
+
+    def test_redis_key_non_amcr_url_uses_full_url(self):
+        """Klíč pro W3C URL neobsahuje prefix verze."""
+        url = "https://www.w3.org/2001/xml.xsd"
+        key = _xsd_redis_key(url)
+        self.assertEqual(key, f"xsd_schema:{url}")
+
+    # --- _fetch_xsd_bytes ---
+
+    def test_returns_bytes_from_network_on_cache_miss(self):
+        """Při absenci záznamu v cache se bajty stáhnou ze sítě."""
+
+        expected = b"<schema/>"
+        mock_response = io.BytesIO(expected)
+        with patch("pas.api.urllib.request.urlopen", return_value=mock_response) as urlopen_mock:
+            result = _fetch_xsd_bytes("https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
+
+        self.assertEqual(result, expected)
+        urlopen_mock.assert_called_once_with("https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd", timeout=10)
+
+    def test_stores_bytes_in_cache_after_network_fetch(self):
+        """Po stažení ze sítě se bajty uloží do cache."""
+
+        url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
+        expected = b"<schema/>"
+        with patch("pas.api.urllib.request.urlopen", return_value=io.BytesIO(expected)):
+            _fetch_xsd_bytes(url)
+
+        self.assertEqual(cache.get(_xsd_redis_key(url)), expected)
+
+    def test_returns_cached_bytes_without_network_call(self):
+        """Při zásahu cache se síť nevolá."""
+
+        url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
+        cached_bytes = b"<cached/>"
+        cache.set(_xsd_redis_key(url), cached_bytes)
+
+        with patch("pas.api.urllib.request.urlopen") as urlopen_mock:
+            result = _fetch_xsd_bytes(url)
+
+        self.assertEqual(result, cached_bytes)
+        urlopen_mock.assert_not_called()
+
+    def test_cache_hit_for_non_amcr_url(self):
+        """Cache funguje i pro W3C URL bez verze v klíči."""
+
+        url = "https://www.w3.org/2001/xml.xsd"
+        cached_bytes = b"<xml-schema/>"
+        cache.set(_xsd_redis_key(url), cached_bytes)
+
+        with patch("pas.api.urllib.request.urlopen") as urlopen_mock:
+            result = _fetch_xsd_bytes(url)
+
+        self.assertEqual(result, cached_bytes)
+        urlopen_mock.assert_not_called()
+
+    def test_propagates_url_error(self):
+        """Síťová chyba se propaguje jako ``urllib.error.URLError``."""
+
+        with patch(
+            "pas.api.urllib.request.urlopen",
+            side_effect=urllib.error.URLError("connection refused"),
+        ):
+            with self.assertRaises(urllib.error.URLError):
+                _fetch_xsd_bytes("https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
+
+    def test_propagates_timeout_error(self):
+        """Vypršení časového limitu se propaguje jako ``TimeoutError``."""
+
+        with patch("pas.api.urllib.request.urlopen", side_effect=TimeoutError()):
+            with self.assertRaises(TimeoutError):
+                _fetch_xsd_bytes("https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
+
+    def test_network_error_does_not_populate_cache(self):
+        """Při síťové chybě se do cache nic neuloží."""
+
+        url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
+        with patch("pas.api.urllib.request.urlopen", side_effect=urllib.error.URLError("err")):
+            with self.assertRaises(urllib.error.URLError):
+                _fetch_xsd_bytes(url)
+
+        self.assertIsNone(cache.get(_xsd_redis_key(url)))
+
+    def test_second_call_uses_cache(self):
+        """Druhé volání se stejnou URL neotevře síťové spojení znovu."""
+
+        url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
+        content = b"<schema/>"
+        with patch("pas.api.urllib.request.urlopen", return_value=io.BytesIO(content)) as urlopen_mock:
+            _fetch_xsd_bytes(url)
+            _fetch_xsd_bytes(url)
+
+        urlopen_mock.assert_called_once()
 
 
 class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):

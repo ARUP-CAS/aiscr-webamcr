@@ -57,11 +57,20 @@ FEDORA_PORT_NUMBER = get_test_secret("TEST_FEDORA_PORT_NUMBER")
 FEDORA_PROTOCOL = get_test_secret("TEST_FEDORA_PROTOCOL")
 FEDORA_PATH = get_test_secret("TEST_FEDORA_PATH")
 
+FEDORA_DB_HOST = get_test_secret("TEST_FEDORA_DB_HOST")
+FEDORA_DB_PORT = get_test_secret("TEST_FEDORA_DB_PORT")
+FEDORA_DB_USER = get_test_secret("TEST_FEDORA_DB_USER")
+FEDORA_DB_PASS = get_test_secret("TEST_FEDORA_DB_PASS")
+FEDORA_DB_NAME = get_test_secret("TEST_FEDORA_DB_NAME")
+FEDORA_DB_TEMPLATE_NAME = get_test_secret("TEST_FEDORA_DB_TEMPLATE_NAME")
+
 TEST_SCREENSHOT_PATH = get_test_secret("TEST_SCREENSHOT_PATH")
 DATABASES["default"]["TEST"] = {"MIGRATE": False}
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 LOGGING["handlers"]["console"]["level"] = "ERROR"
+LOGGING["filters"]["dropped_test_db_filter"] = {"()": "core.logging_filters.DroppedTestDatabaseFilter"}
+LOGGING["loggers"]["django.request"]["filters"] = ["dropped_test_db_filter"]
 SILENCED_SYSTEM_CHECKS = ["django_recaptcha.recaptcha_test_key_error"]
 AUTO_LOGOUT = {}
 

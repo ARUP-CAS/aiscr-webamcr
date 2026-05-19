@@ -172,7 +172,7 @@ třech je jako poznámka uvedeno, že záznam pochází z importu z externího z
      - ``xs:string``
      - Použije se, pokud ``amcr:geom_system`` je ``5514``; atribut ``EPSG`` obsahuje kód souřadnicového systému.
 
-U elementů s atributem ``xml:lang`` se očekává hodnota ``cs``; v praxi však import hodnotu ignoruje.
+U elementů s atributem ``xml:lang`` se očekává hodnota ``cs``.
 
 Elementy odkazující na heslář (``okolnosti``, ``obdobi``, ``druh_nalezu``, ``specifikace``,
 ``pristupnost``) a na organizaci (``predano_organizace``) se uvádějí celé včetně textové hodnoty, protože
@@ -180,14 +180,13 @@ XML musí projít validací schématu. Pro import se využívá atribut ``id``; 
 hodnota ``id`` patří do správného typu hesláře (např. nelze do pole ``obdobi`` uvést kód hesláře
 pro druh nálezu). Textový obsah elementu se při importu ignoruje.
 
-Elementy ``amcr:stav``, ``amcr:historie`` a ``amcr:soubor`` jsou v importu zakázány nebo
-se stanoví automaticky:
+Některé elementy systém stanoví nebo generuje automaticky a v importu se ignorují nebo nejsou povoleny:
 
 - ``amcr:okres``, ``amcr:katastr`` — určí systém automaticky podle souřadnic; v importu nejsou povoleny.
   Při ``geom_system=4326`` se katastr odvozuje z ``geom_wkt``, při ``geom_system=5514`` se ``geom_sjtsk_wkt``
   nejprve transformuje do WGS-84 a katastr se odvozuje z výsledku.
   Pokud souřadnice nespadají do žádného katastru (např. bod mimo území ČR), import selže s HTTP 422.
-- ``amcr:stav`` — přiděluje systém; v importu není povolen.
+- ``amcr:stav`` — musí být jedna z povolených hodnot (1, 2, 3); určuje cílový stav záznamu po importu.
 - ``amcr:evidencni_cislo`` — lze uvést v importu; systém hodnotu přijme a uloží.
 - ``amcr:historie``, ``amcr:soubor`` — pouze pro export.
 
@@ -216,7 +215,7 @@ i pokud jsou v dokumentu přítomny.
         <amcr:poznamka>xs:string</amcr:poznamka>
         <amcr:nalezce id="xs:string">xs:string, xs:string</amcr:nalezce>
         <amcr:datum_nalezu>xs:date</amcr:datum_nalezu>
-        <!-- <amcr:stav>xs:integer</amcr:stav> -->
+        <amcr:stav>xs:integer</amcr:stav>
         <amcr:predano>xs:boolean</amcr:predano>
         <amcr:predano_organizace id="xs:string" xml:lang="cs">xs:string</amcr:predano_organizace>
         <amcr:geom_system>xs:integer</amcr:geom_system>

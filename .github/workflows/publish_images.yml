@@ -164,7 +164,7 @@ jobs:
           echo "dockerhub=${DIGEST_DOCKERHUB}" >> $GITHUB_OUTPUT
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@v4.1.1
+        uses: sigstore/cosign-installer@v4.1.2
 
       - name: Sign image
         shell: bash
