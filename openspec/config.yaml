@@ -1,0 +1,32 @@
+schema: spec-driven
+
+context: |
+  Repository: aiscr-webamcr - Django web application for AMCR, part of
+  the AIS CR ecosystem.
+  Tech stack: Python/Django backend under webclient/, JavaScript frontend
+  dependencies managed from package.json, Docker/local development support,
+  Sphinx documentation under docs/.
+  Governance: AGENTS.md is the assistant entrypoint, CLAUDE.md narrows
+  Claude Code usage, CONTRIBUTING.md owns human contribution workflow.
+  Agent vendor surfaces are tracked repository content when materialized
+  from the aiscr-management hub sync baseline.
+  Hub baseline: aiscr-management .agents/sync/repos.toml and
+  .agents/sync/specialized_sync_assets.toml declare synchronized
+  agent-vendor folders and repo-root integration assets for this repository.
+
+rules:
+  proposal:
+    - State whether the change affects governance, application behavior, or both.
+    - Name any aiscr-management hub baseline or sync path that supplies generated agent assets.
+    - Keep bootstrap proposals separate from Django application behavior changes.
+  specs:
+    - Use SHALL/MUST for durable behavioral requirements.
+    - Use Given/When/Then scenarios for testable contracts.
+    - Do not duplicate hub governance bodies; reference the hub baseline when applicable.
+  design:
+    - State whether files are created locally or expected from hub sync.
+    - Call out any operation that requires separate approval, especially config sync apply.
+  tasks:
+    - Include OpenSpec validation after artifact edits.
+    - Include a dry-run sync check before any future sync apply.
+    - Include usage-log close-out for governance work.

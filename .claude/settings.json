@@ -1,0 +1,101 @@
+{
+  "//_comment": "Claude Code project settings for aiscr-management. Governance: repo root CLAUDE.md and AGENTS.md. Apply to repo root via sync_agent_configs.py.",
+  "//_hooks_note": "Hooks are advisory-only (non-blocking, exit 0). Portable: Python 3 only, no bash-isms, no shared-state writes. See CLAUDE.md for rationale.",
+  "sandbox": {
+    "enabled": true,
+    "allowUnsandboxedCommands": false
+  },
+  "permissions": {
+    "deny": [
+      "Read(//c/Program Files/**)",
+      "Edit(//c/Program Files/**)",
+      "Read(//c/ProgramData/**)",
+      "Edit(//c/ProgramData/**)",
+      "Read(//c/Windows/**)",
+      "Edit(//c/Windows/**)",
+      "Read(~/Documents/**)",
+      "Edit(~/Documents/**)",
+      "Read(~/Desktop/**)",
+      "Edit(~/Desktop/**)",
+      "Read(~/Downloads/**)",
+      "Edit(~/Downloads/**)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Edit(./.env*)",
+      "Read(**/*.key)",
+      "Read(**/credentials*)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .agents/scripts/check_planning_git_upstream.py"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import sys,json;d=json.load(sys.stdin);cmd=d.get('tool_input',{}).get('command','');lc=cmd.lower();('sync_agent_configs.py' in lc and print('[GUARD] High-impact script detected. Human approval required. See AGENTS.md and CLAUDE.md before proceeding.'));('port_workspace_safety_config.py' in lc and print('[GUARD] port_workspace_safety_config.py writes app-level config (~/.cursor, ~/.codex, ~/.claude or --target-dir). Require approved plan and explicit confirmation. May pip install jsonschema/tomli-w; prefer repo .venv.'));(('.agents/scripts/' in lc or '.agents\\\\scripts\\\\' in lc) and all(h not in lc for h in ('.venv/', '.venv\\\\', 'venv/', 'venv\\\\')) and print('[GUARD] Repo script detected without repo venv. Use the repository virtualenv by default unless the user explicitly approved otherwise.'))\""
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .agents/scripts/claude_skill_usage_hook.py read_tool"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import subprocess,sys,shutil; _g=shutil.which('git'); _r=subprocess.run([_g,'status','--short'],capture_output=True,text=True) if _g else None; _c=(_r.stdout if (_r and not _r.returncode) else ''); [print(m) for m in ['[USAGE-LOG] Governance files modified - create/update .agents/reports/usage/ entry','  Required fields: When | Agent/runtime | Model/backend | What | Impacted | Workflow context | Verification | Close-out'] if '.agents/' in _c or '.cursor/' in _c]; sys.exit(0)\""
+          },
+          {
+            "type": "command",
+            "command": "python3 -c \"import subprocess,sys,shutil; _g=shutil.which('git'); _r=subprocess.run([_g,'status','--short'],capture_output=True,text=True) if _g else None; _c=(_r.stdout if (_r and not _r.returncode) else ''); ('local_configs/' in _c or 'specialized_sync_assets.toml' in _c or 'sync_policy.py' in _c) and print('[SYNC-LAYER2] local_configs or sync policy touched — when repos-root exists, run orchestrate_local_agent_sync.py inspect before merge/apply; see config-sync.plan.md.'); sys.exit(0)\""
+          },
+          {
+            "type": "command",
+            "command": "python3 .agents/scripts/check_readme_parity.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 .agents/scripts/claude_mcp_secrets_stop_hook.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 -c \"import subprocess,sys,shutil; _g=shutil.which('git'); _r=subprocess.run([_g,'status','--short'],capture_output=True,text=True) if _g else None; _c=(_r.stdout if (_r and not _r.returncode) else ''); _roots=('.agents/','.cursor/','.claude/','.codex/','.gemini/'); [print(m) for m in ['[USAGE-LOG] Governance files modified - create/update .agents/reports/usage/ entry','  Required fields: When | Agent/runtime | Model/backend | What | Impacted | Workflow context | Verification | Close-out'] if any(r in _c for r in _roots)]; sys.exit(0)\""
+          },
+          {
+            "type": "command",
+            "command": "python3 -c \"import subprocess,sys,shutil; _g=shutil.which('git'); _r=subprocess.run([_g,'status','--short'],capture_output=True,text=True) if _g else None; _c=(_r.stdout if (_r and not _r.returncode) else ''); _roots=('.agents/','.cursor/','.claude/','.codex/','.gemini/'); [print(m) for m in ['[USAGE-LOG] Governance files modified - create/update .agents/reports/usage/ entry','  Required fields: When | Agent/runtime | Model/backend | What | Impacted | Workflow context | Verification | Close-out'] if any(r in _c for r in _roots)]; sys.exit(0)\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .agents/scripts/claude_skill_usage_hook.py"
+          }
+        ]
+      }
+    ]
+  }
+}

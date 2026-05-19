@@ -1,0 +1,19 @@
+# aiscr:canonical=.agents/canonical_configs/workflow_skills/aiscr-agent-vendor-introduction.md
+description = "Introduce or remediate an agent-tool vendor in the AIS CR hub: matrix/TOML, sync policy (AGENT_FOLDERS and repo-root REPO_ROOT_SYNC_IDS), parity, direct bundles; optional cross-tool aiscr-* workflow registration when the session charter requires it."
+prompt = """
+<!-- aiscr:canonical=.agents/canonical_configs/workflow_skills/aiscr-agent-vendor-introduction.md -->
+
+<!-- aiscr:stop-anchor -->
+**Entry scope**
+
+- Stay in this `.gemini/commands/aiscr/` surface and its same-vendor pointers first.
+- Do not open parallel vendor trees by default just in case.
+- Cross into another vendor tree only for explicit parity checks, generator work, or governance maintenance.
+
+Introduce or remediate an agent-tool vendor in the AIS CR hub: matrix/TOML, sync policy (AGENT_FOLDERS and repo-root REPO_ROOT_SYNC_IDS), parity, direct bundles; optional cross-tool aiscr-* workflow registration when the session charter requires it.
+
+**Skill body (authoritative):** `.gemini/skills/aiscr-agent-vendor-introduction/SKILL.md` — load that file for the full workflow body, guardrails, and verification.
+
+`.agents/plans/agent-vendor-introduction.plan.md`
+Load openspec/specs/agent-vendor-onboarding/spec.md first for the durable contract; then agent_tool_feature_matrix.md, mandatory_vendor_doc_urls.toml, sync_policy.py; follow agent-vendor-introduction.plan.md as the phased execution workflow; no sync apply without approval.
+"""

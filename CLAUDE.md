@@ -64,6 +64,8 @@ Migrations are excluded from all hooks.
 
 For live library docs (Django, DRF, Celery, Sphinx): **context7**. For
 issues/PRs and cross-referencing with AGENTS.md: **GitHub MCP**. Configure
-locally (e.g. Cursor MCP or `claude mcp add …`); repo does not commit
-`.cursor/` or `.claude/`. Dev setup checklist:
+personal MCP credentials locally. Repository vendor surfaces such as
+`.cursor/`, `.claude/`, `.codex/`, `.gemini/`, `.clinerules/`, and `.qodo/`
+are tracked when materialized from the `aiscr-management` hub sync baseline;
+do not store private credentials in them. Dev setup checklist:
 [.agents/prompts/setup_dev.md](.agents/prompts/setup_dev.md).

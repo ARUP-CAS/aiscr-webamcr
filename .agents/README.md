@@ -26,7 +26,7 @@ Pravidla a governance viz [AGENTS.md](../AGENTS.md).
     review_reports/              — Reporty z jednotlivých tasků (<task_id>.md); final_audit.md obsahuje Changelog
     bugs.md                      — Evidence nalezených chyb
     refactoring_backlog.md       — Backlog strukturálních vylepšení
-    claude_automation_recommendations.md  — Doporučení pro Claude Code automations
+    automation_recommendations.md  — Doporučení pro Claude Code automations
   scripts/
     review_tools.py              — Repo-agnostic review automation (hash, cross-validate, coverage-gaps, id-inventory, lint-artifacts, prompt-evolution, repo-structure, status)
 ```
@@ -40,6 +40,6 @@ Pravidla a governance viz [AGENTS.md](../AGENTS.md).
 - **Inkrementální update:** `prompts/review_update.md`
 - **Doc hygiene audit:** `prompts/audit_doc_hygiene.md`
 - **Konvence / setup / hooks:** `prompts/project_conventions.md`, `prompts/setup_dev.md`, `prompts/hooks_reference.md`
-- **Automation doporučení:** `reports/claude_automation_recommendations.md`
+- **Automation doporučení:** `reports/automation_recommendations.md`
 
 Viz také [CONTRIBUTING.md](../CONTRIBUTING.md) § Správa dokumentace repozitáře.

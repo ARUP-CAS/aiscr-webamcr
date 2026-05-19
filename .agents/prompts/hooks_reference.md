@@ -32,4 +32,4 @@ Hooks are configured locally (for example in `.claude/settings.json` or the Curs
 
 ---
 
-For full context see `[claude_automation_recommendations.md](../reports/claude_automation_recommendations.md)` and `AGENTS.md` § Shared Automation Rules.
+For full context see `[automation_recommendations.md](../reports/automation_recommendations.md)` and `AGENTS.md` § Shared Automation Rules.

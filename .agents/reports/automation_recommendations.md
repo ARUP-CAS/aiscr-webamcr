@@ -1,4 +1,4 @@
-# Claude Code Automation Recommendations — AMČR (aiscr-webamcr)
+# Automation Recommendations — AMČR (aiscr-webamcr)
 
 Datum: 2026-03-11
 

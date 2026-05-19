@@ -1,0 +1,18 @@
+{
+  "useAdvancedModelForComplexTasks": true,
+  "tools": {
+    "enableGitIntegration": true,
+    "enableTerminal": true
+  },
+  "formatting": {
+    "markdown": {
+      "preferHeadingsLevel": 3,
+      "useBoldForKeyInfo": true
+    }
+  },
+  "behavior": {
+    "summaryVerbosity": "low",
+    "respectContributingGuidelines": true,
+    "respectAgentsGuidelines": true
+  }
+}
