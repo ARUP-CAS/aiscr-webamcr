@@ -2540,12 +2540,15 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
         """
         Ověří oprávnění potřebná pro import samostatného nálezu.
 
-        :param user: Uživatel provádějící import.
-        :param data: Data jednoho importovaného záznamu.
+        Kontroluje dvě podmínky: stav záznamu musí odpovídat roli uživatele (badatel
+        nejvýše stav 1, ostatní role nejvýše stav 3) a projekt musí být součástí
+        průzkumných projektů dostupných danému uživateli dle
+        :meth:`projekt.models.Projekt.get_pruzkum_projekty_pro_uzivatele`.
 
-        :return: Vrací ``True`` pokud má uživatel oprávnění ``pas_zapsat_do_projektu``
-                 nebo ``spoluprace_edit_projekty`` pro daný projekt a stav importovaného
-                 záznamu odpovídá roli uživatele (badatel max. stav 1, archeolog a výše max. stav 3).
+        :param user: Uživatel provádějící import.
+        :param data: Data jednoho importovaného záznamu jako slovník; očekávají se klíče
+            ``stav`` (int) a ``projekt`` (ident_cely projektu).
+        :return: ``True`` pokud jsou splněny obě podmínky, jinak ``False``.
         """
 
         stav = data.get("stav")
@@ -2557,14 +2560,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
             return False
 
         projekt_ident = data.get("projekt")
-        if projekt_ident and check_permissions(Permissions.actionChoices.pas_zapsat_do_projektu, user, projekt_ident):
-            return True
-        elif projekt_ident and check_permissions(
-            Permissions.actionChoices.spoluprace_edit_projekty, user, projekt_ident
-        ):
-            return True
-
-        return False
+        return Projekt.get_pruzkum_projekty_pro_uzivatele(user).filter(ident_cely=projekt_ident).exists()
 
     @classmethod
     def _create_import_history_records(cls, instance: SamostatnyNalez, user) -> None:

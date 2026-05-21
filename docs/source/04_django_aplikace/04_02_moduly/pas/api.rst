@@ -759,12 +759,15 @@ Třídy
 
       Ověří oprávnění potřebná pro import samostatného nálezu.
 
-      :param user: Uživatel provádějící import.
-      :param data: Data jednoho importovaného záznamu.
+      Kontroluje dvě podmínky: stav záznamu musí odpovídat roli uživatele (badatel
+      nejvýše stav 1, ostatní role nejvýše stav 3) a projekt musí být součástí
+      průzkumných projektů dostupných danému uživateli dle
+      :meth:`projekt.models.Projekt.get_pruzkum_projekty_pro_uzivatele`.
 
-      :return: Vrací ``True`` pokud má uživatel oprávnění ``pas_zapsat_do_projektu``
-               nebo ``spoluprace_edit_projekty`` pro daný projekt a stav importovaného
-               záznamu odpovídá roli uživatele (badatel max. stav 1, archeolog a výše max. stav 3).
+      :param user: Uživatel provádějící import.
+      :param data: Data jednoho importovaného záznamu jako slovník; očekávají se klíče
+          ``stav`` (int) a ``projekt`` (ident_cely projektu).
+      :return: ``True`` pokud jsou splněny obě podmínky, jinak ``False``.
 
    .. py:method:: _create_import_history_records()
 

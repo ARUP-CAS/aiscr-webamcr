@@ -21,6 +21,7 @@ from core.constants import (
     NAHRANI_SBR,
     ODESLANI_SN,
     POTVRZENI_SN,
+    PROJEKT_STAV_ZAHAJENY_V_TERENU,
     SN_ARCHIVOVANY,
     SN_ODESLANY,
     SN_POTVRZENY,
@@ -368,11 +369,13 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                     "licence": cls.licence,
                 },
             )
-        from core.constants import ROLE_ARCHEOLOG_ID, ROLE_BADATEL_ID
+        from core.constants import ROLE_ADMIN_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_BADATEL_ID
         from django.contrib.auth.models import Group
 
         badatel_group, _ = Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
         archeolog_group, _ = Group.objects.get_or_create(id=ROLE_ARCHEOLOG_ID, defaults={"name": "archeolog"})
+        Group.objects.get_or_create(id=ROLE_ARCHIVAR_ID, defaults={"name": "archivar"})
+        Group.objects.get_or_create(id=ROLE_ADMIN_ID, defaults={"name": "admin"})
         for role_group in (badatel_group, archeolog_group):
             Permissions.objects.get_or_create(
                 main_role=role_group,
@@ -532,6 +535,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                         "organizace": cls.organizace,
                         "hlavni_katastr": katastr,
                         "typ_projektu": survey_typ_projektu,
+                        "stav": PROJEKT_STAV_ZAHAJENY_V_TERENU,
                     },
                 )
                 Projekt.objects.get_or_create(
@@ -926,8 +930,8 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertIn("detail", response.data)
         self._assert_log_failure()
 
-    def test_non_survey_projekt_returns_404(self):
-        """XML s projektem mimo typ ``průzkum`` vrátí HTTP 404 stejně jako neexistující projekt."""
+    def test_non_survey_projekt_returns_403(self):
+        """XML s projektem mimo typ ``průzkum`` vrátí HTTP 403, protože projekt není v dostupných průzkumných projektech."""
         xml = self._minimal_nalez_xml(
             ident_cely=":tba",
             projekt_ident=self.non_survey_projekt.ident_cely,
@@ -936,8 +940,8 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         response = self._post_xml(xml)
 
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertIn("validation_errors", response.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("detail", response.data)
         self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.non_survey_projekt).exists())
         self._assert_log_failure()
 
