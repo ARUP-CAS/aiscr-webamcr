@@ -356,19 +356,22 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         q = (q or "").strip()
         if not q:
             return []
-        if cls.CROSSREF_DOI_REGEX.match(q):
+        is_doi = bool(cls.CROSSREF_DOI_REGEX.match(q))
+        if is_doi:
             results = cls._api_call_cross_ref_doi(q)
         else:
             results = []
         if not results:
-            is_doi = bool(cls.CROSSREF_DOI_REGEX.match(q))
 
             async def _fetch_all():
                 tasks = [cls._api_call_data_cite_doi(q), cls._api_call_data_cite(q)]
                 if not is_doi:
                     tasks.append(cls._api_call_cross_ref_title(q))
                 gathered = await asyncio.gather(*tasks)
-                return gathered[0], gathered[1], gathered[2] if not is_doi else []
+                doi_results = gathered[0]
+                title_results = gathered[1]
+                crossref_results = gathered[2] if not is_doi else []
+                return doi_results, title_results, crossref_results
 
             try:
                 loop = asyncio.get_running_loop()
@@ -380,7 +383,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
             else:
                 doi_results, title_results, crossref_results = asyncio.run(_fetch_all())
             results = doi_results + title_results + crossref_results
-        if cls.CROSSREF_DOI_REGEX.match(q) and not any(
+        if is_doi and not any(
             i and len(i) > 0 and i[0] is not None and str(i[0]).lower() == q.lower() for i in results
         ):
             results = cls._doi_item_exists(q) + results
