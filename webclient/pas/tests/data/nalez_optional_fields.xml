@@ -8,9 +8,14 @@
     <amcr:ident_cely>{IDENT_CELY}</amcr:ident_cely>
     <amcr:projekt id="{PROJEKT_IDENT}">{PROJEKT_IDENT}</amcr:projekt>
     <amcr:hloubka>42</amcr:hloubka>
+    <amcr:okolnosti id="{OKOLNOSTI_IDENT}" xml:lang="cs">{OKOLNOSTI_IDENT}</amcr:okolnosti>
+    <amcr:obdobi id="{OBDOBI_IDENT}" xml:lang="cs">{OBDOBI_IDENT}</amcr:obdobi>
     <amcr:presna_datace>raný středověk</amcr:presna_datace>
+    <amcr:druh_nalezu id="{DRUH_NALEZU_IDENT}" xml:lang="cs">{DRUH_NALEZU_IDENT}</amcr:druh_nalezu>
+    <amcr:specifikace id="{SPECIFIKACE_IDENT}" xml:lang="cs">{SPECIFIKACE_IDENT}</amcr:specifikace>
     <amcr:pocet>3</amcr:pocet>
     <amcr:poznamka>testovací poznámka</amcr:poznamka>
+    <amcr:nalezce id="{NALEZCE_IDENT}">{NALEZCE_LABEL}</amcr:nalezce>
     <amcr:datum_nalezu>2024-06-01</amcr:datum_nalezu>
     <amcr:stav>3</amcr:stav>
     <amcr:geom_system>4326</amcr:geom_system>
