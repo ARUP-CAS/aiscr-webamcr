@@ -3,7 +3,7 @@ import asyncio
 import concurrent.futures
 import re
 import unicodedata
-from urllib.parse import quote, quote_plus
+from urllib.parse import quote
 
 import httpx
 import requests
@@ -260,9 +260,11 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         Vyhledá DOI v CrossRef API pomocí přímého DOI.
 
         U objektu ``message`` (jedna práce i položky ve výsledném seznamu) se předpokládá vždy pole ``DOI``.
+        Záložní vyhledávání podle názvu se záměrně neprovádí — DOI jako dotaz pro ``query.title``
+        vrací nesouvisející výsledky z CrossRef a blokuje dotaz na DataCite.
 
         :param q: Vyhledávací dotaz (DOI).
-        :return: Seznam [DOI, název] párů.
+        :return: Seznam [DOI, název] párů, nebo prázdný seznam pokud DOI v CrossRef neexistuje.
         """
         q = (q or "").strip()
         if not q:
@@ -272,8 +274,8 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         try:
             response = requests.get(base_url, timeout=cls.HTTP_TIMEOUT)
         except requests.RequestException:
-            response = None
-        if response is not None and response.status_code == 200:
+            return []
+        if response.status_code == 200:
             try:
                 payload = response.json()
             except ValueError:
@@ -282,25 +284,6 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
             doi_id = msg.get("DOI")
             title = cls._crossref_item_display_title(msg) or doi_id
             return [[doi_id, f"{title} ({doi_id})"]]
-        else:
-            list_url = f"https://api.crossref.org/works?query.title={quote_plus(q)}&sort=relevance&rows=50"
-            try:
-                response = requests.get(list_url, timeout=cls.HTTP_TIMEOUT)
-            except requests.RequestException:
-                return []
-            results = []
-            if response.status_code == 200:
-                try:
-                    payload = response.json()
-                except ValueError:
-                    return []
-                for item in payload.get("message", {}).get("items", []):
-                    if not isinstance(item, dict):
-                        continue
-                    doi = item.get("DOI")
-                    label = cls._crossref_item_display_title(item) or doi
-                    results.append([doi, f"{label} ({doi})"])
-                return results
         return []
 
     @classmethod
@@ -373,18 +356,22 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         q = (q or "").strip()
         if not q:
             return []
-        if cls.CROSSREF_DOI_REGEX.match(q):
+        is_doi = bool(cls.CROSSREF_DOI_REGEX.match(q))
+        if is_doi:
             results = cls._api_call_cross_ref_doi(q)
         else:
             results = []
         if not results:
 
             async def _fetch_all():
-                return await asyncio.gather(
-                    cls._api_call_data_cite_doi(q),
-                    cls._api_call_data_cite(q),
-                    cls._api_call_cross_ref_title(q),
-                )
+                tasks = [cls._api_call_data_cite_doi(q), cls._api_call_data_cite(q)]
+                if not is_doi:
+                    tasks.append(cls._api_call_cross_ref_title(q))
+                gathered = await asyncio.gather(*tasks)
+                doi_results = gathered[0]
+                title_results = gathered[1]
+                crossref_results = gathered[2] if not is_doi else []
+                return doi_results, title_results, crossref_results
 
             try:
                 loop = asyncio.get_running_loop()
@@ -396,7 +383,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
             else:
                 doi_results, title_results, crossref_results = asyncio.run(_fetch_all())
             results = doi_results + title_results + crossref_results
-        if cls.CROSSREF_DOI_REGEX.match(q) and not any(
+        if is_doi and not any(
             i and len(i) > 0 and i[0] is not None and str(i[0]).lower() == q.lower() for i in results
         ):
             results = cls._doi_item_exists(q) + results

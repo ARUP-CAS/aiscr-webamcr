@@ -100,9 +100,11 @@ Třídy
       Vyhledá DOI v CrossRef API pomocí přímého DOI.
 
       U objektu ``message`` (jedna práce i položky ve výsledném seznamu) se předpokládá vždy pole ``DOI``.
+      Záložní vyhledávání podle názvu se záměrně neprovádí — DOI jako dotaz pro ``query.title``
+      vrací nesouvisející výsledky z CrossRef a blokuje dotaz na DataCite.
 
       :param q: Vyhledávací dotaz (DOI).
-      :return: Seznam [DOI, název] párů.
+      :return: Seznam [DOI, název] párů, nebo prázdný seznam pokud DOI v CrossRef neexistuje.
 
    .. py:method:: _doi_item_exists()
 
