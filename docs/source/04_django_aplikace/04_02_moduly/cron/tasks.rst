@@ -3,6 +3,18 @@ CRON tasks
 
 Modul tasks.
 
+Třídy
+------
+
+.. py:class:: ImportLockLostError
+
+   Vyvoláno, když ``refresh_import_lock`` zjistí, že importní lock byl ztracen.
+
+   Použito jako sentinel, aby vnější ``except Exception`` v ``run_data_import`` mohl
+   rozlišit ztrátu zámku od ostatních selhání během importu dat a nepřepsal
+   konkrétní status message ``failed_lock_lost``.
+
+
 Funkce
 ------
 

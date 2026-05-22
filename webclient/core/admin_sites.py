@@ -517,9 +517,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
             self.redis_connector.set(
                 f"import_performed_action_{job_id}", performed_action, ex=self.IMPORT_DATA_REDIS_EXPIRATION
             )
-            self.redis_connector.set(
-                f"import_data_progress_{job_id}", json.dumps({}), ex=self.IMPORT_DATA_REDIS_EXPIRATION
-            )
+            self.redis_connector.set(f"import_data_progress_{job_id}", 0, ex=self.IMPORT_DATA_REDIS_EXPIRATION)
             self.redis_connector.set(
                 f"import_data_primary_keys_{job_id}", json.dumps({}), ex=self.IMPORT_DATA_REDIS_EXPIRATION
             )

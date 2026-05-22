@@ -2043,10 +2043,10 @@ Třídy
 
    .. py:method:: get_record_history()
 
-      Vrátí přímo vazbu spolupráce jako cíl pro historii.
+      Vrátí vedoucího uživatele jako cíl pro historii spolupráce.
 
       :param record: Záznam ``UzivatelSpoluprace`` po importu.
-      :return: Přímo předaná vazba spolupráce.
+      :return: Vedoucí uživatel navázaný na spolupráci.
 
 
 .. py:class:: UzivatelOpravneniMapper

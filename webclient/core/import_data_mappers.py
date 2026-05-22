@@ -192,13 +192,16 @@ class ImportDataIncorrectStructureContentObjectError(ImportDataError):
         :param expected_colummns_options: Parametr ``expected_colummns_options`` se předává do volání ``__init__()``, ``join()``.
         """
         super().__init__(
-            f'{_("core_admin.ImportDataIncorrectStructureContentObjectError.message.part_1")} '
-            + (
-                f'{_("core_admin.ImportDataIncorrectStructureContentObjectError.message.columns")}: {", ".join(columns)} '
-            )
-            + (
-                f'{_("core_admin.ImportDataIncorrectStructureContentObjectError.message.expected_columns_options")}: {"; ".join([str(op) for op in expected_colummns_options])} '
-            )
+            _("core_admin.ImportDataIncorrectStructureContentObjectError.message.part_1")
+            + " "
+            + _("core_admin.ImportDataIncorrectStructureContentObjectError.message.columns")
+            + ": "
+            + ", ".join(columns)
+            + " "
+            + _("core_admin.ImportDataIncorrectStructureContentObjectError.message.expected_columns_options")
+            + ": "
+            + "; ".join([str(op) for op in expected_colummns_options])
+            + " "
         )
 
 
@@ -912,6 +915,7 @@ class LookupImportField(BaseImportField):
             :raises ImportDataMissingReferencedValueError: Vyvolá se v konkrétních chybových větvích této funkce.
         """
 
+        self._instance_value = None
         if str(value).lower() == "nan" or value is None or len(str(value)) == 0:
             return None
         lookup_cache = self.get_lookup_cache()
@@ -2903,12 +2907,17 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
             dokument = Dokument.objects.get(ident_cely=mapping_dict["ident_cely"])
             dokument_extra_data_query = DokumentExtraData.objects.filter(dokument=dokument)
-            if dokument_extra_data_query.exists():
-                dokument_extra_data = dokument_extra_data_query.first()
-            else:
-                dokument_extra_data = DokumentExtraData(dokument=dokument)
             for field_name, field_value in mapping_dict_dokument.items():
                 setattr(dokument, field_name, field_value)
+            if dokument_extra_data_query.exists():
+                dokument_extra_data = dokument_extra_data_query.first()
+            elif any(value is not None for value in mapping_dict_dokument_extra_data.values()):
+                # Nový DokumentExtraData zakládáme jen pokud import skutečně nese nějaká data,
+                # která do něj patří. Bez této kontroly by se ukládal záznam se samými NULL
+                # hodnotami a narazil na NOT NULL constraint (např. geom_system).
+                dokument_extra_data = DokumentExtraData(dokument=dokument)
+            else:
+                return [dokument]
             for field_name, field_value in mapping_dict_dokument_extra_data.items():
                 setattr(dokument_extra_data, field_name, field_value)
             return [dokument_extra_data, dokument]
@@ -3270,7 +3279,7 @@ class NeidentAkceVedouciMapper(ImportModelMapper):
             :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
-        field_mapping["neident_akce"] = LookupImportField(DokumentCast)
+        field_mapping["neident_akce"] = LookupImportField(NeidentAkce, "dokument_cast__ident_cely")
         field_mapping["vedouci"] = LookupImportField(Osoba)
         return field_mapping
 
@@ -3806,6 +3815,8 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
         :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``.
         :return: Nově vytvořená hodnota připravená touto funkcí.
         """
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+            return [self.model_class.objects.get(**self._get_filter_kwargs_primary_key())]
         mapping_dict = self.map(performed_action, True)
         mapping_dict = {self.map_column_name_to_field_name(field): value for field, value in mapping_dict.items()}
         app_label, model = mapping_dict["content_type"].split(".")
@@ -3912,12 +3923,12 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
     @staticmethod
     def get_record_history(record: UzivatelSpoluprace):
         """
-        Vrátí přímo vazbu spolupráce jako cíl pro historii.
+        Vrátí vedoucího uživatele jako cíl pro historii spolupráce.
 
         :param record: Záznam ``UzivatelSpoluprace`` po importu.
-        :return: Přímo předaná vazba spolupráce.
+        :return: Vedoucí uživatel navázaný na spolupráci.
         """
-        return record
+        return record.vedouci
 
 
 @ImportModelMapper.register("uzivatele_opravneni")
