@@ -612,6 +612,10 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         # Úprava uložení
         time = self.getTime()
         self.ElementClick(By.ID, "pas-edit-ulozeni")
+        self.select_dynamic_selectpicker_option(
+            "id_edit-ulozeni-predano_organizace",
+            "Archeologický ústav Brno - Dolní Dunajovice",
+        )
         self.ElementClick(By.ID, "id_edit-ulozeni-evidencni_cislo")
         self.driver.find_element(By.ID, "id_edit-ulozeni-evidencni_cislo").send_keys("1")
         self.select_nth_selectpicker_option("id_edit-ulozeni-pristupnost")

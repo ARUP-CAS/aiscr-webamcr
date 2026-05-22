@@ -76,8 +76,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "id_popis").send_keys("test")
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
         self.ElementClick(By.ID, "bs-select-7-1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_licence .filter-option-inner-inner")
-        self.ElementClick(By.ID, "bs-select-8-1")
+        self.select_nth_selectpicker_option("id_licence")
 
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
@@ -770,8 +769,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementSendKeys(By.ID, "id_popis", "test")
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
         self.ElementClick(By.ID, "bs-select-7-1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_licence .btn")
-        self.ElementClick(By.ID, "bs-select-8-1")
+        self.select_nth_selectpicker_option("id_licence")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokument")
@@ -1300,8 +1298,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_typ_dokumentu .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("3")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_licence .btn")
-        self.ElementClick(By.ID, "bs-select-4-1")
+        self.select_nth_selectpicker_option("id_licence")
 
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
