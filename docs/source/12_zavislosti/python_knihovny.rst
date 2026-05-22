@@ -152,7 +152,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/jawah/charset_normalizer/blob/master/CHANGELOG.md
    * - click
-     - 8.4.0
+     - 8.4.1
      - BSD-3-Clause
      - https://github.com/pallets/click/
    * - click-didyoumean
@@ -340,7 +340,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pre-commit/identify
    * - idna
-     - 3.15
+     - 3.16
      - BSD-3-Clause
      - https://github.com/kjd/idna
    * - imagesize
