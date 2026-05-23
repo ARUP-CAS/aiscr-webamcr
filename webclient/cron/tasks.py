@@ -866,6 +866,11 @@ def run_data_import(job_id, user_id, lock_token):
         history_total = len(updated_history_dict)
         redis_connector.set(f"import_data_history_total_{job_id}", history_total, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
         redis_connector.set(f"import_data_history_progress_{job_id}", 0, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+        history_skipped_str = _("cron.tasks.run_data_import.history_record_skipped")
+        for record_id in range(record_count):
+            if record_id not in import_history_record_result:
+                import_history_record_result[record_id] = history_skipped_str
+        redis_connector.set(f"import_data_history_record_result_{job_id}", json.dumps(import_history_record_result))
         for history_index, (history_target_key, entry) in enumerate(updated_history_dict.items()):
             refresh_import_lock()
             if not failed and not stopped:
@@ -928,6 +933,16 @@ def run_data_import(job_id, user_id, lock_token):
         fedora_total = len(fedora_update_targets_dict)
         redis_connector.set(f"import_data_fedora_total_{job_id}", fedora_total, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
         redis_connector.set(f"import_data_fedora_progress_{job_id}", 0, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+        fedora_skipped_str = _("cron.tasks.run_data_import.fedora_skipped")
+        fedora_pending_record_ids = set()
+        for affected_ids in fedora_update_targets_record_ids_dict.values():
+            fedora_pending_record_ids.update(affected_ids)
+        for record_id in range(record_count):
+            if record_id in import_fedora_result:
+                continue
+            if record_id not in fedora_pending_record_ids:
+                import_fedora_result[record_id] = [fedora_skipped_str]
+        redis_connector.set(f"import_fedora_result_{job_id}", json.dumps(import_fedora_result))
         for fedora_index, item in enumerate(fedora_update_targets_dict):
             refresh_import_lock()
             if not failed and not stopped:

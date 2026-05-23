@@ -544,6 +544,13 @@ class AmcrCustomAdminSite(admin.AdminSite):
             context["job_id"] = job_id
             context["validation_results"] = validation_results
             context["invalid_records"] = ", ".join([str(r) for r in invalid_records])
+            context["performed_action"] = performed_action
+            performed_action_labels = {
+                ImportDataAdminForm.PERFORMED_ACTION_INSERT: _("core.forms.ImportDataAdminForm.insert"),
+                ImportDataAdminForm.PERFORMED_ACTION_UPDATE: _("core.forms.ImportDataAdminForm.update"),
+                ImportDataAdminForm.PERFORMED_ACTION_DELETE: _("core.forms.ImportDataAdminForm.delete"),
+            }
+            context["performed_action_label"] = performed_action_labels.get(performed_action, performed_action)
             try:
                 import_directory_settings_obj = CustomAdminSettings.objects.get(item_id="import_directory_settings")
                 import_directory_settings = json.loads(import_directory_settings_obj.value)

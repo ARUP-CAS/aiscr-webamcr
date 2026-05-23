@@ -157,26 +157,18 @@ class ImportDataIncorrectStructureError(ImportDataError):
         :param missing_columns: Parametr ``missing_columns`` se předává do volání ``__init__()``, ``join()``.
         :param excess_columns: Číselná hodnota ``excess_columns`` použitá při výpočtu nebo transformaci.
         """
-        super().__init__(
-            _("core_admin.ImportDataIncorrectStructureError.message.part_1")
-            + " "
-            + (
-                _("core_admin.ImportDataIncorrectStructureError.message.missing_columns")
-                + ": "
-                + ", ".join(missing_columns)
-                + " "
-                if missing_columns
-                else ""
+        message = "{} ".format(_("core_admin.ImportDataIncorrectStructureError.message.part_1"))
+        if missing_columns:
+            message += "{}: {} ".format(
+                _("core_admin.ImportDataIncorrectStructureError.message.missing_columns"),
+                ", ".join(missing_columns),
             )
-            + (
-                _("core_admin.ImportDataIncorrectStructureError.message.excess_columns")
-                + ": "
-                + ", ".join(excess_columns)
-                + " "
-                if excess_columns
-                else ""
+        if excess_columns:
+            message += "{}: {} ".format(
+                _("core_admin.ImportDataIncorrectStructureError.message.excess_columns"),
+                ", ".join(excess_columns),
             )
-        )
+        super().__init__(message)
 
 
 class ImportDataIncorrectStructureContentObjectError(ImportDataError):
@@ -192,16 +184,13 @@ class ImportDataIncorrectStructureContentObjectError(ImportDataError):
         :param expected_colummns_options: Parametr ``expected_colummns_options`` se předává do volání ``__init__()``, ``join()``.
         """
         super().__init__(
-            _("core_admin.ImportDataIncorrectStructureContentObjectError.message.part_1")
-            + " "
-            + _("core_admin.ImportDataIncorrectStructureContentObjectError.message.columns")
-            + ": "
-            + ", ".join(columns)
-            + " "
-            + _("core_admin.ImportDataIncorrectStructureContentObjectError.message.expected_columns_options")
-            + ": "
-            + "; ".join([str(op) for op in expected_colummns_options])
-            + " "
+            "{} {}: {} {}: {} ".format(
+                _("core_admin.ImportDataIncorrectStructureContentObjectError.message.part_1"),
+                _("core_admin.ImportDataIncorrectStructureContentObjectError.message.columns"),
+                ", ".join(columns),
+                _("core_admin.ImportDataIncorrectStructureContentObjectError.message.expected_columns_options"),
+                "; ".join([str(op) for op in expected_colummns_options]),
+            )
         )
 
 
@@ -221,27 +210,22 @@ class ImportDataMissingReferencedValueError(ImportDataError):
         self.missing_value_id = missing_value_id
         self.missing_model_name = missing_model_name
         self.missing_field_name = missing_field_name
-        super().__init__(
-            _("core_admin.ImportDataMissingReferencedValueError.message.part_1")
-            + " "
-            + str(missing_value_id)
-            + " "
-            + _("core_admin.ImportDataMissingReferencedValueError.message.part_2")
-            + " "
-            + (
-                str(missing_model_name)
-                + " "
-                + _("core_admin.ImportDataMissingReferencedValueError.message.part_3")
-                + " "
-                if missing_model_name
-                else ""
-            )
-            + (
-                _("core_admin.ImportDataMissingReferencedValueError.message.part_4") + " " + str(missing_field_name)
-                if missing_field_name
-                else ""
-            )
+        message = "{} {} {} ".format(
+            _("core_admin.ImportDataMissingReferencedValueError.message.part_1"),
+            str(missing_value_id),
+            _("core_admin.ImportDataMissingReferencedValueError.message.part_2"),
         )
+        if missing_model_name:
+            message += "{} {} ".format(
+                str(missing_model_name),
+                _("core_admin.ImportDataMissingReferencedValueError.message.part_3"),
+            )
+        if missing_field_name:
+            message += "{} {}".format(
+                _("core_admin.ImportDataMissingReferencedValueError.message.part_4"),
+                str(missing_field_name),
+            )
+        super().__init__(message)
 
 
 class ImportDataIntegrityError(ImportDataError):
@@ -297,6 +281,34 @@ class ImportDataLimitChoicesError(ImportDataError):
         )
 
 
+class ImportDataMissingHeslarValueError(ImportDataError):
+    """
+    Výjimka vyvolaná, pokud hodnota není platnou položkou hesláře určeného omezením ``nazev_heslare``.
+    """
+
+    def __init__(self, field_name, heslar_name, value):
+        """
+        Inicializuje instanci třídy.
+
+        :param field_name: Název pole, ve kterém lookup selhal.
+        :param heslar_name: Název hesláře (hodnota ``nazev_heslare``), do kterého hodnota nepatří.
+        :param value: Hodnota, která nebyla v hesláři nalezena.
+        """
+        self.field_name = field_name
+        self.heslar_name = heslar_name
+        self.value = value
+        super().__init__(
+            "{} {} {} {} {} {}".format(
+                _("core_admin.ImportDataMissingHeslarValueError.message.part_1"),
+                str(value),
+                _("core_admin.ImportDataMissingHeslarValueError.message.part_2"),
+                str(field_name),
+                _("core_admin.ImportDataMissingHeslarValueError.message.part_3"),
+                str(heslar_name),
+            )
+        )
+
+
 class ImportDataHeslarPresnostLimitChoicesError(ImportDataError):
     """Výjimka vyvolaná při neplatné hodnotě přesnosti v hesláři u importovaného záznamu."""
 
@@ -308,8 +320,11 @@ class ImportDataHeslarPresnostLimitChoicesError(ImportDataError):
         """
         self.record_id = record_id
         super().__init__(
-            f'{_("core_admin.ImportDataLimitChoicesError.message.part_1")} '
-            + f'{record_id} {_("core_admin.ImportDataLimitChoicesError.message.part_2")} '
+            "{} {} {} ".format(
+                _("core_admin.ImportDataLimitChoicesError.message.part_1"),
+                record_id,
+                _("core_admin.ImportDataLimitChoicesError.message.part_2"),
+            )
         )
 
 
@@ -780,7 +795,7 @@ class LookupImportField(BaseImportField):
         :param lookup_field_name: Textový název nebo klíč ``lookup_field_name`` používaný v rámci operace.
         :param limit_choices_to: Parametr ``limit_choices_to`` ovlivňuje větvení podmínek.
 
-            :raises ValueError: Vyvolá se s textem "limit_choices_to is only supported for Heslar model".
+            :raises ValueError: Vyvolá se s textem ``core_admin.LookupImportField.message.limit_choices_to_unsupported_model``.
         """
         super().__init__()
         if not isinstance(lookup_model_classes, Iterable):
@@ -794,7 +809,7 @@ class LookupImportField(BaseImportField):
         self.lookup_field_name = lookup_field_name
         self._instance_value = None
         if limit_choices_to and lookup_model_classes != Heslar:
-            raise ValueError("limit_choices_to is only supported for Heslar model")
+            raise ValueError(_("core_admin.LookupImportField.message.limit_choices_to_unsupported_model"))
         self.limit_choices_to = limit_choices_to
 
     @classmethod
@@ -907,12 +922,14 @@ class LookupImportField(BaseImportField):
                Provádí operaci process value.
 
                Ověří existenci hodnoty v databázi nebo v importovaných záznamech a vrátí odpovídající záznam.
-               Pokud referencovaný záznam neexistuje, vyvolá ImportDataMissingReferencedValueError.
+               Pokud referencovaný záznam neexistuje a lookup je omezen přes ``nazev_heslare``,
+               vyvolá ImportDataMissingHeslarValueError; jinak ImportDataMissingReferencedValueError.
 
                :param value: Parametr ``value`` předává se do volání ``str()``, ``len()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
 
-            :raises ImportDataMissingReferencedValueError: Vyvolá se v konkrétních chybových větvích této funkce.
+            :raises ImportDataMissingHeslarValueError: Vyvolá se, pokud hodnota neodpovídá hesláři určenému omezením ``nazev_heslare``.
+            :raises ImportDataMissingReferencedValueError: Vyvolá se v ostatních případech, kdy referencovaný záznam nebyl nalezen.
         """
 
         self._instance_value = None
@@ -944,6 +961,12 @@ class LookupImportField(BaseImportField):
                 self._check_limit_choices_to(filtered_records[0])
                 self._instance_value = filtered_records[0]
                 return value
+        if self.limit_choices_to and "nazev_heslare" in self.limit_choices_to:
+            raise ImportDataMissingHeslarValueError(
+                self.lookup_field_name,
+                self.limit_choices_to["nazev_heslare"],
+                value,
+            )
         raise ImportDataMissingReferencedValueError(
             value,
             ", ".join([current_class.__name__ for current_class in self.lookup_model_class_list]),

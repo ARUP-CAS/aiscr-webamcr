@@ -79,6 +79,12 @@
           <b>{% trans "core.templates.admin.import_data.status" %}:</b>
           <span id="processCurrentStatus">{% if invalid_records %}{% trans "core.templates.admin.import_data.validation_failed" %}{% else %}{% trans "core.templates.admin.import_data.waiting_for_approval" %}{% endif %}</span>
         </p>
+        {% if performed_action %}
+        <p style="width: 100%;">
+          <b>{% trans "core.forms.ImportDataAdminForm.action.label" %}:</b>
+          <span id="performedAction">{{ performed_action_label }}</span>
+        </p>
+        {% endif %}
         <p>
           <input type="button" id="startImport" class="default"
                  value="{% trans "core.templates.admin.import_data.start_import" %}"{% if invalid_records %} disabled{% endif %}>
@@ -212,6 +218,9 @@
         });
       }
 
+      const MAX_CONSECUTIVE_FAILURES = 5
+      let consecutiveFailures = 0
+
       async function sendRequest(url) {
           try {
               if (stopRequests) {
@@ -222,6 +231,7 @@
               if (!response.ok) {
                   throw new Error(`HTTP error! status: ${response.status}`)
               }
+              consecutiveFailures = 0
 
               const data = await response.json()
 
@@ -230,6 +240,10 @@
 
               if (data.status === "unknown") {
                   console.error("Unknown status of the import process.")
+                  stopRequests = true
+                  if (stopRequestButton) {
+                      stopRequestButton.disabled = true
+                  }
                   return 0
               }
 
@@ -289,6 +303,15 @@
 
           } catch (error) {
               console.error("Error fetching data:", error)
+              consecutiveFailures++
+              if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                  stopRequests = true
+                  if (stopRequestButton) {
+                      stopRequestButton.disabled = true
+                  }
+                  document.getElementById("processCurrentStatus").textContent =
+                      "{% trans 'core.templates.admin.import_data.timeout_error' %}"
+              }
               return 0
           }
 

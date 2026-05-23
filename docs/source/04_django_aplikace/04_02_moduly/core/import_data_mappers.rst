@@ -105,6 +105,21 @@ Třídy
       :param limit_choices_to: Parametr ``limit_choices_to`` se předává do volání ``__init__()``, ``format()``, pracuje se s atributy ``items``.
 
 
+.. py:class:: ImportDataMissingHeslarValueError
+
+   Výjimka vyvolaná, pokud hodnota není platnou položkou hesláře určeného omezením ``nazev_heslare``.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param field_name: Název pole, ve kterém lookup selhal.
+      :param heslar_name: Název hesláře (hodnota ``nazev_heslare``), do kterého hodnota nepatří.
+      :param value: Hodnota, která nebyla v hesláři nalezena.
+
+
 .. py:class:: ImportDataHeslarPresnostLimitChoicesError
 
    Výjimka vyvolaná při neplatné hodnotě přesnosti v hesláři u importovaného záznamu.
@@ -444,7 +459,7 @@ Třídy
       :param lookup_field_name: Textový název nebo klíč ``lookup_field_name`` používaný v rámci operace.
       :param limit_choices_to: Parametr ``limit_choices_to`` ovlivňuje větvení podmínek.
 
-      :raises ValueError: Vyvolá se s textem "limit_choices_to is only supported for Heslar model".
+      :raises ValueError: Vyvolá se s textem ``core_admin.LookupImportField.message.limit_choices_to_unsupported_model``.
 
    .. py:method:: clear_cache()
 
@@ -515,12 +530,14 @@ Třídy
              Provádí operaci process value.
 
              Ověří existenci hodnoty v databázi nebo v importovaných záznamech a vrátí odpovídající záznam.
-             Pokud referencovaný záznam neexistuje, vyvolá ImportDataMissingReferencedValueError.
+             Pokud referencovaný záznam neexistuje a lookup je omezen přes ``nazev_heslare``,
+             vyvolá ImportDataMissingHeslarValueError; jinak ImportDataMissingReferencedValueError.
 
       :param value: Parametr ``value`` předává se do volání ``str()``, ``len()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
-      :raises ImportDataMissingReferencedValueError: Vyvolá se v konkrétních chybových větvích této funkce.
+      :raises ImportDataMissingHeslarValueError: Vyvolá se, pokud hodnota neodpovídá hesláři určenému omezením ``nazev_heslare``.
+      :raises ImportDataMissingReferencedValueError: Vyvolá se v ostatních případech, kdy referencovaný záznam nebyl nalezen.
 
 
 .. py:class:: RuianLookupImportField

@@ -4,6 +4,7 @@ from core.import_data_mappers import (
     ImportDataError,
     ImportDataIncorrectStructureError,
     ImportDataIntegrityError,
+    ImportDataMissingHeslarValueError,
 )
 from django.test import TestCase
 from heslar.hesla import HESLAR_OBDOBI
@@ -266,3 +267,43 @@ class HeslarDataceMapperCheckRequiredFieldsTest(TestCase):
         row["poznamka"] = None
         mapper = HeslarDataceMapper(row)
         mapper.check_required_fields(INSERT)
+
+
+class HeslarDataceMapperObdobiValueFromOtherHeslareTest(TestCase):
+    """Testy pro HeslarDataceMapper — hodnota obdobi patří do jiného hesláře než HESLAR_OBDOBI.
+
+    Pokrývá ``ImportDataMissingHeslarValueError`` v ``LookupImportField._process_value``:
+    pokud lookup je omezen přes ``nazev_heslare`` a hodnota není v cílovém hesláři nalezena,
+    musí být vyvolána tato specifická výjimka místo obecné ``ImportDataMissingReferencedValueError``.
+    """
+
+    def setUp(self):
+        """Vytvoří fixturu pouze pro HESLAR_OBDOBI bez požadovaného ident_cely.
+
+        Hodnota ``HES-OTHER-001`` reprezentuje záznam patřící konceptuálně do jiného hesláře —
+        v rámci HESLAR_OBDOBI se nevyskytuje, takže lookup selže právě podmínkou ``nazev_heslare``.
+        """
+        HeslarNazev.objects.get_or_create(pk=HESLAR_OBDOBI, defaults={"nazev": "Období"})
+
+    def test_obdobi_value_from_other_heslare_raises_missing_heslar_value_error(self):
+        """map() vyvolá ImportDataMissingHeslarValueError pro obdobi mimo HESLAR_OBDOBI."""
+        row = VALID_ROW.copy()
+        row["obdobi"] = "HES-OTHER-001"
+        mapper = HeslarDataceMapper(row)
+        with self.assertRaises(ImportDataMissingHeslarValueError) as ctx:
+            mapper.map(INSERT, serialize=True, include_primary_key=True)
+        self.assertEqual(ctx.exception.field_name, "ident_cely")
+        self.assertEqual(ctx.exception.heslar_name, HESLAR_OBDOBI)
+        self.assertEqual(ctx.exception.value, "HES-OTHER-001")
+
+    def test_obdobi_value_from_other_heslare_message_contains_context(self):
+        """Zpráva výjimky obsahuje hodnotu, název pole i název hesláře."""
+        row = VALID_ROW.copy()
+        row["obdobi"] = "HES-OTHER-001"
+        mapper = HeslarDataceMapper(row)
+        with self.assertRaises(ImportDataMissingHeslarValueError) as ctx:
+            mapper.map(INSERT, serialize=True, include_primary_key=True)
+        message = str(ctx.exception)
+        self.assertIn("HES-OTHER-001", message)
+        self.assertIn("ident_cely", message)
+        self.assertIn(str(HESLAR_OBDOBI), message)
