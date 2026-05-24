@@ -84,6 +84,41 @@ Třídy
       :return: Vrací proměnná ``qs``.
 
 
+.. py:class:: ContinueKatastrProcessing
+
+   Async processor pro hromadný přepočet katastrů u Projekt/AZ/SN.
+
+   Volá se z admin stránky ``/admin/update-katastry/`` opakovaným polováním
+   z JS – každé volání zpracuje další záznam v Redis frontě (klíč
+   ``update_katastry_<random>``). Pro jeden ``ident_cely`` načte záznam,
+   podle typu (Projekt/AZ/SN) zavolá příslušnou ``reassign_*`` funkci a
+   vrátí JSON s progresem a výsledkem.
+
+   **Metody:**
+
+   .. py:method:: get()
+
+      Zpracuje další záznam ve frontě a vrátí JSON s progresem.
+
+      :param request: HTTP GET požadavek.
+      :param kwargs: Klíčové argumenty včetně ``job_id``.
+
+      :return: ``JsonResponse`` se strukturou ``{progress, remaining, ident_cely, result, detail}``.
+
+   .. py:method:: _process()
+
+      Vyvolá příslušnou ``reassign_*`` funkci podle typu záznamu.
+
+      Záznam se zapíše pouze pokud došlo ke změně oproti původnímu stavu
+      (porovnává se ``hlavni_katastr_id`` resp. ``katastr_id``).
+
+      :param record: Instance Projekt/ArcheologickyZaznam/SamostatnyNalez.
+      :param reassign_mod: Modul ``heslar.ruian_sync.reassign`` (předáno
+          kvůli lazy importu).
+
+      :return: ``True`` pokud reassign vrátil katastr odlišný od původního.
+
+
 Funkce
 ------
 

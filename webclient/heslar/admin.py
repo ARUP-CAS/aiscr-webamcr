@@ -14,6 +14,7 @@ from heslar.models import (
     RuianKatastr,
     RuianKraj,
     RuianOkres,
+    RuianSyncRun,
 )
 from pid.views import WikiDataAutocompleteView
 from uzivatel.models import Organizace, Osoba
@@ -524,3 +525,97 @@ class HeslarRuianKatastrAdmin(HeslarRuianAdmin):
     fields = ("nazev", "kod", "okres")
     search_fields = ("okres__nazev", "nazev", "kod")
     list_filter = ("okres", "okres__kraj")
+
+
+@admin.register(RuianSyncRun)
+class RuianSyncRunAdmin(admin.ModelAdmin):
+    """Read-only admin pro audit log běhů synchronizace RÚIAN."""
+
+    list_display = (
+        "started_at",
+        "mode",
+        "variant",
+        "triggered_by",
+        "data_valid_to",
+        "status",
+        "note_flag",
+        "kraj_upserts",
+        "kraj_deletes",
+        "okres_upserts",
+        "okres_deletes",
+        "katastr_upserts",
+        "katastr_deletes",
+        "affected_az",
+        "affected_projekt",
+        "affected_sn",
+        "affected_neident_akce",
+        "finished_at",
+    )
+    list_filter = ("status", "mode", "triggered_by", "variant")
+    search_fields = ("source", "source_path", "note")
+
+    @admin.display(description="⚠")
+    def note_flag(self, obj):
+        """
+        Zobrazí ⚠ pokud run obsahuje poznámku (varování nebo chybu reassignu).
+
+        :param obj: Instance :class:`~heslar.models.RuianSyncRun`.
+
+            :return: Řetězec ``"⚠"`` nebo prázdný řetězec.
+        """
+        return "⚠" if obj.note else ""
+
+    date_hierarchy = "started_at"
+    readonly_fields = (
+        "started_at",
+        "finished_at",
+        "mode",
+        "variant",
+        "source",
+        "triggered_by",
+        "source_path",
+        "data_valid_to",
+        "since",
+        "kraj_upserts",
+        "kraj_deletes",
+        "okres_upserts",
+        "okres_deletes",
+        "katastr_upserts",
+        "katastr_deletes",
+        "affected_az",
+        "affected_projekt",
+        "affected_sn",
+        "affected_neident_akce",
+        "status",
+        "error",
+        "note",
+    )
+
+    def has_add_permission(self, request):
+        """
+        Zakazuje ruční přidávání záznamů do audit logu.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce.
+        :return: Vždy ``False``.
+        """
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        """
+        Zakazuje editaci audit logu.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce.
+        :return: Vždy ``False``.
+        """
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        """
+        Zakazuje mazání audit logu.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce.
+        :return: Vždy ``False``.
+        """
+        return False

@@ -199,23 +199,37 @@ def get_mime_type(file_name):
     return mime_type
 
 
-def get_cadastre_from_point(point):
+def get_cadastre_from_point(point, exclude_kod=None):
     """
     Funkce pro získaní katastru z bodu geomu.
 
     :param point: Parametr ``point`` předává se do volání ``raw()``, ``debug()``.
+    :param exclude_kod: Volitelný kód katastru, který má být ze spatial query
+        vyloučen. Používá se např. v ``heslar.ruian_sync.reassign`` při mazání
+        katastru – aby spatial intersect nevrátil právě mazaný katastr (který
+        je stále v DB až do okamžiku ``katastr.delete()``) a reassign měl
+        šanci najít druhý nejbližší.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``katastr``, None.
     """
-    query = (
-        "select id, nazev from public.ruian_katastr where "
-        "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) limit 1"
-    )
+    if exclude_kod is None:
+        query = (
+            "select id, nazev from public.ruian_katastr where "
+            "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) limit 1"
+        )
+        params = [point[0], point[1]]
+    else:
+        query = (
+            "select id, nazev from public.ruian_katastr where "
+            "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) "
+            "AND kod != %s limit 1"
+        )
+        params = [point[0], point[1], exclude_kod]
     try:
-        katastr = RuianKatastr.objects.raw(query, [point[0], point[1]])[0]
+        katastr = RuianKatastr.objects.raw(query, params)[0]
         logger.debug(
             "core.utils.get_cadastre_from_point.start",
-            extra={"X": point[0], "Y": point[1], "katastr": katastr},
+            extra={"X": point[0], "Y": point[1], "katastr": katastr, "exclude_kod": exclude_kod},
         )
         return katastr
     except IndexError:
@@ -252,14 +266,21 @@ def get_cadastre_from_point_with_geometry(point):
         return None
 
 
-def get_all_pians_with_akce(ident_cely):
+def get_all_pians_with_akce(ident_cely, exclude_kod=None):
     """
     Funkce pro získaní všech pianů s akci.
 
     :param ident_cely: Parametr ``ident_cely`` se předává do volání ``execute()``.
+    :param exclude_kod: Volitelný kód katastru, který se vyloučí ze
+        spatial intersect (``ST_Intersects``). Používá se v
+        ``heslar.ruian_sync.reassign`` při mazání katastru.
+
     :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
     """
-    query = """
+    exclude_clause = ""
+    if exclude_kod is not None:
+        exclude_clause = " AND katastr.kod != %s"
+    query = f"""
         (SELECT A.id,
               A.ident_cely,
               ST_AsText(A.geom) AS geometry,
@@ -271,15 +292,15 @@ def get_all_pians_with_akce(ident_cely):
          (SELECT pian.id,
                  pian.ident_cely,
                  CASE
-                     WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN st_centroid(pian.geom)
-                     WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN st_lineinterpolatepoint(pian.geom, 0.5)
-                     ELSE st_centroid(pian.geom)
+                     WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN ST_LineInterpolatePoint(pian.geom, 0.5)
+                     WHEN ST_GeometryType(pian.geom) IN ('ST_Polygon', 'ST_MultiPolygon') THEN ST_PointOnSurface(pian.geom)
+                     ELSE ST_Centroid(pian.geom)
                  END AS geom,
                  dj.ident_cely AS dj
           FROM public.pian pian
           JOIN public.dokumentacni_jednotka dj ON pian.id=dj.pian
           AND dj.ident_cely LIKE %s
-          WHERE dj.ident_cely IS NOT NULL) AS A ON ST_Intersects(katastr.hranice, geom)
+          WHERE dj.ident_cely IS NOT NULL) AS A ON ST_Intersects(katastr.hranice, geom){exclude_clause}
         ORDER BY A.dj,
                 katastr.nazev
         LIMIT 1)
@@ -293,15 +314,19 @@ def get_all_pians_with_akce(ident_cely):
         FROM public.pian pian
         LEFT JOIN public.dokumentacni_jednotka dj ON pian.id=dj.pian
         AND dj.ident_cely LIKE %s
-        LEFT JOIN public.ruian_katastr katastr ON ST_Intersects(katastr.hranice, pian.geom)
+        LEFT JOIN public.ruian_katastr katastr ON ST_Intersects(katastr.hranice, pian.geom){exclude_clause}
         WHERE dj.ident_cely IS NOT NULL
         ORDER BY dj.ident_cely,
                 katastr_nazev
         LIMIT 990)
         """
+    if exclude_kod is None:
+        params = [ident_cely + "-%", ident_cely + "-%"]
+    else:
+        params = [ident_cely + "-%", exclude_kod, ident_cely + "-%", exclude_kod]
     try:
         cursor = connection.cursor()
-        cursor.execute(query, [ident_cely + "-%", ident_cely + "-%"])
+        cursor.execute(query, params)
         back = []
         for line in cursor.fetchall():
             back.append(
@@ -339,12 +364,16 @@ def update_main_katastr_within_ku(ident_cely: str, katastr: RuianKatastr):
     cursor.execute(query_update_archz, [katastr.pk, akce_ident_cely])
 
 
-def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction):
+def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction, exclude_kod=None):
     """
     Aktualizuje katastry pro všechny akce a lokality související s dokumentační jednotkou.
 
     :param dj: Dokumentační jednotka obsahující odkaz na akci/lokalitu.
     :param fedora_transaction: Aktivní Fedora transakce pro uložení metadat.
+    :param exclude_kod: Volitelný kód katastru, který se vyloučí ze spatial
+        intersect při výpočtu hlavního i ostatních katastrů. Používá se
+        v ``heslar.ruian_sync.reassign.reassign_az`` při mazání katastru
+        – aby se právě mazaný katastr nevybral zpět jako nové přiřazení.
     """
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.start")
     if dj.typ.id == TYP_DJ_KATASTR:
@@ -353,7 +382,7 @@ def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction):
         akce_ident_cely = dj.archeologicky_zaznam.ident_cely
         hlavni_id = None
         ostatni_id = []
-        for line in get_all_pians_with_akce(akce_ident_cely):
+        for line in get_all_pians_with_akce(akce_ident_cely, exclude_kod=exclude_kod):
             if hlavni_id is None:
                 hlavni_id = line["dj_katastr_id"]
             elif hlavni_id != line["dj_katastr_id"] and line["dj_katastr_id"] not in ostatni_id:

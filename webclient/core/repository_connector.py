@@ -16,6 +16,7 @@ from core.utils import get_mime_type
 from django.conf import settings
 from pdf2image import convert_from_bytes
 from PIL import Image, ImageOps
+from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 from xml_generator.generator import DocumentGenerator
 from xml_generator.models import ModelWithMetadata
@@ -23,6 +24,26 @@ from xml_generator.models import ModelWithMetadata
 from redis import ResponseError
 
 logger = logging.getLogger(__name__)
+
+
+def _build_fedora_session():
+    """
+    Sestaví sdílenou ``requests.Session`` s connection poolem pro Fedora repozitář.
+
+    HTTP keep-alive a sdružený pool socketů zásadně sníží počet otevíraných TCP
+    spojení (a tedy i tlak na efemerální porty pod paralelní zátěží).
+
+    :return: Nakonfigurovaná ``requests.Session`` instance.
+    """
+    session = requests.Session()
+    pool_size = getattr(settings, "FEDORA_HTTP_POOL_SIZE", 50)
+    adapter = HTTPAdapter(pool_connections=pool_size, pool_maxsize=pool_size, pool_block=True)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
+
+
+_fedora_session = _build_fedora_session()
 
 
 class FedoraValidationError(Exception):
@@ -484,7 +505,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 :return: Vrací proměnná ``response``.
             """
             auth = cls._get_auth(request_type)
-            response = requests.get(url, auth=auth, verify=False)
+            response = _fedora_session.get(url, auth=auth, verify=False)
             return response
 
         result = send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
@@ -592,7 +613,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             FedoraRequestType.GET_BINARY_FILE_CONTENT_HISTORIE,
         ):
             try:
-                response = requests.get(url, headers=headers, auth=auth, verify=False)
+                response = _fedora_session.get(url, headers=headers, auth=auth, verify=False)
             except requests.exceptions.RequestException as exc:
                 logger.warning(
                     "core_repository_connector._send_request.get_request_failed",
@@ -602,29 +623,31 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         else:
             try:
                 if request_type in (FedoraRequestType.CREATE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
-                    response = requests.post(url, headers=headers, data=data, auth=auth, verify=False)
+                    response = _fedora_session.post(url, headers=headers, data=data, auth=auth, verify=False)
                 elif request_type in (
                     FedoraRequestType.CREATE_METADATA,
                     FedoraRequestType.RECORD_DELETION_ADD_MARK,
                     FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4,
                     FedoraRequestType.CREATE_LINK,
                 ):
-                    response = requests.post(url, headers=headers, data=data, auth=auth, verify=False)
+                    response = _fedora_session.post(url, headers=headers, data=data, auth=auth, verify=False)
                 elif request_type in (
                     FedoraRequestType.CREATE_BINARY_FILE_CONTENT,
                     FedoraRequestType.CREATE_BINARY_FILE_THUMB,
                     FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE,
                 ):
-                    response = requests.post(url, headers=headers, data=data, auth=auth, verify=False, timeout=10)
+                    response = _fedora_session.post(
+                        url, headers=headers, data=data, auth=auth, verify=False, timeout=10
+                    )
                 elif request_type in (
                     FedoraRequestType.UPDATE_METADATA,
                     FedoraRequestType.UPDATE_BINARY_FILE_CONTENT,
                     FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB,
                     FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE,
                 ):
-                    response = requests.put(url, headers=headers, data=data, auth=auth, verify=False)
+                    response = _fedora_session.put(url, headers=headers, data=data, auth=auth, verify=False)
                 elif request_type == FedoraRequestType.CREATE_BINARY_FILE:
-                    response = requests.post(url, headers=headers, auth=auth, data=data, verify=False)
+                    response = _fedora_session.post(url, headers=headers, auth=auth, data=data, verify=False)
                 elif request_type in (
                     FedoraRequestType.DELETE_CONTAINER,
                     FedoraRequestType.DELETE_TOMBSTONE,
@@ -635,7 +658,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.CONNECT_DELETED_RECORD_4,
                     FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5,
                 ):
-                    response = requests.delete(url, headers=headers, auth=auth)
+                    response = _fedora_session.delete(url, headers=headers, auth=auth)
                 elif request_type in (
                     FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
                     FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
@@ -648,7 +671,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.THUMB_CONTENT_UPDATE_RDF_DATA,
                     FedoraRequestType.THUMB_LARGE_CONTENT_UPDATE_RDF_DATA,
                 ):
-                    response = requests.patch(url, auth=auth, headers=headers, data=data)
+                    response = _fedora_session.patch(url, auth=auth, headers=headers, data=data)
             except requests.exceptions.ConnectionError as exc:
                 logger.error(
                     "core_repository_connector._send_request.connection_error",
@@ -1984,7 +2007,7 @@ class FedoraTransaction(BaseFedoraTransaction):
         )
         auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
         if operation == FedoraTransactionOperation.COMMIT:
-            response = requests.put(url, auth=auth, verify=False)
+            response = _fedora_session.put(url, auth=auth, verify=False)
             try:
                 self._save_transaction_result_to_redis(FedoraTransactionResult.COMMITED)
             except ResponseError as err:
@@ -1993,7 +2016,7 @@ class FedoraTransaction(BaseFedoraTransaction):
                     extra={"transaction": self.uid, "error": err},
                 )
         elif operation == FedoraTransactionOperation.ROLLBACK:
-            response = requests.delete(url, auth=auth, verify=False)
+            response = _fedora_session.delete(url, auth=auth, verify=False)
             try:
                 self._save_transaction_result_to_redis(FedoraTransactionResult.ABORTED)
             except ResponseError as err:
@@ -2075,7 +2098,7 @@ class FedoraTransaction(BaseFedoraTransaction):
         )
         auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
         try:
-            response = requests.post(url, auth=auth, verify=False)
+            response = _fedora_session.post(url, auth=auth, verify=False)
         except requests.exceptions.ConnectionError as exc:
             logger.error(
                 "core_repository_connector.FedoraTransaction.__create_transaction.connection_error",

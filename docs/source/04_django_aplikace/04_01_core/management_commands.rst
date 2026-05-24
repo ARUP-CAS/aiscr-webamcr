@@ -130,6 +130,14 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
      - ``int``
      - ``None``
      - core.management.commands.generate_metadata.Command.add_arguments.start_with_pk_help
+   * - ``--workers``
+     - ``int``
+     - ``1``
+     - core.management.commands.generate_metadata.Command.add_arguments.workers_help
+   * - ``--max-retries``
+     - ``int``
+     - ``3``
+     - core.management.commands.generate_metadata.Command.add_arguments.max_retries_help
 
 
 ``generate_thumbs``
