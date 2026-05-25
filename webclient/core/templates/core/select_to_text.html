@@ -6,7 +6,7 @@
     {% endif%}   
 <input {% include "django/forms/widgets/attrs.html" %} id="{{ widget.id}}" name="{{ widget.name}}" readonly="True" 
 type={%if widget.name == "let"%}"button"{%else%}"text"{% endif%}
-{%if widget.name in list %} 
+{%if widget.name|field_basename in list %}
 value="{{ widget|get_osoby_name }}" 
 {%else %}
     value="{% if widget.optgroups %}{{ widget.optgroups|ifinlist:widget.value }}{% elif widget.value %}{{ widget.value|get_katastr_name }}{% endif %}" 

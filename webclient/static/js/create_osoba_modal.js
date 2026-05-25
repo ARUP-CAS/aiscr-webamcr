@@ -1,14 +1,26 @@
 var successFunction = function(settings, response) {
-    let dropdown = document.getElementById('id_vedouci_modal');
-    let newOption = document.createElement('option');
-    newOption.text = response.text;
-    newOption.value = response.value;
+    // Pole "vedouci" je Select2 (AutocompleteModelSelect2Multiple), ne bootstrap-select.
+    // Nová osoba se přidává ke STÁVAJÍCÍMU výběru – čteme aktuální val() a nastavíme
+    // sjednocení (původní + nová). Pouhý append + change tady původní hodnoty ztrácí,
+    // protože jde o modal-v-modalu (edit modal se při otevření osoba dialogu skryje a
+    // poté znovu zobrazí), viz #3957.
+    const $sel = $('#id_vedouci_modal');
+    const val = String(response.value);
+    const selected = ($sel.val() || []).map(String);
+    $sel.append(new Option(response.text, response.value, true, true));
+    if (selected.indexOf(val) === -1) {
+      selected.push(val);
+    }
+    $sel.val(selected).trigger('change');
 
-    dropdown.add(newOption);
-    
-    $('#id_vedouci_modal').selectpicker('refresh');
-    $('#id_vedouci_modal').selectpicker('val', response.value);
-    dropdown.value = response.value;
+    // Osoba-formulář nemá vlastní #submit-btn, takže isFormValid() při jeho odeslání
+    // zakázal #submit-btn editačního modalu a po úspěchu ho už nikdo nepovolil zpět
+    // (tlačítko Uložit zůstalo zablokované a modal nešel zavřít). Vrátíme ho do funkčního
+    // stavu, viz #3957.
+    $("#submit-btn").prop("disabled", false);
+    $("#submit-btn").siblings('button').prop("disabled", false);
+    $("#loader-spinner").hide();
+
     $(settings.modalIDD).modal("hide");
   };
   window.addEventListener("modalLoaded", function() {

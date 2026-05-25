@@ -139,6 +139,25 @@ def ifinlist(widget_optgroups, list):
 
 
 @register.filter
+def field_basename(value):
+    """
+    Vrátí název pole bez prefixu formuláře.
+
+    Django odděluje prefix formuláře pomlčkou (``prefix-pole``), zatímco názvy polí
+    používají podtržítka. Pro vyhodnocení proti seznamu názvů osobních polí je proto
+    potřeba porovnávat jen základ jména – jinak readonly zobrazení prefixovaného
+    formuláře (např. ``neident-vedouci``) selže a hodnota se nezobrazí.
+
+    :param value: Název pole, případně včetně prefixu formuláře.
+
+        :return: Vrací základ názvu pole bez prefixu.
+    """
+    if not value:
+        return value
+    return str(value).rsplit("-", 1)[-1]
+
+
+@register.filter
 def check_if_none(value):
     """
     Vrátí prázdný řetězec, pokud je hodnota None nebo prázdná.

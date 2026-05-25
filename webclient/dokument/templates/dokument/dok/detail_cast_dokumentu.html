@@ -1,5 +1,6 @@
 {% extends "dokument/dok/detail.html" %}
 {% load i18n %}
+{% load static %}
 {% load crispy_forms_tags %}
 {% load template_filters %}
 
@@ -178,4 +179,10 @@
           document.getElementById("karta-dokumentacni-cast").scrollIntoView();
       }
     </script>
+    {% if cast.neident_akce %}
+    {# create_osoba_modal.js je deklarován jen jako NeidentAkceForm.Media.js, ale médium #}
+    {# se nikde nerenderuje ({% crispy %} ho nevkládá), takže se skript nikdy nenačetl a #}
+    {# tlačítko "+" u vedoucího nereagovalo. Načítáme ho zde, po definici heslar_url/modal. #}
+    <script src="{% static 'js/create_osoba_modal.js' %}"></script>
+    {% endif %}
 {% endblock %}

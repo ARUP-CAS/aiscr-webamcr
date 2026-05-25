@@ -87,8 +87,12 @@ class NeidentAkceForm(forms.ModelForm):
         super(NeidentAkceForm, self).__init__(*args, **kwargs)
         self.fields["katastr"].required = True
         self.fields["vedouci"].required = False
-        self.fields["vedouci"].widget.attrs["id"] = "id_vedouci_modal"
+        # Pevné id "id_vedouci_modal" potřebuje pouze editovatelný formulář v modalu
+        # (naváže se na něj create_osoba_modal.js). U readonly varianty zobrazené přímo
+        # na stránce by vzniklo duplicitní id a JS by cílil na špatný prvek (hlavní okno
+        # místo modalu), takže vytvořený vedoucí by se nepropsal.
         if readonly is False:
+            self.fields["vedouci"].widget.attrs["id"] = "id_vedouci_modal"
             if "class" in self.fields["katastr"].widget.attrs.keys():
                 self.fields["katastr"].widget.attrs["class"] = (
                     str(self.fields["katastr"].widget.attrs["class"]) + " required-next"
