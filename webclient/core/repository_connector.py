@@ -1210,6 +1210,12 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                             )
                     return None
             else:
+                if thumb_icon is None:
+                    logger.warning(
+                        "core_repository_connector.__generate_thumb_from_icon.no_icon",
+                        extra={"file": file_name, "mime_type": mime_type, "large": large},
+                    )
+                    return None
                 return resize_image(thumb_icon, large)
 
         if file_name.lower().endswith(".pdf"):
