@@ -22,15 +22,15 @@
       </ul>
     </div>
     {% endif %}
-    {% if form %}
-    <div class="modal-body">
-      {% crispy form %}  
-    </div>
-    {% endif %}
-    {% if form_check %}
-    <div class="modal-body">
-      {% crispy form_check %}
-    </div>
+        {% if form or form_check %}
+        <div class="modal-body">
+            {% if form %}
+            {% crispy form %}
+            {% endif %}
+            {% if form_check %}
+            {% crispy form_check %}
+            {% endif %}
+        </div>
     {% endif %}
     {% if form == None and form_check == None %}
     {% csrf_token %}

@@ -147,8 +147,7 @@ body {
   .pas-coor-left {
     >.row {
 
-      >.form-group.col-lg-6,
-      >.form-group.col-lg-6.col-xl-6 {
+      >.form-group.col-lg-6 {
         flex: 0 0 50%;
         max-width: 50%;
       }
@@ -160,8 +159,7 @@ body {
   .pas-coor-left {
     >.row {
 
-      >.form-group.col-lg-6,
-      >.form-group.col-lg-6.col-xl-6 {
+      >.form-group.col-lg-6 {
         flex: 0 0 100%;
         max-width: 100%;
       }
