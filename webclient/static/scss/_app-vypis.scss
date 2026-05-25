@@ -45,14 +45,12 @@
       font-weight: bolder;
       font-size: 1.3rem;
       overflow-wrap: anywhere;
-      word-break: break-word;
 
     }
 
     .sub-header {
       color: rgb(103, 103, 103);
       overflow-wrap: anywhere;
-      word-break: break-word;
     }
 
     .label {
@@ -80,7 +78,6 @@
 
       .content {
         overflow-wrap: anywhere;
-        word-break: break-word;
       }
     }
 
@@ -101,7 +98,13 @@
         flex: 0 0 auto;
         max-width: 80%;
         overflow-wrap: anywhere;
-        word-break: break-word;
+      }
+
+      .vypis-field-row {
+        .content {
+          flex: initial;
+          max-width: none;
+        }
       }
     }
 
