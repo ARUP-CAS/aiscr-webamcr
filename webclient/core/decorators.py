@@ -84,10 +84,12 @@ def odstavka_in_progress(view_func):
                     return render(
                         request,
                         "/vol/web/nginx/data/" + language + "/oznameni/custom_503.html",
+                        status=503,
                     )
                 return render(
                     request,
                     "/vol/web/nginx/data/" + language + "/custom_503.html",
+                    status=503,
                 )
         return view_func(request, *args, **kwargs)
 
