@@ -20,6 +20,7 @@
       margin-bottom: 16px;
       background-color: #fff8e1;
       padding: 15px;
+      overflow-x: auto;
     }
 
     .section-name {
@@ -43,11 +44,15 @@
     .main-header {
       font-weight: bolder;
       font-size: 1.3rem;
+      overflow-wrap: anywhere;
+      word-break: break-word;
 
     }
 
     .sub-header {
       color: rgb(103, 103, 103);
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .label {
@@ -58,6 +63,25 @@
     .content {
       flex: 0 0 auto;
       max-width: 82%;
+    }
+
+    .vypis-field-row {
+      display: grid;
+      grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
+      column-gap: 0.5rem;
+      align-items: start;
+      margin-bottom: 0.125rem;
+
+      .label,
+      .content {
+        min-width: 0;
+        max-width: none;
+      }
+
+      .content {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
     }
 
     .thumb {
@@ -76,12 +100,43 @@
       .content {
         flex: 0 0 auto;
         max-width: 80%;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .vypis-field-row {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .label {
+        margin-bottom: 0.125rem;
+      }
+    }
+
+    @media print {
+      .record {
+        overflow-x: visible;
+      }
+
+      .vypis-field-row {
+        grid-template-columns: minmax(170px, 210px) minmax(0, 1fr);
       }
     }
 
     .small {
       font-size: 0.8rem;
       padding-left: 40px;
+    }
+
+    .vypis-history-list {
+      margin: 0.25rem 0 0.5rem;
+      padding-left: 1.25rem;
+
+      li {
+        margin-bottom: 0.125rem;
+      }
     }
   }
 }
