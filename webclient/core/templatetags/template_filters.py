@@ -138,23 +138,29 @@ def ifinlist(widget_optgroups, list):
     return string
 
 
+#: Názvy polí, jejichž readonly hodnota se zobrazuje přes ``get_osoby_name``.
+OSOBY_FIELD_NAMES = frozenset({"autori", "editori", "dokument_osoba", "nalezce", "vedouci"})
+
+
 @register.filter
-def field_basename(value):
+def is_osoby_field(value):
     """
-    Vrátí název pole bez prefixu formuláře.
+    Vrátí True, pokud je pole jedním z osobních polí zobrazovaných přes ``get_osoby_name``.
 
     Django odděluje prefix formuláře pomlčkou (``prefix-pole``), zatímco názvy polí
-    používají podtržítka. Pro vyhodnocení proti seznamu názvů osobních polí je proto
-    potřeba porovnávat jen základ jména – jinak readonly zobrazení prefixovaného
-    formuláře (např. ``neident-vedouci``) selže a hodnota se nezobrazí.
+    používají podtržítka. Porovnává se proto jen základ jména bez prefixu (např.
+    ``neident-vedouci`` → ``vedouci``) – jinak by readonly zobrazení prefixovaného
+    formuláře selhalo a hodnota by se nezobrazila. Porovnání je přesné proti
+    :data:`OSOBY_FIELD_NAMES`, nikoli podřetězcové, aby pole jako ``osoba`` nebylo
+    nesprávně vyhodnoceno jako shoda s ``dokument_osoba``.
 
     :param value: Název pole, případně včetně prefixu formuláře.
 
-        :return: Vrací základ názvu pole bez prefixu.
+        :return: Vrací True, pokud základ názvu pole patří mezi osobní pole.
     """
     if not value:
-        return value
-    return str(value).rsplit("-", 1)[-1]
+        return False
+    return str(value).rsplit("-", 1)[-1] in OSOBY_FIELD_NAMES
 
 
 @register.filter

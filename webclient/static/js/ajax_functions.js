@@ -10,7 +10,7 @@ get_vychozi_hodnota_podrazeneho = function (nadrazeneID, podrazeneID, start_url)
                     const data = JSON.parse(this.responseText)
                     let array = []
                     for (let i = 0; i < data.length; i++) {
-                        array = array.concat(data[i].id)
+                        array.push(data[i].id)
                     }
                     $(podrazeneID).val(array.map(String));
                 } else {
