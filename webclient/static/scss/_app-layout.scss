@@ -104,6 +104,71 @@ body {
   z-index: 1001;
 }
 
+.pas-coor-layout {
+  container-name: pas-coor;
+  container-type: inline-size;
+}
+
+.pas-coor-left {
+  container-name: pas-coor-left;
+  container-type: inline-size;
+}
+
+@container pas-coor (min-width: 851px) {
+  .pas-coor-layout {
+
+    >.pas-coor-left {
+      flex: 0 1 clamp(320px, 34%, 520px);
+      min-width: 320px;
+      max-width: 520px;
+    }
+
+    >.pas-coor-right {
+      flex: 1 1 420px;
+      min-width: 420px;
+      max-width: none;
+    }
+  }
+}
+
+@container pas-coor (max-width: 850.98px) {
+  .pas-coor-layout {
+
+    >.pas-coor-left,
+    >.pas-coor-right {
+      flex: 0 0 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
+  }
+}
+
+@container pas-coor-left (min-width: 360px) {
+  .pas-coor-left {
+    >.row {
+
+      >.form-group.col-lg-6,
+      >.form-group.col-lg-6.col-xl-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+      }
+    }
+  }
+}
+
+@container pas-coor-left (max-width: 359.98px) {
+  .pas-coor-left {
+    >.row {
+
+      >.form-group.col-lg-6,
+      >.form-group.col-lg-6.col-xl-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+      }
+    }
+  }
+}
+
 .form-group {
   margin-bottom: 0.15rem !important;
 }
