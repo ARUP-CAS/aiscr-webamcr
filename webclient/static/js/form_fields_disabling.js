@@ -34,7 +34,6 @@ function disableField(id, fields) {
         $(select_id).prop("disabled", true);
         if (!(element.classList.contains("select2multiple"))) {
             // destroy+reinit místo refresh kvůli chybě bootstrap-select 1.14.0-beta3
-            // (buildData duplikuje položky v nabídce), viz #3957 / #3917.
             $(select_id).selectpicker('destroy').selectpicker();
         }
         if (!(element.classList.contains("select2multiple"))) {
@@ -74,9 +73,6 @@ function enableField(id, checked_field, fields, required_field) {
         }
         $(select_id).prop("disabled", false);
         // destroy+reinit místo refresh kvůli chybě bootstrap-select 1.14.0-beta3
-        // (buildData duplikuje položky v nabídce), viz #3957 / #3917. Jen pro skutečné
-        // selecty – tato větev se kvůli BUG-016 spouští i pro textová pole, na ta se
-        // selectpicker volat nesmí (refresh na nich byl beztak jen no-op).
         if (!(element.classList.contains("select2multiple"))
             && (element.type == 'select-multiple' || element.type == 'select-one')) {
             $(select_id).selectpicker('destroy').selectpicker();

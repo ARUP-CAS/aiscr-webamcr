@@ -3,9 +3,7 @@ get_vychozi_hodnota_podrazeneho = function (nadrazeneID, podrazeneID, start_url)
         function (e, clickedIndex, newValue, oldValue) {
             const xhttp = new XMLHttpRequest();
             xhttp.onload = function () {
-                // Místo refresh se používá destroy+reinit, aby se předešlo chybě bootstrap-select
-                // 1.14.0-beta3, kdy buildData() přidává data do main.data místo jejich nahrazení
-                // (u multiselectu se po refresh duplikují položky v nabídce, viz #3957 / #3917).
+                // Místo refresh se používá destroy+reinit, aby se předešlo chybě bootstrap-select 1.14.0-beta3
                 if (this.status === 200) {
                     const data = JSON.parse(this.responseText)
                     let array = []
