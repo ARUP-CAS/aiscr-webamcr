@@ -17,6 +17,8 @@ register = template.Library()
 
 logger = logging.getLogger(__name__)
 
+OSOBY_FIELD_NAMES = frozenset({"autori", "editori", "dokument_osoba", "nalezce", "vedouci"})
+
 
 @register.filter
 def url_to_classes(value):
@@ -136,10 +138,6 @@ def ifinlist(widget_optgroups, list):
                 else:
                     string += "; " + str(option["label"])
     return string
-
-
-#: Názvy polí, jejichž readonly hodnota se zobrazuje přes ``get_osoby_name``.
-OSOBY_FIELD_NAMES = frozenset({"autori", "editori", "dokument_osoba", "nalezce", "vedouci"})
 
 
 @register.filter

@@ -187,10 +187,6 @@
               } else {
                   makeOznamovatelDisabled(false ,false)
               }
-              // Záměrně se nevolá selectpicker('refresh') na všech polích:
-              // přepínaná pole ohlašovatele jsou textová, refresh tedy nic neopravuje,
-              // ale na typ_projektu spouští chybu bootstrap-select 1.14.0-beta3 (vizuální
-              // řetězení hodnot, viz #3957 / #3917).
           });
 
           document.getElementById("id-app-entity-item").innerHTML = '{% trans "projekt.templates.create.toolbar.title" %}';

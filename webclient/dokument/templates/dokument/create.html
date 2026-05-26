@@ -131,9 +131,7 @@
           });
           $('#modal-form-region').on('hidden.bs.modal', function () {
             // Místo refresh se používá destroy+reinit, aby se předešlo chybě bootstrap-select
-            // 1.14.0-beta3, kdy buildData() přidává data do main.data místo jejich nahrazení
-            // (konzistentně s material_originalu výše, viz #3957 / #3917). $('#id_region')
-            // cílí na region hlavního formuláře (první v DOM), čtení je scopované do modalu.
+            // 1.14.0-beta3, kdy buildData() přidává data do main.data místo jejich nahrazení.
             $('#id_region').val($('#id-modal-region-div #id_region').val());
             $('#id_region').selectpicker('destroy').selectpicker();
           });
