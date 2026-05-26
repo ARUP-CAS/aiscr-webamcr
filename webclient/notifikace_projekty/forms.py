@@ -26,6 +26,22 @@ PES_NOTIFICATIONS = [
 ]
 
 
+def _katastr_pk_or_none(value):
+    """
+    Bezpečně převede hodnotu na celočíselný ``pk`` katastru.
+
+    Chrání před ``ValueError`` z databázového dotazu při nečíselné (podvržené) hodnotě.
+
+    :param value: Vstupní hodnota (typicky řetězec z formuláře).
+
+        :return: Celé číslo, nebo ``None``, není-li hodnota platné číslo.
+    """
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def build_katastr_label_choices(object_id):
     """
     Vrátí volbu (``pk``, ``název (okres)``) pro jeden vybraný katastr kvůli popisku ve výběru.
@@ -37,10 +53,11 @@ def build_katastr_label_choices(object_id):
 
         :return: Seznam s jednou dvojicí, nebo prázdný seznam, není-li katastr vybrán.
     """
-    if not object_id:
+    pk = _katastr_pk_or_none(object_id)
+    if pk is None:
         return []
     return list(
-        RuianKatastr.objects.filter(pk=object_id)
+        RuianKatastr.objects.filter(pk=pk)
         .annotate(
             full_name=Concat(
                 "nazev",
@@ -71,7 +88,8 @@ class KatastrAutocompleteChoiceField(forms.ChoiceField):
 
             :return: ``True``, pokud katastr s daným ``pk`` existuje.
         """
-        return RuianKatastr.objects.filter(pk=value).exists()
+        pk = _katastr_pk_or_none(value)
+        return pk is not None and RuianKatastr.objects.filter(pk=pk).exists()
 
 
 def create_pes_form(not_readonly=True, model_typ=None):
@@ -143,11 +161,17 @@ def create_pes_form(not_readonly=True, model_typ=None):
                     ),
                 )
             elif model_typ == KATASTR_CONTENT_TYPE:
+                if self.is_bound:
+                    selected_id = self.data.get(self.add_prefix("object_id"))
+                else:
+                    selected_id = self.initial.get("object_id") or (
+                        self.instance.object_id if self.instance.pk else None
+                    )
                 self.fields["object_id"] = KatastrAutocompleteChoiceField(
                     label=_("notifikaceProjekty.forms.pesForm.katastr.label"),
                     help_text=_("notifikaceProjekty.forms.pesForm.katastr.tooltip"),
                     widget=AutocompleteListSelect2(url="heslar:katastr-autocomplete"),
-                    choices=build_katastr_label_choices(self.instance.object_id if self.instance.pk else None),
+                    choices=build_katastr_label_choices(selected_id),
                     required=True,
                 )
             for key in self.fields.keys():

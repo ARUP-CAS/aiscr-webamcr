@@ -88,6 +88,16 @@ Třídy
 Funkce
 ------
 
+.. py:function:: _katastr_pk_or_none(value)
+
+   Bezpečně převede hodnotu na celočíselný ``pk`` katastru.
+
+   Chrání před ``ValueError`` z databázového dotazu při nečíselné (podvržené) hodnotě.
+
+   :param value: Vstupní hodnota (typicky řetězec z formuláře).
+
+   :return: Celé číslo, nebo ``None``, není-li hodnota platné číslo.
+
 .. py:function:: build_katastr_label_choices(object_id)
 
    Vrátí volbu (``pk``, ``název (okres)``) pro jeden vybraný katastr kvůli popisku ve výběru.
