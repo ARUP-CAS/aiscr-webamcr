@@ -340,6 +340,8 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
                 uzivatel=request.user,
                 vazba=self.request.user.history_vazba,
             ).save()
+            self.request.user.active_transaction = None
+            self.request.user.close_active_transaction_when_finished = False
             self.request.user.set_password(str(request_data["pass-password1"][0]))
             self.request.user.save()
             messages.add_message(
@@ -383,10 +385,9 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         request_data = dict(request.POST)
         logger.debug("uzivatel.views.UserAccountUpdateView.post.start")
         form = self.form_class(data=request.POST, instance=self.request.user)
-        has_changed = (
-            request.POST.get("telefon") != self.request.user.telefon
-            or request.POST.get("orcid") != self.request.user.orcid
-        )
+        has_changed = (request.POST.get("telefon") or "") != (self.request.user.telefon or "") or (
+            request.POST.get("orcid") or ""
+        ) != (self.request.user.orcid or "")
         if form.is_valid() and has_changed:
             obj = form.save(commit=False)
             obj: User

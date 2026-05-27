@@ -162,7 +162,7 @@ class AuthUserChangeForm(forms.ModelForm, FormWithOrcid):
         }
 
         widgets = {
-            "telefon": forms.TextInput(),
+            "telefon": forms.TextInput(attrs={"autocomplete": "tel"}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -228,7 +228,7 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
         widgets = {
             "first_name": forms.TextInput(attrs={"readonly": True}),
             "last_name": forms.TextInput(attrs={"readonly": True}),
-            "email": forms.TextInput(attrs={"readonly": True}),
+            "email": forms.TextInput(attrs={"readonly": True, "autocomplete": "username"}),
             "ident_cely": forms.TextInput(attrs={"readonly": True}),
             "date_joined": ForeignKeyReadOnlyTextInput(),
             "organizace": ForeignKeyReadOnlyTextInput(),
@@ -317,19 +317,19 @@ class UpdatePasswordSettings(forms.ModelForm):
 
     old_password = forms.CharField(
         required=False,
-        widget=PasswordInput(),
+        widget=PasswordInput(attrs={"autocomplete": "current-password"}),
         label=_("uzivatel.forms.userChange.old_password.label"),
         help_text=_("uzivatel.forms.UpdatePasswordSettings.old_password.tooltip"),
     )
     password1 = forms.CharField(
         required=False,
-        widget=PasswordInput(),
+        widget=PasswordInput(attrs={"autocomplete": "new-password"}),
         label=_("uzivatel.forms.userChange.password1.label"),
         help_text=_("uzivatel.forms.UpdatePasswordSettings.password1.tooltip"),
     )
     password2 = forms.CharField(
         required=False,
-        widget=PasswordInput(),
+        widget=PasswordInput(attrs={"autocomplete": "new-password"}),
         label=_("uzivatel.forms.userChange.password2.label"),
         help_text=_("uzivatel.forms.UpdatePasswordSettings.password2.tooltip"),
     )
