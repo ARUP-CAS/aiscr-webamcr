@@ -385,9 +385,11 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         request_data = dict(request.POST)
         logger.debug("uzivatel.views.UserAccountUpdateView.post.start")
         form = self.form_class(data=request.POST, instance=self.request.user)
-        has_changed = (request.POST.get("telefon") or "") != (self.request.user.telefon or "") or (
-            request.POST.get("orcid") or ""
-        ) != (self.request.user.orcid or "")
+        telefon_post = request.POST.get("telefon") or ""
+        telefon_user = self.request.user.telefon or ""
+        orcid_post = request.POST.get("orcid") or ""
+        orcid_user = self.request.user.orcid or ""
+        has_changed = telefon_post != telefon_user or orcid_post != orcid_user
         if form.is_valid() and has_changed:
             obj = form.save(commit=False)
             obj: User
