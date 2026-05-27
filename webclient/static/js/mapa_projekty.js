@@ -166,8 +166,12 @@ map.on('click', function (e) {
                             // Klik mimo území ČR
                             select.val("");
                             poi_correct.clearLayers();
-                            document.getElementById('id_coordinate_x1').value = "";
-                            document.getElementById('id_coordinate_x2').value = "";
+                            try {
+                                document.getElementById('id_coordinate_x1').value = "";
+                                document.getElementById('id_coordinate_x2').value = "";
+                            } catch (e) {
+                                console.log("Error: Element coordinate_x1/x2 neexistuje")
+                            }
                         }
                     })
             }
