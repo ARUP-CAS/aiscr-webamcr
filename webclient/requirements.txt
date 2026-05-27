@@ -28,7 +28,7 @@ redis==7.4.0
 selenium==4.44.0
 django-celery-beat==2.9.0
 django-celery-results==2.6.0
-django-prometheus==2.4.1
+django-prometheus==2.5.0
 python-logstash==0.4.8
 djangorestframework==3.17.1
 djangorestframework-xml==2.0.0
