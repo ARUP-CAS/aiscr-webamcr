@@ -467,6 +467,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
             orgs.append(self.predano_organizace)
         return tuple(orgs)
 
+    @property
     def redis_snapshot_id(self):
         """
         Vrací identifikátor snímku v Redisu.
@@ -552,6 +553,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         if self.igsn:
             return self._get_igsn_client().update_record(check_status, reload_record)
 
+    @property
     def igsn_url(self):
         """
         Vrací URL odkaz na nález v IGSN databázi.
@@ -703,6 +705,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         """
         return (self.vedouci.organizace,)
 
+    @property
     def redis_snapshot_id(self):
         """
         Vrací identifikátor snímku v Redisu.
