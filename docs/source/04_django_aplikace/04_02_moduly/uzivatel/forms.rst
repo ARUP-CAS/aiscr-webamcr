@@ -19,6 +19,12 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``__init__()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, ``OrcidAutocompleteField()``, pracuje se s atributy ``get``.
 
+   .. py:method:: clean_email()
+
+      Normalizuje e-mail na malá písmena a ověří jeho case-insensitive unikátnost.
+
+      :return: Vrací normalizovaný e-mail.
+
 
 .. py:class:: AuthUserCreationFormWithRecaptcha
 
@@ -74,6 +80,12 @@ Třídy
 
       :param args: Parametr ``args`` se předává do volání ``__init__()``, ``OrcidAutocompleteField()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
+   .. py:method:: clean_email()
+
+      Normalizuje e-mail na malá písmena a ověří jeho case-insensitive unikátnost.
+
+      :return: Vrací normalizovaný e-mail.
 
 
 .. py:class:: NotificationsForm
@@ -163,3 +175,18 @@ Třídy
 
    Formulář pro odeslání testovacího mailu v administraci.
 
+
+Funkce
+------
+
+.. py:function:: normalize_and_validate_email(email, instance)
+
+   Normalizuje e-mail na malá písmena a ověří jeho unikátnost bez ohledu na velikost písmen.
+
+   E-mail slouží jako přihlašovací jméno, proto musí být case-insensitive unikátní.
+
+   :param email: Zadaný e-mail uživatele.
+   :param instance: Editovaná instance uživatele, jejíž záznam se z kontroly unikátnosti vynechává.
+
+   :return: Vrací e-mail převedený na malá písmena bez okrajových mezer.
+   :raises ValidationError: Vyvolá se, pokud již existuje jiný uživatel se shodným e-mailem bez ohledu na velikost písmen.

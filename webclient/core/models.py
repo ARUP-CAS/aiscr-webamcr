@@ -768,7 +768,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         if self.repository_uuid is not None and rep_bin_file:
             response = self._create_file_response(rep_bin_file)
             response["Content-Type"] = "image/png"
-            response["Content-Disposition"] = f"attachment; filename={self.nazev}.png"
+            response["Content-Disposition"] = f'inline; filename="{self.nazev}.png"'
+            response["Cache-Control"] = "private, max-age=43200"
             return response
         return None
 
