@@ -33,7 +33,8 @@ function disableField(id, fields) {
         $(select_id).val("").trigger('change');
         $(select_id).prop("disabled", true);
         if (!(element.classList.contains("select2multiple"))) {
-            $(select_id).selectpicker('refresh');
+            // destroy+reinit místo refresh kvůli chybě bootstrap-select 1.14.0-beta3
+            $(select_id).selectpicker('destroy').selectpicker();
         }
         if (!(element.classList.contains("select2multiple"))) {
             element.classList.remove("required-next")
@@ -71,8 +72,10 @@ function enableField(id, checked_field, fields, required_field) {
             $(select_id).val(fields.get(key)).trigger('change');
         }
         $(select_id).prop("disabled", false);
-        if (!(element.classList.contains("select2multiple"))) {
-            $(select_id).selectpicker('refresh');
+        // destroy+reinit místo refresh kvůli chybě bootstrap-select 1.14.0-beta3
+        if (!(element.classList.contains("select2multiple"))
+            && (element.type == 'select-multiple' || element.type == 'select-one')) {
+            $(select_id).selectpicker('destroy').selectpicker();
         }
         if (checked_field.required == true) {
             if (required_field) {
