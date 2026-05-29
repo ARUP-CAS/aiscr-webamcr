@@ -58,7 +58,7 @@ Tyto image jsou standardní open-source image používané pro provoz podpůrný
 redis
 ~~~~~
 
-- **Verze:** 8.6.3
+- **Verze:** 8.8.0
 - **Licence:** RSALv2, SSPLv1
 - **Odkaz:** https://github.com/redis/redis
 
