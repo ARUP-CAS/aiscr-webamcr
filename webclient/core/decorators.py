@@ -7,6 +7,7 @@ from core.utils import get_set_maintenance_in_cache, is_maintenance_in_progress
 from django.shortcuts import render
 
 logger = logging.getLogger(__name__)
+MAINTENANCE_TEMPLATE_BASE_DIR = "/vol/web/nginx/data"
 
 
 def allowed_user_groups(allowed_groups):
@@ -83,11 +84,13 @@ def odstavka_in_progress(view_func):
                 if "oznameni" in request.path:
                     return render(
                         request,
-                        "/vol/web/nginx/data/" + language + "/oznameni/custom_503.html",
+                        f"{MAINTENANCE_TEMPLATE_BASE_DIR}/{language}/oznameni/custom_503.html",
+                        status=503,
                     )
                 return render(
                     request,
-                    "/vol/web/nginx/data/" + language + "/custom_503.html",
+                    f"{MAINTENANCE_TEMPLATE_BASE_DIR}/{language}/custom_503.html",
+                    status=503,
                 )
         return view_func(request, *args, **kwargs)
 

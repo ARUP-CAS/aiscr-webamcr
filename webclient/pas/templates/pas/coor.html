@@ -55,36 +55,36 @@
   {{ formCoor.coordinate_sjtsk_x1|as_crispy_field }}
   {{ formCoor.coordinate_sjtsk_x2|as_crispy_field }}
 </div>
-<div class="row">
-    <div class="form-group col-sm-12 col-lg-4">
+<div class="row pas-coor-layout">
+  <div class="form-group col-sm-12 col-md-4 pas-coor-left">
       <div class="row">
-      <div class="form-group col-sm-6">
+      <div class="form-group col-sm-12 col-lg-6">
       {{ form.projekt|as_crispy_field }}
       </div>
-      <div class="form-group col-sm-6">
+      <div class="form-group col-sm-12 col-lg-6">
       {{ form.katastr|as_crispy_field }}
       </div>
       {% if readonly %}
-      <div class="form-group col-sm-6">
+      <div class="form-group col-sm-12 col-lg-6">
       {{ form.nalezce|as_crispy_field }}
       {% else %}
-      <div class="form-group col-sm-6 input-osoba select2-input">
+      <div class="form-group col-sm-12 col-lg-6 input-osoba select2-input">
         {% crispy_addon form.nalezce append='<button id="create-nalezce-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>' %}
       {% endif %}
       </div>
-      <div class="form-group col-sm-6">
+      <div class="form-group col-sm-12 col-lg-6">
       {{ form.datum_nalezu|as_crispy_field }}
       </div>
-      <div class="form-group col-sm-6">
+      <div class="form-group col-sm-12 col-lg-6">
       {{ form.okolnosti|as_crispy_field }}
       </div>
-      <div class="form-group col-sm-6">
+      <div class="form-group col-sm-12 col-lg-6">
       {{ form.hloubka|as_crispy_field }}
       </div>
       <div>
 
       </div>
-      <div class="form-group col-sm-6">
+      <div class="form-group col-sm-12 col-lg-6">
         <!-- Koordinaty-->
         <div class="form-group">
             <label for="visible_ss_combo">{{ formCoor.visible_ss_combo.label }}</label>
@@ -96,7 +96,7 @@
             {% endif %}
         </div>
       </div>
-      <div class="form-group col-sm-6">
+          <div class="form-group col-sm-12 col-lg-6">
           <!-- Current Location -->
         <div class="form-group map">
             <label for="visible_x2">{% trans "pas.templates.coor.poloha.label" %}</label>
@@ -112,7 +112,7 @@
             {% endif %}
         </div>
       </div>
-      <div class="form-group col-sm-6">
+      <div class="form-group col-sm-12 col-lg-6">
         <!-- Koordinaty X -->
         <div class="form-group">
             <label for="visible_x1">{{ formCoor.visible_x1.label }}</label>
@@ -124,7 +124,7 @@
             {% endif %}
         </div>
       </div>
-      <div class="form-group col-sm-6">
+      <div class="form-group col-sm-12 col-lg-6">
         <!-- Koordinaty Y -->
         <div class="form-group">
             <label for="visible_x2">{{ formCoor.visible_x2.label }}</label>
@@ -141,32 +141,28 @@
       </div>
     </div>
     </div>
-    <div class="col-sm-12 col-lg-8">
+    <div class="col-sm-12 col-md-8 col-lg-8 pas-coor-right">
         {% include "map.html" %}
     </div>
     <div class="col-sm-12">
       <span class="app-divider-label">{% trans "pas.templates.pas.nalezDivider.text" %}</span>
       <hr class="mt-0" />
     </div>
-    <div class="col-sm-4">
+    <div class="col-sm-12">
       <div class="row">
-        <div class="form-group col-sm-6">
+        <div class="form-group col-sm-12 col-md-4 col-lg-2">
         {{ form.obdobi|as_crispy_field }}
         </div>
-        <div class="form-group col-sm-6">
+        <div class="form-group col-sm-12 col-md-4 col-lg-2">
         {{ form.presna_datace|as_crispy_field }}
         </div>
-      </div>
-    </div>
-    <div class="col-sm-8">
-      <div class="row">
-        <div class="form-group col-sm-3">
+        <div class="form-group col-sm-12 col-md-4 col-lg-2">
           {{ form.druh_nalezu|as_crispy_field }}
         </div>
-        <div class="form-group col-sm-3">
+        <div class="form-group col-sm-12 col-md-4 col-lg-2">
           {{ form.specifikace|as_crispy_field }}
         </div>
-        <div class="form-group col-sm-3">
+        <div class="form-group col-sm-12 col-md-4 col-lg-2">
           {{ form.pocet|as_crispy_field }}
         </div>
       </div>
