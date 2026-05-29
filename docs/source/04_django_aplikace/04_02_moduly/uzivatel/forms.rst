@@ -179,7 +179,7 @@ Třídy
 Funkce
 ------
 
-.. py:function:: normalize_and_validate_email(email, instance=None)
+.. py:function:: normalize_and_validate_email(email, instance)
 
    Normalizuje e-mail na malá písmena a ověří jeho unikátnost bez ohledu na velikost písmen.
 
