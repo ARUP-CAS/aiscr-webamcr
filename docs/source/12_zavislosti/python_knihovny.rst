@@ -116,7 +116,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://babel.pocoo.org/
    * - backports.zstd
-     - 1.4.0
+     - 1.5.0
      - PSF-2.0
      - https://github.com/rogdham/backports.zstd
    * - beautifulsoup4
@@ -136,7 +136,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://docs.celeryq.dev/
    * - certifi
-     - 2026.4.22
+     - 2026.5.20
      - Mozilla Public License 2.0 (MPL 2.0)
      - https://github.com/certifi/python-certifi
    * - cffi
@@ -152,7 +152,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/jawah/charset_normalizer/blob/master/CHANGELOG.md
    * - click
-     - 8.3.3
+     - 8.4.1
      - BSD-3-Clause
      - https://github.com/pallets/click/
    * - click-didyoumean
@@ -172,7 +172,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.13.5
+     - 7.14.0
      - Apache-2.0
      - https://github.com/coveragepy/coveragepy
    * - crispy-bootstrap5
@@ -184,7 +184,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Salamek/cron-descriptor
    * - cryptography
-     - 47.0.0
+     - 48.0.0
      - Apache-2.0 OR BSD-3-Clause
      - https://github.com/pyca/cryptography
    * - defusedxml
@@ -340,7 +340,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pre-commit/identify
    * - idna
-     - 3.13
+     - 3.16
      - BSD-3-Clause
      - https://github.com/kjd/idna
    * - imagesize
@@ -360,7 +360,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://sass.github.io/libsass-python/
    * - lxml
-     - 6.1.0
+     - 6.1.1
      - BSD-3-Clause
      - https://lxml.de/
    * - multivolumefile
@@ -372,7 +372,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.4.4
+     - 2.4.6
      - BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
      - https://numpy.org
    * - odfpy
@@ -392,7 +392,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache-2.0 OR BSD-2-Clause
      - https://github.com/pypa/packaging
    * - pandas
-     - 3.0.2
+     - 3.0.3
      - BSD License
      - https://pandas.pydata.org
    * - pdf2image
@@ -400,7 +400,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.29
+     - 9.0.30
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -456,7 +456,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - LGPL-2.1-or-later
      - https://py7zr.readthedocs.io/
    * - pyOpenSSL
-     - 26.1.0
+     - 26.2.0
      - Apache Software License
      - https://pyopenssl.org/
    * - pybcj
@@ -476,7 +476,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 6.10.2
+     - 6.11.0
      - BSD-3-Clause
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -492,7 +492,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.3.0
+     - 1.3.1
      - MIT License
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
@@ -504,7 +504,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://github.com/ahupp/python-magic
    * - pytz
-     - 2026.1.post1
+     - 2026.2
      - MIT License
      - http://pythonhosted.org/pytz
    * - rarfile
@@ -524,11 +524,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/redis/redis-py
    * - reportlab
-     - 4.5.0
+     - 4.5.1
      - BSD License
      - https://www.reportlab.com/
    * - requests
-     - 2.33.1
+     - 2.34.2
      - Apache Software License
      - https://github.com/psf/requests
    * - rjsmin
@@ -540,7 +540,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0BSD OR CC0-1.0
      - https://github.com/AA-Turner/roman-numerals/blob/master/CHANGES.rst
    * - selenium
-     - 4.43.0
+     - 4.44.0
      - Apache-2.0
      - https://www.selenium.dev
    * - setuptools
@@ -664,7 +664,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.3.1
+     - 21.3.3
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
@@ -676,7 +676,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/websocket-client/websocket-client.git
    * - wrapt
-     - 2.1.2
+     - 2.2.0
      - Copyright (c) 2013-2025, Graham Dumpleton
      - https://github.com/GrahamDumpleton/wrapt
    * - wsproto

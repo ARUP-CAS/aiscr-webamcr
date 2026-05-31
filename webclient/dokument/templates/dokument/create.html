@@ -130,8 +130,10 @@
             $("#modal-form-region").modal("show")
           });
           $('#modal-form-region').on('hidden.bs.modal', function () {
-            $('#id_region').selectpicker('val', $('#id-modal-region-div #id_region').val());
-            $('#id_region').selectpicker('refresh');            
+            // Místo refresh se používá destroy+reinit, aby se předešlo chybě bootstrap-select
+            // 1.14.0-beta3, kdy buildData() přidává data do main.data místo jejich nahrazení.
+            $('#id_region').val($('#id-modal-region-div #id_region').val());
+            $('#id_region').selectpicker('destroy').selectpicker();
           });
           $('#modal-form-region').on('hide.bs.modal', function (e) {
             const inpObj = document.getElementById("region-form");

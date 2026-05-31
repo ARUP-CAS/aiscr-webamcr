@@ -159,8 +159,20 @@ map.on('click', function (e) {
                         if (ORIGIN_KATASTR.length == 0) {
                             ORIGIN_KATASTR = select.val();
                         }
-                        select.val(response['value']);
-                        if(response['value']!=undefined) L.marker(point_leaf, { icon: pinIconRedDf }).bindPopup(text).addTo(poi_correct);
+                        if (response['value'] != undefined) {
+                            select.val(response['value']);
+                            L.marker(point_leaf, { icon: pinIconRedDf }).bindPopup(text).addTo(poi_correct);
+                        } else {
+                            // Klik mimo území ČR
+                            select.val("");
+                            poi_correct.clearLayers();
+                            try {
+                                document.getElementById('id_coordinate_x1').value = "";
+                                document.getElementById('id_coordinate_x2').value = "";
+                            } catch (e) {
+                                console.log("Error: Element coordinate_x1/x2 neexistuje")
+                            }
+                        }
                     })
             }
         }

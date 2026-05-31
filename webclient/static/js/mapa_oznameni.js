@@ -18,11 +18,17 @@ map.on('click', function (e) {
                     xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
                 }
                 xhr.onload = function () {
-                    if (JSON.parse(this.responseText).cadastre == "None") {
-                        alert([map_translations['mimoCR']])  // "Neplatny bod, klikli jste mimo území ČR"
+                    const cadastre = JSON.parse(this.responseText).cadastre;
+                    const uzemi = document.getElementById('id_katastralni_uzemi');
+                    if (cadastre == "None" || cadastre == "") {
+                        // Klik mimo území ČR
+                        alert([map_translations['mimoCR']])
+                        uzemi.value = "";
+                        document.getElementById('id_coordinate_x1').value = "";
+                        document.getElementById('id_coordinate_x2').value = "";
+                        poi.clearLayers();
                     } else {
-                        const uzemi = document.getElementById('id_katastralni_uzemi');
-                        uzemi.value = JSON.parse(this.responseText).cadastre;
+                        uzemi.value = cadastre;
                     }
                 };
                 xhr.send(JSON.stringify({ 'x1': x1, 'x2': x2 }))

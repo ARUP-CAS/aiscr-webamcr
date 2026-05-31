@@ -29,6 +29,29 @@ from .models import Osoba, User, UserNotificationType
 logger = logging.getLogger(__name__)
 
 
+def normalize_and_validate_email(email, instance=None):
+    """
+    Normalizuje e-mail na malá písmena a ověří jeho unikátnost bez ohledu na velikost písmen.
+
+    E-mail slouží jako přihlašovací jméno, proto musí být case-insensitive unikátní.
+
+    :param email: Zadaný e-mail uživatele.
+    :param instance: Editovaná instance uživatele, jejíž záznam se z kontroly unikátnosti vynechává.
+
+        :return: Vrací e-mail převedený na malá písmena bez okrajových mezer.
+        :raises ValidationError: Vyvolá se, pokud již existuje jiný uživatel se shodným e-mailem bez ohledu na velikost písmen.
+    """
+    if not email:
+        return email
+    email = email.strip().lower()
+    existing = User.objects.filter(email__iexact=email)
+    if instance is not None and instance.pk:
+        existing = existing.exclude(pk=instance.pk)
+    if existing.exists():
+        raise ValidationError(_("uzivatel.forms.email.duplicate.error"))
+    return email
+
+
 class AuthUserCreationForm(RegistrationForm, FormWithOrcid):
     """Formulář pro vytvoření uživatele."""
 
@@ -111,6 +134,14 @@ class AuthUserCreationForm(RegistrationForm, FormWithOrcid):
         for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
+
+    def clean_email(self):
+        """
+        Normalizuje e-mail na malá písmena a ověří jeho case-insensitive unikátnost.
+
+        :return: Vrací normalizovaný e-mail.
+        """
+        return normalize_and_validate_email(self.cleaned_data.get("email"), self.instance)
 
 
 class AuthUserCreationFormWithRecaptcha(AuthUserCreationForm):
@@ -287,6 +318,14 @@ class AuthUserChangeAdminForm(UserChangeForm, FormWithOrcid):
             instance=self.instance,
             initial_value=args[0].get("orcid") if args else None,
         )
+
+    def clean_email(self):
+        """
+        Normalizuje e-mail na malá písmena a ověří jeho case-insensitive unikátnost.
+
+        :return: Vrací normalizovaný e-mail.
+        """
+        return normalize_and_validate_email(self.cleaned_data.get("email"), self.instance)
 
 
 class NotificationsForm(forms.ModelForm):

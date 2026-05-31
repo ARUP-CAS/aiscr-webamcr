@@ -276,10 +276,12 @@
       {% elif app == "lokalita" %}
         <span class="navbar-mobile-header-ident-lokalita">{{ zaznam.ident_cely }}</span>
       {% elif app == "pas" %}
-        <span class="navbar-mobile-header-ident-pas d-flex justify-content-center">{{ sn.ident_cely }}</span>
-        {% if sn.igsn %}
-        <span class="navbar-mobile-header-ident-pas d-flex justify-content-center">({{ sn.igsn }})</span>
-      {% endif %}
+        <span class="navbar-mobile-header-ident-pas-wrapper d-flex flex-column justify-content-center align-items-center">
+          <span class="navbar-mobile-header-ident-pas">{{ sn.ident_cely }}</span>
+          {% if sn.igsn %}
+            <span class="navbar-mobile-header-ident-pas navbar-mobile-header-ident-pas-igsn">({{ sn.igsn }})</span>
+          {% endif %}
+        </span>
       {% elif dokument %}
         {% if not "3D" in dokument.ident_cely %}
           <span class="navbar-mobile-header-ident-dokument">{{ dokument.ident_cely }}</span>
