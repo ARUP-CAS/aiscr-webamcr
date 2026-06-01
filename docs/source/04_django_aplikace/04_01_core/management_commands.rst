@@ -276,6 +276,41 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
    :undoc-members:
 
 
+``shrink_soubor_hashes``
+------------------------
+
+.. automodule:: core.management.commands.shrink_soubor_hashes
+   :members: Command
+   :undoc-members:
+
+**Parametry:**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 20 20 30
+
+   * - Název
+     - Typ
+     - Výchozí hodnota
+     - Popis
+   * - ``--placeholder-manifest``
+     - 
+     - 
+     - Cesta k placeholder_manifest.json (mimetype -> {sha512, size, file}).
+   * - ``--update-size``
+     - 
+     - ``False``
+     - Při hromadném update přepsat i size_mb podle velikosti placeholderu.
+   * - ``--verify``
+     - 
+     - ``False``
+     - Ověří, že soubor.sha_512 odpovídá manifestu (žádný zápis).
+   * - ``--dry-run``
+     - 
+     - ``False``
+     - Pouze zobrazí, co by se stalo, nic neuloží.
+
+
 ``transform_to_sjtsk``
 ----------------------
 
