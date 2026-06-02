@@ -87,8 +87,8 @@ class NeidentAkceForm(forms.ModelForm):
         super(NeidentAkceForm, self).__init__(*args, **kwargs)
         self.fields["katastr"].required = True
         self.fields["vedouci"].required = False
-        self.fields["vedouci"].widget.attrs["id"] = "id_vedouci_modal"
         if readonly is False:
+            self.fields["vedouci"].widget.attrs["id"] = "id_vedouci_modal"
             if "class" in self.fields["katastr"].widget.attrs.keys():
                 self.fields["katastr"].widget.attrs["class"] = (
                     str(self.fields["katastr"].widget.attrs["class"]) + " required-next"

@@ -17,6 +17,8 @@ register = template.Library()
 
 logger = logging.getLogger(__name__)
 
+OSOBY_FIELD_NAMES = frozenset({"autori", "editori", "dokument_osoba", "nalezce", "vedouci"})
+
 
 @register.filter
 def url_to_classes(value):
@@ -136,6 +138,27 @@ def ifinlist(widget_optgroups, list):
                 else:
                     string += "; " + str(option["label"])
     return string
+
+
+@register.filter
+def is_osoby_field(value):
+    """
+    Vrátí True, pokud je pole jedním z osobních polí zobrazovaných přes ``get_osoby_name``.
+
+    Django odděluje prefix formuláře pomlčkou (``prefix-pole``), zatímco názvy polí
+    používají podtržítka. Porovnává se proto jen základ jména bez prefixu (např.
+    ``neident-vedouci`` → ``vedouci``) – jinak by readonly zobrazení prefixovaného
+    formuláře selhalo a hodnota by se nezobrazila. Porovnání je přesné proti
+    :data:`OSOBY_FIELD_NAMES`, nikoli podřetězcové, aby pole jako ``osoba`` nebylo
+    nesprávně vyhodnoceno jako shoda s ``dokument_osoba``.
+
+    :param value: Název pole, případně včetně prefixu formuláře.
+
+        :return: Vrací True, pokud základ názvu pole patří mezi osobní pole.
+    """
+    if not value:
+        return False
+    return str(value).rsplit("-", 1)[-1] in OSOBY_FIELD_NAMES
 
 
 @register.filter

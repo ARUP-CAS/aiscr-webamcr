@@ -1,5 +1,6 @@
 {% extends "dokument/dok/detail.html" %}
 {% load i18n %}
+{% load static %}
 {% load crispy_forms_tags %}
 {% load template_filters %}
 
@@ -178,4 +179,7 @@
           document.getElementById("karta-dokumentacni-cast").scrollIntoView();
       }
     </script>
+    {% if cast.neident_akce %}
+    <script src="{% static 'js/create_osoba_modal.js' %}"></script>
+    {% endif %}
 {% endblock %}

@@ -34,6 +34,7 @@ from notifikace_projekty.forms import (
     KRAJ_CONTENT_TYPE,
     OKRES_CONTENT_TYPE,
     PES_NOTIFICATIONS,
+    PesInlineFormSet,
     create_pes_form,
 )
 from notifikace_projekty.models import Pes
@@ -159,6 +160,7 @@ class PesNotificationTypeInline(admin.TabularInline):
     model = Pes
     form = create_pes_form(model_typ=model_type)
     form.admin_app = True
+    formset = PesInlineFormSet
 
     def get_queryset(self, request):
         """
@@ -305,6 +307,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     )
     list_filter = ("is_active", "organizace", "groups", "is_superuser")
     readonly_fields = ("ident_cely",)
+    autocomplete_fields = ("osoba",)
     inlines = [
         UserNotificationTypeInline,
         PesUserNotificationTypeInline,
@@ -375,7 +378,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         if obj:
-            if Historie.objects.filter(uzivatel=obj).count() > 1000:
+            if Historie.objects.filter(uzivatel=obj)[:1001].count() > 1000:
                 return False
         return True
 
@@ -572,9 +575,11 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             {
                 "show_delete_history_button": True,
                 "object_id": object_id,
-                "user_account_history_exists": user_account_history.exists() if user_account_history else None,
+                "user_account_history_exists": (
+                    user_account_history.exists() if user_account_history is not None else None
+                ),
                 "user_account_other_records_exists": (
-                    user_account_other_records.exists() if user_account_other_records else None
+                    user_account_other_records.exists() if user_account_other_records is not None else None
                 ),
             }
         )
@@ -608,7 +613,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             uzivatel = User.objects.get(pk=object_id)
             history = Historie.objects.filter(uzivatel=uzivatel)
             user_account_history = history.filter(vazba=uzivatel.history_vazba)
-            user_account_other_records = history.filter(~Q(id__in=(user_account_history.values_list("id", flat=True))))
+            user_account_other_records = history.exclude(vazba=uzivatel.history_vazba)
             return user_account_history, user_account_other_records
         else:
             return None, None
