@@ -547,27 +547,13 @@ class AkceProjektoveAkce(AkceTestClass):
         self.login()
         self.createFedoraRecord("C-202004814")
         self.uploadFileToFedora(253674, "projekt/tests/resources/test.pdf")
-        self.go_to_Projekty_vyper()
         count_old = NalezPredmet.objects.filter(
             komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="C-202004814A-D01"
         ).count()
 
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202004814")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "C-202004814")
-        self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "el_komponenta_C_202004814A_K001")
-
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_C-202004814A-K001_p-0-druh .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-15-82 > .text")
-
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_C-202004814A-K001_p-0-specifikace .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-16-15 > .text")
-
-        self.ElementClick(By.ID, "id_C-202004814A-K001_p-0-pocet")
+        self.goToAddress("/arch-z/akce/detail/C-202004814A/dj/C-202004814A-D01/komponenta/detail/C-202004814A-K001")
+        self.select_dynamic_selectpicker_option("id_C-202004814A-K001_p-0-druh", "džbán", wait_ajax=True)
+        self.select_dynamic_selectpicker_option("id_C-202004814A-K001_p-0-specifikace", "keramika")
         self.driver.find_element(By.ID, "id_C-202004814A-K001_p-0-pocet").send_keys("1")
 
         with WaitForPageLoad(self.driver):

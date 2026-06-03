@@ -1344,11 +1344,8 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
 
         :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
         """
-        self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_o-0-druh .btn")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-3 > .text")
-        self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_o-0-specifikace .btn")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-4-3 > .text")
-
+        self.select_dynamic_selectpicker_option(f"id_{ident}-K001_o-0-druh", "hradba", wait_ajax=True)
+        self.select_dynamic_selectpicker_option(f"id_{ident}-K001_o-0-specifikace", "zděná")
         self.ElementClick(By.ID, f"id_{ident}-K001_o-0-pocet")
         self.driver.find_element(By.ID, f"id_{ident}-K001_o-0-pocet").send_keys("1")
         self.ElementClick(By.ID, f"id_{ident}-K001_o-0-poznamka")
@@ -1362,12 +1359,8 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
 
         :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
         """
-        self.driver.execute_script("$(window).scrollTop(1500 );")
-        self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_p-0-druh .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-6 > .text")
-        self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_p-0-specifikace .filter-option-inner-inner")
-        self.ElementClick(By.ID, "bs-select-12-28")
-
+        self.select_dynamic_selectpicker_option(f"id_{ident}-K001_p-0-druh", "dýka", wait_ajax=True)
+        self.select_dynamic_selectpicker_option(f"id_{ident}-K001_p-0-specifikace", "štípaný")
         self.ElementClick(By.ID, f"id_{ident}-K001_p-0-pocet")
         self.driver.find_element(By.ID, f"id_{ident}-K001_p-0-pocet").send_keys("2")
         self.ElementClick(By.ID, f"id_{ident}-K001_p-0-poznamka")

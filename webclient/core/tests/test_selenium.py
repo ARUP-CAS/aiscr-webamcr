@@ -1006,7 +1006,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         if result:
             raise AssertionError(f"select_nth_selectpicker_option('{field_id}', {index}): {result}")
 
-    def select_dynamic_selectpicker_option(self, field_id, search_text, index=0, timeout=10):
+    def select_dynamic_selectpicker_option(self, field_id, search_text, index=0, timeout=10, wait_ajax=False):
         """
         Vybere volbu v selectpickeru podle textu její nabídky.
 
@@ -1020,6 +1020,9 @@ return new Date('2025-06-28T12:00:00Z');}};
         :param search_text: Řetězec hledaný v textu volby.
         :param index: Pořadí shody mezi vyhovujícími volbami (výchozí 0 = první).
         :param timeout: Maximální doba čekání na načtení voleb v sekundách.
+        :param wait_ajax: Pokud ``True``, po výběru počká na dokončení všech XHR požadavků
+            (včetně nativního XMLHttpRequest). Použij, když výběr spouští AJAX, který
+            upravuje závislé selecty.
         """
 
         def _option_present(driver):
@@ -1037,6 +1040,21 @@ return new Date('2025-06-28T12:00:00Z');}};
                 search_text,
                 index,
             )
+
+        if wait_ajax:
+            # Injektuje tracker pro nativní XMLHttpRequest (jQuery.active ho nevidí).
+            # Musí být aktivní před spuštěním trigger('change'), proto se injektuje zde.
+            self.driver.execute_script("""
+                if (!window._xhrTracker) {
+                    window._xhrTracker = {active: 0};
+                    var origSend = XMLHttpRequest.prototype.send;
+                    XMLHttpRequest.prototype.send = function() {
+                        window._xhrTracker.active++;
+                        this.addEventListener('loadend', function() { window._xhrTracker.active--; });
+                        origSend.apply(this, arguments);
+                    };
+                }
+                """)
 
         try:
             WebDriverWait(self.driver, timeout).until(_option_present)
@@ -1068,6 +1086,13 @@ return new Date('2025-06-28T12:00:00Z');}};
         if result:
             raise AssertionError(
                 f"select_dynamic_selectpicker_option('{field_id}', '{search_text}', {index}): {result}"
+            )
+        if wait_ajax:
+            WebDriverWait(self.driver, timeout).until(
+                lambda d: d.execute_script(
+                    "return window._xhrTracker ? window._xhrTracker.active === 0 : "
+                    "(typeof jQuery !== 'undefined' ? jQuery.active === 0 : true)"
+                )
             )
 
     def _select_value_select_picker(self, field_id, selected_value):
