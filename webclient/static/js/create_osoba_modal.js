@@ -1,7 +1,7 @@
 var successFunction = function(settings, response) {
     const $sel = $('#id_vedouci_modal');
     const val = String(response.value);
-    const selected = ($sel.val() || []).map(String);
+    const selected = [].concat($sel.val() || []).map(String);
     $sel.append(new Option(response.text, response.value, true, true));
     if (selected.indexOf(val) === -1) {
       selected.push(val);
