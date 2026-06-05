@@ -262,21 +262,23 @@ class ImportDataIntegrityError(ImportDataError):
 class ImportDataLimitChoicesError(ImportDataError):
     """Výjimka vyvolaná při hodnotě cizího klíče, která nesplňuje omezení limit_choices_to."""
 
-    def __init__(self, record_id, limit_choices_to: dict):
+    def __init__(self, record_id, limit_choices_to: dict, field_verbose_name):
         """
         Inicializuje instanci třídy.
 
         :param record_id: Identifikátor objektu ``record``.
-        :param limit_choices_to: Parametr ``limit_choices_to`` se předává do volání ``__init__()``, ``format()``, pracuje se s atributy ``items``.
+        :param limit_choices_to: Omezení ``limit_choices_to``, které nalezený záznam nesplňuje.
+        :param field_verbose_name: Čitelný název cílového modelového pole.
         """
         self.record_id = record_id
         self.limit_choices_to = limit_choices_to
+        self.field_verbose_name = field_verbose_name
         super().__init__(
             "{} {} {} {}".format(
                 _("core_admin.ImportDataLimitChoicesError.message.part_1"),
                 record_id,
                 _("core_admin.ImportDataLimitChoicesError.message.part_2"),
-                ",".join(["{}: {}".format(k, v) for k, v in limit_choices_to.items()]),
+                field_verbose_name,
             )
         )
 
@@ -305,25 +307,6 @@ class ImportDataMissingHeslarValueError(ImportDataError):
                 str(field_name),
                 _("core_admin.ImportDataMissingHeslarValueError.message.part_3"),
                 str(heslar_name),
-            )
-        )
-
-
-class ImportDataHeslarPresnostLimitChoicesError(ImportDataError):
-    """Výjimka vyvolaná při neplatné hodnotě přesnosti v hesláři u importovaného záznamu."""
-
-    def __init__(self, record_id):
-        """
-        Inicializuje instanci třídy.
-
-        :param record_id: Identifikátor objektu ``record``.
-        """
-        self.record_id = record_id
-        super().__init__(
-            "{} {} {} ".format(
-                _("core_admin.ImportDataLimitChoicesError.message.part_1"),
-                record_id,
-                _("core_admin.ImportDataLimitChoicesError.message.part_2"),
             )
         )
 
@@ -441,6 +424,20 @@ class BaseImportField:
     def __init__(self):
         """Inicializuje instanci třídy."""
         self._value = None
+        self.field_verbose_name = None
+
+    def set_import_context(self, model_class, field_name):
+        """
+        Nastaví kontext cílového modelového pole pro chybové zprávy importu.
+
+        :param model_class: Modelová třída, do které se importuje.
+        :param field_name: Název cílového pole modelu.
+        """
+        self.field_verbose_name = None
+        try:
+            self.field_verbose_name = str(model_class._meta.get_field(field_name).verbose_name)
+        except FieldDoesNotExist:
+            self.field_verbose_name = field_name
 
     @property
     def value(self):
@@ -630,8 +627,8 @@ class BooleanImportField(BaseImportField):
 class DateImportField(BaseImportField):
     """Importní pole pro hodnoty datového typu date."""
 
-    pattern_iso = re.compile(r"(\d{4}-\d{1,2}-\d{1,2})(?: 0{1,2}:0{1,2}:0{1,2})?")
-    pattern_localized = re.compile(r"\d{1,2}\. ?\d{1,2}\. ?\d{4}")
+    pattern_iso = re.compile(r"(\d{4}-\d{1,2}-\d{1,2})(?:[ T]\d{1,2}:\d{1,2}(?::\d{1,2})?)?")
+    pattern_localized = re.compile(r"(\d{1,2}\. ?\d{1,2}\. ?\d{4})(?: \d{1,2}:\d{1,2}(?::\d{1,2})?)?")
 
     @property
     def value(self):
@@ -662,37 +659,56 @@ class DateImportField(BaseImportField):
 
     def _process_value(self, value) -> datetime.date | None:
         """
-               Provádí operaci process value.
+        Převede vstupní hodnotu na ``date``.
 
-               Převede řetězec na datum. Podporované formáty jsou "YYYY-MM-DD" a "DD.MM.YYYY".
-               Pokud hodnota neodpovídá žádnému formátu, vyvolá ImportDataError.
+        Podporované formáty jsou ``YYYY-MM-DD`` a ``DD.MM.YYYY``. Případná časová složka
+        vstupu (např. ``"2026-05-31 13:45:59"``) se ignoruje a zpracuje se pouze část s datem.
 
-               :param value: Parametr ``value`` předává se do volání ``str()``, ``isinstance()``, pracuje se s atributy ``replace``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-        :return: Výstup funkce odpovídající implementované logice.
-
-            :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
+        :param value: Vstupní hodnota.
+        :return: Hodnota ``date`` nebo ``None`` pro prázdnou hodnotu.
+        :raises ImportDataError: Vyvolá se, pokud hodnota neodpovídá podporovanému formátu.
         """
-
         if not value or str(value).lower() == "nan":
             return None
-        elif isinstance(value, str):
-            if self.pattern_iso.match(value):
-                return datetime.datetime.strptime(self.pattern_iso.match(value).group(1), "%Y-%m-%d").date()
-            if self.pattern_localized.match(value):
-                return datetime.datetime.strptime(value.replace(" ", ""), "%d.%m.%Y").date()
-        elif isinstance(value, datetime.date):
+        if isinstance(value, str):
+            if match := self.pattern_iso.match(value):
+                return datetime.datetime.strptime(match.group(1), "%Y-%m-%d").date()
+            if match := self.pattern_localized.match(value):
+                return datetime.datetime.strptime(match.group(1).replace(" ", ""), "%d.%m.%Y").date()
+        if isinstance(value, datetime.date):
             return value
-        raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_date_value')}: {value}")
+        raise ImportDataError(_("core_admin.ImportDataError.message.invalid_date_value") + ": " + str(value))
 
 
 class DateTimeImportField(BaseImportField):
     """
     Importní pole pro hodnoty datového typu datetime.
 
-    Podporovaný formát: "YYYY-MM-DD HH:MM:SS".
+    Podporované formáty vstupu:
+
+    .. list-table::
+       :header-rows: 1
+       :widths: 30 35 35
+
+       * - Formát
+         - Příklad
+         - Výstup
+       * - ``YYYY-MM-DD HH:MM:SS``
+         - ``2026-05-31 13:45:59``
+         - ``2026-05-31 13:45:59``
+       * - ``YYYY.MM.DD HH:MM:SS``
+         - ``2026.05.31 13:45:59``
+         - ``2026-05-31 13:45:59``
+       * - ``DD.MM.YYYY HH:MM:SS``
+         - ``31.05.2026 13:45:59``
+         - ``2026-05-31 13:45:59``
     """
 
-    pattern_iso = re.compile(r"(\d{4}-\d{1,2}-\d{1,2}.?\d{1,2}:\d{1,2}:\d{1,2}).*")
+    patterns = (
+        (re.compile(r"(\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}).*"), "%Y-%m-%d %H:%M:%S"),
+        (re.compile(r"(\d{4}\.\d{1,2}\.\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}).*"), "%Y.%m.%d %H:%M:%S"),
+        (re.compile(r"(\d{1,2}\.\d{1,2}\.\d{4} \d{1,2}:\d{1,2}:\d{1,2}).*"), "%d.%m.%Y %H:%M:%S"),
+    )
 
     @property
     def value(self):
@@ -723,22 +739,22 @@ class DateTimeImportField(BaseImportField):
 
     def _process_value(self, value) -> datetime.datetime | None:
         """
-               Provádí operaci process value.
+        Převede vstupní hodnotu na ``datetime`` v lokální časové zóně.
 
-               :param value: Parametr ``value`` předává se do volání ``str()``, ``isinstance()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-        :return: Výstup funkce odpovídající implementované logice.
-
-            :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
+        :param value: Vstupní hodnota.
+        :return: Hodnota ``datetime`` s časovou zónou, nebo ``None`` pro prázdnou hodnotu.
+        :raises ImportDataError: Vyvolá se, pokud hodnota neodpovídá žádnému podporovanému formátu.
         """
         if not value or str(value).lower() == "nan":
             return None
-        elif isinstance(value, str):
-            if match := self.pattern_iso.match(value):
-                value = datetime.datetime.strptime(match.group(1), "%Y-%m-%d %H:%M:%S")
-                return timezone.make_aware(value)
-        elif isinstance(value, datetime.datetime):
+        if isinstance(value, str):
+            for pattern, datetime_format in self.patterns:
+                if match := pattern.match(value):
+                    parsed_value = datetime.datetime.strptime(match.group(1), datetime_format)
+                    return timezone.make_aware(parsed_value)
+        if isinstance(value, datetime.datetime):
             return value
-        raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_date_time_value')}: {value}")
+        raise ImportDataError(_("core_admin.ImportDataError.message.invalid_date_time_value") + ": " + str(value))
 
 
 class DateRangeImportField(BaseImportField):
@@ -915,7 +931,7 @@ class LookupImportField(BaseImportField):
         """
         if self.limit_choices_to:
             if not all(getattr(record, k).pk == v for k, v in self.limit_choices_to.items()):
-                raise ImportDataLimitChoicesError(record, self.limit_choices_to)
+                raise ImportDataLimitChoicesError(record, self.limit_choices_to, self.field_verbose_name)
 
     def _process_value(self, value):
         """
@@ -1350,8 +1366,19 @@ class ImportModelMapper(ABC):
             :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``BaseImportField()``, výsledek volání ``IntegerImportField()``, výsledek volání ``PositiveIntegerImportField()``.
             :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
         """
+        return cls._import_field_for_model_field(cls.model_class, field_name)
 
-        model_field = cls.model_class._meta.get_field(field_name)
+    @classmethod
+    def _import_field_for_model_field(cls, model_class, field_name):
+        """
+        Vrátí instanci importního pole odpovídající typu pole ``field_name`` v ``model_class``.
+
+        :param model_class: Modelová třída, na které se pole hledá.
+        :param field_name: Název pole modelu.
+        :return: Instance ``BaseImportField`` nebo její podtřídy, případně ``None`` pro ``ForeignKey``.
+        :raises ImportDataError: Pokud typ pole není podporován.
+        """
+        model_field = model_class._meta.get_field(field_name)
         if (
             isinstance(model_field, models.TextField)
             or isinstance(model_field, models.CharField)
@@ -1523,6 +1550,7 @@ class ImportModelMapper(ABC):
         for field_name, field_instance in self.get_mapping(include_primary_key).items():
             if field_name in self.value_dict:
                 field_value = self.value_dict[field_name]
+                field_instance.set_import_context(self.model_class, self.map_column_name_to_field_name(field_name))
                 field_instance.value = field_value
                 if instance_values:
                     mapping_dict[field_name] = (
@@ -1662,6 +1690,44 @@ class MultipleClassImportModelMapper(ImportModelMapper):
 
     foreign_key_fields = tuple()
     classes = tuple()
+    lookup_fields_mapping: dict = {}
+
+    @classmethod
+    def _field_to_model(cls):
+        """
+        Sestaví mapování ``field_name -> model_class`` na základě ``cls.fields``, ``cls.foreign_key_fields``
+        a ``cls.classes``. Slouží k tomu, aby typově korektní importní pole bylo zvoleno i tehdy,
+        když jeden mapper pokrývá více modelů.
+        """
+        alias_to_model = {entry[0]: entry[1] for entry in cls.classes}
+        mapping = {}
+        for model_alias, field_name in tuple(cls.fields) + tuple(cls.foreign_key_fields):
+            if model_alias in alias_to_model:
+                mapping[field_name] = alias_to_model[model_alias]
+        return mapping
+
+    @classmethod
+    def map_field(cls, field_name):
+        """
+        Najde správný model pro ``field_name`` napříč všemi modely mapperu a vrátí
+        odpovídající importní pole. Pole z ``lookup_fields_mapping`` má přednost.
+
+        :param field_name: Název sloupce importovaného souboru.
+        :return: Instance ``BaseImportField`` nebo její podtřídy.
+        """
+        if field_name in cls.lookup_fields_mapping:
+            return cls.lookup_fields_mapping[field_name]
+        model_class = cls._field_to_model().get(field_name)
+        if model_class is None:
+            return BaseImportField()
+        model_field_name = cls.column_to_field_mapping.get(field_name, field_name)
+        try:
+            import_field = cls._import_field_for_model_field(model_class, model_field_name)
+        except FieldDoesNotExist:
+            return BaseImportField()
+        if import_field is None:
+            return BaseImportField()
+        return import_field
 
     def import_validation(self, performed_action, *args, **kwargs):
         """
@@ -2319,21 +2385,6 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
         return field_mapping
 
     @classmethod
-    def map_field(cls, field_name):
-        """
-        Provádí operaci map field.
-
-        :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
-
-            :return: Vrací výsledek volání ``get()``.
-        """
-        mapping_dict = {
-            "hlavni_katastr": RuianLookupImportField(RuianKatastr, "kod"),
-        }
-        mapping_dict = mapping_dict | cls.lookup_fields_mapping
-        return mapping_dict.get(field_name, BaseImportField())
-
-    @classmethod
     def record_postprocessing(cls, record, performed_action, fedora_transaction):
         """
         Provádí operaci record postprocessing.
@@ -2431,21 +2482,6 @@ class LokalitaMapper(MultipleClassImportModelMapper):
             field_mapping[item] = cls.map_field(item)
         field_mapping = field_mapping | cls.lookup_fields_mapping
         return field_mapping
-
-    @classmethod
-    def map_field(cls, field_name):
-        """
-        Provádí operaci map field.
-
-        :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
-
-            :return: Vrací výsledek volání ``get()``.
-        """
-        mapping_dict = {
-            "hlavni_katastr": RuianLookupImportField(RuianKatastr, "kod"),
-        }
-        mapping_dict = mapping_dict | cls.lookup_fields_mapping
-        return mapping_dict.get(field_name, BaseImportField())
 
     @staticmethod
     def get_record_history(record: ArcheologickyZaznam | Lokalita):
@@ -2880,18 +2916,6 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
             field_mapping[item] = cls.map_field(item)
         field_mapping = field_mapping | cls.lookup_fields_mapping
         return field_mapping
-
-    @classmethod
-    def map_field(cls, field_name):
-        """
-        Provádí operaci map field.
-
-        :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
-
-            :return: Vrací výsledek volání ``get()``.
-        """
-        mapping_dict = cls.lookup_fields_mapping
-        return mapping_dict.get(field_name, BaseImportField())
 
     def create_records(self, performed_action) -> list:
         """
@@ -4065,6 +4089,32 @@ class SouborMapper(ImportModelMapper):
         :return: Přímo předaný soubor.
         """
         return record
+
+    @staticmethod
+    def get_related_history_targets(record: Soubor) -> list:
+        """
+        Vrátí záznamy, kterým má import binárního souboru zapsat historii.
+
+        Soubory dokumentů jsou v historii hlavních záznamů vedené přes navázané
+        archeologické záznamy, zatímco soubory projektu a samostatného nálezu se
+        zapisují přímo na navázaný objekt.
+
+        :param record: Importovaný záznam ``Soubor``.
+        :return: Seznam záznamů s historií dotčenou importem souboru.
+        """
+        related_record = record.vazba.navazany_objekt if record.vazba_id else None
+        if isinstance(related_record, Dokument):
+            targets = []
+            seen = set()
+            for cast in related_record.casti.select_related("archeologicky_zaznam").all():
+                archeologicky_zaznam = cast.archeologicky_zaznam
+                if archeologicky_zaznam and archeologicky_zaznam.pk not in seen:
+                    targets.append(archeologicky_zaznam)
+                    seen.add(archeologicky_zaznam.pk)
+            return targets
+        if isinstance(related_record, ModelWithMetadata):
+            return [related_record]
+        return []
 
 
 @ImportModelMapper.register("uzivatele_notifikace")

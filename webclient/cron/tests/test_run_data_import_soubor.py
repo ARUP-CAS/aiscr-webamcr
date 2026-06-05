@@ -5,11 +5,12 @@ import uuid
 from types import SimpleNamespace
 from unittest.mock import MagicMock, mock_open, patch
 
-from core.constants import SOUBOR_RELATION_TYPE
+from core.constants import IMPORT, SN_ZAPSANY, SOUBOR_RELATION_TYPE
 from core.forms import ImportDataAdminForm
 from core.models import Soubor
 from cron.tests._run_data_import_mapper_base import JOB_ID, RunDataImportMapperTestBase
 from historie.models import Historie, HistorieVazby
+from pas.models import SamostatnyNalez
 
 SOUBOR_FILE_KEY = "soubory"
 
@@ -47,19 +48,52 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             **kwargs,
         )
 
-    def _create_existing_soubor(self, nazev="existing.txt") -> Soubor:
-        """Vytvoří v DB Soubor navázaný na ``self.dokument.soubory`` pro UPDATE/DELETE testy."""
+    def _create_existing_soubor(self, nazev="existing.txt", vazba=None) -> Soubor:
+        """Vytvoří v DB Soubor navázaný na předanou souborovou vazbu pro UPDATE/DELETE testy."""
         historie_vazba = HistorieVazby.objects.create(typ_vazby=SOUBOR_RELATION_TYPE)
         soubor = Soubor(
             nazev=nazev,
             mimetype="text/plain",
-            vazba=self.dokument.soubory,
+            vazba=vazba or self.dokument.soubory,
             size_mb=0.001,
             historie=historie_vazba,
         )
         soubor.suppress_signal = True
         soubor.save()
         return soubor
+
+    def _create_samostatny_nalez_for_soubor(self, ident_cely="C-202399001-N90001") -> SamostatnyNalez:
+        """Vytvoří samostatný nález s vlastní ``soubory`` vazbou pro test importu Souboru."""
+        nalez = SamostatnyNalez(
+            ident_cely=ident_cely,
+            stav=SN_ZAPSANY,
+            projekt=self.projekt,
+            pristupnost=self.base_heslars["pristupnost"],
+            katastr=self.katastr,
+            nalezce=self.osoba,
+            obdobi=self.extra_heslars["obdobi"],
+            druh_nalezu=self.extra_heslars["predmet_druh"],
+        )
+        nalez.suppress_signal = True
+        nalez.save()
+        return nalez
+
+    def _soubor_related_records(self, suffix):
+        """Vrátí testovací cíle pokrývající všechny podporované typy vazby Souboru."""
+        return (
+            ("projekt", self.projekt),
+            ("dokument", self.dokument),
+            ("samostatny_nalez", self._create_samostatny_nalez_for_soubor(f"C-202399001-N90{suffix}")),
+        )
+
+    def _soubor_related_history_records(self, suffix):
+        """Vrátí dvojice objektu pro Soubor.vazba a cíle pro historii hlavního záznamu."""
+        samostatny_nalez = self._create_samostatny_nalez_for_soubor(f"C-202399001-N91{suffix}")
+        return (
+            ("projekt", self.projekt, self.projekt),
+            ("archeologicky_zaznam", self.dokument, self.az),
+            ("samostatny_nalez", samostatny_nalez, samostatny_nalez),
+        )
 
     def _history_record_result(self, fake_redis):
         raw = fake_redis.get(f"import_data_history_record_result_{JOB_ID}")
@@ -73,6 +107,49 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         history_record_result = self._history_record_result(fake_redis)
         self.assertIn(record_id, history_record_result)
         self.assertIn("history_record_created", history_record_result[record_id])
+
+    def assert_related_record_save_metadata_called(self, save_metadata_calls, related_record):
+        """Ověří, že Fedora metadata byla uložena pro objekt dohledaný přes ``Soubor.vazba``.
+
+        :param save_metadata_calls: Seznam objektů, pro které bylo zavoláno ``save_metadata`` ve Fedoře.
+        :param related_record: Navázaný hlavní záznam, jehož ``ident_cely`` se očekává mezi voláními."""
+        ident_celies = [getattr(item, "ident_cely", None) for item in save_metadata_calls]
+        self.assertIn(
+            related_record.ident_cely,
+            ident_celies,
+            "``save_metadata`` musí být zavoláno pro navázaný objekt "
+            f"({related_record.ident_cely}). Volání pro: {ident_celies}",
+        )
+
+    def assert_related_record_metadata_updated(self, save_metadata_calls, related_history_record):
+        """Ověří, že import souboru spustil Fedora ``save_metadata`` na navázaném hlavním záznamu.
+
+        :param save_metadata_calls: Seznam objektů, pro které bylo zavoláno ``save_metadata`` ve Fedoře.
+        :param related_history_record: Navázaný hlavní záznam, u něhož mají být přegenerována Fedora metadata."""
+        ident_celies = [getattr(item, "ident_cely", None) for item in save_metadata_calls]
+        self.assertIn(
+            related_history_record.ident_cely,
+            ident_celies,
+            "Import Souboru musí přegenerovat Fedora metadata navázaného záznamu "
+            f"({related_history_record.ident_cely}). Volání pro: {ident_celies}",
+        )
+
+    def assert_no_related_history_record_created(self, related_history_record, file_name):
+        """Ověří, že na navázaném hlavním záznamu nevznikla historie o importu souboru.
+
+        :param related_history_record: Navázaný hlavní záznam, jehož historie se kontroluje.
+        :param file_name: Název souboru očekávaný v poznámce historického záznamu."""
+        history_count = Historie.objects.filter(
+            vazba=related_history_record.historie,
+            typ_zmeny=IMPORT,
+            poznamka__contains=file_name,
+        ).count()
+        self.assertEqual(
+            history_count,
+            0,
+            "Import Souboru NESMÍ zapisovat historii na navázaný záznam "
+            f"({related_history_record.ident_cely}); namísto historie se aktualizují pouze Fedora metadata.",
+        )
 
     def test_insert_writes_soubor_to_database_and_saves_to_fedora(self):
         """INSERT vloží Soubor do DB, zapíše ho do Fedory a do progress značky přidá ``file``."""
@@ -92,6 +169,33 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         navazany_ident_celies = [getattr(item, "ident_cely", None) for item in save_metadata_calls]
         self.assertIn(navazany_ident_cely, navazany_ident_celies)
         self.assert_history_record_result_contains_item(fake_redis)
+
+    def test_insert_soubor_saves_related_record_metadata_for_all_supported_vazba_types(self):
+        """INSERT Souboru musí uložit metadata objektu navázaného přes ``Soubor.vazba``."""
+        for label, related_record in self._soubor_related_records("001"):
+            with self.subTest(vazba=label):
+                file_name = f"insert-{label}.txt"
+                fake_redis, save_metadata_calls = self._run_soubor_import(
+                    [{"vazba": related_record.ident_cely, "nazev": file_name}],
+                )
+
+                self.assert_import_success(fake_redis)
+                soubor = Soubor.objects.get(vazba=related_record.soubory, nazev=file_name)
+                self.assertEqual(soubor.vazba.navazany_objekt, related_record)
+                self.assert_related_record_save_metadata_called(save_metadata_calls, related_record)
+
+    def test_insert_soubor_updates_related_record_metadata_for_supported_targets(self):
+        """INSERT Souboru musí přegenerovat Fedora metadata navázaného hlavního záznamu a nezapsat na něj historii."""
+        for label, soubor_related_record, related_history_record in self._soubor_related_history_records("001"):
+            with self.subTest(vazba=label):
+                file_name = f"insert-history-{label}.txt"
+                fake_redis, save_metadata_calls = self._run_soubor_import(
+                    [{"vazba": soubor_related_record.ident_cely, "nazev": file_name}],
+                )
+
+                self.assert_import_success(fake_redis)
+                self.assert_related_record_metadata_updated(save_metadata_calls, related_history_record)
+                self.assert_no_related_history_record_created(related_history_record, file_name)
 
     def test_update_re_uploads_binary_content_for_existing_soubor(self):
         """UPDATE pro Soubor je re-upload binárního obsahu se shodným ``nazev`` + ``vazba``.
@@ -117,9 +221,54 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         existing.refresh_from_db()
         self.assertEqual(existing.sha_512, "sha")
         self.assertEqual(existing.path, "/fedora/import-test.txt")
+        self.assertIsNotNone(existing.rozsah)
+        self.assertEqual(existing.rozsah, 1)
         navazany_ident_celies = [getattr(item, "ident_cely", None) for item in save_metadata_calls]
         self.assertIn(navazany_ident_cely, navazany_ident_celies)
         self.assert_history_record_result_contains_item(fake_redis)
+
+    def test_update_soubor_saves_related_record_metadata_for_all_supported_vazba_types(self):
+        """UPDATE Souboru musí uložit metadata objektu navázaného přes ``Soubor.vazba``."""
+        for label, related_record in self._soubor_related_records("002"):
+            with self.subTest(vazba=label):
+                file_name = f"update-{label}.txt"
+                existing = self._create_existing_soubor(nazev=file_name, vazba=related_record.soubory)
+                fake_redis, save_metadata_calls = self._run_soubor_import(
+                    [
+                        {
+                            "id": f"soub-{existing.id}",
+                            "vazba": related_record.ident_cely,
+                            "nazev": file_name,
+                        }
+                    ],
+                    performed_action=ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+                )
+
+                self.assert_import_success(fake_redis)
+                existing.refresh_from_db()
+                self.assertEqual(existing.vazba.navazany_objekt, related_record)
+                self.assert_related_record_save_metadata_called(save_metadata_calls, related_record)
+
+    def test_update_soubor_updates_related_record_metadata_for_supported_targets(self):
+        """UPDATE Souboru musí přegenerovat Fedora metadata navázaného hlavního záznamu a nezapsat na něj historii."""
+        for label, soubor_related_record, related_history_record in self._soubor_related_history_records("002"):
+            with self.subTest(vazba=label):
+                file_name = f"update-history-{label}.txt"
+                existing = self._create_existing_soubor(nazev=file_name, vazba=soubor_related_record.soubory)
+                fake_redis, save_metadata_calls = self._run_soubor_import(
+                    [
+                        {
+                            "id": f"soub-{existing.id}",
+                            "vazba": soubor_related_record.ident_cely,
+                            "nazev": file_name,
+                        }
+                    ],
+                    performed_action=ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+                )
+
+                self.assert_import_success(fake_redis)
+                self.assert_related_record_metadata_updated(save_metadata_calls, related_history_record)
+                self.assert_no_related_history_record_created(related_history_record, file_name)
 
     def test_delete_action_removes_soubor_from_database(self):
         """DELETE akce pro SouborMapper musí Soubor odstranit z DB a aktualizovat metadata navázaného objektu.
@@ -133,6 +282,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         zpět na reálné načtení Dokumentu z DB, aby ``record.save_metadata`` skutečně dorazilo
         na patchovaný ``ModelWithMetadata.save_metadata``.
         """
+        from arch_z.models import ArcheologickyZaznam as AzModel
         from dokument.models import Dokument as DokumentModel
 
         existing = self._create_existing_soubor(nazev="to-delete.txt")
@@ -140,7 +290,12 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         navazany_ident_cely = self.dokument.ident_cely
 
         def real_get_record_from_ident(ident_cely):
-            return DokumentModel.objects.get(ident_cely=ident_cely)
+            for model in (DokumentModel, AzModel):
+                try:
+                    return model.objects.get(ident_cely=ident_cely)
+                except model.DoesNotExist:
+                    continue
+            raise DokumentModel.DoesNotExist(ident_cely)
 
         fake_redis, save_metadata_calls = self._run_soubor_import(
             [{"id": f"soub-{soubor_id}"}],
@@ -161,6 +316,13 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             navazany_ident_celies,
             "Po smazání Souboru musí být ``save_metadata`` zavoláno pro navázaný objekt "
             f"({navazany_ident_cely}). Volání pro: {navazany_ident_celies}",
+        )
+        self.assertIn(
+            self.az.ident_cely,
+            navazany_ident_celies,
+            "Po smazání Souboru musí být ``save_metadata`` zavoláno i pro archeologický záznam "
+            "navázaný přes ``DokumentCast`` "
+            f"({self.az.ident_cely}). Volání pro: {navazany_ident_celies}",
         )
 
     def test_database_save_failure_marks_import_as_failed(self):

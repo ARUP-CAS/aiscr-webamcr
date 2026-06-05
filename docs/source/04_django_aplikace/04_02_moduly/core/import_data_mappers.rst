@@ -102,7 +102,8 @@ Třídy
       Inicializuje instanci třídy.
 
       :param record_id: Identifikátor objektu ``record``.
-      :param limit_choices_to: Parametr ``limit_choices_to`` se předává do volání ``__init__()``, ``format()``, pracuje se s atributy ``items``.
+      :param limit_choices_to: Omezení ``limit_choices_to``, které nalezený záznam nesplňuje.
+      :param field_verbose_name: Čitelný název cílového modelového pole.
 
 
 .. py:class:: ImportDataMissingHeslarValueError
@@ -118,19 +119,6 @@ Třídy
       :param field_name: Název pole, ve kterém lookup selhal.
       :param heslar_name: Název hesláře (hodnota ``nazev_heslare``), do kterého hodnota nepatří.
       :param value: Hodnota, která nebyla v hesláři nalezena.
-
-
-.. py:class:: ImportDataHeslarPresnostLimitChoicesError
-
-   Výjimka vyvolaná při neplatné hodnotě přesnosti v hesláři u importovaného záznamu.
-
-   **Metody:**
-
-   .. py:method:: __init__()
-
-      Inicializuje instanci třídy.
-
-      :param record_id: Identifikátor objektu ``record``.
 
 
 .. py:class:: ImportDataUnsupportedFileError
@@ -223,6 +211,13 @@ Třídy
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
+
+   .. py:method:: set_import_context()
+
+      Nastaví kontext cílového modelového pole pro chybové zprávy importu.
+
+      :param model_class: Modelová třída, do které se importuje.
+      :param field_name: Název cílového pole modelu.
 
    .. py:method:: value()
 
@@ -373,22 +368,38 @@ Třídy
 
    .. py:method:: _process_value()
 
-             Provádí operaci process value.
+      Převede vstupní hodnotu na ``date``.
 
-             Převede řetězec na datum. Podporované formáty jsou "YYYY-MM-DD" a "DD.MM.YYYY".
-             Pokud hodnota neodpovídá žádnému formátu, vyvolá ImportDataError.
+      Podporované formáty jsou ``YYYY-MM-DD`` a ``DD.MM.YYYY``. Případná časová složka
+      vstupu (např. ``"2026-05-31 13:45:59"``) se ignoruje a zpracuje se pouze část s datem.
 
-      :param value: Parametr ``value`` předává se do volání ``str()``, ``isinstance()``, pracuje se s atributy ``replace``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-      :return: Výstup funkce odpovídající implementované logice.
-
-      :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
+      :param value: Vstupní hodnota.
+      :return: Hodnota ``date`` nebo ``None`` pro prázdnou hodnotu.
+      :raises ImportDataError: Vyvolá se, pokud hodnota neodpovídá podporovanému formátu.
 
 
 .. py:class:: DateTimeImportField
 
    Importní pole pro hodnoty datového typu datetime.
 
-   Podporovaný formát: "YYYY-MM-DD HH:MM:SS".
+   Podporované formáty vstupu:
+
+   .. list-table::
+   :header-rows: 1
+   :widths: 30 35 35
+
+   * - Formát
+   - Příklad
+   - Výstup
+   * - ``YYYY-MM-DD HH:MM:SS``
+   - ``2026-05-31 13:45:59``
+   - ``2026-05-31 13:45:59``
+   * - ``YYYY.MM.DD HH:MM:SS``
+   - ``2026.05.31 13:45:59``
+   - ``2026-05-31 13:45:59``
+   * - ``DD.MM.YYYY HH:MM:SS``
+   - ``31.05.2026 13:45:59``
+   - ``2026-05-31 13:45:59``
 
    **Metody:**
 
@@ -412,12 +423,11 @@ Třídy
 
    .. py:method:: _process_value()
 
-             Provádí operaci process value.
+      Převede vstupní hodnotu na ``datetime`` v lokální časové zóně.
 
-      :param value: Parametr ``value`` předává se do volání ``str()``, ``isinstance()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-      :return: Výstup funkce odpovídající implementované logice.
-
-      :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
+      :param value: Vstupní hodnota.
+      :return: Hodnota ``datetime`` s časovou zónou, nebo ``None`` pro prázdnou hodnotu.
+      :raises ImportDataError: Vyvolá se, pokud hodnota neodpovídá žádnému podporovanému formátu.
 
 
 .. py:class:: DateRangeImportField
@@ -727,6 +737,15 @@ Třídy
       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``BaseImportField()``, výsledek volání ``IntegerImportField()``, výsledek volání ``PositiveIntegerImportField()``.
       :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
 
+   .. py:method:: _import_field_for_model_field()
+
+      Vrátí instanci importního pole odpovídající typu pole ``field_name`` v ``model_class``.
+
+      :param model_class: Modelová třída, na které se pole hledá.
+      :param field_name: Název pole modelu.
+      :return: Instance ``BaseImportField`` nebo její podtřídy, případně ``None`` pro ``ForeignKey``.
+      :raises ImportDataError: Pokud typ pole není podporován.
+
    .. py:method:: is_field_required()
 
       Určí, zda field required.
@@ -858,6 +877,20 @@ Třídy
    Základní třída pro mappery importující data do více modelů najednou.
 
    **Metody:**
+
+   .. py:method:: _field_to_model()
+
+      Sestaví mapování ``field_name -> model_class`` na základě ``cls.fields``, ``cls.foreign_key_fields``
+      a ``cls.classes``. Slouží k tomu, aby typově korektní importní pole bylo zvoleno i tehdy,
+      když jeden mapper pokrývá více modelů.
+
+   .. py:method:: map_field()
+
+      Najde správný model pro ``field_name`` napříč všemi modely mapperu a vrátí
+      odpovídající importní pole. Pole z ``lookup_fields_mapping`` má přednost.
+
+      :param field_name: Název sloupce importovaného souboru.
+      :return: Instance ``BaseImportField`` nebo její podtřídy.
 
    .. py:method:: import_validation()
 
@@ -1163,14 +1196,6 @@ Třídy
 
       :return: Vrací proměnná ``field_mapping``.
 
-   .. py:method:: map_field()
-
-      Provádí operaci map field.
-
-      :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
-
-      :return: Vrací výsledek volání ``get()``.
-
    .. py:method:: record_postprocessing()
 
       Provádí operaci record postprocessing.
@@ -1209,14 +1234,6 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
 
       :return: Vrací proměnná ``field_mapping``.
-
-   .. py:method:: map_field()
-
-      Provádí operaci map field.
-
-      :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
-
-      :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: get_record_history()
 
@@ -1441,14 +1458,6 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
 
       :return: Vrací proměnná ``field_mapping``.
-
-   .. py:method:: map_field()
-
-      Provádí operaci map field.
-
-      :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
-
-      :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: create_records()
 
@@ -2144,6 +2153,17 @@ Třídy
 
       :param record: Záznam ``Soubor`` po importu.
       :return: Přímo předaný soubor.
+
+   .. py:method:: get_related_history_targets()
+
+      Vrátí záznamy, kterým má import binárního souboru zapsat historii.
+
+      Soubory dokumentů jsou v historii hlavních záznamů vedené přes navázané
+      archeologické záznamy, zatímco soubory projektu a samostatného nálezu se
+      zapisují přímo na navázaný objekt.
+
+      :param record: Importovaný záznam ``Soubor``.
+      :return: Seznam záznamů s historií dotčenou importem souboru.
 
 
 .. py:class:: UzivatelNotifikaceMapper

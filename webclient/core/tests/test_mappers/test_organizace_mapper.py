@@ -3,6 +3,7 @@ from core.import_data_mappers import (
     ImportDataError,
     ImportDataIncorrectStructureError,
     ImportDataIntegrityError,
+    ImportDataLimitChoicesError,
     OrganizaceMapper,
 )
 from django.test import TestCase
@@ -132,6 +133,26 @@ class OrganizaceMapperInsertValidTest(TestCase):
         result = mapper.map(INSERT, instance_values=True, serialize=False, include_primary_key=True)
         self.assertIsInstance(result["typ_organizace"], Heslar)
         self.assertEqual(result["typ_organizace"].ident_cely, HESLAR_ORGTYP_IDENT)
+
+    def test_map_typ_organizace_wrong_heslar_message_uses_verbose_name(self):
+        """ImportDataLimitChoicesError pro typ_organizace vypíše verbose_name pole místo ID hesláře."""
+        wrong_heslar_nazev = HeslarNazev.objects.create(nazev="Jiný heslář")
+        wrong_heslar = Heslar.objects.create(
+            ident_cely="HES-WRONG-001",
+            nazev_heslare=wrong_heslar_nazev,
+            heslo="Chybná hodnota",
+            heslo_en="Wrong value",
+        )
+        row = VALID_ROW.copy()
+        row["typ_organizace"] = wrong_heslar.ident_cely
+        mapper = OrganizaceMapper(row)
+
+        with self.assertRaises(ImportDataLimitChoicesError) as ctx:
+            mapper.map(INSERT, serialize=True, include_primary_key=True)
+
+        message = str(ctx.exception)
+        self.assertIn(str(Organizace._meta.get_field("typ_organizace").verbose_name), message)
+        self.assertNotIn(f"nazev_heslare: {HESLAR_ORGANIZACE_TYP}", message)
 
     def test_map_fk_fields(self):
         """map() vrátí None pro volitelnou nadřazenou organizaci a hodnoty pro povinné FK."""

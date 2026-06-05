@@ -273,6 +273,13 @@ class RunDataImportOrganizaceTest(TestCase):
             self._run_import(fake_redis)
 
         self._assert_import_failed(fake_redis)
+        fedora_result_raw = fake_redis.get(f"import_fedora_result_{JOB_ID}")
+        self.assertIsNotNone(fedora_result_raw, "import_fedora_result musí být inicializované.")
+        self.assertEqual(
+            json.loads(fedora_result_raw.decode("utf-8")),
+            {},
+            "Při selhání datového importu se nesmí do Fedora výsledku doplnit fedora_skipped.",
+        )
 
     def test_history_save_failure_marks_import_as_failed(self):
         """Pokud uložení Historie záznamu selže, import skončí jako selhalý."""

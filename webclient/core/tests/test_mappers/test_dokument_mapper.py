@@ -115,6 +115,18 @@ class DokumentMapperInvalidStructureTest(TestCase):
             mapper.map(INSERT, serialize=True, include_primary_key=True)
 
 
+class DokumentMapperMapInvalidValueTest(TestCase):
+    """Testy pro DokumentMapper.map — neplatné hodnoty datových typů."""
+
+    def test_invalid_datum_zverejneni_format_raises_error(self):
+        """map() vyvolá ImportDataError při neplatném formátu datum_zverejneni."""
+        row = MAP_SAFE_ROW.copy()
+        row["datum_zverejneni"] = "2021-xxx-13"
+        mapper = DokumentMapper(row)
+        with self.assertRaises(ImportDataError):
+            mapper.map(INSERT, serialize=True, include_primary_key=True)
+
+
 class DokumentMapperCheckRequiredFieldsTest(TestCase):
     """Testy pro DokumentMapper.check_required_fields — bez DB."""
 
