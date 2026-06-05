@@ -114,6 +114,14 @@ Třídy
 
       :return: Vrací výsledek volání ``get()``.
 
+   .. py:method:: _detect_mime()
+
+      Detekuje MIME typ souboru pomocí ``libmagic`` s workaroundem pro regresi v ``libmagic >= 5.46``,
+      kde běžný ZIP s obsahem je vrácen jako ``application/octet-stream``.
+
+      :param file: File-like objekt s podporou ``seek`` a ``read``.
+      :return: Detekovaný MIME typ.
+
    .. py:method:: get_thumb_icon()
 
       Vrací thumb icon.
@@ -146,12 +154,15 @@ Třídy
 
    .. py:method:: check_mime_for_url()
 
-      Ověří mime for url.
+      Ověří, zda detekovaný MIME typ souboru spadá do whitelistu pro danou upload URL.
+
+      Whitelisty per větev musí odpovídat seznamům v ``static/js/dz.js``.
 
       :param file: Soubor nebo cesta k souboru používaná při operaci.
-      :param source_url: Parametr ``source_url`` ovlivňuje větvení podmínek.
-
-      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``mime``, bool.
+      :param source_url: URL uploadu — určuje, který whitelist se použije
+          (``pas``, ``dokument``, ``model3d`` nebo výchozí ``projekt``).
+      :return: ``True``/``False`` podle výsledku kontroly, případně řetězec
+          ``"encrypted"`` u zaheslovaných archivů.
 
    .. py:method:: check_antivirus()
 

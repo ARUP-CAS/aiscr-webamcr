@@ -29,6 +29,29 @@ from .models import Osoba, User, UserNotificationType
 logger = logging.getLogger(__name__)
 
 
+def normalize_and_validate_email(email, instance=None):
+    """
+    Normalizuje e-mail na malá písmena a ověří jeho unikátnost bez ohledu na velikost písmen.
+
+    E-mail slouží jako přihlašovací jméno, proto musí být case-insensitive unikátní.
+
+    :param email: Zadaný e-mail uživatele.
+    :param instance: Editovaná instance uživatele, jejíž záznam se z kontroly unikátnosti vynechává.
+
+        :return: Vrací e-mail převedený na malá písmena bez okrajových mezer.
+        :raises ValidationError: Vyvolá se, pokud již existuje jiný uživatel se shodným e-mailem bez ohledu na velikost písmen.
+    """
+    if not email:
+        return email
+    email = email.strip().lower()
+    existing = User.objects.filter(email__iexact=email)
+    if instance is not None and instance.pk:
+        existing = existing.exclude(pk=instance.pk)
+    if existing.exists():
+        raise ValidationError(_("uzivatel.forms.email.duplicate.error"))
+    return email
+
+
 class AuthUserCreationForm(RegistrationForm, FormWithOrcid):
     """Formulář pro vytvoření uživatele."""
 
@@ -112,6 +135,14 @@ class AuthUserCreationForm(RegistrationForm, FormWithOrcid):
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
 
+    def clean_email(self):
+        """
+        Normalizuje e-mail na malá písmena a ověří jeho case-insensitive unikátnost.
+
+        :return: Vrací normalizovaný e-mail.
+        """
+        return normalize_and_validate_email(self.cleaned_data.get("email"), self.instance)
+
 
 class AuthUserCreationFormWithRecaptcha(AuthUserCreationForm):
     """Implementuje komponentu ``AuthUserCreationFormWithRecaptcha`` v rámci aplikace."""
@@ -162,7 +193,7 @@ class AuthUserChangeForm(forms.ModelForm, FormWithOrcid):
         }
 
         widgets = {
-            "telefon": forms.TextInput(),
+            "telefon": forms.TextInput(attrs={"autocomplete": "tel"}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -228,7 +259,7 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
         widgets = {
             "first_name": forms.TextInput(attrs={"readonly": True}),
             "last_name": forms.TextInput(attrs={"readonly": True}),
-            "email": forms.TextInput(attrs={"readonly": True}),
+            "email": forms.TextInput(attrs={"readonly": True, "autocomplete": "username"}),
             "ident_cely": forms.TextInput(attrs={"readonly": True}),
             "date_joined": ForeignKeyReadOnlyTextInput(),
             "organizace": ForeignKeyReadOnlyTextInput(),
@@ -288,6 +319,14 @@ class AuthUserChangeAdminForm(UserChangeForm, FormWithOrcid):
             initial_value=args[0].get("orcid") if args else None,
         )
 
+    def clean_email(self):
+        """
+        Normalizuje e-mail na malá písmena a ověří jeho case-insensitive unikátnost.
+
+        :return: Vrací normalizovaný e-mail.
+        """
+        return normalize_and_validate_email(self.cleaned_data.get("email"), self.instance)
+
 
 class NotificationsForm(forms.ModelForm):
     """Formulář pro správu typu notifikací."""
@@ -317,19 +356,19 @@ class UpdatePasswordSettings(forms.ModelForm):
 
     old_password = forms.CharField(
         required=False,
-        widget=PasswordInput(),
+        widget=PasswordInput(attrs={"autocomplete": "current-password"}),
         label=_("uzivatel.forms.userChange.old_password.label"),
         help_text=_("uzivatel.forms.UpdatePasswordSettings.old_password.tooltip"),
     )
     password1 = forms.CharField(
         required=False,
-        widget=PasswordInput(),
+        widget=PasswordInput(attrs={"autocomplete": "new-password"}),
         label=_("uzivatel.forms.userChange.password1.label"),
         help_text=_("uzivatel.forms.UpdatePasswordSettings.password1.tooltip"),
     )
     password2 = forms.CharField(
         required=False,
-        widget=PasswordInput(),
+        widget=PasswordInput(attrs={"autocomplete": "new-password"}),
         label=_("uzivatel.forms.userChange.password2.label"),
         help_text=_("uzivatel.forms.UpdatePasswordSettings.password2.tooltip"),
     )

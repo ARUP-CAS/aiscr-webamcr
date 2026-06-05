@@ -355,9 +355,30 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ("docx",),
             "application/msword": ("doc", "dot", "wiz"),
             "application/rtf": ("rtf",),
+            "text/rtf": ("rtf",),
             "application/vnd.oasis.opendocument.text": ("odt",),
             "application/vnd.oasis.opendocument.spreadsheet": ("ods",),
         }.get(mime_type, [])
+
+    @staticmethod
+    def _detect_mime(file) -> str:
+        """
+        Detekuje MIME typ souboru pomocí ``libmagic`` s workaroundem pro regresi v ``libmagic >= 5.46``,
+        kde běžný ZIP s obsahem je vrácen jako ``application/octet-stream``.
+
+        :param file: File-like objekt s podporou ``seek`` a ``read``.
+        :return: Detekovaný MIME typ.
+        """
+        file.seek(0)
+        mime_type = magic.from_buffer(file.read(), mime=True)
+        file.seek(0)
+        if mime_type == "application/octet-stream":
+            head = file.read(4)
+            file.seek(0)
+            if head.startswith((b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08")) and zipfile.is_zipfile(file):
+                mime_type = "application/zip"
+            file.seek(0)
+        return mime_type
 
     @classmethod
     def get_thumb_icon(cls, file):
@@ -368,7 +389,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
             :return: Vrací n-tici.
         """
-        mime_type = magic.from_buffer(file.read(), mime=True)
+        mime_type = cls._detect_mime(file)
         logger.debug("core.models.Soubor.get_thumb_icon.start", extra={"mime_type": mime_type})
         icon_filename = {
             "image/heic": "heic.png",
@@ -387,6 +408,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx.png",
             "application/msword": "doc.png",
             "application/rtf": "rtf.png",
+            "text/rtf": "rtf.png",
             "application/vnd.oasis.opendocument.text": "odt.png",
             "application/vnd.oasis.opendocument.spreadsheet": "ods.png",
             "application/pdf": "pdf.png",
@@ -418,12 +440,10 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         :param check_archive: Parametr ``check_archive`` předává se do volání ``debug()``, ovlivňuje větvení podmínek.
         :return: Načtená data odpovídající zadaným vstupům.
         """
-        file.seek(0)
-        mime_type = magic.from_buffer(file.read(), mime=True)
+        mime_type = cls._detect_mime(file)
         logger.debug(
             "core.models.Soubor.get_mime_type.mime_type", extra={"mime_type": mime_type, "option": check_archive}
         )
-        file.seek(0)
         if check_archive:
             mime_types = set()
             mime_types.add(mime_type)
@@ -553,70 +573,117 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             bytes_io.seek(0)
             return bytes_io
 
+    # Povolené MIME typy podle typu uploadu — odpovídá whitelistu v `static/js/dz.js`.
+    PAS_ACCEPTED_MIMES = frozenset(
+        {
+            "image/tiff",
+            "image/jpeg",
+            "image/png",
+            "image/heic",
+            "image/heif",
+        }
+    )
+
+    DOKUMENT_ACCEPTED_MIMES = frozenset(
+        {
+            "application/pdf",
+            "image/tiff",
+            "image/jpeg",
+            "image/png",
+            "image/svg+xml",
+            "text/plain",
+            "text/csv",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # xlsx
+        }
+    )
+
+    MODEL3D_ACCEPTED_MIMES = frozenset(
+        {
+            "application/pdf",
+            "image/tiff",
+            "image/jpeg",
+            "image/png",
+            "image/svg+xml",
+            "application/zip",
+            "application/zip-compressed",
+            "application/x-zip-compressed",
+            "application/vnd.rar",
+            "application/x-rar",
+            "application/x-rar-compressed",
+            "application/x-compressed",
+            "application/x-7z-compressed",
+        }
+    )
+
+    PROJEKT_ACCEPTED_MIMES = frozenset(
+        {
+            "application/pdf",
+            "image/tiff",
+            "image/jpeg",
+            "image/png",
+            "image/svg+xml",
+            "image/heic",
+            "image/heif",
+            "image/bmp",
+            "image/gif",
+            "application/zip",
+            "application/zip-compressed",
+            "application/x-zip-compressed",
+            "application/vnd.rar",
+            "application/x-rar",
+            "application/x-rar-compressed",
+            "application/x-compressed",
+            "application/x-7z-compressed",
+            "application/msword",  # doc
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # docx
+            "application/vnd.ms-excel",  # xls
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # xlsx
+            "text/plain",
+            "text/csv",
+            "application/rtf",
+            "text/rtf",
+            "application/vnd.oasis.opendocument.text",  # odt
+            "application/vnd.oasis.opendocument.spreadsheet",  # ods
+        }
+    )
+
     @classmethod
     def check_mime_for_url(cls, file, source_url=""):
         """
-        Ověří mime for url.
+        Ověří, zda detekovaný MIME typ souboru spadá do whitelistu pro danou upload URL.
+
+        Whitelisty per větev musí odpovídat seznamům v ``static/js/dz.js``.
 
         :param file: Soubor nebo cesta k souboru používaná při operaci.
-        :param source_url: Parametr ``source_url`` ovlivňuje větvení podmínek.
-
-            :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``mime``, bool.
+        :param source_url: URL uploadu — určuje, který whitelist se použije
+            (``pas``, ``dokument``, ``model3d`` nebo výchozí ``projekt``).
+        :return: ``True``/``False`` podle výsledku kontroly, případně řetězec
+            ``"encrypted"`` u zaheslovaných archivů.
         """
         mime = cls.get_mime_types(file, check_archive=True)
         logger.debug("core.models.Soubor.check_mime_for_url.mime_types", extra={"mime_type": mime})
         if mime == "encrypted":
             return mime
-        elif mime is False:
+        if mime is False:
             return False
         if isinstance(mime, str):
-            mime_str = mime
-            mime = set()
-            mime.add(mime_str)
-        mime: set
+            mime = {mime}
         if "soubor/nahrat/pas/" in source_url or "pas/api/nalez/" in source_url:
-            for item in mime:
-                item: str
-                if not item.startswith("image/"):
-                    logger.debug("core.models.Soubor.check_mime_for_url.unaccepted_types", extra={"mime_type": mime})
-                    return False
-            return True
-        elif "soubor/nahrat/dokument/" in "dokument":
-            accepted_mime_types = [
-                "image/jpeg",  # For .jpeg, .jpg
-                "image/png",  # For .png
-                "image/tiff",  # For .tiff, .tif
-                "text/plain",  # For .txt
-                "application/pdf",  # For .pdf
-                "text/csv",  # For .csv
-            ]
-            unaccepted_mime_types = mime.difference(accepted_mime_types)
-            for item in unaccepted_mime_types:
-                if not item.startswith("image/"):
-                    logger.debug("core.models.Soubor.check_mime_for_url.unaccepted_types", extra={"mime_type": item})
-                    return False
-            return True
+            allowed = cls.PAS_ACCEPTED_MIMES
+        elif "soubor/nahrat/dokument/" in source_url:
+            allowed = cls.DOKUMENT_ACCEPTED_MIMES
+        elif "soubor/nahrat/model3d/" in source_url:
+            allowed = cls.MODEL3D_ACCEPTED_MIMES
         else:
-            accepted_mime_types = [
-                "application/zip",  # For .zip files
-                "application/x-rar-compressed",  # For .rar files
-                "application/x-rar",
-                "application/x-7z-compressed",  # For .7z files
-                "application/vnd.ms-excel",  # For .xls files
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # For .docx files
-                "application/pdf",  # For .pdf files
-                "text/plain",  # For .txt files
-                "text/csv" "application/msword",  # For .csv  # For .doc files
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # For .xlsx files
-                "application/vnd.oasis.opendocument.text",  # For .odt files
-                "application/vnd.oasis.opendocument.spreadsheet",  # For .ods files
-            ]
-            unaccepted_mime_types = mime.difference(accepted_mime_types)
-            for item in unaccepted_mime_types:
-                if not item.startswith("image/"):
-                    logger.debug("core.models.Soubor.check_mime_for_url.unaccepted_types", extra={"mime_type": item})
-                    return False
-            return True
+            allowed = cls.PROJEKT_ACCEPTED_MIMES
+        unaccepted = mime - allowed
+        if unaccepted:
+            logger.debug(
+                "core.models.Soubor.check_mime_for_url.unaccepted_types",
+                extra={"mime_type": list(unaccepted), "source_url": source_url},
+            )
+            return False
+        return True
 
     @classmethod
     def check_antivirus(cls, bytes_io: io.BytesIO):
@@ -701,7 +768,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         if self.repository_uuid is not None and rep_bin_file:
             response = self._create_file_response(rep_bin_file)
             response["Content-Type"] = "image/png"
-            response["Content-Disposition"] = f"attachment; filename={self.nazev}.png"
+            response["Content-Disposition"] = f'inline; filename="{self.nazev}.png"'
+            response["Cache-Control"] = "private, max-age=43200"
             return response
         return None
 

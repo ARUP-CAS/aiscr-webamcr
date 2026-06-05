@@ -52,7 +52,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Licence
      - Odkaz
    * - Django
-     - 5.2.14
+     - 5.2.15
      - BSD-3-Clause
      - https://www.djangoproject.com/
    * - Jinja2
@@ -172,7 +172,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.14.0
+     - 7.14.1
      - Apache-2.0
      - https://github.com/coveragepy/coveragepy
    * - crispy-bootstrap5
@@ -192,7 +192,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Python Software Foundation License
      - https://github.com/tiran/defusedxml
    * - distlib
-     - 0.4.0
+     - 0.4.1
      - Python Software Foundation License
      - https://github.com/pypa/distlib
    * - django-add-default-value
@@ -252,11 +252,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/jazzband/django-model-utils
    * - django-object-actions
-     - 5.0.1
+     - 5.1.2
      - Apache Software License
      - https://github.com/crccheck/django-object-actions
    * - django-prometheus
-     - 2.4.1
+     - 2.5.0
      - Apache Software License
      - http://github.com/korfuri/django-prometheus
    * - django-recaptcha
@@ -312,7 +312,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.29.0
+     - 3.29.1
      - MIT
      - https://github.com/tox-dev/py-filelock
    * - freezegun
@@ -340,7 +340,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pre-commit/identify
    * - idna
-     - 3.16
+     - 3.18
      - BSD-3-Clause
      - https://github.com/kjd/idna
    * - imagesize
@@ -400,7 +400,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.30
+     - 9.0.31
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -412,7 +412,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT-CMU
      - https://python-pillow.github.io
    * - pip
-     - 26.1.1
+     - 26.1.2
      - MIT
      - https://pip.pypa.io/
    * - pip-licenses
@@ -420,7 +420,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/raimon49/pip-licenses
    * - platformdirs
-     - 4.9.6
+     - 4.10.0
      - MIT
      - https://github.com/tox-dev/platformdirs
    * - polib
@@ -476,7 +476,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 6.11.0
+     - 6.12.2
      - BSD-3-Clause
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -492,7 +492,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.3.1
+     - 1.4.0
      - MIT License
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
@@ -560,15 +560,15 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; MIT License
      - https://github.com/python-trio/sniffio
    * - snowballstemmer
-     - 3.0.1
-     - BSD License
+     - 3.1.1
+     - BSD-3-Clause
      - https://github.com/snowballstem/snowball
    * - sortedcontainers
      - 2.4.0
      - Apache Software License
      - http://www.grantjenks.com/docs/sortedcontainers/
    * - soupsieve
-     - 2.8.3
+     - 2.8.4
      - MIT
      - https://github.com/facelessuser/soupsieve
    * - sphinx_rtd_theme
@@ -628,7 +628,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/foutaise/texttable/
    * - tornado
-     - 6.5.5
+     - 6.5.6
      - Apache Software License
      - http://www.tornadoweb.org/
    * - trio
@@ -664,7 +664,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.3.3
+     - 21.4.2
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
@@ -676,7 +676,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/websocket-client/websocket-client.git
    * - wrapt
-     - 2.2.0
+     - 2.2.1
      - Copyright (c) 2013-2025, Graham Dumpleton
      - https://github.com/GrahamDumpleton/wrapt
    * - wsproto
