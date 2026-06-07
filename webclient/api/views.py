@@ -1,4 +1,5 @@
 import base64
+import datetime
 import hashlib
 import io
 import ipaddress
@@ -14,6 +15,7 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 
 import django.utils.timezone
+from api.models import ApiRequestLog
 from core.constants import (
     AKTUALIZACE_SN,
     API_REQUEST_LOG_STATUS_FAILURE,
@@ -34,12 +36,14 @@ from core.constants import (
     ZAPSANI_SN,
 )
 from core.coordTransform import transform_geom_to_sjtsk, transform_geom_to_wgs84
+from core.decorators import odstavka_in_progress
 from core.ident_cely import get_sn_ident
-from core.models import AntivirusCheckResult, ApiRequestLog, Permissions, Soubor, check_permissions
+from core.models import AntivirusCheckResult, Permissions, Soubor, check_permissions
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction, FedoraTransactionStatus
 from core.setting_models import CustomAdminSettings
 from core.utils import get_cadastre_from_point
 from core.views import get_finds_soubor_name
+from django.conf import settings
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.contrib.gis.geos import Point as GEOSPoint
 from django.core.cache import cache
@@ -47,7 +51,10 @@ from django.core.exceptions import ValidationError
 from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
+from django.forms.renderers import BaseRenderer
 from django.http import HttpResponse, JsonResponse
+from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from heslar.hesla import (
@@ -61,19 +68,21 @@ from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie
 from lxml import etree
+from pas.models import SamostatnyNalez
 from pid.exceptions import DoiWriteError
 from projekt.models import Projekt
 from rest_framework import serializers, status
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import BasePermission, IsAuthenticated
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.throttling import BaseThrottle
 from rest_framework.views import APIView
 from uzivatel.models import ROLE_ARCHEOLOG_ID, Organizace, Osoba
 from uzivatel.views import TokenAuthenticationBearer
 from xml_generator.generator import AMCR_NAMESPACE_URL, AMCR_XSD_URL
-
-from .models import SamostatnyNalez
 
 logger = logging.getLogger(__name__)
 
@@ -168,8 +177,8 @@ def _fetch_xsd_bytes(url: str) -> bytes:
         with response:
             content = response.read()
         if not content:
-            logger.warning("pas.api._fetch_xsd_bytes.empty_response", extra={"url": url})
-            raise ValueError(f"pas.api._fetch_xsd_bytes.empty_response: {url}")
+            logger.warning("api.views._fetch_xsd_bytes.empty_response", extra={"url": url})
+            raise ValueError(f"api.views._fetch_xsd_bytes.empty_response: {url}")
         cache.set(cache_key, content, timeout=_AMCR_SCHEMA_CACHE_TTL)
         _XSD_BYTES_CACHE[url] = content
         return content
@@ -279,7 +288,7 @@ class PasApiPermissionMixin:
                     addr = info[4][0]
                     networks.append(ipaddress.ip_network(addr, strict=False))
             except OSError:
-                logger.warning("pas.api.PasApiPermissionMixin._resolve_trusted_networks.dns_failed")
+                logger.warning("api.views.PasApiPermissionMixin._resolve_trusted_networks.dns_failed")
 
         with PasApiPermissionMixin._trusted_proxy_resolve_lock:
             PasApiPermissionMixin._trusted_proxy_resolve_cache[cache_key] = (networks, time.time())
@@ -319,8 +328,9 @@ class PasApiPermissionMixin:
             - ``value`` *(povinný)* — uživatelské jméno nebo IP adresa, IP rozsah,
               CIDR rozsah
             - ``rate`` *(povinný)* — limit ve formátu ``"počet/jednotka"``;
-              jednotky: ``s`` (sekunda), ``m`` (minuta), ``h`` (hodina), ``d`` (den);
-              např. ``"10/m"``, ``"100/h"``, ``"1000/d"``
+              jednotky: ``ms`` (milisekunda), ``s`` (sekunda), ``m`` (minuta),
+              ``h`` (hodina), ``d`` (den);
+              např. ``"5/ms"``, ``"10/m"``, ``"100/h"``, ``"1000/d"``
             - ``active`` *(volitelný, výchozí ``true``)* — ``false`` limit dočasně deaktivuje
 
             Příklad::
@@ -380,7 +390,7 @@ class PasApiPermissionMixin:
         except CustomAdminSettings.DoesNotExist:
             return []
         except (json.JSONDecodeError, TypeError):
-            logger.warning("pas.api._load_json_setting.invalid_json")
+            logger.warning("api.views._load_json_setting.invalid_json")
             if raise_validation_error:
                 # item_id in the validation message is likewise intentional:
                 # it identifies which PAS admin setting is malformed and helps
@@ -388,7 +398,11 @@ class PasApiPermissionMixin:
                 # sensitive data.
                 # codeql[py/error-message-exposure]
                 raise ValidationError(
-                    {"value": _("pas.api.PasApiPermissionMixin.load_json_setting.invalid_json").format(item_id=item_id)}
+                    {
+                        "value": _("api.views.PasApiPermissionMixin.load_json_setting.invalid_json").format(
+                            item_id=item_id
+                        )
+                    }
                 )
             return []
 
@@ -421,13 +435,13 @@ class PasApiPermissionMixin:
         :return: ``True`` pokud je nastavení validní.
         """
         if not isinstance(raw_rules, list):
-            raise ValidationError({"value": _("pas.api.PasApiPermissionMixin.validate_access_rules.not_a_list")})
+            raise ValidationError({"value": _("api.views.PasApiPermissionMixin.validate_access_rules.not_a_list")})
 
         for index, rule in enumerate(raw_rules):
             if not isinstance(rule, dict):
                 raise ValidationError(
                     {
-                        "value": _("pas.api.PasApiPermissionMixin.validate_access_rules.item_not_a_dict").format(
+                        "value": _("api.views.PasApiPermissionMixin.validate_access_rules.item_not_a_dict").format(
                             index=index
                         )
                     }
@@ -435,15 +449,15 @@ class PasApiPermissionMixin:
             if "rule_type" not in rule or "value" not in rule:
                 raise ValidationError(
                     {
-                        "value": _("pas.api.PasApiPermissionMixin.validate_access_rules.missing_required_keys").format(
-                            index=index
-                        )
+                        "value": _(
+                            "api.views.PasApiPermissionMixin.validate_access_rules.missing_required_keys"
+                        ).format(index=index)
                     }
                 )
             if rule.get("active") is not None and not isinstance(rule.get("active"), bool):
                 raise ValidationError(
                     {
-                        "value": _("pas.api.PasApiPermissionMixin.validate_access_rules.invalid_active").format(
+                        "value": _("api.views.PasApiPermissionMixin.validate_access_rules.invalid_active").format(
                             index=index
                         )
                     }
@@ -451,16 +465,16 @@ class PasApiPermissionMixin:
             if rule["rule_type"] not in _ACCESS_RULE_TYPES:
                 raise ValidationError(
                     {
-                        "value": _("pas.api.PasApiPermissionMixin.validate_access_rules.unsupported_rule_type").format(
-                            index=index, rule_type=rule["rule_type"]
-                        )
+                        "value": _(
+                            "api.views.PasApiPermissionMixin.validate_access_rules.unsupported_rule_type"
+                        ).format(index=index, rule_type=rule["rule_type"])
                     }
                 )
             if rule["rule_type"] in {TYPE_IP_BLACKLIST, TYPE_IP_WHITELIST}:
                 if not isinstance(rule["value"], str) or not _is_valid_ip_rule_value(rule["value"]):
                     raise ValidationError(
                         {
-                            "value": _("pas.api.PasApiPermissionMixin.validate_access_rules.invalid_ip_value").format(
+                            "value": _("api.views.PasApiPermissionMixin.validate_access_rules.invalid_ip_value").format(
                                 index=index, value=rule["value"]
                             )
                         }
@@ -488,9 +502,9 @@ class PasApiPermissionMixin:
         if instance.item_id not in _PAS_API_ITEM_IDS:
             raise ValidationError(
                 {
-                    "item_id": _("pas.api.PasApiPermissionMixin.validate_custom_admin_setting.invalid_item_id").format(
-                        item_group=instance.item_group, item_id=instance.item_id
-                    )
+                    "item_id": _(
+                        "api.views.PasApiPermissionMixin.validate_custom_admin_setting.invalid_item_id"
+                    ).format(item_group=instance.item_group, item_id=instance.item_id)
                 }
             )
         try:
@@ -498,7 +512,7 @@ class PasApiPermissionMixin:
         except (json.JSONDecodeError, TypeError):
             raise ValidationError(
                 {
-                    "value": _("pas.api.PasApiPermissionMixin.validate_custom_admin_setting.invalid_json").format(
+                    "value": _("api.views.PasApiPermissionMixin.validate_custom_admin_setting.invalid_json").format(
                         item_id=instance.item_id
                     )
                 }
@@ -548,13 +562,13 @@ class PasApiPermissionMixin:
         :return: ``True`` pokud je nastavení validní.
         """
         if not isinstance(raw_limits, list):
-            raise ValidationError({"value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.not_a_list")})
+            raise ValidationError({"value": _("api.views.PasApiPermissionMixin.validate_rate_limits.not_a_list")})
 
         for index, limit in enumerate(raw_limits):
             if not isinstance(limit, dict):
                 raise ValidationError(
                     {
-                        "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.item_not_a_dict").format(
+                        "value": _("api.views.PasApiPermissionMixin.validate_rate_limits.item_not_a_dict").format(
                             index=index
                         )
                     }
@@ -562,7 +576,7 @@ class PasApiPermissionMixin:
             if "scope" not in limit or "rate" not in limit:
                 raise ValidationError(
                     {
-                        "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.missing_required_keys").format(
+                        "value": _("api.views.PasApiPermissionMixin.validate_rate_limits.missing_required_keys").format(
                             index=index
                         )
                     }
@@ -570,15 +584,23 @@ class PasApiPermissionMixin:
             if limit.get("active") is not None and not isinstance(limit.get("active"), bool):
                 raise ValidationError(
                     {
-                        "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.invalid_active").format(
+                        "value": _("api.views.PasApiPermissionMixin.validate_rate_limits.invalid_active").format(
                             index=index
+                        )
+                    }
+                )
+            if _parse_rate(limit["rate"]) is None:
+                raise ValidationError(
+                    {
+                        "value": _("api.views.PasApiPermissionMixin.validate_rate_limits.invalid_rate").format(
+                            index=index, rate=limit["rate"]
                         )
                     }
                 )
             if limit["scope"] not in {SCOPE_USER, SCOPE_IP, SCOPE_RECORD}:
                 raise ValidationError(
                     {
-                        "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.unsupported_scope").format(
+                        "value": _("api.views.PasApiPermissionMixin.validate_rate_limits.unsupported_scope").format(
                             index=index, scope=limit["scope"]
                         )
                     }
@@ -586,7 +608,7 @@ class PasApiPermissionMixin:
             if limit["scope"] in {SCOPE_USER, SCOPE_IP} and "value" not in limit:
                 raise ValidationError(
                     {
-                        "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.missing_required_keys").format(
+                        "value": _("api.views.PasApiPermissionMixin.validate_rate_limits.missing_required_keys").format(
                             index=index
                         )
                     }
@@ -595,7 +617,7 @@ class PasApiPermissionMixin:
                 raise ValidationError(
                     {
                         "value": _(
-                            "pas.api.PasApiPermissionMixin.validate_rate_limits.record_scope_unexpected_value"
+                            "api.views.PasApiPermissionMixin.validate_rate_limits.record_scope_unexpected_value"
                         ).format(index=index)
                     }
                 )
@@ -603,19 +625,11 @@ class PasApiPermissionMixin:
                 if not isinstance(limit["value"], str) or not _is_valid_ip_rule_value(limit["value"]):
                     raise ValidationError(
                         {
-                            "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.invalid_ip_value").format(
+                            "value": _("api.views.PasApiPermissionMixin.validate_rate_limits.invalid_ip_value").format(
                                 index=index, value=limit["value"]
                             )
                         }
                     )
-            if _parse_rate(limit["rate"]) is None:
-                raise ValidationError(
-                    {
-                        "value": _("pas.api.PasApiPermissionMixin.validate_rate_limits.invalid_rate").format(
-                            index=index, rate=limit["rate"]
-                        )
-                    }
-                )
 
         return True
 
@@ -652,7 +666,7 @@ class PasApiPermissionMixin:
             return True
         if not isinstance(value, str) or value not in _ACCESS_MODES:
             raise ValidationError(
-                {"value": _("pas.api.PasApiPermissionMixin.validate_access_mode.invalid_value").format(value=value)}
+                {"value": _("api.views.PasApiPermissionMixin.validate_access_mode.invalid_value").format(value=value)}
             )
         return True
 
@@ -693,12 +707,12 @@ class PasApiPermissionMixin:
         :return: ``True`` pokud je nastavení validní.
         """
         if not isinstance(raw_proxies, list):
-            raise ValidationError({"value": _("pas.api.PasApiPermissionMixin.validate_trusted_proxies.not_a_list")})
+            raise ValidationError({"value": _("api.views.PasApiPermissionMixin.validate_trusted_proxies.not_a_list")})
         for index, entry in enumerate(raw_proxies):
             if not isinstance(entry, str) or not entry.strip():
                 raise ValidationError(
                     {
-                        "value": _("pas.api.PasApiPermissionMixin.validate_trusted_proxies.invalid_entry").format(
+                        "value": _("api.views.PasApiPermissionMixin.validate_trusted_proxies.invalid_entry").format(
                             index=index
                         )
                     }
@@ -710,7 +724,7 @@ class PasApiPermissionMixin:
                 except ValueError:
                     raise ValidationError(
                         {
-                            "value": _("pas.api.PasApiPermissionMixin.validate_trusted_proxies.invalid_cidr").format(
+                            "value": _("api.views.PasApiPermissionMixin.validate_trusted_proxies.invalid_cidr").format(
                                 index=index, value=stripped
                             )
                         }
@@ -755,18 +769,20 @@ class PasApiPermissionMixin:
         :return: ``True`` pokud je nastavení validní.
         """
         if not isinstance(raw_params, dict):
-            raise ValidationError({"value": _("pas.api.PasApiPermissionMixin.validate_record_lock_params.not_a_dict")})
+            raise ValidationError(
+                {"value": _("api.views.PasApiPermissionMixin.validate_record_lock_params.not_a_dict")}
+            )
         if "retry_delay" in raw_params:
             retry_delay = raw_params["retry_delay"]
             if not isinstance(retry_delay, (int, float)) or isinstance(retry_delay, bool) or retry_delay <= 0:
                 raise ValidationError(
-                    {"value": _("pas.api.PasApiPermissionMixin.validate_record_lock_params.invalid_retry_delay")}
+                    {"value": _("api.views.PasApiPermissionMixin.validate_record_lock_params.invalid_retry_delay")}
                 )
         if "max_retries" in raw_params:
             max_retries = raw_params["max_retries"]
             if not isinstance(max_retries, int) or isinstance(max_retries, bool) or max_retries <= 0:
                 raise ValidationError(
-                    {"value": _("pas.api.PasApiPermissionMixin.validate_record_lock_params.invalid_max_retries")}
+                    {"value": _("api.views.PasApiPermissionMixin.validate_record_lock_params.invalid_max_retries")}
                 )
         return True
 
@@ -785,12 +801,12 @@ class PasApiPermissionMixin:
         """
         if not isinstance(raw_versions, list) or not raw_versions:
             raise ValidationError(
-                {"value": _("pas.api.PasApiPermissionMixin.validate_allowed_schema_versions.not_a_nonempty_list")}
+                {"value": _("api.views.PasApiPermissionMixin.validate_allowed_schema_versions.not_a_nonempty_list")}
             )
         for item in raw_versions:
             if isinstance(item, bool) or not isinstance(item, (int, float)) or item <= 0:
                 raise ValidationError(
-                    {"value": _("pas.api.PasApiPermissionMixin.validate_allowed_schema_versions.invalid_version")}
+                    {"value": _("api.views.PasApiPermissionMixin.validate_allowed_schema_versions.invalid_version")}
                 )
         return True
 
@@ -935,7 +951,7 @@ class IpBlacklistPermission(PasApiPermissionMixin, BasePermission):
                 # are operational context, not secrets.
                 # codeql[py/clear-text-logging-sensitive-data]
                 logger.warning(
-                    "pas.api.IpBlacklistPermission.denied",
+                    "api.views.IpBlacklistPermission.denied",
                     extra={"ip": client_ip, "rule": rule["value"]},
                 )
                 return False
@@ -972,7 +988,7 @@ class IpWhitelistPermission(PasApiPermissionMixin, BasePermission):
         # and incident investigation. It is operational context, not a secret.
         # codeql[py/clear-text-logging-sensitive-data]
         logger.warning(
-            "pas.api.IpWhitelistPermission.denied",
+            "api.views.IpWhitelistPermission.denied",
             extra={"ip": client_ip},
         )
         return False
@@ -1001,7 +1017,7 @@ class UserBlacklistPermission(PasApiPermissionMixin, BasePermission):
                 # denied account and is operational context, not a secret.
                 # codeql[py/clear-text-logging-sensitive-data]
                 logger.warning(
-                    "pas.api.UserBlacklistPermission.denied",
+                    "api.views.UserBlacklistPermission.denied",
                     extra={"user": user_identifier},
                 )
                 return False
@@ -1041,7 +1057,7 @@ class UserWhitelistPermission(PasApiPermissionMixin, BasePermission):
         # context, not a secret.
         # codeql[py/clear-text-logging-sensitive-data]
         logger.warning(
-            "pas.api.UserWhitelistPermission.denied",
+            "api.views.UserWhitelistPermission.denied",
             extra={"user": user_identifier},
         )
         return False
@@ -1066,8 +1082,8 @@ class ApiAccessModePermission(PasApiPermissionMixin, BasePermission):
         if access_mode == ACCESS_MODE_OPEN:
             return True
         if access_mode == ACCESS_MODE_CLOSED:
-            self.message = _("pas.api.ApiAccessModePermission.closed")
-            logger.warning("pas.api.ApiAccessModePermission.closed")
+            self.message = _("api.views.ApiAccessModePermission.closed")
+            logger.warning("api.views.ApiAccessModePermission.closed")
             return False
 
         rules = self.get_access_rules()
@@ -1075,8 +1091,8 @@ class ApiAccessModePermission(PasApiPermissionMixin, BasePermission):
         if has_whitelist:
             return True
 
-        self.message = _("pas.api.ApiAccessModePermission.whitelist_only_without_rules")
-        logger.warning("pas.api.ApiAccessModePermission.whitelist_only_without_rules")
+        self.message = _("api.views.ApiAccessModePermission.whitelist_only_without_rules")
+        logger.warning("api.views.ApiAccessModePermission.whitelist_only_without_rules")
         return False
 
 
@@ -1097,7 +1113,9 @@ def _parse_rate(rate: str) -> tuple[int, int] | None:
     """
     Naparsuje řetězec limitu ve formátu ``počet/jednotka`` na počet a délku okna v sekundách.
 
-    Podporované jednotky: ``s`` (sekunda), ``m`` (minuta), ``h`` (hodina), ``d`` (den).
+    Podporované jednotky: ``ms`` (milisekunda), ``s`` (sekunda), ``m`` (minuta),
+    ``h`` (hodina), ``d`` (den). Pro jednotku ``ms`` je vrácené okno typu ``float``
+    (0.001 s); pro ostatní jednotky je ``int``.
 
     :param rate: Řetězec ve formátu ``10/m``, ``100/h`` apod.
 
@@ -1106,7 +1124,7 @@ def _parse_rate(rate: str) -> tuple[int, int] | None:
     try:
         count_str, period = rate.split("/")
         count = int(count_str)
-        periods = {"s": 1, "m": 60, "h": 3600, "d": 86400}
+        periods = {"ms": 0.001, "s": 1, "m": 60, "h": 3600, "d": 86400}
         window = periods.get(period.strip().lower())
         if window is None:
             return None
@@ -1143,6 +1161,20 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
 
         ident_cely = getattr(view, "kwargs", {}).get("ident_cely") if view is not None else None
 
+        user_interval_ms = int(getattr(settings, "API_MIN_REQUEST_INTERVAL_USER_MS", 0) or 0)
+        if user_interval_ms > 0 and user_identifier:
+            if not self._check_min_interval(
+                f"min_interval_user_{user_identifier}", user_interval_ms, scope="user", identifier=user_identifier
+            ):
+                return False
+
+        ip_interval_ms = int(getattr(settings, "API_MIN_REQUEST_INTERVAL_IP_MS", 0) or 0)
+        if ip_interval_ms > 0 and client_ip:
+            if not self._check_min_interval(
+                f"min_interval_ip_{client_ip}", ip_interval_ms, scope="ip", identifier=client_ip
+            ):
+                return False
+
         for limit in limits:
             if limit["scope"] == SCOPE_USER and limit["value"] == user_identifier:
                 if not self._check_limit(f"throttle_user_{user_identifier}", limit["rate"], request):
@@ -1173,8 +1205,13 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
         """
         parsed = _parse_rate(rate)
         if parsed is None:
-            logger.warning("pas.api.ApiImportThrottle.invalid_rate", extra={"rate": rate})
-            return True
+            # Fail closed: zaměstnaný nevalidním limitem nechceme propustit a tím
+            # potenciálně otevřít neomezený přístup k API. Validní formát ``rate``
+            # je vynucen v ``validate_rate_limits`` při ukládání; tady jde o pojistku
+            # pro případ, že by data v cache/CustomAdminSettings byla poškozená.
+            logger.error("api.views.ApiImportThrottle.invalid_rate", extra={"rate": rate})
+            self.wait_seconds = None
+            return False
         max_requests, window = parsed
         now = time.time()
         window_started_key = f"{cache_key}:window_started"
@@ -1200,11 +1237,43 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
                 window_started = now
             self.wait_seconds = max(window - (now - float(window_started)), 1)
             logger.warning(
-                "pas.api.ApiImportThrottle.throttled",
+                "api.views.ApiImportThrottle.throttled",
                 extra={"cache_key": cache_key, "rate": rate},
             )
             return False
         self.wait_seconds = None
+        return True
+
+    def _check_min_interval(self, cache_key: str, min_interval_ms: int, scope: str, identifier: str) -> bool:
+        """
+        Ověří, že od posledního požadavku ve stejném scope uplynula minimální doba.
+
+        Limit je globální (aplikuje se na všechny uživatele resp. IP), proto se konfiguruje
+        konstantou v settings, ne v ``CustomAdminSettings``. V Redis je uložena časová značka
+        posledního povoleného požadavku. Pokud žádná hodnota není uložena (typicky první požadavek
+        po startu nebo po vypršení TTL), je limit považován za splněný a aktuální čas se uloží.
+
+        :param cache_key: Klíč v cache (Redis).
+        :param min_interval_ms: Minimální interval mezi požadavky v milisekundách.
+        :param scope: Logický rozsah limitu (``"user"`` nebo ``"ip"``) — použito v logu.
+        :param identifier: Identifikátor (uživatel / IP) — použito v logu.
+
+        :return: ``True`` pokud limit nebyl porušen (a nový časový bod byl uložen), jinak ``False``.
+        """
+        now = time.time()
+        min_interval = min_interval_ms / 1000.0
+        ttl = max(int(min_interval) + 2, 2)
+        last = cache.get(cache_key)
+        if last is not None:
+            elapsed = now - float(last)
+            if elapsed < min_interval:
+                self.wait_seconds = max(min_interval - elapsed, 0.001)
+                logger.warning(
+                    "api.views.ApiImportThrottle.min_interval_throttled",
+                    extra={"scope": scope, "identifier": identifier, "wait": self.wait_seconds},
+                )
+                return False
+        cache.set(cache_key, now, timeout=ttl)
         return True
 
     def wait(self):
@@ -1411,9 +1480,9 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
         :return: HTTP odpověď view nebo okamžitá odpověď ``503`` při vypnutém API.
         """
         if self.get_access_mode() == ACCESS_MODE_CLOSED:
-            logger.warning("pas.api.PasApiBaseView.dispatch.closed")
+            logger.warning("api.views.PasApiBaseView.dispatch.closed")
             return JsonResponse(
-                {"detail": _("pas.api.ApiAccessModePermission.closed")},
+                {"detail": _("api.views.ApiAccessModePermission.closed")},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
         return super().dispatch(request, *args, **kwargs)
@@ -1519,14 +1588,14 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
         header = request.headers.get("Content-Digest")
         if not header:
             return (
-                _("pas.api.PasApiBaseView._verify_content_digest.missing_digest"),
+                _("api.views.PasApiBaseView._verify_content_digest.missing_digest"),
                 status.HTTP_400_BAD_REQUEST,
             )
 
         prefix = "sha-512=:"
         if not header.startswith(prefix) or not header.endswith(":"):
             return (
-                _("pas.api.PasApiBaseView._verify_content_digest.invalid_format"),
+                _("api.views.PasApiBaseView._verify_content_digest.invalid_format"),
                 status.HTTP_400_BAD_REQUEST,
             )
 
@@ -1534,14 +1603,14 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
             expected = base64.b64decode(header[len(prefix) : -1])
         except (ValueError, TypeError):
             return (
-                _("pas.api.PasApiBaseView._verify_content_digest.invalid_base64"),
+                _("api.views.PasApiBaseView._verify_content_digest.invalid_base64"),
                 status.HTTP_400_BAD_REQUEST,
             )
 
         actual = hashlib.sha512(uploaded_file.read()).digest()
         uploaded_file.seek(0)
         if actual != expected:
-            return _("pas.api.PasApiBaseView._verify_content_digest.digest_mismatch"), mismatch_status
+            return _("api.views.PasApiBaseView._verify_content_digest.digest_mismatch"), mismatch_status
 
         return None
 
@@ -1576,7 +1645,7 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
         # They are audit/operational identifiers, not secrets.
         # codeql[py/clear-text-logging-sensitive-data]
         logger.info(
-            "pas.api.PasApiBaseView.success",
+            "api.views.PasApiBaseView.success",
             extra={"ident_cely": instance.ident_cely, "user": user_pk},
         )
         if notes:
@@ -1585,7 +1654,7 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
             # incident investigation. They are operational context, not secrets.
             # codeql[py/clear-text-logging-sensitive-data]
             logger.info(
-                "pas.api.PasApiBaseView.success.ignored_lang_notes",
+                "api.views.PasApiBaseView.success.ignored_lang_notes",
                 extra={"ident_cely": instance.ident_cely, "notes": notes, "user": user_pk},
             )
         return HttpResponse(metadata, content_type="application/xml", status=200)
@@ -1634,33 +1703,33 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
         root = doc.getroot()
         amcr_namespace = root.nsmap.get("amcr")
         if amcr_namespace != AMCR_NAMESPACE_URL:
-            return _("pas.api.SamostatnyNalezXmlImportView._validate_declared_schema_version.unsupported_namespace")
+            return _("api.views.SamostatnyNalezXmlImportView._validate_declared_schema_version.unsupported_namespace")
 
         schema_location = root.get(f"{{{cls._XSI_NS}}}schemaLocation")
         if not schema_location:
-            return _("pas.api.SamostatnyNalezXmlImportView._validate_declared_schema_version.missing_schema_location")
+            return _("api.views.SamostatnyNalezXmlImportView._validate_declared_schema_version.missing_schema_location")
 
         schema_parts = schema_location.split()
         if len(schema_parts) % 2 != 0:
-            return _("pas.api.SamostatnyNalezXmlImportView._validate_declared_schema_version.invalid_schema_location")
+            return _("api.views.SamostatnyNalezXmlImportView._validate_declared_schema_version.invalid_schema_location")
 
         schema_mapping = dict(zip(schema_parts[0::2], schema_parts[1::2]))
         declared_amcr_xsd = schema_mapping.get(amcr_namespace)
         if declared_amcr_xsd != AMCR_XSD_URL:
             return _(
-                "pas.api.SamostatnyNalezXmlImportView._validate_declared_schema_version.unsupported_schema_location"
+                "api.views.SamostatnyNalezXmlImportView._validate_declared_schema_version.unsupported_schema_location"
             )
 
         if allowed_versions is not None:
             m = re.search(r"/schema/amcr/(\d+\.\d+)/", amcr_namespace)
             if m is None:
                 return _(
-                    "pas.api.SamostatnyNalezXmlImportView._validate_declared_schema_version.version_not_extractable"
+                    "api.views.SamostatnyNalezXmlImportView._validate_declared_schema_version.version_not_extractable"
                 )
             version = float(m.group(1))
             if version not in allowed_versions:
                 return _(
-                    "pas.api.SamostatnyNalezXmlImportView._validate_declared_schema_version.version_not_allowed"
+                    "api.views.SamostatnyNalezXmlImportView._validate_declared_schema_version.version_not_allowed"
                 ) % {"version": version}
 
         return None
@@ -1723,7 +1792,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                                     line=None,
                                     column=None,
                                     message=_(
-                                        "pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.schema_not_available"
+                                        "api.views.SamostatnyNalezXmlImportView._get_amcr_schema.schema_not_available"
                                     )
                                     % {"url": url},
                                     error_type=ImportErrorType.INVALID_DATA,
@@ -1738,7 +1807,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                         ImportValidationIssue(
                             line=None,
                             column=None,
-                            message=_("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.disallowed_schema_url")
+                            message=_("api.views.SamostatnyNalezXmlImportView._get_amcr_schema.disallowed_schema_url")
                             % {"url": url},
                             error_type=ImportErrorType.INVALID_DATA,
                         )
@@ -1756,7 +1825,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                     ImportValidationIssue(
                         line=None,
                         column=None,
-                        message=_("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.schema_not_available")
+                        message=_("api.views.SamostatnyNalezXmlImportView._get_amcr_schema.schema_not_available")
                         % {"url": schema_url},
                         error_type=ImportErrorType.INVALID_DATA,
                     )
@@ -1769,7 +1838,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                     ImportValidationIssue(
                         line=None,
                         column=None,
-                        message=_("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.schema_invalid_xml")
+                        message=_("api.views.SamostatnyNalezXmlImportView._get_amcr_schema.schema_invalid_xml")
                         % {"url": schema_url},
                         error_type=ImportErrorType.INVALID_DATA,
                     )
@@ -1794,7 +1863,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                 ImportValidationIssue(
                     line=None,
                     column=None,
-                    message=_("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema.disallowed_schema_url")
+                    message=_("api.views.SamostatnyNalezXmlImportView._get_amcr_schema.disallowed_schema_url")
                     % {"url": url},
                     error_type=ImportErrorType.INVALID_DATA,
                 )
@@ -1827,7 +1896,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
             lang_value = child.get(lang_attr)
             if lang_value and lang_value.lower() != "cs":
                 notes.append(
-                    _("pas.api.SamostatnyNalezXmlImportView.post.ignored_lang_attribute")
+                    _("api.views.SamostatnyNalezXmlImportView.post.ignored_lang_attribute")
                     % {"element": _strip_namespace(child.tag), "lang": lang_value}
                 )
         return notes
@@ -1903,7 +1972,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                 ImportValidationIssue(
                     line=elem.sourceline,
                     column=None,
-                    message=f"{field_name}: " + _("pas.api.SamostatnyNalezXmlBaseView._parse_point_wkt.empty_wkt"),
+                    message=f"{field_name}: " + _("api.views.SamostatnyNalezXmlBaseView._parse_point_wkt.empty_wkt"),
                     error_type=ImportErrorType.INVALID_DATA,
                 )
             )
@@ -1914,7 +1983,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                 ImportValidationIssue(
                     line=elem.sourceline,
                     column=None,
-                    message=f"{field_name}: " + _("pas.api.SamostatnyNalezXmlBaseView._parse_point_wkt.invalid_wkt"),
+                    message=f"{field_name}: " + _("api.views.SamostatnyNalezXmlBaseView._parse_point_wkt.invalid_wkt"),
                     error_type=ImportErrorType.INVALID_DATA,
                 )
             ) from None
@@ -1923,7 +1992,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                 ImportValidationIssue(
                     line=elem.sourceline,
                     column=None,
-                    message=f"{field_name}: " + _("pas.api.SamostatnyNalezXmlBaseView._parse_point_wkt.not_a_point"),
+                    message=f"{field_name}: " + _("api.views.SamostatnyNalezXmlBaseView._parse_point_wkt.not_a_point"),
                     error_type=ImportErrorType.INVALID_DATA,
                 )
             )
@@ -1972,7 +2041,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                     line=elem.sourceline,
                     column=None,
                     message="projekt: "
-                    + _("pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.missing_projekt"),
+                    + _("api.views.SamostatnyNalezXmlImportView._parse_nalez_element.missing_projekt"),
                     error_type=ImportErrorType.INVALID_DATA,
                 )
             )
@@ -1985,7 +2054,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                     line=ident_cely_elem.sourceline if ident_cely_elem is not None else elem.sourceline,
                     column=None,
                     message="ident_cely: "
-                    + _("pas.api.SamostatnyNalezXmlImportView._parse_nalez_element.ident_cely_must_be_tba"),
+                    + _("api.views.SamostatnyNalezXmlImportView._parse_nalez_element.ident_cely_must_be_tba"),
                     error_type=ImportErrorType.INVALID_DATA,
                 )
             )
@@ -2001,7 +2070,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                 ImportValidationIssue(
                     line=stav_elem.sourceline if stav_elem is not None else elem.sourceline,
                     column=None,
-                    message="stav: " + _("pas.api.SamostatnyNalezXmlBaseView._parse_nalez_element.unsupported_stav"),
+                    message="stav: " + _("api.views.SamostatnyNalezXmlBaseView._parse_nalez_element.unsupported_stav"),
                     error_type=ImportErrorType.INVALID_DATA,
                 )
             )
@@ -2035,7 +2104,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                     line=geom_system_elem.sourceline if geom_system_elem is not None else elem.sourceline,
                     column=None,
                     message="geom_system: "
-                    + _("pas.api.SamostatnyNalezXmlBaseView._parse_nalez_element.unsupported_geom_system"),
+                    + _("api.views.SamostatnyNalezXmlBaseView._parse_nalez_element.unsupported_geom_system"),
                     error_type=ImportErrorType.INVALID_DATA,
                 )
             )
@@ -2048,7 +2117,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                         line=geom_system_elem.sourceline if geom_system_elem is not None else elem.sourceline,
                         column=None,
                         message="geom_system: "
-                        + _("pas.api.SamostatnyNalezXmlBaseView._parse_nalez_element.unsupported_geom_system"),
+                        + _("api.views.SamostatnyNalezXmlBaseView._parse_nalez_element.unsupported_geom_system"),
                         error_type=ImportErrorType.INVALID_DATA,
                     )
                 )
@@ -2088,7 +2157,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                 converted, result_status = transform_geom_to_sjtsk(wkt)
                 ok = result_status == "OK"
             except Exception as exc:
-                logger.warning("pas.api._parse_geom_fields.sjtsk_conversion_failed", extra={"exc": str(exc)})
+                logger.warning("api.views._parse_geom_fields.sjtsk_conversion_failed", extra={"exc": str(exc)})
                 ok = False
             if not ok:
                 raise ImportValidationException(
@@ -2096,7 +2165,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                         line=wkt_elem.sourceline,
                         column=None,
                         message="geom_wkt: "
-                        + _("pas.api.SamostatnyNalezXmlBaseView._parse_geom_fields.conversion_error"),
+                        + _("api.views.SamostatnyNalezXmlBaseView._parse_geom_fields.conversion_error"),
                         error_type=ImportErrorType.INVALID_DATA,
                     )
                 )
@@ -2111,7 +2180,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                 converted, result_status = transform_geom_to_wgs84(wkt_sjtsk)
                 ok = result_status == "OK"
             except Exception as exc:
-                logger.warning("pas.api._parse_geom_fields.wgs84_conversion_failed", extra={"exc": str(exc)})
+                logger.warning("api.views._parse_geom_fields.wgs84_conversion_failed", extra={"exc": str(exc)})
                 ok = False
             if not ok:
                 raise ImportValidationException(
@@ -2119,7 +2188,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                         line=sjtsk_elem.sourceline,
                         column=None,
                         message="geom_sjtsk_wkt: "
-                        + _("pas.api.SamostatnyNalezXmlBaseView._parse_geom_fields.conversion_error"),
+                        + _("api.views.SamostatnyNalezXmlBaseView._parse_geom_fields.conversion_error"),
                         error_type=ImportErrorType.INVALID_DATA,
                     )
                 )
@@ -2173,13 +2242,13 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
             :return: Detail chyby s kódem ``invalid_data``.
             """
             if "," not in nalezce_text:
-                message = _("pas.api.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format_missing_separator")
+                message = _("api.views.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format_missing_separator")
             elif len(casti) < 2 or not casti[0]:
-                message = _("pas.api.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format_missing_surname")
+                message = _("api.views.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format_missing_surname")
             elif not casti[1]:
-                message = _("pas.api.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format_missing_name")
+                message = _("api.views.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format_missing_name")
             else:
-                message = _("pas.api.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format")
+                message = _("api.views.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format")
             return ImportValidationIssue(
                 line=nalezce_elem.sourceline if nalezce_elem is not None else elem.sourceline,
                 column=None,
@@ -2220,7 +2289,7 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
 class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
     """Pohled pro import záznamu samostatného nálezu z XML souboru přes POST požadavek."""
 
-    _IMPORT_HISTORY_NOTE = gettext_lazy("pas.api.SamostatnyNalezXmlImportView.import_history_note")
+    _IMPORT_HISTORY_NOTE = gettext_lazy("api.views.SamostatnyNalezXmlImportView.import_history_note")
 
     def post(self, request, format=None):
         """
@@ -2253,7 +2322,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
         if xml_file is None:
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.missing_file")},
+                {"detail": _("api.views.SamostatnyNalezXmlImportView.post.missing_file")},
                 status.HTTP_400_BAD_REQUEST,
             )
 
@@ -2276,12 +2345,12 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
             # diagnostics, not secrets.
             # codeql[py/clear-text-logging-sensitive-data]
             logger.warning(
-                "pas.api.SamostatnyNalezXmlImportView.post.xml_syntax_error",
+                "api.views.SamostatnyNalezXmlImportView.post.xml_syntax_error",
                 extra={"error": str(exc), "user": request.user.pk},
             )
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.invalid_xml_syntax")},
+                {"detail": _("api.views.SamostatnyNalezXmlImportView.post.invalid_xml_syntax")},
                 status.HTTP_400_BAD_REQUEST,
             )
 
@@ -2303,7 +2372,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 ImportValidationIssue(
                     line=e.line,
                     column=e.column,
-                    message=_("pas.api.SamostatnyNalezXmlImportView.post.schema_error_item")
+                    message=_("api.views.SamostatnyNalezXmlImportView.post.schema_error_item")
                     % {"line": e.line, "column": e.column, "message": e.message},
                     error_type=ImportErrorType.INVALID_DATA,
                 )
@@ -2314,7 +2383,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
             # are operational diagnostics, not secrets.
             # codeql[py/clear-text-logging-sensitive-data]
             logger.warning(
-                "pas.api.SamostatnyNalezXmlImportView.post.schema_invalid",
+                "api.views.SamostatnyNalezXmlImportView.post.schema_invalid",
                 extra={"errors": [error.to_dict() for error in errors], "user": request.user.pk},
             )
             return self._fail(
@@ -2329,19 +2398,19 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
         if not root_children:
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.missing_samostatny_nalez")},
+                {"detail": _("api.views.SamostatnyNalezXmlImportView.post.missing_samostatny_nalez")},
                 status.HTTP_400_BAD_REQUEST,
             )
         if len(nalez_elements) > 1:
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.multiple_samostatny_nalez")},
+                {"detail": _("api.views.SamostatnyNalezXmlImportView.post.multiple_samostatny_nalez")},
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         if len(root_children) != 1 or not nalez_elements:
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.invalid_root_content")},
+                {"detail": _("api.views.SamostatnyNalezXmlImportView.post.invalid_root_content")},
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
@@ -2364,7 +2433,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
         if projekt_ident and not Projekt.objects.filter(ident_cely=projekt_ident).exists():
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.projekt_not_found")},
+                {"detail": _("api.views.SamostatnyNalezXmlImportView.post.projekt_not_found")},
                 status.HTTP_404_NOT_FOUND,
             )
 
@@ -2374,12 +2443,12 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
             # They are audit/operational identifiers, not secrets.
             # codeql[py/clear-text-logging-sensitive-data]
             logger.warning(
-                "pas.api.SamostatnyNalezXmlImportView.post.permission_denied",
+                "api.views.SamostatnyNalezXmlImportView.post.permission_denied",
                 extra={"user": request.user.pk, "projekt": data.get("projekt")},
             )
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.permission_denied")},
+                {"detail": _("api.views.SamostatnyNalezXmlImportView.post.permission_denied")},
                 status.HTTP_403_FORBIDDEN,
             )
 
@@ -2407,7 +2476,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                         ImportValidationIssue(
                             line=elem.sourceline,
                             column=None,
-                            message=_("pas.api.SamostatnyNalezXmlImportView.post.missing_geom"),
+                            message=_("api.views.SamostatnyNalezXmlImportView.post.missing_geom"),
                             error_type=ImportErrorType.INVALID_DATA,
                         )
                     )
@@ -2425,7 +2494,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                             ImportValidationIssue(
                                 line=elem.sourceline,
                                 column=None,
-                                message=_("pas.api.SamostatnyNalezXmlImportView.post.katastr_not_found"),
+                                message=_("api.views.SamostatnyNalezXmlImportView.post.katastr_not_found"),
                                 error_type=ImportErrorType.INVALID_DATA,
                             )
                         )
@@ -2436,7 +2505,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                             ImportValidationIssue(
                                 line=elem.sourceline,
                                 column=None,
-                                message=_("pas.api.SamostatnyNalezXmlImportView.post.check_pred_odeslanim_failed")
+                                message=_("api.views.SamostatnyNalezXmlImportView.post.check_pred_odeslanim_failed")
                                 + " "
                                 + "; ".join(pred_odeslanim_errors),
                                 error_type=ImportErrorType.INVALID_DATA,
@@ -2449,7 +2518,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                             ImportValidationIssue(
                                 line=elem.sourceline,
                                 column=None,
-                                message=_("pas.api.SamostatnyNalezXmlImportView.post.check_pred_potvrzenim_failed")
+                                message=_("api.views.SamostatnyNalezXmlImportView.post.check_pred_potvrzenim_failed")
                                 + " "
                                 + "; ".join(pred_potvrzenim_errors),
                                 error_type=ImportErrorType.INVALID_DATA,
@@ -2465,7 +2534,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 # stays open after the DB commit, allowing us to verify the Fedora write below.
                 instance.save()
         except ImportValidationException as exc:
-            logger.warning("pas.api.SamostatnyNalezXmlImportView.post.import_validation_error", extra={"error": exc})
+            logger.warning("api.views.SamostatnyNalezXmlImportView.post.import_validation_error", extra={"error": exc})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             return self._fail(
@@ -2474,44 +2543,44 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 self._validation_status(exc.import_errors),
             )
         except IntegrityError as err:
-            logger.warning("pas.api.SamostatnyNalezXmlImportView.post.integrity_error", extra={"error": err})
+            logger.warning("api.views.SamostatnyNalezXmlImportView.post.integrity_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             constraint = getattr(getattr(err.__cause__, "diag", None), "constraint_name", None)
             if constraint == "osoba_jmeno_prijmeni_key":
-                detail = _("pas.api.SamostatnyNalezXmlImportView.post.nalezce_already_exists")
+                detail = _("api.views.SamostatnyNalezXmlImportView.post.nalezce_already_exists")
             else:
-                detail = _("pas.api.SamostatnyNalezXmlImportView.post.integrity_error")
+                detail = _("api.views.SamostatnyNalezXmlImportView.post.integrity_error")
             return self._fail(
                 log_entry,
                 {"detail": detail},
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         except FedoraError as err:
-            logger.error("pas.api.SamostatnyNalezXmlImportView.post.fedora_error", extra={"error": err})
+            logger.error("api.views.SamostatnyNalezXmlImportView.post.fedora_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.internal_error")},
+                {"detail": _("api.views.SamostatnyNalezXmlImportView.post.internal_error")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         except DatabaseError as err:
-            logger.error("pas.api.SamostatnyNalezXmlImportView.post.database_error", extra={"error": err})
+            logger.error("api.views.SamostatnyNalezXmlImportView.post.database_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.internal_error")},
+                {"detail": _("api.views.SamostatnyNalezXmlImportView.post.internal_error")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         except Exception as err:
-            logger.error("pas.api.SamostatnyNalezXmlImportView.post.unexpected_error", extra={"error": err})
+            logger.error("api.views.SamostatnyNalezXmlImportView.post.unexpected_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.internal_error")},
+                {"detail": _("api.views.SamostatnyNalezXmlImportView.post.internal_error")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -2523,13 +2592,14 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
             fedora_transaction.mark_transaction_as_closed()
         except FedoraError as err:
             logger.error(
-                "pas.api.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving", extra={"error": err}
+                "api.views.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving",
+                extra={"error": err},
             )
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving")},
+                {"detail": _("api.views.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -2658,7 +2728,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
         if "evidencni_cislo" not in request.query_params:
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.missing_evidencni_cislo")},
+                {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.missing_evidencni_cislo")},
                 status.HTTP_400_BAD_REQUEST,
             )
 
@@ -2670,14 +2740,14 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
         if evidencni_cislo == "":
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.empty_evidencni_cislo")},
+                {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.empty_evidencni_cislo")},
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
         if len(evidencni_cislo) > self._MAX_EVIDENCNI_CISLO_LENGTH:
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.evidencni_cislo_too_long")},
+                {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.evidencni_cislo_too_long")},
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
@@ -2686,7 +2756,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
         except SamostatnyNalez.DoesNotExist:
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.not_found")},
+                {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.not_found")},
                 status.HTTP_404_NOT_FOUND,
             )
 
@@ -2696,26 +2766,26 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             # They are audit/operational identifiers, not secrets.
             # codeql[py/clear-text-logging-sensitive-data]
             logger.warning(
-                "pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.permission_denied",
+                "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.permission_denied",
                 extra={"user": request.user.pk, "ident_cely": ident_cely},
             )
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.permission_denied")},
+                {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.permission_denied")},
                 status.HTTP_403_FORBIDDEN,
             )
 
         if evidencni_cislo == instance.evidencni_cislo:
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.no_change")},
+                {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.no_change")},
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
         if not self._acquire_record_lock(ident_cely):
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.PasApiBaseView.record_locked")},
+                {"detail": _("api.views.PasApiBaseView.record_locked")},
                 status.HTTP_429_TOO_MANY_REQUESTS,
             )
 
@@ -2734,43 +2804,45 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
                 self._create_history_record(instance, request.user, old_evidencni_cislo, evidencni_cislo)
                 self._update_igsn_if_archived(instance)
         except DoiWriteError as err:
-            logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.igsn_error", extra={"error": err})
+            logger.error("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.igsn_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.doi_update_error")},
+                {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.doi_update_error")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         except FedoraError as err:
-            logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error", extra={"error": err})
+            logger.error("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
+                {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         except DatabaseError as err:
-            logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.database_error", extra={"error": err})
+            logger.error("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.database_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
+                {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         except Exception as err:
-            logger.error("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.unexpected_error", extra={"error": err})
+            logger.error(
+                "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.unexpected_error", extra={"error": err}
+            )
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
+                {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -2779,7 +2851,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             fedora_transaction.mark_transaction_as_closed()
         except FedoraError as err:
             logger.error(
-                "pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error_reading_metadata",
+                "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error_reading_metadata",
                 extra={"error": err},
             )
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
@@ -2787,7 +2859,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error_reading_metadata")},
+                {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error_reading_metadata")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -2895,7 +2967,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
         except SamostatnyNalez.DoesNotExist:
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.not_found")},
+                {"detail": _("api.views.SamostatnyNalezFotografieUploadView.post.not_found")},
                 status.HTTP_404_NOT_FOUND,
             )
 
@@ -2905,12 +2977,12 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             # They are audit/operational identifiers, not secrets.
             # codeql[py/clear-text-logging-sensitive-data]
             logger.warning(
-                "pas.api.SamostatnyNalezFotografieUploadView.post.permission_denied",
+                "api.views.SamostatnyNalezFotografieUploadView.post.permission_denied",
                 extra={"user": request.user.pk, "ident_cely": ident_cely},
             )
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.permission_denied")},
+                {"detail": _("api.views.SamostatnyNalezFotografieUploadView.post.permission_denied")},
                 status.HTTP_403_FORBIDDEN,
             )
 
@@ -2919,14 +2991,14 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
         if uploaded_file is None:
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.missing_file")},
+                {"detail": _("api.views.SamostatnyNalezFotografieUploadView.post.missing_file")},
                 status.HTTP_400_BAD_REQUEST,
             )
 
         if uploaded_file.size > MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES:
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.file_too_large")},
+                {"detail": _("api.views.SamostatnyNalezFotografieUploadView.post.file_too_large")},
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
@@ -2973,7 +3045,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
         if not self._acquire_record_lock(ident_cely):
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.PasApiBaseView.record_locked")},
+                {"detail": _("api.views.PasApiBaseView.record_locked")},
                 status.HTTP_429_TOO_MANY_REQUESTS,
             )
 
@@ -3029,43 +3101,43 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
                 self._update_igsn_if_archived(instance)
                 soubor_instance.save()
         except DoiWriteError as err:
-            logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.igsn_error", extra={"error": err})
+            logger.error("api.views.SamostatnyNalezFotografieUploadView.post.igsn_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
+                {"detail": _("api.views.SamostatnyNalezFotografieUploadView.post.internal_error")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         except FedoraError as err:
-            logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.fedora_error", extra={"error": err})
+            logger.error("api.views.SamostatnyNalezFotografieUploadView.post.fedora_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
+                {"detail": _("api.views.SamostatnyNalezFotografieUploadView.post.internal_error")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         except DatabaseError as err:
-            logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.database_error", extra={"error": err})
+            logger.error("api.views.SamostatnyNalezFotografieUploadView.post.database_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
+                {"detail": _("api.views.SamostatnyNalezFotografieUploadView.post.internal_error")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         except Exception as err:
-            logger.error("pas.api.SamostatnyNalezFotografieUploadView.post.unexpected_error", extra={"error": err})
+            logger.error("api.views.SamostatnyNalezFotografieUploadView.post.unexpected_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.internal_error")},
+                {"detail": _("api.views.SamostatnyNalezFotografieUploadView.post.internal_error")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -3074,16 +3146,136 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             fedora_transaction.mark_transaction_as_closed()
         except FedoraError as err:
             logger.error(
-                "pas.api.SamostatnyNalezFotografieUploadView.post.fedora_error_reading_metadata", extra={"error": err}
+                "api.views.SamostatnyNalezFotografieUploadView.post.fedora_error_reading_metadata", extra={"error": err}
             )
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             self._release_record_lock(ident_cely)
             return self._fail(
                 log_entry,
-                {"detail": _("pas.api.SamostatnyNalezFotografieUploadView.post.fedora_error_reading_metadata")},
+                {"detail": _("api.views.SamostatnyNalezFotografieUploadView.post.fedora_error_reading_metadata")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
         self._release_record_lock(ident_cely)
         return self._success(log_entry, instance, metadata, [])
+
+
+class MyXMLRenderer(BaseRenderer):
+    """Override třídy pro nastavení správnych tagů."""
+
+    media_type = "application/xml"
+    format = "xml"
+    charset = "utf-8"
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        """
+        Renders `data` into serialized XML.
+
+        :param data: Kolekce ``data`` zpracovávaná touto funkcí.
+        :param accepted_media_type: Parametr ``accepted_media_type`` slouží jako vstup pro logiku funkce ``render``.
+        :param renderer_context: Kolekce ``renderer_context`` zpracovávaná touto funkcí.
+
+            :return: Vrací proměnná ``data``.
+        """
+        return data
+
+
+@method_decorator(odstavka_in_progress, name="get")
+class GetUserInfo(APIView):
+    """Třída podlehu pro získaní základních info o uživately."""
+
+    authentication_classes = [TokenAuthenticationBearer]
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [
+        MyXMLRenderer,
+    ]
+    http_method_names = [
+        "get",
+    ]
+
+    def get(self, request, format=None):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` pracuje se s atributy ``user``.
+        :param format: Parametr ``format`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací výsledek volání ``Response()``.
+        """
+        user = request.user
+        return Response(user.metadata)
+
+    def handle_exception(self, exc):
+        """
+        Zpracuje exception. v aplikaci.
+
+        :param exc: Číselná hodnota ``exc`` použitá při výpočtu nebo transformaci.
+
+            :return: Vrací výsledek volání ``handle_exception()``.
+        """
+        self.is_exception = True
+        return super().handle_exception(exc)
+
+    def perform_content_negotiation(self, request, force=False):
+        """
+        Provádí operaci perform content negotiation.
+
+        :param request: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
+        :param force: Parametr ``force`` se předává do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: n-tici, výsledek volání ``perform_content_negotiation()``.
+        """
+        try:
+            self.is_exception
+            return JSONRenderer(), JSONRenderer.media_type
+        except Exception:
+            return super().perform_content_negotiation(request, force)
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        """
+        Provádí operaci finalize response.
+
+        :param request: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, ``finalize_response()``, pracuje se s atributy ``accepted_renderer``, ``accepted_media_type``, vstupuje do návratové hodnoty.
+        :param response: Textový nebo strukturální vstup `response` používaný při sestavení nebo zpracování obsahu.
+        :param args: Parametr ``args`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``finalize_response()``.
+        """
+        try:
+            self.is_exception
+            neg = self.perform_content_negotiation(request, force=True)
+            request.accepted_renderer, request.accepted_media_type = neg
+        finally:
+            return super().finalize_response(request, response, *args, **kwargs)
+
+
+@method_decorator(odstavka_in_progress, name="post")
+class ObtainAuthTokenWithUpdate(ObtainAuthToken):
+    """Třída pohledu pro získaní tokenu pro API."""
+
+    def post(self, request, *args, **kwargs):
+        """
+        Obsluhuje HTTP metodu POST.
+
+        :param request: Parametr ``request`` předává se do volání ``get_serializer()``, pracuje se s atributy ``data``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací výsledek volání ``Response()``.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data["user"]
+        token, created = Token.objects.get_or_create(user=user)
+        if not token.created + datetime.timedelta(hours=settings.TOKEN_EXPIRATION_HOURS) > timezone.now():
+            try:
+                with transaction.atomic():
+                    Token.objects.filter(user=user).delete()
+                    token = Token.objects.create(user=user)
+            except IntegrityError:
+                # Pokud mezitím druhý request token vytvořil,
+                # jen si ho načteme.
+                token = Token.objects.get(user=user)
+        return Response({"token": token.key})

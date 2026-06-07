@@ -4,13 +4,7 @@ import json
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from core.constants import ROLE_ARCHEOLOG_ID, ROLE_BADATEL_ID
-from core.models import Permissions
-from core.setting_models import CustomAdminSettings
-from django.core.cache import cache
-from django.core.exceptions import ValidationError
-from django.test import TestCase
-from pas.api import (
+from api.views import (
     ACCESS_MODE_CLOSED,
     ACCESS_MODE_OPEN,
     ACCESS_MODE_WHITELIST_ONLY,
@@ -23,6 +17,12 @@ from pas.api import (
     UserBlacklistPermission,
     UserWhitelistPermission,
 )
+from core.constants import ROLE_ARCHEOLOG_ID, ROLE_BADATEL_ID
+from core.models import Permissions
+from core.setting_models import CustomAdminSettings
+from django.core.cache import cache
+from django.core.exceptions import ValidationError
+from django.test import TestCase, override_settings
 
 
 class PasApiPermissionTests(TestCase):
@@ -99,7 +99,7 @@ class PasApiPermissionTests(TestCase):
 
         get_access_mode.assert_called_once_with()
         get_access_rules.assert_not_called()
-        self.assertEqual(str(permission.message), "pas.api.ApiAccessModePermission.closed")
+        self.assertEqual(str(permission.message), "api.views.ApiAccessModePermission.closed")
 
     def test_api_access_mode_permission_returns_false_for_closed_mode(self):
         """Režim ``closed`` odmítne přístup."""
@@ -148,7 +148,7 @@ class PasApiPermissionTests(TestCase):
         throttle = ApiImportThrottle()
         request = self._build_request(ip="192.168.1.3")
 
-        with patch("pas.api.time.time", return_value=1000.0):
+        with patch("api.views.time.time", return_value=1000.0):
             self.assertTrue(throttle.allow_request(request))
             self.assertFalse(throttle.allow_request(request))
 
@@ -169,7 +169,7 @@ class PasApiPermissionTests(TestCase):
         throttle = ApiImportThrottle()
         request = self._build_request(ip="203.0.113.10")
 
-        with patch("pas.api.time.time", return_value=1000.0):
+        with patch("api.views.time.time", return_value=1000.0):
             self.assertTrue(throttle._check_limit("throttle_ip_203.0.113.10", "2/m", request))
             self.assertTrue(throttle._check_limit("throttle_ip_203.0.113.10", "2/m", request))
             self.assertFalse(throttle._check_limit("throttle_ip_203.0.113.10", "2/m", request))
@@ -187,7 +187,7 @@ class PasApiPermissionTests(TestCase):
         second_request = self._build_request(ip="203.0.113.11", user=self._build_user("second@example.com"))
         view = SimpleNamespace(kwargs={"ident_cely": "C-202600009-N00007"})
 
-        with patch("pas.api.time.time", return_value=1000.0):
+        with patch("api.views.time.time", return_value=1000.0):
             self.assertTrue(throttle.allow_request(first_request, view))
             self.assertFalse(throttle.allow_request(second_request, view))
 
@@ -220,7 +220,7 @@ class PasApiPermissionTests(TestCase):
 
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_access_mode.invalid_value",
+            "api.views.PasApiPermissionMixin.validate_access_mode.invalid_value",
         ):
             instance.full_clean()
 
@@ -234,7 +234,7 @@ class PasApiPermissionTests(TestCase):
 
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_access_rules.invalid_ip_value",
+            "api.views.PasApiPermissionMixin.validate_access_rules.invalid_ip_value",
         ):
             instance.full_clean()
 
@@ -248,7 +248,7 @@ class PasApiPermissionTests(TestCase):
 
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_custom_admin_setting.invalid_json",
+            "api.views.PasApiPermissionMixin.validate_custom_admin_setting.invalid_json",
         ):
             instance.full_clean()
 
@@ -262,7 +262,7 @@ class PasApiPermissionTests(TestCase):
 
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_custom_admin_setting.invalid_item_id",
+            "api.views.PasApiPermissionMixin.validate_custom_admin_setting.invalid_item_id",
         ):
             instance.full_clean()
 
@@ -276,7 +276,7 @@ class PasApiPermissionTests(TestCase):
 
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_rate_limits.invalid_ip_value",
+            "api.views.PasApiPermissionMixin.validate_rate_limits.invalid_ip_value",
         ):
             instance.full_clean()
 
@@ -284,7 +284,7 @@ class PasApiPermissionTests(TestCase):
         """IP pravidlo musí mít syntakticky validní IP adresu, CIDR nebo rozsah."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_access_rules.invalid_ip_value",
+            "api.views.PasApiPermissionMixin.validate_access_rules.invalid_ip_value",
         ):
             IpBlacklistPermission.validate_access_rules(
                 [{"rule_type": "ip_blacklist", "value": "999.999.999.999", "active": True}]
@@ -294,7 +294,7 @@ class PasApiPermissionTests(TestCase):
         """Položka `access_rules` musí obsahovat `rule_type` i `value`."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_access_rules.missing_required_keys",
+            "api.views.PasApiPermissionMixin.validate_access_rules.missing_required_keys",
         ):
             IpBlacklistPermission.validate_access_rules([{"rule_type": "ip_blacklist"}])
 
@@ -302,7 +302,7 @@ class PasApiPermissionTests(TestCase):
         """Klíč `active` musí být bool nebo null."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_access_rules.invalid_active",
+            "api.views.PasApiPermissionMixin.validate_access_rules.invalid_active",
         ):
             IpBlacklistPermission.validate_access_rules(
                 [{"rule_type": "ip_blacklist", "value": "203.0.113.10", "active": "yes"}]
@@ -312,7 +312,7 @@ class PasApiPermissionTests(TestCase):
         """Položka `access_rules` musí být slovník."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_access_rules.item_not_a_dict",
+            "api.views.PasApiPermissionMixin.validate_access_rules.item_not_a_dict",
         ):
             IpBlacklistPermission.validate_access_rules(["203.0.113.10"])
 
@@ -320,7 +320,7 @@ class PasApiPermissionTests(TestCase):
         """`access_rules` musí být seznam slovníků."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_access_rules.not_a_list",
+            "api.views.PasApiPermissionMixin.validate_access_rules.not_a_list",
         ):
             IpBlacklistPermission.validate_access_rules({"rule_type": "ip_blacklist", "value": "203.0.113.10"})
 
@@ -328,7 +328,7 @@ class PasApiPermissionTests(TestCase):
         """`rule_type` musí být jedním z podporovaných typů pravidel."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_access_rules.unsupported_rule_type",
+            "api.views.PasApiPermissionMixin.validate_access_rules.unsupported_rule_type",
         ):
             IpBlacklistPermission.validate_access_rules(
                 [{"rule_type": "unsupported_rule", "value": "203.0.113.10", "active": True}]
@@ -595,7 +595,7 @@ class PasApiPermissionTests(TestCase):
         """`access_mode` musí být jednou z podporovaných hodnot."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_access_mode.invalid_value",
+            "api.views.PasApiPermissionMixin.validate_access_mode.invalid_value",
         ):
             IpBlacklistPermission.validate_access_mode("invalid_mode")
 
@@ -613,7 +613,7 @@ class PasApiPermissionTests(TestCase):
         """IP limit musí mít syntakticky validní IP adresu, CIDR nebo rozsah."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_rate_limits.invalid_ip_value",
+            "api.views.PasApiPermissionMixin.validate_rate_limits.invalid_ip_value",
         ):
             IpBlacklistPermission.validate_rate_limits(
                 [{"scope": "ip", "value": "999.999.999.999", "rate": "1/m", "active": True}]
@@ -623,17 +623,35 @@ class PasApiPermissionTests(TestCase):
         """`rate` v `rate_limits` musí mít podporovaný formát."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_rate_limits.invalid_rate",
+            "api.views.PasApiPermissionMixin.validate_rate_limits.invalid_rate",
         ):
             IpBlacklistPermission.validate_rate_limits(
                 [{"scope": "ip", "value": "203.0.113.10", "rate": "abc", "active": True}]
             )
 
+    def test_validate_rate_limits_raises_for_invalid_rate_user_scope(self):
+        """Nevalidní `rate` se odmítne i pro scope ``user``."""
+        with self.assertRaisesRegex(
+            ValidationError,
+            "api.views.PasApiPermissionMixin.validate_rate_limits.invalid_rate",
+        ):
+            IpBlacklistPermission.validate_rate_limits(
+                [{"scope": "user", "value": "jan@example.cz", "rate": "abc", "active": True}]
+            )
+
+    def test_validate_rate_limits_raises_for_invalid_rate_record_scope(self):
+        """Nevalidní `rate` se odmítne i pro scope ``record``."""
+        with self.assertRaisesRegex(
+            ValidationError,
+            "api.views.PasApiPermissionMixin.validate_rate_limits.invalid_rate",
+        ):
+            IpBlacklistPermission.validate_rate_limits([{"scope": "record", "rate": "abc", "active": True}])
+
     def test_validate_rate_limits_raises_for_missing_required_keys(self):
         """Položka `rate_limits` musí obsahovat `scope`, `value` a `rate`."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_rate_limits.missing_required_keys",
+            "api.views.PasApiPermissionMixin.validate_rate_limits.missing_required_keys",
         ):
             IpBlacklistPermission.validate_rate_limits([{"scope": "ip", "value": "203.0.113.10"}])
 
@@ -641,7 +659,7 @@ class PasApiPermissionTests(TestCase):
         """Klíč `active` v `rate_limits` musí být bool nebo null."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_rate_limits.invalid_active",
+            "api.views.PasApiPermissionMixin.validate_rate_limits.invalid_active",
         ):
             IpBlacklistPermission.validate_rate_limits(
                 [{"scope": "ip", "value": "203.0.113.10", "rate": "1/m", "active": "yes"}]
@@ -651,7 +669,7 @@ class PasApiPermissionTests(TestCase):
         """Položka `rate_limits` musí být slovník."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_rate_limits.item_not_a_dict",
+            "api.views.PasApiPermissionMixin.validate_rate_limits.item_not_a_dict",
         ):
             IpBlacklistPermission.validate_rate_limits(["203.0.113.10"])
 
@@ -659,7 +677,7 @@ class PasApiPermissionTests(TestCase):
         """`rate_limits` musí být seznam slovníků."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_rate_limits.not_a_list",
+            "api.views.PasApiPermissionMixin.validate_rate_limits.not_a_list",
         ):
             IpBlacklistPermission.validate_rate_limits({"scope": "ip", "value": "203.0.113.10", "rate": "1/m"})
 
@@ -667,7 +685,7 @@ class PasApiPermissionTests(TestCase):
         """`scope` v `rate_limits` musí být `user`, `ip` nebo `record`."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_rate_limits.unsupported_scope",
+            "api.views.PasApiPermissionMixin.validate_rate_limits.unsupported_scope",
         ):
             IpBlacklistPermission.validate_rate_limits(
                 [{"scope": "group", "value": "203.0.113.10", "rate": "1/m", "active": True}]
@@ -683,7 +701,7 @@ class PasApiPermissionTests(TestCase):
         """`record` scope nesmí obsahovat klíč `value` — pravděpodobná záměna s `user` nebo `ip`."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_rate_limits.record_scope_unexpected_value",
+            "api.views.PasApiPermissionMixin.validate_rate_limits.record_scope_unexpected_value",
         ):
             IpBlacklistPermission.validate_rate_limits(
                 [{"scope": "record", "value": "some-user", "rate": "10/m", "active": True}]
@@ -784,9 +802,83 @@ class PasApiPermissionTests(TestCase):
         throttle = ApiImportThrottle()
         request = self._build_request(ip="2001:db8::1")
 
-        with patch("pas.api.time.time", return_value=1000.0):
+        with patch("api.views.time.time", return_value=1000.0):
             self.assertTrue(throttle.allow_request(request))
             self.assertFalse(throttle.allow_request(request))
+
+    @override_settings(API_MIN_REQUEST_INTERVAL_IP_MS=500, API_MIN_REQUEST_INTERVAL_USER_MS=0)
+    def test_min_interval_ip_blocks_second_request_inside_window(self):
+        """Druhý požadavek z téže IP uvnitř okna ``API_MIN_REQUEST_INTERVAL_IP_MS`` je zamítnut."""
+        throttle = ApiImportThrottle()
+        request = self._build_request(ip="203.0.113.10")
+        clock = [1000.0]
+
+        with patch("api.views.time.time", side_effect=lambda: clock[0]):
+            self.assertTrue(throttle.allow_request(request))
+            clock[0] = 1000.2
+            self.assertFalse(throttle.allow_request(request))
+        self.assertAlmostEqual(throttle.wait_seconds, 0.3, places=3)
+
+    @override_settings(API_MIN_REQUEST_INTERVAL_IP_MS=500, API_MIN_REQUEST_INTERVAL_USER_MS=0)
+    def test_min_interval_ip_allows_second_request_after_window(self):
+        """Druhý požadavek po uplynutí okna projde a značka se aktualizuje."""
+        throttle = ApiImportThrottle()
+        request = self._build_request(ip="203.0.113.10")
+        clock = [1000.0]
+
+        with patch("api.views.time.time", side_effect=lambda: clock[0]):
+            self.assertTrue(throttle.allow_request(request))
+            clock[0] = 1000.6
+            self.assertTrue(throttle.allow_request(request))
+
+    @override_settings(API_MIN_REQUEST_INTERVAL_USER_MS=500, API_MIN_REQUEST_INTERVAL_IP_MS=0)
+    def test_min_interval_user_blocks_second_request_inside_window(self):
+        """Druhý požadavek od téhož uživatele uvnitř okna ``API_MIN_REQUEST_INTERVAL_USER_MS`` je zamítnut."""
+        user = self._build_user("jan@example.cz")
+        throttle = ApiImportThrottle()
+        request = self._build_request(ip="203.0.113.10", user=user)
+        clock = [2000.0]
+
+        with patch("api.views.time.time", side_effect=lambda: clock[0]):
+            self.assertTrue(throttle.allow_request(request))
+            clock[0] = 2000.1
+            self.assertFalse(throttle.allow_request(request))
+
+    @override_settings(API_MIN_REQUEST_INTERVAL_USER_MS=500, API_MIN_REQUEST_INTERVAL_IP_MS=0)
+    def test_min_interval_user_does_not_apply_to_anonymous_request(self):
+        """Bez identifikovaného uživatele se user-scope limit neaplikuje."""
+        throttle = ApiImportThrottle()
+        request = self._build_request(ip="203.0.113.10")
+        clock = [3000.0]
+
+        with patch("api.views.time.time", side_effect=lambda: clock[0]):
+            self.assertTrue(throttle.allow_request(request))
+            clock[0] = 3000.01
+            self.assertTrue(throttle.allow_request(request))
+
+    def test_check_limit_denies_when_rate_is_malformed(self):
+        """Při nevalidním ``rate`` v runtime ``_check_limit`` se selže uzavřeně (deny + ERROR)."""
+        throttle = ApiImportThrottle()
+        request = self._build_request(ip="203.0.113.10")
+
+        with self.assertLogs("api.views", level="ERROR") as log_ctx:
+            allowed = throttle._check_limit("throttle_ip_203.0.113.10", "abc", request)
+
+        self.assertFalse(allowed)
+        self.assertIsNone(throttle.wait_seconds)
+        self.assertTrue(any("ApiImportThrottle.invalid_rate" in line for line in log_ctx.output))
+
+    @override_settings(API_MIN_REQUEST_INTERVAL_IP_MS=0, API_MIN_REQUEST_INTERVAL_USER_MS=0)
+    def test_min_interval_disabled_when_settings_zero(self):
+        """Hodnota 0 v obou nastaveních znamená, že limit není aktivní."""
+        throttle = ApiImportThrottle()
+        request = self._build_request(ip="203.0.113.10", user=self._build_user("a@b.cz"))
+        clock = [100.0]
+
+        with patch("api.views.time.time", side_effect=lambda: clock[0]):
+            self.assertTrue(throttle.allow_request(request))
+            clock[0] = 100.001
+            self.assertTrue(throttle.allow_request(request))
 
 
 class GetClientIpTests(TestCase):
@@ -898,7 +990,7 @@ class GetClientIpTests(TestCase):
         """``trusted_proxies`` musí být seznam."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_trusted_proxies.not_a_list",
+            "api.views.PasApiPermissionMixin.validate_trusted_proxies.not_a_list",
         ):
             PasApiPermissionMixin.validate_trusted_proxies("10.0.1.0/24")
 
@@ -906,7 +998,7 @@ class GetClientIpTests(TestCase):
         """Prázdný řetězec v seznamu ``trusted_proxies`` je odmítnut."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_trusted_proxies.invalid_entry",
+            "api.views.PasApiPermissionMixin.validate_trusted_proxies.invalid_entry",
         ):
             PasApiPermissionMixin.validate_trusted_proxies([""])
 
@@ -914,7 +1006,7 @@ class GetClientIpTests(TestCase):
         """Neplatný CIDR řetězec v ``trusted_proxies`` je odmítnut."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_trusted_proxies.invalid_cidr",
+            "api.views.PasApiPermissionMixin.validate_trusted_proxies.invalid_cidr",
         ):
             PasApiPermissionMixin.validate_trusted_proxies(["999.999.999.999/24"])
 
@@ -946,7 +1038,7 @@ class GetClientIpTests(TestCase):
 
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_trusted_proxies.invalid_cidr",
+            "api.views.PasApiPermissionMixin.validate_trusted_proxies.invalid_cidr",
         ):
             instance.full_clean()
 
@@ -962,13 +1054,16 @@ class GetClientIpTests(TestCase):
 
     def test_resolve_trusted_networks_dns_failure_is_logged_and_skipped(self):
         """Neúspěšný DNS lookup je zalogován a daná položka je přeskočena."""
-        with patch("pas.api.socket.getaddrinfo", side_effect=OSError("DNS failure")):
-            with self.assertLogs("pas.api", level="WARNING") as log_ctx:
+        with patch("api.views.socket.getaddrinfo", side_effect=OSError("DNS failure")):
+            with self.assertLogs("api.views", level="WARNING") as log_ctx:
                 networks = PasApiPermissionMixin._resolve_trusted_networks(["nonexistent.internal"])
 
         self.assertEqual(networks, [])
         self.assertTrue(
-            any("pas.api.PasApiPermissionMixin._resolve_trusted_networks.dns_failed" in line for line in log_ctx.output)
+            any(
+                "api.views.PasApiPermissionMixin._resolve_trusted_networks.dns_failed" in line
+                for line in log_ctx.output
+            )
         )
 
     # --- IPv6 ---
@@ -985,7 +1080,7 @@ class GetClientIpTests(TestCase):
         """Neplatný IPv6 CIDR prefix v ``trusted_proxies`` je odmítnut."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_trusted_proxies.invalid_cidr",
+            "api.views.PasApiPermissionMixin.validate_trusted_proxies.invalid_cidr",
         ):
             PasApiPermissionMixin.validate_trusted_proxies(["2001:db8::/200"])
 
@@ -1016,7 +1111,7 @@ class SamostatnyNalezEvidencniCisloPatchPermissionTests(TestCase):
         user = self._build_user(ROLE_BADATEL_ID)
         ident_cely = "C-202600009-N00007"
 
-        with patch("pas.api.check_permissions", return_value=True) as mock_check_permissions:
+        with patch("api.views.check_permissions", return_value=True) as mock_check_permissions:
             self.assertFalse(SamostatnyNalezEvidencniCisloPatchView._has_edit_permissions(user, ident_cely))
 
         mock_check_permissions.assert_called_once_with(
@@ -1031,7 +1126,7 @@ class SamostatnyNalezEvidencniCisloPatchPermissionTests(TestCase):
         user = self._build_user(ROLE_ARCHEOLOG_ID)
         ident_cely = "C-202600009-N00007"
 
-        with patch("pas.api.check_permissions", return_value=True) as mock_check_permissions:
+        with patch("api.views.check_permissions", return_value=True) as mock_check_permissions:
             self.assertTrue(SamostatnyNalezEvidencniCisloPatchView._has_edit_permissions(user, ident_cely))
 
         mock_check_permissions.assert_called_once_with(
@@ -1067,7 +1162,7 @@ class RecordLockParamsValidationTests(TestCase):
         """Vstup, který není slovník, je odmítnut."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_record_lock_params.not_a_dict",
+            "api.views.PasApiPermissionMixin.validate_record_lock_params.not_a_dict",
         ):
             IpBlacklistPermission.validate_record_lock_params([1, 2])
 
@@ -1075,7 +1170,7 @@ class RecordLockParamsValidationTests(TestCase):
         """``retry_delay`` musí být kladné číslo — nula je odmítnuta."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_record_lock_params.invalid_retry_delay",
+            "api.views.PasApiPermissionMixin.validate_record_lock_params.invalid_retry_delay",
         ):
             IpBlacklistPermission.validate_record_lock_params({"retry_delay": 0})
 
@@ -1083,7 +1178,7 @@ class RecordLockParamsValidationTests(TestCase):
         """``retry_delay`` musí být kladné číslo — záporná hodnota je odmítnuta."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_record_lock_params.invalid_retry_delay",
+            "api.views.PasApiPermissionMixin.validate_record_lock_params.invalid_retry_delay",
         ):
             IpBlacklistPermission.validate_record_lock_params({"retry_delay": -1.0})
 
@@ -1091,7 +1186,7 @@ class RecordLockParamsValidationTests(TestCase):
         """``retry_delay`` nesmí být bool (podtyp int v Pythonu)."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_record_lock_params.invalid_retry_delay",
+            "api.views.PasApiPermissionMixin.validate_record_lock_params.invalid_retry_delay",
         ):
             IpBlacklistPermission.validate_record_lock_params({"retry_delay": True})
 
@@ -1099,7 +1194,7 @@ class RecordLockParamsValidationTests(TestCase):
         """``max_retries`` musí být kladné celé číslo — nula je odmítnuta."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_record_lock_params.invalid_max_retries",
+            "api.views.PasApiPermissionMixin.validate_record_lock_params.invalid_max_retries",
         ):
             IpBlacklistPermission.validate_record_lock_params({"max_retries": 0})
 
@@ -1107,7 +1202,7 @@ class RecordLockParamsValidationTests(TestCase):
         """``max_retries`` musí být celé číslo — float je odmítnut."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_record_lock_params.invalid_max_retries",
+            "api.views.PasApiPermissionMixin.validate_record_lock_params.invalid_max_retries",
         ):
             IpBlacklistPermission.validate_record_lock_params({"max_retries": 1.5})
 
@@ -1115,7 +1210,7 @@ class RecordLockParamsValidationTests(TestCase):
         """``max_retries`` nesmí být bool."""
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_record_lock_params.invalid_max_retries",
+            "api.views.PasApiPermissionMixin.validate_record_lock_params.invalid_max_retries",
         ):
             IpBlacklistPermission.validate_record_lock_params({"max_retries": True})
 
@@ -1139,13 +1234,13 @@ class RecordLockParamsValidationTests(TestCase):
 
         with self.assertRaisesRegex(
             ValidationError,
-            "pas.api.PasApiPermissionMixin.validate_record_lock_params.invalid_max_retries",
+            "api.views.PasApiPermissionMixin.validate_record_lock_params.invalid_max_retries",
         ):
             instance.full_clean()
 
     def test_get_record_lock_params_returns_defaults_when_not_configured(self):
         """Bez nastavení v ``CustomAdminSettings`` vrátí výchozí hodnoty."""
-        from pas.api import _RECORD_LOCK_DEFAULT_MAX_RETRIES, _RECORD_LOCK_DEFAULT_RETRY_DELAY
+        from api.views import _RECORD_LOCK_DEFAULT_MAX_RETRIES, _RECORD_LOCK_DEFAULT_RETRY_DELAY
 
         retry_delay, max_retries = IpBlacklistPermission.get_record_lock_params()
 

@@ -24,6 +24,32 @@ ADB
      - ``vb/smazat/<str:ident_cely>``
      - ``views.smazat_vb``
 
+API
+---
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 40 30
+
+   * - Název
+     - URL
+     - Cíl
+   * - ``N/A``
+     - ``token-auth/``
+     - ``ObtainAuthTokenWithUpdate.as_view()``
+   * - ``N/A``
+     - ``uzivatel-info/``
+     - ``GetUserInfo.as_view()``
+   * - ``import-xml``
+     - ``pas/import-xml``
+     - ``SamostatnyNalezXmlImportView.as_view()``
+   * - ``patch-evidencni-cislo``
+     - ``pas/nalez/<str:ident_cely>/evidencni-cislo``
+     - ``SamostatnyNalezEvidencniCisloPatchView.as_view()``
+   * - ``upload-foto``
+     - ``pas/nalez/<str:ident_cely>/upload-foto``
+     - ``SamostatnyNalezFotografieUploadView.as_view()``
+
 ARCH_Z
 ------
 
@@ -757,15 +783,6 @@ PAS
    * - ``get_projekt_pas_table``
      - ``projekt-pas-tabulka/<str:ident_cely>``
      - ``ProjektPasTableView.as_view()``
-   * - ``api-import-xml``
-     - ``api/import-xml``
-     - ``SamostatnyNalezXmlImportView.as_view()``
-   * - ``api-patch-evidencni-cislo``
-     - ``api/nalez/<str:ident_cely>/evidencni-cislo``
-     - ``SamostatnyNalezEvidencniCisloPatchView.as_view()``
-   * - ``api-upload-foto``
-     - ``api/nalez/<str:ident_cely>/upload-foto``
-     - ``SamostatnyNalezFotografieUploadView.as_view()``
 
 PIAN
 ----
@@ -951,12 +968,6 @@ UZIVATEL
    * - ``update-notifications``
      - ``uzivatel/notifikace/edit/``
      - ``update_notifications``
-   * - ``N/A``
-     - ``api/token-auth/``
-     - ``ObtainAuthTokenWithUpdate.as_view()``
-   * - ``N/A``
-     - ``api/uzivatel-info/``
-     - ``GetUserInfo.as_view()``
    * - ``delete-uzivatel-request``
      - ``uzivatel/delete-request/``
      - ``UserDeleteRequest.as_view()``

@@ -166,6 +166,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions.backends.signed_cookies",
     "core.apps.CoreConfig",
     "uzivatel.apps.UzivatelConfig",
+    "api.apps.ApiConfig",
     "ez",
     "historie",
     "oznameni",
@@ -658,6 +659,13 @@ REST_FRAMEWORK = {
     ]
 }
 TOKEN_EXPIRATION_HOURS = 24
+
+# Minimální interval (v milisekundách) mezi dvěma po sobě jdoucími požadavky
+# na PAS API. Limit se aplikuje globálně na všechny uživatele a IP adresy
+# (na rozdíl od rate_limits v ``CustomAdminSettings``, kde se nastavuje
+# per-uživatel nebo per-IP). Hodnota 0 znamená, že limit není aktivní.
+API_MIN_REQUEST_INTERVAL_USER_MS = 0
+API_MIN_REQUEST_INTERVAL_IP_MS = 0
 
 SKIP_RECAPTCHA = False
 

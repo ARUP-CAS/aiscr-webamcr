@@ -11,6 +11,17 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+from api.models import ApiRequestLog
+from api.views import (
+    _RECORD_LOCK_PREFIX,
+    _XSD_BYTES_CACHE,
+    ImportErrorType,
+    ImportValidationException,
+    SamostatnyNalezEvidencniCisloPatchView,
+    SamostatnyNalezXmlImportView,
+    _fetch_xsd_bytes,
+    _xsd_redis_key,
+)
 from core.constants import (
     AKTUALIZACE_SN,
     API_REQUEST_LOG_STATUS_FAILURE,
@@ -28,7 +39,7 @@ from core.constants import (
     SN_ZAPSANY,
     ZAPSANI_SN,
 )
-from core.models import AntivirusCheckResult, ApiRequestLog, Permissions, Soubor, check_permissions
+from core.models import AntivirusCheckResult, Permissions, Soubor, check_permissions
 from core.repository_connector import FedoraNoResponseError
 from core.setting_models import CustomAdminSettings
 from django.core.cache import cache
@@ -41,16 +52,6 @@ from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 from heslar.models import Heslar, HeslarNazev, RuianKatastr
 from historie.models import Historie
 from lxml import etree
-from pas.api import (
-    _RECORD_LOCK_PREFIX,
-    _XSD_BYTES_CACHE,
-    ImportErrorType,
-    ImportValidationException,
-    SamostatnyNalezEvidencniCisloPatchView,
-    SamostatnyNalezXmlImportView,
-    _fetch_xsd_bytes,
-    _xsd_redis_key,
-)
 from pas.models import SamostatnyNalez
 from pid.exceptions import DoiWriteError
 from projekt.models import Projekt
@@ -62,9 +63,9 @@ from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
 
-XML_IMPORT_URL = reverse("pas:api-import-xml")
-PATCH_URL_NAME = "pas:api-patch-evidencni-cislo"
-FOTO_UPLOAD_URL_NAME = "pas:api-upload-foto"
+XML_IMPORT_URL = reverse("api:import-xml")
+PATCH_URL_NAME = "api:patch-evidencni-cislo"
+FOTO_UPLOAD_URL_NAME = "api:upload-foto"
 IDENT_CELY = "C-202600009-N00007"
 
 
@@ -85,12 +86,12 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.addCleanup(patcher.stop)
 
         self._fedora_transaction_counter = 0
-        transaction_patcher = patch("pas.api.FedoraTransaction", side_effect=self._build_mock_fedora_transaction)
+        transaction_patcher = patch("api.views.FedoraTransaction", side_effect=self._build_mock_fedora_transaction)
         transaction_patcher.start()
         self.addCleanup(transaction_patcher.stop)
 
         repository_connector_patcher = patch(
-            "pas.api.FedoraRepositoryConnector", side_effect=self._build_mock_repository_connector
+            "api.views.FedoraRepositoryConnector", side_effect=self._build_mock_repository_connector
         )
         repository_connector_patcher.start()
         self.addCleanup(repository_connector_patcher.stop)
@@ -700,8 +701,8 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             return schema_instance
 
         try:
-            with patch("pas.api._fetch_xsd_bytes", return_value=b"<schema/>") as fetch_mock, patch(
-                "pas.api.etree.XMLSchema", side_effect=build_schema
+            with patch("api.views._fetch_xsd_bytes", return_value=b"<schema/>") as fetch_mock, patch(
+                "api.views.etree.XMLSchema", side_effect=build_schema
             ) as xmlschema_mock:
                 with ThreadPoolExecutor(max_workers=8) as executor:
                     results = list(executor.map(lambda _: SamostatnyNalezXmlImportView._get_amcr_schema(doc), range(8)))
@@ -760,7 +761,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         original_schema_cache = dict(SamostatnyNalezXmlImportView._amcr_schema_cache)
         SamostatnyNalezXmlImportView._amcr_schema_cache = {}
         try:
-            with patch("pas.api._fetch_xsd_bytes", return_value=evil_xsd_bytes):
+            with patch("api.views._fetch_xsd_bytes", return_value=evil_xsd_bytes):
                 with self.assertRaises(ImportValidationException) as exc_ctx:
                     SamostatnyNalezXmlImportView._get_amcr_schema(doc)
         finally:
@@ -882,7 +883,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         schema.validate.return_value = True
         schema.error_log = []
 
-        with patch("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema", return_value=schema):
+        with patch("api.views.SamostatnyNalezXmlImportView._get_amcr_schema", return_value=schema):
             response = self._post_xml(xml)
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
@@ -1200,13 +1201,13 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             None,
         )
 
-        with patch("pas.api.FedoraRepositoryConnector", return_value=connector):
+        with patch("api.views.FedoraRepositoryConnector", return_value=connector):
             response = self._post_xml(xml)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertEqual(
             response.data,
-            {"detail": "pas.api.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving"},
+            {"detail": "api.views.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving"},
         )
         self.assertTrue(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure(response.data)
@@ -1254,7 +1255,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                 return True
             return True
 
-        with patch("pas.api.check_permissions", side_effect=permission_side_effect):
+        with patch("api.views.check_permissions", side_effect=permission_side_effect):
             response = self._post_xml(xml, token=self.outsider_token.key)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1279,7 +1280,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                 return True
             return True
 
-        with patch("pas.api.check_permissions", side_effect=permission_side_effect):
+        with patch("api.views.check_permissions", side_effect=permission_side_effect):
             response = self._post_xml(xml, token=self.outsider_token.key)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1302,7 +1303,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                 return False
             return True
 
-        with patch("pas.api.check_permissions", side_effect=permission_side_effect):
+        with patch("api.views.check_permissions", side_effect=permission_side_effect):
             response = self._post_xml(xml, token=self.outsider_token.key)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1642,7 +1643,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             pristupnost_ident=self.pristupnost.ident_cely,
         )
 
-        with patch("pas.api.SamostatnyNalez.save", side_effect=IntegrityError("other constraint violated")):
+        with patch("api.views.SamostatnyNalez.save", side_effect=IntegrityError("other constraint violated")):
             response = self._post_xml(xml)
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
@@ -1677,7 +1678,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         SamostatnyNalezXmlImportView._amcr_schema_cache.clear()
 
         with patch(
-            "pas.api._fetch_xsd_bytes",
+            "api.views._fetch_xsd_bytes",
             side_effect=urllib.error.URLError("simulated network failure"),
         ):
             response = self._post_xml(xml)
@@ -1798,7 +1799,7 @@ class FetchXsdBytesTests(TestCase):
 
         expected = b"<schema/>"
         mock_response = io.BytesIO(expected)
-        with patch("pas.api.urllib.request.urlopen", return_value=mock_response) as urlopen_mock:
+        with patch("api.views.urllib.request.urlopen", return_value=mock_response) as urlopen_mock:
             result = _fetch_xsd_bytes("https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
 
         self.assertEqual(result, expected)
@@ -1809,7 +1810,7 @@ class FetchXsdBytesTests(TestCase):
 
         url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
         expected = b"<schema/>"
-        with patch("pas.api.urllib.request.urlopen", return_value=io.BytesIO(expected)):
+        with patch("api.views.urllib.request.urlopen", return_value=io.BytesIO(expected)):
             _fetch_xsd_bytes(url)
 
         self.assertEqual(cache.get(_xsd_redis_key(url)), expected)
@@ -1821,7 +1822,7 @@ class FetchXsdBytesTests(TestCase):
         cached_bytes = b"<cached/>"
         cache.set(_xsd_redis_key(url), cached_bytes)
 
-        with patch("pas.api.urllib.request.urlopen") as urlopen_mock:
+        with patch("api.views.urllib.request.urlopen") as urlopen_mock:
             result = _fetch_xsd_bytes(url)
 
         self.assertEqual(result, cached_bytes)
@@ -1834,7 +1835,7 @@ class FetchXsdBytesTests(TestCase):
         cached_bytes = b"<xml-schema/>"
         cache.set(_xsd_redis_key(url), cached_bytes)
 
-        with patch("pas.api.urllib.request.urlopen") as urlopen_mock:
+        with patch("api.views.urllib.request.urlopen") as urlopen_mock:
             result = _fetch_xsd_bytes(url)
 
         self.assertEqual(result, cached_bytes)
@@ -1844,7 +1845,7 @@ class FetchXsdBytesTests(TestCase):
         """Síťová chyba se propaguje jako ``urllib.error.URLError``."""
 
         with patch(
-            "pas.api.urllib.request.urlopen",
+            "api.views.urllib.request.urlopen",
             side_effect=urllib.error.URLError("connection refused"),
         ):
             with self.assertRaises(urllib.error.URLError):
@@ -1853,7 +1854,7 @@ class FetchXsdBytesTests(TestCase):
     def test_propagates_timeout_error(self):
         """Vypršení časového limitu se propaguje jako ``TimeoutError``."""
 
-        with patch("pas.api.urllib.request.urlopen", side_effect=TimeoutError()):
+        with patch("api.views.urllib.request.urlopen", side_effect=TimeoutError()):
             with self.assertRaises(TimeoutError):
                 _fetch_xsd_bytes("https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
 
@@ -1861,7 +1862,7 @@ class FetchXsdBytesTests(TestCase):
         """Při síťové chybě se do cache nic neuloží."""
 
         url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
-        with patch("pas.api.urllib.request.urlopen", side_effect=urllib.error.URLError("err")):
+        with patch("api.views.urllib.request.urlopen", side_effect=urllib.error.URLError("err")):
             with self.assertRaises(urllib.error.URLError):
                 _fetch_xsd_bytes(url)
 
@@ -1872,7 +1873,7 @@ class FetchXsdBytesTests(TestCase):
 
         url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
         content = b"<schema/>"
-        with patch("pas.api.urllib.request.urlopen", return_value=io.BytesIO(content)) as urlopen_mock:
+        with patch("api.views.urllib.request.urlopen", return_value=io.BytesIO(content)) as urlopen_mock:
             _fetch_xsd_bytes(url)
             _fetch_xsd_bytes(url)
 
@@ -1894,12 +1895,12 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.addCleanup(patcher.stop)
 
         self._fedora_transaction_counter = 0
-        transaction_patcher = patch("pas.api.FedoraTransaction", side_effect=self._build_mock_fedora_transaction)
+        transaction_patcher = patch("api.views.FedoraTransaction", side_effect=self._build_mock_fedora_transaction)
         transaction_patcher.start()
         self.addCleanup(transaction_patcher.stop)
 
         repository_connector_patcher = patch(
-            "pas.api.FedoraRepositoryConnector", side_effect=self._build_mock_repository_connector
+            "api.views.FedoraRepositoryConnector", side_effect=self._build_mock_repository_connector
         )
         repository_connector_patcher.start()
         self.addCleanup(repository_connector_patcher.stop)
@@ -2329,7 +2330,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
 
         original_value = self.nalez.evidencni_cislo
 
-        with patch("pas.api.SamostatnyNalez.save", side_effect=DatabaseError("db error")):
+        with patch("api.views.SamostatnyNalez.save", side_effect=DatabaseError("db error")):
             response = self._patch(IDENT_CELY)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -2346,7 +2347,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         original_value = self.nalez.evidencni_cislo
 
         with patch(
-            "pas.api.SamostatnyNalez.save",
+            "api.views.SamostatnyNalez.save",
             side_effect=FedoraNoResponseError("http://fedora.example/", "No response", None),
         ):
             response = self._patch(IDENT_CELY)
@@ -2364,7 +2365,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         connector = Mock()
         connector.get_metadata.side_effect = FedoraNoResponseError("http://fedora.example/", "No Fedora response", None)
 
-        with patch("pas.api.FedoraRepositoryConnector", return_value=connector):
+        with patch("api.views.FedoraRepositoryConnector", return_value=connector):
             response = self._patch(IDENT_CELY)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -2398,7 +2399,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         """PATCH uzavře Fedora transakci explicitním voláním ``mark_transaction_as_closed()`` po commitu."""
         fedora_transaction = Mock()
 
-        with patch("pas.api.FedoraTransaction", return_value=fedora_transaction):
+        with patch("api.views.FedoraTransaction", return_value=fedora_transaction):
             response = self._patch(IDENT_CELY, evidencni_cislo="EC-ON-COMMIT-001")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -2568,12 +2569,12 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         self.addCleanup(patcher.stop)
 
         self._fedora_transaction_counter = 0
-        transaction_patcher = patch("pas.api.FedoraTransaction", side_effect=self._build_mock_fedora_transaction)
+        transaction_patcher = patch("api.views.FedoraTransaction", side_effect=self._build_mock_fedora_transaction)
         transaction_patcher.start()
         self.addCleanup(transaction_patcher.stop)
 
         repository_connector_patcher = patch(
-            "pas.api.FedoraRepositoryConnector", side_effect=self._build_mock_repository_connector
+            "api.views.FedoraRepositoryConnector", side_effect=self._build_mock_repository_connector
         )
         repository_connector_patcher.start()
         self.addCleanup(repository_connector_patcher.stop)
@@ -2990,7 +2991,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
         photo = self._minimal_photo_bytes()
 
-        with patch("pas.api.MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES", 1):
+        with patch("api.views.MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES", 1):
             response = self._post_file(IDENT_CELY, photo)
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
@@ -3005,7 +3006,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
         photo = self._minimal_photo_bytes()
 
-        with patch("pas.api.check_permissions", return_value=False):
+        with patch("api.views.check_permissions", return_value=False):
             response = self._post_file(IDENT_CELY, photo, token=self.outsider_token.key)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -3032,7 +3033,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         photo = self._minimal_photo_bytes()
         expected_path = reverse(FOTO_UPLOAD_URL_NAME, kwargs={"ident_cely": IDENT_CELY})
 
-        with patch("pas.api.Soubor.check_mime_for_url", return_value=True) as mock_mime:
+        with patch("api.views.Soubor.check_mime_for_url", return_value=True) as mock_mime:
             response = self._post_file(IDENT_CELY, photo)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -3044,7 +3045,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
         photo = self._minimal_photo_bytes()
 
-        with patch("pas.api.Soubor.check_antivirus", return_value=AntivirusCheckResult.VIRUS_FOUND):
+        with patch("api.views.Soubor.check_antivirus", return_value=AntivirusCheckResult.VIRUS_FOUND):
             response = self._post_file(IDENT_CELY, photo)
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
@@ -3059,7 +3060,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
         photo = self._minimal_photo_bytes()
 
-        with patch("pas.api.Soubor.check_antivirus", return_value=AntivirusCheckResult.CHECK_FAILED):
+        with patch("api.views.Soubor.check_antivirus", return_value=AntivirusCheckResult.CHECK_FAILED):
             response = self._post_file(IDENT_CELY, photo)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -3091,7 +3092,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         connector = self._build_mock_repository_connector(self.nalez)
         connector.save_binary_file.side_effect = FedoraNoResponseError("http://fedora.example/", "No response", None)
 
-        with patch("pas.api.FedoraRepositoryConnector", return_value=connector):
+        with patch("api.views.FedoraRepositoryConnector", return_value=connector):
             response = self._post_file(IDENT_CELY, photo)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -3111,7 +3112,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
             "http://fedora.example/", "No Fedora response", None
         )
 
-        with patch("pas.api.FedoraRepositoryConnector", side_effect=[save_connector, metadata_connector]):
+        with patch("api.views.FedoraRepositoryConnector", side_effect=[save_connector, metadata_connector]):
             response = self._post_file(IDENT_CELY, photo)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
