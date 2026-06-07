@@ -1262,18 +1262,17 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
         """
         now = time.time()
         min_interval = min_interval_ms / 1000.0
-        ttl = max(int(min_interval) + 2, 2)
-        last = cache.get(cache_key)
-        if last is not None:
-            elapsed = now - float(last)
-            if elapsed < min_interval:
-                self.wait_seconds = max(min_interval - elapsed, 0.001)
-                logger.warning(
-                    "api.views.ApiImportThrottle.min_interval_throttled",
-                    extra={"scope": scope, "identifier": identifier, "wait": self.wait_seconds},
-                )
-                return False
-        cache.set(cache_key, now, timeout=ttl)
+        # Atomically attempt to set the lock for the duration of the minimum interval
+        if not cache.add(cache_key, now, timeout=min_interval):
+            # If the key already exists, we are within the forbidden window
+            last = cache.get(cache_key)
+            elapsed = now - float(last) if last is not None else 0.0
+            self.wait_seconds = max(min_interval - elapsed, 0.001)
+            logger.warning(
+                "api.views.ApiImportThrottle.min_interval_throttled",
+                extra={"scope": scope, "identifier": identifier, "wait": self.wait_seconds},
+            )
+            return False
         return True
 
     def wait(self):
