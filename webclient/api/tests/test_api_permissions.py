@@ -1240,7 +1240,10 @@ class RecordLockParamsValidationTests(TestCase):
 
     def test_get_record_lock_params_returns_defaults_when_not_configured(self):
         """Bez nastavení v ``CustomAdminSettings`` vrátí výchozí hodnoty."""
-        from api.views import _RECORD_LOCK_DEFAULT_MAX_RETRIES, _RECORD_LOCK_DEFAULT_RETRY_DELAY
+        from api.views import (
+            _RECORD_LOCK_DEFAULT_MAX_RETRIES,
+            _RECORD_LOCK_DEFAULT_RETRY_DELAY,
+        )
 
         retry_delay, max_retries = IpBlacklistPermission.get_record_lock_params()
 

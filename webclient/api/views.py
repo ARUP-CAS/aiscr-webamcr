@@ -39,7 +39,12 @@ from core.coordTransform import transform_geom_to_sjtsk, transform_geom_to_wgs84
 from core.decorators import odstavka_in_progress
 from core.ident_cely import get_sn_ident
 from core.models import AntivirusCheckResult, Permissions, Soubor, check_permissions
-from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction, FedoraTransactionStatus
+from core.repository_connector import (
+    FedoraError,
+    FedoraRepositoryConnector,
+    FedoraTransaction,
+    FedoraTransactionStatus,
+)
 from core.setting_models import CustomAdminSettings
 from core.utils import get_cadastre_from_point
 from core.views import get_finds_soubor_name
@@ -1109,7 +1114,7 @@ def _strip_namespace(tag: str) -> str:
     return tag
 
 
-def _parse_rate(rate: str) -> tuple[int, int] | None:
+def _parse_rate(rate: str) -> tuple[int, float] | None:
     """
     Naparsuje řetězec limitu ve formátu ``počet/jednotka`` na počet a délku okna v sekundách.
 
@@ -1235,7 +1240,10 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
             if window_started is None:
                 cache.add(window_started_key, now, timeout=window)
                 window_started = now
-            self.wait_seconds = max(window - (now - float(window_started)), 1)
+            # Minimum kept above 0 so clients always get a non-zero Retry-After; for the
+            # ``ms`` unit the floor is one window (e.g. 0.001 s) so we don't artificially
+            # stretch a millisecond limit to a full second.
+            self.wait_seconds = max(window - (now - float(window_started)), min(window, 0.001))
             logger.warning(
                 "api.views.ApiImportThrottle.throttled",
                 extra={"cache_key": cache_key, "rate": rate},
@@ -1262,17 +1270,24 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
         """
         now = time.time()
         min_interval = min_interval_ms / 1000.0
-        # Atomically attempt to set the lock for the duration of the minimum interval
-        if not cache.add(cache_key, now, timeout=min_interval):
-            # If the key already exists, we are within the forbidden window
-            last = cache.get(cache_key)
-            elapsed = now - float(last) if last is not None else 0.0
-            self.wait_seconds = max(min_interval - elapsed, 0.001)
-            logger.warning(
-                "api.views.ApiImportThrottle.min_interval_throttled",
-                extra={"scope": scope, "identifier": identifier, "wait": self.wait_seconds},
-            )
-            return False
+        # Django cache (django-redis) drops keys when ``timeout`` is fractional ``< 1``;
+        # ceil to an integer second TTL with a floor of 1 s so the entry survives the
+        # sub-second comparison window (e.g. 500 ms).
+        ttl_seconds = max(int(min_interval) + 1, 1)
+        # Sub-second timestamp comparison: ``cache.add`` alone cannot enforce a 500 ms
+        # window because the TTL must be an integer second. We therefore store the
+        # timestamp of the last allowed request and compare against it on each call.
+        last = cache.get(cache_key)
+        if last is not None:
+            elapsed = now - float(last)
+            if elapsed < min_interval:
+                self.wait_seconds = max(min_interval - elapsed, 0.001)
+                logger.warning(
+                    "api.views.ApiImportThrottle.min_interval_throttled",
+                    extra={"scope": scope, "identifier": identifier, "wait": self.wait_seconds},
+                )
+                return False
+        cache.set(cache_key, now, timeout=ttl_seconds)
         return True
 
     def wait(self):

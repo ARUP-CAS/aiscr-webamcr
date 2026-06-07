@@ -370,7 +370,12 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                     "licence": cls.licence,
                 },
             )
-        from core.constants import ROLE_ADMIN_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_BADATEL_ID
+        from core.constants import (
+            ROLE_ADMIN_ID,
+            ROLE_ARCHEOLOG_ID,
+            ROLE_ARCHIVAR_ID,
+            ROLE_BADATEL_ID,
+        )
         from django.contrib.auth.models import Group
 
         badatel_group, _ = Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
@@ -460,7 +465,10 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         )
 
         from heslar.hesla import HESLAR_PROJEKT_TYP
-        from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
+        from heslar.hesla_dynamicka import (
+            TYP_PROJEKTU_PRUZKUM_ID,
+            TYP_PROJEKTU_ZACHRANNY_ID,
+        )
         from heslar.models import RuianKatastr
 
         heslare_typ_projektu, _ = HeslarNazev.objects.get_or_create(
@@ -3292,7 +3300,10 @@ class SamostatnyNalezGetCreateOrgTests(TestCase):
         """Připraví sdílená testovací data pro celou třídu."""
         from django.contrib.gis.geos import MultiPolygon, Point, Polygon
         from heslar.hesla import HESLAR_PROJEKT_TYP
-        from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, TYP_PROJEKTU_PRUZKUM_ID
+        from heslar.hesla_dynamicka import (
+            PRISTUPNOST_ANONYM_ID,
+            TYP_PROJEKTU_PRUZKUM_ID,
+        )
         from heslar.models import RuianKatastr, RuianKraj, RuianOkres
 
         heslare_typ_org, _ = HeslarNazev.objects.get_or_create(
