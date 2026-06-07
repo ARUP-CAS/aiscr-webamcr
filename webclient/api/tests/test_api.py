@@ -47,6 +47,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import DatabaseError, IntegrityError
 from django.test import TestCase
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_LICENCE, HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
 from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 from heslar.models import Heslar, HeslarNazev, RuianKatastr
@@ -2270,6 +2271,41 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.assertIn("empty_evidencni_cislo", str(log.errors))
         self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
+    def test_whitespace_only_evidencni_cislo_returns_422(self):
+        """Hodnota ``evidencni_cislo`` tvořená jen bílými znaky vrátí HTTP 422 (po strip = prázdná)."""
+
+        response = self._patch(IDENT_CELY, evidencni_cislo="%20%20")
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("empty_evidencni_cislo", str(log.errors))
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
+
+    def test_evidencni_cislo_with_inner_space_returns_422(self):
+        """Hodnota ``evidencni_cislo`` obsahující mezeru uvnitř vrátí HTTP 422 a hodnota se neuloží."""
+
+        original_value = self.nalez.evidencni_cislo
+
+        response = self._patch(IDENT_CELY, evidencni_cislo="EC%20TEST%20001")
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("whitespace_in_evidencni_cislo", str(log.errors))
+        self.nalez.refresh_from_db()
+        self.assertEqual(self.nalez.evidencni_cislo, original_value)
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
+
+    def test_evidencni_cislo_is_stripped_before_saving(self):
+        """Vedoucí a koncové bílé znaky se před uložením oříznou; do DB se zapíše čistá hodnota."""
+
+        response = self._patch(IDENT_CELY, evidencni_cislo="%20%20EC-STRIP-001%20%20")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.nalez.refresh_from_db()
+        self.assertEqual(self.nalez.evidencni_cislo, "EC-STRIP-001")
+
     def test_evidencni_cislo_too_long_returns_422(self):
         """Příliš dlouhé ``evidencni_cislo`` (přes 255 znaků) vrátí HTTP 422 a log se stavem FAILURE."""
 
@@ -2401,7 +2437,11 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
 
         history = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=AKTUALIZACE_SN)
         self.assertEqual(history.count(), 1)
-        self.assertEqual(history.get().poznamka, f"{old_value} -> EC-2024-NEW")
+        self.assertEqual(
+            history.get().poznamka,
+            _("api.views.SamostatnyNalezEvidencniCisloPatchView.history.note")
+            % {"old": old_value, "new": "EC-2024-NEW"},
+        )
 
     def test_patch_closes_fedora_transaction_explicitly(self):
         """PATCH uzavře Fedora transakci explicitním voláním ``mark_transaction_as_closed()`` po commitu."""
@@ -2949,6 +2989,32 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("missing_file", str(log.errors))
         self._assert_attached_files(self.nalez, 0)
+
+    def test_multiple_files_returns_400(self):
+        """POST s více než jedním souborem v poli ``file`` je explicitně odmítnut HTTP 400."""
+
+        photo = self._minimal_photo_bytes()
+        client = APIClient()
+        client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {self.token.key}",
+            HTTP_CONTENT_DIGEST=self._content_digest(photo),
+        )
+        url = reverse(FOTO_UPLOAD_URL_NAME, kwargs={"ident_cely": IDENT_CELY})
+        data = {
+            "file": [
+                SimpleUploadedFile("first.png", photo, content_type="application/octet-stream"),
+                SimpleUploadedFile("second.png", photo, content_type="application/octet-stream"),
+            ],
+        }
+
+        response = client.post(url, data, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("multiple_files", str(log.errors))
+        self._assert_attached_files(self.nalez, 0)
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
         self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_nonexistent_ident_cely_returns_404(self):
@@ -3044,9 +3110,52 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         with patch("api.views.Soubor.check_mime_for_url", return_value=True) as mock_mime:
             response = self._post_file(IDENT_CELY, photo)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         mock_mime.assert_called_once()
         self.assertEqual(mock_mime.call_args.args[1], expected_path)
+
+    @staticmethod
+    def _minimal_heif_container(major_brand: bytes) -> bytes:
+        """
+        Sestaví minimální ISO BMFF ``ftyp`` box s daným ``major_brand``.
+
+        Výstup je validní úvod HEIC/HEIF souboru (rozpoznatelný podle hlavičky),
+        nikoli kompletní obrazový soubor. Pro účely testů endpointu, který kontroluje
+        MIME typ a ukládá binární data, je tento prefix dostatečný.
+
+        :param major_brand: Čtyřznaková značka formátu (např. ``b"heic"`` nebo ``b"mif1"``).
+        :return: Bajtová sekvence odpovídající minimálnímu ``ftyp`` boxu.
+        """
+        compatible_brands = b"mif1" + b"heic" + b"heif"
+        box_body = major_brand + b"\x00\x00\x00\x00" + compatible_brands
+        box_size = (8 + len(box_body)).to_bytes(4, "big")
+        return box_size + b"ftyp" + box_body
+
+    def test_heic_mime_is_accepted(self):
+        """Soubor s MIME typem ``image/heic`` projde validací a upload skončí HTTP 201."""
+        heic_bytes = self._minimal_heif_container(b"heic")
+
+        with patch("api.views.Soubor.get_mime_types", return_value="image/heic"), patch(
+            "api.views.Soubor.get_file_extension_by_mime", return_value=("heic", "heif")
+        ):
+            response = self._post_file(IDENT_CELY, heic_bytes, filename="photo.heic")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
+        self._assert_attached_files(self.nalez, 1)
+
+    def test_heif_mime_is_accepted(self):
+        """Soubor s MIME typem ``image/heif`` projde validací a upload skončí HTTP 201."""
+        heif_bytes = self._minimal_heif_container(b"mif1")
+
+        with patch("api.views.Soubor.get_mime_types", return_value="image/heif"), patch(
+            "api.views.Soubor.get_file_extension_by_mime", return_value=("heic", "heif")
+        ):
+            response = self._post_file(IDENT_CELY, heif_bytes, filename="photo.heif")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
+        self._assert_attached_files(self.nalez, 1)
 
     def test_antivirus_virus_found_returns_422(self):
         """Soubor označený antivirem jako škodlivý vrátí HTTP 422."""
@@ -3137,7 +3246,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
         response = self._post_file(IDENT_CELY, photo)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response["Content-Type"], "application/xml")
         self.assertIn(IDENT_CELY, response.content.decode("utf-8"))
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
@@ -3156,7 +3265,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         with patch("pas.models.SamostatnyNalez.igsn_update") as mock_igsn:
             response = self._post_file(IDENT_CELY, photo)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         mock_igsn.assert_called_once_with(False, True)
         archivace = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN)
         self.assertEqual(archivace.count(), 1)
@@ -3188,7 +3297,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         with patch("pas.models.SamostatnyNalez.igsn_update") as mock_igsn:
             response = self._post_file(IDENT_CELY, photo)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         mock_igsn.assert_not_called()
         archivace = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN)
         self.assertEqual(archivace.count(), 0)
@@ -3207,8 +3316,8 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         second_record_response = self._post_file(self.nalez_second.ident_cely, second_photo, filename="second.png")
         throttled_response = self._post_file(IDENT_CELY, first_photo, filename="third.png", token=self.second_token.key)
 
-        self.assertEqual(first_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(second_record_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(first_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(second_record_response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(throttled_response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
         self._assert_attached_files(self.nalez, 1, expected_name="C202600009N00007F01.png")
@@ -3229,7 +3338,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
         self.assertEqual(patch_response.status_code, status.HTTP_200_OK)
         self.assertEqual(throttled_upload_response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
-        self.assertEqual(other_record_upload_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(other_record_upload_response.status_code, status.HTTP_201_CREATED)
 
     def test_record_rate_limit_is_shared_between_upload_and_patch_for_same_ident(self):
         """Upload a PATCH sdílí stejný record-level limit pro stejné ``ident_cely``."""
@@ -3243,7 +3352,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         throttled_patch_response = self._patch_evidencni_cislo(IDENT_CELY, "EC-CROSS-002")
         other_record_patch_response = self._patch_evidencni_cislo(self.nalez_second.ident_cely, "EC-CROSS-003")
 
-        self.assertEqual(upload_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(upload_response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(throttled_patch_response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
         self.assertEqual(other_record_patch_response.status_code, status.HTTP_200_OK)
 
@@ -3270,7 +3379,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         photo = self._minimal_photo_bytes()
         response = self._post_file(IDENT_CELY, photo)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         lock_key = f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"
         self.assertEqual(cache.get(lock_key), 0)
 
@@ -3284,7 +3393,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
         response = self._post_file(self.nalez_second.ident_cely, photo, filename="other.png")
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self._assert_attached_files(self.nalez_second, 1)
         self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{self.nalez_second.ident_cely}"), 0)
         self.assertEqual(cache.get(lock_key), 1)
