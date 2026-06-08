@@ -1980,8 +1980,8 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
     # is caught here.
     _POINT_WKT_RE = re.compile(
         r"^POINT\s*(?:Z|M|ZM)?\s*\("
-        r"\s*-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?"
-        r"(?:\s+-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?){1,3}"
+        r"\s*[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?"
+        r"(?:\s+[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?){1,3}"
         r"\s*\)$",
         re.IGNORECASE,
     )
