@@ -2517,11 +2517,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 # Souřadnice jsou povinné až od stavu SN2 (odeslaný). Ve stavu SN1 (zapsaný)
                 # je dovoleno vyplnit jen ``geom_system`` bez ``geom_wkt`` / ``geom_sjtsk_wkt`` —
                 # stejně jako v běžné aplikaci AMČR.
-                if (
-                    instance.stav in (SN_ODESLANY, SN_POTVRZENY)
-                    and instance.geom is None
-                    and instance.geom_sjtsk is None
-                ):
+                if instance.stav != SN_ZAPSANY and instance.geom is None and instance.geom_sjtsk is None:
                     raise ImportValidationException(
                         ImportValidationIssue(
                             line=elem.sourceline,
@@ -2532,16 +2528,14 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                     )
 
                 # Pravidla převzatá z ``pas.forms.PotvrditNalezForm`` ("Uložení" v UI):
-                # ``evidencni_cislo`` a ``pristupnost`` jsou povinné pro každý importovaný
-                # záznam; ``predano`` a ``predano_organizace`` jsou povinné navíc při
-                # stavu SN_POTVRZENY. V UI tato validace běží mimo hlavní serializer
-                # (v modálním okně), takže ji zde replikujeme pro shodu chování.
+                # ``pristupnost`` je povinná pro každý importovaný záznam;
+                # ``evidencni_cislo``, ``predano`` a ``predano_organizace`` jsou povinné
+                # navíc při stavu SN_POTVRZENY. V UI tato validace běží mimo hlavní
+                # serializer (v modálním okně), takže ji zde replikujeme pro shodu chování.
                 missing_potvrzeni_fields: list[str] = []
-                if not instance.evidencni_cislo:
-                    missing_potvrzeni_fields.append("evidencni_cislo")
-                if instance.pristupnost_id is None:
-                    missing_potvrzeni_fields.append("pristupnost")
                 if instance.stav >= SN_POTVRZENY:
+                    if not instance.evidencni_cislo:
+                        missing_potvrzeni_fields.append("evidencni_cislo")
                     if instance.predano is None:
                         missing_potvrzeni_fields.append("predano")
                     if instance.predano_organizace_id is None:
