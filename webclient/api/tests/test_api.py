@@ -3015,7 +3015,6 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         self.assertIn("multiple_files", str(log.errors))
         self._assert_attached_files(self.nalez, 0)
         self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
-        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_nonexistent_ident_cely_returns_404(self):
         """Neexistující ``ident_cely`` vrátí HTTP 404 a fotografii nevytvoří."""
