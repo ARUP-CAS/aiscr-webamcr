@@ -34,6 +34,8 @@ Třídy
 
       Vrací popisek projektu pro výběrová pole ve tvaru ``ident_cely (vedoucí projektu)``.
 
+      Pokud projekt nemá přiřazeného vedoucího, vrátí pouze ``ident_cely``.
+
       :return: Textový popisek projektu s vedoucím.
 
    .. py:method:: save()

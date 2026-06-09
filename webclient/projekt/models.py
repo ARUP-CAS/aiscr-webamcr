@@ -219,9 +219,13 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Vrací popisek projektu pro výběrová pole ve tvaru ``ident_cely (vedoucí projektu)``.
 
+        Pokud projekt nemá přiřazeného vedoucího, vrátí pouze ``ident_cely``.
+
         :return: Textový popisek projektu s vedoucím.
         """
-        return "%s (%s)" % (self.ident_cely, self.vedouci_projektu)
+        if self.vedouci_projektu:
+            return "%s (%s)" % (self.ident_cely, self.vedouci_projektu)
+        return self.ident_cely
 
     def save(self, *args, **kwargs):
         """
