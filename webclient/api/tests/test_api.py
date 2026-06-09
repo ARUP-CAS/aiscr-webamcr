@@ -42,6 +42,7 @@ from core.constants import (
 from core.models import AntivirusCheckResult, Permissions, Soubor, check_permissions
 from core.repository_connector import FedoraNoResponseError
 from core.setting_models import CustomAdminSettings
+from django.conf import settings
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import DatabaseError, IntegrityError
@@ -122,8 +123,10 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         :param response: HTTP odpověď importního endpointu.
         :param ident_cely: Očekávaný identifikátor obsažený v XML metadatech.
         """
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response["Content-Type"], "application/xml")
+        self.assertEqual(response["X-Record-ID"], ident_cely)
+        self.assertEqual(response["Location"], f"{settings.API_URL}{ident_cely}")
         self.assertIn(ident_cely, response.content.decode("utf-8"))
 
     def _build_mock_fedora_transaction(self, *args, **kwargs):
@@ -1054,7 +1057,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         response = self._post_xml(xml)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(SamostatnyNalez.objects.filter(projekt=self.projekt).count(), 1)
         nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
         self.assertNotEqual(nalez.ident_cely, ":tba")
@@ -1141,6 +1144,28 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertEqual(nalez.katastr.okres.kod, 9999)
         self.assertNotEqual(nalez.katastr.okres.kod, self.other_katastr_okres.kod)
         self._assert_log_success()
+
+    def test_geom_wkt_missing_coordinate_returns_422(self):
+        """WKT bodu s chybějící druhou souřadnicí (např. ``POINT(15.5 )``) vrátí HTTP 422.
+
+        Odpovídá reálnému incidentu, kdy malformované WKT pronikalo do GEOS C parseru
+        a způsobovalo log ``GEOS_ERROR: ParseException: Expected number but encountered ')'``.
+        """
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            geom_wkt="POINT(15.5 )",
+        )
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertEqual(response.data["validation_errors"][0]["error_type"], ImportErrorType.INVALID_DATA.value)
+        self.assertIn("geom_wkt", response.data["validation_errors"][0]["message"])
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure()
 
     def test_invalid_geom_wkt_returns_422(self):
         """Import s syntakticky neplatným WKT v ``geom_wkt`` vrátí HTTP 422."""
@@ -1335,7 +1360,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self._assert_xml_success_response(response, nalez.ident_cely)
         self.assertEqual(nalez.hloubka, 21)
         self.assertEqual(str(nalez.datum_nalezu), "2026-04-06")
-        self.assertFalse(nalez.predano)
+        self.assertTrue(nalez.predano)
         self.assertEqual(nalez.predano_organizace, self.organizace)
         self.assertEqual(nalez.pristupnost, self.pristupnost)
         self.assertEqual(nalez.lokalizace, "test")
@@ -1419,7 +1444,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         ) as mock_potvrzenim:
             response = self._post_xml(xml)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(mock_odeslanim.call_count, 1)
         _, kwargs = mock_odeslanim.call_args
         self.assertTrue(kwargs.get("skip_soubory_check"))
@@ -1441,7 +1466,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         ) as mock_potvrzenim:
             response = self._post_xml(xml)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(mock_odeslanim.call_count, 1)
         _, odeslanim_kwargs = mock_odeslanim.call_args
         self.assertTrue(odeslanim_kwargs.get("skip_soubory_check"))
@@ -1525,6 +1550,127 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         self.assertIn("validation_errors", response.data)
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure(response.data)
+
+    def test_stav1_without_geometry_is_accepted(self):
+        """Import se ``stav=1`` a vyplněným ``geom_system`` bez souřadnic vrátí HTTP 201.
+
+        Ve stavu SN1 (zapsaný) jsou souřadnice volitelné — stejné pravidlo jako
+        v běžné aplikaci AMČR. ``geom_system`` smí být vyplněno (typicky 4326)
+        i bez ``geom_wkt`` / ``geom_sjtsk_wkt``.
+        """
+        template = self._load_xml("minimal_nalez_stav1_no_geom.xml").decode("utf-8")
+        xml = template.format(
+            IDENT_CELY=":tba",
+            PROJEKT_IDENT=self.projekt.ident_cely,
+            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+        ).encode("utf-8")
+
+        response = self._post_xml(xml)
+
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
+        self.assertEqual(nalez.stav, SN_ZAPSANY)
+        self.assertIsNone(nalez.geom)
+        self.assertIsNone(nalez.geom_sjtsk)
+        self.assertIsNone(nalez.katastr)
+        self._assert_log_success()
+
+    def test_missing_evidencni_cislo_returns_422(self):
+        """Import bez ``evidencni_cislo`` vrátí HTTP 422 (povinné pravidlo PotvrditNalezForm)."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+        xml = xml.replace(b"    <amcr:evidencni_cislo>EC-IMPORT-001</amcr:evidencni_cislo>\n", b"")
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertIn("evidencni_cislo", response.data["validation_errors"][0]["message"])
+        self.assertEqual(response.data["validation_errors"][0]["error_type"], ImportErrorType.INVALID_DATA.value)
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure(response.data)
+
+    def test_stav_potvrzeny_missing_predano_returns_422(self):
+        """Import se ``stav=3`` (SN_POTVRZENY) bez ``predano`` vrátí HTTP 422."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+        xml = xml.replace(b"    <amcr:predano>true</amcr:predano>\n", b"")
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertIn("predano", response.data["validation_errors"][0]["message"])
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure(response.data)
+
+    def test_stav_potvrzeny_predano_false_returns_422(self):
+        """Import se ``stav=3`` (SN_POTVRZENY) a ``predano=false`` vrátí HTTP 422 s chybou o hodnotě True."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+        xml = xml.replace(
+            b"    <amcr:predano>true</amcr:predano>\n",
+            b"    <amcr:predano>false</amcr:predano>\n",
+        )
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertIn("predano", response.data["validation_errors"][0]["message"])
+        self.assertIn("predano_must_be_true", response.data["validation_errors"][0]["message"])
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure(response.data)
+
+    def test_stav_odeslany_predano_false_is_accepted(self):
+        """Import se ``stav=2`` (SN_ODESLANY) a ``predano=false`` projde – pravidlo platí jen pro SN_POTVRZENY+."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            stav=SN_ODESLANY,
+        )
+        xml = xml.replace(
+            b"    <amcr:predano>true</amcr:predano>\n",
+            b"    <amcr:predano>false</amcr:predano>\n",
+        )
+
+        response = self._post_xml(xml)
+
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
+        self.assertFalse(nalez.predano)
+        self.assertEqual(nalez.stav, SN_ODESLANY)
+        self._assert_log_success()
+
+    def test_stav_potvrzeny_missing_predano_organizace_returns_422(self):
+        """Import se ``stav=3`` (SN_POTVRZENY) bez ``predano_organizace`` vrátí HTTP 422."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+        xml = xml.replace(
+            b'    <amcr:predano_organizace id="ORG-TEST-XML" xml:lang="cs">ORG-TEST-XML</amcr:predano_organizace>\n',
+            b"",
+        )
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertIn("predano_organizace", response.data["validation_errors"][0]["message"])
         self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure(response.data)
 
@@ -2427,6 +2573,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response["Content-Type"], "application/xml")
+        self.assertEqual(response["X-Record-ID"], IDENT_CELY)
         self.assertIn(IDENT_CELY, response.content.decode("utf-8"))
 
         self.nalez.refresh_from_db()
@@ -3279,6 +3426,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response["Content-Type"], "application/xml")
+        self.assertEqual(response["X-Record-ID"], IDENT_CELY)
         self.assertIn(IDENT_CELY, response.content.decode("utf-8"))
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
         self.assertEqual(log.ident_cely, IDENT_CELY)

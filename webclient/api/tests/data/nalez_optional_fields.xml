@@ -6,6 +6,7 @@
                                http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd">
   <amcr:samostatny_nalez>
     <amcr:ident_cely>{IDENT_CELY}</amcr:ident_cely>
+    <amcr:evidencni_cislo>EC-IMPORT-001</amcr:evidencni_cislo>
     <amcr:projekt id="{PROJEKT_IDENT}">{PROJEKT_IDENT}</amcr:projekt>
     <amcr:hloubka>42</amcr:hloubka>
     <amcr:okolnosti id="{OKOLNOSTI_IDENT}" xml:lang="cs">{OKOLNOSTI_IDENT}</amcr:okolnosti>
@@ -18,6 +19,8 @@
     <amcr:nalezce id="{NALEZCE_IDENT}">{NALEZCE_LABEL}</amcr:nalezce>
     <amcr:datum_nalezu>2024-06-01</amcr:datum_nalezu>
     <amcr:stav>3</amcr:stav>
+    <amcr:predano>true</amcr:predano>
+    <amcr:predano_organizace id="ORG-TEST-XML" xml:lang="cs">ORG-TEST-XML</amcr:predano_organizace>
     <amcr:geom_system>4326</amcr:geom_system>
     <amcr:pristupnost id="{PRISTUPNOST_IDENT}" xml:lang="cs">{PRISTUPNOST_IDENT}</amcr:pristupnost>
     <amcr:chranene_udaje>

@@ -2,6 +2,7 @@
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd">
   <amcr:samostatny_nalez>
     <amcr:ident_cely>{IDENT_CELY}</amcr:ident_cely>
+    <amcr:evidencni_cislo>EC-IMPORT-001</amcr:evidencni_cislo>
     <amcr:projekt id="{PROJEKT_IDENT}">{PROJEKT_IDENT}</amcr:projekt>
     <amcr:hloubka>10</amcr:hloubka>
     <amcr:okolnosti id="{OKOLNOSTI_IDENT}" xml:lang="cs">{OKOLNOSTI_IDENT}</amcr:okolnosti>
@@ -11,6 +12,8 @@
     <amcr:nalezce id="{NALEZCE_IDENT}">{NALEZCE_LABEL}</amcr:nalezce>
     <amcr:datum_nalezu>2026-04-06</amcr:datum_nalezu>
     <amcr:stav>3</amcr:stav>
+    <amcr:predano>true</amcr:predano>
+    <amcr:predano_organizace id="ORG-TEST-XML" xml:lang="cs">ORG-TEST-XML</amcr:predano_organizace>
     <amcr:geom_system>4326</amcr:geom_system>
     <amcr:pristupnost xml:lang="en" id="{PRISTUPNOST_IDENT}">{PRISTUPNOST_IDENT}</amcr:pristupnost>
     <amcr:chranene_udaje>

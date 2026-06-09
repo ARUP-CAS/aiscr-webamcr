@@ -1675,7 +1675,10 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
                 "api.views.PasApiBaseView.success.ignored_lang_notes",
                 extra={"ident_cely": instance.ident_cely, "notes": notes, "user": user_pk},
             )
-        return HttpResponse(metadata, content_type="application/xml", status=http_status)
+        response = HttpResponse(metadata, content_type="application/xml", status=http_status)
+        response["X-Record-ID"] = instance.ident_cely
+        response["Location"] = f"{settings.API_URL}{instance.ident_cely}"
+        return response
 
 
 class SamostatnyNalezXmlBaseView(PasApiBaseView):
@@ -1972,6 +1975,18 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
             return None
         return child.get("id") or None
 
+    # Lightweight shape check for a 2D/3D POINT WKT. Pre-validates user input before
+    # passing it to the GEOS C parser, which otherwise logs malformed input to the
+    # ``django.contrib.gis`` logger at ERROR level even when the resulting exception
+    # is caught here.
+    _POINT_WKT_RE = re.compile(
+        r"^POINT\s*(?:Z|M|ZM)?\s*\("
+        r"\s*[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?"
+        r"(?:\s+[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?){1,3}"
+        r"\s*\)$",
+        re.IGNORECASE,
+    )
+
     @classmethod
     def _parse_point_wkt(cls, elem: etree._Element, field_name: str) -> str:
         """
@@ -1991,6 +2006,17 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                     line=elem.sourceline,
                     column=None,
                     message=f"{field_name}: " + _("api.views.SamostatnyNalezXmlBaseView._parse_point_wkt.empty_wkt"),
+                    error_type=ImportErrorType.INVALID_DATA,
+                )
+            )
+        # Reject obviously malformed WKT before GEOS sees it. This avoids the C-level
+        # ``django.contrib.gis`` ERROR log for inputs like ``POINT(15.5 )``.
+        if not cls._POINT_WKT_RE.match(wkt):
+            raise ImportValidationException(
+                ImportValidationIssue(
+                    line=elem.sourceline,
+                    column=None,
+                    message=f"{field_name}: " + _("api.views.SamostatnyNalezXmlBaseView._parse_point_wkt.invalid_wkt"),
                     error_type=ImportErrorType.INVALID_DATA,
                 )
             )
@@ -2489,12 +2515,52 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 instance = SamostatnyNalez(**serializer.validated_data)
                 if not instance.ident_cely:
                     instance.ident_cely = get_sn_ident(instance.projekt)
-                if instance.geom is None and instance.geom_sjtsk is None:
+                # Souřadnice jsou povinné až od stavu SN2 (odeslaný). Ve stavu SN1 (zapsaný)
+                # je dovoleno vyplnit jen ``geom_system`` bez ``geom_wkt`` / ``geom_sjtsk_wkt`` —
+                # stejně jako v běžné aplikaci AMČR.
+                if instance.stav != SN_ZAPSANY and instance.geom is None and instance.geom_sjtsk is None:
                     raise ImportValidationException(
                         ImportValidationIssue(
                             line=elem.sourceline,
                             column=None,
                             message=_("api.views.SamostatnyNalezXmlImportView.post.missing_geom"),
+                            error_type=ImportErrorType.INVALID_DATA,
+                        )
+                    )
+
+                # Pravidla převzatá z ``pas.forms.PotvrditNalezForm`` ("Uložení" v UI):
+                # ``pristupnost`` je povinná pro každý importovaný záznam;
+                # ``evidencni_cislo``, ``predano`` a ``predano_organizace`` jsou povinné
+                # navíc při stavu SN_POTVRZENY. V UI tato validace běží mimo hlavní
+                # serializer (v modálním okně), takže ji zde replikujeme pro shodu chování.
+                missing_potvrzeni_fields: list[str] = []
+                predano_must_be_true = False
+                if instance.stav >= SN_POTVRZENY:
+                    if not instance.evidencni_cislo:
+                        missing_potvrzeni_fields.append("evidencni_cislo")
+                    if instance.predano is None:
+                        missing_potvrzeni_fields.append("predano")
+                    elif instance.predano is False:
+                        predano_must_be_true = True
+                    if instance.predano_organizace_id is None:
+                        missing_potvrzeni_fields.append("predano_organizace")
+                if missing_potvrzeni_fields:
+                    raise ImportValidationException(
+                        ImportValidationIssue(
+                            line=elem.sourceline,
+                            column=None,
+                            message=", ".join(missing_potvrzeni_fields)
+                            + ": "
+                            + _("api.views.SamostatnyNalezXmlImportView.post.required_potvrzeni_field_missing"),
+                            error_type=ImportErrorType.INVALID_DATA,
+                        )
+                    )
+                if predano_must_be_true:
+                    raise ImportValidationException(
+                        ImportValidationIssue(
+                            line=elem.sourceline,
+                            column=None,
+                            message="predano: " + _("api.views.SamostatnyNalezXmlImportView.post.predano_must_be_true"),
                             error_type=ImportErrorType.INVALID_DATA,
                         )
                     )
@@ -2621,7 +2687,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        return self._success(log_entry, instance, metadata, notes)
+        return self._success(log_entry, instance, metadata, notes, http_status=status.HTTP_201_CREATED)
 
     @staticmethod
     def _has_import_permissions(user, data: dict) -> bool:
@@ -2908,9 +2974,8 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             typ_zmeny=AKTUALIZACE_SN,
             uzivatel=user,
             vazba=instance.historie,
-            poznamka="{}: {} -> {}".format(
-                _("api.views.SamostatnyNalezEvidencniCisloPatchView.history.note"), old_value, new_value
-            ),
+            poznamka=_("api.views.SamostatnyNalezEvidencniCisloPatchView.history.note")
+            % {"old": old_value, "new": new_value},
         )
         if instance.stav == SN_ARCHIVOVANY:
             Historie.objects.create(
