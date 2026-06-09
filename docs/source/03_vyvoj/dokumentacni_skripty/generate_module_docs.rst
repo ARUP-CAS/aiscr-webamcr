@@ -460,6 +460,19 @@ Funkce
    :return: Řetězec zdrojové URL, nebo prázdný řetězec při chybě nebo nepodporovaném registru.
    :rtype: str
 
+.. py:function:: _is_git_ignored(path)
+
+   Zjistí, zda je soubor ignorovaný gitem (``.gitignore`` apod.).
+
+   Využívá ``git check-ignore``. Pokud git není dostupný nebo příkaz selže,
+   soubor se považuje za sledovaný (vrací ``False``), aby kontrola zůstala
+   konzervativní mimo git repozitář.
+
+   :param path: Cesta k souboru ke kontrole.
+   :type path: Path
+   :return: True, pokud je soubor ignorovaný gitem, jinak False.
+   :rtype: bool
+
 .. py:function:: _parse_compose_versions(project_root)
 
    Parsuje všechny soubory docker-compose*.yml a Dockerfile-DB v project_root
