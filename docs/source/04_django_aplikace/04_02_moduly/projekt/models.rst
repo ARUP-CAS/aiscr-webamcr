@@ -30,6 +30,12 @@ Třídy
 
       :return: Vrací hodnotu podle větve zpracování.
 
+   .. py:method:: popis_s_vedoucim()
+
+      Vrací popisek projektu pro výběrová pole ve tvaru ``ident_cely (vedoucí projektu)``.
+
+      :return: Textový popisek projektu s vedoucím.
+
    .. py:method:: save()
 
       Uloží změny objektu.

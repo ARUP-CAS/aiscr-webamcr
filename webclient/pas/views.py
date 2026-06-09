@@ -1418,7 +1418,9 @@ class EditSpolupraceProjektyView(LoginRequiredMixin, TemplateView):
             :return: Vrací proměnná ``context``.
         """
         obj: UzivatelSpoluprace = self.get_object()
-        form = EditSpolupraceProjektyForm(instance=obj, vedouci_organizace=obj.vedouci.organizace)
+        form = EditSpolupraceProjektyForm(
+            instance=obj, vedouci_organizace=obj.vedouci.organizace, prefix="edit-spoluprace-projekty"
+        )
         return {
             "object": obj,
             "title": _("pas.views.editSpolupraceProjeky.title"),
@@ -1459,7 +1461,9 @@ class EditSpolupraceProjektyView(LoginRequiredMixin, TemplateView):
         if not check_permissions(p.actionChoices.spoluprace_edit_projekty, request.user, obj.id):
             messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
             return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
-        form = EditSpolupraceProjektyForm(request.POST, instance=obj, vedouci_organizace=obj.vedouci.organizace)
+        form = EditSpolupraceProjektyForm(
+            request.POST, instance=obj, vedouci_organizace=obj.vedouci.organizace, prefix="edit-spoluprace-projekty"
+        )
         if form.is_valid():
             form.save()
             messages.add_message(request, messages.SUCCESS, _("pas.views.editSpolupraceProjeky.success"))
