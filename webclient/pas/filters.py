@@ -438,10 +438,7 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
                 stav__in=user.moje_stavy_pruzkumnych_projektu(),
             ).order_by("ident_cely")
         self.filters["projekty"].queryset = projekt_qs
-        self.filters["projekty"].field.label_from_instance = lambda obj: "%s (%s)" % (
-            obj.ident_cely,
-            obj.vedouci_projektu,
-        )
+        self.filters["projekty"].field.label_from_instance = Projekt.popis_s_vedoucim
         if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
             self.filters["vedouci"] = ModelMultipleChoiceFilter(
                 queryset=User.objects.select_related("organizace"),
