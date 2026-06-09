@@ -851,7 +851,7 @@ Třídy
 
       Vytvoří záznam historie pro aktualizaci pole ``evidencni_cislo``.
 
-      Poznámka záznamu má formát ``old_value -> new_value``. Je-li záznam ve stavu
+      Poznámka záznamu má formát ``<přeložený popisek>: old_value -> new_value``. Je-li záznam ve stavu
       SN4 (archivovaný), zapíše se navíc záznam ``SN34``, který obnoví datum archivace.
 
       :param instance: Aktualizovaný záznam samostatného nálezu.
@@ -870,18 +870,19 @@ Třídy
 
       Ověří, zda má uživatel oprávnění nahrát fotografii k danému nálezu.
 
-      Oprávněný je takový uživatel, který splňuje standardní pravidla pro editaci nálezu
-      s těmito úpravami:
+      Oprávněný je takový uživatel, který splňuje standardní pravidla pro nahrání
+      souboru k samostatnému nálezu (``soubor_nahrat_pas``) s touto úpravou:
 
-      - pro nahrání fotografie nikdy není autorizován badatel (operaci může užívat
-        pouze archeolog a výše)
-      - pokud je autorizován archeolog, nález může být v libovolném stavu (vč. archivovaného)
+      - pro archeologa a vyšší roli je nález povolen v libovolném stavu (vč.
+        archivovaného) — tj. ``skip_status=True``
+      - pro badatele platí standardní pravidlo AMČR (typicky vlastní nález ve
+        stavu 1) — ``skip_status`` se neuplatní
 
       :param user: Uživatel provádějící požadavek.
       :param ident_cely: Identifikátor záznamu samostatného nálezu.
 
       :return: ``True`` pokud má uživatel oprávnění ``soubor_nahrat_pas`` pro daný záznam
-               a zároveň je jeho hlavní role Archeolog nebo vyšší.
+               podle pravidel pro svou roli.
 
    .. py:method:: _create_rearchive_history_record()
 
@@ -903,9 +904,10 @@ Třídy
       :param ident_cely: Identifikátor aktualizovaného záznamu samostatného nálezu.
       :param format: Formát odpovědi.
 
-      :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
-               nebo chybu syntaxe volání (HTTP 400), nenalezený záznam (HTTP 404),
-               validační chybu souboru (HTTP 422), nebo interní chybu (HTTP 500).
+      :return: Vrací XML metadata aktualizovaného záznamu (HTTP 201),
+               nebo chybu syntaxe volání (HTTP 400; vč. více než jednoho souboru),
+               nenalezený záznam (HTTP 404), validační chybu souboru (HTTP 422),
+               nebo interní chybu (HTTP 500).
 
 
 .. py:class:: MyXMLRenderer

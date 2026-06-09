@@ -1630,7 +1630,11 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
 
     @staticmethod
     def _success(
-        log_entry: "ApiRequestLog", instance: "SamostatnyNalez", metadata: bytes, notes: list[str]
+        log_entry: "ApiRequestLog",
+        instance: "SamostatnyNalez",
+        metadata: bytes,
+        notes: list[str],
+        http_status: int = 200,
     ) -> HttpResponse:
         """
         Označí log záznam jako úspěšný, zaloguje výsledek a vrátí XML odpověď s metadaty.
@@ -1671,7 +1675,7 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
                 "api.views.PasApiBaseView.success.ignored_lang_notes",
                 extra={"ident_cely": instance.ident_cely, "notes": notes, "user": user_pk},
             )
-        return HttpResponse(metadata, content_type="application/xml", status=200)
+        return HttpResponse(metadata, content_type="application/xml", status=http_status)
 
 
 class SamostatnyNalezXmlBaseView(PasApiBaseView):
@@ -2746,7 +2750,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
                 status.HTTP_400_BAD_REQUEST,
             )
 
-        evidencni_cislo = request.query_params["evidencni_cislo"]
+        evidencni_cislo = request.query_params["evidencni_cislo"].strip()
 
         # "Missing" and "empty" must stay separate so API clients can
         # distinguish an omitted query parameter from an explicitly invalid
@@ -2755,6 +2759,13 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.empty_evidencni_cislo")},
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        if any(ch.isspace() for ch in evidencni_cislo):
+            return self._fail(
+                log_entry,
+                {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.whitespace_in_evidencni_cislo")},
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
@@ -2885,7 +2896,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
         """
         Vytvoří záznam historie pro aktualizaci pole ``evidencni_cislo``.
 
-        Poznámka záznamu má formát ``old_value -> new_value``. Je-li záznam ve stavu
+        Poznámka záznamu má formát ``<přeložený popisek>: old_value -> new_value``. Je-li záznam ve stavu
         SN4 (archivovaný), zapíše se navíc záznam ``SN34``, který obnoví datum archivace.
 
         :param instance: Aktualizovaný záznam samostatného nálezu.
@@ -2897,7 +2908,9 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             typ_zmeny=AKTUALIZACE_SN,
             uzivatel=user,
             vazba=instance.historie,
-            poznamka=f"{old_value} -> {new_value}",
+            poznamka="{}: {} -> {}".format(
+                _("api.views.SamostatnyNalezEvidencniCisloPatchView.history.note"), old_value, new_value
+            ),
         )
         if instance.stav == SN_ARCHIVOVANY:
             Historie.objects.create(
@@ -2917,22 +2930,22 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
         """
         Ověří, zda má uživatel oprávnění nahrát fotografii k danému nálezu.
 
-        Oprávněný je takový uživatel, který splňuje standardní pravidla pro editaci nálezu
-        s těmito úpravami:
+        Oprávněný je takový uživatel, který splňuje standardní pravidla pro nahrání
+        souboru k samostatnému nálezu (``soubor_nahrat_pas``) s touto úpravou:
 
-        - pro nahrání fotografie nikdy není autorizován badatel (operaci může užívat
-          pouze archeolog a výše)
-        - pokud je autorizován archeolog, nález může být v libovolném stavu (vč. archivovaného)
+        - pro archeologa a vyšší roli je nález povolen v libovolném stavu (vč.
+          archivovaného) — tj. ``skip_status=True``
+        - pro badatele platí standardní pravidlo AMČR (typicky vlastní nález ve
+          stavu 1) — ``skip_status`` se neuplatní
 
         :param user: Uživatel provádějící požadavek.
         :param ident_cely: Identifikátor záznamu samostatného nálezu.
 
         :return: ``True`` pokud má uživatel oprávnění ``soubor_nahrat_pas`` pro daný záznam
-                 a zároveň je jeho hlavní role Archeolog nebo vyšší.
+                 podle pravidel pro svou roli.
         """
-        if not check_permissions(Permissions.actionChoices.soubor_nahrat_pas, user, ident_cely, skip_status=True):
-            return False
-        return user.hlavni_role.pk >= ROLE_ARCHEOLOG_ID
+        skip_status = user.hlavni_role.pk >= ROLE_ARCHEOLOG_ID
+        return check_permissions(Permissions.actionChoices.soubor_nahrat_pas, user, ident_cely, skip_status=skip_status)
 
     @staticmethod
     def _create_rearchive_history_record(instance: SamostatnyNalez, user) -> None:
@@ -2962,11 +2975,13 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
         :param ident_cely: Identifikátor aktualizovaného záznamu samostatného nálezu.
         :param format: Formát odpovědi.
 
-        :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
-                 nebo chybu syntaxe volání (HTTP 400), nenalezený záznam (HTTP 404),
-                 validační chybu souboru (HTTP 422), nebo interní chybu (HTTP 500).
+        :return: Vrací XML metadata aktualizovaného záznamu (HTTP 201),
+                 nebo chybu syntaxe volání (HTTP 400; vč. více než jednoho souboru),
+                 nenalezený záznam (HTTP 404), validační chybu souboru (HTTP 422),
+                 nebo interní chybu (HTTP 500).
         """
-        uploaded_file = request.FILES.get("file")
+        uploaded_files = request.FILES.getlist("file")
+        uploaded_file = uploaded_files[0] if uploaded_files else None
 
         log_entry = ApiRequestLog.objects.create(
             user=request.user,
@@ -3006,6 +3021,17 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezFotografieUploadView.post.missing_file")},
+                status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Reject requests carrying more than one upload (either multiple "file" parts
+        # or additional unexpected file parts) explicitly, instead of letting them be
+        # detected only via the Content-Digest mismatch.
+        total_files = sum(len(files) for _, files in request.FILES.lists())
+        if len(uploaded_files) > 1 or total_files > 1:
+            return self._fail(
+                log_entry,
+                {"detail": _("api.views.SamostatnyNalezFotografieUploadView.post.multiple_files")},
                 status.HTTP_400_BAD_REQUEST,
             )
 
@@ -3172,7 +3198,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             )
 
         self._release_record_lock(ident_cely)
-        return self._success(log_entry, instance, metadata, [])
+        return self._success(log_entry, instance, metadata, [], http_status=status.HTTP_201_CREATED)
 
 
 class MyXMLRenderer(BaseRenderer):

@@ -661,7 +661,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             return False
         if isinstance(mime, str):
             mime = {mime}
-        if "soubor/nahrat/pas/" in source_url or "/api/pas/nalez/" in source_url:
+        if "soubor/nahrat/pas/" in source_url or "api/pas/nalez/" in source_url:
             allowed = cls.PAS_ACCEPTED_MIMES
         elif "soubor/nahrat/dokument/" in source_url:
             allowed = cls.DOKUMENT_ACCEPTED_MIMES
