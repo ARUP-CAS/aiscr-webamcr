@@ -2439,9 +2439,41 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.assertEqual(history.count(), 1)
         self.assertEqual(
             history.get().poznamka,
-            _("api.views.SamostatnyNalezEvidencniCisloPatchView.history.note")
-            % {"old": old_value, "new": "EC-2024-NEW"},
+            "{}: {} -> EC-2024-NEW".format(
+                _("api.views.SamostatnyNalezEvidencniCisloPatchView.history.note"), old_value
+            ),
         )
+
+    def test_history_poznamka_has_expected_format_with_translated_label(self):
+        """
+        Poznámka historie má formát ``<přeložený popisek>: <old> -> <new>``.
+
+        Django ``gettext`` je nahrazen tak, aby pro klíč překladu vracel ``Evideční číslo``;
+        výsledná poznámka musí být ``Evideční číslo: 123 -> 111``.
+        """
+        self.nalez.evidencni_cislo = "123"
+        self.nalez.save(update_fields=["evidencni_cislo"])
+
+        translation_key = "api.views.SamostatnyNalezEvidencniCisloPatchView.history.note"
+        from api import views as views_module
+
+        original_gettext = views_module._
+
+        def fake_gettext(message):
+            if message == translation_key:
+                return "Evideční číslo"
+            return original_gettext(message)
+
+        with patch("api.views._", side_effect=fake_gettext):
+            response = self._patch(IDENT_CELY, evidencni_cislo="111")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.nalez.refresh_from_db()
+        self.assertEqual(self.nalez.evidencni_cislo, "111")
+
+        history = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=AKTUALIZACE_SN)
+        self.assertEqual(history.count(), 1)
+        self.assertEqual(history.get().poznamka, "Evideční číslo: 123 -> 111")
 
     def test_patch_closes_fedora_transaction_explicitly(self):
         """PATCH uzavře Fedora transakci explicitním voláním ``mark_transaction_as_closed()`` po commitu."""
