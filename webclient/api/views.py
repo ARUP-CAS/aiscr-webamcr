@@ -3223,7 +3223,7 @@ class MyXMLRenderer(BaseRenderer):
 
 @method_decorator(odstavka_in_progress, name="get")
 class GetUserInfo(APIView):
-    """Třída podlehu pro získaní základních info o uživately."""
+    """Třída pohledu pro získaní základních info o uživately."""
 
     authentication_classes = [TokenAuthenticationBearer]
     permission_classes = [IsAuthenticated]
