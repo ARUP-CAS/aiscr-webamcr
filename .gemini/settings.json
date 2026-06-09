@@ -1,0 +1,82 @@
+{
+  "context": {
+    "includeDirectories": [
+      ".gemini/context"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .agents/scripts/gemini_cli_hooks.py session_start",
+            "timeout": 60000,
+            "name": "planning-baseline-advisory",
+            "description": "Advisory: not behind upstream before significant planning (management hub policy)."
+          }
+        ]
+      }
+    ],
+    "BeforeAgent": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .agents/scripts/gemini_cli_hooks.py before_agent",
+            "timeout": 8000,
+            "name": "skill-usage-prompt",
+            "description": "AIS CR skill usage (required): log aiscr-* slugs from the user prompt to gitignored repo .venv/aiscr-skill-usage/raw/ (skill_usage_paths.py; local bootstrap may create .venv)."
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .agents/scripts/gemini_cli_hooks.py session_end",
+            "timeout": 10000,
+            "name": "mgmt-stop-advisory",
+            "description": "Advisory: usage log, sync-layer2, README CZ/EN parity reminders."
+          }
+        ]
+      }
+    ],
+    "BeforeTool": [
+      {
+        "matcher": "run_shell_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .agents/scripts/gemini_cli_hooks.py before_tool",
+            "timeout": 10000,
+            "name": "shell-guard-advisory",
+            "description": "Advisory: high-impact script and venv guards for shell commands."
+          }
+        ]
+      },
+      {
+        "matcher": "read_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .agents/scripts/gemini_cli_hooks.py before_tool",
+            "timeout": 8000,
+            "name": "skill-usage-read-file",
+            "description": "AIS CR skill usage (required): log when read_file targets a workflow SKILL.md path."
+          }
+        ]
+      }
+    ]
+  },
+  "tools": {
+    "sandbox": "docker"
+  },
+  "security": {
+    "folderTrust": {
+      "enabled": true
+    }
+  }
+}

@@ -1,0 +1,110 @@
+diff --git a/node_modules/@fission-ai/openspec/dist/commands/change.js b/node_modules/@fission-ai/openspec/dist/commands/change.js
+index 44cf510..43ea732 100644
+--- a/node_modules/@fission-ai/openspec/dist/commands/change.js
++++ b/node_modules/@fission-ai/openspec/dist/commands/change.js
+@@ -202,7 +202,7 @@ export class ChangeCommand {
+             throw new Error(`Change "${changeName}" not found at ${changeDir}`);
+         }
+         const validator = new Validator(options?.strict || false);
+-        const report = await validator.validateChangeDeltaSpecs(changeDir);
++        const report = await validator.validateChangeBySchemaPolicy(changeDir);
+         if (options?.json) {
+             console.log(JSON.stringify(report, null, 2));
+         }
+diff --git a/node_modules/@fission-ai/openspec/dist/commands/validate.js b/node_modules/@fission-ai/openspec/dist/commands/validate.js
+index cc1e826..fa6a89d 100644
+--- a/node_modules/@fission-ai/openspec/dist/commands/validate.js
++++ b/node_modules/@fission-ai/openspec/dist/commands/validate.js
+@@ -101,7 +101,7 @@ export class ValidateCommand {
+         if (type === 'change') {
+             const changeDir = path.join(process.cwd(), 'openspec', 'changes', id);
+             const start = Date.now();
+-            const report = await validator.validateChangeDeltaSpecs(changeDir);
++            const report = await validator.validateChangeBySchemaPolicy(changeDir);
+             const durationMs = Date.now() - start;
+             this.printReport('change', id, report, durationMs, opts.json);
+             // Non-zero exit if invalid (keeps enriched output test semantics)
+@@ -164,7 +164,7 @@ export class ValidateCommand {
+             queue.push(async () => {
+                 const start = Date.now();
+                 const changeDir = path.join(process.cwd(), 'openspec', 'changes', id);
+-                const report = await validator.validateChangeDeltaSpecs(changeDir);
++                const report = await validator.validateChangeBySchemaPolicy(changeDir);
+                 const durationMs = Date.now() - start;
+                 return { id, type: 'change', valid: report.valid, issues: report.issues, durationMs };
+             });
+diff --git a/node_modules/@fission-ai/openspec/dist/core/validation/validator.js b/node_modules/@fission-ai/openspec/dist/core/validation/validator.js
+index d93519f..5324664 100644
+--- a/node_modules/@fission-ai/openspec/dist/core/validation/validator.js
++++ b/node_modules/@fission-ai/openspec/dist/core/validation/validator.js
+@@ -7,6 +7,17 @@ import { MIN_PURPOSE_LENGTH, MAX_REQUIREMENT_TEXT_LENGTH, VALIDATION_MESSAGES }
+ import { parseDeltaSpec, normalizeRequirementName } from '../parsers/requirement-blocks.js';
+ import { findMainSpecStructureIssues } from '../parsers/spec-structure.js';
+ import { FileSystemUtils } from '../../utils/file-system.js';
++import { readChangeMetadata } from '../../utils/change-metadata.js';
++import { resolveSchema } from '../artifact-graph/resolver.js';
++/** True when the workflow schema defines change-local spec/delta files under specs/. */
++function schemaImpliesDeltaSpecs(schema) {
++    for (const a of schema.artifacts) {
++        const g = a.generates;
++        if (typeof g === 'string' && g.includes('specs'))
++            return true;
++    }
++    return false;
++}
+ export class Validator {
+     strictMode;
+     constructor(strictMode = false) {
+@@ -82,6 +93,52 @@ export class Validator {
+         }
+         return this.createReport(issues);
+     }
++    /**
++     * Validate an active change directory: delta specs when the change schema expects them,
++     * otherwise minimal checks (e.g. proposal-only backlog schemas).
++     */
++    async validateChangeBySchemaPolicy(changeDir) {
++        const projectRoot = path.resolve(changeDir, '../../..');
++        let metadata;
++        try {
++            metadata = readChangeMetadata(changeDir, projectRoot);
++        }
++        catch (error) {
++            const message = error instanceof Error ? error.message : String(error);
++            return this.createReport([
++                { level: 'ERROR', path: '.openspec.yaml', message },
++            ]);
++        }
++        if (metadata === null) {
++            return this.validateChangeDeltaSpecs(changeDir);
++        }
++        let schemaYaml;
++        try {
++            schemaYaml = resolveSchema(metadata.schema, projectRoot);
++        }
++        catch (error) {
++            const message = error instanceof Error ? error.message : String(error);
++            return this.createReport([
++                { level: 'ERROR', path: 'schema', message },
++            ]);
++        }
++        if (!schemaImpliesDeltaSpecs(schemaYaml)) {
++            const issues = [];
++            const proposalPath = path.join(changeDir, 'proposal.md');
++            try {
++                await fs.access(proposalPath);
++            }
++            catch {
++                issues.push({
++                    level: 'ERROR',
++                    path: 'proposal.md',
++                    message: 'This change schema does not use delta specs; proposal.md is required.',
++                });
++            }
++            return this.createReport(issues);
++        }
++        return this.validateChangeDeltaSpecs(changeDir);
++    }
+     /**
+      * Validate delta-formatted spec files under a change directory.
+      * Enforces:

@@ -1,0 +1,19 @@
+# aiscr:canonical=.agents/canonical_configs/workflow_skills/aiscr-hooks-governance.md
+description = "Review and harden AI-related automation and hooks in a repo. Use when the user asks to harden hooks, review automation, or tighten AI-related tooling."
+prompt = """
+<!-- aiscr:canonical=.agents/canonical_configs/workflow_skills/aiscr-hooks-governance.md -->
+
+<!-- aiscr:stop-anchor -->
+**Entry scope**
+
+- Stay in this `.gemini/commands/aiscr/` surface and its same-vendor pointers first.
+- Do not open parallel vendor trees by default just in case.
+- Cross into another vendor tree only for explicit parity checks, generator work, or governance maintenance.
+
+Review and harden AI-related automation and hooks in a repo. Use when the user asks to harden hooks, review automation, or tighten AI-related tooling.
+
+**Skill body (authoritative):** `.gemini/skills/aiscr-hooks-governance/SKILL.md` — load that file for the full workflow body, guardrails, and verification.
+
+`.agents/plans/hooks-governance.plan.md`
+Load openspec/specs/ai-automation-governance/spec.md first for the durable behavioral contract; choose Mode A (introduce new hooks) or Mode B (harden existing hooks); load `AGENTS.md`, `CLAUDE.md`, and `automation_recommendations.md` for governance context; inventory existing hooks, MCP servers, and skills; follow hooks-governance.plan.md for hardening workflow and validation.
+"""

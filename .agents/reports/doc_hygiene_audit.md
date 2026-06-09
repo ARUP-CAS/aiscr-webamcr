@@ -36,7 +36,7 @@
 | `.agents/prompts/hooks_reference.md` | 35 | CS | Developers (local hooks config) |
 | `.agents/config/review_config.yaml` | 238 | YAML | Review agent runtime |
 | `.agents/config/review_cache.json` | 234 | JSON | Review agent state |
-| `.agents/reports/claude_automation_recommendations.md` | 138 | CS/EN | Team (MCP, hooks, skills) |
+| `.agents/reports/automation_recommendations.md` | 138 | CS/EN | Team (MCP, hooks, skills) |
 | `.agents/reports/review_reports/README.md` | 19 | — | Humans (report index) |
 | `.agents/prompts/prompt_evolution/README.md` | 6 | — | Humans (prompt evolution) |
 
@@ -72,7 +72,7 @@ No two files share the same audience with the same responsibility. **OK.**
 | Do not edit migrations / generated docs / cert note | AGENTS.md, CLAUDE.md, CONTRIBUTING.md, project_conventions.md | **Acceptable** — critical “do not” rules; cross-refs used where possible. |
 | Generated artifacts & pre-commit | CLAUDE.md (cross-ref to CONTRIBUTING §Generovaná dokumentace and §Testování), CONTRIBUTING | **Acceptable** — CLAUDE points to CONTRIBUTING. |
 | Secrets / sensitive paths (local_settings, secrets*.json, webclient_env_var.sh) | AGENTS.md, hooks_reference.md, setup_dev.md, CONTRIBUTING | **Acceptable** — AGENTS and hooks_reference own the rule; others point or list for checklist. |
-| Tech stack (Django 5.2, Celery, Redis, etc.) | repository_map.json, review_config.yaml, README, README_en, claude_automation_recommendations.md | **Acceptable** — READMEs self-contained; config/analysis are data; report is descriptive. |
+| Tech stack (Django 5.2, Celery, Redis, etc.) | repository_map.json, review_config.yaml, README, README_en, automation_recommendations.md | **Acceptable** — READMEs self-contained; config/analysis are data; report is descriptive. |
 
 **Redundant duplication:** None that violates “one canonical source + cross-references.”  
 **Contradictory duplication:** None. Paths (e.g. `webclient/` as Django root) and versions (Django 5.2) are consistent.
@@ -84,7 +84,7 @@ No two files share the same audience with the same responsibility. **OK.**
 - **Embedded config vs live config:** No inline YAML/JSON in prompt files that duplicates `review_config.yaml`; prompts reference the file. **No drift.**
 - **Task/status definitions:** Task list lives in `review_config.yaml`; status in `review_cache.json`. No conflicting definitions. **No drift.**
 - **Path references:** All instruction files state that `manage.py` and `requirements.txt` are in `webclient/`, not repo root. **Consistent.**
-- **Version numbers:** Django 5.2 in README, README_en, repository_map.json, review_config.yaml, claude_automation_recommendations.md. **Consistent.**
+- **Version numbers:** Django 5.2 in README, README_en, repository_map.json, review_config.yaml, automation_recommendations.md. **Consistent.**
 - **Rule conflicts:** No “do X” vs “don’t do X” between files.
 
 **Drift instances:** 0.
@@ -104,7 +104,7 @@ No two files share the same audience with the same responsibility. **OK.**
 | [.agents/prompts/hooks_reference.md](.agents/prompts/hooks_reference.md) | AGENTS.md | File exists | Exists |
 | [.agents/prompts/setup_dev.md](.agents/prompts/setup_dev.md) | CLAUDE.md | File exists | Exists |
 | [.agents/prompts/project_conventions.md](.agents/prompts/project_conventions.md) | AGENTS.md, setup_dev.md | File exists | Exists |
-| [claude_automation_recommendations.md](.agents/reports/claude_automation_recommendations.md) | hooks_reference.md | File exists | Exists |
+| [automation_recommendations.md](.agents/reports/automation_recommendations.md) | hooks_reference.md | File exists | Exists |
 | `review_config.yaml` → tasks, vendored_exclusions, etc. | review_codebase.md | `.agents/config/review_config.yaml` | Exists |
 
 **Broken or stale cross-references:** 0.

@@ -121,6 +121,27 @@ Agents must not perform large refactors without explicit instruction.
 
 ------------------------------------------------------------------------
 
+## Verification Sources
+
+When verifying behaviour or documentation, the following priority
+applies:
+
+1. live systems or APIs
+2. source code repositories
+3. official technical documentation
+4. repository documentation
+
+Examples:
+
+- Django behaviour should be verified against official Django
+    documentation
+- Docker image metadata should be verified against container
+    registries
+- Elasticsearch and Redis behaviour should be verified against
+    upstream documentation
+
+------------------------------------------------------------------------
+
 ## Scope
 
 ### In Scope
@@ -157,27 +178,6 @@ Agents must not modify generated artefacts or runtime data such as:
 
 Generated documentation blocks must not be edited manually if scripts
 exist.
-
-------------------------------------------------------------------------
-
-## Verification Sources
-
-When verifying behaviour or documentation, the following priority
-applies:
-
-1. live systems or APIs
-2. source code repositories
-3. official technical documentation
-4. repository documentation
-
-Examples:
-
-- Django behaviour should be verified against official Django
-    documentation
-- Docker image metadata should be verified against container
-    registries
-- Elasticsearch and Redis behaviour should be verified against
-    upstream documentation
 
 ------------------------------------------------------------------------
 
@@ -234,21 +234,27 @@ and, when relevant, to `refactoring_backlog.md` or `bugs.md`.
 
 ------------------------------------------------------------------------
 
-## Shared Automation Rules (No .cursor / .claude in Git)
+## Shared Automation Rules
 
 Team-shared rules and automation config must live in the repository so they
-are versioned and visible to all. The directories `.cursor/` and `.claude/`
-are in `.gitignore`; do not use them for anything that should be shared.
+are versioned and visible to all. Agent-vendor folders such as `.cursor/`,
+`.claude/`, `.codex/`, `.gemini/`, `.clinerules/`, and `.qodo/` are tracked
+repository content when materialized from the `aiscr-management` hub sync
+baseline. Treat hub-synchronized vendor surfaces as shared governance assets,
+not as private local tooling.
 
 - **Agent and project rules:** `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`
 - **Review config and task definitions:** `.agents/config/` (e.g.
   `review_config.yaml`)
 - **Prompts and automation recommendations:** `.agents/prompts/`,
-  `.agents/reports/` (e.g. `claude_automation_recommendations.md`)
+  `.agents/reports/` (e.g. `automation_recommendations.md`)
+- **Vendor delivery surfaces:** `.cursor/`, `.claude/`, `.codex/`,
+  `.gemini/`, `.clinerules/`, `.qodo/` as synchronized from
+  `aiscr-management/.agents/local_configs/aiscr-webamcr/`
 
-Document recommended hooks, MCP servers, and subagents in `AGENTS.md` or
-`.agents/`; local implementation may remain in `.cursor/` or `.claude/` per
-developer. Recommended hook behaviour is described in
+Document recommended hooks, MCP servers, and subagents in `AGENTS.md`,
+`.agents/`, or the tracked vendor surface that consumes them. Recommended hook
+behaviour is described in
 [.agents/prompts/hooks_reference.md](.agents/prompts/hooks_reference.md).
 
 ------------------------------------------------------------------------
@@ -259,3 +265,14 @@ This repository is part of the AIS CR ecosystem maintained by ARUP-CAS.
 Related repositories: aiscr-digiarchiv-2, aiscr-webamcr-help, aiscr-api-home, aiscr-home, aiscr-amcr-home.
 Agents working across repositories should preserve consistency in
 documentation and review processes.
+
+### External APIs consumed
+
+This application **exposes** the Auth API (production: <https://amcr.aiscr.cz/>). It **consumes** the following external services:
+
+| Service | Purpose | Canonical documentation |
+|--------|---------|--------------------------|
+| Digiarchiv (File API) | File URLs (`DIGIARCHIV_SERVER_URL`, `DIGIARCHIV_URL`), cron trigger `call_digiarchiv_update_task` | [aiscr-api-home](https://github.com/ARUP-CAS/aiscr-api-home) — [File API](https://api.aiscr.cz/file-api/) |
+| AMCR schema (OAI-PMH) | XML namespace/XSD for AMCR format (`api.aiscr.cz/schema/amcr/2.2/`) | [aiscr-api-home](https://github.com/ARUP-CAS/aiscr-api-home) — [OAI-PMH](https://api.aiscr.cz/oai-pmh/) |
+
+Do not duplicate endpoint definitions or base URLs here; refer to aiscr-api-home (and its `.agents/config/review_config.yaml`) as the source of truth for live endpoints and verification.

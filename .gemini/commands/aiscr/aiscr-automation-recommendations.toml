@@ -1,0 +1,19 @@
+# aiscr:canonical=.agents/canonical_configs/workflow_skills/aiscr-automation-recommendations.md
+description = "Maintain .agents/canonical_configs/references/automation_recommendations.md as a living document. Use when the user asks to update automation recommendations or review global automation guidance."
+prompt = """
+<!-- aiscr:canonical=.agents/canonical_configs/workflow_skills/aiscr-automation-recommendations.md -->
+
+<!-- aiscr:stop-anchor -->
+**Entry scope**
+
+- Stay in this `.gemini/commands/aiscr/` surface and its same-vendor pointers first.
+- Do not open parallel vendor trees by default just in case.
+- Cross into another vendor tree only for explicit parity checks, generator work, or governance maintenance.
+
+Maintain .agents/canonical_configs/references/automation_recommendations.md as a living document. Use when the user asks to update automation recommendations or review global automation guidance.
+
+**Skill body (authoritative):** `.gemini/skills/aiscr-automation-recommendations/SKILL.md` — load that file for the full workflow body, guardrails, and verification.
+
+_No backing plan file;_ follow fallback and governance.
+Load openspec/specs/openspec-requirement-governance/spec.md first for the durable behavioral contract; skill is spec-first.
+"""
