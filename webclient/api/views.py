@@ -2962,7 +2962,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
         """
         Vytvoří záznam historie pro aktualizaci pole ``evidencni_cislo``.
 
-        Poznámka záznamu má formát ``old_value -> new_value``. Je-li záznam ve stavu
+        Poznámka záznamu má formát ``<přeložený popisek>: old_value -> new_value``. Je-li záznam ve stavu
         SN4 (archivovaný), zapíše se navíc záznam ``SN34``, který obnoví datum archivace.
 
         :param instance: Aktualizovaný záznam samostatného nálezu.
