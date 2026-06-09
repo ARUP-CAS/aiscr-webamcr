@@ -929,7 +929,7 @@ Třídy
 
 .. py:class:: GetUserInfo
 
-   Třída podlehu pro získaní základních info o uživately.
+   Třída pohledu pro získaní základních info o uživately.
 
    **Metody:**
 
