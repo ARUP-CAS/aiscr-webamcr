@@ -42,6 +42,7 @@ from core.constants import (
 from core.models import AntivirusCheckResult, Permissions, Soubor, check_permissions
 from core.repository_connector import FedoraNoResponseError
 from core.setting_models import CustomAdminSettings
+from django.conf import settings
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import DatabaseError, IntegrityError
@@ -125,6 +126,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response["Content-Type"], "application/xml")
         self.assertEqual(response["X-Record-ID"], ident_cely)
+        self.assertEqual(response["Location"], f"{settings.API_URL}{ident_cely}")
         self.assertIn(ident_cely, response.content.decode("utf-8"))
 
     def _build_mock_fedora_transaction(self, *args, **kwargs):
@@ -1358,7 +1360,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self._assert_xml_success_response(response, nalez.ident_cely)
         self.assertEqual(nalez.hloubka, 21)
         self.assertEqual(str(nalez.datum_nalezu), "2026-04-06")
-        self.assertFalse(nalez.predano)
+        self.assertTrue(nalez.predano)
         self.assertEqual(nalez.predano_organizace, self.organizace)
         self.assertEqual(nalez.pristupnost, self.pristupnost)
         self.assertEqual(nalez.lokalizace, "test")
@@ -1600,7 +1602,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             projekt_ident=self.projekt.ident_cely,
             pristupnost_ident=self.pristupnost.ident_cely,
         )
-        xml = xml.replace(b"    <amcr:predano>false</amcr:predano>\n", b"")
+        xml = xml.replace(b"    <amcr:predano>true</amcr:predano>\n", b"")
 
         response = self._post_xml(xml)
 
@@ -1609,6 +1611,48 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertIn("predano", response.data["validation_errors"][0]["message"])
         self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure(response.data)
+
+    def test_stav_potvrzeny_predano_false_returns_422(self):
+        """Import se ``stav=3`` (SN_POTVRZENY) a ``predano=false`` vrátí HTTP 422 s chybou o hodnotě True."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+        xml = xml.replace(
+            b"    <amcr:predano>true</amcr:predano>\n",
+            b"    <amcr:predano>false</amcr:predano>\n",
+        )
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertIn("predano", response.data["validation_errors"][0]["message"])
+        self.assertIn("predano_must_be_true", response.data["validation_errors"][0]["message"])
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure(response.data)
+
+    def test_stav_odeslany_predano_false_is_accepted(self):
+        """Import se ``stav=2`` (SN_ODESLANY) a ``predano=false`` projde – pravidlo platí jen pro SN_POTVRZENY+."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            stav=SN_ODESLANY,
+        )
+        xml = xml.replace(
+            b"    <amcr:predano>true</amcr:predano>\n",
+            b"    <amcr:predano>false</amcr:predano>\n",
+        )
+
+        response = self._post_xml(xml)
+
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
+        self.assertFalse(nalez.predano)
+        self.assertEqual(nalez.stav, SN_ODESLANY)
+        self._assert_log_success()
 
     def test_stav_potvrzeny_missing_predano_organizace_returns_422(self):
         """Import se ``stav=3`` (SN_POTVRZENY) bez ``predano_organizace`` vrátí HTTP 422."""

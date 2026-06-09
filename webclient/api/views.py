@@ -1677,6 +1677,7 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
             )
         response = HttpResponse(metadata, content_type="application/xml", status=http_status)
         response["X-Record-ID"] = instance.ident_cely
+        response["Location"] = f"{settings.API_URL}{instance.ident_cely}"
         return response
 
 
@@ -2533,11 +2534,14 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 # navíc při stavu SN_POTVRZENY. V UI tato validace běží mimo hlavní
                 # serializer (v modálním okně), takže ji zde replikujeme pro shodu chování.
                 missing_potvrzeni_fields: list[str] = []
+                predano_must_be_true = False
                 if instance.stav >= SN_POTVRZENY:
                     if not instance.evidencni_cislo:
                         missing_potvrzeni_fields.append("evidencni_cislo")
                     if instance.predano is None:
                         missing_potvrzeni_fields.append("predano")
+                    elif instance.predano is False:
+                        predano_must_be_true = True
                     if instance.predano_organizace_id is None:
                         missing_potvrzeni_fields.append("predano_organizace")
                 if missing_potvrzeni_fields:
@@ -2548,6 +2552,15 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                             message=", ".join(missing_potvrzeni_fields)
                             + ": "
                             + _("api.views.SamostatnyNalezXmlImportView.post.required_potvrzeni_field_missing"),
+                            error_type=ImportErrorType.INVALID_DATA,
+                        )
+                    )
+                if predano_must_be_true:
+                    raise ImportValidationException(
+                        ImportValidationIssue(
+                            line=elem.sourceline,
+                            column=None,
+                            message="predano: " + _("api.views.SamostatnyNalezXmlImportView.post.predano_must_be_true"),
                             error_type=ImportErrorType.INVALID_DATA,
                         )
                     )
