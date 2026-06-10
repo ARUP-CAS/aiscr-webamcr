@@ -807,6 +807,9 @@ def run_data_import(job_id, user_id, lock_token):
                                             and target != getattr(record, "ident_cely", None)
                                         }
                                     add_item_fedora_update_target(fedora_update_targets, record_id)
+                                    history_target = mapper_class.get_record_history(record)
+                                    if history_target is not None and history_target is not record:
+                                        add_updated_history(mapper_class, history_target, record_id)
                                     record.active_transaction = fedora_transaction
                                     record.delete()
                         fedora_transaction.mark_transaction_as_closed()

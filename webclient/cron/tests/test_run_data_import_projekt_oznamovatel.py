@@ -3,7 +3,7 @@
 import json
 from unittest.mock import MagicMock, patch
 
-from core.constants import ROLE_BADATEL_ID
+from core.constants import IMPORT, ROLE_BADATEL_ID
 from core.forms import ImportDataAdminForm
 from core.tests.fake_redis import FakeRedis
 from cron import tasks as cron_tasks
@@ -16,6 +16,7 @@ from cron.tests._import_test_fixtures import (
 )
 from django.contrib.auth.models import Group
 from django.test import TestCase
+from historie.models import Historie
 from oznameni.models import Oznamovatel
 from uzivatel.models import User
 
@@ -278,3 +279,24 @@ class RunDataImportProjektOznamovatelTest(TestCase):
         details = fake_redis.lrange(f"import_data_progress_details_{JOB_ID}", 0, -1)
         decoded = [item.decode("utf-8") for item in details]
         self.assertIn("cron.tasks.run_data_import.success", decoded)
+
+    def test_delete_creates_imp_history_record_on_parent_projekt(self):
+        """DELETE oznamovatele vytvoří IMP historický záznam na nadřazeném projektu."""
+        self._create_existing_oznamovatel()
+        history_before = Historie.objects.filter(vazba=self.projekt.historie, typ_zmeny=IMPORT).count()
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_DELETE)
+
+        self._run_import(fake_redis)
+
+        history_after = Historie.objects.filter(vazba=self.projekt.historie, typ_zmeny=IMPORT).count()
+        self.assertEqual(history_after, history_before + 1)
+
+    def test_delete_creates_exactly_one_imp_history_record_per_projekt(self):
+        """DELETE oznamovatele vytvoří právě jeden IMP historický záznam na nadřazeném projektu, ne více."""
+        self._create_existing_oznamovatel()
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_DELETE)
+
+        self._run_import(fake_redis)
+
+        imp_records = Historie.objects.filter(vazba=self.projekt.historie, typ_zmeny=IMPORT)
+        self.assertEqual(imp_records.count(), 1)
