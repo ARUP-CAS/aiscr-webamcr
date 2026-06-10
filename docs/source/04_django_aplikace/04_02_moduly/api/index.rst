@@ -1,15 +1,13 @@
-PAS
+API
 ===
 
-Dokumentace modulu pas.
+Dokumentace modulu api.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    models
-   forms
    views
    signals
-   filters
-   tables
+   admin
