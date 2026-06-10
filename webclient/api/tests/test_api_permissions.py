@@ -22,7 +22,7 @@ from core.models import Permissions
 from core.setting_models import CustomAdminSettings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
 
 class PasApiPermissionTests(TestCase):
@@ -806,9 +806,9 @@ class PasApiPermissionTests(TestCase):
             self.assertTrue(throttle.allow_request(request))
             self.assertFalse(throttle.allow_request(request))
 
-    @override_settings(API_MIN_REQUEST_INTERVAL_IP_MS=500, API_MIN_REQUEST_INTERVAL_USER_MS=0)
     def test_min_interval_ip_blocks_second_request_inside_window(self):
-        """Druhý požadavek z téže IP uvnitř okna ``API_MIN_REQUEST_INTERVAL_IP_MS`` je zamítnut."""
+        """Druhý požadavek z téže IP uvnitř okna ``ip_ms`` v ``min_request_intervals`` je zamítnut."""
+        self._set_pas_api_setting("min_request_intervals", {"ip_ms": 500, "user_ms": 0})
         throttle = ApiImportThrottle()
         request = self._build_request(ip="203.0.113.10")
         clock = [1000.0]
@@ -819,9 +819,9 @@ class PasApiPermissionTests(TestCase):
             self.assertFalse(throttle.allow_request(request))
         self.assertAlmostEqual(throttle.wait_seconds, 0.3, places=3)
 
-    @override_settings(API_MIN_REQUEST_INTERVAL_IP_MS=500, API_MIN_REQUEST_INTERVAL_USER_MS=0)
     def test_min_interval_ip_allows_second_request_after_window(self):
         """Druhý požadavek po uplynutí okna projde a značka se aktualizuje."""
+        self._set_pas_api_setting("min_request_intervals", {"ip_ms": 500, "user_ms": 0})
         throttle = ApiImportThrottle()
         request = self._build_request(ip="203.0.113.10")
         clock = [1000.0]
@@ -831,9 +831,9 @@ class PasApiPermissionTests(TestCase):
             clock[0] = 1000.6
             self.assertTrue(throttle.allow_request(request))
 
-    @override_settings(API_MIN_REQUEST_INTERVAL_USER_MS=500, API_MIN_REQUEST_INTERVAL_IP_MS=0)
     def test_min_interval_user_blocks_second_request_inside_window(self):
-        """Druhý požadavek od téhož uživatele uvnitř okna ``API_MIN_REQUEST_INTERVAL_USER_MS`` je zamítnut."""
+        """Druhý požadavek od téhož uživatele uvnitř okna ``user_ms`` v ``min_request_intervals`` je zamítnut."""
+        self._set_pas_api_setting("min_request_intervals", {"user_ms": 500, "ip_ms": 0})
         user = self._build_user("jan@example.cz")
         throttle = ApiImportThrottle()
         request = self._build_request(ip="203.0.113.10", user=user)
@@ -844,9 +844,9 @@ class PasApiPermissionTests(TestCase):
             clock[0] = 2000.1
             self.assertFalse(throttle.allow_request(request))
 
-    @override_settings(API_MIN_REQUEST_INTERVAL_USER_MS=500, API_MIN_REQUEST_INTERVAL_IP_MS=0)
     def test_min_interval_user_does_not_apply_to_anonymous_request(self):
         """Bez identifikovaného uživatele se user-scope limit neaplikuje."""
+        self._set_pas_api_setting("min_request_intervals", {"user_ms": 500, "ip_ms": 0})
         throttle = ApiImportThrottle()
         request = self._build_request(ip="203.0.113.10")
         clock = [3000.0]
@@ -868,9 +868,8 @@ class PasApiPermissionTests(TestCase):
         self.assertIsNone(throttle.wait_seconds)
         self.assertTrue(any("ApiImportThrottle.invalid_rate" in line for line in log_ctx.output))
 
-    @override_settings(API_MIN_REQUEST_INTERVAL_IP_MS=0, API_MIN_REQUEST_INTERVAL_USER_MS=0)
-    def test_min_interval_disabled_when_settings_zero(self):
-        """Hodnota 0 v obou nastaveních znamená, že limit není aktivní."""
+    def test_min_interval_disabled_when_not_configured(self):
+        """Bez nastavení ``min_request_intervals`` jsou oba limity deaktivovány."""
         throttle = ApiImportThrottle()
         request = self._build_request(ip="203.0.113.10", user=self._build_user("a@b.cz"))
         clock = [100.0]
@@ -1280,3 +1279,392 @@ class RecordLockParamsValidationTests(TestCase):
         retry_delay, max_retries = IpBlacklistPermission.get_record_lock_params()
         self.assertAlmostEqual(retry_delay, 3.0)
         self.assertEqual(max_retries, 7)
+
+
+class CacheInvalidationOnSaveTests(TestCase):
+    """Ověřuje, že uložení ``CustomAdminSettings`` záznamu okamžitě invaliduje cache přes signál."""
+
+    def setUp(self):
+        """Před každým testem vyčistí nastavení a cache."""
+        CustomAdminSettings.objects.filter(item_group="pas_api").delete()
+        cache.clear()
+        super().setUp()
+
+    def tearDown(self):
+        """Po každém testu vyčistí nastavení a cache."""
+        CustomAdminSettings.objects.filter(item_group="pas_api").delete()
+        cache.clear()
+        super().tearDown()
+
+    def test_save_invalidates_access_rules_cache(self):
+        """Uložení záznamu ``access_rules`` invaliduje cache — getter vrátí nová data bez ručního cache.clear()."""
+        obj = CustomAdminSettings.objects.create(
+            item_group="pas_api",
+            item_id="access_rules",
+            value=json.dumps([{"rule_type": "ip_blacklist", "value": "1.2.3.4"}]),
+        )
+        rules = PasApiPermissionMixin.get_access_rules()
+        self.assertEqual(len(rules), 1)
+
+        obj.value = json.dumps([])
+        obj.save()  # signal fires here — no cache.clear() needed
+
+        self.assertEqual(PasApiPermissionMixin.get_access_rules(), [])
+
+    def test_delete_invalidates_access_mode_cache(self):
+        """Smazání záznamu ``access_mode`` invaliduje cache — getter vrátí výchozí hodnotu."""
+        obj = CustomAdminSettings.objects.create(
+            item_group="pas_api", item_id="access_mode", value=json.dumps("closed")
+        )
+        self.assertEqual(PasApiPermissionMixin.get_access_mode(), "closed")
+
+        obj.delete()  # signal fires here — no cache.clear() needed
+
+        self.assertEqual(PasApiPermissionMixin.get_access_mode(), "open")
+
+    def test_save_invalidates_cache_ttl_cache(self):
+        """Uložení záznamu ``cache_ttl`` invaliduje jeho vlastní cache."""
+        obj = CustomAdminSettings.objects.create(item_group="pas_api", item_id="cache_ttl", value="120")
+        self.assertEqual(PasApiPermissionMixin.get_cache_ttl(), 120)
+
+        obj.value = "240"
+        obj.save()
+
+        self.assertEqual(PasApiPermissionMixin.get_cache_ttl(), 240)
+
+    def test_save_invalidates_record_lock_ttl_cache(self):
+        """Uložení záznamu ``record_lock_ttl`` invaliduje jeho cache."""
+        obj = CustomAdminSettings.objects.create(item_group="pas_api", item_id="record_lock_ttl", value="600")
+        self.assertEqual(PasApiPermissionMixin.get_record_lock_ttl(), 600)
+
+        obj.value = "900"
+        obj.save()
+
+        self.assertEqual(PasApiPermissionMixin.get_record_lock_ttl(), 900)
+
+    def test_save_invalidates_min_request_intervals_cache(self):
+        """Uložení záznamu ``min_request_intervals`` invaliduje jeho cache."""
+        obj = CustomAdminSettings.objects.create(
+            item_group="pas_api",
+            item_id="min_request_intervals",
+            value=json.dumps({"user_ms": 100, "ip_ms": 50}),
+        )
+        user_ms, ip_ms = PasApiPermissionMixin.get_min_request_intervals()
+        self.assertEqual(user_ms, 100)
+
+        obj.value = json.dumps({"user_ms": 500, "ip_ms": 200})
+        obj.save()
+
+        user_ms, ip_ms = PasApiPermissionMixin.get_min_request_intervals()
+        self.assertEqual(user_ms, 500)
+        self.assertEqual(ip_ms, 200)
+
+    def test_save_of_different_group_does_not_invalidate_cache(self):
+        """Uložení záznamu jiné skupiny než ``pas_api`` necache neovlivní."""
+        CustomAdminSettings.objects.create(item_group="pas_api", item_id="access_mode", value=json.dumps("closed"))
+        self.assertEqual(PasApiPermissionMixin.get_access_mode(), "closed")
+
+        CustomAdminSettings.objects.create(item_group="other_group", item_id="some_setting", value="irrelevant")
+
+        self.assertEqual(PasApiPermissionMixin.get_access_mode(), "closed")
+
+
+class PositiveIntSettingValidationTests(TestCase):
+    """Testy validace nastavení s kladným celým číslem (cache_ttl, record_lock_ttl, aj.)."""
+
+    def test_validate_positive_int_setting_accepts_positive_int(self):
+        """Kladné celé číslo je přijato."""
+        self.assertTrue(PasApiPermissionMixin.validate_positive_int_setting(60, "cache_ttl"))
+
+    def test_validate_positive_int_setting_rejects_zero(self):
+        """Nula je odmítnuta."""
+        with self.assertRaisesRegex(
+            ValidationError,
+            "api.views.PasApiPermissionMixin.validate_positive_int_setting.invalid_value",
+        ):
+            PasApiPermissionMixin.validate_positive_int_setting(0, "cache_ttl")
+
+    def test_validate_positive_int_setting_rejects_negative(self):
+        """Záporné číslo je odmítnuto."""
+        with self.assertRaisesRegex(
+            ValidationError,
+            "api.views.PasApiPermissionMixin.validate_positive_int_setting.invalid_value",
+        ):
+            PasApiPermissionMixin.validate_positive_int_setting(-1, "record_lock_ttl")
+
+    def test_validate_positive_int_setting_rejects_bool(self):
+        """Bool (podtyp int) je odmítnut."""
+        with self.assertRaisesRegex(
+            ValidationError,
+            "api.views.PasApiPermissionMixin.validate_positive_int_setting.invalid_value",
+        ):
+            PasApiPermissionMixin.validate_positive_int_setting(True, "cache_ttl")
+
+    def test_validate_positive_int_setting_rejects_string(self):
+        """Řetězec je odmítnut."""
+        with self.assertRaisesRegex(
+            ValidationError,
+            "api.views.PasApiPermissionMixin.validate_positive_int_setting.invalid_value",
+        ):
+            PasApiPermissionMixin.validate_positive_int_setting("30", "cache_ttl")
+
+    def test_validate_via_custom_admin_settings_full_clean_rejects_zero_cache_ttl(self):
+        """Uložení ``cache_ttl`` s hodnotou 0 přes ``full_clean`` vyhodí ``ValidationError``."""
+        instance = CustomAdminSettings(item_group="pas_api", item_id="cache_ttl", value="0")
+        with self.assertRaises(ValidationError):
+            instance.full_clean()
+
+    def test_validate_via_custom_admin_settings_full_clean_accepts_valid_cache_ttl(self):
+        """Uložení platného ``cache_ttl`` přes ``full_clean`` proběhne bez výjimky."""
+        instance = CustomAdminSettings(item_group="pas_api", item_id="cache_ttl", value="60")
+        instance.full_clean()
+
+    def test_validate_via_custom_admin_settings_full_clean_accepts_valid_record_lock_ttl(self):
+        """Uložení platného ``record_lock_ttl`` přes ``full_clean`` proběhne bez výjimky."""
+        instance = CustomAdminSettings(item_group="pas_api", item_id="record_lock_ttl", value="600")
+        instance.full_clean()
+
+    def test_validate_via_custom_admin_settings_full_clean_accepts_valid_schema_fetch_timeout(self):
+        """Uložení platného ``schema_fetch_timeout`` přes ``full_clean`` proběhne bez výjimky."""
+        instance = CustomAdminSettings(item_group="pas_api", item_id="schema_fetch_timeout", value="30")
+        instance.full_clean()
+
+    def test_validate_via_custom_admin_settings_full_clean_accepts_valid_schema_cache_ttl(self):
+        """Uložení platného ``schema_cache_ttl`` přes ``full_clean`` proběhne bez výjimky."""
+        instance = CustomAdminSettings(item_group="pas_api", item_id="schema_cache_ttl", value="7200")
+        instance.full_clean()
+
+
+class CacheTtlSettingTests(TestCase):
+    """Testy načítání ``cache_ttl`` z ``CustomAdminSettings``."""
+
+    def tearDown(self):
+        """Po každém testu vyčistí nastavení a cache."""
+        CustomAdminSettings.objects.filter(item_group="pas_api").delete()
+        cache.clear()
+        super().tearDown()
+
+    def test_get_cache_ttl_returns_default_when_not_configured(self):
+        """Bez nastavení v ``CustomAdminSettings`` vrátí výchozí hodnotu ``_DEFAULT_CACHE_TTL``."""
+        from api.views import _DEFAULT_CACHE_TTL
+
+        self.assertEqual(PasApiPermissionMixin.get_cache_ttl(), _DEFAULT_CACHE_TTL)
+
+    def test_get_cache_ttl_returns_configured_value(self):
+        """Nastavená hodnota je vrácena a uložena do cache."""
+        CustomAdminSettings.objects.create(item_group="pas_api", item_id="cache_ttl", value="120")
+        self.assertEqual(PasApiPermissionMixin.get_cache_ttl(), 120)
+
+    def test_get_cache_ttl_cache_is_invalidated_on_settings_change(self):
+        """Změna záznamu ``CustomAdminSettings`` invaliduje cache TTL."""
+        CustomAdminSettings.objects.create(item_group="pas_api", item_id="cache_ttl", value="60")
+        PasApiPermissionMixin.get_cache_ttl()
+        CustomAdminSettings.objects.filter(item_group="pas_api", item_id="cache_ttl").update(value="90")
+        cache.clear()
+        self.assertEqual(PasApiPermissionMixin.get_cache_ttl(), 90)
+
+
+class RecordLockTtlSettingTests(TestCase):
+    """Testy načítání ``record_lock_ttl`` z ``CustomAdminSettings``."""
+
+    def tearDown(self):
+        """Po každém testu vyčistí nastavení a cache."""
+        CustomAdminSettings.objects.filter(item_group="pas_api").delete()
+        cache.clear()
+        super().tearDown()
+
+    def test_get_record_lock_ttl_returns_default_when_not_configured(self):
+        """Bez nastavení v ``CustomAdminSettings`` vrátí výchozí hodnotu ``_RECORD_LOCK_DEFAULT_TTL``."""
+        from api.views import _RECORD_LOCK_DEFAULT_TTL
+
+        self.assertEqual(PasApiPermissionMixin.get_record_lock_ttl(), _RECORD_LOCK_DEFAULT_TTL)
+
+    def test_get_record_lock_ttl_returns_configured_value(self):
+        """Nastavená hodnota je vrácena."""
+        CustomAdminSettings.objects.create(item_group="pas_api", item_id="record_lock_ttl", value="600")
+        self.assertEqual(PasApiPermissionMixin.get_record_lock_ttl(), 600)
+
+    def test_get_record_lock_ttl_cache_is_invalidated_on_settings_change(self):
+        """Změna záznamu invaliduje cache TTL zámku."""
+        CustomAdminSettings.objects.create(item_group="pas_api", item_id="record_lock_ttl", value="300")
+        PasApiPermissionMixin.get_record_lock_ttl()
+        CustomAdminSettings.objects.filter(item_group="pas_api", item_id="record_lock_ttl").update(value="600")
+        cache.clear()
+        self.assertEqual(PasApiPermissionMixin.get_record_lock_ttl(), 600)
+
+    def test_get_record_lock_ttl_respects_cache_ttl_setting(self):
+        """``record_lock_ttl`` se kešuje po dobu řízenou hodnotou ``cache_ttl``."""
+        from unittest.mock import patch
+
+        CustomAdminSettings.objects.create(item_group="pas_api", item_id="record_lock_ttl", value="600")
+        with patch.object(PasApiPermissionMixin, "get_cache_ttl", return_value=120):
+            with patch("api.views.cache.set") as mock_set:
+                cache.clear()
+                PasApiPermissionMixin.get_record_lock_ttl()
+                ttl_calls = [c for c in mock_set.call_args_list if c.args[0] == "pas_api_record_lock_ttl"]
+                self.assertTrue(ttl_calls)
+                self.assertEqual(ttl_calls[0].args[2], 120)
+
+
+class SchemaSettingsTests(TestCase):
+    """Testy načítání ``schema_fetch_timeout`` a ``schema_cache_ttl`` z ``CustomAdminSettings``."""
+
+    def tearDown(self):
+        """Po každém testu vyčistí nastavení a cache."""
+        CustomAdminSettings.objects.filter(item_group="pas_api").delete()
+        cache.clear()
+        super().tearDown()
+
+    def test_get_schema_fetch_timeout_returns_default_when_not_configured(self):
+        """Bez nastavení vrátí výchozí hodnotu ``_AMCR_SCHEMA_DEFAULT_FETCH_TIMEOUT``."""
+        from api.views import _AMCR_SCHEMA_DEFAULT_FETCH_TIMEOUT
+
+        self.assertEqual(PasApiPermissionMixin.get_schema_fetch_timeout(), _AMCR_SCHEMA_DEFAULT_FETCH_TIMEOUT)
+
+    def test_get_schema_fetch_timeout_returns_configured_value(self):
+        """Nastavená hodnota je vrácena."""
+        CustomAdminSettings.objects.create(item_group="pas_api", item_id="schema_fetch_timeout", value="30")
+        self.assertEqual(PasApiPermissionMixin.get_schema_fetch_timeout(), 30)
+
+    def test_get_schema_cache_ttl_returns_default_when_not_configured(self):
+        """Bez nastavení vrátí výchozí hodnotu ``_AMCR_SCHEMA_DEFAULT_CACHE_TTL``."""
+        from api.views import _AMCR_SCHEMA_DEFAULT_CACHE_TTL
+
+        self.assertEqual(PasApiPermissionMixin.get_schema_cache_ttl(), _AMCR_SCHEMA_DEFAULT_CACHE_TTL)
+
+    def test_get_schema_cache_ttl_returns_configured_value(self):
+        """Nastavená hodnota je vrácena."""
+        CustomAdminSettings.objects.create(item_group="pas_api", item_id="schema_cache_ttl", value="7200")
+        self.assertEqual(PasApiPermissionMixin.get_schema_cache_ttl(), 7200)
+
+    def test_get_schema_settings_cache_invalidated_on_settings_change(self):
+        """Změna záznamu invaliduje cache timeoutu a TTL schémat."""
+        CustomAdminSettings.objects.create(item_group="pas_api", item_id="schema_fetch_timeout", value="15")
+        PasApiPermissionMixin.get_schema_fetch_timeout()
+        CustomAdminSettings.objects.filter(item_group="pas_api", item_id="schema_fetch_timeout").update(value="25")
+        cache.clear()
+        self.assertEqual(PasApiPermissionMixin.get_schema_fetch_timeout(), 25)
+
+    def test_get_schema_fetch_timeout_respects_cache_ttl_setting(self):
+        """``schema_fetch_timeout`` se kešuje po dobu řízenou hodnotou ``cache_ttl``."""
+        from unittest.mock import patch
+
+        CustomAdminSettings.objects.create(item_group="pas_api", item_id="schema_fetch_timeout", value="30")
+        with patch.object(PasApiPermissionMixin, "get_cache_ttl", return_value=90):
+            with patch("api.views.cache.set") as mock_set:
+                cache.clear()
+                PasApiPermissionMixin.get_schema_fetch_timeout()
+                ttl_calls = [c for c in mock_set.call_args_list if c.args[0] == "pas_api_schema_fetch_timeout"]
+                self.assertTrue(ttl_calls)
+                self.assertEqual(ttl_calls[0].args[2], 90)
+
+    def test_get_schema_cache_ttl_respects_cache_ttl_setting(self):
+        """``schema_cache_ttl`` se kešuje po dobu řízenou hodnotou ``cache_ttl``."""
+        from unittest.mock import patch
+
+        CustomAdminSettings.objects.create(item_group="pas_api", item_id="schema_cache_ttl", value="7200")
+        with patch.object(PasApiPermissionMixin, "get_cache_ttl", return_value=90):
+            with patch("api.views.cache.set") as mock_set:
+                cache.clear()
+                PasApiPermissionMixin.get_schema_cache_ttl()
+                ttl_calls = [c for c in mock_set.call_args_list if c.args[0] == "pas_api_schema_cache_ttl"]
+                self.assertTrue(ttl_calls)
+                self.assertEqual(ttl_calls[0].args[2], 90)
+
+
+class MinRequestIntervalsSettingTests(TestCase):
+    """Testy validace a načítání ``min_request_intervals`` z ``CustomAdminSettings``."""
+
+    def tearDown(self):
+        """Po každém testu vyčistí nastavení a cache."""
+        CustomAdminSettings.objects.filter(item_group="pas_api").delete()
+        cache.clear()
+        super().tearDown()
+
+    def test_validate_min_request_intervals_accepts_valid_dict(self):
+        """Slovník s platnými hodnotami je přijat."""
+        self.assertTrue(PasApiPermissionMixin.validate_min_request_intervals({"user_ms": 500, "ip_ms": 200}))
+
+    def test_validate_min_request_intervals_accepts_empty_dict(self):
+        """Prázdný slovník je přijat (výchozí hodnoty)."""
+        self.assertTrue(PasApiPermissionMixin.validate_min_request_intervals({}))
+
+    def test_validate_min_request_intervals_accepts_zero_values(self):
+        """Hodnota 0 (deaktivovaný limit) je přijata."""
+        self.assertTrue(PasApiPermissionMixin.validate_min_request_intervals({"user_ms": 0, "ip_ms": 0}))
+
+    def test_validate_min_request_intervals_rejects_non_dict(self):
+        """Hodnota, která není slovník, je odmítnuta."""
+        with self.assertRaisesRegex(
+            ValidationError,
+            "api.views.PasApiPermissionMixin.validate_min_request_intervals.not_a_dict",
+        ):
+            PasApiPermissionMixin.validate_min_request_intervals([500, 200])
+
+    def test_validate_min_request_intervals_rejects_negative_user_ms(self):
+        """Záporná hodnota ``user_ms`` je odmítnuta."""
+        with self.assertRaisesRegex(
+            ValidationError,
+            "api.views.PasApiPermissionMixin.validate_min_request_intervals.invalid_value",
+        ):
+            PasApiPermissionMixin.validate_min_request_intervals({"user_ms": -1})
+
+    def test_validate_min_request_intervals_rejects_bool_ip_ms(self):
+        """Bool hodnota ``ip_ms`` je odmítnuta."""
+        with self.assertRaisesRegex(
+            ValidationError,
+            "api.views.PasApiPermissionMixin.validate_min_request_intervals.invalid_value",
+        ):
+            PasApiPermissionMixin.validate_min_request_intervals({"ip_ms": True})
+
+    def test_get_min_request_intervals_returns_defaults_when_not_configured(self):
+        """Bez nastavení vrátí ``(0, 0)`` (oba limity deaktivovány)."""
+        user_ms, ip_ms = PasApiPermissionMixin.get_min_request_intervals()
+        self.assertEqual(user_ms, 0)
+        self.assertEqual(ip_ms, 0)
+
+    def test_get_min_request_intervals_returns_configured_values(self):
+        """Nastavené hodnoty jsou vráceny."""
+        CustomAdminSettings.objects.create(
+            item_group="pas_api",
+            item_id="min_request_intervals",
+            value=json.dumps({"user_ms": 500, "ip_ms": 200}),
+        )
+        user_ms, ip_ms = PasApiPermissionMixin.get_min_request_intervals()
+        self.assertEqual(user_ms, 500)
+        self.assertEqual(ip_ms, 200)
+
+    def test_get_min_request_intervals_cache_is_invalidated_on_settings_change(self):
+        """Změna záznamu ``CustomAdminSettings`` invaliduje cache intervalů."""
+        CustomAdminSettings.objects.create(
+            item_group="pas_api",
+            item_id="min_request_intervals",
+            value=json.dumps({"user_ms": 100, "ip_ms": 100}),
+        )
+        PasApiPermissionMixin.get_min_request_intervals()
+        CustomAdminSettings.objects.filter(item_group="pas_api", item_id="min_request_intervals").update(
+            value=json.dumps({"user_ms": 300, "ip_ms": 400})
+        )
+        cache.clear()
+        user_ms, ip_ms = PasApiPermissionMixin.get_min_request_intervals()
+        self.assertEqual(user_ms, 300)
+        self.assertEqual(ip_ms, 400)
+
+    def test_validate_via_full_clean_accepts_valid_min_request_intervals(self):
+        """Uložení platného ``min_request_intervals`` přes ``full_clean`` proběhne bez výjimky."""
+        instance = CustomAdminSettings(
+            item_group="pas_api",
+            item_id="min_request_intervals",
+            value=json.dumps({"user_ms": 500, "ip_ms": 200}),
+        )
+        instance.full_clean()
+
+    def test_validate_via_full_clean_rejects_negative_user_ms(self):
+        """Záporná hodnota ``user_ms`` přes ``full_clean`` vyhodí ``ValidationError``."""
+        instance = CustomAdminSettings(
+            item_group="pas_api",
+            item_id="min_request_intervals",
+            value=json.dumps({"user_ms": -1}),
+        )
+        with self.assertRaises(ValidationError):
+            instance.full_clean()

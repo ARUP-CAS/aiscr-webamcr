@@ -95,15 +95,22 @@ _CACHE_KEY_ACCESS_RULES = "pas_api_access_rules"
 _CACHE_KEY_RATE_LIMITS = "pas_api_rate_limits"
 _CACHE_KEY_ACCESS_MODE = "pas_api_access_mode"
 _CACHE_KEY_TRUSTED_PROXIES = "pas_api_trusted_proxies"
-_CACHE_TTL = 30  # sekund
+_DEFAULT_CACHE_TTL = 3600  # výchozí hodnota TTL v sekundách; konfigurovatelná přes CustomAdminSettings (cache_ttl)
 
 _RECORD_LOCK_PREFIX = "pas_api_record_lock_"
-_RECORD_LOCK_TTL = 300  # sekund — zámek záznamu vyprší po 5 minutách
-_RECORD_LOCK_DEFAULT_RETRY_DELAY = 0.5  # sekund — výchozí čekací interval mezi pokusy
-_RECORD_LOCK_DEFAULT_MAX_RETRIES = 10  # výchozí maximální počet pokusů o získání zámku
+_RECORD_LOCK_DEFAULT_TTL = (
+    300  # výchozí hodnota v sekundách; konfigurovatelná přes CustomAdminSettings (record_lock_ttl)
+)
+_RECORD_LOCK_DEFAULT_RETRY_DELAY = 0.5  # sekund — výchozí čekací interval; konfigurovatelný přes record_lock_params
+_RECORD_LOCK_DEFAULT_MAX_RETRIES = 10  # výchozí maximální počet pokusů; konfigurovatelný přes record_lock_params
 _CACHE_KEY_RECORD_LOCK_PARAMS = "pas_api_record_lock_params"
 _CACHE_KEY_ALLOWED_SCHEMA_VERSIONS = "pas_api_allowed_schema_versions"
 _NOT_CONFIGURED = "__pas_api_not_configured__"  # sentinel: nastavení neexistuje (odliší se od None = cache miss)
+_CACHE_KEY_CACHE_TTL = "pas_api_cache_ttl"
+_CACHE_KEY_RECORD_LOCK_TTL = "pas_api_record_lock_ttl"
+_CACHE_KEY_SCHEMA_FETCH_TIMEOUT = "pas_api_schema_fetch_timeout"
+_CACHE_KEY_SCHEMA_CACHE_TTL = "pas_api_schema_cache_ttl"
+_CACHE_KEY_MIN_REQUEST_INTERVALS = "pas_api_min_request_intervals"
 
 _PAS_API_GROUP = "pas_api"
 _ACCESS_RULES_ID = "access_rules"
@@ -113,9 +120,18 @@ _ACCESS_MODE_ID = "access_mode"
 _TRUSTED_PROXIES_ID = "trusted_proxies"
 _RECORD_LOCK_PARAMS_ID = "record_lock_params"
 _ALLOWED_SCHEMA_VERSIONS_ID = "allowed_schema_versions"
+_CACHE_TTL_ID = "cache_ttl"
+_RECORD_LOCK_TTL_ID = "record_lock_ttl"
+_SCHEMA_FETCH_TIMEOUT_ID = "schema_fetch_timeout"
+_SCHEMA_CACHE_TTL_ID = "schema_cache_ttl"
+_MIN_REQUEST_INTERVALS_ID = "min_request_intervals"
 _AMCR_SCHEMA_LOCK = threading.Lock()
-_AMCR_SCHEMA_FETCH_TIMEOUT = 10
-_AMCR_SCHEMA_CACHE_TTL = 3600  # sekund — schéma se znovu načte po 60 minutách
+_AMCR_SCHEMA_DEFAULT_FETCH_TIMEOUT = (
+    10  # výchozí hodnota v sekundách; konfigurovatelná přes CustomAdminSettings (schema_fetch_timeout)
+)
+_AMCR_SCHEMA_DEFAULT_CACHE_TTL = (
+    3600  # výchozí hodnota v sekundách; konfigurovatelná přes CustomAdminSettings (schema_cache_ttl)
+)
 _ALLOWED_XML_XSD_URLS = frozenset(
     (
         "http://www.w3.org/2001/xml.xsd",
@@ -178,13 +194,13 @@ def _fetch_xsd_bytes(url: str) -> bytes:
         if cached is not None:
             _XSD_BYTES_CACHE[url] = cached
             return cached
-        response = urllib.request.urlopen(url, timeout=_AMCR_SCHEMA_FETCH_TIMEOUT)  # noqa: S310
+        response = urllib.request.urlopen(url, timeout=PasApiPermissionMixin.get_schema_fetch_timeout())  # noqa: S310
         with response:
             content = response.read()
         if not content:
             logger.warning("api.views._fetch_xsd_bytes.empty_response", extra={"url": url})
             raise ValueError(f"api.views._fetch_xsd_bytes.empty_response: {url}")
-        cache.set(cache_key, content, timeout=_AMCR_SCHEMA_CACHE_TTL)
+        cache.set(cache_key, content, timeout=PasApiPermissionMixin.get_schema_cache_ttl())
         _XSD_BYTES_CACHE[url] = content
         return content
 
@@ -248,6 +264,11 @@ _PAS_API_ITEM_IDS = {
     _TRUSTED_PROXIES_ID,
     _RECORD_LOCK_PARAMS_ID,
     _ALLOWED_SCHEMA_VERSIONS_ID,
+    _CACHE_TTL_ID,
+    _RECORD_LOCK_TTL_ID,
+    _SCHEMA_FETCH_TIMEOUT_ID,
+    _SCHEMA_CACHE_TTL_ID,
+    _MIN_REQUEST_INTERVALS_ID,
 }
 
 # codeql[py/clear-text-logging-sensitive-data]
@@ -380,10 +401,58 @@ class PasApiPermissionMixin:
 
                 {"retry_delay": 1.0, "max_retries": 5}
 
-        Změny v administraci se projeví do ``30`` sekund (TTL cache).
+        ``cache_ttl`` (``item_id="cache_ttl"``)
+            TTL (v sekundách) pro ukládání ostatních nastavení PAS API do cache.
+            Musí být kladné celé číslo. Výchozí hodnota je ``3600``.
+
+            Příklad::
+
+                60
+
+        ``record_lock_ttl`` (``item_id="record_lock_ttl"``)
+            TTL (v sekundách) pro Redis zámek záznamu. Musí být kladné celé číslo.
+            Výchozí hodnota je ``300`` (5 minut).
+
+            Příklad::
+
+                600
+
+        ``schema_fetch_timeout`` (``item_id="schema_fetch_timeout"``)
+            Časový limit (v sekundách) pro stahování XSD schémat ze sítě.
+            Musí být kladné celé číslo. Výchozí hodnota je ``10``.
+
+            Příklad::
+
+                30
+
+        ``schema_cache_ttl`` (``item_id="schema_cache_ttl"``)
+            TTL (v sekundách) pro Redis cache XSD schémat. Musí být kladné celé číslo.
+            Výchozí hodnota je ``3600`` (60 minut).
+
+            Příklad::
+
+                7200
+
+        ``min_request_intervals`` (``item_id="min_request_intervals"``)
+            Minimální interval mezi po sobě jdoucími požadavky pro globální throttling.
+            Objekt s volitelnými klíči:
+
+            - ``user_ms`` *(volitelný, výchozí ``0``)* — minimální interval v milisekundách
+              pro téhož uživatele; hodnota ``0`` limit deaktivuje
+            - ``ip_ms`` *(volitelný, výchozí ``0``)* — minimální interval v milisekundách
+              pro tutéž IP adresu; hodnota ``0`` limit deaktivuje
+
+            Pokud nastavení chybí, jsou oba limity deaktivovány (hodnota ``0``).
+
+            Příklad::
+
+                {"user_ms": 500, "ip_ms": 200}
+
+        Změny v administraci se projeví do hodnoty ``cache_ttl`` (výchozí ``3600`` sekund); změny provedené přes Django admin se projeví okamžitě díky invalidaci cache signálem ``post_save``.
 
         :param item_id: Identifikátor záznamu — ``"access_rules"``, ``"rate_limits"``, ``"access_mode"``,
-            ``"trusted_proxies"`` nebo ``"record_lock_params"``.
+            ``"trusted_proxies"``, ``"record_lock_params"``, ``"cache_ttl"``, ``"record_lock_ttl"``,
+            ``"schema_fetch_timeout"``, ``"schema_cache_ttl"`` nebo ``"min_request_intervals"``.
 
         :param raise_validation_error: Pokud je ``True`` (výchozí), nevalidní JSON vyhodí ``ValidationError``.
 
@@ -426,7 +495,7 @@ class PasApiPermissionMixin:
             raw_rules = cls.load_json_setting(_ACCESS_RULES_ID)
             cls.validate_access_rules(raw_rules)
             rules = [r for r in raw_rules if r.get("active", True)]
-            cache.set(_CACHE_KEY_ACCESS_RULES, rules, _CACHE_TTL)
+            cache.set(_CACHE_KEY_ACCESS_RULES, rules, cls.get_cache_ttl())
         return rules
 
     @staticmethod
@@ -535,6 +604,10 @@ class PasApiPermissionMixin:
             cls.validate_record_lock_params(raw_value)
         elif instance.item_id == _ALLOWED_SCHEMA_VERSIONS_ID:
             cls.validate_allowed_schema_versions(raw_value)
+        elif instance.item_id in {_CACHE_TTL_ID, _RECORD_LOCK_TTL_ID, _SCHEMA_FETCH_TIMEOUT_ID, _SCHEMA_CACHE_TTL_ID}:
+            cls.validate_positive_int_setting(raw_value, instance.item_id)
+        elif instance.item_id == _MIN_REQUEST_INTERVALS_ID:
+            cls.validate_min_request_intervals(raw_value)
         return True
 
     @classmethod
@@ -553,7 +626,7 @@ class PasApiPermissionMixin:
             raw_limits = cls.load_json_setting(_RATE_LIMITS_ID)
             cls.validate_rate_limits(raw_limits)
             limits = [r for r in raw_limits if r.get("active", True)]
-            cache.set(_CACHE_KEY_RATE_LIMITS, limits, _CACHE_TTL)
+            cache.set(_CACHE_KEY_RATE_LIMITS, limits, cls.get_cache_ttl())
         return limits
 
     @staticmethod
@@ -654,7 +727,7 @@ class PasApiPermissionMixin:
             value = cls.load_json_setting(_ACCESS_MODE_ID)
             cls.validate_access_mode(value)
             access_mode = value if value not in (None, []) else ACCESS_MODE_OPEN
-            cache.set(_CACHE_KEY_ACCESS_MODE, access_mode, _CACHE_TTL)
+            cache.set(_CACHE_KEY_ACCESS_MODE, access_mode, cls.get_cache_ttl())
         return access_mode
 
     @staticmethod
@@ -694,7 +767,7 @@ class PasApiPermissionMixin:
             else:
                 cls.validate_trusted_proxies(raw)
                 proxies = raw
-            cache.set(_CACHE_KEY_TRUSTED_PROXIES, proxies, _CACHE_TTL)
+            cache.set(_CACHE_KEY_TRUSTED_PROXIES, proxies, cls.get_cache_ttl())
         return proxies
 
     @staticmethod
@@ -757,7 +830,7 @@ class PasApiPermissionMixin:
                 retry_delay = float(raw.get("retry_delay", _RECORD_LOCK_DEFAULT_RETRY_DELAY))
                 max_retries = int(raw.get("max_retries", _RECORD_LOCK_DEFAULT_MAX_RETRIES))
                 params = (retry_delay, max_retries)
-            cache.set(_CACHE_KEY_RECORD_LOCK_PARAMS, params, _CACHE_TTL)
+            cache.set(_CACHE_KEY_RECORD_LOCK_PARAMS, params, cls.get_cache_ttl())
         return params
 
     @staticmethod
@@ -830,15 +903,173 @@ class PasApiPermissionMixin:
         if versions is None:
             raw = cls.load_json_setting(_ALLOWED_SCHEMA_VERSIONS_ID, raise_validation_error=False)
             if not raw:
-                cache.set(_CACHE_KEY_ALLOWED_SCHEMA_VERSIONS, _NOT_CONFIGURED, _CACHE_TTL)
+                cache.set(_CACHE_KEY_ALLOWED_SCHEMA_VERSIONS, _NOT_CONFIGURED, cls.get_cache_ttl())
                 return None
             cls.validate_allowed_schema_versions(raw)
             versions = [float(v) for v in raw]
-            cache.set(_CACHE_KEY_ALLOWED_SCHEMA_VERSIONS, versions, _CACHE_TTL)
+            cache.set(_CACHE_KEY_ALLOWED_SCHEMA_VERSIONS, versions, cls.get_cache_ttl())
             return versions
         if versions == _NOT_CONFIGURED:
             return None
         return versions
+
+    @staticmethod
+    def validate_positive_int_setting(value, item_id: str) -> bool:
+        """
+        Ověří, že hodnota nastavení je kladné celé číslo.
+
+        Používá se pro nastavení ``cache_ttl``, ``record_lock_ttl``, ``schema_fetch_timeout``
+        a ``schema_cache_ttl``.
+
+        :param value: Naparsovaná JSON hodnota nastavení.
+        :param item_id: Identifikátor nastavení použitý v chybové zprávě.
+
+        :raises ValidationError: Pokud hodnota není kladné celé číslo.
+        :return: ``True`` pokud je hodnota validní.
+        """
+        if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+            raise ValidationError(
+                {
+                    "value": _("api.views.PasApiPermissionMixin.validate_positive_int_setting.invalid_value").format(
+                        item_id=item_id
+                    )
+                }
+            )
+        return True
+
+    @staticmethod
+    def validate_min_request_intervals(raw) -> bool:
+        """
+        Ověří strukturu a obsah nastavení ``min_request_intervals``.
+
+        Očekávaný formát je objekt s nepovinnými klíči ``user_ms`` (nezáporné celé číslo)
+        a ``ip_ms`` (nezáporné celé číslo). Hodnota ``0`` limit deaktivuje.
+
+        :param raw: Naparsovaná JSON hodnota nastavení ``min_request_intervals``.
+
+        :raises ValidationError: Pokud struktura nebo hodnoty neodpovídají očekávání.
+        :return: ``True`` pokud je nastavení validní.
+        """
+        if not isinstance(raw, dict):
+            raise ValidationError(
+                {"value": _("api.views.PasApiPermissionMixin.validate_min_request_intervals.not_a_dict")}
+            )
+        for key in ("user_ms", "ip_ms"):
+            if key in raw:
+                val = raw[key]
+                if not isinstance(val, int) or isinstance(val, bool) or val < 0:
+                    raise ValidationError(
+                        {
+                            "value": _(
+                                "api.views.PasApiPermissionMixin.validate_min_request_intervals.invalid_value"
+                            ).format(key=key)
+                        }
+                    )
+        return True
+
+    @classmethod
+    def get_cache_ttl(cls) -> int:
+        """
+        Vrátí TTL (v sekundách) pro ukládání nastavení PAS API do cache.
+
+        Hodnota se načítá z ``CustomAdminSettings`` (``pas_api/cache_ttl``) a kešuje se
+        po dobu výchozího TTL (``_DEFAULT_CACHE_TTL``). Pokud nastavení neexistuje, vrátí výchozí
+        hodnotu ``_DEFAULT_CACHE_TTL`` (``3600`` sekund).
+
+        :return: TTL v sekundách.
+        """
+        ttl = cache.get(_CACHE_KEY_CACHE_TTL)
+        if ttl is None:
+            raw = cls.load_json_setting(_CACHE_TTL_ID, raise_validation_error=False)
+            if isinstance(raw, int) and not isinstance(raw, bool) and raw > 0:
+                ttl = raw
+            else:
+                ttl = _DEFAULT_CACHE_TTL
+            cache.set(_CACHE_KEY_CACHE_TTL, ttl, _DEFAULT_CACHE_TTL)
+        return ttl
+
+    @classmethod
+    def get_record_lock_ttl(cls) -> int:
+        """
+        Vrátí TTL (v sekundách) pro Redis zámek záznamu.
+
+        Hodnota se načítá z ``CustomAdminSettings`` (``pas_api/record_lock_ttl``) a kešuje se.
+        Pokud nastavení neexistuje, vrátí výchozí hodnotu ``_RECORD_LOCK_DEFAULT_TTL`` (``300`` sekund).
+
+        :return: TTL zámku záznamu v sekundách.
+        """
+        ttl = cache.get(_CACHE_KEY_RECORD_LOCK_TTL)
+        if ttl is None:
+            raw = cls.load_json_setting(_RECORD_LOCK_TTL_ID, raise_validation_error=False)
+            if isinstance(raw, int) and not isinstance(raw, bool) and raw > 0:
+                ttl = raw
+            else:
+                ttl = _RECORD_LOCK_DEFAULT_TTL
+            cache.set(_CACHE_KEY_RECORD_LOCK_TTL, ttl, cls.get_cache_ttl())
+        return ttl
+
+    @classmethod
+    def get_schema_fetch_timeout(cls) -> int:
+        """
+        Vrátí časový limit (v sekundách) pro stahování XSD schémat ze sítě.
+
+        Hodnota se načítá z ``CustomAdminSettings`` (``pas_api/schema_fetch_timeout``) a kešuje se.
+        Pokud nastavení neexistuje, vrátí výchozí hodnotu ``_AMCR_SCHEMA_DEFAULT_FETCH_TIMEOUT`` (``10`` sekund).
+
+        :return: Časový limit v sekundách.
+        """
+        timeout = cache.get(_CACHE_KEY_SCHEMA_FETCH_TIMEOUT)
+        if timeout is None:
+            raw = cls.load_json_setting(_SCHEMA_FETCH_TIMEOUT_ID, raise_validation_error=False)
+            if isinstance(raw, int) and not isinstance(raw, bool) and raw > 0:
+                timeout = raw
+            else:
+                timeout = _AMCR_SCHEMA_DEFAULT_FETCH_TIMEOUT
+            cache.set(_CACHE_KEY_SCHEMA_FETCH_TIMEOUT, timeout, cls.get_cache_ttl())
+        return timeout
+
+    @classmethod
+    def get_schema_cache_ttl(cls) -> int:
+        """
+        Vrátí TTL (v sekundách) pro Redis cache XSD schémat.
+
+        Hodnota se načítá z ``CustomAdminSettings`` (``pas_api/schema_cache_ttl``) a kešuje se.
+        Pokud nastavení neexistuje, vrátí výchozí hodnotu ``_AMCR_SCHEMA_DEFAULT_CACHE_TTL`` (``3600`` sekund).
+
+        :return: TTL cache schémat v sekundách.
+        """
+        ttl = cache.get(_CACHE_KEY_SCHEMA_CACHE_TTL)
+        if ttl is None:
+            raw = cls.load_json_setting(_SCHEMA_CACHE_TTL_ID, raise_validation_error=False)
+            if isinstance(raw, int) and not isinstance(raw, bool) and raw > 0:
+                ttl = raw
+            else:
+                ttl = _AMCR_SCHEMA_DEFAULT_CACHE_TTL
+            cache.set(_CACHE_KEY_SCHEMA_CACHE_TTL, ttl, cls.get_cache_ttl())
+        return ttl
+
+    @classmethod
+    def get_min_request_intervals(cls) -> tuple[int, int]:
+        """
+        Vrátí minimální intervaly (v ms) mezi požadavky pro throttling per-user a per-IP.
+
+        Hodnota se načítá z ``CustomAdminSettings`` (``pas_api/min_request_intervals``) a kešuje se.
+        Pokud nastavení neexistuje, vrátí ``(0, 0)`` (oba limity deaktivovány).
+
+        :return: Dvojice ``(user_ms, ip_ms)``.
+        """
+        intervals = cache.get(_CACHE_KEY_MIN_REQUEST_INTERVALS)
+        if intervals is None:
+            raw = cls.load_json_setting(_MIN_REQUEST_INTERVALS_ID, raise_validation_error=False)
+            if isinstance(raw, dict):
+                user_ms = int(raw.get("user_ms", 0) or 0)
+                ip_ms = int(raw.get("ip_ms", 0) or 0)
+            else:
+                user_ms = 0
+                ip_ms = 0
+            intervals = (user_ms, ip_ms)
+            cache.set(_CACHE_KEY_MIN_REQUEST_INTERVALS, intervals, cls.get_cache_ttl())
+        return intervals
 
     @classmethod
     def get_client_ip(cls, request) -> str:
@@ -933,6 +1164,11 @@ def _invalidate_api_cache(sender, instance=None, **kwargs):
         cache.delete(_CACHE_KEY_TRUSTED_PROXIES)
         cache.delete(_CACHE_KEY_RECORD_LOCK_PARAMS)
         cache.delete(_CACHE_KEY_ALLOWED_SCHEMA_VERSIONS)
+        cache.delete(_CACHE_KEY_CACHE_TTL)
+        cache.delete(_CACHE_KEY_RECORD_LOCK_TTL)
+        cache.delete(_CACHE_KEY_SCHEMA_FETCH_TIMEOUT)
+        cache.delete(_CACHE_KEY_SCHEMA_CACHE_TTL)
+        cache.delete(_CACHE_KEY_MIN_REQUEST_INTERVALS)
 
 
 class IpBlacklistPermission(PasApiPermissionMixin, BasePermission):
@@ -1166,14 +1402,13 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
 
         ident_cely = getattr(view, "kwargs", {}).get("ident_cely") if view is not None else None
 
-        user_interval_ms = int(getattr(settings, "API_MIN_REQUEST_INTERVAL_USER_MS", 0) or 0)
+        user_interval_ms, ip_interval_ms = self.get_min_request_intervals()
         if user_interval_ms > 0 and user_identifier:
             if not self._check_min_interval(
                 f"min_interval_user_{user_identifier}", user_interval_ms, scope="user", identifier=user_identifier
             ):
                 return False
 
-        ip_interval_ms = int(getattr(settings, "API_MIN_REQUEST_INTERVAL_IP_MS", 0) or 0)
         if ip_interval_ms > 0 and client_ip:
             if not self._check_min_interval(
                 f"min_interval_ip_{client_ip}", ip_interval_ms, scope="ip", identifier=client_ip
@@ -1256,8 +1491,8 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
         """
         Ověří, že od posledního požadavku ve stejném scope uplynula minimální doba.
 
-        Limit je globální (aplikuje se na všechny uživatele resp. IP), proto se konfiguruje
-        konstantou v settings, ne v ``CustomAdminSettings``. V Redis je uložena časová značka
+        Limit je globální (aplikuje se na všechny uživatele resp. IP) a konfiguruje se
+        přes ``CustomAdminSettings`` (``pas_api/min_request_intervals``). V Redis je uložena časová značka
         posledního povoleného požadavku. Pokud žádná hodnota není uložena (typicky první požadavek
         po startu nebo po vypršení TTL), je limit považován za splněný a aktuální čas se uloží.
 
@@ -1545,7 +1780,7 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
             instance.igsn_update(False, True)
 
     @staticmethod
-    def _acquire_record_lock(ident_cely: str) -> bool:
+    def _acquire_record_lock(ident_cely: str) -> tuple[bool, int]:
         """
         Pokusí se získat zámek záznamu v Redis.
 
@@ -1558,29 +1793,33 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
 
         :param ident_cely: Identifikátor záznamu, jehož zámek se má získat.
 
-        :return: ``True`` pokud byl zámek úspěšně získán, jinak ``False``.
+        :return: Dvojice ``(úspěch, ttl)`` — TTL se předává do :meth:`_release_record_lock`,
+            aby se zamezilo opakovanému čtení z cache při uvolňování zámku.
         """
         retry_delay, max_retries = PasApiBaseView.get_record_lock_params()
+        record_lock_ttl = PasApiBaseView.get_record_lock_ttl()
         cache_key = f"{_RECORD_LOCK_PREFIX}{ident_cely}"
         for _ in range(max_retries):  # noqa: F402
             with PasApiBaseView._record_lock_thread_lock:
-                if cache.add(cache_key, 1, timeout=_RECORD_LOCK_TTL):
-                    return True
+                if cache.add(cache_key, 1, timeout=record_lock_ttl):
+                    return True, record_lock_ttl
                 if cache.get(cache_key) != 1:
-                    cache.set(cache_key, 1, timeout=_RECORD_LOCK_TTL)
-                    return True
+                    cache.set(cache_key, 1, timeout=record_lock_ttl)
+                    return True, record_lock_ttl
             time.sleep(retry_delay)
-        return False
+        return False, record_lock_ttl
 
     @staticmethod
-    def _release_record_lock(ident_cely: str) -> None:
+    def _release_record_lock(ident_cely: str, ttl: int) -> None:
         """
         Uvolní zámek záznamu nastavením Redis hodnoty na ``0``.
 
         :param ident_cely: Identifikátor záznamu, jehož zámek se má uvolnit.
+        :param ttl: TTL v sekundách — hodnota vrácená z :meth:`_acquire_record_lock`;
+            předává se přímo, aby se zamezilo zbytečnému čtení z cache.
         """
         cache_key = f"{_RECORD_LOCK_PREFIX}{ident_cely}"
-        cache.set(cache_key, 0, timeout=_RECORD_LOCK_TTL)
+        cache.set(cache_key, 0, timeout=ttl)
 
     @staticmethod
     def _verify_content_digest(
@@ -1772,13 +2011,14 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
         cls._validate_schema_url_allowed(schema_url)
 
         now = time.time()
+        schema_cache_ttl = cls.get_schema_cache_ttl()
         cached = cls._amcr_schema_cache.get(schema_url)
-        if cached is not None and now - cached[1] < _AMCR_SCHEMA_CACHE_TTL:
+        if cached is not None and now - cached[1] < schema_cache_ttl:
             return cached[0]
 
         with _AMCR_SCHEMA_LOCK:
             cached = cls._amcr_schema_cache.get(schema_url)
-            if cached is not None and time.time() - cached[1] < _AMCR_SCHEMA_CACHE_TTL:
+            if cached is not None and time.time() - cached[1] < schema_cache_ttl:
                 return cached[0]
 
             class _LocalResolver(etree.Resolver):
@@ -2873,7 +3113,8 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
-        if not self._acquire_record_lock(ident_cely):
+        acquired, lock_ttl = self._acquire_record_lock(ident_cely)
+        if not acquired:
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.PasApiBaseView.record_locked")},
@@ -2898,7 +3139,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             logger.error("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.igsn_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
-            self._release_record_lock(ident_cely)
+            self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.doi_update_error")},
@@ -2908,7 +3149,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             logger.error("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
-            self._release_record_lock(ident_cely)
+            self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
@@ -2918,7 +3159,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             logger.error("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.database_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
-            self._release_record_lock(ident_cely)
+            self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
@@ -2930,7 +3171,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             )
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
-            self._release_record_lock(ident_cely)
+            self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error")},
@@ -2947,14 +3188,14 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             )
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
-            self._release_record_lock(ident_cely)
+            self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error_reading_metadata")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        self._release_record_lock(ident_cely)
+        self._release_record_lock(ident_cely, lock_ttl)
         return self._success(log_entry, instance, metadata, [])
 
     @staticmethod
@@ -3147,7 +3388,8 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
         binary_data.seek(0)
         uploaded_file.seek(0)
 
-        if not self._acquire_record_lock(ident_cely):
+        acquired, lock_ttl = self._acquire_record_lock(ident_cely)
+        if not acquired:
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.PasApiBaseView.record_locked")},
@@ -3160,7 +3402,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
         mimetype = Soubor.get_mime_types(uploaded_file)
         mime_extensions = Soubor.get_file_extension_by_mime(uploaded_file)
         if len(mime_extensions) == 0:
-            self._release_record_lock(ident_cely)
+            self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
                 {"detail": _("core.views.post_upload.mime_rename_failed")},
@@ -3169,7 +3411,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
 
         new_name = get_finds_soubor_name(instance, uploaded_file.name)
         if new_name is False:
-            self._release_record_lock(ident_cely)
+            self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
                 {
@@ -3209,7 +3451,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             logger.error("api.views.SamostatnyNalezFotografieUploadView.post.igsn_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
-            self._release_record_lock(ident_cely)
+            self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezFotografieUploadView.post.internal_error")},
@@ -3219,7 +3461,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             logger.error("api.views.SamostatnyNalezFotografieUploadView.post.fedora_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
-            self._release_record_lock(ident_cely)
+            self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezFotografieUploadView.post.internal_error")},
@@ -3229,7 +3471,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             logger.error("api.views.SamostatnyNalezFotografieUploadView.post.database_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
-            self._release_record_lock(ident_cely)
+            self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezFotografieUploadView.post.internal_error")},
@@ -3239,7 +3481,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             logger.error("api.views.SamostatnyNalezFotografieUploadView.post.unexpected_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
-            self._release_record_lock(ident_cely)
+            self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezFotografieUploadView.post.internal_error")},
@@ -3255,14 +3497,14 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             )
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
-            self._release_record_lock(ident_cely)
+            self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezFotografieUploadView.post.fedora_error_reading_metadata")},
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        self._release_record_lock(ident_cely)
+        self._release_record_lock(ident_cely, lock_ttl)
         return self._success(log_entry, instance, metadata, [], http_status=status.HTTP_201_CREATED)
 
 

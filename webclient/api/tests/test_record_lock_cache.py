@@ -46,7 +46,8 @@ def _process_worker(ident, results_q):
         django.setup()
     from api.views import PasApiBaseView as _PV
 
-    results_q.put(_PV._acquire_record_lock(ident))
+    acquired, _ttl = _PV._acquire_record_lock(ident)
+    results_q.put(acquired)
 
 
 class RecordLockCacheTests(TransactionTestCase):
@@ -75,9 +76,11 @@ class RecordLockCacheTests(TransactionTestCase):
         ident = "TEST_RL_BASIC"
         self._clear(ident)
         try:
-            self.assertTrue(PasApiBaseView._acquire_record_lock(ident))
-            PasApiBaseView._release_record_lock(ident)
-            self.assertTrue(PasApiBaseView._acquire_record_lock(ident))
+            acquired, lock_ttl = PasApiBaseView._acquire_record_lock(ident)
+            self.assertTrue(acquired)
+            PasApiBaseView._release_record_lock(ident, lock_ttl)
+            acquired2, _ = PasApiBaseView._acquire_record_lock(ident)
+            self.assertTrue(acquired2)
         finally:
             self._clear(ident)
 
@@ -86,8 +89,10 @@ class RecordLockCacheTests(TransactionTestCase):
         ident = "TEST_RL_REENTRANT"
         self._clear(ident)
         try:
-            self.assertTrue(PasApiBaseView._acquire_record_lock(ident))
-            self.assertFalse(PasApiBaseView._acquire_record_lock(ident))
+            acquired, _ = PasApiBaseView._acquire_record_lock(ident)
+            self.assertTrue(acquired)
+            acquired2, _ = PasApiBaseView._acquire_record_lock(ident)
+            self.assertFalse(acquired2)
         finally:
             self._clear(ident)
 
@@ -97,10 +102,11 @@ class RecordLockCacheTests(TransactionTestCase):
         key = f"{_RECORD_LOCK_PREFIX}{ident}"
         self._clear(ident)
         try:
-            PasApiBaseView._acquire_record_lock(ident)
-            PasApiBaseView._release_record_lock(ident)
+            _, lock_ttl = PasApiBaseView._acquire_record_lock(ident)
+            PasApiBaseView._release_record_lock(ident, lock_ttl)
             self.assertEqual(cache.get(key), 0)
-            self.assertTrue(PasApiBaseView._acquire_record_lock(ident))
+            acquired, _ = PasApiBaseView._acquire_record_lock(ident)
+            self.assertTrue(acquired)
             self.assertEqual(cache.get(key), 1)
         finally:
             self._clear(ident)
@@ -131,7 +137,7 @@ class RecordLockCacheTests(TransactionTestCase):
 
         def worker():
             barrier.wait()
-            ok = PasApiBaseView._acquire_record_lock(ident)
+            ok, _ttl = PasApiBaseView._acquire_record_lock(ident)
             with result_lock:
                 results.append(ok)
 

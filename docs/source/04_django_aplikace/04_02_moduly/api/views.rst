@@ -103,10 +103,58 @@ Třídy
 
               {"retry_delay": 1.0, "max_retries": 5}
 
-      Změny v administraci se projeví do ``30`` sekund (TTL cache).
+      ``cache_ttl`` (``item_id="cache_ttl"``)
+          TTL (v sekundách) pro ukládání ostatních nastavení PAS API do cache.
+          Musí být kladné celé číslo. Výchozí hodnota je ``3600``.
+
+          Příklad::
+
+              60
+
+      ``record_lock_ttl`` (``item_id="record_lock_ttl"``)
+          TTL (v sekundách) pro Redis zámek záznamu. Musí být kladné celé číslo.
+          Výchozí hodnota je ``300`` (5 minut).
+
+          Příklad::
+
+              600
+
+      ``schema_fetch_timeout`` (``item_id="schema_fetch_timeout"``)
+          Časový limit (v sekundách) pro stahování XSD schémat ze sítě.
+          Musí být kladné celé číslo. Výchozí hodnota je ``10``.
+
+          Příklad::
+
+              30
+
+      ``schema_cache_ttl`` (``item_id="schema_cache_ttl"``)
+          TTL (v sekundách) pro Redis cache XSD schémat. Musí být kladné celé číslo.
+          Výchozí hodnota je ``3600`` (60 minut).
+
+          Příklad::
+
+              7200
+
+      ``min_request_intervals`` (``item_id="min_request_intervals"``)
+          Minimální interval mezi po sobě jdoucími požadavky pro globální throttling.
+          Objekt s volitelnými klíči:
+
+          - ``user_ms`` *(volitelný, výchozí ``0``)* — minimální interval v milisekundách
+            pro téhož uživatele; hodnota ``0`` limit deaktivuje
+          - ``ip_ms`` *(volitelný, výchozí ``0``)* — minimální interval v milisekundách
+            pro tutéž IP adresu; hodnota ``0`` limit deaktivuje
+
+          Pokud nastavení chybí, jsou oba limity deaktivovány (hodnota ``0``).
+
+          Příklad::
+
+              {"user_ms": 500, "ip_ms": 200}
+
+      Změny v administraci se projeví do hodnoty ``cache_ttl`` (výchozí ``3600`` sekund); změny provedené přes Django admin se projeví okamžitě díky invalidaci cache signálem ``post_save``.
 
       :param item_id: Identifikátor záznamu — ``"access_rules"``, ``"rate_limits"``, ``"access_mode"``,
-          ``"trusted_proxies"`` nebo ``"record_lock_params"``.
+          ``"trusted_proxies"``, ``"record_lock_params"``, ``"cache_ttl"``, ``"record_lock_ttl"``,
+          ``"schema_fetch_timeout"``, ``"schema_cache_ttl"`` nebo ``"min_request_intervals"``.
 
       :param raise_validation_error: Pokud je ``True`` (výchozí), nevalidní JSON vyhodí ``ValidationError``.
 
@@ -248,6 +296,77 @@ Třídy
       seznam hodnot jako ``float``.
 
       :return: Seznam povolených verzí nebo ``None``, pokud nastavení není nakonfigurováno.
+
+   .. py:method:: validate_positive_int_setting()
+
+      Ověří, že hodnota nastavení je kladné celé číslo.
+
+      Používá se pro nastavení ``cache_ttl``, ``record_lock_ttl``, ``schema_fetch_timeout``
+      a ``schema_cache_ttl``.
+
+      :param value: Naparsovaná JSON hodnota nastavení.
+      :param item_id: Identifikátor nastavení použitý v chybové zprávě.
+
+      :raises ValidationError: Pokud hodnota není kladné celé číslo.
+      :return: ``True`` pokud je hodnota validní.
+
+   .. py:method:: validate_min_request_intervals()
+
+      Ověří strukturu a obsah nastavení ``min_request_intervals``.
+
+      Očekávaný formát je objekt s nepovinnými klíči ``user_ms`` (nezáporné celé číslo)
+      a ``ip_ms`` (nezáporné celé číslo). Hodnota ``0`` limit deaktivuje.
+
+      :param raw: Naparsovaná JSON hodnota nastavení ``min_request_intervals``.
+
+      :raises ValidationError: Pokud struktura nebo hodnoty neodpovídají očekávání.
+      :return: ``True`` pokud je nastavení validní.
+
+   .. py:method:: get_cache_ttl()
+
+      Vrátí TTL (v sekundách) pro ukládání nastavení PAS API do cache.
+
+      Hodnota se načítá z ``CustomAdminSettings`` (``pas_api/cache_ttl``) a kešuje se
+      po dobu výchozího TTL (``_DEFAULT_CACHE_TTL``). Pokud nastavení neexistuje, vrátí výchozí
+      hodnotu ``_DEFAULT_CACHE_TTL`` (``3600`` sekund).
+
+      :return: TTL v sekundách.
+
+   .. py:method:: get_record_lock_ttl()
+
+      Vrátí TTL (v sekundách) pro Redis zámek záznamu.
+
+      Hodnota se načítá z ``CustomAdminSettings`` (``pas_api/record_lock_ttl``) a kešuje se.
+      Pokud nastavení neexistuje, vrátí výchozí hodnotu ``_RECORD_LOCK_DEFAULT_TTL`` (``300`` sekund).
+
+      :return: TTL zámku záznamu v sekundách.
+
+   .. py:method:: get_schema_fetch_timeout()
+
+      Vrátí časový limit (v sekundách) pro stahování XSD schémat ze sítě.
+
+      Hodnota se načítá z ``CustomAdminSettings`` (``pas_api/schema_fetch_timeout``) a kešuje se.
+      Pokud nastavení neexistuje, vrátí výchozí hodnotu ``_AMCR_SCHEMA_DEFAULT_FETCH_TIMEOUT`` (``10`` sekund).
+
+      :return: Časový limit v sekundách.
+
+   .. py:method:: get_schema_cache_ttl()
+
+      Vrátí TTL (v sekundách) pro Redis cache XSD schémat.
+
+      Hodnota se načítá z ``CustomAdminSettings`` (``pas_api/schema_cache_ttl``) a kešuje se.
+      Pokud nastavení neexistuje, vrátí výchozí hodnotu ``_AMCR_SCHEMA_DEFAULT_CACHE_TTL`` (``3600`` sekund).
+
+      :return: TTL cache schémat v sekundách.
+
+   .. py:method:: get_min_request_intervals()
+
+      Vrátí minimální intervaly (v ms) mezi požadavky pro throttling per-user a per-IP.
+
+      Hodnota se načítá z ``CustomAdminSettings`` (``pas_api/min_request_intervals``) a kešuje se.
+      Pokud nastavení neexistuje, vrátí ``(0, 0)`` (oba limity deaktivovány).
+
+      :return: Dvojice ``(user_ms, ip_ms)``.
 
    .. py:method:: get_client_ip()
 
@@ -413,8 +532,8 @@ Třídy
 
       Ověří, že od posledního požadavku ve stejném scope uplynula minimální doba.
 
-      Limit je globální (aplikuje se na všechny uživatele resp. IP), proto se konfiguruje
-      konstantou v settings, ne v ``CustomAdminSettings``. V Redis je uložena časová značka
+      Limit je globální (aplikuje se na všechny uživatele resp. IP) a konfiguruje se
+      přes ``CustomAdminSettings`` (``pas_api/min_request_intervals``). V Redis je uložena časová značka
       posledního povoleného požadavku. Pokud žádná hodnota není uložena (typicky první požadavek
       po startu nebo po vypršení TTL), je limit považován za splněný a aktuální čas se uloží.
 
@@ -542,13 +661,16 @@ Třídy
 
       :param ident_cely: Identifikátor záznamu, jehož zámek se má získat.
 
-      :return: ``True`` pokud byl zámek úspěšně získán, jinak ``False``.
+      :return: Dvojice ``(úspěch, ttl)`` — TTL se předává do :meth:`_release_record_lock`,
+          aby se zamezilo opakovanému čtení z cache při uvolňování zámku.
 
    .. py:method:: _release_record_lock()
 
       Uvolní zámek záznamu nastavením Redis hodnoty na ``0``.
 
       :param ident_cely: Identifikátor záznamu, jehož zámek se má uvolnit.
+      :param ttl: TTL v sekundách — hodnota vrácená z :meth:`_acquire_record_lock`;
+          předává se přímo, aby se zamezilo zbytečnému čtení z cache.
 
    .. py:method:: _verify_content_digest()
 
