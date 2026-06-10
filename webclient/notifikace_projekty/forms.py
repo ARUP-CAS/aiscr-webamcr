@@ -1,4 +1,5 @@
 import logging
+from itertools import groupby
 
 from core.widgets import AutocompleteListSelect2
 from crispy_forms.helper import FormHelper
@@ -23,6 +24,72 @@ PES_NOTIFICATIONS = [
     "S-E-P-02b",
     "S-E-P-02c",
 ]
+
+
+def _katastr_pk_or_none(value):
+    """
+    Bezpečně převede hodnotu na celočíselný ``pk`` katastru.
+
+    Chrání před ``ValueError`` z databázového dotazu při nečíselné (podvržené) hodnotě.
+
+    :param value: Vstupní hodnota (typicky řetězec z formuláře).
+
+        :return: Celé číslo, nebo ``None``, není-li hodnota platné číslo.
+    """
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def build_katastr_label_choices(object_id):
+    """
+    Vrátí volbu (``pk``, ``název (okres)``) pro jeden vybraný katastr kvůli popisku ve výběru.
+
+    Slouží jen k vykreslení už zvoleného katastru u existujícího psa; nový formulář žádný
+    katastr vybraný nemá. Nahrazuje načítání celého číselníku katastrů.
+
+    :param object_id: Primární klíč zvoleného katastru, nebo ``None``/prázdná hodnota.
+
+        :return: Seznam s jednou dvojicí, nebo prázdný seznam, není-li katastr vybrán.
+    """
+    pk = _katastr_pk_or_none(object_id)
+    if pk is None:
+        return []
+    return list(
+        RuianKatastr.objects.filter(pk=pk)
+        .annotate(
+            full_name=Concat(
+                "nazev",
+                Value(" ("),
+                "okres__nazev",
+                Value(")"),
+                output_field=CharField(),
+            )
+        )
+        .values_list("pk", "full_name")
+    )
+
+
+class KatastrAutocompleteChoiceField(forms.ChoiceField):
+    """
+    ``ChoiceField`` pro katastr s AJAX autocomplete – validuje proti databázi, ne proti ``choices``.
+
+    Standardní ``ChoiceField`` ověřuje odeslanou hodnotu proti seznamu ``choices``, což by
+    vynutilo načtení všech katastrů. Místo toho ověříme existenci jediného odeslaného ``pk``
+    přímo v databázi (indexovaný dotaz).
+    """
+
+    def valid_value(self, value):
+        """
+        Ověří, že hodnota odpovídá existujícímu katastru.
+
+        :param value: Odeslaný primární klíč katastru.
+
+            :return: ``True``, pokud katastr s daným ``pk`` existuje.
+        """
+        pk = _katastr_pk_or_none(value)
+        return pk is not None and RuianKatastr.objects.filter(pk=pk).exists()
 
 
 def create_pes_form(not_readonly=True, model_typ=None):
@@ -56,12 +123,11 @@ def create_pes_form(not_readonly=True, model_typ=None):
             super(PesForm, self).__init__(*args, **kwargs)
             self.model_typ = model_typ
             if model_typ == KRAJ_CONTENT_TYPE:
-                if self.instance.pk is not None:
-                    new_choices = list(RuianKraj.objects.all().values_list("id", "nazev"))
-                else:
-                    new_choices = [("", "")] + list(RuianKraj.objects.all().values_list("id", "nazev"))
+                choices = list(RuianKraj.objects.values_list("id", "nazev"))
+                if self.instance.pk is None:
+                    choices = [("", "")] + choices
                 self.fields["object_id"] = forms.ChoiceField(
-                    choices=new_choices,
+                    choices=choices,
                     label=_("notifikaceProjekty.forms.pesForm.kraj.label"),
                     help_text=_("notifikaceProjekty.forms.pesForm.kraj.tooltip"),
                     required=True,
@@ -74,20 +140,15 @@ def create_pes_form(not_readonly=True, model_typ=None):
                     ),
                 )
             elif model_typ == OKRES_CONTENT_TYPE:
-                if self.instance.pk is not None:
-                    okresy_choices = []
-                else:
-                    okresy_choices = [("", "")]
-                kraje = RuianKraj.objects.all()
-                for kraj in kraje:
-                    kraj_group = []
-                    okresy = RuianOkres.objects.filter(kraj=kraj)
-                    for okres in okresy:
-                        kraj_group.append((okres.pk, okres.nazev))
-                    kraj_group = (kraj.nazev, tuple(kraj_group))
-                    okresy_choices.append(kraj_group)
+                okresy = RuianOkres.objects.select_related("kraj").order_by("kraj__nazev", "nazev")
+                choices = [
+                    (kraj_nazev, tuple((okres.pk, okres.nazev) for okres in skupina))
+                    for kraj_nazev, skupina in groupby(okresy, key=lambda okres: okres.kraj.nazev)
+                ]
+                if self.instance.pk is None:
+                    choices = [("", "")] + choices
                 self.fields["object_id"] = forms.ChoiceField(
-                    choices=okresy_choices,
+                    choices=choices,
                     label=_("notifikaceProjekty.forms.pesForm.okres.label"),
                     help_text=_("notifikaceProjekty.forms.pesForm.okres.tooltip"),
                     required=True,
@@ -100,20 +161,17 @@ def create_pes_form(not_readonly=True, model_typ=None):
                     ),
                 )
             elif model_typ == KATASTR_CONTENT_TYPE:
-                katastre_choices = RuianKatastr.objects.annotate(
-                    full_name=Concat(
-                        "nazev",
-                        Value(" ("),
-                        "okres__nazev",
-                        Value(")"),
-                        output_field=CharField(),
+                if self.is_bound:
+                    selected_id = self.data.get(self.add_prefix("object_id"))
+                else:
+                    selected_id = self.initial.get("object_id") or (
+                        self.instance.object_id if self.instance.pk else None
                     )
-                ).values_list("pk", "full_name")
-                self.fields["object_id"] = forms.ChoiceField(
+                self.fields["object_id"] = KatastrAutocompleteChoiceField(
                     label=_("notifikaceProjekty.forms.pesForm.katastr.label"),
                     help_text=_("notifikaceProjekty.forms.pesForm.katastr.tooltip"),
                     widget=AutocompleteListSelect2(url="heslar:katastr-autocomplete"),
-                    choices=katastre_choices,
+                    choices=build_katastr_label_choices(selected_id),
                     required=True,
                 )
             for key in self.fields.keys():
@@ -152,11 +210,12 @@ def create_pes_form(not_readonly=True, model_typ=None):
                 :raises forms.ValidationError: Vyvolá se při splnění podmínky ``duplicates.exists()``.
             """
             super().clean(*args, **kwargs)
-            # Načte hodnoty a zkontroluje duplicity.
+            object_id = self.cleaned_data.get("object_id")
+            if object_id in (None, ""):
+                return self.cleaned_data
 
-            # Najde duplicitní záznamy.
             duplicates = Pes.objects.filter(
-                object_id=self.cleaned_data["object_id"],
+                object_id=object_id,
                 content_type=ContentType.objects.get(model=self.model_typ),
                 user=self.instance.user,
             )
@@ -230,6 +289,34 @@ class PesNotificationsForm(forms.ModelForm):
 
 class PesInlineFormSet(forms.BaseInlineFormSet):
     """Implementuje komponentu ``PesInlineFormSet`` v rámci aplikace."""
+
+    def clean(self):
+        """
+        Ověří, že formset neobsahuje dvě shodné jednotky (stejné ``object_id``).
+
+        Per-form ``clean`` kontroluje duplicity jen vůči databázi, takže dva nové
+        shodné hlídací psy odeslané najednou by jinak prošly a druhý ``INSERT`` by
+        spadl na unikátní omezení ``unique_pes`` (``user``, ``content_type``,
+        ``object_id``). ``user`` ani ``content_type`` nejsou poli formuláře, proto
+        je standardní ``validate_unique`` neumí ochránit.
+
+        :raises forms.ValidationError: Vyvolá se při nalezení duplicitního ``object_id``.
+        """
+        super().clean()
+        if any(self.errors):
+            return
+        seen_object_ids = set()
+        for form in self.forms:
+            if not getattr(form, "cleaned_data", None):
+                continue
+            if self.can_delete and self._should_delete_form(form):
+                continue
+            object_id = form.cleaned_data.get("object_id")
+            if object_id in (None, ""):
+                continue
+            if object_id in seen_object_ids:
+                raise forms.ValidationError(_("notifikaceProjekty.forms.pesForm.stejnaJendotka.error"))
+            seen_object_ids.add(object_id)
 
     def count_non_empty_forms(self):
         """

@@ -1,4 +1,4 @@
-Django==5.2.14
+Django==5.2.15
 psycopg2-binary==2.9.12
 simplejson==4.1.1
 django-crispy-forms==2.6
@@ -12,7 +12,7 @@ django-compressor==4.6.0
 django-libsass==0.9 
 django-autocomplete-light==3.12.1
 django-widget-tweaks==1.5.1
-distlib==0.4.0
+distlib==0.4.1
 django-rosetta==0.10.3
 django-auto-logout==0.5.1
 reportlab==4.5.1
@@ -47,7 +47,7 @@ coverage==7.14.1
 django-debug-toolbar==6.3.0
 django-livereload-server==0.5.1
 django-debug-toolbar-template-profiler==2.1.0
-django-object-actions==5.1.1
+django-object-actions==5.1.2
 uWSGI==2.0.31
 requests==2.34.2
 httpx==0.28.1

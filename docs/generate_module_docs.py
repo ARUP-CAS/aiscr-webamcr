@@ -2285,6 +2285,30 @@ def _fetch_dockerhub_odkaz(image: str) -> str:
         return ""
 
 
+def _is_git_ignored(path: Path) -> bool:
+    """Zjistí, zda je soubor ignorovaný gitem (``.gitignore`` apod.).
+
+    Využívá ``git check-ignore``. Pokud git není dostupný nebo příkaz selže,
+    soubor se považuje za sledovaný (vrací ``False``), aby kontrola zůstala
+    konzervativní mimo git repozitář.
+
+    :param path: Cesta k souboru ke kontrole.
+    :type path: Path
+    :return: True, pokud je soubor ignorovaný gitem, jinak False.
+    :rtype: bool
+    """
+    try:
+        result = subprocess.run(
+            ["git", "check-ignore", "-q", path.name],
+            cwd=path.parent,
+            capture_output=True,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    # Exit code 0 = ignorovaný, 1 = neignorovaný, 128 = mimo git repozitář.
+    return result.returncode == 0
+
+
 class DockerImageScanner:
     """Prohledává soubory projektu a sbírá tagy Docker image.
 
@@ -2392,7 +2416,7 @@ class DockerImageScanner:
         """
         priority_files = ["docker-compose.yml", "docker-compose-proxy.yml"]
 
-        all_compose = sorted(self.project_root.glob("docker-compose*.yml"))
+        all_compose = [f for f in sorted(self.project_root.glob("docker-compose*.yml")) if not _is_git_ignored(f)]
         ordered: List[Path] = []
 
         for name in priority_files:

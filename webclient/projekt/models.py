@@ -215,6 +215,18 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         if hasattr(self, "get_absolute_url") and hasattr(self, "ident_cely"):
             return f"<a href='{self.get_absolute_url()}' target='_blank' class='link-projekt'>{self.ident_cely}</a>"
 
+    def popis_s_vedoucim(self):
+        """
+        Vrací popisek projektu pro výběrová pole ve tvaru ``ident_cely (vedoucí projektu)``.
+
+        Pokud projekt nemá přiřazeného vedoucího, vrátí pouze ``ident_cely``.
+
+        :return: Textový popisek projektu s vedoucím.
+        """
+        if self.vedouci_projektu:
+            return "%s (%s)" % (self.ident_cely, self.vedouci_projektu)
+        return self.ident_cely
+
     def save(self, *args, **kwargs):
         """
         Uloží změny objektu.
