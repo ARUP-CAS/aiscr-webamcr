@@ -105,7 +105,7 @@ services:
     command: sh -c 'redis-server /home/redis/redis.conf'
 
   redis-exporter:
-    image: oliver006/redis_exporter:v1.84.0-alpine
+    image: oliver006/redis_exporter:v1.86.0-alpine
     ports:
       - "9121:9121"
     secrets:
