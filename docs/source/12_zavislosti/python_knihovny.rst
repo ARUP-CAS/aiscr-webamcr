@@ -184,7 +184,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Salamek/cron-descriptor
    * - cryptography
-     - 48.0.0
+     - 48.0.1
      - Apache-2.0 OR BSD-3-Clause
      - https://github.com/pyca/cryptography
    * - defusedxml
@@ -192,7 +192,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Python Software Foundation License
      - https://github.com/tiran/defusedxml
    * - distlib
-     - 0.4.1
+     - 0.4.2
      - Python Software Foundation License
      - https://github.com/pypa/distlib
    * - django-add-default-value
@@ -280,7 +280,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/djk2/django-tables2-column-shifter
    * - django-timezone-field
-     - 7.2.1
+     - 7.2.2
      - BSD License
      - https://github.com/mfogel/django-timezone-field/
    * - django-widget-tweaks
@@ -312,7 +312,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.29.1
+     - 3.29.3
      - MIT
      - https://github.com/tox-dev/py-filelock
    * - freezegun
@@ -400,7 +400,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.31
+     - 9.0.32
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -476,7 +476,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 6.12.2
+     - 6.13.2
      - BSD-3-Clause
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -628,7 +628,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/foutaise/texttable/
    * - tornado
-     - 6.5.6
+     - 6.5.7
      - Apache Software License
      - http://www.tornadoweb.org/
    * - trio
@@ -668,7 +668,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
-     - 0.7.0
+     - 0.8.1
      - MIT
      - https://github.com/jquast/wcwidth
    * - websocket-client

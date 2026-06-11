@@ -94,7 +94,7 @@ Image pro synchronizaci souborů pomocí rsync. Používá se pro zálohování 
 oliver006/redis_exporter
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** v1.84.0-alpine
+- **Verze:** v1.86.0-alpine
 - **Licence:** MIT license
 - **Odkaz:** https://github.com/oliver006/redis_exporter
 
