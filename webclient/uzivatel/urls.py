@@ -1,8 +1,6 @@
 from django.urls import path
 
 from .views import (
-    GetUserInfo,
-    ObtainAuthTokenWithUpdate,
     UserAccountUpdateView,
     UserDeleteRequest,
     UzivatelAutocomplete,
@@ -25,7 +23,5 @@ urlpatterns = [
     ),
     path("uzivatel/edit/", UserAccountUpdateView.as_view(), name="update-uzivatel"),
     path("uzivatel/notifikace/edit/", update_notifications, name="update-notifications"),
-    path("api/token-auth/", ObtainAuthTokenWithUpdate.as_view()),
-    path("api/uzivatel-info/", GetUserInfo.as_view()),
     path("uzivatel/delete-request/", UserDeleteRequest.as_view(), name="delete-uzivatel-request"),
 ]

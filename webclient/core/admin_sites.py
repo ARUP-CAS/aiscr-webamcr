@@ -216,10 +216,10 @@ class AmcrCustomAdminSite(admin.AdminSite):
 
         # 10. Logy API
         section = make_section(
-            _("core.admin_site.AmcrCustomAdminSite.logy_api"),
+            _("api.admin_site.AmcrCustomAdminSite.logy_api"),
             "logy_api",
             [
-                find_model("core", "ApiRequestLog"),
+                find_model("api", "ApiRequestLog"),
             ],
         )
         if section:

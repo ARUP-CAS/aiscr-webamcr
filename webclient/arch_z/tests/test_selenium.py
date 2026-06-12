@@ -547,27 +547,13 @@ class AkceProjektoveAkce(AkceTestClass):
         self.login()
         self.createFedoraRecord("C-202004814")
         self.uploadFileToFedora(253674, "projekt/tests/resources/test.pdf")
-        self.go_to_Projekty_vyper()
         count_old = NalezPredmet.objects.filter(
             komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="C-202004814A-D01"
         ).count()
 
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202004814")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "C-202004814")
-        self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "el_komponenta_C_202004814A_K001")
-
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_C-202004814A-K001_p-0-druh .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-15-82 > .text")
-
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_C-202004814A-K001_p-0-specifikace .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-16-15 > .text")
-
-        self.ElementClick(By.ID, "id_C-202004814A-K001_p-0-pocet")
+        self.goToAddress("/arch-z/akce/detail/C-202004814A/dj/C-202004814A-D01/komponenta/detail/C-202004814A-K001")
+        self.select_dynamic_selectpicker_option("id_C-202004814A-K001_p-0-druh", "džbán", wait_ajax=True)
+        self.select_dynamic_selectpicker_option("id_C-202004814A-K001_p-0-specifikace", "keramika")
         self.driver.find_element(By.ID, "id_C-202004814A-K001_p-0-pocet").send_keys("1")
 
         with WaitForPageLoad(self.driver):
@@ -2829,11 +2815,10 @@ class AkceSamostatneAkce(AkceTestClass):
         # Vytvoření akce_vedoucí
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
-        self.ElementClick(By.CSS_SELECTOR, ".select2-selection__placeholder")
-        self.wait_for_select2_results()
-        self.ElementClick(By.CSS_SELECTOR, "#select2-id__osv-0-vedouci-results > li:nth-child(5)")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id__osv-0-organizace .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-9-9 > .text")
+
+        self.select_dynamic_select2_autocomplete_option("id__osv-0-vedouci", "Abuši")
+        self.select_dynamic_selectpicker_option("id__osv-0-organizace", "Archaia")
+
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "actionSubmitBtn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_vedouci")
@@ -2841,11 +2826,8 @@ class AkceSamostatneAkce(AkceTestClass):
         # Úprava akce_vedoucí
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id__osv-0-organizace .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-9-16 > .text")
-        self.ElementClick(By.CSS_SELECTOR, "#select2-id__osv-0-vedouci-container")
-        self.wait_for_select2_results()
-        self.ElementClick(By.CSS_SELECTOR, "#select2-id__osv-0-vedouci-results > li:nth-child(4)")
+        self.select_dynamic_select2_autocomplete_option("id__osv-0-vedouci", "Absolon, Ka")
+        self.select_dynamic_selectpicker_option("id__osv-0-organizace", "ARCHEO S")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "actionSubmitBtn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_vedouci")
@@ -2853,7 +2835,7 @@ class AkceSamostatneAkce(AkceTestClass):
         # Smazání akce_vedoucí
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
-        self.ElementClick(By.CSS_SELECTOR, ".app-color-danger")
+        self.ElementClick(By.ID, "objekt-smazat-13241")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         with WaitForPageLoad(self.driver):
@@ -2862,9 +2844,8 @@ class AkceSamostatneAkce(AkceTestClass):
 
         # Vytvoření DJ
         time = self.getTime()
-        self.ElementClick(By.CSS_SELECTOR, "#button-add-dj > .material-icons")
-        self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
+        self.ElementClick(By.ID, "button-add-dj")
+        self.select_dynamic_selectpicker_option("dj_typ_id", "celek")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDjSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_DJ")
@@ -2879,7 +2860,7 @@ class AkceSamostatneAkce(AkceTestClass):
 
         # Smazání DJ
         time = self.getTime()
-        self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
+        self.ElementClick(By.ID, "others")
         self.ElementClick(By.ID, "dj-smazat-X-M-9922437A-D01")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
@@ -2887,54 +2868,33 @@ class AkceSamostatneAkce(AkceTestClass):
 
         # Vytvoření komponenty
         self.createFedoraRecord("X-C-9000000002A", "archivar")
-        self.goToAddress("/id/X-C-9000000002A")
+        self.goToAddress("/arch-z/akce/detail/X-C-9000000002A/dj/X-C-9000000002A-D01/komponenta/zapsat")
         time = self.getTime()
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000002A_D01 > strong")
-        self.ElementClick(
-            By.CSS_SELECTOR, "#detail_dj_form_X-C-9000000002A-D01 .btn-group:nth-child(1) .material-icons"
-        )
-        self.ElementClick(
-            By.LINK_TEXT, _("arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridatKomponentu.label")
-        )
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_obdobi .btn")
-        self.ElementClick(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control")
-        self.ElementSendKeys(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control", "únětická kultura")
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_areal .filter-option-inner-inner")
-        self.ElementSendKeys(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control", "poh")
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
-        self.wait(1)
+        self.select_dynamic_selectpicker_option("id_obdobi", "protoúnětická kultura")
+        self.select_dynamic_selectpicker_option("id_areal", "pohřební areál")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "createCompotSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_komponenta")
 
         # Úprava komponenty
         time = self.getTime()
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001-obdobi .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-6 > .text")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001-jistota .filter-option-inner-inner")
-        self.ElementClick(By.ID, "bs-select-2-1")
-        self.ElementClick(By.ID, "id_X-C-9000000002A-K001-presna_datace")
+        self.select_dynamic_selectpicker_option("id_X-C-9000000002A-K001-obdobi", "moustérien")
+        self.select_nth_selectpicker_option("id_X-C-9000000002A-K001-jistota", 1)
         self.ElementSendKeys(By.ID, "id_X-C-9000000002A-K001-presna_datace", "ne")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001-areal .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-5 > .text")
-        self.ElementClick(By.CSS_SELECTOR, ".show-tick .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-4-1 > .text")
+        self.select_dynamic_selectpicker_option(
+            "id_X-C-9000000002A-K001-areal", "osídlený skalní prostor", wait_ajax=True
+        )
+        self.select_multiple_selectpicker_options("id_X-C-9000000002A-K001-aktivity", ["pohřbívání", "sídlení"])
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editKompSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_komponenta")
 
         # Vytvoření nálezu
         time = self.getTime()
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001_o-0-druh .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-7-8 > .text")
-        self.ElementClick(By.ID, "id_X-C-9000000002A-K001_o-0-pocet")
+        self.select_dynamic_selectpicker_option("id_X-C-9000000002A-K001_o-0-druh", "kašna")
         self.ElementSendKeys(By.ID, "id_X-C-9000000002A-K001_o-0-pocet", "1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001_p-0-druh .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-15-19 > .text")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001_p-0-specifikace .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-16-4 > .text")
+        self.select_dynamic_selectpicker_option("id_X-C-9000000002A-K001_p-0-druh", "hudební nástroj", wait_ajax=True)
+        self.select_dynamic_selectpicker_option("id_X-C-9000000002A-K001_p-0-specifikace", "dehet")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editKompSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_nalez")
@@ -2942,13 +2902,9 @@ class AkceSamostatneAkce(AkceTestClass):
         # Úprava nálezu
         time = self.getTime()
         self.ElementSendKeys(By.ID, "id_X-C-9000000002A-K001_o-0-pocet", "2")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001_p-0-specifikace .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-18-14 > .text")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001_o-0-specifikace .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-8-7 > .text")
-        self.ElementClick(By.ID, "id_X-C-9000000002A-K001_p-0-pocet")
+        self.select_dynamic_selectpicker_option("id_X-C-9000000002A-K001_p-0-specifikace", "kámen – štípaný")
+        self.select_dynamic_selectpicker_option("id_X-C-9000000002A-K001_o-0-specifikace", "konstrukce – dřevěná")
         self.ElementSendKeys(By.ID, "id_X-C-9000000002A-K001_p-0-pocet", "2")
-        self.ElementClick(By.ID, "id_X-C-9000000002A-K001_p-0-poznamka")
         self.ElementSendKeys(By.ID, "id_X-C-9000000002A-K001_p-0-poznamka", "test")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editKompSubmitButton")
@@ -2991,24 +2947,14 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.ID, "others_doc")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.LINK_TEXT, _("dokument.templates.dokument_table.pridatNovyDokument.label"))
-        self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
-        self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "Pavloň")
-        self.wait_for_select2_results()
-        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
-        self.ElementClick(By.ID, "id_rok_vzniku")
+        self.select_multiple_select2_autocomplete_options("id_autori", ["Pavloň"])
         self.ElementSendKeys(By.ID, "id_rok_vzniku", "2023")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_organizace .filter-option-inner-inner")
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(
-            "Archeologický ústav Brno"
-        )
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_typ_dokumentu .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
+        self.select_dynamic_selectpicker_option("id_organizace", "Archeologický ústav Brno", wait_ajax=True)
+        self.select_nth_selectpicker_option("id_typ_dokumentu", wait_ajax=True)
         self.select_nth_selectpicker_option("id_material_originalu")
         self.ElementClick(By.ID, "id_popis")
         self.ElementSendKeys(By.ID, "id_popis", "test")
-        self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
-        self.ElementClick(By.ID, "bs-select-7-1")
+        self.select_nth_selectpicker_option("id_pristupnost")
         self.select_nth_selectpicker_option("id_licence")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
@@ -3028,9 +2974,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.createFedoraRecord("BIB-0000001", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "eo-pripojit-do-az")
-        self.ElementClick(By.ID, "select2-id_ez-container")
-        self.wait_for_select2_results()
-        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        self.select_dynamic_select2_autocomplete_option("id_ez", "BIB-0000001")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_EZ")
@@ -3098,10 +3042,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.goToAddress("/id/X-M-91558334A")
         self.ElementClick(By.ID, "others_doc")
         self.ElementClick(By.ID, "dokument-pripojit")
-        self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
-        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("M-TX-194300151")
-        self.wait_for_select2_results()
-        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        self.select_dynamic_select2_autocomplete_option("id_dokument", "M-TX-194300151")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_dokument_cast_1")

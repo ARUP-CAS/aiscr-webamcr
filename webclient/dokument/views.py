@@ -91,6 +91,7 @@ from dokument.forms import (
     EditDokumentExtraDataForm,
     EditDokumentForm,
     PripojitDokumentForm,
+    RegionForm,
     TvarFormSetHelper,
     create_tvar_form,
 )
@@ -687,6 +688,7 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
     form_class = DokumentCastForm
     slug_field = "ident_cely"
     active_transaction = None
+    prefix = "editcast"
 
     def get_context_data(self, **kwargs):
         """
@@ -706,6 +708,7 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
         }
         context["form"] = DokumentCastForm(
             instance=self.object,
+            prefix=self.get_prefix(),
         )
         return context
 
@@ -2518,6 +2521,7 @@ def zapsat(request, zaznam=None):
             "TYP_ZAZNAMU_LOKALITA": ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA,
             "TYP_ZAZNAMU_AKCE": ArcheologickyZaznam.TYP_ZAZNAMU_AKCE,
             "formDokument": form_d,
+            "formRegionModal": RegionForm(prefix="modal"),
             "hierarchie": get_hierarchie_dokument_typ(),
             "samostatny": True if not zaznam else False,
             "toolbar_label": _("dokument.views.zapsat.dokument.toolbar_label"),

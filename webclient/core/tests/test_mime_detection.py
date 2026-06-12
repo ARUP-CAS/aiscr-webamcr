@@ -343,6 +343,7 @@ class CheckMimeForUrlTests(SimpleTestCase):
     """
 
     PAS_URL = "/soubor/nahrat/pas/123/"
+    PAS_API_URL = "/api/pas/nalez/M-202400001-N00001/upload-foto"
     DOKUMENT_URL = "/soubor/nahrat/dokument/123/"
     MODEL3D_URL = "/soubor/nahrat/model3d/123/"
     PROJEKT_URL = "/soubor/nahrat/projekt/123/"
@@ -377,6 +378,10 @@ class CheckMimeForUrlTests(SimpleTestCase):
     def test_pas_rejects_bmp(self):
         """BMP v PAS uploadu nesmí projít (dříve propouštěl image/* fallback)."""
         self.assertFalse(self._check(self.PAS_URL, _pillow_image("BMP")))
+
+    def test_pas_api_rejects_bmp(self):
+        """Nová PAS API URL musí používat stejný MIME whitelist jako PAS upload."""
+        self.assertFalse(self._check(self.PAS_API_URL, _pillow_image("BMP")))
 
     # === Dokument — povoleno: PDF, TIFF, JPEG, PNG, SVG, TXT, XLSX, CSV ===
 
