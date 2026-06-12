@@ -125,7 +125,7 @@ return 0
         row = table.rows[0]
         data = {}
         for column in columns:
-            if column.column.exclude_from_export:
+            if getattr(column.column, "exclude_from_export", False):
                 continue
             value = row.get_cell_value(column.name)
             if value and "nahled" not in column.name:
