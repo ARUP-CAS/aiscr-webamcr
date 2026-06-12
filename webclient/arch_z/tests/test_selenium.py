@@ -3016,7 +3016,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.goToAddress("/id/X-C-91468414A")
         self.ElementClick(By.ID, "akce-odeslat")
         with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
-            with WaitForPageLoad(self.driver, wait_time=50):
+            with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/ident_cely")
         self.check_fedora_delete(["record/X-C-91468414A", "record/X-C-TX-000000008"])
