@@ -983,13 +983,55 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         return USERS[type]["PASSWORD"]
 
-    def select_nth_selectpicker_option(self, field_id, index=0):
+    def _inject_xhr_tracker(self):
+        """
+        Injektuje tracker počtu rozpracovaných nativních ``XMLHttpRequest`` požadavků.
+
+        ``jQuery.active`` nativní ``XMLHttpRequest`` nevidí, proto se počítají vlastním
+        čítačem ve ``window._xhrTracker``. Musí být aktivní ještě před spuštěním akce
+        (např. ``trigger('change')``), která AJAX vyvolá – proto se injektuje předem.
+        """
+        self.driver.execute_script("""
+            if (!window._xhrTracker) {
+                window._xhrTracker = {active: 0};
+                var origSend = XMLHttpRequest.prototype.send;
+                XMLHttpRequest.prototype.send = function() {
+                    window._xhrTracker.active++;
+                    this.addEventListener('loadend', function() { window._xhrTracker.active--; });
+                    origSend.apply(this, arguments);
+                };
+            }
+            """)
+
+    def _wait_for_xhr_idle(self, timeout=10):
+        """
+        Počká (až ``timeout`` sekund) na dokončení všech rozpracovaných XHR požadavků.
+
+        Vyžaduje předchozí volání :meth:`_inject_xhr_tracker`; pokud tracker chybí, použije
+        se fallback na ``jQuery.active``.
+
+        :param timeout: Maximální doba čekání v sekundách.
+        """
+        WebDriverWait(self.driver, timeout).until(
+            lambda d: d.execute_script(
+                "return window._xhrTracker ? window._xhrTracker.active === 0 : "
+                "(typeof jQuery !== 'undefined' ? jQuery.active === 0 : true)"
+            )
+        )
+
+    def select_nth_selectpicker_option(self, field_id, index=0, wait_ajax=False, timeout=10):
         """
         Vybere neprázdnou, neskrytou volbu v selectpickeru na zadané pozici.
 
         :param field_id: HTML id atribut podkladového ``<select>`` elementu (bez ``#``).
         :param index: Index volby mezi neprázdnými neskrytými volbami (výchozí 0 = první).
+        :param wait_ajax: Pokud ``True``, po výběru počká na dokončení všech XHR požadavků
+            (včetně nativního XMLHttpRequest). Použij, když výběr spouští AJAX, který
+            upravuje závislé selecty.
+        :param timeout: Maximální doba čekání na dokončení XHR požadavků v sekundách.
         """
+        if wait_ajax:
+            self._inject_xhr_tracker()
         result = self.driver.execute_script(
             """
             var sel = document.getElementById(arguments[0]);
@@ -1005,8 +1047,10 @@ return new Date('2025-06-28T12:00:00Z');}};
         )
         if result:
             raise AssertionError(f"select_nth_selectpicker_option('{field_id}', {index}): {result}")
+        if wait_ajax:
+            self._wait_for_xhr_idle(timeout)
 
-    def select_dynamic_selectpicker_option(self, field_id, search_text, index=0, timeout=10):
+    def select_dynamic_selectpicker_option(self, field_id, search_text, index=0, timeout=10, wait_ajax=False):
         """
         Vybere volbu v selectpickeru podle textu její nabídky.
 
@@ -1020,6 +1064,9 @@ return new Date('2025-06-28T12:00:00Z');}};
         :param search_text: Řetězec hledaný v textu volby.
         :param index: Pořadí shody mezi vyhovujícími volbami (výchozí 0 = první).
         :param timeout: Maximální doba čekání na načtení voleb v sekundách.
+        :param wait_ajax: Pokud ``True``, po výběru počká na dokončení všech XHR požadavků
+            (včetně nativního XMLHttpRequest). Použij, když výběr spouští AJAX, který
+            upravuje závislé selecty.
         """
 
         def _option_present(driver):
@@ -1037,6 +1084,10 @@ return new Date('2025-06-28T12:00:00Z');}};
                 search_text,
                 index,
             )
+
+        if wait_ajax:
+            # Tracker musí být aktivní před spuštěním trigger('change'), proto se injektuje zde.
+            self._inject_xhr_tracker()
 
         try:
             WebDriverWait(self.driver, timeout).until(_option_present)
@@ -1069,6 +1120,194 @@ return new Date('2025-06-28T12:00:00Z');}};
             raise AssertionError(
                 f"select_dynamic_selectpicker_option('{field_id}', '{search_text}', {index}): {result}"
             )
+        if wait_ajax:
+            self._wait_for_xhr_idle(timeout)
+
+    def select_multiple_selectpicker_options(self, field_id, search_texts, timeout=10):
+        """
+        Vybere více voleb najednou v multiple selectpickeru podle textu jejich nabídek.
+
+        Na rozdíl od :meth:`select_dynamic_selectpicker_option`, která nastaví jedinou
+        hodnotu (a u multiple selectu tím předchozí výběr přepíše), nastaví tato metoda
+        všechny zadané volby naráz přes ``selectpicker('val', [...])``.
+
+        Pro každý hledaný text počká (až ``timeout`` sekund), až je v podkladovém
+        ``<select>`` k dispozici neskrytá neprázdná volba, jejíž text daný řetězec obsahuje
+        (case-insensitive), a vybere u každého textu první takovou shodu.
+
+        :param field_id: HTML id atribut podkladového ``<select>`` elementu (bez ``#``).
+        :param search_texts: Seznam řetězců hledaných v textech voleb (jeden na vybíranou volbu).
+        :param timeout: Maximální doba čekání na načtení voleb v sekundách.
+        """
+
+        def _all_options_present(driver):
+            return driver.execute_script(
+                """
+                var sel = document.getElementById(arguments[0]);
+                if (!sel) { return false; }
+                var needles = arguments[1];
+                return needles.every(function(needle) {
+                    var n = needle.toLowerCase();
+                    return Array.from(sel.options).some(function(o) {
+                        return !o.hidden && o.value !== '' && (o.text || '').toLowerCase().indexOf(n) !== -1;
+                    });
+                });
+                """,
+                field_id,
+                search_texts,
+            )
+
+        try:
+            WebDriverWait(self.driver, timeout).until(_all_options_present)
+        except TimeoutException:
+            raise AssertionError(
+                f"select_multiple_selectpicker_options('{field_id}', {search_texts}): "
+                f"not all matching options loaded within {timeout}s"
+            )
+
+        result = self.driver.execute_script(
+            """
+            var sel = document.getElementById(arguments[0]);
+            if (!sel) { return 'element not found: ' + arguments[0]; }
+            var needles = arguments[1];
+            var values = [];
+            var missing = [];
+            needles.forEach(function(needle) {
+                var n = needle.toLowerCase();
+                var match = Array.from(sel.options).find(function(o) {
+                    return !o.hidden && o.value !== '' && (o.text || '').toLowerCase().indexOf(n) !== -1;
+                });
+                if (match) { values.push(match.value); } else { missing.push(needle); }
+            });
+            if (missing.length) { return 'no matching option for: ' + missing.join(', '); }
+            $(sel).selectpicker('val', values).trigger('change');
+            return null;
+            """,
+            field_id,
+            search_texts,
+        )
+        if result:
+            raise AssertionError(f"select_multiple_selectpicker_options('{field_id}', {search_texts}): {result}")
+
+    def select_dynamic_select2_autocomplete_option(self, field_id, search_text, index=0, timeout=10):
+        """
+        Vybere volbu v Select2 autocomplete poli (widget ``AutocompleteModelSelect2`` z
+        django-autocomplete-light), které si nabídku donačítá ze serveru přes AJAX.
+
+        Na rozdíl od běžného selectpickeru nemá podkladový ``<select>`` volby předem –
+        objeví se až po zadání hledaného textu. Metoda proto otevře dropdown navázaný na
+        ``<select id=field_id>``, vyplní hledaný text, počká (až ``timeout`` sekund) na
+        načtení výsledků a vybere ``index``-tou volbu, jejíž text obsahuje ``search_text``
+        (case-insensitive).
+
+        Funguje pro single i multiple variantu Select2. Dropdown se otevírá přes kontejner
+        navázaný přímo na ``<select id=field_id>`` (Select2 ho vkládá jako následující
+        sourozenec původního ``<select>``) a výsledky se čtou ze seznamu
+        ``select2-<field_id>-results``, takže metoda funguje i na stránce s více Select2 poli
+        a nezávisí na obecných CSS selektorech typu ``.select2-selection__rendered``. Pro
+        výběr více hodnot v multiple poli volej :meth:`select_multiple_select2_autocomplete_options`.
+
+        :param field_id: HTML id atribut podkladového ``<select>`` elementu (bez ``#``).
+        :param search_text: Řetězec hledaný v textu volby; zadá se i do vyhledávacího pole.
+        :param index: Pořadí shody mezi vyhovujícími volbami (výchozí 0 = první).
+        :param timeout: Maximální doba čekání na otevření dropdownu a načtení voleb v sekundách.
+        """
+
+        # Počká, až je na stránce <select id=field_id> i jeho Select2 kontejner. Pole se může
+        # objevit se zpožděním (např. v právě otevíraném dialogu) nebo se Select2 ještě
+        # nemusel inicializovat – proto se čeká, místo přímého find_element.
+        # Kontejner je následující sourozenec původního <select>, takže to funguje pro single
+        # i multiple variantu (multiple nemá id 'select2-<field_id>-container').
+        def _selection(driver):
+            return driver.execute_script(
+                "var s = document.getElementById(arguments[0]);"
+                "if (!s || !s.nextElementSibling) { return null; }"
+                "return s.nextElementSibling.querySelector('.select2-selection');",
+                field_id,
+            )
+
+        try:
+            selection = WebDriverWait(self.driver, timeout).until(_selection)
+        except TimeoutException:
+            raise AssertionError(
+                f"select_dynamic_select2_autocomplete_option('{field_id}', '{search_text}', {index}): "
+                f"Select2 field <select id={field_id}> not available within {timeout}s"
+            )
+        # Otevři dropdown kliknutím na výběrovou plochu kontejneru.
+        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center', behavior: 'instant'});", selection)
+        selection.click()
+
+        # Vyplň hledaný text – otevřený Select2 dropdown je na stránce vždy nejvýše jeden,
+        # takže jeho vyhledávací pole lze adresovat přes třídu .select2-container--open.
+        try:
+            search = WebDriverWait(self.driver, timeout).until(
+                lambda d: d.find_element(By.CSS_SELECTOR, ".select2-container--open .select2-search__field")
+            )
+        except TimeoutException:
+            raise AssertionError(
+                f"select_dynamic_select2_autocomplete_option('{field_id}', '{search_text}', {index}): "
+                f"search field not opened within {timeout}s"
+            )
+        search.send_keys(search_text)
+
+        results_id = f"select2-{field_id}-results"
+
+        def _option_present(driver):
+            return driver.execute_script(
+                """
+                var ul = document.getElementById(arguments[0]);
+                if (!ul) { return false; }
+                // Dokud běží AJAX (zobrazené "Searching…"), na výsledky ještě nečekej.
+                if (ul.querySelector('.loading-results')) { return false; }
+                var needle = arguments[1].toLowerCase();
+                var matches = Array.from(ul.querySelectorAll('.select2-results__option')).filter(function(o) {
+                    return o.getAttribute('aria-disabled') !== 'true'
+                        && (o.textContent || '').toLowerCase().indexOf(needle) !== -1;
+                });
+                return matches.length > arguments[2];
+                """,
+                results_id,
+                search_text,
+                index,
+            )
+
+        try:
+            WebDriverWait(self.driver, timeout).until(_option_present)
+        except TimeoutException:
+            raise AssertionError(
+                f"select_dynamic_select2_autocomplete_option('{field_id}', '{search_text}', {index}): "
+                f"no matching option at index {index} loaded within {timeout}s"
+            )
+
+        # Najdi index-tou shodu a klikni na ni; kliknutí spustí výběr i 'change' událost Select2.
+        needle = search_text.lower()
+        matches = [
+            o
+            for o in self.driver.find_elements(By.CSS_SELECTOR, f"#{results_id} .select2-results__option")
+            if o.get_attribute("aria-disabled") != "true" and needle in (o.get_attribute("textContent") or "").lower()
+        ]
+        if index >= len(matches):
+            raise AssertionError(
+                f"select_dynamic_select2_autocomplete_option('{field_id}', '{search_text}', {index}): "
+                f"index {index} out of range, {len(matches)} matches for: {search_text}"
+            )
+        matches[index].click()
+
+    def select_multiple_select2_autocomplete_options(self, field_id, search_texts, timeout=10):
+        """
+        Vybere více voleb v multiple Select2 autocomplete poli (widget
+        ``AutocompleteModelSelect2Multiple`` z django-autocomplete-light).
+
+        Pro každý hledaný text zvlášť otevře dropdown, vyhledá a vybere první vyhovující
+        volbu pomocí :meth:`select_dynamic_select2_autocomplete_option`. Multiple Select2 si
+        předchozí výběry drží, takže se hodnoty postupně přidávají.
+
+        :param field_id: HTML id atribut podkladového ``<select>`` elementu (bez ``#``).
+        :param search_texts: Seznam řetězců hledaných v textech voleb (jeden na vybíranou volbu).
+        :param timeout: Maximální doba čekání na otevření dropdownu a načtení voleb v sekundách.
+        """
+        for search_text in search_texts:
+            self.select_dynamic_select2_autocomplete_option(field_id, search_text, index=0, timeout=timeout)
 
     def _select_value_select_picker(self, field_id, selected_value):
         """

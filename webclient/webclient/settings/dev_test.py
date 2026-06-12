@@ -65,7 +65,9 @@ FEDORA_DB_NAME = get_test_secret("TEST_FEDORA_DB_NAME")
 FEDORA_DB_TEMPLATE_NAME = get_test_secret("TEST_FEDORA_DB_TEMPLATE_NAME")
 
 TEST_SCREENSHOT_PATH = get_test_secret("TEST_SCREENSHOT_PATH")
-DATABASES["default"]["TEST"] = {"MIGRATE": False}
+_test_db_name = "test_" + DATABASES["default"]["NAME"]
+DATABASES["default"]["NAME"] = _test_db_name
+DATABASES["default"]["TEST"] = {"MIGRATE": False, "NAME": _test_db_name}
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 LOGGING["handlers"]["console"]["level"] = "ERROR"
