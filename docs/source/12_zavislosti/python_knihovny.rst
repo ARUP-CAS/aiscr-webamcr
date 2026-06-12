@@ -492,7 +492,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.4.0
+     - 1.4.2
      - MIT License
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
@@ -664,7 +664,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.4.2
+     - 21.4.3
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
