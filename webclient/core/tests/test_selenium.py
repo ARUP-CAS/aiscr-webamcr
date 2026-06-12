@@ -1284,7 +1284,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         matches = [
             o
             for o in self.driver.find_elements(By.CSS_SELECTOR, f"#{results_id} .select2-results__option")
-            if o.get_attribute("aria-disabled") != "true" and needle in (o.text or "").lower()
+            if o.get_attribute("aria-disabled") != "true" and needle in (o.get_attribute("textContent") or "").lower()
         ]
         if index >= len(matches):
             raise AssertionError(
