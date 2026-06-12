@@ -1,6 +1,7 @@
 from api.models import ApiRequestLog
 from django.contrib import admin
 from django.http.request import HttpRequest
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
@@ -25,6 +26,8 @@ class ApiRequestLogAdmin(admin.ModelAdmin):
         """Naformátuje datetime jako ``RRRR-MM-DD HH:MM:SS.xx`` (setiny sekundy)."""
         if value is None:
             return ""
+        if timezone.is_aware(value):
+            value = timezone.localtime(value)
         return value.strftime("%Y-%m-%d %H:%M:%S.") + f"{value.microsecond // 10000:02d}"
 
     @admin.display(description=_("api.model.apiRequestLog.receivedAt"), ordering="received_at")

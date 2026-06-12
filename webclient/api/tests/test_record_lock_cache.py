@@ -39,8 +39,23 @@ from django.test import TransactionTestCase
 
 
 def _process_worker(ident, results_q):
-    """Worker pro multiprocessing scénář — re-bootstrapuje Django state."""
+    """Worker pro multiprocessing scénář — re-bootstrapuje Django state.
+
+    Po ``fork`` uzavře zděděná spojení (DB i Redis cache), aby se zabránilo
+    sdílení soketů mezi procesy; znovu se otevřou líně při prvním použití.
+    """
     import django
+    from django.core.cache import caches
+    from django.db import connections
+
+    connections.close_all()
+    for cache_instance in caches.all():
+        close = getattr(cache_instance, "close", None)
+        if callable(close):
+            try:
+                close()
+            except Exception:
+                pass
 
     if not django.apps.apps.ready:
         django.setup()
