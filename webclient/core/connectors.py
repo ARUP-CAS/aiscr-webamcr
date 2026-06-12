@@ -125,6 +125,8 @@ return 0
         row = table.rows[0]
         data = {}
         for column in columns:
+            if column.column.exclude_from_export:
+                continue
             value = row.get_cell_value(column.name)
             if value and "nahled" not in column.name:
                 data[column.name] = force_str(value)

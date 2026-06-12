@@ -423,6 +423,8 @@ def update_all_redis_snapshots(rewrite_existing=False, classes=None):
             if rewrite_existing or not r.exists(item.redis_snapshot_id):
                 key, value = item.generate_redis_snapshot()
                 if key and value:
+                    if rewrite_existing:
+                        pipe.delete(key)
                     pipe.hset(key, mapping=value)
                     change_items = change_items + 1
                     if (change_items % 1000) == 0:
