@@ -283,6 +283,7 @@ class UzivatelSpolupraceTable(SearchTable):
         args=[A("pk")],
         attrs={"th": {"style": "color:white"}},
         orderable=False,
+        exclude_from_export=True,
         verbose_name=_("pas.tables.spolupraceTable.historie.label"),
     )
     projekty = tables.Column(
@@ -290,7 +291,6 @@ class UzivatelSpolupraceTable(SearchTable):
         orderable=False,
         default="",
         attrs={"th": {"style": "color:white"}, "td": {"data-no-tooltip": "true"}},
-        exclude_from_export=True,
     )
     aktivace = AktivaceDeaktivaceColumn(
         attrs={
@@ -298,6 +298,7 @@ class UzivatelSpolupraceTable(SearchTable):
         },
         template_name="pas/aktivace_deaktivace_cell.html",
         orderable=False,
+        exclude_from_export=True,
         verbose_name=_("pas.tables.spolupraceTable.aktivace.label"),
     )
     edit_projekty = EditProjektyColumn(
@@ -380,6 +381,20 @@ class UzivatelSpolupraceTable(SearchTable):
             tooltip,
             mark_safe(", ".join(str(link) for link in links)),
         )
+
+    def value_projekty(self, record):
+        """
+        Vrátí seznam identifikátorů projektů přiřazených ke spolupráci jako prostý text pro export.
+
+        Na rozdíl od ``render_projekty`` nevrací HTML s odkazy, ale pouze čárkou oddělené
+        identifikátory. Metoda je využita při sestavení Redis snapshotu (``get_cell_value``),
+        ze kterého se generuje export, takže do CSV/XLSX/JSON se uloží čitelná hodnota místo HTML.
+
+        :param record: Záznam spolupráce, ze kterého se přes ``record.projekty.all()`` načítají přiřazené projekty.
+
+            :return: Vrací čárkou oddělené identifikátory projektů, nebo prázdný řetězec.
+        """
+        return ", ".join(proj.ident_cely for proj in record.projekty.all())
 
     def get_all_idents(self):
         """

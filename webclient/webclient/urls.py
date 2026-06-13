@@ -90,6 +90,7 @@ urlpatterns = [
     path("pid/", include("pid.urls")),
     path("fedora/", include("fedora_management.urls")),
     path("healthcheck/", include("healthcheck.urls")),
+    path("api/", include("api.urls")),
 ]
 
 if "rosetta" in settings.INSTALLED_APPS:

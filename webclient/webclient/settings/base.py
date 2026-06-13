@@ -166,6 +166,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions.backends.signed_cookies",
     "core.apps.CoreConfig",
     "uzivatel.apps.UzivatelConfig",
+    "api.apps.ApiConfig",
     "ez",
     "historie",
     "oznameni",
@@ -594,9 +595,11 @@ CACHES = {
     }
 }
 
+API_URL = get_secret("API_URL", "https://api.aiscr.cz/id/")
+
 DIGI_LINKS = {
-    "Digi_archiv_link": "https://digiarchiv.aiscr.cz/id/",
-    "OAPI_link": "https://api.aiscr.cz/id/",
+    "Digi_archiv_link": get_secret("DIGIARCHIV_URL", "") or "https://digiarchiv.aiscr.cz/id/",
+    "OAPI_link": API_URL,
     "ARU_PRAHA": "https://www.arup.cas.cz/",
     "ARU_BRNO": "https://www.arub.cz/",
     "ARUP_MAIL": '<a href="mailto:oznameni@arup.cas.cz">oznameni@arup.cas.cz</a>',

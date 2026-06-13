@@ -11,6 +11,17 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+from api.models import ApiRequestLog
+from api.views import (
+    _RECORD_LOCK_PREFIX,
+    _XSD_BYTES_CACHE,
+    ImportErrorType,
+    ImportValidationException,
+    SamostatnyNalezEvidencniCisloPatchView,
+    SamostatnyNalezXmlImportView,
+    _fetch_xsd_bytes,
+    _xsd_redis_key,
+)
 from core.constants import (
     AKTUALIZACE_SN,
     API_REQUEST_LOG_STATUS_FAILURE,
@@ -28,29 +39,21 @@ from core.constants import (
     SN_ZAPSANY,
     ZAPSANI_SN,
 )
-from core.models import AntivirusCheckResult, ApiRequestLog, Permissions, Soubor, check_permissions
+from core.models import AntivirusCheckResult, Permissions, Soubor, check_permissions
 from core.repository_connector import FedoraNoResponseError
 from core.setting_models import CustomAdminSettings
+from django.conf import settings
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import DatabaseError, IntegrityError
 from django.test import TestCase
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_LICENCE, HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
 from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 from heslar.models import Heslar, HeslarNazev, RuianKatastr
 from historie.models import Historie
 from lxml import etree
-from pas.api import (
-    _RECORD_LOCK_PREFIX,
-    _XSD_BYTES_CACHE,
-    ImportErrorType,
-    ImportValidationException,
-    SamostatnyNalezEvidencniCisloPatchView,
-    SamostatnyNalezXmlImportView,
-    _fetch_xsd_bytes,
-    _xsd_redis_key,
-)
 from pas.models import SamostatnyNalez
 from pid.exceptions import DoiWriteError
 from projekt.models import Projekt
@@ -62,9 +65,9 @@ from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
 
-XML_IMPORT_URL = reverse("pas:api-import-xml")
-PATCH_URL_NAME = "pas:api-patch-evidencni-cislo"
-FOTO_UPLOAD_URL_NAME = "pas:api-upload-foto"
+XML_IMPORT_URL = reverse("api:import-xml")
+PATCH_URL_NAME = "api:patch-evidencni-cislo"
+FOTO_UPLOAD_URL_NAME = "api:upload-foto"
 IDENT_CELY = "C-202600009-N00007"
 
 
@@ -85,12 +88,12 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.addCleanup(patcher.stop)
 
         self._fedora_transaction_counter = 0
-        transaction_patcher = patch("pas.api.FedoraTransaction", side_effect=self._build_mock_fedora_transaction)
+        transaction_patcher = patch("api.views.FedoraTransaction", side_effect=self._build_mock_fedora_transaction)
         transaction_patcher.start()
         self.addCleanup(transaction_patcher.stop)
 
         repository_connector_patcher = patch(
-            "pas.api.FedoraRepositoryConnector", side_effect=self._build_mock_repository_connector
+            "api.views.FedoraRepositoryConnector", side_effect=self._build_mock_repository_connector
         )
         repository_connector_patcher.start()
         self.addCleanup(repository_connector_patcher.stop)
@@ -120,8 +123,10 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         :param response: HTTP odpověď importního endpointu.
         :param ident_cely: Očekávaný identifikátor obsažený v XML metadatech.
         """
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response["Content-Type"], "application/xml")
+        self.assertEqual(response["X-Record-ID"], ident_cely)
+        self.assertEqual(response["Location"], f"{settings.API_URL}{ident_cely}")
         self.assertIn(ident_cely, response.content.decode("utf-8"))
 
     def _build_mock_fedora_transaction(self, *args, **kwargs):
@@ -369,7 +374,12 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                     "licence": cls.licence,
                 },
             )
-        from core.constants import ROLE_ADMIN_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_BADATEL_ID
+        from core.constants import (
+            ROLE_ADMIN_ID,
+            ROLE_ARCHEOLOG_ID,
+            ROLE_ARCHIVAR_ID,
+            ROLE_BADATEL_ID,
+        )
         from django.contrib.auth.models import Group
 
         badatel_group, _ = Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
@@ -459,7 +469,10 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         )
 
         from heslar.hesla import HESLAR_PROJEKT_TYP
-        from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
+        from heslar.hesla_dynamicka import (
+            TYP_PROJEKTU_PRUZKUM_ID,
+            TYP_PROJEKTU_ZACHRANNY_ID,
+        )
         from heslar.models import RuianKatastr
 
         heslare_typ_projektu, _ = HeslarNazev.objects.get_or_create(
@@ -700,8 +713,8 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             return schema_instance
 
         try:
-            with patch("pas.api._fetch_xsd_bytes", return_value=b"<schema/>") as fetch_mock, patch(
-                "pas.api.etree.XMLSchema", side_effect=build_schema
+            with patch("api.views._fetch_xsd_bytes", return_value=b"<schema/>") as fetch_mock, patch(
+                "api.views.etree.XMLSchema", side_effect=build_schema
             ) as xmlschema_mock:
                 with ThreadPoolExecutor(max_workers=8) as executor:
                     results = list(executor.map(lambda _: SamostatnyNalezXmlImportView._get_amcr_schema(doc), range(8)))
@@ -760,7 +773,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         original_schema_cache = dict(SamostatnyNalezXmlImportView._amcr_schema_cache)
         SamostatnyNalezXmlImportView._amcr_schema_cache = {}
         try:
-            with patch("pas.api._fetch_xsd_bytes", return_value=evil_xsd_bytes):
+            with patch("api.views._fetch_xsd_bytes", return_value=evil_xsd_bytes):
                 with self.assertRaises(ImportValidationException) as exc_ctx:
                     SamostatnyNalezXmlImportView._get_amcr_schema(doc)
         finally:
@@ -882,7 +895,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         schema.validate.return_value = True
         schema.error_log = []
 
-        with patch("pas.api.SamostatnyNalezXmlImportView._get_amcr_schema", return_value=schema):
+        with patch("api.views.SamostatnyNalezXmlImportView._get_amcr_schema", return_value=schema):
             response = self._post_xml(xml)
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
@@ -1044,7 +1057,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         response = self._post_xml(xml)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(SamostatnyNalez.objects.filter(projekt=self.projekt).count(), 1)
         nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
         self.assertNotEqual(nalez.ident_cely, ":tba")
@@ -1132,6 +1145,28 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertNotEqual(nalez.katastr.okres.kod, self.other_katastr_okres.kod)
         self._assert_log_success()
 
+    def test_geom_wkt_missing_coordinate_returns_422(self):
+        """WKT bodu s chybějící druhou souřadnicí (např. ``POINT(15.5 )``) vrátí HTTP 422.
+
+        Odpovídá reálnému incidentu, kdy malformované WKT pronikalo do GEOS C parseru
+        a způsobovalo log ``GEOS_ERROR: ParseException: Expected number but encountered ')'``.
+        """
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            geom_wkt="POINT(15.5 )",
+        )
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertEqual(response.data["validation_errors"][0]["error_type"], ImportErrorType.INVALID_DATA.value)
+        self.assertIn("geom_wkt", response.data["validation_errors"][0]["message"])
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure()
+
     def test_invalid_geom_wkt_returns_422(self):
         """Import s syntakticky neplatným WKT v ``geom_wkt`` vrátí HTTP 422."""
         template = self._load_xml("nalez_invalid_geom_wkt.xml").decode("utf-8")
@@ -1200,13 +1235,13 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             None,
         )
 
-        with patch("pas.api.FedoraRepositoryConnector", return_value=connector):
+        with patch("api.views.FedoraRepositoryConnector", return_value=connector):
             response = self._post_xml(xml)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertEqual(
             response.data,
-            {"detail": "pas.api.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving"},
+            {"detail": "api.views.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving"},
         )
         self.assertTrue(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure(response.data)
@@ -1254,7 +1289,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                 return True
             return True
 
-        with patch("pas.api.check_permissions", side_effect=permission_side_effect):
+        with patch("api.views.check_permissions", side_effect=permission_side_effect):
             response = self._post_xml(xml, token=self.outsider_token.key)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1279,7 +1314,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                 return True
             return True
 
-        with patch("pas.api.check_permissions", side_effect=permission_side_effect):
+        with patch("api.views.check_permissions", side_effect=permission_side_effect):
             response = self._post_xml(xml, token=self.outsider_token.key)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1302,7 +1337,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                 return False
             return True
 
-        with patch("pas.api.check_permissions", side_effect=permission_side_effect):
+        with patch("api.views.check_permissions", side_effect=permission_side_effect):
             response = self._post_xml(xml, token=self.outsider_token.key)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1325,7 +1360,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self._assert_xml_success_response(response, nalez.ident_cely)
         self.assertEqual(nalez.hloubka, 21)
         self.assertEqual(str(nalez.datum_nalezu), "2026-04-06")
-        self.assertFalse(nalez.predano)
+        self.assertTrue(nalez.predano)
         self.assertEqual(nalez.predano_organizace, self.organizace)
         self.assertEqual(nalez.pristupnost, self.pristupnost)
         self.assertEqual(nalez.lokalizace, "test")
@@ -1409,7 +1444,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         ) as mock_potvrzenim:
             response = self._post_xml(xml)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(mock_odeslanim.call_count, 1)
         _, kwargs = mock_odeslanim.call_args
         self.assertTrue(kwargs.get("skip_soubory_check"))
@@ -1431,7 +1466,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         ) as mock_potvrzenim:
             response = self._post_xml(xml)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(mock_odeslanim.call_count, 1)
         _, odeslanim_kwargs = mock_odeslanim.call_args
         self.assertTrue(odeslanim_kwargs.get("skip_soubory_check"))
@@ -1515,6 +1550,127 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         self.assertIn("validation_errors", response.data)
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure(response.data)
+
+    def test_stav1_without_geometry_is_accepted(self):
+        """Import se ``stav=1`` a vyplněným ``geom_system`` bez souřadnic vrátí HTTP 201.
+
+        Ve stavu SN1 (zapsaný) jsou souřadnice volitelné — stejné pravidlo jako
+        v běžné aplikaci AMČR. ``geom_system`` smí být vyplněno (typicky 4326)
+        i bez ``geom_wkt`` / ``geom_sjtsk_wkt``.
+        """
+        template = self._load_xml("minimal_nalez_stav1_no_geom.xml").decode("utf-8")
+        xml = template.format(
+            IDENT_CELY=":tba",
+            PROJEKT_IDENT=self.projekt.ident_cely,
+            PRISTUPNOST_IDENT=self.pristupnost.ident_cely,
+        ).encode("utf-8")
+
+        response = self._post_xml(xml)
+
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
+        self.assertEqual(nalez.stav, SN_ZAPSANY)
+        self.assertIsNone(nalez.geom)
+        self.assertIsNone(nalez.geom_sjtsk)
+        self.assertIsNone(nalez.katastr)
+        self._assert_log_success()
+
+    def test_missing_evidencni_cislo_returns_422(self):
+        """Import bez ``evidencni_cislo`` vrátí HTTP 422 (povinné pravidlo PotvrditNalezForm)."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+        xml = xml.replace(b"    <amcr:evidencni_cislo>EC-IMPORT-001</amcr:evidencni_cislo>\n", b"")
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertIn("evidencni_cislo", response.data["validation_errors"][0]["message"])
+        self.assertEqual(response.data["validation_errors"][0]["error_type"], ImportErrorType.INVALID_DATA.value)
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure(response.data)
+
+    def test_stav_potvrzeny_missing_predano_returns_422(self):
+        """Import se ``stav=3`` (SN_POTVRZENY) bez ``predano`` vrátí HTTP 422."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+        xml = xml.replace(b"    <amcr:predano>true</amcr:predano>\n", b"")
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertIn("predano", response.data["validation_errors"][0]["message"])
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure(response.data)
+
+    def test_stav_potvrzeny_predano_false_returns_422(self):
+        """Import se ``stav=3`` (SN_POTVRZENY) a ``predano=false`` vrátí HTTP 422 s chybou o hodnotě True."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+        xml = xml.replace(
+            b"    <amcr:predano>true</amcr:predano>\n",
+            b"    <amcr:predano>false</amcr:predano>\n",
+        )
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertIn("predano", response.data["validation_errors"][0]["message"])
+        self.assertIn("predano_must_be_true", response.data["validation_errors"][0]["message"])
+        self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
+        self._assert_log_failure(response.data)
+
+    def test_stav_odeslany_predano_false_is_accepted(self):
+        """Import se ``stav=2`` (SN_ODESLANY) a ``predano=false`` projde – pravidlo platí jen pro SN_POTVRZENY+."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+            stav=SN_ODESLANY,
+        )
+        xml = xml.replace(
+            b"    <amcr:predano>true</amcr:predano>\n",
+            b"    <amcr:predano>false</amcr:predano>\n",
+        )
+
+        response = self._post_xml(xml)
+
+        nalez = SamostatnyNalez.objects.get(projekt=self.projekt)
+        self._assert_xml_success_response(response, nalez.ident_cely)
+        self.assertFalse(nalez.predano)
+        self.assertEqual(nalez.stav, SN_ODESLANY)
+        self._assert_log_success()
+
+    def test_stav_potvrzeny_missing_predano_organizace_returns_422(self):
+        """Import se ``stav=3`` (SN_POTVRZENY) bez ``predano_organizace`` vrátí HTTP 422."""
+        xml = self._minimal_nalez_xml(
+            ident_cely=":tba",
+            projekt_ident=self.projekt.ident_cely,
+            pristupnost_ident=self.pristupnost.ident_cely,
+        )
+        xml = xml.replace(
+            b'    <amcr:predano_organizace id="ORG-TEST-XML" xml:lang="cs">ORG-TEST-XML</amcr:predano_organizace>\n',
+            b"",
+        )
+
+        response = self._post_xml(xml)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("validation_errors", response.data)
+        self.assertIn("predano_organizace", response.data["validation_errors"][0]["message"])
         self.assertFalse(SamostatnyNalez.objects.filter(projekt=self.projekt).exists())
         self._assert_log_failure(response.data)
 
@@ -1642,7 +1798,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             pristupnost_ident=self.pristupnost.ident_cely,
         )
 
-        with patch("pas.api.SamostatnyNalez.save", side_effect=IntegrityError("other constraint violated")):
+        with patch("api.views.SamostatnyNalez.save", side_effect=IntegrityError("other constraint violated")):
             response = self._post_xml(xml)
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
@@ -1677,7 +1833,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         SamostatnyNalezXmlImportView._amcr_schema_cache.clear()
 
         with patch(
-            "pas.api._fetch_xsd_bytes",
+            "api.views._fetch_xsd_bytes",
             side_effect=urllib.error.URLError("simulated network failure"),
         ):
             response = self._post_xml(xml)
@@ -1798,7 +1954,7 @@ class FetchXsdBytesTests(TestCase):
 
         expected = b"<schema/>"
         mock_response = io.BytesIO(expected)
-        with patch("pas.api.urllib.request.urlopen", return_value=mock_response) as urlopen_mock:
+        with patch("api.views.urllib.request.urlopen", return_value=mock_response) as urlopen_mock:
             result = _fetch_xsd_bytes("https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
 
         self.assertEqual(result, expected)
@@ -1809,7 +1965,7 @@ class FetchXsdBytesTests(TestCase):
 
         url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
         expected = b"<schema/>"
-        with patch("pas.api.urllib.request.urlopen", return_value=io.BytesIO(expected)):
+        with patch("api.views.urllib.request.urlopen", return_value=io.BytesIO(expected)):
             _fetch_xsd_bytes(url)
 
         self.assertEqual(cache.get(_xsd_redis_key(url)), expected)
@@ -1821,7 +1977,7 @@ class FetchXsdBytesTests(TestCase):
         cached_bytes = b"<cached/>"
         cache.set(_xsd_redis_key(url), cached_bytes)
 
-        with patch("pas.api.urllib.request.urlopen") as urlopen_mock:
+        with patch("api.views.urllib.request.urlopen") as urlopen_mock:
             result = _fetch_xsd_bytes(url)
 
         self.assertEqual(result, cached_bytes)
@@ -1834,7 +1990,7 @@ class FetchXsdBytesTests(TestCase):
         cached_bytes = b"<xml-schema/>"
         cache.set(_xsd_redis_key(url), cached_bytes)
 
-        with patch("pas.api.urllib.request.urlopen") as urlopen_mock:
+        with patch("api.views.urllib.request.urlopen") as urlopen_mock:
             result = _fetch_xsd_bytes(url)
 
         self.assertEqual(result, cached_bytes)
@@ -1844,7 +2000,7 @@ class FetchXsdBytesTests(TestCase):
         """Síťová chyba se propaguje jako ``urllib.error.URLError``."""
 
         with patch(
-            "pas.api.urllib.request.urlopen",
+            "api.views.urllib.request.urlopen",
             side_effect=urllib.error.URLError("connection refused"),
         ):
             with self.assertRaises(urllib.error.URLError):
@@ -1853,7 +2009,7 @@ class FetchXsdBytesTests(TestCase):
     def test_propagates_timeout_error(self):
         """Vypršení časového limitu se propaguje jako ``TimeoutError``."""
 
-        with patch("pas.api.urllib.request.urlopen", side_effect=TimeoutError()):
+        with patch("api.views.urllib.request.urlopen", side_effect=TimeoutError()):
             with self.assertRaises(TimeoutError):
                 _fetch_xsd_bytes("https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd")
 
@@ -1861,7 +2017,7 @@ class FetchXsdBytesTests(TestCase):
         """Při síťové chybě se do cache nic neuloží."""
 
         url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
-        with patch("pas.api.urllib.request.urlopen", side_effect=urllib.error.URLError("err")):
+        with patch("api.views.urllib.request.urlopen", side_effect=urllib.error.URLError("err")):
             with self.assertRaises(urllib.error.URLError):
                 _fetch_xsd_bytes(url)
 
@@ -1872,7 +2028,7 @@ class FetchXsdBytesTests(TestCase):
 
         url = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
         content = b"<schema/>"
-        with patch("pas.api.urllib.request.urlopen", return_value=io.BytesIO(content)) as urlopen_mock:
+        with patch("api.views.urllib.request.urlopen", return_value=io.BytesIO(content)) as urlopen_mock:
             _fetch_xsd_bytes(url)
             _fetch_xsd_bytes(url)
 
@@ -1894,12 +2050,12 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.addCleanup(patcher.stop)
 
         self._fedora_transaction_counter = 0
-        transaction_patcher = patch("pas.api.FedoraTransaction", side_effect=self._build_mock_fedora_transaction)
+        transaction_patcher = patch("api.views.FedoraTransaction", side_effect=self._build_mock_fedora_transaction)
         transaction_patcher.start()
         self.addCleanup(transaction_patcher.stop)
 
         repository_connector_patcher = patch(
-            "pas.api.FedoraRepositoryConnector", side_effect=self._build_mock_repository_connector
+            "api.views.FedoraRepositoryConnector", side_effect=self._build_mock_repository_connector
         )
         repository_connector_patcher.start()
         self.addCleanup(repository_connector_patcher.stop)
@@ -2261,6 +2417,41 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.assertIn("empty_evidencni_cislo", str(log.errors))
         self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
+    def test_whitespace_only_evidencni_cislo_returns_422(self):
+        """Hodnota ``evidencni_cislo`` tvořená jen bílými znaky vrátí HTTP 422 (po strip = prázdná)."""
+
+        response = self._patch(IDENT_CELY, evidencni_cislo="%20%20")
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("empty_evidencni_cislo", str(log.errors))
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
+
+    def test_evidencni_cislo_with_inner_space_returns_422(self):
+        """Hodnota ``evidencni_cislo`` obsahující mezeru uvnitř vrátí HTTP 422 a hodnota se neuloží."""
+
+        original_value = self.nalez.evidencni_cislo
+
+        response = self._patch(IDENT_CELY, evidencni_cislo="EC%20TEST%20001")
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("whitespace_in_evidencni_cislo", str(log.errors))
+        self.nalez.refresh_from_db()
+        self.assertEqual(self.nalez.evidencni_cislo, original_value)
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
+
+    def test_evidencni_cislo_is_stripped_before_saving(self):
+        """Vedoucí a koncové bílé znaky se před uložením oříznou; do DB se zapíše čistá hodnota."""
+
+        response = self._patch(IDENT_CELY, evidencni_cislo="%20%20EC-STRIP-001%20%20")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.nalez.refresh_from_db()
+        self.assertEqual(self.nalez.evidencni_cislo, "EC-STRIP-001")
+
     def test_evidencni_cislo_too_long_returns_422(self):
         """Příliš dlouhé ``evidencni_cislo`` (přes 255 znaků) vrátí HTTP 422 a log se stavem FAILURE."""
 
@@ -2329,7 +2520,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
 
         original_value = self.nalez.evidencni_cislo
 
-        with patch("pas.api.SamostatnyNalez.save", side_effect=DatabaseError("db error")):
+        with patch("api.views.SamostatnyNalez.save", side_effect=DatabaseError("db error")):
             response = self._patch(IDENT_CELY)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -2346,7 +2537,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         original_value = self.nalez.evidencni_cislo
 
         with patch(
-            "pas.api.SamostatnyNalez.save",
+            "api.views.SamostatnyNalez.save",
             side_effect=FedoraNoResponseError("http://fedora.example/", "No response", None),
         ):
             response = self._patch(IDENT_CELY)
@@ -2364,7 +2555,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         connector = Mock()
         connector.get_metadata.side_effect = FedoraNoResponseError("http://fedora.example/", "No Fedora response", None)
 
-        with patch("pas.api.FedoraRepositoryConnector", return_value=connector):
+        with patch("api.views.FedoraRepositoryConnector", return_value=connector):
             response = self._patch(IDENT_CELY)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -2382,6 +2573,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response["Content-Type"], "application/xml")
+        self.assertEqual(response["X-Record-ID"], IDENT_CELY)
         self.assertIn(IDENT_CELY, response.content.decode("utf-8"))
 
         self.nalez.refresh_from_db()
@@ -2392,13 +2584,49 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
 
         history = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=AKTUALIZACE_SN)
         self.assertEqual(history.count(), 1)
-        self.assertEqual(history.get().poznamka, f"{old_value} -> EC-2024-NEW")
+        self.assertEqual(
+            history.get().poznamka,
+            "{}: {} -> EC-2024-NEW".format(
+                _("api.views.SamostatnyNalezEvidencniCisloPatchView.history.note"), old_value
+            ),
+        )
+
+    def test_history_poznamka_has_expected_format_with_translated_label(self):
+        """
+        Poznámka historie má formát ``<přeložený popisek>: <old> -> <new>``.
+
+        Django ``gettext`` je nahrazen tak, aby pro klíč překladu vracel ``Evideční číslo``;
+        výsledná poznámka musí být ``Evideční číslo: 123 -> 111``.
+        """
+        self.nalez.evidencni_cislo = "123"
+        self.nalez.save(update_fields=["evidencni_cislo"])
+
+        translation_key = "api.views.SamostatnyNalezEvidencniCisloPatchView.history.note"
+        from api import views as views_module
+
+        original_gettext = views_module._
+
+        def fake_gettext(message):
+            if message == translation_key:
+                return "Evideční číslo"
+            return original_gettext(message)
+
+        with patch("api.views._", side_effect=fake_gettext):
+            response = self._patch(IDENT_CELY, evidencni_cislo="111")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.nalez.refresh_from_db()
+        self.assertEqual(self.nalez.evidencni_cislo, "111")
+
+        history = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=AKTUALIZACE_SN)
+        self.assertEqual(history.count(), 1)
+        self.assertEqual(history.get().poznamka, "Evideční číslo: 123 -> 111")
 
     def test_patch_closes_fedora_transaction_explicitly(self):
         """PATCH uzavře Fedora transakci explicitním voláním ``mark_transaction_as_closed()`` po commitu."""
         fedora_transaction = Mock()
 
-        with patch("pas.api.FedoraTransaction", return_value=fedora_transaction):
+        with patch("api.views.FedoraTransaction", return_value=fedora_transaction):
             response = self._patch(IDENT_CELY, evidencni_cislo="EC-ON-COMMIT-001")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -2568,12 +2796,12 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         self.addCleanup(patcher.stop)
 
         self._fedora_transaction_counter = 0
-        transaction_patcher = patch("pas.api.FedoraTransaction", side_effect=self._build_mock_fedora_transaction)
+        transaction_patcher = patch("api.views.FedoraTransaction", side_effect=self._build_mock_fedora_transaction)
         transaction_patcher.start()
         self.addCleanup(transaction_patcher.stop)
 
         repository_connector_patcher = patch(
-            "pas.api.FedoraRepositoryConnector", side_effect=self._build_mock_repository_connector
+            "api.views.FedoraRepositoryConnector", side_effect=self._build_mock_repository_connector
         )
         repository_connector_patcher.start()
         self.addCleanup(repository_connector_patcher.stop)
@@ -2940,6 +3168,31 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("missing_file", str(log.errors))
         self._assert_attached_files(self.nalez, 0)
+
+    def test_multiple_files_returns_400(self):
+        """POST s více než jedním souborem v poli ``file`` je explicitně odmítnut HTTP 400."""
+
+        photo = self._minimal_photo_bytes()
+        client = APIClient()
+        client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {self.token.key}",
+            HTTP_CONTENT_DIGEST=self._content_digest(photo),
+        )
+        url = reverse(FOTO_UPLOAD_URL_NAME, kwargs={"ident_cely": IDENT_CELY})
+        data = {
+            "file": [
+                SimpleUploadedFile("first.png", photo, content_type="application/octet-stream"),
+                SimpleUploadedFile("second.png", photo, content_type="application/octet-stream"),
+            ],
+        }
+
+        response = client.post(url, data, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("detail", response.data)
+        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertIn("multiple_files", str(log.errors))
+        self._assert_attached_files(self.nalez, 0)
         self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_nonexistent_ident_cely_returns_404(self):
@@ -2990,7 +3243,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
         photo = self._minimal_photo_bytes()
 
-        with patch("pas.api.MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES", 1):
+        with patch("api.views.MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES", 1):
             response = self._post_file(IDENT_CELY, photo)
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
@@ -3005,7 +3258,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
         photo = self._minimal_photo_bytes()
 
-        with patch("pas.api.check_permissions", return_value=False):
+        with patch("api.views.check_permissions", return_value=False):
             response = self._post_file(IDENT_CELY, photo, token=self.outsider_token.key)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -3032,19 +3285,62 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         photo = self._minimal_photo_bytes()
         expected_path = reverse(FOTO_UPLOAD_URL_NAME, kwargs={"ident_cely": IDENT_CELY})
 
-        with patch("pas.api.Soubor.check_mime_for_url", return_value=True) as mock_mime:
+        with patch("api.views.Soubor.check_mime_for_url", return_value=True) as mock_mime:
             response = self._post_file(IDENT_CELY, photo)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         mock_mime.assert_called_once()
         self.assertEqual(mock_mime.call_args.args[1], expected_path)
+
+    @staticmethod
+    def _minimal_heif_container(major_brand: bytes) -> bytes:
+        """
+        Sestaví minimální ISO BMFF ``ftyp`` box s daným ``major_brand``.
+
+        Výstup je validní úvod HEIC/HEIF souboru (rozpoznatelný podle hlavičky),
+        nikoli kompletní obrazový soubor. Pro účely testů endpointu, který kontroluje
+        MIME typ a ukládá binární data, je tento prefix dostatečný.
+
+        :param major_brand: Čtyřznaková značka formátu (např. ``b"heic"`` nebo ``b"mif1"``).
+        :return: Bajtová sekvence odpovídající minimálnímu ``ftyp`` boxu.
+        """
+        compatible_brands = b"mif1" + b"heic" + b"heif"
+        box_body = major_brand + b"\x00\x00\x00\x00" + compatible_brands
+        box_size = (8 + len(box_body)).to_bytes(4, "big")
+        return box_size + b"ftyp" + box_body
+
+    def test_heic_mime_is_accepted(self):
+        """Soubor s MIME typem ``image/heic`` projde validací a upload skončí HTTP 201."""
+        heic_bytes = self._minimal_heif_container(b"heic")
+
+        with patch("api.views.Soubor.get_mime_types", return_value="image/heic"), patch(
+            "api.views.Soubor.get_file_extension_by_mime", return_value=("heic", "heif")
+        ):
+            response = self._post_file(IDENT_CELY, heic_bytes, filename="photo.heic")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
+        self._assert_attached_files(self.nalez, 1)
+
+    def test_heif_mime_is_accepted(self):
+        """Soubor s MIME typem ``image/heif`` projde validací a upload skončí HTTP 201."""
+        heif_bytes = self._minimal_heif_container(b"mif1")
+
+        with patch("api.views.Soubor.get_mime_types", return_value="image/heif"), patch(
+            "api.views.Soubor.get_file_extension_by_mime", return_value=("heic", "heif")
+        ):
+            response = self._post_file(IDENT_CELY, heif_bytes, filename="photo.heif")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
+        self._assert_attached_files(self.nalez, 1)
 
     def test_antivirus_virus_found_returns_422(self):
         """Soubor označený antivirem jako škodlivý vrátí HTTP 422."""
 
         photo = self._minimal_photo_bytes()
 
-        with patch("pas.api.Soubor.check_antivirus", return_value=AntivirusCheckResult.VIRUS_FOUND):
+        with patch("api.views.Soubor.check_antivirus", return_value=AntivirusCheckResult.VIRUS_FOUND):
             response = self._post_file(IDENT_CELY, photo)
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
@@ -3059,7 +3355,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
         photo = self._minimal_photo_bytes()
 
-        with patch("pas.api.Soubor.check_antivirus", return_value=AntivirusCheckResult.CHECK_FAILED):
+        with patch("api.views.Soubor.check_antivirus", return_value=AntivirusCheckResult.CHECK_FAILED):
             response = self._post_file(IDENT_CELY, photo)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -3091,7 +3387,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         connector = self._build_mock_repository_connector(self.nalez)
         connector.save_binary_file.side_effect = FedoraNoResponseError("http://fedora.example/", "No response", None)
 
-        with patch("pas.api.FedoraRepositoryConnector", return_value=connector):
+        with patch("api.views.FedoraRepositoryConnector", return_value=connector):
             response = self._post_file(IDENT_CELY, photo)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -3111,7 +3407,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
             "http://fedora.example/", "No Fedora response", None
         )
 
-        with patch("pas.api.FedoraRepositoryConnector", side_effect=[save_connector, metadata_connector]):
+        with patch("api.views.FedoraRepositoryConnector", side_effect=[save_connector, metadata_connector]):
             response = self._post_file(IDENT_CELY, photo)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -3128,8 +3424,9 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
         response = self._post_file(IDENT_CELY, photo)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response["Content-Type"], "application/xml")
+        self.assertEqual(response["X-Record-ID"], IDENT_CELY)
         self.assertIn(IDENT_CELY, response.content.decode("utf-8"))
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
         self.assertEqual(log.ident_cely, IDENT_CELY)
@@ -3147,7 +3444,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         with patch("pas.models.SamostatnyNalez.igsn_update") as mock_igsn:
             response = self._post_file(IDENT_CELY, photo)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         mock_igsn.assert_called_once_with(False, True)
         archivace = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN)
         self.assertEqual(archivace.count(), 1)
@@ -3179,7 +3476,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         with patch("pas.models.SamostatnyNalez.igsn_update") as mock_igsn:
             response = self._post_file(IDENT_CELY, photo)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         mock_igsn.assert_not_called()
         archivace = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN)
         self.assertEqual(archivace.count(), 0)
@@ -3198,8 +3495,8 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         second_record_response = self._post_file(self.nalez_second.ident_cely, second_photo, filename="second.png")
         throttled_response = self._post_file(IDENT_CELY, first_photo, filename="third.png", token=self.second_token.key)
 
-        self.assertEqual(first_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(second_record_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(first_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(second_record_response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(throttled_response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
         self._assert_attached_files(self.nalez, 1, expected_name="C202600009N00007F01.png")
@@ -3220,7 +3517,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
         self.assertEqual(patch_response.status_code, status.HTTP_200_OK)
         self.assertEqual(throttled_upload_response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
-        self.assertEqual(other_record_upload_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(other_record_upload_response.status_code, status.HTTP_201_CREATED)
 
     def test_record_rate_limit_is_shared_between_upload_and_patch_for_same_ident(self):
         """Upload a PATCH sdílí stejný record-level limit pro stejné ``ident_cely``."""
@@ -3234,7 +3531,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         throttled_patch_response = self._patch_evidencni_cislo(IDENT_CELY, "EC-CROSS-002")
         other_record_patch_response = self._patch_evidencni_cislo(self.nalez_second.ident_cely, "EC-CROSS-003")
 
-        self.assertEqual(upload_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(upload_response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(throttled_patch_response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
         self.assertEqual(other_record_patch_response.status_code, status.HTTP_200_OK)
 
@@ -3261,7 +3558,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         photo = self._minimal_photo_bytes()
         response = self._post_file(IDENT_CELY, photo)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         lock_key = f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"
         self.assertEqual(cache.get(lock_key), 0)
 
@@ -3275,7 +3572,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
         response = self._post_file(self.nalez_second.ident_cely, photo, filename="other.png")
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self._assert_attached_files(self.nalez_second, 1)
         self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{self.nalez_second.ident_cely}"), 0)
         self.assertEqual(cache.get(lock_key), 1)
@@ -3291,7 +3588,10 @@ class SamostatnyNalezGetCreateOrgTests(TestCase):
         """Připraví sdílená testovací data pro celou třídu."""
         from django.contrib.gis.geos import MultiPolygon, Point, Polygon
         from heslar.hesla import HESLAR_PROJEKT_TYP
-        from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, TYP_PROJEKTU_PRUZKUM_ID
+        from heslar.hesla_dynamicka import (
+            PRISTUPNOST_ANONYM_ID,
+            TYP_PROJEKTU_PRUZKUM_ID,
+        )
         from heslar.models import RuianKatastr, RuianKraj, RuianOkres
 
         heslare_typ_org, _ = HeslarNazev.objects.get_or_create(
