@@ -156,6 +156,34 @@ class ArcheologickyZaznamAkceMapperMapValidTest(TestCase):
         self.assertEqual(set(result.keys()), expected_keys)
 
 
+class ArcheologickyZaznamAkceMapperImportValidationTest(TestCase):
+    """Testy pro ArcheologickyZaznamAkceMapper.import_validation."""
+
+    def test_import_validation_rejects_samostatna_akce_with_project(self):
+        """import_validation() odmítne ``typ=N`` s vyplněným projektem."""
+        row = MAP_SAFE_ROW.copy()
+        row["typ"] = Akce.TYP_AKCE_SAMOSTATNA
+        row["projekt"] = "C-202300001"
+        mapper = ArcheologickyZaznamAkceMapper(row)
+
+        with self.assertRaisesRegex(
+            ImportDataError, "core_admin.ImportDataError.message.akce_typ_check.typ_n_requires_empty_projekt"
+        ):
+            mapper.import_validation(INSERT)
+
+    def test_import_validation_rejects_projektova_akce_without_project(self):
+        """import_validation() odmítne ``typ=R`` bez projektu."""
+        row = MAP_SAFE_ROW.copy()
+        row["typ"] = Akce.TYP_AKCE_PROJEKTOVA
+        row["projekt"] = None
+        mapper = ArcheologickyZaznamAkceMapper(row)
+
+        with self.assertRaisesRegex(
+            ImportDataError, "core_admin.ImportDataError.message.akce_typ_check.typ_r_requires_filled_projekt"
+        ):
+            mapper.import_validation(INSERT)
+
+
 class ArcheologickyZaznamAkceMapperRecordPostprocessingTest(TestCase):
     """Testy pro ArcheologickyZaznamAkceMapper.record_postprocessing — bez DB."""
 

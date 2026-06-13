@@ -19,23 +19,36 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
     """Testy ``run_data_import`` pro mapper ``SouborMapper``."""
 
     def _soubor_phase_patches(self):
-        """Patche potřebné pro fázi importu souborů (čtení z disku, Fedora binary upload)."""
+        """Patche potřebné pro fázi importu souborů (čtení z disku, Fedora binary upload).
+
+        Mock ``FedoraRepositoryConnector`` ukládá do ``self.connector_mock`` a všechny instance
+        vyrobené patchnutou továrnou jsou dostupné v ``self.connector_instances`` pro inspekci
+        volání jednotlivých metod (např. ``delete_binary_file``).
+        """
         settings_value = SimpleNamespace(value=json.dumps({"DIRECTORY_PATH": "/tmp/import-data"}))
         binary_result = SimpleNamespace(
             size_mb=0.001,
             sha_512="sha",
             url_without_domain="/fedora/import-test.txt",
         )
-        connector = MagicMock()
-        connector.save_binary_file.return_value = binary_result
-        connector.update_binary_file.return_value = binary_result
+        self.connector_instances: list[MagicMock] = []
+
+        def connector_factory(*args, **kwargs):
+            instance = MagicMock()
+            instance.save_binary_file.return_value = binary_result
+            instance.update_binary_file.return_value = binary_result
+            instance.init_args = args
+            instance.init_kwargs = kwargs
+            self.connector_instances.append(instance)
+            return instance
+
         return [
             patch("cron.tasks.CustomAdminSettings.objects.get", return_value=settings_value),
             patch("cron.tasks.os.path.isdir", return_value=True),
             patch("cron.tasks.os.path.isfile", return_value=True),
             patch("builtins.open", mock_open(read_data=b"data")),
             patch("core.models.Soubor.get_mime_types", return_value="text/plain"),
-            patch("cron.tasks.FedoraRepositoryConnector", return_value=connector),
+            patch("cron.tasks.FedoraRepositoryConnector", side_effect=connector_factory),
         ]
 
     def _run_soubor_import(self, payloads, performed_action=ImportDataAdminForm.PERFORMED_ACTION_INSERT, **kwargs):
@@ -98,6 +111,43 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
     def _history_record_result(self, fake_redis):
         raw = fake_redis.get(f"import_data_history_record_result_{JOB_ID}")
         return json.loads(raw.decode("utf-8"))
+
+    def _fedora_update_result(self, fake_redis):
+        raw = fake_redis.get(f"import_fedora_result_{JOB_ID}")
+        return json.loads(raw.decode("utf-8"))
+
+    def _file_import_results(self, fake_redis):
+        raw = fake_redis.get(f"import_data_files_{JOB_ID}")
+        return json.loads(raw.decode("utf-8"))
+
+    def assert_delete_binary_file_called_for_soubor(self, deleted_soubor):
+        """Ověří, že byl zavolán ``FedoraRepositoryConnector.delete_binary_file(soubor)``.
+
+        Prohlédne ``self.connector_instances`` zachycené patchnutou továrnou v ``_soubor_phase_patches``
+        a hledá alespoň jeden connector, na kterém byla metoda zavolána s argumentem nesoucím stejné
+        ``nazev`` jako mazaný Soubor. (Po ``record.delete()`` Django nuluje ``pk``, takže porovnání
+        identity ani ``pk`` není spolehlivé — porovnáváme tedy ``nazev``, který na in-memory instanci
+        zůstává.)
+
+        :param deleted_soubor: Instance ``Soubor`` očekávaná jako argument volání ``delete_binary_file``.
+        """
+        matching = [
+            conn
+            for conn in self.connector_instances
+            if conn.delete_binary_file.called
+            and any(
+                call.args and getattr(call.args[0], "nazev", None) == deleted_soubor.nazev
+                for call in conn.delete_binary_file.call_args_list
+            )
+        ]
+        self.assertTrue(
+            matching,
+            "Po DELETE Souboru musí být na ``FedoraRepositoryConnector`` zavolána metoda "
+            "``delete_binary_file(soubor)`` pro mazaný Soubor (nazev={!r}). "
+            "Zachycené connectory: {} z {} celkem.".format(
+                deleted_soubor.nazev, len(matching), len(self.connector_instances)
+            ),
+        )
 
     def assert_history_record_result_contains_item(self, fake_redis, record_id="0"):
         """Ověří pomocnou podmínku importního testu.
@@ -169,6 +219,34 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         navazany_ident_celies = [getattr(item, "ident_cely", None) for item in save_metadata_calls]
         self.assertIn(navazany_ident_cely, navazany_ident_celies)
         self.assert_history_record_result_contains_item(fake_redis)
+
+    def test_insert_soubor_updates_related_metadata_creates_history_and_reports_it(self):
+        """INSERT Souboru musí aktualizovat metadata, vytvořit historii a propsat ji do reportu."""
+        file_name = "report-check.txt"
+        fake_redis, save_metadata_calls = self._run_soubor_import(
+            [{"vazba": self.dokument.ident_cely, "nazev": file_name}],
+        )
+
+        self.assert_import_success(fake_redis)
+        soubor = Soubor.objects.get(vazba=self.dokument.soubory, nazev=file_name)
+        self.assert_related_record_metadata_updated(save_metadata_calls, self.az)
+        self.assertTrue(
+            Historie.objects.filter(
+                vazba=soubor.historie,
+                typ_zmeny=IMPORT,
+                poznamka__contains=file_name,
+            ).exists(),
+            "Import Souboru musí vytvořit historický záznam na historii importovaného Souboru.",
+        )
+        history_record_result = self._history_record_result(fake_redis)
+        self.assertIn("0", history_record_result)
+        self.assertIn("history_record_created", history_record_result["0"])
+        fedora_update_result = self._fedora_update_result(fake_redis)
+        self.assertIn("0", fedora_update_result)
+        self.assertTrue(
+            any(self.az.ident_cely in item for item in fedora_update_result["0"]),
+            "Report musí obsahovat informaci o aktualizaci Fedora metadat navázaného záznamu.",
+        )
 
     def test_insert_soubor_saves_related_record_metadata_for_all_supported_vazba_types(self):
         """INSERT Souboru musí uložit metadata objektu navázaného přes ``Soubor.vazba``."""
@@ -287,6 +365,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
 
         existing = self._create_existing_soubor(nazev="to-delete.txt")
         soubor_id = existing.id
+        historie_vazba = existing.historie
         navazany_ident_cely = self.dokument.ident_cely
 
         def real_get_record_from_ident(ident_cely):
@@ -297,19 +376,52 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
                     continue
             raise DokumentModel.DoesNotExist(ident_cely)
 
+        # Sledujeme datovou (DELETE) transakci, ze které FedoraRepositoryConnector dědí override_tombstone.
+        # FedoraTransaction ve Fedora-update fázi pouze obnovuje metadata rodičů a record_deletion
+        # tam nevolá, takže override_tombstone na ní nemá smysl a zůstává ve výchozí hodnotě False.
+        deletion_transactions: list[MagicMock] = []
+
+        def deletion_transaction_factory(*args, **kwargs):
+            transaction_mock = MagicMock(uid="test-deletion-uid", updated_ident_cely=set())
+            transaction_mock.override_tombstone = False
+            deletion_transactions.append(transaction_mock)
+            return transaction_mock
+
         fake_redis, save_metadata_calls = self._run_soubor_import(
             [{"id": f"soub-{soubor_id}"}],
             performed_action=ImportDataAdminForm.PERFORMED_ACTION_DELETE,
             extra_patches=[
                 patch("cron.tasks.get_record_from_ident", side_effect=real_get_record_from_ident),
+                patch("cron.tasks.FedoraDeletionOnlyTransaction", side_effect=deletion_transaction_factory),
             ],
         )
 
         self.assert_import_success(fake_redis)
+        self.assertTrue(
+            deletion_transactions,
+            "Během DELETE Souboru musí být v ``run_data_import`` vytvořena alespoň jedna "
+            "``FedoraDeletionOnlyTransaction``.",
+        )
+        self.assertTrue(
+            all(t.override_tombstone is True for t in deletion_transactions),
+            "Každá ``FedoraDeletionOnlyTransaction`` vytvořená v ``run_data_import`` musí mít "
+            "``override_tombstone=True``, aby ji ``FedoraRepositoryConnector.record_deletion`` "
+            "převzal jako podklad pro hlavičku ``Overwrite-Tombstone``. "
+            f"Zachycené hodnoty: {[t.override_tombstone for t in deletion_transactions]}",
+        )
         self.assertFalse(
             Soubor.objects.filter(id=soubor_id).exists(),
             "Po DELETE akci pro SouborMapper musí být řádek v DB skutečně smazán.",
         )
+        self.assertTrue(
+            Historie.objects.filter(
+                vazba=historie_vazba,
+                typ_zmeny=IMPORT,
+                poznamka__contains="to-delete.txt",
+            ).exists(),
+            "Po DELETE akci pro SouborMapper musí vzniknout historický záznam k mazanému Souboru.",
+        )
+        self.assert_history_record_result_contains_item(fake_redis)
         navazany_ident_celies = [getattr(item, "ident_cely", None) for item in save_metadata_calls]
         self.assertIn(
             navazany_ident_cely,
@@ -324,6 +436,85 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             "navázaný přes ``DokumentCast`` "
             f"({self.az.ident_cely}). Volání pro: {navazany_ident_celies}",
         )
+        self.assert_delete_binary_file_called_for_soubor(existing)
+
+    def test_delete_soubor_creates_history_record_with_correct_attributes(self):
+        """DELETE Souboru musí vložit záznam do tabulky Historie se správnými atributy.
+
+        Ověřuje: ``vazba`` odpovídá historické vazbě mazaného Souboru, ``typ_zmeny`` je
+        ``IMPORT``, ``poznamka`` obsahuje název souboru a ``uzivatel`` odpovídá uživateli importu.
+        """
+        existing = self._create_existing_soubor(nazev="history-check.txt")
+        soubor_id = existing.id
+        historie_vazba = existing.historie
+
+        fake_redis, _ = self._run_soubor_import(
+            [{"id": f"soub-{soubor_id}"}],
+            performed_action=ImportDataAdminForm.PERFORMED_ACTION_DELETE,
+        )
+
+        self.assert_import_success(fake_redis)
+        history_qs = Historie.objects.filter(vazba=historie_vazba, typ_zmeny=IMPORT)
+        self.assertEqual(
+            history_qs.count(), 1, "Po DELETE Souboru musí vzniknout právě jeden záznam v tabulce Historie."
+        )
+        history = history_qs.get()
+        self.assertIn(
+            "history-check.txt",
+            history.poznamka,
+            "Poznámka historického záznamu musí obsahovat název smazaného Souboru.",
+        )
+        self.assertEqual(
+            history.uzivatel_id,
+            self.user.id,
+            "Historický záznam musí být přiřazen uživateli, který import spustil.",
+        )
+        self.assert_delete_binary_file_called_for_soubor(existing)
+
+    def test_delete_soubor_updates_parent_record_metadata_for_supported_vazba_types(self):
+        """DELETE Souboru musí přegenerovat Fedora metadata rodičovského záznamu."""
+        from arch_z.models import ArcheologickyZaznam as AzModel
+        from dokument.models import Dokument as DokumentModel
+        from pas.models import SamostatnyNalez as SamostatnyNalezModel
+        from projekt.models import Projekt as ProjektModel
+
+        def real_get_record_from_ident(ident_cely):
+            for model in (ProjektModel, DokumentModel, SamostatnyNalezModel, AzModel):
+                try:
+                    return model.objects.get(ident_cely=ident_cely)
+                except model.DoesNotExist:
+                    continue
+            raise DokumentModel.DoesNotExist(ident_cely)
+
+        for label, parent_record in self._soubor_related_records("003"):
+            with self.subTest(vazba=label):
+                existing = self._create_existing_soubor(
+                    nazev="delete-parent-{}.txt".format(label),
+                    vazba=parent_record.soubory,
+                )
+                soubor_id = existing.id
+                historie_vazba = existing.historie
+                fake_redis, save_metadata_calls = self._run_soubor_import(
+                    [{"id": "soub-{}".format(soubor_id)}],
+                    performed_action=ImportDataAdminForm.PERFORMED_ACTION_DELETE,
+                    extra_patches=[
+                        patch("cron.tasks.get_record_from_ident", side_effect=real_get_record_from_ident),
+                    ],
+                )
+
+                self.assert_import_success(fake_redis)
+                self.assertFalse(Soubor.objects.filter(id=soubor_id).exists())
+                self.assertTrue(
+                    Historie.objects.filter(
+                        vazba=historie_vazba,
+                        typ_zmeny=IMPORT,
+                        poznamka__contains="delete-parent-{}.txt".format(label),
+                    ).exists(),
+                    "Po DELETE Souboru musí vzniknout historický záznam k mazanému Souboru.",
+                )
+                self.assert_history_record_result_contains_item(fake_redis)
+                self.assert_related_record_save_metadata_called(save_metadata_calls, parent_record)
+                self.assert_delete_binary_file_called_for_soubor(existing)
 
     def test_database_save_failure_marks_import_as_failed(self):
         """Selhání ``Soubor.save()`` v datové fázi musí import označit jako selhalý."""
@@ -375,6 +566,49 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         )
 
         self.assert_import_failed(fake_redis)
+
+    def test_update_missing_target_file_record_marks_import_as_failed(self):
+        """UPDATE Souboru bez cílového řádku ``nazev`` + ``vazba`` nesmí skončit jako úspěšný import."""
+        existing = self._create_existing_soubor(nazev="old-name.txt")
+        fake_redis, _ = self._run_soubor_import(
+            [
+                {
+                    "id": f"soub-{existing.id}",
+                    "vazba": self.dokument.ident_cely,
+                    "nazev": "new-name.txt",
+                }
+            ],
+            performed_action=ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+        )
+
+        self.assert_import_failed(fake_redis)
+        file_results = self._file_import_results(fake_redis)
+        self.assertEqual(file_results[0]["file_name"], "new-name.txt")
+        self.assertIn("does_not_exist", file_results[0]["additional_info"])
+
+    def test_insert_existing_target_file_record_marks_import_as_failed(self):
+        """INSERT Souboru na existující ``nazev`` + ``vazba`` nesmí skončit jako úspěšný import."""
+        self._create_existing_soubor(nazev="already-present.txt", vazba=self.dokument.soubory)
+        fake_redis, _ = self._run_soubor_import(
+            [{"vazba": self.dokument.ident_cely, "nazev": "already-present.txt"}],
+        )
+
+        self.assert_import_failed(fake_redis)
+        file_results = self._file_import_results(fake_redis)
+        self.assertEqual(file_results[0]["file_name"], "already-present.txt")
+        self.assertIn("already_exists", file_results[0]["additional_info"])
+
+    def test_missing_binary_file_marks_import_as_failed(self):
+        """Chybějící binární soubor v importním adresáři nesmí skončit jako úspěšný import."""
+        fake_redis, _ = self._run_soubor_import(
+            [{"vazba": self.dokument.ident_cely, "nazev": "missing-binary.txt"}],
+            extra_patches=[patch("cron.tasks.os.path.isfile", return_value=False)],
+        )
+
+        self.assert_import_failed(fake_redis)
+        file_results = self._file_import_results(fake_redis)
+        self.assertEqual(file_results[0]["file_name"], "missing-binary.txt")
+        self.assertIn("file_not_found_in_directory", file_results[0]["additional_info"])
 
     def test_failure_mid_batch_marks_import_as_failed(self):
         """Selhání zápisu v polovině dávky ve fázi souborů musí celý import označit jako selhalý.

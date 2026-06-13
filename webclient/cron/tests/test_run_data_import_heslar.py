@@ -160,6 +160,26 @@ class RunDataImportHeslarTest(TestCase):
         primary_keys = json.loads(primary_keys_raw.decode("utf-8"))
         self.assertEqual(primary_keys.get("0"), f"ident_cely: {HESLAR_IDENT}")
 
+    def test_missing_record_count_marks_import_as_failed(self):
+        """Chybějící ``import_data_count`` musí import ukončit jako selhaný bez zpracování záznamů."""
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_INSERT)
+        fake_redis.delete(f"import_data_count_{JOB_ID}")
+
+        self._run_import(fake_redis)
+
+        self._assert_import_failed(fake_redis)
+        self.assertFalse(Heslar.objects.filter(ident_cely=HESLAR_IDENT).exists())
+
+    def test_zero_record_count_marks_import_as_failed(self):
+        """Nulový ``import_data_count`` musí import ukončit jako selhaný bez zpracování záznamů."""
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_INSERT)
+        fake_redis.set(f"import_data_count_{JOB_ID}", "0")
+
+        self._run_import(fake_redis)
+
+        self._assert_import_failed(fake_redis)
+        self.assertFalse(Heslar.objects.filter(ident_cely=HESLAR_IDENT).exists())
+
     def _run_import(
         self,
         fake_redis: FakeRedis,

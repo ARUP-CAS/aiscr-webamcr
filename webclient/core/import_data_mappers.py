@@ -628,6 +628,7 @@ class DateImportField(BaseImportField):
     """Importní pole pro hodnoty datového typu date."""
 
     pattern_iso = re.compile(r"(\d{4}-\d{1,2}-\d{1,2})(?:[ T]\d{1,2}:\d{1,2}(?::\d{1,2})?)?")
+    pattern_dotted_year_first = re.compile(r"(\d{4}\.\d{1,2}\.\d{1,2})(?: \d{1,2}:\d{1,2}(?::\d{1,2})?)?")
     pattern_localized = re.compile(r"(\d{1,2}\. ?\d{1,2}\. ?\d{4})(?: \d{1,2}:\d{1,2}(?::\d{1,2})?)?")
 
     @property
@@ -661,8 +662,9 @@ class DateImportField(BaseImportField):
         """
         Převede vstupní hodnotu na ``date``.
 
-        Podporované formáty jsou ``YYYY-MM-DD`` a ``DD.MM.YYYY``. Případná časová složka
-        vstupu (např. ``"2026-05-31 13:45:59"``) se ignoruje a zpracuje se pouze část s datem.
+        Podporované formáty jsou ``YYYY-MM-DD``, ``YYYY.MM.DD`` a ``DD.MM.YYYY``.
+        Případná časová složka vstupu (např. ``"2026-05-31 13:45:59"``) se ignoruje
+        a zpracuje se pouze část s datem.
 
         :param value: Vstupní hodnota.
         :return: Hodnota ``date`` nebo ``None`` pro prázdnou hodnotu.
@@ -671,10 +673,15 @@ class DateImportField(BaseImportField):
         if not value or str(value).lower() == "nan":
             return None
         if isinstance(value, str):
-            if match := self.pattern_iso.match(value):
-                return datetime.datetime.strptime(match.group(1), "%Y-%m-%d").date()
-            if match := self.pattern_localized.match(value):
-                return datetime.datetime.strptime(match.group(1).replace(" ", ""), "%d.%m.%Y").date()
+            try:
+                if match := self.pattern_iso.match(value):
+                    return datetime.datetime.strptime(match.group(1), "%Y-%m-%d").date()
+                if match := self.pattern_dotted_year_first.match(value):
+                    return datetime.datetime.strptime(match.group(1), "%Y.%m.%d").date()
+                if match := self.pattern_localized.match(value):
+                    return datetime.datetime.strptime(match.group(1).replace(" ", ""), "%d.%m.%Y").date()
+            except ValueError:
+                raise ImportDataError(_("core_admin.ImportDataError.message.invalid_date_value") + ": " + str(value))
         if isinstance(value, datetime.date):
             return value
         raise ImportDataError(_("core_admin.ImportDataError.message.invalid_date_value") + ": " + str(value))
@@ -748,10 +755,15 @@ class DateTimeImportField(BaseImportField):
         if not value or str(value).lower() == "nan":
             return None
         if isinstance(value, str):
-            for pattern, datetime_format in self.patterns:
-                if match := pattern.match(value):
-                    parsed_value = datetime.datetime.strptime(match.group(1), datetime_format)
-                    return timezone.make_aware(parsed_value)
+            try:
+                for pattern, datetime_format in self.patterns:
+                    if match := pattern.match(value):
+                        parsed_value = datetime.datetime.strptime(match.group(1), datetime_format)
+                        return timezone.make_aware(parsed_value)
+            except ValueError:
+                raise ImportDataError(
+                    _("core_admin.ImportDataError.message.invalid_date_time_value") + ": " + str(value)
+                )
         if isinstance(value, datetime.datetime):
             return value
         raise ImportDataError(_("core_admin.ImportDataError.message.invalid_date_time_value") + ": " + str(value))
@@ -1792,9 +1804,11 @@ class MultipleClassImportModelMapper(ImportModelMapper):
             instance_class_0 = self.classes[0][1].objects.get(ident_cely=mapping_dict["ident_cely"])
             instance_class_1 = self.classes[1][1].objects.get(archeologicky_zaznam=instance_class_0)
             for field_name, field_value in mapping_dict_class_0.items():
-                setattr(instance_class_0, field_name, field_value)
+                if field_name in mapping_dict:
+                    setattr(instance_class_0, field_name, field_value)
             for field_name, field_value in mapping_dict_class_1.items():
-                setattr(instance_class_1, field_name, field_value)
+                if field_name in mapping_dict:
+                    setattr(instance_class_1, field_name, field_value)
             return [instance_class_0, instance_class_1]
         return []
 
@@ -2383,6 +2397,36 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
             field_mapping[item] = cls.map_field(item)
         field_mapping = field_mapping | cls.lookup_fields_mapping
         return field_mapping
+
+    @staticmethod
+    def _is_import_null(value) -> bool:
+        """
+        Určí, zda importovaná hodnota reprezentuje prázdnou hodnotu.
+
+        :param value: Hodnota z importovaného řádku.
+        :return: ``True``, pokud hodnota odpovídá prázdné hodnotě.
+        """
+        return value is None or pd.isna(value) or str(value).strip().lower() in ("", "nan", "none", "null")
+
+    def import_validation(self, performed_action, *args, **kwargs):
+        """
+        Ověří existenci archeologického záznamu a konzistenci typu akce s projektem.
+
+        :param performed_action: Typ prováděné operace importu.
+        :param args: Další poziční argumenty předané nadřazené implementaci.
+        :param kwargs: Další klíčové argumenty předané nadřazené implementaci.
+        :return: Slovník filtračních podmínek pro dohledání cílového záznamu.
+        :raises ImportDataError: Vyvolá se, pokud ``typ`` a ``projekt`` porušují ``akce_typ_check``.
+        """
+        typ = self.value_dict.get("typ")
+        projekt_is_null = self._is_import_null(self.value_dict.get("projekt"))
+        if typ == Akce.TYP_AKCE_SAMOSTATNA and not projekt_is_null:
+            raise ImportDataError(_("core_admin.ImportDataError.message.akce_typ_check.typ_n_requires_empty_projekt"))
+        if typ == Akce.TYP_AKCE_PROJEKTOVA and projekt_is_null:
+            raise ImportDataError(_("core_admin.ImportDataError.message.akce_typ_check.typ_r_requires_filled_projekt"))
+        if not self._is_import_null(typ) and typ not in (Akce.TYP_AKCE_SAMOSTATNA, Akce.TYP_AKCE_PROJEKTOVA):
+            raise ImportDataError(f"{_('core_admin.ImportDataError.message.akce_typ_check.invalid_typ')}: {typ}")
+        return super().import_validation(performed_action, *args, **kwargs)
 
     @classmethod
     def record_postprocessing(cls, record, performed_action, fedora_transaction):
@@ -3985,6 +4029,10 @@ class UzivatelOpravneniMapper(ImportModelMapper):
     model_class = User
     primary_key = ("uzivatel", "skupina")
     allow_update = False
+    supported_actions = (
+        ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+        ImportDataAdminForm.PERFORMED_ACTION_DELETE,
+    )
     column_to_field_mapping = {"uzivatel": "ident_cely"}
 
     def get_mapping(cls, include_primary_key=False):
@@ -4014,16 +4062,33 @@ class UzivatelOpravneniMapper(ImportModelMapper):
 
             :return: Vrací seznam.
         """
+        if performed_action not in self.supported_actions:
+            raise ImportDataError(
+                f"{_('core_admin.ImportDataError.message.invalid_performed_action')}: {performed_action}"
+            )
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
-    def import_validation(self, *args, **kwargs):
+    def import_validation(self, performed_action, *args, **kwargs):
         """
-        Vrátí filtrační podmínky uživatele bez další validační logiky.
+        Ověří, že import oprávnění provede skutečnou změnu.
 
+        :param performed_action: Požadovaná importní akce.
         :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
         :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
         :return: Slovník s podmínkou pro dohledání cílového uživatele.
         """
+        if performed_action not in self.supported_actions:
+            raise ImportDataError(
+                f"{_('core_admin.ImportDataError.message.invalid_performed_action')}: {performed_action}"
+            )
+        user = User.objects.get(ident_cely=self.value_dict["uzivatel"])
+        group = Group.objects.get(name=self.value_dict["skupina"])
+        relation_exists = user.groups.filter(pk=group.pk).exists()
+        record_id = {"uzivatel": self.value_dict["uzivatel"], "skupina": self.value_dict["skupina"]}
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and relation_exists:
+            raise ImportDataIntegrityError(record_id, "User.groups", performed_action)
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE and not relation_exists:
+            raise ImportDataIntegrityError(record_id, "User.groups", performed_action)
         return self._get_filter_kwargs_primary_key()
 
     @staticmethod
@@ -4124,6 +4189,10 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
     model_class = User
     primary_key = ("uzivatel", "notifikace")
     allow_update = False
+    supported_actions = (
+        ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+        ImportDataAdminForm.PERFORMED_ACTION_DELETE,
+    )
     column_to_field_mapping = {"uzivatel": "ident_cely"}
 
     def get_mapping(cls, include_primary_key=False):
@@ -4153,16 +4222,33 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
 
             :return: Vrací seznam.
         """
+        if performed_action not in self.supported_actions:
+            raise ImportDataError(
+                f"{_('core_admin.ImportDataError.message.invalid_performed_action')}: {performed_action}"
+            )
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
-    def import_validation(self, *args, **kwargs):
+    def import_validation(self, performed_action, *args, **kwargs):
         """
-        Vrátí filtrační podmínky uživatele bez další validační logiky.
+        Ověří, že import notifikace provede skutečnou změnu.
 
+        :param performed_action: Požadovaná importní akce.
         :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
         :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
         :return: Slovník s podmínkou pro dohledání cílového uživatele.
         """
+        if performed_action not in self.supported_actions:
+            raise ImportDataError(
+                f"{_('core_admin.ImportDataError.message.invalid_performed_action')}: {performed_action}"
+            )
+        user = User.objects.get(ident_cely=self.value_dict["uzivatel"])
+        notification_type = UserNotificationType.objects.get(ident_cely=self.value_dict["notifikace"])
+        relation_exists = user.notification_types.filter(pk=notification_type.pk).exists()
+        record_id = {"uzivatel": self.value_dict["uzivatel"], "notifikace": self.value_dict["notifikace"]}
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and relation_exists:
+            raise ImportDataIntegrityError(record_id, "User.notification_types", performed_action)
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE and not relation_exists:
+            raise ImportDataIntegrityError(record_id, "User.notification_types", performed_action)
         return self._get_filter_kwargs_primary_key()
 
     @staticmethod

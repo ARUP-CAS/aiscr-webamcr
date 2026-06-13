@@ -40,12 +40,27 @@ class DateImportFieldTest(SimpleTestCase):
 
         self.assertEqual(field.serialized_value, "2026-05-31")
 
+    def test_strips_timestamp_from_dotted_year_first_value(self):
+        """Ověřuje, že čas u formátu ``YYYY.M.D HH:MM:SS`` se ignoruje."""
+        field = DateImportField()
+
+        field.value = "2011.1.1 0:00:00"
+
+        self.assertEqual(field.serialized_value, "2011-01-01")
+
     def test_value_setter_raises_error_for_invalid_date_format(self):
         """Ověřuje, že přiřazení neplatné hodnoty přes ``value`` setter vyvolá chybu."""
         field = DateImportField()
 
         with self.assertRaises(ImportDataError):
             field.value = "31/05/2026"
+
+    def test_value_setter_wraps_invalid_calendar_date_as_import_error(self):
+        """Ověřuje, že kalendářně neplatné datum vyvolá ImportDataError."""
+        field = DateImportField()
+
+        with self.assertRaises(ImportDataError):
+            field.value = "2026-13-31 13:45:59"
 
 
 class DateTimeImportFieldTest(SimpleTestCase):
@@ -69,6 +84,15 @@ class DateTimeImportFieldTest(SimpleTestCase):
         self.assertEqual(field.serialized_value, "2026-05-31 13:45:59")
         self.assertTrue(timezone.is_aware(field._value))
 
+    def test_accepts_single_digit_dotted_datetime_format(self):
+        """Ověřuje, že pole přijme formát ``YYYY.M.D H:MM:SS``."""
+        field = DateTimeImportField()
+
+        field.value = "2011.1.1 0:00:00"
+
+        self.assertEqual(field.serialized_value, "2011-01-01 00:00:00")
+        self.assertTrue(timezone.is_aware(field._value))
+
     def test_accepts_czech_datetime_format(self):
         """Ověřuje, že pole přijme formát ``DD.MM.YYYY HH:MM:SS``."""
         field = DateTimeImportField()
@@ -84,3 +108,10 @@ class DateTimeImportFieldTest(SimpleTestCase):
 
         with self.assertRaises(ImportDataError):
             field.value = "31/05/2026 13:45:59"
+
+    def test_value_setter_wraps_invalid_calendar_datetime_as_import_error(self):
+        """Ověřuje, že kalendářně neplatný datetime vyvolá ImportDataError."""
+        field = DateTimeImportField()
+
+        with self.assertRaises(ImportDataError):
+            field.value = "2026.13.31 13:45:59"

@@ -370,8 +370,9 @@ Třídy
 
       Převede vstupní hodnotu na ``date``.
 
-      Podporované formáty jsou ``YYYY-MM-DD`` a ``DD.MM.YYYY``. Případná časová složka
-      vstupu (např. ``"2026-05-31 13:45:59"``) se ignoruje a zpracuje se pouze část s datem.
+      Podporované formáty jsou ``YYYY-MM-DD``, ``YYYY.MM.DD`` a ``DD.MM.YYYY``.
+      Případná časová složka vstupu (např. ``"2026-05-31 13:45:59"``) se ignoruje
+      a zpracuje se pouze část s datem.
 
       :param value: Vstupní hodnota.
       :return: Hodnota ``date`` nebo ``None`` pro prázdnou hodnotu.
@@ -1195,6 +1196,23 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: _is_import_null()
+
+      Určí, zda importovaná hodnota reprezentuje prázdnou hodnotu.
+
+      :param value: Hodnota z importovaného řádku.
+      :return: ``True``, pokud hodnota odpovídá prázdné hodnotě.
+
+   .. py:method:: import_validation()
+
+      Ověří existenci archeologického záznamu a konzistenci typu akce s projektem.
+
+      :param performed_action: Typ prováděné operace importu.
+      :param args: Další poziční argumenty předané nadřazené implementaci.
+      :param kwargs: Další klíčové argumenty předané nadřazené implementaci.
+      :return: Slovník filtračních podmínek pro dohledání cílového záznamu.
+      :raises ImportDataError: Vyvolá se, pokud ``typ`` a ``projekt`` porušují ``akce_typ_check``.
 
    .. py:method:: record_postprocessing()
 
@@ -2105,8 +2123,9 @@ Třídy
 
    .. py:method:: import_validation()
 
-      Vrátí filtrační podmínky uživatele bez další validační logiky.
+      Ověří, že import oprávnění provede skutečnou změnu.
 
+      :param performed_action: Požadovaná importní akce.
       :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
       :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
       :return: Slovník s podmínkou pro dohledání cílového uživatele.
@@ -2196,8 +2215,9 @@ Třídy
 
    .. py:method:: import_validation()
 
-      Vrátí filtrační podmínky uživatele bez další validační logiky.
+      Ověří, že import notifikace provede skutečnou změnu.
 
+      :param performed_action: Požadovaná importní akce.
       :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
       :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
       :return: Slovník s podmínkou pro dohledání cílového uživatele.

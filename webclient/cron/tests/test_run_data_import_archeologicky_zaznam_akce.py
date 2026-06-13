@@ -293,6 +293,37 @@ class RunDataImportArcheologickyZaznamAkceTest(TestCase):
         decoded = [item.decode("utf-8") for item in details]
         self.assertIn("cron.tasks.run_data_import.success", decoded)
 
+    def test_update_partial_stav_only_changes_stav_and_preserves_other_fields(self):
+        """Ověřuje, že částečný UPDATE se pouze stavem změní stav a nezapíše None do ostatních polí.
+
+        Scénář: záznam existuje se stavem 1, validními FK (pristupnost, hlavni_katastr)
+        a textem uzivatelske_oznaceni. Import UPDATE obsahuje pouze ``ident_cely`` + ``stav=2``.
+        Po importu musí platit: stav=2, ostatní pole zachována beze změny.
+        """
+        az, _ = self._create_existing_az_with_akce()
+        original_pristupnost_id = az.pristupnost_id
+        original_katastr_id = az.hlavni_katastr_id
+
+        partial_payload = {
+            "__file_name": FILE_KEY,
+            "ident_cely": AZ_IDENT,
+            "stav": 2,
+        }
+        fake_redis = FakeRedis(
+            {
+                f"import_data_count_{JOB_ID}": "1",
+                f"import_performed_action_{JOB_ID}": ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+                f"import_data_{JOB_ID}_record_0": json.dumps(partial_payload),
+            }
+        )
+
+        self._run_import(fake_redis)
+
+        updated = ArcheologickyZaznam.objects.get(ident_cely=AZ_IDENT)
+        self.assertEqual(updated.stav, 2, "Stav musí být aktualizován na 2.")
+        self.assertEqual(updated.pristupnost_id, original_pristupnost_id, "Pristupnost nesmí být přepsána na None.")
+        self.assertEqual(updated.hlavni_katastr_id, original_katastr_id, "Hlavní katastr nesmí být přepsán na None.")
+
     def test_delete_action_is_noop_for_multiple_class_mapper(self):
         """DELETE pro ``ArcheologickyZaznamAkceMapper`` je no-op.
 

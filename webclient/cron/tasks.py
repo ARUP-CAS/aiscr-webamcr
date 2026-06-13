@@ -627,6 +627,22 @@ def run_data_import(job_id, user_id, lock_token):
 
         record_count_raw = redis_connector.get(job_key("import_data_count"))
         record_count = int(record_count_raw.decode("utf-8")) if record_count_raw else 0
+        if record_count <= 0:
+            redis_connector.set(
+                job_key("import_data_status_message"),
+                _("cron.tasks.run_data_import.failed_during_data_import"),
+            )
+            redis_connector.set(job_key("import_data_stop"), 1)
+            redis_connector.set(
+                job_key("import_data_progress"),
+                IMPORT_PROGRESS_PHASE_FAILED,
+                ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+            )
+            logger.error(
+                "cron.tasks.run_data_import.invalid_record_count",
+                extra={"job_id": job_id, "record_count": record_count, "record_count_raw": record_count_raw},
+            )
+            return
         performed_action_raw = redis_connector.get(job_key("import_performed_action"))
         performed_action = performed_action_raw.decode("utf-8") if performed_action_raw else None
         redis_connector.delete(job_key("import_data_progress_ids"), job_key("import_data_progress_details"))
@@ -690,6 +706,7 @@ def run_data_import(job_id, user_id, lock_token):
                             fedora_transaction = DryRunFedoraTransaction()
                         else:
                             fedora_transaction = FedoraDeletionOnlyTransaction()
+                            fedora_transaction.override_tombstone = True
                         serialized_record = json.loads(redis_connector.get(record_key(record_id)).decode("utf-8"))
                         mapper_class = ImportModelMapper.get_import_data_mapper(serialized_record.pop("__file_name"))
                         mapper_classes[record_id] = mapper_class
@@ -708,9 +725,34 @@ def run_data_import(job_id, user_id, lock_token):
                                         if getattr(related_target, "ident_cely", None):
                                             fedora_update_targets.add((related_target.__class__, related_target.pk))
                                     add_item_fedora_update_target(fedora_update_targets, record_id)
+                                    if record.historie is None:
+                                        record.create_soubor_vazby()
+                                    history_record = Historie(
+                                        typ_zmeny=IMPORT,
+                                        uzivatel=transaction_user,
+                                        vazba=record.historie,
+                                        poznamka="{} {}".format(
+                                            _("cron.tasks.run_data_import.deleted_file"),
+                                            record.nazev,
+                                        ),
+                                    )
+                                    history_record.save()
+                                    import_history_record_result[record_id] = "{}: {}".format(
+                                        _("cron.tasks.run_data_import.history_record_created"), history_record.pk
+                                    )
+                                    redis_connector.set(
+                                        job_key("import_data_history_record_result"),
+                                        json.dumps(import_history_record_result),
+                                    )
                                     record.active_transaction = fedora_transaction
+                                    record.preserve_history_on_delete = True
                                     record.suppress_signal = True
+                                    related_record = record.vazba.navazany_objekt if record.vazba_id else None
                                     record.delete()
+                                    if related_record is not None:
+                                        FedoraRepositoryConnector(
+                                            related_record, fedora_transaction
+                                        ).delete_binary_file(record)
                                 redis_connector.rpush(job_key("import_data_progress_ids"), record_id)
                                 redis_connector.rpush(
                                     job_key("import_data_progress_details"), "cron.tasks.run_data_import.success"
@@ -1159,7 +1201,14 @@ def run_data_import(job_id, user_id, lock_token):
                                 }
                             )
                             redis_connector.set(job_key("import_data_files"), json.dumps(import_results_files))
-                            continue
+                            failed = True
+                            stopped = True
+                            redis_connector.set(job_key("import_data_stop"), 1)
+                            redis_connector.set(
+                                job_key("import_data_status_message"),
+                                _("cron.tasks.run_data_import.failed_during_data_import"),
+                            )
+                            break
                         elif soubor_query.exists() and performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
                             import_results_files.append(
                                 {
@@ -1170,7 +1219,14 @@ def run_data_import(job_id, user_id, lock_token):
                                 }
                             )
                             redis_connector.set(job_key("import_data_files"), json.dumps(import_results_files))
-                            continue
+                            failed = True
+                            stopped = True
+                            redis_connector.set(job_key("import_data_stop"), 1)
+                            redis_connector.set(
+                                job_key("import_data_status_message"),
+                                _("cron.tasks.run_data_import.failed_during_data_import"),
+                            )
+                            break
                         if not os.path.isfile(file_path):
                             import_results_files.append(
                                 {
@@ -1181,7 +1237,14 @@ def run_data_import(job_id, user_id, lock_token):
                                 }
                             )
                             redis_connector.set(job_key("import_data_files"), json.dumps(import_results_files))
-                            continue
+                            failed = True
+                            stopped = True
+                            redis_connector.set(job_key("import_data_stop"), 1)
+                            redis_connector.set(
+                                job_key("import_data_status_message"),
+                                _("cron.tasks.run_data_import.cannot_read_from_directory"),
+                            )
+                            break
                         record_id = getattr(soubor, "import_record_id", None)
                         soubor = soubor_query.first() or soubor
                         redis_connector.set(
