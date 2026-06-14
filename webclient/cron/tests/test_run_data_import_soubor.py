@@ -706,3 +706,100 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         decoded = [item.decode("utf-8") for item in details]
         self.assertIn("cron.tasks.run_data_import.file", decoded)
         self.assert_history_record_result_contains_item(fake_redis)
+
+    def test_delete_soubor_saves_related_metadata_twice_around_deletion(self):
+        """DELETE Souboru musí zavolat ``save_metadata`` navázaného objektu dvakrát.
+
+        Nejprve před fyzickým smazáním Souboru (snímek 1 — metadata stále obsahují
+        Soubor s historií jeho smazání), pak v existující Fedora-update fázi
+        (snímek 2 — metadata bez smazaného Souboru). Obě verze končí ve Fedora
+        version-historii navázaného objektu.
+        """
+        from arch_z.models import ArcheologickyZaznam as AzModel
+        from dokument.models import Dokument as DokumentModel
+
+        existing = self._create_existing_soubor(nazev="two-snapshots.txt")
+        navazany_ident_cely = self.dokument.ident_cely
+
+        def real_get_record_from_ident(ident_cely):
+            for model in (DokumentModel, AzModel):
+                try:
+                    return model.objects.get(ident_cely=ident_cely)
+                except model.DoesNotExist:
+                    continue
+            raise DokumentModel.DoesNotExist(ident_cely)
+
+        fake_redis, save_metadata_calls = self._run_soubor_import(
+            [{"id": f"soub-{existing.id}"}],
+            performed_action=ImportDataAdminForm.PERFORMED_ACTION_DELETE,
+            extra_patches=[
+                patch("cron.tasks.get_record_from_ident", side_effect=real_get_record_from_ident),
+            ],
+        )
+
+        self.assert_import_success(fake_redis)
+        dokument_saves = [
+            item for item in save_metadata_calls if getattr(item, "ident_cely", None) == navazany_ident_cely
+        ]
+        self.assertGreaterEqual(
+            len(dokument_saves),
+            2,
+            "Navázaný Dokument musí mít ``save_metadata`` zavoláno dvakrát "
+            "(snímek před smazáním Souboru a snímek po smazání). "
+            f"Zachycené volání pro {navazany_ident_cely}: {len(dokument_saves)}.",
+        )
+
+    def test_delete_soubor_first_metadata_save_happens_before_deletion(self):
+        """Snímek 1 metadat navázaného objektu musí proběhnout, dokud Soubor ještě existuje v DB.
+
+        Bez tohoto pořadí by metadata snímku 1 neobsahovala historii smazání Souboru
+        a auditní stopa kdo a kdy soubor smazal by zmizela. Snímek 2 (v existující
+        Fedora-update fázi) naopak proběhne až po fyzickém smazání.
+        """
+        from arch_z.models import ArcheologickyZaznam as AzModel
+        from dokument.models import Dokument as DokumentModel
+
+        existing = self._create_existing_soubor(nazev="ordering-check.txt")
+        soubor_id = existing.id
+        navazany_ident_cely = self.dokument.ident_cely
+
+        def real_get_record_from_ident(ident_cely):
+            for model in (DokumentModel, AzModel):
+                try:
+                    return model.objects.get(ident_cely=ident_cely)
+                except model.DoesNotExist:
+                    continue
+            raise DokumentModel.DoesNotExist(ident_cely)
+
+        soubor_existed_at_call: list[bool] = []
+
+        def capture_soubor_state_on_save(self, *args, **kwargs):
+            if getattr(self, "ident_cely", None) == navazany_ident_cely:
+                soubor_existed_at_call.append(Soubor.objects.filter(id=soubor_id).exists())
+
+        fake_redis, _ = self._run_soubor_import(
+            [{"id": f"soub-{soubor_id}"}],
+            performed_action=ImportDataAdminForm.PERFORMED_ACTION_DELETE,
+            save_metadata_side_effect=capture_soubor_state_on_save,
+            extra_patches=[
+                patch("cron.tasks.get_record_from_ident", side_effect=real_get_record_from_ident),
+            ],
+        )
+
+        self.assert_import_success(fake_redis)
+        self.assertGreaterEqual(
+            len(soubor_existed_at_call),
+            2,
+            "Pro navázaný Dokument musí proběhnout alespoň dvě volání ``save_metadata`` "
+            f"(zachyceno: {len(soubor_existed_at_call)}).",
+        )
+        self.assertTrue(
+            soubor_existed_at_call[0],
+            "První snímek metadat navázaného Dokumentu musí být uložen, dokud mazaný "
+            "Soubor ještě existuje v DB — jinak v něm nebude historie smazání.",
+        )
+        self.assertFalse(
+            soubor_existed_at_call[-1],
+            "Poslední snímek metadat navázaného Dokumentu musí být uložen až po fyzickém "
+            "smazání Souboru, aby reflektoval nový stav bez smazaného souboru.",
+        )

@@ -688,6 +688,7 @@ def run_data_import(job_id, user_id, lock_token):
 
         pending_fedora_update = []
         pending_history_update = []
+        pending_soubor_deletes: list = []
 
         def add_updated_history(mapper_class, history_target, record_id):
             if history_target:
@@ -744,7 +745,8 @@ def run_data_import(job_id, user_id, lock_token):
                                 for record in records:
                                     record: Soubor
                                     fedora_update_targets = mapper_class.fedora_update_targets(record)
-                                    for related_target in SouborMapper.get_related_history_targets(record):
+                                    related_history_targets = SouborMapper.get_related_history_targets(record)
+                                    for related_target in related_history_targets:
                                         if getattr(related_target, "ident_cely", None):
                                             fedora_update_targets.add((related_target.__class__, related_target.pk))
                                     add_item_fedora_update_target(fedora_update_targets, record_id)
@@ -767,16 +769,17 @@ def run_data_import(job_id, user_id, lock_token):
                                         job_key("import_data_history_record_result"),
                                         json.dumps(import_history_record_result),
                                     )
-                                    record.active_transaction = fedora_transaction
-                                    record.preserve_history_on_delete = True
-                                    record.suppress_signal = True
-                                    related_record = record.vazba.navazany_objekt if record.vazba_id else None
-                                    record.delete()
-                                    if related_record is not None:
-                                        FedoraRepositoryConnector(
-                                            related_record, fedora_transaction
-                                        ).delete_binary_file(record)
-                                    fedora_transaction.mark_transaction_as_closed()
+                                    pending_soubor_deletes.append(
+                                        {
+                                            "soubor": record,
+                                            "navazany_objekt": (
+                                                record.vazba.navazany_objekt if record.vazba_id else None
+                                            ),
+                                            "history_targets": list(related_history_targets),
+                                            "record_id": record_id,
+                                        }
+                                    )
+                                fedora_transaction.mark_transaction_as_closed()
                                 redis_connector.rpush(job_key("import_data_progress_ids"), record_id)
                                 redis_connector.rpush(
                                     job_key("import_data_progress_details"), "cron.tasks.run_data_import.success"
@@ -1070,6 +1073,72 @@ def run_data_import(job_id, user_id, lock_token):
         redis_connector.set(job_key("import_data_fedora_progress"), 0, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
         fedora_skipped_str = _("cron.tasks.run_data_import.fedora_skipped")
         fedora_waiting_data_import_str = _("cron.tasks.run_data_import.fedora_waiting_data_import")
+        if not failed and pending_soubor_deletes:
+            refresh_import_lock()
+            seen_save_target_keys: set = set()
+            for entry in pending_soubor_deletes:
+                save_targets = list(entry["history_targets"])
+                if entry["navazany_objekt"] is not None and getattr(entry["navazany_objekt"], "ident_cely", None):
+                    save_targets.append(entry["navazany_objekt"])
+                for target in save_targets:
+                    target_key = (target.__class__, target.pk)
+                    if target_key in seen_save_target_keys:
+                        continue
+                    seen_save_target_keys.add(target_key)
+                    try:
+                        save_fedora_transaction = FedoraTransaction(transaction_user=transaction_user)
+                        target.active_transaction = save_fedora_transaction
+                        target.save_metadata(save_fedora_transaction)
+                        target.suppress_signal = True
+                        save_fedora_transaction.mark_transaction_as_closed()
+                    except Exception as err:
+                        logger.error(
+                            "cron.tasks.run_data_import.soubor_delete.history_save.error",
+                            extra={"job_id": job_id, "history_target": target_key, "error": err},
+                        )
+                        failed = True
+                        redis_connector.set(
+                            job_key("import_data_status_message"),
+                            _("cron.tasks.run_data_import.failed_during_fedora"),
+                        )
+                        redis_connector.set(job_key("import_data_stop"), 1)
+                        break
+                if failed:
+                    break
+            if not failed:
+                for entry in pending_soubor_deletes:
+                    soubor = entry["soubor"]
+                    navazany_objekt = entry["navazany_objekt"]
+                    try:
+                        delete_fedora_transaction = FedoraDeletionOnlyTransaction()
+                        delete_fedora_transaction.override_tombstone = True
+                        soubor.active_transaction = delete_fedora_transaction
+                        soubor.preserve_history_on_delete = True
+                        soubor.suppress_signal = True
+                        soubor.delete()
+                        if navazany_objekt is not None:
+                            FedoraRepositoryConnector(navazany_objekt, delete_fedora_transaction).delete_binary_file(
+                                soubor
+                            )
+                        delete_fedora_transaction.mark_transaction_as_closed()
+                    except Exception as err:
+                        logger.error(
+                            "cron.tasks.run_data_import.soubor_delete.error",
+                            extra={
+                                "job_id": job_id,
+                                "soubor_pk": soubor.pk,
+                                "record_id": entry["record_id"],
+                                "error": err,
+                            },
+                        )
+                        failed = True
+                        redis_connector.set(
+                            job_key("import_data_status_message"),
+                            _("cron.tasks.run_data_import.failed_during_data_import"),
+                        )
+                        redis_connector.set(job_key("import_data_stop"), 1)
+                        break
+
         if not failed:
             fedora_pending_record_ids = set()
             for affected_ids in fedora_update_targets_record_ids_dict.values():
