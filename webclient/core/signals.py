@@ -5,9 +5,6 @@ from core.repository_connector import FedoraTransaction
 from django.db import transaction
 from django.db.models.signals import post_delete, post_save, pre_delete, pre_save
 from django.dispatch import receiver
-from PIL import Image, UnidentifiedImageError
-from pypdf import PdfReader
-from pypdf.errors import PdfReadError
 from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
@@ -22,31 +19,7 @@ def soubor_get_rozsah(sender, instance, **kwargs):
     :param instance: Instancia ``Soubor`` předaná k uložení.
     :param kwargs: Dodatečné argumenty signálu.
     """
-    if instance.binary_data:
-        try:
-            if instance.nazev.lower().endswith("pdf"):
-                try:
-                    instance.binary_data.seek(0)
-                    reader = PdfReader(instance.binary_data)
-                    instance.rozsah = len(reader.pages)
-                except (PdfReadError, OSError, ValueError):
-                    logger.debug("core.models.Soubor.save_error_reading_pdf")
-                    instance.rozsah = 1
-            elif instance.nazev.lower().endswith("tif"):
-                try:
-                    instance.binary_data.seek(0)
-                    img = Image.open(instance.binary_data)
-                    instance.rozsah = img.n_frames
-                except (UnidentifiedImageError, OSError, ValueError):
-                    logger.debug("core.models.Soubor.save_error_reading_tif")
-                    instance.rozsah = 1
-            else:
-                instance.rozsah = 1
-        finally:
-            try:
-                instance.binary_data.seek(0)
-            except Exception:
-                pass
+    instance.rozsah = instance.calculate_rozsah()
 
 
 @receiver(post_save, sender=Soubor, weak=False)
@@ -89,12 +62,16 @@ def soubor_delete_connections(sender, instance: Soubor, **kwargs):
     """
     Odstraní historii záznamu spojené se souborem před jeho fyzickým smazáním.
 
+    Importní mazání Souboru může nejdřív vytvořit auditní záznam na historii
+    souboru. V takovém případě ``preserve_history_on_delete`` zabrání smazání
+    historie a zachová nově vytvořený záznam pro importní report.
+
     :param sender: Model ``Soubor``, který signál vyslal.
     :param instance: Instancia ``Soubor`` určená ke smazání.
     :param kwargs: Dodatečné argumenty signálu.
     """
     logger.debug("cron.signals.soubor_delete_connections.start", extra={"instance": instance.pk})
-    if instance.historie and instance.historie.pk:
+    if instance.historie and instance.historie.pk and not getattr(instance, "preserve_history_on_delete", False):
         instance.historie.delete()
     logger.debug("cron.signals.soubor_delete_connections.end", extra={"instance": instance.pk})
 

@@ -26,6 +26,10 @@ Funkce
 
    Odstraní historii záznamu spojené se souborem před jeho fyzickým smazáním.
 
+   Importní mazání Souboru může nejdřív vytvořit auditní záznam na historii
+   souboru. V takovém případě ``preserve_history_on_delete`` zabrání smazání
+   historie a zachová nově vytvořený záznam pro importní report.
+
    :param sender: Model ``Soubor``, který signál vyslal.
    :param instance: Instancia ``Soubor`` určená ke smazání.
    :param kwargs: Dodatečné argumenty signálu.

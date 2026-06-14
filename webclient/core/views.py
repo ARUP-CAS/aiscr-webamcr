@@ -2379,7 +2379,7 @@ class DataImportProgress(LoginRequiredMixin, View):
         try:
             record_count_raw = redis_connector.get(f"import_data_count_{job_id}") or 0
             record_count = int(record_count_raw)
-            import_data_progress_files = int(redis_connector.get(f"import_data_progress_files_{job_id}") or 0)
+            phase_progress = int(redis_connector.get(f"import_data_progress_{job_id}") or 0)
             status_message = redis_connector.get(f"import_data_status_message_{job_id}")
             stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
 
@@ -2393,9 +2393,46 @@ class DataImportProgress(LoginRequiredMixin, View):
             )
             import_fedora_update_result = json.loads(redis_connector.get(f"import_fedora_result_{job_id}") or "{}")
 
-            progress_data = math.floor((len(serialized_results) / record_count) * 100)
-            progress_files = math.floor(import_data_progress_files * 100)
-            if progress_data == progress_files == 100:
+            from cron.tasks import (
+                IMPORT_PROGRESS_PHASE_DATA_DONE,
+                IMPORT_PROGRESS_PHASE_FEDORA_DONE,
+                IMPORT_PROGRESS_PHASE_FINISHED,
+                IMPORT_PROGRESS_PHASE_HISTORY_DONE,
+            )
+
+            def _phase_fraction(progress_key: str, total_key: str) -> float:
+                total = int(redis_connector.get(total_key) or 0)
+                if not total:
+                    return 0.0
+                processed = int(redis_connector.get(progress_key) or 0)
+                return min(processed / total, 1.0)
+
+            if phase_progress >= IMPORT_PROGRESS_PHASE_FINISHED:
+                progress_data = IMPORT_PROGRESS_PHASE_FINISHED
+            elif phase_progress >= IMPORT_PROGRESS_PHASE_FEDORA_DONE:
+                fraction = _phase_fraction(f"import_data_files_progress_{job_id}", f"import_data_files_total_{job_id}")
+                progress_data = IMPORT_PROGRESS_PHASE_FEDORA_DONE + math.floor(
+                    fraction * (IMPORT_PROGRESS_PHASE_FINISHED - IMPORT_PROGRESS_PHASE_FEDORA_DONE)
+                )
+            elif phase_progress >= IMPORT_PROGRESS_PHASE_HISTORY_DONE:
+                fraction = _phase_fraction(
+                    f"import_data_fedora_progress_{job_id}", f"import_data_fedora_total_{job_id}"
+                )
+                progress_data = IMPORT_PROGRESS_PHASE_HISTORY_DONE + math.floor(
+                    fraction * (IMPORT_PROGRESS_PHASE_FEDORA_DONE - IMPORT_PROGRESS_PHASE_HISTORY_DONE)
+                )
+            elif phase_progress >= IMPORT_PROGRESS_PHASE_DATA_DONE:
+                fraction = _phase_fraction(
+                    f"import_data_history_progress_{job_id}", f"import_data_history_total_{job_id}"
+                )
+                progress_data = IMPORT_PROGRESS_PHASE_DATA_DONE + math.floor(
+                    fraction * (IMPORT_PROGRESS_PHASE_HISTORY_DONE - IMPORT_PROGRESS_PHASE_DATA_DONE)
+                )
+            elif record_count:
+                progress_data = math.floor((len(serialized_results) / record_count) * IMPORT_PROGRESS_PHASE_DATA_DONE)
+            else:
+                progress_data = 0
+            if progress_data >= IMPORT_PROGRESS_PHASE_FINISHED:
                 status = "finished"
             elif stopped:
                 status = "stopped"
@@ -2404,7 +2441,6 @@ class DataImportProgress(LoginRequiredMixin, View):
             progress_response = {
                 "record_count": record_count,
                 "progress_data": progress_data,
-                "progress_files": progress_files,
                 "finished_record_count": len(serialized_results),
                 "serialized_results": serialized_results,
                 "primary_keys": import_data_primary_keys,
@@ -2414,7 +2450,13 @@ class DataImportProgress(LoginRequiredMixin, View):
                 "serialized_results_files": serialized_results_files,
                 "status_message": status_message or _("core.templates.admin.import_data.starting"),
             }
-        except (AttributeError, TypeError, ValueError, json.JSONDecodeError):
+        except (AttributeError, TypeError, ValueError, json.JSONDecodeError) as err:
+            logger.exception(
+                "core.views.dataImportProgress.unknown_import_status job_id=%s error_type=%s error=%s",
+                job_id,
+                type(err).__name__,
+                err,
+            )
             progress_response = {
                 "status": "unknown",
                 "status_message": _("core.views.dataImportProgress.unknown_import_status"),

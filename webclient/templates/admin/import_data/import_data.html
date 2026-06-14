@@ -68,15 +68,10 @@
       {% endif %}
     {% elif validation_results %}
       <div class="submit-row">
+        {% if not invalid_records %}
         <div id="progressBarBoxData" class="progressBarBox" style="margin-bottom: 1rem">
           <div id="progressBarData" class="progressBar" style="position: relative;">
             <span id="progressPercentData" style="position: absolute; top: 0; transform: translateX(-50%); color: #fff; line-height: 30px; font-weight: bold;"></span>
-          </div>
-        </div>
-        {% if import_directory_configured %}
-        <div id="progressBarBoxFiles" class="progressBarBox" style="margin-bottom: 1rem">
-          <div id="progressBarFiles" class="progressBar" style="position: relative;">
-            <span id="progressPercentFiles" style="position: absolute; top: 0; transform: translateX(-50%); color: #fff; line-height: 30px; font-weight: bold;"></span>
           </div>
         </div>
         {% endif %}
@@ -84,6 +79,12 @@
           <b>{% trans "core.templates.admin.import_data.status" %}:</b>
           <span id="processCurrentStatus">{% if invalid_records %}{% trans "core.templates.admin.import_data.validation_failed" %}{% else %}{% trans "core.templates.admin.import_data.waiting_for_approval" %}{% endif %}</span>
         </p>
+        {% if performed_action %}
+        <p style="width: 100%;">
+          <b>{% trans "core.forms.ImportDataAdminForm.action.label" %}:</b>
+          <span id="performedAction">{{ performed_action_label }}</span>
+        </p>
+        {% endif %}
         <p>
           <input type="button" id="startImport" class="default"
                  value="{% trans "core.templates.admin.import_data.start_import" %}"{% if invalid_records %} disabled{% endif %}>
@@ -93,9 +94,6 @@
                  value="{% trans "core.templates.admin.import_data.download_report" %}">
         </p>
       </div>
-      <p id="processFinishedParagraph" style="display: none">
-        <strong>{% trans "core.templates.admin.import_data.finished" %}</strong>
-      </p>
       {% if invalid_records %}
         <p>
           <strong>{% trans "core.templates.admin.import_data.invalid_records" %}</strong>: {{ invalid_records }}
@@ -211,9 +209,14 @@
             fetch(stopRequestUrl)
             stopRequestButton.disabled = true
             const progressBarBoxData = document.getElementById("progressBarBoxData")
-            progressBarBoxData.style.display = "none"
+            if (progressBarBoxData) {
+                progressBarBoxData.style.display = "none"
+            }
         });
       }
+
+      const MAX_CONSECUTIVE_FAILURES = 5
+      let consecutiveFailures = 0
 
       async function sendRequest(url) {
           try {
@@ -225,50 +228,56 @@
               if (!response.ok) {
                   throw new Error(`HTTP error! status: ${response.status}`)
               }
+              consecutiveFailures = 0
 
               const data = await response.json()
 
               const processCurrentStatus = document.getElementById("processCurrentStatus")
               processCurrentStatus.textContent = data.status_message
+              const importFinished = data.status === "finished" || data.status_message === "cron.tasks.run_data_import.finished"
+              const importStopped = data.status === "stopped"
 
               if (data.status === "unknown") {
                   console.error("Unknown status of the import process.")
+                  stopRequests = true
+                  if (stopRequestButton) {
+                      stopRequestButton.disabled = true
+                  }
                   return 0
               }
 
               const progressBarData = document.getElementById("progressBarData")
-              progressBarData.style.width = data.progress_data + "%"
+              if (progressBarData) {
+                  progressBarData.style.width = data.progress_data + "%"
 
-              const progressPercentData = document.getElementById("progressPercentData")
-              progressPercentData.style.left = `${document.getElementById("progressBarBoxData").offsetWidth / 2}px`
+                  const progressPercentData = document.getElementById("progressPercentData")
+                  progressPercentData.style.left = `${document.getElementById("progressBarBoxData").offsetWidth / 2}px`
 
-              if (data.progress_data > 0) {
-                  progressPercentData.textContent = data.progress_data + "%"
+                  if (data.progress_data > 0) {
+                      progressPercentData.textContent = data.progress_data + "%"
+                  }
               }
 
-              const progressBarFiles = document.getElementById("progressBarFiles");
-              if (progressBarFiles) {
-                  progressBarFiles.style.width = data.progress_files + "%"
-
-                  const progressPercentFiles = document.getElementById("progressPercentFiles")
-                  progressPercentFiles.style.left = `${document.getElementById("progressBarBoxFiles").offsetWidth / 2}px`
-
-                  if (data.progress_files > 0) {
-                      progressPercentFiles.textContent = data.progress_files + "%"
-                  } else {
-                      progressPercentFiles.textContent = "{% trans 'core.templates.admin.import_data.files.not_started_yet' %}"
+              if (importFinished || importStopped) {
+                  if (stopRequestButton) {
+                      stopRequestButton.disabled = true
                   }
+                  stopRequests = true
               }
 
               const table = document.getElementById("result_list");
               for (let i = 0; i < data.finished_record_count; i++) {
                   const row = table.rows[i + 1]
+                  if (!row) {
+                      continue
+                  }
                   row.cells[3].innerText = data.primary_keys[i] || ""
                   row.cells[5].innerText = translations[data.serialized_results[i]] || data.serialized_results[i]
                   row.cells[6].innerText = data.history_record_result[i] || ""
-                  const primaryKey = data.primary_keys[i] || ""
-                  const identCely = primaryKey.startsWith("ident_cely: ") ? primaryKey.slice("ident_cely: ".length) : primaryKey
-                  row.cells[7].innerText = (data.fedora_update_result[i] || []).join(", ")
+                  const fedoraUpdateResult = data.fedora_update_result[i] || []
+                  row.cells[7].innerText = Array.isArray(fedoraUpdateResult)
+                      ? fedoraUpdateResult.join(", ")
+                      : fedoraUpdateResult
               }
 
               const table_files = document.getElementById("result_list_files")
@@ -297,13 +306,17 @@
                   }
               }
 
-              if (data.status === "finished" || data.status === "stopped") {
-                  document.getElementById("stopRequests").disabled = true
-                  stopRequests = true
-              }
-
           } catch (error) {
               console.error("Error fetching data:", error)
+              consecutiveFailures++
+              if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                  stopRequests = true
+                  if (stopRequestButton) {
+                      stopRequestButton.disabled = true
+                  }
+                  document.getElementById("processCurrentStatus").textContent =
+                      "{% trans 'core.templates.admin.import_data.timeout_error' %}"
+              }
               return 0
           }
 

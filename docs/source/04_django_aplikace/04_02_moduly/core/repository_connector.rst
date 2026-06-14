@@ -112,8 +112,21 @@ Třídy
       Inicializuje instanci třídy.
 
       :param record: Parametr ``record`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``.
-      :param transaction: Parametr ``transaction`` se předává do volání ``isinstance()``, ``FedoraTransaction()``, pracuje se s atributy ``uid``, ``main_record``, ovlivňuje větvení podmínek.
+      :param transaction: Parametr ``transaction`` se předává do volání ``isinstance()``, ``FedoraTransaction()``, pracuje se s atributy ``uid``, ``main_record``, ``override_tombstone``, ovlivňuje větvení podmínek.
       :param skip_container_check: Parametr ``skip_container_check`` slouží jako vstup pro logiku funkce ``__init__``.
+
+   .. py:method:: override_tombstone()
+
+      Vrací hodnotu ``override_tombstone`` z navázané transakce; bez transakce ``False``.
+
+      Jediným zdrojem pravdy je ``BaseFedoraTransaction.override_tombstone``; connector
+      tuto vlastnost pouze čte. Důvod: ``run_data_import`` neinstanciuje connectory přímo
+      (vznikají uvnitř signálů a ``ModelWithMetadata`` metod), ale transakci propaguje
+      do všech volání, takže nastavením příznaku jen na transakci ovlivní všechny
+      downstream connectory automaticky.
+
+      :return: ``True``, pokud má navázaná transakce nastaveno ``override_tombstone=True``;
+          v ostatních případech (včetně absence transakce) ``False``.
 
    .. py:method:: _get_model_name()
 
@@ -388,6 +401,13 @@ Třídy
    .. py:method:: record_deletion()
 
       Označí záznam jako smazaný v Fedoře přidáním 'deleted' markeru.
+
+      Pokud má navázaná transakce ``override_tombstone == True`` (čte se přes
+      ``self.override_tombstone``), přidá k POST požadavku, který vytváří proxy
+      ``/model/deleted/member/<ident_cely>``, hlavičku ``Overwrite-Tombstone: true``.
+      Cyklus INSERT → DELETE → INSERT → DELETE totiž zanechá na této URL tombstone,
+      který by jinak druhý DELETE tiše rozbil; hlavička dovolí Fedoře tombstone
+      při opětovném vytvoření proxy přepsat.
 
    .. py:method:: add_replaces_triple()
 

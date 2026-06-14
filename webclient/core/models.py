@@ -31,7 +31,9 @@ from heslar.hesla_dynamicka import (
 from historie.models import Historie, HistorieVazby
 from nalez.models import NalezObjekt, NalezPredmet
 from notifikace_projekty.models import Pes
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
+from pypdf import PdfReader
+from pypdf.errors import PdfReadError
 from uzivatel.models import User
 from xml_generator.models import ModelWithMetadata
 
@@ -233,6 +235,48 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         self.historie = hv
         self.save()
         logger.debug("core.models.soubor.create_soubor_vazby.finished", extra={"historie": hv})
+
+    def calculate_rozsah(self, binary_data=None, nazev: str | None = None) -> int:
+        """Spočítá rozsah souboru — počet stran u PDF, počet snímků u TIF, jinak 1.
+
+        Pokud volající předá ``binary_data`` a/nebo ``nazev`` explicitně, použijí se ony;
+        jinak se použijí atributy instance (``self.binary_data``, ``self.nazev``).
+
+        Když binární data nejsou k dispozici (ani na instanci, ani v parametru), vrací
+        stávající ``self.rozsah`` (nebo ``1``, pokud ještě není nastaven) — tj. nepřepisuje
+        již spočítaný rozsah uloženého souboru.
+
+        :param binary_data: Binární obsah souboru (např. ``BytesIO``); pokud chybí, použije
+            se ``self.binary_data``.
+        :param nazev: Název souboru pro odvození typu z přípony; pokud chybí, použije se
+            ``self.nazev``.
+        :return: Spočítaný rozsah.
+        """
+        binary_data = binary_data if binary_data is not None else self.binary_data
+        nazev = nazev if nazev is not None else self.nazev
+        if not binary_data:
+            return self.rozsah if self.rozsah is not None else 1
+        try:
+            if nazev.lower().endswith("pdf"):
+                try:
+                    binary_data.seek(0)
+                    return len(PdfReader(binary_data).pages)
+                except (PdfReadError, OSError, ValueError):
+                    logger.debug("core.models.Soubor.calculate_rozsah.error_reading_pdf")
+                    return 1
+            if nazev.lower().endswith("tif"):
+                try:
+                    binary_data.seek(0)
+                    return Image.open(binary_data).n_frames
+                except (UnidentifiedImageError, OSError, ValueError):
+                    logger.debug("core.models.Soubor.calculate_rozsah.error_reading_tif")
+                    return 1
+            return 1
+        finally:
+            try:
+                binary_data.seek(0)
+            except Exception:
+                pass
 
     @property
     def vytvoreno(self):

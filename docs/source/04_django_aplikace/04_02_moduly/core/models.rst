@@ -76,6 +76,23 @@ Třídy
 
       Metoda pro vytvoření vazby na historii.
 
+   .. py:method:: calculate_rozsah()
+
+      Spočítá rozsah souboru — počet stran u PDF, počet snímků u TIF, jinak 1.
+
+      Pokud volající předá ``binary_data`` a/nebo ``nazev`` explicitně, použijí se ony;
+      jinak se použijí atributy instance (``self.binary_data``, ``self.nazev``).
+
+      Když binární data nejsou k dispozici (ani na instanci, ani v parametru), vrací
+      stávající ``self.rozsah`` (nebo ``1``, pokud ještě není nastaven) — tj. nepřepisuje
+      již spočítaný rozsah uloženého souboru.
+
+      :param binary_data: Binární obsah souboru (např. ``BytesIO``); pokud chybí, použije
+          se ``self.binary_data``.
+      :param nazev: Název souboru pro odvození typu z přípony; pokud chybí, použije se
+          ``self.nazev``.
+      :return: Spočítaný rozsah.
+
    .. py:method:: vytvoreno()
 
       Vrátí záznam historie s typem zmény "Nahrání SBR" (prvního nahrání souboru).
