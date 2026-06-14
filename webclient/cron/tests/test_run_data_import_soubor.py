@@ -69,6 +69,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             mimetype="text/plain",
             vazba=vazba or self.dokument.soubory,
             size_mb=0.001,
+            path=f"AMCR/record/test-record/file/{uuid.uuid4()}",
             historie=historie_vazba,
         )
         soubor.suppress_signal = True
@@ -567,15 +568,16 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
 
         self.assert_import_failed(fake_redis)
 
-    def test_update_missing_target_file_record_marks_import_as_failed(self):
-        """UPDATE Souboru bez cílového řádku ``nazev`` + ``vazba`` nesmí skončit jako úspěšný import."""
+    def test_update_rename_to_conflicting_name_marks_import_as_failed(self):
+        """UPDATE Souboru, jehož cílový ``nazev`` je již obsazen jiným souborem téže vazby, nesmí uspět."""
         existing = self._create_existing_soubor(nazev="old-name.txt")
+        self._create_existing_soubor(nazev="taken-name.txt", vazba=self.dokument.soubory)
         fake_redis, _ = self._run_soubor_import(
             [
                 {
                     "id": f"soub-{existing.id}",
                     "vazba": self.dokument.ident_cely,
-                    "nazev": "new-name.txt",
+                    "nazev": "taken-name.txt",
                 }
             ],
             performed_action=ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
@@ -583,8 +585,8 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
 
         self.assert_import_failed(fake_redis)
         file_results = self._file_import_results(fake_redis)
-        self.assertEqual(file_results[0]["file_name"], "new-name.txt")
-        self.assertIn("does_not_exist", file_results[0]["additional_info"])
+        self.assertEqual(file_results[0]["file_name"], "taken-name.txt")
+        self.assertIn("already_exists", file_results[0]["additional_info"])
 
     def test_insert_existing_target_file_record_marks_import_as_failed(self):
         """INSERT Souboru na existující ``nazev`` + ``vazba`` nesmí skončit jako úspěšný import."""

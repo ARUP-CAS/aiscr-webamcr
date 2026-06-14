@@ -1499,7 +1499,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 "option": save_thumbs,
             },
         )
-        rep_bin_file = RepositoryBinaryFile(uuid, file, file_name)
+        url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, uuid=uuid)
+        container_url = url.removesuffix("/orig")
+        rep_bin_file = RepositoryBinaryFile(container_url, file, file_name)
         data = file.read()
         file_sha_512 = hashlib.sha512(data).hexdigest()
         headers = {
@@ -1507,7 +1509,6 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             "Content-Disposition": f'attachment; filename="{file_name}"',
             "Digest": f"sha-512={file_sha_512}",
         }
-        url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, uuid=uuid)
         self._send_request(url, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, headers=headers, data=data)
         if save_thumbs:
             self.save_thumbs(file_name, file, uuid, True)

@@ -91,6 +91,23 @@ Třídy
       :param performed_action: Parametr ``performed_action`` předává se do volání ``__init__()``, ``format()``.
 
 
+.. py:class:: SouborImportIntegrityError
+
+   Výjimka vyvolaná při importu souboru, pokud porušuje předpoklad o existenci:
+
+   při insertu — soubor se stejným ``nazev`` navázaný na záznam ``vazba`` již existuje,
+   při updatu — žádný takový soubor neexistuje.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param vazba: ``ident_cely`` navázaného záznamu, ke kterému soubor patří.
+      :param nazev: Název souboru, kterého se konflikt týká.
+
+
 .. py:class:: ImportDataLimitChoicesError
 
    Výjimka vyvolaná při hodnotě cizího klíče, která nesplňuje omezení limit_choices_to.
@@ -103,7 +120,8 @@ Třídy
 
       :param record_id: Identifikátor objektu ``record``.
       :param limit_choices_to: Omezení ``limit_choices_to``, které nalezený záznam nesplňuje.
-      :param field_verbose_name: Čitelný název cílového modelového pole.
+      :param target_field_verbose_name: Čitelný název cílového modelového pole.
+      :param import_field_verbose_name: Název importovaného pole, ve kterém lookup selhal.
 
 
 .. py:class:: ImportDataMissingHeslarValueError
@@ -119,6 +137,8 @@ Třídy
       :param field_name: Název pole, ve kterém lookup selhal.
       :param heslar_name: Název hesláře (hodnota ``nazev_heslare``), do kterého hodnota nepatří.
       :param value: Hodnota, která nebyla v hesláři nalezena.
+      :param target_field_verbose_name: Čitelný název cílového modelového pole.
+      :param import_field_verbose_name: Název importovaného pole, ve kterém lookup selhal.
 
 
 .. py:class:: ImportDataUnsupportedFileError
@@ -218,6 +238,7 @@ Třídy
 
       :param model_class: Modelová třída, do které se importuje.
       :param field_name: Název cílového pole modelu.
+      :param import_field_verbose_name: Název importovaného pole.
 
    .. py:method:: value()
 
@@ -469,6 +490,7 @@ Třídy
       :param lookup_model_classes: Parametr ``lookup_model_classes`` předává se do volání ``isinstance()``, ovlivňuje větvení podmínek.
       :param lookup_field_name: Textový název nebo klíč ``lookup_field_name`` používaný v rámci operace.
       :param limit_choices_to: Parametr ``limit_choices_to`` ovlivňuje větvení podmínek.
+      :param verbose_limit_choices_to: Čitelný název pole pro chyby ``limit_choices_to``.
 
       :raises ValueError: Vyvolá se s textem ``core_admin.LookupImportField.message.limit_choices_to_unsupported_model``.
 
@@ -2172,6 +2194,18 @@ Třídy
 
       :param record: Záznam ``Soubor`` po importu.
       :return: Přímo předaný soubor.
+
+   .. py:method:: import_validation()
+
+      Ověří, že při INSERT neexistuje soubor stejného ``nazev`` navázaný na stejný objekt.
+
+      UPDATE a DELETE pracují s primárním klíčem (id) a delegují se na bázovou validaci.
+
+      :param performed_action: Požadovaná importní akce.
+      :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
+      :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
+      :return: Slovník s podmínkou pro dohledání souboru, případně výsledek bázové validace.
+      :raises SouborImportIntegrityError: Při INSERT, pokud soubor stejného jména už existuje.
 
    .. py:method:: get_related_history_targets()
 

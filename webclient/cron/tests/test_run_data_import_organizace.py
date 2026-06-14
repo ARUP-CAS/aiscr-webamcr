@@ -153,6 +153,17 @@ class RunDataImportOrganizaceTest(TestCase):
         primary_keys = json.loads(primary_keys_raw.decode("utf-8"))
         self.assertEqual(primary_keys.get("0"), f"ident_cely: {ORG_IDENT}")
 
+    def test_insert_keeps_zero_mesicu_do_zverejneni(self):
+        """run_data_import nepřevede numerickou nulu v mesicu_do_zverejneni na None."""
+        payload = self._build_insert_payload(ORG_IDENT, ORG_NAZEV_ZKRACENY)
+        payload["mesicu_do_zverejneni"] = 0
+        fake_redis = self._build_multi_record_redis([payload])
+
+        self._run_import(fake_redis)
+
+        created = Organizace.objects.get(ident_cely=ORG_IDENT)
+        self.assertEqual(created.mesicu_do_zverejneni, 0)
+
     def _run_import(
         self,
         fake_redis: FakeRedis,
@@ -300,14 +311,27 @@ class RunDataImportOrganizaceTest(TestCase):
 
     def test_fedora_save_failure_marks_import_as_failed(self):
         """Pokud ``save_metadata`` selže při zápisu do Fedora repozitáře, import skončí jako selhalý."""
+        from core.import_data_mappers import OrganizaceMapper
+
         fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_INSERT)
 
-        def failing_save_metadata(self, fedora_transaction, skip_container_check=False):
-            raise RuntimeError("Simulované selhání Fedora repozitáře.")
+        fedora_record = MagicMock(ident_cely=ORG_IDENT)
+        fedora_record.save_metadata.side_effect = RuntimeError("Simulované selhání Fedora repozitáře.")
 
-        self._run_import(fake_redis, save_metadata_side_effect=failing_save_metadata)
+        with patch.object(OrganizaceMapper, "fedora_update_targets", return_value={ORG_IDENT}), patch(
+            "cron.tasks.get_record_from_ident", return_value=fedora_record
+        ):
+            self._run_import(fake_redis)
 
         self._assert_import_failed(fake_redis)
+        fedora_result_raw = fake_redis.get(f"import_fedora_result_{JOB_ID}")
+        self.assertIsNotNone(fedora_result_raw, "import_fedora_result musí obsahovat chybu Fedora fáze.")
+        fedora_result = json.loads(fedora_result_raw.decode("utf-8"))
+        self.assertIn("0", fedora_result)
+        self.assertEqual(len(fedora_result["0"]), 1)
+        self.assertIn("cron.tasks.run_data_import.fedora_error", fedora_result["0"][0])
+        self.assertIn("Traceback (most recent call last)", fedora_result["0"][0])
+        self.assertIn("RuntimeError: Simulované selhání Fedora repozitáře.", fedora_result["0"][0])
 
     def _build_multi_record_redis(self, records: list[dict]) -> FakeRedis:
         """Sestaví FakeRedis s několika serializovanými záznamy."""

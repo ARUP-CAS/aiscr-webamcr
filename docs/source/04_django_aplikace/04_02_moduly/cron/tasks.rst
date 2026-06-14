@@ -6,6 +6,23 @@ Modul tasks.
 Třídy
 ------
 
+.. py:class:: SouborMissingRepositoryUuidError
+
+   Vyvoláno při pokusu o UPDATE binárního souboru, jehož ``repository_uuid`` je None.
+
+   Indikuje poškozená data: záznam ``Soubor`` existuje v DB, ale nemá přiřazený
+   Fedora UUID, tedy binární soubor v repositáři neexistuje nebo nebyl nikdy nahrán.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param soubor_pk: Primární klíč záznamu ``Soubor`` s chybějícím ``repository_uuid``.
+      :param nazev: Název souboru, u nějž chybí ``repository_uuid``.
+
+
 .. py:class:: ImportLockLostError
 
    Vyvoláno, když ``refresh_import_lock`` zjistí, že importní lock byl ztracen.

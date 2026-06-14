@@ -121,6 +121,22 @@ class OrganizaceMapperInsertValidTest(TestCase):
         self.assertFalse(result["zanikla"])
         self.assertFalse(result["cteni_dokumentu"])
 
+    def test_map_mesicu_do_zverejneni_string_zero(self):
+        """map() zachová řetězcovou nulu v mesicu_do_zverejneni jako platnou hodnotu."""
+        row = VALID_ROW.copy()
+        row["mesicu_do_zverejneni"] = "0"
+        mapper = OrganizaceMapper(row)
+        result = mapper.map(INSERT, serialize=True, include_primary_key=True)
+        self.assertEqual(result["mesicu_do_zverejneni"], 0)
+
+    def test_map_mesicu_do_zverejneni_numeric_zero(self):
+        """map() zachová numerickou nulu z pandas/JSON v mesicu_do_zverejneni jako platnou hodnotu."""
+        row = VALID_ROW.copy()
+        row["mesicu_do_zverejneni"] = 0
+        mapper = OrganizaceMapper(row)
+        result = mapper.map(INSERT, serialize=True, include_primary_key=True)
+        self.assertEqual(result["mesicu_do_zverejneni"], 0)
+
     def test_map_typ_organizace_raw_value(self):
         """map() vrátí serializovanou hodnotu typ_organizace jako ident_cely řetězec."""
         mapper = OrganizaceMapper(VALID_ROW.copy())
@@ -151,7 +167,11 @@ class OrganizaceMapperInsertValidTest(TestCase):
             mapper.map(INSERT, serialize=True, include_primary_key=True)
 
         message = str(ctx.exception)
+        self.assertEqual(ctx.exception.import_field_verbose_name, "typ_organizace")
         self.assertIn(str(Organizace._meta.get_field("typ_organizace").verbose_name), message)
+        self.assertIn("core_admin.ImportDataLimitChoicesError.message.part_2", message)
+        self.assertIn("core_admin.ImportDataLimitChoicesError.message.part_3", message)
+        self.assertIn("typ_organizace", message)
         self.assertNotIn(f"nazev_heslare: {HESLAR_ORGANIZACE_TYP}", message)
 
     def test_map_fk_fields(self):
@@ -268,6 +288,14 @@ class OrganizaceMapperCreateRecordsInsertTest(TestCase):
         self.assertEqual(organizace.email, "info@arup.cas.cz")
         self.assertTrue(organizace.oao)
         self.assertFalse(organizace.zanikla)
+
+    def test_create_records_keeps_numeric_zero_mesicu_do_zverejneni(self):
+        """create_records() nepřevede numerickou nulu v mesicu_do_zverejneni na None."""
+        row = VALID_ROW.copy()
+        row["mesicu_do_zverejneni"] = 0
+        mapper = OrganizaceMapper(row)
+        organizace = mapper.create_records(INSERT)[0]
+        self.assertEqual(organizace.mesicu_do_zverejneni, 0)
 
     def test_create_records_typ_organizace_resolved(self):
         """create_records() nastaví typ_organizace jako instanci Heslar."""

@@ -234,6 +234,8 @@
 
               const processCurrentStatus = document.getElementById("processCurrentStatus")
               processCurrentStatus.textContent = data.status_message
+              const importFinished = data.status === "finished" || data.status_message === "cron.tasks.run_data_import.finished"
+              const importStopped = data.status === "stopped"
 
               if (data.status === "unknown") {
                   console.error("Unknown status of the import process.")
@@ -256,15 +258,26 @@
                   }
               }
 
+              if (importFinished || importStopped) {
+                  if (stopRequestButton) {
+                      stopRequestButton.disabled = true
+                  }
+                  stopRequests = true
+              }
+
               const table = document.getElementById("result_list");
               for (let i = 0; i < data.finished_record_count; i++) {
                   const row = table.rows[i + 1]
+                  if (!row) {
+                      continue
+                  }
                   row.cells[3].innerText = data.primary_keys[i] || ""
                   row.cells[5].innerText = translations[data.serialized_results[i]] || data.serialized_results[i]
                   row.cells[6].innerText = data.history_record_result[i] || ""
-                  const primaryKey = data.primary_keys[i] || ""
-                  const identCely = primaryKey.startsWith("ident_cely: ") ? primaryKey.slice("ident_cely: ".length) : primaryKey
-                  row.cells[7].innerText = (data.fedora_update_result[i] || []).join(", ")
+                  const fedoraUpdateResult = data.fedora_update_result[i] || []
+                  row.cells[7].innerText = Array.isArray(fedoraUpdateResult)
+                      ? fedoraUpdateResult.join(", ")
+                      : fedoraUpdateResult
               }
 
               const table_files = document.getElementById("result_list_files")
@@ -291,11 +304,6 @@
 
                       table_files.appendChild(row)
                   }
-              }
-
-              if (data.status === "finished" || data.status === "stopped") {
-                  document.getElementById("stopRequests").disabled = true
-                  stopRequests = true
               }
 
           } catch (error) {

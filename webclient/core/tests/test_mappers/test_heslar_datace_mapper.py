@@ -295,6 +295,11 @@ class HeslarDataceMapperObdobiValueFromOtherHeslareTest(TestCase):
         self.assertEqual(ctx.exception.field_name, "ident_cely")
         self.assertEqual(ctx.exception.heslar_name, HESLAR_OBDOBI)
         self.assertEqual(ctx.exception.value, "HES-OTHER-001")
+        self.assertEqual(
+            ctx.exception.target_field_verbose_name,
+            HeslarDatace._meta.get_field("obdobi").verbose_name,
+        )
+        self.assertEqual(ctx.exception.import_field_verbose_name, "obdobi")
 
     def test_obdobi_value_from_other_heslare_message_contains_context(self):
         """Zpráva výjimky obsahuje hodnotu, název pole i název hesláře."""
@@ -306,4 +311,9 @@ class HeslarDataceMapperObdobiValueFromOtherHeslareTest(TestCase):
         message = str(ctx.exception)
         self.assertIn("HES-OTHER-001", message)
         self.assertIn("ident_cely", message)
-        self.assertIn(str(HESLAR_OBDOBI), message)
+        self.assertNotIn("core_admin.ImportDataMissingHeslarValueError.message.part_3", message)
+        self.assertNotIn(str(HESLAR_OBDOBI), message)
+        self.assertIn("core_admin.ImportDataMissingHeslarValueError.message.part_4", message)
+        self.assertIn(str(HeslarDatace._meta.get_field("obdobi").verbose_name), message)
+        self.assertIn("core_admin.ImportDataMissingHeslarValueError.message.part_5", message)
+        self.assertIn("obdobi", message)
