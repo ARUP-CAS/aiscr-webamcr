@@ -11,9 +11,11 @@ stack_name="swarm_webamcr"
 
 current_deployment_tag="test"
 deployment_root=${1}
-branch=${2}
+ref=${2}
+ref_type=${3}
 echo ${deployment_root}
-echo ${branch}
+echo ${ref}
+echo ${ref_type}
 
 d_stamp="$(date +%Y%m%dT%H%M%S)"
 logpath="${deployment_root}/logs"
@@ -30,11 +32,28 @@ mkdir -p ${logpath}
 print_d1 "Update repository..."
 
 
-git fetch origin
+git fetch origin --prune --tags --force
 git clean -fd
 git restore .
-git checkout -B ${branch} origin/${branch}
-git reset --hard origin/${branch}
+
+# Pokud typ reference není předán, automaticky ho zjisti (tag vs. branch)
+if [ -z "${ref_type}" ]; then
+    if git show-ref --verify --quiet "refs/tags/${ref}"; then
+        ref_type="tag"
+    else
+        ref_type="branch"
+    fi
+fi
+
+if [ "${ref_type}" = "tag" ]; then
+    print_d1 "Deploying TAG ${ref}"
+    git checkout --force "refs/tags/${ref}"
+    git reset --hard "refs/tags/${ref}"
+else
+    print_d1 "Deploying BRANCH ${ref}"
+    git checkout -B "${ref}" "origin/${ref}"
+    git reset --hard "origin/${ref}"
+fi
 
 
 #Prints
