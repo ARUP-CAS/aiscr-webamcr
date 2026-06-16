@@ -10,12 +10,18 @@ print_d1 "Start script deploy_test_server.sh"
 stack_name="swarm_webamcr"
 
 current_deployment_tag="test"
-deployment_root=${1}
-ref=${2}
-ref_type=${3}
-echo ${deployment_root}
-echo ${ref}
-echo ${ref_type}
+deployment_root="${1}"
+ref="${2}"
+ref_type="${3}"
+
+if [ -z "${ref}" ]; then
+    echo "Error: 'ref' parameter is required." >&2
+    exit 1
+fi
+
+echo "${deployment_root}"
+echo "${ref}"
+echo "${ref_type}"
 
 d_stamp="$(date +%Y%m%dT%H%M%S)"
 logpath="${deployment_root}/logs"
@@ -32,7 +38,7 @@ mkdir -p ${logpath}
 print_d1 "Update repository..."
 
 
-git fetch origin --prune --tags --force
+git fetch origin --prune --prune-tags --tags --force
 git clean -fd
 git restore .
 
@@ -47,12 +53,12 @@ fi
 
 if [ "${ref_type}" = "tag" ]; then
     print_d1 "Deploying TAG ${ref}"
-    git checkout --force "refs/tags/${ref}"
-    git reset --hard "refs/tags/${ref}"
+    git checkout --force "refs/tags/${ref}" || exit 1
+    git reset --hard "refs/tags/${ref}" || exit 1
 else
     print_d1 "Deploying BRANCH ${ref}"
-    git checkout -B "${ref}" "origin/${ref}"
-    git reset --hard "origin/${ref}"
+    git checkout -B "${ref}" "origin/${ref}" || exit 1
+    git reset --hard "origin/${ref}" || exit 1
 fi
 
 
