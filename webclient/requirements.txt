@@ -56,7 +56,7 @@ pytz==2026.2
 python-dateutil==2.9.0.post0
 setuptools==82.0.1
 Werkzeug==3.1.8
-pyOpenSSL==26.2.0
+pyOpenSSL==26.3.0
 sphinxcontrib-googleanalytics==0.5
 sphinxcontrib-mermaid
 SPARQLWrapper==2.0.0
