@@ -97,14 +97,15 @@ jobs:
               NASADIT="${{ inputs.nasadit_verzi }}"
               TEST_MOD="${{ inputs.test_mod }}" 
               TEST_CISLO="${{ inputs.test_cislo }}" 
-              REF_NAME="${{ github.ref_name }}" 
-              SERVER_ROOT="${{ env.server_deploy_root }}" 
-              DEP_SCRIPT="${{ env.dep_script }}" 
+              REF_NAME="${{ github.ref_name }}"
+              REF_TYPE="${{ github.ref_type }}"
+              SERVER_ROOT="${{ env.server_deploy_root }}"
+              DEP_SCRIPT="${{ env.dep_script }}"
               TEST_SCRIPT="${{ env.test_script }}"
               cd $SERVER_ROOT
               chmod +x $DEP_SCRIPT $TEST_SCRIPT
               if [ $NASADIT = true ]; then
-                ./$DEP_SCRIPT $SERVER_ROOT $REF_NAME
+                ./$DEP_SCRIPT $SERVER_ROOT $REF_NAME $REF_TYPE
               fi
               echo "Spouštím testy v režimu: $TEST_MOD"              
               if [ "$TEST_MOD" = "konkretni" ] && [ -z "$TEST_CISLO" ]; then
