@@ -89,12 +89,22 @@ class Command(BaseCommand):
 
         attempt = 0
         while True:
+            fedora_transaction = None
             try:
                 fedora_transaction = FedoraTransaction()
                 obj.active_transaction = fedora_transaction
                 obj.save_metadata(fedora_transaction, close_transaction=True)
                 return
             except (FedoraNoResponseError, *_RETRYABLE_EXCEPTIONS) as exc:
+                if fedora_transaction is not None:
+                    try:
+                        fedora_transaction.rollback_transaction()
+                    except Exception:
+                        logger.warning(
+                            "core.management.commands.generate_metadata.rollback_failed",
+                            extra={"pk": getattr(obj, "pk", None)},
+                            exc_info=True,
+                        )
                 attempt += 1
                 if attempt > max_retries:
                     logger.error(
@@ -145,7 +155,10 @@ class Command(BaseCommand):
             self.stdout.flush()
 
         def worker(obj):
-            self._process_object(obj, max_retries=max_retries)
+            try:
+                self._process_object(obj, max_retries=max_retries)
+            finally:
+                close_old_connections()
             with progress_lock:
                 counter["done"] += 1
                 report(counter["done"])

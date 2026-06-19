@@ -294,6 +294,7 @@ class ContinueKatastrProcessing(LoginRequiredMixin, View):
 
         job_data = raw.decode("utf-8")
         iterator, *ident_list = job_data.split(";")
+        ident_list = [x for x in ident_list if x]
         iterator = int(iterator)
         item_count = max(len(ident_list), 1)
         result = {

@@ -193,15 +193,22 @@ def _stream_to_file(
     """
     logger.debug("heslar.ruian_sync.vfr_download._stream_to_file.start", extra={"url": url})
     target_path.parent.mkdir(parents=True, exist_ok=True)
-    with requests.get(url, stream=True, timeout=timeout) as resp:
-        if resp.status_code == 404:
-            logger.debug("heslar.ruian_sync.vfr_download._stream_to_file.not_found", extra={"url": url})
-            return None
-        resp.raise_for_status()
-        with open(target_path, "wb") as fh:
-            for chunk in resp.iter_content(chunk_size=chunk_size):
-                if chunk:
-                    fh.write(chunk)
+    temp_path = target_path.with_name(target_path.name + ".tmp")
+    try:
+        with requests.get(url, stream=True, timeout=timeout) as resp:
+            if resp.status_code == 404:
+                logger.debug("heslar.ruian_sync.vfr_download._stream_to_file.not_found", extra={"url": url})
+                return None
+            resp.raise_for_status()
+            with open(temp_path, "wb") as fh:
+                for chunk in resp.iter_content(chunk_size=chunk_size):
+                    if chunk:
+                        fh.write(chunk)
+        temp_path.rename(target_path)
+    except Exception:
+        if temp_path.exists():
+            temp_path.unlink(missing_ok=True)
+        raise
     logger.debug(
         "heslar.ruian_sync.vfr_download._stream_to_file.end",
         extra={"url": url, "size": target_path.stat().st_size, "path": str(target_path)},

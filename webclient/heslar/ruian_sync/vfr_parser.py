@@ -148,8 +148,17 @@ def _open_xml_stream(path: Path):
         zf = zipfile.ZipFile(str(p))
         xml_names = [n for n in zf.namelist() if n.lower().endswith(".xml")]
         if not xml_names:
+            zf.close()
             raise ValueError(f"VFR ZIP neobsahuje žádný .xml soubor: {p}")
-        return zf.open(xml_names[0])
+        stream = zf.open(xml_names[0])
+        _orig_close = stream.close
+
+        def _close_both():
+            _orig_close()
+            zf.close()
+
+        stream.close = _close_both
+        return stream
     return open(str(p), "rb")
 
 
