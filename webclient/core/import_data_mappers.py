@@ -1474,7 +1474,7 @@ class ImportModelMapper(ABC):
             return DateRangeImportField()
         if isinstance(model_field, models.ForeignKey):
             return None
-        raise ImportDataError(f"_('core.admin.ImportModelMapper.map_field.error'): {field_name}")
+        raise ImportDataError(_("core.admin.ImportModelMapper.map_field.error") + ": " + field_name)
 
     @classmethod
     def is_field_required(cls, field_name) -> bool:

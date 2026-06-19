@@ -1382,7 +1382,6 @@ def is_maintenance_in_progress():
 
     :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
     """
-    return True
     maintenance = get_set_maintenance_in_cache()
     if maintenance:
         if get_timezone().localize(

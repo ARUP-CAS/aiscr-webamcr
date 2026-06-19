@@ -524,7 +524,6 @@ class AmcrCustomAdminSite(admin.AdminSite):
             self.redis_connector.set(
                 f"import_data_files_{job_id}", json.dumps([]), ex=self.IMPORT_DATA_REDIS_EXPIRATION
             )
-            self.redis_connector.set(f"import_data_progress_files_{job_id}", 0, ex=self.IMPORT_DATA_REDIS_EXPIRATION)
             self.redis_connector.set(
                 f"import_data_status_message_{job_id}",
                 _("core.templates.admin.import_data.starting"),

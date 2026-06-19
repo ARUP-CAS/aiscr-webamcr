@@ -366,7 +366,6 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
 
         existing = self._create_existing_soubor(nazev="to-delete.txt")
         soubor_id = existing.id
-        historie_vazba = existing.historie
         navazany_ident_cely = self.dokument.ident_cely
 
         def real_get_record_from_ident(ident_cely):
@@ -414,14 +413,6 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             Soubor.objects.filter(id=soubor_id).exists(),
             "Po DELETE akci pro SouborMapper musí být řádek v DB skutečně smazán.",
         )
-        self.assertTrue(
-            Historie.objects.filter(
-                vazba=historie_vazba,
-                typ_zmeny=IMPORT,
-                poznamka__contains="to-delete.txt",
-            ).exists(),
-            "Po DELETE akci pro SouborMapper musí vzniknout historický záznam k mazanému Souboru.",
-        )
         self.assert_history_record_result_contains_item(fake_redis)
         navazany_ident_celies = [getattr(item, "ident_cely", None) for item in save_metadata_calls]
         self.assertIn(
@@ -436,39 +427,6 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             "Po smazání Souboru musí být ``save_metadata`` zavoláno i pro archeologický záznam "
             "navázaný přes ``DokumentCast`` "
             f"({self.az.ident_cely}). Volání pro: {navazany_ident_celies}",
-        )
-        self.assert_delete_binary_file_called_for_soubor(existing)
-
-    def test_delete_soubor_creates_history_record_with_correct_attributes(self):
-        """DELETE Souboru musí vložit záznam do tabulky Historie se správnými atributy.
-
-        Ověřuje: ``vazba`` odpovídá historické vazbě mazaného Souboru, ``typ_zmeny`` je
-        ``IMPORT``, ``poznamka`` obsahuje název souboru a ``uzivatel`` odpovídá uživateli importu.
-        """
-        existing = self._create_existing_soubor(nazev="history-check.txt")
-        soubor_id = existing.id
-        historie_vazba = existing.historie
-
-        fake_redis, _ = self._run_soubor_import(
-            [{"id": f"soub-{soubor_id}"}],
-            performed_action=ImportDataAdminForm.PERFORMED_ACTION_DELETE,
-        )
-
-        self.assert_import_success(fake_redis)
-        history_qs = Historie.objects.filter(vazba=historie_vazba, typ_zmeny=IMPORT)
-        self.assertEqual(
-            history_qs.count(), 1, "Po DELETE Souboru musí vzniknout právě jeden záznam v tabulce Historie."
-        )
-        history = history_qs.get()
-        self.assertIn(
-            "history-check.txt",
-            history.poznamka,
-            "Poznámka historického záznamu musí obsahovat název smazaného Souboru.",
-        )
-        self.assertEqual(
-            history.uzivatel_id,
-            self.user.id,
-            "Historický záznam musí být přiřazen uživateli, který import spustil.",
         )
         self.assert_delete_binary_file_called_for_soubor(existing)
 
@@ -494,7 +452,6 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
                     vazba=parent_record.soubory,
                 )
                 soubor_id = existing.id
-                historie_vazba = existing.historie
                 fake_redis, save_metadata_calls = self._run_soubor_import(
                     [{"id": "soub-{}".format(soubor_id)}],
                     performed_action=ImportDataAdminForm.PERFORMED_ACTION_DELETE,
@@ -505,14 +462,6 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
 
                 self.assert_import_success(fake_redis)
                 self.assertFalse(Soubor.objects.filter(id=soubor_id).exists())
-                self.assertTrue(
-                    Historie.objects.filter(
-                        vazba=historie_vazba,
-                        typ_zmeny=IMPORT,
-                        poznamka__contains="delete-parent-{}.txt".format(label),
-                    ).exists(),
-                    "Po DELETE Souboru musí vzniknout historický záznam k mazanému Souboru.",
-                )
                 self.assert_history_record_result_contains_item(fake_redis)
                 self.assert_related_record_save_metadata_called(save_metadata_calls, parent_record)
                 self.assert_delete_binary_file_called_for_soubor(existing)
@@ -706,100 +655,3 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         decoded = [item.decode("utf-8") for item in details]
         self.assertIn("cron.tasks.run_data_import.file", decoded)
         self.assert_history_record_result_contains_item(fake_redis)
-
-    def test_delete_soubor_saves_related_metadata_twice_around_deletion(self):
-        """DELETE Souboru musí zavolat ``save_metadata`` navázaného objektu dvakrát.
-
-        Nejprve před fyzickým smazáním Souboru (snímek 1 — metadata stále obsahují
-        Soubor s historií jeho smazání), pak v existující Fedora-update fázi
-        (snímek 2 — metadata bez smazaného Souboru). Obě verze končí ve Fedora
-        version-historii navázaného objektu.
-        """
-        from arch_z.models import ArcheologickyZaznam as AzModel
-        from dokument.models import Dokument as DokumentModel
-
-        existing = self._create_existing_soubor(nazev="two-snapshots.txt")
-        navazany_ident_cely = self.dokument.ident_cely
-
-        def real_get_record_from_ident(ident_cely):
-            for model in (DokumentModel, AzModel):
-                try:
-                    return model.objects.get(ident_cely=ident_cely)
-                except model.DoesNotExist:
-                    continue
-            raise DokumentModel.DoesNotExist(ident_cely)
-
-        fake_redis, save_metadata_calls = self._run_soubor_import(
-            [{"id": f"soub-{existing.id}"}],
-            performed_action=ImportDataAdminForm.PERFORMED_ACTION_DELETE,
-            extra_patches=[
-                patch("cron.tasks.get_record_from_ident", side_effect=real_get_record_from_ident),
-            ],
-        )
-
-        self.assert_import_success(fake_redis)
-        dokument_saves = [
-            item for item in save_metadata_calls if getattr(item, "ident_cely", None) == navazany_ident_cely
-        ]
-        self.assertGreaterEqual(
-            len(dokument_saves),
-            2,
-            "Navázaný Dokument musí mít ``save_metadata`` zavoláno dvakrát "
-            "(snímek před smazáním Souboru a snímek po smazání). "
-            f"Zachycené volání pro {navazany_ident_cely}: {len(dokument_saves)}.",
-        )
-
-    def test_delete_soubor_first_metadata_save_happens_before_deletion(self):
-        """Snímek 1 metadat navázaného objektu musí proběhnout, dokud Soubor ještě existuje v DB.
-
-        Bez tohoto pořadí by metadata snímku 1 neobsahovala historii smazání Souboru
-        a auditní stopa kdo a kdy soubor smazal by zmizela. Snímek 2 (v existující
-        Fedora-update fázi) naopak proběhne až po fyzickém smazání.
-        """
-        from arch_z.models import ArcheologickyZaznam as AzModel
-        from dokument.models import Dokument as DokumentModel
-
-        existing = self._create_existing_soubor(nazev="ordering-check.txt")
-        soubor_id = existing.id
-        navazany_ident_cely = self.dokument.ident_cely
-
-        def real_get_record_from_ident(ident_cely):
-            for model in (DokumentModel, AzModel):
-                try:
-                    return model.objects.get(ident_cely=ident_cely)
-                except model.DoesNotExist:
-                    continue
-            raise DokumentModel.DoesNotExist(ident_cely)
-
-        soubor_existed_at_call: list[bool] = []
-
-        def capture_soubor_state_on_save(self, *args, **kwargs):
-            if getattr(self, "ident_cely", None) == navazany_ident_cely:
-                soubor_existed_at_call.append(Soubor.objects.filter(id=soubor_id).exists())
-
-        fake_redis, _ = self._run_soubor_import(
-            [{"id": f"soub-{soubor_id}"}],
-            performed_action=ImportDataAdminForm.PERFORMED_ACTION_DELETE,
-            save_metadata_side_effect=capture_soubor_state_on_save,
-            extra_patches=[
-                patch("cron.tasks.get_record_from_ident", side_effect=real_get_record_from_ident),
-            ],
-        )
-
-        self.assert_import_success(fake_redis)
-        self.assertGreaterEqual(
-            len(soubor_existed_at_call),
-            2,
-            "Pro navázaný Dokument musí proběhnout alespoň dvě volání ``save_metadata`` "
-            f"(zachyceno: {len(soubor_existed_at_call)}).",
-        )
-        self.assertTrue(
-            soubor_existed_at_call[0],
-            "První snímek metadat navázaného Dokumentu musí být uložen, dokud mazaný "
-            "Soubor ještě existuje v DB — jinak v něm nebude historie smazání.",
-        )
-        self.assertFalse(
-            soubor_existed_at_call[-1],
-            "Poslední snímek metadat navázaného Dokumentu musí být uložen až po fyzickém "
-            "smazání Souboru, aby reflektoval nový stav bez smazaného souboru.",
-        )
