@@ -856,7 +856,6 @@ def _delete_katastr(
     )
     for projekt in affected_projekty:
         hlavni_was_deleted = projekt.hlavni_katastr_id == katastr.pk
-        _ensure_fedora_container(projekt)  # TEST: vytvořit chybějící Fedora kontejner — smazat po vývoji
         if hlavni_was_deleted:
             try:
                 reassign_mod.reassign_projekt(
@@ -903,7 +902,6 @@ def _delete_katastr(
     )
     for az in affected_az:
         hlavni_was_deleted = az.hlavni_katastr_id == katastr.pk
-        _ensure_fedora_container(az)  # TEST: vytvořit chybějící Fedora kontejner — smazat po vývoji
         try:
             reassign_mod.reassign_az(
                 az,
@@ -920,7 +918,6 @@ def _delete_katastr(
 
     # SN – FK katastr, historie stejně jako Projekt/AZ
     for sn in SamostatnyNalez.objects.filter(katastr=katastr):
-        _ensure_fedora_container(sn)  # TEST: vytvořit chybějící Fedora kontejner — smazat po vývoji
         try:
             reassign_mod.reassign_sn(
                 sn,
@@ -1024,39 +1021,6 @@ def _geos_or_none(wkt: Optional[str]):
             extra={"wkt_prefix": wkt[:120], "wkt_length": len(wkt), "error": str(err)},
         )
         return None
-
-
-# TEST: pomocná funkce — smazat po vývoji
-def _ensure_fedora_container(record) -> None:
-    """
-    TEST-only: zajistí, že Fedora kontejner pro ``record`` existuje.
-
-    Pokud ve Fedoře chybí (typicky 404 při UPDATE_METADATA u nekompletních dat),
-    vytvoří ho s aktuálním (původním) stavem záznamu. Následný reassign pak
-    proběhne jako UPDATE_METADATA na již existujícím kontejneru.
-
-    Realizováno přes ``record.save_metadata()`` s ``skip_container_check=False`` —
-    to v ``FedoraRepositoryConnector._check_container()`` při 404 zavolá
-    ``_create_container()``. Selhání pouze loguje a pokračuje (sync se nesmí
-    zastavit ani v případě, že Fedora pre-create selže).
-    """
-    if not getattr(record, "ident_cely", None):
-        return
-    from core.repository_connector import FedoraTransaction
-
-    record.skip_container_check = False
-    try:
-        fedora_transaction = FedoraTransaction()
-        record.save_metadata(fedora_transaction=fedora_transaction, close_transaction=True)
-    except Exception as err:  # noqa: BLE001
-        logger.warning(
-            "heslar.ruian_sync.syncer._ensure_fedora_container.failed",
-            extra={
-                "ident_cely": getattr(record, "ident_cely", None),
-                "class_name": record.__class__.__name__,
-                "error": str(err)[:500],
-            },
-        )
 
 
 def _append_run_note(run: RuianSyncRun, message: str) -> None:
