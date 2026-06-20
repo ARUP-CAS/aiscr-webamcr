@@ -42,6 +42,15 @@ Třídy
       :param kwargs: Pojmenované argumenty včetně rada, let, dok_osoby a edit.
 
 
+.. py:class:: RegionForm
+
+   Samostatný formulář pro výběr regionu v modálním okně formuláře zapsání dokumentu.
+
+   Používá se s prefixem, aby se id pole (``id_<prefix>-region``) nekřížilo se skrytým
+   polem ``region`` hlavního :class:`EditDokumentForm` na téže stránce. Vybraná hodnota se
+   z modalu kopíruje do skrytého pole pomocí JavaScriptu.
+
+
 .. py:class:: EditDokumentForm
 
    Hlavní formulář pro vytvoření, editaci a zobrazení Dokumentu.
@@ -159,6 +168,15 @@ Třídy
 
 Funkce
 ------
+
+.. py:function:: make_region_field()
+
+   Vytvoří pole pro výběr regionu (Čechy / Morava a Slezsko).
+
+   Sdílené mezi :class:`EditDokumentForm` (skryté pole) a :class:`RegionForm` (pole
+   v modálním okně), aby se nabídka i widget obou polí nelišily.
+
+   :return: Instanci ``forms.ChoiceField`` pro výběr regionu.
 
 .. py:function:: create_tvar_form(not_readonly)
 

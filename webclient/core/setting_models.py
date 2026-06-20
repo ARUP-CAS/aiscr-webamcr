@@ -30,6 +30,6 @@ class CustomAdminSettings(ExportModelOperationsMixin("custom_admin_settings"), m
         :raises ValidationError: Pokud hodnota nastavení neodpovídá očekávanému formátu.
         """
         super().clean()
-        from pas.api import PasApiPermissionMixin
+        from api.views import PasApiPermissionMixin
 
         PasApiPermissionMixin.validate_custom_admin_setting(self)

@@ -23,9 +23,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError
 from django.db.models import Q
-from django.forms.renderers import BaseRenderer
 from django.http import HttpRequest, JsonResponse
 from django.http.response import HttpResponse as HttpResponse
 from django.shortcuts import redirect, render
@@ -40,12 +39,6 @@ from fedora_management.decorators import handle_fedora_error
 from historie.models import Historie
 from rest_framework import exceptions
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.renderers import JSONRenderer
-from rest_framework.response import Response
-from rest_framework.views import APIView
 from services.mailer import Mailer
 from uzivatel.forms import (
     AuthActivationForm,
@@ -564,126 +557,6 @@ class TokenAuthenticationBearer(TokenAuthentication):
             raise exceptions.AuthenticationFailed(_("uzivatel.views.tokenAuthenticationBearer.userTokenTooOld."))
 
         return (token.user, token)
-
-
-class MyXMLRenderer(BaseRenderer):
-    """Override třídy pro nastavení správnych tagů."""
-
-    media_type = "application/xml"
-    format = "xml"
-    charset = "utf-8"
-
-    def render(self, data, accepted_media_type=None, renderer_context=None):
-        """
-        Renders `data` into serialized XML.
-
-        :param data: Kolekce ``data`` zpracovávaná touto funkcí.
-        :param accepted_media_type: Parametr ``accepted_media_type`` slouží jako vstup pro logiku funkce ``render``.
-        :param renderer_context: Kolekce ``renderer_context`` zpracovávaná touto funkcí.
-
-            :return: Vrací proměnná ``data``.
-        """
-        return data
-
-
-@method_decorator(odstavka_in_progress, name="get")
-class GetUserInfo(APIView):
-    """Třída podlehu pro získaní základních info o uživately."""
-
-    authentication_classes = [TokenAuthenticationBearer]
-    permission_classes = [IsAuthenticated]
-    renderer_classes = [
-        MyXMLRenderer,
-    ]
-    http_method_names = [
-        "get",
-    ]
-
-    def get(self, request, format=None):
-        """
-        Vrací výsledek operace.
-
-        :param request: Parametr ``request`` pracuje se s atributy ``user``.
-        :param format: Parametr ``format`` slouží jako vstup pro logiku funkce ``get``.
-
-            :return: Vrací výsledek volání ``Response()``.
-        """
-        user = request.user
-        return Response(user.metadata)
-
-    def handle_exception(self, exc):
-        """
-        Zpracuje exception. v aplikaci.
-
-        :param exc: Číselná hodnota ``exc`` použitá při výpočtu nebo transformaci.
-
-            :return: Vrací výsledek volání ``handle_exception()``.
-        """
-        self.is_exception = True
-        return super().handle_exception(exc)
-
-    def perform_content_negotiation(self, request, force=False):
-        """
-        Provádí operaci perform content negotiation.
-
-        :param request: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
-        :param force: Parametr ``force`` se předává do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací hodnotu podle větve zpracování, typicky: n-tici, výsledek volání ``perform_content_negotiation()``.
-        """
-        try:
-            self.is_exception
-            return JSONRenderer(), JSONRenderer.media_type
-        except Exception:
-            return super().perform_content_negotiation(request, force)
-
-    def finalize_response(self, request, response, *args, **kwargs):
-        """
-        Provádí operaci finalize response.
-
-        :param request: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, ``finalize_response()``, pracuje se s atributy ``accepted_renderer``, ``accepted_media_type``, vstupuje do návratové hodnoty.
-        :param response: Textový nebo strukturální vstup `response` používaný při sestavení nebo zpracování obsahu.
-        :param args: Parametr ``args`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``finalize_response()``.
-        """
-        try:
-            self.is_exception
-            neg = self.perform_content_negotiation(request, force=True)
-            request.accepted_renderer, request.accepted_media_type = neg
-        finally:
-            return super().finalize_response(request, response, *args, **kwargs)
-
-
-@method_decorator(odstavka_in_progress, name="post")
-class ObtainAuthTokenWithUpdate(ObtainAuthToken):
-    """Třída pohledu pro získaní tokenu pro API."""
-
-    def post(self, request, *args, **kwargs):
-        """
-        Obsluhuje HTTP metodu POST.
-
-        :param request: Parametr ``request`` předává se do volání ``get_serializer()``, pracuje se s atributy ``data``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
-
-            :return: Vrací výsledek volání ``Response()``.
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data["user"]
-        token, created = Token.objects.get_or_create(user=user)
-        if not token.created + datetime.timedelta(hours=settings.TOKEN_EXPIRATION_HOURS) > timezone.now():
-            try:
-                with transaction.atomic():
-                    Token.objects.filter(user=user).delete()
-                    token = Token.objects.create(user=user)
-            except IntegrityError:
-                # Pokud mezitím druhý request token vytvořil,
-                # jen si ho načteme.
-                token = Token.objects.get(user=user)
-        return Response({"token": token.key})
 
 
 class UserDeleteRequest(LoginRequiredMixin, UpdateView):

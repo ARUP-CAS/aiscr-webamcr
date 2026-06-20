@@ -27,6 +27,20 @@ ADB
      - ``post_delete``
      - ``vyskovy_bod_delete_repository_container``
 
+API
+---
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 30 40
+
+   * - Model
+     - Typ signálu
+     - Název funkce
+   * - ``ApiRequestLog``
+     - ``pre_save``
+     - ``validate_pas_request_target_fields``
+
 ARCH_Z
 ------
 

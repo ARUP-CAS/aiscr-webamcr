@@ -67,7 +67,7 @@ class ProjectModelChoiceField(ModelChoiceField):
 
             :return: Vrací hodnotu podle větve zpracování.
         """
-        return "%s (%s)" % (obj.ident_cely, obj.vedouci_projektu)
+        return obj.popis_s_vedoucim()
 
 
 class PotvrditNalezForm(forms.ModelForm):
@@ -441,6 +441,7 @@ class EditSpolupraceProjektyForm(forms.ModelForm):
             qs = Projekt.objects.none()
         self.fields["projekty"].widget = AutocompleteSelect2Multiple()
         self.fields["projekty"].queryset = qs
+        self.fields["projekty"].label_from_instance = Projekt.popis_s_vedoucim
         self.fields["projekty"].required = False
         self.fields["projekty"].label = _("pas.forms.editSpolupraceProjekyForm.projekty.label")
         self.fields["projekty"].help_text = _("pas.forms.editSpolupraceProjekyForm.projekty.tooltip")

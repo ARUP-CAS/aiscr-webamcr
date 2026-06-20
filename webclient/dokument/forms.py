@@ -346,6 +346,41 @@ class EditDokumentExtraDataForm(OptimisticLockingMixin, forms.ModelForm):
         self.fields["rada"].disabled = edit_prohibited
 
 
+def make_region_field():
+    """
+    Vytvoří pole pro výběr regionu (Čechy / Morava a Slezsko).
+
+    Sdílené mezi :class:`EditDokumentForm` (skryté pole) a :class:`RegionForm` (pole
+    v modálním okně), aby se nabídka i widget obou polí nelišily.
+
+    :return: Instanci ``forms.ChoiceField`` pro výběr regionu.
+    """
+    return forms.ChoiceField(
+        choices=[
+            (None, ""),
+            ("C-", _("dokument.forms.editDokumentForm.region.C.option")),
+            ("M-", _("dokument.forms.editDokumentForm.region.M.option")),
+        ],
+        label=_("dokument.forms.editDokumentForm.region.label"),
+        widget=forms.Select(
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+        ),
+        help_text=_("dokument.forms.editDokumentForm.region.tooltip"),
+    )
+
+
+class RegionForm(forms.Form):
+    """
+    Samostatný formulář pro výběr regionu v modálním okně formuláře zapsání dokumentu.
+
+    Používá se s prefixem, aby se id pole (``id_<prefix>-region``) nekřížilo se skrytým
+    polem ``region`` hlavního :class:`EditDokumentForm` na téže stránce. Vybraná hodnota se
+    z modalu kopíruje do skrytého pole pomocí JavaScriptu.
+    """
+
+    region = make_region_field()
+
+
 class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení Dokumentu."""
 
@@ -359,18 +394,7 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
         help_text=_("dokument.forms.editDokumentForm.autori.tooltip"),
         label=_("dokument.forms.editDokumentForm.autori.label"),
     )
-    region = forms.ChoiceField(
-        choices=[
-            (None, ""),
-            ("C-", _("dokument.forms.editDokumentForm.region.C.option")),
-            ("M-", _("dokument.forms.editDokumentForm.region.M.option")),
-        ],
-        label=_("dokument.forms.editDokumentForm.region.label"),
-        widget=forms.Select(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
-        ),
-        help_text=_("dokument.forms.editDokumentForm.region.tooltip"),
-    )
+    region = make_region_field()
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""

@@ -109,6 +109,18 @@ Třídy
 
       :return: Vrací výsledek volání ``format_html()``.
 
+   .. py:method:: value_projekty()
+
+      Vrátí seznam identifikátorů projektů přiřazených ke spolupráci jako prostý text pro export.
+
+      Na rozdíl od ``render_projekty`` nevrací HTML s odkazy, ale pouze čárkou oddělené
+      identifikátory. Metoda je využita při sestavení Redis snapshotu (``get_cell_value``),
+      ze kterého se generuje export, takže do CSV/XLSX/JSON se uloží čitelná hodnota místo HTML.
+
+      :param record: Záznam spolupráce, ze kterého se přes ``record.projekty.all()`` načítají přiřazené projekty.
+
+      :return: Vrací čárkou oddělené identifikátory projektů, nebo prázdný řetězec.
+
    .. py:method:: get_all_idents()
 
       Vrátí prázdnu hodnotu. Metoda je zde kvůli kompatibilitě s ostatními tabulkami.
