@@ -10,7 +10,7 @@ django-tables2==3.0.0
 django-tables2-column-shifter==2.2.0
 django-compressor==4.6.0
 django-libsass==0.9 
-django-autocomplete-light==4.0.1
+django-autocomplete-light==5.0.0
 django-widget-tweaks==1.5.1
 distlib==0.4.3
 django-rosetta==0.10.3
@@ -56,7 +56,7 @@ pytz==2026.2
 python-dateutil==2.9.0.post0
 setuptools==82.0.1
 Werkzeug==3.1.8
-pyOpenSSL==26.2.0
+pyOpenSSL==26.3.0
 sphinxcontrib-googleanalytics==0.5
 sphinxcontrib-mermaid
 SPARQLWrapper==2.0.0

@@ -121,7 +121,7 @@ Grafana Enterprise pro vizualizaci metrik a monitoringu. Poskytuje dashboardy pr
 prom/prometheus
 ~~~~~~~~~~~~~~~
 
-- **Verze:** v3.11.3
+- **Verze:** v3.12.0
 - **Licence:** Apache-2.0 License
 - **Odkaz:** https://github.com/prometheus/prometheus
 
@@ -157,7 +157,7 @@ Kibana pro vizualizaci a analýzu logů z Elasticsearch. Poskytuje webové rozhr
 selenium/standalone-chromium
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 147.0
+- **Verze:** 148.0
 - **Licence:** Apache License 2.0
 - **Odkaz:** https://github.com/SeleniumHQ/docker-selenium
 
