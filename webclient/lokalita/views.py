@@ -84,6 +84,8 @@ class LokalitaListView(SearchListView):
     redis_value_list_field = "archeologicky_zaznam__ident_cely"
     typ_zmeny_lookup = ZAPSANI_AZ
     vypis_app = "lokalita"
+    map_enabled = True
+    map_layer = "lokalita"
 
     def init_translations(self):
         """Provádí operaci init translations."""
