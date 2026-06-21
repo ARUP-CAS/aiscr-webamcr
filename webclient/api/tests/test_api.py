@@ -126,7 +126,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response["Content-Type"], "application/xml")
         self.assertEqual(response["X-Record-ID"], ident_cely)
-        self.assertEqual(response["Location"], f"{settings.API_URL}{ident_cely}")
+        self.assertEqual(response["Location"], f"{settings.OAI_PURL}{ident_cely}")
         self.assertIn(ident_cely, response.content.decode("utf-8"))
 
     def _build_mock_fedora_transaction(self, *args, **kwargs):

@@ -1916,7 +1916,7 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
             )
         response = HttpResponse(metadata, content_type="application/xml", status=http_status)
         response["X-Record-ID"] = instance.ident_cely
-        response["Location"] = f"{settings.API_URL}{instance.ident_cely}"
+        response["Location"] = f"{settings.OAI_PURL}{instance.ident_cely}"
         return response
 
 

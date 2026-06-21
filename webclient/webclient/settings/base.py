@@ -595,9 +595,12 @@ CACHES = {
     }
 }
 
-API_URL = get_secret("API_URL", "https://api.aiscr.cz/id/")
+OAI_PURL = get_secret("OAI_PURL", "https://api.aiscr.cz/id/")
+DIGIARCHIV_PURL = get_secret("DIGIARCHIV_PURL", "https://digiarchiv.aiscr.cz/id/")
 
 DIGI_LINKS = {
+    "Digi_archiv_link": DIGIARCHIV_PURL,
+    "OAPI_link": OAI_PURL,
     "Digi_archiv_link": get_secret("DIGIARCHIV_URL", "") or "https://digiarchiv.aiscr.cz/id/",
     "OAPI_link": get_secret("DIGIARCHIV_OAPI_LINK", "") or "https://api.aiscr.cz/id/",
     "ARU_PRAHA": "https://www.arup.cas.cz/",
@@ -670,7 +673,7 @@ CLAMD_HOST = None
 CLAMD_PORT = None
 CLAMD_TIMEOUT = 600
 
-DIGIARCHIV_URL = get_secret("DIGIARCHIV_URL", "https://digiarchiv.aiscr.cz/id/")
+DIGIARCHIV_UPDATE = get_secret("DIGIARCHIV_UPDATE", "https://digiarchiv.aiscr.cz/api/fedora/index_update")
 
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
