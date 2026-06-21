@@ -601,8 +601,6 @@ DIGIARCHIV_PURL = get_secret("DIGIARCHIV_PURL", "https://digiarchiv.aiscr.cz/id/
 DIGI_LINKS = {
     "Digi_archiv_link": DIGIARCHIV_PURL,
     "OAPI_link": OAI_PURL,
-    "Digi_archiv_link": get_secret("DIGIARCHIV_URL", "") or "https://digiarchiv.aiscr.cz/id/",
-    "OAPI_link": get_secret("DIGIARCHIV_OAPI_LINK", "") or "https://api.aiscr.cz/id/",
     "ARU_PRAHA": "https://www.arup.cas.cz/",
     "ARU_BRNO": "https://www.arub.cz/",
     "ARUP_MAIL": '<a href="mailto:oznameni@arup.cas.cz">oznameni@arup.cas.cz</a>',

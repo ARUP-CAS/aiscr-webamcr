@@ -77,24 +77,13 @@ Přehled endpointů
      - —
      - Vrací XML metadata přihlášeného uživatele
    * - ``/api/pas/import-xml``
-   * - ``/api/token-auth/``
-     - ``POST``
-     - JSON
-     - Přihlášení a získání Bearer tokenu
-   * - ``/api/uzivatel-info/``
-     - ``GET``
-     - —
-     - Vrací XML metadata přihlášeného uživatele
-   * - ``/api/pas/import-xml``
      - ``POST``
      - XML soubor
      - Import nového záznamu samostatného nálezu z XML souboru ve formátu AMČR 2.2
    * - ``/api/pas/nalez/{ident_cely}/evidencni-cislo``
-   * - ``/api/pas/nalez/{ident_cely}/evidencni-cislo``
      - ``PATCH``
      - Query parametr
      - Aktualizace evidenčního čísla existujícího záznamu
-   * - ``/api/pas/nalez/{ident_cely}/upload-foto``
    * - ``/api/pas/nalez/{ident_cely}/upload-foto``
      - ``POST``
      - Soubor fotografie
@@ -103,7 +92,6 @@ Přehled endpointů
 Detail endpointů
 ----------------
 
-POST /api/pas/import-xml
 POST /api/pas/import-xml
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -279,7 +267,6 @@ i pokud jsou v dokumentu přítomny.
      - API je dočasně nedostupné.
 
 PATCH /api/pas/nalez/{ident_cely}/evidencni-cislo
-PATCH /api/pas/nalez/{ident_cely}/evidencni-cislo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Aktualizuje pole evidenčního čísla existujícího záznamu samostatného nálezu.
@@ -296,11 +283,9 @@ Hodnota se předává jako query parametr v URL; tělo požadavku se neposílá.
 
 - ``{ident_cely}`` (cesta) — identifikátor záznamu (např. ``M-202400001-N00001``).
 - ``evidencni_cislo`` (query parametr, povinný) — nová hodnota; max. 255 znaků, nesmí být prázdná ani složená výhradně z bílých znaků. Vedoucí a koncové mezery jsou automaticky oříznuty; vnitřní mezery jsou povoleny.
-- ``evidencni_cislo`` (query parametr, povinný) — nová hodnota; max. 255 znaků, nesmí být prázdná ani složená výhradně z bílých znaků. Vedoucí a koncové mezery jsou automaticky oříznuty; vnitřní mezery jsou povoleny.
 
 Příklad::
 
-    PATCH /api/pas/nalez/M-202400001-N00001/evidencni-cislo?evidencni_cislo=EC-2024-001
     PATCH /api/pas/nalez/M-202400001-N00001/evidencni-cislo?evidencni_cislo=EC-2024-001
 
 **Odpovědi**
@@ -323,11 +308,7 @@ Příklad::
      - Prázdná hodnota (po oříznutí bílých znaků), příliš dlouhá hodnota (> 255 znaků) nebo hodnota shodná s aktuální.
    * - ``429``
      - Záznam je právě zpracováván jiným požadavkem (zámek záznamu); zkuste to znovu za chvíli.
-     - Prázdná hodnota (po oříznutí bílých znaků), příliš dlouhá hodnota (> 255 znaků) nebo hodnota shodná s aktuální.
-   * - ``429``
-     - Záznam je právě zpracováván jiným požadavkem (zámek záznamu); zkuste to znovu za chvíli.
 
-POST /api/pas/nalez/{ident_cely}/upload-foto
 POST /api/pas/nalez/{ident_cely}/upload-foto
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -335,8 +316,6 @@ Nahraje fotografii k existujícímu záznamu samostatného nálezu a připojí j
 Soubor je přijat jako binární příloha, ověřen proti poskytnutému SHA-512 digestu
 a zkontrolován na povolený formát. Operaci lze provést na záznamu v libovolném stavu
 včetně archivovaného; v takovém případě je v historii záznamu zaznamenána tichá rearchivace.
-Badatel může nahrát fotografii ke svému nálezu ve standardním stavu; archeolog a vyšší role
-mohou nahrát fotografii k záznamu v libovolném stavu včetně archivovaného.
 Badatel může nahrát fotografii ke svému nálezu ve standardním stavu; archeolog a vyšší role
 mohou nahrát fotografii k záznamu v libovolném stavu včetně archivovaného.
 
@@ -357,19 +336,14 @@ mohou nahrát fotografii k záznamu v libovolném stavu včetně archivovaného.
    * - HTTP kód
      - Popis
    * - ``201``
-   * - ``201``
      - Fotografie byla nahrána; tělo obsahuje XML metadata aktualizovaného záznamu.
    * - ``400``
-     - Chybí soubor ``file``, v požadavku je více než jeden soubor, chybí nebo je neplatná hlavička ``Content-Digest``.
      - Chybí soubor ``file``, v požadavku je více než jeden soubor, chybí nebo je neplatná hlavička ``Content-Digest``.
    * - ``401`` / ``403``
      - Chybí nebo neplatný token, nebo nedostatečné oprávnění.
    * - ``404``
      - Záznam se zadaným ``ident_cely`` nebyl nalezen.
    * - ``422``
-     - Nepodporovaný formát souboru, soubor je příliš velký, nesedí ``Content-Digest`` nebo je název souboru příliš dlouhý.
-   * - ``429``
-     - Záznam je právě zpracováván jiným požadavkem (zámek záznamu); zkuste to znovu za chvíli.
      - Nepodporovaný formát souboru, soubor je příliš velký, nesedí ``Content-Digest`` nebo je název souboru příliš dlouhý.
    * - ``429``
      - Záznam je právě zpracováván jiným požadavkem (zámek záznamu); zkuste to znovu za chvíli.
