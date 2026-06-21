@@ -964,8 +964,8 @@ Třídy
 
       :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
                nebo chybou syntaxe volání (HTTP 400; chybějící parametr
-               ``evidencni_cislo``), chybou dat (HTTP 422; prázdná, příliš
-               dlouhá nebo shodná hodnota), nenalezeným
+               ``evidencni_cislo``), chybou dat (HTTP 422; prázdná nebo příliš
+               dlouhá hodnota), nenalezeným
                záznamem (HTTP 404), nedostatečnými oprávněními (HTTP 403),
                nebo interní chybou (HTTP 500).
 

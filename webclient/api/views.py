@@ -3038,8 +3038,8 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
 
         :return: Vrací XML metadata aktualizovaného záznamu (HTTP 200),
                  nebo chybou syntaxe volání (HTTP 400; chybějící parametr
-                 ``evidencni_cislo``), chybou dat (HTTP 422; prázdná, příliš
-                 dlouhá nebo shodná hodnota), nenalezeným
+                 ``evidencni_cislo``), chybou dat (HTTP 422; prázdná nebo příliš
+                 dlouhá hodnota), nenalezeným
                  záznamem (HTTP 404), nedostatečnými oprávněními (HTTP 403),
                  nebo interní chybou (HTTP 500).
         """
@@ -3065,13 +3065,6 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.empty_evidencni_cislo")},
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-
-        if any(ch.isspace() for ch in evidencni_cislo):
-            return self._fail(
-                log_entry,
-                {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.whitespace_in_evidencni_cislo")},
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
@@ -3215,8 +3208,11 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             typ_zmeny=AKTUALIZACE_SN,
             uzivatel=user,
             vazba=instance.historie,
-            poznamka=_("api.views.SamostatnyNalezEvidencniCisloPatchView.history.note")
-            % {"old": old_value, "new": new_value},
+            poznamka="{}: {} -> {}".format(
+                _("api.views.SamostatnyNalezEvidencniCisloPatchView.history.note"),
+                old_value,
+                new_value,
+            ),
         )
         if instance.stav == SN_ARCHIVOVANY:
             Historie.objects.create(
