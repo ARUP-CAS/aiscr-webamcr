@@ -28,7 +28,8 @@ Read the following files:
 - `.agents/config/review_cache.json`
 - `.agents/reports/bugs.md`
 - `.agents/reports/refactoring_backlog.md`
-- `.agents/prompts/review_codebase.md`
+
+The operational review procedure is the hub-canonical `aiscr-codebase-review` workflow, delivered via the `.cursor/`, `.claude/`, `.codex/`, and `.gemini/` skill surfaces; there is no long-form review prompt under `.agents/prompts/`.
 
 Purpose:
 
@@ -105,7 +106,7 @@ automatically.
 Agents must:
 
 - gather repository context before starting work
-- write all prompts, task descriptions, and high-level plans in English, regardless of surrounding documentation language
+- use the canonical codebase-review language rule for review artifacts: English by default, while preserving verbatim Czech quotations, source text, domain identifiers, and user-facing Czech documentation excerpts where those exact words matter
 - avoid repeating previously recorded work
 - prefer incremental improvements
 - record findings in `.agents/`
@@ -115,7 +116,7 @@ Agents must:
 
 ### Planning phase and plans (fixed rule)
 
-The **planning phase** must be conducted **in English**. Any plan produced (task breakdown, steps, design notes, or similar) must be **written in English**. This applies regardless of the language used in the rest of the repository (e.g. Czech docstrings or UI). No exception.
+The **planning phase** must be conducted **in English**. Any plan produced (task breakdown, steps, design notes, or similar) must be **written in English**. Codebase-review outputs follow the canonical English-default rule with a quotation carve-out for verbatim Czech source text, documentation excerpts, issue titles, and AIS CR domain identifiers.
 
 Agents must not perform large refactors without explicit instruction.
 

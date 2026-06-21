@@ -1,0 +1,32 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "allowUnsandboxedCommands": false
+  },
+  "permissions": {
+    "allow": [
+      "Bash(.venv\\\\Scripts\\\\python.exe .agents\\\\scripts\\\\run_pre_commit_local.py*)",
+      "Bash(.venv/Scripts/python.exe .agents/scripts/run_pre_commit_local.py*)",
+      "Bash(.venv/bin/python .agents/scripts/run_pre_commit_local.py*)"
+    ],
+    "deny": [
+      "Read(//c/Program Files/**)",
+      "Edit(//c/Program Files/**)",
+      "Read(//c/ProgramData/**)",
+      "Edit(//c/ProgramData/**)",
+      "Read(//c/Windows/**)",
+      "Edit(//c/Windows/**)",
+      "Read(~/Documents/**)",
+      "Edit(~/Documents/**)",
+      "Read(~/Desktop/**)",
+      "Edit(~/Desktop/**)",
+      "Read(~/Downloads/**)",
+      "Edit(~/Downloads/**)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Edit(./.env*)",
+      "Read(**/*.key)",
+      "Read(**/credentials*)"
+    ]
+  }
+}

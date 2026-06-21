@@ -45,7 +45,7 @@ flowchart TD
 
 ## Workspace boundary and safety config
 
-**Authoritative:** **`AGENTS.md`** and **`.agents/canonical_configs/governance_rules/workspace-boundary-safety.md`**. Gemini still follows the same workspace boundary and config protection as other assistants (including not weakening sandbox or safety-related app config unless the user strictly orders it).
+**Authoritative:** **`AGENTS.md`** and **`.agents/canonical_configs/governance_rules/aiscr-workspace-boundary-safety.md`**. Gemini still follows the same workspace boundary and config protection as other assistants (including not weakening sandbox or safety-related app config unless the user strictly orders it).
 
 ## Operating default
 
@@ -57,7 +57,7 @@ Run repo commands inside the assistant sandbox and the repository virtualenv whe
 
 ## Not covered here
 
-Planning-first execution, rolling usage logging, ephemeral plan locations, branch/PR rules, and high-impact script policy are the same as for other assistants — see **`AGENTS.md`**, **`.agents/canonical_configs/governance_rules/planning-core.md`**, **`.agents/canonical_configs/governance_rules/usage-logging.md`**, and **`CONTRIBUTING.md`**.
+Planning-first execution, rolling usage logging, ephemeral plan locations, branch/PR rules, and high-impact script policy are the same as for other assistants — see **`AGENTS.md`**, **`.agents/canonical_configs/governance_rules/aiscr-planning-core.md`**, **`.agents/canonical_configs/governance_rules/aiscr-usage-logging.md`**, and **`CONTRIBUTING.md`**.
 
 ## OpenSpec
 
@@ -67,4 +67,4 @@ OpenSpec is the repo's default requirement surface for migrated management workf
 - `openspec/changes/` stores change-scoped OpenSpec artifacts.
 - `openspec/config.yaml` defines the repo-specific `governance-driven` schema.
 
-Gemini-facing OpenSpec skills and commands are generated under `.gemini/skills/openspec-*/` and `.gemini/commands/opsx/`. Use `npx openspec validate --all` after editing OpenSpec artifacts. Planning approval, validation, and usage logging remain governed by `AGENTS.md` and the canonical rule stems.
+Gemini-facing OpenSpec skills and commands are generated under `.gemini/skills/openspec-*/` and `.gemini/commands/opsx/`. Use `npm run openspec:validate` after editing OpenSpec artifacts. Planning approval, validation, and usage logging remain governed by `AGENTS.md` and the canonical rule stems.

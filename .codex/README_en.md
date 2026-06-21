@@ -6,7 +6,7 @@
 Language entry scope: This README_en.md is the sole operational instruction source for agents. README.md is the Czech human-facing twin; update both together when operational behaviour changes.
 ```
 
-This directory holds the local Codex layer for the current AIS CR repository. In committed baselines it is mirrored under `.agents/local_configs/<repo>/.codex/`.
+This directory is the **committed hub-root Codex delivery surface** for the AIS CR management hub. It is the single source of truth for the assets it carries (rules, skills, agents, config, hooks). Sibling repositories receive selected assets through direct-bundle sync resolved from `.agents/sync/` policy via `orchestrate_local_agent_sync.py inspect → dry-run → apply --approve`. The historical `.agents/local_configs/<repo>/.codex/` payload-mirror layout has been retired and must not be recreated.
 
 <!-- aiscr:stop-anchor -->
 The load path below remains a supporting aid; the `Entry scope` and `Read First` sections stay normative.

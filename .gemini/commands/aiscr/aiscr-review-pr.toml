@@ -12,8 +12,5 @@ prompt = """
 
 Review a GitHub PR — durable behavioral contract in OpenSpec spec; execution runbook in plan. Ingest prior review context, structure findings into buckets (resolved / disputed / not addressed / new), post body and inline comments as a single grouped review via GH API.
 
-**Skill body (authoritative):** `.gemini/skills/aiscr-review-pr/SKILL.md` — load that file for the full workflow body, guardrails, and verification.
-
-`.agents/plans/review-pr.plan.md`
-Load openspec/specs/pr-review-workflow/spec.md first for the durable behavioral contract. PR number + optional GH_TOKEN; run review_pr.py gather for prior context; structure findings into buckets (resolved, disputed, not addressed, new) with severity labels; post grouped review per review-pr.plan.md (review_pr.py post).
+**Skill body (authoritative):** [`.gemini/skills/aiscr-review-pr/SKILL.md`](.gemini/skills/aiscr-review-pr/SKILL.md) — load that repository-local file for the full workflow body, guardrails, and verification.
 """

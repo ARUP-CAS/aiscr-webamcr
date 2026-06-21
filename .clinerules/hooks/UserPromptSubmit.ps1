@@ -19,7 +19,6 @@ if ($stdin) {
 }
 
 $highImpactPatterns = @(
-    "sync_agent_configs.py",
     "orchestrate_local_agent_sync.py apply",
     "port_workspace_safety_config.py"
 )

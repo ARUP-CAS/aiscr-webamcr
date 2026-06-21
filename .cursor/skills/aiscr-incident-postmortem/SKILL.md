@@ -5,20 +5,20 @@ description: Document an incident or postmortem for an AIS CR service using the 
 disable-model-invocation: true
 ---
 
-<!-- aiscr:canonical=.agents/canonical_configs/workflow_skills/aiscr-incident-postmortem.md -->
-
-# aiscr-incident-postmortem
+<!-- aiscr:compiled=aiscr-incident-postmortem -->
 
 <!-- aiscr:stop-anchor -->
-**Entry scope**
+**Entry scope (compiled)**
 
-- Stay in this `.cursor/skills/` surface and its same-vendor pointers first.
-- Do not open parallel vendor trees by default just in case.
-- Cross into another vendor tree only for explicit parity checks, generator work, or governance maintenance.
+- This `.cursor/skills/` skill is self-contained; use the workflow body and embedded execution plan below.
+- Load repository-local configuration and state named by the workflow before acting.
+- Do not look for management-hub specs, plans, or canonical source files at runtime.
+
+# /aiscr-incident-postmortem — incident and postmortem documentation
 
 Document a production or staging incident using the AIS CR postmortem template. Output is a structured Czech Markdown report.
 
-**Requirement authority:** [`openspec/specs/incident-documentation/spec.md`](/openspec/specs/incident-documentation/spec.md) — durable behavioral requirements for incident documentation.
+**Requirement authority:** [the workflow contract summarized in this compiled skill](/the workflow contract summarized in this compiled skill) — durable behavioral requirements for incident documentation.
 
 ## Phase awareness
 
@@ -29,14 +29,27 @@ Before executing, check for an active OpenSpec change or domain spec under
 If one exists, load its context files as the primary authority.
 If none exists for this domain, run `/opsx:propose`, stop for human approval,
 and only continue after that change becomes the active context of the run.
-It must not create new OpenSpec changes directly, promote backlog items, or
-escalate scope beyond the approved task boundary.
+It must not create new **governance-driven** OpenSpec changes directly, promote backlog items, or
+escalate scope beyond the approved task boundary, except for the backlog-only handoff governed by
+the workflow contract summarized in this compiled skill after explicit per-run approval (see **Report-to-backlog handoff** below).
+
+## Report-to-backlog handoff
+
+For **hub-owned** corrective actions that need scheduling beyond the postmortem report, follow the workflow contract summarized in this compiled skill (*Incident corrective actions can hand off to backlog*).
+
+1. After the incident report path is set, identify corrective actions that qualify for backlog follow-up.
+2. Ask for **explicit per-run** approval to emit OpenSpec backlog items.
+3. If approved, draft the backlog candidate body inline — candidate slug, a one-line summary, `**Source report:**` (the approved report path), and `**Finding keys:**` — without copying sensitive evidence, then stop. Promotion into the management hub's backlog (creating the OpenSpec backlog change and refreshing the backlog overview) is a separate, explicit hub action by a maintainer; this workflow does not create hub changes or auto-invoke hub commands.
+4. Record backlog slugs in the incident report, or document external tracking / why no hub backlog item was created.
+
+Do not promote or implement spawned backlog inside this skill.
 
 ## Context to load first
 
 1. `AGENTS.md` — governance and scope
-2. [`openspec/specs/incident-documentation/spec.md`](/openspec/specs/incident-documentation/spec.md) — **primary authority** for incident documentation requirements
-3. `.agents/prompts/postmortem_template.md` — template structure and required inputs
+2. [the workflow contract summarized in this compiled skill](/the workflow contract summarized in this compiled skill) — **primary authority** for incident documentation requirements
+3. [the workflow contract summarized in this compiled skill](/the workflow contract summarized in this compiled skill) — backlog emission contract (when emitting hub-owned follow-ups)
+4. `.agents/prompts/postmortem_template.md` — template structure and required inputs
 
 ## Steps
 
@@ -66,6 +79,7 @@ escalate scope beyond the approved task boundary.
    python -c "import datetime; print(datetime.date.today().isoformat())"
    ```
 
+<!-- aiscr:gen:id=guardrails -->
 ## Iron Law
 
 **IRON LAW:** `NEVER WRITE OR COMMIT THE POSTMORTEM REPORT FILE WITHOUT FIRST PRESENTING THE FULL DRAFT TO THE USER FOR REVIEW AND RECEIVING EXPLICIT APPROVAL.`
@@ -89,12 +103,7 @@ Before claiming this workflow complete:
 - [ ] Report written to `.agents/reports/incidents/INC-<date>-<short-name>.md` with correct naming.
 - [ ] Czech Markdown format confirmed per template.
 - [ ] Report not pushed or shared externally without explicit user request.
-
-## Plan and workflow
-
-_No backing plan file;_ follow fallback and governance.
-
-**Registry fallback:** Load openspec/specs/incident-documentation/spec.md first for the durable behavioral contract; skill is spec-first.
+<!-- aiscr:endgen -->
 
 ## Governance
 
@@ -108,4 +117,10 @@ _No backing plan file;_ follow fallback and governance.
 - `/opsx:apply <slug>` -- continue implementing remaining tasks in the current change
 - `/opsx:verify <slug>` -- verify implementation matches change artifacts
 - `/opsx:archive <slug>` -- archive the change after implementation is complete
-- `/aiscr-canonical-workflows-context` -- load context for a different workflow
+- Read the identifiers and references stated in this workflow and follow the **Usage** section before loading a different workflow's context.
+
+## Bundled scripts
+
+The enrollment bundle installs these repository-local runtime scripts:
+
+- `.agents/prompts/postmortem_template.md`

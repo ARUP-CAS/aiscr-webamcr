@@ -12,8 +12,5 @@ prompt = """
 
 Deployed UI/SEO verification for user-facing public URLs in a target review_codebase workflow (optional T12/session); not GitHub PR review.
 
-**Skill body (authoritative):** `.gemini/skills/aiscr-prod-ui-crawl-review/SKILL.md` — load that file for the full workflow body, guardrails, and verification.
-
-`.agents/plans/prod-ui-crawl-review.plan.md`
-Load openspec/specs/production-ui-verification/spec.md first for the durable behavioral contract; in target repo load `AGENTS.md`, `review_codebase.md`, `review_config.yaml`; read `deployed_verify` allowlisted URLs; confirm staging-first and explicit approval for production; run Tier 1 checks (optionally Tier 2 per policy); write `deployed_ui_analysis.json` and `T12.md`; update `review_cache.json`; map findings to source assets per stack; follow prod-ui-crawl-review.plan.md for execution workflow.
+**Skill body (authoritative):** [`.gemini/skills/aiscr-prod-ui-crawl-review/SKILL.md`](.gemini/skills/aiscr-prod-ui-crawl-review/SKILL.md) — load that repository-local file for the full workflow body, guardrails, and verification.
 """

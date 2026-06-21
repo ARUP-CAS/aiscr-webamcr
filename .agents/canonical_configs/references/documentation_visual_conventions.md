@@ -129,6 +129,6 @@ approved family choice, or diagram quality; it checks syntax only.
 ## Related sources
 
 - Capability spec: `openspec/specs/documentation-visual-conventions/spec.md`
-- Planning-first and quality gates: `.agents/canonical_configs/governance_rules/planning-core.md`
+- Planning-first and quality gates: `.agents/canonical_configs/governance_rules/aiscr-planning-core.md`
 - Documentation audit and hygiene: `openspec/specs/documentation-consistency/spec.md`
 - Existing Mermaid precedents in the hub: `.agents/canonical_configs/references/canonical_workflows_context.md`, `.agents/canonical_configs/references/subagent_vanilla_templates_and_mapping.md`

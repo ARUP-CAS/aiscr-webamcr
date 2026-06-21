@@ -8,8 +8,6 @@ Pravidla a governance viz [AGENTS.md](../AGENTS.md).
 ```plain
 .agents/
   prompts/
-    review_codebase.md          — Hlavní prompt pro review session (plný audit T01–T11)
-    review_update.md            — Follow-up prompt pro inkrementální aktualizaci auditu (U01–U06)
     audit_doc_hygiene.md        — Portable audit: duplikace, drift, governance (any repo)
     project_conventions.md      — Shrnutí konvencí pro agenty (odkaz z AGENTS.md)
     setup_dev.md                — Checklist vývojového prostředí a onboarding
@@ -36,8 +34,7 @@ Pravidla a governance viz [AGENTS.md](../AGENTS.md).
 - **Governance:** `AGENTS.md`
 - **Konfigurační hodnoty:** `config/review_config.yaml`
 - **Stav review:** `config/review_cache.json`
-- **Task instrukce:** `prompts/review_codebase.md`
-- **Inkrementální update:** `prompts/review_update.md`
+- **Operační workflow review:** kanonické `aiscr-codebase-review` (režimy full / update) dodané přes skill surfaces `.cursor/` / `.claude/` / `.codex/` / `.gemini/`; samostatný dlouhý review prompt v `prompts/` již neexistuje.
 - **Doc hygiene audit:** `prompts/audit_doc_hygiene.md`
 - **Konvence / setup / hooks:** `prompts/project_conventions.md`, `prompts/setup_dev.md`, `prompts/hooks_reference.md`
 - **Automation doporučení:** `reports/automation_recommendations.md`

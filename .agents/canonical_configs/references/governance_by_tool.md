@@ -1,6 +1,6 @@
 # Governance by Assistant Product - Canonical Rule Map (aiscr-management hub)
 
-**Purpose:** Map policy topics to the canonical shared rule sources under `.agents/canonical_configs/governance_rules/`, with the reminder that `.cursor/rules/*.mdc` is the full materialized reader for generated governance stems. Non-Cursor generated rule surfaces (`.claude/rules/*.md`, `.gemini/context/*.md`, `.github/instructions/*.instructions.md`, and generated sections in `CODEX.md`) are stub surfaces that route to the matching Cursor reader. This file is a lookup table only.
+**Purpose:** Map policy topics to the canonical shared rule sources under `.agents/canonical_configs/governance_rules/`. Every vendor delivery surface — `.cursor/rules/*.mdc`, `.claude/rules/*.md`, `.gemini/context/*.md`, `.github/instructions/*.instructions.md`, and generated sections in `CODEX.md` — is a routing stub that names the matching `.agents/canonical_configs/governance_rules/<stem>.md` canonical document as the rule body. This file is a lookup table only.
 
 **Related:** Full vendor × asset matrix, official URLs, and vendor alignment live in `agent_tool_feature_matrix.md` and `mandatory_vendor_doc_urls.toml`.
 
@@ -11,10 +11,10 @@ flowchart LR
   topic["Need governance for a topic"] --> table["Find the topic row in this table"]
   table --> stem["Open the canonical stem under .agents/canonical_configs/governance_rules/"]
   stem --> assistant{"Assistant in use?"}
-  assistant -->|Cursor| cursor["AGENTS.md + .cursor/rules/<stem>.mdc"]
-  assistant -->|Claude| claude["CLAUDE.md + .claude/rules/<stem>.md stub -> Cursor reader"]
-  assistant -->|Codex| codex["CODEX.md generated stub -> Cursor reader"]
-  assistant -->|Gemini| gemini["GEMINI.md + .gemini/context/<stem>.md stub -> Cursor reader"]
+  assistant -->|Cursor| cursor["AGENTS.md + .cursor/rules/<stem>.mdc stub -> canonical doc"]
+  assistant -->|Claude| claude["CLAUDE.md + .claude/rules/<stem>.md stub -> canonical doc"]
+  assistant -->|Codex| codex["CODEX.md generated stub -> canonical doc"]
+  assistant -->|Gemini| gemini["GEMINI.md + .gemini/context/<stem>.md stub -> canonical doc"]
   assistant -->|Other| other["Tool entry doc + matching vendor surface"]
 ```
 
@@ -37,7 +37,7 @@ flowchart LR
 | Hub vs sibling workflow routing | `ecosystem-hub-workflow-routing.md` | Ecosystem |
 | `port_workspace_safety_config.py` guidance | `port-workspace-safety-config.md` | Port/safety |
 
-**Delivery surfaces:** For any stem above, `.cursor/rules/<stem>.mdc` is the full reader. Non-Cursor generated surfaces are valid stubs when they preserve the stop anchor, topic summary, and Cursor-reader link; follow that link when the rule text is load-bearing for the task.
+**Delivery surfaces:** For any stem above, the canonical body lives at `.agents/canonical_configs/governance_rules/<stem>.md`. Every vendor surface (`.cursor/rules/<stem>.mdc`, `.claude/rules/<stem>.md`, `.gemini/context/<stem>.md`, `.github/instructions/<stem>.instructions.md`, generated `CODEX.md` sections) renders as a routing stub that preserves the stop anchor, topic summary, and canonical-document link; follow that link when the rule text is load-bearing for the task.
 
 **Entry-doc pointers (workspace boundary):** `CLAUDE.md`, `CODEX.md`, and `GEMINI.md` each include a short workspace-boundary pointer back to `AGENTS.md` and the relevant canonical rule when needed.
 
@@ -64,6 +64,6 @@ flowchart LR
 
 1. `AGENTS.md`, `CONTRIBUTING.md`, `.agents/README_en.md`
 2. Tool entry doc (`CLAUDE.md`, `CODEX.md`, `GEMINI.md`) and short generated or direct-bundle vendor pointers where applicable
-3. Topics in the table above: open the assistant-specific stub for orientation, then load the linked `.cursor/rules/<stem>.mdc` full reader when the task touches that rule's details
+3. Topics in the table above: open the assistant-specific stub for orientation, then load the linked `.agents/canonical_configs/governance_rules/<stem>.md` canonical document when the task touches that rule's details
 
-**Cursor:** primary project context is `AGENTS.md` plus `.cursor/rules/*.mdc`; use `.cursor/README_en.md` for assistant-specific routing.
+**Cursor:** primary project context is `AGENTS.md` plus `.cursor/rules/*.mdc`; use `.cursor/README_en.md` for assistant-specific routing. The `.cursor/rules/*.mdc` files are routing stubs on equal footing with every other vendor surface — follow the canonical-document link inside the stub when the rule text is load-bearing.

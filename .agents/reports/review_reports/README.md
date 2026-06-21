@@ -1,5 +1,11 @@
 # Review reports
 
+([English](README_en.md))
+
+```text
+Language entry scope: Agents MUST use README_en.md for operational instructions. This README.md is human-facing Czech only; align with the English twin when meaning changes.
+```
+
 Tato složka obsahuje zprávy z jednotlivých analytických tasků.
 
 Soubory jsou generovány agenty po dokončení každého tasku:
@@ -19,5 +25,6 @@ Soubory jsou generovány agenty po dokončení každého tasku:
 | T10.md | T10 | Analýza skriptů |
 | final_audit.md | T11 | Finální souhrnný audit (obsahuje `## Changelog` pro inkrementální aktualizace) |
 
-Inkrementální aktualizace auditu (via `review_update.md`) se zapisují přímo
-do `final_audit.md` pod sekci `## Changelog` — nevytvářejí se samostatné soubory.
+Inkrementální aktualizace auditu (kanonické workflow `aiscr-codebase-review`, režim
+update) se zapisují přímo do `final_audit.md` pod sekci `## Changelog` — nevytvářejí
+se samostatné soubory.

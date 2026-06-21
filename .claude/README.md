@@ -6,7 +6,7 @@
 Language entry scope: Agents MUST use README_en.md for operational instructions. This README.md is human-facing Czech only; align with the English twin when meaning changes.
 ```
 
-Tato složka drží lokální vrstvu Claude Code pro aktuální AIS CR repozitář. V committed baseline je zrcadlená pod `.agents/local_configs/<repo>/.claude/`.
+Tato složka je **committed vendor strom Claude Code v kořeni management hubu AIS CR**. Je jediným zdrojem pravdy pro aktiva, která obsahuje (rules, skills, agents, hooks, settings). Sourozenecké repozitáře získávají vybraná aktiva přes direct-bundle sync řízený `.agents/sync/` politikou pomocí `orchestrate_local_agent_sync.py inspect → dry-run → apply --approve`. Historické rozvržení `.agents/local_configs/<repo>/.claude/` (payload mirror) bylo vyřazeno a nesmí být obnovováno.
 
 <!-- aiscr:stop-anchor -->
 Následující load path je podpůrná pomůcka; normativní zůstávají sekce `Entry scope` a `Co načíst nejdřív`.

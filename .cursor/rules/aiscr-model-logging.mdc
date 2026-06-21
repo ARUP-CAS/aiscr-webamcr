@@ -8,7 +8,7 @@ alwaysApply: true
 <!-- aiscr:stop-anchor -->
 **Entry scope**
 
-- Stay in this `.cursor/rules/` surface and its same-vendor pointers first.
+- Stay in this Cursor rule surface and its same-vendor pointers first.
 - Do not open parallel vendor trees by default just in case.
 - Cross into another vendor tree only for explicit parity checks, generator work, or governance maintenance.
 

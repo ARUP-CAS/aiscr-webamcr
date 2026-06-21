@@ -1,9 +1,9 @@
 # Refactoring backlog — AMČR (aiscr-webamcr)
 
-> Všechny záznamy jsou psány v češtině.
+> Legacy entries remain mostly in Czech; newly touched review prose follows the canonical English-default rule with verbatim Czech preserved where exact source wording matters.
 > Strukturální zlepšení objevená během auditu.
 >
-> **Poznámka k prioritě vs. závažnosti:** Sekce priorit (Vysoká / Střední / Nízká)
+> **Poznámka k prioritě vs. závažnosti:** Sekce priorit (High / Medium / Low)
 > odrážejí **prioritu refaktoringu** (dopad na architekturu a business logiku).
 > Tato klasifikace se může lišit od **závažnosti bugu** v `bugs.md`, která odráží
 > technické riziko samotného defektu. Pokud položka křížově odkazuje na BUG-XXX,
@@ -12,7 +12,7 @@
 
 ---
 
-## Vysoká priorita
+## High Priority
 
 <!-- Architektonické problémy, bezpečnostní dluhy, ORM výkon -->
 
@@ -52,7 +52,7 @@
 - **Doporučení:** Přidat `db_index=True` nebo indexy přes migraci.
 - **Náročnost:** S
 
-## Střední priorita
+## Medium Priority
 
 <!-- Optimalizace, dekompozice modulů, Docker build -->
 
@@ -140,7 +140,7 @@
 - **Doporučení:** Přidat načtení `DB_PORT` (s výchozí hodnotou 5432) a předat `port=...` do `psycopg2.connect()`. Viz BUG-014.
 - **Náročnost:** S
 
-## Nízká priorita
+## Low Priority
 
 <!-- Kosmetické úpravy, dokumentace, minor code quality -->
 
@@ -179,42 +179,42 @@
 - **Popis:** `GF_SECURITY_ADMIN_PASSWORD`, `ELASTIC_PASSWORD`, `LOGSTASH_INTERNAL_PASSWORD` jsou nastaveny na cesty k souborům nebo názvy secretů, nikoli na jejich hodnoty. Grafana admin heslo je fakticky nefunkční.
 - **Doporučení:** Grafana: použít `GF_SECURITY_ADMIN_PASSWORD__FILE`. Elasticsearch/Logstash: entrypoint wrapper skript načítající secret ze souboru.
 - **Náročnost:** S
-- **Závažnost:** Střední
+- **Severity:** Medium
 
 ### [T04] DOCKER-02: Celery worker v produkci loguje DEBUG
 - **Soubory:** `docker-compose.yml:81`
 - **Popis:** `celery -A webclient worker -l DEBUG` — nadměrné logování, potenciální expozice citlivých dat v produkci.
 - **Doporučení:** Změnit na `-l INFO`.
 - **Náročnost:** S
-- **Závažnost:** Střední
+- **Severity:** Medium
 
 ### [T04] DOCKER-03: ELK Stack major version gap (prod 9.x vs dev 8.x)
 - **Soubory:** `docker-compose.yml`, `docker-compose-dev-local-db*.yml`
 - **Popis:** Produkce, test a git-deploy používají ELK 9.3.1; dev compose používají 8.19.0. Major version gap způsobuje rozdílné chování xpack.security a API.
 - **Doporučení:** Synchronizovat na stejnou major verzi (doporučeno dev = prod).
 - **Náročnost:** S
-- **Závažnost:** Střední
+- **Severity:** Medium
 
 ### [T04] DOCKER-04: sudo přístup v produkčním kontejneru
 - **Soubory:** `Dockerfile:99`
 - **Popis:** `usermod -aG sudo user` — produkční aplikační uživatel je člen sudo skupiny.
 - **Doporučení:** Odebrat sudo skupinu, použít specifická NOPASSWD pravidla pro nutné operace.
 - **Náročnost:** S
-- **Závažnost:** Střední
+- **Severity:** Medium
 
 ### [T04] DOCKER-05: Selenium v produkčním docker-compose.yml
 - **Soubory:** `docker-compose.yml`
 - **Popis:** Selenium service patří výhradně do testovacího prostředí.
 - **Doporučení:** Odebrat ze docker-compose.yml, ponechat pouze v docker-compose-test.yml.
 - **Náročnost:** S
-- **Závažnost:** Nízká
+- **Severity:** Low
 
 ### [T04] DOCKER-06: Fedora Dockerfile — vícenásobný apt-get update, žádný PID 1
 - **Soubory:** `fedora/Dockerfile`
 - **Popis:** Tři separátní RUN apt-get update příkazy bez apt-get clean zvětšují image. CMD spouští dva procesy bez process supervisora.
 - **Doporučení:** Sloučit RUN bloky, přidat tini nebo entrypoint skript.
 - **Náročnost:** S
-- **Závažnost:** Nízká
+- **Severity:** Low
 
 ### [T02] REQ-02: sphinxcontrib-mermaid bez specifikace verze
 - **Soubory:** `webclient/requirements.txt`
@@ -233,35 +233,35 @@
 - **Popis:** `get_secret("DEBUG", "True")` — fallback je "True" → DEBUG=True při chybějícím klíči. Viz BUG-010.
 - **Doporučení:** Změnit fallback na "False".
 - **Náročnost:** S
-- **Závažnost:** Vysoká
+- **Severity:** High
 
 ### [T05] SEC-02: Rotace Mailtrap credentials a nahrazení placeholdery
 - **Soubor:** `webclient/webclient/settings/sample_secrets_mail_client.json`
 - **Popis:** Zdánlivě reálné Mailtrap sandbox credentials v commitu. Viz BUG-011.
 - **Doporučení:** Ověřit, rotovat, nahradit za zjevné placeholdery.
 - **Náročnost:** S
-- **Závažnost:** Střední
+- **Severity:** Medium
 
 ### [T05] SEC-03: Přidat Django security headers do production.py
 - **Soubor:** `webclient/webclient/settings/production.py`
 - **Popis:** Chybí `SECURE_HSTS_SECONDS`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `SECURE_CONTENT_TYPE_NOSNIFF`. Django security check (`manage.py check --deploy`) bude hlásit selhání.
 - **Doporučení:** Přidat do production.py a přidat `manage.py check --deploy` do CI pipeline.
 - **Náročnost:** S
-- **Závažnost:** Střední
+- **Severity:** Medium
 
 ### [T05] SEC-XSS: Audit mark_safe() ve vypis/ aplikaci
 - **Soubory:** `webclient/vypis/fields.py:363,438`, `webclient/vypis/views.py:79`
 - **Popis:** Tři místa aplikují `mark_safe()` na hodnoty z DB nebo model properties. Viz BUG-012.
 - **Doporučení:** Přepsat na `format_html()` nebo zajistit `escape()` před mark_safe.
 - **Náročnost:** M
-- **Závažnost:** Střední
+- **Severity:** Medium
 
 ### [T05] SEC-04: Přidat CVE scanning do CI pipeline
 - **Soubory:** `.github/workflows/` (nový krok)
 - **Popis:** Chybí automatická kontrola CVE v Python závislostech.
 - **Doporučení:** Přidat `pip audit` nebo `safety check` jako CI krok.
 - **Náročnost:** S
-- **Závažnost:** Střední
+- **Severity:** Medium
 
 ### [T07] FRONT-01: Extrahovat větší inline skripty z base.html
 - **Soubory:** `webclient/templates/base.html`
@@ -280,25 +280,25 @@
 - **Popis:** Žádný z mapových skriptů neimplementuje `xhr.onerror` handler — selhání sítě je tiché. Uživatel nedostane zpětnou vazbu při výpadku backendu.
 - **Doporučení:** Přidat konzistentní error handling (onerror + onreadystatechange s kontrolou statusu) s uživatelskou hláškou. Zvážit centrální helper funkci pro XHR volání.
 - **Náročnost:** S
-- **Závažnost:** Střední
+- **Severity:** Medium
 
 ### [T07b] FRONT-04: Obalit JSON.parse do try/catch v mapových a modal skriptech
 - **Soubory:** `webclient/static/js/mapa_arch_z.js`, `mapa_pas.js`, `mapa_projekty.js`, `mapa_doc.js`, `mapa_oznameni.js`, `modal_forms_class.js`
 - **Popis:** JSON.parse(this.responseText) se volá bez try/catch — nevalidní JSON (např. 500 HTML stránka) způsobí nekontrolované selhání.
 - **Doporučení:** Obalit do try/catch a logovat/zobrazit chybu.
 - **Náročnost:** S
-- **Závažnost:** Střední
+- **Severity:** Medium
 
 ### [T07b] FRONT-05: Refaktorovat mapa_pins.js — factory funkce místo duplikace
 - **Soubory:** `webclient/static/js/mapa_pins.js`
 - **Popis:** 235 řádků definuje 4 barevné varianty ikon s rozsáhlou duplikací (copy-paste s jedinou změnou barvy).
 - **Doporučení:** Nahradit factory funkcí `createPinIcon(color)` a redukovat na ~50 řádků.
 - **Náročnost:** S
-- **Závažnost:** Nízká
+- **Severity:** Low
 
 ### [T07b] FRONT-06: Eliminovat implicitní globální proměnné v mapových skriptech
 - **Soubory:** `webclient/static/js/mapa_arch_z.js`, `mapa_pas.js`
 - **Popis:** Proměnné jako `rs`, `geom`, `zoomed`, `coor`, `akce_ident_cely` nejsou deklarovány s let/const/var — stávají se implicitními globály.
 - **Doporučení:** Přidat deklarace `let`/`const` a zvážit ESLint `no-undef` pravidlo.
 - **Náročnost:** S
-- **Závažnost:** Střední
+- **Severity:** Medium

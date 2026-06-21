@@ -1,4 +1,4 @@
-# Finální audit — AMČR (aiscr-webamcr)
+# Final Audit - AMCR (aiscr-webamcr)
 
 **Datum:** 2026-03-13  
 **Účel:** Syntéza výsledků úloh T01–T10 technického review repozitáře.  
@@ -6,7 +6,7 @@
 
 ---
 
-## 1. Hlavní architektonické problémy
+## 1. Major Architectural Issues
 
 - **Přebujelá aplikace `core`** — 78 Python souborů, 26 migrací, importována 16+ aplikacemi. Sdružuje middleware, permissions, constants, signals, logging, konektory (Fedora, Redis), koordinátové transformace a management commands. Jakákoli změna má globální dopad. Viz refactoring_backlog ARCH-01.
 - **Aplikace `dokument`** — nejvyšší fan-out (8 cross-app importů), 10 modelů (vč. 5 M2M through tabulek), 18 migrací. Obsahuje eval() na datech z DB (SEC-ORM-004). Viz refactoring_backlog ARCH-02.
@@ -16,13 +16,13 @@
 
 ---
 
-## 2. Bezpečnostní rizika (prioritizovaná)
+## 2. Security Risks (Prioritized)
 
-**Vysoká priorita**
+**High Priority**
 
 - **DEBUG fallback v produkci** — `get_secret("DEBUG", "True")` v `production.py` znamená, že při chybějícím klíči běží aplikace s DEBUG=True. Viz BUG-010, security_analysis.json SEC-01.
 
-**Střední priorita**
+**Medium Priority**
 
 - **Grafana / Elasticsearch / Logstash** — nesprávná injekce hesel: `GF_SECURITY_ADMIN_PASSWORD` nastaveno na cestu k souboru místo hodnoty; ELASTIC_PASSWORD a LOGSTASH_INTERNAL_PASSWORD na název secretu. Viz BUG-007, BUG-008, docker_analysis.json SEC-D02, SEC-D03.
 - **sudo v produkčním kontejneru** — `usermod -aG sudo user` v Dockerfile. Viz BUG-009, SEC-D01.
@@ -31,23 +31,23 @@
 - **Mailtrap credentials v commitu** — sample_secrets_mail_client.json obsahuje zdánlivě reálné přihlašovací údaje. Viz BUG-011, SEC-02.
 - **eval() v generátorech identifikátorů** — 5 míst v projekt/models.py, arch_z/models.py, dokument/models.py a ez/models.py používá `eval(i)` na hodnotách z DB. Viz BUG-001, orm_analysis.json SEC-ORM-001–SEC-ORM-005.
 
-**Nízká / doporučení**
+**Low / Recommendations**
 
 - CVE audit závislostí nebyl proveden (offline prostředí). Doporučeno: `pip audit` nebo `safety check` v CI. Viz security_analysis.json known_vulnerabilities, refactoring_backlog SEC-04.
 
 ---
 
-## 3. Cirkulární a problematické závislosti
+## 3. Circular and Problematic Dependencies
 
-- **projekt ↔ oznameni** (Vysoká) — vzájemné importy na úrovni modulů: oznameni/models importuje Projekt; projekt/forms, views, urls importují z oznameni. Riziko ImportError při rozšíření. Viz dependency_graph.json CIRC-01, refactoring_backlog CIRC-01.
-- **adb ↔ xml_generator** (Střední) — adb.models importuje BaseAmcrModel z xml_generator.models; xml_generator.generator importuje VyskovyBod z adb.models na úrovni modulu. Viz dependency_graph.json CIRC-02, refactoring_backlog CIRC-02.
+- **projekt ↔ oznameni** (High) — vzájemné importy na úrovni modulů: oznameni/models importuje Projekt; projekt/forms, views, urls importují z oznameni. Riziko ImportError při rozšíření. Viz dependency_graph.json CIRC-01, refactoring_backlog CIRC-01.
+- **adb ↔ xml_generator** (Medium) — adb.models importuje BaseAmcrModel z xml_generator.models; xml_generator.generator importuje VyskovyBod z adb.models na úrovni modulu. Viz dependency_graph.json CIRC-02, refactoring_backlog CIRC-02.
 
 ---
 
-## 4. Moduly s vysokou komplexitou
+## 4. High-Complexity Modules
 
 - **core** — fan-in 16, 78 .py souborů, největší počet zodpovědností (middleware, permissions, signals, logging, konektory, ident_cely, management commands). Doporučeno dekomponovat na core.permissions, core.logging, core.middleware, core.signals.
-- **heslar** — fan-in 16; centrální číselníky, vazba přirozená, ale kritická pro výkon (viz chybějící index na nazev_heslare — BUG-005).
+- **heslar** — fan-in 16; centrální číselníky, vazba přirozená, ale Critical pro výkon (viz chybějící index na nazev_heslare — BUG-005).
 - **xml_generator** — fan-in 10; kombinace base modelů a generátoru XML.
 - **uzivatel** — fan-in 11.
 - **dokument** — fan-out 8.
@@ -56,7 +56,7 @@ Viz dependency_graph.json tightly_coupled_modules a architectural_issues.
 
 ---
 
-## 5. ORM výkonové problémy
+## 5. ORM Performance Issues
 
 - **N+1 v check_pred_* metodách** — `Projekt.check_pred_uzavrenim()` a `ArcheologickyZaznam.check_pred_odeslanim()` iterují přes akce/DJ bez prefetch; kaskádové dotazy. Viz BUG-002, orm_analysis.json NP1-002, NP1-006, refactoring_backlog ORM-02.
 - **Extra SELECT v save()** — ArcheologickyZaznam a SamostatnyNalez při každém save() (pk != None) volají `Model.objects.get(pk=self.pk)` pro zjištění změny pristupnost. Správný vzor: initial hodnota v __init__(). Viz orm_analysis.json NP1-008, NP1-012, refactoring_backlog ORM-01, BUG-004.
@@ -64,7 +64,7 @@ Viz dependency_graph.json tightly_coupled_modules a architectural_issues.
 - **len(queryset.all()) místo .count()** — v Projekt.check_pred_smazanim/check_pred_navrzeni_k_zruseni. Viz orm_analysis.json NP1-003.
 - **Deprecated .extra()** — arch_z/filters.py pro ST_Z(geom). Viz orm_analysis.json raw_sql_usage, refactoring_backlog ORM-06.
 
-Další N+1 a ORM kandidáti (nízká až střední závažnost): NP1-001 (check_pred_archivaci), NP1-004 (set_pristupnost), NP1-005 (datum_oznameni property), NP1-007 (_set_connected_records_ident bulk_update), NP1-009 (User.save), NP1-010 (moje_spolupracujici_organizace), NP1-011 (Pian.pristupnost_pom), NP1-013 (Pian.get_create_org triple-hop), NP1-014 (ModelWithMetadata.record_deletion), NP1-015 (Dokument.check_pred_odeslanim — iterace DJ bez prefetch), NP1-016 (ExterniZdroj.check_pred_odeslanim — iterace vazeb), NP1-017 (ExterniZdrojSekvence.save — extra SELECT na get(pk=pk) pro pristupnost), NP1-018 (Komponenta.check_pred_odeslanim — 3 poddotazy na nálezy), NP1-019 (KomponentaVazby — kaskádové FK bez select_related), NP1-020 (Lokalita.set_snapshots — filter+iterate vzorec). Kompletní přehled: orm_analysis.json n_plus_one_candidates, missing_prefetch_candidates.
+Další N+1 a ORM kandidáti (Low až Medium závažnost): NP1-001 (check_pred_archivaci), NP1-004 (set_pristupnost), NP1-005 (datum_oznameni property), NP1-007 (_set_connected_records_ident bulk_update), NP1-009 (User.save), NP1-010 (moje_spolupracujici_organizace), NP1-011 (Pian.pristupnost_pom), NP1-013 (Pian.get_create_org triple-hop), NP1-014 (ModelWithMetadata.record_deletion), NP1-015 (Dokument.check_pred_odeslanim — iterace DJ bez prefetch), NP1-016 (ExterniZdroj.check_pred_odeslanim — iterace vazeb), NP1-017 (ExterniZdrojSekvence.save — extra SELECT na get(pk=pk) pro pristupnost), NP1-018 (Komponenta.check_pred_odeslanim — 3 poddotazy na nálezy), NP1-019 (KomponentaVazby — kaskádové FK bez select_related), NP1-020 (Lokalita.set_snapshots — filter+iterate vzorec). Kompletní přehled: orm_analysis.json n_plus_one_candidates, missing_prefetch_candidates.
 
 **Chybné přetížení metod:**
 
@@ -72,7 +72,7 @@ Další N+1 a ORM kandidáti (nízká až střední závažnost): NP1-001 (check
 
 ---
 
-## 6. Databázová rizika
+## 6. Database Risks
 
 - **Migrace** — celkem ~213 migrací; uzivatel (31), core (26), arch_z (20), dokument (19), heslar (17), historie (16) jsou kandidáti na squash. Viz orm_analysis.json migration_summary, refactoring_backlog ORM-07.
 - **Heslar.nazev_heslare** — FK bez db_index při masivním použití v limit_choices_to → table scany při formulářích. Viz BUG-005.
@@ -81,7 +81,7 @@ Další N+1 a ORM kandidáti (nízká až střední závažnost): NP1-001 (check
 
 ---
 
-## 7. Docker build problémy
+## 7. Docker Build Issues
 
 - **Secret injection** — Grafana (GF_SECURITY_ADMIN_PASSWORD vs __FILE), Elasticsearch a Logstash (hodnota = název secretu). Viz docker_analysis.json security_issues SEC-D02, SEC-D03, BUG-007, BUG-008.
 - **Produkční kontejner** — uživatel se sudo (SEC-D01); cron daemon uvnitř kontejneru (OPT-D05); libgdal-dev v runtime; redundantní COPY v multi-stage (OPT-D01). Viz docker_analysis.json.
@@ -93,16 +93,16 @@ Další Docker compose problémy: DCD-01 (logstash bez depends_on), DCD-02 (cele
 
 ---
 
-## 8. Frontend a JavaScript rizika
+## 8. Frontend and JavaScript Risks
 
 - **Inline skripty v base.html** — inicializace datepickerů, checkUserAuthentication (polling 60 s), jazykový přepínač; kandidáti na extrakci do samostatných JS souborů. Viz frontend_analysis.json template_inline_scripts.extraction_candidates, refactoring_backlog FRONT-01.
 - **Vlastní JS bez minifikace/bundleru** — mapa a helpery servírovány jako více souborů; větší počet requestů a velikost. Celkem 24 custom JS souborů (~5 600 řádků) analyzováno. Viz frontend_analysis.json build_pipeline, refactoring_backlog FRONT-02.
-- **Mapové skripty — crash při prázdných vrstvách** (Vysoká) — `poi_sugest.getLayers()[0]._latlng` v mapa_arch_z.js, mapa_pas.js, mapa_projekty.js a dalších: crash pokud vrstva nemá geometrii. Přístup `coordinates[0][0]` bez kontroly délky pole. Viz frontend_analysis.json custom_javascript.issues.
-- **XHR bez onerror** (Vysoká) — žádný z mapových skriptů (mapa_arch_z.js, mapa_pas.js, mapa_projekty.js, mapa_doc.js, mapa_oznameni.js) nemá `xhr.onerror` handler; síťová chyba je tiše ignorována. Viz refactoring_backlog FRONT-03.
-- **JSON.parse bez try/catch** (Střední) — mapa_arch_z.js, mapa_pas.js, dz.js, mapa_oznameni.js parsují serverové odpovědi bez ochrany; poškozená odpověď rozbije celý skript. Viz refactoring_backlog FRONT-04.
-- **BUG-016: Invertovaná podmínka** (Střední) — form_fields_disabling.js řádek 64: `||` místo `&&`; podmínka pro disable formulářových polí je vždy pravdivá. Viz bugs.md BUG-016.
-- **BUG-017: Chybná přesnost souřadnic** (Střední) — coor_precision.js řádek 31: JTSK přesnost používá konstantu pro WGS84 (6 des. míst místo 2). Viz bugs.md BUG-017.
-- **dz.js — Leaflet API nesoulad** (Vysoká) — volání `clearLayers()` na `L.geoJSON` objekt, ale správná metoda je na FeatureGroup/LayerGroup. `addData()` po `clearLayers()` může nefungovat dle očekávání.
+- **Mapové skripty — crash při prázdných vrstvách** (High) — `poi_sugest.getLayers()[0]._latlng` v mapa_arch_z.js, mapa_pas.js, mapa_projekty.js a dalších: crash pokud vrstva nemá geometrii. Přístup `coordinates[0][0]` bez kontroly délky pole. Viz frontend_analysis.json custom_javascript.issues.
+- **XHR bez onerror** (High) — žádný z mapových skriptů (mapa_arch_z.js, mapa_pas.js, mapa_projekty.js, mapa_doc.js, mapa_oznameni.js) nemá `xhr.onerror` handler; síťová chyba je tiše ignorována. Viz refactoring_backlog FRONT-03.
+- **JSON.parse bez try/catch** (Medium) — mapa_arch_z.js, mapa_pas.js, dz.js, mapa_oznameni.js parsují serverové odpovědi bez ochrany; poškozená odpověď rozbije celý skript. Viz refactoring_backlog FRONT-04.
+- **BUG-016: Invertovaná podmínka** (Medium) — form_fields_disabling.js řádek 64: `||` místo `&&`; podmínka pro disable formulářových polí je vždy pravdivá. Viz bugs.md BUG-016.
+- **BUG-017: Chybná přesnost souřadnic** (Medium) — coor_precision.js řádek 31: JTSK přesnost používá konstantu pro WGS84 (6 des. míst místo 2). Viz bugs.md BUG-017.
+- **dz.js — Leaflet API nesoulad** (High) — volání `clearLayers()` na `L.geoJSON` objekt, ale správná metoda je na FeatureGroup/LayerGroup. `addData()` po `clearLayers()` může nefungovat dle očekávání.
 - **Implicitní globální proměnné** — map_functions, mapa_pins.js a většina mapových skriptů deklarují proměnné bez `var`/`let`/`const`; hrozí konflikty jmen při společném načtení. Viz refactoring_backlog FRONT-06.
 - **Duplicitní pin-factory vzor** — mapa_pins.js opakuje ~30 řádkový blok pro každou kategorii pinů; kandidát na generické řešení tovární funkcí. Viz refactoring_backlog FRONT-05.
 - **Drobné chyby** — mapa_basic_functions.js: nedefinovaná proměnná v getLocation(); ajax_functions.js: GET bez ošetření síťových chyb. Viz frontend_analysis.json custom_javascript.issues.
@@ -110,7 +110,7 @@ Další Docker compose problémy: DCD-01 (logstash bez depends_on), DCD-02 (cele
 
 ---
 
-## 9. Celery a asynchronní rizika
+## 9. Celery and Asynchronous Risks
 
 - **Chybějící error handling** — update_all_redis_snapshots, update_single_redis_snapshot, update_materialized_views bez centrálního try/except; chyba uprostřed dávky ukončí task bez shrnutí. Viz celery_analysis.json error_handling_issues, refactoring_backlog CELERY-01.
 - **call_digiarchiv_update_task** — requests.get() bez timeoutu a bez try/except; při výpadku služby může worker viset. Viz celery_analysis.json timeout_issues, refactoring_backlog CELERY-02.
@@ -120,7 +120,7 @@ Beat schedule je v DB (django_celery_beat); z kódu nelze vyčíst konkrétní r
 
 ---
 
-## 10. Problémy v dokumentačních generátorech
+## 10. Documentation Generator Issues
 
 - **Read the Docs** — instaluje plné webclient/requirements.txt (včetně Selenium, debug-toolbar); prodlužuje build a zvyšuje riziko konfliktů. Viz documentation_analysis.json sphinx_docs.issues, refactoring_backlog DOCS-01.
 - **docs/licenses/convert_to_rst.py** — žádná kontrola returncode subprocessu ani try/except kolem json.loads; při chybě pip-licenses nečitelný traceback. Viz documentation_analysis.json documentation_generators issues, refactoring_backlog DOCS-02.
@@ -130,7 +130,7 @@ generate_module_docs.py a generate_selenium_test_docs.py nemají v analýze zazn
 
 ---
 
-## 11. CI/CD mezery
+## 11. CI/CD Gaps
 
 - **Dependabot** — chybí .github/dependabot.yml pro sledování závislostí. Viz cicd_analysis.json security_scanning, refactoring_backlog CI-01.
 - **CodeQL** — není samostatný workflow pro statickou analýzu Python kódu; pouze Trivy/SARIF z publish_images. Viz cicd_analysis.json issues.
@@ -141,7 +141,7 @@ Pozitiva: Docker Scout na PR do dev; publish_images s cosign, SLSA, Trivy, SARIF
 
 ---
 
-## 12. Hlavní technický dluh (TOP 10)
+## 12. Major Technical Debt (Top 10)
 
 | # | Položka | Zdroj | Odůvodnění |
 |---|--------|-------|------------|
@@ -158,7 +158,7 @@ Pozitiva: Docker Scout na PR do dev; publish_images s cosign, SLSA, Trivy, SARIF
 
 ---
 
-## 13. Prioritizovaný plán refaktoringu
+## 13. Prioritized Refactoring Plan
 
 **První vlna (bezpečnost a kritický provoz)**
 
@@ -199,16 +199,16 @@ Pozitiva: Docker Scout na PR do dev; publish_images s cosign, SLSA, Trivy, SARIF
 - Refaktor mapa_pins.js — tovární funkce místo opakovaného bloku (S). Viz FRONT-05.
 - Eliminace implicitních globálních proměnných v mapových skriptech (M). Viz FRONT-06.
 
-Podrobnosti a náročnost: refactoring_backlog.md (Vysoká / Střední / Nízká priorita).
+Podrobnosti a náročnost: refactoring_backlog.md (High / Medium / Low priorita).
 
 ---
 
-## 14. Doporučení pro dlouhodobou správu repozitáře
+## 14. Long-Term Repository Maintenance Recommendations
 
 - **Governance** — Pravidla v AGENTS.md a CONTRIBUTING.md ponechat jako zdroj pravdy; při rozporu s .agents/ upravit .agents/ a zaznamenat v review_cache nebo refactoring_backlog. Viz AGENTS.md.
 - **Review cyklus** — Před každou session načíst review_cache.json a file hashes; označit změněné soubory a příslušné tasky jako pending; neopakovat dokončené tasky bez změny vstupů. Viz review_codebase.md INITIALIZATION SEQUENCE.
 - **Konfigurace** — Jediný zdroj limitů a adresářů: review_config.yaml. Vendored exclusions a task registry nemultiplikovat jinde. Viz review_config.yaml.
-- **Bug a backlog** — Před přidáním záznamu do bugs.md ověřit GitHub Issues (aktuálně 113 otevřených); křížově odkazovat „již evidováno / rozšíření / nový kandidát“. Refactoring backlog udržovat v češtině a třídit dle priority (Vysoká / Střední / Nízká). Viz review_codebase.md BUG TRACKING a REFACTORING BACKLOG.
+- **Bug a backlog** — Před přidáním záznamu do bugs.md ověřit GitHub Issues (aktuálně 113 otevřených); křížově odkazovat „již evidováno / rozšíření / nový kandidát“. Refactoring backlog udržovat v češtině a třídit dle priority (High / Medium / Low). Viz review_codebase.md BUG TRACKING a REFACTORING BACKLOG.
 - **Prompt evolution** — Návrhy z reportů ukládat do .agents/prompts/prompt_evolution/<task_id>_prompt_update.md; aplikaci změn do review_codebase.md provádět ručně. Viz review_codebase.md PROMPT EVOLUTION.
 - **Dokumentace a CI** — Generovanou dokumentaci neupravovat ručně; spouštět generátory dle CONTRIBUTING.md. V CI zvážit kontrolu úplnosti Selenium docstringů a `manage.py check --deploy`; CVE krok (pip audit/safety) pro závislosti.
 - **Struktura .agents/** — Zachovat podle .agents/README.md: config (review_config.yaml, review_cache.json), analysis (*.json), reports (review_reports/, bugs.md, refactoring_backlog.md), prompts a prompt_evolution.
@@ -230,13 +230,13 @@ Podrobnosti a náročnost: refactoring_backlog.md (Vysoká / Střední / Nízká
 **Opravené nekonzistence:**
 
 - ARCH-04: prefix opraven `[T02]` → `[T01]` v refactoring_backlog.md (zdroj nálezu je T01, ne T02).
-- BUG-004: závažnost zvýšena z Nízká na Střední v bugs.md (sjednocení s ORM-01 backlog prioritou — extra SELECT v save() je architektonický anti-pattern).
-- BUG-005 / ORM-03: ponecháno Střední — rozdíl oproti backlogu (Vysoká priorita) je záměrný a zdokumentován (priorita refaktoringu ≠ závažnost bugu).
+- BUG-004: závažnost zvýšena z Low na Medium v bugs.md (sjednocení s ORM-01 backlog prioritou — extra SELECT v save() je architektonický anti-pattern).
+- BUG-005 / ORM-03: ponecháno Medium — rozdíl oproti backlogu (High priorita) je záměrný a zdokumentován (priorita refaktoringu ≠ závažnost bugu).
 
 **Mezery v pokrytí:**
 
 - **T03 (ORM):** ✅ VYŘEŠENO (T03c/T03d, 2026-03-13). Všech 10 chybějících Django aplikací (28 modelů, ~2 793 řádků) bylo analyzováno a přidáno do `orm_analysis.json`. Nové nálezy: SEC-ORM-004, SEC-ORM-005 (2 další eval() výskyty v dokument/ez — rozšiřuje BUG-001 ze 3 na 5 míst), NP1-015 až NP1-020 (6 nových N+1 kandidátů), BUG-015 (typo `__init_` v nalez/NalezPredmet).
-- **T07 (Frontend):** ✅ VYŘEŠENO (T07b, 2026-03-13). Vendored exclusions aktualizovány (timer.js, datepicker-cs.js). 20 vlastních JS souborů (~3 846 řádků) analyzováno a přidáno do `frontend_analysis.json`. Nové nálezy: BUG-016 (invertovaná podmínka form_fields_disabling.js), BUG-017 (chybná přesnost coor_precision.js), 4 backlog položky (FRONT-03 až FRONT-06). Vysoká závažnost u 7 issues v mapových skriptech a dz.js.
+- **T07 (Frontend):** ✅ VYŘEŠENO (T07b, 2026-03-13). Vendored exclusions aktualizovány (timer.js, datepicker-cs.js). 20 vlastních JS souborů (~3 846 řádků) analyzováno a přidáno do `frontend_analysis.json`. Nové nálezy: BUG-016 (invertovaná podmínka form_fields_disabling.js), BUG-017 (chybná přesnost coor_precision.js), 4 backlog položky (FRONT-03 až FRONT-06). High závažnost u 7 issues v mapových skriptech a dz.js.
 
 **Ověření bugů:** Všech 14 původních bugů (BUG-001 až BUG-014) potvrzeno jako stále přítomné (spot-check 7 z nich, žádný opraven). Přibyly 3 nové bugy: BUG-015, BUG-016, BUG-017.
 
@@ -263,10 +263,10 @@ Podrobnosti a náročnost: refactoring_backlog.md (Vysoká / Střední / Nízká
 **Ověření bugů:** Všech 17 bugů (BUG-001 až BUG-017) potvrzeno jako přítomné. Spot-check: BUG-015 (nalez/models.py:116 `__init_`), BUG-016 (form_fields_disabling.js:64 `||` místo `&&`), BUG-017 (coor_precision.js:31 `wgs84` místo `jtsk`), SEC-ORM-004 (dokument/models.py:441 `eval(i)`), SEC-ORM-005 (ez/models.py:301 `eval(i)`) — vše ověřeno přímým čtením souborů.
 
 **Nové nálezy:**
-- BUG-015: `__init_` typo v nalez/NalezPredmet — custom init se nespustí (Střední)
-- BUG-016: invertovaná podmínka `||` místo `&&` v form_fields_disabling.js (Střední)
-- BUG-017: chybná přesnost JTSK používá WGS84 konstantu v coor_precision.js (Střední)
-- SEC-ORM-004, SEC-ORM-005: 2 nové výskyty eval() na datech z DB (Střední)
+- BUG-015: `__init_` typo v nalez/NalezPredmet — custom init se nespustí (Medium)
+- BUG-016: invertovaná podmínka `||` místo `&&` v form_fields_disabling.js (Medium)
+- BUG-017: chybná přesnost JTSK používá WGS84 konstantu v coor_precision.js (Medium)
+- SEC-ORM-004, SEC-ORM-005: 2 nové výskyty eval() na datech z DB (Medium)
 - NP1-015 až NP1-020: 6 nových N+1 kandidátů v dokument, ez, lokalita
 - FRONT-03 až FRONT-06: 4 nové backlog položky (XHR onerror, JSON.parse try/catch, pin factory, implicitní globály)
 

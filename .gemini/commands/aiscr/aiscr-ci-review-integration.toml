@@ -12,8 +12,5 @@ prompt = """
 
 Integrate review_tools.py and related AI-review checks into CI for web application repos. Use when the user asks to add AI review to CI, wire review_tools into GitHub Actions, or standardise CI + AI review for webapps.
 
-**Skill body (authoritative):** `.gemini/skills/aiscr-ci-review-integration/SKILL.md` — load that file for the full workflow body, guardrails, and verification.
-
-`.agents/plans/ci-review-integration.plan.md`
-Load openspec/specs/ci-artifact-review/spec.md first for the durable behavioral contract; assess `.github/workflows/*.yml` for current CI setup; confirm `review_tools.py` presence and `review_config.yaml` configuration; design CI + AI review flow per plan Step 2; follow ci-review-integration.plan.md for workflow implementation and validation.
+**Skill body (authoritative):** [`.gemini/skills/aiscr-ci-review-integration/SKILL.md`](.gemini/skills/aiscr-ci-review-integration/SKILL.md) — load that repository-local file for the full workflow body, guardrails, and verification.
 """

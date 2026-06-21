@@ -263,11 +263,11 @@ Technický dluh a auditní výstupy jsou evidovány v `.agents/`.
 Otevřete nový kontext AI agenta a jako první zprávu vložte:
 
 ```
-Read .agents/prompts/review_codebase.md and continue the review.
+Run the aiscr-codebase-review workflow (mode: full or update) and continue the review.
 ```
 
 Agent si načte `AGENTS.md`, stav z `.agents/config/review_cache.json` a zahájí
-další čekající task dle registru v `.agents/prompts/review_codebase.md`.
+další čekající task podle kanonického workflow `aiscr-codebase-review` (dodaného přes skill surfaces `.cursor/` / `.claude/` / `.codex/` / `.gemini/`).
 
 ---
 
@@ -291,7 +291,7 @@ Pravidla se neopakují — místo toho se používají křížové odkazy.
 | `CONTRIBUTING.md` | Vývojáři (lidé i agenti) | Konvence kódu, větve, PR, testování |
 | `CLAUDE.md` | Claude Code | Prostředí, příkazy, rychlá reference |
 | `AGENTS.md` | AI agenti (obecně) | Governance, chování, scope |
-| `.agents/prompts/review_codebase.md` | Review agent sessions | Instrukce pro review tasky |
+| `aiscr-codebase-review` workflow (skill surfaces) | Review agent sessions | Operační postup review tasků |
 | `.agents/config/review_config.yaml` | Review agent runtime | Konfigurační hodnoty |
 
 Pravidla:

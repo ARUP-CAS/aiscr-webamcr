@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
+"""Validate artifacts produced by the AIS CR codebase-review workflow.
+
+The script uses only the Python standard library and works with repositories
+that provide an ``.agents/`` tree and ``review_config.yaml``.
+
+Usage:
+
+    python review_tools.py hash               # check tracked file hashes
+    python review_tools.py cross-validate     # cross-validate artifacts
+    python review_tools.py coverage-gaps      # identify analysis coverage gaps
+    python review_tools.py id-inventory       # inventory IDs across artifacts
+    python review_tools.py lint-artifacts     # validate artifact structure
+    python review_tools.py prompt-evolution   # find unapplied prompt proposals
+    python review_tools.py repo-structure     # report repository statistics
+    python review_tools.py status             # show review workflow status
+    python review_tools.py all                # run every check
 """
-Nástroje pro review — automatická kontrola artefaktů v AI review systému.
 
-Skript je bez závislostí na pip balíčcích (pouze standardní knihovna) a pracuje
-nad libovolným repozitářem, který používá strukturu `.agents/` a konfigurační
-soubor `review_config.yaml`.
-
-Použití:
-
-    python review_tools.py hash               # porovnání hashů sledovaných souborů
-    python review_tools.py cross-validate     # konzistence BUG/backlog/final_audit
-    python review_tools.py coverage-gaps      # nenakrytý kód (ORM, JS, skripty)
-    python review_tools.py id-inventory       # inventura a křížové reference ID
-    python review_tools.py lint-artifacts     # validace struktury .agents/ artefaktů
-    python review_tools.py prompt-evolution   # stav zapracování návrhů na prompt
-    python review_tools.py repo-structure     # přehled struktury repozitáře
-    python review_tools.py status             # dashboard stavu review systému
-    python review_tools.py all                # spuštění všech kontrol
-"""
+# The canonical engine is intentionally a single-file, standard-library bundle
+# so enrolled repositories can execute it without importing hub modules.
+# pylint: disable=too-many-lines,too-many-return-statements,too-many-branches
+# pylint: disable=too-many-statements,too-many-locals,too-many-nested-blocks
+# pylint: disable=too-many-instance-attributes
 
 from __future__ import annotations
 
@@ -32,12 +36,7 @@ from pathlib import Path
 
 
 def _yaml_scalar(s: str):
-    """
-    Převede jednoduchou hodnotu z YAML na odpovídající Python typ.
-
-    :param s: Řetězec s hodnotou z jednoho řádku YAML.
-    :return: Převedená hodnota (int, bool, seznam, None nebo původní řetězec).
-    """
+    """Convert a simple YAML scalar to its Python value."""
     s = s.strip()
     if not s or s in ("~", "null", "Null"):
         return None
@@ -56,14 +55,7 @@ def _yaml_scalar(s: str):
 
 
 def _yaml_strip_comment(s: str) -> str:
-    """
-    Odstraní komentář z řádku YAML s ohledem na uvozovky.
-
-    Komentář začíná znakem `#`, který není součástí uvozovaného řetězce.
-
-    :param s: Vstupní řetězec z YAML souboru.
-    :return: Řetězec bez komentářové části na konci řádku.
-    """
+    """Remove an unquoted trailing comment from a YAML line."""
     in_quote = None
     for i, c in enumerate(s):
         if c in ('"', "'"):
@@ -77,25 +69,12 @@ def _yaml_strip_comment(s: str) -> str:
 
 
 def _yaml_indent(line: str) -> int:
-    """
-    Vrátí počet počátečních mezer (odsazení) na řádku YAML.
-
-    :param line: Celý řádek textu.
-    :return: Počet úvodních mezer v řádku.
-    """
+    """Return the leading-space indentation of a YAML line."""
     return len(line) - len(line.lstrip())
 
 
 def _load_yaml(path: Path) -> dict:
-    """
-    Načte YAML soubor pomocí minimálního, na míru psaného parseru.
-
-    Parser podporuje pouze podmnožinu YAML potřebnou pro `review_config.yaml`
-    a další interní konfigurační soubory.
-
-    :param path: Cesta k YAML souboru.
-    :return: Načtená struktura jako slovník, případně prázdný slovník.
-    """
+    """Load the supported YAML subset without third-party dependencies."""
     if not path.exists():
         return {}
     text = path.read_text(encoding="utf-8")
@@ -105,14 +84,7 @@ def _load_yaml(path: Path) -> dict:
 
 
 def _yaml_map(lines: list[str], pos: int, parent_indent: int) -> tuple[dict, int]:
-    """
-    Zpracuje blok YAML mapy (klíč → hodnota) z dané pozice.
-
-    :param lines: Seznam všech řádků YAML souboru.
-    :param pos: Aktuální index řádku, od kterého se má číst.
-    :param parent_indent: Odsazení nadřazeného bloku, které ukončuje mapu.
-    :return: Dvojice `(data, next_pos)` se slovníkem dat a indexem dalšího řádku.
-    """
+    """Parse a YAML mapping block and return its data and next position."""
     result: dict = {}
     block_indent: int | None = None
     while pos < len(lines):
@@ -176,15 +148,8 @@ def _yaml_map(lines: list[str], pos: int, parent_indent: int) -> tuple[dict, int
     return result, pos
 
 
-def _yaml_seq(lines: list[str], pos: int, parent_indent: int) -> tuple[list, int]:
-    """
-    Zpracuje blok YAML sekvence (seznamu) z dané pozice.
-
-    :param lines: Seznam všech řádků YAML souboru.
-    :param pos: Aktuální index řádku, od kterého se má číst.
-    :param parent_indent: Odsazení nadřazeného bloku, které ukončuje sekvenci.
-    :return: Dvojice `(data, next_pos)` se seznamem hodnot a indexem dalšího řádku.
-    """
+def _yaml_seq(lines: list[str], pos: int, _parent_indent: int) -> tuple[list, int]:
+    """Parse a YAML sequence block and return its data and next position."""
     result: list = []
     block_indent: int | None = None
     while pos < len(lines):
@@ -277,13 +242,7 @@ def _yaml_seq(lines: list[str], pos: int, parent_indent: int) -> tuple[list, int
 
 
 def _find_repo_root(start: Path) -> Path:
-    """
-    Najde kořen repozitáře tak, že postupně stoupá nadřazenými adresáři.
-
-    :param start: Výchozí adresář, typicky adresář tohoto skriptu.
-    :return: Kořen repozitáře s adresářem `.git`, nebo vstupní cesta pokud se
-        `.git` v rozumné hloubce nenajde.
-    """
+    """Find the nearest repository root, falling back to the start path."""
     current = start.resolve()
     for _ in range(20):
         if (current / ".git").exists():
@@ -296,12 +255,7 @@ def _find_repo_root(start: Path) -> Path:
 
 
 class Config:
-    """
-    Konfigurace review systému načtená z `review_config.yaml` včetně výchozích hodnot.
-
-    Třída zapouzdřuje cesty k adresářům `.agents/`, seznam ignorovaných adresářů,
-    informace o vendored souborech a definici úloh T01–T10.
-    """
+    """Review workflow configuration loaded from ``review_config.yaml``."""
 
     def __init__(self, repo_root: Path | None = None, config_path: Path | None = None):
         script_dir = Path(__file__).resolve().parent
@@ -339,6 +293,18 @@ class Config:
         self.vendored_file_patterns: set[str] = {"*.min.js", "*.min.css"}
         self.vendored_headers: tuple[str, ...] = ("/*!", "* @license", "* jQuery", "* Bootstrap")
         self.vendored_filenames: set[str] = set()
+        self.source_extensions: tuple[str, ...] = (
+            ".py",
+            ".js",
+            ".ts",
+            ".html",
+            ".css",
+            ".scss",
+            ".md",
+            ".yaml",
+            ".yml",
+            ".sh",
+        )
         self.tasks: list[dict] = []
         self.django_project_root: Path | None = None
 
@@ -347,12 +313,7 @@ class Config:
         self._apply_config()
 
     def _apply_config(self):
-        """
-        Aplikuje hodnoty načtené z YAML konfigurace na instanci `Config`.
-
-        Nastaví ignorované adresáře, vzory pro vendored soubory, seznam úloh
-        a odvodí kořen Django projektu.
-        """
+        """Apply repository configuration to this instance."""
         cfg = self._raw
         if not cfg:
             self._detect_django_root()
@@ -373,15 +334,15 @@ class Config:
         tasks = cfg.get("tasks", [])
         if isinstance(tasks, list):
             self.tasks = [t for t in tasks if isinstance(t, dict)]
+        source_extensions = cfg.get("source_extensions", [])
+        if isinstance(source_extensions, list) and source_extensions:
+            self.source_extensions = tuple(
+                ext if ext.startswith(".") else f".{ext}" for ext in map(str, source_extensions)
+            )
         self._detect_django_root()
 
     def _detect_django_root(self):
-        """
-        Pokusí se odvodit kořen Django projektu z konfigurace nebo struktury repozitáře.
-
-        Nejprve využije `key_django_apps` z konfigurace, případně prohledá
-        běžné adresáře (`webclient`, `src`, ... ) a hledá v nich `manage.py`.
-        """
+        """Infer the Django project root from configuration or layout."""
         key_apps = self._raw.get("key_django_apps", [])
         if isinstance(key_apps, list) and key_apps:
             first_dir = key_apps[0].get("dir", "") if isinstance(key_apps[0], dict) else ""
@@ -399,19 +360,11 @@ class Config:
                 return
 
     def get_task_ids(self) -> list[str]:
-        """
-        Vrátí seznam ID úloh definovaných v `review_config.yaml`.
-
-        :return: Seznam řetězců typu `T01`, `T02`, ...
-        """
+        """Return task IDs defined in ``review_config.yaml``."""
         return [t.get("id", "") for t in self.tasks if t.get("id")]
 
     def get_analysis_files(self) -> dict[str, Path]:
-        """
-        Vrátí mapování ID úlohy na cestu k jejímu analytickému JSON souboru.
-
-        :return: Slovník `{task_id: Path}`, kde `Path` je relativní k repozitáři.
-        """
+        """Map task IDs to their analysis JSON paths."""
         result: dict[str, Path] = {}
         for t in self.tasks:
             tid = t.get("id", "")
@@ -422,26 +375,14 @@ class Config:
 
 
 def _read_text(path: Path) -> str:
-    """
-    Bezpečně načte textový soubor v UTF‑8, případně vrátí prázdný řetězec.
-
-    :param path: Cesta k souboru.
-    :return: Obsah souboru jako unicode řetězec, nebo prázdný řetězec při chybě.
-    """
+    """Read a UTF-8 text file, returning an empty string when absent."""
     if not path.exists():
         return ""
     return path.read_text(encoding="utf-8")
 
 
 def _load_json(path: Path) -> dict:
-    """
-    Načte JSON soubor a vrátí jeho obsah jako slovník.
-
-    Při neexistujícím souboru nebo chybě v syntaxi vrací prázdný slovník.
-
-    :param path: Cesta k JSON souboru.
-    :return: Načtená struktura nebo prázdný slovník.
-    """
+    """Load a JSON object, returning an empty mapping for invalid input."""
     text = _read_text(path)
     if not text:
         return {}
@@ -452,17 +393,7 @@ def _load_json(path: Path) -> dict:
 
 
 def _is_vendored_js(filename: str, content: str, cfg: Config) -> bool:
-    """
-    Heuristicky určí, zda je JS soubor pravděpodobně vendored (třetí strana).
-
-    Kombinuje název souboru, glob vzory, hlavičkové komentáře a typické
-    signatury knihoven.
-
-    :param filename: Název souboru (bez cesty).
-    :param content: Obsah souboru.
-    :param cfg: Aktivní konfigurace `Config` s pravidly pro vendored soubory.
-    :return: `True`, pokud má být soubor považován za vendored, jinak `False`.
-    """
+    """Heuristically determine whether a JavaScript file is vendored."""
     if filename in cfg.vendored_filenames:
         return True
     for pat in cfg.vendored_file_patterns:
@@ -489,15 +420,7 @@ ID_PATTERNS = [
 
 
 def _extract_all_ids(text: str) -> set[str]:
-    """
-    Vyhledá ve vstupním textu všechny strukturované identifikátory.
-
-    Podporované formáty jsou např. `BUG-001`, `SEC-01`, `ORM-01`, případně
-    další ID odpovídající regulárním výrazům v `ID_PATTERNS`.
-
-    :param text: Vstupní text, typicky obsah markdown/JSON souboru.
-    :return: Množina nalezených ID bez duplicit.
-    """
+    """Extract every structured artifact identifier from text."""
     ids: set[str] = set()
     for pat in ID_PATTERNS:
         ids.update(pat.findall(text))
@@ -505,29 +428,15 @@ def _extract_all_ids(text: str) -> set[str]:
 
 
 def _section_header(name: str) -> str:
-    """
-    Vytvoří textový oddělovač sekce pro výstup příkazu `all`.
-
-    :param name: Název sekce (např. název dílčí kontroly).
-    :return: Řetězec s ASCII oddělovačem a názvem sekce.
-    """
+    """Create a section separator for the ``all`` command."""
     return f"\n{'=' * 60}\n {name}\n{'=' * 60}"
 
 
-# ── cmd: hash ─────────────────────────────────────────────────────────────────
+# -- cmd: hash -----------------------------------------------------------------
 
 
 def cmd_hash(cfg: Config, _args: argparse.Namespace) -> int:
-    """
-    Porovná uložené hashe souborů z `review_cache.json` se stavem v pracovním adresáři.
-
-    Výstupem je souhrn nezměněných, změněných a chybějících souborů; návratová
-    hodnota je počet změněných a chybějících souborů.
-
-    :param cfg: Konfigurace projektu.
-    :param _args: Argumenty příkazové řádky (nepoužité).
-    :return: Počet detekovaných problémů (změněné + chybějící soubory).
-    """
+    """Compare cached file hashes with the working tree."""
     cache = _load_json(cfg.cache_file)
     file_hashes = cache.get("file_hashes", {})
     changed: list[tuple[str, str, str, str]] = []
@@ -563,16 +472,11 @@ def cmd_hash(cfg: Config, _args: argparse.Namespace) -> int:
     return len(changed) + len(missing)
 
 
-# ── cmd: cross-validate ──────────────────────────────────────────────────────
+# -- cmd: cross-validate -------------------------------------------------------
 
 
 def _extract_bug_severities(text: str) -> dict[str, str]:
-    """
-    Z markdownu `bugs.md` vytáhne mapování `BUG-XXX` → závažnost.
-
-    :param text: Obsah souboru `bugs.md`.
-    :return: Slovník s klíčem `BUG-XXX` a hodnotou textu závažnosti.
-    """
+    """Extract ``BUG-XXX`` to severity mappings from ``bugs.md``."""
     result: dict[str, str] = {}
     for m in re.finditer(r"### (BUG-\d+).*?\n.*?\*\*Závažnost:\*\*\s*(\S+)", text, re.DOTALL):
         result[m.group(1)] = m.group(2)
@@ -580,12 +484,7 @@ def _extract_bug_severities(text: str) -> dict[str, str]:
 
 
 def _extract_backlog_items(text: str) -> dict[str, str]:
-    """
-    Z backlogu vytáhne mapování identifikátoru položky na ID úlohy (např. `T03`).
-
-    :param text: Obsah souboru `refactoring_backlog.md`.
-    :return: Slovník `{ITEM_ID: task_prefix}`.
-    """
+    """Extract backlog item identifiers and their task prefixes."""
     result: dict[str, str] = {}
     for m in re.finditer(r"### \[(T\d+[a-z]?(?:/T\d+[a-z]?)?)\]\s+([A-Z][\w-]*\d+)", text):
         result[m.group(2)] = m.group(1)
@@ -593,13 +492,7 @@ def _extract_backlog_items(text: str) -> dict[str, str]:
 
 
 def _get_backlog_priority_section(text: str, item_id: str) -> str | None:
-    """
-    Určí, ve které sekci priorit (`Vysoká`, `Střední`, `Nízká`) se položka nachází.
-
-    :param text: Obsah backlogu.
-    :param item_id: ID položky, které se má vyhledat.
-    :return: Název sekce priority, nebo `None`, pokud položka není nalezena.
-    """
+    """Return the backlog priority section containing an item."""
     sections = list(re.finditer(r"^## (Vysoká|Střední|Nízká) priorita", text, re.MULTILINE))
     item_pos = text.find(item_id)
     if item_pos == -1:
@@ -613,17 +506,7 @@ def _get_backlog_priority_section(text: str, item_id: str) -> str | None:
 
 
 def cmd_cross_validate(cfg: Config, _args: argparse.Namespace) -> int:
-    """
-    Provádí křížovou validaci mezi `bugs.md`, backlogem a finálním auditem.
-
-    Kontroluje, zda se BUG ID vzájemně odkazují z backlogu a reportů, ověřuje
-    existenci reportů zapsaných v cache a porovnává závažnost BUG položek
-    s přiřazenou prioritou v backlogu.
-
-    :param cfg: Konfigurace projektu.
-    :param _args: Argumenty příkazové řádky (nepoužité).
-    :return: Počet chyb nalezených při validaci.
-    """
+    """Cross-validate bugs, backlog entries, reports, and cached metadata."""
     errors: list[str] = []
     warnings: list[str] = []
 
@@ -693,22 +576,11 @@ def cmd_cross_validate(cfg: Config, _args: argparse.Namespace) -> int:
     return len(errors)
 
 
-# ── cmd: coverage-gaps ────────────────────────────────────────────────────────
+# -- cmd: coverage-gaps --------------------------------------------------------
 
 
 def cmd_coverage_gaps(cfg: Config, _args: argparse.Namespace) -> int:
-    """
-    Hledá části kódu, které nejsou pokryté existujícími analýzami.
-
-    Kontroluje:
-    - Django modely vs. `orm_analysis.json` (T03),
-    - vlastní JS kód vs. `frontend_analysis.json` (T07),
-    - skripty vs. `scripts_analysis.json` (T10).
-
-    :param cfg: Konfigurace projektu.
-    :param _args: Argumenty příkazové řádky (nepoužité).
-    :return: Počet nalezených mezer v pokrytí.
-    """
+    """Find source areas not represented in existing analysis artifacts."""
     gaps: list[tuple[str, str, str]] = []
     info_lines: list[str] = []
 
@@ -775,20 +647,11 @@ def cmd_coverage_gaps(cfg: Config, _args: argparse.Namespace) -> int:
     return len(gaps)
 
 
-# ── cmd: id-inventory ─────────────────────────────────────────────────────────
+# -- cmd: id-inventory ---------------------------------------------------------
 
 
 def cmd_id_inventory(cfg: Config, _args: argparse.Namespace) -> int:
-    """
-    Vytvoří inventuru všech strukturovaných ID napříč artefakty v `.agents/`.
-
-    ID se čtou z `bugs.md`, backlogu, jednotlivých reportů i analytických JSON
-    souborů a následně se vypisují podezřelé případy (např. sirotčí BUG ID).
-
-    :param cfg: Konfigurace projektu.
-    :param _args: Argumenty příkazové řádky (nepoužité).
-    :return: Počet problémových ID (např. sirotčích BUG záznamů).
-    """
+    """Inventory structured identifiers across review artifacts."""
     id_locations: dict[str, set[str]] = defaultdict(set)
     trivial_ids = {"UTF-8", "ISO-8601"}
 
@@ -807,7 +670,7 @@ def cmd_id_inventory(cfg: Config, _args: argparse.Namespace) -> int:
         _scan_file(cfg.final_audit, "final_audit")
 
     for rpt in sorted(cfg.review_reports_dir.glob("*.md")):
-        if rpt.name == "README.md" or rpt.name == "final_audit.md":
+        if rpt.name in ("README.md", "final_audit.md"):
             continue
         _scan_file(rpt, rpt.stem)
 
@@ -847,20 +710,11 @@ def cmd_id_inventory(cfg: Config, _args: argparse.Namespace) -> int:
     return issues
 
 
-# ── cmd: lint-artifacts ───────────────────────────────────────────────────────
+# -- cmd: lint-artifacts -------------------------------------------------------
 
 
 def cmd_lint_artifacts(cfg: Config, _args: argparse.Namespace) -> int:
-    """
-    Ověří základní strukturu a konzistenci artefaktů v adresáři `.agents/`.
-
-    Kontroluje existenci klíčových adresářů, validitu JSON souborů, základní
-    strukturu `review_cache.json` a přítomnost povinných polí v `bugs.md`.
-
-    :param cfg: Konfigurace projektu.
-    :param _args: Argumenty příkazové řádky (nepoužité).
-    :return: Počet nalezených chyb.
-    """
+    """Validate the structure and consistency of ``.agents/`` artifacts."""
     errors: list[str] = []
     warnings: list[str] = []
 
@@ -930,21 +784,11 @@ def cmd_lint_artifacts(cfg: Config, _args: argparse.Namespace) -> int:
     return len(errors)
 
 
-# ── cmd: prompt-evolution ─────────────────────────────────────────────────────
+# -- cmd: prompt-evolution -----------------------------------------------------
 
 
 def cmd_prompt_evolution(cfg: Config, _args: argparse.Namespace) -> int:
-    """
-    Zkontroluje, které návrhy na úpravu promptu byly již zapracovány do
-    `review_codebase.md`.
-
-    Pro každý soubor v `prompt_evolution/` heuristicky porovná text návrhu
-    s aktuálním obsahem hlavního promptu a vypíše dosud neintegrované body.
-
-    :param cfg: Konfigurace projektu.
-    :param _args: Argumenty příkazové řádky (nepoužité).
-    :return: Počet návrhů, které dosud nejsou zapracovány.
-    """
+    """Report prompt-evolution proposals not reflected in the active prompt."""
     pe_dir = cfg.prompt_evolution_dir
     if not pe_dir.exists():
         print("[prompt-evolution] No prompt_evolution/ directory found.")
@@ -1026,20 +870,11 @@ def cmd_prompt_evolution(cfg: Config, _args: argparse.Namespace) -> int:
     return len(pending)
 
 
-# ── cmd: repo-structure ───────────────────────────────────────────────────────
+# -- cmd: repo-structure -------------------------------------------------------
 
 
 def cmd_repo_structure(cfg: Config, _args: argparse.Namespace) -> int:
-    """
-    Projde strukturu repozitáře a vygeneruje souhrnné statistiky o souborech.
-
-    Vypisuje počty souborů dle přípon, podle horních adresářů, seznam největších
-    zdrojových souborů a případné nové adresáře, které nejsou v `repository_map.json`.
-
-    :param cfg: Konfigurace projektu.
-    :param _args: Argumenty příkazové řádky (nepoužité).
-    :return: Vždy `0` (informativní příkaz bez chybového kódu).
-    """
+    """Report repository file, extension, line-count, and layout statistics."""
     ext_counts: Counter = Counter()
     ext_lines: Counter = Counter()
     large_files: list[tuple[str, int]] = []
@@ -1049,7 +884,7 @@ def cmd_repo_structure(cfg: Config, _args: argparse.Namespace) -> int:
     for root, dirs, files in os.walk(cfg.repo_root):
         dirs[:] = [d for d in dirs if d not in cfg.ignored_dirs]
         rel_root = Path(root).relative_to(cfg.repo_root)
-        top_dir = str(rel_root).split(os.sep)[0] if str(rel_root) != "." else "."
+        top_dir = str(rel_root).split(os.sep, maxsplit=1)[0] if str(rel_root) != "." else "."
 
         for f in files:
             fp = Path(root) / f
@@ -1058,7 +893,7 @@ def cmd_repo_structure(cfg: Config, _args: argparse.Namespace) -> int:
             dir_file_counts[top_dir] += 1
             total_files += 1
 
-            if ext in (".py", ".js", ".ts", ".html", ".css", ".scss", ".md", ".yaml", ".yml", ".sh"):
+            if ext in cfg.source_extensions:
                 try:
                     lines = len(fp.read_text(encoding="utf-8", errors="replace").splitlines())
                     ext_lines[ext] += lines
@@ -1103,20 +938,11 @@ def cmd_repo_structure(cfg: Config, _args: argparse.Namespace) -> int:
     return 0
 
 
-# ── cmd: status ───────────────────────────────────────────────────────────────
+# -- cmd: status ---------------------------------------------------------------
 
 
 def cmd_status(cfg: Config, _args: argparse.Namespace) -> int:
-    """
-    Vytiskne stručný dashboard aktuálního stavu review systému.
-
-    Zobrazuje stav úloh v cache, počty BUG položek dle závažnosti, rozdělení
-    backlogu podle priority, počet sledovaných souborů a stav analytických JSON.
-
-    :param cfg: Konfigurace projektu.
-    :param _args: Argumenty příkazové řádky (nepoužité).
-    :return: Vždy `0` (příkaz pouze tiskne informace).
-    """
+    """Print a concise dashboard for the current review workflow state."""
     cache = _load_json(cfg.cache_file)
     bugs_text = _read_text(cfg.bugs_file)
     backlog_text = _read_text(cfg.backlog_file)
@@ -1171,7 +997,7 @@ def cmd_status(cfg: Config, _args: argparse.Namespace) -> int:
     return 0
 
 
-# ── cmd: all ──────────────────────────────────────────────────────────────────
+# -- cmd: all ------------------------------------------------------------------
 
 ALL_CHECKS = [
     ("hash", cmd_hash),
@@ -1184,16 +1010,7 @@ ALL_CHECKS = [
 
 
 def cmd_all(cfg: Config, args: argparse.Namespace) -> int:
-    """
-    Spustí všechny dostupné validační příkazy v pevném pořadí.
-
-    Souhrnný výstup obsahuje oddělené sekce pro jednotlivé kontroly a na konci
-    celkový počet nalezených problémů.
-
-    :param cfg: Konfigurace projektu.
-    :param args: Argumenty příkazové řádky předané jednotlivým příkazům.
-    :return: Celkový počet problémů, oříznutý na maximum `125` kvůli návratovému kódu.
-    """
+    """Run all checks and return the bounded aggregate issue count."""
     total = 0
     for name, cmd in ALL_CHECKS:
         print(_section_header(name))
@@ -1204,7 +1021,7 @@ def cmd_all(cfg: Config, args: argparse.Namespace) -> int:
     return min(total, 125)
 
 
-# ── main ──────────────────────────────────────────────────────────────────────
+# -- main ----------------------------------------------------------------------
 
 COMMANDS: dict[str, tuple] = {
     "hash": (cmd_hash, "Compare file hashes against review_cache.json"),
@@ -1220,13 +1037,9 @@ COMMANDS: dict[str, tuple] = {
 
 
 def main() -> int:
-    """
-    Hlavní vstupní bod skriptu pro příkazovou řádku.
-
-    :return: Návratový kód podle výsledku zvoleného příkazu.
-    """
+    """Run the command-line interface and return its exit status."""
     parser = argparse.ArgumentParser(
-        description="Nástroje pro review — automatická kontrola artefaktů AI review systému",
+        description="Validate artifacts produced by the AIS CR codebase-review workflow",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )

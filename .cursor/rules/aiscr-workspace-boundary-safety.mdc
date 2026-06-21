@@ -8,7 +8,7 @@ alwaysApply: true
 <!-- aiscr:stop-anchor -->
 **Entry scope**
 
-- Stay in this `.cursor/rules/` surface and its same-vendor pointers first.
+- Stay in this Cursor rule surface and its same-vendor pointers first.
 - Do not open parallel vendor trees by default just in case.
 - Cross into another vendor tree only for explicit parity checks, generator work, or governance maintenance.
 
@@ -50,7 +50,7 @@ The agent may read/write these for normal tool operation (e.g. plans, temp files
 
 ### Relaxation — sibling repos (repos.toml registry)
 
-When the workspace is aiscr-management (or a repo that contains `.agents/local_configs/`), the rule is **relaxed** for **sibling repositories** named in **`.agents/local_configs/repos.toml`** (canonical machine registry; e.g. `aiscr-webamcr`, `aiscr-digiarchiv-2`). Paths to those sibling repo roots (under the same repos-root as the current repo, or under a configured parent) may be read/written when the user's task is to work with siblings (e.g. sync, governance, config propagation). The agent must still state which repo(s) and what operation, and follow existing governance (approved plan, confirmed branch per repo); it need not apply the same reluctance as for arbitrary system/personal paths. Derive the set of allowed sibling names from **`repos.toml`** only — not from scanning `local_configs/` subdirectories (orphan folders without a registry row are out of scope for this relaxation). If `repos.toml` is missing or lists no siblings, do not assume any sibling paths.
+When the workspace is aiscr-management (or a repo that contains `.agents/sync/`), the rule is **relaxed** for **sibling repositories** named in **`.agents/sync/repos.toml`** (canonical machine registry; e.g. `aiscr-webamcr`, `aiscr-digiarchiv-2`). Paths to those sibling repo roots (under the same repos-root as the current repo, or under a configured parent) may be read/written when the user's task is to work with siblings (e.g. sync, governance, config propagation). The agent must still state which repo(s) and what operation, and follow existing governance (approved plan, confirmed branch per repo); it need not apply the same reluctance as for arbitrary system/personal paths. Derive the set of allowed sibling names from **`repos.toml`** only, not from scanning retired payload directories. If `repos.toml` is missing or lists no siblings, do not assume any sibling paths.
 
 ### Config protection and no self-adaptation
 

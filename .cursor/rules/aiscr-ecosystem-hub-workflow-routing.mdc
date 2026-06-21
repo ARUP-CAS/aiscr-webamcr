@@ -8,7 +8,7 @@ alwaysApply: true
 <!-- aiscr:stop-anchor -->
 **Entry scope**
 
-- Stay in this `.cursor/rules/` surface and its same-vendor pointers first.
+- Stay in this Cursor rule surface and its same-vendor pointers first.
 - Do not open parallel vendor trees by default just in case.
 - Cross into another vendor tree only for explicit parity checks, generator work, or governance maintenance.
 
@@ -20,7 +20,7 @@ Entry scope — canonical stem: This file is vendor-neutral SSOT for this govern
 
 This repository is part of the AIS CR ecosystem. **Workflow entry points** for assistant integrations covered by the ecosystem matrix are **authored and validated in `aiscr-management`**. This shard is the narrow delivery surface of **`.agents/canonical_configs/governance_rules/aiscr-ecosystem-governance.md`**: use the parent rule for the full hub-vs-sibling policy, and use this file when the only question is where ecosystem-wide workflows should run.
 
-**When you need ecosystem-wide automation** (config sync orchestration, plan schema validation, `validate_tool_parity`, canonical workflow registry updates, `specialized_sync_assets.toml` changes):
+**When you need ecosystem-wide automation** (config sync orchestration, plan schema validation, `validate_tool_parity`, asset-manifest updates, or repository enrollment changes):
 
 1. Open a local clone of **`aiscr-management`** (sibling under your usual `repos-root`), or open [the hub repository on GitHub](https://github.com/ARUP-CAS/aiscr-management) and use **`gh`** or the web UI for issues and PRs.
 2. Use the hub's [config-sync plan](https://github.com/ARUP-CAS/aiscr-management/blob/main/.agents/plans/config-sync.plan.md) and [scripts README](https://github.com/ARUP-CAS/aiscr-management/blob/main/.agents/scripts/README.md). If your workspace **is** `aiscr-management`, the same files live under `.agents/…` locally.

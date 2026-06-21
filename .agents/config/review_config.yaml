@@ -115,6 +115,30 @@ tasks:
     priority: 11
     requires: [T01, T02, T03, T04, T05, T06, T07, T08, T09, T10]
 
+phase_outputs:
+  T01:
+    - .agents/analysis/repository_map.json
+  T02:
+    - .agents/analysis/dependency_graph.json
+  T03:
+    - .agents/analysis/orm_analysis.json
+  T04:
+    - .agents/analysis/docker_analysis.json
+  T05:
+    - .agents/analysis/security_analysis.json
+  T06:
+    - .agents/analysis/celery_analysis.json
+  T07:
+    - .agents/analysis/frontend_analysis.json
+  T08:
+    - .agents/analysis/documentation_analysis.json
+  T09:
+    - .agents/analysis/cicd_analysis.json
+  T10:
+    - .agents/analysis/scripts_analysis.json
+  T11:
+    - .agents/reports/review_reports/final_audit.md
+
 tech_stack:
   backend: [Python, "Django 5.2"]
   database: [PostgreSQL]
@@ -253,11 +277,15 @@ prompt_evolution:
   reviewer: human
   note: >
     Suggestions accumulate in prompt_evolution/ across sessions.
-    A human reviewer applies accepted suggestions to .agents/prompts/review_codebase.md
-    before starting a new audit cycle.
+    A human reviewer applies accepted suggestions to the canonical aiscr-codebase-review
+    workflow (delivered via skill surfaces) before starting a new audit cycle.
 
 follow_up:
-  prompt: .agents/prompts/review_update.md
+  # Incremental update (U01–U06) is owned by the canonical aiscr-codebase-review
+  # workflow mode `codebase-review-mode-update`; no standalone review_update.md
+  # prompt file remains in this repo.
+  workflow: aiscr-codebase-review
+  mode: codebase-review-mode-update
   phases: [U01, U02, U03, U04, U05, U06]
   output: .agents/reports/review_reports/final_audit.md  # Changelog section
   tools: .agents/scripts/review_tools.py
