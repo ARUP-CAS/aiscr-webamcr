@@ -81,8 +81,12 @@ Jsou definovány následující secrets:
      - Port Redis
    * - ``TEST_ENV``
      - Příznak testovacího prostředí (True/False)
-   * - ``DIGIARCHIV_URL``
-     - URL pro volání Digiarchiv API (id/)
+   * - ``DIGIARCHIV_UPDATE``
+     - URL pro volání indexace v Digiarchivu
+   * - ``DIGIARCHIV_PURL``
+     - základní URL pro generování odkazu na landing page v Digiarchivu
+   * - ``OAI_PURL``
+     - základní URL pro generování odkazu do OAI-PMH API
    * - ``DATACITE_URL``
      - API endpoint pro Datacite/IGSN DOI služby
    * - ``DOI_USER``
