@@ -100,7 +100,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - http://github.com/celery/py-amqp
    * - anyio
-     - 4.13.0
+     - 4.14.0
      - MIT
      - https://anyio.readthedocs.io/en/stable/versionhistory.html
    * - asgiref
@@ -116,11 +116,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://babel.pocoo.org/
    * - backports.zstd
-     - 1.5.0
+     - 1.6.0
      - PSF-2.0
      - https://github.com/rogdham/backports.zstd
    * - beautifulsoup4
-     - 4.14.3
+     - 4.15.0
      - MIT License
      - https://www.crummy.com/software/BeautifulSoup/bs4/
    * - billiard
@@ -136,7 +136,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://docs.celeryq.dev/
    * - certifi
-     - 2026.5.20
+     - 2026.6.17
      - Mozilla Public License 2.0 (MPL 2.0)
      - https://github.com/certifi/python-certifi
    * - cffi
@@ -184,7 +184,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Salamek/cron-descriptor
    * - cryptography
-     - 48.0.1
+     - 49.0.0
      - Apache-2.0 OR BSD-3-Clause
      - https://github.com/pyca/cryptography
    * - defusedxml
@@ -192,7 +192,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Python Software Foundation License
      - https://github.com/tiran/defusedxml
    * - distlib
-     - 0.4.2
+     - 0.4.3
      - Python Software Foundation License
      - https://github.com/pypa/distlib
    * - django-add-default-value
@@ -208,7 +208,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/bugov/django-auto-logout
    * - django-autocomplete-light
-     - 3.12.1
+     - 5.0.0
      - MIT License
      - http://django-autocomplete-light.rtfd.org
    * - django-cacheops
@@ -312,7 +312,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.29.3
+     - 3.29.4
      - MIT
      - https://github.com/tox-dev/py-filelock
    * - freezegun
@@ -372,7 +372,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.4.6
+     - 2.5.0
      - BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
      - https://numpy.org
    * - odfpy
@@ -432,7 +432,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pre-commit/pre-commit
    * - prettytable
-     - 3.17.0
+     - 3.18.0
      - BSD-3-Clause
      - https://github.com/prettytable/prettytable
    * - prometheus_client
@@ -456,7 +456,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - LGPL-2.1-or-later
      - https://py7zr.readthedocs.io/
    * - pyOpenSSL
-     - 26.2.0
+     - 26.3.0
      - Apache Software License
      - https://pyopenssl.org/
    * - pybcj
@@ -476,7 +476,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 6.13.2
+     - 6.13.3
      - BSD-3-Clause
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -540,7 +540,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0BSD OR CC0-1.0
      - https://github.com/AA-Turner/roman-numerals/blob/master/CHANGES.rst
    * - selenium
-     - 4.44.0
+     - 4.45.0
      - Apache-2.0
      - https://www.selenium.dev
    * - setuptools
@@ -648,8 +648,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache-2.0
      - https://github.com/python/tzdata
    * - tzlocal
-     - 5.3.1
-     - MIT License
+     - 5.4.3
+     - MIT
      - https://github.com/regebro/tzlocal/blob/master/CHANGES.txt
    * - uWSGI
      - 2.0.31
@@ -664,7 +664,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.4.3
+     - 21.5.1
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
@@ -676,7 +676,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/websocket-client/websocket-client.git
    * - wrapt
-     - 2.2.1
+     - 2.2.2
      - Copyright (c) 2013-2025, Graham Dumpleton
      - https://github.com/GrahamDumpleton/wrapt
    * - wsproto
