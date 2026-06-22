@@ -149,11 +149,11 @@ body.app-dark-theme {
 
     // Links in text content
     a:not(.btn) {
-        color: #5eb3ff;
+        color: $link-color-dark;
         text-decoration: none;
 
         &:hover {
-            color: #7ec5ff;
+            color: $link-hover-color-dark;
         }
     }
 
@@ -280,11 +280,21 @@ body.app-dark-theme {
 
     // Tables
     table {
-        &.table.table-striped.table-sm tbody tr td {
-            background-color: $gray-300-dark;
+        &.table.table-striped.table-sm tbody tr {
+            &:nth-child(odd) td {
+                background-color: $gray-300-dark;
 
-            a span.material-icons {
-                color: $body-text-dark;
+                a span.material-icons {
+                    color: $body-text-dark;
+                }
+            }
+
+            &:nth-child(even) td {
+                background-color: $gray-200-dark;
+
+                a span.material-icons {
+                    color: $body-text-dark;
+                }
             }
         }
 
@@ -318,9 +328,16 @@ body.app-dark-theme {
 
     }
 
-    .table>tbody>tr>td {
-        background-color: $gray-300-dark;
-        color: $body-text-dark;
+    .table>tbody>tr {
+        &:nth-child(odd)>td {
+            background-color: $gray-300-dark;
+            color: $body-text-dark;
+        }
+
+        &:nth-child(even)>td {
+            background-color: $gray-200-dark;
+            color: $body-text-dark;
+        }
     }
 
     .table>tbody>tr:hover>td,
