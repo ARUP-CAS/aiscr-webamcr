@@ -40,3 +40,21 @@ Třídy
 
       :return: Vrací ``False`` pro chybu reconnectu na zahozenou testovací DB, jinak ``True``.
 
+
+.. py:class:: DropMaintenance503Filter
+
+   Potlačí záznamy 503 na ``django.request`` při údržbovém režimu.
+
+   Když aplikace vrací vlastní 503 stránku během maintenance/oznámení, Django request
+   logger by mohl logovat tento stav jako error. Tento filtr zahodí pouze
+   503 odpovědi v aktivním údržbovém režimu.
+
+   **Metody:**
+
+   .. py:method:: filter()
+
+      Vrací ``False`` pro maintenance 503 logy, jinak ``True``.
+
+      :param record: Logovací záznam Django request loggeru.
+      :return: ``False`` pokud jde o maintenance 503, jinak ``True``.
+
