@@ -385,6 +385,15 @@ Funkce
    :param specific_module: Konkrétní modul, který se má zpracovat, nebo None pro všechny.
    :return: True, pokud byla vygenerována nějaká dokumentace.
 
+.. py:function:: _update_modules_index_rst(processed_modules)
+
+   Přepíše docs/source/04_django_aplikace/04_02_moduly/index.rst.
+
+   Kategorizuje zpracované moduly na doménové a systémové/integrační.
+   Soubor se zapíše pouze tehdy, pokud se obsah změní.
+
+   :param processed_modules: Seznam názvů modulů úspěšně zpracovaných v tomto běhu.
+
 .. py:function:: generate_rst_for_docs_script(source_file, output_dir, mode)
 
    Vygeneruje dokumentaci RST pro jeden Python skript v adresáři docs/.

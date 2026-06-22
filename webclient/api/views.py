@@ -1916,7 +1916,7 @@ class PasApiBaseView(PasApiPermissionMixin, APIView):
             )
         response = HttpResponse(metadata, content_type="application/xml", status=http_status)
         response["X-Record-ID"] = instance.ident_cely
-        response["Location"] = f"{settings.API_URL}{instance.ident_cely}"
+        response["Location"] = f"{settings.OAI_PURL}{instance.ident_cely}"
         return response
 
 
@@ -3068,13 +3068,6 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
-        if any(ch.isspace() for ch in evidencni_cislo):
-            return self._fail(
-                log_entry,
-                {"detail": _("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.whitespace_in_evidencni_cislo")},
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-
         if len(evidencni_cislo) > self._MAX_EVIDENCNI_CISLO_LENGTH:
             return self._fail(
                 log_entry,
@@ -3215,8 +3208,11 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             typ_zmeny=AKTUALIZACE_SN,
             uzivatel=user,
             vazba=instance.historie,
-            poznamka=_("api.views.SamostatnyNalezEvidencniCisloPatchView.history.note")
-            % {"old": old_value, "new": new_value},
+            poznamka="{}: {} -> {}".format(
+                _("api.views.SamostatnyNalezEvidencniCisloPatchView.history.note"),
+                old_value,
+                new_value,
+            ),
         )
         if instance.stav == SN_ARCHIVOVANY:
             Historie.objects.create(
