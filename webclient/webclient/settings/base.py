@@ -424,7 +424,10 @@ LOGGING = {
     "filters": {
         "user_filter": {
             "()": "core.logging_filters.UserLogFilter",
-        }
+        },
+        "ignore_maintenance_503": {
+            "()": "core.logging_filters.DropMaintenance503Filter",
+        },
     },
     "handlers": {
         "logstash": {
@@ -451,6 +454,7 @@ LOGGING = {
         "django.request": {
             "handlers": ["logstash", "console"],
             "level": "WARNING",
+            "filters": ["ignore_maintenance_503"],
             "propagate": False,
         },
         "request.timer": {
