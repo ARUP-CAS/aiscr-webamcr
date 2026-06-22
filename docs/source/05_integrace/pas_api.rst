@@ -281,7 +281,7 @@ Hodnota se předává jako query parametr v URL; tělo požadavku se neposílá.
 **Parametry**
 
 - ``{ident_cely}`` (cesta) — identifikátor záznamu (např. ``M-202400001-N00001``).
-- ``evidencni_cislo`` (query parametr, povinný) — nová hodnota; max. 255 znaků, nesmí být prázdná ani složená výhradně z bílých znaků. Vedoucí a koncové mezery jsou automaticky oříznuty; vnitřní mezery jsou povoleny.
+- ``evidencni_cislo`` (query parametr, povinný) — nová hodnota; max. 255 znaků, nesmí být prázdná ani složená výhradně z mezer. Vedoucí a koncové mezery jsou automaticky oříznuty; vnitřní mezery jsou povoleny.
 
 Příklad::
 
@@ -304,7 +304,7 @@ Příklad::
    * - ``404``
      - Záznam se zadaným ``ident_cely`` nebyl nalezen.
    * - ``422``
-     - Prázdná hodnota (po oříznutí bílých znaků), příliš dlouhá hodnota (> 255 znaků) nebo hodnota shodná s aktuální.
+     - Prázdná hodnota (po oříznutí mezer), příliš dlouhá hodnota (> 255 znaků) nebo hodnota shodná s aktuální.
    * - ``429``
      - Záznam je právě zpracováván jiným požadavkem (zámek záznamu); zkuste to znovu za chvíli.
 
@@ -315,8 +315,8 @@ Nahraje fotografii k existujícímu záznamu samostatného nálezu a připojí j
 Soubor je přijat jako binární příloha, ověřen proti poskytnutému SHA-512 digestu
 a zkontrolován na povolený formát. Operaci lze provést na záznamu v libovolném stavu
 včetně archivovaného; v takovém případě je v historii záznamu zaznamenána tichá rearchivace.
-Badatel může nahrát fotografii ke svému nálezu ve standardním stavu; archeolog a vyšší role
-mohou nahrát fotografii k záznamu v libovolném stavu včetně archivovaného.
+Badatel může nahrát fotografii ke svému nálezu podle standardních podmínek; archeolog a vyšší
+role mohou nahrát fotografii k záznamu v libovolném stavu včetně archivovaného.
 
 **Požadavek**
 
