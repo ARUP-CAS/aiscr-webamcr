@@ -1036,14 +1036,14 @@ input.coordInput {
 
   /* Modal Content (Image) */
   .modal-content-xxl {
-    background-color: rgb(0, 0, 0);
+    background-color: rgb(255, 255, 255);
     margin: auto;
     display: block;
     max-width: 1200px;
   }
 
   .modal-content {
-    background-color: rgb(0, 0, 0);
+    background-color: rgb(255, 255, 255);
   }
 
 
@@ -1222,4 +1222,14 @@ h6 {
 
 .select2-container--open {
   z-index: 1100;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
 }

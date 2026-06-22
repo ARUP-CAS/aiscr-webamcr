@@ -19,7 +19,7 @@ $body-text-dark: #e0e0e0;
 $body-bg-dark: #4a4a4a;
 
 // Primary colors (adjust brightness for dark mode)
-$primary-dark: #42a5f5;
+$primary-dark: #e2e2e2;
 $secondary-dark: lighten(#303641, 60);
 
 // Sidebar
@@ -34,20 +34,24 @@ $navbar-bg-dark: #3a3a3a;
 $navbar-text-dark: #e0e0e0;
 
 // Cards
-$card-bg-dark: #4a4a4a;
+$card-bg-dark: #2a2a2a;
 $card-border-dark: #666666;
 $app-card-shadow-dark: 0 0.5rem 1rem rgba(0, 0, 0, .5);
 $app-card-shadow-hover-dark: 0 0.5rem 1rem rgba(0, 0, 0, .7);
 
 // Inputs
-$input-bg-dark: #4a4a4a;
+$input-bg-dark: #5a5a5a;
 $input-border-color-dark: #666666;
 $input-text-color-dark: #e0e0e0;
 $input-placeholder-color-dark: #888888;
+$input-disabled-bg-dark: #3a3a3a;
+$input-disabled-border-color-dark: #5a5a5a;
+$input-disabled-text-color-dark: #b8b8b8;
+$input-disabled-placeholder-color-dark: #9a9a9a;
 
 // Borders
 $border-color-dark: #666666;
 
 // Footer
 $app-footer-top-bg-dark: rgba(#4a4a4a, .9);
-$app-footer-bottom-bg-dark: #4a4a4a;
+$app-footer-bottom-bg-dark: #6a6a6a;
