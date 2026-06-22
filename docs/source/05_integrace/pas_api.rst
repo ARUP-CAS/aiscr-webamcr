@@ -250,7 +250,6 @@ i pokud jsou v dokumentu přítomny.
    * - HTTP kód
      - Popis
    * - ``201``
-   * - ``201``
      - Záznam byl úspěšně vytvořen; tělo obsahuje XML metadata nového záznamu.
        Hlavička ``Location`` obsahuje PURL nového záznamu (konfigurovatelné přes secret ``OAI_PURL``).
    * - ``400``
