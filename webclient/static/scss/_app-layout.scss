@@ -214,8 +214,11 @@ table th {
 
 .bootstrap-select {
   .filter-option {
-    margin-top: -0.225rem !important;
     max-width: calc(100% - var(--bs-dropdown-toggle-after-width, 0.6em));
+
+    .filter-option-inner .filter-option-inner-inner {
+      margin-top: -0.125rem !important;
+    }
   }
 
   .dropdown-toggle {
