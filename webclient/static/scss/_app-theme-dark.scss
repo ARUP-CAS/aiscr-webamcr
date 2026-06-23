@@ -251,6 +251,11 @@ body.app-dark-theme {
             border-color: $card-border-dark;
         }
 
+        .modal-content-xxl {
+            background-color: $card-bg-dark;
+            border-color: $card-border-dark;
+        }
+
         .modal-header {
             background-color: $gray-200-dark;
             border-bottom-color: $card-border-dark;
@@ -363,6 +368,11 @@ body.app-dark-theme {
     // Modals
     .app-table-list-container {
         .modal-content {
+            background-color: $card-bg-dark;
+            border-color: $card-border-dark;
+        }
+
+        .modal-content-xxl {
             background-color: $card-bg-dark;
             border-color: $card-border-dark;
         }
