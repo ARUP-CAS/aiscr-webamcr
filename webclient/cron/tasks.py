@@ -423,6 +423,8 @@ def update_all_redis_snapshots(rewrite_existing=False, classes=None):
             if rewrite_existing or not r.exists(item.redis_snapshot_id):
                 key, value = item.generate_redis_snapshot()
                 if key and value:
+                    if rewrite_existing:
+                        pipe.delete(key)
                     pipe.hset(key, mapping=value)
                     change_items = change_items + 1
                     if (change_items % 1000) == 0:
@@ -510,8 +512,8 @@ def write_value_to_redis(key, value):
 def call_digiarchiv_update_task():
     """Zavolá URL digiarchívu pro spuštění aktualizace dat."""
     logger.debug("cron.tasks.call_digiarchiv_update_task.start")
-    url = settings.DIGIARCHIV_URL
-    requests.get(url)
+    url = settings.DIGIARCHIV_UPDATE
+    requests.get(url, timeout=10)
     logger.debug("cron.tasks.call_digiarchiv_update_task.end")
 
 

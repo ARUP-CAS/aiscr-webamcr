@@ -181,7 +181,7 @@ services:
       - prod-net
 
   prometheus:
-    image: prom/prometheus:v3.11.3
+    image: prom/prometheus:v3.12.0
     restart: always
     volumes:
       - ./prometheus:/etc/prometheus
@@ -256,7 +256,7 @@ services:
       - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
 
   selenium:
-    image: selenium/standalone-chromium:147.0
+    image: selenium/standalone-chromium:148.0
     ports:
       - 4444:4444
       - 7900:7900

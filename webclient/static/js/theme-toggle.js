@@ -93,6 +93,13 @@ function initializeThemeToggleButton(buttonId = 'theme-toggle-btn') {
 
     // Click handler
     themeBtn.addEventListener('click', () => {
+        // If Bootstrap isn't loaded (or loads asynchronously), avoid ReferenceError
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            const tooltip = bootstrap.Tooltip.getInstance(themeBtn);
+            if (tooltip) {
+                tooltip.hide();
+            }
+        }
         window.themeManager.toggleTheme();
     });
 
