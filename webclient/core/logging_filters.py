@@ -46,3 +46,29 @@ class DroppedTestDatabaseFilter(logging.Filter):
         if "does not exist" in message and "It seems to have just been dropped or renamed" in message:
             return False
         return True
+
+
+class DropMaintenance503Filter(logging.Filter):
+    """Potlačí záznamy 503 na ``django.request`` při údržbovém režimu.
+
+    Když aplikace vrací vlastní 503 stránku během maintenance/oznámení, Django request
+    logger by mohl logovat tento stav jako error. Tento filtr zahodí pouze
+    503 odpovědi v aktivním údržbovém režimu.
+    """
+
+    def filter(self, record):
+        """
+        Vrací ``False`` pro maintenance 503 logy, jinak ``True``.
+
+        :param record: Logovací záznam Django request loggeru.
+            :return: ``False`` pokud jde o maintenance 503, jinak ``True``.
+        """
+        if getattr(record, "status_code", None) != 503:
+            return True
+        try:
+            from core.utils import is_maintenance_in_progress
+        except Exception:
+            return True
+        if not is_maintenance_in_progress():
+            return True
+        return False

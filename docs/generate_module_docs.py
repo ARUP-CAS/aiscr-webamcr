@@ -1937,7 +1937,118 @@ def generate_all_modules(mode: str = "autodoc", specific_module: Optional[str] =
         for m in successful_modules:
             print(f"    - {m}")
 
+    # Update the top-level index only when all modules are (re)processed so the
+    # index stays in sync with whatever modules exist in the webclient tree.
+    if not specific_module:
+        _update_modules_index_rst(successful_modules)
+
     return total_generated > 0
+
+
+def _update_modules_index_rst(processed_modules: List[str]) -> None:
+    """Přepíše docs/source/04_django_aplikace/04_02_moduly/index.rst.
+
+    Kategorizuje zpracované moduly na doménové a systémové/integrační.
+    Soubor se zapíše pouze tehdy, pokud se obsah změní.
+
+    :param processed_modules: Seznam názvů modulů úspěšně zpracovaných v tomto běhu.
+    """
+    global changes_detected
+
+    domain_modules = {
+        "adb",
+        "arch_z",
+        "dj",
+        "dokument",
+        "ez",
+        "heslar",
+        "historie",
+        "komponenta",
+        "lokalita",
+        "nalez",
+        "neidentakce",
+        "notifikace_projekty",
+        "oznameni",
+        "pas",
+        "pian",
+        "projekt",
+    }
+    system_modules = {
+        "api",
+        "core",
+        "cron",
+        "fedora_management",
+        "healthcheck",
+        "pid",
+        "uzivatel",
+        "vypis",
+        "webclient",
+        "xml_generator",
+    }
+
+    module_set = set(processed_modules)
+    domain = sorted(m for m in module_set if m in domain_modules)
+    system = sorted(m for m in module_set if m in system_modules)
+    other = sorted(m for m in module_set if m not in domain_modules and m not in system_modules)
+
+    lines = [
+        "Moduly aplikace",
+        "==================",
+        "",
+        "Tato sekce popisuje moduly Django aplikace v širším kontextu běhu systému.",
+        "Seznam je členěn na doménové a systémové moduly podle aktuálního kódu aplikace.",
+        "",
+        "Doménové moduly",
+        "---------------",
+        "",
+        ".. toctree::",
+        "   :maxdepth: 2",
+        "   :caption: Obsah:",
+        "",
+    ]
+    for m in domain:
+        lines.append(f"   {m}/index")
+
+    lines += [
+        "",
+        "Systémové a integrační moduly",
+        "-----------------------------",
+        "",
+        ".. toctree::",
+        "   :maxdepth: 2",
+        "   :caption: Obsah:",
+        "",
+    ]
+    for m in system:
+        lines.append(f"   {m}/index")
+
+    if other:
+        lines += [
+            "",
+            "Ostatní moduly",
+            "--------------",
+            "",
+            ".. toctree::",
+            "   :maxdepth: 2",
+            "   :caption: Obsah:",
+            "",
+        ]
+        for m in other:
+            lines.append(f"   {m}/index")
+
+    lines.append("")
+    new_content = "\n".join(lines)
+    output_file = output_base_dir / "index.rst"
+
+    try:
+        if check_content_changed(new_content, output_file):
+            changes_detected = True
+            print("    ⚠ Modules index.rst needs update")
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(new_content)
+        vprint("    ✓ Modules index.rst updated")
+    except Exception as e:
+        print(f"    ✗ Error writing modules index.rst: {e}")
 
 
 def generate_rst_for_docs_script(source_file: Path, output_dir: Path, mode: str = "autodoc") -> bool:

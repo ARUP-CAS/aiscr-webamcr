@@ -23,11 +23,11 @@
         {% endif %}
       </div>
       {% if d.doi %}
-      <div class="align-self-center app-entity-color{% if showback %} app-pipe-right pr-5{% endif %}">
+      <div class="doi align-self-center app-entity-color{% if showback %} app-pipe-right pr-5{% endif %}">
           <span style="font-weight: normal">({{ d.doi }})</span>
           </div>
         {% endif %}
-      {% if showback %}<div id="document-back" class="align-self-center"><a href="" class="app-entity-color font-weight-normal"></a></div>{% endif %}
+      {% if showback %}<div id="document-back" class="backdetail align-self-center"><a href="" class="app-entity-color font-weight-normal"></a></div>{% endif %}
   </div>
   {% if showcontrols %}
     <div class="app-right app-controls">

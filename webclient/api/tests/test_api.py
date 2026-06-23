@@ -126,7 +126,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response["Content-Type"], "application/xml")
         self.assertEqual(response["X-Record-ID"], ident_cely)
-        self.assertEqual(response["Location"], f"{settings.API_URL}{ident_cely}")
+        self.assertEqual(response["Location"], f"{settings.OAI_PURL}{ident_cely}")
         self.assertIn(ident_cely, response.content.decode("utf-8"))
 
     def _build_mock_fedora_transaction(self, *args, **kwargs):
@@ -2428,20 +2428,14 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.assertIn("empty_evidencni_cislo", str(log.errors))
         self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
-    def test_evidencni_cislo_with_inner_space_returns_422(self):
-        """Hodnota ``evidencni_cislo`` obsahující mezeru uvnitř vrátí HTTP 422 a hodnota se neuloží."""
-
-        original_value = self.nalez.evidencni_cislo
+    def test_evidencni_cislo_with_inner_space_is_accepted(self):
+        """Hodnota ``evidencni_cislo`` obsahující mezeru uvnitř je přijata a uloží se včetně mezer."""
 
         response = self._patch(IDENT_CELY, evidencni_cislo="EC%20TEST%20001")
 
-        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
-        self.assertIn("detail", response.data)
-        log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
-        self.assertIn("whitespace_in_evidencni_cislo", str(log.errors))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.nalez.refresh_from_db()
-        self.assertEqual(self.nalez.evidencni_cislo, original_value)
-        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
+        self.assertEqual(self.nalez.evidencni_cislo, "EC TEST 001")
 
     def test_evidencni_cislo_is_stripped_before_saving(self):
         """Vedoucí a koncové bílé znaky se před uložením oříznou; do DB se zapíše čistá hodnota."""
