@@ -889,6 +889,7 @@ def get_list_map_records_in_envelope(layer, bounds, request):
         :return: Trojici ``(queryset, typ_prvku, název_geometrického_pole)`` nebo ``(None, None, None)``
             pro neznámou vrstvu.
     """
+    from copy import copy
     from types import SimpleNamespace
 
     from core.views import PermissionFilterMixin
@@ -905,8 +906,11 @@ def get_list_map_records_in_envelope(layer, bounds, request):
     )
 
     def perm_request(route):
-        # shim požadavku, aby check_filter_permission použil oprávnění výpisu (jeho route), ne mapového endpointu
-        return SimpleNamespace(user=request.user, resolver_match=SimpleNamespace(route=route, kwargs={}))
+        # kopie requestu s podstrčenou route výpisu, aby check_filter_permission použil jeho oprávnění
+        # (a zároveň zůstaly dostupné ostatní atributy requestu – user, GET, META, session …)
+        req = copy(request)
+        req.resolver_match = SimpleNamespace(route=route, kwargs={})
+        return req
 
     if layer == "pas":
         from pas.models import SamostatnyNalez

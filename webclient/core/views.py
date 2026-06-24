@@ -1971,9 +1971,12 @@ def post_ajax_get_list_map_data(request, layer):
 
         :return: Vrací výsledek volání ``JsonResponse()``.
     """
-    body = json.loads(request.body.decode("utf-8"))
-    bounds = body["bounds"]
-    zoom = body["zoom"]
+    try:
+        body = json.loads(request.body.decode("utf-8"))
+        bounds = body["bounds"]
+        zoom = body["zoom"]
+    except (json.JSONDecodeError, KeyError, TypeError):
+        return JsonResponse({"error": "Invalid request body"}, status=400)
     params = [
         bounds["topLeft"]["lng"],
         bounds["bottomLeft"]["lat"],

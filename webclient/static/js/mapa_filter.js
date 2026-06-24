@@ -285,11 +285,17 @@
         var heatPoints = [];
         var maxHeat = 0;
         heats.forEach(function (i) {
-            var geom = i.geom.split("(")[1].split(")")[0].split(" ");
+            if (!i.geom) {
+                return;
+            }
+            var match = i.geom.match(/POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)/i);
+            if (!match) {
+                return;
+            }
             if (i.pocet > maxHeat) {
                 maxHeat = i.pocet;
             }
-            heatPoints.push({ lat: parseFloat(geom[1]), lng: parseFloat(geom[0]), count: i.pocet });
+            heatPoints.push({ lat: parseFloat(match[2]), lng: parseFloat(match[1]), count: i.pocet });
         });
         heatLayer = new HeatmapOverlay(heatmapOptions);
         heatLayer.setData({ max: maxHeat, data: heatPoints });
