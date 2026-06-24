@@ -4,7 +4,6 @@ import logging
 import math
 import os
 from functools import cached_property
-from string import ascii_uppercase as letters
 from typing import Optional
 
 from arch_z.models import ArcheologickyZaznam
@@ -1173,40 +1172,29 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
 
 def get_dokument_soubor_name(dokument: Dokument, filename: str, add_to_index=1):
     """
-    Funkce pro získaní správného jména souboru.
+    Funkce pro získaní správného jména souboru – přiřadí první volný suffix.
 
-    :param dokument: Parametr ``dokument`` předává se do volání ``debug()``, ``filter()``, pracuje se s atributy ``ident_cely``, ``soubory``, vstupuje do návratové hodnoty.
-    :param filename: Parametr ``filename`` se předává do volání ``splitext()``, vstupuje do návratové hodnoty.
-    :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
+    Suffix je část názvu mezi identem (bez pomlček) a příponou; možné hodnoty jsou prázdný řetězec
+    (základní soubor ``{ident}.{ext}``) a písmena ``A``–``Z``. Vybírá se první volný slot, takže po
+    přejmenování či smazání souboru se znovu využijí uvolněná místa (nepoužívá se max + 1, aby uvolněné
+    nižší sloty nezpůsobily falešné hlášení o dosažení maxima).
 
-        :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.
+    :param dokument: Dokument, ke kterému se soubor nahrává; pracuje se s atributy ``ident_cely``, ``soubory``.
+    :param filename: Název nahrávaného souboru, ze kterého se přebírá přípona.
+    :param add_to_index: Zachováno kvůli zpětné kompatibilitě, hodnota se nepoužívá.
+    :return: Nový název souboru, nebo ``False`` pokud jsou všechny suffixy obsazené.
     """
+    from core.views import get_dokument_free_suffixes
+
     logger.debug(
         "dokument.models.get_dokument_soubor_name.start",
         extra={"ident_cely": dokument.ident_cely, "index": add_to_index},
     )
-    files = dokument.soubory.soubory.all().filter(nazev__icontains=dokument.ident_cely.replace("-", ""))
-    logger.debug("dokument.models.get_dokument_soubor_name", extra={"file": files})
-    if not files.exists():
-        return dokument.ident_cely.replace("-", "") + os.path.splitext(filename)[1]
-    else:
-        filtered_files = files.filter(nazev__iregex=r"(([A-Z]\.\w+)$)")
-        if filtered_files.exists():
-            list_last_char = []
-            for file in filtered_files:
-                split_file = os.path.splitext(file.nazev)
-                list_last_char.append(split_file[0][-1])
-            last_char = max(list_last_char)
-            logger.debug("dokument.models.get_dokument_soubor_name", extra={"value": last_char})
-            if last_char != "Z" or add_to_index == 0:
-                return (
-                    dokument.ident_cely.replace("-", "")
-                    + letters[(letters.index(last_char) + add_to_index)]
-                    + os.path.splitext(filename)[1]
-                )
-            else:
-                logger.warning("dokument.models.get_dokument_soubor_name.cannot_be_loaded", extra={"value": last_char})
-                return False
-
-        else:
-            return dokument.ident_cely.replace("-", "") + "A" + os.path.splitext(filename)[1]
+    free_suffixes = get_dokument_free_suffixes(dokument)
+    if not free_suffixes:
+        logger.warning(
+            "dokument.models.get_dokument_soubor_name.cannot_be_loaded",
+            extra={"ident_cely": dokument.ident_cely},
+        )
+        return False
+    return dokument.ident_cely.replace("-", "") + free_suffixes[0] + os.path.splitext(filename)[1]

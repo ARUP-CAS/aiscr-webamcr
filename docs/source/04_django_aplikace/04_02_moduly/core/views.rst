@@ -822,13 +822,16 @@ Funkce
 
 .. py:function:: get_finds_soubor_name(find, filename, add_to_index)
 
-   Funkce pro získaní jména souboru pro samostatný nález.
+   Funkce pro získaní jména souboru pro samostatný nález – přiřadí první volný suffix.
 
-   :param find: Textový název, klíč nebo výraz ``find`` používaný v rámci operace.
-   :param filename: Parametr ``filename`` se předává do volání ``splitext()``, ``warning()``, vstupuje do návratové hodnoty.
-   :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
+   Suffix má tvar ``F01`` … ``F99``. Vybírá se první volný slot, takže po přejmenování či smazání
+   souboru se znovu využijí uvolněná místa (nepoužívá se max + 1, aby uvolněné nižší sloty
+   nezpůsobily falešné hlášení o dosažení maxima).
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.
+   :param find: Samostatný nález, ke kterému se soubor nahrává; pracuje se s atributy ``ident_cely``, ``soubory``.
+   :param filename: Název nahrávaného souboru, ze kterého se přebírá přípona.
+   :param add_to_index: Zachováno kvůli zpětné kompatibilitě, hodnota se nepoužívá.
+   :return: Nový název souboru, nebo ``False`` pokud jsou všechny suffixy obsazené.
 
 .. py:function:: _obsazene_suffixy(navazany_objekt, base, current_soubor)
 

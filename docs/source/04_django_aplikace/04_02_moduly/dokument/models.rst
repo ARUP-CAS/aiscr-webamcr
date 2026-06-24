@@ -396,10 +396,14 @@ Funkce
 
 .. py:function:: get_dokument_soubor_name(dokument, filename, add_to_index)
 
-   Funkce pro získaní správného jména souboru.
+   Funkce pro získaní správného jména souboru – přiřadí první volný suffix.
 
-   :param dokument: Parametr ``dokument`` předává se do volání ``debug()``, ``filter()``, pracuje se s atributy ``ident_cely``, ``soubory``, vstupuje do návratové hodnoty.
-   :param filename: Parametr ``filename`` se předává do volání ``splitext()``, vstupuje do návratové hodnoty.
-   :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
+   Suffix je část názvu mezi identem (bez pomlček) a příponou; možné hodnoty jsou prázdný řetězec
+   (základní soubor ``{ident}.{ext}``) a písmena ``A``–``Z``. Vybírá se první volný slot, takže po
+   přejmenování či smazání souboru se znovu využijí uvolněná místa (nepoužívá se max + 1, aby uvolněné
+   nižší sloty nezpůsobily falešné hlášení o dosažení maxima).
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.
+   :param dokument: Dokument, ke kterému se soubor nahrává; pracuje se s atributy ``ident_cely``, ``soubory``.
+   :param filename: Název nahrávaného souboru, ze kterého se přebírá přípona.
+   :param add_to_index: Zachováno kvůli zpětné kompatibilitě, hodnota se nepoužívá.
+   :return: Nový název souboru, nebo ``False`` pokud jsou všechny suffixy obsazené.
