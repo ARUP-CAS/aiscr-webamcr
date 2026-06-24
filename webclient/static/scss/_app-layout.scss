@@ -59,7 +59,7 @@ body {
 
 #app-page-wrapper {
   @media (min-width: 768px) {
-    min-width: calc(100vh - 300px);
+    min-width: 0;
   }
 
   width: 100%;
@@ -166,6 +166,34 @@ body {
     }
   }
 }
+
+.model-coor-layout {
+  container-name: model-coor;
+  container-type: inline-size;
+}
+
+.model-coor-left {
+  container-name: model-coor-left;
+  container-type: inline-size;
+}
+
+@container model-coor (min-width: 851px) {
+  .model-coor-layout {
+
+    >.model-coor-left {
+      flex: 0 1 clamp(250px, 20%, 300px);
+      min-width: 250px;
+      max-width: 300px;
+    }
+
+    >.model-coor-right {
+      flex: 1 1 420px;
+      min-width: 420px;
+      max-width: none;
+    }
+  }
+}
+
 
 .form-group {
   margin-bottom: 0.15rem !important;
