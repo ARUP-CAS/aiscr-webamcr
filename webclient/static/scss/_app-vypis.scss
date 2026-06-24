@@ -124,7 +124,14 @@
       }
 
       .vypis-field-row {
-        grid-template-columns: minmax(170px, 210px) minmax(0, 1fr);
+        grid-template-columns: minmax(160px, 180px) minmax(0, 1fr);
+        column-gap: 0;
+
+        .label,
+        .content {
+          padding-left: 0.1rem;
+          padding-right: 0.1rem;
+        }
       }
     }
 

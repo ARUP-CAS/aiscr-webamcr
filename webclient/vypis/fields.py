@@ -153,10 +153,10 @@ class SectionNameWithAccessor(SimpleSectionTemplateName):
         """
         if self.foreign_key:
             if getattr(instance, self.foreign_key):
-                return f"{self.name}&nbsp;{getattr(getattr(instance, self.foreign_key), self.accessor)}"
+                return f"<div>{self.name}&nbsp;{getattr(getattr(instance, self.foreign_key), self.accessor)}</div>"
             else:
                 return None
-        return f"{self.name}&nbsp;{getattr(instance, self.accessor)}"
+        return f"<div>{self.name}&nbsp;{getattr(instance, self.accessor)}</div>"
 
 
 class PianSectionNameWithAccessor(SectionNameWithAccessor):
@@ -173,7 +173,7 @@ class PianSectionNameWithAccessor(SectionNameWithAccessor):
         if getattr(instance, self.foreign_key):
             pian = getattr(instance, self.foreign_key)
             stav = getattr(pian, self.accessor[1])()
-            return f"{self.name}&nbsp;{getattr(pian, self.accessor[0])}&nbsp;({stav})&nbsp;-&nbsp;{getattr(pian, self.accessor[2])}&nbsp;({getattr(pian, self.accessor[3])})"
+            return f"<div>{self.name}&nbsp;{getattr(pian, self.accessor[0])}&nbsp;({stav})&nbsp;-&nbsp;{getattr(pian, self.accessor[2])}&nbsp;({getattr(pian, self.accessor[3])})</div>"
         else:
             return None
 
@@ -881,9 +881,9 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
             :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``new_name``.
         """
         if len(self.accessor) > 2:
-            new_name = f"{self.name}&nbsp;{getattr(instance, self.accessor[0])}&nbsp;-&nbsp;{getattr(instance, self.accessor[1])}"
+            new_name = f"<div>{self.name}&nbsp;{getattr(instance, self.accessor[0])}&nbsp;-&nbsp;{getattr(instance, self.accessor[1])}</div>"
         else:
-            new_name = f"{self.name}&nbsp;{getattr(instance, self.accessor[0])}"
+            new_name = f"<div>{self.name}&nbsp;{getattr(instance, self.accessor[0])}</div>"
         if getattr(instance, self.accessor[-1]):
             return f"{new_name} ({getattr(instance, self.accessor[-1])})"
         return new_name
@@ -913,7 +913,7 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
 
             :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``new_name``.
         """
-        new_name = f"{self.name} {getattr(instance, self.accessor[0])}"
+        new_name = f"<div>{self.name} {getattr(instance, self.accessor[0])}</div>"
         if getattr(instance, self.accessor[-1]):
             return f"{new_name}<div class='mime-type' style='white-space: pre;'> ({getattr(instance, self.accessor[-1])})</div>"
         return new_name
@@ -952,7 +952,7 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
             second_part += f"&nbsp;({presna_datace})"
         if aktivity:
             third_part = f"&nbsp;({';&nbsp;'.join([str(a) for a in aktivity])})"
-        return f"{self.name}&nbsp;{getattr(instance, self.accessor[0])}&nbsp;-&nbsp;{obdobi}{second_part}&nbsp;-&nbsp;{areal}{third_part}"
+        return f"<div>{self.name}&nbsp;{getattr(instance, self.accessor[0])}&nbsp;-&nbsp;{obdobi}{second_part}&nbsp;-&nbsp;{areal}{third_part}</div>"
 
 
 class SubSectionField:
