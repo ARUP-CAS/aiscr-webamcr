@@ -10,7 +10,7 @@ využívají odlehčené náhradní objekty a mock ``_send_request``.
 from string import ascii_uppercase
 from unittest import mock
 
-from core.repository_connector import FedoraRepositoryConnector, FedoraRequestType
+from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraRequestType
 from core.views import (
     get_dokument_free_suffixes,
     get_finds_free_suffixes,
@@ -149,6 +149,8 @@ class RepositoryRenameTest(SimpleTestCase):
     def _connector(self):
         # Obejdeme __init__, který vyžaduje request kontext a uživatele.
         connector = FedoraRepositoryConnector.__new__(FedoraRepositoryConnector)
+        connector.transaction = None
+        connector.transaction_uid = None
         return connector
 
     def test_parse_ldp_children(self):
@@ -209,6 +211,26 @@ class RepositoryRenameTest(SimpleTestCase):
             send.side_effect = [get_response]
             connector._rename_child_filename(child_url, "CDL202500001A", "CDL202500001B")
         self.assertEqual(send.call_count, 1)  # jen GET, žádný PATCH
+
+    def test_rename_child_filename_raises_when_metadata_unavailable(self):
+        """Nedostupná metadata potomka vyhodí FedoraError (kvůli rollbacku transakce)."""
+        connector = self._connector()
+        child_url = "http://fedora/rest/AMCR/record/C-DL-202500001/file/uuid/orig"
+        with mock.patch.object(connector, "_send_request", return_value=None):
+            with self.assertRaises(FedoraError):
+                connector._rename_child_filename(child_url, "CDL202500001A", "CDL202500001B")
+        with mock.patch.object(connector, "_send_request", return_value=_Response("", 500)):
+            with self.assertRaises(FedoraError):
+                connector._rename_child_filename(child_url, "CDL202500001A", "CDL202500001B")
+
+    def test_update_file_name_raises_when_container_unavailable(self):
+        """Nedostupný kontejner souboru vyhodí FedoraError místo tichého návratu."""
+        connector = self._connector()
+        connector.record = mock.Mock(ident_cely="C-DL-202500001")
+        soubor = mock.Mock(repository_uuid="uuid", pk=1)
+        with mock.patch.object(connector, "_send_request", return_value=_Response("", 404)):
+            with self.assertRaises(FedoraError):
+                connector.update_file_name(soubor, "CDL202500001A.jpg", "CDL202500001B.jpg")
 
 
 class UploadNameFirstFreeSlotTest(SimpleTestCase):

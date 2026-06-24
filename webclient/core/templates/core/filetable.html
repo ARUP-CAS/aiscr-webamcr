@@ -93,15 +93,13 @@
       }
     }
     //script for modal for rename files
-    if (document.getElementsByClassName("file-prejmenovat-btn")){
-      const renameElements = document.getElementsByClassName("file-prejmenovat-btn")
-      for (let i = 0; i < renameElements.length; i++){
-        const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
-        formID: "prejmenovat-soubor-form",
-        modalFormID: "#prejmenovat-soubor-form",
-        })
-        new Modal(options, renameElements.item(i).id);
-      }
+    const renameElements = document.getElementsByClassName("file-prejmenovat-btn")
+    for (let i = 0; i < renameElements.length; i++){
+      const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      formID: "prejmenovat-soubor-form",
+      modalFormID: "#prejmenovat-soubor-form",
+      })
+      new Modal(options, renameElements.item(i).id);
     }
   });
   //Show soubory modal

@@ -1556,7 +1556,12 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 "core_repository_connector.update_file_name.container_unavailable",
                 extra={"uuid": uuid, "ident_cely": self.record.ident_cely},
             )
-            return
+            raise FedoraError(
+                container_url,
+                "core_repository_connector.update_file_name.container_unavailable",
+                container_response.status_code if container_response is not None else None,
+                fedora_transaction=self.transaction,
+            )
         for child_url in self._parse_ldp_children(container_response.text):
             self._rename_child_filename(child_url, old_base, new_base)
         logger.debug(
@@ -1591,7 +1596,12 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 "core_repository_connector._rename_child_filename.metadata_unavailable",
                 extra={"child_url": child_url},
             )
-            return
+            raise FedoraError(
+                metadata_url,
+                "core_repository_connector._rename_child_filename.metadata_unavailable",
+                metadata_response.status_code if metadata_response is not None else None,
+                fedora_transaction=self.transaction,
+            )
         filename_pattern = re.compile(r"<" + re.escape(self.EBUCORE_FILENAME_PREDICATE) + r">\s+\"((?:[^\"\\]|\\.)*)\"")
         for old_value in set(filename_pattern.findall(metadata_response.text)):
             if old_base and old_base in old_value:

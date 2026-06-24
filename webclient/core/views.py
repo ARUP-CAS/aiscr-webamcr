@@ -381,6 +381,9 @@ def rename_file(request, typ_vazby, ident_cely, pk):
             extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": pk, "error": err},
         )
         messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
+        # POST jde přes AJAX z modalu – ten očekává JSON s přesměrováním, ne HTTP redirect.
+        if request.method == "POST":
+            return JsonResponse({"redirect": _rename_file_safe_redirect(request)})
         return redirect(_rename_file_safe_redirect(request))
 
     navazany_objekt = soubor.vazba.navazany_objekt
