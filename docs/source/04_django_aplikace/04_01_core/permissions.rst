@@ -251,6 +251,9 @@ Používá se pro bližší specifikaci akce či součásti view, pro které se 
 - ``soubor_stahnout_pas``
 - ``soubor_nahradit_dokument``
 - ``soubor_nahradit_pas``
+- ``soubor_prejmenovat_dokument``
+- ``soubor_prejmenovat_model3d``
+- ``soubor_prejmenovat_pas``
 - ``soubor_nahled_projekt``
 - ``soubor_nahled_dokument``
 - ``soubor_nahled_model3d``
@@ -279,4 +282,4 @@ Používá se pro bližší specifikaci akce či součásti view, pro které se 
 - ``vypis_ez``
 - ``historie_fedora``
 
-**Celkem:** 149 akcí
+**Celkem:** 152 akcí

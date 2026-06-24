@@ -799,6 +799,27 @@ Funkce
 
    :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
+.. py:function:: _rename_file_safe_redirect(request)
+
+   Vrátí bezpečnou návratovou URL z parametru ``next`` požadavku na přejmenování.
+
+   :param request: HTTP požadavek s parametrem ``next`` v GET nebo POST.
+   :return: Bezpečná návratová URL nebo domovská stránka.
+
+.. py:function:: rename_file(request, typ_vazby, ident_cely, pk)
+
+   Přejmenuje existující soubor změnou suffixu na volnou povolenou hodnotu.
+
+   Mění název v databázi (``soubor.nazev``), ve Fedoře (``ebucore:filename`` souboru i jeho potomků)
+   a vyvolá přegenerování XML metadat navázaného záznamu. Dostupné jen pro dokumenty (3D modely)
+   a samostatné nálezy, které mají suffixové schéma názvů.
+
+   :param request: HTTP požadavek s metodou GET (modal) nebo POST (provedení).
+   :param typ_vazby: Typ vazby souboru na navázaný doménový objekt.
+   :param ident_cely: Identifikátor záznamu, u kterého se soubor přejmenovává.
+   :param pk: Primární klíč přejmenovávaného souboru.
+   :return: Vrací modal (GET) nebo ``JsonResponse`` s přesměrováním či chybou (POST).
+
 .. py:function:: get_finds_soubor_name(find, filename, add_to_index)
 
    Funkce pro získaní jména souboru pro samostatný nález.
@@ -808,6 +829,44 @@ Funkce
    :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
 
    :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.
+
+.. py:function:: _obsazene_suffixy(navazany_objekt, base, current_soubor)
+
+   Vrátí množinu suffixů (částí názvu mezi identem a příponou) obsazených soubory záznamu.
+
+   :param navazany_objekt: Navázaný objekt (dokument nebo samostatný nález) s vazbou ``soubory``.
+   :param base: Identifikátor záznamu bez pomlček, kterým názvy souborů začínají.
+   :param current_soubor: Soubor, který se přejmenovává a do obsazených suffixů se nezapočítává.
+   :return: Množina řetězců suffixů obsazených ostatními soubory.
+
+.. py:function:: get_dokument_free_suffixes(dokument, current_soubor)
+
+   Vrátí seznam volných suffixů pro soubory dokumentu (3D modelu).
+
+   Suffix je část názvu mezi identem (bez pomlček) a příponou. Možné hodnoty jsou prázdný řetězec
+   (základní soubor ``{ident}.{ext}``) a písmena ``A``–``Z``. Suffix přejmenovávaného souboru se
+   považuje za volný, aby jej bylo možné v nabídce ponechat.
+
+   :param dokument: Dokument, jehož soubory se zkoumají.
+   :param current_soubor: Přejmenovávaný soubor (vyloučen z obsazených suffixů).
+   :return: Seznam volných suffixů v pořadí prázdný slot, ``A`` … ``Z``.
+
+.. py:function:: get_finds_free_suffixes(find, current_soubor)
+
+   Vrátí seznam volných suffixů pro soubory samostatného nálezu.
+
+   Suffix má tvar ``F01`` … ``F99``. Suffix přejmenovávaného souboru se považuje za volný.
+
+   :param find: Samostatný nález, jehož soubory se zkoumají.
+   :param current_soubor: Přejmenovávaný soubor (vyloučen z obsazených suffixů).
+   :return: Seznam volných suffixů v pořadí ``F01`` … ``F99``.
+
+.. py:function:: get_soubor_suffix(soubor)
+
+   Vrátí aktuální suffix souboru (část názvu mezi identem záznamu bez pomlček a příponou).
+
+   :param soubor: Soubor, jehož suffix se zjišťuje.
+   :return: Řetězec suffixu (může být prázdný); ``None`` pokud název neodpovídá očekávanému vzoru.
 
 .. py:function:: get_projekt_soubor_name(projekt, file_name)
 

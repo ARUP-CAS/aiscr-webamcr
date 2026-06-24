@@ -10,6 +10,7 @@ import zipfile
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
+from string import ascii_uppercase as letters
 
 import pandas
 from adb.models import Adb
@@ -23,7 +24,7 @@ from core.constants import (
     ROLE_BADATEL_ID,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
 )
-from core.forms import CheckStavNotChangedForm, TransaltionImportForm
+from core.forms import CheckStavNotChangedForm, RenameSouborForm, TransaltionImportForm
 from core.ident_cely import get_record_from_ident
 from core.message_constants import (
     APPLICATION_RESTART_ERROR,
@@ -32,6 +33,9 @@ from core.message_constants import (
     PRISTUP_ZAKAZAN,
     PROJEKT_NEKDO_ZMENIL_STAV,
     SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
+    SOUBOR_SE_NEPOVEDLO_PREJMENOVAT,
+    SOUBOR_SUFFIX_OBSAZEN,
+    SOUBOR_USPESNE_PREJMENOVAN,
     SPATNY_ZAZNAM_SOUBOR_VAZBA,
     SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     TRANSLATION_DELETE_CANNOT_MAIN,
@@ -328,6 +332,131 @@ def delete_file(request, typ_vazby, ident_cely, pk):
             "button": _("core.views.smazat.submitButton.text"),
         }
         return render(request, "core/transakce_modal.html", context)
+
+
+# Zástupná hodnota pro prázdný (bezpísmenný) slot dokumentu – ``ChoiceField`` s ``required=True``
+# nepřijímá prázdný řetězec jako platnou volbu, proto se v nabídce reprezentuje sentinelem.
+RENAME_BASE_SLOT_VALUE = "__zaklad__"
+
+
+def _rename_file_safe_redirect(request):
+    """
+    Vrátí bezpečnou návratovou URL z parametru ``next`` požadavku na přejmenování.
+
+    :param request: HTTP požadavek s parametrem ``next`` v GET nebo POST.
+    :return: Bezpečná návratová URL nebo domovská stránka.
+    """
+    next_url = request.POST.get("next") if request.method == "POST" else request.GET.get("next")
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+        return next_url
+    return reverse("core:home")
+
+
+@login_required
+@require_http_methods(["POST", "GET"])
+def rename_file(request, typ_vazby, ident_cely, pk):
+    """
+    Přejmenuje existující soubor změnou suffixu na volnou povolenou hodnotu.
+
+    Mění název v databázi (``soubor.nazev``), ve Fedoře (``ebucore:filename`` souboru i jeho potomků)
+    a vyvolá přegenerování XML metadat navázaného záznamu. Dostupné jen pro dokumenty (3D modely)
+    a samostatné nálezy, které mají suffixové schéma názvů.
+
+    :param request: HTTP požadavek s metodou GET (modal) nebo POST (provedení).
+    :param typ_vazby: Typ vazby souboru na navázaný doménový objekt.
+    :param ident_cely: Identifikátor záznamu, u kterého se soubor přejmenovává.
+    :param pk: Primární klíč přejmenovávaného souboru.
+    :return: Vrací modal (GET) nebo ``JsonResponse`` s přesměrováním či chybou (POST).
+    """
+    logger.debug(
+        "core.views.rename_file.start",
+        extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": pk, "method": request.method},
+    )
+    soubor: Soubor = get_object_or_404(Soubor, pk=pk)
+    try:
+        check_soubor_vazba(typ_vazby, ident_cely, pk)
+    except ZaznamSouborNotmatching as err:
+        logger.debug(
+            "core.views.rename_file.vazba_error",
+            extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": pk, "error": err},
+        )
+        messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
+        return redirect(_rename_file_safe_redirect(request))
+
+    navazany_objekt = soubor.vazba.navazany_objekt
+    base = navazany_objekt.ident_cely.replace("-", "")
+    extension = os.path.splitext(soubor.nazev)[1]
+    if isinstance(navazany_objekt, Dokument):
+        free_suffixes = get_dokument_free_suffixes(navazany_objekt, soubor)
+    elif isinstance(navazany_objekt, SamostatnyNalez):
+        free_suffixes = get_finds_free_suffixes(navazany_objekt, soubor)
+    else:
+        logger.warning(
+            "core.views.rename_file.unsupported_record",
+            extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": pk},
+        )
+        messages.add_message(request, messages.ERROR, SOUBOR_SE_NEPOVEDLO_PREJMENOVAT)
+        return JsonResponse({"success": False}, status=400)
+    suffix_choices = [(suffix or RENAME_BASE_SLOT_VALUE, f"{base}{suffix}{extension}") for suffix in free_suffixes]
+
+    if request.method == "POST":
+        form = RenameSouborForm(request.POST, suffix_choices=suffix_choices)
+        if not form.is_valid():
+            messages.add_message(request, messages.ERROR, SOUBOR_SUFFIX_OBSAZEN)
+            return JsonResponse({"success": False}, status=400)
+        chosen_suffix = form.cleaned_data["suffix"]
+        if chosen_suffix == RENAME_BASE_SLOT_VALUE:
+            chosen_suffix = ""
+        new_nazev = f"{base}{chosen_suffix}{extension}"
+        old_nazev = soubor.nazev
+        if new_nazev == old_nazev:
+            messages.add_message(request, messages.SUCCESS, SOUBOR_USPESNE_PREJMENOVAN)
+            return JsonResponse({"redirect": _rename_file_safe_redirect(request)})
+        fedora_transaction = FedoraTransaction()
+        try:
+            with transaction.atomic():
+                connector = FedoraRepositoryConnector(navazany_objekt, fedora_transaction)
+                connector.update_file_name(soubor, old_nazev, new_nazev)
+                soubor.zaznamenej_prejmenovani(request.user, old_nazev, new_nazev)
+                soubor.nazev = new_nazev
+                soubor.active_transaction = fedora_transaction
+                soubor.close_active_transaction_when_finished = True
+                soubor.save()
+        except FedoraUpdatedByAnotherTransactionError as err:
+            logger.debug(
+                "core.views.rename_file.another_transaction",
+                extra={"pk": pk, "error": err, "transaction": fedora_transaction.uid},
+            )
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            messages.add_message(request, messages.ERROR, SOUBOR_SE_NEPOVEDLO_PREJMENOVAT)
+            return JsonResponse({"success": False}, status=400)
+        except FedoraError as err:
+            logger.error(
+                "core.views.rename_file.fedora_error",
+                extra={"pk": pk, "error": err, "transaction": fedora_transaction.uid},
+            )
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            messages.add_message(request, messages.ERROR, SOUBOR_SE_NEPOVEDLO_PREJMENOVAT)
+            return JsonResponse({"success": False}, status=400)
+        logger.debug(
+            "core.views.rename_file.success",
+            extra={"pk": pk, "old_nazev": old_nazev, "new_nazev": new_nazev, "transaction": fedora_transaction.uid},
+        )
+        messages.add_message(request, messages.SUCCESS, SOUBOR_USPESNE_PREJMENOVAN)
+        return JsonResponse({"redirect": _rename_file_safe_redirect(request)})
+
+    initial_suffix = get_soubor_suffix(soubor) or RENAME_BASE_SLOT_VALUE
+    form = RenameSouborForm(suffix_choices=suffix_choices, initial={"suffix": initial_suffix})
+    context = {
+        "object": soubor,
+        "title": _("core.views.rename_file.title.text") + f" {soubor.nazev}",
+        "id_tag": "prejmenovat-soubor-form",
+        "button": _("core.views.rename_file.submitButton.text"),
+        "form": form,
+    }
+    return render(request, "core/transakce_modal.html", context)
 
 
 class DownloadFile(LoginRequiredMixin, View):
@@ -1187,6 +1316,71 @@ def get_finds_soubor_name(find, filename, add_to_index=1):
                 extra={"file": filename, "value": list_last_char},
             )
             return False
+
+
+def _obsazene_suffixy(navazany_objekt, base, current_soubor=None):
+    """
+    Vrátí množinu suffixů (částí názvu mezi identem a příponou) obsazených soubory záznamu.
+
+    :param navazany_objekt: Navázaný objekt (dokument nebo samostatný nález) s vazbou ``soubory``.
+    :param base: Identifikátor záznamu bez pomlček, kterým názvy souborů začínají.
+    :param current_soubor: Soubor, který se přejmenovává a do obsazených suffixů se nezapočítává.
+    :return: Množina řetězců suffixů obsazených ostatními soubory.
+    """
+    obsazene = set()
+    for soubor in navazany_objekt.soubory.soubory.all():
+        if current_soubor is not None and soubor.pk == current_soubor.pk:
+            continue
+        stem = os.path.splitext(soubor.nazev)[0]
+        if stem.startswith(base):
+            obsazene.add(stem[len(base) :])
+    return obsazene
+
+
+def get_dokument_free_suffixes(dokument, current_soubor=None):
+    """
+    Vrátí seznam volných suffixů pro soubory dokumentu (3D modelu).
+
+    Suffix je část názvu mezi identem (bez pomlček) a příponou. Možné hodnoty jsou prázdný řetězec
+    (základní soubor ``{ident}.{ext}``) a písmena ``A``–``Z``. Suffix přejmenovávaného souboru se
+    považuje za volný, aby jej bylo možné v nabídce ponechat.
+
+    :param dokument: Dokument, jehož soubory se zkoumají.
+    :param current_soubor: Přejmenovávaný soubor (vyloučen z obsazených suffixů).
+    :return: Seznam volných suffixů v pořadí prázdný slot, ``A`` … ``Z``.
+    """
+    base = dokument.ident_cely.replace("-", "")
+    obsazene = _obsazene_suffixy(dokument, base, current_soubor)
+    return [suffix for suffix in [""] + list(letters) if suffix not in obsazene]
+
+
+def get_finds_free_suffixes(find, current_soubor=None):
+    """
+    Vrátí seznam volných suffixů pro soubory samostatného nálezu.
+
+    Suffix má tvar ``F01`` … ``F99``. Suffix přejmenovávaného souboru se považuje za volný.
+
+    :param find: Samostatný nález, jehož soubory se zkoumají.
+    :param current_soubor: Přejmenovávaný soubor (vyloučen z obsazených suffixů).
+    :return: Seznam volných suffixů v pořadí ``F01`` … ``F99``.
+    """
+    base = find.ident_cely.replace("-", "")
+    obsazene = _obsazene_suffixy(find, base, current_soubor)
+    return [f"F{number:02d}" for number in range(1, 100) if f"F{number:02d}" not in obsazene]
+
+
+def get_soubor_suffix(soubor):
+    """
+    Vrátí aktuální suffix souboru (část názvu mezi identem záznamu bez pomlček a příponou).
+
+    :param soubor: Soubor, jehož suffix se zjišťuje.
+    :return: Řetězec suffixu (může být prázdný); ``None`` pokud název neodpovídá očekávanému vzoru.
+    """
+    base = soubor.vazba.navazany_objekt.ident_cely.replace("-", "")
+    stem = os.path.splitext(soubor.nazev)[0]
+    if stem.startswith(base):
+        return stem[len(base) :]
+    return None
 
 
 def get_projekt_soubor_name(projekt: Projekt, file_name):

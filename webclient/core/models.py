@@ -39,6 +39,7 @@ from .connectors import ClamdConnectionError, ClamdNetworkSocket, ClamdResponseE
 from .constants import (
     DOKUMENT_RELATION_TYPE,
     NAHRANI_SBR,
+    PREJMENOVANI_SBR,
     PROJEKT_RELATION_TYPE,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
     SOUBOR_RELATION_TYPE,
@@ -313,6 +314,26 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             vazba=self.historie,
         ).save()
         logger.debug("core.models.soubor.zaznamenej_nahrani_nove_verze.finished", extra={"historie": hist})
+
+    def zaznamenej_prejmenovani(self, user, old_nazev, new_nazev):
+        """
+        Metoda pro zapsání přejmenování souboru do historie.
+
+        Do poznámky se uloží změna ve tvaru ``původní_název -> nový_název``.
+
+        :param user: Uživatel, který přejmenování provedl.
+        :param old_nazev: Původní název souboru.
+        :param new_nazev: Nový název souboru.
+        """
+        if self.historie is None:
+            self.create_soubor_vazby()
+        hist = Historie(
+            typ_zmeny=PREJMENOVANI_SBR,
+            uzivatel=user,
+            poznamka=f"{old_nazev} -> {new_nazev}",
+            vazba=self.historie,
+        ).save()
+        logger.debug("core.models.soubor.zaznamenej_prejmenovani.finished", extra={"historie": hist})
 
     @classmethod
     def get_file_extension_by_mime(cls, file):
@@ -1104,6 +1125,15 @@ class Permissions(models.Model):
             "core.models.permissions.actionChoices.soubor_nahradit_dokument"
         )
         soubor_nahradit_pas = "soubor_nahradit_pas", _("core.models.permissions.actionChoices.soubor_nahradit_pas")
+        soubor_prejmenovat_dokument = "soubor_prejmenovat_dokument", _(
+            "core.models.permissions.actionChoices.soubor_prejmenovat_dokument"
+        )
+        soubor_prejmenovat_model3d = "soubor_prejmenovat_model3d", _(
+            "core.models.permissions.actionChoices.soubor_prejmenovat_model3d"
+        )
+        soubor_prejmenovat_pas = "soubor_prejmenovat_pas", _(
+            "core.models.permissions.actionChoices.soubor_prejmenovat_pas"
+        )
         soubor_nahled_projekt = "soubor_nahled_projekt", _(
             "core.models.permissions.actionChoices.soubor_nahled_projekt"
         )

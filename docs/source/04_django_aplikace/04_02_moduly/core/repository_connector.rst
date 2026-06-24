@@ -359,6 +359,34 @@ Třídy
       :param save_thumbs: Parametr ``save_thumbs`` předává se do volání ``debug()``, ovlivňuje větvení podmínek.
       :return: Textová reprezentace UID transakce.
 
+   .. py:method:: update_file_name()
+
+      Přejmenuje soubor ve Fedoře – upraví ``ebucore:filename`` u souboru i všech jeho potomků.
+
+      Potomci (distribuce a paradata jako náhledy) se zjišťují dynamicky čtením ``ldp:contains``
+      kontejneru souboru, protože jejich skutečné zastoupení nelze předem předvídat. U každého
+      potomka se v hodnotě ``ebucore:filename`` nahradí podřetězec odpovídající starému názvu bez
+      přípony za nový, takže se zachová případná odlišná přípona či dekorace potomka.
+
+      :param soubor: Přejmenovávaný soubor s atributem ``repository_uuid``.
+      :param old_nazev: Původní název souboru (včetně přípony).
+      :param new_nazev: Nový název souboru (včetně přípony).
+
+   .. py:method:: _parse_ldp_children()
+
+      Vyparsuje URL potomků (``ldp:contains``) z n-triples reprezentace kontejneru.
+
+      :param ntriples_text: Text odpovědi ve formátu n-triples.
+      :return: Seznam URL potomků.
+
+   .. py:method:: _rename_child_filename()
+
+      Upraví ``ebucore:filename`` jednoho potomka, pokud jeho hodnota obsahuje starý název.
+
+      :param child_url: URL potomka (binárního obsahu).
+      :param old_base: Původní název souboru bez přípony.
+      :param new_base: Nový název souboru bez přípony.
+
    .. py:method:: delete_binary_file()
 
       Odstraní binary file.
