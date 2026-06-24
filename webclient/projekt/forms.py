@@ -543,6 +543,9 @@ class PrihlaseniProjektForm(forms.ModelForm):
         self.fields["kulturni_pamatka"].required = True
         self.fields["organizace"].required = True
         self.helper = FormHelper(self)
+        prihlasit_info = "<div class='col-sm-12 bold'>%(translation)s</div>" % {
+            "translation": _("projekt.forms.prihlaseniProj.bottom_info")
+        }
         self.helper.layout = Layout(
             Div(
                 Div(
@@ -559,6 +562,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
                 Div("kulturni_pamatka", css_class="col-sm-6 col-lg-4"),
                 Div("kulturni_pamatka_cislo", css_class="col-sm-6 col-lg-4"),
                 Div("kulturni_pamatka_popis", css_class="col-sm-6 col-lg-4"),
+                HTML(prihlasit_info),
                 Div("old_stav"),
                 css_class="row",
             ),
