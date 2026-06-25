@@ -208,15 +208,17 @@ class OznamovatelSectionNameWithAccessor(SectionNameWithAccessor):
 class Field:
     """Implementuje komponentu ``Field`` v rámci aplikace."""
 
-    def __init__(self, label, accessor):
+    def __init__(self, label, accessor, css_style=""):
         """
         Inicializuje instanci třídy.
 
         :param label: Textový název nebo klíč ``label`` používaný v rámci operace.
         :param accessor: Parametr ``accessor`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param css_style: Volitelný CSS třídní řetězec pro použití v šabloně.
         """
         self.label = label
         self.accessor = accessor
+        self.css_style = css_style
 
     def __repr__(self):
         """
@@ -262,19 +264,28 @@ class Field:
         """
         return self.label
 
+    def get_css_style(self):
+        """
+        Vrací CSS styly pro pole.
+
+        :return: Vrací atribut ``css_style``.
+        """
+        return self.css_style
+
 
 class SouborField(Field):
     """Implementuje komponentu ``SouborField`` v rámci aplikace."""
 
-    def __init__(self, label, accessor, key_name):
+    def __init__(self, label, accessor, key_name, css_style=""):
         """
         Inicializuje instanci třídy.
 
         :param label: Textový název nebo klíč ``label`` používaný v rámci operace.
         :param accessor: Parametr ``accessor`` se předává do volání ``__init__()``.
         :param key_name: Textový název nebo klíč ``key_name`` používaný v rámci operace.
+        :param css_style: Volitelný CSS třídní řetězec pro použití v šabloně.
         """
-        super().__init__(label, accessor)
+        super().__init__(label, accessor, css_style=css_style)
         self.key_name = key_name
 
     def get_value(self, instance, user=None):
@@ -415,15 +426,16 @@ class ZjisteniField(Field):
 class ForeignField(Field):
     """Implementuje komponentu ``ForeignField`` v rámci aplikace."""
 
-    def __init__(self, name, accessor, foreign_key):
+    def __init__(self, name, accessor, foreign_key, css_style=""):
         """
         Inicializuje instanci třídy.
 
         :param name: Parametr ``name`` předává se do volání ``__init__()``.
         :param accessor: Parametr ``accessor`` se předává do volání ``__init__()``.
         :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
+        :param css_style: Volitelný CSS třídní řetězec pro použití v šabloně.
         """
-        super().__init__(name, accessor)
+        super().__init__(name, accessor, css_style=css_style)
         self.foreign_key = foreign_key
 
     def get_value(self, instance, user=None):
@@ -659,7 +671,7 @@ class ForeignDoubleFieldNum(ForeignField):
 class RepeatableField(ForeignField):
     """Implementuje komponentu ``RepeatableField`` v rámci aplikace."""
 
-    def __init__(self, name, accessor, foreign_key, template_name=None, model_name=None):
+    def __init__(self, name, accessor, foreign_key, template_name=None, model_name=None, css_style=""):
         """
         Inicializuje instanci třídy.
 
@@ -668,8 +680,9 @@ class RepeatableField(ForeignField):
         :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
         :param template_name: Parametr ``template_name`` slouží jako vstup pro logiku funkce ``__init__``.
         :param model_name: Název modelu používaný pro cílení operace.
+        :param css_style: Volitelný CSS třídní řetězec pro použití v šabloně.
         """
-        super().__init__(name, accessor, foreign_key)
+        super().__init__(name, accessor, foreign_key, css_style=css_style)
         self.template_name = template_name
         self.model_name = model_name
 
@@ -1054,6 +1067,7 @@ def get_historie_config(label_key):
     return {
         "section_name": SimpleSectionTemplateName(label_key),
         "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
+        "css_style": SimpleSectionTemplateName("not-simple"),
         "historie": HistorieRepeatableField(
             label_key,
             ["datum_zmeny", "uzivatel_protected", "get_typ_zmeny_display", "poznamka"],

@@ -1,19 +1,22 @@
+<div class='{% if section.css_style != "" %}{{ section.css_style }}{% endif %}'>
 {% for section, field in section.items %}
-        {% if section != "template" %}
+    
+        {% if section != "template"%}
             {% if section == "section_name" %}
             <div class = "section-name row">{{field}}</div>
             {% endif %}
-            <div class="pl-4">
+            <div class="ps-3">
             {% if field.value.template_name %}
                 {% include field.value.template_name with field=field.value %}
             {% elif field.template %}
                 {% include field.template with section=field %}
-            {% elif section != "section_name" %}
-            <div class="row vypis-field-row">
+            {% elif section != "section_name"  and  section != "css_style"  %}
+            <div class="row vypis-field-row {{ field.css_style }}">
                 <div class="label"><strong>{{field.label}}:</strong></div>
                 <div class="content">{{ field.value }}</div>
             </div>
             {% endif %}
         </div>
         {% endif %}
-    {% endfor %}
+{% endfor %}
+</div>

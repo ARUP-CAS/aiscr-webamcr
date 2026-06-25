@@ -28,7 +28,16 @@
             <h1>{{title}}</h1>
         </div>
         <div class="col-3 d-print-none align-self-center no-export">
-            <div class="float-end">
+            <div class="d-flex align-items-center justify-content-end gap-2">
+                <div class="form-check-reverse form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" id="simple-view-toggle" onchange="toggleSimpleView()"
+                        aria-label="{% trans 'vypis.templates.vypis.simple_view.label' %}"
+                        data-simple-label="{% trans 'vypis.templates.vypis.simple_view.label' %}"
+                        data-full-label="{% trans 'vypis.templates.vypis.full_view.label' %}">
+                    <label class="form-check-label" for="simple-view-toggle" id="simple-view-toggle-label">
+                        {% trans 'vypis.templates.vypis.simple_view.label' %}
+                    </label>
+                </div>
                 <button onclick="window.print()" title="{% trans 'vypis.templates.vypis.print.tooltip' %}">
                     <span class="material-icons">print</span>
                 </button>
@@ -47,7 +56,27 @@
 
 {% block script %}
 <script>
-    function createRtf() {    
+    function toggleSimpleView() {
+        const wrapper = document.getElementById('app-wrapper');
+        const toggle = document.getElementById('simple-view-toggle');
+        const label = document.getElementById('simple-view-toggle-label');
+        const simpleLabel = toggle.dataset.simpleLabel;
+        const fullLabel = toggle.dataset.fullLabel;
+        const simpleViewEnabled = wrapper.classList.toggle('simple-view');
+
+        label.textContent = simpleViewEnabled ? fullLabel : simpleLabel;
+        toggle.setAttribute('aria-label', simpleViewEnabled ? fullLabel : simpleLabel);
+        toggle.checked = simpleViewEnabled;
+
+        document.querySelectorAll('#app-wrapper .not-simple').forEach((section) => {
+            const previous = section.previousElementSibling;
+            if (previous && previous.tagName === 'HR') {
+                previous.style.display = simpleViewEnabled ? 'none' : '';
+            }
+        });
+    }
+
+    function createRtf() {
         const htmlContent = document.getElementById('app-wrapper').innerHTML;
         const vypisPrefix = 'AMCR_vypis';
         const currentDateTime = new Date();

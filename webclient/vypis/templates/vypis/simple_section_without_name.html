@@ -1,7 +1,7 @@
 {% for section, field in section.items %}
         {% if section != "section_name" and section != "template" %}
         {% if field.value %}
-        <div class="row vypis-field-row">
+        <div class="row vypis-field-row {{ field.css_style }}">
             <div class="label"><strong>{{field.label}}:</strong></div><div class="content"> {{ field.value }}</div>
         </div>
         {% endif %}
