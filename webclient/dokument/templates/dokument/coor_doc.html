@@ -10,8 +10,8 @@
 </div>
 
 <div class="row model-coor-layout">
-  <div class="form-group col-sm-12 col-md-3 model-coor-left">
-    <div class="mb-3">
+  <div class="col-sm-12 col-md-3 model-coor-left">
+    <div class="mb-3 row">
       {{ formExtraData.zeme|as_crispy_field }}
       {{ formExtraData.region_extra|as_crispy_field }}
       {{ formExtraData.visible_x1|as_crispy_field }}
@@ -21,7 +21,7 @@
     </div>
   </div>
 
-  <div class="form-group col-sm-12 col-md-9 model-coor-right">
+  <div class="col-sm-12 col-md-9 model-coor-right">
     {% include "map.html" %}
   </div>
 </div>

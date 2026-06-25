@@ -177,7 +177,7 @@ body {
   container-type: inline-size;
 }
 
-@container model-coor (min-width: 851px) {
+@container model-coor (min-width: 751px) {
   .model-coor-layout {
 
     >.model-coor-left {
@@ -194,6 +194,29 @@ body {
   }
 }
 
+@container model-coor (max-width: 750.98px) {
+  .model-coor-layout {
+
+    >.model-coor-left,
+    >.model-coor-right {
+      flex: 0 0 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
+  }
+}
+
+@container model-coor-left (min-width: 360px) {
+  .model-coor-left {
+    >.row {
+
+      >div {
+        flex: 0 0 50%;
+        max-width: 50%;
+      }
+    }
+  }
+}
 
 .form-group {
   margin-bottom: 0.15rem !important;
