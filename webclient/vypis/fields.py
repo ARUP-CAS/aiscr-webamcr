@@ -947,7 +947,7 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
 
             :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``new_name``.
         """
-        new_name = f"<div>{self.name} {getattr(instance, self.accessor[0])}</div>"
+        new_name = format_html("<div>{}&nbsp;{}</div>", self.name, getattr(instance, self.accessor[0]))
         if getattr(instance, self.accessor[-1]):
             return format_html(
                 "{}<div class='mime-type' style='white-space: pre;'> ({})</div>",
