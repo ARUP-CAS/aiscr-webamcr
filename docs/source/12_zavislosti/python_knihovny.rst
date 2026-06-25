@@ -100,7 +100,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - http://github.com/celery/py-amqp
    * - anyio
-     - 4.14.0
+     - 4.14.1
      - MIT
      - https://anyio.readthedocs.io/en/stable/versionhistory.html
    * - asgiref
@@ -152,7 +152,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/jawah/charset_normalizer/blob/master/CHANGELOG.md
    * - click
-     - 8.4.1
+     - 8.4.2
      - BSD-3-Clause
      - https://github.com/pallets/click/
    * - click-didyoumean
@@ -172,7 +172,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.14.1
+     - 7.14.3
      - Apache-2.0
      - https://github.com/coveragepy/coveragepy
    * - crispy-bootstrap5
@@ -400,7 +400,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.32
+     - 9.0.33
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -452,7 +452,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Library or Lesser General Public License (LGPL)
      - https://psycopg.org/
    * - py7zr
-     - 1.1.2
+     - 1.1.3
      - LGPL-2.1-or-later
      - https://py7zr.readthedocs.io/
    * - pyOpenSSL
@@ -476,7 +476,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 6.13.3
+     - 6.14.2
      - BSD-3-Clause
      - https://github.com/py-pdf/pypdf
    * - pyppmd
