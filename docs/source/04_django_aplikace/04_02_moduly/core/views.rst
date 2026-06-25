@@ -445,6 +445,17 @@ Třídy
 
       :return: Vrací proměnná ``context``.
 
+   .. py:method:: _is_query_cacheable()
+
+      Vrací, zda je bezpečné zapnout cacheops cache pro aktuální filtr.
+
+      Spočítá součin počtů hodnot u vícehodnotových GET parametrů. Tento součin
+      odpovídá řádové velikosti invalidační DNF, kterou cacheops staví – u velkých
+      kombinací hlubokých M2M filtrů by její sestavení vyčerpalo paměť a shodilo
+      worker. Stránkovací a řadicí parametry se do součinu nezapočítávají.
+
+      :return: ``True`` pokud součin nepřekročí ``cache_filter_value_product_limit``.
+
    .. py:method:: get_queryset()
 
       Vrací queryset výsledků vyhledávání podle zadaných filtrů.
