@@ -106,7 +106,17 @@ def get_redis_pass(default_value=""):
 REDIS_HOST = get_secret("REDIS_HOST", "redis")
 REDIS_PORT = get_secret("REDIS_PORT", 6379)
 
-CACHEOPS_REDIS = f"redis://{get_redis_pass()}{REDIS_HOST}:{REDIS_PORT}/2"
+CACHEOPS_REDIS = {
+    "host": REDIS_HOST,
+    "port": int(REDIS_PORT),
+    "db": 2,
+    "password": get_plain_redis_pass(),
+    "socket_keepalive": True,
+    "health_check_interval": 30,
+    "retry_on_timeout": True,
+}
+
+CACHEOPS_DEGRADE_ON_FAILURE = True
 
 CACHEOPS = {
     "lokalita.Lokalita": {"ops": (), "timeout": 60 * 10},
