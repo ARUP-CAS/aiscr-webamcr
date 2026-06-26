@@ -1,10 +1,10 @@
 [bootstrap]
 schema_in_use = "spec-driven"
-last_aligned_at = "2026-05-06"
-last_aligned_hub_revision = "5e329c8e15201be35353cd893f79cd612a3722e0"
-mode = "bootstrap-mode-align + bootstrap-mode-introduce-openspec"
+last_aligned_at = "2026-06-26"
+last_aligned_hub_revision = "5fd453c396a927c273f4cda9b38fe6286b34f1b7"
+mode = "bootstrap-mode-align"
 target_branch = "DN-agents-setup-review"
 
 [bootstrap.notes]
-summary = "OpenSpec adopted and root governance aligned for tracked hub-synchronized vendor surfaces. Sync apply remains separate and approval-gated."
+summary = "OpenSpec adopted; governance-doc align refreshed AGENTS.md to the current direct-bundle sync model (retired local_configs payload-mirror reference removed) and updated alignment metadata. Bulk vendor-surface realignment and the planning/usage-logging sibling-minimum coverage question are tracked separately; sync apply remains approval-gated."
 

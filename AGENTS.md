@@ -250,8 +250,10 @@ not as private local tooling.
 - **Prompts and automation recommendations:** `.agents/prompts/`,
   `.agents/reports/` (e.g. `automation_recommendations.md`)
 - **Vendor delivery surfaces:** `.cursor/`, `.claude/`, `.codex/`,
-  `.gemini/`, `.clinerules/`, `.qodo/` as synchronized from
-  `aiscr-management/.agents/local_configs/aiscr-webamcr/`
+  `.gemini/`, `.clinerules/`, `.qodo/` as synchronized from the
+  `aiscr-management` hub via direct-bundle sync, resolved from the hub
+  assistant roots plus this repo's enrollment in the hub
+  `.agents/sync/repos.toml`
 
 Document recommended hooks, MCP servers, and subagents in `AGENTS.md`,
 `.agents/`, or the tracked vendor surface that consumes them. Recommended hook
