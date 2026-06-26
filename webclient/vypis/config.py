@@ -350,12 +350,12 @@ DOKUMENTY_CONFIG = {
         "historie": {
             "section_name": SimpleSectionTemplateName(_("vypis.dokumenty.historie.section_name")),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
+            "css_style": SimpleSectionTemplateName("not-simple"),
             "historie": HistorieRepeatableField(
                 _("vypis.dokumenty.historie.label"),
                 ["datum_zmeny", "uzivatel_protected", "get_typ_zmeny_display", "poznamka"],
                 "historie",
                 "vypis/historie.html",
-                css_style="not-simple",
             ),
         },
         "soubory": {
@@ -456,12 +456,12 @@ PROJEKTY_CONFIG = {
         "historie": {
             "section_name": SimpleSectionTemplateName(_("vypis.projekty.historie.section_name")),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
+            "css_style": SimpleSectionTemplateName("not-simple"),
             "historie": HistorieRepeatableField(
                 _("vypis.projekty.historie.label"),
                 ["datum_zmeny", "uzivatel_protected", "get_typ_zmeny_display", "poznamka"],
                 "historie",
                 "vypis/historie.html",
-                css_style="not-simple",
             ),
         },
         "soubory": {
@@ -668,12 +668,12 @@ LOKALITA_CONFIG = {
         "historie": {
             "section_name": SimpleSectionTemplateName(_("vypis.lokalita.historie.section_name")),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
+            "css_style": SimpleSectionTemplateName("not-simple"),
             "historie": HistorieRepeatableField(
                 _("vypis.lokalita.historie.label"),
                 ["datum_zmeny", "uzivatel_protected", "get_typ_zmeny_display", "poznamka"],
                 "historie",
                 "vypis/historie.html",
-                css_style="not-simple",
             ),
         },
         "ext_zdroje": {
@@ -761,12 +761,12 @@ PAS_CONFIG = {
         "historie": {
             "section_name": SimpleSectionTemplateName(_("vypis.pas.historie.section_name")),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
+            "css_style": SimpleSectionTemplateName("not-simple"),
             "historie": HistorieRepeatableField(
                 _("vypis.pas.historie.label"),
                 ["datum_zmeny", "uzivatel_protected", "get_typ_zmeny_display", "poznamka"],
                 "historie",
                 "vypis/historie.html",
-                css_style="not-simple",
             ),
         },
         "soubory": {
@@ -882,7 +882,7 @@ MODEL_CONFIG = {
         "historie": {
             "section_name": SimpleSectionTemplateName(_("vypis.model3d.historie.section_name")),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
-            "css_style": SimpleSectionTemplateName("css_style"),
+            "css_style": SimpleSectionTemplateName("not-simple"),
             "historie": HistorieRepeatableField(
                 _("vypis.model3d.historie.label"),
                 ["datum_zmeny", "uzivatel_protected", "get_typ_zmeny_display", "poznamka"],
@@ -951,12 +951,12 @@ EZ_CONFIG = {
         "historie": {
             "section_name": SimpleSectionTemplateName(_("vypis.ez.historie.section_name")),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
+            "css_style": SimpleSectionTemplateName("not-simple"),
             "historie": HistorieRepeatableField(
                 _("vypis.ez.historie.label"),
                 ["datum_zmeny", "uzivatel_protected", "get_typ_zmeny_display", "poznamka"],
                 "historie",
                 "vypis/historie.html",
-                css_style="not-simple",
             ),
         },
         "ext_odkaz": {

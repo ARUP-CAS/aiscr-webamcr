@@ -35,12 +35,13 @@
                 <input class="form-check-input" type="checkbox" id="simple-view-toggle" onchange="toggleSimpleView()"
                     aria-label="{% trans 'vypis.templates.vypis.simple_view.label' %}"
                     data-simple-label="{% trans 'vypis.templates.vypis.simple_view.label' %}"
-                    data-full-label="{% trans 'vypis.templates.vypis.full_view.label' %}">
+                    data-full-label="{% trans 'vypis.templates.vypis.full_view.label' %}"
+                    disabled="true">
             </div>
-            <button onclick="window.print()" title="{% trans 'vypis.templates.vypis_list.print.tooltip' %}">
+            <button onclick="window.print()" title="{% trans 'vypis.templates.vypis_list.print.tooltip' %}" disabled>
                 <span class="material-icons">print</span>
             </button>
-            <button onclick="createRtf()" title="{% trans 'vypis.templates.vypis_list.download.tooltip' %}">
+            <button onclick="createRtf()" title="{% trans 'vypis.templates.vypis_list.download.tooltip' %}" disabled>
                 <span class="material-icons">download</span>
             </button>
         </div>
@@ -103,6 +104,8 @@
                                 $('.vypisy-content').append(responses[j]);
                                 $('.vypisy-content').append("<div class='new-record'></div>");
                             }
+                            document.getElementById('simple-view-toggle').disabled = false;
+                            document.querySelectorAll('#title_row button[disabled]').forEach((button) => button.disabled = false);
                         }
                     },
                     error: function(xhr, status, error) {
@@ -126,6 +129,8 @@
                             for (let j = 0; j < responses.length; j++) {
                                 $('.vypisy-content').append(responses[j]);
                             }
+                            document.getElementById('simple-view-toggle').disabled = false;
+                            document.querySelectorAll('#title_row button[disabled]').forEach((button) => button.disabled = false);
                         }
                     }
                 });

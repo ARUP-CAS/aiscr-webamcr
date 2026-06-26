@@ -155,13 +155,13 @@ class SectionNameWithAccessor(SimpleSectionTemplateName):
         if self.foreign_key:
             if getattr(instance, self.foreign_key):
                 return format_html(
-                    "<div>{}&nbsp;{}</div>",
+                    "{}&nbsp;{}",
                     self.name,
                     mark_safe(getattr(getattr(instance, self.foreign_key), self.accessor)),
                 )
             else:
                 return None
-        return format_html("<div>{}&nbsp;{}</div>", self.name, mark_safe(getattr(instance, self.accessor)))
+        return format_html("{}&nbsp;{}", self.name, mark_safe(getattr(instance, self.accessor)))
 
 
 class PianSectionNameWithAccessor(SectionNameWithAccessor):
@@ -907,19 +907,21 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
         """
         if len(self.accessor) > 2:
             new_name = format_html(
-                "<div>{}&nbsp;{}&nbsp;-&nbsp;{}</div>",
+                "<span class='ps-0'>{}&nbsp;{}&nbsp;-&nbsp;{}</span>",
                 self.name,
                 mark_safe(getattr(instance, self.accessor[0])),
                 mark_safe(getattr(instance, self.accessor[1])),
             )
         else:
             new_name = format_html(
-                "<div>{}&nbsp;{}</div>",
+                "<span class='ps-0'>{}&nbsp;{}</span>",
                 self.name,
                 mark_safe(getattr(instance, self.accessor[0])),
             )
         if getattr(instance, self.accessor[-1]):
-            return format_html("{} ({})", new_name, mark_safe(getattr(instance, self.accessor[-1])))
+            return format_html(
+                "<span class='ps-0'>{} ({})</span>", new_name, mark_safe(getattr(instance, self.accessor[-1]))
+            )
         return new_name
 
 
@@ -947,10 +949,10 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
 
             :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``new_name``.
         """
-        new_name = format_html("<div>{}&nbsp;{}</div>", self.name, getattr(instance, self.accessor[0]))
+        new_name = format_html("<span class='ps-0'>{}&nbsp;{}</span>", self.name, getattr(instance, self.accessor[0]))
         if getattr(instance, self.accessor[-1]):
             return format_html(
-                "{}<div class='mime-type' style='white-space: pre;'> ({})</div>",
+                "<span class='ps-0'>{}<div class='mime-type' style='white-space: pre;'> ({})</div></span>",
                 new_name,
                 mark_safe(getattr(instance, self.accessor[-1])),
             )
@@ -991,7 +993,7 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
         if aktivity:
             third_part = f"&nbsp;({';&nbsp;'.join([str(a) for a in aktivity])})"
         return format_html(
-            "<div>{}&nbsp;{}&nbsp;-&nbsp;{}{}&nbsp;-&nbsp;{}{}</div>",
+            "<span class='ps-0'>{}&nbsp;{}&nbsp;-&nbsp;{}{}&nbsp;-&nbsp;{}{}</span>",
             self.name,
             mark_safe(getattr(instance, self.accessor[0])),
             obdobi,
