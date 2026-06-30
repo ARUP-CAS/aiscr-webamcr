@@ -48,6 +48,7 @@ from __future__ import annotations
 
 import ast
 import re
+import subprocess
 import sys
 import textwrap
 from collections import defaultdict
@@ -75,6 +76,8 @@ SECTION_MAP = {
 }
 
 REQUIRED_SECTIONS = ("steps", "expected")
+
+IGNORED_DIRS = frozenset((".git", ".venv", "venv", "site-packages", "node_modules", "__pycache__"))
 
 
 @dataclass(frozen=True)
@@ -112,7 +115,7 @@ def _is_ignored_path(p: Path) -> bool:
         :return: Vrací hodnotu typu ``bool`` (výsledek volání ``any()``).
     """
     parts = set(p.parts)
-    return any(x in parts for x in (".git", ".venv", "venv", "site-packages", "node_modules", "__pycache__"))
+    return any(x in parts for x in IGNORED_DIRS)
 
 
 def _find_rst_file(root: Path) -> Path:
@@ -137,11 +140,60 @@ def _find_rst_file(root: Path) -> Path:
 def _iter_test_files(root: Path) -> List[Path]:
     """Vyhledá Python soubory se Selenium testy v repozitáři.
 
-    Hledá `test_selenium.py` v adresářích obsahujících segment `tests` a ignoruje
-    typické „šumové“ adresáře (venv, node_modules, …).
+    Hledá `test_selenium.py` v adresářích obsahujících segment `tests`.
+
+    Primárně se ptá gitu (`git ls-files`), který zná jen sledované soubory a
+    odpoví okamžitě. Když git selže (skript běží mimo git repozitář), spadne se
+    na rekurzivní procházení (`rglob`).
+
+        :param root: Parametr ``root`` slouží jako vstup pro hledání souborů.
+        :return: Vrací hodnotu typu ``List[Path]`` (výsledek volání ``sorted()``).
+    """
+    files = _git_tracked_test_files(root)
+    if files is None:
+        files = _walk_test_files(root)
+    return sorted(set(files))
+
+
+def _git_tracked_test_files(root: Path) -> Optional[List[Path]]:
+    """Vrátí sledované soubory `test_selenium.py` v adresářích `tests` přes git.
+
+    Když git není dostupný nebo `root` není git repozitář, vrátí `None`
+    (volající pak použije fallback přes procházení stromu).
+
+        :param root: Parametr ``root`` předává se do volání ``subprocess.run()``.
+        :return: Vrací seznam cest, nebo `None`, pokud git nelze použít.
+    """
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(root), "ls-files", "**/test_selenium.py", "test_selenium.py"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+    except (OSError, ValueError):
+        return None
+    if proc.returncode != 0:
+        return None
+    files: List[Path] = []
+    for line in proc.stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        p = root / Path(line)
+        if "tests" not in p.parts:
+            continue
+        files.append(p)
+    return files
+
+
+def _walk_test_files(root: Path) -> List[Path]:
+    """Fallback hledání `test_selenium.py` přes rekurzivní procházení (`rglob`).
+
+    Ignoruje typické „šumové“ adresáře (venv, node_modules, …).
 
         :param root: Parametr ``root`` pracuje se s atributy ``rglob``.
-        :return: Vrací hodnotu typu ``List[Path]`` (výsledek volání ``sorted()``).
+        :return: Vrací hodnotu typu ``List[Path]`` (seznam nalezených cest).
     """
     files: List[Path] = []
     for p in root.rglob("test_selenium.py"):
@@ -150,7 +202,7 @@ def _iter_test_files(root: Path) -> List[Path]:
         if "tests" not in p.parts:
             continue
         files.append(p)
-    return sorted(set(files))
+    return files
 
 
 def _get_app_name(file_path: Path) -> str:
