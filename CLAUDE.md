@@ -4,6 +4,20 @@ Full agent rules, repository structure, and coding standards: see [AGENTS.md](AG
 Coding standards, branch rules, and PR process: see [CONTRIBUTING.md](CONTRIBUTING.md).
 AI review system state and artifacts: see [.agents/README.md](.agents/README.md).
 
+## Governance & OpenSpec
+
+Hub-required minimums apply: **plan first** with human approval before mutating
+steps, and record **one rolling usage-log entry** (with agent/runtime + backend
+model id) for significant work. Canonical rule bodies are delivered as readers
+under [.claude/rules/](.claude/rules/) (`aiscr-planning-core`,
+`aiscr-usage-logging`, `aiscr-model-logging`); full governance is in
+[AGENTS.md](AGENTS.md).
+
+OpenSpec is versioned in `openspec/` (`specs/`, `changes/`, `config.yaml` —
+schema `spec-driven`). Validate with `npm run openspec:validate`. Use the
+`openspec-*` / `opsx` skills under `.claude/skills/`; honour explore → plan →
+implement mode-transfer gating per `aiscr-planning-core`.
+
 ## Repository
 
 Django web app for the Archaeological Map of the Czech Republic (AMČR), part of AIS CR (ARUP-CAS).

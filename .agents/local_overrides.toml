@@ -1,10 +1,17 @@
 [bootstrap]
 schema_in_use = "spec-driven"
-last_aligned_at = "2026-06-26"
-last_aligned_hub_revision = "5fd453c396a927c273f4cda9b38fe6286b34f1b7"
+last_aligned_at = "2026-06-30"
+last_aligned_hub_revision = "ca6d7b3b344a20ba339ad2a634b693149c4e14d7"
 mode = "bootstrap-mode-align"
 target_branch = "DN-agents-setup-review"
 
 [bootstrap.notes]
-summary = "OpenSpec adopted; governance-doc align refreshed AGENTS.md to the current direct-bundle sync model (retired local_configs payload-mirror reference removed) and updated alignment metadata. Bulk vendor-surface realignment and the planning/usage-logging sibling-minimum coverage question are tracked separately; sync apply remains approval-gated."
+summary = "Align run: detailed entry-doc reconciliation. Created sibling CODEX.md basis (7 BASELINE codex rule bodies); wrote sibling render variant of GEMINI.md (removed hub self-framing and hub-only dangling links); rewrote .github/copilot-instructions.md sibling-safe; added Governance-baseline + OpenSpec sections to AGENTS.md, CLAUDE.md, CONTRIBUTING.md; verified README CZ/EN parity (no change). Bumped @fission-ai/openspec 1.3.1 -> 1.5.0 via stock npm install (no hub patch; spec-driven validates on stock). Pruned 2 genuine orphan command READMEs (.claude/commands/README*.md). schema 'spec-driven' confirmed as the OpenSpec built-in default (hub-known set is {backlog, governance-driven}; not applicable here)."
+
+[bootstrap.notes.open_items]
+planning_usage_reader_coverage = "aiscr-planning-core and aiscr-usage-logging rule readers are absent from .claude/rules, .gemini/context, .cursor/rules, .github/instructions (only 5 readers delivered). CODEX.md embeds both, but other vendors need them via the sync/manifest track."
+copilot_instructions_managed_asset = ".github/copilot-instructions.md is reconciled sibling-safe but is not a manifest-managed asset for this repo; orphan scanner still flags it. Candidate to enroll as a managed sibling asset at the hub."
+prune_scanner_false_positives = "orchestrate_local_agent_sync prune mis-flags directory-residence files (openspec-commands opsx dirs, .qodo dir) as hub-only-mislocated orphans. Hub follow-up captured via /aiscr-note-idea."
+gemini_config_yaml_ref = "Delivered GEMINI.md references .gemini/config.yaml (Gemini Code Assist) which is not delivered to this repo; minor hub-template observation."
+bulk_vendor_surface_realignment = "opsx command/skill/prompt mirrors and vendor README stubs show content drift vs hub; remediated via approval-gated direct-bundle sync apply, not hand-edited here."
 

@@ -122,6 +122,42 @@ Agents must not perform large refactors without explicit instruction.
 
 ------------------------------------------------------------------------
 
+## Governance baseline (planning, usage logging, model logging)
+
+These hub-required minimums apply to every assistant in this repository. The
+canonical rule bodies are authored at the `aiscr-management` hub and delivered
+here as rule readers under `.claude/rules/`, `.gemini/context/`,
+`.cursor/rules/`, and the embedded sections of `CODEX.md`:
+
+- **Planning-first** — non-trivial or mutating work starts with a short
+  planning phase and human approval before mutating steps (`aiscr-planning-core`).
+- **Usage logging** — record one rolling usage-log entry for significant work
+  while the change set is uncommitted (`aiscr-usage-logging`).
+- **Model logging** — include the agent/runtime and the backend model id (or
+  note it is not exposed) in that same entry (`aiscr-model-logging`).
+
+Do not weaken these in local configuration.
+
+------------------------------------------------------------------------
+
+## OpenSpec
+
+This repository versions OpenSpec artefacts directly:
+
+- Capability specs: `openspec/specs/<domain>/spec.md`
+- Change artefacts: `openspec/changes/<change>/`
+- Repo config and schema selection: `openspec/config.yaml` (schema `spec-driven`)
+
+OpenSpec is the requirement (`what`) layer for migrated workflows; `AGENTS.md`
+and `CONTRIBUTING.md` remain the `how` and approval layer. Validate edits with
+`npm run openspec:validate`. OpenSpec command entry points are delivered per
+vendor (for example `.github/prompts/opsx-*.prompt.md` for Copilot and the
+`openspec-*` skills under `.claude/skills/`). Follow the same planning-first
+approval and explore → plan → implement mode-transfer gating from the delivered
+`aiscr-planning-core` rule.
+
+------------------------------------------------------------------------
+
 ## Verification Sources
 
 When verifying behaviour or documentation, the following priority
@@ -252,8 +288,7 @@ not as private local tooling.
 - **Vendor delivery surfaces:** `.cursor/`, `.claude/`, `.codex/`,
   `.gemini/`, `.clinerules/`, `.qodo/` as synchronized from the
   `aiscr-management` hub via direct-bundle sync, resolved from the hub
-  assistant roots plus this repo's enrollment in the hub
-  `.agents/sync/repos.toml`
+  assistant roots plus this repo's enrollment in the hub sync registry
 
 Document recommended hooks, MCP servers, and subagents in `AGENTS.md`,
 `.agents/`, or the tracked vendor surface that consumes them. Recommended hook

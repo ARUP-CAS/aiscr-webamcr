@@ -242,6 +242,28 @@ Před většími změnami si přečtěte:
 
 ---
 
+## OpenSpec workflow
+
+Repozitář verzuje OpenSpec artefakty přímo:
+
+- Specifikace schopností: `openspec/specs/<doména>/spec.md`
+- Artefakty změn: `openspec/changes/<změna>/`
+- Konfigurace a volba schématu: `openspec/config.yaml` (schéma `spec-driven`)
+
+OpenSpec je vrstva požadavků (`co`); `AGENTS.md` a tento dokument zůstávají
+vrstvou `jak` a schvalování. Po úpravě artefaktů spusťte validaci:
+
+```bash
+npm run openspec:validate
+```
+
+Vstupní body příkazů OpenSpec jsou dodány podle nástroje (např.
+`.github/prompts/opsx-*.prompt.md` pro Copilot a skills `openspec-*` / `opsx`
+pod `.claude/skills/`). Dodržujte schvalování „plan-first“ a přechody režimů
+explore → plan → implement podle pravidla `aiscr-planning-core`.
+
+---
+
 ## AI agenti
 
 Větve generované AI agenty:
