@@ -166,17 +166,19 @@ def _git_tracked_test_files(root: Path) -> Optional[List[Path]]:
     """
     try:
         proc = subprocess.run(
-            ["git", "-C", str(root), "ls-files", "**/test_selenium.py", "test_selenium.py"],
+            ["git", "-C", str(root), "ls-files", "-z", "**/test_selenium.py", "test_selenium.py"],
             capture_output=True,
             text=True,
             encoding="utf-8",
+            timeout=10,
+            check=False,
         )
-    except (OSError, ValueError):
+    except (OSError, ValueError, subprocess.SubprocessError):
         return None
     if proc.returncode != 0:
         return None
     files: List[Path] = []
-    for line in proc.stdout.splitlines():
+    for line in proc.stdout.split("\0"):
         line = line.strip()
         if not line:
             continue
