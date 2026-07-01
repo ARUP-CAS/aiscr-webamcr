@@ -477,6 +477,8 @@ class UserActivationView(ActivationView):
         user = self.get_user(username)
         # Uživatel musí být aktivován ručně administrátorem systému.
         user.is_active = False
+        if user.datum_potvrzeni_emailu is None:
+            user.datum_potvrzeni_emailu = timezone.now()
         user.save()
         for notification in UserNotificationType.objects.filter(
             Q(ident_cely__icontains="S-E-") | Q(ident_cely="zpravodaj")
