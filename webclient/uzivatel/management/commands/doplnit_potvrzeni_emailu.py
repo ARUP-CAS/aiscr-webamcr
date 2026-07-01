@@ -3,7 +3,7 @@ import logging
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from django.db.models import F, Min, OuterRef, Subquery
+from django.db.models import F, OuterRef, Subquery
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
@@ -84,10 +84,8 @@ class Command(BaseCommand):
                 user_id=OuterRef("pk"),
                 notification_type__ident_cely=EMAIL_CONFIRMATION_IDENT,
             )
-            .order_by()
-            .values("user_id")
-            .annotate(first=Min("created_at"))
-            .values("first")
+            .order_by("created_at")
+            .values("created_at")[:1]
         )
 
         datum_otevreni = timezone.make_aware(PUBLIC_OPENING_DATE)
