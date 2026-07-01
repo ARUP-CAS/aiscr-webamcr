@@ -516,6 +516,7 @@ class UserPasswordResetForm(PasswordResetForm):
             receiver_address=to_email,
             status=status,
             exception=exception,
+            record_ident_cely=context["user"].ident_cely,
         )
 
 

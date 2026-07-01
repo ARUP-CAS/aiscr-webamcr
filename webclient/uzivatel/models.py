@@ -841,6 +841,7 @@ class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Mo
     receiver_address = models.CharField(max_length=254)
     status = models.CharField(max_length=3, null=True, blank=True)
     exception = models.CharField(max_length=1024, null=True, blank=True)
+    zaznam_ident_cely = models.TextField(null=True, blank=True)
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
