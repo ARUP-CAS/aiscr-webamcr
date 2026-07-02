@@ -676,7 +676,9 @@ def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
     # Filtrování bbox je kvůli cache vypnuté; pro zapnutí přidejte
     # ``.filter(Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom])))``.
     pian_ids = (
-        DokumentacniJednotka.objects.filter(archeologicky_zaznam__akce__projekt__ident_cely=ident_cely)
+        DokumentacniJednotka.objects.filter(
+            archeologicky_zaznam__akce__projekt__ident_cely=ident_cely, pian__isnull=False
+        )
         .values_list("pian__id", flat=True)
         .distinct()
     )

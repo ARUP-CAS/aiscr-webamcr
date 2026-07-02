@@ -1358,7 +1358,7 @@ class Permissions(models.Model):
                         "core.model.Permissions.check_permission_skip.permission_object_error", extra={"error": e}
                     )
                     id = None
-            if id in perm_skips[0].split(","):
+            if id is not None and str(id) in perm_skips[0].split(","):
                 return True
         return False
 
