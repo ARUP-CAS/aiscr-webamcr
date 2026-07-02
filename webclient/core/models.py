@@ -1358,9 +1358,8 @@ class Permissions(models.Model):
                         "core.model.Permissions.check_permission_skip.permission_object_error", extra={"error": e}
                     )
                     id = None
-            finally:
-                if id in perm_skips[0].split(","):
-                    return True
+            if id in perm_skips[0].split(","):
+                return True
         return False
 
     def get_permission_object(self):
