@@ -889,19 +889,71 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
         qs = super().get_queryset()
         qs = qs.order_by(*sort_params)
         qs = qs.distinct("pk", *sort_params)
-        qs = qs.select_related(
-            "nalezce",
-            "predano_organizace",
-            "katastr",
-            "katastr__okres__kraj",
-            "soubory",
-        ).prefetch_related(
-            "specifikace",
-            "okolnosti",
-            "pristupnost",
-            "soubory__soubory",
-            "obdobi",
-            "druh_nalezu",
+        qs = (
+            qs.select_related(
+                "nalezce",
+                "predano_organizace",
+                "katastr",
+                "katastr__okres__kraj",
+                "soubory",
+            )
+            .prefetch_related(
+                "specifikace",
+                "okolnosti",
+                "pristupnost",
+                "soubory__soubory",
+                "obdobi",
+                "druh_nalezu",
+            )
+            .defer(
+                "geom",
+                "geom_sjtsk",
+                # nalezce (Osoba.__str__ = vypis_cely)
+                "nalezce__jmeno",
+                "nalezce__prijmeni",
+                "nalezce__vypis",
+                "nalezce__rok_narozeni",
+                "nalezce__rok_umrti",
+                "nalezce__rodne_prijmeni",
+                "nalezce__ident_cely",
+                "nalezce__orcid",
+                "nalezce__wikidata",
+                # predano_organizace (Organizace.__str__ = nazev_zkraceny / nazev_zkraceny_en)
+                "predano_organizace__nazev",
+                "predano_organizace__typ_organizace",
+                "predano_organizace__oao",
+                "predano_organizace__mesicu_do_zverejneni",
+                "predano_organizace__zverejneni_pristupnost",
+                "predano_organizace__email",
+                "predano_organizace__telefon",
+                "predano_organizace__adresa",
+                "predano_organizace__ico",
+                "predano_organizace__soucast",
+                "predano_organizace__nazev_en",
+                "predano_organizace__zanikla",
+                "predano_organizace__ident_cely",
+                "predano_organizace__cteni_dokumentu",
+                "predano_organizace__ror",
+                "predano_organizace__licence_id",
+                "predano_organizace__web",
+                # katastr (RuianKatastr.__str__ = nazev, kod, okres.nazev)
+                "katastr__pian_id",
+                "katastr__definicni_bod",
+                "katastr__hranice",
+                # okres (RuianOkres.__str__ = nazev)
+                "katastr__okres__spz",
+                "katastr__okres__kod",
+                "katastr__okres__nazev_en",
+                "katastr__okres__definicni_bod",
+                "katastr__okres__hranice",
+                # kraj (RuianKraj.__str__ = nazev)
+                "katastr__okres__kraj__kod",
+                "katastr__okres__kraj__rada_id",
+                "katastr__okres__kraj__nazev_en",
+                "katastr__okres__kraj__email",
+                "katastr__okres__kraj__definicni_bod",
+                "katastr__okres__kraj__hranice",
+            )
         )
 
         return self.check_filter_permission(qs)

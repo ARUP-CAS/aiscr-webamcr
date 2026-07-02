@@ -11,6 +11,31 @@ Třídy
    Implementuje komponentu ``CannotFindCadasterCentre`` v rámci aplikace.
 
 
+.. py:class:: TwoQueryPaginator
+
+   Paginátor optimalizovaný pro tabulky se širokými řádky a řazením přes JOINy.
+
+   Standardní stránkování řadí celou výsledkovou množinu i se širokými sloupci
+   (TextFields ``popis``, ``poznamka`` apod.), což u velkých tabulek vynutí drahý
+   quicksort. Tento paginátor nejprve seřadí a stránkuje pouze primární klíče
+   (úzký řádek → rychlý top-N heapsort) a teprve pro konkrétní stránku načte plné
+   objekty přes ``pk__in``. Řazení i ``select_related``/``prefetch_related``
+   zůstávají z původního querysetu zachovány.
+
+   Použití pouze pro querysety bez M2M JOINů v hlavním dotazu (jinak by mohlo dojít
+   k duplikaci primárních klíčů). Pro ostatní případy padá zpět na standardní chování.
+
+   **Metody:**
+
+   .. py:method:: page()
+
+      Vrací stránku se záznamy načtenou dvoufázově (nejprve PK, pak plné objekty).
+
+      :param number: Číslo požadované stránky.
+
+      :return: Stránka paginátoru s objekty pro dané číslo stránky.
+
+
 .. py:class:: SearchTable
 
    Základní setup pro tabulky používané v aplikaci.

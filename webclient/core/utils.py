@@ -25,10 +25,13 @@ from django.apps import apps
 from django.conf import ENVIRONMENT_VARIABLE, settings
 from django.contrib.gis.db.models.functions import AsGeoJSON, PointOnSurface
 from django.core.cache import caches
+from django.core.paginator import Paginator
 from django.db import connection, connections
+from django.db.models import QuerySet
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext as _
+from django_tables2.rows import BoundRows
 from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 from heslar.hesla_dynamicka import TYP_DJ_KATASTR
 from heslar.models import RuianKatastr
@@ -1130,6 +1133,53 @@ def get_message(az, message):
             str(dict(ArcheologickyZaznam.CHOICES)[az.typ_zaznamu].upper() + "_" + message),
         )
     )
+
+
+class TwoQueryPaginator(Paginator):
+    """
+    Paginátor optimalizovaný pro tabulky se širokými řádky a řazením přes JOINy.
+
+    Standardní stránkování řadí celou výsledkovou množinu i se širokými sloupci
+    (TextFields ``popis``, ``poznamka`` apod.), což u velkých tabulek vynutí drahý
+    quicksort. Tento paginátor nejprve seřadí a stránkuje pouze primární klíče
+    (úzký řádek → rychlý top-N heapsort) a teprve pro konkrétní stránku načte plné
+    objekty přes ``pk__in``. Řazení i ``select_related``/``prefetch_related``
+    zůstávají z původního querysetu zachovány.
+
+    Použití pouze pro querysety bez M2M JOINů v hlavním dotazu (jinak by mohlo dojít
+    k duplikaci primárních klíčů). Pro ostatní případy padá zpět na standardní chování.
+    """
+
+    def page(self, number):
+        """
+        Vrací stránku se záznamy načtenou dvoufázově (nejprve PK, pak plné objekty).
+
+        :param number: Číslo požadované stránky.
+
+            :return: Stránka paginátoru s objekty pro dané číslo stránky.
+        """
+        number = self.validate_number(number)
+        bottom = (number - 1) * self.per_page
+        top = bottom + self.per_page
+        if top + self.orphans >= self.count:
+            top = self.count
+
+        bound_rows = self.object_list
+        table_data = getattr(bound_rows, "data", None)
+        queryset = getattr(table_data, "data", None)
+
+        if not isinstance(queryset, QuerySet):
+            # Struktura neodpovídá očekávání (např. seznam místo querysetu) – fallback.
+            return super().page(number)
+
+        # Krok 1: seřadit a stránkovat pouze primární klíče (úzký řádek, rychlý sort).
+        pk_list = list(queryset.values_list("pk", flat=True)[bottom:top])
+
+        # Krok 2: načíst plné objekty jen pro danou stránku; řazení zůstává z querysetu.
+        page_qs = queryset.filter(pk__in=pk_list)
+
+        page_rows = BoundRows(data=page_qs, table=bound_rows.table, pinned_data=bound_rows.pinned_data)
+        return self._get_page(page_rows, number, self)
 
 
 class SearchTable(ColumnShiftTableBootstrap4):

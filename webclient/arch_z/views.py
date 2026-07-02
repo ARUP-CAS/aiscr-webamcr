@@ -1861,6 +1861,8 @@ class AkceListView(SearchListView):
             "archeologicky_zaznam__hlavni_katastr__hranice",
             "archeologicky_zaznam__hlavni_katastr__okres__definicni_bod",
             "archeologicky_zaznam__hlavni_katastr__okres__hranice",
+            "archeologicky_zaznam__hlavni_katastr__okres__kraj__definicni_bod",
+            "archeologicky_zaznam__hlavni_katastr__okres__kraj__hranice",
         )
 
         return self.check_filter_permission(qs)

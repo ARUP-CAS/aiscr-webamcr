@@ -79,8 +79,7 @@ class SouborTypFilter(MultipleChoiceFilter):
 
         :return: FormField s volbami z databáze.
         """
-        qs = self.model._default_manager.distinct()
-        qs = qs.order_by(self.field_name).values_list(self.field_name, flat=True)
+        qs = Soubor.objects.values_list("mimetype", flat=True).distinct().order_by("mimetype")
         self.extra["choices"] = [(o, o) for o in qs if o is not None]
         return super().field
 
@@ -382,9 +381,9 @@ class Model3DFilter(GeomWithinFilterMixin, HistorieFilter, FilterSet):
                 queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
             if "poznamka__icontains" in historie:
                 queryset_history &= Q(historie__historie__poznamka__icontains=historie["poznamka__icontains"])
-            queryset = queryset.filter(queryset_history)
+            queryset = queryset.filter(queryset_history).distinct()
 
-        return queryset.distinct()
+        return queryset
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
