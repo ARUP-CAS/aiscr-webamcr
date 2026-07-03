@@ -272,13 +272,14 @@ vendored_exclusions:
     Mohou být referencovány (např. kontrola SRI atributů v šablonách).
 
 prompt_evolution:
-  suggestions_path: .agents/prompts/prompt_evolution/
+  legacy_evidence_report: .agents/reports/workflow_evolution_legacy_evidence.md
   apply_manually: true
   reviewer: human
   note: >
-    Suggestions accumulate in prompt_evolution/ across sessions.
-    A human reviewer applies accepted suggestions to the canonical aiscr-codebase-review
-    workflow (delivered via skill surfaces) before starting a new audit cycle.
+    Starší soubory prompt_evolution byly klasifikovány a zachovány v
+    .agents/reports/workflow_evolution_legacy_evidence.md.
+    Nová zpětná vazba z U05 zůstává lokální evidencí tohoto repozitáře,
+    dokud člověk výslovně neschválí předání report-to-backlog.
 
 follow_up:
   # Incremental update (U01–U06) is owned by the canonical aiscr-codebase-review

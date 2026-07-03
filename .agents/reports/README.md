@@ -26,6 +26,9 @@ Lidsky čitelné výstupy dlouhodobého technického review.
   - doporučení pro nastavení Claude Code / Cursor automations (MCP servery, hooks, skills),  
   - sdílená pravidla mají žít zde a v `AGENTS.md` / `.agents/`, nikoli v `.cursor/` nebo `.claude/`.
 
+- `workflow_evolution_legacy_evidence.md`
+  - zachovaná evidence z vyřazeného kanálu prompt-evolution.
+
 ## Poznámky
 
 - Všechny nové bugy a refaktoringové návrhy musí být zapisovány sem, **ne** pouze

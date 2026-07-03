@@ -12,7 +12,6 @@ Pravidla a governance viz [AGENTS.md](../AGENTS.md).
     project_conventions.md      — Shrnutí konvencí pro agenty (odkaz z AGENTS.md)
     setup_dev.md                — Checklist vývojového prostředí a onboarding
     hooks_reference.md          — Doporučené hooks (pro lokální konfiguraci)
-    prompt_evolution/            — Návrhy na vylepšení promptu z jednotlivých sessions
   config/
     review_config.yaml          — Konfigurace review tasků, tech stack, adresáře
     review_cache.json            — Perzistentní stav a průběh review sessions
@@ -25,6 +24,7 @@ Pravidla a governance viz [AGENTS.md](../AGENTS.md).
     bugs.md                      — Evidence nalezených chyb
     refactoring_backlog.md       — Backlog strukturálních vylepšení
     automation_recommendations.md  — Doporučení pro Claude Code automations
+    workflow_evolution_legacy_evidence.md — Zachovaná evidence z vyřazeného kanálu prompt-evolution
   scripts/
     review_tools.py              — Repo-agnostic review automation (hash, cross-validate, coverage-gaps, id-inventory, lint-artifacts, prompt-evolution, repo-structure, status)
 ```

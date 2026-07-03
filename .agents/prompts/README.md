@@ -6,7 +6,8 @@ Prompty a pomocná dokumentace pro AI agenty pracující v tomto repozitáři. P
 
 - Codebase review: operační workflow je kanonické `aiscr-codebase-review` (režimy full T01–T11 / update U01–U06), dodané přes skill surfaces `.cursor/` / `.claude/` / `.codex/` / `.gemini/`; samostatné prompty `review_codebase.md` / `review_update.md` již v této složce nejsou.
 
-## Prompt evolution
+## Evidence workflow-evolution
 
-Podsložka `prompt_evolution/` obsahuje návrhy na vylepšení hlavního review promptu
-generované na konci jednotlivých tasků (`<task_id>_prompt_update.md`).
+Starší soubory `.agents/prompts/prompt_evolution/` byly klasifikovány a zachovány
+v `.agents/reports/workflow_evolution_legacy_evidence.md`. Aktivní zpětná vazba
+z U05 zůstává pouze evidencí, dokud člověk výslovně neschválí předání do backlogu.

@@ -209,9 +209,9 @@ Podrobnosti a náročnost: refactoring_backlog.md (High / Medium / Low priorita)
 - **Review cyklus** — Před každou session načíst review_cache.json a file hashes; označit změněné soubory a příslušné tasky jako pending; neopakovat dokončené tasky bez změny vstupů. Viz review_codebase.md INITIALIZATION SEQUENCE.
 - **Konfigurace** — Jediný zdroj limitů a adresářů: review_config.yaml. Vendored exclusions a task registry nemultiplikovat jinde. Viz review_config.yaml.
 - **Bug a backlog** — Před přidáním záznamu do bugs.md ověřit GitHub Issues (aktuálně 113 otevřených); křížově odkazovat „již evidováno / rozšíření / nový kandidát“. Refactoring backlog udržovat v češtině a třídit dle priority (High / Medium / Low). Viz review_codebase.md BUG TRACKING a REFACTORING BACKLOG.
-- **Prompt evolution** — Návrhy z reportů ukládat do .agents/prompts/prompt_evolution/<task_id>_prompt_update.md; aplikaci změn do review_codebase.md provádět ručně. Viz review_codebase.md PROMPT EVOLUTION.
+- **Evidence workflow-evolution** — Starší poznámky prompt-evolution jsou zachovány v .agents/reports/workflow_evolution_legacy_evidence.md; nová zpětná vazba z U05 vyžaduje výslovné schválení předání report-to-backlog.
 - **Dokumentace a CI** — Generovanou dokumentaci neupravovat ručně; spouštět generátory dle CONTRIBUTING.md. V CI zvážit kontrolu úplnosti Selenium docstringů a `manage.py check --deploy`; CVE krok (pip audit/safety) pro závislosti.
-- **Struktura .agents/** — Zachovat podle .agents/README.md: config (review_config.yaml, review_cache.json), analysis (*.json), reports (review_reports/, bugs.md, refactoring_backlog.md), prompts a prompt_evolution.
+- **Struktura .agents/** — Zachovat podle .agents/README.md: config (review_config.yaml, review_cache.json), analysis (*.json), reports (review_reports/, bugs.md, refactoring_backlog.md, workflow_evolution_legacy_evidence.md) a prompts.
 
 ---
 
