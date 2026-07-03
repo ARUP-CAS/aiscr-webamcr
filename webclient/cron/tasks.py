@@ -512,8 +512,8 @@ def write_value_to_redis(key, value):
 def call_digiarchiv_update_task():
     """Zavolá URL digiarchívu pro spuštění aktualizace dat."""
     logger.debug("cron.tasks.call_digiarchiv_update_task.start")
-    url = settings.DIGIARCHIV_URL
-    requests.get(url)
+    url = settings.DIGIARCHIV_UPDATE
+    requests.get(url, timeout=10)
     logger.debug("cron.tasks.call_digiarchiv_update_task.end")
 
 
