@@ -6,17 +6,13 @@ AI review system state and artifacts: see [.agents/README.md](.agents/README.md)
 
 ## Governance & OpenSpec
 
-Hub-required minimums apply: **plan first** with human approval before mutating
-steps, and record **one rolling usage-log entry** (with agent/runtime + backend
-model id) for significant work. Canonical rule bodies are delivered as readers
-under [.claude/rules/](.claude/rules/) (`aiscr-planning-core`,
-`aiscr-usage-logging`, `aiscr-model-logging`); full governance is in
-[AGENTS.md](AGENTS.md).
+Use [AGENTS.md](AGENTS.md) as the governance authority. Claude-specific rule
+readers live under [.claude/rules/](.claude/rules/); OpenSpec skills and `opsx`
+commands live under [.claude/skills/](.claude/skills/) and
+[.claude/commands/opsx/](.claude/commands/opsx/).
 
-OpenSpec is versioned in `openspec/` (`specs/`, `changes/`, `config.yaml` —
-schema `spec-driven`). Validate with `npm run openspec:validate`. Use the
-`openspec-*` / `opsx` skills under `.claude/skills/`; honour explore → plan →
-implement mode-transfer gating per `aiscr-planning-core`.
+OpenSpec is versioned in `openspec/` with schema `spec-driven`. Validate with
+`npm run openspec:validate`.
 
 ## Repository
 
@@ -81,5 +77,5 @@ issues/PRs and cross-referencing with AGENTS.md: **GitHub MCP**. Configure
 personal MCP credentials locally. Repository vendor surfaces such as
 `.cursor/`, `.claude/`, `.codex/`, `.gemini/`, `.clinerules/`, and `.qodo/`
 are tracked when materialized from the `aiscr-management` hub sync baseline;
-do not store private credentials in them. Dev setup checklist:
-[.agents/prompts/setup_dev.md](.agents/prompts/setup_dev.md).
+do not store private credentials in them. For development setup, use
+`README_en.md`, `CONTRIBUTING.md`, and repository-local environment notes.

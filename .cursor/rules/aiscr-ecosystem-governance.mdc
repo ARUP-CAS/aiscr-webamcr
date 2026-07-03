@@ -57,6 +57,8 @@ For the narrower delivery surface that answers only where ecosystem-wide workflo
 
 **Each product** loads its **own** config roots: Cursor -> `.cursor/`, Claude Code -> `.claude/`, Codex -> `.codex/`, Gemini CLI -> `.gemini/` (per documentation for the **runtime you use** - local CLI/editor, cloud, or other supported surfaces; the hub does not assume a single host app). **GitHub Copilot** uses **`.github/copilot-instructions.md`** (and GitHub's own rules) when that file is **committed** in the repo.
 
+**Vendor entry-doc digests.** The root vendor digests (`CLAUDE.md`, `CODEX.md`, `GEMINI.md`, `.github/copilot-instructions.md`) share one layered generated-block model: a manual Entry-scope preamble (single stop-anchor region), a shared `vendor-digest-core` generated block authored once at the hub, a vendor-specific generated part, and sibling-owned regions that are preserved when the generated blocks are refreshed. They are **preserve-only managed digests**: expected in siblings where the vendor is active, reconciled against a rendered sibling candidate, and never copy-overwritten by normal sync apply (`GEMINI.md` included). Generated-block refresh belongs to the governance-bootstrap alignment tooling, not to routine copy delivery.
+
 **Hub parity** (`validate_tool_parity`, registry rows, mirrored `skills/` trees at the hub) keeps **workflow slugs and artefacts aligned** across those trees; it does **not** mean every product natively executes another product's files. **Hub authoring:** the single human-readable canonical workflow body lives at `.agents/canonical_configs/workflow_skills/<slug>.md`. Most vendor surfaces (Cursor, Claude, Codex, Gemini, Cline stems, Gemini commands) are routing stubs to that canonical document. Copilot `.github/skills/aiscr-*/SKILL.md` is the deliberate exception: a self-contained, sibling-safe full-body Agent Skill. Guardrail YAML (`iron_laws`, `red_flags`, `verification`, etc.) lives in the same `.agents/canonical_configs/workflow_skills/<slug>.md`; generated surfaces carry the topic summary, phase awareness, workflow routing, and safety boundaries in the product-appropriate form. For a short vendor-path table aimed at contributors, see **`.github/copilot-instructions.md`** (digest text states the same separation).
 
 ### Cross-tool entry-point anti-drift
@@ -90,11 +92,13 @@ When your repo has `.agents/reports/` and `.agents/canonical_configs/references/
 
 If unsure, prefer **reports** for a snapshot at one point in time, **references** for ongoing rules.
 
-### Branch workflow (brief)
+### Git delivery and branch workflow
+
+This section is the normative agent-facing home for git-delivery gating; entry docs carry the governance-kernel minimums plus a pointer here.
 
 - Local-only AI/agent work should stay on the current branch.
-- Agents must not stage, unstage, commit, push, or switch branches for remote delivery without a direct user order for that specific Git index or delivery action.
-- AI/agent branches for explicitly requested remote delivery: `agents/{agent_name}/{topic}` where your `CONTRIBUTING.md` requires it.
+- Agents must not stage, unstage, commit, push, or switch branches for remote delivery without a direct user order for that specific Git index or delivery action. Do not offer staging, committing, pushing, or draft PRs by default unless they are genuinely necessary to complete the requested task.
+- AI/agent branches for explicitly requested remote delivery: `agents/{agent_name}/{topic}` where your `CONTRIBUTING.md` requires it. If the current branch does not match, ask before creating or switching branches.
 - Do not push directly to protected branches.
 - **Sibling or multi-repo changes:** state the branch per target repo and obtain confirmation before writing.
 

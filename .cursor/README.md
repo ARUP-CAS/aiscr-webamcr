@@ -1,43 +1,5 @@
-# Konfigurace Cursoru
+# Vendorova vrstva Cursor
 
-([English](README_en.md))
+Tento adresar `.cursor/` je dorucena vrstva Cursor pro tento repozitar, udrzovana v synchronizaci z hubu `aiscr-management`. Obsahuje aktiva vybrana pro tento repozitar (pravidla, skills, agenty a nastaveni dle potreby).
 
-```text
-Language entry scope: Agents MUST use README_en.md for operational instructions. This README.md is human-facing Czech only; align with the English twin when meaning changes.
-```
-
-Tato složka je **committed vendor strom Cursoru v kořeni management hubu AIS CR**. Je jediným zdrojem pravdy pro aktiva, která obsahuje (rules, skills, agents, hooks). Sourozenecké repozitáře získávají vybraná aktiva přes direct-bundle sync řízený `.agents/sync/` politikou pomocí `orchestrate_local_agent_sync.py inspect → dry-run → apply --approve`. Historické rozvržení `.agents/local_configs/<repo>/.cursor/` (payload mirror) bylo vyřazeno a nesmí být obnovováno.
-
-<!-- aiscr:stop-anchor -->
-Následující load path je podpůrná pomůcka; normativní zůstávají sekce `Entry scope` a `Co načíst nejdřív`.
-
-```mermaid
-flowchart TD
-  scope["Zůstaň nejdřív v .cursor/"]
-  rules["Načti AGENTS.md a .cursor/rules/"]
-  routing["Pro topic routing použij governance_by_tool.md a agent_tool_feature_matrix.md"]
-  workflows["Workflow vstupy hledej v .cursor/skills/"]
-
-  scope --> rules
-  rules --> routing
-  routing --> workflows
-```
-
-## Entry scope
-
-- Zůstaň nejdřív v tomto stromu `.cursor/` a v jeho přímých pointerech.
-- Paralelní `.claude/`, `.codex/` a `.gemini/` neotvírej bez důvodu.
-- Do jiného vendor stromu přecházej jen při explicitní kontrole parity, generátoru nebo governance údržbě.
-- Pro provozní čtení používej anglický protějšek [README_en.md](README_en.md); tento soubor je český primární pár.
-
-## Co načíst nejdřív
-
-- `AGENTS.md`
-- `.cursor/rules/`
-- `.agents/canonical_configs/references/governance_by_tool.md`
-- `.agents/canonical_configs/references/agent_tool_feature_matrix.md`
-
-## Poznámky
-
-- Workflow vstupy jsou v `.cursor/skills/`.
-- Dlouhá governance nepatří do tohoto README; drž ji v kanonických pravidlech.
+Governance viz `AGENTS.md` a dorucene ctecky pravidel. Synchronizovane soubory zde needitujte rucne; zmeny navrhnete v hubu.
