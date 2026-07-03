@@ -95,13 +95,22 @@ detection (`hash`, `status`, `coverage-gaps`, `cross-validate`, `id-inventory`,
      vendored exclusions, the review complexity budget, and **DONE MEANS DONE**.
    - `codebase-review-mode-update`: run phases U01–U06; write findings into the existing
      `final_audit.md` body sections plus a dated changelog entry — never a separate report.
+   - In U05, treat workflow-evolution notes as sibling-local evidence. Classify each
+     suggestion with an evidence path, proposed hub target, and disposition
+     (`incorporated`, `pending`, `rejected`, or `partially incorporated`). Do not compare
+     suggestions against retired sibling `review_codebase.md` / `review_update.md`
+     prompts, and do not edit hub workflow sources from the sibling review run.
 6. **Write outputs** per the plan's cache/report schema, severity vocabulary, and
    output-language discipline: update analysis JSONs, `bugs.md`,
    `refactoring_backlog.md`, `final_audit.md` (body **and** changelog), and the cache
    atomically per phase. Timestamps come from git or the runtime clock, never guessed.
-7. **Validate** with `review_tools.py all` (when present); fix inconsistencies before
+7. **Handle workflow-evolution handoff** only after explicit approval for the current
+   review run. Approved hub-owned follow-up uses the existing `report-to-backlog-handoff`
+   and hub note-idea workflow semantics, then stops at a `schema: backlog` item. Without that
+   approval, feedback remains in sibling evidence or report output.
+8. **Validate** with `review_tools.py all` (when present); fix inconsistencies before
    marking a task `done`.
-8. **Close out** the rolling usage-log entry per `aiscr-usage-logging.md` (agent/runtime,
+9. **Close out** the rolling usage-log entry per `aiscr-usage-logging.md` (agent/runtime,
    model, subagents used, MCP servers used, mode, target repo, impacted paths).
 
 <!-- aiscr:gen:id=guardrails -->
@@ -116,6 +125,8 @@ detection (`hash`, `status`, `coverage-gaps`, `cross-validate`, `id-inventory`,
 **IRON LAW:** `NEVER PROCEED PAST MODE PROPOSAL WITHOUT EXPLICIT USER CONFIRMATION.`
 
 **IRON LAW:** `NEVER HARDCODE REPO-SPECIFIC SCOPE (APP NAMES, FILE LISTS, VENDORED LIBRARIES, THRESHOLD VALUES) INTO THE HUB-CANONICAL SOURCE — IT BELONGS IN THE TARGET REPO REVIEW_CONFIG.YAML.`
+
+**IRON LAW:** `NEVER SELF-MODIFY HUB CODEBASE-REVIEW WORKFLOW SOURCES OR EMIT HUB BACKLOG ITEMS FROM A SIBLING REVIEW RUN WITHOUT EXPLICIT CURRENT-RUN HANDOFF APPROVAL.`
 
 No exceptions. These override any "the file is obviously fine", "the cache says done so I
 
@@ -133,6 +144,7 @@ No exceptions. These override any "the file is obviously fine", "the cache says 
 | "This 2,000-line file is over the line limit, split it" | Line count is a caution signal, not the trigger — justify splits by coherent unit and complexity. |
 | "The skill stub is here, so I'll create `review_config.yaml` and start a pass" | If the repo has no review setup it is not enrolled — explain that enrolment is deliberate and separately approved, and stop. |
 | "I'll target aiscr-management to test the workflow" | Refuse. The hub carries no review lifecycle; point to `run_validation_all.py` / `validate_tool_parity.py`. |
+| "U05 found a good workflow fix, so I'll patch the hub source now" | Record the evidence and prepare a handoff candidate; hub backlog emission requires explicit approval for this run. |
 <!-- aiscr:endgen -->
 
 ## Verification before completion
@@ -160,7 +172,8 @@ No exceptions. These override any "the file is obviously fine", "the cache says 
   the hub-canonical source and plan never hardcode it.
 - This canonical source plus the embedded execution plan below are the single
   operational source. Agents must not self-modify them during a review session;
-  workflow-evolution feedback is human-mediated.
+  workflow-evolution feedback is human-mediated through report-to-backlog handoff and
+  hub note-idea workflow semantics after explicit current-run approval.
 - Durable contract: the workflow contract summarized in this compiled skill. Full runbook:
   the embedded execution plan below.
 

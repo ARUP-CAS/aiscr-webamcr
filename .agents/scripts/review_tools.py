@@ -11,7 +11,7 @@ Usage:
     python review_tools.py coverage-gaps      # identify analysis coverage gaps
     python review_tools.py id-inventory       # inventory IDs across artifacts
     python review_tools.py lint-artifacts     # validate artifact structure
-    python review_tools.py prompt-evolution   # find unapplied prompt proposals
+    python review_tools.py prompt-evolution   # inventory workflow-evolution evidence
     python review_tools.py repo-structure     # report repository statistics
     python review_tools.py status             # show review workflow status
     python review_tools.py all                # run every check
@@ -787,87 +787,77 @@ def cmd_lint_artifacts(cfg: Config, _args: argparse.Namespace) -> int:
 # -- cmd: prompt-evolution -----------------------------------------------------
 
 
+_PROMPT_EVOLUTION_FILE_RE = re.compile(r"^(?P<task>[TU]\d{2}[a-z]?)_prompt_update\.md$", re.IGNORECASE)
+_PROMPT_EVOLUTION_README_NAMES = {"README.md", "README_en.md"}
+
+
+def _relative_display_path(root: Path, path: Path) -> str:
+    """Return a repository-relative path when possible."""
+    try:
+        return str(path.relative_to(root)).replace("\\", "/")
+    except ValueError:
+        return str(path)
+
+
+def _count_prompt_evolution_bullets(content: str) -> int:
+    """Count top-level bullet suggestions in a feedback file."""
+    return len(re.findall(r"(?m)^\s*-\s+\S", content))
+
+
 def cmd_prompt_evolution(cfg: Config, _args: argparse.Namespace) -> int:
-    """Report prompt-evolution proposals not reflected in the active prompt."""
+    """Inventory workflow-evolution evidence and handoff status."""
     pe_dir = cfg.prompt_evolution_dir
     if not pe_dir.exists():
-        print("[prompt-evolution] No prompt_evolution/ directory found.")
+        print("[prompt-evolution] No workflow-evolution evidence found.")
         return 0
 
-    codebase_text = _read_text(cfg.review_codebase)
-    if not codebase_text:
-        print("[prompt-evolution] review_codebase.md not found; cannot check integration.")
+    evidence_files = sorted(path for path in pe_dir.iterdir() if path.is_file())
+    feedback_files: list[tuple[str, Path, int, bool]] = []
+    malformed: list[tuple[Path, str]] = []
+
+    for evidence_file in evidence_files:
+        if evidence_file.name in _PROMPT_EVOLUTION_README_NAMES:
+            continue
+        match = _PROMPT_EVOLUTION_FILE_RE.match(evidence_file.name)
+        if not match:
+            malformed.append((evidence_file, "unexpected filename; expected <task_id>_prompt_update.md"))
+            continue
+        content = _read_text(evidence_file).strip()
+        if not content:
+            malformed.append((evidence_file, "empty evidence file"))
+            continue
+        feedback_files.append(
+            (
+                match.group("task").upper(),
+                evidence_file,
+                _count_prompt_evolution_bullets(content),
+                bool(re.search(r"(?m)^\s*-\s+\S", content)),
+            )
+        )
+
+    if not feedback_files and not malformed:
+        print("[prompt-evolution] No workflow-evolution evidence found.")
         return 0
 
-    pe_files = sorted(pe_dir.glob("*_prompt_update.md"))
-    if not pe_files:
-        print("[prompt-evolution] No prompt evolution files found.")
-        return 0
+    total_bullets = sum(count for _, _, count, _ in feedback_files)
+    print("[prompt-evolution] Workflow-evolution evidence inventory")
+    print(f"  Directory: {_relative_display_path(cfg.repo_root, pe_dir)}")
+    print(f"  Evidence files: {len(feedback_files)}")
+    print(f"  Bullet suggestions: {total_bullets}")
+    print(f"  Pending handoff candidates: {len(feedback_files)}")
+    print(f"  Malformed evidence: {len(malformed)}")
+    print("  Hub handoff: report-to-backlog-handoff -> /aiscr-note-idea after approval")
 
-    pending: list[tuple[str, str]] = []
-    integrated = 0
-    total_suggestions = 0
+    for task, path, bullet_count, has_bullets in feedback_files:
+        rel_path = _relative_display_path(cfg.repo_root, path)
+        shape = f"{bullet_count} bullet(s)" if has_bullets else "unstructured notes"
+        print(f"    [{task}] {rel_path}: {shape}; disposition pending triage")
 
-    for pf in pe_files:
-        task = pf.stem.replace("_prompt_update", "")
-        content = _read_text(pf)
-        suggestions = re.split(r"\n-\s+", content)
-        for suggestion in suggestions:
-            suggestion = suggestion.strip()
-            if not suggestion or len(suggestion) < 20:
-                continue
-            total_suggestions += 1
-            keywords = re.findall(r"\b[A-Za-z_]{4,}\b", suggestion)
-            significant = [
-                k
-                for k in keywords
-                if k.lower()
-                not in {
-                    "should",
-                    "could",
-                    "would",
-                    "this",
-                    "that",
-                    "with",
-                    "from",
-                    "have",
-                    "been",
-                    "they",
-                    "were",
-                    "into",
-                    "more",
-                    "when",
-                    "also",
-                    "each",
-                    "does",
-                    "what",
-                    "make",
-                    "will",
-                    "than",
-                    "only",
-                    "just",
-                    "very",
-                    "note",
-                    "such",
-                    "must",
-                }
-            ]
-            match_count = sum(1 for k in significant[:6] if k.lower() in codebase_text.lower())
-            if match_count >= 2:
-                integrated += 1
-            else:
-                short = suggestion[:80].replace("\n", " ")
-                pending.append((task.upper(), short))
+    for path, reason in malformed:
+        rel_path = _relative_display_path(cfg.repo_root, path)
+        print(f"    ERROR: {rel_path}: {reason}")
 
-    print(f"[prompt-evolution] Files: {len(pe_files)}, Suggestions: {total_suggestions}")
-    print(f"  Integrated:  {integrated}")
-    print(f"  Pending:     {len(pending)}")
-    if pending:
-        for task, desc in pending[:10]:
-            print(f"    [{task}] {desc}...")
-        if len(pending) > 10:
-            print(f"    ... and {len(pending) - 10} more")
-    return len(pending)
+    return len(malformed)
 
 
 # -- cmd: repo-structure -------------------------------------------------------
@@ -1029,7 +1019,7 @@ COMMANDS: dict[str, tuple] = {
     "coverage-gaps": (cmd_coverage_gaps, "Detect uncovered source files"),
     "id-inventory": (cmd_id_inventory, "Cross-reference all IDs across artifacts"),
     "lint-artifacts": (cmd_lint_artifacts, "Validate .agents/ artifact structure"),
-    "prompt-evolution": (cmd_prompt_evolution, "Check prompt evolution integration status"),
+    "prompt-evolution": (cmd_prompt_evolution, "Inventory workflow-evolution evidence"),
     "repo-structure": (cmd_repo_structure, "Scan and summarize repository structure"),
     "status": (cmd_status, "Print review system status dashboard"),
     "all": (cmd_all, "Run all validation checks"),
