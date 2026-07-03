@@ -59,19 +59,17 @@ def handle_fedora_error(view_func=None, additional_exceptions=tuple()):
                             extra={"error": err, "rollback_error": rollback_err},
                         )
                 transaction.set_rollback(True)
+                error_config = None
                 if isinstance(err, FedoraNoResponseError):
+                    error_config = (CHYBA_SPOJENI_REPOZITAR, "connection_failed", 503)
+                elif isinstance(err, FedoraUpdatedByAnotherTransactionError):
+                    error_config = (ZAZNAM_ZMENEN_JINOU_TRANSAKCI, "another_transaction", 409)
+                if error_config:
+                    message, json_error, status_code = error_config
                     request = args[0]
-                    messages.add_message(request, messages.ERROR, CHYBA_SPOJENI_REPOZITAR)
+                    messages.add_message(request, messages.ERROR, message)
                     if request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest":
-                        return JsonResponse({"error": "connection_failed"}, status=503)
-                    if err.ident_cely:
-                        return redirect(reverse("core:redirect_ident", kwargs={"ident_cely": err.ident_cely}))
-                    return redirect(reverse("core:home"))
-                if isinstance(err, FedoraUpdatedByAnotherTransactionError):
-                    request = args[0]
-                    messages.add_message(request, messages.ERROR, ZAZNAM_ZMENEN_JINOU_TRANSAKCI)
-                    if request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest":
-                        return JsonResponse({"error": "another_transaction"}, status=409)
+                        return JsonResponse({"error": json_error}, status=status_code)
                     if err.ident_cely:
                         return redirect(reverse("core:redirect_ident", kwargs={"ident_cely": err.ident_cely}))
                     return redirect(reverse("core:home"))
