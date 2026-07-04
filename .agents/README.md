@@ -9,9 +9,7 @@ Pravidla a governance viz [AGENTS.md](../AGENTS.md).
 .agents/
   prompts/
     audit_doc_hygiene.md        — Portable audit: duplikace, drift, governance (any repo)
-    project_conventions.md      — Shrnutí konvencí pro agenty (odkaz z AGENTS.md)
-    setup_dev.md                — Checklist vývojového prostředí a onboarding
-    hooks_reference.md          — Doporučené hooks (pro lokální konfiguraci)
+    postmortem_template.md      — Šablona pro incident postmortem
   config/
     review_config.yaml          — Konfigurace review tasků, tech stack, adresáře
     review_cache.json            — Perzistentní stav a průběh review sessions
@@ -23,7 +21,6 @@ Pravidla a governance viz [AGENTS.md](../AGENTS.md).
     review_reports/              — Reporty z jednotlivých tasků (<task_id>.md); final_audit.md obsahuje Changelog
     bugs.md                      — Evidence nalezených chyb
     refactoring_backlog.md       — Backlog strukturálních vylepšení
-    automation_recommendations.md  — Doporučení pro Claude Code automations
     workflow_evolution_legacy_evidence.md — Zachovaná evidence z vyřazeného kanálu prompt-evolution
   scripts/
     review_tools.py              — Repo-agnostic review automation (hash, cross-validate, coverage-gaps, id-inventory, lint-artifacts, prompt-evolution, repo-structure, status)
@@ -36,7 +33,5 @@ Pravidla a governance viz [AGENTS.md](../AGENTS.md).
 - **Stav review:** `config/review_cache.json`
 - **Operační workflow review:** kanonické `aiscr-codebase-review` (režimy full / update) dodané přes skill surfaces `.cursor/` / `.claude/` / `.codex/` / `.gemini/`; samostatný dlouhý review prompt v `prompts/` již neexistuje.
 - **Doc hygiene audit:** `prompts/audit_doc_hygiene.md`
-- **Konvence / setup / hooks:** `prompts/project_conventions.md`, `prompts/setup_dev.md`, `prompts/hooks_reference.md`
-- **Automation doporučení:** `reports/automation_recommendations.md`
 
 Viz také [CONTRIBUTING.md](../CONTRIBUTING.md) § Správa dokumentace repozitáře.

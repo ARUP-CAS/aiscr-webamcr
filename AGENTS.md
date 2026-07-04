@@ -305,17 +305,16 @@ not as private local tooling.
 - **Agent and project rules:** `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`
 - **Review config and task definitions:** `.agents/config/` (e.g.
   `review_config.yaml`)
-- **Prompts and automation recommendations:** `.agents/prompts/`,
-  `.agents/reports/` (e.g. `automation_recommendations.md`)
+- **Portable prompts:** `.agents/prompts/` (e.g. `audit_doc_hygiene.md`)
+- **Ecosystem automation recommendations:** hub `aiscr-management` — see below
 - **Vendor delivery surfaces:** `.cursor/`, `.claude/`, `.codex/`,
   `.gemini/`, `.clinerules/`, `.qodo/` as synchronized from the
   `aiscr-management` hub via direct-bundle sync, resolved from the hub
   assistant roots plus this repo's enrollment in the hub sync registry
 
-Document recommended hooks, MCP servers, and subagents in `AGENTS.md`,
-`.agents/`, or the tracked vendor surface that consumes them. Recommended hook
-behaviour is delivered through the tracked vendor hook and configuration
-surfaces where enabled.
+Ecosystem-wide automation recommendations (MCP, skills, hooks, subagents) are maintained in **`aiscr-management`** repository.
+
+Document recommended hooks, MCP servers, and subagents through `AGENTS.md` and tracked vendor hook and configuration surfaces where enabled.
 
 ------------------------------------------------------------------------
 

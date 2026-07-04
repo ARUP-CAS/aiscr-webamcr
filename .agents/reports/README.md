@@ -22,9 +22,6 @@ Lidsky čitelné výstupy dlouhodobého technického review.
   - backlog strukturálních / architektonických vylepšení,  
   - členění podle priority (vysoká / střední / nízká).
 
-- `automation_recommendations.md`  
-  - doporučení pro nastavení Claude Code / Cursor automations (MCP servery, hooks, skills),  
-  - sdílená pravidla mají žít zde a v `AGENTS.md` / `.agents/`, nikoli v `.cursor/` nebo `.claude/`.
 
 - `workflow_evolution_legacy_evidence.md`
   - zachovaná evidence z vyřazeného kanálu prompt-evolution.
@@ -36,3 +33,4 @@ Lidsky čitelné výstupy dlouhodobého technického review.
 - Reporty v `review_reports/` se generují po dokončení tasků T01–T11 podle
   kanonického workflow `aiscr-codebase-review`.
 
+- Ekosystémová doporučení pro automatizaci (MCP, skills, hooks, subagenty) jsou pouze v hubu `aiscr-management` — viz `AGENTS.md`.
