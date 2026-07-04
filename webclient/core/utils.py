@@ -10,7 +10,15 @@ import core.message_constants as mc
 import django
 import pytz
 from arch_z.models import ArcheologickyZaznam
-from core.constants import EPSG_WGS84, LIMIT_PRVKU_ZOBRAZENI_HEATMAP, ZAPSANI_AZ, ZAPSANI_DOK, ZAPSANI_PROJ, ZAPSANI_SN
+from core.constants import (
+    EPSG_WGS84,
+    LIMIT_PRVKU_ZOBRAZENI_HEATMAP,
+    PROJEKT_STAV_VYTVORENY,
+    ZAPSANI_AZ,
+    ZAPSANI_DOK,
+    ZAPSANI_PROJ,
+    ZAPSANI_SN,
+)
 from core.coordTransform import transform_geom_to_sjtsk, transform_geom_to_wgs84
 from dj.models import DokumentacniJednotka
 from django.apps import apps
@@ -854,6 +862,116 @@ def get_pian_from_envelope(bounds, zoom, request):
             count = len(pians)
 
     return pians, count
+
+
+def get_list_map_records_in_envelope(layer, bounds, request):
+    """
+    Vrací permission-filtrovaný queryset záznamů daného workflow ve výřezu mapy pro DETAILNÍ
+    zobrazení v mapovém výběru výpisu.
+
+    Aplikuje stejná oprávnění jako příslušný výpis (přes route výpisu), takže uživatel v detailu
+    uvidí jen záznamy, které smí vidět i v tabulce (role, organizace, vlastnictví, přístupnost).
+    Geometrie akce/lokality je nesena PIANy přes dokumentační jednotky.
+
+    :param layer: Identifikátor vrstvy (``"pas"`` | ``"projekt"`` | ``"akce"`` | ``"lokalita"`` | ``"3d"``).
+    :param bounds: Rohy výřezu mapy (``topLeft``/``topRight``/``bottomRight``/``bottomLeft`` s ``lat``/``lng``).
+    :param request: HTTP požadavek (kvůli uživateli a jeho oprávněním).
+
+        :return: Trojici ``(queryset, typ_prvku, název_geometrického_pole)`` nebo ``(None, None, None)``
+            pro neznámou vrstvu.
+    """
+    from copy import copy
+    from types import SimpleNamespace
+
+    from core.views import PermissionFilterMixin
+    from django.contrib.gis.geos import Polygon
+
+    polygon = Polygon(
+        (
+            (bounds["bottomLeft"]["lng"], bounds["bottomLeft"]["lat"]),
+            (bounds["bottomRight"]["lng"], bounds["bottomRight"]["lat"]),
+            (bounds["topRight"]["lng"], bounds["topRight"]["lat"]),
+            (bounds["topLeft"]["lng"], bounds["topLeft"]["lat"]),
+            (bounds["bottomLeft"]["lng"], bounds["bottomLeft"]["lat"]),
+        )
+    )
+
+    def perm_request(route):
+        # kopie requestu s podstrčenou route výpisu, aby check_filter_permission použil jeho oprávnění
+        # (a zároveň zůstaly dostupné ostatní atributy requestu – user, GET, META, session …)
+        req = copy(request)
+        req.resolver_match = SimpleNamespace(route=route, kwargs={})
+        return req
+
+    if layer == "pas":
+        from pas.models import SamostatnyNalez
+        from pas.views import PasPermissionFilterMixin
+
+        qs = SamostatnyNalez.objects.filter(geom__isnull=False, geom__intersects=polygon)
+        perm = PasPermissionFilterMixin()
+        perm.request = perm_request("pas/vyber")
+        perm.typ_zmeny_lookup = ZAPSANI_SN
+        perm.permission_model_lookup = ""
+        return perm.check_filter_permission(qs), "pas", "geom"
+
+    if layer == "projekt":
+        from projekt.models import Projekt
+        from projekt.views import ProjektPermissionFilterMixin
+
+        qs = Projekt.objects.filter(
+            stav__gt=PROJEKT_STAV_VYTVORENY,
+            geom__isnull=False,
+            geom__intersects=polygon,
+        )
+        perm = ProjektPermissionFilterMixin()
+        perm.request = perm_request("projekt/vyber")
+        perm.typ_zmeny_lookup = ZAPSANI_PROJ
+        perm.permission_model_lookup = ""
+        return perm.check_filter_permission(qs), "projekt", "geom"
+
+    if layer in ("akce", "lokalita"):
+        from pian.models import Pian
+
+        if layer == "akce":
+            from arch_z.models import Akce as Model
+
+            route = "arch-z/akce/vyber"
+        else:
+            from lokalita.models import Lokalita as Model
+
+            route = "arch-z/lokalita/vyber"
+
+        records = Model.objects.filter(
+            archeologicky_zaznam__dokumentacni_jednotky_akce__pian__geom__isnull=False,
+            archeologicky_zaznam__dokumentacni_jednotky_akce__pian__geom__intersects=polygon,
+        )
+        perm = PermissionFilterMixin()
+        perm.request = perm_request(route)
+        perm.typ_zmeny_lookup = ZAPSANI_AZ
+        perm.permission_model_lookup = "archeologicky_zaznam__"
+        records = perm.check_filter_permission(records)
+        az_ids = records.values_list("archeologicky_zaznam_id", flat=True)
+        pians = Pian.objects.filter(
+            dokumentacni_jednotky_pianu__archeologicky_zaznam_id__in=az_ids,
+            geom__intersects=polygon,
+        ).distinct()
+        return pians, "pian", "geom"
+
+    if layer == "3d":
+        from dokument.models import Dokument
+
+        qs = Dokument.objects.filter(
+            ident_cely__contains="3D",
+            extra_data__geom__isnull=False,
+            extra_data__geom__intersects=polygon
+        )
+        perm = PermissionFilterMixin()
+        perm.request = perm_request("dokument/model/vyber")
+        perm.typ_zmeny_lookup = ZAPSANI_DOK
+        perm.permission_model_lookup = ""
+        return perm.check_filter_permission(qs), "3d", "extra_data__geom"
+
+    return None, None, None
 
 
 def get_dj_akce_for_pian(pian_ident_cely, request):

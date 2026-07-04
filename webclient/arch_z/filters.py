@@ -4,6 +4,7 @@ import crispy_forms
 from arch_z.forms import ArchzFilterForm
 from arch_z.models import ArcheologickyZaznam
 from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
+from core.filters import GeomWithinFilterMixin
 from core.forms import SelectMultipleSeparator
 from core.widgets import AutocompleteModelSelect2Multiple
 from crispy_forms.layout import HTML, Div, Layout
@@ -99,7 +100,7 @@ class NumberRangeFilter(RangeFilter):
     field_class = NumberRangeField
 
 
-class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
+class ArchZaznamFilter(GeomWithinFilterMixin, HistorieFilter, KatastrFilterMixin, FilterSet):
     """
     Třída pro základní filtrování archeologických záznamů a jejich potomků.
     """
@@ -108,6 +109,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     TYP_VAZBY = ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
     HISTORIE_TYP_ZMENY_STARTS_WITH = "AZ"
+    geom_filter_lookup = "archeologicky_zaznam__dokumentacni_jednotky_akce__pian__geom"
 
     stav = MultipleChoiceFilter(
         choices=ArcheologickyZaznam.STATES,

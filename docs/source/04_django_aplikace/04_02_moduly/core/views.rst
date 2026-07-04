@@ -865,6 +865,21 @@ Funkce
 
    :return: Vrací výsledek volání ``JsonResponse()``.
 
+.. py:function:: post_ajax_get_list_map_data(request, layer)
+
+   Funkce pohledu pro datovou vrstvu mapy v záložce filtru výpisu.
+
+   Vrací prvky daného workflow (``layer``) v aktuálním výřezu mapy ve stejném kontraktu jako
+   :func:`post_ajax_get_pas_and_pian_limit` – tj. ``{"points"|"heat", "algorithm", "count"}`` –
+   aby klient mohl znovupoužít stávající vykreslování. Nad ``LIMIT_PRVKU_ZOBRAZENI_HEATMAP`` se
+   přepíná na heatmapu. Vrstva je pouze orientační; vlastní filtrování tabulky zajišťuje
+   serverový filtr ``geom_filter``.
+
+   :param request: HTTP požadavek s tělem ``{"bounds": {...}, "zoom": int}``.
+   :param layer: Identifikátor datové vrstvy (``"pas"`` | ``"projekt"`` | ``"akce"`` | ``"lokalita"`` | ``"3d"``).
+
+   :return: Vrací výsledek volání ``JsonResponse()``.
+
 .. py:function:: check_soubor_vazba(typ_vazby, ident, id_zaznamu)
 
    Ověří soubor vazba.
