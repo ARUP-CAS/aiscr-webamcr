@@ -948,7 +948,11 @@ def get_list_map_records_in_envelope(layer, bounds, request):
     if layer == "3d":
         from dokument.models import Dokument
 
-        qs = Dokument.objects.filter(extra_data__geom__isnull=False, extra_data__geom__intersects=polygon)
+        qs = Dokument.objects.filter(
+            ident_cely__contains="3D",
+            extra_data__geom__isnull=False,
+            extra_data__geom__intersects=polygon
+        )
         perm = PermissionFilterMixin()
         perm.request = perm_request("dokument/model/vyber")
         perm.typ_zmeny_lookup = ZAPSANI_DOK
