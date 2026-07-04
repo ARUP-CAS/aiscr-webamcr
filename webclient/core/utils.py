@@ -10,7 +10,15 @@ import core.message_constants as mc
 import django
 import pytz
 from arch_z.models import ArcheologickyZaznam
-from core.constants import EPSG_WGS84, LIMIT_PRVKU_ZOBRAZENI_HEATMAP, ZAPSANI_AZ, ZAPSANI_DOK, ZAPSANI_PROJ, ZAPSANI_SN
+from core.constants import (
+    EPSG_WGS84,
+    LIMIT_PRVKU_ZOBRAZENI_HEATMAP,
+    PROJEKT_STAV_VYTVORENY,
+    ZAPSANI_AZ,
+    ZAPSANI_DOK,
+    ZAPSANI_PROJ,
+    ZAPSANI_SN,
+)
 from core.coordTransform import transform_geom_to_sjtsk, transform_geom_to_wgs84
 from dj.models import DokumentacniJednotka
 from django.apps import apps
@@ -910,7 +918,11 @@ def get_list_map_records_in_envelope(layer, bounds, request):
         from projekt.models import Projekt
         from projekt.views import ProjektPermissionFilterMixin
 
-        qs = Projekt.objects.filter(geom__isnull=False, geom__intersects=polygon)
+        qs = Projekt.objects.filter(
+            stav__gt=PROJEKT_STAV_VYTVORENY,
+            geom__isnull=False,
+            geom__intersects=polygon,
+        )
         perm = ProjektPermissionFilterMixin()
         perm.request = perm_request("projekt/vyber")
         perm.typ_zmeny_lookup = ZAPSANI_PROJ
