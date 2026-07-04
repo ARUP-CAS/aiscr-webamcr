@@ -46,6 +46,9 @@ SOUBOR_SE_NEPOVEDLO_PREJMENOVAT: Final = _(
 SOUBOR_SUFFIX_OBSAZEN: Final = _(
     "common.message.SOUBOR_SUFFIX_OBSAZEN.text"
 )  # Zvolený suffix je již obsazený nebo neplatný.
+ZAZNAM_ZMENEN_JINOU_TRANSAKCI: Final = _(
+    "common.message.ZAZNAM_ZMENEN_JINOU_TRANSAKCI.text"
+)  # Záznam právě upravuje jiná operace, akci nelze dokončit. Zkuste to prosím za chvíli znovu.
 MAXIMUM_IDENT_DOSAZEN: Final = _(
     "common.message.MAXIMUM_IDENT_DOSAZEN.text"
 )  # Byl překročen limit při přidělování identifikátoru. Pro vyřešení problému kontaktujte administrátora AMČR.

@@ -1974,6 +1974,36 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["vypis_app"] = self.vypis_app
         return context
 
+    #: Limit pro zapnutí cacheops cache. cacheops sestavuje invalidační schéma (DNF)
+    #: jako kartézský součin hodnot napříč vícehodnotovými filtry. U hlubokých M2M
+    #: filtrů (předměty/objekty komponent) vede velký počet zvolených hodnot k milionům
+    #: konjunkcí a vyčerpání paměti (OOM) při výpočtu ``cacheops.tree.dnfs``. Pro
+    #: kombinace, jejichž součin počtů hodnot překročí tento limit, se cache vypíná.
+    cache_filter_value_product_limit = 1000
+
+    def _is_query_cacheable(self):
+        """
+        Vrací, zda je bezpečné zapnout cacheops cache pro aktuální filtr.
+
+        Spočítá součin počtů hodnot u vícehodnotových GET parametrů. Tento součin
+        odpovídá řádové velikosti invalidační DNF, kterou cacheops staví – u velkých
+        kombinací hlubokých M2M filtrů by její sestavení vyčerpalo paměť a shodilo
+        worker. Stránkovací a řadicí parametry se do součinu nezapočítávají.
+
+        :return: ``True`` pokud součin nepřekročí ``cache_filter_value_product_limit``.
+        """
+        ignored = {"page", "sort", "per_page", "csrfmiddlewaretoken"}
+        product = 1
+        for key in self.request.GET:
+            if key in ignored:
+                continue
+            count = len(self.request.GET.getlist(key))
+            if count > 1:
+                product *= count
+                if product > self.cache_filter_value_product_limit:
+                    return False
+        return True
+
     def get_queryset(self):
         """
         Vrací queryset výsledků vyhledávání podle zadaných filtrů.
@@ -1981,7 +2011,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         :return: Vrací proměnná ``qs``.
         """
         qs = super().get_queryset()
-        qs.cache()
+        if self._is_query_cacheable():
+            qs.cache()
         return qs
 
     @method_decorator(never_cache)

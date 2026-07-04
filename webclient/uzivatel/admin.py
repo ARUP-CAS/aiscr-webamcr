@@ -25,7 +25,7 @@ from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.html import format_html
-from django.utils.timezone import localtime
+from django.utils.timezone import localtime, now
 from django.utils.translation import gettext_lazy as _
 from django_object_actions import DjangoObjectActions
 from historie.models import Historie
@@ -285,6 +285,42 @@ class PesUserNotificationTypeInline(admin.TabularInline):
         return extra
 
 
+class EmailPotvrzenFilter(admin.SimpleListFilter):
+    """Filtr podle toho, zda uživatel potvrdil svůj email aktivačním odkazem."""
+
+    title = _("uzivatel.admin.filter.emailPotvrzen.title")
+    parameter_name = "email_potvrzen"
+
+    def lookups(self, request, model_admin):
+        """
+        Vrací volby filtru.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``lookups``.
+        :param model_admin: Instance administrace modelu, ke které filtr náleží.
+
+            :return: Vrací n-tici dvojic (hodnota, popisek).
+        """
+        return (
+            ("yes", _("uzivatel.admin.filter.emailPotvrzen.yes")),
+            ("no", _("uzivatel.admin.filter.emailPotvrzen.no")),
+        )
+
+    def queryset(self, request, queryset):
+        """
+        Vyfiltruje queryset podle zvolené hodnoty.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``queryset``.
+        :param queryset: Vstupní queryset, který se má vyfiltrovat.
+
+            :return: Vrací vyfiltrovaný queryset, nebo původní queryset, pokud není volba zvolena.
+        """
+        if self.value() == "yes":
+            return queryset.filter(datum_potvrzeni_emailu__isnull=False)
+        if self.value() == "no":
+            return queryset.filter(datum_potvrzeni_emailu__isnull=True)
+        return queryset
+
+
 class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     """Admin panel pro správu uživatele."""
 
@@ -294,6 +330,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     list_display = (
         "ident_cely",
         "email",
+        "datum_potvrzeni_emailu",
         "is_active",
         "organizace",
         "hlavni_role",
@@ -305,8 +342,8 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         "osoba",
         "is_superuser",
     )
-    list_filter = ("is_active", "organizace", "groups", "is_superuser")
-    readonly_fields = ("ident_cely",)
+    list_filter = ("is_active", EmailPotvrzenFilter, "organizace", "groups", "is_superuser")
+    readonly_fields = ("ident_cely", "datum_potvrzeni_emailu")
     autocomplete_fields = ("osoba",)
     inlines = [
         UserNotificationTypeInline,
@@ -333,7 +370,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                 )
             },
         ),
-        ("Oprávnění", {"fields": ("is_active", "is_superuser")}),
+        ("Oprávnění", {"fields": ("is_active", "datum_potvrzeni_emailu", "is_superuser")}),
     )
     add_fieldsets = (
         (
@@ -395,6 +432,9 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         user = request.user
         obj.created_from_admin_panel = True
         obj.active_transaction = fedora_transaction
+        # Účet zakládaný administrátorem neprochází aktivačním odkazem a proto ho při vytvoření považujeme za potvrzený.
+        if not change and obj.datum_potvrzeni_emailu is None:
+            obj.datum_potvrzeni_emailu = now()
         logger.debug(
             "uzivatel.admin.save_model.start",
             extra={
@@ -707,10 +747,19 @@ class NotificationsLogAdmin(admin.ModelAdmin):
     """
 
     change_list_template = "admin/notificationslog_change_list.html"
-    list_display = ("created", "notification_type", "receiver_address", "user", "status_colored")
+    list_display = ("created", "notification_type", "zaznam_ident_cely", "receiver_address", "user", "status_colored")
+    list_select_related = ("notification_type", "user", "user__organizace")
     list_filter = ("status", "created_at")
-    search_fields = ("receiver_address", "exception")
-    date_hierarchy = "created_at"
+    search_fields = (
+        "receiver_address",
+        "exception",
+        "zaznam_ident_cely",
+        "notification_type__ident_cely",
+        "user__ident_cely",
+        "user__email",
+        "user__last_name",
+        "user__first_name",
+    )
     ordering = ("-created_at",)
     list_per_page = 50
 
