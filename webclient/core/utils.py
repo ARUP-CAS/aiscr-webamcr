@@ -702,33 +702,16 @@ def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
     :param ident_cely: Parametr ``ident_cely`` se předává do volání ``filter()``.
     :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
     """
-    from arch_z.models import Akce
-    from dj.models import DokumentacniJednotka
-    from django.db.models import Q
-
-    q1 = Akce.objects.filter(projekt__ident_cely=ident_cely).only("archeologicky_zaznam__ident_cely")
-
-    pians = []
-    d = None
-    for i in q1:
-        d = list(
-            (
-                DokumentacniJednotka.objects.filter(Q(ident_cely__istartswith=i.archeologicky_zaznam.ident_cely))
-                .distinct()
-                .values_list("pian__id", flat=True)
-            )
+    # Filtrování bbox je kvůli cache vypnuté; pro zapnutí přidejte
+    # ``.filter(Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom])))``.
+    pian_ids = (
+        DokumentacniJednotka.objects.filter(
+            archeologicky_zaznam__akce__projekt__ident_cely=ident_cely, pian__isnull=False
         )
-        # Filtrování bbox je kvůli cache vypnuté; pro zapnutí přidejte .filter(Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom]))).
-        if d:
-            pians.extend(d)
-    try:
-        return Pian.objects.filter(pk__in=pians)
-    except IndexError:
-        logger.debug(
-            "core.utils.get_project_pian_from_envelope.no_points",
-            extra={"left": left, "bottom": bottom, "right": right, "top": top},
-        )
-        return None
+        .values_list("pian__id", flat=True)
+        .distinct()
+    )
+    return Pian.objects.filter(pk__in=pian_ids)
 
 
 def get_3d_from_envelope(left, bottom, right, top, request):

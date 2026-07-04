@@ -11,6 +11,7 @@ from crispy_forms.layout import HTML, Div, Layout
 from django import forms
 from django.forms import HiddenInput
 from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
@@ -543,6 +544,10 @@ class PrihlaseniProjektForm(forms.ModelForm):
         self.fields["kulturni_pamatka"].required = True
         self.fields["organizace"].required = True
         self.helper = FormHelper(self)
+        prihlasit_info = format_html(
+            "<div class='col-sm-12 bold'>{}</div>",
+            _("projekt.forms.prihlaseniProj.bottom_info"),
+        )
         self.helper.layout = Layout(
             Div(
                 Div(
@@ -559,6 +564,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
                 Div("kulturni_pamatka", css_class="col-sm-6 col-lg-4"),
                 Div("kulturni_pamatka_cislo", css_class="col-sm-6 col-lg-4"),
                 Div("kulturni_pamatka_popis", css_class="col-sm-6 col-lg-4"),
+                HTML(prihlasit_info),
                 Div("old_stav"),
                 css_class="row",
             ),

@@ -513,7 +513,7 @@ def call_digiarchiv_update_task():
     """Zavolá URL digiarchívu pro spuštění aktualizace dat."""
     logger.debug("cron.tasks.call_digiarchiv_update_task.start")
     url = settings.DIGIARCHIV_UPDATE
-    requests.get(url)
+    requests.get(url, timeout=10)
     logger.debug("cron.tasks.call_digiarchiv_update_task.end")
 
 

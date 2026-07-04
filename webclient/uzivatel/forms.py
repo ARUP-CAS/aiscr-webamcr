@@ -516,6 +516,7 @@ class UserPasswordResetForm(PasswordResetForm):
             receiver_address=to_email,
             status=status,
             exception=exception,
+            record_ident_cely=getattr(context.get("user"), "ident_cely", None) if context else None,
         )
 
 
