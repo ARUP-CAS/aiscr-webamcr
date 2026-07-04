@@ -837,6 +837,8 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
     toolbar = "toolbar_pas.html"
     typ_zmeny_lookup = ZAPSANI_SN
     vypis_app = "pas"
+    map_enabled = True
+    map_layer = "pas"
 
     def init_translations(self):
         """

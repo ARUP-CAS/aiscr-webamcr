@@ -4,6 +4,7 @@ from functools import reduce
 
 import crispy_forms
 from core.constants import DOKUMENT_RELATION_TYPE, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZMENA_KATASTRU
+from core.filters import GeomWithinFilterMixin
 from core.forms import SelectMultipleSeparator
 from core.models import Soubor
 from core.widgets import AutocompleteModelSelect2Multiple
@@ -217,13 +218,14 @@ class HistorieFilter(FilterSet):
         ).distinct()
 
 
-class Model3DFilter(HistorieFilter, FilterSet):
+class Model3DFilter(GeomWithinFilterMixin, HistorieFilter, FilterSet):
     """
     Třída pro základní filtrování modelu 3D a jejich potomků.
     """
 
     TYP_VAZBY = DOKUMENT_RELATION_TYPE
     INCLUDE_KAT_TYP_ZMENY = False
+    geom_filter_lookup = "extra_data__geom"
     HISTORIE_TYP_ZMENY_STARTS_WITH = "D"
 
     ident_cely = CharFilter(
