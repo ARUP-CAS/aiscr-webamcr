@@ -8,6 +8,7 @@ from core.models import Soubor
 from dj.models import DokumentacniJednotka
 from django.db import connection, transaction
 from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from dokument.models import Dokument, DokumentCast, Tvar
@@ -153,10 +154,14 @@ class SectionNameWithAccessor(SimpleSectionTemplateName):
         """
         if self.foreign_key:
             if getattr(instance, self.foreign_key):
-                return f"{self.name}&nbsp;{getattr(getattr(instance, self.foreign_key), self.accessor)}"
+                return format_html(
+                    "<div>{}&nbsp;{}</div>",
+                    self.name,
+                    mark_safe(getattr(getattr(instance, self.foreign_key), self.accessor)),
+                )
             else:
                 return None
-        return f"{self.name}&nbsp;{getattr(instance, self.accessor)}"
+        return format_html("<div>{}&nbsp;{}</div>", self.name, mark_safe(getattr(instance, self.accessor)))
 
 
 class PianSectionNameWithAccessor(SectionNameWithAccessor):
@@ -173,7 +178,14 @@ class PianSectionNameWithAccessor(SectionNameWithAccessor):
         if getattr(instance, self.foreign_key):
             pian = getattr(instance, self.foreign_key)
             stav = getattr(pian, self.accessor[1])()
-            return f"{self.name}&nbsp;{getattr(pian, self.accessor[0])}&nbsp;({stav})&nbsp;-&nbsp;{getattr(pian, self.accessor[2])}&nbsp;({getattr(pian, self.accessor[3])})"
+            return format_html(
+                "<div>{}&nbsp;{}&nbsp;({})&nbsp;-&nbsp;{}&nbsp;({})</div>",
+                self.name,
+                mark_safe(getattr(pian, self.accessor[0])),
+                stav,
+                mark_safe(getattr(pian, self.accessor[2])),
+                mark_safe(getattr(pian, self.accessor[3])),
+            )
         else:
             return None
 
@@ -881,11 +893,20 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
             :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``new_name``.
         """
         if len(self.accessor) > 2:
-            new_name = f"{self.name}&nbsp;{getattr(instance, self.accessor[0])}&nbsp;-&nbsp;{getattr(instance, self.accessor[1])}"
+            new_name = format_html(
+                "<div>{}&nbsp;{}&nbsp;-&nbsp;{}</div>",
+                self.name,
+                mark_safe(getattr(instance, self.accessor[0])),
+                mark_safe(getattr(instance, self.accessor[1])),
+            )
         else:
-            new_name = f"{self.name}&nbsp;{getattr(instance, self.accessor[0])}"
+            new_name = format_html(
+                "<div>{}&nbsp;{}</div>",
+                self.name,
+                mark_safe(getattr(instance, self.accessor[0])),
+            )
         if getattr(instance, self.accessor[-1]):
-            return f"{new_name} ({getattr(instance, self.accessor[-1])})"
+            return format_html("{} ({})", new_name, mark_safe(getattr(instance, self.accessor[-1])))
         return new_name
 
 
@@ -913,9 +934,13 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
 
             :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``new_name``.
         """
-        new_name = f"{self.name} {getattr(instance, self.accessor[0])}"
+        new_name = f"<div>{self.name} {getattr(instance, self.accessor[0])}</div>"
         if getattr(instance, self.accessor[-1]):
-            return f"{new_name}<div class='mime-type' style='white-space: pre;'> ({getattr(instance, self.accessor[-1])})</div>"
+            return format_html(
+                "{}<div class='mime-type' style='white-space: pre;'> ({})</div>",
+                new_name,
+                mark_safe(getattr(instance, self.accessor[-1])),
+            )
         return new_name
 
 
@@ -952,7 +977,15 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
             second_part += f"&nbsp;({presna_datace})"
         if aktivity:
             third_part = f"&nbsp;({';&nbsp;'.join([str(a) for a in aktivity])})"
-        return f"{self.name}&nbsp;{getattr(instance, self.accessor[0])}&nbsp;-&nbsp;{obdobi}{second_part}&nbsp;-&nbsp;{areal}{third_part}"
+        return format_html(
+            "<div>{}&nbsp;{}&nbsp;-&nbsp;{}{}&nbsp;-&nbsp;{}{}</div>",
+            self.name,
+            mark_safe(getattr(instance, self.accessor[0])),
+            obdobi,
+            second_part,
+            areal,
+            third_part,
+        )
 
 
 class SubSectionField:

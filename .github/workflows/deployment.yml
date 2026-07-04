@@ -62,7 +62,7 @@ jobs:
           echo "git_tag=${git_tag}" >> "$GITHUB_OUTPUT"
           echo "image_tag=${image_tag}" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: refs/tags/${{ steps.normalize-tag.outputs.git_tag }}
           fetch-depth: 0
