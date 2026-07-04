@@ -954,7 +954,7 @@ def get_list_map_records_in_envelope(layer, bounds, request):
         pians = Pian.objects.filter(
             dokumentacni_jednotky_pianu__archeologicky_zaznam_id__in=az_ids,
             geom__intersects=polygon,
-        )
+        ).distinct()
         return pians, "pian", "geom"
 
     if layer == "3d":
