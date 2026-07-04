@@ -88,6 +88,12 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     )
     is_active = models.BooleanField(default=False, verbose_name=_("uzivatel.models.User.aktivni"), db_index=True)
     date_joined = models.DateTimeField(default=timezone.now)
+    datum_potvrzeni_emailu = models.DateTimeField(
+        blank=True,
+        null=True,
+        db_index=True,
+        verbose_name=_("uzivatel.models.User.datumPotvrzeniEmailu"),
+    )
     osoba = models.ForeignKey(
         "Osoba",
         models.RESTRICT,
