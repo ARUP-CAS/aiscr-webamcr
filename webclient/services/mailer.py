@@ -172,6 +172,7 @@ class Mailer:
         status,
         exception,
         log_user=None,
+        record_ident_cely=None,
     ):
         """
                Provádí operaci log notification.
@@ -182,6 +183,7 @@ class Mailer:
                :param status: Stavová nebo časová hodnota `status` používaná při rozhodování logiky.
                :param exception: Číselná hodnota ``exception`` použitá při výpočtu nebo transformaci.
                :param log_user: Uživatel nebo osoba ``log_user``, v jejímž kontextu se operace provádí.
+               :param record_ident_cely: ``ident_cely`` hlavního dotčeného záznamu (u hromadných e-mailů seznam oddělený čárkami), ukládá se do logu.
         :return: Výstup funkce odpovídající implementované logice.
         """
         user_object = log_user if log_user else receiver_object
@@ -200,6 +202,7 @@ class Mailer:
                     receiver_address=receiver_address,
                     status=status,
                     exception=exception,
+                    zaznam_ident_cely=record_ident_cely,
                 ).save()
             except Exception as e:
                 logger.info(
@@ -227,6 +230,7 @@ class Mailer:
         log_user=None,
         reply_to=None,
         cc=None,
+        record_ident_cely=None,
     ):
         """
         Odešle hodnotu. v aplikaci.
@@ -241,6 +245,7 @@ class Mailer:
         :param log_user: Uživatel nebo osoba ``log_user``, v jejímž kontextu se operace provádí.
         :param reply_to: Číselná hodnota ``reply_to`` použitá při výpočtu nebo transformaci.
         :param cc: Seznam adresátů v kopii (CC) pro odesílaný e-mail.
+        :param record_ident_cely: ``ident_cely`` hlavního dotčeného záznamu, předává se do ``_log_notification()``.
         """
         if "@" in to:
             plain_text = cls.__strip_tags(html_content)
@@ -279,6 +284,7 @@ class Mailer:
                 status=status,
                 exception=exception,
                 log_user=log_user,
+                record_ident_cely=record_ident_cely,
             )
         else:
             logger.warning("services.mailer.send.invalid_email", extra={"to": to, "subject": subject})
@@ -306,7 +312,14 @@ class Mailer:
                 "role": user.hlavni_role.name if user.hlavni_role else None,
             },
         )
-        cls.__send(notification_type.predmet, user.email, html, notification_type=notification_type, user=user)
+        cls.__send(
+            notification_type.predmet,
+            user.email,
+            html,
+            notification_type=notification_type,
+            user=user,
+            record_ident_cely=user.ident_cely,
+        )
 
     @classmethod
     def send_eu03(cls, user: "uzivatel.models.User"):
@@ -320,7 +333,14 @@ class Mailer:
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         if not cls._notification_was_sent(notification_type, user):
             html = render_to_string(notification_type.cesta_sablony)
-            cls.__send(notification_type.predmet, user.email, html, notification_type=notification_type, user=user)
+            cls.__send(
+                notification_type.predmet,
+                user.email,
+                html,
+                notification_type=notification_type,
+                user=user,
+                record_ident_cely=user.ident_cely,
+            )
 
     @classmethod
     def send_eu04(cls, user: "uzivatel.models.User"):
@@ -355,6 +375,7 @@ class Mailer:
                     notification_type=notification_type,
                     user=superuser,
                     log_user=user,
+                    record_ident_cely=user.ident_cely,
                 )
 
     @classmethod
@@ -381,7 +402,14 @@ class Mailer:
             },
         )
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
-            cls.__send(notification_type.predmet, user.email, html, notification_type=notification_type, user=user)
+            cls.__send(
+                notification_type.predmet,
+                user.email,
+                html,
+                notification_type=notification_type,
+                user=user,
+                record_ident_cely=user.ident_cely,
+            )
 
     @classmethod
     def send_eu07(cls, user: "uzivatel.models.User", request):
@@ -406,6 +434,7 @@ class Mailer:
             html_content=html,
             notification_type=notification_type,
             from_email=user.email,
+            record_ident_cely=user.ident_cely,
         )
 
     @classmethod
@@ -436,7 +465,12 @@ class Mailer:
                     },
                 )
                 cls.__send(
-                    subject=subject, to=user.email, html_content=html, notification_type=notification_type, user=user
+                    subject=subject,
+                    to=user.email,
+                    html_content=html,
+                    notification_type=notification_type,
+                    user=user,
+                    record_ident_cely=project.ident_cely,
                 )
         else:
             logger.info(
@@ -547,6 +581,7 @@ class Mailer:
                 to=archive_email,
                 html_content=html,
                 notification_type=notification_type,
+                record_ident_cely=zaznam.ident_cely,
             )
 
     @classmethod
@@ -586,6 +621,7 @@ class Mailer:
                 html_content=html,
                 notification_type=notification_type,
                 user=log_entry.uzivatel,
+                record_ident_cely=zaznam.ident_cely,
             )
 
     @classmethod
@@ -634,7 +670,12 @@ class Mailer:
         )
         if cls._notification_should_be_sent(notification_type=notification_type, user=user):
             cls.__send(
-                subject=subject, to=user.email, html_content=html, notification_type=notification_type, user=user
+                subject=subject,
+                to=user.email,
+                html_content=html,
+                notification_type=notification_type,
+                user=user,
+                record_ident_cely=obj.ident_cely,
             )
 
     @classmethod
@@ -686,7 +727,11 @@ class Mailer:
             },
         )
         cls.__send(
-            subject=subject, to=project.oznamovatel.email, html_content=html, notification_type=notification_type
+            subject=subject,
+            to=project.oznamovatel.email,
+            html_content=html,
+            notification_type=notification_type,
+            record_ident_cely=project.ident_cely,
         )
 
     @classmethod
@@ -778,6 +823,7 @@ class Mailer:
                 html_content=html,
                 notification_type=notification_type,
                 attachment=attachment,
+                record_ident_cely=project.ident_cely,
             )
 
     @classmethod
@@ -836,6 +882,7 @@ class Mailer:
                 html_content=html,
                 notification_type=notification_type,
                 user=pes.user,
+                record_ident_cely=project.ident_cely,
             )
         logger.debug("services.mailer.send_ep02.end", extra={"ident_cely": IDENT_CELY})
 
@@ -868,6 +915,7 @@ class Mailer:
                     to=project.oznamovatel.email,
                     html_content=html,
                     notification_type=notification_type,
+                    record_ident_cely=project.ident_cely,
                 )
         except Oznamovatel.DoesNotExist as err:
             logger.debug(
@@ -931,6 +979,7 @@ class Mailer:
             html_content=html,
             notification_type=notification_type,
             from_email=user.email,
+            record_ident_cely=project.ident_cely,
         )
 
     @classmethod
@@ -965,7 +1014,12 @@ class Mailer:
         user = history_log.uzivatel
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
             cls.__send(
-                subject=subject, to=user.email, html_content=html, notification_type=notification_type, user=user
+                subject=subject,
+                to=user.email,
+                html_content=html,
+                notification_type=notification_type,
+                user=user,
+                record_ident_cely=project.ident_cely,
             )
 
     @classmethod
@@ -1002,7 +1056,12 @@ class Mailer:
             user = history_log.uzivatel
             if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
                 cls.__send(
-                    subject=subject, to=user.email, html_content=html, notification_type=notification_type, user=user
+                    subject=subject,
+                    to=user.email,
+                    html_content=html,
+                    notification_type=notification_type,
+                    user=user,
+                    record_ident_cely=project.ident_cely,
                 )
 
     @classmethod
@@ -1078,6 +1137,7 @@ class Mailer:
                 html_content=html,
                 notification_type=notification_type,
                 attachment=cls._get_ep06_attachment(project) if not rep_bin_file else rep_bin_file,
+                record_ident_cely=project.ident_cely,
             )
 
     @classmethod
@@ -1126,7 +1186,14 @@ class Mailer:
         html = render_to_string(notification_type.cesta_sablony, context)
         user = uzivatel.models.User.objects.get(email=send_to)
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
-            cls.__send(subject=subject, to=send_to, html_content=html, notification_type=notification_type, user=user)
+            cls.__send(
+                subject=subject,
+                to=send_to,
+                html_content=html,
+                notification_type=notification_type,
+                user=user,
+                record_ident_cely=", ".join(projekt_ident_list),
+            )
 
     @classmethod
     def send_en01(cls, send_to, projekt_ident_list):
@@ -1193,7 +1260,12 @@ class Mailer:
         )
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
             cls.__send(
-                subject=subject, to=user.email, html_content=html, notification_type=notification_type, user=user
+                subject=subject,
+                to=user.email,
+                html_content=html,
+                notification_type=notification_type,
+                user=user,
+                record_ident_cely=samostatny_nalez.ident_cely,
             )
 
     @classmethod
@@ -1224,9 +1296,17 @@ class Mailer:
                 "site_url": settings.SITE_URL,
             },
         )
+        applicant_ident_cely = user.ident_cely
         user = uzivatel.models.User.objects.get(email=email_to)
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
-            cls.__send(subject=subject, to=email_to, html_content=html, notification_type=notification_type, user=user)
+            cls.__send(
+                subject=subject,
+                to=email_to,
+                html_content=html,
+                notification_type=notification_type,
+                user=user,
+                record_ident_cely=applicant_ident_cely,
+            )
 
     @classmethod
     def send_en06(cls, cooperation: "pas.models.UzivatelSpoluprace"):
@@ -1255,6 +1335,7 @@ class Mailer:
                 to=cooperation.spolupracovnik.email,
                 html_content=html,
                 notification_type=notification_type,
+                record_ident_cely=cooperation.spolupracovnik.ident_cely,
             )
 
     @classmethod
@@ -1289,6 +1370,7 @@ class Mailer:
                 to=cooperation.spolupracovnik.email,
                 html_content=html,
                 notification_type=notification_type,
+                record_ident_cely=cooperation.spolupracovnik.ident_cely,
             )
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=cooperation.vedouci):
             cls.__send(
@@ -1296,6 +1378,7 @@ class Mailer:
                 to=cooperation.vedouci.email,
                 html_content=html,
                 notification_type=notification_type,
+                record_ident_cely=cooperation.spolupracovnik.ident_cely,
             )
 
     @classmethod
@@ -1324,6 +1407,7 @@ class Mailer:
                     html_content=html,
                     notification_type=notification_type,
                     user=first_log_entry.uzivatel,
+                    record_ident_cely=document.ident_cely,
                 )
 
     @classmethod
@@ -1356,6 +1440,7 @@ class Mailer:
                     html_content=html,
                     notification_type=notification_type,
                     user=first_log_entry.uzivatel,
+                    record_ident_cely=document.ident_cely,
                 )
         else:
             logger.warning("services.mailer.send_ek02.no_log_found", extra={"ident_cely": IDENT_CELY})
@@ -1460,6 +1545,7 @@ class Mailer:
             html_content=html,
             notification_type=notification_type,
             from_email=user.email,
+            record_ident_cely=project.ident_cely,
         )
 
     @classmethod
@@ -1493,6 +1579,7 @@ class Mailer:
                 notification_type=notification_type,
                 reply_to=[user.email],
                 cc=[user.email],
+                record_ident_cely=project.ident_cely,
             )
 
     @classmethod
@@ -1526,6 +1613,7 @@ class Mailer:
                 notification_type=notification_type,
                 reply_to=[user.email],
                 cc=[user.email],
+                record_ident_cely=project.ident_cely,
             )
 
     @classmethod
@@ -1553,4 +1641,5 @@ class Mailer:
             html_content=html,
             notification_type=notification_type,
             from_email=user.email,
+            record_ident_cely=project.ident_cely,
         )

@@ -747,10 +747,19 @@ class NotificationsLogAdmin(admin.ModelAdmin):
     """
 
     change_list_template = "admin/notificationslog_change_list.html"
-    list_display = ("created", "notification_type", "receiver_address", "user", "status_colored")
+    list_display = ("created", "notification_type", "zaznam_ident_cely", "receiver_address", "user", "status_colored")
+    list_select_related = ("notification_type", "user", "user__organizace")
     list_filter = ("status", "created_at")
-    search_fields = ("receiver_address", "exception")
-    date_hierarchy = "created_at"
+    search_fields = (
+        "receiver_address",
+        "exception",
+        "zaznam_ident_cely",
+        "notification_type__ident_cely",
+        "user__ident_cely",
+        "user__email",
+        "user__last_name",
+        "user__first_name",
+    )
     ordering = ("-created_at",)
     list_per_page = 50
 

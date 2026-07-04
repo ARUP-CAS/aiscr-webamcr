@@ -842,11 +842,12 @@ class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Mo
     """Databázový model logu notifikací."""
 
     notification_type = models.ForeignKey(UserNotificationType, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="notification_log_items")
     receiver_address = models.CharField(max_length=254)
     status = models.CharField(max_length=3, null=True, blank=True)
     exception = models.CharField(max_length=1024, null=True, blank=True)
+    zaznam_ident_cely = models.TextField(null=True, blank=True)
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
