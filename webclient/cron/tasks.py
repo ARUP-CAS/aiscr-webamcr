@@ -751,25 +751,6 @@ def run_data_import(job_id, user_id, lock_token):
                                             fedora_update_targets.add((related_target.__class__, related_target.pk))
                                         add_updated_history(mapper_class, related_target, record_id)
                                     add_item_fedora_update_target(fedora_update_targets, record_id)
-                                    if record.historie is None:
-                                        record.create_soubor_vazby()
-                                    history_record = Historie(
-                                        typ_zmeny=IMPORT,
-                                        uzivatel=transaction_user,
-                                        vazba=record.historie,
-                                        poznamka="{} {}".format(
-                                            _("cron.tasks.run_data_import.deleted_file"),
-                                            record.nazev,
-                                        ),
-                                    )
-                                    history_record.save()
-                                    import_history_record_result[record_id] = "{}: {}".format(
-                                        _("cron.tasks.run_data_import.history_record_created"), history_record.pk
-                                    )
-                                    redis_connector.set(
-                                        job_key("import_data_history_record_result"),
-                                        json.dumps(import_history_record_result),
-                                    )
                                     pending_soubor_fedora_deletes.append(
                                         {
                                             "soubor": record,

@@ -2211,9 +2211,8 @@ Třídy
 
       Vrátí záznamy, kterým má import binárního souboru zapsat historii.
 
-      Soubory dokumentů jsou v historii hlavních záznamů vedené přes navázané
-      archeologické záznamy, zatímco soubory projektu a samostatného nálezu se
-      zapisují přímo na navázaný objekt.
+      Vrátí přímo navázaný objekt souboru (``vazba.navazany_objekt``), pokud
+      implementuje ``ModelWithMetadata``, jinak prázdný seznam.
 
       :param record: Importovaný záznam ``Soubor``.
       :return: Seznam záznamů s historií dotčenou importem souboru.

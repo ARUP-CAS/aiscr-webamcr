@@ -1949,7 +1949,7 @@ class HeslarDataceMapper(ImportModelMapper):
         field_mapping["obdobi"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_OBDOBI},
-            verbose_limit_choices_to=_("heslar.models.HeslarDatace.obdobi"),
+            verbose_limit_choices_to=_("core.import_data_mappers.HeslarDataceMapper.obdobi.limit_choices"),
         )
         return field_mapping
 
@@ -1985,17 +1985,23 @@ class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
         field_mapping["dokument_typ"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
-            verbose_limit_choices_to=_("heslar.models.HeslarDokumentTypMaterialRada.dokument_typ"),
+            verbose_limit_choices_to=_(
+                "core.import_data_mappers.HeslarDokumentTypMaterialRadaMapper.dokument_typ.limit_choices"
+            ),
         )
         field_mapping["dokument_material"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL},
-            verbose_limit_choices_to=_("heslar.models.HeslarDokumentTypMaterialRada.dokument_material"),
+            verbose_limit_choices_to=_(
+                "core.import_data_mappers.HeslarDokumentTypMaterialRadaMapper.dokument_material.limit_choices"
+            ),
         )
         field_mapping["dokument_rada"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},
-            verbose_limit_choices_to=_("heslar.models.HeslarDokumentTypMaterialRada.dokument_rada"),
+            verbose_limit_choices_to=_(
+                "core.import_data_mappers.HeslarDokumentTypMaterialRadaMapper.dokument_rada.limit_choices"
+            ),
         )
         return field_mapping
 
@@ -2122,17 +2128,19 @@ class OrganizaceMapper(ImportModelMapper):
         field_mapping["typ_organizace"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_ORGANIZACE_TYP},
-            verbose_limit_choices_to=_("uzivatel.models.Organizace.typ_organizace"),
+            verbose_limit_choices_to=_("core.import_data_mappers.OrganizaceMapper.typ_organizace.limit_choices"),
         )
         field_mapping["zverejneni_pristupnost"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
-            verbose_limit_choices_to=_("uzivatel.models.Organizace.zverejneni_pristupnost"),
+            verbose_limit_choices_to=_(
+                "core.import_data_mappers.OrganizaceMapper.zverejneni_pristupnost.limit_choices"
+            ),
         )
         field_mapping["licence"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_LICENCE},
-            verbose_limit_choices_to="licence",
+            verbose_limit_choices_to=_("core.import_data_mappers.OrganizaceMapper.licence.limit_choices"),
         )
         return field_mapping
 
@@ -2205,7 +2213,7 @@ class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
         field_mapping["typ_projektu"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_PROJEKT_TYP},
-            verbose_limit_choices_to=_("projekt.models.projekt.typProjektu.label"),
+            verbose_limit_choices_to=_("core.import_data_mappers.ProjektMapper.typ_projektu.limit_choices"),
         )
         field_mapping["hlavni_katastr"] = RuianLookupImportField(RuianKatastr, "kod")
         field_mapping["vedouci_projektu"] = LookupImportField(Osoba)
@@ -2213,7 +2221,7 @@ class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
         field_mapping["kulturni_pamatka"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_PAMATKOVA_OCHRANA},
-            verbose_limit_choices_to=_("projekt.models.projekt.kulturniPamatka.label"),
+            verbose_limit_choices_to=_("core.import_data_mappers.ProjektMapper.kulturni_pamatka.limit_choices"),
         )
         return field_mapping
 
@@ -2366,30 +2374,30 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
         field_mapping["pristupnost"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
-            verbose_limit_choices_to="pristupnost",
+            verbose_limit_choices_to=_("core.import_data_mappers.SamostatnyNalezMapper.pristupnost.limit_choices"),
         )
         field_mapping["katastr"] = RuianLookupImportField(RuianKatastr, "kod")
         field_mapping["okolnosti"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_NALEZOVE_OKOLNOSTI},
-            verbose_limit_choices_to="okolnosti",
+            verbose_limit_choices_to=_("core.import_data_mappers.SamostatnyNalezMapper.okolnosti.limit_choices"),
         )
         field_mapping["nalezce"] = LookupImportField(Osoba)
         field_mapping["predano_organizace"] = LookupImportField(Organizace)
         field_mapping["obdobi"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_OBDOBI},
-            verbose_limit_choices_to="obdobi",
+            verbose_limit_choices_to=_("core.import_data_mappers.SamostatnyNalezMapper.obdobi.limit_choices"),
         )
         field_mapping["druh_nalezu"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_PREDMET_DRUH},
-            verbose_limit_choices_to="druh nalezu",
+            verbose_limit_choices_to=_("core.import_data_mappers.SamostatnyNalezMapper.druh_nalezu.limit_choices"),
         )
         field_mapping["specifikace"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_PREDMET_SPECIFIKACE},
-            verbose_limit_choices_to="specifikace",
+            verbose_limit_choices_to=_("core.import_data_mappers.SamostatnyNalezMapper.specifikace.limit_choices"),
         )
         return field_mapping
 
@@ -2468,7 +2476,9 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
         "pristupnost": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
-            verbose_limit_choices_to="pristupnost",
+            verbose_limit_choices_to=_(
+                "core.import_data_mappers.ArcheologickyZaznamAkceMapper.pristupnost.limit_choices"
+            ),
         ),
         "hlavni_katastr": RuianLookupImportField(RuianKatastr, "kod"),
         "hlavni_vedouci": LookupImportField(Osoba),
@@ -2476,17 +2486,23 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
         "specifikace_data": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DATUM_SPECIFIKACE},
-            verbose_limit_choices_to="specifikace data",
+            verbose_limit_choices_to=_(
+                "core.import_data_mappers.ArcheologickyZaznamAkceMapper.specifikace_data.limit_choices"
+            ),
         ),
         "hlavni_typ": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_AKCE_TYP},
-            verbose_limit_choices_to="hlavni typ",
+            verbose_limit_choices_to=_(
+                "core.import_data_mappers.ArcheologickyZaznamAkceMapper.hlavni_typ.limit_choices"
+            ),
         ),
         "vedlejsi_typ": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_AKCE_TYP},
-            verbose_limit_choices_to="vedlejsi typ",
+            verbose_limit_choices_to=_(
+                "core.import_data_mappers.ArcheologickyZaznamAkceMapper.vedlejsi_typ.limit_choices"
+            ),
         ),
     }
     model_class = ArcheologickyZaznam
@@ -2614,28 +2630,28 @@ class LokalitaMapper(MultipleClassImportModelMapper):
         "pristupnost": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
-            verbose_limit_choices_to="pristupnost",
+            verbose_limit_choices_to=_("core.import_data_mappers.LokalitaMapper.pristupnost.limit_choices"),
         ),
         "hlavni_katastr": RuianLookupImportField(RuianKatastr, "kod"),
         "typ_lokality": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_LOKALITA_TYP},
-            verbose_limit_choices_to="typ lokality",
+            verbose_limit_choices_to=_("core.import_data_mappers.LokalitaMapper.typ_lokality.limit_choices"),
         ),
         "druh": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_LOKALITA_DRUH},
-            verbose_limit_choices_to="druh",
+            verbose_limit_choices_to=_("core.import_data_mappers.LokalitaMapper.druh.limit_choices"),
         ),
         "zachovalost": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_STAV_DOCHOVANI},
-            verbose_limit_choices_to="zachovalost",
+            verbose_limit_choices_to=_("core.import_data_mappers.LokalitaMapper.zachovalost.limit_choices"),
         ),
         "jistota": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_JISTOTA_URCENI},
-            verbose_limit_choices_to="jistota",
+            verbose_limit_choices_to=_("core.import_data_mappers.LokalitaMapper.jistota.limit_choices"),
         ),
     }
     model_class = ArcheologickyZaznam
@@ -2784,12 +2800,12 @@ class PianMapper(ImportModelMapper, GeometryTransformMixin):
         field_mapping["typ"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_PIAN_TYP},
-            verbose_limit_choices_to="typ",
+            verbose_limit_choices_to=_("core.import_data_mappers.PianMapper.typ.limit_choices"),
         )
         field_mapping["presnost"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_PIAN_PRESNOST},
-            verbose_limit_choices_to="presnost",
+            verbose_limit_choices_to=_("core.import_data_mappers.PianMapper.presnost.limit_choices"),
         )
         field_mapping["zm10"] = LookupImportField(Kladyzm, "cislo")
         field_mapping["zm50"] = LookupImportField(Kladyzm, "cislo")
@@ -2843,7 +2859,7 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
         field_mapping["typ"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DJ_TYP},
-            verbose_limit_choices_to="typ",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentacniJednotkaMapper.typ.limit_choices"),
         )
         return field_mapping
 
@@ -2918,12 +2934,12 @@ class AdbMapper(ImportModelMapper):
         field_mapping["typ_sondy"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_ADB_TYP},
-            verbose_limit_choices_to="typ sondy",
+            verbose_limit_choices_to=_("core.import_data_mappers.AdbMapper.typ_sondy.limit_choices"),
         )
         field_mapping["podnet"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_ADB_PODNET},
-            verbose_limit_choices_to="podnet",
+            verbose_limit_choices_to=_("core.import_data_mappers.AdbMapper.podnet.limit_choices"),
         )
         field_mapping["autor_popisu"] = LookupImportField(Osoba)
         field_mapping["autor_revize"] = LookupImportField(Osoba)
@@ -2973,7 +2989,7 @@ class AdbVyskovyBod(ImportModelMapper):
         field_mapping["typ"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_VYSKOVY_BOD_TYP},
-            verbose_limit_choices_to="typ",
+            verbose_limit_choices_to=_("core.import_data_mappers.AdbVyskovyBod.typ.limit_choices"),
         )
         return field_mapping
 
@@ -3028,24 +3044,24 @@ class DokumentLetMapper(ImportModelMapper):
         field_mapping["letiste_start"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_LETISTE},
-            verbose_limit_choices_to="letiste start",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentLetMapper.letiste_start.limit_choices"),
         )
         field_mapping["letiste_cil"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_LETISTE},
-            verbose_limit_choices_to="letiste cil",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentLetMapper.letiste_cil.limit_choices"),
         )
         field_mapping["pozorovatel"] = LookupImportField(Osoba)
         field_mapping["organizace"] = LookupImportField(Organizace)
         field_mapping["pocasi"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_POCASI},
-            verbose_limit_choices_to="pocasi",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentLetMapper.pocasi.limit_choices"),
         )
         field_mapping["dohlednost"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DOHLEDNOST},
-            verbose_limit_choices_to="dohlednost",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentLetMapper.dohlednost.limit_choices"),
         )
         return field_mapping
 
@@ -3100,58 +3116,58 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
         "typ_dokumentu": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
-            verbose_limit_choices_to="typ dokumentu",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.typ_dokumentu.limit_choices"),
         ),
         "material_originalu": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL},
-            verbose_limit_choices_to="material originalu",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.material_originalu.limit_choices"),
         ),
         "rada": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},
-            verbose_limit_choices_to="rada",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.rada.limit_choices"),
         ),
         "organizace": LookupImportField(Organizace),
         "pristupnost": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
-            verbose_limit_choices_to="pristupnost",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.pristupnost.limit_choices"),
         ),
         "ulozeni_originalu": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_ULOZENI},
-            verbose_limit_choices_to="ulozeni originalu",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.ulozeni_originalu.limit_choices"),
         ),
         "licence": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_LICENCE},
-            verbose_limit_choices_to="licence",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.licence.limit_choices"),
         ),
         "format": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_FORMAT},
-            verbose_limit_choices_to="format",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.format.limit_choices"),
         ),
         "zachovalost": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_ZACHOVALOST},
-            verbose_limit_choices_to="zachovalost",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.zachovalost.limit_choices"),
         ),
         "nahrada": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_NAHRADA},
-            verbose_limit_choices_to="nahrada",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.nahrada.limit_choices"),
         ),
         "udalost_typ": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_UDALOST_TYP},
-            verbose_limit_choices_to="udalost typ",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.udalost_typ.limit_choices"),
         ),
         "zeme": LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_ZEME},
-            verbose_limit_choices_to="zeme",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.zeme.limit_choices"),
         ),
     }
     model_class = Dokument
@@ -3326,7 +3342,7 @@ class DokumentJazykMapper(ImportModelMapper):
         field_mapping["jazyk"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_JAZYK},
-            verbose_limit_choices_to="jazyk",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentJazykMapper.jazyk.limit_choices"),
         )
         return field_mapping
 
@@ -3418,7 +3434,7 @@ class DokumentPosudekMapper(ImportModelMapper):
         field_mapping["posudek"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_POSUDEK_TYP},
-            verbose_limit_choices_to="posudek",
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentPosudekMapper.posudek.limit_choices"),
         )
         return field_mapping
 
@@ -3466,7 +3482,7 @@ class TvarMapper(ImportModelMapper):
         field_mapping["tvar"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_LETFOTO_TVAR},
-            verbose_limit_choices_to="tvar",
+            verbose_limit_choices_to=_("core.import_data_mappers.TvarMapper.tvar.limit_choices"),
         )
         return field_mapping
 
@@ -3649,12 +3665,12 @@ class KomponentaMapper(ImportModelMapper):
         field_mapping["obdobi"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_OBDOBI},
-            verbose_limit_choices_to="obdobi",
+            verbose_limit_choices_to=_("core.import_data_mappers.KomponentaMapper.obdobi.limit_choices"),
         )
         field_mapping["areal"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_AREAL},
-            verbose_limit_choices_to="areal",
+            verbose_limit_choices_to=_("core.import_data_mappers.KomponentaMapper.areal.limit_choices"),
         )
         return field_mapping
 
@@ -3718,7 +3734,7 @@ class KomponentaAktivitaMapper(ImportModelMapper):
         field_mapping["aktivita"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_AKTIVITA},
-            verbose_limit_choices_to="aktivita",
+            verbose_limit_choices_to=_("core.import_data_mappers.KomponentaAktivitaMapper.aktivita.limit_choices"),
         )
         return field_mapping
 
@@ -3795,12 +3811,12 @@ class NalezObjektMapper(NalezMapper):
         field_mapping["druh"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_OBJEKT_DRUH},
-            verbose_limit_choices_to=_("nalez.models.nalezObjekt.druh.label"),
+            verbose_limit_choices_to=_("core.import_data_mappers.NalezObjektMapper.druh.limit_choices"),
         )
         field_mapping["specifikace"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_OBJEKT_SPECIFIKACE},
-            verbose_limit_choices_to=_("nalez.models.nalezObjekt.specifikace.label"),
+            verbose_limit_choices_to=_("core.import_data_mappers.NalezObjektMapper.specifikace.limit_choices"),
         )
         return field_mapping
 
@@ -3826,12 +3842,12 @@ class NalezPredmetMapper(NalezMapper):
         field_mapping["druh"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_PREDMET_DRUH},
-            verbose_limit_choices_to=_("nalez.models.nalezPredmet.druh.label"),
+            verbose_limit_choices_to=_("core.import_data_mappers.NalezPredmetMapper.druh.limit_choices"),
         )
         field_mapping["specifikace"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_PREDMET_SPECIFIKACE},
-            verbose_limit_choices_to=_("nalez.models.nalezPredmet.specifikace.label"),
+            verbose_limit_choices_to=_("core.import_data_mappers.NalezPredmetMapper.specifikace.limit_choices"),
         )
         return field_mapping
 
@@ -3876,12 +3892,12 @@ class ExterniZdrojMapper(ImportModelMapper):
         field_mapping["typ"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_EXTERNI_ZDROJ_TYP},
-            verbose_limit_choices_to="typ",
+            verbose_limit_choices_to=_("core.import_data_mappers.ExterniZdrojMapper.typ.limit_choices"),
         )
         field_mapping["typ_dokumentu"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
-            verbose_limit_choices_to="typ dokumentu",
+            verbose_limit_choices_to=_("core.import_data_mappers.ExterniZdrojMapper.typ_dokumentu.limit_choices"),
         )
         return field_mapping
 
@@ -4440,23 +4456,13 @@ class SouborMapper(ImportModelMapper):
         """
         Vrátí záznamy, kterým má import binárního souboru zapsat historii.
 
-        Soubory dokumentů jsou v historii hlavních záznamů vedené přes navázané
-        archeologické záznamy, zatímco soubory projektu a samostatného nálezu se
-        zapisují přímo na navázaný objekt.
+        Vrátí přímo navázaný objekt souboru (``vazba.navazany_objekt``), pokud
+        implementuje ``ModelWithMetadata``, jinak prázdný seznam.
 
         :param record: Importovaný záznam ``Soubor``.
         :return: Seznam záznamů s historií dotčenou importem souboru.
         """
         related_record = record.vazba.navazany_objekt if record.vazba_id else None
-        if isinstance(related_record, Dokument):
-            targets = []
-            seen = set()
-            for cast in related_record.casti.select_related("archeologicky_zaznam").all():
-                archeologicky_zaznam = cast.archeologicky_zaznam
-                if archeologicky_zaznam and archeologicky_zaznam.pk not in seen:
-                    targets.append(archeologicky_zaznam)
-                    seen.add(archeologicky_zaznam.pk)
-            return targets
         if isinstance(related_record, ModelWithMetadata):
             return [related_record]
         return []

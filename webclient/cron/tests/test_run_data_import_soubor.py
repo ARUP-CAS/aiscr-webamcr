@@ -105,7 +105,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         samostatny_nalez = self._create_samostatny_nalez_for_soubor(f"C-202399001-N91{suffix}")
         return (
             ("projekt", self.projekt, self.projekt),
-            ("archeologicky_zaznam", self.dokument, self.az),
+            ("dokument", self.dokument, self.dokument),
             ("samostatny_nalez", samostatny_nalez, samostatny_nalez),
         )
 
@@ -230,7 +230,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
 
         self.assert_import_success(fake_redis)
         soubor = Soubor.objects.get(vazba=self.dokument.soubory, nazev=file_name)
-        self.assert_related_record_metadata_updated(save_metadata_calls, self.az)
+        self.assert_related_record_metadata_updated(save_metadata_calls, self.dokument)
         self.assertTrue(
             Historie.objects.filter(
                 vazba=soubor.historie,
@@ -245,7 +245,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         fedora_update_result = self._fedora_update_result(fake_redis)
         self.assertIn("0", fedora_update_result)
         self.assertTrue(
-            any(self.az.ident_cely in item for item in fedora_update_result["0"]),
+            any(self.dokument.ident_cely in item for item in fedora_update_result["0"]),
             "Report musí obsahovat informaci o aktualizaci Fedora metadat navázaného záznamu.",
         )
 
@@ -420,13 +420,6 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             navazany_ident_celies,
             "Po smazání Souboru musí být ``save_metadata`` zavoláno pro navázaný objekt "
             f"({navazany_ident_cely}). Volání pro: {navazany_ident_celies}",
-        )
-        self.assertIn(
-            self.az.ident_cely,
-            navazany_ident_celies,
-            "Po smazání Souboru musí být ``save_metadata`` zavoláno i pro archeologický záznam "
-            "navázaný přes ``DokumentCast`` "
-            f"({self.az.ident_cely}). Volání pro: {navazany_ident_celies}",
         )
         self.assert_delete_binary_file_called_for_soubor(existing)
 

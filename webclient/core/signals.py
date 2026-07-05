@@ -62,16 +62,12 @@ def soubor_delete_connections(sender, instance: Soubor, **kwargs):
     """
     Odstraní historii záznamu spojené se souborem před jeho fyzickým smazáním.
 
-    Importní mazání Souboru může nejdřív vytvořit auditní záznam na historii
-    souboru. V takovém případě ``preserve_history_on_delete`` zabrání smazání
-    historie a zachová nově vytvořený záznam pro importní report.
-
     :param sender: Model ``Soubor``, který signál vyslal.
     :param instance: Instancia ``Soubor`` určená ke smazání.
     :param kwargs: Dodatečné argumenty signálu.
     """
     logger.debug("cron.signals.soubor_delete_connections.start", extra={"instance": instance.pk})
-    if instance.historie and instance.historie.pk and not getattr(instance, "preserve_history_on_delete", False):
+    if instance.historie and instance.historie.pk:
         instance.historie.delete()
     logger.debug("cron.signals.soubor_delete_connections.end", extra={"instance": instance.pk})
 
