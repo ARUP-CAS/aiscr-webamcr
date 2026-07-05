@@ -13,8 +13,6 @@ This directory stores durable outputs from the long-running codebase-review life
 - `review_reports/` contains per-phase reports and the consolidated `final_audit.md` summary.
 - `bugs.md` records confirmed bug findings with severity, source location, issue linkage, recommendation, and originating review task.
 - `refactoring_backlog.md` records structural and architectural improvement candidates grouped by priority.
-- `workflow_evolution_legacy_evidence.md` preserves classified evidence from the retired prompt-evolution channel.
-- `verification_prompt_evolution.md` is retained as a historical webamcr-only verification note from the legacy prompt-evolution channel; do not extend it as the active feedback path.
 
 ## Agent Rules
 

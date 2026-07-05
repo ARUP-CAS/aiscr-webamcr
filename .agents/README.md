@@ -21,7 +21,6 @@ Pravidla a governance viz [AGENTS.md](../AGENTS.md).
     review_reports/              — Reporty z jednotlivých tasků (<task_id>.md); final_audit.md obsahuje Changelog
     bugs.md                      — Evidence nalezených chyb
     refactoring_backlog.md       — Backlog strukturálních vylepšení
-    workflow_evolution_legacy_evidence.md — Zachovaná evidence z vyřazeného kanálu prompt-evolution
   scripts/
     review_tools.py              — Repo-agnostic review automation (hash, cross-validate, coverage-gaps, id-inventory, lint-artifacts, prompt-evolution, repo-structure, status)
 ```

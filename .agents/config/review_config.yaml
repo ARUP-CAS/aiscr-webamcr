@@ -48,10 +48,16 @@ tasks:
       Pokud je Django aplikace rozsáhlá, vytvoř sub-tasky T03a, T03b atd.
       Doménové entity AMČR: Projekt, Akce, Lokalita, Dokument, PAS,
       Knihovna3D, PIAN, Hesláře, Uživatel, Organizace.
+      Databázový router `urgent` je architektonická výjimka používaná
+      sekvenčními modely (ProjektSekvence, AkceSekvence, PianSekvence).
+      Do ORM scope zahrň i `webclient/*/signals.py`, `webclient/*/managers.py`,
+      `webclient/history/models.py` a `webclient/komponenta/models.py`.
     warning: >
       Aplikace `core` obsahuje 77 Python souborů a 26 migrací — výrazně největší app.
       Doporučeno rozdělit do sub-tasků: T03a (core modely a migrace),
       T03b (ostatní apps). Aplikace `uzivatel` má 31 migrací a je druhá největší.
+      Velké soubory views (`arch_z/views.py`, `dokument/views.py`,
+      `projekt/views.py`) analyzuj jako samostatný sub-task T03b.
 
   - id: T04
     name: docker_analysis
@@ -72,6 +78,13 @@ tasks:
       - webclient/webclient/settings/sample_secrets_mail_client.json
       - webclient/core/authenticators.py
       - webclient/uzivatel/models.py # uživatelé a oprávnění
+      - webclient/core/middleware.py # middleware v XSS/security scope
+      - webclient/webclient/urls.py # URL routing v security scope
+      - proxy/default.conf # HSTS, SSL redirect a security hlavičky mimo Django settings
+    note: >
+      HTTPS/HSTS a security hlavičky mohou být nastaveny na úrovni NGINX proxy
+      (`proxy/default.conf`), nikoli v Django settings — zahrň proxy kontext do
+      auditu. Modely poskytující `get_ident_cely_link` patří do XSS scope.
 
   - id: T06
     name: celery_analysis
@@ -83,6 +96,9 @@ tasks:
       - webclient/cron/tasks.py # Celery beat schedule (bez testů!)
       - webclient/notifikace_projekty/tasks.py # e-mailové notifikace (bez testů!)
       - webclient/webclient/settings/base.py # CELERY_* nastavení jsou zde
+    note: >
+      Projekt používá `django_celery_beat`; beat schedule je spravován v databázi,
+      takže jej nelze plně auditovat pouze ze souborů repozitáře.
 
   - id: T07
     name: frontend_analysis
@@ -186,6 +202,8 @@ key_django_apps:
 
 important_directories:
   - webclient
+  - webclient/services # sdílené service funkce importované více aplikacemi (T02 scope)
+  - webclient/xml_generator # cross-cutting knihovna base-modelů pro generování XML (T02 scope)
   # webclient/locale — removed: directory does not exist in the repository (T01 prompt evolution)
   - webclient/static
   - webclient/templates
@@ -272,12 +290,12 @@ vendored_exclusions:
     Mohou být referencovány (např. kontrola SRI atributů v šablonách).
 
 prompt_evolution:
-  legacy_evidence_report: .agents/reports/workflow_evolution_legacy_evidence.md
   apply_manually: true
   reviewer: human
   note: >
-    Starší soubory prompt_evolution byly klasifikovány a zachovány v
-    .agents/reports/workflow_evolution_legacy_evidence.md.
+    Starší evidence prompt_evolution byla klasifikována; využitelná pravidla
+    byla zapracována do tohoto review_config.yaml a do kanonického workflow
+    aiscr-codebase-review. Dočasný report legacy evidence byl odstraněn.
     Nová zpětná vazba z U05 zůstává lokální evidencí tohoto repozitáře,
     dokud člověk výslovně neschválí předání report-to-backlog.
 

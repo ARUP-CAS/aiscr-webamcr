@@ -209,9 +209,9 @@ Details and effort: refactoring_backlog.md (High / Medium / Low priority).
 - **Review cycle** — Before each session, load review_cache.json and the file hashes; mark changed files and the relevant tasks as pending; do not repeat completed tasks without a change of inputs. See review_codebase.md INITIALIZATION SEQUENCE.
 - **Configuration** — A single source of limits and directories: review_config.yaml. Do not multiply vendored exclusions and the task registry elsewhere. See review_config.yaml.
 - **Bug and backlog** — Before adding an entry to bugs.md, check GitHub Issues (currently 113 open); cross-reference "already tracked / extension / new candidate". Maintain the refactoring backlog in English and sort by priority (High / Medium / Low). See review_codebase.md BUG TRACKING and REFACTORING BACKLOG.
-- **Workflow-evolution evidence** — Older prompt-evolution notes are preserved in .agents/reports/workflow_evolution_legacy_evidence.md; new feedback from U05 requires explicit approval of the report-to-backlog handoff.
+- **Workflow-evolution evidence** — Legacy prompt-evolution notes were classified and folded into review_config.yaml and the canonical aiscr-codebase-review workflow; the temporary evidence report was removed. New feedback from U05 requires explicit approval of the report-to-backlog handoff.
 - **Documentation and CI** — Do not edit the generated documentation manually; run the generators per CONTRIBUTING.md. In CI, consider a completeness check of the Selenium docstrings and `manage.py check --deploy`; a CVE step (pip audit/safety) for the dependencies.
-- **.agents/ structure** — Keep it per .agents/README.md: config (review_config.yaml, review_cache.json), analysis (*.json), reports (review_reports/, bugs.md, refactoring_backlog.md, workflow_evolution_legacy_evidence.md), and prompts.
+- **.agents/ structure** — Keep it per .agents/README.md: config (review_config.yaml, review_cache.json), analysis (*.json), reports (review_reports/, bugs.md, refactoring_backlog.md), and prompts.
 
 ---
 

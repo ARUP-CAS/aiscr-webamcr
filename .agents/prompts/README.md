@@ -8,6 +8,8 @@ Prompty a pomocná dokumentace pro AI agenty pracující v tomto repozitáři. P
 
 ## Evidence workflow-evolution
 
-Starší soubory `.agents/prompts/prompt_evolution/` byly klasifikovány a zachovány
-v `.agents/reports/workflow_evolution_legacy_evidence.md`. Aktivní zpětná vazba
-z U05 zůstává pouze evidencí, dokud člověk výslovně neschválí předání do backlogu.
+Starší soubory `.agents/prompts/prompt_evolution/` byly klasifikovány; využitelná
+pravidla byla zapracována do `.agents/config/review_config.yaml` a kanonického
+workflow `aiscr-codebase-review`, a dočasný evidenční report byl odstraněn.
+Aktivní zpětná vazba z U05 zůstává pouze lokální evidencí, dokud člověk výslovně
+neschválí předání do backlogu.

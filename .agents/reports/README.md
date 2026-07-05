@@ -22,10 +22,6 @@ Lidsky čitelné výstupy dlouhodobého technického review.
   - backlog strukturálních / architektonických vylepšení,  
   - členění podle priority (vysoká / střední / nízká).
 
-
-- `workflow_evolution_legacy_evidence.md`
-  - zachovaná evidence z vyřazeného kanálu prompt-evolution.
-
 ## Poznámky
 
 - Všechny nové bugy a refaktoringové návrhy musí být zapisovány sem, **ne** pouze
