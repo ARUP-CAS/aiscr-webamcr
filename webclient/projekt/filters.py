@@ -566,20 +566,9 @@ class ProjektFilter(GeomWithinFilterMixin, HistorieFilter, KatastrFilterMixin, F
 
             :return: Vrací výsledek volání ``filter()``.
         """
-        if value.start and value.stop:
-            rng = DateRange(
-                lower=value.start.strftime("%m/%d/%Y"),
-                upper=value.stop.strftime("%m/%d/%Y"),
-            )
-        elif value.start and not value.stop:
-            rng = DateRange(
-                lower=value.start.strftime("%m/%d/%Y"),
-                upper="01/01/2100",
-            )
-        elif value.stop and not value.start:
-            rng = DateRange(lower="01/01/1900", upper=value.stop.strftime("%m/%d/%Y"))
-        else:
-            rng = DateRange(lower="01/01/1900", upper="01/01/2100")
+        lower = value.start.strftime("%Y-%m-%d") if value.start else "1900-01-01"
+        upper = value.stop.strftime("%Y-%m-%d") if value.stop else "2100-01-01"
+        rng = DateRange(lower=lower, upper=upper)
         return queryset.filter(planovane_zahajeni__overlap=rng)
 
     def filter_popisne_udaje_akce(self, queryset, name, value):
