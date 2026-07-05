@@ -75,20 +75,86 @@ body.app-dark-theme {
     }
 
     // Main content
-    .app-page-wrapper {
+    #app-page-wrapper {
         background-color: $body-bg-dark;
+
+        // Footer
+        footer .app-footer-wrapper {
+            background-color: $app-footer-bottom-bg-dark;
+            color: $body-text-dark;
+
+            a {
+                color: $primary-dark;
+
+                &:hover {
+                    color: lighten($primary-dark, 10);
+                }
+            }
+        }
+
     }
 
     #app-page-wrapper .container-fluid.app-content-wrapper {
         background-color: $body-bg-dark;
+
+        .app-toolbar {
+            .app-left {
+                .app-entity-item {
+                    color: $body-text-dark;
+
+                    .material-icons,
+                    button span.material-icons {
+                        color: $body-text-dark;
+                    }
+                }
+
+                .igsn span,
+                .backdetail a,
+                .doi span {
+                    color: $body-text-dark;
+                }
+            }
+        }
+
+        .app-right .btn-group .btn {
+            color: $body-text-dark;
+        }
+
+        .dropzone .dz-message .dz-button {
+            color: $gray-400-dark;
+        }
     }
 
     .leaflet-container {
         background-color: $body-bg-dark;
+
+        .uiElement.label {
+            color: $gray-100-dark;
+        }
     }
 
-    .bs-stepper .step-trigger {
-        color: $body-text-dark;
+    .bs-stepper {
+        .step.active .bs-stepper-circle {
+            background-color: $gray-500-dark !important;
+            color: $body-text-dark !important;
+        }
+
+        .step-trigger {
+            color: $body-text-dark;
+
+
+
+        }
+    }
+
+    // Links in text content
+    a:not(.btn) {
+        color: $link-color-dark;
+        text-decoration: none;
+
+        &:hover {
+            color: $link-hover-color-dark;
+        }
     }
 
     // Cards
@@ -131,6 +197,34 @@ body.app-dark-theme {
             border-color: $primary-dark;
             color: $input-text-color-dark;
         }
+
+        &:disabled,
+        &[readonly] {
+            background-color: $input-disabled-bg-dark;
+            border-color: $input-disabled-border-color-dark;
+            color: $input-disabled-text-color-dark;
+            // Safari keeps disabled text bright without this override.
+            -webkit-text-fill-color: $input-disabled-text-color-dark;
+            opacity: 1;
+
+            &::placeholder {
+                color: $input-disabled-placeholder-color-dark;
+            }
+        }
+
+        &:disabled {
+            cursor: not-allowed;
+        }
+    }
+
+    .form-check-input:disabled {
+        background-color: $input-disabled-bg-dark;
+        border-color: $input-disabled-border-color-dark;
+    }
+
+    .form-check-input:disabled~.form-check-label {
+        color: $input-disabled-text-color-dark;
+        opacity: 1;
     }
 
     .app-divider-label {
@@ -147,7 +241,24 @@ body.app-dark-theme {
         }
 
         .btn-close {
-            --bs-btn-close-filter: invert(1) grayscale(100%) brightness(200%);
+            --bs-btn-close-filter: invert(1) grayscale(1000%) brightness(1000%);
+            --bs-btn-close-opacity: 0.75;
+            --bs-btn-close-hover-opacity: 0.9;
+        }
+
+        .modal-content {
+            background-color: $card-bg-dark;
+            border-color: $card-border-dark;
+        }
+
+        .modal-content-xxl {
+            background-color: $card-bg-dark;
+            border-color: $card-border-dark;
+        }
+
+        .modal-header {
+            background-color: $gray-200-dark;
+            border-bottom-color: $card-border-dark;
         }
     }
 
@@ -174,8 +285,22 @@ body.app-dark-theme {
 
     // Tables
     table {
-        &.table.table-striped.table-sm tbody tr td {
-            background-color: $gray-400-dark;
+        &.table.table-striped.table-sm tbody tr {
+            &:nth-child(odd) td {
+                background-color: $gray-300-dark;
+
+                a span.material-icons {
+                    color: $body-text-dark;
+                }
+            }
+
+            &:nth-child(even) td {
+                background-color: $gray-200-dark;
+
+                a span.material-icons {
+                    color: $body-text-dark;
+                }
+            }
         }
 
         color: $body-text-dark;
@@ -183,7 +308,7 @@ body.app-dark-theme {
         background-color: $gray-400-dark;
 
         thead th {
-            background-color: $gray-200-dark;
+            background-color: $gray-100-dark;
             border-color: $border-color-dark;
             color: $body-text-dark;
         }
@@ -195,10 +320,34 @@ body.app-dark-theme {
                 border-color: $border-color-dark;
 
                 &:hover {
-                    background-color: $gray-100-dark;
+                    background-color: $gray-100-dark !important;
                 }
             }
         }
+    }
+
+    .table-navigation .go-to-page .page-item .page-link {
+        background-color: $gray-400-dark;
+        border-color: $border-color-dark;
+
+
+    }
+
+    .table>tbody>tr {
+        &:nth-child(odd)>td {
+            background-color: $gray-300-dark;
+            color: $body-text-dark;
+        }
+
+        &:nth-child(even)>td {
+            background-color: $gray-200-dark;
+            color: $body-text-dark;
+        }
+    }
+
+    .table>tbody>tr:hover>td,
+    .table.table-striped.table-sm tbody tr:hover>td {
+        background-color: $gray-100-dark !important;
     }
 
     // Dropdowns
@@ -217,35 +366,29 @@ body.app-dark-theme {
     }
 
     // Modals
-    .modal-content {
-        background-color: $card-bg-dark;
-        border-color: $card-border-dark;
-    }
+    .app-table-list-container {
+        .modal-content {
+            background-color: $card-bg-dark;
+            border-color: $card-border-dark;
+        }
 
-    .modal-header {
-        background-color: $gray-200-dark;
-        border-bottom-color: $card-border-dark;
-    }
+        .modal-content-xxl {
+            background-color: $card-bg-dark;
+            border-color: $card-border-dark;
+        }
 
-    // Footer
-    footer {
-        background-color: $app-footer-bottom-bg-dark;
-        color: $body-text-dark;
-
-        a {
-            color: $primary-dark;
-
-            &:hover {
-                color: lighten($primary-dark, 10);
-            }
+        .modal-header {
+            background-color: $gray-200-dark;
+            border-bottom-color: $card-border-dark;
         }
     }
 
+
     // Alerts
     .alert {
-        background-color: rgba($gray-500-dark, 0.2);
-        border-color: rgba($gray-500-dark, 0.5);
-        color: $body-text-dark;
+        background-color: $gray-600-dark;
+        border-color: rgba($gray-600-dark, 0.5);
+        color: white;
     }
 
     // Badge
@@ -322,10 +465,33 @@ body.app-dark-theme {
             }
         }
 
-        &.select2-container--disabled .select2-selection--multiple {
-            background-color: $gray-500-dark;
+        &.select2-container--disabled {
+
+            .select2-selection--single,
+            .select2-selection--multiple {
+                background-color: $input-disabled-bg-dark;
+                border-color: $input-disabled-border-color-dark;
+            }
+
+            .select2-selection .select2-selection__rendered,
+            .select2-selection__choice {
+                color: $input-disabled-text-color-dark;
+            }
         }
 
+    }
+
+    .bootstrap-select>.dropdown-toggle:disabled,
+    .bootstrap-select>.dropdown-toggle.disabled {
+        background-color: $input-disabled-bg-dark;
+        border-color: $input-disabled-border-color-dark;
+        color: $input-disabled-text-color-dark;
+        opacity: 1;
+    }
+
+    .bootstrap-select>.dropdown-toggle:disabled .filter-option,
+    .bootstrap-select>.dropdown-toggle.disabled .filter-option {
+        color: $input-disabled-text-color-dark;
     }
 
     /* Darker Daterange Picker */
@@ -355,6 +521,32 @@ body.app-dark-theme {
 
     .datepicker.dropdown-menu table {
         background-color: $body-bg-dark;
+
+        th.datepicker-switch {
+            &:hover {
+                background-color: $gray-600-dark;
+                color: white;
+            }
+        }
+
+        tr td {
+
+            &.day,
+            span.month,
+            span.year,
+            span.decade,
+            span.century {
+                &:hover {
+                    background-color: $gray-600-dark;
+                    color: white;
+                }
+
+                &.focused {
+                    background-color: $gray-400-dark;
+                    color: white;
+                }
+            }
+        }
     }
 
     .daterangepicker tr:hover {

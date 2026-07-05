@@ -16,12 +16,12 @@
       
     </div>
     {% if zaznam.lokalita.igsn %}
-    <div class="align-self-center app-entity-color{% if showbackdetail and app == "pr" %} app-pipe-right pr-5{% endif %}">
+    <div class="igsn align-self-center app-entity-color{% if showbackdetail and app == "pr" %} app-pipe-right pr-5{% endif %}">
         <span style="font-weight: normal">({{ zaznam.lokalita.igsn }})</span>
         </div>
       {% endif %}
     {% if showbackdetail and app == "pr" %}
-      <div class="align-self-center"><a href="{% url 'projekt:detail' zaznam.akce.projekt.ident_cely %}" class="app-entity-color font-weight-normal">{% trans "templates.toolbarAkce.backToProjekt.label" %}</a></div>
+      <div class="backdetail align-self-center"><a href="{% url 'projekt:detail' zaznam.akce.projekt.ident_cely %}" class="app-entity-color font-weight-normal">{% trans "templates.toolbarAkce.backToProjekt.label" %}</a></div>
     {% endif %}
   </div>
   {% if showcontrols %}

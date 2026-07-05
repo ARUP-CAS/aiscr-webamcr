@@ -1779,6 +1779,8 @@ class AkceListView(SearchListView):
     redis_snapshot_prefix = "akce"
     redis_value_list_field = "archeologicky_zaznam__ident_cely"
     vypis_app = "akce"
+    map_enabled = True
+    map_layer = "akce"
 
     def init_translations(self):
         """Nastaví přeložené texty pro nadpisy, popisky a záhlaví přehledu akcí."""

@@ -1,0 +1,101 @@
+{% load static %}
+{% load i18n %}
+{% load template_tags %}
+
+<script>
+  {% autoescape off %}
+    const settings_heatmap_options = {% get_settings "heatmap_options" "pas_heatmap_options" %};
+  {% endautoescape %}
+  const global_csrftoken = '{{ csrf_token }}';
+  const static_url = "{% get_static_prefix %}";
+  const map_translations = {
+    CurrentLocationError: '{% trans "mapa.CurrentLocationError" %}',
+    cuzkKatastralniMapa: '{% trans "mapa.cuzkKatastralniMapa" %}',
+    cuzkKatastralniUzemi: '{% trans "mapa.cuzkKatastralniUzemi" %}',
+    cuzkOrtofotomapa: '{% trans "mapa.cuzkOrtofotomapa" %}',
+    cuzkStinovanyeelief5G: '{% trans "mapa.cuzkStinovanyeelief5G" %}',
+    cuzkzakladniMapyCr: '{% trans "mapa.cuzkzakladniMapyCr" %}',
+    cuzkzakladniMapyCrGrey: '{% trans "mapa.cuzkzakladniMapyCrGrey" %}',
+    openStreetMapSeda: '{% trans "mapa.openStreetMapSeda" %}',
+    npuPamatkovaOchrana: '{% trans "mapa.npuPamatkovaOchrana" %}',
+    lokalizace: '{% trans "mapa.lokalizacePAS" %}',
+    lokalizacePAS: '{% trans "mapa.lokalizacePAS" %}',
+    FindLocation: '{% trans "mapa.FindLocation" %}',
+    FullscreenTitle: '{% trans "mapa.FullscreenTitle" %}',
+    FullscreenTitleClose: '{% trans "mapa.FullscreenTitleClose" %}',
+    MeasureTitle: '{% trans "mapa.MeasureTitle" %}',
+    pian: '{% trans "mapa.pian" %}',
+    samostatneNalezy: '{% trans "mapa.samostatneNalezy" %}',
+    SetLocation: '{% trans "mapa.SetLocation" %}',
+    zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
+    zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}'
+  };
+  const draw_translations = {
+    rectangle: '{% trans "mapa.drawRectangle" %}',
+    rectangleStart: '{% trans "mapa.drawRectangleStart" %}',
+    rectangleEnd: '{% trans "mapa.drawRectangleEnd" %}',
+    deleteSelection: '{% trans "mapa.deleteSelection" %}'
+  };
+  const leaflet_search_translations = {
+    KatastralniUzemi: '{% trans "leaflet_search.KatastralniUzemi" %}',
+    Okres: '{% trans "leaflet_search.Okres" %}',
+    Obec: '{% trans "leaflet_search.Obec" %}',
+    Adresa: '{% trans "leaflet_search.Adresa" %}',
+    Ulice: '{% trans "leaflet_search.Ulice" %}',
+    Geonames: '{% trans "leaflet_search.Geonames" %}',
+    Parcela: '{% trans "leaflet_search.Parcela" %}',
+    Stavebni: '{% trans "leaflet_search.Stavebni" %}',
+    Pozemkova: '{% trans "leaflet_search.Pozemkova" %}',
+    SearchTextCancel: '{% trans "leaflet_search.SearchTextCancel" %}',
+    SearchTextError: '{% trans "leaflet_search.SearchTextError" %}',
+    ButtonTitle: '{% trans "leaflet_search.ButtonTitle" %}',
+    ButtonSelTitle: '{% trans "leaflet_search.ButtonSelTitle" %}'
+  };
+</script>
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="{% static 'leaflet/dist/leaflet.css' %}"/>
+<script src="{% static 'leaflet/dist/leaflet.js' %}"></script>
+<!-- MarkerCluster -->
+<script src="{% static 'leaflet.markercluster/dist/leaflet.markercluster-src.js' %}"></script>
+<link rel="stylesheet" href="{% static 'leaflet.markercluster/dist/MarkerCluster.css' %}"/>
+<link rel="stylesheet" href="{% static 'leaflet.markercluster/dist/MarkerCluster.Default.css' %}"/>
+<!-- Heatmap -->
+<script src="{% static 'js/heatmap/heatmap.js' %}"></script>
+<script src="{% static 'js/heatmap/leaflet-heatmap.js' %}"></script>
+<!-- FullScreen -->
+<script src="{% static 'leaflet-fullscreen/dist/Leaflet.fullscreen.min.js' %}"></script>
+<link href="{% static 'leaflet-fullscreen/dist/leaflet.fullscreen.css' %}" rel="stylesheet"/>
+<!-- Measure -->
+<link rel="stylesheet" href="{% static 'css/leaflet.measure.css' %}"/>
+<script src="{% static 'js/leaflet.measure.js' %}"></script>
+<!-- Coordinates display -->
+<script src="{% static 'js/leaflet.coor.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/leaflet.coor.css' %}"/>
+<!-- Search -->
+<link rel="stylesheet" href="{% static 'css/leaflet-search.css' %}"/>
+<script src="{% static 'js/leaflet-search.js' %}"></script>
+<!-- Draw (prostorový výběr) -->
+<script src="{% static 'leaflet-draw/dist/leaflet.draw-src.js' %}"></script>
+<link rel="stylesheet" href="{% static 'leaflet-draw/dist/leaflet.draw.css' %}"/>
+
+<!-- Pomocné a AMČR mapové skripty (pořadí dle coor.html) -->
+<script src="{% static 'js/mapa_pins.js' %}"></script>
+<script src="{% static 'js/coor_precision.js' %}"></script>
+<script src="{% static 'js/coordTransform.js' %}"></script>
+<script src="{% static 'js/leaflet-grayscale.js' %}"></script>
+{% if map_layer == "3d" %}
+  <!-- Knihovna 3D je ve Web Mercator (EPSG:3857), ne v S-JTSK -->
+  <script src="{% static 'js/mapa_settings_mercator.js' %}"></script>
+  <script src="{% static 'js/mapa_functions.js' %}"></script>
+  <script src="{% static 'js/mapa_basic_functions_mercator.js' %}"></script>
+{% else %}
+  <script src="{% static 'js/mapa_settings_jtsk.js' %}"></script>
+  <script src="{% static 'js/mapa_functions.js' %}"></script>
+  <script src="{% static 'js/mapa_basic_functions.js' %}"></script>
+{% endif %}
+<script src="{% static 'leaflet.featuregroup.subgroup/dist/leaflet.featuregroup.subgroup.js' %}"></script>
+<script src="{% static 'spin.js/spin.js' %}"></script>
+<script src="{% static 'leaflet-spin/leaflet.spin.min.js' %}"></script>
+<!-- Vlastní logika mapového filtru -->
+<script src="{% static 'js/mapa_filter.js' %}"></script>

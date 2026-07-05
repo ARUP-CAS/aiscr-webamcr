@@ -14,12 +14,12 @@
       {% endif %}
     </div>
     {% if sn.igsn %}
-      <div class="app-entity-item align-self-center app-entity-color{% if show.backtoprojekt %} app-pipe-right pr-5{% endif %}">
+      <div class="igsn align-self-center app-entity-color{% if show.backtoprojekt %} app-pipe-right pr-5{% endif %}">
         <span style="font-weight: normal">({{ sn.igsn }})</span>
         </div>
       {% endif %}
     {% if show.backtoprojekt %}
-      <div class="align-self-center"><a href="{% url 'projekt:detail' sn.projekt.ident_cely %}" class="app-entity-color font-weight-normal">{% trans "templates.toolbarPas.backToProjekt.label" %}</a></div>
+      <div class="backdetail align-self-center"><a href="{% url 'projekt:detail' sn.projekt.ident_cely %}" class="app-entity-color font-weight-normal">{% trans "templates.toolbarPas.backToProjekt.label" %}</a></div>
     {% endif %}
   </div>
   {% if showcontrols %}

@@ -14,6 +14,11 @@ deployment_root="${1}"
 ref="${2}"
 ref_type="${3}"
 
+if [ -z "${deployment_root}" ]; then
+    echo "Error: 'deployment_root' parameter is required." >&2
+    exit 1
+fi
+
 if [ -z "${ref}" ]; then
     echo "Error: 'ref' parameter is required." >&2
     exit 1

@@ -2062,7 +2062,7 @@ class FedoraTransaction(BaseFedoraTransaction):
         )
         self._send_transaction_request()
         self._perform_post_commit_tasks()
-        if settings.DIGIARCHIV_URL != "" and self.changes_count > 0:
+        if settings.DIGIARCHIV_UPDATE != "" and self.changes_count > 0:
             self.call_digiarchiv_update()
         self.__status = FedoraTransactionStatus.COMMITTED
         logger.debug(

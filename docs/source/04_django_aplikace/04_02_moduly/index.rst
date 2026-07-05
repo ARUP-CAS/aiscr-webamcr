@@ -35,6 +35,7 @@ Systémové a integrační moduly
    :maxdepth: 2
    :caption: Obsah:
 
+   api/index
    core/index
    cron/index
    fedora_management/index
