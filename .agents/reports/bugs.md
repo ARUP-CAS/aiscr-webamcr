@@ -1,213 +1,213 @@
-# Evidované chyby — AMČR (aiscr-webamcr)
+# Tracked bugs — AMČR (aiscr-webamcr)
 
-> Legacy entries remain mostly in Czech; newly touched review prose follows the canonical English-default rule with verbatim Czech preserved where exact source wording matters.
-> Před přidáním nové chyby ověř existující GitHub Issues (aktuálně 113 otevřených).
+> Review prose follows the canonical English-default rule; verbatim Czech is preserved where exact source wording, field names, or AIS CR domain identifiers matter.
+> Before adding a new bug, check the existing GitHub Issues (currently 113 open).
 >
-> Stavy: `již evidováno (Issue #XXX)` | `rozšíření existujícího issue #XXX` | `nový kandidát na issue`
+> Statuses: `already tracked (Issue #XXX)` | `extends existing issue #XXX` | `new issue candidate`
 >
 > Severity values: `Critical` | `High` | `Medium` | `Low`
 
 ---
 
-<!-- Záznamy přidávají agenti po dokončení jednotlivých tasků -->
+<!-- Entries are added by agents after completing individual tasks -->
 
-### BUG-001: eval() na hodnotách z databáze v generátorech identifikátorů
+### BUG-001: eval() on values from the database in the identifier generators
 
-- **Soubory:**
+- **Files:**
   - `webclient/projekt/models.py:663` — `Projekt.set_permanent_ident_cely()`
   - `webclient/arch_z/models.py:331` — `ArcheologickyZaznam.set_lokalita_permanent_ident_cely()`
   - `webclient/arch_z/models.py:889` — `get_akce_ident()`
-  - `webclient/dokument/models.py:441` — `Dokument.set_permanent_ident_cely()` *(nalezeno T03c)*
-  - `webclient/ez/models.py:301` — `get_perm_ez_ident()` *(nalezeno T03c)*
+  - `webclient/dokument/models.py:441` — `Dokument.set_permanent_ident_cely()` *(found in T03c)*
+  - `webclient/ez/models.py:301` — `get_perm_ez_ident()` *(found in T03c)*
 - **Severity:** Medium
-- **GitHub Issue:** nový kandidát na issue
-- **Popis:** Všech pět míst používá `eval(i)` pro převod textového čísla (segmentu `ident_cely` z DB) na integer. Ačkoliv jsou hodnoty interně generované a jejich formát je řízen aplikací, `eval()` je inherentně nebezpečná funkce — pokud by byl formát ident_cely narušen (např. chybnou migrací dat), mohl by být spuštěn libovolný Python kód. Viz SEC-ORM-001 až SEC-ORM-005 v `orm_analysis.json`.
-- **Navrhovaná oprava:** Nahradit `eval(i)` za `int(i)` na všech pěti místech. Přidat validaci formátu před konverzí (např. `i.isdigit()`).
+- **GitHub Issue:** new issue candidate
+- **Description:** All five places use `eval(i)` to convert a textual number (a segment of `ident_cely` from the DB) to an integer. Although the values are internally generated and their format is controlled by the application, `eval()` is an inherently dangerous function — if the ident_cely format were compromised (e.g. by a faulty data migration), arbitrary Python code could be executed. See SEC-ORM-001 through SEC-ORM-005 in `orm_analysis.json`.
+- **Recommended fix:** Replace `eval(i)` with `int(i)` in all five places. Add format validation before the conversion (e.g. `i.isdigit()`).
 - **Task:** T03
 
 ---
 
-### BUG-002: N+1 dotazy v ArcheologickyZaznam.check_pred_odeslanim() a Projekt.check_pred_uzavrenim()
+### BUG-002: N+1 queries in ArcheologickyZaznam.check_pred_odeslanim() and Projekt.check_pred_uzavrenim()
 
-- **Soubory:**
+- **Files:**
   - `webclient/arch_z/models.py:240-268`
   - `webclient/projekt/models.py:561-578`
 - **Severity:** Medium
-- **GitHub Issue:** nový kandidát na issue
-- **Popis:** `check_pred_odeslanim()` volá `self.dokumentacni_jednotky_akce.all()` dvakrát a pro každou DJ dělá dotaz na `dj.komponenty.komponenty.all()`. `check_pred_uzavrenim()` volá `self.akce_set.all()` dvakrát a pro každou akci spouští kaskádovou `check_pred_odeslanim()`. Tyto metody jsou volány při každém pokusu o posun stavu záznamu — pro projekty s více akcemi a DJ může počet dotazů dosáhnout desítek.
-- **Navrhovaná oprava:** Přidat `prefetch_related` ve view metodách před voláním `check_pred_*`. Refaktorovat `check_pred_*` metody tak, aby přijímaly prefetchovaná data jako parametr.
+- **GitHub Issue:** new issue candidate
+- **Description:** `check_pred_odeslanim()` calls `self.dokumentacni_jednotky_akce.all()` twice and, for each DJ, makes a query on `dj.komponenty.komponenty.all()`. `check_pred_uzavrenim()` calls `self.akce_set.all()` twice and, for each akce, runs a cascading `check_pred_odeslanim()`. These methods are called on every attempt to advance the record's state — for projects with multiple akce and DJ, the number of queries can reach dozens.
+- **Recommended fix:** Add `prefetch_related` in the view methods before calling `check_pred_*`. Refactor the `check_pred_*` methods to accept prefetched data as a parameter.
 - **Task:** T03
 
 ---
 
-### BUG-003: Import cached_property z distlib.util místo functools
+### BUG-003: Import of cached_property from distlib.util instead of functools
 
-- **Soubory:** `webclient/uzivatel/models.py:28`
+- **Files:** `webclient/uzivatel/models.py:28`
 - **Severity:** Low
-- **GitHub Issue:** nový kandidát na issue
-- **Popis:** `from distlib.util import cached_property` — `distlib` je balíčkovací nástroj (součást pip), nikoliv Django nebo Python standard library. Správná implementace je `from functools import cached_property` (Python 3.8+). Import funguje, ale je nespolehlivý jako závislost a matoucí pro vývojáře.
-- **Navrhovaná oprava:** `from functools import cached_property`
+- **GitHub Issue:** new issue candidate
+- **Description:** `from distlib.util import cached_property` — `distlib` is a packaging tool (part of pip), not Django or the Python standard library. The correct implementation is `from functools import cached_property` (Python 3.8+). The import works, but it is unreliable as a dependency and confusing for developers.
+- **Recommended fix:** `from functools import cached_property`
 - **Task:** T03
 
 ---
 
-### BUG-004: Extra SELECT v SamostatnyNalez.save() — initial_pristupnost vzor je neúplný
+### BUG-004: Extra SELECT in SamostatnyNalez.save() — the initial_pristupnost pattern is incomplete
 
-- **Soubor:** `webclient/pas/models.py:182-186`
+- **File:** `webclient/pas/models.py:182-186`
 - **Severity:** Medium
-- **Sjednocení:** Závažnost zvýšena z Low na Medium (2026-03-13); extra SELECT se spouští při každém uložení záznamu a jde o architektonický anti-pattern — odpovídá zařazení ORM-01 do Vysoké priority v refactoring_backlog.md.
-- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
-- **Popis:** Model `SamostatnyNalez` má property `initial_pristupnost`, ale v metodě `save()` stále bezpodmínečně volá `SamostatnyNalez.objects.get(pk=self.pk)` při každém uložení záznamu (kde `pk is not None`). Správný vzor ukládá počáteční hodnotu v `__init__()`, čímž extra SELECT odpadá.
-- **Navrhovaná oprava:** Přidat do `__init__()`: `self._initial_pristupnost = self.pristupnost`. V `save()` porovnat `self._initial_pristupnost != self.pristupnost` bez extra SELECT.
+- **Alignment:** Severity raised from Low to Medium (2026-03-13); the extra SELECT runs on every record save and is an architectural anti-pattern — it corresponds to the High-priority classification of ORM-01 in refactoring_backlog.md.
+- **GitHub Issue:** new issue candidate — cannot verify, GitHub Issues unavailable without authentication
+- **Description:** The `SamostatnyNalez` model has an `initial_pristupnost` property, but its `save()` method still unconditionally calls `SamostatnyNalez.objects.get(pk=self.pk)` on every record save (where `pk is not None`). The correct pattern stores the initial value in `__init__()`, which eliminates the extra SELECT.
+- **Recommended fix:** Add to `__init__()`: `self._initial_pristupnost = self.pristupnost`. In `save()`, compare `self._initial_pristupnost != self.pristupnost` without the extra SELECT.
 - **Task:** T03b
 
 ---
 
-### BUG-005: Chybějící db_index na Heslar.nazev_heslare (FK globálně používané v limit_choices_to)
+### BUG-005: Missing db_index on Heslar.nazev_heslare (an FK used globally in limit_choices_to)
 
-- **Soubor:** `webclient/heslar/models.py:22-23`
+- **File:** `webclient/heslar/models.py:22-23`
 - **Severity:** Medium
-- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
-- **Popis:** Pole `Heslar.nazev_heslare` je FK na `HeslarNazev` bez `db_index=True`. Toto pole je filtrováno v `limit_choices_to` v desítkách FK polí napříč celou aplikací (proj, pas, arch_z, uzivatel, dokument, adb, heslar atd.). Absence indexu způsobuje table scan na tabulce `heslar` pro každý formulářový dotaz.
-- **Navrhovaná oprava:** Přidat `db_index=True` do FK definice `nazev_heslare` v `heslar/models.py`. Alternativně přidat explicitní `models.Index(fields=["nazev_heslare"])` v `Meta.indexes`.
+- **GitHub Issue:** new issue candidate — cannot verify, GitHub Issues unavailable without authentication
+- **Description:** The `Heslar.nazev_heslare` field is an FK to `HeslarNazev` without `db_index=True`. This field is filtered in `limit_choices_to` in dozens of FK fields across the entire application (proj, pas, arch_z, uzivatel, dokument, adb, heslar, etc.). The absence of an index causes a table scan on the `heslar` table for every form query.
+- **Recommended fix:** Add `db_index=True` to the `nazev_heslare` FK definition in `heslar/models.py`. Alternatively add an explicit `models.Index(fields=["nazev_heslare"])` in `Meta.indexes`.
 - **Task:** T03b
 
 ---
 
-### BUG-006: get_vyskovy_bod() volá .count() dvakrát na stejném querysetu
+### BUG-006: get_vyskovy_bod() calls .count() twice on the same queryset
 
-- **Soubor:** `webclient/adb/models.py:163-171`
+- **File:** `webclient/adb/models.py:163-171`
 - **Severity:** Low
-- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
-- **Popis:** Funkce `get_vyskovy_bod()` volá `vyskove_body.count()` dvakrát — jednou pro test na 0 a jednou pro test na maximum — každé volání spouští samostatný SQL COUNT dotaz.
-- **Navrhovaná oprava:** Uložit výsledek `count = vyskove_body.count()` jednou a porovnat `count == 0` a `count <= MAXIMAL_VYSKOVY_BOD + offset`.
+- **GitHub Issue:** new issue candidate — cannot verify, GitHub Issues unavailable without authentication
+- **Description:** The `get_vyskovy_bod()` function calls `vyskove_body.count()` twice — once to test for 0 and once to test for the maximum — each call runs a separate SQL COUNT query.
+- **Recommended fix:** Store the result `count = vyskove_body.count()` once and compare `count == 0` and `count <= MAXIMAL_VYSKOVY_BOD + offset`.
 - **Task:** T03b
 
 ---
 
-### BUG-007: GF_SECURITY_ADMIN_PASSWORD nastaveno na cestu k souboru místo hesla
+### BUG-007: GF_SECURITY_ADMIN_PASSWORD set to a file path instead of the password
 
-- **Soubory:**
+- **Files:**
   - `docker-compose.yml:149`
   - `docker-compose-test.yml:169`
   - `git_docker-compose.yml:144`
 - **Severity:** Medium
-- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
-- **Popis:** Grafana `GF_SECURITY_ADMIN_PASSWORD=/run/secrets/grafana_admin_password` nastavuje admin heslo na literální string (cestu k souboru), nikoli na obsah Docker secretu. Grafná nepodporuje automatické čtení Docker secrets přes `GF_SECURITY_ADMIN_PASSWORD`; správný formát je `GF_SECURITY_ADMIN_PASSWORD__FILE`. Důsledek: Grafana admin heslo je literální string `/run/secrets/grafana_admin_password`.
-- **Navrhovaná oprava:** Nahradit `GF_SECURITY_ADMIN_PASSWORD=...` za `GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_admin_password` ve všech třech souborech.
+- **GitHub Issue:** new issue candidate — cannot verify, GitHub Issues unavailable without authentication
+- **Description:** Grafana `GF_SECURITY_ADMIN_PASSWORD=/run/secrets/grafana_admin_password` sets the admin password to a literal string (the file path), not to the contents of the Docker secret. Grafana does not support automatic reading of Docker secrets via `GF_SECURITY_ADMIN_PASSWORD`; the correct format is `GF_SECURITY_ADMIN_PASSWORD__FILE`. Consequence: the Grafana admin password is the literal string `/run/secrets/grafana_admin_password`.
+- **Recommended fix:** Replace `GF_SECURITY_ADMIN_PASSWORD=...` with `GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_admin_password` in all three files.
 - **Task:** T04
 
 ---
 
-### BUG-008: ELASTIC_PASSWORD a LOGSTASH_INTERNAL_PASSWORD nastaveny na názvy secretů
+### BUG-008: ELASTIC_PASSWORD and LOGSTASH_INTERNAL_PASSWORD set to secret names
 
-- **Soubory:**
+- **Files:**
   - `docker-compose.yml:180-181,201`
   - `git_docker-compose.yml:172-173,194`
 - **Severity:** Medium
-- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
-- **Popis:** Elasticsearch `ELASTIC_PASSWORD=elastic_pass` a Logstash `LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass` mají jako hodnotu název Docker secretu (řetězec), nikoli jeho obsah. Elasticsearch ani Logstash Docker images nepodporují `_FILE` variantu pro tyto proměnné. Výsledek: Elasticsearch bootstrap heslo je nastaveno na literál `"elastic_pass"` namísto skutečné hodnoty ze secretu.
-- **Navrhovaná oprava:** Použít entrypoint wrapper skript: `export ELASTIC_PASSWORD=$(cat /run/secrets/elastic_pass)` před spuštěním Elasticsearch / Logstash.
+- **GitHub Issue:** new issue candidate — cannot verify, GitHub Issues unavailable without authentication
+- **Description:** Elasticsearch `ELASTIC_PASSWORD=elastic_pass` and Logstash `LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass` have the name of the Docker secret (a string) as their value, not its contents. Neither the Elasticsearch nor the Logstash Docker image supports the `_FILE` variant for these variables. Result: the Elasticsearch bootstrap password is set to the literal `"elastic_pass"` instead of the actual value from the secret.
+- **Recommended fix:** Use an entrypoint wrapper script: `export ELASTIC_PASSWORD=$(cat /run/secrets/elastic_pass)` before starting Elasticsearch / Logstash.
 - **Task:** T04
 
 ---
 
-### BUG-009: sudo přístup aplikačního uživatele v produkčním kontejneru
+### BUG-009: sudo access for the application user in the production container
 
-- **Soubor:** `Dockerfile:99`
+- **File:** `Dockerfile:99`
 - **Severity:** Medium
-- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
-- **Popis:** `usermod -aG sudo user` přidává produkčního aplikačního uživatele do skupiny `sudo`. Pokud dojde k RCE exploitaci aplikace (např. přes eval() — viz BUG-001), útočník může eskalovat oprávnění na root uvnitř kontejneru.
-- **Navrhovaná oprava:** Odebrat `usermod -aG sudo user`. Pro nutné privilegované operace (crontab setup) nastavit specifická NOPASSWD pravidla v `/etc/sudoers`.
+- **GitHub Issue:** new issue candidate — cannot verify, GitHub Issues unavailable without authentication
+- **Description:** `usermod -aG sudo user` adds the production application user to the `sudo` group. If an RCE exploit of the application occurs (e.g. via eval() — see BUG-001), an attacker can escalate privileges to root inside the container.
+- **Recommended fix:** Remove `usermod -aG sudo user`. For necessary privileged operations (crontab setup), set specific NOPASSWD rules in `/etc/sudoers`.
 - **Task:** T04
 
 ---
 
-### BUG-010: Nebezpečný fallback pro DEBUG v production.py
+### BUG-010: Dangerous fallback for DEBUG in production.py
 
-- **Soubor:** `webclient/webclient/settings/production.py:3`
+- **File:** `webclient/webclient/settings/production.py:3`
 - **Severity:** High
-- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
-- **Popis:** `DEBUG = get_secret("DEBUG", "True") == "True"` — výchozí fallback je řetězec `"True"`. Pokud klíč `DEBUG` chybí v secrets souboru, produkční instance se spustí s `DEBUG=True`. To vystavuje úplné Python tracebacky, settings hodnoty a deaktivuje bezpečnostní kontroly Django.
-- **Navrhovaná oprava:** Změnit fallback na `"False"`: `DEBUG = get_secret("DEBUG", "False") == "True"`
+- **GitHub Issue:** new issue candidate — cannot verify, GitHub Issues unavailable without authentication
+- **Description:** `DEBUG = get_secret("DEBUG", "True") == "True"` — the default fallback is the string `"True"`. If the `DEBUG` key is missing from the secrets file, the production instance starts with `DEBUG=True`. This exposes full Python tracebacks, settings values, and deactivates Django's security checks.
+- **Recommended fix:** Change the fallback to `"False"`: `DEBUG = get_secret("DEBUG", "False") == "True"`
 - **Task:** T05
 
 ---
 
-### BUG-011: Mailtrap credentials v commitu
+### BUG-011: Mailtrap credentials in a commit
 
-- **Soubor:** `webclient/webclient/settings/sample_secrets_mail_client.json`
+- **File:** `webclient/webclient/settings/sample_secrets_mail_client.json`
 - **Severity:** Medium
-- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
-- **Popis:** Soubor obsahuje zdánlivě reálné Mailtrap sandbox credentials (`EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`). Kdokoliv s přístupem k repozitáři může použít tyto credentials k přihlášení do Mailtrap a číst zachycené testovací e-maily.
-- **Navrhovaná oprava:** Ověřit zda jsou credentials aktivní, pokud ano rotovat. Nahradit v souboru za zjevné placeholder hodnoty (např. `"PLACEHOLDER_USER"`, `"PLACEHOLDER_PASSWORD"`).
+- **GitHub Issue:** new issue candidate — cannot verify, GitHub Issues unavailable without authentication
+- **Description:** The file contains seemingly real Mailtrap sandbox credentials (`EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`). Anyone with access to the repository can use these credentials to log into Mailtrap and read captured test emails.
+- **Recommended fix:** Verify whether the credentials are active, and if so, rotate them. Replace them in the file with obvious placeholder values (e.g. `"PLACEHOLDER_USER"`, `"PLACEHOLDER_PASSWORD"`).
 - **Task:** T05
 
 ---
 
-### BUG-012: mark_safe() s hodnotami z databáze ve vypis/fields.py
+### BUG-012: mark_safe() with values from the database in vypis/fields.py
 
-- **Soubory:**
+- **Files:**
   - `webclient/vypis/fields.py:363` — `mark_safe(value.get_ident_cely_link)`
   - `webclient/vypis/fields.py:438` — `mark_safe(new_instance)`
   - `webclient/vypis/views.py:79` — `mark_safe(field.get_name(instance))`
 - **Severity:** Medium
-- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
-- **Popis:** Tři místa v `vypis/` aplikují `mark_safe()` na hodnoty odvozené z databázových instancí nebo model properties. Pokud tyto hodnoty nejsou správně escapovány před zabalením do `mark_safe()`, může dojít ke stored XSS. Ident_cely hodnoty mají řízenou strukturu, ale vzor je architektonicky nebezpečný a vyžaduje explicitní ověření.
-- **Navrhovaná oprava:** Auditovat `get_ident_cely_link` property, `get_name()` implementace a Dokument.extra_data atribut. Přepsat na `format_html()` nebo zajistit `escape()` před `mark_safe()`.
+- **GitHub Issue:** new issue candidate — cannot verify, GitHub Issues unavailable without authentication
+- **Description:** Three places in `vypis/` apply `mark_safe()` to values derived from database instances or model properties. If these values are not properly escaped before being wrapped in `mark_safe()`, stored XSS may occur. The ident_cely values have a controlled structure, but the pattern is architecturally dangerous and requires explicit verification.
+- **Recommended fix:** Audit the `get_ident_cely_link` property, the `get_name()` implementations, and the Dokument.extra_data attribute. Rewrite using `format_html()` or ensure `escape()` before `mark_safe()`.
 - **Task:** T05
 
 ---
 
-### BUG-013: restore_database.sh neověřuje povinné proměnné prostředí před DROP DATABASE
+### BUG-013: restore_database.sh does not validate required environment variables before DROP DATABASE
 
-- **Soubory:** `scripts/restore_database.sh`
+- **Files:** `scripts/restore_database.sh`
 - **Severity:** Medium
-- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
-- **Popis:** Skript používá `${DBNAME}`, `${USED_DB_BACKUP}`, `${DB_FLAG_ROLE}` bez kontroly, zda jsou nastaveny. Při prázdných hodnotách může dojít k nechtěnému DROP/CREATE (např. prázdné jméno databáze) nebo k nejasné chybě při pg_restore.
-- **Navrhovaná oprava:** Na začátku skriptu ověřit, že `DBNAME`, `USED_DB_BACKUP`, `DB_FLAG_ROLE` jsou neprázdné; při chybě vypsat usage a ukončit s exit 1. Přidat `set -e`.
+- **GitHub Issue:** new issue candidate — cannot verify, GitHub Issues unavailable without authentication
+- **Description:** The script uses `${DBNAME}`, `${USED_DB_BACKUP}`, `${DB_FLAG_ROLE}` without checking whether they are set. With empty values, an unintended DROP/CREATE may occur (e.g. an empty database name) or an unclear error during pg_restore.
+- **Recommended fix:** At the start of the script, verify that `DBNAME`, `USED_DB_BACKUP`, `DB_FLAG_ROLE` are non-empty; on error print usage and exit with exit 1. Add `set -e`.
 - **Task:** T10
 
 ---
 
-### BUG-014: db_connection_from_docker-web.py ignoruje DB_PORT ze secretu
+### BUG-014: db_connection_from_docker-web.py ignores DB_PORT from the secret
 
-- **Soubory:** `scripts/db/db_connection_from_docker-web.py`
+- **Files:** `scripts/db/db_connection_from_docker-web.py`
 - **Severity:** Medium
-- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
-- **Popis:** Skript načte z `/run/secrets/db_conf` pouze `DB_NAME`, `DB_PASS`, `DB_USER`, `DB_HOST`. Připojení k PostgreSQL tedy vždy používá výchozí port 5432. Pokud je databáze na jiném portu, health check selže nebo kontroluje jinou instanci.
-- **Navrhovaná oprava:** Načíst z JSON i `DB_PORT` (s výchozí hodnotou 5432) a předat do `psycopg2.connect(..., port=db_port)`.
+- **GitHub Issue:** new issue candidate — cannot verify, GitHub Issues unavailable without authentication
+- **Description:** The script reads only `DB_NAME`, `DB_PASS`, `DB_USER`, `DB_HOST` from `/run/secrets/db_conf`. The PostgreSQL connection therefore always uses the default port 5432. If the database is on a different port, the health check fails or checks a different instance.
+- **Recommended fix:** Also read `DB_PORT` from the JSON (with a default of 5432) and pass it to `psycopg2.connect(..., port=db_port)`.
 - **Task:** T10
 
 ---
 
-### BUG-015: NalezPredmet.__init_ — překlep v názvu metody (chybí jedno podtržítko)
+### BUG-015: NalezPredmet.__init_ — typo in the method name (one underscore missing)
 
-- **Soubory:** `webclient/nalez/models.py:116`
+- **Files:** `webclient/nalez/models.py:116`
 - **Severity:** Medium
-- **GitHub Issue:** nový kandidát na issue
-- **Popis:** Metoda je definována jako `def __init_(self, ...)` s jedním podtržítkem na konci místo `__init__` se dvěma. Python tuto metodu nevolá jako konstruktor, takže vlastní inicializace (`close_active_transaction_when_finished = False`, `active_transaction = None`) se nikdy neprovede. Sesterský model `NalezObjekt` má správně `__init__`. Dopady závisí na tom, zda tyto atributy jsou používány jinde (signály, transakce).
-- **Navrhovaná oprava:** Přejmenovat `__init_` na `__init__`.
+- **GitHub Issue:** new issue candidate
+- **Description:** The method is defined as `def __init_(self, ...)` with a single trailing underscore instead of `__init__` with two. Python does not call this method as a constructor, so the custom initialization (`close_active_transaction_when_finished = False`, `active_transaction = None`) is never performed. The sibling model `NalezObjekt` correctly has `__init__`. The impact depends on whether these attributes are used elsewhere (signals, transactions).
+- **Recommended fix:** Rename `__init_` to `__init__`.
 - **Task:** T03d
 
 ---
 
-### BUG-016: form_fields_disabling.js — invertovaná podmínka pro select/non-select prvky
+### BUG-016: form_fields_disabling.js — inverted condition for select/non-select elements
 
-- **Soubory:** `webclient/static/js/form_fields_disabling.js:65`
+- **Files:** `webclient/static/js/form_fields_disabling.js:65`
 - **Severity:** Medium
-- **GitHub Issue:** nový kandidát na issue
-- **Popis:** Podmínka `element.type != 'select-multiple' || element.type != 'select-one'` je logicky vždy pravdivá (de Morganův zákon — OR s negacemi). Větve pro select a non-select formulářové prvky jsou tím invertovány. Projeví se nesprávným povolováním/zakazováním polí při změně nadřazeného selectu.
-- **Navrhovaná oprava:** Nahradit `||` operátor za `&&`.
+- **GitHub Issue:** new issue candidate
+- **Description:** The condition `element.type != 'select-multiple' || element.type != 'select-one'` is logically always true (De Morgan's law — OR of negations). The branches for select and non-select form elements are thereby inverted. This manifests as incorrect enabling/disabling of fields when the parent select changes.
+- **Recommended fix:** Replace the `||` operator with `&&`.
 - **Task:** T07b
 
 ---
 
-### BUG-017: coor_precision.js — chybná konstanta přesnosti pro JTSK (používá WGS84)
+### BUG-017: coor_precision.js — wrong precision constant for JTSK (uses WGS84)
 
-- **Soubory:** `webclient/static/js/coor_precision.js:31`
+- **Files:** `webclient/static/js/coor_precision.js:31`
 - **Severity:** Medium
-- **GitHub Issue:** nový kandidát na issue
-- **Popis:** Funkce `amcr_static_coordinate_precision_jtsk` pro ne-array vstup používá `global_fixed_precision.wgs84` místo `global_fixed_precision.jtsk`. JTSK souřadnice jsou zaokrouhlovány s přesností WGS84, což vede k nesprávnému zaokrouhlení (typicky 6 desetinných míst pro WGS84 vs 2 pro JTSK).
-- **Navrhovaná oprava:** Na řádku 31 nahradit `global_fixed_precision.wgs84` za `global_fixed_precision.jtsk`.
+- **GitHub Issue:** new issue candidate
+- **Description:** The `amcr_static_coordinate_precision_jtsk` function uses `global_fixed_precision.wgs84` instead of `global_fixed_precision.jtsk` for a non-array input. JTSK coordinates are rounded with WGS84 precision, which leads to incorrect rounding (typically 6 decimal places for WGS84 vs 2 for JTSK).
+- **Recommended fix:** On line 31, replace `global_fixed_precision.wgs84` with `global_fixed_precision.jtsk`.
 - **Task:** T07b

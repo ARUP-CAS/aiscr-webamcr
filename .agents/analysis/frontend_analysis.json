@@ -3,11 +3,11 @@
     "status": "done — T07+T07b",
     "needs_agent_update": false
   },
-  "scope_note": "Pouze vlastní kód vývojářů AMČR. Vendorované knihovny (*.min.js, vendor/, atd.) jsou vyloučeny z hodnocení kvality.",
+  "scope_note": "Only the AMČR developers' own code. Vendored libraries (*.min.js, vendor/, etc.) are excluded from the quality assessment.",
   "known_context": {
-    "js_percentage": "36.8% repozitáře",
-    "scss_percentage": "3.9% repozitáře",
-    "known_issue": "Issue #247 — jQuery načítáno z code.jquery.com (CDN), řešeno statickým vložením"
+    "js_percentage": "36.8% of the repository",
+    "scss_percentage": "3.9% of the repository",
+    "known_issue": "Issue #247 — jQuery loaded from code.jquery.com (CDN), resolved by static inclusion"
   },
   "vendored_paths_skipped": [
     "webclient/static/js/Leaflet1.9.4/",
@@ -51,109 +51,109 @@
       "webclient/static/js/create_message.js"
     ],
     "patterns": [
-      "Mapové obrazovky staví na Leafletu a vlastních helper funkcích; stav mapy (aktivní vrstvy, vyhledávací dotaz) se perzistuje v localStorage pod prefixem mapy.",
-      "AJAX helpery používají kombinaci jQuery (pro `changed.bs.select` eventy a selectpicker) a `XMLHttpRequest`/`fetch`; CSRF token je předáván buď přes globální proměnnou nebo Django šablonu.",
-      "Dark / light režim je implementován skrz třídu `ThemeManager`, která nastavuje `data-theme` na `<html>` a třídy na `<body>`, reaguje na `prefers-color-scheme` a ukládá manuální volbu do localStorage.",
-      "Šablona `base.html` obsahuje inline skript pro inicializaci datepickerů, automatické zavírání flash zpráv a periodický polling endpointu `core:check_authentication` pro přesměrování po SSO loginu.",
-      "Mapové soubory (mapa_arch_z, mapa_pas, mapa_projekty, mapa_doc, mapa_oznameni) sdílejí společný vzor: globální proměnné pro stav mapy, XHR pro dynamické načítání vrstev, Leaflet události (draw:created, moveend, overlayadd), heatmap overlay. Žádný z nich nepoužívá onerror handler na XHR.",
-      "Dropzone integrace (dz.js, dz_import_pian.js) používá Dropzone.autoDiscover=false a konfiguraci přes CSRF z Django šablony. Soubory závisí na globálních proměnných z šablon (object_id, typ_uploadu, dz_trans).",
-      "Ikony pinů (mapa_pins.js) definují 4 barevné varianty ikon s rozsáhlou duplikací — kandidát na refaktor do factory funkce.",
-      "Modal formuláře (modal_forms_class.js) implementují AJAX podání s JSON odpovědí a redirect; JSON.parse bez try/catch."
+      "The map screens build on Leaflet and custom helper functions; the map state (active layers, search query) is persisted in localStorage under the map's prefix.",
+      "The AJAX helpers use a combination of jQuery (for `changed.bs.select` events and selectpicker) and `XMLHttpRequest`/`fetch`; the CSRF token is passed either via a global variable or a Django template.",
+      "Dark / light mode is implemented through the `ThemeManager` class, which sets `data-theme` on `<html>` and classes on `<body>`, reacts to `prefers-color-scheme`, and stores the manual choice in localStorage.",
+      "The `base.html` template contains an inline script for initializing the datepickers, automatically closing flash messages, and periodically polling the `core:check_authentication` endpoint to redirect after an SSO login.",
+      "The map files (mapa_arch_z, mapa_pas, mapa_projekty, mapa_doc, mapa_oznameni) share a common pattern: global variables for the map state, XHR for dynamic loading of layers, Leaflet events (draw:created, moveend, overlayadd), a heatmap overlay. None of them uses an onerror handler on the XHR.",
+      "The Dropzone integration (dz.js, dz_import_pian.js) uses Dropzone.autoDiscover=false and configuration via CSRF from the Django template. The files depend on global variables from the templates (object_id, typ_uploadu, dz_trans).",
+      "The pin icons (mapa_pins.js) define 4 color variants of icons with extensive duplication — a candidate for refactoring into a factory function.",
+      "The modal forms (modal_forms_class.js) implement AJAX submission with a JSON response and a redirect; JSON.parse without try/catch."
     ],
     "issues": [
       {
         "file": "webclient/static/js/mapa_basic_functions.js",
-        "severity": "Nízká",
-        "description": "Funkce `getLocation()` chybně předpokládá existenci proměnné `x` (pro zápis chybové hlášky), která není v souboru definována; v praxi se volba geolokace zřejmě nepoužívá, ale jde o potenciální JS chybu.",
-        "recommendation": "Buď doplnit selektor/element pro chybové hlášky (např. `const x = document.getElementById('geo-status')`), nebo chybu logovat do konzole / alertu, případně funkci odstranit, pokud není využívaná."
+        "severity": "Low",
+        "description": "The `getLocation()` function incorrectly assumes the existence of a variable `x` (for writing the error message), which is not defined in the file; in practice the geolocation option is apparently not used, but it is a potential JS error.",
+        "recommendation": "Either add a selector/element for the error message (e.g. `const x = document.getElementById('geo-status')`), or log the error to the console / an alert, or remove the function if it is not used."
       },
       {
         "file": "webclient/static/js/ajax_functions.js",
-        "severity": "Nízká",
-        "description": "Helpery `get_vychozi_hodnota_podrazeneho` a `get_vychozi_licence` posílají GET požadavky přes `XMLHttpRequest` bez explicitního ošetření síťových chyb; selhání skončí pouze vyprázdněním selectu.",
-        "recommendation": "Doplnit logování chyb (např. `console.error`) nebo uživatelskou hlášku pro troubleshooting; volitelně sjednotit na použití `fetch` API."
+        "severity": "Low",
+        "description": "The helpers `get_vychozi_hodnota_podrazeneho` and `get_vychozi_licence` send GET requests via `XMLHttpRequest` without explicit handling of network errors; a failure only ends with emptying the select.",
+        "recommendation": "Add error logging (e.g. `console.error`) or a user message for troubleshooting; optionally unify on the use of the `fetch` API."
       },
       {
         "file": "webclient/templates/base.html",
-        "severity": "Střední",
-        "description": "Inline skript `checkUserAuthentication` volá periodicky (každých 60 s) endpoint `core:check_authentication` a při přechodu z login stránky s parametrem `next` provádí přesměrování. V případě výpadku sítě se chově korektně (jen loguje do konzole), ale dochází k duplikaci přesměrovací logiky mezi backendem a frontendem.",
-        "recommendation": "Zvážit přesun přesměrovací logiky do backendu (např. po úspěšném CAS loginu) a na frontendu ponechat pouze jemný UX enhancement, nebo naopak jasně zdokumentovat, že frontend je autoritativní."
+        "severity": "Medium",
+        "description": "The inline script `checkUserAuthentication` periodically (every 60 s) calls the `core:check_authentication` endpoint and, on a transition from the login page with a `next` parameter, performs a redirect. In case of a network failure it behaves correctly (it only logs to the console), but there is duplication of the redirect logic between the backend and the frontend.",
+        "recommendation": "Consider moving the redirect logic to the backend (e.g. after a successful CAS login) and leaving only a subtle UX enhancement on the frontend, or, conversely, clearly document that the frontend is authoritative."
       },
       {
         "file": "webclient/static/js/mapa_arch_z.js",
-        "severity": "Vysoká",
-        "description": "Řádek 103: `poi_sugest.getLayers()[0]._latlng` — crash pokud je vrstva prázdná. Řádek 305: `coordinates[0][0]` — crash při degenerovaném polygonu.",
-        "recommendation": "Přidat guard `getLayers().length > 0` a `coordinates.length > 0` před přístupem.",
+        "severity": "High",
+        "description": "Line 103: `poi_sugest.getLayers()[0]._latlng` — a crash if the layer is empty. Line 305: `coordinates[0][0]` — a crash on a degenerate polygon.",
+        "recommendation": "Add a guard `getLayers().length > 0` and `coordinates.length > 0` before access.",
         "added_by": "T07b"
       },
       {
         "file": "webclient/static/js/mapa_arch_z.js",
-        "severity": "Střední",
-        "description": "Implicitní globální proměnné (rs, akce_ident_cely, zoomed, coor, geom) na řádcích 404, 753, 810, 812, 883. XHR handlery bez onerror. JSON.parse bez try/catch.",
-        "recommendation": "Deklarovat proměnné s let/const. Přidat xhr.onerror handlery a obalit JSON.parse do try/catch.",
+        "severity": "Medium",
+        "description": "Implicit global variables (rs, akce_ident_cely, zoomed, coor, geom) on lines 404, 753, 810, 812, 883. XHR handlers without onerror. JSON.parse without try/catch.",
+        "recommendation": "Declare the variables with let/const. Add xhr.onerror handlers and wrap JSON.parse in try/catch.",
         "added_by": "T07b"
       },
       {
         "file": "webclient/static/js/mapa_projekty.js",
-        "severity": "Vysoká",
-        "description": "Řádek 269: `bounds.northWest` — LatLngBounds nemá vlastnost northWest, správně je getNorthWest(). Řádek 364: `poi_pian.clearLayers(poi_pian)` — clearLayers() nepřijímá argumenty.",
-        "recommendation": "Použít bounds.getNorthWest() a poi_pian.clearLayers() bez argumentů.",
+        "severity": "High",
+        "description": "Line 269: `bounds.northWest` — LatLngBounds has no northWest property, the correct one is getNorthWest(). Line 364: `poi_pian.clearLayers(poi_pian)` — clearLayers() does not accept arguments.",
+        "recommendation": "Use bounds.getNorthWest() and poi_pian.clearLayers() without arguments.",
         "added_by": "T07b"
       },
       {
         "file": "webclient/static/js/dz.js",
-        "severity": "Vysoká",
-        "description": "Řádky 272–274: po nahrazení tlačítka clonem se delete error handler odkazuje na původní `btn` místo `clone` — nastavení stylu a textu cílí na nesprávný element.",
-        "recommendation": "V delete error handleru použít `clone` místo `btn`.",
+        "severity": "High",
+        "description": "Lines 272–274: after replacing the button with a clone, the delete error handler refers to the original `btn` instead of the `clone` — the style and text setting target the wrong element.",
+        "recommendation": "In the delete error handler use `clone` instead of `btn`.",
         "added_by": "T07b"
       },
       {
         "file": "webclient/static/js/form_fields_disabling.js",
-        "severity": "Vysoká",
-        "description": "Řádek 65: podmínka `element.type != 'select-multiple' || element.type != 'select-one'` je vždy true (OR s negacemi) — logické invertování select/non-select větví. Správně má být &&.",
-        "recommendation": "Nahradit `||` za `&&` v podmínce na řádku 65.",
+        "severity": "High",
+        "description": "Line 65: the condition `element.type != 'select-multiple' || element.type != 'select-one'` is always true (OR of negations) — a logical inversion of the select/non-select branches. It should be &&.",
+        "recommendation": "Replace `||` with `&&` in the condition on line 65.",
         "added_by": "T07b"
       },
       {
         "file": "webclient/static/js/coor_precision.js",
-        "severity": "Vysoká",
-        "description": "Řádek 31: funkce `amcr_static_coordinate_precision_jtsk` pro ne-array vstup chybně používá `global_fixed_precision.wgs84` místo `global_fixed_precision.jtsk`.",
-        "recommendation": "Opravit na `global_fixed_precision.jtsk`.",
+        "severity": "High",
+        "description": "Line 31: the `amcr_static_coordinate_precision_jtsk` function incorrectly uses `global_fixed_precision.wgs84` instead of `global_fixed_precision.jtsk` for a non-array input.",
+        "recommendation": "Fix to `global_fixed_precision.jtsk`.",
         "added_by": "T07b"
       },
       {
         "file": "webclient/static/js/mapa_pas.js",
-        "severity": "Vysoká",
-        "description": "Řádek 326: `boundsLock.topLeft` — proměnná inicializována jako false, pak jako objekt; první použití může vyvolat TypeError.",
-        "recommendation": "Inicializovat boundsLock jako null a přidat guard `if (boundsLock)` před přístupem k vlastnostem.",
+        "severity": "High",
+        "description": "Line 326: `boundsLock.topLeft` — the variable is initialized as false, then as an object; the first use may raise a TypeError.",
+        "recommendation": "Initialize boundsLock as null and add a guard `if (boundsLock)` before accessing properties.",
         "added_by": "T07b"
       },
       {
         "file": "webclient/static/js/mapa_pas.js",
-        "severity": "Střední",
-        "description": "Implicitní globál `geom` v forEach (řádek 362). XHR v fill_katastr a switchMap bez onerror. JSON.parse bez try/catch.",
-        "recommendation": "Deklarovat `let geom`, přidat onerror handlery, obalit JSON.parse do try/catch.",
+        "severity": "Medium",
+        "description": "Implicit global `geom` in forEach (line 362). XHR in fill_katastr and switchMap without onerror. JSON.parse without try/catch.",
+        "recommendation": "Declare `let geom`, add onerror handlers, wrap JSON.parse in try/catch.",
         "added_by": "T07b"
       },
       {
         "file": "webclient/static/js/mapa_doc.js",
-        "severity": "Střední",
-        "description": "poi_all.clearLayers(poi_all) — clearLayers() nepřijímá argumenty. i.geom.split('(')[1] bez kontroly formátu. JSON.parse bez try/catch.",
-        "recommendation": "Použít clearLayers() bez argumentů. Přidat kontroly formátu geometrie a obalit JSON.parse.",
+        "severity": "Medium",
+        "description": "poi_all.clearLayers(poi_all) — clearLayers() does not accept arguments. i.geom.split('(')[1] without a format check. JSON.parse without try/catch.",
+        "recommendation": "Use clearLayers() without arguments. Add geometry format checks and wrap JSON.parse.",
         "added_by": "T07b"
       },
       {
         "file": "webclient/static/js/modal_forms_class.js",
-        "severity": "Střední",
-        "description": "JSON.parse(response) na řádku 64 může selhat pokud odpověď není JSON (např. 403 HTML stránka). Prázdný if blok na řádku 96.",
-        "recommendation": "Obalit JSON.parse do try/catch a ošetřit HTML odpovědi.",
+        "severity": "Medium",
+        "description": "JSON.parse(response) on line 64 may fail if the response is not JSON (e.g. a 403 HTML page). Empty if block on line 96.",
+        "recommendation": "Wrap JSON.parse in try/catch and handle HTML responses.",
         "added_by": "T07b"
       },
       {
         "file": "webclient/static/js/copyIdentLink.js",
-        "severity": "Střední",
-        "description": "navigator.clipboard.writeText() vrací Promise bez await/then — chyby jsou neošetřené. Clipboard API vyžaduje HTTPS.",
-        "recommendation": "Přidat .then()/.catch() nebo async/await s uživatelskou zpětnou vazbou.",
+        "severity": "Medium",
+        "description": "navigator.clipboard.writeText() returns a Promise without await/then — errors are unhandled. The Clipboard API requires HTTPS.",
+        "recommendation": "Add .then()/.catch() or async/await with user feedback.",
         "added_by": "T07b"
       }
     ]
@@ -164,13 +164,13 @@
       "webclient/static/scss/_app-variables.scss",
       "webclient/static/scss/_app-theme-dark.scss"
     ],
-    "structure_notes": "SCSS je organizováno modulárně: `_app-variables.scss` definuje barvy, entity a rozměry; `_app-global.scss` řeší globální komponenty (typografie, tabulky, select2, formsety, tlačítka); `_app-theme-dark.scss` přidává dark-mode vrstvu přes `html[data-theme=\"dark\"]`/`body.app-dark-theme` a přepisuje CSS proměnné a barvy Bootstrap komponent. Vrstvení je v souladu s BS5 a dovoluje rozumný theming bez duplikace stylů.",
+    "structure_notes": "The SCSS is organized modularly: `_app-variables.scss` defines colors, entities, and dimensions; `_app-global.scss` handles global components (typography, tables, select2, formsets, buttons); `_app-theme-dark.scss` adds a dark-mode layer via `html[data-theme=\"dark\"]`/`body.app-dark-theme` and overrides CSS variables and the colors of Bootstrap components. The layering is consistent with BS5 and allows reasonable theming without duplicating styles.",
     "issues": [
       {
         "file": "webclient/static/scss/_app-global.scss",
-        "severity": "Nízká",
-        "description": "Některé bloky pro `.formset-table` jsou opakovaně zapsané (stejný pattern `display: none` / `display: inherit` pro `.small` a `div.small`), což zvyšuje šum ve stylopisu.",
-        "recommendation": "Zvážit refaktor na společnou utilitu / mixin, případně sjednotit selektory tak, aby nedocházelo k duplicitním blokům."
+        "severity": "Low",
+        "description": "Some blocks for `.formset-table` are written repeatedly (the same `display: none` / `display: inherit` pattern for `.small` and `div.small`), which increases the noise in the stylesheet.",
+        "recommendation": "Consider refactoring into a common utility / mixin, or unify the selectors so that no duplicate blocks occur."
       }
     ]
   },
@@ -179,46 +179,46 @@
     "extraction_candidates": [
       {
         "template": "webclient/templates/base.html",
-        "description": "Inline inicializace Bootstrap datepickeru (selektory `.dateinput` a `.date_roky`) a automatické skrývání flash zpráv.",
-        "recommendation": "Přenést do samostatného souboru (např. `static/js/datepicker-init.js` a `static/js/messages.js`) a v šablonách je includovat přes `{% static %}`; usnadní to verzování a případné testování."
+        "description": "Inline initialization of the Bootstrap datepicker (selectors `.dateinput` and `.date_roky`) and automatic hiding of flash messages.",
+        "recommendation": "Move to a separate file (e.g. `static/js/datepicker-init.js` and `static/js/messages.js`) and include them in the templates via `{% static %}`; this facilitates versioning and possible testing."
       },
       {
         "template": "webclient/templates/base.html",
-        "description": "Inline implementace `checkUserAuthentication` a související `setInterval`/`focus` listenerů.",
-        "recommendation": "Extrahovat do samostatného JS modulu (např. `auth_check.js`) a ponechat v base šabloně jen inicializační hook; logika je dostatečně obecná pro sdílení napříč stránkami."
+        "description": "Inline implementation of `checkUserAuthentication` and the related `setInterval`/`focus` listeners.",
+        "recommendation": "Extract into a separate JS module (e.g. `auth_check.js`) and leave only the initialization hook in the base template; the logic is general enough to be shared across pages."
       },
       {
         "template": "webclient/templates/base.html",
-        "description": "Jazykové přepínání (click handlery pro `#english` a `#czech` s AJAX voláním na `set_language`).",
-        "recommendation": "Přenést do samostatného JS (např. `language_switcher.js`) a případně přidat jemnější handlování chyb místo `alert(e)`."
+        "description": "Language switching (click handlers for `#english` and `#czech` with an AJAX call to `set_language`).",
+        "recommendation": "Move to a separate JS (e.g. `language_switcher.js`) and possibly add finer error handling instead of `alert(e)`."
       }
     ]
   },
   "cdn_sri_issues": [
     {
       "tag": "<script async src=\"https://www.googletagmanager.com/gtag/js?id=G-2CPY6QG01L\"></script>",
-      "severity": "Nízká",
-      "description": "Google Tag Manager skript je načítán z CDN bez SRI atributu; u tohoto typu first‑party nástroje to není zásadní bezpečnostní problém, ale je vhodné ho mít zdokumentovaný.",
-      "recommendation": "Zvážit doplnění SRI tam, kde to provider podporuje, nebo explicitně popsat v bezpečnostní dokumentaci, že GTM je schválně bez SRI."
+      "severity": "Low",
+      "description": "The Google Tag Manager script is loaded from a CDN without an SRI attribute; for this type of first‑party tool it is not a serious security problem, but it is worth having it documented.",
+      "recommendation": "Consider adding SRI where the provider supports it, or explicitly describe in the security documentation that GTM is intentionally without SRI."
     }
   ],
   "django_js_integration": {
-    "csrf_handling": "AJAX requesty mimo Django formy využívají kombinaci globálního CSRF tokenu (např. `global_csrftoken` v mapových funkcích) a explicitního přidání `csrfmiddlewaretoken` do AJAX POSTu (v `base.html` pro přepínač jazyka).",
+    "csrf_handling": "AJAX requests outside Django forms use a combination of a global CSRF token (e.g. `global_csrftoken` in the map functions) and explicit addition of `csrfmiddlewaretoken` to the AJAX POST (in `base.html` for the language switcher).",
     "data_passing_patterns": [
-      "CSS třídy na `<body>` jsou generovány přes vlastní filtr `url_to_classes`, což umožňuje cílené styly podle aktuální stránky.",
-      "Mapové skripty používají globální JS proměnné (např. `map_translations`, `leaflet_search_translations`, `static_url`), které jsou zřejmě vkládány z jiných šablon / script bloků.",
-      "Django bloky `{% block script %}` a `{% block script2 %}` v `base.html` dávají možnost přidávat stránkově specifický JS, aniž by se musel duplikovat base layout."
+      "CSS classes on `<body>` are generated via a custom filter `url_to_classes`, which allows targeted styles based on the current page.",
+      "The map scripts use global JS variables (e.g. `map_translations`, `leaflet_search_translations`, `static_url`), which are apparently injected from other templates / script blocks.",
+      "The Django blocks `{% block script %}` and `{% block script2 %}` in `base.html` allow adding page-specific JS without having to duplicate the base layout."
     ],
     "issues": []
   },
   "build_pipeline": {
-    "tool": "django-compressor + SCSS přes `<link type=\"text/x-scss\">` (viz `base.html` a `theme.scss`); JS je servírován přímo ze `static/js` bez bundleru.",
+    "tool": "django-compressor + SCSS via `<link type=\"text/x-scss\">` (see `base.html` and `theme.scss`); JS is served directly from `static/js` without a bundler.",
     "custom_assets_minified": false,
     "issues": [
       {
-        "severity": "Nízká",
-        "description": "Neexistuje bundler nebo minifikační krok pro vlastní JS soubory (mapové skripty, utilitní funkce); v produkci to mírně navyšuje velikost assetů a počet requestů.",
-        "recommendation": "Zvážit lehký build-step (např. Webpack/Vite či Django pipeline) pro sloučení a minifikaci vlastních JS, zejména mapových modulů."
+        "severity": "Low",
+        "description": "There is no bundler or minification step for the custom JS files (map scripts, utility functions); in production this slightly increases the size of the assets and the number of requests.",
+        "recommendation": "Consider a lightweight build step (e.g. Webpack/Vite or a Django pipeline) to merge and minify the custom JS, especially the map modules."
       }
     ]
   }
