@@ -1,9 +1,13 @@
+from unittest.mock import MagicMock
+
 from core.forms import ImportDataAdminForm
 from core.import_data_mappers import (
     HeslarHierarchieMapper,
+    ImportDataBatchOrderingError,
     ImportDataError,
     ImportDataIncorrectStructureError,
     ImportDataIntegrityError,
+    LookupImportField,
 )
 from django.test import TestCase
 from heslar.models import Heslar, HeslarHierarchie, HeslarNazev
@@ -283,3 +287,73 @@ class HeslarHierarchieMapperCheckRequiredFieldsTest(TestCase):
         mapper = HeslarHierarchieMapper(row)
         with self.assertRaises(ImportDataError):
             mapper.check_required_fields(INSERT)
+
+
+class HeslarHierarchieMapperValidateBatchOrderingTest(TestCase):
+    """Testy pro ``HeslarHierarchieMapper.validate_batch_ordering``."""
+
+    @classmethod
+    def setUpTestData(cls):
+        """Vytvoří Heslar záznamy pro testy."""
+        nazev = HeslarNazev.objects.create(nazev="Test nazev hierarchie")
+        cls.heslar_a = Heslar.objects.create(ident_cely="HES-A", heslo="A", heslo_en="A", nazev_heslare=nazev)
+        cls.heslar_b = Heslar.objects.create(ident_cely="HES-B", heslo="B", heslo_en="B", nazev_heslare=nazev)
+
+    def setUp(self):
+        """Vymaže in-memory záznamy dávky před každým testem."""
+        LookupImportField.clear_records()
+
+    def _make_row(self, nadrazene, podrazene):
+        return {"heslo_nadrazene": nadrazene, "heslo_podrazene": podrazene, "typ": "podřízenost"}
+
+    def test_empty_payloads_passes(self):
+        """Prázdný seznam záznamů projde bez chyby."""
+        HeslarHierarchieMapper.validate_batch_ordering([])
+
+    def test_both_exist_in_db_passes(self):
+        """Oba záznamy existují v DB — projde bez chyby."""
+        HeslarHierarchieMapper.validate_batch_ordering([self._make_row("HES-A", "HES-B")])
+
+    def test_missing_nadrazene_in_db_and_batch_raises_error(self):
+        """heslo_nadrazene neexistuje v DB ani v dávce — vyvolá ImportDataBatchOrderingError."""
+        with self.assertRaises(ImportDataBatchOrderingError) as ctx:
+            HeslarHierarchieMapper.validate_batch_ordering([self._make_row("HES-MISSING", "HES-B")])
+        self.assertEqual(ctx.exception.parent_ident_cely, "HES-MISSING")
+        self.assertEqual(ctx.exception.field_name, "heslo_nadrazene")
+
+    def test_missing_podrazene_in_db_and_batch_raises_error(self):
+        """heslo_podrazene neexistuje v DB ani v dávce — vyvolá ImportDataBatchOrderingError."""
+        with self.assertRaises(ImportDataBatchOrderingError) as ctx:
+            HeslarHierarchieMapper.validate_batch_ordering([self._make_row("HES-A", "HES-MISSING")])
+        self.assertEqual(ctx.exception.parent_ident_cely, "HES-MISSING")
+        self.assertEqual(ctx.exception.field_name, "heslo_podrazene")
+
+    def test_heslar_in_batch_records_passes(self):
+        """heslo_nadrazene neexistuje v DB, ale je v in-memory záznamy dávky — projde."""
+        mock_heslar = MagicMock(spec=Heslar)
+        mock_heslar.ident_cely = "HES-NEW"
+        LookupImportField.set_records([mock_heslar])
+        HeslarHierarchieMapper.validate_batch_ordering([self._make_row("HES-NEW", "HES-B")])
+
+    def test_none_value_skipped(self):
+        """None hodnota pro heslo_nadrazene je přeskočena bez chyby."""
+        HeslarHierarchieMapper.validate_batch_ordering([self._make_row(None, "HES-B")])
+
+    def test_nan_value_skipped(self):
+        """'nan' hodnota pro heslo_podrazene je přeskočena bez chyby."""
+        HeslarHierarchieMapper.validate_batch_ordering([self._make_row("HES-A", "nan")])
+
+    def test_error_message_contains_missing_ident_cely(self):
+        """Zpráva výjimky obsahuje ident_cely chybějícího záznamu."""
+        with self.assertRaises(ImportDataBatchOrderingError) as ctx:
+            HeslarHierarchieMapper.validate_batch_ordering([self._make_row("HES-GHOST", "HES-B")])
+        self.assertIn("HES-GHOST", str(ctx.exception))
+
+    def test_multiple_rows_second_row_fails(self):
+        """Druhý řádek s chybějícím nadrazenym selže, první (platný) projde."""
+        payloads = [
+            self._make_row("HES-A", "HES-B"),
+            self._make_row("HES-MISSING", "HES-B"),
+        ]
+        with self.assertRaises(ImportDataBatchOrderingError):
+            HeslarHierarchieMapper.validate_batch_ordering(payloads)

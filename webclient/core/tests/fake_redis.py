@@ -6,17 +6,21 @@ class FakeRedis:
 
     Podporuje pouze operace, které využívá importní pipeline (``cron.tasks.run_data_import``)
     a další taskové cesty: ``get``/``set``/``delete``/``expire``/``rpush``/``lrange``/``lset``
-    a no-op ``eval``. Pokud bude test potřebovat další metody, doplňte je sem.
+    a konfigurabilní ``eval``. Pokud bude test potřebovat další metody, doplňte je sem.
     """
 
-    def __init__(self, initial: dict | None = None):
+    def __init__(self, initial: dict | None = None, eval_results: list | None = None):
         """
         Inicializuje prázdné úložiště a volitelně předvyplní hodnoty.
 
         :param initial: Volitelný slovník výchozích klíčů a hodnot, který se ihned uloží přes ``set``.
+        :param eval_results: Volitelný seznam návratových hodnot pro postupné volání ``eval()``.
+            Každé volání ``eval()`` odebere první položku seznamu. Po vyčerpání seznamu vrátí vždy ``1``.
+            ``None`` (výchozí) znamená vždy vrátit ``1`` bez omezení.
         """
         self._kv: dict[str, bytes] = {}
         self._lists: dict[str, list[bytes]] = {}
+        self._eval_results: list = list(eval_results) if eval_results is not None else []
         for key, value in (initial or {}).items():
             self.set(key, value)
 
@@ -100,9 +104,16 @@ class FakeRedis:
         self._lists[key][index] = self._encode(value)
 
     def eval(self, *args, **kwargs):
-        """No-op pro Redis Lua skripty — vrací 1, aby refresh/release lock vždy uspěl.
+        """Simuluje Redis Lua skript — vrací hodnotu z ``eval_results`` nebo výchozí ``1``.
+
+        Pokud byl při inicializaci předán ``eval_results``, odebere a vrátí první položku seznamu.
+        Po vyčerpání seznamu (nebo pokud nebyl ``eval_results`` zadán) vrátí vždy ``1``,
+        čímž simuluje úspěšnou operaci locku.
 
         :param args: Poziční argumenty volání Redis ``eval``.
         :param kwargs: Pojmenované argumenty volání Redis ``eval``.
+        :return: První zbývající hodnota z ``eval_results``, nebo ``1``.
         """
+        if self._eval_results:
+            return self._eval_results.pop(0)
         return 1

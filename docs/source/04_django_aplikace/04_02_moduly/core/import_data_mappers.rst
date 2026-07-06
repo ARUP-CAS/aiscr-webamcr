@@ -220,6 +220,25 @@ Třídy
       Inicializuje výjimku pro chybějící soubor.
 
 
+.. py:class:: ImportDataBatchOrderingError
+
+   Výjimka vyvolaná při detekci dopředné reference v self-join poli v rámci jednoho importního souboru.
+
+   Nastane, pokud záznam odkazuje přes pole na jiný záznam ze stejného souboru,
+   který je definován až na pozdějším řádku a zároveň v databázi dosud neexistuje.
+   Řešením je přesunout nadřazený záznam před podřízený.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje výjimku pro dopřednou referenci v rámci dávky.
+
+      :param child_ident_cely: Identifikátor záznamu, který odkazuje na dosud neuvedený nadřazený záznam.
+      :param parent_ident_cely: Identifikátor nadřazeného záznamu, který musí v CSV předcházet potomka.
+      :param field_name: Název pole, přes které je reference definována.
+
+
 .. py:class:: BaseImportField
 
    Základní třída pro importní pole. Neprovádí žádnou validaci ani zpracování hodnoty.
@@ -708,6 +727,8 @@ Třídy
 
       :return: Vrací výsledek volání ``get()``.
 
+      :raises ImportDataUnsupportedFilesError: Vyvolá se, pokud souboru neodpovídá žádný registrovaný mapper.
+
    .. py:method:: get_file_name_for_mapper()
 
       Vrátí název souboru odpovídající zadané třídě mapperu.
@@ -751,6 +772,8 @@ Třídy
       :param prefix: Číselná hodnota ``prefix`` použitá při výpočtu nebo transformaci.
       :return: Výstup funkce odpovídající implementované logice.
 
+      :raises ImportDataIncorrectPrimaryKeyFormatError: Vyvolá se, pokud ``value`` neodpovídá formátu ``{prefix}-<číslo>``.
+
    .. py:method:: map_field()
 
       Namapuje pole modelu na odpovídající instanci BaseImportField nebo její podtřídy.
@@ -784,6 +807,16 @@ Třídy
       :return: Nově vytvořená hodnota připravená touto funkcí.
 
       :raises ImportDataError: Vyvolá se při splnění podmínky ``performed_action not in (ImportDataAdminForm.PERFORMED_ACTION_INSERT, ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFO``.
+
+   .. py:method:: validate_batch_ordering()
+
+      Ověří, že záznamy v dávce nejsou v pořadí, které by způsobilo dopřednou referenci v self-join poli.
+
+      Výchozí implementace neprovádí žádnou kontrolu. Podtřídy s self-join FK polem
+      tuto metodu přepíší a vyvolají ``ImportDataBatchOrderingError`` při nalezení porušení.
+
+      :param payloads: Seznam surových řádkových slovníků ze CSV souboru v původním pořadí.
+      :raises ImportDataBatchOrderingError: Vyvolá se při nalezení dopředné reference.
 
    .. py:method:: import_validation()
 
@@ -890,7 +923,7 @@ Třídy
       Transformuje geometries. v aplikaci.
 
       :param mapping_dict: Parametr ``mapping_dict`` předává se do volání ``transform_geom_to_sjtsk()``, ``transform_geom_to_wgs84()``, pracuje se s atributy ``get``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-      :param performed_action: Parametr ``performed_action`` ovlivňuje větvení podmínek.
+      :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``transform_geometries``.
 
       :return: Vrací proměnná ``mapping_dict``.
 
@@ -1019,6 +1052,15 @@ Třídy
 
       :return: Vrací proměnná ``field_mapping``.
 
+   .. py:method:: validate_batch_ordering()
+
+      Ověří, že ``heslo_nadrazene`` a ``heslo_podrazene`` každého záznamu existují v DB
+      nebo v záznamech validovaných dříve ve stejné dávce (např. nové Heslar ze souboru ``heslar.csv``).
+
+      :param payloads: Seznam slovníků odpovídající řádkům souboru ``heslar_hierarchie.csv``.
+      :raises ImportDataBatchOrderingError: Vyvolá se, pokud referencovaný Heslar neexistuje
+          v DB ani v záznamy dávky zpracovaných před tímto souborem.
+
    .. py:method:: _get_updated_ident_cely_record_list()
 
       Vrátí oba heslářové uzly propojené importovanou hierarchií.
@@ -1062,6 +1104,16 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: validate_batch_ordering()
+
+      Ověří, že záznamy neobsahují dopřednou referenci v poli ``soucast`` (self-join FK na Organizace).
+
+      Pokud záznam odkazuje přes ``soucast`` na jinou organizaci, která se v CSV vyskytuje
+      až za ním a zároveň v databázi dosud neexistuje, vyvolá výjimku.
+
+      :param payloads: Seznam surových řádkových slovníků ze CSV souboru v původním pořadí.
+      :raises ImportDataBatchOrderingError: Vyvolá se, pokud je ``soucast`` dopředná reference.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
@@ -1274,6 +1326,16 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: record_postprocessing()
+
+      Provádí operaci record postprocessing.
+
+      :param record: Parametr ``record`` předává se do volání ``isinstance()``, ``record_postprocessing()``, pracuje se s atributy ``typ_zaznamu``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param performed_action: Parametr ``performed_action`` předává se do volání ``record_postprocessing()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``record_postprocessing()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``record_postprocessing()``.
 
    .. py:method:: get_record_history()
 

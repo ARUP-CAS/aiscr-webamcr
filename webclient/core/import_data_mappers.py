@@ -81,6 +81,7 @@ from heslar.hesla import (
     HESLAR_VYSKOVY_BOD_TYP,
     HESLAR_ZEME,
 )
+from heslar.hesla_dynamicka import TYP_DJ_KATASTR
 from heslar.models import (
     Heslar,
     HeslarDatace,
@@ -451,6 +452,38 @@ class ImportDataMissingFileError(ImportDataError):
         super().__init__(_("core.admin.import_data.error.missing_file"))
 
 
+class ImportDataBatchOrderingError(ImportDataError):
+    """
+    Výjimka vyvolaná při detekci dopředné reference v self-join poli v rámci jednoho importního souboru.
+
+    Nastane, pokud záznam odkazuje přes pole na jiný záznam ze stejného souboru,
+    který je definován až na pozdějším řádku a zároveň v databázi dosud neexistuje.
+    Řešením je přesunout nadřazený záznam před podřízený.
+    """
+
+    def __init__(self, child_ident_cely, parent_ident_cely, field_name):
+        """
+        Inicializuje výjimku pro dopřednou referenci v rámci dávky.
+
+        :param child_ident_cely: Identifikátor záznamu, který odkazuje na dosud neuvedený nadřazený záznam.
+        :param parent_ident_cely: Identifikátor nadřazeného záznamu, který musí v CSV předcházet potomka.
+        :param field_name: Název pole, přes které je reference definována.
+        """
+        self.child_ident_cely = child_ident_cely
+        self.parent_ident_cely = parent_ident_cely
+        self.field_name = field_name
+        super().__init__(
+            "{} {} {} {} {} {}".format(
+                _("core_admin.ImportDataBatchOrderingError.message.part_1"),
+                child_ident_cely,
+                _("core_admin.ImportDataBatchOrderingError.message.part_2"),
+                field_name,
+                _("core_admin.ImportDataBatchOrderingError.message.part_3"),
+                parent_ident_cely,
+            )
+        )
+
+
 class BaseImportField:
     """
     Základní třída pro importní pole. Neprovádí žádnou validaci ani zpracování hodnoty.
@@ -567,7 +600,7 @@ class FileNameImportField(BaseImportField):
 class IntegerImportField(BaseImportField):
     """Importní pole pro hodnoty datového typu integer."""
 
-    pattern = re.compile(r"\d+")
+    pattern = re.compile(r"-?\d+")
 
     def _process_value(self, value) -> int | None:
         """
@@ -581,11 +614,18 @@ class IntegerImportField(BaseImportField):
 
         if value is None or str(value).strip() == "" or str(value).lower() == "nan":
             return None
-        if isinstance(value, int) or isinstance(value, float):
-            value = str(value)
-        elif isinstance(value, bytes):
+        if isinstance(value, float):
+            if not value.is_integer():
+                raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_integer_value')}: {value}")
+            return int(value)
+        if isinstance(value, int):
+            return value
+        if isinstance(value, bytes):
             value = value.decode("utf-8")
-        match = self.pattern.search(value)
+        stripped = str(value).strip()
+        if re.fullmatch(r"-?\d+(?:\.0+)?", stripped):
+            return int(float(stripped))
+        match = self.pattern.search(stripped)
         if match:
             return int(match.group())
         raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_integer_value')}: {value}")
@@ -659,9 +699,9 @@ class BooleanImportField(BaseImportField):
         if isinstance(value, bytes):
             value = value.decode("utf-8")
         normalized_value = str(value).strip().lower()
-        if normalized_value in ("true", "1", "-1"):
+        if normalized_value in ("true", "1", "-1", "1.0"):
             return True
-        if normalized_value in ("false", "0"):
+        if normalized_value in ("false", "0", "0.0"):
             return False
         raise ImportDataError(_("core_admin.BooleanImportField.message.invalid_boolean_value") + ": " + str(value))
 
@@ -823,6 +863,8 @@ class DateRangeImportField(BaseImportField):
 
         :return: Vrací hodnotu podle větve zpracování.
         """
+        if self.value is None:
+            return None
         return f"[{self.value.lower.strftime('%Y-%m-%d')},{self.value.upper.strftime('%Y-%m-%d')})"
 
     def _process_value(self, value) -> DateRange | None:
@@ -1205,6 +1247,8 @@ class GenericForeignKeyImportField(LookupImportField):
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``getattr()``, atribut objektu.
         """
         if self.serialized_attribute:
+            if self._instance_value is None:
+                return None
             return getattr(self._instance_value, self.serialized_attribute)
         else:
             return self._value
@@ -1293,16 +1337,20 @@ class ImportModelMapper(ABC):
         return cls._registry
 
     @classmethod
-    def get_import_data_mapper(cls, file_name):
+    def get_import_data_mapper(cls, file_name: str) -> type["ImportModelMapper"]:
         """
         Vrátí třídu mapperu odpovídající zadanému názvu souboru (bez přípony).
 
         :param file_name: Parametr ``file_name`` se předává do volání ``get()``, pracuje se s atributy ``split``, vstupuje do návratové hodnoty.
 
             :return: Vrací výsledek volání ``get()``.
-        """
 
-        return cls.get_import_data_mapper_dict().get(file_name.split(".")[0])
+            :raises ImportDataUnsupportedFilesError: Vyvolá se, pokud souboru neodpovídá žádný registrovaný mapper.
+        """
+        mapper = cls.get_import_data_mapper_dict().get(file_name.split(".")[0])
+        if mapper is None:
+            raise ImportDataUnsupportedFilesError({file_name})
+        return mapper
 
     @classmethod
     def get_file_name_for_mapper(cls, mapper_class):
@@ -1420,9 +1468,14 @@ class ImportModelMapper(ABC):
                :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``int()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
                :param prefix: Číselná hodnota ``prefix`` použitá při výpočtu nebo transformaci.
         :return: Výstup funkce odpovídající implementované logice.
+
+            :raises ImportDataIncorrectPrimaryKeyFormatError: Vyvolá se, pokud ``value`` neodpovídá formátu ``{prefix}-<číslo>``.
         """
         if isinstance(value, str) and prefix:
-            return int(re.match(f"{prefix}-(.*)", value).group(1))
+            match = re.match(f"{prefix}-(.*)", value)
+            if not match:
+                raise ImportDataIncorrectPrimaryKeyFormatError(value)
+            return int(match.group(1))
         return value
 
     @classmethod
@@ -1528,6 +1581,19 @@ class ImportModelMapper(ABC):
                 record,
             ]
         return []
+
+    @classmethod
+    def validate_batch_ordering(cls, payloads: list[dict]) -> None:
+        """
+        Ověří, že záznamy v dávce nejsou v pořadí, které by způsobilo dopřednou referenci v self-join poli.
+
+        Výchozí implementace neprovádí žádnou kontrolu. Podtřídy s self-join FK polem
+        tuto metodu přepíší a vyvolají ``ImportDataBatchOrderingError`` při nalezení porušení.
+
+        :param payloads: Seznam surových řádkových slovníků ze CSV souboru v původním pořadí.
+        :raises ImportDataBatchOrderingError: Vyvolá se při nalezení dopředné reference.
+        """
+        pass
 
     def import_validation(self, performed_action, *args, **kwargs) -> dict | None:
         """
@@ -1746,15 +1812,22 @@ class GeometryTransformMixin:
         Transformuje geometries. v aplikaci.
 
         :param mapping_dict: Parametr ``mapping_dict`` předává se do volání ``transform_geom_to_sjtsk()``, ``transform_geom_to_wgs84()``, pracuje se s atributy ``get``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-        :param performed_action: Parametr ``performed_action`` ovlivňuje větvení podmínek.
+        :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``transform_geometries``.
 
             :return: Vrací proměnná ``mapping_dict``.
         """
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
-            if mapping_dict.get("geom_system") == 4326 and mapping_dict.get("geom"):
-                mapping_dict["geom_sjtsk"] = transform_geom_to_sjtsk(mapping_dict["geom"])
-            elif mapping_dict.get("geom_system") == 5514 and mapping_dict.get("geom_sjtsk"):
-                mapping_dict["geom"] = transform_geom_to_wgs84(mapping_dict["geom_sjtsk"])
+            geom_system = str(mapping_dict.get("geom_system") or "")
+            if geom_system == "4326" and mapping_dict.get("geom"):
+                geom_wkt = getattr(mapping_dict["geom"], "wkt", mapping_dict["geom"])
+                converted, status = transform_geom_to_sjtsk(geom_wkt)
+                if status == "OK":
+                    mapping_dict["geom_sjtsk"] = converted
+            elif geom_system == "5514" and mapping_dict.get("geom_sjtsk"):
+                geom_sjtsk_wkt = getattr(mapping_dict["geom_sjtsk"], "wkt", mapping_dict["geom_sjtsk"])
+                converted, status = transform_geom_to_wgs84(geom_sjtsk_wkt)
+                if status == "OK":
+                    mapping_dict["geom"] = converted
         return mapping_dict
 
 
@@ -1871,6 +1944,10 @@ class MultipleClassImportModelMapper(ImportModelMapper):
                 if field_name in mapping_dict:
                     setattr(instance_class_1, field_name, field_value)
             return [instance_class_0, instance_class_1]
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+            instance_class_0 = self.classes[0][1].objects.get(ident_cely=mapping_dict["ident_cely"])
+            instance_class_1 = self.classes[1][1].objects.get(**{self.classes[1][2]: instance_class_0})
+            return [instance_class_1, instance_class_0]
         return []
 
     @classmethod
@@ -2039,6 +2116,33 @@ class HeslarHierarchieMapper(ImportModelMapper):
         field_mapping["heslo_podrazene"] = LookupImportField(Heslar)
         return field_mapping
 
+    @classmethod
+    def validate_batch_ordering(cls, payloads: list[dict]) -> None:
+        """
+        Ověří, že ``heslo_nadrazene`` a ``heslo_podrazene`` každého záznamu existují v DB
+        nebo v záznamech validovaných dříve ve stejné dávce (např. nové Heslar ze souboru ``heslar.csv``).
+
+        :param payloads: Seznam slovníků odpovídající řádkům souboru ``heslar_hierarchie.csv``.
+        :raises ImportDataBatchOrderingError: Vyvolá se, pokud referencovaný Heslar neexistuje
+            v DB ani v záznamy dávky zpracovaných před tímto souborem.
+        """
+        in_batch_ident_cely: set[str] = {
+            record.ident_cely
+            for record in LookupImportField.get_records()
+            if isinstance(record, Heslar) and getattr(record, "ident_cely", None)
+        }
+        for row in payloads:
+            row_label = "{}/{}".format(row.get("heslo_nadrazene"), row.get("heslo_podrazene"))
+            for field_name in ("heslo_nadrazene", "heslo_podrazene"):
+                value = row.get(field_name)
+                if value is None or str(value).lower() in ("nan", "none", ""):
+                    continue
+                value_str = str(value)
+                if value_str in in_batch_ident_cely:
+                    continue
+                if not Heslar.objects.filter(ident_cely=value_str).exists():
+                    raise ImportDataBatchOrderingError(row_label, value_str, field_name)
+
     @staticmethod
     def _get_updated_ident_cely_record_list(record: HeslarHierarchie) -> list:
         """
@@ -2143,6 +2247,28 @@ class OrganizaceMapper(ImportModelMapper):
             verbose_limit_choices_to=_("core.import_data_mappers.OrganizaceMapper.licence.limit_choices"),
         )
         return field_mapping
+
+    @classmethod
+    def validate_batch_ordering(cls, payloads: list[dict]) -> None:
+        """
+        Ověří, že záznamy neobsahují dopřednou referenci v poli ``soucast`` (self-join FK na Organizace).
+
+        Pokud záznam odkazuje přes ``soucast`` na jinou organizaci, která se v CSV vyskytuje
+        až za ním a zároveň v databázi dosud neexistuje, vyvolá výjimku.
+
+        :param payloads: Seznam surových řádkových slovníků ze CSV souboru v původním pořadí.
+        :raises ImportDataBatchOrderingError: Vyvolá se, pokud je ``soucast`` dopředná reference.
+        """
+        seen: set[str] = set()
+        for row in payloads:
+            ident = row.get("ident_cely")
+            soucast = row.get("soucast")
+            if soucast is not None and str(soucast).lower() not in ("nan", "none", ""):
+                soucast_str = str(soucast)
+                if soucast_str not in seen and not Organizace.objects.filter(ident_cely=soucast_str).exists():
+                    raise ImportDataBatchOrderingError(ident, soucast_str, "soucast")
+            if ident is not None and str(ident).lower() not in ("nan", "none", ""):
+                seen.add(str(ident))
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Organizace) -> list:
@@ -2676,6 +2802,21 @@ class LokalitaMapper(MultipleClassImportModelMapper):
         field_mapping = field_mapping | cls.lookup_fields_mapping
         return field_mapping
 
+    @classmethod
+    def record_postprocessing(cls, record, performed_action, fedora_transaction):
+        """
+        Provádí operaci record postprocessing.
+
+        :param record: Parametr ``record`` předává se do volání ``isinstance()``, ``record_postprocessing()``, pracuje se s atributy ``typ_zaznamu``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param performed_action: Parametr ``performed_action`` předává se do volání ``record_postprocessing()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``record_postprocessing()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``record_postprocessing()``.
+        """
+        if isinstance(record, ArcheologickyZaznam) and performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
+            record.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+        return super().record_postprocessing(record, performed_action, fedora_transaction)
+
     @staticmethod
     def get_record_history(record: ArcheologickyZaznam | Lokalita):
         """
@@ -2875,10 +3016,11 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
             :return: Vrací proměnná ``record``.
         """
         record: DokumentacniJednotka
-        if pian := record.archeologicky_zaznam.hlavni_katastr.pian:
-            record.pian = pian
-        else:
-            record.pian = vytvor_pian(record.archeologicky_zaznam.hlavni_katastr, fedora_transaction)
+        if record.typ.id == TYP_DJ_KATASTR:
+            if pian := record.archeologicky_zaznam.hlavni_katastr.pian:
+                record.pian = pian
+            else:
+                record.pian = vytvor_pian(record.archeologicky_zaznam.hlavni_katastr, fedora_transaction)
         return record
 
     @staticmethod
@@ -3214,8 +3356,10 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
                 return [dokument_extra_data_query.first(), dokument]
             else:
                 return [dokument]
-        mapping_dict_dokument = {field: mapping_dict[field] for field in fields_dokument}
-        mapping_dict_dokument_extra_data = {field: mapping_dict[field] for field in fields_dokument_extra_data}
+        mapping_dict_dokument = {field: mapping_dict[field] for field in fields_dokument if field in mapping_dict}
+        mapping_dict_dokument_extra_data = {
+            field: mapping_dict[field] for field in fields_dokument_extra_data if field in mapping_dict
+        }
         mapping_dict_dokument = {
             self.map_column_name_to_field_name(field): value for field, value in mapping_dict_dokument.items()
         }

@@ -1,6 +1,7 @@
 from core.constants import DOKUMENT_CAST_RELATION_TYPE
 from core.forms import ImportDataAdminForm
 from core.import_data_mappers import (
+    BooleanImportField,
     DokumentacniJednotkaMapper,
     ImportDataError,
     KomponentaMapper,
@@ -10,7 +11,7 @@ from core.import_data_mappers import (
 )
 from core.tests.test_mappers.fixtures import create_dokument_fixture
 from django.db import models
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from dokument.models import DokumentCast
 from komponenta.models import KomponentaVazby
 
@@ -158,3 +159,31 @@ class BooleanImportFieldsTest(TestCase):
                         )
                         with self.assertRaises(ImportDataError):
                             mapper.map(INSERT, serialize=True, include_primary_key=True)
+
+
+class BooleanImportFieldPandasCoercionTest(SimpleTestCase):
+    """Testy BooleanImportField pro hodnoty vzniklé pandas koercí bez dtype=str."""
+
+    def test_float_1_0_parsed_as_true(self):
+        """'1.0' (pandas koerce True v nullable sloupci) se přijme jako True."""
+        field = BooleanImportField()
+        field.value = "1.0"
+        self.assertIs(field.value, True)
+
+    def test_float_0_0_parsed_as_false(self):
+        """'0.0' (pandas koerce False v nullable sloupci) se přijme jako False."""
+        field = BooleanImportField()
+        field.value = "0.0"
+        self.assertIs(field.value, False)
+
+    def test_native_float_1_0_parsed_as_true(self):
+        """Nativní float 1.0 se přijme jako True."""
+        field = BooleanImportField()
+        field.value = 1.0
+        self.assertIs(field.value, True)
+
+    def test_native_float_0_0_parsed_as_false(self):
+        """Nativní float 0.0 se přijme jako False."""
+        field = BooleanImportField()
+        field.value = 0.0
+        self.assertIs(field.value, False)

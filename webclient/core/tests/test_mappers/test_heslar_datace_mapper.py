@@ -58,11 +58,11 @@ class HeslarDataceMapperInsertValidTest(TestCase):
         self.assertEqual(result["obdobi"], "HES-OBD-001")
 
     def test_map_integer_fields_converted(self):
-        """map() převede řetězcové hodnoty rok polí na celá čísla (IntegerImportField vrací absolutní hodnotu)."""
+        """map() převede řetězcové hodnoty rok polí na celá čísla včetně záporných (BCE data)."""
         mapper = HeslarDataceMapper(VALID_ROW.copy())
         result = mapper.map(INSERT, serialize=True, include_primary_key=True)
-        self.assertEqual(result["rok_od_min"], 200)
-        self.assertEqual(result["rok_od_max"], 100)
+        self.assertEqual(result["rok_od_min"], -200)
+        self.assertEqual(result["rok_od_max"], -100)
         self.assertEqual(result["rok_do_min"], 100)
         self.assertEqual(result["rok_do_max"], 200)
 
@@ -150,11 +150,11 @@ class HeslarDataceMapperCreateRecordsTest(TestCase):
         self.assertFalse(HeslarDatace.objects.filter(obdobi=self.heslar).exists())
 
     def test_create_records_integer_fields_set_correctly(self):
-        """create_records() nastaví celočíselná pole (IntegerImportField vrací absolutní hodnotu)."""
+        """create_records() nastaví celočíselná pole včetně záporných hodnot (BCE data)."""
         mapper = HeslarDataceMapper(VALID_ROW.copy())
         datace = mapper.create_records(INSERT)[0]
-        self.assertEqual(datace.rok_od_min, 200)
-        self.assertEqual(datace.rok_od_max, 100)
+        self.assertEqual(datace.rok_od_min, -200)
+        self.assertEqual(datace.rok_od_max, -100)
         self.assertEqual(datace.rok_do_min, 100)
         self.assertEqual(datace.rok_do_max, 200)
 

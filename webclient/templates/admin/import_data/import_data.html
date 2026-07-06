@@ -323,7 +323,7 @@
       }
 
       async function process() {
-          const MAX_TICKS = 3600;
+          const MAX_TICKS = 21600; // 6 hours — matches IMPORT_DATA_RUNNING_TTL_SECONDS on the server
           let ticks = 0;
           do {
               await sendRequest(requestUrl);
@@ -331,7 +331,9 @@
               ticks++;
               if (ticks >= MAX_TICKS) {
                   stopRequests = true;
-                  document.getElementById("stopRequests").disabled = true;
+                  if (stopRequestButton) {
+                      stopRequestButton.disabled = true;
+                  }
                   document.getElementById("processCurrentStatus").textContent = "{% trans 'core.templates.admin.import_data.timeout_error' %}";
                   console.error("Import polling timed out after", MAX_TICKS, "seconds.");
               }

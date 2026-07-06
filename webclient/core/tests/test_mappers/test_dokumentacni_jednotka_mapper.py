@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock, patch
+
 from core.forms import ImportDataAdminForm
 from core.import_data_mappers import (
     DokumentacniJednotkaMapper,
@@ -114,3 +116,66 @@ class DokumentacniJednotkaMapperCheckRequiredFieldsTest(TestCase):
         row["pian"] = None
         mapper = DokumentacniJednotkaMapper(row)
         mapper.check_required_fields(INSERT)
+
+
+class DokumentacniJednotkaMapperRecordPostprocessingTest(TestCase):
+    """Testy pro DokumentacniJednotkaMapper.record_postprocessing — guard TYP_DJ_KATASTR."""
+
+    def _make_record(self, typ_id, existing_katastr_pian=None):
+        """Sestaví mock DokumentacniJednotka se zadaným typem a pianem katastru."""
+        record = MagicMock()
+        record.typ.id = typ_id
+        record.archeologicky_zaznam.hlavni_katastr.pian = existing_katastr_pian
+        return record
+
+    def test_katastr_typ_with_existing_pian_sets_pian(self):
+        """Pro TYP_DJ_KATASTR s existujícím pianem katastru se record.pian nastaví na tento pian."""
+        from heslar.hesla_dynamicka import TYP_DJ_KATASTR
+
+        existing_pian = MagicMock()
+        record = self._make_record(TYP_DJ_KATASTR, existing_katastr_pian=existing_pian)
+
+        DokumentacniJednotkaMapper.record_postprocessing(record, INSERT, MagicMock())
+
+        self.assertIs(record.pian, existing_pian)
+
+    def test_katastr_typ_without_pian_creates_pian(self):
+        """Pro TYP_DJ_KATASTR bez pianu katastru se volá vytvor_pian a výsledek se přiřadí."""
+        from heslar.hesla_dynamicka import TYP_DJ_KATASTR
+
+        record = self._make_record(TYP_DJ_KATASTR, existing_katastr_pian=None)
+        new_pian = MagicMock()
+
+        with patch("core.import_data_mappers.vytvor_pian", return_value=new_pian) as mock_vytvor:
+            DokumentacniJednotkaMapper.record_postprocessing(record, INSERT, MagicMock())
+
+        mock_vytvor.assert_called_once()
+        self.assertIs(record.pian, new_pian)
+
+    def test_non_katastr_typ_does_not_set_pian(self):
+        """Pro jiný typ DJ než TYP_DJ_KATASTR se record.pian nesmí přepsat."""
+        from heslar.hesla_dynamicka import TYP_DJ_KATASTR
+
+        non_katastr_id = TYP_DJ_KATASTR + 1
+        record = self._make_record(non_katastr_id)
+        original_pian = record.pian
+
+        with patch("core.import_data_mappers.vytvor_pian") as mock_vytvor:
+            DokumentacniJednotkaMapper.record_postprocessing(record, INSERT, MagicMock())
+
+        mock_vytvor.assert_not_called()
+        self.assertIs(record.pian, original_pian)
+
+    def test_non_katastr_typ_on_update_does_not_set_pian(self):
+        """Pro jiný typ DJ při UPDATE se record.pian rovněž nesmí přepsat."""
+        from heslar.hesla_dynamicka import TYP_DJ_KATASTR
+
+        non_katastr_id = TYP_DJ_KATASTR + 1
+        record = self._make_record(non_katastr_id)
+        original_pian = record.pian
+
+        with patch("core.import_data_mappers.vytvor_pian") as mock_vytvor:
+            DokumentacniJednotkaMapper.record_postprocessing(record, UPDATE, MagicMock())
+
+        mock_vytvor.assert_not_called()
+        self.assertIs(record.pian, original_pian)

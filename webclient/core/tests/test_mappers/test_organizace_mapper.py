@@ -1,5 +1,8 @@
+from unittest.mock import patch
+
 from core.forms import ImportDataAdminForm
 from core.import_data_mappers import (
+    ImportDataBatchOrderingError,
     ImportDataError,
     ImportDataIncorrectStructureError,
     ImportDataIntegrityError,
@@ -472,3 +475,89 @@ class OrganizaceMapperCheckRequiredFieldsTest(TestCase):
         row["email"] = ""
         mapper = OrganizaceMapper(row)
         mapper.check_required_fields(INSERT)
+
+
+class OrganizaceMapperValidateBatchOrderingTest(TestCase):
+    """Testy pro OrganizaceMapper.validate_batch_ordering — detekce dopředných referencí v soucast."""
+
+    def _row(self, ident_cely, soucast=None):
+        """Sestaví minimální řádkový slovník s ident_cely a soucast."""
+        return {"ident_cely": ident_cely, "soucast": soucast}
+
+    def test_empty_payloads_passes(self):
+        """Prázdný seznam dávky neprojde bez výjimky."""
+        OrganizaceMapper.validate_batch_ordering([])
+
+    def test_no_soucast_references_passes(self):
+        """Záznamy bez soucast neprojdou žádnou kontrolou a validace projde."""
+        payloads = [self._row("ORG-000001"), self._row("ORG-000002"), self._row("ORG-000003")]
+        OrganizaceMapper.validate_batch_ordering(payloads)
+
+    def test_soucast_none_passes(self):
+        """Záznam se soucast=None neprojde kontrolou pořadí."""
+        payloads = [self._row("ORG-000001", soucast=None), self._row("ORG-000002")]
+        OrganizaceMapper.validate_batch_ordering(payloads)
+
+    def test_soucast_nan_float_passes(self):
+        """Záznam se soucast=float('nan') (pandas prázdná hodnota) neprojde kontrolou pořadí."""
+        payloads = [self._row("ORG-000001", soucast=float("nan")), self._row("ORG-000002")]
+        OrganizaceMapper.validate_batch_ordering(payloads)
+
+    def test_parent_before_child_in_batch_passes(self):
+        """Pokud je nadřazená organizace definována dříve v CSV než podřízená, validace projde."""
+        payloads = [
+            self._row("ORG-PARENT"),
+            self._row("ORG-CHILD", soucast="ORG-PARENT"),
+        ]
+        OrganizaceMapper.validate_batch_ordering(payloads)
+
+    def test_child_before_parent_in_batch_raises_error(self):
+        """Dopředná reference: child definován dříve než parent v CSV — musí vyvolat BatchOrderingError."""
+        payloads = [
+            self._row("ORG-CHILD", soucast="ORG-PARENT"),
+            self._row("ORG-PARENT"),
+        ]
+        with self.assertRaises(ImportDataBatchOrderingError) as ctx:
+            OrganizaceMapper.validate_batch_ordering(payloads)
+        self.assertEqual(ctx.exception.child_ident_cely, "ORG-CHILD")
+        self.assertEqual(ctx.exception.parent_ident_cely, "ORG-PARENT")
+        self.assertEqual(ctx.exception.field_name, "soucast")
+
+    def test_error_message_contains_all_placeholders(self):
+        """Zpráva výjimky obsahuje child_ident_cely, parent_ident_cely i field_name."""
+        payloads = [self._row("ORG-CHILD", soucast="ORG-PARENT"), self._row("ORG-PARENT")]
+        with self.assertRaises(ImportDataBatchOrderingError) as ctx:
+            OrganizaceMapper.validate_batch_ordering(payloads)
+        message = str(ctx.exception)
+        self.assertIn("ORG-CHILD", message)
+        self.assertIn("ORG-PARENT", message)
+        self.assertIn("soucast", message)
+
+    def test_soucast_referencing_existing_db_record_passes(self):
+        """Pokud soucast odkazuje na organizaci, která již existuje v DB, validace projde (i když není v CSV dříve)."""
+        payloads = [self._row("ORG-CHILD", soucast="ORG-EXISTING")]
+        with patch("core.import_data_mappers.Organizace.objects") as mock_objects:
+            mock_objects.filter.return_value.exists.return_value = True
+            OrganizaceMapper.validate_batch_ordering(payloads)
+        mock_objects.filter.assert_called_once_with(ident_cely="ORG-EXISTING")
+
+    def test_multiple_children_with_shared_parent_passes(self):
+        """Více potomků odkazujících na jednoho předka, který je definován jako první, projde validací."""
+        payloads = [
+            self._row("ORG-PARENT"),
+            self._row("ORG-CHILD-1", soucast="ORG-PARENT"),
+            self._row("ORG-CHILD-2", soucast="ORG-PARENT"),
+        ]
+        OrganizaceMapper.validate_batch_ordering(payloads)
+
+    def test_first_forward_reference_in_chain_raises_error(self):
+        """Z řetězce dopředných referencí se vyvolá chyba pro první porušení."""
+        payloads = [
+            self._row("ORG-CHILD", soucast="ORG-MIDDLE"),
+            self._row("ORG-MIDDLE", soucast="ORG-PARENT"),
+            self._row("ORG-PARENT"),
+        ]
+        with self.assertRaises(ImportDataBatchOrderingError) as ctx:
+            OrganizaceMapper.validate_batch_ordering(payloads)
+        self.assertEqual(ctx.exception.child_ident_cely, "ORG-CHILD")
+        self.assertEqual(ctx.exception.parent_ident_cely, "ORG-MIDDLE")

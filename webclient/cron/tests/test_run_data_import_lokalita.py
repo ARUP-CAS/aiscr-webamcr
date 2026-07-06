@@ -1,11 +1,4 @@
-"""Jednotkové testy pro ``cron.tasks.run_data_import`` — import Lokalita (MultipleClassImportModelMapper).
-
-``LokalitaMapper`` na rozdíl od ``ArcheologickyZaznamAkceMapper`` nemá vlastní
-``record_postprocessing``, který by archeologickému záznamu nastavil ``typ_zaznamu = "L"``.
-Bez toho narazí AZ na CheckConstraint (``typ_zaznamu in ("L","A")``). Aby test mohl prověřit
-celý běh importu, ``record_postprocessing`` se přes patch chová jako u Akce mapperu a
-nastaví ``typ_zaznamu = "L"``.
-"""
+"""Jednotkové testy pro ``cron.tasks.run_data_import`` — import Lokalita (MultipleClassImportModelMapper)."""
 
 import json
 from unittest.mock import MagicMock, patch
@@ -37,13 +30,6 @@ JOB_ID = "test-job-loc"
 LOCK_TOKEN = "test-lock-token"
 
 LOK_IDENT = "C-L00100001"
-
-
-def _lokalita_record_postprocessing(cls, record, performed_action, fedora_transaction):
-    """Patchovaný postprocessing — pro INSERT nastaví AZ typ_zaznamu na 'L'."""
-    if isinstance(record, ArcheologickyZaznam) and performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
-        record.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
-    return record
 
 
 class RunDataImportLokalitaTest(TestCase):
@@ -174,9 +160,6 @@ class RunDataImportLokalitaTest(TestCase):
             "xml_generator.models.ModelWithMetadata.record_deletion",
             autospec=True,
             return_value=None,
-        ), patch(
-            "core.import_data_mappers.LokalitaMapper.record_postprocessing",
-            classmethod(_lokalita_record_postprocessing),
         ), patch(
             "cron.tasks.FedoraTransaction"
         ) as fedora_transaction_mock, patch(
@@ -332,6 +315,31 @@ class RunDataImportLokalitaTest(TestCase):
         self.assertIsNotNone(status_raw)
         self.assertIn("failed_lock_lost", status_raw.decode("utf-8"))
         self._assert_import_failed(fake_redis)
+
+    def test_lock_acquisition_failure_sets_failed_lock_acquisition_status(self):
+        """Ověřuje, že selhání počáteční obnovy locku nastaví stav failed_lock_acquisition."""
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_INSERT)
+
+        self._run_import(fake_redis, refresh_lock_side_effect=[False])
+
+        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        self.assertIsNotNone(status_raw)
+        self.assertIn("failed_lock_acquisition", status_raw.decode("utf-8"))
+        self.assertIsNotNone(fake_redis.get(f"import_data_stop_{JOB_ID}"))
+
+    def test_lock_acquisition_failure_via_eval_sets_failed_lock_acquisition_status(self):
+        """Ověřuje selhání locku přes FakeRedis.eval_results=[0], bez patchování refresh_import_lock.
+
+        Tím se testuje celý zásobník: FakeRedis.eval → RedisConnector.refresh_import_lock → run_data_import.
+        """
+        fake_redis = FakeRedis(eval_results=[0])
+        with patch("core.connectors.RedisConnector.get_connection", return_value=fake_redis):
+            cron_tasks.run_data_import(JOB_ID, self.user.id, LOCK_TOKEN)
+
+        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        self.assertIsNotNone(status_raw)
+        self.assertIn("failed_lock_acquisition", status_raw.decode("utf-8"))
+        self.assertIsNotNone(fake_redis.get(f"import_data_stop_{JOB_ID}"))
 
     def test_successful_import_writes_success_marker_into_progress_details(self):
         """Ověřuje, že úspěšný import záznamu lokalita zapíše success marker do detailu průběhu."""

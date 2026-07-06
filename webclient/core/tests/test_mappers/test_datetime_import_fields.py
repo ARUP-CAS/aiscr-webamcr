@@ -1,6 +1,15 @@
-"""Testy importních polí pro hodnoty ``date`` a ``datetime``."""
+"""Testy importních polí pro hodnoty ``date``, ``datetime``, ``integer`` a generické FK."""
 
-from core.import_data_mappers import DateImportField, DateTimeImportField, ImportDataError
+from unittest.mock import MagicMock
+
+from core.import_data_mappers import (
+    DateImportField,
+    DateTimeImportField,
+    GenericForeignKeyImportField,
+    ImportDataError,
+    IntegerImportField,
+    PositiveIntegerImportField,
+)
 from django.test import SimpleTestCase
 from django.utils import timezone
 
@@ -115,3 +124,125 @@ class DateTimeImportFieldTest(SimpleTestCase):
 
         with self.assertRaises(ImportDataError):
             field.value = "2026.13.31 13:45:59"
+
+
+class IntegerImportFieldTest(SimpleTestCase):
+    """Testy chování importního pole ``IntegerImportField``."""
+
+    def test_positive_integer_parsed(self):
+        """Kladné celé číslo je správně zpracováno."""
+        field = IntegerImportField()
+        field.value = "5000"
+        self.assertEqual(field.value, 5000)
+
+    def test_negative_integer_preserves_sign(self):
+        """Záporné celé číslo si zachová znaménko (BCE data)."""
+        field = IntegerImportField()
+        field.value = "-5000"
+        self.assertEqual(field.value, -5000)
+
+    def test_negative_integer_as_int_input(self):
+        """Záporné číslo zadané jako int je správně zpracováno."""
+        field = IntegerImportField()
+        field.value = -200
+        self.assertEqual(field.value, -200)
+
+    def test_none_returns_none(self):
+        """None vstup vrátí None."""
+        field = IntegerImportField()
+        field.value = None
+        self.assertIsNone(field.value)
+
+    def test_invalid_value_raises_error(self):
+        """Neplatná hodnota vyvolá ImportDataError."""
+        field = IntegerImportField()
+        with self.assertRaises(ImportDataError):
+            field.value = "abc"
+
+    def test_plain_integer_string_parsed(self):
+        """Řetězec bez desetinné tečky (např. '4') se přijme jako int."""
+        field = IntegerImportField()
+        field.value = "4"
+        self.assertEqual(field.value, 4)
+
+    def test_float_string_x_dot_0_parsed_as_int(self):
+        """'X.0' (pandas koerce celého čísla v nullable sloupci) se přijme jako int."""
+        field = IntegerImportField()
+        field.value = "5.0"
+        self.assertEqual(field.value, 5)
+
+    def test_negative_float_string_x_dot_0_parsed_as_int(self):
+        """'-X.0' se přijme jako záporný int."""
+        field = IntegerImportField()
+        field.value = "-200.0"
+        self.assertEqual(field.value, -200)
+
+    def test_native_float_whole_number_parsed_as_int(self):
+        """Nativní float s celou hodnotou (např. 5.0) se přijme jako int."""
+        field = IntegerImportField()
+        field.value = 5.0
+        self.assertEqual(field.value, 5)
+
+    def test_native_float_non_integer_raises_error(self):
+        """Nativní float s desetinnou částí (např. 5.5) vyvolá ImportDataError."""
+        field = IntegerImportField()
+        with self.assertRaises(ImportDataError):
+            field.value = 5.5
+
+
+class PositiveIntegerImportFieldTest(SimpleTestCase):
+    """Testy chování importního pole ``PositiveIntegerImportField``."""
+
+    def test_positive_integer_parsed(self):
+        """Kladné celé číslo je správně zpracováno."""
+        field = PositiveIntegerImportField()
+        field.value = "200"
+        self.assertEqual(field.value, 200)
+
+    def test_negative_integer_raises_error(self):
+        """Záporné celé číslo vyvolá ImportDataError."""
+        field = PositiveIntegerImportField()
+        with self.assertRaises(ImportDataError):
+            field.value = "-5000"
+
+    def test_none_returns_none(self):
+        """None vstup vrátí None."""
+        field = PositiveIntegerImportField()
+        field.value = None
+        self.assertIsNone(field.value)
+
+    def test_float_string_x_dot_0_parsed_as_int(self):
+        """'X.0' se přijme jako kladný int."""
+        field = PositiveIntegerImportField()
+        field.value = "200.0"
+        self.assertEqual(field.value, 200)
+
+    def test_negative_float_string_raises_error(self):
+        """'-X.0' vyvolá ImportDataError (záporná hodnota)."""
+        field = PositiveIntegerImportField()
+        with self.assertRaises(ImportDataError):
+            field.value = "-200.0"
+
+
+class GenericForeignKeyImportFieldSerializedValueTest(SimpleTestCase):
+    """Testy pro ``GenericForeignKeyImportField.serialized_value`` — None-guard při chybějící instanci."""
+
+    def test_none_instance_value_with_serialized_attribute_returns_none(self):
+        """serialized_value vrátí None, pokud je _instance_value None a serialized_attribute je nastaveno."""
+        field = GenericForeignKeyImportField(serialized_attribute="kod")
+        field._instance_value = None
+        self.assertIsNone(field.serialized_value)
+
+    def test_valid_instance_value_returns_attribute(self):
+        """serialized_value vrátí hodnotu atributu ze _instance_value, pokud instance existuje."""
+        field = GenericForeignKeyImportField(serialized_attribute="kod")
+        mock_instance = MagicMock()
+        mock_instance.kod = "123456"
+        field._instance_value = mock_instance
+        self.assertEqual(field.serialized_value, "123456")
+
+    def test_no_serialized_attribute_returns_raw_value(self):
+        """Bez serialized_attribute vrátí serialized_value přímo _value (výchozí chování)."""
+        field = GenericForeignKeyImportField()
+        field._value = "raw-value"
+        self.assertEqual(field.serialized_value, "raw-value")

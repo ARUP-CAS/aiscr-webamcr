@@ -138,6 +138,21 @@ class RunDataImportDokumentTest(RunDataImportMapperTestBase):
 
         self.assert_import_failed(fake_redis)
 
+    def test_partial_update_only_ident_cely_and_poznamka(self):
+        """Ověřuje, že partial UPDATE s pouze ident_cely a poznamka neselže na KeyError a aktualizuje pole."""
+        original_poznamka = self.dokument.poznamka
+        new_poznamka = "Nová poznámka z partial UPDATE"
+        fake_redis, _ = self.run_import(
+            FILE_KEY,
+            {"ident_cely": self.dokument.ident_cely, "poznamka": new_poznamka},
+            ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+        )
+
+        self.assert_import_success(fake_redis)
+        self.dokument.refresh_from_db()
+        self.assertEqual(self.dokument.poznamka, new_poznamka)
+        self.assertNotEqual(self.dokument.poznamka, original_poznamka)
+
     def test_lock_lost_mid_import_sets_failed_lock_lost_status(self):
         """Ověřuje, že ztráta importního locku při importu záznamu dokument nastaví stav failed_lock_lost."""
         fake_redis, _ = self.run_import(

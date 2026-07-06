@@ -17,6 +17,7 @@ from rosetta.templatetags.rosetta import can_translate as rosetta_can_translate
 from .connectors import RedisConnector
 from .forms import ImportDataAdminForm
 from .import_data_mappers import (
+    ImportDataBatchOrderingError,
     ImportDataEmptyError,
     ImportDataError,
     ImportDataIntegrityError,
@@ -241,7 +242,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
         sheet = None
         if uploaded_file.content_type == "text/csv":
             try:
-                sheet = pd.read_csv(uploaded_file, sep=",")
+                sheet = pd.read_csv(uploaded_file, sep=",", dtype=str)
             except Exception as err:
                 logger.debug(
                     "core.admin_sites.AmcrCustomAdminSite.update_metadata_file_upload" ".cannot_read_file",
@@ -418,10 +419,23 @@ class AmcrCustomAdminSite(admin.AdminSite):
                         raise ValueError(_("core.admin.import_data.error.zip_too_large"))
                     for file_name in file_names:
                         with zf.open(file_name) as file:
-                            sheet = pd.read_csv(file)
+                            sheet = pd.read_csv(file, dtype=str)
                         file_name = normalize_file_name(file_name)
                         mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
                         seen_in_batch: set = set()
+                        try:
+                            mapper_class.validate_batch_ordering(sheet.to_dict("records"))
+                        except ImportDataBatchOrderingError as err:
+                            validation_results.append(
+                                ImportDataValidationResult(
+                                    item_order=row_order,
+                                    file_name=file_name,
+                                    validation_result=str(err),
+                                )
+                            )
+                            invalid_records.append(row_order)
+                            row_order += 1
+                            continue
                         for idx, row in sheet.iterrows():
 
                             def format_primary_key(pk):

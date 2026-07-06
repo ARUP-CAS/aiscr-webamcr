@@ -1,5 +1,6 @@
 from core.forms import ImportDataAdminForm
 from core.import_data_mappers import (
+    DateRangeImportField,
     ImportDataError,
     ImportDataIncorrectStructureError,
     ProjektMapper,
@@ -149,3 +150,37 @@ class ProjektMapperMapValidTest(TestCase):
         result = mapper.map(INSERT, serialize=False, include_primary_key=True)
         expected_keys = set(MAP_SAFE_ROW.keys())
         self.assertEqual(set(result.keys()), expected_keys)
+
+    def test_map_serialize_with_null_planovane_zahajeni_returns_none(self):
+        """map(serialize=True) vrátí None pro planovane_zahajeni=None — nesmí selhat na AttributeError."""
+        mapper = ProjektMapper(MAP_SAFE_ROW.copy())
+        result = mapper.map(INSERT, serialize=True, include_primary_key=True)
+        self.assertIsNone(result["planovane_zahajeni"])
+
+    def test_map_serialize_with_valid_planovane_zahajeni_returns_string(self):
+        """map(serialize=True) vrátí řetězec ve formátu [YYYY-MM-DD,YYYY-MM-DD) pro platnou hodnotu."""
+        row = MAP_SAFE_ROW.copy()
+        row["planovane_zahajeni"] = "[2024-01-01, 2024-06-30)"
+        mapper = ProjektMapper(row)
+        result = mapper.map(INSERT, serialize=True, include_primary_key=True)
+        self.assertEqual(result["planovane_zahajeni"], "[2024-01-01,2024-06-30)")
+
+
+class DateRangeImportFieldSerializedValueTest(TestCase):
+    """Jednotkové testy pro DateRangeImportField.serialized_value."""
+
+    def test_none_value_returns_none(self):
+        """serialized_value vrátí None, pokud je hodnota pole None."""
+        field = DateRangeImportField()
+        field.value = None
+        self.assertIsNone(field.serialized_value)
+
+    def test_valid_range_returns_formatted_string(self):
+        """serialized_value vrátí správně formátovaný řetězec pro platný DateRange."""
+        import datetime
+
+        from django.db.backends.postgresql.psycopg_any import DateRange
+
+        field = DateRangeImportField()
+        field._value = DateRange(datetime.date(2024, 1, 1), datetime.date(2024, 6, 30))
+        self.assertEqual(field.serialized_value, "[2024-01-01,2024-06-30)")

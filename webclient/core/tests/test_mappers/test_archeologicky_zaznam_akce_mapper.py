@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from arch_z.models import Akce, ArcheologickyZaznam
 from core.forms import ImportDataAdminForm
 from core.import_data_mappers import (
@@ -5,11 +7,19 @@ from core.import_data_mappers import (
     ImportDataError,
     ImportDataIncorrectStructureError,
 )
+from cron.tests._import_test_fixtures import (
+    create_akce,
+    create_archeologicky_zaznam,
+    create_heslar_fixtures,
+    create_ruian_with_pian,
+    create_specifikace_data,
+)
 from django.test import TestCase
 from projekt.models import Projekt
 
 INSERT = ImportDataAdminForm.PERFORMED_ACTION_INSERT
 UPDATE = ImportDataAdminForm.PERFORMED_ACTION_UPDATE
+DELETE = ImportDataAdminForm.PERFORMED_ACTION_DELETE
 
 VALID_ROW = {
     "ident_cely": "C-202401-000001A",
@@ -237,3 +247,50 @@ class ArcheologickyZaznamAkceMapperGetUpdatedIdentCelyTest(TestCase):
         akce.projekt = projekt
         result = ArcheologickyZaznamAkceMapper._get_updated_ident_cely_record_list(akce)
         self.assertEqual(result, [az, projekt])
+
+
+class ArcheologickyZaznamAkceMapperCreateRecordsDeleteTest(TestCase):
+    """Testy pro ArcheologickyZaznamAkceMapper.create_records — akce DELETE."""
+
+    AZ_IDENT = "C-202401-DEL-001A"
+
+    @classmethod
+    def setUpTestData(cls):
+        """Vytvoří testovací ArcheologickyZaznam a Akce v DB."""
+        with patch(
+            "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
+            return_value=True,
+        ), patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None):
+            heslars = create_heslar_fixtures("azakce_del")
+            katastr, _ = create_ruian_with_pian("azakce_del", "P-AZ-AK-DEL-001", heslars)
+            specifikace_data = create_specifikace_data("azakce_del")
+            az = create_archeologicky_zaznam(cls.AZ_IDENT, katastr, heslars["pristupnost"])
+            cls.az = az
+            cls.akce = create_akce(az, specifikace_data=specifikace_data)
+
+    def _delete_row(self):
+        return {"ident_cely": self.AZ_IDENT}
+
+    def test_create_records_delete_returns_two_records(self):
+        """create_records(DELETE) vrátí seznam dvou záznamů [Akce, ArcheologickyZaznam]."""
+        mapper = ArcheologickyZaznamAkceMapper(self._delete_row())
+        result = mapper.create_records(DELETE)
+        self.assertEqual(len(result), 2)
+
+    def test_create_records_delete_first_record_is_akce(self):
+        """create_records(DELETE) vrátí Akce jako první — child se maže před parentem."""
+        mapper = ArcheologickyZaznamAkceMapper(self._delete_row())
+        result = mapper.create_records(DELETE)
+        self.assertIsInstance(result[0], Akce)
+
+    def test_create_records_delete_second_record_is_az(self):
+        """create_records(DELETE) vrátí ArcheologickyZaznam jako druhý."""
+        mapper = ArcheologickyZaznamAkceMapper(self._delete_row())
+        result = mapper.create_records(DELETE)
+        self.assertIsInstance(result[1], ArcheologickyZaznam)
+
+    def test_create_records_delete_az_has_correct_ident_cely(self):
+        """ArcheologickyZaznam v result má ident_cely shodné se vstupem."""
+        mapper = ArcheologickyZaznamAkceMapper(self._delete_row())
+        result = mapper.create_records(DELETE)
+        self.assertEqual(result[1].ident_cely, self.AZ_IDENT)
