@@ -11,6 +11,7 @@
     <link type="text/x-scss" href="{% static 'theme.scss' %}" rel="stylesheet" media="print">
 {% endcompress %}
 <script src="{% static 'js/html-to-rtf-browser.js' %}"></script>
+<script src="{% static 'js/vypis-report.js' %}"></script>
 {% endblock %}
 
 {% block title %}{% trans "vypis.templates.vypis.index.title" %}{% endblock %}
@@ -54,53 +55,4 @@
 </div>
 {% endblock %}
 
-{% block script %}
-<script>
-    function toggleSimpleView() {
-        const wrapper = document.getElementById('app-wrapper');
-        const toggle = document.getElementById('simple-view-toggle');
-        const label = document.getElementById('simple-view-toggle-label');
-        const simpleLabel = toggle.dataset.simpleLabel;
-        const fullLabel = toggle.dataset.fullLabel;
-        const simpleViewEnabled = wrapper.classList.toggle('simple-view');
-
-        label.textContent = simpleViewEnabled ? fullLabel : simpleLabel;
-        toggle.setAttribute('aria-label', simpleViewEnabled ? fullLabel : simpleLabel);
-        toggle.checked = simpleViewEnabled;
-
-        document.querySelectorAll('#app-wrapper .not-simple').forEach((section) => {
-            const previous = section.previousElementSibling;
-            if (previous && previous.tagName === 'HR') {
-                previous.style.display = simpleViewEnabled ? 'none' : '';
-            }
-        });
-    }
-
-    function createRtf() {
-        const htmlContent = document.getElementById('app-wrapper').innerHTML;
-        const vypisPrefix = 'AMCR_vypis';
-        const currentDateTime = new Date();
-        const year = currentDateTime.getFullYear();
-        const month = String(currentDateTime.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-        const day = String(currentDateTime.getDate()).padStart(2, '0');
-        const hours = String(currentDateTime.getHours()).padStart(2, '0');
-        const minutes = String(currentDateTime.getMinutes()).padStart(2, '0');
-        const seconds = String(currentDateTime.getSeconds()).padStart(2, '0');
-        const formattedDate = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-        const htmlToRtfLocal = new window.htmlToRtf();
-        let rtfContent = htmlToRtfLocal.convertHtmlToRtf(htmlContent);
-        rtfContent = rtfContent.replace(/ \\\'20/g, "\\\'20");
-        // console.log(rtfContent); only for debug
-        const blob = new Blob([rtfContent], { type: 'application/rtf' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${vypisPrefix}_${formattedDate}.rtf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        // Use the htmlToRtf function to convert HTML to RTF
-        // and create a Blob URL for the RTF file
-    }  
-</script>
-{% endblock %}
+{% block script %}{% endblock %}

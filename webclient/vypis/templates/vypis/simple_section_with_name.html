@@ -1,7 +1,7 @@
-<div class="{{ section.css_style }}">
+<div class="{{ section.css_class }}">
 {% for section, field in section.items %}
     
-        {% if section != "template" and section != "css_style" %}
+        {% if section != "template" and section != "css_class" %}
             {% if section == "section_name" %}
             <div class = "section-name row">{{field}}</div>
             {% endif %}
@@ -11,7 +11,7 @@
             {% elif field.template %}
                 {% include field.template with section=field %}
             {% elif section != "section_name" %}
-                <div class="row vypis-field-row {{ field.css_style }}">
+                <div class="row vypis-field-row {{ field.css_class }}">
                 <div class="label"><strong>{{field.label}}:</strong></div>
                 <div class="content">{{ field.value }}</div>
             </div>

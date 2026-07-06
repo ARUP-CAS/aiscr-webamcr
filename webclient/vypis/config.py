@@ -1,6 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 
 from .fields import (
+    NOT_SIMPLE_CSS_CLASS,
     ChooseField,
     DoubleField,
     DoubleFieldNum,
@@ -68,22 +69,22 @@ NEIDENT_AKCE_CONFIG = {
     "lokalizace": Field(
         _("vypis.dokumenty.neidentifikovane_akce.lokalizace.label"),
         "lokalizace",
-        css_style="not-simple",
+        css_class=NOT_SIMPLE_CSS_CLASS,
     ),
     "popis": Field(
         _("vypis.dokumenty.neidentifikovane_akce.popis.label"),
         "popis",
-        css_style="not-simple",
+        css_class=NOT_SIMPLE_CSS_CLASS,
     ),
     "poznamka": Field(
         _("vypis.dokumenty.neidentifikovane_akce.poznamka.label"),
         "poznamka",
-        css_style="not-simple",
+        css_class=NOT_SIMPLE_CSS_CLASS,
     ),
     "pian": Field(
         _("vypis.dokumenty.neidentifikovane_akce.pian.label"),
         "pian",
-        css_style="not-simple",
+        css_class=NOT_SIMPLE_CSS_CLASS,
     ),
 }
 
@@ -134,14 +135,20 @@ PIAN_CONFIG = {
     ),
     "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
     "zakladni_mapa": ForeignField(_("vypis.pian.zakladni_mapa.label"), "zm10__cislo", "pian"),
-    "primarni_epsg": ForeignField(_("vypis.pian.primarni_epsg.label"), "geom_system", "pian", css_style="not-simple"),
-    "geometrie_gml": ForeignGeomGmlField(_("vypis.pian.geometrie_gml.label"), "geom", "pian", css_style="not-simple"),
-    "geometrie_gml_sjtsk": ForeignGeomGmlField(
-        _("vypis.pian.geometrie_gml_sjtsk.label"), "geom_sjtsk", "pian", css_style="not-simple"
+    "primarni_epsg": ForeignField(
+        _("vypis.pian.primarni_epsg.label"), "geom_system", "pian", css_class=NOT_SIMPLE_CSS_CLASS
     ),
-    "geometrie_wkt": ForeignGeomWktField(_("vypis.pian.geometrie_wkt.label"), "geom", "pian", css_style="not-simple"),
+    "geometrie_gml": ForeignGeomGmlField(
+        _("vypis.pian.geometrie_gml.label"), "geom", "pian", css_class=NOT_SIMPLE_CSS_CLASS
+    ),
+    "geometrie_gml_sjtsk": ForeignGeomGmlField(
+        _("vypis.pian.geometrie_gml_sjtsk.label"), "geom_sjtsk", "pian", css_class=NOT_SIMPLE_CSS_CLASS
+    ),
+    "geometrie_wkt": ForeignGeomWktField(
+        _("vypis.pian.geometrie_wkt.label"), "geom", "pian", css_class=NOT_SIMPLE_CSS_CLASS
+    ),
     "geometrie_wkt_sjtsk": ForeignGeomWktField(
-        _("vypis.pian.geometrie_wkt_sjtsk.label"), "geom_sjtsk", "pian", css_style="not-simple"
+        _("vypis.pian.geometrie_wkt_sjtsk.label"), "geom_sjtsk", "pian", css_class=NOT_SIMPLE_CSS_CLASS
     ),
     "historie": HistorieSubSectionField("pian", _("vypis.pian.historie.section_name")),
 }
@@ -151,18 +158,18 @@ ADB_CONFIG = {
     "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
     "typ_sondy": Field(_("vypis.adb.typ_sondy.label"), "typ_sondy"),
     "uzivatelske_oznaceni_sondy": Field(_("vypis.adb.uzivatelske_oznaceni_sondy.label"), "uzivatelske_oznaceni_sondy"),
-    "trat": Field(_("vypis.adb.trat.label"), "trat", css_style="not-simple"),
-    "cislo_popisne": Field(_("vypis.adb.cislo_popisne.label"), "cislo_popisne", css_style="not-simple"),
-    "parcelni_cislo": Field(_("vypis.adb.parcelni_cislo.label"), "parcelni_cislo", css_style="not-simple"),
-    "podnet": Field(_("vypis.adb.podnet.label"), "podnet", css_style="not-simple"),
+    "trat": Field(_("vypis.adb.trat.label"), "trat", css_class=NOT_SIMPLE_CSS_CLASS),
+    "cislo_popisne": Field(_("vypis.adb.cislo_popisne.label"), "cislo_popisne", css_class=NOT_SIMPLE_CSS_CLASS),
+    "parcelni_cislo": Field(_("vypis.adb.parcelni_cislo.label"), "parcelni_cislo", css_class=NOT_SIMPLE_CSS_CLASS),
+    "podnet": Field(_("vypis.adb.podnet.label"), "podnet", css_class=NOT_SIMPLE_CSS_CLASS),
     "stratigraficke_jednotky": Field(
-        _("vypis.adb.stratigraficke_jednotky.label"), "stratigraficke_jednotky", css_style="not-simple"
+        _("vypis.adb.stratigraficke_jednotky.label"), "stratigraficke_jednotky", css_class=NOT_SIMPLE_CSS_CLASS
     ),
-    "autor_popisu": Field(_("vypis.adb.autor_popisu.label"), "autor_popisu", css_style="not-simple"),
-    "rok_popisu": Field(_("vypis.adb.rok_popisu.label"), "rok_popisu", css_style="not-simple"),
-    "autor_revize": Field(_("vypis.adb.autor_revize.label"), "autor_revize", css_style="not-simple"),
-    "rok_revize": Field(_("vypis.adb.rok_revize.label"), "rok_revize", css_style="not-simple"),
-    "poznamka": Field(_("vypis.adb.poznamka.label"), "poznamka", css_style="not-simple"),
+    "autor_popisu": Field(_("vypis.adb.autor_popisu.label"), "autor_popisu", css_class=NOT_SIMPLE_CSS_CLASS),
+    "rok_popisu": Field(_("vypis.adb.rok_popisu.label"), "rok_popisu", css_class=NOT_SIMPLE_CSS_CLASS),
+    "autor_revize": Field(_("vypis.adb.autor_revize.label"), "autor_revize", css_class=NOT_SIMPLE_CSS_CLASS),
+    "rok_revize": Field(_("vypis.adb.rok_revize.label"), "rok_revize", css_class=NOT_SIMPLE_CSS_CLASS),
+    "poznamka": Field(_("vypis.adb.poznamka.label"), "poznamka", css_class=NOT_SIMPLE_CSS_CLASS),
     "vb": VbRepeatableField(
         _("vypis.adb.vb.label"), ["ident_cely", "typ", "poloha_gml", "poloha_wkt"], "vb", "vypis/akce/vb.html", "adb"
     ),
@@ -216,61 +223,76 @@ DOKUMENTY_CONFIG = {
                 _("vypis.dokumenty.popis_dokumentu.primarni_epsg.label"),
                 "geom_system",
                 "extra_data",
-                css_style="not-simple",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "poloha_gml": ForeignGeomGmlField(
-                _("vypis.dokumenty.popis_dokumentu.poloha_gml.label"), "geom", "extra_data", css_style="not-simple"
+                _("vypis.dokumenty.popis_dokumentu.poloha_gml.label"),
+                "geom",
+                "extra_data",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "poloha_gml_sjtsk": ForeignGeomGmlField(
                 _("vypis.dokumenty.popis_dokumentu.poloha_gml_sjtsk.label"),
                 "geom_sjtsk",
                 "extra_data",
-                css_style="not-simple",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "poloha_wkt": ForeignGeomWktField(
-                _("vypis.dokumenty.popis_dokumentu.poloha_wkt.label"), "geom", "extra_data", css_style="not-simple"
+                _("vypis.dokumenty.popis_dokumentu.poloha_wkt.label"),
+                "geom",
+                "extra_data",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "poloha_wkt_sjtsk": ForeignGeomWktField(
                 _("vypis.dokumenty.popis_dokumentu.poloha_wkt_sjtsk.label"),
                 "geom_sjtsk",
                 "extra_data",
-                css_style="not-simple",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "format": ForeignField(
-                _("vypis.dokumenty.popis_dokumentu.format.label"), "format", "extra_data", css_style="not-simple"
+                _("vypis.dokumenty.popis_dokumentu.format.label"),
+                "format",
+                "extra_data",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "vyska": ForeignField(
-                _("vypis.dokumenty.popis_dokumentu.vyska.label"), "vyska", "extra_data", css_style="not-simple"
+                _("vypis.dokumenty.popis_dokumentu.vyska.label"), "vyska", "extra_data", css_class=NOT_SIMPLE_CSS_CLASS
             ),
             "sirka": ForeignField(
-                _("vypis.dokumenty.popis_dokumentu.sirka.label"), "sirka", "extra_data", css_style="not-simple"
+                _("vypis.dokumenty.popis_dokumentu.sirka.label"), "sirka", "extra_data", css_class=NOT_SIMPLE_CSS_CLASS
             ),
             "meritko": ForeignField(
-                _("vypis.dokumenty.popis_dokumentu.meritko.label"), "meritko", "extra_data", css_style="not-simple"
+                _("vypis.dokumenty.popis_dokumentu.meritko.label"),
+                "meritko",
+                "extra_data",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "zachovalost": ForeignField(
                 _("vypis.dokumenty.popis_dokumentu.zachovalost.label"),
                 "zachovalost",
                 "extra_data",
-                css_style="not-simple",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "nahrada": ForeignField(
-                _("vypis.dokumenty.popis_dokumentu.nahrada.label"), "nahrada", "extra_data", css_style="not-simple"
+                _("vypis.dokumenty.popis_dokumentu.nahrada.label"),
+                "nahrada",
+                "extra_data",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "pocet_variant_originalu": ForeignField(
                 _("vypis.dokumenty.popis_dokumentu.pocet_variant_originalu.label"),
                 "pocet_variant_originalu",
                 "extra_data",
-                css_style="not-simple",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "odkaz": ForeignField(
-                _("vypis.dokumenty.popis_dokumentu.odkaz.label"), "odkaz", "extra_data", css_style="not-simple"
+                _("vypis.dokumenty.popis_dokumentu.odkaz.label"), "odkaz", "extra_data", css_class=NOT_SIMPLE_CSS_CLASS
             ),
             "datum_vzniku": ForeignField(
                 _("vypis.dokumenty.popis_dokumentu.datum_vzniku.label"),
                 "datum_vzniku",
                 "extra_data",
-                css_style="not-simple",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "zeme": ForeignField(_("vypis.dokumenty.popis_dokumentu.zeme.label"), "zeme", "extra_data"),
             "region": ForeignField(_("vypis.dokumenty.popis_dokumentu.region.label"), "region_extra", "extra_data"),
@@ -286,7 +308,7 @@ DOKUMENTY_CONFIG = {
                 _("vypis.dokumenty.popis_dokumentu.duveryhodnost.label"),
                 "duveryhodnost",
                 "extra_data",
-                css_style="not-simple",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "licence": Field(_("vypis.dokumenty.popis_dokumentu.licence.label"), "licence"),
         },
@@ -297,30 +319,35 @@ DOKUMENTY_CONFIG = {
             "cas": ForeignDoubleFieldNum(_("vypis.dokumenty.let.cas.label"), ["hodina_zacatek", "hodina_konec"], "let"),
             "trasa": ForeignDoubleField(_("vypis.dokumenty.let.trasa.label"), ["letiste_start", "letiste_cil"], "let"),
             "ucel_letu": ForeignField(
-                _("vypis.dokumenty.let.ucel_letu.label"), "ucel_letu", "let", css_style="not-simple"
+                _("vypis.dokumenty.let.ucel_letu.label"), "ucel_letu", "let", css_class=NOT_SIMPLE_CSS_CLASS
             ),
             "pozorovatel": ForeignField(
-                _("vypis.dokumenty.let.pozorovatel.label"), "pozorovatel", "let", css_style="not-simple"
+                _("vypis.dokumenty.let.pozorovatel.label"), "pozorovatel", "let", css_class=NOT_SIMPLE_CSS_CLASS
             ),
-            "pilot": ForeignField(_("vypis.dokumenty.let.pilot.label"), "pilot", "let", css_style="not-simple"),
+            "pilot": ForeignField(_("vypis.dokumenty.let.pilot.label"), "pilot", "let", css_class=NOT_SIMPLE_CSS_CLASS),
             "organizace": ForeignField(
-                _("vypis.dokumenty.let.organizace.label"), "organizace__get_nazev", "let", css_style="not-simple"
+                _("vypis.dokumenty.let.organizace.label"),
+                "organizace__get_nazev",
+                "let",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "uzivatelske_oznaceni": ForeignField(
                 _("vypis.dokumenty.let.uzivatelske_oznaceni.label"),
                 "uzivatelske_oznaceni",
                 "let",
-                css_style="not-simple",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "fotoaparat": ForeignField(
-                _("vypis.dokumenty.let.fotoaparat.label"), "fotoaparat", "let", css_style="not-simple"
+                _("vypis.dokumenty.let.fotoaparat.label"), "fotoaparat", "let", css_class=NOT_SIMPLE_CSS_CLASS
             ),
             "typ_letounu": ForeignField(
-                _("vypis.dokumenty.let.typ_letounu.label"), "typ_letounu", "let", css_style="not-simple"
+                _("vypis.dokumenty.let.typ_letounu.label"), "typ_letounu", "let", css_class=NOT_SIMPLE_CSS_CLASS
             ),
-            "pocasi": ForeignField(_("vypis.dokumenty.let.pocasi.label"), "pocasi", "let", css_style="not-simple"),
+            "pocasi": ForeignField(
+                _("vypis.dokumenty.let.pocasi.label"), "pocasi", "let", css_class=NOT_SIMPLE_CSS_CLASS
+            ),
             "dohlednost": ForeignField(
-                _("vypis.dokumenty.let.dohlednost.label"), "dohlednost", "let", css_style="not-simple"
+                _("vypis.dokumenty.let.dohlednost.label"), "dohlednost", "let", css_class=NOT_SIMPLE_CSS_CLASS
             ),
         },
         "dokumentove_tvary": {
@@ -341,6 +368,7 @@ DOKUMENTY_CONFIG = {
                 "dokument",
             ),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
+            "css_class": SimpleSectionTemplateName(NOT_SIMPLE_CSS_CLASS),
             "dok_zaznam": ChooseField(
                 _("vypis.dokumenty.dokument_casti.dok_zaznam.label"), ["archeologicky_zaznam", "projekt"]
             ),
@@ -350,7 +378,7 @@ DOKUMENTY_CONFIG = {
         "historie": {
             "section_name": SimpleSectionTemplateName(_("vypis.dokumenty.historie.section_name")),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
-            "css_style": SimpleSectionTemplateName("not-simple"),
+            "css_class": SimpleSectionTemplateName(NOT_SIMPLE_CSS_CLASS),
             "historie": HistorieRepeatableField(
                 _("vypis.dokumenty.historie.label"),
                 ["datum_zmeny", "uzivatel_protected", "get_typ_zmeny_display", "poznamka"],
@@ -367,11 +395,15 @@ DOKUMENTY_CONFIG = {
                 _("vypis.dokumenty.dokument_casti.small_thumbnail.label"), "small_thumbnail", "dokument"
             ),
             "path": SouborDownloadField(
-                _("vypis.dokumenty.dokument_casti.path.label"), "path", "dokument", css_style="not-simple"
+                _("vypis.dokumenty.dokument_casti.path.label"), "path", "dokument", css_class=NOT_SIMPLE_CSS_CLASS
             ),
-            "rozsah": Field(_("vypis.dokumenty.dokument_casti.rozsah.label"), "rozsah", css_style="not-simple"),
-            "size_mb": Field(_("vypis.dokumenty.dokument_casti.size_mb.label"), "size_mb", css_style="not-simple"),
-            "sha_512": Field(_("vypis.dokumenty.dokument_casti.sha_512.label"), "sha_512", css_style="not-simple"),
+            "rozsah": Field(_("vypis.dokumenty.dokument_casti.rozsah.label"), "rozsah", css_class=NOT_SIMPLE_CSS_CLASS),
+            "size_mb": Field(
+                _("vypis.dokumenty.dokument_casti.size_mb.label"), "size_mb", css_class=NOT_SIMPLE_CSS_CLASS
+            ),
+            "sha_512": Field(
+                _("vypis.dokumenty.dokument_casti.sha_512.label"), "sha_512", css_class=NOT_SIMPLE_CSS_CLASS
+            ),
             "historie": HistorieSubSectionField(None, _("vypis.dokumenty.soubory.historie.label")),
         },
     },
@@ -411,18 +443,20 @@ PROJEKTY_CONFIG = {
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
             "lokalizace": Field(_("vypis.projekty.popis_projektu.lokalizace.label"), "lokalizace"),
             "parcelni_cislo": Field(_("vypis.projekty.popis_projektu.parcelni_cislo.label"), "parcelni_cislo"),
-            "primarni_epsg": Field(_("vypis.projekty.primarni_epsg.label"), "geom_system", css_style="not-simple"),
+            "primarni_epsg": Field(
+                _("vypis.projekty.primarni_epsg.label"), "geom_system", css_class=NOT_SIMPLE_CSS_CLASS
+            ),
             "poloha_gml": GeomGmlField(
-                _("vypis.projekty.popis_projektu.poloha_gml.label"), "geom", css_style="not-simple"
+                _("vypis.projekty.popis_projektu.poloha_gml.label"), "geom", css_class=NOT_SIMPLE_CSS_CLASS
             ),
             "poloha_gml_sjtsk": GeomGmlField(
-                _("vypis.projekty.popis_projektu.poloha_gml_sjtsk.label"), "geom_sjtsk", css_style="not-simple"
+                _("vypis.projekty.popis_projektu.poloha_gml_sjtsk.label"), "geom_sjtsk", css_class=NOT_SIMPLE_CSS_CLASS
             ),
             "poloha_wkt": GeomWktField(
-                _("vypis.projekty.popis_projektu.poloha_wkt.label"), "geom", css_style="not-simple"
+                _("vypis.projekty.popis_projektu.poloha_wkt.label"), "geom", css_class=NOT_SIMPLE_CSS_CLASS
             ),
             "poloha_wkt_sjtsk": GeomWktField(
-                _("vypis.projekty.popis_projektu.poloha_wkt_sjtsk.label"), "geom_sjtsk", css_style="not-simple"
+                _("vypis.projekty.popis_projektu.poloha_wkt_sjtsk.label"), "geom_sjtsk", css_class=NOT_SIMPLE_CSS_CLASS
             ),
             "planovane_zahajeni": Field(
                 _("vypis.projekty.popis_projektu.planovane_zahajeni.label"), "planovane_zahajeni_vypis"
@@ -456,7 +490,7 @@ PROJEKTY_CONFIG = {
         "historie": {
             "section_name": SimpleSectionTemplateName(_("vypis.projekty.historie.section_name")),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
-            "css_style": SimpleSectionTemplateName("not-simple"),
+            "css_class": SimpleSectionTemplateName(NOT_SIMPLE_CSS_CLASS),
             "historie": HistorieRepeatableField(
                 _("vypis.projekty.historie.label"),
                 ["datum_zmeny", "uzivatel_protected", "get_typ_zmeny_display", "poznamka"],
@@ -473,11 +507,11 @@ PROJEKTY_CONFIG = {
                 _("vypis.projekty.soubory.small_thumbnail.label"), "small_thumbnail", "projekt"
             ),
             "path": SouborDownloadField(
-                _("vypis.projekty.soubory.path.label"), "path", "projekt", css_style="not-simple"
+                _("vypis.projekty.soubory.path.label"), "path", "projekt", css_class=NOT_SIMPLE_CSS_CLASS
             ),
-            "rozsah": Field(_("vypis.projekty.soubory.rozsah.label"), "rozsah", css_style="not-simple"),
-            "size_mb": Field(_("vypis.projekty.soubory.size_mb.label"), "size_mb", css_style="not-simple"),
-            "sha_512": Field(_("vypis.projekty.soubory.sha_512.label"), "sha_512", css_style="not-simple"),
+            "rozsah": Field(_("vypis.projekty.soubory.rozsah.label"), "rozsah", css_class=NOT_SIMPLE_CSS_CLASS),
+            "size_mb": Field(_("vypis.projekty.soubory.size_mb.label"), "size_mb", css_class=NOT_SIMPLE_CSS_CLASS),
+            "sha_512": Field(_("vypis.projekty.soubory.sha_512.label"), "sha_512", css_class=NOT_SIMPLE_CSS_CLASS),
             "historie": HistorieSubSectionField(None, _("vypis.projekty.soubory.historie.label")),
         },
         "archeologicke_zaznamy": {
@@ -578,7 +612,7 @@ AKCE_CONFIG = {
         "historie": {
             "section_name": SimpleSectionTemplateName(_("vypis.akce.historie.section_name")),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
-            "css_style": SimpleSectionTemplateName("not-simple"),
+            "css_class": SimpleSectionTemplateName(NOT_SIMPLE_CSS_CLASS),
             "historie": HistorieRepeatableField(
                 _("vypis.akce.historie.label"),
                 ["datum_zmeny", "uzivatel_protected", "get_typ_zmeny_display", "poznamka"],
@@ -668,7 +702,7 @@ LOKALITA_CONFIG = {
         "historie": {
             "section_name": SimpleSectionTemplateName(_("vypis.lokalita.historie.section_name")),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
-            "css_style": SimpleSectionTemplateName("not-simple"),
+            "css_class": SimpleSectionTemplateName(NOT_SIMPLE_CSS_CLASS),
             "historie": HistorieRepeatableField(
                 _("vypis.lokalita.historie.label"),
                 ["datum_zmeny", "uzivatel_protected", "get_typ_zmeny_display", "poznamka"],
@@ -748,20 +782,22 @@ PAS_CONFIG = {
             "hloubka": Field(_("vypis.pas.popis_pas.hloubka.label"), "hloubka"),
             "pocet": Field(_("vypis.pas.popis_pas.pocet.label"), "pocet"),
             "poznamka": Field(_("vypis.pas.popis_pas.poznamka.label"), "poznamka"),
-            "geom_system": Field(_("vypis.pas.popis_pas.geom_system.label"), "geom_system", css_style="not-simple"),
-            "geom": GeomGmlField(_("vypis.pas.popis_pas.geom_gml.label"), "geom", css_style="not-simple"),
-            "geom_sjtsk": GeomGmlField(
-                _("vypis.pas.popis_pas.geom_sjtsk_gml.label"), "geom_sjtsk", css_style="not-simple"
+            "geom_system": Field(
+                _("vypis.pas.popis_pas.geom_system.label"), "geom_system", css_class=NOT_SIMPLE_CSS_CLASS
             ),
-            "geom_wkt": GeomWktField(_("vypis.pas.popis_pas.geom_wkt.label"), "geom", css_style="not-simple"),
+            "geom": GeomGmlField(_("vypis.pas.popis_pas.geom_gml.label"), "geom", css_class=NOT_SIMPLE_CSS_CLASS),
+            "geom_sjtsk": GeomGmlField(
+                _("vypis.pas.popis_pas.geom_sjtsk_gml.label"), "geom_sjtsk", css_class=NOT_SIMPLE_CSS_CLASS
+            ),
+            "geom_wkt": GeomWktField(_("vypis.pas.popis_pas.geom_wkt.label"), "geom", css_class=NOT_SIMPLE_CSS_CLASS),
             "geom_sjtsk_wkt": GeomWktField(
-                _("vypis.pas.popis_pas.geom_sjtsk_wkt.label"), "geom_sjtsk", css_style="not-simple"
+                _("vypis.pas.popis_pas.geom_sjtsk_wkt.label"), "geom_sjtsk", css_class=NOT_SIMPLE_CSS_CLASS
             ),
         },
         "historie": {
             "section_name": SimpleSectionTemplateName(_("vypis.pas.historie.section_name")),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
-            "css_style": SimpleSectionTemplateName("not-simple"),
+            "css_class": SimpleSectionTemplateName(NOT_SIMPLE_CSS_CLASS),
             "historie": HistorieRepeatableField(
                 _("vypis.pas.historie.label"),
                 ["datum_zmeny", "uzivatel_protected", "get_typ_zmeny_display", "poznamka"],
@@ -775,10 +811,12 @@ PAS_CONFIG = {
             ),
             "template": SimpleSectionTemplateName("vypis/soubory.html"),
             "small_thumbnail": SouborField(_("vypis.pas.soubory.small_thumbnail.label"), "small_thumbnail", "pas"),
-            "path": SouborDownloadField(_("vypis.pas.soubory.path.label"), "path", "pas", css_style="not-simple"),
-            "rozsah": Field(_("vypis.pas.soubory.rozsah.label"), "rozsah", css_style="not-simple"),
-            "size_mb": Field(_("vypis.pas.soubory.size_mb.label"), "size_mb", css_style="not-simple"),
-            "sha_512": Field(_("vypis.pas.soubory.sha_512.label"), "sha_512", css_style="not-simple"),
+            "path": SouborDownloadField(
+                _("vypis.pas.soubory.path.label"), "path", "pas", css_class=NOT_SIMPLE_CSS_CLASS
+            ),
+            "rozsah": Field(_("vypis.pas.soubory.rozsah.label"), "rozsah", css_class=NOT_SIMPLE_CSS_CLASS),
+            "size_mb": Field(_("vypis.pas.soubory.size_mb.label"), "size_mb", css_class=NOT_SIMPLE_CSS_CLASS),
+            "sha_512": Field(_("vypis.pas.soubory.sha_512.label"), "sha_512", css_class=NOT_SIMPLE_CSS_CLASS),
             "historie": HistorieSubSectionField(None, _("vypis.pas.soubory.historie.label")),
         },
     },
@@ -829,40 +867,49 @@ MODEL_CONFIG = {
                 _("vypis.model3d.popis_dokumentu.primarni_epsg.label"),
                 "geom_system",
                 "extra_data",
-                css_style="not-simple",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "poloha_gml": ForeignGeomGmlField(
-                _("vypis.model3d.popis_dokumentu.poloha_gml.label"), "geom", "extra_data", css_style="not-simple"
+                _("vypis.model3d.popis_dokumentu.poloha_gml.label"),
+                "geom",
+                "extra_data",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "poloha_gml_sjtsk": ForeignGeomGmlField(
                 _("vypis.model3d.popis_dokumentu.poloha_gml_sjtsk.label"),
                 "geom_sjtsk",
                 "extra_data",
-                css_style="not-simple",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "poloha_wkt": ForeignGeomWktField(
-                _("vypis.model3d.popis_dokumentu.poloha_wkt.label"), "geom", "extra_data", css_style="not-simple"
+                _("vypis.model3d.popis_dokumentu.poloha_wkt.label"),
+                "geom",
+                "extra_data",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "poloha_wkt_sjtsk": ForeignGeomWktField(
                 _("vypis.model3d.popis_dokumentu.poloha_wkt_sjtsk.label"),
                 "geom_sjtsk",
                 "extra_data",
-                css_style="not-simple",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "format": ForeignField(
-                _("vypis.model3d.popis_model3d.format.label"), "format", "extra_data", css_style="not-simple"
+                _("vypis.model3d.popis_model3d.format.label"), "format", "extra_data", css_class=NOT_SIMPLE_CSS_CLASS
             ),
             "zeme": ForeignField(
-                _("vypis.model3d.popis_model3d.zeme.label"), "zeme", "extra_data", css_style="not-simple"
+                _("vypis.model3d.popis_model3d.zeme.label"), "zeme", "extra_data", css_class=NOT_SIMPLE_CSS_CLASS
             ),
             "region": ForeignField(
-                _("vypis.model3d.popis_model3d.region.label"), "region_extra", "extra_data", css_style="not-simple"
+                _("vypis.model3d.popis_model3d.region.label"),
+                "region_extra",
+                "extra_data",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "duveryhodnost": ForeignField(
                 _("vypis.model3d.popis_model3d.duveryhodnost.label"),
                 "duveryhodnost",
                 "extra_data",
-                css_style="not-simple",
+                css_class=NOT_SIMPLE_CSS_CLASS,
             ),
             "licence": Field(_("vypis.model3d.popis_model3d.licence.label"), "licence"),
         },
@@ -882,7 +929,7 @@ MODEL_CONFIG = {
         "historie": {
             "section_name": SimpleSectionTemplateName(_("vypis.model3d.historie.section_name")),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
-            "css_style": SimpleSectionTemplateName("not-simple"),
+            "css_class": SimpleSectionTemplateName(NOT_SIMPLE_CSS_CLASS),
             "historie": HistorieRepeatableField(
                 _("vypis.model3d.historie.label"),
                 ["datum_zmeny", "uzivatel_protected", "get_typ_zmeny_display", "poznamka"],
@@ -899,11 +946,11 @@ MODEL_CONFIG = {
                 _("vypis.model3d.soubory.small_thumbnail.label"), "small_thumbnail", "model3d"
             ),
             "path": SouborDownloadField(
-                _("vypis.model3d.soubory.path.label"), "path", "model3d", css_style="not-simple"
+                _("vypis.model3d.soubory.path.label"), "path", "model3d", css_class=NOT_SIMPLE_CSS_CLASS
             ),
-            "rozsah": Field(_("vypis.model3d.soubory.rozsah.label"), "rozsah", css_style="not-simple"),
-            "size_mb": Field(_("vypis.model3d.soubory.size_mb.label"), "size_mb", css_style="not-simple"),
-            "sha_512": Field(_("vypis.model3d.soubory.sha_512.label"), "sha_512", css_style="not-simple"),
+            "rozsah": Field(_("vypis.model3d.soubory.rozsah.label"), "rozsah", css_class=NOT_SIMPLE_CSS_CLASS),
+            "size_mb": Field(_("vypis.model3d.soubory.size_mb.label"), "size_mb", css_class=NOT_SIMPLE_CSS_CLASS),
+            "sha_512": Field(_("vypis.model3d.soubory.sha_512.label"), "sha_512", css_class=NOT_SIMPLE_CSS_CLASS),
             "historie": HistorieSubSectionField(None, _("vypis.model3d.soubory.historie.label")),
         },
     },
@@ -951,7 +998,7 @@ EZ_CONFIG = {
         "historie": {
             "section_name": SimpleSectionTemplateName(_("vypis.ez.historie.section_name")),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
-            "css_style": SimpleSectionTemplateName("not-simple"),
+            "css_class": SimpleSectionTemplateName(NOT_SIMPLE_CSS_CLASS),
             "historie": HistorieRepeatableField(
                 _("vypis.ez.historie.label"),
                 ["datum_zmeny", "uzivatel_protected", "get_typ_zmeny_display", "poznamka"],

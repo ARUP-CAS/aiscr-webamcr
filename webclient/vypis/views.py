@@ -22,6 +22,9 @@ def add_section_data(instance, section, fields, sections_data, iterator=False, u
     :param sections_data: Kolekce ``sections_data`` zpracovávaná touto funkcí.
     :param iterator: Parametr ``iterator`` ovlivňuje větvení podmínek.
     :param user: Parametr ``user`` se předává do volání ``get_permission()``, ``add_section_data()``, ovlivňuje větvení podmínek.
+
+    Poznámka: položka ``css_class`` se zpracovává zvlášť. U sekce se uloží jako metadata sekce
+    a může tak přidat CSS třídu, například ``not-simple``, která je použita v jednoduchém režimu.
     """
     if fields["section_name"].get_permission(instance, user) is False:
         return None
@@ -75,16 +78,18 @@ def add_section_data(instance, section, fields, sections_data, iterator=False, u
                 user=user,
             )
             continue
-        if label == "section_name" or label == "template" or label == "css_style":
+        if label == "css_class":
+            sections_data[section][label] = field
+        elif label == "section_name" or label == "template":
             sections_data[section][label] = mark_safe(field.get_name(instance))
         elif field.get_value(instance, user):
             sections_data[section][label] = {
                 "label": field.get_label(),
                 "value": field.get_value(instance, user),
-                "css_style": field.get_css_style(),
+                "css_class": field.get_css_class(),
             }
     if (
-        not any(k not in ["section_name", "template", "css_style"] for k in sections_data[section].keys())
+        not any(k not in ["section_name", "template", "css_class"] for k in sections_data[section].keys())
         and not iterator
     ):
         logger.debug("vypis.views.add_section_data", extra={"custom_message": f"Deleting empty section {section}"})
