@@ -257,14 +257,14 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         if not binary_data:
             return self.rozsah if self.rozsah is not None else 1
         try:
-            if nazev.lower().endswith("pdf"):
+            if nazev.lower().endswith(".pdf"):
                 try:
                     binary_data.seek(0)
                     return len(PdfReader(binary_data).pages)
                 except (PdfReadError, OSError, ValueError):
                     logger.debug("core.models.Soubor.calculate_rozsah.error_reading_pdf")
                     return 1
-            if nazev.lower().endswith("tif"):
+            if nazev.lower().endswith((".tif", ".tiff")):
                 try:
                     binary_data.seek(0)
                     return Image.open(binary_data).n_frames

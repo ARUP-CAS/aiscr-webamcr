@@ -2197,15 +2197,18 @@ Třídy
 
    .. py:method:: import_validation()
 
-      Ověří, že při INSERT neexistuje soubor stejného ``nazev`` navázaný na stejný objekt.
+      Ověří, že při INSERT neexistuje soubor stejného ``nazev`` navázaný na stejný objekt,
+      a že stejná kombinace nevyskytuje dvakrát v aktuální importní dávce.
 
       UPDATE a DELETE pracují s primárním klíčem (id) a delegují se na bázovou validaci.
 
       :param performed_action: Požadovaná importní akce.
+      :param seen_in_batch: Množina klíčů ``(nazev, vazba_pk)`` již zpracovaných řádků dávky;
+          pokud je předána, detekuje duplicity v rámci jednoho importu.
       :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
       :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
       :return: Slovník s podmínkou pro dohledání souboru, případně výsledek bázové validace.
-      :raises SouborImportIntegrityError: Při INSERT, pokud soubor stejného jména už existuje.
+      :raises SouborImportIntegrityError: Při INSERT, pokud soubor stejného jména už existuje v DB nebo v dávce.
 
    .. py:method:: get_related_history_targets()
 

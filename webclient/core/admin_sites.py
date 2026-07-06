@@ -421,6 +421,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
                             sheet = pd.read_csv(file)
                         file_name = normalize_file_name(file_name)
                         mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
+                        seen_in_batch: set = set()
                         for idx, row in sheet.iterrows():
 
                             def format_primary_key(pk):
@@ -439,7 +440,9 @@ class AmcrCustomAdminSite(admin.AdminSite):
                                     mapper = mapper_class(row.to_dict())
                                     record = mapper.map(performed_action, serialize=True, include_primary_key=True)
                                     mapper.check_required_fields(performed_action)
-                                    primary_key = mapper.import_validation(performed_action, request.user.pk)
+                                    primary_key = mapper.import_validation(
+                                        performed_action, request.user.pk, seen_in_batch=seen_in_batch
+                                    )
                                     records += mapper.create_records(performed_action)
                                     record["__file_name"] = file_name
                                 except ImportDataIntegrityError as err:

@@ -1094,7 +1094,7 @@ def run_data_import(job_id, user_id, lock_token):
             redis_connector.set(job_key("import_fedora_result"), json.dumps(import_fedora_result))
             for fedora_index, item in enumerate(fedora_update_targets_dict):
                 refresh_import_lock()
-                if not stopped:
+                if not failed and not stopped:
                     redis_connector.set(
                         job_key("import_data_status_message"),
                         "{} {}/{}".format(
@@ -1150,6 +1150,8 @@ def run_data_import(job_id, user_id, lock_token):
                     fedora_index + 1,
                     ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
                 )
+                if failed:
+                    break
         redis_connector.set(job_key("import_fedora_result"), json.dumps(import_fedora_result))
 
         redis_connector.set(
@@ -1212,6 +1214,7 @@ def run_data_import(job_id, user_id, lock_token):
                     redis_connector.set(job_key("import_data_files_progress"), 0, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
                     pending_related_metadata: dict = {}
                     for file_index, soubor in enumerate(import_files_list):
+                        fedora_transaction = None
                         refresh_import_lock()
                         soubor: Soubor
                         logger.debug(
@@ -1301,7 +1304,6 @@ def run_data_import(job_id, user_id, lock_token):
                                 ident_cely,
                             ),
                         )
-                        fedora_transaction = None
                         fedora_transaction = FedoraTransaction()
                         conn = FedoraRepositoryConnector(
                             soubor.vazba.navazany_objekt, fedora_transaction, skip_container_check=False
@@ -1398,12 +1400,13 @@ def run_data_import(job_id, user_id, lock_token):
                         )
                     if not failed and not stopped:
                         for (obj_class, obj_pk), entry in pending_related_metadata.items():
+                            fedora_transaction = None
                             refresh_import_lock()
-                            post_fedora_transaction = FedoraTransaction()
+                            fedora_transaction = FedoraTransaction()
                             obj = obj_class.objects.get(pk=obj_pk)
-                            obj.active_transaction = post_fedora_transaction
-                            obj.save_metadata(post_fedora_transaction)
-                            post_fedora_transaction.mark_transaction_as_closed()
+                            obj.active_transaction = fedora_transaction
+                            obj.save_metadata(fedora_transaction)
+                            fedora_transaction.mark_transaction_as_closed()
                             related_history_vazba = obj.history_vazba if isinstance(obj, User) else obj.historie
                             Historie(
                                 typ_zmeny=IMPORT,
@@ -1415,7 +1418,7 @@ def run_data_import(job_id, user_id, lock_token):
                                 if import_fedora_result.get(rid) == [fedora_waiting_data_import_str]:
                                     import_fedora_result[rid] = []
                                 import_fedora_result[rid].append(
-                                    "{} ({})".format(post_fedora_transaction.uid, entry["ident_cely"])
+                                    "{} ({})".format(fedora_transaction.uid, entry["ident_cely"])
                                 )
                             redis_connector.set(job_key("import_fedora_result"), json.dumps(import_fedora_result))
                 except SouborMissingRepositoryUuidError as err:

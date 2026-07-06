@@ -7,6 +7,7 @@ from core.import_data_mappers import (
     OrganizaceMapper,
 )
 from django.test import TestCase
+from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_LICENCE, HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
 from heslar.models import Heslar, HeslarNazev
 from uzivatel.models import Organizace
@@ -168,7 +169,7 @@ class OrganizaceMapperInsertValidTest(TestCase):
 
         message = str(ctx.exception)
         self.assertEqual(ctx.exception.import_field_verbose_name, "typ_organizace")
-        self.assertIn(str(Organizace._meta.get_field("typ_organizace").verbose_name), message)
+        self.assertIn(str(_("core.import_data_mappers.OrganizaceMapper.typ_organizace.limit_choices")), message)
         self.assertIn("core_admin.ImportDataLimitChoicesError.message.part_2", message)
         self.assertIn("core_admin.ImportDataLimitChoicesError.message.part_3", message)
         self.assertIn("typ_organizace", message)

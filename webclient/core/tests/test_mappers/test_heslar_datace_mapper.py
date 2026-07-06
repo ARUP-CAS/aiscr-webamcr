@@ -7,6 +7,7 @@ from core.import_data_mappers import (
     ImportDataMissingHeslarValueError,
 )
 from django.test import TestCase
+from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_OBDOBI
 from heslar.models import Heslar, HeslarDatace, HeslarNazev
 
@@ -297,7 +298,7 @@ class HeslarDataceMapperObdobiValueFromOtherHeslareTest(TestCase):
         self.assertEqual(ctx.exception.value, "HES-OTHER-001")
         self.assertEqual(
             ctx.exception.target_field_verbose_name,
-            HeslarDatace._meta.get_field("obdobi").verbose_name,
+            _("core.import_data_mappers.HeslarDataceMapper.obdobi.limit_choices"),
         )
         self.assertEqual(ctx.exception.import_field_verbose_name, "obdobi")
 
@@ -314,6 +315,6 @@ class HeslarDataceMapperObdobiValueFromOtherHeslareTest(TestCase):
         self.assertNotIn("core_admin.ImportDataMissingHeslarValueError.message.part_3", message)
         self.assertNotIn(str(HESLAR_OBDOBI), message)
         self.assertIn("core_admin.ImportDataMissingHeslarValueError.message.part_4", message)
-        self.assertIn(str(HeslarDatace._meta.get_field("obdobi").verbose_name), message)
+        self.assertIn(str(_("core.import_data_mappers.HeslarDataceMapper.obdobi.limit_choices")), message)
         self.assertIn("core_admin.ImportDataMissingHeslarValueError.message.part_5", message)
         self.assertIn("obdobi", message)

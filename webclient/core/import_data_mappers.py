@@ -4430,17 +4430,20 @@ class SouborMapper(ImportModelMapper):
         """
         return record
 
-    def import_validation(self, performed_action, *args, **kwargs):
+    def import_validation(self, performed_action, *args, seen_in_batch: set | None = None, **kwargs):
         """
-        Ověří, že při INSERT neexistuje soubor stejného ``nazev`` navázaný na stejný objekt.
+        Ověří, že při INSERT neexistuje soubor stejného ``nazev`` navázaný na stejný objekt,
+        a že stejná kombinace nevyskytuje dvakrát v aktuální importní dávce.
 
         UPDATE a DELETE pracují s primárním klíčem (id) a delegují se na bázovou validaci.
 
         :param performed_action: Požadovaná importní akce.
+        :param seen_in_batch: Množina klíčů ``(nazev, vazba_pk)`` již zpracovaných řádků dávky;
+            pokud je předána, detekuje duplicity v rámci jednoho importu.
         :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
         :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
         :return: Slovník s podmínkou pro dohledání souboru, případně výsledek bázové validace.
-        :raises SouborImportIntegrityError: Při INSERT, pokud soubor stejného jména už existuje.
+        :raises SouborImportIntegrityError: Při INSERT, pokud soubor stejného jména už existuje v DB nebo v dávce.
         """
         if performed_action != ImportDataAdminForm.PERFORMED_ACTION_INSERT:
             return super().import_validation(performed_action, *args, **kwargs)
@@ -4449,6 +4452,11 @@ class SouborMapper(ImportModelMapper):
         vazba_instance = mapping_dict.get("vazba")
         if Soubor.objects.filter(nazev=nazev, vazba=vazba_instance).exists():
             raise SouborImportIntegrityError(self.value_dict.get("vazba"), nazev)
+        if seen_in_batch is not None:
+            key = (nazev, vazba_instance.pk if vazba_instance is not None else None)
+            if key in seen_in_batch:
+                raise SouborImportIntegrityError(self.value_dict.get("vazba"), nazev)
+            seen_in_batch.add(key)
         return {"nazev": nazev, "vazba": vazba_instance}
 
     @staticmethod
