@@ -21,7 +21,7 @@ from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from projekt.views import get_show_oznamovatel
 
-# CSS class used to mark sections that should remain visible in the detailed view.
+# CSS třída pro prvky zobrazované jen v plném režimu; v jednoduchém režimu (#app-wrapper.simple-view) se skryjí.
 NOT_SIMPLE_CSS_CLASS = "not-simple"
 
 
