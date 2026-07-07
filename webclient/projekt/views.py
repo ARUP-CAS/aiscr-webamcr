@@ -691,6 +691,8 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
     redis_snapshot_prefix = "projekt"
     redis_value_list_field = "ident_cely"
     vypis_app = "projekt"
+    map_enabled = True
+    map_layer = "projekt"
 
     def init_translations(self):
         """Provádí operaci init translations."""

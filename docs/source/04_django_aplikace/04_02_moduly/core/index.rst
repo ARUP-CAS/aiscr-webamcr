@@ -12,6 +12,7 @@ Dokumentace modulu core.
    views
    signals
    admin
+   filters
    widgets
    admin_sites
    authenticators

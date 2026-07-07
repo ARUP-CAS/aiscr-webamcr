@@ -1,4 +1,4 @@
-from core.views import post_ajax_get_pas_and_pian_limit
+from core.views import post_ajax_get_list_map_data, post_ajax_get_pas_and_pian_limit
 from django.urls import path
 
 from . import views
@@ -63,6 +63,11 @@ urlpatterns = [
         "mapa-pian-pas",
         post_ajax_get_pas_and_pian_limit,
         name="post_ajax_get_pas_pian_limit",
+    ),
+    path(
+        "mapa-list-data/<str:layer>",
+        post_ajax_get_list_map_data,
+        name="post_ajax_get_list_map_data",
     ),
     path("check-authentication", views.CheckUserAuthentication.as_view(), name="check_authentication"),
     path("read-temp-value", views.ReadTempValueView.as_view(), name="read_temp_value"),

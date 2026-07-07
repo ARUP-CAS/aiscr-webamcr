@@ -263,6 +263,8 @@ class Model3DListView(SearchListView):
     redis_value_list_field = "ident_cely"
     typ_zmeny_lookup = ZAPSANI_DOK
     vypis_app = "model"
+    map_enabled = True
+    map_layer = "3d"
 
     def init_translations(self):
         """Inicializuje přeložené texty pro seznam dokumentů."""
