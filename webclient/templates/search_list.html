@@ -108,6 +108,24 @@
           <div class="card app-card-form">
             <div class="card-body">
               {% crispy filter.form filter.helper %}
+              {% if map_enabled %}
+                <div class="row">
+                  <div class="col-sm-12 app-btn-show-more collapsed" data-bs-toggle="collapse"
+                       href="#mapaCollapse" role="button" aria-expanded="false" aria-controls="mapaCollapse">
+                    <span class="material-icons app-icon-expand">expand_more</span>
+                    <span class="app-divider-label">{% trans "templates.searchList.mapa.label" %}</span>
+                    <hr class="mt-0" />
+                  </div>
+                  <div id="mapaCollapse" class="collapse col-sm-12"
+                       data-map-endpoint="{{ map_data_url }}" data-map-layer="{{ map_layer }}">
+                    <div class="app-mapa-filter-map" style="height: 480px;">
+                      <div id="projectMap"></div>
+                    </div>
+                  </div>
+                </div>
+                <input type="hidden" name="geom_filter" id="geom_filter"
+                       value="{{ filter.form.geom_filter.value|default_if_none:'' }}">
+              {% endif %}
               {% for value in sort_params %}
                 <input type="hidden" name="sort" value="{{ value }}">
               {% endfor %}
@@ -215,6 +233,9 @@ $('#export-progress-modal').on('show.bs.modal', (event) => {
 })
 
 </script>
+{% if map_enabled %}
+  {% include "core/map_filter_assets.html" %}
+{% endif %}
 {% endblock %}
 {% block script2 %}
 <script>

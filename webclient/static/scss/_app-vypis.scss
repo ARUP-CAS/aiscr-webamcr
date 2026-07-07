@@ -140,13 +140,20 @@
       padding-left: 40px;
     }
 
-    .vypis-history-list {
-      margin: 0.25rem 0 0.5rem;
-      padding-left: 1.25rem;
+  }
 
-      li {
-        margin-bottom: 0.125rem;
-      }
+  #app-wrapper.simple-view {
+    .not-simple {
+      display: none !important;
+    }
+  }
+
+  .vypis-history-list {
+    margin: 0.25rem 0 0.5rem;
+    padding-left: 1.25rem;
+
+    li {
+      margin-bottom: 0.125rem;
     }
   }
 }

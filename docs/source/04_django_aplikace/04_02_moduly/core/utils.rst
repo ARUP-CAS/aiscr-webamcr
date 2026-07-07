@@ -362,6 +362,22 @@ Funkce
 
    :return: Vrací n-tici.
 
+.. py:function:: get_list_map_records_in_envelope(layer, bounds, request)
+
+   Vrací permission-filtrovaný queryset záznamů daného workflow ve výřezu mapy pro DETAILNÍ
+   zobrazení v mapovém výběru výpisu.
+
+   Aplikuje stejná oprávnění jako příslušný výpis (přes route výpisu), takže uživatel v detailu
+   uvidí jen záznamy, které smí vidět i v tabulce (role, organizace, vlastnictví, přístupnost).
+   Geometrie akce/lokality je nesena PIANy přes dokumentační jednotky.
+
+   :param layer: Identifikátor vrstvy (``"pas"`` | ``"projekt"`` | ``"akce"`` | ``"lokalita"`` | ``"3d"``).
+   :param bounds: Rohy výřezu mapy (``topLeft``/``topRight``/``bottomRight``/``bottomLeft`` s ``lat``/``lng``).
+   :param request: HTTP požadavek (kvůli uživateli a jeho oprávněním).
+
+   :return: Trojici ``(queryset, typ_prvku, název_geometrického_pole)`` nebo ``(None, None, None)``
+           pro neznámou vrstvu.
+
 .. py:function:: get_dj_akce_for_pian(pian_ident_cely, request)
 
    Funkce pro pro ziskani dj/akce pro pian_ident_cely

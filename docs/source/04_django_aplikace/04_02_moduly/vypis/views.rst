@@ -56,3 +56,6 @@ Funkce
    :param sections_data: Kolekce ``sections_data`` zpracovávaná touto funkcí.
    :param iterator: Parametr ``iterator`` ovlivňuje větvení podmínek.
    :param user: Parametr ``user`` se předává do volání ``get_permission()``, ``add_section_data()``, ovlivňuje větvení podmínek.
+
+   Poznámka: položka ``css_class`` se zpracovává zvlášť. U sekce se uloží jako metadata sekce
+   a může tak přidat CSS třídu, například ``not-simple``, která je použita v jednoduchém režimu.

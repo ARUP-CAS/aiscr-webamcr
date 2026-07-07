@@ -197,6 +197,9 @@ CORE
    * - ``post_ajax_get_pas_pian_limit``
      - ``mapa-pian-pas``
      - ``post_ajax_get_pas_and_pian_limit``
+   * - ``post_ajax_get_list_map_data``
+     - ``mapa-list-data/<str:layer>``
+     - ``post_ajax_get_list_map_data``
    * - ``check_authentication``
      - ``check-authentication``
      - ``views.CheckUserAuthentication.as_view()``
