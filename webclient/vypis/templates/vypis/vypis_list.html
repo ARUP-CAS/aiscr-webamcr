@@ -11,6 +11,7 @@
     <link type="text/x-scss" href="{% static 'theme.scss' %}" rel="stylesheet" media="print">
 {% endcompress %}
 <script src="{% static 'js/html-to-rtf-browser.js' %}"></script>
+<script src="{% static 'js/vypis-report.js' %}"></script>
 {% endblock %}
 
 {% block title %}{% trans "vypis.templates.vypis_list.index.title" %}{% endblock %}
@@ -27,11 +28,21 @@
         <h1>{{title}}</h1>
     </div>
     <div class="col-3 d-print-none align-self-center no-export">
-        <div class="float-end">
-            <button onclick="window.print()" title="{% trans 'vypis.templates.vypis_list.print.tooltip' %}">
+        <div class="float-end d-flex align-items-center gap-2">
+            <div class="form-check form-switch form-check-reverse mb-0">
+                <label class="form-check-label" for="simple-view-toggle" id="simple-view-toggle-label">
+                    {% trans 'vypis.templates.vypis.simple_view.label' %}
+                </label>
+                <input class="form-check-input" type="checkbox" id="simple-view-toggle" onchange="toggleSimpleView()"
+                    aria-label="{% trans 'vypis.templates.vypis.simple_view.label' %}"
+                    data-simple-label="{% trans 'vypis.templates.vypis.simple_view.label' %}"
+                    data-full-label="{% trans 'vypis.templates.vypis.full_view.label' %}"
+                    disabled="true">
+            </div>
+            <button onclick="window.print()" title="{% trans 'vypis.templates.vypis_list.print.tooltip' %}" disabled>
                 <span class="material-icons">print</span>
             </button>
-            <button onclick="createRtf()" title="{% trans 'vypis.templates.vypis_list.download.tooltip' %}">
+            <button onclick="createRtf()" title="{% trans 'vypis.templates.vypis_list.download.tooltip' %}" disabled>
                 <span class="material-icons">download</span>
             </button>
         </div>
@@ -94,6 +105,8 @@
                                 $('.vypisy-content').append(responses[j]);
                                 $('.vypisy-content').append("<div class='new-record'></div>");
                             }
+                            document.getElementById('simple-view-toggle').disabled = false;
+                            document.querySelectorAll('#title_row button[disabled]').forEach((button) => button.disabled = false);
                         }
                     },
                     error: function(xhr, status, error) {
@@ -117,6 +130,8 @@
                             for (let j = 0; j < responses.length; j++) {
                                 $('.vypisy-content').append(responses[j]);
                             }
+                            document.getElementById('simple-view-toggle').disabled = false;
+                            document.querySelectorAll('#title_row button[disabled]').forEach((button) => button.disabled = false);
                         }
                     }
                 });
@@ -124,34 +139,5 @@
         }
     }
     );
-
-</script>
-<script>
-    function createRtf() {    
-        const htmlContent = document.getElementById('app-wrapper').innerHTML;
-        const vypisPrefix = 'AMCR_vypis';
-        const currentDateTime = new Date();
-        const year = currentDateTime.getFullYear();
-        const month = String(currentDateTime.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-        const day = String(currentDateTime.getDate()).padStart(2, '0');
-        const hours = String(currentDateTime.getHours()).padStart(2, '0');
-        const minutes = String(currentDateTime.getMinutes()).padStart(2, '0');
-        const seconds = String(currentDateTime.getSeconds()).padStart(2, '0');
-        const formattedDate = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-        const htmlToRtfLocal = new window.htmlToRtf();
-        let rtfContent = htmlToRtfLocal.convertHtmlToRtf(htmlContent);
-        rtfContent = rtfContent.replace(/ \\\'20/g, "\\\'20");
-        // console.log(rtfContent); only for debug
-        const blob = new Blob([rtfContent], { type: 'application/rtf' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${vypisPrefix}_${formattedDate}.rtf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        // Use the htmlToRtf function to convert HTML to RTF
-        // and create a Blob URL for the RTF file
-    }  
 </script>
 {% endblock %}

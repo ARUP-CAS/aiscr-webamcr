@@ -55,6 +55,8 @@ from core.utils import (
     find_pos_with_backup,
     get_heatmap_pas,
     get_heatmap_pian,
+    get_heatmap_project,
+    get_list_map_records_in_envelope,
     get_message,
     get_pas_from_envelope,
     get_pian_from_envelope,
@@ -1552,6 +1554,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     vypis_app = "core"
     paginate_by = None
     table_pagination = {"per_page": 100}
+    map_enabled = False
+    map_layer = None  # "pas" | "projekt" | "akce" | "lokalita" | "3d"
 
     def create_export(self, export_format):
         """
@@ -1781,7 +1785,42 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["sort_params"] = self._get_sort_params()
         context["idents"] = context["table"].get_all_idents()
         context["vypis_app"] = self.vypis_app
+        context["map_enabled"] = self.map_enabled
+        context["map_layer"] = self.map_layer
+        context["map_data_url"] = (
+            reverse("core:post_ajax_get_list_map_data", args=[self.map_layer]) if self.map_enabled else ""
+        )
         return context
+
+    #: Limit pro zapnutí cacheops cache. cacheops sestavuje invalidační schéma (DNF)
+    #: jako kartézský součin hodnot napříč vícehodnotovými filtry. U hlubokých M2M
+    #: filtrů (předměty/objekty komponent) vede velký počet zvolených hodnot k milionům
+    #: konjunkcí a vyčerpání paměti (OOM) při výpočtu ``cacheops.tree.dnfs``. Pro
+    #: kombinace, jejichž součin počtů hodnot překročí tento limit, se cache vypíná.
+    cache_filter_value_product_limit = 1000
+
+    def _is_query_cacheable(self):
+        """
+        Vrací, zda je bezpečné zapnout cacheops cache pro aktuální filtr.
+
+        Spočítá součin počtů hodnot u vícehodnotových GET parametrů. Tento součin
+        odpovídá řádové velikosti invalidační DNF, kterou cacheops staví – u velkých
+        kombinací hlubokých M2M filtrů by její sestavení vyčerpalo paměť a shodilo
+        worker. Stránkovací a řadicí parametry se do součinu nezapočítávají.
+
+        :return: ``True`` pokud součin nepřekročí ``cache_filter_value_product_limit``.
+        """
+        ignored = {"page", "sort", "per_page", "csrfmiddlewaretoken"}
+        product = 1
+        for key in self.request.GET:
+            if key in ignored:
+                continue
+            count = len(self.request.GET.getlist(key))
+            if count > 1:
+                product *= count
+                if product > self.cache_filter_value_product_limit:
+                    return False
+        return True
 
     def get_queryset(self):
         """
@@ -1790,7 +1829,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         :return: Vrací proměnná ``qs``.
         """
         qs = super().get_queryset()
-        qs.cache()
+        if self._is_query_cacheable():
+            qs.cache()
         return qs
 
     @method_decorator(never_cache)
@@ -1943,6 +1983,76 @@ def post_ajax_get_pas_and_pian_limit(request):
             return JsonResponse({"heat": back, "algorithm": "heat", "count": len(heats)}, status=200)
         else:
             return JsonResponse({"heat": [], "algorithm": "heat", "count": len(heats)}, status=200)
+
+
+@login_required
+@require_http_methods(["POST"])
+def post_ajax_get_list_map_data(request, layer):
+    """
+    Funkce pohledu pro datovou vrstvu mapy v záložce filtru výpisu.
+
+    Vrací prvky daného workflow (``layer``) v aktuálním výřezu mapy ve stejném kontraktu jako
+    :func:`post_ajax_get_pas_and_pian_limit` – tj. ``{"points"|"heat", "algorithm", "count"}`` –
+    aby klient mohl znovupoužít stávající vykreslování. Nad ``LIMIT_PRVKU_ZOBRAZENI_HEATMAP`` se
+    přepíná na heatmapu. Vrstva je pouze orientační; vlastní filtrování tabulky zajišťuje
+    serverový filtr ``geom_filter``.
+
+    :param request: HTTP požadavek s tělem ``{"bounds": {...}, "zoom": int}``.
+    :param layer: Identifikátor datové vrstvy (``"pas"`` | ``"projekt"`` | ``"akce"`` | ``"lokalita"`` | ``"3d"``).
+
+        :return: Vrací výsledek volání ``JsonResponse()``.
+    """
+    try:
+        body = json.loads(request.body.decode("utf-8"))
+        bounds = body["bounds"]
+        zoom = body["zoom"]
+        params = [
+            bounds["topLeft"]["lng"],
+            bounds["bottomLeft"]["lat"],
+            bounds["bottomRight"]["lng"],
+            bounds["topRight"]["lat"],
+            zoom,
+        ]
+        base_qs, type_label, geom_field = get_list_map_records_in_envelope(layer, bounds, request)
+    except (json.JSONDecodeError, KeyError, TypeError):
+        return JsonResponse({"error": "Invalid request body"}, status=400)
+    if base_qs is None:
+        logger.warning("core.views.post_ajax_get_list_map_data.unknown_layer", extra={"layer": layer})
+        return JsonResponse({"points": [], "algorithm": "detail", "count": 0}, status=200)
+
+    points_qs = base_qs.values("ident_cely", type=Value(type_label)).annotate(geom=AsWKT(geom_field))
+    num = points_qs.count()
+
+    if layer == "3d" or num < LIMIT_PRVKU_ZOBRAZENI_HEATMAP:
+        return JsonResponse({"points": list(points_qs), "algorithm": "detail", "count": num}, status=200)
+
+    if layer == "pas":
+        heats = get_heatmap_pas(*params)
+        back = [
+            {"id": str(cid), "pocet": heat["count"], "geom": heat["geometry"].replace(", ", ",")}
+            for cid, heat in enumerate(heats, start=1)
+        ]
+    elif layer in ("akce", "lokalita"):
+        heats = get_heatmap_pian(*params)
+        back = [
+            {"id": str(cid), "pocet": heat["count"], "geom": heat["geometry"].replace(", ", ",")}
+            for cid, heat in enumerate(heats, start=1)
+        ]
+    else:  # projekt
+        lngs = [bounds[c]["lng"] for c in ("topLeft", "topRight", "bottomRight", "bottomLeft")]
+        lats = [bounds[c]["lat"] for c in ("topLeft", "topRight", "bottomRight", "bottomLeft")]
+        west, east = min(lngs), max(lngs)
+        south, north = min(lats), max(lats)
+        heats = get_heatmap_project(east, north, west, south, zoom) or []
+        back = [
+            {
+                "id": str(cid),
+                "pocet": heat["pocet"],
+                "geom": "POINT({} {})".format(*json.loads(heat["geom_geojson"])["coordinates"]),
+            }
+            for cid, heat in enumerate(heats, start=1)
+        ]
+    return JsonResponse({"heat": back, "algorithm": "heat", "count": len(back)}, status=200)
 
 
 def check_soubor_vazba(typ_vazby, ident, id_zaznamu):

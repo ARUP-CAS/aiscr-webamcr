@@ -141,7 +141,7 @@ services:
     entrypoint: ["/bin/sh", "/docker-entrypoint.d/celery_exporter_entrypoint.sh"]
 
   grafana:
-    image: grafana/grafana-enterprise:13.0
+    image: grafana/grafana-enterprise:13.1
     restart: always
     depends_on:
       - prometheus
@@ -230,7 +230,7 @@ services:
       - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
 
   selenium:
-    image: selenium/standalone-chromium:148.0
+    image: selenium/standalone-chromium:149.0
     ports:
       - 4444:4444
       - 7900:7900

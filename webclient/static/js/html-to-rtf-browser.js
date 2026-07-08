@@ -9155,7 +9155,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 {
                     opening: 'ul',
-                    openingRtf: '{{\\*\\pn\\pnlvlblt\\pnf1\\pnindent0{\\pntxtb\\\'B7}}\\fi-360\\li720\\sa200\\sl276\\slmult1\\lang22\\f0\\fs22',
+                    openingRtf: '{{\\*\\pn\\pnlvlblt\\pnf1\\pnindent0{\\pntxtb\\\'B7}}\\fi-360\\li720\\sa0\\sb0\\sl276\\slmult1\\lang22\\f0\\fs22',
                     closing: '/ul',
                     closingRtf: '}'
                 },

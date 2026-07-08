@@ -149,6 +149,31 @@ Třídy
       :return: Vrací proměnná ``extra``.
 
 
+.. py:class:: EmailPotvrzenFilter
+
+   Filtr podle toho, zda uživatel potvrdil svůj email aktivačním odkazem.
+
+   **Metody:**
+
+   .. py:method:: lookups()
+
+      Vrací volby filtru.
+
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``lookups``.
+      :param model_admin: Instance administrace modelu, ke které filtr náleží.
+
+      :return: Vrací n-tici dvojic (hodnota, popisek).
+
+   .. py:method:: queryset()
+
+      Vyfiltruje queryset podle zvolené hodnoty.
+
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``queryset``.
+      :param queryset: Vstupní queryset, který se má vyfiltrovat.
+
+      :return: Vrací vyfiltrovaný queryset, nebo původní queryset, pokud není volba zvolena.
+
+
 .. py:class:: CustomUserAdmin
 
    Admin panel pro správu uživatele.

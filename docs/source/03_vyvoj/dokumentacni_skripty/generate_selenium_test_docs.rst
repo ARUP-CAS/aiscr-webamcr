@@ -83,11 +83,33 @@ Funkce
 
    Vyhledá Python soubory se Selenium testy v repozitáři.
 
-   Hledá `test_selenium.py` v adresářích obsahujících segment `tests` a ignoruje
-   typické „šumové“ adresáře (venv, node_modules, …).
+   Hledá `test_selenium.py` v adresářích obsahujících segment `tests`.
+
+   Primárně se ptá gitu (`git ls-files`), který zná jen sledované soubory a
+   odpoví okamžitě. Když git selže (skript běží mimo git repozitář), spadne se
+   na rekurzivní procházení (`rglob`).
+
+   :param root: Parametr ``root`` slouží jako vstup pro hledání souborů.
+   :return: Vrací hodnotu typu ``List[Path]`` (výsledek volání ``sorted()``).
+
+.. py:function:: _git_tracked_test_files(root)
+
+   Vrátí sledované soubory `test_selenium.py` v adresářích `tests` přes git.
+
+   Když git není dostupný nebo `root` není git repozitář, vrátí `None`
+   (volající pak použije fallback přes procházení stromu).
+
+   :param root: Parametr ``root`` předává se do volání ``subprocess.run()``.
+   :return: Vrací seznam cest, nebo `None`, pokud git nelze použít.
+
+.. py:function:: _walk_test_files(root)
+
+   Fallback hledání `test_selenium.py` přes rekurzivní procházení (`rglob`).
+
+   Ignoruje typické „šumové“ adresáře (venv, node_modules, …).
 
    :param root: Parametr ``root`` pracuje se s atributy ``rglob``.
-   :return: Vrací hodnotu typu ``List[Path]`` (výsledek volání ``sorted()``).
+   :return: Vrací hodnotu typu ``List[Path]`` (seznam nalezených cest).
 
 .. py:function:: _get_app_name(file_path)
 

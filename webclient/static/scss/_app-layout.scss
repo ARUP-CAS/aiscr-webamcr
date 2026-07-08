@@ -59,7 +59,7 @@ body {
 
 #app-page-wrapper {
   @media (min-width: 768px) {
-    min-width: calc(100vh - 300px);
+    min-width: 0;
   }
 
   width: 100%;
@@ -162,6 +162,57 @@ body {
       >.form-group.col-lg-6 {
         flex: 0 0 100%;
         max-width: 100%;
+      }
+    }
+  }
+}
+
+.model-coor-layout {
+  container-name: model-coor;
+  container-type: inline-size;
+}
+
+.model-coor-left {
+  container-name: model-coor-left;
+  container-type: inline-size;
+}
+
+@container model-coor (min-width: 751px) {
+  .model-coor-layout {
+
+    >.model-coor-left {
+      flex: 0 1 clamp(250px, 20%, 300px);
+      min-width: 250px;
+      max-width: 300px;
+    }
+
+    >.model-coor-right {
+      flex: 1 1 420px;
+      min-width: 420px;
+      max-width: none;
+    }
+  }
+}
+
+@container model-coor (max-width: 750.98px) {
+  .model-coor-layout {
+
+    >.model-coor-left,
+    >.model-coor-right {
+      flex: 0 0 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
+  }
+}
+
+@container model-coor-left (min-width: 360px) {
+  .model-coor-left {
+    >.row {
+
+      >div {
+        flex: 0 0 50%;
+        max-width: 50%;
       }
     }
   }

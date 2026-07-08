@@ -72,6 +72,7 @@ core,data-import-stop/<str:job_id>,,X,X,X,X,*,X,X,X,*,X,X,X,*,X,X,X,*,
 core,delete-temp-value,,X,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,
 core,check-authentication,,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,
 core,id/<str:ident_cely>,,X,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,
+core,mapa-list-data/<str:layer>,,X,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,
 core,mapa-pian-pas,mapa_pas,X,*,*,*,*,* | SN4,* | SN4,*,*,SN.my | *,SN.ours | *,*,*,* | SN (my),* | SN (ours),*,*,
 core,mapa-pian-pas,mapa_pian,X,*,*,*,*,* | PI2,* | PI2,*,*,PI.my | *,PI.ours | *,*,*,* | PI (my),* | PI (ours),*,*,
 core,metrics,,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,zavřít mimo localhost
