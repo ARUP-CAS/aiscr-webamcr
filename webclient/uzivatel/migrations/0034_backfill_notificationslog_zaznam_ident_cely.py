@@ -35,7 +35,7 @@ def backfill_zaznam_ident_cely(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("uzivatel", "0033_notificationslog_zaznam_ident_cely"),
+        ("uzivatel", "0033_notificationslog_zaznam_ident_cely_and_more"),
     ]
 
     operations = [
