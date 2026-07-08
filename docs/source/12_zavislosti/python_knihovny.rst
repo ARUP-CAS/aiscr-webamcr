@@ -140,15 +140,15 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Mozilla Public License 2.0 (MPL 2.0)
      - https://github.com/certifi/python-certifi
    * - cffi
-     - 2.0.0
-     - MIT
+     - 2.1.0
+     - MIT-0
      - https://cffi.readthedocs.io/en/latest/whatsnew.html
    * - cfgv
      - 3.5.0
      - MIT
      - https://github.com/asottile/cfgv
    * - charset-normalizer
-     - 3.4.7
+     - 3.4.9
      - MIT
      - https://github.com/jawah/charset_normalizer/blob/master/CHANGELOG.md
    * - click
@@ -224,7 +224,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/django-crispy-forms/django-crispy-forms
    * - django-debug-toolbar
-     - 6.3.0
+     - 7.0.0
      - BSD License
      - https://github.com/django-commons/django-debug-toolbar
    * - django-debug-toolbar-template-profiler
@@ -312,7 +312,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.29.4
+     - 3.29.7
      - MIT
      - https://github.com/tox-dev/py-filelock
    * - freezegun
@@ -372,7 +372,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.5.0
+     - 2.5.1
      - BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
      - https://numpy.org
    * - odfpy
@@ -492,7 +492,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.4.2
+     - 1.4.3
      - MIT License
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
@@ -524,7 +524,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/redis/redis-py
    * - reportlab
-     - 4.5.1
+     - 5.0.0
      - BSD License
      - https://www.reportlab.com/
    * - requests
@@ -600,8 +600,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - http://sphinx-doc.org/
    * - sphinxcontrib-mermaid
-     - 2.0.2
-     - BSD License
+     - 2.0.3
+     - BSD-2-Clause
      - https://github.com/mgaitan/sphinxcontrib-mermaid
    * - sphinxcontrib-qthelp
      - 2.0.0
@@ -640,7 +640,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-trio/trio-websocket
    * - typing_extensions
-     - 4.15.0
+     - 4.16.0
      - PSF-2.0
      - https://github.com/python/typing_extensions
    * - tzdata
@@ -648,7 +648,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache-2.0
      - https://github.com/python/tzdata
    * - tzlocal
-     - 5.4.3
+     - 5.4.4
      - MIT
      - https://github.com/regebro/tzlocal/blob/master/CHANGES.txt
    * - uWSGI
@@ -664,11 +664,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.5.1
+     - 21.6.0
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
-     - 0.8.1
+     - 0.8.2
      - MIT
      - https://github.com/jquast/wcwidth
    * - websocket-client
