@@ -110,6 +110,8 @@ Třídy
 
       :param label: Textový název nebo klíč ``label`` používaný v rámci operace.
       :param accessor: Parametr ``accessor`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param css_class: Volitelný název CSS třídy používaný pro vykreslení pole v šabloně.
+          Stejný klíč lze použít i na úrovni sekce, kde se uloží jako metadata sekce.
 
    .. py:method:: __repr__()
 
@@ -142,6 +144,12 @@ Třídy
 
       :return: Vrací atribut objektu.
 
+   .. py:method:: get_css_class()
+
+      Vrací název CSS třídy pro pole.
+
+      :return: Vrací atribut ``css_class`` obsahující název CSS třídy.
+
 
 .. py:class:: SouborField
 
@@ -156,6 +164,7 @@ Třídy
       :param label: Textový název nebo klíč ``label`` používaný v rámci operace.
       :param accessor: Parametr ``accessor`` se předává do volání ``__init__()``.
       :param key_name: Textový název nebo klíč ``key_name`` používaný v rámci operace.
+      :param css_class: Volitelný CSS třídní řetězec pro použití v šabloně.
 
    .. py:method:: get_value()
 
@@ -276,6 +285,7 @@ Třídy
       :param name: Parametr ``name`` předává se do volání ``__init__()``.
       :param accessor: Parametr ``accessor`` se předává do volání ``__init__()``.
       :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
+      :param css_class: Volitelný CSS třídní řetězec pro použití v šabloně.
 
    .. py:method:: get_value()
 
@@ -462,6 +472,7 @@ Třídy
       :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
       :param template_name: Parametr ``template_name`` slouží jako vstup pro logiku funkce ``__init__``.
       :param model_name: Název modelu používaný pro cílení operace.
+      :param css_class: Volitelný CSS třídní řetězec pro použití v šabloně.
 
    .. py:method:: get_related_manager()
 

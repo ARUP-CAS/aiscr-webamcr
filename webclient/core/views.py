@@ -2006,17 +2006,16 @@ def post_ajax_get_list_map_data(request, layer):
         body = json.loads(request.body.decode("utf-8"))
         bounds = body["bounds"]
         zoom = body["zoom"]
+        params = [
+            bounds["topLeft"]["lng"],
+            bounds["bottomLeft"]["lat"],
+            bounds["bottomRight"]["lng"],
+            bounds["topRight"]["lat"],
+            zoom,
+        ]
+        base_qs, type_label, geom_field = get_list_map_records_in_envelope(layer, bounds, request)
     except (json.JSONDecodeError, KeyError, TypeError):
         return JsonResponse({"error": "Invalid request body"}, status=400)
-    params = [
-        bounds["topLeft"]["lng"],
-        bounds["bottomLeft"]["lat"],
-        bounds["bottomRight"]["lng"],
-        bounds["topRight"]["lat"],
-        zoom,
-    ]
-
-    base_qs, type_label, geom_field = get_list_map_records_in_envelope(layer, bounds, request)
     if base_qs is None:
         logger.warning("core.views.post_ajax_get_list_map_data.unknown_layer", extra={"layer": layer})
         return JsonResponse({"points": [], "algorithm": "detail", "count": 0}, status=200)
