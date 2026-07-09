@@ -21,6 +21,9 @@ from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from projekt.views import get_show_oznamovatel
 
+# CSS třída pro prvky zobrazované jen v plném režimu; v jednoduchém režimu (#app-wrapper.simple-view) se skryjí.
+NOT_SIMPLE_CSS_CLASS = "not-simple"
+
 
 def get_model(name):
     """
@@ -155,13 +158,13 @@ class SectionNameWithAccessor(SimpleSectionTemplateName):
         if self.foreign_key:
             if getattr(instance, self.foreign_key):
                 return format_html(
-                    "<div>{}&nbsp;{}</div>",
+                    "{}&nbsp;{}",
                     self.name,
                     mark_safe(getattr(getattr(instance, self.foreign_key), self.accessor)),
                 )
             else:
                 return None
-        return format_html("<div>{}&nbsp;{}</div>", self.name, mark_safe(getattr(instance, self.accessor)))
+        return format_html("{}&nbsp;{}", self.name, mark_safe(getattr(instance, self.accessor)))
 
 
 class PianSectionNameWithAccessor(SectionNameWithAccessor):
@@ -208,15 +211,18 @@ class OznamovatelSectionNameWithAccessor(SectionNameWithAccessor):
 class Field:
     """Implementuje komponentu ``Field`` v rámci aplikace."""
 
-    def __init__(self, label, accessor):
+    def __init__(self, label, accessor, css_class=""):
         """
         Inicializuje instanci třídy.
 
         :param label: Textový název nebo klíč ``label`` používaný v rámci operace.
         :param accessor: Parametr ``accessor`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param css_class: Volitelný název CSS třídy používaný pro vykreslení pole v šabloně.
+            Stejný klíč lze použít i na úrovni sekce, kde se uloží jako metadata sekce.
         """
         self.label = label
         self.accessor = accessor
+        self.css_class = css_class
 
     def __repr__(self):
         """
@@ -262,19 +268,28 @@ class Field:
         """
         return self.label
 
+    def get_css_class(self):
+        """
+        Vrací název CSS třídy pro pole.
+
+        :return: Vrací atribut ``css_class`` obsahující název CSS třídy.
+        """
+        return self.css_class
+
 
 class SouborField(Field):
     """Implementuje komponentu ``SouborField`` v rámci aplikace."""
 
-    def __init__(self, label, accessor, key_name):
+    def __init__(self, label, accessor, key_name, css_class=""):
         """
         Inicializuje instanci třídy.
 
         :param label: Textový název nebo klíč ``label`` používaný v rámci operace.
         :param accessor: Parametr ``accessor`` se předává do volání ``__init__()``.
         :param key_name: Textový název nebo klíč ``key_name`` používaný v rámci operace.
+        :param css_class: Volitelný CSS třídní řetězec pro použití v šabloně.
         """
-        super().__init__(label, accessor)
+        super().__init__(label, accessor, css_class=css_class)
         self.key_name = key_name
 
     def get_value(self, instance, user=None):
@@ -415,15 +430,16 @@ class ZjisteniField(Field):
 class ForeignField(Field):
     """Implementuje komponentu ``ForeignField`` v rámci aplikace."""
 
-    def __init__(self, name, accessor, foreign_key):
+    def __init__(self, name, accessor, foreign_key, css_class=""):
         """
         Inicializuje instanci třídy.
 
         :param name: Parametr ``name`` předává se do volání ``__init__()``.
         :param accessor: Parametr ``accessor`` se předává do volání ``__init__()``.
         :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
+        :param css_class: Volitelný CSS třídní řetězec pro použití v šabloně.
         """
-        super().__init__(name, accessor)
+        super().__init__(name, accessor, css_class=css_class)
         self.foreign_key = foreign_key
 
     def get_value(self, instance, user=None):
@@ -659,7 +675,7 @@ class ForeignDoubleFieldNum(ForeignField):
 class RepeatableField(ForeignField):
     """Implementuje komponentu ``RepeatableField`` v rámci aplikace."""
 
-    def __init__(self, name, accessor, foreign_key, template_name=None, model_name=None):
+    def __init__(self, name, accessor, foreign_key, template_name=None, model_name=None, css_class=""):
         """
         Inicializuje instanci třídy.
 
@@ -668,8 +684,9 @@ class RepeatableField(ForeignField):
         :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
         :param template_name: Parametr ``template_name`` slouží jako vstup pro logiku funkce ``__init__``.
         :param model_name: Název modelu používaný pro cílení operace.
+        :param css_class: Volitelný CSS třídní řetězec pro použití v šabloně.
         """
-        super().__init__(name, accessor, foreign_key)
+        super().__init__(name, accessor, foreign_key, css_class=css_class)
         self.template_name = template_name
         self.model_name = model_name
 
@@ -894,19 +911,21 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
         """
         if len(self.accessor) > 2:
             new_name = format_html(
-                "<div>{}&nbsp;{}&nbsp;-&nbsp;{}</div>",
+                "<span class='ps-0'>{}&nbsp;{}&nbsp;-&nbsp;{}</span>",
                 self.name,
                 mark_safe(getattr(instance, self.accessor[0])),
                 mark_safe(getattr(instance, self.accessor[1])),
             )
         else:
             new_name = format_html(
-                "<div>{}&nbsp;{}</div>",
+                "<span class='ps-0'>{}&nbsp;{}</span>",
                 self.name,
                 mark_safe(getattr(instance, self.accessor[0])),
             )
         if getattr(instance, self.accessor[-1]):
-            return format_html("{} ({})", new_name, mark_safe(getattr(instance, self.accessor[-1])))
+            return format_html(
+                "<span class='ps-0'>{} ({})</span>", new_name, mark_safe(getattr(instance, self.accessor[-1]))
+            )
         return new_name
 
 
@@ -934,10 +953,10 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
 
             :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``new_name``.
         """
-        new_name = f"<div>{self.name} {getattr(instance, self.accessor[0])}</div>"
+        new_name = format_html("<span class='ps-0'>{}&nbsp;{}</span>", self.name, getattr(instance, self.accessor[0]))
         if getattr(instance, self.accessor[-1]):
             return format_html(
-                "{}<div class='mime-type' style='white-space: pre;'> ({})</div>",
+                "<span class='ps-0'>{}<div class='mime-type' style='white-space: pre;'> ({})</div></span>",
                 new_name,
                 mark_safe(getattr(instance, self.accessor[-1])),
             )
@@ -978,7 +997,7 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
         if aktivity:
             third_part = f"&nbsp;({';&nbsp;'.join([str(a) for a in aktivity])})"
         return format_html(
-            "<div>{}&nbsp;{}&nbsp;-&nbsp;{}{}&nbsp;-&nbsp;{}{}</div>",
+            "<span class='ps-0'>{}&nbsp;{}&nbsp;-&nbsp;{}{}&nbsp;-&nbsp;{}{}</span>",
             self.name,
             mark_safe(getattr(instance, self.accessor[0])),
             obdobi,
@@ -1054,6 +1073,7 @@ def get_historie_config(label_key):
     return {
         "section_name": SimpleSectionTemplateName(label_key),
         "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
+        "css_class": SimpleSectionTemplateName(NOT_SIMPLE_CSS_CLASS),
         "historie": HistorieRepeatableField(
             label_key,
             ["datum_zmeny", "uzivatel_protected", "get_typ_zmeny_display", "poznamka"],
