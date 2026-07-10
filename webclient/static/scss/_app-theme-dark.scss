@@ -90,6 +90,26 @@ body.app-dark-theme {
                     color: lighten($primary-dark, 10);
                 }
             }
+
+            .app-footer-logos-wrapper {
+                .app-footer-logo:not(.app-logo-re3) {
+                    filter: brightness(0) invert(1);
+                    opacity: .65;
+                }
+
+                .app-logo-re3 {
+                    filter: none;
+                    opacity: 1;
+                }
+            }
+
+            .app-footer-icon-link {
+                color: rgba($white-dark, .65);
+
+                &:hover {
+                    color: rgba($white-dark, .85);
+                }
+            }
         }
 
     }

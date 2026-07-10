@@ -393,16 +393,57 @@
 
 {% block footer %}
   <footer class="text-lg-start">
-    <div class="d-lg-flex justify-content-lg-between p-3 app-footer-wrapper">
-      <div>
-        <a href="#" class="text-uppercase" data-bs-toggle="modal" data-bs-target="#footerLicence">{% trans "templates.baseLogedIn.footer.licence" %}</a><span class="app-pipe"></span><!--
-        --><a href="#" class="text-uppercase" data-bs-toggle="modal" data-bs-target="#footerKontakt">{% trans "templates.baseLogedIn.footer.kontakt" %}</a><span class="app-pipe"></span><!--
-        --><a href="#" class="text-uppercase" data-bs-toggle="modal" data-bs-target="#footerPartneri">{% trans "templates.baseLogedIn.footer.partneri" %}</a><span class="app-pipe"></span><!--
-        --><a href="https://amcr-help.aiscr.cz/" class="text-uppercase" target="_blank">{% trans "templates.baseLogedIn.footer.napoveda" %}</a>
+    <div class="app-footer-wrapper">
+      <div class="app-footer-logos-wrapper">
+        <a href="https://www.re3data.org/repository/r3d100013576" title="{% trans 'templates.baseLogedIn.footer.logo.re3' %}" target="_blank" rel="noopener noreferrer">
+          <img src="{% static 'img/footer/logo-re3.png' %}" alt="{% trans 'templates.baseLogedIn.footer.logo.re3' %}" class="app-footer-logo app-logo-re3" />
+        </a>
+        <a href="https://opjak.cz/" title="{% trans 'templates.baseLogedIn.footer.logo.eu' %}" target="_blank" rel="noopener noreferrer">
+          <img src="{% static 'img/footer/logo-eu.png' %}" alt="{% trans 'templates.baseLogedIn.footer.logo.eu' %}" class="app-footer-logo app-logo-eu" />
+        </a>
+        <a href="https://msmt.gov.cz/" title="{% trans 'templates.baseLogedIn.footer.logo.msmt' %}" target="_blank" rel="noopener noreferrer">
+          <img src="{% static 'img/footer/logo-msmt.png' %}" alt="{% trans 'templates.baseLogedIn.footer.logo.msmt' %}" class="app-footer-logo app-logo-msmt" />
+        </a>
+        <a href="https://www.avcr.cz/" title="{% trans 'templates.baseLogedIn.footer.logo.avcr' %}" target="_blank" rel="noopener noreferrer">
+          <img src="{% static 'img/footer/logo-avcr.png' %}" alt="{% trans 'templates.baseLogedIn.footer.logo.avcr' %}" class="app-footer-logo app-logo-avcr" />
+        </a>
+        <a href="https://www.arub.cz/" title="{% trans 'templates.baseLogedIn.footer.logo.arub' %}" target="_blank" rel="noopener noreferrer">
+          <img src="{% static 'img/footer/logo-arub.png' %}" alt="{% trans 'templates.baseLogedIn.footer.logo.arub' %}" class="app-footer-logo app-logo-arub" />
+        </a>
+        <a href="https://www.arup.cas.cz/" title="{% trans 'templates.baseLogedIn.footer.logo.aru' %}" target="_blank" rel="noopener noreferrer">
+          <img src="{% static 'img/footer/logo-aru.png' %}" alt="{% trans 'templates.baseLogedIn.footer.logo.aru' %}" class="app-footer-logo app-logo-aru" />
+        </a>
+        <a href="https://www.aiscr.cz/" title="{% trans 'templates.baseLogedIn.footer.logo.ais' %}" target="_blank" rel="noopener noreferrer">
+          <img src="{% static 'img/footer/logo-ais.png' %}" alt="{% trans 'templates.baseLogedIn.footer.logo.ais' %}" class="app-footer-logo app-logo-ais" />
+        </a>
+        <a href="https://www.vyzkumne-infrastruktury.cz/" title="{% trans 'templates.baseLogedIn.footer.logo.vvi' %}" target="_blank" rel="noopener noreferrer">
+          <img src="{% static 'img/footer/logo-vvi.png' %}" alt="{% trans 'templates.baseLogedIn.footer.logo.vvi' %}" class="app-footer-logo app-logo-vvi" />
+        </a>
       </div>
-      <div>
-        <small>
-          {% trans "templates.baseLogedIn.footer.copyright" %} YYYY <span class="app-pipe"></span><a href="https://github.com/ARUP-CAS/aiscr-webamcr/releases/tag/v1.0.0">{% trans "templates.baseLogedIn.footer.verze" %}: 1.0.0</a>
+
+      <div class="app-footer-info-wrapper">
+        <small class="app-footer-info-item">{% trans "templates.baseLogedIn.footer.copyright" %} YYYY</small>
+        <span class="app-pipe"></span>
+        <span class="app-footer-info-item">
+          <span>{% trans "templates.baseLogedIn.footer.kontakt" %}</span>
+          <a href="#" class="app-footer-icon-link" data-bs-toggle="modal" data-bs-target="#footerKontakt" title="{% trans 'templates.baseLogedIn.footer.kontakt' %}" aria-label="{% trans 'templates.baseLogedIn.footer.kontakt' %}">
+            <span class="material-icons" aria-hidden="true">info</span>
+          </a>
+        </span>
+        <span class="app-pipe"></span>
+        <a href="https://amcr-help.aiscr.cz/" class="app-footer-info-item" target="_blank" rel="noopener noreferrer">{% trans "templates.baseLogedIn.footer.napoveda" %}</a>
+        <span class="app-pipe"></span>
+        <span class="app-footer-info-item app-footer-licence">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0/" title="{% trans 'templates.baseLogedIn.footer.licence' %}" target="_blank" rel="noopener noreferrer">
+            <img src="{% static 'img/footer/logo-cc.png' %}" alt="{% trans 'templates.baseLogedIn.footer.licence' %}" class="app-logo-cc" />
+          </a>
+          <a href="#" class="app-footer-icon-link" data-bs-toggle="modal" data-bs-target="#footerLicence" title="{% trans 'templates.baseLogedIn.footer.licence' %}" aria-label="{% trans 'templates.baseLogedIn.footer.licence' %}">
+            <span class="material-icons" aria-hidden="true">info</span>
+          </a>
+        </span>
+        <span class="app-pipe"></span>
+        <small class="app-footer-info-item">
+          <a href="https://github.com/ARUP-CAS/aiscr-webamcr/releases/tag/v1.0.0">{% trans "templates.baseLogedIn.footer.verze" %}: 1.0.0</a>
         </small>
       </div>
     </div>
@@ -410,7 +451,6 @@
 
   {% include "footer_licence.html" %}
   {% include "footer_kontakt.html" %}
-  {% include "footer_partneri.html" %}
 {% endblock %}
 
 {% block script_sidebar %}
