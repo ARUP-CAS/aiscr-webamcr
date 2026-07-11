@@ -6,6 +6,8 @@ Archive multiple completed changes in a single operation.
 
 This skill allows you to batch-archive changes, handling spec conflicts intelligently by checking the codebase to determine what's actually implemented.
 
+**Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`). Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
+
 **Input**: None required (prompts for selection)
 
 **Steps**
@@ -30,14 +32,14 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
    For each selected change, collect:
 
    a. **Artifact status** - Run `openspec status --change "<name>" --json`
-      - Parse `schemaName` and `artifacts` list
+      - Parse `schemaName`, `artifacts`, `planningHome`, `changeRoot`, `artifactPaths`, and `actionContext`
       - Note which artifacts are `done` vs other states
 
-   b. **Task completion** - Read `openspec/changes/<name>/tasks.md`
+   b. **Task completion** - Read `artifactPaths.tasks.existingOutputPaths` from status JSON
       - Count `- [ ]` (incomplete) vs `- [x]` (complete)
       - If no tasks file exists, note as "No tasks"
 
-   c. **Delta specs** - Check `openspec/changes/<name>/specs/` directory
+   c. **Delta specs** - Check `artifactPaths.specs.existingOutputPaths` from status JSON
       - List which capability specs exist
       - For each, extract requirement names (lines matching `### Requirement: <name>`)
 
@@ -120,8 +122,8 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
 
    b. **Perform the archive**:
       ```bash
-      mkdir -p openspec/changes/archive
-      mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
+      mkdir -p "<planningHome.changesDir>/archive"
+      mv "<changeRoot>" "<planningHome.changesDir>/archive/YYYY-MM-DD-<name>"
       ```
 
    c. **Track outcome** for each change:

@@ -2,7 +2,9 @@
 """Validate artifacts produced by the AIS CR codebase-review workflow.
 
 The script uses only the Python standard library and works with repositories
-that provide an ``.agents/`` tree and ``review_config.yaml``.
+that provide an ``.agents/`` tree and ``review_config.toml``. Structured input is
+parsed with ``tomllib`` and ``json``; no machine-read field is recovered by matching
+Markdown prose. Requires Python 3.11 or newer.
 
 Usage:
 
@@ -12,6 +14,8 @@ Usage:
     python review_tools.py id-inventory       # inventory IDs across artifacts
     python review_tools.py lint-artifacts     # validate artifact structure
     python review_tools.py prompt-evolution   # inventory workflow-evolution evidence
+    python review_tools.py render             # regenerate the Markdown twins
+    python review_tools.py render --check     # fail when a Markdown twin is stale
     python review_tools.py repo-structure     # report repository statistics
     python review_tools.py status             # show review workflow status
     python review_tools.py all                # run every check
@@ -34,211 +38,92 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-
-def _yaml_scalar(s: str):
-    """Convert a simple YAML scalar to its Python value."""
-    s = s.strip()
-    if not s or s in ("~", "null", "Null"):
-        return None
-    if s in ("true", "True"):
-        return True
-    if s in ("false", "False"):
-        return False
-    if len(s) >= 2 and s[0] in ('"', "'") and s[-1] == s[0]:
-        return s[1:-1]
-    if s.startswith("[") and s.endswith("]"):
-        return [_yaml_scalar(x) for x in s[1:-1].split(",") if x.strip()]
-    try:
-        return int(s)
-    except ValueError:
-        return s
+try:  # ``tomllib`` is standard library from Python 3.11 onward.
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - exercised on unsupported interpreters
+    tomllib = None  # type: ignore[assignment] # pylint: disable=invalid-name
 
 
-def _yaml_strip_comment(s: str) -> str:
-    """Remove an unquoted trailing comment from a YAML line."""
-    in_quote = None
-    for i, c in enumerate(s):
-        if c in ('"', "'"):
-            if in_quote == c:
-                in_quote = None
-            elif in_quote is None:
-                in_quote = c
-        elif c == "#" and in_quote is None and (i == 0 or s[i - 1] == " "):
-            return s[:i].rstrip()
-    return s
+MIN_PYTHON = (3, 11)
+
+#: Findings-source schema versions this engine understands.
+FINDINGS_SCHEMA_VERSIONS = frozenset({"1"})
+
+SEVERITIES = ("Critical", "High", "Medium", "Low")
+PRIORITIES = ("High", "Medium", "Low")
+EFFORTS = ("S", "M", "L", "XL")
+
+#: A bug of severity X reconciles to backlog priority SEVERITY_TO_PRIORITY[X]
+#: unless the bug entry documents a deliberate divergence.
+SEVERITY_TO_PRIORITY = {
+    "Critical": "High",
+    "High": "High",
+    "Medium": "Medium",
+    "Low": "Low",
+}
 
 
-def _yaml_indent(line: str) -> int:
-    """Return the leading-space indentation of a YAML line."""
-    return len(line) - len(line.lstrip())
+class ReviewDataError(Exception):
+    """A structured review artifact could not be read or is malformed."""
 
 
-def _load_yaml(path: Path) -> dict:
-    """Load the supported YAML subset without third-party dependencies."""
+def require_supported_python() -> None:
+    """Fail with an explicit version message instead of a ``tomllib`` traceback."""
+    if tomllib is None or sys.version_info < MIN_PYTHON:
+        current = ".".join(str(part) for part in sys.version_info[:3])
+        raise SystemExit(
+            f"review_tools.py requires Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]} or newer "
+            f"(found {current}); it reads TOML with the standard-library tomllib module."
+        )
+
+
+def _load_toml(path: Path) -> dict:
+    """Load a TOML document, returning an empty mapping when the file is absent."""
+    require_supported_python()
     if not path.exists():
         return {}
-    text = path.read_text(encoding="utf-8")
-    lines = text.splitlines()
-    result, _ = _yaml_map(lines, 0, -1)
-    return result
+    try:
+        with path.open("rb") as handle:
+            return tomllib.load(handle)
+    except tomllib.TOMLDecodeError as exc:
+        raise ReviewDataError(f"Invalid TOML in {path.name}: {exc}") from exc
 
 
-def _yaml_map(lines: list[str], pos: int, parent_indent: int) -> tuple[dict, int]:
-    """Parse a YAML mapping block and return its data and next position."""
-    result: dict = {}
-    block_indent: int | None = None
-    while pos < len(lines):
-        raw = lines[pos]
-        stripped = raw.lstrip()
-        if not stripped or stripped.startswith("#"):
-            pos += 1
-            continue
-        indent = _yaml_indent(raw)
-        if block_indent is None:
-            if indent <= parent_indent:
-                break
-            block_indent = indent
-        if indent < block_indent:
-            break
-        if indent > block_indent or stripped.startswith("- "):
-            pos += 1
-            continue
-        if ":" not in stripped:
-            pos += 1
-            continue
-        ci = stripped.index(":")
-        key = stripped[:ci].strip()
-        rest = _yaml_strip_comment(stripped[ci + 1 :]).strip()
-        if rest in ("", ">", "|"):
-            npos = pos + 1
-            while npos < len(lines):
-                ns = lines[npos].lstrip()
-                if ns and not ns.startswith("#"):
-                    break
-                npos += 1
-            if npos >= len(lines) or _yaml_indent(lines[npos]) <= indent:
-                result[key] = "" if rest != ">" else ""
-                pos = npos
-            elif rest == ">":
-                mlines: list[str] = []
-                while npos < len(lines):
-                    ns = lines[npos].lstrip()
-                    if not ns:
-                        npos += 1
-                        continue
-                    if _yaml_indent(lines[npos]) <= indent:
-                        break
-                    mlines.append(ns)
-                    npos += 1
-                result[key] = " ".join(mlines)
-                pos = npos
-            else:
-                ns = lines[npos].lstrip()
-                if ns.startswith("- "):
-                    val, pos = _yaml_seq(lines, npos, indent)
-                else:
-                    val, pos = _yaml_map(lines, npos, indent)
-                result[key] = val
-        elif rest.startswith("[") and rest.endswith("]"):
-            result[key] = [_yaml_scalar(x) for x in rest[1:-1].split(",") if x.strip()]
-            pos += 1
-        else:
-            result[key] = _yaml_scalar(rest)
-            pos += 1
-    return result, pos
+def _check_schema_version(data: dict, path: Path) -> None:
+    """Reject a findings source whose schema version this engine does not know."""
+    declared = data.get("schema_version")
+    if declared is None:
+        raise ReviewDataError(f"{path.name}: missing 'schema_version'")
+    if str(declared) not in FINDINGS_SCHEMA_VERSIONS:
+        known = ", ".join(sorted(FINDINGS_SCHEMA_VERSIONS))
+        raise ReviewDataError(f"{path.name}: unrecognized schema_version '{declared}' (known: {known})")
 
 
-def _yaml_seq(lines: list[str], pos: int, _parent_indent: int) -> tuple[list, int]:
-    """Parse a YAML sequence block and return its data and next position."""
-    result: list = []
-    block_indent: int | None = None
-    while pos < len(lines):
-        raw = lines[pos]
-        stripped = raw.lstrip()
-        if not stripped or stripped.startswith("#"):
-            pos += 1
-            continue
-        indent = _yaml_indent(raw)
-        if block_indent is None:
-            block_indent = indent
-        if indent < block_indent:
-            break
-        if not stripped.startswith("- "):
-            if indent > block_indent:
-                pos += 1
-                continue
-            break
-        content = _yaml_strip_comment(stripped[2:]).strip()
-        if ":" in content and not content.startswith("{"):
-            ci = content.index(":")
-            k = content[:ci].strip()
-            v = _yaml_strip_comment(content[ci + 1 :]).strip()
-            item: dict = {}
-            if v in ("", ">", "|"):
-                npos = pos + 1
-                while npos < len(lines):
-                    ns = lines[npos].lstrip()
-                    if ns and not ns.startswith("#"):
-                        break
-                    npos += 1
-                if npos < len(lines) and _yaml_indent(lines[npos]) > indent + 2:
-                    ns = lines[npos].lstrip()
-                    if ns.startswith("- "):
-                        sv, npos = _yaml_seq(lines, npos, indent + 2)
-                    else:
-                        sv, npos = _yaml_map(lines, npos, indent + 2)
-                    item[k] = sv
-                else:
-                    item[k] = None
-                pos = npos
-            else:
-                item[k] = _yaml_scalar(v)
-                pos += 1
-            while pos < len(lines):
-                r2 = lines[pos]
-                s2 = r2.lstrip()
-                if not s2 or s2.startswith("#"):
-                    pos += 1
-                    continue
-                i2 = _yaml_indent(r2)
-                if i2 <= indent:
-                    break
-                if s2.startswith("- "):
-                    break
-                if ":" in s2:
-                    c2 = s2.index(":")
-                    k2 = s2[:c2].strip()
-                    v2 = _yaml_strip_comment(s2[c2 + 1 :]).strip()
-                    if v2 in ("", ">", "|"):
-                        npos = pos + 1
-                        while npos < len(lines):
-                            ns = lines[npos].lstrip()
-                            if ns and not ns.startswith("#"):
-                                break
-                            npos += 1
-                        if npos < len(lines) and _yaml_indent(lines[npos]) > i2:
-                            ns = lines[npos].lstrip()
-                            if ns.startswith("- "):
-                                sv, npos = _yaml_seq(lines, npos, i2)
-                            else:
-                                sv, npos = _yaml_map(lines, npos, i2)
-                            item[k2] = sv
-                        else:
-                            item[k2] = None
-                        pos = npos
-                    elif v2.startswith("[") and v2.endswith("]"):
-                        item[k2] = [_yaml_scalar(x) for x in v2[1:-1].split(",") if x.strip()]
-                        pos += 1
-                    else:
-                        item[k2] = _yaml_scalar(v2)
-                        pos += 1
-                else:
-                    pos += 1
-            result.append(item)
-        else:
-            result.append(_yaml_scalar(content))
-            pos += 1
-    return result, pos
+def _load_findings(path: Path, twin: Path, entry_key: str) -> dict:
+    """Load a findings source, refusing to fall back to its generated Markdown twin."""
+    if not path.exists():
+        if twin.exists():
+            raise ReviewDataError(
+                f"{path.name} is missing but {twin.name} exists; {twin.name} is a generated "
+                f"twin and is not a findings source. Run the migration before validating."
+            )
+        return {"schema_version": next(iter(FINDINGS_SCHEMA_VERSIONS)), entry_key: []}
+    data = _load_toml(path)
+    _check_schema_version(data, path)
+    entries = data.get(entry_key, [])
+    if not isinstance(entries, list):
+        raise ReviewDataError(f"{path.name}: '{entry_key}' must be an array of tables")
+    return data
+
+
+def load_bugs(cfg: Config) -> dict:
+    """Return the parsed ``bugs.toml`` document."""
+    return _load_findings(cfg.bugs_source, cfg.bugs_file, "bug")
+
+
+def load_backlog(cfg: Config) -> dict:
+    """Return the parsed ``refactoring_backlog.toml`` document."""
+    return _load_findings(cfg.backlog_source, cfg.backlog_file, "item")
 
 
 def _find_repo_root(start: Path) -> Path:
@@ -255,7 +140,7 @@ def _find_repo_root(start: Path) -> Path:
 
 
 class Config:
-    """Review workflow configuration loaded from ``review_config.yaml``."""
+    """Review workflow configuration loaded from ``review_config.toml``."""
 
     def __init__(self, repo_root: Path | None = None, config_path: Path | None = None):
         script_dir = Path(__file__).resolve().parent
@@ -267,6 +152,9 @@ class Config:
         self.prompts_dir = self.agents_dir / "prompts"
 
         self.cache_file = self.config_dir / "review_cache.json"
+        # Findings sources of truth; the ``*.md`` twins are generated by ``render``.
+        self.bugs_source = self.reports_dir / "bugs.toml"
+        self.backlog_source = self.reports_dir / "refactoring_backlog.toml"
         self.bugs_file = self.reports_dir / "bugs.md"
         self.backlog_file = self.reports_dir / "refactoring_backlog.md"
         self.final_audit = self.reports_dir / "review_reports" / "final_audit.md"
@@ -308,8 +196,8 @@ class Config:
         self.tasks: list[dict] = []
         self.django_project_root: Path | None = None
 
-        cfg_path = config_path or self.config_dir / "review_config.yaml"
-        self._raw = _load_yaml(cfg_path)
+        cfg_path = config_path or self.config_dir / "review_config.toml"
+        self._raw = _load_toml(cfg_path)
         self._apply_config()
 
     def _apply_config(self):
@@ -360,7 +248,7 @@ class Config:
                 return
 
     def get_task_ids(self) -> list[str]:
-        """Return task IDs defined in ``review_config.yaml``."""
+        """Return task IDs defined in ``review_config.toml``."""
         return [t.get("id", "") for t in self.tasks if t.get("id")]
 
     def get_analysis_files(self) -> dict[str, Path]:
@@ -475,34 +363,29 @@ def cmd_hash(cfg: Config, _args: argparse.Namespace) -> int:
 # -- cmd: cross-validate -------------------------------------------------------
 
 
-def _extract_bug_severities(text: str) -> dict[str, str]:
-    """Extract ``BUG-XXX`` to severity mappings from ``bugs.md``."""
-    result: dict[str, str] = {}
-    for m in re.finditer(r"### (BUG-\d+).*?\n.*?\*\*Závažnost:\*\*\s*(\S+)", text, re.DOTALL):
-        result[m.group(1)] = m.group(2)
-    return result
+_BUG_REF_RE = re.compile(r"\bBUG-\d+\b")
 
 
-def _extract_backlog_items(text: str) -> dict[str, str]:
-    """Extract backlog item identifiers and their task prefixes."""
-    result: dict[str, str] = {}
-    for m in re.finditer(r"### \[(T\d+[a-z]?(?:/T\d+[a-z]?)?)\]\s+([A-Z][\w-]*\d+)", text):
-        result[m.group(2)] = m.group(1)
-    return result
+def _item_bug_refs(item: dict) -> set[str]:
+    """Collect BUG identifiers an item cross-references, from its field and its prose."""
+    refs = {str(ref) for ref in item.get("bugs", [])}
+    for field in ("description", "recommendation", "title"):
+        refs.update(_BUG_REF_RE.findall(str(item.get(field, ""))))
+    return refs
 
 
-def _get_backlog_priority_section(text: str, item_id: str) -> str | None:
-    """Return the backlog priority section containing an item."""
-    sections = list(re.finditer(r"^## (Vysoká|Střední|Nízká) priorita", text, re.MULTILINE))
-    item_pos = text.find(item_id)
-    if item_pos == -1:
-        return None
-    for i, sec in enumerate(sections):
-        start = sec.start()
-        end = sections[i + 1].start() if i + 1 < len(sections) else len(text)
-        if start <= item_pos < end:
-            return sec.group(1)
-    return None
+def _documents_divergence(bug: dict) -> bool:
+    """Return whether a bug entry documents a deliberate severity/priority divergence.
+
+    The rationale lives in the typed ``alignment`` field. Intent is never inferred from
+    wording inside ``description`` or ``recommended_fix``.
+    """
+    return bool(str(bug.get("alignment", "")).strip())
+
+
+def _task_prefixes(item: dict) -> list[str]:
+    """Split an item's task field, which may name two phases as ``T02/T03``."""
+    return [part.strip() for part in str(item.get("task", "")).split("/") if part.strip()]
 
 
 def cmd_cross_validate(cfg: Config, _args: argparse.Namespace) -> int:
@@ -510,50 +393,72 @@ def cmd_cross_validate(cfg: Config, _args: argparse.Namespace) -> int:
     errors: list[str] = []
     warnings: list[str] = []
 
-    bugs_text = _read_text(cfg.bugs_file)
-    backlog_text = _read_text(cfg.backlog_file)
+    try:
+        bugs_doc = load_bugs(cfg)
+        backlog_doc = load_backlog(cfg)
+    except ReviewDataError as exc:
+        print("[cross-validate] Errors:   1")
+        print(f"    ERROR: {exc}")
+        return 1
+
+    bugs = bugs_doc.get("bug", [])
+    items = backlog_doc.get("item", [])
     final_text = _read_text(cfg.final_audit)
 
-    bug_ids = set(re.findall(r"### (BUG-\d+)", bugs_text))
-    bug_sevs = _extract_bug_severities(bugs_text)
-    backlog_items = _extract_backlog_items(backlog_text)
+    bug_ids = {str(b.get("id", "")) for b in bugs if b.get("id")}
+    bug_sevs = {str(b["id"]): str(b.get("severity", "")) for b in bugs if b.get("id")}
+    bugs_by_id = {str(b["id"]): b for b in bugs if b.get("id")}
 
-    backlog_bug_refs = set(re.findall(r"BUG-\d+", backlog_text))
-    for ref in sorted(backlog_bug_refs):
-        if ref not in bug_ids:
-            errors.append(f"Backlog references {ref} but it does not exist in bugs.md")
+    for item in items:
+        item_id = str(item.get("id", "?"))
+        for ref in sorted(_item_bug_refs(item)):
+            if ref not in bug_ids:
+                errors.append(f"Backlog item {item_id} references {ref} but it does not exist in bugs.toml")
 
-    for bug in sorted(bug_ids):
-        if bug not in backlog_text and bug not in final_text:
-            warnings.append(f"{bug} is not referenced in backlog or final_audit")
+    referenced_bugs: set[str] = set()
+    for item in items:
+        referenced_bugs.update(_item_bug_refs(item))
+    for bug_id in sorted(bug_ids):
+        if bug_id not in referenced_bugs and bug_id not in final_text:
+            warnings.append(f"{bug_id} is not referenced in backlog or final_audit")
 
     reports_dir = cfg.review_reports_dir
-    for item_id, prefix in sorted(backlog_items.items()):
-        prefixes = [p.strip() for p in prefix.split("/")]
-        found = False
-        for p in prefixes:
-            report = reports_dir / f"{p}.md"
-            if report.exists():
-                rt = _read_text(report)
-                if item_id in rt:
-                    found = True
-                    break
-        if not found:
-            names = ", ".join(f"{p}.md" for p in prefixes)
-            warnings.append(f"Backlog item {item_id} [{prefix}]: not mentioned in {names}")
-
-    sev_map = {"Kritická": "Vysoká", "Vysoká": "Vysoká", "Střední": "Střední", "Nízká": "Nízká"}
-    for bug in sorted(bug_ids):
-        sev = bug_sevs.get(bug)
-        if not sev or bug not in backlog_text:
+    for item in items:
+        item_id = str(item.get("id", "?"))
+        prefixes = _task_prefixes(item)
+        if not prefixes:
+            errors.append(f"Backlog item {item_id}: missing 'task'")
             continue
-        bs = _get_backlog_priority_section(backlog_text, bug)
-        if bs and sev in sev_map and bs != sev_map[sev]:
-            bug_block = bugs_text.split(bug)[1].split("###")[0] if bug in bugs_text else ""
-            if "Sjednocení" not in bug_block and "reconcil" not in bug_block.lower():
+        found = False
+        for prefix in prefixes:
+            report = reports_dir / f"{prefix}.md"
+            if report.exists() and item_id in _read_text(report):
+                found = True
+                break
+        if not found:
+            names = ", ".join(f"{prefix}.md" for prefix in prefixes)
+            warnings.append(f"Backlog item {item_id} [{'/'.join(prefixes)}]: not mentioned in {names}")
+
+    # Severity/priority reconciliation. A bug with no severity is an error, not a skip:
+    # this check must never report success because it could not read its own input.
+    for bug_id in sorted(bug_ids):
+        severity = bug_sevs.get(bug_id, "")
+        if not severity:
+            errors.append(f"{bug_id}: missing 'severity'; cannot reconcile against backlog priority")
+            continue
+        if severity not in SEVERITY_TO_PRIORITY:
+            errors.append(f"{bug_id}: severity '{severity}' is outside the canonical vocabulary")
+            continue
+        expected = SEVERITY_TO_PRIORITY[severity]
+        for item in items:
+            if bug_id not in _item_bug_refs(item):
+                continue
+            priority = str(item.get("priority", ""))
+            if priority and priority != expected and not _documents_divergence(bugs_by_id[bug_id]):
                 warnings.append(
-                    f"{bug}: severity={sev} but in backlog '{bs} priorita' "
-                    f"(expected '{sev_map[sev]} priorita' or documented rationale)"
+                    f"{bug_id}: severity={severity} but backlog item "
+                    f"{item.get('id', '?')} has priority '{priority}' "
+                    f"(expected '{expected}' or a documented rationale)"
                 )
 
     cache = _load_json(cfg.cache_file)
@@ -566,7 +471,7 @@ def cmd_cross_validate(cfg: Config, _args: argparse.Namespace) -> int:
             if srp and not (cfg.repo_root / srp).exists():
                 errors.append(f"Cache sub-task {sub_id}: report_path '{srp}' does not exist")
 
-    print(f"[cross-validate] BUG entries: {len(bug_ids)}, Backlog items: {len(backlog_items)}")
+    print(f"[cross-validate] BUG entries: {len(bug_ids)}, Backlog items: {len(items)}")
     print(f"  Errors:   {len(errors)}")
     print(f"  Warnings: {len(warnings)}")
     for e in errors:
@@ -662,10 +567,12 @@ def cmd_id_inventory(cfg: Config, _args: argparse.Namespace) -> int:
                 continue
             id_locations[found_id].add(label)
 
-    if cfg.bugs_file.exists():
-        _scan_file(cfg.bugs_file, "bugs.md")
-    if cfg.backlog_file.exists():
-        _scan_file(cfg.backlog_file, "backlog")
+    # Scan the findings sources, not their generated twins, so identifiers stay
+    # authoritative even when a twin has drifted.
+    if cfg.bugs_source.exists():
+        _scan_file(cfg.bugs_source, "bugs.toml")
+    if cfg.backlog_source.exists():
+        _scan_file(cfg.backlog_source, "backlog")
     if cfg.final_audit.exists():
         _scan_file(cfg.final_audit, "final_audit")
 
@@ -756,16 +663,42 @@ def cmd_lint_artifacts(cfg: Config, _args: argparse.Namespace) -> int:
     else:
         warnings.append("review_cache.json not found")
 
-    bugs_text = _read_text(cfg.bugs_file)
-    if bugs_text:
-        bug_entries = re.findall(r"### (BUG-\d+)", bugs_text)
-        for bug in bug_entries:
-            block = bugs_text.split(bug)[1].split("###")[0] if bug in bugs_text else ""
-            if "**Závažnost:**" not in block and "**Severity:**" not in block:
-                warnings.append(f"{bug}: missing severity field")
-            has_file_ref = any(marker in block for marker in ("**Soubor:**", "**Soubory:**", "**File:**", "**Files:**"))
-            if not has_file_ref:
-                warnings.append(f"{bug}: missing file reference")
+    try:
+        bugs_doc = load_bugs(cfg)
+        for index, bug in enumerate(bugs_doc.get("bug", [])):
+            bug_id = str(bug.get("id", "")) or f"bug[{index}]"
+            severity = str(bug.get("severity", ""))
+            if not severity:
+                errors.append(f"{bug_id}: missing 'severity'")
+            elif severity not in SEVERITIES:
+                errors.append(
+                    f"{bug_id}: severity '{severity}' is outside the canonical vocabulary ({', '.join(SEVERITIES)})"
+                )
+            if not bug.get("files"):
+                errors.append(f"{bug_id}: missing file reference")
+            if not bug.get("task"):
+                warnings.append(f"{bug_id}: missing 'task'")
+    except ReviewDataError as exc:
+        errors.append(str(exc))
+
+    try:
+        backlog_doc = load_backlog(cfg)
+        for index, item in enumerate(backlog_doc.get("item", [])):
+            item_id = str(item.get("id", "")) or f"item[{index}]"
+            priority = str(item.get("priority", ""))
+            if not priority:
+                errors.append(f"{item_id}: missing 'priority'")
+            elif priority not in PRIORITIES:
+                errors.append(
+                    f"{item_id}: priority '{priority}' is outside the canonical vocabulary ({', '.join(PRIORITIES)})"
+                )
+            effort = str(item.get("effort", ""))
+            if effort and effort not in EFFORTS:
+                warnings.append(f"{item_id}: effort '{effort}' is outside {', '.join(EFFORTS)}")
+    except ReviewDataError as exc:
+        errors.append(str(exc))
+
+    errors.extend(_stale_twin_errors(cfg))
 
     for tf in cfg.get_analysis_files().values():
         if tf.suffix == ".json" and not tf.exists():
@@ -860,6 +793,174 @@ def cmd_prompt_evolution(cfg: Config, _args: argparse.Namespace) -> int:
     return len(malformed)
 
 
+# -- cmd: render ---------------------------------------------------------------
+
+
+def _inline(text: str) -> str:
+    """Collapse a multi-line TOML prose field onto the single line Markdown expects."""
+    return re.sub(r"\s*\n\s*", " ", str(text).strip())
+
+
+def _format_location(entry: dict) -> str:
+    """Render one ``[[bug.files]]`` entry as a Markdown code span plus annotations."""
+    location = str(entry.get("path", ""))
+    if entry.get("line"):
+        location = f"{location}:{entry['line']}"
+    rendered = f"`{location}`"
+    if entry.get("symbol"):
+        rendered += f" — `{entry['symbol']}`"
+    if entry.get("note"):
+        rendered += f" *({entry['note']})*"
+    return rendered
+
+
+def _render_bug(bug: dict) -> str:
+    """Render a single bug entry."""
+    lines = [f"### {bug.get('id', '?')}: {_inline(bug.get('title', ''))}", ""]
+    files = bug.get("files") or []
+    # A lone plain location stays inline; anything annotated or multiple becomes a list.
+    note = f" {bug['files_note']}" if bug.get("files_note") else ""
+    if len(files) == 1 and not files[0].get("symbol") and not files[0].get("note"):
+        lines.append(f"- **Files:** {_format_location(files[0])}{note}")
+    else:
+        lines.append(f"- **Files:**{note}")
+        for entry in files:
+            lines.append(f"  - {_format_location(entry)}")
+    lines.append(f"- **Severity:** {bug.get('severity', '')}")
+    if bug.get("github_issue"):
+        lines.append(f"- **GitHub Issue:** {bug['github_issue']}")
+    if bug.get("description"):
+        lines.append(f"- **Description:** {_inline(bug['description'])}")
+    if bug.get("recommended_fix"):
+        lines.append(f"- **Recommended fix:** {_inline(bug['recommended_fix'])}")
+    if bug.get("alignment"):
+        lines.append(f"- **Alignment:** {_inline(bug['alignment'])}")
+    lines.append(f"- **Task:** {bug.get('task', '')}")
+    return "\n".join(lines)
+
+
+def render_bugs(doc: dict) -> str:
+    """Render ``bugs.md`` from the parsed ``bugs.toml`` document."""
+    parts: list[str] = []
+    preamble = str(doc.get("preamble", "")).strip()
+    if preamble:
+        parts.append(preamble)
+    entries = [_render_bug(bug) for bug in doc.get("bug", [])]
+    if entries:
+        parts.append("\n\n---\n\n".join(entries))
+    return "\n\n".join(parts).rstrip() + "\n"
+
+
+def _render_backlog_item(item: dict) -> str:
+    """Render a single refactoring-backlog item.
+
+    Optional fields are emitted only when present, so a sibling that never records an
+    ``impact`` or an ``effort`` does not gain an empty bullet.
+    """
+    header = f"### [{item.get('task', '')}] {item.get('id', '?')}: {_inline(item.get('title', ''))}"
+    lines = [header]
+    files = item.get("files") or []
+    if files:
+        rendered_files = "- **Files:** " + ", ".join(f"`{f}`" for f in files)
+        if item.get("files_note"):
+            rendered_files += f" {item['files_note']}"
+        lines.append(rendered_files)
+    applications = item.get("applications") or []
+    if applications:
+        lines.append("- **Applications:** " + ", ".join(str(a) for a in applications))
+    if item.get("description"):
+        lines.append(f"- **Description:** {_inline(item['description'])}")
+    if item.get("impact"):
+        lines.append(f"- **Impact:** {_inline(item['impact'])}")
+    if item.get("recommendation"):
+        lines.append(f"- **Recommendation:** {_inline(item['recommendation'])}")
+    if item.get("effort"):
+        lines.append(f"- **Effort:** {item['effort']}")
+    if item.get("severity"):
+        lines.append(f"- **Severity:** {item['severity']}")
+    superseded = item.get("supersedes") or []
+    if superseded:
+        lines.append("- **Supersedes:** " + "; ".join(str(s) for s in superseded))
+    return "\n".join(lines)
+
+
+def render_backlog(doc: dict) -> str:
+    """Render ``refactoring_backlog.md`` from the parsed backlog document."""
+    parts: list[str] = []
+    preamble = str(doc.get("preamble", "")).strip()
+    if preamble:
+        parts.append(preamble)
+
+    section_notes = doc.get("section_notes", {})
+    items = doc.get("item", [])
+    for priority in PRIORITIES:
+        in_section = [i for i in items if str(i.get("priority", "")) == priority]
+        if not in_section:
+            continue
+        section = [f"## {priority} Priority"]
+        note = str(section_notes.get(priority, "")).strip()
+        if note:
+            section.append(note)
+        section.append("\n\n".join(_render_backlog_item(i) for i in in_section))
+        parts.append("\n\n".join(section))
+    return "\n\n".join(parts).rstrip() + "\n"
+
+
+def _twin_targets(cfg: Config) -> list[tuple[Path, str]]:
+    """Return each generated twin path paired with the text it should contain."""
+    return [
+        (cfg.bugs_file, render_bugs(load_bugs(cfg))),
+        (cfg.backlog_file, render_backlog(load_backlog(cfg))),
+    ]
+
+
+def _stale_twin_errors(cfg: Config) -> list[str]:
+    """Report generated twins whose contents diverge from their TOML source."""
+    try:
+        targets = _twin_targets(cfg)
+    except ReviewDataError as exc:
+        return [str(exc)]
+    stale: list[str] = []
+    for path, expected in targets:
+        if not path.exists():
+            stale.append(f"{path.name} is missing; run 'review_tools.py render'")
+        elif _read_text(path) != expected:
+            stale.append(f"{path.name} is stale; run 'review_tools.py render'")
+    return stale
+
+
+def cmd_render(cfg: Config, args: argparse.Namespace) -> int:
+    """Regenerate the Markdown twins, or verify they are current under ``--check``."""
+    check_only = getattr(args, "check", False)
+    try:
+        targets = _twin_targets(cfg)
+    except ReviewDataError as exc:
+        print(f"[render] ERROR: {exc}")
+        return 1
+
+    if check_only:
+        stale = _stale_twin_errors(cfg)
+        print(f"[render --check] Stale twins: {len(stale)}")
+        for message in stale:
+            print(f"    ERROR: {message}")
+        return len(stale)
+
+    written = 0
+    for path, expected in targets:
+        if not path.exists() or _read_text(path) != expected:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(expected, encoding="utf-8")
+            written += 1
+            print(f"    wrote {path.name}")
+    print(f"[render] Twins regenerated: {written}, already current: {len(targets) - written}")
+    return 0
+
+
+def cmd_render_check(cfg: Config, _args: argparse.Namespace) -> int:
+    """Run ``render`` in verification mode for the aggregate ``all`` command."""
+    return cmd_render(cfg, argparse.Namespace(check=True))
+
+
 # -- cmd: repo-structure -------------------------------------------------------
 
 
@@ -932,10 +1033,18 @@ def cmd_repo_structure(cfg: Config, _args: argparse.Namespace) -> int:
 
 
 def cmd_status(cfg: Config, _args: argparse.Namespace) -> int:
-    """Print a concise dashboard for the current review workflow state."""
+    """Print a concise dashboard for the current review workflow state.
+
+    Read-only: this command never writes the generated Markdown twins.
+    """
     cache = _load_json(cfg.cache_file)
-    bugs_text = _read_text(cfg.bugs_file)
-    backlog_text = _read_text(cfg.backlog_file)
+    try:
+        bugs_doc = load_bugs(cfg)
+        backlog_doc = load_backlog(cfg)
+    except ReviewDataError as exc:
+        print("[status] Review System Dashboard")
+        print(f"    ERROR: {exc}")
+        return 1
 
     print("[status] Review System Dashboard")
     print(f"  Repository: {cfg.repo_root.name}")
@@ -954,26 +1063,27 @@ def cmd_status(cfg: Config, _args: argparse.Namespace) -> int:
         date_info = f" [{completed[:10]}]" if completed else ""
         print(f"    {tid:6s} {status:8s}{date_info}{sub_info}")
 
-    bug_ids = re.findall(r"### (BUG-\d+)", bugs_text)
-    bug_sevs = _extract_bug_severities(bugs_text)
-    sev_counts: Counter = Counter()
-    for sev in bug_sevs.values():
-        sev_counts[sev] += 1
-    print(f"\n  Bugs: {len(bug_ids)} total")
-    for sev in ["Kritická", "Vysoká", "Střední", "Nízká"]:
+    bugs = bugs_doc.get("bug", [])
+    sev_counts: Counter = Counter(str(b.get("severity", "")) for b in bugs)
+    print(f"\n  Bugs: {len(bugs)} total")
+    for sev in SEVERITIES:
         if sev_counts[sev]:
             print(f"    {sev}: {sev_counts[sev]}")
+    unknown_sev = sorted(set(sev_counts) - set(SEVERITIES))
+    for sev in unknown_sev:
+        label = sev or "(missing)"
+        print(f"    {label}: {sev_counts[sev]} (outside the canonical vocabulary)")
 
-    backlog_items = _extract_backlog_items(backlog_text)
-    priority_counts: Counter = Counter()
-    for item_id in backlog_items:
-        sec = _get_backlog_priority_section(backlog_text, item_id)
-        if sec:
-            priority_counts[sec] += 1
-    print(f"\n  Backlog items: {len(backlog_items)} total")
-    for pri in ["Vysoká", "Střední", "Nízká"]:
+    items = backlog_doc.get("item", [])
+    priority_counts: Counter = Counter(str(i.get("priority", "")) for i in items)
+    print(f"\n  Backlog items: {len(items)} total")
+    for pri in PRIORITIES:
         if priority_counts[pri]:
-            print(f"    {pri} priorita: {priority_counts[pri]}")
+            print(f"    {pri} priority: {priority_counts[pri]}")
+    unknown_pri = sorted(set(priority_counts) - set(PRIORITIES))
+    for pri in unknown_pri:
+        label = pri or "(missing)"
+        print(f"    {label}: {priority_counts[pri]} (outside the canonical vocabulary)")
 
     file_hashes = cache.get("file_hashes", {})
     print(f"\n  Tracked files: {len(file_hashes)}")
@@ -991,6 +1101,7 @@ def cmd_status(cfg: Config, _args: argparse.Namespace) -> int:
 
 ALL_CHECKS = [
     ("hash", cmd_hash),
+    ("render --check", cmd_render_check),
     ("cross-validate", cmd_cross_validate),
     ("coverage-gaps", cmd_coverage_gaps),
     ("id-inventory", cmd_id_inventory),
@@ -1020,6 +1131,7 @@ COMMANDS: dict[str, tuple] = {
     "id-inventory": (cmd_id_inventory, "Cross-reference all IDs across artifacts"),
     "lint-artifacts": (cmd_lint_artifacts, "Validate .agents/ artifact structure"),
     "prompt-evolution": (cmd_prompt_evolution, "Inventory workflow-evolution evidence"),
+    "render": (cmd_render, "Regenerate bugs.md and refactoring_backlog.md from their TOML sources"),
     "repo-structure": (cmd_repo_structure, "Scan and summarize repository structure"),
     "status": (cmd_status, "Print review system status dashboard"),
     "all": (cmd_all, "Run all validation checks"),
@@ -1043,17 +1155,24 @@ def main() -> int:
         "--config",
         type=Path,
         default=None,
-        help="Path to review_config.yaml (default: .agents/config/review_config.yaml)",
+        help="Path to review_config.toml (default: .agents/config/review_config.toml)",
     )
     sub = parser.add_subparsers(dest="command")
     for name, (_, help_text) in COMMANDS.items():
-        sub.add_parser(name, help=help_text)
+        cmd_parser = sub.add_parser(name, help=help_text)
+        if name == "render":
+            cmd_parser.add_argument(
+                "--check",
+                action="store_true",
+                help="Verify the twins are current without writing them",
+            )
 
     args = parser.parse_args()
     if not args.command:
         parser.print_help()
         return 1
 
+    require_supported_python()
     cfg = Config(repo_root=args.repo_root, config_path=args.config)
     cmd_fn = COMMANDS[args.command][0]
     return cmd_fn(cfg, args)

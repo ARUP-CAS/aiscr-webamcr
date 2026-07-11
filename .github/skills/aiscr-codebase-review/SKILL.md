@@ -4,7 +4,7 @@ description: Long-running codebase review for the repository it runs in (any AIS
   repo except the management hub); two modes (full pass T01-T11, incremental update
   U01-U06) dispatched via detect -> propose-with-evidence -> user-confirm. Owns the
   cache and report schema, severity vocabulary, and English-default output language;
-  repo-specific scope stays in the target repo's review_config.yaml. The generated
+  repo-specific scope stays in the target repo's review_config.toml. The generated
   skill embeds its runbook.
 ---
 
@@ -22,7 +22,7 @@ description: Long-running codebase review for the repository it runs in (any AIS
 Run the long-running codebase-review lifecycle against the repository this workflow is
 invoked in (the **target repository**). It defines the lifecycle, policy, and schemas;
 repo-specific scope (apps, file lists, vendored exclusions, thresholds, analysis
-families) stays in the target repo's `.agents/config/review_config.yaml`. The detailed
+families) stays in the target repo's `.agents/config/review_config.toml`. The detailed
 runbook — lifecycle phases, cache and report schema, severity, language discipline, and
 the complexity budget — lives in the embedded execution plan below.
 
@@ -61,7 +61,7 @@ phase runs **even when the operator typed a mode argument**. Cache-aware resumpt
 ## Context to load first
 
 1. The target repository's `AGENTS.md` — repo-specific agent instructions take precedence.
-2. `.agents/config/review_config.yaml` (target) — Tier 3 scope: app/module names, key file lists, vendored exclusions, analysis families, severity thresholds, task-size guardrails, `phase_outputs` mapping, `open_issues`.
+2. `.agents/config/review_config.toml` (target) — Tier 3 scope: app/module names, key file lists, vendored exclusions, analysis families, severity thresholds, task-size guardrails, `phase_outputs` mapping, `open_issues`.
 3. `.agents/config/review_cache.json` (target) — task status, file hashes, sub-task entries, `last_updated`.
 4. `.agents/reports/review_reports/` (target) — presence of `final_audit.md` and per-task reports.
 5. the embedded execution plan below — the execution-layer runbook (lifecycle phases, cache/report schema, severity, language, complexity budget, three-tier split).
@@ -78,7 +78,7 @@ detection (`hash`, `status`, `coverage-gaps`, `cross-validate`, `id-inventory`,
    `last_updated`, presence of `final_audit.md` and per-task reports, and source-file
    recency (via `review_tools.py hash` when available). **Refuse** when the target is
    `aiscr-management`. **Enrolment check:** if the repo has **no review setup at all** —
-   no `review_config.yaml`, no `review_cache.json`, and no `review_reports/` — it is
+   no `review_config.toml`, no `review_cache.json`, and no `review_reports/` — it is
    **not enrolled**; the skill stub being present is not enrolment. Explain that
    creating review configuration and state is a deliberate, separately-approved step
    (bootstrap or a controlled enrolment change), and **stop** without scaffolding.
@@ -90,7 +90,7 @@ detection (`hash`, `status`, `coverage-gaps`, `cross-validate`, `id-inventory`,
 4. **Obtain explicit user confirmation** before any write-capable step.
 5. **Execute the confirmed mode** per `codebase-review.plan.md`:
    - `codebase-review-mode-full`: run phases T01–T11 governed by the repo
-     `review_config.yaml`; resume from the cache (run only `pending` tasks; do not
+     `review_config.toml`; resume from the cache (run only `pending` tasks; do not
      restart `done` tasks unless their inputs changed since `last_updated`); honour
      vendored exclusions, the review complexity budget, and **DONE MEANS DONE**.
    - `codebase-review-mode-update`: run phases U01–U06; write findings into the existing
@@ -120,11 +120,11 @@ detection (`hash`, `status`, `coverage-gaps`, `cross-validate`, `id-inventory`,
 
 **IRON LAW:** `NEVER RUN THE CODEBASE-REVIEW WORKFLOW AGAINST THE MANAGEMENT HUB (AISCR-MANAGEMENT) AS THE TARGET.`
 
-**IRON LAW:** `NEVER CREATE REVIEW SCAFFOLDING (REVIEW_CONFIG.YAML, REVIEW_CACHE.JSON, .AGENTS/ANALYSIS/, .AGENTS/REPORTS/REVIEW_REPORTS/) IN A REPO THAT HAS NONE WITHOUT EXPLICIT, SEPARATELY-APPROVED ENROLMENT. THE SKILL STUB BEING PRESENT IS NOT ENROLMENT.`
+**IRON LAW:** `NEVER CREATE REVIEW SCAFFOLDING (REVIEW_CONFIG.TOML, REVIEW_CACHE.JSON, .AGENTS/ANALYSIS/, .AGENTS/REPORTS/REVIEW_REPORTS/) IN A REPO THAT HAS NONE WITHOUT EXPLICIT, SEPARATELY-APPROVED ENROLMENT. THE SKILL STUB BEING PRESENT IS NOT ENROLMENT.`
 
 **IRON LAW:** `NEVER PROCEED PAST MODE PROPOSAL WITHOUT EXPLICIT USER CONFIRMATION.`
 
-**IRON LAW:** `NEVER HARDCODE REPO-SPECIFIC SCOPE (APP NAMES, FILE LISTS, VENDORED LIBRARIES, THRESHOLD VALUES) INTO THE HUB-CANONICAL SOURCE — IT BELONGS IN THE TARGET REPO REVIEW_CONFIG.YAML.`
+**IRON LAW:** `NEVER HARDCODE REPO-SPECIFIC SCOPE (APP NAMES, FILE LISTS, VENDORED LIBRARIES, THRESHOLD VALUES) INTO THE HUB-CANONICAL SOURCE — IT BELONGS IN THE TARGET REPO REVIEW_CONFIG.TOML.`
 
 **IRON LAW:** `NEVER SELF-MODIFY HUB CODEBASE-REVIEW WORKFLOW SOURCES OR EMIT HUB BACKLOG ITEMS FROM A SIBLING REVIEW RUN WITHOUT EXPLICIT CURRENT-RUN HANDOFF APPROVAL.`
 
@@ -137,12 +137,12 @@ No exceptions. These override any "the file is obviously fine", "the cache says 
 | "The detect phase picked `full` so I can just start writing" | Present the proposed mode with evidence; wait for explicit user confirmation. |
 | "The operator asked for `update`, so I'll run `update`" | Run detect first; if no prior pass exists, refuse and recommend `codebase-review-mode-full`. |
 | "I read the summary / a subagent's report, that's enough to mark done" | DONE MEANS DONE — read every in-scope file directly, or split. |
-| "This app name / file list belongs in the canonical body" | Tier 3 — it goes in the target repo `review_config.yaml`, not the hub source. |
+| "This app name / file list belongs in the canonical body" | Tier 3 — it goes in the target repo `review_config.toml`, not the hub source. |
 | "Update mode found a big gap; I'll just do a full re-run now" | Document the gap; recommend a separate `full` invocation. Do not escalate in-session. |
 | "I'll add the new findings to the changelog only" | Update `final_audit.md` body sections **and** the changelog. |
 | "The source comment is Czech; I'll translate it in the quote" | Preserve Czech-native quoted content and domain identifiers verbatim; only the analytical voice is English. |
 | "This 2,000-line file is over the line limit, split it" | Line count is a caution signal, not the trigger — justify splits by coherent unit and complexity. |
-| "The skill stub is here, so I'll create `review_config.yaml` and start a pass" | If the repo has no review setup it is not enrolled — explain that enrolment is deliberate and separately approved, and stop. |
+| "The skill stub is here, so I'll create `review_config.toml` and start a pass" | If the repo has no review setup it is not enrolled — explain that enrolment is deliberate and separately approved, and stop. |
 | "I'll target aiscr-management to test the workflow" | Refuse. The hub carries no review lifecycle; point to `run_validation_all.py` / `validate_tool_parity.py`. |
 | "U05 found a good workflow fix, so I'll patch the hub source now" | Record the evidence and prepare a handoff candidate; hub backlog emission requires explicit approval for this run. |
 <!-- aiscr:endgen -->
@@ -168,7 +168,7 @@ No exceptions. These override any "the file is obviously fine", "the cache says 
   create review configuration, state, or reports. Review artifacts are produced only by
   **running this workflow**, and initial enrolment of a repo that has none is a
   deliberate, separately-approved step — never a side effect of receiving the stub.
-- Repo-specific scope is authoritative in the target repo `review_config.yaml` (Tier 3);
+- Repo-specific scope is authoritative in the target repo `review_config.toml` (Tier 3);
   the hub-canonical source and plan never hardcode it.
 - This canonical source plus the embedded execution plan below are the single
   operational source. Agents must not self-modify them during a review session;

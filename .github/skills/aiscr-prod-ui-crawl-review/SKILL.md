@@ -15,7 +15,7 @@ description: Deployed UI/SEO verification for user-facing public URLs in a targe
 
 # /aiscr-prod-ui-crawl-review — deployed UI / SEO for review_codebase
 
-Run optional **live deployed** checks for any AIS CR repo whose **public users** load HTML over HTTPS (webapp, docs site, static site, etc.), driven by the target repo's `review_config.yaml`. Outputs: `deployed_ui_analysis.json` + `review_reports/T12.md` (typical)—**not** `review_pr.py`.
+Run optional **live deployed** checks for any AIS CR repo whose **public users** load HTML over HTTPS (webapp, docs site, static site, etc.), driven by the target repo's `review_config.toml`. Outputs: `deployed_ui_analysis.json` + `review_reports/T12.md` (typical)—**not** `review_pr.py`.
 
 ## Phase awareness
 
@@ -47,7 +47,7 @@ Do not promote or implement spawned backlog inside this skill.
 2. the workflow contract summarized in this compiled skill - backlog emission contract (when emitting follow-ups)
 3. `AGENTS.md` - governance, scope, and safety rules
 4. the embedded execution plan below - execution procedures and target repo variations
-5. Target repo: `.agents/config/review_config.yaml` (the `deployed_verify` allowlist and per-repo scope)
+5. Target repo: `.agents/config/review_config.toml` (the `deployed_verify` allowlist and per-repo scope)
 
 ## Steps
 

@@ -16,7 +16,7 @@ disable-model-invocation: true
 
 # /aiscr-prod-ui-crawl-review — deployed UI / SEO for review_codebase
 
-Run optional **live deployed** checks for any AIS CR repo whose **public users** load HTML over HTTPS (webapp, docs site, static site, etc.), driven by the target repo's `review_config.yaml`. Outputs: `deployed_ui_analysis.json` + `review_reports/T12.md` (typical)—**not** `review_pr.py`.
+Run optional **live deployed** checks for any AIS CR repo whose **public users** load HTML over HTTPS (webapp, docs site, static site, etc.), driven by the target repo's `review_config.toml`. Outputs: `deployed_ui_analysis.json` + `review_reports/T12.md` (typical)—**not** `review_pr.py`.
 
 ## Phase awareness
 
@@ -48,7 +48,7 @@ Do not promote or implement spawned backlog inside this skill.
 2. the workflow contract summarized in this compiled skill - backlog emission contract (when emitting follow-ups)
 3. `AGENTS.md` - governance, scope, and safety rules
 4. the embedded execution plan below - execution procedures and target repo variations
-5. Target repo: `.agents/config/review_config.yaml` (the `deployed_verify` allowlist and per-repo scope)
+5. Target repo: `.agents/config/review_config.toml` (the `deployed_verify` allowlist and per-repo scope)
 
 ## Steps
 
@@ -105,7 +105,7 @@ Full workflow: the embedded execution plan below
 
 #### Context
 
-This plan lives in **aiscr-management** and defines an **optional** on-demand task (**T12** working name: `deployed_ui_analysis`) for AIS CR repositories that already have codebase-review set up (`.agents/config/review_config.yaml`), whenever maintainers want to check **live** behaviour of **user-facing surfaces reachable over the public internet** (not only classic webapps).
+This plan lives in **aiscr-management** and defines an **optional** on-demand task (**T12** working name: `deployed_ui_analysis`) for AIS CR repositories that already have codebase-review set up (`.agents/config/review_config.toml`), whenever maintainers want to check **live** behaviour of **user-facing surfaces reachable over the public internet** (not only classic webapps).
 
 **Eligible targets include:** full-stack webapps, public documentation or marketing sites, static frontends, and any other **HTTP(S) HTML experience** end users or the public can load without private network access—**always** via **allowlisted** URLs in config. Pure backend APIs with no HTML surface are **out of scope** unless the repo also ships a public HTML UI or docs site you intentionally include in `deployed_verify`.
 
@@ -131,7 +131,7 @@ Bootstrap and YAML shapes for new repos are set up through the management hub's 
 
 **Assumptions**
 
-- Target repo has (or will add) optional **T12** + `deployed_verify:` in `review_config.yaml` (set up via the management hub's governance-bootstrap workflow if missing).
+- Target repo has (or will add) optional **T12** + `deployed_verify:` in `review_config.toml` (set up via the management hub's governance-bootstrap workflow if missing).
 - T12 is **on-demand** initially: **omit T12 from T11 `requires`** until maintainers promote it.
 
 #### Output artifacts
@@ -150,7 +150,7 @@ See the workflow contract summarized in this compiled skill for output schema an
 
 #### Steps
 
-1. **Orient** — Read target `AGENTS.md`, `.agents/config/review_config.yaml`, `.agents/config/review_cache.json`. Follow that repo's **INITIALIZATION SEQUENCE** (e.g. **webamcr:** `review_tools.py hash` / `status` as documented; **digiarchiv:** directory + hash steps as documented—**do not assume one global script path**).
+1. **Orient** — Read target `AGENTS.md`, `.agents/config/review_config.toml`, `.agents/config/review_cache.json`. Follow that repo's **INITIALIZATION SEQUENCE** (e.g. **webamcr:** `review_tools.py hash` / `status` as documented; **digiarchiv:** directory + hash steps as documented—**do not assume one global script path**).
 2. **Configure** — Read `deployed_verify:` (allowlisted `base_urls`, `max_pages`, `environments`). Refuse production without **explicit** maintainer approval for this run.
 3. **Execute** — Run Tier 1; add Tier 2 only if policy allows. Use Playwright in the target repo, browser/MCP, or manual checklist for auth-walled flows.
 4. **Persist** — Write `deployed_ui_analysis.json` and `T12.md`; update `review_cache.json` for T12; add `bugs.md` / backlog entries per repo rules.
@@ -166,7 +166,7 @@ See the workflow contract summarized in this compiled skill for output schema an
 
 **Per-repo PR (maintainer approval):**
 
-1. In `review_config.yaml`, add task **T12** after T10, before T11:
+1. In `review_config.toml`, add task **T12** after T10, before T11:
 
    - `id: T12`, `name: deployed_ui_analysis`, `description: …`, `target_file: .agents/analysis/deployed_ui_analysis.json`, `priority: 12`.
 
@@ -182,7 +182,7 @@ See the workflow contract summarized in this compiled skill for output schema an
      crawl_notes: "Do not add production URLs without maintainer approval."
    ```
 
-3. Add a **`## DEPLOYED UI / SEO VERIFICATION (T12)`** section to the repo's review documentation, with per-task instructions (the registry stays in `review_config.yaml`).
+3. Add a **`## DEPLOYED UI / SEO VERIFICATION (T12)`** section to the repo's review documentation, with per-task instructions (the registry stays in `review_config.toml`).
 
 4. **Do not** add T12 to T11 `requires` until policy mandates it.
 

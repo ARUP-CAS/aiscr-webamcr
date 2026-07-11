@@ -120,7 +120,7 @@ It describes how to integrate AI‑assisted review into CI in a way that is safe
   - Low‑level implementation details of `review_tools.py`.
   - Introducing new CI platforms beyond what the repo already uses.
 - Assumptions:
-  - The repo already has `.agents/scripts/review_tools.py` and `review_config.yaml` configured (or has ported them via the [governance bootstrap](the embedded execution plan below) workflow, optional asset port phase).
+  - The repo already has `.agents/scripts/review_tools.py` and `review_config.toml` configured (or has ported them via the [governance bootstrap](the embedded execution plan below) workflow, optional asset port phase).
 
 #### Execution approach
 

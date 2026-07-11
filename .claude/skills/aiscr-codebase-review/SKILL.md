@@ -4,7 +4,7 @@ description: Long-running codebase review for the repository it runs in (any AIS
   repo except the management hub); two modes (full pass T01-T11, incremental update
   U01-U06) dispatched via detect -> propose-with-evidence -> user-confirm. Owns the
   cache and report schema, severity vocabulary, and English-default output language;
-  repo-specific scope stays in the target repo's review_config.yaml. The generated
+  repo-specific scope stays in the target repo's review_config.toml. The generated
   skill embeds its runbook.
 disable-model-invocation: true
 user-invocable: true
@@ -25,7 +25,7 @@ effort: high
 Run the long-running codebase-review lifecycle against the repository this workflow is
 invoked in (the **target repository**). It defines the lifecycle, policy, and schemas;
 repo-specific scope (apps, file lists, vendored exclusions, thresholds, analysis
-families) stays in the target repo's `.agents/config/review_config.yaml`. The detailed
+families) stays in the target repo's `.agents/config/review_config.toml`. The detailed
 runbook — lifecycle phases, cache and report schema, severity, language discipline, and
 the complexity budget — lives in the embedded execution plan below.
 
@@ -64,7 +64,7 @@ phase runs **even when the operator typed a mode argument**. Cache-aware resumpt
 ## Context to load first
 
 1. The target repository's `AGENTS.md` — repo-specific agent instructions take precedence.
-2. `.agents/config/review_config.yaml` (target) — Tier 3 scope: app/module names, key file lists, vendored exclusions, analysis families, severity thresholds, task-size guardrails, `phase_outputs` mapping, `open_issues`.
+2. `.agents/config/review_config.toml` (target) — Tier 3 scope: app/module names, key file lists, vendored exclusions, analysis families, severity thresholds, task-size guardrails, `phase_outputs` mapping, `open_issues`.
 3. `.agents/config/review_cache.json` (target) — task status, file hashes, sub-task entries, `last_updated`.
 4. `.agents/reports/review_reports/` (target) — presence of `final_audit.md` and per-task reports.
 5. the embedded execution plan below — the execution-layer runbook (lifecycle phases, cache/report schema, severity, language, complexity budget, three-tier split).
@@ -81,7 +81,7 @@ detection (`hash`, `status`, `coverage-gaps`, `cross-validate`, `id-inventory`,
    `last_updated`, presence of `final_audit.md` and per-task reports, and source-file
    recency (via `review_tools.py hash` when available). **Refuse** when the target is
    `aiscr-management`. **Enrolment check:** if the repo has **no review setup at all** —
-   no `review_config.yaml`, no `review_cache.json`, and no `review_reports/` — it is
+   no `review_config.toml`, no `review_cache.json`, and no `review_reports/` — it is
    **not enrolled**; the skill stub being present is not enrolment. Explain that
    creating review configuration and state is a deliberate, separately-approved step
    (bootstrap or a controlled enrolment change), and **stop** without scaffolding.
@@ -93,7 +93,7 @@ detection (`hash`, `status`, `coverage-gaps`, `cross-validate`, `id-inventory`,
 4. **Obtain explicit user confirmation** before any write-capable step.
 5. **Execute the confirmed mode** per `codebase-review.plan.md`:
    - `codebase-review-mode-full`: run phases T01–T11 governed by the repo
-     `review_config.yaml`; resume from the cache (run only `pending` tasks; do not
+     `review_config.toml`; resume from the cache (run only `pending` tasks; do not
      restart `done` tasks unless their inputs changed since `last_updated`); honour
      vendored exclusions, the review complexity budget, and **DONE MEANS DONE**.
    - `codebase-review-mode-update`: run phases U01–U06; write findings into the existing
@@ -123,11 +123,11 @@ detection (`hash`, `status`, `coverage-gaps`, `cross-validate`, `id-inventory`,
 
 **IRON LAW:** `NEVER RUN THE CODEBASE-REVIEW WORKFLOW AGAINST THE MANAGEMENT HUB (AISCR-MANAGEMENT) AS THE TARGET.`
 
-**IRON LAW:** `NEVER CREATE REVIEW SCAFFOLDING (REVIEW_CONFIG.YAML, REVIEW_CACHE.JSON, .AGENTS/ANALYSIS/, .AGENTS/REPORTS/REVIEW_REPORTS/) IN A REPO THAT HAS NONE WITHOUT EXPLICIT, SEPARATELY-APPROVED ENROLMENT. THE SKILL STUB BEING PRESENT IS NOT ENROLMENT.`
+**IRON LAW:** `NEVER CREATE REVIEW SCAFFOLDING (REVIEW_CONFIG.TOML, REVIEW_CACHE.JSON, .AGENTS/ANALYSIS/, .AGENTS/REPORTS/REVIEW_REPORTS/) IN A REPO THAT HAS NONE WITHOUT EXPLICIT, SEPARATELY-APPROVED ENROLMENT. THE SKILL STUB BEING PRESENT IS NOT ENROLMENT.`
 
 **IRON LAW:** `NEVER PROCEED PAST MODE PROPOSAL WITHOUT EXPLICIT USER CONFIRMATION.`
 
-**IRON LAW:** `NEVER HARDCODE REPO-SPECIFIC SCOPE (APP NAMES, FILE LISTS, VENDORED LIBRARIES, THRESHOLD VALUES) INTO THE HUB-CANONICAL SOURCE — IT BELONGS IN THE TARGET REPO REVIEW_CONFIG.YAML.`
+**IRON LAW:** `NEVER HARDCODE REPO-SPECIFIC SCOPE (APP NAMES, FILE LISTS, VENDORED LIBRARIES, THRESHOLD VALUES) INTO THE HUB-CANONICAL SOURCE — IT BELONGS IN THE TARGET REPO REVIEW_CONFIG.TOML.`
 
 **IRON LAW:** `NEVER SELF-MODIFY HUB CODEBASE-REVIEW WORKFLOW SOURCES OR EMIT HUB BACKLOG ITEMS FROM A SIBLING REVIEW RUN WITHOUT EXPLICIT CURRENT-RUN HANDOFF APPROVAL.`
 
@@ -140,12 +140,12 @@ No exceptions. These override any "the file is obviously fine", "the cache says 
 | "The detect phase picked `full` so I can just start writing" | Present the proposed mode with evidence; wait for explicit user confirmation. |
 | "The operator asked for `update`, so I'll run `update`" | Run detect first; if no prior pass exists, refuse and recommend `codebase-review-mode-full`. |
 | "I read the summary / a subagent's report, that's enough to mark done" | DONE MEANS DONE — read every in-scope file directly, or split. |
-| "This app name / file list belongs in the canonical body" | Tier 3 — it goes in the target repo `review_config.yaml`, not the hub source. |
+| "This app name / file list belongs in the canonical body" | Tier 3 — it goes in the target repo `review_config.toml`, not the hub source. |
 | "Update mode found a big gap; I'll just do a full re-run now" | Document the gap; recommend a separate `full` invocation. Do not escalate in-session. |
 | "I'll add the new findings to the changelog only" | Update `final_audit.md` body sections **and** the changelog. |
 | "The source comment is Czech; I'll translate it in the quote" | Preserve Czech-native quoted content and domain identifiers verbatim; only the analytical voice is English. |
 | "This 2,000-line file is over the line limit, split it" | Line count is a caution signal, not the trigger — justify splits by coherent unit and complexity. |
-| "The skill stub is here, so I'll create `review_config.yaml` and start a pass" | If the repo has no review setup it is not enrolled — explain that enrolment is deliberate and separately approved, and stop. |
+| "The skill stub is here, so I'll create `review_config.toml` and start a pass" | If the repo has no review setup it is not enrolled — explain that enrolment is deliberate and separately approved, and stop. |
 | "I'll target aiscr-management to test the workflow" | Refuse. The hub carries no review lifecycle; point to `run_validation_all.py` / `validate_tool_parity.py`. |
 | "U05 found a good workflow fix, so I'll patch the hub source now" | Record the evidence and prepare a handoff candidate; hub backlog emission requires explicit approval for this run. |
 <!-- aiscr:endgen -->
@@ -171,7 +171,7 @@ No exceptions. These override any "the file is obviously fine", "the cache says 
   create review configuration, state, or reports. Review artifacts are produced only by
   **running this workflow**, and initial enrolment of a repo that has none is a
   deliberate, separately-approved step — never a side effect of receiving the stub.
-- Repo-specific scope is authoritative in the target repo `review_config.yaml` (Tier 3);
+- Repo-specific scope is authoritative in the target repo `review_config.toml` (Tier 3);
   the hub-canonical source and plan never hardcode it.
 - This canonical source plus the embedded execution plan below are the single
   operational source. Agents must not self-modify them during a review session;
@@ -206,7 +206,7 @@ as a target (it carries no review configuration or state by design).
 The workflow owns the lifecycle, policy, and schemas; **repo-specific scope** (app and
 module names, key file lists, vendored exclusions, analysis families, severity
 thresholds, task-size guardrails, the `phase_outputs` mapping, and the GitHub
-open-issues count) lives in the target repo's `.agents/config/review_config.yaml`
+open-issues count) lives in the target repo's `.agents/config/review_config.toml`
 (Tier 3 — see *Three-tier authority split*). Per-repo state lives in
 `.agents/config/review_cache.json` and `.agents/reports/review_reports/`. If
 `.agents/scripts/review_tools.py` exists in the target repo, use it for mechanical
@@ -214,11 +214,11 @@ detection (`hash`, `status`, `coverage-gaps`, `cross-validate`, `id-inventory`,
 `lint-artifacts`, `all`); it is repo-local plumbing, not a hub contract.
 
 A repository is **enrolled** in the lifecycle when it has review setup
-(`review_config.yaml`, `review_cache.json`, or `review_reports/`). Receiving the skill
+(`review_config.toml`, `review_cache.json`, or `review_reports/`). Receiving the skill
 stub through the shared sync surface does **not** enrol a repo: the workflow refuses to
 auto-scaffold review artifacts in a repo that has none. Initial enrolment is a
 deliberate, separately-approved step (governance bootstrap, or a controlled change that
-introduces `review_config.yaml`) — **not** something the config-sync tooling performs.
+introduces `review_config.toml`) — **not** something the config-sync tooling performs.
 
 **Not in scope:** GitHub PR review (`aiscr-review-pr`, `review_pr.py`) and deployed
 live-UI/SEO verification (`aiscr-prod-ui-crawl-review`, optional T12). Those are
@@ -249,17 +249,17 @@ fields) MUST come from a verifiable source — `git log -1 --format=%ci -- <path
 
 #### Canonical lifecycle phases
 
-Phase names are **abstract and stack-neutral**. The target repo's `review_config.yaml`
+Phase names are **abstract and stack-neutral**. The target repo's `review_config.toml`
 `phase_outputs` mapping binds each canonical phase id to that repo's concrete analysis
 output filenames (preserved without rename); per-task report headers MAY append a
 stack-specific descriptor for reader clarity (for example *T03 — Data-layer analysis
 (Django ORM)* or *T03 — Data-layer analysis (Solr / XSLT)*), but cross-references in
-`final_audit.md`, `bugs.md`, and `refactoring_backlog.md` use the canonical phase id.
+`final_audit.md` and the findings sources use the canonical phase id.
 
 **Full pass (T01–T11):**
 
 - **T01 — Repository map.** Structural index: directories and their purpose, application/module boundaries, file sizes and types, infrastructure components. Update whenever structure changes.
-- **T02 — Dependency graph.** Internal and external dependencies; production code only (exclude test directories from the architectural import graph). Distinguish module-level imports (load-time, higher circular-dependency risk) from lazy imports. Detect circular dependencies (module-level vs lazy carry different severity per Tier 3 thresholds), high fan-in modules (decomposition candidates) and high fan-out modules (high-responsibility candidates), and outdated dependency versions. Record architectural issues in `refactoring_backlog.md`.
+- **T02 — Dependency graph.** Internal and external dependencies; production code only (exclude test directories from the architectural import graph). Distinguish module-level imports (load-time, higher circular-dependency risk) from lazy imports. Detect circular dependencies (module-level vs lazy carry different severity per Tier 3 thresholds), high fan-in modules (decomposition candidates) and high fan-out modules (high-responsibility candidates), and outdated dependency versions. Record architectural issues in `refactoring_backlog.toml`.
 - **T03 — Data-layer analysis.** Persistence and data-access patterns: models/schemas read directly (not via summary), migrations, query patterns, eager-vs-lazy loading, signal/handler chains that can cause hidden N+1 queries, custom managers/query helpers. Detect N+1 queries, counting anti-patterns, missing eager-loading, missing change-detection caching, deprecated data-layer APIs, unindexed filtered fields, and queries in templates or property methods. Record severe issues as bugs.
 - **T04 — Build and container analysis.** All build/container/orchestration files and infrastructure service configs. Detect oversized images, build-only dependencies leaking into production images, poor layer caching, outdated/insecure base images, hardcoded secrets, incorrect secret-injection mechanisms per service, dev/prod version parity gaps, services placed in the wrong environment, multi-process containers lacking a supervisor or exec pattern, and admin/monitoring interfaces exposed without isolation or auth.
 - **T05 — Security analysis.** Production security audit. Run the framework's deploy check first and record warnings. Inspect framework security settings (including dangerous fallback values), secrets management (distinguishing placeholder from real-looking credentials), authentication/authorization, proxy-level controls (HTTPS/HSTS/headers, defense-in-depth), CORS, CSRF, injection risks (raw queries), and XSS risks (unsafe-HTML helpers) classified by input provenance: hardcoded static → acceptable; model/DB value without escaping → medium; request/user input → high. Audit dependencies for known CVEs; when scanners are unavailable, record "CVE audit recommended". Cross-reference build-level findings from T04 by ID rather than duplicating them. For security-sensitive areas consider a dedicated security review before merge.
@@ -277,7 +277,7 @@ stack-specific descriptor for reader clarity (for example *T03 — Data-layer an
 - **U03 — Cross-validation and consistency.** Run mechanical checks (orphan bugs, backlog-prefix mismatches, severity mismatches, cache-path validity, orphan/duplicate IDs, JSON/schema/entry-completeness lint). Manually verify final-audit accuracy (top-findings list references valid IDs; no high-severity finding missing; section content matches task reports).
 - **U04 — Spot-check findings validity.** Targeted (not full) re-verification: read the referenced file/line for every Critical/High bug and a sample of Medium bugs; confirm or invalidate; re-check key architectural findings; flag fixed-but-not-updated entries for status update.
 - **U05 — Workflow-evolution integration.** Classify accumulated workflow-improvement feedback (`incorporated` / `pending` / `rejected` / `partially incorporated`) and produce a prioritized list of pending suggestions with concrete, copy-pasteable diffs for the human reviewer. Agents MUST NOT self-modify the canonical workflow source during an update session; feedback routes to the hub through the documented workflow-evolution feedback path.
-- **U06 — Artifact refresh.** Update all artifacts from U01–U05: cache (`file_hashes`, `last_updated`); analysis JSONs (append/update in place, never overwrite); `bugs.md` (new + fixed-status); `refactoring_backlog.md`; and `final_audit.md` in two passes — (a) body sections to reflect the current consolidated state, (b) a dated changelog entry. Collect findings first, write once at U06.
+- **U06 — Artifact refresh.** Update all artifacts from U01–U05 in one atomic pass, in this order: analysis JSONs (append/update in place, never overwrite); `bugs.toml` (new + fixed-status) and `refactoring_backlog.toml`; `review_tools.py render` to regenerate the Markdown twins; the cache (`file_hashes`, `last_updated`); and `final_audit.md` in two passes — (a) body sections to reflect the current consolidated state, (b) a dated changelog entry. Collect findings first, write once at U06.
 
 U05 implementation detail: legacy `.agents/prompts/prompt_evolution/*_prompt_update.md`
 files are migration evidence, not active prompt patches. Record evidence paths,
@@ -332,13 +332,127 @@ A repo whose cache predates this schema is brought to `schema_version: "2"` by a
 (`sub_tasks`, `scope`, per-task `report_path`). Do **not** move payload between fields,
 rename existing task or sub-task ids, or invalidate completed tasks.
 
+#### Findings schema
+
+Review findings are **structured sources of truth**, not prose. `.agents/reports/bugs.toml`
+and `.agents/reports/refactoring_backlog.toml` are authored by the agent; the Markdown
+files `bugs.md` and `refactoring_backlog.md` are **generated twins** produced by
+`review_tools.py render` and must never be hand-edited. Tooling reads typed fields from
+the TOML; no machine-read field is recovered by matching a Markdown heading or a bold
+label.
+
+**Canonical `schema_version`: `"1"`** for both files. `lint-artifacts` rejects an
+unrecognized version by name rather than reading absent fields.
+
+`preamble` carries the file-level narrative that belongs to the document rather than to
+any finding — the bugs header stating the open-issue count and status vocabulary, the
+backlog note explaining that refactoring priority is evaluated on a different frame from
+bug severity. It is part of the source so that regeneration cannot discard it.
+
+```toml
+### .agents/reports/bugs.toml
+schema_version = "1"
+preamble = """
+Before adding a new bug, check the existing GitHub Issues (currently 113 open).
+Statuses: `already tracked (Issue #XXX)` | `extends existing issue #XXX` | `new issue candidate`"""
+
+[[bug]]
+id = "BUG-001"
+title = "eval() on values from the database in the identifier generators"
+severity = "Critical"          # Critical | High | Medium | Low
+task = "T03"                   # discovering phase id
+github_issue = "new issue candidate"
+description = """..."""
+recommended_fix = """..."""
+alignment = """..."""          # optional; documents a severity/priority divergence
+
+  [[bug.files]]
+  path = "webclient/projekt/models.py"
+  line = 663                   # optional
+  symbol = "Projekt.set_permanent_ident_cely()"  # optional
+  note = "found in T03c"       # optional
+```
+
+`alignment` is the **only** place a documented severity-versus-priority divergence is
+recorded. `cross-validate` reads that field; it never infers intent from wording in
+`description` or `recommended_fix`.
+
+```toml
+### .agents/reports/refactoring_backlog.toml
+schema_version = "1"
+preamble = """
+Structural improvements discovered during the audit."""
+
+[[item]]
+id = "CIRC-01"
+title = "Circular dependency projekt <-> oznameni"
+priority = "High"              # High | Medium | Low
+task = "T02"                   # or "T02/T03" when two phases share the finding
+description = """..."""        # authored as Description, or as Finding
+recommendation = """..."""     # authored as Recommendation, or as Proposal
+impact = """..."""             # optional; own field, never folded into description
+effort = "L"                   # optional; S | M | L | XL
+severity = "Medium"            # optional; when the item also carries a bug severity
+files = ["webclient/oznameni/models.py", "webclient/projekt/forms.py"]  # optional
+applications = ["uzivatel (31)", "core (26)"]  # optional; affected module scope
+bugs = ["BUG-004"]             # optional cross-references into bugs.toml
+```
+
+Required per bug: `id`, `severity`, `task`, and at least one `files` entry. Required per
+backlog item: `id`, `priority`, `task`, `description`. Severity and priority values
+outside the canonical vocabularies are a `lint-artifacts` error naming the offending
+identifier.
+
+**Label normalization.** Repositories that authored backlog items with `Finding` and
+`Proposal` labels map them to `description` and `recommendation`. `Impact` has no
+synonym and is retained as its own optional field rather than folded into `description`.
+
+**Identifier discipline.** A finding's identifier is durable. Where a backlog heading
+carries no identifier but the repo's analysis artifacts already name one for the same
+finding (for example `SOLR-001` in `solr_analysis.json`, `ARCH-01` in
+`dependency_graph.json`), that identifier is carried forward. Identifiers are never bound
+to headings by automated title similarity, and a newly assigned identifier requires
+maintainer review.
+
+#### Repository configuration schema
+
+Repo-specific scope lives in `.agents/config/review_config.toml` (Tier 3). The engine
+reads only a structural subset; the remaining keys are agent-facing. TOML orders bare
+keys before tables, so top-level scalars and arrays precede every `[table]` header.
+
+```toml
+repository = "aiscr-webamcr"
+branch = "test"
+open_issues = 113
+ignored_directories = ["media", "staticfiles"]
+source_extensions = [".py", ".js", ".html"]
+
+[vendored_exclusions]
+directories = ["vendor", "libs"]
+copyright_headers = ["/*!", "* @license"]
+file_patterns = ["*.min.js", "*.min.css"]
+filenames = ["leaflet.js"]
+
+[[tasks]]
+id = "T01"
+target_file = ".agents/analysis/repository_map.json"
+
+[[key_django_apps]]
+dir = "webclient/core"
+```
+
+The engine parses this with the standard library (`tomllib`). It carries **no
+hand-maintained parser** for any structured format, and it requires Python 3.11 or newer.
+
 #### Report schema
 
 Each completed task (and each sub-task, e.g. `T03c`) produces its own
 `.agents/reports/review_reports/<id>.md` written in the same session as the analysis —
 never deferred. Per-task report body: summary of findings, identified problems,
 improvement suggestions, a refactoring-effort estimate table, and a workflow-evolution
-note. Also update the relevant analysis JSON, `bugs.md`, and `refactoring_backlog.md`.
+note. Also update the relevant analysis JSON and the findings sources `bugs.toml` and
+`refactoring_backlog.toml`, then run `review_tools.py render` to regenerate their
+Markdown twins.
 
 `final_audit.md` (T11) uses this fixed **English** section ordering so reports are
 comparable across repositories regardless of stack:
@@ -367,21 +481,25 @@ affected body sections (never the changelog alone).
 When `coverage-gaps` or a U02 audit finds missed files/modules: create sequentially
 named sub-tasks (letter-suffix convention), each covering a cohesive group reviewable
 in one DONE-MEANS-DONE pass; read every in-scope file; write the sub-task report; then
-in a single atomic pass update the analysis JSON (append), `bugs.md`,
-`refactoring_backlog.md`, the cache sub-task entry (`status`, `completed_at`, `scope`,
-`report_path`), and `final_audit.md` body **and** changelog. Common pitfall: updating
+in a single atomic pass, in this order: update the analysis JSON (append), write
+`bugs.toml` and `refactoring_backlog.toml`, run `review_tools.py render` to regenerate
+the Markdown twins, update the cache sub-task entry (`status`, `completed_at`, `scope`,
+`report_path`), and update `final_audit.md` body **and** changelog. Rendering belongs
+inside the pass so the twins are never stale between phases. Common pitfall: updating
 only the changelog while leaving body sections stale — update both.
 
 #### Severity vocabulary and bug-tracking discipline
 
-Use one shared **English** severity vocabulary across `bugs.md`,
-`refactoring_backlog.md`, and final-audit ranking: **Critical / High / Medium / Low**.
+Use one shared **English** severity vocabulary across `bugs.toml`,
+`refactoring_backlog.toml`, and final-audit ranking: **Critical / High / Medium / Low**.
+Severity and priority are **typed fields** in the findings sources, never labels
+recovered from Markdown prose.
 The numeric thresholds that map a finding to a severity (fan-in/fan-out cutoffs,
-version-gap sizes, etc.) are Tier 3 values in the target repo's `review_config.yaml`;
+version-gap sizes, etc.) are Tier 3 values in the target repo's `review_config.toml`;
 this workflow names the rule, the repo supplies the value.
 
-**GitHub Issue cross-reference is mandatory.** Before filing a `bugs.md` or
-`refactoring_backlog.md` entry, check the target repo's GitHub Issues and mark the entry
+**GitHub Issue cross-reference is mandatory.** Before filing a `bugs.toml` or
+`refactoring_backlog.toml` entry, check the target repo's GitHub Issues and mark the entry
 as *already tracked (Issue #N)*, *extends existing Issue #N*, or *new candidate*. When a
 bug also appears in the refactoring backlog, reconcile severity vs priority; document
 any intentional divergence in the bug entry. When a `Critical` bug is found, record it
@@ -394,8 +512,8 @@ that discovered them.
 #### Output language and quotation discipline
 
 Review outputs are authored in **English by default** — task reports, `final_audit.md`
-body and changelog, `bugs.md` and `refactoring_backlog.md` entries (including field
-labels such as File, Severity, Description, Recommended fix, Task), analysis JSON
+body and changelog, `bugs.toml` and `refactoring_backlog.toml` prose fields (`title`,
+`description`, `recommended_fix`, `recommendation`, `preamble`), analysis JSON
 descriptions/notes, workflow-evolution feedback, severity values, and `final_audit.md`
 section headings.
 
@@ -444,12 +562,12 @@ Sub-tasks use the **letter-suffix convention** (`T03a`, `T03b`, `T03c`, …); ea
 produces its own per-task report and a `review_cache.json` sub-task entry with `scope`.
 The per-sub-task scope and the numeric thresholds are Tier 3 in the repo config. If a
 repo chooses to make the complexity budget machine-readable, it MAY add a
-`review_complexity` / split-trigger section to `review_config.yaml`; this is repo-local
+`review_complexity` / split-trigger section to `review_config.toml`; this is repo-local
 and not a precondition for use.
 
 ##### Per-stack analysis-family extension
 
-A repo adds stack-specific analysis families purely through its `review_config.yaml`
+A repo adds stack-specific analysis families purely through its `review_config.toml`
 `phase_outputs` mapping — for example a search/index analysis output and a
 transform/stylesheet analysis output both mapping to the canonical **T03 — Data-layer
 analysis** phase. No fork of the canonical source is required to add a stack-specific
@@ -459,12 +577,13 @@ detail lives in config (Tier 3).
 ##### Three-tier authority split
 
 - **Tier 1 — Lifecycle (hub-canonical):** phase list and intent, report layout, cache
-  schema and versioning, mode-dispatch contract, two-pass `final_audit.md` rule.
+  and findings schemas and their versioning, artefact format classification,
+  mode-dispatch contract, two-pass `final_audit.md` rule.
 - **Tier 2 — Policy (hub-canonical):** severity vocabulary, analysis heuristics, DONE
   MEANS DONE, GitHub-Issue cross-reference, review-complexity split rule, datetime
   discipline, bug-entry format, output-language and quotation discipline. Tier 2 names
   the *rule*; Tier 3 supplies the *value*.
-- **Tier 3 — Scope (target repo `review_config.yaml`):** app/module names, vendored
+- **Tier 3 — Scope (target repo `review_config.toml`):** app/module names, vendored
   exclusions, per-stack analysis families, severity thresholds, task-size guardrails,
   risk/coupling hints, key file lists, `phase_outputs`. The hub-canonical source MUST
   NOT hardcode Tier 3 scope.
@@ -483,9 +602,11 @@ Delegated output is evidence to verify, not a substitute for the read-every-file
   run it again before finalizing `final_audit.md` (T11).
 - Confirm the cache conforms to `schema_version: "2"` and that no completed task was
   invalidated by a schema field-add.
+- Confirm the findings sources conform to `schema_version: "1"` and that
+  `review_tools.py render --check` reports no stale Markdown twin.
 - Confirm `final_audit.md` uses the canonical English section ordering and that body
   sections and changelog were updated together.
-- Confirm severity labels are Critical/High/Medium/Low and that bug/backlog entries
+- Confirm severity values are Critical/High/Medium/Low and that bug/backlog entries
   carry a GitHub-Issue cross-reference.
 - Update the rolling usage-log entry per
   the applicable governance rules.

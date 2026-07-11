@@ -26,6 +26,6 @@
     "spin.js": "2.3.2"
   },
   "devDependencies": {
-    "@fission-ai/openspec": "1.5.0"
+    "@fission-ai/openspec": "1.6.0"
   }
 }

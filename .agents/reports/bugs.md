@@ -53,19 +53,19 @@
 
 ### BUG-004: Extra SELECT in SamostatnyNalez.save() — the initial_pristupnost pattern is incomplete
 
-- **File:** `webclient/pas/models.py:182-186`
+- **Files:** `webclient/pas/models.py:182-186`
 - **Severity:** Medium
-- **Alignment:** Severity raised from Low to Medium (2026-03-13); the extra SELECT runs on every record save and is an architectural anti-pattern — it corresponds to the High-priority classification of ORM-01 in refactoring_backlog.md.
 - **GitHub Issue:** new issue candidate — cannot verify, GitHub Issues unavailable without authentication
 - **Description:** The `SamostatnyNalez` model has an `initial_pristupnost` property, but its `save()` method still unconditionally calls `SamostatnyNalez.objects.get(pk=self.pk)` on every record save (where `pk is not None`). The correct pattern stores the initial value in `__init__()`, which eliminates the extra SELECT.
 - **Recommended fix:** Add to `__init__()`: `self._initial_pristupnost = self.pristupnost`. In `save()`, compare `self._initial_pristupnost != self.pristupnost` without the extra SELECT.
+- **Alignment:** Severity raised from Low to Medium (2026-03-13); the extra SELECT runs on every record save and is an architectural anti-pattern — it corresponds to the High-priority classification of ORM-01 in refactoring_backlog.md.
 - **Task:** T03b
 
 ---
 
 ### BUG-005: Missing db_index on Heslar.nazev_heslare (an FK used globally in limit_choices_to)
 
-- **File:** `webclient/heslar/models.py:22-23`
+- **Files:** `webclient/heslar/models.py:22-23`
 - **Severity:** Medium
 - **GitHub Issue:** new issue candidate — cannot verify, GitHub Issues unavailable without authentication
 - **Description:** The `Heslar.nazev_heslare` field is an FK to `HeslarNazev` without `db_index=True`. This field is filtered in `limit_choices_to` in dozens of FK fields across the entire application (proj, pas, arch_z, uzivatel, dokument, adb, heslar, etc.). The absence of an index causes a table scan on the `heslar` table for every form query.
@@ -76,7 +76,7 @@
 
 ### BUG-006: get_vyskovy_bod() calls .count() twice on the same queryset
 
-- **File:** `webclient/adb/models.py:163-171`
+- **Files:** `webclient/adb/models.py:163-171`
 - **Severity:** Low
 - **GitHub Issue:** new issue candidate — cannot verify, GitHub Issues unavailable without authentication
 - **Description:** The `get_vyskovy_bod()` function calls `vyskove_body.count()` twice — once to test for 0 and once to test for the maximum — each call runs a separate SQL COUNT query.
@@ -114,7 +114,7 @@
 
 ### BUG-009: sudo access for the application user in the production container
 
-- **File:** `Dockerfile:99`
+- **Files:** `Dockerfile:99`
 - **Severity:** Medium
 - **GitHub Issue:** new issue candidate — cannot verify, GitHub Issues unavailable without authentication
 - **Description:** `usermod -aG sudo user` adds the production application user to the `sudo` group. If an RCE exploit of the application occurs (e.g. via eval() — see BUG-001), an attacker can escalate privileges to root inside the container.
@@ -125,7 +125,7 @@
 
 ### BUG-010: Dangerous fallback for DEBUG in production.py
 
-- **File:** `webclient/webclient/settings/production.py:3`
+- **Files:** `webclient/webclient/settings/production.py:3`
 - **Severity:** High
 - **GitHub Issue:** new issue candidate — cannot verify, GitHub Issues unavailable without authentication
 - **Description:** `DEBUG = get_secret("DEBUG", "True") == "True"` — the default fallback is the string `"True"`. If the `DEBUG` key is missing from the secrets file, the production instance starts with `DEBUG=True`. This exposes full Python tracebacks, settings values, and deactivates Django's security checks.
@@ -136,7 +136,7 @@
 
 ### BUG-011: Mailtrap credentials in a commit
 
-- **File:** `webclient/webclient/settings/sample_secrets_mail_client.json`
+- **Files:** `webclient/webclient/settings/sample_secrets_mail_client.json`
 - **Severity:** Medium
 - **GitHub Issue:** new issue candidate — cannot verify, GitHub Issues unavailable without authentication
 - **Description:** The file contains seemingly real Mailtrap sandbox credentials (`EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`). Anyone with access to the repository can use these credentials to log into Mailtrap and read captured test emails.

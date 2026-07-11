@@ -229,21 +229,21 @@
 - **Effort:** M
 
 ### [T05] SEC-01: Fix the DEBUG fallback in production.py
-- **File:** `webclient/webclient/settings/production.py:3`
+- **Files:** `webclient/webclient/settings/production.py:3`
 - **Description:** `get_secret("DEBUG", "True")` — the fallback is "True" → DEBUG=True with a missing key. See BUG-010.
 - **Recommendation:** Change the fallback to "False".
 - **Effort:** S
 - **Severity:** High
 
 ### [T05] SEC-02: Rotate the Mailtrap credentials and replace with placeholders
-- **File:** `webclient/webclient/settings/sample_secrets_mail_client.json`
+- **Files:** `webclient/webclient/settings/sample_secrets_mail_client.json`
 - **Description:** Seemingly real Mailtrap sandbox credentials in a commit. See BUG-011.
 - **Recommendation:** Verify, rotate, replace with obvious placeholders.
 - **Effort:** S
 - **Severity:** Medium
 
 ### [T05] SEC-03: Add Django security headers to production.py
-- **File:** `webclient/webclient/settings/production.py`
+- **Files:** `webclient/webclient/settings/production.py`
 - **Description:** Missing `SECURE_HSTS_SECONDS`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `SECURE_CONTENT_TYPE_NOSNIFF`. The Django security check (`manage.py check --deploy`) will report failures.
 - **Recommendation:** Add to production.py and add `manage.py check --deploy` to the CI pipeline.
 - **Effort:** S

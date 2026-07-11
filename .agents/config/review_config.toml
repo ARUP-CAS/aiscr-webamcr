@@ -1,0 +1,389 @@
+repository = "aiscr-webamcr"
+branch = "test"
+github_url = "https://github.com/ARUP-CAS/aiscr-webamcr/tree/test"
+open_issues = 113
+important_directories = [
+    "webclient",
+    "webclient/services",
+    "webclient/xml_generator",
+    "webclient/static",
+    "webclient/templates",
+    "scripts",
+    "docs",
+    ".github",
+    "proxy",
+    "elasticsearch",
+    "logstash",
+    "kibana",
+    "prometheus",
+    "redis",
+    "fedora",
+    "cert",
+]
+important_files = [
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "webclient/manage.py",
+    "Dockerfile",
+    "Dockerfile-DB",
+    "Dockerfile-DEV",
+    "docker-compose.yml",
+    "docker-compose-dev-local-db.yml",
+    "docker-compose-dev-local-db-all-containers.yml",
+    "docker-compose-proxy.yml",
+    "docker-compose-test.yml",
+    "git_docker-compose.yml",
+    "git_docker-compose.override.yml",
+    "git_docker-compose-proxy.yml",
+    "readthedocs.yaml",
+    ".pre-commit-config.yaml",
+    ".flake8",
+    ".isort.cfg",
+    "webclient/requirements.txt",
+]
+ignored_directories = [
+    ".git",
+    ".venv",
+    "venv",
+    "node_modules",
+    "__pycache__",
+    "build",
+    "dist",
+    "media",
+    "staticfiles",
+    "coverage",
+    ".pytest_cache",
+    ".mypy_cache",
+]
+
+[task_size_limits]
+max_files_per_task = 20
+max_lines_per_task = 6000
+max_lines_per_file = 2000
+large_file_strategy = "split_task"
+prefer_single_app_per_task = true
+
+[cache_strategy]
+hash_algorithm = "sha256"
+hash_target = "file_content"
+
+[cache_strategy.cache_format]
+file_path = "string"
+sha256 = "string"
+last_reviewed = "iso8601"
+task_id = "string"
+
+[[tasks]]
+id = "T01"
+name = "repository_map"
+description = "Repository structure mapping"
+target_file = ".agents/analysis/repository_map.json"
+priority = 1
+
+[[tasks]]
+id = "T02"
+name = "dependency_graph"
+description = "Graph of internal and external dependencies"
+target_file = ".agents/analysis/dependency_graph.json"
+priority = 2
+
+[[tasks]]
+id = "T03"
+name = "orm_analysis"
+description = "Analysis of Django models, migrations, and ORM patterns"
+target_file = ".agents/analysis/orm_analysis.json"
+priority = 3
+note = """
+If a Django application is extensive, create sub-tasks T03a, T03b, etc. AMČR domain entities: Projekt, Akce, Lokalita, Dokument, PAS, Knihovna3D, PIAN, Hesláře, Uživatel, Organizace. Database router `urgent` is an architectural exception used by sequence models (ProjektSekvence, AkceSekvence, PianSekvence). Include in ORM scope also `webclient/*/signals.py`, `webclient/*/managers.py`, `webclient/history/models.py`, and `webclient/komponenta/models.py`.
+"""
+warning = """
+Application `core` contains 77 Python files and 26 migrations — by far the largest app. Recommended split into sub-tasks: T03a (core models and migrations), T03b (other apps). Application `uzivatel` has 31 migrations and is the second largest. Large view files (`arch_z/views.py`, `dokument/views.py`, `projekt/views.py`) analyze as a separate sub-task T03b.
+"""
+
+[[tasks]]
+id = "T04"
+name = "docker_analysis"
+description = "Analysis of all Dockerfile and docker-compose files"
+target_file = ".agents/analysis/docker_analysis.json"
+priority = 4
+
+[[tasks]]
+id = "T05"
+name = "security_analysis"
+description = "Security audit (settings, secrets, authentication, CORS)"
+target_file = ".agents/analysis/security_analysis.json"
+priority = 5
+key_files = [
+    "webclient/webclient/settings/base.py",
+    "webclient/webclient/settings/production.py",
+    "webclient/webclient/settings/dev.py",
+    "webclient/webclient/settings/sample_secrets_db.json",
+    "webclient/webclient/settings/sample_secrets_mail_client.json",
+    "webclient/core/authenticators.py",
+    "webclient/uzivatel/models.py",
+    "webclient/core/middleware.py",
+    "webclient/webclient/urls.py",
+    "proxy/default.conf",
+]
+note = """
+HTTPS/HSTS and security headers may be configured at the NGINX proxy level (`proxy/default.conf`), not in Django settings — include proxy context in the audit. Models providing `get_ident_cely_link` belong in XSS scope.
+"""
+
+[[tasks]]
+id = "T06"
+name = "celery_analysis"
+description = "Analysis of Celery tasks, beat schedule, and async patterns"
+target_file = ".agents/analysis/celery_analysis.json"
+priority = 6
+key_files = [
+    "webclient/webclient/celery.py",
+    "webclient/cron/tasks.py",
+    "webclient/notifikace_projekty/tasks.py",
+    "webclient/webclient/settings/base.py",
+]
+note = """
+The project uses `django_celery_beat`; beat schedule is managed in the database, so it cannot be fully audited from repository files alone.
+"""
+
+[[tasks]]
+id = "T07"
+name = "frontend_analysis"
+description = "Analysis of custom AMČR developer JS/SCSS code (vendored libraries excluded)"
+target_file = ".agents/analysis/frontend_analysis.json"
+priority = 7
+
+[[tasks]]
+id = "T08"
+name = "documentation_analysis"
+description = "Sphinx documentation and documentation generator analysis"
+target_file = ".agents/analysis/documentation_analysis.json"
+priority = 8
+
+[[tasks]]
+id = "T09"
+name = "cicd_analysis"
+description = "GitHub Actions, pre-commit hooks, and CI pipeline analysis"
+target_file = ".agents/analysis/cicd_analysis.json"
+priority = 9
+
+[[tasks]]
+id = "T10"
+name = "scripts_analysis"
+description = "Analysis of scripts in scripts/"
+target_file = ".agents/analysis/scripts_analysis.json"
+priority = 10
+
+[[tasks]]
+id = "T11"
+name = "final_audit"
+description = "Final summary audit of all findings"
+target_file = ".agents/reports/review_reports/final_audit.md"
+priority = 11
+requires = [
+    "T01",
+    "T02",
+    "T03",
+    "T04",
+    "T05",
+    "T06",
+    "T07",
+    "T08",
+    "T09",
+    "T10",
+]
+
+[phase_outputs]
+T01 = [
+    ".agents/analysis/repository_map.json",
+]
+T02 = [
+    ".agents/analysis/dependency_graph.json",
+]
+T03 = [
+    ".agents/analysis/orm_analysis.json",
+]
+T04 = [
+    ".agents/analysis/docker_analysis.json",
+]
+T05 = [
+    ".agents/analysis/security_analysis.json",
+]
+T06 = [
+    ".agents/analysis/celery_analysis.json",
+]
+T07 = [
+    ".agents/analysis/frontend_analysis.json",
+]
+T08 = [
+    ".agents/analysis/documentation_analysis.json",
+]
+T09 = [
+    ".agents/analysis/cicd_analysis.json",
+]
+T10 = [
+    ".agents/analysis/scripts_analysis.json",
+]
+T11 = [
+    ".agents/reports/review_reports/final_audit.md",
+]
+
+[tech_stack]
+backend = [
+    "Python",
+    "Django 5.2",
+]
+database = [
+    "PostgreSQL",
+]
+async = [
+    "Celery",
+    "Redis",
+]
+docs = [
+    "Sphinx",
+    "Read the Docs",
+]
+infrastructure = [
+    "Docker",
+    "docker-compose",
+]
+observability = [
+    "Elasticsearch",
+    "Kibana",
+    "Logstash",
+    "Prometheus",
+]
+document_storage = [
+    "Fedora Repository",
+]
+frontend = [
+    "JavaScript (~37%)",
+    "SCSS",
+    "HTML",
+]
+proxy = [
+    "NGINX",
+]
+testing = [
+    "Django test framework",
+    "Selenium tests",
+]
+code_quality = [
+    "black",
+    "isort",
+    "flake8",
+    "pre-commit",
+]
+
+[[key_django_apps]]
+dir = "webclient/core/"
+name = "Core"
+note = "Shared infrastructure — 77 .py, 26 migrations. Largest app."
+
+[[key_django_apps]]
+dir = "webclient/projekt/"
+name = "Projekt"
+note = "Primary domain entity (archaeological projects)"
+
+[[key_django_apps]]
+dir = "webclient/arch_z/"
+name = "Archeologický záznam"
+note = "Archaeological records — 33 .py, 20 migrations"
+
+[[key_django_apps]]
+dir = "webclient/uzivatel/"
+name = "Uživatel"
+note = "Users, organisations, permissions, CAS SSO — 43 .py, 31 migrations"
+
+[[key_django_apps]]
+dir = "webclient/dokument/"
+name = "Dokument"
+note = "Documents and attachments — 31 .py"
+
+[[key_django_apps]]
+dir = "webclient/heslar/"
+name = "Hesláře"
+note = "Controlled vocabularies / domain value lists"
+
+[[key_django_apps]]
+dir = "webclient/pian/"
+name = "PIAN"
+note = "Spatial identification of finds — geometry, coordinate transforms"
+
+[[key_django_apps]]
+dir = "webclient/pas/"
+name = "PAS"
+note = "Amateur metal-detector finds cooperation"
+
+[[key_django_apps]]
+dir = "webclient/cron/"
+name = "Cron"
+note = "Celery beat schedule — no tests"
+
+[[key_django_apps]]
+dir = "webclient/notifikace_projekty/"
+name = "Notifikace projektů"
+note = "E-mail notifications via Celery — no tests"
+
+[vendored_exclusions]
+directories = [
+    "vendor/",
+    "vendors/",
+    "lib/",
+    "libs/",
+    "node_modules/",
+    "dist/",
+]
+file_patterns = [
+    "*.min.js",
+    "*.min.css",
+]
+copyright_headers = [
+    "/*!",
+    "* @license",
+    "* jQuery",
+    "* Bootstrap",
+]
+filenames = [
+    "leaflet.markercluster-src.js",
+    "leaflet-search.js",
+    "leaflet-search-geocoder.js",
+    "leaflet.measure.js",
+    "leaflet-grayscale.js",
+    "leaflet_subgroup.js",
+    "leaflet.coor.js",
+    "leaflet.EditCoordControl.js",
+    "simpleheat.js",
+    "HeatLayer.js",
+    "html-to-rtf-browser.js",
+    "coordTransform.js",
+    "timer.js",
+    "datepicker-cs.js",
+]
+note = """
+Vendored files must not be assessed for internal code quality in any task. They may be referenced (e.g. SRI attribute checks in templates).
+"""
+
+[prompt_evolution]
+apply_manually = true
+reviewer = "human"
+note = """
+Older prompt_evolution evidence was classified; usable rules were incorporated into this review_config.yaml and the canonical aiscr-codebase-review workflow. The temporary legacy evidence report was removed. New U05 feedback remains local evidence for this repository until a human explicitly approves report-to-backlog handoff.
+"""
+
+[follow_up]
+workflow = "aiscr-codebase-review"
+mode = "codebase-review-mode-update"
+phases = [
+    "U01",
+    "U02",
+    "U03",
+    "U04",
+    "U05",
+    "U06",
+]
+output = ".agents/reports/review_reports/final_audit.md"
+tools = ".agents/scripts/review_tools.py"
+note = """
+Incremental update prompt — detects changes, coverage gaps, cross-validation issues, and spot-checks existing findings. Output goes into final_audit.md Changelog section (not separate files). Does not replace the full T01-T11 audit cycle. review_tools.py provides: hash, cross-validate, coverage-gaps, id-inventory, lint-artifacts, prompt-evolution, repo-structure, status. Script is repo-agnostic and config-driven (uses review_config.yaml).
+"""

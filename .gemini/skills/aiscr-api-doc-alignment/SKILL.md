@@ -118,7 +118,7 @@ are aligned and clearly governed.
   - Changing underlying API behaviour; focus is on documentation and governance.
   - Building entirely new documentation infrastructure.
 - Assumptions:
-  - The API repo has a documentation entry point (e.g. Quarto site, README, or OpenAPI spec). If there is no OpenAPI/REST spec file, treat the main documentation (e.g. Quarto sections per API) as user-facing canonical and any agent-facing config (e.g. `.agents/config/review_config.yaml` with `live_endpoints`) as canonical for live URLs and verification.
+  - The API repo has a documentation entry point (e.g. Quarto site, README, or OpenAPI spec). If there is no OpenAPI/REST spec file, treat the main documentation (e.g. Quarto sections per API) as user-facing canonical and any agent-facing config (e.g. `.agents/config/review_config.toml` with `live_endpoints`) as canonical for live URLs and verification.
 
 #### Ecosystem map and related artifacts
 
@@ -149,7 +149,7 @@ are aligned and clearly governed.
     - deprecation rules,
     - example requests/responses.
   - How other files should reference the canonical ones (links, short summaries, no duplication).
-- If the repo has no OpenAPI/REST spec: treat the main API documentation (e.g. Quarto `.qmd` sections) as canonical for user-facing endpoint definitions and examples, and any `.agents/` config that lists live URLs and curl (e.g. `live_endpoints` in `review_config.yaml`) as canonical for agent verification. Other files should link to or summarise these; avoid duplicating endpoint tables.
+- If the repo has no OpenAPI/REST spec: treat the main API documentation (e.g. Quarto `.qmd` sections) as canonical for user-facing endpoint definitions and examples, and any `.agents/` config that lists live URLs and curl (e.g. `live_endpoints` in `review_config.toml`) as canonical for agent verification. Other files should link to or summarise these; avoid duplicating endpoint tables.
 
 ##### Step 3 — Align docs and specs
 
@@ -162,7 +162,7 @@ are aligned and clearly governed.
 
 - In `AGENTS.md` or `CLAUDE.md`:
   - Define rules for AI‑generated API docs:
-    - Always read the canonical source first (OpenAPI spec if present, otherwise the main API docs and agent live-endpoint config, e.g. `review_config.yaml`).
+    - Always read the canonical source first (OpenAPI spec if present, otherwise the main API docs and agent live-endpoint config, e.g. `review_config.toml`).
     - Never invent endpoints or parameters not present in the canonical source.
     - When generating examples, ensure they match authentication and base URLs from the canonical source.
   - Optionally, create a dedicated AI prompt for generating or updating API docs with these rules.
@@ -182,7 +182,7 @@ are aligned and clearly governed.
 - Re-run the relevant validation tools:
   - OpenAPI or similar spec validators on all in-scope API definitions.
   - Link or build checks for the documentation site, if available.
-- When no machine-readable spec exists: cross-check docs and config for consistent base URLs and auth; run any repo-defined verification (e.g. curl commands from `review_config.yaml`).
+- When no machine-readable spec exists: cross-check docs and config for consistent base URLs and auth; run any repo-defined verification (e.g. curl commands from `review_config.toml`).
 - Review the changes:
   - Inspect diffs in API specs and related docs,
   - Confirm that responsibilities between specs, docs, and governance sections are clear and non-duplicative.
