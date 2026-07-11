@@ -287,6 +287,34 @@ class SouborImportIntegrityError(ImportDataError):
         )
 
 
+class ImportDataFileExtensionNotAllowedError(ImportDataError):
+    """
+    Výjimka vyvolaná při importu souboru, jehož přípona neodpovídá žádnému MIME typu
+    povolenému pro navázaný záznam.
+
+    Skutečný MIME typ nelze při validaci CSV zjistit (binární obsah není k dispozici);
+    kontrola proto vychází pouze z přípony v názvu souboru.
+    """
+
+    def __init__(self, nazev, vazba):
+        """
+        Inicializuje instanci třídy.
+
+        :param nazev: Název souboru s nepovolenou příponou.
+        :param vazba: ``ident_cely`` navázaného záznamu, pro který přípona není povolena.
+        """
+        self.nazev = nazev
+        self.vazba = vazba
+        super().__init__(
+            "{} {} {} {}".format(
+                _("core_admin.ImportDataFileExtensionNotAllowedError.message.part_1"),
+                nazev,
+                _("core_admin.ImportDataFileExtensionNotAllowedError.message.part_2"),
+                vazba,
+            )
+        )
+
+
 class ImportDataLimitChoicesError(ImportDataError):
     """Výjimka vyvolaná při hodnotě cizího klíče, která nesplňuje omezení limit_choices_to."""
 
@@ -624,7 +652,7 @@ class IntegerImportField(BaseImportField):
             value = value.decode("utf-8")
         stripped = str(value).strip()
         if re.fullmatch(r"-?\d+(?:\.0+)?", stripped):
-            return int(float(stripped))
+            return int(stripped.split(".")[0])
         match = self.pattern.search(stripped)
         if match:
             return int(match.group())
@@ -4235,12 +4263,14 @@ class UzivatelMapper(ImportModelMapper):
         """
         return record
 
-    def import_validation(self, performed_action, user_id) -> dict | None:
+    def import_validation(self, performed_action, user_id, *args, **kwargs) -> dict | None:
         """
         Zabrání smazání aktivního uživatele a jinak deleguje běžnou validaci mapperu.
 
         :param performed_action: Typ prováděné operace importu.
         :param user_id: Primární klíč aktuálně přihlášeného uživatele.
+        :param args: Dodatečné poziční argumenty zachované kvůli jednotné signatuře, předávají se rodičovské metodě.
+        :param kwargs: Dodatečné pojmenované argumenty zachované kvůli jednotné signatuře, předávají se rodičovské metodě.
         :return: Filtrační podmínky primárního klíče nebo ``None`` podle standardní validace mapperu.
         :raises ImportDataActiveUserCannotBeDeleted: Vyvolá se při pokusu smazat právě aktivního uživatele.
         """
@@ -4249,7 +4279,7 @@ class UzivatelMapper(ImportModelMapper):
             and User.objects.get(pk=user_id).ident_cely == self.value_dict["ident_cely"]
         ):
             raise ImportDataActiveUserCannotBeDeleted(self.value_dict["ident_cely"])
-        return super().import_validation(performed_action)
+        return super().import_validation(performed_action, *args, **kwargs)
 
 
 @ImportModelMapper.register("uzivatele_notifikace_projekty")
@@ -4500,9 +4530,12 @@ class UzivatelOpravneniMapper(ImportModelMapper):
             raise ImportDataError(
                 f"{_('core_admin.ImportDataError.message.invalid_performed_action')}: {performed_action}"
             )
-        user = User.objects.get(ident_cely=self.value_dict["uzivatel"])
-        group = Group.objects.get(name=self.value_dict["skupina"])
-        relation_exists = user.groups.filter(pk=group.pk).exists()
+        try:
+            user = User.objects.get(ident_cely=self.value_dict["uzivatel"])
+            group = Group.objects.get(name=self.value_dict["skupina"])
+            relation_exists = user.groups.filter(pk=group.pk).exists()
+        except (User.DoesNotExist, Group.DoesNotExist):
+            relation_exists = False
         record_id = {"uzivatel": self.value_dict["uzivatel"], "skupina": self.value_dict["skupina"]}
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and relation_exists:
             raise ImportDataIntegrityError(record_id, "User.groups", performed_action)
@@ -4574,10 +4607,39 @@ class SouborMapper(ImportModelMapper):
         """
         return record
 
+    @staticmethod
+    def _validate_extension_allowed_for_vazba(nazev, vazba_instance):
+        """
+        Ověří, že přípona souboru může odpovídat MIME typu povolenému pro navázaný záznam.
+
+        Skutečný MIME typ nelze při validaci CSV zjistit (binární obsah není k dispozici);
+        kontroluje se proto, zda alespoň jeden MIME typ odpovídající příponě je ve whitelistu
+        navázaného záznamu. Neznámé přípony se nekontrolují — rozhodne kontrola obsahu při importu.
+
+        :param nazev: Název importovaného souboru.
+        :param vazba_instance: Instance ``SouborVazby`` navázaného záznamu.
+        :raises ImportDataFileExtensionNotAllowedError: Vyvolá se, pokud přípona neodpovídá
+            žádnému MIME typu povolenému pro navázaný záznam.
+        """
+        if not nazev or vazba_instance is None:
+            return
+        extension = nazev.rsplit(".", 1)[-1].lower() if "." in nazev else ""
+        possible_mimes = Soubor.mimes_for_extension(extension)
+        if not possible_mimes:
+            return
+        allowed_mimes = Soubor.allowed_mimes_for_record(vazba_instance.navazany_objekt)
+        if possible_mimes.isdisjoint(allowed_mimes):
+            raise ImportDataFileExtensionNotAllowedError(
+                nazev, getattr(vazba_instance.navazany_objekt, "ident_cely", None)
+            )
+
     def import_validation(self, performed_action, *args, seen_in_batch: set | None = None, **kwargs):
         """
         Ověří, že při INSERT neexistuje soubor stejného ``nazev`` navázaný na stejný objekt,
         a že stejná kombinace nevyskytuje dvakrát v aktuální importní dávce.
+
+        Při INSERT a UPDATE dále ověří, že přípona souboru může odpovídat MIME typu
+        povolenému pro navázaný záznam.
 
         UPDATE a DELETE pracují s primárním klíčem (id) a delegují se na bázovou validaci.
 
@@ -4588,10 +4650,17 @@ class SouborMapper(ImportModelMapper):
         :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
         :return: Slovník s podmínkou pro dohledání souboru, případně výsledek bázové validace.
         :raises SouborImportIntegrityError: Při INSERT, pokud soubor stejného jména už existuje v DB nebo v dávce.
+        :raises ImportDataFileExtensionNotAllowedError: Při INSERT a UPDATE, pokud přípona souboru
+            neodpovídá žádnému MIME typu povolenému pro navázaný záznam.
         """
+        if performed_action in (
+            ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+            ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+        ):
+            mapping_dict = self.map(performed_action, instance_values=True)
+            self._validate_extension_allowed_for_vazba(mapping_dict.get("nazev"), mapping_dict.get("vazba"))
         if performed_action != ImportDataAdminForm.PERFORMED_ACTION_INSERT:
             return super().import_validation(performed_action, *args, **kwargs)
-        mapping_dict = self.map(performed_action, instance_values=True)
         nazev = mapping_dict.get("nazev")
         vazba_instance = mapping_dict.get("vazba")
         if Soubor.objects.filter(nazev=nazev, vazba=vazba_instance).exists():
@@ -4679,9 +4748,12 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
             raise ImportDataError(
                 f"{_('core_admin.ImportDataError.message.invalid_performed_action')}: {performed_action}"
             )
-        user = User.objects.get(ident_cely=self.value_dict["uzivatel"])
-        notification_type = UserNotificationType.objects.get(ident_cely=self.value_dict["notifikace"])
-        relation_exists = user.notification_types.filter(pk=notification_type.pk).exists()
+        try:
+            user = User.objects.get(ident_cely=self.value_dict["uzivatel"])
+            notification_type = UserNotificationType.objects.get(ident_cely=self.value_dict["notifikace"])
+            relation_exists = user.notification_types.filter(pk=notification_type.pk).exists()
+        except (User.DoesNotExist, UserNotificationType.DoesNotExist):
+            relation_exists = False
         record_id = {"uzivatel": self.value_dict["uzivatel"], "notifikace": self.value_dict["notifikace"]}
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and relation_exists:
             raise ImportDataIntegrityError(record_id, "User.notification_types", performed_action)

@@ -217,6 +217,7 @@
 
       const MAX_CONSECUTIVE_FAILURES = 5
       let consecutiveFailures = 0
+      let maxProgressData = 0
 
       async function sendRequest(url) {
           try {
@@ -246,15 +247,16 @@
                   return 0
               }
 
+              maxProgressData = Math.max(maxProgressData, data.progress_data)
               const progressBarData = document.getElementById("progressBarData")
               if (progressBarData) {
-                  progressBarData.style.width = data.progress_data + "%"
+                  progressBarData.style.width = maxProgressData + "%"
 
                   const progressPercentData = document.getElementById("progressPercentData")
                   progressPercentData.style.left = `${document.getElementById("progressBarBoxData").offsetWidth / 2}px`
 
-                  if (data.progress_data > 0) {
-                      progressPercentData.textContent = data.progress_data + "%"
+                  if (maxProgressData > 0) {
+                      progressPercentData.textContent = maxProgressData + "%"
                   }
               }
 

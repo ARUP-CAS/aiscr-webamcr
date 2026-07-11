@@ -43,6 +43,17 @@ class SouborCalculateRozsahTest(SimpleTestCase):
 
         self.assertEqual(rozsah, 2)
 
+    def test_calculate_rozsah_returns_one_for_tif_with_foreign_content(self):
+        """calculate_rozsah() vrátí 1 pro soubor s příponou TIF, jehož obsah je jiný obrazový formát bez n_frames."""
+        data = io.BytesIO()
+        Image.new("RGB", (1, 1)).save(data, format="JPEG")
+        data.seek(0)
+        soubor = Soubor(nazev="prejmenovany.tif")
+
+        rozsah = soubor.calculate_rozsah(binary_data=data)
+
+        self.assertEqual(rozsah, 1)
+
     def test_calculate_rozsah_returns_one_for_other_file_type(self):
         """calculate_rozsah() vrátí 1 pro soubor bez zvláštního zpracování."""
         soubor = Soubor(nazev="poznamka.txt")

@@ -2542,7 +2542,7 @@ class DataImportProgress(LoginRequiredMixin, View):
                 progress_data = math.floor((len(serialized_results) / record_count) * IMPORT_PROGRESS_PHASE_DATA_DONE)
             else:
                 progress_data = 0
-            if progress_data >= IMPORT_PROGRESS_PHASE_FINISHED:
+            if phase_progress >= IMPORT_PROGRESS_PHASE_FINISHED:
                 status = "finished"
             elif stopped:
                 status = "stopped"

@@ -3,11 +3,14 @@ from unittest.mock import MagicMock, patch
 from core.forms import ImportDataAdminForm
 from core.import_data_mappers import (
     ImportDataError,
+    ImportDataFileExtensionNotAllowedError,
     ImportDataIncorrectStructureError,
     SouborImportIntegrityError,
     SouborMapper,
 )
 from django.test import TestCase
+from dokument.models import Dokument
+from pas.models import SamostatnyNalez
 
 INSERT = ImportDataAdminForm.PERFORMED_ACTION_INSERT
 UPDATE = ImportDataAdminForm.PERFORMED_ACTION_UPDATE
@@ -127,3 +130,67 @@ class SouborMapperImportValidationSeenInBatchTest(TestCase):
         self._make_mapper("test.pdf", 1).import_validation(INSERT, seen_in_batch=None)
         result = self._make_mapper("test.pdf", 1).import_validation(INSERT, seen_in_batch=None)
         self.assertIsInstance(result, dict)
+
+
+class SouborMapperExtensionWhitelistTest(TestCase):
+    """Testy pro kontrolu přípony souboru proti whitelistu MIME typů navázaného záznamu — bez DB."""
+
+    def _make_mapper(self, nazev, navazany_objekt):
+        """Vytvoří SouborMapper s namockovaným map() vracejícím SouborVazby s daným navázaným objektem."""
+        mock_vazba = MagicMock()
+        mock_vazba.pk = 1
+        mock_vazba.navazany_objekt = navazany_objekt
+        mapper = SouborMapper({"nazev": nazev, "vazba": "X-IDENT"})
+        mapper.map = MagicMock(return_value={"nazev": nazev, "vazba": mock_vazba})
+        return mapper
+
+    def test_disallowed_extension_for_samostatny_nalez_raises_error(self):
+        """import_validation() INSERT vyvolá chybu pro textový soubor na samostatném nálezu (jen obrazové formáty)."""
+        mapper = self._make_mapper("poznamka.txt", SamostatnyNalez(ident_cely="C-202400001-N00001"))
+        with self.assertRaises(ImportDataFileExtensionNotAllowedError):
+            mapper.import_validation(INSERT)
+
+    @patch("core.import_data_mappers.Soubor.objects")
+    def test_allowed_extension_for_samostatny_nalez_passes(self, mock_objects):
+        """import_validation() INSERT projde pro obrazový soubor na samostatném nálezu.
+
+        :param mock_objects: Mock pro ``Soubor.objects`` simulující prázdnou DB.
+        """
+        mock_objects.filter.return_value.exists.return_value = False
+        mapper = self._make_mapper("fotka.jpg", SamostatnyNalez(ident_cely="C-202400001-N00002"))
+        result = mapper.import_validation(INSERT)
+        self.assertIsInstance(result, dict)
+
+    @patch("core.import_data_mappers.Soubor.objects")
+    def test_unknown_extension_skips_check(self, mock_objects):
+        """import_validation() INSERT nekontroluje příponu, kterou nelze namapovat na MIME typ.
+
+        :param mock_objects: Mock pro ``Soubor.objects`` simulující prázdnou DB.
+        """
+        mock_objects.filter.return_value.exists.return_value = False
+        mapper = self._make_mapper("mracno.xyz", SamostatnyNalez(ident_cely="C-202400001-N00003"))
+        result = mapper.import_validation(INSERT)
+        self.assertIsInstance(result, dict)
+
+    def test_archive_extension_for_dokument_raises_error(self):
+        """import_validation() INSERT vyvolá chybu pro ZIP archiv na běžném dokumentu."""
+        mapper = self._make_mapper("archiv.zip", Dokument(ident_cely="C-DL-202400001"))
+        with self.assertRaises(ImportDataFileExtensionNotAllowedError):
+            mapper.import_validation(INSERT)
+
+    @patch("core.import_data_mappers.Soubor.objects")
+    def test_archive_extension_for_model3d_dokument_passes(self, mock_objects):
+        """import_validation() INSERT projde pro ZIP archiv na dokumentu 3D modelu.
+
+        :param mock_objects: Mock pro ``Soubor.objects`` simulující prázdnou DB.
+        """
+        mock_objects.filter.return_value.exists.return_value = False
+        mapper = self._make_mapper("model.zip", Dokument(ident_cely="3D-202400001"))
+        result = mapper.import_validation(INSERT)
+        self.assertIsInstance(result, dict)
+
+    def test_update_with_disallowed_extension_raises_error(self):
+        """import_validation() UPDATE vyvolá chybu přípony ještě před delegací na bázovou validaci."""
+        mapper = self._make_mapper("poznamka.txt", SamostatnyNalez(ident_cely="C-202400001-N00004"))
+        with self.assertRaises(ImportDataFileExtensionNotAllowedError):
+            mapper.import_validation(UPDATE)

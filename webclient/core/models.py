@@ -268,7 +268,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 try:
                     binary_data.seek(0)
                     return Image.open(binary_data).n_frames
-                except (UnidentifiedImageError, OSError, ValueError):
+                except (UnidentifiedImageError, OSError, ValueError, AttributeError):
                     logger.debug("core.models.Soubor.calculate_rozsah.error_reading_tif")
                     return 1
             return 1
@@ -368,34 +368,80 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             :return: Vrací výsledek volání ``get()``.
         """
         mime_type = cls.get_mime_types(file)
-        return {
-            "image/jpeg": ("jpeg", "jpg", "jpe", "jfif", "jfif-tbnl", "jif", "pjpg"),
-            "image/png": ("png",),
-            "image/tiff": ("tiff", "tif"),
-            "image/heic": ("heic", "heif"),
-            "image/heif": ("heic", "heif"),
-            "image/svg+xml": ("svg", "svgz"),
-            "image/bmp": ("bmp",),
-            "image/gif": ("gif",),
-            "text/plain": ("txt", "text"),
-            "application/pdf": ("pdf",),
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ("xlsx",),
-            "text/csv": ("csv",),
-            "application/zip": ("zip",),
-            "application/zip-compressed": ("zip",),
-            "application/x-zip-compressed": ("zip",),
-            "application/vnd.rar": ("rar",),
-            "application/x-rar-compressed": ("rar",),
-            "application/x-rar": ("rar",),
-            "application/x-7z-compressed": ("7z",),
-            "application/vnd.ms-excel": ("xls", "xla", "xlb", "xlc", "xlm", "xlt", "xlw"),
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ("docx",),
-            "application/msword": ("doc", "dot", "wiz"),
-            "application/rtf": ("rtf",),
-            "text/rtf": ("rtf",),
-            "application/vnd.oasis.opendocument.text": ("odt",),
-            "application/vnd.oasis.opendocument.spreadsheet": ("ods",),
-        }.get(mime_type, [])
+        return cls.extensions_for_mime(mime_type)
+
+    MIME_TO_EXTENSIONS = {
+        "image/jpeg": ("jpeg", "jpg", "jpe", "jfif", "jfif-tbnl", "jif", "pjpg"),
+        "image/png": ("png",),
+        "image/tiff": ("tiff", "tif"),
+        "image/heic": ("heic", "heif"),
+        "image/heif": ("heic", "heif"),
+        "image/svg+xml": ("svg", "svgz"),
+        "image/bmp": ("bmp",),
+        "image/gif": ("gif",),
+        "text/plain": ("txt", "text"),
+        "application/pdf": ("pdf",),
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ("xlsx",),
+        "text/csv": ("csv",),
+        "application/zip": ("zip",),
+        "application/zip-compressed": ("zip",),
+        "application/x-zip-compressed": ("zip",),
+        "application/vnd.rar": ("rar",),
+        "application/x-rar-compressed": ("rar",),
+        "application/x-rar": ("rar",),
+        "application/x-7z-compressed": ("7z",),
+        "application/vnd.ms-excel": ("xls", "xla", "xlb", "xlc", "xlm", "xlt", "xlw"),
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ("docx",),
+        "application/msword": ("doc", "dot", "wiz"),
+        "application/rtf": ("rtf",),
+        "text/rtf": ("rtf",),
+        "application/vnd.oasis.opendocument.text": ("odt",),
+        "application/vnd.oasis.opendocument.spreadsheet": ("ods",),
+    }
+
+    @classmethod
+    def extensions_for_mime(cls, mime_type):
+        """
+        Vrací povolené přípony pro daný MIME typ.
+
+        :param mime_type: MIME typ, pro který se hledají přípony.
+        :return: N-tice povolených přípon, nebo prázdný seznam pro neznámý MIME typ.
+        """
+        return cls.MIME_TO_EXTENSIONS.get(mime_type, [])
+
+    @classmethod
+    def mimes_for_extension(cls, extension) -> frozenset:
+        """
+        Vrací množinu MIME typů, kterým může odpovídat daná přípona souboru.
+
+        :param extension: Přípona souboru bez tečky, malými písmeny.
+        :return: Množina MIME typů; prázdná pro neznámou příponu.
+        """
+        return frozenset(
+            mime_type for mime_type, extensions in cls.MIME_TO_EXTENSIONS.items() if extension in extensions
+        )
+
+    @classmethod
+    def allowed_mimes_for_record(cls, navazany_objekt) -> frozenset:
+        """
+        Vrací množinu povolených MIME typů souboru podle typu navázaného záznamu.
+
+        Odpovídá whitelistům používaným při uživatelském uploadu (:meth:`check_mime_for_url`);
+        dokumenty s ``3D`` v identifikátoru používají whitelist pro 3D modely.
+
+        :param navazany_objekt: Navázaný hlavní záznam (Projekt, Dokument nebo SamostatnyNalez).
+        :return: Množina povolených MIME typů.
+        """
+        from dokument.models import Dokument
+        from pas.models import SamostatnyNalez
+
+        if isinstance(navazany_objekt, SamostatnyNalez):
+            return cls.PAS_ACCEPTED_MIMES
+        if isinstance(navazany_objekt, Dokument):
+            if "3D" in navazany_objekt.ident_cely:
+                return cls.MODEL3D_ACCEPTED_MIMES
+            return cls.DOKUMENT_ACCEPTED_MIMES
+        return cls.PROJEKT_ACCEPTED_MIMES
 
     @staticmethod
     def _detect_mime(file) -> str:

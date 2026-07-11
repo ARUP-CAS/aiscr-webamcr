@@ -18,12 +18,15 @@ SOUBOR_FILE_KEY = "soubory"
 class RunDataImportSouborTest(RunDataImportMapperTestBase):
     """Testy ``run_data_import`` pro mapper ``SouborMapper``."""
 
-    def _soubor_phase_patches(self):
+    def _soubor_phase_patches(self, mimetype="text/plain"):
         """Patche potřebné pro fázi importu souborů (čtení z disku, Fedora binary upload).
 
         Mock ``FedoraRepositoryConnector`` ukládá do ``self.connector_mock`` a všechny instance
         vyrobené patchnutou továrnou jsou dostupné v ``self.connector_instances`` pro inspekci
         volání jednotlivých metod (např. ``delete_binary_file``).
+
+        :param mimetype: MIME typ vrácený mockem ``Soubor.get_mime_types``; musí odpovídat
+            příponě importovaného souboru i whitelistu navázaného záznamu.
         """
         settings_value = SimpleNamespace(value=json.dumps({"DIRECTORY_PATH": "/tmp/import-data"}))
         binary_result = SimpleNamespace(
@@ -47,19 +50,33 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             patch("cron.tasks.os.path.isdir", return_value=True),
             patch("cron.tasks.os.path.isfile", return_value=True),
             patch("builtins.open", mock_open(read_data=b"data")),
-            patch("core.models.Soubor.get_mime_types", return_value="text/plain"),
+            patch("core.models.Soubor.get_mime_types", return_value=mimetype),
             patch("cron.tasks.FedoraRepositoryConnector", side_effect=connector_factory),
         ]
 
     def _run_soubor_import(self, payloads, performed_action=ImportDataAdminForm.PERFORMED_ACTION_INSERT, **kwargs):
         extra = kwargs.pop("extra_patches", None) or []
+        mimetype = kwargs.pop("mimetype", "text/plain")
         return self.run_import_records(
             SOUBOR_FILE_KEY,
             payloads,
             performed_action,
-            extra_patches=self._soubor_phase_patches() + list(extra),
+            extra_patches=self._soubor_phase_patches(mimetype=mimetype) + list(extra),
             **kwargs,
         )
+
+    @staticmethod
+    def _file_fixture_for_vazba(label):
+        """Vrátí příponu a MIME typ souboru vhodné pro whitelist daného typu vazby.
+
+        Samostatný nález přijímá pouze obrazové formáty, ostatní typy vazby přijímají ``text/plain``.
+
+        :param label: Označení typu vazby (``projekt``, ``dokument`` nebo ``samostatny_nalez``).
+        :return: Dvojice ``(extension, mimetype)``.
+        """
+        if label == "samostatny_nalez":
+            return "jpg", "image/jpeg"
+        return "txt", "text/plain"
 
     def _create_existing_soubor(self, nazev="existing.txt", vazba=None) -> Soubor:
         """Vytvoří v DB Soubor navázaný na předanou souborovou vazbu pro UPDATE/DELETE testy."""
@@ -253,9 +270,11 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         """INSERT Souboru musí uložit metadata objektu navázaného přes ``Soubor.vazba``."""
         for label, related_record in self._soubor_related_records("001"):
             with self.subTest(vazba=label):
-                file_name = f"insert-{label}.txt"
+                extension, mimetype = self._file_fixture_for_vazba(label)
+                file_name = f"insert-{label}.{extension}"
                 fake_redis, save_metadata_calls = self._run_soubor_import(
                     [{"vazba": related_record.ident_cely, "nazev": file_name}],
+                    mimetype=mimetype,
                 )
 
                 self.assert_import_success(fake_redis)
@@ -267,9 +286,11 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         """INSERT Souboru musí přegenerovat Fedora metadata navázaného hlavního záznamu a nezapsat na něj historii."""
         for label, soubor_related_record, related_history_record in self._soubor_related_history_records("001"):
             with self.subTest(vazba=label):
-                file_name = f"insert-history-{label}.txt"
+                extension, mimetype = self._file_fixture_for_vazba(label)
+                file_name = f"insert-history-{label}.{extension}"
                 fake_redis, save_metadata_calls = self._run_soubor_import(
                     [{"vazba": soubor_related_record.ident_cely, "nazev": file_name}],
+                    mimetype=mimetype,
                 )
 
                 self.assert_import_success(fake_redis)
@@ -310,7 +331,8 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         """UPDATE Souboru musí uložit metadata objektu navázaného přes ``Soubor.vazba``."""
         for label, related_record in self._soubor_related_records("002"):
             with self.subTest(vazba=label):
-                file_name = f"update-{label}.txt"
+                extension, mimetype = self._file_fixture_for_vazba(label)
+                file_name = f"update-{label}.{extension}"
                 existing = self._create_existing_soubor(nazev=file_name, vazba=related_record.soubory)
                 fake_redis, save_metadata_calls = self._run_soubor_import(
                     [
@@ -321,6 +343,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
                         }
                     ],
                     performed_action=ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+                    mimetype=mimetype,
                 )
 
                 self.assert_import_success(fake_redis)
@@ -332,7 +355,8 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         """UPDATE Souboru musí přegenerovat Fedora metadata navázaného hlavního záznamu a nezapsat na něj historii."""
         for label, soubor_related_record, related_history_record in self._soubor_related_history_records("002"):
             with self.subTest(vazba=label):
-                file_name = f"update-history-{label}.txt"
+                extension, mimetype = self._file_fixture_for_vazba(label)
+                file_name = f"update-history-{label}.{extension}"
                 existing = self._create_existing_soubor(nazev=file_name, vazba=soubor_related_record.soubory)
                 fake_redis, save_metadata_calls = self._run_soubor_import(
                     [
@@ -343,6 +367,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
                         }
                     ],
                     performed_action=ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+                    mimetype=mimetype,
                 )
 
                 self.assert_import_success(fake_redis)
@@ -553,6 +578,48 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         file_results = self._file_import_results(fake_redis)
         self.assertEqual(file_results[0]["file_name"], "missing-binary.txt")
         self.assertIn("file_not_found_in_directory", file_results[0]["additional_info"])
+
+    def test_insert_file_with_mismatched_extension_marks_import_as_failed(self):
+        """INSERT souboru, jehož přípona neodpovídá MIME typu detekovanému z obsahu, nesmí uspět."""
+        fake_redis, _ = self._run_soubor_import(
+            [{"vazba": self.dokument.ident_cely, "nazev": "renamed-photo.tif"}],
+        )
+
+        self.assert_import_failed(fake_redis)
+        status_message = fake_redis.get(f"import_data_status_message_{JOB_ID}").decode("utf-8")
+        self.assertEqual(status_message, "cron.tasks.run_data_import.failed_mime_extension_mismatch")
+        fedora_result = self._fedora_update_result(fake_redis)
+        self.assertIn("does not match detected mime type", fedora_result["0"][0])
+
+    def test_insert_file_with_unsupported_mime_marks_import_as_failed(self):
+        """INSERT souboru, jehož detekovaný MIME typ není v mapě podporovaných formátů, nesmí uspět."""
+        fake_redis, _ = self._run_soubor_import(
+            [{"vazba": self.dokument.ident_cely, "nazev": "neznamy.bin"}],
+            mimetype="application/octet-stream",
+        )
+
+        self.assert_import_failed(fake_redis)
+        status_message = fake_redis.get(f"import_data_status_message_{JOB_ID}").decode("utf-8")
+        self.assertEqual(status_message, "cron.tasks.run_data_import.failed_mime_unsupported")
+        fedora_result = self._fedora_update_result(fake_redis)
+        self.assertIn("is not supported", fedora_result["0"][0])
+
+    def test_insert_file_with_disallowed_mime_for_record_marks_import_as_failed(self):
+        """INSERT souboru, jehož MIME typ není ve whitelistu navázaného záznamu, nesmí uspět.
+
+        Samostatný nález přijímá pouze obrazové formáty — textový soubor s konzistentní
+        příponou tedy projde kontrolou přípony, ale musí selhat na whitelistu záznamu.
+        """
+        nalez = self._create_samostatny_nalez_for_soubor("C-202399001-N95001")
+        fake_redis, _ = self._run_soubor_import(
+            [{"vazba": nalez.ident_cely, "nazev": "poznamka.txt"}],
+        )
+
+        self.assert_import_failed(fake_redis)
+        status_message = fake_redis.get(f"import_data_status_message_{JOB_ID}").decode("utf-8")
+        self.assertEqual(status_message, "cron.tasks.run_data_import.failed_mime_not_allowed")
+        fedora_result = self._fedora_update_result(fake_redis)
+        self.assertIn("is not allowed for record", fedora_result["0"][0])
 
     def test_failure_mid_batch_marks_import_as_failed(self):
         """Selhání zápisu v polovině dávky ve fázi souborů musí celý import označit jako selhalý.

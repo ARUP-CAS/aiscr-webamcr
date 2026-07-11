@@ -100,6 +100,74 @@ class SouborMissingRepositoryUuidError(RuntimeError):
         )
 
 
+class SouborMimeUnsupportedError(RuntimeError):
+    """Vyvoláno při importu souboru, jehož detekovaný MIME typ aplikace nepodporuje.
+
+    Indikuje MIME typ mimo mapu podporovaných formátů ``Soubor.MIME_TO_EXTENSIONS``.
+    """
+
+    def __init__(self, nazev, mime_type):
+        """
+        Inicializuje instanci třídy.
+
+        :param nazev: Název importovaného souboru.
+        :param mime_type: MIME typ detekovaný z obsahu souboru.
+        """
+        self.nazev = nazev
+        self.mime_type = mime_type
+        super().__init__("Soubor nazev={!r}: detected mime type {!r} is not supported".format(nazev, mime_type))
+
+
+class SouborMimeExtensionMismatchError(RuntimeError):
+    """Vyvoláno při importu souboru, jehož přípona neodpovídá MIME typu detekovanému z obsahu.
+
+    Indikuje přejmenovaný soubor (např. JPEG uložený s příponou ``.tif``), jehož import
+    by vedl k nekonzistenci mezi názvem a skutečným obsahem souboru.
+    """
+
+    def __init__(self, nazev, extension, mime_type):
+        """
+        Inicializuje instanci třídy.
+
+        :param nazev: Název souboru, u nějž byla zjištěna neshoda.
+        :param extension: Přípona odvozená z názvu souboru.
+        :param mime_type: MIME typ detekovaný z obsahu souboru.
+        """
+        self.nazev = nazev
+        self.extension = extension
+        self.mime_type = mime_type
+        super().__init__(
+            "Soubor nazev={!r}: extension {!r} does not match detected mime type {!r}".format(
+                nazev, extension, mime_type
+            )
+        )
+
+
+class SouborMimeNotAllowedError(RuntimeError):
+    """Vyvoláno při importu souboru, jehož MIME typ není povolen pro typ navázaného záznamu.
+
+    Whitelisty povolených MIME typů odpovídají kontrole ``Soubor.check_mime_for_url``
+    používané při uživatelském uploadu.
+    """
+
+    def __init__(self, nazev, mime_type, navazany_ident_cely):
+        """
+        Inicializuje instanci třídy.
+
+        :param nazev: Název importovaného souboru.
+        :param mime_type: MIME typ detekovaný z obsahu souboru.
+        :param navazany_ident_cely: Identifikátor navázaného záznamu, pro který MIME typ není povolen.
+        """
+        self.nazev = nazev
+        self.mime_type = mime_type
+        self.navazany_ident_cely = navazany_ident_cely
+        super().__init__(
+            "Soubor nazev={!r}: mime type {!r} is not allowed for record {!r}".format(
+                nazev, mime_type, navazany_ident_cely
+            )
+        )
+
+
 class ImportLockLostError(RuntimeError):
     """Vyvoláno, když ``refresh_import_lock`` zjistí, že importní lock byl ztracen.
 
@@ -935,6 +1003,44 @@ def run_data_import(job_id, user_id, lock_token):
                         redis_connector.set(job_key("import_data_stop"), 1)
                         logger.info("cron.tasks.run_data_import.files.insert.stopped", extra={"job_id": job_id})
                         break
+                if not failed and not stopped and pending_soubor_fedora_deletes:
+                    delete_fedora_transactions = []
+                    try:
+                        for entry in pending_soubor_fedora_deletes:
+                            soubor = entry["soubor"]
+                            navazany_objekt = entry["navazany_objekt"]
+                            delete_fedora_transaction = FedoraDeletionOnlyTransaction()
+                            delete_fedora_transaction.override_tombstone = True
+                            delete_fedora_transactions.append(delete_fedora_transaction)
+                            soubor.active_transaction = delete_fedora_transaction
+                            soubor.suppress_signal = True
+                            soubor.delete()
+                            if navazany_objekt is not None:
+                                FedoraRepositoryConnector(
+                                    navazany_objekt, delete_fedora_transaction
+                                ).delete_binary_file(soubor)
+                        for delete_fedora_transaction in delete_fedora_transactions:
+                            delete_fedora_transaction.mark_transaction_as_closed()
+                    except Exception as err:
+                        logger.error(
+                            "cron.tasks.run_data_import.soubor_delete.error",
+                            extra={"job_id": job_id, "soubor_pk": soubor.pk, "error": err},
+                        )
+                        for delete_fedora_transaction in delete_fedora_transactions:
+                            try:
+                                delete_fedora_transaction.rollback_transaction()
+                            except Exception as rollback_err:
+                                logger.error(
+                                    "cron.tasks.run_data_import.soubor_delete.rollback_error",
+                                    extra={"job_id": job_id, "error": rollback_err},
+                                )
+                        transaction.set_rollback(True)
+                        failed = True
+                        redis_connector.set(
+                            job_key("import_data_status_message"),
+                            _("cron.tasks.run_data_import.failed_during_data_import"),
+                        )
+                        redis_connector.set(job_key("import_data_stop"), 1)
         except Exception as err:
             if not isinstance(err, ImportLockLostError):
                 redis_connector.set(
@@ -974,32 +1080,6 @@ def run_data_import(job_id, user_id, lock_token):
                 if detail == success_marker:
                     redis_connector.lset(job_key("import_data_progress_details"), index, rollback_marker)
 
-        if not failed and pending_soubor_fedora_deletes:
-            for entry in pending_soubor_fedora_deletes:
-                soubor = entry["soubor"]
-                navazany_objekt = entry["navazany_objekt"]
-                try:
-                    delete_fedora_transaction = FedoraDeletionOnlyTransaction()
-                    delete_fedora_transaction.override_tombstone = True
-                    soubor.active_transaction = delete_fedora_transaction
-                    soubor.suppress_signal = True
-                    soubor.delete()
-                    if navazany_objekt is not None:
-                        FedoraRepositoryConnector(navazany_objekt, delete_fedora_transaction).delete_binary_file(soubor)
-                    delete_fedora_transaction.mark_transaction_as_closed()
-                except Exception as err:
-                    logger.error(
-                        "cron.tasks.run_data_import.soubor_delete.error",
-                        extra={"job_id": job_id, "soubor_pk": soubor.pk, "error": err},
-                    )
-                    failed = True
-                    redis_connector.set(
-                        job_key("import_data_status_message"),
-                        _("cron.tasks.run_data_import.failed_during_data_import"),
-                    )
-                    redis_connector.set(job_key("import_data_stop"), 1)
-                    break
-
         HISTORY_REDIS_UPDATE_INTERVAL = 10
         history_total = len(updated_history_dict)
         redis_connector.set(job_key("import_data_history_total"), history_total, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
@@ -1010,6 +1090,8 @@ def run_data_import(job_id, user_id, lock_token):
                 import_history_record_result[record_id] = history_skipped_str
         redis_connector.set(job_key("import_data_history_record_result"), json.dumps(import_history_record_result))
         for history_index, (history_target_key, entry) in enumerate(updated_history_dict.items()):
+            if failed:
+                break
             refresh_import_lock()
             if not failed and not stopped:
                 redis_connector.set(
@@ -1135,8 +1217,7 @@ def run_data_import(job_id, user_id, lock_token):
                     fedora_error_result = "{}: {}".format(
                         _("cron.tasks.run_data_import.fedora_error"), fedora_error_stack
                     )
-                    result_record_ids = affected_record_ids or range(record_count)
-                    for record_id in result_record_ids:
+                    for record_id in affected_record_ids:
                         import_fedora_result[record_id].append(fedora_error_result)
                     redis_connector.set(job_key("import_fedora_result"), json.dumps(import_fedora_result))
                     failed = True
@@ -1201,6 +1282,9 @@ def run_data_import(job_id, user_id, lock_token):
                 redis_connector.set(job_key("import_data_stop"), 1)
                 failed = True
             if not failed:
+                fedora_transaction = None
+                filename = None
+                record_id = None
                 try:
                     redis_connector.set(
                         job_key("import_data_status_message"),
@@ -1215,6 +1299,7 @@ def run_data_import(job_id, user_id, lock_token):
                     pending_related_metadata: dict = {}
                     for file_index, soubor in enumerate(import_files_list):
                         fedora_transaction = None
+                        record_id = None
                         refresh_import_lock()
                         soubor: Soubor
                         logger.debug(
@@ -1311,6 +1396,14 @@ def run_data_import(job_id, user_id, lock_token):
                         with open(file_path, "rb") as f:
                             bio = BytesIO(f.read())
                         mimetype = Soubor.get_mime_types(bio)
+                        mime_extensions = Soubor.extensions_for_mime(mimetype)
+                        if not mime_extensions:
+                            raise SouborMimeUnsupportedError(filename, mimetype)
+                        file_extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+                        if file_extension not in mime_extensions:
+                            raise SouborMimeExtensionMismatchError(filename, file_extension, mimetype)
+                        if mimetype not in Soubor.allowed_mimes_for_record(soubor.vazba.navazany_objekt):
+                            raise SouborMimeNotAllowedError(filename, mimetype, ident_cely)
                         if mimetype in ["image/png", "image/jpeg", "image/tiff"] and isinstance(
                             soubor.vazba.navazany_objekt, SamostatnyNalez
                         ):
@@ -1399,6 +1492,7 @@ def run_data_import(job_id, user_id, lock_token):
                             ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
                         )
                     if not failed and not stopped:
+                        record_id = None
                         for (obj_class, obj_pk), entry in pending_related_metadata.items():
                             fedora_transaction = None
                             refresh_import_lock()
@@ -1435,6 +1529,70 @@ def run_data_import(job_id, user_id, lock_token):
                     redis_connector.set(
                         job_key("import_data_status_message"),
                         _("cron.tasks.run_data_import.failed_missing_repository_uuid"),
+                    )
+                    failed = True
+                except SouborMimeUnsupportedError as err:
+                    if fedora_transaction is not None:
+                        fedora_transaction.rollback_transaction()
+                    logger.error(
+                        "cron.tasks.run_data_import.files.mime_unsupported",
+                        extra={
+                            "error": err,
+                            "job_id": job_id,
+                            "import_filename": filename,
+                            "detected_mime": err.mime_type,
+                        },
+                    )
+                    if record_id is not None:
+                        import_fedora_result[record_id] = [str(err)]
+                        redis_connector.set(job_key("import_fedora_result"), json.dumps(import_fedora_result))
+                    redis_connector.set(job_key("import_data_stop"), 1)
+                    redis_connector.set(
+                        job_key("import_data_status_message"),
+                        _("cron.tasks.run_data_import.failed_mime_unsupported"),
+                    )
+                    failed = True
+                except SouborMimeExtensionMismatchError as err:
+                    if fedora_transaction is not None:
+                        fedora_transaction.rollback_transaction()
+                    logger.error(
+                        "cron.tasks.run_data_import.files.mime_extension_mismatch",
+                        extra={
+                            "error": err,
+                            "job_id": job_id,
+                            "import_filename": filename,
+                            "detected_mime": err.mime_type,
+                        },
+                    )
+                    if record_id is not None:
+                        import_fedora_result[record_id] = [str(err)]
+                        redis_connector.set(job_key("import_fedora_result"), json.dumps(import_fedora_result))
+                    redis_connector.set(job_key("import_data_stop"), 1)
+                    redis_connector.set(
+                        job_key("import_data_status_message"),
+                        _("cron.tasks.run_data_import.failed_mime_extension_mismatch"),
+                    )
+                    failed = True
+                except SouborMimeNotAllowedError as err:
+                    if fedora_transaction is not None:
+                        fedora_transaction.rollback_transaction()
+                    logger.error(
+                        "cron.tasks.run_data_import.files.mime_not_allowed",
+                        extra={
+                            "error": err,
+                            "job_id": job_id,
+                            "import_filename": filename,
+                            "detected_mime": err.mime_type,
+                            "navazany_ident_cely": err.navazany_ident_cely,
+                        },
+                    )
+                    if record_id is not None:
+                        import_fedora_result[record_id] = [str(err)]
+                        redis_connector.set(job_key("import_fedora_result"), json.dumps(import_fedora_result))
+                    redis_connector.set(job_key("import_data_stop"), 1)
+                    redis_connector.set(
+                        job_key("import_data_status_message"),
+                        _("cron.tasks.run_data_import.failed_mime_not_allowed"),
                     )
                     failed = True
                 except FedoraError as err:

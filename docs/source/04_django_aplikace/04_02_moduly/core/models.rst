@@ -131,6 +131,30 @@ Třídy
 
       :return: Vrací výsledek volání ``get()``.
 
+   .. py:method:: extensions_for_mime()
+
+      Vrací povolené přípony pro daný MIME typ.
+
+      :param mime_type: MIME typ, pro který se hledají přípony.
+      :return: N-tice povolených přípon, nebo prázdný seznam pro neznámý MIME typ.
+
+   .. py:method:: mimes_for_extension()
+
+      Vrací množinu MIME typů, kterým může odpovídat daná přípona souboru.
+
+      :param extension: Přípona souboru bez tečky, malými písmeny.
+      :return: Množina MIME typů; prázdná pro neznámou příponu.
+
+   .. py:method:: allowed_mimes_for_record()
+
+      Vrací množinu povolených MIME typů souboru podle typu navázaného záznamu.
+
+      Odpovídá whitelistům používaným při uživatelském uploadu (:meth:`check_mime_for_url`);
+      dokumenty s ``3D`` v identifikátoru používají whitelist pro 3D modely.
+
+      :param navazany_objekt: Navázaný hlavní záznam (Projekt, Dokument nebo SamostatnyNalez).
+      :return: Množina povolených MIME typů.
+
    .. py:method:: _detect_mime()
 
       Detekuje MIME typ souboru pomocí ``libmagic`` s workaroundem pro regresi v ``libmagic >= 5.46``,

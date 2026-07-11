@@ -108,6 +108,24 @@ Třídy
       :param nazev: Název souboru, kterého se konflikt týká.
 
 
+.. py:class:: ImportDataFileExtensionNotAllowedError
+
+   Výjimka vyvolaná při importu souboru, jehož přípona neodpovídá žádnému MIME typu
+   povolenému pro navázaný záznam.
+
+   Skutečný MIME typ nelze při validaci CSV zjistit (binární obsah není k dispozici);
+   kontrola proto vychází pouze z přípony v názvu souboru.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param nazev: Název souboru s nepovolenou příponou.
+      :param vazba: ``ident_cely`` navázaného záznamu, pro který přípona není povolena.
+
+
 .. py:class:: ImportDataLimitChoicesError
 
    Výjimka vyvolaná při hodnotě cizího klíče, která nesplňuje omezení limit_choices_to.
@@ -2063,6 +2081,8 @@ Třídy
 
       :param performed_action: Typ prováděné operace importu.
       :param user_id: Primární klíč aktuálně přihlášeného uživatele.
+      :param args: Dodatečné poziční argumenty zachované kvůli jednotné signatuře, předávají se rodičovské metodě.
+      :param kwargs: Dodatečné pojmenované argumenty zachované kvůli jednotné signatuře, předávají se rodičovské metodě.
       :return: Filtrační podmínky primárního klíče nebo ``None`` podle standardní validace mapperu.
       :raises ImportDataActiveUserCannotBeDeleted: Vyvolá se při pokusu smazat právě aktivního uživatele.
 
@@ -2257,10 +2277,26 @@ Třídy
       :param record: Záznam ``Soubor`` po importu.
       :return: Přímo předaný soubor.
 
+   .. py:method:: _validate_extension_allowed_for_vazba()
+
+      Ověří, že přípona souboru může odpovídat MIME typu povolenému pro navázaný záznam.
+
+      Skutečný MIME typ nelze při validaci CSV zjistit (binární obsah není k dispozici);
+      kontroluje se proto, zda alespoň jeden MIME typ odpovídající příponě je ve whitelistu
+      navázaného záznamu. Neznámé přípony se nekontrolují — rozhodne kontrola obsahu při importu.
+
+      :param nazev: Název importovaného souboru.
+      :param vazba_instance: Instance ``SouborVazby`` navázaného záznamu.
+      :raises ImportDataFileExtensionNotAllowedError: Vyvolá se, pokud přípona neodpovídá
+          žádnému MIME typu povolenému pro navázaný záznam.
+
    .. py:method:: import_validation()
 
       Ověří, že při INSERT neexistuje soubor stejného ``nazev`` navázaný na stejný objekt,
       a že stejná kombinace nevyskytuje dvakrát v aktuální importní dávce.
+
+      Při INSERT a UPDATE dále ověří, že přípona souboru může odpovídat MIME typu
+      povolenému pro navázaný záznam.
 
       UPDATE a DELETE pracují s primárním klíčem (id) a delegují se na bázovou validaci.
 
@@ -2271,6 +2307,8 @@ Třídy
       :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
       :return: Slovník s podmínkou pro dohledání souboru, případně výsledek bázové validace.
       :raises SouborImportIntegrityError: Při INSERT, pokud soubor stejného jména už existuje v DB nebo v dávce.
+      :raises ImportDataFileExtensionNotAllowedError: Při INSERT a UPDATE, pokud přípona souboru
+          neodpovídá žádnému MIME typu povolenému pro navázaný záznam.
 
    .. py:method:: get_related_history_targets()
 

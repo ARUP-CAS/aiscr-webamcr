@@ -23,6 +23,58 @@ Třídy
       :param nazev: Název souboru, u nějž chybí ``repository_uuid``.
 
 
+.. py:class:: SouborMimeUnsupportedError
+
+   Vyvoláno při importu souboru, jehož detekovaný MIME typ aplikace nepodporuje.
+
+   Indikuje MIME typ mimo mapu podporovaných formátů ``Soubor.MIME_TO_EXTENSIONS``.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param nazev: Název importovaného souboru.
+      :param mime_type: MIME typ detekovaný z obsahu souboru.
+
+
+.. py:class:: SouborMimeExtensionMismatchError
+
+   Vyvoláno při importu souboru, jehož přípona neodpovídá MIME typu detekovanému z obsahu.
+
+   Indikuje přejmenovaný soubor (např. JPEG uložený s příponou ``.tif``), jehož import
+   by vedl k nekonzistenci mezi názvem a skutečným obsahem souboru.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param nazev: Název souboru, u nějž byla zjištěna neshoda.
+      :param extension: Přípona odvozená z názvu souboru.
+      :param mime_type: MIME typ detekovaný z obsahu souboru.
+
+
+.. py:class:: SouborMimeNotAllowedError
+
+   Vyvoláno při importu souboru, jehož MIME typ není povolen pro typ navázaného záznamu.
+
+   Whitelisty povolených MIME typů odpovídají kontrole ``Soubor.check_mime_for_url``
+   používané při uživatelském uploadu.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param nazev: Název importovaného souboru.
+      :param mime_type: MIME typ detekovaný z obsahu souboru.
+      :param navazany_ident_cely: Identifikátor navázaného záznamu, pro který MIME typ není povolen.
+
+
 .. py:class:: ImportLockLostError
 
    Vyvoláno, když ``refresh_import_lock`` zjistí, že importní lock byl ztracen.
