@@ -2797,7 +2797,10 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
         :return: Seznam souvisejícího archeologického záznamu a projektu.
         """
         if isinstance(record, ArcheologickyZaznam):
-            return [record, record.akce.projekt]
+            # Při DELETE je navázaná Akce smazána dříve než ArcheologickyZaznam,
+            # reverzní vazba proto už nemusí existovat.
+            akce = getattr(record, "akce", None)
+            return [record, akce.projekt if akce else None]
         elif isinstance(record, Akce):
             return [record.archeologicky_zaznam, record.projekt]
 

@@ -1,8 +1,8 @@
 """Jednotkové testy pro ``cron.tasks.run_data_import`` — import Akce (MultipleClassImportModelMapper).
 
 ArcheologickyZaznamAkceMapper ukládá dvě instance (ArcheologickyZaznam + Akce) v rámci
-jednoho záznamu. DELETE pro tento mapper není podporován (``create_records`` vrací pro
-DELETE prázdný seznam), proto je vynechán z testovací matice.
+jednoho záznamu. DELETE maže obě instance; vstupní soubor pro DELETE smí obsahovat
+pouze sloupec primárního klíče.
 """
 
 import json
@@ -93,8 +93,8 @@ class RunDataImportArcheologickyZaznamAkceTest(TestCase):
             "souhrn_upresneni": None,
         }
 
-    def _build_redis(self, performed_action: str) -> FakeRedis:
-        serialized_record = self._build_insert_payload()
+    def _build_redis(self, performed_action: str, payload: dict | None = None) -> FakeRedis:
+        serialized_record = payload or self._build_insert_payload()
         return FakeRedis(
             {
                 f"import_data_count_{JOB_ID}": "1",
@@ -324,24 +324,26 @@ class RunDataImportArcheologickyZaznamAkceTest(TestCase):
         self.assertEqual(updated.pristupnost_id, original_pristupnost_id, "Pristupnost nesmí být přepsána na None.")
         self.assertEqual(updated.hlavni_katastr_id, original_katastr_id, "Hlavní katastr nesmí být přepsán na None.")
 
-    def test_delete_action_is_noop_for_multiple_class_mapper(self):
-        """DELETE pro ``ArcheologickyZaznamAkceMapper`` je no-op.
+    def test_delete_removes_az_and_akce_from_database(self):
+        """DELETE pro ``ArcheologickyZaznamAkceMapper`` smaže Akci i ArcheologickyZaznam.
 
-        ``MultipleClassImportModelMapper.create_records`` vrací pro DELETE prázdný seznam,
-        takže žádný záznam se neoznačí ke smazání. Test fixuje toto chování — pokud
-        by se v budoucnu DELETE skutečně implementoval, je třeba sem doplnit kontrolu
-        smazaných řádků.
+        Vstupní soubor pro DELETE smí obsahovat pouze sloupec primárního klíče —
+        plný insert payload by selhal už při kontrole struktury sloupců.
         """
         az, akce = self._create_existing_az_with_akce()
-        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_DELETE)
+        delete_payload = {"__file_name": FILE_KEY, "ident_cely": AZ_IDENT}
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_DELETE, payload=delete_payload)
 
         self._run_import(fake_redis)
 
-        self.assertTrue(
-            ArcheologickyZaznam.objects.filter(pk=az.pk).exists(),
-            "DELETE akce pro ArcheologickyZaznamAkceMapper je no-op — řádek musí v DB zůstat.",
-        )
-        self.assertTrue(
+        details = fake_redis.lrange(f"import_data_progress_details_{JOB_ID}", 0, -1)
+        decoded = [item.decode("utf-8") for item in details]
+        self.assertIn("cron.tasks.run_data_import.success", decoded)
+        self.assertFalse(
             Akce.objects.filter(pk=akce.pk).exists(),
-            "DELETE akce pro ArcheologickyZaznamAkceMapper je no-op — Akce musí v DB zůstat.",
+            "DELETE musí smazat záznam Akce.",
+        )
+        self.assertFalse(
+            ArcheologickyZaznam.objects.filter(pk=az.pk).exists(),
+            "DELETE musí smazat záznam ArcheologickyZaznam.",
         )
