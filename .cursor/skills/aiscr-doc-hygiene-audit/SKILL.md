@@ -136,7 +136,7 @@ Before claiming this workflow complete:
 
 #### Context
 
-This plan is for running a **documentation hygiene and governance alignment** pass in an AIS CR repository.  
+This plan is for running a **documentation hygiene and governance alignment** pass in an AIS CR repository.
 It uses `.agents/prompts/audit_doc_hygiene.md` as the main execution prompt and adds a structured lifecycle and validation layer around it.
 
 Typical targets include application repositories (`aiscr-webamcr`, `aiscr-digiarchiv-2`), documentation sites (`aiscr-webamcr-help`, `aiscr-api-home`), data tools (`aiscr-oao`), and this management repo itself (`aiscr-management`). This plan is typically orchestrated by the **aiscr-doc-hygiene-audit** skill (see the identifiers and references stated in this workflow); the plan remains usable without the skill.

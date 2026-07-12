@@ -10,7 +10,7 @@ disable-model-invocation: true
 <!-- aiscr:stop-anchor -->
 **Entry scope (compiled)**
 
-- This `.gemini/skills/` skill is self-contained; use the workflow body and embedded execution plan below.
+- This `.gemini/skills/` skill is self-contained; use the workflow body below.
 - Load repository-local configuration and state named by the workflow before acting.
 - Do not look for management-hub specs, plans, or canonical source files at runtime.
 

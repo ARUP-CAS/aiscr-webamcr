@@ -100,3 +100,115 @@ Before claiming this workflow complete, confirm:
 - `/opsx:verify <slug>` -- verify implementation matches change artifacts
 - `/opsx:archive <slug>` -- archive the change after implementation is complete
 - Read the identifiers and references stated in this workflow and follow the **Usage** section before loading a different workflow's context.
+
+## Embedded execution plan
+
+### Plan: Security- and Privacy-Aware AI Usage
+
+> **OpenSpec migration:** Persistent behavioral requirements for this workflow now live in the workflow contract summarized in this compiled skill. This `.plan.md` file remains the reusable execution and governance layer for aiscr-management. See the identifiers and references stated in this workflow.
+
+#### Context
+
+AIS CR repositories may process or reference sensitive data (personal data, internal identifiers, infrastructure details).
+This plan coordinates how AI systems should be used with such data across repositories, without replacing formal security policies.
+
+#### Goals
+
+- Make security and privacy considerations **explicit** in AI-related workflows.
+- Reduce the risk of leaking sensitive data via prompts, logs, or generated artefacts.
+- Align per‑repo practices with organisation‑level security expectations.
+
+#### Scope and assumptions
+
+- In scope:
+  - AI prompts, hooks, scripts, and configs that may touch sensitive data.
+  - Governance documents that mention AI usage.
+- Out of scope:
+  - Formal legal or regulatory compliance frameworks (handled outside Git).
+  - Low‑level security controls (firewalls, network configuration).
+- Assumptions:
+  - Each repo already has or can add a minimal section on AI usage in its governance docs.
+
+#### Execution approach
+
+- Locate AI-related docs and prompts that might reference sensitive data.
+- Trace where secrets, credentials, or PII are handled in code/config.
+- Review proposed governance and prompt changes for clarity and completeness.
+
+#### Steps
+
+##### Step 1 — Identify sensitive data surfaces
+
+- For each target repo (or category of repos):
+  - Identify:
+    - types of data handled (e.g. personal data, internal IDs, infrastructure URLs),
+    - where such data is stored (databases, files, environment variables),
+    - any existing guidance on handling this data.
+
+##### Step 2 — Review current AI usage rules
+
+- Read:
+  - `AGENTS.md`, `CLAUDE.md`, and similar files in each repo.
+  - Any internal guidance recorded in `.agents/` prompts or reports.
+- Determine:
+  - whether AI usage rules are present,
+  - whether they are consistent across repos.
+
+##### Step 3 — Define cross-repo AI usage principles
+
+- Draft a short set of principles, for example:
+  - Do not paste raw production data into prompts or examples.
+  - Abstract or anonymise data when demonstrating behaviour.
+  - Redact secrets, tokens, and passwords from any logs or AI context.
+  - For internal infrastructure details, use placeholders unless explicitly needed and allowed.
+- Confirm these principles with security stakeholders where appropriate.
+
+##### Step 4 — Update governance and prompts
+
+- In relevant governance docs (`AGENTS.md`, `CLAUDE.md`) and key prompts:
+  - Add or refine sections that:
+    - state the AI usage principles,
+    - provide examples of safe vs unsafe patterns,
+    - define where to store any AI‑generated artefacts that may touch sensitive topics.
+- Ensure that:
+  - prompts which interact with live systems or logs include reminders about redaction and anonymisation,
+  - automation scripts do not automatically send sensitive content to external services.
+
+##### Step 5 — Validation
+
+- Spot-check repositories for compliance:
+  - prompts and docs uphold the principles,
+  - no obvious examples of unsafe AI usage.
+- Optionally:
+  - Create a small checklist in `.agents/reports/` to track which repos have been updated and reviewed.
+
+#### Validation
+
+- For each in-scope repository:
+  - Check that AI usage sections in `AGENTS.md`, `CLAUDE.md`, and key prompts reflect the agreed principles.
+  - Review a small sample of recent AI-assisted changes or sessions (where logs are available) for obvious security/privacy issues.
+- Perform targeted reviews where sensitive data handling is most likely; confirm that any checklists or tracking reports are up to date.
+
+#### Notes / Adaptation per repo
+
+- For repositories that only host public information (e.g. public websites), the rules may be lighter but should still be explicit.
+- For repositories handling more sensitive data, consider stricter local policies and escalations (for example requiring human review for any AI‑assisted change touching certain domains).
+
+#### Options (planning phase)
+
+**Delivery (choose before any commit or push):**
+
+- **(A)** Create a branch and open a **draft** PR for the changes (recommended).
+- **(B)** Create a branch only (no PR).
+- **(C)** Local changes only (no branch, no push).
+
+Do not commit or push until the user has chosen.
+
+#### Plan refinement / Autoupdate
+
+After applying this plan across multiple repositories:
+
+- Recommended if relevant: apply updates to this `.plan.md` (e.g. more precise AI usage principles or improved validation patterns); validate changes accordingly and verbosely.
+- Keep repository‑specific security constraints in local governance docs; the plan should express cross‑repo principles.
+- If new classes of risks are identified, add them to the `Steps` and `Notes` so future runs proactively address them.
+- If you discover that specific prompts, scripts, or configurations systematically violate or ignore the agreed safe‑usage principles, apply updates to those underlying artefacts and validate accordingly (verbose validation).

@@ -9,7 +9,7 @@ description: Document an incident or postmortem for an AIS CR service using the 
 <!-- aiscr:stop-anchor -->
 **Entry scope (compiled)**
 
-- This `.codex/skills/` skill is self-contained; use the workflow body and embedded execution plan below.
+- This `.codex/skills/` skill is self-contained; use the workflow body below.
 - Load repository-local configuration and state named by the workflow before acting.
 - Do not look for management-hub specs, plans, or canonical source files at runtime.
 

@@ -392,6 +392,7 @@ effort = "L"                   # optional; S | M | L | XL
 severity = "Medium"            # optional; when the item also carries a bug severity
 files = ["webclient/oznameni/models.py", "webclient/projekt/forms.py"]  # optional
 applications = ["uzivatel (31)", "core (26)"]  # optional; affected module scope
+supersedes = ["Missing managed-schema for the Solr collection `oai`"]  # optional
 bugs = ["BUG-004"]             # optional cross-references into bugs.toml
 ```
 
@@ -410,6 +411,11 @@ finding (for example `SOLR-001` in `solr_analysis.json`, `ARCH-01` in
 `dependency_graph.json`), that identifier is carried forward. Identifiers are never bound
 to headings by automated title similarity, and a newly assigned identifier requires
 maintainer review.
+
+**Merging duplicates.** Findings are preserved by default. When two items describe the
+same defect, the superseded one is removed only with explicit maintainer approval, and
+the surviving item lists what it absorbed in `supersedes` so the merge stays traceable
+instead of reading as a silent deletion. Tooling never infers a merge on its own.
 
 #### Repository configuration schema
 

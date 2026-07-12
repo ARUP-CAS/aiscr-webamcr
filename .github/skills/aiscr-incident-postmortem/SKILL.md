@@ -9,7 +9,7 @@ description: Document an incident or postmortem for an AIS CR service using the 
 <!-- aiscr:stop-anchor -->
 **Entry scope (compiled)**
 
-- This `.github/skills/` skill is self-contained; use the workflow body and embedded execution plan below.
+- This `.github/skills/` skill is self-contained; use the workflow body below.
 - Load repository-local configuration and state named by the workflow before acting.
 - Do not look for management-hub specs, plans, or canonical source files at runtime.
 
@@ -117,3 +117,9 @@ Before claiming this workflow complete:
 - `/opsx:verify <slug>` -- verify implementation matches change artifacts
 - `/opsx:archive <slug>` -- archive the change after implementation is complete
 - Read the identifiers and references stated in this workflow and follow the **Usage** section before loading a different workflow's context.
+
+## Bundled scripts
+
+The enrollment bundle installs these repository-local runtime scripts:
+
+- `.agents/prompts/postmortem_template.md`

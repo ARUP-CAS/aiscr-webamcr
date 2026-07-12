@@ -93,7 +93,7 @@ Before claiming this workflow complete:
 
 #### Context
 
-This plan targets AIS CR repositories that define or document APIs (for example `aiscr-api-home` and related services).  
+This plan targets AIS CR repositories that define or document APIs (for example `aiscr-api-home` and related services).
 It ensures that:
 
 - OpenAPI/REST specifications,
