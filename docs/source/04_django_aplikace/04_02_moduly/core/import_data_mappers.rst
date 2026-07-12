@@ -930,18 +930,36 @@ Třídy
 
 .. py:class:: GeometryTransformMixin
 
-   Mixin pro mappery s geometrickými poli. Při insertu zajišťuje konverzi mezi souřadnicovými systémy:
+   Mixin pro mappery s geometrickými poli. Při insertu i updatu zajišťuje konverzi mezi souřadnicovými systémy:
 
-   WGS84 (SRID 4326) → S-JTSK (SRID 5514) a naopak.
+   WGS84 (SRID 4326) → S-JTSK (SRID 5514) a naopak. Zdrojem pravdy je geometrie v systému daném polem
+   ``geom_system``; odvozená geometrie se vždy přepočítá, aby update nemohl způsobit nesoulad v souřadnicích.
 
    **Metody:**
 
+   .. py:method:: _transform_geometry()
+
+      Převede geometrii na WKT a provede transformaci mezi souřadnicovými systémy.
+
+      :param value: Geometrie jako WKT string nebo ``GEOSGeometry``.
+      :param transform_function: Funkce ``transform_geom_to_sjtsk`` nebo ``transform_geom_to_wgs84``.
+      :return: Dvojice ``(převedený WKT, bool zda transformace uspěla)``.
+
+   .. py:method:: _get_geometry_db_record()
+
+      Vrátí existující záznam z databáze, ze kterého se při updatu doplní geometrické hodnoty
+      chybějící v importovaném souboru (``geom``, ``geom_sjtsk``, ``geom_system``).
+
+      :return: Instance modelu s geometrickými poli, nebo ``None``, pokud záznam neexistuje.
+
    .. py:method:: transform_geometries()
 
-      Transformuje geometries. v aplikaci.
+      Zajistí konzistenci dvojice ``geom``/``geom_sjtsk`` podle ``geom_system``. Při insertu se odvozená
+      geometrie dopočítá z hodnot v souboru; při updatu se hodnoty chybějící v souboru doplní
+      z existujícího záznamu v databázi a odvozená geometrie se přepočítá.
 
-      :param mapping_dict: Parametr ``mapping_dict`` předává se do volání ``transform_geom_to_sjtsk()``, ``transform_geom_to_wgs84()``, pracuje se s atributy ``get``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-      :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``transform_geometries``.
+      :param mapping_dict: Slovník mapovaných hodnot řádku; může být doplněn o přepočtenou geometrii.
+      :param performed_action: Prováděná akce importu (INSERT/UPDATE/DELETE).
 
       :return: Vrací proměnná ``mapping_dict``.
 
@@ -1595,6 +1613,13 @@ Třídy
       :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
       :return: Výstup funkce odpovídající implementované logice.
+
+   .. py:method:: _get_geometry_db_record()
+
+      Vrátí ``DokumentExtraData`` navázaný na aktualizovaný dokument — geometrická pole
+      u dokumentu nese tento záznam, nikoli samotný ``Dokument``.
+
+      :return: Instance ``DokumentExtraData``, nebo ``None``, pokud záznam neexistuje.
 
    .. py:method:: get_record_history()
 

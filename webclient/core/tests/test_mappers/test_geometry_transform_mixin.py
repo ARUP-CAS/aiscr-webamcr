@@ -4,8 +4,12 @@ Pokrývá obě opravené chyby:
 - Bug 1: porovnání ``geom_system`` jako string (dříve int ``4326``/``5514`` → vždy False).
 - Bug 2: výsledek transformace je tuple ``(wkt, status)``; vstup musí být WKT string,
   nikoli ``GEOSGeometry`` objekt.
+
+Dále pokrývá přepočet odvozené geometrie při UPDATE, včetně doplnění hodnot
+chybějících v souboru z existujícího záznamu v databázi.
 """
 
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from core.forms import ImportDataAdminForm
@@ -138,15 +142,95 @@ class GeometryTransformMixinGEOSGeometryInputTest(TestCase):
         self.assertIsInstance(captured["wkt"], str)
 
 
-class GeometryTransformMixinUpdateTest(TestCase):
-    """Ověřuje, že transformace proběhne pouze při INSERT, nikoli při UPDATE."""
+def _fake_mapper(db_record):
+    """Vytvoří náhradu mapperu vracející ``db_record`` místo dotazu do databáze."""
+    return SimpleNamespace(_get_geometry_db_record=lambda: db_record)
 
-    def test_transform_skipped_on_update(self):
-        """transform_geometries nespustí transformaci pro akci UPDATE."""
+
+class GeometryTransformMixinUpdateTest(TestCase):
+    """Ověřuje přepočet odvozené geometrie při akci UPDATE."""
+
+    def test_update_with_full_geometry_columns_recomputes_sjtsk(self):
+        """UPDATE s geom_system='4326' a geom v souboru přepočítá geom_sjtsk bez dotazu do DB."""
         mapping = _mapping("4326", geom=WKT_WGS84)
         with patch(
             "core.import_data_mappers.transform_geom_to_sjtsk", return_value=(WKT_SJTSK, "OK")
         ) as mock_transform:
             ProjektMapper.transform_geometries(None, mapping, UPDATE)
+        mock_transform.assert_called_once_with(WKT_WGS84)
+        self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
+
+    def test_update_with_full_geometry_columns_recomputes_wgs84(self):
+        """UPDATE s geom_system='5514' a geom_sjtsk v souboru přepočítá geom bez dotazu do DB."""
+        mapping = _mapping("5514", geom_sjtsk=WKT_SJTSK)
+        with patch(
+            "core.import_data_mappers.transform_geom_to_wgs84", return_value=(WKT_WGS84, "OK")
+        ) as mock_transform:
+            ProjektMapper.transform_geometries(None, mapping, UPDATE)
+        mock_transform.assert_called_once_with(WKT_SJTSK)
+        self.assertEqual(mapping["geom"], WKT_WGS84)
+
+    def test_update_geom_only_reads_geom_system_from_db(self):
+        """UPDATE pouze s geom v souboru doplní geom_system z DB a přepočítá geom_sjtsk."""
+        mapping = {"geom": WKT_WGS84}
+        mapper = _fake_mapper(SimpleNamespace(geom_system="4326", geom=None, geom_sjtsk=None))
+        with patch(
+            "core.import_data_mappers.transform_geom_to_sjtsk", return_value=(WKT_SJTSK, "OK")
+        ) as mock_transform:
+            ProjektMapper.transform_geometries(mapper, mapping, UPDATE)
+        mock_transform.assert_called_once_with(WKT_WGS84)
+        self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
+
+    def test_update_geom_system_only_reads_geometry_from_db(self):
+        """UPDATE pouze s geom_system v souboru vezme zdrojovou geometrii z DB a přepočítá odvozenou."""
+        mapping = {"geom_system": "4326"}
+        mapper = _fake_mapper(SimpleNamespace(geom_system="5514", geom=WKT_WGS84, geom_sjtsk=None))
+        with patch(
+            "core.import_data_mappers.transform_geom_to_sjtsk", return_value=(WKT_SJTSK, "OK")
+        ) as mock_transform:
+            ProjektMapper.transform_geometries(mapper, mapping, UPDATE)
+        mock_transform.assert_called_once_with(WKT_WGS84)
+        self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
+
+    def test_update_clearing_geom_clears_geom_sjtsk(self):
+        """UPDATE s prázdným geom (geom_system='4326') vynuluje i odvozený geom_sjtsk."""
+        mapping = _mapping("4326", geom=None, geom_sjtsk=WKT_SJTSK)
+        with patch("core.import_data_mappers.transform_geom_to_sjtsk") as mock_transform:
+            ProjektMapper.transform_geometries(None, mapping, UPDATE)
         mock_transform.assert_not_called()
         self.assertIsNone(mapping["geom_sjtsk"])
+
+    def test_update_clearing_geom_sjtsk_clears_geom(self):
+        """UPDATE s prázdným geom_sjtsk (geom_system='5514') vynuluje i odvozený geom."""
+        mapping = _mapping("5514", geom=WKT_WGS84, geom_sjtsk=None)
+        with patch("core.import_data_mappers.transform_geom_to_wgs84") as mock_transform:
+            ProjektMapper.transform_geometries(None, mapping, UPDATE)
+        mock_transform.assert_not_called()
+        self.assertIsNone(mapping["geom"])
+
+    def test_update_without_geometry_columns_does_nothing(self):
+        """UPDATE bez geometrických sloupců neprovede transformaci ani dotaz do DB."""
+        mapping = {"nazev": "Testovací projekt"}
+        with patch("core.import_data_mappers.transform_geom_to_sjtsk") as mock_sjtsk, patch(
+            "core.import_data_mappers.transform_geom_to_wgs84"
+        ) as mock_wgs84:
+            ProjektMapper.transform_geometries(None, mapping, UPDATE)
+        mock_sjtsk.assert_not_called()
+        mock_wgs84.assert_not_called()
+        self.assertEqual(mapping, {"nazev": "Testovací projekt"})
+
+    def test_update_failed_transform_does_not_overwrite(self):
+        """Pokud transformace při UPDATE selže, odvozená geometrie se nepřepíše."""
+        mapping = _mapping("4326", geom=WKT_WGS84, geom_sjtsk="original")
+        with patch("core.import_data_mappers.transform_geom_to_sjtsk", return_value=("", "parse error")):
+            ProjektMapper.transform_geometries(None, mapping, UPDATE)
+        self.assertEqual(mapping["geom_sjtsk"], "original")
+
+    def test_update_missing_record_in_db_does_not_crash(self):
+        """UPDATE s geometrií v souboru a neexistujícím záznamem v DB neselže."""
+        mapping = {"geom": WKT_WGS84}
+        mapper = _fake_mapper(None)
+        with patch("core.import_data_mappers.transform_geom_to_sjtsk") as mock_transform:
+            ProjektMapper.transform_geometries(mapper, mapping, UPDATE)
+        mock_transform.assert_not_called()
+        self.assertNotIn("geom_sjtsk", mapping)

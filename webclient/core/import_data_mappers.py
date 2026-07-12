@@ -1830,32 +1830,94 @@ class ImportModelMapper(ABC):
 
 class GeometryTransformMixin:
     """
-    Mixin pro mappery s geometrickými poli. Při insertu zajišťuje konverzi mezi souřadnicovými systémy:
+    Mixin pro mappery s geometrickými poli. Při insertu i updatu zajišťuje konverzi mezi souřadnicovými systémy:
 
-    WGS84 (SRID 4326) → S-JTSK (SRID 5514) a naopak.
+    WGS84 (SRID 4326) → S-JTSK (SRID 5514) a naopak. Zdrojem pravdy je geometrie v systému daném polem
+    ``geom_system``; odvozená geometrie se vždy přepočítá, aby update nemohl způsobit nesoulad v souřadnicích.
     """
+
+    GEOMETRY_COLUMNS = ("geom", "geom_sjtsk", "geom_system")
+
+    @staticmethod
+    def _transform_geometry(value, transform_function):
+        """
+        Převede geometrii na WKT a provede transformaci mezi souřadnicovými systémy.
+
+        :param value: Geometrie jako WKT string nebo ``GEOSGeometry``.
+        :param transform_function: Funkce ``transform_geom_to_sjtsk`` nebo ``transform_geom_to_wgs84``.
+        :return: Dvojice ``(převedený WKT, bool zda transformace uspěla)``.
+        """
+        wkt = getattr(value, "wkt", value)
+        converted, status = transform_function(wkt)
+        return converted, status == "OK"
+
+    def _get_geometry_db_record(self):
+        """
+        Vrátí existující záznam z databáze, ze kterého se při updatu doplní geometrické hodnoty
+        chybějící v importovaném souboru (``geom``, ``geom_sjtsk``, ``geom_system``).
+
+        :return: Instance modelu s geometrickými poli, nebo ``None``, pokud záznam neexistuje.
+        """
+        filter_kwargs = self._get_filter_kwargs_primary_key()
+        if not filter_kwargs:
+            return None
+        return self.model_class.objects.filter(**filter_kwargs).first()
 
     def transform_geometries(self, mapping_dict, performed_action):
         """
-        Transformuje geometries. v aplikaci.
+        Zajistí konzistenci dvojice ``geom``/``geom_sjtsk`` podle ``geom_system``. Při insertu se odvozená
+        geometrie dopočítá z hodnot v souboru; při updatu se hodnoty chybějící v souboru doplní
+        z existujícího záznamu v databázi a odvozená geometrie se přepočítá.
 
-        :param mapping_dict: Parametr ``mapping_dict`` předává se do volání ``transform_geom_to_sjtsk()``, ``transform_geom_to_wgs84()``, pracuje se s atributy ``get``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-        :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``transform_geometries``.
+        :param mapping_dict: Slovník mapovaných hodnot řádku; může být doplněn o přepočtenou geometrii.
+        :param performed_action: Prováděná akce importu (INSERT/UPDATE/DELETE).
 
             :return: Vrací proměnná ``mapping_dict``.
         """
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
             geom_system = str(mapping_dict.get("geom_system") or "")
             if geom_system == "4326" and mapping_dict.get("geom"):
-                geom_wkt = getattr(mapping_dict["geom"], "wkt", mapping_dict["geom"])
-                converted, status = transform_geom_to_sjtsk(geom_wkt)
-                if status == "OK":
+                converted, ok = GeometryTransformMixin._transform_geometry(
+                    mapping_dict["geom"], transform_geom_to_sjtsk
+                )
+                if ok:
                     mapping_dict["geom_sjtsk"] = converted
             elif geom_system == "5514" and mapping_dict.get("geom_sjtsk"):
-                geom_sjtsk_wkt = getattr(mapping_dict["geom_sjtsk"], "wkt", mapping_dict["geom_sjtsk"])
-                converted, status = transform_geom_to_wgs84(geom_sjtsk_wkt)
-                if status == "OK":
+                converted, ok = GeometryTransformMixin._transform_geometry(
+                    mapping_dict["geom_sjtsk"], transform_geom_to_wgs84
+                )
+                if ok:
                     mapping_dict["geom"] = converted
+        elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
+            has_any_geometry_column = any(column in mapping_dict for column in GeometryTransformMixin.GEOMETRY_COLUMNS)
+            if not has_any_geometry_column:
+                return mapping_dict
+            missing_geometry_column = any(
+                column not in mapping_dict for column in GeometryTransformMixin.GEOMETRY_COLUMNS
+            )
+            db_record = self._get_geometry_db_record() if missing_geometry_column else None
+            geom_system = mapping_dict.get("geom_system") or getattr(db_record, "geom_system", None)
+            geom_system = str(geom_system or "")
+            if geom_system == "4326":
+                geom = mapping_dict["geom"] if "geom" in mapping_dict else getattr(db_record, "geom", None)
+                if geom:
+                    converted, ok = GeometryTransformMixin._transform_geometry(geom, transform_geom_to_sjtsk)
+                    if ok:
+                        mapping_dict["geom_sjtsk"] = converted
+                elif "geom" in mapping_dict:
+                    mapping_dict["geom_sjtsk"] = None
+            elif geom_system == "5514":
+                geom_sjtsk = (
+                    mapping_dict["geom_sjtsk"]
+                    if "geom_sjtsk" in mapping_dict
+                    else getattr(db_record, "geom_sjtsk", None)
+                )
+                if geom_sjtsk:
+                    converted, ok = GeometryTransformMixin._transform_geometry(geom_sjtsk, transform_geom_to_wgs84)
+                    if ok:
+                        mapping_dict["geom"] = converted
+                elif "geom_sjtsk" in mapping_dict:
+                    mapping_dict["geom"] = None
         return mapping_dict
 
 
@@ -3431,6 +3493,19 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
         """
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
         return self.transform_geometries(mapping_dict, performed_action)
+
+    def _get_geometry_db_record(self):
+        """
+        Vrátí ``DokumentExtraData`` navázaný na aktualizovaný dokument — geometrická pole
+        u dokumentu nese tento záznam, nikoli samotný ``Dokument``.
+
+        :return: Instance ``DokumentExtraData``, nebo ``None``, pokud záznam neexistuje.
+        """
+        filter_kwargs = self._get_filter_kwargs_primary_key()
+        if not filter_kwargs:
+            return None
+        dokument_filter = {f"dokument__{field}": value for field, value in filter_kwargs.items()}
+        return DokumentExtraData.objects.filter(**dokument_filter).first()
 
     @staticmethod
     def get_record_history(record: Dokument | DokumentExtraData):
