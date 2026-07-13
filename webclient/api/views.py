@@ -3128,6 +3128,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
                 instance.save(update_fields=["evidencni_cislo"])
                 self._create_history_record(instance, request.user, old_evidencni_cislo, evidencni_cislo)
                 self._update_igsn_if_archived(instance)
+                instance.save_metadata()
         except DoiWriteError as err:
             logger.error("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.igsn_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
