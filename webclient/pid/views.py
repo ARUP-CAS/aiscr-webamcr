@@ -8,6 +8,7 @@ from urllib.parse import quote
 import httpx
 import requests
 from arch_z.models import ArcheologickyZaznam
+from asgiref.sync import async_to_sync
 from core.connectors import RedisConnector
 from core.constants import AZ_STAV_ARCHIVOVANY, D_STAV_ARCHIVOVANY, SN_ARCHIVOVANY
 from core.repository_connector import FedoraTransaction
@@ -533,6 +534,8 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
             payload = response.json()
         except ValueError:
             return False
+        if not isinstance(payload, dict):
+            return False
         return cls._statements_contain_human(payload.get(cls.INSTANCE_OF_PROPERTY, []))
 
     @classmethod
@@ -606,25 +609,33 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
         :param item_id: Identifikátor položky (např. ``Q7186``).
         :return: Seznam s jedním [WikiData ID, jméno] párem, nebo prázdný seznam.
         """
-        statements_response = requests.get(
-            f"{cls.API_URL}/entities/items/{item_id}/statements",
-            headers=cls.HEADERS,
-            params={"property": cls.INSTANCE_OF_PROPERTY},
-            timeout=cls.HTTP_TIMEOUT,
-        )
+        try:
+            statements_response = requests.get(
+                f"{cls.API_URL}/entities/items/{item_id}/statements",
+                headers=cls.HEADERS,
+                params={"property": cls.INSTANCE_OF_PROPERTY},
+                timeout=cls.HTTP_TIMEOUT,
+            )
+        except requests.RequestException:
+            return []
         if statements_response.status_code != 200:
             return []
         try:
             statements = statements_response.json()
         except ValueError:
             return []
+        if not isinstance(statements, dict):
+            return []
         if not cls._statements_contain_human(statements.get(cls.INSTANCE_OF_PROPERTY, [])):
             return []
-        labels_response = requests.get(
-            f"{cls.API_URL}/entities/items/{item_id}/labels", headers=cls.HEADERS, timeout=cls.HTTP_TIMEOUT
-        )
+        try:
+            labels_response = requests.get(
+                f"{cls.API_URL}/entities/items/{item_id}/labels", headers=cls.HEADERS, timeout=cls.HTTP_TIMEOUT
+            )
+        except requests.RequestException:
+            labels_response = None
         labels = {}
-        if labels_response.status_code == 200:
+        if labels_response is not None and labels_response.status_code == 200:
             try:
                 labels = labels_response.json()
             except ValueError:
@@ -657,14 +668,7 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
         if qid_match := cls.QID_REGEX.search(q):
             return cls._get_item_result(qid_match.group(0))
         q = unicodedata.normalize("NFKD", q)
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = None
-        if loop and loop.is_running():
-            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-                return pool.submit(asyncio.run, cls._search_humans(q)).result()
-        return asyncio.run(cls._search_humans(q))
+        return async_to_sync(cls._search_humans)(q)
 
 
 class ContinuePidProcessing(AdminRecordProcessingView):
