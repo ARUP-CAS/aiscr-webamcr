@@ -20,7 +20,6 @@ from dokument.models import Dokument
 from fedora_management.views import AdminRecordProcessingView
 from pas.models import SamostatnyNalez
 from pid.exceptions import DoiWriteError
-from SPARQLWrapper import JSON, SPARQLWrapper
 
 
 class ApiView(autocomplete.Select2ListView):
@@ -479,70 +478,193 @@ class RorAutocompleteView(LoginRequiredMixin, ApiView):
 class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
     """Implementuje komponentu ``WikiDataAutocompleteView`` v rámci aplikace."""
 
-    API_URL = "https://query.wikidata.org/sparql"
+    API_URL = "https://www.wikidata.org/w/rest.php/wikibase/v1"
+    HEADERS = {
+        "Accept": "application/json",
+        "User-Agent": "AMCR-webamcr/1.0 (https://github.com/ARUP-CAS/aiscr-webamcr)",
+    }
     CACHE_PREFIX = "WIKIDATA"
-    ID_REGEX = re.compile(r".*Q\d+")
+    QID_REGEX = re.compile(r"Q\d+")
+    SEARCH_LANGUAGES = ("en", "cs")
+    LABEL_LANGUAGES = ("en", "cs", "mul")
+    SEARCH_LIMIT = 20
+    HUMAN_ITEM_QID = "Q5"
+    INSTANCE_OF_PROPERTY = "P31"
+    HTTP_TIMEOUT = 5
+    MAX_CONNECTIONS = 10
+
+    @classmethod
+    def _statements_contain_human(cls, statements):
+        """
+        Zjistí, zda seznam výroků ``P31`` obsahuje hodnotu ``Q5`` (člověk).
+
+        :param statements: Seznam výroků vrácený REST API pro vlastnost ``P31``.
+        :return: ``True``, pokud některý výrok odkazuje na položku ``Q5``.
+        """
+        if not isinstance(statements, list):
+            return False
+        for statement in statements:
+            if not isinstance(statement, dict):
+                continue
+            value = statement.get("value")
+            if isinstance(value, dict) and value.get("content") == cls.HUMAN_ITEM_QID:
+                return True
+        return False
+
+    @classmethod
+    async def _item_is_human(cls, client, item_id):
+        """
+        Asynchronně ověří výrokem ``P31``, zda je položka Wikidata člověk.
+
+        Neúspěšná odpověď nebo chyba spojení se vyhodnotí jako ``False``.
+
+        :param client: Sdílená instance ``httpx.AsyncClient``.
+        :param item_id: Identifikátor položky (např. ``Q7186``).
+        :return: ``True``, pokud má položka výrok ``P31`` s hodnotou ``Q5``.
+        """
+        url = f"{cls.API_URL}/entities/items/{item_id}/statements"
+        try:
+            response = await client.get(url, params={"property": cls.INSTANCE_OF_PROPERTY})
+        except httpx.RequestError:
+            return False
+        if response.status_code != 200:
+            return False
+        try:
+            payload = response.json()
+        except ValueError:
+            return False
+        return cls._statements_contain_human(payload.get(cls.INSTANCE_OF_PROPERTY, []))
+
+    @classmethod
+    async def _search_language(cls, client, q, language):
+        """
+        Asynchronně vyhledá položky koncovým bodem ``/search/items`` v jednom jazyce.
+
+        Chyby spojení (``httpx.RequestError``) se propagují volajícímu.
+
+        :param client: Sdílená instance ``httpx.AsyncClient``.
+        :param q: Vyhledávací dotaz.
+        :param language: Kód jazyka, ve kterém se prohledávají popisky.
+        :return: Seznam nalezených položek tak, jak je vrací API.
+        """
+        params = {"q": q, "language": language, "limit": cls.SEARCH_LIMIT}
+        response = await client.get(f"{cls.API_URL}/search/items", params=params)
+        if response.status_code != 200:
+            return []
+        try:
+            payload = response.json()
+        except ValueError:
+            return []
+        results = payload.get("results", [])
+        return results if isinstance(results, list) else []
+
+    @classmethod
+    async def _search_humans(cls, q):
+        """
+        Vyhledá osoby podle textového dotazu ve všech jazycích ``SEARCH_LANGUAGES``.
+
+        Koncový bod ``/search/items`` neumí filtrovat podle typu položky, proto se po
+        sloučení výsledků a odstranění duplicit u každého kandidáta paralelně ověřuje
+        výrok ``P31`` = ``Q5`` a ostatní položky se vyřadí.
+
+        :param q: Vyhledávací dotaz.
+        :return: Seznam [WikiData ID, jméno] párů.
+        """
+        limits = httpx.Limits(max_connections=cls.MAX_CONNECTIONS)
+        async with httpx.AsyncClient(timeout=cls.HTTP_TIMEOUT, headers=cls.HEADERS, limits=limits) as client:
+            searches = [cls._search_language(client, q, language) for language in cls.SEARCH_LANGUAGES]
+            candidates = {}
+            for results in await asyncio.gather(*searches):
+                for result in results:
+                    if not isinstance(result, dict):
+                        continue
+                    item_id = result.get("id")
+                    if not item_id or item_id in candidates:
+                        continue
+                    display_label = result.get("display-label")
+                    candidates[item_id] = display_label.get("value") if isinstance(display_label, dict) else None
+            checks = await asyncio.gather(*(cls._item_is_human(client, item_id) for item_id in candidates))
+        result_list = []
+        for item_id, is_human in zip(candidates, checks):
+            if not is_human:
+                continue
+            label = candidates[item_id]
+            if label and label != item_id:
+                result_list.append([item_id, f"{label} ({item_id})"])
+            else:
+                result_list.append([item_id, item_id])
+        return result_list
+
+    @classmethod
+    def _get_item_result(cls, item_id):
+        """
+        Načte položku podle identifikátoru a vrátí ji, pokud jde o člověka.
+
+        Popisek se vybírá v pořadí jazyků ``LABEL_LANGUAGES``; bez použitelného popisku
+        se vrací samotný identifikátor.
+
+        :param item_id: Identifikátor položky (např. ``Q7186``).
+        :return: Seznam s jedním [WikiData ID, jméno] párem, nebo prázdný seznam.
+        """
+        statements_response = requests.get(
+            f"{cls.API_URL}/entities/items/{item_id}/statements",
+            headers=cls.HEADERS,
+            params={"property": cls.INSTANCE_OF_PROPERTY},
+            timeout=cls.HTTP_TIMEOUT,
+        )
+        if statements_response.status_code != 200:
+            return []
+        try:
+            statements = statements_response.json()
+        except ValueError:
+            return []
+        if not cls._statements_contain_human(statements.get(cls.INSTANCE_OF_PROPERTY, [])):
+            return []
+        labels_response = requests.get(
+            f"{cls.API_URL}/entities/items/{item_id}/labels", headers=cls.HEADERS, timeout=cls.HTTP_TIMEOUT
+        )
+        labels = {}
+        if labels_response.status_code == 200:
+            try:
+                labels = labels_response.json()
+            except ValueError:
+                labels = {}
+        if not isinstance(labels, dict):
+            labels = {}
+        label = next((labels[language] for language in cls.LABEL_LANGUAGES if labels.get(language)), None)
+        if label and label != item_id:
+            return [[item_id, f"{label} ({item_id})"]]
+        return [[item_id, item_id]]
 
     @classmethod
     def api_call(cls, q, use_cache=False):
         """
-        Vyhledá osoby v WikiData SPARQL API.
+        Vyhledá osoby ve Wikidata pomocí Wikibase REST API.
 
-        :param q: Vyhledávací dotaz.
-        :param use_cache: Zda používat cache.
+        Dotaz s identifikátorem položky (``Q123`` nebo URL entity) se ověří koncovým
+        bodem ``/entities/items``; ostatní dotazy prohledávají popisky koncovým bodem
+        ``/search/items``. Výsledky jsou vždy omezeny na osoby (``P31`` = ``Q5``).
+
+        :param q: Vyhledávací dotaz (jméno, identifikátor ``Q`` nebo URL entity).
+        :param use_cache: Parametr se kvůli shodné signatuře s ``ApiView.api_call`` předává,
+            ale u této třídy se nepoužívá (mezipaměť Redis se nečte ani neukládá).
         :return: Seznam [WikiData ID, jméno] párů.
         """
         if not q:
             return []
         if q.startswith("https://www.wikidata.org/entity/"):
             q = q.replace("https://www.wikidata.org/entity/", "")
-        if cls.ID_REGEX.match(q):
-            query = f"""
-                SELECT ?item ?itemLabel WHERE {{
-                VALUES ?item {{ wd:{q} }}
-                ?item wdt:P31 wd:Q5.
-                SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,cs". }}
-                }}
-                LIMIT 50
-            """
-        else:
-            q = unicodedata.normalize("NFKD", q)
-            query = f"""
-                SELECT DISTINCT ?item ?itemLabel
-                WHERE {{
-                  VALUES ?lang {{ "en" "cs" }}
-                  SERVICE wikibase:mwapi {{
-                    bd:serviceParam wikibase:endpoint "www.wikidata.org";
-                                   wikibase:api "EntitySearch";
-                                   mwapi:search "{q}";
-                                   mwapi:language ?lang;
-                                   wikibase:limit "50".
-                    ?item wikibase:apiOutputItem mwapi:item.
-                  }}
-                  ?item wdt:P31 wd:Q5. 
-                  SERVICE wikibase:label {{
-                    bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,cs".
-                  }}
-                }}
-            """
-
-        # Inicializace klienta SPARQL dotazování.
-        sparql = SPARQLWrapper(cls.API_URL)
-        sparql.setQuery(query)
-        sparql.setReturnFormat(JSON)
-
-        result_list = []
-        results = sparql.query().convert()
-        for result in results["results"]["bindings"]:
-            id = result["item"]["value"]
-            if "/" in id:
-                id = id.split("/")[-1]
-            if (title := result["itemLabel"]["value"]) and title != id and title != "Q":
-                title = f"{title} ({id})"
-            else:
-                title = id
-            result_list.append([id, title])
-        return result_list
+        if qid_match := cls.QID_REGEX.search(q):
+            return cls._get_item_result(qid_match.group(0))
+        q = unicodedata.normalize("NFKD", q)
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+        if loop and loop.is_running():
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                return pool.submit(asyncio.run, cls._search_humans(q)).result()
+        return asyncio.run(cls._search_humans(q))
 
 
 class ContinuePidProcessing(AdminRecordProcessingView):
