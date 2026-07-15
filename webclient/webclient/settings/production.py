@@ -1,6 +1,6 @@
 from .base import *
 
-DEBUG = get_secret("DEBUG", "True") == "True"
+DEBUG = get_secret("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = get_secret("ALLOWED_HOSTS").split()
 CSRF_TRUSTED_ORIGINS = get_secret("CSRF_TRUSTED_ORIGINS", "").split()
