@@ -152,7 +152,7 @@ class SectionNameWithAccessor(SimpleSectionTemplateName):
 
         :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, None.
+            :return: Název sekce jako HTML přes ``format_html`` (``SafeString``), nebo ``None``.
         """
         if self.foreign_key:
             if getattr(instance, self.foreign_key):
@@ -175,7 +175,7 @@ class PianSectionNameWithAccessor(SectionNameWithAccessor):
 
         :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
 
-            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, None.
+            :return: Název sekce jako HTML přes ``format_html`` (``SafeString``), nebo ``None``.
         """
         if getattr(instance, self.foreign_key):
             pian = getattr(instance, self.foreign_key)
@@ -382,7 +382,7 @@ class ChooseField(Field):
         :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
         :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
 
-            :return: Vrací hodnotu podle větve zpracování, None.
+            :return: První neprázdný ``get_ident_cely_link`` (``SafeString`` z ``format_html``), nebo ``None``.
         """
         for accessor in self.accessor:
             value = getattr(instance, accessor)
@@ -448,7 +448,9 @@ class ForeignField(Field):
         :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
         :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
 
-            :return: Vrací výsledek volání.
+            :return: Vrací vyřešený atribut podle accessorů, nebo ``""``. Hodnota není označena jako bezpečná
+                (``SafeString``); šablona ji autoescapuje, pokud už není ``SafeString`` (např. odkaz z
+                ``get_ident_cely_link``).
         """
         accessors = self.accessor.split("__")
         new_instance = ""
@@ -906,7 +908,7 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
 
         :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``new_name``.
+            :return: Název sekce jako HTML přes ``format_html`` (``SafeString``).
         """
         if len(self.accessor) > 2:
             new_name = format_html(
@@ -948,7 +950,7 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
 
         :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``new_name``.
+            :return: Název sekce jako HTML přes ``format_html`` (``SafeString``).
         """
         new_name = format_html("<span class='ps-0'>{}&nbsp;{}</span>", self.name, getattr(instance, self.accessor[0]))
         if getattr(instance, self.accessor[-1]):
@@ -969,7 +971,7 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
 
         :param instance: Parametr ``instance`` předává se do volání ``getattr()``, vstupuje do návratové hodnoty.
 
-            :return: Vrací hodnotu podle větve zpracování.
+            :return: Název sekce jako HTML přes ``format_html`` (``SafeString``).
         """
         obdobi = getattr(instance, self.accessor[1])
         jistota = getattr(instance, self.accessor[2])

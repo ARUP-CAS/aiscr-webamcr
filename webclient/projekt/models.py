@@ -211,7 +211,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Vrací ident cely link.
 
-        :return: Vrací hodnotu podle větve zpracování.
+        :return: HTML odkaz přes ``format_html`` (``SafeString``), nebo ``None`` pokud chybí URL/ident.
         """
         if hasattr(self, "get_absolute_url") and hasattr(self, "ident_cely"):
             return format_html(
