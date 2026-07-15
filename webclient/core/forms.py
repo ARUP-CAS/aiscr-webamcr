@@ -256,7 +256,7 @@ class VratitFormAZ(VratitForm):
         ).distinct()
 
 
-class DecimalTextWideget(forms.widgets.TextInput):
+class DecimalTextWidget(forms.widgets.TextInput):
     """Třida pro formátování hodnoty velikosti souboru na 3 desetiná místa."""
 
     def format_value(self, value):
