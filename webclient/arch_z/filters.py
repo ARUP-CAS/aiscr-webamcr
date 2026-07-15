@@ -797,9 +797,9 @@ class AkceFilter(ArchZaznamFilter):
         """
         if value:
             if name == "vb_niveleta_od":
-                queryset = queryset.extra(where=["ST_Z(geom) >= %s"], params=[value])
+                queryset = queryset.extra(where=['ST_Z("vyskovy_bod"."geom") >= %s'], params=[value])
             if name == "vb_niveleta_do":
-                queryset = queryset.extra(where=["ST_Z(geom) <= %s"], params=[value])
+                queryset = queryset.extra(where=['ST_Z("vyskovy_bod"."geom") <= %s'], params=[value])
         return queryset
 
     def filter_queryset(self, queryset):

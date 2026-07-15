@@ -242,6 +242,26 @@ Třídy
       :param value: Hodnota pro filtrování.
       :return: Filtrovaný QuerySet.
 
+   .. py:method:: _get_soubor_subquery()
+
+      Sestaví podmínky pro filtrování podle vlastností jednoho souboru.
+
+      Filtry typu, velikosti a počtu stran (rozsahu) se slučují do jediného korelovaného
+      poddotazu, aby všechny podmínky platily pro tentýž soubor. Bez tohoto sloučení by
+      každý filtr přidal samostatný JOIN na ``soubor`` (násobný JOIN téže tabulky), což
+      vede k rozsáhlému kartézskému součinu a k volnější sémantice (různé soubory by mohly
+      splňovat různé podmínky).
+
+      :return: Slovník podmínek pro model ``Soubor`` nebo ``None``, není-li aktivní žádný filtr.
+
+   .. py:method:: filter_queryset()
+
+      Filtruje queryset a slučuje filtry podle vlastností souboru do jednoho poddotazu.
+
+      :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``.
+
+      :return: Vrací filtrovaný queryset.
+
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.

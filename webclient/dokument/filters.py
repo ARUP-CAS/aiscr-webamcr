@@ -10,7 +10,7 @@ from core.models import Soubor
 from core.widgets import AutocompleteModelSelect2Multiple
 from crispy_forms.layout import HTML, Div, Layout
 from django.db import models
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.forms import NumberInput, SelectMultiple
 from django.utils.translation import gettext_lazy as _
 from django_filters import (
@@ -401,7 +401,7 @@ class Model3DFilter(GeomWithinFilterMixin, HistorieFilter, FilterSet):
             | Q(extra_data__odkaz__icontains=value)
             | Q(casti__komponenty__komponenty__objekty__poznamka__icontains=value)
             | Q(casti__komponenty__komponenty__predmety__poznamka__icontains=value)
-        )
+        ).distinct()
 
     def filter_roky(self, queryset, name, value):
         """
@@ -887,7 +887,8 @@ class DokumentFilter(Model3DFilter):
         widget=SelectMultipleSeparator(),
     )
     tvar_poznamka = CharFilter(
-        field_name="tvary__poznamka",
+        field_name="tvar__poznamka",
+        lookup_expr="icontains",
         label=_("dokument.filters.dokumentFilter.tvarPoznamka.label"),
         distinct=True,
     )
@@ -1264,6 +1265,52 @@ class DokumentFilter(Model3DFilter):
 
         else:
             return queryset.distinct()
+
+    def _get_soubor_subquery(self):
+        """
+        Sestaví podmínky pro filtrování podle vlastností jednoho souboru.
+
+        Filtry typu, velikosti a počtu stran (rozsahu) se slučují do jediného korelovaného
+        poddotazu, aby všechny podmínky platily pro tentýž soubor. Bez tohoto sloučení by
+        každý filtr přidal samostatný JOIN na ``soubor`` (násobný JOIN téže tabulky), což
+        vede k rozsáhlému kartézskému součinu a k volnější sémantice (různé soubory by mohly
+        splňovat různé podmínky).
+
+        :return: Slovník podmínek pro model ``Soubor`` nebo ``None``, není-li aktivní žádný filtr.
+        """
+        cd = self.form.cleaned_data
+        conditions = {}
+        typ = cd.pop("soubor_typ", None)
+        if typ:
+            conditions["mimetype__in"] = typ
+        velikost_od = cd.pop("soubor_velikost_od", None)
+        if velikost_od is not None:
+            conditions["size_mb__gte"] = velikost_od
+        velikost_do = cd.pop("soubor_velikost_do", None)
+        if velikost_do is not None:
+            conditions["size_mb__lte"] = velikost_do
+        stran_od = cd.pop("soubor_pocet_stran_od", None)
+        if stran_od is not None:
+            conditions["rozsah__gte"] = stran_od
+        stran_do = cd.pop("soubor_pocet_stran_do", None)
+        if stran_do is not None:
+            conditions["rozsah__lte"] = stran_do
+        return conditions or None
+
+    def filter_queryset(self, queryset):
+        """
+        Filtruje queryset a slučuje filtry podle vlastností souboru do jednoho poddotazu.
+
+        :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``.
+
+            :return: Vrací filtrovaný queryset.
+        """
+        soubor_conditions = self._get_soubor_subquery()
+        queryset = super().filter_queryset(queryset)
+        if soubor_conditions:
+            soubory = Soubor.objects.filter(vazba__dokument_souboru=OuterRef("pk"), **soubor_conditions)
+            queryset = queryset.filter(Exists(soubory))
+        return queryset
 
     def __init__(self, *args, **kwargs):
         """
