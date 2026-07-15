@@ -119,7 +119,7 @@
                 background-color: $color;
 
                 &:hover {
-                    $link-hover-color: darken($color, 10);
+                    $link-hover-color: darken($color, 10%);
                     border-color: $link-hover-color;
                     background-color: $link-hover-color;
                 }
@@ -284,6 +284,8 @@ body.app-dark-theme {
     // Body
     color: $body-text-dark;
     background-color: $body-bg-dark;
+
+    @include setEntityTransakceColor();
 
     .app-entity-cards {
         .col {
@@ -974,5 +976,3 @@ body.app-dark-theme {
         }
     }
 }
-
-@include setEntityTransakceColor();
