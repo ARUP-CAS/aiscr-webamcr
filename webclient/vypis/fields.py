@@ -463,7 +463,7 @@ class ForeignField(Field):
                         break
         except Dokument.extra_data.RelatedObjectDoesNotExist:
             new_instance = ""
-        return format_html(new_instance)
+        return new_instance
 
 
 class GeomGmlField(Field):
@@ -976,23 +976,20 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
         presna_datace = getattr(instance, self.accessor[3])
         areal = getattr(instance, self.accessor[4])
         aktivity = getattr(instance, self.accessor[5]).all()
-        second_part = format_html("")
-        third_part = format_html("")
+        second_part = ""
+        third_part = ""
         vypis_jistota_translated_ne = _("vypis.vypis_config.komponenta.jistota.Ne")
         vypis_jistota_translated_ano = _("vypis.vypis_config.komponenta.jistota.Ano")
         if jistota is not None:
-            if jistota:
-                second_part += format_html(" ({}", vypis_jistota_translated_ano)
-            else:
-                second_part += format_html(" ({}", vypis_jistota_translated_ne)
+            jistota_str = vypis_jistota_translated_ano if jistota else vypis_jistota_translated_ne
             if presna_datace:
-                second_part += format_html(" {})", presna_datace)
+                second_part = f" ({jistota_str} {presna_datace})"
             else:
-                second_part += ")"
+                second_part = f" ({jistota_str})"
         elif presna_datace:
-            second_part += format_html(" ({})", presna_datace)
+            second_part = f" ({presna_datace})"
         if aktivity:
-            third_part = format_html(" ({})", "; ".join([str(a) for a in aktivity]))
+            third_part = f" ({'; '.join([str(a) for a in aktivity])})"
         return format_html(
             "<span class='ps-0'>{} {} - {}{} - {}{}</span>",
             self.name,
