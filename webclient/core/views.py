@@ -23,7 +23,7 @@ from core.constants import (
     ROLE_BADATEL_ID,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
 )
-from core.forms import CheckStavNotChangedForm, TransaltionImportForm
+from core.forms import CheckStavNotChangedForm, TranslationImportForm
 from core.ident_cely import get_record_from_ident
 from core.message_constants import (
     APPLICATION_RESTART_ERROR,
@@ -2189,7 +2189,7 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
     """Třída pohledu pro import překladových souborů."""
 
     template_name = "rosetta/import_form.html"
-    form_class = TransaltionImportForm
+    form_class = TranslationImportForm
 
     def form_valid(self, form):
         """
