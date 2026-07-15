@@ -983,7 +983,7 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
         if jistota is not None:
             jistota_str = vypis_jistota_translated_ano if jistota else vypis_jistota_translated_ne
             if presna_datace:
-                second_part = f" ({jistota_str} {presna_datace})"
+                second_part = f" ({jistota_str}; {presna_datace})"
             else:
                 second_part = f" ({jistota_str})"
         elif presna_datace:
