@@ -5,6 +5,7 @@ from celery import Celery
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
 from django.urls import reverse
+from django.utils.html import format_html
 
 logger = logging.getLogger(__name__)
 UPDATE_REDIS_SNAPSHOT = 20
@@ -80,7 +81,7 @@ class BaseAmcrModel(models.Model):
         :return: Vrací hodnotu podle větve zpracování.
         """
         if hasattr(self, "get_absolute_url") and hasattr(self, "ident_cely"):
-            return f"<a href='{self.get_absolute_url()}' target='_blank'>{self.ident_cely}</a>"
+            return format_html("<a href='{}' target='_blank'>{}</a>", self.get_absolute_url(), self.ident_cely)
 
 
 class ModelWithMetadata(BaseAmcrModel):

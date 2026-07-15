@@ -237,7 +237,7 @@ Třídy
       :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
       :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``mark_safe()``, None.
+      :return: Vrací hodnotu podle větve zpracování, None.
 
 
 .. py:class:: StatusField
@@ -294,7 +294,7 @@ Třídy
       :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
       :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
 
-      :return: Vrací výsledek volání ``mark_safe()``.
+      :return: Vrací výsledek volání.
 
 
 .. py:class:: GeomGmlField

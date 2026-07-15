@@ -8943,6 +8943,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (attributes.class && attributes.class.includes('link-projekt')) {
                         tagName = tagName + '.link-projekt';
                     }
+                    if (attributes.class && attributes.class.includes('soubor')) {
+                        tagName = tagName + '.soubor';
+                    }
                     allowedTag = this.getAllowedTag(tagName);
 
                     if (allowedTag) {
@@ -9218,6 +9221,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     openingRtf: '{\\pard{\\b',
                     closing: '/div.section-name.row',
                     closingRtf: '}\\sb70\\par}'
+                },
+                {
+                    opening: 'div.row.soubor',
+                    openingRtf: '{\\pard{\\b',
+                    closing: '/div.row.soubor',
+                    closingRtf: '}\\sb70}'
                 },
                 {
                     opening: 'div.new-record',

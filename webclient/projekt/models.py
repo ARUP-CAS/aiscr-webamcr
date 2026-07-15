@@ -43,6 +43,7 @@ from django.db import models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
@@ -213,7 +214,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         :return: Vrací hodnotu podle větve zpracování.
         """
         if hasattr(self, "get_absolute_url") and hasattr(self, "ident_cely"):
-            return f"<a href='{self.get_absolute_url()}' target='_blank' class='link-projekt'>{self.ident_cely}</a>"
+            return format_html(
+                "<a href='{}' target='_blank' class='link-projekt'>{}</a>", self.get_absolute_url(), self.ident_cely
+            )
 
     def popis_s_vedoucim(self):
         """

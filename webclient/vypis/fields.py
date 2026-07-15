@@ -9,7 +9,6 @@ from dj.models import DokumentacniJednotka
 from django.db import connection, transaction
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from dokument.models import Dokument, DokumentCast, Tvar
 from ez.models import ExterniZdroj
@@ -160,11 +159,11 @@ class SectionNameWithAccessor(SimpleSectionTemplateName):
                 return format_html(
                     "{}&nbsp;{}",
                     self.name,
-                    mark_safe(getattr(getattr(instance, self.foreign_key), self.accessor)),
+                    getattr(getattr(instance, self.foreign_key), self.accessor),
                 )
             else:
                 return None
-        return format_html("{}&nbsp;{}", self.name, mark_safe(getattr(instance, self.accessor)))
+        return format_html("{}&nbsp;{}", self.name, getattr(instance, self.accessor))
 
 
 class PianSectionNameWithAccessor(SectionNameWithAccessor):
@@ -184,10 +183,10 @@ class PianSectionNameWithAccessor(SectionNameWithAccessor):
             return format_html(
                 "<div>{}&nbsp;{}&nbsp;({})&nbsp;-&nbsp;{}&nbsp;({})</div>",
                 self.name,
-                mark_safe(getattr(pian, self.accessor[0])),
+                getattr(pian, self.accessor[0]),
                 stav,
-                mark_safe(getattr(pian, self.accessor[2])),
-                mark_safe(getattr(pian, self.accessor[3])),
+                getattr(pian, self.accessor[2]),
+                getattr(pian, self.accessor[3]),
             )
         else:
             return None
@@ -383,12 +382,12 @@ class ChooseField(Field):
         :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
         :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
 
-            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``mark_safe()``, None.
+            :return: Vrací hodnotu podle větve zpracování, None.
         """
         for accessor in self.accessor:
             value = getattr(instance, accessor)
             if value:
-                return mark_safe(value.get_ident_cely_link)
+                return value.get_ident_cely_link
         return None
 
 
@@ -449,7 +448,7 @@ class ForeignField(Field):
         :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
         :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
 
-            :return: Vrací výsledek volání ``mark_safe()``.
+            :return: Vrací výsledek volání.
         """
         accessors = self.accessor.split("__")
         new_instance = ""
@@ -464,7 +463,7 @@ class ForeignField(Field):
                         break
         except Dokument.extra_data.RelatedObjectDoesNotExist:
             new_instance = ""
-        return mark_safe(new_instance)
+        return format_html(new_instance)
 
 
 class GeomGmlField(Field):
@@ -913,19 +912,17 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
             new_name = format_html(
                 "<span class='ps-0'>{}&nbsp;{}&nbsp;-&nbsp;{}</span>",
                 self.name,
-                mark_safe(getattr(instance, self.accessor[0])),
-                mark_safe(getattr(instance, self.accessor[1])),
+                getattr(instance, self.accessor[0]),
+                getattr(instance, self.accessor[1]),
             )
         else:
             new_name = format_html(
                 "<span class='ps-0'>{}&nbsp;{}</span>",
                 self.name,
-                mark_safe(getattr(instance, self.accessor[0])),
+                getattr(instance, self.accessor[0]),
             )
         if getattr(instance, self.accessor[-1]):
-            return format_html(
-                "<span class='ps-0'>{} ({})</span>", new_name, mark_safe(getattr(instance, self.accessor[-1]))
-            )
+            return format_html("<span class='ps-0'>{} ({})</span>", new_name, getattr(instance, self.accessor[-1]))
         return new_name
 
 
@@ -958,7 +955,7 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
             return format_html(
                 "<span class='ps-0'>{}<div class='mime-type' style='white-space: pre;'> ({})</div></span>",
                 new_name,
-                mark_safe(getattr(instance, self.accessor[-1])),
+                getattr(instance, self.accessor[-1]),
             )
         return new_name
 
@@ -979,27 +976,27 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
         presna_datace = getattr(instance, self.accessor[3])
         areal = getattr(instance, self.accessor[4])
         aktivity = getattr(instance, self.accessor[5]).all()
-        second_part = ""
-        third_part = ""
+        second_part = format_html("")
+        third_part = format_html("")
         vypis_jistota_translated_ne = _("vypis.vypis_config.komponenta.jistota.Ne")
         vypis_jistota_translated_ano = _("vypis.vypis_config.komponenta.jistota.Ano")
         if jistota is not None:
             if jistota:
-                second_part += f"&nbsp;({vypis_jistota_translated_ano}"
+                second_part += format_html(" ({}", vypis_jistota_translated_ano)
             else:
-                second_part += f"&nbsp;({vypis_jistota_translated_ne}"
+                second_part += format_html(" ({}", vypis_jistota_translated_ne)
             if presna_datace:
-                second_part += f";&nbsp;{presna_datace})"
+                second_part += format_html(" {})", presna_datace)
             else:
                 second_part += ")"
         elif presna_datace:
-            second_part += f"&nbsp;({presna_datace})"
+            second_part += format_html(" ({})", presna_datace)
         if aktivity:
-            third_part = f"&nbsp;({';&nbsp;'.join([str(a) for a in aktivity])})"
+            third_part = format_html(" ({})", "; ".join([str(a) for a in aktivity]))
         return format_html(
-            "<span class='ps-0'>{}&nbsp;{}&nbsp;-&nbsp;{}{}&nbsp;-&nbsp;{}{}</span>",
+            "<span class='ps-0'>{} {} - {}{} - {}{}</span>",
             self.name,
-            mark_safe(getattr(instance, self.accessor[0])),
+            getattr(instance, self.accessor[0]),
             obdobi,
             second_part,
             areal,
