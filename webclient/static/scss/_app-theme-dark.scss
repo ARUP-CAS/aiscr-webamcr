@@ -1,270 +1,8 @@
 // --- DARK THEME ---
 // Apply dark mode styles when data-theme="dark" is set
+// Entity colors reuse shared mixins from app-mixins with $dark-entities.
 
 @import 'app-variables-dark';
-
-
-// set entity color
-@mixin setEntityColor($type) {
-    @each $entity, $color in $dark-entities {
-        @if ($type ==card) {
-            &.app-entity-#{$entity} {
-                background-color: $color;
-
-                .card-footer {
-                    color: $color;
-                }
-            }
-        }
-    }
-}
-
-// set entity color for all defined elements inside
-@mixin setEntityElementsColor() {
-    @each $entity, $color in $dark-entities {
-        .app-entity-#{$entity} {
-
-            // common
-            .app-entity-color {
-                color: $color;
-            }
-
-            // toolbar
-            .app-toolbar {
-
-                .app-left {
-                    .app-entity-title {
-                        background-color: $color;
-
-                        &:after {
-                            background-color: $color;
-                        }
-                    }
-
-                    .app-entity-item {
-                        color: $color;
-
-                        button span.material-icons {
-                            color: $color;
-                        }
-
-                    }
-                }
-
-                .app-right {
-                    .btn {
-                        color: $color;
-                        border-left-color: rgba($color, .3) !important;
-
-                        &:hover {
-                            background-color: $color;
-                            color: $white;
-                        }
-                    }
-                }
-            }
-
-            // stepper
-            .bs-stepper {
-                overflow-x: auto;
-
-                .step {
-                    &.active {
-                        .bs-stepper-circle {
-                            background-color: $gray-100;
-                            color: $color;
-                            font-weight: bold;
-                            box-shadow: inset 0 0 0 5.4px $color;
-                        }
-
-                        .bs-stepper-label {
-                            color: $color;
-                        }
-                    }
-                }
-            }
-
-            // card header button
-            .card {
-                &.app-card-form {
-                    .card-header {
-                        background-color: rgba($color, 1.0);
-                        color: #fff;
-
-                        .btn-group {
-                            .btn {
-                                &:hover {
-                                    background-color: $color !important;
-                                    color: $white;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // entity card
-            .app-card-entity {
-                background-color: $color;
-
-                .card-footer {
-                    background-color: $white;
-                    color: $color;
-                }
-            }
-
-            // button color
-            .btn-primary {
-                border-color: $color;
-                background-color: $color;
-
-                &:hover {
-                    $link-hover-color: darken($color, 10%);
-                    border-color: $link-hover-color;
-                    background-color: $link-hover-color;
-                }
-            }
-
-            // check box color
-            .custom-control-input:checked~.custom-control-label::before {
-                border-color: $color;
-                background-color: $color;
-            }
-
-            .form-check-input:checked {
-                background-color: $color;
-                border-color: $color;
-            }
-
-            .badge {
-                background-color: $color !important;
-                color: $white;
-            }
-
-            // table list
-            .app-table-list-wrapper {
-                .table {
-                    thead {
-                        position: sticky;
-                        top: 0;
-                        --bs-table-bg: #{$color} !important;
-
-                        a {
-                            color: $white;
-                        }
-
-                        .white {
-                            color: $white;
-                        }
-                    }
-
-                    tbody {
-                        a {
-                            color: $color;
-                        }
-
-                        button {
-                            color: $color;
-                        }
-
-                        td {
-                            vertical-align: middle;
-                        }
-                    }
-                }
-            }
-
-            // pagination
-            .pagination {
-                .page-item {
-                    &.active {
-                        .page-link {
-                            background-color: $color;
-                            border: $color;
-                            color: $white;
-                            display: flex;
-                            border: 1px solid #dee2e6;
-                        }
-                    }
-
-                    .page-link {
-                        color: $color;
-                        display: flex;
-                    }
-                }
-            }
-
-            // dropdown
-            .dropdown-menu {
-                .dropdown-item {
-                    &:active {
-                        background-color: $color;
-                    }
-                }
-            }
-        }
-
-        // card behavior based on entity
-        .app-card-#{$entity} {
-            table {
-                tr {
-                    td {
-                        &.app-ident-cely {
-                            color: $color !important;
-
-                            .material-icons {
-                                color: $color;
-                            }
-
-                            a {
-                                color: $color;
-                            }
-                        }
-
-                        &.app-cell-badge {
-                            padding-left: 0;
-                        }
-
-                        .badge {
-                            background-color: $color !important;
-                            color: $white;
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// set entity color for all transakce table idents
-@mixin setEntityTransakceColor() {
-    @each $entity, $color in $dark-entities {
-        .app-card-#{$entity} {
-            table {
-                tr {
-                    td {
-                        &.app-ident-cely {
-                            color: $color !important;
-
-                            .material-icons {
-                                color: $color;
-                            }
-
-                            a {
-                                color: $color;
-                            }
-                        }
-
-                        .badge {
-                            background-color: $color !important;
-                            color: $white;
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 // Apply dark theme styles to the entire app when theme is set to dark
 html[data-theme="dark"],
@@ -285,13 +23,13 @@ body.app-dark-theme {
     color: $body-text-dark;
     background-color: $body-bg-dark;
 
-    @include setEntityTransakceColor();
+    @include setEntityTransakceColor($dark-entities);
 
     .app-entity-cards {
         .col {
 
             .app-card-entity {
-                @include setEntityColor("card");
+                @include setEntityColor("card", $dark-entities, null);
             }
         }
     }
@@ -369,7 +107,7 @@ body.app-dark-theme {
     }
 
     #app-page-wrapper .container-fluid.app-content-wrapper {
-        @include setEntityElementsColor();
+        @include setEntityElementsColor($dark-entities);
         background-color: $body-bg-dark;
 
         .app-toolbar {
