@@ -1165,21 +1165,33 @@ class TwoQueryPaginator(Paginator):
             top = self.count
 
         bound_rows = self.object_list
-        table_data = getattr(bound_rows, "data", None)
-        queryset = getattr(table_data, "data", None)
+        if isinstance(bound_rows, QuerySet):
+            # Přímé použití s QuerySetem (mimo django-tables2).
+            queryset = bound_rows
+            is_table = False
+        else:
+            # django-tables2: BoundRows -> TableData -> queryset.
+            table_data = getattr(bound_rows, "data", None)
+            queryset = getattr(table_data, "data", None)
+            is_table = True
 
         if not isinstance(queryset, QuerySet):
             # Struktura neodpovídá očekávání (např. seznam místo querysetu) – fallback.
             return super().page(number)
 
         # Krok 1: seřadit a stránkovat pouze primární klíče (úzký řádek, rychlý sort).
-        pk_list = list(queryset.values_list("pk", flat=True)[bottom:top])
+        # select_related(None) odstraní JOINy přidané jen pro načtení souvisejících objektů;
+        # JOINy nutné pro filter/order_by Django ponechá.
+        pk_list = list(queryset.select_related(None).values_list("pk", flat=True)[bottom:top])
 
         # Krok 2: načíst plné objekty jen pro danou stránku; řazení zůstává z querysetu.
         page_qs = queryset.filter(pk__in=pk_list)
 
-        page_rows = BoundRows(data=page_qs, table=bound_rows.table, pinned_data=bound_rows.pinned_data)
-        return self._get_page(page_rows, number, self)
+        if is_table:
+            page_rows = BoundRows(data=page_qs, table=bound_rows.table, pinned_data=bound_rows.pinned_data)
+            return self._get_page(page_rows, number, self)
+
+        return self._get_page(page_qs, number, self)
 
 
 class SearchTable(ColumnShiftTableBootstrap4):

@@ -47,7 +47,7 @@ from core.message_constants import (
 from core.models import Permissions as p
 from core.models import check_permissions
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
-from core.utils import get_cadastre_from_point, get_cadastre_from_point_with_geometry
+from core.utils import TwoQueryPaginator, get_cadastre_from_point, get_cadastre_from_point_with_geometry
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -839,6 +839,7 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
     vypis_app = "pas"
     map_enabled = True
     map_layer = "pas"
+    table_pagination = {"per_page": 100, "paginator_class": TwoQueryPaginator}
 
     def init_translations(self):
         """

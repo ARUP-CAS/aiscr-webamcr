@@ -254,6 +254,20 @@ Třídy
 
       :return: Slovník podmínek pro model ``Soubor`` nebo ``None``, není-li aktivní žádný filtr.
 
+   .. py:method:: filter_soubor_noop()
+
+      Prázdný filtr pro pole vlastností souboru – vrací queryset beze změny.
+
+      Vlastní filtrování probíhá hromadně v ``filter_queryset`` přes jeden korelovaný
+      poddotaz (viz :meth:`_get_soubor_subquery`), aby nevznikal samostatný JOIN na
+      ``soubor`` pro každé pole.
+
+      :param queryset: Vstupní queryset.
+      :param name: Jméno pole filtru.
+      :param value: Hodnota filtru (ignoruje se).
+
+      :return: Nezměněný queryset.
+
    .. py:method:: filter_queryset()
 
       Filtruje queryset a slučuje filtry podle vlastností souboru do jednoho poddotazu.

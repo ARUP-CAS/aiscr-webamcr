@@ -892,8 +892,12 @@ class DokumentFilter(Model3DFilter):
         label=_("dokument.filters.dokumentFilter.tvarPoznamka.label"),
         distinct=True,
     )
+    # Filtry na vlastnosti souboru mají prázdnou metodu (``noop``) – nefiltrují samostatně,
+    # aby nevznikal samostatný JOIN na ``soubor`` pro každý z nich. Sloučí je do jediného
+    # korelovaného poddotazu ``_get_soubor_subquery`` / ``filter_queryset``.
     soubor_typ = SouborTypFilter(
         field_name="soubory__soubory__mimetype",
+        method="filter_soubor_noop",
         label=_("dokument.filters.dokumentFilter.souborTyp.label"),
         widget=SelectMultiple(
             attrs={
@@ -907,26 +911,26 @@ class DokumentFilter(Model3DFilter):
 
     soubor_velikost_od = NumberFilter(
         field_name="soubory__soubory__size_mb",
-        lookup_expr="gte",
+        method="filter_soubor_noop",
         label=_("dokument.filters.dokumentFilter.souborVelikost.label"),
     )
 
     soubor_velikost_do = NumberFilter(
         field_name="soubory__soubory__size_mb",
-        lookup_expr="lte",
+        method="filter_soubor_noop",
         label=" ",
     )
 
     soubor_pocet_stran_od = NumberFilter(
         field_name="soubory__soubory__rozsah",
+        method="filter_soubor_noop",
         label=_("dokument.filters.dokumentFilter.souborPocetStran.label"),
-        lookup_expr="gte",
     )
 
     soubor_pocet_stran_do = NumberFilter(
         field_name="soubory__soubory__rozsah",
+        method="filter_soubor_noop",
         label=" ",
-        lookup_expr="lte",
     )
     id_AZ = CharFilter(
         method="filter_id_AZ",
@@ -1280,22 +1284,38 @@ class DokumentFilter(Model3DFilter):
         """
         cd = self.form.cleaned_data
         conditions = {}
-        typ = cd.pop("soubor_typ", None)
+        typ = cd.get("soubor_typ")
         if typ:
             conditions["mimetype__in"] = typ
-        velikost_od = cd.pop("soubor_velikost_od", None)
+        velikost_od = cd.get("soubor_velikost_od")
         if velikost_od is not None:
             conditions["size_mb__gte"] = velikost_od
-        velikost_do = cd.pop("soubor_velikost_do", None)
+        velikost_do = cd.get("soubor_velikost_do")
         if velikost_do is not None:
             conditions["size_mb__lte"] = velikost_do
-        stran_od = cd.pop("soubor_pocet_stran_od", None)
+        stran_od = cd.get("soubor_pocet_stran_od")
         if stran_od is not None:
             conditions["rozsah__gte"] = stran_od
-        stran_do = cd.pop("soubor_pocet_stran_do", None)
+        stran_do = cd.get("soubor_pocet_stran_do")
         if stran_do is not None:
             conditions["rozsah__lte"] = stran_do
         return conditions or None
+
+    def filter_soubor_noop(self, queryset, name, value):
+        """
+        Prázdný filtr pro pole vlastností souboru – vrací queryset beze změny.
+
+        Vlastní filtrování probíhá hromadně v ``filter_queryset`` přes jeden korelovaný
+        poddotaz (viz :meth:`_get_soubor_subquery`), aby nevznikal samostatný JOIN na
+        ``soubor`` pro každé pole.
+
+        :param queryset: Vstupní queryset.
+        :param name: Jméno pole filtru.
+        :param value: Hodnota filtru (ignoruje se).
+
+            :return: Nezměněný queryset.
+        """
+        return queryset
 
     def filter_queryset(self, queryset):
         """
