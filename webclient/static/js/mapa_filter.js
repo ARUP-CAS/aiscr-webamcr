@@ -16,17 +16,78 @@
     }
 
     var endpoint = sectionEl.getAttribute("data-map-endpoint");
+    var mapLayerName = sectionEl.getAttribute("data-map-layer");
     var geomInput = document.getElementById("geom_filter");
 
-    // body se shlukují (markercluster), polygony/linie jdou do samostatné vrstvy
-    var poiLayer = (typeof L.markerClusterGroup !== "undefined"
-        ? L.markerClusterGroup({ disableClusteringAtZoom: 20 })
-        : L.layerGroup()).addTo(map);
-    var shapeLayer = L.layerGroup().addTo(map);
     var heatmapOptions = typeof settings_heatmap_options !== "undefined" ? settings_heatmap_options : {};
     var heatLayer = new HeatmapOverlay(heatmapOptions);
     var boundsLock = null;
     var mapInitialized = false;
+
+    // Datové vrstvy workflow – stejné pojmenování i ovládání jako v detailních mapách.
+    // Sdílený markercluster + subgroupy: body se shlukují, polygony/linie jdou do stejné vrstvy.
+    var mcg = L.markerClusterGroup({ disableClusteringAtZoom: 20 }).addTo(map);
+
+    function makeDataLayer() {
+        var group = L.featureGroup.subGroup(mcg);
+        map.addLayer(group);
+        return group;
+    }
+
+    var dataLayers = {}; // popisek vrstvy -> vrstva (jde do ovládání vrstev)
+    var projektStavLayers = null; // stav projektu -> vrstva (jen workflow projekty)
+    var defaultDataLayer = null; // vrstva pro ostatní workflow
+
+    if (mapLayerName === "projekt") {
+        var p1 = makeDataLayer();
+        var p2 = makeDataLayer();
+        var p3 = makeDataLayer();
+        var p46 = makeDataLayer();
+        var p78 = makeDataLayer();
+        dataLayers[map_translations["projektyP1"]] = p1;
+        dataLayers[map_translations["projektyP2"]] = p2;
+        dataLayers[map_translations["projektyP3"]] = p3;
+        dataLayers[map_translations["projektyP46"]] = p46;
+        dataLayers[map_translations["projektyP78"]] = p78;
+        projektStavLayers = { 1: p1, 2: p2, 3: p3, 4: p46, 5: p46, 6: p46, 7: p78, 8: p78 };
+    } else if (mapLayerName === "pas") {
+        defaultDataLayer = makeDataLayer();
+        dataLayers[map_translations["samostatneNalezy"]] = defaultDataLayer;
+    } else if (mapLayerName === "akce" || mapLayerName === "lokalita") {
+        defaultDataLayer = makeDataLayer();
+        dataLayers[map_translations["pian"]] = defaultDataLayer;
+    } else if (mapLayerName === "3d") {
+        defaultDataLayer = makeDataLayer();
+        dataLayers[map_translations["Library3D"]] = defaultDataLayer;
+    }
+
+    // Přestavba ovládání vrstev: podklady + ČÚZK/NPÚ + datové vrstvy workflow.
+    // Vypadnou vrstvy vázané na konkrétní záznam i prázdná „lokalizace“ z basic_functions.
+    if (typeof global_map_layers !== "undefined" && global_map_layers) {
+        global_map_layers.remove(map);
+    }
+    var controlOverlays = {};
+    controlOverlays[map_translations["cuzkKatastralniMapa"]] = cuzkWMS;
+    controlOverlays[map_translations["cuzkKatastralniUzemi"]] = cuzkWMS2;
+    controlOverlays[map_translations["npuPamatkovaOchrana"]] = npuOchrana;
+    Object.keys(dataLayers).forEach(function (name) {
+        controlOverlays[name] = dataLayers[name];
+    });
+    L.control.layers(baseLayers, controlOverlays).addTo(map);
+
+    // cílová datová vrstva pro daný prvek (u projektů podle stavu)
+    function targetLayerFor(point) {
+        if (projektStavLayers) {
+            return projektStavLayers[point.stav] || null;
+        }
+        return defaultDataLayer;
+    }
+
+    function clearDataLayers() {
+        Object.keys(dataLayers).forEach(function (name) {
+            dataLayers[name].clearLayers();
+        });
+    }
 
     // Lokalizace popisků nástroje pro kreslení (leaflet-draw)
     if (typeof draw_translations !== "undefined" && L.drawLocal) {
@@ -70,7 +131,8 @@
         };
     }
 
-    // koš v toolbaru maže výběr rovnou jedním klikem (bez režimu mazání Save/Cancel/Clear)
+    // koš v toolbaru maže výběr rovnou jedním klikem (bez režimu mazání Save/Cancel/Clear);
+    // po smazání se musí vyprázdnit i skryté pole #geom_filter, jinak by se dál filtrovalo
     if (L.EditToolbar && L.EditToolbar.Delete && !L.EditToolbar.Delete.prototype._amcrInstantDelete) {
         L.EditToolbar.Delete.prototype._amcrInstantDelete = true;
         L.EditToolbar.Delete.prototype.enable = function () {
@@ -79,6 +141,7 @@
             }
             this._deletedLayers = new L.LayerGroup();
             this.removeAllLayers();
+            updateGeomFilter();
         };
     }
 
@@ -224,7 +287,7 @@
         return '<a href="' + detailUrlFor(layerType, identCely) + '" target="_blank">' + identCely + "</a>";
     }
 
-    function renderPoint(wkt, identCely, layerType) {
+    function renderPoint(wkt, identCely, layerType, target) {
         var latlng = geomToLatLng(wkt);
         if (!latlng) {
             return;
@@ -232,7 +295,7 @@
         L.marker(latlng, { icon: pointIconForType(layerType) })
             .bindTooltip(identCely, { sticky: true })
             .bindPopup(popupLink(layerType, identCely))
-            .addTo(poiLayer);
+            .addTo(target);
     }
 
     // souřadnice prvního prstence/části geometrie ("(" pro linii, "((" pro polygon)
@@ -248,7 +311,7 @@
     }
 
     // PIAN (akce/lokalita): skutečná geometrie (polygon/linie/bod) jako v náhledu akce + pin v repr. bodě
-    function renderPian(wkt, identCely) {
+    function renderPian(wkt, identCely, target) {
         var style = { color: "rgb(151, 0, 156)" };
         var shape = null;
         if (wkt.indexOf("POLYGON") !== -1) {
@@ -257,26 +320,27 @@
             shape = L.polyline(wktPartToLatLngs(wkt, "("), style);
         }
         if (shape) {
-            shape.bindTooltip(identCely, { sticky: true }).bindPopup(popupLink("pian", identCely)).addTo(shapeLayer);
+            shape.bindTooltip(identCely, { sticky: true }).bindPopup(popupLink("pian", identCely)).addTo(target);
         }
         var latlng = geomToLatLng(wkt);
         if (latlng) {
             L.marker(latlng, { icon: pointIconForType("pian") })
                 .bindTooltip(identCely, { sticky: true })
                 .bindPopup(popupLink("pian", identCely))
-                .addTo(poiLayer);
+                .addTo(target);
         }
     }
 
     function renderDetail(points) {
         points.forEach(function (i) {
-            if (!i.geom) {
+            var target = targetLayerFor(i);
+            if (!i.geom || !target) {
                 return;
             }
             if (i.type === "pian") {
-                renderPian(i.geom, i.ident_cely);
+                renderPian(i.geom, i.ident_cely, target);
             } else {
-                renderPoint(i.geom, i.ident_cely, i.type);
+                renderPoint(i.geom, i.ident_cely, i.type, target);
             }
         });
     }
@@ -302,16 +366,27 @@
         map.addLayer(heatLayer);
     }
 
+    // klíč výřezu ze všech čtyř rohů a zoomu – aby se přeskočilo jen skutečně nezměněné zobrazení
+    // (porovnání pouhého topLeft by vynechalo načtení při změně samotného zoomu)
+    function boundsKey(bounds, zoom) {
+        return ["topLeft", "topRight", "bottomRight", "bottomLeft"]
+            .map(function (corner) {
+                return bounds[corner].lat.toFixed(6) + "," + bounds[corner].lng.toFixed(6);
+            })
+            .join("|") + "@" + zoom;
+    }
+
     function loadMapData() {
         if (!endpoint) {
             return;
         }
         var bounds = getRotatedBounds();
         var zoom = map.getZoom();
-        if (boundsLock && boundsLock.topLeft && bounds.topLeft.equals(boundsLock.topLeft)) {
+        var key = boundsKey(bounds, zoom);
+        if (boundsLock === key) {
             return;
         }
-        boundsLock = bounds;
+        boundsLock = key;
         var xhr = new XMLHttpRequest();
         xhr.open("POST", endpoint);
         xhr.setRequestHeader("Content-type", "application/json");
@@ -320,9 +395,16 @@
         }
         map.spin(true);
         xhr.onload = function () {
+            map.spin(false);
+            if (this.status < 200 || this.status >= 300) {
+                boundsLock = null; // ať se při dalším pohybu zkusí načíst znovu
+                if (typeof console !== "undefined") {
+                    console.error("mapa_filter: načtení dat selhalo (HTTP " + this.status + ")");
+                }
+                return;
+            }
             try {
-                poiLayer.clearLayers();
-                shapeLayer.clearLayers();
+                clearDataLayers();
                 map.removeLayer(heatLayer);
                 var res = JSON.parse(this.responseText);
                 if (res.algorithm === "detail") {
@@ -332,13 +414,16 @@
                 }
             } catch (e) {
                 if (typeof console !== "undefined") {
-                    console.log(e);
+                    console.error("mapa_filter: chyba při zpracování dat", e);
                 }
             }
-            map.spin(false);
         };
         xhr.onerror = function () {
             map.spin(false);
+            boundsLock = null;
+            if (typeof console !== "undefined") {
+                console.error("mapa_filter: síťová chyba při načítání dat");
+            }
         };
         xhr.send(JSON.stringify({ bounds: bounds, zoom: zoom }));
     }

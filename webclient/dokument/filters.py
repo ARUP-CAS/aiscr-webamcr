@@ -4,7 +4,7 @@ from functools import reduce
 
 import crispy_forms
 from core.constants import DOKUMENT_RELATION_TYPE, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZMENA_KATASTRU
-from core.filters import GeomWithinFilterMixin
+from core.filters import GeomIntersectsFilterMixin
 from core.forms import SelectMultipleSeparator
 from core.models import Soubor
 from core.widgets import AutocompleteModelSelect2Multiple
@@ -218,7 +218,7 @@ class HistorieFilter(FilterSet):
         ).distinct()
 
 
-class Model3DFilter(GeomWithinFilterMixin, HistorieFilter, FilterSet):
+class Model3DFilter(GeomIntersectsFilterMixin, HistorieFilter, FilterSet):
     """
     Třída pro základní filtrování modelu 3D a jejich potomků.
     """

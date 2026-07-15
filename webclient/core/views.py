@@ -67,12 +67,12 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.gis.db.models.functions import AsWKT
+from django.contrib.gis.db.models.functions import AsWKT, PointOnSurface
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.core.validators import URLValidator
 from django.db import transaction
-from django.db.models import FilteredRelation, Q, Value
+from django.db.models import Case, FilteredRelation, Q, TextField, Value, When
 from django.http import (
     FileResponse,
     Http404,
@@ -1985,6 +1985,27 @@ def post_ajax_get_pas_and_pian_limit(request):
             return JsonResponse({"heat": [], "algorithm": "heat", "count": len(heats)}, status=200)
 
 
+def pian_geom_expression(geom_field):
+    """
+    Vrací výraz pro geometrii PIANu posílanou do mapy jako WKT.
+
+    PIAN s přesností „poloha podle katastru“ se v mapě zobrazuje jako **bod**, nikoli jako polygon
+    katastrálního území (shodně s mapou v detailu akce). Posíláme proto rovnou reprezentativní bod
+    (``ST_PointOnSurface``) – klient tak nemusí pravidlo znát a nepřenáší se zbytečně velký polygon.
+
+    :param geom_field: Název geometrického pole na modelu Pian.
+
+        :return: Vrací podmíněný výraz pro anotaci ``geom``.
+    """
+    from heslar.hesla_dynamicka import PIAN_PRESNOST_KATASTR
+
+    return Case(
+        When(presnost=PIAN_PRESNOST_KATASTR, then=AsWKT(PointOnSurface(geom_field))),
+        default=AsWKT(geom_field),
+        output_field=TextField(),
+    )
+
+
 @login_required
 @require_http_methods(["POST"])
 def post_ajax_get_list_map_data(request, layer):
@@ -1993,8 +2014,12 @@ def post_ajax_get_list_map_data(request, layer):
 
     Vrací prvky daného workflow (``layer``) v aktuálním výřezu mapy ve stejném kontraktu jako
     :func:`post_ajax_get_pas_and_pian_limit` – tj. ``{"points"|"heat", "algorithm", "count"}`` –
-    aby klient mohl znovupoužít stávající vykreslování. Nad ``LIMIT_PRVKU_ZOBRAZENI_HEATMAP`` se
-    přepíná na heatmapu. Vrstva je pouze orientační; vlastní filtrování tabulky zajišťuje
+    aby klient mohl znovupoužít stávající vykreslování. Dosáhne-li počet prvků ve výřezu hodnoty
+    ``LIMIT_PRVKU_ZOBRAZENI_HEATMAP``, přepne se na heatmapu; **výjimkou je vrstva ``"3d"``
+    (knihovna 3D), která heatmapu nemá a vždy vrací jednotlivé body** (stejně jako náhled 3D mapy).
+
+    Detailní body respektují oprávnění příslušného výpisu, takže uživatel v mapě vidí jen záznamy,
+    které smí vidět i v tabulce. Vrstva je orientační; vlastní filtrování tabulky zajišťuje
     serverový filtr ``geom_filter``.
 
     :param request: HTTP požadavek s tělem ``{"bounds": {...}, "zoom": int}``.
@@ -2013,18 +2038,29 @@ def post_ajax_get_list_map_data(request, layer):
             bounds["topRight"]["lat"],
             zoom,
         ]
-        base_qs, type_label, geom_field = get_list_map_records_in_envelope(layer, bounds, request)
     except (json.JSONDecodeError, KeyError, TypeError):
         return JsonResponse({"error": "Invalid request body"}, status=400)
+
+    base_qs, type_label, geom_field = get_list_map_records_in_envelope(layer, bounds, request)
     if base_qs is None:
         logger.warning("core.views.post_ajax_get_list_map_data.unknown_layer", extra={"layer": layer})
         return JsonResponse({"points": [], "algorithm": "detail", "count": 0}, status=200)
 
-    points_qs = base_qs.values("ident_cely", type=Value(type_label)).annotate(geom=AsWKT(geom_field))
-    num = points_qs.count()
+    # U projektů posíláme i stav, aby je klient rozdělil do vrstev „Projekty - P1 … P7-P8“ jako v detailu.
+    extra_fields = ("stav",) if layer == "projekt" else ()
+    points_qs = base_qs.values("ident_cely", *extra_fields, type=Value(type_label)).annotate(
+        geom=pian_geom_expression(geom_field) if type_label == "pian" else AsWKT(geom_field)
+    )
 
-    if layer == "3d" or num < LIMIT_PRVKU_ZOBRAZENI_HEATMAP:
-        return JsonResponse({"points": list(points_qs), "algorithm": "detail", "count": num}, status=200)
+    # Knihovna 3D heatmapu nemá (stejně jako náhled 3D mapy) – vždy vracíme jednotlivé body.
+    if layer == "3d":
+        points = list(points_qs)
+        return JsonResponse({"points": points, "algorithm": "detail", "count": len(points)}, status=200)
+
+    # Jediný dotaz omezený prahem: vejdeme-li se pod limit, jde o detail, jinak se přepne na heatmapu.
+    points = list(points_qs[:LIMIT_PRVKU_ZOBRAZENI_HEATMAP])
+    if len(points) < LIMIT_PRVKU_ZOBRAZENI_HEATMAP:
+        return JsonResponse({"points": points, "algorithm": "detail", "count": len(points)}, status=200)
 
     if layer == "pas":
         heats = get_heatmap_pas(*params)

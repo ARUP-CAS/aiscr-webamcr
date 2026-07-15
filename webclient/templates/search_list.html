@@ -118,6 +118,10 @@
                   </div>
                   <div id="mapaCollapse" class="collapse col-sm-12"
                        data-map-endpoint="{{ map_data_url }}" data-map-layer="{{ map_layer }}">
+                    <div class="text-muted small mb-2 d-flex align-items-center">
+                      <span class="material-icons mr-1" style="font-size: 1rem;">info_outline</span>
+                      {% trans "templates.searchList.mapa.napoveda" %}
+                    </div>
                     <div class="app-mapa-filter-map" style="height: 480px;">
                       <div id="projectMap"></div>
                     </div>
