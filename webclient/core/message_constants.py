@@ -46,6 +46,9 @@ SOUBOR_SE_NEPOVEDLO_PREJMENOVAT: Final = _(
 SOUBOR_SUFFIX_OBSAZEN: Final = _(
     "common.message.SOUBOR_SUFFIX_OBSAZEN.text"
 )  # Zvolený suffix je již obsazený nebo neplatný.
+SOUBOR_NEJVYSSI_SUFFIX_OBSAZEN: Final = _(
+    "common.message.SOUBOR_NEJVYSSI_SUFFIX_OBSAZEN.text"
+)  # Nejvyšší pozici názvu nelze přidělit, ale některé nižší jsou volné – uvolněte je přejmenováním.
 ZAZNAM_ZMENEN_JINOU_TRANSAKCI: Final = _(
     "common.message.ZAZNAM_ZMENEN_JINOU_TRANSAKCI.text"
 )  # Záznam právě upravuje jiná operace, akci nelze dokončit. Zkuste to prosím za chvíli znovu.

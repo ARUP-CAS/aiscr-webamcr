@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("core", "0029_insert_ruian_sync_settings"),
+        ("core", "0028_remove_apirequestlog"),
     ]
 
     operations = [

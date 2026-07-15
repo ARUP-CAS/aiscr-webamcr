@@ -33,6 +33,7 @@ from core.message_constants import (
     PRISTUP_ZAKAZAN,
     PROJEKT_NEKDO_ZMENIL_STAV,
     SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
+    SOUBOR_NEJVYSSI_SUFFIX_OBSAZEN,
     SOUBOR_SE_NEPOVEDLO_PREJMENOVAT,
     SOUBOR_SUFFIX_OBSAZEN,
     SOUBOR_USPESNE_PREJMENOVAN,
@@ -45,6 +46,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE,
     ZAZNAM_USPESNE_SMAZAN,
+    ZAZNAM_ZMENEN_JINOU_TRANSAKCI,
 )
 from core.models import AntivirusCheckResult, Soubor
 from core.repository_connector import (
@@ -354,6 +356,26 @@ def _rename_file_safe_redirect(request):
     return reverse("core:home")
 
 
+class _SuffixNoLongerFreeError(Exception):
+    """Zvolený suffix byl mezi načtením formuláře a uložením obsazen jiným požadavkem."""
+
+
+def _rename_file_messages_response(request, message, status=400):
+    """
+    Vrátí ``JsonResponse`` s frontovanými django zprávami pro AJAX modal (vzor ``delete_file``).
+
+    :param request: HTTP požadavek, do jehož zpráv se přidá chybová hláška.
+    :param message: Chybová zpráva k zobrazení uživateli.
+    :param status: HTTP status odpovědi.
+    :return: ``JsonResponse`` se seznamem zpráv v klíči ``messages``.
+    """
+    messages.add_message(request, messages.ERROR, message)
+    django_messages = [
+        {"level": m.level, "message": m.message, "extra_tags": m.tags} for m in messages.get_messages(request)
+    ]
+    return JsonResponse({"messages": django_messages}, status=status)
+
+
 @login_required
 @require_http_methods(["POST", "GET"])
 def rename_file(request, typ_vazby, ident_cely, pk):
@@ -361,7 +383,7 @@ def rename_file(request, typ_vazby, ident_cely, pk):
     Přejmenuje existující soubor změnou suffixu na volnou povolenou hodnotu.
 
     Mění název v databázi (``soubor.nazev``), ve Fedoře (``ebucore:filename`` souboru i jeho potomků)
-    a vyvolá přegenerování XML metadat navázaného záznamu. Dostupné jen pro dokumenty (3D modely)
+    a vyvolá přegenerování XML metadat navázaného záznamu. Dostupné pro dokumenty (včetně 3D modelů)
     a samostatné nálezy, které mají suffixové schéma názvů.
 
     :param request: HTTP požadavek s metodou GET (modal) nebo POST (provedení).
@@ -400,15 +422,16 @@ def rename_file(request, typ_vazby, ident_cely, pk):
             "core.views.rename_file.unsupported_record",
             extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": pk},
         )
-        messages.add_message(request, messages.ERROR, SOUBOR_SE_NEPOVEDLO_PREJMENOVAT)
-        return JsonResponse({"success": False}, status=400)
+        # GET modal se načítá přes AJAX .load() (očekává HTML) – vrátíme redirect; POST očekává JSON.
+        if request.method == "POST":
+            return _rename_file_messages_response(request, SOUBOR_SE_NEPOVEDLO_PREJMENOVAT)
+        return redirect(_rename_file_safe_redirect(request))
     suffix_choices = [(suffix or RENAME_BASE_SLOT_VALUE, f"{base}{suffix}{extension}") for suffix in free_suffixes]
 
     if request.method == "POST":
         form = RenameSouborForm(request.POST, suffix_choices=suffix_choices)
         if not form.is_valid():
-            messages.add_message(request, messages.ERROR, SOUBOR_SUFFIX_OBSAZEN)
-            return JsonResponse({"success": False}, status=400)
+            return _rename_file_messages_response(request, SOUBOR_SUFFIX_OBSAZEN)
         chosen_suffix = form.cleaned_data["suffix"]
         if chosen_suffix == RENAME_BASE_SLOT_VALUE:
             chosen_suffix = ""
@@ -420,6 +443,15 @@ def rename_file(request, typ_vazby, ident_cely, pk):
         fedora_transaction = FedoraTransaction()
         try:
             with transaction.atomic():
+                # Zámek nadřazeného záznamu serializuje souběžná přejmenování; po zamčení znovu
+                # ověříme, že zvolený suffix je stále volný (jiný požadavek jej mohl mezitím obsadit).
+                type(navazany_objekt).objects.select_for_update().get(pk=navazany_objekt.pk)
+                if isinstance(navazany_objekt, Dokument):
+                    current_free = get_dokument_free_suffixes(navazany_objekt, soubor)
+                else:
+                    current_free = get_finds_free_suffixes(navazany_objekt, soubor)
+                if chosen_suffix not in current_free:
+                    raise _SuffixNoLongerFreeError()
                 connector = FedoraRepositoryConnector(navazany_objekt, fedora_transaction)
                 connector.update_file_name(soubor, old_nazev, new_nazev)
                 soubor.zaznamenej_prejmenovani(request.user, old_nazev, new_nazev)
@@ -427,6 +459,11 @@ def rename_file(request, typ_vazby, ident_cely, pk):
                 soubor.active_transaction = fedora_transaction
                 soubor.close_active_transaction_when_finished = True
                 soubor.save()
+        except _SuffixNoLongerFreeError:
+            logger.debug("core.views.rename_file.suffix_taken", extra={"pk": pk, "suffix": chosen_suffix})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return _rename_file_messages_response(request, SOUBOR_SUFFIX_OBSAZEN)
         except FedoraUpdatedByAnotherTransactionError as err:
             logger.debug(
                 "core.views.rename_file.another_transaction",
@@ -434,8 +471,7 @@ def rename_file(request, typ_vazby, ident_cely, pk):
             )
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
-            messages.add_message(request, messages.ERROR, SOUBOR_SE_NEPOVEDLO_PREJMENOVAT)
-            return JsonResponse({"success": False}, status=400)
+            return _rename_file_messages_response(request, ZAZNAM_ZMENEN_JINOU_TRANSAKCI)
         except FedoraError as err:
             logger.error(
                 "core.views.rename_file.fedora_error",
@@ -443,8 +479,17 @@ def rename_file(request, typ_vazby, ident_cely, pk):
             )
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
-            messages.add_message(request, messages.ERROR, SOUBOR_SE_NEPOVEDLO_PREJMENOVAT)
-            return JsonResponse({"success": False}, status=400)
+            return _rename_file_messages_response(request, SOUBOR_SE_NEPOVEDLO_PREJMENOVAT)
+        except Exception as err:
+            # Neočekávaná chyba (např. IntegrityError nebo chyba v save_metadata): DB se rollbackne
+            # přes atomic(), ale otevřenou Fedora transakci musíme uklidit ručně, jinak zůstane viset.
+            logger.error(
+                "core.views.rename_file.unexpected_error",
+                extra={"pk": pk, "error": err, "transaction": fedora_transaction.uid},
+            )
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            raise
         logger.debug(
             "core.views.rename_file.success",
             extra={"pk": pk, "old_nazev": old_nazev, "new_nazev": new_nazev, "transaction": fedora_transaction.uid},
@@ -1074,6 +1119,15 @@ class NewFileUploadView(BasePostUploadView):
 
         if new_name is False:
             self.fedora_transaction.rollback_transaction()
+            # Nejvyšší suffix už nelze přidělit. Pokud jsou nižší sloty volné (vznikly přejmenováním
+            # či smazáním), poradíme uživateli je uvolnit přejmenováním; jinak je záznam skutečně plný.
+            free_suffixes = []
+            if typ_vazby in ("dokument", "model3d"):
+                free_suffixes = get_dokument_free_suffixes(objekt)
+            elif typ_vazby == "pas":
+                free_suffixes = get_finds_free_suffixes(objekt)
+            if free_suffixes:
+                return JsonResponse({"error": str(SOUBOR_NEJVYSSI_SUFFIX_OBSAZEN)}, status=403)
             return JsonResponse(
                 {
                     "error": (
@@ -1296,25 +1350,34 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
 
 def get_finds_soubor_name(find, filename, add_to_index=1):
     """
-    Funkce pro získaní jména souboru pro samostatný nález – přiřadí první volný suffix.
+    Funkce pro získaní jména souboru pro samostatný nález.
 
-    Suffix má tvar ``F01`` … ``F99``. Vybírá se první volný slot, takže po přejmenování či smazání
-    souboru se znovu využijí uvolněná místa (nepoužívá se max + 1, aby uvolněné nižší sloty
-    nezpůsobily falešné hlášení o dosažení maxima).
+    Název se přiděluje navýšením podle nejvyššího obsazeného suffixu (``F01`` … ``F99``). Toto výchozí
+    chování se záměrně nemění – uvolnění či změnu pozice řeší přejmenování souboru.
 
-    :param find: Samostatný nález, ke kterému se soubor nahrává; pracuje se s atributy ``ident_cely``, ``soubory``.
-    :param filename: Název nahrávaného souboru, ze kterého se přebírá přípona.
-    :param add_to_index: Zachováno kvůli zpětné kompatibilitě, hodnota se nepoužívá.
-    :return: Nový název souboru, nebo ``False`` pokud jsou všechny suffixy obsazené.
+    :param find: Textový název, klíč nebo výraz ``find`` používaný v rámci operace.
+    :param filename: Parametr ``filename`` se předává do volání ``splitext()``, ``warning()``, vstupuje do návratové hodnoty.
+    :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.
     """
-    free_suffixes = get_finds_free_suffixes(find)
-    if not free_suffixes:
-        logger.warning(
-            "core.views.get_finds_soubor_name.cannot_upload",
-            extra={"file": filename, "ident_cely": find.ident_cely},
-        )
-        return False
-    return f"{find.ident_cely.replace('-', '')}{free_suffixes[0]}{os.path.splitext(filename)[1]}"
+    ident_cely_sanitized = find.ident_cely.replace("-", "")
+    files = find.soubory.soubory.filter(nazev__contains=ident_cely_sanitized)
+    if not files.exists():
+        return (f"{ident_cely_sanitized}F01") + os.path.splitext(filename)[1]
+    else:
+        list_last_char = [int(os.path.splitext(file.nazev)[0][-2:]) for file in files]
+        last_char = max(list_last_char)
+        if last_char != 99 or add_to_index == 0:
+            new_last_char = str(last_char + add_to_index).zfill(2)
+            extension = os.path.splitext(filename)[1]
+            return f"{find.ident_cely.replace('-', '')}F{new_last_char}{extension}"
+        else:
+            logger.warning(
+                "core.views.get_finds_soubor_name.cannot_upload",
+                extra={"file": filename, "value": list_last_char},
+            )
+            return False
 
 
 def _obsazene_suffixy(navazany_objekt, base, current_soubor=None):

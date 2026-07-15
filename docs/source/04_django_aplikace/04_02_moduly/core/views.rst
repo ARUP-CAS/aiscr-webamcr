@@ -6,6 +6,11 @@ Definice views.
 Třídy
 ------
 
+.. py:class:: _SuffixNoLongerFreeError
+
+   Zvolený suffix byl mezi načtením formuláře a uložením obsazen jiným požadavkem.
+
+
 .. py:class:: DownloadFile
 
    Implementuje komponentu ``DownloadFile`` v rámci aplikace.
@@ -817,12 +822,21 @@ Funkce
    :param request: HTTP požadavek s parametrem ``next`` v GET nebo POST.
    :return: Bezpečná návratová URL nebo domovská stránka.
 
+.. py:function:: _rename_file_messages_response(request, message, status)
+
+   Vrátí ``JsonResponse`` s frontovanými django zprávami pro AJAX modal (vzor ``delete_file``).
+
+   :param request: HTTP požadavek, do jehož zpráv se přidá chybová hláška.
+   :param message: Chybová zpráva k zobrazení uživateli.
+   :param status: HTTP status odpovědi.
+   :return: ``JsonResponse`` se seznamem zpráv v klíči ``messages``.
+
 .. py:function:: rename_file(request, typ_vazby, ident_cely, pk)
 
    Přejmenuje existující soubor změnou suffixu na volnou povolenou hodnotu.
 
    Mění název v databázi (``soubor.nazev``), ve Fedoře (``ebucore:filename`` souboru i jeho potomků)
-   a vyvolá přegenerování XML metadat navázaného záznamu. Dostupné jen pro dokumenty (3D modely)
+   a vyvolá přegenerování XML metadat navázaného záznamu. Dostupné pro dokumenty (včetně 3D modelů)
    a samostatné nálezy, které mají suffixové schéma názvů.
 
    :param request: HTTP požadavek s metodou GET (modal) nebo POST (provedení).
@@ -833,16 +847,16 @@ Funkce
 
 .. py:function:: get_finds_soubor_name(find, filename, add_to_index)
 
-   Funkce pro získaní jména souboru pro samostatný nález – přiřadí první volný suffix.
+   Funkce pro získaní jména souboru pro samostatný nález.
 
-   Suffix má tvar ``F01`` … ``F99``. Vybírá se první volný slot, takže po přejmenování či smazání
-   souboru se znovu využijí uvolněná místa (nepoužívá se max + 1, aby uvolněné nižší sloty
-   nezpůsobily falešné hlášení o dosažení maxima).
+   Název se přiděluje navýšením podle nejvyššího obsazeného suffixu (``F01`` … ``F99``). Toto výchozí
+   chování se záměrně nemění – uvolnění či změnu pozice řeší přejmenování souboru.
 
-   :param find: Samostatný nález, ke kterému se soubor nahrává; pracuje se s atributy ``ident_cely``, ``soubory``.
-   :param filename: Název nahrávaného souboru, ze kterého se přebírá přípona.
-   :param add_to_index: Zachováno kvůli zpětné kompatibilitě, hodnota se nepoužívá.
-   :return: Nový název souboru, nebo ``False`` pokud jsou všechny suffixy obsazené.
+   :param find: Textový název, klíč nebo výraz ``find`` používaný v rámci operace.
+   :param filename: Parametr ``filename`` se předává do volání ``splitext()``, ``warning()``, vstupuje do návratové hodnoty.
+   :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
+
+   :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.
 
 .. py:function:: _obsazene_suffixy(navazany_objekt, base, current_soubor)
 
