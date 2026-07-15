@@ -100,11 +100,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - http://github.com/celery/py-amqp
    * - anyio
-     - 4.14.1
+     - 4.14.2
      - MIT
      - https://anyio.readthedocs.io/en/stable/versionhistory.html
    * - asgiref
-     - 3.11.1
+     - 3.12.1
      - BSD License
      - https://github.com/django/asgiref/
    * - attrs
@@ -492,7 +492,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.4.3
+     - 1.4.4
      - MIT License
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
@@ -644,7 +644,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - PSF-2.0
      - https://github.com/python/typing_extensions
    * - tzdata
-     - 2026.2
+     - 2026.3
      - Apache-2.0
      - https://github.com/python/tzdata
    * - tzlocal
@@ -664,7 +664,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.6.0
+     - 21.6.1
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
