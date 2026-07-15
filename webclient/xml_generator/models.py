@@ -12,7 +12,7 @@ UPDATE_REDIS_SNAPSHOT = 20
 
 def check_if_task_queued(class_name, pk, task_name):
     """
-    Ověří if task queued.
+    Ověří, zda je úloha ve frontě.
 
     :param class_name: Parametr ``class_name`` předává se do volání ``warning()``, ``debug()``, ovlivňuje větvení podmínek.
     :param pk: Primární klíč zpracovávaného záznamu.
