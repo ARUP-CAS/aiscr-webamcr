@@ -121,7 +121,7 @@ Grafana Enterprise pro vizualizaci metrik a monitoringu. Poskytuje dashboardy pr
 prom/prometheus
 ~~~~~~~~~~~~~~~
 
-- **Verze:** v3.12.0
+- **Verze:** v3.13.1
 - **Licence:** Apache-2.0 License
 - **Odkaz:** https://github.com/prometheus/prometheus
 
@@ -130,7 +130,7 @@ Prometheus pro sběr a ukládání metrik. Slouží jako centrální systém pro
 docker.elastic.co/logstash/logstash
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 9.4.2
+- **Verze:** 9.4.3
 - **Licence:** SSPL, Elastic License 2.0, Apache License 2.0
 - **Odkaz:** https://github.com/elastic/logstash
 
@@ -139,7 +139,7 @@ Logstash pro zpracování a transformaci logů. Zajišťuje parsování a indexo
 docker.elastic.co/elasticsearch/elasticsearch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 9.4.2
+- **Verze:** 9.4.3
 - **Licence:** SSPL, Elastic License 2.0, Apache License 2.0
 - **Odkaz:** https://github.com/elastic/elasticsearch
 
@@ -148,7 +148,7 @@ Elasticsearch pro fulltextové vyhledávání a analýzu logů. Ukládá a index
 docker.elastic.co/kibana/kibana
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 9.4.2
+- **Verze:** 9.4.3
 - **Licence:** SSPL, Elastic License 2.0, Apache License 2.0
 - **Odkaz:** https://github.com/elastic/kibana
 
@@ -175,7 +175,7 @@ cAdvisor pro monitorování využití zdrojů kontejnerů. Shromažďuje metriky
 prometheuscommunity/postgres-exporter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** v0.19.1
+- **Verze:** v0.20.1
 - **Licence:** Apache-2.0 License
 - **Odkaz:** https://github.com/prometheus-community/postgres_exporter
 
