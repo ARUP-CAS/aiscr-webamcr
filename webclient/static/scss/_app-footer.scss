@@ -16,12 +16,55 @@ footer {
     }
   }
 
+  .app-footer-logos-container {
+    margin-bottom: $spacer-3;
+  }
+
+  .app-footer-logos-toggle-wrapper {
+    margin-bottom: $spacer-2;
+
+    .app-footer-logos-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      color: $gray-700;
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: .8rem;
+      cursor: pointer;
+      line-height: 1;
+
+
+      &:hover {
+        color: darken($gray-700, 20%);
+
+        #app-footer-logos-toggle-text {
+          text-decoration: underline;
+        }
+
+        #app-footer-logos-toggle-icon {
+          text-decoration: none;
+        }
+      }
+
+      .material-icons {
+        @include setIcon($size: 18, $position: middle);
+      }
+    }
+  }
+
   .app-footer-logos-wrapper {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 1rem 2rem;
-    margin-bottom: $spacer-3;
+    transition: max-height 0.3s ease-out;
+    overflow: hidden;
+
+    &.collapsed {
+      max-height: 58px; // fallback — JS overrides with measured value
+    }
 
     a {
       display: inline-flex;
@@ -97,27 +140,20 @@ footer {
     .app-footer-icon-link {
       display: inline-flex;
       align-items: center;
-      color: rgba($gray-800, .62);
+      color: $gray-800;
       line-height: 1;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
 
       &:hover {
-        color: rgba($gray-900, .75);
+        color: darken($gray-800, 20%);
+        text-decoration: underline;
       }
 
       .material-icons {
         @include setIcon($size: 20, $position: sub);
-        direction: ltr;
-        display: inline-block;
-        font-family: "Material Icons";
-        font-feature-settings: "liga";
-        font-style: normal;
-        font-weight: normal;
-        letter-spacing: normal;
-        line-height: 1;
-        text-transform: none;
-        white-space: nowrap;
-        -webkit-font-feature-settings: "liga";
-        -webkit-font-smoothing: antialiased;
       }
     }
 

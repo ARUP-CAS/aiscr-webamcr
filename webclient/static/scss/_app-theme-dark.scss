@@ -72,6 +72,10 @@ body.app-dark-theme {
         .navbar-text {
             color: $navbar-text-dark !important;
         }
+
+        .navbar-collapse#navbarMobile {
+            background-color: $navbar-bg-dark !important;
+        }
     }
 
     // Main content
@@ -88,6 +92,18 @@ body.app-dark-theme {
 
                 &:hover {
                     color: lighten($primary-dark, 10);
+                    text-decoration: underline;
+                }
+            }
+
+            .app-footer-logos-toggle-wrapper {
+                .app-footer-logos-toggle-btn {
+                    color: $body-text-dark;
+                    ;
+
+                    &:hover {
+                        color: lighten($body-text-dark, 10);
+                    }
                 }
             }
 
@@ -104,10 +120,11 @@ body.app-dark-theme {
             }
 
             .app-footer-icon-link {
-                color: rgba($white-dark, .65);
+                color: $body-text-dark;
 
                 &:hover {
-                    color: rgba($white-dark, .85);
+                    color: lighten($body-text-dark, 10);
+                    text-decoration-color: lighten($body-text-dark, 10);
                 }
             }
         }
