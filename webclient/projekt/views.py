@@ -820,7 +820,16 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
                 "oznamovatel",
             )
             .prefetch_related("katastry__okres__kraj")
-            .defer("geom")
+            .defer(
+                "geom",
+                "geom_sjtsk",
+                "hlavni_katastr__hranice",
+                "hlavni_katastr__definicni_bod",
+                "hlavni_katastr__okres__hranice",
+                "hlavni_katastr__okres__definicni_bod",
+                "hlavni_katastr__okres__kraj__hranice",
+                "hlavni_katastr__okres__kraj__definicni_bod",
+            )
         )
         return self.check_filter_permission(qs)
 
