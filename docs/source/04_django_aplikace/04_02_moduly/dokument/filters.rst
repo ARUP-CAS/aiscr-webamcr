@@ -16,6 +16,10 @@ Třídy
 
       Vrací dynamicky generované pole s volbami typů souborů z aktuální databáze.
 
+      Nabízí pouze typy souborů navázaných na dokument – volby, které nemá žádný
+      dokument, by ve filtru vracely prázdný výsledek. Dotaz vychází z modelu
+      ``Soubor`` (místo joinu od ``Dokument``), což je rychlejší při shodném výsledku.
+
       :return: FormField s volbami z databáze.
 
 

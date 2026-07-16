@@ -22,8 +22,12 @@ Třídy
    objekty přes ``pk__in``. Řazení i ``select_related``/``prefetch_related``
    zůstávají z původního querysetu zachovány.
 
-   Použití pouze pro querysety bez M2M JOINů v hlavním dotazu (jinak by mohlo dojít
-   k duplikaci primárních klíčů). Pro ostatní případy padá zpět na standardní chování.
+   První fáze předpokládá, že queryset vrací každý primární klíč nejvýše jednou. Filtry
+   procházející víceřádkové relace (M2M / reverzní FK) mají ``distinct=True``, takže si
+   deduplikaci zajistí samy – a sort se tak platí jen tehdy, kdy je opravdu nutný.
+   Kdyby přesto duplicity vznikly (např. nový filtr bez ``distinct``), stránka se
+   dopočítá znovu s ``distinct()`` – viz :meth:`page`. Pokud ``object_list`` není
+   queryset, padá se zpět na standardní chování.
 
    **Metody:**
 

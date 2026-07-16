@@ -77,9 +77,18 @@ class SouborTypFilter(MultipleChoiceFilter):
         """
         Vrací dynamicky generované pole s volbami typů souborů z aktuální databáze.
 
+        Nabízí pouze typy souborů navázaných na dokument – volby, které nemá žádný
+        dokument, by ve filtru vracely prázdný výsledek. Dotaz vychází z modelu
+        ``Soubor`` (místo joinu od ``Dokument``), což je rychlejší při shodném výsledku.
+
         :return: FormField s volbami z databáze.
         """
-        qs = Soubor.objects.values_list("mimetype", flat=True).distinct().order_by("mimetype")
+        qs = (
+            Soubor.objects.filter(vazba__dokument_souboru__isnull=False)
+            .values_list("mimetype", flat=True)
+            .distinct()
+            .order_by("mimetype")
+        )
         self.extra["choices"] = [(o, o) for o in qs if o is not None]
         return super().field
 

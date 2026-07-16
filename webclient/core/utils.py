@@ -1147,8 +1147,12 @@ class TwoQueryPaginator(Paginator):
     objekty přes ``pk__in``. Řazení i ``select_related``/``prefetch_related``
     zůstávají z původního querysetu zachovány.
 
-    Použití pouze pro querysety bez M2M JOINů v hlavním dotazu (jinak by mohlo dojít
-    k duplikaci primárních klíčů). Pro ostatní případy padá zpět na standardní chování.
+    První fáze předpokládá, že queryset vrací každý primární klíč nejvýše jednou. Filtry
+    procházející víceřádkové relace (M2M / reverzní FK) mají ``distinct=True``, takže si
+    deduplikaci zajistí samy – a sort se tak platí jen tehdy, kdy je opravdu nutný.
+    Kdyby přesto duplicity vznikly (např. nový filtr bez ``distinct``), stránka se
+    dopočítá znovu s ``distinct()`` – viz :meth:`page`. Pokud ``object_list`` není
+    queryset, padá se zpět na standardní chování.
     """
 
     def _unwrap(self):
@@ -1209,7 +1213,17 @@ class TwoQueryPaginator(Paginator):
         # Krok 1: seřadit a stránkovat pouze primární klíče (úzký řádek, rychlý sort).
         # select_related(None) odstraní JOINy přidané jen pro načtení souvisejících objektů;
         # JOINy nutné pro filter/order_by Django ponechá.
-        pk_list = list(queryset.select_related(None).values_list("pk", flat=True)[bottom:top])
+        pk_qs = queryset.select_related(None).values_list("pk", flat=True)
+        pk_list = list(pk_qs[bottom:top])
+
+        if len(pk_list) != len(set(pk_list)):
+            # Pojistka: queryset joinuje víceřádkovou relaci bez deduplikace, takže se
+            # klíče opakují a stránka by byla neúplná. Zopakujeme s distinct().
+            logger.warning(
+                "core.utils.TwoQueryPaginator.page.duplicate_pks",
+                extra={"model": queryset.model.__name__},
+            )
+            pk_list = list(pk_qs.distinct()[bottom:top])
 
         # Krok 2: načíst plné objekty jen pro danou stránku; řazení zůstává z querysetu.
         page_qs = queryset.filter(pk__in=pk_list)
