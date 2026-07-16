@@ -289,7 +289,7 @@ services:
     restart: always
 
   postgresql_exporter:
-    image: prometheuscommunity/postgres-exporter:v0.19.1
+    image: prometheuscommunity/postgres-exporter:v0.20.1
     restart: always
     environment:
       - DATA_SOURCE_URI_FILE=/run/secrets/postgresql_exporter_uri
