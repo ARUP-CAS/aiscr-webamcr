@@ -482,7 +482,7 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
     API_URL = "https://www.wikidata.org/w/rest.php/wikibase/v1"
     HEADERS = {
         "Accept": "application/json",
-        "User-Agent": "AMCR-webamcr/1.0 (https://github.com/ARUP-CAS/aiscr-webamcr)",
+        "User-Agent": "AMCR/1.0 (https://github.com/ARUP-CAS/aiscr-webamcr)",
     }
     CACHE_PREFIX = "WIKIDATA"
     QID_REGEX = re.compile(r"Q\d+")
