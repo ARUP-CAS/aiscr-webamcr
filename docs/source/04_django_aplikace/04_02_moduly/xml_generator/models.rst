@@ -24,7 +24,7 @@ Třídy
 
       Vrací ident cely link.
 
-      :return: Vrací hodnotu podle větve zpracování.
+      :return: HTML odkaz přes ``format_html`` (``SafeString``), nebo ``None`` pokud chybí URL/ident.
 
 
 .. py:class:: ModelWithMetadata

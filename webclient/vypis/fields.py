@@ -9,7 +9,6 @@ from dj.models import DokumentacniJednotka
 from django.db import connection, transaction
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from dokument.models import Dokument, DokumentCast, Tvar
 from ez.models import ExterniZdroj
@@ -153,18 +152,18 @@ class SectionNameWithAccessor(SimpleSectionTemplateName):
 
         :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, None.
+            :return: Název sekce jako HTML přes ``format_html`` (``SafeString``), nebo ``None``.
         """
         if self.foreign_key:
             if getattr(instance, self.foreign_key):
                 return format_html(
                     "{}&nbsp;{}",
                     self.name,
-                    mark_safe(getattr(getattr(instance, self.foreign_key), self.accessor)),
+                    getattr(getattr(instance, self.foreign_key), self.accessor),
                 )
             else:
                 return None
-        return format_html("{}&nbsp;{}", self.name, mark_safe(getattr(instance, self.accessor)))
+        return format_html("{}&nbsp;{}", self.name, getattr(instance, self.accessor))
 
 
 class PianSectionNameWithAccessor(SectionNameWithAccessor):
@@ -176,7 +175,7 @@ class PianSectionNameWithAccessor(SectionNameWithAccessor):
 
         :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
 
-            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, None.
+            :return: Název sekce jako HTML přes ``format_html`` (``SafeString``), nebo ``None``.
         """
         if getattr(instance, self.foreign_key):
             pian = getattr(instance, self.foreign_key)
@@ -184,10 +183,10 @@ class PianSectionNameWithAccessor(SectionNameWithAccessor):
             return format_html(
                 "<div>{}&nbsp;{}&nbsp;({})&nbsp;-&nbsp;{}&nbsp;({})</div>",
                 self.name,
-                mark_safe(getattr(pian, self.accessor[0])),
+                getattr(pian, self.accessor[0]),
                 stav,
-                mark_safe(getattr(pian, self.accessor[2])),
-                mark_safe(getattr(pian, self.accessor[3])),
+                getattr(pian, self.accessor[2]),
+                getattr(pian, self.accessor[3]),
             )
         else:
             return None
@@ -383,12 +382,12 @@ class ChooseField(Field):
         :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
         :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
 
-            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``mark_safe()``, None.
+            :return: První neprázdný ``get_ident_cely_link`` (``SafeString`` z ``format_html``), nebo ``None``.
         """
         for accessor in self.accessor:
             value = getattr(instance, accessor)
             if value:
-                return mark_safe(value.get_ident_cely_link)
+                return value.get_ident_cely_link
         return None
 
 
@@ -449,7 +448,9 @@ class ForeignField(Field):
         :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
         :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
 
-            :return: Vrací výsledek volání ``mark_safe()``.
+            :return: Vrací vyřešený atribut podle accessorů, nebo ``""``. Hodnota není označena jako bezpečná
+                (``SafeString``); šablona ji autoescapuje, pokud už není ``SafeString`` (např. odkaz z
+                ``get_ident_cely_link``).
         """
         accessors = self.accessor.split("__")
         new_instance = ""
@@ -464,7 +465,7 @@ class ForeignField(Field):
                         break
         except Dokument.extra_data.RelatedObjectDoesNotExist:
             new_instance = ""
-        return mark_safe(new_instance)
+        return new_instance
 
 
 class GeomGmlField(Field):
@@ -907,25 +908,23 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
 
         :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``new_name``.
+            :return: Název sekce jako HTML přes ``format_html`` (``SafeString``).
         """
         if len(self.accessor) > 2:
             new_name = format_html(
                 "<span class='ps-0'>{}&nbsp;{}&nbsp;-&nbsp;{}</span>",
                 self.name,
-                mark_safe(getattr(instance, self.accessor[0])),
-                mark_safe(getattr(instance, self.accessor[1])),
+                getattr(instance, self.accessor[0]),
+                getattr(instance, self.accessor[1]),
             )
         else:
             new_name = format_html(
                 "<span class='ps-0'>{}&nbsp;{}</span>",
                 self.name,
-                mark_safe(getattr(instance, self.accessor[0])),
+                getattr(instance, self.accessor[0]),
             )
         if getattr(instance, self.accessor[-1]):
-            return format_html(
-                "<span class='ps-0'>{} ({})</span>", new_name, mark_safe(getattr(instance, self.accessor[-1]))
-            )
+            return format_html("<span class='ps-0'>{} ({})</span>", new_name, getattr(instance, self.accessor[-1]))
         return new_name
 
 
@@ -951,14 +950,14 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
 
         :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``new_name``.
+            :return: Název sekce jako HTML přes ``format_html`` (``SafeString``).
         """
         new_name = format_html("<span class='ps-0'>{}&nbsp;{}</span>", self.name, getattr(instance, self.accessor[0]))
         if getattr(instance, self.accessor[-1]):
             return format_html(
                 "<span class='ps-0'>{}<div class='mime-type' style='white-space: pre;'> ({})</div></span>",
                 new_name,
-                mark_safe(getattr(instance, self.accessor[-1])),
+                getattr(instance, self.accessor[-1]),
             )
         return new_name
 
@@ -972,7 +971,7 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
 
         :param instance: Parametr ``instance`` předává se do volání ``getattr()``, vstupuje do návratové hodnoty.
 
-            :return: Vrací hodnotu podle větve zpracování.
+            :return: Název sekce jako HTML přes ``format_html`` (``SafeString``).
         """
         obdobi = getattr(instance, self.accessor[1])
         jistota = getattr(instance, self.accessor[2])
@@ -984,22 +983,19 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
         vypis_jistota_translated_ne = _("vypis.vypis_config.komponenta.jistota.Ne")
         vypis_jistota_translated_ano = _("vypis.vypis_config.komponenta.jistota.Ano")
         if jistota is not None:
-            if jistota:
-                second_part += f"&nbsp;({vypis_jistota_translated_ano}"
-            else:
-                second_part += f"&nbsp;({vypis_jistota_translated_ne}"
+            jistota_str = vypis_jistota_translated_ano if jistota else vypis_jistota_translated_ne
             if presna_datace:
-                second_part += f";&nbsp;{presna_datace})"
+                second_part = f" ({jistota_str}; {presna_datace})"
             else:
-                second_part += ")"
+                second_part = f" ({jistota_str})"
         elif presna_datace:
-            second_part += f"&nbsp;({presna_datace})"
+            second_part = f" ({presna_datace})"
         if aktivity:
-            third_part = f"&nbsp;({';&nbsp;'.join([str(a) for a in aktivity])})"
+            third_part = f" ({'; '.join([str(a) for a in aktivity])})"
         return format_html(
-            "<span class='ps-0'>{}&nbsp;{}&nbsp;-&nbsp;{}{}&nbsp;-&nbsp;{}{}</span>",
+            "<span class='ps-0'>{} {} - {}{} - {}{}</span>",
             self.name,
-            mark_safe(getattr(instance, self.accessor[0])),
+            getattr(instance, self.accessor[0]),
             obdobi,
             second_part,
             areal,
