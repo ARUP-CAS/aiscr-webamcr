@@ -180,6 +180,11 @@ class Modal {
 
     errorFunction(settings, response) {
         if (!settings.errorFunc) {
+            // Uklidíme stav nastavený v beforeSend – jinak by po zobrazení chyby zůstal viset
+            // spinner a zablokovaná tlačítka (dříve to zamaskoval slepý reload stránky).
+            $("#loader-spinner").hide();
+            $("#submit-btn").prop("disabled", false);
+            $("#submit-btn").siblings("button").prop("disabled", false);
             // jQuery předává do error callbacku jqXHR, ne rozparsované tělo odpovědi –
             // JSON je až v responseJSON. Bez toho by redirect i messages byly vždy undefined
             // a skončilo by se slepým reloadem bez zobrazení chyby.
