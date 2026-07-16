@@ -282,7 +282,7 @@ class RenameSouborForm(forms.Form):
         self.helper.include_media = False
 
 
-class DecimalTextWideget(forms.widgets.TextInput):
+class DecimalTextWidget(forms.widgets.TextInput):
     """Třida pro formátování hodnoty velikosti souboru na 3 desetiná místa."""
 
     def format_value(self, value):
@@ -664,12 +664,12 @@ class BaseFilterForm(forms.Form):
         return cleaned_data
 
 
-class TransaltionImportForm(forms.Form):
-    """Implementuje komponentu ``TransaltionImportForm`` v rámci aplikace."""
+class TranslationImportForm(forms.Form):
+    """Implementuje komponentu ``TranslationImportForm`` v rámci aplikace."""
 
     file = forms.FileField(
         required=True,
-        label=_("core.forms.TransaltionImportForm.file.label"),
+        label=_("core.forms.TranslationImportForm.file.label"),
         widget=forms.FileInput(attrs={"accept": ".po"}),
     )
 

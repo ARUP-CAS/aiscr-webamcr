@@ -23,7 +23,7 @@ from core.constants import (
     ROLE_BADATEL_ID,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
 )
-from core.forms import CheckStavNotChangedForm, RenameSouborForm, TransaltionImportForm
+from core.forms import CheckStavNotChangedForm, RenameSouborForm, TranslationImportForm
 from core.ident_cely import get_record_from_ident
 from core.message_constants import (
     APPLICATION_RESTART_ERROR,
@@ -2197,17 +2197,16 @@ def post_ajax_get_list_map_data(request, layer):
         body = json.loads(request.body.decode("utf-8"))
         bounds = body["bounds"]
         zoom = body["zoom"]
+        params = [
+            bounds["topLeft"]["lng"],
+            bounds["bottomLeft"]["lat"],
+            bounds["bottomRight"]["lng"],
+            bounds["topRight"]["lat"],
+            zoom,
+        ]
+        base_qs, type_label, geom_field = get_list_map_records_in_envelope(layer, bounds, request)
     except (json.JSONDecodeError, KeyError, TypeError):
         return JsonResponse({"error": "Invalid request body"}, status=400)
-    params = [
-        bounds["topLeft"]["lng"],
-        bounds["bottomLeft"]["lat"],
-        bounds["bottomRight"]["lng"],
-        bounds["topRight"]["lat"],
-        zoom,
-    ]
-
-    base_qs, type_label, geom_field = get_list_map_records_in_envelope(layer, bounds, request)
     if base_qs is None:
         logger.warning("core.views.post_ajax_get_list_map_data.unknown_layer", extra={"layer": layer})
         return JsonResponse({"points": [], "algorithm": "detail", "count": 0}, status=200)
@@ -2381,7 +2380,7 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
     """Třída pohledu pro import překladových souborů."""
 
     template_name = "rosetta/import_form.html"
-    form_class = TransaltionImportForm
+    form_class = TranslationImportForm
 
     def form_valid(self, form):
         """

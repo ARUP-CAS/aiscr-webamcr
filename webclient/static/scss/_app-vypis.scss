@@ -11,6 +11,10 @@
 
   .app-content-wrapper {
 
+    .simple-view-label {
+      word-break: break-word;
+    }
+
     button {
       border: none;
       background: none;
