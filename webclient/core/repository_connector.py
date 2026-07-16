@@ -1,6 +1,7 @@
 import hashlib
 import io
 import logging
+import os
 import re
 from abc import ABC
 from datetime import datetime, timezone
@@ -186,6 +187,7 @@ class FedoraRequestType(Enum):
     FILE_CONTENT_UPDATE_RDF_DATA = 41
     THUMB_CONTENT_UPDATE_RDF_DATA = 42
     THUMB_LARGE_CONTENT_UPDATE_RDF_DATA = 43
+    BINARY_FILE_CHILD_UPDATE_RDF_DATA = 44
 
     # dotazy, které nemění Fedoru
     GET_CONTAINER = 1001
@@ -201,6 +203,8 @@ class FedoraRequestType(Enum):
     GET_BINARY_FILE_CONTENT_HISTORIE = 1039
     GET_METADATA_VERSION = 1040
     GET_BINARY_FILE_METADATA_VERSION = 1041
+    GET_BINARY_FILE_CHILDREN = 1042
+    GET_BINARY_FILE_CHILD_RDF = 1043
 
 
 class FedoraRepositoryConnector:
@@ -590,6 +594,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             FedoraRequestType.GET_TOMBSTONE,
             FedoraRequestType.GET_METADATA_HISTORIE,
             FedoraRequestType.GET_BINARY_FILE_CONTENT_HISTORIE,
+            FedoraRequestType.GET_BINARY_FILE_CHILDREN,
+            FedoraRequestType.GET_BINARY_FILE_CHILD_RDF,
         ):
             try:
                 response = requests.get(url, headers=headers, auth=auth, verify=False)
@@ -647,6 +653,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.FILE_CONTENT_UPDATE_RDF_DATA,
                     FedoraRequestType.THUMB_CONTENT_UPDATE_RDF_DATA,
                     FedoraRequestType.THUMB_LARGE_CONTENT_UPDATE_RDF_DATA,
+                    FedoraRequestType.BINARY_FILE_CHILD_UPDATE_RDF_DATA,
                 ):
                     response = requests.patch(url, auth=auth, headers=headers, data=data)
             except requests.exceptions.ConnectionError as exc:
@@ -682,6 +689,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             FedoraRequestType.GET_DELETED_LINK,
             FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
             FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE,
+            FedoraRequestType.GET_BINARY_FILE_CHILDREN,
+            FedoraRequestType.GET_BINARY_FILE_CHILD_RDF,
         ):
             if str(response.status_code)[0] == "2":
                 logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
@@ -1501,6 +1510,194 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             extra={"uuid": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
         )
         return rep_bin_file
+
+    EBUCORE_FILENAME_PREDICATE = "http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#filename"
+    LDP_CONTAINS_PREDICATE = "http://www.w3.org/ns/ldp#contains"
+
+    def update_file_name(self, soubor, old_nazev, new_nazev):
+        """
+        Přejmenuje soubor ve Fedoře – upraví ``ebucore:filename`` u souboru i všech jeho potomků.
+
+        Potomci (distribuce a paradata jako náhledy) se zjišťují dynamicky čtením ``ldp:contains``
+        kontejneru souboru, protože jejich skutečné zastoupení nelze předem předvídat. U každého
+        potomka se v hodnotě ``ebucore:filename`` nahradí podřetězec odpovídající starému názvu bez
+        přípony za nový, takže se zachová případná odlišná přípona či dekorace potomka.
+
+        :param soubor: Přejmenovávaný soubor s atributem ``repository_uuid``.
+        :param old_nazev: Původní název souboru (včetně přípony).
+        :param new_nazev: Nový název souboru (včetně přípony).
+
+            :raises FedoraError: Vyvolá se, pokud soubor nemá ``repository_uuid``, kontejner není
+                dostupný, byla překročena maximální hloubka rekurze, nebo se nepřejmenoval ani jeden
+                potomek – aby se DB transakce rollbackla a nerozešla se s Fedorou.
+        """
+        uuid = soubor.repository_uuid
+        if not uuid:
+            logger.warning(
+                "core_repository_connector.update_file_name.no_uuid",
+                extra={"pk": getattr(soubor, "pk", None), "ident_cely": self.record.ident_cely},
+            )
+            # Bez UUID nelze soubor ve Fedoře najít – vyhodíme výjimku, aby se DB transakce
+            # rollbackla a nedošlo k rozejití DB a Fedory (falešný úspěch).
+            raise FedoraError(
+                self.record.ident_cely,
+                "core_repository_connector.update_file_name.no_uuid",
+                None,
+                fedora_transaction=self.transaction,
+            )
+        old_base = os.path.splitext(old_nazev)[0]
+        new_base = os.path.splitext(new_nazev)[0]
+        logger.debug(
+            "core_repository_connector.update_file_name.start",
+            extra={
+                "uuid": uuid,
+                "old_nazev": old_nazev,
+                "new_nazev": new_nazev,
+                "ident_cely": self.record.ident_cely,
+                "transaction": self.transaction_uid,
+            },
+        )
+        container_url = f"{self.get_base_url()}/record/{self.record.ident_cely}/file/{uuid}"
+        renamed_count = self._rename_filenames_in_container(container_url, old_base, new_base, depth=0)
+        if renamed_count == 0:
+            # Nic se nepřejmenovalo (prázdný kontejner nebo žádný potomek neodpovídá starému názvu) –
+            # nesmíme potvrdit úspěch, jinak by DB obsahovala nový název, ale Fedora starý.
+            logger.warning(
+                "core_repository_connector.update_file_name.nothing_renamed",
+                extra={"uuid": uuid, "ident_cely": self.record.ident_cely, "old_base": old_base},
+            )
+            raise FedoraError(
+                container_url,
+                "core_repository_connector.update_file_name.nothing_renamed",
+                None,
+                fedora_transaction=self.transaction,
+            )
+        logger.debug(
+            "core_repository_connector.update_file_name.end",
+            extra={"uuid": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
+        )
+
+    # Maximální hloubka rekurze při průchodu potomky souboru (ochrana proti zacyklení).
+    MAX_RENAME_DEPTH = 20
+
+    def _rename_filenames_in_container(self, container_url, old_base, new_base, depth):
+        """
+        Rekurzivně projde kontejner a přejmenuje ``ebucore:filename`` u všech binárních potomků.
+
+        Potomci se zjišťují dynamicky z ``ldp:contains``. Pokud potomek není binární soubor (nemá
+        ``fcr:metadata``), zanoří se do něj jako do kontejneru – tím se pokryjí i vnořené distribuce
+        a paradata (např. ``file/{soubor}/paradata/{child}``), jejichž zastoupení nelze předvídat.
+
+        :param container_url: URL kontejneru, jehož potomci se procházejí.
+        :param old_base: Původní název souboru bez přípony.
+        :param new_base: Nový název souboru bez přípony.
+        :param depth: Aktuální hloubka rekurze.
+        :return: Počet úspěšně odeslaných PATCH úprav ``ebucore:filename`` v celém podstromu.
+        """
+        if depth > self.MAX_RENAME_DEPTH:
+            logger.warning(
+                "core_repository_connector._rename_filenames_in_container.max_depth_reached",
+                extra={"container_url": container_url, "depth": depth},
+            )
+            # Nesmíme vrátit 0 a pokračovat – mělčí potomci už mohou být přejmenovaní a záznam by
+            # se uložil jako úspěch, přestože hlubší potomci by zůstali se starým názvem.
+            raise FedoraError(
+                container_url,
+                "core_repository_connector._rename_filenames_in_container.max_depth_reached",
+                None,
+                fedora_transaction=self.transaction,
+            )
+        container_response = self._send_request(
+            container_url, FedoraRequestType.GET_BINARY_FILE_CHILDREN, headers={"Accept": "application/n-triples"}
+        )
+        if container_response is None or str(container_response.status_code)[0] != "2":
+            logger.warning(
+                "core_repository_connector.update_file_name.container_unavailable",
+                extra={"container_url": container_url, "ident_cely": self.record.ident_cely},
+            )
+            raise FedoraError(
+                container_url,
+                "core_repository_connector.update_file_name.container_unavailable",
+                container_response.status_code if container_response is not None else None,
+                fedora_transaction=self.transaction,
+            )
+        renamed_count = 0
+        for child_url in self._parse_ldp_children(container_response.text):
+            is_binary, patches = self._rename_child_filename(child_url, old_base, new_base)
+            if is_binary:
+                renamed_count += patches
+            else:
+                # Potomek není binární soubor – jde o (pod)kontejner, zanoříme se hlouběji.
+                renamed_count += self._rename_filenames_in_container(child_url, old_base, new_base, depth + 1)
+        return renamed_count
+
+    def _parse_ldp_children(self, ntriples_text):
+        """
+        Vyparsuje URL potomků (``ldp:contains``) z n-triples reprezentace kontejneru.
+
+        :param ntriples_text: Text odpovědi ve formátu n-triples.
+        :return: Seznam URL potomků.
+        """
+        pattern = re.compile(r"<[^>]+>\s+<" + re.escape(self.LDP_CONTAINS_PREDICATE) + r">\s+<([^>]+)>\s*\.")
+        return pattern.findall(ntriples_text)
+
+    def _rename_child_filename(self, child_url, old_base, new_base):
+        """
+        Upraví ``ebucore:filename`` binárního potomka, pokud jeho hodnota obsahuje starý název.
+
+        :param child_url: URL potomka.
+        :param old_base: Původní název souboru bez přípony.
+        :param new_base: Nový název souboru bez přípony.
+        :return: Dvojice ``(is_binary, patch_count)`` – ``is_binary`` je ``True`` pro binární soubor
+            (má ``fcr:metadata``), ``False`` pro kontejner (volající se do něj má zanořit);
+            ``patch_count`` je počet odeslaných úprav ``ebucore:filename``.
+        """
+        metadata_url = f"{child_url}/fcr:metadata"
+        metadata_response = self._send_request(
+            metadata_url, FedoraRequestType.GET_BINARY_FILE_CHILD_RDF, headers={"Accept": "application/n-triples"}
+        )
+        if metadata_response is None:
+            raise FedoraError(
+                metadata_url,
+                "core_repository_connector._rename_child_filename.metadata_unavailable",
+                None,
+                fedora_transaction=self.transaction,
+            )
+        if metadata_response.status_code == 404:
+            # Potomek nemá fcr:metadata – není to binární soubor, ale kontejner.
+            return False, 0
+        if str(metadata_response.status_code)[0] != "2":
+            logger.warning(
+                "core_repository_connector._rename_child_filename.metadata_unavailable",
+                extra={"child_url": child_url, "status_code": metadata_response.status_code},
+            )
+            raise FedoraError(
+                metadata_url,
+                "core_repository_connector._rename_child_filename.metadata_unavailable",
+                metadata_response.status_code,
+                fedora_transaction=self.transaction,
+            )
+        filename_pattern = re.compile(r"<" + re.escape(self.EBUCORE_FILENAME_PREDICATE) + r">\s+\"((?:[^\"\\]|\\.)*)\"")
+        patch_count = 0
+        for old_value in set(filename_pattern.findall(metadata_response.text)):
+            if old_base and old_base in old_value:
+                new_value = old_value.replace(old_base, new_base)
+                if new_value == old_value:
+                    continue
+                data = (
+                    f"PREFIX ebucore: <{self.EBUCORE_FILENAME_PREDICATE.rsplit('#', 1)[0]}#>\n"
+                    f'DELETE {{ <> ebucore:filename "{old_value}" . }}\n'
+                    f'INSERT {{ <> ebucore:filename "{new_value}" . }}\n'
+                    "WHERE { }"
+                )
+                self._send_request(
+                    metadata_url,
+                    FedoraRequestType.BINARY_FILE_CHILD_UPDATE_RDF_DATA,
+                    headers={"Content-Type": "application/sparql-update"},
+                    data=data,
+                )
+                patch_count += 1
+        return True, patch_count
 
     def delete_binary_file(self, soubor):
         """

@@ -4903,6 +4903,7 @@ X-C-TX-201801166
 C-201226860A
 C-K9000024
 C-202104117
+X-C-TX-000000002
 
 Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
@@ -4933,6 +4934,7 @@ Uživatelské kroky
 - Editace Neidentifikované Akce
 - Smazání Neidentifikované Akce
 - Smazání Dokumentu
+- Přejmenování dokumentu
 - Odpojení Akce
 - Odpojení Lokality
 - Odpojení Projektu
