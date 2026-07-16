@@ -34,7 +34,7 @@ def get_secret(setting, default_value=None):
             try:
                 return secrets[setting]
             except KeyError:
-                error_msg = error_msg = f"Add {setting} variable to {file_path} file"
+                error_msg = f"Add {setting} variable to {file_path} file"
                 raise ImproperlyConfigured(error_msg)
         else:
             return secrets.get(setting, default_value)
