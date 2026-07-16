@@ -633,7 +633,7 @@ AUTO_LOGOUT = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
-SHOW_DARK_MODE = get_secret("SHOW_DARK_MODE", "True") == "True"
+SHOW_DARK_MODE = get_secret("SHOW_DARK_MODE", "True") in (True, "True")
 
 COMPRESS_REBUILD_TIMEOUT = 3600
 
@@ -679,7 +679,7 @@ TOKEN_EXPIRATION_HOURS = 24
 
 SKIP_RECAPTCHA = False
 
-TEST_ENV = get_secret("TEST_ENV", "True") == "True"
+TEST_ENV = get_secret("TEST_ENV", "True") in (True, "True")
 
 CLAMD_HOST = None
 CLAMD_PORT = None
