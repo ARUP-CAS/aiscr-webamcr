@@ -23,7 +23,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_LOKALITA_DRUH},
     )
     popis = models.TextField(blank=True, null=True)
-    nazev = models.TextField(blank=False, null=False, db_index=True)
+    nazev = models.CharField(max_length=500, blank=False, null=False, db_index=True)
     typ_lokality = models.ForeignKey(
         Heslar,
         models.RESTRICT,
