@@ -269,16 +269,14 @@ Třídy
       :param queryset: Vstupní queryset.
       :param name: Jméno pole filtru.
       :param value: Hodnota filtru (ignoruje se).
-
       :return: Nezměněný queryset.
 
    .. py:method:: filter_queryset()
 
       Filtruje queryset a slučuje filtry podle vlastností souboru do jednoho poddotazu.
 
-      :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``.
-
-      :return: Vrací filtrovaný queryset.
+      :param queryset: Vstupní queryset dokumentů před filtrací.
+      :return: Filtrovaný queryset.
 
    .. py:method:: __init__()
 

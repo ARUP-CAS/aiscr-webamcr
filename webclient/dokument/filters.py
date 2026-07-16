@@ -1321,8 +1321,7 @@ class DokumentFilter(Model3DFilter):
         :param queryset: Vstupní queryset.
         :param name: Jméno pole filtru.
         :param value: Hodnota filtru (ignoruje se).
-
-            :return: Nezměněný queryset.
+        :return: Nezměněný queryset.
         """
         return queryset
 
@@ -1330,9 +1329,8 @@ class DokumentFilter(Model3DFilter):
         """
         Filtruje queryset a slučuje filtry podle vlastností souboru do jednoho poddotazu.
 
-        :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``.
-
-            :return: Vrací filtrovaný queryset.
+        :param queryset: Vstupní queryset dokumentů před filtrací.
+        :return: Filtrovaný queryset.
         """
         soubor_conditions = self._get_soubor_subquery()
         queryset = super().filter_queryset(queryset)

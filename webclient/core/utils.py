@@ -1147,12 +1147,13 @@ class TwoQueryPaginator(Paginator):
     objekty přes ``pk__in``. Řazení i ``select_related``/``prefetch_related``
     zůstávají z původního querysetu zachovány.
 
-    První fáze předpokládá, že queryset vrací každý primární klíč nejvýše jednou. Filtry
-    procházející víceřádkové relace (M2M / reverzní FK) mají ``distinct=True``, takže si
-    deduplikaci zajistí samy – a sort se tak platí jen tehdy, kdy je opravdu nutný.
-    Kdyby přesto duplicity vznikly (např. nový filtr bez ``distinct``), stránka se
-    dopočítá znovu s ``distinct()`` – viz :meth:`page`. Pokud ``object_list`` není
-    queryset, padá se zpět na standardní chování.
+    První fáze předpokládá, že queryset vrací každý primární klíč nejvýše jednou.
+    Deduplikaci zajišťují filtry (``distinct=True`` na poli, lokální ``.distinct()``
+    v metodě filtru, nebo ``Exists`` poddotaz) a u některých výpisů také
+    ``distinct("pk", *sort)`` na querysetu. Kdyby přesto duplicity vznikly
+    (např. nový filtr bez deduplikace), stránka se dopočítá znovu s ``distinct()``
+    – viz metoda ``page``. Pokud ``object_list`` není queryset, padá se zpět
+    na standardní chování.
     """
 
     def _unwrap(self):
@@ -1177,10 +1178,12 @@ class TwoQueryPaginator(Paginator):
         """
         Počet zobrazovaných záznamů = počet distinct primárních klíčů.
 
-        Querysety těchto výpisů používají ``distinct("pk", *sort)`` (DISTINCT ON přes
-        všechny sloupce a řazení), jehož spočítání přes ``COUNT(*) FROM (SELECT DISTINCT ON …)``
-        vynutí setřídění celé množiny. Protože zobrazené řádky jsou jednoznačné podle pk,
-        stačí ``COUNT(DISTINCT pk)`` bez řazení – řádově rychlejší.
+        Kdyby se počet počítal přes ``COUNT(*)`` z poddotazu s ``DISTINCT ON``
+        (``distinct("pk", *sort)``), vynutilo by to setřídění celé množiny.
+        Protože zobrazené řádky jsou jednoznačné podle pk, stačí
+        ``COUNT(DISTINCT pk)`` bez řazení – řádově rychlejší. Platí stejně
+        pro výpisy s list-level ``distinct("pk", *sort)`` i pro ty, které
+        spoléhají na deduplikaci ve filtrech.
 
         :return: Počet záznamů.
         """
@@ -1194,8 +1197,7 @@ class TwoQueryPaginator(Paginator):
         Vrací stránku se záznamy načtenou dvoufázově (nejprve PK, pak plné objekty).
 
         :param number: Číslo požadované stránky.
-
-            :return: Stránka paginátoru s objekty pro dané číslo stránky.
+        :return: Stránka paginátoru s objekty pro dané číslo stránky.
         """
         number = self.validate_number(number)
         bottom = (number - 1) * self.per_page
