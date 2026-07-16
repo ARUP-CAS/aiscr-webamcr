@@ -1526,6 +1526,10 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         :param soubor: Přejmenovávaný soubor s atributem ``repository_uuid``.
         :param old_nazev: Původní název souboru (včetně přípony).
         :param new_nazev: Nový název souboru (včetně přípony).
+
+            :raises FedoraError: Vyvolá se, pokud soubor nemá ``repository_uuid``, kontejner není
+                dostupný, byla překročena maximální hloubka rekurze, nebo se nepřejmenoval ani jeden
+                potomek – aby se DB transakce rollbackla a nerozešla se s Fedorou.
         """
         uuid = soubor.repository_uuid
         if not uuid:
@@ -1595,7 +1599,14 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 "core_repository_connector._rename_filenames_in_container.max_depth_reached",
                 extra={"container_url": container_url, "depth": depth},
             )
-            return 0
+            # Nesmíme vrátit 0 a pokračovat – mělčí potomci už mohou být přejmenovaní a záznam by
+            # se uložil jako úspěch, přestože hlubší potomci by zůstali se starým názvem.
+            raise FedoraError(
+                container_url,
+                "core_repository_connector._rename_filenames_in_container.max_depth_reached",
+                None,
+                fedora_transaction=self.transaction,
+            )
         container_response = self._send_request(
             container_url, FedoraRequestType.GET_BINARY_FILE_CHILDREN, headers={"Accept": "application/n-triples"}
         )

@@ -372,6 +372,10 @@ Třídy
       :param old_nazev: Původní název souboru (včetně přípony).
       :param new_nazev: Nový název souboru (včetně přípony).
 
+      :raises FedoraError: Vyvolá se, pokud soubor nemá ``repository_uuid``, kontejner není
+              dostupný, byla překročena maximální hloubka rekurze, nebo se nepřejmenoval ani jeden
+              potomek – aby se DB transakce rollbackla a nerozešla se s Fedorou.
+
    .. py:method:: _rename_filenames_in_container()
 
       Rekurzivně projde kontejner a přejmenuje ``ebucore:filename`` u všech binárních potomků.

@@ -180,11 +180,15 @@ class Modal {
 
     errorFunction(settings, response) {
         if (!settings.errorFunc) {
-            if (response.redirect) {
-                window.location.href = response.redirect
+            // jQuery předává do error callbacku jqXHR, ne rozparsované tělo odpovědi –
+            // JSON je až v responseJSON. Bez toho by redirect i messages byly vždy undefined
+            // a skončilo by se slepým reloadem bez zobrazení chyby.
+            const data = (response && response.responseJSON) || {};
+            if (data.redirect) {
+                window.location.href = data.redirect
             }
-            else if (response.messages) {
-                createMessage(response.messages[0].extra_tags, response.messages[0].message)
+            else if (data.messages && data.messages.length > 0) {
+                createMessage(data.messages[0].extra_tags, data.messages[0].message)
                 $(settings.modalIDD).modal("hide");
             }
             else {

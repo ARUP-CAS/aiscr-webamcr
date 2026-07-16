@@ -10,7 +10,6 @@ import zipfile
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
-from string import ascii_uppercase as letters
 
 import pandas
 from adb.models import Adb
@@ -56,6 +55,7 @@ from core.repository_connector import (
     FedoraTransactionStatus,
     FedoraUpdatedByAnotherTransactionError,
 )
+from core.soubor_naming import get_dokument_free_suffixes, get_finds_free_suffixes, get_soubor_suffix
 from core.utils import (
     SessionIdentifier,
     find_pos_with_backup,
@@ -483,13 +483,15 @@ def rename_file(request, typ_vazby, ident_cely, pk):
         except Exception as err:
             # Neočekávaná chyba (např. IntegrityError nebo chyba v save_metadata): DB se rollbackne
             # přes atomic(), ale otevřenou Fedora transakci musíme uklidit ručně, jinak zůstane viset.
-            logger.error(
+            # Chybu zalogujeme (včetně tracebacku) a uživateli vrátíme hlášku – HTTP 500 by v modalu
+            # skončilo jen slepým reloadem bez vysvětlení.
+            logger.exception(
                 "core.views.rename_file.unexpected_error",
                 extra={"pk": pk, "error": err, "transaction": fedora_transaction.uid},
             )
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
-            raise
+            return _rename_file_messages_response(request, SOUBOR_SE_NEPOVEDLO_PREJMENOVAT)
         logger.debug(
             "core.views.rename_file.success",
             extra={"pk": pk, "old_nazev": old_nazev, "new_nazev": new_nazev, "transaction": fedora_transaction.uid},
@@ -1378,71 +1380,6 @@ def get_finds_soubor_name(find, filename, add_to_index=1):
                 extra={"file": filename, "value": list_last_char},
             )
             return False
-
-
-def _obsazene_suffixy(navazany_objekt, base, current_soubor=None):
-    """
-    Vrátí množinu suffixů (částí názvu mezi identem a příponou) obsazených soubory záznamu.
-
-    :param navazany_objekt: Navázaný objekt (dokument nebo samostatný nález) s vazbou ``soubory``.
-    :param base: Identifikátor záznamu bez pomlček, kterým názvy souborů začínají.
-    :param current_soubor: Soubor, který se přejmenovává a do obsazených suffixů se nezapočítává.
-    :return: Množina řetězců suffixů obsazených ostatními soubory.
-    """
-    obsazene = set()
-    for soubor in navazany_objekt.soubory.soubory.all():
-        if current_soubor is not None and soubor.pk == current_soubor.pk:
-            continue
-        stem = os.path.splitext(soubor.nazev)[0]
-        if stem.startswith(base):
-            obsazene.add(stem[len(base) :])
-    return obsazene
-
-
-def get_dokument_free_suffixes(dokument, current_soubor=None):
-    """
-    Vrátí seznam volných suffixů pro soubory dokumentu (3D modelu).
-
-    Suffix je část názvu mezi identem (bez pomlček) a příponou. Možné hodnoty jsou prázdný řetězec
-    (základní soubor ``{ident}.{ext}``) a písmena ``A``–``Z``. Suffix přejmenovávaného souboru se
-    považuje za volný, aby jej bylo možné v nabídce ponechat.
-
-    :param dokument: Dokument, jehož soubory se zkoumají.
-    :param current_soubor: Přejmenovávaný soubor (vyloučen z obsazených suffixů).
-    :return: Seznam volných suffixů v pořadí prázdný slot, ``A`` … ``Z``.
-    """
-    base = dokument.ident_cely.replace("-", "")
-    obsazene = _obsazene_suffixy(dokument, base, current_soubor)
-    return [suffix for suffix in [""] + list(letters) if suffix not in obsazene]
-
-
-def get_finds_free_suffixes(find, current_soubor=None):
-    """
-    Vrátí seznam volných suffixů pro soubory samostatného nálezu.
-
-    Suffix má tvar ``F01`` … ``F99``. Suffix přejmenovávaného souboru se považuje za volný.
-
-    :param find: Samostatný nález, jehož soubory se zkoumají.
-    :param current_soubor: Přejmenovávaný soubor (vyloučen z obsazených suffixů).
-    :return: Seznam volných suffixů v pořadí ``F01`` … ``F99``.
-    """
-    base = find.ident_cely.replace("-", "")
-    obsazene = _obsazene_suffixy(find, base, current_soubor)
-    return [f"F{number:02d}" for number in range(1, 100) if f"F{number:02d}" not in obsazene]
-
-
-def get_soubor_suffix(soubor):
-    """
-    Vrátí aktuální suffix souboru (část názvu mezi identem záznamu bez pomlček a příponou).
-
-    :param soubor: Soubor, jehož suffix se zjišťuje.
-    :return: Řetězec suffixu (může být prázdný); ``None`` pokud název neodpovídá očekávanému vzoru.
-    """
-    base = soubor.vazba.navazany_objekt.ident_cely.replace("-", "")
-    stem = os.path.splitext(soubor.nazev)[0]
-    if stem.startswith(base):
-        return stem[len(base) :]
-    return None
 
 
 def get_projekt_soubor_name(projekt: Projekt, file_name):

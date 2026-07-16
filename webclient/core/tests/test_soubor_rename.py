@@ -16,7 +16,8 @@ from core.repository_connector import (
     FedoraRequestType,
     FedoraTransactionStatus,
 )
-from core.views import get_dokument_free_suffixes, get_finds_free_suffixes, get_soubor_suffix, rename_file
+from core.soubor_naming import get_dokument_free_suffixes, get_finds_free_suffixes, get_soubor_suffix
+from core.views import rename_file
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.test import RequestFactory, SimpleTestCase
 from dokument.models import Dokument
@@ -250,6 +251,15 @@ class RepositoryRenameTest(SimpleTestCase):
         with self.assertRaises(FedoraError):
             connector.update_file_name(soubor, "CDL202500001A.jpg", "CDL202500001B.jpg")
 
+    def test_rename_filenames_in_container_raises_at_max_depth(self):
+        """Překročení maximální hloubky rekurze vyhodí FedoraError (ne tiché 0 úprav)."""
+        connector = self._connector()
+        connector.record = mock.Mock(ident_cely="C-DL-1")
+        with self.assertRaises(FedoraError):
+            connector._rename_filenames_in_container(
+                "http://fedora/x", "A", "B", depth=FedoraRepositoryConnector.MAX_RENAME_DEPTH + 1
+            )
+
     def test_update_file_name_raises_when_nothing_renamed(self):
         """Když žádný potomek neodpovídá starému názvu, vyhodí se FedoraError (0 úprav)."""
         connector = self._connector()
@@ -392,6 +402,14 @@ class RenameFileViewTest(SimpleTestCase):
         """FedoraError: rollback transakce, JSON messages 400, soubor se neuloží."""
         err = FedoraError("url", "boom", 500)
         response, soubor, ft, connector = self._run({"suffix": "B"}, update_side_effect=err)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("messages", json.loads(response.content))
+        ft.rollback_transaction.assert_called_once()
+        soubor.save.assert_not_called()
+
+    def test_post_unexpected_error_returns_message(self):
+        """Neočekávaná výjimka: rollback + JSON messages 400 (ne HTTP 500 se slepým reloadem)."""
+        response, soubor, ft, connector = self._run({"suffix": "B"}, update_side_effect=ValueError("boom"))
         self.assertEqual(response.status_code, 400)
         self.assertIn("messages", json.loads(response.content))
         ft.rollback_transaction.assert_called_once()
