@@ -466,7 +466,7 @@ class RorAutocompleteView(LoginRequiredMixin, ApiView):
                 name = ""
                 for item in result.get("names", []):
                     if (
-                        (item.get("lang") in ("en", "cs") or item.get("lang") is None)
+                        (item.get("lang") in ("cs", "en") or item.get("lang") is None)
                         and item.get("value")
                         and ("label" in item.get("types") or "ror_display" in item.get("types"))
                     ):
@@ -486,8 +486,8 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
     }
     CACHE_PREFIX = "WIKIDATA"
     QID_REGEX = re.compile(r"Q\d+")
-    SEARCH_LANGUAGES = ("en", "cs")
-    LABEL_LANGUAGES = ("en", "cs", "mul")
+    SEARCH_LANGUAGES = ("cs", "en")
+    LABEL_LANGUAGES = ("cs", "en", "mul")
     SEARCH_LIMIT = 20
     HUMAN_ITEM_QID = "Q5"
     INSTANCE_OF_PROPERTY = "P31"
