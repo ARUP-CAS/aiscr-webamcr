@@ -15,11 +15,11 @@
                  aria-valuenow="0"
                  aria-valuemin="0" aria-valuemax="100"></div>
           </div>
-          {% if table.rows|length >= 50000 %}
+          {% if table.paginator.count >= 50000 %}
             <p id="modal-confirm-download-par">{% trans "core.templates.core.export_modal.confirm_download" %}</p>
           {% endif %}
           <p id="export-progress-model-file-message"
-             {% if table.rows|length >= 50000 %}style="display: none"{% endif %}>
+             {% if table.paginator.count >= 50000 %}style="display: none"{% endif %}>
             {% trans "core.templates.core.export_modal.file_being_generated" %}
           </p>
         </div>

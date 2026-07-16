@@ -27,6 +27,23 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: _unwrap()
+
+      Získá podkladový queryset z ``object_list`` (BoundRows z django-tables2 nebo přímý QuerySet).
+
+      :return: Dvojice ``(queryset, is_table)``; ``queryset`` je ``None``, neodpovídá-li struktura očekávání.
+
+   .. py:method:: count()
+
+      Počet zobrazovaných záznamů = počet distinct primárních klíčů.
+
+      Querysety těchto výpisů používají ``distinct("pk", *sort)`` (DISTINCT ON přes
+      všechny sloupce a řazení), jehož spočítání přes ``COUNT(*) FROM (SELECT DISTINCT ON …)``
+      vynutí setřídění celé množiny. Protože zobrazené řádky jsou jednoznačné podle pk,
+      stačí ``COUNT(DISTINCT pk)`` bez řazení – řádově rychlejší.
+
+      :return: Počet záznamů.
+
    .. py:method:: page()
 
       Vrací stránku se záznamy načtenou dvoufázově (nejprve PK, pak plné objekty).

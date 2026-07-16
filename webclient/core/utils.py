@@ -29,6 +29,7 @@ from django.core.paginator import Paginator
 from django.db import connection, connections
 from django.db.models import QuerySet
 from django.urls import reverse
+from django.utils.functional import cached_property
 from django.utils.html import format_html
 from django.utils.translation import gettext as _
 from django_tables2.rows import BoundRows
@@ -1150,6 +1151,40 @@ class TwoQueryPaginator(Paginator):
     k duplikaci primárních klíčů). Pro ostatní případy padá zpět na standardní chování.
     """
 
+    def _unwrap(self):
+        """
+        Získá podkladový queryset z ``object_list`` (BoundRows z django-tables2 nebo přímý QuerySet).
+
+        :return: Dvojice ``(queryset, is_table)``; ``queryset`` je ``None``, neodpovídá-li struktura očekávání.
+        """
+        bound_rows = self.object_list
+        if isinstance(bound_rows, QuerySet):
+            # Přímé použití s QuerySetem (mimo django-tables2).
+            return bound_rows, False
+        # django-tables2: BoundRows -> TableData -> queryset.
+        table_data = getattr(bound_rows, "data", None)
+        queryset = getattr(table_data, "data", None)
+        if isinstance(queryset, QuerySet):
+            return queryset, True
+        return None, True
+
+    @cached_property
+    def count(self):
+        """
+        Počet zobrazovaných záznamů = počet distinct primárních klíčů.
+
+        Querysety těchto výpisů používají ``distinct("pk", *sort)`` (DISTINCT ON přes
+        všechny sloupce a řazení), jehož spočítání přes ``COUNT(*) FROM (SELECT DISTINCT ON …)``
+        vynutí setřídění celé množiny. Protože zobrazené řádky jsou jednoznačné podle pk,
+        stačí ``COUNT(DISTINCT pk)`` bez řazení – řádově rychlejší.
+
+        :return: Počet záznamů.
+        """
+        queryset, _ = self._unwrap()
+        if queryset is None:
+            return len(self.object_list)
+        return queryset.order_by().values("pk").distinct().count()
+
     def page(self, number):
         """
         Vrací stránku se záznamy načtenou dvoufázově (nejprve PK, pak plné objekty).
@@ -1164,16 +1199,8 @@ class TwoQueryPaginator(Paginator):
         if top + self.orphans >= self.count:
             top = self.count
 
+        queryset, is_table = self._unwrap()
         bound_rows = self.object_list
-        if isinstance(bound_rows, QuerySet):
-            # Přímé použití s QuerySetem (mimo django-tables2).
-            queryset = bound_rows
-            is_table = False
-        else:
-            # django-tables2: BoundRows -> TableData -> queryset.
-            table_data = getattr(bound_rows, "data", None)
-            queryset = getattr(table_data, "data", None)
-            is_table = True
 
         if not isinstance(queryset, QuerySet):
             # Struktura neodpovídá očekávání (např. seznam místo querysetu) – fallback.
