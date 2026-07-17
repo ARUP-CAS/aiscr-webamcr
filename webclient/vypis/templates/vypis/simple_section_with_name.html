@@ -3,7 +3,7 @@
     
         {% if section != "template" and section != "css_class" %}
             {% if section == "section_name" %}
-            <div class = "section-name row">{{field}}</div>
+            <div class = "section-name row"><div>{{field}}</div></div>
             {% endif %}
             <div class="ps-3">
             {% if field.value.template_name %}

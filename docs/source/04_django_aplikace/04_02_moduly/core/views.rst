@@ -6,6 +6,11 @@ Definice views.
 Třídy
 ------
 
+.. py:class:: _SuffixNoLongerFreeError
+
+   Zvolený suffix byl mezi načtením formuláře a uložením obsazen jiným požadavkem.
+
+
 .. py:class:: DownloadFile
 
    Implementuje komponentu ``DownloadFile`` v rámci aplikace.
@@ -810,9 +815,42 @@ Funkce
 
    :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
+.. py:function:: _rename_file_safe_redirect(request)
+
+   Vrátí bezpečnou návratovou URL z parametru ``next`` požadavku na přejmenování.
+
+   :param request: HTTP požadavek s parametrem ``next`` v GET nebo POST.
+   :return: Bezpečná návratová URL nebo domovská stránka.
+
+.. py:function:: _rename_file_messages_response(request, message, status)
+
+   Vrátí ``JsonResponse`` s frontovanými django zprávami pro AJAX modal (vzor ``delete_file``).
+
+   :param request: HTTP požadavek, do jehož zpráv se přidá chybová hláška.
+   :param message: Chybová zpráva k zobrazení uživateli.
+   :param status: HTTP status odpovědi.
+   :return: ``JsonResponse`` se seznamem zpráv v klíči ``messages``.
+
+.. py:function:: rename_file(request, typ_vazby, ident_cely, pk)
+
+   Přejmenuje existující soubor změnou suffixu na volnou povolenou hodnotu.
+
+   Mění název v databázi (``soubor.nazev``), ve Fedoře (``ebucore:filename`` souboru i jeho potomků)
+   a vyvolá přegenerování XML metadat navázaného záznamu. Dostupné pro dokumenty (včetně 3D modelů)
+   a samostatné nálezy, které mají suffixové schéma názvů.
+
+   :param request: HTTP požadavek s metodou GET (modal) nebo POST (provedení).
+   :param typ_vazby: Typ vazby souboru na navázaný doménový objekt.
+   :param ident_cely: Identifikátor záznamu, u kterého se soubor přejmenovává.
+   :param pk: Primární klíč přejmenovávaného souboru.
+   :return: Vrací modal (GET) nebo ``JsonResponse`` s přesměrováním či chybou (POST).
+
 .. py:function:: get_finds_soubor_name(find, filename, add_to_index)
 
    Funkce pro získaní jména souboru pro samostatný nález.
+
+   Název se přiděluje navýšením podle nejvyššího obsazeného suffixu (``F01`` … ``F99``). Toto výchozí
+   chování se záměrně nemění – uvolnění či změnu pozice řeší přejmenování souboru.
 
    :param find: Textový název, klíč nebo výraz ``find`` používaný v rámci operace.
    :param filename: Parametr ``filename`` se předává do volání ``splitext()``, ``warning()``, vstupuje do návratové hodnoty.

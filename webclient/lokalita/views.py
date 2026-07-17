@@ -150,6 +150,14 @@ class LokalitaListView(SearchListView):
             "archeologicky_zaznam",
             "archeologicky_zaznam__pristupnost",
         ).prefetch_related("archeologicky_zaznam__katastry", "archeologicky_zaznam__katastry__okres")
+        qs = qs.defer(
+            "archeologicky_zaznam__hlavni_katastr__definicni_bod",
+            "archeologicky_zaznam__hlavni_katastr__hranice",
+            "archeologicky_zaznam__hlavni_katastr__okres__definicni_bod",
+            "archeologicky_zaznam__hlavni_katastr__okres__hranice",
+            "archeologicky_zaznam__hlavni_katastr__okres__kraj__definicni_bod",
+            "archeologicky_zaznam__hlavni_katastr__okres__kraj__hranice",
+        )
         return self.check_filter_permission(qs)
 
     def get_context_data(self, **kwargs):
