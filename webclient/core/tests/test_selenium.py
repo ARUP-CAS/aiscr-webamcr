@@ -131,8 +131,8 @@ class WaitForPageLoad:
 
             :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
-        start_time = time.time()
-        while time.time() < start_time + self.wait_time:
+        start_time = time.monotonic()
+        while time.monotonic() < start_time + self.wait_time:
             if condition_function():
                 return True
             else:
@@ -811,8 +811,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
             :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
-        end = time.time() + timeout
-        while time.time() < end:
+        end = time.monotonic() + timeout
+        while time.monotonic() < end:
             try:
                 if condition_function(by, value):
                     return True
@@ -1237,7 +1237,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         # plochu může dočasně překrývat jiný element – typicky právě zavíraný modál, který má
         # ještě po dobu fade animace nastavené display: block. Chrome v takové chvíli vyhodí
         # ElementClickInterceptedException, i když je Select2 pole už v DOM a viditelné.
-        end = time.time() + timeout
+        end = time.monotonic() + timeout
         while True:
             try:
                 self.driver.execute_script(
@@ -1246,7 +1246,7 @@ return new Date('2025-06-28T12:00:00Z');}};
                 selection.click()
                 break
             except (ElementClickInterceptedException, StaleElementReferenceException) as err:
-                if time.time() >= end:
+                if time.monotonic() >= end:
                     raise AssertionError(
                         f"select_dynamic_select2_autocomplete_option('{field_id}', '{search_text}', {index}): "
                         f"Select2 field <select id={field_id}> not clickable within {timeout}s "
