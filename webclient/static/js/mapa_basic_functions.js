@@ -84,6 +84,16 @@ function onMarkerClickLog(text) {
     }
 }
 
+// Chyba načtení DJ musí být rozlišitelná od „PIAN nemá žádné DJ“ (to je „--“), jinak vypadá výpadek
+// jako prázdný seznam. Překlad použijeme, jen když ho stránka má; jinak zůstane „--“ jako dosud.
+function onMarkerClickError(popup) {
+    if (typeof map_translations !== "undefined" && map_translations.PianDjError) {
+        popup.setContent(map_translations.PianDjError);
+    } else {
+        popup.setContent("--");
+    }
+}
+
 function onMarkerClick(ident_cely,e) {
     onMarkerClickLog("arch_z_detail_map.onMarkerClick")
     const popup = e.target.getPopup();
@@ -94,9 +104,25 @@ function onMarkerClick(ident_cely,e) {
     if (typeof global_csrftoken !== 'undefined') {
         xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
     }
+    xhr.onerror = function () {
+        onMarkerClickLog("onMarkerClick: sitova chyba")
+        onMarkerClickError(popup);
+    }
     xhr.send();
     xhr.onload = function () {
-        rs = JSON.parse(this.responseText).points
+        if (this.status < 200 || this.status >= 300) {
+            onMarkerClickLog("onMarkerClick: HTTP "+this.status)
+            onMarkerClickError(popup);
+            return;
+        }
+        let rs;
+        try {
+            rs = JSON.parse(this.responseText).points || [];
+        } catch (err) {
+            onMarkerClickLog("onMarkerClick: neplatna odpoved: "+err)
+            onMarkerClickError(popup);
+            return;
+        }
         text=""
         rs.forEach((i) => {
             try{
