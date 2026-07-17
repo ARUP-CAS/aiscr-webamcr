@@ -716,7 +716,7 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
             ale u této třídy se nepoužívá (mezipaměť Redis se nečte ani neukládá).
         :return: Seznam [WikiData ID, jméno] párů.
         """
-        if not q:
+        if not q or not q.strip():
             return []
         q = q.strip()
         if q.startswith("https://www.wikidata.org/entity/"):

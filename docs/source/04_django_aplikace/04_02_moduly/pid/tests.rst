@@ -126,6 +126,13 @@ Třídy
       :param mock_item: Mock pro ``_get_item_result``.
       :param mock_search: Mock pro ``_search_humans``.
 
+   .. py:method:: test_whitespace_only_query_returns_empty_list()
+
+      Dotaz tvořený jen mezerami vrátí prázdný seznam bez volání backendu.
+
+      :param mock_item: Mock pro ``_get_item_result``.
+      :param mock_search: Mock pro ``_search_humans``.
+
    .. py:method:: test_search_language_request_error_returns_empty_list()
 
       Chyba spojení při vyhledávání vrátí prázdný seznam místo výjimky.

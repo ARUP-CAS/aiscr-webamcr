@@ -256,6 +256,21 @@ class WikiDataAutocompleteViewApiCallTest(TestCase):
         mock_item.assert_not_called()
         mock_search.assert_not_called()
 
+    @patch.object(WikiDataAutocompleteView, "_search_humans", new_callable=AsyncMock)
+    @patch.object(WikiDataAutocompleteView, "_get_item_result")
+    def test_whitespace_only_query_returns_empty_list(self, mock_item, mock_search):
+        """
+        Dotaz tvořený jen mezerami vrátí prázdný seznam bez volání backendu.
+
+        :param mock_item: Mock pro ``_get_item_result``.
+        :param mock_search: Mock pro ``_search_humans``.
+        """
+        results = WikiDataAutocompleteView.api_call("   ")
+
+        self.assertEqual(results, [])
+        mock_item.assert_not_called()
+        mock_search.assert_not_called()
+
     def test_search_language_request_error_returns_empty_list(self):
         """Chyba spojení při vyhledávání vrátí prázdný seznam místo výjimky."""
         client = SimpleNamespace(get=AsyncMock(side_effect=httpx.RequestError("boom")))
