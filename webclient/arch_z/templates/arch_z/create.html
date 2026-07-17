@@ -243,8 +243,18 @@
     }
     else {
       $(".dateinput").datepicker('destroy')
-      datum_zahajeni.value = "1.1." + datum_zahajeni.value.slice(-4)
-      datum_ukonceni.value = "31.12." + datum_ukonceni.value.slice(-4)
+      if (datum_zahajeni.value.length >= 4){
+        datum_zahajeni.value = "1.1." + datum_zahajeni.value
+      }
+      else if (datum_zahajeni.value.length == 0){
+        datum_zahajeni.value = ""
+      }
+      if (datum_ukonceni.value.length >= 4){
+        datum_ukonceni.value = "31.12." + datum_ukonceni.value
+      }
+      else if (datum_ukonceni.value.length == 0){
+        datum_ukonceni.value = ""
+      }
       $(".dateinput").datepicker({
           format: "d.m.yyyy",
           viewMode: "days",
