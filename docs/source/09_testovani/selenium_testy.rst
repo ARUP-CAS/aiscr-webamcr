@@ -1440,7 +1440,7 @@ Uživatelské kroky
 - Uživatel otevře akci ve stavu A1 (C-202110946A).
 - Kliknout na tlačítko “Přidat dokumentační jednotku”
 - Zvolit typ DJ “celek akce”
-- Zvolit typ Negativní jednotka “ano”
+- Zvolit Terénní zjištění “negativní”
 - Kliknout na “uložit”
 
 Očekávané výsledky
@@ -1488,7 +1488,7 @@ Uživatelské kroky
 - Uživatel otevře akci ve stavu A1 (číslo akce).
 - Kliknout na tlačítko “Přidat dokumentační jednotku”
 - Zvolit typ DJ - ponechat nevyplněno
-- Zvolit typ Negativní jednotka “ano”
+- Zvolit Terénní zjištění “negativní”
 - Kliknout na “uložit změny”
 
 Očekávané výsledky
@@ -1536,7 +1536,7 @@ Uživatelské kroky
 - Uživatel otevře akci ve stavu A1 (M-202400005A).
 - Kliknout na tlačítko “Přidat dokumentační jednotku”
 - Zvolit typ DJ “část akce”
-- Zvolit typ Negativní jednotka “ano”
+- Zvolit Terénní zjištění “negativní”
 - Kliknout na “uložit změny”
 
 Očekávané výsledky
@@ -1584,7 +1584,7 @@ Uživatelské kroky
 - Uživatel otevře akci ve stavu A1 (C-202309552A).
 - Kliknout na tlačítko “Přidat dokumentační jednotku”
 - Zvolit typ DJ “nevyplněno”
-- Zvolit typ Negativní jednotka “ano”
+- Zvolit Terénní zjištění “negativní”
 - Kliknout na “uložit změny”
 
 Očekávané výsledky
@@ -5976,7 +5976,7 @@ Uživatelské kroky
 - Lokalita → Vybrat → Filtr → ID obsahuje „X-C-L000000001“ → Vybrat → otevřít lokalitu
 - Kliknout na tlačítko “Přidat dokumentační jednotku”
 - Zvolit typ DJ “lokalita”
-- Zvolit typ Negativní jednotka “ne”
+- Zvolit Terénní zjištění “pozitivní”
 - Kliknout na “uložit”
 
 Očekávané výsledky
@@ -6021,7 +6021,7 @@ Uživatelské kroky
 - Uživatel otevře lokalitu ve stavu L1 (viz předpoklady)
 - Lokalita → Vybrat → Filtr → ID obsahuje „X-C-L000000001“ → Vybrat → otevřít lokalitu
 - Kliknout na tlačítko “Přidat dokumentační jednotku”
-- Zvolit typ Negativní jednotka “ne”, nevybere pole Typ
+- Zvolit Terénní zjištění “pozitivní”, nevybere pole Typ
 - Kliknout na “uložit”
 
 Očekávané výsledky

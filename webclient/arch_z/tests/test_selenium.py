@@ -84,7 +84,7 @@ class AkceProjektoveAkce(AkceTestClass):
         - Uživatel otevře akci ve stavu A1 (C-202110946A).
         - Kliknout na tlačítko “Přidat dokumentační jednotku”
         - Zvolit typ DJ “celek akce”
-        - Zvolit typ Negativní jednotka “ano”
+        - Zvolit Terénní zjištění “negativní”
         - Kliknout na “uložit”
 
         Expected:
@@ -145,7 +145,7 @@ class AkceProjektoveAkce(AkceTestClass):
         - Uživatel otevře akci ve stavu A1 (číslo akce).
         - Kliknout na tlačítko “Přidat dokumentační jednotku”
         - Zvolit typ DJ - ponechat nevyplněno
-        - Zvolit typ Negativní jednotka “ano”
+        - Zvolit Terénní zjištění “negativní”
         - Kliknout na “uložit změny”
 
         Expected:
@@ -204,7 +204,7 @@ class AkceProjektoveAkce(AkceTestClass):
         - Uživatel otevře akci ve stavu A1 (M-202400005A).
         - Kliknout na tlačítko “Přidat dokumentační jednotku”
         - Zvolit typ DJ “část akce”
-        - Zvolit typ Negativní jednotka “ano”
+        - Zvolit Terénní zjištění “negativní”
         - Kliknout na “uložit změny”
 
         Expected:
@@ -266,7 +266,7 @@ class AkceProjektoveAkce(AkceTestClass):
         - Uživatel otevře akci ve stavu A1 (C-202309552A).
         - Kliknout na tlačítko “Přidat dokumentační jednotku”
         - Zvolit typ DJ “nevyplněno”
-        - Zvolit typ Negativní jednotka “ano”
+        - Zvolit Terénní zjištění “negativní”
         - Kliknout na “uložit změny”
 
         Expected:
@@ -1748,15 +1748,9 @@ class AkceSamostatneAkce(AkceTestClass):
         self.login("badatel")
 
         count_old = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000001A").count()
-        self.go_to_Akce_vybrat()
-        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000001A")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11) > .material-icons")
-        self.ElementClick(By.LINK_TEXT, "X-C-9000000001A")
-        self.ElementClick(By.CSS_SELECTOR, "#button-add-dj > .material-icons")
-        self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
+        self.goToAddress("/arch-z/akce/detail/X-C-9000000001A")
+        self.ElementClick(By.ID, "button-add-dj")
+        self.select_dynamic_selectpicker_option("dj_typ_id", "celek akce")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDjSubmitButton")
 
@@ -1796,18 +1790,11 @@ class AkceSamostatneAkce(AkceTestClass):
         self.login("badatel")
 
         count_old = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000001A").count()
-        self.go_to_Akce_vybrat()
-        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000001A")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11) > .material-icons")
-        self.ElementClick(By.LINK_TEXT, "X-C-9000000001A")
-        self.ElementClick(By.CSS_SELECTOR, "#button-add-dj > .material-icons")
-
-        # self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
-        # self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
+        self.goToAddress("/arch-z/akce/detail/X-C-9000000001A")
+        self.ElementClick(By.ID, "button-add-dj")
+        # self.select_dynamic_selectpicker_option("dj_typ_id", "celek akce")
         try:
-            with WaitForPageLoad(self.driver, 5):
+            with WaitForPageLoad(self.driver, 3):
                 self.ElementClick(By.ID, "newDjSubmitButton")
         except Exception:
             pass
