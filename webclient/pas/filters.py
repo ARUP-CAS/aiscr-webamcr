@@ -15,7 +15,7 @@ from core.constants import (
     SPOLUPRACE_AKTIVNI,
     UZIVATEL_SPOLUPRACE_RELATION_TYPE,
 )
-from core.filters import GeomWithinFilterMixin
+from core.filters import GeomIntersectsFilterMixin
 from core.forms import SelectMultipleSeparator
 from core.widgets import AutocompleteModelSelect2Multiple, AutocompleteSelect2Multiple
 from crispy_forms.layout import HTML, Div, Layout
@@ -54,7 +54,7 @@ from uzivatel.models import Organizace, Osoba, User
 logger = logging.getLogger(__name__)
 
 
-class SamostatnyNalezFilter(GeomWithinFilterMixin, HistorieFilter, filters.FilterSet):
+class SamostatnyNalezFilter(GeomIntersectsFilterMixin, HistorieFilter, filters.FilterSet):
     """
     Třída pro základní filtrování samostatného nálezu a jejich potomků.
     """

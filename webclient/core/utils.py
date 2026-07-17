@@ -888,7 +888,10 @@ def get_list_map_records_in_envelope(layer, bounds, request):
     from types import SimpleNamespace
 
     from core.views import PermissionFilterMixin
+    from django.contrib.gis.db.models.functions import PointOnSurface
     from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+    from heslar.hesla_dynamicka import PIAN_PRESNOST_KATASTR
 
     polygon = Polygon(
         (
@@ -959,6 +962,12 @@ def get_list_map_records_in_envelope(layer, bounds, request):
             dokumentacni_jednotky_pianu__archeologicky_zaznam_id__in=az_ids,
             geom__intersects=polygon,
         ).distinct()
+        # Katastrální PIAN se v mapě zobrazuje jako bod (viz pian_geom_expression), proto ho do výřezu
+        # zahrneme jen tehdy, když ve výřezu leží i ten bod – jinak by se kreslily piny mimo obrazovku
+        # a nafukovaly počty pro heatmapu. Hrubý filtr výše zůstává kvůli využití prostorového indexu.
+        pians = pians.annotate(_pos=PointOnSurface("geom")).filter(
+            ~Q(presnost=PIAN_PRESNOST_KATASTR) | Q(_pos__intersects=polygon)
+        )
         return pians, "pian", "geom"
 
     if layer == "3d":

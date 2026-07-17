@@ -10,7 +10,7 @@ from core.constants import (
     PROJEKT_RELATION_TYPE,
     SCHVALENI_OZNAMENI_PROJ,
 )
-from core.filters import GeomWithinFilterMixin
+from core.filters import GeomIntersectsFilterMixin
 from core.forms import SelectMultipleSeparator
 from core.widgets import AutocompleteModelSelect2Multiple
 from crispy_forms.layout import HTML, Div, Layout
@@ -163,7 +163,7 @@ class KatastrFilterMixin(FilterSet):
         ).distinct()
 
 
-class ProjektFilter(GeomWithinFilterMixin, HistorieFilter, KatastrFilterMixin, FilterSet):
+class ProjektFilter(GeomIntersectsFilterMixin, HistorieFilter, KatastrFilterMixin, FilterSet):
     """Třída pro filtrování projektů."""
 
     HISTORIE_TYP_ZMENY_STARTS_WITH = "P"

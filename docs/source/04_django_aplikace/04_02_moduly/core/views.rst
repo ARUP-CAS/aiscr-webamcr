@@ -917,14 +917,40 @@ Funkce
 
    :return: Vrací výsledek volání ``JsonResponse()``.
 
+.. py:function:: normalize_pian_presnost(points)
+
+   Přepočte id hesláře přesnosti PIANu na pořadové číslo 1–4, stejně jako to dělá
+   :func:`core.utils.get_pian_from_envelope` pro mapy v detailu záznamu. Klient hodnotu ukazuje
+   v popisku PIANu (``ident (přesnost)``).
+
+   :param points: Seznam slovníků s klíčem ``presnost`` (id hesláře).
+
+   :return: Vrací týž seznam s přepočtenou hodnotou ``presnost``.
+
+.. py:function:: pian_geom_expression(geom_field)
+
+   Vrací výraz pro geometrii PIANu posílanou do mapy jako WKT.
+
+   PIAN s přesností „poloha podle katastru“ se v mapě zobrazuje jako **bod**, nikoli jako polygon
+   katastrálního území (shodně s mapou v detailu akce). Posíláme proto rovnou reprezentativní bod
+   (``ST_PointOnSurface``) – klient tak nemusí pravidlo znát a nepřenáší se zbytečně velký polygon.
+
+   :param geom_field: Název geometrického pole na modelu Pian.
+
+   :return: Vrací podmíněný výraz pro anotaci ``geom``.
+
 .. py:function:: post_ajax_get_list_map_data(request, layer)
 
    Funkce pohledu pro datovou vrstvu mapy v záložce filtru výpisu.
 
    Vrací prvky daného workflow (``layer``) v aktuálním výřezu mapy ve stejném kontraktu jako
    :func:`post_ajax_get_pas_and_pian_limit` – tj. ``{"points"|"heat", "algorithm", "count"}`` –
-   aby klient mohl znovupoužít stávající vykreslování. Nad ``LIMIT_PRVKU_ZOBRAZENI_HEATMAP`` se
-   přepíná na heatmapu. Vrstva je pouze orientační; vlastní filtrování tabulky zajišťuje
+   aby klient mohl znovupoužít stávající vykreslování. Dosáhne-li počet prvků ve výřezu hodnoty
+   ``LIMIT_PRVKU_ZOBRAZENI_HEATMAP``, přepne se na heatmapu; **výjimkou je vrstva ``"3d"``
+   (knihovna 3D), která heatmapu nemá a vždy vrací jednotlivé body** (stejně jako náhled 3D mapy).
+
+   Detailní body respektují oprávnění příslušného výpisu, takže uživatel v mapě vidí jen záznamy,
+   které smí vidět i v tabulce. Vrstva je orientační; vlastní filtrování tabulky zajišťuje
    serverový filtr ``geom_filter``.
 
    :param request: HTTP požadavek s tělem ``{"bounds": {...}, "zoom": int}``.
