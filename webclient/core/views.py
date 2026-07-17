@@ -2040,7 +2040,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         """
         qs = super().get_queryset()
         if self._is_query_cacheable():
-            qs.cache()
+            qs = qs.cache()
         return qs
 
     @method_decorator(never_cache)
