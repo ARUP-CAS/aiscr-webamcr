@@ -84,7 +84,7 @@ class AkceProjektoveAkce(AkceTestClass):
         - Uživatel otevře akci ve stavu A1 (C-202110946A).
         - Kliknout na tlačítko “Přidat dokumentační jednotku”
         - Zvolit typ DJ “celek akce”
-        - Zvolit Terénní zjištění “pozitivní”
+        - Zvolit Terénní zjištění “negativní”
         - Kliknout na “uložit”
 
         Expected:
@@ -145,7 +145,7 @@ class AkceProjektoveAkce(AkceTestClass):
         - Uživatel otevře akci ve stavu A1 (číslo akce).
         - Kliknout na tlačítko “Přidat dokumentační jednotku”
         - Zvolit typ DJ - ponechat nevyplněno
-        - Zvolit Terénní zjištění “pozitivní”
+        - Zvolit Terénní zjištění “negativní”
         - Kliknout na “uložit změny”
 
         Expected:
@@ -204,7 +204,7 @@ class AkceProjektoveAkce(AkceTestClass):
         - Uživatel otevře akci ve stavu A1 (M-202400005A).
         - Kliknout na tlačítko “Přidat dokumentační jednotku”
         - Zvolit typ DJ “část akce”
-        - Zvolit Terénní zjištění “pozitivní”
+        - Zvolit Terénní zjištění “negativní”
         - Kliknout na “uložit změny”
 
         Expected:
@@ -266,7 +266,7 @@ class AkceProjektoveAkce(AkceTestClass):
         - Uživatel otevře akci ve stavu A1 (C-202309552A).
         - Kliknout na tlačítko “Přidat dokumentační jednotku”
         - Zvolit typ DJ “nevyplněno”
-        - Zvolit Terénní zjištění “pozitivní”
+        - Zvolit Terénní zjištění “negativní”
         - Kliknout na “uložit změny”
 
         Expected:
