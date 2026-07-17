@@ -84,6 +84,10 @@ body.app-dark-theme {
         .navbar-text {
             color: $navbar-text-dark !important;
         }
+
+        .navbar-collapse#navbarMobile {
+            background-color: $navbar-bg-dark !important;
+        }
     }
 
     // Main content
@@ -100,6 +104,38 @@ body.app-dark-theme {
 
                 &:hover {
                     color: lighten($primary-dark, 10);
+                    text-decoration: underline;
+                }
+            }
+
+            .app-footer-logos-toggle-wrapper {
+                .app-footer-logos-toggle-btn {
+                    color: $body-text-dark;
+
+                    &:hover {
+                        color: lighten($body-text-dark, 10);
+                    }
+                }
+            }
+
+            .app-footer-logos-wrapper {
+                .app-footer-logo:not(.app-logo-re3) {
+                    filter: brightness(0) invert(1);
+                    opacity: .65;
+                }
+
+                .app-logo-re3 {
+                    filter: none;
+                    opacity: 1;
+                }
+            }
+
+            .app-footer-icon-link {
+                color: $body-text-dark;
+
+                &:hover {
+                    color: lighten($body-text-dark, 10);
+                    text-decoration-color: lighten($body-text-dark, 10);
                 }
             }
         }
