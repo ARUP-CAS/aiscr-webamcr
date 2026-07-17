@@ -266,7 +266,7 @@
     <button class="btn btn-light mb-0 mt-0" id="sidebar-toggle"><span class="material-icons">menu_open</span></button>
     <span class="navbar-mobile-header-ident" id="navbar-mobile-header-ident">
       {% if search_sum %}
-        {% trans "templates.baseLogedIn.navbar.pocetZaznamuShort" %}: {{ table.rows|length }}
+        {% trans "templates.baseLogedIn.navbar.pocetZaznamuShort" %}: {{ table.paginator.count }}
       {% elif projekt %}
         <span class="navbar-mobile-header-ident-projekt">{{ projekt.ident_cely }}</span>
       {% elif app == "akce" %}

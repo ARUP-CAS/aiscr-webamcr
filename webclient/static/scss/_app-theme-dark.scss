@@ -1,5 +1,6 @@
 // --- DARK THEME ---
 // Apply dark mode styles when data-theme="dark" is set
+// Entity colors reuse shared mixins from app-mixins with $dark-entities.
 
 @import 'app-variables-dark';
 
@@ -21,6 +22,17 @@ body.app-dark-theme {
     // Body
     color: $body-text-dark;
     background-color: $body-bg-dark;
+
+    @include setEntityTransakceColor($dark-entities);
+
+    .app-entity-cards {
+        .col {
+
+            .app-card-entity {
+                @include setEntityColor("card", $dark-entities, null);
+            }
+        }
+    }
 
     // Sidebar
     .app-sidebar-wrapper {
@@ -132,9 +144,12 @@ body.app-dark-theme {
     }
 
     #app-page-wrapper .container-fluid.app-content-wrapper {
+        @include setEntityElementsColor($dark-entities);
         background-color: $body-bg-dark;
 
         .app-toolbar {
+            background-color: $app-toolbar-bg-dark !important;
+
             .app-left {
                 .app-entity-item {
                     color: $body-text-dark;
@@ -468,6 +483,14 @@ body.app-dark-theme {
 
     }
 
+    .leaflet-control-zoom.leaflet-bar.leaflet-control a {
+        color: black;
+    }
+
+    .leaflet-marker-icon.marker-cluster.leaflet-zoom-animated.leaflet-interactive {
+        color: black;
+    }
+
     .select2-container--default {
         .select2-dropdown {
             background-color: $gray-400-dark;
@@ -691,11 +714,12 @@ body.app-dark-theme {
                     }
                 }
 
-                .app-theme-toggle {
+                .app-theme-toggle-button {
                     color: $body-text-dark !important;
 
-                    button:hover {
-                        opacity: 0.8;
+                    &:hover {
+                        opacity: 0.8 !important;
+                        color: $body-text-dark !important;
                     }
                 }
 
@@ -720,6 +744,10 @@ body.app-dark-theme {
 
         .dropzone.mb-0.dz-clickable {
             background-color: $gray-600-dark;
+        }
+
+        .bs-stepper .bs-stepper-header .step.active .bs-stepper-label {
+            color: $body-text-dark !important;
         }
     }
 }

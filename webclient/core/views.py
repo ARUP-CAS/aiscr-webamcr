@@ -23,7 +23,7 @@ from core.constants import (
     ROLE_BADATEL_ID,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
 )
-from core.forms import CheckStavNotChangedForm, TransaltionImportForm
+from core.forms import CheckStavNotChangedForm, RenameSouborForm, TranslationImportForm
 from core.ident_cely import get_record_from_ident
 from core.message_constants import (
     APPLICATION_RESTART_ERROR,
@@ -32,6 +32,10 @@ from core.message_constants import (
     PRISTUP_ZAKAZAN,
     PROJEKT_NEKDO_ZMENIL_STAV,
     SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
+    SOUBOR_NEJVYSSI_SUFFIX_OBSAZEN,
+    SOUBOR_SE_NEPOVEDLO_PREJMENOVAT,
+    SOUBOR_SUFFIX_OBSAZEN,
+    SOUBOR_USPESNE_PREJMENOVAN,
     SPATNY_ZAZNAM_SOUBOR_VAZBA,
     SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     TRANSLATION_DELETE_CANNOT_MAIN,
@@ -41,6 +45,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE,
     ZAZNAM_USPESNE_SMAZAN,
+    ZAZNAM_ZMENEN_JINOU_TRANSAKCI,
 )
 from core.models import AntivirusCheckResult, Soubor
 from core.repository_connector import (
@@ -50,6 +55,7 @@ from core.repository_connector import (
     FedoraTransactionStatus,
     FedoraUpdatedByAnotherTransactionError,
 )
+from core.soubor_naming import get_dokument_free_suffixes, get_finds_free_suffixes, get_soubor_suffix
 from core.utils import (
     SessionIdentifier,
     find_pos_with_backup,
@@ -330,6 +336,179 @@ def delete_file(request, typ_vazby, ident_cely, pk):
             "button": _("core.views.smazat.submitButton.text"),
         }
         return render(request, "core/transakce_modal.html", context)
+
+
+# Zástupná hodnota pro prázdný (bezpísmenný) slot dokumentu – ``ChoiceField`` s ``required=True``
+# nepřijímá prázdný řetězec jako platnou volbu, proto se v nabídce reprezentuje sentinelem.
+RENAME_BASE_SLOT_VALUE = "__zaklad__"
+
+
+def _rename_file_safe_redirect(request):
+    """
+    Vrátí bezpečnou návratovou URL z parametru ``next`` požadavku na přejmenování.
+
+    :param request: HTTP požadavek s parametrem ``next`` v GET nebo POST.
+    :return: Bezpečná návratová URL nebo domovská stránka.
+    """
+    next_url = request.POST.get("next") if request.method == "POST" else request.GET.get("next")
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+        return next_url
+    return reverse("core:home")
+
+
+class _SuffixNoLongerFreeError(Exception):
+    """Zvolený suffix byl mezi načtením formuláře a uložením obsazen jiným požadavkem."""
+
+
+def _rename_file_messages_response(request, message, status=400):
+    """
+    Vrátí ``JsonResponse`` s frontovanými django zprávami pro AJAX modal (vzor ``delete_file``).
+
+    :param request: HTTP požadavek, do jehož zpráv se přidá chybová hláška.
+    :param message: Chybová zpráva k zobrazení uživateli.
+    :param status: HTTP status odpovědi.
+    :return: ``JsonResponse`` se seznamem zpráv v klíči ``messages``.
+    """
+    messages.add_message(request, messages.ERROR, message)
+    django_messages = [
+        {"level": m.level, "message": m.message, "extra_tags": m.tags} for m in messages.get_messages(request)
+    ]
+    return JsonResponse({"messages": django_messages}, status=status)
+
+
+@login_required
+@require_http_methods(["POST", "GET"])
+def rename_file(request, typ_vazby, ident_cely, pk):
+    """
+    Přejmenuje existující soubor změnou suffixu na volnou povolenou hodnotu.
+
+    Mění název v databázi (``soubor.nazev``), ve Fedoře (``ebucore:filename`` souboru i jeho potomků)
+    a vyvolá přegenerování XML metadat navázaného záznamu. Dostupné pro dokumenty (včetně 3D modelů)
+    a samostatné nálezy, které mají suffixové schéma názvů.
+
+    :param request: HTTP požadavek s metodou GET (modal) nebo POST (provedení).
+    :param typ_vazby: Typ vazby souboru na navázaný doménový objekt.
+    :param ident_cely: Identifikátor záznamu, u kterého se soubor přejmenovává.
+    :param pk: Primární klíč přejmenovávaného souboru.
+    :return: Vrací modal (GET) nebo ``JsonResponse`` s přesměrováním či chybou (POST).
+    """
+    logger.debug(
+        "core.views.rename_file.start",
+        extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": pk, "method": request.method},
+    )
+    soubor: Soubor = get_object_or_404(Soubor, pk=pk)
+    try:
+        check_soubor_vazba(typ_vazby, ident_cely, pk)
+    except ZaznamSouborNotmatching as err:
+        logger.debug(
+            "core.views.rename_file.vazba_error",
+            extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": pk, "error": err},
+        )
+        messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
+        # POST jde přes AJAX z modalu – ten očekává JSON s přesměrováním, ne HTTP redirect.
+        if request.method == "POST":
+            return JsonResponse({"redirect": _rename_file_safe_redirect(request)})
+        return redirect(_rename_file_safe_redirect(request))
+
+    navazany_objekt = soubor.vazba.navazany_objekt
+    base = navazany_objekt.ident_cely.replace("-", "")
+    extension = os.path.splitext(soubor.nazev)[1]
+    if isinstance(navazany_objekt, Dokument):
+        free_suffixes = get_dokument_free_suffixes(navazany_objekt, soubor)
+    elif isinstance(navazany_objekt, SamostatnyNalez):
+        free_suffixes = get_finds_free_suffixes(navazany_objekt, soubor)
+    else:
+        logger.warning(
+            "core.views.rename_file.unsupported_record",
+            extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": pk},
+        )
+        # GET modal se načítá přes AJAX .load() (očekává HTML) – vrátíme redirect; POST očekává JSON.
+        if request.method == "POST":
+            return _rename_file_messages_response(request, SOUBOR_SE_NEPOVEDLO_PREJMENOVAT)
+        return redirect(_rename_file_safe_redirect(request))
+    suffix_choices = [(suffix or RENAME_BASE_SLOT_VALUE, f"{base}{suffix}{extension}") for suffix in free_suffixes]
+
+    if request.method == "POST":
+        form = RenameSouborForm(request.POST, suffix_choices=suffix_choices)
+        if not form.is_valid():
+            return _rename_file_messages_response(request, SOUBOR_SUFFIX_OBSAZEN)
+        chosen_suffix = form.cleaned_data["suffix"]
+        if chosen_suffix == RENAME_BASE_SLOT_VALUE:
+            chosen_suffix = ""
+        new_nazev = f"{base}{chosen_suffix}{extension}"
+        old_nazev = soubor.nazev
+        if new_nazev == old_nazev:
+            messages.add_message(request, messages.SUCCESS, SOUBOR_USPESNE_PREJMENOVAN)
+            return JsonResponse({"redirect": _rename_file_safe_redirect(request)})
+        fedora_transaction = FedoraTransaction()
+        try:
+            with transaction.atomic():
+                # Zámek nadřazeného záznamu serializuje souběžná přejmenování; po zamčení znovu
+                # ověříme, že zvolený suffix je stále volný (jiný požadavek jej mohl mezitím obsadit).
+                type(navazany_objekt).objects.select_for_update().get(pk=navazany_objekt.pk)
+                if isinstance(navazany_objekt, Dokument):
+                    current_free = get_dokument_free_suffixes(navazany_objekt, soubor)
+                else:
+                    current_free = get_finds_free_suffixes(navazany_objekt, soubor)
+                if chosen_suffix not in current_free:
+                    raise _SuffixNoLongerFreeError()
+                connector = FedoraRepositoryConnector(navazany_objekt, fedora_transaction)
+                connector.update_file_name(soubor, old_nazev, new_nazev)
+                soubor.zaznamenej_prejmenovani(request.user, old_nazev, new_nazev)
+                soubor.nazev = new_nazev
+                soubor.active_transaction = fedora_transaction
+                soubor.close_active_transaction_when_finished = True
+                soubor.save()
+        except _SuffixNoLongerFreeError:
+            logger.debug("core.views.rename_file.suffix_taken", extra={"pk": pk, "suffix": chosen_suffix})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return _rename_file_messages_response(request, SOUBOR_SUFFIX_OBSAZEN)
+        except FedoraUpdatedByAnotherTransactionError as err:
+            logger.debug(
+                "core.views.rename_file.another_transaction",
+                extra={"pk": pk, "error": err, "transaction": fedora_transaction.uid},
+            )
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return _rename_file_messages_response(request, ZAZNAM_ZMENEN_JINOU_TRANSAKCI)
+        except FedoraError as err:
+            logger.error(
+                "core.views.rename_file.fedora_error",
+                extra={"pk": pk, "error": err, "transaction": fedora_transaction.uid},
+            )
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return _rename_file_messages_response(request, SOUBOR_SE_NEPOVEDLO_PREJMENOVAT)
+        except Exception as err:
+            # Neočekávaná chyba (např. IntegrityError nebo chyba v save_metadata): DB se rollbackne
+            # přes atomic(), ale otevřenou Fedora transakci musíme uklidit ručně, jinak zůstane viset.
+            # Chybu zalogujeme (včetně tracebacku) a uživateli vrátíme hlášku – HTTP 500 by v modalu
+            # skončilo jen slepým reloadem bez vysvětlení.
+            logger.exception(
+                "core.views.rename_file.unexpected_error",
+                extra={"pk": pk, "error": err, "transaction": fedora_transaction.uid},
+            )
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return _rename_file_messages_response(request, SOUBOR_SE_NEPOVEDLO_PREJMENOVAT)
+        logger.debug(
+            "core.views.rename_file.success",
+            extra={"pk": pk, "old_nazev": old_nazev, "new_nazev": new_nazev, "transaction": fedora_transaction.uid},
+        )
+        messages.add_message(request, messages.SUCCESS, SOUBOR_USPESNE_PREJMENOVAN)
+        return JsonResponse({"redirect": _rename_file_safe_redirect(request)})
+
+    initial_suffix = get_soubor_suffix(soubor) or RENAME_BASE_SLOT_VALUE
+    form = RenameSouborForm(suffix_choices=suffix_choices, initial={"suffix": initial_suffix})
+    context = {
+        "object": soubor,
+        "title": _("core.views.rename_file.title.text") + f" {soubor.nazev}",
+        "id_tag": "prejmenovat-soubor-form",
+        "button": _("core.views.rename_file.submitButton.text"),
+        "form": form,
+    }
+    return render(request, "core/transakce_modal.html", context)
 
 
 class DownloadFile(LoginRequiredMixin, View):
@@ -942,6 +1121,15 @@ class NewFileUploadView(BasePostUploadView):
 
         if new_name is False:
             self.fedora_transaction.rollback_transaction()
+            # Nejvyšší suffix už nelze přidělit. Pokud jsou nižší sloty volné (vznikly přejmenováním
+            # či smazáním), poradíme uživateli je uvolnit přejmenováním; jinak je záznam skutečně plný.
+            free_suffixes = []
+            if typ_vazby in ("dokument", "model3d"):
+                free_suffixes = get_dokument_free_suffixes(objekt)
+            elif typ_vazby == "pas":
+                free_suffixes = get_finds_free_suffixes(objekt)
+            if free_suffixes:
+                return JsonResponse({"error": str(SOUBOR_NEJVYSSI_SUFFIX_OBSAZEN)}, status=403)
             return JsonResponse(
                 {
                     "error": (
@@ -1165,6 +1353,9 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
 def get_finds_soubor_name(find, filename, add_to_index=1):
     """
     Funkce pro získaní jména souboru pro samostatný nález.
+
+    Název se přiděluje navýšením podle nejvyššího obsazeného suffixu (``F01`` … ``F99``). Toto výchozí
+    chování se záměrně nemění – uvolnění či změnu pozice řeší přejmenování souboru.
 
     :param find: Textový název, klíč nebo výraz ``find`` používaný v rámci operace.
     :param filename: Parametr ``filename`` se předává do volání ``splitext()``, ``warning()``, vstupuje do návratové hodnoty.
@@ -2189,7 +2380,7 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
     """Třída pohledu pro import překladových souborů."""
 
     template_name = "rosetta/import_form.html"
-    form_class = TransaltionImportForm
+    form_class = TranslationImportForm
 
     def form_valid(self, form):
         """

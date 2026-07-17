@@ -1,7 +1,5 @@
-<div class="row">
-{% for zaznam in field.zaznamy %}
 <div>
+{% for zaznam in field.zaznamy %}
     <a href="{% url 'core:redirect_ident' zaznam.ident_cely %}" target="_blank">{{ zaznam.ident_cely }}</a>&nbsp;{% if zaznam.druh_nalezu and  zaznam.specifikace %}({{zaznam.druh_nalezu}}&nbsp;-&nbsp;{{zaznam.specifikace}}){% elif zaznam.druh_nalezu and not zaznam.specifikace %}({{zaznam.druh_nalezu}}){% elif zaznam.specifikace and not zaznam.druh_nalezu %}({{zaznam.specifikace}}){% endif %}{% if not forloop.last %},&nbsp;{% endif %}
-</div>
 {% endfor %}
 </div>
