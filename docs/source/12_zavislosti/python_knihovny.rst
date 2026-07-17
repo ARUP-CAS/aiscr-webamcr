@@ -308,7 +308,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.30.2
+     - 3.30.3
      - MIT
      - https://github.com/tox-dev/py-filelock
    * - freezegun
