@@ -22,7 +22,6 @@
     var heatmapOptions = typeof settings_heatmap_options !== "undefined" ? settings_heatmap_options : {};
     var heatLayer = new HeatmapOverlay(heatmapOptions);
     var boundsLock = null;
-    var pendingXhr = null; // právě běžící požadavek na data (kvůli zrušení při změně výřezu)
     var mapInitialized = false;
 
     // Datové vrstvy workflow – stejné pojmenování i ovládání jako v detailních mapách.
@@ -401,17 +400,13 @@
         }
         boundsLock = key;
 
-        // Zrušíme dosud běžící požadavek – jinak by jeho pozdější odpověď mohla přepsat novější
-        // výřez. Odpovědi z neaktuálního výřezu navíc zahazujeme podle klíče (viz jeStale).
-        if (pendingXhr) {
-            pendingXhr.abort();
-        }
+        // Odpověď z neaktuálního výřezu zahodíme – pomalejší starší požadavek by jinak přepsal
+        // novější data. Běžící požadavek záměrně nerušíme (abort): server by dostal broken pipe.
         function jeStale() {
             return boundsLock !== key;
         }
 
         var xhr = new XMLHttpRequest();
-        pendingXhr = xhr;
         xhr.open("POST", endpoint);
         xhr.setRequestHeader("Content-type", "application/json");
         if (typeof global_csrftoken !== "undefined") {
@@ -420,9 +415,6 @@
         map.spin(true);
         xhr.onload = function () {
             map.spin(false);
-            if (pendingXhr === xhr) {
-                pendingXhr = null;
-            }
             if (jeStale()) {
                 return; // mezitím se výřez změnil, data už nejsou aktuální
             }
@@ -460,17 +452,8 @@
                 }
             }
         };
-        xhr.onabort = function () {
-            map.spin(false);
-            if (pendingXhr === xhr) {
-                pendingXhr = null;
-            }
-        };
         xhr.onerror = function () {
             map.spin(false);
-            if (pendingXhr === xhr) {
-                pendingXhr = null;
-            }
             if (jeStale()) {
                 return;
             }
