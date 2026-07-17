@@ -34,6 +34,7 @@ from core.constants import (
     UKONCENI_V_TERENU_PROJ,
     UZAVRENI_PROJ,
     VRACENI_NAVRHU_ZRUSENI,
+    VRACENI_PROJ,
     VRACENI_ZRUSENI,
     ZAHAJENI_V_TERENU_PROJ,
     ZAPSANI_PROJ,
@@ -1685,6 +1686,7 @@ def get_history_dates(historie_vazby, request_user):
         "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_PROJ, anonymized),
         "datum_navrhu_ke_zruseni": historie_vazby.get_last_transaction_date(NAVRZENI_KE_ZRUSENI_PROJ, anonymized),
         "datum_zruseni": datum_zruseni,
+        "datum_vraceni": historie_vazby.get_last_transaction_if_type(VRACENI_PROJ, anonymized),
     }
     return historie
 
