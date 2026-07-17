@@ -155,7 +155,7 @@ class AkceLokality(BaseSeleniumTestClass):
         - Lokalita → Vybrat → Filtr → ID obsahuje „X-C-L000000001“ → Vybrat → otevřít lokalitu
         - Kliknout na tlačítko “Přidat dokumentační jednotku”
         - Zvolit typ DJ “lokalita”
-        - Zvolit typ Negativní jednotka “ne”
+        - Zvolit Terénní zjištění “pozitivní”
         - Kliknout na “uložit”
 
         Expected:
@@ -197,7 +197,7 @@ class AkceLokality(BaseSeleniumTestClass):
         - Uživatel otevře lokalitu ve stavu L1 (viz předpoklady)
         - Lokalita → Vybrat → Filtr → ID obsahuje „X-C-L000000001“ → Vybrat → otevřít lokalitu
         - Kliknout na tlačítko “Přidat dokumentační jednotku”
-        - Zvolit typ Negativní jednotka “ne”, nevybere pole Typ
+        - Zvolit Terénní zjištění “pozitivní”, nevybere pole Typ
         - Kliknout na “uložit”
 
         Expected:
