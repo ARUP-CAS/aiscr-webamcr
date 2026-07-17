@@ -90,9 +90,9 @@ class LokalitaFilter(ArchZaznamFilter):
                 queryset_history &= Q(
                     archeologicky_zaznam__historie__historie__poznamka__icontains=historie["poznamka__icontains"]
                 )
-            queryset = queryset.filter(queryset_history)
+            queryset = queryset.filter(queryset_history).distinct()
 
-        return queryset.distinct()
+        return queryset
 
     def filter_popisne_udaje(self, queryset, name, value):
         """

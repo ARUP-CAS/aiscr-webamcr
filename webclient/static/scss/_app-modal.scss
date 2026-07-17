@@ -2,14 +2,6 @@
 @import 'app-mixins';
 @import 'app-variables';
 
-.app-modal-partneri {
-  .app-logos {
-    img {
-      @extend .me-4, .mb-4;
-      max-height: 80px;
-    }
-  }
-}
 .app-modal-form {
   .modal-body {
     .bootstrap-select {

@@ -76,6 +76,7 @@ VRACENI_SN: Final = "SN-1"  # 5
 AKTUALIZACE_SN: Final = "SN-UPD"  # update jednotlivého pole
 # Soubory.
 NAHRANI_SBR: Final = "SBR0"  # 0
+PREJMENOVANI_SBR: Final = "SBR1"  # 1
 # Uživatel.
 ZMENA_HLAVNI_ROLE: Final = "HR"  # 0, 1
 ZMENA_UDAJU_ADMIN: Final = "ZUA"  # 0

@@ -256,7 +256,33 @@ class VratitFormAZ(VratitForm):
         ).distinct()
 
 
-class DecimalTextWideget(forms.widgets.TextInput):
+class RenameSouborForm(forms.Form):
+    """Formulář pro přejmenování souboru výběrem volného suffixu z povolených hodnot."""
+
+    suffix = forms.ChoiceField(
+        label=_("core.forms.RenameSouborForm.suffix.label"),
+        required=True,
+        help_text=_("core.forms.RenameSouborForm.suffix.tooltip"),
+        widget=forms.Select(attrs={"class": "selectpicker", "data-live-search": "true"}),
+    )
+
+    def __init__(self, *args, suffix_choices=None, **kwargs):
+        """
+        Inicializuje formulář a naplní nabídku suffixů povolenými (volnými) hodnotami.
+
+        :param suffix_choices: Seznam dvojic ``(hodnota, popisek)`` volných suffixů.
+        :param args: Poziční argumenty předané do ``forms.Form``.
+        :param kwargs: Klíčové argumenty předané do ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        if suffix_choices is not None:
+            self.fields["suffix"].choices = suffix_choices
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.include_media = False
+
+
+class DecimalTextWidget(forms.widgets.TextInput):
     """Třida pro formátování hodnoty velikosti souboru na 3 desetiná místa."""
 
     def format_value(self, value):
@@ -638,12 +664,12 @@ class BaseFilterForm(forms.Form):
         return cleaned_data
 
 
-class TransaltionImportForm(forms.Form):
-    """Implementuje komponentu ``TransaltionImportForm`` v rámci aplikace."""
+class TranslationImportForm(forms.Form):
+    """Implementuje komponentu ``TranslationImportForm`` v rámci aplikace."""
 
     file = forms.FileField(
         required=True,
-        label=_("core.forms.TransaltionImportForm.file.label"),
+        label=_("core.forms.TranslationImportForm.file.label"),
         widget=forms.FileInput(attrs={"accept": ".po"}),
     )
 

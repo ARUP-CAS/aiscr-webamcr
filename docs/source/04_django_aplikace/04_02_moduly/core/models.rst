@@ -106,6 +106,16 @@ Třídy
       :param user: Parametr ``user`` se předává do volání ``Historie()``.
       :param nazev: Parametr ``nazev`` se předává do volání ``Historie()``, ovlivňuje větvení podmínek.
 
+   .. py:method:: zaznamenej_prejmenovani()
+
+      Metoda pro zapsání přejmenování souboru do historie.
+
+      Do poznámky se uloží změna ve tvaru ``původní_název -> nový_název``.
+
+      :param user: Uživatel, který přejmenování provedl.
+      :param old_nazev: Původní název souboru.
+      :param new_nazev: Nový název souboru.
+
    .. py:method:: get_file_extension_by_mime()
 
       Vrací file extension by mime.

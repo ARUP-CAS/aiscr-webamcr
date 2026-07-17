@@ -50,6 +50,7 @@ from core.models import check_permissions
 from core.repository_connector import FedoraError, FedoraRepositoryConnector
 from core.utils import (
     CannotFindCadasterCentre,
+    TwoQueryPaginator,
     get_all_pians_with_akce,
     get_dj_pians_centroid,
     get_message,
@@ -1781,6 +1782,7 @@ class AkceListView(SearchListView):
     vypis_app = "akce"
     map_enabled = True
     map_layer = "akce"
+    table_pagination = {"per_page": 100, "paginator_class": TwoQueryPaginator}
 
     def init_translations(self):
         """Nastaví přeložené texty pro nadpisy, popisky a záhlaví přehledu akcí."""
@@ -1861,6 +1863,8 @@ class AkceListView(SearchListView):
             "archeologicky_zaznam__hlavni_katastr__hranice",
             "archeologicky_zaznam__hlavni_katastr__okres__definicni_bod",
             "archeologicky_zaznam__hlavni_katastr__okres__hranice",
+            "archeologicky_zaznam__hlavni_katastr__okres__kraj__definicni_bod",
+            "archeologicky_zaznam__hlavni_katastr__okres__kraj__hranice",
         )
 
         return self.check_filter_permission(qs)

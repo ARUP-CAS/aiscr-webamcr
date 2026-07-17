@@ -64,7 +64,7 @@ Třídy
 
       :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, None.
+      :return: Název sekce jako HTML přes ``format_html`` (``SafeString``), nebo ``None``.
 
 
 .. py:class:: PianSectionNameWithAccessor
@@ -79,7 +79,7 @@ Třídy
 
       :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, None.
+      :return: Název sekce jako HTML přes ``format_html`` (``SafeString``), nebo ``None``.
 
 
 .. py:class:: OznamovatelSectionNameWithAccessor
@@ -237,7 +237,7 @@ Třídy
       :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
       :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``mark_safe()``, None.
+      :return: První neprázdný ``get_ident_cely_link`` (``SafeString`` z ``format_html``), nebo ``None``.
 
 
 .. py:class:: StatusField
@@ -294,7 +294,9 @@ Třídy
       :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
       :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
 
-      :return: Vrací výsledek volání ``mark_safe()``.
+      :return: Vrací vyřešený atribut podle accessorů, nebo ``""``. Hodnota není označena jako bezpečná
+              (``SafeString``); šablona ji autoescapuje, pokud už není ``SafeString`` (např. odkaz z
+              ``get_ident_cely_link``).
 
 
 .. py:class:: GeomGmlField
@@ -606,7 +608,7 @@ Třídy
 
       :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``new_name``.
+      :return: Název sekce jako HTML přes ``format_html`` (``SafeString``).
 
 
 .. py:class:: SouboryRepeatableSectionNameWithAccessor
@@ -629,7 +631,7 @@ Třídy
 
       :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``new_name``.
+      :return: Název sekce jako HTML přes ``format_html`` (``SafeString``).
 
 
 .. py:class:: KomponentaRepeatableSectionNameWithAccessor
@@ -644,7 +646,7 @@ Třídy
 
       :param instance: Parametr ``instance`` předává se do volání ``getattr()``, vstupuje do návratové hodnoty.
 
-      :return: Vrací hodnotu podle větve zpracování.
+      :return: Název sekce jako HTML přes ``format_html`` (``SafeString``).
 
 
 .. py:class:: SubSectionField
