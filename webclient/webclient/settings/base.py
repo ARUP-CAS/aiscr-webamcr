@@ -111,11 +111,15 @@ CACHEOPS_REDIS = {
     "port": int(REDIS_PORT),
     "db": 2,
     "password": get_plain_redis_pass(),
+    "socket_timeout": 3,
     "socket_keepalive": True,
     "health_check_interval": 30,
     "retry_on_timeout": True,
 }
 
+# Výpadek Redisu nesmí shodit request – cache je jen výkonová optimalizace.
+# Při ConnectionError/TimeoutError cacheops chybu zaloguje jako warning a dotaz
+# doběhne bez cache (pomaleji, ale správně).
 CACHEOPS_DEGRADE_ON_FAILURE = True
 
 CACHEOPS = {
