@@ -63,7 +63,7 @@ footer {
     overflow: hidden;
 
     &.collapsed {
-      max-height: 58px; // fallback — JS overrides with measured value
+      max-height: 0; // matches collapseAll() inline maxHeight; hide until expand
     }
 
     a {

@@ -396,7 +396,7 @@
     <div class="app-footer-wrapper">
       <div class="app-footer-logos-container">
         <div class="app-footer-logos-toggle-wrapper" id="app-footer-logos-toggle-container" style="display: none;">
-          <button type="button" class="app-footer-icon-link app-footer-logos-toggle-btn" id="app-footer-logos-toggle-btn">
+          <button type="button" class="app-footer-icon-link app-footer-logos-toggle-btn" id="app-footer-logos-toggle-btn" aria-expanded="false" aria-controls="app-footer-logos-wrapper">
             <span class="material-icons" id="app-footer-logos-toggle-icon">expand_more</span>
             <span id="app-footer-logos-toggle-text">{% trans "templates.baseLogedIn.footer.logos.show" %}</span>
           </button>
@@ -944,6 +944,7 @@
     wrapper.style.maxHeight = '0px';
     icon.textContent = 'expand_more';
     text.textContent = showText;
+    btn.setAttribute('aria-expanded', 'false');
   }
 
   function expandAll() {
@@ -951,6 +952,7 @@
     wrapper.style.maxHeight = wrapper.scrollHeight + 'px';
     icon.textContent = 'expand_less';
     text.textContent = hideText;
+    btn.setAttribute('aria-expanded', 'true');
   }
 
   function updateFooter() {
@@ -975,6 +977,7 @@
       wrapper.style.maxHeight = 'none';
       userToggled = false;
       isCollapsed = true;
+      btn.setAttribute('aria-expanded', 'false');
     }
   }
 
