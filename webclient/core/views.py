@@ -1983,21 +1983,29 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         )
         return context
 
-    #: Limit pro zapnutí cacheops cache. cacheops sestavuje invalidační schéma (DNF)
-    #: jako kartézský součin hodnot napříč vícehodnotovými filtry. U hlubokých M2M
-    #: filtrů (předměty/objekty komponent) vede velký počet zvolených hodnot k milionům
-    #: konjunkcí a vyčerpání paměti (OOM) při výpočtu ``cacheops.tree.dnfs``. Pro
-    #: kombinace, jejichž součin počtů hodnot překročí tento limit, se cache vypíná.
+    #: Horní mez součinu počtů hodnot vícehodnotových GET parametrů, do které se ještě
+    #: zapíná cacheops cache. Způsob výpočtu a zdůvodnění viz ``_is_query_cacheable``.
     cache_filter_value_product_limit = 1000
 
     def _is_query_cacheable(self):
         """
         Vrací, zda je bezpečné zapnout cacheops cache pro aktuální filtr.
 
-        Spočítá součin počtů hodnot u vícehodnotových GET parametrů. Tento součin
-        odpovídá řádové velikosti invalidační DNF, kterou cacheops staví – u velkých
-        kombinací hlubokých M2M filtrů by její sestavení vyčerpalo paměť a shodilo
-        worker. Stránkovací a řadicí parametry se do součinu nezapočítávají.
+        cacheops sestavuje invalidační schéma (DNF) jako kartézský součin hodnot napříč
+        vícehodnotovými filtry, takže rozsáhlé kombinace vedou k milionům konjunkcí a
+        k vyčerpání paměti (OOM) při výpočtu ``cacheops.tree.dnfs``. Motivací jsou hluboké
+        M2M filtry (předměty a objekty komponent), kontrola ale platí pro libovolný
+        vícehodnotový GET parametr.
+
+        Jako míra slouží součin počtů hodnot vícehodnotových GET parametrů. Jde
+        o konzervativní odhad řádové velikosti DNF na základě multiplicity GET parametrů,
+        nikoli o přímé měření struktury querysetu. Předpokládá se, že filtry odesílají
+        každou hodnotu jako samostatný výskyt parametru (``?pole=1&pole=2``), jak to dělá
+        ``forms.SelectMultiple``. Filtr, který by více hodnot kódoval do jednoho parametru
+        (například oddělené čárkou), by tato kontrola nezachytila.
+
+        Do součinu se nezapočítávají parametry stránkování, řazení a CSRF token
+        (``page``, ``sort``, ``per_page``, ``csrfmiddlewaretoken``).
 
         :return: ``True`` pokud součin nepřekročí ``cache_filter_value_product_limit``.
         """
@@ -2010,12 +2018,23 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             if count > 1:
                 product *= count
                 if product > self.cache_filter_value_product_limit:
+                    logger.debug(
+                        "core.views.SearchListView._is_query_cacheable.cache_skipped",
+                        extra={
+                            "key": key,
+                            "product": product,
+                            "limit": self.cache_filter_value_product_limit,
+                        },
+                    )
                     return False
         return True
 
     def get_queryset(self):
         """
         Vrací queryset výsledků vyhledávání podle zadaných filtrů.
+
+        Cacheops cache se zapíná pouze pro filtry, které projdou kontrolou
+        ``_is_query_cacheable``. U rozsáhlých kombinací hodnot dotaz proběhne bez cache.
 
         :return: Vrací proměnná ``qs``.
         """
