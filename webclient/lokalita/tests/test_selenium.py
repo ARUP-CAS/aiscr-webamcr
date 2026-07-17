@@ -163,21 +163,12 @@ class AkceLokality(BaseSeleniumTestClass):
         """
         logger.info("AkceLokality.test_053_pridani_DJ_lokality_p_001.start")
         self.login("archeolog")
-        self.go_to_form_vybrat()
         count_old = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-L000000001").count()
+        self.goToAddress("/arch-z/lokalita/detail/X-C-L000000001")
+        self.ElementClick(By.ID, "button-add-dj")
+        self.select_dynamic_selectpicker_option("dj_typ_id", "lokalita")
+        self.select_dynamic_selectpicker_option("id_negativni_jednotka", "pozitivní")
 
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-L000000001")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")
-
-        self.ElementClick(By.LINK_TEXT, "X-C-L000000001")
-        self.ElementClick(By.CSS_SELECTOR, "#button-add-dj > .material-icons")
-        self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-2 > .text")
-
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_negativni_jednotka .filter-option-inner-inner")
-        self.ElementClick(By.ID, "bs-select-2-0")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDjSubmitButton")
 
@@ -215,21 +206,12 @@ class AkceLokality(BaseSeleniumTestClass):
         """
         logger.info("AkceLokality.test_054_pridani_DJ_lokality_n_001.start")
         self.login("archeolog")
-        self.go_to_form_vybrat()
         count_old = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-L000000001").count()
+        self.goToAddress("/arch-z/lokalita/detail/X-C-L000000001")
+        self.ElementClick(By.ID, "button-add-dj")
+        # self.select_dynamic_selectpicker_option("dj_typ_id", "lokalita")
 
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-L000000001")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")
-
-        self.ElementClick(By.LINK_TEXT, "X-C-L000000001")
-        self.ElementClick(By.CSS_SELECTOR, "#button-add-dj > .material-icons")
-        # self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
-        # self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-2 > .text")
-
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_negativni_jednotka .filter-option-inner-inner")
-        self.ElementClick(By.ID, "bs-select-2-0")
+        self.select_dynamic_selectpicker_option("id_negativni_jednotka", "pozitivní")
         try:
             with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "newDjSubmitButton")
@@ -271,28 +253,14 @@ class AkceLokality(BaseSeleniumTestClass):
         """
         logger.info("AkceLokality.test_055_pridani_komponenty_DJ_lokality_p_001.start")
         self.login("archeolog")
-        self.go_to_form_vybrat()
         count_old = Komponenta.objects.filter(
             komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-L000000002-D01"
         ).count()
-
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-L000000002")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")
-        self.ElementClick(By.LINK_TEXT, "X-C-L000000002")
-        self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_L000000002_D01 > strong")
-        self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_X-C-L000000002-D01 > .card-header .material-icons")
+        self.goToAddress("/arch-z/lokalita/detail/X-C-L000000002/dj/X-C-L000000002-D01")
+        self.ElementClick(By.ID, "add_others")
         self.ElementClick(By.LINK_TEXT, _("lokalita.templates.dj.djUpdate.moreActions.pridatKomponentu.label"))
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_obdobi .filter-option-inner-inner")
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("úně")
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.DOWN)
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
-
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_areal .filter-option-inner-inner")
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("s")
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
+        self.select_dynamic_selectpicker_option("id_obdobi", "úně")
+        self.select_dynamic_selectpicker_option("id_areal", "s")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "createCompotSubmitButton")
 
@@ -329,17 +297,10 @@ class AkceLokality(BaseSeleniumTestClass):
         """
         logger.info("AkceLokality.test_056_odeslani_lokality_p_001.start")
         self.login("archeolog")
-        self.go_to_form_vybrat()
+
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N9000579").first().stav, AZ_STAV_ZAPSANY)
-
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-N9000579")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")
-        self.ElementClick(By.LINK_TEXT, "C-N9000579")
-        self.ElementClick(By.CSS_SELECTOR, "#lokalita-odeslat > .app-controls-button-text")
-        self.wait(1)
+        self.goToAddress("/arch-z/lokalita/detail/C-N9000579")
+        self.ElementClick(By.ID, "lokalita-odeslat")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
 
@@ -378,16 +339,9 @@ class AkceLokality(BaseSeleniumTestClass):
         self.createFedoraRecord("C-DT-100000147")
         self.uploadFileToFedora(81227, "dokument/tests/resources/test.tif")
         self.uploadFileToFedora(81228, "dokument/tests/resources/test.tif")
-        self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N9000145").first().stav, AZ_STAV_ZAPSANY)
-
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-N9000145")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")
-        self.ElementClick(By.LINK_TEXT, "C-N9000145")
-        self.ElementClick(By.CSS_SELECTOR, "#lokalita-odeslat > .app-controls-button-text")
+        self.goToAddress("/arch-z/lokalita/detail/C-N9000145")
+        self.ElementClick(By.ID, "lokalita-odeslat")
         try:
             with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
@@ -472,14 +426,9 @@ class AkceLokality(BaseSeleniumTestClass):
         self.createFedoraRecord("C-DY-100000058")
         self.uploadFileToFedora(187349, "dokument/tests/resources/test.tif")
         self.uploadFileToFedora(63179, "dokument/tests/resources/test.tif")
-        self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000109").first().stav, AZ_STAV_ODESLANY)
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-N1000109")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")
-        self.ElementClick(By.LINK_TEXT, "C-N1000109")
-        self.ElementClick(By.CSS_SELECTOR, "#lokalita-archivovat > .material-icons")
+        self.goToAddress("/arch-z/lokalita/detail/C-N1000109")
+        self.ElementClick(By.ID, "lokalita-archivovat")
         try:
             with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
@@ -520,16 +469,9 @@ class AkceLokality(BaseSeleniumTestClass):
         self.createFedoraRecord("C-DY-100000065")
         self.uploadFileToFedora(187330, "dokument/tests/resources/test.tif")
         self.uploadFileToFedora(63104, "dokument/tests/resources/test.tif")
-        self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000003").first().stav, AZ_STAV_ODESLANY)
-
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-N1000003")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")
-        self.ElementClick(By.LINK_TEXT, "C-N1000003")
-        self.ElementClick(By.CSS_SELECTOR, "#lokalita-vratit > .app-controls-button-text")
-        self.wait(1)
+        self.goToAddress("/arch-z/lokalita/detail/C-N1000003")
+        self.ElementClick(By.ID, "lokalita-vratit")
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
         with WaitForPageLoad(self.driver):
@@ -570,15 +512,9 @@ class AkceLokality(BaseSeleniumTestClass):
         self.createFedoraRecord("C-DY-100000065")
         self.uploadFileToFedora(187330, "dokument/tests/resources/test.tif")
         self.uploadFileToFedora(63104, "dokument/tests/resources/test.tif")
-        self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000003").first().stav, AZ_STAV_ODESLANY)
-
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-N1000003")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")
-        self.ElementClick(By.LINK_TEXT, "C-N1000003")
-        self.ElementClick(By.CSS_SELECTOR, "#lokalita-vratit > .app-controls-button-text")
+        self.goToAddress("/arch-z/lokalita/detail/C-N1000003")
+        self.ElementClick(By.ID, "lokalita-vratit")
         # self.ElementClick(By.ID, "id_reason")
         # self.driver.find_element(By.ID, "id_reason").send_keys("test")
         try:
@@ -617,16 +553,9 @@ class AkceLokality(BaseSeleniumTestClass):
         logger.info("AkceLokality.test_062_vraceni_archivovane_lokality_p_001.start")
 
         self.login("archivar")
-        self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N9000593").first().stav, AZ_STAV_ARCHIVOVANY)
-
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-N9000593")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")
-        self.ElementClick(By.LINK_TEXT, "C-N9000593")
-        self.ElementClick(By.CSS_SELECTOR, "#lokalita-vratit > .app-controls-button-text")
-        self.wait(1)
+        self.goToAddress("/arch-z/lokalita/detail/C-N9000593")
+        self.ElementClick(By.ID, "lokalita-vratit")
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
         with WaitForPageLoad(self.driver):
@@ -664,15 +593,9 @@ class AkceLokality(BaseSeleniumTestClass):
         logger.info("AkceLokality.test_063_vraceni_archivovane_lokality_n_001.start")
 
         self.login("archivar")
-        self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N9000593").first().stav, AZ_STAV_ARCHIVOVANY)
-
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-N9000593")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")
-        self.ElementClick(By.LINK_TEXT, "C-N9000593")
-        self.ElementClick(By.CSS_SELECTOR, "#lokalita-vratit > .app-controls-button-text")
+        self.goToAddress("/arch-z/lokalita/detail/C-N9000593")
+        self.ElementClick(By.ID, "lokalita-vratit")
         # self.ElementClick(By.ID, "id_reason")
         # self.driver.find_element(By.ID, "id_reason").send_keys("test")
         try:
