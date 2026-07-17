@@ -552,9 +552,9 @@ class ProjektFilter(GeomIntersectsFilterMixin, HistorieFilter, KatastrFilterMixi
                 queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
             if "poznamka__icontains" in historie:
                 queryset_history &= Q(historie__historie__poznamka__icontains=historie["poznamka__icontains"])
-            queryset = queryset.filter(queryset_history)
+            queryset = queryset.filter(queryset_history).distinct()
 
-        return queryset.distinct()
+        return queryset
 
     def filter_planovane_zahajeni(self, queryset, name, value):
         """
@@ -566,20 +566,9 @@ class ProjektFilter(GeomIntersectsFilterMixin, HistorieFilter, KatastrFilterMixi
 
             :return: Vrací výsledek volání ``filter()``.
         """
-        if value.start and value.stop:
-            rng = DateRange(
-                lower=value.start.strftime("%m/%d/%Y"),
-                upper=value.stop.strftime("%m/%d/%Y"),
-            )
-        elif value.start and not value.stop:
-            rng = DateRange(
-                lower=value.start.strftime("%m/%d/%Y"),
-                upper="01/01/2100",
-            )
-        elif value.stop and not value.start:
-            rng = DateRange(lower="01/01/1900", upper=value.stop.strftime("%m/%d/%Y"))
-        else:
-            rng = DateRange(lower="01/01/1900", upper="01/01/2100")
+        lower = value.start.strftime("%Y-%m-%d") if value.start else "1900-01-01"
+        upper = value.stop.strftime("%Y-%m-%d") if value.stop else "2100-01-01"
+        rng = DateRange(lower=lower, upper=upper)
         return queryset.filter(planovane_zahajeni__overlap=rng)
 
     def filter_popisne_udaje_akce(self, queryset, name, value):

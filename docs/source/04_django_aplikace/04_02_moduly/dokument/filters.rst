@@ -16,6 +16,10 @@ Třídy
 
       Vrací dynamicky generované pole s volbami typů souborů z aktuální databáze.
 
+      Nabízí pouze typy souborů navázaných na dokument – volby, které nemá žádný
+      dokument, by ve filtru vracely prázdný výsledek. Dotaz vychází z modelu
+      ``Soubor`` (místo joinu od ``Dokument``), což je rychlejší při shodném výsledku.
+
       :return: FormField s volbami z databáze.
 
 
@@ -241,6 +245,38 @@ Třídy
       :param name: Jméno pole pro filtrování.
       :param value: Hodnota pro filtrování.
       :return: Filtrovaný QuerySet.
+
+   .. py:method:: _get_soubor_subquery()
+
+      Sestaví podmínky pro filtrování podle vlastností jednoho souboru.
+
+      Filtry typu, velikosti a počtu stran (rozsahu) se slučují do jediného korelovaného
+      poddotazu, aby všechny podmínky platily pro tentýž soubor. Bez tohoto sloučení by
+      každý filtr přidal samostatný JOIN na ``soubor`` (násobný JOIN téže tabulky), což
+      vede k rozsáhlému kartézskému součinu a k volnější sémantice (různé soubory by mohly
+      splňovat různé podmínky).
+
+      :return: Slovník podmínek pro model ``Soubor`` nebo ``None``, není-li aktivní žádný filtr.
+
+   .. py:method:: filter_soubor_noop()
+
+      Prázdný filtr pro pole vlastností souboru – vrací queryset beze změny.
+
+      Vlastní filtrování probíhá hromadně v ``filter_queryset`` přes jeden korelovaný
+      poddotaz (viz :meth:`_get_soubor_subquery`), aby nevznikal samostatný JOIN na
+      ``soubor`` pro každé pole.
+
+      :param queryset: Vstupní queryset.
+      :param name: Jméno pole filtru.
+      :param value: Hodnota filtru (ignoruje se).
+      :return: Nezměněný queryset.
+
+   .. py:method:: filter_queryset()
+
+      Filtruje queryset a slučuje filtry podle vlastností souboru do jednoho poddotazu.
+
+      :param queryset: Vstupní queryset dokumentů před filtrací.
+      :return: Filtrovaný queryset.
 
    .. py:method:: __init__()
 

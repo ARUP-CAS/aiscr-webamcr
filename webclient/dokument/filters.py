@@ -10,7 +10,7 @@ from core.models import Soubor
 from core.widgets import AutocompleteModelSelect2Multiple
 from crispy_forms.layout import HTML, Div, Layout
 from django.db import models
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.forms import NumberInput, SelectMultiple
 from django.utils.translation import gettext_lazy as _
 from django_filters import (
@@ -77,10 +77,18 @@ class SouborTypFilter(MultipleChoiceFilter):
         """
         Vrací dynamicky generované pole s volbami typů souborů z aktuální databáze.
 
+        Nabízí pouze typy souborů navázaných na dokument – volby, které nemá žádný
+        dokument, by ve filtru vracely prázdný výsledek. Dotaz vychází z modelu
+        ``Soubor`` (místo joinu od ``Dokument``), což je rychlejší při shodném výsledku.
+
         :return: FormField s volbami z databáze.
         """
-        qs = self.model._default_manager.distinct()
-        qs = qs.order_by(self.field_name).values_list(self.field_name, flat=True)
+        qs = (
+            Soubor.objects.filter(vazba__dokument_souboru__isnull=False)
+            .values_list("mimetype", flat=True)
+            .distinct()
+            .order_by("mimetype")
+        )
         self.extra["choices"] = [(o, o) for o in qs if o is not None]
         return super().field
 
@@ -382,9 +390,9 @@ class Model3DFilter(GeomIntersectsFilterMixin, HistorieFilter, FilterSet):
                 queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
             if "poznamka__icontains" in historie:
                 queryset_history &= Q(historie__historie__poznamka__icontains=historie["poznamka__icontains"])
-            queryset = queryset.filter(queryset_history)
+            queryset = queryset.filter(queryset_history).distinct()
 
-        return queryset.distinct()
+        return queryset
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
@@ -402,7 +410,7 @@ class Model3DFilter(GeomIntersectsFilterMixin, HistorieFilter, FilterSet):
             | Q(extra_data__odkaz__icontains=value)
             | Q(casti__komponenty__komponenty__objekty__poznamka__icontains=value)
             | Q(casti__komponenty__komponenty__predmety__poznamka__icontains=value)
-        )
+        ).distinct()
 
     def filter_roky(self, queryset, name, value):
         """
@@ -888,12 +896,17 @@ class DokumentFilter(Model3DFilter):
         widget=SelectMultipleSeparator(),
     )
     tvar_poznamka = CharFilter(
-        field_name="tvary__poznamka",
+        field_name="tvar__poznamka",
+        lookup_expr="icontains",
         label=_("dokument.filters.dokumentFilter.tvarPoznamka.label"),
         distinct=True,
     )
+    # Filtry na vlastnosti souboru mají prázdnou metodu (``noop``) – nefiltrují samostatně,
+    # aby nevznikal samostatný JOIN na ``soubor`` pro každý z nich. Sloučí je do jediného
+    # korelovaného poddotazu ``_get_soubor_subquery`` / ``filter_queryset``.
     soubor_typ = SouborTypFilter(
         field_name="soubory__soubory__mimetype",
+        method="filter_soubor_noop",
         label=_("dokument.filters.dokumentFilter.souborTyp.label"),
         widget=SelectMultiple(
             attrs={
@@ -907,26 +920,26 @@ class DokumentFilter(Model3DFilter):
 
     soubor_velikost_od = NumberFilter(
         field_name="soubory__soubory__size_mb",
-        lookup_expr="gte",
+        method="filter_soubor_noop",
         label=_("dokument.filters.dokumentFilter.souborVelikost.label"),
     )
 
     soubor_velikost_do = NumberFilter(
         field_name="soubory__soubory__size_mb",
-        lookup_expr="lte",
+        method="filter_soubor_noop",
         label=" ",
     )
 
     soubor_pocet_stran_od = NumberFilter(
         field_name="soubory__soubory__rozsah",
+        method="filter_soubor_noop",
         label=_("dokument.filters.dokumentFilter.souborPocetStran.label"),
-        lookup_expr="gte",
     )
 
     soubor_pocet_stran_do = NumberFilter(
         field_name="soubory__soubory__rozsah",
+        method="filter_soubor_noop",
         label=" ",
-        lookup_expr="lte",
     )
     id_AZ = CharFilter(
         method="filter_id_AZ",
@@ -1265,6 +1278,66 @@ class DokumentFilter(Model3DFilter):
 
         else:
             return queryset.distinct()
+
+    def _get_soubor_subquery(self):
+        """
+        Sestaví podmínky pro filtrování podle vlastností jednoho souboru.
+
+        Filtry typu, velikosti a počtu stran (rozsahu) se slučují do jediného korelovaného
+        poddotazu, aby všechny podmínky platily pro tentýž soubor. Bez tohoto sloučení by
+        každý filtr přidal samostatný JOIN na ``soubor`` (násobný JOIN téže tabulky), což
+        vede k rozsáhlému kartézskému součinu a k volnější sémantice (různé soubory by mohly
+        splňovat různé podmínky).
+
+        :return: Slovník podmínek pro model ``Soubor`` nebo ``None``, není-li aktivní žádný filtr.
+        """
+        cd = self.form.cleaned_data
+        conditions = {}
+        typ = cd.get("soubor_typ")
+        if typ:
+            conditions["mimetype__in"] = typ
+        velikost_od = cd.get("soubor_velikost_od")
+        if velikost_od is not None:
+            conditions["size_mb__gte"] = velikost_od
+        velikost_do = cd.get("soubor_velikost_do")
+        if velikost_do is not None:
+            conditions["size_mb__lte"] = velikost_do
+        stran_od = cd.get("soubor_pocet_stran_od")
+        if stran_od is not None:
+            conditions["rozsah__gte"] = stran_od
+        stran_do = cd.get("soubor_pocet_stran_do")
+        if stran_do is not None:
+            conditions["rozsah__lte"] = stran_do
+        return conditions or None
+
+    def filter_soubor_noop(self, queryset, name, value):
+        """
+        Prázdný filtr pro pole vlastností souboru – vrací queryset beze změny.
+
+        Vlastní filtrování probíhá hromadně v ``filter_queryset`` přes jeden korelovaný
+        poddotaz (viz :meth:`_get_soubor_subquery`), aby nevznikal samostatný JOIN na
+        ``soubor`` pro každé pole.
+
+        :param queryset: Vstupní queryset.
+        :param name: Jméno pole filtru.
+        :param value: Hodnota filtru (ignoruje se).
+        :return: Nezměněný queryset.
+        """
+        return queryset
+
+    def filter_queryset(self, queryset):
+        """
+        Filtruje queryset a slučuje filtry podle vlastností souboru do jednoho poddotazu.
+
+        :param queryset: Vstupní queryset dokumentů před filtrací.
+        :return: Filtrovaný queryset.
+        """
+        soubor_conditions = self._get_soubor_subquery()
+        queryset = super().filter_queryset(queryset)
+        if soubor_conditions:
+            soubory = Soubor.objects.filter(vazba__dokument_souboru=OuterRef("pk"), **soubor_conditions)
+            queryset = queryset.filter(Exists(soubory))
+        return queryset
 
     def __init__(self, *args, **kwargs):
         """

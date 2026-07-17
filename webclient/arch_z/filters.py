@@ -798,9 +798,9 @@ class AkceFilter(ArchZaznamFilter):
         """
         if value:
             if name == "vb_niveleta_od":
-                queryset = queryset.extra(where=["ST_Z(geom) >= %s"], params=[value])
+                queryset = queryset.extra(where=['ST_Z("vyskovy_bod"."geom") >= %s'], params=[value])
             if name == "vb_niveleta_do":
-                queryset = queryset.extra(where=["ST_Z(geom) <= %s"], params=[value])
+                queryset = queryset.extra(where=['ST_Z("vyskovy_bod"."geom") <= %s'], params=[value])
         return queryset
 
     def filter_queryset(self, queryset):
@@ -814,10 +814,12 @@ class AkceFilter(ArchZaznamFilter):
         logger.debug("arch_z.filters.AkceFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(AkceFilter, self).filter_queryset(queryset)
+        needs_distinct = False
         if "vb_niveleta_od" in self.request.GET or "vb_niveleta_do" in self.request.GET:
             queryset = queryset.filter(
                 archeologicky_zaznam__dokumentacni_jednotky_akce__adb__vyskove_body__geom__isnull=False
             )
+            needs_distinct = True
         if historie:
             queryset_history = Q(archeologicky_zaznam__historie__typ_vazby=historie["typ_vazby"])
             if "uzivatel" in historie:
@@ -841,7 +843,10 @@ class AkceFilter(ArchZaznamFilter):
                     archeologicky_zaznam__historie__historie__poznamka__icontains=historie["poznamka__icontains"]
                 )
             queryset = queryset.filter(queryset_history)
-        return queryset.distinct()
+            needs_distinct = True
+        if needs_distinct:
+            return queryset.distinct()
+        return queryset
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""

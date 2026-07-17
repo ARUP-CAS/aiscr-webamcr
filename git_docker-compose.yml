@@ -158,7 +158,7 @@ services:
       - git-reverse-proxy
 
   prometheus:
-    image: prom/prometheus:v3.12.0
+    image: prom/prometheus:v3.13.1
     volumes:
       - ./prometheus:/etc/prometheus
     networks:
@@ -174,7 +174,7 @@ services:
       - "--web.enable-admin-api"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:9.4.2
+    image: docker.elastic.co/logstash/logstash:9.4.3
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
     volumes:
@@ -190,7 +190,7 @@ services:
       - logstash_elastic_host
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.4.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.4.3
     hostname: elasticsearch
     environment:
       - discovery.type=single-node
@@ -216,7 +216,7 @@ services:
           memory: "2G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:9.4.2
+    image: docker.elastic.co/kibana/kibana:9.4.3
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200

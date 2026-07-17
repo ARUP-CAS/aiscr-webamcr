@@ -24,7 +24,7 @@ Třídy
 
       Vrací ident cely link.
 
-      :return: Vrací hodnotu podle větve zpracování.
+      :return: HTML odkaz přes ``format_html`` (``SafeString``), nebo ``None`` pokud chybí URL/ident.
 
 
 .. py:class:: ModelWithMetadata
@@ -127,7 +127,7 @@ Funkce
 
 .. py:function:: check_if_task_queued(class_name, pk, task_name)
 
-   Ověří if task queued.
+   Ověří, zda je úloha ve frontě.
 
    :param class_name: Parametr ``class_name`` předává se do volání ``warning()``, ``debug()``, ovlivňuje větvení podmínek.
    :param pk: Primární klíč zpracovávaného záznamu.

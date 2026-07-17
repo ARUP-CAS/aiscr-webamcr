@@ -24,7 +24,7 @@
             </button>
           </div>
           <div class="app-middle text-muted search-sum-text">
-            {{search_sum}}: <strong id="pocet_zaznamu" >{{ table.rows|length }}</strong>
+            {{search_sum}}: <strong id="pocet_zaznamu" >{{ table.paginator.count }}</strong>
           </div>
           <div class="app-right">
             <div class="btn-group" role="group">
@@ -210,7 +210,7 @@ $('#export-progress-modal').on('show.bs.modal', (event) => {
     const email = rawEmail.replace("@", "(at)");
     const url = triggerElement.data('url') + `&export_suffix_string=${export_suffix_string}`;
     const redis_variable_name = `export_${email}_${export_suffix_string}`
-    {% if table.rows|length >= 50000 %}
+    {% if table.paginator.count >= 50000 %}
         const paragraph = $("#modal-confirm-download-par");
         paragraph.next('a.source-link').remove();
         const modal_link = $('<a>')
@@ -231,7 +231,7 @@ $('#export-progress-modal').on('show.bs.modal', (event) => {
         }
     {% endif %}
     $('#export-progress-modal').data('sourceUrl', url);
-    {% if table.rows|length < 50000 %}
+    {% if table.paginator.count < 50000 %}
         manageExportDownload(url, redis_variable_name);
     {% endif %}
 })
