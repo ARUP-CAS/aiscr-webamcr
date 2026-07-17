@@ -1,6 +1,7 @@
 # flake8: noqa: E201, E202
 import asyncio
 import concurrent.futures
+import logging
 import re
 import unicodedata
 from urllib.parse import quote
@@ -21,6 +22,8 @@ from dokument.models import Dokument
 from fedora_management.views import AdminRecordProcessingView
 from pas.models import SamostatnyNalez
 from pid.exceptions import DoiWriteError
+
+logger = logging.getLogger(__name__)
 
 
 class ApiView(autocomplete.Select2ListView):
@@ -517,7 +520,7 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
         """
         Asynchronně ověří výrokem ``P31``, zda je položka Wikidata člověk.
 
-        Neúspěšná odpověď nebo chyba spojení se vyhodnotí jako ``False``.
+        Neúspěšná odpověď nebo chyba spojení se zaloguje a vyhodnotí jako ``False``.
 
         :param client: Sdílená instance ``httpx.AsyncClient``.
         :param item_id: Identifikátor položky (např. ``Q7186``).
@@ -526,13 +529,19 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
         url = f"{cls.API_URL}/entities/items/{item_id}/statements"
         try:
             response = await client.get(url, params={"property": cls.INSTANCE_OF_PROPERTY})
-        except httpx.RequestError:
+        except httpx.RequestError as err:
+            logger.warning("pid.views.WikiDataAutocompleteView._item_is_human.request_error", extra={"error": err})
             return False
         if response.status_code != 200:
+            logger.warning(
+                "pid.views.WikiDataAutocompleteView._item_is_human.http_error",
+                extra={"status_code": response.status_code, "item_id": item_id},
+            )
             return False
         try:
             payload = response.json()
         except ValueError:
+            logger.warning("pid.views.WikiDataAutocompleteView._item_is_human.invalid_json", extra={"item_id": item_id})
             return False
         if not isinstance(payload, dict):
             return False
@@ -543,7 +552,8 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
         """
         Asynchronně vyhledá položky koncovým bodem ``/search/items`` v jednom jazyce.
 
-        Chyby spojení (``httpx.RequestError``) se propagují volajícímu.
+        Chyby spojení a neplatné odpovědi se zalogují a vrátí se prázdný seznam,
+        aby výpadek Wikidata neshodil uživatelské našeptávání.
 
         :param client: Sdílená instance ``httpx.AsyncClient``.
         :param q: Vyhledávací dotaz.
@@ -551,12 +561,25 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
         :return: Seznam nalezených položek tak, jak je vrací API.
         """
         params = {"q": q, "language": language, "limit": cls.SEARCH_LIMIT}
-        response = await client.get(f"{cls.API_URL}/search/items", params=params)
+        try:
+            response = await client.get(f"{cls.API_URL}/search/items", params=params)
+        except httpx.RequestError as err:
+            logger.warning("pid.views.WikiDataAutocompleteView._search_language.request_error", extra={"error": err})
+            return []
         if response.status_code != 200:
+            logger.warning(
+                "pid.views.WikiDataAutocompleteView._search_language.http_error",
+                extra={"status_code": response.status_code, "language": language},
+            )
             return []
         try:
             payload = response.json()
         except ValueError:
+            logger.warning(
+                "pid.views.WikiDataAutocompleteView._search_language.invalid_json", extra={"language": language}
+            )
+            return []
+        if not isinstance(payload, dict):
             return []
         results = payload.get("results", [])
         return results if isinstance(results, list) else []
@@ -616,13 +639,21 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
                 params={"property": cls.INSTANCE_OF_PROPERTY},
                 timeout=cls.HTTP_TIMEOUT,
             )
-        except requests.RequestException:
+        except requests.RequestException as err:
+            logger.warning("pid.views.WikiDataAutocompleteView._get_item_result.request_error", extra={"error": err})
             return []
         if statements_response.status_code != 200:
+            logger.warning(
+                "pid.views.WikiDataAutocompleteView._get_item_result.http_error",
+                extra={"status_code": statements_response.status_code, "item_id": item_id},
+            )
             return []
         try:
             statements = statements_response.json()
         except ValueError:
+            logger.warning(
+                "pid.views.WikiDataAutocompleteView._get_item_result.invalid_json", extra={"item_id": item_id}
+            )
             return []
         if not isinstance(statements, dict):
             return []
@@ -632,7 +663,10 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
             labels_response = requests.get(
                 f"{cls.API_URL}/entities/items/{item_id}/labels", headers=cls.HEADERS, timeout=cls.HTTP_TIMEOUT
             )
-        except requests.RequestException:
+        except requests.RequestException as err:
+            logger.warning(
+                "pid.views.WikiDataAutocompleteView._get_item_result.labels_request_error", extra={"error": err}
+            )
             labels_response = None
         labels = {}
         if labels_response is not None and labels_response.status_code == 200:
@@ -648,13 +682,34 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
         return [[item_id, item_id]]
 
     @classmethod
+    def check_availability(cls):
+        """
+        Ověří dostupnost Wikibase REST API jediným levným požadavkem.
+
+        Slouží jako kontrola dostupnosti (např. pro ``OsobaAdminForm``), aniž by se
+        spouštělo plné vyhledávání. Na rozdíl od ``api_call`` chyby nepolyká — při
+        nedostupnosti API vyhazuje výjimku.
+
+        :return: ``None``.
+        :raises requests.RequestException: Pokud je API nedostupné nebo vrátí chybový stav.
+        """
+        response = requests.get(
+            f"{cls.API_URL}/entities/items/{cls.HUMAN_ITEM_QID}/statements",
+            headers=cls.HEADERS,
+            params={"property": cls.INSTANCE_OF_PROPERTY},
+            timeout=cls.HTTP_TIMEOUT,
+        )
+        response.raise_for_status()
+
+    @classmethod
     def api_call(cls, q, use_cache=False):
         """
         Vyhledá osoby ve Wikidata pomocí Wikibase REST API.
 
-        Dotaz s identifikátorem položky (``Q123`` nebo URL entity) se ověří koncovým
-        bodem ``/entities/items``; ostatní dotazy prohledávají popisky koncovým bodem
-        ``/search/items``. Výsledky jsou vždy omezeny na osoby (``P31`` = ``Q5``).
+        Dotaz tvořený pouze identifikátorem položky (``Q123``, případně jako URL entity)
+        se ověří koncovým bodem ``/entities/items``; ostatní dotazy prohledávají popisky
+        koncovým bodem ``/search/items``. Výsledky jsou vždy omezeny na osoby
+        (``P31`` = ``Q5``). Chyby spojení se logují a vrací se prázdný seznam.
 
         :param q: Vyhledávací dotaz (jméno, identifikátor ``Q`` nebo URL entity).
         :param use_cache: Parametr se kvůli shodné signatuře s ``ApiView.api_call`` předává,
@@ -663,10 +718,11 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
         """
         if not q:
             return []
+        q = q.strip()
         if q.startswith("https://www.wikidata.org/entity/"):
             q = q.replace("https://www.wikidata.org/entity/", "")
-        if qid_match := cls.QID_REGEX.search(q):
-            return cls._get_item_result(qid_match.group(0))
+        if cls.QID_REGEX.fullmatch(q):
+            return cls._get_item_result(q)
         q = unicodedata.normalize("NFKD", q)
         return async_to_sync(cls._search_humans)(q)
 

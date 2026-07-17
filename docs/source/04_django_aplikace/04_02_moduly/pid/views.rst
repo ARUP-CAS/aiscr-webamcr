@@ -180,13 +180,25 @@ Třídy
       :param item_id: Identifikátor položky (např. ``Q7186``).
       :return: Seznam s jedním [WikiData ID, jméno] párem, nebo prázdný seznam.
 
+   .. py:method:: check_availability()
+
+      Ověří dostupnost Wikibase REST API jediným levným požadavkem.
+
+      Slouží jako kontrola dostupnosti (např. pro ``OsobaAdminForm``), aniž by se
+      spouštělo plné vyhledávání. Na rozdíl od ``api_call`` chyby nepolyká — při
+      nedostupnosti API vyhazuje výjimku.
+
+      :return: ``None``.
+      :raises requests.RequestException: Pokud je API nedostupné nebo vrátí chybový stav.
+
    .. py:method:: api_call()
 
       Vyhledá osoby ve Wikidata pomocí Wikibase REST API.
 
-      Dotaz s identifikátorem položky (``Q123`` nebo URL entity) se ověří koncovým
-      bodem ``/entities/items``; ostatní dotazy prohledávají popisky koncovým bodem
-      ``/search/items``. Výsledky jsou vždy omezeny na osoby (``P31`` = ``Q5``).
+      Dotaz tvořený pouze identifikátorem položky (``Q123``, případně jako URL entity)
+      se ověří koncovým bodem ``/entities/items``; ostatní dotazy prohledávají popisky
+      koncovým bodem ``/search/items``. Výsledky jsou vždy omezeny na osoby
+      (``P31`` = ``Q5``). Chyby spojení se logují a vrací se prázdný seznam.
 
       :param q: Vyhledávací dotaz (jméno, identifikátor ``Q`` nebo URL entity).
       :param use_cache: Parametr se kvůli shodné signatuře s ``ApiView.api_call`` předává,
