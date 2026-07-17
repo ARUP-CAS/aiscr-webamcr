@@ -310,9 +310,12 @@
             });
     }
 
-    // PIAN (akce/lokalita): skutečná geometrie (polygon/linie/bod) jako v náhledu akce + pin v repr. bodě
-    function renderPian(wkt, identCely, target) {
+    // PIAN (akce/lokalita): skutečná geometrie (polygon/linie/bod) jako v náhledu akce + pin v repr. bodě.
+    // Popis i chování po kliknutí je shodné s mapou v detailu: tooltip „ident (přesnost)“ a popup se
+    // seznamem dokumentačních jednotek, který dotáhne onMarkerClick z mapa_basic_functions.js.
+    function renderPian(wkt, identCely, target, presnost) {
         var style = { color: "rgb(151, 0, 156)" };
+        var popis = presnost ? identCely + " (" + presnost + ")" : identCely;
         var shape = null;
         if (wkt.indexOf("POLYGON") !== -1) {
             shape = L.polygon(wktPartToLatLngs(wkt, "(("), style);
@@ -320,15 +323,24 @@
             shape = L.polyline(wktPartToLatLngs(wkt, "("), style);
         }
         if (shape) {
-            shape.bindTooltip(identCely, { sticky: true }).bindPopup(popupLink("pian", identCely)).addTo(target);
+            bindPianPopup(shape.bindTooltip(popis, { sticky: true }), identCely).addTo(target);
         }
         var latlng = geomToLatLng(wkt);
         if (latlng) {
-            L.marker(latlng, { icon: pointIconForType("pian") })
-                .bindTooltip(identCely, { sticky: true })
-                .bindPopup(popupLink("pian", identCely))
-                .addTo(target);
+            bindPianPopup(
+                L.marker(latlng, { icon: pointIconForType("pian") }).bindTooltip(popis, { sticky: true }),
+                identCely
+            ).addTo(target);
         }
+    }
+
+    // popup s dokumentačními jednotkami PIANu (stejně jako v detailní mapě); bez onMarkerClick
+    // zůstane aspoň odkaz na samotný PIAN
+    function bindPianPopup(layer, identCely) {
+        if (typeof onMarkerClick === "function") {
+            return layer.bindPopup("").on("click", onMarkerClick.bind(null, identCely));
+        }
+        return layer.bindPopup(popupLink("pian", identCely));
     }
 
     function renderDetail(points) {
@@ -338,7 +350,7 @@
                 return;
             }
             if (i.type === "pian") {
-                renderPian(i.geom, i.ident_cely, target);
+                renderPian(i.geom, i.ident_cely, target, i.presnost);
             } else {
                 renderPoint(i.geom, i.ident_cely, i.type, target);
             }
@@ -403,18 +415,30 @@
                 }
                 return;
             }
+            // nejdřív parsujeme a teprve po úspěchu maž vrstvy – ať při chybné odpovědi
+            // nezůstane mapa prázdná; boundsLock resetujeme, aby šlo načtení zopakovat
+            var res;
+            try {
+                res = JSON.parse(this.responseText);
+            } catch (e) {
+                boundsLock = null;
+                if (typeof console !== "undefined") {
+                    console.error("mapa_filter: odpověď serveru se nepodařilo zpracovat", e);
+                }
+                return;
+            }
             try {
                 clearDataLayers();
                 map.removeLayer(heatLayer);
-                var res = JSON.parse(this.responseText);
                 if (res.algorithm === "detail") {
                     renderDetail(res.points || []);
                 } else {
                     renderHeat(res.heat || []);
                 }
             } catch (e) {
+                boundsLock = null;
                 if (typeof console !== "undefined") {
-                    console.error("mapa_filter: chyba při zpracování dat", e);
+                    console.error("mapa_filter: chyba při vykreslování dat", e);
                 }
             }
         };

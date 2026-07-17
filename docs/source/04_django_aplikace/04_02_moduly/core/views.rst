@@ -903,6 +903,16 @@ Funkce
 
    :return: Vrací výsledek volání ``JsonResponse()``.
 
+.. py:function:: normalize_pian_presnost(points)
+
+   Přepočte id hesláře přesnosti PIANu na pořadové číslo 1–4, stejně jako to dělá
+   :func:`core.utils.get_pian_from_envelope` pro mapy v detailu záznamu. Klient hodnotu ukazuje
+   v popisku PIANu (``ident (přesnost)``).
+
+   :param points: Seznam slovníků s klíčem ``presnost`` (id hesláře).
+
+   :return: Vrací týž seznam s přepočtenou hodnotou ``presnost``.
+
 .. py:function:: pian_geom_expression(geom_field)
 
    Vrací výraz pro geometrii PIANu posílanou do mapy jako WKT.

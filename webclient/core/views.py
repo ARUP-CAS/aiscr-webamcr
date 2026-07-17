@@ -2176,6 +2176,27 @@ def post_ajax_get_pas_and_pian_limit(request):
             return JsonResponse({"heat": [], "algorithm": "heat", "count": len(heats)}, status=200)
 
 
+def normalize_pian_presnost(points):
+    """
+    Přepočte id hesláře přesnosti PIANu na pořadové číslo 1–4, stejně jako to dělá
+    :func:`core.utils.get_pian_from_envelope` pro mapy v detailu záznamu. Klient hodnotu ukazuje
+    v popisku PIANu (``ident (přesnost)``).
+
+    :param points: Seznam slovníků s klíčem ``presnost`` (id hesláře).
+
+        :return: Vrací týž seznam s přepočtenou hodnotou ``presnost``.
+    """
+    from heslar.hesla import HESLAR_PIAN_PRESNOST
+    from heslar.models import Heslar
+
+    prvni = Heslar.objects.filter(nazev_heslare__id=HESLAR_PIAN_PRESNOST).first()
+    offset = (prvni.id - 1) if prvni else 0
+    for point in points:
+        if point.get("presnost") is not None:
+            point["presnost"] -= offset
+    return points
+
+
 def pian_geom_expression(geom_field):
     """
     Vrací výraz pro geometrii PIANu posílanou do mapy jako WKT.
@@ -2238,7 +2259,13 @@ def post_ajax_get_list_map_data(request, layer):
         return JsonResponse({"points": [], "algorithm": "detail", "count": 0}, status=200)
 
     # U projektů posíláme i stav, aby je klient rozdělil do vrstev „Projekty - P1 … P7-P8“ jako v detailu.
-    extra_fields = ("stav",) if layer == "projekt" else ()
+    # U PIANů posíláme přesnost kvůli popisku „ident (přesnost)“, shodně s mapou v detailu záznamu.
+    if layer == "projekt":
+        extra_fields = ("stav",)
+    elif type_label == "pian":
+        extra_fields = ("presnost",)
+    else:
+        extra_fields = ()
     points_qs = base_qs.values("ident_cely", *extra_fields, type=Value(type_label)).annotate(
         geom=pian_geom_expression(geom_field) if type_label == "pian" else AsWKT(geom_field)
     )
@@ -2251,6 +2278,8 @@ def post_ajax_get_list_map_data(request, layer):
     # Jediný dotaz omezený prahem: vejdeme-li se pod limit, jde o detail, jinak se přepne na heatmapu.
     points = list(points_qs[:LIMIT_PRVKU_ZOBRAZENI_HEATMAP])
     if len(points) < LIMIT_PRVKU_ZOBRAZENI_HEATMAP:
+        if type_label == "pian":
+            points = normalize_pian_presnost(points)
         return JsonResponse({"points": points, "algorithm": "detail", "count": len(points)}, status=200)
 
     if layer == "pas":

@@ -75,8 +75,17 @@ function getLocation() {
 }
 
 //zobrazení DJ které daný pian obsahují
+// addLogText je definován jen v mapa_arch_z.js; na ostatních mapách (PAS, mapový filtr) chybí,
+// takže se na něj odkazujeme jen když existuje – jinak by klik na PIAN skončil ReferenceError
+// a popup by zůstal prázdný.
+function onMarkerClickLog(text) {
+    if (typeof addLogText === "function") {
+        addLogText(text);
+    }
+}
+
 function onMarkerClick(ident_cely,e) {
-    addLogText("arch_z_detail_map.onMarkerClick")
+    onMarkerClickLog("arch_z_detail_map.onMarkerClick")
     const popup = e.target.getPopup();
     popup.setContent("");
     let xhr = new XMLHttpRequest();
@@ -94,7 +103,7 @@ function onMarkerClick(ident_cely,e) {
                 let link='<a href="/id/' + i.dj + '" target="_blank">' + i.dj + '</a></br>'
                 text = text + link
             } catch(e){
-                addLogText("err:"+e)
+                onMarkerClickLog("err:"+e)
             }
         })
         if(text=="") text="--"
