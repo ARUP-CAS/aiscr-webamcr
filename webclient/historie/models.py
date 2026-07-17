@@ -23,6 +23,7 @@ from core.constants import (
     POTVRZENI_EXT_ZD,
     POTVRZENI_PIAN,
     POTVRZENI_SN,
+    PREJMENOVANI_SBR,
     PRIHLASENI_PROJ,
     PROJEKT_RELATION_TYPE,
     RUSENI_PROJ,
@@ -128,6 +129,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         (VRACENI_EXT_ZD, _("historie.models.historieStav.ez.EZ-1")),
         # Soubor.
         (NAHRANI_SBR, _("historie.models.historieStav.soubor.SBR0")),
+        (PREJMENOVANI_SBR, _("historie.models.historieStav.soubor.SBR1")),
     )
 
     datum_zmeny = models.DateTimeField(

@@ -359,6 +359,55 @@ Třídy
       :param save_thumbs: Parametr ``save_thumbs`` předává se do volání ``debug()``, ovlivňuje větvení podmínek.
       :return: Textová reprezentace UID transakce.
 
+   .. py:method:: update_file_name()
+
+      Přejmenuje soubor ve Fedoře – upraví ``ebucore:filename`` u souboru i všech jeho potomků.
+
+      Potomci (distribuce a paradata jako náhledy) se zjišťují dynamicky čtením ``ldp:contains``
+      kontejneru souboru, protože jejich skutečné zastoupení nelze předem předvídat. U každého
+      potomka se v hodnotě ``ebucore:filename`` nahradí podřetězec odpovídající starému názvu bez
+      přípony za nový, takže se zachová případná odlišná přípona či dekorace potomka.
+
+      :param soubor: Přejmenovávaný soubor s atributem ``repository_uuid``.
+      :param old_nazev: Původní název souboru (včetně přípony).
+      :param new_nazev: Nový název souboru (včetně přípony).
+
+      :raises FedoraError: Vyvolá se, pokud soubor nemá ``repository_uuid``, kontejner není
+              dostupný, byla překročena maximální hloubka rekurze, nebo se nepřejmenoval ani jeden
+              potomek – aby se DB transakce rollbackla a nerozešla se s Fedorou.
+
+   .. py:method:: _rename_filenames_in_container()
+
+      Rekurzivně projde kontejner a přejmenuje ``ebucore:filename`` u všech binárních potomků.
+
+      Potomci se zjišťují dynamicky z ``ldp:contains``. Pokud potomek není binární soubor (nemá
+      ``fcr:metadata``), zanoří se do něj jako do kontejneru – tím se pokryjí i vnořené distribuce
+      a paradata (např. ``file/{soubor}/paradata/{child}``), jejichž zastoupení nelze předvídat.
+
+      :param container_url: URL kontejneru, jehož potomci se procházejí.
+      :param old_base: Původní název souboru bez přípony.
+      :param new_base: Nový název souboru bez přípony.
+      :param depth: Aktuální hloubka rekurze.
+      :return: Počet úspěšně odeslaných PATCH úprav ``ebucore:filename`` v celém podstromu.
+
+   .. py:method:: _parse_ldp_children()
+
+      Vyparsuje URL potomků (``ldp:contains``) z n-triples reprezentace kontejneru.
+
+      :param ntriples_text: Text odpovědi ve formátu n-triples.
+      :return: Seznam URL potomků.
+
+   .. py:method:: _rename_child_filename()
+
+      Upraví ``ebucore:filename`` binárního potomka, pokud jeho hodnota obsahuje starý název.
+
+      :param child_url: URL potomka.
+      :param old_base: Původní název souboru bez přípony.
+      :param new_base: Nový název souboru bez přípony.
+      :return: Dvojice ``(is_binary, patch_count)`` – ``is_binary`` je ``True`` pro binární soubor
+          (má ``fcr:metadata``), ``False`` pro kontejner (volající se do něj má zanořit);
+          ``patch_count`` je počet odeslaných úprav ``ebucore:filename``.
+
    .. py:method:: delete_binary_file()
 
       Odstraní binary file.

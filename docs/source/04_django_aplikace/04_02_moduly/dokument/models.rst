@@ -398,6 +398,10 @@ Funkce
 
    Funkce pro získaní správného jména souboru.
 
+   První soubor dostane základní název bez písmene (``{ident}.{ext}``), další se přidělují navýšením
+   podle nejvyššího obsazeného písmenného suffixu (``A`` … ``Z``). Toto výchozí chování se záměrně
+   nemění – uvolnění či změnu pozice (včetně základního slotu) řeší přejmenování souboru.
+
    :param dokument: Parametr ``dokument`` předává se do volání ``debug()``, ``filter()``, pracuje se s atributy ``ident_cely``, ``soubory``, vstupuje do návratové hodnoty.
    :param filename: Parametr ``filename`` se předává do volání ``splitext()``, vstupuje do návratové hodnoty.
    :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.

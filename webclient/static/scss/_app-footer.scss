@@ -2,12 +2,193 @@
 
 footer {
   .app-footer-wrapper {
+    @extend .p-3;
     background-color: $app-footer-bottom-bg;
     color: $gray-600;
 
     a {
       @include setLinkColor($gray-800, d, 20);
       font-size: .8rem;
+    }
+
+    img {
+      vertical-align: middle;
+    }
+  }
+
+  .app-footer-logos-container {
+    margin-bottom: $spacer-3;
+  }
+
+  .app-footer-logos-toggle-wrapper {
+    margin-bottom: $spacer-2;
+
+    .app-footer-logos-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      color: $gray-700;
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: .8rem;
+      cursor: pointer;
+      line-height: 1;
+
+
+      &:hover {
+        color: darken($gray-700, 20%);
+
+        #app-footer-logos-toggle-text {
+          text-decoration: underline;
+        }
+
+        #app-footer-logos-toggle-icon {
+          text-decoration: none;
+        }
+      }
+
+      .material-icons {
+        @include setIcon($size: 18, $position: middle);
+      }
+    }
+  }
+
+  .app-footer-logos-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 2rem;
+    transition: max-height 0.3s ease-out;
+    overflow: hidden;
+
+    &.collapsed {
+      max-height: 0; // matches collapseAll() inline maxHeight; hide until expand
+    }
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      flex: 0 0 auto;
+      max-width: 100%;
+    }
+
+    .app-footer-logo {
+      max-width: 100%;
+      object-fit: contain;
+    }
+
+    .app-logo-re3 {
+      height: 44px;
+    }
+
+    .app-logo-eu,
+    .app-logo-msmt,
+    .app-logo-avcr,
+    .app-logo-arub,
+    .app-logo-aru,
+    .app-logo-ais,
+    .app-logo-vvi {
+      filter: grayscale(1) brightness(0);
+      opacity: .62;
+    }
+
+    .app-logo-eu,
+    .app-logo-msmt,
+    .app-logo-arub {
+      height: 34px;
+    }
+
+    .app-logo-avcr,
+    .app-logo-aru,
+    .app-logo-vvi {
+      height: 39px;
+    }
+
+    .app-logo-ais {
+      height: 49px;
+    }
+  }
+
+  .app-footer-info-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: $spacer-2;
+    row-gap: $spacer-2;
+    font-size: .8rem;
+
+    .app-footer-info-item {
+      display: inline-flex;
+      align-items: center;
+      flex: 0 0 auto;
+      gap: .25rem;
+      min-height: 24px;
+    }
+
+    small {
+      font-size: .8rem;
+    }
+
+    .app-pipe {
+      align-self: center;
+      flex: 0 0 auto;
+      height: 1rem;
+      margin: 0;
+    }
+
+    .app-footer-icon-link {
+      display: inline-flex;
+      align-items: center;
+      color: $gray-800;
+      line-height: 1;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+
+      &:hover {
+        color: darken($gray-800, 20%);
+        text-decoration: underline;
+      }
+
+      .material-icons {
+        @include setIcon($size: 20, $position: sub);
+      }
+    }
+
+    .app-logo-cc {
+      height: 18px;
+    }
+  }
+
+  @media (max-width: 575px) {
+    .app-footer-logos-wrapper {
+      gap: $spacer-3;
+
+      .app-logo-re3 {
+        height: 39px;
+      }
+
+      .app-logo-eu,
+      .app-logo-msmt,
+      .app-logo-arub {
+        height: 30px;
+      }
+
+      .app-logo-avcr,
+      .app-logo-aru,
+      .app-logo-vvi {
+        height: 34px;
+      }
+
+      .app-logo-ais {
+        height: 43px;
+      }
+    }
+
+    .app-footer-info-wrapper {
+      row-gap: $spacer-2;
     }
   }
 }
