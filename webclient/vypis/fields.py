@@ -993,7 +993,7 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
         if aktivity:
             third_part = f" ({'; '.join([str(a) for a in aktivity])})"
         return format_html(
-            "<span class='ps-0'>{} {} - {}{} - {}{}</span>",
+            "<span class='ps-0'>{}&nbsp;{}&nbsp;-&nbsp;{}{}&nbsp;-&nbsp;{}{}</span>",
             self.name,
             getattr(instance, self.accessor[0]),
             obdobi,
