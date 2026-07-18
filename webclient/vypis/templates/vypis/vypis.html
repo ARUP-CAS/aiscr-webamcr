@@ -25,16 +25,21 @@
   {% endif %}
 <div>
     <div class="row" id="title_row">
-        <div class="col-8">
+        <div class="col-7">
             <h1>{{title}}</h1>
         </div>
-        <div class="col-4 d-print-none align-self-center no-export">
+        <div class="col-2"></div>
+        <div class="col-3 d-print-none align-self-center no-export">
             <div class="d-flex align-items-center justify-content-end gap-2">
                 <div class="form-check-reverse form-switch mb-0">
                     <input class="form-check-input" type="checkbox" id="simple-view-toggle" onchange="toggleSimpleView()"
                         aria-label="{% trans 'vypis.templates.vypis.simple_view.label' %}"
                         data-simple-label="{% trans 'vypis.templates.vypis.simple_view.label' %}"
-                        data-full-label="{% trans 'vypis.templates.vypis.full_view.label' %}">
+                        data-full-label="{% trans 'vypis.templates.vypis.full_view.label' %}"
+                        title="{% trans 'vypis.templates.vypis.simple_view.label' %}"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        data-bs-trigger="hover">
                     <label class="form-check-label simple-view-label" for="simple-view-toggle" id="simple-view-toggle-label">
                         {% trans 'vypis.templates.vypis.simple_view.label' %}
                     </label>
@@ -55,4 +60,15 @@
 </div>
 {% endblock %}
 
-{% block script %}{% endblock %}
+{% block script %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tooltipTriggerList = [].slice.call(
+        document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    );
+    tooltipTriggerList.forEach(function (el) {
+        new bootstrap.Tooltip(el);
+    });
+});
+</script>
+{% endblock %}

@@ -8946,6 +8946,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (attributes.class && attributes.class.includes('soubor')) {
                         tagName = tagName + '.soubor';
                     }
+                    if (attributes.class && attributes.class.includes('dok_zaznam') && attributes.class.includes('content')) {
+                        tagName = tagName + '.dok_zaznam';
+                    }
                     allowedTag = this.getAllowedTag(tagName);
 
                     if (allowedTag) {
@@ -9004,6 +9007,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     opening: 'div',
                     openingRtf: '',
                     closing: '/div',
+                    closingRtf: ''
+                },
+                {
+                    opening: 'div.dok_zaznam',
+                    openingRtf: '\\\'20',
+                    closing: '/div.dok_zaznam',
                     closingRtf: ''
                 },
                 {
@@ -9242,9 +9251,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 {
                     opening: 'div.sub-header',
-                    openingRtf: '{\\pard{\\b',
+                    openingRtf: '{\\pard',
                     closing: '/div.sub-header',
-                    closingRtf: '}\\sb70\\par}'
+                    closingRtf: '\\sb70\\par}'
                 },
             ];
 

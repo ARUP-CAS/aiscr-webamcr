@@ -17,6 +17,7 @@
 
         label.textContent = simpleViewEnabled ? fullLabel : simpleLabel;
         toggle.setAttribute('aria-label', simpleViewEnabled ? fullLabel : simpleLabel);
+        toggle.setAttribute('data-bs-original-title', simpleViewEnabled ? fullLabel : simpleLabel);
         toggle.checked = simpleViewEnabled;
 
         document.querySelectorAll('#app-wrapper .not-simple').forEach((section) => {
