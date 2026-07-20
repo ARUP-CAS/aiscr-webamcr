@@ -2753,34 +2753,44 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
         if len(dokument_ids) > 0:
             fedora_transaction = zaznam.create_transaction(request.user)
             try:
-                for dokument_id in dokument_ids:
-                    dokument = get_object_or_404(Dokument, id=dokument_id)
-                    dokument.active_transaction = fedora_transaction
-                    relace = casti_zaznamu.filter(dokument__id=dokument_id)
-                    if not relace.exists():
-                        dc_ident = get_cast_dokumentu_ident(dokument)
-                        if isinstance(zaznam, ArcheologickyZaznam):
-                            dc = DokumentCast(
-                                archeologicky_zaznam=zaznam,
-                                dokument=dokument,
-                                ident_cely=dc_ident,
+                # Deterministické pořadí zamykání – dvě souběžné dávky sdílející dokumenty
+                # by při opačném pořadí jinak mohly na select_for_update uváznout (deadlock).
+                for dokument_id in sorted(dokument_ids):
+                    with transaction.atomic():
+                        # Zámek řádku dokumentu serializuje souběžné připojení téhož dokumentu –
+                        # jinak oba requesty spočítají v get_cast_dokumentu_ident stejné pořadové
+                        # číslo části a druhý insert spadne na unique constraint (IntegrityError, #4141).
+                        dokument = get_object_or_404(Dokument.objects.select_for_update(), id=dokument_id)
+                        dokument.active_transaction = fedora_transaction
+                        relace = casti_zaznamu.filter(dokument__id=dokument_id)
+                        if not relace.exists():
+                            dc_ident = get_cast_dokumentu_ident(dokument)
+                            if isinstance(zaznam, ArcheologickyZaznam):
+                                dc = DokumentCast(
+                                    archeologicky_zaznam=zaznam,
+                                    dokument=dokument,
+                                    ident_cely=dc_ident,
+                                )
+                            else:
+                                dc = DokumentCast(projekt=zaznam, dokument=dokument, ident_cely=dc_ident)
+                            dc.active_transaction = fedora_transaction
+                            dc.save()
+                            dokument.save()
+                            logger.debug(
+                                "dokument.views.pripojit.pripojit",
+                                extra={"value": debug_name, "zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
+                            )
+                            messages.add_message(
+                                request, messages.SUCCESS, f"{dokument.ident_cely} {DOKUMENT_USPESNE_PRIPOJEN}"
                             )
                         else:
-                            dc = DokumentCast(projekt=zaznam, dokument=dokument, ident_cely=dc_ident)
-                        dc.active_transaction = fedora_transaction
-                        dc.save()
-                        dokument.save()
-                        logger.debug(
-                            "dokument.views.pripojit.pripojit",
-                            extra={"value": debug_name, "zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
-                        )
-                        messages.add_message(
-                            request, messages.SUCCESS, f"{dokument.ident_cely} {DOKUMENT_USPESNE_PRIPOJEN}"
-                        )
-                    else:
-                        messages.add_message(
-                            request, messages.ERROR, f"{dokument.ident_cely} {DOKUMENT_JIZ_BYL_PRIPOJEN}"
-                        )
+                            messages.add_message(
+                                request, messages.ERROR, f"{dokument.ident_cely} {DOKUMENT_JIZ_BYL_PRIPOJEN}"
+                            )
+            except FedoraError:
+                # Souběžná úprava téhož záznamu (Fedora 409) apod. – necháme probublat do
+                # dekorátoru handle_fedora_error, který vrátí čistou odpověď a zrolluje transakci.
+                raise
             except Exception as err:
                 logger.error("dokument.views.pripojit.error", extra={"error": err, "ident_cely": dokument.ident_cely})
                 transaction.set_rollback(True)
