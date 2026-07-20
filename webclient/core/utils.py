@@ -1275,13 +1275,11 @@ class SearchTable(ColumnShiftTableBootstrap4):
 
             :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
         """
+        from core.models import prvni_soubor_dle_nazvu
         from pas.models import SamostatnyNalez
 
         record: SamostatnyNalez
-        if record.soubory.soubory.count() > 0:
-            soubor = record.soubory.soubory.first()
-        else:
-            soubor = None
+        soubor = prvni_soubor_dle_nazvu(record.soubory.soubory.all())
         if soubor is not None:
             from core.models import Soubor
 

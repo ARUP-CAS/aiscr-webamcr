@@ -45,7 +45,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.models import Permissions as p
-from core.models import check_permissions
+from core.models import check_permissions, soubor_nazev_razeni_klic
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.utils import TwoQueryPaginator, get_cadastre_from_point, get_cadastre_from_point_with_geometry
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
@@ -104,7 +104,7 @@ def get_detail_context(sn, request):
     context["history_dates"] = get_history_dates(sn.historie, request.user)
     context["show"] = get_detail_template_shows(sn, request.user)
     if sn.soubory:
-        context["soubory"] = sorted(sn.soubory.soubory.all(), key=lambda x: (x.nazev.replace(".", "0"), x.nazev))
+        context["soubory"] = sorted(sn.soubory.soubory.all(), key=soubor_nazev_razeni_klic)
     else:
         context["soubory"] = None
     context["app"] = "pas"

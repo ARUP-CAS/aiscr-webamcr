@@ -12,7 +12,15 @@
   .app-content-wrapper {
 
     .simple-view-label {
-      word-break: break-word;
+      white-space: normal;
+      word-break: normal;
+      overflow-wrap: break-word;
+    }
+
+    @media (max-width: 649.98px) {
+      .simple-view-label {
+        display: none;
+      }
     }
 
     button {

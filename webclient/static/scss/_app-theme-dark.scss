@@ -23,17 +23,6 @@ body.app-dark-theme {
     color: $body-text-dark;
     background-color: $body-bg-dark;
 
-    @include setEntityTransakceColor($dark-entities);
-
-    .app-entity-cards {
-        .col {
-
-            .app-card-entity {
-                @include setEntityColor("card", $dark-entities, null);
-            }
-        }
-    }
-
     // Sidebar
     .app-sidebar-wrapper {
         background-color: $app-sidebar-bg-dark;
@@ -143,7 +132,91 @@ body.app-dark-theme {
     }
 
     #app-page-wrapper .container-fluid.app-content-wrapper {
-        @include setEntityElementsColor($dark-entities);
+        @each $entity, $color in $dark-entities {
+            .app-entity-#{$entity} {
+                .app-table-list-wrapper {
+                    .table {
+                        thead {
+                            position: sticky;
+                            top: 0;
+                            --bs-table-bg: #{$color} !important;
+
+                            a {
+                                color: $white;
+                            }
+
+                            .white {
+                                color: $white;
+                            }
+                        }
+
+                        tbody {
+                            a {
+                                color: $color;
+                            }
+
+                            button {
+                                color: $color;
+                            }
+
+                            td {
+                                vertical-align: middle;
+                            }
+                        }
+                    }
+                }
+
+                // pagination
+                .pagination {
+                    .page-item {
+                        &.active {
+                            .page-link {
+                                background-color: $color;
+                                color: $white;
+                                display: flex;
+                                border: 1px solid #dee2e6;
+                            }
+                        }
+
+                        .page-link {
+                            color: $color;
+                            display: flex;
+                        }
+                    }
+                }
+            }
+
+            .app-card-#{$entity} {
+                table {
+                    tr {
+                        td {
+                            &.app-ident-cely {
+                                color: $color !important;
+
+                                .material-icons {
+                                    color: $color;
+                                }
+
+                                a {
+                                    color: $color;
+                                }
+                            }
+
+                            &.app-cell-badge {
+                                padding-left: 0;
+                            }
+
+                            .badge {
+                                background-color: $color !important;
+                                color: $white;
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+
         background-color: $body-bg-dark;
 
         .app-toolbar {
@@ -167,6 +240,8 @@ body.app-dark-theme {
             }
         }
 
+
+
         .app-right .btn-group .btn {
             color: $body-text-dark;
         }
@@ -181,6 +256,10 @@ body.app-dark-theme {
 
         .uiElement.label {
             color: $gray-100-dark;
+        }
+
+        .leaflet-draw-actions a {
+            color: $body-text-dark !important;
         }
     }
 
@@ -221,6 +300,10 @@ body.app-dark-theme {
 
         .card-body {
             color: $body-text-dark;
+
+            .material-icons {
+                color: $body-text-dark;
+            }
         }
     }
 

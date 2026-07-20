@@ -55,7 +55,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.models import Permissions as p
-from core.models import Soubor, check_permissions
+from core.models import Soubor, check_permissions, soubor_nazev_razeni_klic
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.utils import TwoQueryPaginator, get_3d_from_envelope
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
@@ -67,7 +67,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import IntegrityError, transaction
-from django.db.models import OuterRef, Prefetch, Q, Subquery
+from django.db.models import Prefetch, Q
 from django.forms import inlineformset_factory
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -244,7 +244,7 @@ def detail_model_3D(request, ident_cely):
     context["show"] = show
     context["global_map_can_edit"] = False
     if dokument.soubory:
-        context["soubory"] = sorted(dokument.soubory.soubory.all(), key=lambda x: (x.nazev.replace(".", "0"), x.nazev))
+        context["soubory"] = sorted(dokument.soubory.soubory.all(), key=soubor_nazev_razeni_klic)
     else:
         context["soubory"] = None
     return render(request, "dokument/detail_model_3D.html", context)
@@ -453,7 +453,6 @@ class DokumentListView(SearchListView):
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
         qs = qs.order_by(*sort_params)
-        subqry = Subquery(Soubor.objects.filter(vazba=OuterRef("vazba")).values_list("id", flat=True)[:1])
         qs = qs.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES)
         qs = (
             qs.select_related(
@@ -471,8 +470,8 @@ class DokumentListView(SearchListView):
             .prefetch_related(
                 Prefetch(
                     "soubory__soubory",
-                    queryset=Soubor.objects.filter(id__in=subqry),
-                    to_attr="first_soubor",
+                    queryset=Soubor.objects.only("id", "nazev", "vazba"),
+                    to_attr="soubory_nahled",
                 ),
                 Prefetch(
                     "autori",
@@ -641,9 +640,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         context["show"] = show
 
         if dokument.soubory:
-            context["soubory"] = sorted(
-                dokument.soubory.soubory.all(), key=lambda x: (x.nazev.replace(".", "0"), x.nazev)
-            )
+            context["soubory"] = sorted(dokument.soubory.soubory.all(), key=soubor_nazev_razeni_klic)
         else:
             context["soubory"] = None
 
@@ -2756,34 +2753,44 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
         if len(dokument_ids) > 0:
             fedora_transaction = zaznam.create_transaction(request.user)
             try:
-                for dokument_id in dokument_ids:
-                    dokument = get_object_or_404(Dokument, id=dokument_id)
-                    dokument.active_transaction = fedora_transaction
-                    relace = casti_zaznamu.filter(dokument__id=dokument_id)
-                    if not relace.exists():
-                        dc_ident = get_cast_dokumentu_ident(dokument)
-                        if isinstance(zaznam, ArcheologickyZaznam):
-                            dc = DokumentCast(
-                                archeologicky_zaznam=zaznam,
-                                dokument=dokument,
-                                ident_cely=dc_ident,
+                # Deterministické pořadí zamykání – dvě souběžné dávky sdílející dokumenty
+                # by při opačném pořadí jinak mohly na select_for_update uváznout (deadlock).
+                for dokument_id in sorted(dokument_ids):
+                    with transaction.atomic():
+                        # Zámek řádku dokumentu serializuje souběžné připojení téhož dokumentu –
+                        # jinak oba requesty spočítají v get_cast_dokumentu_ident stejné pořadové
+                        # číslo části a druhý insert spadne na unique constraint (IntegrityError, #4141).
+                        dokument = get_object_or_404(Dokument.objects.select_for_update(), id=dokument_id)
+                        dokument.active_transaction = fedora_transaction
+                        relace = casti_zaznamu.filter(dokument__id=dokument_id)
+                        if not relace.exists():
+                            dc_ident = get_cast_dokumentu_ident(dokument)
+                            if isinstance(zaznam, ArcheologickyZaznam):
+                                dc = DokumentCast(
+                                    archeologicky_zaznam=zaznam,
+                                    dokument=dokument,
+                                    ident_cely=dc_ident,
+                                )
+                            else:
+                                dc = DokumentCast(projekt=zaznam, dokument=dokument, ident_cely=dc_ident)
+                            dc.active_transaction = fedora_transaction
+                            dc.save()
+                            dokument.save()
+                            logger.debug(
+                                "dokument.views.pripojit.pripojit",
+                                extra={"value": debug_name, "zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
+                            )
+                            messages.add_message(
+                                request, messages.SUCCESS, f"{dokument.ident_cely} {DOKUMENT_USPESNE_PRIPOJEN}"
                             )
                         else:
-                            dc = DokumentCast(projekt=zaznam, dokument=dokument, ident_cely=dc_ident)
-                        dc.active_transaction = fedora_transaction
-                        dc.save()
-                        dokument.save()
-                        logger.debug(
-                            "dokument.views.pripojit.pripojit",
-                            extra={"value": debug_name, "zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
-                        )
-                        messages.add_message(
-                            request, messages.SUCCESS, f"{dokument.ident_cely} {DOKUMENT_USPESNE_PRIPOJEN}"
-                        )
-                    else:
-                        messages.add_message(
-                            request, messages.ERROR, f"{dokument.ident_cely} {DOKUMENT_JIZ_BYL_PRIPOJEN}"
-                        )
+                            messages.add_message(
+                                request, messages.ERROR, f"{dokument.ident_cely} {DOKUMENT_JIZ_BYL_PRIPOJEN}"
+                            )
+            except FedoraError:
+                # Souběžná úprava téhož záznamu (Fedora 409) apod. – necháme probublat do
+                # dekorátoru handle_fedora_error, který vrátí čistou odpověď a zrolluje transakci.
+                raise
             except Exception as err:
                 logger.error("dokument.views.pripojit.error", extra={"error": err, "ident_cely": dokument.ident_cely})
                 transaction.set_rollback(True)
