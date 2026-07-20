@@ -330,10 +330,10 @@ Funkce
 
    Vrátí řadicí klíč souboru podle názvu.
 
-   Tečka je nahrazena znakem ``0``, aby se soubory řadily shodně s výpisem souborů
-   v detailu záznamu (např. ``nazev.jpg`` před ``nazev-2.jpg``). Používá se pro
-   jednotné určení pořadí souborů i výběr náhledového souboru napříč dokumenty,
-   3D modely i samostatnými nálezy.
+   Při porovnání se tečka chová jako znak ``0``, což zachovává dosavadní pořadí
+   výpisu souborů v detailu záznamu (např. ``foto.jpg`` před ``foto2.jpg``). Používá
+   se pro jednotné určení pořadí souborů i výběr náhledového souboru napříč
+   dokumenty, 3D modely i samostatnými nálezy.
 
    :param soubor: Soubor, z jehož názvu se klíč sestaví.
    :return: N-tice použitelná jako ``key`` pro ``sorted`` nebo ``min``.
