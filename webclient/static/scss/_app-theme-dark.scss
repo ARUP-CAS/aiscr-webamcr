@@ -172,7 +172,6 @@ body.app-dark-theme {
                         &.active {
                             .page-link {
                                 background-color: $color;
-                                border: $color;
                                 color: $white;
                                 display: flex;
                                 border: 1px solid #dee2e6;
@@ -216,26 +215,27 @@ body.app-dark-theme {
                 }
             }
 
-            background-color: $body-bg-dark;
+        }
 
-            .app-toolbar {
-                background-color: $app-toolbar-bg-dark !important;
+        background-color: $body-bg-dark;
 
-                .app-left {
-                    .app-entity-item {
-                        color: $body-text-dark;
+        .app-toolbar {
+            background-color: $app-toolbar-bg-dark !important;
 
-                        .material-icons,
-                        button span.material-icons {
-                            color: $body-text-dark;
-                        }
-                    }
+            .app-left {
+                .app-entity-item {
+                    color: $body-text-dark;
 
-                    .igsn span,
-                    .backdetail a,
-                    .doi span {
+                    .material-icons,
+                    button span.material-icons {
                         color: $body-text-dark;
                     }
+                }
+
+                .igsn span,
+                .backdetail a,
+                .doi span {
+                    color: $body-text-dark;
                 }
             }
         }
