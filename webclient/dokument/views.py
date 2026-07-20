@@ -55,7 +55,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.models import Permissions as p
-from core.models import Soubor, check_permissions
+from core.models import Soubor, check_permissions, soubor_nazev_razeni_klic
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.utils import TwoQueryPaginator, get_3d_from_envelope
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
@@ -67,7 +67,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import IntegrityError, transaction
-from django.db.models import OuterRef, Prefetch, Q, Subquery
+from django.db.models import Prefetch, Q
 from django.forms import inlineformset_factory
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -244,7 +244,7 @@ def detail_model_3D(request, ident_cely):
     context["show"] = show
     context["global_map_can_edit"] = False
     if dokument.soubory:
-        context["soubory"] = sorted(dokument.soubory.soubory.all(), key=lambda x: (x.nazev.replace(".", "0"), x.nazev))
+        context["soubory"] = sorted(dokument.soubory.soubory.all(), key=soubor_nazev_razeni_klic)
     else:
         context["soubory"] = None
     return render(request, "dokument/detail_model_3D.html", context)
@@ -453,7 +453,6 @@ class DokumentListView(SearchListView):
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
         qs = qs.order_by(*sort_params)
-        subqry = Subquery(Soubor.objects.filter(vazba=OuterRef("vazba")).values_list("id", flat=True)[:1])
         qs = qs.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES)
         qs = (
             qs.select_related(
@@ -471,8 +470,8 @@ class DokumentListView(SearchListView):
             .prefetch_related(
                 Prefetch(
                     "soubory__soubory",
-                    queryset=Soubor.objects.filter(id__in=subqry),
-                    to_attr="first_soubor",
+                    queryset=Soubor.objects.only("id", "nazev", "vazba"),
+                    to_attr="soubory_nahled",
                 ),
                 Prefetch(
                     "autori",
@@ -641,9 +640,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         context["show"] = show
 
         if dokument.soubory:
-            context["soubory"] = sorted(
-                dokument.soubory.soubory.all(), key=lambda x: (x.nazev.replace(".", "0"), x.nazev)
-            )
+            context["soubory"] = sorted(dokument.soubory.soubory.all(), key=soubor_nazev_razeni_klic)
         else:
             context["soubory"] = None
 
