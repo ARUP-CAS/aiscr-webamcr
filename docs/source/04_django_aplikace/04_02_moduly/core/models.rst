@@ -326,6 +326,28 @@ Funkce
    :param filename: Název souboru.
    :return: Cesta pro uložení souboru.
 
+.. py:function:: soubor_nazev_razeni_klic(soubor)
+
+   Vrátí řadicí klíč souboru podle názvu.
+
+   Tečka je nahrazena znakem ``0``, aby se soubory řadily shodně s výpisem souborů
+   v detailu záznamu (např. ``nazev.jpg`` před ``nazev-2.jpg``). Používá se pro
+   jednotné určení pořadí souborů i výběr náhledového souboru napříč dokumenty,
+   3D modely i samostatnými nálezy.
+
+   :param soubor: Soubor, z jehož názvu se klíč sestaví.
+   :return: N-tice použitelná jako ``key`` pro ``sorted`` nebo ``min``.
+
+.. py:function:: prvni_soubor_dle_nazvu(soubory)
+
+   Vrátí náhledový soubor jako první soubor seřazený podle názvu.
+
+   Pořadí odpovídá výpisu souborů v detailu (viz :func:`soubor_nazev_razeni_klic`),
+   takže náhled je vždy první soubor v seznamu.
+
+   :param soubory: Iterovatelná kolekce souborů.
+   :return: Soubor s nejnižším řadicím klíčem názvu, nebo None pro prázdný vstup.
+
 .. py:function:: check_permissions(action, user, ident, skip_status)
 
    Ověří permissions. v aplikaci.
