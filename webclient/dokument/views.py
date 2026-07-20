@@ -2753,7 +2753,9 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
         if len(dokument_ids) > 0:
             fedora_transaction = zaznam.create_transaction(request.user)
             try:
-                for dokument_id in dokument_ids:
+                # Deterministické pořadí zamykání – dvě souběžné dávky sdílející dokumenty
+                # by při opačném pořadí jinak mohly na select_for_update uváznout (deadlock).
+                for dokument_id in sorted(dokument_ids):
                     with transaction.atomic():
                         # Zámek řádku dokumentu serializuje souběžné připojení téhož dokumentu –
                         # jinak oba requesty spočítají v get_cast_dokumentu_ident stejné pořadové
