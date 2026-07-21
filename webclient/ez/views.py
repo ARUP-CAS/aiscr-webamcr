@@ -140,21 +140,40 @@ class ExterniZdrojListView(SearchListView):
         qs = super().get_queryset()
         qs = qs.order_by(*sort_params)
         qs = qs.distinct("pk", *sort_params)
-        qs = qs.select_related(
-            "typ",
-        ).prefetch_related(
-            Prefetch(
-                "autori",
-                queryset=Osoba.objects.all().order_by("externizdrojautor__poradi"),
-                to_attr="ordered_autors",
-            ),
-            Prefetch(
+        qs = (
+            qs.select_related(
+                "typ",
+                "typ_dokumentu",
+            )
+            .prefetch_related(
+                Prefetch(
+                    "autori",
+                    queryset=Osoba.objects.all().order_by("externizdrojautor__poradi"),
+                    to_attr="ordered_autors",
+                ),
+                Prefetch(
+                    "editori",
+                    queryset=Osoba.objects.all().order_by("externizdrojeditor__poradi"),
+                    to_attr="ordered_editors",
+                ),
                 "editori",
-                queryset=Osoba.objects.all().order_by("externizdrojeditor__poradi"),
-                to_attr="ordered_editors",
-            ),
-            "editori",
-            "autori",
+                "autori",
+            )
+            .defer(
+                # typ + typ_dokumentu (Heslar.__str__ = heslo / heslo_en); ostatní sloupce heslaru zbytečné
+                "typ__ident_cely",
+                "typ__nazev_heslare",
+                "typ__popis",
+                "typ__zkratka",
+                "typ__popis_en",
+                "typ__razeni",
+                "typ_dokumentu__ident_cely",
+                "typ_dokumentu__nazev_heslare",
+                "typ_dokumentu__popis",
+                "typ_dokumentu__zkratka",
+                "typ_dokumentu__popis_en",
+                "typ_dokumentu__razeni",
+            )
         )
         return self.check_filter_permission(qs)
 

@@ -23,7 +23,7 @@ from core.constants import (
     ROLE_BADATEL_ID,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
 )
-from core.forms import CheckStavNotChangedForm, TransaltionImportForm
+from core.forms import CheckStavNotChangedForm, RenameSouborForm, TranslationImportForm
 from core.ident_cely import get_record_from_ident
 from core.message_constants import (
     APPLICATION_RESTART_ERROR,
@@ -32,6 +32,10 @@ from core.message_constants import (
     PRISTUP_ZAKAZAN,
     PROJEKT_NEKDO_ZMENIL_STAV,
     SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
+    SOUBOR_NEJVYSSI_SUFFIX_OBSAZEN,
+    SOUBOR_SE_NEPOVEDLO_PREJMENOVAT,
+    SOUBOR_SUFFIX_OBSAZEN,
+    SOUBOR_USPESNE_PREJMENOVAN,
     SPATNY_ZAZNAM_SOUBOR_VAZBA,
     SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     TRANSLATION_DELETE_CANNOT_MAIN,
@@ -41,6 +45,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE,
     ZAZNAM_USPESNE_SMAZAN,
+    ZAZNAM_ZMENEN_JINOU_TRANSAKCI,
 )
 from core.models import AntivirusCheckResult, Soubor
 from core.repository_connector import (
@@ -50,6 +55,7 @@ from core.repository_connector import (
     FedoraTransactionStatus,
     FedoraUpdatedByAnotherTransactionError,
 )
+from core.soubor_naming import get_dokument_free_suffixes, get_finds_free_suffixes, get_soubor_suffix
 from core.utils import (
     SessionIdentifier,
     find_pos_with_backup,
@@ -67,12 +73,12 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.gis.db.models.functions import AsWKT
+from django.contrib.gis.db.models.functions import AsWKT, PointOnSurface
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.core.validators import URLValidator
 from django.db import transaction
-from django.db.models import FilteredRelation, Q, Value
+from django.db.models import Case, FilteredRelation, Q, TextField, Value, When
 from django.http import (
     FileResponse,
     Http404,
@@ -330,6 +336,179 @@ def delete_file(request, typ_vazby, ident_cely, pk):
             "button": _("core.views.smazat.submitButton.text"),
         }
         return render(request, "core/transakce_modal.html", context)
+
+
+# Zástupná hodnota pro prázdný (bezpísmenný) slot dokumentu – ``ChoiceField`` s ``required=True``
+# nepřijímá prázdný řetězec jako platnou volbu, proto se v nabídce reprezentuje sentinelem.
+RENAME_BASE_SLOT_VALUE = "__zaklad__"
+
+
+def _rename_file_safe_redirect(request):
+    """
+    Vrátí bezpečnou návratovou URL z parametru ``next`` požadavku na přejmenování.
+
+    :param request: HTTP požadavek s parametrem ``next`` v GET nebo POST.
+    :return: Bezpečná návratová URL nebo domovská stránka.
+    """
+    next_url = request.POST.get("next") if request.method == "POST" else request.GET.get("next")
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+        return next_url
+    return reverse("core:home")
+
+
+class _SuffixNoLongerFreeError(Exception):
+    """Zvolený suffix byl mezi načtením formuláře a uložením obsazen jiným požadavkem."""
+
+
+def _rename_file_messages_response(request, message, status=400):
+    """
+    Vrátí ``JsonResponse`` s frontovanými django zprávami pro AJAX modal (vzor ``delete_file``).
+
+    :param request: HTTP požadavek, do jehož zpráv se přidá chybová hláška.
+    :param message: Chybová zpráva k zobrazení uživateli.
+    :param status: HTTP status odpovědi.
+    :return: ``JsonResponse`` se seznamem zpráv v klíči ``messages``.
+    """
+    messages.add_message(request, messages.ERROR, message)
+    django_messages = [
+        {"level": m.level, "message": m.message, "extra_tags": m.tags} for m in messages.get_messages(request)
+    ]
+    return JsonResponse({"messages": django_messages}, status=status)
+
+
+@login_required
+@require_http_methods(["POST", "GET"])
+def rename_file(request, typ_vazby, ident_cely, pk):
+    """
+    Přejmenuje existující soubor změnou suffixu na volnou povolenou hodnotu.
+
+    Mění název v databázi (``soubor.nazev``), ve Fedoře (``ebucore:filename`` souboru i jeho potomků)
+    a vyvolá přegenerování XML metadat navázaného záznamu. Dostupné pro dokumenty (včetně 3D modelů)
+    a samostatné nálezy, které mají suffixové schéma názvů.
+
+    :param request: HTTP požadavek s metodou GET (modal) nebo POST (provedení).
+    :param typ_vazby: Typ vazby souboru na navázaný doménový objekt.
+    :param ident_cely: Identifikátor záznamu, u kterého se soubor přejmenovává.
+    :param pk: Primární klíč přejmenovávaného souboru.
+    :return: Vrací modal (GET) nebo ``JsonResponse`` s přesměrováním či chybou (POST).
+    """
+    logger.debug(
+        "core.views.rename_file.start",
+        extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": pk, "method": request.method},
+    )
+    soubor: Soubor = get_object_or_404(Soubor, pk=pk)
+    try:
+        check_soubor_vazba(typ_vazby, ident_cely, pk)
+    except ZaznamSouborNotmatching as err:
+        logger.debug(
+            "core.views.rename_file.vazba_error",
+            extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": pk, "error": err},
+        )
+        messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
+        # POST jde přes AJAX z modalu – ten očekává JSON s přesměrováním, ne HTTP redirect.
+        if request.method == "POST":
+            return JsonResponse({"redirect": _rename_file_safe_redirect(request)})
+        return redirect(_rename_file_safe_redirect(request))
+
+    navazany_objekt = soubor.vazba.navazany_objekt
+    base = navazany_objekt.ident_cely.replace("-", "")
+    extension = os.path.splitext(soubor.nazev)[1]
+    if isinstance(navazany_objekt, Dokument):
+        free_suffixes = get_dokument_free_suffixes(navazany_objekt, soubor)
+    elif isinstance(navazany_objekt, SamostatnyNalez):
+        free_suffixes = get_finds_free_suffixes(navazany_objekt, soubor)
+    else:
+        logger.warning(
+            "core.views.rename_file.unsupported_record",
+            extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": pk},
+        )
+        # GET modal se načítá přes AJAX .load() (očekává HTML) – vrátíme redirect; POST očekává JSON.
+        if request.method == "POST":
+            return _rename_file_messages_response(request, SOUBOR_SE_NEPOVEDLO_PREJMENOVAT)
+        return redirect(_rename_file_safe_redirect(request))
+    suffix_choices = [(suffix or RENAME_BASE_SLOT_VALUE, f"{base}{suffix}{extension}") for suffix in free_suffixes]
+
+    if request.method == "POST":
+        form = RenameSouborForm(request.POST, suffix_choices=suffix_choices)
+        if not form.is_valid():
+            return _rename_file_messages_response(request, SOUBOR_SUFFIX_OBSAZEN)
+        chosen_suffix = form.cleaned_data["suffix"]
+        if chosen_suffix == RENAME_BASE_SLOT_VALUE:
+            chosen_suffix = ""
+        new_nazev = f"{base}{chosen_suffix}{extension}"
+        old_nazev = soubor.nazev
+        if new_nazev == old_nazev:
+            messages.add_message(request, messages.SUCCESS, SOUBOR_USPESNE_PREJMENOVAN)
+            return JsonResponse({"redirect": _rename_file_safe_redirect(request)})
+        fedora_transaction = FedoraTransaction()
+        try:
+            with transaction.atomic():
+                # Zámek nadřazeného záznamu serializuje souběžná přejmenování; po zamčení znovu
+                # ověříme, že zvolený suffix je stále volný (jiný požadavek jej mohl mezitím obsadit).
+                type(navazany_objekt).objects.select_for_update().get(pk=navazany_objekt.pk)
+                if isinstance(navazany_objekt, Dokument):
+                    current_free = get_dokument_free_suffixes(navazany_objekt, soubor)
+                else:
+                    current_free = get_finds_free_suffixes(navazany_objekt, soubor)
+                if chosen_suffix not in current_free:
+                    raise _SuffixNoLongerFreeError()
+                connector = FedoraRepositoryConnector(navazany_objekt, fedora_transaction)
+                connector.update_file_name(soubor, old_nazev, new_nazev)
+                soubor.zaznamenej_prejmenovani(request.user, old_nazev, new_nazev)
+                soubor.nazev = new_nazev
+                soubor.active_transaction = fedora_transaction
+                soubor.close_active_transaction_when_finished = True
+                soubor.save()
+        except _SuffixNoLongerFreeError:
+            logger.debug("core.views.rename_file.suffix_taken", extra={"pk": pk, "suffix": chosen_suffix})
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return _rename_file_messages_response(request, SOUBOR_SUFFIX_OBSAZEN)
+        except FedoraUpdatedByAnotherTransactionError as err:
+            logger.debug(
+                "core.views.rename_file.another_transaction",
+                extra={"pk": pk, "error": err, "transaction": fedora_transaction.uid},
+            )
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return _rename_file_messages_response(request, ZAZNAM_ZMENEN_JINOU_TRANSAKCI)
+        except FedoraError as err:
+            logger.error(
+                "core.views.rename_file.fedora_error",
+                extra={"pk": pk, "error": err, "transaction": fedora_transaction.uid},
+            )
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return _rename_file_messages_response(request, SOUBOR_SE_NEPOVEDLO_PREJMENOVAT)
+        except Exception as err:
+            # Neočekávaná chyba (např. IntegrityError nebo chyba v save_metadata): DB se rollbackne
+            # přes atomic(), ale otevřenou Fedora transakci musíme uklidit ručně, jinak zůstane viset.
+            # Chybu zalogujeme (včetně tracebacku) a uživateli vrátíme hlášku – HTTP 500 by v modalu
+            # skončilo jen slepým reloadem bez vysvětlení.
+            logger.exception(
+                "core.views.rename_file.unexpected_error",
+                extra={"pk": pk, "error": err, "transaction": fedora_transaction.uid},
+            )
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return _rename_file_messages_response(request, SOUBOR_SE_NEPOVEDLO_PREJMENOVAT)
+        logger.debug(
+            "core.views.rename_file.success",
+            extra={"pk": pk, "old_nazev": old_nazev, "new_nazev": new_nazev, "transaction": fedora_transaction.uid},
+        )
+        messages.add_message(request, messages.SUCCESS, SOUBOR_USPESNE_PREJMENOVAN)
+        return JsonResponse({"redirect": _rename_file_safe_redirect(request)})
+
+    initial_suffix = get_soubor_suffix(soubor) or RENAME_BASE_SLOT_VALUE
+    form = RenameSouborForm(suffix_choices=suffix_choices, initial={"suffix": initial_suffix})
+    context = {
+        "object": soubor,
+        "title": _("core.views.rename_file.title.text") + f" {soubor.nazev}",
+        "id_tag": "prejmenovat-soubor-form",
+        "button": _("core.views.rename_file.submitButton.text"),
+        "form": form,
+    }
+    return render(request, "core/transakce_modal.html", context)
 
 
 class DownloadFile(LoginRequiredMixin, View):
@@ -942,6 +1121,15 @@ class NewFileUploadView(BasePostUploadView):
 
         if new_name is False:
             self.fedora_transaction.rollback_transaction()
+            # Nejvyšší suffix už nelze přidělit. Pokud jsou nižší sloty volné (vznikly přejmenováním
+            # či smazáním), poradíme uživateli je uvolnit přejmenováním; jinak je záznam skutečně plný.
+            free_suffixes = []
+            if typ_vazby in ("dokument", "model3d"):
+                free_suffixes = get_dokument_free_suffixes(objekt)
+            elif typ_vazby == "pas":
+                free_suffixes = get_finds_free_suffixes(objekt)
+            if free_suffixes:
+                return JsonResponse({"error": str(SOUBOR_NEJVYSSI_SUFFIX_OBSAZEN)}, status=403)
             return JsonResponse(
                 {
                     "error": (
@@ -1165,6 +1353,9 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
 def get_finds_soubor_name(find, filename, add_to_index=1):
     """
     Funkce pro získaní jména souboru pro samostatný nález.
+
+    Název se přiděluje navýšením podle nejvyššího obsazeného suffixu (``F01`` … ``F99``). Toto výchozí
+    chování se záměrně nemění – uvolnění či změnu pozice řeší přejmenování souboru.
 
     :param find: Textový název, klíč nebo výraz ``find`` používaný v rámci operace.
     :param filename: Parametr ``filename`` se předává do volání ``splitext()``, ``warning()``, vstupuje do návratové hodnoty.
@@ -1792,21 +1983,29 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         )
         return context
 
-    #: Limit pro zapnutí cacheops cache. cacheops sestavuje invalidační schéma (DNF)
-    #: jako kartézský součin hodnot napříč vícehodnotovými filtry. U hlubokých M2M
-    #: filtrů (předměty/objekty komponent) vede velký počet zvolených hodnot k milionům
-    #: konjunkcí a vyčerpání paměti (OOM) při výpočtu ``cacheops.tree.dnfs``. Pro
-    #: kombinace, jejichž součin počtů hodnot překročí tento limit, se cache vypíná.
+    #: Horní mez součinu počtů hodnot vícehodnotových GET parametrů, do které se ještě
+    #: zapíná cacheops cache. Způsob výpočtu a zdůvodnění viz ``_is_query_cacheable``.
     cache_filter_value_product_limit = 1000
 
     def _is_query_cacheable(self):
         """
         Vrací, zda je bezpečné zapnout cacheops cache pro aktuální filtr.
 
-        Spočítá součin počtů hodnot u vícehodnotových GET parametrů. Tento součin
-        odpovídá řádové velikosti invalidační DNF, kterou cacheops staví – u velkých
-        kombinací hlubokých M2M filtrů by její sestavení vyčerpalo paměť a shodilo
-        worker. Stránkovací a řadicí parametry se do součinu nezapočítávají.
+        cacheops sestavuje invalidační schéma (DNF) jako kartézský součin hodnot napříč
+        vícehodnotovými filtry, takže rozsáhlé kombinace vedou k milionům konjunkcí a
+        k vyčerpání paměti (OOM) při výpočtu ``cacheops.tree.dnfs``. Motivací jsou hluboké
+        M2M filtry (předměty a objekty komponent), kontrola ale platí pro libovolný
+        vícehodnotový GET parametr.
+
+        Jako míra slouží součin počtů hodnot vícehodnotových GET parametrů. Jde
+        o konzervativní odhad řádové velikosti DNF na základě multiplicity GET parametrů,
+        nikoli o přímé měření struktury querysetu. Předpokládá se, že filtry odesílají
+        každou hodnotu jako samostatný výskyt parametru (``?pole=1&pole=2``), jak to dělá
+        ``forms.SelectMultiple``. Filtr, který by více hodnot kódoval do jednoho parametru
+        (například oddělené čárkou), by tato kontrola nezachytila.
+
+        Do součinu se nezapočítávají parametry stránkování, řazení a CSRF token
+        (``page``, ``sort``, ``per_page``, ``csrfmiddlewaretoken``).
 
         :return: ``True`` pokud součin nepřekročí ``cache_filter_value_product_limit``.
         """
@@ -1819,6 +2018,14 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             if count > 1:
                 product *= count
                 if product > self.cache_filter_value_product_limit:
+                    logger.debug(
+                        "core.views.SearchListView._is_query_cacheable.cache_skipped",
+                        extra={
+                            "key": key,
+                            "product": product,
+                            "limit": self.cache_filter_value_product_limit,
+                        },
+                    )
                     return False
         return True
 
@@ -1826,11 +2033,14 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         """
         Vrací queryset výsledků vyhledávání podle zadaných filtrů.
 
+        Cacheops cache se zapíná pouze pro filtry, které projdou kontrolou
+        ``_is_query_cacheable``. U rozsáhlých kombinací hodnot dotaz proběhne bez cache.
+
         :return: Vrací proměnná ``qs``.
         """
         qs = super().get_queryset()
         if self._is_query_cacheable():
-            qs.cache()
+            qs = qs.cache()
         return qs
 
     @method_decorator(never_cache)
@@ -1985,6 +2195,48 @@ def post_ajax_get_pas_and_pian_limit(request):
             return JsonResponse({"heat": [], "algorithm": "heat", "count": len(heats)}, status=200)
 
 
+def normalize_pian_presnost(points):
+    """
+    Přepočte id hesláře přesnosti PIANu na pořadové číslo 1–4, stejně jako to dělá
+    :func:`core.utils.get_pian_from_envelope` pro mapy v detailu záznamu. Klient hodnotu ukazuje
+    v popisku PIANu (``ident (přesnost)``).
+
+    :param points: Seznam slovníků s klíčem ``presnost`` (id hesláře).
+
+        :return: Vrací týž seznam s přepočtenou hodnotou ``presnost``.
+    """
+    from heslar.hesla import HESLAR_PIAN_PRESNOST
+    from heslar.models import Heslar
+
+    prvni = Heslar.objects.filter(nazev_heslare__id=HESLAR_PIAN_PRESNOST).first()
+    offset = (prvni.id - 1) if prvni else 0
+    for point in points:
+        if point.get("presnost") is not None:
+            point["presnost"] -= offset
+    return points
+
+
+def pian_geom_expression(geom_field):
+    """
+    Vrací výraz pro geometrii PIANu posílanou do mapy jako WKT.
+
+    PIAN s přesností „poloha podle katastru“ se v mapě zobrazuje jako **bod**, nikoli jako polygon
+    katastrálního území (shodně s mapou v detailu akce). Posíláme proto rovnou reprezentativní bod
+    (``ST_PointOnSurface``) – klient tak nemusí pravidlo znát a nepřenáší se zbytečně velký polygon.
+
+    :param geom_field: Název geometrického pole na modelu Pian.
+
+        :return: Vrací podmíněný výraz pro anotaci ``geom``.
+    """
+    from heslar.hesla_dynamicka import PIAN_PRESNOST_KATASTR
+
+    return Case(
+        When(presnost=PIAN_PRESNOST_KATASTR, then=AsWKT(PointOnSurface(geom_field))),
+        default=AsWKT(geom_field),
+        output_field=TextField(),
+    )
+
+
 @login_required
 @require_http_methods(["POST"])
 def post_ajax_get_list_map_data(request, layer):
@@ -1993,8 +2245,12 @@ def post_ajax_get_list_map_data(request, layer):
 
     Vrací prvky daného workflow (``layer``) v aktuálním výřezu mapy ve stejném kontraktu jako
     :func:`post_ajax_get_pas_and_pian_limit` – tj. ``{"points"|"heat", "algorithm", "count"}`` –
-    aby klient mohl znovupoužít stávající vykreslování. Nad ``LIMIT_PRVKU_ZOBRAZENI_HEATMAP`` se
-    přepíná na heatmapu. Vrstva je pouze orientační; vlastní filtrování tabulky zajišťuje
+    aby klient mohl znovupoužít stávající vykreslování. Dosáhne-li počet prvků ve výřezu hodnoty
+    ``LIMIT_PRVKU_ZOBRAZENI_HEATMAP``, přepne se na heatmapu; **výjimkou je vrstva ``"3d"``
+    (knihovna 3D), která heatmapu nemá a vždy vrací jednotlivé body** (stejně jako náhled 3D mapy).
+
+    Detailní body respektují oprávnění příslušného výpisu, takže uživatel v mapě vidí jen záznamy,
+    které smí vidět i v tabulce. Vrstva je orientační; vlastní filtrování tabulky zajišťuje
     serverový filtr ``geom_filter``.
 
     :param request: HTTP požadavek s tělem ``{"bounds": {...}, "zoom": int}``.
@@ -2006,26 +2262,44 @@ def post_ajax_get_list_map_data(request, layer):
         body = json.loads(request.body.decode("utf-8"))
         bounds = body["bounds"]
         zoom = body["zoom"]
+        params = [
+            bounds["topLeft"]["lng"],
+            bounds["bottomLeft"]["lat"],
+            bounds["bottomRight"]["lng"],
+            bounds["topRight"]["lat"],
+            zoom,
+        ]
     except (json.JSONDecodeError, KeyError, TypeError):
         return JsonResponse({"error": "Invalid request body"}, status=400)
-    params = [
-        bounds["topLeft"]["lng"],
-        bounds["bottomLeft"]["lat"],
-        bounds["bottomRight"]["lng"],
-        bounds["topRight"]["lat"],
-        zoom,
-    ]
 
     base_qs, type_label, geom_field = get_list_map_records_in_envelope(layer, bounds, request)
     if base_qs is None:
         logger.warning("core.views.post_ajax_get_list_map_data.unknown_layer", extra={"layer": layer})
         return JsonResponse({"points": [], "algorithm": "detail", "count": 0}, status=200)
 
-    points_qs = base_qs.values("ident_cely", type=Value(type_label)).annotate(geom=AsWKT(geom_field))
-    num = points_qs.count()
+    # U projektů posíláme i stav, aby je klient rozdělil do vrstev „Projekty - P1 … P7-P8“ jako v detailu.
+    # U PIANů posíláme přesnost kvůli popisku „ident (přesnost)“, shodně s mapou v detailu záznamu.
+    if layer == "projekt":
+        extra_fields = ("stav",)
+    elif type_label == "pian":
+        extra_fields = ("presnost",)
+    else:
+        extra_fields = ()
+    points_qs = base_qs.values("ident_cely", *extra_fields, type=Value(type_label)).annotate(
+        geom=pian_geom_expression(geom_field) if type_label == "pian" else AsWKT(geom_field)
+    )
 
-    if layer == "3d" or num < LIMIT_PRVKU_ZOBRAZENI_HEATMAP:
-        return JsonResponse({"points": list(points_qs), "algorithm": "detail", "count": num}, status=200)
+    # Knihovna 3D heatmapu nemá (stejně jako náhled 3D mapy) – vždy vracíme jednotlivé body.
+    if layer == "3d":
+        points = list(points_qs)
+        return JsonResponse({"points": points, "algorithm": "detail", "count": len(points)}, status=200)
+
+    # Jediný dotaz omezený prahem: vejdeme-li se pod limit, jde o detail, jinak se přepne na heatmapu.
+    points = list(points_qs[:LIMIT_PRVKU_ZOBRAZENI_HEATMAP])
+    if len(points) < LIMIT_PRVKU_ZOBRAZENI_HEATMAP:
+        if type_label == "pian":
+            points = normalize_pian_presnost(points)
+        return JsonResponse({"points": points, "algorithm": "detail", "count": len(points)}, status=200)
 
     if layer == "pas":
         heats = get_heatmap_pas(*params)
@@ -2190,7 +2464,7 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
     """Třída pohledu pro import překladových souborů."""
 
     template_name = "rosetta/import_form.html"
-    form_class = TransaltionImportForm
+    form_class = TranslationImportForm
 
     def form_valid(self, form):
         """

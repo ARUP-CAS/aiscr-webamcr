@@ -25,10 +25,14 @@ from django.apps import apps
 from django.conf import ENVIRONMENT_VARIABLE, settings
 from django.contrib.gis.db.models.functions import AsGeoJSON, PointOnSurface
 from django.core.cache import caches
+from django.core.paginator import Paginator
 from django.db import connection, connections
+from django.db.models import QuerySet
 from django.urls import reverse
+from django.utils.functional import cached_property
 from django.utils.html import format_html
 from django.utils.translation import gettext as _
+from django_tables2.rows import BoundRows
 from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 from heslar.hesla_dynamicka import TYP_DJ_KATASTR
 from heslar.models import RuianKatastr
@@ -913,7 +917,10 @@ def get_list_map_records_in_envelope(layer, bounds, request):
     from types import SimpleNamespace
 
     from core.views import PermissionFilterMixin
+    from django.contrib.gis.db.models.functions import PointOnSurface
     from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+    from heslar.hesla_dynamicka import PIAN_PRESNOST_KATASTR
 
     polygon = Polygon(
         (
@@ -984,6 +991,12 @@ def get_list_map_records_in_envelope(layer, bounds, request):
             dokumentacni_jednotky_pianu__archeologicky_zaznam_id__in=az_ids,
             geom__intersects=polygon,
         ).distinct()
+        # Katastrální PIAN se v mapě zobrazuje jako bod (viz pian_geom_expression), proto ho do výřezu
+        # zahrneme jen tehdy, když ve výřezu leží i ten bod – jinak by se kreslily piny mimo obrazovku
+        # a nafukovaly počty pro heatmapu. Hrubý filtr výše zůstává kvůli využití prostorového indexu.
+        pians = pians.annotate(_pos=PointOnSurface("geom")).filter(
+            ~Q(presnost=PIAN_PRESNOST_KATASTR) | Q(_pos__intersects=polygon)
+        )
         return pians, "pian", "geom"
 
     if layer == "3d":
@@ -1161,6 +1174,107 @@ def get_message(az, message):
     )
 
 
+class TwoQueryPaginator(Paginator):
+    """
+    Paginátor optimalizovaný pro tabulky se širokými řádky a řazením přes JOINy.
+
+    Standardní stránkování řadí celou výsledkovou množinu i se širokými sloupci
+    (TextFields ``popis``, ``poznamka`` apod.), což u velkých tabulek vynutí drahý
+    quicksort. Tento paginátor nejprve seřadí a stránkuje pouze primární klíče
+    (úzký řádek → rychlý top-N heapsort) a teprve pro konkrétní stránku načte plné
+    objekty přes ``pk__in``. Řazení i ``select_related``/``prefetch_related``
+    zůstávají z původního querysetu zachovány.
+
+    První fáze předpokládá, že queryset vrací každý primární klíč nejvýše jednou.
+    Deduplikaci zajišťují filtry (``distinct=True`` na poli, lokální ``.distinct()``
+    v metodě filtru, nebo ``Exists`` poddotaz) a u některých výpisů také
+    ``distinct("pk", *sort)`` na querysetu. Kdyby přesto duplicity vznikly
+    (např. nový filtr bez deduplikace), stránka se dopočítá znovu s ``distinct()``
+    – viz metoda ``page``. Pokud ``object_list`` není queryset, padá se zpět
+    na standardní chování.
+    """
+
+    def _unwrap(self):
+        """
+        Získá podkladový queryset z ``object_list`` (BoundRows z django-tables2 nebo přímý QuerySet).
+
+        :return: Dvojice ``(queryset, is_table)``; ``queryset`` je ``None``, neodpovídá-li struktura očekávání.
+        """
+        bound_rows = self.object_list
+        if isinstance(bound_rows, QuerySet):
+            # Přímé použití s QuerySetem (mimo django-tables2).
+            return bound_rows, False
+        # django-tables2: BoundRows -> TableData -> queryset.
+        table_data = getattr(bound_rows, "data", None)
+        queryset = getattr(table_data, "data", None)
+        if isinstance(queryset, QuerySet):
+            return queryset, True
+        return None, True
+
+    @cached_property
+    def count(self):
+        """
+        Počet zobrazovaných záznamů = počet distinct primárních klíčů.
+
+        Kdyby se počet počítal přes ``COUNT(*)`` z poddotazu s ``DISTINCT ON``
+        (``distinct("pk", *sort)``), vynutilo by to setřídění celé množiny.
+        Protože zobrazené řádky jsou jednoznačné podle pk, stačí
+        ``COUNT(DISTINCT pk)`` bez řazení – řádově rychlejší. Platí stejně
+        pro výpisy s list-level ``distinct("pk", *sort)`` i pro ty, které
+        spoléhají na deduplikaci ve filtrech.
+
+        :return: Počet záznamů.
+        """
+        queryset, _ = self._unwrap()
+        if queryset is None:
+            return len(self.object_list)
+        return queryset.order_by().values("pk").distinct().count()
+
+    def page(self, number):
+        """
+        Vrací stránku se záznamy načtenou dvoufázově (nejprve PK, pak plné objekty).
+
+        :param number: Číslo požadované stránky.
+        :return: Stránka paginátoru s objekty pro dané číslo stránky.
+        """
+        number = self.validate_number(number)
+        bottom = (number - 1) * self.per_page
+        top = bottom + self.per_page
+        if top + self.orphans >= self.count:
+            top = self.count
+
+        queryset, is_table = self._unwrap()
+        bound_rows = self.object_list
+
+        if not isinstance(queryset, QuerySet):
+            # Struktura neodpovídá očekávání (např. seznam místo querysetu) – fallback.
+            return super().page(number)
+
+        # Krok 1: seřadit a stránkovat pouze primární klíče (úzký řádek, rychlý sort).
+        # select_related(None) odstraní JOINy přidané jen pro načtení souvisejících objektů;
+        # JOINy nutné pro filter/order_by Django ponechá.
+        pk_qs = queryset.select_related(None).values_list("pk", flat=True)
+        pk_list = list(pk_qs[bottom:top])
+
+        if len(pk_list) != len(set(pk_list)):
+            # Pojistka: queryset joinuje víceřádkovou relaci bez deduplikace, takže se
+            # klíče opakují a stránka by byla neúplná. Zopakujeme s distinct().
+            logger.warning(
+                "core.utils.TwoQueryPaginator.page.duplicate_pks",
+                extra={"model": queryset.model.__name__},
+            )
+            pk_list = list(pk_qs.distinct()[bottom:top])
+
+        # Krok 2: načíst plné objekty jen pro danou stránku; řazení zůstává z querysetu.
+        page_qs = queryset.filter(pk__in=pk_list)
+
+        if is_table:
+            page_rows = BoundRows(data=page_qs, table=bound_rows.table, pinned_data=bound_rows.pinned_data)
+            return self._get_page(page_rows, number, self)
+
+        return self._get_page(page_qs, number, self)
+
+
 class SearchTable(ColumnShiftTableBootstrap4):
     """
     Základní setup pro tabulky používané v aplikaci.
@@ -1190,13 +1304,11 @@ class SearchTable(ColumnShiftTableBootstrap4):
 
             :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
         """
+        from core.models import prvni_soubor_dle_nazvu
         from pas.models import SamostatnyNalez
 
         record: SamostatnyNalez
-        if record.soubory.soubory.count() > 0:
-            soubor = record.soubory.soubory.first()
-        else:
-            soubor = None
+        soubor = prvni_soubor_dle_nazvu(record.soubory.soubory.all())
         if soubor is not None:
             from core.models import Soubor
 

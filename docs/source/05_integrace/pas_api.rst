@@ -97,10 +97,11 @@ POST /api/pas/import-xml
 
 Vytvoří nový záznam samostatného nálezu na základě XML souboru ve formátu AMČR.
 XML je validováno oproti XSD schématu a datovým pravidlům systému.
-Po úspěšném importu je záznam automaticky zapsán, odeslán a potvrzen —
-nález tedy vstupuje do systému přímo ve stavu **Potvrzený** (SN3).
-Do historie záznamu jsou zapsány události SN-01, SN-12 a SN-23; ve všech
-třech je jako poznámka uvedeno, že záznam pochází z importu z externího zdroje.
+Po úspěšném importu je záznam automaticky zapsán, odeslán či potvrzen a
+nález vstupuje do systému ve zvoleném stavu. Do historie záznamu jsou zapsány
+události odpovídající celému řetězci transakcí až do cílového stavu (SN-01,
+SN-12, SN-23); u nich je jako poznámka uvedeno, že záznam pochází z importu
+z externího zdroje.
 
 **Požadavek**
 
@@ -184,19 +185,20 @@ U elementů s atributem ``xml:lang`` se očekává hodnota ``cs``.
 
 Elementy odkazující na heslář (``okolnosti``, ``obdobi``, ``druh_nalezu``, ``specifikace``,
 ``pristupnost``) a na organizaci (``predano_organizace``) se uvádějí celé včetně textové hodnoty, protože
-XML musí projít validací schématu. Pro import se využívá atribut ``id``; systém ověřuje, že zadaná
+XML musí projít validací schématu. Pro import se ale využívá pouze atribut ``id``; systém ověřuje, že zadaná
 hodnota ``id`` patří do správného typu hesláře (např. nelze do pole ``obdobi`` uvést kód hesláře
 pro druh nálezu). Textový obsah elementu se při importu ignoruje.
 
-Některé elementy systém stanoví nebo generuje automaticky a v importu se ignorují nebo nejsou povoleny:
+Některé elementy systém stanoví nebo generuje automaticky a v importu se ignorují:
 
-- ``amcr:okres``, ``amcr:katastr`` — určí systém automaticky podle souřadnic; v importu nejsou povoleny.
+- ``amcr:okres``, ``amcr:katastr`` — určí systém automaticky podle souřadnic; v importu se ingnorují.
   Při ``geom_system=4326`` se katastr odvozuje z ``geom_wkt``, při ``geom_system=5514`` se ``geom_sjtsk_wkt``
   nejprve transformuje do WGS-84 a katastr se odvozuje z výsledku.
   Pokud souřadnice nespadají do žádného katastru (např. bod mimo území ČR), import selže s HTTP 422.
-- ``amcr:stav`` — musí být jedna z povolených hodnot (1, 2, 3); určuje cílový stav záznamu po importu.
-- ``amcr:evidencni_cislo`` — lze uvést v importu; systém hodnotu přijme a uloží.
-- ``amcr:historie``, ``amcr:soubor`` — pouze pro export.
+- ``amcr:stav`` — musí být jedna z povolených hodnot (1, 2, 3); určuje cílový stav záznamu po importu;
+  import přímo do stavu 4 (archivováno) není možný.
+- ``amcr:igsn``, ``amcr:geom_gml``, ``amcr:geom_sjtsk_gml``, ``amcr:historie``, ``amcr:soubor`` — pouze
+  pro export; import elementy ignoruje.
 
 **Šablona vstupního XML**
 

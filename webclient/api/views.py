@@ -3127,7 +3127,8 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
                 # not a database field, so there is no point in using it as an argument in the save method.
                 instance.save(update_fields=["evidencni_cislo"])
                 self._create_history_record(instance, request.user, old_evidencni_cislo, evidencni_cislo)
-                self._update_igsn_if_archived(instance)
+                instance.save_metadata()
+            self._update_igsn_if_archived(instance)
         except DoiWriteError as err:
             logger.error("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.igsn_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
@@ -3441,8 +3442,8 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
                 soubor_instance.save()
                 soubor_instance.zaznamenej_nahrani(request.user, uploaded_file.name)
                 self._create_rearchive_history_record(instance, request.user)
-                self._update_igsn_if_archived(instance)
                 soubor_instance.save()
+            self._update_igsn_if_archived(instance)
         except DoiWriteError as err:
             logger.error("api.views.SamostatnyNalezFotografieUploadView.post.igsn_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:

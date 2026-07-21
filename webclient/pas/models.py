@@ -16,7 +16,7 @@ from core.constants import (
     VRACENI_SN,
     ZAPSANI_SN,
 )
-from core.models import ModelWithMetadata, SouborVazby
+from core.models import ModelWithMetadata, SouborVazby, prvni_soubor_dle_nazvu
 from django.conf import settings
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
@@ -336,15 +336,12 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     @property
     def nahled_soubor(self):
         """
-        Vrací cestu k miniaturnímu náhledu souboru.
+        Vrací náhledový soubor (první podle názvu, shodně s výpisem souborů).
 
         :return: První soubor nebo None, pokud žádný neexistuje.
 
         """
-        if self.soubory.soubory.count() > 0:
-            return self.soubory.soubory.first()
-        else:
-            return None
+        return prvni_soubor_dle_nazvu(self.soubory.soubory.all())
 
     @cached_property
     def large_thumbnail(self):

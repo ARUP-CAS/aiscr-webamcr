@@ -106,6 +106,16 @@ Třídy
       :param user: Parametr ``user`` se předává do volání ``Historie()``.
       :param nazev: Parametr ``nazev`` se předává do volání ``Historie()``, ovlivňuje větvení podmínek.
 
+   .. py:method:: zaznamenej_prejmenovani()
+
+      Metoda pro zapsání přejmenování souboru do historie.
+
+      Do poznámky se uloží změna ve tvaru ``původní_název -> nový_název``.
+
+      :param user: Uživatel, který přejmenování provedl.
+      :param old_nazev: Původní název souboru.
+      :param new_nazev: Nový název souboru.
+
    .. py:method:: get_file_extension_by_mime()
 
       Vrací file extension by mime.
@@ -315,6 +325,28 @@ Funkce
    :param instance: Instance souboru.
    :param filename: Název souboru.
    :return: Cesta pro uložení souboru.
+
+.. py:function:: soubor_nazev_razeni_klic(soubor)
+
+   Vrátí řadicí klíč souboru podle názvu.
+
+   Při porovnání se tečka chová jako znak ``0``, což zachovává dosavadní pořadí
+   výpisu souborů v detailu záznamu (např. ``foto.jpg`` před ``foto2.jpg``). Používá
+   se pro jednotné určení pořadí souborů i výběr náhledového souboru napříč
+   dokumenty, 3D modely i samostatnými nálezy.
+
+   :param soubor: Soubor, z jehož názvu se klíč sestaví.
+   :return: N-tice použitelná jako ``key`` pro ``sorted`` nebo ``min``.
+
+.. py:function:: prvni_soubor_dle_nazvu(soubory)
+
+   Vrátí náhledový soubor jako první soubor seřazený podle názvu.
+
+   Pořadí odpovídá výpisu souborů v detailu (viz :func:`soubor_nazev_razeni_klic`),
+   takže náhled je vždy první soubor v seznamu.
+
+   :param soubory: Iterovatelná kolekce souborů.
+   :return: Soubor s nejnižším řadicím klíčem názvu, nebo None pro prázdný vstup.
 
 .. py:function:: check_permissions(action, user, ident, skip_status)
 

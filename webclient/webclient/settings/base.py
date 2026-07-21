@@ -34,7 +34,7 @@ def get_secret(setting, default_value=None):
             try:
                 return secrets[setting]
             except KeyError:
-                error_msg = error_msg = f"Add {setting} variable to {file_path} file"
+                error_msg = f"Add {setting} variable to {file_path} file"
                 raise ImproperlyConfigured(error_msg)
         else:
             return secrets.get(setting, default_value)
@@ -111,11 +111,15 @@ CACHEOPS_REDIS = {
     "port": int(REDIS_PORT),
     "db": 2,
     "password": get_plain_redis_pass(),
+    "socket_timeout": 3,
     "socket_keepalive": True,
     "health_check_interval": 30,
     "retry_on_timeout": True,
 }
 
+# Výpadek Redisu nesmí shodit request – cache je jen výkonová optimalizace.
+# Při ConnectionError/TimeoutError cacheops chybu zaloguje jako warning a dotaz
+# doběhne bez cache (pomaleji, ale správně).
 CACHEOPS_DEGRADE_ON_FAILURE = True
 
 CACHEOPS = {
@@ -633,7 +637,7 @@ AUTO_LOGOUT = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
-SHOW_DARK_MODE = get_secret("SHOW_DARK_MODE", "True") == "True"
+SHOW_DARK_MODE = get_secret("SHOW_DARK_MODE", "True") in (True, "True")
 
 COMPRESS_REBUILD_TIMEOUT = 3600
 
@@ -679,7 +683,7 @@ TOKEN_EXPIRATION_HOURS = 24
 
 SKIP_RECAPTCHA = False
 
-TEST_ENV = get_secret("TEST_ENV", "True") == "True"
+TEST_ENV = get_secret("TEST_ENV", "True") in (True, "True")
 
 CLAMD_HOST = None
 CLAMD_PORT = None

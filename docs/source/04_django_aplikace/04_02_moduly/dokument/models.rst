@@ -152,7 +152,7 @@ Třídy
 
    .. py:method:: thumbnail_image_file()
 
-      Vrací první soubor jako náhled (seřazeny abecedně).
+      Vrací první soubor jako náhled (seřazeno podle názvu shodně s výpisem souborů).
 
       :return: První seřazený soubor nebo None.
 
@@ -397,6 +397,10 @@ Funkce
 .. py:function:: get_dokument_soubor_name(dokument, filename, add_to_index)
 
    Funkce pro získaní správného jména souboru.
+
+   První soubor dostane základní název bez písmene (``{ident}.{ext}``), další se přidělují navýšením
+   podle nejvyššího obsazeného písmenného suffixu (``A`` … ``Z``). Toto výchozí chování se záměrně
+   nemění – uvolnění či změnu pozice (včetně základního slotu) řeší přejmenování souboru.
 
    :param dokument: Parametr ``dokument`` předává se do volání ``debug()``, ``filter()``, pracuje se s atributy ``ident_cely``, ``soubory``, vstupuje do návratové hodnoty.
    :param filename: Parametr ``filename`` se předává do volání ``splitext()``, vstupuje do návratové hodnoty.

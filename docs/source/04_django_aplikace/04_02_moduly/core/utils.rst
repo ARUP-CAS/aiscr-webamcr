@@ -11,6 +11,54 @@ Třídy
    Implementuje komponentu ``CannotFindCadasterCentre`` v rámci aplikace.
 
 
+.. py:class:: TwoQueryPaginator
+
+   Paginátor optimalizovaný pro tabulky se širokými řádky a řazením přes JOINy.
+
+   Standardní stránkování řadí celou výsledkovou množinu i se širokými sloupci
+   (TextFields ``popis``, ``poznamka`` apod.), což u velkých tabulek vynutí drahý
+   quicksort. Tento paginátor nejprve seřadí a stránkuje pouze primární klíče
+   (úzký řádek → rychlý top-N heapsort) a teprve pro konkrétní stránku načte plné
+   objekty přes ``pk__in``. Řazení i ``select_related``/``prefetch_related``
+   zůstávají z původního querysetu zachovány.
+
+   První fáze předpokládá, že queryset vrací každý primární klíč nejvýše jednou.
+   Deduplikaci zajišťují filtry (``distinct=True`` na poli, lokální ``.distinct()``
+   v metodě filtru, nebo ``Exists`` poddotaz) a u některých výpisů také
+   ``distinct("pk", *sort)`` na querysetu. Kdyby přesto duplicity vznikly
+   (např. nový filtr bez deduplikace), stránka se dopočítá znovu s ``distinct()``
+   – viz metoda ``page``. Pokud ``object_list`` není queryset, padá se zpět
+   na standardní chování.
+
+   **Metody:**
+
+   .. py:method:: _unwrap()
+
+      Získá podkladový queryset z ``object_list`` (BoundRows z django-tables2 nebo přímý QuerySet).
+
+      :return: Dvojice ``(queryset, is_table)``; ``queryset`` je ``None``, neodpovídá-li struktura očekávání.
+
+   .. py:method:: count()
+
+      Počet zobrazovaných záznamů = počet distinct primárních klíčů.
+
+      Kdyby se počet počítal přes ``COUNT(*)`` z poddotazu s ``DISTINCT ON``
+      (``distinct("pk", *sort)``), vynutilo by to setřídění celé množiny.
+      Protože zobrazené řádky jsou jednoznačné podle pk, stačí
+      ``COUNT(DISTINCT pk)`` bez řazení – řádově rychlejší. Platí stejně
+      pro výpisy s list-level ``distinct("pk", *sort)`` i pro ty, které
+      spoléhají na deduplikaci ve filtrech.
+
+      :return: Počet záznamů.
+
+   .. py:method:: page()
+
+      Vrací stránku se záznamy načtenou dvoufázově (nejprve PK, pak plné objekty).
+
+      :param number: Číslo požadované stránky.
+      :return: Stránka paginátoru s objekty pro dané číslo stránky.
+
+
 .. py:class:: SearchTable
 
    Základní setup pro tabulky používané v aplikaci.

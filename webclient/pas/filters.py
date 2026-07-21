@@ -15,7 +15,7 @@ from core.constants import (
     SPOLUPRACE_AKTIVNI,
     UZIVATEL_SPOLUPRACE_RELATION_TYPE,
 )
-from core.filters import GeomWithinFilterMixin
+from core.filters import GeomIntersectsFilterMixin
 from core.forms import SelectMultipleSeparator
 from core.widgets import AutocompleteModelSelect2Multiple, AutocompleteSelect2Multiple
 from crispy_forms.layout import HTML, Div, Layout
@@ -54,7 +54,7 @@ from uzivatel.models import Organizace, Osoba, User
 logger = logging.getLogger(__name__)
 
 
-class SamostatnyNalezFilter(GeomWithinFilterMixin, HistorieFilter, filters.FilterSet):
+class SamostatnyNalezFilter(GeomIntersectsFilterMixin, HistorieFilter, filters.FilterSet):
     """
     Třída pro základní filtrování samostatného nálezu a jejich potomků.
     """
@@ -310,9 +310,9 @@ class SamostatnyNalezFilter(GeomWithinFilterMixin, HistorieFilter, filters.Filte
                 queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
             if "poznamka__icontains" in historie:
                 queryset_history &= Q(historie__historie__poznamka__icontains=historie["poznamka__icontains"])
-            queryset = queryset.filter(queryset_history)
+            queryset = queryset.filter(queryset_history).distinct()
 
-        return queryset.distinct()
+        return queryset
 
     def filter_obdobi(self, queryset, name, value):
         """
@@ -505,8 +505,8 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
                 queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
             if "poznamka__icontains" in historie:
                 queryset_history &= Q(historie__historie__poznamka__icontains=historie["poznamka__icontains"])
-            queryset = queryset.filter(queryset_history)
-        return queryset.distinct()
+            queryset = queryset.filter(queryset_history).distinct()
+        return queryset
 
 
 class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):

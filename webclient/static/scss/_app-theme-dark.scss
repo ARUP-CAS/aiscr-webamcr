@@ -1,5 +1,6 @@
 // --- DARK THEME ---
 // Apply dark mode styles when data-theme="dark" is set
+// Entity colors reuse shared mixins from app-mixins with $dark-entities.
 
 @import 'app-variables-dark';
 
@@ -72,6 +73,10 @@ body.app-dark-theme {
         .navbar-text {
             color: $navbar-text-dark !important;
         }
+
+        .navbar-collapse#navbarMobile {
+            background-color: $navbar-bg-dark !important;
+        }
     }
 
     // Main content
@@ -88,6 +93,38 @@ body.app-dark-theme {
 
                 &:hover {
                     color: lighten($primary-dark, 10);
+                    text-decoration: underline;
+                }
+            }
+
+            .app-footer-logos-toggle-wrapper {
+                .app-footer-logos-toggle-btn {
+                    color: $body-text-dark;
+
+                    &:hover {
+                        color: lighten($body-text-dark, 10);
+                    }
+                }
+            }
+
+            .app-footer-logos-wrapper {
+                .app-footer-logo:not(.app-logo-re3) {
+                    filter: brightness(0) invert(1);
+                    opacity: .65;
+                }
+
+                .app-logo-re3 {
+                    filter: none;
+                    opacity: 1;
+                }
+            }
+
+            .app-footer-icon-link {
+                color: $body-text-dark;
+
+                &:hover {
+                    color: lighten($body-text-dark, 10);
+                    text-decoration-color: lighten($body-text-dark, 10);
                 }
             }
         }
@@ -95,9 +132,95 @@ body.app-dark-theme {
     }
 
     #app-page-wrapper .container-fluid.app-content-wrapper {
+        @each $entity, $color in $dark-entities {
+            .app-entity-#{$entity} {
+                .app-table-list-wrapper {
+                    .table {
+                        thead {
+                            position: sticky;
+                            top: 0;
+                            --bs-table-bg: #{$color} !important;
+
+                            a {
+                                color: $white;
+                            }
+
+                            .white {
+                                color: $white;
+                            }
+                        }
+
+                        tbody {
+                            a {
+                                color: $color;
+                            }
+
+                            button {
+                                color: $color;
+                            }
+
+                            td {
+                                vertical-align: middle;
+                            }
+                        }
+                    }
+                }
+
+                // pagination
+                .pagination {
+                    .page-item {
+                        &.active {
+                            .page-link {
+                                color: $white;
+                                display: flex;
+                                border: 1px solid #dee2e6;
+                            }
+                        }
+
+                        .page-link {
+                            color: $color;
+                            display: flex;
+                        }
+                    }
+                }
+            }
+
+            .app-card-#{$entity} {
+                table {
+                    tr {
+                        td {
+                            &.app-ident-cely {
+                                color: $color !important;
+
+                                .material-icons {
+                                    color: $color;
+                                }
+
+                                a {
+                                    color: $color;
+                                }
+                            }
+
+                            &.app-cell-badge {
+                                padding-left: 0;
+                            }
+
+                            .badge {
+                                background-color: $color !important;
+                                color: $white;
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+
         background-color: $body-bg-dark;
 
         .app-toolbar {
+            background-color: $app-toolbar-bg-dark !important;
+
             .app-left {
                 .app-entity-item {
                     color: $body-text-dark;
@@ -116,6 +239,8 @@ body.app-dark-theme {
             }
         }
 
+
+
         .app-right .btn-group .btn {
             color: $body-text-dark;
         }
@@ -130,6 +255,10 @@ body.app-dark-theme {
 
         .uiElement.label {
             color: $gray-100-dark;
+        }
+
+        .leaflet-draw-actions a {
+            color: $body-text-dark !important;
         }
     }
 
@@ -170,6 +299,10 @@ body.app-dark-theme {
 
         .card-body {
             color: $body-text-dark;
+
+            .material-icons {
+                color: $body-text-dark;
+            }
         }
     }
 
@@ -431,6 +564,14 @@ body.app-dark-theme {
 
     }
 
+    .leaflet-control-zoom.leaflet-bar.leaflet-control a {
+        color: black;
+    }
+
+    .leaflet-marker-icon.marker-cluster.leaflet-zoom-animated.leaflet-interactive {
+        color: black;
+    }
+
     .select2-container--default {
         .select2-dropdown {
             background-color: $gray-400-dark;
@@ -654,11 +795,12 @@ body.app-dark-theme {
                     }
                 }
 
-                .app-theme-toggle {
+                .app-theme-toggle-button {
                     color: $body-text-dark !important;
 
-                    button:hover {
-                        opacity: 0.8;
+                    &:hover {
+                        opacity: 0.8 !important;
+                        color: $body-text-dark !important;
                     }
                 }
 
@@ -683,6 +825,10 @@ body.app-dark-theme {
 
         .dropzone.mb-0.dz-clickable {
             background-color: $gray-600-dark;
+        }
+
+        .bs-stepper .bs-stepper-header .step.active .bs-stepper-label {
+            color: $body-text-dark !important;
         }
     }
 }

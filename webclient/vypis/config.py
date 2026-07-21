@@ -368,9 +368,8 @@ DOKUMENTY_CONFIG = {
                 "dokument",
             ),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
-            "css_class": SimpleSectionTemplateName(NOT_SIMPLE_CSS_CLASS),
             "dok_zaznam": ChooseField(
-                _("vypis.dokumenty.dokument_casti.dok_zaznam.label"), ["archeologicky_zaznam", "projekt"]
+                _("vypis.dokumenty.dokument_casti.dok_zaznam.label"), ["archeologicky_zaznam", "projekt"], "dok_zaznam"
             ),
             "komponenty": SubSectionField(KOMPONENTY_DOKU_CONFIG),
             "neident_akce": NeidentAkceSubSectionField(NEIDENT_AKCE_CONFIG),
@@ -922,7 +921,7 @@ MODEL_CONFIG = {
             ),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
             "dok_zaznam": ChooseField(
-                _("vypis.model3d.dokument_casti.dok_zaznam.label"), ["archeologicky_zaznam", "projekt"]
+                _("vypis.model3d.dokument_casti.dok_zaznam.label"), ["archeologicky_zaznam", "projekt"], "dok_zaznam"
             ),
             "komponenty": SubSectionField(KOMPONENTY_DOKU_CONFIG),
         },

@@ -8943,6 +8943,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (attributes.class && attributes.class.includes('link-projekt')) {
                         tagName = tagName + '.link-projekt';
                     }
+                    if (attributes.class && attributes.class.includes('soubor')) {
+                        tagName = tagName + '.soubor';
+                    }
+                    if (attributes.class && attributes.class.includes('dok_zaznam') && attributes.class.includes('content')) {
+                        tagName = tagName + '.dok_zaznam';
+                    }
                     allowedTag = this.getAllowedTag(tagName);
 
                     if (allowedTag) {
@@ -9004,6 +9010,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     closingRtf: ''
                 },
                 {
+                    opening: 'div.dok_zaznam',
+                    openingRtf: '\\\'20',
+                    closing: '/div.dok_zaznam',
+                    closingRtf: ''
+                },
+                {
                     opening: 'em',
                     openingRtf: '{\\i',
                     closing: '/em',
@@ -9059,7 +9071,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 {
                     opening: 'li',
-                    openingRtf: '{\\pnlvlblt\\b\\\'b7}',
+                    openingRtf: '',
                     closing: '/li',
                     closingRtf: '\\par'
                 },
@@ -9220,6 +9232,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     closingRtf: '}\\sb70\\par}'
                 },
                 {
+                    opening: 'div.row.soubor',
+                    openingRtf: '{\\pard{\\b',
+                    closing: '/div.row.soubor',
+                    closingRtf: '}\\sb70}'
+                },
+                {
                     opening: 'div.new-record',
                     openingRtf: '\\page',
                     closing: '/div.new-record',
@@ -9233,9 +9251,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 {
                     opening: 'div.sub-header',
-                    openingRtf: '{\\pard{\\b',
+                    openingRtf: '{\\pard',
                     closing: '/div.sub-header',
-                    closingRtf: '}\\sb70\\par}'
+                    closingRtf: '\\sb70\\par}'
                 },
             ];
 
