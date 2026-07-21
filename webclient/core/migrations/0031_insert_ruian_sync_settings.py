@@ -58,7 +58,7 @@ def remove_ruian_sync_settings(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("core", "0028_remove_apirequestlog"),
+        ("core", "0030_alter_permissions_action"),
     ]
 
     operations = [
