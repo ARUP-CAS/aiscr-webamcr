@@ -1,11 +1,15 @@
 {% extends "base.html" %}
 {% load template_filters %}
 {% load template_tags %}
+{% load compress %}
 {% load i18n %}
 {% load static %}
 
 {% block head %}
 {{ block.super }}
+{% compress css %}
+    <link type="text/x-scss" href="{% static 'theme.scss' %}" rel="stylesheet" media="print">
+{% endcompress %}
 <script src="{% static 'js/html-to-rtf-browser.js' %}"></script>
 <script src="{% static 'js/vypis-report.js' %}"></script>
 {% endblock %}
