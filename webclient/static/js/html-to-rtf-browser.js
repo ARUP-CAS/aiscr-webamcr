@@ -9071,7 +9071,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 {
                     opening: 'li',
-                    openingRtf: '{\\pnlvlblt\\b\\\'b7}',
+                    openingRtf: '',
                     closing: '/li',
                     closingRtf: '\\par'
                 },
