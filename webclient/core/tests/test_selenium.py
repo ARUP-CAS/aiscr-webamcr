@@ -44,6 +44,7 @@ from selenium.common.exceptions import (
 from selenium.webdriver.chrome.webdriver import WebDriver as ChromeDriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from uzivatel.models import User
 from xml_generator.generator import DocumentGenerator
@@ -1339,13 +1340,34 @@ return new Date('2025-06-28T12:00:00Z');}};
                 index,
             )
 
-        try:
-            WebDriverWait(self.driver, timeout).until(_option_present)
-        except TimeoutException:
-            raise AssertionError(
-                f"select_dynamic_select2_autocomplete_option('{field_id}', '{search_text}', {index}): "
-                f"no matching option at index {index} loaded within {timeout}s"
-            )
+        # Select2 (django-autocomplete-light) debounceuje psaní na 250 ms a při rychlém či pod
+        # zátěží zaseknutém psaní může vystřelit dva AJAX dotazy za sebou (částečný prefix + plný
+        # text). Když se odpovědi vrátí mimo pořadí, zůstane v dropdownu stránka výsledků bez
+        # hledané volby a čekání marně vyprší, i když je záznam v DB. Proto při prvním neúspěchu
+        # pole vyčisti a text napiš znovu – tím se spustí jeden čistý, už nekonkurenční dotaz.
+        for attempt in range(2):
+            try:
+                WebDriverWait(self.driver, timeout).until(_option_present)
+                break
+            except TimeoutException:
+                if attempt == 0:
+                    try:
+                        # Dropdown zůstává otevřený; vyzvedni si vyhledávací pole znovu (mohlo
+                        # zastarat při překreslení výsledků) a přepiš do něj hledaný text.
+                        search = self.driver.find_element(
+                            By.CSS_SELECTOR, ".select2-container--open .select2-search__field"
+                        )
+                        search.send_keys(Keys.CONTROL, "a")
+                        search.send_keys(Keys.DELETE)
+                        search.send_keys(search_text)
+                        continue
+                    except (NoSuchElementException, StaleElementReferenceException):
+                        pass
+                raise AssertionError(
+                    f"select_dynamic_select2_autocomplete_option('{field_id}', '{search_text}', {index}): "
+                    f"no matching option at index {index} loaded within {timeout}s "
+                    f"(hodnota vyhledávacího pole: {search.get_attribute('value')!r})"
+                )
 
         # Najdi index-tou shodu a klikni na ni; kliknutí spustí výběr i 'change' událost Select2.
         needle = search_text.lower()
