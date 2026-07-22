@@ -203,7 +203,7 @@ services:
 
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:9.4.3
+    image: docker.elastic.co/logstash/logstash:9.4.4
     restart: always
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
