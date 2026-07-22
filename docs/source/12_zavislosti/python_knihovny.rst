@@ -132,7 +132,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://docs.celeryq.dev/
    * - certifi
-     - 2026.6.17
+     - 2026.7.22
      - Mozilla Public License 2.0 (MPL 2.0)
      - https://github.com/certifi/python-certifi
    * - cffi
@@ -308,7 +308,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.31.2
+     - 3.32.0
      - MIT
      - https://github.com/tox-dev/py-filelock
    * - freezegun
@@ -416,7 +416,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/raimon49/pip-licenses
    * - platformdirs
-     - 4.10.1
+     - 4.11.0
      - MIT
      - https://github.com/tox-dev/platformdirs
    * - polib
@@ -424,7 +424,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/izimobil/polib/
    * - pre_commit
-     - 4.6.0
+     - 4.6.1
      - MIT
      - https://github.com/pre-commit/pre-commit
    * - prettytable
@@ -488,7 +488,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.4.4
+     - 1.5.0
      - MIT License
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
@@ -504,7 +504,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://pythonhosted.org/pytz
    * - rarfile
-     - 4.3
+     - 4.4
      - ISC License (ISCL)
      - https://github.com/markokr/rarfile
    * - rcssmin
@@ -564,7 +564,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.grantjenks.com/docs/sortedcontainers/
    * - soupsieve
-     - 2.9
+     - 2.9.1
      - MIT
      - https://github.com/facelessuser/soupsieve
    * - sphinx_rtd_theme
@@ -660,7 +660,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.6.1
+     - 21.7.0
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
