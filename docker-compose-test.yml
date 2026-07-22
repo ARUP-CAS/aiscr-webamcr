@@ -218,7 +218,7 @@ services:
       - logstash_elastic_host
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.4.3
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.4.4
     hostname: elasticsearch
     restart: always
     environment:
