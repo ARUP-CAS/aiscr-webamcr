@@ -1,0 +1,13 @@
+[bootstrap]
+schema_in_use = "spec-driven"
+last_aligned_at = "2026-07-03"
+last_aligned_hub_revision = "b4592dcf03ab792f74e88de63d9c302aae73c7ac"
+mode = "bootstrap-mode-align"
+target_branch = "DN-agents-setup-review"
+
+[bootstrap.notes]
+summary = "Align run: applied the current hub direct-bundle baseline for enrolled assistant/vendor surfaces and OpenSpec workflow mirrors; refreshed preserve-only digest blocks for GEMINI.md and .github/copilot-instructions.md; removed stale dangling prompt/config references from AGENTS.md, CLAUDE.md, and GEMINI.md; delivered missing planning and usage rule readers across Claude, Cursor, Gemini, and Copilot; completed the sibling vendor entry-doc baseline reset by adding the AGENTS governance kernel and reducing duplicate hand-authored policy summaries to routing pointers. OpenSpec remains spec-driven and @fission-ai/openspec 1.5.0 remains aligned with the hub."
+
+[bootstrap.notes.open_items]
+mcp_assets_advisory = "doc_reconciliation suggests optional adoption of MCP setup/authentication reference and per-vendor MCP setup surfaces; not enrolled in this run."
+

@@ -1,23 +1,31 @@
 #!/usr/bin/env python3
+"""Validate artifacts produced by the AIS CR codebase-review workflow.
+
+The script uses only the Python standard library and works with repositories
+that provide an ``.agents/`` tree and ``review_config.toml``. Structured input is
+parsed with ``tomllib`` and ``json``; no machine-read field is recovered by matching
+Markdown prose. Requires Python 3.11 or newer.
+
+Usage:
+
+    python review_tools.py hash               # check tracked file hashes
+    python review_tools.py cross-validate     # cross-validate artifacts
+    python review_tools.py coverage-gaps      # identify analysis coverage gaps
+    python review_tools.py id-inventory       # inventory IDs across artifacts
+    python review_tools.py lint-artifacts     # validate artifact structure
+    python review_tools.py prompt-evolution   # inventory workflow-evolution evidence
+    python review_tools.py render             # regenerate the Markdown twins
+    python review_tools.py render --check     # fail when a Markdown twin is stale
+    python review_tools.py repo-structure     # report repository statistics
+    python review_tools.py status             # show review workflow status
+    python review_tools.py all                # run every check
 """
-Nástroje pro review — automatická kontrola artefaktů v AI review systému.
 
-Skript je bez závislostí na pip balíčcích (pouze standardní knihovna) a pracuje
-nad libovolným repozitářem, který používá strukturu `.agents/` a konfigurační
-soubor `review_config.yaml`.
-
-Použití:
-
-    python review_tools.py hash               # porovnání hashů sledovaných souborů
-    python review_tools.py cross-validate     # konzistence BUG/backlog/final_audit
-    python review_tools.py coverage-gaps      # nenakrytý kód (ORM, JS, skripty)
-    python review_tools.py id-inventory       # inventura a křížové reference ID
-    python review_tools.py lint-artifacts     # validace struktury .agents/ artefaktů
-    python review_tools.py prompt-evolution   # stav zapracování návrhů na prompt
-    python review_tools.py repo-structure     # přehled struktury repozitáře
-    python review_tools.py status             # dashboard stavu review systému
-    python review_tools.py all                # spuštění všech kontrol
-"""
+# The canonical engine is intentionally a single-file, standard-library bundle
+# so enrolled repositories can execute it without importing hub modules.
+# pylint: disable=too-many-lines,too-many-return-statements,too-many-branches
+# pylint: disable=too-many-statements,too-many-locals,too-many-nested-blocks
+# pylint: disable=too-many-instance-attributes
 
 from __future__ import annotations
 
@@ -30,260 +38,96 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-
-def _yaml_scalar(s: str):
-    """
-    Převede jednoduchou hodnotu z YAML na odpovídající Python typ.
-
-    :param s: Řetězec s hodnotou z jednoho řádku YAML.
-    :return: Převedená hodnota (int, bool, seznam, None nebo původní řetězec).
-    """
-    s = s.strip()
-    if not s or s in ("~", "null", "Null"):
-        return None
-    if s in ("true", "True"):
-        return True
-    if s in ("false", "False"):
-        return False
-    if len(s) >= 2 and s[0] in ('"', "'") and s[-1] == s[0]:
-        return s[1:-1]
-    if s.startswith("[") and s.endswith("]"):
-        return [_yaml_scalar(x) for x in s[1:-1].split(",") if x.strip()]
-    try:
-        return int(s)
-    except ValueError:
-        return s
+try:  # ``tomllib`` is standard library from Python 3.11 onward.
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - exercised on unsupported interpreters
+    tomllib = None  # type: ignore[assignment] # pylint: disable=invalid-name
 
 
-def _yaml_strip_comment(s: str) -> str:
-    """
-    Odstraní komentář z řádku YAML s ohledem na uvozovky.
+MIN_PYTHON = (3, 11)
 
-    Komentář začíná znakem `#`, který není součástí uvozovaného řetězce.
+#: Findings-source schema versions this engine understands.
+FINDINGS_SCHEMA_VERSIONS = frozenset({"1"})
 
-    :param s: Vstupní řetězec z YAML souboru.
-    :return: Řetězec bez komentářové části na konci řádku.
-    """
-    in_quote = None
-    for i, c in enumerate(s):
-        if c in ('"', "'"):
-            if in_quote == c:
-                in_quote = None
-            elif in_quote is None:
-                in_quote = c
-        elif c == "#" and in_quote is None and (i == 0 or s[i - 1] == " "):
-            return s[:i].rstrip()
-    return s
+SEVERITIES = ("Critical", "High", "Medium", "Low")
+PRIORITIES = ("High", "Medium", "Low")
+EFFORTS = ("S", "M", "L", "XL")
+
+#: A bug of severity X reconciles to backlog priority SEVERITY_TO_PRIORITY[X]
+#: unless the bug entry documents a deliberate divergence.
+SEVERITY_TO_PRIORITY = {
+    "Critical": "High",
+    "High": "High",
+    "Medium": "Medium",
+    "Low": "Low",
+}
 
 
-def _yaml_indent(line: str) -> int:
-    """
-    Vrátí počet počátečních mezer (odsazení) na řádku YAML.
-
-    :param line: Celý řádek textu.
-    :return: Počet úvodních mezer v řádku.
-    """
-    return len(line) - len(line.lstrip())
+class ReviewDataError(Exception):
+    """A structured review artifact could not be read or is malformed."""
 
 
-def _load_yaml(path: Path) -> dict:
-    """
-    Načte YAML soubor pomocí minimálního, na míru psaného parseru.
+def require_supported_python() -> None:
+    """Fail with an explicit version message instead of a ``tomllib`` traceback."""
+    if tomllib is None or sys.version_info < MIN_PYTHON:
+        current = ".".join(str(part) for part in sys.version_info[:3])
+        raise SystemExit(
+            f"review_tools.py requires Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]} or newer "
+            f"(found {current}); it reads TOML with the standard-library tomllib module."
+        )
 
-    Parser podporuje pouze podmnožinu YAML potřebnou pro `review_config.yaml`
-    a další interní konfigurační soubory.
 
-    :param path: Cesta k YAML souboru.
-    :return: Načtená struktura jako slovník, případně prázdný slovník.
-    """
+def _load_toml(path: Path) -> dict:
+    """Load a TOML document, returning an empty mapping when the file is absent."""
+    require_supported_python()
     if not path.exists():
         return {}
-    text = path.read_text(encoding="utf-8")
-    lines = text.splitlines()
-    result, _ = _yaml_map(lines, 0, -1)
-    return result
+    try:
+        with path.open("rb") as handle:
+            return tomllib.load(handle)
+    except tomllib.TOMLDecodeError as exc:
+        raise ReviewDataError(f"Invalid TOML in {path.name}: {exc}") from exc
 
 
-def _yaml_map(lines: list[str], pos: int, parent_indent: int) -> tuple[dict, int]:
-    """
-    Zpracuje blok YAML mapy (klíč → hodnota) z dané pozice.
-
-    :param lines: Seznam všech řádků YAML souboru.
-    :param pos: Aktuální index řádku, od kterého se má číst.
-    :param parent_indent: Odsazení nadřazeného bloku, které ukončuje mapu.
-    :return: Dvojice `(data, next_pos)` se slovníkem dat a indexem dalšího řádku.
-    """
-    result: dict = {}
-    block_indent: int | None = None
-    while pos < len(lines):
-        raw = lines[pos]
-        stripped = raw.lstrip()
-        if not stripped or stripped.startswith("#"):
-            pos += 1
-            continue
-        indent = _yaml_indent(raw)
-        if block_indent is None:
-            if indent <= parent_indent:
-                break
-            block_indent = indent
-        if indent < block_indent:
-            break
-        if indent > block_indent or stripped.startswith("- "):
-            pos += 1
-            continue
-        if ":" not in stripped:
-            pos += 1
-            continue
-        ci = stripped.index(":")
-        key = stripped[:ci].strip()
-        rest = _yaml_strip_comment(stripped[ci + 1 :]).strip()
-        if rest in ("", ">", "|"):
-            npos = pos + 1
-            while npos < len(lines):
-                ns = lines[npos].lstrip()
-                if ns and not ns.startswith("#"):
-                    break
-                npos += 1
-            if npos >= len(lines) or _yaml_indent(lines[npos]) <= indent:
-                result[key] = "" if rest != ">" else ""
-                pos = npos
-            elif rest == ">":
-                mlines: list[str] = []
-                while npos < len(lines):
-                    ns = lines[npos].lstrip()
-                    if not ns:
-                        npos += 1
-                        continue
-                    if _yaml_indent(lines[npos]) <= indent:
-                        break
-                    mlines.append(ns)
-                    npos += 1
-                result[key] = " ".join(mlines)
-                pos = npos
-            else:
-                ns = lines[npos].lstrip()
-                if ns.startswith("- "):
-                    val, pos = _yaml_seq(lines, npos, indent)
-                else:
-                    val, pos = _yaml_map(lines, npos, indent)
-                result[key] = val
-        elif rest.startswith("[") and rest.endswith("]"):
-            result[key] = [_yaml_scalar(x) for x in rest[1:-1].split(",") if x.strip()]
-            pos += 1
-        else:
-            result[key] = _yaml_scalar(rest)
-            pos += 1
-    return result, pos
+def _check_schema_version(data: dict, path: Path) -> None:
+    """Reject a findings source whose schema version this engine does not know."""
+    declared = data.get("schema_version")
+    if declared is None:
+        raise ReviewDataError(f"{path.name}: missing 'schema_version'")
+    if str(declared) not in FINDINGS_SCHEMA_VERSIONS:
+        known = ", ".join(sorted(FINDINGS_SCHEMA_VERSIONS))
+        raise ReviewDataError(f"{path.name}: unrecognized schema_version '{declared}' (known: {known})")
 
 
-def _yaml_seq(lines: list[str], pos: int, parent_indent: int) -> tuple[list, int]:
-    """
-    Zpracuje blok YAML sekvence (seznamu) z dané pozice.
+def _load_findings(path: Path, twin: Path, entry_key: str) -> dict:
+    """Load a findings source, refusing to fall back to its generated Markdown twin."""
+    if not path.exists():
+        if twin.exists():
+            raise ReviewDataError(
+                f"{path.name} is missing but {twin.name} exists; {twin.name} is a generated "
+                f"twin and is not a findings source. Run the migration before validating."
+            )
+        return {"schema_version": next(iter(FINDINGS_SCHEMA_VERSIONS)), entry_key: []}
+    data = _load_toml(path)
+    _check_schema_version(data, path)
+    entries = data.get(entry_key, [])
+    if not isinstance(entries, list):
+        raise ReviewDataError(f"{path.name}: '{entry_key}' must be an array of tables")
+    return data
 
-    :param lines: Seznam všech řádků YAML souboru.
-    :param pos: Aktuální index řádku, od kterého se má číst.
-    :param parent_indent: Odsazení nadřazeného bloku, které ukončuje sekvenci.
-    :return: Dvojice `(data, next_pos)` se seznamem hodnot a indexem dalšího řádku.
-    """
-    result: list = []
-    block_indent: int | None = None
-    while pos < len(lines):
-        raw = lines[pos]
-        stripped = raw.lstrip()
-        if not stripped or stripped.startswith("#"):
-            pos += 1
-            continue
-        indent = _yaml_indent(raw)
-        if block_indent is None:
-            block_indent = indent
-        if indent < block_indent:
-            break
-        if not stripped.startswith("- "):
-            if indent > block_indent:
-                pos += 1
-                continue
-            break
-        content = _yaml_strip_comment(stripped[2:]).strip()
-        if ":" in content and not content.startswith("{"):
-            ci = content.index(":")
-            k = content[:ci].strip()
-            v = _yaml_strip_comment(content[ci + 1 :]).strip()
-            item: dict = {}
-            if v in ("", ">", "|"):
-                npos = pos + 1
-                while npos < len(lines):
-                    ns = lines[npos].lstrip()
-                    if ns and not ns.startswith("#"):
-                        break
-                    npos += 1
-                if npos < len(lines) and _yaml_indent(lines[npos]) > indent + 2:
-                    ns = lines[npos].lstrip()
-                    if ns.startswith("- "):
-                        sv, npos = _yaml_seq(lines, npos, indent + 2)
-                    else:
-                        sv, npos = _yaml_map(lines, npos, indent + 2)
-                    item[k] = sv
-                else:
-                    item[k] = None
-                pos = npos
-            else:
-                item[k] = _yaml_scalar(v)
-                pos += 1
-            while pos < len(lines):
-                r2 = lines[pos]
-                s2 = r2.lstrip()
-                if not s2 or s2.startswith("#"):
-                    pos += 1
-                    continue
-                i2 = _yaml_indent(r2)
-                if i2 <= indent:
-                    break
-                if s2.startswith("- "):
-                    break
-                if ":" in s2:
-                    c2 = s2.index(":")
-                    k2 = s2[:c2].strip()
-                    v2 = _yaml_strip_comment(s2[c2 + 1 :]).strip()
-                    if v2 in ("", ">", "|"):
-                        npos = pos + 1
-                        while npos < len(lines):
-                            ns = lines[npos].lstrip()
-                            if ns and not ns.startswith("#"):
-                                break
-                            npos += 1
-                        if npos < len(lines) and _yaml_indent(lines[npos]) > i2:
-                            ns = lines[npos].lstrip()
-                            if ns.startswith("- "):
-                                sv, npos = _yaml_seq(lines, npos, i2)
-                            else:
-                                sv, npos = _yaml_map(lines, npos, i2)
-                            item[k2] = sv
-                        else:
-                            item[k2] = None
-                        pos = npos
-                    elif v2.startswith("[") and v2.endswith("]"):
-                        item[k2] = [_yaml_scalar(x) for x in v2[1:-1].split(",") if x.strip()]
-                        pos += 1
-                    else:
-                        item[k2] = _yaml_scalar(v2)
-                        pos += 1
-                else:
-                    pos += 1
-            result.append(item)
-        else:
-            result.append(_yaml_scalar(content))
-            pos += 1
-    return result, pos
+
+def load_bugs(cfg: Config) -> dict:
+    """Return the parsed ``bugs.toml`` document."""
+    return _load_findings(cfg.bugs_source, cfg.bugs_file, "bug")
+
+
+def load_backlog(cfg: Config) -> dict:
+    """Return the parsed ``refactoring_backlog.toml`` document."""
+    return _load_findings(cfg.backlog_source, cfg.backlog_file, "item")
 
 
 def _find_repo_root(start: Path) -> Path:
-    """
-    Najde kořen repozitáře tak, že postupně stoupá nadřazenými adresáři.
-
-    :param start: Výchozí adresář, typicky adresář tohoto skriptu.
-    :return: Kořen repozitáře s adresářem `.git`, nebo vstupní cesta pokud se
-        `.git` v rozumné hloubce nenajde.
-    """
+    """Find the nearest repository root, falling back to the start path."""
     current = start.resolve()
     for _ in range(20):
         if (current / ".git").exists():
@@ -296,12 +140,7 @@ def _find_repo_root(start: Path) -> Path:
 
 
 class Config:
-    """
-    Konfigurace review systému načtená z `review_config.yaml` včetně výchozích hodnot.
-
-    Třída zapouzdřuje cesty k adresářům `.agents/`, seznam ignorovaných adresářů,
-    informace o vendored souborech a definici úloh T01–T10.
-    """
+    """Review workflow configuration loaded from ``review_config.toml``."""
 
     def __init__(self, repo_root: Path | None = None, config_path: Path | None = None):
         script_dir = Path(__file__).resolve().parent
@@ -313,6 +152,9 @@ class Config:
         self.prompts_dir = self.agents_dir / "prompts"
 
         self.cache_file = self.config_dir / "review_cache.json"
+        # Findings sources of truth; the ``*.md`` twins are generated by ``render``.
+        self.bugs_source = self.reports_dir / "bugs.toml"
+        self.backlog_source = self.reports_dir / "refactoring_backlog.toml"
         self.bugs_file = self.reports_dir / "bugs.md"
         self.backlog_file = self.reports_dir / "refactoring_backlog.md"
         self.final_audit = self.reports_dir / "review_reports" / "final_audit.md"
@@ -339,20 +181,27 @@ class Config:
         self.vendored_file_patterns: set[str] = {"*.min.js", "*.min.css"}
         self.vendored_headers: tuple[str, ...] = ("/*!", "* @license", "* jQuery", "* Bootstrap")
         self.vendored_filenames: set[str] = set()
+        self.source_extensions: tuple[str, ...] = (
+            ".py",
+            ".js",
+            ".ts",
+            ".html",
+            ".css",
+            ".scss",
+            ".md",
+            ".yaml",
+            ".yml",
+            ".sh",
+        )
         self.tasks: list[dict] = []
         self.django_project_root: Path | None = None
 
-        cfg_path = config_path or self.config_dir / "review_config.yaml"
-        self._raw = _load_yaml(cfg_path)
+        cfg_path = config_path or self.config_dir / "review_config.toml"
+        self._raw = _load_toml(cfg_path)
         self._apply_config()
 
     def _apply_config(self):
-        """
-        Aplikuje hodnoty načtené z YAML konfigurace na instanci `Config`.
-
-        Nastaví ignorované adresáře, vzory pro vendored soubory, seznam úloh
-        a odvodí kořen Django projektu.
-        """
+        """Apply repository configuration to this instance."""
         cfg = self._raw
         if not cfg:
             self._detect_django_root()
@@ -373,15 +222,15 @@ class Config:
         tasks = cfg.get("tasks", [])
         if isinstance(tasks, list):
             self.tasks = [t for t in tasks if isinstance(t, dict)]
+        source_extensions = cfg.get("source_extensions", [])
+        if isinstance(source_extensions, list) and source_extensions:
+            self.source_extensions = tuple(
+                ext if ext.startswith(".") else f".{ext}" for ext in map(str, source_extensions)
+            )
         self._detect_django_root()
 
     def _detect_django_root(self):
-        """
-        Pokusí se odvodit kořen Django projektu z konfigurace nebo struktury repozitáře.
-
-        Nejprve využije `key_django_apps` z konfigurace, případně prohledá
-        běžné adresáře (`webclient`, `src`, ... ) a hledá v nich `manage.py`.
-        """
+        """Infer the Django project root from configuration or layout."""
         key_apps = self._raw.get("key_django_apps", [])
         if isinstance(key_apps, list) and key_apps:
             first_dir = key_apps[0].get("dir", "") if isinstance(key_apps[0], dict) else ""
@@ -399,19 +248,11 @@ class Config:
                 return
 
     def get_task_ids(self) -> list[str]:
-        """
-        Vrátí seznam ID úloh definovaných v `review_config.yaml`.
-
-        :return: Seznam řetězců typu `T01`, `T02`, ...
-        """
+        """Return task IDs defined in ``review_config.toml``."""
         return [t.get("id", "") for t in self.tasks if t.get("id")]
 
     def get_analysis_files(self) -> dict[str, Path]:
-        """
-        Vrátí mapování ID úlohy na cestu k jejímu analytickému JSON souboru.
-
-        :return: Slovník `{task_id: Path}`, kde `Path` je relativní k repozitáři.
-        """
+        """Map task IDs to their analysis JSON paths."""
         result: dict[str, Path] = {}
         for t in self.tasks:
             tid = t.get("id", "")
@@ -422,26 +263,14 @@ class Config:
 
 
 def _read_text(path: Path) -> str:
-    """
-    Bezpečně načte textový soubor v UTF‑8, případně vrátí prázdný řetězec.
-
-    :param path: Cesta k souboru.
-    :return: Obsah souboru jako unicode řetězec, nebo prázdný řetězec při chybě.
-    """
+    """Read a UTF-8 text file, returning an empty string when absent."""
     if not path.exists():
         return ""
     return path.read_text(encoding="utf-8")
 
 
 def _load_json(path: Path) -> dict:
-    """
-    Načte JSON soubor a vrátí jeho obsah jako slovník.
-
-    Při neexistujícím souboru nebo chybě v syntaxi vrací prázdný slovník.
-
-    :param path: Cesta k JSON souboru.
-    :return: Načtená struktura nebo prázdný slovník.
-    """
+    """Load a JSON object, returning an empty mapping for invalid input."""
     text = _read_text(path)
     if not text:
         return {}
@@ -452,17 +281,7 @@ def _load_json(path: Path) -> dict:
 
 
 def _is_vendored_js(filename: str, content: str, cfg: Config) -> bool:
-    """
-    Heuristicky určí, zda je JS soubor pravděpodobně vendored (třetí strana).
-
-    Kombinuje název souboru, glob vzory, hlavičkové komentáře a typické
-    signatury knihoven.
-
-    :param filename: Název souboru (bez cesty).
-    :param content: Obsah souboru.
-    :param cfg: Aktivní konfigurace `Config` s pravidly pro vendored soubory.
-    :return: `True`, pokud má být soubor považován za vendored, jinak `False`.
-    """
+    """Heuristically determine whether a JavaScript file is vendored."""
     if filename in cfg.vendored_filenames:
         return True
     for pat in cfg.vendored_file_patterns:
@@ -489,15 +308,7 @@ ID_PATTERNS = [
 
 
 def _extract_all_ids(text: str) -> set[str]:
-    """
-    Vyhledá ve vstupním textu všechny strukturované identifikátory.
-
-    Podporované formáty jsou např. `BUG-001`, `SEC-01`, `ORM-01`, případně
-    další ID odpovídající regulárním výrazům v `ID_PATTERNS`.
-
-    :param text: Vstupní text, typicky obsah markdown/JSON souboru.
-    :return: Množina nalezených ID bez duplicit.
-    """
+    """Extract every structured artifact identifier from text."""
     ids: set[str] = set()
     for pat in ID_PATTERNS:
         ids.update(pat.findall(text))
@@ -505,29 +316,15 @@ def _extract_all_ids(text: str) -> set[str]:
 
 
 def _section_header(name: str) -> str:
-    """
-    Vytvoří textový oddělovač sekce pro výstup příkazu `all`.
-
-    :param name: Název sekce (např. název dílčí kontroly).
-    :return: Řetězec s ASCII oddělovačem a názvem sekce.
-    """
+    """Create a section separator for the ``all`` command."""
     return f"\n{'=' * 60}\n {name}\n{'=' * 60}"
 
 
-# ── cmd: hash ─────────────────────────────────────────────────────────────────
+# -- cmd: hash -----------------------------------------------------------------
 
 
 def cmd_hash(cfg: Config, _args: argparse.Namespace) -> int:
-    """
-    Porovná uložené hashe souborů z `review_cache.json` se stavem v pracovním adresáři.
-
-    Výstupem je souhrn nezměněných, změněných a chybějících souborů; návratová
-    hodnota je počet změněných a chybějících souborů.
-
-    :param cfg: Konfigurace projektu.
-    :param _args: Argumenty příkazové řádky (nepoužité).
-    :return: Počet detekovaných problémů (změněné + chybějící soubory).
-    """
+    """Compare cached file hashes with the working tree."""
     cache = _load_json(cfg.cache_file)
     file_hashes = cache.get("file_hashes", {})
     changed: list[tuple[str, str, str, str]] = []
@@ -563,114 +360,105 @@ def cmd_hash(cfg: Config, _args: argparse.Namespace) -> int:
     return len(changed) + len(missing)
 
 
-# ── cmd: cross-validate ──────────────────────────────────────────────────────
+# -- cmd: cross-validate -------------------------------------------------------
 
 
-def _extract_bug_severities(text: str) -> dict[str, str]:
+_BUG_REF_RE = re.compile(r"\bBUG-\d+\b")
+
+
+def _item_bug_refs(item: dict) -> set[str]:
+    """Collect BUG identifiers an item cross-references, from its field and its prose."""
+    refs = {str(ref) for ref in item.get("bugs", [])}
+    for field in ("description", "recommendation", "title"):
+        refs.update(_BUG_REF_RE.findall(str(item.get(field, ""))))
+    return refs
+
+
+def _documents_divergence(bug: dict) -> bool:
+    """Return whether a bug entry documents a deliberate severity/priority divergence.
+
+    The rationale lives in the typed ``alignment`` field. Intent is never inferred from
+    wording inside ``description`` or ``recommended_fix``.
     """
-    Z markdownu `bugs.md` vytáhne mapování `BUG-XXX` → závažnost.
-
-    :param text: Obsah souboru `bugs.md`.
-    :return: Slovník s klíčem `BUG-XXX` a hodnotou textu závažnosti.
-    """
-    result: dict[str, str] = {}
-    for m in re.finditer(r"### (BUG-\d+).*?\n.*?\*\*Závažnost:\*\*\s*(\S+)", text, re.DOTALL):
-        result[m.group(1)] = m.group(2)
-    return result
+    return bool(str(bug.get("alignment", "")).strip())
 
 
-def _extract_backlog_items(text: str) -> dict[str, str]:
-    """
-    Z backlogu vytáhne mapování identifikátoru položky na ID úlohy (např. `T03`).
-
-    :param text: Obsah souboru `refactoring_backlog.md`.
-    :return: Slovník `{ITEM_ID: task_prefix}`.
-    """
-    result: dict[str, str] = {}
-    for m in re.finditer(r"### \[(T\d+[a-z]?(?:/T\d+[a-z]?)?)\]\s+([A-Z][\w-]*\d+)", text):
-        result[m.group(2)] = m.group(1)
-    return result
-
-
-def _get_backlog_priority_section(text: str, item_id: str) -> str | None:
-    """
-    Určí, ve které sekci priorit (`Vysoká`, `Střední`, `Nízká`) se položka nachází.
-
-    :param text: Obsah backlogu.
-    :param item_id: ID položky, které se má vyhledat.
-    :return: Název sekce priority, nebo `None`, pokud položka není nalezena.
-    """
-    sections = list(re.finditer(r"^## (Vysoká|Střední|Nízká) priorita", text, re.MULTILINE))
-    item_pos = text.find(item_id)
-    if item_pos == -1:
-        return None
-    for i, sec in enumerate(sections):
-        start = sec.start()
-        end = sections[i + 1].start() if i + 1 < len(sections) else len(text)
-        if start <= item_pos < end:
-            return sec.group(1)
-    return None
+def _task_prefixes(item: dict) -> list[str]:
+    """Split an item's task field, which may name two phases as ``T02/T03``."""
+    return [part.strip() for part in str(item.get("task", "")).split("/") if part.strip()]
 
 
 def cmd_cross_validate(cfg: Config, _args: argparse.Namespace) -> int:
-    """
-    Provádí křížovou validaci mezi `bugs.md`, backlogem a finálním auditem.
-
-    Kontroluje, zda se BUG ID vzájemně odkazují z backlogu a reportů, ověřuje
-    existenci reportů zapsaných v cache a porovnává závažnost BUG položek
-    s přiřazenou prioritou v backlogu.
-
-    :param cfg: Konfigurace projektu.
-    :param _args: Argumenty příkazové řádky (nepoužité).
-    :return: Počet chyb nalezených při validaci.
-    """
+    """Cross-validate bugs, backlog entries, reports, and cached metadata."""
     errors: list[str] = []
     warnings: list[str] = []
 
-    bugs_text = _read_text(cfg.bugs_file)
-    backlog_text = _read_text(cfg.backlog_file)
+    try:
+        bugs_doc = load_bugs(cfg)
+        backlog_doc = load_backlog(cfg)
+    except ReviewDataError as exc:
+        print("[cross-validate] Errors:   1")
+        print(f"    ERROR: {exc}")
+        return 1
+
+    bugs = bugs_doc.get("bug", [])
+    items = backlog_doc.get("item", [])
     final_text = _read_text(cfg.final_audit)
 
-    bug_ids = set(re.findall(r"### (BUG-\d+)", bugs_text))
-    bug_sevs = _extract_bug_severities(bugs_text)
-    backlog_items = _extract_backlog_items(backlog_text)
+    bug_ids = {str(b.get("id", "")) for b in bugs if b.get("id")}
+    bug_sevs = {str(b["id"]): str(b.get("severity", "")) for b in bugs if b.get("id")}
+    bugs_by_id = {str(b["id"]): b for b in bugs if b.get("id")}
 
-    backlog_bug_refs = set(re.findall(r"BUG-\d+", backlog_text))
-    for ref in sorted(backlog_bug_refs):
-        if ref not in bug_ids:
-            errors.append(f"Backlog references {ref} but it does not exist in bugs.md")
+    for item in items:
+        item_id = str(item.get("id", "?"))
+        for ref in sorted(_item_bug_refs(item)):
+            if ref not in bug_ids:
+                errors.append(f"Backlog item {item_id} references {ref} but it does not exist in bugs.toml")
 
-    for bug in sorted(bug_ids):
-        if bug not in backlog_text and bug not in final_text:
-            warnings.append(f"{bug} is not referenced in backlog or final_audit")
+    referenced_bugs: set[str] = set()
+    for item in items:
+        referenced_bugs.update(_item_bug_refs(item))
+    for bug_id in sorted(bug_ids):
+        if bug_id not in referenced_bugs and bug_id not in final_text:
+            warnings.append(f"{bug_id} is not referenced in backlog or final_audit")
 
     reports_dir = cfg.review_reports_dir
-    for item_id, prefix in sorted(backlog_items.items()):
-        prefixes = [p.strip() for p in prefix.split("/")]
-        found = False
-        for p in prefixes:
-            report = reports_dir / f"{p}.md"
-            if report.exists():
-                rt = _read_text(report)
-                if item_id in rt:
-                    found = True
-                    break
-        if not found:
-            names = ", ".join(f"{p}.md" for p in prefixes)
-            warnings.append(f"Backlog item {item_id} [{prefix}]: not mentioned in {names}")
-
-    sev_map = {"Kritická": "Vysoká", "Vysoká": "Vysoká", "Střední": "Střední", "Nízká": "Nízká"}
-    for bug in sorted(bug_ids):
-        sev = bug_sevs.get(bug)
-        if not sev or bug not in backlog_text:
+    for item in items:
+        item_id = str(item.get("id", "?"))
+        prefixes = _task_prefixes(item)
+        if not prefixes:
+            errors.append(f"Backlog item {item_id}: missing 'task'")
             continue
-        bs = _get_backlog_priority_section(backlog_text, bug)
-        if bs and sev in sev_map and bs != sev_map[sev]:
-            bug_block = bugs_text.split(bug)[1].split("###")[0] if bug in bugs_text else ""
-            if "Sjednocení" not in bug_block and "reconcil" not in bug_block.lower():
+        found = False
+        for prefix in prefixes:
+            report = reports_dir / f"{prefix}.md"
+            if report.exists() and item_id in _read_text(report):
+                found = True
+                break
+        if not found:
+            names = ", ".join(f"{prefix}.md" for prefix in prefixes)
+            warnings.append(f"Backlog item {item_id} [{'/'.join(prefixes)}]: not mentioned in {names}")
+
+    # Severity/priority reconciliation. A bug with no severity is an error, not a skip:
+    # this check must never report success because it could not read its own input.
+    for bug_id in sorted(bug_ids):
+        severity = bug_sevs.get(bug_id, "")
+        if not severity:
+            errors.append(f"{bug_id}: missing 'severity'; cannot reconcile against backlog priority")
+            continue
+        if severity not in SEVERITY_TO_PRIORITY:
+            errors.append(f"{bug_id}: severity '{severity}' is outside the canonical vocabulary")
+            continue
+        expected = SEVERITY_TO_PRIORITY[severity]
+        for item in items:
+            if bug_id not in _item_bug_refs(item):
+                continue
+            priority = str(item.get("priority", ""))
+            if priority and priority != expected and not _documents_divergence(bugs_by_id[bug_id]):
                 warnings.append(
-                    f"{bug}: severity={sev} but in backlog '{bs} priorita' "
-                    f"(expected '{sev_map[sev]} priorita' or documented rationale)"
+                    f"{bug_id}: severity={severity} but backlog item "
+                    f"{item.get('id', '?')} has priority '{priority}' "
+                    f"(expected '{expected}' or a documented rationale)"
                 )
 
     cache = _load_json(cfg.cache_file)
@@ -683,7 +471,7 @@ def cmd_cross_validate(cfg: Config, _args: argparse.Namespace) -> int:
             if srp and not (cfg.repo_root / srp).exists():
                 errors.append(f"Cache sub-task {sub_id}: report_path '{srp}' does not exist")
 
-    print(f"[cross-validate] BUG entries: {len(bug_ids)}, Backlog items: {len(backlog_items)}")
+    print(f"[cross-validate] BUG entries: {len(bug_ids)}, Backlog items: {len(items)}")
     print(f"  Errors:   {len(errors)}")
     print(f"  Warnings: {len(warnings)}")
     for e in errors:
@@ -693,22 +481,11 @@ def cmd_cross_validate(cfg: Config, _args: argparse.Namespace) -> int:
     return len(errors)
 
 
-# ── cmd: coverage-gaps ────────────────────────────────────────────────────────
+# -- cmd: coverage-gaps --------------------------------------------------------
 
 
 def cmd_coverage_gaps(cfg: Config, _args: argparse.Namespace) -> int:
-    """
-    Hledá části kódu, které nejsou pokryté existujícími analýzami.
-
-    Kontroluje:
-    - Django modely vs. `orm_analysis.json` (T03),
-    - vlastní JS kód vs. `frontend_analysis.json` (T07),
-    - skripty vs. `scripts_analysis.json` (T10).
-
-    :param cfg: Konfigurace projektu.
-    :param _args: Argumenty příkazové řádky (nepoužité).
-    :return: Počet nalezených mezer v pokrytí.
-    """
+    """Find source areas not represented in existing analysis artifacts."""
     gaps: list[tuple[str, str, str]] = []
     info_lines: list[str] = []
 
@@ -775,20 +552,11 @@ def cmd_coverage_gaps(cfg: Config, _args: argparse.Namespace) -> int:
     return len(gaps)
 
 
-# ── cmd: id-inventory ─────────────────────────────────────────────────────────
+# -- cmd: id-inventory ---------------------------------------------------------
 
 
 def cmd_id_inventory(cfg: Config, _args: argparse.Namespace) -> int:
-    """
-    Vytvoří inventuru všech strukturovaných ID napříč artefakty v `.agents/`.
-
-    ID se čtou z `bugs.md`, backlogu, jednotlivých reportů i analytických JSON
-    souborů a následně se vypisují podezřelé případy (např. sirotčí BUG ID).
-
-    :param cfg: Konfigurace projektu.
-    :param _args: Argumenty příkazové řádky (nepoužité).
-    :return: Počet problémových ID (např. sirotčích BUG záznamů).
-    """
+    """Inventory structured identifiers across review artifacts."""
     id_locations: dict[str, set[str]] = defaultdict(set)
     trivial_ids = {"UTF-8", "ISO-8601"}
 
@@ -799,15 +567,17 @@ def cmd_id_inventory(cfg: Config, _args: argparse.Namespace) -> int:
                 continue
             id_locations[found_id].add(label)
 
-    if cfg.bugs_file.exists():
-        _scan_file(cfg.bugs_file, "bugs.md")
-    if cfg.backlog_file.exists():
-        _scan_file(cfg.backlog_file, "backlog")
+    # Scan the findings sources, not their generated twins, so identifiers stay
+    # authoritative even when a twin has drifted.
+    if cfg.bugs_source.exists():
+        _scan_file(cfg.bugs_source, "bugs.toml")
+    if cfg.backlog_source.exists():
+        _scan_file(cfg.backlog_source, "backlog")
     if cfg.final_audit.exists():
         _scan_file(cfg.final_audit, "final_audit")
 
     for rpt in sorted(cfg.review_reports_dir.glob("*.md")):
-        if rpt.name == "README.md" or rpt.name == "final_audit.md":
+        if rpt.name in ("README.md", "final_audit.md"):
             continue
         _scan_file(rpt, rpt.stem)
 
@@ -847,20 +617,11 @@ def cmd_id_inventory(cfg: Config, _args: argparse.Namespace) -> int:
     return issues
 
 
-# ── cmd: lint-artifacts ───────────────────────────────────────────────────────
+# -- cmd: lint-artifacts -------------------------------------------------------
 
 
 def cmd_lint_artifacts(cfg: Config, _args: argparse.Namespace) -> int:
-    """
-    Ověří základní strukturu a konzistenci artefaktů v adresáři `.agents/`.
-
-    Kontroluje existenci klíčových adresářů, validitu JSON souborů, základní
-    strukturu `review_cache.json` a přítomnost povinných polí v `bugs.md`.
-
-    :param cfg: Konfigurace projektu.
-    :param _args: Argumenty příkazové řádky (nepoužité).
-    :return: Počet nalezených chyb.
-    """
+    """Validate the structure and consistency of ``.agents/`` artifacts."""
     errors: list[str] = []
     warnings: list[str] = []
 
@@ -902,16 +663,42 @@ def cmd_lint_artifacts(cfg: Config, _args: argparse.Namespace) -> int:
     else:
         warnings.append("review_cache.json not found")
 
-    bugs_text = _read_text(cfg.bugs_file)
-    if bugs_text:
-        bug_entries = re.findall(r"### (BUG-\d+)", bugs_text)
-        for bug in bug_entries:
-            block = bugs_text.split(bug)[1].split("###")[0] if bug in bugs_text else ""
-            if "**Závažnost:**" not in block and "**Severity:**" not in block:
-                warnings.append(f"{bug}: missing severity field")
-            has_file_ref = any(marker in block for marker in ("**Soubor:**", "**Soubory:**", "**File:**", "**Files:**"))
-            if not has_file_ref:
-                warnings.append(f"{bug}: missing file reference")
+    try:
+        bugs_doc = load_bugs(cfg)
+        for index, bug in enumerate(bugs_doc.get("bug", [])):
+            bug_id = str(bug.get("id", "")) or f"bug[{index}]"
+            severity = str(bug.get("severity", ""))
+            if not severity:
+                errors.append(f"{bug_id}: missing 'severity'")
+            elif severity not in SEVERITIES:
+                errors.append(
+                    f"{bug_id}: severity '{severity}' is outside the canonical vocabulary ({', '.join(SEVERITIES)})"
+                )
+            if not bug.get("files"):
+                errors.append(f"{bug_id}: missing file reference")
+            if not bug.get("task"):
+                warnings.append(f"{bug_id}: missing 'task'")
+    except ReviewDataError as exc:
+        errors.append(str(exc))
+
+    try:
+        backlog_doc = load_backlog(cfg)
+        for index, item in enumerate(backlog_doc.get("item", [])):
+            item_id = str(item.get("id", "")) or f"item[{index}]"
+            priority = str(item.get("priority", ""))
+            if not priority:
+                errors.append(f"{item_id}: missing 'priority'")
+            elif priority not in PRIORITIES:
+                errors.append(
+                    f"{item_id}: priority '{priority}' is outside the canonical vocabulary ({', '.join(PRIORITIES)})"
+                )
+            effort = str(item.get("effort", ""))
+            if effort and effort not in EFFORTS:
+                warnings.append(f"{item_id}: effort '{effort}' is outside {', '.join(EFFORTS)}")
+    except ReviewDataError as exc:
+        errors.append(str(exc))
+
+    errors.extend(_stale_twin_errors(cfg))
 
     for tf in cfg.get_analysis_files().values():
         if tf.suffix == ".json" and not tf.exists():
@@ -930,116 +717,255 @@ def cmd_lint_artifacts(cfg: Config, _args: argparse.Namespace) -> int:
     return len(errors)
 
 
-# ── cmd: prompt-evolution ─────────────────────────────────────────────────────
+# -- cmd: prompt-evolution -----------------------------------------------------
+
+
+_PROMPT_EVOLUTION_FILE_RE = re.compile(r"^(?P<task>[TU]\d{2}[a-z]?)_prompt_update\.md$", re.IGNORECASE)
+_PROMPT_EVOLUTION_README_NAMES = {"README.md", "README_en.md"}
+
+
+def _relative_display_path(root: Path, path: Path) -> str:
+    """Return a repository-relative path when possible."""
+    try:
+        return str(path.relative_to(root)).replace("\\", "/")
+    except ValueError:
+        return str(path)
+
+
+def _count_prompt_evolution_bullets(content: str) -> int:
+    """Count top-level bullet suggestions in a feedback file."""
+    return len(re.findall(r"(?m)^\s*-\s+\S", content))
 
 
 def cmd_prompt_evolution(cfg: Config, _args: argparse.Namespace) -> int:
-    """
-    Zkontroluje, které návrhy na úpravu promptu byly již zapracovány do
-    `review_codebase.md`.
-
-    Pro každý soubor v `prompt_evolution/` heuristicky porovná text návrhu
-    s aktuálním obsahem hlavního promptu a vypíše dosud neintegrované body.
-
-    :param cfg: Konfigurace projektu.
-    :param _args: Argumenty příkazové řádky (nepoužité).
-    :return: Počet návrhů, které dosud nejsou zapracovány.
-    """
+    """Inventory workflow-evolution evidence and handoff status."""
     pe_dir = cfg.prompt_evolution_dir
     if not pe_dir.exists():
-        print("[prompt-evolution] No prompt_evolution/ directory found.")
+        print("[prompt-evolution] No workflow-evolution evidence found.")
         return 0
 
-    codebase_text = _read_text(cfg.review_codebase)
-    if not codebase_text:
-        print("[prompt-evolution] review_codebase.md not found; cannot check integration.")
+    evidence_files = sorted(path for path in pe_dir.iterdir() if path.is_file())
+    feedback_files: list[tuple[str, Path, int, bool]] = []
+    malformed: list[tuple[Path, str]] = []
+
+    for evidence_file in evidence_files:
+        if evidence_file.name in _PROMPT_EVOLUTION_README_NAMES:
+            continue
+        match = _PROMPT_EVOLUTION_FILE_RE.match(evidence_file.name)
+        if not match:
+            malformed.append((evidence_file, "unexpected filename; expected <task_id>_prompt_update.md"))
+            continue
+        content = _read_text(evidence_file).strip()
+        if not content:
+            malformed.append((evidence_file, "empty evidence file"))
+            continue
+        feedback_files.append(
+            (
+                match.group("task").upper(),
+                evidence_file,
+                _count_prompt_evolution_bullets(content),
+                bool(re.search(r"(?m)^\s*-\s+\S", content)),
+            )
+        )
+
+    if not feedback_files and not malformed:
+        print("[prompt-evolution] No workflow-evolution evidence found.")
         return 0
 
-    pe_files = sorted(pe_dir.glob("*_prompt_update.md"))
-    if not pe_files:
-        print("[prompt-evolution] No prompt evolution files found.")
-        return 0
+    total_bullets = sum(count for _, _, count, _ in feedback_files)
+    print("[prompt-evolution] Workflow-evolution evidence inventory")
+    print(f"  Directory: {_relative_display_path(cfg.repo_root, pe_dir)}")
+    print(f"  Evidence files: {len(feedback_files)}")
+    print(f"  Bullet suggestions: {total_bullets}")
+    print(f"  Pending handoff candidates: {len(feedback_files)}")
+    print(f"  Malformed evidence: {len(malformed)}")
+    print("  Hub handoff: report-to-backlog-handoff -> /aiscr-note-idea after approval")
 
-    pending: list[tuple[str, str]] = []
-    integrated = 0
-    total_suggestions = 0
+    for task, path, bullet_count, has_bullets in feedback_files:
+        rel_path = _relative_display_path(cfg.repo_root, path)
+        shape = f"{bullet_count} bullet(s)" if has_bullets else "unstructured notes"
+        print(f"    [{task}] {rel_path}: {shape}; disposition pending triage")
 
-    for pf in pe_files:
-        task = pf.stem.replace("_prompt_update", "")
-        content = _read_text(pf)
-        suggestions = re.split(r"\n-\s+", content)
-        for suggestion in suggestions:
-            suggestion = suggestion.strip()
-            if not suggestion or len(suggestion) < 20:
-                continue
-            total_suggestions += 1
-            keywords = re.findall(r"\b[A-Za-z_]{4,}\b", suggestion)
-            significant = [
-                k
-                for k in keywords
-                if k.lower()
-                not in {
-                    "should",
-                    "could",
-                    "would",
-                    "this",
-                    "that",
-                    "with",
-                    "from",
-                    "have",
-                    "been",
-                    "they",
-                    "were",
-                    "into",
-                    "more",
-                    "when",
-                    "also",
-                    "each",
-                    "does",
-                    "what",
-                    "make",
-                    "will",
-                    "than",
-                    "only",
-                    "just",
-                    "very",
-                    "note",
-                    "such",
-                    "must",
-                }
-            ]
-            match_count = sum(1 for k in significant[:6] if k.lower() in codebase_text.lower())
-            if match_count >= 2:
-                integrated += 1
-            else:
-                short = suggestion[:80].replace("\n", " ")
-                pending.append((task.upper(), short))
+    for path, reason in malformed:
+        rel_path = _relative_display_path(cfg.repo_root, path)
+        print(f"    ERROR: {rel_path}: {reason}")
 
-    print(f"[prompt-evolution] Files: {len(pe_files)}, Suggestions: {total_suggestions}")
-    print(f"  Integrated:  {integrated}")
-    print(f"  Pending:     {len(pending)}")
-    if pending:
-        for task, desc in pending[:10]:
-            print(f"    [{task}] {desc}...")
-        if len(pending) > 10:
-            print(f"    ... and {len(pending) - 10} more")
-    return len(pending)
+    return len(malformed)
 
 
-# ── cmd: repo-structure ───────────────────────────────────────────────────────
+# -- cmd: render ---------------------------------------------------------------
+
+
+def _inline(text: str) -> str:
+    """Collapse a multi-line TOML prose field onto the single line Markdown expects."""
+    return re.sub(r"\s*\n\s*", " ", str(text).strip())
+
+
+def _format_location(entry: dict) -> str:
+    """Render one ``[[bug.files]]`` entry as a Markdown code span plus annotations."""
+    location = str(entry.get("path", ""))
+    if entry.get("line"):
+        location = f"{location}:{entry['line']}"
+    rendered = f"`{location}`"
+    if entry.get("symbol"):
+        rendered += f" — `{entry['symbol']}`"
+    if entry.get("note"):
+        rendered += f" *({entry['note']})*"
+    return rendered
+
+
+def _render_bug(bug: dict) -> str:
+    """Render a single bug entry."""
+    lines = [f"### {bug.get('id', '?')}: {_inline(bug.get('title', ''))}", ""]
+    files = bug.get("files") or []
+    # A lone plain location stays inline; anything annotated or multiple becomes a list.
+    note = f" {bug['files_note']}" if bug.get("files_note") else ""
+    if len(files) == 1 and not files[0].get("symbol") and not files[0].get("note"):
+        lines.append(f"- **Files:** {_format_location(files[0])}{note}")
+    else:
+        lines.append(f"- **Files:**{note}")
+        for entry in files:
+            lines.append(f"  - {_format_location(entry)}")
+    lines.append(f"- **Severity:** {bug.get('severity', '')}")
+    if bug.get("github_issue"):
+        lines.append(f"- **GitHub Issue:** {bug['github_issue']}")
+    if bug.get("description"):
+        lines.append(f"- **Description:** {_inline(bug['description'])}")
+    if bug.get("recommended_fix"):
+        lines.append(f"- **Recommended fix:** {_inline(bug['recommended_fix'])}")
+    if bug.get("alignment"):
+        lines.append(f"- **Alignment:** {_inline(bug['alignment'])}")
+    lines.append(f"- **Task:** {bug.get('task', '')}")
+    return "\n".join(lines)
+
+
+def render_bugs(doc: dict) -> str:
+    """Render ``bugs.md`` from the parsed ``bugs.toml`` document."""
+    parts: list[str] = []
+    preamble = str(doc.get("preamble", "")).strip()
+    if preamble:
+        parts.append(preamble)
+    entries = [_render_bug(bug) for bug in doc.get("bug", [])]
+    if entries:
+        parts.append("\n\n---\n\n".join(entries))
+    return "\n\n".join(parts).rstrip() + "\n"
+
+
+def _render_backlog_item(item: dict) -> str:
+    """Render a single refactoring-backlog item.
+
+    Optional fields are emitted only when present, so a sibling that never records an
+    ``impact`` or an ``effort`` does not gain an empty bullet.
+    """
+    header = f"### [{item.get('task', '')}] {item.get('id', '?')}: {_inline(item.get('title', ''))}"
+    lines = [header]
+    files = item.get("files") or []
+    if files:
+        rendered_files = "- **Files:** " + ", ".join(f"`{f}`" for f in files)
+        if item.get("files_note"):
+            rendered_files += f" {item['files_note']}"
+        lines.append(rendered_files)
+    applications = item.get("applications") or []
+    if applications:
+        lines.append("- **Applications:** " + ", ".join(str(a) for a in applications))
+    if item.get("description"):
+        lines.append(f"- **Description:** {_inline(item['description'])}")
+    if item.get("impact"):
+        lines.append(f"- **Impact:** {_inline(item['impact'])}")
+    if item.get("recommendation"):
+        lines.append(f"- **Recommendation:** {_inline(item['recommendation'])}")
+    if item.get("effort"):
+        lines.append(f"- **Effort:** {item['effort']}")
+    if item.get("severity"):
+        lines.append(f"- **Severity:** {item['severity']}")
+    superseded = item.get("supersedes") or []
+    if superseded:
+        lines.append("- **Supersedes:** " + "; ".join(str(s) for s in superseded))
+    return "\n".join(lines)
+
+
+def render_backlog(doc: dict) -> str:
+    """Render ``refactoring_backlog.md`` from the parsed backlog document."""
+    parts: list[str] = []
+    preamble = str(doc.get("preamble", "")).strip()
+    if preamble:
+        parts.append(preamble)
+
+    section_notes = doc.get("section_notes", {})
+    items = doc.get("item", [])
+    for priority in PRIORITIES:
+        in_section = [i for i in items if str(i.get("priority", "")) == priority]
+        if not in_section:
+            continue
+        section = [f"## {priority} Priority"]
+        note = str(section_notes.get(priority, "")).strip()
+        if note:
+            section.append(note)
+        section.append("\n\n".join(_render_backlog_item(i) for i in in_section))
+        parts.append("\n\n".join(section))
+    return "\n\n".join(parts).rstrip() + "\n"
+
+
+def _twin_targets(cfg: Config) -> list[tuple[Path, str]]:
+    """Return each generated twin path paired with the text it should contain."""
+    return [
+        (cfg.bugs_file, render_bugs(load_bugs(cfg))),
+        (cfg.backlog_file, render_backlog(load_backlog(cfg))),
+    ]
+
+
+def _stale_twin_errors(cfg: Config) -> list[str]:
+    """Report generated twins whose contents diverge from their TOML source."""
+    try:
+        targets = _twin_targets(cfg)
+    except ReviewDataError as exc:
+        return [str(exc)]
+    stale: list[str] = []
+    for path, expected in targets:
+        if not path.exists():
+            stale.append(f"{path.name} is missing; run 'review_tools.py render'")
+        elif _read_text(path) != expected:
+            stale.append(f"{path.name} is stale; run 'review_tools.py render'")
+    return stale
+
+
+def cmd_render(cfg: Config, args: argparse.Namespace) -> int:
+    """Regenerate the Markdown twins, or verify they are current under ``--check``."""
+    check_only = getattr(args, "check", False)
+    try:
+        targets = _twin_targets(cfg)
+    except ReviewDataError as exc:
+        print(f"[render] ERROR: {exc}")
+        return 1
+
+    if check_only:
+        stale = _stale_twin_errors(cfg)
+        print(f"[render --check] Stale twins: {len(stale)}")
+        for message in stale:
+            print(f"    ERROR: {message}")
+        return len(stale)
+
+    written = 0
+    for path, expected in targets:
+        if not path.exists() or _read_text(path) != expected:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(expected, encoding="utf-8")
+            written += 1
+            print(f"    wrote {path.name}")
+    print(f"[render] Twins regenerated: {written}, already current: {len(targets) - written}")
+    return 0
+
+
+def cmd_render_check(cfg: Config, _args: argparse.Namespace) -> int:
+    """Run ``render`` in verification mode for the aggregate ``all`` command."""
+    return cmd_render(cfg, argparse.Namespace(check=True))
+
+
+# -- cmd: repo-structure -------------------------------------------------------
 
 
 def cmd_repo_structure(cfg: Config, _args: argparse.Namespace) -> int:
-    """
-    Projde strukturu repozitáře a vygeneruje souhrnné statistiky o souborech.
-
-    Vypisuje počty souborů dle přípon, podle horních adresářů, seznam největších
-    zdrojových souborů a případné nové adresáře, které nejsou v `repository_map.json`.
-
-    :param cfg: Konfigurace projektu.
-    :param _args: Argumenty příkazové řádky (nepoužité).
-    :return: Vždy `0` (informativní příkaz bez chybového kódu).
-    """
+    """Report repository file, extension, line-count, and layout statistics."""
     ext_counts: Counter = Counter()
     ext_lines: Counter = Counter()
     large_files: list[tuple[str, int]] = []
@@ -1049,7 +975,7 @@ def cmd_repo_structure(cfg: Config, _args: argparse.Namespace) -> int:
     for root, dirs, files in os.walk(cfg.repo_root):
         dirs[:] = [d for d in dirs if d not in cfg.ignored_dirs]
         rel_root = Path(root).relative_to(cfg.repo_root)
-        top_dir = str(rel_root).split(os.sep)[0] if str(rel_root) != "." else "."
+        top_dir = str(rel_root).split(os.sep, maxsplit=1)[0] if str(rel_root) != "." else "."
 
         for f in files:
             fp = Path(root) / f
@@ -1058,7 +984,7 @@ def cmd_repo_structure(cfg: Config, _args: argparse.Namespace) -> int:
             dir_file_counts[top_dir] += 1
             total_files += 1
 
-            if ext in (".py", ".js", ".ts", ".html", ".css", ".scss", ".md", ".yaml", ".yml", ".sh"):
+            if ext in cfg.source_extensions:
                 try:
                     lines = len(fp.read_text(encoding="utf-8", errors="replace").splitlines())
                     ext_lines[ext] += lines
@@ -1103,23 +1029,22 @@ def cmd_repo_structure(cfg: Config, _args: argparse.Namespace) -> int:
     return 0
 
 
-# ── cmd: status ───────────────────────────────────────────────────────────────
+# -- cmd: status ---------------------------------------------------------------
 
 
 def cmd_status(cfg: Config, _args: argparse.Namespace) -> int:
-    """
-    Vytiskne stručný dashboard aktuálního stavu review systému.
+    """Print a concise dashboard for the current review workflow state.
 
-    Zobrazuje stav úloh v cache, počty BUG položek dle závažnosti, rozdělení
-    backlogu podle priority, počet sledovaných souborů a stav analytických JSON.
-
-    :param cfg: Konfigurace projektu.
-    :param _args: Argumenty příkazové řádky (nepoužité).
-    :return: Vždy `0` (příkaz pouze tiskne informace).
+    Read-only: this command never writes the generated Markdown twins.
     """
     cache = _load_json(cfg.cache_file)
-    bugs_text = _read_text(cfg.bugs_file)
-    backlog_text = _read_text(cfg.backlog_file)
+    try:
+        bugs_doc = load_bugs(cfg)
+        backlog_doc = load_backlog(cfg)
+    except ReviewDataError as exc:
+        print("[status] Review System Dashboard")
+        print(f"    ERROR: {exc}")
+        return 1
 
     print("[status] Review System Dashboard")
     print(f"  Repository: {cfg.repo_root.name}")
@@ -1138,26 +1063,27 @@ def cmd_status(cfg: Config, _args: argparse.Namespace) -> int:
         date_info = f" [{completed[:10]}]" if completed else ""
         print(f"    {tid:6s} {status:8s}{date_info}{sub_info}")
 
-    bug_ids = re.findall(r"### (BUG-\d+)", bugs_text)
-    bug_sevs = _extract_bug_severities(bugs_text)
-    sev_counts: Counter = Counter()
-    for sev in bug_sevs.values():
-        sev_counts[sev] += 1
-    print(f"\n  Bugs: {len(bug_ids)} total")
-    for sev in ["Kritická", "Vysoká", "Střední", "Nízká"]:
+    bugs = bugs_doc.get("bug", [])
+    sev_counts: Counter = Counter(str(b.get("severity", "")) for b in bugs)
+    print(f"\n  Bugs: {len(bugs)} total")
+    for sev in SEVERITIES:
         if sev_counts[sev]:
             print(f"    {sev}: {sev_counts[sev]}")
+    unknown_sev = sorted(set(sev_counts) - set(SEVERITIES))
+    for sev in unknown_sev:
+        label = sev or "(missing)"
+        print(f"    {label}: {sev_counts[sev]} (outside the canonical vocabulary)")
 
-    backlog_items = _extract_backlog_items(backlog_text)
-    priority_counts: Counter = Counter()
-    for item_id in backlog_items:
-        sec = _get_backlog_priority_section(backlog_text, item_id)
-        if sec:
-            priority_counts[sec] += 1
-    print(f"\n  Backlog items: {len(backlog_items)} total")
-    for pri in ["Vysoká", "Střední", "Nízká"]:
+    items = backlog_doc.get("item", [])
+    priority_counts: Counter = Counter(str(i.get("priority", "")) for i in items)
+    print(f"\n  Backlog items: {len(items)} total")
+    for pri in PRIORITIES:
         if priority_counts[pri]:
-            print(f"    {pri} priorita: {priority_counts[pri]}")
+            print(f"    {pri} priority: {priority_counts[pri]}")
+    unknown_pri = sorted(set(priority_counts) - set(PRIORITIES))
+    for pri in unknown_pri:
+        label = pri or "(missing)"
+        print(f"    {label}: {priority_counts[pri]} (outside the canonical vocabulary)")
 
     file_hashes = cache.get("file_hashes", {})
     print(f"\n  Tracked files: {len(file_hashes)}")
@@ -1171,10 +1097,11 @@ def cmd_status(cfg: Config, _args: argparse.Namespace) -> int:
     return 0
 
 
-# ── cmd: all ──────────────────────────────────────────────────────────────────
+# -- cmd: all ------------------------------------------------------------------
 
 ALL_CHECKS = [
     ("hash", cmd_hash),
+    ("render --check", cmd_render_check),
     ("cross-validate", cmd_cross_validate),
     ("coverage-gaps", cmd_coverage_gaps),
     ("id-inventory", cmd_id_inventory),
@@ -1184,16 +1111,7 @@ ALL_CHECKS = [
 
 
 def cmd_all(cfg: Config, args: argparse.Namespace) -> int:
-    """
-    Spustí všechny dostupné validační příkazy v pevném pořadí.
-
-    Souhrnný výstup obsahuje oddělené sekce pro jednotlivé kontroly a na konci
-    celkový počet nalezených problémů.
-
-    :param cfg: Konfigurace projektu.
-    :param args: Argumenty příkazové řádky předané jednotlivým příkazům.
-    :return: Celkový počet problémů, oříznutý na maximum `125` kvůli návratovému kódu.
-    """
+    """Run all checks and return the bounded aggregate issue count."""
     total = 0
     for name, cmd in ALL_CHECKS:
         print(_section_header(name))
@@ -1204,7 +1122,7 @@ def cmd_all(cfg: Config, args: argparse.Namespace) -> int:
     return min(total, 125)
 
 
-# ── main ──────────────────────────────────────────────────────────────────────
+# -- main ----------------------------------------------------------------------
 
 COMMANDS: dict[str, tuple] = {
     "hash": (cmd_hash, "Compare file hashes against review_cache.json"),
@@ -1212,7 +1130,8 @@ COMMANDS: dict[str, tuple] = {
     "coverage-gaps": (cmd_coverage_gaps, "Detect uncovered source files"),
     "id-inventory": (cmd_id_inventory, "Cross-reference all IDs across artifacts"),
     "lint-artifacts": (cmd_lint_artifacts, "Validate .agents/ artifact structure"),
-    "prompt-evolution": (cmd_prompt_evolution, "Check prompt evolution integration status"),
+    "prompt-evolution": (cmd_prompt_evolution, "Inventory workflow-evolution evidence"),
+    "render": (cmd_render, "Regenerate bugs.md and refactoring_backlog.md from their TOML sources"),
     "repo-structure": (cmd_repo_structure, "Scan and summarize repository structure"),
     "status": (cmd_status, "Print review system status dashboard"),
     "all": (cmd_all, "Run all validation checks"),
@@ -1220,13 +1139,9 @@ COMMANDS: dict[str, tuple] = {
 
 
 def main() -> int:
-    """
-    Hlavní vstupní bod skriptu pro příkazovou řádku.
-
-    :return: Návratový kód podle výsledku zvoleného příkazu.
-    """
+    """Run the command-line interface and return its exit status."""
     parser = argparse.ArgumentParser(
-        description="Nástroje pro review — automatická kontrola artefaktů AI review systému",
+        description="Validate artifacts produced by the AIS CR codebase-review workflow",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
@@ -1240,17 +1155,24 @@ def main() -> int:
         "--config",
         type=Path,
         default=None,
-        help="Path to review_config.yaml (default: .agents/config/review_config.yaml)",
+        help="Path to review_config.toml (default: .agents/config/review_config.toml)",
     )
     sub = parser.add_subparsers(dest="command")
     for name, (_, help_text) in COMMANDS.items():
-        sub.add_parser(name, help=help_text)
+        cmd_parser = sub.add_parser(name, help=help_text)
+        if name == "render":
+            cmd_parser.add_argument(
+                "--check",
+                action="store_true",
+                help="Verify the twins are current without writing them",
+            )
 
     args = parser.parse_args()
     if not args.command:
         parser.print_help()
         return 1
 
+    require_supported_python()
     cfg = Config(repo_root=args.repo_root, config_path=args.config)
     cmd_fn = COMMANDS[args.command][0]
     return cmd_fn(cfg, args)

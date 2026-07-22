@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "description": "JavaScript dependency management for AMCR web client",
+  "scripts": {
+    "openspec:validate": "node ./node_modules/@fission-ai/openspec/bin/openspec.js validate --all",
+    "openspec:cli": "node ./node_modules/@fission-ai/openspec/bin/openspec.js",
+    "openspec:update": "node ./node_modules/@fission-ai/openspec/bin/openspec.js update"
+  },
   "dependencies": {
     "bootstrap": "5.3.8",
     "bootstrap-datepicker": "1.10.1",
@@ -19,5 +24,8 @@
     "leaflet.markercluster": "1.5.3",
     "moment": "2.30.1",
     "spin.js": "2.3.2"
+  },
+  "devDependencies": {
+    "@fission-ai/openspec": "1.6.0"
   }
 }

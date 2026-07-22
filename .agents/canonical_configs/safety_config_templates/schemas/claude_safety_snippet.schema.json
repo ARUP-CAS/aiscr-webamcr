@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Claude Code safety snippet for settings.json",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["sandbox", "permissions"],
+  "properties": {
+    "sandbox": {
+      "type": "object",
+      "required": ["enabled", "allowUnsandboxedCommands"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "allowUnsandboxedCommands": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "permissions": {
+      "type": "object",
+      "required": ["deny"],
+      "properties": {
+        "deny": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

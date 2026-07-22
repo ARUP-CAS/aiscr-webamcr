@@ -4,6 +4,16 @@ Full agent rules, repository structure, and coding standards: see [AGENTS.md](AG
 Coding standards, branch rules, and PR process: see [CONTRIBUTING.md](CONTRIBUTING.md).
 AI review system state and artifacts: see [.agents/README.md](.agents/README.md).
 
+## Governance & OpenSpec
+
+Use [AGENTS.md](AGENTS.md) as the governance authority. Claude-specific rule
+readers live under [.claude/rules/](.claude/rules/); OpenSpec skills and `opsx`
+commands live under [.claude/skills/](.claude/skills/) and
+[.claude/commands/opsx/](.claude/commands/opsx/).
+
+OpenSpec is versioned in `openspec/` with schema `spec-driven`. Validate with
+`npm run openspec:validate`.
+
 ## Repository
 
 Django web app for the Archaeological Map of the Czech Republic (AMČR), part of AIS CR (ARUP-CAS).
@@ -64,6 +74,8 @@ Migrations are excluded from all hooks.
 
 For live library docs (Django, DRF, Celery, Sphinx): **context7**. For
 issues/PRs and cross-referencing with AGENTS.md: **GitHub MCP**. Configure
-locally (e.g. Cursor MCP or `claude mcp add …`); repo does not commit
-`.cursor/` or `.claude/`. Dev setup checklist:
-[.agents/prompts/setup_dev.md](.agents/prompts/setup_dev.md).
+personal MCP credentials locally. Repository vendor surfaces such as
+`.cursor/`, `.claude/`, `.codex/`, `.gemini/`, `.clinerules/`, and `.qodo/`
+are tracked when materialized from the `aiscr-management` hub sync baseline;
+do not store private credentials in them. For development setup, use
+`README_en.md`, `CONTRIBUTING.md`, and repository-local environment notes.

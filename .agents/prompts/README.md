@@ -4,15 +4,12 @@ Prompty a pomocná dokumentace pro AI agenty pracující v tomto repozitáři. P
 
 ## Hlavní soubory
 
-- `review_codebase.md` — hlavní prompt pro dlouhodobý technický review (plný audit T01–T11).
-- `review_update.md` — follow-up prompt pro inkrementální aktualizaci auditu (U01–U06); výstup do `final_audit.md` Changelog.
-- `audit_doc_hygiene.md` — přenositelný prompt pro audit dokumentace (duplicit, drift, governance).
-- `project_conventions.md` — shrnutí projektových konvencí pro agenty (větve, commity, docstringy…).
-- `setup_dev.md` — onboarding a nastavení vývojového prostředí.
-- `hooks_reference.md` — doporučené lokální hooks (PostToolUse / PreToolUse).
+- Codebase review: operační workflow je kanonické `aiscr-codebase-review` (režimy full T01–T11 / update U01–U06), dodané přes skill surfaces `.cursor/` / `.claude/` / `.codex/` / `.gemini/`; samostatné prompty `review_codebase.md` / `review_update.md` již v této složce nejsou.
 
-## Prompt evolution
+## Evidence workflow-evolution
 
-Podsložka `prompt_evolution/` obsahuje návrhy na vylepšení hlavního review promptu
-generované na konci jednotlivých tasků (`<task_id>_prompt_update.md`).
-
+Starší soubory `.agents/prompts/prompt_evolution/` byly klasifikovány; využitelná
+pravidla byla zapracována do `.agents/config/review_config.yaml` a kanonického
+workflow `aiscr-codebase-review`, a dočasný evidenční report byl odstraněn.
+Aktivní zpětná vazba z U05 zůstává pouze lokální evidencí, dokud člověk výslovně
+neschválí předání do backlogu.

@@ -1,0 +1,49 @@
+{
+  "context": {
+    "includeDirectories": [
+      ".gemini/context"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .agents/scripts/gemini_cli_hooks.py session_start",
+            "timeout": 60000,
+            "name": "planning-baseline-advisory",
+            "description": "Advisory: not behind upstream before significant planning (management hub policy)."
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .agents/scripts/gemini_cli_hooks.py session_end",
+            "timeout": 10000,
+            "name": "mgmt-stop-advisory",
+            "description": "Advisory: usage log, sync-layer2, README CZ/EN parity reminders."
+          }
+        ]
+      }
+    ],
+    "BeforeTool": [
+      {
+        "matcher": "run_shell_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .agents/scripts/gemini_cli_hooks.py before_tool",
+            "timeout": 10000,
+            "name": "shell-guard-advisory",
+            "description": "Advisory: high-impact script and venv guards for shell commands."
+          }
+        ]
+      }
+    ]
+  }
+}
