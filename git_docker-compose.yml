@@ -216,7 +216,7 @@ services:
           memory: "2G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:9.4.3
+    image: docker.elastic.co/kibana/kibana:9.4.4
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
