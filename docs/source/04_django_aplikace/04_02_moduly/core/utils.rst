@@ -207,11 +207,16 @@ Funkce
 
    :return: Vrací proměnná ``mime_type``.
 
-.. py:function:: get_cadastre_from_point(point)
+.. py:function:: get_cadastre_from_point(point, exclude_kod)
 
    Funkce pro získaní katastru z bodu geomu.
 
    :param point: Parametr ``point`` předává se do volání ``raw()``, ``debug()``.
+   :param exclude_kod: Volitelný kód katastru, který má být ze spatial query
+       vyloučen. Používá se např. v ``heslar.ruian_sync.reassign`` při mazání
+       katastru – aby spatial intersect nevrátil právě mazaný katastr (který
+       je stále v DB až do okamžiku ``katastr.delete()``) a reassign měl
+       šanci najít druhý nejbližší.
 
    :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``katastr``, None.
 
@@ -223,11 +228,15 @@ Funkce
 
    :return: Vrací hodnotu podle větve zpracování, typicky: seznam, None.
 
-.. py:function:: get_all_pians_with_akce(ident_cely)
+.. py:function:: get_all_pians_with_akce(ident_cely, exclude_kod)
 
    Funkce pro získaní všech pianů s akci.
 
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``execute()``.
+   :param exclude_kod: Volitelný kód katastru, který se vyloučí ze
+       spatial intersect (``ST_Intersects``). Používá se v
+       ``heslar.ruian_sync.reassign`` při mazání katastru.
+
    :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
 
 .. py:function:: update_main_katastr_within_ku(ident_cely, katastr)
@@ -237,12 +246,16 @@ Funkce
    :param ident_cely: Parametr ``ident_cely`` pracuje se s atributy ``split``.
    :param katastr: Parametr ``katastr`` předává se do volání ``execute()``, pracuje se s atributy ``pk``.
 
-.. py:function:: update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
+.. py:function:: update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction, exclude_kod)
 
    Aktualizuje katastry pro všechny akce a lokality související s dokumentační jednotkou.
 
    :param dj: Dokumentační jednotka obsahující odkaz na akci/lokalitu.
    :param fedora_transaction: Aktivní Fedora transakce pro uložení metadat.
+   :param exclude_kod: Volitelný kód katastru, který se vyloučí ze spatial
+       intersect při výpočtu hlavního i ostatních katastrů. Používá se
+       v ``heslar.ruian_sync.reassign.reassign_az`` při mazání katastru
+       – aby se právě mazaný katastr nevybral zpět jako nové přiřazení.
 
 .. py:function:: get_pians_from_akce(katastr, akce_ident_cely)
 

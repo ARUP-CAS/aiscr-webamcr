@@ -98,3 +98,36 @@ Funkce
    :param lock_token: Token pro ověření vlastnictví importního zámku v Redis.
 
    :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem "Missing required DIRECTORY_PATH setting".
+
+.. py:function:: sync_ruian_changes(reassign_records)
+
+   Periodická aktualizace heslářů RÚIAN podle denních změnových VFR souborů.
+
+   Naváže na poslední úspěšný :class:`heslar.models.RuianSyncRun` (kotva
+   ``data_valid_to``) a postupně stáhne a aplikuje denní změnové VFR od
+   následujícího dne až do dnešního data. Pro každý zpracovaný den vznikne
+   jeden ``RuianSyncRun`` s vlastním auditem.
+
+   Po úspěšné aplikaci se stažený VFR ZIP **smaže** – jinak by se
+   v cílovém adresáři (``target_dir`` z ``CustomAdminSettings``,
+   skupina ``ruian_sync``) akumuloval (cca 10–30 MB / den). Při selhání
+   syncu soubor zůstane na disku pro post-mortem; další pokus stejného
+   dne ho přepíše. Cesta zůstává v ``RuianSyncRun.source_path``.
+
+   Bezpečnostní pojistka: pokud zatím neexistuje žádný úspěšný běh
+   (typicky před prvotním plným syncem přes ``manage.py
+   aktualizuj_ruian_shp``), task pouze zaloguje chybu a skončí – nestahuje
+   ani nemodifikuje data.
+
+   :param reassign_records: Pokud ``True`` (default pro produkční cron),
+       po aplikaci denních změn proběhne **cílený** spatial reassign
+       Projekt/AZ/SN dotčených změnou hranic katastrů – viz
+       :func:`heslar.ruian_sync.syncer._reassign_records_in_changed_katastry`.
+       Iteruje jen kandidáty (záznamy s vazbou na změněné katastry nebo
+       s geometrií protínající jejich novou hranici), nikoli celou DB.
+
+       Předání ``False`` (např. při ručním spuštění z shellu pro test
+       pouhého přijetí dat) reassign přeskočí; navázané záznamy se pak
+       nepřepočítají, ale upserty/delete katastrů proběhnou normálně.
+       Lze pak dohnat samostatně přes ``reassign_all`` nebo
+       ``/admin/update-katastry/``.

@@ -295,17 +295,24 @@ def ruian_katastr_delete_repository_container(sender, instance: RuianKatastr, **
     """
     Provádí operaci ruian katastr delete repository container.
 
+    Pokud má instance ``suppress_signal=True``, signál neprovede žádnou
+    operaci ve Fedora repozitáři – stejné chování jako u ostatních signálů
+    (např. :func:`save_metadata_katastr`). Volající (typicky cron / sync
+    nad heslářem RÚIAN) tak může explicitně potlačit Fedora zápis přes
+    ``instance.suppress_signal = True`` před voláním ``.delete()``.
+
     :param sender: Model třídy, která poslala signál.
     :param instance: Parametr ``instance`` předává se do volání ``get_or_create_transaction()``, ``on_commit()``.
     :param kwargs: Další klíčové argumenty signálu.
     """
     logger.debug("heslo.signals.ruian_katastr_delete_repository_container.start")
-    fedora_transaction = get_or_create_transaction(instance)
-    transaction.on_commit(lambda: instance.record_deletion(fedora_transaction, close_transaction=True))
-    logger.debug(
-        "heslo.signals.ruian_katastr_delete_repository_container.end",
-        extra={"transaction": getattr(fedora_transaction, "uid", None)},
-    )
+    if not instance.suppress_signal:
+        fedora_transaction = get_or_create_transaction(instance)
+        transaction.on_commit(lambda: instance.record_deletion(fedora_transaction, close_transaction=True))
+        logger.debug(
+            "heslo.signals.ruian_katastr_delete_repository_container.end",
+            extra={"transaction": getattr(fedora_transaction, "uid", None)},
+        )
 
 
 @receiver(pre_delete, sender=RuianKraj, weak=False)
@@ -313,17 +320,21 @@ def ruian_kraj_delete_repository_container(sender, instance: RuianKraj, **kwargs
     """
     Provádí operaci ruian kraj delete repository container.
 
+    Respektuje ``instance.suppress_signal`` – při ``True`` se Fedora
+    operace neprovede.
+
     :param sender: Model třídy, která poslala signál.
     :param instance: Parametr ``instance`` předává se do volání ``get_or_create_transaction()``, ``on_commit()``.
     :param kwargs: Další klíčové argumenty signálu.
     """
     logger.debug("heslo.signals.ruian_kraj_delete_repository_container.start")
-    fedora_transaction = get_or_create_transaction(instance)
-    transaction.on_commit(lambda: instance.record_deletion(fedora_transaction, close_transaction=True))
-    logger.debug(
-        "heslo.signals.ruian_kraj_delete_repository_container.end",
-        extra={"transaction": getattr(fedora_transaction, "uid", None)},
-    )
+    if not instance.suppress_signal:
+        fedora_transaction = get_or_create_transaction(instance)
+        transaction.on_commit(lambda: instance.record_deletion(fedora_transaction, close_transaction=True))
+        logger.debug(
+            "heslo.signals.ruian_kraj_delete_repository_container.end",
+            extra={"transaction": getattr(fedora_transaction, "uid", None)},
+        )
 
 
 @receiver(pre_delete, sender=RuianOkres, weak=False)
@@ -331,11 +342,16 @@ def ruian_okres_delete_repository_container(sender, instance: RuianOkres, **kwar
     """
     Provádí operaci ruian okres delete repository container.
 
+    Respektuje ``instance.suppress_signal`` – při ``True`` se Fedora
+    operace neprovede.
+
     :param sender: Model třídy, která poslala signál.
     :param instance: Instance modelu, která byla uložena.
     :param kwargs: Další klíčové argumenty signálu.
     """
     logger.debug("heslo.signals.ruian_okres_delete_repository_container.start")
+    if instance.suppress_signal:
+        return
 
     def save_metadata():
         """Uloží metadata. v aplikaci."""

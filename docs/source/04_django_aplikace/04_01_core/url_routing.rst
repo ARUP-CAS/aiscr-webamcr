@@ -518,6 +518,9 @@ HESLAR
    * - ``heslar_nazev-autocomplete``
      - ``heslar-nazev/autocomplete/``
      - ``HeslarNazevAutocompleteView.as_view()``
+   * - ``continue-processing-katastry``
+     - ``continue-processing-katastry/<str:job_id>``
+     - ``ContinueKatastrProcessing.as_view()``
 
 HISTORIE
 --------

@@ -42,6 +42,19 @@ Třídy
       :param request: HTTP požadavek; u ``POST`` od superuživatele validuje formulář, připraví job v Redis a vrátí stránku průběhu.
       :return: Odpověď ``TemplateResponse`` s formulářem nebo stránkou spuštěného jobu.
 
+   .. py:method:: update_katastry_file_upload()
+
+      Zpracuje hromadný přepočet katastrů u záznamů Projekt/AZ/SN.
+
+      Přijímá CSV/XLSX se sloupcem ``ident_cely`` (jeden záznam na řádek),
+      založí job v Redis pod prefixem ``update_katastry_`` a deleguje vlastní
+      zpracování na :class:`heslar.views.ContinueKatastrProcessing` (polovaný
+      z JS na stránce průběhu).
+
+      :param request: HTTP požadavek; ``POST`` od superuživatele validuje formulář a připraví job.
+
+      :return: Odpověď ``TemplateResponse`` s formulářem nebo stránkou průběhu.
+
    .. py:method:: import_data()
 
       Importuje datové CSV soubory ze ZIP archivu do interní importní fronty.

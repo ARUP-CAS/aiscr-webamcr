@@ -657,3 +657,15 @@ Třídy
 
       :param ident_cely: Parametr ``ident_cely`` se předává do volání ``add()``.
 
+
+Funkce
+------
+
+.. py:function:: _build_fedora_session()
+
+   Sestaví sdílenou ``requests.Session`` s connection poolem pro Fedora repozitář.
+
+   HTTP keep-alive a sdružený pool socketů zásadně sníží počet otevíraných TCP
+   spojení (a tedy i tlak na efemerální porty pod paralelní zátěží).
+
+   :return: Nakonfigurovaná ``requests.Session`` instance.

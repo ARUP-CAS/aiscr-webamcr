@@ -183,6 +183,7 @@ ext-zdroj,vyber,,X,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,
 ext-zdroj,zapsat,,X,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,
 fedora,continue-processing/<str:job_id>,,X,X,X,X,*,X,X,X,*,X,X,X,*,X,X,X,*,
 healthcheck,/,,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,zavřít mimo localhost
+heslar,continue-processing-katastry/<str:job_id>,,X,X,X,X,*,X,X,X,*,X,X,X,*,X,X,X,*,
 heslar,dokument-format/,,X,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,
 heslar,dokument-typ/,,X,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,
 heslar,heslar-nazev/autocomplete/,,X,X,X,X,*,X,X,X,*,X,X,X,*,X,X,X,*,
