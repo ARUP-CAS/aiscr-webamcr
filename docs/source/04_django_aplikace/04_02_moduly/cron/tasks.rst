@@ -3,6 +3,87 @@ CRON tasks
 
 Modul tasks.
 
+Třídy
+------
+
+.. py:class:: SouborMissingRepositoryUuidError
+
+   Vyvoláno při pokusu o UPDATE binárního souboru, jehož ``repository_uuid`` je None.
+
+   Indikuje poškozená data: záznam ``Soubor`` existuje v DB, ale nemá přiřazený
+   Fedora UUID, tedy binární soubor v repositáři neexistuje nebo nebyl nikdy nahrán.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param soubor_pk: Primární klíč záznamu ``Soubor`` s chybějícím ``repository_uuid``.
+      :param nazev: Název souboru, u nějž chybí ``repository_uuid``.
+
+
+.. py:class:: SouborMimeUnsupportedError
+
+   Vyvoláno při importu souboru, jehož detekovaný MIME typ aplikace nepodporuje.
+
+   Indikuje MIME typ mimo mapu podporovaných formátů ``Soubor.MIME_TO_EXTENSIONS``.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param nazev: Název importovaného souboru.
+      :param mime_type: MIME typ detekovaný z obsahu souboru.
+
+
+.. py:class:: SouborMimeExtensionMismatchError
+
+   Vyvoláno při importu souboru, jehož přípona neodpovídá MIME typu detekovanému z obsahu.
+
+   Indikuje přejmenovaný soubor (např. JPEG uložený s příponou ``.tif``), jehož import
+   by vedl k nekonzistenci mezi názvem a skutečným obsahem souboru.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param nazev: Název souboru, u nějž byla zjištěna neshoda.
+      :param extension: Přípona odvozená z názvu souboru.
+      :param mime_type: MIME typ detekovaný z obsahu souboru.
+
+
+.. py:class:: SouborMimeNotAllowedError
+
+   Vyvoláno při importu souboru, jehož MIME typ není povolen pro typ navázaného záznamu.
+
+   Whitelisty povolených MIME typů odpovídají kontrole ``Soubor.check_mime_for_url``
+   používané při uživatelském uploadu.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param nazev: Název importovaného souboru.
+      :param mime_type: MIME typ detekovaný z obsahu souboru.
+      :param navazany_ident_cely: Identifikátor navázaného záznamu, pro který MIME typ není povolen.
+
+
+.. py:class:: ImportLockLostError
+
+   Vyvoláno, když ``refresh_import_lock`` zjistí, že importní lock byl ztracen.
+
+   Použito jako sentinel, aby vnější ``except Exception`` v ``run_data_import`` mohl
+   rozlišit ztrátu zámku od ostatních selhání během importu dat a nepřepsal
+   konkrétní status message ``failed_lock_lost``.
+
+
 Funkce
 ------
 
@@ -97,4 +178,50 @@ Funkce
    :param user_id: Identifikátor objektu ``user``.
    :param lock_token: Token pro ověření vlastnictví importního zámku v Redis.
 
-   :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem "Missing required DIRECTORY_PATH setting".
+   Možné hodnoty Redis klíče ``import_data_status_message_{job_id}``:
+
+   .. list-table::
+       :header-rows: 1
+       :widths: 35 65
+
+       * - Hodnota stavu
+         - Situace, kdy se stav nastaví
+       * - ``cron.tasks.run_data_import.failed_lock_lost``
+         - Import už běžel, ale při obnově Redis locku se zjistí, že task lock ztratil.
+       * - ``cron.tasks.run_data_import.failed_lock_acquisition``
+         - Task na začátku nezíská nebo neobnoví importní lock, takže import nepokračuje.
+       * - ``cron.tasks.run_data_import.importing_record_data {n}/{total}``
+         - Během hlavní fáze importu dat, před zpracováním jednotlivého záznamu.
+       * - ``cron.tasks.run_data_import.stopped_by_user``
+         - Uživatel zastavil import přes ``import_data_stop_{job_id}``.
+       * - ``cron.tasks.run_data_import.failed_during_data_import``
+         - Selže zpracování datového záznamu, databázová transakce nebo hlavní fáze importu dat.
+       * - ``cron.tasks.run_data_import.creating_history_records``
+         - Hlavní import dat doběhl bez chyby a začíná fáze vytváření historie.
+       * - ``cron.tasks.run_data_import.creating_history_records {n}/{total}``
+         - Během fáze historie, před vytvořením konkrétního historického záznamu.
+       * - ``cron.tasks.run_data_import.failed_during_history``
+         - Selže vytvoření některého záznamu historie.
+       * - ``cron.tasks.run_data_import.updating_fedora_records``
+         - Historie doběhla bez chyby a začíná fáze aktualizace Fedora metadat.
+       * - ``cron.tasks.run_data_import.updating_fedora_records {n}/{total}``
+         - Během aktualizace jednotlivých Fedora záznamů.
+       * - ``cron.tasks.run_data_import.failed_during_fedora``
+         - Selže uložení metadat do Fedory pro některý z dotčených záznamů.
+       * - ``cron.tasks.run_data_import.finalizing``
+         - Fedora fáze doběhla bez chyby a import přechází do finální fáze.
+       * - ``cron.tasks.run_data_import.file_import.validating_directory_settings``
+         - Před importem binárních souborů se kontroluje konfigurace importního adresáře.
+       * - ``cron.tasks.run_data_import.import_directory_not_configured``
+         - Import souborů je potřeba, ale chybí nebo je neplatná konfigurace ``DIRECTORY_PATH``.
+       * - ``cron.tasks.run_data_import.file_import.connected``
+         - Konfigurace importního adresáře je validní a začíná příprava importu souborů.
+       * - ``cron.tasks.run_data_import.importing_file {n}/{total}: {filename} ({ident_cely})``
+         - Během importu konkrétního binárního souboru.
+       * - ``cron.tasks.run_data_import.cannot_read_from_directory``
+         - Při importu souborů nastane chyba čtení z adresáře nebo zpracování souboru.
+       * - ``cron.tasks.run_data_import.finished``
+         - Import doběhl úspěšně, nebyl zastaven a nebyla nastavena chyba.
+
+   :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem
+       "Missing required DIRECTORY_PATH setting".

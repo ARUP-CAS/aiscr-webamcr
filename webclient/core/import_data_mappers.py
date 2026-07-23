@@ -81,6 +81,7 @@ from heslar.hesla import (
     HESLAR_VYSKOVY_BOD_TYP,
     HESLAR_ZEME,
 )
+from heslar.hesla_dynamicka import TYP_DJ_KATASTR
 from heslar.models import (
     Heslar,
     HeslarDatace,
@@ -157,26 +158,18 @@ class ImportDataIncorrectStructureError(ImportDataError):
         :param missing_columns: Parametr ``missing_columns`` se předává do volání ``__init__()``, ``join()``.
         :param excess_columns: Číselná hodnota ``excess_columns`` použitá při výpočtu nebo transformaci.
         """
-        super().__init__(
-            _("core_admin.ImportDataIncorrectStructureError.message.part_1")
-            + " "
-            + (
-                _("core_admin.ImportDataIncorrectStructureError.message.missing_columns")
-                + ": "
-                + ", ".join(missing_columns)
-                + " "
-                if missing_columns
-                else ""
+        message = "{} ".format(_("core_admin.ImportDataIncorrectStructureError.message.part_1"))
+        if missing_columns:
+            message += "{}: {} ".format(
+                _("core_admin.ImportDataIncorrectStructureError.message.missing_columns"),
+                ", ".join(missing_columns),
             )
-            + (
-                _("core_admin.ImportDataIncorrectStructureError.message.excess_columns")
-                + ": "
-                + ", ".join(excess_columns)
-                + " "
-                if excess_columns
-                else ""
+        if excess_columns:
+            message += "{}: {} ".format(
+                _("core_admin.ImportDataIncorrectStructureError.message.excess_columns"),
+                ", ".join(excess_columns),
             )
-        )
+        super().__init__(message)
 
 
 class ImportDataIncorrectStructureContentObjectError(ImportDataError):
@@ -192,12 +185,12 @@ class ImportDataIncorrectStructureContentObjectError(ImportDataError):
         :param expected_colummns_options: Parametr ``expected_colummns_options`` se předává do volání ``__init__()``, ``join()``.
         """
         super().__init__(
-            f'{_("core_admin.ImportDataIncorrectStructureContentObjectError.message.part_1")} '
-            + (
-                f'{_("core_admin.ImportDataIncorrectStructureContentObjectError.message.columns")}: {", ".join(columns)} '
-            )
-            + (
-                f'{_("core_admin.ImportDataIncorrectStructureContentObjectError.message.expected_columns_options")}: {"; ".join([str(op) for op in expected_colummns_options])} '
+            "{} {}: {} {}: {} ".format(
+                _("core_admin.ImportDataIncorrectStructureContentObjectError.message.part_1"),
+                _("core_admin.ImportDataIncorrectStructureContentObjectError.message.columns"),
+                ", ".join(columns),
+                _("core_admin.ImportDataIncorrectStructureContentObjectError.message.expected_columns_options"),
+                "; ".join([str(op) for op in expected_colummns_options]),
             )
         )
 
@@ -218,20 +211,22 @@ class ImportDataMissingReferencedValueError(ImportDataError):
         self.missing_value_id = missing_value_id
         self.missing_model_name = missing_model_name
         self.missing_field_name = missing_field_name
-        super().__init__(
-            f'{_("core_admin.ImportDataMissingReferencedValueError.message.part_1")} '
-            + f'{missing_value_id} {_("core_admin.ImportDataMissingReferencedValueError.message.part_2")} '
-            + (
-                f'{missing_model_name} {_("core_admin.ImportDataMissingReferencedValueError.message.part_3")} '
-                if missing_model_name
-                else ""
-            )
-            + (
-                f'{_("core_admin.ImportDataMissingReferencedValueError.message.part_4")} {missing_field_name}'
-                if missing_field_name
-                else ""
-            )
+        message = "{} {} {} ".format(
+            _("core_admin.ImportDataMissingReferencedValueError.message.part_1"),
+            str(missing_value_id),
+            _("core_admin.ImportDataMissingReferencedValueError.message.part_2"),
         )
+        if missing_model_name:
+            message += "{} {} ".format(
+                str(missing_model_name),
+                _("core_admin.ImportDataMissingReferencedValueError.message.part_3"),
+            )
+        if missing_field_name:
+            message += "{} {}".format(
+                _("core_admin.ImportDataMissingReferencedValueError.message.part_4"),
+                str(missing_field_name),
+            )
+        super().__init__(message)
 
 
 class ImportDataIntegrityError(ImportDataError):
@@ -265,41 +260,120 @@ class ImportDataIntegrityError(ImportDataError):
         )
 
 
-class ImportDataLimitChoicesError(ImportDataError):
-    """Výjimka vyvolaná při hodnotě cizího klíče, která nesplňuje omezení limit_choices_to."""
+class SouborImportIntegrityError(ImportDataError):
+    """
+    Výjimka vyvolaná při importu souboru, pokud porušuje předpoklad o existenci:
 
-    def __init__(self, record_id, limit_choices_to: dict):
+    při insertu — soubor se stejným ``nazev`` navázaný na záznam ``vazba`` již existuje,
+    při updatu — žádný takový soubor neexistuje.
+    """
+
+    def __init__(self, vazba, nazev):
         """
         Inicializuje instanci třídy.
 
-        :param record_id: Identifikátor objektu ``record``.
-        :param limit_choices_to: Parametr ``limit_choices_to`` se předává do volání ``__init__()``, ``format()``, pracuje se s atributy ``items``.
+        :param vazba: ``ident_cely`` navázaného záznamu, ke kterému soubor patří.
+        :param nazev: Název souboru, kterého se konflikt týká.
         """
-        self.record_id = record_id
-        self.limit_choices_to = limit_choices_to
+        self.vazba = vazba
+        self.nazev = nazev
         super().__init__(
             "{} {} {} {}".format(
-                _("core_admin.ImportDataLimitChoicesError.message.part_1"),
-                record_id,
-                _("core_admin.ImportDataLimitChoicesError.message.part_2"),
-                ",".join(["{}: {}".format(k, v) for k, v in limit_choices_to.items()]),
+                _("core_admin.SouborImportIntegrityError.message.part_1"),
+                nazev,
+                _("core_admin.SouborImportIntegrityError.message.part_2"),
+                vazba,
             )
         )
 
 
-class ImportDataHeslarPresnostLimitChoicesError(ImportDataError):
-    """Výjimka vyvolaná při neplatné hodnotě přesnosti v hesláři u importovaného záznamu."""
+class ImportDataFileExtensionNotAllowedError(ImportDataError):
+    """
+    Výjimka vyvolaná při importu souboru, jehož přípona neodpovídá žádnému MIME typu
+    povolenému pro navázaný záznam.
 
-    def __init__(self, record_id):
+    Skutečný MIME typ nelze při validaci CSV zjistit (binární obsah není k dispozici);
+    kontrola proto vychází pouze z přípony v názvu souboru.
+    """
+
+    def __init__(self, nazev, vazba):
+        """
+        Inicializuje instanci třídy.
+
+        :param nazev: Název souboru s nepovolenou příponou.
+        :param vazba: ``ident_cely`` navázaného záznamu, pro který přípona není povolena.
+        """
+        self.nazev = nazev
+        self.vazba = vazba
+        super().__init__(
+            "{} {} {} {}".format(
+                _("core_admin.ImportDataFileExtensionNotAllowedError.message.part_1"),
+                nazev,
+                _("core_admin.ImportDataFileExtensionNotAllowedError.message.part_2"),
+                vazba,
+            )
+        )
+
+
+class ImportDataLimitChoicesError(ImportDataError):
+    """Výjimka vyvolaná při hodnotě cizího klíče, která nesplňuje omezení limit_choices_to."""
+
+    def __init__(self, record_id, limit_choices_to: dict, target_field_verbose_name, import_field_verbose_name=None):
         """
         Inicializuje instanci třídy.
 
         :param record_id: Identifikátor objektu ``record``.
+        :param limit_choices_to: Omezení ``limit_choices_to``, které nalezený záznam nesplňuje.
+        :param target_field_verbose_name: Čitelný název cílového modelového pole.
+        :param import_field_verbose_name: Název importovaného pole, ve kterém lookup selhal.
         """
         self.record_id = record_id
+        self.limit_choices_to = limit_choices_to
+        self.target_field_verbose_name = target_field_verbose_name
+        self.import_field_verbose_name = import_field_verbose_name
         super().__init__(
-            f'{_("core_admin.ImportDataLimitChoicesError.message.part_1")} '
-            + f'{record_id} {_("core_admin.ImportDataLimitChoicesError.message.part_2")} '
+            "{} {} {} {} {} {}".format(
+                _("core_admin.ImportDataLimitChoicesError.message.part_1"),
+                record_id,
+                _("core_admin.ImportDataLimitChoicesError.message.part_2"),
+                target_field_verbose_name,
+                _("core_admin.ImportDataLimitChoicesError.message.part_3"),
+                import_field_verbose_name,
+            )
+        )
+
+
+class ImportDataMissingHeslarValueError(ImportDataError):
+    """
+    Výjimka vyvolaná, pokud hodnota není platnou položkou hesláře určeného omezením ``nazev_heslare``.
+    """
+
+    def __init__(self, field_name, heslar_name, value, target_field_verbose_name=None, import_field_verbose_name=None):
+        """
+        Inicializuje instanci třídy.
+
+        :param field_name: Název pole, ve kterém lookup selhal.
+        :param heslar_name: Název hesláře (hodnota ``nazev_heslare``), do kterého hodnota nepatří.
+        :param value: Hodnota, která nebyla v hesláři nalezena.
+        :param target_field_verbose_name: Čitelný název cílového modelového pole.
+        :param import_field_verbose_name: Název importovaného pole, ve kterém lookup selhal.
+        """
+        self.field_name = field_name
+        self.heslar_name = heslar_name
+        self.value = value
+        self.target_field_verbose_name = target_field_verbose_name
+        self.import_field_verbose_name = import_field_verbose_name
+        super().__init__(
+            "{} {} {} {} {} {} {} {}".format(
+                _("core_admin.ImportDataMissingHeslarValueError.message.part_1"),
+                str(value),
+                _("core_admin.ImportDataMissingHeslarValueError.message.part_2"),
+                str(field_name),
+                _("core_admin.ImportDataMissingHeslarValueError.message.part_4"),
+                str(target_field_verbose_name),
+                _("core_admin.ImportDataMissingHeslarValueError.message.part_5"),
+                str(import_field_verbose_name),
+            )
         )
 
 
@@ -406,6 +480,38 @@ class ImportDataMissingFileError(ImportDataError):
         super().__init__(_("core.admin.import_data.error.missing_file"))
 
 
+class ImportDataBatchOrderingError(ImportDataError):
+    """
+    Výjimka vyvolaná při detekci dopředné reference v self-join poli v rámci jednoho importního souboru.
+
+    Nastane, pokud záznam odkazuje přes pole na jiný záznam ze stejného souboru,
+    který je definován až na pozdějším řádku a zároveň v databázi dosud neexistuje.
+    Řešením je přesunout nadřazený záznam před podřízený.
+    """
+
+    def __init__(self, child_ident_cely, parent_ident_cely, field_name):
+        """
+        Inicializuje výjimku pro dopřednou referenci v rámci dávky.
+
+        :param child_ident_cely: Identifikátor záznamu, který odkazuje na dosud neuvedený nadřazený záznam.
+        :param parent_ident_cely: Identifikátor nadřazeného záznamu, který musí v CSV předcházet potomka.
+        :param field_name: Název pole, přes které je reference definována.
+        """
+        self.child_ident_cely = child_ident_cely
+        self.parent_ident_cely = parent_ident_cely
+        self.field_name = field_name
+        super().__init__(
+            "{} {} {} {} {} {}".format(
+                _("core_admin.ImportDataBatchOrderingError.message.part_1"),
+                child_ident_cely,
+                _("core_admin.ImportDataBatchOrderingError.message.part_2"),
+                field_name,
+                _("core_admin.ImportDataBatchOrderingError.message.part_3"),
+                parent_ident_cely,
+            )
+        )
+
+
 class BaseImportField:
     """
     Základní třída pro importní pole. Neprovádí žádnou validaci ani zpracování hodnoty.
@@ -416,6 +522,23 @@ class BaseImportField:
     def __init__(self):
         """Inicializuje instanci třídy."""
         self._value = None
+        self.model_field_verbose_name = None
+        self.import_field_verbose_name = None
+
+    def set_import_context(self, model_class, field_name, import_field_verbose_name=None):
+        """
+        Nastaví kontext cílového modelového pole pro chybové zprávy importu.
+
+        :param model_class: Modelová třída, do které se importuje.
+        :param field_name: Název cílového pole modelu.
+        :param import_field_verbose_name: Název importovaného pole.
+        """
+        self.model_field_verbose_name = None
+        self.import_field_verbose_name = import_field_verbose_name or field_name
+        try:
+            self.model_field_verbose_name = str(model_class._meta.get_field(field_name).verbose_name)
+        except FieldDoesNotExist:
+            self.model_field_verbose_name = field_name
 
     @property
     def value(self):
@@ -505,7 +628,7 @@ class FileNameImportField(BaseImportField):
 class IntegerImportField(BaseImportField):
     """Importní pole pro hodnoty datového typu integer."""
 
-    pattern = re.compile(r"\d+")
+    pattern = re.compile(r"-?\d+")
 
     def _process_value(self, value) -> int | None:
         """
@@ -517,19 +640,26 @@ class IntegerImportField(BaseImportField):
             :raises ImportDataError: Vyvolá se při splnění podmínky ``value``.
         """
 
-        if not value:
+        if value is None or str(value).strip() == "" or str(value).lower() == "nan":
             return None
-        if isinstance(value, int) or isinstance(value, float):
-            value = str(value)
-        elif isinstance(value, bytes):
+        if isinstance(value, float):
+            if not value.is_integer():
+                raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_integer_value')}: {value}")
+            return int(value)
+        if isinstance(value, int):
+            return value
+        if isinstance(value, bytes):
             value = value.decode("utf-8")
-        match = self.pattern.search(value)
+        stripped = str(value).strip()
+        if re.fullmatch(r"-?\d+(?:\.0+)?", stripped):
+            return int(stripped.split(".")[0])
+        match = self.pattern.search(stripped)
         if match:
             return int(match.group())
         raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_integer_value')}: {value}")
 
 
-class PositiveIntegerImportField(BaseImportField):
+class PositiveIntegerImportField(IntegerImportField):
     """
     Importní pole pro kladné celočíselné hodnoty. Záporná čísla způsobí vyvolání ImportDataError.
     """
@@ -543,6 +673,8 @@ class PositiveIntegerImportField(BaseImportField):
 
             :raises ImportDataError: Vyvolá se při splnění podmínky ``value is not None and value < 0``.
         """
+        if value is not None and str(value).strip().startswith("-"):
+            raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_positive_integer_value')}: {value}")
         value = super()._process_value(value)
         if value is not None and value < 0:
             raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_positive_integer_value')}: {value}")
@@ -592,19 +724,22 @@ class BooleanImportField(BaseImportField):
 
         if isinstance(value, bool):
             return value
-        if isinstance(value, str):
-            if value.lower() in ("true", "1"):
-                return True
-            elif value.lower() in ("false", "0"):
-                return False
-        raise ImportDataError(f"{_('core_admin.BooleanImportField.message.invalid_boolean_value')}: {value}")
+        if isinstance(value, bytes):
+            value = value.decode("utf-8")
+        normalized_value = str(value).strip().lower()
+        if normalized_value in ("true", "1", "-1", "1.0"):
+            return True
+        if normalized_value in ("false", "0", "0.0"):
+            return False
+        raise ImportDataError(_("core_admin.BooleanImportField.message.invalid_boolean_value") + ": " + str(value))
 
 
 class DateImportField(BaseImportField):
     """Importní pole pro hodnoty datového typu date."""
 
-    pattern_iso = re.compile(r"(\d{4}-\d{1,2}-\d{1,2})(?: 0{1,2}:0{1,2}:0{1,2})?")
-    pattern_localized = re.compile(r"\d{1,2}\. ?\d{1,2}\. ?\d{4}")
+    pattern_iso = re.compile(r"(\d{4}-\d{1,2}-\d{1,2})(?:[ T]\d{1,2}:\d{1,2}(?::\d{1,2})?)?")
+    pattern_dotted_year_first = re.compile(r"(\d{4}\.\d{1,2}\.\d{1,2})(?: \d{1,2}:\d{1,2}(?::\d{1,2})?)?")
+    pattern_localized = re.compile(r"(\d{1,2}\. ?\d{1,2}\. ?\d{4})(?: \d{1,2}:\d{1,2}(?::\d{1,2})?)?")
 
     @property
     def value(self):
@@ -635,37 +770,62 @@ class DateImportField(BaseImportField):
 
     def _process_value(self, value) -> datetime.date | None:
         """
-               Provádí operaci process value.
+        Převede vstupní hodnotu na ``date``.
 
-               Převede řetězec na datum. Podporované formáty jsou "YYYY-MM-DD" a "DD.MM.YYYY".
-               Pokud hodnota neodpovídá žádnému formátu, vyvolá ImportDataError.
+        Podporované formáty jsou ``YYYY-MM-DD``, ``YYYY.MM.DD`` a ``DD.MM.YYYY``.
+        Případná časová složka vstupu (např. ``"2026-05-31 13:45:59"``) se ignoruje
+        a zpracuje se pouze část s datem.
 
-               :param value: Parametr ``value`` předává se do volání ``str()``, ``isinstance()``, pracuje se s atributy ``replace``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-        :return: Výstup funkce odpovídající implementované logice.
-
-            :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
+        :param value: Vstupní hodnota.
+        :return: Hodnota ``date`` nebo ``None`` pro prázdnou hodnotu.
+        :raises ImportDataError: Vyvolá se, pokud hodnota neodpovídá podporovanému formátu.
         """
-
         if not value or str(value).lower() == "nan":
             return None
-        elif isinstance(value, str):
-            if self.pattern_iso.match(value):
-                return datetime.datetime.strptime(self.pattern_iso.match(value).group(1), "%Y-%m-%d").date()
-            if self.pattern_localized.match(value):
-                return datetime.datetime.strptime(value.replace(" ", ""), "%d.%m.%Y").date()
-        elif isinstance(value, datetime.date):
+        if isinstance(value, str):
+            try:
+                if match := self.pattern_iso.match(value):
+                    return datetime.datetime.strptime(match.group(1), "%Y-%m-%d").date()
+                if match := self.pattern_dotted_year_first.match(value):
+                    return datetime.datetime.strptime(match.group(1), "%Y.%m.%d").date()
+                if match := self.pattern_localized.match(value):
+                    return datetime.datetime.strptime(match.group(1).replace(" ", ""), "%d.%m.%Y").date()
+            except ValueError:
+                raise ImportDataError(_("core_admin.ImportDataError.message.invalid_date_value") + ": " + str(value))
+        if isinstance(value, datetime.date):
             return value
-        raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_date_value')}: {value}")
+        raise ImportDataError(_("core_admin.ImportDataError.message.invalid_date_value") + ": " + str(value))
 
 
 class DateTimeImportField(BaseImportField):
     """
     Importní pole pro hodnoty datového typu datetime.
 
-    Podporovaný formát: "YYYY-MM-DD HH:MM:SS".
+    Podporované formáty vstupu:
+
+    .. list-table::
+       :header-rows: 1
+       :widths: 30 35 35
+
+       * - Formát
+         - Příklad
+         - Výstup
+       * - ``YYYY-MM-DD HH:MM:SS``
+         - ``2026-05-31 13:45:59``
+         - ``2026-05-31 13:45:59``
+       * - ``YYYY.MM.DD HH:MM:SS``
+         - ``2026.05.31 13:45:59``
+         - ``2026-05-31 13:45:59``
+       * - ``DD.MM.YYYY HH:MM:SS``
+         - ``31.05.2026 13:45:59``
+         - ``2026-05-31 13:45:59``
     """
 
-    pattern_iso = re.compile(r"(\d{4}-\d{1,2}-\d{1,2}.?\d{1,2}:\d{1,2}:\d{1,2}).*")
+    patterns = (
+        (re.compile(r"(\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}).*"), "%Y-%m-%d %H:%M:%S"),
+        (re.compile(r"(\d{4}\.\d{1,2}\.\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}).*"), "%Y.%m.%d %H:%M:%S"),
+        (re.compile(r"(\d{1,2}\.\d{1,2}\.\d{4} \d{1,2}:\d{1,2}:\d{1,2}).*"), "%d.%m.%Y %H:%M:%S"),
+    )
 
     @property
     def value(self):
@@ -696,22 +856,27 @@ class DateTimeImportField(BaseImportField):
 
     def _process_value(self, value) -> datetime.datetime | None:
         """
-               Provádí operaci process value.
+        Převede vstupní hodnotu na ``datetime`` v lokální časové zóně.
 
-               :param value: Parametr ``value`` předává se do volání ``str()``, ``isinstance()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-        :return: Výstup funkce odpovídající implementované logice.
-
-            :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
+        :param value: Vstupní hodnota.
+        :return: Hodnota ``datetime`` s časovou zónou, nebo ``None`` pro prázdnou hodnotu.
+        :raises ImportDataError: Vyvolá se, pokud hodnota neodpovídá žádnému podporovanému formátu.
         """
         if not value or str(value).lower() == "nan":
             return None
-        elif isinstance(value, str):
-            if match := self.pattern_iso.match(value):
-                value = datetime.datetime.strptime(match.group(1), "%Y-%m-%d %H:%M:%S")
-                return timezone.make_aware(value)
-        elif isinstance(value, datetime.datetime):
+        if isinstance(value, str):
+            try:
+                for pattern, datetime_format in self.patterns:
+                    if match := pattern.match(value):
+                        parsed_value = datetime.datetime.strptime(match.group(1), datetime_format)
+                        return timezone.make_aware(parsed_value)
+            except ValueError:
+                raise ImportDataError(
+                    _("core_admin.ImportDataError.message.invalid_date_time_value") + ": " + str(value)
+                )
+        if isinstance(value, datetime.datetime):
             return value
-        raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_date_time_value')}: {value}")
+        raise ImportDataError(_("core_admin.ImportDataError.message.invalid_date_time_value") + ": " + str(value))
 
 
 class DateRangeImportField(BaseImportField):
@@ -726,6 +891,8 @@ class DateRangeImportField(BaseImportField):
 
         :return: Vrací hodnotu podle větve zpracování.
         """
+        if self.value is None:
+            return None
         return f"[{self.value.lower.strftime('%Y-%m-%d')},{self.value.upper.strftime('%Y-%m-%d')})"
 
     def _process_value(self, value) -> DateRange | None:
@@ -759,7 +926,11 @@ class LookupImportField(BaseImportField):
     _lookup_cache_context = ContextVar("lookup_import_field_cache", default=None)
 
     def __init__(
-        self, lookup_model_classes=None, lookup_field_name: str = "ident_cely", limit_choices_to: dict | None = None
+        self,
+        lookup_model_classes=None,
+        lookup_field_name: str = "ident_cely",
+        limit_choices_to: dict | None = None,
+        verbose_limit_choices_to=None,
     ):
         """
         Inicializuje instanci třídy.
@@ -767,8 +938,9 @@ class LookupImportField(BaseImportField):
         :param lookup_model_classes: Parametr ``lookup_model_classes`` předává se do volání ``isinstance()``, ovlivňuje větvení podmínek.
         :param lookup_field_name: Textový název nebo klíč ``lookup_field_name`` používaný v rámci operace.
         :param limit_choices_to: Parametr ``limit_choices_to`` ovlivňuje větvení podmínek.
+        :param verbose_limit_choices_to: Čitelný název pole pro chyby ``limit_choices_to``.
 
-            :raises ValueError: Vyvolá se s textem "limit_choices_to is only supported for Heslar model".
+            :raises ValueError: Vyvolá se s textem ``core_admin.LookupImportField.message.limit_choices_to_unsupported_model``.
         """
         super().__init__()
         if not isinstance(lookup_model_classes, Iterable):
@@ -782,8 +954,9 @@ class LookupImportField(BaseImportField):
         self.lookup_field_name = lookup_field_name
         self._instance_value = None
         if limit_choices_to and lookup_model_classes != Heslar:
-            raise ValueError("limit_choices_to is only supported for Heslar model")
+            raise ValueError(_("core_admin.LookupImportField.message.limit_choices_to_unsupported_model"))
         self.limit_choices_to = limit_choices_to
+        self.verbose_limit_choices_to = verbose_limit_choices_to
 
     @classmethod
     def clear_cache(cls):
@@ -888,21 +1061,30 @@ class LookupImportField(BaseImportField):
         """
         if self.limit_choices_to:
             if not all(getattr(record, k).pk == v for k, v in self.limit_choices_to.items()):
-                raise ImportDataLimitChoicesError(record, self.limit_choices_to)
+                target_field_verbose_name = self.verbose_limit_choices_to or self.model_field_verbose_name
+                raise ImportDataLimitChoicesError(
+                    record,
+                    self.limit_choices_to,
+                    target_field_verbose_name,
+                    self.import_field_verbose_name,
+                )
 
     def _process_value(self, value):
         """
                Provádí operaci process value.
 
                Ověří existenci hodnoty v databázi nebo v importovaných záznamech a vrátí odpovídající záznam.
-               Pokud referencovaný záznam neexistuje, vyvolá ImportDataMissingReferencedValueError.
+               Pokud referencovaný záznam neexistuje a lookup je omezen přes ``nazev_heslare``,
+               vyvolá ImportDataMissingHeslarValueError; jinak ImportDataMissingReferencedValueError.
 
                :param value: Parametr ``value`` předává se do volání ``str()``, ``len()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
 
-            :raises ImportDataMissingReferencedValueError: Vyvolá se v konkrétních chybových větvích této funkce.
+            :raises ImportDataMissingHeslarValueError: Vyvolá se, pokud hodnota neodpovídá hesláři určenému omezením ``nazev_heslare``.
+            :raises ImportDataMissingReferencedValueError: Vyvolá se v ostatních případech, kdy referencovaný záznam nebyl nalezen.
         """
 
+        self._instance_value = None
         if str(value).lower() == "nan" or value is None or len(str(value)) == 0:
             return None
         lookup_cache = self.get_lookup_cache()
@@ -931,6 +1113,15 @@ class LookupImportField(BaseImportField):
                 self._check_limit_choices_to(filtered_records[0])
                 self._instance_value = filtered_records[0]
                 return value
+        if self.limit_choices_to and "nazev_heslare" in self.limit_choices_to:
+            target_field_verbose_name = self.verbose_limit_choices_to or self.model_field_verbose_name
+            raise ImportDataMissingHeslarValueError(
+                self.lookup_field_name,
+                self.limit_choices_to["nazev_heslare"],
+                value,
+                target_field_verbose_name,
+                self.import_field_verbose_name,
+            )
         raise ImportDataMissingReferencedValueError(
             value,
             ", ".join([current_class.__name__ for current_class in self.lookup_model_class_list]),
@@ -979,6 +1170,8 @@ class VazbaLookupImportField(LookupImportField):
 
             :raises ImportDataMissingReferencedValueError: Vyvolá se v konkrétních chybových větvích této funkce.
         """
+        if value is None:
+            return None
         try:
             record = get_record_from_ident(value)
         except Exception:
@@ -989,7 +1182,12 @@ class VazbaLookupImportField(LookupImportField):
                     self._instance_value = record
                     return value
                 elif DokumentCast in self.lookup_model_class_list:
-                    self._instance_value = DokumentCast.objects.get(ident_cely=value)
+                    dokument_cast = DokumentCast.objects.get(ident_cely=value)
+                    self._instance_value = (
+                        getattr(dokument_cast, self.read_field_name)
+                        if self.read_field_name and hasattr(dokument_cast, self.read_field_name)
+                        else dokument_cast
+                    )
                     return value
                 elif DokumentacniJednotka in self.lookup_model_class_list:
                     self._instance_value = DokumentacniJednotka.objects.get(ident_cely=value)
@@ -1077,6 +1275,8 @@ class GenericForeignKeyImportField(LookupImportField):
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``getattr()``, atribut objektu.
         """
         if self.serialized_attribute:
+            if self._instance_value is None:
+                return None
             return getattr(self._instance_value, self.serialized_attribute)
         else:
             return self._value
@@ -1165,16 +1365,20 @@ class ImportModelMapper(ABC):
         return cls._registry
 
     @classmethod
-    def get_import_data_mapper(cls, file_name):
+    def get_import_data_mapper(cls, file_name: str) -> type["ImportModelMapper"]:
         """
         Vrátí třídu mapperu odpovídající zadanému názvu souboru (bez přípony).
 
         :param file_name: Parametr ``file_name`` se předává do volání ``get()``, pracuje se s atributy ``split``, vstupuje do návratové hodnoty.
 
             :return: Vrací výsledek volání ``get()``.
-        """
 
-        return cls.get_import_data_mapper_dict().get(file_name.split(".")[0])
+            :raises ImportDataUnsupportedFilesError: Vyvolá se, pokud souboru neodpovídá žádný registrovaný mapper.
+        """
+        mapper = cls.get_import_data_mapper_dict().get(file_name.split(".")[0])
+        if mapper is None:
+            raise ImportDataUnsupportedFilesError({file_name})
+        return mapper
 
     @classmethod
     def get_file_name_for_mapper(cls, mapper_class):
@@ -1292,9 +1496,14 @@ class ImportModelMapper(ABC):
                :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``int()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
                :param prefix: Číselná hodnota ``prefix`` použitá při výpočtu nebo transformaci.
         :return: Výstup funkce odpovídající implementované logice.
+
+            :raises ImportDataIncorrectPrimaryKeyFormatError: Vyvolá se, pokud ``value`` neodpovídá formátu ``{prefix}-<číslo>``.
         """
         if isinstance(value, str) and prefix:
-            return int(re.match(f"{prefix}-(.*)", value).group(1))
+            match = re.match(f"{prefix}-(.*)", value)
+            if not match:
+                raise ImportDataIncorrectPrimaryKeyFormatError(value)
+            return int(match.group(1))
         return value
 
     @classmethod
@@ -1307,18 +1516,29 @@ class ImportModelMapper(ABC):
             :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``BaseImportField()``, výsledek volání ``IntegerImportField()``, výsledek volání ``PositiveIntegerImportField()``.
             :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
         """
+        return cls._import_field_for_model_field(cls.model_class, field_name)
 
-        model_field = cls.model_class._meta.get_field(field_name)
+    @classmethod
+    def _import_field_for_model_field(cls, model_class, field_name):
+        """
+        Vrátí instanci importního pole odpovídající typu pole ``field_name`` v ``model_class``.
+
+        :param model_class: Modelová třída, na které se pole hledá.
+        :param field_name: Název pole modelu.
+        :return: Instance ``BaseImportField`` nebo její podtřídy, případně ``None`` pro ``ForeignKey``.
+        :raises ImportDataError: Pokud typ pole není podporován.
+        """
+        model_field = model_class._meta.get_field(field_name)
         if (
             isinstance(model_field, models.TextField)
             or isinstance(model_field, models.CharField)
             or isinstance(model_field, models.URLField)
         ):
             return BaseImportField()
-        if isinstance(model_field, models.IntegerField):
-            return IntegerImportField()
         if isinstance(model_field, models.PositiveIntegerField):
             return PositiveIntegerImportField()
+        if isinstance(model_field, models.IntegerField):
+            return IntegerImportField()
         if isinstance(model_field, models.DecimalField):
             return DecimalImportField()
         if isinstance(model_field, models.DateTimeField):
@@ -1335,7 +1555,7 @@ class ImportModelMapper(ABC):
             return DateRangeImportField()
         if isinstance(model_field, models.ForeignKey):
             return None
-        raise ImportDataError(f"_('core.admin.ImportModelMapper.map_field.error'): {field_name}")
+        raise ImportDataError(_("core.admin.ImportModelMapper.map_field.error") + ": " + field_name)
 
     @classmethod
     def is_field_required(cls, field_name) -> bool:
@@ -1389,6 +1609,19 @@ class ImportModelMapper(ABC):
                 record,
             ]
         return []
+
+    @classmethod
+    def validate_batch_ordering(cls, payloads: list[dict]) -> None:
+        """
+        Ověří, že záznamy v dávce nejsou v pořadí, které by způsobilo dopřednou referenci v self-join poli.
+
+        Výchozí implementace neprovádí žádnou kontrolu. Podtřídy s self-join FK polem
+        tuto metodu přepíší a vyvolají ``ImportDataBatchOrderingError`` při nalezení porušení.
+
+        :param payloads: Seznam surových řádkových slovníků ze CSV souboru v původním pořadí.
+        :raises ImportDataBatchOrderingError: Vyvolá se při nalezení dopředné reference.
+        """
+        pass
 
     def import_validation(self, performed_action, *args, **kwargs) -> dict | None:
         """
@@ -1480,6 +1713,11 @@ class ImportModelMapper(ABC):
         for field_name, field_instance in self.get_mapping(include_primary_key).items():
             if field_name in self.value_dict:
                 field_value = self.value_dict[field_name]
+                field_instance.set_import_context(
+                    self.model_class,
+                    self.map_column_name_to_field_name(field_name),
+                    field_name,
+                )
                 field_instance.value = field_value
                 if instance_values:
                     mapping_dict[field_name] = (
@@ -1592,25 +1830,94 @@ class ImportModelMapper(ABC):
 
 class GeometryTransformMixin:
     """
-    Mixin pro mappery s geometrickými poli. Při insertu zajišťuje konverzi mezi souřadnicovými systémy:
+    Mixin pro mappery s geometrickými poli. Při insertu i updatu zajišťuje konverzi mezi souřadnicovými systémy:
 
-    WGS84 (SRID 4326) → S-JTSK (SRID 5514) a naopak.
+    WGS84 (SRID 4326) → S-JTSK (SRID 5514) a naopak. Zdrojem pravdy je geometrie v systému daném polem
+    ``geom_system``; odvozená geometrie se vždy přepočítá, aby update nemohl způsobit nesoulad v souřadnicích.
     """
+
+    GEOMETRY_COLUMNS = ("geom", "geom_sjtsk", "geom_system")
+
+    @staticmethod
+    def _transform_geometry(value, transform_function):
+        """
+        Převede geometrii na WKT a provede transformaci mezi souřadnicovými systémy.
+
+        :param value: Geometrie jako WKT string nebo ``GEOSGeometry``.
+        :param transform_function: Funkce ``transform_geom_to_sjtsk`` nebo ``transform_geom_to_wgs84``.
+        :return: Dvojice ``(převedený WKT, bool zda transformace uspěla)``.
+        """
+        wkt = getattr(value, "wkt", value)
+        converted, status = transform_function(wkt)
+        return converted, status == "OK"
+
+    def _get_geometry_db_record(self):
+        """
+        Vrátí existující záznam z databáze, ze kterého se při updatu doplní geometrické hodnoty
+        chybějící v importovaném souboru (``geom``, ``geom_sjtsk``, ``geom_system``).
+
+        :return: Instance modelu s geometrickými poli, nebo ``None``, pokud záznam neexistuje.
+        """
+        filter_kwargs = self._get_filter_kwargs_primary_key()
+        if not filter_kwargs:
+            return None
+        return self.model_class.objects.filter(**filter_kwargs).first()
 
     def transform_geometries(self, mapping_dict, performed_action):
         """
-        Transformuje geometries. v aplikaci.
+        Zajistí konzistenci dvojice ``geom``/``geom_sjtsk`` podle ``geom_system``. Při insertu se odvozená
+        geometrie dopočítá z hodnot v souboru; při updatu se hodnoty chybějící v souboru doplní
+        z existujícího záznamu v databázi a odvozená geometrie se přepočítá.
 
-        :param mapping_dict: Parametr ``mapping_dict`` předává se do volání ``transform_geom_to_sjtsk()``, ``transform_geom_to_wgs84()``, pracuje se s atributy ``get``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-        :param performed_action: Parametr ``performed_action`` ovlivňuje větvení podmínek.
+        :param mapping_dict: Slovník mapovaných hodnot řádku; může být doplněn o přepočtenou geometrii.
+        :param performed_action: Prováděná akce importu (INSERT/UPDATE/DELETE).
 
             :return: Vrací proměnná ``mapping_dict``.
         """
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
-            if mapping_dict.get("geom_system") == 4326 and mapping_dict.get("geom"):
-                mapping_dict["geom_sjtsk"] = transform_geom_to_sjtsk(mapping_dict["geom"])
-            elif mapping_dict.get("geom_system") == 5514 and mapping_dict.get("geom_sjtsk"):
-                mapping_dict["geom"] = transform_geom_to_wgs84(mapping_dict["geom_sjtsk"])
+            geom_system = str(mapping_dict.get("geom_system") or "")
+            if geom_system == "4326" and mapping_dict.get("geom"):
+                converted, ok = GeometryTransformMixin._transform_geometry(
+                    mapping_dict["geom"], transform_geom_to_sjtsk
+                )
+                if ok:
+                    mapping_dict["geom_sjtsk"] = converted
+            elif geom_system == "5514" and mapping_dict.get("geom_sjtsk"):
+                converted, ok = GeometryTransformMixin._transform_geometry(
+                    mapping_dict["geom_sjtsk"], transform_geom_to_wgs84
+                )
+                if ok:
+                    mapping_dict["geom"] = converted
+        elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
+            has_any_geometry_column = any(column in mapping_dict for column in GeometryTransformMixin.GEOMETRY_COLUMNS)
+            if not has_any_geometry_column:
+                return mapping_dict
+            missing_geometry_column = any(
+                column not in mapping_dict for column in GeometryTransformMixin.GEOMETRY_COLUMNS
+            )
+            db_record = self._get_geometry_db_record() if missing_geometry_column else None
+            geom_system = mapping_dict.get("geom_system") or getattr(db_record, "geom_system", None)
+            geom_system = str(geom_system or "")
+            if geom_system == "4326":
+                geom = mapping_dict["geom"] if "geom" in mapping_dict else getattr(db_record, "geom", None)
+                if geom:
+                    converted, ok = GeometryTransformMixin._transform_geometry(geom, transform_geom_to_sjtsk)
+                    if ok:
+                        mapping_dict["geom_sjtsk"] = converted
+                elif "geom" in mapping_dict:
+                    mapping_dict["geom_sjtsk"] = None
+            elif geom_system == "5514":
+                geom_sjtsk = (
+                    mapping_dict["geom_sjtsk"]
+                    if "geom_sjtsk" in mapping_dict
+                    else getattr(db_record, "geom_sjtsk", None)
+                )
+                if geom_sjtsk:
+                    converted, ok = GeometryTransformMixin._transform_geometry(geom_sjtsk, transform_geom_to_wgs84)
+                    if ok:
+                        mapping_dict["geom"] = converted
+                elif "geom_sjtsk" in mapping_dict:
+                    mapping_dict["geom"] = None
         return mapping_dict
 
 
@@ -1619,6 +1926,44 @@ class MultipleClassImportModelMapper(ImportModelMapper):
 
     foreign_key_fields = tuple()
     classes = tuple()
+    lookup_fields_mapping: dict = {}
+
+    @classmethod
+    def _field_to_model(cls):
+        """
+        Sestaví mapování ``field_name -> model_class`` na základě ``cls.fields``, ``cls.foreign_key_fields``
+        a ``cls.classes``. Slouží k tomu, aby typově korektní importní pole bylo zvoleno i tehdy,
+        když jeden mapper pokrývá více modelů.
+        """
+        alias_to_model = {entry[0]: entry[1] for entry in cls.classes}
+        mapping = {}
+        for model_alias, field_name in tuple(cls.fields) + tuple(cls.foreign_key_fields):
+            if model_alias in alias_to_model:
+                mapping[field_name] = alias_to_model[model_alias]
+        return mapping
+
+    @classmethod
+    def map_field(cls, field_name):
+        """
+        Najde správný model pro ``field_name`` napříč všemi modely mapperu a vrátí
+        odpovídající importní pole. Pole z ``lookup_fields_mapping`` má přednost.
+
+        :param field_name: Název sloupce importovaného souboru.
+        :return: Instance ``BaseImportField`` nebo její podtřídy.
+        """
+        if field_name in cls.lookup_fields_mapping:
+            return cls.lookup_fields_mapping[field_name]
+        model_class = cls._field_to_model().get(field_name)
+        if model_class is None:
+            return BaseImportField()
+        model_field_name = cls.column_to_field_mapping.get(field_name, field_name)
+        try:
+            import_field = cls._import_field_for_model_field(model_class, model_field_name)
+        except FieldDoesNotExist:
+            return BaseImportField()
+        if import_field is None:
+            return BaseImportField()
+        return import_field
 
     def import_validation(self, performed_action, *args, **kwargs):
         """
@@ -1683,10 +2028,16 @@ class MultipleClassImportModelMapper(ImportModelMapper):
             instance_class_0 = self.classes[0][1].objects.get(ident_cely=mapping_dict["ident_cely"])
             instance_class_1 = self.classes[1][1].objects.get(archeologicky_zaznam=instance_class_0)
             for field_name, field_value in mapping_dict_class_0.items():
-                setattr(instance_class_0, field_name, field_value)
+                if field_name in mapping_dict:
+                    setattr(instance_class_0, field_name, field_value)
             for field_name, field_value in mapping_dict_class_1.items():
-                setattr(instance_class_1, field_name, field_value)
+                if field_name in mapping_dict:
+                    setattr(instance_class_1, field_name, field_value)
             return [instance_class_0, instance_class_1]
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+            instance_class_0 = self.classes[0][1].objects.get(ident_cely=mapping_dict["ident_cely"])
+            instance_class_1 = self.classes[1][1].objects.get(**{self.classes[1][2]: instance_class_0})
+            return [instance_class_1, instance_class_0]
         return []
 
     @classmethod
@@ -1762,7 +2113,11 @@ class HeslarDataceMapper(ImportModelMapper):
             :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
-        field_mapping["obdobi"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_OBDOBI})
+        field_mapping["obdobi"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_OBDOBI},
+            verbose_limit_choices_to=_("core.import_data_mappers.HeslarDataceMapper.obdobi.limit_choices"),
+        )
         return field_mapping
 
     @staticmethod
@@ -1795,13 +2150,25 @@ class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument_typ"] = LookupImportField(
-            Heslar, limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP}
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
+            verbose_limit_choices_to=_(
+                "core.import_data_mappers.HeslarDokumentTypMaterialRadaMapper.dokument_typ.limit_choices"
+            ),
         )
         field_mapping["dokument_material"] = LookupImportField(
-            Heslar, limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL}
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL},
+            verbose_limit_choices_to=_(
+                "core.import_data_mappers.HeslarDokumentTypMaterialRadaMapper.dokument_material.limit_choices"
+            ),
         )
         field_mapping["dokument_rada"] = LookupImportField(
-            Heslar, limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA}
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},
+            verbose_limit_choices_to=_(
+                "core.import_data_mappers.HeslarDokumentTypMaterialRadaMapper.dokument_rada.limit_choices"
+            ),
         )
         return field_mapping
 
@@ -1838,6 +2205,33 @@ class HeslarHierarchieMapper(ImportModelMapper):
         field_mapping["heslo_nadrazene"] = LookupImportField(Heslar)
         field_mapping["heslo_podrazene"] = LookupImportField(Heslar)
         return field_mapping
+
+    @classmethod
+    def validate_batch_ordering(cls, payloads: list[dict]) -> None:
+        """
+        Ověří, že ``heslo_nadrazene`` a ``heslo_podrazene`` každého záznamu existují v DB
+        nebo v záznamech validovaných dříve ve stejné dávce (např. nové Heslar ze souboru ``heslar.csv``).
+
+        :param payloads: Seznam slovníků odpovídající řádkům souboru ``heslar_hierarchie.csv``.
+        :raises ImportDataBatchOrderingError: Vyvolá se, pokud referencovaný Heslar neexistuje
+            v DB ani v záznamy dávky zpracovaných před tímto souborem.
+        """
+        in_batch_ident_cely: set[str] = {
+            record.ident_cely
+            for record in LookupImportField.get_records()
+            if isinstance(record, Heslar) and getattr(record, "ident_cely", None)
+        }
+        for row in payloads:
+            row_label = "{}/{}".format(row.get("heslo_nadrazene"), row.get("heslo_podrazene"))
+            for field_name in ("heslo_nadrazene", "heslo_podrazene"):
+                value = row.get(field_name)
+                if value is None or str(value).lower() in ("nan", "none", ""):
+                    continue
+                value_str = str(value)
+                if value_str in in_batch_ident_cely:
+                    continue
+                if not Heslar.objects.filter(ident_cely=value_str).exists():
+                    raise ImportDataBatchOrderingError(row_label, value_str, field_name)
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: HeslarHierarchie) -> list:
@@ -1926,13 +2320,45 @@ class OrganizaceMapper(ImportModelMapper):
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["soucast"] = LookupImportField(Organizace)
         field_mapping["typ_organizace"] = LookupImportField(
-            Heslar, limit_choices_to={"nazev_heslare": HESLAR_ORGANIZACE_TYP}
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_ORGANIZACE_TYP},
+            verbose_limit_choices_to=_("core.import_data_mappers.OrganizaceMapper.typ_organizace.limit_choices"),
         )
         field_mapping["zverejneni_pristupnost"] = LookupImportField(
-            Heslar, limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST}
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
+            verbose_limit_choices_to=_(
+                "core.import_data_mappers.OrganizaceMapper.zverejneni_pristupnost.limit_choices"
+            ),
         )
-        field_mapping["licence"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_LICENCE})
+        field_mapping["licence"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_LICENCE},
+            verbose_limit_choices_to=_("core.import_data_mappers.OrganizaceMapper.licence.limit_choices"),
+        )
         return field_mapping
+
+    @classmethod
+    def validate_batch_ordering(cls, payloads: list[dict]) -> None:
+        """
+        Ověří, že záznamy neobsahují dopřednou referenci v poli ``soucast`` (self-join FK na Organizace).
+
+        Pokud záznam odkazuje přes ``soucast`` na jinou organizaci, která se v CSV vyskytuje
+        až za ním a zároveň v databázi dosud neexistuje, vyvolá výjimku.
+
+        :param payloads: Seznam surových řádkových slovníků ze CSV souboru v původním pořadí.
+        :raises ImportDataBatchOrderingError: Vyvolá se, pokud je ``soucast`` dopředná reference.
+        """
+        seen: set[str] = set()
+        for row in payloads:
+            ident = row.get("ident_cely")
+            soucast = row.get("soucast")
+            if soucast is not None and str(soucast).lower() not in ("nan", "none", ""):
+                soucast_str = str(soucast)
+                if soucast_str not in seen and not Organizace.objects.filter(ident_cely=soucast_str).exists():
+                    raise ImportDataBatchOrderingError(ident, soucast_str, "soucast")
+            if ident is not None and str(ident).lower() not in ("nan", "none", ""):
+                seen.add(str(ident))
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Organizace) -> list:
@@ -2001,13 +2427,17 @@ class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["typ_projektu"] = LookupImportField(
-            Heslar, limit_choices_to={"nazev_heslare": HESLAR_PROJEKT_TYP}
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_PROJEKT_TYP},
+            verbose_limit_choices_to=_("core.import_data_mappers.ProjektMapper.typ_projektu.limit_choices"),
         )
         field_mapping["hlavni_katastr"] = RuianLookupImportField(RuianKatastr, "kod")
         field_mapping["vedouci_projektu"] = LookupImportField(Osoba)
         field_mapping["organizace"] = LookupImportField(Organizace)
         field_mapping["kulturni_pamatka"] = LookupImportField(
-            Heslar, limit_choices_to={"nazev_heslare": HESLAR_PAMATKOVA_OCHRANA}
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_PAMATKOVA_OCHRANA},
+            verbose_limit_choices_to=_("core.import_data_mappers.ProjektMapper.kulturni_pamatka.limit_choices"),
         )
         return field_mapping
 
@@ -2157,19 +2587,33 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["projekt"] = LookupImportField(Projekt)
-        field_mapping["pristupnost"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST})
+        field_mapping["pristupnost"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
+            verbose_limit_choices_to=_("core.import_data_mappers.SamostatnyNalezMapper.pristupnost.limit_choices"),
+        )
         field_mapping["katastr"] = RuianLookupImportField(RuianKatastr, "kod")
         field_mapping["okolnosti"] = LookupImportField(
-            Heslar, limit_choices_to={"nazev_heslare": HESLAR_NALEZOVE_OKOLNOSTI}
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_NALEZOVE_OKOLNOSTI},
+            verbose_limit_choices_to=_("core.import_data_mappers.SamostatnyNalezMapper.okolnosti.limit_choices"),
         )
         field_mapping["nalezce"] = LookupImportField(Osoba)
         field_mapping["predano_organizace"] = LookupImportField(Organizace)
-        field_mapping["obdobi"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_OBDOBI})
+        field_mapping["obdobi"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_OBDOBI},
+            verbose_limit_choices_to=_("core.import_data_mappers.SamostatnyNalezMapper.obdobi.limit_choices"),
+        )
         field_mapping["druh_nalezu"] = LookupImportField(
-            Heslar, limit_choices_to={"nazev_heslare": HESLAR_PREDMET_DRUH}
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_PREDMET_DRUH},
+            verbose_limit_choices_to=_("core.import_data_mappers.SamostatnyNalezMapper.druh_nalezu.limit_choices"),
         )
         field_mapping["specifikace"] = LookupImportField(
-            Heslar, limit_choices_to={"nazev_heslare": HESLAR_PREDMET_SPECIFIKACE}
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_PREDMET_SPECIFIKACE},
+            verbose_limit_choices_to=_("core.import_data_mappers.SamostatnyNalezMapper.specifikace.limit_choices"),
         )
         return field_mapping
 
@@ -2245,13 +2689,37 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
     )
     lookup_fields_mapping = {
         "projekt": LookupImportField(Projekt),
-        "pristupnost": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST}),
+        "pristupnost": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
+            verbose_limit_choices_to=_(
+                "core.import_data_mappers.ArcheologickyZaznamAkceMapper.pristupnost.limit_choices"
+            ),
+        ),
         "hlavni_katastr": RuianLookupImportField(RuianKatastr, "kod"),
         "hlavni_vedouci": LookupImportField(Osoba),
         "organizace": LookupImportField(Organizace),
-        "specifikace_data": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_DATUM_SPECIFIKACE}),
-        "hlavni_typ": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_AKCE_TYP}),
-        "vedlejsi_typ": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_AKCE_TYP}),
+        "specifikace_data": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_DATUM_SPECIFIKACE},
+            verbose_limit_choices_to=_(
+                "core.import_data_mappers.ArcheologickyZaznamAkceMapper.specifikace_data.limit_choices"
+            ),
+        ),
+        "hlavni_typ": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_AKCE_TYP},
+            verbose_limit_choices_to=_(
+                "core.import_data_mappers.ArcheologickyZaznamAkceMapper.hlavni_typ.limit_choices"
+            ),
+        ),
+        "vedlejsi_typ": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_AKCE_TYP},
+            verbose_limit_choices_to=_(
+                "core.import_data_mappers.ArcheologickyZaznamAkceMapper.vedlejsi_typ.limit_choices"
+            ),
+        ),
     }
     model_class = ArcheologickyZaznam
     classes = (
@@ -2275,20 +2743,35 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
         field_mapping = field_mapping | cls.lookup_fields_mapping
         return field_mapping
 
-    @classmethod
-    def map_field(cls, field_name):
+    @staticmethod
+    def _is_import_null(value) -> bool:
         """
-        Provádí operaci map field.
+        Určí, zda importovaná hodnota reprezentuje prázdnou hodnotu.
 
-        :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
-
-            :return: Vrací výsledek volání ``get()``.
+        :param value: Hodnota z importovaného řádku.
+        :return: ``True``, pokud hodnota odpovídá prázdné hodnotě.
         """
-        mapping_dict = {
-            "hlavni_katastr": RuianLookupImportField(RuianKatastr, "kod"),
-        }
-        mapping_dict = mapping_dict | cls.lookup_fields_mapping
-        return mapping_dict.get(field_name, BaseImportField())
+        return value is None or pd.isna(value) or str(value).strip().lower() in ("", "nan", "none", "null")
+
+    def import_validation(self, performed_action, *args, **kwargs):
+        """
+        Ověří existenci archeologického záznamu a konzistenci typu akce s projektem.
+
+        :param performed_action: Typ prováděné operace importu.
+        :param args: Další poziční argumenty předané nadřazené implementaci.
+        :param kwargs: Další klíčové argumenty předané nadřazené implementaci.
+        :return: Slovník filtračních podmínek pro dohledání cílového záznamu.
+        :raises ImportDataError: Vyvolá se, pokud ``typ`` a ``projekt`` porušují ``akce_typ_check``.
+        """
+        typ = self.value_dict.get("typ")
+        projekt_is_null = self._is_import_null(self.value_dict.get("projekt"))
+        if typ == Akce.TYP_AKCE_SAMOSTATNA and not projekt_is_null:
+            raise ImportDataError(_("core_admin.ImportDataError.message.akce_typ_check.typ_n_requires_empty_projekt"))
+        if typ == Akce.TYP_AKCE_PROJEKTOVA and projekt_is_null:
+            raise ImportDataError(_("core_admin.ImportDataError.message.akce_typ_check.typ_r_requires_filled_projekt"))
+        if not self._is_import_null(typ) and typ not in (Akce.TYP_AKCE_SAMOSTATNA, Akce.TYP_AKCE_PROJEKTOVA):
+            raise ImportDataError(f"{_('core_admin.ImportDataError.message.akce_typ_check.invalid_typ')}: {typ}")
+        return super().import_validation(performed_action, *args, **kwargs)
 
     @classmethod
     def record_postprocessing(cls, record, performed_action, fedora_transaction):
@@ -2314,7 +2797,10 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
         :return: Seznam souvisejícího archeologického záznamu a projektu.
         """
         if isinstance(record, ArcheologickyZaznam):
-            return [record, record.akce.projekt]
+            # Při DELETE je navázaná Akce smazána dříve než ArcheologickyZaznam,
+            # reverzní vazba proto už nemusí existovat.
+            akce = getattr(record, "akce", None)
+            return [record, akce.projekt if akce else None]
         elif isinstance(record, Akce):
             return [record.archeologicky_zaznam, record.projekt]
 
@@ -2360,12 +2846,32 @@ class LokalitaMapper(MultipleClassImportModelMapper):
         ("lokalita", "jistota"),
     )
     lookup_fields_mapping = {
-        "pristupnost": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST}),
+        "pristupnost": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
+            verbose_limit_choices_to=_("core.import_data_mappers.LokalitaMapper.pristupnost.limit_choices"),
+        ),
         "hlavni_katastr": RuianLookupImportField(RuianKatastr, "kod"),
-        "typ_lokality": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_LOKALITA_TYP}),
-        "druh": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_LOKALITA_DRUH}),
-        "zachovalost": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_STAV_DOCHOVANI}),
-        "jistota": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_JISTOTA_URCENI}),
+        "typ_lokality": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_LOKALITA_TYP},
+            verbose_limit_choices_to=_("core.import_data_mappers.LokalitaMapper.typ_lokality.limit_choices"),
+        ),
+        "druh": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_LOKALITA_DRUH},
+            verbose_limit_choices_to=_("core.import_data_mappers.LokalitaMapper.druh.limit_choices"),
+        ),
+        "zachovalost": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_STAV_DOCHOVANI},
+            verbose_limit_choices_to=_("core.import_data_mappers.LokalitaMapper.zachovalost.limit_choices"),
+        ),
+        "jistota": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_JISTOTA_URCENI},
+            verbose_limit_choices_to=_("core.import_data_mappers.LokalitaMapper.jistota.limit_choices"),
+        ),
     }
     model_class = ArcheologickyZaznam
     classes = (
@@ -2390,19 +2896,19 @@ class LokalitaMapper(MultipleClassImportModelMapper):
         return field_mapping
 
     @classmethod
-    def map_field(cls, field_name):
+    def record_postprocessing(cls, record, performed_action, fedora_transaction):
         """
-        Provádí operaci map field.
+        Provádí operaci record postprocessing.
 
-        :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
+        :param record: Parametr ``record`` předává se do volání ``isinstance()``, ``record_postprocessing()``, pracuje se s atributy ``typ_zaznamu``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param performed_action: Parametr ``performed_action`` předává se do volání ``record_postprocessing()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``record_postprocessing()``, vstupuje do návratové hodnoty.
 
-            :return: Vrací výsledek volání ``get()``.
+            :return: Vrací výsledek volání ``record_postprocessing()``.
         """
-        mapping_dict = {
-            "hlavni_katastr": RuianLookupImportField(RuianKatastr, "kod"),
-        }
-        mapping_dict = mapping_dict | cls.lookup_fields_mapping
-        return mapping_dict.get(field_name, BaseImportField())
+        if isinstance(record, ArcheologickyZaznam) and performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
+            record.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+        return super().record_postprocessing(record, performed_action, fedora_transaction)
 
     @staticmethod
     def get_record_history(record: ArcheologickyZaznam | Lokalita):
@@ -2525,8 +3031,16 @@ class PianMapper(ImportModelMapper, GeometryTransformMixin):
             :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
-        field_mapping["typ"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_PIAN_TYP})
-        field_mapping["presnost"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_PIAN_PRESNOST})
+        field_mapping["typ"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_PIAN_TYP},
+            verbose_limit_choices_to=_("core.import_data_mappers.PianMapper.typ.limit_choices"),
+        )
+        field_mapping["presnost"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_PIAN_PRESNOST},
+            verbose_limit_choices_to=_("core.import_data_mappers.PianMapper.presnost.limit_choices"),
+        )
         field_mapping["zm10"] = LookupImportField(Kladyzm, "cislo")
         field_mapping["zm50"] = LookupImportField(Kladyzm, "cislo")
         return field_mapping
@@ -2576,7 +3090,11 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["archeologicky_zaznam"] = LookupImportField(ArcheologickyZaznam)
         field_mapping["pian"] = LookupImportField(Pian)
-        field_mapping["typ"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_DJ_TYP})
+        field_mapping["typ"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_DJ_TYP},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentacniJednotkaMapper.typ.limit_choices"),
+        )
         return field_mapping
 
     @classmethod
@@ -2591,10 +3109,11 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
             :return: Vrací proměnná ``record``.
         """
         record: DokumentacniJednotka
-        if pian := record.archeologicky_zaznam.hlavni_katastr.pian:
-            record.pian = pian
-        else:
-            record.pian = vytvor_pian(record.archeologicky_zaznam.hlavni_katastr, fedora_transaction)
+        if record.typ.id == TYP_DJ_KATASTR:
+            if pian := record.archeologicky_zaznam.hlavni_katastr.pian:
+                record.pian = pian
+            else:
+                record.pian = vytvor_pian(record.archeologicky_zaznam.hlavni_katastr, fedora_transaction)
         return record
 
     @staticmethod
@@ -2647,8 +3166,16 @@ class AdbMapper(ImportModelMapper):
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokumentacni_jednotka"] = LookupImportField(DokumentacniJednotka)
-        field_mapping["typ_sondy"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_ADB_TYP})
-        field_mapping["podnet"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_ADB_PODNET})
+        field_mapping["typ_sondy"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_ADB_TYP},
+            verbose_limit_choices_to=_("core.import_data_mappers.AdbMapper.typ_sondy.limit_choices"),
+        )
+        field_mapping["podnet"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_ADB_PODNET},
+            verbose_limit_choices_to=_("core.import_data_mappers.AdbMapper.podnet.limit_choices"),
+        )
         field_mapping["autor_popisu"] = LookupImportField(Osoba)
         field_mapping["autor_revize"] = LookupImportField(Osoba)
         field_mapping["sm5"] = LookupImportField(Kladysm5, "mapno")
@@ -2694,7 +3221,11 @@ class AdbVyskovyBod(ImportModelMapper):
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["adb"] = LookupImportField(Adb)
-        field_mapping["typ"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_VYSKOVY_BOD_TYP})
+        field_mapping["typ"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_VYSKOVY_BOD_TYP},
+            verbose_limit_choices_to=_("core.import_data_mappers.AdbVyskovyBod.typ.limit_choices"),
+        )
         return field_mapping
 
     @staticmethod
@@ -2745,12 +3276,28 @@ class DokumentLetMapper(ImportModelMapper):
             :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
-        field_mapping["letiste_start"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_LETISTE})
-        field_mapping["letiste_cil"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_LETISTE})
+        field_mapping["letiste_start"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_LETISTE},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentLetMapper.letiste_start.limit_choices"),
+        )
+        field_mapping["letiste_cil"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_LETISTE},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentLetMapper.letiste_cil.limit_choices"),
+        )
         field_mapping["pozorovatel"] = LookupImportField(Osoba)
         field_mapping["organizace"] = LookupImportField(Organizace)
-        field_mapping["pocasi"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_POCASI})
-        field_mapping["dohlednost"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_DOHLEDNOST})
+        field_mapping["pocasi"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_POCASI},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentLetMapper.pocasi.limit_choices"),
+        )
+        field_mapping["dohlednost"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_DOHLEDNOST},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentLetMapper.dohlednost.limit_choices"),
+        )
         return field_mapping
 
 
@@ -2801,18 +3348,62 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
     column_to_field_mapping = {"region": "region_extra"}
     lookup_fields_mapping = {
         "let": LookupImportField(Let),
-        "typ_dokumentu": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP}),
-        "material_originalu": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL}),
-        "rada": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA}),
+        "typ_dokumentu": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.typ_dokumentu.limit_choices"),
+        ),
+        "material_originalu": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.material_originalu.limit_choices"),
+        ),
+        "rada": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.rada.limit_choices"),
+        ),
         "organizace": LookupImportField(Organizace),
-        "pristupnost": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST}),
-        "ulozeni_originalu": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_ULOZENI}),
-        "licence": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_LICENCE}),
-        "format": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_FORMAT}),
-        "zachovalost": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_ZACHOVALOST}),
-        "nahrada": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_NAHRADA}),
-        "udalost_typ": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_UDALOST_TYP}),
-        "zeme": LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_ZEME}),
+        "pristupnost": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.pristupnost.limit_choices"),
+        ),
+        "ulozeni_originalu": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_ULOZENI},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.ulozeni_originalu.limit_choices"),
+        ),
+        "licence": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_LICENCE},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.licence.limit_choices"),
+        ),
+        "format": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_FORMAT},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.format.limit_choices"),
+        ),
+        "zachovalost": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_ZACHOVALOST},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.zachovalost.limit_choices"),
+        ),
+        "nahrada": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_NAHRADA},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.nahrada.limit_choices"),
+        ),
+        "udalost_typ": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_UDALOST_TYP},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.udalost_typ.limit_choices"),
+        ),
+        "zeme": LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_ZEME},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentMapper.zeme.limit_choices"),
+        ),
     }
     model_class = Dokument
     historie_typ_vazby = DOKUMENT_RELATION_TYPE
@@ -2838,18 +3429,6 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
         field_mapping = field_mapping | cls.lookup_fields_mapping
         return field_mapping
 
-    @classmethod
-    def map_field(cls, field_name):
-        """
-        Provádí operaci map field.
-
-        :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
-
-            :return: Vrací výsledek volání ``get()``.
-        """
-        mapping_dict = cls.lookup_fields_mapping
-        return mapping_dict.get(field_name, BaseImportField())
-
     def create_records(self, performed_action) -> list:
         """
         Vytvoří instanci Dokument a DokumentExtraData s vazbou na Dokument.
@@ -2870,8 +3449,10 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
                 return [dokument_extra_data_query.first(), dokument]
             else:
                 return [dokument]
-        mapping_dict_dokument = {field: mapping_dict[field] for field in fields_dokument}
-        mapping_dict_dokument_extra_data = {field: mapping_dict[field] for field in fields_dokument_extra_data}
+        mapping_dict_dokument = {field: mapping_dict[field] for field in fields_dokument if field in mapping_dict}
+        mapping_dict_dokument_extra_data = {
+            field: mapping_dict[field] for field in fields_dokument_extra_data if field in mapping_dict
+        }
         mapping_dict_dokument = {
             self.map_column_name_to_field_name(field): value for field, value in mapping_dict_dokument.items()
         }
@@ -2887,12 +3468,17 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
             dokument = Dokument.objects.get(ident_cely=mapping_dict["ident_cely"])
             dokument_extra_data_query = DokumentExtraData.objects.filter(dokument=dokument)
-            if dokument_extra_data_query.exists():
-                dokument_extra_data = dokument_extra_data_query.first()
-            else:
-                dokument_extra_data = DokumentExtraData(dokument=dokument)
             for field_name, field_value in mapping_dict_dokument.items():
                 setattr(dokument, field_name, field_value)
+            if dokument_extra_data_query.exists():
+                dokument_extra_data = dokument_extra_data_query.first()
+            elif any(value is not None for value in mapping_dict_dokument_extra_data.values()):
+                # Nový DokumentExtraData zakládáme jen pokud import skutečně nese nějaká data,
+                # která do něj patří. Bez této kontroly by se ukládal záznam se samými NULL
+                # hodnotami a narazil na NOT NULL constraint (např. geom_system).
+                dokument_extra_data = DokumentExtraData(dokument=dokument)
+            else:
+                return [dokument]
             for field_name, field_value in mapping_dict_dokument_extra_data.items():
                 setattr(dokument_extra_data, field_name, field_value)
             return [dokument_extra_data, dokument]
@@ -2910,6 +3496,19 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
         """
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
         return self.transform_geometries(mapping_dict, performed_action)
+
+    def _get_geometry_db_record(self):
+        """
+        Vrátí ``DokumentExtraData`` navázaný na aktualizovaný dokument — geometrická pole
+        u dokumentu nese tento záznam, nikoli samotný ``Dokument``.
+
+        :return: Instance ``DokumentExtraData``, nebo ``None``, pokud záznam neexistuje.
+        """
+        filter_kwargs = self._get_filter_kwargs_primary_key()
+        if not filter_kwargs:
+            return None
+        dokument_filter = {f"dokument__{field}": value for field, value in filter_kwargs.items()}
+        return DokumentExtraData.objects.filter(**dokument_filter).first()
 
     @staticmethod
     def get_record_history(record: Dokument | DokumentExtraData):
@@ -2990,7 +3589,11 @@ class DokumentJazykMapper(ImportModelMapper):
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument"] = LookupImportField(Dokument)
-        field_mapping["jazyk"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_JAZYK})
+        field_mapping["jazyk"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_JAZYK},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentJazykMapper.jazyk.limit_choices"),
+        )
         return field_mapping
 
     @staticmethod
@@ -3078,7 +3681,11 @@ class DokumentPosudekMapper(ImportModelMapper):
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument"] = LookupImportField(Dokument)
-        field_mapping["posudek"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_POSUDEK_TYP})
+        field_mapping["posudek"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_POSUDEK_TYP},
+            verbose_limit_choices_to=_("core.import_data_mappers.DokumentPosudekMapper.posudek.limit_choices"),
+        )
         return field_mapping
 
     @staticmethod
@@ -3122,7 +3729,11 @@ class TvarMapper(ImportModelMapper):
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument"] = LookupImportField(Dokument)
-        field_mapping["tvar"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_LETFOTO_TVAR})
+        field_mapping["tvar"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_LETFOTO_TVAR},
+            verbose_limit_choices_to=_("core.import_data_mappers.TvarMapper.tvar.limit_choices"),
+        )
         return field_mapping
 
     @staticmethod
@@ -3254,7 +3865,7 @@ class NeidentAkceVedouciMapper(ImportModelMapper):
             :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
-        field_mapping["neident_akce"] = LookupImportField(DokumentCast)
+        field_mapping["neident_akce"] = LookupImportField(NeidentAkce, "dokument_cast__ident_cely")
         field_mapping["vedouci"] = LookupImportField(Osoba)
         return field_mapping
 
@@ -3284,6 +3895,7 @@ class KomponentaMapper(ImportModelMapper):
     """Mapovač pro model Komponenta."""
 
     fields = ("ident_cely", "jistota", "presna_datace", "poznamka")
+    column_to_field_mapping = {"vazba": "komponenta_vazby"}
     model_class = Komponenta
     require_primary_key_value = True
 
@@ -3300,8 +3912,16 @@ class KomponentaMapper(ImportModelMapper):
         field_mapping["vazba"] = VazbaLookupImportField(
             (DokumentacniJednotka, DokumentCast), read_field_name="komponenty"
         )
-        field_mapping["obdobi"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_OBDOBI})
-        field_mapping["areal"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_AREAL})
+        field_mapping["obdobi"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_OBDOBI},
+            verbose_limit_choices_to=_("core.import_data_mappers.KomponentaMapper.obdobi.limit_choices"),
+        )
+        field_mapping["areal"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_AREAL},
+            verbose_limit_choices_to=_("core.import_data_mappers.KomponentaMapper.areal.limit_choices"),
+        )
         return field_mapping
 
     @staticmethod
@@ -3361,7 +3981,11 @@ class KomponentaAktivitaMapper(ImportModelMapper):
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["komponenta"] = LookupImportField(Komponenta)
-        field_mapping["aktivita"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_AKTIVITA})
+        field_mapping["aktivita"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_AKTIVITA},
+            verbose_limit_choices_to=_("core.import_data_mappers.KomponentaAktivitaMapper.aktivita.limit_choices"),
+        )
         return field_mapping
 
     @staticmethod
@@ -3434,9 +4058,15 @@ class NalezObjektMapper(NalezMapper):
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["komponenta"] = LookupImportField(Komponenta)
-        field_mapping["druh"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_OBJEKT_DRUH})
+        field_mapping["druh"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_OBJEKT_DRUH},
+            verbose_limit_choices_to=_("core.import_data_mappers.NalezObjektMapper.druh.limit_choices"),
+        )
         field_mapping["specifikace"] = LookupImportField(
-            Heslar, limit_choices_to={"nazev_heslare": HESLAR_OBJEKT_SPECIFIKACE}
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_OBJEKT_SPECIFIKACE},
+            verbose_limit_choices_to=_("core.import_data_mappers.NalezObjektMapper.specifikace.limit_choices"),
         )
         return field_mapping
 
@@ -3459,9 +4089,15 @@ class NalezPredmetMapper(NalezMapper):
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["komponenta"] = LookupImportField(Komponenta)
-        field_mapping["druh"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_PREDMET_DRUH})
+        field_mapping["druh"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_PREDMET_DRUH},
+            verbose_limit_choices_to=_("core.import_data_mappers.NalezPredmetMapper.druh.limit_choices"),
+        )
         field_mapping["specifikace"] = LookupImportField(
-            Heslar, limit_choices_to={"nazev_heslare": HESLAR_PREDMET_SPECIFIKACE}
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_PREDMET_SPECIFIKACE},
+            verbose_limit_choices_to=_("core.import_data_mappers.NalezPredmetMapper.specifikace.limit_choices"),
         )
         return field_mapping
 
@@ -3503,9 +4139,15 @@ class ExterniZdrojMapper(ImportModelMapper):
             :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
-        field_mapping["typ"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_EXTERNI_ZDROJ_TYP})
+        field_mapping["typ"] = LookupImportField(
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_EXTERNI_ZDROJ_TYP},
+            verbose_limit_choices_to=_("core.import_data_mappers.ExterniZdrojMapper.typ.limit_choices"),
+        )
         field_mapping["typ_dokumentu"] = LookupImportField(
-            Heslar, limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP}
+            Heslar,
+            limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
+            verbose_limit_choices_to=_("core.import_data_mappers.ExterniZdrojMapper.typ_dokumentu.limit_choices"),
         )
         return field_mapping
 
@@ -3699,12 +4341,14 @@ class UzivatelMapper(ImportModelMapper):
         """
         return record
 
-    def import_validation(self, performed_action, user_id) -> dict | None:
+    def import_validation(self, performed_action, user_id, *args, **kwargs) -> dict | None:
         """
         Zabrání smazání aktivního uživatele a jinak deleguje běžnou validaci mapperu.
 
         :param performed_action: Typ prováděné operace importu.
         :param user_id: Primární klíč aktuálně přihlášeného uživatele.
+        :param args: Dodatečné poziční argumenty zachované kvůli jednotné signatuře, předávají se rodičovské metodě.
+        :param kwargs: Dodatečné pojmenované argumenty zachované kvůli jednotné signatuře, předávají se rodičovské metodě.
         :return: Filtrační podmínky primárního klíče nebo ``None`` podle standardní validace mapperu.
         :raises ImportDataActiveUserCannotBeDeleted: Vyvolá se při pokusu smazat právě aktivního uživatele.
         """
@@ -3713,7 +4357,7 @@ class UzivatelMapper(ImportModelMapper):
             and User.objects.get(pk=user_id).ident_cely == self.value_dict["ident_cely"]
         ):
             raise ImportDataActiveUserCannotBeDeleted(self.value_dict["ident_cely"])
-        return super().import_validation(performed_action)
+        return super().import_validation(performed_action, *args, **kwargs)
 
 
 @ImportModelMapper.register("uzivatele_notifikace_projekty")
@@ -3789,6 +4433,8 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
         :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``.
         :return: Nově vytvořená hodnota připravená touto funkcí.
         """
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+            return [self.model_class.objects.get(**self._get_filter_kwargs_primary_key())]
         mapping_dict = self.map(performed_action, True)
         mapping_dict = {self.map_column_name_to_field_name(field): value for field, value in mapping_dict.items()}
         app_label, model = mapping_dict["content_type"].split(".")
@@ -3895,12 +4541,12 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
     @staticmethod
     def get_record_history(record: UzivatelSpoluprace):
         """
-        Vrátí přímo vazbu spolupráce jako cíl pro historii.
+        Vrátí vedoucího uživatele jako cíl pro historii spolupráce.
 
         :param record: Záznam ``UzivatelSpoluprace`` po importu.
-        :return: Přímo předaná vazba spolupráce.
+        :return: Vedoucí uživatel navázaný na spolupráci.
         """
-        return record
+        return record.vedouci
 
 
 @ImportModelMapper.register("uzivatele_opravneni")
@@ -3910,6 +4556,10 @@ class UzivatelOpravneniMapper(ImportModelMapper):
     model_class = User
     primary_key = ("uzivatel", "skupina")
     allow_update = False
+    supported_actions = (
+        ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+        ImportDataAdminForm.PERFORMED_ACTION_DELETE,
+    )
     column_to_field_mapping = {"uzivatel": "ident_cely"}
 
     def get_mapping(cls, include_primary_key=False):
@@ -3939,16 +4589,36 @@ class UzivatelOpravneniMapper(ImportModelMapper):
 
             :return: Vrací seznam.
         """
+        if performed_action not in self.supported_actions:
+            raise ImportDataError(
+                f"{_('core_admin.ImportDataError.message.invalid_performed_action')}: {performed_action}"
+            )
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
-    def import_validation(self, *args, **kwargs):
+    def import_validation(self, performed_action, *args, **kwargs):
         """
-        Vrátí filtrační podmínky uživatele bez další validační logiky.
+        Ověří, že import oprávnění provede skutečnou změnu.
 
+        :param performed_action: Požadovaná importní akce.
         :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
         :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
         :return: Slovník s podmínkou pro dohledání cílového uživatele.
         """
+        if performed_action not in self.supported_actions:
+            raise ImportDataError(
+                f"{_('core_admin.ImportDataError.message.invalid_performed_action')}: {performed_action}"
+            )
+        try:
+            user = User.objects.get(ident_cely=self.value_dict["uzivatel"])
+            group = Group.objects.get(name=self.value_dict["skupina"])
+            relation_exists = user.groups.filter(pk=group.pk).exists()
+        except (User.DoesNotExist, Group.DoesNotExist):
+            relation_exists = False
+        record_id = {"uzivatel": self.value_dict["uzivatel"], "skupina": self.value_dict["skupina"]}
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and relation_exists:
+            raise ImportDataIntegrityError(record_id, "User.groups", performed_action)
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE and not relation_exists:
+            raise ImportDataIntegrityError(record_id, "User.groups", performed_action)
         return self._get_filter_kwargs_primary_key()
 
     @staticmethod
@@ -4015,6 +4685,87 @@ class SouborMapper(ImportModelMapper):
         """
         return record
 
+    @staticmethod
+    def _validate_extension_allowed_for_vazba(nazev, vazba_instance):
+        """
+        Ověří, že přípona souboru může odpovídat MIME typu povolenému pro navázaný záznam.
+
+        Skutečný MIME typ nelze při validaci CSV zjistit (binární obsah není k dispozici);
+        kontroluje se proto, zda alespoň jeden MIME typ odpovídající příponě je ve whitelistu
+        navázaného záznamu. Neznámé přípony se nekontrolují — rozhodne kontrola obsahu při importu.
+
+        :param nazev: Název importovaného souboru.
+        :param vazba_instance: Instance ``SouborVazby`` navázaného záznamu.
+        :raises ImportDataFileExtensionNotAllowedError: Vyvolá se, pokud přípona neodpovídá
+            žádnému MIME typu povolenému pro navázaný záznam.
+        """
+        if not nazev or vazba_instance is None:
+            return
+        extension = nazev.rsplit(".", 1)[-1].lower() if "." in nazev else ""
+        possible_mimes = Soubor.mimes_for_extension(extension)
+        if not possible_mimes:
+            return
+        allowed_mimes = Soubor.allowed_mimes_for_record(vazba_instance.navazany_objekt)
+        if possible_mimes.isdisjoint(allowed_mimes):
+            raise ImportDataFileExtensionNotAllowedError(
+                nazev, getattr(vazba_instance.navazany_objekt, "ident_cely", None)
+            )
+
+    def import_validation(self, performed_action, *args, seen_in_batch: set | None = None, **kwargs):
+        """
+        Ověří, že při INSERT neexistuje soubor stejného ``nazev`` navázaný na stejný objekt,
+        a že stejná kombinace nevyskytuje dvakrát v aktuální importní dávce.
+
+        Při INSERT a UPDATE dále ověří, že přípona souboru může odpovídat MIME typu
+        povolenému pro navázaný záznam.
+
+        UPDATE a DELETE pracují s primárním klíčem (id) a delegují se na bázovou validaci.
+
+        :param performed_action: Požadovaná importní akce.
+        :param seen_in_batch: Množina klíčů ``(nazev, vazba_pk)`` již zpracovaných řádků dávky;
+            pokud je předána, detekuje duplicity v rámci jednoho importu.
+        :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
+        :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
+        :return: Slovník s podmínkou pro dohledání souboru, případně výsledek bázové validace.
+        :raises SouborImportIntegrityError: Při INSERT, pokud soubor stejného jména už existuje v DB nebo v dávce.
+        :raises ImportDataFileExtensionNotAllowedError: Při INSERT a UPDATE, pokud přípona souboru
+            neodpovídá žádnému MIME typu povolenému pro navázaný záznam.
+        """
+        if performed_action in (
+            ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+            ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+        ):
+            mapping_dict = self.map(performed_action, instance_values=True)
+            self._validate_extension_allowed_for_vazba(mapping_dict.get("nazev"), mapping_dict.get("vazba"))
+        if performed_action != ImportDataAdminForm.PERFORMED_ACTION_INSERT:
+            return super().import_validation(performed_action, *args, **kwargs)
+        nazev = mapping_dict.get("nazev")
+        vazba_instance = mapping_dict.get("vazba")
+        if Soubor.objects.filter(nazev=nazev, vazba=vazba_instance).exists():
+            raise SouborImportIntegrityError(self.value_dict.get("vazba"), nazev)
+        if seen_in_batch is not None:
+            key = (nazev, vazba_instance.pk if vazba_instance is not None else None)
+            if key in seen_in_batch:
+                raise SouborImportIntegrityError(self.value_dict.get("vazba"), nazev)
+            seen_in_batch.add(key)
+        return {"nazev": nazev, "vazba": vazba_instance}
+
+    @staticmethod
+    def get_related_history_targets(record: Soubor) -> list:
+        """
+        Vrátí záznamy, kterým má import binárního souboru zapsat historii.
+
+        Vrátí přímo navázaný objekt souboru (``vazba.navazany_objekt``), pokud
+        implementuje ``ModelWithMetadata``, jinak prázdný seznam.
+
+        :param record: Importovaný záznam ``Soubor``.
+        :return: Seznam záznamů s historií dotčenou importem souboru.
+        """
+        related_record = record.vazba.navazany_objekt if record.vazba_id else None
+        if isinstance(related_record, ModelWithMetadata):
+            return [related_record]
+        return []
+
 
 @ImportModelMapper.register("uzivatele_notifikace")
 class UzivatelNotifikaceMapper(ImportModelMapper):
@@ -4023,6 +4774,10 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
     model_class = User
     primary_key = ("uzivatel", "notifikace")
     allow_update = False
+    supported_actions = (
+        ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+        ImportDataAdminForm.PERFORMED_ACTION_DELETE,
+    )
     column_to_field_mapping = {"uzivatel": "ident_cely"}
 
     def get_mapping(cls, include_primary_key=False):
@@ -4052,16 +4807,36 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
 
             :return: Vrací seznam.
         """
+        if performed_action not in self.supported_actions:
+            raise ImportDataError(
+                f"{_('core_admin.ImportDataError.message.invalid_performed_action')}: {performed_action}"
+            )
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
-    def import_validation(self, *args, **kwargs):
+    def import_validation(self, performed_action, *args, **kwargs):
         """
-        Vrátí filtrační podmínky uživatele bez další validační logiky.
+        Ověří, že import notifikace provede skutečnou změnu.
 
+        :param performed_action: Požadovaná importní akce.
         :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
         :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
         :return: Slovník s podmínkou pro dohledání cílového uživatele.
         """
+        if performed_action not in self.supported_actions:
+            raise ImportDataError(
+                f"{_('core_admin.ImportDataError.message.invalid_performed_action')}: {performed_action}"
+            )
+        try:
+            user = User.objects.get(ident_cely=self.value_dict["uzivatel"])
+            notification_type = UserNotificationType.objects.get(ident_cely=self.value_dict["notifikace"])
+            relation_exists = user.notification_types.filter(pk=notification_type.pk).exists()
+        except (User.DoesNotExist, UserNotificationType.DoesNotExist):
+            relation_exists = False
+        record_id = {"uzivatel": self.value_dict["uzivatel"], "notifikace": self.value_dict["notifikace"]}
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and relation_exists:
+            raise ImportDataIntegrityError(record_id, "User.notification_types", performed_action)
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE and not relation_exists:
+            raise ImportDataIntegrityError(record_id, "User.notification_types", performed_action)
         return self._get_filter_kwargs_primary_key()
 
     @staticmethod

@@ -17,6 +17,7 @@ from rosetta.templatetags.rosetta import can_translate as rosetta_can_translate
 from .connectors import RedisConnector
 from .forms import ImportDataAdminForm
 from .import_data_mappers import (
+    ImportDataBatchOrderingError,
     ImportDataEmptyError,
     ImportDataError,
     ImportDataIntegrityError,
@@ -241,7 +242,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
         sheet = None
         if uploaded_file.content_type == "text/csv":
             try:
-                sheet = pd.read_csv(uploaded_file, sep=",")
+                sheet = pd.read_csv(uploaded_file, sep=",", dtype=str)
             except Exception as err:
                 logger.debug(
                     "core.admin_sites.AmcrCustomAdminSite.update_metadata_file_upload" ".cannot_read_file",
@@ -418,9 +419,23 @@ class AmcrCustomAdminSite(admin.AdminSite):
                         raise ValueError(_("core.admin.import_data.error.zip_too_large"))
                     for file_name in file_names:
                         with zf.open(file_name) as file:
-                            sheet = pd.read_csv(file)
+                            sheet = pd.read_csv(file, dtype=str)
                         file_name = normalize_file_name(file_name)
                         mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
+                        seen_in_batch: set = set()
+                        try:
+                            mapper_class.validate_batch_ordering(sheet.to_dict("records"))
+                        except ImportDataBatchOrderingError as err:
+                            validation_results.append(
+                                ImportDataValidationResult(
+                                    item_order=row_order,
+                                    file_name=file_name,
+                                    validation_result=str(err),
+                                )
+                            )
+                            invalid_records.append(row_order)
+                            row_order += 1
+                            continue
                         for idx, row in sheet.iterrows():
 
                             def format_primary_key(pk):
@@ -439,7 +454,9 @@ class AmcrCustomAdminSite(admin.AdminSite):
                                     mapper = mapper_class(row.to_dict())
                                     record = mapper.map(performed_action, serialize=True, include_primary_key=True)
                                     mapper.check_required_fields(performed_action)
-                                    primary_key = mapper.import_validation(performed_action, request.user.pk)
+                                    primary_key = mapper.import_validation(
+                                        performed_action, request.user.pk, seen_in_batch=seen_in_batch
+                                    )
                                     records += mapper.create_records(performed_action)
                                     record["__file_name"] = file_name
                                 except ImportDataIntegrityError as err:
@@ -517,16 +534,13 @@ class AmcrCustomAdminSite(admin.AdminSite):
             self.redis_connector.set(
                 f"import_performed_action_{job_id}", performed_action, ex=self.IMPORT_DATA_REDIS_EXPIRATION
             )
-            self.redis_connector.set(
-                f"import_data_progress_{job_id}", json.dumps({}), ex=self.IMPORT_DATA_REDIS_EXPIRATION
-            )
+            self.redis_connector.set(f"import_data_progress_{job_id}", 0, ex=self.IMPORT_DATA_REDIS_EXPIRATION)
             self.redis_connector.set(
                 f"import_data_primary_keys_{job_id}", json.dumps({}), ex=self.IMPORT_DATA_REDIS_EXPIRATION
             )
             self.redis_connector.set(
                 f"import_data_files_{job_id}", json.dumps([]), ex=self.IMPORT_DATA_REDIS_EXPIRATION
             )
-            self.redis_connector.set(f"import_data_progress_files_{job_id}", 0, ex=self.IMPORT_DATA_REDIS_EXPIRATION)
             self.redis_connector.set(
                 f"import_data_status_message_{job_id}",
                 _("core.templates.admin.import_data.starting"),
@@ -546,6 +560,13 @@ class AmcrCustomAdminSite(admin.AdminSite):
             context["job_id"] = job_id
             context["validation_results"] = validation_results
             context["invalid_records"] = ", ".join([str(r) for r in invalid_records])
+            context["performed_action"] = performed_action
+            performed_action_labels = {
+                ImportDataAdminForm.PERFORMED_ACTION_INSERT: _("core.forms.ImportDataAdminForm.insert"),
+                ImportDataAdminForm.PERFORMED_ACTION_UPDATE: _("core.forms.ImportDataAdminForm.update"),
+                ImportDataAdminForm.PERFORMED_ACTION_DELETE: _("core.forms.ImportDataAdminForm.delete"),
+            }
+            context["performed_action_label"] = performed_action_labels.get(performed_action, performed_action)
             try:
                 import_directory_settings_obj = CustomAdminSettings.objects.get(item_id="import_directory_settings")
                 import_directory_settings = json.loads(import_directory_settings_obj.value)

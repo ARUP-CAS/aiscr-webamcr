@@ -76,6 +76,23 @@ Třídy
 
       Metoda pro vytvoření vazby na historii.
 
+   .. py:method:: calculate_rozsah()
+
+      Spočítá rozsah souboru — počet stran u PDF, počet snímků u TIF, jinak 1.
+
+      Pokud volající předá ``binary_data`` a/nebo ``nazev`` explicitně, použijí se ony;
+      jinak se použijí atributy instance (``self.binary_data``, ``self.nazev``).
+
+      Když binární data nejsou k dispozici (ani na instanci, ani v parametru), vrací
+      stávající ``self.rozsah`` (nebo ``1``, pokud ještě není nastaven) — tj. nepřepisuje
+      již spočítaný rozsah uloženého souboru.
+
+      :param binary_data: Binární obsah souboru (např. ``BytesIO``); pokud chybí, použije
+          se ``self.binary_data``.
+      :param nazev: Název souboru pro odvození typu z přípony; pokud chybí, použije se
+          ``self.nazev``.
+      :return: Spočítaný rozsah.
+
    .. py:method:: vytvoreno()
 
       Vrátí záznam historie s typem zmény "Nahrání SBR" (prvního nahrání souboru).
@@ -123,6 +140,30 @@ Třídy
       :param file: Soubor nebo cesta k souboru používaná při operaci.
 
       :return: Vrací výsledek volání ``get()``.
+
+   .. py:method:: extensions_for_mime()
+
+      Vrací povolené přípony pro daný MIME typ.
+
+      :param mime_type: MIME typ, pro který se hledají přípony.
+      :return: N-tice povolených přípon, nebo prázdný seznam pro neznámý MIME typ.
+
+   .. py:method:: mimes_for_extension()
+
+      Vrací množinu MIME typů, kterým může odpovídat daná přípona souboru.
+
+      :param extension: Přípona souboru bez tečky, malými písmeny.
+      :return: Množina MIME typů; prázdná pro neznámou příponu.
+
+   .. py:method:: allowed_mimes_for_record()
+
+      Vrací množinu povolených MIME typů souboru podle typu navázaného záznamu.
+
+      Odpovídá whitelistům používaným při uživatelském uploadu (:meth:`check_mime_for_url`);
+      dokumenty s ``3D`` v identifikátoru používají whitelist pro 3D modely.
+
+      :param navazany_objekt: Navázaný hlavní záznam (Projekt, Dokument nebo SamostatnyNalez).
+      :return: Množina povolených MIME typů.
 
    .. py:method:: _detect_mime()
 
