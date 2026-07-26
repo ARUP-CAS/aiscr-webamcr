@@ -5,6 +5,7 @@ from celery import Celery
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
 from django.urls import reverse
+from django.utils.html import format_html
 
 logger = logging.getLogger(__name__)
 UPDATE_REDIS_SNAPSHOT = 20
@@ -12,7 +13,7 @@ UPDATE_REDIS_SNAPSHOT = 20
 
 def check_if_task_queued(class_name, pk, task_name):
     """
-    Ověří if task queued.
+    Ověří, zda je úloha ve frontě.
 
     :param class_name: Parametr ``class_name`` předává se do volání ``warning()``, ``debug()``, ovlivňuje větvení podmínek.
     :param pk: Primární klíč zpracovávaného záznamu.
@@ -77,10 +78,10 @@ class BaseAmcrModel(models.Model):
         """
         Vrací ident cely link.
 
-        :return: Vrací hodnotu podle větve zpracování.
+        :return: HTML odkaz přes ``format_html`` (``SafeString``), nebo ``None`` pokud chybí URL/ident.
         """
         if hasattr(self, "get_absolute_url") and hasattr(self, "ident_cely"):
-            return f"<a href='{self.get_absolute_url()}' target='_blank'>{self.ident_cely}</a>"
+            return format_html("<a href='{}' target='_blank'>{}</a>", self.get_absolute_url(), self.ident_cely)
 
 
 class ModelWithMetadata(BaseAmcrModel):

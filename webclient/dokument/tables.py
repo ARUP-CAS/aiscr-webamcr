@@ -1,7 +1,7 @@
 import logging
 
 import django_tables2 as tables
-from core.models import Soubor
+from core.models import Soubor, prvni_soubor_dle_nazvu
 from core.utils import SearchTable
 from django.urls import reverse
 from django.utils.html import format_html
@@ -111,10 +111,7 @@ class Model3DTable(SearchTable):
         :param record: Záznam s daty modelu 3D.
         :return: HTML řetězec s náhledem nebo prázdný řetězec.
         """
-        if len(record.soubory.soubory.all()) > 0:
-            soubor = record.soubory.soubory.first()
-        else:
-            soubor = None
+        soubor = prvni_soubor_dle_nazvu(record.soubory.soubory.all())
         if soubor is not None:
             soubor: Soubor
             thumbnail_url = reverse(
@@ -125,8 +122,8 @@ class Model3DTable(SearchTable):
                     soubor.id,
                 ),
             )
-            soubor_url = reverse(
-                "core:download_file",
+            thumbnail_large_url = reverse(
+                "core:download_thumbnail_large",
                 args=(
                     "model3d",
                     record.ident_cely,
@@ -137,7 +134,7 @@ class Model3DTable(SearchTable):
                 '<img src="{}" class="image-nahled" data-bs-toggle="modal" data-bs-target="#soubor-modal" loading="lazy" data-fullsrc="{}" '
                 'style="opacity:0" onload="this.style.opacity=100">',
                 thumbnail_url,
-                soubor_url,
+                thumbnail_large_url,
             )
         return ""
 
@@ -262,8 +259,8 @@ class DokumentTable(SearchTable):
         :param record: Záznam s daty modelu 3D.
         :return: HTML řetězec s náhledem nebo prázdný řetězec.
         """
-        if hasattr(record.soubory, "first_soubor") and len(record.soubory.first_soubor) > 0:
-            soubor = record.soubory.first_soubor[0]
+        if hasattr(record.soubory, "soubory_nahled"):
+            soubor = prvni_soubor_dle_nazvu(record.soubory.soubory_nahled)
         else:
             soubor = None
         if soubor is not None:

@@ -32,7 +32,17 @@
                style="opacity:0" onload="this.style.opacity=100">
         {% endif %}  
       </td>
-      <td>{{ soubor.nazev }}</td>
+      <td>
+        {{ soubor.nazev }}
+        {% if show.soubor_prejmenovat %}
+          <button id="file-prejmenovat-{{ soubor.id }}" class="file-prejmenovat-btn btn-link p-0 border-0 align-middle"
+                  type="button" name="button"
+                  title="{% trans 'core.templates.filetable.prejmenovat.title' %}"
+                  href="{% url 'core:rename_file' vazba_trida ident soubor.id %}?next={{ next_url }}{{ ident }}">
+            <span class="material-icons">edit</span>
+          </button>
+        {% endif %}
+      </td>
       <td>{{ soubor.mimetype }}</td>
       <td>{{ soubor.size_mb|floatformat:3 }} MB</td>
       <td>{{ soubor.rozsah|check_if_none }}</td>
@@ -81,6 +91,15 @@
         })
         new Modal(options, elements.item(i).id);
       }
+    }
+    //script for modal for rename files
+    const renameElements = document.getElementsByClassName("file-prejmenovat-btn")
+    for (let i = 0; i < renameElements.length; i++){
+      const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      formID: "prejmenovat-soubor-form",
+      modalFormID: "#prejmenovat-soubor-form",
+      })
+      new Modal(options, renameElements.item(i).id);
     }
   });
   //Show soubory modal

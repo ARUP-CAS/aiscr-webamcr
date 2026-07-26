@@ -1,4 +1,4 @@
-<div class="row">
+<div>
 {% for zaznam in field.zaznamy %}
 <a href="{% url 'core:redirect_ident' zaznam.ident_cely %}" target="_blank">{{ zaznam.ident_cely }}</a>{% if zaznam.paginace %}&nbsp;({{zaznam.paginace}}){% endif %}{% if not forloop.last %},&nbsp;{% endif %}
 {% endfor %}

@@ -55,9 +55,9 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.models import Permissions as p
-from core.models import Soubor, check_permissions
+from core.models import Soubor, check_permissions, soubor_nazev_razeni_klic
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
-from core.utils import get_3d_from_envelope
+from core.utils import TwoQueryPaginator, get_3d_from_envelope
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
 from django.conf import settings
@@ -67,7 +67,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import IntegrityError, transaction
-from django.db.models import OuterRef, Prefetch, Q, Subquery
+from django.db.models import Prefetch, Q
 from django.forms import inlineformset_factory
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -244,7 +244,7 @@ def detail_model_3D(request, ident_cely):
     context["show"] = show
     context["global_map_can_edit"] = False
     if dokument.soubory:
-        context["soubory"] = sorted(dokument.soubory.soubory.all(), key=lambda x: (x.nazev.replace(".", "0"), x.nazev))
+        context["soubory"] = sorted(dokument.soubory.soubory.all(), key=soubor_nazev_razeni_klic)
     else:
         context["soubory"] = None
     return render(request, "dokument/detail_model_3D.html", context)
@@ -263,6 +263,7 @@ class Model3DListView(SearchListView):
     redis_value_list_field = "ident_cely"
     typ_zmeny_lookup = ZAPSANI_DOK
     vypis_app = "model"
+    table_pagination = {"per_page": 100, "paginator_class": TwoQueryPaginator}
     map_enabled = True
     map_layer = "3d"
 
@@ -316,16 +317,55 @@ class Model3DListView(SearchListView):
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
-        qs = qs.order_by(*sort_params).distinct()
-        qs = qs.filter(ident_cely__contains="3D")
-        qs = qs.select_related("typ_dokumentu", "extra_data", "organizace", "extra_data__format").prefetch_related(
-            Prefetch(
-                "autori",
-                queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
-                to_attr="ordered_autors",
-            ),
-            "extra_data__zeme",
-            "soubory__soubory",
+        qs = qs.order_by(*sort_params)
+        qs = qs.filter(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES)
+        qs = (
+            qs.select_related("typ_dokumentu", "extra_data", "organizace", "extra_data__format", "licence")
+            .prefetch_related(
+                Prefetch(
+                    "autori",
+                    queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
+                    to_attr="ordered_autors",
+                ),
+                "extra_data__zeme",
+                "soubory__soubory",
+            )
+            .defer(
+                # extra_data — geometry a sloupce nezobrazené v Model3DTable
+                "extra_data__geom",
+                "extra_data__geom_sjtsk",
+                "extra_data__geom_system",
+                "extra_data__datum_vzniku",
+                "extra_data__zachovalost",
+                "extra_data__nahrada",
+                "extra_data__pocet_variant_originalu",
+                "extra_data__meritko",
+                "extra_data__vyska",
+                "extra_data__sirka",
+                "extra_data__cislo_objektu",
+                "extra_data__udalost",
+                "extra_data__udalost_typ",
+                "extra_data__rok_od",
+                "extra_data__rok_do",
+                # organizace (Organizace.__str__ = nazev_zkraceny / nazev_zkraceny_en)
+                "organizace__nazev",
+                "organizace__typ_organizace",
+                "organizace__oao",
+                "organizace__mesicu_do_zverejneni",
+                "organizace__zverejneni_pristupnost",
+                "organizace__email",
+                "organizace__telefon",
+                "organizace__adresa",
+                "organizace__ico",
+                "organizace__soucast",
+                "organizace__nazev_en",
+                "organizace__zanikla",
+                "organizace__ident_cely",
+                "organizace__cteni_dokumentu",
+                "organizace__ror",
+                "organizace__licence_id",
+                "organizace__web",
+            )
         )
 
         return self.check_filter_permission(qs)
@@ -350,6 +390,7 @@ class DokumentListView(SearchListView):
     redis_value_list_field = "ident_cely"
     typ_zmeny_lookup = ZAPSANI_DOK
     vypis_app = "dokument"
+    table_pagination = {"per_page": 100, "paginator_class": TwoQueryPaginator}
 
     def init_translations(self):
         """Inicializuje přeložené texty pro seznam dokumentů."""
@@ -411,31 +452,81 @@ class DokumentListView(SearchListView):
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
-        qs = qs.order_by(*sort_params).distinct()
-        subqry = Subquery(Soubor.objects.filter(vazba=OuterRef("vazba")).values_list("id", flat=True)[:1])
-        qs = qs.exclude(ident_cely__contains="3D")
-        qs = qs.select_related(
-            "extra_data",
-            "organizace",
-            "extra_data__format",
-            "soubory",
-            "material_originalu",
-            "ulozeni_originalu",
-        ).prefetch_related(
-            Prefetch(
-                "soubory__soubory",
-                queryset=Soubor.objects.filter(id__in=subqry),
-                to_attr="first_soubor",
-            ),
-            Prefetch(
-                "autori",
-                queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
-                to_attr="ordered_autors",
-            ),
-            "typ_dokumentu",
-            "let",
-            "rada",
-            "pristupnost",
+        qs = qs.order_by(*sort_params)
+        qs = qs.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES)
+        qs = (
+            qs.select_related(
+                "extra_data",
+                "organizace",
+                "extra_data__format",
+                "soubory",
+                "material_originalu",
+                "ulozeni_originalu",
+                "typ_dokumentu",
+                "rada",
+                "pristupnost",
+                "licence",
+            )
+            .prefetch_related(
+                Prefetch(
+                    "soubory__soubory",
+                    queryset=Soubor.objects.only("id", "nazev", "vazba"),
+                    to_attr="soubory_nahled",
+                ),
+                Prefetch(
+                    "autori",
+                    queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
+                    to_attr="ordered_autors",
+                ),
+                "let",
+            )
+            .only(
+                "ident_cely",
+                "doi",
+                "stav",
+                "pristupnost__heslo",
+                "pristupnost__heslo_en",
+                "datum_zverejneni",
+                "oznaceni_originalu",
+                "autori_snapshot",
+                "organizace__nazev_zkraceny",
+                "organizace__nazev_zkraceny_en",
+                "rok_vzniku",
+                "extra_data__datum_vzniku",
+                "popis",
+                "poznamka",
+                "extra_data__cislo_objektu",
+                "rada__heslo",
+                "rada__heslo_en",
+                "extra_data__udalost_typ",
+                "material_originalu__heslo",
+                "material_originalu__heslo_en",
+                "extra_data__format__heslo",
+                "extra_data__format__heslo_en",
+                "ulozeni_originalu__heslo",
+                "ulozeni_originalu__heslo_en",
+                "licence__heslo",
+                "licence__heslo_en",
+                "extra_data__zachovalost",
+                "extra_data__nahrada",
+                "extra_data__pocet_variant_originalu",
+                "extra_data__meritko",
+                "extra_data__vyska",
+                "extra_data__sirka",
+                "extra_data__zeme",
+                "extra_data__region_extra",
+                "extra_data__udalost",
+                "extra_data__rok_od",
+                "extra_data__rok_do",
+                "extra_data__duveryhodnost",
+                "typ_dokumentu__heslo",
+                "typ_dokumentu__heslo_en",
+                "soubory__typ_vazby",
+                "osoby_snapshot",
+                "extra_data__odkaz",
+                # FK id pro prefetch_related("let") – jinak je deferováno a způsobí N+1
+                "let",
+            )
         )
         return self.check_filter_permission(qs)
 
@@ -549,9 +640,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         context["show"] = show
 
         if dokument.soubory:
-            context["soubory"] = sorted(
-                dokument.soubory.soubory.all(), key=lambda x: (x.nazev.replace(".", "0"), x.nazev)
-            )
+            context["soubory"] = sorted(dokument.soubory.soubory.all(), key=soubor_nazev_razeni_klic)
         else:
             context["soubory"] = None
 
@@ -2372,6 +2461,7 @@ def get_detail_template_shows(dokument, user):
         soubor_nahled = check_permissions(p.actionChoices.soubor_nahled_model3d, user, dokument.ident_cely)
         soubor_smazat = check_permissions(p.actionChoices.soubor_smazat_model3d, user, dokument.ident_cely)
         soubor_nahradit = check_permissions(p.actionChoices.soubor_nahradit_model3d, user, dokument.ident_cely)
+        soubor_prejmenovat = check_permissions(p.actionChoices.soubor_prejmenovat_model3d, user, dokument.ident_cely)
         vypis = check_permissions(p.actionChoices.vypis_model3d, user, dokument.ident_cely)
     else:
         show_edit = check_permissions(p.actionChoices.dok_edit, user, dokument.ident_cely)
@@ -2381,6 +2471,7 @@ def get_detail_template_shows(dokument, user):
         soubor_nahled = check_permissions(p.actionChoices.soubor_nahled_dokument, user, dokument.ident_cely)
         soubor_smazat = check_permissions(p.actionChoices.soubor_smazat_dokument, user, dokument.ident_cely)
         soubor_nahradit = check_permissions(p.actionChoices.soubor_nahradit_dokument, user, dokument.ident_cely)
+        soubor_prejmenovat = check_permissions(p.actionChoices.soubor_prejmenovat_dokument, user, dokument.ident_cely)
         vypis = check_permissions(p.actionChoices.vypis_dokument, user, dokument.ident_cely)
     show_arch_links = dokument.stav == D_STAV_ARCHIVOVANY
     show_tvary = True if dokument.rada.zkratka in ["LD", "LN", "DL"] else False
@@ -2400,6 +2491,7 @@ def get_detail_template_shows(dokument, user):
         "soubor_nahled": soubor_nahled,
         "soubor_smazat": soubor_smazat,
         "soubor_nahradit": soubor_nahradit,
+        "soubor_prejmenovat": soubor_prejmenovat,
         "vypis": vypis,
     }
     return show
@@ -2661,34 +2753,44 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
         if len(dokument_ids) > 0:
             fedora_transaction = zaznam.create_transaction(request.user)
             try:
-                for dokument_id in dokument_ids:
-                    dokument = get_object_or_404(Dokument, id=dokument_id)
-                    dokument.active_transaction = fedora_transaction
-                    relace = casti_zaznamu.filter(dokument__id=dokument_id)
-                    if not relace.exists():
-                        dc_ident = get_cast_dokumentu_ident(dokument)
-                        if isinstance(zaznam, ArcheologickyZaznam):
-                            dc = DokumentCast(
-                                archeologicky_zaznam=zaznam,
-                                dokument=dokument,
-                                ident_cely=dc_ident,
+                # Deterministické pořadí zamykání – dvě souběžné dávky sdílející dokumenty
+                # by při opačném pořadí jinak mohly na select_for_update uváznout (deadlock).
+                for dokument_id in sorted(dokument_ids):
+                    with transaction.atomic():
+                        # Zámek řádku dokumentu serializuje souběžné připojení téhož dokumentu –
+                        # jinak oba requesty spočítají v get_cast_dokumentu_ident stejné pořadové
+                        # číslo části a druhý insert spadne na unique constraint (IntegrityError, #4141).
+                        dokument = get_object_or_404(Dokument.objects.select_for_update(), id=dokument_id)
+                        dokument.active_transaction = fedora_transaction
+                        relace = casti_zaznamu.filter(dokument__id=dokument_id)
+                        if not relace.exists():
+                            dc_ident = get_cast_dokumentu_ident(dokument)
+                            if isinstance(zaznam, ArcheologickyZaznam):
+                                dc = DokumentCast(
+                                    archeologicky_zaznam=zaznam,
+                                    dokument=dokument,
+                                    ident_cely=dc_ident,
+                                )
+                            else:
+                                dc = DokumentCast(projekt=zaznam, dokument=dokument, ident_cely=dc_ident)
+                            dc.active_transaction = fedora_transaction
+                            dc.save()
+                            dokument.save()
+                            logger.debug(
+                                "dokument.views.pripojit.pripojit",
+                                extra={"value": debug_name, "zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
+                            )
+                            messages.add_message(
+                                request, messages.SUCCESS, f"{dokument.ident_cely} {DOKUMENT_USPESNE_PRIPOJEN}"
                             )
                         else:
-                            dc = DokumentCast(projekt=zaznam, dokument=dokument, ident_cely=dc_ident)
-                        dc.active_transaction = fedora_transaction
-                        dc.save()
-                        dokument.save()
-                        logger.debug(
-                            "dokument.views.pripojit.pripojit",
-                            extra={"value": debug_name, "zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
-                        )
-                        messages.add_message(
-                            request, messages.SUCCESS, f"{dokument.ident_cely} {DOKUMENT_USPESNE_PRIPOJEN}"
-                        )
-                    else:
-                        messages.add_message(
-                            request, messages.ERROR, f"{dokument.ident_cely} {DOKUMENT_JIZ_BYL_PRIPOJEN}"
-                        )
+                            messages.add_message(
+                                request, messages.ERROR, f"{dokument.ident_cely} {DOKUMENT_JIZ_BYL_PRIPOJEN}"
+                            )
+            except FedoraError:
+                # Souběžná úprava téhož záznamu (Fedora 409) apod. – necháme probublat do
+                # dekorátoru handle_fedora_error, který vrátí čistou odpověď a zrolluje transakci.
+                raise
             except Exception as err:
                 logger.error("dokument.views.pripojit.error", extra={"error": err, "ident_cely": dokument.ident_cely})
                 transaction.set_rollback(True)

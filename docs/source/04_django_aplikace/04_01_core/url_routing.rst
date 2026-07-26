@@ -182,6 +182,9 @@ CORE
    * - ``delete_file``
      - ``soubor/smazat/<str:typ_vazby>/<str:ident_cely>/<int:pk>``
      - ``views.delete_file``
+   * - ``rename_file``
+     - ``soubor/prejmenovat/<str:typ_vazby>/<str:ident_cely>/<int:pk>``
+     - ``views.rename_file``
    * - ``delete_file_DZ``
      - ``soubor/smazat-DZ/<str:typ_vazby>/<str:ident_cely>/<int:pk>``
      - ``views.delete_file_DZ``

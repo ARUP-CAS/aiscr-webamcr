@@ -122,7 +122,7 @@ class OsobaAdminForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
             help_text=_("heslar.forms.OsobaAdminForm.orcid.tooltip"),
         )
         try:
-            WikiDataAutocompleteView.api_call("test")
+            WikiDataAutocompleteView.check_availability()
             self.fields["wikidata"] = WikiDataAutocompleteField(
                 widget=AutocompleteListSelect2(url="pid:wikidata-autocomplete"),
                 label=_("heslar.forms.OsobaAdminForm.wikidata.label"),

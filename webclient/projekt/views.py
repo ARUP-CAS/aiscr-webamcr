@@ -34,6 +34,7 @@ from core.constants import (
     UKONCENI_V_TERENU_PROJ,
     UZAVRENI_PROJ,
     VRACENI_NAVRHU_ZRUSENI,
+    VRACENI_PROJ,
     VRACENI_ZRUSENI,
     ZAHAJENI_V_TERENU_PROJ,
     ZAPSANI_PROJ,
@@ -820,7 +821,16 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
                 "oznamovatel",
             )
             .prefetch_related("katastry__okres__kraj")
-            .defer("geom")
+            .defer(
+                "geom",
+                "geom_sjtsk",
+                "hlavni_katastr__hranice",
+                "hlavni_katastr__definicni_bod",
+                "hlavni_katastr__okres__hranice",
+                "hlavni_katastr__okres__definicni_bod",
+                "hlavni_katastr__okres__kraj__hranice",
+                "hlavni_katastr__okres__kraj__definicni_bod",
+            )
         )
         return self.check_filter_permission(qs)
 
@@ -1676,6 +1686,7 @@ def get_history_dates(historie_vazby, request_user):
         "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_PROJ, anonymized),
         "datum_navrhu_ke_zruseni": historie_vazby.get_last_transaction_date(NAVRZENI_KE_ZRUSENI_PROJ, anonymized),
         "datum_zruseni": datum_zruseni,
+        "datum_vraceni": historie_vazby.get_last_transaction_if_type(VRACENI_PROJ, anonymized),
     }
     return historie
 

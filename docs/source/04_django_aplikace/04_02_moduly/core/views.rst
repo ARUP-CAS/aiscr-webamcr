@@ -6,6 +6,11 @@ Definice views.
 Třídy
 ------
 
+.. py:class:: _SuffixNoLongerFreeError
+
+   Zvolený suffix byl mezi načtením formuláře a uložením obsazen jiným požadavkem.
+
+
 .. py:class:: DownloadFile
 
    Implementuje komponentu ``DownloadFile`` v rámci aplikace.
@@ -449,16 +454,30 @@ Třídy
 
       Vrací, zda je bezpečné zapnout cacheops cache pro aktuální filtr.
 
-      Spočítá součin počtů hodnot u vícehodnotových GET parametrů. Tento součin
-      odpovídá řádové velikosti invalidační DNF, kterou cacheops staví – u velkých
-      kombinací hlubokých M2M filtrů by její sestavení vyčerpalo paměť a shodilo
-      worker. Stránkovací a řadicí parametry se do součinu nezapočítávají.
+      cacheops sestavuje invalidační schéma (DNF) jako kartézský součin hodnot napříč
+      vícehodnotovými filtry, takže rozsáhlé kombinace vedou k milionům konjunkcí a
+      k vyčerpání paměti (OOM) při výpočtu ``cacheops.tree.dnfs``. Motivací jsou hluboké
+      M2M filtry (předměty a objekty komponent), kontrola ale platí pro libovolný
+      vícehodnotový GET parametr.
+
+      Jako míra slouží součin počtů hodnot vícehodnotových GET parametrů. Jde
+      o konzervativní odhad řádové velikosti DNF na základě multiplicity GET parametrů,
+      nikoli o přímé měření struktury querysetu. Předpokládá se, že filtry odesílají
+      každou hodnotu jako samostatný výskyt parametru (``?pole=1&pole=2``), jak to dělá
+      ``forms.SelectMultiple``. Filtr, který by více hodnot kódoval do jednoho parametru
+      (například oddělené čárkou), by tato kontrola nezachytila.
+
+      Do součinu se nezapočítávají parametry stránkování, řazení a CSRF token
+      (``page``, ``sort``, ``per_page``, ``csrfmiddlewaretoken``).
 
       :return: ``True`` pokud součin nepřekročí ``cache_filter_value_product_limit``.
 
    .. py:method:: get_queryset()
 
       Vrací queryset výsledků vyhledávání podle zadaných filtrů.
+
+      Cacheops cache se zapíná pouze pro filtry, které projdou kontrolou
+      ``_is_query_cacheable``. U rozsáhlých kombinací hodnot dotaz proběhne bez cache.
 
       :return: Vrací proměnná ``qs``.
 
@@ -810,9 +829,42 @@ Funkce
 
    :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
+.. py:function:: _rename_file_safe_redirect(request)
+
+   Vrátí bezpečnou návratovou URL z parametru ``next`` požadavku na přejmenování.
+
+   :param request: HTTP požadavek s parametrem ``next`` v GET nebo POST.
+   :return: Bezpečná návratová URL nebo domovská stránka.
+
+.. py:function:: _rename_file_messages_response(request, message, status)
+
+   Vrátí ``JsonResponse`` s frontovanými django zprávami pro AJAX modal (vzor ``delete_file``).
+
+   :param request: HTTP požadavek, do jehož zpráv se přidá chybová hláška.
+   :param message: Chybová zpráva k zobrazení uživateli.
+   :param status: HTTP status odpovědi.
+   :return: ``JsonResponse`` se seznamem zpráv v klíči ``messages``.
+
+.. py:function:: rename_file(request, typ_vazby, ident_cely, pk)
+
+   Přejmenuje existující soubor změnou suffixu na volnou povolenou hodnotu.
+
+   Mění název v databázi (``soubor.nazev``), ve Fedoře (``ebucore:filename`` souboru i jeho potomků)
+   a vyvolá přegenerování XML metadat navázaného záznamu. Dostupné pro dokumenty (včetně 3D modelů)
+   a samostatné nálezy, které mají suffixové schéma názvů.
+
+   :param request: HTTP požadavek s metodou GET (modal) nebo POST (provedení).
+   :param typ_vazby: Typ vazby souboru na navázaný doménový objekt.
+   :param ident_cely: Identifikátor záznamu, u kterého se soubor přejmenovává.
+   :param pk: Primární klíč přejmenovávaného souboru.
+   :return: Vrací modal (GET) nebo ``JsonResponse`` s přesměrováním či chybou (POST).
+
 .. py:function:: get_finds_soubor_name(find, filename, add_to_index)
 
    Funkce pro získaní jména souboru pro samostatný nález.
+
+   Název se přiděluje navýšením podle nejvyššího obsazeného suffixu (``F01`` … ``F99``). Toto výchozí
+   chování se záměrně nemění – uvolnění či změnu pozice řeší přejmenování souboru.
 
    :param find: Textový název, klíč nebo výraz ``find`` používaný v rámci operace.
    :param filename: Parametr ``filename`` se předává do volání ``splitext()``, ``warning()``, vstupuje do návratové hodnoty.
@@ -865,14 +917,40 @@ Funkce
 
    :return: Vrací výsledek volání ``JsonResponse()``.
 
+.. py:function:: normalize_pian_presnost(points)
+
+   Přepočte id hesláře přesnosti PIANu na pořadové číslo 1–4, stejně jako to dělá
+   :func:`core.utils.get_pian_from_envelope` pro mapy v detailu záznamu. Klient hodnotu ukazuje
+   v popisku PIANu (``ident (přesnost)``).
+
+   :param points: Seznam slovníků s klíčem ``presnost`` (id hesláře).
+
+   :return: Vrací týž seznam s přepočtenou hodnotou ``presnost``.
+
+.. py:function:: pian_geom_expression(geom_field)
+
+   Vrací výraz pro geometrii PIANu posílanou do mapy jako WKT.
+
+   PIAN s přesností „poloha podle katastru“ se v mapě zobrazuje jako **bod**, nikoli jako polygon
+   katastrálního území (shodně s mapou v detailu akce). Posíláme proto rovnou reprezentativní bod
+   (``ST_PointOnSurface``) – klient tak nemusí pravidlo znát a nepřenáší se zbytečně velký polygon.
+
+   :param geom_field: Název geometrického pole na modelu Pian.
+
+   :return: Vrací podmíněný výraz pro anotaci ``geom``.
+
 .. py:function:: post_ajax_get_list_map_data(request, layer)
 
    Funkce pohledu pro datovou vrstvu mapy v záložce filtru výpisu.
 
    Vrací prvky daného workflow (``layer``) v aktuálním výřezu mapy ve stejném kontraktu jako
    :func:`post_ajax_get_pas_and_pian_limit` – tj. ``{"points"|"heat", "algorithm", "count"}`` –
-   aby klient mohl znovupoužít stávající vykreslování. Nad ``LIMIT_PRVKU_ZOBRAZENI_HEATMAP`` se
-   přepíná na heatmapu. Vrstva je pouze orientační; vlastní filtrování tabulky zajišťuje
+   aby klient mohl znovupoužít stávající vykreslování. Dosáhne-li počet prvků ve výřezu hodnoty
+   ``LIMIT_PRVKU_ZOBRAZENI_HEATMAP``, přepne se na heatmapu; **výjimkou je vrstva ``"3d"``
+   (knihovna 3D), která heatmapu nemá a vždy vrací jednotlivé body** (stejně jako náhled 3D mapy).
+
+   Detailní body respektují oprávnění příslušného výpisu, takže uživatel v mapě vidí jen záznamy,
+   které smí vidět i v tabulce. Vrstva je orientační; vlastní filtrování tabulky zajišťuje
    serverový filtr ``geom_filter``.
 
    :param request: HTTP požadavek s tělem ``{"bounds": {...}, "zoom": int}``.

@@ -37,6 +37,7 @@
         }
 
         .app-flags {
+          width: 60px;
           padding-right: 0px;
 
           .nav-link {
@@ -52,18 +53,26 @@
         }
 
         .app-theme-toggle {
-          padding-left: 0px;
-          ;
-          background: transparent;
-          border: 0;
-          cursor: pointer;
-          display: flex;
+          width: 40px;
           align-items: center;
           justify-content: center;
+          display: flex;
           transition: color 0.2s ease;
 
-          .material-icons {
-            font-size: 1.25rem;
+          .app-theme-toggle-button {
+            padding-left: 0px;
+            background: transparent;
+            border: 0;
+            cursor: pointer;
+
+            &:hover {
+              color: rgba(#656565, 0.9);
+            }
+
+
+            .material-icons {
+              font-size: 1.25rem;
+            }
           }
         }
       }

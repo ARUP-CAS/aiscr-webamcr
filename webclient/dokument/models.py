@@ -22,7 +22,7 @@ from core.constants import (
     ZAPSANI_DOK,
 )
 from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
-from core.models import ModelWithMetadata, Soubor, SouborVazby
+from core.models import ModelWithMetadata, Soubor, SouborVazby, prvni_soubor_dle_nazvu
 from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -540,14 +540,11 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     @property
     def thumbnail_image_file(self) -> Soubor | None:
         """
-        Vrací první soubor jako náhled (seřazeny abecedně).
+        Vrací první soubor jako náhled (seřazeno podle názvu shodně s výpisem souborů).
 
         :return: První seřazený soubor nebo None.
         """
-        if self.soubory.soubory.count() > 0:
-            soubory = [x for x in self.soubory.soubory.all()]
-            soubory = list(sorted(soubory, key=lambda x: x.nazev))
-            return soubory[0]
+        return prvni_soubor_dle_nazvu(self.soubory.soubory.all())
 
     @cached_property
     def large_thumbnail(self):
@@ -1174,6 +1171,10 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
 def get_dokument_soubor_name(dokument: Dokument, filename: str, add_to_index=1):
     """
     Funkce pro získaní správného jména souboru.
+
+    První soubor dostane základní název bez písmene (``{ident}.{ext}``), další se přidělují navýšením
+    podle nejvyššího obsazeného písmenného suffixu (``A`` … ``Z``). Toto výchozí chování se záměrně
+    nemění – uvolnění či změnu pozice (včetně základního slotu) řeší přejmenování souboru.
 
     :param dokument: Parametr ``dokument`` předává se do volání ``debug()``, ``filter()``, pracuje se s atributy ``ident_cely``, ``soubory``, vstupuje do návratové hodnoty.
     :param filename: Parametr ``filename`` se předává do volání ``splitext()``, vstupuje do návratové hodnoty.

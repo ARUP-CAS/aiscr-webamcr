@@ -75,8 +75,27 @@ function getLocation() {
 }
 
 //zobrazení DJ které daný pian obsahují
+// addLogText je definován jen v mapa_arch_z.js; na ostatních mapách (PAS, mapový filtr) chybí,
+// takže se na něj odkazujeme jen když existuje – jinak by klik na PIAN skončil ReferenceError
+// a popup by zůstal prázdný.
+function onMarkerClickLog(text) {
+    if (typeof addLogText === "function") {
+        addLogText(text);
+    }
+}
+
+// Chyba načtení DJ musí být rozlišitelná od „PIAN nemá žádné DJ“ (to je „--“), jinak vypadá výpadek
+// jako prázdný seznam. Překlad použijeme, jen když ho stránka má; jinak zůstane „--“ jako dosud.
+function onMarkerClickError(popup) {
+    if (typeof map_translations !== "undefined" && map_translations.PianDjError) {
+        popup.setContent(map_translations.PianDjError);
+    } else {
+        popup.setContent("--");
+    }
+}
+
 function onMarkerClick(ident_cely,e) {
-    addLogText("arch_z_detail_map.onMarkerClick")
+    onMarkerClickLog("arch_z_detail_map.onMarkerClick")
     const popup = e.target.getPopup();
     popup.setContent("");
     let xhr = new XMLHttpRequest();
@@ -85,16 +104,32 @@ function onMarkerClick(ident_cely,e) {
     if (typeof global_csrftoken !== 'undefined') {
         xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
     }
+    xhr.onerror = function () {
+        onMarkerClickLog("onMarkerClick: sitova chyba")
+        onMarkerClickError(popup);
+    }
     xhr.send();
     xhr.onload = function () {
-        rs = JSON.parse(this.responseText).points
+        if (this.status < 200 || this.status >= 300) {
+            onMarkerClickLog("onMarkerClick: HTTP "+this.status)
+            onMarkerClickError(popup);
+            return;
+        }
+        let rs;
+        try {
+            rs = JSON.parse(this.responseText).points || [];
+        } catch (err) {
+            onMarkerClickLog("onMarkerClick: neplatna odpoved: "+err)
+            onMarkerClickError(popup);
+            return;
+        }
         text=""
         rs.forEach((i) => {
             try{
                 let link='<a href="/id/' + i.dj + '" target="_blank">' + i.dj + '</a></br>'
                 text = text + link
             } catch(e){
-                addLogText("err:"+e)
+                onMarkerClickLog("err:"+e)
             }
         })
         if(text=="") text="--"

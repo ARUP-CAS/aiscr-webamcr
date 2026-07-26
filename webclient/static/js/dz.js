@@ -87,7 +87,35 @@ const show_action_result_message = (file, result = ActionResultsEnum.success, me
     }
 }
 
+// Klíč v sessionStorage pro hlášky, které mají přežít záměrný reload stránky po uploadu.
+const DZ_PENDING_MESSAGES_KEY = "dz_pending_messages";
+
+// Uloží hlášku, aby se po reloadu stránky (queuecomplete) znovu zobrazila.
+const store_pending_message = (file, result, message, action = ActionTypeEnum.upload) => {
+    try {
+        const pending = JSON.parse(sessionStorage.getItem(DZ_PENDING_MESSAGES_KEY) || "[]");
+        pending.push({ name: file && file.name ? file.name : "", result, message, action });
+        sessionStorage.setItem(DZ_PENDING_MESSAGES_KEY, JSON.stringify(pending));
+    } catch (e) {
+        // sessionStorage nemusí být dostupné (např. privátní režim) – hlášku prostě neuchováme.
+    }
+};
+
+// Znovu zobrazí a vyprázdní hlášky uložené před reloadem stránky.
+const show_pending_messages = () => {
+    let pending = [];
+    try {
+        pending = JSON.parse(sessionStorage.getItem(DZ_PENDING_MESSAGES_KEY) || "[]");
+        sessionStorage.removeItem(DZ_PENDING_MESSAGES_KEY);
+    } catch (e) {
+        return;
+    }
+    pending.forEach((m) => show_action_result_message({ name: m.name }, m.result, m.message, m.action));
+};
+
 window.onload = function () {
+    // Nejprve obnov hlášky (zejména chyby), které vznikly před reloadem po předchozím uploadu.
+    show_pending_messages();
     const xhttp = new XMLHttpRequest();
     const csrfcookie = function () {
         let cookieValue = null,
@@ -320,13 +348,18 @@ window.onload = function () {
         },
         error: function (file, response) {
             console.log(response);
+            // Hlášku uložíme do sessionStorage, aby přežila záměrný reload stránky v queuecomplete
+            // a uživatel chybu viděl i po něm.
             if (Array.isArray(response) && response.includes('reject')) {
                 show_action_result_message(file, ActionResultsEnum.reject, response);
+                store_pending_message(file, ActionResultsEnum.reject, response);
             }
             else if (response.hasOwnProperty("error")) {
                 show_action_result_message(file, ActionResultsEnum.error, response.error);
+                store_pending_message(file, ActionResultsEnum.error, response.error);
             } else {
                 show_action_result_message(file, ActionResultsEnum.error, response);
+                store_pending_message(file, ActionResultsEnum.error, response);
             }
 
             this.removeFile(file);

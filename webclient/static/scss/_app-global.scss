@@ -608,6 +608,15 @@ a.dropdown-item {
   outline: 0;
 }
 
+.leaflet-container .leaflet-draw-toolbar a.leaflet-draw-draw-rectangle {
+  background: #fff url('/static/static/img/area.png') no-repeat 2px 2px;
+  background-size: 26px 52px;
+  &:hover,
+  &:focus {
+    background-color: #f4f4f4;
+  }
+}
+
 input.coordInput {
   width: 130px;
   border-radius: 5px;

@@ -37,6 +37,18 @@ ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE: Final = _(
 ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY: Final = _(
     "common.message.ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY.text"
 )  # Záznam nebyl smazán kvůli navázaným záznamům.
+SOUBOR_USPESNE_PREJMENOVAN: Final = _(
+    "common.message.SOUBOR_USPESNE_PREJMENOVAN.text"
+)  # Soubor byl úspěšně přejmenován.
+SOUBOR_SE_NEPOVEDLO_PREJMENOVAT: Final = _(
+    "common.message.SOUBOR_SE_NEPOVEDLO_PREJMENOVAT.text"
+)  # Soubor se nepovedlo přejmenovat.
+SOUBOR_SUFFIX_OBSAZEN: Final = _(
+    "common.message.SOUBOR_SUFFIX_OBSAZEN.text"
+)  # Zvolený suffix je již obsazený nebo neplatný.
+SOUBOR_NEJVYSSI_SUFFIX_OBSAZEN: Final = _(
+    "common.message.SOUBOR_NEJVYSSI_SUFFIX_OBSAZEN.text"
+)  # Nejvyšší pozici názvu nelze přidělit, ale některé nižší jsou volné – uvolněte je přejmenováním.
 ZAZNAM_ZMENEN_JINOU_TRANSAKCI: Final = _(
     "common.message.ZAZNAM_ZMENEN_JINOU_TRANSAKCI.text"
 )  # Záznam právě upravuje jiná operace, akci nelze dokončit. Zkuste to prosím za chvíli znovu.

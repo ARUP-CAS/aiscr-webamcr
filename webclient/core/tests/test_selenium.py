@@ -131,8 +131,8 @@ class WaitForPageLoad:
 
             :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
-        start_time = time.time()
-        while time.time() < start_time + self.wait_time:
+        start_time = time.monotonic()
+        while time.monotonic() < start_time + self.wait_time:
             if condition_function():
                 return True
             else:
@@ -811,8 +811,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
             :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
-        end = time.time() + timeout
-        while time.time() < end:
+        end = time.monotonic() + timeout
+        while time.monotonic() < end:
             try:
                 if condition_function(by, value):
                     return True
@@ -1233,9 +1233,28 @@ return new Date('2025-06-28T12:00:00Z');}};
                 f"select_dynamic_select2_autocomplete_option('{field_id}', '{search_text}', {index}): "
                 f"Select2 field <select id={field_id}> not available within {timeout}s"
             )
-        # Otevři dropdown kliknutím na výběrovou plochu kontejneru.
-        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center', behavior: 'instant'});", selection)
-        selection.click()
+        # Otevři dropdown kliknutím na výběrovou plochu kontejneru. Klikání se opakuje, protože
+        # plochu může dočasně překrývat jiný element – typicky právě zavíraný modál, který má
+        # ještě po dobu fade animace nastavené display: block. Chrome v takové chvíli vyhodí
+        # ElementClickInterceptedException, i když je Select2 pole už v DOM a viditelné.
+        end = time.monotonic() + timeout
+        while True:
+            try:
+                self.driver.execute_script(
+                    "arguments[0].scrollIntoView({block: 'center', behavior: 'instant'});", selection
+                )
+                selection.click()
+                break
+            except (ElementClickInterceptedException, StaleElementReferenceException) as err:
+                if time.monotonic() >= end:
+                    raise AssertionError(
+                        f"select_dynamic_select2_autocomplete_option('{field_id}', '{search_text}', {index}): "
+                        f"Select2 field <select id={field_id}> not clickable within {timeout}s "
+                        f"({err.__class__.__name__})"
+                    )
+                time.sleep(0.3)
+                # Element mohl mezitím zastarat (překreslení DOM), tak si ho vyzvedni znovu.
+                selection = _selection(self.driver) or selection
 
         # Vyplň hledaný text – otevřený Select2 dropdown je na stránce vždy nejvýše jeden,
         # takže jeho vyhledávací pole lze adresovat přes třídu .select2-container--open.
@@ -1409,19 +1428,22 @@ return new Date('2025-06-28T12:00:00Z');}};
         port = self.server_thread.port
         self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}{rel_address}")
 
-    def upload_file(self, file_path, file_name, mime="image/jpeg"):
+    def upload_file(self, file_path, file_name, mime="image/jpeg", timeout=30):
         """
         Metoda nahraje soubor do Dropzone.
 
         :param file_path: Parametr ``file_path`` se předává do volání ``open()``.
         :param file_name: Parametr ``file_name`` se předává do volání ``execute_async_script()``.
         :param mime: Parametr ``mime`` se předává do volání ``execute_async_script()``.
+        :param timeout: Maximální doba čekání na dokončení uploadu v sekundách. Upload je celý
+            round-trip na server (uložení souboru), takže při vytíženém test runneru trvá i
+            desítky sekund; timeout skriptu je o 5 s delší, aby se stihla vrátit chybová hláška.
 
             :raises AssertionError: Vyvolá se při splnění podmínky ``result.get('status') != 'success'``.
         """
         with open(file_path, "rb") as f:
             b64 = base64.b64encode(f.read()).decode("ascii")
-        self.driver.set_script_timeout(15)
+        self.driver.set_script_timeout(timeout + 5)
         result = self.driver.execute_async_script(
             """
             const callback = arguments[arguments.length - 1];
@@ -1429,6 +1451,7 @@ return new Date('2025-06-28T12:00:00Z');}};
             const name = arguments[1];
             const b64 = arguments[2];
             const mime = arguments[3];
+            const timeoutMs = arguments[4];
 
             const safeCallback = (() => {
             let finished = false;
@@ -1490,8 +1513,13 @@ return new Date('2025-06-28T12:00:00Z');}};
             dz.on("error", onError);
             const timeoutId = setTimeout(() => {
             cleanup();
-            fail("Dropzone did not finish within internal timeout");
-            }, 12000);
+            // Stav souborů ve frontě říká, kde se to zaseklo (queued / uploading / success / error).
+            let files = [];
+            try {
+                files = dz.files.map((f) => ({name: f.name, status: f.status, progress: f.upload && f.upload.progress}));
+            } catch (e) { /* ignore */ }
+            fail("Dropzone did not finish within internal timeout", {timeoutMs, files});
+            }, timeoutMs);
 
             // Add file
             try {
@@ -1518,6 +1546,7 @@ return new Date('2025-06-28T12:00:00Z');}};
             file_name,
             b64,
             mime,
+            timeout * 1000,
         )
 
         if result.get("status") != "success":

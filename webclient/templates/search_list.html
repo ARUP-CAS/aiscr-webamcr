@@ -24,7 +24,7 @@
             </button>
           </div>
           <div class="app-middle text-muted search-sum-text">
-            {{search_sum}}: <strong id="pocet_zaznamu" >{{ table.rows|length }}</strong>
+            {{search_sum}}: <strong id="pocet_zaznamu" >{{ table.paginator.count }}</strong>
           </div>
           <div class="app-right">
             <div class="btn-group" role="group">
@@ -118,6 +118,10 @@
                   </div>
                   <div id="mapaCollapse" class="collapse col-sm-12"
                        data-map-endpoint="{{ map_data_url }}" data-map-layer="{{ map_layer }}">
+                    <div class="text-muted small mb-2 d-flex align-items-center">
+                      <span class="material-icons mr-1" style="font-size: 1rem;">info_outline</span>
+                      {% trans "templates.searchList.mapa.napoveda" %}
+                    </div>
                     <div class="app-mapa-filter-map" style="height: 480px;">
                       <div id="projectMap"></div>
                     </div>
@@ -206,7 +210,7 @@ $('#export-progress-modal').on('show.bs.modal', (event) => {
     const email = rawEmail.replace("@", "(at)");
     const url = triggerElement.data('url') + `&export_suffix_string=${export_suffix_string}`;
     const redis_variable_name = `export_${email}_${export_suffix_string}`
-    {% if table.rows|length >= 50000 %}
+    {% if table.paginator.count >= 50000 %}
         const paragraph = $("#modal-confirm-download-par");
         paragraph.next('a.source-link').remove();
         const modal_link = $('<a>')
@@ -227,7 +231,7 @@ $('#export-progress-modal').on('show.bs.modal', (event) => {
         }
     {% endif %}
     $('#export-progress-modal').data('sourceUrl', url);
-    {% if table.rows|length < 50000 %}
+    {% if table.paginator.count < 50000 %}
         manageExportDownload(url, redis_variable_name);
     {% endif %}
 })

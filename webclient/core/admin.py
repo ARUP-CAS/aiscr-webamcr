@@ -380,7 +380,8 @@ class PermissionSkipAdmin(admin.ModelAdmin):
     change_list_template = "core/permissions_changelist.html"
     list_display = ["user"]
     actions = ("export_as_csv",)
-    search_fields = ["user"]
+    search_fields = ["user__ident_cely", "user__last_name", "user__first_name"]
+    autocomplete_fields = ["user"]
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = None) -> HttpResponse:
         """

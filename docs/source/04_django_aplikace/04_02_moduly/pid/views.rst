@@ -163,12 +163,46 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: _statements_contain_human()
+
+      Zjistí, zda seznam výroků ``P31`` obsahuje hodnotu ``Q5`` (člověk).
+
+      :param statements: Seznam výroků vrácený REST API pro vlastnost ``P31``.
+      :return: ``True``, pokud některý výrok odkazuje na položku ``Q5``.
+
+   .. py:method:: _get_item_result()
+
+      Načte položku podle identifikátoru a vrátí ji, pokud jde o člověka.
+
+      Popisek se vybírá v pořadí jazyků ``LABEL_LANGUAGES``; bez použitelného popisku
+      se vrací samotný identifikátor.
+
+      :param item_id: Identifikátor položky (např. ``Q7186``).
+      :return: Seznam s jedním [WikiData ID, jméno] párem, nebo prázdný seznam.
+
+   .. py:method:: check_availability()
+
+      Ověří dostupnost Wikibase REST API jediným levným požadavkem.
+
+      Slouží jako kontrola dostupnosti (např. pro ``OsobaAdminForm``), aniž by se
+      spouštělo plné vyhledávání. Na rozdíl od ``api_call`` chyby nepolyká — při
+      nedostupnosti API vyhazuje výjimku.
+
+      :return: ``None``.
+      :raises requests.RequestException: Pokud je API nedostupné nebo vrátí chybový stav.
+
    .. py:method:: api_call()
 
-      Vyhledá osoby v WikiData SPARQL API.
+      Vyhledá osoby ve Wikidata pomocí Wikibase REST API.
 
-      :param q: Vyhledávací dotaz.
-      :param use_cache: Zda používat cache.
+      Dotaz tvořený pouze identifikátorem položky (``Q123``, případně jako URL entity)
+      se ověří koncovým bodem ``/entities/items``; ostatní dotazy prohledávají popisky
+      koncovým bodem ``/search/items``. Výsledky jsou vždy omezeny na osoby
+      (``P31`` = ``Q5``). Chyby spojení se logují a vrací se prázdný seznam.
+
+      :param q: Vyhledávací dotaz (jméno, identifikátor ``Q`` nebo URL entity).
+      :param use_cache: Parametr se kvůli shodné signatuře s ``ApiView.api_call`` předává,
+          ale u této třídy se nepoužívá (mezipaměť Redis se nečte ani neukládá).
       :return: Seznam [WikiData ID, jméno] párů.
 
 

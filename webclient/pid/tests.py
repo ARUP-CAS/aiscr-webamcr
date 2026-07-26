@@ -1,9 +1,13 @@
 """Testy aplikace PID."""
 
+import asyncio
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
+import httpx
+import requests
 from django.test import TestCase
-from pid.views import DoiAutocompleteView
+from pid.views import DoiAutocompleteView, WikiDataAutocompleteView
 
 
 class DoiAutocompleteViewApiCallTest(TestCase):
@@ -187,3 +191,144 @@ class DoiAutocompleteViewApiCallTest(TestCase):
         mock_dc_title.assert_not_called()
         mock_cr_title.assert_not_called()
         mock_exists.assert_not_called()
+
+
+class WikiDataAutocompleteViewApiCallTest(TestCase):
+    """Testy metody ``api_call`` a pomocných metod třídy ``WikiDataAutocompleteView``."""
+
+    @patch.object(WikiDataAutocompleteView, "_search_humans", new_callable=AsyncMock)
+    @patch.object(WikiDataAutocompleteView, "_get_item_result")
+    def test_exact_qid_routes_to_item_lookup(self, mock_item, mock_search):
+        """
+        Dotaz tvořený pouze identifikátorem ``Q`` se ověří přes ``_get_item_result``.
+
+        :param mock_item: Mock pro ``_get_item_result``.
+        :param mock_search: Mock pro ``_search_humans``.
+        """
+        mock_item.return_value = [["Q868", "Aristotelés (Q868)"]]
+
+        results = WikiDataAutocompleteView.api_call(" Q868 ")
+
+        self.assertEqual(results, [["Q868", "Aristotelés (Q868)"]])
+        mock_item.assert_called_once_with("Q868")
+        mock_search.assert_not_called()
+
+    @patch.object(WikiDataAutocompleteView, "_search_humans", new_callable=AsyncMock, return_value=[])
+    @patch.object(WikiDataAutocompleteView, "_get_item_result")
+    def test_free_text_with_embedded_qid_routes_to_name_search(self, mock_item, mock_search):
+        """
+        Volný text obsahující ``Q`` s číslicemi se vyhledává podle jména, ne podle identifikátoru.
+
+        :param mock_item: Mock pro ``_get_item_result``.
+        :param mock_search: Mock pro ``_search_humans``.
+        """
+        WikiDataAutocompleteView.api_call("Aristoteles Q868")
+
+        mock_item.assert_not_called()
+        mock_search.assert_called_once()
+
+    @patch.object(WikiDataAutocompleteView, "_search_humans", new_callable=AsyncMock)
+    @patch.object(WikiDataAutocompleteView, "_get_item_result", return_value=[])
+    def test_entity_url_routes_to_item_lookup(self, mock_item, mock_search):
+        """
+        URL entity Wikidata se převede na identifikátor a ověří přes ``_get_item_result``.
+
+        :param mock_item: Mock pro ``_get_item_result``.
+        :param mock_search: Mock pro ``_search_humans``.
+        """
+        WikiDataAutocompleteView.api_call("https://www.wikidata.org/entity/Q868")
+
+        mock_item.assert_called_once_with("Q868")
+        mock_search.assert_not_called()
+
+    @patch.object(WikiDataAutocompleteView, "_search_humans", new_callable=AsyncMock)
+    @patch.object(WikiDataAutocompleteView, "_get_item_result")
+    def test_empty_query_returns_empty_list(self, mock_item, mock_search):
+        """
+        Prázdný dotaz vrátí prázdný seznam bez volání backendu.
+
+        :param mock_item: Mock pro ``_get_item_result``.
+        :param mock_search: Mock pro ``_search_humans``.
+        """
+        results = WikiDataAutocompleteView.api_call("")
+
+        self.assertEqual(results, [])
+        mock_item.assert_not_called()
+        mock_search.assert_not_called()
+
+    @patch.object(WikiDataAutocompleteView, "_search_humans", new_callable=AsyncMock)
+    @patch.object(WikiDataAutocompleteView, "_get_item_result")
+    def test_whitespace_only_query_returns_empty_list(self, mock_item, mock_search):
+        """
+        Dotaz tvořený jen mezerami vrátí prázdný seznam bez volání backendu.
+
+        :param mock_item: Mock pro ``_get_item_result``.
+        :param mock_search: Mock pro ``_search_humans``.
+        """
+        results = WikiDataAutocompleteView.api_call("   ")
+
+        self.assertEqual(results, [])
+        mock_item.assert_not_called()
+        mock_search.assert_not_called()
+
+    def test_search_language_request_error_returns_empty_list(self):
+        """Chyba spojení při vyhledávání vrátí prázdný seznam místo výjimky."""
+        client = SimpleNamespace(get=AsyncMock(side_effect=httpx.RequestError("boom")))
+
+        results = asyncio.run(WikiDataAutocompleteView._search_language(client, "test", "cs"))
+
+        self.assertEqual(results, [])
+
+    def test_search_language_non_dict_payload_returns_empty_list(self):
+        """Neslovníková JSON odpověď vyhledávání vrátí prázdný seznam místo výjimky."""
+        response = SimpleNamespace(status_code=200, json=lambda: ["unexpected"])
+        client = SimpleNamespace(get=AsyncMock(return_value=response))
+
+        results = asyncio.run(WikiDataAutocompleteView._search_language(client, "test", "cs"))
+
+        self.assertEqual(results, [])
+
+    def test_item_is_human_request_error_returns_false(self):
+        """Chyba spojení při ověření výroku ``P31`` se vyhodnotí jako ``False``."""
+        client = SimpleNamespace(get=AsyncMock(side_effect=httpx.RequestError("boom")))
+
+        result = asyncio.run(WikiDataAutocompleteView._item_is_human(client, "Q868"))
+
+        self.assertFalse(result)
+
+    @patch("pid.views.requests.get")
+    def test_check_availability_raises_on_connection_error(self, mock_get):
+        """Kontrola dostupnosti propaguje chybu spojení volajícímu.
+
+        :param mock_get: Mock pro ``requests.get``.
+        """
+        mock_get.side_effect = requests.ConnectionError("boom")
+
+        with self.assertRaises(requests.RequestException):
+            WikiDataAutocompleteView.check_availability()
+
+    @patch("pid.views.requests.get")
+    def test_check_availability_raises_on_http_error(self, mock_get):
+        """Kontrola dostupnosti vyhazuje výjimku při chybovém stavovém kódu.
+
+        :param mock_get: Mock pro ``requests.get``.
+        """
+        response = requests.Response()
+        response.status_code = 503
+        mock_get.return_value = response
+
+        with self.assertRaises(requests.RequestException):
+            WikiDataAutocompleteView.check_availability()
+
+    @patch("pid.views.requests.get")
+    def test_check_availability_passes_on_success(self, mock_get):
+        """Kontrola dostupnosti při úspěšné odpovědi nevyhazuje výjimku.
+
+        :param mock_get: Mock pro ``requests.get``.
+        """
+        response = requests.Response()
+        response.status_code = 200
+        mock_get.return_value = response
+
+        WikiDataAutocompleteView.check_availability()
+        mock_get.assert_called_once()

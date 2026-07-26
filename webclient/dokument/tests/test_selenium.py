@@ -705,6 +705,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         C-201226860A
         C-K9000024
         C-202104117
+        X-C-TX-000000002
 
         Steps:
         - Vytvoření Dokumentu
@@ -733,6 +734,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         - Editace Neidentifikované Akce
         - Smazání Neidentifikované Akce
         - Smazání Dokumentu
+        - Přejmenování dokumentu
         - Odpojení Akce
         - Odpojení Lokality
         - Odpojení Projektu
@@ -1034,6 +1036,23 @@ class AkceDokumenty(BaseSeleniumTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument_1")
+
+        # Přejmenování dokumentu X-C-TX-000000002
+        self.createFedoraRecord("X-C-TX-000000002", "archivar")
+        self.createFedoraRecord("C-202401979A", "archivar")
+        self.goToAddress("/id/X-C-TX-000000002")
+        self.ElementClick(By.ID, "NahratSoubory")
+        with WaitForPageLoad(self.driver):
+            self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "buttonUploadSubmit")
+        time = self.getTime()
+        file = Soubor.objects.filter(vazba__dokument_souboru__ident_cely="X-C-TX-000000002").first().pk
+        self.ElementClick(By.ID, f"file-prejmenovat-{file}")
+        self.select_dynamic_selectpicker_option("id_suffix", "XCTX000000002I.jpg")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/rename_dokument")
 
         # odpojeni akce
         self.createFedoraRecord("X-C-TX-201801166", "archivar")

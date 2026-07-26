@@ -46,7 +46,7 @@ jobs:
             image_name_github: arup-cas/aiscr-webamcr-proxy
             image_name_dockerhub: aiscr/webamcr-proxy
             description: Archaeological Map of the Czech Republic (AMCR) - Proxy Server
-            url: https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/proxy
+            url: https://github.com/ARUP-CAS/aiscr-webamcr/tree/main/proxy
 
           - component: redis
             context: ./redis
@@ -54,7 +54,7 @@ jobs:
             image_name_github: arup-cas/aiscr-webamcr-redis
             image_name_dockerhub: aiscr/webamcr-redis
             description: Archaeological Map of the Czech Republic (AMCR) - Redis Server
-            url: https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/redis
+            url: https://github.com/ARUP-CAS/aiscr-webamcr/tree/main/redis
 
     permissions:
       id-token: write
@@ -236,3 +236,4 @@ jobs:
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-${{ matrix.component }}.sarif
+          category: trivy-${{ matrix.component }}

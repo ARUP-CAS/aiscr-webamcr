@@ -19,14 +19,19 @@
 }
 
 // set entity color
-@mixin setEntityColor($type) {
-  @each $entity, $color in $entities {
+// $entity-map: light ($entities) or dark ($dark-entities) entity color map
+// $card-footer-bg: footer background; pass null to leave background unset (dark theme)
+@mixin setEntityColor($type, $entity-map: $entities, $card-footer-bg: $white) {
+  @each $entity, $color in $entity-map {
     @if ($type ==card) {
       &.app-entity-#{$entity} {
         background-color: $color;
 
         .card-footer {
-          background-color: $white;
+          @if $card-footer-bg != null {
+            background-color: $card-footer-bg;
+          }
+
           color: $color;
         }
       }
@@ -35,8 +40,9 @@
 }
 
 // set entity color for all defined elements inside
-@mixin setEntityElementsColor() {
-  @each $entity, $color in $entities {
+// $entity-map: light ($entities) or dark ($dark-entities) entity color map
+@mixin setEntityElementsColor($entity-map: $entities) {
+  @each $entity, $color in $entity-map {
     .app-entity-#{$entity} {
 
       // common
@@ -135,7 +141,7 @@
         background-color: $color;
 
         &:hover {
-          $link-hover-color: darken($color, 10);
+          $link-hover-color: darken($color, 10%);
           border-color: $link-hover-color;
           background-color: $link-hover-color;
         }
@@ -282,8 +288,9 @@
 }
 
 // set entity color for all transakce table idents
-@mixin setEntityTransakceColor() {
-  @each $entity, $color in $entities {
+// $entity-map: light ($entities) or dark ($dark-entities) entity color map
+@mixin setEntityTransakceColor($entity-map: $entities) {
+  @each $entity, $color in $entity-map {
     .app-card-#{$entity} {
       table {
         tr {

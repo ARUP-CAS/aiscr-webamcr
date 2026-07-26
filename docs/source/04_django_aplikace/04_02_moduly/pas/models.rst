@@ -99,7 +99,7 @@ Třídy
 
    .. py:method:: nahled_soubor()
 
-      Vrací cestu k miniaturnímu náhledu souboru.
+      Vrací náhledový soubor (první podle názvu, shodně s výpisem souborů).
 
       :return: První soubor nebo None, pokud žádný neexistuje.
 

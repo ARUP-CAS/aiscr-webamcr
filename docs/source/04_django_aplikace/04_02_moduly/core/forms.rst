@@ -140,7 +140,22 @@ Třídy
       :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
-.. py:class:: DecimalTextWideget
+.. py:class:: RenameSouborForm
+
+   Formulář pro přejmenování souboru výběrem volného suffixu z povolených hodnot.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje formulář a naplní nabídku suffixů povolenými (volnými) hodnotami.
+
+      :param suffix_choices: Seznam dvojic ``(hodnota, popisek)`` volných suffixů.
+      :param args: Poziční argumenty předané do ``forms.Form``.
+      :param kwargs: Klíčové argumenty předané do ``forms.Form``.
+
+
+.. py:class:: DecimalTextWidget
 
    Třida pro formátování hodnoty velikosti souboru na 3 desetiná místa.
 
@@ -272,9 +287,9 @@ Třídy
       :raises forms.ValidationError: Pokud je startovní datum pozdější než koncové.
 
 
-.. py:class:: TransaltionImportForm
+.. py:class:: TranslationImportForm
 
-   Implementuje komponentu ``TransaltionImportForm`` v rámci aplikace.
+   Implementuje komponentu ``TranslationImportForm`` v rámci aplikace.
 
    **Metody:**
 
