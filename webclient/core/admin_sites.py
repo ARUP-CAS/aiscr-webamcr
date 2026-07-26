@@ -1,10 +1,9 @@
-import io
 import json
 import logging
 import os
 import random
+import secrets
 import string
-import zipfile
 
 import pandas as pd
 from django.contrib import admin
@@ -16,19 +15,7 @@ from rosetta.templatetags.rosetta import can_translate as rosetta_can_translate
 
 from .connectors import RedisConnector
 from .forms import ImportDataAdminForm
-from .import_data_mappers import (
-    ImportDataBatchOrderingError,
-    ImportDataEmptyError,
-    ImportDataError,
-    ImportDataIntegrityError,
-    ImportDataMissingFileError,
-    ImportDataUnsupportedFileError,
-    ImportDataUnsupportedFilesError,
-    ImportDataValidationResult,
-    ImportModelMapper,
-    LookupImportField,
-)
-from .models import AntivirusCheckResult, Soubor
+from .import_data_mappers import ImportDataMissingFileError
 from .setting_models import CustomAdminSettings
 from .utils import is_maintenance_in_progress
 
@@ -331,263 +318,201 @@ class AmcrCustomAdminSite(admin.AdminSite):
 
     IMPORT_DATA_REDIS_EXPIRATION = 6 * 60 * 60  # 6 hodin
     IMPORT_ZIP_MAX_UNCOMPRESSED_SIZE = 1024 * 1024 * 1024  # 1024 MB
+    # Velikost chunku komprimovaného ZIPu ve stagingu do Redis (§3.3). Zdrojová konstanta,
+    # neladí se za běhu; drží každý SET/GET v řádu desítek ms a hodnotu pod proto-max-bulk-len.
+    IMPORT_DATA_REDIS_CHUNK_SIZE = 64 * 1024 * 1024  # 64 MiB
+
+    def _import_performed_action_labels(self):
+        """
+        Vrátí mapu kódů akcí importu na jejich lidsky čitelné popisky.
+
+        :return: Slovník ``{kód akce: přeložený popisek}`` pro zobrazení ve stavu importu.
+        """
+        return {
+            ImportDataAdminForm.PERFORMED_ACTION_INSERT: _("core.forms.ImportDataAdminForm.insert"),
+            ImportDataAdminForm.PERFORMED_ACTION_UPDATE: _("core.forms.ImportDataAdminForm.update"),
+            ImportDataAdminForm.PERFORMED_ACTION_DELETE: _("core.forms.ImportDataAdminForm.delete"),
+        }
+
+    def _import_directory_configured(self):
+        """
+        Zjistí, zda je nakonfigurovaný a dostupný adresář pro import binárních souborů.
+
+        :return: ``True``, pokud je ``DIRECTORY_PATH`` nastavený a ukazuje na existující adresář.
+        """
+        try:
+            import_directory_settings_obj = CustomAdminSettings.objects.get(item_id="import_directory_settings")
+            import_directory_settings = json.loads(import_directory_settings_obj.value)
+            import_directory_path = import_directory_settings.get("DIRECTORY_PATH")
+            return bool(import_directory_path and os.path.isdir(import_directory_path))
+        except (CustomAdminSettings.DoesNotExist, json.JSONDecodeError, ValueError, KeyError):
+            return False
+
+    def _render_import_polling_ui(self, request, context, job_id):
+        """
+        Vykreslí polling UI navázané na běžící nebo terminální importní úlohu ``job_id``.
+
+        Do kontextu vkládá pouze ne-datové položky (URL, popisek akce, konfigurace adresáře);
+        veškerá importní a validační data si stránka tahá z progress endpointu (požadavek 3, §4.1).
+
+        :param request: HTTP požadavek.
+        :param context: Základní kontext šablony (``app_list``, ``maintenance`` …).
+        :param job_id: Identifikátor importní úlohy, na kterou se stránka naváže.
+        :return: ``TemplateResponse`` s polling UI bez validačních dat v kontextu.
+        """
+        performed_action = self.redis_connector.get(f"import_performed_action_{job_id}") or None
+        context = dict(context)
+        context["job_id"] = job_id
+        context["url"] = reverse("core:data-import-progress", args=[job_id])
+        context["url_stop"] = reverse("core:data-import-stop", args=[job_id])
+        context["url_start"] = reverse("core:data-import-start", args=[job_id])
+        context["url_cancel"] = reverse("core:data-import-cancel", args=[job_id])
+        context["performed_action"] = performed_action
+        context["performed_action_label"] = self._import_performed_action_labels().get(
+            performed_action, performed_action
+        )
+        context["import_directory_configured"] = self._import_directory_configured()
+        return TemplateResponse(request, "admin/import_data/import_data.html", context)
 
     def import_data(self, request):
         """
-        Importuje datové CSV soubory ze ZIP archivu do interní importní fronty.
+        Přijme nahraný ZIP hromadného importu a zařadí jeho validaci do fronty (accept-and-enqueue).
 
-        :param request: HTTP požadavek; při ``POST`` od superuživatele zvaliduje vstupní formulář,
-            zpracuje obsah ZIPu, provede validační kroky přes mapery a uloží připravené záznamy do Redis.
-        :return: Odpověď ``TemplateResponse`` s výsledkem validace, případně s chybovou hláškou importu.
-        :raises ImportDataUnsupportedFilesError: Vyvolá se, pokud ZIP obsahuje soubory mimo povolenou sadu názvů.
-        :raises ImportDataUnsupportedFileError: Vyvolá se, pokud pro nalezený CSV soubor neexistuje mapper.
+        Validace ani import už neběží v HTTP požadavku (viz #391): POST komprimovaný ZIP nastageuje
+        do Redis po chuncích, získá globální importní lock, nastaví fázi ``validating`` a dispatchne
+        ``cron.tasks.run_data_import_validation``. Stránka pak jen pollује progress endpoint —
+        žádná importní ani validační data se nevykreslují z kontextu POSTu (požadavek 3).
+
+        Znovuotevření stránky (GET) se naváže na běžící úlohu daného uživatele přes
+        ``import_data_current_job_{user_id}`` (požadavek 2).
+
+        Paměťová charakteristika (§8): ``data_file.read()`` načte celý komprimovaný upload
+        (~200-330 MB pro max. úlohu) najednou do RAM web workeru a slicing chunků drží druhou
+        referenci — přechodný špičkový nárůst ~250-500 MB na jeden upload. Globální lock serializuje
+        uploady, takže špičkuje jen jeden uWSGI worker; buffery se uvolní návratem požadavku.
+
+        :param request: HTTP požadavek; při ``POST`` od superuživatele zvaliduje formulář a zařadí
+            validaci do fronty.
+        :return: ``TemplateResponse`` s polling UI, upload formulářem nebo chybovou hláškou.
+        :raises PermissionDenied: Pokud přihlášený uživatel není superuživatel.
         """
-
         if not request.user.is_superuser:
             raise PermissionDenied
 
-        def normalize_file_name(name: str) -> str:
-            """
-            Normalizuje název souboru ze ZIP archivu na formát pro porovnání s mapery.
+        from cron import tasks
 
-            :param name: Původní cesta nebo název souboru ze ZIP archivu.
-            :return: Název souboru bez adresáře, oříznutý o bílé znaky a převedený na malá písmena.
-            """
-            if "/" in name:
-                name = name.split("/")[-1]
-            return name.strip().lower()
-
+        maintenance = is_maintenance_in_progress()
         # Missing Redis key returns None, so bool(get(...)) is False when no import lock is held.
         import_data_running = bool(self.redis_connector.get(RedisConnector.IMPORT_DATA_LOCK_KEY))
 
         context = {
             "app_list": self.get_app_list(request),
-            "maintenance": is_maintenance_in_progress(),
+            "maintenance": maintenance,
             "import_data_running": import_data_running,
             **self.each_context(request),
         }
-        if not is_maintenance_in_progress() or import_data_running:
+
+        # Own-job gate (§4.1 step 3 / GET branch): if the requesting admin already has a non-terminal
+        # job, always bind the page to it and never accept a new upload. This gate is advisory and not
+        # atomic — the real serialization is the global lock acquire below (§4.1 step 7).
+        current_job_id = self.redis_connector.get(f"import_data_current_job_{request.user.id}") or None
+        if current_job_id:
+            phase = self.redis_connector.get(f"import_data_phase_{current_job_id}")
+            if phase in (
+                tasks.IMPORT_PHASE_VALIDATING,
+                tasks.IMPORT_PHASE_AWAITING_APPROVAL,
+                tasks.IMPORT_PHASE_IMPORTING,
+            ):
+                return self._render_import_polling_ui(request, context, current_job_id)
+
+        # Maintenance gate (§4.1 step 2 / Invariant A): reject uploads outside maintenance mode.
+        if not maintenance:
+            context["form"] = ImportDataAdminForm()
             return TemplateResponse(request, "admin/import_data/import_data.html", context)
-        if request.method == "POST" and request.user.is_superuser:
+
+        # Global-lock-busy gate (§4.1 step 4 / Invariant B): another admin's pipeline holds the lock.
+        if import_data_running:
+            return TemplateResponse(request, "admin/import_data/import_data.html", context)
+
+        if request.method == "POST":
             form = ImportDataAdminForm(request.POST, request.FILES)
-            if form.is_valid():
-                cleaned_data = form.cleaned_data
-            else:
+            if not form.is_valid():
+                context["form"] = form
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
             context["form"] = form
-            performed_action = cleaned_data["performed_action"]
+            performed_action = form.cleaned_data["performed_action"]
+            data_file = form.cleaned_data.get("data_file")
+            if not data_file:
+                context["error_message"] = _("core.admin.import_data.error.import_error")
+                context["error_message_details"] = str(ImportDataMissingFileError())
+                return TemplateResponse(request, "admin/import_data/import_data.html", context)
+
+            job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
+            lock_token = secrets.token_hex(16)
+
+            # Atomic acquire is the real serialization guarantee (§4.1 step 7); on a TOCTOU race with
+            # another upload, fall back to the import_is_running page.
+            if not RedisConnector.acquire_import_lock(
+                self.redis_connector, lock_token, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS
+            ):
+                context["import_data_running"] = True
+                return TemplateResponse(request, "admin/import_data/import_data.html", context)
+
+            chunk_count = 0
             try:
-                data_file = cleaned_data.get("data_file")
-                if not data_file:
-                    raise ImportDataMissingFileError()
+                # Stage the compressed ZIP in Redis, chunked (§3.3 / §4.1 step 8). Binary chunks are
+                # written through the bytes connection so they are not utf-8 mangled.
                 file_bytes = data_file.read()
-                job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
-                context["url"] = reverse("core:data-import-progress", args=[job_id])
-                context["url_stop"] = reverse("core:data-import-stop", args=[job_id])
-                validation_results = []
-                records = []
-                record_id = 0  # index of valid records only — used as Redis key suffix and records_count
-                row_order = 0  # index of every CSV row (valid + invalid) — used as item_order in validation results
-                invalid_records = []
-                antivirus_result = Soubor.check_antivirus(io.BytesIO(file_bytes))
-                if antivirus_result == AntivirusCheckResult.VIRUS_FOUND:
-                    context["error_message"] = _("core.admin.import_data.error.import_error")
-                    context["error_message_details"] = _("core.admin.import_data.error.virus_found")
-                    return TemplateResponse(request, "admin/import_data/import_data.html", context)
-                if antivirus_result == AntivirusCheckResult.CHECK_FAILED:
-                    logger.warning("core.admin_sites.AmcrCustomAdminSite.import_data.antivirus_check_failed")
-                LookupImportField.set_records(records)
-                with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
-                    file_names = [
-                        name for name in zf.namelist() if not name.startswith("__MACOSX") and not name.endswith("/")
-                    ]
-                    mapper_dict = ImportModelMapper.get_import_data_mapper_dict()
-                    mapper_key_order = {f"{name}.csv": i for i, name in enumerate(mapper_dict.keys())}
-                    allowed_file_names = set(
-                        [
-                            f"{name}.csv".lower()
-                            for name, mapper in mapper_dict.items()
-                            if performed_action != ImportDataAdminForm.PERFORMED_ACTION_UPDATE or mapper.allow_update
-                        ]
+                chunk_size = self.IMPORT_DATA_REDIS_CHUNK_SIZE
+                chunk_count = (len(file_bytes) + chunk_size - 1) // chunk_size
+                bytes_connector = RedisConnector.get_connection()
+                pipe = bytes_connector.pipeline()
+                for i in range(chunk_count):
+                    pipe.set(
+                        f"import_data_file_{job_id}_{i}",
+                        file_bytes[i * chunk_size : (i + 1) * chunk_size],
+                        ex=tasks.IMPORT_DATA_RUNNING_TTL_SECONDS,
                     )
-                    normalized_imported_file_names = set([normalize_file_name(file_name) for file_name in file_names])
-                    if not normalized_imported_file_names.issubset(allowed_file_names):
-                        raise ImportDataUnsupportedFilesError(normalized_imported_file_names - allowed_file_names)
-                    file_names.sort(key=lambda fn: mapper_key_order.get(normalize_file_name(fn), len(mapper_key_order)))
-                    total_uncompressed_size = sum(zf.getinfo(fn).file_size for fn in file_names)
-                    if total_uncompressed_size > self.IMPORT_ZIP_MAX_UNCOMPRESSED_SIZE:
-                        raise ValueError(_("core.admin.import_data.error.zip_too_large"))
-                    for file_name in file_names:
-                        with zf.open(file_name) as file:
-                            sheet = pd.read_csv(file, dtype=str)
-                        file_name = normalize_file_name(file_name)
-                        mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
-                        seen_in_batch: set = set()
-                        try:
-                            mapper_class.validate_batch_ordering(sheet.to_dict("records"))
-                        except ImportDataBatchOrderingError as err:
-                            validation_results.append(
-                                ImportDataValidationResult(
-                                    item_order=row_order,
-                                    file_name=file_name,
-                                    validation_result=str(err),
-                                )
-                            )
-                            invalid_records.append(row_order)
-                            row_order += 1
-                            continue
-                        for idx, row in sheet.iterrows():
+                pipe.execute()
 
-                            def format_primary_key(pk):
-                                """
-                                Převede primární klíč importovaného záznamu na text pro validační výstup.
-
-                                :param pk: Primární klíč z mapperu, typicky slovník složeného klíče nebo skalární hodnota.
-                                :return: Textová reprezentace klíče vhodná pro zobrazení ve validační tabulce.
-                                """
-                                if isinstance(pk, dict):
-                                    return ", ".join("{}: {}".format(k, v) for k, v in pk.items())
-                                return str(pk)
-
-                            if mapper_class:
-                                try:
-                                    mapper = mapper_class(row.to_dict())
-                                    record = mapper.map(performed_action, serialize=True, include_primary_key=True)
-                                    mapper.check_required_fields(performed_action)
-                                    primary_key = mapper.import_validation(
-                                        performed_action, request.user.pk, seen_in_batch=seen_in_batch
-                                    )
-                                    records += mapper.create_records(performed_action)
-                                    record["__file_name"] = file_name
-                                except ImportDataIntegrityError as err:
-                                    validation_results.append(
-                                        ImportDataValidationResult(
-                                            item_order=row_order,
-                                            file_name=file_name,
-                                            primary_key_import=format_primary_key(err.record_id),
-                                            validation_result=str(err),
-                                        )
-                                    )
-                                    invalid_records.append(row_order)
-                                except ImportDataError as err:
-                                    validation_results.append(
-                                        ImportDataValidationResult(
-                                            item_order=row_order,
-                                            file_name=file_name,
-                                            validation_result=str(err),
-                                        )
-                                    )
-                                    invalid_records.append(row_order)
-                                else:
-                                    records.append(record)
-                                    validation_results.append(
-                                        ImportDataValidationResult(
-                                            item_order=row_order,
-                                            file_name=file_name,
-                                            primary_key_import=format_primary_key(primary_key),
-                                            validation_result=_("core.admin.import_data.record_valid"),
-                                        )
-                                    )
-                                    self.redis_connector.set(
-                                        f"import_data_{job_id}_record_{record_id}",
-                                        json.dumps(record),
-                                        ex=self.IMPORT_DATA_REDIS_EXPIRATION,
-                                    )
-                                    record_id += 1
-                                row_order += 1
-                            else:
-                                raise ImportDataUnsupportedFileError(file_name)
-                    if row_order == 0:
-                        raise ImportDataEmptyError()
-            except zipfile.BadZipFile:
-                context["error_message"] = _("core.admin.import_data.error.import_error")
-                context["error_message_details"] = _("core.admin.import_data.error.bad_zip_file")
-                return TemplateResponse(request, "admin/import_data/import_data.html", context)
-            except ImportDataUnsupportedFilesError as err:
-                context["error_message"] = _("core.admin.import_data.error.import_error")
-                context["error_message_details"] = str(err)
-                return TemplateResponse(request, "admin/import_data/import_data.html", context)
-            except ImportDataUnsupportedFileError as err:
-                context["error_message"] = _("core.admin.import_data.error.import_error")
-                context["error_message_details"] = str(err)
-                return TemplateResponse(request, "admin/import_data/import_data.html", context)
-            except ImportDataEmptyError as err:
-                context["error_message"] = _("core.admin.import_data.error.import_error")
-                context["error_message_details"] = str(err)
-                return TemplateResponse(request, "admin/import_data/import_data.html", context)
-            except ImportDataMissingFileError as err:
-                context["error_message"] = _("core.admin.import_data.error.import_error")
-                context["error_message_details"] = str(err)
-                return TemplateResponse(request, "admin/import_data/import_data.html", context)
-            except Exception as err:
-                logger.exception(
-                    "core.admin_sites.AmcrCustomAdminSite.import_data.unexpected_error", extra={"err": err}
+                ttl = tasks.IMPORT_DATA_RUNNING_TTL_SECONDS
+                self.redis_connector.set(f"import_data_file_chunks_{job_id}", chunk_count, ex=ttl)
+                self.redis_connector.set(f"import_data_current_job_{request.user.id}", job_id, ex=ttl)
+                self.redis_connector.set(f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_VALIDATING, ex=ttl)
+                self.redis_connector.set(
+                    f"import_data_status_message_{job_id}",
+                    _("cron.tasks.run_data_import.validating"),
+                    ex=ttl,
                 )
+                self.redis_connector.set(f"import_performed_action_{job_id}", performed_action, ex=ttl)
+                self.redis_connector.set(f"import_data_user_{job_id}", request.user.id, ex=ttl)
+                self.redis_connector.set(f"import_data_lock_token_{job_id}", lock_token, ex=ttl)
+                self.redis_connector.set(f"import_data_validation_total_{job_id}", 0, ex=ttl)
+                self.redis_connector.set(f"import_data_validation_progress_{job_id}", 0, ex=ttl)
+                self.redis_connector.set(f"import_data_validation_results_{job_id}", json.dumps([]), ex=ttl)
+                self.redis_connector.set(f"import_data_valid_{job_id}", "0", ex=ttl)
+
+                tasks.run_data_import_validation.delay(job_id, request.user.id, lock_token, performed_action)
+            except Exception as err:
+                logger.exception("core.admin_sites.AmcrCustomAdminSite.import_data.dispatch_failed", extra={"err": err})
+                # On dispatch failure release the lock and delete every staged chunk key plus the
+                # count and the per-user pointer (§4.1 step 10).
+                RedisConnector.release_import_lock(self.redis_connector, lock_token)
+                stray_keys = [f"import_data_file_{job_id}_{i}" for i in range(chunk_count)]
+                stray_keys.append(f"import_data_file_chunks_{job_id}")
+                self.redis_connector.delete(*stray_keys)
+                self.redis_connector.delete(f"import_data_current_job_{request.user.id}")
                 context["error_message"] = _("core.admin.import_data.error.import_error")
                 context["error_message_details"] = _("core.admin.import_data.error.unexpected_error")
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
-            finally:
-                LookupImportField.clear_records()
-                LookupImportField.clear_cache()
-            records_count = record_id
-            self.redis_connector.set(f"import_data_count_{job_id}", records_count, ex=self.IMPORT_DATA_REDIS_EXPIRATION)
-            self.redis_connector.set(
-                f"import_performed_action_{job_id}", performed_action, ex=self.IMPORT_DATA_REDIS_EXPIRATION
-            )
-            self.redis_connector.set(f"import_data_progress_{job_id}", 0, ex=self.IMPORT_DATA_REDIS_EXPIRATION)
-            self.redis_connector.set(
-                f"import_data_primary_keys_{job_id}", json.dumps({}), ex=self.IMPORT_DATA_REDIS_EXPIRATION
-            )
-            self.redis_connector.set(
-                f"import_data_files_{job_id}", json.dumps([]), ex=self.IMPORT_DATA_REDIS_EXPIRATION
-            )
-            self.redis_connector.set(
-                f"import_data_status_message_{job_id}",
-                _("core.templates.admin.import_data.starting"),
-                ex=self.IMPORT_DATA_REDIS_EXPIRATION,
-            )
-            self.redis_connector.set(
-                f"import_data_validation_results_{job_id}",
-                json.dumps([r.to_dict() for r in validation_results]),
-                ex=self.IMPORT_DATA_REDIS_EXPIRATION,
-            )
-            self.redis_connector.set(
-                f"import_data_valid_{job_id}",
-                "1" if not invalid_records else "0",
-                ex=self.IMPORT_DATA_REDIS_EXPIRATION,
-            )
-            context["records_count"] = records_count
-            context["job_id"] = job_id
-            context["validation_results"] = validation_results
-            context["invalid_records"] = ", ".join([str(r) for r in invalid_records])
-            context["performed_action"] = performed_action
-            performed_action_labels = {
-                ImportDataAdminForm.PERFORMED_ACTION_INSERT: _("core.forms.ImportDataAdminForm.insert"),
-                ImportDataAdminForm.PERFORMED_ACTION_UPDATE: _("core.forms.ImportDataAdminForm.update"),
-                ImportDataAdminForm.PERFORMED_ACTION_DELETE: _("core.forms.ImportDataAdminForm.delete"),
-            }
-            context["performed_action_label"] = performed_action_labels.get(performed_action, performed_action)
-            try:
-                import_directory_settings_obj = CustomAdminSettings.objects.get(item_id="import_directory_settings")
-                import_directory_settings = json.loads(import_directory_settings_obj.value)
-                import_directory_path = import_directory_settings.get("DIRECTORY_PATH")
-                context["import_directory_configured"] = bool(
-                    import_directory_path and os.path.isdir(import_directory_path)
-                )
-            except (CustomAdminSettings.DoesNotExist, json.JSONDecodeError, ValueError, KeyError):
-                context["import_directory_configured"] = False
-            context["url_start"] = reverse("core:data-import-start", args=[job_id])
-            if not invalid_records:
-                context["stop_request"] = False
-            else:
-                context["stop_request"] = True
+
             logger.debug(
-                "core.admin_sites.AmcrCustomAdminSite.import_data.end",
-                extra={"job_id": job_id, "records_count": records_count, "invalid_records": invalid_records},
+                "core.admin_sites.AmcrCustomAdminSite.import_data.enqueued",
+                extra={"job_id": job_id, "chunk_count": chunk_count},
             )
-            return TemplateResponse(request, "admin/import_data/import_data.html", context)
-        else:
-            context["form"] = ImportDataAdminForm()
+            return self._render_import_polling_ui(request, context, job_id)
+
+        context["form"] = ImportDataAdminForm()
         return TemplateResponse(request, "admin/import_data/import_data.html", context)
 
     def get_urls(

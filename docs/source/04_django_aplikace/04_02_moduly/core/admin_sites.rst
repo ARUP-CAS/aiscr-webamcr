@@ -42,15 +42,51 @@ Třídy
       :param request: HTTP požadavek; u ``POST`` od superuživatele validuje formulář, připraví job v Redis a vrátí stránku průběhu.
       :return: Odpověď ``TemplateResponse`` s formulářem nebo stránkou spuštěného jobu.
 
+   .. py:method:: _import_performed_action_labels()
+
+      Vrátí mapu kódů akcí importu na jejich lidsky čitelné popisky.
+
+      :return: Slovník ``{kód akce: přeložený popisek}`` pro zobrazení ve stavu importu.
+
+   .. py:method:: _import_directory_configured()
+
+      Zjistí, zda je nakonfigurovaný a dostupný adresář pro import binárních souborů.
+
+      :return: ``True``, pokud je ``DIRECTORY_PATH`` nastavený a ukazuje na existující adresář.
+
+   .. py:method:: _render_import_polling_ui()
+
+      Vykreslí polling UI navázané na běžící nebo terminální importní úlohu ``job_id``.
+
+      Do kontextu vkládá pouze ne-datové položky (URL, popisek akce, konfigurace adresáře);
+      veškerá importní a validační data si stránka tahá z progress endpointu (požadavek 3, §4.1).
+
+      :param request: HTTP požadavek.
+      :param context: Základní kontext šablony (``app_list``, ``maintenance`` …).
+      :param job_id: Identifikátor importní úlohy, na kterou se stránka naváže.
+      :return: ``TemplateResponse`` s polling UI bez validačních dat v kontextu.
+
    .. py:method:: import_data()
 
-      Importuje datové CSV soubory ze ZIP archivu do interní importní fronty.
+      Přijme nahraný ZIP hromadného importu a zařadí jeho validaci do fronty (accept-and-enqueue).
 
-      :param request: HTTP požadavek; při ``POST`` od superuživatele zvaliduje vstupní formulář,
-          zpracuje obsah ZIPu, provede validační kroky přes mapery a uloží připravené záznamy do Redis.
-      :return: Odpověď ``TemplateResponse`` s výsledkem validace, případně s chybovou hláškou importu.
-      :raises ImportDataUnsupportedFilesError: Vyvolá se, pokud ZIP obsahuje soubory mimo povolenou sadu názvů.
-      :raises ImportDataUnsupportedFileError: Vyvolá se, pokud pro nalezený CSV soubor neexistuje mapper.
+      Validace ani import už neběží v HTTP požadavku (viz #391): POST komprimovaný ZIP nastageuje
+      do Redis po chuncích, získá globální importní lock, nastaví fázi ``validating`` a dispatchne
+      ``cron.tasks.run_data_import_validation``. Stránka pak jen pollује progress endpoint —
+      žádná importní ani validační data se nevykreslují z kontextu POSTu (požadavek 3).
+
+      Znovuotevření stránky (GET) se naváže na běžící úlohu daného uživatele přes
+      ``import_data_current_job_{user_id}`` (požadavek 2).
+
+      Paměťová charakteristika (§8): ``data_file.read()`` načte celý komprimovaný upload
+      (~200-330 MB pro max. úlohu) najednou do RAM web workeru a slicing chunků drží druhou
+      referenci — přechodný špičkový nárůst ~250-500 MB na jeden upload. Globální lock serializuje
+      uploady, takže špičkuje jen jeden uWSGI worker; buffery se uvolní návratem požadavku.
+
+      :param request: HTTP požadavek; při ``POST`` od superuživatele zvaliduje formulář a zařadí
+          validaci do fronty.
+      :return: ``TemplateResponse`` s polling UI, upload formulářem nebo chybovou hláškou.
+      :raises PermissionDenied: Pokud přihlášený uživatel není superuživatel.
 
    .. py:method:: get_urls()
 

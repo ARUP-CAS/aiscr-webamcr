@@ -170,6 +170,43 @@ Funkce
 
    Zavolá URL digiarchívu pro spuštění aktualizace dat.
 
+.. py:function:: _normalize_import_file_name(name)
+
+   Normalizuje název souboru ze ZIP archivu na formát pro porovnání s mapery.
+
+   :param name: Původní cesta nebo název souboru ze ZIP archivu.
+   :return: Název souboru bez adresáře, oříznutý o bílé znaky a převedený na malá písmena.
+
+.. py:function:: _format_import_primary_key(pk)
+
+   Převede primární klíč importovaného záznamu na text pro validační výstup.
+
+   :param pk: Primární klíč z mapperu, typicky slovník složeného klíče nebo skalární hodnota.
+   :return: Textová reprezentace klíče vhodná pro zobrazení ve validační tabulce.
+
+.. py:function:: run_data_import_validation(job_id, user_id, lock_token, performed_action)
+
+   Asynchronně zvaliduje nahraný ZIP archiv hromadného importu (viz §4.2 dokumentu #391).
+
+   Task převezme staged ZIP z Redis (chunky ``import_data_file_{job_id}_{i}``, §3.3), projde
+   všechny CSV řádky přes mappery (``map`` / ``check_required_fields`` / ``import_validation`` /
+   ``create_records``) a inkrementálně zapisuje výsledky do Redis, aby je stránka mohla pollovat.
+   Samotný import neprovádí — po úspěšné validaci nechává lock držený a přechází do fáze
+   ``awaiting_approval``; při chybě nebo zastavení lock uvolní.
+
+   Kontrakt read-only: ``create_records`` se během validace volá pouze pro serializaci a musí
+   zůstat read-only — nesmí volat ``save()``/``delete()`` ani jinak měnit databázi (§4.2).
+
+   Paměťová charakteristika (§8): reassembled komprimovaný blob (~250 MB pro maximální úlohu)
+   NENÍ high-water mark workeru. Validační průchod (object-dtype DataFrame + kopie z ``to_dict`` +
+   akumulující se seznam ``records``) dosahuje několika GB pro maximální úlohu — worker musí být
+   dimenzován na tento peak, ne na ~250 MB komprimovaného blobu.
+
+   :param job_id: Identifikátor importní úlohy (sufix všech per-job Redis klíčů).
+   :param user_id: Identifikátor uživatele, který import spustil.
+   :param lock_token: Token vlastnictví importního locku, obnovovaný jednou za řádek během validace.
+   :param performed_action: Typ akce importu (insert/update/delete) z ``ImportDataAdminForm``.
+
 .. py:function:: run_data_import(job_id, user_id, lock_token)
 
    Spustí data import.

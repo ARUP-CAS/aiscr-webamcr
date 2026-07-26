@@ -716,6 +716,13 @@ Třídy
 
    předzpracovává hodnoty podle cílového pole a vytváří záznamy.
 
+   Kontrakt read-only během validace (§4.2 dokumentu #391): ve validační fázi
+   (``cron.tasks.run_data_import_validation``) se metody mapperu ``map``,
+   ``check_required_fields``, ``import_validation`` a ``create_records`` používají výhradně
+   read-only. ``create_records`` staví in-memory objekty pouze pro serializaci a nesmí volat
+   ``save()``/``delete()`` ani jinak měnit databázi či externí úložiště (Fedora). Kontrakt je
+   vynucen dokumentací a testy (§10), nikoli runtime guardem.
+
    **Metody:**
 
    .. py:method:: register()

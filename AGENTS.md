@@ -117,6 +117,19 @@ Agents must:
 
 The **planning phase** must be conducted **in English**. Any plan produced (task breakdown, steps, design notes, or similar) must be **written in English**. This applies regardless of the language used in the rest of the repository (e.g. Czech docstrings or UI). No exception.
 
+### Comments vs. docstrings language (fixed rule)
+
+There is a simple, invariant rule for source-code language:
+
+- **Inline comments must always be in English.** This covers every `#` comment
+  in Python, `//` and `/* */` comments in JS/CSS, and `{# … #}` comments in
+  Django templates.
+- **Docstrings must be in Czech** (Sphinx style — `:param:`, `:return:`,
+  `:raises:`), per the docstring convention in CONTRIBUTING.md.
+
+No exception: never write an inline comment in Czech, and never write a docstring
+in English (aside from identifiers, class names, and code tokens).
+
 Agents must not perform large refactors without explicit instruction.
 
 ------------------------------------------------------------------------

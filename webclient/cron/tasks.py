@@ -1,11 +1,14 @@
 import datetime
+import io
 import json
 import logging
 import os
 import traceback
+import zipfile
 from collections import defaultdict
 from io import BytesIO
 
+import pandas as pd
 import requests
 from arch_z.models import Akce
 from cacheops import invalidate_model
@@ -28,14 +31,21 @@ from core.constants import (
 from core.forms import ImportDataAdminForm
 from core.ident_cely import get_record_from_ident
 from core.import_data_mappers import (
+    ImportDataBatchOrderingError,
+    ImportDataEmptyError,
     ImportDataError,
+    ImportDataIntegrityError,
+    ImportDataMissingFileError,
+    ImportDataUnsupportedFileError,
+    ImportDataUnsupportedFilesError,
+    ImportDataValidationResult,
     ImportModelMapper,
     LookupImportField,
     SouborMapper,
     UzivatelNotifikaceMapper,
     UzivatelOpravneniMapper,
 )
-from core.models import Soubor, SouborVazby
+from core.models import AntivirusCheckResult, Soubor, SouborVazby
 from core.repository_connector import (
     DryRunFedoraTransaction,
     FedoraDeletionOnlyTransaction,
@@ -77,6 +87,24 @@ IMPORT_PROGRESS_PHASE_DATA_DONE = 25
 IMPORT_PROGRESS_PHASE_HISTORY_DONE = 50
 IMPORT_PROGRESS_PHASE_FEDORA_DONE = 75
 IMPORT_PROGRESS_PHASE_FINISHED = 100
+
+# Fáze životního cyklu importní úlohy (klíč ``import_data_phase_{job_id}``, viz §3.1).
+IMPORT_PHASE_VALIDATING = "validating"
+IMPORT_PHASE_AWAITING_APPROVAL = "awaiting_approval"
+IMPORT_PHASE_IMPORTING = "importing"
+IMPORT_PHASE_FINISHED = "finished"
+IMPORT_PHASE_STOPPED = "stopped"
+IMPORT_PHASE_CANCELED = "canceled"
+IMPORT_PHASE_FAILED = "failed"
+
+# Diskriminátor terminální fáze ``failed`` (klíč ``import_data_failure_reason_{job_id}``, viz §4.2 krok 7).
+IMPORT_FAILURE_REASON_VALIDATION_REJECTED = "validation_rejected"
+IMPORT_FAILURE_REASON_ERROR = "error"
+
+# Jak často validační task zapisuje JSON snapshot ``import_data_validation_results_{job_id}`` pro report
+# (živý seznam ``import_data_validation_details`` se plní ``rpush`` každý řádek). Zrcadlí
+# ``HISTORY_REDIS_UPDATE_INTERVAL`` — viz §11.
+VALIDATION_REDIS_UPDATE_INTERVAL = 50
 
 
 class SouborMissingRepositoryUuidError(RuntimeError):
@@ -624,6 +652,422 @@ def call_digiarchiv_update_task():
     logger.debug("cron.tasks.call_digiarchiv_update_task.end")
 
 
+def _normalize_import_file_name(name: str) -> str:
+    """
+    Normalizuje název souboru ze ZIP archivu na formát pro porovnání s mapery.
+
+    :param name: Původní cesta nebo název souboru ze ZIP archivu.
+    :return: Název souboru bez adresáře, oříznutý o bílé znaky a převedený na malá písmena.
+    """
+    if "/" in name:
+        name = name.split("/")[-1]
+    return name.strip().lower()
+
+
+def _format_import_primary_key(pk):
+    """
+    Převede primární klíč importovaného záznamu na text pro validační výstup.
+
+    :param pk: Primární klíč z mapperu, typicky slovník složeného klíče nebo skalární hodnota.
+    :return: Textová reprezentace klíče vhodná pro zobrazení ve validační tabulce.
+    """
+    if isinstance(pk, dict):
+        return ", ".join("{}: {}".format(k, v) for k, v in pk.items())
+    return str(pk)
+
+
+@shared_task
+def run_data_import_validation(job_id, user_id, lock_token, performed_action):
+    """
+    Asynchronně zvaliduje nahraný ZIP archiv hromadného importu (viz §4.2 dokumentu #391).
+
+    Task převezme staged ZIP z Redis (chunky ``import_data_file_{job_id}_{i}``, §3.3), projde
+    všechny CSV řádky přes mappery (``map`` / ``check_required_fields`` / ``import_validation`` /
+    ``create_records``) a inkrementálně zapisuje výsledky do Redis, aby je stránka mohla pollovat.
+    Samotný import neprovádí — po úspěšné validaci nechává lock držený a přechází do fáze
+    ``awaiting_approval``; při chybě nebo zastavení lock uvolní.
+
+    Kontrakt read-only: ``create_records`` se během validace volá pouze pro serializaci a musí
+    zůstat read-only — nesmí volat ``save()``/``delete()`` ani jinak měnit databázi (§4.2).
+
+    Paměťová charakteristika (§8): reassembled komprimovaný blob (~250 MB pro maximální úlohu)
+    NENÍ high-water mark workeru. Validační průchod (object-dtype DataFrame + kopie z ``to_dict`` +
+    akumulující se seznam ``records``) dosahuje několika GB pro maximální úlohu — worker musí být
+    dimenzován na tento peak, ne na ~250 MB komprimovaného blobu.
+
+    :param job_id: Identifikátor importní úlohy (sufix všech per-job Redis klíčů).
+    :param user_id: Identifikátor uživatele, který import spustil.
+    :param lock_token: Token vlastnictví importního locku, obnovovaný jednou za řádek během validace.
+    :param performed_action: Typ akce importu (insert/update/delete) z ``ImportDataAdminForm``.
+    """
+    logger.debug("cron.tasks.run_data_import_validation.start", extra={"job_id": job_id})
+
+    redis_connector = RedisConnector.get_connection()
+
+    def job_key(key):
+        return "{}_{}".format(key, job_id)
+
+    def record_key(record_id):
+        return "import_data_{}_record_{}".format(job_id, record_id)
+
+    def chunk_key(index):
+        return "import_data_file_{}_{}".format(job_id, index)
+
+    def refresh_lock_or_raise():
+        if not RedisConnector.refresh_import_lock(redis_connector, lock_token, IMPORT_DATA_RUNNING_TTL_SECONDS):
+            raise ImportLockLostError("Import data lock lost during validation")
+
+    # Seznam per-job datových klíčů, které se na úspěšné cestě persistují (bez TTL) pro okno
+    # awaiting_approval a na terminální cestě expirují na 6 h kvůli retenci reportu (§4.2 krok 8, §6).
+    per_job_data_keys = [
+        "import_data_validation_results",
+        "import_data_validation_progress",
+        "import_data_validation_total",
+        "import_data_validation_details",
+        "import_data_validation_ids",
+        "import_data_invalid_records",
+        "import_data_status_message",
+        "import_data_count",
+        "import_data_valid",
+        "import_data_phase",
+        "import_data_failure_reason",
+        "import_data_primary_keys",
+        "import_data_files",
+        "import_data_history_record_result",
+        "import_fedora_result",
+        "import_data_progress",
+        "import_performed_action",
+        "import_data_user",
+        "import_data_lock_token",
+        "import_data_stop",
+    ]
+
+    failure_reason = None  # None = úspěch; jinak IMPORT_FAILURE_REASON_*
+    stopped = False
+    chunk_count = 0
+    records: list = []
+    validation_results: list = []
+    invalid_records: list = []
+    record_id = 0  # index platných záznamů — sufix Redis klíče a records_count
+    row_order = 0  # index každého CSV řádku (platný i neplatný) — item_order ve validačních výsledcích
+
+    def fail_error(message):
+        nonlocal failure_reason
+        failure_reason = IMPORT_FAILURE_REASON_ERROR
+        redis_connector.set(job_key("import_data_status_message"), message, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+
+    def fail_lock_lost():
+        nonlocal failure_reason
+        failure_reason = IMPORT_FAILURE_REASON_ERROR
+        redis_connector.set(
+            job_key("import_data_status_message"),
+            _("cron.tasks.run_data_import.failed_lock_lost"),
+            ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+        )
+        redis_connector.set(job_key("import_data_stop"), 1, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+
+    def push_validation_result(vr):
+        # rpush the live incremental-rendering lists the UI reads (§5); checkpoint the JSON
+        # report snapshot every VALIDATION_REDIS_UPDATE_INTERVAL rows (§4.2 krok 6).
+        validation_results.append(vr)
+        redis_connector.rpush(job_key("import_data_validation_details"), json.dumps(vr.to_dict()))
+        redis_connector.rpush(job_key("import_data_validation_ids"), vr.item_order)
+        redis_connector.incr(job_key("import_data_validation_progress"))
+        if len(validation_results) % VALIDATION_REDIS_UPDATE_INTERVAL == 0:
+            redis_connector.set(
+                job_key("import_data_validation_results"),
+                json.dumps([r.to_dict() for r in validation_results]),
+                ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+            )
+
+    LookupImportField.clear_cache()
+    LookupImportField.clear_records()
+    LookupImportField.set_records(records)
+
+    try:
+        # Up-front lock refresh; on loss mirror run_data_import's ImportLockLostError pattern (§4.2 krok 1).
+        try:
+            refresh_lock_or_raise()
+        except ImportLockLostError:
+            fail_lock_lost()
+            return
+
+        # Reassemble the staged ZIP from Redis chunks (§3.3 / §4.2 krok 2).
+        chunk_count_raw = redis_connector.get(job_key("import_data_file_chunks"))
+        chunk_count = int(chunk_count_raw) if chunk_count_raw else 0
+        blob = bytearray()
+        if chunk_count:
+            pipe = redis_connector.pipeline()
+            for i in range(chunk_count):
+                pipe.get(chunk_key(i))
+            chunk_values = pipe.execute()
+            for i in range(len(chunk_values)):
+                if chunk_values[i]:
+                    blob.extend(chunk_values[i])
+                # Free each chunk from worker memory as soon as it is appended (§4.2 krok 2).
+                chunk_values[i] = None
+        blob = bytes(blob)
+
+        antivirus_result = Soubor.check_antivirus(io.BytesIO(blob))
+        if antivirus_result == AntivirusCheckResult.VIRUS_FOUND:
+            fail_error(_("core.admin.import_data.error.virus_found"))
+            return
+        if antivirus_result == AntivirusCheckResult.CHECK_FAILED:
+            logger.warning("cron.tasks.run_data_import_validation.antivirus_check_failed", extra={"job_id": job_id})
+
+        redis_connector.set(
+            job_key("import_data_status_message"),
+            _("cron.tasks.run_data_import.validating"),
+            ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+        )
+
+        try:
+            with zipfile.ZipFile(io.BytesIO(blob)) as zf:
+                file_names = [
+                    name for name in zf.namelist() if not name.startswith("__MACOSX") and not name.endswith("/")
+                ]
+                mapper_dict = ImportModelMapper.get_import_data_mapper_dict()
+                mapper_key_order = {f"{name}.csv": i for i, name in enumerate(mapper_dict.keys())}
+                allowed_file_names = set(
+                    [
+                        f"{name}.csv".lower()
+                        for name, mapper in mapper_dict.items()
+                        if performed_action != ImportDataAdminForm.PERFORMED_ACTION_UPDATE or mapper.allow_update
+                    ]
+                )
+                normalized_imported_file_names = set(
+                    [_normalize_import_file_name(file_name) for file_name in file_names]
+                )
+                if not normalized_imported_file_names.issubset(allowed_file_names):
+                    raise ImportDataUnsupportedFilesError(normalized_imported_file_names - allowed_file_names)
+                file_names.sort(
+                    key=lambda fn: mapper_key_order.get(_normalize_import_file_name(fn), len(mapper_key_order))
+                )
+                # Lazy import to avoid a module-load cycle: the uncompressed-size guardrail lives on
+                # the admin site next to IMPORT_DATA_REDIS_CHUNK_SIZE (§11).
+                from core.admin_sites import AmcrCustomAdminSite
+
+                total_uncompressed_size = sum(zf.getinfo(fn).file_size for fn in file_names)
+                if total_uncompressed_size > AmcrCustomAdminSite.IMPORT_ZIP_MAX_UNCOMPRESSED_SIZE:
+                    raise ValueError(_("core.admin.import_data.error.zip_too_large"))
+
+                # Best-effort denominator for the validation progress bar (§5b.3): count data rows
+                # across all CSVs. The sheets stay transient — the main loop re-reads each file, and
+                # any real parse error surfaces there, not here.
+                total_rows = 0
+                for file_name in file_names:
+                    try:
+                        with zf.open(file_name) as file:
+                            total_rows += len(pd.read_csv(file, dtype=str, usecols=[0]))
+                    except Exception:
+                        pass
+                redis_connector.set(
+                    job_key("import_data_validation_total"), total_rows, ex=IMPORT_DATA_RUNNING_TTL_SECONDS
+                )
+
+                for file_name in file_names:
+                    with zf.open(file_name) as file:
+                        sheet = pd.read_csv(file, dtype=str)
+                    file_name = _normalize_import_file_name(file_name)
+                    mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
+                    seen_in_batch: set = set()
+                    try:
+                        mapper_class.validate_batch_ordering(sheet.to_dict("records"))
+                    except ImportDataBatchOrderingError as err:
+                        push_validation_result(
+                            ImportDataValidationResult(
+                                item_order=row_order,
+                                file_name=file_name,
+                                validation_result=str(err),
+                            )
+                        )
+                        invalid_records.append(row_order)
+                        row_order += 1
+                        continue
+                    for idx, row in sheet.iterrows():
+                        # Refresh the lock once per row and poll the stop sentinel — the same cadence
+                        # the import task uses at the top of its record loop (§4.2 krok 6).
+                        refresh_lock_or_raise()
+                        if redis_connector.get(job_key("import_data_stop")) is not None:
+                            stopped = True
+                            redis_connector.set(
+                                job_key("import_data_status_message"),
+                                _("cron.tasks.run_data_import.stopped_by_user"),
+                                ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+                            )
+                            return
+                        redis_connector.set(
+                            job_key("import_data_status_message"),
+                            "{} {}/{}".format(_("cron.tasks.run_data_import.validating"), row_order + 1, total_rows),
+                            ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+                        )
+                        if mapper_class:
+                            try:
+                                mapper = mapper_class(row.to_dict())
+                                record = mapper.map(performed_action, serialize=True, include_primary_key=True)
+                                mapper.check_required_fields(performed_action)
+                                primary_key = mapper.import_validation(
+                                    performed_action, user_id, seen_in_batch=seen_in_batch
+                                )
+                                # create_records is called for serialization only and must remain
+                                # read-only — it must not call save()/delete() or otherwise mutate
+                                # the DB during validation (§4.2 read-only contract).
+                                records += mapper.create_records(performed_action)
+                                record["__file_name"] = file_name
+                            except ImportDataIntegrityError as err:
+                                push_validation_result(
+                                    ImportDataValidationResult(
+                                        item_order=row_order,
+                                        file_name=file_name,
+                                        primary_key_import=_format_import_primary_key(err.record_id),
+                                        validation_result=str(err),
+                                    )
+                                )
+                                invalid_records.append(row_order)
+                            except ImportDataError as err:
+                                push_validation_result(
+                                    ImportDataValidationResult(
+                                        item_order=row_order,
+                                        file_name=file_name,
+                                        validation_result=str(err),
+                                    )
+                                )
+                                invalid_records.append(row_order)
+                            else:
+                                records.append(record)
+                                push_validation_result(
+                                    ImportDataValidationResult(
+                                        item_order=row_order,
+                                        file_name=file_name,
+                                        primary_key_import=_format_import_primary_key(primary_key),
+                                        validation_result=_("core.admin.import_data.record_valid"),
+                                    )
+                                )
+                                redis_connector.set(
+                                    record_key(record_id),
+                                    json.dumps(record),
+                                    ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+                                )
+                                record_id += 1
+                            row_order += 1
+                        else:
+                            raise ImportDataUnsupportedFileError(file_name)
+                if row_order == 0:
+                    raise ImportDataEmptyError()
+        except ImportLockLostError:
+            fail_lock_lost()
+            return
+        except zipfile.BadZipFile:
+            fail_error(_("core.admin.import_data.error.bad_zip_file"))
+            return
+        except (ImportDataUnsupportedFilesError, ImportDataUnsupportedFileError) as err:
+            fail_error(str(err))
+            return
+        except ImportDataEmptyError as err:
+            fail_error(str(err))
+            return
+        except ImportDataMissingFileError as err:
+            fail_error(str(err))
+            return
+        except ValueError as err:
+            fail_error(str(err))
+            return
+        except Exception:
+            logger.exception("cron.tasks.run_data_import_validation.unexpected_error", extra={"job_id": job_id})
+            fail_error(_("core.admin.import_data.error.unexpected_error"))
+            return
+
+        # Success path: all files parsed. Finalize the per-job keys the import phase/report consume.
+        record_count = record_id
+        redis_connector.set(job_key("import_data_count"), record_count, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+        redis_connector.set(
+            job_key("import_data_valid"), "1" if not invalid_records else "0", ex=IMPORT_DATA_RUNNING_TTL_SECONDS
+        )
+        redis_connector.set(
+            job_key("import_data_validation_results"),
+            json.dumps([r.to_dict() for r in validation_results]),
+            ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+        )
+        redis_connector.set(job_key("import_data_primary_keys"), json.dumps({}), ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+        redis_connector.set(job_key("import_data_files"), json.dumps([]), ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+        redis_connector.set(
+            job_key("import_data_history_record_result"), json.dumps({}), ex=IMPORT_DATA_RUNNING_TTL_SECONDS
+        )
+        redis_connector.set(job_key("import_fedora_result"), json.dumps({}), ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+        redis_connector.set(job_key("import_data_progress"), 0, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+        if invalid_records:
+            # Distinguish validation-rejected (fixable invalid rows) from a crash (§4.2 krok 7):
+            # terminal failed phase with the lock released, but a distinct failure reason and a
+            # distinct status message carrying the invalid-row count.
+            redis_connector.set(
+                job_key("import_data_invalid_records"),
+                json.dumps(invalid_records),
+                ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+            )
+            failure_reason = IMPORT_FAILURE_REASON_VALIDATION_REJECTED
+            # Distinct status message carrying the invalid-row count. Use .format() (not %) so a
+            # missing translation — where _() returns the bare dotted key with no placeholder — does
+            # not raise; .format() ignores the extra argument. Never wrap _() in an f-string (§4.2).
+            redis_connector.set(
+                job_key("import_data_status_message"),
+                _("cron.tasks.run_data_import.validation_rejected").format(len(invalid_records)),
+                ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+            )
+        else:
+            redis_connector.set(
+                job_key("import_data_status_message"),
+                _("cron.tasks.run_data_import.validation_done"),
+                ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+            )
+    finally:
+        LookupImportField.clear_records()
+        LookupImportField.clear_cache()
+
+        # Free the staged ZIP as soon as validation is done with the bytes — the import task
+        # consumes the per-record JSON keys, not the ZIP (§3.3 / §4.2 krok 8).
+        chunk_keys = [chunk_key(i) for i in range(chunk_count)]
+        chunk_keys.append(job_key("import_data_file_chunks"))
+        redis_connector.delete(*chunk_keys)
+
+        all_data_keys = [job_key(k) for k in per_job_data_keys]
+        all_data_keys += [record_key(i) for i in range(record_id)]
+
+        if not stopped and failure_reason is None:
+            # Validation OK, all rows valid → hold the lock across awaiting_approval and persist the
+            # lock and every per-job data key (remove the TTL) so a slow reviewer does not find the
+            # job gone (§3.2 / §4.2 krok 8). No refresher runs during awaiting_approval.
+            redis_connector.set(job_key("import_data_phase"), IMPORT_PHASE_AWAITING_APPROVAL)
+            RedisConnector.persist_import_lock(redis_connector, lock_token)
+            persist_pipe = redis_connector.pipeline()
+            for key in all_data_keys:
+                persist_pipe.persist(key)
+            persist_pipe.execute()
+        else:
+            # Terminal failure/stop → release the lock, clear the per-user pointer, and expire (not
+            # delete) the data keys to 6 h so the page can still show why validation failed and the
+            # report stays downloadable (§4.2 krok 8).
+            if stopped:
+                redis_connector.set(job_key("import_data_phase"), IMPORT_PHASE_STOPPED)
+            else:
+                redis_connector.set(job_key("import_data_phase"), IMPORT_PHASE_FAILED)
+                redis_connector.set(job_key("import_data_failure_reason"), failure_reason)
+            RedisConnector.release_import_lock(redis_connector, lock_token)
+            user_pointer = redis_connector.get(job_key("import_data_user"))
+            if user_pointer is not None:
+                if isinstance(user_pointer, bytes):
+                    user_pointer = user_pointer.decode("utf-8")
+                redis_connector.delete("import_data_current_job_{}".format(user_pointer))
+            expire_pipe = redis_connector.pipeline()
+            for key in all_data_keys:
+                expire_pipe.expire(key, IMPORT_DATA_EXPIRATION_SECONDS)
+            expire_pipe.execute()
+
+    logger.debug(
+        "cron.tasks.run_data_import_validation.end",
+        extra={"job_id": job_id, "failure_reason": failure_reason, "stopped": stopped, "record_count": record_id},
+    )
+
+
 @shared_task
 def run_data_import(job_id, user_id, lock_token):
     """
@@ -686,6 +1130,7 @@ def run_data_import(job_id, user_id, lock_token):
     redis_connector = RedisConnector().get_connection()
     record_count = 0
     failed = True
+    stopped = False  # initialized up front so the terminal finally can set the phase safely
     LookupImportField.clear_cache()
     LookupImportField.clear_records()
 
@@ -777,6 +1222,9 @@ def run_data_import(job_id, user_id, lock_token):
                 fedora_update_targets_dict.setdefault(item, None)
                 fedora_update_targets_record_ids_dict[item].add(record_id)
 
+        # Tracks whether the data-phase atomic() block was rolled back (via set_rollback or a
+        # propagating exception). Drives the success -> rolled_back relabel (§13.4 S-I1).
+        data_rolled_back = False
         try:
             with transaction.atomic():
                 for record_id in range(record_count):
@@ -968,6 +1416,7 @@ def run_data_import(job_id, user_id, lock_token):
                         )
                         fedora_transaction.rollback_transaction()
                         transaction.set_rollback(True)
+                        data_rolled_back = True
                         redis_connector.rpush(job_key("import_data_progress_ids"), record_id)
                         redis_connector.rpush(
                             job_key("import_data_progress_details"),
@@ -992,6 +1441,10 @@ def run_data_import(job_id, user_id, lock_token):
                     stopped = redis_connector.get(job_key("import_data_stop")) is not None or failed
                     if stopped:
                         if not failed:
+                            # User stop during the data phase: roll back every record committed so far
+                            # so the abort leaves nothing persisted — a true abort (§13.4 S-I1).
+                            transaction.set_rollback(True)
+                            data_rolled_back = True
                             redis_connector.set(
                                 job_key("import_data_status_message"), _("cron.tasks.run_data_import.stopped_by_user")
                             )
@@ -1035,6 +1488,7 @@ def run_data_import(job_id, user_id, lock_token):
                                     extra={"job_id": job_id, "error": rollback_err},
                                 )
                         transaction.set_rollback(True)
+                        data_rolled_back = True
                         failed = True
                         redis_connector.set(
                             job_key("import_data_status_message"),
@@ -1042,6 +1496,8 @@ def run_data_import(job_id, user_id, lock_token):
                         )
                         redis_connector.set(job_key("import_data_stop"), 1)
         except Exception as err:
+            # An exception propagating out of the atomic() block rolls the data phase back.
+            data_rolled_back = True
             if not isinstance(err, ImportLockLostError):
                 redis_connector.set(
                     job_key("import_data_status_message"),
@@ -1061,18 +1517,27 @@ def run_data_import(job_id, user_id, lock_token):
             pending_fedora_update.clear()
             pending_history_update.clear()
 
-        redis_connector.set(
-            job_key("import_data_progress"),
-            IMPORT_PROGRESS_PHASE_FAILED if failed else IMPORT_PROGRESS_PHASE_DATA_DONE,
-            ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
-        )
+        if failed:
+            redis_connector.set(
+                job_key("import_data_progress"),
+                IMPORT_PROGRESS_PHASE_FAILED,
+                ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+            )
+        elif not stopped:
+            redis_connector.set(
+                job_key("import_data_progress"),
+                IMPORT_PROGRESS_PHASE_DATA_DONE,
+                ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+            )
         if not failed and not stopped:
             redis_connector.set(
                 job_key("import_data_status_message"),
                 _("cron.tasks.run_data_import.creating_history_records"),
             )
 
-        if failed:
+        # Relabel committed "success" markers to "rolled_back" whenever the data phase was rolled
+        # back — both on failure and on a user stop during the data phase (§13.4 S-I1).
+        if data_rolled_back:
             success_marker = "cron.tasks.run_data_import.success".encode("utf-8")
             rollback_marker = "cron.tasks.run_data_import.rolled_back".encode("utf-8")
             details = redis_connector.lrange(job_key("import_data_progress_details"), 0, -1)
@@ -1090,7 +1555,15 @@ def run_data_import(job_id, user_id, lock_token):
                 import_history_record_result[record_id] = history_skipped_str
         redis_connector.set(job_key("import_data_history_record_result"), json.dumps(import_history_record_result))
         for history_index, (history_target_key, entry) in enumerate(updated_history_dict.items()):
-            if failed:
+            # Honor a stop — whether set during the data phase (skips history entirely) or arriving
+            # now during the history phase (§13.9 rec 1). Data is already committed at this point, so
+            # this only halts further work; it does not roll back.
+            if not failed and not stopped and redis_connector.get(job_key("import_data_stop")) is not None:
+                stopped = True
+                redis_connector.set(
+                    job_key("import_data_status_message"), _("cron.tasks.run_data_import.stopped_by_user")
+                )
+            if failed or stopped:
                 break
             refresh_import_lock()
             if not failed and not stopped:
@@ -1145,11 +1618,18 @@ def run_data_import(job_id, user_id, lock_token):
                 )
         redis_connector.set(job_key("import_data_history_record_result"), json.dumps(import_history_record_result))
 
-        redis_connector.set(
-            job_key("import_data_progress"),
-            IMPORT_PROGRESS_PHASE_FAILED if failed else IMPORT_PROGRESS_PHASE_HISTORY_DONE,
-            ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
-        )
+        if failed:
+            redis_connector.set(
+                job_key("import_data_progress"),
+                IMPORT_PROGRESS_PHASE_FAILED,
+                ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+            )
+        elif not stopped:
+            redis_connector.set(
+                job_key("import_data_progress"),
+                IMPORT_PROGRESS_PHASE_HISTORY_DONE,
+                ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+            )
         if not failed and not stopped:
             redis_connector.set(
                 job_key("import_data_status_message"),
@@ -1161,7 +1641,7 @@ def run_data_import(job_id, user_id, lock_token):
         redis_connector.set(job_key("import_data_fedora_progress"), 0, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
         fedora_skipped_str = _("cron.tasks.run_data_import.fedora_skipped")
         fedora_waiting_data_import_str = _("cron.tasks.run_data_import.fedora_waiting_data_import")
-        if not failed:
+        if not failed and not stopped:
             fedora_pending_record_ids = set()
             for affected_ids in fedora_update_targets_record_ids_dict.values():
                 fedora_pending_record_ids.update(affected_ids)
@@ -1175,6 +1655,16 @@ def run_data_import(job_id, user_id, lock_token):
                         import_fedora_result[record_id] = [fedora_skipped_str]
             redis_connector.set(job_key("import_fedora_result"), json.dumps(import_fedora_result))
             for fedora_index, item in enumerate(fedora_update_targets_dict):
+                # Honor a stop that first arrives during the Fedora phase (§13.9 rec 1). Each Fedora
+                # update is its own committed transaction, so this only halts further work — it does
+                # not (and cannot) roll back the updates already committed.
+                if not failed and not stopped and redis_connector.get(job_key("import_data_stop")) is not None:
+                    stopped = True
+                    redis_connector.set(
+                        job_key("import_data_status_message"), _("cron.tasks.run_data_import.stopped_by_user")
+                    )
+                if failed or stopped:
+                    break
                 refresh_import_lock()
                 if not failed and not stopped:
                     redis_connector.set(
@@ -1235,11 +1725,18 @@ def run_data_import(job_id, user_id, lock_token):
                     break
         redis_connector.set(job_key("import_fedora_result"), json.dumps(import_fedora_result))
 
-        redis_connector.set(
-            job_key("import_data_progress"),
-            IMPORT_PROGRESS_PHASE_FAILED if failed else IMPORT_PROGRESS_PHASE_FEDORA_DONE,
-            ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
-        )
+        if failed:
+            redis_connector.set(
+                job_key("import_data_progress"),
+                IMPORT_PROGRESS_PHASE_FAILED,
+                ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+            )
+        elif not stopped:
+            redis_connector.set(
+                job_key("import_data_progress"),
+                IMPORT_PROGRESS_PHASE_FEDORA_DONE,
+                ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+            )
         if not failed and not stopped:
             redis_connector.set(
                 job_key("import_data_status_message"),
@@ -1673,8 +2170,40 @@ def run_data_import(job_id, user_id, lock_token):
         redis_connector.expire(job_key("import_data_fedora_total"), IMPORT_DATA_EXPIRATION_SECONDS)
         redis_connector.expire(job_key("import_data_files_progress"), IMPORT_DATA_EXPIRATION_SECONDS)
         redis_connector.expire(job_key("import_data_files_total"), IMPORT_DATA_EXPIRATION_SECONDS)
+        redis_connector.expire(job_key("import_data_validation_results"), IMPORT_DATA_EXPIRATION_SECONDS)
+        redis_connector.expire(job_key("import_data_validation_details"), IMPORT_DATA_EXPIRATION_SECONDS)
+        redis_connector.expire(job_key("import_data_validation_ids"), IMPORT_DATA_EXPIRATION_SECONDS)
+        redis_connector.expire(job_key("import_data_validation_progress"), IMPORT_DATA_EXPIRATION_SECONDS)
+        redis_connector.expire(job_key("import_data_validation_total"), IMPORT_DATA_EXPIRATION_SECONDS)
+        redis_connector.expire(job_key("import_data_valid"), IMPORT_DATA_EXPIRATION_SECONDS)
+        redis_connector.expire(job_key("import_data_invalid_records"), IMPORT_DATA_EXPIRATION_SECONDS)
+        redis_connector.expire(job_key("import_data_failure_reason"), IMPORT_DATA_EXPIRATION_SECONDS)
+        redis_connector.expire(job_key("import_data_lock_token"), IMPORT_DATA_EXPIRATION_SECONDS)
+        redis_connector.expire(job_key("import_data_user"), IMPORT_DATA_EXPIRATION_SECONDS)
+        redis_connector.expire(job_key("import_performed_action"), IMPORT_DATA_EXPIRATION_SECONDS)
+        redis_connector.expire(job_key("import_data_phase"), IMPORT_DATA_EXPIRATION_SECONDS)
         for record_id in range(record_count):
             redis_connector.expire(record_key(record_id), IMPORT_DATA_EXPIRATION_SECONDS)
+        # Set the terminal phase matching the outcome, clear the per-user in-flight pointer, and
+        # defensively delete any staged ZIP chunk keys the validation task should already have
+        # removed (§4.3).
+        if failed:
+            redis_connector.set(job_key("import_data_phase"), IMPORT_PHASE_FAILED, ex=IMPORT_DATA_EXPIRATION_SECONDS)
+        elif stopped:
+            redis_connector.set(job_key("import_data_phase"), IMPORT_PHASE_STOPPED, ex=IMPORT_DATA_EXPIRATION_SECONDS)
+        else:
+            redis_connector.set(job_key("import_data_phase"), IMPORT_PHASE_FINISHED, ex=IMPORT_DATA_EXPIRATION_SECONDS)
+        job_user = redis_connector.get(job_key("import_data_user"))
+        if job_user is not None:
+            if isinstance(job_user, bytes):
+                job_user = job_user.decode("utf-8")
+            redis_connector.delete("import_data_current_job_{}".format(job_user))
+        leftover_chunks_raw = redis_connector.get(job_key("import_data_file_chunks"))
+        if leftover_chunks_raw:
+            leftover_count = int(leftover_chunks_raw)
+            stray_keys = ["import_data_file_{}_{}".format(job_id, i) for i in range(leftover_count)]
+            stray_keys.append(job_key("import_data_file_chunks"))
+            redis_connector.delete(*stray_keys)
         RedisConnector.release_import_lock(redis_connector, lock_token)
 
     logger.debug(

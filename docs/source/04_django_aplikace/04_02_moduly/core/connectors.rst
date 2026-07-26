@@ -54,6 +54,14 @@ Třídy
       :param ttl_seconds: Nová doba expirace locku v sekundách.
       :return: ``True``, pokud byl lock úspěšně obnoven; jinak ``False``.
 
+   .. py:method:: persist_import_lock()
+
+      Odstraní expiraci importního locku pouze tehdy, pokud ho stále vlastní zadaný token.
+
+      :param connection: Redis spojení, přes které se lock upravuje.
+      :param token: Jedinečný token vlastníka locku.
+      :return: ``True``, pokud byla expirace odstraněna; jinak ``False``.
+
    .. py:method:: release_import_lock()
 
       Uvolní importní lock pouze tehdy, pokud ho stále vlastní zadaný token.

@@ -339,6 +339,29 @@ class RunDataImportUzivatelTest(TestCase):
             "Při uživatelském stopu musí status obsahovat klíč ``stopped_by_user``.",
         )
 
+    def test_user_stop_during_data_phase_rolls_back_committed_records(self):
+        """Uživatelský stop během datové fáze odvolá už uložené záznamy — čistý abort (§13.4 S-I1)."""
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_INSERT)
+        fake_redis.set(f"import_data_stop_{JOB_ID}", "1")
+
+        self._run_import(fake_redis)
+
+        self.assertFalse(
+            User.objects.filter(ident_cely=USER_IDENT).exists(),
+            "Po uživatelském stopu v datové fázi se musí uložený záznam odvolat (rollback).",
+        )
+        details = [d.decode("utf-8") for d in fake_redis.lrange(f"import_data_progress_details_{JOB_ID}", 0, -1)]
+        self.assertIn(
+            "cron.tasks.run_data_import.rolled_back",
+            details,
+            "Při rollbacku se musí značka ``success`` přeznačit na ``rolled_back``.",
+        )
+        self.assertNotIn(
+            "cron.tasks.run_data_import.success",
+            details,
+            "Po rollbacku nesmí v detailech zůstat značka ``success``.",
+        )
+
     def test_update_of_nonexistent_record_marks_import_as_failed(self):
         """UPDATE záznamu, který v DB neexistuje, vyvolá ``DoesNotExist`` a import skončí jako selhalý."""
         fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_UPDATE)

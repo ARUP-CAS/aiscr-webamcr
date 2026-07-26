@@ -796,6 +796,28 @@ Třídy
       :raises PermissionDenied: Vyvolá se při splnění podmínky ``not request.user.is_superuser``.
 
 
+.. py:class:: DataImportCancel
+
+   Explicitní uvolnění importního locku — uživatelova akce „zruš a uvolni slot“ (§4.5).
+
+   **Metody:**
+
+   .. py:method:: post()
+
+      Zruší importní úlohu a uvolní globální lock.
+
+      Pro fázi ``awaiting_approval`` přímo uvolní lock (release), nastaví fázi ``canceled`` a
+      expiruje per-job datové klíče na 6 h (report zůstane stažitelný). Force-cancel zaseklé
+      ``awaiting_approval`` úlohy smí provést libovolný superuživatel (§7). Pro fázi ``validating``
+      je cancel ekvivalentní stop (nastaví stop sentinel; task uvolní lock ve svém ``finally``) —
+      obranný no-op, z UI nedostupný (§2.5.3). Pro ``importing`` a terminální fáze cancel odmítne.
+
+      :param request: HTTP požadavek přihlášeného superuživatele.
+      :param kwargs: Obsahuje ``job_id`` identifikující importní úlohu.
+      :return: ``JsonResponse`` s výsledkem operace.
+      :raises PermissionDenied: Pokud přihlášený uživatel není superuživatel.
+
+
 Funkce
 ------
 
@@ -968,3 +990,22 @@ Funkce
 
    :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
    :raises ZaznamSouborNotmatching: Vyvolá se při splnění podmínky ``soubor.count() > 0``.
+
+.. py:function:: _check_import_ownership(request, job_id, redis_connector)
+
+   Ověří, že přihlášený superuživatel je vlastníkem dané importní úlohy (§7).
+
+   :param request: HTTP požadavek s přihlášeným uživatelem.
+   :param job_id: Identifikátor importní úlohy.
+   :param redis_connector: Dekódující Redis spojení.
+   :return: ``True`` pokud je uživatel vlastníkem úlohy; jinak ``False``.
+
+.. py:function:: _expire_import_data_keys(redis_connector, job_id, ttl_seconds)
+
+   Nastaví expiraci všem per-job datovým klíčům importní úlohy na ``ttl_seconds`` (§4.5).
+
+   Klíče se pouze expirují, nikdy nemažou — report musí zůstat stažitelný po dobu retence.
+
+   :param redis_connector: Dekódující Redis spojení.
+   :param job_id: Identifikátor importní úlohy.
+   :param ttl_seconds: Doba retence v sekundách.

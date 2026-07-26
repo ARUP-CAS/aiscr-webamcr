@@ -33,6 +33,13 @@ if redis.call("get", KEYS[1]) == ARGV[1] then
 end
 return 0
 """
+    _PERSIST_LOCK_SCRIPT = """
+if redis.call('get', KEYS[1]) == ARGV[1] then
+    return redis.call('persist', KEYS[1])
+else
+    return 0
+end
+"""
 
     @classmethod
     def _create_connection(cls):
@@ -100,6 +107,17 @@ return 0
         :return: ``True``, pokud byl lock úspěšně obnoven; jinak ``False``.
         """
         return bool(connection.eval(cls._REFRESH_LOCK_SCRIPT, 1, cls.IMPORT_DATA_LOCK_KEY, token, ttl_seconds))
+
+    @classmethod
+    def persist_import_lock(cls, connection: redis.Redis, token: str) -> bool:
+        """
+        Odstraní expiraci importního locku pouze tehdy, pokud ho stále vlastní zadaný token.
+
+        :param connection: Redis spojení, přes které se lock upravuje.
+        :param token: Jedinečný token vlastníka locku.
+        :return: ``True``, pokud byla expirace odstraněna; jinak ``False``.
+        """
+        return bool(connection.eval(cls._PERSIST_LOCK_SCRIPT, 1, cls.IMPORT_DATA_LOCK_KEY, token))
 
     @classmethod
     def release_import_lock(cls, connection: redis.Redis, token: str) -> bool:

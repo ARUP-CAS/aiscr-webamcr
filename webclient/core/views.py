@@ -3,7 +3,6 @@ import logging
 import math
 import os
 import re
-import secrets
 import tempfile
 import unicodedata
 import zipfile
@@ -2744,6 +2743,68 @@ class ApplicationRestartView(LoginRequiredMixin, View):
         return redirect(referer)
 
 
+def _check_import_ownership(request, job_id, redis_connector) -> bool:
+    """
+    Ověří, že přihlášený superuživatel je vlastníkem dané importní úlohy (§7).
+
+    :param request: HTTP požadavek s přihlášeným uživatelem.
+    :param job_id: Identifikátor importní úlohy.
+    :param redis_connector: Dekódující Redis spojení.
+    :return: ``True`` pokud je uživatel vlastníkem úlohy; jinak ``False``.
+    """
+    owner = redis_connector.get(f"import_data_user_{job_id}")
+    return owner is not None and str(owner) == str(request.user.id)
+
+
+# Per-job Redis datové klíče, které se na terminální cestě expirují (ne mažou) kvůli retenci
+# reportu (§4.5/§6). Zrcadlí sadu, kterou expiruje run_data_import a validační task.
+_IMPORT_DATA_JOB_KEY_SUFFIXES = [
+    "import_data_validation_results",
+    "import_data_validation_details",
+    "import_data_validation_ids",
+    "import_data_validation_progress",
+    "import_data_validation_total",
+    "import_data_invalid_records",
+    "import_data_failure_reason",
+    "import_data_status_message",
+    "import_data_count",
+    "import_data_valid",
+    "import_data_phase",
+    "import_data_primary_keys",
+    "import_data_files",
+    "import_data_history_record_result",
+    "import_fedora_result",
+    "import_data_progress",
+    "import_performed_action",
+    "import_data_user",
+    "import_data_lock_token",
+    "import_data_stop",
+]
+
+
+def _expire_import_data_keys(redis_connector, job_id, ttl_seconds):
+    """
+    Nastaví expiraci všem per-job datovým klíčům importní úlohy na ``ttl_seconds`` (§4.5).
+
+    Klíče se pouze expirují, nikdy nemažou — report musí zůstat stažitelný po dobu retence.
+
+    :param redis_connector: Dekódující Redis spojení.
+    :param job_id: Identifikátor importní úlohy.
+    :param ttl_seconds: Doba retence v sekundách.
+    """
+    count_raw = redis_connector.get(f"import_data_count_{job_id}") or 0
+    try:
+        count = int(count_raw)
+    except (TypeError, ValueError):
+        count = 0
+    pipe = redis_connector.pipeline()
+    for suffix in _IMPORT_DATA_JOB_KEY_SUFFIXES:
+        pipe.expire(f"{suffix}_{job_id}", ttl_seconds)
+    for i in range(count):
+        pipe.expire(f"import_data_{job_id}_record_{i}", ttl_seconds)
+    pipe.execute()
+
+
 class DataImportProgress(LoginRequiredMixin, View):
     """Implementuje komponentu ``DataImportProgress`` v rámci aplikace."""
 
@@ -2778,6 +2839,21 @@ class DataImportProgress(LoginRequiredMixin, View):
             )
             import_fedora_update_result = json.loads(redis_connector.get(f"import_fedora_result_{job_id}") or "{}")
 
+            phase = redis_connector.get(f"import_data_phase_{job_id}") or "unknown"
+            # Live validation rows (incremental UI path, §5) — read from the rpush-ed list, not the
+            # JSON snapshot the report reads.
+            validation_details = redis_connector.lrange(f"import_data_validation_details_{job_id}", 0, -1)
+            validation_results = [json.loads(item) for item in validation_details]
+            invalid_records = json.loads(redis_connector.get(f"import_data_invalid_records_{job_id}") or "[]")
+            failure_reason = redis_connector.get(f"import_data_failure_reason_{job_id}") if phase == "failed" else None
+            performed_action = redis_connector.get(f"import_performed_action_{job_id}")
+            performed_action_labels = {
+                "insert": _("core.forms.ImportDataAdminForm.insert"),
+                "update": _("core.forms.ImportDataAdminForm.update"),
+                "delete": _("core.forms.ImportDataAdminForm.delete"),
+            }
+            performed_action_label = performed_action_labels.get(performed_action, performed_action)
+
             from cron.tasks import (
                 IMPORT_PROGRESS_PHASE_DATA_DONE,
                 IMPORT_PROGRESS_PHASE_FEDORA_DONE,
@@ -2792,7 +2868,16 @@ class DataImportProgress(LoginRequiredMixin, View):
                 processed = int(redis_connector.get(progress_key) or 0)
                 return min(processed / total, 1.0)
 
-            if phase_progress >= IMPORT_PROGRESS_PHASE_FINISHED:
+            # Validation progress bar (§5b.4): a separate branch above the import if/elif ladder,
+            # gated on phase, so it never disturbs the import constants or the import tests.
+            if phase == "validating":
+                validation_total = int(redis_connector.get(f"import_data_validation_total_{job_id}") or 0)
+                if validation_total:
+                    validation_done = int(redis_connector.get(f"import_data_validation_progress_{job_id}") or 0)
+                    progress_data = min(int(validation_done / validation_total * 100), 100)
+                else:
+                    progress_data = 0
+            elif phase_progress >= IMPORT_PROGRESS_PHASE_FINISHED:
                 progress_data = IMPORT_PROGRESS_PHASE_FINISHED
             elif phase_progress >= IMPORT_PROGRESS_PHASE_FEDORA_DONE:
                 fraction = _phase_fraction(f"import_data_files_progress_{job_id}", f"import_data_files_total_{job_id}")
@@ -2817,13 +2902,16 @@ class DataImportProgress(LoginRequiredMixin, View):
                 progress_data = math.floor((len(serialized_results) / record_count) * IMPORT_PROGRESS_PHASE_DATA_DONE)
             else:
                 progress_data = 0
-            if phase_progress >= IMPORT_PROGRESS_PHASE_FINISHED:
+            if phase in ("finished", "stopped", "failed", "canceled"):
+                status = phase
+            elif phase_progress >= IMPORT_PROGRESS_PHASE_FINISHED:
                 status = "finished"
             elif stopped:
                 status = "stopped"
             else:
                 status = "in_progress"
             progress_response = {
+                "phase": phase,
                 "record_count": record_count,
                 "progress_data": progress_data,
                 "finished_record_count": len(serialized_results),
@@ -2834,6 +2922,11 @@ class DataImportProgress(LoginRequiredMixin, View):
                 "status": status,
                 "serialized_results_files": serialized_results_files,
                 "status_message": status_message or _("core.templates.admin.import_data.starting"),
+                "validation_results": validation_results,
+                "invalid_records": invalid_records,
+                "failure_reason": failure_reason,
+                "performed_action": performed_action,
+                "performed_action_label": performed_action_label,
             }
         except (AttributeError, TypeError, ValueError, json.JSONDecodeError) as err:
             logger.exception(
@@ -2866,6 +2959,12 @@ class DataImportStop(LoginRequiredMixin, View):
             raise PermissionDenied
         job_id = kwargs.get("job_id")
         redis_connector = RedisConnector().get_connection_decode()
+        # Only the owner may stop their running import/validation (§7).
+        if not _check_import_ownership(request, job_id, redis_connector):
+            return JsonResponse(
+                {"result": "error", "status_message": _("core.templates.admin.import_data.not_owner")},
+                status=403,
+            )
         redis_connector.set(f"import_data_stop_{job_id}", 1)
         return JsonResponse({"result": "ok"})
 
@@ -2886,7 +2985,11 @@ class DataImportProgressReportView(LoginRequiredMixin, View):
             raise PermissionDenied
         job_id = kwargs.get("job_id")
         redis_connector = RedisConnector().get_connection_decode()
+        # The report contains validation data, so restrict it to the job owner (§7).
+        if not _check_import_ownership(request, job_id, redis_connector):
+            raise PermissionDenied
 
+        phase = redis_connector.get(f"import_data_phase_{job_id}") or "unknown"
         validation_results = json.loads(redis_connector.get(f"import_data_validation_results_{job_id}") or "[]")
         primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}") or "{}")
         progress_ids = redis_connector.lrange(f"import_data_progress_ids_{job_id}", 0, -1)
@@ -2917,6 +3020,16 @@ class DataImportProgressReportView(LoginRequiredMixin, View):
             }
 
         rows = [build_row(item) for item in validation_results]
+        # Mid-run reports are a partial snapshot (§4.7): surface the phase so a partial report is
+        # never mistaken for the final one. The download is not refused mid-run.
+        if phase in ("validating", "importing"):
+            rows = [
+                {
+                    _("core.templates.admin.import_data.import_order"): _(
+                        "core.templates.admin.import_data.partial_report_banner"
+                    )
+                }
+            ] + rows
 
         df = pandas.DataFrame(rows)
         output = BytesIO()
@@ -2959,7 +3072,14 @@ class DataImportStart(LoginRequiredMixin, View):
         from cron import tasks
 
         redis_connector = RedisConnector.get_connection_decode()
-        if redis_connector.get(f"import_data_valid_{job_id}") != "1":
+        # Only the owner may start their validated job (§7).
+        if not _check_import_ownership(request, job_id, redis_connector):
+            return JsonResponse(
+                {"result": "error", "status_message": _("core.templates.admin.import_data.not_owner")},
+                status=403,
+            )
+        phase = redis_connector.get(f"import_data_phase_{job_id}")
+        if phase != tasks.IMPORT_PHASE_AWAITING_APPROVAL or redis_connector.get(f"import_data_valid_{job_id}") != "1":
             return JsonResponse(
                 {
                     "result": "error",
@@ -2967,18 +3087,97 @@ class DataImportStart(LoginRequiredMixin, View):
                 },
                 status=422,
             )
-        lock_token = secrets.token_hex(16)
-        if not RedisConnector.acquire_import_lock(redis_connector, lock_token, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS):
+        # Reuse the token held continuously since upload and re-attach the 6h TTL — the lock had NO
+        # TTL during awaiting_approval (the validation task persist()ed it on success). Do NOT acquire
+        # a new lock (§4.4). refresh returns False only on an explicit superuser force-cancel or a
+        # Redis restart — not on TTL expiry, because there is no TTL to expire during review.
+        lock_token = redis_connector.get(f"import_data_lock_token_{job_id}")
+        if not lock_token or not RedisConnector.refresh_import_lock(
+            redis_connector, lock_token, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS
+        ):
+            redis_connector.set(
+                f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_FAILED, ex=tasks.IMPORT_DATA_EXPIRATION_SECONDS
+            )
+            redis_connector.set(
+                f"import_data_status_message_{job_id}",
+                _("cron.tasks.run_data_import.failed_lock_lost"),
+                ex=tasks.IMPORT_DATA_EXPIRATION_SECONDS,
+            )
+            redis_connector.set(
+                f"import_data_failure_reason_{job_id}",
+                tasks.IMPORT_FAILURE_REASON_ERROR,
+                ex=tasks.IMPORT_DATA_EXPIRATION_SECONDS,
+            )
+            redis_connector.delete(f"import_data_current_job_{request.user.id}")
             return JsonResponse(
-                {
-                    "result": "already_running",
-                    "status_message": _("core.templates.admin.import_data.import_is_running"),
-                },
+                {"result": "error", "status_message": _("cron.tasks.run_data_import.failed_lock_lost")},
                 status=409,
             )
+        redis_connector.set(f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_IMPORTING)
         try:
             tasks.run_data_import.delay(job_id, request.user.id, lock_token)
         except Exception:
-            RedisConnector.release_import_lock(redis_connector, lock_token)
-            raise
+            # The job is still resumable — do NOT release the lock; revert the phase and return 500 (§4.4).
+            redis_connector.set(f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_AWAITING_APPROVAL)
+            return JsonResponse(
+                {"result": "error", "status_message": _("core.admin.import_data.error.import_error")},
+                status=500,
+            )
         return JsonResponse({"result": "ok"})
+
+
+class DataImportCancel(LoginRequiredMixin, View):
+    """Explicitní uvolnění importního locku — uživatelova akce „zruš a uvolni slot“ (§4.5)."""
+
+    def post(self, request, **kwargs):
+        """
+        Zruší importní úlohu a uvolní globální lock.
+
+        Pro fázi ``awaiting_approval`` přímo uvolní lock (release), nastaví fázi ``canceled`` a
+        expiruje per-job datové klíče na 6 h (report zůstane stažitelný). Force-cancel zaseklé
+        ``awaiting_approval`` úlohy smí provést libovolný superuživatel (§7). Pro fázi ``validating``
+        je cancel ekvivalentní stop (nastaví stop sentinel; task uvolní lock ve svém ``finally``) —
+        obranný no-op, z UI nedostupný (§2.5.3). Pro ``importing`` a terminální fáze cancel odmítne.
+
+        :param request: HTTP požadavek přihlášeného superuživatele.
+        :param kwargs: Obsahuje ``job_id`` identifikující importní úlohu.
+        :return: ``JsonResponse`` s výsledkem operace.
+        :raises PermissionDenied: Pokud přihlášený uživatel není superuživatel.
+        """
+        if not request.user.is_superuser:
+            raise PermissionDenied
+        job_id = kwargs.get("job_id")
+        from cron import tasks
+
+        redis_connector = RedisConnector.get_connection_decode()
+        phase = redis_connector.get(f"import_data_phase_{job_id}")
+        lock_token = redis_connector.get(f"import_data_lock_token_{job_id}")
+        job_user = redis_connector.get(f"import_data_user_{job_id}")
+
+        if phase == tasks.IMPORT_PHASE_AWAITING_APPROVAL:
+            # Direct lock release — this is what frees the slot for other admins. Any superuser may
+            # force-cancel a stuck awaiting_approval job (§7), so no ownership check here.
+            if lock_token:
+                RedisConnector.release_import_lock(redis_connector, lock_token)
+            redis_connector.set(f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_CANCELED)
+            redis_connector.set(f"import_data_status_message_{job_id}", _("cron.tasks.run_data_import.cancelled"))
+            _expire_import_data_keys(redis_connector, job_id, tasks.IMPORT_DATA_EXPIRATION_SECONDS)
+            if job_user is not None:
+                redis_connector.delete(f"import_data_current_job_{job_user}")
+            return JsonResponse({"result": "ok"})
+
+        if phase == tasks.IMPORT_PHASE_VALIDATING:
+            # cancel ≡ stop; owner only. Defensive no-op — the UI never reaches this branch (§2.5.3).
+            if not _check_import_ownership(request, job_id, redis_connector):
+                return JsonResponse(
+                    {"result": "error", "status_message": _("core.templates.admin.import_data.not_owner")},
+                    status=403,
+                )
+            redis_connector.set(f"import_data_stop_{job_id}", 1)
+            return JsonResponse({"result": "ok"})
+
+        # importing → use Stop (the import task owns the lock); terminal phases → nothing to cancel.
+        return JsonResponse(
+            {"result": "error", "status_message": _("core.templates.admin.import_data.cancel_not_allowed")},
+            status=409,
+        )
