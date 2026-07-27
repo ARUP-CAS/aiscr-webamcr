@@ -54,6 +54,17 @@ Třídy
 
       :return: ``True``, pokud je ``DIRECTORY_PATH`` nastavený a ukazuje na existující adresář.
 
+   .. py:method:: _render_lock_busy()
+
+      Vykreslí stránku s hláškou ``import_is_running`` — globální lock drží jiný admin.
+
+      Symetrický protějšek k ``_render_import_polling_ui`` pro větev „jiný admin má lock“
+      (§4.1 krok 4 / Invariant B). Kontext se nedotýká dat importu ani validace.
+
+      :param request: HTTP požadavek.
+      :param context: Základní kontext šablony (``app_list``, ``maintenance`` …).
+      :return: ``TemplateResponse`` s hláškou o běžícím importu jiného admina.
+
    .. py:method:: _render_import_polling_ui()
 
       Vykreslí polling UI navázané na běžící nebo terminální importní úlohu ``job_id``.

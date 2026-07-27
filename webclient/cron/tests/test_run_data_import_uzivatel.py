@@ -111,6 +111,10 @@ class RunDataImportUzivatelTest(TestCase):
                 f"import_data_count_{JOB_ID}": "1",
                 f"import_performed_action_{JOB_ID}": performed_action,
                 f"import_data_{JOB_ID}_record_0": json.dumps(serialized_record),
+                f"import_data_user_{JOB_ID}": str(self.runner.id),
+                f"import_data_file_chunks_{JOB_ID}": "2",
+                f"import_data_file_{JOB_ID}_0": b"chunk-0",
+                f"import_data_file_{JOB_ID}_1": b"chunk-1",
             }
         )
 
@@ -159,7 +163,7 @@ class RunDataImportUzivatelTest(TestCase):
         )
         with patch("core.connectors.RedisConnector.get_connection", return_value=fake_redis), patch(
             "core.connectors.RedisConnector.refresh_import_lock", **refresh_lock_kwargs
-        ), patch(
+        ), patch("core.connectors.RedisConnector.release_import_lock", return_value=True) as release_lock_mock, patch(
             "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
             return_value=True,
         ), patch(
@@ -194,7 +198,30 @@ class RunDataImportUzivatelTest(TestCase):
             fedora_deletion_mock.return_value = MagicMock(uid="test-fedora-deletion-uid", updated_ident_cely=set())
             signals_fedora_transaction_mock.return_value = MagicMock(uid="test-signals-fedora-uid")
             cron_tasks.run_data_import(JOB_ID, self.runner.id, LOCK_TOKEN)
+        self._release_lock_mock = release_lock_mock
         return save_metadata_calls
+
+    def _assert_terminal_cleanup(self, fake_redis: FakeRedis, expected_phase: str):
+        """Ověří terminální úklid v ``finally``: fáze, uvolněný lock, smazaný pointer, smazané chunky."""
+        phase_raw = fake_redis.get(f"import_data_phase_{JOB_ID}")
+        self.assertIsNotNone(phase_raw)
+        self.assertEqual(phase_raw.decode("utf-8"), expected_phase)
+        self.assertTrue(
+            self._release_lock_mock.called,
+            "Terminální finally musí uvolnit importní lock přes release_import_lock.",
+        )
+        self.assertIsNone(
+            fake_redis.get(f"import_data_current_job_{self.runner.id}"),
+            "Terminální finally musí smazat import_data_current_job_{user_id}.",
+        )
+        self.assertIsNone(
+            fake_redis.get(f"import_data_file_chunks_{JOB_ID}"),
+            "Terminální finally musí defenzivně smazat import_data_file_chunks_{job_id}.",
+        )
+        self.assertIsNone(
+            fake_redis.get(f"import_data_file_{JOB_ID}_0"),
+            "Terminální finally musí defenzivně smazat leftover chunk klíče.",
+        )
 
     def _create_existing_user(self) -> User:
         """Vytvoří v DB uživatele, na kterého navazují testy update/delete.
@@ -220,7 +247,7 @@ class RunDataImportUzivatelTest(TestCase):
             )
 
     def _assert_import_failed(self, fake_redis: FakeRedis):
-        """Ověří, že import skončil ve stavu selhání: progress=0 a stop flag je nastaven."""
+        """Ověří, že import skončil ve stavu selhání: progress=0, stop flag nastaven, failure_reason=error."""
         progress_raw = fake_redis.get(f"import_data_progress_{JOB_ID}")
         self.assertIsNotNone(progress_raw, "import_data_progress musí být nastaveno.")
         self.assertEqual(
@@ -231,6 +258,12 @@ class RunDataImportUzivatelTest(TestCase):
         self.assertIsNotNone(
             fake_redis.get(f"import_data_stop_{JOB_ID}"),
             "Při selhání musí být nastaven stop flag.",
+        )
+        failure_reason_raw = fake_redis.get(f"import_data_failure_reason_{JOB_ID}")
+        self.assertIsNotNone(failure_reason_raw)
+        self.assertEqual(
+            failure_reason_raw.decode("utf-8"),
+            cron_tasks.IMPORT_FAILURE_REASON_ERROR,
         )
 
     def test_update_modifies_existing_user_and_saves_to_fedora(self):
@@ -268,6 +301,7 @@ class RunDataImportUzivatelTest(TestCase):
             self._run_import(fake_redis)
 
         self._assert_import_failed(fake_redis)
+        self._assert_terminal_cleanup(fake_redis, cron_tasks.IMPORT_PHASE_FAILED)
 
     def test_history_save_failure_marks_import_as_failed(self):
         """Pokud uložení Historie záznamu selže, import skončí jako selhalý.
@@ -331,13 +365,14 @@ class RunDataImportUzivatelTest(TestCase):
 
         self._run_import(fake_redis)
 
-        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
         self.assertIsNotNone(status_raw, "Status message musí být nastaven.")
         self.assertIn(
             "stopped_by_user",
             status_raw.decode("utf-8"),
             "Při uživatelském stopu musí status obsahovat klíč ``stopped_by_user``.",
         )
+        self._assert_terminal_cleanup(fake_redis, cron_tasks.IMPORT_PHASE_STOPPED)
 
     def test_user_stop_during_data_phase_rolls_back_committed_records(self):
         """Uživatelský stop během datové fáze odvolá už uložené záznamy — čistý abort (§13.4 S-I1)."""
@@ -350,7 +385,7 @@ class RunDataImportUzivatelTest(TestCase):
             User.objects.filter(ident_cely=USER_IDENT).exists(),
             "Po uživatelském stopu v datové fázi se musí uložený záznam odvolat (rollback).",
         )
-        details = [d.decode("utf-8") for d in fake_redis.lrange(f"import_data_progress_details_{JOB_ID}", 0, -1)]
+        details = [d.decode("utf-8") for d in fake_redis.lrange(f"import_data_progress_details_tr_{JOB_ID}", 0, -1)]
         self.assertIn(
             "cron.tasks.run_data_import.rolled_back",
             details,
@@ -395,7 +430,7 @@ class RunDataImportUzivatelTest(TestCase):
 
         self._run_import(fake_redis, refresh_lock_side_effect=[True, False, False, False, False])
 
-        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
         self.assertIsNotNone(status_raw, "Status message musí být nastaven.")
         self.assertIn(
             "failed_lock_lost",
@@ -405,15 +440,16 @@ class RunDataImportUzivatelTest(TestCase):
         self._assert_import_failed(fake_redis)
 
     def test_successful_import_writes_success_marker_into_progress_details(self):
-        """Úspěšný import zapíše do ``import_data_progress_details_{job_id}`` značku ``success``."""
+        """Úspěšný import zapíše do ``import_data_progress_details_tr_{job_id}`` značku ``success``."""
         fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_INSERT)
 
         self._run_import(fake_redis)
 
-        details = fake_redis.lrange(f"import_data_progress_details_{JOB_ID}", 0, -1)
+        details = fake_redis.lrange(f"import_data_progress_details_tr_{JOB_ID}", 0, -1)
         decoded = [item.decode("utf-8") for item in details]
         self.assertIn(
             "cron.tasks.run_data_import.success",
             decoded,
             "Po úspěšném importu musí být v progress_details značka ``success``.",
         )
+        self._assert_terminal_cleanup(fake_redis, cron_tasks.IMPORT_PHASE_FINISHED)

@@ -75,7 +75,8 @@ class RunDataImportSamostatnyNalezTest(RunDataImportMapperTestBase):
             patch("cron.tasks.os.path.isdir", return_value=True),
             patch("cron.tasks.os.path.isfile", return_value=True),
             patch("builtins.open", mock_open(read_data=b"plain text")),
-            patch("core.models.Soubor.get_mime_types", return_value="text/plain"),
+            # SamostatnyNalez povoluje pouze obrazové MIME typy (PAS_ACCEPTED_MIMES).
+            patch("core.models.Soubor.get_mime_types", return_value="image/png"),
             patch("cron.tasks.FedoraRepositoryConnector", return_value=connector),
         ]
 
@@ -94,12 +95,12 @@ class RunDataImportSamostatnyNalezTest(RunDataImportMapperTestBase):
 
         fake_redis, _ = self.run_import_records(
             SOUBOR_FILE_KEY,
-            [{"vazba": ident_cely, "nazev": "nalez.txt"}],
+            [{"vazba": ident_cely, "nazev": "nalez.png"}],
             extra_patches=self._soubor_phase_patches(),
         )
 
         self.assert_import_success(fake_redis)
-        soubor = Soubor.objects.get(vazba__samostatny_nalez_souboru__ident_cely=ident_cely, nazev="nalez.txt")
+        soubor = Soubor.objects.get(vazba__samostatny_nalez_souboru__ident_cely=ident_cely, nazev="nalez.png")
         self.assertIsNotNone(soubor.rozsah)
         self.assertEqual(soubor.rozsah, 1)
 
@@ -166,7 +167,7 @@ class RunDataImportSamostatnyNalezTest(RunDataImportMapperTestBase):
             pre_redis_keys={f"import_data_stop_{JOB_ID}": "1"},
         )
 
-        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
         self.assertIsNotNone(status_raw)
         self.assertIn("stopped_by_user", status_raw.decode("utf-8"))
 
@@ -188,7 +189,7 @@ class RunDataImportSamostatnyNalezTest(RunDataImportMapperTestBase):
             refresh_lock_side_effect=[True, False, False, False, False, False],
         )
 
-        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
         self.assertIsNotNone(status_raw)
         self.assertIn("failed_lock_lost", status_raw.decode("utf-8"))
         self.assert_import_failed(fake_redis)
@@ -197,6 +198,6 @@ class RunDataImportSamostatnyNalezTest(RunDataImportMapperTestBase):
         """Ověřuje, že úspěšný import záznamu samostatny nalez zapíše success marker do detailu průběhu."""
         fake_redis, _ = self.run_import(FILE_KEY, self._base_payload())
 
-        details = fake_redis.lrange(f"import_data_progress_details_{JOB_ID}", 0, -1)
+        details = fake_redis.lrange(f"import_data_progress_details_tr_{JOB_ID}", 0, -1)
         decoded = [item.decode("utf-8") for item in details]
         self.assertIn("cron.tasks.run_data_import.success", decoded)

@@ -89,7 +89,7 @@ class RunDataImportDokumentCastTest(RunDataImportMapperTestBase):
             pre_redis_keys={f"import_data_stop_{JOB_ID}": "1"},
         )
 
-        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
         self.assertIsNotNone(status_raw)
         self.assertIn("stopped_by_user", status_raw.decode("utf-8"))
 
@@ -111,7 +111,7 @@ class RunDataImportDokumentCastTest(RunDataImportMapperTestBase):
             refresh_lock_side_effect=[True, False, False, False, False, False],
         )
 
-        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
         self.assertIsNotNone(status_raw)
         self.assertIn("failed_lock_lost", status_raw.decode("utf-8"))
         self.assert_import_failed(fake_redis)
@@ -120,6 +120,6 @@ class RunDataImportDokumentCastTest(RunDataImportMapperTestBase):
         """Ověřuje, že úspěšný import záznamu dokument cast zapíše success marker do detailu průběhu."""
         fake_redis, _ = self.run_import(FILE_KEY, self._base_payload())
 
-        details = fake_redis.lrange(f"import_data_progress_details_{JOB_ID}", 0, -1)
+        details = fake_redis.lrange(f"import_data_progress_details_tr_{JOB_ID}", 0, -1)
         decoded = [item.decode("utf-8") for item in details]
         self.assertIn("cron.tasks.run_data_import.success", decoded)

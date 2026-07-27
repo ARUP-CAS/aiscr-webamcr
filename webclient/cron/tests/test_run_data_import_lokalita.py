@@ -197,6 +197,12 @@ class RunDataImportLokalitaTest(TestCase):
         self.assertIsNotNone(progress_raw)
         self.assertEqual(int(progress_raw.decode("utf-8")), cron_tasks.IMPORT_PROGRESS_PHASE_FAILED)
         self.assertIsNotNone(fake_redis.get(f"import_data_stop_{JOB_ID}"))
+        failure_reason_raw = fake_redis.get(f"import_data_failure_reason_{JOB_ID}")
+        self.assertIsNotNone(failure_reason_raw)
+        self.assertEqual(
+            failure_reason_raw.decode("utf-8"),
+            cron_tasks.IMPORT_FAILURE_REASON_ERROR,
+        )
 
     def test_insert_writes_az_and_lokalita_to_database(self):
         """Ověřuje, že INSERT import zapíše záznam az and lokalita do databáze."""
@@ -284,7 +290,7 @@ class RunDataImportLokalitaTest(TestCase):
 
         self._run_import(fake_redis)
 
-        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
         self.assertIsNotNone(status_raw)
         self.assertIn("stopped_by_user", status_raw.decode("utf-8"))
 
@@ -311,7 +317,7 @@ class RunDataImportLokalitaTest(TestCase):
 
         self._run_import(fake_redis, refresh_lock_side_effect=[True, False, False, False, False])
 
-        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
         self.assertIsNotNone(status_raw)
         self.assertIn("failed_lock_lost", status_raw.decode("utf-8"))
         self._assert_import_failed(fake_redis)
@@ -322,7 +328,7 @@ class RunDataImportLokalitaTest(TestCase):
 
         self._run_import(fake_redis, refresh_lock_side_effect=[False])
 
-        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
         self.assertIsNotNone(status_raw)
         self.assertIn("failed_lock_acquisition", status_raw.decode("utf-8"))
         self.assertIsNotNone(fake_redis.get(f"import_data_stop_{JOB_ID}"))
@@ -336,7 +342,7 @@ class RunDataImportLokalitaTest(TestCase):
         with patch("core.connectors.RedisConnector.get_connection", return_value=fake_redis):
             cron_tasks.run_data_import(JOB_ID, self.user.id, LOCK_TOKEN)
 
-        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
         self.assertIsNotNone(status_raw)
         self.assertIn("failed_lock_acquisition", status_raw.decode("utf-8"))
         self.assertIsNotNone(fake_redis.get(f"import_data_stop_{JOB_ID}"))
@@ -347,7 +353,7 @@ class RunDataImportLokalitaTest(TestCase):
 
         self._run_import(fake_redis)
 
-        details = fake_redis.lrange(f"import_data_progress_details_{JOB_ID}", 0, -1)
+        details = fake_redis.lrange(f"import_data_progress_details_tr_{JOB_ID}", 0, -1)
         decoded = [item.decode("utf-8") for item in details]
         self.assertIn("cron.tasks.run_data_import.success", decoded)
 
@@ -363,7 +369,7 @@ class RunDataImportLokalitaTest(TestCase):
 
         self._run_import(fake_redis)
 
-        details = fake_redis.lrange(f"import_data_progress_details_{JOB_ID}", 0, -1)
+        details = fake_redis.lrange(f"import_data_progress_details_tr_{JOB_ID}", 0, -1)
         decoded = [item.decode("utf-8") for item in details]
         self.assertIn("cron.tasks.run_data_import.success", decoded)
         self.assertFalse(

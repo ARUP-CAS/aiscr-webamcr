@@ -1000,11 +1000,35 @@ Funkce
    :param redis_connector: Dekódující Redis spojení.
    :return: ``True`` pokud je uživatel vlastníkem úlohy; jinak ``False``.
 
+.. py:function:: _translate_status_value(raw)
+
+   Přeloží hodnotu načtenou z Redis (ID nebo obálka ``{id, params}``).
+
+   Standardizační pravidlo: worker ukládá do Redis pouze překladová ID (případně obálku
+   ``{"id": <id>, "params": {...}}`` pro parametrizované zprávy), nikoli přeložené texty. Tento
+   helper překlad provádí v locale přihlášeného admina až na straně čtenáře.
+
+   :param raw: Hodnota z Redis — ``None``, plain ID (str), nebo JSON obálka (str) s ``id`` a
+       ``params``. Zpětně kompatibilní: pokud hodnota není obálka, přeloží se jako ID; pokud
+       překlad chybí, ``_()`` vrátí ID doslova.
+   :return: Přeložený řetězec, nebo ``None`` pokud je vstup ``None``.
+
+.. py:function:: _status_message_id(raw)
+
+   Vrátí samotné ID stavové zprávy bez překladu/parametrů (pro porovnání v UI).
+
+   UI potřebuje znát ID (např. ``cron.tasks.run_data_import.failed_lock_lost``) nezávisle na
+   locale, aby mohl poradit re-upload — viz ``failedLockLostMessage`` větev v šabloně.
+
+   :param raw: Hodnota z Redis (ID nebo obálka ``{id, params}``).
+   :return: ID překladového řetězce, nebo ``None``.
+
 .. py:function:: _expire_import_data_keys(redis_connector, job_id, ttl_seconds)
 
    Nastaví expiraci všem per-job datovým klíčům importní úlohy na ``ttl_seconds`` (§4.5).
 
    Klíče se pouze expirují, nikdy nemažou — report musí zůstat stažitelný po dobu retence.
+   Seznam suffixů sdílí jediný zdroj pravdy s ``cron.tasks`` (``IMPORT_DATA_JOB_KEY_SUFFIXES``).
 
    :param redis_connector: Dekódující Redis spojení.
    :param job_id: Identifikátor importní úlohy.

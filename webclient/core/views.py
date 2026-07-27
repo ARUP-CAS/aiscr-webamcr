@@ -2758,28 +2758,59 @@ def _check_import_ownership(request, job_id, redis_connector) -> bool:
 
 # Per-job Redis datové klíče, které se na terminální cestě expirují (ne mažou) kvůli retenci
 # reportu (§4.5/§6). Zrcadlí sadu, kterou expiruje run_data_import a validační task.
-_IMPORT_DATA_JOB_KEY_SUFFIXES = [
-    "import_data_validation_results",
-    "import_data_validation_details",
-    "import_data_validation_ids",
-    "import_data_validation_progress",
-    "import_data_validation_total",
-    "import_data_invalid_records",
-    "import_data_failure_reason",
-    "import_data_status_message",
-    "import_data_count",
-    "import_data_valid",
-    "import_data_phase",
-    "import_data_primary_keys",
-    "import_data_files",
-    "import_data_history_record_result",
-    "import_fedora_result",
-    "import_data_progress",
-    "import_performed_action",
-    "import_data_user",
-    "import_data_lock_token",
-    "import_data_stop",
-]
+def _translate_status_value(raw):
+    """Přeloží hodnotu načtenou z Redis (ID nebo obálka ``{id, params}``).
+
+    Standardizační pravidlo: worker ukládá do Redis pouze překladová ID (případně obálku
+    ``{"id": <id>, "params": {...}}`` pro parametrizované zprávy), nikoli přeložené texty. Tento
+    helper překlad provádí v locale přihlášeného admina až na straně čtenáře.
+
+    :param raw: Hodnota z Redis — ``None``, plain ID (str), nebo JSON obálka (str) s ``id`` a
+        ``params``. Zpětně kompatibilní: pokud hodnota není obálka, přeloží se jako ID; pokud
+        překlad chybí, ``_()`` vrátí ID doslova.
+    :return: Přeložený řetězec, nebo ``None`` pokud je vstup ``None``.
+    """
+    if raw is None:
+        return None
+    if isinstance(raw, bytes):
+        raw = raw.decode("utf-8")
+    try:
+        obj = json.loads(raw)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return _(raw)
+    if isinstance(obj, dict) and "id" in obj:
+        params = obj.get("params") or {}
+        if obj.get("raw"):
+            # Raw exception message — composed at raise time from translated mapper fragments +
+            # runtime data; rendered verbatim (carve-out, see translation_value docstring).
+            return params.get("message", "")
+        try:
+            return _(obj["id"]).format(**params)
+        except (KeyError, IndexError):
+            return _(obj["id"])
+    return _(raw)
+
+
+def _status_message_id(raw):
+    """Vrátí samotné ID stavové zprávy bez překladu/parametrů (pro porovnání v UI).
+
+    UI potřebuje znát ID (např. ``cron.tasks.run_data_import.failed_lock_lost``) nezávisle na
+    locale, aby mohl poradit re-upload — viz ``failedLockLostMessage`` větev v šabloně.
+
+    :param raw: Hodnota z Redis (ID nebo obálka ``{id, params}``).
+    :return: ID překladového řetězce, nebo ``None``.
+    """
+    if raw is None:
+        return None
+    if isinstance(raw, bytes):
+        raw = raw.decode("utf-8")
+    try:
+        obj = json.loads(raw)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return raw
+    if isinstance(obj, dict) and "id" in obj:
+        return obj["id"]
+    return raw
 
 
 def _expire_import_data_keys(redis_connector, job_id, ttl_seconds):
@@ -2787,18 +2818,21 @@ def _expire_import_data_keys(redis_connector, job_id, ttl_seconds):
     Nastaví expiraci všem per-job datovým klíčům importní úlohy na ``ttl_seconds`` (§4.5).
 
     Klíče se pouze expirují, nikdy nemažou — report musí zůstat stažitelný po dobu retence.
+    Seznam suffixů sdílí jediný zdroj pravdy s ``cron.tasks`` (``IMPORT_DATA_JOB_KEY_SUFFIXES``).
 
     :param redis_connector: Dekódující Redis spojení.
     :param job_id: Identifikátor importní úlohy.
     :param ttl_seconds: Doba retence v sekundách.
     """
+    from cron.tasks import IMPORT_DATA_JOB_KEY_SUFFIXES
+
     count_raw = redis_connector.get(f"import_data_count_{job_id}") or 0
     try:
         count = int(count_raw)
     except (TypeError, ValueError):
         count = 0
     pipe = redis_connector.pipeline()
-    for suffix in _IMPORT_DATA_JOB_KEY_SUFFIXES:
+    for suffix in IMPORT_DATA_JOB_KEY_SUFFIXES:
         pipe.expire(f"{suffix}_{job_id}", ttl_seconds)
     for i in range(count):
         pipe.expire(f"import_data_{job_id}_record_{i}", ttl_seconds)
@@ -2826,24 +2860,56 @@ class DataImportProgress(LoginRequiredMixin, View):
             record_count_raw = redis_connector.get(f"import_data_count_{job_id}") or 0
             record_count = int(record_count_raw)
             phase_progress = int(redis_connector.get(f"import_data_progress_{job_id}") or 0)
-            status_message = redis_connector.get(f"import_data_status_message_{job_id}")
+            status_message_raw = redis_connector.get(f"import_data_status_message_tr_{job_id}")
+            status_message = _translate_status_value(status_message_raw)
+            status_message_id = _status_message_id(status_message_raw)
             stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
 
             import_data_primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}") or "{}")
             progress_ids = redis_connector.lrange(f"import_data_progress_ids_{job_id}", 0, -1)
-            progress_details = redis_connector.lrange(f"import_data_progress_details_{job_id}", 0, -1)
-            serialized_results = dict(zip(progress_ids, progress_details))
-            serialized_results_files = json.loads(redis_connector.get(f"import_data_files_{job_id}") or "[]")
-            import_history_record_result = json.loads(
-                redis_connector.get(f"import_data_history_record_result_{job_id}") or "{}"
-            )
-            import_fedora_update_result = json.loads(redis_connector.get(f"import_fedora_result_{job_id}") or "{}")
+            progress_details = redis_connector.lrange(f"import_data_progress_details_tr_{job_id}", 0, -1)
+            # Per-row status values are translation IDs/envelopes — translate each in the admin's locale.
+            serialized_results = {
+                rid: _translate_status_value(detail) for rid, detail in zip(progress_ids, progress_details)
+            }
+            # File table: each entry's additional_info_tr is a translation ID/envelope (or raw envelope
+            # for the mimetype); translate it, keep the rest of the dict verbatim.
+            serialized_results_files_raw = json.loads(redis_connector.get(f"import_data_files_{job_id}") or "[]")
+            serialized_results_files = []
+            for entry in serialized_results_files_raw:
+                translated_entry = dict(entry)
+                if "additional_info_tr" in translated_entry:
+                    translated_entry["additional_info"] = _translate_status_value(
+                        translated_entry.pop("additional_info_tr")
+                    )
+                else:
+                    translated_entry.setdefault("additional_info", "")
+                serialized_results_files.append(translated_entry)
+            import_history_record_result = {
+                rid: _translate_status_value(value)
+                for rid, value in json.loads(
+                    redis_connector.get(f"import_data_history_record_result_tr_{job_id}") or "{}"
+                ).items()
+            }
+            import_fedora_update_result = {
+                rid: [_translate_status_value(item) for item in items]
+                for rid, items in json.loads(redis_connector.get(f"import_fedora_result_tr_{job_id}") or "{}").items()
+            }
 
             phase = redis_connector.get(f"import_data_phase_{job_id}") or "unknown"
             # Live validation rows (incremental UI path, §5) — read from the rpush-ed list, not the
             # JSON snapshot the report reads.
             validation_details = redis_connector.lrange(f"import_data_validation_details_{job_id}", 0, -1)
-            validation_results = [json.loads(item) for item in validation_details]
+            # validation_result is a translation ID for valid rows, or a raw translated exception
+            # message for invalid rows (carve-out: mapper exceptions compose the message at raise
+            # time). _translate_status_value renders both correctly in the admin's locale.
+            validation_results = [
+                {
+                    **json.loads(item),
+                    "validation_result": _translate_status_value(json.loads(item).get("validation_result", "")),
+                }
+                for item in validation_details
+            ]
             invalid_records = json.loads(redis_connector.get(f"import_data_invalid_records_{job_id}") or "[]")
             failure_reason = redis_connector.get(f"import_data_failure_reason_{job_id}") if phase == "failed" else None
             performed_action = redis_connector.get(f"import_performed_action_{job_id}")
@@ -2922,6 +2988,7 @@ class DataImportProgress(LoginRequiredMixin, View):
                 "status": status,
                 "serialized_results_files": serialized_results_files,
                 "status_message": status_message or _("core.templates.admin.import_data.starting"),
+                "status_message_id": status_message_id,
                 "validation_results": validation_results,
                 "invalid_records": invalid_records,
                 "failure_reason": failure_reason,
@@ -2990,13 +3057,29 @@ class DataImportProgressReportView(LoginRequiredMixin, View):
             raise PermissionDenied
 
         phase = redis_connector.get(f"import_data_phase_{job_id}") or "unknown"
-        validation_results = json.loads(redis_connector.get(f"import_data_validation_results_{job_id}") or "[]")
+        validation_results_raw = json.loads(redis_connector.get(f"import_data_validation_results_{job_id}") or "[]")
+        # validation_result is a translation ID (valid rows) or a raw translated exception message
+        # (invalid rows, carve-out). Translate each in the admin's locale.
+        validation_results = [
+            {**item, "validation_result": _translate_status_value(item.get("validation_result", ""))}
+            for item in validation_results_raw
+        ]
         primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}") or "{}")
         progress_ids = redis_connector.lrange(f"import_data_progress_ids_{job_id}", 0, -1)
-        progress_details = redis_connector.lrange(f"import_data_progress_details_{job_id}", 0, -1)
-        serialized_results = dict(zip(progress_ids, progress_details))
-        history_record_result = json.loads(redis_connector.get(f"import_data_history_record_result_{job_id}") or "{}")
-        fedora_update_result = json.loads(redis_connector.get(f"import_fedora_result_{job_id}") or "{}")
+        progress_details = redis_connector.lrange(f"import_data_progress_details_tr_{job_id}", 0, -1)
+        serialized_results = {
+            rid: _translate_status_value(detail) for rid, detail in zip(progress_ids, progress_details)
+        }
+        history_record_result = {
+            rid: _translate_status_value(value)
+            for rid, value in json.loads(
+                redis_connector.get(f"import_data_history_record_result_tr_{job_id}") or "{}"
+            ).items()
+        }
+        fedora_update_result = {
+            rid: [_translate_status_value(item) for item in items]
+            for rid, items in json.loads(redis_connector.get(f"import_fedora_result_tr_{job_id}") or "{}").items()
+        }
 
         def build_row(item):
             """
@@ -3099,8 +3182,8 @@ class DataImportStart(LoginRequiredMixin, View):
                 f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_FAILED, ex=tasks.IMPORT_DATA_EXPIRATION_SECONDS
             )
             redis_connector.set(
-                f"import_data_status_message_{job_id}",
-                _("cron.tasks.run_data_import.failed_lock_lost"),
+                f"import_data_status_message_tr_{job_id}",
+                tasks.translation_value("cron.tasks.run_data_import.failed_lock_lost"),
                 ex=tasks.IMPORT_DATA_EXPIRATION_SECONDS,
             )
             redis_connector.set(
@@ -3109,6 +3192,7 @@ class DataImportStart(LoginRequiredMixin, View):
                 ex=tasks.IMPORT_DATA_EXPIRATION_SECONDS,
             )
             redis_connector.delete(f"import_data_current_job_{request.user.id}")
+            redis_connector.expire(f"import_data_lock_token_{job_id}", tasks.IMPORT_DATA_EXPIRATION_SECONDS)
             return JsonResponse(
                 {"result": "error", "status_message": _("cron.tasks.run_data_import.failed_lock_lost")},
                 status=409,
@@ -3129,6 +3213,9 @@ class DataImportStart(LoginRequiredMixin, View):
 class DataImportCancel(LoginRequiredMixin, View):
     """Explicitní uvolnění importního locku — uživatelova akce „zruš a uvolni slot“ (§4.5)."""
 
+    http_method_names = ["post"]
+
+    @method_decorator(csrf_protect)
     def post(self, request, **kwargs):
         """
         Zruší importní úlohu a uvolní globální lock.
@@ -3160,7 +3247,10 @@ class DataImportCancel(LoginRequiredMixin, View):
             if lock_token:
                 RedisConnector.release_import_lock(redis_connector, lock_token)
             redis_connector.set(f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_CANCELED)
-            redis_connector.set(f"import_data_status_message_{job_id}", _("cron.tasks.run_data_import.cancelled"))
+            redis_connector.set(
+                f"import_data_status_message_tr_{job_id}",
+                tasks.translation_value("cron.tasks.run_data_import.cancelled"),
+            )
             _expire_import_data_keys(redis_connector, job_id, tasks.IMPORT_DATA_EXPIRATION_SECONDS)
             if job_user is not None:
                 redis_connector.delete(f"import_data_current_job_{job_user}")

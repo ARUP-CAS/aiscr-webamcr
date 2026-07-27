@@ -4,9 +4,13 @@
 class FakeRedis:
     """Minimální in-memory náhrada za ``redis.Redis`` použitelná v unit testech.
 
-    Podporuje pouze operace, které využívá importní pipeline (``cron.tasks.run_data_import``)
-    a další taskové cesty: ``get``/``set``/``delete``/``expire``/``rpush``/``lrange``/``lset``
-    a konfigurabilní ``eval``. Pokud bude test potřebovat další metody, doplňte je sem.
+    Podporuje operace, které využívá importní pipeline (``cron.tasks.run_data_import`` i
+    ``cron.tasks.run_data_import_validation``) a další taskové cesty:
+    ``get``/``set``/``delete``/``expire``/``persist``/``rpush``/``lrange``/``lset``/``incr``
+    a konfigurabilní ``eval``. ``pipeline()`` vrací ``FakePipeline``, který operace zaznamená
+    a při ``execute()`` je sekvenčně provede nad stejným úložištěm; podporuje ``get``/``set``/
+    ``delete``/``expire``/``persist``/``rpush``/``incr``. Pokud bude test potřebovat další
+    metody, doplňte je sem.
     """
 
     def __init__(self, initial: dict | None = None, eval_results: list | None = None):
@@ -73,6 +77,13 @@ class FakeRedis:
         """
         return key in self._kv or key in self._lists
 
+    def persist(self, key):
+        """No-op symetrický k ``expire``: vrací ``True``, pokud klíč existuje (TTL se neřeší).
+
+        :param key: Redis klíč, u kterého se má zrušit expirace.
+        """
+        return key in self._kv or key in self._lists
+
     def rpush(self, key, value):
         """Přidá hodnotu na konec listu pod klíčem a vrátí novou délku listu.
 
@@ -103,6 +114,25 @@ class FakeRedis:
         """
         self._lists[key][index] = self._encode(value)
 
+    def incr(self, key, amount=1):
+        """Inkrementuje celočíselnou hodnotu pod klíčem a vrátí novou hodnotu.
+
+        :param key: Redis klíč číselného čítače.
+        :param amount: O kolik se hodnota zvýší (výchozí ``1``).
+        :return: Nová hodnota čítače po inkrementu.
+        """
+        current = int(self._kv.get(key, b"0")) if key in self._kv else 0
+        current += amount
+        self._kv[key] = str(current).encode("utf-8")
+        return current
+
+    def pipeline(self):
+        """Vrátí ``FakePipeline`` sdílející toto úložiště; operace se provedou až při ``execute()``.
+
+        :return: Instance ``FakeRedis.FakePipeline`` nad tímto úložištěm.
+        """
+        return FakeRedis.FakePipeline(self)
+
     def eval(self, *args, **kwargs):
         """Simuluje Redis Lua skript — vrací hodnotu z ``eval_results`` nebo výchozí ``1``.
 
@@ -117,3 +147,101 @@ class FakeRedis:
         if self._eval_results:
             return self._eval_results.pop(0)
         return 1
+
+    class FakePipeline:
+        """Record-then-execute pipeline nad ``FakeRedis`` — operace se provedou až při ``execute()``."""
+
+        def __init__(self, redis: "FakeRedis"):
+            """Váže pipeline k danému úložišti a inicializuje prázdnou frontu operací.
+
+            :param redis: Vlastník úložiště, nad kterým se operace provedou.
+            """
+            self._redis = redis
+            self._ops: list = []
+
+        def get(self, key):
+            """Zaznamená ``get`` operaci do fronty.
+
+            :param key: Redis klíč čtené hodnoty.
+            """
+            self._ops.append(("get", key))
+            return self
+
+        def set(self, key, value, ex=None, nx=False):
+            """Zaznamená ``set`` operaci do fronty.
+
+            :param key: Redis klíč zapisované hodnoty.
+            :param value: Hodnota k uložení.
+            :param ex: Ignorováno — FakeRedis neimplementuje TTL.
+            :param nx: Pokud ``True``, zapiš pouze při neexistenci klíče.
+            """
+            self._ops.append(("set", key, value, ex, nx))
+            return self
+
+        def delete(self, *keys):
+            """Zaznamená ``delete`` operaci do fronty.
+
+            :param keys: Redis klíče určené ke smazání.
+            """
+            self._ops.append(("delete", keys))
+            return self
+
+        def expire(self, key, seconds):
+            """Zaznamená ``expire`` operaci do fronty.
+
+            :param key: Redis klíč, pro který se nastavuje TTL.
+            :param seconds: Počet sekund TTL (fake implementací ignorováno).
+            """
+            self._ops.append(("expire", key, seconds))
+            return self
+
+        def persist(self, key):
+            """Zaznamená ``persist`` operaci do fronty.
+
+            :param key: Redis klíč, u kterého se má zrušit expirace.
+            """
+            self._ops.append(("persist", key))
+            return self
+
+        def rpush(self, key, value):
+            """Zaznamená ``rpush`` operaci do fronty.
+
+            :param key: Redis klíč seznamu.
+            :param value: Hodnota přidaná na konec seznamu.
+            """
+            self._ops.append(("rpush", key, value))
+            return self
+
+        def incr(self, key, amount=1):
+            """Zaznamená ``incr`` operaci do fronty.
+
+            :param key: Redis klíč číselného čítače.
+            :param amount: O kolik se hodnota zvýší.
+            """
+            self._ops.append(("incr", key, amount))
+            return self
+
+        def execute(self):
+            """Provede zaznamenané operace sekvenčně a vrátí seznam jejich návratových hodnot.
+
+            :return: Seznam návratových hodnot v pořadí zaznamenaných operací.
+            """
+            results = []
+            for op in self._ops:
+                name = op[0]
+                if name == "get":
+                    results.append(self._redis.get(op[1]))
+                elif name == "set":
+                    results.append(self._redis.set(op[1], op[2], ex=op[3], nx=op[4]))
+                elif name == "delete":
+                    results.append(self._redis.delete(*op[1]))
+                elif name == "expire":
+                    results.append(self._redis.expire(op[1], op[2]))
+                elif name == "persist":
+                    results.append(self._redis.persist(op[1]))
+                elif name == "rpush":
+                    results.append(self._redis.rpush(op[1], op[2]))
+                elif name == "incr":
+                    results.append(self._redis.incr(op[1], op[2]))
+            self._ops = []
+            return results

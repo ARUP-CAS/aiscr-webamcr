@@ -368,9 +368,9 @@ class RunDataImportMapperTestBase(TestCase):
     def _import_details(self, fake_redis: FakeRedis) -> dict:
         details = [
             item.decode("utf-8") if isinstance(item, bytes) else item
-            for item in fake_redis.lrange(f"import_data_progress_details_{JOB_ID}", 0, -1)
+            for item in fake_redis.lrange(f"import_data_progress_details_tr_{JOB_ID}", 0, -1)
         ]
-        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
         status = status_raw.decode("utf-8") if isinstance(status_raw, bytes) else status_raw
         return {"status": status, "details": details}
 

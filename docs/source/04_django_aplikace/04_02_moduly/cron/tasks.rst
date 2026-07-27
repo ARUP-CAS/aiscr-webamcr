@@ -87,6 +87,24 @@ Třídy
 Funkce
 ------
 
+.. py:function:: translation_value(message_id)
+
+   Zabalí překladové ID (a případné parametry) pro uložení do Redis.
+
+   Pro zprávy bez parametrů vrací přímo ID (plain string) — běžný případ. Pro parametrizované
+   zprávy vrací JSON obálku ``{"id": <id>, "params": {...}}``, kterou čtenář rozbalí a interpoluje
+   po překladu. Nikdy nevolá ``_()`` — překlad probíhá až na straně čtenáře.
+
+   Pro výjimky, jejichž zpráva je složena za běhu (např. ``str(err)`` z mapperů), použijte
+   ``raw=True``: obálka ``{"id": "cron.tasks.run_data_import.error.raw", "params": {"message": ...},
+   "raw": true}`` se na čtenáři vrátí doslova bez překladu.
+
+   :param message_id: ID překladového řetězce (dotted key, např.
+       ``cron.tasks.run_data_import.finished``).
+   :param params: Parametry pro interpolaci přeloženého řetězce (např. ``n``, ``total``). Pro
+       výjimku použijte ``raw=True`` a ``message=<str(err)>``.
+   :return: Hodnota připravená k zápisu do Redis (ID nebo JSON obálka).
+
 .. py:function:: send_notifications_enz()
 
    Každý den zkontrolovat a případně odeslat upozornění uživatelům na základě pole projekt.datum_odevzdani_NZ,
@@ -215,7 +233,9 @@ Funkce
    :param user_id: Identifikátor objektu ``user``.
    :param lock_token: Token pro ověření vlastnictví importního zámku v Redis.
 
-   Možné hodnoty Redis klíče ``import_data_status_message_{job_id}``:
+   Možné hodnoty Redis klíče ``import_data_status_message_tr_{job_id}`` (ukládá se překladové
+   ID, případně obálka ``{id, params}`` pro parametrizované zprávy; překlad provádí až čtenář
+   v locale přihlášeného admina — viz ``translation_value`` a ``_translate_status_value``):
 
    .. list-table::
        :header-rows: 1

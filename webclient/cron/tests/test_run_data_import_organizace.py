@@ -284,7 +284,7 @@ class RunDataImportOrganizaceTest(TestCase):
             self._run_import(fake_redis)
 
         self._assert_import_failed(fake_redis)
-        fedora_result_raw = fake_redis.get(f"import_fedora_result_{JOB_ID}")
+        fedora_result_raw = fake_redis.get(f"import_fedora_result_tr_{JOB_ID}")
         self.assertIsNotNone(fedora_result_raw, "import_fedora_result musí být inicializované.")
         self.assertEqual(
             json.loads(fedora_result_raw.decode("utf-8")),
@@ -324,14 +324,17 @@ class RunDataImportOrganizaceTest(TestCase):
             self._run_import(fake_redis)
 
         self._assert_import_failed(fake_redis)
-        fedora_result_raw = fake_redis.get(f"import_fedora_result_{JOB_ID}")
+        fedora_result_raw = fake_redis.get(f"import_fedora_result_tr_{JOB_ID}")
         self.assertIsNotNone(fedora_result_raw, "import_fedora_result musí obsahovat chybu Fedora fáze.")
         fedora_result = json.loads(fedora_result_raw.decode("utf-8"))
         self.assertIn("0", fedora_result)
         self.assertEqual(len(fedora_result["0"]), 1)
-        self.assertIn("cron.tasks.run_data_import.fedora_error", fedora_result["0"][0])
-        self.assertIn("Traceback (most recent call last)", fedora_result["0"][0])
-        self.assertIn("RuntimeError: Simulované selhání Fedora repozitáře.", fedora_result["0"][0])
+        # Chyba Fedora fáze se ukládá jako ``translation_value`` obálka ``{"id", "params": {...}}``;
+        # traceback je v ``params.message`` (JSON escapuje diakritiku, proto obálku rozbalíme).
+        error_envelope = json.loads(fedora_result["0"][0])
+        self.assertEqual(error_envelope["id"], "cron.tasks.run_data_import.fedora_error")
+        self.assertIn("Traceback (most recent call last)", error_envelope["params"]["message"])
+        self.assertIn("RuntimeError: Simulované selhání Fedora repozitáře.", error_envelope["params"]["message"])
 
     def _build_multi_record_redis(self, records: list[dict]) -> FakeRedis:
         """Sestaví FakeRedis s několika serializovanými záznamy."""
@@ -366,7 +369,7 @@ class RunDataImportOrganizaceTest(TestCase):
 
         self._run_import(fake_redis)
 
-        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
         self.assertIsNotNone(status_raw, "Status message musí být nastaven.")
         self.assertIn(
             "stopped_by_user",
@@ -407,7 +410,7 @@ class RunDataImportOrganizaceTest(TestCase):
 
         self._run_import(fake_redis, refresh_lock_side_effect=[True, False, False, False, False])
 
-        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
         self.assertIsNotNone(status_raw, "Status message musí být nastaven.")
         self.assertIn(
             "failed_lock_lost",
@@ -417,12 +420,12 @@ class RunDataImportOrganizaceTest(TestCase):
         self._assert_import_failed(fake_redis)
 
     def test_successful_import_writes_success_marker_into_progress_details(self):
-        """Úspěšný import zapíše do ``import_data_progress_details_{job_id}`` značku ``success``."""
+        """Úspěšný import zapíše do ``import_data_progress_details_tr_{job_id}`` značku ``success``."""
         fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_INSERT)
 
         self._run_import(fake_redis)
 
-        details = fake_redis.lrange(f"import_data_progress_details_{JOB_ID}", 0, -1)
+        details = fake_redis.lrange(f"import_data_progress_details_tr_{JOB_ID}", 0, -1)
         decoded = [item.decode("utf-8") for item in details]
         self.assertIn(
             "cron.tasks.run_data_import.success",

@@ -317,7 +317,7 @@ class RunDataImportOsobaTest(TestCase):
 
         self._run_import(fake_redis)
 
-        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
         self.assertIsNotNone(status_raw, "Status message musí být nastaven.")
         self.assertIn(
             "stopped_by_user",
@@ -358,7 +358,7 @@ class RunDataImportOsobaTest(TestCase):
 
         self._run_import(fake_redis, refresh_lock_side_effect=[True, False, False, False, False])
 
-        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
         self.assertIsNotNone(status_raw, "Status message musí být nastaven.")
         self.assertIn(
             "failed_lock_lost",
@@ -368,12 +368,12 @@ class RunDataImportOsobaTest(TestCase):
         self._assert_import_failed(fake_redis)
 
     def test_successful_import_writes_success_marker_into_progress_details(self):
-        """Úspěšný import zapíše do ``import_data_progress_details_{job_id}`` značku ``success``."""
+        """Úspěšný import zapíše do ``import_data_progress_details_tr_{job_id}`` značku ``success``."""
         fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_INSERT)
 
         self._run_import(fake_redis)
 
-        details = fake_redis.lrange(f"import_data_progress_details_{JOB_ID}", 0, -1)
+        details = fake_redis.lrange(f"import_data_progress_details_tr_{JOB_ID}", 0, -1)
         decoded = [item.decode("utf-8") for item in details]
         self.assertIn(
             "cron.tasks.run_data_import.success",

@@ -348,6 +348,21 @@ class AmcrCustomAdminSite(admin.AdminSite):
         except (CustomAdminSettings.DoesNotExist, json.JSONDecodeError, ValueError, KeyError):
             return False
 
+    def _render_lock_busy(self, request, context):
+        """
+        Vykreslí stránku s hláškou ``import_is_running`` — globální lock drží jiný admin.
+
+        Symetrický protějšek k ``_render_import_polling_ui`` pro větev „jiný admin má lock“
+        (§4.1 krok 4 / Invariant B). Kontext se nedotýká dat importu ani validace.
+
+        :param request: HTTP požadavek.
+        :param context: Základní kontext šablony (``app_list``, ``maintenance`` …).
+        :return: ``TemplateResponse`` s hláškou o běžícím importu jiného admina.
+        """
+        context = dict(context)
+        context["import_data_running"] = True
+        return TemplateResponse(request, "admin/import_data/import_data.html", context)
+
     def _render_import_polling_ui(self, request, context, job_id):
         """
         Vykreslí polling UI navázané na běžící nebo terminální importní úlohu ``job_id``.
@@ -432,7 +447,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
 
         # Global-lock-busy gate (§4.1 step 4 / Invariant B): another admin's pipeline holds the lock.
         if import_data_running:
-            return TemplateResponse(request, "admin/import_data/import_data.html", context)
+            return self._render_lock_busy(request, context)
 
         if request.method == "POST":
             form = ImportDataAdminForm(request.POST, request.FILES)
@@ -455,8 +470,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
             if not RedisConnector.acquire_import_lock(
                 self.redis_connector, lock_token, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS
             ):
-                context["import_data_running"] = True
-                return TemplateResponse(request, "admin/import_data/import_data.html", context)
+                return self._render_lock_busy(request, context)
 
             chunk_count = 0
             try:
@@ -480,8 +494,8 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 self.redis_connector.set(f"import_data_current_job_{request.user.id}", job_id, ex=ttl)
                 self.redis_connector.set(f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_VALIDATING, ex=ttl)
                 self.redis_connector.set(
-                    f"import_data_status_message_{job_id}",
-                    _("cron.tasks.run_data_import.validating"),
+                    f"import_data_status_message_tr_{job_id}",
+                    tasks.translation_value("cron.tasks.run_data_import.validating"),
                     ex=ttl,
                 )
                 self.redis_connector.set(f"import_performed_action_{job_id}", performed_action, ex=ttl)

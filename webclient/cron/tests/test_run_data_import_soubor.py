@@ -127,11 +127,11 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         )
 
     def _history_record_result(self, fake_redis):
-        raw = fake_redis.get(f"import_data_history_record_result_{JOB_ID}")
+        raw = fake_redis.get(f"import_data_history_record_result_tr_{JOB_ID}")
         return json.loads(raw.decode("utf-8"))
 
     def _fedora_update_result(self, fake_redis):
-        raw = fake_redis.get(f"import_fedora_result_{JOB_ID}")
+        raw = fake_redis.get(f"import_fedora_result_tr_{JOB_ID}")
         return json.loads(raw.decode("utf-8"))
 
     def _file_import_results(self, fake_redis):
@@ -231,7 +231,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             Soubor.objects.filter(vazba=self.dokument.soubory, nazev="import-test.txt").exists(),
             "Po INSERTu musí Soubor existovat v DB.",
         )
-        details = fake_redis.lrange(f"import_data_progress_details_{JOB_ID}", 0, -1)
+        details = fake_redis.lrange(f"import_data_progress_details_tr_{JOB_ID}", 0, -1)
         decoded = [item.decode("utf-8") for item in details]
         self.assertIn("cron.tasks.run_data_import.file", decoded)
         navazany_ident_celies = [getattr(item, "ident_cely", None) for item in save_metadata_calls]
@@ -553,7 +553,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         self.assert_import_failed(fake_redis)
         file_results = self._file_import_results(fake_redis)
         self.assertEqual(file_results[0]["file_name"], "taken-name.txt")
-        self.assertIn("already_exists", file_results[0]["additional_info"])
+        self.assertIn("already_exists", file_results[0]["additional_info_tr"])
 
     def test_insert_existing_target_file_record_marks_import_as_failed(self):
         """INSERT Souboru na existující ``nazev`` + ``vazba`` nesmí skončit jako úspěšný import."""
@@ -565,7 +565,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         self.assert_import_failed(fake_redis)
         file_results = self._file_import_results(fake_redis)
         self.assertEqual(file_results[0]["file_name"], "already-present.txt")
-        self.assertIn("already_exists", file_results[0]["additional_info"])
+        self.assertIn("already_exists", file_results[0]["additional_info_tr"])
 
     def test_missing_binary_file_marks_import_as_failed(self):
         """Chybějící binární soubor v importním adresáři nesmí skončit jako úspěšný import."""
@@ -577,7 +577,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         self.assert_import_failed(fake_redis)
         file_results = self._file_import_results(fake_redis)
         self.assertEqual(file_results[0]["file_name"], "missing-binary.txt")
-        self.assertIn("file_not_found_in_directory", file_results[0]["additional_info"])
+        self.assertIn("file_not_found_in_directory", file_results[0]["additional_info_tr"])
 
     def test_insert_file_with_mismatched_extension_marks_import_as_failed(self):
         """INSERT souboru, jehož přípona neodpovídá MIME typu detekovanému z obsahu, nesmí uspět."""
@@ -586,7 +586,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         )
 
         self.assert_import_failed(fake_redis)
-        status_message = fake_redis.get(f"import_data_status_message_{JOB_ID}").decode("utf-8")
+        status_message = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}").decode("utf-8")
         self.assertEqual(status_message, "cron.tasks.run_data_import.failed_mime_extension_mismatch")
         fedora_result = self._fedora_update_result(fake_redis)
         self.assertIn("does not match detected mime type", fedora_result["0"][0])
@@ -599,7 +599,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         )
 
         self.assert_import_failed(fake_redis)
-        status_message = fake_redis.get(f"import_data_status_message_{JOB_ID}").decode("utf-8")
+        status_message = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}").decode("utf-8")
         self.assertEqual(status_message, "cron.tasks.run_data_import.failed_mime_unsupported")
         fedora_result = self._fedora_update_result(fake_redis)
         self.assertIn("is not supported", fedora_result["0"][0])
@@ -616,7 +616,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         )
 
         self.assert_import_failed(fake_redis)
-        status_message = fake_redis.get(f"import_data_status_message_{JOB_ID}").decode("utf-8")
+        status_message = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}").decode("utf-8")
         self.assertEqual(status_message, "cron.tasks.run_data_import.failed_mime_not_allowed")
         fedora_result = self._fedora_update_result(fake_redis)
         self.assertIn("is not allowed for record", fedora_result["0"][0])
@@ -655,7 +655,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             pre_redis_keys={f"import_data_stop_{JOB_ID}": "1"},
         )
 
-        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
         self.assertIsNotNone(status_raw)
         self.assertIn("stopped_by_user", status_raw.decode("utf-8"))
 
@@ -696,13 +696,13 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             refresh_lock_side_effect=[True, False, False, False, False, False, False],
         )
 
-        status_raw = fake_redis.get(f"import_data_status_message_{JOB_ID}")
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
         self.assertIsNotNone(status_raw)
         self.assertIn("failed_lock_lost", status_raw.decode("utf-8"))
         self.assert_import_failed(fake_redis)
 
     def test_successful_import_writes_file_marker_into_progress_details(self):
-        """Úspěšný import Souboru zapíše do ``import_data_progress_details_{JOB_ID}`` značku ``file``.
+        """Úspěšný import Souboru zapíše do ``import_data_progress_details_tr_{JOB_ID}`` značku ``file``.
 
         SouborMapper běží ve speciální fázi souborů a zapisuje vlastní značku
         ``cron.tasks.run_data_import.file`` (nikoli generický ``success``).
@@ -711,7 +711,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             [{"vazba": self.dokument.ident_cely, "nazev": "marker.txt"}],
         )
 
-        details = fake_redis.lrange(f"import_data_progress_details_{JOB_ID}", 0, -1)
+        details = fake_redis.lrange(f"import_data_progress_details_tr_{JOB_ID}", 0, -1)
         decoded = [item.decode("utf-8") for item in details]
         self.assertIn("cron.tasks.run_data_import.file", decoded)
         self.assert_history_record_result_contains_item(fake_redis)
