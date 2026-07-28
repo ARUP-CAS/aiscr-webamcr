@@ -1318,6 +1318,8 @@ def run_data_import(job_id, user_id, lock_token):
 
         def add_item_fedora_update_target(items, record_id):
             for item in items:
+                if item is None:
+                    continue
                 if isinstance(item, tuple) and len(item) == 2:
                     item_class, item_pk = item
                     record = item_class.objects.get(pk=item_pk)

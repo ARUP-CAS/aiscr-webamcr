@@ -2856,6 +2856,13 @@ class DataImportProgress(LoginRequiredMixin, View):
             raise PermissionDenied
         job_id = kwargs.get("job_id")
         redis_connector = RedisConnector().get_connection_decode()
+        # The progress poll exposes validation results and primary keys, so restrict it to the job
+        # owner (§7), consistent with stop/start/report.
+        if not _check_import_ownership(request, job_id, redis_connector):
+            return JsonResponse(
+                {"result": "error", "status_message": _("core.templates.admin.import_data.not_owner")},
+                status=403,
+            )
         try:
             record_count_raw = redis_connector.get(f"import_data_count_{job_id}") or 0
             record_count = int(record_count_raw)

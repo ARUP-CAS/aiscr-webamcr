@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from arch_z.models import Akce, ArcheologickyZaznam
 from core.forms import ImportDataAdminForm
@@ -247,6 +247,24 @@ class ArcheologickyZaznamAkceMapperGetUpdatedIdentCelyTest(TestCase):
         akce.projekt = projekt
         result = ArcheologickyZaznamAkceMapper._get_updated_ident_cely_record_list(akce)
         self.assertEqual(result, [az, projekt])
+
+    def test_az_without_akce_omits_none(self):
+        """_get_updated_ident_cely_record_list() nevrací None, když reverzní vazba akce chybí (DELETE)."""
+        az = ArcheologickyZaznam()
+        with patch("arch_z.models.ArcheologickyZaznam.akce", create=True, new=PropertyMock(return_value=None)):
+            result = ArcheologickyZaznamAkceMapper._get_updated_ident_cely_record_list(az)
+        self.assertEqual(result, [az])
+        self.assertNotIn(None, result)
+
+    def test_az_with_akce_without_projekt_omits_none(self):
+        """_get_updated_ident_cely_record_list() nevrací None, když akce existuje, ale projekt chybí."""
+        az = ArcheologickyZaznam()
+        akce = Akce()
+        akce.projekt = None
+        with patch("arch_z.models.ArcheologickyZaznam.akce", create=True, new=PropertyMock(return_value=akce)):
+            result = ArcheologickyZaznamAkceMapper._get_updated_ident_cely_record_list(az)
+        self.assertEqual(result, [az])
+        self.assertNotIn(None, result)
 
 
 class ArcheologickyZaznamAkceMapperCreateRecordsDeleteTest(TestCase):

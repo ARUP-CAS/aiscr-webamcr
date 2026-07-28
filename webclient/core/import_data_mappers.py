@@ -644,7 +644,7 @@ class IntegerImportField(BaseImportField):
             return None
         if isinstance(value, float):
             if not value.is_integer():
-                raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_integer_value')}: {value}")
+                raise ImportDataError(_("core_admin.ImportDataError.message.invalid_integer_value") + ": " + str(value))
             return int(value)
         if isinstance(value, int):
             return value
@@ -656,7 +656,7 @@ class IntegerImportField(BaseImportField):
         match = self.pattern.search(stripped)
         if match:
             return int(match.group())
-        raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_integer_value')}: {value}")
+        raise ImportDataError(_("core_admin.ImportDataError.message.invalid_integer_value") + ": " + str(value))
 
 
 class PositiveIntegerImportField(IntegerImportField):
@@ -674,10 +674,14 @@ class PositiveIntegerImportField(IntegerImportField):
             :raises ImportDataError: Vyvolá se při splnění podmínky ``value is not None and value < 0``.
         """
         if value is not None and str(value).strip().startswith("-"):
-            raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_positive_integer_value')}: {value}")
+            raise ImportDataError(
+                _("core_admin.ImportDataError.message.invalid_positive_integer_value") + ": " + str(value)
+            )
         value = super()._process_value(value)
         if value is not None and value < 0:
-            raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_positive_integer_value')}: {value}")
+            raise ImportDataError(
+                _("core_admin.ImportDataError.message.invalid_positive_integer_value") + ": " + str(value)
+            )
         return value
 
 
@@ -704,7 +708,7 @@ class DecimalImportField(BaseImportField):
         match = self.pattern.fullmatch(value)
         if match:
             return float(match.group())
-        raise ImportDataError(f"{_('core_admin.DecimalImportField.message.invalid_decimal_value')}: {value}")
+        raise ImportDataError(_("core_admin.DecimalImportField.message.invalid_decimal_value") + ": " + str(value))
 
 
 class BooleanImportField(BaseImportField):
@@ -916,7 +920,7 @@ class DateRangeImportField(BaseImportField):
                 start = datetime.datetime.strptime(start.strip(), "%Y-%m-%d").date()
                 end = datetime.datetime.strptime(end.strip(), "%Y-%m-%d").date()
                 return DateRange(start, end)
-        raise ImportDataError(f"{_('core_admin.DateRangeImportField.message.invalid_date_range_value')}: {value}")
+        raise ImportDataError(_("core_admin.DateRangeImportField.message.invalid_date_range_value") + ": " + str(value))
 
 
 class LookupImportField(BaseImportField):
@@ -1245,10 +1249,10 @@ class GeomImportField(BaseImportField):
         if isinstance(value, GEOSGeometry):
             if value.srid != self.srid:
                 raise ImportDataError(
-                    f"{_('core_admin.GeomImportField.message.srid_mismatch')}: {value.srid} != {self.srid}"
+                    _("core_admin.GeomImportField.message.srid_mismatch") + f": {value.srid} != {self.srid}"
                 )
             return value
-        raise ImportDataError(f"{_('core_admin.GeomImportField.message.invalid_date_value')}: {value}")
+        raise ImportDataError(_("core_admin.GeomImportField.message.invalid_date_value") + ": " + str(value))
 
 
 class GenericForeignKeyImportField(LookupImportField):
@@ -1595,7 +1599,7 @@ class ImportModelMapper(ABC):
             ImportDataAdminForm.PERFORMED_ACTION_DELETE,
         ):
             raise ImportDataError(
-                f"{_('core_admin.ImportDataError.message.invalid_performed_action')}: {performed_action}"
+                _("core_admin.ImportDataError.message.invalid_performed_action") + ": " + str(performed_action)
             )
         mapping_dict = {self.map_column_name_to_field_name(field): value for field, value in mapping_dict.items()}
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
@@ -1747,7 +1751,7 @@ class ImportModelMapper(ABC):
         for key, value in self.value_dict.items():
             required = self.is_field_required(key)
             if required and (value is None or str(value).lower().strip() in ("nan", "") or pd.isna(value)):
-                raise ImportDataError(f"{_('core_admin.ImportDataError.message.missing_required_field')}: {key}")
+                raise ImportDataError(_("core_admin.ImportDataError.message.missing_required_field") + ": " + str(key))
 
     def map_column_name_to_field_name(self, column_name):
         """
@@ -2777,7 +2781,7 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
         if typ == Akce.TYP_AKCE_PROJEKTOVA and projekt_is_null:
             raise ImportDataError(_("core_admin.ImportDataError.message.akce_typ_check.typ_r_requires_filled_projekt"))
         if not self._is_import_null(typ) and typ not in (Akce.TYP_AKCE_SAMOSTATNA, Akce.TYP_AKCE_PROJEKTOVA):
-            raise ImportDataError(f"{_('core_admin.ImportDataError.message.akce_typ_check.invalid_typ')}: {typ}")
+            raise ImportDataError(_("core_admin.ImportDataError.message.akce_typ_check.invalid_typ") + ": " + str(typ))
         return super().import_validation(performed_action, *args, **kwargs)
 
     @classmethod
@@ -2807,7 +2811,8 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
             # Při DELETE je navázaná Akce smazána dříve než ArcheologickyZaznam,
             # reverzní vazba proto už nemusí existovat.
             akce = getattr(record, "akce", None)
-            return [record, akce.projekt if akce else None]
+            projekt = akce.projekt if akce else None
+            return [record, projekt] if projekt is not None else [record]
         elif isinstance(record, Akce):
             return [record.archeologicky_zaznam, record.projekt]
 
@@ -4598,7 +4603,7 @@ class UzivatelOpravneniMapper(ImportModelMapper):
         """
         if performed_action not in self.supported_actions:
             raise ImportDataError(
-                f"{_('core_admin.ImportDataError.message.invalid_performed_action')}: {performed_action}"
+                _("core_admin.ImportDataError.message.invalid_performed_action") + ": " + str(performed_action)
             )
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
@@ -4613,7 +4618,7 @@ class UzivatelOpravneniMapper(ImportModelMapper):
         """
         if performed_action not in self.supported_actions:
             raise ImportDataError(
-                f"{_('core_admin.ImportDataError.message.invalid_performed_action')}: {performed_action}"
+                _("core_admin.ImportDataError.message.invalid_performed_action") + ": " + str(performed_action)
             )
         try:
             user = User.objects.get(ident_cely=self.value_dict["uzivatel"])
@@ -4816,7 +4821,7 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
         """
         if performed_action not in self.supported_actions:
             raise ImportDataError(
-                f"{_('core_admin.ImportDataError.message.invalid_performed_action')}: {performed_action}"
+                _("core_admin.ImportDataError.message.invalid_performed_action") + ": " + str(performed_action)
             )
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
@@ -4831,7 +4836,7 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
         """
         if performed_action not in self.supported_actions:
             raise ImportDataError(
-                f"{_('core_admin.ImportDataError.message.invalid_performed_action')}: {performed_action}"
+                _("core_admin.ImportDataError.message.invalid_performed_action") + ": " + str(performed_action)
             )
         try:
             user = User.objects.get(ident_cely=self.value_dict["uzivatel"])
