@@ -1409,7 +1409,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         soubor.save()
         if include_content:
             content_type = get_mime_type(soubor.nazev)
-            rep_bin_file = RepositoryBinaryFile(uuid, data, soubor.nazev)
+            rep_bin_file = RepositoryBinaryFile(result.text, data, soubor.nazev)
             headers = {
                 "Content-Type": content_type,
                 "Content-Disposition": f'attachment; filename="{soubor.nazev}"'.encode("utf-8"),
@@ -1470,7 +1470,10 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             file = io.BytesIO()
             file.write(response.content)
             file.seek(0)
-            rep_bin_file = RepositoryBinaryFile(uuid, file)
+            container_url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
+            if ident_cely_old is not None:
+                container_url = container_url.replace(self.record.ident_cely, ident_cely_old)
+            rep_bin_file = RepositoryBinaryFile(container_url, file)
             logger.debug(
                 "core_repository_connector.get_binary_file.end",
                 extra={
