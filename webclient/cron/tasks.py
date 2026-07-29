@@ -994,13 +994,18 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                                 ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
                             )
                             return
-                        redis_connector.set(
-                            job_key("import_data_status_message_tr"),
-                            translation_value(
-                                "cron.tasks.run_data_import.validating", n=row_order + 1, total=total_rows
-                            ),
-                            ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
-                        )
+                        # Throttle the human-readable status message to one write per
+                        # VALIDATION_REDIS_UPDATE_INTERVAL rows (plus the first row) — the numeric
+                        # progress bar is driven separately by import_data_validation_progress, so
+                        # this label only needs to advance coarsely. Avoids one Redis SET per row.
+                        if row_order % VALIDATION_REDIS_UPDATE_INTERVAL == 0:
+                            redis_connector.set(
+                                job_key("import_data_status_message_tr"),
+                                translation_value(
+                                    "cron.tasks.run_data_import.validating", n=row_order + 1, total=total_rows
+                                ),
+                                ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+                            )
                         if mapper_class:
                             try:
                                 mapper = mapper_class(row.to_dict())

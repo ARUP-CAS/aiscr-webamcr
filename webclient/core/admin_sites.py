@@ -462,7 +462,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 context["error_message_details"] = str(ImportDataMissingFileError())
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
 
-            job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
+            job_id = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(20))
             lock_token = secrets.token_hex(16)
 
             # Atomic acquire is the real serialization guarantee (§4.1 step 7); on a TOCTOU race with

@@ -2786,7 +2786,9 @@ def _translate_status_value(raw):
             return params.get("message", "")
         try:
             return _(obj["id"]).format(**params)
-        except (KeyError, IndexError):
+        except (KeyError, IndexError, ValueError):
+            # ValueError covers a stray/literal brace in the translated string that breaks
+            # str.format(); fall back to the untouched translation.
             return _(obj["id"])
     return _(raw)
 
