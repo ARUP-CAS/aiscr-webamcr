@@ -46,5 +46,39 @@
       <amcr:telefon>608123123</amcr:telefon>
       <amcr:email>test@arup.cas.cz</amcr:email>
     </amcr:oznamovatel>
+    <amcr:soubor>
+      <amcr:id>soub-0000001</amcr:id>
+      <amcr:path>rest/AMCR-selenium-test/record/C-202500001/file/UUID-REMOVED</amcr:path>
+      <amcr:nazev>oznameni_C-202500001_20250727120001.pdf</amcr:nazev>
+      <amcr:mimetype>application/pdf</amcr:mimetype>
+      <amcr:rozsah>6</amcr:rozsah>
+      <amcr:size_mb>0.2123908997</amcr:size_mb>
+      <amcr:sha_512>1cf571a0474263cba31c1554525d4b6865914f81c97bd054bb55da1a464d7236e320f8c9499438ee7a97ec842996d3b539a6905d7fee122051123d5184c81cd0</amcr:sha_512>
+      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/C-202500001/file/UUID-REMOVED</amcr:url>
+      <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+        <amcr:poznamka>oznameni_C-202500001_20250727120001.pdf</amcr:poznamka>
+        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
+      </amcr:historie>
+    </amcr:soubor>
+    <amcr:soubor>
+      <amcr:id>soub-0000001</amcr:id>
+      <amcr:path>rest/AMCR-selenium-test/record/C-202500001/file/UUID-REMOVED</amcr:path>
+      <amcr:nazev>test_foto_1.jpg</amcr:nazev>
+      <amcr:mimetype>image/jpeg</amcr:mimetype>
+      <amcr:rozsah>1</amcr:rozsah>
+      <amcr:size_mb>0.2002487183</amcr:size_mb>
+      <amcr:sha_512>0e8e2ebeb9dae8a407218849b91229720c3b76bcfdcced4b413bbed380a1e4d6cb06b97be753791c1fbc3280d44f7f9bc60882b45dab7d2ef12e99f2a09cac4b</amcr:sha_512>
+      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/C-202500001/file/UUID-REMOVED</amcr:url>
+      <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+        <amcr:poznamka>test_foto_1.jpg</amcr:poznamka>
+        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
+      </amcr:historie>
+    </amcr:soubor>
   </amcr:projekt>
 </amcr:amcr>

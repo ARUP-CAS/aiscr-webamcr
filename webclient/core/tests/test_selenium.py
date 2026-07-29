@@ -30,6 +30,7 @@ from django.db import connection
 from django.http import Http404
 from django.test import LiveServerTestCase
 from lxml import etree
+from pdf2image import convert_from_bytes
 from PIL import Image, ImageChops
 from rdflib import XSD, Graph, Literal, URIRef
 from selenium import webdriver
@@ -280,12 +281,71 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                         members.append(result)
         return members
 
-    def save_container_content(self, container_path, path):
+    FILE_UUID_REGEX = re.compile(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}")
+
+    def _build_file_uuid_map(self, fedora_ids):
+        """
+        Sestaví mapování reálných UUID souborů na stabilní placeholdery použité při tvorbě
+        názvu referenčního souboru.
+
+        Pokud záznam (kontejner) obsahuje jediný soubor, placeholder je prázdný řetězec, aby se
+        zachovaly názvy stávajících referenčních souborů. Pokud obsahuje souborů víc, jsou
+        rozlišeny podle stabilního názvu souboru (``Soubor.nazev``) dohledaného v databázi podle
+        reálného UUID, nikoli podle pořadí, ve kterém položky vrátí Fedora ``fcr:search``.
+
+        :param fedora_ids: Seznam ``fedora_id`` položek vrácených z Fedora ``fcr:search``.
+        :return: Slovník mapující reálné UUID na placeholder použitý v názvu referenčního souboru.
+        """
+        prefixes = {}
+        for fedora_id in fedora_ids:
+            filename = (
+                str(fedora_id.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__").replace(":", "--")
+            )
+            if "__file__" not in filename:
+                continue
+            match = self.FILE_UUID_REGEX.search(filename)
+            if not match:
+                continue
+            prefix = filename.split("__file__", 1)[0]
+            uid = match.group(0)
+            uids = prefixes.setdefault(prefix, [])
+            if uid not in uids:
+                uids.append(uid)
+
+        uuid_map = {}
+        for uids in prefixes.values():
+            if len(uids) == 1:
+                uuid_map[uids[0]] = ""
+                continue
+            used = set()
+            for uid in uids:
+                soubor = Soubor.objects.filter(path__endswith=f"/{uid}").first()
+                placeholder = re.sub(r"[^A-Za-z0-9_.-]", "_", soubor.nazev) if soubor else uid
+                if placeholder in used:
+                    placeholder = f"{placeholder}-{uid}"
+                used.add(placeholder)
+                uuid_map[uid] = placeholder
+        return uuid_map
+
+    def _apply_file_uuid_map(self, filename, uuid_map):
+        """
+        Nahradí v názvu referenčního souboru reálné UUID souboru stabilním placeholderem.
+
+        :param filename: Název sestavený z Fedora cesty (před nahrazením UUID).
+        :param uuid_map: Mapování reálného UUID na placeholder, viz :func:`_build_file_uuid_map`.
+        :return: Název s nahrazeným UUID.
+        """
+        if "__file__" in filename:
+            filename = self.FILE_UUID_REGEX.sub(lambda m: uuid_map.get(m.group(0), ""), filename)
+        return filename
+
+    def save_container_content(self, container_path, path, uuid_map=None):
         """
         Uloží container content.
 
         :param container_path: Parametr ``container_path`` se předává do volání ``get()``, ``str()``, pracuje se s atributy ``split``.
         :param path: Parametr ``path`` se předává do volání ``open()``, ``xml_to_string_bez_ignorovanych_z_textu()``.
+        :param uuid_map: Mapování reálného UUID souboru na stabilní placeholder, viz :func:`_build_file_uuid_map`.
 
             :return: Vrací proměnná ``members``.
         """
@@ -304,8 +364,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__").replace(":", "--")
         )
         extension = extensions[response.headers.get("Content-Type", "").split(";")[0].strip()]
-        if "__file__" in filename:
-            filename = re.sub(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", "", filename)
+        filename = self._apply_file_uuid_map(filename, uuid_map or {})
         if response.status_code == 200:
             f = open(f"{path}/{filename}.{extension}", "wb")
             if extension == "xml":
@@ -359,12 +418,44 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         rozdil = ImageChops.difference(img1, img2)
         return not rozdil.getbbox()
 
-    def check_container_content(self, container_path, path):
+    def porovnej_pdf_obsah(self, bin1, bin2):
+        """
+        Porovná dva PDF dokumenty zadané jako binární řetězce.
+
+        Binární porovnání PDF selhává i u vizuálně totožného dokumentu, pokud se změní generátor
+        PDF (např. verze knihovny), proto se každá stránka převede na obrázek a obrázky se porovnají
+        stejně jako u PNG (viz :func:`porovnej_png_obsah`).
+
+        :param bin1: První binární vstup použitý při porovnání.
+        :param bin2: Druhý binární vstup použitý při porovnání.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
+        try:
+            stranky1 = convert_from_bytes(bin1)
+            stranky2 = convert_from_bytes(bin2)
+        except Exception:
+            return False
+
+        if len(stranky1) != len(stranky2):
+            return False
+
+        for stranka1, stranka2 in zip(stranky1, stranky2):
+            buf1 = BytesIO()
+            buf2 = BytesIO()
+            stranka1.save(buf1, format="PNG")
+            stranka2.save(buf2, format="PNG")
+            if not self.porovnej_png_obsah(buf1.getvalue(), buf2.getvalue()):
+                return False
+        return True
+
+    def check_container_content(self, container_path, path, uuid_map=None):
         """
         Stáhne obsah z URL kontejneru a porovná ho s referenčním souborem na disku.
 
         :param container_path: URL kontejneru (Fedora) ke stažení obsahu.
         :param path: Adresář s referenčními soubory pro porovnání.
+        :param uuid_map: Mapování reálného UUID souboru na stabilní placeholder, viz :func:`_build_file_uuid_map`.
         :return: True pokud se obsah shoduje.
         """
         headers = {}
@@ -382,8 +473,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__").replace(":", "--")
         )
         extension = extensions[response.headers.get("Content-Type", "").split(";")[0].strip()]
-        if "__file__" in filename:
-            filename = re.sub(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", "", filename)
+        filename = self._apply_file_uuid_map(filename, uuid_map or {})
         if response.status_code == 200:
             f = open(f"{path}/{filename}.{extension}", "rb")
             sample_file = f.read()
@@ -412,6 +502,14 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
         elif extension == "png":
             assert self.porovnej_png_obsah(sample_file, response.content)
+        elif extension == "pdf":
+            res = self.porovnej_pdf_obsah(sample_file, response.content)
+            if res is False:
+                logger.error(
+                    "BaseSeleniumTestClass.fedora_error.check_container_content.pdf",
+                    extra={"data": filename},
+                )
+            assert res
         else:
             res = sample_file == response.content
             if res is False:
@@ -451,8 +549,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             f.write(json.dumps(index, indent=2).encode("utf-8"))
             f.close()
             res = json.loads(response.text)
+            uuid_map = self._build_file_uuid_map([n["fedora_id"] for n in res["items"]])
             for n in res["items"]:
-                self.save_container_content(n["fedora_id"], path)
+                self.save_container_content(n["fedora_id"], path, uuid_map)
 
     def check_fedora_change(self, time, path):
         """
@@ -487,8 +586,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
 
             res = json.loads(response.text)
+            uuid_map = self._build_file_uuid_map([n["fedora_id"] for n in res["items"]])
             for n in res["items"]:
-                self.check_container_content(n["fedora_id"], path)
+                self.check_container_content(n["fedora_id"], path, uuid_map)
 
     def check_fedora_delete(self, records):
         """

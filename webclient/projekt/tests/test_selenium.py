@@ -356,27 +356,28 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             ident = OznameniSeleniumTest.oznameni_projektu(self)
         self.check_fedora_change(time, "projekt/tests/resources/test_146/create_projekt")
 
-        # Úprava projektu – smazání dokumentace
+        # ident cely projektu
         self.login("archivar")
         self.goToAddress(f"/id/{ident}")
         time = self.getTime()
-        file = Soubor.objects.filter(vazba__projekt_souboru__ident_cely=ident).first().pk
-        self.ElementClick(By.ID, f"file-smazat-{file}")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_146/delete_soubor")
-
-        # ident cely projektu
-        self.goToAddress(f"/id/{ident}")
-        time = self.getTime()
         self.ElementClick(By.ID, "projekt-schvalit")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_send_mail label")
+        # self.ElementClick(By.CSS_SELECTOR, "#div_id_send_mail label")
         with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
             with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "submit-btn")
         # ident_new = self.driver.find_element(By.ID, "id-app-entity-item").text
         self.check_fedora_change(time, "projekt/tests/resources/test_146/ident_cely")
         self.check_fedora_delete(["record/X-C-000000001"])
+
+        # Úprava projektu – smazání dokumentace
+        self.goToAddress(f"/id/{ident}")
+        ident = self.driver.current_url.split("/")[-1]
+        time = self.getTime()
+        file = Soubor.objects.filter(vazba__projekt_souboru__ident_cely=ident, nazev="test_foto_1.jpg").first().pk
+        self.ElementClick(By.ID, f"file-smazat-{file}")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/delete_soubor")
 
         # Vytvoření projektu průzkumu
         self.goToAddress("/projekt/zapsat")
