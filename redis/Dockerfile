@@ -1,6 +1,6 @@
 # Dockerfile for Redis
 
-FROM redis:8.8.0
+FROM redis:8.8.1
 
 ARG VERSION_APP
 ARG TAG_APP
