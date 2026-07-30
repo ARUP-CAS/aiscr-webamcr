@@ -21,6 +21,10 @@ class RedisConnector:
     r = None
     r_decode = None
     IMPORT_DATA_LOCK_KEY = "import_data_lock"
+    # Zpětný odkaz lock → job_id: jediný singleton klíč (bez ``_{job_id}`` sufixu), který drží
+    # id právě běžící importní úlohy. Umožňuje superuživateli ručně resetovat zaseklou úlohu i
+    # z „import běží (jiný admin)“ stránky, kde stránka zná jen existenci locku, nikoli job_id.
+    IMPORT_DATA_ACTIVE_JOB_KEY = "import_data_active_job_id"
     _RELEASE_LOCK_SCRIPT = """
 if redis.call("get", KEYS[1]) == ARGV[1] then
     return redis.call("del", KEYS[1])

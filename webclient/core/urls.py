@@ -125,6 +125,16 @@ urlpatterns = [
         name="data-import-cancel",
     ),
     path(
+        "data-import-reset/<str:job_id>",
+        views.DataImportReset.as_view(),
+        name="data-import-reset",
+    ),
+    path(
+        "data-import-reset",
+        views.DataImportReset.as_view(),
+        name="data-import-reset-active",
+    ),
+    path(
         "data-import-progress-report/<str:job_id>",
         views.DataImportProgressReportView.as_view(),
         name="data-import-progress-report",

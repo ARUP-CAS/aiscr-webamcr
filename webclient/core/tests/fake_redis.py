@@ -13,7 +13,7 @@ class FakeRedis:
     metody, doplňte je sem.
     """
 
-    def __init__(self, initial: dict | None = None, eval_results: list | None = None):
+    def __init__(self, initial: dict | None = None, eval_results: list | None = None, decode_responses: bool = False):
         """
         Inicializuje prázdné úložiště a volitelně předvyplní hodnoty.
 
@@ -21,10 +21,15 @@ class FakeRedis:
         :param eval_results: Volitelný seznam návratových hodnot pro postupné volání ``eval()``.
             Každé volání ``eval()`` odebere první položku seznamu. Po vyčerpání seznamu vrátí vždy ``1``.
             ``None`` (výchozí) znamená vždy vrátit ``1`` bez omezení.
+        :param decode_responses: Pokud ``True``, čtecí operace (``get``, ``lrange`` a pipeline ``get``)
+            vracejí ``str`` místo ``bytes`` — emuluje klienta z ``get_connection_decode()``, který
+            používají view (``DataImportProgress``, ``DataImportStop``, ``DataImportCancel`` …).
+            Výchozí ``False`` zachovává bytovou sémantiku ``get_connection()`` pro taskové testy.
         """
         self._kv: dict[str, bytes] = {}
         self._lists: dict[str, list[bytes]] = {}
         self._eval_results: list = list(eval_results) if eval_results is not None else []
+        self._decode = decode_responses
         for key, value in (initial or {}).items():
             self.set(key, value)
 
@@ -34,6 +39,16 @@ class FakeRedis:
         if isinstance(value, bytes):
             return value
         return str(value).encode("utf-8")
+
+    def _maybe_decode(self, value):
+        """Dekóduje ``bytes`` na ``str``, pokud fake emuluje klienta s ``decode_responses=True``.
+
+        :param value: Hodnota načtená z úložiště (``bytes`` nebo ``None``).
+        :return: ``str`` v decode režimu, jinak původní hodnota beze změny.
+        """
+        if self._decode and isinstance(value, bytes):
+            return value.decode("utf-8")
+        return value
 
     def set(self, key, value, ex=None, nx=False):
         """
@@ -56,7 +71,7 @@ class FakeRedis:
 
         :param key: Redis klíč čtené hodnoty.
         """
-        return self._kv.get(key)
+        return self._maybe_decode(self._kv.get(key))
 
     def delete(self, *keys):
         """Smaže předané klíče (i listy) a vrátí počet skutečně odstraněných položek.
@@ -101,9 +116,8 @@ class FakeRedis:
         :param stop: Koncový index výřezu.
         """
         items = self._lists.get(key, [])
-        if stop == -1:
-            return list(items[start:])
-        return list(items[start : stop + 1])
+        sliced = items[start:] if stop == -1 else items[start : stop + 1]
+        return [self._maybe_decode(item) for item in sliced]
 
     def lset(self, key, index, value):
         """Nastaví hodnotu v listu na zadaném indexu.

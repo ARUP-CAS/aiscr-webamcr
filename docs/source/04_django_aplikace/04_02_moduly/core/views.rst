@@ -818,6 +818,31 @@ Třídy
       :raises PermissionDenied: Pokud přihlášený uživatel není superuživatel.
 
 
+.. py:class:: DataImportReset
+
+   Ruční reset zaseklé importní úlohy superuživatelem — jediná povolená obnova držení locku.
+
+   Použije se, když worker validační/importní úlohy zemře (OOM/SIGKILL) a lock zůstane držený
+   (až 48 h). Žádný automatický reaper neexistuje; uvolnění je výhradně tato vědomá akce admina.
+
+   **Metody:**
+
+   .. py:method:: post()
+
+      Vynuceně resetuje zaseklou importní úlohu a uvolní globální lock.
+
+      ``job_id`` se bere z URL (vlastní stránka běžící úlohy), jinak se dohledá ze zpětného
+      odkazu ``IMPORT_DATA_ACTIVE_JOB_KEY`` (stránka „import běží — jiný admin“). Reset je
+      povolen pro libovolnou ne-terminální fázi (``validating``/``importing``/``awaiting_approval``)
+      a smí ho provést kterýkoli superuživatel (§7) — dead-worker úlohu typicky nemůže uvolnit
+      její vlastník. Vlastní úklid a token-checked uvolnění locku provádí ``tasks.reset_import_job``.
+
+      :param request: HTTP požadavek přihlášeného superuživatele.
+      :param kwargs: Volitelně ``job_id`` identifikující importní úlohu.
+      :return: ``JsonResponse`` s výsledkem operace.
+      :raises PermissionDenied: Pokud přihlášený uživatel není superuživatel.
+
+
 Funkce
 ------
 

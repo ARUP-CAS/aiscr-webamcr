@@ -2906,6 +2906,18 @@ class DataImportProgress(LoginRequiredMixin, View):
             }
 
             phase = redis_connector.get(f"import_data_phase_{job_id}") or "unknown"
+            from cron.tasks import (
+                IMPORT_PHASE_CANCELED,
+                IMPORT_PHASE_FAILED,
+                IMPORT_PHASE_FINISHED,
+                IMPORT_PHASE_STOPPED,
+                IMPORT_PHASE_VALIDATING,
+                IMPORT_PROGRESS_PHASE_DATA_DONE,
+                IMPORT_PROGRESS_PHASE_FEDORA_DONE,
+                IMPORT_PROGRESS_PHASE_FINISHED,
+                IMPORT_PROGRESS_PHASE_HISTORY_DONE,
+            )
+
             # Live validation rows (incremental UI path, §5) — read from the rpush-ed list, not the
             # JSON snapshot the report reads.
             validation_details = redis_connector.lrange(f"import_data_validation_details_{job_id}", 0, -1)
@@ -2920,7 +2932,9 @@ class DataImportProgress(LoginRequiredMixin, View):
                 for item in validation_details
             ]
             invalid_records = json.loads(redis_connector.get(f"import_data_invalid_records_{job_id}") or "[]")
-            failure_reason = redis_connector.get(f"import_data_failure_reason_{job_id}") if phase == "failed" else None
+            failure_reason = (
+                redis_connector.get(f"import_data_failure_reason_{job_id}") if phase == IMPORT_PHASE_FAILED else None
+            )
             performed_action = redis_connector.get(f"import_performed_action_{job_id}")
             performed_action_labels = {
                 "insert": _("core.forms.ImportDataAdminForm.insert"),
@@ -2928,13 +2942,6 @@ class DataImportProgress(LoginRequiredMixin, View):
                 "delete": _("core.forms.ImportDataAdminForm.delete"),
             }
             performed_action_label = performed_action_labels.get(performed_action, performed_action)
-
-            from cron.tasks import (
-                IMPORT_PROGRESS_PHASE_DATA_DONE,
-                IMPORT_PROGRESS_PHASE_FEDORA_DONE,
-                IMPORT_PROGRESS_PHASE_FINISHED,
-                IMPORT_PROGRESS_PHASE_HISTORY_DONE,
-            )
 
             def _phase_fraction(progress_key: str, total_key: str) -> float:
                 total = int(redis_connector.get(total_key) or 0)
@@ -2945,7 +2952,7 @@ class DataImportProgress(LoginRequiredMixin, View):
 
             # Validation progress bar (§5b.4): a separate branch above the import if/elif ladder,
             # gated on phase, so it never disturbs the import constants or the import tests.
-            if phase == "validating":
+            if phase == IMPORT_PHASE_VALIDATING:
                 validation_total = int(redis_connector.get(f"import_data_validation_total_{job_id}") or 0)
                 if validation_total:
                     validation_done = int(redis_connector.get(f"import_data_validation_progress_{job_id}") or 0)
@@ -2977,12 +2984,12 @@ class DataImportProgress(LoginRequiredMixin, View):
                 progress_data = math.floor((len(serialized_results) / record_count) * IMPORT_PROGRESS_PHASE_DATA_DONE)
             else:
                 progress_data = 0
-            if phase in ("finished", "stopped", "failed", "canceled"):
+            if phase in (IMPORT_PHASE_FINISHED, IMPORT_PHASE_STOPPED, IMPORT_PHASE_FAILED, IMPORT_PHASE_CANCELED):
                 status = phase
             elif phase_progress >= IMPORT_PROGRESS_PHASE_FINISHED:
-                status = "finished"
+                status = IMPORT_PHASE_FINISHED
             elif stopped:
-                status = "stopped"
+                status = IMPORT_PHASE_STOPPED
             else:
                 status = "in_progress"
             progress_response = {
@@ -3065,6 +3072,8 @@ class DataImportProgressReportView(LoginRequiredMixin, View):
         if not _check_import_ownership(request, job_id, redis_connector):
             raise PermissionDenied
 
+        from cron.tasks import IMPORT_PHASE_IMPORTING, IMPORT_PHASE_VALIDATING
+
         phase = redis_connector.get(f"import_data_phase_{job_id}") or "unknown"
         validation_results_raw = json.loads(redis_connector.get(f"import_data_validation_results_{job_id}") or "[]")
         # validation_result is a translation ID (valid rows) or a raw translated exception message
@@ -3114,7 +3123,7 @@ class DataImportProgressReportView(LoginRequiredMixin, View):
         rows = [build_row(item) for item in validation_results]
         # Mid-run reports are a partial snapshot (§4.7): surface the phase so a partial report is
         # never mistaken for the final one. The download is not refused mid-run.
-        if phase in ("validating", "importing"):
+        if phase in (IMPORT_PHASE_VALIDATING, IMPORT_PHASE_IMPORTING):
             rows = [
                 {
                     _("core.templates.admin.import_data.import_order"): _(
@@ -3201,6 +3210,7 @@ class DataImportStart(LoginRequiredMixin, View):
                 ex=tasks.IMPORT_DATA_EXPIRATION_SECONDS,
             )
             redis_connector.delete(f"import_data_current_job_{request.user.id}")
+            redis_connector.delete(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
             redis_connector.expire(f"import_data_lock_token_{job_id}", tasks.IMPORT_DATA_EXPIRATION_SECONDS)
             return JsonResponse(
                 {"result": "error", "status_message": _("cron.tasks.run_data_import.failed_lock_lost")},
@@ -3263,6 +3273,7 @@ class DataImportCancel(LoginRequiredMixin, View):
             _expire_import_data_keys(redis_connector, job_id, tasks.IMPORT_DATA_EXPIRATION_SECONDS)
             if job_user is not None:
                 redis_connector.delete(f"import_data_current_job_{job_user}")
+            redis_connector.delete(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
             return JsonResponse({"result": "ok"})
 
         if phase == tasks.IMPORT_PHASE_VALIDATING:
@@ -3280,3 +3291,51 @@ class DataImportCancel(LoginRequiredMixin, View):
             {"result": "error", "status_message": _("core.templates.admin.import_data.cancel_not_allowed")},
             status=409,
         )
+
+
+class DataImportReset(LoginRequiredMixin, View):
+    """Ruční reset zaseklé importní úlohy superuživatelem — jediná povolená obnova držení locku.
+
+    Použije se, když worker validační/importní úlohy zemře (OOM/SIGKILL) a lock zůstane držený
+    (až 48 h). Žádný automatický reaper neexistuje; uvolnění je výhradně tato vědomá akce admina.
+    """
+
+    http_method_names = ["post"]
+
+    @method_decorator(csrf_protect)
+    def post(self, request, **kwargs):
+        """
+        Vynuceně resetuje zaseklou importní úlohu a uvolní globální lock.
+
+        ``job_id`` se bere z URL (vlastní stránka běžící úlohy), jinak se dohledá ze zpětného
+        odkazu ``IMPORT_DATA_ACTIVE_JOB_KEY`` (stránka „import běží — jiný admin“). Reset je
+        povolen pro libovolnou ne-terminální fázi (``validating``/``importing``/``awaiting_approval``)
+        a smí ho provést kterýkoli superuživatel (§7) — dead-worker úlohu typicky nemůže uvolnit
+        její vlastník. Vlastní úklid a token-checked uvolnění locku provádí ``tasks.reset_import_job``.
+
+        :param request: HTTP požadavek přihlášeného superuživatele.
+        :param kwargs: Volitelně ``job_id`` identifikující importní úlohu.
+        :return: ``JsonResponse`` s výsledkem operace.
+        :raises PermissionDenied: Pokud přihlášený uživatel není superuživatel.
+        """
+        if not request.user.is_superuser:
+            raise PermissionDenied
+        from cron import tasks
+
+        redis_connector = RedisConnector.get_connection_decode()
+        job_id = kwargs.get("job_id") or redis_connector.get(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
+        phase = redis_connector.get(f"import_data_phase_{job_id}") if job_id else None
+        if phase not in (
+            tasks.IMPORT_PHASE_VALIDATING,
+            tasks.IMPORT_PHASE_IMPORTING,
+            tasks.IMPORT_PHASE_AWAITING_APPROVAL,
+        ):
+            return JsonResponse(
+                {"result": "error", "status_message": _("core.templates.admin.import_data.nothing_to_reset")},
+                status=409,
+            )
+        tasks.reset_import_job(redis_connector, job_id)
+        logger.warning(
+            "core.views.DataImportReset.reset", extra={"job_id": job_id, "by_user": request.user.id, "phase": phase}
+        )
+        return JsonResponse({"result": "ok"})

@@ -361,6 +361,9 @@ class AmcrCustomAdminSite(admin.AdminSite):
         """
         context = dict(context)
         context["import_data_running"] = True
+        # No-arg reset: the blocked admin does not know the running job's id, so the endpoint
+        # resolves it from IMPORT_DATA_ACTIVE_JOB_KEY.
+        context["url_reset"] = reverse("core:data-import-reset-active")
         return TemplateResponse(request, "admin/import_data/import_data.html", context)
 
     def _render_import_polling_ui(self, request, context, job_id):
@@ -382,6 +385,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
         context["url_stop"] = reverse("core:data-import-stop", args=[job_id])
         context["url_start"] = reverse("core:data-import-start", args=[job_id])
         context["url_cancel"] = reverse("core:data-import-cancel", args=[job_id])
+        context["url_reset"] = reverse("core:data-import-reset", args=[job_id])
         context["performed_action"] = performed_action
         context["performed_action_label"] = self._import_performed_action_labels().get(
             performed_action, performed_action
@@ -492,6 +496,8 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 ttl = tasks.IMPORT_DATA_RUNNING_TTL_SECONDS
                 self.redis_connector.set(f"import_data_file_chunks_{job_id}", chunk_count, ex=ttl)
                 self.redis_connector.set(f"import_data_current_job_{request.user.id}", job_id, ex=ttl)
+                # Lock → job back-reference so a superuser can manually reset this job from anywhere.
+                self.redis_connector.set(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, job_id, ex=ttl)
                 self.redis_connector.set(f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_VALIDATING, ex=ttl)
                 self.redis_connector.set(
                     f"import_data_status_message_tr_{job_id}",
@@ -516,6 +522,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 stray_keys.append(f"import_data_file_chunks_{job_id}")
                 self.redis_connector.delete(*stray_keys)
                 self.redis_connector.delete(f"import_data_current_job_{request.user.id}")
+                self.redis_connector.delete(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
                 context["error_message"] = _("core.admin.import_data.error.import_error")
                 context["error_message_details"] = _("core.admin.import_data.error.unexpected_error")
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)

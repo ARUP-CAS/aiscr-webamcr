@@ -61,6 +61,37 @@
       <p>{% trans "core.templates.admin.import_data.not_maintenance" %}</p>
     {% elif import_data_running and not job_id %}
       <p>{% trans "core.templates.admin.import_data.import_is_running" %}</p>
+      {% if url_reset %}
+        {% csrf_token %}
+        <p>
+          <input type="button" id="resetImportBusy" class="default"
+                 value="{% trans "core.templates.admin.import_data.reset_import" %}">
+        </p>
+        <script>
+            // Manual, admin-only recovery for a lock stuck by a dead worker. No job_id here (this is
+            // another admin's job), so the endpoint resolves it from IMPORT_DATA_ACTIVE_JOB_KEY.
+            (function () {
+                const resetButton = document.getElementById("resetImportBusy")
+                if (!resetButton) {
+                    return
+                }
+                const resetUrl = "{{ url_reset }}"
+                const csrfToken = document.cookie.split("; ").find(row => row.startsWith("csrftoken="))?.split("=")[1]
+                resetButton.addEventListener("click", async () => {
+                    if (!window.confirm("{% trans 'core.templates.admin.import_data.reset_confirm' %}")) {
+                        return
+                    }
+                    resetButton.disabled = true
+                    const response = await fetch(resetUrl, {method: "POST", headers: {"X-CSRFToken": csrfToken}})
+                    if (response.ok) {
+                        window.location.reload()
+                    } else {
+                        resetButton.disabled = false
+                    }
+                })
+            })()
+        </script>
+      {% endif %}
     {% elif error_message %}
       <p class="errornote">{{ error_message }}</p>
       {% if error_message_details %}
@@ -96,6 +127,8 @@
                  value="{% trans "core.templates.admin.import_data.stop_request" %}" disabled>
           <input type="button" id="cancelRelease" class="default"
                  value="{% trans "core.templates.admin.import_data.cancel_release_lock" %}" disabled>
+          <input type="button" id="resetImport" class="default"
+                 value="{% trans "core.templates.admin.import_data.reset_import" %}" disabled>
           <input type="button" id="downloadReport" class="default"
                  value="{% trans "core.templates.admin.import_data.download_report" %}" disabled>
         </p>
@@ -163,6 +196,7 @@
       const stopRequestUrl = "{{ url_stop }}"
       const startRequestUrl = "{{ url_start }}"
       const cancelRequestUrl = "{{ url_cancel }}"
+      const resetRequestUrl = "{{ url_reset }}"
       const downloadReportUrl = "{% url 'core:data-import-progress-report' job_id %}"
       const FAILED_LOCK_LOST_ID = "cron.tasks.run_data_import.failed_lock_lost"
       const csrfToken = document.cookie.split("; ").find(row => row.startsWith("csrftoken="))?.split("=")[1]
@@ -172,6 +206,7 @@
       const startImportButton = document.getElementById("startImport")
       const stopRequestButton = document.getElementById("stopRequests")
       const cancelReleaseButton = document.getElementById("cancelRelease")
+      const resetImportButton = document.getElementById("resetImport")
       const downloadReportButton = document.getElementById("downloadReport")
       const reuploadNotice = document.getElementById("reuploadNotice")
       const reuploadButton = document.getElementById("reuploadButton")
@@ -179,6 +214,7 @@
       let stopRequests = false
       let stopRequested = false
       let cancelRequested = false
+      let resetRequested = false
       let currentPhase = null
       let maxProgressData = 0
 
@@ -192,6 +228,10 @@
       // Stop is the single control that halts a running validation (cancel ≡ stop there).
       function applyPhaseUi(phase) {
           setDisabled(downloadReportButton, false)
+          // Manual reset is available in any non-terminal phase (dead-worker recovery); the admin is
+          // the sole decision-maker (§ finding #1). It stays disabled once already requested.
+          const resettable = phase === "validating" || phase === "importing" || phase === "awaiting_approval"
+          setDisabled(resetImportButton, !resettable || resetRequested)
           if (phase === "validating") {
               setDisabled(startImportButton, true)
               setDisabled(stopRequestButton, false)
@@ -425,6 +465,24 @@
               }
               stopRequests = false
               process()
+          })
+      }
+
+      if (resetImportButton) {
+          resetImportButton.addEventListener("click", async () => {
+              if (!window.confirm("{% trans 'core.templates.admin.import_data.reset_confirm' %}")) {
+                  return
+              }
+              resetRequested = true
+              setDisabled(resetImportButton, true)
+              const response = await fetch(resetRequestUrl, {method: "POST", headers: {"X-CSRFToken": csrfToken}})
+              if (!response.ok) {
+                  resetRequested = false
+                  const data = await response.json().catch(() => null)
+                  document.getElementById("processCurrentStatus").textContent = data?.status_message || ""
+                  setDisabled(resetImportButton, false)
+              }
+              // On success the running poll loop observes phase=failed and winds the UI down.
           })
       }
 

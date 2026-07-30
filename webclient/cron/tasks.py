@@ -216,6 +216,7 @@ TRANSLATABLE_MESSAGE_IDS = (
     _("cron.tasks.run_data_import.cancelled"),
     _("cron.tasks.run_data_import.validation_rejected"),
     _("cron.tasks.run_data_import.validation_done"),
+    _("cron.tasks.run_data_import.reset_by_admin"),
     _("core.admin.import_data.record_valid"),
 )
 
@@ -789,6 +790,76 @@ def _format_import_primary_key(pk):
     return str(pk)
 
 
+def reset_import_job(redis_connector, job_id):
+    """Ruční superuživatelský reset zaseklé importní úlohy: uvolní globální lock a úlohu ukončí.
+
+    Určeno pro případ, kdy worker validační/importní úlohy zemřel (OOM/SIGKILL) a lock zůstal
+    držený — jediná povolená obnova je tato ruční akce administrátora (žádný automatický reaper).
+    Uvolnění locku je token-checked: pokud lock mezitím legitimně získala jiná úloha, je release
+    no-op a cizí lock zůstane nedotčen. Postup zrcadlí terminální ``finally`` importních tasků:
+    nastaví stop sentinel (případný živý zombie task se zastaví při nejbližší kontrole a sám
+    zruší svou právě otevřenou DB transakci), fázi ``failed`` s důvodem ``error``, vyčistí
+    ukazatel běžící úlohy uživatele i zpětný odkaz ``IMPORT_DATA_ACTIVE_JOB_KEY``, uvolní případný
+    nastagovaný ZIP a per-job datové klíče pouze expiruje (report zůstane stažitelný).
+
+    :param redis_connector: Dekódující Redis spojení.
+    :param job_id: Identifikátor resetované importní úlohy.
+    """
+    logger.warning("cron.tasks.reset_import_job.start", extra={"job_id": job_id})
+
+    def job_key(key):
+        return "{}_{}".format(key, job_id)
+
+    def to_str(value):
+        return value.decode("utf-8") if isinstance(value, bytes) else value
+
+    # Halt any still-alive task first, then token-checked release so a re-acquired lock is untouched.
+    redis_connector.set(job_key("import_data_stop"), 1, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+    lock_token = to_str(redis_connector.get(job_key("import_data_lock_token")))
+    if lock_token:
+        RedisConnector.release_import_lock(redis_connector, lock_token)
+
+    redis_connector.set(job_key("import_data_phase"), IMPORT_PHASE_FAILED, ex=IMPORT_DATA_EXPIRATION_SECONDS)
+    redis_connector.set(
+        job_key("import_data_failure_reason"), IMPORT_FAILURE_REASON_ERROR, ex=IMPORT_DATA_EXPIRATION_SECONDS
+    )
+    redis_connector.set(
+        job_key("import_data_status_message_tr"),
+        translation_value("cron.tasks.run_data_import.reset_by_admin"),
+        ex=IMPORT_DATA_EXPIRATION_SECONDS,
+    )
+
+    job_user = to_str(redis_connector.get(job_key("import_data_user")))
+    if job_user is not None:
+        redis_connector.delete("import_data_current_job_{}".format(job_user))
+    redis_connector.delete(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
+
+    # Free any staged ZIP chunks the dead task never cleaned up (can be hundreds of MB).
+    leftover_chunks_raw = redis_connector.get(job_key("import_data_file_chunks"))
+    if leftover_chunks_raw:
+        try:
+            leftover_count = int(leftover_chunks_raw)
+        except (TypeError, ValueError):
+            leftover_count = 0
+        stray_keys = ["import_data_file_{}_{}".format(job_id, i) for i in range(leftover_count)]
+        stray_keys.append(job_key("import_data_file_chunks"))
+        redis_connector.delete(*stray_keys)
+
+    # Expire (not delete) the per-job data keys so the report stays downloadable during retention.
+    count_raw = redis_connector.get(job_key("import_data_count"))
+    try:
+        count = int(count_raw) if count_raw else 0
+    except (TypeError, ValueError):
+        count = 0
+    pipe = redis_connector.pipeline()
+    for suffix in IMPORT_DATA_JOB_KEY_SUFFIXES:
+        pipe.expire(job_key(suffix), IMPORT_DATA_EXPIRATION_SECONDS)
+    for i in range(count):
+        pipe.expire("import_data_{}_record_{}".format(job_id, i), IMPORT_DATA_EXPIRATION_SECONDS)
+    pipe.execute()
+    logger.warning("cron.tasks.reset_import_job.done", extra={"job_id": job_id, "job_user": job_user})
+
+
 @shared_task
 def run_data_import_validation(job_id, user_id, lock_token, performed_action):
     """
@@ -1151,6 +1222,9 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
             # POST expires during a long awaiting_approval review and the owner is locked out of
             # their own still-valid, still-lock-holding job (US-3 "Leave and come back", §3.2).
             persist_pipe.persist("import_data_current_job_{}".format(user_id))
+            # Keep the lock → job back-reference alive exactly as long as the (now persisted) lock,
+            # so a manual reset can still target this job during a long awaiting_approval review.
+            persist_pipe.persist(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
             persist_pipe.execute()
         else:
             # Terminal failure/stop → release the lock, clear the per-user pointer, and expire (not
@@ -1167,6 +1241,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                 if isinstance(user_pointer, bytes):
                     user_pointer = user_pointer.decode("utf-8")
                 redis_connector.delete("import_data_current_job_{}".format(user_pointer))
+            redis_connector.delete(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
             expire_pipe = redis_connector.pipeline()
             for key in all_data_keys:
                 expire_pipe.expire(key, IMPORT_DATA_EXPIRATION_SECONDS)
@@ -2340,6 +2415,7 @@ def run_data_import(job_id, user_id, lock_token):
             if isinstance(job_user, bytes):
                 job_user = job_user.decode("utf-8")
             redis_connector.delete("import_data_current_job_{}".format(job_user))
+        redis_connector.delete(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
         leftover_chunks_raw = redis_connector.get(job_key("import_data_file_chunks"))
         if leftover_chunks_raw:
             leftover_count = int(leftover_chunks_raw)

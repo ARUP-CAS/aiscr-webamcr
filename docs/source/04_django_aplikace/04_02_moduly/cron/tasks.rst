@@ -202,6 +202,22 @@ Funkce
    :param pk: Primární klíč z mapperu, typicky slovník složeného klíče nebo skalární hodnota.
    :return: Textová reprezentace klíče vhodná pro zobrazení ve validační tabulce.
 
+.. py:function:: reset_import_job(redis_connector, job_id)
+
+   Ruční superuživatelský reset zaseklé importní úlohy: uvolní globální lock a úlohu ukončí.
+
+   Určeno pro případ, kdy worker validační/importní úlohy zemřel (OOM/SIGKILL) a lock zůstal
+   držený — jediná povolená obnova je tato ruční akce administrátora (žádný automatický reaper).
+   Uvolnění locku je token-checked: pokud lock mezitím legitimně získala jiná úloha, je release
+   no-op a cizí lock zůstane nedotčen. Postup zrcadlí terminální ``finally`` importních tasků:
+   nastaví stop sentinel (případný živý zombie task se zastaví při nejbližší kontrole a sám
+   zruší svou právě otevřenou DB transakci), fázi ``failed`` s důvodem ``error``, vyčistí
+   ukazatel běžící úlohy uživatele i zpětný odkaz ``IMPORT_DATA_ACTIVE_JOB_KEY``, uvolní případný
+   nastagovaný ZIP a per-job datové klíče pouze expiruje (report zůstane stažitelný).
+
+   :param redis_connector: Dekódující Redis spojení.
+   :param job_id: Identifikátor resetované importní úlohy.
+
 .. py:function:: run_data_import_validation(job_id, user_id, lock_token, performed_action)
 
    Asynchronně zvaliduje nahraný ZIP archiv hromadného importu (viz §4.2 dokumentu #391).

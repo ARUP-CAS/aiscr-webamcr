@@ -248,6 +248,12 @@ CORE
    * - ``data-import-cancel``
      - ``data-import-cancel/<str:job_id>``
      - ``views.DataImportCancel.as_view()``
+   * - ``data-import-reset``
+     - ``data-import-reset/<str:job_id>``
+     - ``views.DataImportReset.as_view()``
+   * - ``data-import-reset-active``
+     - ``data-import-reset``
+     - ``views.DataImportReset.as_view()``
    * - ``data-import-progress-report``
      - ``data-import-progress-report/<str:job_id>``
      - ``views.DataImportProgressReportView.as_view()``
