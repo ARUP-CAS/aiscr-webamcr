@@ -2919,8 +2919,16 @@ class DataImportProgress(LoginRequiredMixin, View):
             )
 
             # Live validation rows (incremental UI path, §5) — read from the rpush-ed list, not the
-            # JSON snapshot the report reads.
-            validation_details = redis_connector.lrange(f"import_data_validation_details_{job_id}", 0, -1)
+            # JSON snapshot the report reads. The client sends back how many rows it already has
+            # (validation_since) so each poll only pays for the rows appended since the last one,
+            # instead of re-reading/re-translating the whole growing list every tick (review r3703505264).
+            try:
+                validation_since = max(int(request.GET.get("validation_since", 0)), 0)
+            except (TypeError, ValueError):
+                validation_since = 0
+            validation_details = redis_connector.lrange(
+                f"import_data_validation_details_{job_id}", validation_since, -1
+            )
             # validation_result is a translation ID for valid rows, or a raw translated exception
             # message for invalid rows (carve-out: mapper exceptions compose the message at raise
             # time). _translate_status_value renders both correctly in the admin's locale.
@@ -2931,6 +2939,7 @@ class DataImportProgress(LoginRequiredMixin, View):
                 }
                 for item in validation_details
             ]
+            validation_cursor = validation_since + len(validation_details)
             invalid_records = json.loads(redis_connector.get(f"import_data_invalid_records_{job_id}") or "[]")
             failure_reason = (
                 redis_connector.get(f"import_data_failure_reason_{job_id}") if phase == IMPORT_PHASE_FAILED else None
@@ -3006,6 +3015,7 @@ class DataImportProgress(LoginRequiredMixin, View):
                 "status_message": status_message or _("core.templates.admin.import_data.starting"),
                 "status_message_id": status_message_id,
                 "validation_results": validation_results,
+                "validation_cursor": validation_cursor,
                 "invalid_records": invalid_records,
                 "failure_reason": failure_reason,
                 "performed_action": performed_action,
@@ -3179,23 +3189,30 @@ class DataImportStart(LoginRequiredMixin, View):
                 {"result": "error", "status_message": _("core.templates.admin.import_data.not_owner")},
                 status=403,
             )
-        phase = redis_connector.get(f"import_data_phase_{job_id}")
-        if phase != tasks.IMPORT_PHASE_AWAITING_APPROVAL or redis_connector.get(f"import_data_valid_{job_id}") != "1":
-            return JsonResponse(
-                {
-                    "result": "error",
-                    "status_message": _("core.templates.admin.import_data.invalid_records"),
-                },
-                status=422,
-            )
-        # Reuse the token held continuously since upload and re-attach the 6h TTL — the lock had NO
-        # TTL during awaiting_approval (the validation task persist()ed it on success). Do NOT acquire
-        # a new lock (§4.4). refresh returns False only on an explicit superuser force-cancel or a
-        # Redis restart — not on TTL expiry, because there is no TTL to expire during review.
-        lock_token = redis_connector.get(f"import_data_lock_token_{job_id}")
-        if not lock_token or not RedisConnector.refresh_import_lock(
-            redis_connector, lock_token, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS
-        ):
+        # Atomic phase check + awaiting_approval->importing transition, so two concurrent Start
+        # requests can't both pass and enqueue run_data_import twice (review r3703505178).
+        claimed, lock_token = RedisConnector.claim_awaiting_import(
+            redis_connector,
+            job_id,
+            tasks.IMPORT_PHASE_AWAITING_APPROVAL,
+            tasks.IMPORT_PHASE_IMPORTING,
+            tasks.IMPORT_DATA_RUNNING_TTL_SECONDS,
+        )
+        if not claimed:
+            phase = redis_connector.get(f"import_data_phase_{job_id}")
+            if (
+                phase != tasks.IMPORT_PHASE_AWAITING_APPROVAL
+                or redis_connector.get(f"import_data_valid_{job_id}") != "1"
+            ):
+                return JsonResponse(
+                    {
+                        "result": "error",
+                        "status_message": _("core.templates.admin.import_data.invalid_records"),
+                    },
+                    status=422,
+                )
+            # Phase/validity were fine but the claim failed — the lock was lost (force-cancel or
+            # Redis restart), since there's no TTL to expire during review.
             redis_connector.set(
                 f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_FAILED, ex=tasks.IMPORT_DATA_EXPIRATION_SECONDS
             )
@@ -3216,7 +3233,6 @@ class DataImportStart(LoginRequiredMixin, View):
                 {"result": "error", "status_message": _("cron.tasks.run_data_import.failed_lock_lost")},
                 status=409,
             )
-        redis_connector.set(f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_IMPORTING)
         try:
             tasks.run_data_import.delay(job_id, request.user.id, lock_token)
         except Exception:

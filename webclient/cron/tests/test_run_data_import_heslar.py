@@ -274,6 +274,60 @@ class RunDataImportHeslarTest(TestCase):
             "Po DELETE importu nesmí Heslář v DB existovat.",
         )
 
+    def test_delete_stop_rolls_back_database_without_committing_fedora_deletion(self):
+        """Stop uprostřed DELETE musí zrušit i DB smazání a nesmí commitnout Fedora transakci.
+
+        Před opravou review r3703505196 se ``FedoraDeletionOnlyTransaction.mark_transaction_as_closed``
+        volalo hned po ``record.delete()``, ještě před kontrolou stop sentinelu — takže i po
+        následném ``transaction.set_rollback(True)`` (DB záznam zůstal) byl repozitářový objekt
+        v Fedoře už nevratně smazán. Obě úložiště tak musí zůstat konzistentní: záznam v DB i
+        v Fedoře.
+        """
+        self._create_existing_heslar()
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_DELETE)
+        # Stop flag nastavený předem — smyčka ho zachytí až PO zpracování (delete + fronta
+        # Fedora commitu) prvního záznamu, čímž reprodukuje pořadí operací z review r3703505196.
+        fake_redis.set(f"import_data_stop_{JOB_ID}", "1")
+
+        with patch("core.connectors.RedisConnector.get_connection", return_value=fake_redis), patch(
+            "core.connectors.RedisConnector.refresh_import_lock", return_value=True
+        ), patch(
+            "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
+            return_value=True,
+        ), patch(
+            "xml_generator.models.ModelWithMetadata.save_metadata",
+            autospec=True,
+            return_value=None,
+        ), patch(
+            "cron.tasks.FedoraTransaction"
+        ) as fedora_transaction_mock, patch(
+            "cron.tasks.FedoraDeletionOnlyTransaction"
+        ) as fedora_deletion_mock, patch(
+            "heslar.signals.FedoraTransaction"
+        ) as signals_fedora_transaction_mock:
+            fedora_transaction_mock.return_value = MagicMock(uid="test-fedora-uid")
+            deletion_transaction = MagicMock(uid="test-fedora-deletion-uid", updated_ident_cely=set())
+            fedora_deletion_mock.return_value = deletion_transaction
+            signals_fedora_transaction_mock.return_value = MagicMock(uid="test-signals-fedora-uid")
+
+            cron_tasks.run_data_import(JOB_ID, self.user.id, LOCK_TOKEN)
+
+        # DB store: rollback musí ponechat záznam na místě — DELETE se nesmí projevit.
+        self.assertTrue(
+            Heslar.objects.filter(ident_cely=HESLAR_IDENT).exists(),
+            "Po Stop uprostřed DELETE musí záznam v DB zůstat zachován (rollback).",
+        )
+        # Fedora store: smazání repozitářového objektu se nesmí commitnout.
+        deletion_transaction.mark_transaction_as_closed.assert_not_called()
+
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
+        self.assertIsNotNone(status_raw, "Status message musí být nastaven.")
+        self.assertIn(
+            "stopped_by_user",
+            status_raw.decode("utf-8"),
+            "Při zastavení uprostřed DELETE musí status obsahovat klíč ``stopped_by_user``.",
+        )
+
     def test_database_save_failure_marks_import_as_failed(self):
         """Pokud ``record.save()`` v DB fázi vyvolá výjimku, import skončí jako selhalý."""
         fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_INSERT)

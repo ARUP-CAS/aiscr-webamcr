@@ -189,6 +189,100 @@ class DataImportOwnershipTest(SimpleTestCase):
         self.assertEqual(json.loads(response.content)["result"], "error")
 
 
+class DataImportProgressValidationCursorTest(SimpleTestCase):
+    """Testy pro ``DataImportProgress`` — ``validation_since``/``validation_cursor`` (review r3703505264)."""
+
+    def setUp(self):
+        """Připraví ``RequestFactory`` sdílenou napříč testy."""
+        self.factory = RequestFactory()
+
+    def _get(self, fake, validation_since=None, user_id=OWNER_ID):
+        """Zavolá ``DataImportProgress`` s volitelným query parametrem ``validation_since``.
+
+        :param fake: ``FakeRedis`` vrácený z ``get_connection_decode()``.
+        :param validation_since: Hodnota query parametru, nebo ``None`` pro jeho vynechání.
+        :param user_id: ``id`` přihlášeného uživatele.
+        :return: HTTP odpověď view.
+        """
+        url = f"/data-import/{JOB}"
+        if validation_since is not None:
+            url += f"?validation_since={validation_since}"
+        request = self.factory.get(url)
+        request.user = _StubUser(user_id, is_superuser=True)
+        with mock.patch("core.views.RedisConnector.get_connection_decode", return_value=fake):
+            return DataImportProgress.as_view()(request, job_id=JOB)
+
+    @staticmethod
+    def _push_validation_rows(fake, count):
+        """Přidá ``count`` validačních řádků do ``import_data_validation_details_{JOB}``.
+
+        :param fake: ``FakeRedis``, do kterého se řádky zapíší.
+        :param count: Počet řádků k zápisu.
+        """
+        for i in range(count):
+            fake.rpush(
+                f"import_data_validation_details_{JOB}",
+                json.dumps(
+                    {"item_order": i, "file_name": "f", "primary_key_import": str(i), "validation_result": "ok"}
+                ),
+            )
+
+    def test_no_since_param_returns_all_rows_and_cursor(self):
+        """Bez ``validation_since`` vrátí všechny řádky a ``validation_cursor`` rovný jejich počtu."""
+        fake = _fake(tasks.IMPORT_PHASE_VALIDATING)
+        self._push_validation_rows(fake, 3)
+
+        response = self._get(fake)
+
+        data = json.loads(response.content)
+        self.assertEqual(len(data["validation_results"]), 3)
+        self.assertEqual(data["validation_cursor"], 3)
+
+    def test_since_param_returns_only_appended_rows(self):
+        """S ``validation_since`` vrátí jen řádky přidané od tohoto indexu, cursor je nová celková délka."""
+        fake = _fake(tasks.IMPORT_PHASE_VALIDATING)
+        self._push_validation_rows(fake, 5)
+
+        response = self._get(fake, validation_since=3)
+
+        data = json.loads(response.content)
+        self.assertEqual(len(data["validation_results"]), 2)
+        self.assertEqual(data["validation_cursor"], 5)
+
+    def test_since_param_beyond_list_length_returns_empty_and_stable_cursor(self):
+        """``validation_since`` za koncem seznamu vrátí prázdný delta a cursor beze změny."""
+        fake = _fake(tasks.IMPORT_PHASE_VALIDATING)
+        self._push_validation_rows(fake, 2)
+
+        response = self._get(fake, validation_since=2)
+
+        data = json.loads(response.content)
+        self.assertEqual(data["validation_results"], [])
+        self.assertEqual(data["validation_cursor"], 2)
+
+    def test_invalid_since_param_falls_back_to_zero(self):
+        """Neplatný (nečíselný) ``validation_since`` se chová jako 0 (vrátí vše)."""
+        fake = _fake(tasks.IMPORT_PHASE_VALIDATING)
+        self._push_validation_rows(fake, 2)
+
+        response = self._get(fake, validation_since="not-a-number")
+
+        data = json.loads(response.content)
+        self.assertEqual(len(data["validation_results"]), 2)
+        self.assertEqual(data["validation_cursor"], 2)
+
+    def test_negative_since_param_clamped_to_zero(self):
+        """Záporný ``validation_since`` se ořeže na 0 (vrátí vše), nikoli chybný záporný lrange."""
+        fake = _fake(tasks.IMPORT_PHASE_VALIDATING)
+        self._push_validation_rows(fake, 2)
+
+        response = self._get(fake, validation_since=-5)
+
+        data = json.loads(response.content)
+        self.assertEqual(len(data["validation_results"]), 2)
+        self.assertEqual(data["validation_cursor"], 2)
+
+
 class DataImportResetTest(SimpleTestCase):
     """Testy ručního superuživatelského resetu zaseklé importní úlohy (``DataImportReset``)."""
 

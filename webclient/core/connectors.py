@@ -44,6 +44,23 @@ else
     return 0
 end
 """
+    # Atomic phase/validity check + lock refresh, so two concurrent Start requests can't both
+    # observe awaiting_approval and dispatch the import task twice.
+    _CLAIM_AWAITING_IMPORT_SCRIPT = """
+if redis.call("get", KEYS[1]) ~= ARGV[1] then
+    return {0, ""}
+end
+if redis.call("get", KEYS[2]) ~= "1" then
+    return {0, ""}
+end
+local token = redis.call("get", KEYS[3])
+if not token or redis.call("get", KEYS[4]) ~= token then
+    return {0, ""}
+end
+redis.call("set", KEYS[1], ARGV[2])
+redis.call("expire", KEYS[4], ARGV[3])
+return {1, token}
+"""
 
     @classmethod
     def _create_connection(cls):
@@ -133,6 +150,53 @@ end
         :return: ``True``, pokud byl lock odstraněn; jinak ``False``.
         """
         return bool(connection.eval(cls._RELEASE_LOCK_SCRIPT, 1, cls.IMPORT_DATA_LOCK_KEY, token))
+
+    @classmethod
+    def delete_if_value_matches(cls, connection: redis.Redis, key: str, expected_value: str) -> bool:
+        """
+        Smaže libovolný klíč pouze tehdy, pokud jeho aktuální hodnota odpovídá ``expected_value``.
+
+        Chrání job-routing ukazatele (``import_data_current_job_{user}``,
+        ``IMPORT_DATA_ACTIVE_JOB_KEY``) před tím, aby terminální úklid jedné úlohy smazal ukazatel
+        již přepsaný nově nastartovanou úlohou (review r3703505227).
+
+        :param connection: Redis spojení, přes které se klíč maže.
+        :param key: Klíč ke smazání.
+        :param expected_value: Hodnota, kterou musí klíč stále mít, aby ke smazání došlo.
+        :return: ``True``, pokud byl klíč smazán; jinak ``False``.
+        """
+        return bool(connection.eval(cls._RELEASE_LOCK_SCRIPT, 1, key, expected_value))
+
+    @classmethod
+    def claim_awaiting_import(
+        cls, connection: redis.Redis, job_id: str, expected_phase: str, new_phase: str, ttl_seconds: int
+    ) -> tuple:
+        """
+        Atomicky ověří fázi, platnost validace i vlastnictví locku importní úlohy a v jediném
+        volání ji převede z ``expected_phase`` do ``new_phase``, přičemž obnoví TTL locku.
+        Sloučení kontroly a zápisu do jednoho Lua skriptu zabraňuje tomu, aby dva souběžné
+        požadavky na start téhož importu prošly kontrolou fáze oba a naplánovaly stejnou úlohu dvakrát.
+
+        :param connection: Redis spojení, přes které se operace provádí.
+        :param job_id: Identifikátor importní úlohy.
+        :param expected_phase: Fáze, ve které se úloha musí nacházet, aby byla nárokována.
+        :param new_phase: Fáze, do které se úloha při úspěchu převede.
+        :param ttl_seconds: Nová doba expirace globálního locku v sekundách.
+        :return: Dvojice ``(claimed, lock_token)``; ``claimed`` je ``True`` při úspěchu, ``lock_token``
+            je vlastnící token nebo ``None``, pokud úloha nebyla nárokována.
+        """
+        claimed, token = connection.eval(
+            cls._CLAIM_AWAITING_IMPORT_SCRIPT,
+            4,
+            f"import_data_phase_{job_id}",
+            f"import_data_valid_{job_id}",
+            f"import_data_lock_token_{job_id}",
+            cls.IMPORT_DATA_LOCK_KEY,
+            expected_phase,
+            new_phase,
+            ttl_seconds,
+        )
+        return bool(claimed), (token or None)
 
     @staticmethod
     def prepare_model_for_redis(table):

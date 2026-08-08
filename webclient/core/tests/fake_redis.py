@@ -147,19 +147,30 @@ class FakeRedis:
         """
         return FakeRedis.FakePipeline(self)
 
-    def eval(self, *args, **kwargs):
-        """Simuluje Redis Lua skript — vrací hodnotu z ``eval_results`` nebo výchozí ``1``.
+    def eval(self, script, numkeys, *keys_and_args):
+        """Simuluje Redis Lua skript — vrací hodnotu z ``eval_results``, jinak reálně vykoná
+        compare-then-delete (``RedisConnector._RELEASE_LOCK_SCRIPT``/``delete_if_value_matches``).
 
-        Pokud byl při inicializaci předán ``eval_results``, odebere a vrátí první položku seznamu.
-        Po vyčerpání seznamu (nebo pokud nebyl ``eval_results`` zadán) vrátí vždy ``1``,
-        čímž simuluje úspěšnou operaci locku.
+        Pokud byl při inicializaci předán ``eval_results``, odebere a vrátí první položku seznamu
+        (beze změny úložiště) — pro testy, které chtějí vynutit konkrétní výsledek locku. Jinak,
+        pro compare-then-delete skript, klíč skutečně smaže, pokud jeho hodnota odpovídá
+        očekávané — jiné skripty (refresh/persist/claim) vrací ``1`` beze změny úložiště.
 
-        :param args: Poziční argumenty volání Redis ``eval``.
-        :param kwargs: Pojmenované argumenty volání Redis ``eval``.
-        :return: První zbývající hodnota z ``eval_results``, nebo ``1``.
+        :param script: Zdrojový text Lua skriptu (rozlišuje se dle přítomnosti ``\"del\"``).
+        :param numkeys: Počet KEYS argumentů na začátku ``keys_and_args``.
+        :param keys_and_args: KEYS následované ARGV, stejně jako u reálného Redis ``eval``.
+        :return: První zbývající hodnota z ``eval_results``, nebo výsledek simulace.
         """
         if self._eval_results:
             return self._eval_results.pop(0)
+        keys = keys_and_args[:numkeys]
+        argv = keys_and_args[numkeys:]
+        if "del" in script and keys and argv:
+            key = keys[0]
+            if self._kv.get(key) == self._encode(argv[0]):
+                self.delete(key)
+                return 1
+            return 0
         return 1
 
     class FakePipeline:

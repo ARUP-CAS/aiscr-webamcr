@@ -1,14 +1,20 @@
+from unittest.mock import patch
+
 from core.forms import ImportDataAdminForm
 from core.import_data_mappers import (
     DokumentMapper,
     ImportDataError,
     ImportDataIncorrectStructureError,
 )
+from cron.tests._run_data_import_mapper_base import RunDataImportMapperTestBase
 from django.test import TestCase
 from dokument.models import Dokument, DokumentExtraData
 
 INSERT = ImportDataAdminForm.PERFORMED_ACTION_INSERT
 UPDATE = ImportDataAdminForm.PERFORMED_ACTION_UPDATE
+
+WKT_WGS84 = "POINT (14.5 50.1)"
+WKT_SJTSK = "POINT (-598288 -1160780)"
 
 VALID_ROW = {
     "ident_cely": "C-TX-000001",
@@ -239,3 +245,21 @@ class DokumentMapperColumnMappingTest(TestCase):
     def test_column_to_field_mapping_maps_region_to_region_extra(self):
         """column_to_field_mapping mapuje sloupec 'region' na pole modelu 'region_extra'."""
         self.assertEqual(DokumentMapper.column_to_field_mapping.get("region"), "region_extra")
+
+
+class DokumentMapperUpdateGeometryWithoutExtraDataTest(RunDataImportMapperTestBase):
+    """Integrační test: UPDATE geometrie na Dokument bez existujícího DokumentExtraData (review r3703505252)."""
+
+    def test_update_with_only_geom_derives_geom_sjtsk_using_effective_default(self):
+        """UPDATE s ``ident_cely,geom`` (bez geom_system) na Dokument bez extra dat musí dopočítat geom_sjtsk."""
+        self.assertFalse(DokumentExtraData.objects.filter(dokument=self.dokument).exists())
+        row = {"ident_cely": self.dokument.ident_cely, "geom": WKT_WGS84}
+        mapper = DokumentMapper(row)
+
+        with patch("core.import_data_mappers.transform_geom_to_sjtsk", return_value=(WKT_SJTSK, "OK")):
+            result = mapper.create_records(UPDATE)
+
+        extra_data = next(record for record in result if isinstance(record, DokumentExtraData))
+        self.assertEqual(extra_data.geom_system, "4326")
+        self.assertEqual(extra_data.geom.wkt, WKT_WGS84)
+        self.assertEqual(extra_data.geom_sjtsk.wkt, WKT_SJTSK)

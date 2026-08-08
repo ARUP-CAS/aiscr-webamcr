@@ -535,6 +535,127 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
 
         self.assert_import_failed(fake_redis)
 
+    def _run_soubor_delete_batch(self, count, extra_patches):
+        """Spustí DELETE import několika Souborů najednou pro testy konzistence DB a Fedory.
+
+        :param count: Počet mazaných Souborů (a tím i importovaných záznamů).
+        :param extra_patches: Patche navíc předané importnímu běhu.
+        :return: Trojice ``(fake_redis, seznam vytvořených Souborů, seznam jejich ID)``."""
+        souborys = [self._create_existing_soubor(nazev="delete-batch-{}.txt".format(index)) for index in range(count)]
+        soubor_ids = [soubor.id for soubor in souborys]
+        fake_redis, _ = self._run_soubor_import(
+            [{"id": "soub-{}".format(soubor_id)} for soubor_id in soubor_ids],
+            performed_action=ImportDataAdminForm.PERFORMED_ACTION_DELETE,
+            extra_patches=extra_patches,
+        )
+        return fake_redis, souborys, soubor_ids
+
+    def test_fedora_deletes_are_committed_only_after_the_database_commit(self):
+        """Uvnitř otevřené databázové transakce se nesmí potvrdit žádná Fedora transakce mazání.
+
+        Potvrzení jsou zaregistrována přes ``transaction.on_commit``; test callback zachytí místo spuštění
+        a ověří, že do té chvíle nebylo potvrzeno nic a po jeho spuštění je potvrzeno všechno."""
+        transaction_patch, transactions, commits = self.fedora_deletion_transaction_recorder()
+        on_commit_patch, captured_callbacks = self.capture_fedora_delete_commit_patch()
+
+        fake_redis, _souborys, soubor_ids = self._run_soubor_delete_batch(
+            3, extra_patches=[transaction_patch, on_commit_patch]
+        )
+
+        self.assert_import_success(fake_redis)
+        self.assertEqual(
+            commits,
+            [],
+            "Dokud je databázová transakce otevřená, nesmí být potvrzena žádná Fedora transakce mazání "
+            "(potvrzeno {} z {}).".format(len(commits), len(transactions)),
+        )
+        self.assertEqual(
+            len(captured_callbacks),
+            1,
+            "Datová fáze musí zaregistrovat právě jeden ``on_commit`` callback potvrzující Fedora mazání.",
+        )
+        captured_callbacks[0]()
+        self.assertEqual(
+            len(commits),
+            len(transactions),
+            "Po commitu databáze musí být potvrzeny všechny zařazené Fedora transakce mazání.",
+        )
+        self.assertFalse(Soubor.objects.filter(id__in=soubor_ids).exists())
+
+    def test_nth_fedora_delete_commit_failure_keeps_data_committed_and_reports_it(self):
+        """Selhání N-tého potvrzení Fedora transakce nesmí zastavit zbytek fronty ani shodit import.
+
+        Databáze je v tu chvíli již potvrzená, takže zbývající mazání musí doběhnout. Nedokončené mazání
+        zůstává ve Fedoře jako osiřelý objekt — musí se objevit v reportu u dotčeného záznamu.
+
+        Fronta potvrzení má pro tři mazané Soubory šest položek: tři prázdné transakce z datové smyčky
+        a tři skutečné transakce mazání. Páté potvrzení je tedy mazání druhého Souboru."""
+        transaction_patch, transactions, commits = self.fedora_deletion_transaction_recorder(fail_on_commit_number=5)
+
+        fake_redis, souborys, soubor_ids = self._run_soubor_delete_batch(3, extra_patches=[transaction_patch])
+
+        self.assert_import_success(fake_redis)
+        self.assertFalse(
+            Soubor.objects.filter(id__in=soubor_ids).exists(),
+            "Selhání potvrzení ve Fedoře nesmí vrátit zpět již potvrzené mazání záznamů v databázi.",
+        )
+        self.assertEqual(
+            len(commits),
+            len(transactions),
+            "Po selhání jednoho potvrzení musí fronta pokračovat zbývajícími transakcemi "
+            "(potvrzeno {} z {}).".format(len(commits), len(transactions)),
+        )
+        reported = [item for items in self._fedora_update_result(fake_redis).values() for item in items]
+        self.assertTrue(
+            any("fedora_delete_commit_failed" in item and souborys[1].nazev in item for item in reported),
+            "Nedokončené mazání ve Fedoře musí být nahlášeno v reportu i s identifikací souboru "
+            "({}). Report: {}".format(souborys[1].nazev, reported),
+        )
+
+    def test_database_commit_failure_leaves_no_fedora_delete_committed(self):
+        """Selhání commitu databáze nesmí zanechat potvrzené mazání ve Fedoře.
+
+        Callbacky ``on_commit`` se při selhaném commitu nespustí, takže žádná zařazená transakce není
+        potvrzena a všechny se musí zrušit."""
+        transaction_patch, transactions, commits = self.fedora_deletion_transaction_recorder()
+
+        fake_redis, _souborys, soubor_ids = self._run_soubor_delete_batch(
+            3, extra_patches=[transaction_patch, self.failing_database_commit_patch()]
+        )
+
+        self.assert_import_failed(fake_redis)
+        self.assertEqual(
+            commits,
+            [],
+            "Při selhaném commitu databáze nesmí být potvrzena žádná Fedora transakce mazání.",
+        )
+        self.assertTrue(transactions, "Test musí vytvořit alespoň jednu Fedora transakci mazání.")
+        for transaction_mock in transactions:
+            transaction_mock.rollback_transaction.assert_called()
+        self.assertEqual(
+            Soubor.objects.filter(id__in=soubor_ids).count(),
+            len(soubor_ids),
+            "Po selhaném commitu se musí vrátit i mazání záznamů v databázi.",
+        )
+
+    def test_record_failure_rolls_back_fedora_transactions_of_earlier_records(self):
+        """Chyba u pozdějšího záznamu musí zrušit Fedora transakce zařazené předchozími záznamy."""
+        transaction_patch, transactions, commits = self.fedora_deletion_transaction_recorder()
+        existing = self._create_existing_soubor(nazev="rollback-earlier.txt")
+
+        fake_redis, _ = self._run_soubor_import(
+            [{"id": "soub-{}".format(existing.id)}, {"id": "soub-0"}],
+            performed_action=ImportDataAdminForm.PERFORMED_ACTION_DELETE,
+            extra_patches=[transaction_patch],
+        )
+
+        self.assert_import_failed(fake_redis)
+        self.assertEqual(commits, [], "Zrušená datová fáze nesmí potvrdit žádnou Fedora transakci mazání.")
+        self.assertTrue(transactions, "První záznam musí stihnout vytvořit Fedora transakci mazání.")
+        for transaction_mock in transactions:
+            transaction_mock.rollback_transaction.assert_called()
+        self.assertTrue(Soubor.objects.filter(id=existing.id).exists())
+
     def test_update_rename_to_conflicting_name_marks_import_as_failed(self):
         """UPDATE Souboru, jehož cílový ``nazev`` je již obsazen jiným souborem téže vazby, nesmí uspět."""
         existing = self._create_existing_soubor(nazev="old-name.txt")

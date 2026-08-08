@@ -87,7 +87,7 @@ Třídy
 Funkce
 ------
 
-.. py:function:: translation_value(message_id)
+.. py:function:: translation_value(message_id, raw)
 
    Zabalí překladové ID (a případné parametry) pro uložení do Redis.
 
@@ -97,10 +97,13 @@ Funkce
 
    Pro výjimky, jejichž zpráva je složena za běhu (např. ``str(err)`` z mapperů), použijte
    ``raw=True``: obálka ``{"id": "cron.tasks.run_data_import.error.raw", "params": {"message": ...},
-   "raw": true}`` se na čtenáři vrátí doslova bez překladu.
+   "raw": true}`` se na čtenáři vrátí doslova bez překladu. ``raw`` je zde samostatný keyword
+   argument (ne součást ``params``), aby v obálce skončil na nejvyšší úrovni, kde ho čtenář hledá.
 
    :param message_id: ID překladového řetězce (dotted key, např.
        ``cron.tasks.run_data_import.finished``).
+   :param raw: Pokud ``True``, obálka nese příznak ``raw`` na nejvyšší úrovni a čtenář zprávu
+       vrátí doslova (``params["message"]``) bez volání ``_()``.
    :param params: Parametry pro interpolaci přeloženého řetězce (např. ``n``, ``total``). Pro
        výjimku použijte ``raw=True`` a ``message=<str(err)>``.
    :return: Hodnota připravená k zápisu do Redis (ID nebo JSON obálka).

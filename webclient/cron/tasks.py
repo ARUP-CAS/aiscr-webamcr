@@ -150,7 +150,7 @@ VALIDATION_REDIS_UPDATE_INTERVAL = 50
 TRANSLATABLE_KEY_SUFFIX = "_tr"
 
 
-def translation_value(message_id: str, **params) -> str:
+def translation_value(message_id: str, raw: bool = False, **params) -> str:
     """Zabalí překladové ID (a případné parametry) pro uložení do Redis.
 
     Pro zprávy bez parametrů vrací přímo ID (plain string) — běžný případ. Pro parametrizované
@@ -159,14 +159,19 @@ def translation_value(message_id: str, **params) -> str:
 
     Pro výjimky, jejichž zpráva je složena za běhu (např. ``str(err)`` z mapperů), použijte
     ``raw=True``: obálka ``{"id": "cron.tasks.run_data_import.error.raw", "params": {"message": ...},
-    "raw": true}`` se na čtenáři vrátí doslova bez překladu.
+    "raw": true}`` se na čtenáři vrátí doslova bez překladu. ``raw`` je zde samostatný keyword
+    argument (ne součást ``params``), aby v obálce skončil na nejvyšší úrovni, kde ho čtenář hledá.
 
     :param message_id: ID překladového řetězce (dotted key, např.
         ``cron.tasks.run_data_import.finished``).
+    :param raw: Pokud ``True``, obálka nese příznak ``raw`` na nejvyšší úrovni a čtenář zprávu
+        vrátí doslova (``params["message"]``) bez volání ``_()``.
     :param params: Parametry pro interpolaci přeloženého řetězce (např. ``n``, ``total``). Pro
         výjimku použijte ``raw=True`` a ``message=<str(err)>``.
     :return: Hodnota připravená k zápisu do Redis (ID nebo JSON obálka).
     """
+    if raw:
+        return json.dumps({"id": message_id, "params": params, "raw": True})
     if not params:
         return message_id
     return json.dumps({"id": message_id, "params": params})
@@ -198,6 +203,7 @@ TRANSLATABLE_MESSAGE_IDS = (
     _("cron.tasks.run_data_import.fedora_waiting_data_import"),
     _("cron.tasks.run_data_import.fedora_record"),
     _("cron.tasks.run_data_import.fedora_error"),
+    _("cron.tasks.run_data_import.fedora_delete_commit_failed"),
     _("cron.tasks.run_data_import.failed_during_fedora"),
     _("cron.tasks.run_data_import.finalizing"),
     _("cron.tasks.run_data_import.file_import.validating_directory_settings"),
@@ -831,8 +837,10 @@ def reset_import_job(redis_connector, job_id):
 
     job_user = to_str(redis_connector.get(job_key("import_data_user")))
     if job_user is not None:
-        redis_connector.delete("import_data_current_job_{}".format(job_user))
-    redis_connector.delete(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
+        # Compare-then-delete: only clear the pointer if it still points at this job — a
+        # replacement job may have already claimed it (review r3703505227).
+        RedisConnector.delete_if_value_matches(redis_connector, "import_data_current_job_{}".format(job_user), job_id)
+    RedisConnector.delete_if_value_matches(redis_connector, RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, job_id)
 
     # Free any staged ZIP chunks the dead task never cleaned up (can be hundreds of MB).
     leftover_chunks_raw = redis_connector.get(job_key("import_data_file_chunks"))
@@ -1240,8 +1248,11 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
             if user_pointer is not None:
                 if isinstance(user_pointer, bytes):
                     user_pointer = user_pointer.decode("utf-8")
-                redis_connector.delete("import_data_current_job_{}".format(user_pointer))
-            redis_connector.delete(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
+                # Compare-then-delete: a replacement job may already own this pointer (r3703505227).
+                RedisConnector.delete_if_value_matches(
+                    redis_connector, "import_data_current_job_{}".format(user_pointer), job_id
+                )
+            RedisConnector.delete_if_value_matches(redis_connector, RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, job_id)
             expire_pipe = redis_connector.pipeline()
             for key in all_data_keys:
                 expire_pipe.expire(key, IMPORT_DATA_EXPIRATION_SECONDS)
@@ -1389,6 +1400,76 @@ def run_data_import(job_id, user_id, lock_token):
         pending_fedora_update = []
         pending_history_update = []
         pending_soubor_fedora_deletes: list = []
+        # Ordered queue of Fedora deletion transactions committed only once the database transaction
+        # has committed, so the database is the single commit point (review r3703505209).
+        pending_fedora_delete_commits: list = []
+
+        def queue_fedora_delete_commit(record_id, fedora_transaction, identity=None):
+            """Zařadí Fedora transakci mazání do fronty potvrzované až po commitu databáze.
+
+            :param record_id: Pořadové číslo importovaného záznamu, pod kterým se hlásí případné selhání.
+            :param fedora_transaction: Transakce, která se potvrdí až po úspěšném commitu databáze.
+            :param identity: Popis mazaného objektu pro jeho dohledání ve Fedoře, pokud potvrzení selže."""
+            pending_fedora_delete_commits.append(
+                {"record_id": record_id, "transaction": fedora_transaction, "identity": identity or {}}
+            )
+
+        def rollback_pending_fedora_delete_commits():
+            """Zruší všechny dosud nepotvrzené Fedora transakce mazání a vyprázdní frontu.
+
+            Volá se na každé cestě, která ruší datovou fázi, aby ve Fedoře nezůstaly otevřené transakce
+            po záznamech zpracovaných před chybou."""
+            for entry in pending_fedora_delete_commits:
+                try:
+                    entry["transaction"].rollback_transaction()
+                except Exception as rollback_err:
+                    logger.error(
+                        "cron.tasks.run_data_import.fedora_delete_rollback.error",
+                        extra={"job_id": job_id, "record_id": entry["record_id"], "error": rollback_err},
+                    )
+            pending_fedora_delete_commits.clear()
+
+        def commit_pending_fedora_delete_commits():
+            """Potvrdí frontu Fedora transakcí mazání po úspěšném commitu databáze.
+
+            Spouští se přes ``transaction.on_commit``, takže při rollbacku databáze neproběhne vůbec —
+            databáze je jediný bod commitu. Selhání jednoho potvrzení nezastaví zbytek fronty: data jsou
+            už potvrzená a zbývající mazání musí doběhnout. Nedokončené mazání zůstane ve Fedoře jako
+            osiřelý objekt bez řádku v databázi, proto se loguje a hlásí u dotčeného záznamu. Metoda
+            nesmí vyhodit výjimku — ta by na výstupu z ``atomic()`` označila potvrzený import za chybu."""
+            failed_commits = False
+            for entry in pending_fedora_delete_commits:
+                try:
+                    entry["transaction"].mark_transaction_as_closed()
+                except Exception as commit_err:
+                    failed_commits = True
+                    logger.error(
+                        "cron.tasks.run_data_import.fedora_delete_commit.error",
+                        extra={
+                            "job_id": job_id,
+                            "record_id": entry["record_id"],
+                            "identity": entry["identity"],
+                            "error": commit_err,
+                        },
+                    )
+                    # Raw error envelope: composed at runtime from a translated fragment plus the
+                    # identity of the object an operator has to clean up in Fedora by hand.
+                    import_fedora_result[entry["record_id"]].append(
+                        translation_value(
+                            "cron.tasks.run_data_import.fedora_delete_commit_failed",
+                            raw=True,
+                            message=(
+                                _("cron.tasks.run_data_import.fedora_delete_commit_failed")
+                                + " "
+                                + str(entry["identity"])
+                                + ": "
+                                + str(commit_err)
+                            ),
+                        )
+                    )
+            pending_fedora_delete_commits.clear()
+            if failed_commits:
+                redis_connector.set(job_key("import_fedora_result_tr"), json.dumps(import_fedora_result))
 
         def add_updated_history(mapper_class, history_target, record_id):
             if history_target:
@@ -1458,13 +1539,16 @@ def run_data_import(job_id, user_id, lock_token):
                                     add_item_fedora_update_target(fedora_update_targets, record_id)
                                     pending_soubor_fedora_deletes.append(
                                         {
+                                            "record_id": record_id,
                                             "soubor": record,
                                             "navazany_objekt": (
                                                 record.vazba.navazany_objekt if record.vazba_id else None
                                             ),
                                         }
                                     )
-                                fedora_transaction.mark_transaction_as_closed()
+                                # This transaction carries no Fedora work (the delete is deferred below),
+                                # but it is still queued so that nothing commits inside atomic().
+                                queue_fedora_delete_commit(record_id, fedora_transaction)
                                 redis_connector.rpush(job_key("import_data_progress_ids"), record_id)
                                 redis_connector.rpush(
                                     job_key("import_data_progress_details_tr"), "cron.tasks.run_data_import.success"
@@ -1569,7 +1653,17 @@ def run_data_import(job_id, user_id, lock_token):
                                         add_updated_history(mapper_class, history_target, record_id)
                                     record.active_transaction = fedora_transaction
                                     record.delete()
-                        fedora_transaction.mark_transaction_as_closed()
+                        # Defer the real commit until the database transaction has committed
+                        # (review r3703505196, r3703505209) — mirrors the Soubor delete deferral below.
+                        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+                            deleted_record = primary_key_record or (records[0] if records else None)
+                            queue_fedora_delete_commit(
+                                record_id,
+                                fedora_transaction,
+                                {"ident_cely": getattr(deleted_record, "ident_cely", None)},
+                            )
+                        else:
+                            fedora_transaction.mark_transaction_as_closed()
 
                         for item in pending_history_update:
                             mapper_class, record = item
@@ -1656,14 +1750,23 @@ def run_data_import(job_id, user_id, lock_token):
                         logger.info("cron.tasks.run_data_import.files.insert.stopped", extra={"job_id": job_id})
                         break
                 if not failed and not stopped and pending_soubor_fedora_deletes:
-                    delete_fedora_transactions = []
                     try:
                         for entry in pending_soubor_fedora_deletes:
                             soubor = entry["soubor"]
                             navazany_objekt = entry["navazany_objekt"]
                             delete_fedora_transaction = FedoraDeletionOnlyTransaction()
                             delete_fedora_transaction.override_tombstone = True
-                            delete_fedora_transactions.append(delete_fedora_transaction)
+                            # Identity is captured before delete() — afterwards Django clears the pk and
+                            # the row is gone, so a post-commit failure could not be reported.
+                            queue_fedora_delete_commit(
+                                entry["record_id"],
+                                delete_fedora_transaction,
+                                {
+                                    "soubor": soubor.nazev,
+                                    "path": soubor.path,
+                                    "repository_uuid": soubor.repository_uuid,
+                                },
+                            )
                             soubor.active_transaction = delete_fedora_transaction
                             soubor.suppress_signal = True
                             soubor.delete()
@@ -1671,21 +1774,11 @@ def run_data_import(job_id, user_id, lock_token):
                                 FedoraRepositoryConnector(
                                     navazany_objekt, delete_fedora_transaction
                                 ).delete_binary_file(soubor)
-                        for delete_fedora_transaction in delete_fedora_transactions:
-                            delete_fedora_transaction.mark_transaction_as_closed()
                     except Exception as err:
                         logger.error(
                             "cron.tasks.run_data_import.soubor_delete.error",
                             extra={"job_id": job_id, "soubor_pk": soubor.pk, "error": err},
                         )
-                        for delete_fedora_transaction in delete_fedora_transactions:
-                            try:
-                                delete_fedora_transaction.rollback_transaction()
-                            except Exception as rollback_err:
-                                logger.error(
-                                    "cron.tasks.run_data_import.soubor_delete.rollback_error",
-                                    extra={"job_id": job_id, "error": rollback_err},
-                                )
                         transaction.set_rollback(True)
                         data_rolled_back = True
                         failed = True
@@ -1694,8 +1787,20 @@ def run_data_import(job_id, user_id, lock_token):
                             translation_value("cron.tasks.run_data_import.failed_during_data_import"),
                         )
                         redis_connector.set(job_key("import_data_stop"), 1)
+                if failed or stopped:
+                    # Nothing from this batch will persist — do not leave the queued Fedora
+                    # transactions open (review r3703505209).
+                    rollback_pending_fedora_delete_commits()
+                elif pending_fedora_delete_commits:
+                    # The database is the single commit point: Fedora deletions are committed only
+                    # after the database transaction commits, so a rollback — including a failure of
+                    # the database commit itself — can never leave them committed (review r3703505209).
+                    transaction.on_commit(commit_pending_fedora_delete_commits)
         except Exception as err:
-            # An exception propagating out of the atomic() block rolls the data phase back.
+            # An exception propagating out of the atomic() block rolls the data phase back. This also
+            # covers a failure of the database commit itself: Django then discards the on_commit
+            # callbacks, so the queued Fedora deletions are still uncommitted and can be aborted here.
+            rollback_pending_fedora_delete_commits()
             data_rolled_back = True
             if not isinstance(err, ImportLockLostError):
                 redis_connector.set(
@@ -2389,6 +2494,23 @@ def run_data_import(job_id, user_id, lock_token):
                 job_key("import_data_status_message_tr"),
                 translation_value("cron.tasks.run_data_import.finished"),
             )
+    except Exception as err:
+        # Escaped a phase-local handler (e.g. a bare refresh_import_lock() call) — record it as a
+        # failure so finally below doesn't report the job as finished (review r3703505190).
+        failed = True
+        if not isinstance(err, ImportLockLostError):
+            redis_connector.set(
+                job_key("import_data_status_message_tr"),
+                translation_value("cron.tasks.run_data_import.failed_during_data_import"),
+            )
+            redis_connector.set(job_key("import_data_stop"), 1)
+        redis_connector.set(
+            job_key("import_data_progress"), IMPORT_PROGRESS_PHASE_FAILED, ex=IMPORT_DATA_RUNNING_TTL_SECONDS
+        )
+        logger.error(
+            "cron.tasks.run_data_import.unhandled_error",
+            extra={"job_id": job_id, "error": err, "traceback": traceback.format_exc()},
+        )
     finally:
         LookupImportField.clear_cache()
         LookupImportField.clear_records()
@@ -2414,8 +2536,11 @@ def run_data_import(job_id, user_id, lock_token):
         if job_user is not None:
             if isinstance(job_user, bytes):
                 job_user = job_user.decode("utf-8")
-            redis_connector.delete("import_data_current_job_{}".format(job_user))
-        redis_connector.delete(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
+            # Compare-then-delete: a replacement job may already own this pointer (r3703505227).
+            RedisConnector.delete_if_value_matches(
+                redis_connector, "import_data_current_job_{}".format(job_user), job_id
+            )
+        RedisConnector.delete_if_value_matches(redis_connector, RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, job_id)
         leftover_chunks_raw = redis_connector.get(job_key("import_data_file_chunks"))
         if leftover_chunks_raw:
             leftover_count = int(leftover_chunks_raw)

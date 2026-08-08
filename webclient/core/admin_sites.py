@@ -476,6 +476,23 @@ class AmcrCustomAdminSite(admin.AdminSite):
             ):
                 return self._render_lock_busy(request, context)
 
+            ttl = tasks.IMPORT_DATA_RUNNING_TTL_SECONDS
+            # Publish routing/recovery metadata BEFORE the risky data_file.read()/chunk pipeline
+            # below — if the web worker is OOM-killed mid-read, the no-arg reset must still be able
+            # to resolve the orphaned lock via IMPORT_DATA_ACTIVE_JOB_KEY (review r3703505235).
+            self.redis_connector.set(f"import_data_current_job_{request.user.id}", job_id, ex=ttl)
+            # Lock → job back-reference so a superuser can manually reset this job from anywhere.
+            self.redis_connector.set(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, job_id, ex=ttl)
+            self.redis_connector.set(f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_VALIDATING, ex=ttl)
+            self.redis_connector.set(f"import_data_lock_token_{job_id}", lock_token, ex=ttl)
+            self.redis_connector.set(f"import_data_user_{job_id}", request.user.id, ex=ttl)
+            self.redis_connector.set(
+                f"import_data_status_message_tr_{job_id}",
+                tasks.translation_value("cron.tasks.run_data_import.validating"),
+                ex=ttl,
+            )
+            self.redis_connector.set(f"import_performed_action_{job_id}", performed_action, ex=ttl)
+
             chunk_count = 0
             try:
                 # Stage the compressed ZIP in Redis, chunked (§3.3 / §4.1 step 8). Binary chunks are
@@ -493,20 +510,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
                     )
                 pipe.execute()
 
-                ttl = tasks.IMPORT_DATA_RUNNING_TTL_SECONDS
                 self.redis_connector.set(f"import_data_file_chunks_{job_id}", chunk_count, ex=ttl)
-                self.redis_connector.set(f"import_data_current_job_{request.user.id}", job_id, ex=ttl)
-                # Lock → job back-reference so a superuser can manually reset this job from anywhere.
-                self.redis_connector.set(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, job_id, ex=ttl)
-                self.redis_connector.set(f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_VALIDATING, ex=ttl)
-                self.redis_connector.set(
-                    f"import_data_status_message_tr_{job_id}",
-                    tasks.translation_value("cron.tasks.run_data_import.validating"),
-                    ex=ttl,
-                )
-                self.redis_connector.set(f"import_performed_action_{job_id}", performed_action, ex=ttl)
-                self.redis_connector.set(f"import_data_user_{job_id}", request.user.id, ex=ttl)
-                self.redis_connector.set(f"import_data_lock_token_{job_id}", lock_token, ex=ttl)
                 self.redis_connector.set(f"import_data_validation_total_{job_id}", 0, ex=ttl)
                 self.redis_connector.set(f"import_data_validation_progress_{job_id}", 0, ex=ttl)
                 self.redis_connector.set(f"import_data_validation_results_{job_id}", json.dumps([]), ex=ttl)

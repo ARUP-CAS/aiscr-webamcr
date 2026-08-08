@@ -25,6 +25,7 @@ from cron.tests._import_test_fixtures import (
     create_ruian_with_pian,
 )
 from django.contrib.auth.models import Group
+from django.db import DatabaseError, transaction
 from django.test import TestCase
 from dokument.models import Dokument, DokumentCast, Let
 from ez.models import ExterniZdroj
@@ -61,6 +62,9 @@ from uzivatel.models import Osoba, User, UserNotificationType
 
 JOB_ID = "test-job-remaining"
 LOCK_TOKEN = "test-lock-token"
+# Name of the run_data_import closure registered via transaction.on_commit to commit the queued Fedora
+# deletion transactions — the hook the consistency tests intercept.
+FEDORA_DELETE_COMMIT_CALLBACK = "commit_pending_fedora_delete_commits"
 
 
 @contextmanager
@@ -362,7 +366,10 @@ class RunDataImportMapperTestBase(TestCase):
             if extra_patches:
                 for ctx in extra_patches:
                     stack.enter_context(ctx)
-            cron_tasks.run_data_import(JOB_ID, self.user.id, LOCK_TOKEN)
+            # Fedora deletions are committed from a transaction.on_commit callback; under TestCase the
+            # surrounding transaction never commits, so without this they would never run.
+            with self.captureOnCommitCallbacks(execute=True):
+                cron_tasks.run_data_import(JOB_ID, self.user.id, LOCK_TOKEN)
         return fake_redis, save_metadata_calls
 
     def _import_details(self, fake_redis: FakeRedis) -> dict:
@@ -385,6 +392,69 @@ class RunDataImportMapperTestBase(TestCase):
             cron_tasks.IMPORT_PROGRESS_PHASE_FINISHED,
             self._import_details(fake_redis),
         )
+
+    def fedora_deletion_transaction_recorder(self, fail_on_commit_number: int | None = None):
+        """Vyrobí patch ``cron.tasks.FedoraDeletionOnlyTransaction`` sledující potvrzení transakcí.
+
+        :param fail_on_commit_number: Pořadí potvrzení (1 = první), které má vyhodit výjimku; ``None``
+            znamená, že projdou všechna potvrzení.
+        :return: Trojice ``(patch, seznam vytvořených transakcí, seznam potvrzených transakcí)``."""
+        transactions: list = []
+        commits: list = []
+
+        def transaction_factory(*args, **kwargs):
+            transaction_mock = MagicMock(uid="test-deletion-uid", updated_ident_cely=set())
+            transaction_mock.override_tombstone = False
+
+            def mark_transaction_as_closed():
+                commits.append(transaction_mock)
+                if fail_on_commit_number is not None and len(commits) == fail_on_commit_number:
+                    raise RuntimeError("Simulované selhání potvrzení Fedora transakce mazání.")
+
+            transaction_mock.mark_transaction_as_closed.side_effect = mark_transaction_as_closed
+            transactions.append(transaction_mock)
+            return transaction_mock
+
+        return (
+            patch("cron.tasks.FedoraDeletionOnlyTransaction", side_effect=transaction_factory),
+            transactions,
+            commits,
+        )
+
+    def capture_fedora_delete_commit_patch(self):
+        """Zachytí ``on_commit`` callback potvrzující Fedora mazání místo jeho spuštění.
+
+        Umožňuje ověřit, že uvnitř otevřené databázové transakce se nic ve Fedoře nepotvrzuje, a callback
+        pak spustit ručně.
+
+        :return: Dvojice ``(patch pro transaction.on_commit, seznam zachycených callbacků)``."""
+        captured: list = []
+        real_on_commit = transaction.on_commit
+
+        def capturing_on_commit(func, *args, **kwargs):
+            if getattr(func, "__name__", "") == FEDORA_DELETE_COMMIT_CALLBACK:
+                captured.append(func)
+                return None
+            return real_on_commit(func, *args, **kwargs)
+
+        return patch("cron.tasks.transaction.on_commit", side_effect=capturing_on_commit), captured
+
+    def failing_database_commit_patch(self):
+        """Simuluje selhání commitu databáze na hranici ``atomic()`` bloku datové fáze.
+
+        Registrace callbacku pro potvrzení Fedora mazání je poslední krok uvnitř ``atomic()``. Výjimka
+        vyhozená místo ní opustí blok stejně jako selhaný commit databáze — tedy s neprovedenými
+        ``on_commit`` callbacky.
+
+        :return: Patch pro ``transaction.on_commit`` vyhazující na tomto callbacku ``DatabaseError``."""
+        real_on_commit = transaction.on_commit
+
+        def failing_on_commit(func, *args, **kwargs):
+            if getattr(func, "__name__", "") == FEDORA_DELETE_COMMIT_CALLBACK:
+                raise DatabaseError("Simulované selhání commitu databáze.")
+            return real_on_commit(func, *args, **kwargs)
+
+        return patch("cron.tasks.transaction.on_commit", side_effect=failing_on_commit)
 
     def assert_import_failed(self, fake_redis: FakeRedis):
         """Ověří pomocnou podmínku importního testu.

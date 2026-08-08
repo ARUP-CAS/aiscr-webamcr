@@ -16,6 +16,8 @@ from core.forms import ImportDataAdminForm
 from core.import_data_mappers import ProjektMapper
 from django.contrib.gis.geos import GEOSGeometry
 from django.test import TestCase
+from dokument.models import DokumentExtraData
+from projekt.models import Projekt
 
 INSERT = ImportDataAdminForm.PERFORMED_ACTION_INSERT
 UPDATE = ImportDataAdminForm.PERFORMED_ACTION_UPDATE
@@ -142,9 +144,12 @@ class GeometryTransformMixinGEOSGeometryInputTest(TestCase):
         self.assertIsInstance(captured["wkt"], str)
 
 
-def _fake_mapper(db_record):
-    """Vytvoří náhradu mapperu vracející ``db_record`` místo dotazu do databáze."""
-    return SimpleNamespace(_get_geometry_db_record=lambda: db_record)
+def _fake_mapper(db_record, target_model=Projekt):
+    """Vytvoří náhradu mapperu vracející ``db_record``/``target_model`` místo dotazu do databáze."""
+    return SimpleNamespace(
+        _get_geometry_db_record=lambda: db_record,
+        _geometry_target_model=lambda: target_model,
+    )
 
 
 class GeometryTransformMixinUpdateTest(TestCase):
@@ -234,3 +239,15 @@ class GeometryTransformMixinUpdateTest(TestCase):
             ProjektMapper.transform_geometries(mapper, mapping, UPDATE)
         mock_transform.assert_not_called()
         self.assertNotIn("geom_sjtsk", mapping)
+
+    def test_update_missing_record_uses_target_model_default_geom_system(self):
+        """Bez existujícího řádku (např. Dokument bez DokumentExtraData) se použije výchozí
+        ``geom_system`` cílového modelu, aby se odvozená geometrie dopočítala (r3703505252)."""
+        mapping = {"geom": WKT_WGS84}
+        mapper = _fake_mapper(None, target_model=DokumentExtraData)
+        with patch(
+            "core.import_data_mappers.transform_geom_to_sjtsk", return_value=(WKT_SJTSK, "OK")
+        ) as mock_transform:
+            ProjektMapper.transform_geometries(mapper, mapping, UPDATE)
+        mock_transform.assert_called_once_with(WKT_WGS84)
+        self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)

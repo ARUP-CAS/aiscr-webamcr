@@ -787,12 +787,14 @@ class DateImportField(BaseImportField):
         if not value or str(value).lower() == "nan":
             return None
         if isinstance(value, str):
+            # fullmatch (not match): the optional time suffix must consume the rest of the string,
+            # otherwise trailing junk (e.g. "2026.05.31junk") would be silently accepted.
             try:
-                if match := self.pattern_iso.match(value):
+                if match := self.pattern_iso.fullmatch(value):
                     return datetime.datetime.strptime(match.group(1), "%Y-%m-%d").date()
-                if match := self.pattern_dotted_year_first.match(value):
+                if match := self.pattern_dotted_year_first.fullmatch(value):
                     return datetime.datetime.strptime(match.group(1), "%Y.%m.%d").date()
-                if match := self.pattern_localized.match(value):
+                if match := self.pattern_localized.fullmatch(value):
                     return datetime.datetime.strptime(match.group(1).replace(" ", ""), "%d.%m.%Y").date()
             except ValueError:
                 raise ImportDataError(_("core_admin.ImportDataError.message.invalid_date_value") + ": " + str(value))
@@ -1874,6 +1876,17 @@ class GeometryTransformMixin:
             return None
         return self.model_class.objects.filter(**filter_kwargs).first()
 
+    def _geometry_target_model(self):
+        """
+        Vrátí model, jehož pole ``geom_system`` je zdrojem výchozí hodnoty, když geometrický
+        záznam v databázi ještě neexistuje (viz ``transform_geometries``). Výchozí implementace
+        vrací ``model_class`` — mappery, kde geometrii nese jiný model (např. ``DokumentMapper``
+        → ``DokumentExtraData``), musí tuto metodu přetížit stejně jako ``_get_geometry_db_record``.
+
+        :return: Třída modelu s polem ``geom_system``.
+        """
+        return self.model_class
+
     def transform_geometries(self, mapping_dict, performed_action):
         """
         Zajistí konzistenci dvojice ``geom``/``geom_sjtsk`` podle ``geom_system``. Při insertu se odvozená
@@ -1907,7 +1920,17 @@ class GeometryTransformMixin:
                 column not in mapping_dict for column in GeometryTransformMixin.GEOMETRY_COLUMNS
             )
             db_record = self._get_geometry_db_record() if missing_geometry_column else None
-            geom_system = mapping_dict.get("geom_system") or getattr(db_record, "geom_system", None)
+            if "geom_system" in mapping_dict:
+                geom_system = mapping_dict.get("geom_system")
+            elif db_record is not None:
+                geom_system = getattr(db_record, "geom_system", None)
+            else:
+                # No existing geometry row (e.g. Dokument without DokumentExtraData yet) — use the
+                # target model's own default, matching what create_records() will persist (r3703505252).
+                try:
+                    geom_system = self._geometry_target_model()._meta.get_field("geom_system").get_default()
+                except FieldDoesNotExist:
+                    geom_system = None
             geom_system = str(geom_system or "")
             if geom_system == "4326":
                 geom = mapping_dict["geom"] if "geom" in mapping_dict else getattr(db_record, "geom", None)
@@ -2775,7 +2798,24 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
         :raises ImportDataError: Vyvolá se, pokud ``typ`` a ``projekt`` porušují ``akce_typ_check``.
         """
         typ = self.value_dict.get("typ")
-        projekt_is_null = self._is_import_null(self.value_dict.get("projekt"))
+        projekt_value = self.value_dict.get("projekt")
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE and (
+            "typ" not in self.value_dict or "projekt" not in self.value_dict
+        ):
+            # Partial UPDATE omits typ/projekt: merge the omitted field from the existing Akce
+            # instead of treating its absence as an explicit NULL (review r3703505240).
+            filter_kwargs = self._get_filter_kwargs_primary_key()
+            existing_akce = (
+                Akce.objects.filter(**{f"archeologicky_zaznam__{k}": v for k, v in filter_kwargs.items()}).first()
+                if filter_kwargs
+                else None
+            )
+            if existing_akce is not None:
+                if "typ" not in self.value_dict:
+                    typ = existing_akce.typ
+                if "projekt" not in self.value_dict:
+                    projekt_value = existing_akce.projekt_id
+        projekt_is_null = self._is_import_null(projekt_value)
         if typ == Akce.TYP_AKCE_SAMOSTATNA and not projekt_is_null:
             raise ImportDataError(_("core_admin.ImportDataError.message.akce_typ_check.typ_n_requires_empty_projekt"))
         if typ == Akce.TYP_AKCE_PROJEKTOVA and projekt_is_null:
@@ -3521,6 +3561,14 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
             return None
         dokument_filter = {f"dokument__{field}": value for field, value in filter_kwargs.items()}
         return DokumentExtraData.objects.filter(**dokument_filter).first()
+
+    def _geometry_target_model(self):
+        """
+        Geometrie dokumentu se ukládá do ``DokumentExtraData``, nikoli do ``Dokument``.
+
+        :return: Třída ``DokumentExtraData``.
+        """
+        return DokumentExtraData
 
     @staticmethod
     def get_record_history(record: Dokument | DokumentExtraData):

@@ -71,6 +71,27 @@ class DateImportFieldTest(SimpleTestCase):
         with self.assertRaises(ImportDataError):
             field.value = "2026-13-31 13:45:59"
 
+    def test_rejects_trailing_junk_after_iso_date(self):
+        """``2026-05-31junk`` nesmí projít jako platné ISO datum (review r3703505272)."""
+        field = DateImportField()
+
+        with self.assertRaises(ImportDataError):
+            field.value = "2026-05-31junk"
+
+    def test_rejects_trailing_junk_after_dotted_year_first_date(self):
+        """``2026.05.31junk`` nesmí projít jako platné datum (review r3703505272)."""
+        field = DateImportField()
+
+        with self.assertRaises(ImportDataError):
+            field.value = "2026.05.31junk"
+
+    def test_rejects_trailing_junk_after_localized_date(self):
+        """``31.05.2026junk`` nesmí projít jako platné datum (review r3703505272)."""
+        field = DateImportField()
+
+        with self.assertRaises(ImportDataError):
+            field.value = "31.05.2026junk"
+
 
 class DateTimeImportFieldTest(SimpleTestCase):
     """Testy chování importního pole ``DateTimeImportField`` při zpracování hodnot s časem."""

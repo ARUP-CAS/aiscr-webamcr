@@ -959,6 +959,15 @@ Třídy
 
       :return: Instance modelu s geometrickými poli, nebo ``None``, pokud záznam neexistuje.
 
+   .. py:method:: _geometry_target_model()
+
+      Vrátí model, jehož pole ``geom_system`` je zdrojem výchozí hodnoty, když geometrický
+      záznam v databázi ještě neexistuje (viz ``transform_geometries``). Výchozí implementace
+      vrací ``model_class`` — mappery, kde geometrii nese jiný model (např. ``DokumentMapper``
+      → ``DokumentExtraData``), musí tuto metodu přetížit stejně jako ``_get_geometry_db_record``.
+
+      :return: Třída modelu s polem ``geom_system``.
+
    .. py:method:: transform_geometries()
 
       Zajistí konzistenci dvojice ``geom``/``geom_sjtsk`` podle ``geom_system``. Při insertu se odvozená
@@ -1627,6 +1636,12 @@ Třídy
       u dokumentu nese tento záznam, nikoli samotný ``Dokument``.
 
       :return: Instance ``DokumentExtraData``, nebo ``None``, pokud záznam neexistuje.
+
+   .. py:method:: _geometry_target_model()
+
+      Geometrie dokumentu se ukládá do ``DokumentExtraData``, nikoli do ``Dokument``.
+
+      :return: Třída ``DokumentExtraData``.
 
    .. py:method:: get_record_history()
 

@@ -11,6 +11,8 @@ from cron.tests._import_test_fixtures import (
     create_akce,
     create_archeologicky_zaznam,
     create_heslar_fixtures,
+    create_projekt,
+    create_projekt_typ,
     create_ruian_with_pian,
     create_specifikace_data,
 )
@@ -192,6 +194,48 @@ class ArcheologickyZaznamAkceMapperImportValidationTest(TestCase):
             ImportDataError, "core_admin.ImportDataError.message.akce_typ_check.typ_r_requires_filled_projekt"
         ):
             mapper.import_validation(INSERT)
+
+
+class ArcheologickyZaznamAkceMapperPartialUpdateValidationTest(TestCase):
+    """Testy pro partial UPDATE (omitted typ/projekt musí čerpat z existující Akce, review r3703505240)."""
+
+    @classmethod
+    def setUpTestData(cls):
+        """Vytvoří existující projektovou (typ=R) a samostatnou (typ=N) akci v DB."""
+        with patch(
+            "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
+            return_value=True,
+        ), patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None), patch(
+            "projekt.models.Projekt.set_pristupnost", return_value=None
+        ):
+            heslars = create_heslar_fixtures("azakce_partial")
+            katastr, _ = create_ruian_with_pian("azakce_partial", "P-AZ-PART-001", heslars)
+            specifikace_data = create_specifikace_data("azakce_partial")
+            projekt_typ = create_projekt_typ("azakce_partial")
+
+            cls.az_r = create_archeologicky_zaznam("C-202401-PART-001A", katastr, heslars["pristupnost"])
+            cls.projekt = create_projekt("C-202401-PART-PROJ", katastr, projekt_typ)
+            cls.akce_r = create_akce(cls.az_r, projekt=cls.projekt, specifikace_data=specifikace_data)
+
+            cls.az_n = create_archeologicky_zaznam("C-202401-PART-002A", katastr, heslars["pristupnost"])
+            cls.akce_n = create_akce(cls.az_n, specifikace_data=specifikace_data)
+
+    def test_omitted_projekt_merges_existing_value_for_projektova_akce(self):
+        """UPDATE s ``ident_cely,typ=R`` (bez projekt) nesmí být odmítnut — projekt zůstává z DB."""
+        row = {"ident_cely": self.az_r.ident_cely, "typ": Akce.TYP_AKCE_PROJEKTOVA}
+        mapper = ArcheologickyZaznamAkceMapper(row)
+
+        mapper.import_validation(UPDATE)  # must not raise
+
+    def test_omitted_typ_merges_existing_value_and_rejects_inconsistent_projekt(self):
+        """UPDATE s ``ident_cely,projekt=...`` (bez typ) na existující typ=N musí selhat na akce_typ_check."""
+        row = {"ident_cely": self.az_n.ident_cely, "projekt": self.projekt.ident_cely}
+        mapper = ArcheologickyZaznamAkceMapper(row)
+
+        with self.assertRaisesRegex(
+            ImportDataError, "core_admin.ImportDataError.message.akce_typ_check.typ_n_requires_empty_projekt"
+        ):
+            mapper.import_validation(UPDATE)
 
 
 class ArcheologickyZaznamAkceMapperRecordPostprocessingTest(TestCase):

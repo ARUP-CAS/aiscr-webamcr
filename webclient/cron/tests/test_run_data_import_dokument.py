@@ -74,6 +74,52 @@ class RunDataImportDokumentTest(RunDataImportMapperTestBase):
         self.assert_import_success(fake_redis)
         self.assertFalse(Dokument.objects.filter(pk=dokument.pk).exists())
 
+    def test_delete_commits_fedora_only_after_the_database_commit(self):
+        """Mazání dokumentu se ve Fedoře nesmí potvrdit dřív, než je potvrzená databázová transakce."""
+        dokument = self._create_dokument("C-FD-991000004")
+        transaction_patch, transactions, commits = self.fedora_deletion_transaction_recorder()
+        on_commit_patch, captured_callbacks = self.capture_fedora_delete_commit_patch()
+
+        fake_redis, _ = self.run_import(
+            FILE_KEY,
+            {"ident_cely": dokument.ident_cely},
+            ImportDataAdminForm.PERFORMED_ACTION_DELETE,
+            extra_patches=[transaction_patch, on_commit_patch],
+        )
+
+        self.assert_import_success(fake_redis)
+        self.assertEqual(
+            commits,
+            [],
+            "Dokud je databázová transakce otevřená, nesmí být potvrzena žádná Fedora transakce mazání.",
+        )
+        self.assertEqual(len(captured_callbacks), 1)
+        captured_callbacks[0]()
+        self.assertEqual(len(commits), len(transactions))
+        self.assertFalse(Dokument.objects.filter(pk=dokument.pk).exists())
+
+    def test_delete_database_commit_failure_leaves_no_fedora_delete_committed(self):
+        """Selhání commitu databáze při mazání dokumentu nesmí zanechat potvrzené mazání ve Fedoře."""
+        dokument = self._create_dokument("C-FD-991000005")
+        transaction_patch, transactions, commits = self.fedora_deletion_transaction_recorder()
+
+        fake_redis, _ = self.run_import(
+            FILE_KEY,
+            {"ident_cely": dokument.ident_cely},
+            ImportDataAdminForm.PERFORMED_ACTION_DELETE,
+            extra_patches=[transaction_patch, self.failing_database_commit_patch()],
+        )
+
+        self.assert_import_failed(fake_redis)
+        self.assertEqual(commits, [])
+        self.assertTrue(transactions, "Test musí vytvořit alespoň jednu Fedora transakci mazání.")
+        for transaction_mock in transactions:
+            transaction_mock.rollback_transaction.assert_called()
+        self.assertTrue(
+            Dokument.objects.filter(pk=dokument.pk).exists(),
+            "Po selhaném commitu se musí vrátit i smazání dokumentu v databázi.",
+        )
+
     def test_duplicate_insert_fails(self):
         """Ověřuje, že duplicitní INSERT import záznamu dokument skončí selháním."""
         fake_redis, _ = self.run_import(FILE_KEY, self._base_payload(self.dokument.ident_cely))

@@ -2032,12 +2032,14 @@ files**. When the stop is honored depends entirely on which sub-phase is active.
   "success" markers are relabeled `rolled_back` (`tasks.py:~1090`). `finally`
   sets `phase = stopped`, releases the lock, clears the pointer. **Latency: the
   current record only. Result: nothing persisted — a true abort.**
-  - **Caveat (DELETE imports):** in the DELETE path a record is removed with a
-    `FedoraDeletionOnlyTransaction` (`tasks.py:815`, `record.delete()` at `:949`).
-    `set_rollback(True)` reverts the **database** row but does **not** undo any
-    Fedora-side deletion that already executed. For delete-imports the abort is
-    therefore DB-clean but may leave a Fedora tombstone. Not currently handled —
-    see §13.8.
+  - **DELETE imports (resolved, review r3703505209):** in the DELETE path a record is
+    removed with a `FedoraDeletionOnlyTransaction`, but that transaction is no longer
+    committed inside the `atomic()` block. Every deletion transaction is queued and
+    committed from a single `transaction.on_commit` callback
+    (`commit_pending_fedora_delete_commits`), which Django does not run when the
+    transaction rolls back. A stopped or failed delete-import — including a failure of
+    the database commit itself — therefore leaves Fedora untouched, and the queued
+    transactions are explicitly rolled back. The abort is now clean in **both** stores.
 - **S-I2 — Stop during the history phase (deferred or ignored).** The data loop
   has already **committed** (the `atomic()` block exited normally). The history
   loop does not poll the sentinel and `stopped` is still `False`, so **history
@@ -2123,7 +2125,7 @@ after a job is running, the `finally` never executes:
 | Stop during | Data records | History rows | Fedora metadata | Binary files | Net effect |
 |---|---|---|---|---|---|
 | `validating` | — | — | — | — | nothing written |
-| data loop (S-I1) | **rolled back** | skipped | skipped | skipped | **clean abort** |
+| data loop (S-I1) | **rolled back** | skipped | skipped | skipped | **clean abort**, Fedora deletions included |
 | history (S-I2) | committed | committed | committed | deferred/none | **partial, unabortable** |
 | Fedora (S-I3) | committed | committed | partial→full | deferred/none | **partial, unabortable** |
 | file loop (S-I4) | committed | committed | committed | **partial** | **partial, unabortable** |
@@ -2146,11 +2148,20 @@ after a job is running, the `finally` never executes:
    superuser force-cancel to act on `importing`/`validating` (currently 409/no-op)
    by clearing the lock, pointer, and phase directly rather than relying on the
    dead task.
-3. **DELETE-import Fedora rollback gap (S-I1 caveat).** DB rollback on stop does
-   not reverse Fedora deletions already performed in the data loop. *Recommendation:*
-   defer Fedora deletions to the post-commit phase (as inserts/updates already do
-   via `DryRunFedoraTransaction`) so a stopped delete-import leaves Fedora
-   untouched, or explicitly document the residual.
+3. **DELETE-import Fedora rollback gap (S-I1 caveat) — implemented.** Fedora
+   deletions are deferred to the post-commit phase via `transaction.on_commit`, so
+   the database is the single commit point and a stopped or failed delete-import —
+   including a failure of the database commit itself — leaves Fedora untouched.
+   *Residual, accepted:* the opposite direction remains. Once the database has
+   committed, an individual Fedora commit can still fail, leaving an object in Fedora
+   that was meant to be deleted but no longer has a row in the database. It is not
+   lost data (`FedoraRepositoryConnector.delete_binary_file` is a soft delete — a
+   `dcterms:type 'deleted'` marker triple; the bytes stay) and it is recoverable. The
+   commit loop does not abandon the remaining deletions on such a failure; each
+   failure is logged (`cron.tasks.run_data_import.fedora_delete_commit.error`, with
+   `ident_cely` / `repository_uuid` / `path`) and reported per record in
+   `import_fedora_result_tr`, so an operator can finish the deletion. A durable outbox
+   with an automatic retry task was judged disproportionate for this change.
 4. **Reconcile the design narrative.** Update US-8 (§2.5.1) and the `importing`
    transition note (§3.1) to reflect the rollback-on-stop semantics now in effect
    for the data phase (§13.4 S-I1).

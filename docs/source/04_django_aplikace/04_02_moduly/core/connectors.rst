@@ -70,6 +70,34 @@ Třídy
       :param token: Jedinečný token vlastníka locku.
       :return: ``True``, pokud byl lock odstraněn; jinak ``False``.
 
+   .. py:method:: delete_if_value_matches()
+
+      Smaže libovolný klíč pouze tehdy, pokud jeho aktuální hodnota odpovídá ``expected_value``.
+
+      Chrání job-routing ukazatele (``import_data_current_job_{user}``,
+      ``IMPORT_DATA_ACTIVE_JOB_KEY``) před tím, aby terminální úklid jedné úlohy smazal ukazatel
+      již přepsaný nově nastartovanou úlohou (review r3703505227).
+
+      :param connection: Redis spojení, přes které se klíč maže.
+      :param key: Klíč ke smazání.
+      :param expected_value: Hodnota, kterou musí klíč stále mít, aby ke smazání došlo.
+      :return: ``True``, pokud byl klíč smazán; jinak ``False``.
+
+   .. py:method:: claim_awaiting_import()
+
+      Atomicky ověří fázi, platnost validace i vlastnictví locku importní úlohy a v jediném
+      volání ji převede z ``expected_phase`` do ``new_phase``, přičemž obnoví TTL locku.
+      Sloučení kontroly a zápisu do jednoho Lua skriptu zabraňuje tomu, aby dva souběžné
+      požadavky na start téhož importu prošly kontrolou fáze oba a naplánovaly stejnou úlohu dvakrát.
+
+      :param connection: Redis spojení, přes které se operace provádí.
+      :param job_id: Identifikátor importní úlohy.
+      :param expected_phase: Fáze, ve které se úloha musí nacházet, aby byla nárokována.
+      :param new_phase: Fáze, do které se úloha při úspěchu převede.
+      :param ttl_seconds: Nová doba expirace globálního locku v sekundách.
+      :return: Dvojice ``(claimed, lock_token)``; ``claimed`` je ``True`` při úspěchu, ``lock_token``
+          je vlastnící token nebo ``None``, pokud úloha nebyla nárokována.
+
    .. py:method:: prepare_model_for_redis()
 
       Převede řádek Django-tables2 tabulky do slovníku pro uložení do Redis cache.

@@ -217,6 +217,8 @@
       let resetRequested = false
       let currentPhase = null
       let maxProgressData = 0
+      let validationCursor = 0
+      let pollingActive = false
 
       function setDisabled(btn, disabled) {
           if (btn) {
@@ -290,10 +292,9 @@
       function renderTables(data) {
           const table = document.getElementById("result_list")
           if (table && data.validation_results) {
-              // Append validation rows incrementally by index (the same pattern the file table uses).
-              const start_index = table.rows.length - 1
-              for (let i = start_index; i < data.validation_results.length; i++) {
-                  const vr = data.validation_results[i]
+              // The server now returns only the rows appended since validationCursor (review
+              // r3703505264), so every entry here is new — append all of them directly.
+              for (const vr of data.validation_results) {
                   const row = table.insertRow(-1)
                   row.insertCell(-1).innerText = (vr.item_order + 1)
                   row.insertCell(-1).innerText = vr.file_name || ""
@@ -303,6 +304,9 @@
                   row.insertCell(-1).innerText = ""
                   row.insertCell(-1).innerText = ""
                   row.insertCell(-1).innerText = ""
+              }
+              if (typeof data.validation_cursor === "number") {
+                  validationCursor = data.validation_cursor
               }
               // During importing (all rows valid), fill the DB-key / status / history / Fedora columns.
               for (let i = 0; i < data.finished_record_count; i++) {
@@ -350,7 +354,10 @@
               if (stopRequests) {
                   return -1
               }
-              const response = await fetch(url)
+              // Ask the server for only the validation rows appended since our last poll (r3703505264).
+              const fetchUrl = new URL(url, window.location.origin)
+              fetchUrl.searchParams.set("validation_since", String(validationCursor))
+              const response = await fetch(fetchUrl)
               if (!response.ok) {
                   throw new Error(`HTTP error! status: ${response.status}`)
               }
@@ -406,19 +413,30 @@
       }
 
       async function process() {
-          const MAX_TICKS = 172800; // 48 hours — matches IMPORT_DATA_RUNNING_TTL_SECONDS on the server
-          let ticks = 0;
-          do {
-              await sendRequest(requestUrl);
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              ticks++;
-              if (ticks >= MAX_TICKS) {
-                  stopRequests = true;
-                  document.getElementById("processCurrentStatus").textContent =
-                      "{% trans 'core.templates.admin.import_data.timeout_error' %}";
-                  console.error("Import polling timed out after", MAX_TICKS, "seconds.");
-              }
-          } while (stopRequests === false);
+          // Single-flight guard: Start/Cancel call process() again while the page-load loop may
+          // still be running (awaiting_approval isn't terminal) — without this, two loops would
+          // poll concurrently and double the request rate (review r3703505264).
+          if (pollingActive) {
+              return;
+          }
+          pollingActive = true;
+          try {
+              const MAX_TICKS = 172800; // 48 hours — matches IMPORT_DATA_RUNNING_TTL_SECONDS on the server
+              let ticks = 0;
+              do {
+                  await sendRequest(requestUrl);
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                  ticks++;
+                  if (ticks >= MAX_TICKS) {
+                      stopRequests = true;
+                      document.getElementById("processCurrentStatus").textContent =
+                          "{% trans 'core.templates.admin.import_data.timeout_error' %}";
+                      console.error("Import polling timed out after", MAX_TICKS, "seconds.");
+                  }
+              } while (stopRequests === false);
+          } finally {
+              pollingActive = false;
+          }
       }
 
       if (startImportButton) {
