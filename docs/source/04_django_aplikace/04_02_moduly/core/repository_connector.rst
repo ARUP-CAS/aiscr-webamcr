@@ -156,6 +156,7 @@ Třídy
       :param request_type: Parametr ``request_type`` předává se do volání ``_get_request_url()``, ``_send_request()``.
       :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
       :param ident_cely: Parametr ``ident_cely`` se předává do volání ``_get_request_url()``.
+      :param path: Relativní cesta distribuce nebo paradat pod kontejnerem souboru.
       :return: Textová reprezentace UID transakce.
 
    .. py:method:: get_base_url()
@@ -171,6 +172,10 @@ Třídy
       :param request_type: Parametr ``request_type`` předává se do volání ``error()``, ovlivňuje větvení podmínek.
       :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
       :param ident_cely: Parametr ``ident_cely`` ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param path: Relativní cesta pod kontejnerem souboru (např. ``ocr/alto-xml`` nebo
+          ``paradata/ocr/alto-xml``). U typů ``CREATE_*`` se předává cesta *nadřazeného* kontejneru,
+          protože POST cílí na rodiče a poslední segment jde v hlavičce ``Slug``; prázdná hodnota
+          zde znamená, že rodičem je přímo kontejner souboru.
       :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: check_container_deleted()
@@ -340,6 +345,19 @@ Třídy
       :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
       :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
 
+   .. py:method:: _record_thumb_history()
+
+      Zapíše do historie souboru vznik nebo aktualizaci náhledu.
+
+      Náhledy jsou distribuce souboru jako každé jiné, takže se evidují stejnými typy změn
+      (``DIST01``/``DIST11``) s poznámkou ``thumb``, resp. ``thumb-large``. Zápis je best-effort:
+      selhání se pouze zaloguje, protože ztráta záznamu v historii nesmí shodit nahrání souboru
+      ani generování náhledů.
+
+      :param uuid: UUID kontejneru souboru, ke kterému náhled patří.
+      :param distribution: Název kontejneru náhledu (``thumb`` nebo ``thumb-large``).
+      :param updated: Pokud ``True``, jde o přepis existujícího náhledu (``DIST11``).
+
    .. py:method:: migrate_binary_file()
 
       Migruje binární soubor do Fedora repositáře a vrátí wrapper se metadaty.
@@ -371,6 +389,239 @@ Třídy
       :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
       :param save_thumbs: Parametr ``save_thumbs`` předává se do volání ``debug()``, ovlivňuje větvení podmínek.
       :return: Textová reprezentace UID transakce.
+
+   .. py:method:: _normalize_distribution_name()
+
+      Ověří a normalizuje název distribuce použitý jako cesta kontejneru ve Fedoře.
+
+      Pravidla jsou sdílená s validační fází importu (``core.constants``), aby mapper
+      i connector odmítly stejné hodnoty: vyhrazené názvy a segmenty, které by umožnily
+      opustit kontejner souboru (``.``, ``..``, prázdný segment).
+
+      :param distribution: Název distribuce z importu, např. ``ocr/alto-xml``.
+      :param allow_orig: Pokud ``True``, je povolen název ``orig`` – používá se pro paradata,
+          která lze připojit i k původní distribuci souboru.
+      :return: Normalizovaný název bez okrajových lomítek a bílých znaků.
+      :raises FedoraValidationError: Pokud je název prázdný, obsahuje nepovolený segment
+          nebo je vyhrazený.
+
+   .. py:method:: _ensure_child_containers()
+
+      Zajistí existenci mezilehlých kontejnerů na cestě k distribuci nebo paradatům.
+
+      Pro cestu ``ocr/alto-xml`` vznikne v případě potřeby kontejner ``ocr``; pro paradata
+      i kontejner ``paradata``. Existence se nespoléhá na chování konkrétní verze Fedory,
+      každý mezilehlý segment se ověří a případně založí explicitně. Za chybějící se považuje
+      i kontejner se stavem 410 (tombstone po dřívějším smazání) – zakládá se znovu
+      s hlavičkou ``Overwrite-Tombstone``, jinak by na něj následný zápis obsahu selhal.
+
+      :param uuid: UUID kontejneru souboru, pod kterým distribuce leží.
+      :param path: Relativní cesta distribuce (poslední segment je binární obsah, nezakládá se zde).
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+
+   .. py:method:: _save_file_child()
+
+      Vytvoří nový binární kontejner pod kontejnerem souboru (distribuce nebo paradata).
+
+      POST cílí na nadřazený kontejner a poslední segment cesty jde v hlavičce ``Slug``,
+      stejně jako u ``save_binary_file`` se Slugem ``orig``. Na rozdíl od ``orig`` je ale
+      cílová URL plně určena vstupem (uuid souboru a názvem distribuce), takže po dřívějším
+      smazání téže distribuce na ní zůstal tombstone a Fedora by nové vytvoření odmítla
+      stavem 410. Proto se – jako u proxy záznamu v ``record_deletion`` – posílá hlavička
+      ``Overwrite-Tombstone``; zde bezpodmínečně, protože INSERT probíhá až v samostatném
+      importním běhu, do kterého se příznak ``override_tombstone`` mazací transakce nedostane.
+
+      :param uuid: UUID kontejneru souboru.
+      :param path: Relativní cesta pod kontejnerem souboru, např. ``ocr/alto-xml``.
+      :param file_name: Název souboru zapsaný do ``Content-Disposition``.
+      :param content_type: MIME typ ukládaného obsahu.
+      :param file: Binární obsah k uložení.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :return: Wrapper nad uloženým obsahem s URL vzniklého kontejneru.
+
+   .. py:method:: _update_file_child()
+
+      Přepíše obsah existujícího kontejneru distribuce nebo paradat.
+
+      PUT na živý zdroj zakládá ve Fedoře novou verzi obsahu, takže historie zůstane dostupná
+      stejně jako u ``update_binary_file``.
+
+      :param uuid: UUID kontejneru souboru.
+      :param path: Relativní cesta pod kontejnerem souboru.
+      :param file_name: Název souboru zapsaný do ``Content-Disposition``.
+      :param content_type: MIME typ ukládaného obsahu.
+      :param file: Nový binární obsah.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :param overwrite_tombstone: Pokud ``True``, přidá hlavičku ``Overwrite-Tombstone``. Používá se
+          pro paradata, u kterých se nevede historie, takže nelze rozlišit aktualizaci živého zdroje
+          od opětovného nahrání na URL po dřívějším smazání, kde zůstal tombstone.
+      :return: Wrapper nad uloženým obsahem s URL kontejneru.
+
+   .. py:method:: _delete_file_child()
+
+      Smaže kontejner distribuce nebo paradat.
+
+      Tombstone se záměrně neodstraňuje: případné opětovné nahrání téže distribuce jej přepíše
+      hlavičkou ``Overwrite-Tombstone`` v ``_save_file_child``.
+
+      :param uuid: UUID kontejneru souboru.
+      :param path: Relativní cesta pod kontejnerem souboru.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+
+   .. py:method:: _get_file_child()
+
+      Načte obsah kontejneru distribuce nebo paradat.
+
+      :param uuid: UUID kontejneru souboru.
+      :param path: Relativní cesta pod kontejnerem souboru.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :return: Wrapper nad načteným obsahem, nebo ``None``, pokud kontejner neexistuje.
+
+   .. py:method:: save_distribution()
+
+      Uloží novou alternativní distribuci souboru do kontejneru ``file/{uuid}/{distribution}``.
+
+      :param uuid: UUID kontejneru souboru.
+      :param distribution: Název distribuce, např. ``ocr/alto-xml``.
+      :param file_name: Název souboru zapsaný do ``Content-Disposition``.
+      :param content_type: MIME typ ukládaného obsahu.
+      :param file: Binární obsah distribuce.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :return: Wrapper nad uloženým obsahem.
+      :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+
+   .. py:method:: update_distribution()
+
+      Přepíše obsah existující alternativní distribuce souboru.
+
+      :param uuid: UUID kontejneru souboru.
+      :param distribution: Název distribuce, např. ``ocr/alto-xml``.
+      :param file_name: Název souboru zapsaný do ``Content-Disposition``.
+      :param content_type: MIME typ ukládaného obsahu.
+      :param file: Nový binární obsah distribuce.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :return: Wrapper nad uloženým obsahem.
+      :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+
+   .. py:method:: delete_distribution()
+
+      Smaže alternativní distribuci souboru.
+
+      :param uuid: UUID kontejneru souboru.
+      :param distribution: Název distribuce, např. ``ocr/alto-xml``.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+
+   .. py:method:: get_distribution()
+
+      Načte obsah alternativní distribuce souboru.
+
+      :param uuid: UUID kontejneru souboru.
+      :param distribution: Název distribuce, např. ``ocr/alto-xml``.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :return: Wrapper nad načteným obsahem, nebo ``None``, pokud distribuce neexistuje.
+      :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+
+   .. py:method:: distribution_exists()
+
+      Zjistí, zda ve Fedoře existuje kontejner dané distribuce souboru.
+
+      Dotazuje se na ``fcr:metadata`` distribuce, aby se nepřenášel binární obsah. Smazaná
+      distribuce vrací ``410`` (tombstone) a považuje se za neexistující – stejně jako ``404``.
+      Na rozdíl od zápisových metod je povolen i název ``orig`` a náhledy, protože jde
+      o čistě čtecí dotaz, kterým se lze ptát na libovolný kontejner souboru.
+
+      :param uuid: UUID kontejneru souboru.
+      :param distribution: Název distribuce, např. ``ocr/alto-xml``.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :return: ``True``, pokud kontejner existuje, jinak ``False``.
+      :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+      :raises FedoraNoResponseError: Pokud repozitář neodpoví – existenci nelze určit a volající
+          se nesmí spolehnout na domnělou neexistenci.
+
+   .. py:method:: get_historie_distribution()
+
+      Vrátí verze kontejneru distribuce z ``fcr:versions``.
+
+      Používá se pro doplnění historie u náhledů vzniklých dřív, než se pro ně historie
+      zapisovala; z časů verzí lze rekonstruovat první nahrání i následné aktualizace.
+
+      :param uuid: UUID kontejneru souboru.
+      :param distribution: Název distribuce, např. ``thumb``.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :return: Seznam slovníků ``{"datetime": …, "timestamp": …}`` seřazený tak, jak jej vrátila
+          Fedora; prázdný seznam, pokud kontejner neexistuje nebo verze nemá.
+
+   .. py:method:: paradata_exists()
+
+      Zjistí, zda ve Fedoře existují paradata dané distribuce.
+
+      :param uuid: UUID kontejneru souboru.
+      :param distribution: Název distribuce, ke které paradata patří.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :return: ``True``, pokud kontejner paradat existuje, jinak ``False``.
+      :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+      :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+
+   .. py:method:: _get_paradata_path()
+
+      Sestaví cestu paradat pro zadanou distribuci.
+
+      Paradata lze připojit i k původní distribuci ``orig``, proto je tento název na rozdíl
+      od alternativních distribucí povolen.
+
+      :param distribution: Název distribuce, ke které paradata patří.
+      :return: Relativní cesta ``paradata/{distribution}`` pod kontejnerem souboru.
+      :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+
+   .. py:method:: save_paradata()
+
+      Uloží paradata distribuce do kontejneru ``file/{uuid}/paradata/{distribution}``.
+
+      :param uuid: UUID kontejneru souboru.
+      :param distribution: Název distribuce, ke které paradata patří.
+      :param file_name: Název souboru zapsaný do ``Content-Disposition``.
+      :param content_type: MIME typ ukládaného obsahu.
+      :param file: Binární obsah paradat.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :return: Wrapper nad uloženým obsahem.
+      :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+
+   .. py:method:: update_paradata()
+
+      Přepíše obsah existujících paradat distribuce.
+
+      Zápis se posílá s hlavičkou ``Overwrite-Tombstone``: paradata nemají vlastní historii ani
+      databázový záznam, takže nelze ověřit, zda cílová URL patří živému zdroji, nebo zda na ní
+      po dřívějším smazání paradat zůstal tombstone, který by PUT odmítl stavem 410.
+
+      :param uuid: UUID kontejneru souboru.
+      :param distribution: Název distribuce, ke které paradata patří.
+      :param file_name: Název souboru zapsaný do ``Content-Disposition``.
+      :param content_type: MIME typ ukládaného obsahu.
+      :param file: Nový binární obsah paradat.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :return: Wrapper nad uloženým obsahem.
+      :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+
+   .. py:method:: delete_paradata()
+
+      Smaže paradata distribuce.
+
+      :param uuid: UUID kontejneru souboru.
+      :param distribution: Název distribuce, ke které paradata patří.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+
+   .. py:method:: get_paradata()
+
+      Načte obsah paradat distribuce.
+
+      :param uuid: UUID kontejneru souboru.
+      :param distribution: Název distribuce, ke které paradata patří.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :return: Wrapper nad načteným obsahem, nebo ``None``, pokud paradata neexistují.
+      :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
 
    .. py:method:: update_file_name()
 

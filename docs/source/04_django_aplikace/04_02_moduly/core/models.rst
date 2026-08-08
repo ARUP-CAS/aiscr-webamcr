@@ -247,6 +247,25 @@ Třídy
 
       :return: FileResponse se souborem nebo None.
 
+   .. py:method:: available_distributions()
+
+      Vrátí názvy distribucí souboru dostupných ke stažení, včetně původní ``orig``.
+
+      Seznam se skládá z historie souboru: distribuce je dostupná, pokud k ní existuje záznam
+      ``DIST01`` a zároveň neexistuje mladší ``DIST10`` se stejnou poznámkou. Na rozdíl od
+      validace importu, která se ptá přímo Fedory, se zde čte z databáze — tabulka souborů
+      vykresluje seznam pro každý řádek a jeden HTTP dotaz do repozitáře na řádek by byl
+      neúnosný. Zdrojem tohoto pravidla je zadání issue #3527.
+
+      :return: Seznam názvů distribucí; ``orig`` je vždy první.
+
+   .. py:method:: get_distribution_response()
+
+      Vrátí obsah zvolené distribuce souboru jako HTTP odpověď.
+
+      :param distribution: Název distribuce; ``orig`` vrátí původní obsah souboru.
+      :return: ``FileResponse`` s obsahem distribuce, nebo ``None``, pokud ji nelze načíst.
+
    .. py:method:: getMock()
 
       Vrátí mock reprezentaci souboru.

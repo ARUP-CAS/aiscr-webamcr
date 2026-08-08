@@ -85,6 +85,24 @@ SMAZANI_DISTRIBUCE: Final = "DIST10"
 # Vyhrazené názvy distribucí (``orig``, ``paradata`` celé; z ``thumb`` jen ``thumb/page`` a níže).
 RESERVED_DISTRIBUTION_NAMES: Final = frozenset({"orig", "paradata"})
 RESERVED_DISTRIBUTION_PREFIX: Final = "thumb/page"
+# Název kontejneru s původním obsahem souboru; výchozí volba při stahování.
+ORIGINAL_DISTRIBUTION_NAME: Final = "orig"
+# Kontejnery, které pro soubor vznikají už při jeho importu, takže k nim nevede záznam ``DIST01``.
+IMPLICIT_DISTRIBUTION_NAMES: Final = frozenset({"orig", "thumb", "thumb-large"})
+# Segmenty, které by dovolily opustit kontejner souboru nebo vytvořit prázdný segment cesty.
+UNSAFE_DISTRIBUTION_SEGMENTS: Final = frozenset({"", ".", ".."})
+
+
+def normalize_distribution_name(name: str) -> str:
+    """Sjednotí zápis názvu distribuce – odstraní bílé znaky a okrajová lomítka.
+
+    Jediné místo, kde se název distribuce normalizuje; volají ho jak validace importu,
+    tak connector, aby obě vrstvy pracovaly se stejnou hodnotou.
+
+    :param name: Název distribuce z importu (např. `` /ocr/alto-xml/ ``).
+    :return: Normalizovaný název, případně prázdný řetězec.
+    """
+    return (name or "").strip().strip("/")
 
 
 def is_reserved_distribution_name(name: str) -> bool:
@@ -93,12 +111,48 @@ def is_reserved_distribution_name(name: str) -> bool:
     :param name: Název distribuce z importu (např. ``ocr/alto-xml``).
     :return: ``True``, pokud je název vyhrazený, jinak ``False``.
     """
-    normalized = (name or "").strip().strip("/")
+    normalized = normalize_distribution_name(name)
     if normalized in RESERVED_DISTRIBUTION_NAMES:
         return True
     if normalized == RESERVED_DISTRIBUTION_PREFIX or normalized.startswith(RESERVED_DISTRIBUTION_PREFIX + "/"):
         return True
     return False
+
+
+def has_unsafe_distribution_segments(name: str) -> bool:
+    """Ověří, zda název distribuce obsahuje segment, který by vedl mimo kontejner souboru.
+
+    Zachytí prázdné segmenty (``ocr//alto``) i průchod adresáři (``ocr/../orig``). Validace
+    importu i connector používají tuto funkci, aby CSV neprošlo validací jen proto, že by
+    chybu zachytil až zápis do Fedory.
+
+    :param name: Název distribuce z importu.
+    :return: ``True``, pokud je některý segment nepovolený, jinak ``False``.
+    """
+    normalized = normalize_distribution_name(name)
+    return any(segment in UNSAFE_DISTRIBUTION_SEGMENTS for segment in normalized.split("/"))
+
+
+def find_distribution_prefix_collisions(names) -> list[tuple[str, str]]:
+    """Najde dvojice názvů distribucí, kde jeden je předkem druhého v cestě.
+
+    Název ``ocr`` je předkem ``ocr/alto-xml``: tentýž název nesmí být zároveň binární distribucí
+    (list) i nadřazeným kontejnerem jiné distribuce. Zápis listu by ve Fedoře vytvořil binární
+    uzel tam, kde pozdější ``ocr/alto-xml`` očekává kontejner, takže by zápis potomka selhal.
+    Kontrola proto běží nad názvy jedné dávky (pro jeden soubor).
+
+    :param names: Iterovatelný soubor názvů distribucí z importu (s duplicitami i mezerami).
+    :return: Seznam dvojic ``(predchudce, potomek)`` v lexikografickém pořadí; prázdný,
+        pokud nedošlo ke kolizi.
+    """
+    unique = sorted(name for name in (normalize_distribution_name(n) for n in names) if name)
+    collisions = []
+    for index, ancestor in enumerate(unique):
+        prefix = ancestor + "/"
+        for descendant in unique[index + 1 :]:
+            if descendant.startswith(prefix):
+                collisions.append((ancestor, descendant))
+    return collisions
 
 
 # Uživatel.

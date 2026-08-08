@@ -545,11 +545,20 @@ class DownloadFile(LoginRequiredMixin, View):
                 safe_redirect = "/"
             return redirect(safe_redirect)
         soubor: Soubor = get_object_or_404(Soubor, id=pk)
+        distribution = kwargs.get("distribution")
         if soubor.repository_uuid:
             if self.thumb_small and soubor.small_thumbnail is not None:
                 return soubor.small_thumbnail
             elif self.thumb_large and soubor.large_thumbnail is not None:
                 return soubor.large_thumbnail
+            elif distribution:
+                # Only distributions the file actually offers may be downloaded; a raw name from the
+                # URL must not reach Fedora, otherwise it could address any container under the file.
+                if distribution not in soubor.available_distributions():
+                    raise Http404
+                distribution_response = soubor.get_distribution_response(distribution)
+                if distribution_response is not None:
+                    return distribution_response
             elif soubor.content_file_response is not None:
                 return soubor.content_file_response
         raise Http404

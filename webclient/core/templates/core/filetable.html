@@ -53,9 +53,26 @@
       </td>
       {% if show.soubor_stahnout %}
       <td>
-        <a href="{% url 'core:download_file' vazba_trida ident soubor.id %}" target="_blank">
-          <span class="material-icons">get_app</span>
-        </a>
+        {% with distribuce=soubor.available_distributions %}
+          {% if distribuce|length > 1 %}
+            {# More than orig is available – let the user pick which rendition to download. #}
+            <select class="form-control form-control-sm d-inline-block w-auto align-middle mr-1"
+                    id="file-distribution-{{ soubor.id }}"
+                    onchange="document.getElementById('file-download-{{ soubor.id }}').href = this.value;">
+              {% for distribution in distribuce %}
+                {% if forloop.first %}
+                  <option value="{% url 'core:download_file' vazba_trida ident soubor.id %}">{{ distribution }}</option>
+                {% else %}
+                  <option value="{% url 'core:download_file_distribution' vazba_trida ident soubor.id distribution %}">{{ distribution }}</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+          {% endif %}
+          <a id="file-download-{{ soubor.id }}"
+             href="{% url 'core:download_file' vazba_trida ident soubor.id %}" target="_blank">
+            <span class="material-icons">get_app</span>
+          </a>
+        {% endwith %}
       </td>
       {% endif %}
       {% if allow_replace and show.soubor_nahradit %}

@@ -12,7 +12,7 @@ import magic
 import piexif
 import py7zr
 import rarfile
-from core.constants import ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_BADATEL_ID
+from core.constants import ORIGINAL_DISTRIBUTION_NAME, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_BADATEL_ID
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.db import models
@@ -919,6 +919,59 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         if self.repository_uuid is not None and rep_bin_file and rep_bin_file.size_mb > 0:
             return self._create_file_response(rep_bin_file)
         return None
+
+    def available_distributions(self) -> list:
+        """
+        Vrátí názvy distribucí souboru dostupných ke stažení, včetně původní ``orig``.
+
+        Seznam se skládá z historie souboru: distribuce je dostupná, pokud k ní existuje záznam
+        ``DIST01`` a zároveň neexistuje mladší ``DIST10`` se stejnou poznámkou. Na rozdíl od
+        validace importu, která se ptá přímo Fedory, se zde čte z databáze — tabulka souborů
+        vykresluje seznam pro každý řádek a jeden HTTP dotaz do repozitáře na řádek by byl
+        neúnosný. Zdrojem tohoto pravidla je zadání issue #3527.
+
+        :return: Seznam názvů distribucí; ``orig`` je vždy první.
+        """
+        from core.constants import NAHRANI_DISTRIBUCE, SMAZANI_DISTRIBUCE
+
+        distributions = [ORIGINAL_DISTRIBUTION_NAME]
+        if not self.historie_id:
+            return distributions
+        posledni_nahrani = {}
+        posledni_smazani = {}
+        for zaznam in self.historie.historie_set.filter(
+            typ_zmeny__in=(NAHRANI_DISTRIBUCE, SMAZANI_DISTRIBUCE)
+        ).order_by("datum_zmeny"):
+            cil = posledni_nahrani if zaznam.typ_zmeny == NAHRANI_DISTRIBUCE else posledni_smazani
+            cil[zaznam.poznamka] = zaznam.datum_zmeny
+        for distribution, nahrani in posledni_nahrani.items():
+            smazani = posledni_smazani.get(distribution)
+            if distribution and (smazani is None or smazani <= nahrani):
+                distributions.append(distribution)
+        return distributions
+
+    def get_distribution_response(self, distribution) -> FileResponse | None:
+        """
+        Vrátí obsah zvolené distribuce souboru jako HTTP odpověď.
+
+        :param distribution: Název distribuce; ``orig`` vrátí původní obsah souboru.
+        :return: ``FileResponse`` s obsahem distribuce, nebo ``None``, pokud ji nelze načíst.
+        """
+        from core.repository_connector import FedoraRepositoryConnector
+
+        if distribution in (None, "", ORIGINAL_DISTRIBUTION_NAME):
+            return self.content_file_response
+        record = self.vazba.navazany_objekt
+        if record is None or self.repository_uuid is None:
+            return None
+        connector = FedoraRepositoryConnector(record, skip_container_check=False)
+        rep_bin_file = connector.get_distribution(self.repository_uuid, distribution)
+        if rep_bin_file is None:
+            return None
+        response = self._create_file_response(rep_bin_file)
+        # The distribution has its own binary; only the file name is derived from the parent record.
+        response["Content-Disposition"] = f"attachment; filename={self.nazev}"
+        return response
 
     def getMock(self):
         """
