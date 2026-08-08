@@ -114,6 +114,7 @@ def create_soubor_fixture(
     nazev="dokument.pdf",
     uuid="11111111-2222-3333-4444-555555555555",
     with_path=True,
+    with_navazany_objekt=True,
 ):
     """Vytvoří uložený ``Soubor`` navázaný na dokument, včetně vazby na historii.
 
@@ -121,14 +122,17 @@ def create_soubor_fixture(
     :param nazev: Název souboru.
     :param uuid: UUID kontejneru souboru ve Fedoře, ze kterého se skládá ``path``.
     :param with_path: Pokud ``False``, soubor zůstane bez ``path`` (nemá tedy ``repository_uuid``).
+    :param with_navazany_objekt: Pokud ``False``, vazba se k dokumentu nepřipojí, takže
+        ``vazba.navazany_objekt`` je ``None`` (soubor nemá nadřazený záznam).
     :return: Uloženou instanci ``Soubor`` s vyplněnou vazbou na historii.
     """
     vazba = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
     vazba.suppress_signal = True
     vazba.save()
-    dokument.soubory = vazba
-    dokument.suppress_signal = True
-    dokument.save()
+    if with_navazany_objekt:
+        dokument.soubory = vazba
+        dokument.suppress_signal = True
+        dokument.save()
     soubor = Soubor(
         nazev=nazev,
         mimetype="application/pdf",

@@ -56,6 +56,7 @@ from core.repository_connector import (
     DryRunFedoraTransaction,
     FedoraDeletionOnlyTransaction,
     FedoraError,
+    FedoraNoResponseError,
     FedoraRepositoryConnector,
     FedoraTransaction,
 )
@@ -1396,6 +1397,14 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
             # ValueError carries a translation ID (e.g. zip_too_large) raised above.
             fail_error(str(err))
             return
+        except FedoraNoResponseError as err:
+            logger.warning(
+                "cron.tasks.run_data_import_validation.fedora_unavailable",
+                extra={"job_id": job_id},
+                exc_info=True,
+            )
+            fail_error("cron.tasks.run_data_import.error.raw", raw=True, message=str(err))
+            return
         except Exception:
             logger.exception("cron.tasks.run_data_import_validation.unexpected_error", extra={"job_id": job_id})
             fail_error("core.admin.import_data.error.unexpected_error")
@@ -1955,6 +1964,19 @@ def run_data_import(job_id, user_id, lock_token):
                 for (obj_class, obj_pk), entry in pending_distribution_metadata.items():
                     fedora_transaction = None
                     refresh_import_lock()
+                    # Like the distribution write loop, the metadata refresh polls the stop
+                    # sentinel so a user stop does not have to wait for lock loss. The check sits
+                    # before the transaction is opened so an in-flight Fedora write is never torn.
+                    if redis_connector.get(job_key("import_data_stop")) is not None:
+                        stopped = True
+                        logger.info(
+                            "cron.tasks.run_data_import.distribution.metadata.stopped", extra={"job_id": job_id}
+                        )
+                        redis_connector.set(
+                            job_key("import_data_status_message_tr"),
+                            translation_value("cron.tasks.run_data_import.stopped_by_user"),
+                        )
+                        break
                     fedora_transaction = FedoraTransaction()
                     obj = obj_class.objects.get(pk=obj_pk)
                     obj.active_transaction = fedora_transaction
@@ -3078,7 +3100,10 @@ def run_data_import(job_id, user_id, lock_token):
         RedisConnector.delete_if_value_matches(redis_connector, RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, job_id)
         leftover_chunks_raw = redis_connector.get(job_key("import_data_file_chunks"))
         if leftover_chunks_raw:
-            leftover_count = int(leftover_chunks_raw)
+            try:
+                leftover_count = int(leftover_chunks_raw)
+            except (TypeError, ValueError):
+                leftover_count = 0
             stray_keys = ["import_data_file_{}_{}".format(job_id, i) for i in range(leftover_count)]
             stray_keys.append(job_key("import_data_file_chunks"))
             redis_connector.delete(*stray_keys)

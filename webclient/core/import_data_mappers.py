@@ -423,6 +423,54 @@ class DistribuceMissingRepositoryUuidError(ImportDataError):
         )
 
 
+class DistribuceMissingVazbaError(ImportDataError):
+    """
+    Výjimka vyvolaná, pokud dotčený soubor nemá vazbu na nadřazený záznam (``navazany_objekt``).
+
+    Bez navázaného záznamu nelze sestavit kontejner ve Fedoře, protože connector odvozuje cestu
+    z ``ident_cely`` nadřazeného záznamu. Kontrola probíhá už při validaci, aby import neselhal
+    až v fázi zápisu do repozitáře, a aby byl řádek označen jako neplatný místo pádu celé dávky.
+    """
+
+    def __init__(self, soubor_id):
+        """
+        Inicializuje instanci třídy.
+
+        :param soubor_id: Identifikace dotčeného souboru z importu (``id`` nebo ``path``).
+        """
+        self.soubor_id = soubor_id
+        super().__init__(
+            "{} {}".format(
+                _("core_admin.DistribuceMissingVazbaError.message.part_1"),
+                soubor_id,
+            )
+        )
+
+
+class DistribuceUnsafeFilenameError(ImportDataError):
+    """
+    Výjimka vyvolaná, pokud název souboru z importu (``distribution_nazev`` / ``paradata_nazev``)
+    není prostý název – obsahuje oddělovač cesty, ``..`` nebo je absolutní.
+
+    Takový název by se spojil s importním adresářem a mohl by z něj opustit, proto se kontroluje
+    už při validaci, aby byl řádek označen jako neplatný místo pádu celé dávky ve fázi zápisu.
+    """
+
+    def __init__(self, nazev):
+        """
+        Inicializuje instanci třídy.
+
+        :param nazev: Neplatný název souboru z importu.
+        """
+        self.nazev = nazev
+        super().__init__(
+            "{} {}".format(
+                _("core_admin.DistribuceUnsafeFilenameError.message.part_1"),
+                nazev,
+            )
+        )
+
+
 class DistribuceImportIntegrityError(ImportDataError):
     """
     Výjimka vyvolaná při importu alternativní distribuce, pokud porušuje předpoklad o existenci:
@@ -5118,6 +5166,23 @@ class DistribuceMapper(DistributionColumnsMixin, ImportModelMapper):
             raise ImportDataReservedDistributionError(distribution)
         return distribution
 
+    def _validate_import_filename(self):
+        """
+        Ověří, že název souboru z importu je prostý název bez cesty.
+
+        Název souboru (``distribution_nazev`` / ``paradata_nazev``) se ve fázi zápisu spojuje
+        s importním adresářem, takže nesmí obsahovat oddělovače cesty ani ``..`` – jinak by
+        mohl opustit importní adresář. Zakázání obou oddělovačů (``/`` i ``\\``) vylučuje i
+        absolutní cestu. Kontroluje se už při validaci, aby se neplatný řádek označil jako
+        neplatný místo pádu celé dávky ve fázi zápisu. DELETE se nevyhodnocuje, protože
+        nemaže soubor z importního adresáře.
+
+        :raises DistribuceUnsafeFilenameError: Pokud název souboru chybí, obsahuje cestu nebo ``..``.
+        """
+        nazev = self.value_dict.get(self.NAZEV_COLUMN)
+        if not nazev or "/" in nazev or "\\" in nazev or nazev in (".", ".."):
+            raise DistribuceUnsafeFilenameError(nazev)
+
     @classmethod
     def validate_batch_ordering(cls, payloads: list[dict]) -> None:
         """
@@ -5155,12 +5220,17 @@ class DistribuceMapper(DistributionColumnsMixin, ImportModelMapper):
         :return: Nalezený ``Soubor``.
         :raises ImportDataMissingReferencedValueError: Pokud dotčený soubor neexistuje.
         :raises DistribuceMissingRepositoryUuidError: Pokud soubor nemá cestu do Fedory.
+        :raises DistribuceMissingVazbaError: Pokud soubor nemá vazbu na nadřazený záznam
+            (``navazany_objekt`` je ``None``) — bez něj nelze ve Fedoře sestavit kontejner distribuce
+            ani paradat.
         """
         soubor = self.model_class.objects.filter(**self._get_filter_kwargs_primary_key()).first()
         if soubor is None:
             raise ImportDataMissingReferencedValueError(missing_value_id, self.model_class.__name__, missing_field_name)
         if not soubor.repository_uuid:
             raise DistribuceMissingRepositoryUuidError(missing_value_id)
+        if soubor.vazba.navazany_objekt is None:
+            raise DistribuceMissingVazbaError(missing_value_id)
         return soubor
 
     def import_validation(self, performed_action, *args, seen_in_batch: set | None = None, **kwargs):
@@ -5182,12 +5252,17 @@ class DistribuceMapper(DistributionColumnsMixin, ImportModelMapper):
         :raises ImportDataError: Pokud chybí název distribuce.
         :raises ImportDataInvalidDistributionError: Pokud název distribuce obsahuje nepovolený segment.
         :raises ImportDataReservedDistributionError: Pokud je název distribuce vyhrazený.
+        :raises DistribuceUnsafeFilenameError: Pokud název souboru (``nazev``) obsahuje cestu
+            nebo ``..``; nevyhodnocuje se pro DELETE.
         :raises ImportDataMissingReferencedValueError: Pokud dotčený soubor neexistuje.
         :raises DistribuceMissingRepositoryUuidError: Pokud soubor nemá cestu do Fedory.
+        :raises DistribuceMissingVazbaError: Pokud soubor nemá vazbu na nadřazený záznam.
         :raises DistribuceImportIntegrityError: Při porušení předpokladu o existenci distribuce
             nebo při opakování téže distribuce v jedné dávce.
         """
         distribution = self._validate_distribution_name()
+        if performed_action != ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+            self._validate_import_filename()
         soubor = self._get_soubor(self.value_dict.get("id"), "id")
         exists = self.distribution_exists(soubor, distribution)
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and exists:
@@ -5289,8 +5364,11 @@ class ParadataMapper(DistribuceMapper):
         :raises ImportDataError: Pokud chybí cesta souboru nebo název distribuce.
         :raises ImportDataInvalidDistributionError: Pokud název distribuce obsahuje nepovolený segment.
         :raises ImportDataReservedDistributionError: Pokud je název distribuce vyhrazený.
+        :raises DistribuceUnsafeFilenameError: Pokud název souboru (``nazev``) obsahuje cestu
+            nebo ``..``; nevyhodnocuje se pro DELETE.
         :raises ImportDataMissingReferencedValueError: Pokud dotčený soubor neexistuje.
         :raises DistribuceMissingRepositoryUuidError: Pokud soubor nemá cestu do Fedory.
+        :raises DistribuceMissingVazbaError: Pokud soubor nemá vazbu na nadřazený záznam.
         :raises DistribuceImportIntegrityError: Pokud cílová distribuce není dostupná nebo se
             táž dvojice (soubor, distribuce) v dávce opakuje.
         """
@@ -5300,6 +5378,8 @@ class ParadataMapper(DistribuceMapper):
                 _("core_admin.ImportDataError.message.missing_required_field") + ": " + self.PATH_COLUMN
             )
         distribution = self._validate_distribution_name(allow_implicit=True)
+        if performed_action != ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+            self._validate_import_filename()
         soubor = self._get_soubor(path, self.PATH_COLUMN)
         if not self.distribution_exists(soubor, distribution):
             raise DistribuceImportIntegrityError(path, distribution, performed_action)

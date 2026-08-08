@@ -58,7 +58,8 @@
             {# More than orig is available – let the user pick which rendition to download. #}
             <select class="form-control form-control-sm d-inline-block w-auto align-middle mr-1"
                     id="file-distribution-{{ soubor.id }}"
-                    onchange="document.getElementById('file-download-{{ soubor.id }}').href = this.value;">
+                    data-target-id="file-download-{{ soubor.id }}"
+                    data-default-href="{% url 'core:download_file' vazba_trida ident soubor.id %}">
               {% for distribution in distribuce %}
                 {% if forloop.first %}
                   <option value="{% url 'core:download_file' vazba_trida ident soubor.id %}">{{ distribution }}</option>
@@ -93,6 +94,36 @@
   {% endfor %}
   </tbody>
 </table>
+<script>
+  (function () {
+    function getSafeHref(value, fallback) {
+      try {
+        var parsed = new URL(value, window.location.origin);
+        var isHttp = parsed.protocol === 'http:' || parsed.protocol === 'https:';
+        var isSameOrigin = parsed.origin === window.location.origin;
+        if (isHttp && isSameOrigin) {
+          return parsed.href;
+        }
+      } catch (e) {
+        // Ignore malformed URLs and fall back to known-safe default.
+      }
+      return fallback;
+    }
+
+    var distributionSelects = document.querySelectorAll('select[id^="file-distribution-"]');
+    distributionSelects.forEach(function (selectEl) {
+      selectEl.addEventListener('change', function () {
+        var targetId = selectEl.getAttribute('data-target-id');
+        var fallbackHref = selectEl.getAttribute('data-default-href');
+        var linkEl = document.getElementById(targetId);
+        if (!linkEl) {
+          return;
+        }
+        linkEl.href = getSafeHref(selectEl.value, fallbackHref);
+      });
+    });
+  })();
+</script>
 
 {% include "soubor_modal.html" %}
 

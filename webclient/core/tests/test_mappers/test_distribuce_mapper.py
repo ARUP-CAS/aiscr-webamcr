@@ -14,6 +14,8 @@ from core.import_data_mappers import (
     DistribuceImportIntegrityError,
     DistribuceMapper,
     DistribuceMissingRepositoryUuidError,
+    DistribuceMissingVazbaError,
+    DistribuceUnsafeFilenameError,
     ImportDataDistributionPrefixCollisionError,
     ImportDataError,
     ImportDataIncorrectStructureError,
@@ -121,6 +123,28 @@ class DistribuceMapperNameValidationTest(TestCase):
                 with self.assertRaises(ImportDataError):
                     DistribuceMapper(row).import_validation(INSERT)
 
+    def test_unsafe_filename_rejected(self):
+        """Název souboru s průchodem adresáři nebo absolutní cestou se odmítne už při validaci."""
+        for nazev in ("../secret", "..\\secret", "/etc/passwd", "sub/file.xml", ".", ".."):
+            with self.subTest(nazev=nazev):
+                row = VALID_ROW.copy()
+                row["nazev"] = nazev
+                with self.assertRaises(DistribuceUnsafeFilenameError):
+                    DistribuceMapper(row).import_validation(INSERT)
+
+    def test_paradata_unsafe_filename_rejected(self):
+        """Paradata kontrolují název souboru stejně jako distribuce."""
+        for nazev in ("../secret", "/etc/passwd", "sub/file.xml"):
+            with self.subTest(nazev=nazev):
+                row = {
+                    "path": "/rest/AMCR/record/C-1/file/uuid-1",
+                    "distribution": "ocr",
+                    "nazev": nazev,
+                    "mimetype": "text/xml",
+                }
+                with self.assertRaises(DistribuceUnsafeFilenameError):
+                    ParadataMapper(row).import_validation(INSERT)
+
 
 class DistribuceMapperValidationTest(TestCase):
     """Testy validace importu proti existujícím souborům a stavu distribucí ve Fedoře."""
@@ -222,6 +246,15 @@ class DistribuceMapperValidationTest(TestCase):
         with patch.object(FedoraRepositoryConnector, "distribution_exists") as exists_mock:
             with self.assertRaises(DistribuceMissingRepositoryUuidError):
                 DistribuceMapper(self._row(id=f"soub-{soubor_bez_path.pk}")).import_validation(INSERT)
+        exists_mock.assert_not_called()
+
+    def test_soubor_without_vazba_rejected(self):
+        """Soubor bez navázaného nadřazeného záznamu se odmítne dřív, než se na distribuci zeptáme Fedory."""
+        soubor_bez_vazby = create_soubor_fixture(self.dokument, nazev="bez_navazaneho.pdf", with_navazany_objekt=False)
+
+        with patch.object(FedoraRepositoryConnector, "distribution_exists") as exists_mock:
+            with self.assertRaises(DistribuceMissingVazbaError):
+                DistribuceMapper(self._row(id=f"soub-{soubor_bez_vazby.pk}")).import_validation(INSERT)
         exists_mock.assert_not_called()
 
     def test_duplicate_row_in_batch_rejected(self):

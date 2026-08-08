@@ -195,6 +195,40 @@ Třídy
       :param soubor_id: Identifikace dotčeného souboru z importu (``id`` nebo ``path``).
 
 
+.. py:class:: DistribuceMissingVazbaError
+
+   Výjimka vyvolaná, pokud dotčený soubor nemá vazbu na nadřazený záznam (``navazany_objekt``).
+
+   Bez navázaného záznamu nelze sestavit kontejner ve Fedoře, protože connector odvozuje cestu
+   z ``ident_cely`` nadřazeného záznamu. Kontrola probíhá už při validaci, aby import neselhal
+   až v fázi zápisu do repozitáře, a aby byl řádek označen jako neplatný místo pádu celé dávky.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param soubor_id: Identifikace dotčeného souboru z importu (``id`` nebo ``path``).
+
+
+.. py:class:: DistribuceUnsafeFilenameError
+
+   Výjimka vyvolaná, pokud název souboru z importu (``distribution_nazev`` / ``paradata_nazev``)
+   není prostý název – obsahuje oddělovač cesty, ``..`` nebo je absolutní.
+
+   Takový název by se spojil s importním adresářem a mohl by z něj opustit, proto se kontroluje
+   už při validaci, aby byl řádek označen jako neplatný místo pádu celé dávky ve fázi zápisu.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param nazev: Neplatný název souboru z importu.
+
+
 .. py:class:: DistribuceImportIntegrityError
 
    Výjimka vyvolaná při importu alternativní distribuce, pokud porušuje předpoklad o existenci:
@@ -2539,6 +2573,19 @@ Třídy
       :raises ImportDataInvalidDistributionError: Pokud název obsahuje nepovolený segment.
       :raises ImportDataReservedDistributionError: Pokud je název distribuce vyhrazený.
 
+   .. py:method:: _validate_import_filename()
+
+      Ověří, že název souboru z importu je prostý název bez cesty.
+
+      Název souboru (``distribution_nazev`` / ``paradata_nazev``) se ve fázi zápisu spojuje
+      s importním adresářem, takže nesmí obsahovat oddělovače cesty ani ``..`` – jinak by
+      mohl opustit importní adresář. Zakázání obou oddělovačů (``/`` i ``\``) vylučuje i
+      absolutní cestu. Kontroluje se už při validaci, aby se neplatný řádek označil jako
+      neplatný místo pádu celé dávky ve fázi zápisu. DELETE se nevyhodnocuje, protože
+      nemaže soubor z importního adresáře.
+
+      :raises DistribuceUnsafeFilenameError: Pokud název souboru chybí, obsahuje cestu nebo ``..``.
+
    .. py:method:: validate_batch_ordering()
 
       Ověří, že názvy distribucí jedné dávky nejsou pro tentýž soubor v předko-potomk vztahu.
@@ -2562,6 +2609,9 @@ Třídy
       :return: Nalezený ``Soubor``.
       :raises ImportDataMissingReferencedValueError: Pokud dotčený soubor neexistuje.
       :raises DistribuceMissingRepositoryUuidError: Pokud soubor nemá cestu do Fedory.
+      :raises DistribuceMissingVazbaError: Pokud soubor nemá vazbu na nadřazený záznam
+          (``navazany_objekt`` je ``None``) — bez něj nelze ve Fedoře sestavit kontejner distribuce
+          ani paradat.
 
    .. py:method:: import_validation()
 
@@ -2582,8 +2632,11 @@ Třídy
       :raises ImportDataError: Pokud chybí název distribuce.
       :raises ImportDataInvalidDistributionError: Pokud název distribuce obsahuje nepovolený segment.
       :raises ImportDataReservedDistributionError: Pokud je název distribuce vyhrazený.
+      :raises DistribuceUnsafeFilenameError: Pokud název souboru (``nazev``) obsahuje cestu
+          nebo ``..``; nevyhodnocuje se pro DELETE.
       :raises ImportDataMissingReferencedValueError: Pokud dotčený soubor neexistuje.
       :raises DistribuceMissingRepositoryUuidError: Pokud soubor nemá cestu do Fedory.
+      :raises DistribuceMissingVazbaError: Pokud soubor nemá vazbu na nadřazený záznam.
       :raises DistribuceImportIntegrityError: Při porušení předpokladu o existenci distribuce
           nebo při opakování téže distribuce v jedné dávce.
 
@@ -2650,8 +2703,11 @@ Třídy
       :raises ImportDataError: Pokud chybí cesta souboru nebo název distribuce.
       :raises ImportDataInvalidDistributionError: Pokud název distribuce obsahuje nepovolený segment.
       :raises ImportDataReservedDistributionError: Pokud je název distribuce vyhrazený.
+      :raises DistribuceUnsafeFilenameError: Pokud název souboru (``nazev``) obsahuje cestu
+          nebo ``..``; nevyhodnocuje se pro DELETE.
       :raises ImportDataMissingReferencedValueError: Pokud dotčený soubor neexistuje.
       :raises DistribuceMissingRepositoryUuidError: Pokud soubor nemá cestu do Fedory.
+      :raises DistribuceMissingVazbaError: Pokud soubor nemá vazbu na nadřazený záznam.
       :raises DistribuceImportIntegrityError: Pokud cílová distribuce není dostupná nebo se
           táž dvojice (soubor, distribuce) v dávce opakuje.
 
