@@ -77,6 +77,30 @@ AKTUALIZACE_SN: Final = "SN-UPD"  # update jednotlivého pole
 # Soubory.
 NAHRANI_SBR: Final = "SBR0"  # 0
 PREJMENOVANI_SBR: Final = "SBR1"  # 1
+# Alternativní distribuce souborů.
+NAHRANI_DISTRIBUCE: Final = "DIST01"
+UPDATE_DISTRIBUCE: Final = "DIST11"
+SMAZANI_DISTRIBUCE: Final = "DIST10"
+
+# Vyhrazené názvy distribucí (``orig``, ``paradata`` celé; z ``thumb`` jen ``thumb/page`` a níže).
+RESERVED_DISTRIBUTION_NAMES: Final = frozenset({"orig", "paradata"})
+RESERVED_DISTRIBUTION_PREFIX: Final = "thumb/page"
+
+
+def is_reserved_distribution_name(name: str) -> bool:
+    """Ověří, zda je název distribuce vyhrazený a nesmí být použit pro alternativní distribuci.
+
+    :param name: Název distribuce z importu (např. ``ocr/alto-xml``).
+    :return: ``True``, pokud je název vyhrazený, jinak ``False``.
+    """
+    normalized = (name or "").strip().strip("/")
+    if normalized in RESERVED_DISTRIBUTION_NAMES:
+        return True
+    if normalized == RESERVED_DISTRIBUTION_PREFIX or normalized.startswith(RESERVED_DISTRIBUTION_PREFIX + "/"):
+        return True
+    return False
+
+
 # Uživatel.
 ZMENA_HLAVNI_ROLE: Final = "HR"  # 0, 1
 ZMENA_UDAJU_ADMIN: Final = "ZUA"  # 0
