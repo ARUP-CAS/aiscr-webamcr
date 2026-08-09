@@ -10,15 +10,15 @@ from decimal import Decimal
 import pandas as pd
 from adb.models import Adb, Kladysm5, VyskovyBod
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam, ArcheologickyZaznamKatastr, ExterniOdkaz
-from core.constants import (
-    DOKUMENT_RELATION_TYPE,
+from core.constants import DOKUMENT_RELATION_TYPE
+from core.coordTransform import transform_geom_to_sjtsk, transform_geom_to_wgs84
+from core.distribution_names import (
     IMPLICIT_DISTRIBUTION_NAMES,
     find_distribution_prefix_collisions,
     has_unsafe_distribution_segments,
     is_reserved_distribution_name,
     normalize_distribution_name,
 )
-from core.coordTransform import transform_geom_to_sjtsk, transform_geom_to_wgs84
 from core.forms import ImportDataAdminForm
 from core.ident_cely import get_record_from_ident
 from core.models import Soubor, SouborVazby

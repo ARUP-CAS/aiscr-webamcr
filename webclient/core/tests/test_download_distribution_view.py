@@ -85,6 +85,20 @@ class DownloadDistributionViewTest(SimpleTestCase):
 
         soubor.get_distribution_response.assert_not_called()
 
+    def test_thumbnail_container_raises_404(self):
+        """Náhled se přes tuto routu stáhnout nedá — ``available_distributions`` ho nenabízí.
+
+        Náhledy mají vlastní endpointy (``core:download_thumbnail``,
+        ``core:download_thumbnail_large``); zde se ověřuje, že je gate na seznam dostupných
+        distribucí odmítne i přesto, že jejich kontejner ve Fedoře existuje.
+        """
+        soubor = self._soubor(available=("orig", "ocr"))
+
+        with self.assertRaises(Http404):
+            self._call_view(soubor, distribution="thumb")
+
+        soubor.get_distribution_response.assert_not_called()
+
     def test_distribution_of_file_outside_repository_raises_404(self):
         """Soubor bez UUID ve Fedoře nesmí nabídnout ke stažení žádnou distribuci."""
         soubor = self._soubor(available=("orig", "ocr"), repository_uuid=None)

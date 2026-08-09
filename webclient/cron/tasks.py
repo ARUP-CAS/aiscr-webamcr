@@ -812,6 +812,51 @@ def _format_import_primary_key(pk):
     return str(pk)
 
 
+def _import_job_record_keys(redis_connector, job_id, record_count=None) -> list:
+    """Vrátí klíče jednotlivých naimportovaných záznamů dané úlohy.
+
+    Primárně se rozsah odvodí z čítače ``import_data_count_{job_id}``. Pokud čítač chybí nebo
+    není číslo (úloha už doběhla a čítač vyexpiroval), klíče se dohledají scanem — jinak by
+    zůstaly bez TTL napořád: validace je na úspěšné cestě ``persist``uje, takže by je nic
+    nesmazalo (review #4197, Fix 6).
+
+    :param redis_connector: Redis spojení, nad kterým se klíče dohledávají.
+    :param job_id: Identifikátor importní úlohy.
+    :param record_count: Počet záznamů, pokud ho volající zná; jinak se zjistí z čítače.
+    :return: Seznam klíčů ``import_data_{job_id}_record_{i}``.
+    """
+    if record_count is None:
+        count_raw = redis_connector.get("import_data_count_{}".format(job_id))
+        try:
+            record_count = int(count_raw) if count_raw else None
+        except (TypeError, ValueError):
+            record_count = None
+    if record_count:
+        return ["import_data_{}_record_{}".format(job_id, i) for i in range(record_count)]
+    pattern = "import_data_{}_record_*".format(job_id)
+    return [key.decode("utf-8") if isinstance(key, bytes) else key for key in redis_connector.scan_iter(match=pattern)]
+
+
+def expire_import_job_keys(redis_connector, job_id, ttl_seconds, record_count=None):
+    """Nastaví expiraci všem per-job klíčům importní úlohy.
+
+    Klíče se pouze expirují, nikdy nemažou — report musí zůstat stažitelný po dobu retence.
+    Jediný zdroj pravdy pro terminální úklid: volá ho validační i importní task, ruční reset
+    (``reset_import_job``) a zrušení úlohy z view.
+
+    :param redis_connector: Redis spojení, nad kterým se expirace nastavuje.
+    :param job_id: Identifikátor importní úlohy.
+    :param ttl_seconds: Doba retence v sekundách.
+    :param record_count: Počet naimportovaných záznamů, pokud ho volající zná.
+    """
+    pipe = redis_connector.pipeline()
+    for suffix in IMPORT_DATA_JOB_KEY_SUFFIXES:
+        pipe.expire("{}_{}".format(suffix, job_id), ttl_seconds)
+    for key in _import_job_record_keys(redis_connector, job_id, record_count):
+        pipe.expire(key, ttl_seconds)
+    pipe.execute()
+
+
 def reset_import_job(redis_connector, job_id):
     """Ruční superuživatelský reset zaseklé importní úlohy: uvolní globální lock a úlohu ukončí.
 
@@ -870,17 +915,7 @@ def reset_import_job(redis_connector, job_id):
         redis_connector.delete(*stray_keys)
 
     # Expire (not delete) the per-job data keys so the report stays downloadable during retention.
-    count_raw = redis_connector.get(job_key("import_data_count"))
-    try:
-        count = int(count_raw) if count_raw else 0
-    except (TypeError, ValueError):
-        count = 0
-    pipe = redis_connector.pipeline()
-    for suffix in IMPORT_DATA_JOB_KEY_SUFFIXES:
-        pipe.expire(job_key(suffix), IMPORT_DATA_EXPIRATION_SECONDS)
-    for i in range(count):
-        pipe.expire("import_data_{}_record_{}".format(job_id, i), IMPORT_DATA_EXPIRATION_SECONDS)
-    pipe.execute()
+    expire_import_job_keys(redis_connector, job_id, IMPORT_DATA_EXPIRATION_SECONDS)
     logger.warning("cron.tasks.reset_import_job.done", extra={"job_id": job_id, "job_user": job_user})
 
 
@@ -1504,10 +1539,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                     redis_connector, "import_data_current_job_{}".format(user_pointer), job_id
                 )
             RedisConnector.delete_if_value_matches(redis_connector, RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, job_id)
-            expire_pipe = redis_connector.pipeline()
-            for key in all_data_keys:
-                expire_pipe.expire(key, IMPORT_DATA_EXPIRATION_SECONDS)
-            expire_pipe.execute()
+            expire_import_job_keys(redis_connector, job_id, IMPORT_DATA_EXPIRATION_SECONDS, record_count=record_id)
 
         # Terminal snapshot — phase is now awaiting_approval/stopped/failed above, so this is the
         # report an operator sees if they never return to the polling page.
@@ -1796,6 +1828,17 @@ def run_data_import(job_id, user_id, lock_token):
             ošetření; proto se přes ``nonlocal`` udržují ``failed``, ``stopped``, ``record_id``,
             ``filename`` a ``fedora_transaction``, ze kterých ošetření skládají hlášení
             a provádějí rollback.
+
+            Fáze **není atomická**: každá položka má vlastní Fedora transakci, kterou potvrdí
+            hned po zápisu, a záznam historie vzniká rovnou. Selhání uprostřed dávky tedy nechá
+            dříve zpracované distribuce zapsané — stejně jako u importu binárních souborů, se
+            kterým tato fáze sdílí ošetření chyb. Rollback zpět přes už potvrzené položky by
+            znamenal mazat obsah, který si uživatel mohl mezitím stáhnout; opakovaný import
+            téhož CSV je proto zamýšlená cesta k dorovnání stavu.
+
+            Historie distribucí se zapisuje pod ``ADMIN_USER``, jak vyžaduje zadání #3527.
+            Náhledy oproti tomu eviduje ``Soubor.zaznamenej_distribuce()`` pod uživatelem,
+            který soubor nahrál — jde o dvě různá pravidla, ne o nekonzistenci.
             """
             nonlocal failed, stopped, record_id, filename, fedora_transaction
 
@@ -2790,6 +2833,9 @@ def run_data_import(job_id, user_id, lock_token):
                         soubor.save()
                         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
                             soubor.create_soubor_vazby()
+                        # Až tady má soubor vazbu na historii — u INSERTu vzniká řádek i vazba
+                        # teprve po zápisu do Fedory, takže náhledy se do historie doplňují zde.
+                        soubor.zaznamenej_distribuce(rep_bin_file.thumb_writes, transaction_user)
                         history_record = Historie(
                             typ_zmeny=IMPORT,
                             uzivatel=transaction_user,
@@ -3067,10 +3113,9 @@ def run_data_import(job_id, user_id, lock_token):
     finally:
         LookupImportField.clear_cache()
         LookupImportField.clear_records()
-        for suffix in IMPORT_DATA_JOB_KEY_SUFFIXES:
-            redis_connector.expire(job_key(suffix), IMPORT_DATA_EXPIRATION_SECONDS)
-        for record_id in range(record_count):
-            redis_connector.expire(record_key(record_id), IMPORT_DATA_EXPIRATION_SECONDS)
+        # record_count je 0 i tehdy, když se čítač nepodařilo přečíst — helper v tom případě
+        # klíče záznamů dohledá scanem, aby po validaci nezůstaly bez TTL napořád.
+        expire_import_job_keys(redis_connector, job_id, IMPORT_DATA_EXPIRATION_SECONDS, record_count=record_count)
         # Set the terminal phase matching the outcome, clear the per-user in-flight pointer, and
         # defensively delete any staged ZIP chunk keys the validation task should already have
         # removed.

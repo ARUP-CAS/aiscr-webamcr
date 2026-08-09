@@ -287,3 +287,46 @@ class ImportDataReportDirectoryGateTest(SimpleTestCase):
         delay_mock.assert_not_called()
         self.assertIsNone(fake.get(f"import_data_current_job_{USER_ID}"))
         data_file.read.assert_not_called()
+
+
+class ImportDataMaintenanceGateTest(SimpleTestCase):
+    """Ověřuje zpětnou vazbu při odeslání formuláře mimo režim údržby."""
+
+    def setUp(self):
+        """Připraví ``RequestFactory`` sdílenou napříč testy."""
+        self.factory = RequestFactory()
+
+    def _call(self, method):
+        """Zavolá ``import_data`` mimo režim údržby zadanou HTTP metodou.
+
+        :param method: ``"get"`` nebo ``"post"``.
+        :return: ``TemplateResponse`` vrácená view.
+        """
+        fake = FakeRedis(decode_responses=True)
+        request = getattr(self.factory, method)("/admin/core/import-data/")
+        request.user = _StubUser(USER_ID)
+        request._dont_enforce_csrf_checks = True
+
+        with patch.object(AmcrCustomAdminSite, "get_app_list", return_value=[]), patch.object(
+            AmcrCustomAdminSite, "each_context", return_value={}
+        ), patch.object(AmcrCustomAdminSite, "redis_connector", fake), patch(
+            "core.admin_sites.is_maintenance_in_progress", return_value=False
+        ):
+            return AmcrCustomAdminSite().import_data(request)
+
+    def test_post_outside_maintenance_reports_why_nothing_happened(self):
+        """POST mimo údržbu musí vysvětlit, proč se import nespustil — ne jen překreslit stránku."""
+        response = self._call("post")
+
+        self.assertIn("error_message", response.context_data)
+        self.assertEqual(
+            str(response.context_data["error_message_details"]),
+            "core.templates.admin.import_data.not_maintenance",
+        )
+
+    def test_get_outside_maintenance_shows_no_error(self):
+        """Pouhé otevření stránky mimo údržbu chybu nehlásí — uživatel zatím nic neodeslal."""
+        response = self._call("get")
+
+        self.assertNotIn("error_message", response.context_data)
+        self.assertIn("form", response.context_data)

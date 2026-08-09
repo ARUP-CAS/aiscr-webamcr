@@ -110,8 +110,14 @@
       return fallback;
     }
 
+    // This template is an include, so a page with two file tables runs the script twice and
+    // querySelectorAll would match every select both times. Bind each select only once.
     var distributionSelects = document.querySelectorAll('select[id^="file-distribution-"]');
     distributionSelects.forEach(function (selectEl) {
+      if (selectEl.dataset.distributionBound === '1') {
+        return;
+      }
+      selectEl.dataset.distributionBound = '1';
       selectEl.addEventListener('change', function () {
         var targetId = selectEl.getAttribute('data-target-id');
         var fallbackHref = selectEl.getAttribute('data-default-href');

@@ -1040,10 +1040,13 @@ class NewFileUploadView(BasePostUploadView):
         logger.debug("core.views.post_upload.saving", extra={"instance": soubor_instance})
         soubor_instance.save()
         if not request.user.is_authenticated:
-            user_admin = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
-            soubor_instance.zaznamenej_nahrani(user_admin, self.original_filename)
+            historie_uzivatel = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
         else:
-            soubor_instance.zaznamenej_nahrani(request.user, self.original_filename)
+            historie_uzivatel = request.user
+        soubor_instance.zaznamenej_nahrani(historie_uzivatel, self.original_filename)
+        # Historie náhledů se zapisuje až tady — při volání ``save_binary_file`` výše ještě
+        # záznam ``Soubor`` neexistoval, takže connector vrátil jen přehled zapsaných náhledů.
+        soubor_instance.zaznamenej_distribuce(rep_bin_file.thumb_writes, historie_uzivatel)
         duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk").exclude(id=soubor_instance.id)
         response_data = self._append_duplicate_message(response_data, duplikat)
         response_data = self._append_rename_message(response_data, renamed, new_name)
@@ -1274,6 +1277,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
             soubor_instance.binary_data = soubor_data
             soubor_instance.save()
             soubor_instance.zaznamenej_nahrani_nove_verze(request.user, original_name)
+            soubor_instance.zaznamenej_distribuce(rep_bin_file.thumb_writes, request.user)
         if rep_bin_file is not None:
             duplikat = Soubor.objects.filter(sha_512=rep_bin_file.sha_512).exclude(id=soubor_instance.id).order_by("pk")
             response_data = {"filename": soubor_instance.nazev}
@@ -2826,32 +2830,6 @@ def _status_message_id(raw):
     return raw
 
 
-def _expire_import_data_keys(redis_connector, job_id, ttl_seconds):
-    """
-    Nastaví expiraci všem per-job datovým klíčům importní úlohy na ``ttl_seconds``.
-
-    Klíče se pouze expirují, nikdy nemažou — report musí zůstat stažitelný po dobu retence.
-    Seznam suffixů sdílí jediný zdroj pravdy s ``cron.tasks`` (``IMPORT_DATA_JOB_KEY_SUFFIXES``).
-
-    :param redis_connector: Dekódující Redis spojení.
-    :param job_id: Identifikátor importní úlohy.
-    :param ttl_seconds: Doba retence v sekundách.
-    """
-    from cron.tasks import IMPORT_DATA_JOB_KEY_SUFFIXES
-
-    count_raw = redis_connector.get(f"import_data_count_{job_id}") or 0
-    try:
-        count = int(count_raw)
-    except (TypeError, ValueError):
-        count = 0
-    pipe = redis_connector.pipeline()
-    for suffix in IMPORT_DATA_JOB_KEY_SUFFIXES:
-        pipe.expire(f"{suffix}_{job_id}", ttl_seconds)
-    for i in range(count):
-        pipe.expire(f"import_data_{job_id}_record_{i}", ttl_seconds)
-    pipe.execute()
-
-
 class DataImportProgress(LoginRequiredMixin, View):
     """Implementuje komponentu ``DataImportProgress`` v rámci aplikace."""
 
@@ -2943,13 +2921,12 @@ class DataImportProgress(LoginRequiredMixin, View):
             # validation_result is a translation ID for valid rows, or a raw translated exception
             # message for invalid rows (carve-out: mapper exceptions compose the message at raise
             # time). _translate_status_value renders both correctly in the admin's locale.
-            validation_results = [
-                {
-                    **json.loads(item),
-                    "validation_result": _translate_status_value(json.loads(item).get("validation_result", "")),
-                }
-                for item in validation_details
-            ]
+            validation_results = []
+            for item in validation_details:
+                # Jeden ``json.loads`` na řádek — poll běží každou vteřinu nad rostoucím seznamem.
+                row = json.loads(item)
+                row["validation_result"] = _translate_status_value(row.get("validation_result", ""))
+                validation_results.append(row)
             validation_cursor = validation_since + len(validation_details)
             invalid_records = json.loads(redis_connector.get(f"import_data_invalid_records_{job_id}") or "[]")
             failure_reason = (
@@ -3242,6 +3219,10 @@ class DataImportStart(LoginRequiredMixin, View):
             tasks.run_data_import.delay(job_id, request.user.id, lock_token)
         except Exception:
             # The job is still resumable — do NOT release the lock; revert the phase and return 500.
+            # claim_awaiting_import put the running TTL back on the lock, which validation had made
+            # persistent for the awaiting_approval window; restore it, otherwise a reviewer slower
+            # than the running TTL would find the lock expired and the job unstartable.
+            RedisConnector.persist_import_lock(redis_connector, lock_token)
             redis_connector.set(f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_AWAITING_APPROVAL)
             return JsonResponse(
                 {"result": "error", "status_message": _("core.admin.import_data.error.import_error")},
@@ -3291,7 +3272,7 @@ class DataImportCancel(LoginRequiredMixin, View):
                 f"import_data_status_message_tr_{job_id}",
                 tasks.translation_value("cron.tasks.run_data_import.cancelled"),
             )
-            _expire_import_data_keys(redis_connector, job_id, tasks.IMPORT_DATA_EXPIRATION_SECONDS)
+            tasks.expire_import_job_keys(redis_connector, job_id, tasks.IMPORT_DATA_EXPIRATION_SECONDS)
             if job_user is not None:
                 redis_connector.delete(f"import_data_current_job_{job_user}")
             redis_connector.delete(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)

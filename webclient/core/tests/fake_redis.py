@@ -1,13 +1,15 @@
 """Sdílená in-memory náhrada za Redis pro účely jednotkových testů."""
 
+import fnmatch
+
 
 class FakeRedis:
     """Minimální in-memory náhrada za ``redis.Redis`` použitelná v unit testech.
 
     Podporuje operace, které využívá importní pipeline (``cron.tasks.run_data_import`` i
     ``cron.tasks.run_data_import_validation``) a další taskové cesty:
-    ``get``/``set``/``delete``/``expire``/``persist``/``rpush``/``lrange``/``lset``/``incr``
-    a konfigurabilní ``eval``. ``pipeline()`` vrací ``FakePipeline``, který operace zaznamená
+    ``get``/``set``/``delete``/``expire``/``persist``/``rpush``/``lrange``/``lset``/``incr``/
+    ``scan_iter`` a konfigurabilní ``eval``. ``pipeline()`` vrací ``FakePipeline``, který operace zaznamená
     a při ``execute()`` je sekvenčně provede nad stejným úložištěm; podporuje ``get``/``set``/
     ``delete``/``expire``/``persist``/``rpush``/``incr``. Pokud bude test potřebovat další
     metody, doplňte je sem.
@@ -98,6 +100,19 @@ class FakeRedis:
         :param key: Redis klíč, u kterého se má zrušit expirace.
         """
         return key in self._kv or key in self._lists
+
+    def scan_iter(self, match=None):
+        """Projde klíče úložiště odpovídající glob vzoru (zjednodušený ``SCAN``).
+
+        Reálný Redis nezaručuje pořadí ani unikátnost napříč iteracemi; fake vrací klíče
+        v pořadí vložení, což pro testy stačí.
+
+        :param match: Glob vzor (např. ``import_data_ABC_record_*``); ``None`` vrátí vše.
+        :return: Generátor klíčů odpovídajících vzoru.
+        """
+        for key in list(self._kv.keys()) + list(self._lists.keys()):
+            if match is None or fnmatch.fnmatchcase(key, match):
+                yield key
 
     def rpush(self, key, value):
         """Přidá hodnotu na konec listu pod klíčem a vrátí novou délku listu.

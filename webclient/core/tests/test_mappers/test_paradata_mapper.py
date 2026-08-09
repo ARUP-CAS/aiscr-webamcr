@@ -83,8 +83,12 @@ class ParadataMapperNameValidationTest(TestCase):
     """Testy validace názvu distribuce a cesty, které nepotřebují existující soubor."""
 
     def test_reserved_names_rejected(self):
-        """Paradata nelze připojit ke kontejneru ``paradata`` ani pod ``thumb/page``."""
-        for distribution in ("paradata", "thumb/page", "thumb/page/1"):
+        """Paradata nelze připojit ke kontejneru ``paradata`` ani pod ``thumb/page``.
+
+        Vyhrazený je i celý podstrom, takže ``paradata/alto-xml`` (paradata k paradatům)
+        neprojde. ``orig`` naopak zůstává povolený — paradata k původnímu obsahu dávají smysl.
+        """
+        for distribution in ("paradata", "thumb/page", "thumb/page/1", "paradata/alto-xml", "orig/x"):
             with self.subTest(distribution=distribution):
                 row = VALID_ROW.copy()
                 row["distribution"] = distribution

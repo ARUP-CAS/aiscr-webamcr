@@ -11,7 +11,7 @@ from unittest import mock
 
 from core.connectors import RedisConnector
 from core.tests.fake_redis import FakeRedis
-from core.views import DataImportCancel, DataImportProgress, DataImportReset, DataImportStop
+from core.views import DataImportCancel, DataImportProgress, DataImportReset, DataImportStart, DataImportStop
 from cron import tasks
 from django.core.exceptions import PermissionDenied
 from django.test import RequestFactory, SimpleTestCase
@@ -137,6 +137,70 @@ class DataImportCancelTest(SimpleTestCase):
 
         with self.assertRaises(PermissionDenied):
             self._post(fake, user_id=OWNER_ID, is_superuser=False)
+
+
+class DataImportStartDispatchFailureTest(SimpleTestCase):
+    """Testy chování ``DataImportStart``, když se nepodaří naplánovat importní task."""
+
+    def setUp(self):
+        """Připraví ``RequestFactory`` sdílenou napříč testy."""
+        self.factory = RequestFactory()
+
+    def _post(self, fake, delay_side_effect):
+        """Zavolá ``DataImportStart`` s nárokovanou úlohou a zadaným chováním ``delay()``.
+
+        :param fake: ``FakeRedis`` vrácený z ``get_connection_decode()``.
+        :param delay_side_effect: Výjimka vyvolaná při plánování tasku, nebo ``None``.
+        :return: Dvojice ``(odpověď, mock persist_import_lock)``.
+        """
+        request = self.factory.post(f"/data-import-start/{JOB}")
+        request.user = _StubUser(OWNER_ID)
+        request._dont_enforce_csrf_checks = True
+        with mock.patch("core.views.RedisConnector.get_connection_decode", return_value=fake), mock.patch(
+            "core.views.is_maintenance_in_progress", return_value=True
+        ), mock.patch("core.views.RedisConnector.persist_import_lock") as persist, mock.patch.object(
+            tasks.run_data_import, "delay", side_effect=delay_side_effect
+        ):
+            response = DataImportStart.as_view()(request, job_id=JOB)
+        return response, persist
+
+    def _claimable(self):
+        """Sestaví fake se stavem úlohy připravené ke startu (claim projde a vrátí token).
+
+        :return: ``FakeRedis`` s výsledkem claim skriptu v ``eval_results``.
+        """
+        fake = _fake(tasks.IMPORT_PHASE_AWAITING_APPROVAL, extra={f"import_data_valid_{JOB}": "1"})
+        # claim_awaiting_import rozbaluje dvojici (claimed, token); fake skripty jinak vrací 1.
+        fake._eval_results = [[1, "tok-xyz"]]
+        return fake
+
+    def test_dispatch_failure_repersists_the_lock_and_reverts_the_phase(self):
+        """Selhání ``delay()``: lock se znovu zpersistuje a fáze se vrátí na awaiting_approval.
+
+        ``claim_awaiting_import`` locku vrátí běžící TTL; bez opětovného ``persist`` by lock
+        během dlouhého schvalování vyexpiroval a úloha by už nešla spustit.
+        """
+        fake = self._claimable()
+
+        response, persist = self._post(fake, RuntimeError("broker down"))
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(fake.get(f"import_data_phase_{JOB}"), tasks.IMPORT_PHASE_AWAITING_APPROVAL)
+        persist.assert_called_once_with(fake, "tok-xyz")
+
+    def test_successful_dispatch_leaves_the_lock_alone(self):
+        """Při úspěšném naplánování se lock nezpersistuje — drží ho běžící import.
+
+        Fázi na ``importing`` přepíná až Lua skript claimu, který ``FakeRedis`` nesimuluje
+        (vrací jen návratovou hodnotu), takže se tu neověřuje.
+        """
+        fake = self._claimable()
+
+        response, persist = self._post(fake, None)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.content)["result"], "ok")
+        persist.assert_not_called()
 
 
 class DataImportOwnershipTest(SimpleTestCase):
@@ -281,6 +345,33 @@ class DataImportProgressValidationCursorTest(SimpleTestCase):
         data = json.loads(response.content)
         self.assertEqual(len(data["validation_results"]), 2)
         self.assertEqual(data["validation_cursor"], 2)
+
+    def test_row_keeps_its_other_fields_next_to_the_translated_result(self):
+        """Překlad ``validation_result`` nesmí zahodit ostatní sloupce řádku.
+
+        Řádek se rozparsuje jen jednou a doplní se do něj přeložený výsledek — tento test
+        hlídá, že se při té změně nezratily ``item_order``, ``file_name`` ani primární klíč.
+        """
+        fake = _fake(tasks.IMPORT_PHASE_VALIDATING)
+        fake.rpush(
+            f"import_data_validation_details_{JOB}",
+            json.dumps(
+                {
+                    "item_order": 7,
+                    "file_name": "distribution.csv",
+                    "primary_key_import": "soub-100008",
+                    "validation_result": "core.admin.import_data.record_valid",
+                }
+            ),
+        )
+
+        response = self._get(fake)
+
+        row = json.loads(response.content)["validation_results"][0]
+        self.assertEqual(row["item_order"], 7)
+        self.assertEqual(row["file_name"], "distribution.csv")
+        self.assertEqual(row["primary_key_import"], "soub-100008")
+        self.assertEqual(row["validation_result"], "core.admin.import_data.record_valid")
 
 
 class DataImportResetTest(SimpleTestCase):

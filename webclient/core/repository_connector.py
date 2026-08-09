@@ -12,7 +12,11 @@ from typing import Optional, Union
 import requests
 from celery import Celery
 from core.connectors import RedisConnector
-from core.constants import has_unsafe_distribution_segments, is_reserved_distribution_name, normalize_distribution_name
+from core.distribution_names import (
+    has_unsafe_distribution_segments,
+    is_reserved_distribution_name,
+    normalize_distribution_name,
+)
 from core.log_middleware import LogMiddleware
 from core.utils import get_mime_type
 from django.conf import settings
@@ -149,6 +153,10 @@ class RepositoryBinaryFile:
         self.content = content
         self.filename = filename
         self.size = content.getbuffer().nbytes
+        # Náhledy zapsané při uložení obsahu — dvojice ``(distribuce, aktualizace)`` pro
+        # ``Soubor.zaznamenej_distribuce()``. Historii nelze zapsat už při zápisu do Fedory,
+        # protože při vkládání souboru ještě neexistuje řádek ``Soubor``, ke kterému patří.
+        self.thumb_writes: list = []
         self.content.seek(0)
         self._calculate_sha_512()
 
@@ -1223,7 +1231,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
         self._update_creator(FedoraRequestType.FILE_CONTENT_UPDATE_RDF_DATA, uuid)
         if save_thumbs:
-            self.save_thumbs(file_name, file, uuid)
+            rep_bin_file.thumb_writes = self.save_thumbs(file_name, file, uuid)
         logger.debug(
             "core_repository_connector.save_binary_file.end",
             extra={"uuid": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -1323,16 +1331,24 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         else:
             return __generate_thumb_from_icon(file_name, file_content, large)
 
-    def save_thumbs(self, file_name, file, uuid, update=False, ident_cely_old=None):
+    def save_thumbs(self, file_name, file, uuid, update=False, ident_cely_old=None) -> list:
         """
         Uloží thumbs. v aplikaci.
+
+        Vrací přehled skutečně zapsaných náhledů, aby volající mohl doplnit historii souboru
+        (``DIST01``/``DIST11``) až po jeho uložení do databáze. Historii nelze zapsat zde:
+        při vkládání souboru se náhledy generují dřív, než vůbec vznikne řádek ``Soubor``.
 
         :param file_name: Parametr ``file_name`` se předává do volání ``debug()``, ``__generate_thumb()``, pracuje se s atributy ``rfind``.
         :param file: Soubor nebo cesta k souboru používaná při operaci.
         :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
         :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
         :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
+        :return: Seznam dvojic ``(nazev_nahledu, aktualizace)``; ``aktualizace`` je ``True``,
+            pokud šlo o přepis existujícího náhledu. Náhledy, které se nepodařilo vygenerovat,
+            v seznamu nejsou.
         """
+        thumb_writes = []
         logger.debug(
             "core_repository_connector._save_thumb.start",
             extra={
@@ -1410,10 +1426,11 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 else:
                     self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_THUMB, headers=headers, data=data)
                 self._update_creator(FedoraRequestType.THUMB_CONTENT_UPDATE_RDF_DATA, uuid, ident_cely)
-            self._record_thumb_history(
-                uuid,
-                f"thumb{'-large' * large}",
-                updated=bool(update and (existing_large_thumb if large else existing_small_thumb) is not None),
+            thumb_writes.append(
+                (
+                    f"thumb{'-large' * large}",
+                    bool(update and (existing_large_thumb if large else existing_small_thumb) is not None),
+                )
             )
             logger.debug(
                 "core_repository_connector._save_thumb.end",
@@ -1426,54 +1443,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     "transaction": self.transaction_uid,
                 },
             )
-
-    def _record_thumb_history(self, uuid, distribution, updated=False):
-        """
-        Zapíše do historie souboru vznik nebo aktualizaci náhledu.
-
-        Náhledy jsou distribuce souboru jako každé jiné, takže se evidují stejnými typy změn
-        (``DIST01``/``DIST11``) s poznámkou ``thumb``, resp. ``thumb-large``. Zápis je best-effort:
-        selhání se pouze zaloguje, protože ztráta záznamu v historii nesmí shodit nahrání souboru
-        ani generování náhledů.
-
-        :param uuid: UUID kontejneru souboru, ke kterému náhled patří.
-        :param distribution: Název kontejneru náhledu (``thumb`` nebo ``thumb-large``).
-        :param updated: Pokud ``True``, jde o přepis existujícího náhledu (``DIST11``).
-        """
-        from core.constants import NAHRANI_DISTRIBUCE, UPDATE_DISTRIBUCE
-        from core.models import Soubor
-        from heslar import hesla_dynamicka
-        from historie.models import Historie
-        from uzivatel.models import User
-
-        try:
-            soubor = Soubor.objects.filter(path__endswith=f"/{uuid}").first()
-            if soubor is None or not soubor.historie_id:
-                logger.debug(
-                    "core_repository_connector._record_thumb_history.soubor_not_found",
-                    extra={"uuid": uuid, "path": distribution, "transaction": self.transaction_uid},
-                )
-                return
-            uzivatel = User.objects.filter(ident_cely=self.user).first()
-            if uzivatel is None:
-                uzivatel = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
-            if uzivatel is None:
-                logger.warning(
-                    "core_repository_connector._record_thumb_history.user_not_found",
-                    extra={"uuid": uuid, "user": self.user, "transaction": self.transaction_uid},
-                )
-                return
-            Historie(
-                typ_zmeny=UPDATE_DISTRIBUCE if updated else NAHRANI_DISTRIBUCE,
-                uzivatel=uzivatel,
-                vazba=soubor.historie,
-                poznamka=distribution,
-            ).save()
-        except Exception as err:
-            logger.warning(
-                "core_repository_connector._record_thumb_history.failed",
-                extra={"uuid": uuid, "path": distribution, "error": err, "transaction": self.transaction_uid},
-            )
+        return thumb_writes
 
     def migrate_binary_file(
         self, soubor, include_content=True, check_if_exists=True, ident_cely_old=None
@@ -1637,7 +1607,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         }
         self._send_request(url, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, headers=headers, data=data)
         if save_thumbs:
-            self.save_thumbs(file_name, file, uuid, True)
+            rep_bin_file.thumb_writes = self.save_thumbs(file_name, file, uuid, True)
         logger.debug(
             "core_repository_connector.update_binary_file.end",
             extra={"uuid": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -1924,9 +1894,26 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         :raises FedoraNoResponseError: Pokud repozitář neodpoví – existenci nelze určit a volající
             se nesmí spolehnout na domnělou neexistenci.
         """
-        distribution = self._normalize_distribution_name(distribution, allow_orig=True)
+        return self._container_exists(
+            uuid, self._normalize_distribution_name(distribution, allow_orig=True), ident_cely
+        )
+
+    def _container_exists(self, uuid, path, ident_cely=None) -> bool:
+        """
+        Zjistí, zda ve Fedoře existuje kontejner na zadané cestě pod souborem.
+
+        Cestu už nevaliduje — volající ji buď ověřil, nebo si ji sám sestavil (paradata).
+        Díky tomu neprochází vnitřně skládaná cesta ``paradata/{distribuce}`` kontrolou
+        vyhrazených názvů, která by ji odmítla, přestože ji vytvořil sám connector.
+
+        :param uuid: UUID kontejneru souboru.
+        :param path: Relativní cesta pod kontejnerem souboru.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: ``True``, pokud kontejner existuje, jinak ``False``.
+        :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+        """
         url = self._get_request_url(
-            FedoraRequestType.GET_DISTRIBUTION_METADATA, uuid=uuid, ident_cely=ident_cely, path=distribution
+            FedoraRequestType.GET_DISTRIBUTION_METADATA, uuid=uuid, ident_cely=ident_cely, path=path
         )
         response = self._send_request(url, FedoraRequestType.GET_DISTRIBUTION_METADATA)
         if response is None:
@@ -1936,7 +1923,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             "core_repository_connector.distribution_exists.end",
             extra={
                 "uuid": uuid,
-                "path": distribution,
+                "path": path,
                 "status_code": response.status_code,
                 "exists": exists,
                 "transaction": self.transaction_uid,
@@ -1979,7 +1966,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
         :raises FedoraNoResponseError: Pokud repozitář neodpoví.
         """
-        return self.distribution_exists(uuid, self._get_paradata_path(distribution), ident_cely)
+        # ``_get_paradata_path`` název distribuce ověří sám; výsledná cesta pod ``paradata/``
+        # už znovu validovat nesmí, protože ``paradata`` je vyhrazený prefix.
+        return self._container_exists(uuid, self._get_paradata_path(distribution), ident_cely)
 
     def _get_paradata_path(self, distribution) -> str:
         """

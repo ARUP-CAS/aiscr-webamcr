@@ -482,3 +482,45 @@ class ReservedDistributionNameTest(DistributionConnectorTestBase):
             self.connector.delete_distribution(self.UUID, " /ocr/alto-xml/ ")
 
         self.assertEqual(send.call_args_list[0].args[0], f"{self.file_url}/ocr/alto-xml")
+
+
+class ReservedSubtreeTest(DistributionConnectorTestBase):
+    """Testy vyhrazeného podstromu — vyhrazený název chrání i vše pod sebou."""
+
+    def test_rejects_names_under_a_reserved_prefix(self):
+        """Zápis pod vyhrazený název se odmítne dřív, než se odešle požadavek do Fedory."""
+        for distribution in ("paradata/alto-xml", "paradata/ocr/alto-xml", "orig/x", "thumb/page/1"):
+            with self.subTest(distribution=distribution):
+                with mock.patch.object(self.connector, "_send_request") as send:
+                    with self.assertRaises(FedoraValidationError):
+                        self.connector.save_distribution(
+                            self.UUID, distribution, "soubor.xml", "text/xml", self._file()
+                        )
+                send.assert_not_called()
+
+    def test_paradata_exists_still_queries_the_paradata_container(self):
+        """Vnitřně sestavená cesta ``paradata/{distribuce}`` se znovu nevaliduje.
+
+        ``paradata`` je vyhrazený prefix, takže opětovná validace vlastní cesty by dotaz
+        na existenci paradat shodila — proto jde přes ``_container_exists``.
+        """
+        with mock.patch.object(self.connector, "_send_request", return_value=_Response(status_code=200)) as send:
+            exists = self.connector.paradata_exists(self.UUID, "alto-xml")
+
+        self.assertTrue(exists)
+        self.assertEqual(send.call_args_list[0].args[0], f"{self.file_url}/paradata/alto-xml/fcr:metadata")
+
+    def test_paradata_exists_allows_the_original_distribution(self):
+        """Paradata lze mít i k ``orig``; cesta míří pod kontejner paradat."""
+        with mock.patch.object(self.connector, "_send_request", return_value=_Response(status_code=404)) as send:
+            exists = self.connector.paradata_exists(self.UUID, "orig")
+
+        self.assertFalse(exists)
+        self.assertEqual(send.call_args_list[0].args[0], f"{self.file_url}/paradata/orig/fcr:metadata")
+
+    def test_paradata_still_rejects_a_reserved_distribution(self):
+        """Paradata k ``paradata`` nedávají smysl a odmítnou se i po rozšíření kontroly."""
+        with mock.patch.object(self.connector, "_send_request") as send:
+            with self.assertRaises(FedoraValidationError):
+                self.connector.paradata_exists(self.UUID, "paradata")
+        send.assert_not_called()

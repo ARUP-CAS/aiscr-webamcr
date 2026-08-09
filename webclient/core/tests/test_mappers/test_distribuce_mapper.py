@@ -97,8 +97,20 @@ class DistribuceMapperNameValidationTest(TestCase):
     """Testy validace názvu distribuce, které nepotřebují existující soubor."""
 
     def test_reserved_names_rejected(self):
-        """Vyhrazené názvy distribucí se odmítnou."""
-        for distribution in ("orig", "paradata", "thumb/page", "thumb/page/1"):
+        """Vyhrazené názvy distribucí se odmítnou, včetně celého podstromu pod nimi.
+
+        ``paradata/…`` by zapsalo do kontejneru paradat mimo ``ParadataMapper`` a ``orig/…``
+        pod binární obsah souboru — obojí musí spadnout už při validaci CSV.
+        """
+        for distribution in (
+            "orig",
+            "paradata",
+            "thumb/page",
+            "thumb/page/1",
+            "paradata/alto-xml",
+            "paradata/ocr/alto-xml",
+            "orig/x",
+        ):
             with self.subTest(distribution=distribution):
                 row = VALID_ROW.copy()
                 row["distribution"] = distribution

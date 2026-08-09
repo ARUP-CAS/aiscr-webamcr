@@ -65,6 +65,9 @@ class RunDataImportSamostatnyNalezTest(RunDataImportMapperTestBase):
             size_mb=0.001,
             sha_512="sha",
             url_without_domain="/fedora/import-test.txt",
+            # Skutečný ``RepositoryBinaryFile`` atribut vždy má; import z něj po uložení souboru
+            # doplňuje historii náhledů.
+            thumb_writes=[],
         )
         connector = MagicMock()
         connector.save_binary_file.return_value = binary_result

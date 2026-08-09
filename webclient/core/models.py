@@ -12,7 +12,8 @@ import magic
 import piexif
 import py7zr
 import rarfile
-from core.constants import ORIGINAL_DISTRIBUTION_NAME, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_BADATEL_ID
+from core.constants import ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_BADATEL_ID
+from core.distribution_names import IMPLICIT_DISTRIBUTION_NAMES, ORIGINAL_DISTRIBUTION_NAME
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.db import models
@@ -370,6 +371,48 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             vazba=self.historie,
         ).save()
         logger.debug("core.models.soubor.zaznamenej_nahrani.finished", extra={"historie": hist})
+
+    def zaznamenej_distribuce(self, thumb_writes, user):
+        """
+        Metoda pro zapsání vzniku nebo aktualizace náhledů souboru do historie.
+
+        Náhledy jsou distribuce souboru jako každé jiné, takže se evidují stejnými typy změn
+        (``DIST01``/``DIST11``) s poznámkou ``thumb``, resp. ``thumb-large``. Volá se až po
+        uložení souboru: náhledy se do Fedory zapisují dřív, než při vkládání vznikne řádek
+        ``Soubor``, takže connector historii sám zapsat nemůže a vrací jen přehled zápisů
+        (``RepositoryBinaryFile.thumb_writes``).
+
+        Zápis je best-effort — selhání se pouze zaloguje, protože ztráta záznamu v historii
+        nesmí shodit nahrání souboru ani generování náhledů.
+
+        :param thumb_writes: Seznam dvojic ``(nazev_nahledu, aktualizace)`` z ``save_thumbs()``.
+        :param user: Uživatel, kterému se změna v historii připíše.
+        """
+        from core.constants import NAHRANI_DISTRIBUCE, UPDATE_DISTRIBUCE
+
+        if not thumb_writes:
+            return
+        try:
+            if self.historie is None:
+                self.create_soubor_vazby()
+            for distribution, updated in thumb_writes:
+                # Ukládá se po jednom, ne přes ``bulk_create`` — ten nespouští ``pre_save``,
+                # kterým se do záznamu doplňuje ``organizace_snapshot``.
+                Historie(
+                    typ_zmeny=UPDATE_DISTRIBUCE if updated else NAHRANI_DISTRIBUCE,
+                    uzivatel=user,
+                    vazba=self.historie,
+                    poznamka=distribution,
+                ).save()
+            logger.debug(
+                "core.models.soubor.zaznamenej_distribuce.finished",
+                extra={"soubor": self.pk, "distribuce": thumb_writes},
+            )
+        except Exception as err:
+            logger.warning(
+                "core.models.soubor.zaznamenej_distribuce.failed",
+                extra={"soubor": self.pk, "distribuce": thumb_writes, "error": err},
+            )
 
     def zaznamenej_nahrani_nove_verze(self, user, nazev=None):
         """
@@ -862,19 +905,31 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 return AntivirusCheckResult.CHECK_FAILED
         return AntivirusCheckResult.SKIPPED
 
-    def _create_file_response(self, rep_bin_file: RepositoryBinaryFile) -> FileResponse:
+    def _create_file_response(
+        self, rep_bin_file: RepositoryBinaryFile, filename=None, as_attachment=True
+    ) -> FileResponse:
         """
         Vytvoří file response.
 
+        Hlavičku ``Content-Disposition`` sestaví ``FileResponse``: název uvozovkuje a pro
+        neasciiové znaky doplní tvar ``filename*=utf-8''…`` podle RFC 6266. Ruční skládání
+        hlavičky vedlo u názvů s mezerou nebo diakritikou (v AMČR běžné) k oříznutému
+        nebo rozsypanému názvu staženého souboru.
+
+        ``as_attachment`` je nutné předávat explicitně — ``FileResponse`` bez něj sestaví
+        hlavičku s ``inline``, takže by se soubor v prohlížeči zobrazil místo stažení.
+
         :param rep_bin_file: Parametr ``rep_bin_file`` pracuje se s atributy ``content``.
+        :param filename: Název, pod kterým se soubor nabídne ke stažení; výchozí je ``nazev``.
+        :param as_attachment: Pokud ``False``, obsah se nabídne k zobrazení (``inline``)
+            místo ke stažení; používají náhledy vykreslované přímo ve stránce.
         :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         content = rep_bin_file.content
-        response = FileResponse(content, filename=self.nazev)
+        response = FileResponse(content, filename=filename or self.nazev, as_attachment=as_attachment)
         content.seek(0)
         response["Content-Length"] = content.getbuffer().nbytes
         content.seek(0)
-        response["Content-Disposition"] = f"attachment; filename={self.nazev}"
         return response
 
     @cached_property
@@ -886,9 +941,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         """
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_large=True)
         if self.repository_uuid is not None and rep_bin_file:
-            response = self._create_file_response(rep_bin_file)
+            response = self._create_file_response(rep_bin_file, filename=f"{self.nazev}.png")
             response["Content-Type"] = "image/png"
-            response["Content-Disposition"] = f"attachment; filename={self.nazev}.png"
             return response
         return None
 
@@ -901,9 +955,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         """
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_small=True)
         if self.repository_uuid is not None and rep_bin_file:
-            response = self._create_file_response(rep_bin_file)
+            response = self._create_file_response(rep_bin_file, filename=f"{self.nazev}.png", as_attachment=False)
             response["Content-Type"] = "image/png"
-            response["Content-Disposition"] = f'inline; filename="{self.nazev}.png"'
             response["Cache-Control"] = "private, max-age=43200"
             return response
         return None
@@ -920,6 +973,29 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             return self._create_file_response(rep_bin_file)
         return None
 
+    @staticmethod
+    def distribution_history_prefetch():
+        """
+        Vrátí ``Prefetch`` pro hromadné načtení historie distribucí u tabulky souborů.
+
+        Bez něj se ``available_distributions()`` doptává na historii pro každý řádek zvlášť,
+        takže počet dotazů roste s počtem souborů záznamu. Vyfiltrovaná a seřazená data se
+        ukládají do ``distribuce_historie``, odkud si je metoda vyzvedne.
+
+        Použití: ``.select_related("historie").prefetch_related(Soubor.distribution_history_prefetch())``
+
+        :return: ``Prefetch`` k předání do ``prefetch_related()``.
+        """
+        from core.constants import NAHRANI_DISTRIBUCE, SMAZANI_DISTRIBUCE
+
+        return models.Prefetch(
+            "historie__historie_set",
+            queryset=Historie.objects.filter(typ_zmeny__in=(NAHRANI_DISTRIBUCE, SMAZANI_DISTRIBUCE)).order_by(
+                "datum_zmeny"
+            ),
+            to_attr="distribuce_historie",
+        )
+
     def available_distributions(self) -> list:
         """
         Vrátí názvy distribucí souboru dostupných ke stažení, včetně původní ``orig``.
@@ -930,6 +1006,11 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         vykresluje seznam pro každý řádek a jeden HTTP dotaz do repozitáře na řádek by byl
         neúnosný. Zdrojem tohoto pravidla je zadání issue #3527.
 
+        Kontejnery vznikající už při importu souboru (``IMPLICIT_DISTRIBUTION_NAMES``) se do
+        seznamu nezahrnují: ``orig`` je do něj přidán zvlášť jako první položka a náhledy mají
+        vlastní endpointy (``core:download_thumbnail``, ``core:download_thumbnail_large``).
+        Historii ``DIST01``/``DIST11`` si přitom náhledy vedou stejně jako ostatní distribuce.
+
         :return: Seznam názvů distribucí; ``orig`` je vždy první.
         """
         from core.constants import NAHRANI_DISTRIBUCE, SMAZANI_DISTRIBUCE
@@ -939,12 +1020,19 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             return distributions
         posledni_nahrani = {}
         posledni_smazani = {}
-        for zaznam in self.historie.historie_set.filter(
-            typ_zmeny__in=(NAHRANI_DISTRIBUCE, SMAZANI_DISTRIBUCE)
-        ).order_by("datum_zmeny"):
+        # Přednostně se použijí data z ``distribution_history_prefetch()``; bez něj se historie
+        # dotáhne pro tento jeden soubor (volající mimo tabulku souborů).
+        zaznamy = getattr(self.historie, "distribuce_historie", None)
+        if zaznamy is None:
+            zaznamy = self.historie.historie_set.filter(
+                typ_zmeny__in=(NAHRANI_DISTRIBUCE, SMAZANI_DISTRIBUCE)
+            ).order_by("datum_zmeny")
+        for zaznam in zaznamy:
             cil = posledni_nahrani if zaznam.typ_zmeny == NAHRANI_DISTRIBUCE else posledni_smazani
             cil[zaznam.poznamka] = zaznam.datum_zmeny
         for distribution, nahrani in posledni_nahrani.items():
+            if distribution in IMPLICIT_DISTRIBUTION_NAMES:
+                continue
             smazani = posledni_smazani.get(distribution)
             if distribution and (smazani is None or smazani <= nahrani):
                 distributions.append(distribution)
@@ -953,6 +1041,10 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     def get_distribution_response(self, distribution) -> FileResponse | None:
         """
         Vrátí obsah zvolené distribuce souboru jako HTTP odpověď.
+
+        Distribuce má vlastní binární obsah, takže se ke stažení nabídne pod názvem odvozeným
+        z názvu souboru a distribuce (``scan.pdf`` + ``ocr/alto-xml`` → ``scan.pdf.ocr_alto-xml``).
+        Samotný ``nazev`` by u distribuce lhal — obsah je jiný formát než původní soubor.
 
         :param distribution: Název distribuce; ``orig`` vrátí původní obsah souboru.
         :return: ``FileResponse`` s obsahem distribuce, nebo ``None``, pokud ji nelze načíst.
@@ -968,10 +1060,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         rep_bin_file = connector.get_distribution(self.repository_uuid, distribution)
         if rep_bin_file is None:
             return None
-        response = self._create_file_response(rep_bin_file)
-        # The distribution has its own binary; only the file name is derived from the parent record.
-        response["Content-Disposition"] = f"attachment; filename={self.nazev}"
-        return response
+        return self._create_file_response(
+            rep_bin_file, filename="{}.{}".format(self.nazev, distribution.replace("/", "_"))
+        )
 
     def getMock(self):
         """

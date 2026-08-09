@@ -244,7 +244,12 @@ def detail_model_3D(request, ident_cely):
     context["show"] = show
     context["global_map_can_edit"] = False
     if dokument.soubory:
-        context["soubory"] = sorted(dokument.soubory.soubory.all(), key=soubor_nazev_razeni_klic)
+        context["soubory"] = sorted(
+            dokument.soubory.soubory.select_related("historie").prefetch_related(
+                Soubor.distribution_history_prefetch()
+            ),
+            key=soubor_nazev_razeni_klic,
+        )
     else:
         context["soubory"] = None
     return render(request, "dokument/detail_model_3D.html", context)
@@ -640,7 +645,12 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         context["show"] = show
 
         if dokument.soubory:
-            context["soubory"] = sorted(dokument.soubory.soubory.all(), key=soubor_nazev_razeni_klic)
+            context["soubory"] = sorted(
+                dokument.soubory.soubory.select_related("historie").prefetch_related(
+                    Soubor.distribution_history_prefetch()
+                ),
+                key=soubor_nazev_razeni_klic,
+            )
         else:
             context["soubory"] = None
 

@@ -1069,14 +1069,3 @@ Funkce
 
    :param raw: Hodnota z Redis (ID nebo obálka ``{id, params}``).
    :return: ID překladového řetězce, nebo ``None``.
-
-.. py:function:: _expire_import_data_keys(redis_connector, job_id, ttl_seconds)
-
-   Nastaví expiraci všem per-job datovým klíčům importní úlohy na ``ttl_seconds``.
-
-   Klíče se pouze expirují, nikdy nemažou — report musí zůstat stažitelný po dobu retence.
-   Seznam suffixů sdílí jediný zdroj pravdy s ``cron.tasks`` (``IMPORT_DATA_JOB_KEY_SUFFIXES``).
-
-   :param redis_connector: Dekódující Redis spojení.
-   :param job_id: Identifikátor importní úlohy.
-   :param ttl_seconds: Doba retence v sekundách.

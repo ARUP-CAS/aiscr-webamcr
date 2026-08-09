@@ -9,14 +9,11 @@ import datetime
 from io import StringIO
 from unittest import mock
 
-from core.constants import (
-    NAHRANI_DISTRIBUCE,
-    ORIGINAL_DISTRIBUTION_NAME,
-    ROLE_BADATEL_ID,
-    SMAZANI_DISTRIBUCE,
-    UPDATE_DISTRIBUCE,
-)
+from core.constants import NAHRANI_DISTRIBUCE, ROLE_BADATEL_ID, SMAZANI_DISTRIBUCE, UPDATE_DISTRIBUCE
+from core.distribution_names import ORIGINAL_DISTRIBUTION_NAME
+from core.models import Soubor
 from core.tests.test_mappers.fixtures import create_dokument_fixture, create_soubor_fixture
+from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.management import call_command
 from django.test import TestCase
@@ -110,6 +107,166 @@ class SouborAvailableDistributionsTest(TestCase):
         self._record(UPDATE_DISTRIBUCE, "ocr")
 
         self.assertEqual(self.soubor.available_distributions(), [ORIGINAL_DISTRIBUTION_NAME])
+
+    def test_thumbnail_containers_are_not_offered(self):
+        """Náhledy mají vlastní endpointy, takže se mezi distribucemi ke stažení neobjeví."""
+        self._record(NAHRANI_DISTRIBUCE, "thumb")
+        self._record(NAHRANI_DISTRIBUCE, "thumb-large")
+
+        self.assertEqual(self.soubor.available_distributions(), [ORIGINAL_DISTRIBUTION_NAME])
+
+    def test_thumbnails_do_not_hide_a_real_distribution(self):
+        """Vyfiltrování náhledů nesmí odstranit skutečnou alternativní distribuci."""
+        self._record(NAHRANI_DISTRIBUCE, "thumb")
+        self._record(NAHRANI_DISTRIBUCE, "ocr", offset_minutes=5)
+
+        self.assertEqual(self.soubor.available_distributions(), [ORIGINAL_DISTRIBUTION_NAME, "ocr"])
+
+    def test_original_is_not_duplicated_by_its_own_history(self):
+        """Záznam o nahrání ``orig`` nesmí položku zdvojit — přidává se vždy jen jednou."""
+        self._record(NAHRANI_DISTRIBUCE, ORIGINAL_DISTRIBUTION_NAME)
+
+        self.assertEqual(self.soubor.available_distributions(), [ORIGINAL_DISTRIBUTION_NAME])
+
+
+class SouborDistributionHistoryPrefetchTest(TestCase):
+    """Testy pro ``Soubor.distribution_history_prefetch`` — hromadné načtení historie distribucí."""
+
+    def setUp(self):
+        """Připraví dokument se třemi soubory, z nichž každý má nahranou distribuci."""
+        Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
+        self.dokument = create_dokument_fixture(ident_cely="C-TX-000701")
+        self.uzivatel = User.objects.create_user(  # type: ignore[attr-defined]
+            email="prefetch@example.cz",
+            password="pass",
+            is_active=True,
+            ident_cely="U-990701",
+            organizace=self.dokument.organizace,
+        )
+        # ``create_soubor_fixture`` zakládá vlastní ``SouborVazby`` a přepíše ``dokument.soubory``,
+        # takže další soubory se musí navěsit na tutéž vazbu — jinak by detail viděl jen poslední.
+        self.soubory = [
+            create_soubor_fixture(self.dokument, nazev="prefetch-0.txt", uuid="aaaaaaaa-bbbb-cccc-dddd-000000000000")
+        ]
+        for poradi in (1, 2):
+            soubor = Soubor(
+                nazev="prefetch-{}.txt".format(poradi),
+                mimetype="application/pdf",
+                vazba=self.soubory[0].vazba,
+                size_mb=1,
+                path="rest/{}/record/{}/file/aaaaaaaa-bbbb-cccc-dddd-00000000000{}".format(
+                    settings.FEDORA_SERVER_NAME, self.dokument.ident_cely, poradi
+                ),
+            )
+            soubor.suppress_signal = True
+            soubor.save()
+            soubor.create_soubor_vazby()
+            self.soubory.append(soubor)
+        for soubor in self.soubory:
+            Historie.objects.create(
+                typ_zmeny=NAHRANI_DISTRIBUCE,
+                uzivatel=self.uzivatel,
+                vazba=soubor.historie,
+                poznamka="ocr",
+            )
+
+    def _load(self):
+        """Načte soubory dokumentu s prefetchem historie distribucí.
+
+        :return: Seznam souborů připravený stejně jako v detailu záznamu.
+        """
+        return list(
+            self.dokument.soubory.soubory.select_related("historie")
+            .prefetch_related(Soubor.distribution_history_prefetch())
+            .order_by("nazev")
+        )
+
+    def test_prefetch_removes_the_per_file_query(self):
+        """Se prefetchem nesmí počet dotazů růst s počtem souborů."""
+        soubory = self._load()
+
+        with self.assertNumQueries(0):
+            for soubor in soubory:
+                soubor.available_distributions()
+
+    def test_prefetched_result_matches_the_unprefetched_one(self):
+        """Prefetchovaná i doptávaná cesta musí vrátit shodný seznam distribucí."""
+        prefetched = [soubor.available_distributions() for soubor in self._load()]
+        primy = [Soubor.objects.get(pk=soubor.pk).available_distributions() for soubor in self.soubory]
+
+        self.assertEqual(prefetched, primy)
+        self.assertEqual(prefetched, [[ORIGINAL_DISTRIBUTION_NAME, "ocr"]] * 3)
+
+    def test_prefetch_respects_deletions(self):
+        """Distribuce smazaná po nahrání se nesmí objevit ani přes prefetch."""
+        Historie.objects.create(
+            typ_zmeny=SMAZANI_DISTRIBUCE,
+            uzivatel=self.uzivatel,
+            vazba=self.soubory[0].historie,
+            poznamka="ocr",
+        )
+
+        soubory = self._load()
+
+        self.assertEqual(soubory[0].available_distributions(), [ORIGINAL_DISTRIBUTION_NAME])
+        self.assertEqual(soubory[1].available_distributions(), [ORIGINAL_DISTRIBUTION_NAME, "ocr"])
+
+
+class SouborZaznamenejDistribuceTest(TestCase):
+    """Testy pro ``Soubor.zaznamenej_distribuce`` — doplnění historie náhledů po uložení souboru."""
+
+    def setUp(self):
+        """Připraví dokument se souborem a uživatele, kterému se historie připisuje."""
+        Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
+        self.dokument = create_dokument_fixture(ident_cely="C-TX-000601")
+        self.soubor = create_soubor_fixture(self.dokument, uuid="11111111-2222-3333-4444-555555555555")
+        self.uzivatel = User.objects.create_user(  # type: ignore[attr-defined]
+            email="nahledy@example.cz",
+            password="pass",
+            is_active=True,
+            ident_cely="U-990601",
+            organizace=self.dokument.organizace,
+        )
+
+    def _history(self, distribution):
+        """Vrátí záznamy historie daného náhledu.
+
+        :param distribution: Název kontejneru náhledu.
+        :return: Seznam záznamů ``Historie``.
+        """
+        return list(self.soubor.historie.historie_set.filter(poznamka=distribution).order_by("pk"))
+
+    def test_new_thumbnails_are_recorded_as_uploads(self):
+        """Nově vygenerované náhledy se zapíší jako ``DIST01`` pro každý kontejner zvlášť."""
+        self.soubor.zaznamenej_distribuce([("thumb", False), ("thumb-large", False)], self.uzivatel)
+
+        self.assertEqual([record.typ_zmeny for record in self._history("thumb")], [NAHRANI_DISTRIBUCE])
+        self.assertEqual([record.typ_zmeny for record in self._history("thumb-large")], [NAHRANI_DISTRIBUCE])
+
+    def test_overwritten_thumbnail_is_recorded_as_update(self):
+        """Přepis existujícího náhledu se zapíše jako ``DIST11``."""
+        self.soubor.zaznamenej_distribuce([("thumb", True)], self.uzivatel)
+
+        self.assertEqual([record.typ_zmeny for record in self._history("thumb")], [UPDATE_DISTRIBUCE])
+
+    def test_empty_input_writes_nothing(self):
+        """Bez vygenerovaných náhledů nevznikne žádný záznam historie."""
+        self.soubor.zaznamenej_distribuce([], self.uzivatel)
+
+        self.assertEqual(self.soubor.historie.historie_set.count(), 0)
+
+    def test_organizace_snapshot_is_filled_from_the_user(self):
+        """Zápis musí projít signálem ``pre_save``, který doplňuje snímek organizace."""
+        self.soubor.zaznamenej_distribuce([("thumb", False)], self.uzivatel)
+
+        self.assertEqual(self._history("thumb")[0].organizace_snapshot, self.uzivatel.organizace)
+
+    def test_failure_is_swallowed_so_upload_is_not_broken(self):
+        """Selhání zápisu historie nesmí shodit nahrání souboru — jen se zaloguje."""
+        with mock.patch("core.models.Historie.save", side_effect=RuntimeError("boom")):
+            self.soubor.zaznamenej_distribuce([("thumb", False)], self.uzivatel)
+
+        self.assertEqual(self._history("thumb"), [])
 
 
 class BackfillThumbHistoryCommandTest(TestCase):

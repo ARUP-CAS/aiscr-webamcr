@@ -339,24 +339,18 @@ Třídy
 
       Uloží thumbs. v aplikaci.
 
+      Vrací přehled skutečně zapsaných náhledů, aby volající mohl doplnit historii souboru
+      (``DIST01``/``DIST11``) až po jeho uložení do databáze. Historii nelze zapsat zde:
+      při vkládání souboru se náhledy generují dřív, než vůbec vznikne řádek ``Soubor``.
+
       :param file_name: Parametr ``file_name`` se předává do volání ``debug()``, ``__generate_thumb()``, pracuje se s atributy ``rfind``.
       :param file: Soubor nebo cesta k souboru používaná při operaci.
       :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
       :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
       :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
-
-   .. py:method:: _record_thumb_history()
-
-      Zapíše do historie souboru vznik nebo aktualizaci náhledu.
-
-      Náhledy jsou distribuce souboru jako každé jiné, takže se evidují stejnými typy změn
-      (``DIST01``/``DIST11``) s poznámkou ``thumb``, resp. ``thumb-large``. Zápis je best-effort:
-      selhání se pouze zaloguje, protože ztráta záznamu v historii nesmí shodit nahrání souboru
-      ani generování náhledů.
-
-      :param uuid: UUID kontejneru souboru, ke kterému náhled patří.
-      :param distribution: Název kontejneru náhledu (``thumb`` nebo ``thumb-large``).
-      :param updated: Pokud ``True``, jde o přepis existujícího náhledu (``DIST11``).
+      :return: Seznam dvojic ``(nazev_nahledu, aktualizace)``; ``aktualizace`` je ``True``,
+          pokud šlo o přepis existujícího náhledu. Náhledy, které se nepodařilo vygenerovat,
+          v seznamu nejsou.
 
    .. py:method:: migrate_binary_file()
 
@@ -538,6 +532,20 @@ Třídy
       :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
       :raises FedoraNoResponseError: Pokud repozitář neodpoví – existenci nelze určit a volající
           se nesmí spolehnout na domnělou neexistenci.
+
+   .. py:method:: _container_exists()
+
+      Zjistí, zda ve Fedoře existuje kontejner na zadané cestě pod souborem.
+
+      Cestu už nevaliduje — volající ji buď ověřil, nebo si ji sám sestavil (paradata).
+      Díky tomu neprochází vnitřně skládaná cesta ``paradata/{distribuce}`` kontrolou
+      vyhrazených názvů, která by ji odmítla, přestože ji vytvořil sám connector.
+
+      :param uuid: UUID kontejneru souboru.
+      :param path: Relativní cesta pod kontejnerem souboru.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :return: ``True``, pokud kontejner existuje, jinak ``False``.
+      :raises FedoraNoResponseError: Pokud repozitář neodpoví.
 
    .. py:method:: get_historie_distribution()
 
