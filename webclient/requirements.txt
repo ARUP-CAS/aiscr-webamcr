@@ -30,7 +30,7 @@ django-celery-beat==2.9.0
 django-celery-results==2.6.0
 django-prometheus==2.5.0
 python-logstash==0.4.8
-djangorestframework==3.17.1
+djangorestframework==3.18.0
 djangorestframework-xml==2.0.0
 lxml==6.1.1
 python-magic==0.4.27
