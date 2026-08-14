@@ -132,11 +132,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://docs.celeryq.dev/
    * - certifi
-     - 2026.6.17
+     - 2026.7.22
      - Mozilla Public License 2.0 (MPL 2.0)
      - https://github.com/certifi/python-certifi
    * - cffi
-     - 2.1.0
+     - 2.1.1
      - MIT-0
      - https://cffi.readthedocs.io/en/latest/whatsnew.html
    * - cfgv
@@ -144,7 +144,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/asottile/cfgv
    * - charset-normalizer
-     - 3.4.9
+     - 3.5.0
      - MIT
      - https://github.com/jawah/charset_normalizer/blob/master/CHANGELOG.md
    * - click
@@ -308,7 +308,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.31.2
+     - 3.32.3
      - MIT
      - https://github.com/tox-dev/py-filelock
    * - freezegun
@@ -368,7 +368,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.5.1
+     - 2.5.2
      - BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
      - https://numpy.org
    * - odfpy
@@ -384,7 +384,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; MIT License
      - https://github.com/python-trio/outcome
    * - packaging
-     - 26.2
+     - 26.3
      - Apache-2.0 OR BSD-2-Clause
      - https://github.com/pypa/packaging
    * - pandas
@@ -408,7 +408,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT-CMU
      - https://python-pillow.github.io
    * - pip
-     - 26.1.2
+     - 26.2.1
      - MIT
      - https://pip.pypa.io/
    * - pip-licenses
@@ -416,7 +416,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/raimon49/pip-licenses
    * - platformdirs
-     - 4.10.1
+     - 4.11.3
      - MIT
      - https://github.com/tox-dev/platformdirs
    * - polib
@@ -432,11 +432,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://github.com/prettytable/prettytable
    * - prometheus_client
-     - 0.25.0
+     - 0.26.0
      - Apache-2.0 AND BSD-2-Clause
      - https://github.com/prometheus/client_python
    * - prompt_toolkit
-     - 3.0.52
+     - 3.0.53
      - BSD License
      - https://github.com/prompt-toolkit/python-prompt-toolkit
    * - psutil
@@ -488,7 +488,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.4.4
+     - 1.5.2
      - MIT License
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
@@ -564,7 +564,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.grantjenks.com/docs/sortedcontainers/
    * - soupsieve
-     - 2.9
+     - 2.9.2
      - MIT
      - https://github.com/facelessuser/soupsieve
    * - sphinx_rtd_theme
@@ -608,7 +608,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://www.sphinx-doc.org/
    * - sqlparse
-     - 0.5.5
+     - 0.6.0
      - BSD License
      - https://github.com/andialbrecht/sqlparse
    * - tablib
@@ -624,11 +624,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/foutaise/texttable/
    * - tornado
-     - 6.5.7
+     - 6.5.8
      - Apache Software License
      - http://www.tornadoweb.org/
    * - trio
-     - 0.33.0
+     - 0.34.0
      - MIT OR Apache-2.0
      - https://github.com/python-trio/trio
    * - trio-websocket
@@ -660,7 +660,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.6.1
+     - 21.7.4
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
@@ -672,7 +672,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/websocket-client/websocket-client.git
    * - wrapt
-     - 2.2.2
+     - 2.3.0
      - Copyright (c) 2013-2025, Graham Dumpleton
      - https://github.com/GrahamDumpleton/wrapt
    * - wsproto
