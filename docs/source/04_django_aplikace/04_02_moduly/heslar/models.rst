@@ -227,10 +227,14 @@ Třídy
 
    .. py:method:: last_successful()
 
-      Vrací poslední úspěšně dokončený běh seřazený podle ``data_valid_to``.
+      Vrací poslední úspěšně dokončený běh seřazený podle ``started_at``.
 
       Používá se cronem k určení, od jakého data má pokračovat ve stahování
-      denních změnových VFR souborů.
+      denních změnových VFR souborů. Řazení podle ``started_at`` (a ne
+      podle ``data_valid_to``) je nutné proto, aby opětovný **plný** sync
+      (např. z nového SHP snapshotu se staršími ``data_valid_to``) resetoval
+      čítač – jinak by cron pokračoval od posledního delta, jako by nový
+      plný sync nikdy neproběhl.
 
       :return: Instance ``RuianSyncRun`` nebo ``None``, pokud žádný úspěšný běh dosud neexistuje.
 

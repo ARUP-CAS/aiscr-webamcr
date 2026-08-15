@@ -780,9 +780,6 @@ PAS
    * - ``post_point_position_2_katastre``
      - ``mapa-zjisti-katastr``
      - ``views.post_point_position_2_katastre``
-   * - ``post_point_position_2_katastre_with_geom``
-     - ``mapa-zjisti-katastr-geom``
-     - ``views.post_point_position_2_katastre_with_geom``
    * - ``spoluprace_smazani``
      - ``spoluprace/smazat/<int:pk>``
      - ``views.smazat_spolupraci``

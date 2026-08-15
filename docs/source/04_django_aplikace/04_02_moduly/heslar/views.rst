@@ -143,11 +143,15 @@ Funkce
 
 .. py:function:: zjisti_katastr_souradnic(request)
 
-   Funkce pohledu pro vrácení katastru podle souradnic.
+   Vrátí katastr obsahující zadaný bod v EPSG:5514 (S-JTSK).
 
-   :param request: Parametr ``request`` se předává do volání ``filter()``, ``Point()``, pracuje se s atributy ``GET``.
+   Volá se AJAX z ``mapa_projekty.js`` po kliknutí do Leaflet mapy (mapa
+   je v JTSK CRS ``mapa_settings_jtsk.js``). Vstupem jsou GET parametry
+   ``x`` a ``y`` v EPSG:5514 v konvenci projektu (záporné hodnoty).
 
-   :return: Vrací výsledek volání ``JsonResponse()``.
+   :param request: GET s parametry ``x`` a ``y`` v EPSG:5514.
+
+   :return: JsonResponse s ``id`` a ``value`` katastru, nebo prázdný.
 
 .. py:function:: zjisti_vychozi_hodnotu(request)
 

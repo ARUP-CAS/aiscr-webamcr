@@ -44,33 +44,57 @@ from uzivatel.models import User
 logger = logging.getLogger(__name__)
 
 
-def _point_to_xy(point) -> Optional[Tuple[float, float]]:
+def _prefer_sjtsk(sjtsk_geom, wgs84_geom):
     """
-    Převede ``GEOSGeometry`` bod na dvojici ``(x, y)`` v EPSG:4326.
+    Vrátí ``Point`` v EPSG:5514. Preferuje ``sjtsk_geom``; jinak transformuje
+    ``wgs84_geom`` (4326) na 5514 přes ``transform_geom_to_sjtsk``.
 
-    :param point: Geometrický bod (typicky ``Point`` objektu modelu) nebo ``None``.
+    Používá se v reassign helperech k jednotnému získání SJTSK bodu — moderní
+    záznamy mají naplněný ``.geom_sjtsk``, starší jen ``.geom`` (4326).
 
-        :return: Dvojice ``(x, y)`` ve WGS84, nebo ``None`` pokud byl vstup ``None``
-            nebo prázdná geometrie (``EMPTY``).
+    :param sjtsk_geom: ``GEOSGeometry`` v EPSG:5514 nebo ``None``.
+    :param wgs84_geom: ``GEOSGeometry`` v EPSG:4326 nebo ``None``.
+
+        :return: ``GEOSGeometry`` (Point) v EPSG:5514 nebo ``None``.
     """
-    if point is None or point.empty:
+    from core.coordTransform import transform_geom_to_sjtsk
+    from django.contrib.gis.geos import GEOSGeometry
+
+    if sjtsk_geom is not None and not sjtsk_geom.empty:
+        return sjtsk_geom
+    if wgs84_geom is None or wgs84_geom.empty:
         return None
-    return (point.x, point.y)
+    wkt_5514, status = transform_geom_to_sjtsk(wgs84_geom.wkt)
+    if status != "OK":
+        logger.warning(
+            "heslar.ruian_sync.reassign._prefer_sjtsk.transform_failed",
+            extra={"status": status, "wkt_prefix": wgs84_geom.wkt[:80]},
+        )
+        return None
+    return GEOSGeometry(wkt_5514, srid=5514)
 
 
-def _resolve_target_point(record_point, fallback_point) -> Optional[Tuple[float, float]]:
+def _resolve_target_point(record_point, fallback_point):
     """
     Vybere bod, podle kterého se má hledat nový katastr.
 
     Preferuje vlastní geometrii záznamu; pokud není k dispozici, použije
     ``fallback_point`` (typicky definiční bod původního katastru).
 
-    :param record_point: ``GEOSGeometry`` bod záznamu, nebo ``None``.
-    :param fallback_point: Záložní ``GEOSGeometry`` bod, nebo ``None``.
+    Oba body musí být v EPSG:5514 (konvence projektu — záporné hodnoty).
+    Volající v reassign helperech používají :func:`_prefer_sjtsk` pro
+    získání SJTSK Point z ``record.geom_sjtsk`` nebo transform z ``record.geom``.
 
-        :return: Dvojice ``(x, y)`` nebo ``None`` (žádná dostupná geometrie).
+    :param record_point: ``GEOSGeometry`` bod záznamu v EPSG:5514, nebo ``None``.
+    :param fallback_point: Záložní ``GEOSGeometry`` bod v EPSG:5514, nebo ``None``.
+
+        :return: ``GEOSGeometry`` Point v EPSG:5514 (``get_cadastre_from_point``
+            přijímá Point přímo přes ``point[0]``/``point[1]``), nebo ``None``.
     """
-    return _point_to_xy(record_point) or _point_to_xy(fallback_point)
+    for point in (record_point, fallback_point):
+        if point is not None and not point.empty:
+            return point
+    return None
 
 
 def _close_or_rollback(fedora_tx: FedoraTransaction, success: bool) -> None:
@@ -185,11 +209,11 @@ def _compute_az_katastr_assignment(
     query = """
         SELECT k.id
         FROM (
-            SELECT dj.ident_cely AS dj_ident_cely, pian.geom AS pian_geom
+            SELECT dj.ident_cely AS dj_ident_cely, pian.geom_sjtsk AS pian_geom
             FROM public.dokumentacni_jednotka dj
             JOIN public.pian pian ON dj.pian = pian.id
             WHERE dj.ident_cely LIKE %s
-              AND pian.geom IS NOT NULL
+              AND pian.geom_sjtsk IS NOT NULL
         ) dp
         JOIN public.ruian_katastr k ON ST_Intersects(k.hranice, dp.pian_geom)
         WHERE %s::int IS NULL OR k.kod <> %s::int
@@ -260,7 +284,7 @@ def _update_az_katastry_if_changed(
         )
         return False
 
-    current_ostatni = set(az.katastry.values_list("pk", flat=True))
+    current_ostatni = {k.pk for k in az.katastry.all()}
     new_ostatni = set(new_ostatni_ids)
     hlavni_changed = new_hlavni_id != az.hlavni_katastr_id
     ostatni_changed = new_ostatni != current_ostatni
@@ -326,8 +350,8 @@ def reassign_az(
     ``fallback_point`` (definiční bod původního katastru).
 
     :param az: Instance :class:`ArcheologickyZaznam`, která má být přepočítána.
-    :param fallback_point: ``Point`` (EPSG:4326) použitý, pokud AZ nemá DJ;
-        typicky definiční bod původního katastru.
+    :param fallback_point: ``Point`` (EPSG:5514) použitý, pokud AZ nemá DJ;
+        typicky definiční bod původního katastru z ``RuianKatastr.definicni_bod``.
     :param exclude_kod: Volitelný kód katastru, který se vyloučí ze spatial
         intersect (používá se při mazání katastru – aby se mazaný katastr,
         který je do okamžiku ``katastr.delete()`` stále v DB, nevybral zpět).
@@ -391,7 +415,8 @@ def reassign_projekt(
     :func:`reassign_az`.
 
     :param projekt: Instance :class:`Projekt`, která má být přepočítána.
-    :param fallback_point: ``Point`` (EPSG:4326) použitý, pokud projekt nemá ``geom``.
+    :param fallback_point: ``Point`` (EPSG:5514) použitý, pokud projekt nemá ``geom``.
+        Typicky definiční bod původního katastru z ``RuianKatastr.definicni_bod``.
     :param exclude_kod: Volitelný kód katastru vyloučený ze spatial query
         (viz :func:`reassign_az`).
 
@@ -399,7 +424,7 @@ def reassign_projekt(
     """
     logger.debug("heslar.ruian_sync.reassign.reassign_projekt.start", extra={"ident_cely": projekt.ident_cely})
 
-    target = _resolve_target_point(projekt.geom, fallback_point)
+    target = _resolve_target_point(_prefer_sjtsk(projekt.geom_sjtsk, projekt.geom), fallback_point)
     if target is None:
         logger.warning(
             "heslar.ruian_sync.reassign.reassign_projekt.no_geometry",
@@ -445,8 +470,8 @@ def reassign_projekt_dalsi_katastr(
 
     :param projekt: Instance :class:`Projekt`.
     :param old_katastr: Katastr odebíraný z M2M (mazaný katastr).
-    :param fallback_point: Záložní ``Point`` (EPSG:4326) pro spatial query
-        (typicky definiční bod mazaného katastru).
+    :param fallback_point: Záložní ``Point`` (EPSG:5514) pro spatial query
+        (typicky definiční bod mazaného katastru z ``RuianKatastr.definicni_bod``).
     :param exclude_kod: Kód katastru vyloučený ze spatial query
         (viz :func:`reassign_az`).
     """
@@ -459,7 +484,7 @@ def reassign_projekt_dalsi_katastr(
     if old_katastr.pk not in current:
         return
 
-    target = _resolve_target_point(projekt.geom, fallback_point)
+    target = _resolve_target_point(_prefer_sjtsk(projekt.geom_sjtsk, projekt.geom), fallback_point)
     new_katastr = get_cadastre_from_point(target, exclude_kod=exclude_kod) if target else None
 
     to_add: set = set()
@@ -498,7 +523,8 @@ def reassign_sn(
     :func:`reassign_az`.
 
     :param sn: Instance :class:`SamostatnyNalez`.
-    :param fallback_point: ``Point`` (EPSG:4326) použitý, pokud SN nemá ``geom``.
+    :param fallback_point: ``Point`` (EPSG:5514) použitý, pokud SN nemá ``geom``.
+        Typicky definiční bod původního katastru z ``RuianKatastr.definicni_bod``.
     :param exclude_kod: Volitelný kód katastru vyloučený ze spatial query
         (viz :func:`reassign_az`).
 
@@ -506,7 +532,7 @@ def reassign_sn(
     """
     logger.debug("heslar.ruian_sync.reassign.reassign_sn.start", extra={"ident_cely": sn.ident_cely})
 
-    target = _resolve_target_point(sn.geom, fallback_point)
+    target = _resolve_target_point(_prefer_sjtsk(sn.geom_sjtsk, sn.geom), fallback_point)
     if target is None:
         logger.warning("heslar.ruian_sync.reassign.reassign_sn.no_geometry", extra={"ident_cely": sn.ident_cely})
         return None
@@ -544,8 +570,8 @@ def reassign_neident_akce(
     – typicky definiční bod původního katastru.
 
     :param neident_akce: Instance :class:`NeidentAkce`.
-    :param fallback_point: ``Point`` (EPSG:4326) – typicky definiční bod
-        původního (mazaného) katastru.
+    :param fallback_point: ``Point`` (EPSG:5514) – typicky definiční bod
+        původního (mazaného) katastru z ``RuianKatastr.definicni_bod``.
     :param exclude_kod: Volitelný kód katastru vyloučený ze spatial query
         (viz :func:`reassign_az`).
 
@@ -556,7 +582,7 @@ def reassign_neident_akce(
         extra={"pk": neident_akce.pk},
     )
 
-    target = _point_to_xy(fallback_point)
+    target = fallback_point if fallback_point is not None and not fallback_point.empty else None
     if target is None:
         logger.warning(
             "heslar.ruian_sync.reassign.reassign_neident_akce.no_geometry",
@@ -772,6 +798,7 @@ def _reassign_all_az() -> Dict[str, int]:
         ArcheologickyZaznam.objects.filter(Exists(has_dj))
         .select_related("hlavni_katastr")
         .defer("hlavni_katastr__hranice")
+        .prefetch_related("dokumentacni_jednotky_akce__komponenty__komponenty", "katastry")
     )
     total = qs.count()
     print(f"AZ: zpracovávám {total} záznamů (jen s DJ)", flush=True)

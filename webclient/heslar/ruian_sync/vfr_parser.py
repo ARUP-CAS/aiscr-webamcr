@@ -19,8 +19,9 @@ Implementační poznámky:
   prefixy);
 * ZIP archiv otevírá přes ``zipfile.ZipFile`` a streamuje XML přímo z něj
   bez rozbalování na disk;
-* geometrie se převádí z EPSG:5514 na EPSG:4326 přes existující
-  ``core.coordTransform.transform_geom_to_wgs84``;
+* geometrie zůstává v EPSG:5514 (RÚIAN heslář je od migrace 0013 primárně
+  JTSK) — parser jen normalizuje případné záporné S-JTSK z VFR na kladnou
+  East-North konvenci přes :func:`_normalize_sjtsk_wkt`;
 * okres katastru se rezolvuje přes přechodný map ``obec_kod → okres_kod``
   z téhož souboru; pokud obec ve změnovém souboru chybí, syncer dohledá
   okres z DB.
@@ -38,7 +39,6 @@ import zipfile
 from pathlib import Path
 from typing import Iterator, Optional, Tuple
 
-from core.coordTransform import transform_geom_to_wgs84
 from heslar.ruian_sync.provider import (
     EVENT_DELETE,
     EVENT_UPSERT,
@@ -494,7 +494,7 @@ def _extract_definicni_bod(elem) -> Optional[str]:
     except ValueError:
         return None
     wkt_5514 = f"POINT({x} {y})"
-    return _to_wgs84(wkt_5514)
+    return _normalize_sjtsk_wkt(wkt_5514)
 
 
 #: AMČR potřebuje vždy originální hranice. Pokud ``OriginalniHranice``
@@ -519,7 +519,7 @@ def _extract_hranice(elem) -> Optional[str]:
             if etree.QName(descendant.tag).localname == hranice_name:
                 wkt_5514 = _gml_multisurface_to_wkt(descendant)
                 if wkt_5514:
-                    return _to_wgs84(wkt_5514)
+                    return _normalize_sjtsk_wkt(wkt_5514)
     return None
 
 
@@ -545,15 +545,24 @@ def _gml_multisurface_to_wkt(hranice_elem) -> Optional[str]:
             for role_elem in poly.iter():
                 if etree.QName(role_elem.tag).localname != ring_role:
                     continue
-                pos_list = None
+                segment_coords = []
                 for ring_child in role_elem.iter():
-                    if etree.QName(ring_child.tag).localname == "posList":
-                        pos_list = (ring_child.text or "").strip()
-                        break
-                if pos_list:
-                    coords = _coords_from_poslist(pos_list)
-                    if coords:
-                        rings.append(coords)
+                    if etree.QName(ring_child.tag).localname != "posList":
+                        continue
+                    text = (ring_child.text or "").strip()
+                    if not text:
+                        continue
+                    seg = _coords_from_poslist(text, close_ring=False)
+                    if not seg:
+                        continue
+                    if segment_coords and segment_coords[-1] == seg[0]:
+                        segment_coords.extend(seg[1:])
+                    else:
+                        segment_coords.extend(seg)
+                if len(segment_coords) >= 3 and segment_coords[0] != segment_coords[-1]:
+                    segment_coords.append(segment_coords[0])
+                if segment_coords:
+                    rings.append(segment_coords)
         if rings:
             ring_strs = ["(" + ", ".join(f"{x} {y}" for x, y in r) + ")" for r in rings]
             polygons_wkt.append("(" + ", ".join(ring_strs) + ")")
@@ -563,19 +572,22 @@ def _gml_multisurface_to_wkt(hranice_elem) -> Optional[str]:
     return "MULTIPOLYGON(" + ", ".join(polygons_wkt) + ")"
 
 
-def _coords_from_poslist(pos_list: str):
+def _coords_from_poslist(pos_list: str, *, close_ring: bool = True):
     """
     Naparsuje ``gml:posList`` (whitespace-separated čísla) na seznam dvojic.
 
-    GML 3.2.1 ``posList`` může mít formát ``x1 y1 x2 y2 ...``. Pokud poslední
-    bod prstenu není totožný s prvním (nezavřený LinearRing), funkce ho
-    automaticky doplní – WKT a OGC standardy zavření vyžadují a některé
-    VFR soubory ho explicitně neuvádějí.
+    GML 3.2.1 ``posList`` má formát ``x1 y1 x2 y2 ...``.
 
     :param pos_list: Textový obsah ``gml:posList``.
+    :param close_ring: Pokud ``True`` (default), automaticky doplní kopii
+        prvního bodu na konec, pokud nejsou totožné (uzavření LinearRing dle
+        OGC/WKT). Při ``False`` se vrátí čisté souřadnice – používá volající,
+        který skládá prsten z několika ``posList`` segmentů (viz
+        :func:`_gml_multisurface_to_wkt` pro Ring/curveMember/LineString).
 
-        :return: Seznam ``[(x, y), …]`` se zaručeným ``out[0] == out[-1]`` při
-            ≥3 bodech, nebo prázdný seznam při neparsovatelném vstupu.
+        :return: Seznam ``[(x, y), …]``. Při ``close_ring=True`` a ≥3 bodech
+            je zaručeno ``out[0] == out[-1]``. Prázdný seznam při
+            neparsovatelném vstupu.
     """
     nums = pos_list.split()
     if len(nums) % 2 != 0:
@@ -586,50 +598,41 @@ def _coords_from_poslist(pos_list: str):
             out.append((float(nums[i]), float(nums[i + 1])))
         except ValueError:
             return []
-    # Zajistit uzavření prstenu: pokud poslední bod není identický s prvním,
-    # přidej kopii prvního na konec. Ošetřuje GML produkce, které neuzavírají
-    # explicitně, i občasné float-rounding artefakty.
-    if len(out) >= 3 and out[0] != out[-1]:
+    if close_ring and len(out) >= 3 and out[0] != out[-1]:
         out.append(out[0])
     return out
 
 
 # ---------------------------------------------------------------------------
-# CRS transformace 5514 → 4326
+# Normalizace znaménka S-JTSK (VFR ↔ PostGIS EPSG:5514 East-North)
 # ---------------------------------------------------------------------------
 
 
-# Range pro detekci znaménka S-JTSK (z core/coordTransform.py:69):
-# záporné Y v rozmezí -905000 .. -400000, X v rozmezí -1230000 .. -930000.
-_SJTSK_NEGATIVE_Y_RANGE = (-905000, -400000)
-_SJTSK_NEGATIVE_X_RANGE = (-1230000, -930000)
-
-
-def _to_wgs84(wkt_5514: str) -> str:
+def _normalize_sjtsk_wkt(wkt_5514: str) -> str:
     """
-    Převede WKT v EPSG:5514 na WKT v EPSG:4326 přes ``core.coordTransform``.
+    Normalizuje WKT v EPSG:5514 do **záporné** (West-South) konvence,
+    kterou používá zbytek projektu (``pian.geom_sjtsk``, ``adb.geom``
+    a ``ruian_katastr.hranice`` po migraci 0013).
 
-    ``core.coordTransform.convertToWGS84`` očekává **záporná** Y/X
-    (rozsah -905000..-400000 resp. -1230000..-930000). VFR soubory mohou
-    obsahovat S-JTSK v kladné formě (standardní EPSG:5514). Helper
-    detekuje sign podle prvních souřadnic a podle potřeby invertuje
-    znaménka v celém WKT řetězci před voláním transformace.
+    Konvence projektu:
+
+    * ``core.coordTransform.convertToJTSK`` vrací ``[-Y, -X]`` (záporné).
+    * Všechna 5514 data v DB jsou v této konvenci uložena.
+    * PostGIS ``ST_Intersects`` funguje matematicky správně dokud jsou obě
+      strany ve stejné konvenci (neinterpretuje osy — porovnává souřadnice).
+
+    VFR z ČÚZK může dodávat kladné (standardní EPSG:5514 East-North)
+    i záporné souřadnice. Helper detekuje znaménko podle první dvojice
+    a v případě **kladných** hodnot invertuje znaménka v celém WKT řetězci.
 
     :param wkt_5514: WKT v EPSG:5514 (kladný nebo záporný S-JTSK).
 
-        :return: WKT v EPSG:4326 (longitude latitude).
+        :return: WKT v EPSG:5514 v záporné konvenci projektu.
     """
     sample_x, sample_y = _sample_xy(wkt_5514)
-    needs_negation = sample_x is not None and sample_x > 0 and sample_y is not None and sample_y > 0
-    if needs_negation:
-        wkt_to_transform = _negate_coords(wkt_5514)
-    else:
-        wkt_to_transform = wkt_5514
-    transformed = transform_geom_to_wgs84(wkt_to_transform)
-    if isinstance(transformed, tuple):
-        # transform_geom vrací (geom, status); pro nás stačí WKT
-        return transformed[0]
-    return transformed
+    if sample_x is not None and sample_x > 0 and sample_y is not None and sample_y > 0:
+        return _negate_coords(wkt_5514)
+    return wkt_5514
 
 
 def _sample_xy(wkt: str) -> Tuple[Optional[float], Optional[float]]:

@@ -47,7 +47,7 @@ from core.message_constants import (
 from core.models import Permissions as p
 from core.models import check_permissions, soubor_nazev_razeni_klic
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
-from core.utils import TwoQueryPaginator, get_cadastre_from_point, get_cadastre_from_point_with_geometry
+from core.utils import TwoQueryPaginator, get_cadastre_from_point
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -257,10 +257,10 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         sn.geom_system = form_coor.data.get("coordinate_system")
 
         if geom is not None:
-            sn.katastr = get_cadastre_from_point(geom)
             sn.geom = geom
         if geom_sjtsk is not None:
             sn.geom_sjtsk = geom_sjtsk
+            sn.katastr = get_cadastre_from_point(geom_sjtsk)
 
         sn.save()
         form.save_m2m()
@@ -444,10 +444,10 @@ def edit(request, ident_cely):
                 )
             sn.geom_system = form_coor.data.get("coordinate_system")
             if geom is not None:
-                sn.katastr = get_cadastre_from_point(geom)
                 sn.geom = geom
             if geom_sjtsk is not None:
                 sn.geom_sjtsk = geom_sjtsk
+                sn.katastr = get_cadastre_from_point(geom_sjtsk)
             sn: SamostatnyNalez = form.save(commit=False)
             sn.create_transaction(request.user)
             sn.close_active_transaction_when_finished = True
@@ -1586,49 +1586,22 @@ def get_detail_template_shows(sn, user):
 @require_http_methods(["POST"])
 def post_point_position_2_katastre(request):
     """
-    Funkce pro získaní názvu katastru z bodu.
+    Vrátí název katastru obsahujícího zadaný bod v EPSG:5514.
 
-    :param request: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
+    Volá se AJAX z ``mapa_pas.js`` po kliknutí do Leaflet mapy (JTSK CRS).
+    Vstupem je JSON body s ``x1``/``x2`` v EPSG:5514 (v konvenci projektu –
+    záporné hodnoty).
 
-        :return: Vrací výsledek volání ``JsonResponse()``.
+    :param request: POST s JSON ``{"x1": <sjtsk_x>, "x2": <sjtsk_y>}``.
+
+        :return: JsonResponse s ``katastr_name`` (prázdný pokud nenalezen).
     """
     body = json.loads(request.body.decode("utf-8"))
     logger.debug("pas.views.post_point_position_2_katastre", extra={"data": body})
-    katastr_name = get_cadastre_from_point(Point(body["x1"], body["x2"]))
-    if katastr_name is not None:
-        return JsonResponse(
-            {
-                "katastr_name": katastr_name.nazev,
-            },
-            status=200,
-        )
-    else:
-        return JsonResponse({"katastr_name": ""}, status=200)
-
-
-@login_required
-@require_http_methods(["POST"])
-def post_point_position_2_katastre_with_geom(request):
-    """
-    Funkce pro získaní názvu katastru, geomu z bodu.
-
-    :param request: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
-
-        :return: Vrací výsledek volání ``JsonResponse()``.
-    """
-    body = json.loads(request.body.decode("utf-8"))
-    [katastr_name, katastr_db, katastr_geom] = get_cadastre_from_point_with_geometry(Point(body["x1"], body["x2"]))
-    if katastr_name is not None:
-        return JsonResponse(
-            {
-                "katastr_name": katastr_name,
-                "katastr_db": katastr_db,
-                "katastr_geom": katastr_geom,
-            },
-            status=200,
-        )
-    else:
-        return JsonResponse({"katastr_name": ""}, status=200)
+    katastr = get_cadastre_from_point((body["x1"], body["x2"]))
+    if katastr is not None:
+        return JsonResponse({"katastr_name": katastr.nazev}, status=200)
+    return JsonResponse({"katastr_name": ""}, status=200)
 
 
 def get_required_fields(zaznam=None, next=0):

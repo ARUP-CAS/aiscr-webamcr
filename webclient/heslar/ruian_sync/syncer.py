@@ -146,7 +146,7 @@ def sync_delta(
             # úspěšně aplikovali upserty/delete katastrů. Detail jde
             # do run.note + log; další pokus může uživatel udělat ručně
             # přes reassign_all nebo /admin/update-katastry/.
-            logger.warning(
+            logger.error(
                 "heslar.ruian_sync.syncer.sync_delta.reassign_failed",
                 extra={"run_id": run.pk, "error": str(err)[:500]},
             )
@@ -281,6 +281,8 @@ def _apply_full_state(
         _append_run_note(run, "Mazání krajů přeskočeno: zdroj neposkytl žádné kraje (chybí ST_UKSH?).")
         logger.warning("heslar.ruian_sync.syncer._apply_full_state.skip_kraj_delete")
 
+    _check_katastry_topology(run)
+
     run.save()
 
 
@@ -361,6 +363,8 @@ def _apply_changes(events: Iterable[RuianChangeEvent], run: RuianSyncRun) -> Set
             if _delete_kraj(db_kraje[ev.kod], run):
                 run.kraj_deletes += 1
 
+    _check_katastry_topology(run)
+
     run.save()
     return hranice_changed_kody
 
@@ -410,6 +414,14 @@ def _upsert_kraj(existing: Optional[RuianKraj], dto: RuianKrajDTO) -> bool:
         changed = True
     new_hr = _geos_or_none(dto.hranice_wkt)
     if new_hr is not None and existing.hranice != new_hr:
+        _log_hranice_change_if_significant(
+            existing.hranice,
+            new_hr,
+            level="kraj",
+            kod=existing.kod,
+            nazev=existing.nazev,
+            new_definicni_bod=new_db,
+        )
         existing.hranice = new_hr
         changed = True
     if changed:
@@ -509,6 +521,14 @@ def _upsert_okres(existing: Optional[RuianOkres], dto: RuianOkresDTO) -> bool:
         changed = True
     new_hr = _geos_or_none(dto.hranice_wkt)
     if new_hr is not None and existing.hranice != new_hr:
+        _log_hranice_change_if_significant(
+            existing.hranice,
+            new_hr,
+            level="okres",
+            kod=existing.kod,
+            nazev=existing.nazev,
+            new_definicni_bod=new_db,
+        )
         existing.hranice = new_hr
         changed = True
     if changed:
@@ -619,6 +639,14 @@ def _upsert_katastr(
         geometry_changed = True
         changed = True
     if new_hr is not None and existing.hranice != new_hr:
+        _log_hranice_change_if_significant(
+            existing.hranice,
+            new_hr,
+            level="katastr",
+            kod=existing.kod,
+            nazev=existing.nazev,
+            new_definicni_bod=new_db,
+        )
         existing.hranice = new_hr
         geometry_changed = True
         hranice_changed = True
@@ -645,44 +673,52 @@ def _upsert_katastr(
 # ---------------------------------------------------------------------------
 
 
-#: SQL kandidátů Projekt: projekty s vyplněným ``geom``, které buď ukazují
-#: na změněný katastr přes ``hlavni_katastr`` FK, nebo jejich bod nově padá
-#: do polygonu změněného katastru (nově by tam patřily). Spatial index nad
-#: ``hranice`` zajistí, že join je rychlý i pro velké sady projektů.
+#: SQL kandidátů Projekt: projekty s vyplněným ``geom_sjtsk``, které buď
+#: ukazují na změněný katastr přes ``hlavni_katastr`` FK, nebo jejich bod
+#: nově padá do polygonu změněného katastru. ``katastr.hranice`` je od
+#: migrace 0013 v EPSG:5514; join proti ``projekt.geom_sjtsk`` (5514)
+#: drží obě strany v jednom CRS a využívá spatial index.
 _SQL_PROJEKT_CANDIDATES = """
     SELECT DISTINCT p.id
     FROM projekt p
     JOIN ruian_katastr k ON k.kod = ANY(%s::int[])
-    WHERE p.geom IS NOT NULL
-      AND (p.hlavni_katastr = k.id OR ST_Intersects(k.hranice, p.geom))
+    WHERE p.geom_sjtsk IS NOT NULL
+      AND (p.hlavni_katastr = k.id OR ST_Intersects(k.hranice, p.geom_sjtsk))
 """
 
 #: SQL kandidátů AZ: AZ ukazující ``hlavni_katastr`` na změněný katastr
 #: NEBO mající alespoň jednu DJ s PIANem, který nově protíná hranici
-#: změněného katastru.
+#: změněného katastru. Používá ``pian.geom_sjtsk`` (5514) místo
+#: ``pian.geom`` (4326) — obě strany intersectu v jednom CRS.
+#:
+#: Query je rozdělená na dvě UNION větve místo ``OR EXISTS``: Postgres
+#: kombinaci ``JOIN + OR EXISTS`` optimalizuje špatně (v testu 300+ s
+#: timeout na 17 katastrů), zatímco UNION se dvěma nezávisle
+#: optimalizovanými JOIN větvemi doběhne za ~2 s. Parametr ``%s`` musí
+#: být předán **dvakrát** (jednou pro každou větev).
 _SQL_AZ_CANDIDATES = """
+    SELECT az.id
+    FROM archeologicky_zaznam az
+    JOIN ruian_katastr k ON az.hlavni_katastr = k.id
+    WHERE k.kod = ANY(%s::int[])
+    UNION
     SELECT DISTINCT az.id
     FROM archeologicky_zaznam az
-    JOIN ruian_katastr k ON k.kod = ANY(%s::int[])
-    WHERE az.hlavni_katastr = k.id
-       OR EXISTS (
-           SELECT 1
-           FROM dokumentacni_jednotka dj
-           JOIN pian p ON dj.pian = p.id
-           WHERE dj.archeologicky_zaznam = az.id
-             AND p.geom IS NOT NULL
-             AND ST_Intersects(k.hranice, p.geom)
-       )
+    JOIN dokumentacni_jednotka dj ON dj.archeologicky_zaznam = az.id
+    JOIN pian p ON dj.pian = p.id
+    JOIN ruian_katastr k
+      ON k.kod = ANY(%s::int[]) AND ST_Intersects(k.hranice, p.geom_sjtsk)
+    WHERE p.geom_sjtsk IS NOT NULL
 """
 
-#: SQL kandidátů SN: SN s vyplněným ``geom`` ukazující na změněný katastr
-#: nebo jehož bod nově padá do polygonu změněného katastru.
+#: SQL kandidátů SN: SN s vyplněným ``geom_sjtsk`` (5514) ukazující na
+#: změněný katastr nebo jehož bod nově padá do polygonu změněného katastru.
 _SQL_SN_CANDIDATES = """
     SELECT DISTINCT s.id
     FROM samostatny_nalez s
     JOIN ruian_katastr k ON k.kod = ANY(%s::int[])
-    WHERE s.geom IS NOT NULL
-      AND (s.katastr = k.id OR ST_Intersects(k.hranice, s.geom))
+    WHERE s.geom_sjtsk IS NOT NULL
+      AND (s.katastr = k.id OR ST_Intersects(k.hranice, s.geom_sjtsk))
 """
 
 
@@ -739,10 +775,10 @@ def _reassign_records_in_changed_katastry(
     )
 
     # Prostorové dotazy pro každý kandidátní záznam mohou přesáhnout globální
-    # statement_timeout (90 s). Reassign je batch operace – timeout vypínáme
+    # statement_timeout (90 s). Reassign je batch operace – timeout 5 min
     # lokálně pro tuto session a obnovíme ho po dokončení.
     with connection.cursor() as _cur:
-        _cur.execute("SET statement_timeout = 0")
+        _cur.execute("SET statement_timeout = 300000")
     try:
         _reassign_records_in_changed_katastry_inner(kody_list, run)
     finally:
@@ -770,8 +806,10 @@ def _reassign_records_in_changed_katastry_inner(kody_list: list, run: RuianSyncR
             run.affected_projekt += 1
 
     # --- AZ ---
+    # SQL má dvě UNION větve, každá s vlastním ``ANY(%s::int[])`` – předáváme
+    # ``kody_list`` dvakrát (jednou pro každou větev, viz komentář u SQL).
     with connection.cursor() as cursor:
-        cursor.execute(_SQL_AZ_CANDIDATES, [kody_list])
+        cursor.execute(_SQL_AZ_CANDIDATES, [kody_list, kody_list])
         az_ids = [row[0] for row in cursor.fetchall()]
     print(f"  AZ kandidátů:      {len(az_ids)}", flush=True)
     for az in ArcheologickyZaznam.objects.filter(pk__in=az_ids).select_related("hlavni_katastr"):
@@ -999,7 +1037,7 @@ def _delete_katastr(
 
 def _geos_or_none(wkt: Optional[str]):
     """
-    Převede WKT řetězec na ``GEOSGeometry`` v EPSG:4326, nebo vrátí ``None``.
+    Převede WKT řetězec na ``GEOSGeometry`` v EPSG:5514, nebo vrátí ``None``.
 
     Defenzivně chytá :class:`GEOSException` a :class:`ValueError` – pokud GEOS
     odmítne WKT (typicky kvůli neuzavřenému prstenu nebo invalidní topologii
@@ -1007,20 +1045,192 @@ def _geos_or_none(wkt: Optional[str]):
     Konkrétní geometrii prvku tím necháme nezměněnou v DB; popisné údaje
     (název, kódy) se aktualizují normálně.
 
-    :param wkt: WKT reprezentace geometrie nebo ``None``.
+    :param wkt: WKT reprezentace geometrie v EPSG:5514 (S-JTSK) nebo ``None``.
 
-        :return: ``GEOSGeometry`` nebo ``None`` (i při chybě parsování).
+        :return: ``GEOSGeometry`` v EPSG:5514 nebo ``None`` (i při chybě parsování).
     """
     if not wkt:
         return None
     try:
-        return GEOSGeometry(wkt, srid=4326)
+        return GEOSGeometry(wkt, srid=5514)
     except (GEOSException, ValueError) as err:
         logger.warning(
             "heslar.ruian_sync.syncer._geos_or_none.invalid_wkt",
             extra={"wkt_prefix": wkt[:120], "wkt_length": len(wkt), "error": str(err)},
         )
         return None
+
+
+#: Prahové hodnoty pro :func:`_log_hranice_change_if_significant`. Nad těmito
+#: prahovými hodnotami se změna hranice loguje jako warning. Tyto hodnoty
+#: byly zvoleny tak, aby normální hraniční revize RÚIAN (obvykle drobné
+#: úpravy jednotek metrů, změna plochy < 1 %) nepodléhaly warningu, ale
+#: strukturální bugy typu ZKSH 20260520 pro Ruzyni (pokles počtu bodů
+#: 1284 → 292 = 77 %, změna plochy > 90 %) ano.
+_HRANICE_AREA_DIFF_WARN_PCT = 5.0
+_HRANICE_POINT_DROP_WARN_PCT = 50.0
+
+
+def _log_hranice_change_if_significant(
+    old_hranice,
+    new_hranice,
+    *,
+    level: str,
+    kod: int,
+    nazev: str,
+    new_definicni_bod=None,
+) -> None:
+    """
+    Loguje warning, pokud se nová hranice výrazně liší od původní
+    nebo pokud nový definiční bod neleží uvnitř nové hranice.
+
+    Safeguard proti tichým regresím parseru VFR: pokud ČÚZK změní formát
+    výměnného souboru nebo pokud parser jinak přestane produkovat
+    konzistentní data, sync typicky běží přes noc na pozadí a nikdo
+    si toho hned nevšimne. Warning v log agregátoru (Elastic/Kibana)
+    na tuto situaci upozorní.
+
+    Kontroly:
+
+    * relativní změna plochy > :data:`_HRANICE_AREA_DIFF_WARN_PCT` procent;
+    * pokles počtu vertexů > :data:`_HRANICE_POINT_DROP_WARN_PCT` procent;
+    * ``new_definicni_bod`` **není pokryt** novou hranicí – ověřeno pouze
+      pokud volající parametr předá. ``covers`` (na rozdíl od ``contains``)
+      povoluje bod ležící přesně na hranici, aby normální hraniční bod
+      nevyvolával false positive. Volá se přes ``prepared`` geometrii, která
+      pro bodový argument používá indexovaný point-in-area locator místo
+      overlay/nodingu – ten na místech, kde se stýká víc katastrů, hlásil
+      ``GEOS_ERROR: TopologyException: side location conflict``.
+
+    Každá splněná podmínka vyvolá samostatný warning (jde je snadno
+    filtrovat v log agregátoru přes klíč ``event``).
+
+    :param old_hranice: Původní hranice v DB (``None`` u nově vytvářeného
+        prvku – v tom případě se area/points kontrola přeskočí, kontrola
+        pokrytí definičního bodu ale proběhne, pokud je bod předán).
+    :param new_hranice: Nová hranice ze zdroje.
+    :param level: ``"kraj"`` / ``"okres"`` / ``"katastr"`` pro log detail.
+    :param kod: RÚIAN kód prvku (identifikátor v logu).
+    :param nazev: Název prvku (čitelnost logu).
+    :param new_definicni_bod: Volitelný ``Point`` v EPSG:5514 – pokud je
+        předán, kontroluje se, že leží uvnitř / na hranici ``new_hranice``.
+    """
+    if new_hranice is None:
+        return
+
+    if old_hranice is not None:
+        try:
+            old_area = float(old_hranice.area)
+            new_area = float(new_hranice.area)
+            old_pts = int(old_hranice.num_coords)
+            new_pts = int(new_hranice.num_coords)
+        except (AttributeError, GEOSException, TypeError, ValueError):
+            old_area = 0.0
+            old_pts = 0
+            new_area = 0.0
+            new_pts = 0
+        if old_area > 0 and old_pts > 0:
+            area_diff_pct = abs(new_area - old_area) / old_area * 100.0
+            pts_drop_pct = max(0.0, (old_pts - new_pts) / old_pts * 100.0)
+            if area_diff_pct > _HRANICE_AREA_DIFF_WARN_PCT or pts_drop_pct > _HRANICE_POINT_DROP_WARN_PCT:
+                logger.warning(
+                    "heslar.ruian_sync.syncer._log_hranice_change_if_significant.significant",
+                    extra={
+                        "level": level,
+                        "kod": kod,
+                        "nazev": nazev,
+                        "area_old_m2": round(old_area, 1),
+                        "area_new_m2": round(new_area, 1),
+                        "area_diff_pct": round(area_diff_pct, 2),
+                        "points_old": old_pts,
+                        "points_new": new_pts,
+                        "points_drop_pct": round(pts_drop_pct, 2),
+                    },
+                )
+
+    if new_definicni_bod is not None:
+        try:
+            covers = bool(new_hranice.prepared.covers(new_definicni_bod))
+        except (AttributeError, GEOSException, TypeError, ValueError):
+            covers = True  # nevalidovatelné → tichá skipnutí
+        if not covers:
+            try:
+                distance_m = round(float(new_hranice.distance(new_definicni_bod)), 2)
+            except (AttributeError, GEOSException, TypeError, ValueError):
+                distance_m = None
+            logger.warning(
+                "heslar.ruian_sync.syncer._log_hranice_change_if_significant.bod_outside",
+                extra={
+                    "level": level,
+                    "kod": kod,
+                    "nazev": nazev,
+                    "definicni_bod_x": float(new_definicni_bod.x),
+                    "definicni_bod_y": float(new_definicni_bod.y),
+                    "distance_m": distance_m,
+                },
+            )
+
+
+#: Práh (m²) pro překryv dvojice katastrů. Malé překryvy (např. drobné
+#: hraniční artefakty z generalizace polygonu) ignorujeme, výrazné hlásíme.
+_TOPOLOGY_OVERLAP_MIN_M2 = 0.01
+
+
+def _check_katastry_topology(run: RuianSyncRun) -> None:
+    """
+    Provede na závěr syncu topologickou kontrolu konzistence katastrů.
+
+    Najde dvojice katastrů, jejichž hranice se překrývají plochou větší než
+    :data:`_TOPOLOGY_OVERLAP_MIN_M2`. Používá PostGIS spatial index přes
+    ``ST_Overlaps`` (redukuje O(N²) na O(N log N)).
+
+    Cíl kontroly je čistě **preventivní** – warning v log agregátoru
+    upozorní, že se v sync pipeline objevila strukturální regrese. Sync se
+    kvůli tomu nezastavuje, warningy se sesbírají do audit logu.
+
+    :param run: Audit záznam RuianSyncRun – shrnutí topologických issue se
+        připojí do jeho ``note``.
+    """
+    logger.debug("heslar.ruian_sync.syncer._check_katastry_topology.start", extra={"run_id": run.pk})
+
+    overlaps_count = 0
+
+    with connection.cursor() as cursor:
+        # Překryvy dvojic katastrů (spatial index prefilter přes ST_Overlaps).
+        cursor.execute(
+            """
+            SELECT a.kod, a.nazev, b.kod, b.nazev,
+                   ST_Area(ST_Intersection(a.hranice, b.hranice)) AS overlap_m2
+            FROM ruian_katastr a
+            JOIN ruian_katastr b ON a.id < b.id AND ST_Overlaps(a.hranice, b.hranice)
+            WHERE ST_Area(ST_Intersection(a.hranice, b.hranice)) > %s
+            ORDER BY overlap_m2 DESC
+            """,
+            [_TOPOLOGY_OVERLAP_MIN_M2],
+        )
+        for kod_a, nazev_a, kod_b, nazev_b, overlap_m2 in cursor.fetchall():
+            overlaps_count += 1
+            logger.warning(
+                "heslar.ruian_sync.syncer._check_katastry_topology.overlap",
+                extra={
+                    "kod_a": kod_a,
+                    "nazev_a": nazev_a,
+                    "kod_b": kod_b,
+                    "nazev_b": nazev_b,
+                    "overlap_m2": round(float(overlap_m2), 1),
+                },
+            )
+
+    if overlaps_count > 0:
+        _append_run_note(
+            run,
+            f"Topologická kontrola: {overlaps_count} překryvů dvojic katastrů.",
+        )
+
+    logger.debug(
+        "heslar.ruian_sync.syncer._check_katastry_topology.end",
+        extra={"run_id": run.pk, "overlaps": overlaps_count},
+    )
 
 
 def _append_run_note(run: RuianSyncRun, message: str) -> None:

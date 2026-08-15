@@ -2,6 +2,7 @@ import datetime
 import logging
 import os
 
+from core.coordTransform import transform_geom_to_sjtsk
 from core.forms import OptimisticLockingMixin
 from core.utils import get_cadastre_from_point
 from core.validators import validate_date_min_1600, validate_phone_number
@@ -9,6 +10,7 @@ from core.widgets import AutocompleteModelSelect2Multiple
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from django import forms
+from django.contrib.gis.geos import GEOSGeometry
 from django.forms import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django_recaptcha.fields import ReCaptchaField
@@ -273,6 +275,8 @@ class ProjektOznameniForm(forms.ModelForm):
     )
     coordinate_x2 = forms.CharField(widget=forms.HiddenInput())
     coordinate_x1 = forms.CharField(widget=forms.HiddenInput())
+    coordinate_sjtsk_x1 = forms.CharField(widget=forms.HiddenInput())
+    coordinate_sjtsk_x2 = forms.CharField(widget=forms.HiddenInput())
     katastralni_uzemi = forms.CharField(
         widget=forms.TextInput(attrs={"readonly": "readonly"}),
         label=_("oznameni.forms.projektOznameniForm.katastralniUzemi.label"),
@@ -331,9 +335,20 @@ class ProjektOznameniForm(forms.ModelForm):
         self.fields["lokalizace"].required = True
         self.fields["parcelni_cislo"].required = True
         if change:
-            self.fields["katastralni_uzemi"].initial = get_cadastre_from_point(self.instance.geom).__str__()
-            self.fields["coordinate_x1"].initial = self.instance.geom[0]
-            self.fields["coordinate_x2"].initial = self.instance.geom[1]
+            sjtsk_pt = None
+            if self.instance.geom_sjtsk is not None:
+                sjtsk_pt = self.instance.geom_sjtsk
+            elif self.instance.geom is not None:
+                sjtsk_wkt, status = transform_geom_to_sjtsk(self.instance.geom.wkt)
+                if status == "OK":
+                    sjtsk_pt = GEOSGeometry(sjtsk_wkt, srid=5514)
+            if sjtsk_pt is not None:
+                self.fields["coordinate_sjtsk_x1"].initial = sjtsk_pt.x
+                self.fields["coordinate_sjtsk_x2"].initial = sjtsk_pt.y
+                self.fields["katastralni_uzemi"].initial = str(get_cadastre_from_point(sjtsk_pt))
+            if self.instance.geom is not None:
+                self.fields["coordinate_x1"].initial = self.instance.geom[0]
+                self.fields["coordinate_x2"].initial = self.instance.geom[1]
             self.fields["ident_cely"].initial = self.instance.ident_cely
 
         self.helper = FormHelper(self)
@@ -361,6 +376,8 @@ class ProjektOznameniForm(forms.ModelForm):
                     "oznaceni_stavby",
                     "coordinate_x1",
                     "coordinate_x2",
+                    "coordinate_sjtsk_x1",
+                    "coordinate_sjtsk_x2",
                     "ident_cely",
                     css_class="card-body",
                 ),

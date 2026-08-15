@@ -14,9 +14,11 @@ Kombinace pokrývá data, která zachycuje současný stav DB a co aplikace
 potřebuje pro spatial intersect (`core/utils.py`) i UI markery, **bez nutnosti
 stahovat 6258 per-obec VFR souborů**.
 
-Polygony i body jsou v EPSG:5514 (S-JTSK Krovak East-North); modul je
-převádí do EPSG:4326 přes existující :mod:`core.coordTransform` (stejně jako
-:mod:`vfr_parser`), aby zápis do DB odpovídal `srid=4326`.
+Polygony i body jsou v EPSG:5514 (S-JTSK Krovak East-North) a v tomtéž
+CRS se ukládají do DB — RÚIAN heslář je od migrace 0013 primárně JTSK.
+Modul žádnou CRS transformaci neprovádí; jen normalizuje SHP polygony
+na ``MULTIPOLYGON`` a případně invertuje znaménko UZSZ bodů z historické
+záporné formy na kladnou (PostGIS EPSG:5514 East-North konvence).
 
 Architektura:
 
@@ -37,7 +39,6 @@ import zipfile
 from pathlib import Path
 from typing import Dict, Iterable, Optional
 
-from core.coordTransform import transform_geom_to_wgs84
 from django.contrib.gis.gdal import DataSource
 from heslar.ruian_sync.provider import (
     RuianChangeEvent,
@@ -236,14 +237,14 @@ class ShpUzszSource(RuianSource):
 
     def _load_uzsz_definicni_body(self):
         """
-        Načte mapy ``kód → WKT POINT(EPSG:4326)`` z UZSZ pro kraj/okres/katastr.
+        Načte mapy ``kód → WKT POINT(EPSG:5514)`` z UZSZ pro kraj/okres/katastr.
 
         Iteruje XML jen jednou; matchuje elementy podle ``gml:id`` prefixu
         (``VC.``/``OK.``/``KU.``). Obce se zde negenerují – vazba na obec
         není v DTO potřeba (KATUZE_P přímo zná ``OKRES_KOD``).
 
             :return: Trojice slovníků ``(kraj_pts, okres_pts, katastr_pts)``,
-                kde hodnoty jsou WKT POINT v EPSG:4326 nebo prázdný řetězec
+                kde hodnoty jsou WKT POINT v EPSG:5514 nebo prázdný řetězec
                 pokud bod chybí.
         """
         kraj_pts: Dict[int, str] = {}
@@ -286,10 +287,10 @@ class ShpUzszSource(RuianSource):
                 if pos_text is None:
                     elem.clear()
                     continue
-                wkt_4326 = self._point_to_wgs84_wkt(pos_text)
-                if wkt_4326 is not None:
+                wkt = self._point_wkt(pos_text)
+                if wkt is not None:
                     try:
-                        target_dict[int(kod_text)] = wkt_4326
+                        target_dict[int(kod_text)] = wkt
                     except ValueError:
                         pass
                 elem.clear()
@@ -344,9 +345,9 @@ class ShpUzszSource(RuianSource):
         Načte kraje (Vusc) ze ``VUSC_P.shp`` a doplní definiční body.
 
         Pokud UZSZ pro daný kraj definiční bod neposkytl, použije se
-        fallback na centroid polygonu (viz :meth:`_centroid_to_wgs84_wkt`).
+        fallback na centroid polygonu (viz :meth:`_centroid_wkt`).
 
-        :param def_bod_map: Mapa ``kód kraje → WKT POINT(EPSG:4326)``.
+        :param def_bod_map: Mapa ``kód kraje → WKT POINT(EPSG:5514)``.
 
             :return: Seznam :class:`RuianKrajDTO`.
         """
@@ -356,8 +357,8 @@ class ShpUzszSource(RuianSource):
             nazev = (feat.get("NAZEV") or "").strip()
             if kod is None or not nazev:
                 continue
-            hranice_wkt = self._geom_to_wgs84_multipolygon(feat.geom)
-            def_bod_wkt = def_bod_map.get(kod) or self._centroid_to_wgs84_wkt(feat.geom, kod=kod, level="kraj")
+            hranice_wkt = self._geom_to_multipolygon_wkt(feat.geom)
+            def_bod_wkt = def_bod_map.get(kod) or self._centroid_wkt(feat.geom, kod=kod, level="kraj")
             out.append(
                 RuianKrajDTO(
                     kod=kod,
@@ -377,7 +378,7 @@ class ShpUzszSource(RuianSource):
         Pokud UZSZ pro daný okres definiční bod neposkytl, použije se
         fallback na centroid polygonu.
 
-        :param def_bod_map: Mapa ``kód okresu → WKT POINT(EPSG:4326)``.
+        :param def_bod_map: Mapa ``kód okresu → WKT POINT(EPSG:5514)``.
 
             :return: Seznam :class:`RuianOkresDTO`.
         """
@@ -388,8 +389,8 @@ class ShpUzszSource(RuianSource):
             kraj_kod = self._safe_int(feat.get("VUSC_KOD"))
             if kod is None or not nazev:
                 continue
-            hranice_wkt = self._geom_to_wgs84_multipolygon(feat.geom)
-            def_bod_wkt = def_bod_map.get(kod) or self._centroid_to_wgs84_wkt(feat.geom, kod=kod, level="okres")
+            hranice_wkt = self._geom_to_multipolygon_wkt(feat.geom)
+            def_bod_wkt = def_bod_map.get(kod) or self._centroid_wkt(feat.geom, kod=kod, level="okres")
             out.append(
                 RuianOkresDTO(
                     kod=kod,
@@ -416,7 +417,7 @@ class ShpUzszSource(RuianSource):
         Model :class:`RuianKatastr.definicni_bod` je NOT NULL, takže fallback
         je nutný – bez něj by import selhal s ``IntegrityError``.
 
-        :param def_bod_map: Mapa ``kód katastru → WKT POINT(EPSG:4326)``.
+        :param def_bod_map: Mapa ``kód katastru → WKT POINT(EPSG:5514)``.
 
             :return: Seznam :class:`RuianKatastrDTO`.
         """
@@ -428,10 +429,10 @@ class ShpUzszSource(RuianSource):
             okres_kod = self._safe_int(feat.get("OKRES_KOD"))
             if kod is None or not nazev:
                 continue
-            hranice_wkt = self._geom_to_wgs84_multipolygon(feat.geom)
+            hranice_wkt = self._geom_to_multipolygon_wkt(feat.geom)
             def_bod_wkt = def_bod_map.get(kod)
             if not def_bod_wkt:
-                def_bod_wkt = self._centroid_to_wgs84_wkt(feat.geom, kod=kod, level="katastr")
+                def_bod_wkt = self._centroid_wkt(feat.geom, kod=kod, level="katastr")
                 if def_bod_wkt:
                     fallback_count += 1
             out.append(
@@ -523,99 +524,122 @@ class ShpUzszSource(RuianSource):
         raise FileNotFoundError(f"SHP cesta není ZIP ani adresář: {self.shp_path}")
 
     # ------------------------------------------------------------------
-    # Geometrie – konverze EPSG:5514 → 4326
+    # Geometrie – WKT v EPSG:5514 v konvenci projektu (záporná / West-South)
     # ------------------------------------------------------------------
+    #
+    # Konvence projektu: ``core.coordTransform.convertToJTSK`` vrací ``[-Y, -X]``
+    # (záporné), takže všechna 5514 data v DB (``pian.geom_sjtsk``, ``adb.geom``,
+    # ``ruian_katastr.hranice`` po migraci 0013) jsou v této konvenci.
+    #
+    # SHP soubory z ČÚZK jsou nativně **kladné** EPSG:5514 East-North – proto
+    # se při importu **vždy** invertují znaménka. UZSZ ``gml:pos`` může být
+    # kladné i záporné – autodetekcí normalizujeme na zápornou formu.
 
     @staticmethod
-    def _geom_to_wgs84_multipolygon(geom) -> Optional[str]:
+    def _negate_wkt(wkt: str) -> str:
         """
-        Převede GDAL geometrii (Polygon/MultiPolygon, EPSG:5514) na WKT
-        MULTIPOLYGON v EPSG:4326 přes :mod:`core.coordTransform`.
+        Invertuje znaménka všech čísel ve WKT řetězci.
 
-        Polygon obalí do MULTIPOLYGON, aby DTO odpovídalo `MultiPolygonField`
-        v Django modelech.
+        Sdílená helper funkce pro přechod mezi kladnou a zápornou konvencí
+        EPSG:5514 (WKT obsahuje čísla jen v souřadnicích, ne v klíčových
+        slovech, takže regex přes všechna čísla je bezpečný).
 
-        :param geom: GDAL geometrie z SHP feature.
+        :param wkt: Vstupní WKT.
 
-            :return: WKT MULTIPOLYGON v EPSG:4326 nebo ``None`` při selhání.
+            :return: WKT se všemi čísly s opačným znaménkem.
+        """
+        import re
+
+        def _flip(match):
+            s = match.group(0)
+            if s.startswith("-"):
+                return s[1:]
+            return "-" + s
+
+        return re.sub(r"-?\d+(?:\.\d+)?", _flip, wkt)
+
+    @classmethod
+    def _ensure_negative_wkt(cls, wkt: str) -> str:
+        """
+        Normalizuje WKT do záporné konvence EPSG:5514 (West-South).
+
+        Autodetekce podle prvního souřadnicového čísla **uvnitř závorek**:
+        pokud už je záporné, WKT se vrátí beze změny; pokud je kladné,
+        použije se :meth:`_negate_wkt` na invertování všech znamének.
+
+        :param wkt: Vstupní WKT (kladný nebo záporný 5514).
+
+            :return: WKT v EPSG:5514 v záporné konvenci.
+        """
+        # Najdi první číslo _uvnitř_ souřadnicové části (po první levé závorce).
+        # Regex vynechává klíčová slova jako "POLYGON", "MULTIPOLYGON", "POINT"
+        # a vždy hledá první číslo za "(" – to je vždy X-souřadnice prvního bodu.
+        m = re.search(r"\(\s*\(?\s*\(?\s*(-?)(\d)", wkt)
+        if m and m.group(1) == "-":
+            return wkt  # už je záporné
+        return cls._negate_wkt(wkt)
+
+    @classmethod
+    def _geom_to_multipolygon_wkt(cls, geom) -> Optional[str]:
+        """
+        Vrátí WKT MULTIPOLYGON z GDAL geometrie SHP feature v záporné 5514.
+
+        SHP z ČÚZK je v kladné EPSG:5514 East-North. Konvence projektu je
+        záporná (West-South) – helper obalí ``Polygon`` do ``MULTIPOLYGON``
+        a invertuje všechna znaménka.
+
+        :param geom: GDAL geometrie z SHP feature (kladná 5514).
+
+            :return: WKT MULTIPOLYGON v EPSG:5514 (záporná forma) nebo ``None``.
         """
         if geom is None:
             return None
-        wkt_5514 = geom.wkt
-        if wkt_5514 is None:
+        wkt = geom.wkt
+        if wkt is None:
             return None
-        # Pokud je to Polygon, obal jako MULTIPOLYGON((...))
-        if wkt_5514.upper().startswith("POLYGON"):
-            inner = wkt_5514[wkt_5514.index("(") :]
-            wkt_5514 = "MULTIPOLYGON(" + inner + ")"
-        try:
-            transformed = transform_geom_to_wgs84(wkt_5514)
-        except Exception as err:  # noqa: BLE001 – defenzivní; chyba v transformaci 1 prvku nezhasí celý sync
-            logger.warning(
-                "heslar.ruian_sync.shp_importer._geom_to_wgs84_multipolygon.error",
-                extra={"error": str(err)},
-            )
-            return None
-        if isinstance(transformed, tuple):
-            return transformed[0]
-        return transformed
+        if wkt.upper().startswith("POLYGON"):
+            inner = wkt[wkt.index("(") :]
+            wkt = "MULTIPOLYGON(" + inner + ")"
+        return cls._ensure_negative_wkt(wkt)
 
-    @staticmethod
-    def _centroid_to_wgs84_wkt(geom, *, kod: Optional[int] = None, level: str = "") -> Optional[str]:
+    @classmethod
+    def _centroid_wkt(cls, geom, *, kod: Optional[int] = None, level: str = "") -> Optional[str]:
         """
-        Vrátí WKT POINT centroidu polygonu v EPSG:4326.
+        Vrátí WKT POINT centroidu polygonu v záporné 5514.
 
         Slouží jako fallback pro definiční bod, pokud ho UZSZ neposkytl.
-        Centroid se počítá nad původní geometrií v EPSG:5514, pak se
-        výsledný bod transformuje do EPSG:4326 přes
-        :mod:`core.coordTransform`. Tento postup odpovídá historické
-        konvenci projektu (existující ``RuianKatastr.definicni_bod`` má
-        identickou hodnotu jako ``ST_Centroid(hranice)`` – ověřeno na
-        vzorku 1000 záznamů s 100% shodou).
+        Centroid se počítá nad původní SHP geometrií v kladné 5514,
+        pak se invertují znaménka do konvence projektu (záporná 5514).
 
-        Při úspěšném dopočtu zaloguje **warning** – fallback je sice validní
-        (a očekávaný pro nově vzniklé prvky, které UZSZ ještě nezná), ale
-        operátor by měl o jeho použití vědět: hodnota se mírně liší od
-        autoritativní hodnoty z RÚIAN, kterou by měl příští `ST_UZSZ`
-        už obsahovat. Sledováním warningů v ``RuianSyncRun.note`` /
-        adminu se dá zjistit, kolik prvků bylo třeba dopočítat.
+        Při dopočtu se loguje **warning** (u pseudo-prvků v
+        :data:`_FALLBACK_EXPECTED` jen **info**) – fallback je signalizace,
+        že UZSZ dat chybí (typicky nově vzniklý prvek).
 
-        :param geom: GDAL ``OGRGeometry`` z SHP feature (polygon/multipolygon
-            v EPSG:5514).
+        :param geom: GDAL ``OGRGeometry`` z SHP feature (kladná 5514).
         :param kod: Kód prvku pro logování (volitelné).
         :param level: Úroveň prvku pro logování – ``"kraj"``/``"okres"``/
             ``"katastr"`` (volitelné).
 
-            :return: WKT ``POINT(lon lat)`` v EPSG:4326 nebo ``None`` při
-                selhání transformace či prázdné geometrii.
+            :return: WKT ``POINT(x y)`` v EPSG:5514 (záporná forma) nebo ``None``.
         """
         if geom is None:
             return None
         try:
-            centroid = geom.centroid  # OGRGeometry typu POINT v 5514
-            wkt_5514 = centroid.wkt if centroid is not None else None
+            centroid = geom.centroid  # OGRGeometry typu POINT v kladné 5514
+            wkt_positive = centroid.wkt if centroid is not None else None
         except Exception as err:  # noqa: BLE001
             logger.warning(
-                "heslar.ruian_sync.shp_importer._centroid_to_wgs84_wkt.error",
+                "heslar.ruian_sync.shp_importer._centroid_wkt.error",
                 extra={"error": str(err), "kod": kod, "level": level},
             )
             return None
-        if not wkt_5514:
+        if not wkt_positive:
             logger.warning(
-                "heslar.ruian_sync.shp_importer._centroid_to_wgs84_wkt.empty_centroid",
+                "heslar.ruian_sync.shp_importer._centroid_wkt.empty_centroid",
                 extra={"kod": kod, "level": level},
             )
             return None
-        try:
-            transformed = transform_geom_to_wgs84(wkt_5514)
-        except Exception as err:  # noqa: BLE001
-            logger.warning(
-                "heslar.ruian_sync.shp_importer._centroid_to_wgs84_wkt.transform_error",
-                extra={"error": str(err), "wkt": wkt_5514, "kod": kod, "level": level},
-            )
-            return None
-        if isinstance(transformed, tuple):
-            transformed = transformed[0]
+        wkt = cls._ensure_negative_wkt(wkt_positive)
 
         # Pro známé pseudo-prvky (viz _FALLBACK_EXPECTED) je centroid očekávaný
         # výsledek – logujeme jako INFO, aby se neztrácel ve WARNING streamu.
@@ -629,25 +653,29 @@ class ShpUzszSource(RuianSource):
             reason = "UZSZ neposkytl autoritativní definiční bod, použit centroid polygonu."
 
         log_call(
-            "heslar.ruian_sync.shp_importer._centroid_to_wgs84_wkt.fallback_used",
+            "heslar.ruian_sync.shp_importer._centroid_wkt.fallback_used",
             extra={
                 "kod": kod,
                 "level": level,
-                "centroid_wkt": transformed,
+                "centroid_wkt": wkt,
                 "reason": reason,
             },
         )
-        return transformed
+        return wkt
 
     @staticmethod
-    def _point_to_wgs84_wkt(pos_text: str) -> Optional[str]:
+    def _point_wkt(pos_text: str) -> Optional[str]:
         """
-        Převede ``gml:pos`` (S-JTSK East-North, typicky záporné Y/X)
-        na WKT POINT v EPSG:4326.
+        Převede ``gml:pos`` na WKT POINT v záporné EPSG:5514.
 
-        :param pos_text: Text obsahu ``gml:pos`` (např. ``"-751802.14 -1177969.41"``).
+        UZSZ může dodávat souřadnice v kladné i záporné formě S-JTSK.
+        Konvence projektu je záporná (West-South) – helper normalizuje
+        obojí na zápornou formu.
 
-            :return: WKT ``POINT(lon lat)`` v EPSG:4326 nebo ``None``.
+        :param pos_text: Text obsahu ``gml:pos`` (např. ``"751802.14 1177969.41"``
+            nebo ``"-751802.14 -1177969.41"``).
+
+            :return: WKT ``POINT(x y)`` v EPSG:5514 (záporná forma) nebo ``None``.
         """
         parts = pos_text.split()
         if len(parts) < 2:
@@ -656,18 +684,10 @@ class ShpUzszSource(RuianSource):
             x, y = float(parts[0]), float(parts[1])
         except ValueError:
             return None
-        wkt_5514 = f"POINT({x} {y})"
-        try:
-            transformed = transform_geom_to_wgs84(wkt_5514)
-        except Exception as err:  # noqa: BLE001
-            logger.warning(
-                "heslar.ruian_sync.shp_importer._point_to_wgs84_wkt.error",
-                extra={"error": str(err), "pos": pos_text},
-            )
-            return None
-        if isinstance(transformed, tuple):
-            return transformed[0]
-        return transformed
+        # Normalizace na zápornou formu (konvence projektu – West-South).
+        if x > 0 and y > 0:
+            x, y = -x, -y
+        return f"POINT({x} {y})"
 
     # ------------------------------------------------------------------
     # Helpers

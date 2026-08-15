@@ -2,7 +2,7 @@ import logging
 
 from dal import autocomplete
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.gis.geos import Point
+from django.contrib.gis.geos import GEOSGeometry
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import OperationalError, ProgrammingError
 from django.db.models import IntegerField, Value
@@ -95,15 +95,27 @@ def heslar_12(druha, prvni_kat, id=False):
 
 def zjisti_katastr_souradnic(request):
     """
-    Funkce pohledu pro vrácení katastru podle souradnic.
+    Vrátí katastr obsahující zadaný bod v EPSG:5514 (S-JTSK).
 
-    :param request: Parametr ``request`` se předává do volání ``filter()``, ``Point()``, pracuje se s atributy ``GET``.
+    Volá se AJAX z ``mapa_projekty.js`` po kliknutí do Leaflet mapy (mapa
+    je v JTSK CRS ``mapa_settings_jtsk.js``). Vstupem jsou GET parametry
+    ``x`` a ``y`` v EPSG:5514 v konvenci projektu (záporné hodnoty).
 
-        :return: Vrací výsledek volání ``JsonResponse()``.
+    :param request: GET s parametry ``x`` a ``y`` v EPSG:5514.
+
+        :return: JsonResponse s ``id`` a ``value`` katastru, nebo prázdný.
     """
-    nalezene_katastry = RuianKatastr.objects.filter(
-        hranice__contains=Point(float(request.GET.get("long", 0)), float(request.GET.get("lat", 0)))
-    )
+    try:
+        x_val = float(request.GET["x"])
+        y_val = float(request.GET["y"])
+    except (KeyError, ValueError):
+        logger.warning(
+            "heslar.views.zjisti_katastr_souradnic.invalid_params",
+            extra={"GET": dict(request.GET)},
+        )
+        return JsonResponse({})
+    bod = GEOSGeometry(f"POINT({x_val} {y_val})", srid=5514)
+    nalezene_katastry = RuianKatastr.objects.filter(hranice__contains=bod)
     if nalezene_katastry.count() == 1:
         return JsonResponse(
             {
@@ -111,8 +123,7 @@ def zjisti_katastr_souradnic(request):
                 "value": str(nalezene_katastry.first()),
             }
         )
-    else:
-        return JsonResponse({})
+    return JsonResponse({})
 
 
 def zjisti_vychozi_hodnotu(request):

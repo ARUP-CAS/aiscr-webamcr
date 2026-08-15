@@ -204,7 +204,12 @@ def _stream_to_file(
                 for chunk in resp.iter_content(chunk_size=chunk_size):
                     if chunk:
                         fh.write(chunk)
-        temp_path.rename(target_path)
+        if target_path.exists():
+            logger.warning(
+                "heslar.ruian_sync.vfr_download._stream_to_file.overwrite",
+                extra={"path": str(target_path)},
+            )
+        temp_path.replace(target_path)
     except Exception:
         if temp_path.exists():
             temp_path.unlink(missing_ok=True)

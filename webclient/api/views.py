@@ -2805,14 +2805,13 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                         )
                     )
 
-                geom_wgs84 = instance.geom
-                if geom_wgs84 is None and instance.geom_sjtsk is not None:
-                    # Clone so that the stored geom_sjtsk field is never mutated; WGS-84 is
-                    # only needed transiently to identify the cadastre.
-                    geom_wgs84 = instance.geom_sjtsk.clone()
-                    geom_wgs84.transform(4326)
-                if geom_wgs84:
-                    instance.katastr = get_cadastre_from_point(geom_wgs84)
+                sjtsk_pt = instance.geom_sjtsk
+                if sjtsk_pt is None and instance.geom is not None:
+                    sjtsk_wkt, sjtsk_status = transform_geom_to_sjtsk(instance.geom.wkt)
+                    if sjtsk_status == "OK":
+                        sjtsk_pt = GEOSGeometry(sjtsk_wkt, srid=5514)
+                if sjtsk_pt is not None:
+                    instance.katastr = get_cadastre_from_point(sjtsk_pt)
                     if instance.katastr is None:
                         raise ImportValidationException(
                             ImportValidationIssue(

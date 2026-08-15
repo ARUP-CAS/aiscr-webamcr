@@ -340,8 +340,8 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
     )
     nazev = models.TextField(verbose_name=_("heslar.models.RuianKatastr.nazev"), db_index=True)
     kod = models.IntegerField(verbose_name=_("heslar.models.RuianKatastr.kod"), db_index=True)
-    definicni_bod = pgmodels.PointField(verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=4326)
-    hranice = pgmodels.MultiPolygonField(verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
+    definicni_bod = pgmodels.PointField(verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=5514)
+    hranice = pgmodels.MultiPolygonField(verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=5514)
     pian = models.OneToOneField(
         "pian.Pian", models.SET_NULL, verbose_name=_("heslar.models.RuianKatastr.pian"), null=True, blank=True
     )
@@ -409,9 +409,9 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
     rada_id = models.CharField(max_length=1, verbose_name=_("heslar.models.RuianKraj.rada_id"))
     nazev_en = models.CharField(unique=True, max_length=100)
     definicni_bod = pgmodels.PointField(
-        null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=4326
+        null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=5514
     )
-    hranice = pgmodels.MultiPolygonField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
+    hranice = pgmodels.MultiPolygonField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=5514)
     email = models.CharField(blank=True, null=True, verbose_name=_("heslar.models.RuianKraj.email"), max_length=254)
 
     class Meta:
@@ -468,9 +468,9 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
     kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianOkres.kod"))
     nazev_en = models.TextField(verbose_name=_("heslar.models.RuianOkres.nazev_en"))
     definicni_bod = pgmodels.PointField(
-        null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=4326
+        null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=5514
     )
-    hranice = pgmodels.MultiPolygonField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
+    hranice = pgmodels.MultiPolygonField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=5514)
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
@@ -610,11 +610,15 @@ class RuianSyncRun(models.Model):
     @classmethod
     def last_successful(cls):
         """
-        Vrací poslední úspěšně dokončený běh seřazený podle ``data_valid_to``.
+        Vrací poslední úspěšně dokončený běh seřazený podle ``started_at``.
 
         Používá se cronem k určení, od jakého data má pokračovat ve stahování
-        denních změnových VFR souborů.
+        denních změnových VFR souborů. Řazení podle ``started_at`` (a ne
+        podle ``data_valid_to``) je nutné proto, aby opětovný **plný** sync
+        (např. z nového SHP snapshotu se staršími ``data_valid_to``) resetoval
+        čítač – jinak by cron pokračoval od posledního delta, jako by nový
+        plný sync nikdy neproběhl.
 
         :return: Instance ``RuianSyncRun`` nebo ``None``, pokud žádný úspěšný běh dosud neexistuje.
         """
-        return cls.objects.filter(status=cls.STATUS_SUCCESS).order_by("-data_valid_to").first()
+        return cls.objects.filter(status=cls.STATUS_SUCCESS).order_by("-started_at").first()
