@@ -2,6 +2,10 @@
 services:
   web:
     image: ${amcr_image}
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     secrets:
       - db_conf
       - mail_conf
@@ -165,7 +169,7 @@ services:
       - prod-net
 
   prometheus:
-    image: prom/prometheus:v3.13.1
+    image: prom/prometheus:v3.13.2
     restart: always
     volumes:
       - ./prometheus:/etc/prometheus
