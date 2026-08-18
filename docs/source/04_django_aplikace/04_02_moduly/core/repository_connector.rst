@@ -184,6 +184,17 @@ Třídy
       :param request_type: Parametr ``request_type`` ovlivňuje větvení podmínek.
       :return: Načtená data odpovídající zadaným vstupům.
 
+   .. py:method:: _get_session()
+
+      Vrací ``requests.Session`` odpovídající identitě, pod kterou se požadavek odesílá.
+
+      Session nesmí být sdílená napříč identitami, jinak by cookie ``JSESSIONID`` přenesla
+      do admin požadavku subjekt přihlášený jako ``FEDORA_USER``; viz komentář u
+      ``_fedora_admin_session``.
+
+      :param request_type: Typ požadavku určující, zda se použije admin nebo běžný účet.
+      :return: Session s connection poolem pro danou identitu.
+
    .. py:method:: _send_request()
 
       Odešle request.

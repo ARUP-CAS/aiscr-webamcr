@@ -44,7 +44,13 @@ def _build_fedora_session():
     return session
 
 
+# Fedora (Tomcat + Shiro) si po prvním přihlášení uloží subjekt do servletové session a vrací
+# cookie JSESSIONID. Pokud by requestům pod FEDORA_USER a FEDORA_ADMIN_USER sloužila jedna
+# requests.Session, sdílely by i cookie jar a Fedora by admin požadavky vyhodnocovala pod
+# identitou, která session založila. Mazání tombstone (viz _delete_link) pak skončí na HTTP 403,
+# protože role fedoraUser na něj nemá právo. Každá identita proto má vlastní session.
 _fedora_session = _build_fedora_session()
+_fedora_admin_session = _build_fedora_session()
 
 
 class FedoraValidationError(Exception):
@@ -226,6 +232,19 @@ class FedoraRequestType(Enum):
     GET_BINARY_FILE_METADATA_VERSION = 1041
     GET_BINARY_FILE_CHILDREN = 1042
     GET_BINARY_FILE_CHILD_RDF = 1043
+
+
+#: Typy požadavků, které Fedora povolí jen roli ``fedoraAdmin`` (mazání kontejnerů a tombstone).
+_ADMIN_REQUEST_TYPES = frozenset(
+    {
+        FedoraRequestType.DELETE_CONTAINER,
+        FedoraRequestType.DELETE_TOMBSTONE,
+        FedoraRequestType.DELETE_LINK_CONTAINER,
+        FedoraRequestType.DELETE_LINK_TOMBSTONE,
+        FedoraRequestType.CONNECT_DELETED_RECORD_3,
+        FedoraRequestType.CONNECT_DELETED_RECORD_4,
+    }
+)
 
 
 class FedoraRepositoryConnector:
@@ -509,7 +528,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 :return: Vrací proměnná ``response``.
             """
             auth = cls._get_auth(request_type)
-            response = _fedora_session.get(url, auth=auth, verify=False)
+            response = cls._get_session(request_type).get(url, auth=auth, verify=False)
             return response
 
         result = send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
@@ -557,18 +576,25 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         :param request_type: Parametr ``request_type`` ovlivňuje větvení podmínek.
         :return: Načtená data odpovídající zadaným vstupům.
         """
-        if request_type in (
-            FedoraRequestType.DELETE_CONTAINER,
-            FedoraRequestType.DELETE_TOMBSTONE,
-            FedoraRequestType.DELETE_LINK_CONTAINER,
-            FedoraRequestType.DELETE_LINK_TOMBSTONE,
-            FedoraRequestType.CONNECT_DELETED_RECORD_3,
-            FedoraRequestType.CONNECT_DELETED_RECORD_4,
-        ):
+        if request_type in _ADMIN_REQUEST_TYPES:
             auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
         else:
             auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
         return auth
+
+    @classmethod
+    def _get_session(cls, request_type: FedoraRequestType) -> requests.Session:
+        """
+        Vrací ``requests.Session`` odpovídající identitě, pod kterou se požadavek odesílá.
+
+        Session nesmí být sdílená napříč identitami, jinak by cookie ``JSESSIONID`` přenesla
+        do admin požadavku subjekt přihlášený jako ``FEDORA_USER``; viz komentář u
+        ``_fedora_admin_session``.
+
+        :param request_type: Typ požadavku určující, zda se použije admin nebo běžný účet.
+        :return: Session s connection poolem pro danou identitu.
+        """
+        return _fedora_admin_session if request_type in _ADMIN_REQUEST_TYPES else _fedora_session
 
     def _send_request(
         self, url: str, request_type: FedoraRequestType, *, headers=None, data=None
@@ -590,6 +616,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             extra["data"] = data
         logger.debug("core_repository_connector._send_request.start", extra=extra)
         auth = self._get_auth(request_type)
+        session = self._get_session(request_type)
         response = None
         if self.transaction_uid:
             if headers is None:
@@ -619,7 +646,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             FedoraRequestType.GET_BINARY_FILE_CHILD_RDF,
         ):
             try:
-                response = _fedora_session.get(url, headers=headers, auth=auth, verify=False)
+                response = session.get(url, headers=headers, auth=auth, verify=False)
             except requests.exceptions.RequestException as exc:
                 logger.warning(
                     "core_repository_connector._send_request.get_request_failed",
@@ -629,31 +656,29 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         else:
             try:
                 if request_type in (FedoraRequestType.CREATE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
-                    response = _fedora_session.post(url, headers=headers, data=data, auth=auth, verify=False)
+                    response = session.post(url, headers=headers, data=data, auth=auth, verify=False)
                 elif request_type in (
                     FedoraRequestType.CREATE_METADATA,
                     FedoraRequestType.RECORD_DELETION_ADD_MARK,
                     FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4,
                     FedoraRequestType.CREATE_LINK,
                 ):
-                    response = _fedora_session.post(url, headers=headers, data=data, auth=auth, verify=False)
+                    response = session.post(url, headers=headers, data=data, auth=auth, verify=False)
                 elif request_type in (
                     FedoraRequestType.CREATE_BINARY_FILE_CONTENT,
                     FedoraRequestType.CREATE_BINARY_FILE_THUMB,
                     FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE,
                 ):
-                    response = _fedora_session.post(
-                        url, headers=headers, data=data, auth=auth, verify=False, timeout=10
-                    )
+                    response = session.post(url, headers=headers, data=data, auth=auth, verify=False, timeout=10)
                 elif request_type in (
                     FedoraRequestType.UPDATE_METADATA,
                     FedoraRequestType.UPDATE_BINARY_FILE_CONTENT,
                     FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB,
                     FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE,
                 ):
-                    response = _fedora_session.put(url, headers=headers, data=data, auth=auth, verify=False)
+                    response = session.put(url, headers=headers, data=data, auth=auth, verify=False)
                 elif request_type == FedoraRequestType.CREATE_BINARY_FILE:
-                    response = _fedora_session.post(url, headers=headers, auth=auth, data=data, verify=False)
+                    response = session.post(url, headers=headers, auth=auth, data=data, verify=False)
                 elif request_type in (
                     FedoraRequestType.DELETE_CONTAINER,
                     FedoraRequestType.DELETE_TOMBSTONE,
@@ -664,7 +689,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.CONNECT_DELETED_RECORD_4,
                     FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5,
                 ):
-                    response = _fedora_session.delete(url, headers=headers, auth=auth)
+                    response = session.delete(url, headers=headers, auth=auth)
                 elif request_type in (
                     FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
                     FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
@@ -678,7 +703,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.THUMB_LARGE_CONTENT_UPDATE_RDF_DATA,
                     FedoraRequestType.BINARY_FILE_CHILD_UPDATE_RDF_DATA,
                 ):
-                    response = _fedora_session.patch(url, auth=auth, headers=headers, data=data)
+                    response = session.patch(url, auth=auth, headers=headers, data=data)
             except requests.exceptions.ConnectionError as exc:
                 logger.error(
                     "core_repository_connector._send_request.connection_error",
@@ -2204,7 +2229,7 @@ class FedoraTransaction(BaseFedoraTransaction):
         )
         auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
         if operation == FedoraTransactionOperation.COMMIT:
-            response = _fedora_session.put(url, auth=auth, verify=False)
+            response = _fedora_admin_session.put(url, auth=auth, verify=False)
             try:
                 self._save_transaction_result_to_redis(FedoraTransactionResult.COMMITED)
             except ResponseError as err:
@@ -2213,7 +2238,7 @@ class FedoraTransaction(BaseFedoraTransaction):
                     extra={"transaction": self.uid, "error": err},
                 )
         elif operation == FedoraTransactionOperation.ROLLBACK:
-            response = _fedora_session.delete(url, auth=auth, verify=False)
+            response = _fedora_admin_session.delete(url, auth=auth, verify=False)
             try:
                 self._save_transaction_result_to_redis(FedoraTransactionResult.ABORTED)
             except ResponseError as err:
