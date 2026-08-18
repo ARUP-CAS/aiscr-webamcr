@@ -34,6 +34,7 @@ nejsou potřeba – AMČR potřebuje pouze originální hranice.
 from __future__ import annotations
 
 import logging
+import math
 import re
 import zipfile
 from pathlib import Path
@@ -51,6 +52,7 @@ from heslar.ruian_sync.provider import (
     RuianOkresDTO,
 )
 from lxml import etree
+from osgeo import ogr
 
 logger = logging.getLogger(__name__)
 
@@ -523,19 +525,293 @@ def _extract_hranice(elem) -> Optional[str]:
     return None
 
 
+#: Krok linearizace kruhových oblouků ve stupních, viz :func:`_linearize_arc`.
+#:
+#: Hodnota odpovídá densifikaci, kterou používá ČÚZK při exportu týchž hranic
+#: do SHP. Změřeno na 24 obloucích s poloměry 3,75–135 m z denních změnových
+#: souborů: konstantní není délka tětivy (0,38–10,78 m) ani odchylka od
+#: oblouku (4,8–107,5 mm), ale **úhlový krok** – naměřeno 4,31–5,96°, což
+#: odpovídá cílovým 6° zaokrouhleným na celý počet úseček (``ceil``).
+#:
+#: Držet stejný krok jako ČÚZK je podstatné: katastr aktualizovaný z VFR pak
+#: lícuje se sousedem, který zůstal z plného syncu ze SHP, a nevznikají mezi
+#: nimi překryvy.
+_ARC_STEP_DEGREES = 6.0
+
+#: Zakřivené GML elementy, které umí zpracovat vlastní kód
+#: (:func:`_linearize_arcstring`). ``posList`` u nich nejsou lomové body, ale
+#: řídicí body oblouků – čtení po dvojicích jako u lomené čáry by oblouk
+#: nahradilo tětivou (u katastru Hřibsko to dělalo 51 m²).
+_NATIVE_CURVED_LOCALNAMES = frozenset({"Arc", "ArcString"})
+
+#: Zakřivené GML elementy, které vlastní kód **neumí** – pro ně se geometrie
+#: celá deleguje na GDAL (:func:`_linearize_curved_gml`). Ve zpracovávaných
+#: prvcích (kraj/okres/katastr) se dosud neobjevily; ``Circle`` se vyskytuje
+#: jen u ``Parcela``, kterou nesyncujeme. Fallback je tu proto, aby případný
+#: nový typ nespadl tiše na tětivu.
+_FOREIGN_CURVED_LOCALNAMES = frozenset(
+    {
+        "ArcByCenterPoint",
+        "ArcByBulge",
+        "ArcStringByBulge",
+        "Circle",
+        "CircleByCenterPoint",
+        "CubicSpline",
+        "Bezier",
+        "BSpline",
+        "Clothoid",
+        "OffsetCurve",
+        "CompositeCurve",
+    }
+)
+
+#: Elementy nesoucí ``posList`` jednoho úseku prstenu. ``LinearRing`` je celý
+#: prsten jedním kusem, ostatní jsou dílčí segmenty uvnitř ``Ring``.
+_SEGMENT_LOCALNAMES = frozenset(
+    {
+        "LinearRing",
+        "LineString",
+        "LineStringSegment",
+        "Arc",
+        "ArcString",
+    }
+)
+
+
+def _has_foreign_curve(hranice_elem) -> bool:
+    """
+    Zjistí, zda podstrom obsahuje zakřivený typ, který vlastní kód neumí.
+
+    :param hranice_elem: Element ``OriginalniHranice``.
+
+        :return: ``True`` pokud je potřeba delegovat na GDAL.
+    """
+    for descendant in hranice_elem.iter():
+        if etree.QName(descendant.tag).localname in _FOREIGN_CURVED_LOCALNAMES:
+            return True
+    return False
+
+
+def _circle_from_3points(p1, p2, p3):
+    """
+    Spočítá střed a poloměr kružnice procházející třemi body.
+
+    :param p1: První bod ``(x, y)``.
+    :param p2: Prostřední bod ``(x, y)``.
+    :param p3: Koncový bod ``(x, y)``.
+
+        :return: Dvojice ``((cx, cy), r)``, nebo ``(None, None)`` pokud jsou
+            body kolineární (kružnice neexistuje).
+    """
+    ax, ay = p1
+    bx, by = p2
+    cx, cy = p3
+    d = 2.0 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by))
+    if abs(d) < 1e-9:
+        return None, None
+    a2 = ax * ax + ay * ay
+    b2 = bx * bx + by * by
+    c2 = cx * cx + cy * cy
+    ux = (a2 * (by - cy) + b2 * (cy - ay) + c2 * (ay - by)) / d
+    uy = (a2 * (cx - bx) + b2 * (ax - cx) + c2 * (bx - ax)) / d
+    return (ux, uy), math.hypot(ax - ux, ay - uy)
+
+
+def _linearize_arc(p1, p2, p3):
+    """
+    Proloží jeden kruhový oblouk úsečkami stejně, jak to dělá ČÚZK v SHP.
+
+    Oblouk je v GML dán třemi body (počátek, bod na oblouku, konec). Pravidlo
+    densifikace bylo zpětně odvozeno porovnáním VFR a SHP téhož katastru:
+    počet úseček je ``ceil(úhel_oblouku_ve_stupních / _ARC_STEP_DEGREES)``
+    a oblouk se dělí na **rovnoměrné úhlové kroky**. Na katastru Hřibsko dává
+    tento postup shodný počet vrcholů jako SHP (38) a maximální odchylku
+    0,013 mm; GDAL ``GetLinearGeometry`` dělí jinak (o vrchol víc) a zůstávaly
+    po něm vlásečnicové překryvy se sousedy.
+
+    Krajní body se přebírají **přesně** ze vstupu, aby navazující segment
+    prstenu bez mezery lícoval (dopočtená hodnota by se lišila o float šum).
+
+    :param p1: Počátek oblouku ``(x, y)``.
+    :param p2: Bod na oblouku mezi ``p1`` a ``p3``.
+    :param p3: Konec oblouku ``(x, y)``.
+
+        :return: Seznam bodů ``[(x, y), …]`` včetně obou krajních; při
+            kolineárních bodech ``[p1, p2, p3]`` (úsečka).
+    """
+    center, radius = _circle_from_3points(p1, p2, p3)
+    if center is None:
+        return [p1, p2, p3]
+
+    def angle(pt):
+        return math.atan2(pt[1] - center[1], pt[0] - center[0])
+
+    def normalize(a):
+        while a <= -math.pi:
+            a += 2 * math.pi
+        while a > math.pi:
+            a -= 2 * math.pi
+        return a
+
+    a1 = angle(p1)
+    # Směr oběhu určuje poloha prostředního bodu: pokud leží na kratší cestě
+    # proti směru hodinových ručiček, jdeme tudy, jinak opačně.
+    sweep_ccw = normalize(angle(p3) - a1) % (2 * math.pi)
+    mid_ccw = normalize(angle(p2) - a1) % (2 * math.pi)
+    if mid_ccw <= sweep_ccw:
+        total, direction = sweep_ccw, 1.0
+    else:
+        total, direction = 2 * math.pi - sweep_ccw, -1.0
+
+    steps = max(1, math.ceil(math.degrees(total) / _ARC_STEP_DEGREES))
+    out = [p1]
+    for i in range(1, steps):
+        a = a1 + direction * total * i / steps
+        out.append((center[0] + radius * math.cos(a), center[1] + radius * math.sin(a)))
+    out.append(p3)
+    return out
+
+
+def _linearize_arcstring(control_points):
+    """
+    Proloží ``gml:ArcString`` (nebo ``gml:Arc``) úsečkami.
+
+    ``ArcString`` je posloupnost oblouků se sdílenými koncovými body – body
+    1-2-3 tvoří první oblouk, 3-4-5 druhý atd. Počet bodů je proto vždy
+    lichý (``2n+1`` pro ``n`` oblouků).
+
+    :param control_points: Řídicí body ``[(x, y), …]`` z ``gml:posList``.
+
+        :return: Seznam bodů lomené čáry, nebo prázdný seznam při neplatném
+            počtu řídicích bodů.
+    """
+    if len(control_points) < 3 or len(control_points) % 2 == 0:
+        logger.warning(
+            "heslar.ruian_sync.vfr_parser._linearize_arcstring.invalid_point_count",
+            extra={"point_count": len(control_points)},
+        )
+        return []
+    out = []
+    for i in range(0, len(control_points) - 2, 2):
+        seg = _linearize_arc(control_points[i], control_points[i + 1], control_points[i + 2])
+        out.extend(seg if not out else seg[1:])
+    return out
+
+
+def _linearize_curved_gml(hranice_elem) -> Optional[str]:
+    """
+    Převede GML se zakřivenými segmenty na WKT MULTIPOLYGON přes GDAL.
+
+    Vlastní lxml parser umí číst pouze ``posList`` jako lomovou čáru, takže
+    oblouky (``gml:ArcString`` apod.) by nahradil tětivou. GDAL GML driver
+    zakřivené segmenty rozpozná a ``GetLinearGeometry`` je proloží úsečkami
+    s krokem :data:`_ARC_STEP_DEGREES`.
+
+    Nejde o transformaci mezi souřadnicovými systémy – ta v projektu zůstává
+    výhradně na ``core.coordTransform``. GDAL se tu používá jen jako parser
+    GML geometrie, obdobně jako v :mod:`heslar.ruian_sync.shp_importer`.
+
+    :param hranice_elem: Element ``OriginalniHranice``.
+
+        :return: WKT MULTIPOLYGON nebo ``None`` při neúspěchu (volající pak
+            ponechá stávající geometrii v DB beze změny).
+    """
+    if len(hranice_elem) == 0:
+        return None
+    try:
+        geom = ogr.CreateGeometryFromGML(etree.tostring(hranice_elem[0]).decode())
+        if geom is None:
+            raise ValueError("CreateGeometryFromGML vrátilo None")
+        wkt = geom.GetLinearGeometry(_ARC_STEP_DEGREES).ExportToWkt()
+    except Exception as err:  # noqa: BLE001 – GDAL hlásí chyby různými typy
+        logger.warning(
+            "heslar.ruian_sync.vfr_parser._linearize_curved_gml.failed",
+            extra={"error": str(err)},
+        )
+        return None
+    if not wkt:
+        return None
+    # GDAL vrací POLYGON pro jednodílné geometrie; model očekává MULTIPOLYGON.
+    if wkt.upper().startswith("POLYGON"):
+        wkt = "MULTIPOLYGON(" + wkt[wkt.index("(") :] + ")"
+    if not wkt.upper().startswith("MULTIPOLYGON"):
+        logger.warning(
+            "heslar.ruian_sync.vfr_parser._linearize_curved_gml.unexpected_type",
+            extra={"wkt_prefix": wkt[:60]},
+        )
+        return None
+    return wkt
+
+
+def _ring_coords(role_elem):
+    """
+    Sestaví souřadnice jednoho prstenu z jeho segmentů.
+
+    Prsten může být zadaný dvěma způsoby (oba se ve VFR vyskytují):
+
+    * ``gml:LinearRing`` s jedním ``posList`` – celý prsten jedním kusem;
+    * ``gml:Ring`` s několika ``gml:curveMember``, kde každý nese
+      ``gml:LineString`` (lomená čára) nebo ``gml:Curve/segments`` s
+      ``gml:ArcString`` (kruhové oblouky).
+
+    Segmenty se procházejí v pořadí dokumentu a spojují; sdílený bod na
+    spoji se nezdvojuje. Oblouky projdou linearizací
+    (:func:`_linearize_arcstring`), lomené čáry se berou tak, jak jsou.
+    Na konci se prsten uzavře, pokud poslední bod není totožný s prvním.
+
+    :param role_elem: Element ``gml:exterior`` nebo ``gml:interior``.
+
+        :return: Seznam bodů ``[(x, y), …]`` uzavřeného prstenu, nebo
+            prázdný seznam.
+    """
+    coords = []
+    for prim in role_elem.iter():
+        local = etree.QName(prim.tag).localname
+        if local not in _SEGMENT_LOCALNAMES:
+            continue
+        pos_text = None
+        for child in prim.iter():
+            if etree.QName(child.tag).localname == "posList":
+                pos_text = (child.text or "").strip()
+                break
+        if not pos_text:
+            continue
+        pts = _coords_from_poslist(pos_text, close_ring=False)
+        if not pts:
+            continue
+        if local in _NATIVE_CURVED_LOCALNAMES:
+            pts = _linearize_arcstring(pts)
+            if not pts:
+                continue
+        if coords and coords[-1] == pts[0]:
+            coords.extend(pts[1:])
+        else:
+            coords.extend(pts)
+    if len(coords) >= 3 and coords[0] != coords[-1]:
+        coords.append(coords[0])
+    return coords
+
+
 def _gml_multisurface_to_wkt(hranice_elem) -> Optional[str]:
     """
     Převede ``gml:MultiSurface`` (nebo ``gml:MultiPolygon``) na WKT MULTIPOLYGON.
 
-    Iteruje ``gml:Polygon`` (nebo ``gml:Surface``); každý polygon má
-    exteriér (``gml:exterior/gml:LinearRing/gml:posList``) a 0..N
-    interiérů (otvorů). WKT pro MULTIPOLYGON má syntaxi
+    Iteruje ``gml:Polygon`` (nebo ``gml:Surface``); každý polygon má exteriér
+    a 0..N interiérů (otvorů), jejichž souřadnice sestaví :func:`_ring_coords`
+    – ta zvládne i prsteny složené z několika segmentů včetně kruhových
+    oblouků. WKT pro MULTIPOLYGON má syntaxi
     ``MULTIPOLYGON(((x y, x y, ...), (x y, ...)), ((...)))``.
+
+    Obsahuje-li geometrie zakřivený typ, který vlastní kód neumí
+    (:data:`_FOREIGN_CURVED_LOCALNAMES`), deleguje se celá na GDAL.
 
     :param hranice_elem: Element ``OriginalniHranice``.
 
         :return: WKT řetězec nebo ``None``.
     """
+    if _has_foreign_curve(hranice_elem):
+        return _linearize_curved_gml(hranice_elem)
+
     polygons_wkt = []
     for poly in hranice_elem.iter():
         if etree.QName(poly.tag).localname not in ("Polygon", "Surface"):
@@ -545,22 +821,7 @@ def _gml_multisurface_to_wkt(hranice_elem) -> Optional[str]:
             for role_elem in poly.iter():
                 if etree.QName(role_elem.tag).localname != ring_role:
                     continue
-                segment_coords = []
-                for ring_child in role_elem.iter():
-                    if etree.QName(ring_child.tag).localname != "posList":
-                        continue
-                    text = (ring_child.text or "").strip()
-                    if not text:
-                        continue
-                    seg = _coords_from_poslist(text, close_ring=False)
-                    if not seg:
-                        continue
-                    if segment_coords and segment_coords[-1] == seg[0]:
-                        segment_coords.extend(seg[1:])
-                    else:
-                        segment_coords.extend(seg)
-                if len(segment_coords) >= 3 and segment_coords[0] != segment_coords[-1]:
-                    segment_coords.append(segment_coords[0])
+                segment_coords = _ring_coords(role_elem)
                 if segment_coords:
                     rings.append(segment_coords)
         if rings:

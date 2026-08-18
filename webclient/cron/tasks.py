@@ -1052,6 +1052,21 @@ def run_data_import(job_id, user_id, lock_token):
     )
 
 
+#: Kolik dní zpět musí den být, aby se HTTP 404 na jeho změnovém VFR dal
+#: interpretovat jako „v RÚIAN ten den opravdu nebyly žádné změny".
+#:
+#: ČÚZK publikuje změnový soubor pro den D až kolem 22:00 **téhož dne**, takže
+#: pro dnešek (a krátce po půlnoci případně i pro včerejšek) 404 znamená jen
+#: „ještě nevydáno". Kdyby se takové 404 zapsalo jako ``success``, kotva
+#: ``data_valid_to`` by se posunula za daný den a jeho skutečné změny by se
+#: už nikdy nestáhly.
+#:
+#: Skutečné mezery existují (za sledovaných 60 dnů 2 dny bez souboru), proto
+#: se u starších dnů 404 stále bere jako „bez změn" – jinak by se pipeline
+#: na takové mezeře zaseklo natrvalo.
+RUIAN_NOT_PUBLISHED_GRACE_DAYS = 2
+
+
 @shared_task
 def sync_ruian_changes(reassign_records: bool = True):
     """
@@ -1109,7 +1124,7 @@ def sync_ruian_changes(reassign_records: bool = True):
         today = datetime.date.today()
         day = last_run.data_valid_to + datetime.timedelta(days=1)
 
-        while day <= today:
+        while day < today:
             run = RuianSyncRun.objects.create(
                 mode=RuianSyncRun.MODE_DELTA,
                 source="file_vfr",
@@ -1121,7 +1136,22 @@ def sync_ruian_changes(reassign_records: bool = True):
             try:
                 source = FileVfrSource.download_for_day(day, target_dir=target_dir)
                 if source is None:
-                    # HTTP 404 = ten den nebyly v RÚIAN žádné změny (víkend / svátek).
+                    # HTTP 404 má dva různé významy podle stáří dne – viz
+                    # RUIAN_NOT_PUBLISHED_GRACE_DAYS.
+                    if (today - day).days < RUIAN_NOT_PUBLISHED_GRACE_DAYS:
+                        # Čerstvý den: soubor ještě nemusí být vydaný. Běh
+                        # označíme jako neúspěšný, aby se kotva ``data_valid_to``
+                        # neposunula, a zkusíme to znovu při příštím cronu.
+                        run.status = RuianSyncRun.STATUS_FAILED
+                        run.finished_at = timezone.now()
+                        run.note = "not_published_yet (404)"
+                        run.save(update_fields=["status", "finished_at", "note"])
+                        logger.info(
+                            "cron.tasks.sync_ruian_changes.not_published_yet",
+                            extra={"day": day.isoformat(), "run_id": run.pk},
+                        )
+                        return
+                    # Starší den: v RÚIAN ten den opravdu nebyly žádné změny.
                     run.status = RuianSyncRun.STATUS_SUCCESS
                     run.finished_at = timezone.now()
                     run.note = "no_changes (404)"

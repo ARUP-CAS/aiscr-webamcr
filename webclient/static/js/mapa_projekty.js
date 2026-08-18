@@ -65,12 +65,12 @@ L.easyButton('bi bi-skip-backward-fill', function () {
     if (poi_sugest.getLayers().length>0) {
         let ll = poi_sugest.getLayers()[0]._latlng;
         map.setView(ll, zoom_jtsk);
-        const [sjtsk_x, sjtsk_y] = convertToJTSK(ll.lng, ll.lat);
+        const sjtsk = amcr_static_coordinate_precision_jtsk(convertToJTSK(ll.lng, ll.lat), false);
         try {
             document.getElementById('id_coordinate_x2').value = ll.lat;
             document.getElementById('id_coordinate_x1').value = ll.lng;
-            document.getElementById('id_coordinate_sjtsk_x1').value = sjtsk_x;
-            document.getElementById('id_coordinate_sjtsk_x2').value = sjtsk_y;
+            document.getElementById('id_coordinate_sjtsk_x1').value = sjtsk[0];
+            document.getElementById('id_coordinate_sjtsk_x2').value = sjtsk[1];
         } catch (e) {
             console.log("Error: Element coordinate_x1/x2 doesn exists")
         }
@@ -160,7 +160,7 @@ map.on('click', function (e) {
             const getUrl = window.location;
             const select = $("input[name='hlavni_katastr']");
             if (select) {
-                fetch(getUrl.protocol + "//" + getUrl.host + `/heslar/mapa-zjisti-katastr/?x=${sjtsk.x}&y=${sjtsk.y}`)
+                fetch(getUrl.protocol + "//" + getUrl.host + `/heslar/mapa-zjisti-katastr/?x=${sjtsk[0]}&y=${sjtsk[1]}`)
                     .then(response => response.json())
                     .then(response => {
                         if (ORIGIN_KATASTR.length == 0) {
@@ -191,12 +191,13 @@ map.on('click', function (e) {
     if (!global_measuring_toolbox._measuring)
         if (point_leaf[1] >= 12.06 && point_leaf[1] <= 18.87 && point_leaf[0] >= 48.55 && point_leaf[0] <= 51.08)
             if (map.getZoom() > 11) {
-                const sjtsk = layerPointToJTSK(map, e.layerPoint);
+                const sjtsk_raw = layerPointToJTSK(map, e.layerPoint);
+                const sjtsk = amcr_static_coordinate_precision_jtsk([sjtsk_raw.x, sjtsk_raw.y], false);
                 try {
                     document.getElementById('id_coordinate_x2').value = point_leaf[0]
                     document.getElementById('id_coordinate_x1').value = point_leaf[1]
-                    document.getElementById('id_coordinate_sjtsk_x1').value = sjtsk.x
-                    document.getElementById('id_coordinate_sjtsk_x2').value = sjtsk.y
+                    document.getElementById('id_coordinate_sjtsk_x1').value = sjtsk[0]
+                    document.getElementById('id_coordinate_sjtsk_x2').value = sjtsk[1]
                 } catch (e) {
                     console.log("Error: Element coordinate_x1/x2 doesn exists")
                 }

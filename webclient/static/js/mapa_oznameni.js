@@ -7,12 +7,13 @@ map.on('click', function (e) {
         let [x1, x2] = amcr_static_coordinate_precision_wgs84([e.latlng.lng, e.latlng.lat]);
         if (x1 >= 12.06 && x1 <= 18.87 && x2 >= 48.55 && x2 <= 51.08)
             if (map.getZoom() > 11) {
-                const sjtsk = layerPointToJTSK(map, e.layerPoint);
+                const sjtsk_raw = layerPointToJTSK(map, e.layerPoint);
+                const sjtsk = amcr_static_coordinate_precision_jtsk([sjtsk_raw.x, sjtsk_raw.y], false);
                 document.getElementById('id_coordinate_x1').value = x1
                 document.getElementById('id_coordinate_x2').value = x2
                 try {
-                    document.getElementById('id_coordinate_sjtsk_x1').value = sjtsk.x
-                    document.getElementById('id_coordinate_sjtsk_x2').value = sjtsk.y
+                    document.getElementById('id_coordinate_sjtsk_x1').value = sjtsk[0]
+                    document.getElementById('id_coordinate_sjtsk_x2').value = sjtsk[1]
                 } catch (e) {
                     console.log("Error: coordinate_sjtsk_x1/x2 fields not present")
                 }
@@ -42,7 +43,7 @@ map.on('click', function (e) {
                         uzemi.value = cadastre;
                     }
                 };
-                xhr.send(JSON.stringify({ 'x1': sjtsk.x, 'x2': sjtsk.y }))
+                xhr.send(JSON.stringify({ 'x1': sjtsk[0], 'x2': sjtsk[1] }))
 
             } else {
                 var zoom = 1;
