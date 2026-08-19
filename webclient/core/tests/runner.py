@@ -3,8 +3,18 @@ import logging
 import unittest.runner
 
 from django.test.runner import DiscoverRunner as BaseRunner
+from django.test.utils import override_settings
 
 logger = logging.getLogger(__name__)
+
+#: Platnost session cookie po dobu běhu testů (v sekundách).
+#:
+#: Projekt používá ``SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"``,
+#: takže session je uložená přímo v podepsané cookie a její stáří se počítá
+#: z podpisového razítka proti ``SESSION_COOKIE_AGE``. Selenium testy ale běží
+#: pod ``freeze_time`` s pevným datem, které je vůči reálnému času klidně
+#: měsíce v minulosti.
+TEST_SESSION_COOKIE_AGE = 60 * 60 * 24 * 365 * 20  # 20 let
 
 USERS = {
     "archeolog": {"USERNAME": "archeolog1@arup.cas.cz", "PASSWORD": "afsd15Easd#"},
@@ -112,6 +122,32 @@ class AMCRSeleniumTestRunner(BaseRunner):
         """
         super(AMCRSeleniumTestRunner, self).__init__(*args, **kwargs)
         self.test_runner = CustomTextTestRunner
+        self._session_cookie_age_override = None
+
+    def setup_test_environment(self, **kwargs):
+        """
+        Připraví testovací prostředí a prodlouží platnost session cookie.
+
+        Viz :data:`TEST_SESSION_COOKIE_AGE` – bez prodloužení ztrácejí testy
+        běžící pod ``freeze_time`` session, jakmile se hodiny vrátí do
+        reálného času.
+
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``setup_test_environment()``.
+        """
+        super().setup_test_environment(**kwargs)
+        self._session_cookie_age_override = override_settings(SESSION_COOKIE_AGE=TEST_SESSION_COOKIE_AGE)
+        self._session_cookie_age_override.enable()
+
+    def teardown_test_environment(self, **kwargs):
+        """
+        Vrátí původní ``SESSION_COOKIE_AGE`` a uklidí testovací prostředí.
+
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``teardown_test_environment()``.
+        """
+        if self._session_cookie_age_override is not None:
+            self._session_cookie_age_override.disable()
+            self._session_cookie_age_override = None
+        super().teardown_test_environment(**kwargs)
 
     def setup_databases(self, *args, **kwargs):
         """

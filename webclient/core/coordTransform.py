@@ -681,7 +681,7 @@ def transform_geom(geom, transFunc):
         else:
             spgeom[i1] = parts2[0]
     if len(spgeom) > 1:
-        geom = ", ".join(spgeom)
+        geom = ",".join(spgeom)
     else:
         geom = spgeom[0]
     return geom, "OK"

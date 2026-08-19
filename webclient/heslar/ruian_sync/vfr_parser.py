@@ -528,10 +528,7 @@ def _extract_hranice(elem) -> Optional[str]:
 #: Krok linearizace kruhových oblouků ve stupních, viz :func:`_linearize_arc`.
 #:
 #: Hodnota odpovídá densifikaci, kterou používá ČÚZK při exportu týchž hranic
-#: do SHP. Změřeno na 24 obloucích s poloměry 3,75–135 m z denních změnových
-#: souborů: konstantní není délka tětivy (0,38–10,78 m) ani odchylka od
-#: oblouku (4,8–107,5 mm), ale **úhlový krok** – naměřeno 4,31–5,96°, což
-#: odpovídá cílovým 6° zaokrouhleným na celý počet úseček (``ceil``).
+#: do SHP.
 #:
 #: Držet stejný krok jako ČÚZK je podstatné: katastr aktualizovaný z VFR pak
 #: lícuje se sousedem, který zůstal z plného syncu ze SHP, a nevznikají mezi
@@ -540,8 +537,7 @@ _ARC_STEP_DEGREES = 6.0
 
 #: Zakřivené GML elementy, které umí zpracovat vlastní kód
 #: (:func:`_linearize_arcstring`). ``posList`` u nich nejsou lomové body, ale
-#: řídicí body oblouků – čtení po dvojicích jako u lomené čáry by oblouk
-#: nahradilo tětivou (u katastru Hřibsko to dělalo 51 m²).
+#: řídicí body oblouků.
 _NATIVE_CURVED_LOCALNAMES = frozenset({"Arc", "ArcString"})
 
 #: Zakřivené GML elementy, které vlastní kód **neumí** – pro ně se geometrie

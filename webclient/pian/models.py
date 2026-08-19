@@ -56,7 +56,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         db_index=True,
     )
     geom = pgmodels.GeometryField(null=False, srid=4326, db_index=True)
-    geom_sjtsk = pgmodels.GeometryField(blank=True, null=True, srid=5514, db_index=True)
+    geom_sjtsk = pgmodels.GeometryField(null=False, srid=5514, db_index=True)
     geom_system = models.CharField(max_length=6, default="5514", db_index=True)
     zm10 = models.ForeignKey(
         "Kladyzm",
@@ -154,11 +154,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         db_table = "pian"
         constraints = [
             CheckConstraint(
-                condition=(
-                    (Q(geom_system="5514") & Q(geom_sjtsk__isnull=False))
-                    | (Q(geom_system="4326") & Q(geom__isnull=False))
-                    | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))
-                ),
+                condition=Q(geom_system__in=["4326", "5514"]),
                 name="pian_geom_check",
             ),
         ]

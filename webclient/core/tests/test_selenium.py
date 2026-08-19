@@ -964,6 +964,55 @@ return new Date('2025-06-28T12:00:00Z');}};
  originalEvent: syntheticEvent
 }});""")
 
+    def clickAtMapCoordJTSK(self, x1, x2, zoom=17):
+        """
+        Klikne do mapy na bod zadaný v EPSG:5514 (S-JTSK).
+
+        Obdoba :meth:`clickAtMapCoord`, která bere WGS84. Souřadnice se
+        očekávají v záporné konvenci projektu, tj. tak, jak je vrací
+        ``convertToJTSK`` a jak jsou uložené v ``geom_sjtsk`` –
+        např. ``(-693174.81, -1077354.27)``.
+
+        ``layerPoint`` se počítá **přímou pixelovou transformací**
+        ``crs.transformation.transform``, což je přesná inverze k
+        ``layerPointToJTSK`` (mapa_basic_functions.js), kterou klik handler
+        používá. Bod, který si handler dopočítá, proto odpovídá zadanému.
+        Cesta přes ``convertToWGS84`` + ``latLngToLayerPoint`` by nestačila –
+        Leaflet tam zaokrouhluje na celé pixely, takže výsledek by kolísal
+        podle aktuálního výřezu.
+
+        ``pixelOrigin`` se mění s každým ``setView``, proto se ``layerPoint``
+        počítá až po vycentrování mapy (a napoprvé jen kvůli určení středu).
+
+        :param x1: Souřadnice X v EPSG:5514 (záporná konvence).
+        :param x2: Souřadnice Y v EPSG:5514 (záporná konvence).
+        :param zoom: Úroveň přiblížení; klik handler vyžaduje > 11.
+        """
+        self.driver.execute_script(f"""
+ window.getToday = function() {{
+return new Date('2025-06-28T12:00:00Z');}};
+ const crs = map.options.crs;
+ const scale = crs.scale({zoom});
+ const jtsk = L.point({x1}, {x2});
+ const toLayerPoint = () =>
+   crs.transformation.transform(jtsk, scale).subtract(map.getPixelOrigin());
+ map.setView(map.layerPointToLatLng(toLayerPoint()), {zoom});
+ const layerPoint = toLayerPoint();
+ const latlng = map.layerPointToLatLng(layerPoint);
+ const containerPoint = map.layerPointToContainerPoint(layerPoint);
+ const syntheticEvent = new MouseEvent('click', {{
+ bubbles: true,
+ cancelable: true,
+ clientX: 0,
+ clientY: 0
+}});
+ map.fire('click', {{
+ latlng: latlng,
+ containerPoint: containerPoint,
+ layerPoint: layerPoint,
+ originalEvent: syntheticEvent
+}});""")
+
     def _username(self, type="archeolog"):
         """
                Provádí operaci username.
