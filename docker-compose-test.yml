@@ -203,7 +203,7 @@ services:
 
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:9.4.3
+    image: docker.elastic.co/logstash/logstash:9.5.1
     restart: always
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
@@ -218,7 +218,7 @@ services:
       - logstash_elastic_host
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.4.3
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.1
     hostname: elasticsearch
     restart: always
     environment:
@@ -246,7 +246,7 @@ services:
           memory: "2G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:9.4.3
+    image: docker.elastic.co/kibana/kibana:9.5.1
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
