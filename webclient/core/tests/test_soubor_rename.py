@@ -1,10 +1,11 @@
 """
-Testy přejmenování souborů změnou suffixu (issue #3487).
+Testy přejmenování souborů změnou suffixu (issue #3487, #3421).
 
-Pokrývají výpočet volných suffixů pro dokumenty (včetně prázdného slotu) a samostatné nálezy
-(``F01``–``F99``) a logiku přejmenování potomků ve Fedoře (parsování ``ldp:contains`` a sestavení
-SPARQL příkazu pro ``ebucore:filename``). Testy nepotřebují databázi ani běžící Fedoru –
-využívají odlehčené náhradní objekty a mock ``_send_request``.
+Pokrývají přidělování názvů a výpočet volných suffixů ve jednotném schématu ``F001``–``F999``
+pro dokumenty i samostatné nálezy (včetně chování u historických názvů) a logiku přejmenování
+potomků ve Fedoře (parsování ``ldp:contains`` a sestavení SPARQL příkazu pro ``ebucore:filename``).
+Testy nepotřebují databázi ani běžící Fedoru – využívají odlehčené náhradní objekty
+a mock ``_send_request``.
 """
 
 import json
@@ -16,7 +17,7 @@ from core.repository_connector import (
     FedoraRequestType,
     FedoraTransactionStatus,
 )
-from core.soubor_naming import get_dokument_free_suffixes, get_finds_free_suffixes, get_soubor_suffix
+from core.soubor_naming import get_free_suffixes, get_next_soubor_name, get_soubor_suffix
 from core.views import rename_file
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.test import RequestFactory, SimpleTestCase
@@ -59,13 +60,23 @@ class _Soubor:
 
 
 class DokumentSuffixTest(SimpleTestCase):
-    """Testy volných suffixů pro dokumenty (prázdný slot a písmena A–Z)."""
+    """Testy volných suffixů a přidělování názvů pro dokumenty (``F001``–``F999``)."""
 
     def _record(self):
         soubory = [
+            _Soubor("CDL202500001F001.jpg", 1),
+            _Soubor("CDL202500001F003.jpg", 2),
+        ]
+        record = _Record("C-DL-202500001", soubory)
+        for soubor in soubory:
+            soubor.vazba.navazany_objekt = record
+        return record
+
+    def _legacy_record(self):
+        """Záznam s historickými názvy souborů (základní slot a písmeno) z doby před #3421."""
+        soubory = [
             _Soubor("CDL202500001.jpg", 1),
             _Soubor("CDL202500001A.jpg", 2),
-            _Soubor("CDL202500001C.jpg", 3),
         ]
         record = _Record("C-DL-202500001", soubory)
         for soubor in soubory:
@@ -73,46 +84,61 @@ class DokumentSuffixTest(SimpleTestCase):
         return record
 
     def test_free_suffixes_for_new_file(self):
-        """Pro nový soubor jsou obsazené suffixy vynechány, prázdný slot i A a C chybí."""
-        free = get_dokument_free_suffixes(self._record())
+        """Obsazené F001 a F003 chybí, F002 a F999 jsou volné; prázdný slot ani písmena se nenabízejí."""
+        free = get_free_suffixes(self._record())
+        self.assertNotIn("F001", free)
+        self.assertNotIn("F003", free)
+        self.assertIn("F002", free)
+        self.assertIn("F999", free)
         self.assertNotIn("", free)
         self.assertNotIn("A", free)
-        self.assertNotIn("C", free)
-        self.assertIn("B", free)
-        self.assertIn("Z", free)
+        self.assertEqual(free[0], "F002")
 
     def test_current_suffix_is_offered(self):
         """Suffix přejmenovávaného souboru se považuje za volný (lze jej v nabídce ponechat)."""
         record = self._record()
-        current = record.soubory.soubory.all()[2]  # CDL202500001C.jpg
-        free = get_dokument_free_suffixes(record, current)
-        self.assertIn("C", free)
-        self.assertNotIn("", free)
-        self.assertNotIn("A", free)
+        current = record.soubory.soubory.all()[1]  # CDL202500001F003.jpg
+        free = get_free_suffixes(record, current)
+        self.assertIn("F003", free)
+        self.assertNotIn("F001", free)
 
-    def test_empty_slot_free_when_unused(self):
-        """Pokud základní (bezpísmenný) soubor neexistuje, je prázdný slot volný."""
-        record = _Record("C-DL-202500001", [_Soubor("CDL202500001A.jpg", 2)])
-        free = get_dokument_free_suffixes(record)
-        self.assertIn("", free)
-        self.assertEqual(free[0], "")
+    def test_legacy_suffix_of_renamed_file_is_offered(self):
+        """Historický suffix přejmenovávaného souboru zůstává v nabídce na prvním místě."""
+        record = self._legacy_record()
+        current = record.soubory.soubory.all()[1]  # CDL202500001A.jpg
+        free = get_free_suffixes(record, current)
+        self.assertEqual(free[0], "A")
+        self.assertIn("F001", free)
+        self.assertNotIn("", free)
+
+    def test_next_name_starts_at_f001(self):
+        """První soubor dokumentu dostane rovnou suffix F001 (#3421)."""
+        record = _Record("C-DL-202500001", [])
+        self.assertEqual(get_next_soubor_name(record, "sken.PDF"), "CDL202500001F001.PDF")
+
+    def test_next_name_continues_after_highest(self):
+        """Další soubor navazuje na nejvyšší obsazené číslo, mezery se nedoplňují."""
+        self.assertEqual(get_next_soubor_name(self._record(), "foto.jpg"), "CDL202500001F004.jpg")
+
+    def test_next_name_ignores_legacy_suffixes(self):
+        """Historické názvy (základní slot, písmena) číslování neovlivňují – začíná se od F001."""
+        self.assertEqual(get_next_soubor_name(self._legacy_record(), "foto.jpg"), "CDL202500001F001.jpg")
 
     def test_get_soubor_suffix(self):
         """Suffix se odvodí jako část názvu mezi identem bez pomlček a příponou."""
-        record = self._record()
-        soubory = record.soubory.soubory.all()
-        self.assertEqual(get_soubor_suffix(soubory[0]), "")
-        self.assertEqual(get_soubor_suffix(soubory[1]), "A")
-        self.assertEqual(get_soubor_suffix(soubory[2]), "C")
+        legacy = self._legacy_record().soubory.soubory.all()
+        self.assertEqual(get_soubor_suffix(legacy[0]), "")
+        self.assertEqual(get_soubor_suffix(legacy[1]), "A")
+        self.assertEqual(get_soubor_suffix(self._record().soubory.soubory.all()[0]), "F001")
 
 
 class FindSuffixTest(SimpleTestCase):
-    """Testy volných suffixů pro samostatné nálezy (F01–F99)."""
+    """Testy volných suffixů a přidělování názvů pro samostatné nálezy (``F001``–``F999``)."""
 
     def _record(self):
         soubory = [
-            _Soubor("CPD2025F01.jpg", 1),
-            _Soubor("CPD2025F03.jpg", 2),
+            _Soubor("CPD2025F001.jpg", 1),
+            _Soubor("CPD2025F003.jpg", 2),
         ]
         record = _Record("C-PD-2025", soubory)
         for soubor in soubory:
@@ -120,21 +146,49 @@ class FindSuffixTest(SimpleTestCase):
         return record
 
     def test_free_suffixes_for_new_file(self):
-        """Obsazené F01 a F03 chybí, F02 a F99 jsou volné."""
-        free = get_finds_free_suffixes(self._record())
-        self.assertNotIn("F01", free)
-        self.assertNotIn("F03", free)
-        self.assertIn("F02", free)
-        self.assertIn("F99", free)
-        self.assertEqual(free[0], "F02")
+        """Obsazené F001 a F003 chybí, F002 a F999 jsou volné."""
+        free = get_free_suffixes(self._record())
+        self.assertNotIn("F001", free)
+        self.assertNotIn("F003", free)
+        self.assertIn("F002", free)
+        self.assertIn("F999", free)
+        self.assertEqual(free[0], "F002")
 
     def test_current_suffix_is_offered(self):
         """Suffix přejmenovávaného nálezového souboru je v nabídce."""
         record = self._record()
-        current = record.soubory.soubory.all()[1]  # F03
-        free = get_finds_free_suffixes(record, current)
-        self.assertIn("F03", free)
-        self.assertNotIn("F01", free)
+        current = record.soubory.soubory.all()[1]  # F003
+        free = get_free_suffixes(record, current)
+        self.assertIn("F003", free)
+        self.assertNotIn("F001", free)
+
+    def _legacy_record(self):
+        """Nález s historickými dvojcifernými názvy souborů (``F01`` … ``F99``)."""
+        soubory = [_Soubor("CPD2025F01.jpg", 1), _Soubor("CPD2025F02.jpg", 2)]
+        record = _Record("C-PD-2025", soubory)
+        for soubor in soubory:
+            soubor.vazba.navazany_objekt = record
+        return record
+
+    def test_two_digit_suffix_blocks_same_number(self):
+        """Historické F01 obsazuje stejné číslo jako F001, takže se F001 nenabízí jako volné."""
+        free = get_free_suffixes(self._legacy_record())
+        self.assertNotIn("F001", free)
+        self.assertNotIn("F002", free)
+        self.assertEqual(free[0], "F003")
+
+    def test_renamed_two_digit_suffix_can_be_normalized(self):
+        """U přejmenovávaného souboru se nabízí jak jeho historický suffix, tak trojciferná podoba."""
+        record = self._legacy_record()
+        current = record.soubory.soubory.all()[0]  # CPD2025F01.jpg
+        free = get_free_suffixes(record, current)
+        self.assertEqual(free[0], "F01")
+        self.assertIn("F001", free)
+        self.assertNotIn("F002", free)
+
+    def test_next_name_continues_after_two_digit_suffix(self):
+        """Číslování navazuje i na starší dvojciferné suffixy nálezů (``F01`` … ``F99``)."""
+        self.assertEqual(get_next_soubor_name(self._legacy_record(), "foto.jpg"), "CPD2025F003.jpg")
 
 
 class _Response:
@@ -357,11 +411,11 @@ class RenameFileViewTest(SimpleTestCase):
         connector = mock.Mock()
         if update_side_effect is not None:
             connector.update_file_name.side_effect = update_side_effect
-        # get_dokument_free_suffixes se volá 2x: pro nabídku a pro re-check po zámku.
+        # get_free_suffixes se volá 2x: pro nabídku a pro re-check po zámku.
         free_values = [list(free), list(recheck_free if recheck_free is not None else free)]
         with mock.patch("core.views.get_object_or_404", return_value=soubor), mock.patch(
             "core.views.check_soubor_vazba"
-        ), mock.patch("core.views.get_dokument_free_suffixes", side_effect=free_values), mock.patch(
+        ), mock.patch("core.views.get_free_suffixes", side_effect=free_values), mock.patch(
             "core.views.FedoraTransaction", return_value=ft
         ), mock.patch(
             "core.views.FedoraRepositoryConnector", return_value=connector

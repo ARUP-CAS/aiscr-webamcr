@@ -517,11 +517,6 @@
       <amcr:heslo_podrazene id="HES-123456" xml:lang="cs">sídliště nesp.</amcr:heslo_podrazene>
       <amcr:typ xml:lang="cs">podřízenost</amcr:typ>
     </amcr:hierarchie_nize>
-    <amcr:dokument_typ_material_rada>
-      <amcr:id>hdtm-1</amcr:id>
-      <amcr:dokument_typ id="HES-123456" xml:lang="cs">nálezová zpráva</amcr:dokument_typ>
-      <amcr:dokument_material id="HES-123456" xml:lang="cs">primárně digitální</amcr:dokument_material>
-    </amcr:dokument_typ_material_rada>
     <amcr:datace>
       <amcr:rok_od_min>-1500</amcr:rok_od_min>
       <amcr:rok_od_max>-1300</amcr:rok_od_max>

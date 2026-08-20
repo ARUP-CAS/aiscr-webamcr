@@ -74,15 +74,6 @@ Funkce
    :param created: Parametr ``created`` slouží jako vstup pro logiku funkce ``save_metadata_heslar_datace``.
    :param kwargs: Další klíčové argumenty signálu.
 
-.. py:function:: save_metadata_heslar_dokument_typ_material_rada(sender, instance, created)
-
-   Funkce pro uložení metadat heslář - hierarchie.
-
-   :param sender: Model třídy, která poslala signál.
-   :param instance: Parametr ``instance`` pracuje se s atributy ``suppress_signal``, ovlivňuje větvení podmínek.
-   :param created: Parametr ``created`` ovlivňuje větvení podmínek.
-   :param kwargs: Další klíčové argumenty signálu.
-
 .. py:function:: save_metadata_heslar_odkaz(sender, instance, created)
 
    Funkce pro uložení metadat heslář - odkaz.
@@ -127,14 +118,6 @@ Funkce
 .. py:function:: delete_uppdate_related_heslar_hierarchie(sender, instance)
 
    Funkce pro uložení metadat navázaného hesláře při smazání heslář - hierarchie.
-
-   :param sender: Model třídy, která poslala signál.
-   :param instance: Instance modelu, která byla uložena.
-   :param kwargs: Další klíčové argumenty signálu.
-
-.. py:function:: delete_uppdate_related_heslar_dokument_typ_material_rada(sender, instance)
-
-   Funkce pro uložení metadat navázaného hesláře při smazání heslář - dokument typ materiál řada.
 
    :param sender: Model třídy, která poslala signál.
    :param instance: Instance modelu, která byla uložena.

@@ -167,6 +167,7 @@ Používá se pro bližší specifikaci akce či součásti view, pro které se 
 - ``dok_tvary_edit``
 - ``dok_tvary_smazat``
 - ``dok_zapsat_do_archz``
+- ``dok_zapsat_vlastni_ident``
 - ``dok_zapsat_do_projekt``
 - ``model_edit``
 - ``neident_akce_edit``
@@ -282,4 +283,4 @@ Používá se pro bližší specifikaci akce či součásti view, pro které se 
 - ``vypis_ez``
 - ``historie_fedora``
 
-**Celkem:** 152 akcí
+**Celkem:** 153 akcí

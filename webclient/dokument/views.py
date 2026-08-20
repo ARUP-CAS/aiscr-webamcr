@@ -22,9 +22,9 @@ from core.constants import (
     ZAPSANI_DOK,
 )
 from core.coordTransform import convertToJTSK
-from core.exceptions import MaximalIdentNumberError, NelzeZjistitRaduError, UnexpectedDataRelations
+from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
 from core.forms import CheckStavNotChangedForm, VratitForm, VratitFormDokument
-from core.ident_cely import get_cast_dokumentu_ident, get_dokument_rada, get_temp_dokument_ident
+from core.ident_cely import get_cast_dokumentu_ident, get_temp_dokument_ident
 from core.message_constants import (
     DOKUMENT_AZ_USPESNE_PRIPOJEN,
     DOKUMENT_CAST_USPESNE_ODPOJEN,
@@ -33,7 +33,6 @@ from core.message_constants import (
     DOKUMENT_NEIDENT_AKCE_USPESNE_SMAZANA,
     DOKUMENT_NELZE_ARCHIVOVAT,
     DOKUMENT_NELZE_ODESLAT,
-    DOKUMENT_NELZE_VYTVORIT_RADA,
     DOKUMENT_ODPOJ_ZADNE_RELACE,
     DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM,
     DOKUMENT_PROJEKT_USPESNE_PRIPOJEN,
@@ -115,6 +114,7 @@ from heslar.hesla import (
 )
 from heslar.hesla_dynamicka import (
     DOKUMENT_RADA_DATA_3D,
+    DOKUMENT_RADA_VYCHOZI,
     MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR,
     MODEL_3D_DOKUMENT_TYPES,
     PRIMARNE_DIGITALNI,
@@ -2194,9 +2194,8 @@ def archivovat(request, ident_cely):
             with transaction.atomic():
                 # Nastav identifikátor na permanentní.
                 if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
-                    rada = get_dokument_rada(dokument.typ_dokumentu, dokument.material_originalu)
                     try:
-                        dokument.set_permanent_ident_cely(dokument.ident_cely[2], rada)
+                        dokument.set_permanent_ident_cely(dokument.ident_cely[2], dokument.rada)
                     except MaximalIdentNumberError:
                         fedora_transaction.error_message = MAXIMUM_IDENT_DOSAZEN
                         fedora_transaction.rollback_transaction()
@@ -2410,6 +2409,25 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
         return self.check_filter_permission(qs)
 
 
+def get_region_zaznamu(zaznam):
+    """
+    Odvodí prefix regionu z identifikátoru záznamu, do kterého se dokument zapisuje.
+
+    Dokument zapisovaný do projektu nebo archeologického záznamu přebírá region z nadřazeného
+    záznamu, nikoli z volby uživatele. U dočasných identifikátorů archeologického záznamu je
+    region až za prefixem "X-".
+
+    :param zaznam: Projekt nebo archeologický záznam, do kterého se dokument zapisuje; ``None``
+        u samostatně zapisovaného dokumentu.
+    :return: Prefix regionu včetně pomlčky ("C-" nebo "M-"), nebo ``None`` pokud záznam není zadán.
+    """
+    if not zaznam:
+        return None
+    if isinstance(zaznam, ArcheologickyZaznam) and zaznam.ident_cely.startswith("X"):
+        return zaznam.ident_cely[2] + "-"
+    return zaznam.ident_cely[0] + "-"
+
+
 def get_hierarchie_dokument_typ():
     """
     Funkce pro získaní hierarchie pro heslař.
@@ -2511,11 +2529,15 @@ def zapsat(request, zaznam=None):
     """
     required_fields = get_required_fields_dokument()
     required_fields_next = get_required_fields_dokument(next=1)
+    allow_vlastni_ident = check_permissions(p.actionChoices.dok_zapsat_vlastni_ident, request.user)
+    region_zaznamu = get_region_zaznamu(zaznam)
     if request.method == "POST":
         form_d = EditDokumentForm(
             request.POST,
             required=required_fields,
             required_next=required_fields_next,
+            allow_vlastni_ident=allow_vlastni_ident,
+            region_zaznamu=region_zaznamu,
         )
         if form_d.is_valid():
             logger.debug("dokument.views.zapsat.valid")
@@ -2526,22 +2548,28 @@ def zapsat(request, zaznam=None):
             )
             if isinstance(zaznam, Projekt):
                 dokument.datum_zverejneni = datetime.now().date() + timedelta(days=365 * 100)
+            vlastni_ident_cely = form_d.cleaned_data.get("vlastni_ident_cely") if allow_vlastni_ident else None
             try:
-                dokument.rada = get_dokument_rada(dokument.typ_dokumentu, dokument.material_originalu)
-                if zaznam:
-                    prefix = zaznam.ident_cely[0] + "-"
-                    if isinstance(zaznam, ArcheologickyZaznam):
-                        if zaznam.ident_cely.startswith("X"):
-                            prefix = zaznam.ident_cely[2] + "-"
-                            logger.debug(prefix)
+                if vlastni_ident_cely:
+                    # Dokument dostává rovnou trvalý identifikátor, řada musí odpovídat jeho tvaru.
+                    dokument.rada = form_d.vlastni_ident_rada
+                    dokument.ident_cely = vlastni_ident_cely
+                    logger.debug("dokument.views.zapsat.vlastni_ident", extra={"ident_cely": dokument.ident_cely})
                 else:
-                    prefix = form_d.cleaned_data["region"]
-                dokument.ident_cely = get_temp_dokument_ident(rada=dokument.rada.zkratka, region=prefix)
-            except NelzeZjistitRaduError:
-                fedora_transaction.rollback_transaction()
-                messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_VYTVORIT_RADA)
+                    # Řada se přiděluje fixně, věcné dělení nesou pouze typ a materiál.
+                    dokument.rada = Heslar.objects.get(id=DOKUMENT_RADA_VYCHOZI)
+                    prefix = region_zaznamu or form_d.cleaned_data["region"]
+                    dokument.ident_cely = get_temp_dokument_ident(rada=dokument.rada.zkratka, region=prefix)
             except MaximalIdentNumberError:
                 fedora_transaction.error_message = MAXIMUM_IDENT_DOSAZEN
+                fedora_transaction.rollback_transaction()
+            except Heslar.DoesNotExist:
+                # Výchozí řada je heslo hesláře odkazované konstantou; pokud v databázi chybí,
+                # nelze dokument zapsat a otevřenou transakci je nutné zrušit.
+                logger.error(
+                    "dokument.views.zapsat.vychozi_rada_neexistuje",
+                    extra={"heslar_id": DOKUMENT_RADA_VYCHOZI},
+                )
                 fedora_transaction.rollback_transaction()
             else:
                 if FedoraRepositoryConnector.check_container_deleted_or_not_exists(dokument.ident_cely, "dokument"):
@@ -2595,6 +2623,8 @@ def zapsat(request, zaznam=None):
             required=required_fields,
             required_next=required_fields_next,
             region_not_required=True if zaznam else None,
+            allow_vlastni_ident=allow_vlastni_ident,
+            region_zaznamu=region_zaznamu,
         )
     back_ident = None
     back_model = None
@@ -2615,9 +2645,12 @@ def zapsat(request, zaznam=None):
             "TYP_ZAZNAMU_LOKALITA": ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA,
             "TYP_ZAZNAMU_AKCE": ArcheologickyZaznam.TYP_ZAZNAMU_AKCE,
             "formDokument": form_d,
-            "formRegionModal": RegionForm(prefix="modal"),
+            # Předvyplnění drží zvolenou regionální působnost i při opakovaném vykreslení
+            # formuláře po neúspěšné validaci.
+            "formRegionModal": RegionForm(prefix="modal", initial={"region": form_d["region"].value()}),
             "hierarchie": get_hierarchie_dokument_typ(),
             "samostatny": True if not zaznam else False,
+            "allow_vlastni_ident": allow_vlastni_ident,
             "toolbar_label": _("dokument.views.zapsat.dokument.toolbar_label"),
         },
     )

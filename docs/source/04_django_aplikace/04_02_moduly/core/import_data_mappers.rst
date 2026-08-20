@@ -910,9 +910,9 @@ Třídy
       :return: Seznam s objektem ``obdobi``, jehož identifikátor se má případně aktualizovat.
 
 
-.. py:class:: HeslarDokumentTypMaterialRadaMapper
+.. py:class:: HeslarDokumentTypMaterialMapper
 
-   Mapovač pro model HeslarDokumentTypMaterialRada.
+   Mapovač pro model HeslarDokumentTypMaterial.
 
    **Metody:**
 
@@ -923,13 +923,6 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
-
-   .. py:method:: _get_updated_ident_cely_record_list()
-
-      Vrátí dokumentovou řadu navázanou na importovanou kombinaci typu a materiálu.
-
-      :param record: Záznam ``HeslarDokumentTypMaterialRada`` po importu.
-      :return: Seznam s navázanou hodnotou ``dokument_rada``.
 
 
 .. py:class:: HeslarHierarchieMapper

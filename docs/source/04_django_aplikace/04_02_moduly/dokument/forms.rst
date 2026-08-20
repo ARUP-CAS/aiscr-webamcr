@@ -66,7 +66,20 @@ Třídy
       :param required: Která pole jsou povinná.
       :param required_next: Která pole budou povinná v následující relaci.
       :param can_edit_datum_zverejneni: Zda lze editovat datum zveřejnění.
-      :param kwargs: Klíčové argumenty včetně create a region_not_required.
+      :param kwargs: Klíčové argumenty včetně create, region_not_required, allow_vlastni_ident
+          a region_zaznamu.
+
+   .. py:method:: clean()
+
+      Ověří ručně zadaný identifikátor dokumentu a zjistí jeho řadu (#3421).
+
+      Identifikátor se vyhodnocuje jen při zaškrtnuté volbě ``pouzit_vlastni_ident``; kontroluje se
+      jeho vyplnění, tvar permanentního identu dokumentu, existence řady v hesláři, to, že jej dosud
+      nemá jiný dokument, a shoda regionu se zvolenou regionální působností (u dokumentu zapisovaného
+      do záznamu s regionem nadřazeného záznamu). Bez zaškrtnuté volby se případná zadaná hodnota
+      zahodí, aby se dokument zapsal standardně s dočasným identifikátorem.
+
+      :return: Očištěná data formuláře.
 
 
 .. py:class:: CreateModelDokumentForm

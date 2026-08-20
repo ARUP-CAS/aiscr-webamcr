@@ -2,6 +2,7 @@ import logging
 
 from core.constants import COORDINATE_SYSTEM, D_STAV_ARCHIVOVANY, D_STAV_ODESLANY
 from core.forms import BaseFilterForm, OptimisticLockingMixin
+from core.ident_cely import get_dokument_rada_from_ident, get_dokument_region_from_ident
 from core.widgets import AutocompleteModelSelect2Multiple, AutocompleteSelect2Multiple
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
@@ -395,6 +396,17 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
         label=_("dokument.forms.editDokumentForm.autori.label"),
     )
     region = make_region_field()
+    pouzit_vlastni_ident = forms.BooleanField(
+        required=False,
+        label=_("dokument.forms.editDokumentForm.pouzitVlastniIdent.label"),
+        help_text=_("dokument.forms.editDokumentForm.pouzitVlastniIdent.tooltip"),
+    )
+    vlastni_ident_cely = forms.CharField(
+        required=False,
+        label=_("dokument.forms.editDokumentForm.vlastniIdentCely.label"),
+        help_text=_("dokument.forms.editDokumentForm.vlastniIdentCely.tooltip"),
+        widget=forms.TextInput(attrs={"placeholder": "M-DD-202100034"}),
+    )
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
@@ -501,11 +513,22 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
         :param required: Která pole jsou povinná.
         :param required_next: Která pole budou povinná v následující relaci.
         :param can_edit_datum_zverejneni: Zda lze editovat datum zveřejnění.
-        :param kwargs: Klíčové argumenty včetně create a region_not_required.
+        :param kwargs: Klíčové argumenty včetně create, region_not_required, allow_vlastni_ident
+            a region_zaznamu.
         """
         create = kwargs.pop("create", None)
         region_not_required = kwargs.pop("region_not_required", None)
+        allow_vlastni_ident = kwargs.pop("allow_vlastni_ident", False)
+        region_zaznamu = kwargs.pop("region_zaznamu", None)
         super(EditDokumentForm, self).__init__(*args, **kwargs)
+        #: Řada odvozená z ručně zadaného identifikátoru; naplní ji ``clean_vlastni_ident_cely``.
+        self.vlastni_ident_rada = None
+        self.allow_vlastni_ident = allow_vlastni_ident
+        #: Region nadřazeného záznamu; má přednost před volbou uživatele v poli ``region``.
+        self.region_zaznamu = region_zaznamu
+        if not allow_vlastni_ident:
+            del self.fields["pouzit_vlastni_ident"]
+            del self.fields["vlastni_ident_cely"]
         self.fields["popis"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
         self.fields["posudky"].choices = heslar_12(HESLAR_POSUDEK_TYP, HESLAR_POSUDEK_TYP_KAT)[1:]
@@ -560,6 +583,9 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
                 css_class="row",
             ),
         )
+        if allow_vlastni_ident:
+            self.helper.layout[0].append(Div("pouzit_vlastni_ident", css_class="col-sm-6 col-lg-2"))
+            self.helper.layout[0].append(Div("vlastni_ident_cely", css_class="col-sm-6 col-lg-2"))
         if self.optimistic_lock_field_name in self.fields:
             self.helper.layout[0].append(Div(self.optimistic_lock_field_name, css_class="d-none"))
         for key in self.fields.keys():
@@ -596,6 +622,43 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
             self.fields["region"].required = False
         elif create:
             self.fields["region"].required = True
+
+    def clean(self):
+        """
+        Ověří ručně zadaný identifikátor dokumentu a zjistí jeho řadu (#3421).
+
+        Identifikátor se vyhodnocuje jen při zaškrtnuté volbě ``pouzit_vlastni_ident``; kontroluje se
+        jeho vyplnění, tvar permanentního identu dokumentu, existence řady v hesláři, to, že jej dosud
+        nemá jiný dokument, a shoda regionu se zvolenou regionální působností (u dokumentu zapisovaného
+        do záznamu s regionem nadřazeného záznamu). Bez zaškrtnuté volby se případná zadaná hodnota
+        zahodí, aby se dokument zapsal standardně s dočasným identifikátorem.
+
+        :return: Očištěná data formuláře.
+        """
+        cleaned_data = super().clean()
+        if "pouzit_vlastni_ident" not in self.fields:
+            return cleaned_data
+        ident_cely = (cleaned_data.get("vlastni_ident_cely") or "").strip().upper()
+        cleaned_data["vlastni_ident_cely"] = ident_cely
+        if not cleaned_data.get("pouzit_vlastni_ident"):
+            cleaned_data["vlastni_ident_cely"] = ""
+            return cleaned_data
+        if not ident_cely:
+            self.add_error("vlastni_ident_cely", _("dokument.forms.editDokumentForm.vlastniIdentCely.nevyplneny"))
+            return cleaned_data
+        rada = get_dokument_rada_from_ident(ident_cely)
+        if rada is None:
+            self.add_error("vlastni_ident_cely", _("dokument.forms.editDokumentForm.vlastniIdentCely.neplatnyTvar"))
+            return cleaned_data
+        if Dokument.objects.filter(ident_cely=ident_cely).exists():
+            self.add_error("vlastni_ident_cely", _("dokument.forms.editDokumentForm.vlastniIdentCely.obsazeny"))
+            return cleaned_data
+        ocekavany_region = self.region_zaznamu or cleaned_data.get("region")
+        if ocekavany_region and get_dokument_region_from_ident(ident_cely) != ocekavany_region:
+            self.add_error("vlastni_ident_cely", _("dokument.forms.editDokumentForm.vlastniIdentCely.jinyRegion"))
+            return cleaned_data
+        self.vlastni_ident_rada = rada
+        return cleaned_data
 
 
 class CreateModelDokumentForm(OptimisticLockingMixin, forms.ModelForm):
