@@ -1575,20 +1575,46 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Provádí operaci login.
 
+        Před vyplněním formuláře ověří, že prohlížeč skutečně zobrazuje přihlašovací
+        stránku. Element ``#czech`` je i v hlavičce přihlášené aplikace, takže při
+        neúspěšném odhlášení by se kliklo na přepínač jazyka v dashboardu a formulář
+        by chyběl. Pokud je session ještě přihlášená, odhlásí se znovu.
+
         :param type: Parametr ``type`` předává se do volání ``send_keys()``, ``_username()``.
+
+            :raises Exception: Vyvolá se s textem "LoginPageNotDisplayedError", pokud se
+                po přechodu na úvodní stránku nezobrazí přihlašovací formulář.
         """
         self.goToAddress()
+        if self.findElement(By.ID, "buttonLogout"):
+            logger.warning(
+                "BaseSeleniumTestClass.login.stillLoggedIn", extra={"url": self.driver.current_url, "type": type}
+            )
+            self.logout()
+            self.goToAddress()
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "czech")
 
+        if not self.wait_for(self.findElement, By.ID, "id_username"):
+            logger.warning(
+                "BaseSeleniumTestClass.login.loginFormNotFound", extra={"url": self.driver.current_url, "type": type}
+            )
+            raise Exception("LoginPageNotDisplayedError")
         self.driver.find_element(By.ID, "id_username").send_keys(self._username(type))
         self.driver.find_element(By.ID, "id_password").send_keys(self._password(type))
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, ".btn")
 
     def logout(self):
-        """Provádí operaci logout."""
-        self.ElementClick(By.ID, "buttonLogout")
+        """
+        Provádí operaci logout.
+
+        Odhlášení je POST formuláře s přesměrováním na úvodní stránku. Bez čekání na
+        dokončení navigace může následné ``driver.get()`` request zrušit a session
+        zůstane přihlášená.
+        """
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "buttonLogout")
 
     def goToAddress(self, rel_address="/"):
         """
