@@ -152,7 +152,7 @@ Třídy
 
    .. py:method:: thumbnail_image_file()
 
-      Vrací první soubor jako náhled (seřazeny abecedně).
+      Vrací první soubor jako náhled (seřazeno podle názvu shodně s výpisem souborů).
 
       :return: První seřazený soubor nebo None.
 

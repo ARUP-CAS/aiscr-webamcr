@@ -13,7 +13,7 @@
             {% elif section != "section_name" %}
                 <div class="row vypis-field-row {{ field.css_class }}">
                 <div class="label"><strong>{{field.label}}:</strong></div>
-                <div class="content">{{ field.value }}</div>
+                <div class="content {{ field.css_class }}">{{ field.value }}</div>
             </div>
             {% endif %}
         </div>
