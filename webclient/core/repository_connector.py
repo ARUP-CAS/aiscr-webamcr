@@ -1381,14 +1381,16 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 data = io.BytesIO(data)
                 file_sha_512 = hashlib.sha512(data).hexdigest()
             else:
-                old_uuid = soubor.repository_uuid
                 old_rep_bin_file = soubor.get_repository_content(ident_cely_old)
                 data = old_rep_bin_file.content
                 file_sha_512 = old_rep_bin_file.sha_512
                 data.seek(0)
                 # Náhledy pro soubor už existují na starém umístění - stačí je zkopírovat, ne přegenerovat.
-                old_large_thumb = self.get_binary_file(old_uuid, ident_cely_old, thumb_large=True)
-                old_small_thumb = self.get_binary_file(old_uuid, ident_cely_old, thumb_small=True)
+                # Musí se číst přes soubor.get_repository_content (netransakční spojení) stejně jako orig výše -
+                # `self` je transakční připojení, ve kterém record_ident_change už smazal starý kontejner,
+                # takže by zde GET na starý container vracel 404.
+                old_large_thumb = soubor.get_repository_content(ident_cely_old, thumb_large=True)
+                old_small_thumb = soubor.get_repository_content(ident_cely_old, thumb_small=True)
                 source_thumbs = {
                     True: old_large_thumb.content.read() if old_large_thumb else None,
                     False: old_small_thumb.content.read() if old_small_thumb else None,
