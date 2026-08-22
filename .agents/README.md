@@ -8,10 +8,9 @@ Pravidla a governance viz [AGENTS.md](../AGENTS.md).
 ```plain
 .agents/
   prompts/
-    audit_doc_hygiene.md        — Portable audit: duplikace, drift, governance (any repo)
     postmortem_template.md      — Šablona pro incident postmortem
   config/
-    review_config.yaml          — Konfigurace review tasků, tech stack, adresáře
+    review_config.toml          — Konfigurace review tasků, tech stack, adresáře
     review_cache.json            — Perzistentní stav a průběh review sessions
   analysis/
     repository_map.json          — Strukturální mapa repozitáře (T01)
@@ -28,9 +27,8 @@ Pravidla a governance viz [AGENTS.md](../AGENTS.md).
 ## Kanonický zdroj
 
 - **Governance:** `AGENTS.md`
-- **Konfigurační hodnoty:** `config/review_config.yaml`
+- **Konfigurační hodnoty:** `config/review_config.toml`
 - **Stav review:** `config/review_cache.json`
-- **Operační workflow review:** kanonické `aiscr-codebase-review` (režimy full / update) dodané přes skill surfaces `.cursor/` / `.claude/` / `.codex/` / `.gemini/`; samostatný dlouhý review prompt v `prompts/` již neexistuje.
-- **Doc hygiene audit:** `prompts/audit_doc_hygiene.md`
+- **Operační workflow review:** kanonické `aiscr-review-codebase` (režimy full / update) dodané přes skill surfaces `.cursor/` / `.claude/` / `.codex/` / `.gemini/`; samostatný dlouhý review prompt v `prompts/` již neexistuje.
 
 Viz také [CONTRIBUTING.md](../CONTRIBUTING.md) § Správa dokumentace repozitáře.

@@ -779,7 +779,7 @@ def cmd_prompt_evolution(cfg: Config, _args: argparse.Namespace) -> int:
     print(f"  Bullet suggestions: {total_bullets}")
     print(f"  Pending handoff candidates: {len(feedback_files)}")
     print(f"  Malformed evidence: {len(malformed)}")
-    print("  Hub handoff: report-to-backlog-handoff -> /aiscr-note-idea after approval")
+    print("  Hub handoff: report-to-backlog-handoff -> /aiscr-plan-idea after approval")
 
     for task, path, bullet_count, has_bullets in feedback_files:
         rel_path = _relative_display_path(cfg.repo_root, path)

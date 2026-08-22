@@ -368,11 +368,11 @@ Vendored files must not be assessed for internal code quality in any task. They 
 apply_manually = true
 reviewer = "human"
 note = """
-Older prompt_evolution evidence was classified; usable rules were incorporated into this review_config.yaml and the canonical aiscr-codebase-review workflow. The temporary legacy evidence report was removed. New U05 feedback remains local evidence for this repository until a human explicitly approves report-to-backlog handoff.
+Older prompt_evolution evidence was classified; usable rules were incorporated into this review_config.toml and the canonical aiscr-review-codebase workflow. The temporary legacy evidence report was removed. New U05 feedback remains local evidence for this repository until a human explicitly approves report-to-backlog handoff.
 """
 
 [follow_up]
-workflow = "aiscr-codebase-review"
+workflow = "aiscr-review-codebase"
 mode = "codebase-review-mode-update"
 phases = [
     "U01",

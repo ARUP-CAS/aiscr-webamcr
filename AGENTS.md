@@ -13,29 +13,16 @@ see [CLAUDE.md](CLAUDE.md).
 
 ## AIS CR governance kernel
 
-This generated block is rendered from AIS CR hub canonical governance stems. In
-a sibling repository, treat the delivered assistant rule readers and `AGENTS.md`
-as the local operating surface; do not hand-edit this block.
+This generated block is rendered from AIS CR hub canonical governance stems. In a sibling repository, treat the delivered assistant rule readers and `AGENTS.md` as the local operating surface; do not hand-edit this block.
 
 **Required minimums:**
 
-- **Planning and approval:** Non-trivial or mutating work starts with a
-  planning phase and explicit human approval before mutating steps. OpenSpec
-  phase transfers require fresh approval before implementation or archive.
-- **Usage logging:** Significant management or AI-governance work keeps one
-  rolling usage-log entry for the current uncommitted change set.
-- **Model/backend logging:** That usage-log entry records the
-  assistant/runtime and the actual backend model id, or states that the
-  runtime does not expose it.
-- **Script, sync, and git approval:** High-impact scripts, sync apply, git
-  staging, commits, pushes, branch switches, and remote delivery require a
-  direct user order. Config sync uses inspect -> dry-run -> apply --approve.
-- **Workspace and sibling boundaries:** Work stays inside opened workspaces
-  unless explicitly approved. Sibling repositories may be touched only when
-  registry-scoped, branch-aware, and covered by the approved operation.
-- **Hub authority:** Sibling workflows may consume delivered governance
-  surfaces but must not write back to hub paths; hub adoption starts as a
-  separate explicit hub action.
+- **Planning and approval:** Non-trivial or mutating work starts with a planning phase and explicit human approval before mutating steps. OpenSpec phase transfers require fresh approval before implementation or archive.
+- **Usage logging:** Significant management or AI-governance work keeps one rolling usage-log entry for the current uncommitted change set.
+- **Model/backend logging:** That usage-log entry records the assistant/runtime and the actual backend model id, or states that the runtime does not expose it.
+- **Script, sync, and git approval:** High-impact scripts, sync apply, git staging, commits, pushes, branch switches, and remote delivery require a direct user order. Sibling delivery uses inspect -> plan -> apply --approve.
+- **Workspace and sibling boundaries:** Work stays inside opened workspaces unless explicitly approved. Sibling repositories may be touched only when registry-scoped, branch-aware, and covered by the approved operation.
+- **Hub authority:** Sibling workflows may consume delivered governance surfaces but must not write back to hub paths; hub adoption starts as a separate explicit hub action.
 
 **Source stems:**
 
@@ -71,7 +58,7 @@ Read the following files:
 - `.agents/reports/bugs.md`
 - `.agents/reports/refactoring_backlog.md`
 
-The operational review procedure is the hub-canonical `aiscr-codebase-review` workflow, delivered via the `.cursor/`, `.claude/`, `.codex/`, and `.gemini/` skill surfaces; there is no long-form review prompt under `.agents/prompts/`.
+The operational review procedure is the hub-canonical `aiscr-review-codebase` workflow, delivered via the `.cursor/`, `.claude/`, `.codex/`, and `.gemini/` skill surfaces; there is no long-form review prompt under `.agents/prompts/`.
 
 Purpose:
 
@@ -304,8 +291,8 @@ not as private local tooling.
 
 - **Agent and project rules:** `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`
 - **Review config and task definitions:** `.agents/config/` (e.g.
-  `review_config.yaml`)
-- **Portable prompts:** `.agents/prompts/` (e.g. `audit_doc_hygiene.md`)
+  `review_config.toml`)
+- **Portable prompts:** `.agents/prompts/` (e.g. `postmortem_template.md`)
 - **Ecosystem automation recommendations:** hub `aiscr-management` — see below
 - **Vendor delivery surfaces:** `.cursor/`, `.claude/`, `.codex/`,
   `.gemini/`, `.clinerules/`, `.qodo/` as synchronized from the
@@ -334,4 +321,4 @@ This application **exposes** the Auth API (production: <https://amcr.aiscr.cz/>)
 | Digiarchiv (File API) | File URLs (`DIGIARCHIV_SERVER_URL`, `DIGIARCHIV_URL`), cron trigger `call_digiarchiv_update_task` | [aiscr-api-home](https://github.com/ARUP-CAS/aiscr-api-home) — [File API](https://api.aiscr.cz/file-api/) |
 | AMCR schema (OAI-PMH) | XML namespace/XSD for AMCR format (`api.aiscr.cz/schema/amcr/2.2/`) | [aiscr-api-home](https://github.com/ARUP-CAS/aiscr-api-home) — [OAI-PMH](https://api.aiscr.cz/oai-pmh/) |
 
-Do not duplicate endpoint definitions or base URLs here; refer to aiscr-api-home (and its `.agents/config/review_config.yaml`) as the source of truth for live endpoints and verification.
+Do not duplicate endpoint definitions or base URLs here; refer to aiscr-api-home (and its `.agents/config/review_config.toml`) as the source of truth for live endpoints and verification.

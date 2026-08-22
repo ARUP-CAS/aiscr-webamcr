@@ -94,13 +94,15 @@ Standard `aiscr-*` workflows are authored at the `aiscr-management` hub and deli
 
 ### OpenSpec
 
-- `openspec/specs/` stores persistent capability specs, `openspec/changes/` stores change-scoped artifacts, and `openspec/config.yaml` selects the repo schema.
+- Whether this repository uses OpenSpec at all is its declared **posture**, read from the `context:` content of its own `openspec/config.yaml`; no config means posture `none`, and at `none` OpenSpec is not in use here — do not create an `openspec/` tree as a side effect of ordinary work. The adoption ladder itself, the work-kind triggers that fire a change inside an adopting posture, and how a session reads and respects the declared posture are owned by the `aiscr-openspec-posture` rule, which is BASELINE-delivered and so is already loaded alongside this digest in every repository that receives it; read the rungs there rather than from a copy here.
 - Mode-transfer gating iron law: `NEVER TREAT ARTIFACT COMPLETION AS IMPLICIT APPROVAL TO IMPLEMENT.` The explore → plan → implement boundaries each need fresh, phase-local human approval; after planning artifacts are complete, stop and offer apply instead of continuing silently.
 - Validate OpenSpec artifacts after editing them (`npm run openspec:validate` where available).
 
 ### Secrets and boundaries
 
-- Do not commit secrets, tokens, or API keys; do not paste production data or real PII into prompts; abstract or redact when demonstrating behaviour.
+- Do not commit secrets, tokens, or API keys; do not paste production data or real PII into prompts; abstract or redact when demonstrating behaviour. Redact secret-bearing logs and config excerpts **before** they enter AI context or storage, not afterwards, and check a generated artifact for secrets before committing it.
+- Use placeholders for internal infrastructure detail — `https://internal.example/...` and equivalents — unless the real value is explicitly needed and allowed.
+- Automation must not send sensitive content to an external service silently: that path needs explicit intent, a safeguard, and the user's approval before transmission.
 - Stay inside the opened workspace; out-of-workspace access needs an explicit user request and a plain statement of impact.
 - Do not weaken sandbox, permission, or other safety-related assistant configuration unless the user strictly orders it.
 
@@ -113,7 +115,7 @@ Standard `aiscr-*` workflows are authored at the `aiscr-management` hub and deli
 
 ### Gemini CLI ([geminicli.com/docs](https://geminicli.com/docs/))
 
-**Project context:** root `GEMINI.md` is the default project context file (hierarchical lookup toward the `.git` boundary; override via `context.fileName` in project `settings.json`). **Governance context:** `.gemini/context/<stem>.md` — delivered rule readers loaded via `context.includeDirectories` in `.gemini/settings.json`. **Project config:** `.gemini/settings.json` (tools, sandbox, model, hooks, MCP, context). **Skills:** `.gemini/skills/` with `SKILL.md` stubs; OpenSpec entry points are delivered under `.gemini/skills/openspec-*/` and `.gemini/commands/opsx/` where enrolled. **Hooks:** configured under `hooks` in `settings.json` ([Hooks](https://geminicli.com/docs/hooks/)). **Subagents:** project custom agents as Markdown with YAML frontmatter under `.gemini/agents/*.md` ([Subagents](https://geminicli.com/docs/core/subagents/)). **MCP:** `mcpServers` in `settings.json`. **Exclusions:** `.geminiignore`. **User-level config:** `~/.gemini/settings.json`. **Source:** [Gemini CLI on GitHub](https://github.com/google-gemini/gemini-cli).
+**Project context:** root `GEMINI.md` is the default project context file (hierarchical lookup toward the `.git` boundary; override via `context.fileName` in project `settings.json`). **Governance context:** `.gemini/context/<stem>.md` — delivered rule readers loaded via `context.includeDirectories` in `.gemini/settings.json`. **Project config:** `.gemini/settings.json` (tools, sandbox, model, hooks, MCP, context). **Skills:** `.gemini/skills/` with `SKILL.md` stubs; OpenSpec entry points are delivered under `.gemini/skills/openspec-*/` and `.gemini/commands/opsx/` where enrolled. **Hooks:** configured under `hooks` in `settings.json` ([Hooks](https://geminicli.com/docs/hooks/)). **Subagents:** project custom agents as Markdown with YAML frontmatter under `.gemini/agents/*.md` ([Subagents](https://geminicli.com/docs/core/subagents/)). **MCP:** `mcpServers` in `settings.json`. **Exclusions:** the CLI honours an optional repository-root ignore file that this repository does not commit; add it per the Gemini CLI docs if a repo needs one. **User-level config:** `~/.gemini/settings.json`. **Source:** [Gemini CLI on GitHub](https://github.com/google-gemini/gemini-cli).
 
 ### Gemini Code Assist ([developers.google.com/gemini-code-assist](https://developers.google.com/gemini-code-assist/docs/overview))
 
@@ -123,6 +125,6 @@ IDE assistance and a GitHub PR review service. **PR reviews:** trigger with `/ge
 
 1. `AGENTS.md`, `CONTRIBUTING.md`
 2. `GEMINI.md` (this file)
-3. Topic-specific delivered rule readers under `.gemini/context/`
+3. The delivered rule readers under `.gemini/context/` — `settings.json` `context.includeDirectories` loads that whole directory, so every reader is already in context rather than selected per topic
 
 <!-- end:generated:vendor-digest-gemini -->

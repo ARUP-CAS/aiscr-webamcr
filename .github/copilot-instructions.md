@@ -40,7 +40,7 @@ Use the generated kernel in `AGENTS.md` and Copilot instruction readers under
 
 ## Enrolled workflow discovery
 
-- **Workflow skills (this repo's enrolled set):** delivered as `.github/skills/aiscr-*/SKILL.md` for Copilot and as matching `aiscr-*` skills under `.cursor/skills/`, `.claude/skills/`, `.codex/skills/`, `.gemini/skills/`. Enrolled here: `aiscr-codebase-review`, `aiscr-prod-ui-crawl-review`, `aiscr-ci-review-integration`, `aiscr-incident-postmortem`, `aiscr-release-notes`, `aiscr-api-doc-alignment`, `aiscr-ai-data-exposure-policy`, `aiscr-doc-hygiene-audit`, `aiscr-docs-language-review`, `aiscr-review-pr`, `aiscr-ci-scriptification`, `aiscr-workstation-assistant-sandbox`.
+- **Workflow skills (this repo's enrolled set):** delivered as `.github/skills/aiscr-*/SKILL.md` for Copilot and as matching `aiscr-*` skills under `.cursor/skills/`, `.claude/skills/`, `.codex/skills/`, `.gemini/skills/`. Enrolled here: `aiscr-review-codebase`, `aiscr-review-prod-ui`, `aiscr-review-api-doc`, `aiscr-review-pr`, `aiscr-write-incident-postmortem`, `aiscr-write-release-notes`, `aiscr-plan-issue`, `aiscr-plan-from-issue`, `aiscr-setup-workstation-safety`.
 - **Skillset / workflow map:** `.agents/canonical_configs/references/aiscr_skillset_mapping.md`; topic-to-tool routing in `.agents/canonical_configs/references/governance_by_tool.md`.
 
 ## Local OpenSpec entry points
@@ -52,13 +52,13 @@ orientation below and the delivered `aiscr-planning-core` reader.
 
 ## Ecosystem-wide workflows (hub)
 
-Cross-repo config sync, tool-parity / manifest maintenance, and registry changes are **run from the `aiscr-management` hub** (a local clone next to this repo, or via GitHub / `gh`), not from this repository. For the short routing summary, see the delivered `aiscr-ecosystem-hub-workflow-routing` reader (for example `.github/instructions/aiscr-ecosystem-hub-workflow-routing.instructions.md` or `.cursor/rules/aiscr-ecosystem-hub-workflow-routing.mdc`). This digest does not replace the per-assistant skill surfaces enrolled for this repository.
+Cross-repo config sync, tool-parity / manifest maintenance, and registry changes are **run from the `aiscr-management` hub** (a local clone next to this repo, or via GitHub / `gh`), not from this repository. For the short routing summary, see the delivered `aiscr-ecosystem-governance` reader (for example `.github/instructions/aiscr-ecosystem-governance.instructions.md` or `.cursor/rules/aiscr-ecosystem-governance.mdc`). This digest does not replace the per-assistant skill surfaces enrolled for this repository.
 
 ## Safety pointers
 
-Use `AGENTS.md` and the delivered `aiscr-workspace-boundary-safety` and
-`aiscr-ai-data-exposure-policy` readers for workspace, secrets, and AI data
-exposure rules.
+Use `AGENTS.md` and the delivered `aiscr-workspace-boundary-safety` reader for
+workspace-boundary rules; the generated *Secrets and boundaries* section below
+carries the secrets and AI-data-exposure rules.
 
 ## Adding or renaming a standard `aiscr-` workflow
 
@@ -97,13 +97,15 @@ Standard `aiscr-*` workflows are authored at the `aiscr-management` hub and deli
 
 ### OpenSpec
 
-- `openspec/specs/` stores persistent capability specs, `openspec/changes/` stores change-scoped artifacts, and `openspec/config.yaml` selects the repo schema.
+- Whether this repository uses OpenSpec at all is its declared **posture**, read from the `context:` content of its own `openspec/config.yaml`; no config means posture `none`, and at `none` OpenSpec is not in use here — do not create an `openspec/` tree as a side effect of ordinary work. The adoption ladder itself, the work-kind triggers that fire a change inside an adopting posture, and how a session reads and respects the declared posture are owned by the `aiscr-openspec-posture` rule, which is BASELINE-delivered and so is already loaded alongside this digest in every repository that receives it; read the rungs there rather than from a copy here.
 - Mode-transfer gating iron law: `NEVER TREAT ARTIFACT COMPLETION AS IMPLICIT APPROVAL TO IMPLEMENT.` The explore → plan → implement boundaries each need fresh, phase-local human approval; after planning artifacts are complete, stop and offer apply instead of continuing silently.
 - Validate OpenSpec artifacts after editing them (`npm run openspec:validate` where available).
 
 ### Secrets and boundaries
 
-- Do not commit secrets, tokens, or API keys; do not paste production data or real PII into prompts; abstract or redact when demonstrating behaviour.
+- Do not commit secrets, tokens, or API keys; do not paste production data or real PII into prompts; abstract or redact when demonstrating behaviour. Redact secret-bearing logs and config excerpts **before** they enter AI context or storage, not afterwards, and check a generated artifact for secrets before committing it.
+- Use placeholders for internal infrastructure detail — `https://internal.example/...` and equivalents — unless the real value is explicitly needed and allowed.
+- Automation must not send sensitive content to an external service silently: that path needs explicit intent, a safeguard, and the user's approval before transmission.
 - Stay inside the opened workspace; out-of-workspace access needs an explicit user request and a plain statement of impact.
 - Do not weaken sandbox, permission, or other safety-related assistant configuration unless the user strictly orders it.
 
@@ -114,8 +116,8 @@ Standard `aiscr-*` workflows are authored at the `aiscr-management` hub and deli
 
 ## GitHub Copilot in this repository
 
-- **Instructions:** generated per-topic instruction files are delivered under `.github/instructions/*.instructions.md`; this digest is the Copilot entry point for governance context.
-- **Skills:** `aiscr-*` workflows are delivered as self-contained Agent Skills under `.github/skills/aiscr-*/SKILL.md` (read by the Copilot CLI and the cloud coding agent); OpenSpec prompts are generated under `.github/prompts/opsx-*.prompt.md` and mirrored OpenSpec skills under `.github/skills/openspec-*/`.
+- **Instructions:** the generated instruction files under `.github/instructions/*.instructions.md` are split one per governance topic but each declares `applyTo: "**/*"`, so all of them apply to every file — the split is an authoring convenience, not selective loading. This digest is the Copilot entry point for governance context.
+- **Skills:** `aiscr-*` workflows are delivered under `.github/skills/aiscr-*/SKILL.md` (read by the Copilot CLI and the cloud coding agent), gated by manifest locus: `ENROLLED` workflows compile a self-contained sibling-safe Agent Skill; `HUB-ONLY` workflows render a routing stub pointing at the canonical body. OpenSpec prompts are generated under `.github/prompts/opsx-*.prompt.md` and mirrored OpenSpec skills under `.github/skills/openspec-*/`.
 - **Sibling-owned content:** repo identity, repo-specific notes, and the enrolled-workflow list live outside the generated blocks of this digest and are preserved when the generated blocks are refreshed.
 
 <!-- end:generated:vendor-digest-copilot -->

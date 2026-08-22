@@ -8,11 +8,28 @@ context: |
   Sphinx documentation under docs/.
   Governance: AGENTS.md is the assistant entrypoint, CLAUDE.md narrows
   Claude Code usage, CONTRIBUTING.md owns human contribution workflow.
+
+  OpenSpec posture: spec-tracked.
+  This is the local reading of a posture declared and owned by the management hub. It says
+  how far this repository takes OpenSpec, not which schema it declares:
+    - change-tracked - change-scoped planning artifacts live under `openspec/changes/`;
+      no durable capability specs are maintained here.
+    - spec-tracked - as change-tracked, and `openspec/specs/` is this repository's durable
+      requirement surface.
+  Do not edit this line to unblock work in progress. Changing posture is a decision taken
+  deliberately with the hub and then applied to this repository.
+
+  When OpenSpec fires: behaviour-changing work (user-visible behaviour, an API or data
+  contract, a stored format), cross-repo work, and governance-touching work. Not typo and
+  formatting fixes, dependency bumps that change no behaviour, or refreshing a generated
+  surface from its source.
+
   Agent vendor surfaces are tracked repository content when materialized
   from the aiscr-management hub sync baseline.
-  Hub baseline: aiscr-management .agents/sync/repos.toml and
-  .agents/sync/specialized_sync_assets.toml declare synchronized
-  agent-vendor folders and repo-root integration assets for this repository.
+  Hub baseline: aiscr-management .agents/sync/repos.toml declares this
+  repository's enrollment and synchronized agent-vendor folders, and
+  .agents/canonical_configs/asset_manifest.toml is the governed-asset
+  inventory those deliveries are resolved from.
 
 rules:
   proposal:

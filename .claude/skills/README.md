@@ -1,3 +1,3 @@
-# Skills Claude Code
+# Claude Code skills
 
-Tento adresar `.claude/skills/` obsahuje workflow Agent Skills dorucene pro tento repozitar z hubu `aiscr-management`; kazdy `aiscr-*/SKILL.md` je vstupni bod standardniho workflow. Synchronizovane skills zde needitujte rucne; zmeny navrhnete v hubu.
+This `.claude/skills/` directory holds the workflow Agent Skills delivered for this repository from the `aiscr-management` hub; each `aiscr-*/SKILL.md` is a standard-workflow entry point. Do not hand-edit synced skills; propose changes at the hub.

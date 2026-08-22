@@ -70,7 +70,8 @@ CATEGORY_OPENSPEC_ACTIVE_CHANGES = "openspec_active_changes"
 CATEGORY_OPENSPEC_ARCHIVED_CHANGES = "openspec_archived_changes"
 CATEGORY_OTHER = "other"
 
-# Glob patterns relative to repo root (instruction-bearing files per audit_doc_hygiene C1;
+# Glob patterns relative to repo root (instruction-bearing files per the hub-owned
+# aiscr-audit-doc-hygiene workflow, criterion C1;
 # .agents/reports/*.md is included for C8 reports and long-lived assets cleanup evaluation).
 # Each entry pairs a glob with the audit category to assign to matching paths. First match wins.
 DISCOVERY_GLOB_RULES: tuple[tuple[str, str], ...] = (

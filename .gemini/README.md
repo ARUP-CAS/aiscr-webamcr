@@ -1,5 +1,5 @@
-# Vendorova vrstva Gemini
+# Gemini vendor surface
 
-Tento adresar `.gemini/` je dorucena vrstva Gemini pro tento repozitar, udrzovana v synchronizaci z hubu `aiscr-management`. Obsahuje aktiva vybrana pro tento repozitar (pravidla, skills, agenty a nastaveni dle potreby).
+This `.gemini/` directory is the delivered Gemini surface for this repository, kept in sync from the `aiscr-management` hub. It carries the assets selected for this repository (rules, skills, agents, and settings as applicable).
 
-Governance viz `AGENTS.md` a dorucene ctecky pravidel. Synchronizovane soubory zde needitujte rucne; zmeny navrhnete v hubu.
+For governance, see `AGENTS.md` and the delivered rule readers. Do not hand-edit synced files here; propose changes at the hub.
