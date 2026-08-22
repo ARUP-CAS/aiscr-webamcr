@@ -779,6 +779,28 @@ Třídy
       :raises PermissionDenied: Vyvolá se, pokud přihlášený uživatel není superuživatel.
 
 
+.. py:class:: DataImportReportDownloadView
+
+   Stáhne na disku archivovaný XLSX report importní úlohy podle jeho indexu.
+
+   **Metody:**
+
+   .. py:method:: get()
+
+      Vrátí uložený XLSX report importní úlohy jako přílohu.
+
+      Na rozdíl od ``DataImportProgressReportView`` (report sestavený za běhu z Redis, dostupný
+      jen vlastníkovi úlohy) čte přímo soubor na disku podle JSON indexu — funguje i po expiraci
+      Redis klíčů úlohy a je dostupný libovolnému superuživateli (index slouží k dohledání a
+      obnově libovolného minulého importu, ne jen vlastního).
+
+      :param request: HTTP požadavek, ověřuje se právo superuživatele.
+      :param kwargs: Obsahuje ``job_id`` importní úlohy, jejíž report se stahuje.
+      :return: ``FileResponse`` s obsahem XLSX souboru.
+      :raises PermissionDenied: Pokud přihlášený uživatel není superuživatel.
+      :raises Http404: Pokud úloha není v indexu, nebo její soubor na disku chybí.
+
+
 .. py:class:: DataImportStart
 
    Implementuje komponentu ``DataImportStart`` v rámci aplikace.

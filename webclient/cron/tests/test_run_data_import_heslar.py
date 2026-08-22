@@ -130,7 +130,12 @@ class RunDataImportHeslarTest(TestCase):
             side_effect=fake_save_metadata,
         ), patch(
             "cron.tasks.FedoraTransaction"
-        ) as fedora_transaction_mock:
+        ) as fedora_transaction_mock, patch(
+            "cron.tasks.check_import_report_directory",
+            return_value=("/tmp/fake-import-dir", "/tmp/fake-import-dir/reports", None),
+        ), patch(
+            "cron.tasks.save_import_report_to_disk", return_value=None
+        ):
             fedora_transaction_mock.return_value = MagicMock(uid="test-fedora-uid")
 
             cron_tasks.run_data_import(JOB_ID, self.user.id, LOCK_TOKEN)
@@ -213,7 +218,12 @@ class RunDataImportHeslarTest(TestCase):
             "cron.tasks.FedoraDeletionOnlyTransaction"
         ) as fedora_deletion_mock, patch(
             "heslar.signals.FedoraTransaction"
-        ) as signals_fedora_transaction_mock:
+        ) as signals_fedora_transaction_mock, patch(
+            "cron.tasks.check_import_report_directory",
+            return_value=("/tmp/fake-import-dir", "/tmp/fake-import-dir/reports", None),
+        ), patch(
+            "cron.tasks.save_import_report_to_disk", return_value=None
+        ):
             fedora_transaction_mock.return_value = MagicMock(uid="test-fedora-uid")
             fedora_deletion_mock.return_value = MagicMock(uid="test-fedora-deletion-uid", updated_ident_cely=set())
             signals_fedora_transaction_mock.return_value = MagicMock(uid="test-signals-fedora-uid")
@@ -304,7 +314,12 @@ class RunDataImportHeslarTest(TestCase):
             "cron.tasks.FedoraDeletionOnlyTransaction"
         ) as fedora_deletion_mock, patch(
             "heslar.signals.FedoraTransaction"
-        ) as signals_fedora_transaction_mock:
+        ) as signals_fedora_transaction_mock, patch(
+            "cron.tasks.check_import_report_directory",
+            return_value=("/tmp/fake-import-dir", "/tmp/fake-import-dir/reports", None),
+        ), patch(
+            "cron.tasks.save_import_report_to_disk", return_value=None
+        ):
             fedora_transaction_mock.return_value = MagicMock(uid="test-fedora-uid")
             deletion_transaction = MagicMock(uid="test-fedora-deletion-uid", updated_ident_cely=set())
             fedora_deletion_mock.return_value = deletion_transaction

@@ -221,6 +221,74 @@ Funkce
    :param redis_connector: Dekódující Redis spojení.
    :param job_id: Identifikátor resetované importní úlohy.
 
+.. py:function:: _translate_status_value_for_report(raw)
+
+   Přeloží hodnotu z Redis (ID nebo obálka ``{id, params}``) do aktivního jazyka.
+
+   Zrcadlí ``core.views._translate_status_value`` — nedovolat odtud, aby ``cron.tasks`` (načítaný
+   při startu Celery workeru) nezávisel na ``core.views`` na úrovni modulu.
+
+   :param raw: Hodnota z Redis — ``None``, plain ID (str), nebo JSON obálka (str) s ``id`` a
+       ``params``.
+   :return: Přeložený řetězec, nebo ``None``, pokud je vstup ``None``.
+
+.. py:function:: get_or_create_import_report_path(job_id, redis_connector, reports_directory_path)
+
+   Vrátí cestu k XLSX reportu importní úlohy, poprvé ji odvodí a uloží do Redis.
+
+   Report je vázaný na okamžik prvního volání (typicky začátek validace) — jméno souboru nese
+   tento časový otisk plus ``job_id`` pro jednoznačnost. Cesta se persistuje do Redis, aby ji
+   validace i navazující import (dvě samostatné Celery úlohy) použily shodně a psaly do stejného
+   souboru (zákaznický požadavek: jeden XLSX report na import, dohledatelný podle času startu).
+
+   :param job_id: Identifikátor importní úlohy.
+   :param redis_connector: Redis spojení, přes které se cesta persistuje.
+   :param reports_directory_path: Adresář, kam se report ukládá (podadresář ``reports``).
+   :return: Absolutní cesta k XLSX souboru reportu této úlohy.
+
+.. py:function:: build_import_report_dataframe(job_id, redis_connector)
+
+   Sestaví DataFrame reportu importní úlohy z aktuálního stavu v Redis.
+
+   Sdílený mechanismus mezi periodickým ukládáním na disk (``save_import_report_to_disk``,
+   volané z ``run_data_import_validation``/``run_data_import``) a stahováním přes
+   ``DataImportProgressReportView`` — obě strany čtou stejná Redis data stejným způsobem, takže
+   stažený a na disk uložený report si vždy odpovídají.
+
+   :param job_id: Identifikátor importní úlohy.
+   :param redis_connector: Dekódující Redis spojení (klíče i hodnoty jako ``str``).
+   :return: Dvojice ``(DataFrame, fáze)`` — ``fáze`` je aktuální ``import_data_phase_{job_id}``.
+
+.. py:function:: build_import_fedora_target_dataframe(job_id, redis_connector)
+
+   Sestaví DataFrame druhého listu reportu s výsledky Fedora aktualizací po cílech.
+
+   Na rozdíl od hlavního listu (jeden řádek na importovaný záznam) obsahuje jeden řádek na
+   skutečně provedenou aktualizaci Fedora metadat nad deduplikovanými cíli z
+   ``fedora_update_targets_dict`` — víc importovaných záznamů může sdílet jeden Fedora cíl
+   (zákaznický požadavek na list ``Fedora``). Navíc obsahuje řádek pro každý záznam, který žádný
+   Fedora cíl neměl (``FEDORA_SKIPPED_ID``) — nový unikátní placeholder výsledku importu, ID
+   transakce zůstává prázdné (zákaznický požadavek).
+
+   :param job_id: Identifikátor importní úlohy.
+   :param redis_connector: Dekódující Redis spojení.
+   :return: DataFrame se sloupci ``ident_cely``, ID transakce Fedora a přeložený výsledek.
+
+.. py:function:: save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
+
+   Uloží aktuální stav reportu importní úlohy jako XLSX do adresáře reportů.
+
+   Volá se na začátku validace/importu a po každé fázové tranzici i v except/finally větvích
+   (zákaznický požadavek — report musí přežít TTL Redis klíčů). Zápis je
+   atomický (dočasný soubor + ``os.replace``), takže souběžné čtení nikdy neuvidí částečně
+   zapsaný XLSX. Chyba zápisu se loguje a nesmí přerušit import — volající proto výjimku
+   nepropaguje dál.
+
+   :param job_id: Identifikátor importní úlohy.
+   :param redis_connector: Dekódující Redis spojení.
+   :param reports_directory_path: Adresář reportů (z ``check_import_report_directory``).
+   :return: Cesta k uloženému souboru při úspěchu, jinak ``None``.
+
 .. py:function:: run_data_import_validation(job_id, user_id, lock_token, performed_action)
 
    Asynchronně zvaliduje nahraný ZIP archiv hromadného importu (viz §4.2 dokumentu #391).

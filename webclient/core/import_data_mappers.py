@@ -1919,8 +1919,9 @@ class GeometryTransformMixin:
             missing_geometry_column = any(
                 column not in mapping_dict for column in GeometryTransformMixin.GEOMETRY_COLUMNS
             )
-            db_record = self._get_geometry_db_record() if missing_geometry_column else None
-            if "geom_system" in mapping_dict:
+            geom_system_present = bool(mapping_dict.get("geom_system"))
+            db_record = self._get_geometry_db_record() if (missing_geometry_column or not geom_system_present) else None
+            if geom_system_present:
                 geom_system = mapping_dict.get("geom_system")
             elif db_record is not None:
                 geom_system = getattr(db_record, "geom_system", None)

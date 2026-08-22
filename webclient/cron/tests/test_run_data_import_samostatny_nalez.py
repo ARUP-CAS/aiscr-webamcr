@@ -1,6 +1,5 @@
 """Jednotkové testy pro ``cron.tasks.run_data_import`` — mapper ``SamostatnyNalezMapper``."""
 
-import json
 from types import SimpleNamespace
 from unittest.mock import MagicMock, mock_open, patch
 
@@ -62,7 +61,6 @@ class RunDataImportSamostatnyNalezTest(RunDataImportMapperTestBase):
 
     def _soubor_phase_patches(self):
         """Patche potřebné pro import binárního souboru navázaného na samostatný nález."""
-        settings_value = SimpleNamespace(value=json.dumps({"DIRECTORY_PATH": "/tmp/import-data"}))
         binary_result = SimpleNamespace(
             size_mb=0.001,
             sha_512="sha",
@@ -71,8 +69,6 @@ class RunDataImportSamostatnyNalezTest(RunDataImportMapperTestBase):
         connector = MagicMock()
         connector.save_binary_file.return_value = binary_result
         return [
-            patch("cron.tasks.CustomAdminSettings.objects.get", return_value=settings_value),
-            patch("cron.tasks.os.path.isdir", return_value=True),
             patch("cron.tasks.os.path.isfile", return_value=True),
             patch("builtins.open", mock_open(read_data=b"plain text")),
             # SamostatnyNalez povoluje pouze obrazové MIME typy (PAS_ACCEPTED_MIMES).

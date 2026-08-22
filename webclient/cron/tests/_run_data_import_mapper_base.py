@@ -325,6 +325,18 @@ class RunDataImportMapperTestBase(TestCase):
         with ExitStack() as stack:
             stack.enter_context(patch("core.connectors.RedisConnector.get_connection", return_value=fake_redis))
             stack.enter_context(patch("core.connectors.RedisConnector.refresh_import_lock", **refresh_lock_kwargs))
+            # Report-directory gate + disk-writing report are exercised by their own dedicated tests
+            # (test_import_report.py); mapper smoke tests only care that the gate passes and that no
+            # real xlsx gets written on every one of hundreds of test rows/runs.
+            stack.enter_context(
+                patch(
+                    "cron.tasks.check_import_report_directory",
+                    return_value=("/tmp/fake-import-dir", "/tmp/fake-import-dir/reports", None),
+                )
+            )
+            self.report_save_mock = stack.enter_context(
+                patch("cron.tasks.save_import_report_to_disk", return_value=None)
+            )
             stack.enter_context(
                 patch(
                     "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",

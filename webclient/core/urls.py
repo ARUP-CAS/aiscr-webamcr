@@ -139,4 +139,9 @@ urlpatterns = [
         views.DataImportProgressReportView.as_view(),
         name="data-import-progress-report",
     ),
+    path(
+        "data-import-report-download/<str:job_id>",
+        views.DataImportReportDownloadView.as_view(),
+        name="data-import-report-download",
+    ),
 ]

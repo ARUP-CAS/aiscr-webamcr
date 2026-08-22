@@ -149,14 +149,18 @@ class FakeRedis:
 
     def eval(self, script, numkeys, *keys_and_args):
         """Simuluje Redis Lua skript — vrací hodnotu z ``eval_results``, jinak reálně vykoná
-        compare-then-delete (``RedisConnector._RELEASE_LOCK_SCRIPT``/``delete_if_value_matches``).
+        compare-then-delete (``RedisConnector._RELEASE_LOCK_SCRIPT``/``delete_if_value_matches``)
+        nebo compare-then-transition (``RedisConnector._CLAIM_AWAITING_IMPORT_SCRIPT``).
 
         Pokud byl při inicializaci předán ``eval_results``, odebere a vrátí první položku seznamu
         (beze změny úložiště) — pro testy, které chtějí vynutit konkrétní výsledek locku. Jinak,
-        pro compare-then-delete skript, klíč skutečně smaže, pokud jeho hodnota odpovídá
-        očekávané — jiné skripty (refresh/persist/claim) vrací ``1`` beze změny úložiště.
+        pro compare-then-delete skript klíč skutečně smaže, pokud jeho hodnota odpovídá
+        očekávané; pro claim skript ověří fázi/validitu/token a fázi skutečně přepne
+        (review r3747341985 — bez toho nešel otestovat souběh dvou Start požadavků);
+        jiné skripty (refresh/persist) vrací ``1`` beze změny úložiště.
 
-        :param script: Zdrojový text Lua skriptu (rozlišuje se dle přítomnosti ``\"del\"``).
+        :param script: Zdrojový text Lua skriptu (rozlišuje se dle přítomnosti ``\"del\"``
+            resp. ``\"return {1, token}\"``).
         :param numkeys: Počet KEYS argumentů na začátku ``keys_and_args``.
         :param keys_and_args: KEYS následované ARGV, stejně jako u reálného Redis ``eval``.
         :return: První zbývající hodnota z ``eval_results``, nebo výsledek simulace.
@@ -165,6 +169,8 @@ class FakeRedis:
             return self._eval_results.pop(0)
         keys = keys_and_args[:numkeys]
         argv = keys_and_args[numkeys:]
+        if "return {1, token}" in script:
+            return self._eval_claim_awaiting_import(keys, argv)
         if "del" in script and keys and argv:
             key = keys[0]
             if self._kv.get(key) == self._encode(argv[0]):
@@ -172,6 +178,28 @@ class FakeRedis:
                 return 1
             return 0
         return 1
+
+    def _eval_claim_awaiting_import(self, keys, argv):
+        """Vykoná simulaci ``RedisConnector._CLAIM_AWAITING_IMPORT_SCRIPT``.
+
+        Ověří fázi, validitu a vlastnictví locku úlohy a při shodě atomicky přepne fázi na
+        ``new_phase`` — stejně jako reálný Lua skript, ale nad in-memory úložištěm.
+
+        :param keys: ``(phase_key, valid_key, lock_token_key, global_lock_key)`` z ``KEYS``.
+        :param argv: ``(expected_phase, new_phase, ttl_seconds)`` z ``ARGV``.
+        :return: ``[1, token]`` při úspěšném nároku, jinak ``[0, ""]``.
+        """
+        phase_key, valid_key, lock_token_key, global_lock_key = keys
+        expected_phase, new_phase, _ttl_seconds = argv
+        if self._kv.get(phase_key) != self._encode(expected_phase):
+            return [0, ""]
+        if self._kv.get(valid_key) != self._encode("1"):
+            return [0, ""]
+        token_raw = self._kv.get(lock_token_key)
+        if token_raw is None or self._kv.get(global_lock_key) != token_raw:
+            return [0, ""]
+        self.set(phase_key, new_phase)
+        return [1, self._maybe_decode(token_raw)]
 
     class FakePipeline:
         """Record-then-execute pipeline nad ``FakeRedis`` — operace se provedou až při ``execute()``."""

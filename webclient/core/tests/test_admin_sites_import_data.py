@@ -71,6 +71,9 @@ class ImportDataUploadRecoveryMetadataTest(SimpleTestCase):
             "core.admin_sites.ImportDataAdminForm", return_value=form_mock
         ), patch(
             "core.admin_sites.is_maintenance_in_progress", return_value=True
+        ), patch(
+            "core.admin_sites.check_import_report_directory",
+            return_value=("/tmp/fake-import-dir", "/tmp/fake-import-dir/reports", None),
         ):
             site = AmcrCustomAdminSite()
             response = site.import_data(request)
@@ -119,6 +122,9 @@ class ImportDataUploadRecoveryMetadataTest(SimpleTestCase):
             "core.admin_sites.ImportDataAdminForm", return_value=form_mock
         ), patch(
             "core.admin_sites.is_maintenance_in_progress", return_value=True
+        ), patch(
+            "core.admin_sites.check_import_report_directory",
+            return_value=("/tmp/fake-import-dir", "/tmp/fake-import-dir/reports", None),
         ):
             site = AmcrCustomAdminSite()
             response = site.import_data(request)
@@ -141,6 +147,66 @@ class ImportDataUploadRecoveryMetadataTest(SimpleTestCase):
         self.assertIsNone(fake.get(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY))
         self.assertIsNone(fake.get(f"import_data_current_job_{USER_ID}"))
 
+    def test_dispatch_failure_cleanup_preserves_racing_job_pointers(self):
+        """Compare-then-delete cleanup nesmí smazat pointery nové úlohy, která je přepsala po
+        uvolnění locku.
+
+        Simuluje: dispatch selže → ``release_import_lock`` uvolní lock → mezitím jiný upload stihne
+        získat lock a přepsat ``import_data_current_job_{user}``/``IMPORT_DATA_ACTIVE_JOB_KEY`` na
+        svůj vlastní ``job_id`` → následný compare-then-delete úklid selhavší úlohy nesmí tyto
+        pointery smazat, protože už neodpovídají jejímu ``job_id``.
+        """
+        fake = FakeRedis(decode_responses=True)
+        fake_bytes = FakeRedis()
+        racing_job_id = "racing-job-id"
+
+        def release_lock_and_simulate_race(connection, token):
+            connection.set(f"import_data_current_job_{USER_ID}", racing_job_id)
+            connection.set(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, racing_job_id)
+            return True
+
+        data_file = MagicMock()
+        data_file.read.side_effect = RuntimeError("simulated dispatch failure")
+
+        form_mock = MagicMock()
+        form_mock.is_valid.return_value = True
+        form_mock.cleaned_data = {
+            "performed_action": ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+            "data_file": data_file,
+        }
+        request = self.factory.post("/admin/core/import-data/")
+        request.user = _StubUser(USER_ID)
+        request._dont_enforce_csrf_checks = True
+
+        with patch.object(AmcrCustomAdminSite, "get_app_list", return_value=[]), patch.object(
+            AmcrCustomAdminSite, "each_context", return_value={}
+        ), patch.object(AmcrCustomAdminSite, "redis_connector", fake), patch(
+            "core.admin_sites.RedisConnector.get_connection", return_value=fake_bytes
+        ), patch(
+            "core.admin_sites.ImportDataAdminForm", return_value=form_mock
+        ), patch(
+            "core.admin_sites.is_maintenance_in_progress", return_value=True
+        ), patch(
+            "core.admin_sites.check_import_report_directory",
+            return_value=("/tmp/fake-import-dir", "/tmp/fake-import-dir/reports", None),
+        ), patch(
+            "core.admin_sites.RedisConnector.release_import_lock", side_effect=release_lock_and_simulate_race
+        ):
+            site = AmcrCustomAdminSite()
+            response = site.import_data(request)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            fake.get(f"import_data_current_job_{USER_ID}"),
+            racing_job_id,
+            "Compare-then-delete nesmí smazat pointer, který mezitím přepsala nová úloha.",
+        )
+        self.assertEqual(
+            fake.get(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY),
+            racing_job_id,
+            "Compare-then-delete nesmí smazat pointer, který mezitím přepsala nová úloha.",
+        )
+
     def test_successful_upload_still_dispatches_validation(self):
         """Přesun zápisů metadat před čtení souboru nesmí rozbít úspěšnou cestu (task se stále dispatchne)."""
         data_file = MagicMock()
@@ -155,3 +221,69 @@ class ImportDataUploadRecoveryMetadataTest(SimpleTestCase):
         self.assertEqual(fake.get(f"import_data_phase_{job_id}"), tasks.IMPORT_PHASE_VALIDATING)
         self.assertEqual(fake.get(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY), job_id)
         self.assertEqual(fake.get(f"import_data_current_job_{USER_ID}"), job_id)
+
+
+class ImportDataReportDirectoryGateTest(SimpleTestCase):
+    """Ověřuje, že bez nakonfigurovaného/zapisovatelného adresáře reportů import nejde ani spustit
+    (customer requirement — report je jediný trvalý záznam běhu)."""
+
+    def setUp(self):
+        """Připraví ``RequestFactory`` sdílenou napříč testy."""
+        self.factory = RequestFactory()
+
+    def _call(self, method, data_file=None):
+        """Zavolá ``AmcrCustomAdminSite.import_data`` s nekonfigurovaným adresářem reportů.
+
+        :param method: ``"get"`` nebo ``"post"``.
+        :param data_file: Mock nahrávaného souboru pro POST (ignorováno pro GET).
+        :return: ``TemplateResponse`` vrácená view.
+        """
+        fake = FakeRedis(decode_responses=True)
+        request_factory_method = getattr(self.factory, method)
+        if method == "post":
+            form_mock = MagicMock()
+            form_mock.is_valid.return_value = True
+            form_mock.cleaned_data = {
+                "performed_action": ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+                "data_file": data_file,
+            }
+            request = request_factory_method("/admin/core/import-data/")
+        else:
+            form_mock = None
+            request = request_factory_method("/admin/core/import-data/")
+        request.user = _StubUser(USER_ID)
+        request._dont_enforce_csrf_checks = True
+
+        with patch.object(AmcrCustomAdminSite, "get_app_list", return_value=[]), patch.object(
+            AmcrCustomAdminSite, "each_context", return_value={}
+        ), patch.object(AmcrCustomAdminSite, "redis_connector", fake), patch(
+            "core.admin_sites.is_maintenance_in_progress", return_value=True
+        ), patch(
+            "core.admin_sites.check_import_report_directory",
+            return_value=(None, None, "Missing required DIRECTORY_PATH setting"),
+        ), patch(
+            "core.admin_sites.ImportDataAdminForm", return_value=form_mock
+        ):
+            site = AmcrCustomAdminSite()
+            response = site.import_data(request)
+        return response, fake
+
+    def test_get_shows_error_instead_of_upload_form(self):
+        """GET bez nakonfigurovaného adresáře reportů nesmí vykreslit upload formulář."""
+        response, _fake = self._call("get")
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("form", response.context_data)
+        self.assertIn("error_message", response.context_data)
+
+    def test_post_does_not_dispatch_validation(self):
+        """POST bez nakonfigurovaného adresáře reportů nesmí založit job ani dispatchnout validaci."""
+        data_file = MagicMock()
+        data_file.read.return_value = b"PK\x03\x04fake-zip-bytes"
+
+        with patch("cron.tasks.run_data_import_validation.delay") as delay_mock:
+            response, fake = self._call("post", data_file=data_file)
+
+        self.assertEqual(response.status_code, 200)
+        delay_mock.assert_not_called()
+        self.assertIsNone(fake.get(f"import_data_current_job_{USER_ID}"))
+        data_file.read.assert_not_called()

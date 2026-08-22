@@ -184,7 +184,12 @@ class RunDataImportValidationTest(TestCase):
             "uzivatel.models.User.save_metadata", lambda *a, **kw: None
         ), patch(
             "uzivatel.signals.FedoraTransaction"
-        ) as signals_fedora_transaction_mock:
+        ) as signals_fedora_transaction_mock, patch(
+            "cron.tasks.check_import_report_directory",
+            return_value=("/tmp/fake-import-dir", "/tmp/fake-import-dir/reports", None),
+        ), patch(
+            "cron.tasks.save_import_report_to_disk", return_value=None
+        ):
             signals_fedora_transaction_mock.return_value = None
             cron_tasks.run_data_import_validation(
                 JOB_ID, self.runner.id, LOCK_TOKEN, ImportDataAdminForm.PERFORMED_ACTION_INSERT
@@ -476,7 +481,12 @@ class RunDataImportValidationTest(TestCase):
             "uzivatel.models.User.save_metadata"
         ) as user_save_metadata_mock, patch(
             "core.repository_connector.FedoraRepositoryConnector.save_binary_file"
-        ) as save_binary_file_mock:
+        ) as save_binary_file_mock, patch(
+            "cron.tasks.check_import_report_directory",
+            return_value=("/tmp/fake-import-dir", "/tmp/fake-import-dir/reports", None),
+        ), patch(
+            "cron.tasks.save_import_report_to_disk", return_value=None
+        ):
             cron_tasks.run_data_import_validation(
                 JOB_ID, self.runner.id, LOCK_TOKEN, ImportDataAdminForm.PERFORMED_ACTION_INSERT
             )

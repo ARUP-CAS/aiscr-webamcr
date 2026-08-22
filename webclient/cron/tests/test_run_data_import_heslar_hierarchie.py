@@ -171,7 +171,12 @@ class RunDataImportHeslarHierarchieTest(TestCase):
             "cron.tasks.FedoraDeletionOnlyTransaction"
         ) as fedora_deletion_mock, patch(
             "heslar.signals.FedoraTransaction"
-        ) as signals_fedora_transaction_mock:
+        ) as signals_fedora_transaction_mock, patch(
+            "cron.tasks.check_import_report_directory",
+            return_value=("/tmp/fake-import-dir", "/tmp/fake-import-dir/reports", None),
+        ), patch(
+            "cron.tasks.save_import_report_to_disk", return_value=None
+        ):
             fedora_transaction_mock.return_value = MagicMock(uid="test-fedora-uid", updated_ident_cely=set())
             fedora_deletion_mock.return_value = MagicMock(uid="test-fedora-deletion-uid", updated_ident_cely=set())
             signals_fedora_transaction_mock.return_value = MagicMock(uid="test-signals-fedora-uid")

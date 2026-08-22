@@ -57,6 +57,11 @@
 
 {% block content %}
   <div id="content-main">
+    <p>
+      <a href="{% url 'admin:import_reports' %}" target="_blank" rel="noopener">
+        {% trans "core.admin_site.AmcrCustomAdminSite.hromadny_import_reporty" %}
+      </a>
+    </p>
     {% if not maintenance %}
       <p>{% trans "core.templates.admin.import_data.not_maintenance" %}</p>
     {% elif import_data_running and not job_id %}
@@ -115,6 +120,10 @@
           <b>{% trans "core.forms.ImportDataAdminForm.action.label" %}:</b>
           <span id="performedAction">{{ performed_action_label }}</span>
         </p>
+        <p id="reportSavedNotice" style="display: none; width: 100%;">
+          <b>{% trans "core.templates.admin.import_data.report_saved_label" %}:</b>
+          <span id="reportSavedPath"></span>
+        </p>
         <p id="reuploadNotice" style="display: none; width: 100%;">
           <strong>{% trans "core.templates.admin.import_data.reupload_notice" %}</strong>
           <input type="button" id="reuploadButton" class="default"
@@ -160,6 +169,12 @@
       <p><strong>{% trans "core.templates.admin.import_data.import_directory_not_configured" %}</strong></p>
       {% endif %}
     {% else %}
+      <p>
+        {% trans "core.templates.admin.import_data.no_active_job_notice" %}
+        <a href="{% url 'admin:import_reports' %}" target="_blank" rel="noopener">
+          {% trans "core.admin_site.AmcrCustomAdminSite.hromadny_import_reporty" %}
+        </a>.
+      </p>
       <form method="post" enctype="multipart/form-data">
         <div>
           <fieldset class="module aligned">
@@ -374,6 +389,17 @@
               applyPhaseUi(data.phase)
               applyProgress(data)
               renderTables(data)
+
+              // Plain text, not a link (customer requirement) — shown only once the XLSX report has
+              // actually been written to disk, never speculatively.
+              if (data.report_saved_path) {
+                  const reportSavedNotice = document.getElementById("reportSavedNotice")
+                  const reportSavedPath = document.getElementById("reportSavedPath")
+                  if (reportSavedNotice && reportSavedPath) {
+                      reportSavedPath.textContent = data.report_saved_path
+                      reportSavedNotice.style.display = "block"
+                  }
+              }
 
               // failed_lock_lost is load-bearing (§4.8): the validated job is gone — the admin must
               // re-upload. Do not render it as a stale awaiting_approval table.

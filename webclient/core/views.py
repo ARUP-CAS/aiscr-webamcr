@@ -57,6 +57,7 @@ from core.repository_connector import (
 from core.soubor_naming import get_dokument_free_suffixes, get_finds_free_suffixes, get_soubor_suffix
 from core.utils import (
     SessionIdentifier,
+    check_import_report_directory,
     find_pos_with_backup,
     get_heatmap_pas,
     get_heatmap_pian,
@@ -66,6 +67,7 @@ from core.utils import (
     get_pas_from_envelope,
     get_pian_from_envelope,
     is_maintenance_in_progress,
+    read_import_report_index,
     replace_last,
 )
 from django.conf import settings
@@ -3020,6 +3022,9 @@ class DataImportProgress(LoginRequiredMixin, View):
                 "failure_reason": failure_reason,
                 "performed_action": performed_action,
                 "performed_action_label": performed_action_label,
+                # Plain path, not a link (customer requirement) — only set once the XLSX has
+                # actually been written to disk, never speculatively.
+                "report_saved_path": redis_connector.get(f"import_data_report_saved_path_{job_id}"),
             }
         except (AttributeError, TypeError, ValueError, json.JSONDecodeError) as err:
             logger.exception(
@@ -3082,67 +3087,11 @@ class DataImportProgressReportView(LoginRequiredMixin, View):
         if not _check_import_ownership(request, job_id, redis_connector):
             raise PermissionDenied
 
-        from cron.tasks import IMPORT_PHASE_IMPORTING, IMPORT_PHASE_VALIDATING
+        # Shared with the periodic on-disk snapshot (cron.tasks.save_import_report_to_disk) so the
+        # downloaded and disk-persisted reports always match.
+        from cron.tasks import build_import_report_dataframe
 
-        phase = redis_connector.get(f"import_data_phase_{job_id}") or "unknown"
-        validation_results_raw = json.loads(redis_connector.get(f"import_data_validation_results_{job_id}") or "[]")
-        # validation_result is a translation ID (valid rows) or a raw translated exception message
-        # (invalid rows, carve-out). Translate each in the admin's locale.
-        validation_results = [
-            {**item, "validation_result": _translate_status_value(item.get("validation_result", ""))}
-            for item in validation_results_raw
-        ]
-        primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}") or "{}")
-        progress_ids = redis_connector.lrange(f"import_data_progress_ids_{job_id}", 0, -1)
-        progress_details = redis_connector.lrange(f"import_data_progress_details_tr_{job_id}", 0, -1)
-        serialized_results = {
-            rid: _translate_status_value(detail) for rid, detail in zip(progress_ids, progress_details)
-        }
-        history_record_result = {
-            rid: _translate_status_value(value)
-            for rid, value in json.loads(
-                redis_connector.get(f"import_data_history_record_result_tr_{job_id}") or "{}"
-            ).items()
-        }
-        fedora_update_result = {
-            rid: [_translate_status_value(item) for item in items]
-            for rid, items in json.loads(redis_connector.get(f"import_fedora_result_tr_{job_id}") or "{}").items()
-        }
-
-        def build_row(item):
-            """
-            Sestaví řádek reportu z jednoho záznamu výsledku validace.
-
-            :param item: Slovník s daty validačního výsledku záznamu importu.
-            :return: Slovník s přeloženými názvy sloupců a hodnotami pro export do Excelu.
-            """
-            i = item["item_order"]
-            return {
-                _("core.templates.admin.import_data.import_order"): i + 1,
-                _("core.templates.admin.import_data.fila_name"): item.get("file_name", ""),
-                _("core.templates.admin.import_data.primary_key_import"): item.get("primary_key_import", ""),
-                _("core.templates.admin.import_data.primary_key_database"): primary_keys.get(str(i), ""),
-                _("core.templates.admin.validation_result"): item.get("validation_result", ""),
-                _("core.templates.admin.status"): serialized_results.get(str(i), ""),
-                _("core.templates.admin.import_data.history_record_result"): history_record_result.get(str(i), ""),
-                _("core.templates.admin.import_data.fedora_update_result"): ", ".join(
-                    fedora_update_result.get(str(i), [])
-                ),
-            }
-
-        rows = [build_row(item) for item in validation_results]
-        # Mid-run reports are a partial snapshot (§4.7): surface the phase so a partial report is
-        # never mistaken for the final one. The download is not refused mid-run.
-        if phase in (IMPORT_PHASE_VALIDATING, IMPORT_PHASE_IMPORTING):
-            rows = [
-                {
-                    _("core.templates.admin.import_data.import_order"): _(
-                        "core.templates.admin.import_data.partial_report_banner"
-                    )
-                }
-            ] + rows
-
-        df = pandas.DataFrame(rows)
+        df, _phase = build_import_report_dataframe(job_id, redis_connector)
         output = BytesIO()
         with pandas.ExcelWriter(output, engine="openpyxl") as writer:
             df.to_excel(writer, index=False, sheet_name="Import")
@@ -3154,6 +3103,53 @@ class DataImportProgressReportView(LoginRequiredMixin, View):
         )
         response["Content-Disposition"] = f'attachment; filename="import_report_{job_id}.xlsx"'
         return response
+
+
+class DataImportReportDownloadView(LoginRequiredMixin, View):
+    """Stáhne na disku archivovaný XLSX report importní úlohy podle jeho indexu."""
+
+    def get(self, request, **kwargs):
+        """
+        Vrátí uložený XLSX report importní úlohy jako přílohu.
+
+        Na rozdíl od ``DataImportProgressReportView`` (report sestavený za běhu z Redis, dostupný
+        jen vlastníkovi úlohy) čte přímo soubor na disku podle JSON indexu — funguje i po expiraci
+        Redis klíčů úlohy a je dostupný libovolnému superuživateli (index slouží k dohledání a
+        obnově libovolného minulého importu, ne jen vlastního).
+
+        :param request: HTTP požadavek, ověřuje se právo superuživatele.
+        :param kwargs: Obsahuje ``job_id`` importní úlohy, jejíž report se stahuje.
+        :return: ``FileResponse`` s obsahem XLSX souboru.
+        :raises PermissionDenied: Pokud přihlášený uživatel není superuživatel.
+        :raises Http404: Pokud úloha není v indexu, nebo její soubor na disku chybí.
+        """
+        if not request.user.is_superuser:
+            raise PermissionDenied
+        job_id = kwargs.get("job_id")
+        _import_directory_path, reports_directory_path, dir_error = check_import_report_directory(check_writable=False)
+        if dir_error:
+            raise Http404("core.views.DataImportReportDownloadView.directory_not_configured")
+
+        entries = read_import_report_index(reports_directory_path)
+        entry = next((e for e in entries if e.get("job_id") == job_id), None)
+        if entry is None:
+            raise Http404("core.views.DataImportReportDownloadView.not_found")
+
+        file_name = os.path.basename(entry.get("file_name") or "")
+        file_path = os.path.join(reports_directory_path, file_name)
+        if not file_name or not os.path.isfile(file_path):
+            logger.error(
+                "core.views.DataImportReportDownloadView.missing_file",
+                extra={"job_id": job_id, "file_path": file_path},
+            )
+            raise Http404("core.views.DataImportReportDownloadView.missing_file")
+
+        return FileResponse(
+            open(file_path, "rb"),
+            as_attachment=True,
+            filename=file_name,
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
 
 
 class DataImportStart(LoginRequiredMixin, View):

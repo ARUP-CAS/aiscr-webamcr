@@ -240,6 +240,18 @@ class GeometryTransformMixinUpdateTest(TestCase):
         mock_transform.assert_not_called()
         self.assertNotIn("geom_sjtsk", mapping)
 
+    def test_update_blank_geom_system_falls_back_to_db_record(self):
+        """UPDATE s prázdnou hodnotou ``geom_system`` v souboru (např. prázdná CSV buňka) použije
+        hodnotu z DB záznamu místo prázdného řetězce, aby se odvozená geometrie dopočítala."""
+        mapping = {"geom_system": "", "geom": WKT_WGS84}
+        mapper = _fake_mapper(SimpleNamespace(geom_system="4326", geom=None, geom_sjtsk=None))
+        with patch(
+            "core.import_data_mappers.transform_geom_to_sjtsk", return_value=(WKT_SJTSK, "OK")
+        ) as mock_transform:
+            ProjektMapper.transform_geometries(mapper, mapping, UPDATE)
+        mock_transform.assert_called_once_with(WKT_WGS84)
+        self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
+
     def test_update_missing_record_uses_target_model_default_geom_system(self):
         """Bez existujícího řádku (např. Dokument bez DokumentExtraData) se použije výchozí
         ``geom_system`` cílového modelu, aby se odvozená geometrie dopočítala (r3703505252)."""

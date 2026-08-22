@@ -168,6 +168,19 @@ Třídy
       :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
 
 
+.. py:class:: ImportReportIndexError
+
+   Vyvoláno, když index reportů odkazuje na XLSX soubor, který na disku fyzicky chybí.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param missing_job_ids: Seznam ``job_id`` úloh, jejichž report v indexu chybí na disku.
+
+
 Funkce
 ------
 
@@ -508,6 +521,63 @@ Funkce
    Funkce pro zjištění, zda je údržba v průběhu.
 
    :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+
+.. py:function:: check_import_report_directory(check_writable)
+
+   Ověří konfiguraci importního adresáře a připraví v něm podadresář pro reporty.
+
+   Sdílená kontrola pro ``cron.tasks`` (běžící úlohy) i ``core.admin_sites`` (formulář před
+   nahráním) — obě strany musí souhlasit, jinak by admin nahrál soubor, který by úloha odmítla
+   zpracovat (a report by neměl kam uložit). Podadresář ``reports`` se vytvoří, pokud chybí;
+   zápis se ověřuje vytvořením a smazáním dočasného souboru.
+
+   :param check_writable: Pokud ``True``, ověří zapisovatelnost podadresáře reports vytvořením
+       a smazáním dočasného souboru.
+   :return: Trojice ``(import_directory_path, reports_directory_path, error)``. Při úspěchu je
+       ``error`` ``None``; při chybě jsou obě cesty ``None`` a ``error`` obsahuje popis problému.
+
+.. py:function:: _import_report_index_path(reports_directory_path)
+
+   Vrátí cestu k JSON indexu uložených importních reportů.
+
+   :param reports_directory_path: Adresář reportů (z ``check_import_report_directory``).
+   :return: Absolutní cesta k souboru ``index.json``.
+
+.. py:function:: read_import_report_index(reports_directory_path)
+
+   Načte index uložených importních reportů, seřazený od nejnovějšího.
+
+   Chybějící nebo poškozený index se považuje za prázdný seznam (report ještě nebyl uložen,
+   nebo je index dočasně nekonzistentní) — čtenář kvůli tomu nesmí spadnout.
+
+   :param reports_directory_path: Adresář reportů (z ``check_import_report_directory``).
+   :return: Seznam záznamů ``{"job_id", "file_name", "stage", "updated_at"}``.
+
+.. py:function:: upsert_import_report_index_entry(reports_directory_path, job_id, file_name, stage)
+
+   Zapíše nebo aktualizuje záznam importní úlohy v JSON indexu reportů.
+
+   Volá se pokaždé, když ``cron.tasks.save_import_report_to_disk`` úspěšně zapíše XLSX, takže
+   index vždy odpovídá poslední známé fázi úlohy — dohledatelnost reportů i po expiraci Redis
+   klíčů (zákaznický požadavek). Zápis je atomický (dočasný soubor + ``os.replace``).
+
+   :param reports_directory_path: Adresář reportů (z ``check_import_report_directory``).
+   :param job_id: Identifikátor importní úlohy.
+   :param file_name: Jméno XLSX souboru reportu (bez cesty).
+   :param stage: Aktuální fáze úlohy (``cron.tasks.IMPORT_PHASE_*``).
+
+.. py:function:: check_import_report_index_files_exist(entries, reports_directory_path)
+
+   Ověří, že pro každý záznam indexu existuje odpovídající XLSX soubor na disku.
+
+   Každému záznamu doplní klíč ``"exists"`` (mutace in-place), takže volající může zobrazit
+   i položky s chybějícím souborem. Přesto na konci vyvolá výjimku, pokud nějaký soubor chybí —
+   volající musí chybu buď zachytit a zobrazit, nebo ji nechat propagovat (zákaznický požadavek:
+   nesoulad indexu a disku se nesmí tiše přehlédnout).
+
+   :param entries: Seznam záznamů z ``read_import_report_index``.
+   :param reports_directory_path: Adresář reportů (z ``check_import_report_directory``).
+   :raises ImportReportIndexError: Pokud index odkazuje na soubor, který na disku chybí.
 
 .. py:function:: get_timezone()
 

@@ -17,7 +17,13 @@ from .connectors import RedisConnector
 from .forms import ImportDataAdminForm
 from .import_data_mappers import ImportDataMissingFileError
 from .setting_models import CustomAdminSettings
-from .utils import is_maintenance_in_progress
+from .utils import (
+    ImportReportIndexError,
+    check_import_report_directory,
+    check_import_report_index_files_exist,
+    is_maintenance_in_progress,
+    read_import_report_index,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +102,10 @@ class AmcrCustomAdminSite(admin.AdminSite):
                     ),
                     custom_link(_("core.admin_site.AmcrCustomAdminSite.aktualizovat_katastry")),
                     custom_link(_("core.admin_site.AmcrCustomAdminSite.hromadny_import"), reverse("admin:import_data")),
+                    custom_link(
+                        _("core.admin_site.AmcrCustomAdminSite.hromadny_import_reporty"),
+                        reverse("admin:import_reports"),
+                    ),
                     custom_link(
                         _("core.admin_site.AmcrCustomAdminSite.spravovat_doi_igsn"), reverse("admin:update_doi")
                     ),
@@ -453,6 +463,20 @@ class AmcrCustomAdminSite(admin.AdminSite):
         if import_data_running:
             return self._render_lock_busy(request, context)
 
+        # Report-directory gate: the XLSX report is the durable record of every run (customer
+        # decision) — an import that cannot save its report must not be allowed to start at all,
+        # so this is checked before the form is even shown, not just before file-import work
+        # later in cron.tasks.
+        _import_directory_path, _reports_directory_path, report_dir_error = check_import_report_directory()
+        if report_dir_error:
+            logger.error(
+                "core.admin_sites.AmcrCustomAdminSite.import_data.report_directory_not_configured",
+                extra={"error": report_dir_error},
+            )
+            context["error_message"] = _("core.admin.import_data.error.import_error")
+            context["error_message_details"] = _("cron.tasks.run_data_import.import_directory_not_configured")
+            return TemplateResponse(request, "admin/import_data/import_data.html", context)
+
         if request.method == "POST":
             form = ImportDataAdminForm(request.POST, request.FILES)
             if not form.is_valid():
@@ -525,8 +549,14 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 stray_keys = [f"import_data_file_{job_id}_{i}" for i in range(chunk_count)]
                 stray_keys.append(f"import_data_file_chunks_{job_id}")
                 self.redis_connector.delete(*stray_keys)
-                self.redis_connector.delete(f"import_data_current_job_{request.user.id}")
-                self.redis_connector.delete(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
+                # Compare-then-delete: after the lock release above, a racing upload may already own
+                # these pointers, so only remove them if they still point at this job.
+                RedisConnector.delete_if_value_matches(
+                    self.redis_connector, f"import_data_current_job_{request.user.id}", job_id
+                )
+                RedisConnector.delete_if_value_matches(
+                    self.redis_connector, RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, job_id
+                )
                 context["error_message"] = _("core.admin.import_data.error.import_error")
                 context["error_message_details"] = _("core.admin.import_data.error.unexpected_error")
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
@@ -540,6 +570,63 @@ class AmcrCustomAdminSite(admin.AdminSite):
         context["form"] = ImportDataAdminForm()
         return TemplateResponse(request, "admin/import_data/import_data.html", context)
 
+    def import_reports(self, request):
+        """
+        Zobrazí index uložených XLSX reportů hromadného importu (zákaznický požadavek).
+
+        Report je jediný trvalý záznam importu (bez nového DB modelu — zákaznické rozhodnutí),
+        takže tato stránka dělá historii reportů dohledatelnou i po expiraci Redis klíčů a po
+        uzavření polling UI dané úlohy.
+
+        :param request: HTTP požadavek; přístup mají pouze superuživatelé.
+        :return: ``TemplateResponse`` se seznamem reportů a odkazy ke stažení.
+        :raises PermissionDenied: Pokud přihlášený uživatel není superuživatel.
+        """
+        if not request.user.is_superuser:
+            raise PermissionDenied
+
+        from cron import tasks
+
+        context = {
+            "app_list": self.get_app_list(request),
+            **self.each_context(request),
+        }
+
+        _import_directory_path, reports_directory_path, dir_error = check_import_report_directory(check_writable=False)
+        if dir_error:
+            logger.error(
+                "core.admin_sites.AmcrCustomAdminSite.import_reports.report_directory_not_configured",
+                extra={"error": dir_error},
+            )
+            context["error_message"] = _("core.templates.admin.import_reports.directory_not_configured")
+            context["entries"] = []
+            return TemplateResponse(request, "admin/import_data/import_reports.html", context)
+
+        stage_labels = {
+            tasks.IMPORT_PHASE_VALIDATING: _("core.templates.admin.import_reports.stage_validating"),
+            tasks.IMPORT_PHASE_AWAITING_APPROVAL: _("core.templates.admin.import_reports.stage_awaiting_approval"),
+            tasks.IMPORT_PHASE_IMPORTING: _("core.templates.admin.import_reports.stage_importing"),
+            tasks.IMPORT_PHASE_FINISHED: _("core.templates.admin.import_reports.stage_finished"),
+            tasks.IMPORT_PHASE_STOPPED: _("core.templates.admin.import_reports.stage_stopped"),
+            tasks.IMPORT_PHASE_CANCELED: _("core.templates.admin.import_reports.stage_canceled"),
+            tasks.IMPORT_PHASE_FAILED: _("core.templates.admin.import_reports.stage_failed"),
+        }
+
+        entries = read_import_report_index(reports_directory_path)
+        try:
+            check_import_report_index_files_exist(entries, reports_directory_path)
+        except ImportReportIndexError:
+            # Entries are mutated in place before the raise, so the "exists" flag is already set on
+            # every entry — the page still renders the full list, just flagged (customer requirement:
+            # an index/disk mismatch must never be silently hidden).
+            context["error_message"] = _("core.templates.admin.import_reports.missing_files_error")
+
+        for entry in entries:
+            entry["stage_label"] = stage_labels.get(entry.get("stage"), entry.get("stage") or "")
+
+        context["entries"] = entries
+        return TemplateResponse(request, "admin/import_data/import_reports.html", context)
+
     def get_urls(
         self,
     ):
@@ -547,7 +634,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
         Vrátí vlastní URL cesty admin site pro hromadné operace.
 
         :return: Seznam URL vzorů rozšířený o cesty pro aktualizaci metadat,
-            aktualizaci DOI/IGSN a hromadný import dat.
+            aktualizaci DOI/IGSN, hromadný import dat a index jeho uložených reportů.
         """
         return [
             path(
@@ -564,5 +651,10 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 "import-data/",
                 self.admin_view(self.import_data),
                 name="import_data",
+            ),
+            path(
+                "import-data-reports/",
+                self.admin_view(self.import_reports),
+                name="import_reports",
             ),
         ] + super().get_urls()

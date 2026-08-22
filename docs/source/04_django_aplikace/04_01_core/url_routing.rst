@@ -257,6 +257,9 @@ CORE
    * - ``data-import-progress-report``
      - ``data-import-progress-report/<str:job_id>``
      - ``views.DataImportProgressReportView.as_view()``
+   * - ``data-import-report-download``
+     - ``data-import-report-download/<str:job_id>``
+     - ``views.DataImportReportDownloadView.as_view()``
 
 DJ
 --

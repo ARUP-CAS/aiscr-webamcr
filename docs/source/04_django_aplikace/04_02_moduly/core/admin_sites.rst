@@ -99,10 +99,22 @@ Třídy
       :return: ``TemplateResponse`` s polling UI, upload formulářem nebo chybovou hláškou.
       :raises PermissionDenied: Pokud přihlášený uživatel není superuživatel.
 
+   .. py:method:: import_reports()
+
+      Zobrazí index uložených XLSX reportů hromadného importu (zákaznický požadavek).
+
+      Report je jediný trvalý záznam importu (bez nového DB modelu — zákaznické rozhodnutí),
+      takže tato stránka dělá historii reportů dohledatelnou i po expiraci Redis klíčů a po
+      uzavření polling UI dané úlohy.
+
+      :param request: HTTP požadavek; přístup mají pouze superuživatelé.
+      :return: ``TemplateResponse`` se seznamem reportů a odkazy ke stažení.
+      :raises PermissionDenied: Pokud přihlášený uživatel není superuživatel.
+
    .. py:method:: get_urls()
 
       Vrátí vlastní URL cesty admin site pro hromadné operace.
 
       :return: Seznam URL vzorů rozšířený o cesty pro aktualizaci metadat,
-          aktualizaci DOI/IGSN a hromadný import dat.
+          aktualizaci DOI/IGSN, hromadný import dat a index jeho uložených reportů.
 

@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, mock_open, patch
 from core.constants import IMPORT, SN_ZAPSANY, SOUBOR_RELATION_TYPE
 from core.forms import ImportDataAdminForm
 from core.models import Soubor
+from core.tests.fake_redis import FakeRedis
 from cron.tests._run_data_import_mapper_base import JOB_ID, RunDataImportMapperTestBase
 from historie.models import Historie, HistorieVazby
 from pas.models import SamostatnyNalez
@@ -28,7 +29,6 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         :param mimetype: MIME typ vrácený mockem ``Soubor.get_mime_types``; musí odpovídat
             příponě importovaného souboru i whitelistu navázaného záznamu.
         """
-        settings_value = SimpleNamespace(value=json.dumps({"DIRECTORY_PATH": "/tmp/import-data"}))
         binary_result = SimpleNamespace(
             size_mb=0.001,
             sha_512="sha",
@@ -46,8 +46,8 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             return instance
 
         return [
-            patch("cron.tasks.CustomAdminSettings.objects.get", return_value=settings_value),
-            patch("cron.tasks.os.path.isdir", return_value=True),
+            # The report-directory gate (which used to read CustomAdminSettings directly here) is
+            # now mocked globally by run_import_records via cron.tasks.check_import_report_directory.
             patch("cron.tasks.os.path.isfile", return_value=True),
             patch("builtins.open", mock_open(read_data=b"data")),
             patch("core.models.Soubor.get_mime_types", return_value=mimetype),
@@ -516,12 +516,9 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         SouborMapper nepoužívá ``save_metadata`` jako ostatní mappery — binární obsah
         se zapisuje přímo přes ``save_binary_file`` ve fázi importu souborů.
         """
-        settings_value = SimpleNamespace(value=json.dumps({"DIRECTORY_PATH": "/tmp/import-data"}))
         failing_connector = MagicMock()
         failing_connector.save_binary_file.side_effect = RuntimeError("Simulované selhání Fedora binárního uploadu.")
         custom_patches = [
-            patch("cron.tasks.CustomAdminSettings.objects.get", return_value=settings_value),
-            patch("cron.tasks.os.path.isdir", return_value=True),
             patch("cron.tasks.os.path.isfile", return_value=True),
             patch("builtins.open", mock_open(read_data=b"data")),
             patch("core.models.Soubor.get_mime_types", return_value="text/plain"),
@@ -610,6 +607,51 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             any("fedora_delete_commit_failed" in item and souborys[1].nazev in item for item in reported),
             "Nedokončené mazání ve Fedoře musí být nahlášeno v reportu i s identifikací souboru "
             "({}). Report: {}".format(souborys[1].nazev, reported),
+        )
+
+    def test_fedora_delete_commit_failure_report_write_error_does_not_fail_import(self):
+        """Selže-li i zápis do Redis po neúspěšném potvrzení Fedora transakce, import se přesto
+        musí hlásit jako úspěšný.
+
+        ``commit_pending_fedora_delete_commits`` nesmí nechat výjimku uniknout — jinak by na hranici
+        ``atomic()`` bloku byl již potvrzený import chybně označen za chybu, přestože data i mazání
+        ve Fedoře již proběhla. Ten zápis do Redis je zároveň poslední, co se v DELETE běhu s tímto
+        klíčem děje, takže jeho selhání znamená, že se report o selhaném potvrzení do Redis skutečně
+        neuloží — to je přijatelný důsledek dokumentovaného kontraktu „nesmí vyhodit výjimku“, ne
+        záruka konzistence reportu. Patchuje ``FakeRedis.set`` na úrovni třídy, protože instance je
+        vytvořena uvnitř ``run_import_records`` dříve, než se aplikují ``extra_patches``."""
+        transaction_patch, transactions, commits = self.fedora_deletion_transaction_recorder(fail_on_commit_number=5)
+        report_key = f"import_fedora_result_tr_{JOB_ID}"
+        raised = []
+        original_set = FakeRedis.set
+
+        def failing_set(self, key, value, ex=None, nx=False):
+            # Match only the report write inside commit_pending_fedora_delete_commits (identified by
+            # the failure marker in its JSON payload) — the unguarded initial "{}" write earlier in
+            # the run must succeed normally, or the import fails before reaching the code under test.
+            if key == report_key and "fedora_delete_commit_failed" in str(value) and not raised:
+                raised.append(True)
+                raise ConnectionError("Simulovaný výpadek Redis.")
+            return original_set(self, key, value, ex=ex, nx=nx)
+
+        with patch.object(FakeRedis, "set", failing_set), self.assertLogs("cron.tasks", level="ERROR") as captured_logs:
+            fake_redis, _souborys, soubor_ids = self._run_soubor_delete_batch(3, extra_patches=[transaction_patch])
+
+        self.assert_import_success(fake_redis)
+        self.assertTrue(raised, "Test musí skutečně vyvolat selhání zápisu do Redis.")
+        self.assertTrue(
+            any("fedora_delete_commit.redis_write_failed" in message for message in captured_logs.output),
+            "Selhání zápisu reportu do Redis musí být zalogováno ({}).".format(captured_logs.output),
+        )
+        self.assertFalse(
+            Soubor.objects.filter(id__in=soubor_ids).exists(),
+            "Selhání zápisu do Redis nesmí vrátit zpět již potvrzené mazání záznamů v databázi.",
+        )
+        self.assertEqual(
+            len(commits),
+            len(transactions),
+            "Selhání zápisu reportu do Redis nesmí zastavit zbytek fronty Fedora potvrzení "
+            "(potvrzeno {} z {}).".format(len(commits), len(transactions)),
         )
 
     def test_database_commit_failure_leaves_no_fedora_delete_committed(self):
