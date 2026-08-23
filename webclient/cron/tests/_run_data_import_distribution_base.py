@@ -61,8 +61,8 @@ class RunDataImportDistributionTestBase(RunDataImportMapperTestBase):
             return instance
 
         return [
-            patch("cron.tasks.CustomAdminSettings.objects.get", return_value=settings_value),
-            patch("cron.tasks.os.path.isdir", return_value=True),
+            patch("core.utils.CustomAdminSettings.objects.get", return_value=settings_value),
+            patch("core.utils.os.path.isdir", return_value=True),
             patch("cron.tasks.os.path.isfile", return_value=True),
             patch("builtins.open", mock_open(read_data=b"data")),
             patch("cron.tasks.FedoraRepositoryConnector", side_effect=connector_factory),
