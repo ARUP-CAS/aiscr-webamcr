@@ -2,11 +2,12 @@
 Testy mapperu paradat souborů (``paradata.csv``, issue #3527).
 
 Pokrývají strukturu sloupců podle akce, dohledání souboru podle ``path``, ověření distribuce,
-ke které paradata patří, a přípravu záznamu pro fázi importu. Paradata nemění databázi ani
-metadata záznamu a nezapisují historii – kontroluje se i to. Dotaz do Fedory je nahrazen mockem.
+ke které paradata patří, existenční symetrii paradat samotných vůči prováděné akci, a přípravu
+záznamu pro fázi importu. Paradata nemění databázi ani metadata záznamu a nezapisují historii –
+kontroluje se i to. Dotaz do Fedory je nahrazen mockem.
 """
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from core.forms import ImportDataAdminForm
 from core.import_data_mappers import (
@@ -135,15 +136,28 @@ class ParadataMapperValidationTest(TestCase):
         row.update(overrides)
         return row
 
-    def _fedora(self, exists=True):
-        """Nahradí dotaz do Fedory na existenci cílové distribuce pevnou odpovědí."""
-        return patch.object(FedoraRepositoryConnector, "distribution_exists", return_value=exists)
+    def _fedora(self, distribution_exists=True, paradata_exists=False):
+        """Nahradí dotazy do Fedory na existenci cílové distribuce i paradat pevnými odpověďmi.
+
+        Výchozí ``paradata_exists=False`` odpovídá běžnému INSERT scénáři — paradata ještě
+        neexistují, jen distribuce, ke které se připojují.
+        """
+        return patch.multiple(
+            FedoraRepositoryConnector,
+            distribution_exists=MagicMock(return_value=distribution_exists),
+            paradata_exists=MagicMock(return_value=paradata_exists),
+        )
 
     def test_implicit_distributions_are_checked_in_fedora(self):
         """I kontejnery vzniklé při importu souboru se ověřují ve Fedoře, kde na ně dosáhneme."""
         for distribution in ("orig", "thumb", "thumb-large"):
             with self.subTest(distribution=distribution):
-                with patch.object(FedoraRepositoryConnector, "distribution_exists", return_value=True) as exists_mock:
+                exists_mock = MagicMock(return_value=True)
+                with patch.multiple(
+                    FedoraRepositoryConnector,
+                    distribution_exists=exists_mock,
+                    paradata_exists=MagicMock(return_value=False),
+                ):
                     result = ParadataMapper(self._row(distribution=distribution)).import_validation(INSERT)
 
                 self.assertEqual(result, {"path": self.soubor.path})
@@ -151,33 +165,49 @@ class ParadataMapperValidationTest(TestCase):
 
     def test_missing_implicit_distribution_rejected(self):
         """Chybí-li ve Fedoře náhled, paradata k němu se odmítnou."""
-        with self._fedora(exists=False):
+        with self._fedora(distribution_exists=False):
             with self.assertRaises(DistribuceImportIntegrityError):
                 ParadataMapper(self._row(distribution="thumb")).import_validation(INSERT)
 
     def test_alternative_distribution_must_exist(self):
         """Alternativní distribuce musí ve Fedoře existovat, jinak paradata nemají kam patřit."""
-        with self._fedora(exists=False):
+        with self._fedora(distribution_exists=False):
             with self.assertRaises(DistribuceImportIntegrityError):
                 ParadataMapper(self._row(distribution="ocr/alto-xml")).import_validation(INSERT)
 
-        with self._fedora(exists=True):
+        with self._fedora(distribution_exists=True):
             self.assertEqual(
                 ParadataMapper(self._row(distribution="ocr/alto-xml")).import_validation(INSERT),
                 {"path": self.soubor.path},
             )
 
-    def test_all_actions_check_only_target_distribution(self):
-        """INSERT, UPDATE i DELETE ověřují shodně jen existenci cílové distribuce."""
-        for action in (INSERT, UPDATE, DELETE):
-            with self.subTest(action=action):
-                row = (
-                    {"path": self.soubor.path, "distribution": "orig"}
-                    if action == DELETE
-                    else self._row(distribution="orig")
-                )
-                with self._fedora(exists=True):
-                    self.assertEqual(ParadataMapper(row).import_validation(action), {"path": self.soubor.path})
+    def test_insert_passes_when_paradata_missing(self):
+        """INSERT projde, pokud paradata dané distribuce ve Fedoře ještě nejsou."""
+        with self._fedora(distribution_exists=True, paradata_exists=False):
+            result = ParadataMapper(self._row()).import_validation(INSERT)
+
+        self.assertEqual(result, {"path": self.soubor.path})
+
+    def test_insert_rejects_existing_paradata(self):
+        """INSERT odmítne paradata, jejichž kontejner ve Fedoře už existuje."""
+        with self._fedora(distribution_exists=True, paradata_exists=True):
+            with self.assertRaises(DistribuceImportIntegrityError):
+                ParadataMapper(self._row()).import_validation(INSERT)
+
+    def test_update_and_delete_pass_for_existing_paradata(self):
+        """UPDATE i DELETE projdou, pokud kontejner paradat ve Fedoře existuje."""
+        with self._fedora(distribution_exists=True, paradata_exists=True):
+            self.assertEqual(ParadataMapper(self._row()).import_validation(UPDATE), {"path": self.soubor.path})
+            row = {"path": self.soubor.path, "distribution": "orig"}
+            self.assertEqual(ParadataMapper(row).import_validation(DELETE), {"path": self.soubor.path})
+
+    def test_update_and_delete_reject_missing_paradata(self):
+        """UPDATE i DELETE odmítnou paradata, jejichž kontejner ve Fedoře není."""
+        with self._fedora(distribution_exists=True, paradata_exists=False):
+            with self.assertRaises(DistribuceImportIntegrityError):
+                ParadataMapper(self._row()).import_validation(UPDATE)
+            with self.assertRaises(DistribuceImportIntegrityError):
+                ParadataMapper({"path": self.soubor.path, "distribution": "orig"}).import_validation(DELETE)
 
     def test_fedora_outage_propagates(self):
         """Nedostupná Fedora validaci zastaví místo tichého předpokladu o neexistenci."""
@@ -189,9 +219,19 @@ class ParadataMapperValidationTest(TestCase):
             with self.assertRaises(FedoraNoResponseError):
                 ParadataMapper(self._row()).import_validation(INSERT)
 
+    def test_paradata_fedora_outage_propagates(self):
+        """Nedostupná Fedora při dotazu na paradata validaci zastaví stejně jako u distribuce."""
+        with patch.multiple(
+            FedoraRepositoryConnector,
+            distribution_exists=MagicMock(return_value=True),
+            paradata_exists=MagicMock(side_effect=FedoraNoResponseError("url", "No Fedora response", None)),
+        ):
+            with self.assertRaises(FedoraNoResponseError):
+                ParadataMapper(self._row()).import_validation(INSERT)
+
     def test_missing_soubor_rejected(self):
         """Neexistující cesta souboru se odmítne jako chybějící reference."""
-        with self._fedora(exists=True):
+        with self._fedora(distribution_exists=True):
             with self.assertRaises(ImportDataMissingReferencedValueError):
                 ParadataMapper(self._row(path="rest/AMCR/record/C-TX-NEEXISTUJE/file/uuid")).import_validation(INSERT)
 
@@ -200,15 +240,22 @@ class ParadataMapperValidationTest(TestCase):
         soubor = create_soubor_fixture(self.dokument, nazev="mimo.pdf", uuid="99999999-0000-0000-0000-000000000000")
         Soubor.objects.filter(pk=soubor.pk).update(path="mimo/fedoru/soubor.pdf")
 
-        with patch.object(FedoraRepositoryConnector, "distribution_exists") as exists_mock:
+        distribution_exists_mock = MagicMock()
+        paradata_exists_mock = MagicMock()
+        with patch.multiple(
+            FedoraRepositoryConnector,
+            distribution_exists=distribution_exists_mock,
+            paradata_exists=paradata_exists_mock,
+        ):
             with self.assertRaises(DistribuceMissingRepositoryUuidError):
                 ParadataMapper(self._row(path="mimo/fedoru/soubor.pdf")).import_validation(INSERT)
-        exists_mock.assert_not_called()
+        distribution_exists_mock.assert_not_called()
+        paradata_exists_mock.assert_not_called()
 
     def test_duplicate_row_in_batch_rejected(self):
         """Táž dvojice (soubor, distribuce) se v jedné dávce nesmí opakovat."""
         seen: set = set()
-        with self._fedora(exists=True):
+        with self._fedora(distribution_exists=True, paradata_exists=False):
             ParadataMapper(self._row()).import_validation(INSERT, seen_in_batch=seen)
 
             with self.assertRaises(DistribuceImportIntegrityError):
@@ -217,7 +264,7 @@ class ParadataMapperValidationTest(TestCase):
     def test_paradata_for_different_distributions_in_batch_pass(self):
         """Paradata k různým distribucím téhož souboru mohou být v jedné dávce."""
         seen: set = set()
-        with self._fedora(exists=True):
+        with self._fedora(distribution_exists=True, paradata_exists=False):
             ParadataMapper(self._row(distribution="orig")).import_validation(INSERT, seen_in_batch=seen)
             ParadataMapper(self._row(distribution="thumb")).import_validation(INSERT, seen_in_batch=seen)
 

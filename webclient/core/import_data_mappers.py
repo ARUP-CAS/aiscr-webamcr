@@ -5351,7 +5351,9 @@ class ParadataMapper(DistribuceMapper):
         i jeho uložení ve Fedoře a existenci distribuce, ke které paradata patří — včetně
         kontejnerů vzniklých při importu souboru (``orig``, ``thumb``, ``thumb-large``), protože
         zdrojem pravdy je Fedora, a ne historie, ve které tyto kontejnery nemají záznam.
-        Pro INSERT, UPDATE i DELETE se kontroluje shodně jen existence cílové distribuce.
+        Navíc — stejně jako ``DistribuceMapper`` u distribuce samotné — ověřuje existenční stav
+        kontejneru paradat vůči prováděné akci: INSERT vyžaduje, aby paradata dané distribuce
+        ještě neexistovala, UPDATE a DELETE naopak vyžadují jejich existenci.
         Duplicitní dvojice (soubor, distribuce) v jedné dávce se odmítá, protože by druhý řádek
         beze stopy přepsal první.
 
@@ -5369,8 +5371,9 @@ class ParadataMapper(DistribuceMapper):
         :raises ImportDataMissingReferencedValueError: Pokud dotčený soubor neexistuje.
         :raises DistribuceMissingRepositoryUuidError: Pokud soubor nemá cestu do Fedory.
         :raises DistribuceMissingVazbaError: Pokud soubor nemá vazbu na nadřazený záznam.
-        :raises DistribuceImportIntegrityError: Pokud cílová distribuce není dostupná nebo se
-            táž dvojice (soubor, distribuce) v dávce opakuje.
+        :raises DistribuceImportIntegrityError: Pokud cílová distribuce není dostupná, existenční
+            stav paradat neodpovídá prováděné akci, nebo se táž dvojice (soubor, distribuce)
+            v dávce opakuje.
         """
         path = (self.value_dict.get(self.PATH_COLUMN) or "").strip()
         if not path:
@@ -5383,12 +5386,42 @@ class ParadataMapper(DistribuceMapper):
         soubor = self._get_soubor(path, self.PATH_COLUMN)
         if not self.distribution_exists(soubor, distribution):
             raise DistribuceImportIntegrityError(path, distribution, performed_action)
+        paradata_exists = self.paradata_exists(soubor, distribution)
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and paradata_exists:
+            raise DistribuceImportIntegrityError(path, distribution, performed_action)
+        if (
+            performed_action
+            in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE)
+            and not paradata_exists
+        ):
+            raise DistribuceImportIntegrityError(path, distribution, performed_action)
         if seen_in_batch is not None:
             key = (soubor.pk, distribution)
             if key in seen_in_batch:
                 raise DistribuceImportIntegrityError(path, distribution, performed_action)
             seen_in_batch.add(key)
         return self._get_filter_kwargs_primary_key()
+
+    @staticmethod
+    def paradata_exists(soubor: Soubor, distribution: str) -> bool:
+        """
+        Určí, zda pro soubor existují paradata dané distribuce.
+
+        Na rozdíl od zděděné ``distribution_exists`` (ta ověřuje rodičovskou distribuci, ke které
+        paradata patří) se dotazuje přímo na kontejner paradat, aby INSERT/UPDATE/DELETE mohly
+        ověřit stejnou existenční symetrii, jakou ``DistribuceMapper`` uplatňuje nad distribucí
+        samotnou.
+
+        :param soubor: Dotčený existující ``Soubor`` s vyplněnou cestou do Fedory.
+        :param distribution: Název distribuce, ke které paradata patří.
+        :return: ``True``, pokud paradata dané distribuce existují, jinak ``False``.
+        :raises FedoraNoResponseError: Pokud repozitář neodpoví — existence se nedá určit
+            a validace nesmí pokračovat s nepodloženým předpokladem.
+        """
+        from core.repository_connector import FedoraRepositoryConnector
+
+        connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt)
+        return connector.paradata_exists(soubor.repository_uuid, distribution)
 
     def create_records(self, performed_action):
         """
