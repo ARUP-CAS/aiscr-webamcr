@@ -81,7 +81,7 @@ class DataImportCancelTest(SimpleTestCase):
         """awaiting_approval: kterýkoli superuživatel uvolní lock, fáze → canceled, ukazatel zmizí."""
         fake = _fake(tasks.IMPORT_PHASE_AWAITING_APPROVAL)
 
-        # Force-cancel smí provést i jiný než vlastník (§7) — proto OTHER_ID.
+        # Force-cancel smí provést i jiný než vlastník — proto OTHER_ID.
         response = self._post(fake, user_id=OTHER_ID)
 
         self.assertEqual(response.status_code, 200)
@@ -190,7 +190,7 @@ class DataImportOwnershipTest(SimpleTestCase):
 
 
 class DataImportProgressValidationCursorTest(SimpleTestCase):
-    """Testy pro ``DataImportProgress`` — ``validation_since``/``validation_cursor`` (review r3703505264)."""
+    """Testy pro ``DataImportProgress`` — ``validation_since``/``validation_cursor``."""
 
     def setUp(self):
         """Připraví ``RequestFactory`` sdílenou napříč testy."""
@@ -338,7 +338,7 @@ class DataImportResetTest(SimpleTestCase):
         self._assert_reset(fake)
 
     def test_reset_by_any_superuser(self):
-        """Reset smí provést kterýkoli superuživatel, ne jen vlastník (dead-worker recovery, §7)."""
+        """Reset smí provést kterýkoli superuživatel, ne jen vlastník (dead-worker recovery)."""
         fake = _fake(tasks.IMPORT_PHASE_IMPORTING, extra={RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY: JOB})
 
         response = self._post(fake, user_id=OTHER_ID)

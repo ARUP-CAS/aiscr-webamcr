@@ -72,25 +72,89 @@ class DateImportFieldTest(SimpleTestCase):
             field.value = "2026-13-31 13:45:59"
 
     def test_rejects_trailing_junk_after_iso_date(self):
-        """``2026-05-31junk`` nesmí projít jako platné ISO datum (review r3703505272)."""
+        """``2026-05-31junk`` nesmí projít jako platné ISO datum."""
         field = DateImportField()
 
         with self.assertRaises(ImportDataError):
             field.value = "2026-05-31junk"
 
     def test_rejects_trailing_junk_after_dotted_year_first_date(self):
-        """``2026.05.31junk`` nesmí projít jako platné datum (review r3703505272)."""
+        """``2026.05.31junk`` nesmí projít jako platné datum."""
         field = DateImportField()
 
         with self.assertRaises(ImportDataError):
             field.value = "2026.05.31junk"
 
     def test_rejects_trailing_junk_after_localized_date(self):
-        """``31.05.2026junk`` nesmí projít jako platné datum (review r3703505272)."""
+        """``31.05.2026junk`` nesmí projít jako platné datum."""
         field = DateImportField()
 
         with self.assertRaises(ImportDataError):
             field.value = "31.05.2026junk"
+
+    def test_accepts_fractional_seconds(self):
+        """``2026-05-31 13:45:59.123`` musí projít i po zavedení ``fullmatch``."""
+        field = DateImportField()
+
+        field.value = "2026-05-31 13:45:59.123"
+
+        self.assertEqual(field.serialized_value, "2026-05-31")
+
+    def test_accepts_iso_offset_suffix(self):
+        """``2026-05-31T13:45:59+02:00`` musí projít i po zavedení ``fullmatch``."""
+        field = DateImportField()
+
+        field.value = "2026-05-31T13:45:59+02:00"
+
+        self.assertEqual(field.serialized_value, "2026-05-31")
+
+    def test_accepts_iso_zulu_suffix(self):
+        """``2026-05-31T13:45:59Z`` musí projít i po zavedení ``fullmatch``."""
+        field = DateImportField()
+
+        field.value = "2026-05-31T13:45:59Z"
+
+        self.assertEqual(field.serialized_value, "2026-05-31")
+
+    def test_timezone_offset_shifts_date_across_midnight(self):
+        """Kladný posun časového pásma po převodu do TIME_ZONE aplikace posune datum na předchozí den."""
+        field = DateImportField()
+
+        field.value = "2026-06-01T01:30:00+05:00"
+
+        self.assertEqual(field.serialized_value, "2026-05-31")
+
+    def test_negative_timezone_offset_shifts_date_to_next_day(self):
+        """Záporný posun časového pásma po převodu do TIME_ZONE aplikace posune datum na následující den."""
+        field = DateImportField()
+
+        field.value = "2026-05-31T23:30:00-05:00"
+
+        self.assertEqual(field.serialized_value, "2026-06-01")
+
+    def test_utc_offset_shifts_date_when_projected_to_app_timezone(self):
+        """Datum se posune podle TIME_ZONE aplikace (Europe/Prague), ne podle prostého UTC."""
+        field = DateImportField()
+
+        field.value = "2026-05-31T22:30:00Z"
+
+        self.assertEqual(field.serialized_value, "2026-06-01")
+
+    def test_utc_instant_exactly_at_local_midnight_boundary(self):
+        """``2026-05-31T22:00:00Z`` odpovídá přesně půlnoci v Europe/Prague (CEST, +02:00)."""
+        field = DateImportField()
+
+        field.value = "2026-05-31T22:00:00Z"
+
+        self.assertEqual(field.serialized_value, "2026-06-01")
+
+    def test_utc_instant_one_second_before_local_midnight_boundary(self):
+        """O sekundu dříve než půlnoc v Europe/Prague musí datum zůstat na předchozím dni."""
+        field = DateImportField()
+
+        field.value = "2026-05-31T21:59:59Z"
+
+        self.assertEqual(field.serialized_value, "2026-05-31")
 
 
 class DateTimeImportFieldTest(SimpleTestCase):

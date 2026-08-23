@@ -287,7 +287,7 @@ class RunDataImportHeslarTest(TestCase):
     def test_delete_stop_rolls_back_database_without_committing_fedora_deletion(self):
         """Stop uprostřed DELETE musí zrušit i DB smazání a nesmí commitnout Fedora transakci.
 
-        Před opravou review r3703505196 se ``FedoraDeletionOnlyTransaction.mark_transaction_as_closed``
+        Před opravou se ``FedoraDeletionOnlyTransaction.mark_transaction_as_closed``
         volalo hned po ``record.delete()``, ještě před kontrolou stop sentinelu — takže i po
         následném ``transaction.set_rollback(True)`` (DB záznam zůstal) byl repozitářový objekt
         v Fedoře už nevratně smazán. Obě úložiště tak musí zůstat konzistentní: záznam v DB i
@@ -296,7 +296,7 @@ class RunDataImportHeslarTest(TestCase):
         self._create_existing_heslar()
         fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_DELETE)
         # Stop flag nastavený předem — smyčka ho zachytí až PO zpracování (delete + fronta
-        # Fedora commitu) prvního záznamu, čímž reprodukuje pořadí operací z review r3703505196.
+        # Fedora commitu) prvního záznamu, čímž reprodukuje popsané pořadí operací.
         fake_redis.set(f"import_data_stop_{JOB_ID}", "1")
 
         with patch("core.connectors.RedisConnector.get_connection", return_value=fake_redis), patch(

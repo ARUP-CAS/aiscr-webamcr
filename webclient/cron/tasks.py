@@ -88,7 +88,7 @@ IMPORT_PROGRESS_PHASE_HISTORY_DONE = 50
 IMPORT_PROGRESS_PHASE_FEDORA_DONE = 75
 IMPORT_PROGRESS_PHASE_FINISHED = 100
 
-# Fáze životního cyklu importní úlohy (klíč ``import_data_phase_{job_id}``, viz §3.1).
+# Fáze životního cyklu importní úlohy (klíč ``import_data_phase_{job_id}``).
 IMPORT_PHASE_VALIDATING = "validating"
 IMPORT_PHASE_AWAITING_APPROVAL = "awaiting_approval"
 IMPORT_PHASE_IMPORTING = "importing"
@@ -97,7 +97,7 @@ IMPORT_PHASE_STOPPED = "stopped"
 IMPORT_PHASE_CANCELED = "canceled"
 IMPORT_PHASE_FAILED = "failed"
 
-# Diskriminátor terminální fáze ``failed`` (klíč ``import_data_failure_reason_{job_id}``, viz §4.2 krok 7).
+# Diskriminátor terminální fáze ``failed`` (klíč ``import_data_failure_reason_{job_id}``).
 IMPORT_FAILURE_REASON_VALIDATION_REJECTED = "validation_rejected"
 IMPORT_FAILURE_REASON_ERROR = "error"
 
@@ -143,7 +143,7 @@ IMPORT_DATA_JOB_KEY_SUFFIXES = (
 
 # Jak často validační task zapisuje JSON snapshot ``import_data_validation_results_{job_id}`` pro report
 # (živý seznam ``import_data_validation_details`` se plní ``rpush`` každý řádek). Zrcadlí
-# ``HISTORY_REDIS_UPDATE_INTERVAL`` — viz §11.
+# ``HISTORY_REDIS_UPDATE_INTERVAL``.
 VALIDATION_REDIS_UPDATE_INTERVAL = 50
 
 # Standardizační pravidlo: do Redis se ukládají pouze ID překladových řetězců (nikoli přeložené
@@ -847,7 +847,7 @@ def reset_import_job(redis_connector, job_id):
     job_user = to_str(redis_connector.get(job_key("import_data_user")))
     if job_user is not None:
         # Compare-then-delete: only clear the pointer if it still points at this job — a
-        # replacement job may have already claimed it (review r3703505227).
+        # replacement job may have already claimed it.
         RedisConnector.delete_if_value_matches(redis_connector, "import_data_current_job_{}".format(job_user), job_id)
     RedisConnector.delete_if_value_matches(redis_connector, RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, job_id)
 
@@ -1086,18 +1086,18 @@ def save_import_report_to_disk(job_id, redis_connector, reports_directory_path):
 @shared_task
 def run_data_import_validation(job_id, user_id, lock_token, performed_action):
     """
-    Asynchronně zvaliduje nahraný ZIP archiv hromadného importu (viz §4.2 dokumentu #391).
+    Asynchronně zvaliduje nahraný ZIP archiv hromadného importu.
 
-    Task převezme staged ZIP z Redis (chunky ``import_data_file_{job_id}_{i}``, §3.3), projde
+    Task převezme staged ZIP z Redis (chunky ``import_data_file_{job_id}_{i}``), projde
     všechny CSV řádky přes mappery (``map`` / ``check_required_fields`` / ``import_validation`` /
     ``create_records``) a inkrementálně zapisuje výsledky do Redis, aby je stránka mohla pollovat.
     Samotný import neprovádí — po úspěšné validaci nechává lock držený a přechází do fáze
     ``awaiting_approval``; při chybě nebo zastavení lock uvolní.
 
     Kontrakt read-only: ``create_records`` se během validace volá pouze pro serializaci a musí
-    zůstat read-only — nesmí volat ``save()``/``delete()`` ani jinak měnit databázi (§4.2).
+    zůstat read-only — nesmí volat ``save()``/``delete()`` ani jinak měnit databázi.
 
-    Paměťová charakteristika (§8): reassembled komprimovaný blob (~250 MB pro maximální úlohu)
+    Paměťová charakteristika: reassembled komprimovaný blob (~250 MB pro maximální úlohu)
     NENÍ high-water mark workeru. Validační průchod (object-dtype DataFrame + kopie z ``to_dict`` +
     akumulující se seznam ``records``) dosahuje několika GB pro maximální úlohu — worker musí být
     dimenzován na tento peak, ne na ~250 MB komprimovaného blobu.
@@ -1159,8 +1159,8 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         redis_connector.set(job_key("import_data_stop"), 1, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
 
     def push_validation_result(vr):
-        # rpush the live incremental-rendering lists the UI reads (§5); checkpoint the JSON
-        # report snapshot every VALIDATION_REDIS_UPDATE_INTERVAL rows (§4.2 krok 6).
+        # rpush the live incremental-rendering lists the UI reads; checkpoint the JSON
+        # report snapshot every VALIDATION_REDIS_UPDATE_INTERVAL rows.
         validation_results.append(vr)
         redis_connector.rpush(job_key("import_data_validation_details"), json.dumps(vr.to_dict()))
         redis_connector.rpush(job_key("import_data_validation_ids"), vr.item_order)
@@ -1182,7 +1182,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
     reports_directory_path = None
 
     try:
-        # Up-front lock refresh; on loss mirror run_data_import's ImportLockLostError pattern (§4.2 krok 1).
+        # Up-front lock refresh; on loss mirror run_data_import's ImportLockLostError pattern.
         try:
             refresh_lock_or_raise()
         except ImportLockLostError:
@@ -1202,7 +1202,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
             return
         save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
 
-        # Reassemble the staged ZIP from Redis chunks (§3.3 / §4.2 krok 2).
+        # Reassemble the staged ZIP from Redis chunks.
         chunk_count_raw = redis_connector.get(job_key("import_data_file_chunks"))
         chunk_count = int(chunk_count_raw) if chunk_count_raw else 0
         blob = bytearray()
@@ -1214,7 +1214,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
             for i in range(len(chunk_values)):
                 if chunk_values[i]:
                     blob.extend(chunk_values[i])
-                # Free each chunk from worker memory as soon as it is appended (§4.2 krok 2).
+                # Free each chunk from worker memory as soon as it is appended.
                 chunk_values[i] = None
         blob = bytes(blob)
 
@@ -1254,14 +1254,14 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                     key=lambda fn: mapper_key_order.get(_normalize_import_file_name(fn), len(mapper_key_order))
                 )
                 # Lazy import to avoid a module-load cycle: the uncompressed-size guardrail lives on
-                # the admin site next to IMPORT_DATA_REDIS_CHUNK_SIZE (§11).
+                # the admin site next to IMPORT_DATA_REDIS_CHUNK_SIZE.
                 from core.admin_sites import AmcrCustomAdminSite
 
                 total_uncompressed_size = sum(zf.getinfo(fn).file_size for fn in file_names)
                 if total_uncompressed_size > AmcrCustomAdminSite.IMPORT_ZIP_MAX_UNCOMPRESSED_SIZE:
                     raise ValueError("core.admin.import_data.error.zip_too_large")
 
-                # Best-effort denominator for the validation progress bar (§5b.3): count data rows
+                # Best-effort denominator for the validation progress bar: count data rows
                 # across all CSVs. The sheets stay transient — the main loop re-reads each file, and
                 # any real parse error surfaces there, not here.
                 total_rows = 0
@@ -1296,7 +1296,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                         continue
                     for idx, row in sheet.iterrows():
                         # Refresh the lock once per row and poll the stop sentinel — the same cadence
-                        # the import task uses at the top of its record loop (§4.2 krok 6).
+                        # the import task uses at the top of its record loop.
                         refresh_lock_or_raise()
                         if redis_connector.get(job_key("import_data_stop")) is not None:
                             stopped = True
@@ -1328,7 +1328,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                                 )
                                 # create_records is called for serialization only and must remain
                                 # read-only — it must not call save()/delete() or otherwise mutate
-                                # the DB during validation (§4.2 read-only contract).
+                                # the DB during validation (read-only contract).
                                 records += mapper.create_records(performed_action)
                                 record["__file_name"] = file_name
                             except ImportDataIntegrityError as err:
@@ -1417,7 +1417,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         )
         redis_connector.set(job_key("import_data_progress"), 0, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
         if invalid_records:
-            # Distinguish validation-rejected (fixable invalid rows) from a crash (§4.2 krok 7):
+            # Distinguish validation-rejected (fixable invalid rows) from a crash:
             # terminal failed phase with the lock released, but a distinct failure reason and a
             # distinct status message carrying the invalid-row count.
             redis_connector.set(
@@ -1427,7 +1427,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
             )
             failure_reason = IMPORT_FAILURE_REASON_VALIDATION_REJECTED
             # Store the translation ID + the invalid-row count as an envelope; the reader interpolates
-            # after translating. Never wrap _() in an f-string (§4.2).
+            # after translating. Never wrap _() in an f-string.
             redis_connector.set(
                 job_key("import_data_status_message_tr"),
                 translation_value("cron.tasks.run_data_import.validation_rejected", count=len(invalid_records)),
@@ -1444,7 +1444,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         LookupImportField.clear_cache()
 
         # Free the staged ZIP as soon as validation is done with the bytes — the import task
-        # consumes the per-record JSON keys, not the ZIP (§3.3 / §4.2 krok 8).
+        # consumes the per-record JSON keys, not the ZIP.
         chunk_keys = [chunk_key(i) for i in range(chunk_count)]
         chunk_keys.append(job_key("import_data_file_chunks"))
         redis_connector.delete(*chunk_keys)
@@ -1455,7 +1455,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         if not stopped and failure_reason is None:
             # Validation OK, all rows valid → hold the lock across awaiting_approval and persist the
             # lock and every per-job data key (remove the TTL) so a slow reviewer does not find the
-            # job gone (§3.2 / §4.2 krok 8). No refresher runs during awaiting_approval.
+            # job gone. No refresher runs during awaiting_approval.
             redis_connector.set(job_key("import_data_phase"), IMPORT_PHASE_AWAITING_APPROVAL)
             RedisConnector.persist_import_lock(redis_connector, lock_token)
             persist_pipe = redis_connector.pipeline()
@@ -1464,7 +1464,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
             # The per-user "current job" pointer is keyed by user_id, not job_id, so it is NOT in
             # per_job_data_keys. Persist it too on the success path — otherwise its 6 h TTL from the
             # POST expires during a long awaiting_approval review and the owner is locked out of
-            # their own still-valid, still-lock-holding job (US-3 "Leave and come back", §3.2).
+            # their own still-valid, still-lock-holding job ("Leave and come back" case).
             persist_pipe.persist("import_data_current_job_{}".format(user_id))
             # Keep the lock → job back-reference alive exactly as long as the (now persisted) lock,
             # so a manual reset can still target this job during a long awaiting_approval review.
@@ -1473,7 +1473,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         else:
             # Terminal failure/stop → release the lock, clear the per-user pointer, and expire (not
             # delete) the data keys to 6 h so the page can still show why validation failed and the
-            # report stays downloadable (§4.2 krok 8).
+            # report stays downloadable.
             if stopped:
                 redis_connector.set(job_key("import_data_phase"), IMPORT_PHASE_STOPPED)
             else:
@@ -1661,7 +1661,7 @@ def run_data_import(job_id, user_id, lock_token):
         updated_history_dict = defaultdict(lambda: {"files": set(), "record_ids": set()})
         import_fedora_result = defaultdict(list)
         # One entry per deduplicated Fedora target actually processed (not per import record) — the
-        # "Fedora" report sheet (§ customer requirement).
+        # "Fedora" report sheet (customer requirement).
         fedora_target_results: list = []
         transaction_user = User.objects.get(pk=user_id)
 
@@ -1669,7 +1669,7 @@ def run_data_import(job_id, user_id, lock_token):
         pending_history_update = []
         pending_soubor_fedora_deletes: list = []
         # Ordered queue of Fedora deletion transactions committed only once the database transaction
-        # has committed, so the database is the single commit point (review r3703505209).
+        # has committed, so the database is the single commit point.
         pending_fedora_delete_commits: list = []
 
         def queue_fedora_delete_commit(record_id, fedora_transaction, identity=None):
@@ -1769,7 +1769,7 @@ def run_data_import(job_id, user_id, lock_token):
                 fedora_update_targets_record_ids_dict[item].add(record_id)
 
         # Tracks whether the data-phase atomic() block was rolled back (via set_rollback or a
-        # propagating exception). Drives the success -> rolled_back relabel (§13.4 S-I1).
+        # propagating exception). Drives the success -> rolled_back relabel.
         data_rolled_back = False
         try:
             with transaction.atomic():
@@ -1930,7 +1930,7 @@ def run_data_import(job_id, user_id, lock_token):
                                     record.active_transaction = fedora_transaction
                                     record.delete()
                         # Defer the real commit until the database transaction has committed
-                        # (review r3703505196, r3703505209) — mirrors the Soubor delete deferral below.
+                        # mirrors the Soubor delete deferral below.
                         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
                             deleted_record = primary_key_record or (records[0] if records else None)
                             queue_fedora_delete_commit(
@@ -2010,7 +2010,7 @@ def run_data_import(job_id, user_id, lock_token):
                     if stopped:
                         if not failed:
                             # User stop during the data phase: roll back every record committed so far
-                            # so the abort leaves nothing persisted — a true abort (§13.4 S-I1).
+                            # so the abort leaves nothing persisted — a true abort.
                             transaction.set_rollback(True)
                             data_rolled_back = True
                             redis_connector.set(
@@ -2065,12 +2065,12 @@ def run_data_import(job_id, user_id, lock_token):
                         redis_connector.set(job_key("import_data_stop"), 1)
                 if failed or stopped:
                     # Nothing from this batch will persist — do not leave the queued Fedora
-                    # transactions open (review r3703505209).
+                    # transactions open.
                     rollback_pending_fedora_delete_commits()
                 elif pending_fedora_delete_commits:
                     # The database is the single commit point: Fedora deletions are committed only
                     # after the database transaction commits, so a rollback — including a failure of
-                    # the database commit itself — can never leave them committed (review r3703505209).
+                    # the database commit itself — can never leave them committed.
                     transaction.on_commit(commit_pending_fedora_delete_commits)
         except Exception as err:
             # An exception propagating out of the atomic() block rolls the data phase back. This also
@@ -2122,7 +2122,7 @@ def run_data_import(job_id, user_id, lock_token):
             save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
 
         # Relabel committed "success" markers to "rolled_back" whenever the data phase was rolled
-        # back — both on failure and on a user stop during the data phase (§13.4 S-I1).
+        # back — both on failure and on a user stop during the data phase.
         if data_rolled_back:
             success_marker = "cron.tasks.run_data_import.success".encode("utf-8")
             rollback_marker = "cron.tasks.run_data_import.rolled_back".encode("utf-8")
@@ -2142,7 +2142,7 @@ def run_data_import(job_id, user_id, lock_token):
         redis_connector.set(job_key("import_data_history_record_result_tr"), json.dumps(import_history_record_result))
         for history_index, (history_target_key, entry) in enumerate(updated_history_dict.items()):
             # Honor a stop — whether set during the data phase (skips history entirely) or arriving
-            # now during the history phase (§13.9 rec 1). Data is already committed at this point, so
+            # now during the history phase. Data is already committed at this point, so
             # this only halts further work; it does not roll back.
             if not failed and not stopped and redis_connector.get(job_key("import_data_stop")) is not None:
                 stopped = True
@@ -2246,7 +2246,7 @@ def run_data_import(job_id, user_id, lock_token):
                         import_fedora_result[record_id] = [fedora_skipped_id]
             redis_connector.set(job_key("import_fedora_result_tr"), json.dumps(import_fedora_result))
             for fedora_index, item in enumerate(fedora_update_targets_dict):
-                # Honor a stop that first arrives during the Fedora phase (§13.9 rec 1). Each Fedora
+                # Honor a stop that first arrives during the Fedora phase. Each Fedora
                 # update is its own committed transaction, so this only halts further work — it does
                 # not (and cannot) roll back the updates already committed.
                 if not failed and not stopped and redis_connector.get(job_key("import_data_stop")) is not None:
@@ -2803,7 +2803,7 @@ def run_data_import(job_id, user_id, lock_token):
             save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
     except Exception as err:
         # Escaped a phase-local handler (e.g. a bare refresh_import_lock() call) — record it as a
-        # failure so finally below doesn't report the job as finished (review r3703505190).
+        # failure so finally below doesn't report the job as finished.
         failed = True
         if not isinstance(err, ImportLockLostError):
             redis_connector.set(
@@ -2829,7 +2829,7 @@ def run_data_import(job_id, user_id, lock_token):
             redis_connector.expire(record_key(record_id), IMPORT_DATA_EXPIRATION_SECONDS)
         # Set the terminal phase matching the outcome, clear the per-user in-flight pointer, and
         # defensively delete any staged ZIP chunk keys the validation task should already have
-        # removed (§4.3).
+        # removed.
         if failed:
             redis_connector.set(job_key("import_data_phase"), IMPORT_PHASE_FAILED, ex=IMPORT_DATA_EXPIRATION_SECONDS)
             redis_connector.set(

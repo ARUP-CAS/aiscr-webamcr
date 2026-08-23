@@ -156,7 +156,7 @@ class FakeRedis:
         (beze změny úložiště) — pro testy, které chtějí vynutit konkrétní výsledek locku. Jinak,
         pro compare-then-delete skript klíč skutečně smaže, pokud jeho hodnota odpovídá
         očekávané; pro claim skript ověří fázi/validitu/token a fázi skutečně přepne
-        (review r3747341985 — bez toho nešel otestovat souběh dvou Start požadavků);
+        (bez toho nešel otestovat souběh dvou Start požadavků);
         jiné skripty (refresh/persist) vrací ``1`` beze změny úložiště.
 
         :param script: Zdrojový text Lua skriptu (rozlišuje se dle přítomnosti ``\"del\"``

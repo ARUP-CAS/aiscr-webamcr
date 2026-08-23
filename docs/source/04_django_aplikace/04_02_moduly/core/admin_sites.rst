@@ -58,8 +58,8 @@ Třídy
 
       Vykreslí stránku s hláškou ``import_is_running`` — globální lock drží jiný admin.
 
-      Symetrický protějšek k ``_render_import_polling_ui`` pro větev „jiný admin má lock“
-      (§4.1 krok 4 / Invariant B). Kontext se nedotýká dat importu ani validace.
+      Symetrický protějšek k ``_render_import_polling_ui`` pro větev „jiný admin má lock“.
+      Kontext se nedotýká dat importu ani validace.
 
       :param request: HTTP požadavek.
       :param context: Základní kontext šablony (``app_list``, ``maintenance`` …).
@@ -70,7 +70,7 @@ Třídy
       Vykreslí polling UI navázané na běžící nebo terminální importní úlohu ``job_id``.
 
       Do kontextu vkládá pouze ne-datové položky (URL, popisek akce, konfigurace adresáře);
-      veškerá importní a validační data si stránka tahá z progress endpointu (požadavek 3, §4.1).
+      veškerá importní a validační data si stránka tahá z progress endpointu.
 
       :param request: HTTP požadavek.
       :param context: Základní kontext šablony (``app_list``, ``maintenance`` …).
@@ -81,15 +81,15 @@ Třídy
 
       Přijme nahraný ZIP hromadného importu a zařadí jeho validaci do fronty (accept-and-enqueue).
 
-      Validace ani import už neběží v HTTP požadavku (viz #391): POST komprimovaný ZIP nastageuje
+      Validace ani import už neběží v HTTP požadavku: POST komprimovaný ZIP nastageuje
       do Redis po chuncích, získá globální importní lock, nastaví fázi ``validating`` a dispatchne
-      ``cron.tasks.run_data_import_validation``. Stránka pak jen pollује progress endpoint —
-      žádná importní ani validační data se nevykreslují z kontextu POSTu (požadavek 3).
+      ``cron.tasks.run_data_import_validation``. Stránka pak jen polluje progress endpoint —
+      žádná importní ani validační data se nevykreslují z kontextu POSTu.
 
       Znovuotevření stránky (GET) se naváže na běžící úlohu daného uživatele přes
-      ``import_data_current_job_{user_id}`` (požadavek 2).
+      ``import_data_current_job_{user_id}``.
 
-      Paměťová charakteristika (§8): ``data_file.read()`` načte celý komprimovaný upload
+      Paměťová charakteristika: ``data_file.read()`` načte celý komprimovaný upload
       (~200-330 MB pro max. úlohu) najednou do RAM web workeru a slicing chunků drží druhou
       referenci — přechodný špičkový nárůst ~250-500 MB na jeden upload. Globální lock serializuje
       uploady, takže špičkuje jen jeden uWSGI worker; buffery se uvolní návratem požadavku.

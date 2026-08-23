@@ -1,5 +1,4 @@
-"""Test pro ``DataImportStart`` — atomický claim fáze proti souběžným Start požadavkům
-(review r3703505178 / r3747341985).
+"""Test pro ``DataImportStart`` — atomický claim fáze proti souběžným Start požadavkům.
 
 Testuje výhradně přes ``RequestFactory``/``FakeRedis`` (bez DB), stejným stylem jako
 ``core.tests.test_admin_sites_import_data``. Dokud ``FakeRedis.eval`` skutečně nevykonával

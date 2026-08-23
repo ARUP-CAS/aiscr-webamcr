@@ -103,8 +103,8 @@
         <p>{{ error_message_details }}</p>
       {% endif %}
     {% elif job_id %}
-      {# Polling UI (§4.8): a thin shell — all import/validation data is rendered by JS from the #}
-      {# progress endpoint (requirement 3). No validation table is rendered from server context. #}
+      {# Polling UI: a thin shell — all import/validation data is rendered by JS from the #}
+      {# progress endpoint. No validation table is rendered from server context. #}
       {% csrf_token %}
       <div class="submit-row">
         <div id="progressBarBoxData" class="progressBarBox" style="margin-bottom: 1rem">
@@ -241,7 +241,7 @@
           }
       }
 
-      // Enable/disable the action buttons per phase (§2.5.3). Cancel is disabled during validating —
+      // Enable/disable the action buttons per phase. Cancel is disabled during validating —
       // Stop is the single control that halts a running validation (cancel ≡ stop there).
       function applyPhaseUi(phase) {
           setDisabled(downloadReportButton, false)
@@ -279,7 +279,7 @@
       }
 
       // Reuse the single progress bar across both phases; reset to 0 once on validating -> importing,
-      // pin at 100% during awaiting_approval (§5b.5).
+      // pin at 100% during awaiting_approval.
       function applyProgress(data) {
           const phase = data.phase
           if (phase === "importing" && currentPhase !== "importing") {
@@ -401,7 +401,7 @@
                   }
               }
 
-              // failed_lock_lost is load-bearing (§4.8): the validated job is gone — the admin must
+              // failed_lock_lost is load-bearing: the validated job is gone — the admin must
               // re-upload. Do not render it as a stale awaiting_approval table.
               if (data.phase === "failed" && data.status_message_id === FAILED_LOCK_LOST_ID) {
                   if (reuploadNotice) {
@@ -441,7 +441,7 @@
       async function process() {
           // Single-flight guard: Start/Cancel call process() again while the page-load loop may
           // still be running (awaiting_approval isn't terminal) — without this, two loops would
-          // poll concurrently and double the request rate (review r3703505264).
+          // poll concurrently and double the request rate.
           if (pollingActive) {
               return;
           }

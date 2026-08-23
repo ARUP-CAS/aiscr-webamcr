@@ -820,7 +820,7 @@ Třídy
 
 .. py:class:: DataImportCancel
 
-   Explicitní uvolnění importního locku — uživatelova akce „zruš a uvolni slot“ (§4.5).
+   Explicitní uvolnění importního locku — uživatelova akce „zruš a uvolni slot“.
 
    **Metody:**
 
@@ -830,9 +830,9 @@ Třídy
 
       Pro fázi ``awaiting_approval`` přímo uvolní lock (release), nastaví fázi ``canceled`` a
       expiruje per-job datové klíče na 6 h (report zůstane stažitelný). Force-cancel zaseklé
-      ``awaiting_approval`` úlohy smí provést libovolný superuživatel (§7). Pro fázi ``validating``
+      ``awaiting_approval`` úlohy smí provést libovolný superuživatel. Pro fázi ``validating``
       je cancel ekvivalentní stop (nastaví stop sentinel; task uvolní lock ve svém ``finally``) —
-      obranný no-op, z UI nedostupný (§2.5.3). Pro ``importing`` a terminální fáze cancel odmítne.
+      obranný no-op, z UI nedostupný. Pro ``importing`` a terminální fáze cancel odmítne.
 
       :param request: HTTP požadavek přihlášeného superuživatele.
       :param kwargs: Obsahuje ``job_id`` identifikující importní úlohu.
@@ -856,7 +856,7 @@ Třídy
       ``job_id`` se bere z URL (vlastní stránka běžící úlohy), jinak se dohledá ze zpětného
       odkazu ``IMPORT_DATA_ACTIVE_JOB_KEY`` (stránka „import běží — jiný admin“). Reset je
       povolen pro libovolnou ne-terminální fázi (``validating``/``importing``/``awaiting_approval``)
-      a smí ho provést kterýkoli superuživatel (§7) — dead-worker úlohu typicky nemůže uvolnit
+      a smí ho provést kterýkoli superuživatel — dead-worker úlohu typicky nemůže uvolnit
       její vlastník. Vlastní úklid a token-checked uvolnění locku provádí ``tasks.reset_import_job``.
 
       :param request: HTTP požadavek přihlášeného superuživatele.
@@ -1040,7 +1040,7 @@ Funkce
 
 .. py:function:: _check_import_ownership(request, job_id, redis_connector)
 
-   Ověří, že přihlášený superuživatel je vlastníkem dané importní úlohy (§7).
+   Ověří, že přihlášený superuživatel je vlastníkem dané importní úlohy.
 
    :param request: HTTP požadavek s přihlášeným uživatelem.
    :param job_id: Identifikátor importní úlohy.
@@ -1072,7 +1072,7 @@ Funkce
 
 .. py:function:: _expire_import_data_keys(redis_connector, job_id, ttl_seconds)
 
-   Nastaví expiraci všem per-job datovým klíčům importní úlohy na ``ttl_seconds`` (§4.5).
+   Nastaví expiraci všem per-job datovým klíčům importní úlohy na ``ttl_seconds``.
 
    Klíče se pouze expirují, nikdy nemažou — report musí zůstat stažitelný po dobu retence.
    Seznam suffixů sdílí jediný zdroj pravdy s ``cron.tasks`` (``IMPORT_DATA_JOB_KEY_SUFFIXES``).

@@ -76,7 +76,7 @@ Třídy
 
       Chrání job-routing ukazatele (``import_data_current_job_{user}``,
       ``IMPORT_DATA_ACTIVE_JOB_KEY``) před tím, aby terminální úklid jedné úlohy smazal ukazatel
-      již přepsaný nově nastartovanou úlohou (review r3703505227).
+      již přepsaný nově nastartovanou úlohou.
 
       :param connection: Redis spojení, přes které se klíč maže.
       :param key: Klíč ke smazání.

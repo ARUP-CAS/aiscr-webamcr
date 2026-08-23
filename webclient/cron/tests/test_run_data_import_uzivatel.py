@@ -380,7 +380,7 @@ class RunDataImportUzivatelTest(TestCase):
         self._assert_terminal_cleanup(fake_redis, cron_tasks.IMPORT_PHASE_STOPPED)
 
     def test_user_stop_during_data_phase_rolls_back_committed_records(self):
-        """Uživatelský stop během datové fáze odvolá už uložené záznamy — čistý abort (§13.4 S-I1)."""
+        """Uživatelský stop během datové fáze odvolá už uložené záznamy — čistý abort."""
         fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_INSERT)
         fake_redis.set(f"import_data_stop_{JOB_ID}", "1")
 

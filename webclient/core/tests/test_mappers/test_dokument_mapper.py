@@ -248,7 +248,7 @@ class DokumentMapperColumnMappingTest(TestCase):
 
 
 class DokumentMapperUpdateGeometryWithoutExtraDataTest(RunDataImportMapperTestBase):
-    """Integrační test: UPDATE geometrie na Dokument bez existujícího DokumentExtraData (review r3703505252)."""
+    """Integrační test: UPDATE geometrie na Dokument bez existujícího DokumentExtraData."""
 
     def test_update_with_only_geom_derives_geom_sjtsk_using_effective_default(self):
         """UPDATE s ``ident_cely,geom`` (bez geom_system) na Dokument bez extra dat musí dopočítat geom_sjtsk."""

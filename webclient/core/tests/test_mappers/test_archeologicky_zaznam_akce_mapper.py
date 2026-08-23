@@ -197,7 +197,7 @@ class ArcheologickyZaznamAkceMapperImportValidationTest(TestCase):
 
 
 class ArcheologickyZaznamAkceMapperPartialUpdateValidationTest(TestCase):
-    """Testy pro partial UPDATE (omitted typ/projekt musí čerpat z existující Akce, review r3703505240)."""
+    """Testy pro partial UPDATE (omitted typ/projekt musí čerpat z existující Akce)."""
 
     @classmethod
     def setUpTestData(cls):

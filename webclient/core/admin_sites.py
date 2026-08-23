@@ -328,7 +328,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
 
     IMPORT_DATA_REDIS_EXPIRATION = 6 * 60 * 60  # 6 hodin
     IMPORT_ZIP_MAX_UNCOMPRESSED_SIZE = 1024 * 1024 * 1024  # 1024 MB
-    # Velikost chunku komprimovaného ZIPu ve stagingu do Redis (§3.3). Zdrojová konstanta,
+    # Velikost chunku komprimovaného ZIPu ve stagingu do Redis. Zdrojová konstanta,
     # neladí se za běhu; drží každý SET/GET v řádu desítek ms a hodnotu pod proto-max-bulk-len.
     IMPORT_DATA_REDIS_CHUNK_SIZE = 64 * 1024 * 1024  # 64 MiB
 
@@ -362,8 +362,8 @@ class AmcrCustomAdminSite(admin.AdminSite):
         """
         Vykreslí stránku s hláškou ``import_is_running`` — globální lock drží jiný admin.
 
-        Symetrický protějšek k ``_render_import_polling_ui`` pro větev „jiný admin má lock“
-        (§4.1 krok 4 / Invariant B). Kontext se nedotýká dat importu ani validace.
+        Symetrický protějšek k ``_render_import_polling_ui`` pro větev „jiný admin má lock“.
+        Kontext se nedotýká dat importu ani validace.
 
         :param request: HTTP požadavek.
         :param context: Základní kontext šablony (``app_list``, ``maintenance`` …).
@@ -381,7 +381,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
         Vykreslí polling UI navázané na běžící nebo terminální importní úlohu ``job_id``.
 
         Do kontextu vkládá pouze ne-datové položky (URL, popisek akce, konfigurace adresáře);
-        veškerá importní a validační data si stránka tahá z progress endpointu (požadavek 3, §4.1).
+        veškerá importní a validační data si stránka tahá z progress endpointu.
 
         :param request: HTTP požadavek.
         :param context: Základní kontext šablony (``app_list``, ``maintenance`` …).
@@ -407,15 +407,15 @@ class AmcrCustomAdminSite(admin.AdminSite):
         """
         Přijme nahraný ZIP hromadného importu a zařadí jeho validaci do fronty (accept-and-enqueue).
 
-        Validace ani import už neběží v HTTP požadavku (viz #391): POST komprimovaný ZIP nastageuje
+        Validace ani import už neběží v HTTP požadavku: POST komprimovaný ZIP nastageuje
         do Redis po chuncích, získá globální importní lock, nastaví fázi ``validating`` a dispatchne
-        ``cron.tasks.run_data_import_validation``. Stránka pak jen pollује progress endpoint —
-        žádná importní ani validační data se nevykreslují z kontextu POSTu (požadavek 3).
+        ``cron.tasks.run_data_import_validation``. Stránka pak jen polluje progress endpoint —
+        žádná importní ani validační data se nevykreslují z kontextu POSTu.
 
         Znovuotevření stránky (GET) se naváže na běžící úlohu daného uživatele přes
-        ``import_data_current_job_{user_id}`` (požadavek 2).
+        ``import_data_current_job_{user_id}``.
 
-        Paměťová charakteristika (§8): ``data_file.read()`` načte celý komprimovaný upload
+        Paměťová charakteristika: ``data_file.read()`` načte celý komprimovaný upload
         (~200-330 MB pro max. úlohu) najednou do RAM web workeru a slicing chunků drží druhou
         referenci — přechodný špičkový nárůst ~250-500 MB na jeden upload. Globální lock serializuje
         uploady, takže špičkuje jen jeden uWSGI worker; buffery se uvolní návratem požadavku.
@@ -441,9 +441,9 @@ class AmcrCustomAdminSite(admin.AdminSite):
             **self.each_context(request),
         }
 
-        # Own-job gate (§4.1 step 3 / GET branch): if the requesting admin already has a non-terminal
+        # Own-job gate (GET branch): if the requesting admin already has a non-terminal
         # job, always bind the page to it and never accept a new upload. This gate is advisory and not
-        # atomic — the real serialization is the global lock acquire below (§4.1 step 7).
+        # atomic — the real serialization is the global lock acquire below.
         current_job_id = self.redis_connector.get(f"import_data_current_job_{request.user.id}") or None
         if current_job_id:
             phase = self.redis_connector.get(f"import_data_phase_{current_job_id}")
@@ -454,12 +454,12 @@ class AmcrCustomAdminSite(admin.AdminSite):
             ):
                 return self._render_import_polling_ui(request, context, current_job_id)
 
-        # Maintenance gate (§4.1 step 2 / Invariant A): reject uploads outside maintenance mode.
+        # Maintenance gate: reject uploads outside maintenance mode.
         if not maintenance:
             context["form"] = ImportDataAdminForm()
             return TemplateResponse(request, "admin/import_data/import_data.html", context)
 
-        # Global-lock-busy gate (§4.1 step 4 / Invariant B): another admin's pipeline holds the lock.
+        # Global-lock-busy gate: another admin's pipeline holds the lock.
         if import_data_running:
             return self._render_lock_busy(request, context)
 
@@ -493,7 +493,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
             job_id = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(20))
             lock_token = secrets.token_hex(16)
 
-            # Atomic acquire is the real serialization guarantee (§4.1 step 7); on a TOCTOU race with
+            # Atomic acquire is the real serialization guarantee; on a TOCTOU race with
             # another upload, fall back to the import_is_running page.
             if not RedisConnector.acquire_import_lock(
                 self.redis_connector, lock_token, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS
@@ -503,7 +503,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
             ttl = tasks.IMPORT_DATA_RUNNING_TTL_SECONDS
             # Publish routing/recovery metadata BEFORE the risky data_file.read()/chunk pipeline
             # below — if the web worker is OOM-killed mid-read, the no-arg reset must still be able
-            # to resolve the orphaned lock via IMPORT_DATA_ACTIVE_JOB_KEY (review r3703505235).
+            # to resolve the orphaned lock via IMPORT_DATA_ACTIVE_JOB_KEY.
             self.redis_connector.set(f"import_data_current_job_{request.user.id}", job_id, ex=ttl)
             # Lock → job back-reference so a superuser can manually reset this job from anywhere.
             self.redis_connector.set(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, job_id, ex=ttl)
@@ -519,7 +519,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
 
             chunk_count = 0
             try:
-                # Stage the compressed ZIP in Redis, chunked (§3.3 / §4.1 step 8). Binary chunks are
+                # Stage the compressed ZIP in Redis, chunked. Binary chunks are
                 # written through the bytes connection so they are not utf-8 mangled.
                 file_bytes = data_file.read()
                 chunk_size = self.IMPORT_DATA_REDIS_CHUNK_SIZE
@@ -544,7 +544,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
             except Exception as err:
                 logger.exception("core.admin_sites.AmcrCustomAdminSite.import_data.dispatch_failed", extra={"err": err})
                 # On dispatch failure release the lock and delete every staged chunk key plus the
-                # count and the per-user pointer (§4.1 step 10).
+                # count and the per-user pointer.
                 RedisConnector.release_import_lock(self.redis_connector, lock_token)
                 stray_keys = [f"import_data_file_{job_id}_{i}" for i in range(chunk_count)]
                 stray_keys.append(f"import_data_file_chunks_{job_id}")

@@ -430,7 +430,9 @@ Třídy
 
       Podporované formáty jsou ``YYYY-MM-DD``, ``YYYY.MM.DD`` a ``DD.MM.YYYY``.
       Případná časová složka vstupu (např. ``"2026-05-31 13:45:59"``) se ignoruje
-      a zpracuje se pouze část s datem.
+      a zpracuje se pouze část s datem. Je-li u formátu ISO uveden posun časového
+      pásma (``Z`` nebo ``+HH:MM``), čas se před určením data převede do časové zóny
+      aplikace (``TIME_ZONE``), protože posun může datum posunout přes půlnoc.
 
       :param value: Vstupní hodnota.
       :return: Hodnota ``date`` nebo ``None`` pro prázdnou hodnotu.
@@ -716,12 +718,12 @@ Třídy
 
    předzpracovává hodnoty podle cílového pole a vytváří záznamy.
 
-   Kontrakt read-only během validace (§4.2 dokumentu #391): ve validační fázi
+   Kontrakt read-only během validace: ve validační fázi
    (``cron.tasks.run_data_import_validation``) se metody mapperu ``map``,
    ``check_required_fields``, ``import_validation`` a ``create_records`` používají výhradně
    read-only. ``create_records`` staví in-memory objekty pouze pro serializaci a nesmí volat
    ``save()``/``delete()`` ani jinak měnit databázi či externí úložiště (Fedora). Kontrakt je
-   vynucen dokumentací a testy (§10), nikoli runtime guardem.
+   vynucen dokumentací a testy, nikoli runtime guardem.
 
    **Metody:**
 

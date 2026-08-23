@@ -23,7 +23,7 @@ Pravidla a governance viz [AGENTS.md](../AGENTS.md).
     dependency_graph.json        — Graf interních a externích závislostí (T02)
     *_analysis.json              — Výstupy analýz per-task (ORM, Docker, security, …)
   reports/
-    review_reports/              — Standardizovaný cíl pro reviews (viz níže); reporty z tasků (<task_id>.md); final_audit.md obsahuje Changelog
+    review_reports/              — Reporty z jednotlivých tasků (<task_id>.md); final_audit.md obsahuje Changelog
     bugs.md                      — Evidence nalezených chyb
     refactoring_backlog.md       — Backlog strukturálních vylepšení
     claude_automation_recommendations.md  — Doporučení pro Claude Code automations
@@ -41,17 +41,5 @@ Pravidla a governance viz [AGENTS.md](../AGENTS.md).
 - **Doc hygiene audit:** `prompts/audit_doc_hygiene.md`
 - **Konvence / setup / hooks:** `prompts/project_conventions.md`, `prompts/setup_dev.md`, `prompts/hooks_reference.md`
 - **Automation doporučení:** `reports/claude_automation_recommendations.md`
-
-## Ukládání reviews (standardizovaný cíl)
-
-Každé review provedené agentem se ukládá do adresáře
-`.agents/reports/review_reports/` jako Markdown dokument s **náhodným řetězcem
-znaků** v názvu souboru, aby jeden agent nepřepsal review jiného agenta. Vzor:
-`review_<topic>_<random>.md` (např. `review_validation_refactor_a3f9k2.md`).
-Každé review musí navíc uvádět **název modelu**, který jej vytvořil (např.
-`claude-opus-4-8`), zaznamenaný v hlavičce nebo metadatech dokumentu.
-
-Všechny Markdown dokumenty generované agenty (plány, analýzy, reviews apod.)
-musí být psány **anglicky**. Governance viz [AGENTS.md](../AGENTS.md).
 
 Viz také [CONTRIBUTING.md](../CONTRIBUTING.md) § Správa dokumentace repozitáře.

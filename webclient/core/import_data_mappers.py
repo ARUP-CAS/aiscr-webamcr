@@ -741,7 +741,11 @@ class BooleanImportField(BaseImportField):
 class DateImportField(BaseImportField):
     """Importní pole pro hodnoty datového typu date."""
 
-    pattern_iso = re.compile(r"(\d{4}-\d{1,2}-\d{1,2})(?:[ T]\d{1,2}:\d{1,2}(?::\d{1,2})?)?")
+    pattern_iso = re.compile(
+        r"(?P<date>\d{4}-\d{1,2}-\d{1,2})"
+        r"(?:[ T](?P<hour>\d{1,2}):(?P<minute>\d{1,2})(?::\d{1,2})?(?:\.\d+)?"
+        r"(?P<tz>Z|[+-]\d{2}:?\d{2})?)?"
+    )
     pattern_dotted_year_first = re.compile(r"(\d{4}\.\d{1,2}\.\d{1,2})(?: \d{1,2}:\d{1,2}(?::\d{1,2})?)?")
     pattern_localized = re.compile(r"(\d{1,2}\. ?\d{1,2}\. ?\d{4})(?: \d{1,2}:\d{1,2}(?::\d{1,2})?)?")
 
@@ -778,7 +782,9 @@ class DateImportField(BaseImportField):
 
         Podporované formáty jsou ``YYYY-MM-DD``, ``YYYY.MM.DD`` a ``DD.MM.YYYY``.
         Případná časová složka vstupu (např. ``"2026-05-31 13:45:59"``) se ignoruje
-        a zpracuje se pouze část s datem.
+        a zpracuje se pouze část s datem. Je-li u formátu ISO uveden posun časového
+        pásma (``Z`` nebo ``+HH:MM``), čas se před určením data převede do časové zóny
+        aplikace (``TIME_ZONE``), protože posun může datum posunout přes půlnoc.
 
         :param value: Vstupní hodnota.
         :return: Hodnota ``date`` nebo ``None`` pro prázdnou hodnotu.
@@ -791,7 +797,24 @@ class DateImportField(BaseImportField):
             # otherwise trailing junk (e.g. "2026.05.31junk") would be silently accepted.
             try:
                 if match := self.pattern_iso.fullmatch(value):
-                    return datetime.datetime.strptime(match.group(1), "%Y-%m-%d").date()
+                    date_obj = datetime.datetime.strptime(match.group("date"), "%Y-%m-%d").date()
+                    tz = match.group("tz")
+                    if tz:
+                        # an offset can push the wall-clock date across midnight once
+                        # projected onto the app's TIME_ZONE (Europe/Prague).
+                        naive_dt = datetime.datetime.combine(
+                            date_obj,
+                            datetime.time(int(match.group("hour")), int(match.group("minute"))),
+                        )
+                        if tz == "Z":
+                            offset = datetime.timedelta()
+                        else:
+                            sign = 1 if tz[0] == "+" else -1
+                            digits = tz[1:].replace(":", "")
+                            offset = sign * datetime.timedelta(hours=int(digits[:2]), minutes=int(digits[2:]))
+                        aware_dt = naive_dt.replace(tzinfo=datetime.timezone(offset))
+                        date_obj = aware_dt.astimezone(timezone.get_current_timezone()).date()
+                    return date_obj
                 if match := self.pattern_dotted_year_first.fullmatch(value):
                     return datetime.datetime.strptime(match.group(1), "%Y.%m.%d").date()
                 if match := self.pattern_localized.fullmatch(value):
@@ -1321,12 +1344,12 @@ class ImportModelMapper(ABC):
 
     předzpracovává hodnoty podle cílového pole a vytváří záznamy.
 
-    Kontrakt read-only během validace (§4.2 dokumentu #391): ve validační fázi
+    Kontrakt read-only během validace: ve validační fázi
     (``cron.tasks.run_data_import_validation``) se metody mapperu ``map``,
     ``check_required_fields``, ``import_validation`` a ``create_records`` používají výhradně
     read-only. ``create_records`` staví in-memory objekty pouze pro serializaci a nesmí volat
     ``save()``/``delete()`` ani jinak měnit databázi či externí úložiště (Fedora). Kontrakt je
-    vynucen dokumentací a testy (§10), nikoli runtime guardem.
+    vynucen dokumentací a testy, nikoli runtime guardem.
     """
 
     fields = tuple()
@@ -2804,7 +2827,7 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
             "typ" not in self.value_dict or "projekt" not in self.value_dict
         ):
             # Partial UPDATE omits typ/projekt: merge the omitted field from the existing Akce
-            # instead of treating its absence as an explicit NULL (review r3703505240).
+            # instead of treating its absence as an explicit NULL.
             filter_kwargs = self._get_filter_kwargs_primary_key()
             existing_akce = (
                 Akce.objects.filter(**{f"archeologicky_zaznam__{k}": v for k, v in filter_kwargs.items()}).first()

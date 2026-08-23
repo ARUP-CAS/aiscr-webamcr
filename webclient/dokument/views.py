@@ -2759,7 +2759,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
                     with transaction.atomic():
                         # Zámek řádku dokumentu serializuje souběžné připojení téhož dokumentu –
                         # jinak oba requesty spočítají v get_cast_dokumentu_ident stejné pořadové
-                        # číslo části a druhý insert spadne na unique constraint (IntegrityError, #4141).
+                        # číslo části a druhý insert spadne na unique constraint (IntegrityError).
                         dokument = get_object_or_404(Dokument.objects.select_for_update(), id=dokument_id)
                         dokument.active_transaction = fedora_transaction
                         relace = casti_zaznamu.filter(dokument__id=dokument_id)

@@ -1,4 +1,4 @@
-"""Test pro ``AmcrCustomAdminSite.import_data`` — pořadí zápisu recovery metadat (review r3703505235).
+"""Test pro ``AmcrCustomAdminSite.import_data`` — pořadí zápisu recovery metadat.
 
 Testuje výhradně přes ``RequestFactory``/``FakeRedis`` (bez DB) — mirror stylu
 ``core.tests.test_data_import_views``. Admin-menu plumbing (``get_app_list``/``each_context``)
