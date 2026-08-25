@@ -482,7 +482,11 @@ class ShpUzszSource(RuianSource):
 
         * ``shp_path`` jako adresář – hledá ``<basename>.shp`` přímo v něm,
         * ``shp_path`` jako ZIP – rozbalí potřebné soubory do
-          ``shp_path.parent / "<stem>_unpacked"`` (jen pokud ještě nejsou rozbalené).
+          ``shp_path.parent / "<stem>_unpacked"``.
+
+        Rozbaluje se, pokud vrstva ještě rozbalená není **nebo je starší než
+        archiv**. Bez kontroly stáří by se po stažení novějšího ``1.zip``
+        tiše použila zastaralá data.
 
         :param basename: Základ názvu vrstvy bez přípony, např. ``"VUSC_P"``.
 
@@ -493,14 +497,29 @@ class ShpUzszSource(RuianSource):
             target = self.shp_path / f"{basename}.shp"
             if not target.exists():
                 raise FileNotFoundError(f"SHP layer nenalezen: {target}")
+            logger.info(
+                "heslar.ruian_sync.shp_importer._resolve_shp_layer.directory",
+                extra={"basename": basename, "path": str(target)},
+            )
             return target
 
-        # ZIP – rozbalit, pokud ještě není
+        # ZIP – rozbalit, pokud chybí nebo je zastaralé
         if zipfile.is_zipfile(str(self.shp_path)):
             unpack_dir = self.shp_path.parent / f"{self.shp_path.stem}_unpacked"
             unpack_dir.mkdir(parents=True, exist_ok=True)
             target = unpack_dir / f"{basename}.shp"
-            if not target.exists():
+            zip_mtime = self.shp_path.stat().st_mtime
+            zastarale = target.exists() and target.stat().st_mtime < zip_mtime
+            if zastarale:
+                logger.warning(
+                    "heslar.ruian_sync.shp_importer._resolve_shp_layer.stale_unpacked",
+                    extra={
+                        "basename": basename,
+                        "unpack_dir": str(unpack_dir),
+                        "zip": str(self.shp_path),
+                    },
+                )
+            if not target.exists() or zastarale:
                 with zipfile.ZipFile(str(self.shp_path)) as zf:
                     # Rozbalit všechny pomocné soubory (.shp, .shx, .dbf, .prj, .cpg)
                     for member in zf.namelist():
@@ -513,10 +532,14 @@ class ShpUzszSource(RuianSource):
                             ".cpg",
                         ):
                             zf.extract(member, str(unpack_dir))
-                            # Pokud je v ZIPu uložen v podadresáři, přemístit do unpack_dir
+                            # Pokud je v ZIPu uložen v podadresáři, přemístit do unpack_dir.
                             extracted = unpack_dir / member
                             if extracted != unpack_dir / member_path.name:
-                                extracted.rename(unpack_dir / member_path.name)
+                                extracted.replace(unpack_dir / member_path.name)
+                logger.info(
+                    "heslar.ruian_sync.shp_importer._resolve_shp_layer.extracted",
+                    extra={"basename": basename, "unpack_dir": str(unpack_dir), "zip": str(self.shp_path)},
+                )
             if not target.exists():
                 raise FileNotFoundError(f"SHP layer {basename} nebyl v archivu {self.shp_path} nalezen.")
             return target
