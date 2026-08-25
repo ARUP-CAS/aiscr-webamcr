@@ -52,7 +52,6 @@ Třídy
       z JS na stránce průběhu).
 
       :param request: HTTP požadavek; ``POST`` od superuživatele validuje formulář a připraví job.
-
       :return: Odpověď ``TemplateResponse`` s formulářem nebo stránkou průběhu.
 
    .. py:method:: import_data()

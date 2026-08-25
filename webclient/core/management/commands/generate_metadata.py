@@ -13,6 +13,34 @@ logger = logging.getLogger(__name__)
 
 _RETRYABLE_EXCEPTIONS = (requests.exceptions.ConnectionError, requests.exceptions.Timeout)
 
+#: Kolikanásobek počtu vláken se najednou předá executoru při paralelním běhu.
+#: Vyšší číslo lépe zaplní pool (méně čekání na doběhnutí dávky), nižší drží
+#: v paměti méně záznamů. Deset je kompromis – při ``--workers 10`` je v každé
+#: chvíli načteno nejvýše 100 objektů.
+_BATCH_PER_WORKER = 10
+
+
+def _po_davkach(iterable, velikost):
+    """
+    Rozdělí iterátor na seznamy o nejvýše ``velikost`` položkách.
+
+    Slouží k tomu, aby se při paralelním zpracování nemusel celý queryset
+    materializovat najednou – viz :meth:`Command._process_queryset`.
+
+    :param iterable: Vstupní iterátor (typicky ``queryset.iterator()``).
+    :param velikost: Maximální počet položek v jedné dávce.
+
+        :return: Generátor seznamů.
+    """
+    davka = []
+    for polozka in iterable:
+        davka.append(polozka)
+        if len(davka) >= velikost:
+            yield davka
+            davka = []
+    if davka:
+        yield davka
+
 
 class Command(BaseCommand):
     """
@@ -134,6 +162,13 @@ class Command(BaseCommand):
         po chunkách přes ``.iterator()``, aby se nehromadily v paměti všechny záznamy
         při dlouhých dávkách.
 
+        Paralelní větev předává executoru práci po dávkách (:func:`_po_davkach`).
+        ``Executor.map`` totiž bez parametru ``buffersize`` (Python 3.14+) vyčerpá
+        celý vstupní iterátor hned na začátku a odešle ``submit()`` pro každou
+        položku – tím by se queryset materializoval v paměti najednou a
+        ``.iterator(chunk_size=…)`` by ztratil smysl právě v té větvi, která je
+        určená pro velké dávky.
+
         :param queryset: Django QuerySet záznamů ke zpracování.
         :param workers: Počet paralelních vláken (1 = sekvenční zpracování).
         :param max_retries: Maximální počet opakování při přechodných síťových chybách.
@@ -166,7 +201,8 @@ class Command(BaseCommand):
         try:
             if workers and workers > 1:
                 with ThreadPoolExecutor(max_workers=workers) as executor:
-                    list(executor.map(worker, records))
+                    for davka in _po_davkach(records, workers * _BATCH_PER_WORKER):
+                        list(executor.map(worker, davka))
             else:
                 for index, obj in enumerate(records, start=1):
                     self._process_object(obj, max_retries=max_retries)

@@ -444,6 +444,13 @@ def reassign_projekt(
         try:
             projekt.hlavni_katastr = new_katastr
             projekt.active_transaction = fedora_tx
+            # Bez tohoto flagu ``projekt.signals.projekt_post_save`` přeskočí
+            # větev, která z M2M ``katastry`` odebere nový hlavní katastr.
+            # Při mazání katastru běží pro tentýž projekt i
+            # ``reassign_projekt_dalsi_katastr`` se stejným bodem i
+            # ``exclude_kod``, takže obě pole dostanou týž katastr – a bez
+            # úklidu by skončil zároveň jako hlavní i jako položka M2M.
+            projekt.close_active_transaction_when_finished = True
             projekt.save()
             success = True
         finally:
@@ -501,6 +508,10 @@ def reassign_projekt_dalsi_katastr(
     success = False
     try:
         projekt.active_transaction = fedora_tx
+        # Viz komentář v ``reassign_projekt`` – bez flagu se v post_save
+        # signálu neprovede odebrání hlavního katastru z M2M a projekt by
+        # skončil s týmž katastrem v obou polích.
+        projekt.close_active_transaction_when_finished = True
         projekt.save()
         success = True
     finally:

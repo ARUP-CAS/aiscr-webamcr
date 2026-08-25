@@ -236,11 +236,23 @@ def download_change_file(day: date, target_dir: Path) -> Optional[Path]:
     """
     if bool(_get_setting("prefer_atom")):
         try:
-            return download_via_atom(day, target_dir)
+            z_atomu = download_via_atom(day, target_dir)
         except Exception as err:  # noqa: BLE001 — fallback na deterministické URL
             logger.warning(
                 "heslar.ruian_sync.vfr_download.download_change_file.atom_failed",
                 extra={"day": day.isoformat(), "error": str(err)},
+            )
+        else:
+            if z_atomu is not None:
+                return z_atomu
+            # ATOM feed drží jen posledních ~15 dní, takže pro starší den
+            # vrátí ``None`` (ne výjimku). Bez propadnutí na deterministickou
+            # URL by volající dostal ``None`` a cron by to vyhodnotil jako
+            # „ten den nebyly změny" – při dohánění delšího výpadku by se
+            # reálné změny ztratily a běh by přitom skončil jako úspěšný.
+            logger.info(
+                "heslar.ruian_sync.vfr_download.download_change_file.atom_miss_fallback",
+                extra={"day": day.isoformat()},
             )
 
     url = build_change_url(day)

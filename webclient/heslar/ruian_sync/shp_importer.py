@@ -158,7 +158,7 @@ class ShpUzszSource(RuianSource):
         """
         try:
             with self._open_uzsz_stream() as fh:
-                ctx = etree.iterparse(fh, events=("end",), huge_tree=True)
+                ctx = etree.iterparse(fh, events=("end",), huge_tree=True, resolve_entities=False)
                 for _, elem in ctx:
                     if etree.QName(elem.tag).localname == "TypSouboru":
                         typ = (elem.text or "").strip()
@@ -269,7 +269,7 @@ class ShpUzszSource(RuianSource):
         # Pokud bychom dostali duplicitní zápis pro tentýž kód, převálcujeme jej
         # poslední hodnotou – v UZSZ jsou všechny instance pro daný kód shodné.
         with self._open_uzsz_stream() as fh:
-            ctx = etree.iterparse(fh, events=("end",), huge_tree=True)
+            ctx = etree.iterparse(fh, events=("end",), huge_tree=True, resolve_entities=False)
             for _, elem in ctx:
                 if etree.QName(elem.tag).localname != "Point":
                     continue

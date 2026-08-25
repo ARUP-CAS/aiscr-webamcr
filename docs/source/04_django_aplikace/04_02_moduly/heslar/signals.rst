@@ -105,9 +105,8 @@ Funkce
    Provádí operaci ruian katastr delete repository container.
 
    Pokud má instance ``suppress_signal=True``, signál neprovede žádnou
-   operaci ve Fedora repozitáři – stejné chování jako u ostatních signálů
-   (např. :func:`save_metadata_katastr`). Volající (typicky cron / sync
-   nad heslářem RÚIAN) tak může explicitně potlačit Fedora zápis přes
+   operaci ve Fedora repozitáři – stejné chování jako u ostatních signálů.
+   Volající tak může explicitně potlačit Fedora zápis přes
    ``instance.suppress_signal = True`` před voláním ``.delete()``.
 
    :param sender: Model třídy, která poslala signál.

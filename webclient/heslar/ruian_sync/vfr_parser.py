@@ -190,8 +190,20 @@ def _iter_elements(path: Path, local_names: Tuple[str, ...]) -> Iterator:
     prvků (např. ``<Parcela><KatastralniUzemi><Kod>X</Kod></KatastralniUzemi></Parcela>``)
     a zabrání se destruktivnímu cleanupu vnořených struktur.
 
-    Po vyieldování top-level elementu se uvolní předchozí siblingy (snížení
-    paměti při velkých kolekcích).
+    Paměť se uvolňuje u **všech** záznamů nejvyšší úrovně, nejen u těch
+    sledovaných. Denní ZKSH obsahuje řádově tisíce ``Parcela`` /
+    ``StavebniObjekt`` / ``AdresniMisto``, které nás nezajímají – bez jejich
+    zahazování by strom rostl po celou dobu parsování a tvrzení o konstantní
+    paměti by neplatilo (naměřeno +40 MB na jeden soubor).
+
+    Uklízet lze jen záznamy nejvyšší úrovně (vnuky kořene, tj. přímé potomky
+    kolekcí jako ``Parcely``/``StavebniObjekty``). Hlouběji leží potomci
+    sledovaných prvků – ``Kod``, ``Nazev``, ``Geometrie`` – a jejich ``end``
+    událost přichází **dřív** než u rodiče, takže jejich vyprázdnění by
+    zničilo data, která extraktory teprve potřebují.
+
+    Vyieldovaný element se zde nevyprazdňuje; to dělá volající
+    (:func:`parse_changes`) až po vytvoření DTO.
 
     :param path: Cesta k VFR souboru.
     :param local_names: Tuple local-names (bez namespace prefixu) k matchnutí.
@@ -201,21 +213,32 @@ def _iter_elements(path: Path, local_names: Tuple[str, ...]) -> Iterator:
     target_set = set(local_names)
     stream = _open_xml_stream(path)
     try:
-        ctx = etree.iterparse(stream, events=("end",), huge_tree=True)
+        ctx = etree.iterparse(stream, events=("end",), huge_tree=True, resolve_entities=False)
         for _, elem in ctx:
-            local = etree.QName(elem.tag).localname
-            if local not in target_set:
-                continue
             parent = elem.getparent()
             if parent is None:
                 continue
-            parent_local = etree.QName(parent.tag).localname
-            allowed = _TARGET_PARENTS.get(local)
-            if allowed is not None and parent_local not in allowed:
-                # Reference uvnitř jiného prvku (např. Parcela/KatastralniUzemi).
-                continue
-            yield elem
-            # Uvolnění předchozích siblingů (snížení paměti)
+
+            local = etree.QName(elem.tag).localname
+            je_target = False
+            if local in target_set:
+                allowed = _TARGET_PARENTS.get(local)
+                # Reference uvnitř jiného prvku (např. Parcela/KatastralniUzemi)
+                # mají jiného rodiče než definice a nesmí se yieldovat.
+                je_target = allowed is None or etree.QName(parent.tag).localname in allowed
+
+            if je_target:
+                yield elem
+            else:
+                # Záznam nejvyšší úrovně = vnuk kořene. Cokoli hlubšího je
+                # potomek nějakého záznamu a uklidit se nesmí.
+                grandparent = parent.getparent()
+                if grandparent is None or grandparent.getparent() is not None:
+                    continue
+                elem.clear()
+
+            # Zahození předchozích sourozenců – drží paměť na uzdě bez ohledu
+            # na to, kolik záznamů v kolekci ještě přijde.
             while elem.getprevious() is not None:
                 del parent[0]
     finally:

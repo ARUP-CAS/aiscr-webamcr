@@ -335,20 +335,30 @@ def _apply_changes(events: Iterable[RuianChangeEvent], run: RuianSyncRun) -> Set
                 run.okres_upserts += 1
 
     hranice_changed_kody: Set[int] = set()
-    db_katastry = {k.kod: k for k in RuianKatastr.objects.all()}
+    # Načítáme jen ``kod`` (bez geometrií ``hranice``/``definicni_bod``) a plný
+    # záznam pak dotahujeme cíleně pro dotčené kódy – jeden obří SELECT přes
+    # 13 000 katastrů s polygony překračoval PostgreSQL ``statement_timeout``
+    # (stejný důvod jako v ``_apply_full_state``, viz komentář tamtéž).
+    db_katastr_codes = set(RuianKatastr.objects.values_list("kod", flat=True))
     for ev in bucket[LEVEL_KATASTR]:
         if ev.event_type == EVENT_UPSERT:
-            changed, hranice_changed = _upsert_katastr(db_katastry.get(ev.kod), ev.payload, run)
+            existing = (
+                RuianKatastr.objects.select_related("okres").filter(kod=ev.kod).first()
+                if ev.kod in db_katastr_codes
+                else None
+            )
+            changed, hranice_changed = _upsert_katastr(existing, ev.payload, run)
             if changed:
                 run.katastr_upserts += 1
             if hranice_changed:
                 hranice_changed_kody.add(ev.kod)
 
     # ---- Fáze 2: delete (katastr → okres → kraj, reverzně dle FK) ----
-    db_katastry = {k.kod: k for k in RuianKatastr.objects.all()}
+    db_katastr_codes = set(RuianKatastr.objects.values_list("kod", flat=True))
     for ev in bucket[LEVEL_KATASTR]:
-        if ev.event_type == EVENT_DELETE and ev.kod in db_katastry:
-            if _delete_katastr(db_katastry[ev.kod], run):
+        if ev.event_type == EVENT_DELETE and ev.kod in db_katastr_codes:
+            katastr = RuianKatastr.objects.select_related("okres").filter(kod=ev.kod).first()
+            if katastr is not None and _delete_katastr(katastr, run):
                 run.katastr_deletes += 1
 
     db_okresy = {o.kod: o for o in RuianOkres.objects.all()}
@@ -659,11 +669,25 @@ def _upsert_katastr(
         existing.save()
 
     if name_changed:
-        affected = _log_katastr_rename(existing, old_nazev=old_nazev, new_nazev=dto.nazev)
-        run.affected_projekt += affected.get("projekt", 0)
-        run.affected_az += affected.get("az", 0)
-        run.affected_sn += affected.get("sn", 0)
-        run.affected_neident_akce += affected.get("neident_akce", 0)
+        # ``_log_katastr_rename`` volá ``save()`` nad Projekt/AZ/SN, a ty přes
+        # signály posílají živé HTTP zápisy do Fedory. Tato funkce přitom běží
+        # v ``@transaction.atomic`` – kdyby cokoli po nich vyhodilo výjimku,
+        # DB by se rollbackla, ale zápisy v repozitáři by zůstaly a data by se
+        # trvale rozešla. Odkládáme je proto až za commit, stejně jako to už
+        # dělá cesta mazání katastru (viz ``_delete_katastr``).
+        #
+        # ``run`` je tentýž objekt po celý běh a ``run.save()`` proběhne až
+        # v ``_apply_full_state``/``_apply_changes``, takže countery navýšené
+        # v callbacku se do auditu ještě promítnou.
+        def _rename_po_commitu():
+            """Dopíše historii a aktualizuje Fedoru pro záznamy navázané na katastr."""
+            affected = _log_katastr_rename(existing, old_nazev=old_nazev, new_nazev=dto.nazev)
+            run.affected_projekt += affected.get("projekt", 0)
+            run.affected_az += affected.get("az", 0)
+            run.affected_sn += affected.get("sn", 0)
+            run.affected_neident_akce += affected.get("neident_akce", 0)
+
+        transaction.on_commit(_rename_po_commitu)
 
     return (changed, hranice_changed)
 

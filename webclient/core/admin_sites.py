@@ -342,8 +342,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
         z JS na stránce průběhu).
 
         :param request: HTTP požadavek; ``POST`` od superuživatele validuje formulář a připraví job.
-
-            :return: Odpověď ``TemplateResponse`` s formulářem nebo stránkou průběhu.
+        :return: Odpověď ``TemplateResponse`` s formulářem nebo stránkou průběhu.
         """
         from heslar.forms import UpdateKatastryFileForm
 

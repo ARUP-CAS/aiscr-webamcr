@@ -565,6 +565,18 @@ def edit(request, ident_cely):
                 x2 = form.cleaned_data["coordinate_x2"]
                 sjtsk_x1 = form.cleaned_data.get("coordinate_sjtsk_x1")
                 sjtsk_x2 = form.cleaned_data.get("coordinate_sjtsk_x2")
+                if not (sjtsk_x1 and sjtsk_x2) and x1 and x2:
+                    # ``EditProjektForm`` nemá (na rozdíl od ``CreateProjektForm``)
+                    # validaci vyžadující všechny čtyři souřadnice a SJTSK pole
+                    # jsou ``required=False``. Kdyby je JS nevyplnil (zastaralá
+                    # cache po nasazení, výpadek klik-handleru), podmínka níže
+                    # by celý blok přeskočila a poloha by se tiše neuložila.
+                    # Dopočítáme je proto z WGS84 stejně jako ve větvi výše.
+                    sjtsk_x1, sjtsk_x2 = convertToJTSK(x1, x2)
+                    logger.warning(
+                        "projekt.views.edit.form_valid.sjtsk_dopocitano",
+                        extra={"ident_cely": projekt.ident_cely},
+                    )
             # Obcházení kontroly změny lon/lat; důležitá je pouze geometrie.
             form.fields["coordinate_x1"].initial = x1
             form.fields["coordinate_x2"].initial = x2
@@ -578,13 +590,20 @@ def edit(request, ident_cely):
             if sjtsk_x1 and sjtsk_x2 and x1 and x2:
                 new_sjtsk = Point(sjtsk_x1, sjtsk_x2, srid=5514)
                 new_geom = Point(x1, x2)
-                if new_geom is not None and (old_geom is None or new_geom.coords != old_geom.coords):
+                if old_geom is None or new_geom.coords != old_geom.coords:
                     projekt.geom = new_geom
                     projekt.geom_sjtsk = new_sjtsk
                     projekt.save()
                     logger.debug("projekt.views.edit.form_valid.geom_updated", extra={"geom": projekt.geom})
                 else:
                     logger.debug("projekt.views.edit.form_valid.geom_not_updated")
+            else:
+                # Sem se lze dostat jen při chybějícím WGS84 páru – ten je ve
+                # formuláři povinný, takže jde o anomálii, ne o běžný stav.
+                logger.warning(
+                    "projekt.views.edit.form_valid.geom_preskocena",
+                    extra={"ident_cely": projekt.ident_cely, "x1": x1, "x2": x2},
+                )
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             form.save_m2m()
