@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       new_tag:
-        description: 'Tag name following "vx.x.x" semantics (e.g. "v1.0.0"):'
+        description: 'Tag name following "vX.Y.Z" semantics, optionally with a suffix (e.g. "v1.0.0" or "v1.0.0-rc.1"):'
         type: string
         required: true
       citation_update:
@@ -20,35 +20,51 @@ on:
           - testing
         required: true
         default: testing
-   
+
 concurrency:
-  group: release-${{ github.repository }}-${{ inputs.environment }}
+  group: release-${{ github.repository }}
   cancel-in-progress: false
 
 jobs:
+  release_gate:
+    name: Approve release
+    permissions: {}
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+      deployment: false
+    steps:
+      - name: Release approved
+        env:
+          RELEASE_ENVIRONMENT: ${{ inputs.environment }}
+        run: echo "Release approved for $RELEASE_ENVIRONMENT"
+
   update_files:
     name: Update citation
+    needs: release_gate
     permissions:
-      id-token: write
-      contents: write
+      contents: read
     runs-on: ubuntu-latest
     outputs:
       sha: ${{ steps.final-sha.outputs.sha }}
     steps:
       - name: Validate tag format
+        env:
+          NEW_TAG: ${{ inputs.new_tag }}
         run: |
           set -euo pipefail
-          if [[ ! "${{ inputs.new_tag }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+          if [[ ! "$NEW_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
             echo "Invalid tag format. Must be vX.Y.Z or vX.Y.Z-suffix"
             exit 1
           fi
-      
+
       - name: Log-in as AMCR app
         uses: actions/create-github-app-token@v3
         id: app-token
         with:
-          app-id: ${{ vars.AISCR_AMCR_ACTIONS_APP_ID }}
+          client-id: ${{ vars.AISCR_AMCR_ACTIONS_CLIENT_ID }}
           private-key: ${{ secrets.AISCR_AMCR_ACTIONS_KEY }}
+          permission-contents: write
 
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -57,31 +73,115 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
 
-      - name: Install yq
-        if: ${{ inputs.citation_update }}
-        uses: mikefarah/yq@v4
+      - name: Check if tag exists
+        env:
+          NEW_TAG: ${{ inputs.new_tag }}
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+          if git show-ref --tags --verify --quiet "refs/tags/$NEW_TAG"; then
+            echo "Tag already exists!"
+            exit 1
+          fi
 
       - name: Update CITATION.cff
         if: ${{ inputs.citation_update }}
+        shell: bash
+        env:
+          VERSION: ${{ inputs.new_tag }}
         run: |
           set -euo pipefail
-          if [ ! -f CITATION.cff ]; then
-            echo "CITATION.cff not found"
-            exit 1
-          fi
-          VERSION=${{ inputs.new_tag }}
-          DATE=$(date -I)
-          yq -i '.version = "'"$VERSION"'"' CITATION.cff
-          yq -i '.date-released = "'"$DATE"'"' CITATION.cff
+          DATE="$(TZ=Europe/Prague date -I)"
+          export DATE
+
+          python3 <<'PY'
+          from __future__ import annotations
+
+          import os
+          import re
+          from pathlib import Path
+
+          VERSION_LINE = re.compile(r"^version:\s*.*$", re.MULTILINE)
+          DATE_LINE = re.compile(r"^date-released:\s*.*$", re.MULTILINE)
+
+
+          def main() -> None:
+              version = os.environ["VERSION"]
+              date = os.environ["DATE"]
+              citation_path = Path("CITATION.cff")
+
+              if not re.fullmatch(
+                  r"v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?",
+                  version,
+              ):
+                  raise SystemExit(f"invalid VERSION {version!r}")
+
+              if not citation_path.is_file():
+                  raise SystemExit("CITATION.cff not found")
+
+              citation = citation_path.read_text(encoding="utf-8")
+
+              if len(VERSION_LINE.findall(citation)) != 1:
+                  raise SystemExit(
+                      "CITATION.cff must contain exactly one version line"
+                  )
+
+              if len(DATE_LINE.findall(citation)) != 1:
+                  raise SystemExit(
+                      "CITATION.cff must contain exactly one date-released line"
+                  )
+
+              citation = VERSION_LINE.sub(
+                  f'version: "{version}"',
+                  citation,
+                  count=1,
+              )
+              citation = DATE_LINE.sub(
+                  f'date-released: "{date}"',
+                  citation,
+                  count=1,
+              )
+
+              if not re.search(
+                  rf'^version:\s*"{re.escape(version)}"\s*$',
+                  citation,
+                  re.MULTILINE,
+              ):
+                  raise SystemExit(
+                      f"CITATION.cff verification: version is not {version}"
+                  )
+
+              if not re.search(
+                  rf'^date-released:\s*"{re.escape(date)}"\s*$',
+                  citation,
+                  re.MULTILINE,
+              ):
+                  raise SystemExit(
+                      f'CITATION.cff verification: date-released is not "{date}"'
+                  )
+
+              citation_path.write_bytes(citation.encode("utf-8"))
+
+              print(
+                  f'CITATION.cff version="{version}" '
+                  f'date-released="{date}"'
+              )
+
+
+          if __name__ == "__main__":
+              main()
+          PY
+
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
           git add CITATION.cff
+
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
             git commit -m "Update CITATION.cff for release $VERSION"
             git pull --rebase origin main
-            git push --force-with-lease || {
+            git push origin main || {
               echo "Push failed due to upstream changes. Retry release."
               exit 1
             }
@@ -90,26 +190,23 @@ jobs:
       - name: Set final SHA
         id: final-sha
         run: |
-          git fetch origin main
-          echo "sha=$(git rev-parse origin/main)" >> $GITHUB_OUTPUT
-  
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
   new_version:
     name: Create new tag
     needs: update_files
     permissions:
-      contents: write
-      deployments: write
+      contents: read
     runs-on: ubuntu-latest
-    environment:
-      name: ${{ inputs.environment }}
     steps:
       - name: Log-in as AMCR app
         uses: actions/create-github-app-token@v3
         id: app-token
         with:
-          app-id: ${{ vars.AISCR_AMCR_ACTIONS_APP_ID }}
+          client-id: ${{ vars.AISCR_AMCR_ACTIONS_CLIENT_ID }}
           private-key: ${{ secrets.AISCR_AMCR_ACTIONS_KEY }}
-      
+          permission-contents: write
+
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
@@ -118,20 +215,26 @@ jobs:
           fetch-depth: 0
 
       - name: Check if tag exists
+        env:
+          NEW_TAG: ${{ inputs.new_tag }}
         run: |
+          set -euo pipefail
           git fetch --tags --force
-          if git show-ref --tags --verify --quiet "refs/tags/${{ inputs.new_tag }}"; then
+          if git show-ref --tags --verify --quiet "refs/tags/$NEW_TAG"; then
             echo "Tag already exists!"
             exit 1
           fi
-      
+
       - name: Create annotated tag
-        uses: rickstaa/action-create-tag@v1
-        id: tag_create
-        with:
-          tag: ${{ inputs.new_tag }}
-          commit_sha: ${{ needs.update_files.outputs.sha }}
-          message: "Release ${{ inputs.new_tag }}"
+        env:
+          NEW_TAG: ${{ inputs.new_tag }}
+          RELEASE_SHA: ${{ needs.update_files.outputs.sha }}
+        run: |
+          set -euo pipefail
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          git tag -a "$NEW_TAG" "$RELEASE_SHA" -m "Release $NEW_TAG"
+          git push origin "refs/tags/$NEW_TAG"
 
   docker_deploy:
     needs: new_version
@@ -145,5 +248,64 @@ jobs:
     uses: ./.github/workflows/publish_images.yml
     with:
       tag: ${{ inputs.new_tag }}
-      latest: ${{ inputs.environment  == 'production' }}
+      latest: ${{ inputs.environment == 'production' }}
     secrets: inherit
+
+  record_deployment:
+    name: Record deployment
+    needs:
+      - update_files
+      - docker_deploy
+    permissions:
+      contents: read
+      deployments: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create deployment
+        id: deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ needs.update_files.outputs.sha }}
+          RELEASE_ENVIRONMENT: ${{ inputs.environment }}
+          NEW_TAG: ${{ inputs.new_tag }}
+        run: |
+          set -euo pipefail
+
+          jq -n \
+            --arg ref "$RELEASE_SHA" \
+            --arg environment "$RELEASE_ENVIRONMENT" \
+            --arg description "Release $NEW_TAG" \
+            --argjson production_environment "$([[ "$RELEASE_ENVIRONMENT" == "production" ]] && echo true || echo false)" \
+            '{
+              ref: $ref,
+              environment: $environment,
+              description: $description,
+              auto_merge: false,
+              required_contexts: [],
+              production_environment: $production_environment
+            }' > deployment.json
+
+          DEPLOYMENT_ID="$(
+            gh api \
+              --method POST \
+              "repos/$GITHUB_REPOSITORY/deployments" \
+              --input deployment.json \
+              --jq '.id'
+          )"
+
+          echo "id=$DEPLOYMENT_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Mark deployment successful
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOYMENT_ID: ${{ steps.deployment.outputs.id }}
+          NEW_TAG: ${{ inputs.new_tag }}
+        run: |
+          set -euo pipefail
+
+          gh api \
+            --method POST \
+            "repos/$GITHUB_REPOSITORY/deployments/$DEPLOYMENT_ID/statuses" \
+            -f state=success \
+            -f description="Release $NEW_TAG published successfully" \
+            -f log_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
