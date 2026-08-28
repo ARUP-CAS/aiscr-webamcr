@@ -138,8 +138,8 @@ class Migration(migrations.Migration):
                 ("note", models.TextField(blank=True, default="", verbose_name="heslar.models.RuianSyncRun.note")),
             ],
             options={
-                "verbose_name": "Záznam synchronizace RÚIAN",
-                "verbose_name_plural": "Záznamy synchronizace RÚIAN",
+                "verbose_name": "heslar.models.RuianSyncRun.modelTitle",
+                "verbose_name_plural": "heslar.models.RuianSyncRun.modelTitles",
                 "db_table": "ruian_sync_run",
                 "ordering": ["-started_at"],
             },

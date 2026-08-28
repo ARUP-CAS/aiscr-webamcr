@@ -364,7 +364,10 @@ class ShpUzszSource(RuianSource):
                     kod=kod,
                     nazev=nazev,
                     nazev_en=None,  # SHP neposkytuje
-                    rada_id="",  # SHP neposkytuje (řeší syncer)
+                    # SHP rada_id neposkytuje. U existujícího kraje ho syncer
+                    # ignoruje (hodnota v DB zůstane), u nového kraje vyhodí
+                    # RuianMissingMandatoryFieldError – doplňuje se ručně.
+                    rada_id="",
                     definicni_bod_wkt=def_bod_wkt,
                     hranice_wkt=hranice_wkt,
                 )
@@ -397,7 +400,8 @@ class ShpUzszSource(RuianSource):
                     nazev=nazev,
                     kraj_kod=kraj_kod or 0,
                     nazev_en=None,
-                    spz="",  # SHP neposkytuje
+                    # SHP spz neposkytuje – stejný režim jako rada_id u kraje.
+                    spz="",
                     definicni_bod_wkt=def_bod_wkt,
                     hranice_wkt=hranice_wkt,
                 )

@@ -29,6 +29,19 @@ Implementační poznámky:
 Parser čte výhradně variantu **ZKSH** (denní změnový + originální hranice
 katastrů). Jiné varianty (``ZKSG`` generalizované, ``ZZSZ`` bez polygonů)
 nejsou potřeba – AMČR potřebuje pouze originální hranice.
+
+Bezpečnostní poznámky – změnový soubor se stahuje automaticky z internetu,
+takže je z pohledu aplikace **nedůvěryhodný vstup**:
+
+* ``resolve_entities=False`` blokuje XXE i „billion laughs";
+* ``huge_tree`` zůstává vypnuté, aby platily pojistky libxml2 na hloubku
+  stromu a délku jmen a textových uzlů;
+* velikost rozbaleného obsahu je omezená (:data:`_MAX_UNPACKED_BYTES`,
+  :data:`_MAX_COMPRESSION_RATIO`) proti dekompresní bombě, a limit se vynucuje
+  i při čtení, protože hlavička ZIPu je pod kontrolou útočníka;
+* geometrie se parsuje **výhradně vlastním kódem**; GML se nepředává do GDALu,
+  aby se podvrženým souborem nedal oslovit parser v rozsáhlé C/C++ knihovně
+  (viz :data:`_FOREIGN_CURVED_LOCALNAMES`).
 """
 
 from __future__ import annotations
@@ -52,15 +65,18 @@ from heslar.ruian_sync.provider import (
     RuianOkresDTO,
 )
 from lxml import etree
-from osgeo import ogr
 
 logger = logging.getLogger(__name__)
 
 
 class RuianMissingMandatoryFieldError(Exception):
     """
-    Vyhozeno, pokud je v DB potřeba uložit nový kraj/okres, ale VFR
+    Vyhozeno, pokud je v DB potřeba uložit nový kraj/okres, ale zdroj
     neposkytuje povinné pole (``rada_id`` u kraje, ``spz`` u okresu).
+
+    Ta pole v RÚIAN neexistují – jsou vlastní AMČR a historicky se plnila
+    ručně. Prázdný řetězec se do ``NOT NULL`` sloupce záměrně nezapisuje
+    (u ``spz`` je navíc ``unique``, takže by stejně prošel nejvýš jednou).
 
     Volající (syncer) zachytí, zaloguje a označí ``RuianSyncRun.status="failed"``.
     """
@@ -71,10 +87,94 @@ class RuianMissingMandatoryFieldError(Exception):
         :param kod: Kód prvku.
         :param missing: Seznam názvů chybějících polí.
         """
-        super().__init__(f"Nový {level} kód={kod} – chybí povinná pole: {', '.join(missing)}")
+        super().__init__(
+            f"Nový {level} kód={kod} – chybí povinná pole: {', '.join(missing)}. "
+            f"Hodnotu je nutné doplnit zásahem do DB nebo přes shell a sync spustit znovu; "
+            f"administrace RÚIAN heslářů je pro tato pole read-only."
+        )
         self.level = level
         self.kod = kod
         self.missing = missing
+
+
+#: Strop na velikost XML rozbaleného z jedné denní delty. Reálné soubory ČÚZK
+#: se pohybují v jednotkách až desítkách MB (naměřeno: stavový ``ST_UZSZ``
+#: 4,5 MB komprimovaně → 48,7 MB rozbaleno), takže 1 GiB je ~20× nad největším
+#: reálným vstupem a přitom spolehlivě zastaví dekompresní bombu.
+_MAX_UNPACKED_BYTES = 1024 * 1024 * 1024
+
+#: Strop na poměr rozbalené/komprimované velikosti. Naměřené reálné hodnoty:
+#: 2,4× (SHP archiv) a 10,8× (VFR XML). Bomby mívají poměr v tisících, takže
+#: 100× je bezpečně nad legitimním provozem.
+_MAX_COMPRESSION_RATIO = 100.0
+
+
+class RuianDecompressionBombError(Exception):
+    """
+    Vyhozeno, pokud stažený archiv vypadá jako dekompresní bomba – rozbalený
+    obsah překračuje :data:`_MAX_UNPACKED_BYTES` nebo poměr komprese
+    :data:`_MAX_COMPRESSION_RATIO`.
+
+    Kontrola má dvě fáze, protože hlavička ZIPu je pod kontrolou útočníka:
+    nejdřív se ověří deklarované velikosti z centrálního adresáře, pak se limit
+    **znovu vynucuje při čtení** streamu (:class:`_LimitedReader`) – archiv,
+    který v hlavičce lže, se zastaví až na skutečně přečtených bajtech.
+
+    Volající (syncer) zachytí, zaloguje a označí ``RuianSyncRun.status="failed"``.
+    """
+
+    def __init__(self, duvod: str, *, path=None):
+        """
+        :param duvod: Lidsky čitelný popis, který limit byl překročen.
+        :param path: Cesta k archivu, kterého se nález týká.
+        """
+        super().__init__(f"Podezření na dekompresní bombu ({path}): {duvod}")
+        self.duvod = duvod
+        self.path = path
+
+
+class _LimitedReader:
+    """
+    Obal nad file-like objektem, který zastaví čtení po překročení limitu.
+
+    Existuje proto, že ``ZipInfo.file_size`` pochází z centrálního adresáře
+    archivu, tedy z dat, která může útočník libovolně podvrhnout. Kontrola
+    hlavičky sama o sobě proto nestačí – tenhle obal počítá **skutečně
+    přečtené** bajty a po překročení limitu vyhodí
+    :class:`RuianDecompressionBombError`.
+
+    :param stream: Podkladový binární stream.
+    :param limit: Maximální počet bajtů, které smí být celkem přečteny.
+    :param path: Cesta k archivu (jen pro chybovou hlášku).
+    """
+
+    def __init__(self, stream, limit: int, *, path=None):
+        self._stream = stream
+        self._limit = limit
+        self._path = path
+        self._read_total = 0
+
+    def read(self, size=-1):
+        """
+        Přečte data z podkladového streamu a započítá je do limitu.
+
+        :param size: Počet bajtů k přečtení; ``-1`` znamená vše.
+
+            :return: Přečtené bajty.
+            :raises RuianDecompressionBombError: Při překročení limitu.
+        """
+        chunk = self._stream.read(size)
+        self._read_total += len(chunk)
+        if self._read_total > self._limit:
+            raise RuianDecompressionBombError(
+                f"rozbalený obsah překročil {self._limit} B " f"(přečteno nejméně {self._read_total} B)",
+                path=self._path,
+            )
+        return chunk
+
+    def close(self):
+        """Zavře podkladový stream."""
+        return self._stream.close()
 
 
 # ---------------------------------------------------------------------------
@@ -148,11 +248,17 @@ def _open_xml_stream(path: Path):
     p = Path(path)
     if p.suffix.lower() == ".zip" or zipfile.is_zipfile(str(p)):
         zf = zipfile.ZipFile(str(p))
-        xml_names = [n for n in zf.namelist() if n.lower().endswith(".xml")]
-        if not xml_names:
+        xml_infos = [i for i in zf.infolist() if i.filename.lower().endswith(".xml")]
+        if not xml_infos:
             zf.close()
             raise ValueError(f"VFR ZIP neobsahuje žádný .xml soubor: {p}")
-        stream = zf.open(xml_names[0])
+        info = xml_infos[0]
+        try:
+            _check_zip_header(info, path=p)
+        except RuianDecompressionBombError:
+            zf.close()
+            raise
+        stream = zf.open(info)
         _orig_close = stream.close
 
         def _close_both():
@@ -160,8 +266,34 @@ def _open_xml_stream(path: Path):
             zf.close()
 
         stream.close = _close_both
-        return stream
-    return open(str(p), "rb")
+        return _LimitedReader(stream, _MAX_UNPACKED_BYTES, path=p)
+    return _LimitedReader(open(str(p), "rb"), _MAX_UNPACKED_BYTES, path=p)
+
+
+def _check_zip_header(info: zipfile.ZipInfo, *, path) -> None:
+    """
+    Ověří deklarované velikosti členu archivu proti limitům dekompresní bomby.
+
+    Jde jen o **první** fázi kontroly – hodnoty pocházejí z centrálního
+    adresáře ZIPu, který útočník ovládá. Skutečné vynucení limitu dělá
+    :class:`_LimitedReader` při čtení.
+
+    :param info: Záznam členu archivu.
+    :param path: Cesta k archivu (jen pro chybovou hlášku).
+    :raises RuianDecompressionBombError: Při překročení některého z limitů.
+    """
+    if info.file_size > _MAX_UNPACKED_BYTES:
+        raise RuianDecompressionBombError(
+            f"člen {info.filename!r} deklaruje {info.file_size} B rozbalených, " f"limit je {_MAX_UNPACKED_BYTES} B",
+            path=path,
+        )
+    if info.compress_size > 0:
+        ratio = info.file_size / info.compress_size
+        if ratio > _MAX_COMPRESSION_RATIO:
+            raise RuianDecompressionBombError(
+                f"člen {info.filename!r} má poměr komprese {ratio:.1f}x, " f"limit je {_MAX_COMPRESSION_RATIO:.0f}x",
+                path=path,
+            )
 
 
 #: Povolené rodičovské kontejnery pro každý target localname.
@@ -213,7 +345,13 @@ def _iter_elements(path: Path, local_names: Tuple[str, ...]) -> Iterator:
     target_set = set(local_names)
     stream = _open_xml_stream(path)
     try:
-        ctx = etree.iterparse(stream, events=("end",), huge_tree=True, resolve_entities=False)
+        # huge_tree=False (default) ponechává zapnuté pojistky libxml2 na hloubku
+        # stromu a délku jmen/textových uzlů. Denní delty jsou malé (jednotky MB
+        # komprimovaně, desítky MB rozbalené), takže je nepotřebují – a část
+        # historických přetečení v libxml2 byla dosažitelná právě jen s vypnutými
+        # limity. resolve_entities=False blokuje XXE i „billion laughs".
+        # Obojí je bezpečnostní nastavení, neměnit bez rozmyslu.
+        ctx = etree.iterparse(stream, events=("end",), resolve_entities=False)
         for _, elem in ctx:
             parent = elem.getparent()
             if parent is None:
@@ -301,7 +439,9 @@ def _parse_kraj_dto(elem) -> Optional[RuianKrajDTO]:
         kod=kod,
         nazev=nazev,
         nazev_en=None,  # VFR neposkytuje
-        rada_id="",  # VFR neposkytuje – syncer řeší
+        # VFR rada_id neposkytuje. U existujícího kraje ho syncer ignoruje,
+        # u nového vyhodí RuianMissingMandatoryFieldError (doplňuje se ručně).
+        rada_id="",
         definicni_bod_wkt=db_wkt,
         hranice_wkt=hr_wkt,
     )
@@ -341,7 +481,8 @@ def _parse_okres_dto(elem) -> Optional[RuianOkresDTO]:
         nazev=nazev,
         kraj_kod=vusc_kod,
         nazev_en=None,
-        spz="",  # VFR neposkytuje
+        # VFR spz neposkytuje – stejný režim jako rada_id u kraje.
+        spz="",
         definicni_bod_wkt=db_wkt,
         hranice_wkt=hr_wkt,
     )
@@ -563,11 +704,17 @@ _ARC_STEP_DEGREES = 6.0
 #: řídicí body oblouků.
 _NATIVE_CURVED_LOCALNAMES = frozenset({"Arc", "ArcString"})
 
-#: Zakřivené GML elementy, které vlastní kód **neumí** – pro ně se geometrie
-#: celá deleguje na GDAL (:func:`_linearize_curved_gml`). Ve zpracovávaných
+#: Zakřivené GML elementy, které vlastní kód **neumí**. Ve zpracovávaných
 #: prvcích (kraj/okres/katastr) se dosud neobjevily; ``Circle`` se vyskytuje
-#: jen u ``Parcela``, kterou nesyncujeme. Fallback je tu proto, aby případný
-#: nový typ nespadl tiše na tětivu.
+#: jen u ``Parcela``, kterou nesyncujeme.
+#:
+#: Dřív se geometrie s těmito typy delegovala na GDAL
+#: (``ogr.CreateGeometryFromGML``). To ale znamenalo, že podvržený denní soubor
+#: mohl jedním elementem dostat vlastní data do parseru GML v GDALu – tedy do
+#: rozsáhlé C/C++ knihovny – po cestě, kterou reálná data ČÚZK nikdy nevyužijí.
+#: Proto se prvek nově **odmítne** a zaloguje jako ERROR; stávající geometrie
+#: v DB zůstane beze změny a operátor se o novém typu dozví z logu místo
+#: tichého fallbacku. Viz :func:`_gml_multisurface_to_wkt`.
 _FOREIGN_CURVED_LOCALNAMES = frozenset(
     {
         "ArcByCenterPoint",
@@ -597,18 +744,23 @@ _SEGMENT_LOCALNAMES = frozenset(
 )
 
 
-def _has_foreign_curve(hranice_elem) -> bool:
+def _first_foreign_curve(hranice_elem) -> Optional[str]:
     """
-    Zjistí, zda podstrom obsahuje zakřivený typ, který vlastní kód neumí.
+    Najde první zakřivený typ v podstromu, který vlastní kód neumí.
+
+    Vrací přímo název typu (ne jen ``True``), aby jej volající mohl zalogovat –
+    operátor tak z logu pozná, který nový GML typ ČÚZK zavedlo.
 
     :param hranice_elem: Element ``OriginalniHranice``.
 
-        :return: ``True`` pokud je potřeba delegovat na GDAL.
+        :return: Local-name nepodporovaného typu, nebo ``None`` když podstrom
+            obsahuje jen typy, které vlastní kód zvládne.
     """
     for descendant in hranice_elem.iter():
-        if etree.QName(descendant.tag).localname in _FOREIGN_CURVED_LOCALNAMES:
-            return True
-    return False
+        local = etree.QName(descendant.tag).localname
+        if local in _FOREIGN_CURVED_LOCALNAMES:
+            return local
+    return None
 
 
 def _circle_from_3points(p1, p2, p3):
@@ -717,51 +869,6 @@ def _linearize_arcstring(control_points):
     return out
 
 
-def _linearize_curved_gml(hranice_elem) -> Optional[str]:
-    """
-    Převede GML se zakřivenými segmenty na WKT MULTIPOLYGON přes GDAL.
-
-    Vlastní lxml parser umí číst pouze ``posList`` jako lomovou čáru, takže
-    oblouky (``gml:ArcString`` apod.) by nahradil tětivou. GDAL GML driver
-    zakřivené segmenty rozpozná a ``GetLinearGeometry`` je proloží úsečkami
-    s krokem :data:`_ARC_STEP_DEGREES`.
-
-    Nejde o transformaci mezi souřadnicovými systémy – ta v projektu zůstává
-    výhradně na ``core.coordTransform``. GDAL se tu používá jen jako parser
-    GML geometrie, obdobně jako v :mod:`heslar.ruian_sync.shp_importer`.
-
-    :param hranice_elem: Element ``OriginalniHranice``.
-
-        :return: WKT MULTIPOLYGON nebo ``None`` při neúspěchu (volající pak
-            ponechá stávající geometrii v DB beze změny).
-    """
-    if len(hranice_elem) == 0:
-        return None
-    try:
-        geom = ogr.CreateGeometryFromGML(etree.tostring(hranice_elem[0]).decode())
-        if geom is None:
-            raise ValueError("CreateGeometryFromGML vrátilo None")
-        wkt = geom.GetLinearGeometry(_ARC_STEP_DEGREES).ExportToWkt()
-    except Exception as err:  # noqa: BLE001 – GDAL hlásí chyby různými typy
-        logger.warning(
-            "heslar.ruian_sync.vfr_parser._linearize_curved_gml.failed",
-            extra={"error": str(err)},
-        )
-        return None
-    if not wkt:
-        return None
-    # GDAL vrací POLYGON pro jednodílné geometrie; model očekává MULTIPOLYGON.
-    if wkt.upper().startswith("POLYGON"):
-        wkt = "MULTIPOLYGON(" + wkt[wkt.index("(") :] + ")"
-    if not wkt.upper().startswith("MULTIPOLYGON"):
-        logger.warning(
-            "heslar.ruian_sync.vfr_parser._linearize_curved_gml.unexpected_type",
-            extra={"wkt_prefix": wkt[:60]},
-        )
-        return None
-    return wkt
-
-
 def _ring_coords(role_elem):
     """
     Sestaví souřadnice jednoho prstenu z jeho segmentů.
@@ -822,14 +929,23 @@ def _gml_multisurface_to_wkt(hranice_elem) -> Optional[str]:
     ``MULTIPOLYGON(((x y, x y, ...), (x y, ...)), ((...)))``.
 
     Obsahuje-li geometrie zakřivený typ, který vlastní kód neumí
-    (:data:`_FOREIGN_CURVED_LOCALNAMES`), deleguje se celá na GDAL.
+    (:data:`_FOREIGN_CURVED_LOCALNAMES`), prvek se **odmítne** – vrátí se
+    ``None``, volající ponechá stávající geometrii v DB beze změny a událost
+    se zaloguje jako ERROR. Tyto typy se v kraji/okrese/katastru nikdy
+    nevyskytly; odmítnutí je bezpečnější než je posílat do parseru GML
+    v GDALu (viz komentář u :data:`_FOREIGN_CURVED_LOCALNAMES`).
 
     :param hranice_elem: Element ``OriginalniHranice``.
 
         :return: WKT řetězec nebo ``None``.
     """
-    if _has_foreign_curve(hranice_elem):
-        return _linearize_curved_gml(hranice_elem)
+    foreign = _first_foreign_curve(hranice_elem)
+    if foreign is not None:
+        logger.error(
+            "heslar.ruian_sync.vfr_parser._gml_multisurface_to_wkt.nepodporovana_krivka",
+            extra={"typ": foreign},
+        )
+        return None
 
     polygons_wkt = []
     for poly in hranice_elem.iter():
@@ -961,4 +1077,5 @@ def _negate_coords(wkt: str) -> str:
 __all__ = [
     "parse_changes",
     "RuianMissingMandatoryFieldError",
+    "RuianDecompressionBombError",
 ]

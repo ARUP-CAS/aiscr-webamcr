@@ -596,8 +596,8 @@ class RuianSyncRun(models.Model):
 
         db_table = "ruian_sync_run"
         ordering = ["-started_at"]
-        verbose_name = "Záznam synchronizace RÚIAN"
-        verbose_name_plural = "Záznamy synchronizace RÚIAN"
+        verbose_name = _("heslar.models.RuianSyncRun.modelTitle")
+        verbose_name_plural = _("heslar.models.RuianSyncRun.modelTitles")
 
     def __str__(self):
         """

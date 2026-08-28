@@ -260,6 +260,29 @@ def get_all_pians_with_akce(ident_cely, exclude_kod=None):
     Spatial intersect probíhá v EPSG:5514, vrácená geometrie ``pian_geom`` je
     ale ve WGS84 (EPSG:4326).
 
+    Do ``ST_Intersects`` nevstupuje celá geometrie PIANu, ale **jediný
+    reprezentativní bod**. Důvod je z issue #315: dokud se porovnávala celá
+    geometrie, PIAN ležící přes dvě katastrální území matchoval obě a hlavní
+    katastr vycházel nejednoznačně. Bod se volí podle typu geometrie:
+
+    * ``LineString`` – ``ST_LineInterpolatePoint(geom, 0.5)``, střed linie;
+    * ``Polygon`` / ``MultiPolygon`` – ``ST_PointOnSurface(geom)``, který leží
+      **vždy uvnitř** (centroid může u konkávních tvarů padnout mimo);
+    * ostatní (typicky ``Point``) – ``ST_Centroid(geom)``.
+
+    .. note::
+       Větev pro linie byla zamýšlená už při zavedení ``CASE`` (2022), ale
+       kvůli dvěma shodným podmínkám na ``ST_LineString`` byla nedosažitelná –
+       fakticky se pro všechny typy geometrie používal centroid. Issue #372
+       mrtvou větev odstranilo a plochy navíc převedlo na
+       ``ST_PointOnSurface``. Volba hlavního katastru se proto může u linií
+       a konkávních ploch lišit od stavu před #372.
+
+       Určení ``zm10``/``zm50`` PIANu (a tím i jeho ``ident_cely``) to
+       **neovlivňuje** – počítá se nezávisle v :mod:`pian.forms` a
+       :mod:`core.management.commands.check_pian_properties`, které si
+       reprezentativní bod odvozují samy a u ploch dál používají centroid.
+
     :param ident_cely: Parametr ``ident_cely`` se předává do volání ``execute()``.
     :param exclude_kod: Volitelný kód katastru, který se vyloučí ze
         spatial intersect (``ST_Intersects``). Používá se v

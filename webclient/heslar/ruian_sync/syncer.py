@@ -23,7 +23,11 @@ zajistí zápis do Fedora repozitáře.
 * **Smazání katastru** – nejprve přepočítá příslušnost všech navázaných
   Projekt/AZ/SN/NeidentAkce (modul :mod:`heslar.ruian_sync.reassign`),
   pak teprve katastr smaže.
-* **Nový prvek** – založí jako nový záznam.
+* **Nový prvek** – založí jako nový záznam. U nového kraje/okresu musí zdroj
+  dodat povinná pole (``rada_id`` u kraje, ``spz`` u okresu); pokud chybí,
+  vyhodí se :class:`~heslar.ruian_sync.vfr_parser.RuianMissingMandatoryFieldError`
+  a běh skončí jako ``failed`` – prázdný řetězec se do ``NOT NULL`` sloupce
+  záměrně nepíše, protože by šlo o tichou nekonzistenci.
 """
 
 from __future__ import annotations
@@ -37,7 +41,7 @@ from arch_z.models import ArcheologickyZaznam
 from core.repository_connector import FedoraError, FedoraTransaction, FedoraTransactionCommitFailedError
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.geos.error import GEOSException
-from django.db import connection, transaction
+from django.db import DatabaseError, connection, transaction
 from django.db.models import Q
 from django.db.models.deletion import RestrictedError
 from heslar.models import RuianKatastr, RuianKraj, RuianOkres, RuianSyncRun
@@ -55,6 +59,7 @@ from heslar.ruian_sync.provider import (
     RuianOkresDTO,
     RuianSource,
 )
+from heslar.ruian_sync.vfr_parser import RuianMissingMandatoryFieldError
 from neidentakce.models import NeidentAkce
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
@@ -181,28 +186,37 @@ def _apply_full_state(
     :param state: Plný stav prvků RÚIAN.
     :param run: Audit záznam, do kterého se zapisují countery.
     """
+    # Výchozí pokrytí pro závěrečnou kontrolu díry (viz _zkontroluj_pokryti).
+    plocha_pred = _soucet_plochy_katastru()
+
     # ---- Fáze 1: upserty (kraj → okres → katastr) ----
     print("Fáze 1 – upsert (kraj → okres → katastr)", flush=True)
 
-    db_kraje = {k.kod: k for k in RuianKraj.objects.all()}
+    # Načítáme jen ``kod``, ne celé záznamy. Kraje i okresy nesou polygon
+    # ``hranice`` (u kraje je to sjednocení všech jeho okresů, tedy obří
+    # geometrie), takže jeden SELECT přes všechny řádky překračoval
+    # PostgreSQL ``statement_timeout``. Plný záznam se dotahuje cíleně až
+    # pro dotčený kód – stejný postup jako u katastrů níž.
+    db_kraj_codes = set(RuianKraj.objects.values_list("kod", flat=True))
     state_kraj_codes = set()
     total_kraje = len(state.kraje)
     _print_section("Upsert krajů", total_kraje)
     last_pct = 0
     for i, kraj_dto in enumerate(state.kraje, 1):
         state_kraj_codes.add(kraj_dto.kod)
-        if _upsert_kraj(db_kraje.get(kraj_dto.kod), kraj_dto):
+        existing_kraj = RuianKraj.objects.filter(kod=kraj_dto.kod).first() if kraj_dto.kod in db_kraj_codes else None
+        if _upsert_kraj(existing_kraj, kraj_dto):
             run.kraj_upserts += 1
         last_pct = _print_progress("kraj upsert", i, total_kraje, last_pct)
 
-    db_okresy = {o.kod: o for o in RuianOkres.objects.select_related("kraj").all()}
+    db_okres_codes = set(RuianOkres.objects.values_list("kod", flat=True))
     state_okres_codes = set()
     total_okresy = len(state.okresy)
     _print_section("Upsert okresů", total_okresy)
     last_pct = 0
     for i, okres_dto in enumerate(state.okresy, 1):
         state_okres_codes.add(okres_dto.kod)
-        if _upsert_okres(db_okresy.get(okres_dto.kod), okres_dto):
+        if _upsert_okres(_najdi_okres_k_upsertu(db_okres_codes, okres_dto.kod), okres_dto):
             run.okres_upserts += 1
         last_pct = _print_progress("okres upsert", i, total_okresy, last_pct)
 
@@ -252,14 +266,18 @@ def _apply_full_state(
         logger.warning("heslar.ruian_sync.syncer._apply_full_state.skip_katastr_delete")
 
     if state.okresy:
-        # Načteme okresy znovu (FK z katastrů na ně už nemíří – byly smazány nebo přesměrovány)
-        db_okresy = {o.kod: o for o in RuianOkres.objects.all()}
-        to_delete = sorted(set(db_okresy) - state_okres_codes)
+        # Načteme kódy znovu (FK z katastrů na ně už nemíří – byly smazány
+        # nebo přesměrovány; navíc se mezitím mohl některý okres přečíslovat).
+        db_okres_codes = set(RuianOkres.objects.values_list("kod", flat=True))
+        to_delete = sorted(db_okres_codes - state_okres_codes)
         total_del = len(to_delete)
         _print_section("Mazání chybějících okresů", total_del)
         last_pct = 0
         for i, kod in enumerate(to_delete, 1):
-            if _delete_okres(db_okresy[kod], run):
+            okres_ke_smazani = RuianOkres.objects.filter(kod=kod).first()
+            if okres_ke_smazani is None:
+                continue
+            if _delete_okres(okres_ke_smazani, run):
                 run.okres_deletes += 1
             last_pct = _print_progress("okres delete", i, total_del, last_pct)
     else:
@@ -267,21 +285,24 @@ def _apply_full_state(
         logger.warning("heslar.ruian_sync.syncer._apply_full_state.skip_okres_delete")
 
     if state.kraje:
-        # Načteme kraje znovu (vazby z okresů by už měly směřovat na zachovávané kraje)
-        db_kraje = {k.kod: k for k in RuianKraj.objects.all()}
-        to_delete = sorted(set(db_kraje) - state_kraj_codes)
+        # Načteme kódy znovu (vazby z okresů by už měly směřovat na zachovávané kraje)
+        db_kraj_codes = set(RuianKraj.objects.values_list("kod", flat=True))
+        to_delete = sorted(db_kraj_codes - state_kraj_codes)
         total_del = len(to_delete)
         _print_section("Mazání chybějících krajů", total_del)
         last_pct = 0
         for i, kod in enumerate(to_delete, 1):
-            if _delete_kraj(db_kraje[kod], run):
+            kraj_ke_smazani = RuianKraj.objects.filter(kod=kod).first()
+            if kraj_ke_smazani is None:
+                continue
+            if _delete_kraj(kraj_ke_smazani, run):
                 run.kraj_deletes += 1
             last_pct = _print_progress("kraj delete", i, total_del, last_pct)
     else:
         _append_run_note(run, "Mazání krajů přeskočeno: zdroj neposkytl žádné kraje (chybí ST_UKSH?).")
         logger.warning("heslar.ruian_sync.syncer._apply_full_state.skip_kraj_delete")
 
-    _check_katastry_topology(run)
+    _check_katastry_topology(run, plocha_pred)
 
     run.save()
 
@@ -314,6 +335,9 @@ def _apply_changes(events: Iterable[RuianChangeEvent], run: RuianSyncRun) -> Set
             ve výsledku **nejsou** – ty řeší ``_delete_katastr`` přímo.
     """
     # Setříděné batche podle úrovně, abychom neporušili FK pořadí
+    # Výchozí pokrytí pro závěrečnou kontrolu díry (viz _zkontroluj_pokryti).
+    plocha_pred = _soucet_plochy_katastru()
+
     bucket = {LEVEL_KRAJ: [], LEVEL_OKRES: [], LEVEL_KATASTR: []}
     for ev in events:
         if ev.level not in bucket:
@@ -322,16 +346,18 @@ def _apply_changes(events: Iterable[RuianChangeEvent], run: RuianSyncRun) -> Set
         bucket[ev.level].append(ev)
 
     # ---- Fáze 1: upserty (kraj → okres → katastr) ----
-    db_kraje = {k.kod: k for k in RuianKraj.objects.all()}
+    # Načítáme jen kódy, plný záznam cíleně – viz komentář v _apply_full_state.
+    db_kraj_codes = set(RuianKraj.objects.values_list("kod", flat=True))
     for ev in bucket[LEVEL_KRAJ]:
         if ev.event_type == EVENT_UPSERT:
-            if _upsert_kraj(db_kraje.get(ev.kod), ev.payload):
+            existing_kraj = RuianKraj.objects.filter(kod=ev.kod).first() if ev.kod in db_kraj_codes else None
+            if _upsert_kraj(existing_kraj, ev.payload):
                 run.kraj_upserts += 1
 
-    db_okresy = {o.kod: o for o in RuianOkres.objects.all()}
+    db_okres_codes = set(RuianOkres.objects.values_list("kod", flat=True))
     for ev in bucket[LEVEL_OKRES]:
         if ev.event_type == EVENT_UPSERT:
-            if _upsert_okres(db_okresy.get(ev.kod), ev.payload):
+            if _upsert_okres(_najdi_okres_k_upsertu(db_okres_codes, ev.kod), ev.payload):
                 run.okres_upserts += 1
 
     hranice_changed_kody: Set[int] = set()
@@ -361,19 +387,21 @@ def _apply_changes(events: Iterable[RuianChangeEvent], run: RuianSyncRun) -> Set
             if katastr is not None and _delete_katastr(katastr, run):
                 run.katastr_deletes += 1
 
-    db_okresy = {o.kod: o for o in RuianOkres.objects.all()}
+    db_okres_codes = set(RuianOkres.objects.values_list("kod", flat=True))
     for ev in bucket[LEVEL_OKRES]:
-        if ev.event_type == EVENT_DELETE and ev.kod in db_okresy:
-            if _delete_okres(db_okresy[ev.kod], run):
+        if ev.event_type == EVENT_DELETE and ev.kod in db_okres_codes:
+            okres = RuianOkres.objects.filter(kod=ev.kod).first()
+            if okres is not None and _delete_okres(okres, run):
                 run.okres_deletes += 1
 
-    db_kraje = {k.kod: k for k in RuianKraj.objects.all()}
+    db_kraj_codes = set(RuianKraj.objects.values_list("kod", flat=True))
     for ev in bucket[LEVEL_KRAJ]:
-        if ev.event_type == EVENT_DELETE and ev.kod in db_kraje:
-            if _delete_kraj(db_kraje[ev.kod], run):
+        if ev.event_type == EVENT_DELETE and ev.kod in db_kraj_codes:
+            kraj = RuianKraj.objects.filter(kod=ev.kod).first()
+            if kraj is not None and _delete_kraj(kraj, run):
                 run.kraj_deletes += 1
 
-    _check_katastry_topology(run)
+    _check_katastry_topology(run, plocha_pred)
 
     run.save()
     return hranice_changed_kody
@@ -389,16 +417,35 @@ def _upsert_kraj(existing: Optional[RuianKraj], dto: RuianKrajDTO) -> bool:
     """
     Vytvoří nebo aktualizuje :class:`RuianKraj`.
 
+    Pro **nový** kraj je ``rada_id`` povinné – sloupec je v DB ``NOT NULL``
+    a hodnota vstupuje do systémové logiky (určení řady C/M). Zdroj (SHP ani
+    VFR) ji neposkytuje, protože v RÚIAN neexistuje – jde o údaj vlastní AMČR.
+    Prázdný řetězec by prošel schématem, ale byl by tichou nekonzistencí,
+    kterou by nikdo nezachytil; proto se místo něj vyhodí
+    :class:`~heslar.ruian_sync.vfr_parser.RuianMissingMandatoryFieldError`
+    a celý běh skončí jako ``failed``.
+
+    Náprava je **zásah do DB nebo přes shell**, ne přes administraci –
+    :class:`~heslar.admin.HeslarRuianKrajAdmin` má ``rada_id``
+    v ``readonly_fields``. Po doplnění hodnoty projde další běh update větví.
+
+    U **existujícího** kraje se prázdná hodnota ze zdroje jen ignoruje
+    (stávající hodnota v DB zůstává).
+
     :param existing: Stávající záznam v DB nebo ``None``.
     :param dto: Nová data ze zdroje.
+    :raises RuianMissingMandatoryFieldError: Zakládá se nový kraj, ale zdroj
+        neposkytl ``rada_id``.
 
         :return: ``True`` pokud došlo k vytvoření nebo skutečné změně, jinak ``False``.
     """
     if existing is None:
+        if not dto.rada_id:
+            raise RuianMissingMandatoryFieldError("kraj", dto.kod, ["rada_id"])
         kraj = RuianKraj(
             kod=dto.kod,
             nazev=dto.nazev,
-            rada_id=dto.rada_id or "",
+            rada_id=dto.rada_id,
             nazev_en=dto.nazev_en or dto.nazev,
             definicni_bod=_geos_or_none(dto.definicni_bod_wkt),
             hranice=_geos_or_none(dto.hranice_wkt),
@@ -468,7 +515,7 @@ def _delete_kraj(kraj: RuianKraj, run: Optional[RuianSyncRun] = None) -> bool:
         return False
     except FedoraError as err:
         # DB delete proběhl, jen Fedora kontejner neexistoval (viz _delete_katastr).
-        logger.warning(
+        logger.error(
             "heslar.ruian_sync.syncer._delete_kraj.fedora_error",
             extra={"kod": kraj.kod, "nazev": kraj.nazev, "error": str(err)},
         )
@@ -481,13 +528,127 @@ def _delete_kraj(kraj: RuianKraj, run: Optional[RuianSyncRun] = None) -> bool:
     return True
 
 
+#: Okresy, které se v AMČR historicky vedou pod jiným kódem, než jaký dnes
+#: dodává ČÚZK. Klíč = kód ze zdroje, hodnota = starý kód v naší DB.
+#:
+#: Jediná položka je Praha. ČÚZK ji vede jako pseudo-okres ``9999`` („území
+#: Hlavního města Prahy"), protože RÚIAN v Praze administrativně okresy nemá
+#: a ČÚZK přesto potřebuje okresové napojení pro 112 pražských katastrů.
+#: AMČR ji má jako okres ``3100`` („Hlavní město Praha", SPZ ``PHA``).
+#:
+#: Přebíráme kód zdroje, protože Praha okres opravdu není a stejné číslo
+#: chodí i v denních přírůstcích – držet vlastní kód by znamenalo přepisovat
+#: ho při každé změně. Sync proto **existující záznam přečísluje**, místo aby
+#: zakládal nový: řádek zůstane týž, takže si 112 katastrů podrží FK a ``spz``
+#: „PHA" přežije (update větev prázdnou hodnotu ze zdroje ignoruje).
+#:
+#: Bez toho by full sync založil nový okres 9999, přesunul pod něj pražské
+#: katastry a okres 3100 by ve fázi mazání zmizel i se svou SPZ.
+_OKRES_PRECISLOVANI = {
+    9999: 3100,
+}
+
+
+def _najdi_okres_k_upsertu(db_okres_codes: Set[int], kod: int) -> Optional[RuianOkres]:
+    """
+    Vyhledá existující okres pro upsert, včetně přečíslovaných kódů.
+
+    Nejdřív hledá podle kódu ze zdroje; pokud takový okres v DB není a jde
+    o známé přečíslování (:data:`_OKRES_PRECISLOVANI`), zkusí ještě starý kód.
+    Díky tomu se místo založení nového záznamu upraví ten stávající.
+
+    Bere **množinu kódů**, ne hotové objekty, a plný záznam dotahuje cíleně –
+    načíst všech 77 okresů najednou znamená vytáhnout i jejich polygony
+    ``hranice``, což překračovalo ``statement_timeout`` (stejný důvod jako
+    u katastrů v :func:`_apply_full_state`).
+
+    :param db_okres_codes: Množina kódů okresů existujících v DB.
+    :param kod: Kód okresu ze zdroje.
+
+        :return: Existující záznam, nebo ``None`` když jde o skutečně nový okres.
+    """
+    if kod in db_okres_codes:
+        return RuianOkres.objects.filter(kod=kod).first()
+    stary_kod = _OKRES_PRECISLOVANI.get(kod)
+    if stary_kod is not None and stary_kod in db_okres_codes:
+        return RuianOkres.objects.filter(kod=stary_kod).first()
+    return None
+
+
+def _smaz_fedora_kontejner_okresu(stary_kod: int) -> None:
+    """
+    Smaže ve Fedoře kontejner okresu pod jeho **původním** kódem.
+
+    Volá se při přečíslování okresu. ``RuianOkres.ident_cely`` je odvozená
+    property ``f"ruian-{kod}"``, takže změna kódu identitu ve Fedoře tiše
+    přesune – nový kontejner založí ``post_save`` signál, ale ten starý by
+    zůstal viset jako osiřelý. Proto ho mažeme explicitně.
+
+    Používá se úzká operace ``delete_container`` (ne ``record_deletion``),
+    protože nejde o zánik záznamu – ten dál existuje, jen pod jiným kódem.
+    Nemá se tedy zapisovat deletion record ani sahat na navázané soubory.
+
+    Chyba se jen zaloguje; přečíslování v DB je důležitější než úklid ve
+    Fedoře a osiřelý kontejner jde smazat i ručně.
+
+    :param stary_kod: Kód, pod kterým okres ve Fedoře dosud figuroval.
+    """
+    from core.repository_connector import FedoraRepositoryConnector
+
+    stary_zaznam = RuianOkres(kod=stary_kod)
+    try:
+        connector = FedoraRepositoryConnector(stary_zaznam, skip_container_check=True)
+        connector.delete_container(delete_tombstone=True, delete_link=True)
+        logger.info(
+            "heslar.ruian_sync.syncer._smaz_fedora_kontejner_okresu.ok",
+            extra={"ident_cely": stary_zaznam.ident_cely},
+        )
+    except Exception as err:  # noqa: BLE001 – Fedora hlásí chyby různými typy
+        logger.error(
+            "heslar.ruian_sync.syncer._smaz_fedora_kontejner_okresu.error",
+            extra={"ident_cely": stary_zaznam.ident_cely, "error": str(err)[:500]},
+        )
+
+
 @transaction.atomic
 def _upsert_okres(existing: Optional[RuianOkres], dto: RuianOkresDTO) -> bool:
     """
     Vytvoří nebo aktualizuje :class:`RuianOkres`.
 
+    Pro **nový** okres je ``spz`` povinné – sloupec je v DB ``NOT NULL``
+    a navíc ``unique``. Zdroj (SHP ani VFR) ho neposkytuje, jde o údaj vlastní
+    AMČR; ``spz`` se exportuje do OAI/AMČR XML (viz ``amcr.xsd``, element je
+    tam povinný) a používá se v exportu PAS.
+
+    Placeholder tu proto **nedává smysl**: kvůli ``unique`` by jedna konstantní
+    náhradní hodnota prošla nejvýš u prvního nového okresu a druhý by stejně
+    spadl na porušení unique constraintu – jen později a s nesrozumitelnou
+    chybou. Místo toho se vyhodí
+    :class:`~heslar.ruian_sync.vfr_parser.RuianMissingMandatoryFieldError`
+    a celý běh skončí jako ``failed`` (viz :func:`_upsert_kraj`).
+
+    Náprava je **zásah do DB nebo přes shell** – administrace okresů je celá
+    read-only (:class:`~heslar.admin.HeslarRuianAdmin` zakazuje add i change).
+
+    U **existujícího** okresu se prázdná hodnota ze zdroje jen ignoruje.
+
+    **Přečíslování**: pokud ``existing`` dorazí se starým kódem (vyhledal ho
+    :func:`_najdi_okres_k_upsertu` podle :data:`_OKRES_PRECISLOVANI`), přepíše
+    se mu ``kod`` na hodnotu ze zdroje a starý kontejner ve Fedoře se smaže –
+    ``ident_cely`` je odvozený z kódu, takže nový kontejner založí ``post_save``
+    signál. Mazání běží až v ``on_commit``, aby se do otevřené DB transakce
+    nedostalo HTTP volání do Fedory.
+
+    **Zánik** okresu žádnou zvláštní obsluhu nepotřebuje: katastry přejdou pod
+    nový okres už ve fázi upsertu (:func:`_upsert_katastr` přepíná FK
+    ``okres``), která běží před mazáním okresů, takže se maže až prázdný
+    záznam. Pokud by na něj přesto něco ukazovalo, ``RESTRICT`` mazání
+    zablokuje a :func:`_delete_okres` to zaloguje do ``run.note``.
+
     :param existing: Stávající záznam nebo ``None``.
     :param dto: Nová data.
+    :raises RuianMissingMandatoryFieldError: Zakládá se nový okres, ale zdroj
+        neposkytl ``spz``.
 
         :return: ``True`` při vytvoření nebo změně, jinak ``False``.
     """
@@ -499,11 +660,13 @@ def _upsert_okres(existing: Optional[RuianOkres], dto: RuianOkresDTO) -> bool:
                 extra={"okres_kod": dto.kod, "kraj_kod": dto.kraj_kod},
             )
             return False
+        if not dto.spz:
+            raise RuianMissingMandatoryFieldError("okres", dto.kod, ["spz"])
         okres = RuianOkres(
             kod=dto.kod,
             nazev=dto.nazev,
             kraj=kraj,
-            spz=dto.spz or "",
+            spz=dto.spz,
             nazev_en=dto.nazev_en or dto.nazev,
             definicni_bod=_geos_or_none(dto.definicni_bod_wkt),
             hranice=_geos_or_none(dto.hranice_wkt),
@@ -512,6 +675,15 @@ def _upsert_okres(existing: Optional[RuianOkres], dto: RuianOkresDTO) -> bool:
         return True
 
     changed = False
+    if existing.kod != dto.kod:
+        stary_kod = existing.kod
+        logger.warning(
+            "heslar.ruian_sync.syncer._upsert_okres.precislovani",
+            extra={"stary_kod": stary_kod, "novy_kod": dto.kod, "nazev": existing.nazev},
+        )
+        existing.kod = dto.kod
+        changed = True
+        transaction.on_commit(lambda: _smaz_fedora_kontejner_okresu(stary_kod))
     if existing.nazev != dto.nazev:
         existing.nazev = dto.nazev
         changed = True
@@ -573,7 +745,7 @@ def _delete_okres(okres: RuianOkres, run: Optional[RuianSyncRun] = None) -> bool
         return False
     except FedoraError as err:
         # DB delete proběhl, jen Fedora kontejner neexistoval (viz _delete_katastr).
-        logger.warning(
+        logger.error(
             "heslar.ruian_sync.syncer._delete_okres.fedora_error",
             extra={"kod": okres.kod, "nazev": okres.nazev, "error": str(err)},
         )
@@ -821,7 +993,7 @@ def _reassign_records_in_changed_katastry_inner(kody_list: list, run: RuianSyncR
         try:
             new_kat = reassign_mod.reassign_projekt(projekt)
         except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
-            logger.warning(
+            logger.error(
                 "heslar.ruian_sync.syncer._reassign_records_in_changed_katastry.projekt_error",
                 extra={"ident_cely": projekt.ident_cely, "error": str(err)[:500]},
             )
@@ -844,7 +1016,7 @@ def _reassign_records_in_changed_katastry_inner(kody_list: list, run: RuianSyncR
                 fallback_point=az.hlavni_katastr.definicni_bod if az.hlavni_katastr else None,
             )
         except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
-            logger.warning(
+            logger.error(
                 "heslar.ruian_sync.syncer._reassign_records_in_changed_katastry.az_error",
                 extra={"ident_cely": az.ident_cely, "error": str(err)[:500]},
             )
@@ -862,7 +1034,7 @@ def _reassign_records_in_changed_katastry_inner(kody_list: list, run: RuianSyncR
         try:
             new_kat = reassign_mod.reassign_sn(sn)
         except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
-            logger.warning(
+            logger.error(
                 "heslar.ruian_sync.syncer._reassign_records_in_changed_katastry.sn_error",
                 extra={"ident_cely": sn.ident_cely, "error": str(err)[:500]},
             )
@@ -926,7 +1098,7 @@ def _delete_katastr(
                     exclude_kod=katastr_kod,
                 )
             except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
-                logger.warning(
+                logger.error(
                     "heslar.ruian_sync.syncer._delete_katastr.reassign_projekt_fedora_error",
                     extra={"katastr_kod": katastr.kod, "ident_cely": projekt.ident_cely, "error": str(err)[:500]},
                 )
@@ -939,7 +1111,7 @@ def _delete_katastr(
                 exclude_kod=katastr_kod,
             )
         except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
-            logger.warning(
+            logger.error(
                 "heslar.ruian_sync.syncer._delete_katastr.reassign_projekt_dalsi_fedora_error",
                 extra={"katastr_kod": katastr.kod, "ident_cely": projekt.ident_cely, "error": str(err)[:500]},
             )
@@ -954,9 +1126,11 @@ def _delete_katastr(
     # katastr, to_add jeho náhradníky). _log_katastr_change se volá navíc
     # jen tehdy, když se měnil i hlavni_katastr.
     #
-    # Výjimky kde reassign_az M2M nepřepočítá (AZ s celokatastr DJ nebo bez DJ)
-    # jsou edge case; pokud M2M záznam zůstane, katastr.delete() selže s
-    # RestrictedError a operátor dostane upozornění přes run.note.
+    # AZ s celokatastr DJ nebo bez DJ nemají PIAN intersect, takže je
+    # reassign_az řeší fallback větví: hlavní katastr se určí z definičního
+    # bodu mazaného katastru a mazaný katastr se odebere z M2M. Bez toho by
+    # RESTRICT (na hlavni_katastr i na through modelu) zablokoval
+    # katastr.delete() a katastr by v DB zůstal natrvalo.
     affected_az = (
         ArcheologickyZaznam.objects.filter(Q(hlavni_katastr=katastr) | Q(katastry=katastr))
         .distinct()
@@ -971,7 +1145,7 @@ def _delete_katastr(
                 exclude_kod=katastr_kod,
             )
         except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
-            logger.warning(
+            logger.error(
                 "heslar.ruian_sync.syncer._delete_katastr.reassign_az_fedora_error",
                 extra={"katastr_kod": katastr.kod, "ident_cely": az.ident_cely, "error": str(err)[:500]},
             )
@@ -987,7 +1161,7 @@ def _delete_katastr(
                 exclude_kod=katastr_kod,
             )
         except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
-            logger.warning(
+            logger.error(
                 "heslar.ruian_sync.syncer._delete_katastr.reassign_sn_fedora_error",
                 extra={"katastr_kod": katastr.kod, "ident_cely": sn.ident_cely, "error": str(err)[:500]},
             )
@@ -1006,7 +1180,7 @@ def _delete_katastr(
                 exclude_kod=katastr_kod,
             )
         except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
-            logger.warning(
+            logger.error(
                 "heslar.ruian_sync.syncer._delete_katastr.reassign_neident_akce_fedora_error",
                 extra={
                     "katastr_kod": katastr.kod,
@@ -1027,7 +1201,7 @@ def _delete_katastr(
     try:
         katastr.delete()
     except RestrictedError as err:
-        logger.warning(
+        logger.error(
             "heslar.ruian_sync.syncer._delete_katastr.restricted",
             extra={"kod": katastr.kod, "nazev": katastr.nazev, "error": str(err)},
         )
@@ -1040,7 +1214,7 @@ def _delete_katastr(
         # neexistoval (typicky 404 v testovacím prostředí, kde RUIAN záznamy
         # do Fedory nikdy nešly), což pro náš účel znamená "nic ke smazání".
         # Záznam v DB je pryč, sync pokračuje.
-        logger.warning(
+        logger.error(
             "heslar.ruian_sync.syncer._delete_katastr.fedora_error",
             extra={"kod": katastr.kod, "nazev": katastr.nazev, "error": str(err)},
         )
@@ -1078,7 +1252,7 @@ def _geos_or_none(wkt: Optional[str]):
     try:
         return GEOSGeometry(wkt, srid=5514)
     except (GEOSException, ValueError) as err:
-        logger.warning(
+        logger.error(
             "heslar.ruian_sync.syncer._geos_or_none.invalid_wkt",
             extra={"wkt_prefix": wkt[:120], "wkt_length": len(wkt), "error": str(err)},
         )
@@ -1199,28 +1373,273 @@ def _log_hranice_change_if_significant(
 #: hraniční artefakty z generalizace polygonu) ignorujeme, výrazné hlásíme.
 _TOPOLOGY_OVERLAP_MIN_M2 = 0.01
 
+#: Od jaké plochy se vnitřní prstenec sjednocení bere jako skutečná díra.
+#:
+#: Nejde jen o chybějící katastr – i katastr se **špatnou hranicí** (chybně
+#: linearizovaný oblouk, posunutý vrchol) nechá mezi sousedy mezeru, a ta bývá
+#: malá. Práh je proto co nejníž, těsně nad úrovní numerického šumu.
+#:
+#: Naměřeno na čisté DB: největší artefakt sjednocení má 0,0004 m², drtivá
+#: většina je pod 0,0001 m². Naproti tomu reálná chyba oblouku (Hřibsko, před
+#: opravou linearizace) dělala 51 m². Hodnota 0,01 m² = 1 cm² tedy leží 25×
+#: nad šumem a o čtyři řády pod reálnou vadou. Shodná s
+#: :data:`_TOPOLOGY_OVERLAP_MIN_M2`, který má stejné odůvodnění.
+_TOPOLOGY_HOLE_MIN_M2 = 0.01
 
-def _check_katastry_topology(run: RuianSyncRun) -> None:
+#: O kolik m² smí čistě klesnout součet ploch všech katastrů, než se to bere
+#: za ztrátu pokrytí.
+#:
+#: Samotné měření šum nemá – opakovaný ``SUM(ST_Area(hranice))`` nad toutéž
+#: DB vrací bitově shodnou hodnotu (ověřeno na 5 běhů, rozptyl 0). Práh tedy
+#: neřeší přesnost výpočtu, ale odlišení **zániku katastru** od legitimního
+#: posunu hranic.
+#:
+#: Práh je schválně nízko, protože tahle kontrola nehlídá jen zánik celého
+#: katastru (nejmenší v ČR má 2 500 m²), ale i **nepřesně navazující hranici
+#: na vnějším obrysu státu**. Uvnitř území se takový nesoulad projeví jako
+#: vnitřní prstenec a odhalí ho :func:`_zkontroluj_unii_pokryti`; na státní
+#: hranici žádný prstenec nevznikne, sjednocení je slepé a jedinou stopou
+#: zůstane úbytek plochy – klidně jen jednotky m².
+#:
+#: Riziko planého poplachu je přijatelné: kontrola pouze loguje a nic
+#: neblokuje, takže falešný nález stojí pohled do logu, kdežto přehlédnutí
+#: znamená tiše ztracené území.
+#:
+#: Skutečný rozptyl legitimní denní delty zatím změřený není – tímto kódem
+#: žádná neprošla. Pokud se ukáže, že běžná delta rozdíl 10 m² překračuje,
+#: je tohle ta jediná konstanta, kterou je pak potřeba zvednout.
+_PLOCHA_POKRYTI_DROP_WARN_M2 = 10.0
+
+
+def _soucet_plochy_katastru() -> float:
     """
-    Provede na závěr syncu topologickou kontrolu konzistence katastrů.
+    Vrátí součet ploch hranic všech katastrů v m².
 
-    Najde dvojice katastrů, jejichž hranice se překrývají plochou větší než
-    :data:`_TOPOLOGY_OVERLAP_MIN_M2`. Používá PostGIS spatial index přes
-    ``ST_Overlaps`` (redukuje O(N²) na O(N log N)).
+    Slouží jako laciný ukazatel celkového pokrytí ČR – nad 13 000 katastrů
+    trvá dotaz kolem 0,06 s, protože nepočítá žádný průnik ani sjednocení.
 
-    Cíl kontroly je čistě **preventivní** – warning v log agregátoru
-    upozorní, že se v sync pipeline objevila strukturální regrese. Sync se
-    kvůli tomu nezastavuje, warningy se sesbírají do audit logu.
-
-    :param run: Audit záznam RuianSyncRun – shrnutí topologických issue se
-        připojí do jeho ``note``.
+        :return: Součet ``ST_Area(hranice)`` v m²; ``0.0`` pokud žádný katastr
+            hranici nemá.
     """
-    logger.debug("heslar.ruian_sync.syncer._check_katastry_topology.start", extra={"run_id": run.pk})
-
-    overlaps_count = 0
-
     with connection.cursor() as cursor:
-        # Překryvy dvojic katastrů (spatial index prefilter přes ST_Overlaps).
+        cursor.execute("SELECT COALESCE(SUM(ST_Area(hranice)), 0) FROM ruian_katastr WHERE hranice IS NOT NULL")
+        return float(cursor.fetchone()[0])
+
+
+def _zkontroluj_pokryti(run: RuianSyncRun, plocha_pred: Optional[float]) -> None:
+    """
+    Ověří, že syncem nevznikla díra v pokrytí ČR katastry.
+
+    Porovná součet ploch všech katastrů před syncem a po něm. Úprava hranic je
+    zhruba nulový součet (co jednomu ubude, sousedovi přibude), takže
+    **pokles** o víc než :data:`_PLOCHA_POKRYTI_DROP_WARN_M2` znamená území,
+    které nově nepatří žádnému katastru.
+
+    Doplňuje :func:`_zkontroluj_unii_pokryti`, nenahrazuje ji – každá vidí
+    něco jiného (obojí ověřeno měřením):
+
+    * **jen tahle kontrola** odhalí zánik **hraničního** katastru. Ten
+      nevytvoří vnitřní prstenec, jen prohne vnější obrys státu, takže
+      sjednocení nehlásí vůbec nic. Ověřeno na katastru Zálesí u Javorníka
+      (19,3 km²): unie žádnou anomálii nenašla, součet ploch ano;
+    * **jen sjednocení** naopak odhalí nepřesně navazující hranici. Tam totiž
+      vzniknou mezery i překryvy zároveň a v součtu se navzájem vyruší –
+      naměřeno, že při posunu hranice o 0,2 m součet ploch dokonce **stoupl**
+      o 6 m², přestože sjednocení našlo 20 děr.
+
+    Součet ploch je navíc o dva řády levnější (~0,4 s proti ~11 s), takže
+    slouží i jako pojistka, kdyby ``ST_CoverageUnion`` selhalo výjimkou.
+
+    Nic nevyhazuje – jen zaloguje a připíše do ``run.note``.
+
+    :param run: Audit záznam, do jehož ``note`` se zapíše shrnutí.
+    :param plocha_pred: Součet ploch v m² pořízený **před** aplikací změn;
+        ``None`` kontrolu přeskočí (nemáme s čím porovnávat).
+    """
+    if plocha_pred is None:
+        return
+
+    plocha_po = _soucet_plochy_katastru()
+    rozdil = plocha_po - plocha_pred
+    if rozdil >= -_PLOCHA_POKRYTI_DROP_WARN_M2:
+        logger.debug(
+            "heslar.ruian_sync.syncer._zkontroluj_pokryti.ok",
+            extra={"run_id": run.pk, "rozdil_m2": round(rozdil, 1)},
+        )
+        return
+
+    logger.error(
+        "heslar.ruian_sync.syncer._zkontroluj_pokryti.dira",
+        extra={
+            "run_id": run.pk,
+            "plocha_pred_m2": round(plocha_pred, 1),
+            "plocha_po_m2": round(plocha_po, 1),
+            "ubytek_m2": round(-rozdil, 1),
+            "limit_m2": _PLOCHA_POKRYTI_DROP_WARN_M2,
+        },
+    )
+    _append_run_note(
+        run,
+        f"Pokrytí kleslo o {-rozdil / 1e6:.4f} km² – v ČR pravděpodobně vznikla díra bez katastru.",
+    )
+
+
+#: Kolik děr se nejvýš vypíše do logu jednotlivě. Zbytek se jen sečte –
+#: při rozsypaném pokrytí by jinak jeden běh vygeneroval tisíce hlášení.
+_TOPOLOGY_MAX_LOGGED = 50
+
+#: SQL pro sjednocení pokrytí. ``ST_CoverageUnion`` využívá toho, že katastry
+#: tvoří (mají tvořit) rovinné pokrytí, takže je řádově rychlejší než
+#: ``ST_Union``. ``MATERIALIZED`` je podstatné – bez něj by PostgreSQL CTE
+#: inlinoval a sjednocení počítal dvakrát.
+#:
+#: Z jednoho sjednocení se čte vše potřebné:
+#:
+#: * ``soucet_ploch`` vs ``plocha_unie`` – rozdíl je celková plocha překryvů;
+#: * vnitřní prstence sjednocení – to jsou díry, včetně pozice;
+#: * počet netriviálních částí – >1 znamená, že pokrytí není spojité.
+_SQL_UNIE_POKRYTI = """
+WITH u AS MATERIALIZED (
+    SELECT ST_CoverageUnion(hranice) AS g,
+           SUM(ST_Area(hranice)) AS soucet_ploch
+    FROM ruian_katastr
+    WHERE hranice IS NOT NULL
+),
+souhrn AS (
+    SELECT soucet_ploch,
+           ST_Area(g) AS plocha_unie,
+           (SELECT count(*) FROM ST_Dump(g) d WHERE ST_Area(d.geom) > %(min_m2)s) AS casti
+    FROM u
+),
+dery AS (
+    SELECT ST_Area(ST_MakePolygon(ST_InteriorRingN(d.geom, i))) AS plocha,
+           ST_AsText(ST_PointOnSurface(ST_MakePolygon(ST_InteriorRingN(d.geom, i)))) AS bod
+    FROM u, ST_Dump(u.g) d, generate_series(1, ST_NumInteriorRings(d.geom)) i
+)
+SELECT s.soucet_ploch, s.plocha_unie, s.casti, dr.plocha, dr.bod
+FROM souhrn s
+LEFT JOIN dery dr ON dr.plocha > %(min_m2)s
+ORDER BY dr.plocha DESC NULLS LAST
+"""
+
+
+def _zkontroluj_unii_pokryti(run: RuianSyncRun) -> bool:
+    """
+    Ověří sjednocením, že katastry tvoří bezděrové a nepřekrývající se pokrytí.
+
+    Odhalí nejen chybějící katastr, ale i **poškozenou hranici** – špatně
+    linearizovaný oblouk nebo posunutý vrchol nechá mezi sousedy mezeru, která
+    se ve sjednocení projeví jako vnitřní prstenec. Práh
+    :data:`_TOPOLOGY_HOLE_MIN_M2` je proto nastavený co nejníž: naměřený šum
+    z linearizace je nejvýš 0,0004 m², kdežto reálná chyba oblouku dělala
+    desítky m².
+
+    U každé díry se loguje plocha i pozice (``ST_PointOnSurface``), takže se dá
+    dohledat v mapě. Vypíše se nejvýš :data:`_TOPOLOGY_MAX_LOGGED` největších.
+
+    Selhání ``ST_CoverageUnion`` **není** chyba kontroly, ale nález – funkce
+    vyhodí ``TopologyException``, právě když je pokrytí vážně poškozené. Proto
+    se výjimka zachytí a zaloguje jako ERROR.
+
+    .. warning::
+       Rozdíl ``soucet_ploch - plocha_unie`` **nelze** brát jako spolehlivou
+       míru překryvu. ``ST_CoverageUnion`` je definované jen nad validním
+       pokrytím; nad překrývajícím se vstupem vrací nedefinovaný výsledek,
+       ze kterého překryv vůbec nemusí být vidět. Ověřeno měřením: nafouknutí
+       jednoho katastru o 5 m vyrobilo 71 510 m² skutečných překryvů, ale
+       rozdíl ploch zůstal nulový – projevilo se to jako díra a nespojitost.
+       Proto se dohledání dvojic spouští při **jakékoli** anomálii, ne podle
+       naměřeného překryvu.
+
+    :param run: Audit záznam, do jehož ``note`` se zapíše shrnutí.
+
+        :return: ``True`` pokud je pokrytí podezřelé (díra, nespojitost,
+            naměřený překryv nebo selhání sjednocení) a volající má spustit
+            dohledání konkrétních dvojic; ``False`` pokud je vše v pořádku.
+    """
+    logger.debug("heslar.ruian_sync.syncer._zkontroluj_unii_pokryti.start", extra={"run_id": run.pk})
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(_SQL_UNIE_POKRYTI, {"min_m2": _TOPOLOGY_HOLE_MIN_M2})
+            rows = cursor.fetchall()
+    except DatabaseError as err:
+        # TopologyException apod. – pokrytí je natolik rozbité, že ho GEOS
+        # nedokáže sjednotit. Sám o sobě to je nález. Kontroly běží
+        # v autocommitu (``_apply_*`` atomické nejsou, transakci si otevírají
+        # až jednotlivé upserty), takže neúspěšný dotaz nezablokuje ty další.
+        logger.error(
+            "heslar.ruian_sync.syncer._zkontroluj_unii_pokryti.selhalo",
+            extra={"run_id": run.pk, "error": str(err)[:500]},
+        )
+        _append_run_note(run, f"Sjednocení pokrytí selhalo, hranice katastrů jsou poškozené: {str(err)[:200]}")
+        return True
+
+    if not rows:
+        return False
+
+    soucet_ploch, plocha_unie, casti = (float(rows[0][0] or 0), float(rows[0][1] or 0), int(rows[0][2] or 0))
+    dery = [(float(r[3]), r[4]) for r in rows if r[3] is not None]
+
+    for plocha, bod in dery[:_TOPOLOGY_MAX_LOGGED]:
+        logger.error(
+            "heslar.ruian_sync.syncer._zkontroluj_unii_pokryti.dira",
+            extra={"run_id": run.pk, "plocha_m2": round(plocha, 4), "bod_5514": bod},
+        )
+    if len(dery) > _TOPOLOGY_MAX_LOGGED:
+        logger.error(
+            "heslar.ruian_sync.syncer._zkontroluj_unii_pokryti.dalsi_dery",
+            extra={"run_id": run.pk, "nevypsano": len(dery) - _TOPOLOGY_MAX_LOGGED},
+        )
+    if dery:
+        _append_run_note(
+            run,
+            f"Topologická kontrola: {len(dery)} děr v pokrytí " f"(největší {dery[0][0]:.4f} m² @ {dery[0][1]}).",
+        )
+
+    if casti > 1:
+        logger.error(
+            "heslar.ruian_sync.syncer._zkontroluj_unii_pokryti.nespojite",
+            extra={"run_id": run.pk, "casti": casti},
+        )
+        _append_run_note(run, f"Topologická kontrola: pokrytí není spojité, rozpadlo se na {casti} částí.")
+
+    # Rozdíl může vyjít nepatrně negativní (plovoucí čárka); za překryv se
+    # bere až kladná hodnota nad prahem. Viz varování v docstringu – tenhle
+    # údaj je jen jeden z několika spouštěčů, ne jediný.
+    prekryv_m2 = max(0.0, soucet_ploch - plocha_unie)
+    podezrele = bool(dery) or casti > 1 or prekryv_m2 > _TOPOLOGY_OVERLAP_MIN_M2
+    logger.debug(
+        "heslar.ruian_sync.syncer._zkontroluj_unii_pokryti.end",
+        extra={
+            "run_id": run.pk,
+            "dery": len(dery),
+            "casti": casti,
+            "prekryv_m2": round(prekryv_m2, 4),
+            "podezrele": podezrele,
+        },
+    )
+    return podezrele
+
+
+def _zkontroluj_prekryvy_dvojic(run: RuianSyncRun) -> int:
+    """
+    Dohledá konkrétní dvojice katastrů, jejichž hranice se překrývají.
+
+    Spouští se **až když** :func:`_zkontroluj_unii_pokryti` překryv naměřilo
+    (nebo selhalo) – v čistém stavu se tedy vůbec neprovede. Sjednocení totiž
+    dá jen celkovou plochu překryvů; tenhle dotaz k ní přidá jména a kódy,
+    což je to, co operátor potřebuje k ručnímu šetření.
+
+    Používá PostGIS spatial index přes ``ST_Overlaps`` (redukuje O(N²)
+    na O(N log N)).
+
+    :param run: Audit záznam, do jehož ``note`` se zapíše shrnutí.
+
+        :return: Počet nalezených překrývajících se dvojic.
+    """
+    overlaps_count = 0
+    with connection.cursor() as cursor:
         cursor.execute(
             """
             SELECT a.kod, a.nazev, b.kod, b.nazev,
@@ -1234,22 +1653,64 @@ def _check_katastry_topology(run: RuianSyncRun) -> None:
         )
         for kod_a, nazev_a, kod_b, nazev_b, overlap_m2 in cursor.fetchall():
             overlaps_count += 1
-            logger.warning(
-                "heslar.ruian_sync.syncer._check_katastry_topology.overlap",
-                extra={
-                    "kod_a": kod_a,
-                    "nazev_a": nazev_a,
-                    "kod_b": kod_b,
-                    "nazev_b": nazev_b,
-                    "overlap_m2": round(float(overlap_m2), 1),
-                },
-            )
+            if overlaps_count <= _TOPOLOGY_MAX_LOGGED:
+                logger.error(
+                    "heslar.ruian_sync.syncer._zkontroluj_prekryvy_dvojic.overlap",
+                    extra={
+                        "kod_a": kod_a,
+                        "nazev_a": nazev_a,
+                        "kod_b": kod_b,
+                        "nazev_b": nazev_b,
+                        "overlap_m2": round(float(overlap_m2), 4),
+                    },
+                )
 
     if overlaps_count > 0:
-        _append_run_note(
-            run,
-            f"Topologická kontrola: {overlaps_count} překryvů dvojic katastrů.",
-        )
+        _append_run_note(run, f"Topologická kontrola: {overlaps_count} překryvů dvojic katastrů.")
+    return overlaps_count
+
+
+def _check_katastry_topology(run: RuianSyncRun, plocha_pred: Optional[float] = None) -> None:
+    """
+    Provede na závěr syncu topologickou kontrolu konzistence katastrů.
+
+    Skládá se ze tří stupňů, seřazených podle ceny:
+
+    1. **součet ploch** – :func:`_zkontroluj_pokryti` porovná plochu před
+       a po syncu (~0,4 s). Laciná pojistka, která funguje i kdyby sjednocení
+       níže selhalo výjimkou;
+    2. **sjednocení pokrytí** – :func:`_zkontroluj_unii_pokryti` spočítá
+       ``ST_CoverageUnion`` (~11 s) a z něj odvodí díry (vnitřní prstence
+       sjednocení), celkový překryv i to, jestli pokrytí nerozpadlo na víc
+       nesouvislých částí;
+    3. **dvojice katastrů** – :func:`_zkontroluj_prekryvy_dvojic` (~13 s)
+       pojmenuje konkrétní překrývající se dvojice. Spouští se **jen když**
+       stupeň 2 označil pokrytí za podezřelé – tedy při díře, nespojitosti,
+       naměřeném překryvu nebo selhání sjednocení. V čistém stavu se
+       neprovede a celá kontrola stojí jen stupně 1 a 2 (~11 s).
+
+    Podmínka ve stupni 3 je záměrně široká. Překryv se totiž ze sjednocení
+    spolehlivě vyčíst nedá (viz varování u :func:`_zkontroluj_unii_pokryti`),
+    zato se vždy projeví aspoň jednou z ostatních anomálií – ověřeno měřením
+    na uměle vyrobených překryvech.
+
+    Cíl kontroly je čistě **preventivní** – hlášení v log agregátoru
+    upozorní, že se v sync pipeline objevila strukturální regrese. Sync se
+    kvůli tomu nezastavuje.
+
+    :param run: Audit záznam RuianSyncRun – shrnutí topologických issue se
+        připojí do jeho ``note``.
+    :param plocha_pred: Součet ploch katastrů v m² pořízený před aplikací
+        změn (viz :func:`_soucet_plochy_katastru`); ``None`` kontrolu pokrytí
+        přeskočí.
+    """
+    logger.debug("heslar.ruian_sync.syncer._check_katastry_topology.start", extra={"run_id": run.pk})
+
+    _zkontroluj_pokryti(run, plocha_pred)
+
+    overlaps_count = 0
+    if _zkontroluj_unii_pokryti(run):
+        overlaps_count = _zkontroluj_prekryvy_dvojic(run)
 
     logger.debug(
         "heslar.ruian_sync.syncer._check_katastry_topology.end",
@@ -1344,7 +1805,7 @@ def _log_katastr_rename(katastr: RuianKatastr, old_nazev: str, new_nazev: str) -
             projekt.save()
             success = True
         except (FedoraError, FedoraTransactionCommitFailedError) as err:
-            logger.warning(
+            logger.error(
                 "heslar.ruian_sync.syncer._log_katastr_rename.projekt_fedora_error",
                 extra={"ident_cely": projekt.ident_cely, "error": str(err)[:500]},
             )
@@ -1361,7 +1822,7 @@ def _log_katastr_rename(katastr: RuianKatastr, old_nazev: str, new_nazev: str) -
             az.save()
             success = True
         except (FedoraError, FedoraTransactionCommitFailedError) as err:
-            logger.warning(
+            logger.error(
                 "heslar.ruian_sync.syncer._log_katastr_rename.az_fedora_error",
                 extra={"ident_cely": az.ident_cely, "error": str(err)[:500]},
             )
@@ -1378,7 +1839,7 @@ def _log_katastr_rename(katastr: RuianKatastr, old_nazev: str, new_nazev: str) -
             sn.save()
             success = True
         except (FedoraError, FedoraTransactionCommitFailedError) as err:
-            logger.warning(
+            logger.error(
                 "heslar.ruian_sync.syncer._log_katastr_rename.sn_fedora_error",
                 extra={"ident_cely": sn.ident_cely, "error": str(err)[:500]},
             )
@@ -1391,7 +1852,7 @@ def _log_katastr_rename(katastr: RuianKatastr, old_nazev: str, new_nazev: str) -
         try:
             neident_akce.save()
         except (FedoraError, FedoraTransactionCommitFailedError) as err:
-            logger.warning(
+            logger.error(
                 "heslar.ruian_sync.syncer._log_katastr_rename.neident_akce_fedora_error",
                 extra={"pk": neident_akce.pk, "error": str(err)[:500]},
             )

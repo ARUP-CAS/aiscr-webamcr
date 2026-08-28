@@ -49,6 +49,24 @@ _VARIANT = "ZKSH"
 #: Default chunk size pro streamované stahování (8 MB).
 _DEFAULT_CHUNK_SIZE = 8 * 1024 * 1024
 
+#: Strop na velikost stahovaného změnového souboru. Tudy tečou **pouze denní
+#: delty** (``download_change_file`` / ``download_via_atom``) – stavový archiv
+#: ``1.zip`` se nasazuje ručně a tímto kódem neprochází. Reálné delty mají
+#: jednotky MB, takže 256 MiB je řádově nad legitimním provozem a přitom
+#: zabrání zaplnění disku, kdyby na druhé straně stálo něco nepřátelského.
+_MAX_DOWNLOAD_BYTES = 256 * 1024 * 1024
+
+
+class RuianDownloadTooLargeError(Exception):
+    """
+    Vyhozeno, pokud stahovaný změnový soubor přeroste
+    :data:`_MAX_DOWNLOAD_BYTES`.
+
+    Rozdělaný ``.tmp`` soubor se smaže, takže na disku nic nezůstane.
+    Volající (syncer) zachytí, zaloguje a označí ``RuianSyncRun.status="failed"``.
+    """
+
+
 #: HTTP timeout v sekundách pro celé spojení (headers + body); pro velké
 #: soubory záměrně dlouhý.
 _DEFAULT_TIMEOUT = 600
@@ -190,6 +208,8 @@ def _stream_to_file(
         :return: ``target_path`` při úspěchu, ``None`` při HTTP 404.
         :raises requests.HTTPError: Při jiných HTTP chybách než 404.
         :raises requests.RequestException: Při síťové chybě.
+        :raises RuianDownloadTooLargeError: Pokud přenos přeroste
+            :data:`_MAX_DOWNLOAD_BYTES`; rozdělaný ``.tmp`` soubor se smaže.
     """
     logger.debug("heslar.ruian_sync.vfr_download._stream_to_file.start", extra={"url": url})
     target_path.parent.mkdir(parents=True, exist_ok=True)
@@ -200,9 +220,16 @@ def _stream_to_file(
                 logger.debug("heslar.ruian_sync.vfr_download._stream_to_file.not_found", extra={"url": url})
                 return None
             resp.raise_for_status()
+            stazeno = 0
             with open(temp_path, "wb") as fh:
                 for chunk in resp.iter_content(chunk_size=chunk_size):
                     if chunk:
+                        stazeno += len(chunk)
+                        if stazeno > _MAX_DOWNLOAD_BYTES:
+                            raise RuianDownloadTooLargeError(
+                                f"Stahování {url} překročilo limit "
+                                f"{_MAX_DOWNLOAD_BYTES} B (staženo nejméně {stazeno} B)."
+                            )
                         fh.write(chunk)
         if target_path.exists():
             logger.warning(

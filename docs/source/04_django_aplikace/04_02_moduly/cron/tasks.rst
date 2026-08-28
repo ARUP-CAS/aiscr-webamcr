@@ -99,6 +99,25 @@ Funkce
 
    :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem "Missing required DIRECTORY_PATH setting".
 
+.. py:function:: _zkontroluj_stari_poslednich_dat(today)
+
+   Zaloguje ``ERROR``, pokud se déle než :data:`RUIAN_NO_DOWNLOAD_ERROR_DAYS`
+   dnů nepodařilo stáhnout žádný změnový soubor.
+
+   Hledá poslední :class:`~heslar.models.RuianSyncRun` s neprázdným
+   ``source_path`` – tedy běh, který skutečně dostal data. Běhy uzavřené jako
+   ``no_changes (404)`` ``source_path`` nemají, takže se do stáří nezapočítají
+   a dlouhá série 404 (typicky změněná URL u poskytovatele) se projeví.
+
+   Volá se **až po** stažení všech dostupných dnů, ne před ním. Delší pauza
+   v publikování je normální stav; kdyby se kontrola pouštěla na začátku,
+   hlásila by chybu i tehdy, když ji právě probíhající běh vzápětí dožene.
+
+   Nic nevyhazuje ani neblokuje sync – jen upozorní do logu, aby si toho
+   monitoring všiml.
+
+   :param today: Dnešní datum (předává volající, ať se dá test ustálit).
+
 .. py:function:: sync_ruian_changes(reassign_records)
 
    Periodická aktualizace heslářů RÚIAN podle denních změnových VFR souborů.

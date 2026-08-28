@@ -28,6 +28,7 @@ from core.repository_connector import (
     FedoraError,
     FedoraTransaction,
     FedoraTransactionCommitFailedError,
+    FedoraTransactionStatus,
 )
 from core.utils import get_cadastre_from_point
 from dj.models import DokumentacniJednotka
@@ -104,13 +105,37 @@ def _close_or_rollback(fedora_tx: FedoraTransaction, success: bool) -> None:
     Commit pošle ČUZK Fedoře ``COMMIT`` request a spustí post-commit úlohy;
     rollback pošle ``ROLLBACK``.
 
+    Pokud transakce **už uzavřená je**, funkce nedělá nic. Nastává to
+    u záznamů se ``close_active_transaction_when_finished = True`` – tam ji
+    uzavře už ``save()`` v post_save signálu a druhý commit by Fedora odmítla
+    chybou „Transaction ... has already been committed". ``rollback_transaction``
+    si tuhle pojistku řeší sám, ``mark_transaction_as_closed`` ne.
+
     :param fedora_tx: Instance lokální transakce (:class:`FedoraTransaction`).
     :param success: ``True`` = commit, ``False`` = rollback.
     """
+    if fedora_tx.status is not FedoraTransactionStatus.ACTIVE:
+        logger.debug(
+            "heslar.ruian_sync.reassign._close_or_rollback.uz_uzavrena",
+            extra={"transaction": getattr(fedora_tx, "uid", None), "status": str(fedora_tx.status)},
+        )
+        return
     if success:
         fedora_tx.mark_transaction_as_closed()
-    else:
+        return
+
+    # Rollback běží ve ``finally`` po neúspěšném zápisu, takže Fedora už
+    # nemusí odpovídat (typicky když spadla úplně). Kdyby se výjimka z úklidu
+    # pustila dál, přebila by tu původní – volající by pak místo „zápis do
+    # Fedory selhal" dostal nesrozumitelnou chybu z rollbacku a navíc by ji
+    # neodchytil, protože ``requests.ConnectionError`` není ``FedoraError``.
+    try:
         fedora_tx.rollback_transaction()
+    except Exception as err:  # noqa: BLE001 – úklid nesmí zastínit původní chybu
+        logger.error(
+            "heslar.ruian_sync.reassign._close_or_rollback.rollback_selhal",
+            extra={"transaction": getattr(fedora_tx, "uid", None), "error": str(err)[:500]},
+        )
 
 
 def _log_katastr_change(historie_vazba_id: Optional[int], old_nazev: str, new_nazev: str) -> None:
@@ -186,14 +211,30 @@ def _compute_az_katastr_assignment(
     katastr nazev atd., které reassign vůbec nepoužíval – pro AZ
     s mnoha DJ to znamenalo desítky kB zbytečných dat).
 
-    Pořadí výsledků je zachováno shodně se starou implementací: v rámci
-    každé DJ jsou napřed katastry obsahující **centroid PIANu**
-    (= "majoritní" katastr, kde polygon převážně leží), pak ostatní
-    abecedně podle ``katastr.nazev``; mezi DJ se řadí podle
-    ``dj.ident_cely``. Determinismus volby *hlavního* katastru
-    (= první unikátní katastr v pořadí) tak zůstává shodný s předchozí
-    implementací přes ``core.utils.get_all_pians_with_akce``, jejíž první
-    UNION větev vybírala katastr s centroidem PIANu prvního DJ.
+    Řazení: v rámci každé DJ jsou napřed katastry obsahující **reprezentativní
+    bod PIANu** (= "majoritní" katastr, kde geometrie převážně leží), pak
+    ostatní abecedně podle ``katastr.nazev``; mezi DJ se řadí podle
+    ``dj.ident_cely``. Hlavní katastr je první unikátní katastr v tomto pořadí.
+
+    Do prostorového porovnání nevstupuje celá geometrie PIANu, ale **jediný
+    reprezentativní bod** – jinak by PIAN ležící přes dvě katastrální území
+    matchoval obě a hlavní katastr by vycházel nejednoznačně (issue #315).
+    Bod se volí podle typu geometrie, shodně s
+    :func:`core.utils.get_all_pians_with_akce`:
+
+    * ``LineString`` – ``ST_LineInterpolatePoint(geom, 0.5)``, střed linie;
+    * ``Polygon`` / ``MultiPolygon`` – ``ST_PointOnSurface(geom)``, který leží
+      **vždy uvnitř** (centroid může u konkávních tvarů padnout mimo);
+    * ostatní (typicky ``Point``) – ``ST_Centroid(geom)``.
+
+    .. note::
+       Větev pro linie byla zamýšlená už při zavedení ``CASE`` (2022), ale
+       kvůli dvěma shodným podmínkám na ``ST_LineString`` byla nedosažitelná –
+       fakticky se pro všechny typy geometrie používal centroid. Issue #372
+       mrtvou větev odstranilo a plochy navíc převedlo na
+       ``ST_PointOnSurface``. Volba hlavního katastru se proto může u linií
+       a konkávních ploch lišit od stavu před #372; ``zm10``/``zm50`` PIANu to
+       ale neovlivňuje (viz poznámka u ``get_all_pians_with_akce``).
 
     :param az_ident_cely: Identifikátor archeologického záznamu
         (např. ``"M-CHEB-202200095"``); jeho DJ se vyhledají přes
@@ -344,10 +385,23 @@ def reassign_az(
     * M2M aktualizuje delta-only přes ``add()`` + ``remove()``.
 
     Pokud první DJ je typu *celokatastr* (``TYP_DJ_KATASTR``), přepočet se
-    neprovádí – zachovává se původní semantika ``core.utils`` utility.
+    při běžném volání neprovádí – zachovává se původní semantika
+    ``core.utils`` utility, která zde nedělala nic. **Výjimkou je mazání
+    katastru**: pokud je předaný ``exclude_kod`` a AZ na mazaný katastr
+    odkazuje (hlavním katastrem nebo přes M2M), přepočet proběhne přes
+    fallback větev – jinak by ``RESTRICT`` na ``hlavni_katastr`` i na through
+    modelu ``ArcheologickyZaznamKatastr`` zablokoval ``katastr.delete()``
+    a katastr by v DB zůstal natrvalo.
 
-    Pokud AZ žádnou DJ nemá, spočítá pouze ``hlavni_katastr`` z
-    ``fallback_point`` (definiční bod původního katastru).
+    Pokud AZ žádnou DJ nemá, spočítá ``hlavni_katastr`` z ``fallback_point``
+    (definiční bod původního katastru).
+
+    Ve fallback větvi se navíc mazaný katastr **nahradí i v M2M** ``katastry``
+    svým nástupcem – obdobně jako u projektů ve
+    :func:`reassign_projekt_dalsi_katastr`. Hlavní katastr se přitom přepisuje
+    jen tehdy, když se maže právě on; když se maže katastr figurující pouze
+    mezi „dalšími", zůstane hlavní beze změny (spatial query vrací nástupce
+    mazaného katastru, ne nový hlavní).
 
     :param az: Instance :class:`ArcheologickyZaznam`, která má být přepočítána.
     :param fallback_point: ``Point`` (EPSG:5514) použitý, pokud AZ nemá DJ;
@@ -361,16 +415,25 @@ def reassign_az(
     logger.debug("heslar.ruian_sync.reassign.reassign_az.start", extra={"ident_cely": az.ident_cely})
 
     first_dj = DokumentacniJednotka.objects.filter(archeologicky_zaznam=az).order_by("ident_cely").first()
-    if first_dj is not None:
-        # Celokatastr DJ nemá smysl řešit PIAN intersectem – původní
-        # `update_all_katastr_within_akce_or_lokalita` v tomto případě
-        # vůbec nic nedělala. Zachováváme stejné chování.
-        if first_dj.typ_id == TYP_DJ_KATASTR:
-            return az.hlavni_katastr
+    je_celokatastr = first_dj is not None and first_dj.typ_id == TYP_DJ_KATASTR
 
+    if first_dj is not None and not je_celokatastr:
         changed = _update_az_katastry_if_changed(az, exclude_kod=exclude_kod)
         if changed:
             az.refresh_from_db()
+        return az.hlavni_katastr
+
+    # Celokatastr DJ nemá smysl řešit PIAN intersectem – původní
+    # `update_all_katastr_within_akce_or_lokalita` v tomto případě vůbec nic
+    # nedělala a při běžném přepočtu to platí dál.
+    #
+    # Výjimkou je **mazání katastru** (``exclude_kod``): tam by „nedělat nic"
+    # znamenalo nechat ``hlavni_katastr`` ukazovat na mizející záznam, FK má
+    # ``RESTRICT``, takže by ``katastr.delete()`` skončil ``RestrictedError``
+    # a katastr by v DB zůstal natrvalo. V tom případě propadneme na stejnou
+    # fallback větev jako AZ bez DJ – tedy prostorový náhradník z definičního
+    # bodu mazaného katastru, obdobně jako :func:`reassign_neident_akce`.
+    if je_celokatastr and not _odkazuje_na_mazany_katastr(az, exclude_kod):
         return az.hlavni_katastr
 
     target = _resolve_target_point(None, fallback_point)
@@ -382,19 +445,78 @@ def reassign_az(
     if new_katastr is None:
         return None
 
-    if new_katastr.pk != az.hlavni_katastr_id:
+    # Hlavní katastr přepisujeme jen tehdy, když se maže právě on. Kdyby se
+    # mazal katastr, který je u AZ jen mezi „dalšími", nesmí se hlavní sáhnout –
+    # spatial query totiž vrací nástupce *mazaného* katastru, ne nový hlavní.
+    # Mimo kontext mazání (``exclude_kod is None``) slouží fallback k prostému
+    # dopočtu hlavního katastru u AZ bez DJ, takže tam platí beze změny.
+    hlavni_se_maze = exclude_kod is not None and az.hlavni_katastr is not None and az.hlavni_katastr.kod == exclude_kod
+    hlavni_changed = new_katastr.pk != az.hlavni_katastr_id and (exclude_kod is None or hlavni_se_maze)
+
+    # Mazaný katastr musí zmizet i z M2M ``katastry``. Through model
+    # ``ArcheologickyZaznamKatastr`` má rovněž ``on_delete=RESTRICT``, takže
+    # osiřelý řádek by mazání zablokoval stejně jako hlavní katastr.
+    to_add: set = set()
+    to_remove: set = set()
+    if exclude_kod is not None:
+        soucasne = dict(az.katastry.values_list("pk", "kod"))
+        to_remove = {pk for pk, kod in soucasne.items() if kod == exclude_kod}
+        if to_remove:
+            # Na uvolněné místo nastupuje nástupce mazaného katastru – stejně
+            # jako u projektů ve :func:`reassign_projekt_dalsi_katastr`. Tím se
+            # zachová informace, že AZ zasahuje i do území, které nově patří
+            # jinam. Nepřidáváme ho, pokud v M2M už je nebo pokud je (nově)
+            # hlavním katastrem – hlavní katastr a M2M jsou z konstrukce
+            # disjunktní (viz :func:`_compute_az_katastr_assignment`).
+            hlavni_po_zmene = new_katastr.pk if hlavni_changed else az.hlavni_katastr_id
+            if new_katastr.pk not in soucasne and new_katastr.pk != hlavni_po_zmene:
+                to_add = {new_katastr.pk}
+
+    if not hlavni_changed and not to_remove:
+        return new_katastr
+
+    if hlavni_changed:
         old_nazev = az.hlavni_katastr.nazev if az.hlavni_katastr else "?"
         _log_katastr_change(az.historie_id, old_nazev, new_katastr.nazev)
-        fedora_tx = FedoraTransaction()
-        success = False
-        try:
+    if to_remove:
+        _log_az_ostatni_change(az.historie_id, to_add, to_remove)
+
+    fedora_tx = FedoraTransaction()
+    success = False
+    try:
+        if hlavni_changed:
             az.hlavni_katastr = new_katastr
-            az.active_transaction = fedora_tx
-            az.save()
-            success = True
-        finally:
-            _close_or_rollback(fedora_tx, success)
+        if to_add:
+            az.katastry.add(*to_add)
+        if to_remove:
+            az.katastry.remove(*to_remove)
+        az.active_transaction = fedora_tx
+        az.save()
+        success = True
+    finally:
+        _close_or_rollback(fedora_tx, success)
     return new_katastr
+
+
+def _odkazuje_na_mazany_katastr(az: ArcheologickyZaznam, exclude_kod: Optional[int]) -> bool:
+    """
+    Zjistí, zda AZ odkazuje na právě mazaný katastr.
+
+    Používá se v :func:`reassign_az` k rozlišení, jestli jde o běžný přepočet
+    (kde se AZ s celokatastr DJ nechává beze změny) nebo o mazání katastru
+    (kde se přepočítat musí, jinak ``RESTRICT`` zablokuje ``katastr.delete()``).
+
+    :param az: Archeologický záznam.
+    :param exclude_kod: Kód mazaného katastru; ``None`` mimo kontext mazání.
+
+        :return: ``True`` pokud mazaný katastr figuruje jako ``hlavni_katastr``
+            nebo v M2M ``katastry``.
+    """
+    if exclude_kod is None:
+        return False
+    if az.hlavni_katastr is not None and az.hlavni_katastr.kod == exclude_kod:
+        return True
+    return az.katastry.filter(kod=exclude_kod).exists()
 
 
 def reassign_projekt(
@@ -768,7 +890,7 @@ def _reassign_all_projekt() -> Dict[str, int]:
         try:
             new_kat = reassign_projekt(projekt)
         except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
-            logger.warning(
+            logger.error(
                 "heslar.ruian_sync.reassign.reassign_all.projekt_error",
                 extra={"ident_cely": projekt.ident_cely, "error": str(err)[:500]},
             )
@@ -819,7 +941,7 @@ def _reassign_all_az() -> Dict[str, int]:
         try:
             new_kat = reassign_az(az)
         except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
-            logger.warning(
+            logger.error(
                 "heslar.ruian_sync.reassign.reassign_all.az_error",
                 extra={"ident_cely": az.ident_cely, "error": str(err)[:500]},
             )
@@ -858,7 +980,7 @@ def _reassign_all_sn() -> Dict[str, int]:
         try:
             new_kat = reassign_sn(sn)
         except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
-            logger.warning(
+            logger.error(
                 "heslar.ruian_sync.reassign.reassign_all.sn_error",
                 extra={"ident_cely": sn.ident_cely, "error": str(err)[:500]},
             )
