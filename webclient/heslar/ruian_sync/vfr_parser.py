@@ -947,7 +947,7 @@ def _gml_multisurface_to_wkt(hranice_elem) -> Optional[str]:
         )
         return None
 
-    polygons_wkt = []
+    casti = []
     for poly in hranice_elem.iter():
         if etree.QName(poly.tag).localname not in ("Polygon", "Surface"):
             continue
@@ -960,12 +960,124 @@ def _gml_multisurface_to_wkt(hranice_elem) -> Optional[str]:
                 if segment_coords:
                     rings.append(segment_coords)
         if rings:
-            ring_strs = ["(" + ", ".join(f"{x} {y}" for x, y in r) + ")" for r in rings]
-            polygons_wkt.append("(" + ", ".join(ring_strs) + ")")
+            casti.append(rings)
 
-    if not polygons_wkt:
+    if not casti:
         return None
+
+    casti = _preved_vnorene_casti_na_diry(casti)
+    polygons_wkt = [
+        "(" + ", ".join("(" + ", ".join(f"{x} {y}" for x, y in r) + ")" for r in rings) + ")" for rings in casti
+    ]
     return "MULTIPOLYGON(" + ", ".join(polygons_wkt) + ")"
+
+
+def _bod_v_prstenci(bod, prsten) -> bool:
+    """
+    Zjistí, zda bod leží uvnitř uzavřeného prstenu (ray casting).
+
+    Vlastní implementace místo GEOS: pracuje se už rozparsovanými čísly, takže
+    není důvod pouštět do hry další C knihovnu (viz bezpečnostní poznámky
+    v hlavičce modulu).
+
+    :param bod: Dvojice ``(x, y)``.
+    :param prsten: Seznam bodů uzavřeného prstenu.
+
+        :return: ``True`` pokud bod leží uvnitř.
+    """
+    x, y = bod
+    uvnitr = False
+    for i in range(len(prsten) - 1):
+        x1, y1 = prsten[i]
+        x2, y2 = prsten[i + 1]
+        if (y1 > y) != (y2 > y):
+            prusecik = x1 + (y - y1) * (x2 - x1) / (y2 - y1)
+            if x < prusecik:
+                uvnitr = not uvnitr
+    return uvnitr
+
+
+#: Kolik vrcholů se testuje při rozhodování, zda prsten leží uvnitř jiného.
+#: Jediný vrchol nestačí – sousední územní jednotky se často dotýkají, takže
+#: konkrétní vrchol může ležet přesně **na** hranici (naměřeno u Brna-města:
+#: 199 z prvních 200 vrcholů uvnitř, ten první přesně na hranici).
+_VZOREK_BODU_PRO_VNORENI = 9
+
+
+def _lezi_uvnitr(prsten, obalujici) -> bool:
+    """
+    Rozhodne, zda prsten leží uvnitř jiného prstenu, podle vzorku vrcholů.
+
+    Testuje se :data:`_VZOREK_BODU_PRO_VNORENI` rovnoměrně rozložených vrcholů
+    a rozhoduje většina. Jediný vrchol by nestačil – ten může ležet přesně na
+    společné hranici, což u sousedících územních jednotek není výjimka.
+
+    :param prsten: Testovaný prsten jako seznam bodů.
+    :param obalujici: Prsten, do kterého se vnoření zjišťuje.
+
+        :return: ``True`` pokud většina vzorku leží uvnitř.
+    """
+    body = prsten[:-1] or prsten
+    krok = max(1, len(body) // _VZOREK_BODU_PRO_VNORENI)
+    vzorek = body[::krok][:_VZOREK_BODU_PRO_VNORENI]
+    uvnitr = sum(1 for b in vzorek if _bod_v_prstenci(b, obalujici))
+    return uvnitr * 2 > len(vzorek)
+
+
+def _preved_vnorene_casti_na_diry(casti):
+    """
+    Přesune části multipolygonu ležící uvnitř jiné části mezi její vnitřní prstence.
+
+    ČÚZK ve VFR posílá u některých územních jednotek enklávu jako **samostatný
+    ``surfaceMember`` s vlastním ``exterior``** místo jako ``gml:interior``
+    obalující části. Naměřeno na okrese 3703 Brno-venkov (delta 21. a 24. 8.
+    2026), který obklopuje okres Brno-město: dva ``surfaceMember``, oba jen
+    s ``exterior``, žádný ``interior``, oba prstence se stejnou orientací (CW),
+    takže ve zdroji není žádný signál, podle kterého by šlo díru poznat.
+
+    Doslovným převzetím vyjde plocha 1 958,8 km² (součet částí) místo správných
+    1 498,4 km² – ověřeno proti součtu ploch 227 katastrů toho okresu i proti
+    SHP produktu ČÚZK, který tentýž okres posílá s jedním vnitřním prstencem.
+
+    Oprava stojí čistě na geometrii, ne na dohadu o konvenci zdroje: části
+    multipolygonu se nesmějí překrývat, takže část ležící celá uvnitř jiné
+    nemůže znamenat nic jiného než díru.
+
+    :param casti: Seznam částí, každá jako seznam prstenů ``[[(x, y), …], …]``;
+        první prsten je vnější.
+
+        :return: Nový seznam částí s vnořenými částmi přesunutými do děr.
+    """
+    if len(casti) < 2:
+        return casti
+
+    obalky = []
+    for rings in casti:
+        xs = [x for x, _ in rings[0]]
+        ys = [y for _, y in rings[0]]
+        obalky.append((min(xs), min(ys), max(xs), max(ys)))
+
+    vnorena_do = {}
+    for i, (rings_i, (minx_i, miny_i, maxx_i, maxy_i)) in enumerate(zip(casti, obalky)):
+        for j, (rings_j, (minx_j, miny_j, maxx_j, maxy_j)) in enumerate(zip(casti, obalky)):
+            if i == j or j in vnorena_do:
+                continue
+            if not (minx_j <= minx_i and miny_j <= miny_i and maxx_i <= maxx_j and maxy_i <= maxy_j):
+                continue
+            if _lezi_uvnitr(rings_i[0], rings_j[0]):
+                vnorena_do[i] = j
+                break
+
+    if not vnorena_do:
+        return casti
+
+    for i, j in vnorena_do.items():
+        casti[j].append(casti[i][0])
+        logger.warning(
+            "heslar.ruian_sync.vfr_parser._gml_multisurface_to_wkt.vnorena_cast_jako_dira",
+            extra={"bodu_vnorene": len(casti[i][0]), "bodu_obalujici": len(casti[j][0])},
+        )
+    return [rings for i, rings in enumerate(casti) if i not in vnorena_do]
 
 
 def _coords_from_poslist(pos_list: str, *, close_ring: bool = True):
