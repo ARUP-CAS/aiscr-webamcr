@@ -518,6 +518,9 @@ HESLAR
    * - ``heslar_nazev-autocomplete``
      - ``heslar-nazev/autocomplete/``
      - ``HeslarNazevAutocompleteView.as_view()``
+   * - ``continue-processing-katastry``
+     - ``continue-processing-katastry/<str:job_id>``
+     - ``ContinueKatastrProcessing.as_view()``
 
 HISTORIE
 --------
@@ -777,9 +780,6 @@ PAS
    * - ``post_point_position_2_katastre``
      - ``mapa-zjisti-katastr``
      - ``views.post_point_position_2_katastre``
-   * - ``post_point_position_2_katastre_with_geom``
-     - ``mapa-zjisti-katastr-geom``
-     - ``views.post_point_position_2_katastre_with_geom``
    * - ``spoluprace_smazani``
      - ``spoluprace/smazat/<int:pk>``
      - ``views.smazat_spolupraci``

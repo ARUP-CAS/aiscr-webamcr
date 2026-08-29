@@ -1050,3 +1050,164 @@ def run_data_import(job_id, user_id, lock_token):
     logger.debug(
         "cron.tasks.run_data_import.end", extra={"job_id": job_id, "failed": failed, "record_count": record_count}
     )
+
+
+#: Kolik dní zpět musí den být, aby se HTTP 404 na jeho změnovém VFR dal
+#: interpretovat jako „v RÚIAN ten den opravdu nebyly žádné změny".
+#:
+#: ČÚZK publikuje změnový soubor pro den D až kolem 22:00 **téhož dne**, takže
+#: pro dnešek (a krátce po půlnoci případně i pro včerejšek) 404 znamená jen
+#: „ještě nevydáno". Kdyby se takové 404 zapsalo jako ``success``, kotva
+#: ``data_valid_to`` by se posunula za daný den a jeho skutečné změny by se
+#: už nikdy nestáhly.
+#:
+#: Skutečné mezery existují (za sledovaných 60 dnů 2 dny bez souboru), proto
+#: se u starších dnů 404 stále bere jako „bez změn" – jinak by se pipeline
+#: na takové mezeře zaseklo natrvalo.
+RUIAN_NOT_PUBLISHED_GRACE_DAYS = 2
+
+
+@shared_task
+def sync_ruian_changes(reassign_records: bool = True):
+    """
+    Periodická aktualizace heslářů RÚIAN podle denních změnových VFR souborů.
+
+    Naváže na poslední úspěšný :class:`heslar.models.RuianSyncRun` (kotva
+    ``data_valid_to``) a postupně stáhne a aplikuje denní změnové VFR od
+    následujícího dne až do dnešního data. Pro každý zpracovaný den vznikne
+    jeden ``RuianSyncRun`` s vlastním auditem.
+
+    Po úspěšné aplikaci se stažený VFR ZIP **smaže** – jinak by se
+    v cílovém adresáři (``target_dir`` z ``CustomAdminSettings``,
+    skupina ``ruian_sync``) akumuloval (cca 10–30 MB / den). Při selhání
+    syncu soubor zůstane na disku pro post-mortem; další pokus stejného
+    dne ho přepíše. Cesta zůstává v ``RuianSyncRun.source_path``.
+
+    Bezpečnostní pojistka: pokud zatím neexistuje žádný úspěšný běh
+    (typicky před prvotním plným syncem přes ``manage.py
+    aktualizuj_ruian_shp``), task pouze zaloguje chybu a skončí – nestahuje
+    ani nemodifikuje data.
+
+    :param reassign_records: Pokud ``True`` (default pro produkční cron),
+        po aplikaci denních změn proběhne **cílený** spatial reassign
+        Projekt/AZ/SN dotčených změnou hranic katastrů – viz
+        :func:`heslar.ruian_sync.syncer._reassign_records_in_changed_katastry`.
+        Iteruje jen kandidáty (záznamy s vazbou na změněné katastry nebo
+        s geometrií protínající jejich novou hranici), nikoli celou DB.
+
+        Předání ``False`` (např. při ručním spuštění z shellu pro test
+        pouhého přijetí dat) reassign přeskočí; navázané záznamy se pak
+        nepřepočítají, ale upserty/delete katastrů proběhnou normálně.
+        Lze pak dohnat samostatně přes ``reassign_all`` nebo
+        ``/admin/update-katastry/``.
+    """
+    try:
+        logger.debug("cron.tasks.sync_ruian_changes.do.start")
+
+        from heslar.models import RuianSyncRun
+        from heslar.ruian_sync import FileVfrSource
+        from heslar.ruian_sync import syncer as ruian_syncer
+        from heslar.ruian_sync.vfr_download import get_target_dir
+
+        last_run = RuianSyncRun.last_successful()
+        if last_run is None:
+            logger.error(
+                "cron.tasks.sync_ruian_changes.no_initial_state",
+                extra={"reason": "Před spuštěním cronu je nutné provést prvotní full sync."},
+            )
+            return
+
+        # ``target_dir`` se čte z ``CustomAdminSettings(group='ruian_sync',
+        # item_id='vfr_download', key='target_dir')`` – admin může bez
+        # restartu changeenout cíl pro stahování.
+        target_dir = get_target_dir()
+        today = datetime.date.today()
+        day = last_run.data_valid_to + datetime.timedelta(days=1)
+
+        while day < today:
+            run = RuianSyncRun.objects.create(
+                mode=RuianSyncRun.MODE_DELTA,
+                source="file_vfr",
+                triggered_by=RuianSyncRun.TRIGGER_CRON,
+                data_valid_to=day,
+                since=last_run.data_valid_to,
+                variant="ZKSH",
+            )
+            try:
+                source = FileVfrSource.download_for_day(day, target_dir=target_dir)
+                if source is None:
+                    # HTTP 404 má dva různé významy podle stáří dne – viz
+                    # RUIAN_NOT_PUBLISHED_GRACE_DAYS.
+                    if (today - day).days < RUIAN_NOT_PUBLISHED_GRACE_DAYS:
+                        # Čerstvý den: soubor ještě nemusí být vydaný. Běh
+                        # označíme jako neúspěšný, aby se kotva ``data_valid_to``
+                        # neposunula, a zkusíme to znovu při příštím cronu.
+                        run.status = RuianSyncRun.STATUS_FAILED
+                        run.finished_at = timezone.now()
+                        run.note = "not_published_yet (404)"
+                        run.save(update_fields=["status", "finished_at", "note"])
+                        logger.info(
+                            "cron.tasks.sync_ruian_changes.not_published_yet",
+                            extra={"day": day.isoformat(), "run_id": run.pk},
+                        )
+                        return
+                    # Starší den: v RÚIAN ten den opravdu nebyly žádné změny.
+                    run.status = RuianSyncRun.STATUS_SUCCESS
+                    run.finished_at = timezone.now()
+                    run.note = "no_changes (404)"
+                    run.save(update_fields=["status", "finished_at", "note"])
+                    last_run = run
+                    day += datetime.timedelta(days=1)
+                    continue
+
+                run.source_path = str(getattr(source, "path", ""))
+                run.save(update_fields=["source_path"])
+                ruian_syncer.sync_delta(source=source, run=run, day=day, reassign_records=reassign_records)
+                run.refresh_from_db()
+                run.status = RuianSyncRun.STATUS_SUCCESS
+                run.finished_at = timezone.now()
+                run.save(update_fields=["status", "finished_at"])
+                last_run = run  # další den naváže od tohoto úspěšně dokončeného
+
+                # Po úspěšné aplikaci změn smažeme stažený VFR ZIP – jinak by
+                # se v ``target_dir`` akumuloval každý den jeden soubor
+                # (cca 10–30 MB). Cesta zůstává v ``run.source_path`` pro audit.
+                # Chyba mazání nesmí přerušit běh – jen zalogujeme a pokračujeme.
+                source_path = getattr(source, "path", None)
+                if source_path is not None:
+                    try:
+                        source_path.unlink(missing_ok=True)
+                        logger.debug(
+                            "cron.tasks.sync_ruian_changes.source_removed",
+                            extra={"day": day.isoformat(), "path": str(source_path)},
+                        )
+                    except OSError as cleanup_err:
+                        logger.warning(
+                            "cron.tasks.sync_ruian_changes.source_remove_failed",
+                            extra={
+                                "day": day.isoformat(),
+                                "path": str(source_path),
+                                "error": str(cleanup_err),
+                            },
+                        )
+            except Exception as err:
+                run.error = traceback.format_exc()
+                run.status = RuianSyncRun.STATUS_FAILED
+                run.finished_at = timezone.now()
+                run.save(update_fields=["error", "status", "finished_at"])
+                logger.error(
+                    "cron.tasks.sync_ruian_changes.day_failed",
+                    extra={"day": day.isoformat(), "run_id": run.pk, "error": str(err)},
+                )
+                # Neúspěšný den přerušuje běh – další pokus proběhne v dalším spuštění
+                # cronu, který naváže od stejného `day` (last_successful nezměněno).
+                return
+
+            day += datetime.timedelta(days=1)
+
+        logger.debug("cron.tasks.sync_ruian_changes.do.end")
+    except Exception as err:
+        logger.error(
+            "cron.tasks.sync_ruian_changes.do.error",
+            extra={"error": str(err), "traceback": traceback.format_exc()},
+        )

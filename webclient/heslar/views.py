@@ -2,12 +2,13 @@ import logging
 
 from dal import autocomplete
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.gis.geos import Point
+from django.contrib.gis.geos import GEOSGeometry
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import OperationalError, ProgrammingError
 from django.db.models import IntegerField, Value
 from django.http import JsonResponse
 from django.utils.translation import get_language
+from django.views import View
 from heslar.hesla import HESLAR_DOKUMENT_FORMAT, HESLAR_DOKUMENT_TYP, HESLAR_PRISTUPNOST
 from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_FORMATS, MODEL_3D_DOKUMENT_TYPES
 from heslar.models import Heslar, HeslarHierarchie, HeslarNazev, RuianKatastr
@@ -94,15 +95,27 @@ def heslar_12(druha, prvni_kat, id=False):
 
 def zjisti_katastr_souradnic(request):
     """
-    Funkce pohledu pro vrácení katastru podle souradnic.
+    Vrátí katastr obsahující zadaný bod v EPSG:5514 (S-JTSK).
 
-    :param request: Parametr ``request`` se předává do volání ``filter()``, ``Point()``, pracuje se s atributy ``GET``.
+    Volá se AJAX z ``mapa_projekty.js`` po kliknutí do Leaflet mapy (mapa
+    je v JTSK CRS ``mapa_settings_jtsk.js``). Vstupem jsou GET parametry
+    ``x`` a ``y`` v EPSG:5514 v konvenci projektu (záporné hodnoty).
 
-        :return: Vrací výsledek volání ``JsonResponse()``.
+    :param request: GET s parametry ``x`` a ``y`` v EPSG:5514.
+
+        :return: JsonResponse s ``id`` a ``value`` katastru, nebo prázdný.
     """
-    nalezene_katastry = RuianKatastr.objects.filter(
-        hranice__contains=Point(float(request.GET.get("long", 0)), float(request.GET.get("lat", 0)))
-    )
+    try:
+        x_val = float(request.GET["x"])
+        y_val = float(request.GET["y"])
+    except (KeyError, ValueError):
+        logger.warning(
+            "heslar.views.zjisti_katastr_souradnic.invalid_params",
+            extra={"GET": dict(request.GET)},
+        )
+        return JsonResponse({})
+    bod = GEOSGeometry(f"POINT({x_val} {y_val})", srid=5514)
+    nalezene_katastry = RuianKatastr.objects.filter(hranice__contains=bod)
     if nalezene_katastry.count() == 1:
         return JsonResponse(
             {
@@ -110,8 +123,7 @@ def zjisti_katastr_souradnic(request):
                 "value": str(nalezene_katastry.first()),
             }
         )
-    else:
-        return JsonResponse({})
+    return JsonResponse({})
 
 
 def zjisti_vychozi_hodnotu(request):
@@ -256,3 +268,120 @@ def heslar_list(heslo_nazev, filter={}, use_exclude=False):
         return list(hesla_filtered.values_list("id", "heslo_en"))
     else:
         return list(hesla_filtered.values_list("id", "heslo"))
+
+
+class ContinueKatastrProcessing(LoginRequiredMixin, View):
+    """
+    Async processor pro hromadný přepočet katastrů u Projekt/AZ/SN.
+
+    Volá se z admin stránky ``/admin/update-katastry/`` opakovaným polováním
+    z JS – každé volání zpracuje další záznam v Redis frontě (klíč
+    ``update_katastry_<random>``). Pro jeden ``ident_cely`` načte záznam,
+    podle typu (Projekt/AZ/SN) zavolá příslušnou ``reassign_*`` funkci a
+    vrátí JSON s progresem a výsledkem.
+    """
+
+    def get(self, request, **kwargs):
+        """
+        Zpracuje další záznam ve frontě a vrátí JSON s progresem.
+
+        :param request: HTTP GET požadavek.
+        :param kwargs: Klíčové argumenty včetně ``job_id``.
+
+            :return: ``JsonResponse`` se strukturou ``{progress, remaining, ident_cely, result, detail}``.
+        """
+        from core.connectors import RedisConnector
+        from core.ident_cely import get_record_from_ident
+        from core.repository_connector import FedoraError
+        from django.http import Http404
+        from django.utils.translation import gettext as _t
+        from heslar.ruian_sync import reassign as reassign_mod
+
+        r = RedisConnector().get_connection()
+        job_id = kwargs.get("job_id")
+        raw = r.get(job_id)
+        if raw is None:
+            return JsonResponse({"progress": 100, "remaining": 0, "result": "expired"})
+
+        job_data = raw.decode("utf-8")
+        iterator, *ident_list = job_data.split(";")
+        ident_list = [x for x in ident_list if x]
+        iterator = int(iterator)
+        item_count = max(len(ident_list), 1)
+        result = {
+            "progress": (iterator + 1) / item_count * 100,
+            "remaining": len(ident_list) - iterator,
+            "detail": None,
+            "is_error": False,
+        }
+        if iterator >= len(ident_list):
+            return JsonResponse(result)
+
+        ident_cely = ident_list[iterator]
+        result["ident_cely"] = ident_cely
+        r.set(job_id, f"{iterator + 1};{';'.join(ident_list)}")
+
+        try:
+            record = get_record_from_ident(ident_cely)
+        except Http404:
+            record = None
+        if record is None:
+            logger.debug("heslar.views.ContinueKatastrProcessing.not_found", extra={"ident_cely": ident_cely})
+            result["result"] = _t("heslar.views.ContinueKatastrProcessing.record_not_found")
+            result["is_error"] = True
+            return JsonResponse(result)
+
+        try:
+            changed = self._process(record, reassign_mod)
+            result["result"] = (
+                _t("heslar.views.ContinueKatastrProcessing.changed")
+                if changed
+                else _t("heslar.views.ContinueKatastrProcessing.no_change")
+            )
+        except FedoraError as err:
+            logger.debug(
+                "heslar.views.ContinueKatastrProcessing.fedora_error",
+                extra={"ident_cely": ident_cely, "error": err},
+            )
+            result["result"] = _t("heslar.views.ContinueKatastrProcessing.error")
+            result["is_error"] = True
+        return JsonResponse(result)
+
+    @staticmethod
+    def _process(record, reassign_mod) -> bool:
+        """
+        Vyvolá příslušnou ``reassign_*`` funkci podle typu záznamu.
+
+        Záznam se zapíše pouze pokud došlo ke změně oproti původnímu stavu
+        (porovnává se ``hlavni_katastr_id`` resp. ``katastr_id``).
+
+        :param record: Instance Projekt/ArcheologickyZaznam/SamostatnyNalez.
+        :param reassign_mod: Modul ``heslar.ruian_sync.reassign`` (předáno
+            kvůli lazy importu).
+
+            :return: ``True`` pokud reassign vrátil katastr odlišný od původního.
+        """
+        from arch_z.models import ArcheologickyZaznam
+        from pas.models import SamostatnyNalez
+        from projekt.models import Projekt
+
+        if isinstance(record, Projekt):
+            old_id = record.hlavni_katastr_id
+            new_kat = reassign_mod.reassign_projekt(record)
+            return new_kat is not None and new_kat.pk != old_id
+        if isinstance(record, ArcheologickyZaznam):
+            old_main = record.hlavni_katastr_id
+            old_set = set(record.katastry.values_list("id", flat=True))
+            reassign_mod.reassign_az(record)
+            record.refresh_from_db()
+            new_set = set(record.katastry.values_list("id", flat=True))
+            return record.hlavni_katastr_id != old_main or new_set != old_set
+        if isinstance(record, SamostatnyNalez):
+            old_id = record.katastr_id
+            new_kat = reassign_mod.reassign_sn(record)
+            return new_kat is not None and new_kat.pk != old_id
+        logger.debug(
+            "heslar.views.ContinueKatastrProcessing._process.unsupported",
+            extra={"type": type(record).__name__},
+        )
+        return False

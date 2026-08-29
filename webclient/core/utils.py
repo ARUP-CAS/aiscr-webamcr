@@ -211,23 +211,41 @@ def get_mime_type(file_name):
     return mime_type
 
 
-def get_cadastre_from_point(point):
+def get_cadastre_from_point(point, exclude_kod=None):
     """
-    Funkce pro získaní katastru z bodu geomu.
+    Vrátí katastr obsahující zadaný bod v EPSG:5514 (S-JTSK).
 
-    :param point: Parametr ``point`` předává se do volání ``raw()``, ``debug()``.
+    Vstup je v JTSK v konvenci projektu (záporné hodnoty, viz
+    ``core.coordTransform.convertToJTSK`` vracející ``[-Y, -X]``)
 
-        :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``katastr``, None.
+    :param point: Dvojice ``(x, y)`` v EPSG:5514 (záporná konvence projektu).
+    :param exclude_kod: Volitelný kód katastru, který má být ze spatial query
+        vyloučen. Používá se např. v ``heslar.ruian_sync.reassign`` při mazání
+        katastru – aby spatial intersect nevrátil právě mazaný katastr (který
+        je stále v DB až do okamžiku ``katastr.delete()``) a reassign měl
+        šanci najít druhý nejbližší.
+
+    :return: Instance :class:`RuianKatastr` nebo ``None``.
     """
-    query = (
-        "select id, nazev from public.ruian_katastr where "
-        "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) limit 1"
-    )
+    wkt_5514 = f"POINT({point[0]} {point[1]})"
+    if exclude_kod is None:
+        query = (
+            "select id, nazev from public.ruian_katastr where "
+            "ST_Contains(hranice, ST_GeomFromText(%s, 5514)) limit 1"
+        )
+        params = [wkt_5514]
+    else:
+        query = (
+            "select id, nazev from public.ruian_katastr where "
+            "ST_Contains(hranice, ST_GeomFromText(%s, 5514)) "
+            "AND kod != %s limit 1"
+        )
+        params = [wkt_5514, exclude_kod]
     try:
-        katastr = RuianKatastr.objects.raw(query, [point[0], point[1]])[0]
+        katastr = RuianKatastr.objects.raw(query, params)[0]
         logger.debug(
             "core.utils.get_cadastre_from_point.start",
-            extra={"X": point[0], "Y": point[1], "katastr": katastr},
+            extra={"X": point[0], "Y": point[1], "katastr": katastr, "exclude_kod": exclude_kod},
         )
         return katastr
     except IndexError:
@@ -235,46 +253,29 @@ def get_cadastre_from_point(point):
         return None
 
 
-def get_cadastre_from_point_with_geometry(point):
-    """
-    Funkce pro získaní katastru s geometrií z bodu geomu.
-
-    :param point: Parametr ``point`` předává se do volání ``debug()``, ``execute()``.
-
-        :return: Vrací hodnotu podle větve zpracování, typicky: seznam, None.
-    """
-    query = (
-        "select id, nazev,ST_AsText(definicni_bod) AS db, ST_AsText(hranice) AS hranice from public.ruian_katastr where "
-        "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) limit 1"
-    )
-    try:
-        logger.debug(
-            "core.utils.get_cadastre_from_point.start",
-            extra={"X": point[0], "Y": point[1]},
-        )
-        cursor = connection.cursor()
-        cursor.execute(query, [point[0], point[1]])
-        line = cursor.fetchone()
-        return [line[1], line[2], line[3]]
-    except IndexError:
-        logger.error(
-            "core.utils.get_cadastre_from_point_with_geometry.error",
-            extra={"geom": point},
-        )
-        return None
-
-
-def get_all_pians_with_akce(ident_cely):
+def get_all_pians_with_akce(ident_cely, exclude_kod=None):
     """
     Funkce pro získaní všech pianů s akci.
 
+    Spatial intersect probíhá v EPSG:5514, vrácená geometrie ``pian_geom`` je
+    ale ve WGS84 (EPSG:4326).
+
     :param ident_cely: Parametr ``ident_cely`` se předává do volání ``execute()``.
-    :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
+    :param exclude_kod: Volitelný kód katastru, který se vyloučí ze
+        spatial intersect (``ST_Intersects``). Používá se v
+        ``heslar.ruian_sync.reassign`` při mazání katastru.
+
+    :return: Seznam slovníků s klíči ``id``, ``pian_ident_cely``, ``pian_geom``,
+        ``dj``, ``dj_katastr`` a ``dj_katastr_id``; ``None``, pokud dotaz skončí
+        výjimkou.
     """
-    query = """
+    exclude_clause = ""
+    if exclude_kod is not None:
+        exclude_clause = " AND katastr.kod != %s"
+    query = f"""
         (SELECT A.id,
               A.ident_cely,
-              ST_AsText(A.geom) AS geometry,
+              ST_AsText(A.geom_wgs84) AS geometry,
               A.dj,
               katastr.nazev AS katastr_nazev,
               katastr.id AS ku_id
@@ -282,16 +283,17 @@ def get_all_pians_with_akce(ident_cely):
         JOIN
          (SELECT pian.id,
                  pian.ident_cely,
+                 pian.geom AS geom_wgs84,
                  CASE
-                     WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN st_centroid(pian.geom)
-                     WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN st_lineinterpolatepoint(pian.geom, 0.5)
-                     ELSE st_centroid(pian.geom)
+                     WHEN ST_GeometryType(pian.geom_sjtsk) = 'ST_LineString' THEN ST_LineInterpolatePoint(pian.geom_sjtsk, 0.5)
+                     WHEN ST_GeometryType(pian.geom_sjtsk) IN ('ST_Polygon', 'ST_MultiPolygon') THEN ST_PointOnSurface(pian.geom_sjtsk)
+                     ELSE ST_Centroid(pian.geom_sjtsk)
                  END AS geom,
                  dj.ident_cely AS dj
           FROM public.pian pian
           JOIN public.dokumentacni_jednotka dj ON pian.id=dj.pian
           AND dj.ident_cely LIKE %s
-          WHERE dj.ident_cely IS NOT NULL) AS A ON ST_Intersects(katastr.hranice, geom)
+          WHERE dj.ident_cely IS NOT NULL) AS A ON ST_Intersects(katastr.hranice, A.geom){exclude_clause}
         ORDER BY A.dj,
                 katastr.nazev
         LIMIT 1)
@@ -305,15 +307,19 @@ def get_all_pians_with_akce(ident_cely):
         FROM public.pian pian
         LEFT JOIN public.dokumentacni_jednotka dj ON pian.id=dj.pian
         AND dj.ident_cely LIKE %s
-        LEFT JOIN public.ruian_katastr katastr ON ST_Intersects(katastr.hranice, pian.geom)
+        LEFT JOIN public.ruian_katastr katastr ON ST_Intersects(katastr.hranice, pian.geom_sjtsk){exclude_clause}
         WHERE dj.ident_cely IS NOT NULL
         ORDER BY dj.ident_cely,
                 katastr_nazev
         LIMIT 990)
         """
+    if exclude_kod is None:
+        params = [ident_cely + "-%", ident_cely + "-%"]
+    else:
+        params = [ident_cely + "-%", exclude_kod, ident_cely + "-%", exclude_kod]
     try:
         cursor = connection.cursor()
-        cursor.execute(query, [ident_cely + "-%", ident_cely + "-%"])
+        cursor.execute(query, params)
         back = []
         for line in cursor.fetchall():
             back.append(
@@ -351,12 +357,16 @@ def update_main_katastr_within_ku(ident_cely: str, katastr: RuianKatastr):
     cursor.execute(query_update_archz, [katastr.pk, akce_ident_cely])
 
 
-def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction):
+def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction, exclude_kod=None):
     """
     Aktualizuje katastry pro všechny akce a lokality související s dokumentační jednotkou.
 
     :param dj: Dokumentační jednotka obsahující odkaz na akci/lokalitu.
     :param fedora_transaction: Aktivní Fedora transakce pro uložení metadat.
+    :param exclude_kod: Volitelný kód katastru, který se vyloučí ze spatial
+        intersect při výpočtu hlavního i ostatních katastrů. Používá se
+        v ``heslar.ruian_sync.reassign.reassign_az`` při mazání katastru
+        – aby se právě mazaný katastr nevybral zpět jako nové přiřazení.
     """
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.start")
     if dj.typ.id == TYP_DJ_KATASTR:
@@ -365,7 +375,7 @@ def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction):
         akce_ident_cely = dj.archeologicky_zaznam.ident_cely
         hlavni_id = None
         ostatni_id = []
-        for line in get_all_pians_with_akce(akce_ident_cely):
+        for line in get_all_pians_with_akce(akce_ident_cely, exclude_kod=exclude_kod):
             if hlavni_id is None:
                 hlavni_id = line["dj_katastr_id"]
             elif hlavni_id != line["dj_katastr_id"] and line["dj_katastr_id"] not in ostatni_id:
@@ -383,21 +393,48 @@ def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction):
 
 def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
     """
-    Funkce pro bodu, geomu a presnosti z akce.
+    Funkce pro sestavení seznamu bodů, geometrií a přesností pianů dokumentačních jednotek akce.
 
-    :param katastr: Parametr ``katastr`` předává se do volání ``debug()``, ``raw()``, pracuje se s atributy ``pk``.
-    :param akce_ident_cely: Identifikátor ``akce_ident_cely`` používaný pro dohledání cílového záznamu.
+    Pro každou dokumentační jednotku akce s napojeným pianem vrátí centroid geometrie pianu,
+    její WKT (mimo DJ typu katastr), zkratku přesnosti a barvu odlišující zobrazovanou DJ.
+    Pokud akce žádné piany nemá, vrátí jediný bod s definičním bodem katastru a jeho bounding boxem.
+    Definiční bod i hranice katastru jsou v DB v EPSG:5514 a transformují se na EPSG:4326 pro frontend.
 
-        :return: Vrací proměnná ``pians``.
-        :raises CannotFindCadasterCentre: Vyvolá se při zpracování zachycené výjimky typu ``IndexError``.
+    :param katastr: Katastr, z jehož definičního bodu a hranice se odvodí výchozí bod a bbox mapy.
+    :param akce_ident_cely: Ident_cely akce nebo dokumentační jednotky; DJ se dohledávají
+        podle prefixu před ``-D``.
+
+    :return: Seznam slovníků s klíči ``lat``, ``lng``, ``zoom``, ``geom``, ``presnost``,
+        ``pian_ident_cely``, ``color``, ``bbox`` a (u pianů DJ) ``DJ_ident_cely``.
+    :raises CannotFindCadasterCentre: Pokud se nepodaří transformovat definiční bod nebo hranici
+        katastru do EPSG:4326, nebo pokud při zpracování dat dojde k ``IndexError``.
     """
     logger.debug("core.utils.get_pians_from_akce.start", extra={"katastr": katastr, "ident_cely": akce_ident_cely})
+    # katastr.definicni_bod a katastr.hranice jsou od migrace 0013 v EPSG:5514.
+    # Přečteme jako WKT a v Pythonu transformujeme na 4326 pro frontend (Leaflet).
     query = (
-        "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng,ST_AsText(ST_Envelope(hranice)) as bbox "
+        "select id, ST_AsText(definicni_bod) AS db_wkt, ST_AsText(ST_Envelope(hranice)) AS bbox_wkt "
         " from public.ruian_katastr where "
         " id=%s"
     )
-    bod_ku = RuianKatastr.objects.raw(query, [katastr.pk])[0]
+    from types import SimpleNamespace
+
+    row = RuianKatastr.objects.raw(query, [katastr.pk])[0]
+    db_wkt_4326, db_status = transform_geom_to_wgs84(row.db_wkt)
+    bbox_wkt_4326, bbox_status = transform_geom_to_wgs84(row.bbox_wkt)
+    if db_status != "OK" or bbox_status != "OK":
+        logger.warning(
+            "core.utils.get_pians_from_akce.transform_failed",
+            extra={"db_status": db_status, "bbox_status": bbox_status, "katastr": katastr.pk},
+        )
+        raise CannotFindCadasterCentre()
+    # Vyparsuj lat/lng z 4326 POINT WKT ``POINT(x y)`` → (lng, lat).
+    _db_coords = db_wkt_4326[db_wkt_4326.index("(") + 1 : db_wkt_4326.rindex(")")].split()
+    bod_ku = SimpleNamespace(
+        lng=float(_db_coords[0]),
+        lat=float(_db_coords[1]),
+        bbox=bbox_wkt_4326,
+    )
     pians = []
     try:
         if len(akce_ident_cely) > 1:

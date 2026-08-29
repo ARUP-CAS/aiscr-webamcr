@@ -47,6 +47,17 @@ Třídy
 
       :return: Vrací výsledek volání ``join()``.
 
+   .. py:method:: _get_schema_tree()
+
+      Načte a naparsuje XSD schema, výsledek je cachovaný po celou dobu běhu procesu.
+
+      XSD soubor se během běhu nemění, opakované ``etree.parse()`` při každém
+      volání :func:`_parse_schema`/:func:`get_ref_type_attribute_name` bylo
+      zbytečné čtení a parsování ze disku (desítky ms na volání).
+
+      :param schema_path: Cesta k XSD schema souboru.
+      :return: Naparsovaný ``lxml.etree._ElementTree``.
+
    .. py:method:: _parse_schema()
 
              Zpracuje schema.

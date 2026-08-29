@@ -1,3 +1,4 @@
+import logging
 import re
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
@@ -24,9 +25,11 @@ from core.constants import (
     ZAPSANI_SN,
     ZMENA_AZ,
 )
+from core.coordTransform import transform_geom_to_wgs84
 from core.models import Soubor
 from dj.models import DokumentacniJednotka
 from django.conf import settings
+from django.contrib.gis.geos import GEOSGeometry
 from django.core.exceptions import ObjectDoesNotExist
 from dokument.models import Dokument, DokumentCast
 from ez.models import ExterniZdroj
@@ -43,6 +46,8 @@ from komponenta.models import Komponenta
 from lokalita.models import Lokalita
 from pas.models import SamostatnyNalez
 from uzivatel.models import Heslar, Organizace, Osoba
+
+logger = logging.getLogger(__name__)
 
 
 class ModelSerializer(ABC):
@@ -445,6 +450,10 @@ def serialize_geom(geom=None, katastr: RuianKatastr | None = None, verejne: bool
     """
     Serializuje geometrii a katastr do formátu geoLocationPoint/geoLocationPlace pro DataCite metadata.
 
+    DataCite ``geoLocationPoint`` je definovaný ve WGS84 (EPSG:4326), takže
+    geometrie v EPSG:5514 se před serializací převede. Když transformace selže,
+    souřadnice se do metadat neuvedou vůbec (raději chybějící než chybné).
+
     :param geom: Geometrie záznamu (bod nebo polygon), z níž se použije centroid; ``None`` přeskočí souřadnice.
     :param katastr: Katastrální území záznamu použité pro textový popis polohy; ``None`` přeskočí lokalitu.
     :param verejne: Příznak, zda má být záznam zobrazen veřejně — ovlivňuje úroveň detailu souřadnic.
@@ -452,13 +461,21 @@ def serialize_geom(geom=None, katastr: RuianKatastr | None = None, verejne: bool
     """
     serialized_geom = {}
     if geom and verejne:
-        serialized_geom.update(
-            {
-                "geoLocationPoint": frozenset(
-                    {"pointLatitude": geom.centroid.y, "pointLongitude": geom.centroid.x}.items()
+        centroid = geom.centroid
+        if centroid.srid == 5514:
+            wgs84_wkt, status = transform_geom_to_wgs84(centroid.wkt)
+            if status == "OK":
+                centroid = GEOSGeometry(wgs84_wkt, srid=4326)
+            else:
+                logger.warning(
+                    "pid.model_serializers.serialize_geom.transform_failed",
+                    extra={"status": status, "wkt": centroid.wkt},
                 )
-            }
-        )
+                centroid = None
+        if centroid is not None:
+            serialized_geom.update(
+                {"geoLocationPoint": frozenset({"pointLatitude": centroid.y, "pointLongitude": centroid.x}.items())}
+            )
     if katastr:
         if verejne:
             serialized_geom["geoLocationPlace"] = (

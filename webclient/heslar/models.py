@@ -340,8 +340,8 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
     )
     nazev = models.TextField(verbose_name=_("heslar.models.RuianKatastr.nazev"), db_index=True)
     kod = models.IntegerField(verbose_name=_("heslar.models.RuianKatastr.kod"), db_index=True)
-    definicni_bod = pgmodels.PointField(verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=4326)
-    hranice = pgmodels.MultiPolygonField(verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
+    definicni_bod = pgmodels.PointField(verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=5514)
+    hranice = pgmodels.MultiPolygonField(verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=5514)
     pian = models.OneToOneField(
         "pian.Pian", models.SET_NULL, verbose_name=_("heslar.models.RuianKatastr.pian"), null=True, blank=True
     )
@@ -409,9 +409,9 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
     rada_id = models.CharField(max_length=1, verbose_name=_("heslar.models.RuianKraj.rada_id"))
     nazev_en = models.CharField(unique=True, max_length=100)
     definicni_bod = pgmodels.PointField(
-        null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=4326
+        null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=5514
     )
-    hranice = pgmodels.MultiPolygonField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
+    hranice = pgmodels.MultiPolygonField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=5514)
     email = models.CharField(blank=True, null=True, verbose_name=_("heslar.models.RuianKraj.email"), max_length=254)
 
     class Meta:
@@ -468,9 +468,9 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
     kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianOkres.kod"))
     nazev_en = models.TextField(verbose_name=_("heslar.models.RuianOkres.nazev_en"))
     definicni_bod = pgmodels.PointField(
-        null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=4326
+        null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=5514
     )
-    hranice = pgmodels.MultiPolygonField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
+    hranice = pgmodels.MultiPolygonField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=5514)
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
@@ -513,3 +513,112 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
             super().save(*args, **kwargs)
         else:
             raise ValidationError(_("heslar.models.RuianOkres.save.check_container_deleted_or_not_exists.invalid"))
+
+
+class RuianSyncRun(models.Model):
+    """
+    Záznam o jednom běhu synchronizace heslářů RÚIAN se zdrojem ČÚZK.
+
+    Slouží jako audit log a zároveň jako stavový token pro inkrementální cron –
+    pole ``data_valid_to`` posledního úspěšného běhu určuje, od kterého dne má
+    cron pokračovat ve stahování denních změnových VFR souborů.
+    """
+
+    MODE_FULL = "full"
+    MODE_DELTA = "delta"
+    MODE_CHOICES = [
+        (MODE_FULL, _("heslar.models.RuianSyncRun.mode.full")),
+        (MODE_DELTA, _("heslar.models.RuianSyncRun.mode.delta")),
+    ]
+
+    TRIGGER_MANAGE = "manage"
+    TRIGGER_CRON = "cron"
+    TRIGGER_ADMIN = "admin"
+    TRIGGER_CHOICES = [
+        (TRIGGER_MANAGE, _("heslar.models.RuianSyncRun.triggered_by.manage")),
+        (TRIGGER_CRON, _("heslar.models.RuianSyncRun.triggered_by.cron")),
+        (TRIGGER_ADMIN, _("heslar.models.RuianSyncRun.triggered_by.admin")),
+    ]
+
+    STATUS_RUNNING = "running"
+    STATUS_SUCCESS = "success"
+    STATUS_FAILED = "failed"
+    STATUS_CHOICES = [
+        (STATUS_RUNNING, _("heslar.models.RuianSyncRun.status.running")),
+        (STATUS_SUCCESS, _("heslar.models.RuianSyncRun.status.success")),
+        (STATUS_FAILED, _("heslar.models.RuianSyncRun.status.failed")),
+    ]
+
+    started_at = models.DateTimeField(
+        auto_now_add=True, db_index=True, verbose_name=_("heslar.models.RuianSyncRun.started_at")
+    )
+    finished_at = models.DateTimeField(null=True, blank=True, verbose_name=_("heslar.models.RuianSyncRun.finished_at"))
+    mode = models.CharField(
+        max_length=8, choices=MODE_CHOICES, db_index=True, verbose_name=_("heslar.models.RuianSyncRun.mode")
+    )
+    source = models.CharField(max_length=64, verbose_name=_("heslar.models.RuianSyncRun.source"))
+    triggered_by = models.CharField(
+        max_length=8,
+        choices=TRIGGER_CHOICES,
+        db_index=True,
+        verbose_name=_("heslar.models.RuianSyncRun.triggered_by"),
+    )
+    source_path = models.TextField(blank=True, default="", verbose_name=_("heslar.models.RuianSyncRun.source_path"))
+    data_valid_to = models.DateField(db_index=True, verbose_name=_("heslar.models.RuianSyncRun.data_valid_to"))
+    since = models.DateField(null=True, blank=True, verbose_name=_("heslar.models.RuianSyncRun.since"))
+    variant = models.CharField(
+        max_length=8, blank=True, default="", verbose_name=_("heslar.models.RuianSyncRun.variant")
+    )
+    kraj_upserts = models.IntegerField(default=0, verbose_name=_("heslar.models.RuianSyncRun.kraj_upserts"))
+    kraj_deletes = models.IntegerField(default=0, verbose_name=_("heslar.models.RuianSyncRun.kraj_deletes"))
+    okres_upserts = models.IntegerField(default=0, verbose_name=_("heslar.models.RuianSyncRun.okres_upserts"))
+    okres_deletes = models.IntegerField(default=0, verbose_name=_("heslar.models.RuianSyncRun.okres_deletes"))
+    katastr_upserts = models.IntegerField(default=0, verbose_name=_("heslar.models.RuianSyncRun.katastr_upserts"))
+    katastr_deletes = models.IntegerField(default=0, verbose_name=_("heslar.models.RuianSyncRun.katastr_deletes"))
+    affected_az = models.IntegerField(default=0, verbose_name=_("heslar.models.RuianSyncRun.affected_az"))
+    affected_projekt = models.IntegerField(default=0, verbose_name=_("heslar.models.RuianSyncRun.affected_projekt"))
+    affected_sn = models.IntegerField(default=0, verbose_name=_("heslar.models.RuianSyncRun.affected_sn"))
+    affected_neident_akce = models.IntegerField(
+        default=0, verbose_name=_("heslar.models.RuianSyncRun.affected_neident_akce")
+    )
+    status = models.CharField(
+        max_length=8,
+        choices=STATUS_CHOICES,
+        default=STATUS_RUNNING,
+        db_index=True,
+        verbose_name=_("heslar.models.RuianSyncRun.status"),
+    )
+    error = models.TextField(blank=True, default="", verbose_name=_("heslar.models.RuianSyncRun.error"))
+    note = models.TextField(blank=True, default="", verbose_name=_("heslar.models.RuianSyncRun.note"))
+
+    class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
+        db_table = "ruian_sync_run"
+        ordering = ["-started_at"]
+        verbose_name = "Záznam synchronizace RÚIAN"
+        verbose_name_plural = "Záznamy synchronizace RÚIAN"
+
+    def __str__(self):
+        """
+        Vrací textovou reprezentaci běhu.
+
+        :return: Řetězec ve formátu ``YYYY-MM-DD HH:MM mode (status)``.
+        """
+        return f"{self.started_at:%Y-%m-%d %H:%M} {self.mode} ({self.status})"
+
+    @classmethod
+    def last_successful(cls):
+        """
+        Vrací poslední úspěšně dokončený běh seřazený podle ``started_at``.
+
+        Používá se cronem k určení, od jakého data má pokračovat ve stahování
+        denních změnových VFR souborů. Řazení podle ``started_at`` (a ne
+        podle ``data_valid_to``) je nutné proto, aby opětovný **plný** sync
+        (např. z nového SHP snapshotu se staršími ``data_valid_to``) resetoval
+        čítač – jinak by cron pokračoval od posledního delta, jako by nový
+        plný sync nikdy neproběhl.
+
+        :return: Instance ``RuianSyncRun`` nebo ``None``, pokud žádný úspěšný běh dosud neexistuje.
+        """
+        return cls.objects.filter(status=cls.STATUS_SUCCESS).order_by("-started_at").first()

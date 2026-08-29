@@ -84,6 +84,41 @@ Třídy
       :return: Vrací proměnná ``qs``.
 
 
+.. py:class:: ContinueKatastrProcessing
+
+   Async processor pro hromadný přepočet katastrů u Projekt/AZ/SN.
+
+   Volá se z admin stránky ``/admin/update-katastry/`` opakovaným polováním
+   z JS – každé volání zpracuje další záznam v Redis frontě (klíč
+   ``update_katastry_<random>``). Pro jeden ``ident_cely`` načte záznam,
+   podle typu (Projekt/AZ/SN) zavolá příslušnou ``reassign_*`` funkci a
+   vrátí JSON s progresem a výsledkem.
+
+   **Metody:**
+
+   .. py:method:: get()
+
+      Zpracuje další záznam ve frontě a vrátí JSON s progresem.
+
+      :param request: HTTP GET požadavek.
+      :param kwargs: Klíčové argumenty včetně ``job_id``.
+
+      :return: ``JsonResponse`` se strukturou ``{progress, remaining, ident_cely, result, detail}``.
+
+   .. py:method:: _process()
+
+      Vyvolá příslušnou ``reassign_*`` funkci podle typu záznamu.
+
+      Záznam se zapíše pouze pokud došlo ke změně oproti původnímu stavu
+      (porovnává se ``hlavni_katastr_id`` resp. ``katastr_id``).
+
+      :param record: Instance Projekt/ArcheologickyZaznam/SamostatnyNalez.
+      :param reassign_mod: Modul ``heslar.ruian_sync.reassign`` (předáno
+          kvůli lazy importu).
+
+      :return: ``True`` pokud reassign vrátil katastr odlišný od původního.
+
+
 Funkce
 ------
 
@@ -108,11 +143,15 @@ Funkce
 
 .. py:function:: zjisti_katastr_souradnic(request)
 
-   Funkce pohledu pro vrácení katastru podle souradnic.
+   Vrátí katastr obsahující zadaný bod v EPSG:5514 (S-JTSK).
 
-   :param request: Parametr ``request`` se předává do volání ``filter()``, ``Point()``, pracuje se s atributy ``GET``.
+   Volá se AJAX z ``mapa_projekty.js`` po kliknutí do Leaflet mapy (mapa
+   je v JTSK CRS ``mapa_settings_jtsk.js``). Vstupem jsou GET parametry
+   ``x`` a ``y`` v EPSG:5514 v konvenci projektu (záporné hodnoty).
 
-   :return: Vrací výsledek volání ``JsonResponse()``.
+   :param request: GET s parametry ``x`` a ``y`` v EPSG:5514.
+
+   :return: JsonResponse s ``id`` a ``value`` katastru, nebo prázdný.
 
 .. py:function:: zjisti_vychozi_hodnotu(request)
 
