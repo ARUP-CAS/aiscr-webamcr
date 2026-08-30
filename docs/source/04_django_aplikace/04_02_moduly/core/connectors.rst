@@ -98,6 +98,24 @@ Třídy
       :return: Dvojice ``(claimed, lock_token)``; ``claimed`` je ``True`` při úspěchu, ``lock_token``
           je vlastnící token nebo ``None``, pokud úloha nebyla nárokována.
 
+   .. py:method:: cancel_awaiting_import()
+
+      Atomicky zruší dosud nespouštěný import, pokud stále vlastní jeho lock.
+
+      :param connection: Redis spojení použité pro atomické spuštění Lua skriptu.
+      :param job_id: Identifikátor rušené importní úlohy.
+      :param job_user: Identifikátor vlastníka úlohy použitý pro nalezení uživatelského ukazatele.
+      :param status_message: Překladový identifikátor stavu uložený po úspěšném zrušení.
+      :return: ``True``, pokud byla úloha zrušena; jinak ``False``.
+
+   .. py:method:: finalize_validation()
+
+      Atomicky převede vlastníkem drženou validaci do čekání na schválení.
+
+      :param connection: Redis spojení použité pro atomické spuštění Lua skriptu.
+      :param job_id: Identifikátor finalizované importní úlohy.
+      :return: ``True``, pokud úloha stále vlastní lock a přechod proběhl; jinak ``False``.
+
    .. py:method:: prepare_model_for_redis()
 
       Převede řádek Django-tables2 tabulky do slovníku pro uložení do Redis cache.

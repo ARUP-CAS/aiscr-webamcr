@@ -3222,8 +3222,10 @@ class DataImportStart(LoginRequiredMixin, View):
                 tasks.IMPORT_FAILURE_REASON_ERROR,
                 ex=tasks.IMPORT_DATA_EXPIRATION_SECONDS,
             )
-            redis_connector.delete(f"import_data_current_job_{request.user.id}")
-            redis_connector.delete(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
+            RedisConnector.delete_if_value_matches(
+                redis_connector, f"import_data_current_job_{request.user.id}", job_id
+            )
+            RedisConnector.delete_if_value_matches(redis_connector, RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, job_id)
             redis_connector.expire(f"import_data_lock_token_{job_id}", tasks.IMPORT_DATA_EXPIRATION_SECONDS)
             return JsonResponse(
                 {"result": "error", "status_message": _("cron.tasks.run_data_import.failed_lock_lost")},
@@ -3269,23 +3271,20 @@ class DataImportCancel(LoginRequiredMixin, View):
 
         redis_connector = RedisConnector.get_connection_decode()
         phase = redis_connector.get(f"import_data_phase_{job_id}")
-        lock_token = redis_connector.get(f"import_data_lock_token_{job_id}")
         job_user = redis_connector.get(f"import_data_user_{job_id}")
-
-        if phase == tasks.IMPORT_PHASE_AWAITING_APPROVAL:
-            # Direct lock release — this is what frees the slot for other admins. Any superuser may
-            # force-cancel a stuck awaiting_approval job, so no ownership check here.
-            if lock_token:
-                RedisConnector.release_import_lock(redis_connector, lock_token)
-            redis_connector.set(f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_CANCELED)
-            redis_connector.set(
-                f"import_data_status_message_tr_{job_id}",
+        if phase == tasks.IMPORT_PHASE_AWAITING_APPROVAL and job_user is not None:
+            # Any superuser may force-cancel, but the CAS makes this mutually exclusive with Start.
+            if not RedisConnector.cancel_awaiting_import(
+                redis_connector,
+                job_id,
+                job_user,
                 tasks.translation_value("cron.tasks.run_data_import.cancelled"),
-            )
+            ):
+                return JsonResponse(
+                    {"result": "error", "status_message": _("core.templates.admin.import_data.cancel_not_allowed")},
+                    status=409,
+                )
             _expire_import_data_keys(redis_connector, job_id, tasks.IMPORT_DATA_EXPIRATION_SECONDS)
-            if job_user is not None:
-                redis_connector.delete(f"import_data_current_job_{job_user}")
-            redis_connector.delete(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
             return JsonResponse({"result": "ok"})
 
         if phase == tasks.IMPORT_PHASE_VALIDATING:

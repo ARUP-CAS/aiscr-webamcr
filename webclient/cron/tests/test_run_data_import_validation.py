@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from core.constants import ROLE_BADATEL_ID
 from core.forms import ImportDataAdminForm
+from core.import_data_mappers import SouborImportIntegrityError
 from core.models import AntivirusCheckResult
 from core.tests.fake_redis import FakeRedis
 from cron import tasks as cron_tasks
@@ -148,7 +149,10 @@ class RunDataImportValidationTest(TestCase):
         fake_redis.set(f"import_performed_action_{JOB_ID}", performed_action)
         fake_redis.set(f"import_data_user_{JOB_ID}", str(self.runner.id))
         fake_redis.set(f"import_data_lock_token_{JOB_ID}", LOCK_TOKEN)
+        fake_redis.set(f"import_data_phase_{JOB_ID}", cron_tasks.IMPORT_PHASE_VALIDATING)
         fake_redis.set(f"import_data_current_job_{self.runner.id}", JOB_ID)
+        fake_redis.set(cron_tasks.RedisConnector.IMPORT_DATA_LOCK_KEY, LOCK_TOKEN)
+        fake_redis.set(cron_tasks.RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, JOB_ID)
         fake_redis.set(f"import_data_validation_total_{JOB_ID}", 0)
         fake_redis.set(f"import_data_validation_progress_{JOB_ID}", 0)
         fake_redis.set(f"import_data_validation_results_{JOB_ID}", json.dumps([]))
@@ -162,6 +166,7 @@ class RunDataImportValidationTest(TestCase):
         fake_redis: FakeRedis,
         antivirus_result: AntivirusCheckResult = AntivirusCheckResult.PASSES,
         refresh_lock_side_effect=None,
+        finalize_validation_side_effect=None,
     ):
         """Spustí ``run_data_import_validation`` s mocknutým Redis, antivirem a Fedora."""
         refresh_lock_kwargs = (
@@ -169,9 +174,15 @@ class RunDataImportValidationTest(TestCase):
             if refresh_lock_side_effect is not None
             else {"return_value": True}
         )
+        real_finalize_validation = cron_tasks.RedisConnector.finalize_validation
+        finalize_validation_kwargs = (
+            {"side_effect": finalize_validation_side_effect}
+            if finalize_validation_side_effect is not None
+            else {"side_effect": real_finalize_validation}
+        )
         with patch("core.connectors.RedisConnector.get_connection", return_value=fake_redis), patch(
             "core.connectors.RedisConnector.refresh_import_lock", **refresh_lock_kwargs
-        ), patch("core.connectors.RedisConnector.persist_import_lock", return_value=True), patch(
+        ), patch("core.connectors.RedisConnector.finalize_validation", **finalize_validation_kwargs), patch(
             "core.connectors.RedisConnector.release_import_lock", return_value=True
         ) as release_lock_mock, patch(
             "core.models.Soubor.check_antivirus", return_value=antivirus_result
@@ -188,8 +199,9 @@ class RunDataImportValidationTest(TestCase):
             "cron.tasks.check_import_report_directory",
             return_value=("/tmp/fake-import-dir", "/tmp/fake-import-dir/reports", None),
         ), patch(
-            "cron.tasks.save_import_report_to_disk", return_value=None
-        ):
+            "cron.tasks.save_import_report_to_disk", return_value="/tmp/fake-import-dir/reports/report.xlsx"
+        ) as report_save_mock:
+            self.validation_report_save_mock = report_save_mock
             signals_fedora_transaction_mock.return_value = None
             cron_tasks.run_data_import_validation(
                 JOB_ID, self.runner.id, LOCK_TOKEN, ImportDataAdminForm.PERFORMED_ACTION_INSERT
@@ -327,6 +339,56 @@ class RunDataImportValidationTest(TestCase):
         self.assertIsNotNone(progress_raw)
         self.assertEqual(int(progress_raw.decode("utf-8")), 1)
 
+    def test_reset_during_finalization_cannot_publish_awaiting_approval(self):
+        """Reset těsně před finalizací zabrání přechodu validace do ``awaiting_approval``."""
+        fake_redis = self._build_redis(blob=_build_zip([_uzivatel_row()]))
+        real_finalize_validation = cron_tasks.RedisConnector.finalize_validation
+
+        def reset_then_finalize(connection, job_id):
+            connection.set(f"import_data_stop_{job_id}", "1")
+            connection.set(f"import_data_phase_{job_id}", cron_tasks.IMPORT_PHASE_FAILED)
+            connection.delete(cron_tasks.RedisConnector.IMPORT_DATA_LOCK_KEY)
+            return real_finalize_validation(connection, job_id)
+
+        release_lock_mock = self._run_validation(
+            fake_redis,
+            finalize_validation_side_effect=reset_then_finalize,
+        )
+
+        self._assert_phase(fake_redis, cron_tasks.IMPORT_PHASE_FAILED)
+        status = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}").decode("utf-8")
+        self.assertIn("failed_lock_lost", status)
+        self.assertTrue(release_lock_mock.called)
+
+    def test_lock_replaced_during_finalization_cannot_publish_awaiting_approval(self):
+        """Cizí lock získaný před finalizací zůstane zachován a validace skončí jako ``failed``."""
+        fake_redis = self._build_redis(blob=_build_zip([_uzivatel_row()]))
+        real_finalize_validation = cron_tasks.RedisConnector.finalize_validation
+        replacement_token = "replacement-lock-token"
+        replacement_job_id = "replacement-job"
+
+        def replace_lock_then_finalize(connection, job_id):
+            connection.set(cron_tasks.RedisConnector.IMPORT_DATA_LOCK_KEY, replacement_token)
+            connection.set(cron_tasks.RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, replacement_job_id)
+            connection.set(f"import_data_current_job_{self.runner.id}", replacement_job_id)
+            return real_finalize_validation(connection, job_id)
+
+        self._run_validation(
+            fake_redis,
+            finalize_validation_side_effect=replace_lock_then_finalize,
+        )
+
+        self._assert_phase(fake_redis, cron_tasks.IMPORT_PHASE_FAILED)
+        self.assertEqual(
+            fake_redis.get(cron_tasks.RedisConnector.IMPORT_DATA_LOCK_KEY).decode("utf-8"), replacement_token
+        )
+        self.assertEqual(
+            fake_redis.get(cron_tasks.RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY).decode("utf-8"), replacement_job_id
+        )
+        self.assertEqual(
+            fake_redis.get(f"import_data_current_job_{self.runner.id}").decode("utf-8"), replacement_job_id
+        )
+
     def test_some_invalid_sets_failed_validation_rejected_and_releases_lock(self):
         """Řádek s neexistující organizací nastaví ``failed`` s ``validation_rejected`` reason a uvolní lock."""
         # Neexistující organizace → LookupImportField vyvolá ImportDataMissingReferencedValueError.
@@ -357,6 +419,66 @@ class RunDataImportValidationTest(TestCase):
         self.assertTrue(release_lock_mock.called, "Při validation_rejected se lock musí uvolnit.")
         details = fake_redis.lrange(f"import_data_validation_details_{JOB_ID}", 0, -1)
         self.assertEqual(len(details), 2)
+        persisted_results = json.loads(fake_redis.get(f"import_data_validation_results_{JOB_ID}"))
+        self.assertEqual(len(persisted_results), 2)
+        self.assertEqual([result["item_order"] for result in persisted_results], [0, 1])
+        self.assertGreaterEqual(self.validation_report_save_mock.call_count, 2)
+
+    def test_duplicate_soubory_across_zip_paths_is_rejected(self):
+        """Duplicitní soubor v různých cestách ZIPu sdílí stav dávky a validace jej odmítne."""
+
+        class SouborMapperStub:
+            """Napodobuje mapper souborů a odmítá opakovaný logický klíč v jedné dávce."""
+
+            allow_update = True
+
+            def __init__(self, row):
+                self.row = row
+
+            @staticmethod
+            def validate_batch_ordering(rows):
+                return None
+
+            def map(self, performed_action, **kwargs):
+                return {"logical_key": self.row["logical_key"]}
+
+            def check_required_fields(self, performed_action):
+                return None
+
+            def import_validation(self, performed_action, user_id, seen_in_batch=None):
+                key = self.row["logical_key"]
+                if key in seen_in_batch:
+                    raise SouborImportIntegrityError("X-TEST", key)
+                seen_in_batch.add(key)
+                return {"logical_key": key}
+
+            def create_records(self, performed_action):
+                return []
+
+        archive = io.BytesIO()
+        with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("a/soubory.csv", "logical_key\nduplicate.txt\n")
+            zf.writestr("b/soubory.csv", "logical_key\nduplicate.txt\n")
+        fake_redis = self._build_redis(blob=archive.getvalue())
+
+        with patch.object(
+            cron_tasks.ImportModelMapper,
+            "get_import_data_mapper_dict",
+            return_value={"soubory": SouborMapperStub},
+        ), patch.object(
+            cron_tasks.ImportModelMapper,
+            "get_import_data_mapper",
+            return_value=SouborMapperStub,
+        ):
+            self._run_validation(fake_redis)
+
+        self._assert_phase(fake_redis, cron_tasks.IMPORT_PHASE_FAILED)
+        self.assertEqual(fake_redis.get(f"import_data_valid_{JOB_ID}").decode("utf-8"), "0")
+        results = json.loads(fake_redis.get(f"import_data_validation_results_{JOB_ID}"))
+        self.assertEqual(len(results), 2)
+        self.assertEqual([item["file_name"] for item in results], ["soubory.csv", "soubory.csv"])
+        self.assertEqual(results[0]["validation_result"], "core.admin.import_data.record_valid")
+        self.assertIn("duplicate.txt", results[1]["validation_result"])
 
     def test_failed_validation_rejected_and_error_never_share_status_string(self):
         """``validation_rejected`` a ``error`` reason nesmí sdílet stejnou status zprávu."""
@@ -391,6 +513,32 @@ class RunDataImportValidationTest(TestCase):
         self.assertIsNotNone(status_raw)
         self.assertIn("stopped_by_user", status_raw.decode("utf-8"))
         self.assertTrue(release_lock_mock.called)
+
+    def test_stop_after_non_checkpoint_rows_flushes_complete_results_before_report(self):
+        """Stop po dvou řádcích zapíše oba výsledky do Redis ještě před terminálním reportem."""
+        rows = [
+            _uzivatel_row(ident_cely="U-VAL-STOP-1", email="stop-1@example.cz"),
+            _uzivatel_row(ident_cely="U-VAL-STOP-2", email="stop-2@example.cz"),
+            _uzivatel_row(ident_cely="U-VAL-STOP-3", email="stop-3@example.cz"),
+        ]
+        fake_redis = self._build_redis(blob=_build_zip(rows))
+        refresh_count = 0
+
+        def stop_before_third_row(*args, **kwargs):
+            nonlocal refresh_count
+            refresh_count += 1
+            # One initial refresh precedes validation; subsequent calls precede individual rows.
+            if refresh_count == 4:
+                fake_redis.set(f"import_data_stop_{JOB_ID}", "1")
+            return True
+
+        self._run_validation(fake_redis, refresh_lock_side_effect=stop_before_third_row)
+
+        self._assert_phase(fake_redis, cron_tasks.IMPORT_PHASE_STOPPED)
+        persisted_results = json.loads(fake_redis.get(f"import_data_validation_results_{JOB_ID}"))
+        self.assertEqual(len(persisted_results), 2)
+        self.assertEqual([result["item_order"] for result in persisted_results], [0, 1])
+        self.assertGreaterEqual(self.validation_report_save_mock.call_count, 2)
 
     def test_chunked_zip_is_reassembled_byte_for_byte(self):
         """ZIP rozdělený na více chunků se reassemblovat byte-for-byte a správně zvaliduje."""
@@ -485,7 +633,7 @@ class RunDataImportValidationTest(TestCase):
             "cron.tasks.check_import_report_directory",
             return_value=("/tmp/fake-import-dir", "/tmp/fake-import-dir/reports", None),
         ), patch(
-            "cron.tasks.save_import_report_to_disk", return_value=None
+            "cron.tasks.save_import_report_to_disk", return_value="/tmp/fake-import-dir/reports/report.xlsx"
         ):
             cron_tasks.run_data_import_validation(
                 JOB_ID, self.runner.id, LOCK_TOKEN, ImportDataAdminForm.PERFORMED_ACTION_INSERT

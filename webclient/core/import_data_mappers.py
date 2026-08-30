@@ -1921,6 +1921,10 @@ class GeometryTransformMixin:
 
             :return: Vrací proměnná ``mapping_dict``.
         """
+        # CSV empty cells become either ``None`` or whitespace strings.  They mean "not supplied",
+        # never an instruction to persist an invalid blank coordinate-system value.
+        if not str(mapping_dict.get("geom_system") or "").strip():
+            mapping_dict.pop("geom_system", None)
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
             geom_system = str(mapping_dict.get("geom_system") or "")
             if geom_system == "4326" and mapping_dict.get("geom"):

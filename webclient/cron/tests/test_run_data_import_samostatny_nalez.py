@@ -1,11 +1,13 @@
 """Jednotkové testy pro ``cron.tasks.run_data_import`` — mapper ``SamostatnyNalezMapper``."""
 
+import json
 from types import SimpleNamespace
 from unittest.mock import MagicMock, mock_open, patch
 
 from core.constants import SN_ZAPSANY
 from core.forms import ImportDataAdminForm
 from core.models import Soubor
+from cron import tasks as cron_tasks
 from cron.tests._run_data_import_mapper_base import JOB_ID, RunDataImportMapperTestBase
 from historie.models import Historie
 from pas.models import SamostatnyNalez
@@ -144,8 +146,9 @@ class RunDataImportSamostatnyNalezTest(RunDataImportMapperTestBase):
     def test_fedora_save_failure_marks_import_as_failed(self):
         """Ověřuje, že selhání uložení metadat Fedory pro záznam samostatny nalez označí import jako selhaný."""
 
-        def failing_save_metadata(self, *args, **kwargs):
-            raise RuntimeError("Simulované selhání Fedora.")
+        def failing_save_metadata(_record, fedora_transaction, *args, **kwargs):
+            if self.fedora_metadata_transactions:
+                raise RuntimeError("Simulované selhání Fedora.")
 
         fake_redis, _ = self.run_import(
             FILE_KEY,
@@ -154,6 +157,97 @@ class RunDataImportSamostatnyNalezTest(RunDataImportMapperTestBase):
         )
 
         self.assert_import_failed(fake_redis)
+        self.assertEqual(len(self.fedora_metadata_transactions), 1)
+        self.fedora_metadata_transactions[0].rollback_transaction.assert_called_once_with()
+
+    def test_fedora_close_failure_rolls_back_active_transaction(self):
+        """Selhání uzavření Fedora transakce ji vrátí zpět a import označí jako neúspěšný."""
+
+        def failing_close():
+            raise RuntimeError("Simulované selhání uzavření Fedora transakce.")
+
+        fake_redis, _ = self.run_import(
+            FILE_KEY,
+            self._base_payload(),
+            close_fedora_transaction_side_effect=failing_close,
+        )
+
+        self.assert_import_failed(fake_redis)
+        self.assertEqual(len(self.fedora_metadata_transactions), 1)
+        transaction_mock = self.fedora_metadata_transactions[0]
+        transaction_mock.mark_transaction_as_closed.assert_called_once_with()
+        transaction_mock.rollback_transaction.assert_called_once_with()
+
+    def _three_fedora_payloads(self):
+        payloads = []
+        for index in range(3):
+            payload = self._base_payload(f"C-202399001-N0010{index}")
+            payload["evidencni_cislo"] = f"SN-FEDORA-{index}"
+            payloads.append(payload)
+        return payloads
+
+    def test_fedora_failure_preserves_success_failed_and_unattempted_targets(self):
+        """Selhání druhého cíle ponechá v reportu i úspěšný první a neprovedený třetí cíl."""
+        closed_count = 0
+
+        def fail_second_close():
+            nonlocal closed_count
+            closed_count += 1
+            if closed_count == 2:
+                raise RuntimeError("Simulované selhání druhé Fedora transakce.")
+
+        fake_redis, _ = self.run_import_records(
+            FILE_KEY,
+            self._three_fedora_payloads(),
+            close_fedora_transaction_side_effect=fail_second_close,
+        )
+
+        self.assert_import_failed(fake_redis)
+        targets = json.loads(fake_redis.get(f"import_fedora_target_results_tr_{JOB_ID}"))
+        self.assertCountEqual(
+            [target["result"] for target in targets],
+            [
+                "cron.tasks.run_data_import.fedora_target_success",
+                "cron.tasks.run_data_import.fedora_target_error",
+                "cron.tasks.run_data_import.fedora_target_unattempted",
+                "cron.tasks.run_data_import.fedora_target_unattempted",
+            ],
+        )
+        self.assertCountEqual(
+            [tuple(target["record_ids"]) for target in targets],
+            [(0,), (1,), (2,), (0, 1, 2)],
+        )
+        attempted_targets = [
+            target for target in targets if target["result"] != "cron.tasks.run_data_import.fedora_target_unattempted"
+        ]
+        self.assertEqual([target["transaction_uid"] for target in attempted_targets], ["test-fedora-uid"] * 2)
+        dataframe = cron_tasks.build_import_fedora_target_dataframe(JOB_ID, fake_redis)
+        self.assertEqual(len(dataframe.index), 4)
+
+    def test_fedora_stop_preserves_success_and_all_unattempted_targets(self):
+        """Stop po prvním cíli ponechá zbývající plánované cíle obnovitelné v reportu."""
+        fake_redis, _ = self.run_import_records(
+            FILE_KEY,
+            self._three_fedora_payloads(),
+            stop_after_fedora_close_count=1,
+        )
+
+        targets = json.loads(fake_redis.get(f"import_fedora_target_results_tr_{JOB_ID}"))
+        self.assertCountEqual(
+            [target["result"] for target in targets],
+            [
+                "cron.tasks.run_data_import.fedora_target_success",
+                "cron.tasks.run_data_import.fedora_target_unattempted",
+                "cron.tasks.run_data_import.fedora_target_unattempted",
+                "cron.tasks.run_data_import.fedora_target_unattempted",
+            ],
+        )
+        self.assertCountEqual(
+            [tuple(target["record_ids"]) for target in targets],
+            [(0,), (1,), (2,), (0, 1, 2)],
+        )
+        dataframe = cron_tasks.build_import_fedora_target_dataframe(JOB_ID, fake_redis)
+        self.assertEqual(len(dataframe.index), 4)
 
     def test_user_stop_during_import_marks_status_as_stopped(self):
         """Ověřuje, že uživatelské zastavení importu záznamu samostatny nalez nastaví stav zastaveno."""

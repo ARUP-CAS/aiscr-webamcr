@@ -281,8 +281,8 @@ Funkce
    Volá se na začátku validace/importu a po každé fázové tranzici i v except/finally větvích
    (zákaznický požadavek — report musí přežít TTL Redis klíčů). Zápis je
    atomický (dočasný soubor + ``os.replace``), takže souběžné čtení nikdy neuvidí částečně
-   zapsaný XLSX. Chyba zápisu se loguje a nesmí přerušit import — volající proto výjimku
-   nepropaguje dál.
+   zapsaný XLSX. Chyba zápisu se loguje a vrací se ``None``; úvodní snapshot validačního či
+   importního tasku tuto hodnotu používá jako fail-closed bránu před další prací.
 
    :param job_id: Identifikátor importní úlohy.
    :param redis_connector: Dekódující Redis spojení.

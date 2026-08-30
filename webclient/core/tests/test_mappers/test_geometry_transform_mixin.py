@@ -43,6 +43,30 @@ class GeometryTransformMixinStringComparisonTest(TestCase):
         mock_transform.assert_called_once_with(WKT_WGS84)
         self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
 
+    def test_update_none_geom_system_falls_back_without_persisting_blank_value(self):
+        """Hodnota ``None`` se chová jako chybějící údaj a do modelu se nepřenese."""
+        mapping = {"geom_system": None, "geom": WKT_WGS84}
+        mapper = _fake_mapper(SimpleNamespace(geom_system="4326", geom=None, geom_sjtsk=None))
+        with patch(
+            "core.import_data_mappers.transform_geom_to_sjtsk", return_value=(WKT_SJTSK, "OK")
+        ) as mock_transform:
+            ProjektMapper.transform_geometries(mapper, mapping, UPDATE)
+        mock_transform.assert_called_once_with(WKT_WGS84)
+        self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
+        self.assertNotIn("geom_system", mapping)
+
+    def test_update_whitespace_geom_system_falls_back_without_persisting_blank_value(self):
+        """Řetězec tvořený mezerami se chová jako chybějící údaj a do modelu se nepřenese."""
+        mapping = {"geom_system": "   ", "geom": WKT_WGS84}
+        mapper = _fake_mapper(SimpleNamespace(geom_system="4326", geom=None, geom_sjtsk=None))
+        with patch(
+            "core.import_data_mappers.transform_geom_to_sjtsk", return_value=(WKT_SJTSK, "OK")
+        ) as mock_transform:
+            ProjektMapper.transform_geometries(mapper, mapping, UPDATE)
+        mock_transform.assert_called_once_with(WKT_WGS84)
+        self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
+        self.assertNotIn("geom_system", mapping)
+
     def test_empty_geom_with_4326_does_not_trigger_transform(self):
         """geom_system='4326' ale geom=None nespustí transformaci."""
         mapping = _mapping("4326", geom=None)
@@ -251,6 +275,7 @@ class GeometryTransformMixinUpdateTest(TestCase):
             ProjektMapper.transform_geometries(mapper, mapping, UPDATE)
         mock_transform.assert_called_once_with(WKT_WGS84)
         self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
+        self.assertNotIn("geom_system", mapping)
 
     def test_update_missing_record_uses_target_model_default_geom_system(self):
         """Bez existujícího řádku (např. Dokument bez DokumentExtraData) se použije výchozí

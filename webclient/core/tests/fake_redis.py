@@ -171,6 +171,10 @@ class FakeRedis:
         argv = keys_and_args[numkeys:]
         if "return {1, token}" in script:
             return self._eval_claim_awaiting_import(keys, argv)
+        if "KEYS[6]" in script and 'redis.call("set", KEYS[4]' in script:
+            return self._eval_cancel_awaiting_import(keys, argv)
+        if 'redis.call("exists", KEYS[2])' in script and 'redis.call("persist", KEYS[4])' in script:
+            return self._eval_finalize_validation(keys, argv)
         if "del" in script and keys and argv:
             key = keys[0]
             if self._kv.get(key) == self._encode(argv[0]):
@@ -200,6 +204,41 @@ class FakeRedis:
             return [0, ""]
         self.set(phase_key, new_phase)
         return [1, self._maybe_decode(token_raw)]
+
+    def _eval_cancel_awaiting_import(self, keys, argv):
+        """Simuluje atomické zrušení dosud nespouštěného importu."""
+        phase_key, token_key, global_lock_key, status_key, user_pointer_key, active_job_key = keys
+        expected_phase, canceled_phase, status_message, job_id = argv
+        token = self._kv.get(token_key)
+        if (
+            self._kv.get(phase_key) != self._encode(expected_phase)
+            or not token
+            or self._kv.get(global_lock_key) != token
+        ):
+            return 0
+        self.set(phase_key, canceled_phase)
+        self.set(status_key, status_message)
+        self.delete(global_lock_key)
+        if self._kv.get(user_pointer_key) == self._encode(job_id):
+            self.delete(user_pointer_key)
+        if self._kv.get(active_job_key) == self._encode(job_id):
+            self.delete(active_job_key)
+        return 1
+
+    def _eval_finalize_validation(self, keys, argv):
+        """Simuluje atomický přechod validace do awaiting_approval."""
+        phase_key, stop_key, token_key, global_lock_key = keys
+        expected_phase, new_phase = argv
+        token = self._kv.get(token_key)
+        if (
+            self._kv.get(phase_key) != self._encode(expected_phase)
+            or stop_key in self._kv
+            or not token
+            or self._kv.get(global_lock_key) != token
+        ):
+            return 0
+        self.set(phase_key, new_phase)
+        return 1
 
     class FakePipeline:
         """Record-then-execute pipeline nad ``FakeRedis`` — operace se provedou až při ``execute()``."""

@@ -48,6 +48,7 @@ def _fake(phase, *, user_id=OWNER_ID, extra=None):
         f"import_data_phase_{JOB}": phase,
         f"import_data_user_{JOB}": user_id,
         f"import_data_lock_token_{JOB}": "tok-xyz",
+        RedisConnector.IMPORT_DATA_LOCK_KEY: "tok-xyz",
         f"import_data_current_job_{user_id}": JOB,
     }
     if extra:
@@ -122,6 +123,16 @@ class DataImportCancelTest(SimpleTestCase):
 
         self.assertEqual(response.status_code, 409)
         self.assertEqual(json.loads(response.content)["result"], "error")
+
+    def test_claimed_job_is_not_changed_by_stale_cancel(self):
+        """Start, který už atomicky převedl job do importing, vyhraje nad současným Cancel požadavkem."""
+        fake = _fake(tasks.IMPORT_PHASE_IMPORTING)
+
+        response = self._post(fake, user_id=OTHER_ID)
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(fake.get(f"import_data_phase_{JOB}"), tasks.IMPORT_PHASE_IMPORTING)
+        self.assertEqual(fake.get(RedisConnector.IMPORT_DATA_LOCK_KEY), "tok-xyz")
 
     def test_terminal_phase_conflict(self):
         """Terminální fáze (finished): není co rušit → 409."""

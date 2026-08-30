@@ -281,6 +281,8 @@ class RunDataImportMapperTestBase(TestCase):
         payloads: list[dict],
         performed_action=ImportDataAdminForm.PERFORMED_ACTION_INSERT,
         save_metadata_side_effect=None,
+        close_fedora_transaction_side_effect=None,
+        stop_after_fedora_close_count: int | None = None,
         refresh_lock_side_effect=None,
         pre_redis_keys: dict | None = None,
         extra_patches: list | None = None,
@@ -291,6 +293,8 @@ class RunDataImportMapperTestBase(TestCase):
         :param payloads: Hodnota použitá v testovacím importním scénáři.
         :param performed_action: Hodnota použitá v testovacím importním scénáři.
         :param save_metadata_side_effect: Hodnota použitá v testovacím importním scénáři.
+        :param close_fedora_transaction_side_effect: Volitelná chyba při uzavírání Fedora transakce metadat.
+        :param stop_after_fedora_close_count: Po kolika uzavřených Fedora transakcích nastavit stop sentinel.
         :param refresh_lock_side_effect: Hodnota použitá v testovacím importním scénáři.
         :param pre_redis_keys: Hodnota použitá v testovacím importním scénáři.
         :param extra_patches: Hodnota použitá v testovacím importním scénáři."""
@@ -314,6 +318,10 @@ class RunDataImportMapperTestBase(TestCase):
         def get_record_from_ident_side_effect(ident_cely):
             record = MagicMock()
             record.ident_cely = ident_cely
+            if save_metadata_side_effect is not None:
+                record.save_metadata.side_effect = lambda *args, **kwargs: save_metadata_side_effect(
+                    record, *args, **kwargs
+                )
             return record
 
         refresh_lock_kwargs = (
@@ -335,7 +343,7 @@ class RunDataImportMapperTestBase(TestCase):
                 )
             )
             self.report_save_mock = stack.enter_context(
-                patch("cron.tasks.save_import_report_to_disk", return_value=None)
+                patch("cron.tasks.save_import_report_to_disk", return_value="/tmp/fake-import-dir/reports/report.xlsx")
             )
             stack.enter_context(
                 patch(
@@ -360,7 +368,26 @@ class RunDataImportMapperTestBase(TestCase):
             stack.enter_context(patch("historie.models.Historie.save_record_deletion_record", return_value=None))
             fedora_transaction_mock = stack.enter_context(patch("cron.tasks.FedoraTransaction"))
             fedora_deletion_mock = stack.enter_context(patch("cron.tasks.FedoraDeletionOnlyTransaction"))
-            fedora_transaction_mock.return_value = MagicMock(uid="test-fedora-uid", updated_ident_cely=set())
+            self.fedora_metadata_transactions = []
+            closed_fedora_transaction_count = 0
+
+            def fedora_transaction_factory(*args, **kwargs):
+                transaction_mock = MagicMock(uid="test-fedora-uid", updated_ident_cely=set())
+                if close_fedora_transaction_side_effect is not None:
+                    transaction_mock.mark_transaction_as_closed.side_effect = close_fedora_transaction_side_effect
+                elif stop_after_fedora_close_count is not None:
+
+                    def close_and_stop():
+                        nonlocal closed_fedora_transaction_count
+                        closed_fedora_transaction_count += 1
+                        if closed_fedora_transaction_count == stop_after_fedora_close_count:
+                            fake_redis.set(f"import_data_stop_{JOB_ID}", "1")
+
+                    transaction_mock.mark_transaction_as_closed.side_effect = close_and_stop
+                self.fedora_metadata_transactions.append(transaction_mock)
+                return transaction_mock
+
+            fedora_transaction_mock.side_effect = fedora_transaction_factory
             fedora_deletion_mock.return_value = MagicMock(uid="test-deletion-uid", updated_ident_cely=set())
             for target in (
                 "arch_z.signals.FedoraTransaction",

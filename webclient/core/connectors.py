@@ -61,6 +61,29 @@ redis.call("set", KEYS[1], ARGV[2])
 redis.call("expire", KEYS[4], ARGV[3])
 return {1, token}
 """
+    # Cancel has the same ownership boundary as Start.  It must not observe
+    # awaiting_approval and then race a Start request which has already claimed
+    # the job.
+    _CANCEL_AWAITING_IMPORT_SCRIPT = """
+if redis.call("get", KEYS[1]) ~= ARGV[1] then return 0 end
+local token = redis.call("get", KEYS[2])
+if not token or redis.call("get", KEYS[3]) ~= token then return 0 end
+redis.call("set", KEYS[1], ARGV[2])
+redis.call("set", KEYS[4], ARGV[3])
+redis.call("del", KEYS[3])
+if redis.call("get", KEYS[5]) == ARGV[4] then redis.call("del", KEYS[5]) end
+if redis.call("get", KEYS[6]) == ARGV[4] then redis.call("del", KEYS[6]) end
+return 1
+"""
+    _FINALIZE_VALIDATION_SCRIPT = """
+if redis.call("get", KEYS[1]) ~= ARGV[1] then return 0 end
+if redis.call("exists", KEYS[2]) ~= 0 then return 0 end
+local token = redis.call("get", KEYS[3])
+if not token or redis.call("get", KEYS[4]) ~= token then return 0 end
+redis.call("set", KEYS[1], ARGV[2])
+redis.call("persist", KEYS[4])
+return 1
+"""
 
     @classmethod
     def _create_connection(cls):
@@ -197,6 +220,54 @@ return {1, token}
             ttl_seconds,
         )
         return bool(claimed), (token or None)
+
+    @classmethod
+    def cancel_awaiting_import(cls, connection: redis.Redis, job_id: str, job_user: str, status_message: str) -> bool:
+        """Atomicky zruší dosud nespouštěný import, pokud stále vlastní jeho lock.
+
+        :param connection: Redis spojení použité pro atomické spuštění Lua skriptu.
+        :param job_id: Identifikátor rušené importní úlohy.
+        :param job_user: Identifikátor vlastníka úlohy použitý pro nalezení uživatelského ukazatele.
+        :param status_message: Překladový identifikátor stavu uložený po úspěšném zrušení.
+        :return: ``True``, pokud byla úloha zrušena; jinak ``False``.
+        """
+        return bool(
+            connection.eval(
+                cls._CANCEL_AWAITING_IMPORT_SCRIPT,
+                6,
+                f"import_data_phase_{job_id}",
+                f"import_data_lock_token_{job_id}",
+                cls.IMPORT_DATA_LOCK_KEY,
+                f"import_data_status_message_tr_{job_id}",
+                f"import_data_current_job_{job_user}",
+                cls.IMPORT_DATA_ACTIVE_JOB_KEY,
+                "awaiting_approval",
+                "canceled",
+                status_message,
+                job_id,
+            )
+        )
+
+    @classmethod
+    def finalize_validation(cls, connection: redis.Redis, job_id: str) -> bool:
+        """Atomicky převede vlastníkem drženou validaci do čekání na schválení.
+
+        :param connection: Redis spojení použité pro atomické spuštění Lua skriptu.
+        :param job_id: Identifikátor finalizované importní úlohy.
+        :return: ``True``, pokud úloha stále vlastní lock a přechod proběhl; jinak ``False``.
+        """
+        return bool(
+            connection.eval(
+                cls._FINALIZE_VALIDATION_SCRIPT,
+                4,
+                f"import_data_phase_{job_id}",
+                f"import_data_stop_{job_id}",
+                f"import_data_lock_token_{job_id}",
+                cls.IMPORT_DATA_LOCK_KEY,
+                "validating",
+                "awaiting_approval",
+            )
+        )
 
     @staticmethod
     def prepare_model_for_redis(table):

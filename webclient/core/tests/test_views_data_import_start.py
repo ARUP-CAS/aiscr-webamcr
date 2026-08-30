@@ -81,11 +81,16 @@ class DataImportStartConcurrencyTest(SimpleTestCase):
 
     def test_claim_fails_when_global_lock_token_does_not_match(self):
         """Pokud globální lock mezitím ztratil vlastnictví (jiný token), claim selže a fáze se
-        přepne na ``failed`` — reflektuje větev „lock lost“ ve view."""
+        přepne na ``failed``; ukazatele novější úlohy přitom nesmí smazat."""
+        replacement_job_id = "replacement-job"
         self.fake.set(RedisConnector.IMPORT_DATA_LOCK_KEY, "someone-elses-token")
+        self.fake.set(f"import_data_current_job_{USER_ID}", replacement_job_id)
+        self.fake.set(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, replacement_job_id)
 
         response, delay_mock = self._post()
 
         self.assertEqual(response.status_code, 409)
         delay_mock.assert_not_called()
         self.assertEqual(self.fake.get(f"import_data_phase_{JOB_ID}"), tasks.IMPORT_PHASE_FAILED)
+        self.assertEqual(self.fake.get(f"import_data_current_job_{USER_ID}"), replacement_job_id)
+        self.assertEqual(self.fake.get(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY), replacement_job_id)

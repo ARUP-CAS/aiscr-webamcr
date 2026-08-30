@@ -10,6 +10,7 @@ adresáře (ne DB tabulkou) — testy zde pokrývají sdílenou kontrolu adresá
 import json
 import os
 import tempfile
+from unittest.mock import patch
 
 import openpyxl
 from core.setting_models import CustomAdminSettings
@@ -21,6 +22,7 @@ from core.utils import (
     read_import_report_index,
     upsert_import_report_index_entry,
 )
+from cron import tasks as cron_tasks
 from cron.tasks import (
     build_import_fedora_target_dataframe,
     build_import_report_dataframe,
@@ -194,6 +196,15 @@ class SaveImportReportToDiskTest(TestCase):
             self.assertIn(JOB_ID, first)
             self.assertTrue(first.endswith(".xlsx"))
 
+    def test_persisted_path_outside_reports_directory_is_rejected(self):
+        """Redisem podvržená cesta nesmí přesměrovat XLSX ani index mimo validovaný adresář reportů."""
+        fake_redis = FakeRedis(decode_responses=False)
+        with tempfile.TemporaryDirectory() as tmp:
+            reports_dir = os.path.join(tmp, "reports")
+            os.makedirs(reports_dir)
+            fake_redis.set("import_data_report_path_{}".format(JOB_ID), os.path.join(tmp, "outside.xlsx"))
+            self.assertIsNone(save_import_report_to_disk(JOB_ID, fake_redis, reports_dir))
+
     def test_save_writes_readable_xlsx_and_sets_redis_flag(self):
         """Úspěšné uložení zapíše čitelný XLSX (s listem ``Fedora``) a nastaví Redis příznak."""
         fake_redis = FakeRedis(decode_responses=False)
@@ -259,6 +270,73 @@ class SaveImportReportToDiskTest(TestCase):
         self.assertIsNone(fake_redis.get("import_data_report_saved_path_{}".format(JOB_ID)))
 
 
+class RunDataImportReportGateTest(TestCase):
+    """Ověřuje, že první durabilní report je bránou před všemi mutacemi importu."""
+
+    LOCK_TOKEN = "report-gate-lock-token"
+    USER_ID = 42
+
+    def _run_with_report_failure(self, reports_directory, failure_patch):
+        """Spustí import s poruchou reportu a vrátí Redis i mocky všech mutačních hranic."""
+        fake_redis = FakeRedis(
+            {
+                f"import_data_phase_{JOB_ID}": cron_tasks.IMPORT_PHASE_IMPORTING,
+                f"import_data_lock_token_{JOB_ID}": self.LOCK_TOKEN,
+                f"import_data_user_{JOB_ID}": self.USER_ID,
+            }
+        )
+        with patch("core.connectors.RedisConnector.get_connection", return_value=fake_redis), patch(
+            "core.connectors.RedisConnector.refresh_import_lock", return_value=True
+        ), patch(
+            "cron.tasks.check_import_report_directory",
+            return_value=(os.path.dirname(reports_directory), reports_directory, None),
+        ), failure_patch, patch(
+            "cron.tasks.User.objects.get"
+        ) as user_get_mock, patch(
+            "cron.tasks.transaction.atomic"
+        ) as atomic_mock, patch(
+            "cron.tasks.FedoraTransaction"
+        ) as fedora_transaction_mock:
+            cron_tasks.run_data_import(JOB_ID, self.USER_ID, self.LOCK_TOKEN)
+        return fake_redis, user_get_mock, atomic_mock, fedora_transaction_mock
+
+    def _assert_failed_before_mutation(self, fake_redis, user_get_mock, atomic_mock, fedora_transaction_mock):
+        """Ověří terminální selhání a absenci DB/Fedora mutačních operací."""
+        self.assertEqual(
+            fake_redis.get(f"import_data_phase_{JOB_ID}"),
+            cron_tasks.IMPORT_PHASE_FAILED.encode("utf-8"),
+        )
+        self.assertIn(
+            "failed_during_data_import",
+            fake_redis.get(f"import_data_status_message_tr_{JOB_ID}").decode("utf-8"),
+        )
+        user_get_mock.assert_not_called()
+        atomic_mock.assert_not_called()
+        fedora_transaction_mock.assert_not_called()
+
+    def test_xlsx_creation_failure_prevents_database_and_fedora_mutation(self):
+        """Chyba vytvoření XLSX ukončí task ještě před načtením uživatele a mutačními fázemi."""
+        with tempfile.TemporaryDirectory() as tmp:
+            reports_directory = os.path.join(tmp, "reports")
+            os.makedirs(reports_directory)
+            result = self._run_with_report_failure(
+                reports_directory,
+                patch("cron.tasks.pd.ExcelWriter", side_effect=OSError("xlsx write failed")),
+            )
+        self._assert_failed_before_mutation(*result)
+
+    def test_index_upsert_failure_prevents_database_and_fedora_mutation(self):
+        """Chyba indexu po atomické náhradě XLSX stále zabrání všem importním mutacím."""
+        with tempfile.TemporaryDirectory() as tmp:
+            reports_directory = os.path.join(tmp, "reports")
+            os.makedirs(reports_directory)
+            result = self._run_with_report_failure(
+                reports_directory,
+                patch("cron.tasks.upsert_import_report_index_entry", side_effect=OSError("index write failed")),
+            )
+        self._assert_failed_before_mutation(*result)
+
+
 class BuildImportFedoraTargetDataframeTest(TestCase):
     """Testy pro ``cron.tasks.build_import_fedora_target_dataframe`` (list ``Fedora``)."""
 
@@ -267,7 +345,7 @@ class BuildImportFedoraTargetDataframeTest(TestCase):
         fake_redis = FakeRedis(decode_responses=False)
         df = build_import_fedora_target_dataframe(JOB_ID, fake_redis)
         self.assertEqual(len(df), 0)
-        self.assertEqual(len(df.columns), 3)
+        self.assertEqual(len(df.columns), 4)
 
     def test_translates_result_and_keeps_raw_transaction_data(self):
         """Sloupec výsledku se přeloží z translation ID, ident_cely a transaction_uid zůstanou syrová data."""
