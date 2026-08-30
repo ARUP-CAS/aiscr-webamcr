@@ -1,29 +1,20 @@
-# .agents/reports
+# .agents/reports - Review and Workflow Reports
 
-Lidsky čitelné výstupy dlouhodobého technického review.
+This directory stores durable outputs from the long-running codebase-review lifecycle.
 
-## Struktura
+## Structure
 
-- `review_reports/`  
-  - detailní reporty pro jednotlivé tasky (`T01.md` … `T10.md`, `final_audit.md`),  
-  - viz také `review_reports/README.md` pro popis jednotlivých souborů.
+- `review_reports/` contains per-phase reports and the consolidated `final_audit.md` summary; see `review_reports/README.md` for the per-file breakdown.
+- `bugs.md` records confirmed bug findings with severity, source location, issue linkage, recommendation, and originating review task.
+- `refactoring_backlog.md` records structural and architectural improvement candidates grouped by priority (high / medium / low).
 
-- `bugs.md`  
-  - evidence nalezených chyb (`BUG-XXX`),  
-  - pro každou chybu: soubor/řádek, závažnost, vztah ke GitHub Issue, návrh opravy, task.
+## Agent Rules
 
-- `refactoring_backlog.md`  
-  - backlog strukturálních / architektonických vylepšení,  
-  - členění podle priority (vysoká / střední / nízká).
-
-- `claude_automation_recommendations.md`  
-  - doporučení pro nastavení Claude Code / Cursor automations (MCP servery, hooks, skills),  
-  - sdílená pravidla mají žít zde a v `AGENTS.md` / `.agents/`, nikoli v `.cursor/` nebo `.claude/`.
-
-## Poznámky
-
-- Všechny nové bugy a refaktoringové návrhy musí být zapisovány sem, **ne** pouze
-  do GitHub Issues, aby byla historie review kompletní.
-- Reporty v `review_reports/` se generují po dokončení tasků T01–T11 podle šablony
-  v `prompts/review_codebase.md`.
-
+- Use `aiscr-review-codebase` from the delivered assistant workflow surfaces as the operational review workflow source.
+- Record every new bug and refactoring candidate here, not only in GitHub Issues, so the review history stays complete.
+- Reports under `review_reports/` are generated as tasks T01-T11 complete.
+- Keep new review workflow prose English by default.
+- Preserve verbatim Czech quotations, source comments, docstrings, documentation excerpts, GitHub issue titles, and AIS CR domain identifiers when exact wording matters.
+- Use severity values `Critical`, `High`, `Medium`, and `Low` in newly touched review artifacts.
+- Do not recreate long-form review prompt files under `.agents/prompts/`; the operational workflow is the delivered `aiscr-review-codebase` skill (modes full / update).
+- Ecosystem automation recommendations (MCP, skills, hooks, subagents) live only in the `aiscr-management` hub - see `AGENTS.md`.

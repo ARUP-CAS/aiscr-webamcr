@@ -1,0 +1,606 @@
+schema_version = "1"
+preamble = """
+# Refactoring backlog — AMČR (aiscr-webamcr)
+
+> Review prose follows the canonical English-default rule; verbatim Czech is preserved where field names or AIS CR domain identifiers matter.
+> Structural improvements discovered during the audit.
+>
+> **Note on priority vs. severity:** The priority sections (High / Medium / Low)
+> reflect the **refactoring priority** (impact on architecture and business logic).
+> This classification may differ from the **bug severity** in `bugs.md`, which reflects
+> the technical risk of the defect itself. When an item cross-references BUG-XXX,
+> both values are intentional — refactoring priority and bug severity use a different
+> evaluation frame.
+
+---"""
+
+[section_notes]
+High = "<!-- Architectural problems, security debt, ORM performance -->"
+Medium = "<!-- Optimizations, module decomposition, Docker build -->"
+Low = "<!-- Cosmetic changes, documentation, minor code quality -->"
+
+[[item]]
+id = "CIRC-01"
+title = "Circular dependency projekt ↔ oznameni"
+priority = "High"
+task = "T02"
+files = [
+    "webclient/oznameni/models.py",
+    "webclient/projekt/forms.py",
+    "webclient/projekt/views.py",
+    "webclient/projekt/urls.py",
+]
+description = "Mutual imports at the module level between projekt and oznameni. An unstable architecture that may cause an ImportError on further extension."
+recommendation = "Merge oznameni into projekt or extract the shared logic into core."
+effort = "L"
+
+[[item]]
+id = "ARCH-01"
+title = "The overgrown `core` application"
+priority = "High"
+task = "T02"
+files = [
+    "webclient/core/",
+]
+files_note = "(77 .py files, 26 migrations)"
+description = "Core is imported by 16+ applications. It contains middleware, permissions, constants, signals, logging — too many responsibilities. Global impact of changes."
+recommendation = "Decompose into core.permissions, core.logging, core.middleware, core.signals."
+effort = "XL"
+
+[[item]]
+id = "ARCH-02"
+title = "The `dokument` application — excessive fan-out"
+priority = "High"
+task = "T02"
+files = [
+    "webclient/dokument/",
+]
+description = "Imports 8 other applications — the highest fan-out in the repository. A potential violation of the single-responsibility principle."
+recommendation = "Audit the dependencies, consider signals or a services layer."
+effort = "M"
+
+[[item]]
+id = "ORM-01"
+title = "Extra SELECT in the save() methods of ArcheologickyZaznam and SamostatnyNalez"
+priority = "High"
+task = "T03"
+files = [
+    "webclient/arch_z/models.py:531",
+    "webclient/pas/models.py:182",
+]
+description = "On every `save()` call (where `pk != None`), an extra `SELECT get(pk=self.pk)` is done to detect a change of `pristupnost`. The correct solution is to store the initial value in `__init__()`, as with `initial_stav`."
+recommendation = "Add `self._initial_pristupnost = self.pristupnost` in `__init__()`, and in `save()` compare with `self._initial_pristupnost`."
+effort = "S"
+
+[[item]]
+id = "ORM-02"
+title = "N+1 in the check_pred_* methods"
+priority = "High"
+task = "T03"
+files = [
+    "webclient/projekt/models.py",
+    "webclient/arch_z/models.py",
+]
+description = "The methods `check_pred_uzavrenim()` and `check_pred_odeslanim()` make N+1 queries when iterating over akce and documentation units. See BUG-002."
+recommendation = "prefetch_related before calling the check methods, or accept prefetched data as a parameter."
+effort = "M"
+
+[[item]]
+id = "ORM-03"
+title = "Missing indexes on pas.SamostatnyNalez"
+priority = "High"
+task = "T03"
+files = [
+    "webclient/pas/models.py",
+]
+description = "The FK fields `projekt`, `katastr`, `pristupnost`, `stav` have no `db_index=True`. For a table with thousands of records, indexes are key."
+recommendation = "Add `db_index=True` or indexes via a migration."
+effort = "S"
+
+[[item]]
+id = "CIRC-02"
+title = "Circular dependency adb ↔ xml_generator"
+priority = "Medium"
+task = "T02"
+files = [
+    "webclient/adb/models.py",
+    "webclient/xml_generator/generator.py",
+]
+description = "adb.models imports BaseAmcrModel from xml_generator.models; xml_generator.generator imports VyskovyBod from adb.models at the module level."
+recommendation = "Move BaseAmcrModel/ModelWithMetadata into core or an amcr_base module."
+effort = "M"
+
+[[item]]
+id = "ARCH-03"
+title = "Duality of responsibilities in xml_generator"
+priority = "Medium"
+task = "T02"
+files = [
+    "webclient/xml_generator/",
+]
+description = "xml_generator serves both as a base-model library (BaseAmcrModel) and as an XML generator. Imported by 10 applications."
+recommendation = "Split into amcr_base (base models) and xml_generator (purely an XML generator)."
+effort = "M"
+
+[[item]]
+id = "CELERY-01"
+title = "Harden the error handling of long Celery tasks"
+priority = "Medium"
+task = "T06"
+files = [
+    "webclient/cron/tasks.py",
+]
+description = "The tasks `update_all_redis_snapshots`, `update_single_redis_snapshot`, and `update_materialized_views` have no central exception handling. An error in the middle of a batch (e.g. a Redis/DB outage or a problem in REFRESH MATERIALIZED VIEW) terminates the whole task without a summary and without a clear log of partial success."
+recommendation = "Wrap the main loops/calls in `try/except` blocks with a summary log (count of processed items, the current class/model, the name of the materialized view) and consistent behavior on failure."
+effort = "S"
+
+[[item]]
+id = "CELERY-02"
+title = "Timeout and error handling for the external HTTP call"
+priority = "Medium"
+task = "T06"
+files = [
+    "webclient/cron/tasks.py",
+]
+description = "The task `call_digiarchiv_update_task` calls `requests.get(settings.DIGIARCHIV_URL)` without an explicit `timeout` and without `try/except`. On an outage or a slow service response, the worker may wait disproportionately long and the logs contain no clear information about the cause."
+recommendation = "Add a reasonable `timeout` and wrap the call in a `try/except` with error logging; optionally set a retry strategy via Celery (e.g. countdown/max_retries)."
+effort = "S"
+
+[[item]]
+id = "CELERY-03"
+title = "Limit the polling pattern in check_hlidaci_pes"
+priority = "Medium"
+task = "T06"
+files = [
+    "webclient/notifikace_projekty/tasks.py",
+]
+description = "The task `check_hlidaci_pes` waits in a while loop (`time.sleep(0.5)`) for the creation of a project in the DB, without an upper time limit. On a misconfiguration or a transaction rollback, it may run longer than desired and block the worker."
+recommendation = "Prefer scheduling the task via `transaction.on_commit()` (running only after the transaction is committed) or add a maximum iteration count / time budget with safe termination and a log once it is exceeded."
+effort = "M"
+
+[[item]]
+id = "REQ-01"
+title = "Mixed production and development dependencies in requirements.txt"
+priority = "Medium"
+task = "T02"
+files = [
+    "webclient/requirements.txt",
+]
+description = "Selenium, debug-toolbar, pre-commit, coverage, sphinx, etc. are in the production requirements.txt. The production image is unnecessarily large."
+recommendation = "Split into requirements.txt, requirements-dev.txt, requirements-test.txt."
+effort = "S"
+
+[[item]]
+id = "DOCS-01"
+title = "Separate requirements for the documentation build"
+priority = "Medium"
+task = "T08"
+files = [
+    "readthedocs.yaml",
+    "webclient/requirements.txt",
+]
+description = "The Read the Docs build installs the complete `webclient/requirements.txt`, which also contains development and testing packages (Selenium, debug-toolbar, Sphinx, etc.). For a documentation build this is unnecessary and increases both time and the risk of dependency conflicts."
+recommendation = "Create a separate file (e.g. `docs/requirements.txt`) with the minimal set of packages for the documentation and switch the installation in `.readthedocs.yaml` to that file."
+effort = "S"
+
+[[item]]
+id = "DOCS-02"
+title = "Improve error handling in the license generator"
+priority = "Medium"
+task = "T08"
+files = [
+    "docs/licenses/convert_to_rst.py",
+]
+description = "The script runs `pip-licenses` via `subprocess.run` and, without checking the return code, directly parses the JSON output. On a tool error or invalid output it ends with a traceback without an understandable message."
+recommendation = "Check `returncode` and wrap `json.loads` in a `try/except` with a clear error message (e.g. missing `pip-licenses`), optionally returning a non-zero exit code for a clear failure in CI."
+effort = "S"
+
+[[item]]
+id = "SCRIPTS-01"
+title = "Unify the fail-fast behavior and wrappers in the deploy scripts"
+priority = "Medium"
+task = "T10"
+files = [
+    "scripts/prod_deploy.sh",
+    "scripts/dev_deploy.sh",
+    "scripts/test_deploy.sh",
+    "scripts/git_prod_deploy.sh",
+]
+description = "The deploy scripts use their own `er()` wrapper for logging and error propagation, but do not globally use `set -e`/`set -u`. Errors in commands outside `er()` may manifest only indirectly (e.g. in subsequent steps or only in the log)."
+recommendation = "Add `set -e` (possibly `set -u`) and review which commands should be wrapped in `er()` and which may fail \"softly\". Also unify the structure of the helper functions across the scripts so they are easily maintainable."
+effort = "S"
+
+[[item]]
+id = "DOCS-03"
+title = "Enforce docstring completeness for Selenium tests"
+priority = "Medium"
+task = "T08"
+files = [
+    "docs/generate_selenium_test_docs.py",
+]
+description = "The Selenium documentation generator assumes that all tests have a docstring and the required `Steps` and `Expected` sections. A missing section leads to incomplete documentation without a clear warning."
+recommendation = "Add a check and a summary report of missing sections/docstrings and, when running in CI (e.g. in a pre-commit hook), the option to fail the build if the minimal documentation rules are not met."
+effort = "M"
+
+[[item]]
+id = "CI-01"
+title = "Add Dependabot and a lightweight CodeQL workflow"
+priority = "Medium"
+task = "T09"
+files = [
+    ".github/",
+]
+files_note = "(new workflow and configuration)"
+description = "The current pipeline uses Docker Scout and Trivy for scanning the Docker image, but has no separate check of Python dependencies (Dependabot) or static code analysis (CodeQL). The risk that vulnerable libraries in the code pass without warning is higher."
+recommendation = "Add `.github/dependabot.yml` for Python and GitHub Actions and a simple CodeQL workflow for Python (e.g. running on push/PR to the `dev` branch) to complement the image-level scanning."
+effort = "S"
+
+[[item]]
+id = "SCRIPTS-01"
+title = "Add set -e to the deploy and maintenance scripts"
+priority = "Medium"
+task = "T10"
+files = [
+    "scripts/prod_deploy.sh",
+    "scripts/dev_deploy.sh",
+    "scripts/test_deploy.sh",
+    "scripts/git_prod_deploy.sh",
+    "scripts/restore_database.sh",
+    "scripts/build_prod_image.sh",
+    "scripts/ci_deployment/deploy_server.sh",
+    "scripts/ci_deployment/deploy_test_server.sh",
+]
+description = "Most scripts have no `set -e`; a command failure outside the `er()` wrapper may be overlooked. `restore_database.sh` performs a DROP/CREATE of the database without stopping on an error."
+recommendation = "Add `set -e` (and optionally `set -o pipefail`) at the start of each script; for interactive blocks consider disabling it temporarily. In `restore_database.sh`, additionally verify the required environment variables before running."
+effort = "S"
+
+[[item]]
+id = "SCRIPTS-02"
+title = "Extract the common functions of the deploy scripts into scripts/common.sh"
+priority = "Medium"
+task = "T10"
+files = [
+    "scripts/prod_deploy.sh",
+    "scripts/dev_deploy.sh",
+    "scripts/test_deploy.sh",
+    "scripts/git_prod_deploy.sh",
+]
+description = "The functions `ask_continue`, `echo_dec`, `er()`, `check_create_network`, `check_stack_exists`, `check_file_exist` are repeated in the four scripts; maintenance and consistency are hindered."
+recommendation = "Create `scripts/common.sh` with the shared functions and load it in the deploy scripts via `source \"$(dirname \"$0\")/common.sh\"` (or a relative path from the repository root)."
+effort = "M"
+
+[[item]]
+id = "SCRIPTS-03"
+title = "Fix db_connection_from_docker-web.py — use DB_PORT from the secret"
+priority = "Medium"
+task = "T10"
+files = [
+    "scripts/db/db_connection_from_docker-web.py",
+]
+description = "The script reads `DB_NAME`, `DB_PASS`, `DB_USER`, `DB_HOST` from the JSON secret, but not `DB_PORT`; the DB connection therefore always uses the default port 5432. With a non-standard port the health check is incorrect."
+recommendation = "Add reading of `DB_PORT` (with a default of 5432) and pass `port=...` to `psycopg2.connect()`. See BUG-014."
+effort = "S"
+
+[[item]]
+id = "ORM-04"
+title = "Replace eval() with int() in the identifier generators"
+priority = "Low"
+task = "T03"
+files = [
+    "webclient/projekt/models.py:663",
+    "webclient/arch_z/models.py:331",
+    "webclient/arch_z/models.py:889",
+]
+description = "Three occurrences of `eval(i)` to convert a number from a string. See BUG-001."
+recommendation = "Replace with `int(i)`, add validation `i.isdigit()`."
+effort = "S"
+
+[[item]]
+id = "ORM-05"
+title = "Fix the cached_property import in uzivatel/models.py"
+priority = "Low"
+task = "T03"
+files = [
+    "webclient/uzivatel/models.py:28",
+]
+description = "Import from `distlib.util` instead of `functools`. See BUG-003."
+recommendation = "`from functools import cached_property`"
+effort = "S"
+
+[[item]]
+id = "ORM-06"
+title = "Replace .extra() in arch_z/filters.py with RawSQL"
+priority = "Low"
+task = "T03"
+files = [
+    "webclient/arch_z/filters.py:773-775",
+]
+description = "`.extra(where=[\"ST_Z(geom) >= %s\"])` has been deprecated since Django 4.0."
+recommendation = "Use `RawSQL` or a PostGIS function."
+effort = "S"
+
+[[item]]
+id = "ORM-07"
+title = "Squash migrations for applications with 20+ migrations"
+priority = "Low"
+task = "T03"
+applications = [
+    "uzivatel (31)",
+    "core (26)",
+    "arch_z (20)",
+    "dokument (19)",
+]
+description = "152 migrations in total — the applications with the most migrations are candidates for `squashmigrations`."
+recommendation = "Gradual squash after the schema stabilizes, starting with less critical applications."
+effort = "M"
+
+[[item]]
+id = "DOCKER-DEP-01"
+title = "logstash without depends_on elasticsearch"
+priority = "Low"
+task = "T02/T04"
+files = [
+    "docker-compose.yml",
+]
+description = "The logstash service has no depends_on: elasticsearch — a potential race condition on concurrent startup."
+recommendation = "Add depends_on: [elasticsearch] to the logstash service."
+effort = "S"
+
+[[item]]
+id = "DOCKER-01"
+title = "Fix the secret injection for Grafana, Elasticsearch, Logstash"
+priority = "Low"
+task = "T04"
+files = [
+    "docker-compose.yml:149,180-181,201",
+    "docker-compose-test.yml:169",
+    "git_docker-compose.yml:144",
+]
+description = "`GF_SECURITY_ADMIN_PASSWORD`, `ELASTIC_PASSWORD`, `LOGSTASH_INTERNAL_PASSWORD` are set to file paths or secret names, not to their values. The Grafana admin password is effectively non-functional."
+recommendation = "Grafana: use `GF_SECURITY_ADMIN_PASSWORD__FILE`. Elasticsearch/Logstash: an entrypoint wrapper script that reads the secret from the file."
+effort = "S"
+severity = "Medium"
+
+[[item]]
+id = "DOCKER-02"
+title = "Celery worker logs DEBUG in production"
+priority = "Low"
+task = "T04"
+files = [
+    "docker-compose.yml:81",
+]
+description = "`celery -A webclient worker -l DEBUG` — excessive logging, potential exposure of sensitive data in production."
+recommendation = "Change to `-l INFO`."
+effort = "S"
+severity = "Medium"
+
+[[item]]
+id = "DOCKER-03"
+title = "ELK Stack major version gap (prod 9.x vs dev 8.x)"
+priority = "Low"
+task = "T04"
+files = [
+    "docker-compose.yml",
+    "docker-compose-dev-local-db*.yml",
+]
+description = "Production, test, and git-deploy use ELK 9.3.1; the dev compose files use 8.19.0. The major version gap causes different behavior of xpack.security and the API."
+recommendation = "Synchronize to the same major version (dev = prod recommended)."
+effort = "S"
+severity = "Medium"
+
+[[item]]
+id = "DOCKER-04"
+title = "sudo access in the production container"
+priority = "Low"
+task = "T04"
+files = [
+    "Dockerfile:99",
+]
+description = "`usermod -aG sudo user` — the production application user is a member of the sudo group."
+recommendation = "Remove the sudo group, use specific NOPASSWD rules for necessary operations."
+effort = "S"
+severity = "Medium"
+
+[[item]]
+id = "DOCKER-05"
+title = "Selenium in the production docker-compose.yml"
+priority = "Low"
+task = "T04"
+files = [
+    "docker-compose.yml",
+]
+description = "The Selenium service belongs exclusively in the testing environment."
+recommendation = "Remove it from docker-compose.yml, keep it only in docker-compose-test.yml."
+effort = "S"
+severity = "Low"
+
+[[item]]
+id = "DOCKER-06"
+title = "Fedora Dockerfile — multiple apt-get update, no PID 1"
+priority = "Low"
+task = "T04"
+files = [
+    "fedora/Dockerfile",
+]
+description = "Three separate RUN apt-get update commands without apt-get clean enlarge the image. CMD runs two processes without a process supervisor."
+recommendation = "Merge the RUN blocks, add tini or an entrypoint script."
+effort = "S"
+severity = "Low"
+
+[[item]]
+id = "REQ-02"
+title = "sphinxcontrib-mermaid without a version specification"
+priority = "Low"
+task = "T02"
+files = [
+    "webclient/requirements.txt",
+]
+description = "The sphinxcontrib-mermaid package has no fixed version — non-deterministic builds."
+recommendation = "Add a specific version."
+effort = "S"
+
+[[item]]
+id = "ARCH-04"
+title = "cron and notifikace_projekty without tests"
+priority = "Low"
+task = "T01"
+files = [
+    "webclient/cron/",
+    "webclient/notifikace_projekty/",
+]
+description = "Both applications have no tests, even though cron imports 6 other applications."
+recommendation = "Add unit tests for the Celery tasks."
+effort = "M"
+
+[[item]]
+id = "SEC-01"
+title = "Fix the DEBUG fallback in production.py"
+priority = "Low"
+task = "T05"
+files = [
+    "webclient/webclient/settings/production.py:3",
+]
+description = "`get_secret(\"DEBUG\", \"True\")` — the fallback is \"True\" → DEBUG=True with a missing key. See BUG-010."
+recommendation = "Change the fallback to \"False\"."
+effort = "S"
+severity = "High"
+
+[[item]]
+id = "SEC-02"
+title = "Rotate the Mailtrap credentials and replace with placeholders"
+priority = "Low"
+task = "T05"
+files = [
+    "webclient/webclient/settings/sample_secrets_mail_client.json",
+]
+description = "Seemingly real Mailtrap sandbox credentials in a commit. See BUG-011."
+recommendation = "Verify, rotate, replace with obvious placeholders."
+effort = "S"
+severity = "Medium"
+
+[[item]]
+id = "SEC-03"
+title = "Add Django security headers to production.py"
+priority = "Low"
+task = "T05"
+files = [
+    "webclient/webclient/settings/production.py",
+]
+description = "Missing `SECURE_HSTS_SECONDS`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `SECURE_CONTENT_TYPE_NOSNIFF`. The Django security check (`manage.py check --deploy`) will report failures."
+recommendation = "Add to production.py and add `manage.py check --deploy` to the CI pipeline."
+effort = "S"
+severity = "Medium"
+
+[[item]]
+id = "SEC-XSS"
+title = "Audit mark_safe() in the vypis/ application"
+priority = "Low"
+task = "T05"
+files = [
+    "webclient/vypis/fields.py:363,438",
+    "webclient/vypis/views.py:79",
+]
+description = "Three places apply `mark_safe()` to values from the DB or model properties. See BUG-012."
+recommendation = "Rewrite using `format_html()` or ensure `escape()` before mark_safe."
+effort = "M"
+severity = "Medium"
+
+[[item]]
+id = "SEC-04"
+title = "Add CVE scanning to the CI pipeline"
+priority = "Low"
+task = "T05"
+files = [
+    ".github/workflows/",
+]
+files_note = "(a new step)"
+description = "There is no automatic CVE check in the Python dependencies."
+recommendation = "Add `pip audit` or `safety check` as a CI step."
+effort = "S"
+severity = "Medium"
+
+[[item]]
+id = "FRONT-01"
+title = "Extract the larger inline scripts from base.html"
+priority = "Low"
+task = "T07"
+files = [
+    "webclient/templates/base.html",
+]
+description = "The `base.html` template contains several larger inline scripts (datepicker initialization, automatic hiding of flash messages, periodic authentication check, the language switcher). The logic is correct, but harder to reuse and less readable in inline form."
+recommendation = "Move these blocks into separate JS files in `static/js/` (e.g. `datepicker-init.js`, `messages.js`, `auth_check.js`, `language_switcher.js`) and load them in the template via `{% static %}`."
+effort = "S"
+
+[[item]]
+id = "FRONT-02"
+title = "Consider a bundler/minification for the custom JS"
+priority = "Low"
+task = "T07"
+files = [
+    "webclient/static/js/",
+]
+description = "The custom JavaScript (map scripts, helpers, theme-toggle) is served as multiple separate files without a bundler and minification. In production this increases the number of HTTP requests and the size of the assets."
+recommendation = "Consider deploying a lightweight bundler (e.g. Webpack/Vite/rollup) or at least a minification step within the existing `django-compressor` setup for the custom JS."
+effort = "M"
+
+[[item]]
+id = "FRONT-03"
+title = "Add XHR onerror handlers in all map scripts"
+priority = "Low"
+task = "T07b"
+files = [
+    "webclient/static/js/mapa_arch_z.js",
+    "mapa_pas.js",
+    "mapa_projekty.js",
+    "mapa_doc.js",
+    "mapa_oznameni.js",
+]
+description = "None of the map scripts implements an `xhr.onerror` handler — a network failure is silent. The user gets no feedback on a backend outage."
+recommendation = "Add consistent error handling (onerror + onreadystatechange with a status check) with a user message. Consider a central helper function for XHR calls."
+effort = "S"
+severity = "Medium"
+
+[[item]]
+id = "FRONT-04"
+title = "Wrap JSON.parse in try/catch in the map and modal scripts"
+priority = "Low"
+task = "T07b"
+files = [
+    "webclient/static/js/mapa_arch_z.js",
+    "mapa_pas.js",
+    "mapa_projekty.js",
+    "mapa_doc.js",
+    "mapa_oznameni.js",
+    "modal_forms_class.js",
+]
+description = "JSON.parse(this.responseText) is called without try/catch — invalid JSON (e.g. a 500 HTML page) causes an uncontrolled failure."
+recommendation = "Wrap in try/catch and log/display the error."
+effort = "S"
+severity = "Medium"
+
+[[item]]
+id = "FRONT-05"
+title = "Refactor mapa_pins.js — a factory function instead of duplication"
+priority = "Low"
+task = "T07b"
+files = [
+    "webclient/static/js/mapa_pins.js",
+]
+description = "235 lines define 4 color variants of icons with extensive duplication (copy-paste with a single color change)."
+recommendation = "Replace with a factory function `createPinIcon(color)` and reduce to ~50 lines."
+effort = "S"
+severity = "Low"
+
+[[item]]
+id = "FRONT-06"
+title = "Eliminate the implicit global variables in the map scripts"
+priority = "Low"
+task = "T07b"
+files = [
+    "webclient/static/js/mapa_arch_z.js",
+    "mapa_pas.js",
+]
+description = "Variables like `rs`, `geom`, `zoomed`, `coor`, `akce_ident_cely` are not declared with let/const/var — they become implicit globals."
+recommendation = "Add `let`/`const` declarations and consider the ESLint `no-undef` rule."
+effort = "S"
+severity = "Medium"

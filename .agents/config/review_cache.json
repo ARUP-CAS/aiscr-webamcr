@@ -21,25 +21,25 @@
         "T03a": {
           "status": "done",
           "completed_at": "2026-03-09T21:13:14Z",
-          "scope": "Modely přímo přečteny: core, projekt, arch_z, uzivatel. Raw SQL / extra() vyhledávání celým repozitářem.",
+          "scope": "Models read directly: core, projekt, arch_z, uzivatel. Repository-wide Raw SQL / extra() search.",
           "report_path": ".agents/reports/review_reports/T03.md"
         },
         "T03b": {
           "status": "done",
           "completed_at": "2026-03-10T00:05:15Z",
-          "scope": "Modely přímo přečteny: heslar, pian, pas, adb, oznameni, xml_generator. ORM vzory ve views (cílené Grep). GitHub Issues: nedostupné bez autentizace, zdokumentováno.",
+          "scope": "Models read directly: heslar, pian, pas, adb, oznameni, xml_generator. ORM patterns in views (targeted Grep). GitHub Issues: unavailable without authentication, documented.",
           "report_path": ".agents/reports/review_reports/T03b.md"
         },
         "T03c": {
           "status": "done",
           "completed_at": "2026-03-13T12:00:00Z",
-          "scope": "Modely přímo přečteny: dokument (10 modelů), historie (2 modely), ez (4 modely), xml_generator (2 abstraktní modely). Nové nálezy: SEC-ORM-004/005, NP1-015 až NP1-019.",
+          "scope": "Models read directly: dokument (10 models), historie (2 models), ez (4 models), xml_generator (2 abstract models). New findings: SEC-ORM-004/005, NP1-015 through NP1-019.",
           "report_path": ".agents/reports/review_reports/T03c.md"
         },
         "T03d": {
           "status": "done",
           "completed_at": "2026-03-13T12:00:00Z",
-          "scope": "Modely přímo přečteny: komponenta (3 modely), lokalita (1 model), nalez (2 modely), dj (1 model), neidentakce (2 modely), notifikace_projekty (1 model). Nové nálezy: NP1-020, BUG-015 (__init_ typo).",
+          "scope": "Models read directly: komponenta (3 models), lokalita (1 model), nalez (2 models), dj (1 model), neidentakce (2 models), notifikace_projekty (1 model). New findings: NP1-020, BUG-015 (__init_ typo).",
           "report_path": ".agents/reports/review_reports/T03d.md"
         }
       }
@@ -67,7 +67,7 @@
         "T07b": {
           "status": "done",
           "completed_at": "2026-03-13T12:00:00Z",
-          "scope": "20 custom JS souborů analyzováno (~3 846 řádků). Vendored exclusions aktualizovány (timer.js, datepicker-cs.js). Nové nálezy: BUG-016 (form_fields_disabling), BUG-017 (coor_precision), FRONT-03 až FRONT-06 (backlog).",
+          "scope": "20 custom JS files analyzed (~3,846 lines). Vendored exclusions updated (timer.js, datepicker-cs.js). New findings: BUG-016 (form_fields_disabling), BUG-017 (coor_precision), FRONT-03 through FRONT-06 (backlog).",
           "report_path": ".agents/reports/review_reports/T07b.md"
         }
       }
