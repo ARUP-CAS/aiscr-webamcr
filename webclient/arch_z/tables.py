@@ -1,6 +1,6 @@
 import django_tables2 as tables
 from core.utils import SearchTable
-from django.contrib.postgres.aggregates import StringAgg
+from django.db.models import StringAgg, Value
 from django.utils.translation import gettext_lazy as _
 
 from .models import Akce
@@ -153,7 +153,7 @@ class AkceTable(SearchTable):
         queryset = queryset.annotate(
             vedouci_organizace__nazev_zkraceny=StringAgg(
                 "akcevedouci__organizace__nazev_zkraceny",
-                delimiter=", ",
+                delimiter=Value(", "),
             )
         ).order_by(f"{'-' * (-1 * is_descending)}vedouci_organizace__nazev_zkraceny")
         return queryset, True

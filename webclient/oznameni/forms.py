@@ -9,13 +9,13 @@ from core.widgets import AutocompleteModelSelect2Multiple
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from django import forms
+from django.db.backends.postgresql.psycopg_any import DateRange
 from django.forms import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django_recaptcha.fields import ReCaptchaField
 from django_recaptcha.widgets import ReCaptchaV2Invisible
 from oznameni.models import Oznamovatel
 from projekt.models import Projekt
-from psycopg2._range import DateRange
 
 logger = logging.getLogger(__name__)
 

@@ -174,7 +174,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='heslarhierarchie',
             constraint=models.CheckConstraint(
-                check=models.Q(('typ__in', ['podřízenost', 'uplatnění', 'výchozí hodnota'])),
+                condition=models.Q(('typ__in', ['podřízenost', 'uplatnění', 'výchozí hodnota'])),
                 name='heslar_hierarchie_typ_check'),
         ),
     ]
