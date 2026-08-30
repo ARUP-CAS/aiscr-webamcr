@@ -5265,20 +5265,34 @@ class DistribuceMapper(DistributionColumnsMixin, ImportModelMapper):
             self._validate_import_filename()
         soubor = self._get_soubor(self.value_dict.get("id"), "id")
         exists = self.distribution_exists(soubor, distribution)
-        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and exists:
-            raise DistribuceImportIntegrityError(self.value_dict.get("id"), distribution, performed_action)
-        if (
-            performed_action
-            in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE)
-            and not exists
-        ):
-            raise DistribuceImportIntegrityError(self.value_dict.get("id"), distribution, performed_action)
+        self._raise_if_existence_mismatched(self.value_dict.get("id"), distribution, performed_action, exists)
         if seen_in_batch is not None:
             key = (soubor.pk, distribution)
             if key in seen_in_batch:
                 raise DistribuceImportIntegrityError(self.value_dict.get("id"), distribution, performed_action)
             seen_in_batch.add(key)
         return self._get_filter_kwargs_primary_key()
+
+    @staticmethod
+    def _raise_if_existence_mismatched(id_value, distribution: str, performed_action, exists: bool) -> None:
+        """
+        Ověří existenční stav distribuce (nebo paradat) vůči prováděné akci.
+
+        :param id_value: Identifikátor řádku pro chybové hlášení (``id`` nebo ``path``).
+        :param distribution: Název distribuce.
+        :param performed_action: Prováděná importní akce.
+        :param exists: Zda distribuce (nebo paradata) v cíli již existují.
+        :raises DistribuceImportIntegrityError: Pokud INSERT naráží na existující cíl, nebo
+            UPDATE/DELETE na cíl neexistující.
+        """
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and exists:
+            raise DistribuceImportIntegrityError(id_value, distribution, performed_action)
+        if (
+            performed_action
+            in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE)
+            and not exists
+        ):
+            raise DistribuceImportIntegrityError(id_value, distribution, performed_action)
 
     def create_records(self, performed_action):
         """
@@ -5387,14 +5401,7 @@ class ParadataMapper(DistribuceMapper):
         if not self.distribution_exists(soubor, distribution):
             raise DistribuceImportIntegrityError(path, distribution, performed_action)
         paradata_exists = self.paradata_exists(soubor, distribution)
-        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and paradata_exists:
-            raise DistribuceImportIntegrityError(path, distribution, performed_action)
-        if (
-            performed_action
-            in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE)
-            and not paradata_exists
-        ):
-            raise DistribuceImportIntegrityError(path, distribution, performed_action)
+        self._raise_if_existence_mismatched(path, distribution, performed_action, paradata_exists)
         if seen_in_batch is not None:
             key = (soubor.pk, distribution)
             if key in seen_in_batch:

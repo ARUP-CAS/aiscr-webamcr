@@ -2640,6 +2640,17 @@ Třídy
       :raises DistribuceImportIntegrityError: Při porušení předpokladu o existenci distribuce
           nebo při opakování téže distribuce v jedné dávce.
 
+   .. py:method:: _raise_if_existence_mismatched()
+
+      Ověří existenční stav distribuce (nebo paradat) vůči prováděné akci.
+
+      :param id_value: Identifikátor řádku pro chybové hlášení (``id`` nebo ``path``).
+      :param distribution: Název distribuce.
+      :param performed_action: Prováděná importní akce.
+      :param exists: Zda distribuce (nebo paradata) v cíli již existují.
+      :raises DistribuceImportIntegrityError: Pokud INSERT naráží na existující cíl, nebo
+          UPDATE/DELETE na cíl neexistující.
+
    .. py:method:: create_records()
 
       Dohledá existující ``Soubor`` a připojí k němu přechodné atributy distribuce.
