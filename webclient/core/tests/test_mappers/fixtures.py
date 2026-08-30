@@ -1,5 +1,8 @@
 """Sdílené pomocné funkce pro vytváření testovacích dat v mapper testech."""
 
+from core.constants import DOKUMENT_RELATION_TYPE
+from core.models import Soubor, SouborVazby
+from django.conf import settings
 from dokument.models import Dokument
 from ez.models import ExterniZdroj
 from heslar.hesla import (
@@ -56,17 +59,21 @@ def create_dokument_fixture(ident_cely="C-TX-000001", stav=1):
         defaults={"heslo": "Veřejná", "heslo_en": "Public", "nazev_heslare": hn_org_typ},
     )[0]
 
-    organizace = Organizace(
-        ident_cely="ORG-T-001",
-        nazev="Testovací ústav",
-        nazev_zkraceny="TU",
-        nazev_zkraceny_en="TI",
-        typ_organizace=heslar_org_typ,
-        zverejneni_pristupnost=heslar_pristupnost,
-        licence=heslar_licence,
-    )
-    organizace.suppress_signal = True
-    organizace.save()
+    # Organizace is shared by every fixture dokument — its nazev_zkraceny is unique, so a second
+    # call must reuse the existing row instead of inserting a duplicate.
+    organizace = Organizace.objects.filter(ident_cely="ORG-T-001").first()
+    if organizace is None:
+        organizace = Organizace(
+            ident_cely="ORG-T-001",
+            nazev="Testovací ústav",
+            nazev_zkraceny="TU",
+            nazev_zkraceny_en="TI",
+            typ_organizace=heslar_org_typ,
+            zverejneni_pristupnost=heslar_pristupnost,
+            licence=heslar_licence,
+        )
+        organizace.suppress_signal = True
+        organizace.save()
 
     dokument = Dokument(
         ident_cely=ident_cely,
@@ -100,3 +107,40 @@ def create_externi_zdroj_fixture(ident_cely="BIB-C-EZ-000001", stav=1):
     externi_zdroj.suppress_signal = True
     externi_zdroj.save()
     return externi_zdroj
+
+
+def create_soubor_fixture(
+    dokument,
+    nazev="dokument.pdf",
+    uuid="11111111-2222-3333-4444-555555555555",
+    with_path=True,
+    with_navazany_objekt=True,
+):
+    """Vytvoří uložený ``Soubor`` navázaný na dokument, včetně vazby na historii.
+
+    :param dokument: Dokument, ke kterému se soubor naváže.
+    :param nazev: Název souboru.
+    :param uuid: UUID kontejneru souboru ve Fedoře, ze kterého se skládá ``path``.
+    :param with_path: Pokud ``False``, soubor zůstane bez ``path`` (nemá tedy ``repository_uuid``).
+    :param with_navazany_objekt: Pokud ``False``, vazba se k dokumentu nepřipojí, takže
+        ``vazba.navazany_objekt`` je ``None`` (soubor nemá nadřazený záznam).
+    :return: Uloženou instanci ``Soubor`` s vyplněnou vazbou na historii.
+    """
+    vazba = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
+    vazba.suppress_signal = True
+    vazba.save()
+    if with_navazany_objekt:
+        dokument.soubory = vazba
+        dokument.suppress_signal = True
+        dokument.save()
+    soubor = Soubor(
+        nazev=nazev,
+        mimetype="application/pdf",
+        vazba=vazba,
+        size_mb=1,
+        path=(f"rest/{settings.FEDORA_SERVER_NAME}/record/{dokument.ident_cely}/file/{uuid}" if with_path else None),
+    )
+    soubor.suppress_signal = True
+    soubor.save()
+    soubor.create_soubor_vazby()
+    return soubor

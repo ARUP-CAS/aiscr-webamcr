@@ -205,6 +205,33 @@ Funkce
    :param pk: Primární klíč z mapperu, typicky slovník složeného klíče nebo skalární hodnota.
    :return: Textová reprezentace klíče vhodná pro zobrazení ve validační tabulce.
 
+.. py:function:: _import_job_record_keys(redis_connector, job_id, record_count)
+
+   Vrátí klíče jednotlivých naimportovaných záznamů dané úlohy.
+
+   Primárně se rozsah odvodí z čítače ``import_data_count_{job_id}``. Pokud čítač chybí nebo
+   není číslo (úloha už doběhla a čítač vyexpiroval), klíče se dohledají scanem — jinak by
+   zůstaly bez TTL napořád: validace je na úspěšné cestě ``persist``uje, takže by je nic
+   nesmazalo (review #4197, Fix 6).
+
+   :param redis_connector: Redis spojení, nad kterým se klíče dohledávají.
+   :param job_id: Identifikátor importní úlohy.
+   :param record_count: Počet záznamů, pokud ho volající zná; jinak se zjistí z čítače.
+   :return: Seznam klíčů ``import_data_{job_id}_record_{i}``.
+
+.. py:function:: expire_import_job_keys(redis_connector, job_id, ttl_seconds, record_count)
+
+   Nastaví expiraci všem per-job klíčům importní úlohy.
+
+   Klíče se pouze expirují, nikdy nemažou — report musí zůstat stažitelný po dobu retence.
+   Jediný zdroj pravdy pro terminální úklid: volá ho validační i importní task, ruční reset
+   (``reset_import_job``) a zrušení úlohy z view.
+
+   :param redis_connector: Redis spojení, nad kterým se expirace nastavuje.
+   :param job_id: Identifikátor importní úlohy.
+   :param ttl_seconds: Doba retence v sekundách.
+   :param record_count: Počet naimportovaných záznamů, pokud ho volající zná.
+
 .. py:function:: reset_import_job(redis_connector, job_id)
 
    Ruční superuživatelský reset zaseklé importní úlohy: uvolní globální lock a úlohu ukončí.

@@ -66,6 +66,33 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
    docker exec -it $(sudo docker ps -q -f name=swarm_webamcr_web) python3 manage.py <název_příkazu> [parametry] --settings=webclient.settings.production
 
 
+``backfill_thumb_history``
+--------------------------
+
+.. automodule:: core.management.commands.backfill_thumb_history
+   :members: Command
+   :undoc-members:
+
+**Parametry:**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 20 20 30
+
+   * - Název
+     - Typ
+     - Výchozí hodnota
+     - Popis
+   * - ``--dry-run``
+     - 
+     - ``False``
+     - Pouze zobrazí, kolik záznamů historie by vzniklo, nic neuloží.
+   * - ``--limit``
+     - ``int``
+     - ``None``
+     - Maximální počet zpracovaných souborů.
+
+
 ``check_pian_properties``
 -------------------------
 

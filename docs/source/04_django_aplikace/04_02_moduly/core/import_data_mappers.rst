@@ -126,6 +126,127 @@ Třídy
       :param vazba: ``ident_cely`` navázaného záznamu, pro který přípona není povolena.
 
 
+.. py:class:: ImportDataReservedDistributionError
+
+   Výjimka vyvolaná při importu alternativní distribuce, jejíž název je vyhrazený.
+
+   Vyhrazené názvy (``orig``, ``paradata``, ``thumb/page`` a vše pod ním) nelze použít jako
+   název kontejneru distribuce ve Fedoře.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param distribution: Vyhrazený název distribuce, který nelze použít.
+
+
+.. py:class:: ImportDataInvalidDistributionError
+
+   Výjimka vyvolaná při importu distribuce nebo paradat s neplatným názvem distribuce.
+
+   Neplatný je název s prázdným segmentem (``ocr//alto-xml``) nebo se segmentem umožňujícím
+   opustit kontejner souboru (``ocr/../orig``). Kontrola probíhá už při validaci, aby chyba
+   nevznikla až při zápisu do Fedory.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param distribution: Neplatný název distribuce, který nelze použít.
+
+
+.. py:class:: ImportDataDistributionPrefixCollisionError
+
+   Výjimka vyvolaná při importu distribucí (nebo paradat), jejichž názvy se v cestě kříží.
+
+   Název ``ocr`` je předkem ``ocr/alto-xml``: tentýž název nesmí být zároveň binární distribucí
+   a nadřazeným kontejnerem jiné distribuce, protože zápis listu by ve Fedoře vytvořil binární
+   uzel tam, kde potomek očekává kontejner. Kontrola probíhá už nad celou dávkou, aby chyba
+   nevznikla až při zápisu do repozitáře.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param soubor_ref: Identifikace dotčeného souboru z importu (``id`` nebo ``path``).
+      :param ancestor: Název distribuce, který je předkem ``descendant`` v cestě.
+      :param descendant: Název distribuce, který je potomkem ``ancestor`` v cestě.
+
+
+.. py:class:: DistribuceMissingRepositoryUuidError
+
+   Výjimka vyvolaná, pokud dotčený soubor nemá ve ``path`` uloženou cestu do Fedory.
+
+   Bez UUID kontejneru souboru nelze distribuci ani paradata ve Fedoře umístit; kontrola
+   probíhá už při validaci, aby import neselhal až v fázi zápisu do repozitáře.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param soubor_id: Identifikace dotčeného souboru z importu (``id`` nebo ``path``).
+
+
+.. py:class:: DistribuceMissingVazbaError
+
+   Výjimka vyvolaná, pokud dotčený soubor nemá vazbu na nadřazený záznam (``navazany_objekt``).
+
+   Bez navázaného záznamu nelze sestavit kontejner ve Fedoře, protože connector odvozuje cestu
+   z ``ident_cely`` nadřazeného záznamu. Kontrola probíhá už při validaci, aby import neselhal
+   až v fázi zápisu do repozitáře, a aby byl řádek označen jako neplatný místo pádu celé dávky.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param soubor_id: Identifikace dotčeného souboru z importu (``id`` nebo ``path``).
+
+
+.. py:class:: DistribuceUnsafeFilenameError
+
+   Výjimka vyvolaná, pokud název souboru z importu (``distribution_nazev`` / ``paradata_nazev``)
+   není prostý název – obsahuje oddělovač cesty, ``..`` nebo je absolutní.
+
+   Takový název by se spojil s importním adresářem a mohl by z něj opustit, proto se kontroluje
+   už při validaci, aby byl řádek označen jako neplatný místo pádu celé dávky ve fázi zápisu.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param nazev: Neplatný název souboru z importu.
+
+
+.. py:class:: DistribuceImportIntegrityError
+
+   Výjimka vyvolaná při importu alternativní distribuce, pokud porušuje předpoklad o existenci:
+
+   při insertu — distribuce daného názvu pro soubor již existuje,
+   při updatu/mazání — žádná taková distribuce neexistuje.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param soubor_id: Identifikátor dotčeného souboru ve formátu importu (např. ``soub-100008``).
+      :param distribution: Název distribuce, které se konflikt týká.
+      :param performed_action: Prováděná importní akce.
+
+
 .. py:class:: ImportDataLimitChoicesError
 
    Výjimka vyvolaná při hodnotě cizího klíče, která nesplňuje omezení limit_choices_to.
@@ -2368,6 +2489,281 @@ Třídy
 
       :param record: Importovaný záznam ``Soubor``.
       :return: Seznam záznamů s historií dotčenou importem souboru.
+
+
+.. py:class:: DistributionColumnsMixin
+
+   Mixin pro mappery pracující s kontejnery pod souborem (alternativní distribuce, paradata).
+
+   Sloupce těchto importů nejsou průmětem modelu ``Soubor`` — ``distribution`` v modelu vůbec
+   neexistuje a ``nazev`` s ``mimetype`` popisují nahrávaný binární obsah, ne řádek souboru.
+   Nelze proto použít odvození z ``fields``; mixin definuje sadu sloupců i kontrolu struktury
+   na jednom místě, aby se obě varianty importu nemohly rozejít. Odlišuje je jen sloupec
+   odkazující na dotčený soubor (``KEY_COLUMN``).
+
+   Mixin musí být v seznamu předků uveden **před** ``ImportModelMapper``, protože jeho metody
+   přebíjejí bázové implementace.
+
+   **Metody:**
+
+   .. py:method:: get_mapping()
+
+      Vrátí mapování sloupců importu na importní pole.
+
+      Odkaz na soubor je mapován průchozím polem, aby se hodnota ve formátu importu
+      (např. ``soub-100008``) zachovala i po serializaci pro fázi importu.
+
+      :param include_primary_key: Nepoužito — mapper vrací vždy plnou sadu sloupců.
+      :return: Slovník sloupec → instance importního pole.
+
+   .. py:method:: _check_column_structure()
+
+      Ověří strukturu sloupců importu podle prováděné akce.
+
+      INSERT/UPDATE očekávají odkaz na soubor, ``nazev``, ``mimetype`` a ``distribution``;
+      DELETE očekává pouze odkaz na soubor a ``distribution``, protože ke smazání kontejneru
+      není potřeba znát nahrávaný obsah.
+
+      :param performed_action: Prováděná importní akce.
+      :param include_primary_key: Nepoužito, zachováno kvůli sjednocenému rozhraní.
+      :raises ImportDataIncorrectStructureError: Při nesouladu skutečných a očekávaných sloupců.
+
+
+.. py:class:: DistribuceMapper
+
+   Mapovač pro alternativní distribuce existujících souborů (``distribution.csv``).
+
+   Distribuce nemá vlastní databázový model — je reprezentována kontejnerem ve Fedoře a
+   záznamy v historii dotčeného souboru (``DIST01``/``DIST11``/``DIST10``). Mapper proto
+   pouze dohledá existující ``Soubor``, ověří vstup a předá hodnoty pro fázi importu, která
+   provede zápis do Fedory a historie. V souladu s kontraktem read-only mapper nic nemění.
+
+   **Metody:**
+
+   .. py:method:: distribution_exists()
+
+      Určí, zda je pro soubor aktuálně dostupná distribuce daného názvu.
+
+      Zdrojem pravdy je Fedora, nikoli historie souboru: dotazem na ``fcr:metadata`` kontejneru
+      distribuce se zjistí jeho skutečný stav. Historie je pouze záznamem o provedených změnách
+      a mohla by se s repozitářem rozejít (distribuce založená nebo smazaná mimo import, ztracený
+      zápis historie), takže validace importu by pak povolila zápis, který ve Fedoře selže.
+      Smazaná distribuce po sobě zanechá tombstone a odpoví ``410`` – tedy neexistuje.
+
+      Dotaz je read-only, což je v souladu s kontraktem validační fáze (nesmí měnit databázi
+      ani repozitář).
+
+      :param soubor: Dotčený existující ``Soubor`` s vyplněnou cestou do Fedory.
+      :param distribution: Název distribuce.
+      :return: ``True``, pokud je distribuce dostupná, jinak ``False``.
+      :raises FedoraNoResponseError: Pokud repozitář neodpoví – existence se nedá určit
+          a validace nesmí pokračovat s nepodloženým předpokladem.
+
+   .. py:method:: _validate_distribution_name()
+
+      Ověří a vrátí normalizovaný název distribuce ze sloupce ``distribution``.
+
+      Používá stejná pravidla jako ``FedoraRepositoryConnector`` (funkce v ``core.constants``),
+      aby se neplatná hodnota zachytila už při validaci CSV, a ne až při zápisu do Fedory.
+
+      :param allow_implicit: Pokud ``True``, jsou povoleny názvy kontejnerů vznikajících
+          při importu souboru (``orig``, ``thumb``, ``thumb-large``) – využívají paradata.
+      :return: Normalizovaný název distribuce.
+      :raises ImportDataError: Pokud chybí název distribuce.
+      :raises ImportDataInvalidDistributionError: Pokud název obsahuje nepovolený segment.
+      :raises ImportDataReservedDistributionError: Pokud je název distribuce vyhrazený.
+
+   .. py:method:: _validate_import_filename()
+
+      Ověří, že název souboru z importu je prostý název bez cesty.
+
+      Název souboru (``distribution_nazev`` / ``paradata_nazev``) se ve fázi zápisu spojuje
+      s importním adresářem, takže nesmí obsahovat oddělovače cesty ani ``..`` – jinak by
+      mohl opustit importní adresář. Zakázání obou oddělovačů (``/`` i ``\``) vylučuje i
+      absolutní cestu. Kontroluje se už při validaci, aby se neplatný řádek označil jako
+      neplatný místo pádu celé dávky ve fázi zápisu. DELETE se nevyhodnocuje, protože
+      nemaže soubor z importního adresáře.
+
+      :raises DistribuceUnsafeFilenameError: Pokud název souboru chybí, obsahuje cestu nebo ``..``.
+
+   .. py:method:: validate_batch_ordering()
+
+      Ověří, že názvy distribucí jedné dávky nejsou pro tentýž soubor v předko-potomk vztahu.
+
+      Název ``ocr`` je předkem ``ocr/alto-xml``: tentýž název nesmí být zároveň binární distribucí
+      (list) i nadřazeným kontejnerem jiné distribuce, protože zápis listu by ve Fedoře
+      vytvořil binární uzel tam, kde potomek očekává kontejner. Jmenný prostor kontejnerů je ve
+      Fedoře jeden pro každý soubor, takže názvy se sdružují podle sloupce odkazujícího na soubor.
+      Stejná kontrola platí pro paradata, která tento mapper dědí.
+
+      :param payloads: Seznam surových řádkových slovníků ze souboru ``distribution.csv``.
+      :raises ImportDataDistributionPrefixCollisionError: Pokud jsou dva názvy v předko-potomk
+          vztahu pro tentýž soubor.
+
+   .. py:method:: _get_soubor()
+
+      Dohledá dotčený existující ``Soubor`` a ověří, že je uložen ve Fedoře.
+
+      :param missing_value_id: Hodnota z importu použitá v hlášení o nenalezeném souboru.
+      :param missing_field_name: Název sloupce, podle kterého se soubor dohledává.
+      :return: Nalezený ``Soubor``.
+      :raises ImportDataMissingReferencedValueError: Pokud dotčený soubor neexistuje.
+      :raises DistribuceMissingRepositoryUuidError: Pokud soubor nemá cestu do Fedory.
+      :raises DistribuceMissingVazbaError: Pokud soubor nemá vazbu na nadřazený záznam
+          (``navazany_objekt`` je ``None``) — bez něj nelze ve Fedoře sestavit kontejner distribuce
+          ani paradat.
+
+   .. py:method:: import_validation()
+
+      Ověří vstup pro import alternativní distribuce.
+
+      Kontroluje neprázdný, platný a nevyhrazený název distribuce, existenci dotčeného souboru
+      i jeho uložení ve Fedoře a — podle akce — existenci distribuce: INSERT vyžaduje, aby
+      distribuce dosud neexistovala, UPDATE/DELETE naopak vyžadují její existenci. Protože
+      historie vzniká až ve fázi importu, hlídá se navíc opakování téže dvojice
+      (soubor, distribuce) v rámci jedné dávky.
+
+      :param performed_action: Prováděná importní akce.
+      :param seen_in_batch: Množina klíčů ``(soubor_pk, distribuce)`` již zpracovaných řádků dávky;
+          pokud je předána, detekuje duplicity v rámci jednoho importu.
+      :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní.
+      :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní.
+      :return: Slovník s primárním klíčem pro dohledání souboru.
+      :raises ImportDataError: Pokud chybí název distribuce.
+      :raises ImportDataInvalidDistributionError: Pokud název distribuce obsahuje nepovolený segment.
+      :raises ImportDataReservedDistributionError: Pokud je název distribuce vyhrazený.
+      :raises DistribuceUnsafeFilenameError: Pokud název souboru (``nazev``) obsahuje cestu
+          nebo ``..``; nevyhodnocuje se pro DELETE.
+      :raises ImportDataMissingReferencedValueError: Pokud dotčený soubor neexistuje.
+      :raises DistribuceMissingRepositoryUuidError: Pokud soubor nemá cestu do Fedory.
+      :raises DistribuceMissingVazbaError: Pokud soubor nemá vazbu na nadřazený záznam.
+      :raises DistribuceImportIntegrityError: Při porušení předpokladu o existenci distribuce
+          nebo při opakování téže distribuce v jedné dávce.
+
+   .. py:method:: _raise_if_existence_mismatched()
+
+      Ověří existenční stav distribuce (nebo paradat) vůči prováděné akci.
+
+      :param id_value: Identifikátor řádku pro chybové hlášení (``id`` nebo ``path``).
+      :param distribution: Název distribuce.
+      :param performed_action: Prováděná importní akce.
+      :param exists: Zda distribuce (nebo paradata) v cíli již existují.
+      :raises DistribuceImportIntegrityError: Pokud INSERT naráží na existující cíl, nebo
+          UPDATE/DELETE na cíl neexistující.
+
+   .. py:method:: create_records()
+
+      Dohledá existující ``Soubor`` a připojí k němu přechodné atributy distribuce.
+
+      Nevytváří, neupravuje ani nemaže žádný databázový záznam ``Soubor`` — vrací pouze
+      existující instanci s hodnotami ``distribution_name``/``distribution_nazev``/
+      ``distribution_mimetype`` pro fázi importu, která provede zápis do Fedory a historie.
+
+      :param performed_action: Prováděná importní akce.
+      :return: Jednoprvkový seznam s dotčeným souborem.
+
+   .. py:method:: get_record_history()
+
+      Vrátí soubor jako cíl pro zápis historie distribuce.
+
+      :param record: Dotčený ``Soubor``.
+      :return: Přímo předaný soubor.
+
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+      Vrátí objekt navázaný na soubor, jehož metadata je po importu distribuce třeba aktualizovat.
+
+      :param record: Dotčený ``Soubor``.
+      :return: Seznam s navázaným objektem souboru, jinak prázdný seznam.
+
+
+.. py:class:: ParadataMapper
+
+   Mapovač pro paradata existujících souborů (``paradata.csv``).
+
+   Paradata jsou čistě fedorovská operace – ukládají se jako kontejner
+   ``…/file/{uuid}/paradata/{distribution}`` a nemění databázi ani metadatové XML. Mapper proto
+   nezapisuje historii ani neoznačuje záznam k aktualizaci metadat; pouze ověří vstup a předá
+   hodnoty fázi importu.
+
+   Oproti ``DistribuceMapper`` se soubor dohledává podle ``path`` (nikoli ``id``) a sloupec
+   ``distribution`` neoznačuje zakládanou distribuci, ale distribuci, ke které paradata patří.
+   Proto jsou povoleny i kontejnery vznikající při importu souboru (``orig``, ``thumb``,
+   ``thumb-large``); jejich existenci lze ověřit, protože zdrojem pravdy je Fedora.
+
+   **Metody:**
+
+   .. py:method:: import_validation()
+
+      Ověří vstup pro import paradat.
+
+      Kontroluje neprázdnou cestu souboru, platný název distribuce, existenci dotčeného souboru
+      i jeho uložení ve Fedoře a existenci distribuce, ke které paradata patří — včetně
+      kontejnerů vzniklých při importu souboru (``orig``, ``thumb``, ``thumb-large``), protože
+      zdrojem pravdy je Fedora, a ne historie, ve které tyto kontejnery nemají záznam.
+      Navíc — stejně jako ``DistribuceMapper`` u distribuce samotné — ověřuje existenční stav
+      kontejneru paradat vůči prováděné akci: INSERT vyžaduje, aby paradata dané distribuce
+      ještě neexistovala, UPDATE a DELETE naopak vyžadují jejich existenci.
+      Duplicitní dvojice (soubor, distribuce) v jedné dávce se odmítá, protože by druhý řádek
+      beze stopy přepsal první.
+
+      :param performed_action: Prováděná importní akce.
+      :param seen_in_batch: Množina klíčů ``(soubor_pk, distribuce)`` již zpracovaných řádků dávky;
+          pokud je předána, detekuje duplicity v rámci jednoho importu.
+      :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní.
+      :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní.
+      :return: Slovník s primárním klíčem pro dohledání souboru.
+      :raises ImportDataError: Pokud chybí cesta souboru nebo název distribuce.
+      :raises ImportDataInvalidDistributionError: Pokud název distribuce obsahuje nepovolený segment.
+      :raises ImportDataReservedDistributionError: Pokud je název distribuce vyhrazený.
+      :raises DistribuceUnsafeFilenameError: Pokud název souboru (``nazev``) obsahuje cestu
+          nebo ``..``; nevyhodnocuje se pro DELETE.
+      :raises ImportDataMissingReferencedValueError: Pokud dotčený soubor neexistuje.
+      :raises DistribuceMissingRepositoryUuidError: Pokud soubor nemá cestu do Fedory.
+      :raises DistribuceMissingVazbaError: Pokud soubor nemá vazbu na nadřazený záznam.
+      :raises DistribuceImportIntegrityError: Pokud cílová distribuce není dostupná, existenční
+          stav paradat neodpovídá prováděné akci, nebo se táž dvojice (soubor, distribuce)
+          v dávce opakuje.
+
+   .. py:method:: paradata_exists()
+
+      Určí, zda pro soubor existují paradata dané distribuce.
+
+      Na rozdíl od zděděné ``distribution_exists`` (ta ověřuje rodičovskou distribuci, ke které
+      paradata patří) se dotazuje přímo na kontejner paradat, aby INSERT/UPDATE/DELETE mohly
+      ověřit stejnou existenční symetrii, jakou ``DistribuceMapper`` uplatňuje nad distribucí
+      samotnou.
+
+      :param soubor: Dotčený existující ``Soubor`` s vyplněnou cestou do Fedory.
+      :param distribution: Název distribuce, ke které paradata patří.
+      :return: ``True``, pokud paradata dané distribuce existují, jinak ``False``.
+      :raises FedoraNoResponseError: Pokud repozitář neodpoví — existence se nedá určit
+          a validace nesmí pokračovat s nepodloženým předpokladem.
+
+   .. py:method:: create_records()
+
+      Dohledá existující ``Soubor`` a připojí k němu přechodné atributy paradat.
+
+      Nemění žádný databázový záznam — vrací pouze existující instanci s hodnotami
+      ``paradata_distribution``/``paradata_nazev``/``paradata_mimetype`` pro fázi importu,
+      která provede samotný zápis do Fedory.
+
+      :param performed_action: Prováděná importní akce.
+      :return: Jednoprvkový seznam s dotčeným souborem.
+
+   .. py:method:: get_record_history()
+
+      Paradata se do historie nezapisují — vrací ``None``.
+
+      :param record: Dotčený ``Soubor``.
+      :return: Vždy ``None``.
+
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+      Paradata nemění metadata záznamu, takže žádný objekt k aktualizaci nevrací.
+
+      :param record: Dotčený ``Soubor``.
+      :return: Vždy prázdný seznam.
 
 
 .. py:class:: UzivatelNotifikaceMapper

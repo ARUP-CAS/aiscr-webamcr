@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import random
 import secrets
 import string
 
@@ -288,7 +287,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 uploaded_file = form.cleaned_data["ident_list_file"]
                 sheet = self._read_file(uploaded_file, context)
                 if isinstance(sheet, pd.DataFrame):
-                    job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
+                    job_id = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(20))
                     job_id = f"update_pid_{job_id}"
                     self.redis_connector.set(job_id, "0;" + ";".join(sheet.index.unique().tolist()))
                     performed_action = form.cleaned_data["performed_action"]
@@ -317,7 +316,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 uploaded_file = form.cleaned_data["ident_list_file"]
                 sheet = self._read_file(uploaded_file, context)
                 if isinstance(sheet, pd.DataFrame):
-                    job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
+                    job_id = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(20))
                     job_id = f"update_metadata_{job_id}"
                     self.redis_connector.set(job_id, "0;" + ";".join(sheet.index.unique().tolist()))
                     context["url"] = reverse("fedora:continue-processing", args=[job_id])
@@ -457,6 +456,11 @@ class AmcrCustomAdminSite(admin.AdminSite):
         # Maintenance gate: reject uploads outside maintenance mode.
         if not maintenance:
             context["form"] = ImportDataAdminForm()
+            # Formulář se zobrazuje i mimo režim údržby, ale odeslání se tady zastaví — bez
+            # hlášky by POST skončil tichým překreslením stránky bez jakékoli zpětné vazby.
+            if request.method == "POST":
+                context["error_message"] = _("core.admin.import_data.error.import_error")
+                context["error_message_details"] = _("core.templates.admin.import_data.not_maintenance")
             return TemplateResponse(request, "admin/import_data/import_data.html", context)
 
         # Global-lock-busy gate: another admin's pipeline holds the lock.

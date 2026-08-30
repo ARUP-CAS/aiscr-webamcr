@@ -3441,6 +3441,9 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             with transaction.atomic():
                 soubor_instance.save()
                 soubor_instance.zaznamenej_nahrani(request.user, uploaded_file.name)
+                # Náhledy se do Fedory zapsaly ještě před vznikem záznamu ``Soubor``,
+                # takže se jejich historie doplňuje až tady.
+                soubor_instance.zaznamenej_distribuce(rep_bin_file.thumb_writes, request.user)
                 self._create_rearchive_history_record(instance, request.user)
                 soubor_instance.save()
             self._update_igsn_if_archived(instance)

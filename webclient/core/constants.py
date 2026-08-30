@@ -77,6 +77,11 @@ AKTUALIZACE_SN: Final = "SN-UPD"  # update jednotlivého pole
 # Soubory.
 NAHRANI_SBR: Final = "SBR0"  # 0
 PREJMENOVANI_SBR: Final = "SBR1"  # 1
+# Alternativní distribuce souborů.
+NAHRANI_DISTRIBUCE: Final = "DIST01"
+UPDATE_DISTRIBUCE: Final = "DIST11"
+SMAZANI_DISTRIBUCE: Final = "DIST10"
+
 # Uživatel.
 ZMENA_HLAVNI_ROLE: Final = "HR"  # 0, 1
 ZMENA_UDAJU_ADMIN: Final = "ZUA"  # 0
