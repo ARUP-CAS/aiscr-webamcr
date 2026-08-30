@@ -1247,7 +1247,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         else:
             return __generate_thumb_from_icon(file_name, file_content, large)
 
-    def save_thumbs(self, file_name, file, uuid, update=False, ident_cely_old=None):
+    def save_thumbs(self, file_name, file, uuid, update=False, ident_cely_old=None, source_thumbs=None):
         """
         Uloží thumbs. v aplikaci.
 
@@ -1256,6 +1256,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
         :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
         :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
+        :param source_thumbs: Volitelný slovník ``{True: bytes|None, False: bytes|None}`` s již existujícím
+            obsahem náhledů (velký/malý). Pokud je pro danou velikost k dispozici, náhled se nahraje přímo
+            místo přegenerování z ``file`` (např. při migraci souboru na nový identifikátor).
         """
         logger.debug(
             "core_repository_connector._save_thumb.start",
@@ -1268,22 +1271,24 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             },
         )
         for large in (True, False):
-            file.seek(0)
-            data = self.__generate_thumb(file_name, file, large)
-            if not data:
-                logger.info(
-                    "core_repository_connector._save_thumb.error",
-                    extra={
-                        "file": file_name,
-                        "ident_cely": self.record.ident_cely,
-                        "large": large,
-                        "update": update,
-                        "uuid": uuid,
-                        "transaction": self.transaction_uid,
-                    },
-                )
-                continue
-            data = data.read()
+            data = source_thumbs.get(large) if source_thumbs else None
+            if data is None:
+                file.seek(0)
+                generated = self.__generate_thumb(file_name, file, large)
+                if not generated:
+                    logger.info(
+                        "core_repository_connector._save_thumb.error",
+                        extra={
+                            "file": file_name,
+                            "ident_cely": self.record.ident_cely,
+                            "large": large,
+                            "update": update,
+                            "uuid": uuid,
+                            "transaction": self.transaction_uid,
+                        },
+                    )
+                    continue
+                data = generated.read()
             file_sha_512 = hashlib.sha512(data).hexdigest()
             thumb_file_name = file_name[: file_name.rfind(".")]
             headers = {
@@ -1368,6 +1373,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         if soubor.repository_uuid is not None and check_if_exists:
             return None
         self._check_binary_file_container()
+        source_thumbs = None
         if include_content:
             if soubor.repository_uuid is None:
                 with open(soubor.path, mode="rb") as file:
@@ -1379,6 +1385,16 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 data = old_rep_bin_file.content
                 file_sha_512 = old_rep_bin_file.sha_512
                 data.seek(0)
+                # Náhledy pro soubor už existují na starém umístění - stačí je zkopírovat, ne přegenerovat.
+                # Musí se číst přes soubor.get_repository_content (netransakční spojení) stejně jako orig výše -
+                # `self` je transakční připojení, ve kterém record_ident_change už smazal starý kontejner,
+                # takže by zde GET na starý container vracel 404.
+                old_large_thumb = soubor.get_repository_content(ident_cely_old, thumb_large=True)
+                old_small_thumb = soubor.get_repository_content(ident_cely_old, thumb_small=True)
+                source_thumbs = {
+                    True: old_large_thumb.content.read() if old_large_thumb else None,
+                    False: old_small_thumb.content.read() if old_small_thumb else None,
+                }
         else:
             data = None
             file_sha_512 = None
@@ -1404,7 +1420,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
             self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
             self._update_creator(FedoraRequestType.FILE_CONTENT_UPDATE_RDF_DATA, uuid)
-            self.save_thumbs(soubor.nazev, data, soubor.repository_uuid)
+            self.save_thumbs(soubor.nazev, data, soubor.repository_uuid, source_thumbs=source_thumbs)
             logger.debug(
                 "core_repository_connector.migrate_binary_file.end",
                 extra={"uuid": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
