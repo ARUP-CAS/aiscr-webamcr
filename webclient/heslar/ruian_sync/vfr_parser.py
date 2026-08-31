@@ -708,11 +708,16 @@ _NATIVE_CURVED_LOCALNAMES = frozenset({"Arc", "ArcString"})
 #: prvcích (kraj/okres/katastr) se dosud neobjevily; ``Circle`` se vyskytuje
 #: jen u ``Parcela``, kterou nesyncujeme.
 #:
+#: O odmítnutí prvku **nerozhoduje tenhle seznam**, ale whitelist
+#: :data:`_POVOLENE_GML_LOCALNAMES` – ten odmítne i typ, o kterém nevíme.
+#: Seznam slouží už jen k rozlišení v logu: „tenhle typ známe a neumíme ho"
+#: proti „tenhle typ neznáme vůbec".
+#:
 #: Dřív se geometrie s těmito typy delegovala na GDAL
 #: (``ogr.CreateGeometryFromGML``). To ale znamenalo, že podvržený denní soubor
 #: mohl jedním elementem dostat vlastní data do parseru GML v GDALu – tedy do
 #: rozsáhlé C/C++ knihovny – po cestě, kterou reálná data ČÚZK nikdy nevyužijí.
-#: Proto se prvek nově **odmítne** a zaloguje jako ERROR; stávající geometrie
+#: Proto se prvek **odmítne** a zaloguje jako ERROR; stávající geometrie
 #: v DB zůstane beze změny a operátor se o novém typu dozví z logu místo
 #: tichého fallbacku. Viz :func:`_gml_multisurface_to_wkt`.
 _FOREIGN_CURVED_LOCALNAMES = frozenset(
@@ -744,21 +749,67 @@ _SEGMENT_LOCALNAMES = frozenset(
 )
 
 
-def _first_foreign_curve(hranice_elem) -> Optional[str]:
-    """
-    Najde první zakřivený typ v podstromu, který vlastní kód neumí.
+#: Všechny GML elementy, které :func:`_gml_multisurface_to_wkt` a
+#: :func:`_ring_coords` umí zpracovat – strukturální obaly i vlastní segmenty.
+#:
+#: Kontrola je záměrně **whitelist, ne blacklist**. Blacklist
+#: (:data:`_FOREIGN_CURVED_LOCALNAMES`) by zachytil jen typy, které někdo
+#: předem vyjmenoval; typ, o kterém nevíme, by jím prošel – a protože
+#: :func:`_ring_coords` bere jen segmenty ze seznamu, jeho body by z prstenu
+#: prostě vypadly. Prsten by se pak uzavřel spojnicí přes vzniklou mezeru
+#: a vznikla by **tiše zkomolená hranice** bez jediného hlášení.
+_POVOLENE_GML_LOCALNAMES = frozenset(
+    {
+        # kolekce a plochy
+        "MultiSurface",
+        "MultiPolygon",
+        "surfaceMember",
+        "polygonMember",
+        "Surface",
+        "Polygon",
+        "patches",
+        "PolygonPatch",
+        # role prstenů
+        "exterior",
+        "interior",
+        # prsteny a jejich členění
+        "LinearRing",
+        "Ring",
+        "curveMember",
+        "Curve",
+        "segments",
+        # segmenty
+        "LineString",
+        "LineStringSegment",
+        "Arc",
+        "ArcString",
+        # souřadnice
+        "posList",
+    }
+)
 
-    Vrací přímo název typu (ne jen ``True``), aby jej volající mohl zalogovat –
-    operátor tak z logu pozná, který nový GML typ ČÚZK zavedlo.
+
+def _neznamy_geometricky_prvek(hranice_elem) -> Optional[str]:
+    """
+    Najde první GML element v hranici, který parser neumí zpracovat.
+
+    Prochází celý podstrom a hlásí cokoli mimo :data:`_POVOLENE_GML_LOCALNAMES`.
+    Vrací přímo název typu (ne jen ``True``), aby ho volající mohl zalogovat –
+    operátor tak z logu pozná, co přesně ČÚZK v datech nově použilo.
+
+    Kořenový element (``OriginalniHranice``) se přeskakuje, kontroluje se až
+    jeho obsah.
 
     :param hranice_elem: Element ``OriginalniHranice``.
 
-        :return: Local-name nepodporovaného typu, nebo ``None`` když podstrom
-            obsahuje jen typy, které vlastní kód zvládne.
+        :return: Local-name nepodporovaného elementu, nebo ``None`` když je
+            celý podstrom zpracovatelný.
     """
     for descendant in hranice_elem.iter():
+        if descendant is hranice_elem:
+            continue
         local = etree.QName(descendant.tag).localname
-        if local in _FOREIGN_CURVED_LOCALNAMES:
+        if local not in _POVOLENE_GML_LOCALNAMES:
             return local
     return None
 
@@ -939,11 +990,18 @@ def _gml_multisurface_to_wkt(hranice_elem) -> Optional[str]:
 
         :return: WKT řetězec nebo ``None``.
     """
-    foreign = _first_foreign_curve(hranice_elem)
-    if foreign is not None:
+    neznamy = _neznamy_geometricky_prvek(hranice_elem)
+    if neznamy is not None:
         logger.error(
-            "heslar.ruian_sync.vfr_parser._gml_multisurface_to_wkt.nepodporovana_krivka",
-            extra={"typ": foreign},
+            "heslar.ruian_sync.vfr_parser._gml_multisurface_to_wkt.nepodporovany_prvek",
+            extra={
+                "typ": neznamy,
+                "duvod": (
+                    "známý typ, který parser neumí"
+                    if neznamy in _FOREIGN_CURVED_LOCALNAMES
+                    else "typ mimo seznam podporovaných"
+                ),
+            },
         )
         return None
 

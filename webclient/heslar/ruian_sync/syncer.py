@@ -263,7 +263,7 @@ def _apply_full_state(
             last_pct = _print_progress("katastr delete", i, total_del, last_pct)
     else:
         _append_run_note(run, "Mazání katastrů přeskočeno: zdroj neposkytl žádné KU.")
-        logger.warning("heslar.ruian_sync.syncer._apply_full_state.skip_katastr_delete")
+        logger.error("heslar.ruian_sync.syncer._apply_full_state.skip_katastr_delete")
 
     if state.okresy:
         # Načteme kódy znovu (FK z katastrů na ně už nemíří – byly smazány
@@ -282,7 +282,7 @@ def _apply_full_state(
             last_pct = _print_progress("okres delete", i, total_del, last_pct)
     else:
         _append_run_note(run, "Mazání okresů přeskočeno: zdroj neposkytl žádné okresy (chybí ST_UKSH?).")
-        logger.warning("heslar.ruian_sync.syncer._apply_full_state.skip_okres_delete")
+        logger.error("heslar.ruian_sync.syncer._apply_full_state.skip_okres_delete")
 
     if state.kraje:
         # Načteme kódy znovu (vazby z okresů by už měly směřovat na zachovávané kraje)
@@ -300,7 +300,7 @@ def _apply_full_state(
             last_pct = _print_progress("kraj delete", i, total_del, last_pct)
     else:
         _append_run_note(run, "Mazání krajů přeskočeno: zdroj neposkytl žádné kraje (chybí ST_UKSH?).")
-        logger.warning("heslar.ruian_sync.syncer._apply_full_state.skip_kraj_delete")
+        logger.error("heslar.ruian_sync.syncer._apply_full_state.skip_kraj_delete")
 
     _check_katastry_topology(run, plocha_pred)
 
@@ -341,7 +341,7 @@ def _apply_changes(events: Iterable[RuianChangeEvent], run: RuianSyncRun) -> Set
     bucket = {LEVEL_KRAJ: [], LEVEL_OKRES: [], LEVEL_KATASTR: []}
     for ev in events:
         if ev.level not in bucket:
-            logger.warning("heslar.ruian_sync.syncer._apply_changes.unknown_level", extra={"level": ev.level})
+            logger.error("heslar.ruian_sync.syncer._apply_changes.unknown_level", extra={"level": ev.level})
             continue
         bucket[ev.level].append(ev)
 
@@ -506,7 +506,7 @@ def _delete_kraj(kraj: RuianKraj, run: Optional[RuianSyncRun] = None) -> bool:
         with transaction.atomic():
             kraj.delete()
     except RestrictedError as err:
-        logger.warning(
+        logger.error(
             "heslar.ruian_sync.syncer._delete_kraj.restricted",
             extra={"kod": kraj.kod, "nazev": kraj.nazev, "error": str(err)},
         )
@@ -736,7 +736,7 @@ def _delete_okres(okres: RuianOkres, run: Optional[RuianSyncRun] = None) -> bool
         with transaction.atomic():
             okres.delete()
     except RestrictedError as err:
-        logger.warning(
+        logger.error(
             "heslar.ruian_sync.syncer._delete_okres.restricted",
             extra={"kod": okres.kod, "nazev": okres.nazev, "error": str(err)},
         )
@@ -1356,7 +1356,7 @@ def _log_hranice_change_if_significant(
                 distance_m = round(float(new_hranice.distance(new_definicni_bod)), 2)
             except (AttributeError, GEOSException, TypeError, ValueError):
                 distance_m = None
-            logger.warning(
+            logger.error(
                 "heslar.ruian_sync.syncer._log_hranice_change_if_significant.bod_outside",
                 extra={
                     "level": level,
