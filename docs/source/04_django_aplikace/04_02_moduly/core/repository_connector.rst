@@ -339,6 +339,9 @@ Třídy
       :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
       :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
       :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
+      :param source_thumbs: Volitelný slovník ``{True: bytes|None, False: bytes|None}`` s již existujícím
+          obsahem náhledů (velký/malý). Pokud je pro danou velikost k dispozici, náhled se nahraje přímo
+          místo přegenerování z ``file`` (např. při migraci souboru na nový identifikátor).
 
    .. py:method:: migrate_binary_file()
 
