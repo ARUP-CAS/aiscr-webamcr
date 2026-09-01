@@ -249,6 +249,45 @@ class RunDataImportSamostatnyNalezTest(RunDataImportMapperTestBase):
         dataframe = cron_tasks.build_import_fedora_target_dataframe(JOB_ID, fake_redis)
         self.assertEqual(len(dataframe.index), 4)
 
+    def test_fedora_plan_report_failure_prevents_first_fedora_mutation(self):
+        """Selhání durabilního snapshotu úplného plánu ukončí fázi před první Fedora transakcí."""
+        report_call_count = 0
+        checkpoint_targets = []
+
+        def fail_fedora_plan_checkpoint(_job_id, redis_connector, _reports_directory_path):
+            nonlocal report_call_count
+            report_call_count += 1
+            targets_raw = redis_connector.get(f"import_fedora_target_results_tr_{JOB_ID}")
+            targets = json.loads(targets_raw or "[]")
+            if targets:
+                checkpoint_targets.extend(targets)
+                return None
+            return "/tmp/fake-import-dir/reports/report.xlsx"
+
+        fake_redis, _ = self.run_import_records(
+            FILE_KEY,
+            self._three_fedora_payloads(),
+            extra_patches=[patch("cron.tasks.save_import_report_to_disk", side_effect=fail_fedora_plan_checkpoint)],
+        )
+
+        self.assert_import_failed(fake_redis)
+        self.assertGreaterEqual(report_call_count, 3)
+        self.assertTrue(checkpoint_targets)
+        self.assertTrue(
+            all(
+                target["result"] == "cron.tasks.run_data_import.fedora_target_unattempted"
+                for target in checkpoint_targets
+            )
+        )
+        self.assertEqual(self.fedora_metadata_transactions, [])
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
+        self.assertIn("failed_during_data_import", status_raw.decode("utf-8"))
+        self.assertFalse(
+            SamostatnyNalez.objects.filter(
+                ident_cely__in=[payload["ident_cely"] for payload in self._three_fedora_payloads()]
+            ).exists()
+        )
+
     def test_user_stop_during_import_marks_status_as_stopped(self):
         """Ověřuje, že uživatelské zastavení importu záznamu samostatny nalez nastaví stav zastaveno."""
         fake_redis, _ = self.run_import(

@@ -1704,6 +1704,7 @@ def run_data_import(job_id, user_id, lock_token):
         import_fedora_result = defaultdict(list)
         # One entry per planned deduplicated Fedora target (not per import record) — including
         # targets that remain unattempted after a failure or stop.
+        fedora_target_items: list = []
         fedora_target_results: list = []
         transaction_user = User.objects.get(pk=user_id)
 
@@ -1809,6 +1810,16 @@ def run_data_import(job_id, user_id, lock_token):
                         continue
                 fedora_update_targets_dict.setdefault(item, None)
                 fedora_update_targets_record_ids_dict[item].add(record_id)
+
+        def fedora_target_identity(item):
+            """Return a stable, actionable identity without relying on a model instance repr."""
+            if isinstance(item, str):
+                return item
+            if isinstance(item, tuple) and len(item) == 2:
+                item_class, item_pk = item
+                model_label = getattr(getattr(item_class, "_meta", None), "label", item_class.__name__)
+                return "{}:{}".format(model_label, item_pk)
+            return str(item)
 
         # Tracks whether the data-phase atomic() block was rolled back (via set_rollback or a
         # propagating exception). Drives the success -> rolled_back relabel.
@@ -2105,6 +2116,33 @@ def run_data_import(job_id, user_id, lock_token):
                             translation_value("cron.tasks.run_data_import.failed_during_data_import"),
                         )
                         redis_connector.set(job_key("import_data_stop"), 1)
+                if not failed and not stopped:
+                    fedora_target_items = list(fedora_update_targets_dict)
+                    fedora_target_results = [
+                        {
+                            "ident_cely": fedora_target_identity(item),
+                            "transaction_uid": None,
+                            "record_ids": sorted(fedora_update_targets_record_ids_dict.get(item, set())),
+                            "result": translation_value("cron.tasks.run_data_import.fedora_target_unattempted"),
+                        }
+                        for item in fedora_target_items
+                    ]
+                    redis_connector.set(job_key("import_fedora_target_results_tr"), json.dumps(fedora_target_results))
+                    # Fail closed before the data transaction commits. Once the commit succeeds, a
+                    # hard worker exit can no longer leave committed database changes without the
+                    # complete actionable Fedora plan already present in the durable XLSX report.
+                    if save_import_report_to_disk(job_id, redis_connector, reports_directory_path) is None:
+                        transaction.set_rollback(True)
+                        data_rolled_back = True
+                        failed = True
+                        redis_connector.set(
+                            job_key("import_data_status_message_tr"),
+                            translation_value("cron.tasks.run_data_import.failed_during_data_import"),
+                        )
+                        redis_connector.set(job_key("import_data_stop"), 1)
+                        logger.error(
+                            "cron.tasks.run_data_import.fedora_plan_report_save_failed", extra={"job_id": job_id}
+                        )
                 if failed or stopped:
                     # Nothing from this batch will persist — do not leave the queued Fedora
                     # transactions open.
@@ -2140,6 +2178,9 @@ def run_data_import(job_id, user_id, lock_token):
             failed = True
             fedora_update_targets_dict = {}
             updated_history_dict = defaultdict(lambda: {"files": set(), "record_ids": set()})
+            fedora_target_items = []
+            fedora_target_results = []
+            redis_connector.set(job_key("import_fedora_target_results_tr"), json.dumps(fedora_target_results))
             pending_fedora_update.clear()
             pending_history_update.clear()
 
@@ -2266,39 +2307,13 @@ def run_data_import(job_id, user_id, lock_token):
                 job_key("import_data_status_message_tr"),
                 translation_value("cron.tasks.run_data_import.updating_fedora_records"),
             )
-        if reports_directory_path:
-            save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
-
         fedora_total = len(fedora_update_targets_dict)
         redis_connector.set(job_key("import_data_fedora_total"), fedora_total, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
         redis_connector.set(job_key("import_data_fedora_progress"), 0, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
         fedora_skipped_id = FEDORA_SKIPPED_ID
         fedora_waiting_data_import_id = "cron.tasks.run_data_import.fedora_waiting_data_import"
-        fedora_target_items = list(fedora_update_targets_dict)
-
-        def fedora_target_identity(item):
-            """Return a stable, actionable identity without relying on a model instance repr."""
-            if isinstance(item, str):
-                return item
-            if isinstance(item, tuple) and len(item) == 2:
-                item_class, item_pk = item
-                model_label = getattr(getattr(item_class, "_meta", None), "label", item_class.__name__)
-                return "{}:{}".format(model_label, item_pk)
-            return str(item)
-
-        # Persist the complete plan before the first Fedora mutation. Rows are updated in place as
-        # targets succeed or fail; therefore a process error or user stop cannot make later targets
-        # disappear from the durable report.
-        fedora_target_results = [
-            {
-                "ident_cely": fedora_target_identity(item),
-                "transaction_uid": None,
-                "record_ids": sorted(fedora_update_targets_record_ids_dict.get(item, set())),
-                "result": translation_value("cron.tasks.run_data_import.fedora_target_unattempted"),
-            }
-            for item in fedora_target_items
-        ]
-        redis_connector.set(job_key("import_fedora_target_results_tr"), json.dumps(fedora_target_results))
+        if reports_directory_path:
+            save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
         if not failed and not stopped:
             fedora_pending_record_ids = set()
             for affected_ids in fedora_update_targets_record_ids_dict.values():
