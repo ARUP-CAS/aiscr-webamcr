@@ -1,6 +1,6 @@
 Django==6.0.1
 psycopg2-binary==2.9.12
-simplejson==4.1.1
+simplejson==4.1.2
 django-crispy-forms==2.7
 crispy-bootstrap5==2026.3
 django-recaptcha==4.1.0
