@@ -52,7 +52,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Licence
      - Odkaz
    * - Django
-     - 5.2.16
+     - 6.0.8
      - BSD-3-Clause
      - https://www.djangoproject.com/
    * - Jinja2
@@ -308,7 +308,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.32.4
+     - 3.32.5
      - MIT
      - https://github.com/tox-dev/py-filelock
    * - freezegun
@@ -416,7 +416,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/raimon49/pip-licenses
    * - platformdirs
-     - 4.11.4
+     - 4.11.5
      - MIT
      - https://github.com/tox-dev/platformdirs
    * - polib
@@ -480,7 +480,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - LGPL-2.1-or-later
      - https://pyppmd.readthedocs.io/
    * - python-crontab
-     - 3.3.0
+     - 3.4.0
      - LGPLv3
      - https://gitlab.com/doctormo/python-crontab/
    * - python-dateutil
@@ -488,7 +488,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.5.3
+     - 1.6.0
      - MIT License
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
@@ -660,19 +660,19 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.7.5
+     - 21.7.7
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
-     - 0.8.2
+     - 0.8.3
      - MIT
      - https://github.com/jquast/wcwidth
    * - websocket-client
-     - 1.9.0
-     - Apache Software License
-     - https://github.com/websocket-client/websocket-client.git
+     - 1.9.2
+     - Apache-2.0
+     - https://github.com/websocket-client/websocket-client
    * - wrapt
-     - 2.3.0
+     - 2.4.0
      - Copyright (c) 2013-2025, Graham Dumpleton
      - https://github.com/GrahamDumpleton/wrapt
    * - wsproto
