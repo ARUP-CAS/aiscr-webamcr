@@ -7,6 +7,7 @@ import random
 import re
 import threading
 import time
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
 from threading import Lock
@@ -20,6 +21,13 @@ from requests.auth import HTTPBasicAuth
 logger = logging.getLogger(__name__)
 
 _RETRYABLE_EXCEPTIONS = (requests.exceptions.ConnectionError, requests.exceptions.Timeout)
+
+#: Timeout (sekundy) pro všechny HTTP požadavky na Fedoru - stejná hodnota jako
+#: ``requests.post(..., timeout=10)`` v ``core/repository_connector.py:624``. Bez
+#: timeoutu je ``requests.exceptions.Timeout`` v ``_RETRYABLE_EXCEPTIONS`` nedosažitelný
+#: (výchozí chování ``requests`` je čekat neomezeně) a zaseknuté TCP spojení by worker
+#: zablokovalo natrvalo, ne jen na dobu jednoho pokusu.
+_HTTP_TIMEOUT = 10
 
 #: HTTP status kódy z Fedory, které se považují za přechodné (stojí za retry) - server
 #: chyby (5xx, typicky přetížení/konflikt při souběžném zápisu do stejného sdíleného
@@ -264,7 +272,9 @@ class _FastFedoraWriter:
         """
         if tx_url:
             headers = {**headers, "Atomic-ID": tx_url}
-        response = getattr(self._session(), method)(url, headers=headers, data=data, verify=False)
+        response = getattr(self._session(), method)(
+            url, headers=headers, data=data, verify=False, timeout=_HTTP_TIMEOUT
+        )
         if not str(response.status_code).startswith("2"):
             raise FastFedoraWriteError(url, response.status_code, response.text)
         return response
@@ -280,7 +290,7 @@ class _FastFedoraWriter:
                 odpověď neobsahuje identifikátor transakce v hlavičce ``Location``.
         """
         url = f"{self.rest_root}/fcr:tx"
-        response = self._session().post(url, verify=False)
+        response = self._session().post(url, verify=False, timeout=_HTTP_TIMEOUT)
         if not str(response.status_code).startswith("2"):
             raise FastFedoraWriteError(url, response.status_code, response.text)
         match = re.search(
@@ -299,7 +309,7 @@ class _FastFedoraWriter:
 
             :raises FastFedoraWriteError: Pokud commit selže.
         """
-        response = self._admin_session().put(tx_url, verify=False)
+        response = self._admin_session().put(tx_url, verify=False, timeout=_HTTP_TIMEOUT)
         if not str(response.status_code).startswith("2"):
             raise FastFedoraWriteError(tx_url, response.status_code, response.text)
 
@@ -311,7 +321,7 @@ class _FastFedoraWriter:
         :param tx_url: URL transakce z ``begin_transaction``.
         """
         try:
-            self._admin_session().delete(tx_url, verify=False)
+            self._admin_session().delete(tx_url, verify=False, timeout=_HTTP_TIMEOUT)
         except requests.exceptions.RequestException as exc:
             logger.warning(
                 "core.management.commands.generate_metadata_fast.rollback_failed",
@@ -387,19 +397,37 @@ class _FastFedoraWriter:
         ``http://www.w3.org/ns/ldp#contains`` URI. Kontrola na ``"ldp:contains"`` by
         záludně záviselo na tom, že fcrepo zvolí zrovna tenhle turtle prefix.
 
+        Odpověď se čte proudově (``stream=True``) a čtení se ukončí, jakmile se najde
+        první výskyt hledaného URI - právě u neprázdného repozitáře (ten, který má tahle
+        metoda odhalit) může mít úplný výpis containment trojic desítky MB; není důvod
+        stahovat ho celý, když stačí najít jeden triple.
+
         :return: ``True``, pokud ``/record`` neobsahuje žádný ``ldp:contains`` triple
             (nebo vůbec neexistuje), jinak ``False``.
 
             :raises FastFedoraWriteError: Pokud dotaz vrátí jiný status kód než 200/404.
         """
         response = self._session().get(
-            f"{self.base_url}/record", headers={"Accept": "application/n-triples"}, verify=False
+            f"{self.base_url}/record",
+            headers={"Accept": "application/n-triples"},
+            verify=False,
+            timeout=_HTTP_TIMEOUT,
+            stream=True,
         )
-        if response.status_code == 404:
+        try:
+            if response.status_code == 404:
+                return True
+            if response.status_code != 200:
+                raise FastFedoraWriteError(f"{self.base_url}/record", response.status_code, response.text)
+            marker = b"http://www.w3.org/ns/ldp#contains"
+            tail = b""
+            for chunk in response.iter_content(chunk_size=65536):
+                if marker in tail + chunk:
+                    return False
+                tail = chunk[-len(marker) :]
             return True
-        if response.status_code != 200:
-            raise FastFedoraWriteError(f"{self.base_url}/record", response.status_code, response.text)
-        return "http://www.w3.org/ns/ldp#contains" not in response.text
+        finally:
+            response.close()
 
     def create_file_container(self, ident_cely, tx_url=None):
         """
@@ -588,9 +616,10 @@ class Command(BaseCommand):
     Placeholder nahrazuje skutečný obsah souboru, takže po migraci ``Soubor.sha_512``/
     ``size_mb`` v DB přestanou odpovídat tomu, co je reálně ve Fedoře. Volitelný
     ``--aktualizovat-db`` tohle srovná - po úspěšném zápisu přepíše obě pole na hodnoty
-    odpovídající vloženému placeholderu (viz ``_aktualizuj_soubory_v_db``). Bez něj
-    zůstane DB ukazovat hash/velikost původního souboru, který ale ve Fedoře není -
-    což může být žádoucí, pokud se DB řeší jinak (odsud opt-in, ne výchozí chování).
+    odpovídající vloženému placeholderu (viz ``_flush_db_updates``, volá se hromadně po
+    doběhnutí modelu, ne po každém souboru zvlášť). Bez něj zůstane DB ukazovat
+    hash/velikost původního souboru, který ale ve Fedoře není - což může být žádoucí,
+    pokud se DB řeší jinak (odsud opt-in, ne výchozí chování).
 
     Příklady použití::
 
@@ -665,7 +694,8 @@ class Command(BaseCommand):
                 "Po úspěšném vložení placeholderu do Fedory přepíše Soubor.sha_512/size_mb "
                 "v DB na hodnoty odpovídající vloženému placeholderu (ne původnímu, skutečnému "
                 "souboru) - bez toho DB po migraci ukazuje hash/velikost obsahu, který ve "
-                "Fedoře reálně není. Nemá efekt bez --bez-souboru vynechaných souborů. "
+                "Fedoře reálně není. Se --bez-souboru nemá žádný efekt - tam se soubory "
+                "vůbec nezapisují, není co v DB aktualizovat. "
                 "Mutuje DB hromadně - použij vědomě, ne jen 'pro jistotu'."
             ),
         )
@@ -687,9 +717,9 @@ class Command(BaseCommand):
         return _FastFedoraWriter(base_url, LogMiddleware.get_user_id())
 
     @staticmethod
-    def _aktualizuj_soubory_v_db(zapsane):
+    def _flush_db_updates(db_updates, placeholders):
         """
-        Přepíše ``Soubor.sha_512``/``size_mb`` v DB na hodnoty odpovídající placeholderu,
+        Hromadně přepíše ``Soubor.sha_512``/``size_mb`` na hodnoty odpovídající placeholderu,
         který byl skutečně vložen do Fedory (viz ``--aktualizovat-db`` a "Poznámka k
         záměru" v review issue #3967).
 
@@ -698,19 +728,31 @@ class Command(BaseCommand):
         souboru, který ale ve Fedoře reálně není. Krok je opt-in (``--aktualizovat-db``),
         protože jde o hromadnou mutaci produkční DB, ne jen zápis do Fedory.
 
-        :param zapsane: Seznam ``(pk, entry)`` - ``entry`` je položka z ``_load_placeholders``
-            odpovídající placeholderu skutečně zapsanému pro tento ``Soubor.pk``.
+        Všechny soubory se stejným mimetype dostaly bajtově identický placeholder (viz
+        ``_load_placeholders``), takže mají i identický ``sha_512``/``size_mb`` - není
+        důvod dělat samostatný ``UPDATE`` na každý soubor zvlášť (u run na statisících
+        souborů šlo o stejný počet round-tripů, review issue #3967). Místo toho jeden
+        ``UPDATE ... WHERE pk IN (...)`` na dávku pro každý mimetype.
+
+        ``size_mb`` se počítá stejně jako ``RepositoryBinaryFile.size_mb`` v
+        ``core/repository_connector.py`` (``size / 1024**2``, MiB) - ne ``/1_000_000``,
+        ať DB po migraci odpovídá jednotkám, které používá zbytek aplikace.
+
+        :param db_updates: Mapa ``mimetype -> [Soubor.pk, ...]`` nasbíraná v ``_process_record``.
+        :param placeholders: Mapa mimetype -> placeholder obsah (``_load_placeholders``).
         """
         from core.models import Soubor
 
-        for pk, entry in zapsane:
-            Soubor.objects.filter(pk=pk).update(
-                sha_512=entry["orig_sha512"],
-                size_mb=Decimal(len(entry["orig_bytes"])) / Decimal(1_000_000),
-            )
+        for mimetype, pks in db_updates.items():
+            if not pks:
+                continue
+            entry = placeholders[mimetype]
+            size_mb = Decimal(len(entry["orig_bytes"])) / Decimal(1024**2)
+            for chunk in _po_davkach(pks, 5000):
+                Soubor.objects.filter(pk__in=chunk).update(sha_512=entry["orig_sha512"], size_mb=size_mb)
 
     @staticmethod
-    def _process_record(obj, writer, max_retries, failures, placeholders=None, aktualizovat_db=False):
+    def _process_record(obj, writer, max_retries, failures, placeholders=None, db_updates=None, db_updates_lock=None):
         """
         Vygeneruje XML metadata pro jeden záznam a vloží je do Fedory rychlou cestou.
 
@@ -721,6 +763,11 @@ class Command(BaseCommand):
         záznamu - kdyby se zpracovaly v jiné transakci, vznikla by na tomtéž OCFL
         objektu druhá verze navíc (viz docstring ``_FastFedoraWriter`` a issue #3967 -
         měření ukázalo, že počet OCFL verzí určuje počet transakcí, ne počet mutací v nich).
+
+        Generování XML dokumentu a načtení seznamu souborů záznamu proběhne **jednou,
+        před** retry smyčkou - na rozdíl od samotného zápisu do Fedory nezávisí na
+        předchozím (neúspěšném) pokusu, takže by se při retry jen zbytečně opakovalo
+        (DB dotazy, XPath nad schématem) beze změny výsledku.
 
         Selhání (vyčerpané retries, nebo rovnou trvalá chyba - viz ``_is_retryable``)
         nezastaví celý běh - zaloguje se a záznam se přidá do ``failures`` k pozdějšímu
@@ -736,8 +783,12 @@ class Command(BaseCommand):
         :param failures: Sdílený seznam pro zápis ``(pk, ident_cely, error)`` při selhání.
         :param placeholders: Mapa mimetype -> placeholder obsah (``_load_placeholders``),
             nebo ``None`` při ``--bez-souboru`` - pak se soubory záznamu vůbec neřeší.
-        :param aktualizovat_db: Viz ``--aktualizovat-db`` - po úspěšném commitu přepíše
-            ``Soubor.sha_512``/``size_mb`` vložených souborů na hodnoty placeholderu.
+        :param db_updates: Sdílený ``defaultdict(list)`` mimetype -> ``[Soubor.pk, ...]``
+            (viz ``--aktualizovat-db`` a ``_flush_db_updates``), nebo ``None`` bez
+            ``--aktualizovat-db``. Po úspěšném zápisu se sem jen přidá pk - samotný
+            ``UPDATE`` proběhne hromadně až po doběhnutí celého modelu.
+        :param db_updates_lock: Zámek pro ``db_updates`` (sdílený mezi vlákny), povinný
+            pokud je ``db_updates`` zadané.
         """
         from core.models import SouborVazby
         from xml_generator.generator import DocumentGenerator
@@ -749,48 +800,60 @@ class Command(BaseCommand):
             )
             return
         model_name = _get_schema_by_name()[obj.__class__.__name__][1]
+        try:
+            document = DocumentGenerator(obj).generate_document()
+            hash512 = hashlib.sha512(document).hexdigest()
+            soubory = []
+            if placeholders is not None and isinstance(getattr(obj, "soubory", None), SouborVazby):
+                soubory = [
+                    (s.pk, s.path.rsplit("/", 1)[-1], s.nazev, s.mimetype)
+                    for s in obj.soubory.soubory.exclude(path="").exclude(path__isnull=True)
+                ]
+        except Exception as exc:
+            # Chyba při generování dokumentu/čtení seznamu souborů není nikdy
+            # retryovatelná (na rozdíl od zápisu do Fedory níže) - jde o data/logiku,
+            # ne o přechodný síťový/serverový stav, opakování by dalo stejný výsledek.
+            logger.error(
+                "core.management.commands.generate_metadata_fast.record_failed",
+                extra={"pk": obj.pk, "ident_cely": obj.ident_cely, "error": str(exc)},
+            )
+            failures.append((obj.pk, obj.ident_cely, str(exc)))
+            return
+
         attempt = 0
         while True:
             tx_url = None
             try:
-                document = DocumentGenerator(obj).generate_document()
-                hash512 = hashlib.sha512(document).hexdigest()
                 tx_url = writer.begin_transaction()
                 writer.create_record(obj.ident_cely, model_name, document, hash512, tx_url=tx_url)
-                zapsane_soubory = []
-                if placeholders is not None and isinstance(getattr(obj, "soubory", None), SouborVazby):
-                    soubory = [
-                        (s.pk, s.path.rsplit("/", 1)[-1], s.nazev, s.mimetype)
-                        for s in obj.soubory.soubory.exclude(path="").exclude(path__isnull=True)
-                    ]
-                    if soubory:
-                        writer.create_file_container(obj.ident_cely, tx_url=tx_url)
-                        for pk, uuid, nazev, mimetype in soubory:
-                            entry = placeholders.get(mimetype)
-                            if entry is None:
-                                logger.warning(
-                                    "core.management.commands.generate_metadata_fast.no_placeholder",
-                                    extra={"pk": pk, "mimetype": mimetype, "ident_cely": obj.ident_cely},
-                                )
-                                failures.append((pk, obj.ident_cely, f"Chybí placeholder pro mimetype '{mimetype}'."))
-                                continue
-                            writer.create_binary_file(
-                                obj.ident_cely,
-                                uuid,
-                                nazev,
-                                mimetype,
-                                entry["orig_bytes"],
-                                entry["orig_sha512"],
-                                entry["thumb_bytes"],
-                                entry["thumb_sha512"],
-                                entry["thumb_large_bytes"],
-                                entry["thumb_large_sha512"],
-                                tx_url=tx_url,
+                if soubory:
+                    writer.create_file_container(obj.ident_cely, tx_url=tx_url)
+                    for pk, uuid, nazev, mimetype in soubory:
+                        entry = placeholders.get(mimetype)
+                        if entry is None:
+                            logger.warning(
+                                "core.management.commands.generate_metadata_fast.no_placeholder",
+                                extra={"pk": pk, "mimetype": mimetype, "ident_cely": obj.ident_cely},
                             )
-                            zapsane_soubory.append((pk, entry))
+                            failures.append((pk, obj.ident_cely, f"Chybí placeholder pro mimetype '{mimetype}'."))
+                            continue
+                        writer.create_binary_file(
+                            obj.ident_cely,
+                            uuid,
+                            nazev,
+                            mimetype,
+                            entry["orig_bytes"],
+                            entry["orig_sha512"],
+                            entry["thumb_bytes"],
+                            entry["thumb_sha512"],
+                            entry["thumb_large_bytes"],
+                            entry["thumb_large_sha512"],
+                            tx_url=tx_url,
+                        )
+                        if db_updates is not None:
+                            with db_updates_lock:
+                                db_updates[mimetype].append(pk)
                 writer.commit_transaction(tx_url)
-                if aktualizovat_db and zapsane_soubory:
-                    Command._aktualizuj_soubory_v_db(zapsane_soubory)
                 return
             except Exception as exc:
                 if tx_url:
@@ -901,13 +964,22 @@ class Command(BaseCommand):
                     total = min(total, limit)
                 self.stdout.write(f"== {current_class.__name__} ({total}) ==")
                 failures = []
+                # db_updates/lock jsou nové pro každý model - _flush_db_updates se volá
+                # hned po doběhnutí (ne až na konci celého běhu), ať se dopad případného
+                # pádu na aktualizaci DB omezí na jeden rozpracovaný model, ne na celý běh.
+                db_updates = defaultdict(list) if aktualizovat_db else None
+                db_updates_lock = Lock() if aktualizovat_db else None
                 self._run_parallel(
                     queryset.iterator(chunk_size=500),
-                    lambda obj: self._process_record(obj, writer, max_retries, failures, placeholders, aktualizovat_db),
+                    lambda obj: self._process_record(
+                        obj, writer, max_retries, failures, placeholders, db_updates, db_updates_lock
+                    ),
                     workers,
                     total=total,
                 )
                 self._report_failures(failures)
+                if db_updates:
+                    self._flush_db_updates(db_updates, placeholders)
         else:
             entry = schema_by_name.get(model_class)
             if entry is None:
@@ -922,13 +994,19 @@ class Command(BaseCommand):
                 queryset = queryset[:limit]
             total = queryset.count()
             failures = []
+            db_updates = defaultdict(list) if aktualizovat_db else None
+            db_updates_lock = Lock() if aktualizovat_db else None
             self._run_parallel(
                 queryset.iterator(chunk_size=500),
-                lambda obj: self._process_record(obj, writer, max_retries, failures, placeholders, aktualizovat_db),
+                lambda obj: self._process_record(
+                    obj, writer, max_retries, failures, placeholders, db_updates, db_updates_lock
+                ),
                 workers,
                 total=total,
             )
             self._report_failures(failures)
+            if db_updates:
+                self._flush_db_updates(db_updates, placeholders)
 
     def _report_failures(self, failures):
         """

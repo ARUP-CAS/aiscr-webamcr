@@ -180,7 +180,7 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
    * - ``--aktualizovat-db``
      - 
      - ``False``
-     - Po úspěšném vložení placeholderu do Fedory přepíše Soubor.sha_512/size_mb v DB na hodnoty odpovídající vloženému placeholderu (ne původnímu, skutečnému souboru) - bez toho DB po migraci ukazuje hash/velikost obsahu, který ve Fedoře reálně není. Nemá efekt bez --bez-souboru vynechaných souborů. Mutuje DB hromadně - použij vědomě, ne jen 'pro jistotu'.
+     - Po úspěšném vložení placeholderu do Fedory přepíše Soubor.sha_512/size_mb v DB na hodnoty odpovídající vloženému placeholderu (ne původnímu, skutečnému souboru) - bez toho DB po migraci ukazuje hash/velikost obsahu, který ve Fedoře reálně není. Se --bez-souboru nemá žádný efekt - tam se soubory vůbec nezapisují, není co v DB aktualizovat. Mutuje DB hromadně - použij vědomě, ne jen 'pro jistotu'.
 
 
 ``generate_thumbs``

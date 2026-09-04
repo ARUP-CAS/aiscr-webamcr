@@ -19,11 +19,6 @@
 *.pyc    binary
 *.pyd    binary
 
-# Placeholder fixtures pro generate_metadata_fast (issue #3967) - obsah se posílá do
-# Fedory se sha512 přepočítaným z bajtů na disku (viz core/management/commands/
-# placeholders/README.md); `* text=auto` by u .csv/.txt normalizovalo konce řádků
-# podle checkoutu (Windows CRLF vs. Linux LF) a bajty by se lišily stroj od stroje.
-webclient/core/management/commands/placeholders/** -text
 *.pyo    binary
 
 # Jupyter notebook
@@ -115,3 +110,12 @@ webclient/core/management/commands/placeholders/** -text
 .gitattributes export-ignore
 .gitignore     export-ignore
 .gitkeep       export-ignore
+
+# Placeholder fixtures pro generate_metadata_fast (issue #3967) - obsah se posílá do
+# Fedory se sha512 přepočítaným z bajtů na disku (viz core/management/commands/
+# placeholders/README.md); `* text=auto` a specifičtější pravidla výše (`*.csv text`,
+# `*.txt text`, ...) by normalizovaly konce řádků podle checkoutu (Windows CRLF vs.
+# Linux LF) a bajty by se lišily stroj od stroje. Musí být AŽ TADY, na konci souboru -
+# v `.gitattributes` vyhrává pro danou cestu poslední shodující se pravidlo, takže dřív
+# v souboru by ho přebily `* text=auto`/`*.csv text`/`*.txt text`.
+webclient/core/management/commands/placeholders/** -text

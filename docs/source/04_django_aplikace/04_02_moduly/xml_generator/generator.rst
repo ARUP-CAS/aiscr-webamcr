@@ -54,7 +54,10 @@ Třídy
       XSD soubor se během běhu nemění, opakované ``etree.parse()`` při každém
       volání :func:`_parse_schema`/:func:`get_ref_type_attribute_name` bylo
       zbytečné čtení a parsování ze disku (desítky ms na volání). Cache je
-      per-vlákno (viz ``_schema_tree_local``), ne sdílená přes všechna vlákna.
+      per-vlákno (viz ``_schema_tree_local``), ne sdílená přes všechna vlákna -
+      a klíčovaná podle ``schema_path``, ne jen jedna hodnota na vlákno, aby
+      metoda respektovala svůj vlastní argument (kdyby o stejného vlákna žádal
+      strom pro jinou cestu, dostal by mylně strom z první cesty).
 
       :param schema_path: Cesta k XSD schema souboru.
       :return: Naparsovaný ``lxml.etree._ElementTree``.
