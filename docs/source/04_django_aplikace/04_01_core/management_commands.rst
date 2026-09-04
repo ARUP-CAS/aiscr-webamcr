@@ -132,6 +132,57 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
      - core.management.commands.generate_metadata.Command.add_arguments.start_with_pk_help
 
 
+``generate_metadata_fast``
+--------------------------
+
+.. automodule:: core.management.commands.generate_metadata_fast
+   :members: Command
+   :undoc-members:
+
+**Parametry:**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 20 20 30
+
+   * - Název
+     - Typ
+     - Výchozí hodnota
+     - Popis
+   * - ``--model``
+     - ``str``
+     - ``None``
+     - Název třídy modelu (např. Projekt, Dokument). Pokud není zadán, zpracují se všechny modely.
+   * - ``--limit``
+     - ``int``
+     - ``None``
+     - Maximální počet zpracovaných záznamů (na model, pokud není zadán --model).
+   * - ``--start-with-pk``
+     - ``int``
+     - ``None``
+     - Primární klíč, od kterého se má začít zpracování (``pk__gte``). Bez --model se aplikuje na všech 15 modelů stejně - pro navázání po pádu proto použij vždy spolu s --model.
+   * - ``--workers``
+     - ``int``
+     - ``1``
+     - Počet paralelních vláken (1 = sekvenční běh).
+   * - ``--max-retries``
+     - ``int``
+     - ``3``
+     - Maximální počet opakování jednoho záznamu při přechodné chybě (viz _is_retryable).
+   * - ``--bez-souboru``
+     - 
+     - ``False``
+     - Negenerovat soubory (Projekt/Dokument/SamostatnyNalez) - jen XML metadata. Bez tohoto přepínače musí jít načíst placeholder_manifest.json (viz core/management/commands/placeholders/).
+   * - ``--force``
+     - 
+     - ``False``
+     - Přeskočí kontrolu, že /record je prázdné. Použij výhradně pro navázání po pádu spolu s --start-with-pk nastaveným za poslední úspěšně zpracovaný záznam - jinak hrozí duplicitní zdroje (viz docstring třídy Command).
+   * - ``--aktualizovat-db``
+     - 
+     - ``False``
+     - Po úspěšném vložení placeholderu do Fedory přepíše Soubor.sha_512/size_mb v DB na hodnoty odpovídající vloženému placeholderu (ne původnímu, skutečnému souboru) - bez toho DB po migraci ukazuje hash/velikost obsahu, který ve Fedoře reálně není. Nemá efekt bez --bez-souboru vynechaných souborů. Mutuje DB hromadně - použij vědomě, ne jen 'pro jistotu'.
+
+
 ``generate_thumbs``
 -------------------
 
@@ -274,41 +325,6 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
 .. automodule:: core.management.commands.send_test_emails
    :members: Command
    :undoc-members:
-
-
-``shrink_soubor_hashes``
-------------------------
-
-.. automodule:: core.management.commands.shrink_soubor_hashes
-   :members: Command
-   :undoc-members:
-
-**Parametry:**
-
-.. list-table::
-   :header-rows: 1
-   :widths: 30 20 20 30
-
-   * - Název
-     - Typ
-     - Výchozí hodnota
-     - Popis
-   * - ``--placeholder-manifest``
-     - 
-     - 
-     - Cesta k placeholder_manifest.json (mimetype -> {sha512, size, file}).
-   * - ``--update-size``
-     - 
-     - ``False``
-     - Při hromadném update přepsat i size_mb podle velikosti placeholderu.
-   * - ``--verify``
-     - 
-     - ``False``
-     - Ověří, že soubor.sha_512 odpovídá manifestu (žádný zápis).
-   * - ``--dry-run``
-     - 
-     - ``False``
-     - Pouze zobrazí, co by se stalo, nic neuloží.
 
 
 ``transform_to_sjtsk``

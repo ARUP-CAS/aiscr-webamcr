@@ -47,6 +47,18 @@ Třídy
 
       :return: Vrací výsledek volání ``join()``.
 
+   .. py:method:: _get_schema_tree()
+
+      Načte a naparsuje XSD schema; výsledek je cachovaný po dobu běhu vlákna.
+
+      XSD soubor se během běhu nemění, opakované ``etree.parse()`` při každém
+      volání :func:`_parse_schema`/:func:`get_ref_type_attribute_name` bylo
+      zbytečné čtení a parsování ze disku (desítky ms na volání). Cache je
+      per-vlákno (viz ``_schema_tree_local``), ne sdílená přes všechna vlákna.
+
+      :param schema_path: Cesta k XSD schema souboru.
+      :return: Naparsovaný ``lxml.etree._ElementTree``.
+
    .. py:method:: _parse_schema()
 
              Zpracuje schema.
@@ -67,6 +79,23 @@ Třídy
 
       :param comment_text: Číselná hodnota ``comment_text`` použitá při výpočtu nebo transformaci.
       :return: Výstup funkce odpovídající implementované logice.
+
+   .. py:method:: _get_cached_related()
+
+      Ekvivalent ``getattr(record, attr_name[, default])``, ale pro ForeignKey na
+      ``Heslar`` použije cache v rámci životnosti tohoto ``DocumentGenerator``.
+
+      Stejný heslářový kód se v rámci jednoho dokumentu často vyskytuje vícekrát
+      (různé prvky schématu odkazují na stejnou klasifikaci) - bez cache se
+      zbytečně opakovaně dotazuje ta samá řádka `heslar` (viz profiling issue #3967:
+      ~34 % dotazů na `heslar` uvnitř jednoho záznamu byly duplicity). Cache nikdy
+      nepřežije jeden dokument, takže nehrozí zastaralá data napříč záznamy.
+
+      :param record: Instance modelu (nebo ``None``), ze které se atribut čte.
+      :param attr_name: Název atributu/pole.
+      :param default: Výchozí hodnota při chybějícím atributu; není-li zadána,
+          chová se jako ``getattr`` bez výchozí hodnoty (vyhodí ``AttributeError``).
+      :return: Hodnota atributu.
 
    .. py:method:: _get_attribute_of_record()
 

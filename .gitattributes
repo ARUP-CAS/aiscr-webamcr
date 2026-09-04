@@ -18,6 +18,12 @@
 *.pickle binary
 *.pyc    binary
 *.pyd    binary
+
+# Placeholder fixtures pro generate_metadata_fast (issue #3967) - obsah se posílá do
+# Fedory se sha512 přepočítaným z bajtů na disku (viz core/management/commands/
+# placeholders/README.md); `* text=auto` by u .csv/.txt normalizovalo konce řádků
+# podle checkoutu (Windows CRLF vs. Linux LF) a bajty by se lišily stroj od stroje.
+webclient/core/management/commands/placeholders/** -text
 *.pyo    binary
 
 # Jupyter notebook
