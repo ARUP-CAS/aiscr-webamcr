@@ -3,8 +3,110 @@ CRON tasks
 
 Modul tasks.
 
+Třídy
+------
+
+.. py:class:: SouborMissingRepositoryUuidError
+
+   Vyvoláno při pokusu o UPDATE binárního souboru, jehož ``repository_uuid`` je None.
+
+   Indikuje poškozená data: záznam ``Soubor`` existuje v DB, ale nemá přiřazený
+   Fedora UUID, tedy binární soubor v repositáři neexistuje nebo nebyl nikdy nahrán.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param soubor_pk: Primární klíč záznamu ``Soubor`` s chybějícím ``repository_uuid``.
+      :param nazev: Název souboru, u nějž chybí ``repository_uuid``.
+
+
+.. py:class:: SouborMimeUnsupportedError
+
+   Vyvoláno při importu souboru, jehož detekovaný MIME typ aplikace nepodporuje.
+
+   Indikuje MIME typ mimo mapu podporovaných formátů ``Soubor.MIME_TO_EXTENSIONS``.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param nazev: Název importovaného souboru.
+      :param mime_type: MIME typ detekovaný z obsahu souboru.
+
+
+.. py:class:: SouborMimeExtensionMismatchError
+
+   Vyvoláno při importu souboru, jehož přípona neodpovídá MIME typu detekovanému z obsahu.
+
+   Indikuje přejmenovaný soubor (např. JPEG uložený s příponou ``.tif``), jehož import
+   by vedl k nekonzistenci mezi názvem a skutečným obsahem souboru.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param nazev: Název souboru, u nějž byla zjištěna neshoda.
+      :param extension: Přípona odvozená z názvu souboru.
+      :param mime_type: MIME typ detekovaný z obsahu souboru.
+
+
+.. py:class:: SouborMimeNotAllowedError
+
+   Vyvoláno při importu souboru, jehož MIME typ není povolen pro typ navázaného záznamu.
+
+   Whitelisty povolených MIME typů odpovídají kontrole ``Soubor.check_mime_for_url``
+   používané při uživatelském uploadu.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param nazev: Název importovaného souboru.
+      :param mime_type: MIME typ detekovaný z obsahu souboru.
+      :param navazany_ident_cely: Identifikátor navázaného záznamu, pro který MIME typ není povolen.
+
+
+.. py:class:: ImportLockLostError
+
+   Vyvoláno, když ``refresh_import_lock`` zjistí, že importní lock byl ztracen.
+
+   Použito jako sentinel, aby vnější ``except Exception`` v ``run_data_import`` mohl
+   rozlišit ztrátu zámku od ostatních selhání během importu dat a nepřepsal
+   konkrétní status message ``failed_lock_lost``.
+
+
 Funkce
 ------
+
+.. py:function:: translation_value(message_id, raw)
+
+   Zabalí překladové ID (a případné parametry) pro uložení do Redis.
+
+   Pro zprávy bez parametrů vrací přímo ID (plain string) — běžný případ. Pro parametrizované
+   zprávy vrací JSON obálku ``{"id": <id>, "params": {...}}``, kterou čtenář rozbalí a interpoluje
+   po překladu. Nikdy nevolá ``_()`` — překlad probíhá až na straně čtenáře.
+
+   Pro výjimky, jejichž zpráva je složena za běhu (např. ``str(err)`` z mapperů), použijte
+   ``raw=True``: obálka ``{"id": "cron.tasks.run_data_import.error.raw", "params": {"message": ...},
+   "raw": true}`` se na čtenáři vrátí doslova bez překladu. ``raw`` je zde samostatný keyword
+   argument (ne součást ``params``), aby v obálce skončil na nejvyšší úrovni, kde ho čtenář hledá.
+
+   :param message_id: ID překladového řetězce (dotted key, např.
+       ``cron.tasks.run_data_import.finished``).
+   :param raw: Pokud ``True``, obálka nese příznak ``raw`` na nejvyšší úrovni a čtenář zprávu
+       vrátí doslova (``params["message"]``) bez volání ``_()``.
+   :param params: Parametry pro interpolaci přeloženého řetězce (např. ``n``, ``total``). Pro
+       výjimku použijte ``raw=True`` a ``message=<str(err)>``.
+   :return: Hodnota připravená k zápisu do Redis (ID nebo JSON obálka).
 
 .. py:function:: send_notifications_enz()
 
@@ -89,6 +191,127 @@ Funkce
 
    Zavolá URL digiarchívu pro spuštění aktualizace dat.
 
+.. py:function:: _normalize_import_file_name(name)
+
+   Normalizuje název souboru ze ZIP archivu na formát pro porovnání s mapery.
+
+   :param name: Původní cesta nebo název souboru ze ZIP archivu.
+   :return: Název souboru bez adresáře, oříznutý o bílé znaky a převedený na malá písmena.
+
+.. py:function:: _format_import_primary_key(pk)
+
+   Převede primární klíč importovaného záznamu na text pro validační výstup.
+
+   :param pk: Primární klíč z mapperu, typicky slovník složeného klíče nebo skalární hodnota.
+   :return: Textová reprezentace klíče vhodná pro zobrazení ve validační tabulce.
+
+.. py:function:: reset_import_job(redis_connector, job_id)
+
+   Ruční superuživatelský reset zaseklé importní úlohy: uvolní globální lock a úlohu ukončí.
+
+   Určeno pro případ, kdy worker validační/importní úlohy zemřel (OOM/SIGKILL) a lock zůstal
+   držený — jediná povolená obnova je tato ruční akce administrátora (žádný automatický reaper).
+   Uvolnění locku je token-checked: pokud lock mezitím legitimně získala jiná úloha, je release
+   no-op a cizí lock zůstane nedotčen. Postup zrcadlí terminální ``finally`` importních tasků:
+   nastaví stop sentinel (případný živý zombie task se zastaví při nejbližší kontrole a sám
+   zruší svou právě otevřenou DB transakci), fázi ``failed`` s důvodem ``error``, vyčistí
+   ukazatel běžící úlohy uživatele i zpětný odkaz ``IMPORT_DATA_ACTIVE_JOB_KEY``, uvolní případný
+   nastagovaný ZIP a per-job datové klíče pouze expiruje (report zůstane stažitelný).
+
+   :param redis_connector: Dekódující Redis spojení.
+   :param job_id: Identifikátor resetované importní úlohy.
+
+.. py:function:: _translate_status_value_for_report(raw)
+
+   Přeloží hodnotu z Redis (ID nebo obálka ``{id, params}``) do aktivního jazyka.
+
+   Zrcadlí ``core.views._translate_status_value`` — nedovolat odtud, aby ``cron.tasks`` (načítaný
+   při startu Celery workeru) nezávisel na ``core.views`` na úrovni modulu.
+
+   :param raw: Hodnota z Redis — ``None``, plain ID (str), nebo JSON obálka (str) s ``id`` a
+       ``params``.
+   :return: Přeložený řetězec, nebo ``None``, pokud je vstup ``None``.
+
+.. py:function:: get_or_create_import_report_path(job_id, redis_connector, reports_directory_path)
+
+   Vrátí cestu k XLSX reportu importní úlohy, poprvé ji odvodí a uloží do Redis.
+
+   Report je vázaný na okamžik prvního volání (typicky začátek validace) — jméno souboru nese
+   tento časový otisk plus ``job_id`` pro jednoznačnost. Cesta se persistuje do Redis, aby ji
+   validace i navazující import (dvě samostatné Celery úlohy) použily shodně a psaly do stejného
+   souboru (zákaznický požadavek: jeden XLSX report na import, dohledatelný podle času startu).
+
+   :param job_id: Identifikátor importní úlohy.
+   :param redis_connector: Redis spojení, přes které se cesta persistuje.
+   :param reports_directory_path: Adresář, kam se report ukládá (podadresář ``reports``).
+   :return: Absolutní cesta k XLSX souboru reportu této úlohy.
+
+.. py:function:: build_import_report_dataframe(job_id, redis_connector)
+
+   Sestaví DataFrame reportu importní úlohy z aktuálního stavu v Redis.
+
+   Sdílený mechanismus mezi periodickým ukládáním na disk (``save_import_report_to_disk``,
+   volané z ``run_data_import_validation``/``run_data_import``) a stahováním přes
+   ``DataImportProgressReportView`` — obě strany čtou stejná Redis data stejným způsobem, takže
+   stažený a na disk uložený report si vždy odpovídají.
+
+   :param job_id: Identifikátor importní úlohy.
+   :param redis_connector: Dekódující Redis spojení (klíče i hodnoty jako ``str``).
+   :return: Dvojice ``(DataFrame, fáze)`` — ``fáze`` je aktuální ``import_data_phase_{job_id}``.
+
+.. py:function:: build_import_fedora_target_dataframe(job_id, redis_connector)
+
+   Sestaví DataFrame druhého listu reportu s výsledky Fedora aktualizací po cílech.
+
+   Na rozdíl od hlavního listu (jeden řádek na importovaný záznam) obsahuje jeden řádek na
+   skutečně provedenou aktualizaci Fedora metadat nad deduplikovanými cíli z
+   ``fedora_update_targets_dict`` — víc importovaných záznamů může sdílet jeden Fedora cíl
+   (zákaznický požadavek na list ``Fedora``). Navíc obsahuje řádek pro každý záznam, který žádný
+   Fedora cíl neměl (``FEDORA_SKIPPED_ID``) — nový unikátní placeholder výsledku importu, ID
+   transakce zůstává prázdné (zákaznický požadavek).
+
+   :param job_id: Identifikátor importní úlohy.
+   :param redis_connector: Dekódující Redis spojení.
+   :return: DataFrame se sloupci ``ident_cely``, ID transakce Fedora a přeložený výsledek.
+
+.. py:function:: save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
+
+   Uloží aktuální stav reportu importní úlohy jako XLSX do adresáře reportů.
+
+   Volá se na začátku validace/importu a po každé fázové tranzici i v except/finally větvích
+   (zákaznický požadavek — report musí přežít TTL Redis klíčů). Zápis je
+   atomický (dočasný soubor + ``os.replace``), takže souběžné čtení nikdy neuvidí částečně
+   zapsaný XLSX. Chyba zápisu se loguje a vrací se ``None``; úvodní snapshot validačního či
+   importního tasku tuto hodnotu používá jako fail-closed bránu před další prací.
+
+   :param job_id: Identifikátor importní úlohy.
+   :param redis_connector: Dekódující Redis spojení.
+   :param reports_directory_path: Adresář reportů (z ``check_import_report_directory``).
+   :return: Cesta k uloženému souboru při úspěchu, jinak ``None``.
+
+.. py:function:: run_data_import_validation(job_id, user_id, lock_token, performed_action)
+
+   Asynchronně zvaliduje nahraný ZIP archiv hromadného importu.
+
+   Task převezme staged ZIP z Redis (chunky ``import_data_file_{job_id}_{i}``), projde
+   všechny CSV řádky přes mappery (``map`` / ``check_required_fields`` / ``import_validation`` /
+   ``create_records``) a inkrementálně zapisuje výsledky do Redis, aby je stránka mohla pollovat.
+   Samotný import neprovádí — po úspěšné validaci nechává lock držený a přechází do fáze
+   ``awaiting_approval``; při chybě nebo zastavení lock uvolní.
+
+   Kontrakt read-only: ``create_records`` se během validace volá pouze pro serializaci a musí
+   zůstat read-only — nesmí volat ``save()``/``delete()`` ani jinak měnit databázi.
+
+   Paměťová charakteristika: reassembled komprimovaný blob (~250 MB pro maximální úlohu)
+   NENÍ high-water mark workeru. Validační průchod (object-dtype DataFrame + kopie z ``to_dict`` +
+   akumulující se seznam ``records``) dosahuje několika GB pro maximální úlohu — worker musí být
+   dimenzován na tento peak, ne na ~250 MB komprimovaného blobu.
+
+   :param job_id: Identifikátor importní úlohy (sufix všech per-job Redis klíčů).
+   :param user_id: Identifikátor uživatele, který import spustil.
+   :param lock_token: Token vlastnictví importního locku, obnovovaný jednou za řádek během validace.
+   :param performed_action: Typ akce importu (insert/update/delete) z ``ImportDataAdminForm``.
+
 .. py:function:: run_data_import(job_id, user_id, lock_token)
 
    Spustí data import.
@@ -97,4 +320,52 @@ Funkce
    :param user_id: Identifikátor objektu ``user``.
    :param lock_token: Token pro ověření vlastnictví importního zámku v Redis.
 
-   :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem "Missing required DIRECTORY_PATH setting".
+   Možné hodnoty Redis klíče ``import_data_status_message_tr_{job_id}`` (ukládá se překladové
+   ID, případně obálka ``{id, params}`` pro parametrizované zprávy; překlad provádí až čtenář
+   v locale přihlášeného admina — viz ``translation_value`` a ``_translate_status_value``):
+
+   .. list-table::
+       :header-rows: 1
+       :widths: 35 65
+
+       * - Hodnota stavu
+         - Situace, kdy se stav nastaví
+       * - ``cron.tasks.run_data_import.failed_lock_lost``
+         - Import už běžel, ale při obnově Redis locku se zjistí, že task lock ztratil.
+       * - ``cron.tasks.run_data_import.failed_lock_acquisition``
+         - Task na začátku nezíská nebo neobnoví importní lock, takže import nepokračuje.
+       * - ``cron.tasks.run_data_import.importing_record_data {n}/{total}``
+         - Během hlavní fáze importu dat, před zpracováním jednotlivého záznamu.
+       * - ``cron.tasks.run_data_import.stopped_by_user``
+         - Uživatel zastavil import přes ``import_data_stop_{job_id}``.
+       * - ``cron.tasks.run_data_import.failed_during_data_import``
+         - Selže zpracování datového záznamu, databázová transakce nebo hlavní fáze importu dat.
+       * - ``cron.tasks.run_data_import.creating_history_records``
+         - Hlavní import dat doběhl bez chyby a začíná fáze vytváření historie.
+       * - ``cron.tasks.run_data_import.creating_history_records {n}/{total}``
+         - Během fáze historie, před vytvořením konkrétního historického záznamu.
+       * - ``cron.tasks.run_data_import.failed_during_history``
+         - Selže vytvoření některého záznamu historie.
+       * - ``cron.tasks.run_data_import.updating_fedora_records``
+         - Historie doběhla bez chyby a začíná fáze aktualizace Fedora metadat.
+       * - ``cron.tasks.run_data_import.updating_fedora_records {n}/{total}``
+         - Během aktualizace jednotlivých Fedora záznamů.
+       * - ``cron.tasks.run_data_import.failed_during_fedora``
+         - Selže uložení metadat do Fedory pro některý z dotčených záznamů.
+       * - ``cron.tasks.run_data_import.finalizing``
+         - Fedora fáze doběhla bez chyby a import přechází do finální fáze.
+       * - ``cron.tasks.run_data_import.file_import.validating_directory_settings``
+         - Před importem binárních souborů se kontroluje konfigurace importního adresáře.
+       * - ``cron.tasks.run_data_import.import_directory_not_configured``
+         - Import souborů je potřeba, ale chybí nebo je neplatná konfigurace ``DIRECTORY_PATH``.
+       * - ``cron.tasks.run_data_import.file_import.connected``
+         - Konfigurace importního adresáře je validní a začíná příprava importu souborů.
+       * - ``cron.tasks.run_data_import.importing_file {n}/{total}: {filename} ({ident_cely})``
+         - Během importu konkrétního binárního souboru.
+       * - ``cron.tasks.run_data_import.cannot_read_from_directory``
+         - Při importu souborů nastane chyba čtení z adresáře nebo zpracování souboru.
+       * - ``cron.tasks.run_data_import.finished``
+         - Import doběhl úspěšně, nebyl zastaven a nebyla nastavena chyba.
+
+   :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem
+       "Missing required DIRECTORY_PATH setting".

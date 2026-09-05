@@ -1,4 +1,5 @@
 import glob
+import json
 import logging
 import mimetypes
 import os
@@ -20,6 +21,7 @@ from core.constants import (
     ZAPSANI_SN,
 )
 from core.coordTransform import transform_geom_to_sjtsk, transform_geom_to_wgs84
+from core.setting_models import CustomAdminSettings
 from dj.models import DokumentacniJednotka
 from django.apps import apps
 from django.conf import ENVIRONMENT_VARIABLE, settings
@@ -29,6 +31,7 @@ from django.core.paginator import Paginator
 from django.db import connection, connections
 from django.db.models import QuerySet
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.html import format_html
 from django.utils.translation import gettext as _
@@ -1600,6 +1603,164 @@ def is_maintenance_in_progress():
         ) <= datetime.now(get_timezone()):
             return True
     return False
+
+
+IMPORT_REPORT_SUBDIRECTORY = "reports"
+
+
+def check_import_report_directory(check_writable=True):
+    """
+    Ověří konfiguraci importního adresáře a připraví v něm podadresář pro reporty.
+
+    Sdílená kontrola pro ``cron.tasks`` (běžící úlohy) i ``core.admin_sites`` (formulář před
+    nahráním) — obě strany musí souhlasit, jinak by admin nahrál soubor, který by úloha odmítla
+    zpracovat (a report by neměl kam uložit). Podadresář ``reports`` se vytvoří, pokud chybí;
+    zápis se ověřuje vytvořením a smazáním dočasného souboru.
+
+    :param check_writable: Pokud ``True``, ověří zapisovatelnost podadresáře reports vytvořením
+        a smazáním dočasného souboru.
+    :return: Trojice ``(import_directory_path, reports_directory_path, error)``. Při úspěchu je
+        ``error`` ``None``; při chybě jsou obě cesty ``None`` a ``error`` obsahuje popis problému.
+    """
+    try:
+        import_directory_settings_obj = CustomAdminSettings.objects.get(item_id="import_directory_settings")
+        import_directory_settings = json.loads(import_directory_settings_obj.value)
+        import_directory_path = import_directory_settings.get("DIRECTORY_PATH")
+        if not import_directory_path:
+            return None, None, "core.utils.check_import_report_directory.missing_directory_path"
+        if not os.path.isdir(import_directory_path):
+            return (
+                None,
+                None,
+                "core.utils.check_import_report_directory.directory_not_found: {}".format(import_directory_path),
+            )
+    except (CustomAdminSettings.DoesNotExist, json.JSONDecodeError, ValueError, KeyError) as err:
+        return None, None, "core.utils.check_import_report_directory.invalid_settings: {}".format(err)
+
+    reports_directory_path = os.path.join(import_directory_path, IMPORT_REPORT_SUBDIRECTORY)
+    try:
+        os.makedirs(reports_directory_path, exist_ok=True)
+    except OSError as err:
+        return None, None, "core.utils.check_import_report_directory.cannot_create_reports_directory: {}".format(err)
+
+    if check_writable:
+        probe_path = os.path.join(reports_directory_path, ".write_check_{}".format(uuid.uuid4().hex))
+        try:
+            with open(probe_path, "wb"):
+                pass
+            os.remove(probe_path)
+        except OSError as err:
+            return None, None, "core.utils.check_import_report_directory.reports_directory_not_writable: {}".format(err)
+
+    return import_directory_path, reports_directory_path, None
+
+
+IMPORT_REPORT_INDEX_FILENAME = "index.json"
+
+
+class ImportReportIndexError(Exception):
+    """Vyvoláno, když index reportů odkazuje na XLSX soubor, který na disku fyzicky chybí."""
+
+    def __init__(self, missing_job_ids):
+        """
+        Inicializuje instanci třídy.
+
+        :param missing_job_ids: Seznam ``job_id`` úloh, jejichž report v indexu chybí na disku.
+        """
+        self.missing_job_ids = missing_job_ids
+        super().__init__("Import report index references missing files for job_ids={}".format(missing_job_ids))
+
+
+def _import_report_index_path(reports_directory_path):
+    """
+    Vrátí cestu k JSON indexu uložených importních reportů.
+
+    :param reports_directory_path: Adresář reportů (z ``check_import_report_directory``).
+    :return: Absolutní cesta k souboru ``index.json``.
+    """
+    return os.path.join(reports_directory_path, IMPORT_REPORT_INDEX_FILENAME)
+
+
+def read_import_report_index(reports_directory_path):
+    """
+    Načte index uložených importních reportů, seřazený od nejnovějšího.
+
+    Chybějící nebo poškozený index se považuje za prázdný seznam (report ještě nebyl uložen,
+    nebo je index dočasně nekonzistentní) — čtenář kvůli tomu nesmí spadnout.
+
+    :param reports_directory_path: Adresář reportů (z ``check_import_report_directory``).
+    :return: Seznam záznamů ``{"job_id", "file_name", "stage", "updated_at"}``.
+    """
+    index_path = _import_report_index_path(reports_directory_path)
+    try:
+        with open(index_path, "r", encoding="utf-8") as f:
+            entries = json.load(f)
+    except FileNotFoundError:
+        return []
+    except (OSError, ValueError) as err:
+        logger.error(
+            "core.utils.read_import_report_index.corrupt_index",
+            extra={"index_path": index_path, "error": str(err)},
+        )
+        return []
+    entries.sort(key=lambda entry: entry.get("updated_at", ""), reverse=True)
+    return entries
+
+
+def upsert_import_report_index_entry(reports_directory_path, job_id, file_name, stage):
+    """
+    Zapíše nebo aktualizuje záznam importní úlohy v JSON indexu reportů.
+
+    Volá se pokaždé, když ``cron.tasks.save_import_report_to_disk`` úspěšně zapíše XLSX, takže
+    index vždy odpovídá poslední známé fázi úlohy — dohledatelnost reportů i po expiraci Redis
+    klíčů (zákaznický požadavek). Zápis je atomický (dočasný soubor + ``os.replace``).
+
+    :param reports_directory_path: Adresář reportů (z ``check_import_report_directory``).
+    :param job_id: Identifikátor importní úlohy.
+    :param file_name: Jméno XLSX souboru reportu (bez cesty).
+    :param stage: Aktuální fáze úlohy (``cron.tasks.IMPORT_PHASE_*``).
+    """
+    index_path = _import_report_index_path(reports_directory_path)
+    entries = [entry for entry in read_import_report_index(reports_directory_path) if entry.get("job_id") != job_id]
+    entries.append(
+        {
+            "job_id": job_id,
+            "file_name": file_name,
+            "stage": stage,
+            "updated_at": timezone.now().isoformat(),
+        }
+    )
+    tmp_path = "{}.tmp".format(index_path)
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        json.dump(entries, f, ensure_ascii=False, indent=2)
+    os.replace(tmp_path, index_path)
+
+
+def check_import_report_index_files_exist(entries, reports_directory_path):
+    """
+    Ověří, že pro každý záznam indexu existuje odpovídající XLSX soubor na disku.
+
+    Každému záznamu doplní klíč ``"exists"`` (mutace in-place), takže volající může zobrazit
+    i položky s chybějícím souborem. Přesto na konci vyvolá výjimku, pokud nějaký soubor chybí —
+    volající musí chybu buď zachytit a zobrazit, nebo ji nechat propagovat (zákaznický požadavek:
+    nesoulad indexu a disku se nesmí tiše přehlédnout).
+
+    :param entries: Seznam záznamů z ``read_import_report_index``.
+    :param reports_directory_path: Adresář reportů (z ``check_import_report_directory``).
+    :raises ImportReportIndexError: Pokud index odkazuje na soubor, který na disku chybí.
+    """
+    missing_job_ids = []
+    for entry in entries:
+        file_name = os.path.basename(entry.get("file_name") or "")
+        entry["exists"] = bool(file_name) and os.path.isfile(os.path.join(reports_directory_path, file_name))
+        if not entry["exists"]:
+            missing_job_ids.append(entry.get("job_id"))
+    if missing_job_ids:
+        logger.error(
+            "core.utils.check_import_report_index_files_exist.missing_files",
+            extra={"job_ids": missing_job_ids, "reports_directory_path": reports_directory_path},
+        )
+        raise ImportReportIndexError(missing_job_ids)
 
 
 def get_timezone():

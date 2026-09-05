@@ -245,9 +245,21 @@ CORE
    * - ``data-import-start``
      - ``data-import-start/<str:job_id>``
      - ``views.DataImportStart.as_view()``
+   * - ``data-import-cancel``
+     - ``data-import-cancel/<str:job_id>``
+     - ``views.DataImportCancel.as_view()``
+   * - ``data-import-reset``
+     - ``data-import-reset/<str:job_id>``
+     - ``views.DataImportReset.as_view()``
+   * - ``data-import-reset-active``
+     - ``data-import-reset``
+     - ``views.DataImportReset.as_view()``
    * - ``data-import-progress-report``
      - ``data-import-progress-report/<str:job_id>``
      - ``views.DataImportProgressReportView.as_view()``
+   * - ``data-import-report-download``
+     - ``data-import-report-download/<str:job_id>``
+     - ``views.DataImportReportDownloadView.as_view()``
 
 DJ
 --

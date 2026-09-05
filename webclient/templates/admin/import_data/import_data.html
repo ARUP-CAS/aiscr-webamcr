@@ -57,50 +57,91 @@
 
 {% block content %}
   <div id="content-main">
+    <p>
+      <a href="{% url 'admin:import_reports' %}" target="_blank" rel="noopener">
+        {% trans "core.admin_site.AmcrCustomAdminSite.hromadny_import_reporty" %}
+      </a>
+    </p>
     {% if not maintenance %}
       <p>{% trans "core.templates.admin.import_data.not_maintenance" %}</p>
-    {% elif import_data_running %}
+    {% elif import_data_running and not job_id %}
       <p>{% trans "core.templates.admin.import_data.import_is_running" %}</p>
+      {% if url_reset %}
+        {% csrf_token %}
+        <p>
+          <input type="button" id="resetImportBusy" class="default"
+                 value="{% trans "core.templates.admin.import_data.reset_import" %}">
+        </p>
+        <script>
+            // Manual, admin-only recovery for a lock stuck by a dead worker. No job_id here (this is
+            // another admin's job), so the endpoint resolves it from IMPORT_DATA_ACTIVE_JOB_KEY.
+            (function () {
+                const resetButton = document.getElementById("resetImportBusy")
+                if (!resetButton) {
+                    return
+                }
+                const resetUrl = "{{ url_reset }}"
+                const csrfToken = document.cookie.split("; ").find(row => row.startsWith("csrftoken="))?.split("=")[1]
+                resetButton.addEventListener("click", async () => {
+                    if (!window.confirm("{% trans 'core.templates.admin.import_data.reset_confirm' %}")) {
+                        return
+                    }
+                    resetButton.disabled = true
+                    const response = await fetch(resetUrl, {method: "POST", headers: {"X-CSRFToken": csrfToken}})
+                    if (response.ok) {
+                        window.location.reload()
+                    } else {
+                        resetButton.disabled = false
+                    }
+                })
+            })()
+        </script>
+      {% endif %}
     {% elif error_message %}
       <p class="errornote">{{ error_message }}</p>
       {% if error_message_details %}
         <p>{{ error_message_details }}</p>
       {% endif %}
-    {% elif validation_results %}
+    {% elif job_id %}
+      {# Polling UI: a thin shell — all import/validation data is rendered by JS from the #}
+      {# progress endpoint. No validation table is rendered from server context. #}
+      {% csrf_token %}
       <div class="submit-row">
         <div id="progressBarBoxData" class="progressBarBox" style="margin-bottom: 1rem">
           <div id="progressBarData" class="progressBar" style="position: relative;">
             <span id="progressPercentData" style="position: absolute; top: 0; transform: translateX(-50%); color: #fff; line-height: 30px; font-weight: bold;"></span>
           </div>
         </div>
-        {% if import_directory_configured %}
-        <div id="progressBarBoxFiles" class="progressBarBox" style="margin-bottom: 1rem">
-          <div id="progressBarFiles" class="progressBar" style="position: relative;">
-            <span id="progressPercentFiles" style="position: absolute; top: 0; transform: translateX(-50%); color: #fff; line-height: 30px; font-weight: bold;"></span>
-          </div>
-        </div>
-        {% endif %}
         <p style="width: 100%;">
           <b>{% trans "core.templates.admin.import_data.status" %}:</b>
-          <span id="processCurrentStatus">{% if invalid_records %}{% trans "core.templates.admin.import_data.validation_failed" %}{% else %}{% trans "core.templates.admin.import_data.waiting_for_approval" %}{% endif %}</span>
+          <span id="processCurrentStatus"></span>
+        </p>
+        <p style="width: 100%;">
+          <b>{% trans "core.forms.ImportDataAdminForm.action.label" %}:</b>
+          <span id="performedAction">{{ performed_action_label }}</span>
+        </p>
+        <p id="reportSavedNotice" style="display: none; width: 100%;">
+          <b>{% trans "core.templates.admin.import_data.report_saved_label" %}:</b>
+          <span id="reportSavedPath"></span>
+        </p>
+        <p id="reuploadNotice" style="display: none; width: 100%;">
+          <strong>{% trans "core.templates.admin.import_data.reupload_notice" %}</strong>
+          <input type="button" id="reuploadButton" class="default"
+                 value="{% trans "core.templates.admin.import_data.reupload" %}">
         </p>
         <p>
           <input type="button" id="startImport" class="default"
-                 value="{% trans "core.templates.admin.import_data.start_import" %}"{% if invalid_records %} disabled{% endif %}>
-          <input type="submit" id="stopRequests" class="default"
+                 value="{% trans "core.templates.admin.import_data.start_import" %}" disabled>
+          <input type="button" id="stopRequests" class="default"
                  value="{% trans "core.templates.admin.import_data.stop_request" %}" disabled>
+          <input type="button" id="cancelRelease" class="default"
+                 value="{% trans "core.templates.admin.import_data.cancel_release_lock" %}" disabled>
+          <input type="button" id="resetImport" class="default"
+                 value="{% trans "core.templates.admin.import_data.reset_import" %}" disabled>
           <input type="button" id="downloadReport" class="default"
-                 value="{% trans "core.templates.admin.import_data.download_report" %}">
+                 value="{% trans "core.templates.admin.import_data.download_report" %}" disabled>
         </p>
       </div>
-      <p id="processFinishedParagraph" style="display: none">
-        <strong>{% trans "core.templates.admin.import_data.finished" %}</strong>
-      </p>
-      {% if invalid_records %}
-        <p>
-          <strong>{% trans "core.templates.admin.import_data.invalid_records" %}</strong>: {{ invalid_records }}
-        </p>
-      {% endif %}
       <table id="result_list" class="table table-bordered table-striped">
         <tr>
           <th>{% trans "core.templates.admin.import_data.import_order" %}</th>
@@ -112,18 +153,6 @@
           <th>{% trans "core.templates.admin.import_data.history_record_result" %}</th>
           <th>{% trans "core.templates.admin.import_data.fedora_update_result" %}</th>
         </tr>
-        {% for result in validation_results %}
-          <tr>
-            <td>{{ result.item_order|add:1 }}</td>
-            <td>{{ result.file_name }}</td>
-            <td>{{ result.primary_key_import }}</td>
-            <td></td>
-            <td>{{ result.validation_result }}</td>
-            <td></td>
-            <td></td>
-            <td></td>
-          </tr>
-        {% endfor %}
       </table>
       {% if import_directory_configured %}
       <hr style="margin: 2rem 0;">
@@ -140,6 +169,12 @@
       <p><strong>{% trans "core.templates.admin.import_data.import_directory_not_configured" %}</strong></p>
       {% endif %}
     {% else %}
+      <p>
+        {% trans "core.templates.admin.import_data.no_active_job_notice" %}
+        <a href="{% url 'admin:import_reports' %}" target="_blank" rel="noopener">
+          {% trans "core.admin_site.AmcrCustomAdminSite.hromadny_import_reporty" %}
+        </a>.
+      </p>
       <form method="post" enctype="multipart/form-data">
         <div>
           <fieldset class="module aligned">
@@ -166,164 +201,349 @@
     {% endif %}
   </div>
 
+  {% if job_id %}
   <script>
-      const translations = {
-          "cron.tasks.run_data_import.success": "{% trans 'cron.tasks.run_data_import.success' %}",
-          "cron.tasks.run_data_import.file": "{% trans 'cron.tasks.run_data_import.file' %}",
-          "cron.tasks.run_data_import.rolled_back": "{% trans 'cron.tasks.run_data_import.rolled_back' %}",
-      }
+      // The backend translates every status/result value (stored as translation IDs in Redis) into
+      // the admin's locale before returning it from DataImportProgress, so no client-side
+      // translation map is needed. failed_lock_lost is keyed off the locale-independent
+      // status_message_id (the bare translation ID) instead of a translated string.
       const requestUrl = "{{ url }}"
       const stopRequestUrl = "{{ url_stop }}"
-      {% if job_id %}
-      const downloadReportUrl = "{% url 'core:data-import-progress-report' job_id %}"
-      document.getElementById("downloadReport").addEventListener("click", () => {
-          window.location.href = downloadReportUrl
-      })
-      {% endif %}
       const startRequestUrl = "{{ url_start }}"
+      const cancelRequestUrl = "{{ url_cancel }}"
+      const resetRequestUrl = "{{ url_reset }}"
+      const downloadReportUrl = "{% url 'core:data-import-progress-report' job_id %}"
+      const FAILED_LOCK_LOST_ID = "cron.tasks.run_data_import.failed_lock_lost"
       const csrfToken = document.cookie.split("; ").find(row => row.startsWith("csrftoken="))?.split("=")[1]
-      let stopRequests = {% if stop_request is True %}true{% else %}false{% endif %}
+
+      const TERMINAL_PHASES = ["finished", "stopped", "canceled", "failed"]
+
       const startImportButton = document.getElementById("startImport")
       const stopRequestButton = document.getElementById("stopRequests")
-      if (startImportButton) {
-        startImportButton.addEventListener("click", async () => {
-            startImportButton.disabled = true
-            if (stopRequestButton) {
-                stopRequestButton.disabled = false
-            }
-            document.getElementById("processCurrentStatus").textContent = "{% trans 'core.templates.admin.import_data.starting' %}"
-            const response = await fetch(startRequestUrl, {method: "POST", headers: {"X-CSRFToken": csrfToken}})
-            if (!response.ok) {
-                if (stopRequestButton) {
-                    stopRequestButton.disabled = true
-                }
-                startImportButton.disabled = false
-                const data = await response.json().catch(() => null)
-                document.getElementById("processCurrentStatus").textContent =
-                    data?.status_message || "{% trans 'core.templates.admin.import_data.import_is_running' %}"
-                return
-            }
-            process()
-        });
+      const cancelReleaseButton = document.getElementById("cancelRelease")
+      const resetImportButton = document.getElementById("resetImport")
+      const downloadReportButton = document.getElementById("downloadReport")
+      const reuploadNotice = document.getElementById("reuploadNotice")
+      const reuploadButton = document.getElementById("reuploadButton")
+
+      let stopRequests = false
+      let stopRequested = false
+      let cancelRequested = false
+      let resetRequested = false
+      let currentPhase = null
+      let maxProgressData = 0
+      let validationCursor = 0
+      let pollingActive = false
+
+      function setDisabled(btn, disabled) {
+          if (btn) {
+              btn.disabled = disabled
+          }
       }
-      if (stopRequestButton) {
-        stopRequestButton.addEventListener("click", () => {
-            fetch(stopRequestUrl)
-            stopRequestButton.disabled = true
-            const progressBarBoxData = document.getElementById("progressBarBoxData")
-            progressBarBoxData.style.display = "none"
-        });
+
+      // Enable/disable the action buttons per phase. Cancel is disabled during validating —
+      // Stop is the single control that halts a running validation (cancel ≡ stop there).
+      function applyPhaseUi(phase) {
+          setDisabled(downloadReportButton, false)
+          // Manual reset is available in any non-terminal phase (dead-worker recovery); the admin is
+          // the sole decision-maker (§ finding #1). It stays disabled once already requested.
+          const resettable = phase === "validating" || phase === "importing" || phase === "awaiting_approval"
+          setDisabled(resetImportButton, !resettable || resetRequested)
+          if (phase === "validating") {
+              setDisabled(startImportButton, true)
+              setDisabled(stopRequestButton, false)
+              setDisabled(cancelReleaseButton, true)
+          } else if (phase === "awaiting_approval") {
+              setDisabled(startImportButton, false)
+              setDisabled(stopRequestButton, true)
+              setDisabled(cancelReleaseButton, false)
+          } else if (phase === "importing") {
+              setDisabled(startImportButton, true)
+              setDisabled(stopRequestButton, false)
+              setDisabled(cancelReleaseButton, true)
+          } else {
+              setDisabled(startImportButton, true)
+              setDisabled(stopRequestButton, true)
+              setDisabled(cancelReleaseButton, true)
+          }
+          // Once the admin has clicked Stop/Cancel, keep the button disabled while the task winds
+          // down — the sentinel is already set, a second click is a no-op, and re-enabling it (the
+          // phase is still validating/importing until the task reaches its terminal finally) would
+          // let the admin click it twice.
+          if (stopRequested) {
+              setDisabled(stopRequestButton, true)
+          }
+          if (cancelRequested) {
+              setDisabled(cancelReleaseButton, true)
+          }
       }
+
+      // Reuse the single progress bar across both phases; reset to 0 once on validating -> importing,
+      // pin at 100% during awaiting_approval.
+      function applyProgress(data) {
+          const phase = data.phase
+          if (phase === "importing" && currentPhase !== "importing") {
+              maxProgressData = 0
+          }
+          currentPhase = phase
+
+          if (phase === "awaiting_approval") {
+              maxProgressData = 100
+          } else {
+              maxProgressData = Math.max(maxProgressData, data.progress_data)
+          }
+
+          const progressBarData = document.getElementById("progressBarData")
+          if (progressBarData) {
+              progressBarData.style.width = maxProgressData + "%"
+              const progressPercentData = document.getElementById("progressPercentData")
+              progressPercentData.style.left = `${document.getElementById("progressBarBoxData").offsetWidth / 2}px`
+              if (maxProgressData > 0) {
+                  progressPercentData.textContent = maxProgressData + "%"
+              }
+          }
+      }
+
+      function renderTables(data) {
+          const table = document.getElementById("result_list")
+          if (table && data.validation_results) {
+              // The server now returns only the rows appended since validationCursor (review
+              // r3703505264), so every entry here is new — append all of them directly.
+              for (const vr of data.validation_results) {
+                  const row = table.insertRow(-1)
+                  row.insertCell(-1).innerText = (vr.item_order + 1)
+                  row.insertCell(-1).innerText = vr.file_name || ""
+                  row.insertCell(-1).innerText = vr.primary_key_import || ""
+                  row.insertCell(-1).innerText = ""
+                  row.insertCell(-1).innerText = vr.validation_result || ""
+                  row.insertCell(-1).innerText = ""
+                  row.insertCell(-1).innerText = ""
+                  row.insertCell(-1).innerText = ""
+              }
+              if (typeof data.validation_cursor === "number") {
+                  validationCursor = data.validation_cursor
+              }
+              // During importing (all rows valid), fill the DB-key / status / history / Fedora columns.
+              for (let i = 0; i < data.finished_record_count; i++) {
+                  const row = table.rows[i + 1]
+                  if (!row) {
+                      continue
+                  }
+                  row.cells[3].innerText = data.primary_keys[i] || ""
+                  row.cells[5].innerText = data.serialized_results[i] || ""
+                  row.cells[6].innerText = data.history_record_result[i] || ""
+                  const fedoraUpdateResult = data.fedora_update_result[i] || []
+                  row.cells[7].innerText = Array.isArray(fedoraUpdateResult)
+                      ? fedoraUpdateResult.join(", ")
+                      : fedoraUpdateResult
+              }
+          }
+
+          const table_files = document.getElementById("result_list_files")
+          if (table_files && data.serialized_results_files) {
+              const start_index = table_files.rows.length - 1
+              for (let i = start_index; i < data.serialized_results_files.length; i++) {
+                  const row = document.createElement("tr")
+                  const cell_1 = document.createElement("td")
+                  cell_1.innerText = data.serialized_results_files[i]["ident_cely"]
+                  row.appendChild(cell_1)
+                  const cell_2 = document.createElement("td")
+                  cell_2.innerText = data.serialized_results_files[i]["file_name"]
+                  row.appendChild(cell_2)
+                  const cell_3 = document.createElement("td")
+                  cell_3.innerText = data.serialized_results_files[i]["size_mb"]
+                  row.appendChild(cell_3)
+                  const cell_4 = document.createElement("td")
+                  cell_4.innerText = data.serialized_results_files[i]["additional_info"]
+                  row.appendChild(cell_4)
+                  table_files.appendChild(row)
+              }
+          }
+      }
+
+      const MAX_CONSECUTIVE_FAILURES = 5
+      let consecutiveFailures = 0
 
       async function sendRequest(url) {
           try {
               if (stopRequests) {
                   return -1
               }
-
-              const response = await fetch(url)
+              // Ask the server for only the validation rows appended since our last poll (r3703505264).
+              const fetchUrl = new URL(url, window.location.origin)
+              fetchUrl.searchParams.set("validation_since", String(validationCursor))
+              const response = await fetch(fetchUrl)
               if (!response.ok) {
                   throw new Error(`HTTP error! status: ${response.status}`)
               }
-
+              consecutiveFailures = 0
               const data = await response.json()
-
-              const processCurrentStatus = document.getElementById("processCurrentStatus")
-              processCurrentStatus.textContent = data.status_message
 
               if (data.status === "unknown") {
                   console.error("Unknown status of the import process.")
+                  stopRequests = true
                   return 0
               }
 
-              const progressBarData = document.getElementById("progressBarData")
-              progressBarData.style.width = data.progress_data + "%"
+              document.getElementById("processCurrentStatus").textContent = data.status_message
+              applyPhaseUi(data.phase)
+              applyProgress(data)
+              renderTables(data)
 
-              const progressPercentData = document.getElementById("progressPercentData")
-              progressPercentData.style.left = `${document.getElementById("progressBarBoxData").offsetWidth / 2}px`
-
-              if (data.progress_data > 0) {
-                  progressPercentData.textContent = data.progress_data + "%"
-              }
-
-              const progressBarFiles = document.getElementById("progressBarFiles");
-              if (progressBarFiles) {
-                  progressBarFiles.style.width = data.progress_files + "%"
-
-                  const progressPercentFiles = document.getElementById("progressPercentFiles")
-                  progressPercentFiles.style.left = `${document.getElementById("progressBarBoxFiles").offsetWidth / 2}px`
-
-                  if (data.progress_files > 0) {
-                      progressPercentFiles.textContent = data.progress_files + "%"
-                  } else {
-                      progressPercentFiles.textContent = "{% trans 'core.templates.admin.import_data.files.not_started_yet' %}"
+              // Plain text, not a link (customer requirement) — shown only once the XLSX report has
+              // actually been written to disk, never speculatively.
+              if (data.report_saved_path) {
+                  const reportSavedNotice = document.getElementById("reportSavedNotice")
+                  const reportSavedPath = document.getElementById("reportSavedPath")
+                  if (reportSavedNotice && reportSavedPath) {
+                      reportSavedPath.textContent = data.report_saved_path
+                      reportSavedNotice.style.display = "block"
                   }
               }
 
-              const table = document.getElementById("result_list");
-              for (let i = 0; i < data.finished_record_count; i++) {
-                  const row = table.rows[i + 1]
-                  row.cells[3].innerText = data.primary_keys[i] || ""
-                  row.cells[5].innerText = translations[data.serialized_results[i]] || data.serialized_results[i]
-                  row.cells[6].innerText = data.history_record_result[i] || ""
-                  const primaryKey = data.primary_keys[i] || ""
-                  const identCely = primaryKey.startsWith("ident_cely: ") ? primaryKey.slice("ident_cely: ".length) : primaryKey
-                  row.cells[7].innerText = (data.fedora_update_result[i] || []).join(", ")
-              }
-
-              const table_files = document.getElementById("result_list_files")
-              if (table_files) {
-                  const start_index = table_files.rows.length - 1
-                  for (let i = start_index; i < data.serialized_results_files.length; i++) {
-                      const row = document.createElement("tr")
-
-                      const cell_1 = document.createElement("td")
-                      cell_1.innerText = data.serialized_results_files[i]["ident_cely"]
-                      row.appendChild(cell_1)
-
-                      const cell_2 = document.createElement("td")
-                      cell_2.innerText = data.serialized_results_files[i]["file_name"]
-                      row.appendChild(cell_2)
-
-                      const cell_3 = document.createElement("td")
-                      cell_3.innerText = data.serialized_results_files[i]["size_mb"]
-                      row.appendChild(cell_3)
-
-                      const cell_4 = document.createElement("td")
-                      cell_4.innerText = data.serialized_results_files[i]["additional_info"]
-                      row.appendChild(cell_4)
-
-                      table_files.appendChild(row)
+              // failed_lock_lost is load-bearing: the validated job is gone — the admin must
+              // re-upload. Do not render it as a stale awaiting_approval table.
+              if (data.phase === "failed" && data.status_message_id === FAILED_LOCK_LOST_ID) {
+                  if (reuploadNotice) {
+                      reuploadNotice.style.display = "block"
                   }
               }
 
-              if (data.status === "finished" || data.status === "stopped") {
-                  document.getElementById("stopRequests").disabled = true
+              // Terminal detection MUST key off `phase`, not `status`. The progress view returns
+              // status === "stopped" as soon as the stop *sentinel* is set — before the task has
+              // actually wound down and set phase = stopped. Keying off status would stop polling
+              // prematurely and freeze the UI in the still-"importing" state (buttons enabled, bar
+              // visible, status frozen). `phase` only becomes terminal once the task's finally runs.
+              const terminal = TERMINAL_PHASES.includes(data.phase)
+              if (terminal) {
                   stopRequests = true
+                  // On a stopped/canceled job the bar no longer means anything — hide it. A finished
+                  // job keeps its 100% bar; a failed job keeps the bar where it failed.
+                  if (data.phase === "stopped" || data.phase === "canceled") {
+                      const progressBarBoxData = document.getElementById("progressBarBoxData")
+                      if (progressBarBoxData) {
+                          progressBarBoxData.style.display = "none"
+                      }
+                  }
               }
-
           } catch (error) {
               console.error("Error fetching data:", error)
+              consecutiveFailures++
+              if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                  stopRequests = true
+                  document.getElementById("processCurrentStatus").textContent =
+                      "{% trans 'core.templates.admin.import_data.timeout_error' %}"
+              }
               return 0
           }
-
       }
 
       async function process() {
-          const MAX_TICKS = 3600;
-          let ticks = 0;
-          do {
-              await sendRequest(requestUrl);
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              ticks++;
-              if (ticks >= MAX_TICKS) {
-                  stopRequests = true;
-                  document.getElementById("stopRequests").disabled = true;
-                  document.getElementById("processCurrentStatus").textContent = "{% trans 'core.templates.admin.import_data.timeout_error' %}";
-                  console.error("Import polling timed out after", MAX_TICKS, "seconds.");
-              }
-          } while (stopRequests === false);
+          // Single-flight guard: Start/Cancel call process() again while the page-load loop may
+          // still be running (awaiting_approval isn't terminal) — without this, two loops would
+          // poll concurrently and double the request rate.
+          if (pollingActive) {
+              return;
+          }
+          pollingActive = true;
+          try {
+              const MAX_TICKS = 172800; // 48 hours — matches IMPORT_DATA_RUNNING_TTL_SECONDS on the server
+              let ticks = 0;
+              do {
+                  await sendRequest(requestUrl);
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                  ticks++;
+                  if (ticks >= MAX_TICKS) {
+                      stopRequests = true;
+                      document.getElementById("processCurrentStatus").textContent =
+                          "{% trans 'core.templates.admin.import_data.timeout_error' %}";
+                      console.error("Import polling timed out after", MAX_TICKS, "seconds.");
+                  }
+              } while (stopRequests === false);
+          } finally {
+              pollingActive = false;
+          }
       }
 
+      if (startImportButton) {
+          startImportButton.addEventListener("click", async () => {
+              setDisabled(startImportButton, true)
+              document.getElementById("processCurrentStatus").textContent =
+                  "{% trans 'core.templates.admin.import_data.starting' %}"
+              const response = await fetch(startRequestUrl, {method: "POST", headers: {"X-CSRFToken": csrfToken}})
+              if (!response.ok) {
+                  const data = await response.json().catch(() => null)
+                  document.getElementById("processCurrentStatus").textContent =
+                      data?.status_message || "{% trans 'core.templates.admin.import_data.import_is_running' %}"
+                  setDisabled(startImportButton, false)
+                  return
+              }
+              stopRequests = false
+              process()
+          })
+      }
+
+      if (stopRequestButton) {
+          stopRequestButton.addEventListener("click", () => {
+              // Record the intent so applyPhaseUi keeps the button disabled until the task reaches a
+              // terminal phase (it stays "importing"/"validating" for ~1 more record/row). Keep
+              // polling so the UI updates when the task finishes stopping.
+              stopRequested = true
+              setDisabled(stopRequestButton, true)
+              fetch(stopRequestUrl)
+          })
+      }
+
+      if (cancelReleaseButton) {
+          cancelReleaseButton.addEventListener("click", async () => {
+              cancelRequested = true
+              setDisabled(cancelReleaseButton, true)
+              const response = await fetch(cancelRequestUrl, {method: "POST", headers: {"X-CSRFToken": csrfToken}})
+              if (!response.ok) {
+                  cancelRequested = false
+                  const data = await response.json().catch(() => null)
+                  document.getElementById("processCurrentStatus").textContent =
+                      data?.status_message || ""
+                  setDisabled(cancelReleaseButton, false)
+                  return
+              }
+              stopRequests = false
+              process()
+          })
+      }
+
+      if (resetImportButton) {
+          resetImportButton.addEventListener("click", async () => {
+              if (!window.confirm("{% trans 'core.templates.admin.import_data.reset_confirm' %}")) {
+                  return
+              }
+              resetRequested = true
+              setDisabled(resetImportButton, true)
+              const response = await fetch(resetRequestUrl, {method: "POST", headers: {"X-CSRFToken": csrfToken}})
+              if (!response.ok) {
+                  resetRequested = false
+                  const data = await response.json().catch(() => null)
+                  document.getElementById("processCurrentStatus").textContent = data?.status_message || ""
+                  setDisabled(resetImportButton, false)
+              }
+              // On success the running poll loop observes phase=failed and winds the UI down.
+          })
+      }
+
+      if (downloadReportButton) {
+          downloadReportButton.addEventListener("click", () => {
+              window.location.href = downloadReportUrl
+          })
+      }
+
+      if (reuploadButton) {
+          reuploadButton.addEventListener("click", () => {
+              window.location.reload()
+          })
+      }
+
+      // Start polling immediately on page load so a reopened job resumes where it left off.
+      process()
   </script>
+  {% endif %}
 {% endblock content %}

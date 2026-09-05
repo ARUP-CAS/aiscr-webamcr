@@ -779,6 +779,28 @@ Třídy
       :raises PermissionDenied: Vyvolá se, pokud přihlášený uživatel není superuživatel.
 
 
+.. py:class:: DataImportReportDownloadView
+
+   Stáhne na disku archivovaný XLSX report importní úlohy podle jeho indexu.
+
+   **Metody:**
+
+   .. py:method:: get()
+
+      Vrátí uložený XLSX report importní úlohy jako přílohu.
+
+      Na rozdíl od ``DataImportProgressReportView`` (report sestavený za běhu z Redis, dostupný
+      jen vlastníkovi úlohy) čte přímo soubor na disku podle JSON indexu — funguje i po expiraci
+      Redis klíčů úlohy a je dostupný libovolnému superuživateli (index slouží k dohledání a
+      obnově libovolného minulého importu, ne jen vlastního).
+
+      :param request: HTTP požadavek, ověřuje se právo superuživatele.
+      :param kwargs: Obsahuje ``job_id`` importní úlohy, jejíž report se stahuje.
+      :return: ``FileResponse`` s obsahem XLSX souboru.
+      :raises PermissionDenied: Pokud přihlášený uživatel není superuživatel.
+      :raises Http404: Pokud úloha není v indexu, nebo její soubor na disku chybí.
+
+
 .. py:class:: DataImportStart
 
    Implementuje komponentu ``DataImportStart`` v rámci aplikace.
@@ -794,6 +816,53 @@ Třídy
 
       :return: Vrací výsledek volání ``JsonResponse()``.
       :raises PermissionDenied: Vyvolá se při splnění podmínky ``not request.user.is_superuser``.
+
+
+.. py:class:: DataImportCancel
+
+   Explicitní uvolnění importního locku — uživatelova akce „zruš a uvolni slot“.
+
+   **Metody:**
+
+   .. py:method:: post()
+
+      Zruší importní úlohu a uvolní globální lock.
+
+      Pro fázi ``awaiting_approval`` přímo uvolní lock (release), nastaví fázi ``canceled`` a
+      expiruje per-job datové klíče na 6 h (report zůstane stažitelný). Force-cancel zaseklé
+      ``awaiting_approval`` úlohy smí provést libovolný superuživatel. Pro fázi ``validating``
+      je cancel ekvivalentní stop (nastaví stop sentinel; task uvolní lock ve svém ``finally``) —
+      obranný no-op, z UI nedostupný. Pro ``importing`` a terminální fáze cancel odmítne.
+
+      :param request: HTTP požadavek přihlášeného superuživatele.
+      :param kwargs: Obsahuje ``job_id`` identifikující importní úlohu.
+      :return: ``JsonResponse`` s výsledkem operace.
+      :raises PermissionDenied: Pokud přihlášený uživatel není superuživatel.
+
+
+.. py:class:: DataImportReset
+
+   Ruční reset zaseklé importní úlohy superuživatelem — jediná povolená obnova držení locku.
+
+   Použije se, když worker validační/importní úlohy zemře (OOM/SIGKILL) a lock zůstane držený
+   (až 48 h). Žádný automatický reaper neexistuje; uvolnění je výhradně tato vědomá akce admina.
+
+   **Metody:**
+
+   .. py:method:: post()
+
+      Vynuceně resetuje zaseklou importní úlohu a uvolní globální lock.
+
+      ``job_id`` se bere z URL (vlastní stránka běžící úlohy), jinak se dohledá ze zpětného
+      odkazu ``IMPORT_DATA_ACTIVE_JOB_KEY`` (stránka „import běží — jiný admin“). Reset je
+      povolen pro libovolnou ne-terminální fázi (``validating``/``importing``/``awaiting_approval``)
+      a smí ho provést kterýkoli superuživatel — dead-worker úlohu typicky nemůže uvolnit
+      její vlastník. Vlastní úklid a token-checked uvolnění locku provádí ``tasks.reset_import_job``.
+
+      :param request: HTTP požadavek přihlášeného superuživatele.
+      :param kwargs: Volitelně ``job_id`` identifikující importní úlohu.
+      :return: ``JsonResponse`` s výsledkem operace.
+      :raises PermissionDenied: Pokud přihlášený uživatel není superuživatel.
 
 
 Funkce
@@ -968,3 +1037,46 @@ Funkce
 
    :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
    :raises ZaznamSouborNotmatching: Vyvolá se při splnění podmínky ``soubor.count() > 0``.
+
+.. py:function:: _check_import_ownership(request, job_id, redis_connector)
+
+   Ověří, že přihlášený superuživatel je vlastníkem dané importní úlohy.
+
+   :param request: HTTP požadavek s přihlášeným uživatelem.
+   :param job_id: Identifikátor importní úlohy.
+   :param redis_connector: Dekódující Redis spojení.
+   :return: ``True`` pokud je uživatel vlastníkem úlohy; jinak ``False``.
+
+.. py:function:: _translate_status_value(raw)
+
+   Přeloží hodnotu načtenou z Redis (ID nebo obálka ``{id, params}``).
+
+   Standardizační pravidlo: worker ukládá do Redis pouze překladová ID (případně obálku
+   ``{"id": <id>, "params": {...}}`` pro parametrizované zprávy), nikoli přeložené texty. Tento
+   helper překlad provádí v locale přihlášeného admina až na straně čtenáře.
+
+   :param raw: Hodnota z Redis — ``None``, plain ID (str), nebo JSON obálka (str) s ``id`` a
+       ``params``. Zpětně kompatibilní: pokud hodnota není obálka, přeloží se jako ID; pokud
+       překlad chybí, ``_()`` vrátí ID doslova.
+   :return: Přeložený řetězec, nebo ``None`` pokud je vstup ``None``.
+
+.. py:function:: _status_message_id(raw)
+
+   Vrátí samotné ID stavové zprávy bez překladu/parametrů (pro porovnání v UI).
+
+   UI potřebuje znát ID (např. ``cron.tasks.run_data_import.failed_lock_lost``) nezávisle na
+   locale, aby mohl poradit re-upload — viz ``failedLockLostMessage`` větev v šabloně.
+
+   :param raw: Hodnota z Redis (ID nebo obálka ``{id, params}``).
+   :return: ID překladového řetězce, nebo ``None``.
+
+.. py:function:: _expire_import_data_keys(redis_connector, job_id, ttl_seconds)
+
+   Nastaví expiraci všem per-job datovým klíčům importní úlohy na ``ttl_seconds``.
+
+   Klíče se pouze expirují, nikdy nemažou — report musí zůstat stažitelný po dobu retence.
+   Seznam suffixů sdílí jediný zdroj pravdy s ``cron.tasks`` (``IMPORT_DATA_JOB_KEY_SUFFIXES``).
+
+   :param redis_connector: Dekódující Redis spojení.
+   :param job_id: Identifikátor importní úlohy.
+   :param ttl_seconds: Doba retence v sekundách.

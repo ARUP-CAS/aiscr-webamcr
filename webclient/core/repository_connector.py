@@ -215,7 +215,7 @@ class FedoraRepositoryConnector:
         Inicializuje instanci třídy.
 
         :param record: Parametr ``record`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``.
-        :param transaction: Parametr ``transaction`` se předává do volání ``isinstance()``, ``FedoraTransaction()``, pracuje se s atributy ``uid``, ``main_record``, ovlivňuje větvení podmínek.
+        :param transaction: Parametr ``transaction`` se předává do volání ``isinstance()``, ``FedoraTransaction()``, pracuje se s atributy ``uid``, ``main_record``, ``override_tombstone``, ovlivňuje větvení podmínek.
         :param skip_container_check: Parametr ``skip_container_check`` slouží jako vstup pro logiku funkce ``__init__``.
         """
         from core.models import ModelWithMetadata
@@ -243,6 +243,21 @@ class FedoraRepositoryConnector:
             "core_repository_connector.__init__.end",
             extra={"transaction": self.transaction_uid, "ident_cely": record.ident_cely},
         )
+
+    @property
+    def override_tombstone(self) -> bool:
+        """Vrací hodnotu ``override_tombstone`` z navázané transakce; bez transakce ``False``.
+
+        Jediným zdrojem pravdy je ``BaseFedoraTransaction.override_tombstone``; connector
+        tuto vlastnost pouze čte. Důvod: ``run_data_import`` neinstanciuje connectory přímo
+        (vznikají uvnitř signálů a ``ModelWithMetadata`` metod), ale transakci propaguje
+        do všech volání, takže nastavením příznaku jen na transakci ovlivní všechny
+        downstream connectory automaticky.
+
+        :return: ``True``, pokud má navázaná transakce nastaveno ``override_tombstone=True``;
+            v ostatních případech (včetně absence transakce) ``False``.
+        """
+        return self.transaction.override_tombstone if self.transaction else False
 
     def _get_model_name(self):
         """
@@ -1410,7 +1425,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         soubor.save()
         if include_content:
             content_type = get_mime_type(soubor.nazev)
-            rep_bin_file = RepositoryBinaryFile(uuid, data, soubor.nazev)
+            rep_bin_file = RepositoryBinaryFile(result.text, data, soubor.nazev)
             headers = {
                 "Content-Type": content_type,
                 "Content-Disposition": f'attachment; filename="{soubor.nazev}"'.encode("utf-8"),
@@ -1471,7 +1486,10 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             file = io.BytesIO()
             file.write(response.content)
             file.seek(0)
-            rep_bin_file = RepositoryBinaryFile(uuid, file)
+            container_url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
+            if ident_cely_old is not None:
+                container_url = container_url.replace(self.record.ident_cely, ident_cely_old)
+            rep_bin_file = RepositoryBinaryFile(container_url, file)
             logger.debug(
                 "core_repository_connector.get_binary_file.end",
                 extra={
@@ -1509,7 +1527,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 "option": save_thumbs,
             },
         )
-        rep_bin_file = RepositoryBinaryFile(uuid, file, file_name)
+        url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, uuid=uuid)
+        container_url = url.removesuffix("/orig")
+        rep_bin_file = RepositoryBinaryFile(container_url, file, file_name)
         data = file.read()
         file_sha_512 = hashlib.sha512(data).hexdigest()
         headers = {
@@ -1517,7 +1537,6 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             "Content-Disposition": f'attachment; filename="{file_name}"',
             "Digest": f"sha-512={file_sha_512}",
         }
-        url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, uuid=uuid)
         self._send_request(url, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, headers=headers, data=data)
         if save_thumbs:
             self.save_thumbs(file_name, file, uuid, True)
@@ -1819,7 +1838,15 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         )
 
     def record_deletion(self):
-        """Označí záznam jako smazaný v Fedoře přidáním 'deleted' markeru."""
+        """Označí záznam jako smazaný v Fedoře přidáním 'deleted' markeru.
+
+        Pokud má navázaná transakce ``override_tombstone == True`` (čte se přes
+        ``self.override_tombstone``), přidá k POST požadavku, který vytváří proxy
+        ``/model/deleted/member/<ident_cely>``, hlavičku ``Overwrite-Tombstone: true``.
+        Cyklus INSERT → DELETE → INSERT → DELETE totiž zanechá na této URL tombstone,
+        který by jinak druhý DELETE tiše rozbil; hlavička dovolí Fedoře tombstone
+        při opětovném vytvoření proxy přepsat.
+        """
         logger.debug(
             "core_repository_connector.record_deletion.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -1843,6 +1870,8 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
             url = self._get_request_url(FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS)
             self._send_request(url, FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS, headers=headers, data=data)
             headers = {"Slug": self.record.ident_cely, "Content-Type": "text/turtle"}
+            if self.override_tombstone:
+                headers["Overwrite-Tombstone"] = "true"
             data = (
                 "@prefix ore: <http://www.openarchives.org/ore/terms/> . "
                 "@prefix dcterms: <http://purl.org/dc/terms/> . "
@@ -2035,6 +2064,7 @@ class BaseFedoraTransaction(ABC):
     def __init__(self):
         """Inicializuje instanci třídy."""
         self.uid = None
+        self.override_tombstone = False
 
     def mark_transaction_as_closed(self):
         """Označí transakci jako uzavřenou. Výchozí implementace neprovádí žádnou akci."""
