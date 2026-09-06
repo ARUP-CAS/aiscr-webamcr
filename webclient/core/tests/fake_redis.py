@@ -1,5 +1,7 @@
 """Sdílená in-memory náhrada za Redis pro účely jednotkových testů."""
 
+from core.connectors import RedisConnector
+
 
 class FakeRedis:
     """Minimální in-memory náhrada za ``redis.Redis`` použitelná v unit testech.
@@ -7,7 +9,8 @@ class FakeRedis:
     Podporuje operace, které využívá importní pipeline (``cron.tasks.run_data_import`` i
     ``cron.tasks.run_data_import_validation``) a další taskové cesty:
     ``get``/``set``/``delete``/``expire``/``persist``/``rpush``/``lrange``/``lset``/``incr``
-    a konfigurabilní ``eval``. ``pipeline()`` vrací ``FakePipeline``, který operace zaznamená
+    a ``eval`` dispatchovaný přes přesnou shodu se skriptovými konstantami ``RedisConnector``
+    (viz ``eval()``). ``pipeline()`` vrací ``FakePipeline``, který operace zaznamená
     a při ``execute()`` je sekvenčně provede nad stejným úložištěm; podporuje ``get``/``set``/
     ``delete``/``expire``/``persist``/``rpush``/``incr``. Pokud bude test potřebovat další
     metody, doplňte je sem.
@@ -178,40 +181,83 @@ class FakeRedis:
         return FakeRedis.FakePipeline(self)
 
     def eval(self, script, numkeys, *keys_and_args):
-        """Simuluje Redis Lua skript — vrací hodnotu z ``eval_results``, jinak reálně vykoná
-        compare-then-delete (``RedisConnector._RELEASE_LOCK_SCRIPT``/``delete_if_value_matches``)
-        nebo compare-then-transition (``RedisConnector._CLAIM_AWAITING_IMPORT_SCRIPT``).
+        """Simuluje Redis Lua skript — vrací hodnotu z ``eval_results``, jinak vykoná simulaci
+        odpovídající skriptu.
+
+        Dispatch probíhá přes přesnou shodu (``==``) se skriptovými konstantami definovanými na
+        ``RedisConnector`` (ne přes hledání podřetězců) — pokud se přijatý skript neshoduje s žádnou
+        známou konstantou, vyhodí ``ValueError``, aby budoucí úprava Lua skriptu v ``connectors.py``
+        neprošla testem tiše se špatným (obecným) chováním.
 
         Pokud byl při inicializaci předán ``eval_results``, odebere a vrátí první položku seznamu
-        (beze změny úložiště) — pro testy, které chtějí vynutit konkrétní výsledek locku. Jinak,
-        pro compare-then-delete skript klíč skutečně smaže, pokud jeho hodnota odpovídá
-        očekávané; pro claim skript ověří fázi/validitu/token a fázi skutečně přepne
-        (bez toho nešel otestovat souběh dvou Start požadavků);
-        jiné skripty (refresh/persist) vrací ``1`` beze změny úložiště.
+        (beze změny úložiště) — pro testy, které chtějí vynutit konkrétní výsledek locku.
 
-        :param script: Zdrojový text Lua skriptu (rozlišuje se dle přítomnosti ``\"del\"``
-            resp. ``\"return {1, token}\"``).
+        :param script: Zdrojový text Lua skriptu — musí být přesně jedna z konstant
+            ``RedisConnector._RELEASE_LOCK_SCRIPT`` / ``_REFRESH_LOCK_SCRIPT`` /
+            ``_PERSIST_LOCK_SCRIPT`` / ``_CLAIM_AWAITING_IMPORT_SCRIPT`` /
+            ``_CANCEL_AWAITING_IMPORT_SCRIPT`` / ``_FINALIZE_VALIDATION_SCRIPT``.
         :param numkeys: Počet KEYS argumentů na začátku ``keys_and_args``.
         :param keys_and_args: KEYS následované ARGV, stejně jako u reálného Redis ``eval``.
         :return: První zbývající hodnota z ``eval_results``, nebo výsledek simulace.
+        :raises ValueError: Pokud ``script`` neodpovídá žádné známé konstantě ``RedisConnector``.
         """
         if self._eval_results:
             return self._eval_results.pop(0)
         keys = keys_and_args[:numkeys]
         argv = keys_and_args[numkeys:]
-        if "return {1, token}" in script:
+        if script == RedisConnector._CLAIM_AWAITING_IMPORT_SCRIPT:
             return self._eval_claim_awaiting_import(keys, argv)
-        if "KEYS[6]" in script and 'redis.call("set", KEYS[4]' in script:
+        if script == RedisConnector._CANCEL_AWAITING_IMPORT_SCRIPT:
             return self._eval_cancel_awaiting_import(keys, argv)
-        if 'redis.call("exists", KEYS[2])' in script and 'redis.call("persist", KEYS[4])' in script:
+        if script == RedisConnector._FINALIZE_VALIDATION_SCRIPT:
             return self._eval_finalize_validation(keys, argv)
-        if "del" in script and keys and argv:
-            key = keys[0]
-            if self._kv.get(key) == self._encode(argv[0]):
-                self.delete(key)
-                return 1
+        if script == RedisConnector._RELEASE_LOCK_SCRIPT:
+            return self._eval_compare_then_delete(keys, argv)
+        if script == RedisConnector._REFRESH_LOCK_SCRIPT:
+            return self._eval_compare_then_expire(keys, argv)
+        if script == RedisConnector._PERSIST_LOCK_SCRIPT:
+            return self._eval_compare_then_persist(keys, argv)
+        raise ValueError(
+            "FakeRedis.eval: neznámý Lua skript neodpovídá žádné konstantě RedisConnector — "
+            "doplňte simulaci nebo použijte eval_results."
+        )
+
+    def _eval_compare_then_delete(self, keys, argv):
+        """Simuluje ``RedisConnector._RELEASE_LOCK_SCRIPT`` (compare-then-delete).
+
+        :param keys: ``(key,)`` — klíč, jehož hodnota se porovnává.
+        :param argv: ``(expected_value,)`` — očekávaná hodnota klíče.
+        :return: ``1`` a smaže klíč, pokud hodnota odpovídá; jinak ``0``.
+        """
+        key = keys[0]
+        if self._kv.get(key) == self._encode(argv[0]):
+            self.delete(key)
+            return 1
+        return 0
+
+    def _eval_compare_then_expire(self, keys, argv):
+        """Simuluje ``RedisConnector._REFRESH_LOCK_SCRIPT`` (compare-then-expire).
+
+        :param keys: ``(key,)`` — klíč locku.
+        :param argv: ``(expected_value, ttl_seconds)`` — očekávaná hodnota a nové TTL.
+        :return: Výsledek ``expire()``, pokud hodnota odpovídá; jinak ``0``.
+        """
+        key, expected_value = keys[0], argv[0]
+        if self._kv.get(key) != self._encode(expected_value):
             return 0
-        return 1
+        return int(self.expire(key, int(argv[1])))
+
+    def _eval_compare_then_persist(self, keys, argv):
+        """Simuluje ``RedisConnector._PERSIST_LOCK_SCRIPT`` (compare-then-persist).
+
+        :param keys: ``(key,)`` — klíč locku.
+        :param argv: ``(expected_value,)`` — očekávaná hodnota klíče.
+        :return: Výsledek ``persist()``, pokud hodnota odpovídá; jinak ``0``.
+        """
+        key, expected_value = keys[0], argv[0]
+        if self._kv.get(key) != self._encode(expected_value):
+            return 0
+        return int(self.persist(key))
 
     def _eval_claim_awaiting_import(self, keys, argv):
         """Vykoná simulaci ``RedisConnector._CLAIM_AWAITING_IMPORT_SCRIPT``.
