@@ -2521,6 +2521,7 @@ def run_data_import(job_id, user_id, lock_token):
                 fedora_transaction = None
                 filename = None
                 record_id = None
+                related_metadata_log_context = {}
                 try:
                     redis_connector.set(
                         job_key("import_data_status_message_tr"),
@@ -2731,7 +2732,13 @@ def run_data_import(job_id, user_id, lock_token):
                         )
                     if not failed and not stopped:
                         record_id = None
+                        filename = None
                         for (obj_class, obj_pk), entry in pending_related_metadata.items():
+                            related_metadata_log_context = {
+                                "related_metadata_model": obj_class._meta.label,
+                                "related_metadata_pk": obj_pk,
+                                "related_metadata_ident_cely": entry["ident_cely"],
+                            }
                             fedora_transaction = None
                             refresh_import_lock()
                             fedora_transaction = FedoraTransaction()
@@ -2762,7 +2769,13 @@ def run_data_import(job_id, user_id, lock_token):
                         fedora_transaction.rollback_transaction()
                     logger.error(
                         "cron.tasks.run_data_import.files.missing_repository_uuid",
-                        extra={"error": err, "job_id": job_id, "import_filename": filename, "soubor_pk": err.soubor_pk},
+                        extra={
+                            "error": err,
+                            "job_id": job_id,
+                            "import_filename": filename,
+                            "soubor_pk": err.soubor_pk,
+                            **related_metadata_log_context,
+                        },
                     )
                     if record_id is not None:
                         import_fedora_result[record_id] = [
@@ -2784,6 +2797,7 @@ def run_data_import(job_id, user_id, lock_token):
                             "error": err,
                             "job_id": job_id,
                             "import_filename": filename,
+                            **related_metadata_log_context,
                             "detected_mime": err.mime_type,
                         },
                     )
@@ -2807,6 +2821,7 @@ def run_data_import(job_id, user_id, lock_token):
                             "error": err,
                             "job_id": job_id,
                             "import_filename": filename,
+                            **related_metadata_log_context,
                             "detected_mime": err.mime_type,
                         },
                     )
@@ -2830,6 +2845,7 @@ def run_data_import(job_id, user_id, lock_token):
                             "error": err,
                             "job_id": job_id,
                             "import_filename": filename,
+                            **related_metadata_log_context,
                             "detected_mime": err.mime_type,
                             "navazany_ident_cely": err.navazany_ident_cely,
                         },
@@ -2856,6 +2872,7 @@ def run_data_import(job_id, user_id, lock_token):
                             "job_id": job_id,
                             "import_filename": filename,
                             "traceback": fedora_error_stack,
+                            **related_metadata_log_context,
                         },
                     )
                     fedora_error_result = translation_value(
@@ -2878,7 +2895,13 @@ def run_data_import(job_id, user_id, lock_token):
                     error_stack = traceback.format_exc()
                     logger.error(
                         "cron.tasks.run_data_import.directory_error",
-                        extra={"error": err, "job_id": job_id, "import_filename": filename, "traceback": error_stack},
+                        extra={
+                            "error": err,
+                            "job_id": job_id,
+                            "import_filename": filename,
+                            "traceback": error_stack,
+                            **related_metadata_log_context,
+                        },
                     )
                     error_result = translation_value(
                         "cron.tasks.run_data_import.cannot_read_from_directory",
