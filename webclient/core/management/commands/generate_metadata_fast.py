@@ -22,12 +22,24 @@ logger = logging.getLogger(__name__)
 
 _RETRYABLE_EXCEPTIONS = (requests.exceptions.ConnectionError, requests.exceptions.Timeout)
 
-#: Timeout (sekundy) pro všechny HTTP požadavky na Fedoru - stejná hodnota jako
-#: ``requests.post(..., timeout=10)`` v ``core/repository_connector.py:624``. Bez
-#: timeoutu je ``requests.exceptions.Timeout`` v ``_RETRYABLE_EXCEPTIONS`` nedosažitelný
-#: (výchozí chování ``requests`` je čekat neomezeně) a zaseknuté TCP spojení by worker
-#: zablokovalo natrvalo, ne jen na dobu jednoho pokusu.
-_HTTP_TIMEOUT = 10
+#: Timeout (sekundy) pro běžné HTTP požadavky na Fedoru. Bez timeoutu je
+#: ``requests.exceptions.Timeout`` v ``_RETRYABLE_EXCEPTIONS`` nedosažitelný (výchozí
+#: chování ``requests`` je čekat neomezeně) a zaseknuté TCP spojení by worker zablokovalo
+#: natrvalo, ne jen na dobu jednoho pokusu. Hodnota je záměrně vyšší než ``timeout=10``
+#: v ``core/repository_connector.py`` - ta je pro jednu operaci v běžném provozu, kdežto
+#: tady Fedora obsluhuje N paralelních workerů najednou a odpovídá výrazně pomaleji.
+_HTTP_TIMEOUT = 60
+
+#: Timeout (sekundy) pro commit transakce - řádově vyšší než ``_HTTP_TIMEOUT``, protože
+#: commit je zdaleka nejdražší operace: Fedora při něm persistuje celý OCFL objekt
+#: (container + metadata + všechny soubory záznamu) a updatuje ``containment`` index pro
+#: sdílené rodiče (``/record``, ``/model/{model}/member``). Právě na tom indexu vzniká
+#: pod souběhem zámková kontence - měřeno na lokálním běhu (issue #3967): Fedora tam
+#: hlásila `deadlock detected` na `UPDATE containment SET updated = ? WHERE fedora_id = ?`.
+#: Krátký timeout je tu nebezpečný: vypršení NEZNAMENÁ, že commit selhal, jen že jsme se
+#: nedočkali odpovědi - a slepé zopakování záznamu pak vytvoří ve Fedoře duplikát
+#: (kolize Slugu se nevyhodnotí jako chyba, Fedora zdroj přejmenuje na náhodné UUID).
+_COMMIT_TIMEOUT = 300
 
 #: HTTP status kódy z Fedory, které se považují za přechodné (stojí za retry) - server
 #: chyby (5xx, typicky přetížení/konflikt při souběžném zápisu do stejného sdíleného
@@ -309,9 +321,33 @@ class _FastFedoraWriter:
 
             :raises FastFedoraWriteError: Pokud commit selže.
         """
-        response = self._admin_session().put(tx_url, verify=False, timeout=_HTTP_TIMEOUT)
+        response = self._admin_session().put(tx_url, verify=False, timeout=_COMMIT_TIMEOUT)
         if not str(response.status_code).startswith("2"):
             raise FastFedoraWriteError(tx_url, response.status_code, response.text)
+
+    def record_exists(self, ident_cely) -> bool:
+        """
+        Zjistí (mimo jakoukoli transakci), jestli container záznamu ve Fedoře existuje.
+
+        Používá se výhradně po timeoutu commitu (viz ``_process_record``) k rozhodnutí,
+        jestli se má záznam opakovat. Timeout totiž **neznamená, že commit selhal** -
+        Fedora ho mohla v klidu dokončit a jen se nestihla ozvat; slepé zopakování by
+        pak vytvořilo duplikát, protože kolize ``Slug`` není chyba a Fedora zdroj
+        přejmenuje na náhodné UUID (ověřeno na lokálním běhu, issue #3967).
+
+        :param ident_cely: Celý identifikátor záznamu.
+
+            :return: ``True``, pokud container existuje, ``False`` při 404.
+
+            :raises FastFedoraWriteError: Pokud dotaz vrátí jiný status kód než 200/404.
+        """
+        url = f"{self.base_url}/record/{ident_cely}"
+        response = self._session().head(url, verify=False, timeout=_HTTP_TIMEOUT)
+        if response.status_code == 404:
+            return False
+        if response.status_code != 200:
+            raise FastFedoraWriteError(url, response.status_code, response.text)
+        return True
 
     def rollback_transaction(self, tx_url: str):
         """
@@ -662,7 +698,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--max-retries",
             type=int,
-            default=3,
+            default=20,
             help="Maximální počet opakování jednoho záznamu při přechodné chybě (viz _is_retryable).",
         )
         parser.add_argument(
@@ -853,7 +889,36 @@ class Command(BaseCommand):
                         if db_updates is not None:
                             with db_updates_lock:
                                 db_updates[mimetype].append(pk)
-                writer.commit_transaction(tx_url)
+                try:
+                    writer.commit_transaction(tx_url)
+                except requests.exceptions.Timeout:
+                    # Timeout na commitu NEZNAMENA, ze commit selhal - Fedora ho mohla
+                    # dokoncit a jen se nestihla ozvat. Slepe zopakovani by pak vytvorilo
+                    # duplikat (kolize Slug neni chyba, Fedora zdroj prejmenuje na nahodne
+                    # UUID) - realne se to na lokalnim behu stalo 5x, viz issue #3967.
+                    # Proto se radeji zeptame, jestli zaznam existuje, a podle toho se
+                    # rozhodneme.
+                    try:
+                        created = writer.record_exists(obj.ident_cely)
+                    except Exception as verify_exc:
+                        # Vysledek se nepodarilo zjistit - neopakovat. Chybejici zaznam je
+                        # mensi zlo nez duplikat: je videt ve failures a da se cilene
+                        # dohnat, kdezto duplikat s nahodnym UUID se musi hledat rucne.
+                        logger.error(
+                            "core.management.commands.generate_metadata_fast.commit_timeout_unverified",
+                            extra={"pk": obj.pk, "ident_cely": obj.ident_cely, "error": str(verify_exc)},
+                        )
+                        failures.append(
+                            (obj.pk, obj.ident_cely, f"Commit vyprsel a stav se nepodarilo overit: {verify_exc}")
+                        )
+                        return
+                    if created:
+                        logger.warning(
+                            "core.management.commands.generate_metadata_fast.commit_timeout_but_created",
+                            extra={"pk": obj.pk, "ident_cely": obj.ident_cely},
+                        )
+                        return
+                    raise
                 return
             except Exception as exc:
                 if tx_url:
@@ -873,7 +938,28 @@ class Command(BaseCommand):
                     )
                     failures.append((obj.pk, obj.ident_cely, str(exc)))
                     return
-                backoff = min(30.0, 0.5 * (2 ** (attempt - 1))) + random.uniform(0, 0.5)
+                # Konflikt na sdíleném rodiči (409/410, viz _RETRYABLE_STATUS_CODES) se
+                # sám o sobě nevyřeší rychle - potřebuje čas, ať se aktuálně běžící
+                # konkurenční transakce na tomtéž kontejneru stihnou zkomitovat. Krátký
+                # backoff (dřív max ~3,5 s součtem přes 3 pokusy) na to nestačil, proto
+                # vyšší základ i strop a jitter škálovaný s backoffem samotným (ne pevných
+                # 0-0,5 s) - ať se různá vlákna, co narazila na stejný konflikt zároveň,
+                # při retry víc rozprostřou v čase místo opětovné kolize nastejno.
+                base_backoff = min(60.0, 2.0 * (2 ** (attempt - 1)))
+                backoff = base_backoff + random.uniform(0, base_backoff * 0.5)
+                # Bez tohohle logu je opakování zcela neviditelne - v logu se objevi jen
+                # vycerpane retries, takze uspesne opakovani (a tedy i pripadny duplikat,
+                # ktery pri nem vznikne) projde jako ciste uspesny zaznam.
+                logger.warning(
+                    "core.management.commands.generate_metadata_fast.retry",
+                    extra={
+                        "pk": obj.pk,
+                        "ident_cely": obj.ident_cely,
+                        "attempt": attempt,
+                        "backoff": round(backoff, 1),
+                        "error": str(exc),
+                    },
+                )
                 time.sleep(backoff)
 
     def _run_parallel(self, work_items, worker_fn, workers, total=None):

@@ -167,7 +167,7 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
      - Počet paralelních vláken (1 = sekvenční běh).
    * - ``--max-retries``
      - ``int``
-     - ``3``
+     - ``20``
      - Maximální počet opakování jednoho záznamu při přechodné chybě (viz _is_retryable).
    * - ``--bez-souboru``
      - 
