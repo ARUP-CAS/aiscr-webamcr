@@ -94,3 +94,44 @@ class DataImportStartConcurrencyTest(SimpleTestCase):
         self.assertEqual(self.fake.get(f"import_data_phase_{JOB_ID}"), tasks.IMPORT_PHASE_FAILED)
         self.assertEqual(self.fake.get(f"import_data_current_job_{USER_ID}"), replacement_job_id)
         self.assertEqual(self.fake.get(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY), replacement_job_id)
+
+    def test_lost_claim_expires_job_data_and_preserves_replacement(self):
+        """Ztráta locku nastaví retenci dat a záznamů, ale nezmění novější úlohu."""
+        for replacement_token in (None, "replacement-token"):
+            with self.subTest(replacement_token=replacement_token):
+                self.setUp()
+                retained_keys = {
+                    f"import_data_count_{JOB_ID}": "2",
+                    f"import_data_validation_results_{JOB_ID}": "[]",
+                    f"import_data_{JOB_ID}_record_0": "first record",
+                    f"import_data_{JOB_ID}_record_1": "second record",
+                }
+                for key, value in retained_keys.items():
+                    self.fake.set(key, value)
+                    self.assertEqual(self.fake.ttl(key), -1)
+                replacement_keys = {
+                    f"import_data_current_job_{USER_ID}": "replacement-job",
+                    RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY: "replacement-job",
+                    "import_data_phase_replacement-job": tasks.IMPORT_PHASE_IMPORTING,
+                }
+                self.fake.delete(RedisConnector.IMPORT_DATA_LOCK_KEY)
+                if replacement_token is not None:
+                    replacement_keys[RedisConnector.IMPORT_DATA_LOCK_KEY] = replacement_token
+                for key, value in replacement_keys.items():
+                    self.fake.set(key, value, ex=1234)
+
+                response, delay_mock = self._post()
+
+                self.assertEqual(response.status_code, 409)
+                delay_mock.assert_not_called()
+                self.assertEqual(self.fake.get(f"import_data_phase_{JOB_ID}"), tasks.IMPORT_PHASE_FAILED)
+                for key, value in retained_keys.items():
+                    self.assertEqual(self.fake.get(key), value)
+                    self.assertEqual(self.fake.ttl(key), tasks.IMPORT_DATA_EXPIRATION_SECONDS)
+                for suffix in ("import_data_user", "import_data_valid", "import_data_lock_token"):
+                    self.assertEqual(self.fake.ttl(f"{suffix}_{JOB_ID}"), tasks.IMPORT_DATA_EXPIRATION_SECONDS)
+                for key, value in replacement_keys.items():
+                    self.assertEqual(self.fake.get(key), value)
+                    self.assertEqual(self.fake.ttl(key), 1234)
+                if replacement_token is None:
+                    self.assertIsNone(self.fake.get(RedisConnector.IMPORT_DATA_LOCK_KEY))

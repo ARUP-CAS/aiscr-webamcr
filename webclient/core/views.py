@@ -3228,7 +3228,7 @@ class DataImportStart(LoginRequiredMixin, View):
                 redis_connector, f"import_data_current_job_{request.user.id}", job_id
             )
             RedisConnector.delete_if_value_matches(redis_connector, RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, job_id)
-            redis_connector.expire(f"import_data_lock_token_{job_id}", tasks.IMPORT_DATA_EXPIRATION_SECONDS)
+            _expire_import_data_keys(redis_connector, job_id, tasks.IMPORT_DATA_EXPIRATION_SECONDS)
             return JsonResponse(
                 {"result": "error", "status_message": _("cron.tasks.run_data_import.failed_lock_lost")},
                 status=409,
