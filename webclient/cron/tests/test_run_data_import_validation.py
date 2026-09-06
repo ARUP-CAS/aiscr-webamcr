@@ -360,6 +360,28 @@ class RunDataImportValidationTest(TestCase):
         self.assertIn("failed_lock_lost", status)
         self.assertTrue(release_lock_mock.called)
 
+    def test_user_stop_during_finalization_reports_stopped_not_lock_lost(self):
+        """Stop klik během finalizace (fáze stále ``validating``) se hlásí jako ``stopped``, ne jako lock-lost error."""
+        fake_redis = self._build_redis(blob=_build_zip([_uzivatel_row()]))
+        real_finalize_validation = cron_tasks.RedisConnector.finalize_validation
+
+        def stop_then_finalize(connection, job_id):
+            # Only the stop sentinel is set (as core.views.DataImportStop does) — phase stays
+            # "validating", unlike an admin reset which also rewrites the phase.
+            connection.set(f"import_data_stop_{job_id}", "1")
+            return real_finalize_validation(connection, job_id)
+
+        self._run_validation(
+            fake_redis,
+            finalize_validation_side_effect=stop_then_finalize,
+        )
+
+        self._assert_phase(fake_redis, cron_tasks.IMPORT_PHASE_STOPPED)
+        status = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}").decode("utf-8")
+        self.assertIn("stopped_by_user", status)
+        self.assertNotIn("failed_lock_lost", status)
+        self.assertIsNone(fake_redis.get(f"import_data_failure_reason_{JOB_ID}"))
+
     def test_lock_replaced_during_finalization_cannot_publish_awaiting_approval(self):
         """Cizí lock získaný před finalizací zůstane zachován a validace skončí jako ``failed``."""
         fake_redis = self._build_redis(blob=_build_zip([_uzivatel_row()]))
@@ -571,9 +593,14 @@ class RunDataImportValidationTest(TestCase):
 
         self._run_validation(fake_redis, antivirus_result=AntivirusCheckResult.VIRUS_FOUND)
 
-        # Datové klíče musí stále existovat (expire v FakeRedis je no-op, klíč zůstává).
+        # Datové klíče musí stále existovat.
         self.assertIsNotNone(fake_redis.get(f"import_data_validation_results_{JOB_ID}"))
         self.assertIsNotNone(fake_redis.get(f"import_data_status_message_tr_{JOB_ID}"))
+        # TTL musí zůstat na 6 h (terminální flush nesmí klíč tiše prodloužit zpět na 48 h).
+        self.assertEqual(
+            fake_redis.ttl(f"import_data_validation_results_{JOB_ID}"),
+            cron_tasks.IMPORT_DATA_EXPIRATION_SECONDS,
+        )
         # Chunk klíče se naopak mažou (ne expirují).
         chunks_raw = fake_redis.get(f"import_data_file_chunks_{JOB_ID}")
         self.assertIsNone(chunks_raw)
@@ -585,11 +612,13 @@ class RunDataImportValidationTest(TestCase):
 
         self._run_validation(fake_redis)
 
-        # Persist v FakeRedis je no-op; ověříme, že klíče zůstávají a fáze je awaiting_approval.
         self._assert_phase(fake_redis, cron_tasks.IMPORT_PHASE_AWAITING_APPROVAL)
         self.assertIsNotNone(fake_redis.get(f"import_data_validation_results_{JOB_ID}"))
         self.assertIsNotNone(fake_redis.get(f"import_data_count_{JOB_ID}"))
         self.assertIsNotNone(fake_redis.get(f"import_data_valid_{JOB_ID}"))
+        # Klíč musí zůstat bez TTL — terminální flush nesmí tiše vrátit 48h TTL po persist()u
+        # (r3917103970): reviewer by jinak po dlouhé awaiting_approval našel prázdný report.
+        self.assertEqual(fake_redis.ttl(f"import_data_validation_results_{JOB_ID}"), -1)
         # Per-user pointer se na úspěšné cestě persistuje (nesmí se smazat).
         self.assertIsNotNone(fake_redis.get(f"import_data_current_job_{self.runner.id}"))
 

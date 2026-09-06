@@ -1478,19 +1478,43 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         all_data_keys = [job_key(k) for k in per_job_data_keys]
         all_data_keys += [record_key(i) for i in range(record_id)]
 
+        # Flush before the persist/expire branching below, not after: whichever branch runs next
+        # decides the key's final TTL (persist strips it, expire sets 6h) — flushing afterwards
+        # would silently re-apply this 48h TTL on top of that decision.
+        if reports_directory_path:
+            flush_validation_results()
+
         if not stopped and failure_reason is None:
             # Validation OK, all rows valid → hold the lock across awaiting_approval and persist the
             # lock and every per-job data key (remove the TTL) so a slow reviewer does not find the
             # job gone. No refresher runs during awaiting_approval.
             if not RedisConnector.finalize_validation(redis_connector, job_id):
-                failure_reason = IMPORT_FAILURE_REASON_ERROR
-                redis_connector.set(
-                    job_key("import_data_status_message_tr"),
-                    translation_value("cron.tasks.run_data_import.failed_lock_lost"),
-                    ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
-                )
-                redis_connector.set(job_key("import_data_stop"), 1, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
-                stopped = False
+                # The script refuses on phase change, stop sentinel, or lock loss alike — re-read
+                # the stop sentinel/phase to tell a deliberate stop from a real lock loss. A phase
+                # already moved past "validating" to something other than "stopped" (e.g. an admin
+                # reset, which also sets the stop sentinel) is a real termination, not a plain stop.
+                current_phase = redis_connector.get(job_key("import_data_phase"))
+                if isinstance(current_phase, bytes):
+                    current_phase = current_phase.decode("utf-8")
+                stop_requested = redis_connector.get(job_key("import_data_stop")) is not None
+                if current_phase == IMPORT_PHASE_STOPPED or (
+                    current_phase == IMPORT_PHASE_VALIDATING and stop_requested
+                ):
+                    stopped = True
+                    redis_connector.set(
+                        job_key("import_data_status_message_tr"),
+                        translation_value("cron.tasks.run_data_import.stopped_by_user"),
+                        ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+                    )
+                else:
+                    failure_reason = IMPORT_FAILURE_REASON_ERROR
+                    redis_connector.set(
+                        job_key("import_data_status_message_tr"),
+                        translation_value("cron.tasks.run_data_import.failed_lock_lost"),
+                        ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+                    )
+                    redis_connector.set(job_key("import_data_stop"), 1, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+                    stopped = False
             else:
                 persist_pipe = redis_connector.pipeline()
                 for key in all_data_keys:
@@ -1531,7 +1555,6 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         # Terminal snapshot — phase is now awaiting_approval/stopped/failed above, so this is the
         # report an operator sees if they never return to the polling page.
         if reports_directory_path:
-            flush_validation_results()
             save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
 
     logger.debug(

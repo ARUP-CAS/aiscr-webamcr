@@ -11,6 +11,11 @@ class FakeRedis:
     a při ``execute()`` je sekvenčně provede nad stejným úložištěm; podporuje ``get``/``set``/
     ``delete``/``expire``/``persist``/``rpush``/``incr``. Pokud bude test potřebovat další
     metody, doplňte je sem.
+
+    TTL se nesimuluje reálným časem (nic samo nevyprší), ale ``set(ex=...)``/``expire``/
+    ``persist`` si pamatují poslední zadanou hodnotu TTL na klíč, dostupnou přes ``ttl()`` —
+    stačí to k ověření, že kód nastavil/zrušil TTL ve správném pořadí, aniž by test čekal na
+    reálné vypršení.
     """
 
     def __init__(self, initial: dict | None = None, eval_results: list | None = None, decode_responses: bool = False):
@@ -28,6 +33,7 @@ class FakeRedis:
         """
         self._kv: dict[str, bytes] = {}
         self._lists: dict[str, list[bytes]] = {}
+        self._ttl: dict[str, int] = {}
         self._eval_results: list = list(eval_results) if eval_results is not None else []
         self._decode = decode_responses
         for key, value in (initial or {}).items():
@@ -56,7 +62,7 @@ class FakeRedis:
 
         :param key: Klíč v úložišti.
         :param value: Hodnota k uložení (kóduje se na ``bytes``).
-        :param ex: Ignorováno — FakeRedis neimplementuje TTL.
+        :param ex: TTL v sekundách; jako u reálného Redis ``SET`` bez ``ex`` zruší dřívější TTL.
         :param nx: Pokud ``True`` a klíč existuje, nic se nezapíše a vrátí se ``False``.
         :return: ``True`` při zápisu, ``False`` pokud byl ``nx=True`` a klíč již existoval.
         """
@@ -64,6 +70,10 @@ class FakeRedis:
         if nx and key in self._kv:
             return False
         self._kv[key] = encoded
+        if ex is not None:
+            self._ttl[key] = ex
+        else:
+            self._ttl.pop(key, None)
         return True
 
     def get(self, key):
@@ -82,22 +92,42 @@ class FakeRedis:
         for key in keys:
             removed += int(self._kv.pop(key, None) is not None)
             removed += int(self._lists.pop(key, None) is not None)
+            self._ttl.pop(key, None)
         return removed
 
     def expire(self, key, seconds):
-        """No-op: FakeRedis nesleduje TTL; vrací ``True``, pokud klíč existuje.
+        """Nastaví TTL na existující klíč a vrátí ``True``, pokud klíč existuje.
 
         :param key: Redis klíč, pro který se nastavuje TTL.
-        :param seconds: Počet sekund TTL ignorovaný fake implementací.
+        :param seconds: Počet sekund TTL.
         """
-        return key in self._kv or key in self._lists
+        exists = key in self._kv or key in self._lists
+        if exists:
+            self._ttl[key] = seconds
+        return exists
 
     def persist(self, key):
-        """No-op symetrický k ``expire``: vrací ``True``, pokud klíč existuje (TTL se neřeší).
+        """Zruší TTL existujícího klíče a vrátí ``True``, pokud klíč existuje.
 
         :param key: Redis klíč, u kterého se má zrušit expirace.
         """
-        return key in self._kv or key in self._lists
+        exists = key in self._kv or key in self._lists
+        if exists:
+            self._ttl.pop(key, None)
+        return exists
+
+    def ttl(self, key):
+        """Vrátí aktuální TTL v sekundách, ``-1`` pokud klíč nemá TTL, ``-2`` pokud neexistuje.
+
+        Zrcadlí sémantiku ``redis-py`` ``ttl()``, ale bez plynutí reálného času — vrací poslední
+        hodnotu nastavenou přes ``set(ex=...)``/``expire``, dokud ji nezruší ``persist`` nebo
+        přepsání bez ``ex``.
+
+        :param key: Redis klíč, jehož TTL se zjišťuje.
+        """
+        if key not in self._kv and key not in self._lists:
+            return -2
+        return self._ttl.get(key, -1)
 
     def rpush(self, key, value):
         """Přidá hodnotu na konec listu pod klíčem a vrátí novou délku listu.
@@ -264,7 +294,7 @@ class FakeRedis:
 
             :param key: Redis klíč zapisované hodnoty.
             :param value: Hodnota k uložení.
-            :param ex: Ignorováno — FakeRedis neimplementuje TTL.
+            :param ex: TTL v sekundách (viz ``FakeRedis.set``).
             :param nx: Pokud ``True``, zapiš pouze při neexistenci klíče.
             """
             self._ops.append(("set", key, value, ex, nx))
@@ -282,7 +312,7 @@ class FakeRedis:
             """Zaznamená ``expire`` operaci do fronty.
 
             :param key: Redis klíč, pro který se nastavuje TTL.
-            :param seconds: Počet sekund TTL (fake implementací ignorováno).
+            :param seconds: Počet sekund TTL.
             """
             self._ops.append(("expire", key, seconds))
             return self
