@@ -1147,7 +1147,12 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
 
     failure_reason = None  # None = úspěch; jinak IMPORT_FAILURE_REASON_*
     stopped = False
-    chunk_count = 0
+    # Read before the early-return gates below (lock-lost, report directory, first report save) so
+    # the finally block's chunk cleanup can free the staged ZIP even on those paths — otherwise it
+    # runs with chunk_count == 0 and only the counter key is deleted, leaving the chunks themselves
+    # to their 48h TTL.
+    chunk_count_raw = redis_connector.get(job_key("import_data_file_chunks"))
+    chunk_count = int(chunk_count_raw) if chunk_count_raw else 0
     records: list = []
     validation_results: list = []
     invalid_records: list = []
@@ -1228,9 +1233,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
             fail_error("core.admin.import_data.error.unexpected_error")
             return
 
-        # Reassemble the staged ZIP from Redis chunks.
-        chunk_count_raw = redis_connector.get(job_key("import_data_file_chunks"))
-        chunk_count = int(chunk_count_raw) if chunk_count_raw else 0
+        # Reassemble the staged ZIP from Redis chunks (chunk_count already read above).
         blob = bytearray()
         if chunk_count:
             pipe = redis_connector.pipeline()
