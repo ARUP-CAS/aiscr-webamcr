@@ -446,6 +446,35 @@ class RunDataImportValidationTest(TestCase):
         self.assertEqual([result["item_order"] for result in persisted_results], [0, 1])
         self.assertGreaterEqual(self.validation_report_save_mock.call_count, 2)
 
+    def test_nonexistent_user_insert_in_uzivatele_opravneni_is_rejected_per_row(self):
+        """[r3917104054] INSERT s neexistujícím uživatelem v uzivatele_opravneni.csv.
+
+        Reviewer's finding claimed ``create_records`` (bare ``User.objects.get``) would raise an
+        uncaught ``User.DoesNotExist`` and fail the whole job with a generic ``error``, because
+        ``import_validation`` lets a nonexistent user through on INSERT (no relation exists yet,
+        which is correct for INSERT). This test shows that does NOT happen on the actual
+        ``run_data_import_validation`` pipeline: ``map()`` runs before ``import_validation``/
+        ``create_records`` (cron/tasks.py ~line 1356) and ``UzivatelOpravneniMapper.get_mapping()``
+        already resolves ``uzivatel`` through ``LookupImportField(User)``, which raises
+        ``ImportDataMissingReferencedValueError`` (an ``ImportDataError``) for a missing user —
+        caught by the per-row handler — so ``create_records`` is never reached for this row.
+        The job is correctly rejected as ``validation_rejected``, not ``error``.
+        """
+        archive = io.BytesIO()
+        with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("uzivatele_opravneni.csv", "uzivatel,skupina\nU-DOES-NOT-EXIST,archeolog\n")
+        fake_redis = self._build_redis(blob=archive.getvalue())
+
+        self._run_validation(fake_redis)
+
+        self._assert_phase(fake_redis, cron_tasks.IMPORT_PHASE_FAILED)
+        failure_reason_raw = fake_redis.get(f"import_data_failure_reason_{JOB_ID}")
+        self.assertIsNotNone(failure_reason_raw)
+        self.assertEqual(failure_reason_raw.decode("utf-8"), cron_tasks.IMPORT_FAILURE_REASON_VALIDATION_REJECTED)
+        status_raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}")
+        self.assertIsNotNone(status_raw)
+        self.assertIn("validation_rejected", status_raw.decode("utf-8"))
+
     def test_duplicate_soubory_across_zip_paths_is_rejected(self):
         """Duplicitní soubor v různých cestách ZIPu sdílí stav dávky a validace jej odmítne."""
 

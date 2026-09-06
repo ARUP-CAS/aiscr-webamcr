@@ -2045,14 +2045,25 @@ class MultipleClassImportModelMapper(ImportModelMapper):
             raise ImportDataIntegrityError(
                 self._get_filter_kwargs_primary_key(), self.model_class.__name__, performed_action
             )
-        elif (
-            performed_action
-            in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE)
-            and not self.model_class.objects.filter(ident_cely=self.value_dict["ident_cely"]).exists()
+        elif performed_action in (
+            ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+            ImportDataAdminForm.PERFORMED_ACTION_DELETE,
         ):
-            raise ImportDataIntegrityError(
-                self._get_filter_kwargs_primary_key(), self.model_class.__name__, performed_action
-            )
+            if not self.model_class.objects.filter(ident_cely=self.value_dict["ident_cely"]).exists():
+                raise ImportDataIntegrityError(
+                    self._get_filter_kwargs_primary_key(), self.model_class.__name__, performed_action
+                )
+            # class_0 (self.model_class) existing does not guarantee its class_1 companion row
+            # does too (e.g. an ArcheologickyZaznam whose typ_zaznamu does not match this mapper's
+            # specialization) — without this check, create_records()'s classes[1][1].objects.get()
+            # would raise an unguarded DoesNotExist instead of a per-row ImportDataIntegrityError.
+            class_1_alias, class_1_model, class_1_fk_field = self.classes[1]
+            if not class_1_model.objects.filter(
+                **{"{}__ident_cely".format(class_1_fk_field): self.value_dict["ident_cely"]}
+            ).exists():
+                raise ImportDataIntegrityError(
+                    self._get_filter_kwargs_primary_key(), class_1_model.__name__, performed_action
+                )
         return self._get_filter_kwargs_primary_key()
 
     def _get_filter_kwargs_primary_key(self):
@@ -4681,7 +4692,11 @@ class UzivatelOpravneniMapper(ImportModelMapper):
             raise ImportDataError(
                 _("core_admin.ImportDataError.message.invalid_performed_action") + ": " + str(performed_action)
             )
-        return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
+        try:
+            return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
+        except User.DoesNotExist:
+            record_id = {"uzivatel": self.value_dict["uzivatel"], "skupina": self.value_dict["skupina"]}
+            raise ImportDataIntegrityError(record_id, "User.groups", performed_action)
 
     def import_validation(self, performed_action, *args, **kwargs):
         """
@@ -4899,7 +4914,11 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
             raise ImportDataError(
                 _("core_admin.ImportDataError.message.invalid_performed_action") + ": " + str(performed_action)
             )
-        return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
+        try:
+            return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
+        except User.DoesNotExist:
+            record_id = {"uzivatel": self.value_dict["uzivatel"], "notifikace": self.value_dict["notifikace"]}
+            raise ImportDataIntegrityError(record_id, "User.notification_types", performed_action)
 
     def import_validation(self, performed_action, *args, **kwargs):
         """
