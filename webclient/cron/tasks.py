@@ -139,6 +139,8 @@ IMPORT_DATA_JOB_KEY_SUFFIXES = (
     "import_data_user",
     "import_data_lock_token",
     "import_data_stop",
+    "import_data_report_path",
+    "import_data_report_saved_path",
 )
 
 # Jak často validační task zapisuje JSON snapshot ``import_data_validation_results_{job_id}`` pro report
