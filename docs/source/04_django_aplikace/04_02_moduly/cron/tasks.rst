@@ -248,12 +248,13 @@ Funkce
 
 .. py:function:: build_import_report_dataframe(job_id, redis_connector)
 
-   Sestaví DataFrame reportu importní úlohy z aktuálního stavu v Redis.
+   Sestaví DataFrame listu ``Import`` reportu importní úlohy z aktuálního stavu v Redis.
 
    Sdílený mechanismus mezi periodickým ukládáním na disk (``save_import_report_to_disk``,
    volané z ``run_data_import_validation``/``run_data_import``) a stahováním přes
-   ``DataImportProgressReportView`` — obě strany čtou stejná Redis data stejným způsobem, takže
-   stažený a na disk uložený report si vždy odpovídají.
+   ``DataImportProgressReportView``. Pokrývá pouze list ``Import`` — list ``Fedora`` musí obě
+   strany sestavit stejně přes ``build_import_fedora_target_dataframe``, jinak si stažený a na
+   disk uložený report neodpovídají.
 
    :param job_id: Identifikátor importní úlohy.
    :param redis_connector: Dekódující Redis spojení (klíče i hodnoty jako ``str``).

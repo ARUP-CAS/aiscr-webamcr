@@ -3088,13 +3088,15 @@ class DataImportProgressReportView(LoginRequiredMixin, View):
             raise PermissionDenied
 
         # Shared with the periodic on-disk snapshot (cron.tasks.save_import_report_to_disk) so the
-        # downloaded and disk-persisted reports always match.
-        from cron.tasks import build_import_report_dataframe
+        # downloaded and disk-persisted reports always match — both sheets, built the same way.
+        from cron.tasks import build_import_fedora_target_dataframe, build_import_report_dataframe
 
         df, _phase = build_import_report_dataframe(job_id, redis_connector)
+        fedora_df = build_import_fedora_target_dataframe(job_id, redis_connector)
         output = BytesIO()
         with pandas.ExcelWriter(output, engine="openpyxl") as writer:
             df.to_excel(writer, index=False, sheet_name="Import")
+            fedora_df.to_excel(writer, index=False, sheet_name="Fedora")
         output.seek(0)
 
         response = HttpResponse(

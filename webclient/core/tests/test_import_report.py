@@ -10,6 +10,7 @@ adresáře (ne DB tabulkou) — testy zde pokrývají sdílenou kontrolu adresá
 import json
 import os
 import tempfile
+from io import BytesIO
 from unittest.mock import patch
 
 import openpyxl
@@ -22,6 +23,7 @@ from core.utils import (
     read_import_report_index,
     upsert_import_report_index_entry,
 )
+from core.views import DataImportProgressReportView
 from cron import tasks as cron_tasks
 from cron.tasks import (
     build_import_fedora_target_dataframe,
@@ -29,7 +31,7 @@ from cron.tasks import (
     get_or_create_import_report_path,
     save_import_report_to_disk,
 )
-from django.test import TestCase
+from django.test import RequestFactory, SimpleTestCase, TestCase
 
 JOB_ID = "report-test-job"
 
@@ -403,6 +405,41 @@ class BuildImportFedoraTargetDataframeTest(TestCase):
         )
         df = build_import_fedora_target_dataframe(JOB_ID, fake_redis)
         self.assertEqual(len(df), 0)
+
+
+class _StubUser:
+    """Minimální náhrada uživatele pro ``RequestFactory`` — nese jen atributy čtené view/mixinem."""
+
+    def __init__(self, user_id, is_superuser=True):
+        """
+        :param user_id: Hodnota ``id`` porovnávaná s vlastníkem úlohy v Redis.
+        :param is_superuser: Zda je uživatel superuživatel (brána na začátku view).
+        """
+        self.id = user_id
+        self.pk = user_id
+        self.is_superuser = is_superuser
+        self.is_active = True
+        self.is_authenticated = True
+
+
+class DataImportProgressReportViewTest(SimpleTestCase):
+    """Testy pro ``DataImportProgressReportView`` — stažení živého XLSX reportu úlohy."""
+
+    def test_download_has_both_import_and_fedora_sheets(self):
+        """Stažený report musí obsahovat oba listy — stejné jako na disk uložená kopie."""
+        fake_redis = FakeRedis(decode_responses=True)
+        _populate_report_redis(fake_redis)
+        fake_redis.set("import_data_user_{}".format(JOB_ID), 7)
+
+        request = RequestFactory().get("/data-import-report/{}".format(JOB_ID))
+        request.user = _StubUser(user_id=7)
+        with patch("core.views.RedisConnector.get_connection_decode", return_value=fake_redis):
+            response = DataImportProgressReportView.as_view()(request, job_id=JOB_ID)
+
+        self.assertEqual(response.status_code, 200)
+        workbook = openpyxl.load_workbook(BytesIO(response.content))
+        self.assertIn("Import", workbook.sheetnames)
+        self.assertIn("Fedora", workbook.sheetnames)
 
 
 class ImportReportIndexTest(TestCase):
