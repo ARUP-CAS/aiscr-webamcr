@@ -177,6 +177,14 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
      - 
      - ``False``
      - Přeskočí kontrolu, že /record je prázdné. Použij výhradně pro navázání po pádu spolu s --start-with-pk nastaveným za poslední úspěšně zpracovaný záznam - jinak hrozí duplicitní zdroje (viz docstring třídy Command).
+   * - ``--jen-kontrola``
+     - 
+     - ``False``
+     - Negenerovat nic, jen porovnat DB proti Fedoře a vypsat rozdíly (chybějící a přebývající záznamy). Hodí se pro prověření už dokončeného běhu.
+   * - ``--bez-kontroly``
+     - 
+     - ``False``
+     - Přeskočit závěrečnou kontrolu konzistence DB vs Fedora po dogenerování.
    * - ``--aktualizovat-db``
      - 
      - ``False``

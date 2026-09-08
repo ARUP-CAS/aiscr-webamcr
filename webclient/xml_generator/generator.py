@@ -10,7 +10,7 @@ from adb.models import VyskovyBod
 from django.contrib.gis.db import models
 from django.contrib.gis.db.models.functions import AsGML, GeoFunc
 from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist
-from heslar.models import Heslar, RuianKraj, RuianOkres
+from heslar.models import RuianKraj, RuianOkres
 from lxml import etree
 from lxml import etree as ET
 
@@ -165,17 +165,38 @@ class DocumentGenerator:
         if tree is None:
             tree = etree.parse(schema_path, etree.XMLParser())
             trees[schema_path] = tree
+            # Nový strom znamená, že dříve nacachované prvky patří jinému dokumentu -
+            # viz `_parse_schema`, které je drží ve stejném úložišti.
+            _schema_tree_local.xpath_cache = {}
         return tree
 
     def _parse_schema(self, model_name):
         """
-               Zpracuje schema.
+        Vrátí prvky XSD schématu pro daný model; výsledek je cachovaný po vlákno.
 
-               :param model_name: Název modelu používaný pro cílení operace.
-        :return: Výstup funkce odpovídající implementované logice.
+        XPath nad schématem je měřitelně drahý: volá se šestkrát na jeden dokument a
+        zabere 3-4 ms (issue #3967), což při stovkách tisíc záznamů dělá desítky minut
+        čistého CPU. Výsledek přitom závisí jen na ``model_name`` a na souboru se
+        schématem, který se za běhu nemění.
+
+        Cache leží ve stejném per-vláknovém úložišti jako samotný strom (viz
+        ``_get_schema_tree``) - vrácené prvky totiž do toho stromu patří a `lxml` není
+        bezpečné sdílet mezi vlákny. Prvky se používají jen pro čtení; výstupní dokument
+        se skládá do zvláštního stromu.
+
+        :param model_name: Název modelu používaný pro cílení operace.
+        :return: Seznam prvků schématu.
         """
-        tree = self._get_schema_tree(self.get_path_to_schema())
-        return tree.xpath(self._create_xpath_query(model_name))
+        schema_path = self.get_path_to_schema()
+        tree = self._get_schema_tree(schema_path)
+        cache = getattr(_schema_tree_local, "xpath_cache", None)
+        if cache is None:
+            cache = {}
+            _schema_tree_local.xpath_cache = cache
+        klic = (schema_path, model_name)
+        if klic not in cache:
+            cache[klic] = tree.xpath(self._create_xpath_query(model_name))
+        return cache[klic]
 
     @staticmethod
     def _get_prefix(comment_text: str) -> str:
@@ -218,14 +239,18 @@ class DocumentGenerator:
 
     def _get_cached_related(self, record, attr_name, default=_MISSING):
         """
-        Ekvivalent ``getattr(record, attr_name[, default])``, ale pro ForeignKey na
-        ``Heslar`` použije cache v rámci životnosti tohoto ``DocumentGenerator``.
+        Ekvivalent ``getattr(record, attr_name[, default])``, ale ForeignKey se čte přes
+        cache platnou po dobu života tohoto ``DocumentGenerator``.
 
-        Stejný heslářový kód se v rámci jednoho dokumentu často vyskytuje vícekrát
-        (různé prvky schématu odkazují na stejnou klasifikaci) - bez cache se
-        zbytečně opakovaně dotazuje ta samá řádka `heslar` (viz profiling issue #3967:
-        ~34 % dotazů na `heslar` uvnitř jednoho záznamu byly duplicity). Cache nikdy
-        nepřežije jeden dokument, takže nehrozí zastaralá data napříč záznamy.
+        Jeden dokument odkazuje na tytéž řádky opakovaně (různé prvky schématu ukazují na
+        stejnou klasifikaci, osobu, uživatele nebo katastr), takže se bez cache tentýž
+        ``SELECT`` posílá znovu a znovu. Měřeno (issue #3967): duplicitní dotazy tvořily
+        11-24 % všech dotazů na jeden dokument, nejčastěji ``auth_user``, ``osoba``,
+        ``heslar`` a ``ruian_katastr``. Cache nepřežije jeden dokument, takže nehrozí
+        zastaralá data napříč záznamy; generování dokumentu je navíc jen čtení.
+
+        Klíč zahrnuje i cílový model - samotné ``pk`` nestačí, protože stejné číslo běžně
+        existuje ve víc tabulkách (``Osoba`` 5 vs ``User`` 5).
 
         :param record: Instance modelu (nebo ``None``), ze které se atribut čte.
         :param attr_name: Název atributu/pole.
@@ -239,23 +264,23 @@ class DocumentGenerator:
                 field = record._meta.get_field(attr_name)
             except FieldDoesNotExist:
                 field = None
-        if field is not None and getattr(field, "many_to_one", False) and field.related_model is Heslar:
+        if field is not None and getattr(field, "many_to_one", False) and field.related_model is not None:
             if field.is_cached(record):
                 # Instance už hodnotu má (Django ji nacachoval dřív, např. eagerní
                 # čtení v __init__ některých modelů) - použij ji, ať se nedotazuje
-                # znovu cestou přes _heslar_cache zbytečně navíc.
+                # znovu cestou přes _fk_cache zbytečně navíc.
                 return field.get_cached_value(record)
             fk_id = getattr(record, field.attname, None)
             if fk_id is None:
                 return None
-            if fk_id not in self._heslar_cache:
-                # `.get()`, ne `.filter().first()` - nerozbitá FK musí vyhodit
-                # `Heslar.DoesNotExist` stejně jako by to udělal obyčejný FK
-                # descriptor přes `getattr()` (chování před zavedením cache).
-                # Negativní výsledek se neukládá do cache, ať se chyba neschová
-                # jen proto, že šlo o druhé volání pro stejné `fk_id`.
-                self._heslar_cache[fk_id] = Heslar.objects.get(pk=fk_id)
-            return self._heslar_cache[fk_id]
+            klic = (field.related_model, fk_id)
+            if klic not in self._fk_cache:
+                # `.get()`, ne `.filter().first()` - rozbitá FK musí vyhodit
+                # `DoesNotExist` stejně jako by to udělal obyčejný FK descriptor přes
+                # `getattr()` (chování před zavedením cache). Negativní výsledek se
+                # neukládá, ať se chyba neschová jen proto, že šlo o druhé volání.
+                self._fk_cache[klic] = field.related_model._base_manager.get(pk=fk_id)
+            return self._fk_cache[klic]
         if default is self._MISSING:
             return getattr(record, attr_name)
         return getattr(record, attr_name, default)
@@ -771,7 +796,7 @@ class DocumentGenerator:
         :param document_object: Parametr ``document_object`` slouží jako vstup pro logiku funkce ``__init__``.
         """
         self.document_object = document_object
-        self._heslar_cache = {}
+        self._fk_cache = {}
         self._geom_annotation_cache = {}
         ET.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
         ET.register_namespace("gml", "http://www.opengis.net/gml/3.2")

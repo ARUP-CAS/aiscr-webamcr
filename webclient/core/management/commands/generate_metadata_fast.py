@@ -1,3 +1,4 @@
+import concurrent.futures.thread
 import functools
 import hashlib
 import json
@@ -5,10 +6,12 @@ import logging
 import os
 import random
 import re
+import socket
+import sys
 import threading
 import time
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from decimal import Decimal
 from threading import Lock
 
@@ -50,6 +53,30 @@ _COMMIT_TIMEOUT = 300
 #: samotné opakování celého záznamu v nové transakci je bezpečné). Cokoli jiného (4xx)
 #: je považováno za trvalou chybu naší strany a neopakuje se.
 _RETRYABLE_STATUS_CODES = {409, 410, 500, 502, 503, 504}
+
+#: Vytahuje identifikátor člena z ``ldp:contains`` trojice v n-triples odpovědi Fedory
+#: (objekt trojice je plné URI, poslední segment je hledaný ident) - viz ``list_model_members``.
+_MEMBER_RE = re.compile(r"<[^>]*/member/([^/>]+)>\s*\.?\s*$")
+
+#: Horní strop celkové doby zpracování JEDNOHO záznamu (sekundy), napříč všemi pokusy.
+#: Bez něj by šlo ``--max-retries 20`` × (``_COMMIT_TIMEOUT`` 300 s + backoff) až na ~2,2
+#: hodiny na jediný záznam - a hlavně by nešlo rozeznat "pomalu to zkouší dál" od
+#: "definitivně zaseknuté", takže watchdog níž by neměl smysluplnou hranici.
+_RECORD_TIME_BUDGET = 600
+
+#: Po jaké době bez dokončení se úloha považuje za zaseknutou a přestane se na ni čekat.
+#: Musí být s rezervou nad ``_RECORD_TIME_BUDGET``, aby se neopouštěly záznamy, které jen
+#: legitimně dojíždějí opakování. Vlákno samotné se ukončit nedá (viz ``_run_parallel``).
+_STUCK_TIMEOUT = 900
+
+#: Jak často se kontroluje, jestli něco neuvízlo (sekundy).
+_WATCHDOG_INTERVAL = 30
+
+#: Velikost HTTP connection poolu na vlákno. Výchozích 10 v urllib3 je méně než běžný
+#: počet workerů, takže se spojení nad limit vytvářela a hned zahazovala - a každé nové
+#: spojení znamená nový překlad jména (viz ``_run_parallel`` a issue #3967, kde uvíznutí
+#: v ``getaddrinfo`` zastavilo celý běh).
+_POOL_SIZE = 32
 
 #: Viz stejnojmenná konstanta v ``generate_metadata.py``.
 _BATCH_PER_WORKER = 10
@@ -138,6 +165,28 @@ class FastFedoraWriteError(Exception):
         super().__init__(f"{status_code} {url}: {text[:300]}")
 
 
+class FedoraSlugCollision(Exception):
+    """
+    Fedora dostala ``Slug``, který už v cílovém kontejneru existuje.
+
+    Fedora tenhle případ **nehlásí jako chybu** - vrátí 201 a zdroj potichu přejmenuje na
+    náhodné UUID (ověřeno proti běžící instanci). Bez explicitní kontroly ``Location`` tak
+    opakování záznamu, jehož commit ve skutečnosti prošel, tiše vyrobí duplikát; ten se
+    navíc zaloguje jako úspěch. Viz ``_FastFedoraWriter.create_record``.
+    """
+
+    def __init__(self, ident_cely, location):
+        """
+        Inicializuje výjimku.
+
+        :param ident_cely: Identifikátor, který se pokoušel zapsat.
+        :param location: Cesta, kterou Fedora zdroji ve skutečnosti přidělila.
+        """
+        self.ident_cely = ident_cely
+        self.location = location
+        super().__init__(f"Slug '{ident_cely}' už existuje, Fedora zdroj přejmenovala na '{location}'")
+
+
 def _is_retryable(exc: Exception) -> bool:
     """
     Rozhodne, zda má smysl výjimku opakovat (přechodná chyba), nebo ne (trvalá chyba
@@ -188,7 +237,8 @@ class _FastFedoraWriter:
         """
         Inicializuje zapisovač.
 
-        :param base_url: Základní URL Fedora repozitáře (``.../rest/{FEDORA_SERVER_NAME}``).
+        :param base_url: Základní URL Fedora repozitáře (``.../rest/{FEDORA_SERVER_NAME}``),
+            už s IP adresou místo jména - viz ``Command._get_writer``.
         :param user_ident: Identifikátor uživatele zapsaný jako ``dcterms:creator``.
         """
         from django.conf import settings
@@ -218,6 +268,7 @@ class _FastFedoraWriter:
         if session is None:
             session = requests.Session()
             session.auth = self.auth
+            self._nastav_pool(session)
             self._thread_local.session = session
         return session
 
@@ -242,8 +293,25 @@ class _FastFedoraWriter:
         if session is None:
             session = requests.Session()
             session.auth = self.admin_auth
+            self._nastav_pool(session)
             self._thread_local.admin_session = session
         return session
+
+    @staticmethod
+    def _nastav_pool(session):
+        """
+        Zvětší HTTP connection pool session, ať se spojení opravdu recyklují.
+
+        Výchozí ``pool_maxsize`` v urllib3 je 10; při vyšším počtu workerů se spojení nad
+        ten limit zakládala a hned zahazovala, takže se pořád znovu překládalo jméno
+        serveru. Právě v tom překladu (``getaddrinfo``) uvízlo vlákno a zastavilo celý
+        běh (issue #3967) - méně nových spojení tedy znamená méně příležitostí k uváznutí.
+
+        :param session: ``requests.Session``, které se pool nastavuje.
+        """
+        adapter = requests.adapters.HTTPAdapter(pool_connections=_POOL_SIZE, pool_maxsize=_POOL_SIZE)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
 
     def _creator_rdf(self):
         """
@@ -305,12 +373,13 @@ class _FastFedoraWriter:
         response = self._session().post(url, verify=False, timeout=_HTTP_TIMEOUT)
         if not str(response.status_code).startswith("2"):
             raise FastFedoraWriteError(url, response.status_code, response.text)
-        match = re.search(
-            r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", response.headers.get("Location", "")
-        )
-        if not match:
+        # URL transakce se bere PŘESNĚ tak, jak ji vrátila Fedora, neskládá se z
+        # `rest_root`. Fedora si `Atomic-ID` ověřuje proti vlastní podobě URI, takže
+        # jakýkoli rozdíl (jiný host, jiný port) skončí na `409 Invalid transaction id`.
+        location = response.headers.get("Location", "")
+        if not re.search(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", location):
             raise FastFedoraWriteError(url, response.status_code, "Location header neobsahuje ID transakce.")
-        return f"{self.rest_root}/fcr:tx/{match.group()}"
+        return location
 
     def commit_transaction(self, tx_url: str):
         """
@@ -325,44 +394,61 @@ class _FastFedoraWriter:
         if not str(response.status_code).startswith("2"):
             raise FastFedoraWriteError(tx_url, response.status_code, response.text)
 
-    def record_exists(self, ident_cely) -> bool:
-        """
-        Zjistí (mimo jakoukoli transakci), jestli container záznamu ve Fedoře existuje.
-
-        Používá se výhradně po timeoutu commitu (viz ``_process_record``) k rozhodnutí,
-        jestli se má záznam opakovat. Timeout totiž **neznamená, že commit selhal** -
-        Fedora ho mohla v klidu dokončit a jen se nestihla ozvat; slepé zopakování by
-        pak vytvořilo duplikát, protože kolize ``Slug`` není chyba a Fedora zdroj
-        přejmenuje na náhodné UUID (ověřeno na lokálním běhu, issue #3967).
-
-        :param ident_cely: Celý identifikátor záznamu.
-
-            :return: ``True``, pokud container existuje, ``False`` při 404.
-
-            :raises FastFedoraWriteError: Pokud dotaz vrátí jiný status kód než 200/404.
-        """
-        url = f"{self.base_url}/record/{ident_cely}"
-        response = self._session().head(url, verify=False, timeout=_HTTP_TIMEOUT)
-        if response.status_code == 404:
-            return False
-        if response.status_code != 200:
-            raise FastFedoraWriteError(url, response.status_code, response.text)
-        return True
-
     def rollback_transaction(self, tx_url: str):
         """
-        Zruší transakci (best-effort - chyba při rollbacku se jen zaloguje, ať
-        nepřekryje původní chybu, kvůli které se rollback volá).
+        Zruší transakci. Chyba se jen zaloguje, ať nepřekryje původní chybu, kvůli které
+        se rollback volá - ale zahodit ji potichu nelze, protože neuzavřená transakce je
+        drahá.
+
+        Fedora drží zámek na dotčených záznamech **v paměti** a uvolní ho jen při commitu
+        nebo rollbacku; samotné vypršení transakce zámek neuvolní. O vypršelé se stará
+        naplánovaná úloha, která ale běží s periodou ``fcrepo.session.timeout`` (v našem
+        nasazení 1 hodina). Neúspěšný rollback tedy může zablokovat záznam až na dvě
+        hodiny a všechny naše další pokusy o něj skončí na
+        ``409 ... is being updated by another transaction`` (reálně se to stalo, issue #3967).
+        Proto se kontroluje i návratový kód (dřív se hlídala jen síťová výjimka, takže
+        odmítnutý rollback prošel bez povšimnutí) a jednou se to zkusí znovu.
 
         :param tx_url: URL transakce z ``begin_transaction``.
         """
-        try:
-            self._admin_session().delete(tx_url, verify=False, timeout=_HTTP_TIMEOUT)
-        except requests.exceptions.RequestException as exc:
-            logger.warning(
-                "core.management.commands.generate_metadata_fast.rollback_failed",
-                extra={"tx_url": tx_url, "error": str(exc)},
-            )
+        duvod = None
+        for pokus in (1, 2):
+            try:
+                response = self._admin_session().delete(tx_url, verify=False, timeout=_HTTP_TIMEOUT)
+            except requests.exceptions.RequestException as exc:
+                duvod = str(exc)
+            else:
+                # 404/410 = transakce už neexistuje, tedy není co uvolňovat.
+                if str(response.status_code).startswith("2") or response.status_code in (404, 410):
+                    return
+                duvod = f"{response.status_code}: {response.text[:200]}"
+            if pokus == 1:
+                time.sleep(1)
+        logger.warning(
+            "core.management.commands.generate_metadata_fast.rollback_failed",
+            extra={"tx_url": tx_url, "error": duvod},
+        )
+
+    @staticmethod
+    def _zkontroluj_slug(ident_cely, response, ocekavany_suffix):
+        """
+        Ověří, že Fedora zdroj skutečně založila pod požadovaným ``Slug``.
+
+        Při kolizi Fedora nevrátí chybu, ale 201 s ``Location`` na náhodné UUID - viz
+        ``FedoraSlugCollision``. Kontrola hlavičky je jediný spolehlivý způsob, jak
+        kolizi rozpoznat; dřívější pokus předvídat ji dotazem "existuje už záznam?" před
+        opakováním se neosvědčil, protože po neúspěšném commitu je záznam ve Fedoře
+        viditelný až se zpožděním několika sekund (měřeno, issue #3967).
+
+        :param ident_cely: Požadovaný identifikátor.
+        :param response: Odpověď na POST, který zdroj zakládal.
+        :param ocekavany_suffix: Cesta, na kterou musí ``Location`` končit.
+
+            :raises FedoraSlugCollision: Pokud ``Location`` odpovídá jinému (přejmenovanému) zdroji.
+        """
+        location = (response.headers.get("Location") or "").rstrip("/")
+        if location and not location.endswith(ocekavany_suffix):
+            raise FedoraSlugCollision(ident_cely, location)
 
     def create_record(self, ident_cely, model_name, document: bytes, hash512: str, tx_url=None):
         """
@@ -376,7 +462,7 @@ class _FastFedoraWriter:
             čtyři requesty se sbalí do jedné OCFL verze při ``commit_transaction``.
         """
         record_url = f"{self.base_url}/record/"
-        self._request(
+        response = self._request(
             "post",
             record_url,
             {
@@ -387,8 +473,9 @@ class _FastFedoraWriter:
             self._creator_rdf(),
             tx_url=tx_url,
         )
+        self._zkontroluj_slug(ident_cely, response, f"/record/{ident_cely}")
         link_url = f"{self.base_url}/model/{model_name}/member"
-        self._request(
+        response = self._request(
             "post",
             link_url,
             {"Slug": ident_cely, "Content-Type": "text/turtle"},
@@ -398,6 +485,7 @@ class _FastFedoraWriter:
             f"dcterms:creator <info:fedora/{self.server_name}/record/{self.user_ident}> .",
             tx_url=tx_url,
         )
+        self._zkontroluj_slug(ident_cely, response, f"/model/{model_name}/member/{ident_cely}")
         # CREATE_METADATA se posílá na container (ne na `/metadata`) se `Slug: metadata` -
         # stejně jako `FedoraRepositoryConnector.save_metadata`/`_get_request_url`.
         metadata_url = f"{self.base_url}/record/{ident_cely}/metadata"
@@ -420,6 +508,45 @@ class _FastFedoraWriter:
             self._creator_sparql_update(),
             tx_url=tx_url,
         )
+
+    def list_model_members(self, model_name):
+        """
+        Vrátí množinu identifikátorů zapsaných ve Fedoře pod ``/model/{model}/member``.
+
+        Používá se pro závěrečnou kontrolu konzistence (viz ``Command._zkontroluj_konzistenci``).
+        Odpověď se čte proudově - u velkých modelů (``pian`` mívá přes 70 tisíc členů) jde
+        o řádově megabajty ``ldp:contains`` trojic a není důvod je držet v paměti naráz.
+
+        :param model_name: Fedora model name (viz ``_get_schema_by_name``).
+
+            :return: Množina identifikátorů (poslední segment cesty každého člena).
+
+            :raises FastFedoraWriteError: Pokud dotaz vrátí jiný status kód než 200/404.
+        """
+        url = f"{self.base_url}/model/{model_name}/member"
+        response = self._session().get(
+            url,
+            headers={"Accept": "application/n-triples"},
+            verify=False,
+            timeout=_HTTP_TIMEOUT,
+            stream=True,
+        )
+        try:
+            if response.status_code == 404:
+                return set()
+            if response.status_code != 200:
+                raise FastFedoraWriteError(url, response.status_code, response.text)
+            identy = set()
+            response.encoding = response.encoding or "utf-8"
+            for radek in response.iter_lines(decode_unicode=True):
+                if not radek or "ldp#contains" not in radek:
+                    continue
+                match = _MEMBER_RE.search(radek)
+                if match:
+                    identy.add(match.group(1))
+            return identy
+        finally:
+            response.close()
 
     def is_repository_empty(self):
         """
@@ -723,6 +850,21 @@ class Command(BaseCommand):
             ),
         )
         parser.add_argument(
+            "--jen-kontrola",
+            action="store_true",
+            default=False,
+            help=(
+                "Negenerovat nic, jen porovnat DB proti Fedoře a vypsat rozdíly "
+                "(chybějící a přebývající záznamy). Hodí se pro prověření už dokončeného běhu."
+            ),
+        )
+        parser.add_argument(
+            "--bez-kontroly",
+            action="store_true",
+            default=False,
+            help="Přeskočit závěrečnou kontrolu konzistence DB vs Fedora po dogenerování.",
+        )
+        parser.add_argument(
             "--aktualizovat-db",
             action="store_true",
             default=False,
@@ -746,10 +888,23 @@ class Command(BaseCommand):
         from core.log_middleware import LogMiddleware
         from django.conf import settings
 
-        base_url = (
-            f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}"
-            f"/rest/{settings.FEDORA_SERVER_NAME}"
-        )
+        hostname = settings.FEDORA_SERVER_HOSTNAME
+        port = settings.FEDORA_PORT_NUMBER
+        # Jméno se přeloží JEDNOU tady a dál se pracuje s IP. Jinak ho překládá znovu
+        # každé nově navazované spojení, a protože jich při stovkách tisíc záznamů vzniknou
+        # desetitisíce, stačí aby jediný překlad uvízl a přijdeme o worker (reálně se to
+        # stalo - vlákno zaseklé v `getaddrinfo`/netlink zastavilo celý běh, issue #3967).
+        # `timeout=` v requests na překlad jména nesahá, takže jinak se proti tomu bránit
+        # nedá. Hlavička `Host` se záměrně NEpřepisuje na původní jméno: Fedora podle ní
+        # generuje URI transakcí, takže by `Atomic-ID` složené z IP neodpovídalo tomu, co
+        # Fedora čeká, a každý zápis by skončil na `409 Invalid transaction id`. Uloženým
+        # datům to nevadí - v OCFL se drží interní `info:fedora/...` identifikátory,
+        # ověřeno grepem přes uložený záznam (žádné absolutní http URI tam není).
+        try:
+            ip = socket.gethostbyname(hostname)
+        except OSError as exc:
+            raise CommandError(f"Nepodařilo se přeložit '{hostname}' na IP adresu: {exc}")
+        base_url = f"{settings.FEDORA_PROTOCOL}://{ip}:{port}/rest/{settings.FEDORA_SERVER_NAME}"
         return _FastFedoraWriter(base_url, LogMiddleware.get_user_id())
 
     @staticmethod
@@ -836,6 +991,7 @@ class Command(BaseCommand):
             )
             return
         model_name = _get_schema_by_name()[obj.__class__.__name__][1]
+        zacatek = time.time()
         try:
             document = DocumentGenerator(obj).generate_document()
             hash512 = hashlib.sha512(document).hexdigest()
@@ -889,36 +1045,24 @@ class Command(BaseCommand):
                         if db_updates is not None:
                             with db_updates_lock:
                                 db_updates[mimetype].append(pk)
-                try:
-                    writer.commit_transaction(tx_url)
-                except requests.exceptions.Timeout:
-                    # Timeout na commitu NEZNAMENA, ze commit selhal - Fedora ho mohla
-                    # dokoncit a jen se nestihla ozvat. Slepe zopakovani by pak vytvorilo
-                    # duplikat (kolize Slug neni chyba, Fedora zdroj prejmenuje na nahodne
-                    # UUID) - realne se to na lokalnim behu stalo 5x, viz issue #3967.
-                    # Proto se radeji zeptame, jestli zaznam existuje, a podle toho se
-                    # rozhodneme.
-                    try:
-                        created = writer.record_exists(obj.ident_cely)
-                    except Exception as verify_exc:
-                        # Vysledek se nepodarilo zjistit - neopakovat. Chybejici zaznam je
-                        # mensi zlo nez duplikat: je videt ve failures a da se cilene
-                        # dohnat, kdezto duplikat s nahodnym UUID se musi hledat rucne.
-                        logger.error(
-                            "core.management.commands.generate_metadata_fast.commit_timeout_unverified",
-                            extra={"pk": obj.pk, "ident_cely": obj.ident_cely, "error": str(verify_exc)},
-                        )
-                        failures.append(
-                            (obj.pk, obj.ident_cely, f"Commit vyprsel a stav se nepodarilo overit: {verify_exc}")
-                        )
-                        return
-                    if created:
-                        logger.warning(
-                            "core.management.commands.generate_metadata_fast.commit_timeout_but_created",
-                            extra={"pk": obj.pk, "ident_cely": obj.ident_cely},
-                        )
-                        return
-                    raise
+                writer.commit_transaction(tx_url)
+                return
+            except FedoraSlugCollision as exc:
+                # Zaznam uz ve Fedore je - tenhle pokus byl zbytecny (typicky opakovani po
+                # 409, jehoz commit ve skutecnosti prosel). Rollback zahodi rozdelanou
+                # transakci i s prejmenovanym duplikatem, takze ve Fedore po nas nic
+                # nezustane. Neni to chyba behu, jen se dal nepokousime.
+                if tx_url:
+                    writer.rollback_transaction(tx_url)
+                logger.warning(
+                    "core.management.commands.generate_metadata_fast.uz_existuje",
+                    extra={
+                        "pk": obj.pk,
+                        "ident_cely": obj.ident_cely,
+                        "attempt": attempt,
+                        "location": exc.location,
+                    },
+                )
                 return
             except Exception as exc:
                 if tx_url:
@@ -931,12 +1075,21 @@ class Command(BaseCommand):
                     failures.append((obj.pk, obj.ident_cely, str(exc)))
                     return
                 attempt += 1
-                if attempt > max_retries:
+                uplynulo = time.time() - zacatek
+                if attempt > max_retries or uplynulo > _RECORD_TIME_BUDGET:
+                    duvod = "vyčerpané pokusy" if attempt > max_retries else "vyčerpaný časový strop"
                     logger.error(
                         "core.management.commands.generate_metadata_fast.retries_exhausted",
-                        extra={"pk": obj.pk, "ident_cely": obj.ident_cely, "attempts": attempt, "error": str(exc)},
+                        extra={
+                            "pk": obj.pk,
+                            "ident_cely": obj.ident_cely,
+                            "attempts": attempt,
+                            "elapsed": round(uplynulo),
+                            "reason": duvod,
+                            "error": str(exc),
+                        },
                     )
-                    failures.append((obj.pk, obj.ident_cely, str(exc)))
+                    failures.append((obj.pk, obj.ident_cely, f"{duvod} ({attempt}. pokus): {exc}"))
                     return
                 # Konflikt na sdíleném rodiči (409/410, viz _RETRYABLE_STATUS_CODES) se
                 # sám o sobě nevyřeší rychle - potřebuje čas, ať se aktuálně běžící
@@ -1003,20 +1156,96 @@ class Command(BaseCommand):
                 counter["done"] += 1
                 report(counter["done"])
 
-        try:
-            if workers and workers > 1:
-                with ThreadPoolExecutor(max_workers=workers) as executor:
-                    for davka in _po_davkach(work_items, workers * _BATCH_PER_WORKER):
-                        list(executor.map(worker, davka))
-            else:
+        if not workers or workers <= 1:
+            try:
                 done = 0
                 for item in work_items:
                     worker_fn(item)
                     done += 1
                     report(done)
+            finally:
+                close_old_connections()
+            self.stdout.write("")
+            return 0
+
+        # Úlohy se odesílají průběžně, ne po uzavřených dávkách. Dřív tu bylo
+        # `list(executor.map(worker, davka))`, což je bariéra: čekalo se na všech
+        # `workers * _BATCH_PER_WORKER` položek dávky, takže jediná nedokončená úloha
+        # zastavila celý běh, i když ostatní workeři byli volní (reálně se to stalo -
+        # issue #3967, vlákno uvízlo v `getaddrinfo`). Počet rozpracovaných úloh je
+        # přesto omezený, aby se queryset nemusel materializovat celý do paměti.
+        limit = workers * _BATCH_PER_WORKER
+        rozpracovane = {}
+        zaseknutych = 0
+        executor = ThreadPoolExecutor(max_workers=workers)
+
+        def skliz():
+            """Sklidí dokončené úlohy a opustí ty, které přesáhly ``_STUCK_TIMEOUT``."""
+            nonlocal zaseknutych
+            hotove, _ = wait(set(rozpracovane), timeout=_WATCHDOG_INTERVAL, return_when=FIRST_COMPLETED)
+            for future in hotove:
+                rozpracovane.pop(future, None)
+                vyjimka = future.exception()
+                if vyjimka is not None:
+                    # _process_record si chyby řeší sám, sem se dostane jen něco
+                    # nečekaného - ať to nezmizí.
+                    logger.error(
+                        "core.management.commands.generate_metadata_fast.worker_failed",
+                        extra={"error": str(vyjimka)},
+                    )
+            nyni = time.time()
+            for future, (polozka, odeslano) in list(rozpracovane.items()):
+                if nyni - odeslano <= _STUCK_TIMEOUT:
+                    continue
+                # Vlákno zaseknuté v systémovém volání se z Pythonu ukončit nedá, takže
+                # ho jen přestaneme sledovat - přijdeme o jeden worker, ne o celý běh.
+                rozpracovane.pop(future, None)
+                zaseknutych += 1
+                logger.error(
+                    "core.management.commands.generate_metadata_fast.uloha_zaseknuta",
+                    extra={
+                        "pk": getattr(polozka, "pk", None),
+                        "ident_cely": getattr(polozka, "ident_cely", None),
+                        "elapsed": round(nyni - odeslano),
+                    },
+                )
+                self.stdout.write("")
+                self.stdout.write(
+                    self.style.ERROR(
+                        f"Zaseknutá úloha po {round(nyni - odeslano)}s opuštěna: "
+                        f"{getattr(polozka, 'ident_cely', getattr(polozka, 'pk', '?'))} "
+                        "(vlákno zůstane blokované, běh pokračuje)"
+                    )
+                )
+
+        try:
+            for item in work_items:
+                rozpracovane[executor.submit(worker, item)] = (item, time.time())
+                while len(rozpracovane) >= limit:
+                    skliz()
+            while rozpracovane:
+                skliz()
         finally:
+            # wait=False: kdyby některé vlákno uvízlo, shutdown(wait=True) by tu čekal
+            # navždy. Zbylé úlohy jsou v tu chvíli buď hotové, nebo opuštěné watchdogem.
+            executor.shutdown(wait=False)
+            if zaseknutych:
+                # ThreadPoolExecutor registruje atexit hook, který na konci procesu
+                # join-uje své workery - tímto se ten join přeskočí. Samo to ale NESTAČÍ:
+                # workery jsou non-daemon vlákna, takže je při ukončení joinuje i samotný
+                # interpret. Proto se běh na konci ukončuje natvrdo, viz `handle`.
+                concurrent.futures.thread._threads_queues.clear()
             close_old_connections()
+
         self.stdout.write("")
+        if zaseknutych:
+            self.stdout.write(
+                self.style.ERROR(
+                    f"Opuštěno {zaseknutych} zaseknutých úloh - tyto záznamy ve Fedoře chybí "
+                    "a odhalí je závěrečná kontrola konzistence."
+                )
+            )
+        return zaseknutych
 
     def _handle_metadata(self, options, writer, placeholders):
         """
@@ -1027,6 +1256,7 @@ class Command(BaseCommand):
         :param placeholders: Mapa mimetype -> placeholder obsah (``_load_placeholders``),
             nebo ``None`` při ``--bez-souboru`` - viz ``_process_record``.
         """
+        self._zaseknute_ulohy = 0
         model_class = options.get("model")
         limit = options.get("limit")
         start_with_pk = options.get("start_with_pk")
@@ -1055,7 +1285,7 @@ class Command(BaseCommand):
                 # pádu na aktualizaci DB omezí na jeden rozpracovaný model, ne na celý běh.
                 db_updates = defaultdict(list) if aktualizovat_db else None
                 db_updates_lock = Lock() if aktualizovat_db else None
-                self._run_parallel(
+                self._zaseknute_ulohy += self._run_parallel(
                     queryset.iterator(chunk_size=500),
                     lambda obj: self._process_record(
                         obj, writer, max_retries, failures, placeholders, db_updates, db_updates_lock
@@ -1082,7 +1312,7 @@ class Command(BaseCommand):
             failures = []
             db_updates = defaultdict(list) if aktualizovat_db else None
             db_updates_lock = Lock() if aktualizovat_db else None
-            self._run_parallel(
+            self._zaseknute_ulohy += self._run_parallel(
                 queryset.iterator(chunk_size=500),
                 lambda obj: self._process_record(
                     obj, writer, max_retries, failures, placeholders, db_updates, db_updates_lock
@@ -1093,6 +1323,118 @@ class Command(BaseCommand):
             self._report_failures(failures)
             if db_updates:
                 self._flush_db_updates(db_updates, placeholders)
+
+    @staticmethod
+    def _identy_z_db(queryset):
+        """
+        Vrátí množinu ``ident_cely`` pro queryset.
+
+        Většina modelů má ``ident_cely`` jako databázový sloupec, takže se čte jedním
+        ``values_list``. U ``RuianKraj``/``RuianOkres`` je to ale Python property (ne
+        pole), takže tam ``values_list`` skončí ``FieldError`` a musí se iterovat přes
+        instance.
+
+        :param queryset: Queryset modelu.
+
+            :return: Množina identifikátorů.
+        """
+        from django.core.exceptions import FieldDoesNotExist
+
+        try:
+            queryset.model._meta.get_field("ident_cely")
+        except FieldDoesNotExist:
+            return {obj.ident_cely for obj in queryset if obj.ident_cely}
+        return {i for i in queryset.values_list("ident_cely", flat=True) if i}
+
+    def _zkontroluj_konzistenci(self, options, writer):
+        """
+        Po dogenerování porovná, co je v DB, s tím, co je ve Fedoře, a vypíše rozdíly.
+
+        Hledá dvě věci, které se při běhu na statisících záznamů reálně staly (issue #3967):
+
+        - **chybí ve Fedoře** - záznam je v DB, ale zápis selhal (vyčerpané retries, trvalá
+          chyba). Ve ``failures`` se sice objeví, ale ty se vypisují po každém modelu zvlášť
+          a v dlouhém logu snadno zapadnou.
+        - **navíc ve Fedoře** - zdroj, který nemá protějšek v DB. Typicky duplikát z retry:
+          když Fedora ohlásí chybu na commitu, který fakticky prošel, opakování narazí na
+          kolizi ``Slug`` a Fedora zdroj přejmenuje na náhodné UUID. Tohle je nejzákeřnější
+          případ, protože záznam se přitom zaloguje jako úspěšný.
+
+        Porovnává se přes ``/model/{model}/member`` (link zdroje), protože ty jsou 1:1 se
+        záznamy. Použijí se stejné filtry (``--model``/``--limit``/``--start-with-pk``) jako
+        při generování, aby srovnání dávalo smysl i u částečného běhu.
+
+        :param options: Parametry příkazu.
+        :param writer: Sdílený ``_FastFedoraWriter``.
+
+            :return: ``True``, pokud je vše konzistentní, jinak ``False``.
+        """
+        model_class = options.get("model")
+        limit = options.get("limit")
+        start_with_pk = options.get("start_with_pk")
+        schema_by_name = _get_schema_by_name()
+
+        if model_class:
+            polozky = [(model_class, schema_by_name[model_class])]
+        else:
+            polozky = list(schema_by_name.items())
+
+        self.stdout.write("")
+        self.stdout.write("=== Kontrola konzistence DB vs Fedora ===")
+        self.stdout.write(f"{'model':<24}{'DB':>9}{'Fedora':>9}{'chybí':>8}{'navíc':>8}")
+
+        vse_chybi = []
+        vse_navic = []
+        for nazev_tridy, (current_class, fedora_name) in polozky:
+            queryset = current_class.objects.all().order_by("pk")
+            if start_with_pk:
+                queryset = current_class.objects.filter(pk__gte=start_with_pk).order_by("pk")
+            if limit is not None:
+                queryset = queryset[:limit]
+            db_identy = self._identy_z_db(queryset)
+            try:
+                fedora_identy = writer.list_model_members(fedora_name)
+            except Exception as exc:
+                self.stdout.write(self.style.ERROR(f"{nazev_tridy:<24} kontrola selhala: {exc}"))
+                continue
+
+            chybi = db_identy - fedora_identy
+            # Při --limit/--start-with-pk je "navíc" nevypovídající (ve Fedoře je legitimně
+            # víc, než kolik jsme právě zpracovali), proto se počítá jen u plného běhu.
+            navic = (fedora_identy - db_identy) if (limit is None and not start_with_pk) else set()
+
+            styl = self.style.ERROR if (chybi or navic) else self.style.SUCCESS
+            self.stdout.write(
+                styl(f"{nazev_tridy:<24}{len(db_identy):>9}{len(fedora_identy):>9}" f"{len(chybi):>8}{len(navic):>8}")
+            )
+            vse_chybi.extend((nazev_tridy, i) for i in sorted(chybi))
+            vse_navic.extend((nazev_tridy, i) for i in sorted(navic))
+
+        if vse_chybi:
+            self.stdout.write("")
+            self.stdout.write(self.style.ERROR(f"CHYBÍ ve Fedoře ({len(vse_chybi)}) - v DB je, zápis neproběhl:"))
+            for nazev_tridy, ident in vse_chybi[:50]:
+                self.stdout.write(self.style.ERROR(f"  {nazev_tridy}: {ident}"))
+            if len(vse_chybi) > 50:
+                self.stdout.write(self.style.ERROR(f"  ... a dalších {len(vse_chybi) - 50}"))
+
+        if vse_navic:
+            self.stdout.write("")
+            self.stdout.write(
+                self.style.ERROR(
+                    f"NAVÍC ve Fedoře ({len(vse_navic)}) - nemá protějšek v DB, "
+                    "typicky duplikát z opakování (Fedora přejmenovala kolidující Slug na UUID):"
+                )
+            )
+            for nazev_tridy, ident in vse_navic[:50]:
+                self.stdout.write(self.style.ERROR(f"  {nazev_tridy}: {ident}"))
+            if len(vse_navic) > 50:
+                self.stdout.write(self.style.ERROR(f"  ... a dalších {len(vse_navic) - 50}"))
+
+        if not vse_chybi and not vse_navic:
+            self.stdout.write(self.style.SUCCESS("Vše sedí - žádné chybějící ani přebývající záznamy."))
+            return True
+        return False
 
     def _report_failures(self, failures):
         """
@@ -1132,6 +1474,10 @@ class Command(BaseCommand):
                 placeholder_manifest.json, nebo pokud ``/record`` už obsahuje
                 nějaký záznam (bez ``--force``).
         """
+        if options.get("jen_kontrola"):
+            self._zkontroluj_konzistenci(options, self._get_writer())
+            return
+
         placeholders = None
         if not options.get("bez_souboru"):
             try:
@@ -1152,3 +1498,22 @@ class Command(BaseCommand):
                 "--force a --start-with-pk nastaveným za poslední úspěšně zpracovaný záznam."
             )
         self._handle_metadata(options, writer, placeholders)
+
+        if not options.get("bez_kontroly"):
+            self._zkontroluj_konzistenci(options, writer)
+
+        if getattr(self, "_zaseknute_ulohy", 0):
+            # Uvízlé vlákno je non-daemon, takže by na něj interpret při ukončení čekal
+            # navěky (u syscallu, ze kterého se nevrátí). Veškerá práce i kontrola jsou
+            # v tuhle chvíli hotové, takže proces ukončíme natvrdo - jinak by to vypadalo
+            # jako další zásek.
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Ukončuji natvrdo - {self._zaseknute_ulohy} vláken zůstalo zaseknutých "
+                    "v systémovém volání a nelze je ukončit."
+                )
+            )
+            self.stdout.flush()
+            sys.stdout.flush()
+            sys.stderr.flush()
+            os._exit(0)

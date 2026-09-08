@@ -64,10 +64,20 @@ Třídy
 
    .. py:method:: _parse_schema()
 
-             Zpracuje schema.
+      Vrátí prvky XSD schématu pro daný model; výsledek je cachovaný po vlákno.
+
+      XPath nad schématem je měřitelně drahý: volá se šestkrát na jeden dokument a
+      zabere 3-4 ms (issue #3967), což při stovkách tisíc záznamů dělá desítky minut
+      čistého CPU. Výsledek přitom závisí jen na ``model_name`` a na souboru se
+      schématem, který se za běhu nemění.
+
+      Cache leží ve stejném per-vláknovém úložišti jako samotný strom (viz
+      ``_get_schema_tree``) - vrácené prvky totiž do toho stromu patří a `lxml` není
+      bezpečné sdílet mezi vlákny. Prvky se používají jen pro čtení; výstupní dokument
+      se skládá do zvláštního stromu.
 
       :param model_name: Název modelu používaný pro cílení operace.
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam prvků schématu.
 
    .. py:method:: _get_prefix()
 
@@ -85,14 +95,18 @@ Třídy
 
    .. py:method:: _get_cached_related()
 
-      Ekvivalent ``getattr(record, attr_name[, default])``, ale pro ForeignKey na
-      ``Heslar`` použije cache v rámci životnosti tohoto ``DocumentGenerator``.
+      Ekvivalent ``getattr(record, attr_name[, default])``, ale ForeignKey se čte přes
+      cache platnou po dobu života tohoto ``DocumentGenerator``.
 
-      Stejný heslářový kód se v rámci jednoho dokumentu často vyskytuje vícekrát
-      (různé prvky schématu odkazují na stejnou klasifikaci) - bez cache se
-      zbytečně opakovaně dotazuje ta samá řádka `heslar` (viz profiling issue #3967:
-      ~34 % dotazů na `heslar` uvnitř jednoho záznamu byly duplicity). Cache nikdy
-      nepřežije jeden dokument, takže nehrozí zastaralá data napříč záznamy.
+      Jeden dokument odkazuje na tytéž řádky opakovaně (různé prvky schématu ukazují na
+      stejnou klasifikaci, osobu, uživatele nebo katastr), takže se bez cache tentýž
+      ``SELECT`` posílá znovu a znovu. Měřeno (issue #3967): duplicitní dotazy tvořily
+      11-24 % všech dotazů na jeden dokument, nejčastěji ``auth_user``, ``osoba``,
+      ``heslar`` a ``ruian_katastr``. Cache nepřežije jeden dokument, takže nehrozí
+      zastaralá data napříč záznamy; generování dokumentu je navíc jen čtení.
+
+      Klíč zahrnuje i cílový model - samotné ``pk`` nestačí, protože stejné číslo běžně
+      existuje ve víc tabulkách (``Osoba`` 5 vs ``User`` 5).
 
       :param record: Instance modelu (nebo ``None``), ze které se atribut čte.
       :param attr_name: Název atributu/pole.
