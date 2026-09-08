@@ -16,8 +16,8 @@
   },
   "application/pdf": {
     "file": "placeholder_01.pdf",
-    "sha512": "d42fafbc71137fedeca919f244252853b593ac185fb8503ad6d5ffca426affcaeda2b76e14539ab9ee5f979936a7637d8760b8e1935c7859ac2828c78a0b8e1c",
-    "size": 621,
+    "sha512": "21d27285c2c3f445a405e9571b81a8cff3d1b105d30c4e236d3c942b2597b69f8ace5a3d1952f7389cbabcd55e5c1df6b8086c1ec428566adec04925090435ec",
+    "size": 590,
     "thumb": {
       "file": "placeholder_01_thumb.png",
       "sha512": "d10f0f7939b1c858f232a9b77a54cef7086e332f2e0187dbca5e29e83588d0ecaa072591c0c809fbdcf560a6e8671457a522a3e3be4f85abb199fae00cd8baf8",
@@ -345,8 +345,8 @@
   },
   "text/plain": {
     "file": "placeholder_20.txt",
-    "sha512": "bff62434f6f8c1cb1af0440037c7d7050c857fba33506d41c405778b92869d32c3020ac74d2b43223e95ef268e3d1e71e982f02f50cc0f805d12b6cbb6ccc34c",
-    "size": 18,
+    "sha512": "6c63a306d7cddae6c5f1d840a30d1ca612eb04844b9b39b52b5851e8f2548c6032c2f7cc0e109833ca7989b8db37a7266e6494cd05cc1d31f851dbdca2b2bace",
+    "size": 17,
     "thumb": {
       "file": "placeholder_20_thumb.png",
       "sha512": "0ff06c14ca26a2bb1f03c38d33e75f71b622b60e7c1795a1f119aebde5aa9e4a6256755c69cc9dddd05500dd5541edb1d7fd721dcfb9bcc40c6b44e0945fcfa9",

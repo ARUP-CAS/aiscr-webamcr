@@ -699,14 +699,20 @@ def _load_placeholders(manifest_path=_PLACEHOLDER_MANIFEST_PATH):
     """
     Načte ``placeholder_manifest.json`` a předčte obsah všech placeholder + náhled souborů do paměti.
 
-    SHA-512 hash se vždy počítá znovu z přečtených bajtů - hodnota v manifestu slouží
-    jen jako kontrola (neshoda se zaloguje jako WARNING, ale načtení nespadne). Nejde
-    o přílišnou opatrnost: `.gitattributes` (`* text=auto`) normalizuje konce řádků
-    textových placeholderů (`.csv`/`.txt`) při checkoutu, takže hash zapsaný do
-    manifestu na jiném OS/checkoutu neodpovídá aktuálním bajtům na disku - ověřeno
-    (issue #3967 review) na `placeholder_19.csv` (20 B v manifestu, 22 B na Windows
-    checkoutu s CRLF). Kdyby se poslal `Digest: sha-512=<manifest>` neodpovídající
+    SHA-512 hash se vždy počítá znovu z přečtených bajtů, do Fedory jde jen tato
+    dopočítaná hodnota. Kdyby se poslal `Digest: sha-512=<manifest>` neodpovídající
     tělu požadavku, Fedora by na každý takový soubor vracela 409.
+
+    Neshoda proti manifestu se zaloguje jako WARNING (`placeholder_hash_mismatch`)
+    a načtení nespadne. **Není to očekávaný stav** - konce řádků chrání
+    `.gitattributes` (`placeholders/** -text`), takže každý checkout dostane bajty
+    shodné s blobem. Neshoda tedy znamená buď zastaralý manifest, nebo změněný či
+    poškozený placeholder, a je třeba ji prošetřit: v issue #3967 přesně takto vyšlo
+    najevo, že `placeholder_01.pdf` a `placeholder_20.txt` mají v manifestu hash
+    CRLF-poškozených bajtů (u PDF s rozbitými `xref` offsety), protože manifest byl
+    vygenerován na Windows working tree, který git po opravě `.gitattributes` už
+    nepřepsal - a `git status` to nehlásil, protože index měl zapsanou konvertovanou
+    velikost.
 
     :param manifest_path: Cesta k ``placeholder_manifest.json`` (výchozí umístění viz
         ``_PLACEHOLDER_MANIFEST_PATH`` - parametr existuje hlavně kvůli testům).

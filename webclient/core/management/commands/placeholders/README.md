@@ -9,12 +9,19 @@ hromadné generování Fedora repozitáře z DB, kdy se obsah souborů nahradí 
 podle mimetype místo kopírování skutečných dat. Cesta k manifestu je v tomto příkazu
 napevno (`_PLACEHOLDER_MANIFEST_PATH`, tento adresář vedle `generate_metadata_fast.py`).
 
-`sha512` v manifestu je jen **informativní/kontrolní hodnota** - `generate_metadata_fast`
-si při načtení (`_load_placeholders`) hash vždy přepočítá ze skutečně přečtených bajtů a
-neshodu jen zaloguje jako WARNING (nespadne). Nespoléhej tedy na to, že hash v manifestu
-je aktuální, pokud jsi soubor upravoval na jiném stroji/checkoutu - `.gitattributes`
-normalizuje konce řádků textových placeholderů (`.csv`/`.txt`), takže se bajty na disku
-mezi Windows a Linux checkoutem mohou lišit i beze změny obsahu.
+`sha512` v manifestu je **kontrolní hodnota** - do Fedory jde vždy hash dopočítaný ze
+skutečně přečtených bajtů (`_load_placeholders`), takže zastaralý manifest nic nerozbije.
+Neshoda se ale zaloguje jako WARNING `placeholder_hash_mismatch` a **není to normální
+stav**: konce řádků chrání `.gitattributes` (`placeholders/** -text`), takže každý
+checkout na každé platformě dostane bajty shodné s blobem v gitu. Neshoda proto znamená
+zastaralý manifest nebo změněný/poškozený placeholder - neignoruj ji.
+
+Pozor na past, která tohle jednou už schovala (issue #3967): pokud máš working tree
+vytvořený **před** opravou `.gitattributes`, git ti soubory sám nepřepíše a `git status`
+mlčí, protože index má zapsanou zkonvertovanou velikost. Takový strom obsahuje
+CRLF-poškozené placeholdery (u `placeholder_01.pdf` to rozbíjí `xref` offsety, tedy
+neplatné PDF). Náprava: soubory smazat a `git checkout -- <cesty>`, pak ověřit, že
+manifest souhlasí i proti `git cat-file -p HEAD:<cesta>`, ne jen proti disku.
 
 Volitelný přepínač `--aktualizovat-db` příkazu `generate_metadata_fast` po zápisu
 placeholderu přepíše `Soubor.sha_512`/`size_mb` v DB na hodnoty odpovídající vloženému
@@ -34,7 +41,8 @@ Provenience (jak byly soubory jednorázově vyrobeny):
 Pokud bys potřeboval sadu změnit (nový mimetype, jiný obsah), nahraď příslušný soubor
 a **přepočítej `placeholder_manifest.json`** (sha512 + size) - `generate_metadata_fast`
 sice hash při načtení přepočítá sám (viz výše), ale zastaralá hodnota v manifestu pak
-zbytečně loguje WARNING při každém běhu.
+loguje WARNING při každém běhu. Přepočítávej z bajtů blobu (`git cat-file`) nebo
+z čerstvého checkoutu, ne z working tree, u kterého si nejsi jistý normalizací.
 
 ## Náhledy (thumb / thumb-large)
 
