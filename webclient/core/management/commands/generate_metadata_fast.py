@@ -884,6 +884,11 @@ class Command(BaseCommand):
             ),
         )
 
+    # Nastavují se v `_handle_metadata`; výchozí hodnoty tady drží `handle()` funkční
+    # i na cestách, kde se generování nespustí (např. `--jen-kontrola`).
+    _zaseknute_ulohy = 0
+    _pocet_selhani = 0
+
     @staticmethod
     def _get_writer():
         """
@@ -914,7 +919,7 @@ class Command(BaseCommand):
         return _FastFedoraWriter(base_url, LogMiddleware.get_user_id())
 
     @staticmethod
-    def _flush_db_updates(db_updates, placeholders):
+    def _flush_db_updates(db_updates, db_updates_lock, placeholders):
         """
         Hromadně přepíše ``Soubor.sha_512``/``size_mb`` na hodnoty odpovídající placeholderu,
         který byl skutečně vložen do Fedory (viz ``--aktualizovat-db`` a "Poznámka k
@@ -935,10 +940,21 @@ class Command(BaseCommand):
         ``core/repository_connector.py`` (``size / 1024**2``, MiB) - ne ``/1_000_000``,
         ať DB po migraci odpovídá jednotkám, které používá zbytek aplikace.
 
-        :param db_updates: Mapa ``mimetype -> [Soubor.pk, ...]`` nasbíraná v ``_process_record``.
+        :param db_updates: Mapa ``mimetype -> [Soubor.pk, ...]`` nasbíraná v ``_process_record``,
+            nebo ``None`` bez ``--aktualizovat-db`` (pak se nic nedělá).
+        :param db_updates_lock: Zámek chránící ``db_updates`` (viz ``_process_record``).
         :param placeholders: Mapa mimetype -> placeholder obsah (``_load_placeholders``).
         """
         from core.models import Soubor
+
+        if db_updates is None:
+            return
+        # Watchdog zaseknutá vlákna jen opouští, nezabíjí je - takové vlákno může do
+        # `db_updates` ještě zapsat. Iterovat přímo přes sdílený dict by proto mohlo
+        # skončit `RuntimeError: dictionary changed size during iteration`, takže se
+        # pod zámkem udělá kopie (review issue #3967).
+        with db_updates_lock:
+            db_updates = {mimetype: list(pks) for mimetype, pks in db_updates.items()}
 
         for mimetype, pks in db_updates.items():
             if not pks:
@@ -1018,23 +1034,51 @@ class Command(BaseCommand):
             failures.append((obj.pk, obj.ident_cely, str(exc)))
             return
 
+        # Chybějící placeholder je vlastnost dat záznamu, ne pokusu o zápis - vyhodnotí se
+        # jednou, ještě před retry smyčkou. Dřív tahle větev byla uvnitř smyčky, takže
+        # každé opakování záznamu (vyvolané jiným, retryovatelným souborem) zapsalo tentýž
+        # chybějící placeholder do logu i do `failures` znovu (review issue #3967).
+        melo_soubory = bool(soubory)
+        zapisovatelne = []
+        for pk, uuid, nazev, mimetype in soubory:
+            entry = placeholders.get(mimetype) if placeholders is not None else None
+            if entry is None:
+                logger.warning(
+                    "core.management.commands.generate_metadata_fast.no_placeholder",
+                    extra={"pk": pk, "mimetype": mimetype, "ident_cely": obj.ident_cely},
+                )
+                failures.append((pk, obj.ident_cely, f"Chybí placeholder pro mimetype '{mimetype}'."))
+                continue
+            zapisovatelne.append((pk, uuid, nazev, mimetype, entry))
+
+        def zaeviduj_db_updates():
+            """
+            Zapíše soubory záznamu do ``db_updates`` pro pozdější ``_flush_db_updates``.
+
+            Volá se **až** když je zápis do Fedory jistý (po commitu, nebo při kolizi slugu,
+            kdy záznam ve Fedoře prokazatelně je z dřív zkomitovaného pokusu). Dřív se ``pk``
+            přidávalo hned při vkládání souboru do transakce, takže záznam, který nakonec
+            vyčerpal všechny pokusy, dostal do ``Soubor.sha_512``/``size_mb`` placeholder,
+            který se do Fedory nikdy nedostal (review issue #3967).
+            """
+            if db_updates is None or not zapisovatelne:
+                return
+            with db_updates_lock:
+                for pk_souboru, _uuid, _nazev, mimetype_souboru, _entry in zapisovatelne:
+                    db_updates[mimetype_souboru].append(pk_souboru)
+
         attempt = 0
         while True:
             tx_url = None
             try:
                 tx_url = writer.begin_transaction()
                 writer.create_record(obj.ident_cely, model_name, document, hash512, tx_url=tx_url)
-                if soubory:
+                if melo_soubory:
+                    # Kontejner `/file` se zakládá podle toho, jestli záznam má soubory v DB,
+                    # ne podle `zapisovatelne` - u záznamu, jehož všechny soubory nemají
+                    # placeholder, tak zůstane chování stejné jako dřív (prázdný kontejner).
                     writer.create_file_container(obj.ident_cely, tx_url=tx_url)
-                    for pk, uuid, nazev, mimetype in soubory:
-                        entry = placeholders.get(mimetype)
-                        if entry is None:
-                            logger.warning(
-                                "core.management.commands.generate_metadata_fast.no_placeholder",
-                                extra={"pk": pk, "mimetype": mimetype, "ident_cely": obj.ident_cely},
-                            )
-                            failures.append((pk, obj.ident_cely, f"Chybí placeholder pro mimetype '{mimetype}'."))
-                            continue
+                    for pk, uuid, nazev, mimetype, entry in zapisovatelne:
                         writer.create_binary_file(
                             obj.ident_cely,
                             uuid,
@@ -1048,10 +1092,8 @@ class Command(BaseCommand):
                             entry["thumb_large_sha512"],
                             tx_url=tx_url,
                         )
-                        if db_updates is not None:
-                            with db_updates_lock:
-                                db_updates[mimetype].append(pk)
                 writer.commit_transaction(tx_url)
+                zaeviduj_db_updates()
                 return
             except FedoraSlugCollision as exc:
                 # Zaznam uz ve Fedore je - tenhle pokus byl zbytecny (typicky opakovani po
@@ -1060,6 +1102,10 @@ class Command(BaseCommand):
                 # nezustane. Neni to chyba behu, jen se dal nepokousime.
                 if tx_url:
                     writer.rollback_transaction(tx_url)
+                # Fedora commituje transakce atomicky, takže dřívější pokus, který kolizi
+                # způsobil, uložil záznam včetně všech jeho souborů - z pohledu DB je to
+                # úspěch a `Soubor.sha_512`/`size_mb` se má přepsat.
+                zaeviduj_db_updates()
                 logger.warning(
                     "core.management.commands.generate_metadata_fast.uz_existuje",
                     extra={
@@ -1263,6 +1309,7 @@ class Command(BaseCommand):
             nebo ``None`` při ``--bez-souboru`` - viz ``_process_record``.
         """
         self._zaseknute_ulohy = 0
+        self._pocet_selhani = 0
         model_class = options.get("model")
         limit = options.get("limit")
         start_with_pk = options.get("start_with_pk")
@@ -1300,8 +1347,8 @@ class Command(BaseCommand):
                     total=total,
                 )
                 self._report_failures(failures)
-                if db_updates:
-                    self._flush_db_updates(db_updates, placeholders)
+                self._pocet_selhani += len(failures)
+                self._flush_db_updates(db_updates, db_updates_lock, placeholders)
         else:
             entry = schema_by_name.get(model_class)
             if entry is None:
@@ -1327,8 +1374,8 @@ class Command(BaseCommand):
                 total=total,
             )
             self._report_failures(failures)
-            if db_updates:
-                self._flush_db_updates(db_updates, placeholders)
+            self._pocet_selhani += len(failures)
+            self._flush_db_updates(db_updates, db_updates_lock, placeholders)
 
     @staticmethod
     def _identy_z_db(queryset):
@@ -1481,7 +1528,8 @@ class Command(BaseCommand):
                 nějaký záznam (bez ``--force``).
         """
         if options.get("jen_kontrola"):
-            self._zkontroluj_konzistenci(options, self._get_writer())
+            if not self._zkontroluj_konzistenci(options, self._get_writer()):
+                raise CommandError("Kontrola konzistence našla nesrovnalosti (podrobnosti výše).")
             return
 
         placeholders = None
@@ -1505,21 +1553,39 @@ class Command(BaseCommand):
             )
         self._handle_metadata(options, writer, placeholders)
 
+        konzistentni = True
         if not options.get("bez_kontroly"):
-            self._zkontroluj_konzistenci(options, writer)
+            konzistentni = self._zkontroluj_konzistenci(options, writer)
 
-        if getattr(self, "_zaseknute_ulohy", 0):
+        # Běh, ve kterém něco selhalo, nesmí skončit nulovým exit kódem - jinak ho volající
+        # skript (nebo orchestrace 24h produkčního běhu) vyhodnotí jako úspěch, i když část
+        # záznamů ve Fedoře chybí. Návratová hodnota kontroly konzistence se dřív zahazovala
+        # a selhání jednotlivých záznamů se nikde neprojevila (review issue #3967).
+        problemy = []
+        if self._pocet_selhani:
+            problemy.append(f"{self._pocet_selhani} položek selhalo")
+        if not konzistentni:
+            problemy.append("kontrola konzistence našla nesrovnalosti")
+        if self._zaseknute_ulohy:
+            problemy.append(f"{self._zaseknute_ulohy} vláken zůstalo zaseknutých")
+
+        if self._zaseknute_ulohy:
             # Uvízlé vlákno je non-daemon, takže by na něj interpret při ukončení čekal
             # navěky (u syscallu, ze kterého se nevrátí). Veškerá práce i kontrola jsou
             # v tuhle chvíli hotové, takže proces ukončíme natvrdo - jinak by to vypadalo
-            # jako další zásek.
+            # jako další zásek. `os._exit` obchází i vyhazování `CommandError` níže, proto
+            # se exit kód předává přímo.
             self.stdout.write(
                 self.style.WARNING(
                     f"Ukončuji natvrdo - {self._zaseknute_ulohy} vláken zůstalo zaseknutých "
                     "v systémovém volání a nelze je ukončit."
                 )
             )
+            self.stdout.write(self.style.ERROR("Běh nedokončen bez chyb: " + ", ".join(problemy) + "."))
             self.stdout.flush()
             sys.stdout.flush()
             sys.stderr.flush()
-            os._exit(0)
+            os._exit(1)
+
+        if problemy:
+            raise CommandError("Běh dokončen s chybami: " + ", ".join(problemy) + " (podrobnosti viz log).")
