@@ -3,6 +3,7 @@ import io
 import logging
 import os
 import re
+import threading
 from abc import ABC
 from datetime import datetime, timezone
 from enum import Enum
@@ -27,30 +28,67 @@ from redis import ResponseError
 logger = logging.getLogger(__name__)
 
 
-def _build_fedora_session():
+def _build_fedora_adapter() -> HTTPAdapter:
     """
-    Sestaví sdílenou ``requests.Session`` s connection poolem pro Fedora repozitář.
+    Sestaví ``HTTPAdapter`` se sdíleným connection poolem pro Fedora repozitář.
 
     HTTP keep-alive a sdružený pool socketů zásadně sníží počet otevíraných TCP
-    spojení (a tedy i tlak na efemerální porty pod paralelní zátěží).
+    spojení (a tedy i tlak na efemerální porty pod paralelní zátěží). Adapter
+    se proto **sdílí napříč vlákny** – ``urllib3.PoolManager`` pod ním je
+    thread-safe a pool zůstane jeden pro celý proces. Kdyby si každé vlákno
+    stavělo vlastní adapter, násobil by se i pool a smysl sdružování socketů
+    by se ztratil.
+
+    :return: Nakonfigurovaná ``HTTPAdapter`` instance.
+    """
+    pool_size = getattr(settings, "FEDORA_HTTP_POOL_SIZE", 50)
+    return HTTPAdapter(pool_connections=pool_size, pool_maxsize=pool_size, pool_block=True)
+
+
+#: Sdílené adaptery – drží connection pool společný pro všechna vlákna.
+_fedora_adapter = _build_fedora_adapter()
+
+#: Úložiště session per vlákno. ``requests.Session`` **není** thread-safe:
+#: nese mutable stav, především cookie jar. Fedora (Tomcat + Shiro) si po
+#: přihlášení ukládá subjekt do servletové session a vrací cookie
+#: ``JSESSIONID``; při sdílené session si vlákna můžou tuhle cookie navzájem
+#: přepsat a request pak odejde s identifikátorem session, kterou Shiro už
+#: nemusí uznat. ``generate_metadata --workers`` posílá requesty právě
+#: z několika vláken najednou, proto má každé vlastní session.
+_thread_local = threading.local()
+
+
+def _build_fedora_session() -> requests.Session:
+    """
+    Sestaví ``requests.Session`` napojenou na sdílený connection pool.
 
     :return: Nakonfigurovaná ``requests.Session`` instance.
     """
     session = requests.Session()
-    pool_size = getattr(settings, "FEDORA_HTTP_POOL_SIZE", 50)
-    adapter = HTTPAdapter(pool_connections=pool_size, pool_maxsize=pool_size, pool_block=True)
-    session.mount("http://", adapter)
-    session.mount("https://", adapter)
+    session.mount("http://", _fedora_adapter)
+    session.mount("https://", _fedora_adapter)
     return session
 
 
-# Fedora (Tomcat + Shiro) si po prvním přihlášení uloží subjekt do servletové session a vrací
-# cookie JSESSIONID. Pokud by requestům pod FEDORA_USER a FEDORA_ADMIN_USER sloužila jedna
-# requests.Session, sdílely by i cookie jar a Fedora by admin požadavky vyhodnocovala pod
-# identitou, která session založila. Mazání tombstone (viz _delete_link) pak skončí na HTTP 403,
-# protože role fedoraUser na něj nemá právo. Každá identita proto má vlastní session.
-_fedora_session = _build_fedora_session()
-_fedora_admin_session = _build_fedora_session()
+def _get_fedora_session(*, admin: bool = False) -> requests.Session:
+    """
+    Vrátí Fedora session pro aktuální vlákno a zadanou identitu.
+
+    Session se **nesmí** sdílet napříč identitami, jinak by cookie
+    ``JSESSIONID`` přenesla do admin požadavku subjekt přihlášený jako
+    ``FEDORA_USER``. Mazání tombstone (viz ``_delete_link``) pak skončí na
+    HTTP 403, protože role ``fedoraUser`` na něj nemá právo. Každá dvojice
+    (vlákno, identita) má proto vlastní session; connection pool je společný.
+
+    :param admin: ``True`` pro identitu ``FEDORA_ADMIN_USER``, jinak ``FEDORA_USER``.
+    :return: Session příslušná aktuálnímu vláknu a identitě.
+    """
+    atribut = "admin_session" if admin else "session"
+    session = getattr(_thread_local, atribut, None)
+    if session is None:
+        session = _build_fedora_session()
+        setattr(_thread_local, atribut, session)
+    return session
 
 
 class FedoraValidationError(Exception):
@@ -587,14 +625,13 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Vrací ``requests.Session`` odpovídající identitě, pod kterou se požadavek odesílá.
 
-        Session nesmí být sdílená napříč identitami, jinak by cookie ``JSESSIONID`` přenesla
-        do admin požadavku subjekt přihlášený jako ``FEDORA_USER``; viz komentář u
-        ``_fedora_admin_session``.
+        Session nesmí být sdílená napříč identitami ani napříč vlákny; obojí řeší
+        :func:`_get_fedora_session`, viz komentář u ``_thread_local``.
 
         :param request_type: Typ požadavku určující, zda se použije admin nebo běžný účet.
-        :return: Session s connection poolem pro danou identitu.
+        :return: Session aktuálního vlákna pro danou identitu.
         """
-        return _fedora_admin_session if request_type in _ADMIN_REQUEST_TYPES else _fedora_session
+        return _get_fedora_session(admin=request_type in _ADMIN_REQUEST_TYPES)
 
     def _send_request(
         self, url: str, request_type: FedoraRequestType, *, headers=None, data=None
@@ -2229,7 +2266,7 @@ class FedoraTransaction(BaseFedoraTransaction):
         )
         auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
         if operation == FedoraTransactionOperation.COMMIT:
-            response = _fedora_admin_session.put(url, auth=auth, verify=False)
+            response = _get_fedora_session(admin=True).put(url, auth=auth, verify=False)
             try:
                 self._save_transaction_result_to_redis(FedoraTransactionResult.COMMITED)
             except ResponseError as err:
@@ -2238,7 +2275,7 @@ class FedoraTransaction(BaseFedoraTransaction):
                     extra={"transaction": self.uid, "error": err},
                 )
         elif operation == FedoraTransactionOperation.ROLLBACK:
-            response = _fedora_admin_session.delete(url, auth=auth, verify=False)
+            response = _get_fedora_session(admin=True).delete(url, auth=auth, verify=False)
             try:
                 self._save_transaction_result_to_redis(FedoraTransactionResult.ABORTED)
             except ResponseError as err:
@@ -2320,7 +2357,7 @@ class FedoraTransaction(BaseFedoraTransaction):
         )
         auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
         try:
-            response = _fedora_session.post(url, auth=auth, verify=False)
+            response = _get_fedora_session().post(url, auth=auth, verify=False)
         except requests.exceptions.ConnectionError as exc:
             logger.error(
                 "core_repository_connector.FedoraTransaction.__create_transaction.connection_error",

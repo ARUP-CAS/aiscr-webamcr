@@ -188,6 +188,19 @@ _MAX_UBYTEK_KATASTRU = 50
 _MAX_UBYTEK_OKRESU = 1
 _MAX_UBYTEK_KRAJU = 1
 
+#: O kolik procent smí součet ploch katastrů ve zdroji odchýlit od stavu
+#: v databázi. Kontroluje se **obě strany**: pokles odhalí useknuté nebo
+#: scvrklé hranice, nárůst hrubé překryvy. Rozloha ČR je stabilní (naměřeno
+#: 78 866 km²), reálné revize hranic s ní hnou o zlomky procenta. Půl procenta
+#: (~394 km²) tak odpovídá prahu :data:`_MAX_UBYTEK_KATASTRU` – padesát
+#: průměrných katastrů je asi 300 km².
+_MAX_ODCHYLKA_PLOCHY_PCT = 0.5
+
+#: Kolik nevalidních polygonů (podle GEOS) smí zdroj obsahovat. Současná data
+#: ČÚZK jich mají nula – měřeno 8. 9. 2026 na všech 13 091 katastrech –, takže
+#: jakýkoli nevalidní polygon znamená vadu vstupu, ne běžný stav.
+_MAX_NEVALIDNICH_HRANIC = 0
+
 
 class RuianNeuplnyZdrojError(RuntimeError):
     """
@@ -196,6 +209,63 @@ class RuianNeuplnyZdrojError(RuntimeError):
     Vyhazuje :func:`_zkontroluj_uplnost_zdroje` **před** jakoukoli změnou dat,
     aby useknutý nebo poškozený vstup nemohl smazat velkou část heslářů.
     """
+
+
+def _zkontroluj_geometrii_zdroje(state: RuianFullState, db_katastru: int) -> list:
+    """
+    Zkontroluje geometrii katastrů ve zdroji ještě před zápisem do databáze.
+
+    Doplňuje kontrolu počtů: vstup může mít všechny jednotky, a přesto nést
+    poškozené hranice. Měří se dvě věci, obě nad daty ze zdroje:
+
+    * **součet ploch** proti stávajícímu pokrytí v databázi, oboustranně –
+      pokles znamená scvrklé nebo proděravělé hranice, nárůst hrubé překryvy;
+    * **validita polygonů** podle GEOS.
+
+    Nad 13 tisíci katastry stojí obojí dohromady asi 0,4 s, protože nepočítá
+    žádný průnik ani sjednocení.
+
+    Prvky bez ``hranice_wkt`` se přeskočí – u plného stavu je to výjimečné,
+    a chybějící geometrie sama o sobě není důvod běh zastavit.
+
+    :param state: Plný stav prvků RÚIAN ze zdroje.
+    :param db_katastru: Počet katastrů v databázi; při nule (první import)
+      se součet ploch neporovnává, protože není proti čemu.
+    :return: Seznam textových popisů nalezených problémů; prázdný, když je
+        geometrie zdroje v pořádku.
+    """
+    if not state.katastry:
+        return []
+
+    plocha_zdroje = 0.0
+    nevalidnich = 0
+    s_geometrii = 0
+    for dto in state.katastry:
+        geom = _geos_or_none(dto.hranice_wkt)
+        if geom is None:
+            continue
+        s_geometrii += 1
+        plocha_zdroje += geom.area
+        if not geom.valid:
+            nevalidnich += 1
+
+    problemy = []
+    if nevalidnich > _MAX_NEVALIDNICH_HRANIC:
+        problemy.append(
+            f"hranice: {nevalidnich} z {s_geometrii} polygonů ve zdroji je nevalidních, "
+            f"limit je {_MAX_NEVALIDNICH_HRANIC}"
+        )
+
+    plocha_db = _soucet_plochy_katastru() if db_katastru else 0.0
+    if plocha_db and s_geometrii:
+        odchylka = abs(plocha_zdroje - plocha_db) / plocha_db * 100
+        if odchylka > _MAX_ODCHYLKA_PLOCHY_PCT:
+            problemy.append(
+                f"plocha: součet hranic ve zdroji {plocha_zdroje / 1e6:.1f} km² proti "
+                f"{plocha_db / 1e6:.1f} km² v DB, odchylka {odchylka:.2f} %, "
+                f"limit je {_MAX_ODCHYLKA_PLOCHY_PCT} %"
+            )
+    return problemy
 
 
 def _zkontroluj_uplnost_zdroje(state: RuianFullState, run: RuianSyncRun) -> None:
@@ -216,14 +286,29 @@ def _zkontroluj_uplnost_zdroje(state: RuianFullState, run: RuianSyncRun) -> None
     úbytku, než odpovídá reálným změnám v RÚIAN, běh zastaví
     :class:`RuianNeuplnyZdrojError`.
 
-    Kontrola je záměrně **před** fází upsertů, tedy před první změnou dat –
-    ne až po ní jako diagnostický :func:`_check_katastry_topology`.
+    Druhá část kontroly je topologická a měří se **na zdroji, ne na databázi**:
+    součet ploch všech hranic ve vstupu a počet polygonů, které GEOS odmítne
+    jako nevalidní. Zachytí tím vstup, který má sice všechny jednotky (a projde
+    tedy počty výše), ale poškozenou geometrii – scvrklé či proděravělé hranice
+    součet ploch srazí, hrubé překryvy ho naopak nafouknou.
+
+    Celá kontrola je záměrně **před** fází upsertů, tedy před první změnou dat.
+    :func:`_check_katastry_topology` zůstává jako závěrečná diagnostika stavu
+    databáze; ta ze své podstaty běží až po zápisu a sync nezastavuje.
+
+    Zbývající rozdíl proti úplné topologii je vědomý: skutečné díry a překryvy
+    mezi sousedy odhalí až ``ST_CoverageUnion`` (~11 s nad naplněnou tabulkou),
+    což by znamenalo nahrát celý zdroj do dočasné tabulky ještě před vlastním
+    zápisem. Součet ploch je jeho laciný zástupce – stojí 0,4 s a zachytí každou
+    odchylku, která se v ploše projeví.
 
     :param state: Plný stav prvků RÚIAN ze zdroje.
     :param run: Audit záznam; důvod zastavení se zapíše do ``run.note``.
     :raises RuianNeuplnyZdrojError: Když zdroj proti databázi postrádá víc
         prvků, než připouštějí prahy :data:`_MAX_UBYTEK_KATASTRU`,
-        :data:`_MAX_UBYTEK_OKRESU` a :data:`_MAX_UBYTEK_KRAJU`.
+        :data:`_MAX_UBYTEK_OKRESU` a :data:`_MAX_UBYTEK_KRAJU`, nebo když
+        neprojde topologická část podle :data:`_MAX_ODCHYLKA_PLOCHY_PCT`
+        a :data:`_MAX_NEVALIDNICH_HRANIC`.
     """
     problemy = []
 
@@ -243,6 +328,8 @@ def _zkontroluj_uplnost_zdroje(state: RuianFullState, run: RuianSyncRun) -> None
         if chybi > limit:
             problemy.append(f"{nazev}: ve zdroji chybí {chybi} proti DB, limit je {limit}")
 
+    problemy.extend(_zkontroluj_geometrii_zdroje(state, db_katastru))
+
     if not problemy:
         logger.debug(
             "heslar.ruian_sync.syncer._zkontroluj_uplnost_zdroje.ok",
@@ -251,6 +338,8 @@ def _zkontroluj_uplnost_zdroje(state: RuianFullState, run: RuianSyncRun) -> None
                 "kraje": len(state.kraje),
                 "okresy": len(state.okresy),
                 "katastry": len(state.katastry),
+                "prah_ubytku_katastru": _MAX_UBYTEK_KATASTRU,
+                "prah_odchylky_plochy_pct": _MAX_ODCHYLKA_PLOCHY_PCT,
             },
         )
         return
@@ -1652,7 +1741,7 @@ def _soucet_plochy_katastru() -> float:
         return float(cursor.fetchone()[0])
 
 
-def _zkontroluj_pokryti(run: RuianSyncRun, plocha_pred: Optional[float]) -> None:
+def _zkontroluj_pokryti(run: RuianSyncRun, plocha_pred: Optional[float]) -> Optional[float]:
     """
     Ověří, že syncem nevznikla díra v pokrytí ČR katastry.
 
@@ -1676,14 +1765,19 @@ def _zkontroluj_pokryti(run: RuianSyncRun, plocha_pred: Optional[float]) -> None
     Součet ploch je navíc o dva řády levnější (~0,4 s proti ~11 s), takže
     slouží i jako pojistka, kdyby ``ST_CoverageUnion`` selhalo výjimkou.
 
-    Nic nevyhazuje – jen zaloguje a připíše do ``run.note``.
+    Nic nevyhazuje. Sama o sobě **nic nehlásí jako chybu**. Naměřený úbytek vrací volajícímu
+    (:func:`_check_katastry_topology`), který ho vyhodnotí až spolu s výsledkem
+    sjednocení – pokles plochy totiž může znamenat díru, zánik hraničního
+    katastru, ale taky jen plošnou výměnu hranic z nového zdroje.
 
     :param run: Audit záznam, do jehož ``note`` se zapíše shrnutí.
     :param plocha_pred: Součet ploch v m² pořízený **před** aplikací změn;
         ``None`` kontrolu přeskočí (nemáme s čím porovnávat).
+    :return: Úbytek plochy v m² (kladné číslo), když překročil
+        :data:`_PLOCHA_POKRYTI_DROP_WARN_M2`; jinak ``None``.
     """
     if plocha_pred is None:
-        return
+        return None
 
     plocha_po = _soucet_plochy_katastru()
     rozdil = plocha_po - plocha_pred
@@ -1692,10 +1786,10 @@ def _zkontroluj_pokryti(run: RuianSyncRun, plocha_pred: Optional[float]) -> None
             "heslar.ruian_sync.syncer._zkontroluj_pokryti.ok",
             extra={"run_id": run.pk, "rozdil_m2": round(rozdil, 1)},
         )
-        return
+        return None
 
-    logger.error(
-        "heslar.ruian_sync.syncer._zkontroluj_pokryti.dira",
+    logger.debug(
+        "heslar.ruian_sync.syncer._zkontroluj_pokryti.ubytek",
         extra={
             "run_id": run.pk,
             "plocha_pred_m2": round(plocha_pred, 1),
@@ -1704,11 +1798,35 @@ def _zkontroluj_pokryti(run: RuianSyncRun, plocha_pred: Optional[float]) -> None
             "limit_m2": _PLOCHA_POKRYTI_DROP_WARN_M2,
         },
     )
-    _append_run_note(
-        run,
-        f"Pokrytí kleslo o {-rozdil / 1e6:.4f} km² – v ČR pravděpodobně vznikla díra bez katastru.",
-    )
+    return -rozdil
 
+
+#: O kolik m² se smí lišit součet ploch jednotlivých úrovní RÚIAN
+#: (katastry / okresy / kraje), než se to ohlásí jako chyba.
+#:
+#: Všechny tři vrstvy pokrývají totéž území a pocházejí ze samostatných
+#: souborů (``KATUZE_P``, ``OKRESY_P``, ``VUSC_P``), takže shoda jejich
+#: součtů je nezávislá kontrola toho, že se celý sync potkal. Naměřeno
+#: 9. 9. 2026 po plném synchu: všechny tři daly 78 866 842 064,610 m²,
+#: tedy rozdíl **0,000 m²**. Práh 1000 m² je proti tomu velkorysý a přitom
+#: hluboko pod jakoukoli reálnou změnou hranice.
+_MAX_ROZDIL_UROVNI_M2 = 1000.0
+
+#: SQL pro součty ploch všech tří úrovní naráz (~0,15 s). Vedle ploch vrací
+#: i počty prvků celkem a z nich těch s vyplněnou hranicí, aby šlo odlišit
+#: rozejité plochy od úrovně, které geometrie chybí.
+_SQL_SOUCTY_UROVNI = """
+    SELECT
+      (SELECT COALESCE(SUM(ST_Area(hranice)), 0) FROM ruian_katastr WHERE hranice IS NOT NULL),
+      (SELECT COALESCE(SUM(ST_Area(hranice)), 0) FROM ruian_okres   WHERE hranice IS NOT NULL),
+      (SELECT COALESCE(SUM(ST_Area(hranice)), 0) FROM ruian_kraj    WHERE hranice IS NOT NULL),
+      (SELECT count(*) FROM ruian_katastr),
+      (SELECT count(*) FROM ruian_okres),
+      (SELECT count(*) FROM ruian_kraj),
+      (SELECT count(*) FROM ruian_katastr WHERE hranice IS NOT NULL),
+      (SELECT count(*) FROM ruian_okres   WHERE hranice IS NOT NULL),
+      (SELECT count(*) FROM ruian_kraj    WHERE hranice IS NOT NULL)
+"""
 
 #: Kolik děr se nejvýš vypíše do logu jednotlivě. Zbytek se jen sečte –
 #: při rozsypaném pokrytí by jinak jeden běh vygeneroval tisíce hlášení.
@@ -1896,11 +2014,166 @@ def _zkontroluj_prekryvy_dvojic(run: RuianSyncRun) -> int:
     return overlaps_count
 
 
+def _zkontroluj_soulad_urovni(run: RuianSyncRun) -> None:
+    """
+    Ověří, že katastry, okresy a kraje pokrývají stejně velké území.
+
+    Každá úroveň má vlastní polygony z jiného souboru RÚIAN, ale všechny tři
+    popisují totéž území. Součty jejich ploch se proto musí shodovat – a shodují
+    se přesně: po plném synchu z 9. 9. 2026 daly všechny tři
+    78 866 842 064,610 m², tedy rozdíl 0,000 m².
+
+    Je to jediná kontrola v syncu, která porovnává **různé úrovně mezi sebou**.
+    Ostatní se dívají vždy jen na katastry, takže by jim uniklo, kdyby se
+    úrovně rozešly – typicky když změnový soubor přinese posun hranice
+    katastru na okraji okresu, ale odpovídající polygon okresu už ne.
+
+    Hlásí se dvě různé vady:
+
+    * **chybějící geometrie** – prvek bez vyplněné ``hranice``. U katastru to
+      databáze nedovolí (sloupec je ``NOT NULL``), u okresu a kraje ano, a je
+      to vada: bez polygonu nejde spočítat pokrytí ani prostorově dohledat
+      nadřazený prvek. Takový stav měla databáze před prvním plným syncem
+      ze SHP a nesmí v ní zůstat;
+    * **rozejité plochy** – úroveň má geometrii kompletní, ale její součet
+      nesedí na katastry.
+
+    U úrovně, které geometrie chybí, se plochy neporovnávají – rozdíl by jen
+    opisoval chybějící prvky a zdvojoval hlášení.
+
+    Nic nevyhazuje – jen zaloguje a připíše do ``run.note``.
+
+    :param run: Audit záznam, do jehož ``note`` se zapíše shrnutí.
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(_SQL_SOUCTY_UROVNI)
+        (
+            plocha_kat,
+            plocha_okr,
+            plocha_kraj,
+            celkem_kat,
+            celkem_okr,
+            celkem_kraj,
+            s_hranici_kat,
+            s_hranici_okr,
+            s_hranici_kraj,
+        ) = cursor.fetchone()
+
+    urovne = (
+        ("katastrů", plocha_kat, celkem_kat, s_hranici_kat),
+        ("okresů", plocha_okr, celkem_okr, s_hranici_okr),
+        ("krajů", plocha_kraj, celkem_kraj, s_hranici_kraj),
+    )
+    problemy = []
+    bez_geometrie = set()
+
+    for nazev, _plocha, celkem, s_hranici in urovne:
+        chybi = celkem - s_hranici
+        if not chybi:
+            continue
+        bez_geometrie.add(nazev)
+        problemy.append(f"{nazev}: {chybi} z {celkem} nemá vyplněnou hranici")
+        logger.error(
+            "heslar.ruian_sync.syncer._zkontroluj_soulad_urovni.chybi_geometrie",
+            extra={"run_id": run.pk, "uroven": nazev, "bez_hranice": chybi, "celkem": celkem},
+        )
+
+    if celkem_kat and "katastrů" not in bez_geometrie:
+        for nazev, plocha, _celkem, _s_hranici in urovne[1:]:
+            if nazev in bez_geometrie:
+                continue
+            rozdil = plocha - plocha_kat
+            if abs(rozdil) <= _MAX_ROZDIL_UROVNI_M2:
+                continue
+            problemy.append(f"{nazev} {rozdil / 1e6:+.4f} km²")
+            logger.error(
+                "heslar.ruian_sync.syncer._zkontroluj_soulad_urovni.nesoulad",
+                extra={
+                    "run_id": run.pk,
+                    "uroven": nazev,
+                    "plocha_urovne_m2": round(plocha, 1),
+                    "plocha_katastru_m2": round(plocha_kat, 1),
+                    "rozdil_m2": round(rozdil, 1),
+                    "limit_m2": _MAX_ROZDIL_UROVNI_M2,
+                },
+            )
+
+    if not problemy:
+        logger.debug(
+            "heslar.ruian_sync.syncer._zkontroluj_soulad_urovni.ok",
+            extra={
+                "run_id": run.pk,
+                "plocha_katastru_m2": round(plocha_kat, 1),
+                "plocha_okresu_m2": round(plocha_okr, 1),
+                "plocha_kraju_m2": round(plocha_kraj, 1),
+            },
+        )
+        return
+
+    _append_run_note(
+        run,
+        f"Úrovně RÚIAN nesedí proti katastrům ({plocha_kat / 1e6:.4f} km²): " + "; ".join(problemy) + ".",
+    )
+
+
+def _ohlas_ubytek_pokryti(run: RuianSyncRun, ubytek: float, *, podezrele: bool) -> None:
+    """
+    Ohlásí úbytek pokrytí až podle toho, co k němu řeklo sjednocení.
+
+    Pokles součtu ploch má tři možné příčiny a samotné číslo mezi nimi
+    nerozliší:
+
+    1. **díra nebo překryv** – sjednocení je najde a hlásí je samo,
+    2. **zánik hraničního katastru** – ten vnitřní prstenec nevytvoří, jen
+       prohne vnější obrys státu, takže sjednocení mlčí a tenhle součet je
+       jediný signál,
+    3. **plošná výměna hranic** – nový zdroj přinese mírně jinou geometrii
+       u tisíců katastrů. Naměřeno na plném synchu z 9. 9. 2026: přepsáno
+       7004 katastrů z 13 074, součet klesl o 10,35 km² (0,013 %, tedy asi
+       1478 m² na katastr), přitom sjednocení nenašlo jedinou díru ani překryv.
+
+    U **delty** se hlásí ``ERROR`` vždycky. Denní změnový soubor mění hrstku
+    katastrů, takže tam je pokles nad prahem podezřelý za všech okolností a
+    planý poplach je levnější než přehlédnutá díra.
+
+    U **plného synchu** se rozlišuje: když sjednocení nic nenašlo, jde
+    nejspíš o bod 3 a hlásí se ``WARNING`` s poznámkou, ať se ověří bod 2.
+    Kdyby se i tady hlásil ``ERROR``, zazněl by při každém plném synchu a
+    přestal by se číst.
+
+    :param run: Audit záznam, do jehož ``note`` se zapíše shrnutí.
+    :param ubytek: Úbytek plochy v m² (kladné číslo).
+    :param podezrele: Výsledek :func:`_zkontroluj_unii_pokryti` – ``True``,
+        když sjednocení našlo anomálii nebo vůbec neproběhlo.
+    """
+    prisne = podezrele or run.mode != RuianSyncRun.MODE_FULL
+    extra = {
+        "run_id": run.pk,
+        "ubytek_m2": round(ubytek, 1),
+        "limit_m2": _PLOCHA_POKRYTI_DROP_WARN_M2,
+        "mode": run.mode,
+        "sjednoceni_podezrele": podezrele,
+    }
+    if prisne:
+        logger.error("heslar.ruian_sync.syncer._zkontroluj_pokryti.dira", extra=extra)
+        _append_run_note(
+            run,
+            f"Pokrytí kleslo o {ubytek / 1e6:.4f} km² – v ČR pravděpodobně vznikla díra bez katastru.",
+        )
+        return
+    logger.warning("heslar.ruian_sync.syncer._zkontroluj_pokryti.ubytek_bez_anomalie", extra=extra)
+    _append_run_note(
+        run,
+        f"Pokrytí kleslo o {ubytek / 1e6:.4f} km², ale sjednocení nenašlo díru ani překryv – "
+        "nejspíš plošná výměna hranic ze zdroje. Ověřte, že nezanikl hraniční katastr.",
+    )
+
+
 def _check_katastry_topology(run: RuianSyncRun, plocha_pred: Optional[float] = None) -> None:
     """
     Provede na závěr syncu topologickou kontrolu konzistence katastrů.
 
-    Skládá se ze tří stupňů, seřazených podle ceny:
+    Skládá se ze čtyř stupňů, první tři seřazené podle ceny:
 
     1. **součet ploch** – :func:`_zkontroluj_pokryti` porovná plochu před
        a po syncu (~0,4 s). Laciná pojistka, která funguje i kdyby sjednocení
@@ -1914,6 +2187,12 @@ def _check_katastry_topology(run: RuianSyncRun, plocha_pred: Optional[float] = N
        stupeň 2 označil pokrytí za podezřelé – tedy při díře, nespojitosti,
        naměřeném překryvu nebo selhání sjednocení. V čistém stavu se
        neprovede a celá kontrola stojí jen stupně 1 a 2 (~11 s).
+
+    Čtvrtý stupeň stojí stranou téhle posloupnosti: **soulad úrovní** –
+    :func:`_zkontroluj_soulad_urovni` (~0,15 s) porovná součet ploch katastrů
+    proti okresům a krajům. Jako jediný se dívá napříč úrovněmi, takže odhalí
+    i případ, kdy jsou katastry samy o sobě v pořádku, ale rozešly se
+    s nadřazenou úrovní.
 
     Podmínka ve stupni 3 je záměrně široká. Překryv se totiž ze sjednocení
     spolehlivě vyčíst nedá (viz varování u :func:`_zkontroluj_unii_pokryti`),
@@ -1932,11 +2211,17 @@ def _check_katastry_topology(run: RuianSyncRun, plocha_pred: Optional[float] = N
     """
     logger.debug("heslar.ruian_sync.syncer._check_katastry_topology.start", extra={"run_id": run.pk})
 
-    _zkontroluj_pokryti(run, plocha_pred)
+    ubytek = _zkontroluj_pokryti(run, plocha_pred)
 
+    podezrele = _zkontroluj_unii_pokryti(run)
     overlaps_count = 0
-    if _zkontroluj_unii_pokryti(run):
+    if podezrele:
         overlaps_count = _zkontroluj_prekryvy_dvojic(run)
+
+    if ubytek is not None:
+        _ohlas_ubytek_pokryti(run, ubytek, podezrele=podezrele)
+
+    _zkontroluj_soulad_urovni(run)
 
     logger.debug(
         "heslar.ruian_sync.syncer._check_katastry_topology.end",

@@ -140,40 +140,70 @@ def _close_or_rollback(fedora_tx: FedoraTransaction, success: bool) -> None:
 
 
 @contextlib.contextmanager
-def _db_a_fedora(ident_cely: str):
+def _db_a_fedora(ident_cely: str, *, commit_v_signalu: bool = False):
     """
     Drží DB zápisy reassignu rollbackovatelné, dokud Fedora neuspěje.
 
     Bez toho běžely změny FK, M2M i řádek historie v autocommitu **před**
     vznikem :class:`FedoraTransaction`. Když pak selhalo vytvoření transakce,
-    ``save()`` nebo commit, volající sice chybu odchytil, ale už zapsané
-    vazby nedokázal vrátit – Postgres, historie a Fedora se rozešly.
+    ``save()`` nebo commit, volající chybu odchytil, ale už zapsané vazby
+    nedokázal vrátit – Postgres, historie a Fedora se rozešly.
 
     Blok proto obaluje celý zápis do ``transaction.atomic()``: výjimka
-    odkudkoli (včetně ``mark_transaction_as_closed`` ve ``finally``) zruší
-    i databázovou část.
+    odkudkoli zruší i databázovou část.
 
-    Zbývá jeden případ, který takhle ošetřit nejde: záznamy se
-    ``close_active_transaction_when_finished = True`` commitují Fedoru už
-    uvnitř ``post_save`` signálu. Když po něm cokoli spadne, Fedora zápis má
-    a DB se vrátí. Takový rozpad se proto loguje na ERROR s ``ident_cely``
-    a UID transakce, aby se dal dohledat a ručně srovnat.
+    **Kdo uzavírá Fedora transakci.** Záznamy se
+    ``close_active_transaction_when_finished = True`` (projekty, viz
+    :func:`reassign_projekt`) commitují Fedoru samy – jejich ``post_save``
+    signál si na to registruje ``transaction.on_commit`` callback. Ten se
+    ale spustí až při commitu obalující ``transaction.atomic()``, tedy
+    **po** tomhle bloku. Kdyby transakci uzavřel i blok, přišel by druhý
+    commit a Fedora ho odmítne chybou „Transaction … has already been
+    committed“. Pro takové volající je ``commit_v_signalu=True``: blok
+    Fedoru na úspěšné cestě neuzavírá a nechá to na callbacku.
+
+    U téhle varianty **nelze databázi vrátit**, když selže až callback –
+    ``on_commit`` z definice běží po commitu. Selhání se proto jen zaloguje
+    na ERROR s ``ident_cely`` a UID transakce, aby šlo dohledat, kterým
+    záznamům chybí aktuální metadata v repozitáři.
 
     :param ident_cely: Identifikátor zpracovávaného záznamu (do logu).
+    :param commit_v_signalu: ``True`` u záznamů, jejichž ``post_save`` signál
+        Fedora transakci uzavírá sám v ``on_commit`` callbacku.
     :return: Generátor vracející otevřenou :class:`FedoraTransaction`;
         volající uvnitř bloku provede DB zápisy i ``save()``.
     """
     fedora_tx = FedoraTransaction()
     success = False
+    stav = {"db_commitnuto": False}
     try:
         with transaction.atomic():
+            # Marker se registruje jako první, takže se spustí dřív než
+            # callback ze signálu. Podle něj se pozná, jestli výjimka přišla
+            # ještě před commitem databáze (pak se DB vrátila), nebo až z
+            # některého ``on_commit`` callbacku (pak už je DB zapsaná).
+            transaction.on_commit(lambda: stav.__setitem__("db_commitnuto", True))
             try:
                 yield fedora_tx
                 success = True
             finally:
-                _close_or_rollback(fedora_tx, success)
+                if not (commit_v_signalu and success):
+                    _close_or_rollback(fedora_tx, success)
     except Exception:
-        if fedora_tx.status is FedoraTransactionStatus.COMMITTED:
+        if stav["db_commitnuto"]:
+            logger.error(
+                "heslar.ruian_sync.reassign._db_a_fedora.metadata_nezapsana",
+                extra={
+                    "ident_cely": ident_cely,
+                    "transaction": getattr(fedora_tx, "uid", None),
+                    "reason": (
+                        "Databaze je zapsana, ale zapis metadat do Fedory po commitu "
+                        "selhal - repozitar ma u tohoto zaznamu zastarala metadata. "
+                        "Nahradou je manage.py generate_metadata pro tento ident."
+                    ),
+                },
+            )
+        elif fedora_tx.status is FedoraTransactionStatus.COMMITTED:
             logger.error(
                 "heslar.ruian_sync.reassign._db_a_fedora.rozpad_db_fedora",
                 extra={
@@ -611,7 +641,7 @@ def reassign_projekt(
     if new_katastr.pk != projekt.hlavni_katastr_id:
         old_nazev = projekt.hlavni_katastr.nazev if projekt.hlavni_katastr else "?"
         popis = _popis_zmeny_hlavniho(old_nazev, new_katastr.nazev)
-        with _db_a_fedora(projekt.ident_cely) as fedora_tx:
+        with _db_a_fedora(projekt.ident_cely, commit_v_signalu=True) as fedora_tx:
             if historie_parts is None:
                 log_katastr_change(projekt.historie_id, popis)
             projekt.hlavni_katastr = new_katastr
@@ -678,7 +708,7 @@ def reassign_projekt_dalsi_katastr(
         to_add = {new_katastr.pk}
 
     popis = _popis_zmeny_ostatnich(to_add, to_remove)
-    with _db_a_fedora(projekt.ident_cely) as fedora_tx:
+    with _db_a_fedora(projekt.ident_cely, commit_v_signalu=True) as fedora_tx:
         if to_add:
             projekt.katastry.add(*to_add)
         projekt.katastry.remove(old_katastr)

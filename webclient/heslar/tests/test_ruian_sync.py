@@ -459,7 +459,15 @@ class _FakeFedoraTransakce:
         self.rollbacknuta = False
 
     def mark_transaction_as_closed(self):
-        """Uzavře transakci commitem, případně po commitu vyhodí chybu."""
+        """
+        Uzavře transakci commitem – druhý pokus odmítne stejně jako Fedora.
+
+        Reálný repozitář na opakovaný commit odpoví ``Transaction … has
+        already been committed``; tahle náhrada to napodobuje, aby se dvojitý
+        commit v testu projevil, a ne tiše prošel.
+        """
+        if self.status is reassign_mod.FedoraTransactionStatus.COMMITTED:
+            raise RuntimeError(f"Transaction with transactionId: {self.uid} has already been committed.")
         self.status = reassign_mod.FedoraTransactionStatus.COMMITTED
         if self.commit_selze:
             raise RuntimeError("commit prošel, navazující krok spadl")
@@ -1058,3 +1066,404 @@ class RozpoznaniOpakovaniTests(TestCase):
     def test_selhani_bez_stazeni_metadata_nevynuti(self):
         """Běh, který skončil na 404, se k datům nedostal."""
         self.assertFalse(self._spust([(RuianSyncRun.STATUS_FAILED, "")]))
+
+
+@_BEZ_CACHEOPS
+class GeometrieZdrojeTests(TestCase):
+    """
+    Testy topologické kontroly zdroje před destruktivním diffem.
+
+    Kontrola počtů propustí vstup, který má všechny jednotky, ale poškozenou
+    geometrii. Součet ploch a validita polygonů to zachytí ještě před tím, než
+    se do databáze cokoli zapíše – na rozdíl od
+    :func:`~heslar.ruian_sync.syncer._check_katastry_topology`, která ze své
+    podstaty běží až po zápisu a sync nezastavuje.
+    """
+
+    def setUp(self):
+        """Vytvoří katastry se známou plochou (čtverce 900 × 900 m)."""
+        _, self.okres, self.katastry = _vytvor_ruian_data(4, prefix=950000)
+
+    def _stav(self, meritko=1.0, nevalidni=0):
+        """
+        Sestaví plný stav odvozený od vytvořených katastrů.
+
+        :param meritko: Násobek délky strany čtverce; ``1.0`` = shodné s DB.
+        :param nevalidni: Kolik polygonů nahradit sebeprotínajícím se tvarem.
+        :return: Instance :class:`RuianFullState`.
+        """
+        dtos = []
+        for i, katastr in enumerate(self.katastry):
+            if i < nevalidni:
+                # Přesýpací hodiny – prsten protíná sám sebe.
+                wkt = "MULTIPOLYGON(((0 0, 10 10, 10 0, 0 10, 0 0)))"
+            else:
+                strana = 900 * meritko
+                x0 = -700000.0 - i * 1000
+                y0 = -1000000.0
+                wkt = (
+                    f"MULTIPOLYGON((({x0} {y0}, {x0 + strana} {y0}, "
+                    f"{x0 + strana} {y0 + strana}, {x0} {y0 + strana}, {x0} {y0})))"
+                )
+            dtos.append(
+                RuianKatastrDTO(kod=katastr.kod, nazev=katastr.nazev, okres_kod=self.okres.kod, hranice_wkt=wkt)
+            )
+        return RuianFullState(kraje=[], okresy=[], katastry=dtos)
+
+    def test_shodna_geometrie_projde(self):
+        """Zdroj shodný s databází nemá co hlásit."""
+        self.assertEqual(syncer._zkontroluj_geometrii_zdroje(self._stav(), len(self.katastry)), [])
+
+    def test_scvrkle_hranice_se_zachyti(self):
+        """Zmenšené hranice srazí součet ploch pod práh odchylky."""
+        problemy = syncer._zkontroluj_geometrii_zdroje(self._stav(meritko=0.9), len(self.katastry))
+
+        self.assertEqual(len(problemy), 1)
+        self.assertIn("plocha", problemy[0])
+
+    def test_nafouknute_hranice_se_zachyti(self):
+        """Kontrola je oboustranná – hrubý překryv součet ploch nafoukne."""
+        problemy = syncer._zkontroluj_geometrii_zdroje(self._stav(meritko=1.1), len(self.katastry))
+
+        self.assertEqual(len(problemy), 1)
+        self.assertIn("plocha", problemy[0])
+
+    def test_nevalidni_polygon_se_zachyti(self):
+        """Sebeprotínající se prsten je vada vstupu, ne běžný stav."""
+        problemy = syncer._zkontroluj_geometrii_zdroje(self._stav(nevalidni=1), len(self.katastry))
+
+        self.assertTrue(any("nevalidních" in p for p in problemy), problemy)
+
+    def test_prvni_import_plochu_neporovnava(self):
+        """Do prázdné databáze není proti čemu součet ploch porovnávat."""
+        self.assertEqual(syncer._zkontroluj_geometrii_zdroje(self._stav(meritko=0.5), 0), [])
+
+    def test_kontrola_bezi_pred_zapisem(self):
+        """
+        Vadná geometrie zastaví běh dřív, než se smaže jediný katastr.
+
+        Tohle je jádro připomínky: dosud se stejný stav jen zapsal a teprve
+        potom se o něm zalogovalo.
+        """
+        run = RuianSyncRun.objects.create(
+            mode=RuianSyncRun.MODE_FULL,
+            source="shp",
+            triggered_by=RuianSyncRun.TRIGGER_MANAGE,
+            data_valid_to=datetime.date(2026, 6, 6),
+            variant="ZKSH",
+        )
+        pred = RuianKatastr.objects.count()
+
+        with self.assertRaises(syncer.RuianNeuplnyZdrojError):
+            syncer._apply_full_state(self._stav(meritko=0.5), run)
+
+        self.assertEqual(RuianKatastr.objects.count(), pred, "nesmělo dojít k žádnému zápisu")
+
+
+@_BEZ_CACHEOPS
+class CommitVSignaluTests(TestCase):
+    """
+    Testy záznamů, které Fedora transakci uzavírají samy v ``on_commit``.
+
+    Projekty mají ``close_active_transaction_when_finished = True``, takže
+    jejich ``post_save`` signál registruje ``transaction.on_commit`` callback
+    a ten transakci commitne. Callback se ale spustí až při commitu obalující
+    ``transaction.atomic()``. Kdyby ji uzavřel i blok
+    :func:`~heslar.ruian_sync.reassign._db_a_fedora`, přišel by druhý commit
+    a Fedora ho odmítne chybou „has already been committed“.
+
+    Regrese na plný sync z 8. 9. 2026, kde takhle selhalo šest projektů.
+
+    Testuje se **kontrakt bloku**, tedy jestli transakci uzavírá, nebo ne.
+    Samotné spuštění callbacku nasimulovat nejde: v ``TestCase`` se
+    ``on_commit`` nikdy nespustí (testovací transakce se vrací) a
+    ``TransactionTestCase`` by vyprázdnil sdílenou testovací databázi.
+    """
+
+    def _projed(self, commit_v_signalu, vyhodit=None):
+        """
+        Projede blok tak, jak to dělá reassign projektu.
+
+        :param commit_v_signalu: Hodnota stejnojmenného parametru bloku.
+        :param vyhodit: Výjimka vyhozená uvnitř bloku, nebo ``None``.
+        :return: Dvojice ``(fake transakce, zachycená výjimka nebo None)``.
+        """
+        fake = _FakeFedoraTransakce()
+        chyba = None
+        try:
+            with mock.patch.object(reassign_mod, "FedoraTransaction", lambda: fake):
+                with reassign_mod._db_a_fedora("P-TEST", commit_v_signalu=commit_v_signalu):
+                    if vyhodit is not None:
+                        raise vyhodit
+        except Exception as exc:  # noqa: BLE001 – test zkoumá i typ chyby
+            chyba = exc
+        return fake, chyba
+
+    def test_s_priznakem_blok_transakci_neuzavira(self):
+        """
+        S příznakem nechá blok transakci otevřenou pro callback ze signálu.
+
+        Tohle je jádro opravy – dřív ji blok uzavřel sám a callback pak narazil
+        na „has already been committed“.
+        """
+        fake, chyba = self._projed(commit_v_signalu=True)
+
+        self.assertIsNone(chyba)
+        self.assertEqual(
+            fake.status,
+            reassign_mod.FedoraTransactionStatus.ACTIVE,
+            "blok nesmí commitovat – transakci uzavře až callback ze signálu",
+        )
+
+    def test_bez_priznaku_blok_transakci_uzavre(self):
+        """Bez příznaku commit patří bloku – tak fungují AZ a SN."""
+        fake, chyba = self._projed(commit_v_signalu=False)
+
+        self.assertIsNone(chyba)
+        self.assertEqual(fake.status, reassign_mod.FedoraTransactionStatus.COMMITTED)
+
+    def test_druhy_commit_by_fedora_odmitla(self):
+        """
+        Kontrola, že náhrada Fedory dvojitý commit opravdu odhalí.
+
+        Bez toho by test výše prošel i s rozbitým kódem.
+        """
+        fake = _FakeFedoraTransakce()
+        fake.mark_transaction_as_closed()
+
+        with self.assertRaises(RuntimeError) as chyceno:
+            fake.mark_transaction_as_closed()
+
+        self.assertIn("already been committed", str(chyceno.exception))
+
+    def test_chyba_uvnitr_bloku_vraci_obe_strany(self):
+        """
+        I s příznakem musí výjimka uvnitř bloku odvolat Fedoru i databázi.
+
+        Callback ze signálu se v takovém případě vůbec nespustí, takže tu
+        žádný rozpad nevzniká a nic se jako rozpad nehlásí.
+        """
+        with self.assertNoLogs(reassign_mod.logger, level=logging.ERROR):
+            fake, chyba = self._projed(commit_v_signalu=True, vyhodit=ValueError("zápis selhal"))
+
+        self.assertIsInstance(chyba, ValueError)
+        self.assertTrue(fake.rollbacknuta)
+        self.assertEqual(fake.status, reassign_mod.FedoraTransactionStatus.ABORTED)
+
+
+@_BEZ_CACHEOPS
+class UbytekPokrytiTests(TestCase):
+    """
+    Testy hlášení úbytku pokrytí podle režimu běhu a výsledku sjednocení.
+
+    Pokles součtu ploch sám o sobě nerozliší díru od plošné výměny hranic.
+    U delty se proto hlásí ``ERROR`` vždy (planý poplach je levnější než
+    přehlédnutá díra), u plného synchu jen tehdy, když sjednocení opravdu
+    našlo anomálii – jinak by poplach zazněl při každém plném synchu.
+
+    Regrese na plný sync z 9. 9. 2026: pokles 10,35 km² při 7004 přepsaných
+    katastrech, přitom sjednocení nenašlo jedinou díru ani překryv.
+    """
+
+    UBYTEK = 10_353_866.0
+
+    def _run(self, mode):
+        """
+        Vytvoří audit záznam daného režimu.
+
+        :param mode: ``RuianSyncRun.MODE_FULL`` nebo ``MODE_DELTA``.
+        :return: Uložená instance :class:`RuianSyncRun`.
+        """
+        return RuianSyncRun.objects.create(
+            mode=mode,
+            source="shp" if mode == RuianSyncRun.MODE_FULL else "file_vfr",
+            triggered_by=RuianSyncRun.TRIGGER_MANAGE,
+            data_valid_to=datetime.date(2026, 9, 9),
+            variant="ZKSH",
+        )
+
+    def _ohlas(self, mode, podezrele):
+        """
+        Zavolá hlášení a vrátí úroveň, hlášku a poznámku z auditu.
+
+        :param mode: Režim běhu.
+        :param podezrele: Co vrátilo sjednocení.
+        :return: Trojice ``(uroven, hlaska, note)``.
+        """
+        run = self._run(mode)
+        with self.assertLogs(syncer.logger, level=logging.WARNING) as zachyt:
+            syncer._ohlas_ubytek_pokryti(run, self.UBYTEK, podezrele=podezrele)
+        run.refresh_from_db()
+        uroven, _, hlaska = zachyt.output[0].partition(":")
+        return uroven, hlaska, run.note or ""
+
+    def test_full_bez_anomalie_je_jen_varovani(self):
+        """Plošná výměna hranic při plném synchu není chyba."""
+        uroven, hlaska, note = self._ohlas(RuianSyncRun.MODE_FULL, podezrele=False)
+
+        self.assertEqual(uroven, "WARNING")
+        self.assertIn("ubytek_bez_anomalie", hlaska)
+        self.assertIn("nenašlo díru ani překryv", note)
+        self.assertNotIn("pravděpodobně vznikla díra", note)
+
+    def test_full_s_anomalii_je_chyba(self):
+        """Když sjednocení našlo díru, mírnější hlášení by zakrylo vadu."""
+        uroven, hlaska, note = self._ohlas(RuianSyncRun.MODE_FULL, podezrele=True)
+
+        self.assertEqual(uroven, "ERROR")
+        self.assertIn("pravděpodobně vznikla díra", note)
+
+    def test_delta_je_prisna_i_bez_anomalie(self):
+        """
+        U denní změny se hlásí chyba i při čistém sjednocení.
+
+        Delta mění hrstku katastrů, takže pokles nad prahem je podezřelý vždy.
+        """
+        uroven, hlaska, note = self._ohlas(RuianSyncRun.MODE_DELTA, podezrele=False)
+
+        self.assertEqual(uroven, "ERROR")
+        self.assertIn("pravděpodobně vznikla díra", note)
+
+    def test_pokryti_beze_zmeny_nic_nehlasi(self):
+        """Bez úbytku nad prahem se nevrací nic k hlášení."""
+        run = self._run(RuianSyncRun.MODE_FULL)
+        plocha = syncer._soucet_plochy_katastru()
+
+        self.assertIsNone(syncer._zkontroluj_pokryti(run, plocha))
+
+    def test_bez_vychoziho_stavu_se_kontrola_preskoci(self):
+        """Bez plochy před syncem není s čím porovnávat."""
+        self.assertIsNone(syncer._zkontroluj_pokryti(self._run(RuianSyncRun.MODE_FULL), None))
+
+
+@_BEZ_CACHEOPS
+class SouladUrovniTests(TestCase):
+    """
+    Testy porovnání ploch katastrů, okresů a krajů na závěr syncu.
+
+    Každá úroveň má polygony z jiného souboru RÚIAN, ale popisují totéž území,
+    takže se jejich součty musí shodovat. Po plném synchu z 9. 9. 2026 daly
+    všechny tři 78 866 842 064,610 m² – rozdíl 0,000 m².
+
+    Testy si stavějí vlastní úrovně, aby nezávisely na obsahu databáze:
+    jeden kraj a jeden okres o ploše dvou katastrů.
+    """
+
+    def setUp(self):
+        """Vytvoří dva katastry a k nim odpovídající okres a kraj."""
+        self.run = RuianSyncRun.objects.create(
+            mode=RuianSyncRun.MODE_FULL,
+            source="shp",
+            triggered_by=RuianSyncRun.TRIGGER_MANAGE,
+            data_valid_to=datetime.date(2026, 9, 9),
+            variant="ZKSH",
+        )
+        RuianKatastr.objects.all().delete()
+        RuianOkres.objects.all().delete()
+        RuianKraj.objects.all().delete()
+        self.kraj, self.okres, self.katastry = _vytvor_ruian_data(2, prefix=970000)
+
+    def _nastav_hranice_urovni(self, meritko_okresu=1.0, meritko_kraje=1.0):
+        """
+        Přiřadí okresu a kraji hranici o ploše obou katastrů, volitelně zvětšenou.
+
+        :param meritko_okresu: Násobek plochy u okresu.
+        :param meritko_kraje: Násobek plochy u kraje.
+        """
+        for objekt, meritko in ((self.okres, meritko_okresu), (self.kraj, meritko_kraje)):
+            polygony = []
+            for i in range(len(self.katastry)):
+                strana = 900 * meritko
+                x0 = -700000.0 - i * 1000
+                y0 = -1000000.0
+                polygony.append(
+                    Polygon(
+                        ((x0, y0), (x0 + strana, y0), (x0 + strana, y0 + strana), (x0, y0 + strana), (x0, y0)),
+                        srid=5514,
+                    )
+                )
+            objekt.hranice = MultiPolygon(*polygony, srid=5514)
+            objekt.suppress_signal = True
+            objekt.save()
+
+    def test_shodne_plochy_projdou(self):
+        """Když všechny tři úrovně pokrývají totéž, nic se nehlásí."""
+        self._nastav_hranice_urovni()
+
+        with self.assertNoLogs(syncer.logger, level=logging.WARNING):
+            syncer._zkontroluj_soulad_urovni(self.run)
+
+        self.run.refresh_from_db()
+        self.assertEqual(self.run.note or "", "")
+
+    def test_rozejity_okres_se_ohlasi(self):
+        """
+        Okres o jiné ploše než jeho katastry znamená nesoulad úrovní.
+
+        Typicky když změnový soubor přinese posun hranice katastru na okraji
+        okresu, ale odpovídající polygon okresu už ne.
+        """
+        self._nastav_hranice_urovni(meritko_okresu=1.5)
+
+        with self.assertLogs(syncer.logger, level=logging.ERROR) as zachyt:
+            syncer._zkontroluj_soulad_urovni(self.run)
+
+        self.assertTrue(any("nesoulad" in radek for radek in zachyt.output), zachyt.output)
+        self.run.refresh_from_db()
+        self.assertIn("okresů", self.run.note or "")
+
+    def test_hlasi_se_kazda_rozejita_uroven(self):
+        """Rozejdou-li se obě nadřazené úrovně, musí být v poznámce obě."""
+        self._nastav_hranice_urovni(meritko_okresu=1.5, meritko_kraje=0.5)
+
+        with self.assertLogs(syncer.logger, level=logging.ERROR):
+            syncer._zkontroluj_soulad_urovni(self.run)
+
+        self.run.refresh_from_db()
+        self.assertIn("okresů", self.run.note or "")
+        self.assertIn("krajů", self.run.note or "")
+
+    def test_chybejici_geometrie_je_chyba(self):
+        """
+        Okres či kraj bez vyplněné hranice je vada, ne důvod ke přeskočení.
+
+        Přesně tenhle stav měla databáze před prvním plným syncem ze SHP –
+        okresy i kraje tam byly, ale bez polygonů. Bez geometrie nejde spočítat
+        pokrytí ani prostorově dohledat nadřazený prvek, takže v databázi
+        zůstat nesmí.
+        """
+        with self.assertLogs(syncer.logger, level=logging.ERROR) as zachyt:
+            syncer._zkontroluj_soulad_urovni(self.run)
+
+        self.assertTrue(any("chybi_geometrie" in radek for radek in zachyt.output), zachyt.output)
+        self.run.refresh_from_db()
+        self.assertIn("nemá vyplněnou hranici", self.run.note or "")
+
+    def test_pri_chybejici_geometrii_se_plochy_neporovnavaji(self):
+        """
+        U úrovně bez geometrie nemá porovnání ploch smysl.
+
+        Rozdíl by jen opisoval chybějící prvky a zdvojoval hlášení, takže se
+        hlásí pouze chybějící geometrie.
+        """
+        with self.assertLogs(syncer.logger, level=logging.ERROR) as zachyt:
+            syncer._zkontroluj_soulad_urovni(self.run)
+
+        self.assertFalse(any("nesoulad" in radek for radek in zachyt.output), zachyt.output)
+
+    def test_castecne_vyplnena_uroven_je_chyba(self):
+        """Stačí jediný okres bez hranice – kontrola nesmí projít."""
+        self._nastav_hranice_urovni()
+        druhy = RuianOkres.objects.create(
+            nazev="Okres bez hranice",
+            kraj=self.kraj,
+            spz="TZZ",
+            kod=979999,
+            nazev_en="District without boundary",
+        )
+        self.addCleanup(druhy.delete)
+
+        with self.assertLogs(syncer.logger, level=logging.ERROR) as zachyt:
+            syncer._zkontroluj_soulad_urovni(self.run)
+
+        self.assertTrue(any("chybi_geometrie" in radek for radek in zachyt.output), zachyt.output)
