@@ -76,7 +76,7 @@ PostgreSQL databáze s PostGIS rozšířením pro geografická data. Používá 
 postgres
 ~~~~~~~~
 
-- **Verze:** 12.3
+- **Verze:** 17.11
 - **Licence:** PostgreSQL License
 - **Odkaz:** https://github.com/docker-library/postgres
 
@@ -202,7 +202,7 @@ Memcached pro ukládání cache v paměti. Používá se pro zrychlení aplikace
 fcrepo/fcrepo
 ~~~~~~~~~~~~~
 
-- **Verze:** 6.5.1-tomcat9
+- **Verze:** 7.0.0-tomcat10
 - **Licence:** Apache-2.0 License
 - **Odkaz:** https://github.com/fcrepo/fcrepo
 
