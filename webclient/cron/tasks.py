@@ -1,3 +1,4 @@
+import contextlib
 import datetime
 import json
 import logging
@@ -1066,6 +1067,35 @@ def run_data_import(job_id, user_id, lock_token):
 #: na takové mezeře zaseklo natrvalo.
 RUIAN_NOT_PUBLISHED_GRACE_DAYS = 2
 
+#: Kolik po sobě jdoucích 404 dnů se ještě bere jako pravděpodobná pauza ve
+#: vydávání změnových souborů. Při dosažení se **jen zaloguje ERROR** – běh
+#: pokračuje dál. Zastavit se u prahu nesmí: kotva stojí před sérií a smyčka
+#: by se nikdy nedostala k prvnímu dni s daty, takže by delší legitimní pauza
+#: ve vydávání sync zablokovala natrvalo.
+RUIAN_VAROVANI_404_DNU = 5
+
+#: Strop počtu 404 dnů, které jedno spuštění cronu proskenuje, než to vzdá.
+#: Chrání jen objem HTTP requestů při dlouhodobě nedostupném zdroji; kotva se
+#: přes nepotvrzené dny neposouvá tak jako tak. Delší souvislý výpadek než
+#: tento strop znamená, že je stejně potřeba zásah člověka (a dávno předtím
+#: zahlásil chybu i :func:`_zkontroluj_stari_poslednich_dat`).
+#:
+#: .. warning::
+#:    ČÚZK drží denní změnové soubory jen **3 měsíce zpět** (změřeno 8. 9. 2026:
+#:    ``-92 dní`` ještě HTTP 200, ``-93 dní`` už 404). Zotavení popsané výše
+#:    tedy funguje jen uvnitř tohoto okna – zameškané dny starší než 3 měsíce
+#:    na serveru neexistují a nedají se dohnat ani po opravě URL. Jediná cesta
+#:    zpět je pak plný sync přes ``manage.py aktualizuj_ruian_shp``. Na tenhle
+#:    stav upozorní ERROR ``mimo_retenci_zdroje`` z
+#:    :func:`_zkontroluj_stari_poslednich_dat`; předchází mu o desítky dní
+#:    mírnější ``dlouho_bez_dat``, který se proto nesmí přehlížet.
+RUIAN_MAX_404_POKUSU_ZA_BEH = 60
+
+#: Poznámka označující den, který skončil na 404 a čeká na potvrzení pozdějším
+#: úspěšně staženým dnem. Slouží i k recyklaci takového běhu při dalším cronu,
+#: aby se pro tentýž den nehromadily duplicitní řádky auditu.
+NOTE_404_NEPOTVRZENO = "no_changes_nepotvrzeno (404)"
+
 #: Po kolika dnech bez jediného **skutečně staženého** souboru se zaloguje
 #: ``ERROR``.
 #:
@@ -1080,11 +1110,29 @@ RUIAN_NOT_PUBLISHED_GRACE_DAYS = 2
 #: 10 dnů je bezpečně nad běžným provozem včetně svátků.
 RUIAN_NO_DOWNLOAD_ERROR_DAYS = 10
 
+#: Jak dlouho ČÚZK drží denní změnové soubory ke stažení. Změřeno 8. 9. 2026
+#: proti ``https://vdp.cuzk.gov.cz/vymenny_format/soucasna/``: ``-92 dní``
+#: ještě vrací HTTP 200, ``-93 dní`` už 404 – tedy klouzavé okno 3 měsíců.
+#:
+#: Po překročení téhle hranice přestává platit záruka, na které stojí zotavení
+#: z výpadku (nepotvrzené dny se po opravě URL stáhnou znovu): zameškané dny
+#: na serveru prostě nejsou. Denní sync už mezeru nedožene a jediná cesta zpět
+#: je plný sync ze SHP.
+RUIAN_RETENCE_ZDROJE_DNU = 92
+
 
 def _zkontroluj_stari_poslednich_dat(today: datetime.date) -> None:
     """
     Zaloguje ``ERROR``, pokud se déle než :data:`RUIAN_NO_DOWNLOAD_ERROR_DAYS`
     dnů nepodařilo stáhnout žádný změnový soubor.
+
+    Hlásí se ve dvou úrovních podle toho, jestli se mezera dá ještě dohnat:
+
+    * od :data:`RUIAN_NO_DOWNLOAD_ERROR_DAYS` dnů – ``dlouho_bez_dat``, tedy
+      „něco je špatně, ověřte URL“; zameškané dny jsou pořád ke stažení,
+    * od :data:`RUIAN_RETENCE_ZDROJE_DNU` dnů – ``mimo_retenci_zdroje``:
+      soubory už ze serveru zmizely, denní sync mezeru nedožene a operátor
+      musí spustit plný sync ``manage.py aktualizuj_ruian_shp``.
 
     Hledá poslední :class:`~heslar.models.RuianSyncRun` s neprázdným
     ``source_path`` – tedy běh, který skutečně dostal data. Běhy uzavřené jako
@@ -1111,6 +1159,27 @@ def _zkontroluj_stari_poslednich_dat(today: datetime.date) -> None:
         return
 
     stari = (today - posledni_s_daty.data_valid_to).days
+    if stari >= RUIAN_RETENCE_ZDROJE_DNU:
+        # Nejstarší zameškané dny už ČÚZK nenabízí – denní sync je nedožene
+        # ani po opravě URL. Tady už nestačí hlásit „dlouho bez dat“, operátor
+        # musí vědět, že se z toho dostane výhradně plným syncem.
+        logger.error(
+            "cron.tasks.sync_ruian_changes.mimo_retenci_zdroje",
+            extra={
+                "dnu_bez_dat": stari,
+                "retence_zdroje_dnu": RUIAN_RETENCE_ZDROJE_DNU,
+                "posledni_data_valid_to": posledni_s_daty.data_valid_to.isoformat(),
+                "posledni_run_id": posledni_s_daty.pk,
+                "reason": (
+                    f"Denní sync stojí {stari} dnů, což je za hranicí retence zdroje "
+                    f"({RUIAN_RETENCE_ZDROJE_DNU} dnů). Zameškané změnové soubory už na "
+                    "serveru ČÚZK nejsou a denní sync je nedožene. Je nutné spustit plný "
+                    "sync: manage.py aktualizuj_ruian_shp."
+                ),
+            },
+        )
+        return
+
     if stari > RUIAN_NO_DOWNLOAD_ERROR_DAYS:
         logger.error(
             "cron.tasks.sync_ruian_changes.dlouho_bez_dat",
@@ -1127,6 +1196,39 @@ def _zkontroluj_stari_poslednich_dat(today: datetime.date) -> None:
                 ),
             },
         )
+
+
+#: Klíč Postgres advisory locku serializujícího běhy :func:`sync_ruian_changes`.
+#: Advisory lock (ne Redis) proto, že drží po celou dobu session a nemůže
+#: uprostřed běhu vypršet – catch-up přes desítky dní trvá klidně hodiny,
+#: takže jakýkoli TTL by musel mít heartbeat. Uvolní se i tvrdým pádem
+#: workeru, protože ho Postgres pustí se zánikem spojení.
+RUIAN_SYNC_LOCK_KEY = 372_004_066
+
+
+@contextlib.contextmanager
+def _ruian_sync_lock():
+    """
+    Zajistí, že ``sync_ruian_changes`` neběží ve dvou instancích současně.
+
+    Souběžné běhy by četly stejnou kotvu ``RuianSyncRun.last_successful()``,
+    stahovaly do stejné cílové cesty (včetně ``.tmp``) a dvakrát aplikovaly
+    tytéž změny do DB, historie i Fedory.
+
+    :return: Generátor vracející ``True``, když byl zámek získán, jinak
+        ``False``; volající v tom případě běh přeskočí.
+    """
+    from django.db import connection as db_connection
+
+    with db_connection.cursor() as cursor:
+        cursor.execute("SELECT pg_try_advisory_lock(%s)", [RUIAN_SYNC_LOCK_KEY])
+        ziskan = bool(cursor.fetchone()[0])
+    try:
+        yield ziskan
+    finally:
+        if ziskan:
+            with db_connection.cursor() as cursor:
+                cursor.execute("SELECT pg_advisory_unlock(%s)", [RUIAN_SYNC_LOCK_KEY])
 
 
 @shared_task
@@ -1163,6 +1265,54 @@ def sync_ruian_changes(reassign_records: bool = True):
         Lze pak dohnat samostatně přes ``reassign_all`` nebo
         ``/admin/update-katastry/``.
     """
+    with _ruian_sync_lock() as ziskan_zamek:
+        if not ziskan_zamek:
+            # Vědomě ERROR, ne WARNING: běh se přeskakuje celý a v produkci
+            # to znamená, že buď předchozí sync visí, nebo je cron nastavený
+            # hustěji, než stíhá doběhnout – obojí je potřeba vidět.
+            logger.error(
+                "cron.tasks.sync_ruian_changes.lock_not_acquired",
+                extra={"reason": "Jiný běh sync_ruian_changes stále drží advisory lock, přeskakuji."},
+            )
+            return
+        _sync_ruian_changes_locked(reassign_records)
+
+
+def _potvrd_prazdne_dny(runy: list) -> None:
+    """
+    Uzavře jako úspěšné dny, které skončily na 404 a čekaly na potvrzení.
+
+    Volá se ve chvíli, kdy se nějaký pozdější den opravdu stáhl – tím je
+    doloženo, že URL funguje, a předcházející 404 tedy znamenaly „ten den
+    nebyly změny“, ne nedostupný zdroj.
+
+    :param runy: Seznam :class:`heslar.models.RuianSyncRun` čekajících na
+        potvrzení, v pořadí podle dne.
+    """
+    from heslar.models import RuianSyncRun
+
+    if not runy:
+        return
+    for run in runy:
+        run.status = RuianSyncRun.STATUS_SUCCESS
+        run.note = "no_changes (404)"
+        run.save(update_fields=["status", "note"])
+    logger.info(
+        "cron.tasks.sync_ruian_changes.prazdne_dny_potvrzeny",
+        extra={
+            "pocet_dnu": len(runy),
+            "od": runy[0].data_valid_to.isoformat(),
+            "do": runy[-1].data_valid_to.isoformat(),
+        },
+    )
+
+
+def _sync_ruian_changes_locked(reassign_records: bool = True):
+    """
+    Vlastní tělo :func:`sync_ruian_changes` běžící pod advisory lockem.
+
+    :param reassign_records: Viz :func:`sync_ruian_changes`.
+    """
     try:
         logger.debug("cron.tasks.sync_ruian_changes.do.start")
 
@@ -1186,17 +1336,30 @@ def sync_ruian_changes(reassign_records: bool = True):
         today = datetime.date.today()
 
         day = last_run.data_valid_to + datetime.timedelta(days=1)
+        #: Dny, které skončily na 404 a čekají na potvrzení pozdějším dnem,
+        #: který se opravdu stáhne. Viz :data:`RUIAN_MAX_CONSECUTIVE_404`.
+        nepotvrzene_404: list = []
 
         try:
             while day < today:
-                run = RuianSyncRun.objects.create(
+                # Dny čekající na potvrzení (404) se při každém spuštění cronu
+                # zkoušejí znovu. Aby se pro ně nezakládal pokaždé nový řádek
+                # auditu, existující nepotvrzený běh se recykluje.
+                run = RuianSyncRun.objects.filter(
                     mode=RuianSyncRun.MODE_DELTA,
-                    source="file_vfr",
-                    triggered_by=RuianSyncRun.TRIGGER_CRON,
                     data_valid_to=day,
-                    since=last_run.data_valid_to,
-                    variant="ZKSH",
-                )
+                    status=RuianSyncRun.STATUS_FAILED,
+                    note=NOTE_404_NEPOTVRZENO,
+                ).first()
+                if run is None:
+                    run = RuianSyncRun.objects.create(
+                        mode=RuianSyncRun.MODE_DELTA,
+                        source="file_vfr",
+                        triggered_by=RuianSyncRun.TRIGGER_CRON,
+                        data_valid_to=day,
+                        since=last_run.data_valid_to,
+                        variant="ZKSH",
+                    )
                 try:
                     source = FileVfrSource.download_for_day(day, target_dir=target_dir)
                     if source is None:
@@ -1215,18 +1378,103 @@ def sync_ruian_changes(reassign_records: bool = True):
                                 extra={"day": day.isoformat(), "run_id": run.pk},
                             )
                             return
-                        # Starší den: v RÚIAN ten den opravdu nebyly žádné změny.
-                        run.status = RuianSyncRun.STATUS_SUCCESS
+                        # Starší den: 404 *nejspíš* znamená „ten den nebyly
+                        # změny“, ale úplně stejně vypadá i změněná URL na
+                        # straně poskytovatele. Proto se takový den neuzavře
+                        # jako úspěch hned – zůstane FAILED v bufferu a kotva
+                        # se přes něj neposune. Potvrdí ho až pozdější den,
+                        # který se opravdu stáhne (= URL funguje). Do té doby
+                        # se dny při každém spuštění cronu zkusí znovu, takže
+                        # se po opravě URL nic nepřeskočí.
+                        run.status = RuianSyncRun.STATUS_FAILED
                         run.finished_at = timezone.now()
-                        run.note = "no_changes (404)"
+                        run.note = NOTE_404_NEPOTVRZENO
                         run.save(update_fields=["status", "finished_at", "note"])
-                        last_run = run
+                        nepotvrzene_404.append(run)
+                        if len(nepotvrzene_404) == RUIAN_VAROVANI_404_DNU:
+                            # Jen alarm, jednou za běh. Pokračujeme dál – další
+                            # den může mít data a tím celou sérii potvrdit.
+                            logger.error(
+                                "cron.tasks.sync_ruian_changes.podezrela_serie_404",
+                                extra={
+                                    "pocet_dnu": len(nepotvrzene_404),
+                                    "od": nepotvrzene_404[0].data_valid_to.isoformat(),
+                                    "do": nepotvrzene_404[-1].data_valid_to.isoformat(),
+                                    "reason": (
+                                        "Souvislá série 404 na změnových VFR. Kotva se neposouvá, "
+                                        "dny se po opravě stáhnou znovu. Ověřte base_url/atom_feed_url "
+                                        "v CustomAdminSettings (skupina ruian_sync, item vfr_download)."
+                                    ),
+                                },
+                            )
+                        if len(nepotvrzene_404) >= RUIAN_MAX_404_POKUSU_ZA_BEH:
+                            logger.error(
+                                "cron.tasks.sync_ruian_changes.strop_404_pokusu",
+                                extra={
+                                    "pocet_dnu": len(nepotvrzene_404),
+                                    "od": nepotvrzene_404[0].data_valid_to.isoformat(),
+                                    "do": nepotvrzene_404[-1].data_valid_to.isoformat(),
+                                    "reason": (
+                                        "Dosažen strop 404 pokusů na jeden běh, končím. "
+                                        "Zbytek se zkusí při dalším spuštění cronu."
+                                    ),
+                                },
+                            )
+                            return
                         day += datetime.timedelta(days=1)
                         continue
 
+                    # Den se stáhl, takže URL prokazatelně funguje – tím se
+                    # zpětně potvrdí, že předchozí 404 dny byly opravdu bez
+                    # změn, a mohou se uzavřít jako úspěšné.
+                    _potvrd_prazdne_dny(nepotvrzene_404)
+                    nepotvrzene_404 = []
+
+                    # U recyklovaného běhu (viz NOTE_404_NEPOTVRZENO výše) je
+                    # potřeba starou poznámku smazat – den se tentokrát stáhl.
+                    run.note = ""
                     run.source_path = str(getattr(source, "path", ""))
-                    run.save(update_fields=["source_path"])
-                    ruian_syncer.sync_delta(source=source, run=run, day=day, reassign_records=reassign_records)
+                    run.save(update_fields=["note", "source_path"])
+
+                    # Opakuje se den, jehož dřívější pokus data stáhl a přesto
+                    # selhal? Pak mohl PostgreSQL commitnout změnu, u které pak
+                    # neprošel zápis metadat do Fedory (posílá ho až
+                    # ``transaction.on_commit`` callback v ``heslar.signals``,
+                    # tedy po commitu). Prvky by teď měly stejná data jako DB,
+                    # upsert by je vyhodnotil jako nezměněné a metadata by se
+                    # už nikdy nedopsala. Vynuceným zápisem se dohoní.
+                    #
+                    # Filtr na neprázdný ``source_path`` je podstatný: běh, který
+                    # skončil na 404, se k datům vůbec nedostal a nemá co dohánět.
+                    opakovani_po_selhani = (
+                        RuianSyncRun.objects.filter(
+                            mode=RuianSyncRun.MODE_DELTA,
+                            data_valid_to=day,
+                            status=RuianSyncRun.STATUS_FAILED,
+                        )
+                        .exclude(pk=run.pk)
+                        .exclude(source_path="")
+                        .exists()
+                    )
+                    if opakovani_po_selhani:
+                        logger.warning(
+                            "cron.tasks.sync_ruian_changes.opakovani_po_selhani",
+                            extra={
+                                "day": day.isoformat(),
+                                "run_id": run.pk,
+                                "reason": (
+                                    "Dřívější pokus o tento den selhal po stažení dat. "
+                                    "Metadata se do Fedory zapíšou i u nezměněných prvků."
+                                ),
+                            },
+                        )
+                    ruian_syncer.sync_delta(
+                        source=source,
+                        run=run,
+                        day=day,
+                        reassign_records=reassign_records,
+                        vynutit_metadata=opakovani_po_selhani,
+                    )
                     run.refresh_from_db()
                     run.status = RuianSyncRun.STATUS_SUCCESS
                     run.finished_at = timezone.now()
@@ -1268,6 +1516,19 @@ def sync_ruian_changes(reassign_records: bool = True):
                     return
 
                 day += datetime.timedelta(days=1)
+
+            if nepotvrzene_404:
+                # Konec záběru (dnešek) a poslední dny skončily na 404. Kotva
+                # se přes ně vědomě neposouvá – potvrdí je až první den, který
+                # se opravdu stáhne, při některém z dalších spuštění cronu.
+                logger.info(
+                    "cron.tasks.sync_ruian_changes.prazdne_dny_cekaji",
+                    extra={
+                        "pocet_dnu": len(nepotvrzene_404),
+                        "od": nepotvrzene_404[0].data_valid_to.isoformat(),
+                        "do": nepotvrzene_404[-1].data_valid_to.isoformat(),
+                    },
+                )
         finally:
             _zkontroluj_stari_poslednich_dat(today)
 

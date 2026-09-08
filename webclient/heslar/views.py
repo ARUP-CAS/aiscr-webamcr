@@ -292,7 +292,7 @@ class ContinueKatastrProcessing(LoginRequiredMixin, View):
         """
         from core.connectors import RedisConnector
         from core.ident_cely import get_record_from_ident
-        from core.repository_connector import FedoraError
+        from core.repository_connector import FedoraError, FedoraTransactionCommitFailedError
         from django.http import Http404
         from django.utils.translation import gettext as _t
         from heslar.ruian_sync import reassign as reassign_mod
@@ -319,6 +319,13 @@ class ContinueKatastrProcessing(LoginRequiredMixin, View):
 
         ident_cely = ident_list[iterator]
         result["ident_cely"] = ident_cely
+        # Kurzor posouváme ještě před zpracováním záměrně: kdyby se posouval až
+        # po úspěchu, jeden trvale padající záznam by frontu zablokoval a JS by
+        # ho polloval donekonečna. Cenou je, že selhání se nezopakuje – proto
+        # musí být každé selhání níže odchycené, zalogované na ERROR a vrácené
+        # v odpovědi jako ``is_error``, aby operátor věděl, které identy
+        # zůstaly nepřepočítané. Neodchycená výjimka by skončila jako HTTP 500,
+        # polling by se zastavil a přeskočily by se i všechny zbývající identy.
         r.set(job_id, f"{iterator + 1};{';'.join(ident_list)}")
 
         try:
@@ -338,10 +345,13 @@ class ContinueKatastrProcessing(LoginRequiredMixin, View):
                 if changed
                 else _t("heslar.views.ContinueKatastrProcessing.no_change")
             )
-        except FedoraError as err:
-            logger.debug(
-                "heslar.views.ContinueKatastrProcessing.fedora_error",
-                extra={"ident_cely": ident_cely, "error": err},
+        except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
+            # ``FedoraTransactionCommitFailedError`` není potomkem ``FedoraError``,
+            # takže dřív propadala ven jako HTTP 500. ``ValueError`` vyhazují
+            # ``reassign_*`` funkce nad nekonzistentní geometrií.
+            logger.error(
+                "heslar.views.ContinueKatastrProcessing.reassign_error",
+                extra={"ident_cely": ident_cely, "error": str(err)[:500]},
             )
             result["result"] = _t("heslar.views.ContinueKatastrProcessing.error")
             result["is_error"] = True

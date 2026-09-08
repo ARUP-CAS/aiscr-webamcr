@@ -16,17 +16,131 @@
 # co má reálnou vypovídací hodnotu – výčet povolených hodnot
 # ``geom_system``.
 
+#
+# Před zpřísněním sloupce běží dávkový backfill: dokud byl nullable, mohly
+# vzniknout řádky s ``geom_sjtsk IS NULL`` (starý ``pian_geom_check`` je
+# u ``geom_system='4326'`` výslovně povoloval). ``AlterField`` by na takové
+# databázi skončil ``IntegrityError`` – ověřeno na kopii produkční DB, kde
+# bylo 213 123 z 213 129 řádků bez JTSK.
+
 import django.contrib.gis.db.models.fields
 from django.db import migrations, models
 
 
+#: Po kolika řádcích se backfill commituje. Vyšší číslo znamená méně režie,
+#: ale delší transakci; 1000 je kompromis ověřený na 258 tisících pianech.
+_DAVKA = 1000
+
+
+def _doplnit_geom_sjtsk(apps, schema_editor):
+    """
+    Dopočítá chybějící ``Pian.geom_sjtsk`` z ``Pian.geom`` (EPSG:4326).
+
+    Používá výhradně ``core.coordTransform.transform_geom_to_sjtsk`` – projekt
+    zakazuje ``ST_Transform`` i ``GEOSGeometry.transform()``, aby všechny
+    převody procházely jednou aplikační implementací.
+
+    Zapisuje se **raw SQL UPDATE**, ne přes ORM: ``Pian.save()`` spouští
+    signály, které zapisují metadata do Fedory. Při migraci je to nežádoucí
+    (a nad statisíci řádky neprůchodné).
+
+    Řádky, u kterých transformace selže nebo které nemají ani ``geom``,
+    zůstanou prázdné – ``AlterField`` pak skončí chybou a nasazení se zastaví,
+    což je správně: tichý default by do dat vnesl nesmyslnou geometrii.
+
+    Po dobu backfillu je vypnutý trigger ``trg_validate_geometries``. Ten je
+    ``BEFORE INSERT OR UPDATE OF geom, geom_sjtsk`` a jeho funkce validuje
+    **obě** kolony včetně ``NEW.geom``, kterou tahle migrace vůbec nemění.
+    V datech přitom existují starší piany, jejichž ``geom`` dnešní
+    ``validategeom`` neuznává (``geometryNotSimple``, ``segmentsTooShort``,
+    ``BBox``) – vznikly dřív než ten trigger. Bez vypnutí by první takový
+    řádek shodil celou migraci, a tím i nasazení, přestože o zápis nevalidní
+    geometrie vůbec nejde.
+
+    Vypnutí i zapnutí běží v jedné transakci s backfillem, takže nemůže
+    zůstat trigger vypnutý, když cokoli selže.
+    """
+    from core.coordTransform import transform_geom_to_sjtsk
+    from django.db import transaction
+
+    Pian = apps.get_model("pian", "Pian")
+    connection = schema_editor.connection
+
+    zpracovano = preskoceno = 0
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute("ALTER TABLE pian DISABLE TRIGGER trg_validate_geometries")
+        try:
+            zpracovano, preskoceno = _projed_davky(Pian, connection, transform_geom_to_sjtsk)
+        finally:
+            with connection.cursor() as cursor:
+                cursor.execute("ALTER TABLE pian ENABLE TRIGGER trg_validate_geometries")
+
+    if zpracovano or preskoceno:
+        print(f"  pian.geom_sjtsk doplnen: {zpracovano}, nepodarilo se: {preskoceno}", flush=True)
+
+
+def _projed_davky(Pian, connection, transform_geom_to_sjtsk):
+    """
+    Projde piany bez ``geom_sjtsk`` po dávkách a dopočítá jim hodnotu.
+
+    :param Pian: Historický model ``pian.Pian`` z ``apps.get_model``.
+    :param connection: Databázové spojení ze ``schema_editor``.
+    :param transform_geom_to_sjtsk: Funkce převodu WKT do EPSG:5514.
+    :return: Dvojice ``(zpracovano, preskoceno)``.
+    """
+    zpracovano = preskoceno = 0
+    while True:
+        davka = list(
+            Pian.objects.filter(geom_sjtsk__isnull=True, geom__isnull=False)
+            .exclude(pk__in=_preskocene)
+            .values_list("pk", "geom")[:_DAVKA]
+        )
+        if not davka:
+            break
+        for pk, geom in davka:
+            wkt, stav = transform_geom_to_sjtsk(geom.wkt)
+            if stav != "OK" or not wkt:
+                _preskocene.add(pk)
+                preskoceno += 1
+                continue
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE pian SET geom_sjtsk = ST_GeomFromText(%s, 5514) WHERE id = %s",
+                    [wkt, pk],
+                )
+            zpracovano += 1
+
+    return zpracovano, preskoceno
+
+
+#: PK řádků, u kterých transformace selhala. Bez nich by se smyčka výš točila
+#: donekonečna, protože takový řádek zůstane ``geom_sjtsk IS NULL``.
+_preskocene = set()
+
+
+def _zpet(apps, schema_editor):
+    """Zpětný krok backfillu neexistuje – dopočtené hodnoty se nemažou."""
+
+
 class Migration(migrations.Migration):
+
+    # Backfill (RunPython) a zpřísnění sloupce (AlterField) nesmí běžet
+    # v jedné transakci: PostgreSQL by ``ALTER TABLE`` odmítl chybou
+    # "cannot ALTER TABLE because it has pending trigger events", protože
+    # předchozí hromadné UPDATE nechá ve stejné transakci nevyřízené
+    # trigger eventy. S ``atomic = False`` má každá operace transakci vlastní.
+    #
+    # Backfill je idempotentní (doplňuje jen řádky s ``geom_sjtsk IS NULL``),
+    # takže opakované spuštění po případném selhání je bezpečné.
+    atomic = False
 
     dependencies = [
         ("pian", "0007_remove_pian_geom_sjtsk_updated_at_and_more"),
     ]
 
     operations = [
+        migrations.RunPython(_doplnit_geom_sjtsk, _zpet),
         migrations.AlterField(
             model_name="pian",
             name="geom_sjtsk",

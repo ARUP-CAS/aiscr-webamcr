@@ -104,6 +104,14 @@ Funkce
    Zaloguje ``ERROR``, pokud se déle než :data:`RUIAN_NO_DOWNLOAD_ERROR_DAYS`
    dnů nepodařilo stáhnout žádný změnový soubor.
 
+   Hlásí se ve dvou úrovních podle toho, jestli se mezera dá ještě dohnat:
+
+   * od :data:`RUIAN_NO_DOWNLOAD_ERROR_DAYS` dnů – ``dlouho_bez_dat``, tedy
+     „něco je špatně, ověřte URL“; zameškané dny jsou pořád ke stažení,
+   * od :data:`RUIAN_RETENCE_ZDROJE_DNU` dnů – ``mimo_retenci_zdroje``:
+     soubory už ze serveru zmizely, denní sync mezeru nedožene a operátor
+     musí spustit plný sync ``manage.py aktualizuj_ruian_shp``.
+
    Hledá poslední :class:`~heslar.models.RuianSyncRun` s neprázdným
    ``source_path`` – tedy běh, který skutečně dostal data. Běhy uzavřené jako
    ``no_changes (404)`` ``source_path`` nemají, takže se do stáří nezapočítají
@@ -117,6 +125,17 @@ Funkce
    monitoring všiml.
 
    :param today: Dnešní datum (předává volající, ať se dá test ustálit).
+
+.. py:function:: _ruian_sync_lock()
+
+   Zajistí, že ``sync_ruian_changes`` neběží ve dvou instancích současně.
+
+   Souběžné běhy by četly stejnou kotvu ``RuianSyncRun.last_successful()``,
+   stahovaly do stejné cílové cesty (včetně ``.tmp``) a dvakrát aplikovaly
+   tytéž změny do DB, historie i Fedory.
+
+   :return: Generátor vracející ``True``, když byl zámek získán, jinak
+       ``False``; volající v tom případě běh přeskočí.
 
 .. py:function:: sync_ruian_changes(reassign_records)
 
@@ -150,3 +169,20 @@ Funkce
        nepřepočítají, ale upserty/delete katastrů proběhnou normálně.
        Lze pak dohnat samostatně přes ``reassign_all`` nebo
        ``/admin/update-katastry/``.
+
+.. py:function:: _potvrd_prazdne_dny(runy)
+
+   Uzavře jako úspěšné dny, které skončily na 404 a čekaly na potvrzení.
+
+   Volá se ve chvíli, kdy se nějaký pozdější den opravdu stáhl – tím je
+   doloženo, že URL funguje, a předcházející 404 tedy znamenaly „ten den
+   nebyly změny“, ne nedostupný zdroj.
+
+   :param runy: Seznam :class:`heslar.models.RuianSyncRun` čekajících na
+       potvrzení, v pořadí podle dne.
+
+.. py:function:: _sync_ruian_changes_locked(reassign_records)
+
+   Vlastní tělo :func:`sync_ruian_changes` běžící pod advisory lockem.
+
+   :param reassign_records: Viz :func:`sync_ruian_changes`.

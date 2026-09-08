@@ -35,7 +35,7 @@ from __future__ import annotations
 import logging
 import traceback
 from datetime import date
-from typing import Iterable, Optional, Set, Tuple
+from typing import Iterable, List, Optional, Set, Tuple
 
 from arch_z.models import ArcheologickyZaznam
 from core.repository_connector import FedoraError, FedoraTransaction, FedoraTransactionCommitFailedError
@@ -109,6 +109,7 @@ def sync_delta(
     day: date,
     *,
     reassign_records: bool = False,
+    vynutit_metadata: bool = False,
 ) -> None:
     """
     Aplikuje denní změnový VFR pro jeden konkrétní den.
@@ -127,15 +128,24 @@ def sync_delta(
         spatial reassign Projekt/AZ/SN dotčených změnami hranic (přepočet
         katastru, zápis do historie, aktualizace Fedory). Default ``False``
         – navázané záznamy se nepřepočítávají.
+    :param vynutit_metadata: Pokud ``True``, u prvků beze změny se stejně
+        zavolá ``save()``, aby se přegenerovala metadata ve Fedoře. Předává
+        se při **opakování dne, jehož předchozí pokus selhal** – viz
+        :func:`_upsert_kraj` a vysvětlení níže.
     :raises Exception: Propaguje výjimku zdroje/DB.
     """
     logger.debug(
         "heslar.ruian_sync.syncer.sync_delta.start",
-        extra={"run_id": run.pk, "day": day.isoformat(), "reassign_records": reassign_records},
+        extra={
+            "run_id": run.pk,
+            "day": day.isoformat(),
+            "reassign_records": reassign_records,
+            "vynutit_metadata": vynutit_metadata,
+        },
     )
 
     try:
-        hranice_changed_kody = _apply_changes(source.fetch_changes(day), run)
+        hranice_changed_kody = _apply_changes(source.fetch_changes(day), run, vynutit_metadata=vynutit_metadata)
     except Exception:
         logger.error(
             "heslar.ruian_sync.syncer.sync_delta.error",
@@ -166,12 +176,104 @@ def sync_delta(
 # ---------------------------------------------------------------------------
 
 
+#: Kolik katastrů smí plnému stavu ze zdroje chybět proti databázi, aniž by se
+#: běh zastavil. Absolutní číslo (ne procento), aby limit nedriftoval s tím,
+#: jak DB roste. Skutečné slučování KÚ teče přes denní změnové soubory, ne
+#: přes tenhle snapshot, takže i 50 je nad reálným provozem s rezervou.
+_MAX_UBYTEK_KATASTRU = 50
+
+#: Kolik okresů, resp. krajů smí ve zdroji chybět proti databázi. Zánik okresu
+#: nebo kraje je změna „jednou za generaci“, takže víc než jeden chybějící
+#: prvek znamená neúplný vstup, ne skutečnou změnu.
+_MAX_UBYTEK_OKRESU = 1
+_MAX_UBYTEK_KRAJU = 1
+
+
+class RuianNeuplnyZdrojError(RuntimeError):
+    """
+    Zdrojová data plného stavu vypadají neúplně a běh se proto nesmí aplikovat.
+
+    Vyhazuje :func:`_zkontroluj_uplnost_zdroje` **před** jakoukoli změnou dat,
+    aby useknutý nebo poškozený vstup nemohl smazat velkou část heslářů.
+    """
+
+
+def _zkontroluj_uplnost_zdroje(state: RuianFullState, run: RuianSyncRun) -> None:
+    """
+    Ověří ještě před zápisem, že plný stav ze zdroje není useknutý.
+
+    Prázdná úroveň (žádné kraje/okresy/katastry) se řeší jinde – tam se mazání
+    jen přeskočí. Nebezpečnější je stav *neprázdný, ale neúplný*: takový projde
+    dosavadní booleovskou pojistkou a smaže každý prvek, který ve zdroji chybí.
+
+    Nejde přitom o nápadně poškozený archiv – ten by neotevřel ani parser.
+    Reálné cesty jsou tišší: :meth:`~heslar.ruian_sync.shp_importer.ShpUzszSource._load_katastry`
+    přeskočí ``continue`` každý prvek bez ``KOD``/``NAZEV``, a ``shp_path``
+    smí být i rozbalený adresář, takže nedokončené rozbalení dá ``KATUZE_P.shp``,
+    který se otevře a načte jen zčásti. V obou případech skončí v ruce
+    neprázdný, validní a neúplný stav bez jediné chybové hlášky.
+    Kontrola proto porovná počty kódů ve zdroji proti databázi a při větším
+    úbytku, než odpovídá reálným změnám v RÚIAN, běh zastaví
+    :class:`RuianNeuplnyZdrojError`.
+
+    Kontrola je záměrně **před** fází upsertů, tedy před první změnou dat –
+    ne až po ní jako diagnostický :func:`_check_katastry_topology`.
+
+    :param state: Plný stav prvků RÚIAN ze zdroje.
+    :param run: Audit záznam; důvod zastavení se zapíše do ``run.note``.
+    :raises RuianNeuplnyZdrojError: Když zdroj proti databázi postrádá víc
+        prvků, než připouštějí prahy :data:`_MAX_UBYTEK_KATASTRU`,
+        :data:`_MAX_UBYTEK_OKRESU` a :data:`_MAX_UBYTEK_KRAJU`.
+    """
+    problemy = []
+
+    db_katastru = RuianKatastr.objects.count()
+    if state.katastry and db_katastru:
+        chybi = len(set(RuianKatastr.objects.values_list("kod", flat=True)) - {k.kod for k in state.katastry})
+        if chybi > _MAX_UBYTEK_KATASTRU:
+            problemy.append(f"katastry: ve zdroji chybí {chybi} z {db_katastru} v DB, limit je {_MAX_UBYTEK_KATASTRU}")
+
+    for nazev, model, dtos, limit in (
+        ("okresy", RuianOkres, state.okresy, _MAX_UBYTEK_OKRESU),
+        ("kraje", RuianKraj, state.kraje, _MAX_UBYTEK_KRAJU),
+    ):
+        if not dtos:
+            continue
+        chybi = len(set(model.objects.values_list("kod", flat=True)) - {d.kod for d in dtos})
+        if chybi > limit:
+            problemy.append(f"{nazev}: ve zdroji chybí {chybi} proti DB, limit je {limit}")
+
+    if not problemy:
+        logger.debug(
+            "heslar.ruian_sync.syncer._zkontroluj_uplnost_zdroje.ok",
+            extra={
+                "run_id": run.pk,
+                "kraje": len(state.kraje),
+                "okresy": len(state.okresy),
+                "katastry": len(state.katastry),
+            },
+        )
+        return
+
+    duvod = "Neúplný zdroj plného stavu – " + "; ".join(problemy)
+    _append_run_note(run, duvod)
+    run.save()
+    logger.error(
+        "heslar.ruian_sync.syncer._zkontroluj_uplnost_zdroje.neuplny_zdroj",
+        extra={"run_id": run.pk, "problemy": problemy},
+    )
+    raise RuianNeuplnyZdrojError(duvod)
+
+
 def _apply_full_state(
     state: RuianFullState,
     run: RuianSyncRun,
 ) -> None:
     """
     Aplikuje plný stav (upserty + delete) ve dvou fázích.
+
+    Před oběma fázemi běží :func:`_zkontroluj_uplnost_zdroje`, která useknutý
+    (neprázdný, ale neúplný) vstup zastaví **dřív, než se cokoli změní**.
 
     **Fáze 1 – upserty** v pořadí kraj → okres → katastr (zaručí, že nadřazený
     prvek existuje, než dítě upraví svůj FK). Při této fázi se vazby
@@ -185,7 +287,11 @@ def _apply_full_state(
 
     :param state: Plný stav prvků RÚIAN.
     :param run: Audit záznam, do kterého se zapisují countery.
+    :raises RuianNeuplnyZdrojError: Když zdroj neprojde kontrolou úplnosti.
     """
+    # Nejdřív validace zdroje – teprve když projde, smí se sáhnout na data.
+    _zkontroluj_uplnost_zdroje(state, run)
+
     # Výchozí pokrytí pro závěrečnou kontrolu díry (viz _zkontroluj_pokryti).
     plocha_pred = _soucet_plochy_katastru()
 
@@ -312,7 +418,12 @@ def _apply_full_state(
 # ---------------------------------------------------------------------------
 
 
-def _apply_changes(events: Iterable[RuianChangeEvent], run: RuianSyncRun) -> Set[int]:
+def _apply_changes(
+    events: Iterable[RuianChangeEvent],
+    run: RuianSyncRun,
+    *,
+    vynutit_metadata: bool = False,
+) -> Set[int]:
     """
     Aplikuje sekvenci :class:`RuianChangeEvent` na DB ve dvou fázích.
 
@@ -329,6 +440,8 @@ def _apply_changes(events: Iterable[RuianChangeEvent], run: RuianSyncRun) -> Set
 
     :param events: Iterable událostí ze změnového VFR.
     :param run: Audit záznam, do kterého se zapisují countery.
+    :param vynutit_metadata: Vynutí přegenerování metadat i u prvků, jejichž
+        data se proti databázi nezměnila – viz :func:`sync_delta`.
 
         :return: Množina ``kod`` katastrů, u kterých došlo ke změně polygonu
             ``hranice`` (= kandidáti pro spatial reassign). Mazané katastry
@@ -351,13 +464,15 @@ def _apply_changes(events: Iterable[RuianChangeEvent], run: RuianSyncRun) -> Set
     for ev in bucket[LEVEL_KRAJ]:
         if ev.event_type == EVENT_UPSERT:
             existing_kraj = RuianKraj.objects.filter(kod=ev.kod).first() if ev.kod in db_kraj_codes else None
-            if _upsert_kraj(existing_kraj, ev.payload):
+            if _upsert_kraj(existing_kraj, ev.payload, vynutit_metadata=vynutit_metadata):
                 run.kraj_upserts += 1
 
     db_okres_codes = set(RuianOkres.objects.values_list("kod", flat=True))
     for ev in bucket[LEVEL_OKRES]:
         if ev.event_type == EVENT_UPSERT:
-            if _upsert_okres(_najdi_okres_k_upsertu(db_okres_codes, ev.kod), ev.payload):
+            if _upsert_okres(
+                _najdi_okres_k_upsertu(db_okres_codes, ev.kod), ev.payload, vynutit_metadata=vynutit_metadata
+            ):
                 run.okres_upserts += 1
 
     hranice_changed_kody: Set[int] = set()
@@ -373,7 +488,7 @@ def _apply_changes(events: Iterable[RuianChangeEvent], run: RuianSyncRun) -> Set
                 if ev.kod in db_katastr_codes
                 else None
             )
-            changed, hranice_changed = _upsert_katastr(existing, ev.payload, run)
+            changed, hranice_changed = _upsert_katastr(existing, ev.payload, run, vynutit_metadata=vynutit_metadata)
             if changed:
                 run.katastr_upserts += 1
             if hranice_changed:
@@ -413,7 +528,12 @@ def _apply_changes(events: Iterable[RuianChangeEvent], run: RuianSyncRun) -> Set
 
 
 @transaction.atomic
-def _upsert_kraj(existing: Optional[RuianKraj], dto: RuianKrajDTO) -> bool:
+def _upsert_kraj(
+    existing: Optional[RuianKraj],
+    dto: RuianKrajDTO,
+    *,
+    vynutit_metadata: bool = False,
+) -> bool:
     """
     Vytvoří nebo aktualizuje :class:`RuianKraj`.
 
@@ -481,7 +601,14 @@ def _upsert_kraj(existing: Optional[RuianKraj], dto: RuianKrajDTO) -> bool:
         )
         existing.hranice = new_hr
         changed = True
-    if changed:
+    if changed or vynutit_metadata:
+        # ``vynutit_metadata`` řeší rozpad DB a Fedory po neúspěšném dni:
+        # ``save()`` commitne PostgreSQL a metadata se do Fedory posílají až
+        # z ``transaction.on_commit`` callbacku v ``heslar.signals``. Když ten
+        # callback selže, databáze změnu **má**, repozitář ne. Při opakování
+        # dne by se DTO rovnalo řádku v DB, ``changed`` by vyšlo ``False``
+        # a ``save()`` by se nezavolal – Fedora by zůstala zastaralá natrvalo.
+        # Vynucený zápis je proto jediná cesta, jak metadata dohnat.
         existing.save()
     return changed
 
@@ -611,7 +738,12 @@ def _smaz_fedora_kontejner_okresu(stary_kod: int) -> None:
 
 
 @transaction.atomic
-def _upsert_okres(existing: Optional[RuianOkres], dto: RuianOkresDTO) -> bool:
+def _upsert_okres(
+    existing: Optional[RuianOkres],
+    dto: RuianOkresDTO,
+    *,
+    vynutit_metadata: bool = False,
+) -> bool:
     """
     Vytvoří nebo aktualizuje :class:`RuianOkres`.
 
@@ -713,7 +845,14 @@ def _upsert_okres(existing: Optional[RuianOkres], dto: RuianOkresDTO) -> bool:
         )
         existing.hranice = new_hr
         changed = True
-    if changed:
+    if changed or vynutit_metadata:
+        # ``vynutit_metadata`` řeší rozpad DB a Fedory po neúspěšném dni:
+        # ``save()`` commitne PostgreSQL a metadata se do Fedory posílají až
+        # z ``transaction.on_commit`` callbacku v ``heslar.signals``. Když ten
+        # callback selže, databáze změnu **má**, repozitář ne. Při opakování
+        # dne by se DTO rovnalo řádku v DB, ``changed`` by vyšlo ``False``
+        # a ``save()`` by se nezavolal – Fedora by zůstala zastaralá natrvalo.
+        # Vynucený zápis je proto jediná cesta, jak metadata dohnat.
         existing.save()
     return changed
 
@@ -758,11 +897,64 @@ def _delete_okres(okres: RuianOkres, run: Optional[RuianSyncRun] = None) -> bool
     return True
 
 
+def _dohledej_okres_prostorove(dto: RuianKatastrDTO) -> Optional[RuianOkres]:
+    """
+    Dohledá okres nového katastru podle jeho definičního bodu.
+
+    Denní změnový soubor odkazuje okres katastru přes obec. Když obec ve
+    stejném souboru není, :func:`~heslar.ruian_sync.vfr_parser._parse_katastr_dto`
+    doplní ``okres_kod=0`` s tím, že okres dohledá syncer. U **existujícího**
+    katastru se ponechá stávající okres, u **nového** ale žádný není a cizí
+    klíč je ``NOT NULL``.
+
+    Zkusí se proto prostorová cesta. Katastr z principu leží celý uvnitř
+    jednoho okresu, takže je jednoznačná:
+
+    1. okres, jehož hranice obsahuje definiční bod nového katastru,
+    2. když okresy hranice nemají (nejsou z RÚIAN naplněné), okres katastru,
+       jehož hranice ten bod obsahuje.
+
+    :param dto: Data nového katastru ze změnového souboru.
+    :return: Nalezený :class:`RuianOkres`, nebo ``None`` když katastr nemá
+        definiční bod nebo bod neleží v žádné známé hranici.
+    """
+    bod = _geos_or_none(dto.definicni_bod_wkt)
+    if bod is None:
+        return None
+    okres = RuianOkres.objects.filter(hranice__contains=bod).first()
+    zdroj = "hranice okresu"
+    if okres is None:
+        sousedni = (
+            RuianKatastr.objects.filter(hranice__contains=bod).exclude(kod=dto.kod).select_related("okres").first()
+        )
+        if sousedni is not None:
+            okres = sousedni.okres
+            zdroj = f"hranice katastru {sousedni.kod}"
+    if okres is None:
+        logger.error(
+            "heslar.ruian_sync.syncer._dohledej_okres_prostorove.nenalezen",
+            extra={"katastr_kod": dto.kod, "bod": dto.definicni_bod_wkt},
+        )
+        return None
+    logger.warning(
+        "heslar.ruian_sync.syncer._dohledej_okres_prostorove.ok",
+        extra={
+            "katastr_kod": dto.kod,
+            "okres_kod": okres.kod,
+            "okres_nazev": okres.nazev,
+            "zdroj": zdroj,
+        },
+    )
+    return okres
+
+
 @transaction.atomic
 def _upsert_katastr(
     existing: Optional[RuianKatastr],
     dto: RuianKatastrDTO,
     run: RuianSyncRun,
+    *,
+    vynutit_metadata: bool = False,
 ) -> Tuple[bool, bool]:
     """
     Vytvoří nebo aktualizuje :class:`RuianKatastr`.
@@ -783,13 +975,20 @@ def _upsert_katastr(
         hranice se objevuje v DB).
     """
     okres = RuianOkres.objects.filter(kod=dto.okres_kod).first()
+    if existing is None and okres is None:
+        okres = _dohledej_okres_prostorove(dto)
     if existing is None:
         if okres is None:
+            # Nový katastr bez okresu nelze uložit – FK je NOT NULL. Dřív se
+            # jen zalogoval ERROR a vrátilo (False, False), jenže běh dne pak
+            # doběhl jako úspěšný, kotva se posunula a katastr se už nikdy
+            # nezaložil ani nezopakoval. Proto se místo toho vyhodí výjimka:
+            # den skončí jako failed a další spuštění cronu ho zkusí znovu.
             logger.error(
                 "heslar.ruian_sync.syncer._upsert_katastr.missing_okres",
                 extra={"katastr_kod": dto.kod, "okres_kod": dto.okres_kod},
             )
-            return (False, False)
+            raise RuianMissingMandatoryFieldError("katastr", dto.kod, ["okres"])
         katastr = RuianKatastr(
             kod=dto.kod,
             nazev=dto.nazev,
@@ -837,7 +1036,8 @@ def _upsert_katastr(
     if geometry_changed:
         existing.pian = None  # FK pian_id → NULL, samotný PIAN zůstává
 
-    if changed:
+    if changed or vynutit_metadata:
+        # Vynucený zápis při opakování neúspěšného dne – viz ``_upsert_kraj``.
         existing.save()
 
     if name_changed:
@@ -874,6 +1074,9 @@ def _upsert_katastr(
 #: nově padá do polygonu změněného katastru. ``katastr.hranice`` je od
 #: migrace 0013 v EPSG:5514; join proti ``projekt.geom_sjtsk`` (5514)
 #: drží obě strany v jednom CRS a využívá spatial index.
+#:
+#: M2M ``projekt.katastry`` tu vědomě není: podle zadání issue #372 se další
+#: katastry projektu při změně hranic nemění, mění se jen hlavní katastr.
 _SQL_PROJEKT_CANDIDATES = """
     SELECT DISTINCT p.id
     FROM projekt p
@@ -887,11 +1090,18 @@ _SQL_PROJEKT_CANDIDATES = """
 #: změněného katastru. Používá ``pian.geom_sjtsk`` (5514) místo
 #: ``pian.geom`` (4326) — obě strany intersectu v jednom CRS.
 #:
-#: Query je rozdělená na dvě UNION větve místo ``OR EXISTS``: Postgres
+#: Třetí UNION větev přidává AZ navázané na změněný katastr jen přes M2M
+#: ``az.katastry`` (through ``archeologicky_zaznam_katastr``). Když se
+#: katastr zmenší tak, že už PIAN neprotíná, druhá větev takový AZ nevrátí
+#: a první taky ne (hlavní katastr má jiný) – vazba i metadata by zůstaly
+#: zastaralé. ``reassign_az`` → ``_update_az_katastry_if_changed`` M2M
+#: přepočítá a odebere katastr, který už se PIANů netýká.
+#:
+#: Query je rozdělená na UNION větve místo ``OR EXISTS``: Postgres
 #: kombinaci ``JOIN + OR EXISTS`` optimalizuje špatně (v testu 300+ s
 #: timeout na 17 katastrů), zatímco UNION se dvěma nezávisle
 #: optimalizovanými JOIN větvemi doběhne za ~2 s. Parametr ``%s`` musí
-#: být předán **dvakrát** (jednou pro každou větev).
+#: být předán **třikrát** (jednou pro každou větev).
 _SQL_AZ_CANDIDATES = """
     SELECT az.id
     FROM archeologicky_zaznam az
@@ -905,6 +1115,11 @@ _SQL_AZ_CANDIDATES = """
     JOIN ruian_katastr k
       ON k.kod = ANY(%s::int[]) AND ST_Intersects(k.hranice, p.geom_sjtsk)
     WHERE p.geom_sjtsk IS NOT NULL
+    UNION
+    SELECT DISTINCT azk.archeologicky_zaznam_id
+    FROM archeologicky_zaznam_katastr azk
+    JOIN ruian_katastr k ON azk.katastr_id = k.id
+    WHERE k.kod = ANY(%s::int[])
 """
 
 #: SQL kandidátů SN: SN s vyplněným ``geom_sjtsk`` (5514) ukazující na
@@ -1002,10 +1217,10 @@ def _reassign_records_in_changed_katastry_inner(kody_list: list, run: RuianSyncR
             run.affected_projekt += 1
 
     # --- AZ ---
-    # SQL má dvě UNION větve, každá s vlastním ``ANY(%s::int[])`` – předáváme
-    # ``kody_list`` dvakrát (jednou pro každou větev, viz komentář u SQL).
+    # SQL má tři UNION větve, každá s vlastním ``ANY(%s::int[])`` – předáváme
+    # ``kody_list`` třikrát (jednou pro každou větev, viz komentář u SQL).
     with connection.cursor() as cursor:
-        cursor.execute(_SQL_AZ_CANDIDATES, [kody_list, kody_list])
+        cursor.execute(_SQL_AZ_CANDIDATES, [kody_list, kody_list, kody_list])
         az_ids = [row[0] for row in cursor.fetchall()]
     print(f"  AZ kandidátů:      {len(az_ids)}", flush=True)
     for az in ArcheologickyZaznam.objects.filter(pk__in=az_ids).select_related("hlavni_katastr"):
@@ -1057,7 +1272,8 @@ def _delete_katastr(
 
     1. Projekt: union query (hlavni_katastr nebo M2M) → ``reassign_projekt``
        pro hlavní katastr + ``reassign_projekt_dalsi_katastr`` pro M2M;
-       oba kroky zapisují do Historie a aktualizují Fedoru.
+       oba kroky aktualizují Fedoru a své popisy změn odkládají do
+       společného ``historie_parts``, takže vznikne jen jeden řádek Historie.
     2. AZ: union query → ``reassign_az`` přepočítá v jednom průchodu
        ``hlavni_katastr`` i M2M; Historie a Fedora jsou řešeny uvnitř
        ``reassign_az`` resp. ``_update_az_katastry_if_changed``.
@@ -1090,18 +1306,25 @@ def _delete_katastr(
     )
     for projekt in affected_projekty:
         hlavni_was_deleted = projekt.hlavni_katastr_id == katastr.pk
+        # Popisy obou kroků se sbírají do jednoho seznamu a zapíší se do
+        # Historie až jedním voláním na konci. Jinak by projekt, kterému se
+        # mění hlavní katastr i M2M, dostal dva samostatné řádky historie
+        # o téže události.
+        historie_parts: List[str] = []
         if hlavni_was_deleted:
             try:
                 reassign_mod.reassign_projekt(
                     projekt,
                     fallback_point=fallback_point,
                     exclude_kod=katastr_kod,
+                    historie_parts=historie_parts,
                 )
             except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
                 logger.error(
                     "heslar.ruian_sync.syncer._delete_katastr.reassign_projekt_fedora_error",
                     extra={"katastr_kod": katastr.kod, "ident_cely": projekt.ident_cely, "error": str(err)[:500]},
                 )
+                reassign_mod.log_katastr_change(projekt.historie_id, *historie_parts)
                 continue
         try:
             reassign_mod.reassign_projekt_dalsi_katastr(
@@ -1109,22 +1332,25 @@ def _delete_katastr(
                 katastr,
                 fallback_point=fallback_point,
                 exclude_kod=katastr_kod,
+                historie_parts=historie_parts,
             )
         except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
             logger.error(
                 "heslar.ruian_sync.syncer._delete_katastr.reassign_projekt_dalsi_fedora_error",
                 extra={"katastr_kod": katastr.kod, "ident_cely": projekt.ident_cely, "error": str(err)[:500]},
             )
+        # I při selhání druhého kroku se zapíše to, co se skutečně povedlo.
+        reassign_mod.log_katastr_change(projekt.historie_id, *historie_parts)
         run.affected_projekt += 1
 
     # ---- AZ: hlavní katastr + M2M dalších katastrů ----
     #
     # Union query zachytí AZ kde mazaný katastr figuruje jako hlavní NEBO jako
     # jeden z dalších (M2M). reassign_az → _update_az_katastry_if_changed
-    # přepočítá obojí v jednom průchodu: hlavni_katastr i M2M sadu, zapíše
-    # historii pro M2M přes _log_az_ostatni_change (to_remove obsahuje mazaný
-    # katastr, to_add jeho náhradníky). _log_katastr_change se volá navíc
-    # jen tehdy, když se měnil i hlavni_katastr.
+    # přepočítá obojí v jednom průchodu: hlavni_katastr i M2M sadu a zapíše
+    # jeden řádek historie přes log_katastr_change – poznámka spojuje popis
+    # změny hlavního katastru s popisem změny M2M (to_remove obsahuje mazaný
+    # katastr, to_add jeho náhradníky).
     #
     # AZ s celokatastr DJ nebo bez DJ nemají PIAN intersect, takže je
     # reassign_az řeší fallback větví: hlavní katastr se určí z definičního
@@ -1797,7 +2023,7 @@ def _log_katastr_rename(katastr: RuianKatastr, old_nazev: str, new_nazev: str) -
     counts = {"projekt": 0, "az": 0, "sn": 0, "neident_akce": 0}
 
     for projekt in Projekt.objects.filter(Q(hlavni_katastr=katastr) | Q(katastry=katastr)).distinct():
-        reassign_mod._log_katastr_change(projekt.historie_id, old_nazev, new_nazev)
+        reassign_mod.log_katastr_change(projekt.historie_id, old_nazev, new_nazev)
         fedora_tx = FedoraTransaction()
         success = False
         try:
@@ -1814,7 +2040,7 @@ def _log_katastr_rename(katastr: RuianKatastr, old_nazev: str, new_nazev: str) -
         counts["projekt"] += 1
 
     for az in ArcheologickyZaznam.objects.filter(Q(hlavni_katastr=katastr) | Q(katastry=katastr)).distinct():
-        reassign_mod._log_katastr_change(az.historie_id, old_nazev, new_nazev)
+        reassign_mod.log_katastr_change(az.historie_id, old_nazev, new_nazev)
         fedora_tx = FedoraTransaction()
         success = False
         try:
@@ -1831,7 +2057,7 @@ def _log_katastr_rename(katastr: RuianKatastr, old_nazev: str, new_nazev: str) -
         counts["az"] += 1
 
     for sn in SamostatnyNalez.objects.filter(katastr=katastr):
-        reassign_mod._log_katastr_change(sn.historie_id, old_nazev, new_nazev)
+        reassign_mod.log_katastr_change(sn.historie_id, old_nazev, new_nazev)
         fedora_tx = FedoraTransaction()
         success = False
         try:

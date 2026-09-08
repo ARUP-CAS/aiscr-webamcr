@@ -128,9 +128,14 @@ class Command(BaseCommand):
                     try:
                         fedora_transaction.rollback_transaction()
                     except Exception:
-                        logger.warning(
+                        # ERROR, ne WARNING: neúspěšný rollback nechává ve Fedoře
+                        # viset otevřenou transakci, kterou už nikdo neuzavře.
+                        logger.error(
                             "core.management.commands.generate_metadata.rollback_failed",
-                            extra={"pk": getattr(obj, "pk", None)},
+                            extra={
+                                "pk": getattr(obj, "pk", None),
+                                "transaction_uid": getattr(fedora_transaction, "uid", None),
+                            },
                             exc_info=True,
                         )
                 attempt += 1

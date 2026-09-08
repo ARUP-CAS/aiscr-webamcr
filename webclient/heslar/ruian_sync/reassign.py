@@ -19,6 +19,7 @@ batch refresh celé DB. Implementuje pravidla z issue #372:
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import Dict, Iterable, Iterator, List, Optional, Tuple
 
@@ -32,7 +33,7 @@ from core.repository_connector import (
 )
 from core.utils import get_cadastre_from_point
 from dj.models import DokumentacniJednotka
-from django.db import connection
+from django.db import connection, transaction
 from heslar import hesla_dynamicka
 from heslar.hesla_dynamicka import TYP_DJ_KATASTR
 from heslar.models import RuianKatastr
@@ -138,62 +139,113 @@ def _close_or_rollback(fedora_tx: FedoraTransaction, success: bool) -> None:
         )
 
 
-def _log_katastr_change(historie_vazba_id: Optional[int], old_nazev: str, new_nazev: str) -> None:
+@contextlib.contextmanager
+def _db_a_fedora(ident_cely: str):
     """
-    Zapíše záznam do :class:`~historie.models.Historie` při změně katastru záznamu.
+    Drží DB zápisy reassignu rollbackovatelné, dokud Fedora neuspěje.
+
+    Bez toho běžely změny FK, M2M i řádek historie v autocommitu **před**
+    vznikem :class:`FedoraTransaction`. Když pak selhalo vytvoření transakce,
+    ``save()`` nebo commit, volající sice chybu odchytil, ale už zapsané
+    vazby nedokázal vrátit – Postgres, historie a Fedora se rozešly.
+
+    Blok proto obaluje celý zápis do ``transaction.atomic()``: výjimka
+    odkudkoli (včetně ``mark_transaction_as_closed`` ve ``finally``) zruší
+    i databázovou část.
+
+    Zbývá jeden případ, který takhle ošetřit nejde: záznamy se
+    ``close_active_transaction_when_finished = True`` commitují Fedoru už
+    uvnitř ``post_save`` signálu. Když po něm cokoli spadne, Fedora zápis má
+    a DB se vrátí. Takový rozpad se proto loguje na ERROR s ``ident_cely``
+    a UID transakce, aby se dal dohledat a ručně srovnat.
+
+    :param ident_cely: Identifikátor zpracovávaného záznamu (do logu).
+    :return: Generátor vracející otevřenou :class:`FedoraTransaction`;
+        volající uvnitř bloku provede DB zápisy i ``save()``.
+    """
+    fedora_tx = FedoraTransaction()
+    success = False
+    try:
+        with transaction.atomic():
+            try:
+                yield fedora_tx
+                success = True
+            finally:
+                _close_or_rollback(fedora_tx, success)
+    except Exception:
+        if fedora_tx.status is FedoraTransactionStatus.COMMITTED:
+            logger.error(
+                "heslar.ruian_sync.reassign._db_a_fedora.rozpad_db_fedora",
+                extra={
+                    "ident_cely": ident_cely,
+                    "transaction": getattr(fedora_tx, "uid", None),
+                    "reason": (
+                        "Fedora transakce uz byla commitnuta, ale databazova cast se "
+                        "rollbackla - repozitar a DB se u tohoto zaznamu rozesly."
+                    ),
+                },
+            )
+        raise
+
+
+def _popis_zmeny_hlavniho(old_nazev: str, new_nazev: str) -> str:
+    """
+    Sestaví textový popis změny hlavního katastru pro poznámku v historii.
+
+    :param old_nazev: Název původního hlavního katastru (``"?"`` když není znám).
+    :param new_nazev: Název nového hlavního katastru.
+    :return: Text ve tvaru ``"Jehnědí -> Horní Sloupnice"``.
+    """
+    return f"{old_nazev} -> {new_nazev}"
+
+
+def _popis_zmeny_ostatnich(to_add: set, to_remove: set) -> str:
+    """
+    Sestaví textový popis změny M2M ``katastry`` pro poznámku v historii.
+
+    Přidané katastry jsou uvozeny ``+``, odebrané ``-``.
+
+    :param to_add: Množina PK katastrů, které byly přidány do M2M.
+    :param to_remove: Množina PK katastrů, které byly odebrány z M2M.
+    :return: Text ve tvaru ``"+Jehnědí, -Horní Sloupnice"``, nebo ``""``
+        když se nic nemění.
+    """
+    if not to_add and not to_remove:
+        return ""
+    names = {k.pk: k.nazev for k in RuianKatastr.objects.filter(pk__in=to_add | to_remove).only("pk", "nazev")}
+    parts = [f"+{names.get(pk, pk)}" for pk in sorted(to_add)]
+    parts += [f"-{names.get(pk, pk)}" for pk in sorted(to_remove)]
+    return ", ".join(parts)
+
+
+def log_katastr_change(historie_vazba_id: Optional[int], *casti: str) -> None:
+    """
+    Zapíše **jeden** záznam do :class:`~historie.models.Historie` o změně katastrů.
+
+    Volající předá jednotlivé části poznámky – typicky změnu hlavního katastru
+    (:func:`_popis_zmeny_hlavniho`) a změnu M2M dalších katastrů
+    (:func:`_popis_zmeny_ostatnich`). Když se změní obojí, vznikne stále jen
+    jeden řádek historie, ne dva samostatné; prázdné části se ignorují.
 
     Používá se v batch reassignu (:func:`reassign_all`) a v cíleném reassignu
     po změně hranic katastru. Vzor je shodný s
     :func:`heslar.ruian_sync.syncer._log_katastr_change_for_record`.
 
     :param historie_vazba_id: PK :class:`~historie.models.HistorieVazby` záznamu.
-    :param old_nazev: Název původního katastru (použije ``"?"`` pokud je prázdný).
-    :param new_nazev: Název nového katastru.
+    :param casti: Textové části poznámky; prázdné řetězce se přeskočí.
     """
-    if historie_vazba_id is None:
+    poznamka = ", ".join(cast for cast in casti if cast)
+    if historie_vazba_id is None or not poznamka:
         return
     Historie.objects.create(
         typ_zmeny=ZMENA_KATASTRU,
         uzivatel=User.objects.get(pk=hesla_dynamicka.ADMIN_USER),
-        poznamka=f"{old_nazev} -> {new_nazev}",
+        poznamka=poznamka,
         vazba_id=historie_vazba_id,
     )
     logger.debug(
-        "heslar.ruian_sync.reassign._log_katastr_change",
-        extra={"vazba_id": historie_vazba_id, "old": old_nazev, "new": new_nazev},
-    )
-
-
-def _log_az_ostatni_change(
-    historie_vazba_id: Optional[int],
-    to_add: set,
-    to_remove: set,
-) -> None:
-    """
-    Zapíše agregovaný záznam do :class:`~historie.models.Historie` při změně
-    M2M ``katastry`` archeologického záznamu.
-
-    Přidané katastry jsou uvozeny ``+``, odebrané ``-``.
-    Příklad poznámky: ``"+Jehnědí, -Horní Sloupnice"``.
-
-    :param historie_vazba_id: PK :class:`~historie.models.HistorieVazby` záznamu.
-    :param to_add: Množina PK katastrů, které byly přidány do M2M.
-    :param to_remove: Množina PK katastrů, které byly odebrány z M2M.
-    """
-    if not historie_vazba_id or (not to_add and not to_remove):
-        return
-    names = {k.pk: k.nazev for k in RuianKatastr.objects.filter(pk__in=to_add | to_remove).only("pk", "nazev")}
-    parts = [f"+{names.get(pk, pk)}" for pk in sorted(to_add)]
-    parts += [f"-{names.get(pk, pk)}" for pk in sorted(to_remove)]
-    Historie.objects.create(
-        typ_zmeny=ZMENA_KATASTRU,
-        uzivatel=User.objects.get(pk=hesla_dynamicka.ADMIN_USER),
-        poznamka=", ".join(parts),
-        vazba_id=historie_vazba_id,
-    )
-    logger.debug(
-        "heslar.ruian_sync.reassign._log_az_ostatni_change",
-        extra={"vazba_id": historie_vazba_id, "poznamka": ", ".join(parts)},
+        "heslar.ruian_sync.reassign.log_katastr_change",
+        extra={"vazba_id": historie_vazba_id, "poznamka": poznamka},
     )
 
 
@@ -340,16 +392,16 @@ def _update_az_katastry_if_changed(
     old_hlavni_nazev = az.hlavni_katastr.nazev if hlavni_changed and az.hlavni_katastr else "?"
     to_add: set = set()
     to_remove: set = set()
+    popis_hlavni = ""
     if hlavni_changed:
         new_hlavni_nazev = RuianKatastr.objects.values_list("nazev", flat=True).get(pk=new_hlavni_id)
-        _log_katastr_change(az.historie_id, old_hlavni_nazev, new_hlavni_nazev)
+        popis_hlavni = _popis_zmeny_hlavniho(old_hlavni_nazev, new_hlavni_nazev)
     if ostatni_changed:
         to_add = new_ostatni - current_ostatni
         to_remove = current_ostatni - new_ostatni
-        _log_az_ostatni_change(az.historie_id, to_add, to_remove)
-    fedora_tx = FedoraTransaction()
-    success = False
-    try:
+    with _db_a_fedora(az.ident_cely) as fedora_tx:
+        # Jeden řádek historie i když se mění hlavní katastr i M2M zároveň.
+        log_katastr_change(az.historie_id, popis_hlavni, _popis_zmeny_ostatnich(to_add, to_remove))
         if hlavni_changed:
             az.hlavni_katastr_id = new_hlavni_id
         if ostatni_changed:
@@ -359,9 +411,6 @@ def _update_az_katastry_if_changed(
                 az.katastry.remove(*to_remove)
         az.active_transaction = fedora_tx
         az.save()
-        success = True
-    finally:
-        _close_or_rollback(fedora_tx, success)
     return True
 
 
@@ -475,15 +524,13 @@ def reassign_az(
     if not hlavni_changed and not to_remove:
         return new_katastr
 
+    popis_hlavni = ""
     if hlavni_changed:
         old_nazev = az.hlavni_katastr.nazev if az.hlavni_katastr else "?"
-        _log_katastr_change(az.historie_id, old_nazev, new_katastr.nazev)
-    if to_remove:
-        _log_az_ostatni_change(az.historie_id, to_add, to_remove)
-
-    fedora_tx = FedoraTransaction()
-    success = False
-    try:
+        popis_hlavni = _popis_zmeny_hlavniho(old_nazev, new_katastr.nazev)
+    popis_ostatni = _popis_zmeny_ostatnich(to_add, to_remove) if to_remove else ""
+    with _db_a_fedora(az.ident_cely) as fedora_tx:
+        log_katastr_change(az.historie_id, popis_hlavni, popis_ostatni)
         if hlavni_changed:
             az.hlavni_katastr = new_katastr
         if to_add:
@@ -492,9 +539,6 @@ def reassign_az(
             az.katastry.remove(*to_remove)
         az.active_transaction = fedora_tx
         az.save()
-        success = True
-    finally:
-        _close_or_rollback(fedora_tx, success)
     return new_katastr
 
 
@@ -524,6 +568,7 @@ def reassign_projekt(
     fallback_point=None,
     *,
     exclude_kod: Optional[int] = None,
+    historie_parts: Optional[List[str]] = None,
 ) -> Optional[RuianKatastr]:
     """
     Přepočítá ``hlavni_katastr`` projektu.
@@ -541,6 +586,11 @@ def reassign_projekt(
         Typicky definiční bod původního katastru z ``RuianKatastr.definicni_bod``.
     :param exclude_kod: Volitelný kód katastru vyloučený ze spatial query
         (viz :func:`reassign_az`).
+    :param historie_parts: Volitelný akumulátor popisů změn. Když je předán,
+        funkce do něj popis jen připojí a **nezapisuje** vlastní řádek
+        historie – zápis provede volající (viz :func:`_delete_katastr`
+        v syncer modulu), aby změna hlavního katastru a změna M2M dalších
+        katastrů skončily v jednom záznamu, ne ve dvou.
 
         :return: Nový ``hlavni_katastr`` po přepočtu nebo ``None``.
     """
@@ -560,10 +610,10 @@ def reassign_projekt(
 
     if new_katastr.pk != projekt.hlavni_katastr_id:
         old_nazev = projekt.hlavni_katastr.nazev if projekt.hlavni_katastr else "?"
-        _log_katastr_change(projekt.historie_id, old_nazev, new_katastr.nazev)
-        fedora_tx = FedoraTransaction()
-        success = False
-        try:
+        popis = _popis_zmeny_hlavniho(old_nazev, new_katastr.nazev)
+        with _db_a_fedora(projekt.ident_cely) as fedora_tx:
+            if historie_parts is None:
+                log_katastr_change(projekt.historie_id, popis)
             projekt.hlavni_katastr = new_katastr
             projekt.active_transaction = fedora_tx
             # Bez tohoto flagu ``projekt.signals.projekt_post_save`` přeskočí
@@ -574,9 +624,10 @@ def reassign_projekt(
             # úklidu by skončil zároveň jako hlavní i jako položka M2M.
             projekt.close_active_transaction_when_finished = True
             projekt.save()
-            success = True
-        finally:
-            _close_or_rollback(fedora_tx, success)
+        if historie_parts is not None:
+            # Popis se přidá až po úspěšném zápisu – při selhání se řádek
+            # historie nezapíše vůbec, stejně jako v samostatné větvi výše.
+            historie_parts.append(popis)
     return new_katastr
 
 
@@ -586,6 +637,7 @@ def reassign_projekt_dalsi_katastr(
     fallback_point=None,
     *,
     exclude_kod: Optional[int] = None,
+    historie_parts: Optional[List[str]] = None,
 ) -> None:
     """
     Nahradí mazaný katastr v M2M ``katastry`` projektu prostorovým náhradníkem.
@@ -603,6 +655,9 @@ def reassign_projekt_dalsi_katastr(
         (typicky definiční bod mazaného katastru z ``RuianKatastr.definicni_bod``).
     :param exclude_kod: Kód katastru vyloučený ze spatial query
         (viz :func:`reassign_az`).
+    :param historie_parts: Volitelný akumulátor popisů změn – viz
+        :func:`reassign_projekt`. Když je předán, řádek historie zapíše
+        volající jedním voláním :func:`log_katastr_change`.
     """
     logger.debug(
         "heslar.ruian_sync.reassign.reassign_projekt_dalsi_katastr.start",
@@ -622,24 +677,21 @@ def reassign_projekt_dalsi_katastr(
     if new_katastr is not None and new_katastr.pk not in current:
         to_add = {new_katastr.pk}
 
-    if to_add:
-        projekt.katastry.add(*to_add)
-    projekt.katastry.remove(old_katastr)
-
-    fedora_tx = FedoraTransaction()
-    success = False
-    try:
+    popis = _popis_zmeny_ostatnich(to_add, to_remove)
+    with _db_a_fedora(projekt.ident_cely) as fedora_tx:
+        if to_add:
+            projekt.katastry.add(*to_add)
+        projekt.katastry.remove(old_katastr)
+        if historie_parts is None:
+            log_katastr_change(projekt.historie_id, popis)
         projekt.active_transaction = fedora_tx
         # Viz komentář v ``reassign_projekt`` – bez flagu se v post_save
         # signálu neprovede odebrání hlavního katastru z M2M a projekt by
         # skončil s týmž katastrem v obou polích.
         projekt.close_active_transaction_when_finished = True
         projekt.save()
-        success = True
-    finally:
-        _close_or_rollback(fedora_tx, success)
-
-    _log_az_ostatni_change(projekt.historie_id, to_add, to_remove)
+    if historie_parts is not None and popis:
+        historie_parts.append(popis)
 
 
 def reassign_sn(
@@ -676,16 +728,11 @@ def reassign_sn(
 
     if new_katastr.pk != sn.katastr_id:
         old_nazev = sn.katastr.nazev if sn.katastr else "?"
-        _log_katastr_change(sn.historie_id, old_nazev, new_katastr.nazev)
-        fedora_tx = FedoraTransaction()
-        success = False
-        try:
+        with _db_a_fedora(sn.ident_cely) as fedora_tx:
+            log_katastr_change(sn.historie_id, _popis_zmeny_hlavniho(old_nazev, new_katastr.nazev))
             sn.katastr = new_katastr
             sn.active_transaction = fedora_tx
             sn.save()
-            success = True
-        finally:
-            _close_or_rollback(fedora_tx, success)
     return new_katastr
 
 
