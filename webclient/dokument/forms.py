@@ -513,14 +513,17 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
         :param required: Která pole jsou povinná.
         :param required_next: Která pole budou povinná v následující relaci.
         :param can_edit_datum_zverejneni: Zda lze editovat datum zveřejnění.
-        :param kwargs: Klíčové argumenty včetně create, region_not_required, allow_vlastni_ident
-            a region_zaznamu.
+        :param kwargs: Klíčové argumenty včetně create, allow_vlastni_ident a region_zaznamu.
         """
         create = kwargs.pop("create", None)
-        region_not_required = kwargs.pop("region_not_required", None)
         allow_vlastni_ident = kwargs.pop("allow_vlastni_ident", False)
         region_zaznamu = kwargs.pop("region_zaznamu", None)
         super(EditDokumentForm, self).__init__(*args, **kwargs)
+        # Regionální působnost určuje jen prefix identifikátoru přidělovaného při zápisu. Po vytvoření
+        # dokumentu ji už nelze změnit, takže pole dává smysl pouze ve formuláři pro zápis.
+        zapis_dokumentu = self.instance.pk is None
+        if not zapis_dokumentu:
+            del self.fields["region"]
         #: Řada odvozená z ručně zadaného identifikátoru; naplní ji ``clean_vlastni_ident_cely``.
         self.vlastni_ident_rada = None
         self.allow_vlastni_ident = allow_vlastni_ident
@@ -579,10 +582,12 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
                 Div("pristupnost", css_class="col-sm-6 col-lg-2"),
                 Div("licence", css_class="col-sm-6 col-lg-2"),
                 Div("datum_zverejneni", css_class="col-sm-6 col-lg-2"),
-                Div("region", style="display: none"),
                 css_class="row",
             ),
         )
+        if zapis_dokumentu:
+            # Hodnotu plní dialog pro výběr regionální působnosti, pole samotné zůstává skryté.
+            self.helper.layout[0].append(Div("region", style="display: none"))
         if allow_vlastni_ident:
             self.helper.layout[0].append(Div("pouzit_vlastni_ident", css_class="col-sm-6 col-lg-2"))
             self.helper.layout[0].append(Div("vlastni_ident_cely", css_class="col-sm-6 col-lg-2"))
@@ -618,10 +623,10 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
             .order_by("dokumentautor__poradi")
             .values_list("id", "vypis_cely")
         )
-        if region_not_required is True:
-            self.fields["region"].required = False
-        elif create:
-            self.fields["region"].required = True
+        if zapis_dokumentu:
+            # Dokument zapisovaný do projektu nebo archeologického záznamu přebírá region od něj,
+            # samostatně zapisovaný dokument jej musí mít zvolený.
+            self.fields["region"].required = region_zaznamu is None
 
     def clean(self):
         """

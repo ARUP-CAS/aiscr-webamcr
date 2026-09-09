@@ -19,6 +19,10 @@ import re
 SUFFIX_DIGIT_COUNT = 3
 #: Maximální počet souborů navázaných na jeden záznam.
 MAX_SUFFIX_NUMBER = 10**SUFFIX_DIGIT_COUNT - 1
+#: O kolik čísel nad nejvyšší obsazené sahá nabídka volných suffixů při přejmenování. Dává prostor
+#: pro přeuspořádání souborů (odložení na volnou pozici a zpět), aniž by nabídka narostla do stovek
+#: položek a znepřehlednila výběrové pole.
+SUFFIX_NABIDKA_REZERVA = 50
 
 _SUFFIX_REGEX = re.compile(r"^F(\d+)$")
 
@@ -94,18 +98,23 @@ def get_free_suffixes(navazany_objekt, current_soubor=None):
     """
     Vrátí seznam volných suffixů záznamu ve tvaru ``F001`` … ``F999``.
 
+    Nabízejí se všechna volná čísla až po :data:`SUFFIX_NABIDKA_REZERVA` nad nejvyšším obsazeným,
+    tedy jak mezery mezi obsazenými čísly, tak dost volných pozic nad nimi na přeuspořádání souborů.
+    Zbytek rozsahu až do ``F999`` se nenabízí, aby nabídka nenarostla do stovek položek.
+
     Platí shodně pro dokumenty (včetně 3D modelů) i samostatné nálezy. Suffix přejmenovávaného
     souboru se považuje za volný, aby jej bylo možné v nabídce ponechat; pokud jde o historický
     suffix (prázdný slot, písmeno nebo dvojciferné ``F01``), zařadí se na začátek nabídky.
 
     :param navazany_objekt: Dokument nebo samostatný nález, jehož soubory se zkoumají.
     :param current_soubor: Přejmenovávaný soubor (vyloučen z obsazených suffixů).
-    :return: Seznam volných suffixů ve vzestupném pořadí.
+    :return: Seznam volných suffixů ve vzestupném pořadí; prázdný, je-li záznam zcela zaplněný.
     """
     base = navazany_objekt.ident_cely.replace("-", "")
     obsazene = _obsazene_suffixy(navazany_objekt, base, current_soubor)
     obsazena = _obsazena_cisla(obsazene)
-    volne = [format_suffix(number) for number in range(1, MAX_SUFFIX_NUMBER + 1) if number not in obsazena]
+    horizont = min(max(obsazena, default=0) + SUFFIX_NABIDKA_REZERVA, MAX_SUFFIX_NUMBER)
+    volne = [format_suffix(number) for number in range(1, horizont + 1) if number not in obsazena]
     if current_soubor is not None:
         soucasny = get_soubor_suffix(current_soubor)
         if soucasny is not None and soucasny not in obsazene and soucasny not in volne:

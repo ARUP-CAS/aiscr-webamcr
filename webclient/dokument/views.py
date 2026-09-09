@@ -2622,7 +2622,6 @@ def zapsat(request, zaznam=None):
             create=True,
             required=required_fields,
             required_next=required_fields_next,
-            region_not_required=True if zaznam else None,
             allow_vlastni_ident=allow_vlastni_ident,
             region_zaznamu=region_zaznamu,
         )

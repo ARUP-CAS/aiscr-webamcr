@@ -84,15 +84,15 @@ class DokumentSuffixTest(SimpleTestCase):
         return record
 
     def test_free_suffixes_for_new_file(self):
-        """Obsazené F001 a F003 chybí, F002 a F999 jsou volné; prázdný slot ani písmena se nenabízejí."""
+        """Nabízí se mezera po chybějícím F002 i rezerva volných čísel nad nejvyšším obsazeným."""
         free = get_free_suffixes(self._record())
+        self.assertEqual(free[:3], ["F002", "F004", "F005"])
         self.assertNotIn("F001", free)
         self.assertNotIn("F003", free)
-        self.assertIn("F002", free)
-        self.assertIn("F999", free)
         self.assertNotIn("", free)
         self.assertNotIn("A", free)
-        self.assertEqual(free[0], "F002")
+        # Nejvyšší obsazené je F003, nabídka tedy sahá po F053.
+        self.assertEqual(free[-1], "F053")
 
     def test_current_suffix_is_offered(self):
         """Suffix přejmenovávaného souboru se považuje za volný (lze jej v nabídce ponechat)."""
@@ -107,9 +107,32 @@ class DokumentSuffixTest(SimpleTestCase):
         record = self._legacy_record()
         current = record.soubory.soubory.all()[1]  # CDL202500001A.jpg
         free = get_free_suffixes(record, current)
-        self.assertEqual(free[0], "A")
-        self.assertIn("F001", free)
+        self.assertEqual(free[:2], ["A", "F001"])
         self.assertNotIn("", free)
+
+    def test_offer_stays_short(self):
+        """Nabídka nepokrývá celý rozsah do F999, aby výběrové pole zůstalo použitelné."""
+        soubory = [_Soubor(f"CDL202500001F{number:03d}.jpg", number) for number in range(1, 51)]
+        record = _Record("C-DL-202500001", soubory)
+        for soubor in soubory:
+            soubor.vazba.navazany_objekt = record
+        free = get_free_suffixes(record)
+        self.assertEqual(free, [f"F{number:03d}" for number in range(51, 101)])
+
+    def test_offer_gives_room_for_reordering(self):
+        """Nad nejvyšším obsazeným číslem zůstává rezerva volných pozic pro přeuspořádání."""
+        record = _Record("C-DL-202500001", [])
+        self.assertEqual(get_free_suffixes(record), [f"F{number:03d}" for number in range(1, 51)])
+
+    def test_offer_never_exceeds_maximum(self):
+        """U záznamu s nejvyšším možným číslem nabídka nepřeteče za F999."""
+        soubory = [_Soubor("CDL202500001F999.jpg", 1)]
+        record = _Record("C-DL-202500001", soubory)
+        for soubor in soubory:
+            soubor.vazba.navazany_objekt = record
+        free = get_free_suffixes(record)
+        self.assertEqual(free[-1], "F998")
+        self.assertNotIn("F999", free)
 
     def test_next_name_starts_at_f001(self):
         """První soubor dokumentu dostane rovnou suffix F001 (#3421)."""
@@ -146,13 +169,11 @@ class FindSuffixTest(SimpleTestCase):
         return record
 
     def test_free_suffixes_for_new_file(self):
-        """Obsazené F001 a F003 chybí, F002 a F999 jsou volné."""
+        """Nabízí se mezera po chybějícím F002 i rezerva volných čísel nad nejvyšším obsazeným."""
         free = get_free_suffixes(self._record())
+        self.assertEqual(free[:3], ["F002", "F004", "F005"])
         self.assertNotIn("F001", free)
         self.assertNotIn("F003", free)
-        self.assertIn("F002", free)
-        self.assertIn("F999", free)
-        self.assertEqual(free[0], "F002")
 
     def test_current_suffix_is_offered(self):
         """Suffix přejmenovávaného nálezového souboru je v nabídce."""
@@ -173,18 +194,16 @@ class FindSuffixTest(SimpleTestCase):
     def test_two_digit_suffix_blocks_same_number(self):
         """Historické F01 obsazuje stejné číslo jako F001, takže se F001 nenabízí jako volné."""
         free = get_free_suffixes(self._legacy_record())
+        self.assertEqual(free[0], "F003")
         self.assertNotIn("F001", free)
         self.assertNotIn("F002", free)
-        self.assertEqual(free[0], "F003")
 
     def test_renamed_two_digit_suffix_can_be_normalized(self):
         """U přejmenovávaného souboru se nabízí jak jeho historický suffix, tak trojciferná podoba."""
         record = self._legacy_record()
         current = record.soubory.soubory.all()[0]  # CPD2025F01.jpg
         free = get_free_suffixes(record, current)
-        self.assertEqual(free[0], "F01")
-        self.assertIn("F001", free)
-        self.assertNotIn("F002", free)
+        self.assertEqual(free[:3], ["F01", "F001", "F003"])
 
     def test_next_name_continues_after_two_digit_suffix(self):
         """Číslování navazuje i na starší dvojciferné suffixy nálezů (``F01`` … ``F99``)."""

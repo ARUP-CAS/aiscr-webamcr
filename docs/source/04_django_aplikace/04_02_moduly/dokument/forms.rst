@@ -66,8 +66,7 @@ Třídy
       :param required: Která pole jsou povinná.
       :param required_next: Která pole budou povinná v následující relaci.
       :param can_edit_datum_zverejneni: Zda lze editovat datum zveřejnění.
-      :param kwargs: Klíčové argumenty včetně create, region_not_required, allow_vlastni_ident
-          a region_zaznamu.
+      :param kwargs: Klíčové argumenty včetně create, allow_vlastni_ident a region_zaznamu.
 
    .. py:method:: clean()
 

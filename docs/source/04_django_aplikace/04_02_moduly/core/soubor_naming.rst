@@ -63,13 +63,17 @@ Funkce
 
    Vrátí seznam volných suffixů záznamu ve tvaru ``F001`` … ``F999``.
 
+   Nabízejí se všechna volná čísla až po :data:`SUFFIX_NABIDKA_REZERVA` nad nejvyšším obsazeným,
+   tedy jak mezery mezi obsazenými čísly, tak dost volných pozic nad nimi na přeuspořádání souborů.
+   Zbytek rozsahu až do ``F999`` se nenabízí, aby nabídka nenarostla do stovek položek.
+
    Platí shodně pro dokumenty (včetně 3D modelů) i samostatné nálezy. Suffix přejmenovávaného
    souboru se považuje za volný, aby jej bylo možné v nabídce ponechat; pokud jde o historický
    suffix (prázdný slot, písmeno nebo dvojciferné ``F01``), zařadí se na začátek nabídky.
 
    :param navazany_objekt: Dokument nebo samostatný nález, jehož soubory se zkoumají.
    :param current_soubor: Přejmenovávaný soubor (vyloučen z obsazených suffixů).
-   :return: Seznam volných suffixů ve vzestupném pořadí.
+   :return: Seznam volných suffixů ve vzestupném pořadí; prázdný, je-li záznam zcela zaplněný.
 
 .. py:function:: get_soubor_suffix(soubor)
 
