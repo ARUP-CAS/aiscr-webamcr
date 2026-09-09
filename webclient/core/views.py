@@ -55,7 +55,12 @@ from core.repository_connector import (
     FedoraTransactionStatus,
     FedoraUpdatedByAnotherTransactionError,
 )
-from core.soubor_naming import get_dokument_free_suffixes, get_finds_free_suffixes, get_soubor_suffix
+from core.soubor_naming import (
+    MAX_SUFFIX_NUMBER,
+    get_free_suffixes,
+    get_next_soubor_name,
+    get_soubor_suffix,
+)
 from core.utils import (
     SessionIdentifier,
     find_pos_with_backup,
@@ -413,10 +418,8 @@ def rename_file(request, typ_vazby, ident_cely, pk):
     navazany_objekt = soubor.vazba.navazany_objekt
     base = navazany_objekt.ident_cely.replace("-", "")
     extension = os.path.splitext(soubor.nazev)[1]
-    if isinstance(navazany_objekt, Dokument):
-        free_suffixes = get_dokument_free_suffixes(navazany_objekt, soubor)
-    elif isinstance(navazany_objekt, SamostatnyNalez):
-        free_suffixes = get_finds_free_suffixes(navazany_objekt, soubor)
+    if isinstance(navazany_objekt, (Dokument, SamostatnyNalez)):
+        free_suffixes = get_free_suffixes(navazany_objekt, soubor)
     else:
         logger.warning(
             "core.views.rename_file.unsupported_record",
@@ -446,10 +449,7 @@ def rename_file(request, typ_vazby, ident_cely, pk):
                 # Zámek nadřazeného záznamu serializuje souběžná přejmenování; po zamčení znovu
                 # ověříme, že zvolený suffix je stále volný (jiný požadavek jej mohl mezitím obsadit).
                 type(navazany_objekt).objects.select_for_update().get(pk=navazany_objekt.pk)
-                if isinstance(navazany_objekt, Dokument):
-                    current_free = get_dokument_free_suffixes(navazany_objekt, soubor)
-                else:
-                    current_free = get_finds_free_suffixes(navazany_objekt, soubor)
+                current_free = get_free_suffixes(navazany_objekt, soubor)
                 if chosen_suffix not in current_free:
                     raise _SuffixNoLongerFreeError()
                 connector = FedoraRepositoryConnector(navazany_objekt, fedora_transaction)
@@ -1124,10 +1124,8 @@ class NewFileUploadView(BasePostUploadView):
             # Nejvyšší suffix už nelze přidělit. Pokud jsou nižší sloty volné (vznikly přejmenováním
             # či smazáním), poradíme uživateli je uvolnit přejmenováním; jinak je záznam skutečně plný.
             free_suffixes = []
-            if typ_vazby in ("dokument", "model3d"):
-                free_suffixes = get_dokument_free_suffixes(objekt)
-            elif typ_vazby == "pas":
-                free_suffixes = get_finds_free_suffixes(objekt)
+            if typ_vazby in ("dokument", "model3d", "pas"):
+                free_suffixes = get_free_suffixes(objekt)
             if free_suffixes:
                 return JsonResponse({"error": str(SOUBOR_NEJVYSSI_SUFFIX_OBSAZEN)}, status=403)
             return JsonResponse(
@@ -1350,36 +1348,25 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
         return True
 
 
-def get_finds_soubor_name(find, filename, add_to_index=1):
+def get_finds_soubor_name(find, filename):
     """
     Funkce pro získaní jména souboru pro samostatný nález.
 
-    Název se přiděluje navýšením podle nejvyššího obsazeného suffixu (``F01`` … ``F99``). Toto výchozí
-    chování se záměrně nemění – uvolnění či změnu pozice řeší přejmenování souboru.
+    Název má tvar ``{ident bez pomlček}F###.{přípona}`` (#3421). Pořadové číslo se určuje navýšením
+    nejvyššího obsazeného čísla, takže číslování navazuje i na starší dvojciferné suffixy ``F01`` … ``F99``.
+    Uvolnění či změnu pozice řeší přejmenování souboru.
 
-    :param find: Textový název, klíč nebo výraz ``find`` používaný v rámci operace.
-    :param filename: Parametr ``filename`` se předává do volání ``splitext()``, ``warning()``, vstupuje do návratové hodnoty.
-    :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
-
-        :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.
+    :param find: Samostatný nález, ke kterému se soubor nahrává.
+    :param filename: Původní název nahrávaného souboru (použije se jeho přípona).
+    :return: Nový název souboru, nebo ``False`` při vyčerpání všech pořadových čísel.
     """
-    ident_cely_sanitized = find.ident_cely.replace("-", "")
-    files = find.soubory.soubory.filter(nazev__contains=ident_cely_sanitized)
-    if not files.exists():
-        return (f"{ident_cely_sanitized}F01") + os.path.splitext(filename)[1]
-    else:
-        list_last_char = [int(os.path.splitext(file.nazev)[0][-2:]) for file in files]
-        last_char = max(list_last_char)
-        if last_char != 99 or add_to_index == 0:
-            new_last_char = str(last_char + add_to_index).zfill(2)
-            extension = os.path.splitext(filename)[1]
-            return f"{find.ident_cely.replace('-', '')}F{new_last_char}{extension}"
-        else:
-            logger.warning(
-                "core.views.get_finds_soubor_name.cannot_upload",
-                extra={"file": filename, "value": list_last_char},
-            )
-            return False
+    new_name = get_next_soubor_name(find, filename)
+    if new_name is False:
+        logger.warning(
+            "core.views.get_finds_soubor_name.cannot_upload",
+            extra={"file": filename, "ident_cely": find.ident_cely, "maximum": MAX_SUFFIX_NUMBER},
+        )
+    return new_name
 
 
 def get_projekt_soubor_name(projekt: Projekt, file_name):

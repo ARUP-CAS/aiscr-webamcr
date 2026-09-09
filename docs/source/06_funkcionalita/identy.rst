@@ -26,7 +26,7 @@ Následující tabulka ukazuje obsahuje přehled používaných indentifikátor�
      - ``(X-ADB|ADB)-\D{4}\d{2}-\d{4,6}-V\d{4}``
    * - ``arch_z``
      - ``ArcheologickyZaznam``
-     - ``(C|M|X-C|X-M)-\d{9}\D{1}``
+     - ``(C|M|X-C|X-M)-\d{9}\D{1}\d{0,2}``
    * - ``arch_z``
      - ``ArcheologickyZaznam``
      - ``(C|M|X-C|X-M)-9\d{6,9}\D{1}``
@@ -35,7 +35,7 @@ Následující tabulka ukazuje obsahuje přehled používaných indentifikátor�
      - ``(C|M|X-C|X-M)-(N|L|K)\d{7,9}``
    * - ``dj``
      - ``DokumentacniJednotka``
-     - ``(C|M|X-C|X-M)-\w{7,10}\D{1}-D\d{2}``
+     - ``(C|M|X-C|X-M)-\w{7,10}\D{1}\d{0,2}-D\d{2}``
    * - ``dj``
      - ``DokumentacniJednotka``
      - ``(C|M|X-C|X-M)-(N|L|K)\d{7,9}-D\d{2}``
@@ -71,7 +71,10 @@ Následující tabulka ukazuje obsahuje přehled používaných indentifikátor�
      - ``ruian-(\d{2,6})``
    * - ``komponenta``
      - ``Komponenta``
-     - ``(C|M|X-C|X-M)-\w{7,10}\D{1}-K\d{3}``
+     - ``(C|M|X-C|X-M)-\w{7,10}\D{1}\d{0,2}-K\d{3}``
+   * - ``komponenta``
+     - ``Komponenta``
+     - ``(C|M|X-C|X-M)-(N|L|K)\d{7,9}-K\d{3}``
    * - ``pas``
      - ``SamostatnyNalez``
      - ``(C|M|X-C|X-M)-\d{9}-N\d{5}``
@@ -129,11 +132,15 @@ Projektová akce
 
 * Je určena pro archeologickou dokumentaci projektu
 
-* Logika složení je: ident_cely projektu + písmeno abecedy v pořadí od A do Z
-  
-* Příklad: "M-202100034A"
+* Logika složení je: ident_cely projektu + "A" + pořadové číslo akce v rámci projektu doplněné nulami na 2 číslice
 
-* Pokud je překročen maximální počet akcí pro projekt (26), zobrazí se na webu chybová zpráva
+* Příklad: "M-202100034A01"
+
+* Pokud je překročen maximální počet akcí pro projekt (99), zobrazí se na webu chybová zpráva
+
+* Historicky se místo pořadového čísla používalo jedno písmeno abecedy v pořadí od A do Z (např. "M-202100034A"),
+  s maximem 26 akcí na projekt. Tyto identifikátory zůstávají v platnosti, do nového číslování se nezapočítávají
+  a číslování začíná i u takových projektů od "A01". Obsazená pořadová čísla se při přidělování přeskakují.
 
 * Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L55 `get_project_event_ident`
 
@@ -144,11 +151,16 @@ Dočasný ident
 --------------
 
 * Přiřazení k vytvořeným dokumentům a 3D modelům
-  
+
 * Logika složení je: "X-" + region (M anebo C) + "-" + rada (TX/DD/3D...) + "-" + devítimístné číslo (id ze sekvence `dokument_xident_seq` doplněno na 9 čísel nulami)
 
 * Příklad: "X-M-TX-000000034"
-  
+
+* Dokumenty zapisované přes formulář dostávají řadu fixně podle konstanty ``DOKUMENT_RADA_VYCHOZI``
+  (heslář řad dokumentů, zkratka "DD"); věcné dělení nese pouze typ a materiál dokumentu. Řada se
+  určuje jednorázově při zápisu a dále se nemění. Import si řady určuje sám podle importovaných dat
+  a 3D modely mají vlastní formulář s řadou "3D".
+
 * Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L103 `get_temp_dokument_ident`
 
 Permanentní ident
@@ -163,8 +175,29 @@ Permanentní ident
 * Příklad: "M-DD-202100034"
 
 * Při překročení maximálního pořadového čísla (99999) je uživateli vrácena chybová zpráva
-  
+
 * Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/dokument/models.py#L366 `set_permanent_ident_cely`
+
+Zápis pod konkrétním ID
+------------------------
+
+* Slouží pro zpětnou digitalizaci dokumentů, které mají být zařazeny do evidence pod svým původním identifikátorem
+
+* Zobrazení volby ve formuláři pro zápis dokumentu je vázáno na oprávnění ``dok_zapsat_vlastni_ident``
+  (ve výchozím nastavení archiváři a administrátoři)
+
+* Zadaný identifikátor musí odpovídat tvaru permanentního identu dokumentu a jeho řada musí existovat
+  v hesláři řad; řada dokumentu se přebírá ze zadaného identifikátoru. Řadu "3D" tato volba nepřipouští,
+  3D modely mají vlastní formulář.
+
+* Formulář odmítne identifikátor, který už je obsazený jiným dokumentem
+
+* Dokument dostane trvalý identifikátor rovnou při zápisu, takže se při archivaci už nepřečísluje.
+  Na přidělování identifikátorů z tabulky `dokument_sekvence` to nemá vliv, protože obsazená pořadová
+  čísla se přeskakují.
+
+* Kód: `zapsat` v ``webclient/dokument/views.py``, validace v ``EditDokumentForm.clean_vlastni_ident_cely``
+  a ``core.ident_cely.get_dokument_rada_from_ident``
 
 ===============
 Část Dokumentu
@@ -188,7 +221,7 @@ Dokumentační jednotka
 
 * Logika složení je: ident_cely arch záznamu + "-D" + pořadové číslo DJ na arch záznam doplněné na 2 číslice s nulami
 
-* Příklad: "M-202100034A-D01"
+* Příklad: "M-202100034A01-D01"
 
 * Při překročení maximálního počtu DJ arch záznamu (99) se na webu zobrazí chybové hlášení
 
@@ -202,7 +235,7 @@ Komponenta dokumentační jednotky
 
 * Logika složení je: ident_cely arch záznamu + "-K" + pořadové číslo komponenty per arch záznam doplněné na 3 číslice s nulami
 
-* Příklad: "M-202100034A-K001"
+* Příklad: "M-202100034A01-K001" pro akci, "C-N1000001-K001" pro lokalitu
 
 * Pokud je překročeno maximum komponent arch záznamu pod DJ (999), zobrazí se na webu chybové hlášení
 
@@ -221,6 +254,29 @@ Komponenta dokumentu
 * Pokud je překročeno maximum komponent u dokumentu (999), zobrazí se na webu chybové hlášení
 
 * Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L164 `get_komponenta_ident`
+
+=======
+Soubory
+=======
+
+* Přiděluje se souborům nahrávaným k dokumentům (včetně 3D modelů) a k samostatným nálezům
+
+* Logika složení je: ident_cely záznamu bez pomlček + "F" + pořadové číslo souboru doplněné nulami
+  na 3 číslice + původní přípona souboru
+
+* Pořadové číslo dostává už první nahraný soubor, přiděluje se navýšením nejvyššího obsazeného čísla
+  a obsazená čísla se přeskakují. Uvolnění nebo změnu pozice řeší přejmenování souboru.
+
+* Příklady: "CDD192700656F001.pdf" pro dokument, "C202600010N00055F001.jpg" pro samostatný nález
+
+* Při překročení maximálního počtu souborů na záznam (999) se na webu zobrazí chybové hlášení
+
+* Historicky měly soubory dokumentů základní název bez suffixu (např. "CDD192700656.pdf") a další
+  soubory se rozlišovaly písmeny A–Z; u samostatných nálezů se používala dvojciferná řada "F01"–"F99".
+  Tyto názvy zůstávají v platnosti a nepřejmenovávají se. U dokumentů se do nového číslování
+  nezapočítávají a číslování začíná od "F001", u samostatných nálezů na ně číslování navazuje.
+
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/soubor_naming.py `get_next_soubor_name`
 
 ====
 Pian
@@ -259,7 +315,7 @@ Samostatný nález
 
 * Logika složení je: ident_cely projektu + "-N" + pořadové číslo SN per projekt doplněno na 5 čísel nulami
 
-* Příklad: "M-202100034A-N00001"
+* Příklad: "M-202100034-N00001"
 
 * Pokud je překročeno maximum SN u projektu (99999), zobrazí se na webu chybové hlášení
 

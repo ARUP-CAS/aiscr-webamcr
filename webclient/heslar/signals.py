@@ -10,7 +10,6 @@ from django.utils.translation import gettext as _
 from .models import (
     Heslar,
     HeslarDatace,
-    HeslarDokumentTypMaterialRada,
     HeslarHierarchie,
     HeslarOdkaz,
     RuianKatastr,
@@ -200,39 +199,6 @@ def save_metadata_heslar_datace(sender, instance: HeslarDatace, created, **kwarg
         )
 
 
-@receiver(post_save, sender=HeslarDokumentTypMaterialRada, weak=False)
-def save_metadata_heslar_dokument_typ_material_rada(sender, instance: HeslarDokumentTypMaterialRada, created, **kwargs):
-    """
-    Funkce pro uložení metadat heslář - hierarchie.
-
-    :param sender: Model třídy, která poslala signál.
-    :param instance: Parametr ``instance`` pracuje se s atributy ``suppress_signal``, ovlivňuje větvení podmínek.
-    :param created: Parametr ``created`` ovlivňuje větvení podmínek.
-    :param kwargs: Další klíčové argumenty signálu.
-    """
-    logger.debug("heslo.signals.save_metadata_heslar_dokument_typ_material_rada.start")
-    if not instance.suppress_signal:
-        if created:
-
-            def save_metadata():
-                """
-                               Uloží metadata.
-
-                Výsledek provedené změny nad cílovým objektem.
-                """
-                fedora_transaction = FedoraTransaction()
-                instance.dokument_typ.save_metadata(fedora_transaction)
-                instance.dokument_material.save_metadata(fedora_transaction)
-                instance.dokument_rada.save_metadata(fedora_transaction, close_transaction=True)
-                logger.debug(
-                    "heslo.signals.save_metadata_heslar_dokument_typ_material_rada.save_metadata",
-                    extra={"transaction": getattr(fedora_transaction, "uid", None)},
-                )
-
-            transaction.on_commit(save_metadata)
-    logger.debug("heslo.signals.save_metadata_heslar_dokument_typ_material_rada.end")
-
-
 @receiver(post_save, sender=HeslarOdkaz, weak=False)
 def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs):
     """
@@ -369,31 +335,6 @@ def delete_uppdate_related_heslar_hierarchie(sender, instance: HeslarHierarchie,
     transaction.on_commit(save_metadata)
     logger.debug(
         "heslo.signals.delete_uppdate_related_heslar_hierarchie.end",
-        extra={"transaction": getattr(fedora_transaction, "uid", None)},
-    )
-
-
-@receiver(post_delete, sender=HeslarDokumentTypMaterialRada, weak=False)
-def delete_uppdate_related_heslar_dokument_typ_material_rada(sender, instance: HeslarDokumentTypMaterialRada, **kwargs):
-    """
-    Funkce pro uložení metadat navázaného hesláře při smazání heslář - dokument typ materiál řada.
-
-    :param sender: Model třídy, která poslala signál.
-    :param instance: Instance modelu, která byla uložena.
-    :param kwargs: Další klíčové argumenty signálu.
-    """
-    logger.debug("heslo.signals.delete_uppdate_related_heslar_dokument_typ_material_rada.start")
-    fedora_transaction = FedoraTransaction()
-
-    def save_metadata():
-        """Uloží metadata. v aplikaci."""
-        instance.dokument_rada.save_metadata(fedora_transaction)
-        instance.dokument_typ.save_metadata(fedora_transaction)
-        instance.dokument_material.save_metadata(fedora_transaction, close_transaction=True)
-
-    transaction.on_commit(save_metadata)
-    logger.debug(
-        "heslo.signals.delete_uppdate_related_heslar_dokument_typ_material_rada.end",
         extra={"transaction": getattr(fedora_transaction, "uid", None)},
     )
 

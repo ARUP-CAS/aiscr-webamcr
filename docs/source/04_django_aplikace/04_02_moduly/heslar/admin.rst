@@ -134,7 +134,7 @@ Třídy
       :return: Vrací atribut objektu.
 
 
-.. py:class:: HeslarDokumentTypMaterialRadaAdmin
+.. py:class:: HeslarDokumentTypMaterialAdmin
 
    Admin část pro prohlížení modelu heslař dokument typ material.
 

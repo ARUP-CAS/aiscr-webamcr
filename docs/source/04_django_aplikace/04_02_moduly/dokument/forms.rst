@@ -66,7 +66,19 @@ Třídy
       :param required: Která pole jsou povinná.
       :param required_next: Která pole budou povinná v následující relaci.
       :param can_edit_datum_zverejneni: Zda lze editovat datum zveřejnění.
-      :param kwargs: Klíčové argumenty včetně create a region_not_required.
+      :param kwargs: Klíčové argumenty včetně create, allow_vlastni_ident a region_zaznamu.
+
+   .. py:method:: clean()
+
+      Ověří ručně zadaný identifikátor dokumentu a zjistí jeho řadu (#3421).
+
+      Identifikátor se vyhodnocuje jen při zaškrtnuté volbě ``pouzit_vlastni_ident``; kontroluje se
+      jeho vyplnění, tvar permanentního identu dokumentu, existence řady v hesláři, to, že jej dosud
+      nemá jiný dokument, a shoda regionu se zvolenou regionální působností (u dokumentu zapisovaného
+      do záznamu s regionem nadřazeného záznamu). Bez zaškrtnuté volby se případná zadaná hodnota
+      zahodí, aby se dokument zapsal standardně s dočasným identifikátorem.
+
+      :return: Očištěná data formuláře.
 
 
 .. py:class:: CreateModelDokumentForm
@@ -177,6 +189,18 @@ Funkce
    v modálním okně), aby se nabídka i widget obou polí nelišily.
 
    :return: Instanci ``forms.ChoiceField`` pro výběr regionu.
+
+.. py:function:: nastav_nabidku_autoru(form)
+
+   Naplní nabídku widgetu pole ``autori`` popisky osob, které se mají vykreslit.
+
+   Našeptávací widget vykresluje pouze vybrané hodnoty a popisek k nim hledá ve svých volbách;
+   pro hodnotu bez odpovídající volby zobrazí místo jména holé ID. U odeslaného formuláře proto
+   musí nabídka vycházet z odeslaných hodnot, jinak by se po neúspěšné validaci místo jmen autorů
+   zobrazila jejich čísla. U nového dokumentu je nabídka prázdná, u existujícího vychází
+   z navázaných autorů v jejich pořadí.
+
+   :param form: Formulář dokumentu nebo 3D modelu s polem ``autori``.
 
 .. py:function:: create_tvar_form(not_readonly)
 

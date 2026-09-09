@@ -2,6 +2,7 @@ import logging
 
 from core.constants import COORDINATE_SYSTEM, D_STAV_ARCHIVOVANY, D_STAV_ODESLANY
 from core.forms import BaseFilterForm, OptimisticLockingMixin
+from core.ident_cely import get_dokument_rada_from_ident, get_dokument_region_from_ident
 from core.widgets import AutocompleteModelSelect2Multiple, AutocompleteSelect2Multiple
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
@@ -381,6 +382,35 @@ class RegionForm(forms.Form):
     region = make_region_field()
 
 
+def nastav_nabidku_autoru(form):
+    """
+    Naplní nabídku widgetu pole ``autori`` popisky osob, které se mají vykreslit.
+
+    Našeptávací widget vykresluje pouze vybrané hodnoty a popisek k nim hledá ve svých volbách;
+    pro hodnotu bez odpovídající volby zobrazí místo jména holé ID. U odeslaného formuláře proto
+    musí nabídka vycházet z odeslaných hodnot, jinak by se po neúspěšné validaci místo jmen autorů
+    zobrazila jejich čísla. U nového dokumentu je nabídka prázdná, u existujícího vychází
+    z navázaných autorů v jejich pořadí.
+
+    :param form: Formulář dokumentu nebo 3D modelu s polem ``autori``.
+    """
+    if form.is_bound:
+        hodnoty = form["autori"].value() or []
+        if not isinstance(hodnoty, (list, tuple)):
+            hodnoty = [hodnoty]
+        ids = [int(hodnota) for hodnota in hodnoty if str(hodnota).isdigit()]
+    elif form.instance.pk:
+        ids = list(
+            Osoba.objects.filter(dokumentautor__dokument=form.instance)
+            .order_by("dokumentautor__poradi")
+            .values_list("id", flat=True)
+        )
+    else:
+        ids = []
+    popisky = dict(Osoba.objects.filter(pk__in=ids).values_list("id", "vypis_cely"))
+    form.fields["autori"].widget.choices = [(pk, popisky[pk]) for pk in ids if pk in popisky]
+
+
 class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení Dokumentu."""
 
@@ -395,6 +425,17 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
         label=_("dokument.forms.editDokumentForm.autori.label"),
     )
     region = make_region_field()
+    pouzit_vlastni_ident = forms.BooleanField(
+        required=False,
+        label=_("dokument.forms.editDokumentForm.pouzitVlastniIdent.label"),
+        help_text=_("dokument.forms.editDokumentForm.pouzitVlastniIdent.tooltip"),
+    )
+    vlastni_ident_cely = forms.CharField(
+        required=False,
+        label=_("dokument.forms.editDokumentForm.vlastniIdentCely.label"),
+        help_text=_("dokument.forms.editDokumentForm.vlastniIdentCely.tooltip"),
+        widget=forms.TextInput(attrs={"placeholder": "M-DD-202100034"}),
+    )
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
@@ -501,11 +542,25 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
         :param required: Která pole jsou povinná.
         :param required_next: Která pole budou povinná v následující relaci.
         :param can_edit_datum_zverejneni: Zda lze editovat datum zveřejnění.
-        :param kwargs: Klíčové argumenty včetně create a region_not_required.
+        :param kwargs: Klíčové argumenty včetně create, allow_vlastni_ident a region_zaznamu.
         """
         create = kwargs.pop("create", None)
-        region_not_required = kwargs.pop("region_not_required", None)
+        allow_vlastni_ident = kwargs.pop("allow_vlastni_ident", False)
+        region_zaznamu = kwargs.pop("region_zaznamu", None)
         super(EditDokumentForm, self).__init__(*args, **kwargs)
+        # Regionální působnost určuje jen prefix identifikátoru přidělovaného při zápisu. Po vytvoření
+        # dokumentu ji už nelze změnit, takže pole dává smysl pouze ve formuláři pro zápis.
+        zapis_dokumentu = self.instance.pk is None
+        if not zapis_dokumentu:
+            del self.fields["region"]
+        #: Řada odvozená z ručně zadaného identifikátoru; naplní ji ``clean_vlastni_ident_cely``.
+        self.vlastni_ident_rada = None
+        self.allow_vlastni_ident = allow_vlastni_ident
+        #: Region nadřazeného záznamu; má přednost před volbou uživatele v poli ``region``.
+        self.region_zaznamu = region_zaznamu
+        if not allow_vlastni_ident:
+            del self.fields["pouzit_vlastni_ident"]
+            del self.fields["vlastni_ident_cely"]
         self.fields["popis"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
         self.fields["posudky"].choices = heslar_12(HESLAR_POSUDEK_TYP, HESLAR_POSUDEK_TYP_KAT)[1:]
@@ -556,10 +611,15 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
                 Div("pristupnost", css_class="col-sm-6 col-lg-2"),
                 Div("licence", css_class="col-sm-6 col-lg-2"),
                 Div("datum_zverejneni", css_class="col-sm-6 col-lg-2"),
-                Div("region", style="display: none"),
                 css_class="row",
             ),
         )
+        if zapis_dokumentu:
+            # Hodnotu plní dialog pro výběr regionální působnosti, pole samotné zůstává skryté.
+            self.helper.layout[0].append(Div("region", style="display: none"))
+        if allow_vlastni_ident:
+            self.helper.layout[0].append(Div("pouzit_vlastni_ident", css_class="col-sm-6 col-lg-2"))
+            self.helper.layout[0].append(Div("vlastni_ident_cely", css_class="col-sm-6 col-lg-2"))
         if self.optimistic_lock_field_name in self.fields:
             self.helper.layout[0].append(Div(self.optimistic_lock_field_name, css_class="d-none"))
         for key in self.fields.keys():
@@ -587,15 +647,48 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
                     self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""
         if not can_edit_datum_zverejneni:
             self.fields["datum_zverejneni"].disabled = True
-        self.fields["autori"].widget.choices = list(
-            Osoba.objects.filter(dokumentautor__dokument__pk=self.instance.pk)
-            .order_by("dokumentautor__poradi")
-            .values_list("id", "vypis_cely")
-        )
-        if region_not_required is True:
-            self.fields["region"].required = False
-        elif create:
-            self.fields["region"].required = True
+        nastav_nabidku_autoru(self)
+        if zapis_dokumentu:
+            # Dokument zapisovaný do projektu nebo archeologického záznamu přebírá region od něj,
+            # samostatně zapisovaný dokument jej musí mít zvolený.
+            self.fields["region"].required = region_zaznamu is None
+
+    def clean(self):
+        """
+        Ověří ručně zadaný identifikátor dokumentu a zjistí jeho řadu (#3421).
+
+        Identifikátor se vyhodnocuje jen při zaškrtnuté volbě ``pouzit_vlastni_ident``; kontroluje se
+        jeho vyplnění, tvar permanentního identu dokumentu, existence řady v hesláři, to, že jej dosud
+        nemá jiný dokument, a shoda regionu se zvolenou regionální působností (u dokumentu zapisovaného
+        do záznamu s regionem nadřazeného záznamu). Bez zaškrtnuté volby se případná zadaná hodnota
+        zahodí, aby se dokument zapsal standardně s dočasným identifikátorem.
+
+        :return: Očištěná data formuláře.
+        """
+        cleaned_data = super().clean()
+        if "pouzit_vlastni_ident" not in self.fields:
+            return cleaned_data
+        ident_cely = (cleaned_data.get("vlastni_ident_cely") or "").strip().upper()
+        cleaned_data["vlastni_ident_cely"] = ident_cely
+        if not cleaned_data.get("pouzit_vlastni_ident"):
+            cleaned_data["vlastni_ident_cely"] = ""
+            return cleaned_data
+        if not ident_cely:
+            self.add_error("vlastni_ident_cely", _("dokument.forms.editDokumentForm.vlastniIdentCely.nevyplneny"))
+            return cleaned_data
+        rada = get_dokument_rada_from_ident(ident_cely)
+        if rada is None:
+            self.add_error("vlastni_ident_cely", _("dokument.forms.editDokumentForm.vlastniIdentCely.neplatnyTvar"))
+            return cleaned_data
+        if Dokument.objects.filter(ident_cely=ident_cely).exists():
+            self.add_error("vlastni_ident_cely", _("dokument.forms.editDokumentForm.vlastniIdentCely.obsazeny"))
+            return cleaned_data
+        ocekavany_region = self.region_zaznamu or cleaned_data.get("region")
+        if ocekavany_region and get_dokument_region_from_ident(ident_cely) != ocekavany_region:
+            self.add_error("vlastni_ident_cely", _("dokument.forms.editDokumentForm.vlastniIdentCely.jinyRegion"))
+            return cleaned_data
+        self.vlastni_ident_rada = rada
+        return cleaned_data
 
 
 class CreateModelDokumentForm(OptimisticLockingMixin, forms.ModelForm):
@@ -705,11 +798,7 @@ class CreateModelDokumentForm(OptimisticLockingMixin, forms.ModelForm):
                     )
                 else:
                     self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""
-        self.fields["autori"].widget.choices = list(
-            Osoba.objects.filter(dokumentautor__dokument__pk=self.instance.pk)
-            .order_by("dokumentautor__poradi")
-            .values_list("id", "vypis_cely")
-        )
+        nastav_nabidku_autoru(self)
 
 
 class CreateModelExtraDataForm(OptimisticLockingMixin, forms.ModelForm):

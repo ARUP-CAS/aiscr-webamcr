@@ -8,7 +8,7 @@ from django.db.models import CheckConstraint, Q
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
-from heslar.hesla import HESLAR_DOKUMENT_MATERIAL, HESLAR_DOKUMENT_RADA, HESLAR_DOKUMENT_TYP, HESLAR_OBDOBI
+from heslar.hesla import HESLAR_DOKUMENT_MATERIAL, HESLAR_DOKUMENT_TYP, HESLAR_OBDOBI
 from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
@@ -31,15 +31,6 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
     IDENT_PREFIX = "HES"
     SEQUENCE_NAME = "heslar_ident_cely_seq"
-
-    @property
-    def dokument_typ_material_rada(self):
-        """
-        Vrací navázané záznamy třídy ``HeslarDokumentTypMaterialRada``.
-
-        :return: QuerySet záznamů.
-        """
-        return HeslarDokumentTypMaterialRada.objects.filter(dokument_rada=self)
 
     @property
     def podrazena_hesla(self):
@@ -150,24 +141,21 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
         self.suppress_signal = False
 
 
-class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_typ_material_rada"), models.Model):
-    """Databázový model vazby typu dokumentu, materiálu a řady."""
+class HeslarDokumentTypMaterial(ExportModelOperationsMixin("heslar_dokument_typ_material"), models.Model):
+    """
+    Databázový model povolených kombinací typu a materiálu dokumentu.
 
-    dokument_rada = models.ForeignKey(
-        Heslar,
-        models.RESTRICT,
-        db_column="dokument_rada",
-        related_name="rada",
-        limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},
-        verbose_name=_("heslar.models.HeslarDokumentTypMaterialRada.dokument_rada"),
-    )
+    Slouží pouze jako provozní nastavení vazby polí ve formuláři pro zápis a editaci dokumentu.
+    Řada dokumentu se z této vazby neodvozuje – přiděluje se fixně při zápisu, resp. importu (#3421).
+    """
+
     dokument_typ = models.ForeignKey(
         Heslar,
         models.RESTRICT,
         db_column="dokument_typ",
         related_name="typ",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
-        verbose_name=_("heslar.models.HeslarDokumentTypMaterialRada.dokument_typ"),
+        verbose_name=_("heslar.models.HeslarDokumentTypMaterial.dokument_typ"),
     )
     dokument_material = models.ForeignKey(
         Heslar,
@@ -175,15 +163,15 @@ class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_
         db_column="dokument_material",
         related_name="material",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL},
-        verbose_name=_("heslar.models.HeslarDokumentTypMaterialRada.dokument_material"),
+        verbose_name=_("heslar.models.HeslarDokumentTypMaterial.dokument_material"),
     )
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
 
-        db_table = "heslar_dokument_typ_material_rada"
+        db_table = "heslar_dokument_typ_material"
         unique_together = (("dokument_typ", "dokument_material"),)
-        verbose_name_plural = "Heslář dokument typ materiál řada"
+        verbose_name_plural = "Heslář dokument typ materiál"
 
     def __init__(self, *args, **kwargs):
         """
@@ -192,8 +180,7 @@ class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_
         :param args: Parametr ``args`` se předává do volání ``__init__()``.
         :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
-        super(HeslarDokumentTypMaterialRada, self).__init__(*args, **kwargs)
-        self.initial_dokument_rada = self.dokument_rada
+        super(HeslarDokumentTypMaterial, self).__init__(*args, **kwargs)
         self.initial_dokument_typ = self.dokument_typ
         self.initial_dokument_material = self.dokument_material
         self.suppress_signal = False
