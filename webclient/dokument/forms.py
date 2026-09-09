@@ -382,6 +382,35 @@ class RegionForm(forms.Form):
     region = make_region_field()
 
 
+def nastav_nabidku_autoru(form):
+    """
+    Naplní nabídku widgetu pole ``autori`` popisky osob, které se mají vykreslit.
+
+    Našeptávací widget vykresluje pouze vybrané hodnoty a popisek k nim hledá ve svých volbách;
+    pro hodnotu bez odpovídající volby zobrazí místo jména holé ID. U odeslaného formuláře proto
+    musí nabídka vycházet z odeslaných hodnot, jinak by se po neúspěšné validaci místo jmen autorů
+    zobrazila jejich čísla. U nového dokumentu je nabídka prázdná, u existujícího vychází
+    z navázaných autorů v jejich pořadí.
+
+    :param form: Formulář dokumentu nebo 3D modelu s polem ``autori``.
+    """
+    if form.is_bound:
+        hodnoty = form["autori"].value() or []
+        if not isinstance(hodnoty, (list, tuple)):
+            hodnoty = [hodnoty]
+        ids = [int(hodnota) for hodnota in hodnoty if str(hodnota).isdigit()]
+    elif form.instance.pk:
+        ids = list(
+            Osoba.objects.filter(dokumentautor__dokument=form.instance)
+            .order_by("dokumentautor__poradi")
+            .values_list("id", flat=True)
+        )
+    else:
+        ids = []
+    popisky = dict(Osoba.objects.filter(pk__in=ids).values_list("id", "vypis_cely"))
+    form.fields["autori"].widget.choices = [(pk, popisky[pk]) for pk in ids if pk in popisky]
+
+
 class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení Dokumentu."""
 
@@ -618,11 +647,7 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
                     self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""
         if not can_edit_datum_zverejneni:
             self.fields["datum_zverejneni"].disabled = True
-        self.fields["autori"].widget.choices = list(
-            Osoba.objects.filter(dokumentautor__dokument__pk=self.instance.pk)
-            .order_by("dokumentautor__poradi")
-            .values_list("id", "vypis_cely")
-        )
+        nastav_nabidku_autoru(self)
         if zapis_dokumentu:
             # Dokument zapisovaný do projektu nebo archeologického záznamu přebírá region od něj,
             # samostatně zapisovaný dokument jej musí mít zvolený.
@@ -773,11 +798,7 @@ class CreateModelDokumentForm(OptimisticLockingMixin, forms.ModelForm):
                     )
                 else:
                     self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""
-        self.fields["autori"].widget.choices = list(
-            Osoba.objects.filter(dokumentautor__dokument__pk=self.instance.pk)
-            .order_by("dokumentautor__poradi")
-            .values_list("id", "vypis_cely")
-        )
+        nastav_nabidku_autoru(self)
 
 
 class CreateModelExtraDataForm(OptimisticLockingMixin, forms.ModelForm):

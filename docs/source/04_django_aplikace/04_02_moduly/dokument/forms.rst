@@ -190,6 +190,18 @@ Funkce
 
    :return: Instanci ``forms.ChoiceField`` pro výběr regionu.
 
+.. py:function:: nastav_nabidku_autoru(form)
+
+   Naplní nabídku widgetu pole ``autori`` popisky osob, které se mají vykreslit.
+
+   Našeptávací widget vykresluje pouze vybrané hodnoty a popisek k nim hledá ve svých volbách;
+   pro hodnotu bez odpovídající volby zobrazí místo jména holé ID. U odeslaného formuláře proto
+   musí nabídka vycházet z odeslaných hodnot, jinak by se po neúspěšné validaci místo jmen autorů
+   zobrazila jejich čísla. U nového dokumentu je nabídka prázdná, u existujícího vychází
+   z navázaných autorů v jejich pořadí.
+
+   :param form: Formulář dokumentu nebo 3D modelu s polem ``autori``.
+
 .. py:function:: create_tvar_form(not_readonly)
 
    Funkce která vrací formulář Tvar pro formset.
