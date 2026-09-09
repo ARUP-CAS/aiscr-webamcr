@@ -52,7 +52,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="samostatnynalez",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     models.Q(("geom_system", "5514"), ("geom_sjtsk__isnull", False)),
                     models.Q(("geom_system", "5514*"), ("geom_sjtsk__isnull", False)),
                     models.Q(("geom_system", "4326"), ("geom__isnull", False)),

@@ -174,7 +174,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="organizace",
             constraint=models.CheckConstraint(
-                check=models.Q(("mesicu_do_zverejneni__lte", ORGANIZACE_MESICU_DO_ZVEREJNENI_MAX)),
+                condition=models.Q(("mesicu_do_zverejneni__lte", ORGANIZACE_MESICU_DO_ZVEREJNENI_MAX)),
                 name="organizace_mesicu_do_zverejneni_max_value_check",
             ),
         ),

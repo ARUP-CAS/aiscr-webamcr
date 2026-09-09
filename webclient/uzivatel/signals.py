@@ -5,9 +5,8 @@ from core.ident_cely import get_uzivatel_ident
 from core.log_middleware import LogMiddleware
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from django.contrib.auth import user_logged_in
-from django.contrib.auth.hashers import check_password
 from django.contrib.auth.models import Group
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models.signals import post_delete, post_save, pre_delete, pre_save
 from django.dispatch import receiver
@@ -64,6 +63,9 @@ def create_ident_cely(sender, instance: User, **kwargs):
     """
     Přidelení identu celý pro usera.
 
+    Zároveň potlačí navazující signál u uložení, které není změnou dat uživatele -- zápis
+    ``last_login`` při přihlášení a přehashování hesla starým hasherem.
+
     :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``create_ident_cely``.
     :param instance: Parametr ``instance`` předává se do volání ``filter()``, ``check_container_deleted_or_not_exists()``, pracuje se s atributy ``id``, ``old``, ovlivňuje větvení podmínek.
     :param kwargs: Parametr ``kwargs`` se předává do volání ``len()``, ovlivňuje větvení podmínek.
@@ -94,6 +96,16 @@ def create_ident_cely(sender, instance: User, **kwargs):
             )
     if kwargs["update_fields"] and len(kwargs["update_fields"]) == 1 and "last_login" in kwargs["update_fields"]:
         instance.suppress_signal = True
+    if (
+        kwargs["update_fields"]
+        and set(kwargs["update_fields"]) == {"password"}
+        and getattr(instance, "_password", None) is None
+    ):
+        # Django může při přihlášení přehashovat heslo uložené zastaralým hasherem a uloží jej
+        # s `update_fields=["password"]`. Metoda `set_password()` přitom plní `_password`,
+        # kdežto rehash jej nechává na None, takže tady jde o rehash, ne o změnu hesla,
+        # a nemá smysl kvůli tomu zapisovat metadata do Fedory ani měnit API token.
+        instance.suppress_signal = True
     logger.debug("uzivatel.signals.create_ident_cely.end", extra={"ident_cely": instance.ident_cely})
 
 
@@ -120,21 +132,6 @@ def user_post_save_method(sender, instance: User, created: bool, **kwargs):
         group = Group.objects.get(pk=ROLE_BADATEL_ID)
         instance.groups.set([group], clear=True)
     if not instance.suppress_signal:
-
-        def check_password_change():
-            """
-            Ověří password change.
-
-            :return: Vrací výsledek ověření nebo validačního pravidla.
-            """
-            if created:
-                return False
-            try:
-                old_instance = User.objects.get(pk=instance.pk)
-            except ObjectDoesNotExist:
-                return False
-            return not check_password(instance.password, old_instance.password)
-
         send_deactivation_email(sender, instance, **kwargs)
         send_account_confirmed_email(sender, instance, created)
         # Vytvoří nebo změní token při změně uživatele.
@@ -145,9 +142,13 @@ def user_post_save_method(sender, instance: User, created: bool, **kwargs):
         else:
             old_token.delete()
             Token.objects.create(user=instance)
-        if instance.active_transaction is None and check_password_change():
+        if instance.active_transaction is None:
+            # Bez transakce se metadata do Fedory nezapíšou, viz `User.save_metadata`. Uložení
+            # bez transakce dělá například změna hesla nebo potvrzení e-mailu, proto se zde
+            # transakce dotvoří.
             instance.active_transaction = FedoraTransaction()
             instance.close_active_transaction_when_finished = True
+            fedora_transaction = instance.active_transaction
         if instance.close_active_transaction_when_finished:
             transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
         else:
