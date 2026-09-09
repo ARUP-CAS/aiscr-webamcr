@@ -78,7 +78,8 @@ _WATCHDOG_INTERVAL = 30
 #: v ``getaddrinfo`` zastavilo celý běh).
 _POOL_SIZE = 32
 
-#: Viz stejnojmenná konstanta v ``generate_metadata.py``.
+#: Kolik položek na jedno vlákno smí být rozpracovaných zároveň (viz ``_run_parallel``).
+#: Stejnojmenná konstanta se stejnou hodnotou je i v ``generate_metadata.py``.
 _BATCH_PER_WORKER = 10
 
 #: Pevná cesta k ``placeholder_manifest.json`` - placeholdery jsou součástí této
@@ -131,8 +132,9 @@ def _po_davkach(iterable, velikost):
     """
     Rozdělí iterátor na seznamy o nejvýše ``velikost`` položkách.
 
-    Viz stejnojmenná funkce v ``generate_metadata.py`` - duplikováno, aby byl tento
-    příkaz samostatný a nezávisel na interních detailech sourozeneckého modulu.
+    Duplikováno se stejnojmennou funkcí v ``generate_metadata.py`` (těla jsou shodná),
+    aby byl tento příkaz samostatný a nezávisel na interních detailech sourozeneckého
+    modulu.
 
     :param iterable: Vstupní iterátor.
     :param velikost: Maximální počet položek v jedné dávce.
@@ -228,9 +230,11 @@ class _FastFedoraWriter:
     (begin/commit) na dávku mutací, ale při stovkách tisíc záznamů jde o řádový rozdíl
     v místě na disku, ne v rychlosti.
 
-    Mapování ``_MODEL_NAME_MAP`` a RDF šablony musí zůstat v souladu s
-    ``FedoraRepositoryConnector`` (``_get_model_name``, ``_get_creator_rdf_data``);
-    při jejich změně aktualizuj obě místa.
+    Fedora model name se odvozuje z ``_get_schema_by_name()`` (ne z vlastní tabulky) a
+    RDF šablony (``_creator_rdf``, ``_creator_sparql_update``) jsou textově shodné s
+    ``FedoraRepositoryConnector`` (``_get_model_name``, ``_get_creator_rdf_data``).
+    Tuhle shodu hlídá test ``core/tests/test_fast_writer_rdf_parity.py``, ne jen tento
+    komentář (review PR #4262).
     """
 
     def __init__(self, base_url, user_ident):
@@ -455,7 +459,7 @@ class _FastFedoraWriter:
         Vytvoří kompletní záznam (container, model link, metadata) jedním průchodem.
 
         :param ident_cely: Celý identifikátor záznamu (``Slug`` containeru).
-        :param model_name: Fedora model name pro link (``_MODEL_NAME_MAP``).
+        :param model_name: Fedora model name pro link (viz ``_get_schema_by_name``).
         :param document: Vygenerovaný XML dokument metadat.
         :param hash512: SHA-512 hash ``document``.
         :param tx_url: URL aktivní Fedora transakce (viz ``begin_transaction``) - všechny
@@ -809,85 +813,62 @@ class Command(BaseCommand):
             "--model",
             type=str,
             default=None,
-            help="Název třídy modelu (např. Projekt, Dokument). Pokud není zadán, zpracují se všechny modely.",
+            help=_("core.management.commands.generate_metadata_fast.Command.add_arguments.model_help"),
         )
         parser.add_argument(
             "--limit",
             type=int,
             default=None,
-            help="Maximální počet zpracovaných záznamů (na model, pokud není zadán --model).",
+            help=_("core.management.commands.generate_metadata_fast.Command.add_arguments.limit_help"),
         )
         parser.add_argument(
             "--start-with-pk",
             type=int,
             default=None,
-            help=(
-                "Primární klíč, od kterého se má začít zpracování (``pk__gte``). Bez "
-                "--model se aplikuje na všech 15 modelů stejně - pro navázání po pádu "
-                "proto použij vždy spolu s --model."
-            ),
+            help=(_("core.management.commands.generate_metadata_fast.Command.add_arguments.start_with_pk_help")),
         )
-        parser.add_argument("--workers", type=int, default=1, help="Počet paralelních vláken (1 = sekvenční běh).")
+        parser.add_argument(
+            "--workers",
+            type=int,
+            default=1,
+            help=_("core.management.commands.generate_metadata_fast.Command.add_arguments.workers_help"),
+        )
         parser.add_argument(
             "--max-retries",
             type=int,
             default=20,
-            help="Maximální počet opakování jednoho záznamu při přechodné chybě (viz _is_retryable).",
+            help=_("core.management.commands.generate_metadata_fast.Command.add_arguments.max_retries_help"),
         )
         parser.add_argument(
             "--bez-souboru",
             action="store_true",
             default=False,
-            help=(
-                "Negenerovat soubory (Projekt/Dokument/SamostatnyNalez) - jen XML "
-                "metadata. Bez tohoto přepínače musí jít načíst placeholder_manifest.json "
-                "(viz core/management/commands/placeholders/)."
-            ),
+            help=(_("core.management.commands.generate_metadata_fast.Command.add_arguments.bez_souboru_help")),
         )
         parser.add_argument(
             "--force",
             action="store_true",
             default=False,
-            help=(
-                "Přeskočí kontrolu, že /record je prázdné. Použij výhradně pro "
-                "navázání po pádu spolu s --start-with-pk nastaveným za poslední "
-                "úspěšně zpracovaný záznam - jinak hrozí duplicitní zdroje (viz "
-                "docstring třídy Command)."
-            ),
+            help=(_("core.management.commands.generate_metadata_fast.Command.add_arguments.force_help")),
         )
         parser.add_argument(
             "--jen-kontrola",
             action="store_true",
             default=False,
-            help=(
-                "Negenerovat nic, jen porovnat DB proti Fedoře a vypsat rozdíly "
-                "(chybějící a přebývající záznamy). Hodí se pro prověření už dokončeného běhu."
-            ),
+            help=(_("core.management.commands.generate_metadata_fast.Command.add_arguments.jen_kontrola_help")),
         )
         parser.add_argument(
             "--bez-kontroly",
             action="store_true",
             default=False,
-            help="Přeskočit závěrečnou kontrolu konzistence DB vs Fedora po dogenerování.",
+            help=_("core.management.commands.generate_metadata_fast.Command.add_arguments.bez_kontroly_help"),
         )
         parser.add_argument(
             "--aktualizovat-db",
             action="store_true",
             default=False,
-            help=(
-                "Po úspěšném vložení placeholderu do Fedory přepíše Soubor.sha_512/size_mb "
-                "v DB na hodnoty odpovídající vloženému placeholderu (ne původnímu, skutečnému "
-                "souboru) - bez toho DB po migraci ukazuje hash/velikost obsahu, který ve "
-                "Fedoře reálně není. Se --bez-souboru nemá žádný efekt - tam se soubory "
-                "vůbec nezapisují, není co v DB aktualizovat. "
-                "Mutuje DB hromadně - použij vědomě, ne jen 'pro jistotu'."
-            ),
+            help=(_("core.management.commands.generate_metadata_fast.Command.add_arguments.aktualizovat_db_help")),
         )
-
-    # Nastavují se v `_handle_metadata`; výchozí hodnoty tady drží `handle()` funkční
-    # i na cestách, kde se generování nespustí (např. `--jen-kontrola`).
-    _zaseknute_ulohy = 0
-    _pocet_selhani = 0
 
     @staticmethod
     def _get_writer():
@@ -1314,7 +1295,10 @@ class Command(BaseCommand):
         limit = options.get("limit")
         start_with_pk = options.get("start_with_pk")
         workers = options.get("workers") or 1
-        max_retries = options.get("max_retries") or 3
+        # Ne `or 3` - argparse tu volbu dodá vždy (má `default=20`), takže `or` by se
+        # uplatnilo jedině na explicitní `--max-retries 0`, tedy na legitimní žádost
+        # "neopakovat", a mlčky by z ní udělalo 3 pokusy (review PR #4262).
+        max_retries = options["max_retries"]
         aktualizovat_db = bool(options.get("aktualizovat_db"))
         schema_by_name = _get_schema_by_name()
 
@@ -1324,13 +1308,8 @@ class Command(BaseCommand):
             # pro model, na kterém běh spadl; pro ostatní se tím zbytečně přeskočí
             # záznamy s nižším pk. Použij --start-with-pk vždy spolu s --model.
             for current_class, _fedora_name in schema_by_name.values():
-                queryset = current_class.objects.all().order_by("pk")
-                if start_with_pk:
-                    queryset = current_class.objects.filter(pk__gte=start_with_pk).order_by("pk")
+                queryset = self._queryset_pro_model(current_class, start_with_pk, limit)
                 total = queryset.count()
-                if limit is not None:
-                    queryset = queryset[:limit]
-                    total = min(total, limit)
                 self.stdout.write(f"== {current_class.__name__} ({total}) ==")
                 failures = []
                 # db_updates/lock jsou nové pro každý model - _flush_db_updates se volá
@@ -1356,11 +1335,7 @@ class Command(BaseCommand):
                     f"Neznámý model '{model_class}'. Platné hodnoty: {', '.join(sorted(schema_by_name))}."
                 )
             model_cls = entry[0]
-            queryset = model_cls.objects.order_by("pk").all()
-            if start_with_pk:
-                queryset = model_cls.objects.filter(pk__gte=start_with_pk).order_by("pk")
-            if limit is not None:
-                queryset = queryset[:limit]
+            queryset = self._queryset_pro_model(model_cls, start_with_pk, limit)
             total = queryset.count()
             failures = []
             db_updates = defaultdict(list) if aktualizovat_db else None
@@ -1376,6 +1351,28 @@ class Command(BaseCommand):
             self._report_failures(failures)
             self._pocet_selhani += len(failures)
             self._flush_db_updates(db_updates, db_updates_lock, placeholders)
+
+    @staticmethod
+    def _queryset_pro_model(model_cls, start_with_pk, limit):
+        """
+        Sestaví queryset jednoho modelu podle ``--start-with-pk`` a ``--limit``.
+
+        Jediné místo, kde se tyhle filtry skládají - dřív byly rozepsané třikrát
+        (smyčka přes všechny modely, větev pro ``--model`` a ``_zkontroluj_konzistenci``).
+        Závěrečná kontrola musí porovnávat přesně tu množinu záznamů, která se
+        generovala, takže rozejití kopií by hlásilo neexistující rozdíly (review PR #4262).
+
+        :param model_cls: Třída modelu.
+        :param start_with_pk: Hodnota ``--start-with-pk`` (nebo ``None``).
+        :param limit: Hodnota ``--limit`` (nebo ``None``).
+        :return: Queryset seřazený podle ``pk``.
+        """
+        queryset = model_cls.objects.all().order_by("pk")
+        if start_with_pk:
+            queryset = queryset.filter(pk__gte=start_with_pk)
+        if limit is not None:
+            queryset = queryset[:limit]
+        return queryset
 
     @staticmethod
     def _identy_z_db(queryset):
@@ -1428,7 +1425,14 @@ class Command(BaseCommand):
         schema_by_name = _get_schema_by_name()
 
         if model_class:
-            polozky = [(model_class, schema_by_name[model_class])]
+            # Stejná validace jako v `_handle_metadata` - bez ní tady typo v `--model`
+            # spadlo na neodchycený `KeyError` místo srozumitelné chyby (review PR #4262).
+            entry = schema_by_name.get(model_class)
+            if entry is None:
+                raise CommandError(
+                    f"Neznámý model '{model_class}'. Platné hodnoty: {', '.join(sorted(schema_by_name))}."
+                )
+            polozky = [(model_class, entry)]
         else:
             polozky = list(schema_by_name.items())
 
@@ -1438,17 +1442,17 @@ class Command(BaseCommand):
 
         vse_chybi = []
         vse_navic = []
+        nezkontrolovano = []
         for nazev_tridy, (current_class, fedora_name) in polozky:
-            queryset = current_class.objects.all().order_by("pk")
-            if start_with_pk:
-                queryset = current_class.objects.filter(pk__gte=start_with_pk).order_by("pk")
-            if limit is not None:
-                queryset = queryset[:limit]
-            db_identy = self._identy_z_db(queryset)
+            db_identy = self._identy_z_db(self._queryset_pro_model(current_class, start_with_pk, limit))
             try:
                 fedora_identy = writer.list_model_members(fedora_name)
             except Exception as exc:
                 self.stdout.write(self.style.ERROR(f"{nazev_tridy:<24} kontrola selhala: {exc}"))
+                # Model, který se nepodařilo přečíst z Fedory, se nesmí započítat jako
+                # "sedí" - jinak výpadek při čtení skončí hlášením úspěchu (a nulovým
+                # exit kódem), přesto že se nic neporovnalo.
+                nezkontrolovano.append(nazev_tridy)
                 continue
 
             chybi = db_identy - fedora_identy
@@ -1484,7 +1488,16 @@ class Command(BaseCommand):
             if len(vse_navic) > 50:
                 self.stdout.write(self.style.ERROR(f"  ... a dalších {len(vse_navic) - 50}"))
 
-        if not vse_chybi and not vse_navic:
+        if nezkontrolovano:
+            self.stdout.write("")
+            self.stdout.write(
+                self.style.ERROR(
+                    f"NEZKONTROLOVÁNO ({len(nezkontrolovano)}) - nepodařilo se přečíst z Fedory: "
+                    + ", ".join(nezkontrolovano)
+                )
+            )
+
+        if not vse_chybi and not vse_navic and not nezkontrolovano:
             self.stdout.write(self.style.SUCCESS("Vše sedí - žádné chybějící ani přebývající záznamy."))
             return True
         return False

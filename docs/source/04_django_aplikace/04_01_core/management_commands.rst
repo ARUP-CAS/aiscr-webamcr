@@ -152,43 +152,43 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
    * - ``--model``
      - ``str``
      - ``None``
-     - Název třídy modelu (např. Projekt, Dokument). Pokud není zadán, zpracují se všechny modely.
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.model_help
    * - ``--limit``
      - ``int``
      - ``None``
-     - Maximální počet zpracovaných záznamů (na model, pokud není zadán --model).
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.limit_help
    * - ``--start-with-pk``
      - ``int``
      - ``None``
-     - Primární klíč, od kterého se má začít zpracování (``pk__gte``). Bez --model se aplikuje na všech 15 modelů stejně - pro navázání po pádu proto použij vždy spolu s --model.
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.start_with_pk_help
    * - ``--workers``
      - ``int``
      - ``1``
-     - Počet paralelních vláken (1 = sekvenční běh).
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.workers_help
    * - ``--max-retries``
      - ``int``
      - ``20``
-     - Maximální počet opakování jednoho záznamu při přechodné chybě (viz _is_retryable).
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.max_retries_help
    * - ``--bez-souboru``
      - 
      - ``False``
-     - Negenerovat soubory (Projekt/Dokument/SamostatnyNalez) - jen XML metadata. Bez tohoto přepínače musí jít načíst placeholder_manifest.json (viz core/management/commands/placeholders/).
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.bez_souboru_help
    * - ``--force``
      - 
      - ``False``
-     - Přeskočí kontrolu, že /record je prázdné. Použij výhradně pro navázání po pádu spolu s --start-with-pk nastaveným za poslední úspěšně zpracovaný záznam - jinak hrozí duplicitní zdroje (viz docstring třídy Command).
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.force_help
    * - ``--jen-kontrola``
      - 
      - ``False``
-     - Negenerovat nic, jen porovnat DB proti Fedoře a vypsat rozdíly (chybějící a přebývající záznamy). Hodí se pro prověření už dokončeného běhu.
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.jen_kontrola_help
    * - ``--bez-kontroly``
      - 
      - ``False``
-     - Přeskočit závěrečnou kontrolu konzistence DB vs Fedora po dogenerování.
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.bez_kontroly_help
    * - ``--aktualizovat-db``
      - 
      - ``False``
-     - Po úspěšném vložení placeholderu do Fedory přepíše Soubor.sha_512/size_mb v DB na hodnoty odpovídající vloženému placeholderu (ne původnímu, skutečnému souboru) - bez toho DB po migraci ukazuje hash/velikost obsahu, který ve Fedoře reálně není. Se --bez-souboru nemá žádný efekt - tam se soubory vůbec nezapisují, není co v DB aktualizovat. Mutuje DB hromadně - použij vědomě, ne jen 'pro jistotu'.
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.aktualizovat_db_help
 
 
 ``generate_thumbs``

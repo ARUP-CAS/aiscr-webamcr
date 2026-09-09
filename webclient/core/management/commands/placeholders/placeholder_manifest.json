@@ -149,6 +149,21 @@
       "size": 10505
     }
   },
+  "application/x-compressed": {
+    "file": "placeholder_10.zip",
+    "sha512": "72dbe4b66d722379269f05fd4eb288d969c460aa9fbbeb893a8a0ab82cf8b86808e63abd4b500224a01371e10d7b3de78706be032b0587cd774beeb3750b58c0",
+    "size": 141,
+    "thumb": {
+      "file": "placeholder_10_thumb.png",
+      "sha512": "7a16482848140bc3a838314559f5d9c3b01a19f8e2fd71e5a8a981d811f5b2bc637bee87854b2c626707ccd518b1d43b1deeb90069b586e4dfa1dd13524c2753",
+      "size": 2581
+    },
+    "thumb_large": {
+      "file": "placeholder_10_thumb_large.png",
+      "sha512": "3d2abbd75690ca14dea854055810a9076baff623f8c847b85bcf64a3f776c0916d2a02170bf5d54165001dc8a07560dfec038a108061bec18f5392a401325d5c",
+      "size": 9716
+    }
+  },
   "application/x-rar": {
     "file": "placeholder_08.rar",
     "sha512": "92e68436fa1d5c745ccabc2cf193b017f496fae5ba760f65f8ebb900eea2e9337b45b9d70744a2c3fe6c1f934d0339c4d0602eb909df42df9016fd0253603b5b",
