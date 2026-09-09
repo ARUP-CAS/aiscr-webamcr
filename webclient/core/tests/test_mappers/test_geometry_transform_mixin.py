@@ -288,3 +288,23 @@ class GeometryTransformMixinUpdateTest(TestCase):
             ProjektMapper.transform_geometries(mapper, mapping, UPDATE)
         mock_transform.assert_called_once_with(WKT_WGS84)
         self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
+
+    def test_update_full_export_blank_geometry_columns_preserves_db_geometry(self):
+        """[r3917104061] Full-export CSV UPDATE s prázdnými geom/geom_sjtsk/geom_system buňkami
+        (řádek mění jen jiné pole, např. licenci) nesmí smazat existující geometrii záznamu — blank
+        buňky ve všech třech geometrických sloupcích znamenají "netýká se", ne "vymaž"."""
+        mapping = {"geom": None, "geom_sjtsk": "", "geom_system": None, "licence": "nova-licence"}
+        mapper = _fake_mapper(SimpleNamespace(geom_system="4326", geom=WKT_WGS84, geom_sjtsk=WKT_SJTSK))
+        with patch("core.import_data_mappers.transform_geom_to_sjtsk") as mock_sjtsk, patch(
+            "core.import_data_mappers.transform_geom_to_wgs84"
+        ) as mock_wgs84:
+            result = ProjektMapper.transform_geometries(mapper, mapping, UPDATE)
+        mock_sjtsk.assert_not_called()
+        mock_wgs84.assert_not_called()
+        self.assertNotIn("geom", result)
+        self.assertNotIn("geom_sjtsk", result)
+        self.assertNotIn("geom_system", result)
+        self.assertEqual(result["licence"], "nova-licence")
+        # Explicit clearing (geom_system supplied, geom blank) must still work — see
+        # test_update_clearing_geom_clears_geom_sjtsk; the fix above only changes rows that don't
+        # touch geometry at all (blank geom_system).

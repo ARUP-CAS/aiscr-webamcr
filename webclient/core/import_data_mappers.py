@@ -1923,8 +1923,17 @@ class GeometryTransformMixin:
         """
         # CSV empty cells become either ``None`` or whitespace strings.  They mean "not supplied",
         # never an instruction to persist an invalid blank coordinate-system value.
-        if not str(mapping_dict.get("geom_system") or "").strip():
+        geom_system_supplied = bool(str(mapping_dict.get("geom_system") or "").strip())
+        if not geom_system_supplied:
             mapping_dict.pop("geom_system", None)
+            # A blank geom_system means the row is not editing geometry at all — a full-export CSV
+            # always carries the geom/geom_sjtsk headers too, so a blank cell there in that case must
+            # mean "not touched", not "clear this", or every export-and-reimport would wipe geometry.
+            # When geom_system IS explicitly supplied, a blank geom/geom_sjtsk still means an explicit
+            # clear (see the elif branches below) — the user deliberately touched the geometry group.
+            for column in ("geom", "geom_sjtsk"):
+                if not str(mapping_dict.get(column) or "").strip():
+                    mapping_dict.pop(column, None)
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
             geom_system = str(mapping_dict.get("geom_system") or "")
             if geom_system == "4326" and mapping_dict.get("geom"):
