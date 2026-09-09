@@ -31,6 +31,10 @@
   <!-- Optional JavaScript; choose one of the two! -->
   <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
   <script src="{% static 'jquery/dist/jquery.min.js' %}"></script>
+  <!-- jquery-migrate: doplnuje API odstranena v jQuery 4, na kterych stoji select2 4.0.13
+       z django-autocomplete-light (viz issue #4211). Az select2 pojede nativne na jQuery 4,
+       lze migrate odstranit. -->
+  <script src="{% static 'jquery-migrate/dist/jquery-migrate.min.js' %}"></script>
   <script src="{% static 'bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
   <!-- Bootstrap select -->
   <link rel="stylesheet"
