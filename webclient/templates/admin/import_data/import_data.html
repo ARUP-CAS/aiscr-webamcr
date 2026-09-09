@@ -485,6 +485,9 @@
 
       if (stopRequestButton) {
           stopRequestButton.addEventListener("click", () => {
+              if (!window.confirm("{% trans 'core.templates.admin.import_data.stop_confirm' %}")) {
+                  return
+              }
               // Record the intent so applyPhaseUi keeps the button disabled until the task reaches a
               // terminal phase (it stays "importing"/"validating" for ~1 more record/row). Keep
               // polling so the UI updates when the task finishes stopping.
@@ -496,6 +499,9 @@
 
       if (cancelReleaseButton) {
           cancelReleaseButton.addEventListener("click", async () => {
+              if (!window.confirm("{% trans 'core.templates.admin.import_data.cancel_confirm' %}")) {
+                  return
+              }
               cancelRequested = true
               setDisabled(cancelReleaseButton, true)
               const response = await fetch(cancelRequestUrl, {method: "POST", headers: {"X-CSRFToken": csrfToken}})
