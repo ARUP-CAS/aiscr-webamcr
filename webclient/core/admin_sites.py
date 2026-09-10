@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import random
+import secrets
 import string
 import zipfile
 
@@ -106,7 +107,10 @@ class AmcrCustomAdminSite(admin.AdminSite):
                     custom_link(
                         _("core.admin_site.AmcrCustomAdminSite.aktualizovat_metadata"), reverse("admin:update_metadata")
                     ),
-                    custom_link(_("core.admin_site.AmcrCustomAdminSite.aktualizovat_katastry")),
+                    custom_link(
+                        _("core.admin_site.AmcrCustomAdminSite.aktualizovat_katastry"),
+                        reverse("admin:update_katastry"),
+                    ),
                     custom_link(_("core.admin_site.AmcrCustomAdminSite.hromadny_import"), reverse("admin:import_data")),
                     custom_link(
                         _("core.admin_site.AmcrCustomAdminSite.spravovat_doi_igsn"), reverse("admin:update_doi")
@@ -197,6 +201,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 find_model("django_celery_beat", "SolarSchedule"),
                 find_model("django_celery_results", "GroupResult"),
                 find_model("django_celery_results", "TaskResult"),
+                find_model("heslar", "RuianSyncRun"),
             ],
         )
         if section:
@@ -327,6 +332,48 @@ class AmcrCustomAdminSite(admin.AdminSite):
         else:
             context["form"] = UpdateMetadataFileForm()
         return TemplateResponse(request, "admin/fedora_management/update_metadata.html", context)
+
+    def update_katastry_file_upload(self, request):
+        """
+        Zpracuje hromadný přepočet katastrů u záznamů Projekt/AZ/SN.
+
+        Přijímá CSV/XLSX se sloupcem ``ident_cely`` (jeden záznam na řádek),
+        založí job v Redis pod prefixem ``update_katastry_`` a deleguje vlastní
+        zpracování na :class:`heslar.views.ContinueKatastrProcessing` (polovaný
+        z JS na stránce průběhu).
+
+        :param request: HTTP požadavek; ``POST`` od superuživatele validuje formulář a připraví job.
+        :return: Odpověď ``TemplateResponse`` s formulářem nebo stránkou průběhu.
+        """
+        from heslar.forms import UpdateKatastryFileForm
+        from heslar.views import UPDATE_KATASTRY_PREFIX, UPDATE_KATASTRY_REDIS_EXPIRATION
+
+        context = {
+            "app_list": self.get_app_list(request),
+            **self.each_context(request),
+        }
+        if request.method == "POST" and request.user.is_superuser:
+            form = UpdateKatastryFileForm(request.POST, request.FILES)
+            context["form"] = form
+            if form.is_valid():
+                uploaded_file = form.cleaned_data["ident_list_file"]
+                sheet = self._read_file(uploaded_file, context)
+                if isinstance(sheet, pd.DataFrame):
+                    # ``secrets`` místo ``random``: ``random`` je předvídatelný
+                    # generátor, a kdo klíč uhodne, může cizí job přepsat.
+                    # Expirace brání tomu, aby nedokončené joby zůstaly
+                    # v Redis natrvalo – stejně jako u ``import_data_*``.
+                    job_id = f"{UPDATE_KATASTRY_PREFIX}{secrets.token_urlsafe(24)}"
+                    self.redis_connector.set(
+                        job_id,
+                        "0;" + ";".join(sheet.index.unique().tolist()),
+                        ex=UPDATE_KATASTRY_REDIS_EXPIRATION,
+                    )
+                    context["url"] = reverse("heslar:continue-processing-katastry", args=[job_id])
+            return TemplateResponse(request, "admin/update_running_job.html", context)
+        else:
+            context["form"] = UpdateKatastryFileForm()
+        return TemplateResponse(request, "admin/heslar/update_katastry.html", context)
 
     IMPORT_DATA_REDIS_EXPIRATION = 6 * 60 * 60  # 6 hodin
     IMPORT_ZIP_MAX_UNCOMPRESSED_SIZE = 1024 * 1024 * 1024  # 1024 MB
@@ -583,6 +630,11 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 "update-metadata/",
                 self.admin_view(self.update_metadata_file_upload),
                 name="update_metadata",
+            ),
+            path(
+                "update-katastry/",
+                self.admin_view(self.update_katastry_file_upload),
+                name="update_katastry",
             ),
             path(
                 "update-doi/",

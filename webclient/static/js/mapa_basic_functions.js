@@ -150,3 +150,28 @@ map.on('zoomend', function () {
 });
 
 map.getContainer().style.cursor = 'grab';
+
+// Získá JTSK souřadnice (EPSG:5514, záporná konvence projektu) z Leaflet
+// layerPointu. Volaný v klik handlerech mapa_projekty.js / mapa_oznameni.js,
+// které potřebují posílat backendu bod přímo v JTSK.
+//
+// Pokud je aktuální mapa **JTSK** (viz ``JTSKcrs`` v mapa_settings_jtsk.js),
+// invertujeme pouze pixel krok přes ``crs.transformation.untransform`` –
+// Leaflet už interně JTSK spočítal a takto ho získáme zpět bez round-tripu
+// přes WGS84.
+//
+// Pro jiné CRS (např. Mercator varianta 3D katalogu) fallbackneme na
+// projektovou vlastní transformaci ``convertToJTSK`` z coordTransform.js –
+// jinak by ``crs.transformation.untransform`` vrátil Mercator místo JTSK.
+function layerPointToJTSK(leafletMap, layerPoint) {
+    const crs = leafletMap.options.crs;
+    if (crs.code === 'EPSG:5514') {
+        const scale = crs.scale(leafletMap.getZoom());
+        return crs.transformation.untransform(
+            layerPoint.add(leafletMap.getPixelOrigin()), scale
+        );
+    }
+    const latlng = leafletMap.layerPointToLatLng(layerPoint);
+    const [x, y] = convertToJTSK(latlng.lng, latlng.lat);
+    return L.point(x, y);
+}

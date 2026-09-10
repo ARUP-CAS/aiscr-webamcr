@@ -1237,7 +1237,8 @@ function arch_select_perspective(currentUrl,selected_ku,selected_ident_cely,sele
                     if(zoom_pian.bbox!=""){
                         box=[]
                         zoom_pian.bbox.split("((")[1].split(")")[0].split(",").forEach(i => {
-                            box.push([i.split(" ")[1].trim(), i.split(" ")[0].trim()]);
+                            const c = i.trim().split(/\s+/);
+                            box.push([c[1], c[0]]);
                         })
                         map.fitBounds([ [box[0][0],box[0][1] ],[box[2][0],box[2][1] ]]);
                     }

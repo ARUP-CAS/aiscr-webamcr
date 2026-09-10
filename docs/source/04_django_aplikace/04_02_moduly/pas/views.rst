@@ -442,19 +442,15 @@ Funkce
 
 .. py:function:: post_point_position_2_katastre(request)
 
-   Funkce pro získaní názvu katastru z bodu.
+   Vrátí název katastru obsahujícího zadaný bod v EPSG:5514.
 
-   :param request: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
+   Volá se AJAX z ``mapa_pas.js`` po kliknutí do Leaflet mapy (JTSK CRS).
+   Vstupem je JSON body s ``x1``/``x2`` v EPSG:5514 (v konvenci projektu –
+   záporné hodnoty).
 
-   :return: Vrací výsledek volání ``JsonResponse()``.
+   :param request: POST s JSON ``{"x1": <sjtsk_x>, "x2": <sjtsk_y>}``.
 
-.. py:function:: post_point_position_2_katastre_with_geom(request)
-
-   Funkce pro získaní názvu katastru, geomu z bodu.
-
-   :param request: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
-
-   :return: Vrací výsledek volání ``JsonResponse()``.
+   :return: JsonResponse s ``katastr_name`` (prázdný pokud nenalezen).
 
 .. py:function:: get_required_fields(zaznam, next)
 

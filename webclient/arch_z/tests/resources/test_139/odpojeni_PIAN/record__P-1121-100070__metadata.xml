@@ -15,6 +15,12 @@
         </gml:Point>
       </amcr:geom_gml>
       <amcr:geom_wkt EPSG="4326">POINT(12.8049934 50.3517312)</amcr:geom_wkt>
+      <amcr:geom_sjtsk_gml>
+        <gml:Point srsName="EPSG:5514">
+          <gml:coordinates>-852572.6,-996983.47</gml:coordinates>
+        </gml:Point>
+      </amcr:geom_sjtsk_gml>
+      <amcr:geom_sjtsk_wkt EPSG="5514">POINT(-852572.6 -996983.47)</amcr:geom_sjtsk_wkt>
     </amcr:chranene_udaje>
     <amcr:historie>
       <amcr:id>hist-0000001</amcr:id>

@@ -99,15 +99,17 @@ class OznameniZapsatView(OznameniView):
                 projekt.suppress_signal = True
                 projekt.typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
                 dalsi_katastry = form_projekt.cleaned_data["katastry"]
-                projekt.geom = Point(
-                    float(request.POST.get("coordinate_x1")),
-                    float(request.POST.get("coordinate_x2")),
-                )
-                projekt.geom_sjtsk = Point(
-                    *convertToJTSK(float(request.POST.get("coordinate_x1")), float(request.POST.get("coordinate_x2")))
-                )
+                wgs84_x1 = float(request.POST.get("coordinate_x1"))
+                wgs84_x2 = float(request.POST.get("coordinate_x2"))
+                try:
+                    sjtsk_x1 = float(request.POST.get("coordinate_sjtsk_x1"))
+                    sjtsk_x2 = float(request.POST.get("coordinate_sjtsk_x2"))
+                except (TypeError, ValueError):
+                    sjtsk_x1, sjtsk_x2 = convertToJTSK(wgs84_x1, wgs84_x2)
+                projekt.geom_sjtsk = Point(sjtsk_x1, sjtsk_x2, srid=5514)
+                projekt.geom = Point(wgs84_x1, wgs84_x2)
                 projekt.geom_system = "5514"
-                projekt.hlavni_katastr = get_cadastre_from_point(projekt.geom)
+                projekt.hlavni_katastr = get_cadastre_from_point(projekt.geom_sjtsk)
                 logger.debug(
                     "oznameni.views.index.hlavni_katastr",
                     extra={
@@ -382,15 +384,14 @@ def post_poi2kat(request):
     """
     try:
         body = json.loads(request.body.decode("utf-8"))
-        geom = Point(float(body["x1"]), float(body["x2"]))
+        point = (float(body["x1"]), float(body["x2"]))
     except (json.JSONDecodeError, UnicodeDecodeError, KeyError, TypeError, ValueError) as e:
         logger.warning("post_poi2kat: neplatný požadavek: %s", e)
         return JsonResponse({"cadastre": ""}, status=400)
-    katastr = get_cadastre_from_point(geom)
+    katastr = get_cadastre_from_point(point)
     if len(str(katastr)) > 0:
         return JsonResponse({"cadastre": str(katastr)}, status=200)
-    else:
-        return JsonResponse({"cadastre": ""}, status=200)
+    return JsonResponse({"cadastre": ""}, status=200)
 
 
 class OznamovatelCreateView(LoginRequiredMixin, TemplateView):

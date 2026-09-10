@@ -9,7 +9,7 @@ from core.constants import (
     POTVRZENI_PIAN,
     ZAPSANI_PIAN,
 )
-from core.coordTransform import transform_geom_to_sjtsk
+from core.coordTransform import transform_geom_to_wgs84
 from core.exceptions import MaximalIdentNumberError
 from django.contrib import messages
 from django.contrib.gis.db import models as pgmodels
@@ -56,7 +56,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         db_index=True,
     )
     geom = pgmodels.GeometryField(null=False, srid=4326, db_index=True)
-    geom_sjtsk = pgmodels.GeometryField(blank=True, null=True, srid=5514, db_index=True)
+    geom_sjtsk = pgmodels.GeometryField(null=False, srid=5514, db_index=True)
     geom_system = models.CharField(max_length=6, default="5514", db_index=True)
     zm10 = models.ForeignKey(
         "Kladyzm",
@@ -154,11 +154,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         db_table = "pian"
         constraints = [
             CheckConstraint(
-                condition=(
-                    (Q(geom_system="5514") & Q(geom_sjtsk__isnull=False))
-                    | (Q(geom_system="4326") & Q(geom__isnull=False))
-                    | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))
-                ),
+                condition=Q(geom_system__in=["4326", "5514"]),
                 name="pian_geom_check",
             ),
         ]
@@ -364,8 +360,12 @@ def vytvor_pian(katastr, fedora_transaction):
         logger.error("dj.signals.create_dokumentacni_jednotka.zm50s.not_found")
         raise Exception("zm50s.not_found")
     try:
-        geom = katastr.hranice
-        geom_jtsk, res = transform_geom_to_sjtsk(str(geom).split(";")[1])
+        # katastr.hranice je EPSG:5514 (S-JTSK). Pian má
+        # ``geom`` v EPSG:4326 a ``geom_sjtsk`` v EPSG:5514
+        geom_sjtsk = katastr.hranice
+        geom_wgs84_wkt, res = transform_geom_to_wgs84(geom_sjtsk.wkt)
+        if res != "OK":
+            raise RuntimeError(f"vytvor_pian transform 5514→4326 failed: {res}")
         presnost = Heslar.objects.get(pk=PIAN_PRESNOST_KATASTR)
         typ = Heslar.objects.get(pk=GEOMETRY_PLOCHA)
         pian = Pian(
@@ -374,9 +374,9 @@ def vytvor_pian(katastr, fedora_transaction):
             zm50=zm50,
             typ=typ,
             presnost=presnost,
-            geom=geom,
-            geom_sjtsk=GEOSGeometry(geom_jtsk),
-            geom_system="4326",
+            geom=GEOSGeometry(geom_wgs84_wkt, srid=4326),
+            geom_sjtsk=geom_sjtsk,
+            geom_system="5514",
         )
         pian.active_transaction = fedora_transaction
         pian.set_permanent_ident_cely()
