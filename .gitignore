@@ -117,8 +117,3 @@ logstash/logstash.conf
 /prometheus/prometheus.yml
 /webclient/core/tests/resources/ssl.crt
 /webclient/core/tests/resources/ssl.key
-
-# agents
-.codex/
-.claude/
-.cursor/
