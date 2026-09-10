@@ -1,28 +1,30 @@
 """
-Testy shody RDF formátu mezi ``_FastFedoraWriter`` a :class:`FedoraRepositoryConnector`.
+Testy shody mezi ``_FastFedoraWriter`` a :class:`FedoraRepositoryConnector`.
 
 ``generate_metadata_fast`` zapisuje do Fedory vlastní, zrychlenou cestou a přitom musí
-produkovat bajtově stejné RDF jako běžný zápis z aplikace - jinak by se záznamy vzniklé
-migrací lišily od záznamů vzniklých v provozu a nic by si toho nevšimlo (závěrečná
-kontrola konzistence porovnává jen identifikátory, ne RDF). Dřív tuhle shodu držela
-pouze věta v docstringu; tenhle test ji hlídá skutečným porovnáním odeslaných dat
-(review PR #4262).
+produkovat stejné RDF a používat stejná Fedora model names jako běžný zápis z aplikace -
+jinak by se záznamy vzniklé migrací lišily od záznamů vzniklých v provozu a nic by si
+toho nevšimlo (závěrečná kontrola konzistence porovnává jen identifikátory a navíc se
+opírá o tytéž názvy, takže by ohlásila falešnou shodu). Dřív tuhle shodu držela pouze
+věta v docstringu; tenhle modul ji hlídá testy (review PR #4262).
 
 Data se odebírají tak, jak by odešla na drát - odesílací metoda se nahradí záchytem,
 takže se testuje reálné chování obou implementací, ne podoba jejich zdrojáku.
 """
 
+import ast
+import inspect
 from types import SimpleNamespace
 from unittest import mock
 
-from core.management.commands.generate_metadata_fast import _FastFedoraWriter
+from core.management.commands.generate_metadata_fast import _FastFedoraWriter, _get_schema_by_name
 from core.repository_connector import FedoraRepositoryConnector, FedoraRequestType
 from django.test import SimpleTestCase, override_settings
 
 SERVER_NAME = "AMCR-TEST"
 USER_IDENT = "U-000322"
 IDENT_CELY = "C-202300001"
-MODEL_NAME = "akce"
+MODEL_NAME = "projekt"
 
 
 @override_settings(
@@ -111,3 +113,70 @@ class CreatorRdfParityTest(SimpleTestCase):
         link_data = [data for url, data in zachyceno if "/member" in url]
         self.assertEqual(len(link_data), 1, f"očekáván jeden zápis link resource, zachyceno: {zachyceno}")
         self.assertEqual(link_data[0], ocekavane)
+
+
+class ModelNameParityTest(SimpleTestCase):
+    """
+    Hlídá, že Fedora model names migrace odpovídají těm, které používá aplikace.
+
+    ``generate_metadata_fast`` je odvozuje z ``DocumentGenerator._get_schema_dict()``,
+    zatímco aplikace má vlastní ruční tabulku v ``FedoraRepositoryConnector._get_model_name``.
+    Kdyby se rozešly, migrace by zapsala ``/model/{jméno}/member`` linky pod názvem, na který
+    se aplikace nikdy nezeptá - a ``_zkontroluj_konzistenci`` by přitom hlásila shodu, protože
+    porovnává proti témže odvozeným názvům (review PR #4262).
+    """
+
+    @staticmethod
+    def _model_name_z_connectoru(nazev_tridy):
+        """
+        Zavolá ``FedoraRepositoryConnector._get_model_name`` pro daný název třídy.
+
+        Metoda čte jen ``self.record.__class__.__name__``, takže stačí atrapa se
+        správným názvem třídy - není potřeba DB ani instance modelu.
+
+        :param nazev_tridy: Název modelové třídy (např. ``"Projekt"``).
+        :return: Fedora model name, nebo ``None`` když ho tabulka nezná.
+        """
+        connector = FedoraRepositoryConnector.__new__(FedoraRepositoryConnector)
+        connector.record = type(nazev_tridy, (), {})()
+        return connector._get_model_name()
+
+    def test_vsechny_modely_maji_shodne_fedora_name(self):
+        """Pro každý generovaný model musí obě strany dát stejné Fedora model name."""
+        schema = _get_schema_by_name()
+        self.assertGreater(len(schema), 0)
+        rozdily = {}
+        for nazev_tridy, (_trida, fedora_name) in schema.items():
+            z_connectoru = self._model_name_z_connectoru(nazev_tridy)
+            if z_connectoru != fedora_name:
+                rozdily[nazev_tridy] = (fedora_name, z_connectoru)
+        self.assertEqual(
+            rozdily,
+            {},
+            "Fedora model names se rozešly (model: generátor vs FedoraRepositoryConnector): " f"{rozdily}",
+        )
+
+    def test_connector_nezna_zadny_model_navic(self):
+        """
+        Tabulka v ``_get_model_name`` nesmí obsahovat model, který migrace negeneruje.
+
+        Opačný směr než test výše: název, který zná jen aplikace, by znamenal, že se
+        na něj někdo dotazuje, ale migrace pod ním nic nezapsala. Klíče se čtou z AST
+        metody - kdyby se přepsala do jiné podoby, test spadne a je to signál, že se
+        na tuhle shodu musí někdo podívat.
+        """
+        strom = ast.parse(inspect.getsource(FedoraRepositoryConnector._get_model_name).lstrip())
+        slovniky = [n for n in ast.walk(strom) if isinstance(n, ast.Dict)]
+        self.assertEqual(
+            len(slovniky),
+            1,
+            "V `_get_model_name` se nenašel právě jeden slovníkový literál - "
+            "metoda se změnila, zkontroluj shodu mapování ručně a uprav tento test.",
+        )
+        klice_connectoru = {k.value for k in slovniky[0].keys if isinstance(k, ast.Constant)}
+        self.assertEqual(len(klice_connectoru), len(slovniky[0].keys))
+        self.assertEqual(
+            klice_connectoru - set(_get_schema_by_name()),
+            set(),
+            "FedoraRepositoryConnector zná model(y), které generate_metadata_fast negeneruje.",
+        )

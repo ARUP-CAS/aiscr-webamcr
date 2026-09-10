@@ -78,6 +78,10 @@ _WATCHDOG_INTERVAL = 30
 #: v ``getaddrinfo`` zastavilo celý běh).
 _POOL_SIZE = 32
 
+#: Kolik průchodů ``_flush_db_updates`` nejvýš udělá, než se vzdá dobíhajících zápisů
+#: od opuštěných vláken (viz ``_flush_db_updates``).
+_FLUSH_MAX_PRUCHODU = 5
+
 #: Kolik položek na jedno vlákno smí být rozpracovaných zároveň (viz ``_run_parallel``).
 #: Stejnojmenná konstanta se stejnou hodnotou je i v ``generate_metadata.py``.
 _BATCH_PER_WORKER = 10
@@ -921,8 +925,11 @@ class Command(BaseCommand):
         ``core/repository_connector.py`` (``size / 1024**2``, MiB) - ne ``/1_000_000``,
         ať DB po migraci odpovídá jednotkám, které používá zbytek aplikace.
 
+        Mapa se při zpracování vybírá (vyprazdňuje), takže po návratu je prázdná a
+        opakované zavolání nic znovu neaktualizuje.
+
         :param db_updates: Mapa ``mimetype -> [Soubor.pk, ...]`` nasbíraná v ``_process_record``,
-            nebo ``None`` bez ``--aktualizovat-db`` (pak se nic nedělá).
+            nebo ``None`` bez ``--aktualizovat-db`` (pak se nic nedělá). Funkce ji vyprázdní.
         :param db_updates_lock: Zámek chránící ``db_updates`` (viz ``_process_record``).
         :param placeholders: Mapa mimetype -> placeholder obsah (``_load_placeholders``).
         """
@@ -931,19 +938,34 @@ class Command(BaseCommand):
         if db_updates is None:
             return
         # Watchdog zaseknutá vlákna jen opouští, nezabíjí je - takové vlákno může do
-        # `db_updates` ještě zapsat. Iterovat přímo přes sdílený dict by proto mohlo
-        # skončit `RuntimeError: dictionary changed size during iteration`, takže se
-        # pod zámkem udělá kopie (review issue #3967).
-        with db_updates_lock:
-            db_updates = {mimetype: list(pks) for mimetype, pks in db_updates.items()}
+        # `db_updates` ještě zapsat, klidně až po prvním průchodu. Proto se dict pod
+        # zámkem *vybere* (a vyprázdní), ne jen zkopíruje, a opakuje se to, dokud něco
+        # přibývá: kopie by pozdní zápis nechala nezpracovaný a `Soubor.sha_512`/
+        # `size_mb` by pak trvale neodpovídaly placeholderu, který ve Fedoře reálně je
+        # (review PR #4262). Vybírání zároveň brání tomu, aby se stejné pk aktualizovalo
+        # v dalším průchodu znovu.
+        for _pruchod in range(_FLUSH_MAX_PRUCHODU):
+            with db_updates_lock:
+                davka = {mimetype: pks for mimetype, pks in db_updates.items() if pks}
+                db_updates.clear()
+            if not davka:
+                return
 
-        for mimetype, pks in db_updates.items():
-            if not pks:
-                continue
-            entry = placeholders[mimetype]
-            size_mb = Decimal(len(entry["orig_bytes"])) / Decimal(1024**2)
-            for chunk in _po_davkach(pks, 5000):
-                Soubor.objects.filter(pk__in=chunk).update(sha_512=entry["orig_sha512"], size_mb=size_mb)
+            for mimetype, pks in davka.items():
+                entry = placeholders[mimetype]
+                size_mb = Decimal(len(entry["orig_bytes"])) / Decimal(1024**2)
+                for chunk in _po_davkach(pks, 5000):
+                    Soubor.objects.filter(pk__in=chunk).update(sha_512=entry["orig_sha512"], size_mb=size_mb)
+
+        # Sem se dostaneme jen když i po `_FLUSH_MAX_PRUCHODU` průchodech pořád něco
+        # přibývá - to už není pozdní dozvuk jednoho vlákna, ale něco nečekaného.
+        with db_updates_lock:
+            zbyva = sum(len(pks) for pks in db_updates.values())
+        if zbyva:
+            logger.warning(
+                "core.management.commands.generate_metadata_fast.db_updates_neodeslane",
+                extra={"pocet": zbyva, "pruchodu": _FLUSH_MAX_PRUCHODU},
+            )
 
     @staticmethod
     def _process_record(obj, writer, max_retries, failures, placeholders=None, db_updates=None, db_updates_lock=None):
@@ -1300,44 +1322,21 @@ class Command(BaseCommand):
         # "neopakovat", a mlčky by z ní udělalo 3 pokusy (review PR #4262).
         max_retries = options["max_retries"]
         aktualizovat_db = bool(options.get("aktualizovat_db"))
-        schema_by_name = _get_schema_by_name()
-
-        if not model_class:
-            # Bez --model se --start-with-pk aplikuje stejně na všech 15 modelů (stejné
-            # chování jako u generate_metadata) - jako navázání po pádu dává smysl jen
-            # pro model, na kterém běh spadl; pro ostatní se tím zbytečně přeskočí
-            # záznamy s nižším pk. Použij --start-with-pk vždy spolu s --model.
-            for current_class, _fedora_name in schema_by_name.values():
-                queryset = self._queryset_pro_model(current_class, start_with_pk, limit)
-                total = queryset.count()
-                self.stdout.write(f"== {current_class.__name__} ({total}) ==")
-                failures = []
-                # db_updates/lock jsou nové pro každý model - _flush_db_updates se volá
-                # hned po doběhnutí (ne až na konci celého běhu), ať se dopad případného
-                # pádu na aktualizaci DB omezí na jeden rozpracovaný model, ne na celý běh.
-                db_updates = defaultdict(list) if aktualizovat_db else None
-                db_updates_lock = Lock() if aktualizovat_db else None
-                self._zaseknute_ulohy += self._run_parallel(
-                    queryset.iterator(chunk_size=500),
-                    lambda obj: self._process_record(
-                        obj, writer, max_retries, failures, placeholders, db_updates, db_updates_lock
-                    ),
-                    workers,
-                    total=total,
-                )
-                self._report_failures(failures)
-                self._pocet_selhani += len(failures)
-                self._flush_db_updates(db_updates, db_updates_lock, placeholders)
-        else:
-            entry = schema_by_name.get(model_class)
-            if entry is None:
-                raise CommandError(
-                    f"Neznámý model '{model_class}'. Platné hodnoty: {', '.join(sorted(schema_by_name))}."
-                )
-            model_cls = entry[0]
-            queryset = self._queryset_pro_model(model_cls, start_with_pk, limit)
+        # Jedna smyčka pro `--model` i pro všechny modely - dřív byl celý blok (failures,
+        # db_updates, `_run_parallel`, report, flush) rozepsaný dvakrát, takže oprava
+        # provedená jen v jedné větvi by `--model X` rozešla s plným během nad týmiž daty
+        # (review PR #4262). Bez `--model` se `--start-with-pk` aplikuje stejně na všech
+        # 15 modelů (stejné chování jako u generate_metadata) - jako navázání po pádu dává
+        # smysl jen pro model, na kterém běh spadl; pro ostatní se tím zbytečně přeskočí
+        # záznamy s nižším pk. Použij `--start-with-pk` vždy spolu s `--model`.
+        for _nazev_tridy, (current_class, _fedora_name) in self._polozky_ke_zpracovani(model_class):
+            queryset = self._queryset_pro_model(current_class, start_with_pk, limit)
             total = queryset.count()
+            self.stdout.write(f"== {current_class.__name__} ({total}) ==")
             failures = []
+            # db_updates/lock jsou nové pro každý model - _flush_db_updates se volá
+            # hned po doběhnutí (ne až na konci celého běhu), ať se dopad případného
+            # pádu na aktualizaci DB omezí na jeden rozpracovaný model, ne na celý běh.
             db_updates = defaultdict(list) if aktualizovat_db else None
             db_updates_lock = Lock() if aktualizovat_db else None
             self._zaseknute_ulohy += self._run_parallel(
@@ -1351,6 +1350,30 @@ class Command(BaseCommand):
             self._report_failures(failures)
             self._pocet_selhani += len(failures)
             self._flush_db_updates(db_updates, db_updates_lock, placeholders)
+
+    @staticmethod
+    def _polozky_ke_zpracovani(model_class):
+        """
+        Přeloží ``--model`` na seznam modelů ke zpracování, nebo vrátí všechny.
+
+        Jediné místo, kde se ``--model`` validuje - dřív byla tatáž kontrola i tatáž
+        chybová zpráva zvlášť v ``_handle_metadata`` a v ``_zkontroluj_konzistenci``.
+        Kdyby se rozešly, ``--jen-kontrola`` by odmítala model, který generování přijme
+        (nebo naopak), takže by si kontrola protiřečila s vlastním generováním
+        (review PR #4262).
+
+        :param model_class: Hodnota ``--model`` (nebo ``None`` pro všechny modely).
+        :return: Seznam dvojic ``(název třídy, (třída, fedora_model_name))``.
+
+            :raises CommandError: Pokud ``--model`` neodpovídá žádnému známému modelu.
+        """
+        schema_by_name = _get_schema_by_name()
+        if not model_class:
+            return list(schema_by_name.items())
+        entry = schema_by_name.get(model_class)
+        if entry is None:
+            raise CommandError(f"Neznámý model '{model_class}'. Platné hodnoty: {', '.join(sorted(schema_by_name))}.")
+        return [(model_class, entry)]
 
     @staticmethod
     def _queryset_pro_model(model_cls, start_with_pk, limit):
@@ -1412,7 +1435,10 @@ class Command(BaseCommand):
 
         Porovnává se přes ``/model/{model}/member`` (link zdroje), protože ty jsou 1:1 se
         záznamy. Použijí se stejné filtry (``--model``/``--limit``/``--start-with-pk``) jako
-        při generování, aby srovnání dávalo smysl i u částečného běhu.
+        při generování, aby srovnání dávalo smysl i u částečného běhu. Kontrola proto
+        **není globální**, kdykoli je nějaký filtr zadaný - vypisuje se rozsah a i hlášení
+        o úspěchu se o něj opírá, aby navázaný běh (``--force --start-with-pk``) netvrdil
+        konzistenci celé DB, přestože záznamy pod bodem navázání neviděl.
 
         :param options: Parametry příkazu.
         :param writer: Sdílený ``_FastFedoraWriter``.
@@ -1422,22 +1448,23 @@ class Command(BaseCommand):
         model_class = options.get("model")
         limit = options.get("limit")
         start_with_pk = options.get("start_with_pk")
-        schema_by_name = _get_schema_by_name()
+        polozky = self._polozky_ke_zpracovani(model_class)
 
+        # Kontrola používá stejné filtry jako generování, takže při --start-with-pk/--limit
+        # neporovnává celou DB. Rozsah se proto vypisuje a "vše sedí" se o něj opírá -
+        # jinak by navázaný běh (--force --start-with-pk) tvrdil globální konzistenci,
+        # přestože záznamy pod bodem navázání vůbec neviděl (review PR #4262).
+        omezeni = []
         if model_class:
-            # Stejná validace jako v `_handle_metadata` - bez ní tady typo v `--model`
-            # spadlo na neodchycený `KeyError` místo srozumitelné chyby (review PR #4262).
-            entry = schema_by_name.get(model_class)
-            if entry is None:
-                raise CommandError(
-                    f"Neznámý model '{model_class}'. Platné hodnoty: {', '.join(sorted(schema_by_name))}."
-                )
-            polozky = [(model_class, entry)]
-        else:
-            polozky = list(schema_by_name.items())
+            omezeni.append(f"model {model_class}")
+        if start_with_pk:
+            omezeni.append(f"pk >= {start_with_pk}")
+        if limit is not None:
+            omezeni.append(f"prvních {limit} na model")
+        rozsah = ", ".join(omezeni) if omezeni else "celá DB"
 
         self.stdout.write("")
-        self.stdout.write("=== Kontrola konzistence DB vs Fedora ===")
+        self.stdout.write(f"=== Kontrola konzistence DB vs Fedora (rozsah: {rozsah}) ===")
         self.stdout.write(f"{'model':<24}{'DB':>9}{'Fedora':>9}{'chybí':>8}{'navíc':>8}")
 
         vse_chybi = []
@@ -1498,7 +1525,15 @@ class Command(BaseCommand):
             )
 
         if not vse_chybi and not vse_navic and not nezkontrolovano:
-            self.stdout.write(self.style.SUCCESS("Vše sedí - žádné chybějící ani přebývající záznamy."))
+            if omezeni:
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"V rozsahu ({rozsah}) vše sedí. Pozor, mimo tenhle rozsah se nekontrolovalo - "
+                        "celou DB proti Fedoře porovná `--jen-kontrola` bez --model/--limit/--start-with-pk."
+                    )
+                )
+            else:
+                self.stdout.write(self.style.SUCCESS("Vše sedí - žádné chybějící ani přebývající záznamy."))
             return True
         return False
 
