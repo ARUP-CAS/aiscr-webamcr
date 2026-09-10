@@ -27,9 +27,33 @@ import django.contrib.gis.db.models.fields
 from django.db import migrations, models
 
 
-#: Po kolika řádcích se backfill commituje. Vyšší číslo znamená méně režie,
-#: ale delší transakci; 1000 je kompromis ověřený na 258 tisících pianech.
+#: Velikost jedné dávky backfillu. Každá dávka je samostatná transakce, po
+#: které je práce zapsaná natrvalo – vyšší číslo znamená míň režie, ale delší
+#: transakci a víc práce ztracené při případném pádu. 1000 je kompromis
+#: ověřený na 258 tisících pianech.
 _DAVKA = 1000
+
+
+def _prepni_trigger(connection, *, zapnout):
+    """
+    Zapne nebo vypne ``trg_validate_geometries`` v krátké vlastní transakci.
+
+    ``ALTER TABLE`` bere na ``pian`` zámek ``ACCESS EXCLUSIVE``. Držet ho po
+    celou dobu backfillu nelze: běh přes stovky tisíc řádků trvá minuty,
+    zatímco aplikace má ``statement_timeout=90000`` (viz ``settings.base``)
+    a do toho limitu se počítá i čekání na zámek – každý dotaz nad ``pian``
+    by po celou dobu nasazení skončil chybou. Přepnutí proto běží samostatně
+    a zámek se drží jen na okamžik.
+
+    :param connection: Databázové spojení ze ``schema_editor``.
+    :param zapnout: ``True`` zapne trigger, ``False`` ho vypne.
+    """
+    from django.db import transaction
+
+    smer = "ENABLE" if zapnout else "DISABLE"
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(f"ALTER TABLE pian {smer} TRIGGER trg_validate_geometries")
 
 
 def _doplnit_geom_sjtsk(apps, schema_editor):
@@ -48,33 +72,31 @@ def _doplnit_geom_sjtsk(apps, schema_editor):
     zůstanou prázdné – ``AlterField`` pak skončí chybou a nasazení se zastaví,
     což je správně: tichý default by do dat vnesl nesmyslnou geometrii.
 
-    Po dobu backfillu je vypnutý trigger ``trg_validate_geometries``. Ten je
-    ``BEFORE INSERT OR UPDATE OF geom, geom_sjtsk`` a jeho funkce validuje
-    **obě** kolony včetně ``NEW.geom``, kterou tahle migrace vůbec nemění.
-    V datech přitom existují starší piany, jejichž ``geom`` dnešní
+    **Trigger.** Po dobu backfillu je vypnutý ``trg_validate_geometries``.
+    Ten je ``BEFORE INSERT OR UPDATE OF geom, geom_sjtsk`` a jeho funkce
+    validuje **obě** kolony včetně ``NEW.geom``, kterou tahle migrace vůbec
+    nemění. V datech přitom existují starší piany, jejichž ``geom`` dnešní
     ``validategeom`` neuznává (``geometryNotSimple``, ``segmentsTooShort``,
     ``BBox``) – vznikly dřív než ten trigger. Bez vypnutí by první takový
     řádek shodil celou migraci, a tím i nasazení, přestože o zápis nevalidní
     geometrie vůbec nejde.
 
-    Vypnutí i zapnutí běží v jedné transakci s backfillem, takže nemůže
-    zůstat trigger vypnutý, když cokoli selže.
+    Vypnutí, backfill i zapnutí jsou **tři oddělené transakce**, ne jedna.
+    Zámek ``ACCESS EXCLUSIVE`` z ``ALTER TABLE`` se tak drží jen na okamžik
+    (viz :func:`_prepni_trigger`) a jednotlivé dávky se průběžně commitují,
+    takže neúspěch nezahodí celou dosud odvedenou práci. Zapnutí zpět je ve
+    ``finally``, takže trigger nezůstane vypnutý ani při chybě uprostřed.
     """
     from core.coordTransform import transform_geom_to_sjtsk
-    from django.db import transaction
 
     Pian = apps.get_model("pian", "Pian")
     connection = schema_editor.connection
 
-    zpracovano = preskoceno = 0
-    with transaction.atomic():
-        with connection.cursor() as cursor:
-            cursor.execute("ALTER TABLE pian DISABLE TRIGGER trg_validate_geometries")
-        try:
-            zpracovano, preskoceno = _projed_davky(Pian, connection, transform_geom_to_sjtsk)
-        finally:
-            with connection.cursor() as cursor:
-                cursor.execute("ALTER TABLE pian ENABLE TRIGGER trg_validate_geometries")
+    _prepni_trigger(connection, zapnout=False)
+    try:
+        zpracovano, preskoceno = _projed_davky(Pian, connection, transform_geom_to_sjtsk)
+    finally:
+        _prepni_trigger(connection, zapnout=True)
 
     if zpracovano or preskoceno:
         print(f"  pian.geom_sjtsk doplnen: {zpracovano}, nepodarilo se: {preskoceno}", flush=True)
@@ -84,11 +106,17 @@ def _projed_davky(Pian, connection, transform_geom_to_sjtsk):
     """
     Projde piany bez ``geom_sjtsk`` po dávkách a dopočítá jim hodnotu.
 
+    Každá dávka běží ve vlastní transakci a po jejím konci je zapsaná
+    natrvalo. Migrace má proto ``atomic = False`` – jedna společná transakce
+    by držela zámky a nevyřízené trigger eventy po celou dobu běhu.
+
     :param Pian: Historický model ``pian.Pian`` z ``apps.get_model``.
     :param connection: Databázové spojení ze ``schema_editor``.
     :param transform_geom_to_sjtsk: Funkce převodu WKT do EPSG:5514.
     :return: Dvojice ``(zpracovano, preskoceno)``.
     """
+    from django.db import transaction
+
     zpracovano = preskoceno = 0
     while True:
         davka = list(
@@ -98,18 +126,19 @@ def _projed_davky(Pian, connection, transform_geom_to_sjtsk):
         )
         if not davka:
             break
-        for pk, geom in davka:
-            wkt, stav = transform_geom_to_sjtsk(geom.wkt)
-            if stav != "OK" or not wkt:
-                _preskocene.add(pk)
-                preskoceno += 1
-                continue
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "UPDATE pian SET geom_sjtsk = ST_GeomFromText(%s, 5514) WHERE id = %s",
-                    [wkt, pk],
-                )
-            zpracovano += 1
+        with transaction.atomic():
+            for pk, geom in davka:
+                wkt, stav = transform_geom_to_sjtsk(geom.wkt)
+                if stav != "OK" or not wkt:
+                    _preskocene.add(pk)
+                    preskoceno += 1
+                    continue
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "UPDATE pian SET geom_sjtsk = ST_GeomFromText(%s, 5514) WHERE id = %s",
+                        [wkt, pk],
+                    )
+                zpracovano += 1
 
     return zpracovano, preskoceno
 

@@ -223,6 +223,30 @@ Funkce
 
    :return: Instance :class:`RuianKatastr` nebo ``None``.
 
+.. py:function:: reprezentativni_bod_sql(sloupec)
+
+   Vrátí SQL výraz pro reprezentativní bod PIANu.
+
+   Do prostorového porovnání s katastrem nevstupuje celá geometrie PIANu, ale
+   jediný bod – viz issue #315: dokud se porovnávala celá geometrie, PIAN
+   ležící přes dvě katastrální území matchoval obě a hlavní katastr vycházel
+   nejednoznačně. Bod se volí podle typu geometrie:
+
+   * ``LineString`` – ``ST_LineInterpolatePoint(geom, 0.5)``, střed linie;
+   * ``Polygon`` / ``MultiPolygon`` – ``ST_PointOnSurface(geom)``, který na
+     rozdíl od centroidu leží vždy uvnitř plochy;
+   * ostatní – ``ST_Centroid(geom)``.
+
+   Funkce existuje proto, aby týž výraz nebyl opsaný na dvou místech: používá
+   ho :func:`get_all_pians_with_akce` i
+   ``heslar.ruian_sync.reassign._compute_az_katastr_assignment``. Rozcházely
+   by se jinak tiše a hlavní katastr by u téhož PIANu vycházel jinak podle
+   toho, kterou cestou se počítá.
+
+   :param sloupec: SQL výraz s geometrií PIANu v EPSG:5514 (název sloupce
+       včetně aliasu tabulky, např. ``pian.geom_sjtsk``).
+   :return: SQL ``CASE`` výraz vracející bod.
+
 .. py:function:: get_all_pians_with_akce(ident_cely, exclude_kod)
 
    Funkce pro získaní všech pianů s akci.

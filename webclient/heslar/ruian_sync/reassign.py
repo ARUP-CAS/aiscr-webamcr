@@ -31,17 +31,17 @@ from core.repository_connector import (
     FedoraTransactionCommitFailedError,
     FedoraTransactionStatus,
 )
-from core.utils import get_cadastre_from_point
+from core.utils import get_cadastre_from_point, reprezentativni_bod_sql
 from dj.models import DokumentacniJednotka
 from django.db import connection, transaction
 from heslar import hesla_dynamicka
 from heslar.hesla_dynamicka import TYP_DJ_KATASTR
 from heslar.models import RuianKatastr
+from heslar.ruian_sync.prubeh import print_progress
 from historie.models import Historie
 from neidentakce.models import NeidentAkce
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
-from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -269,7 +269,10 @@ def log_katastr_change(historie_vazba_id: Optional[int], *casti: str) -> None:
         return
     Historie.objects.create(
         typ_zmeny=ZMENA_KATASTRU,
-        uzivatel=User.objects.get(pk=hesla_dynamicka.ADMIN_USER),
+        # ``uzivatel_id`` místo ``uzivatel``: instance se nikde nepoužívá, jen
+        # se z ní bere cizí klíč. Načítat ji dotazem u každého záznamu je při
+        # přepočtu přes desítky tisíc záznamů zbytečné N+1.
+        uzivatel_id=hesla_dynamicka.ADMIN_USER,
         poznamka=poznamka,
         vazba_id=historie_vazba_id,
     )
@@ -329,7 +332,7 @@ def _compute_az_katastr_assignment(
             jsou všechny další unikátní katastry. Pokud AZ nemá DJ
             s PIAN intersectem, vrací ``(None, [])``.
     """
-    query = """
+    query = f"""
         SELECT k.id
         FROM (
             SELECT dj.ident_cely AS dj_ident_cely, pian.geom_sjtsk AS pian_geom
@@ -341,15 +344,7 @@ def _compute_az_katastr_assignment(
         JOIN public.ruian_katastr k ON ST_Intersects(k.hranice, dp.pian_geom)
         WHERE %s::int IS NULL OR k.kod <> %s::int
         ORDER BY dp.dj_ident_cely,
-                 ST_Intersects(k.hranice,
-                     CASE
-                         WHEN ST_GeometryType(dp.pian_geom) = 'ST_LineString'
-                             THEN ST_LineInterpolatePoint(dp.pian_geom, 0.5)
-                         WHEN ST_GeometryType(dp.pian_geom) IN ('ST_Polygon', 'ST_MultiPolygon')
-                             THEN ST_PointOnSurface(dp.pian_geom)
-                         ELSE ST_Centroid(dp.pian_geom)
-                     END
-                 ) DESC,
+                 ST_Intersects(k.hranice, {reprezentativni_bod_sql('dp.pian_geom')}) DESC,
                  k.nazev
     """
     with connection.cursor() as cursor:
@@ -463,6 +458,11 @@ def reassign_az(
     * lokální Fedora transakci otevírá až ve chvíli, kdy je jistý zápis;
     * M2M aktualizuje delta-only přes ``add()`` + ``remove()``.
 
+    Když AZ nemá jedinou DJ s PIANem, nemá přepočet z čeho vyjít a záznam se
+    vrací beze změny. Při **mazání katastru** (``exclude_kod``) to ale nestačí:
+    pokud na mazaný katastr pořád ukazuje, propadne se na fallback větev
+    s prostorovým náhradníkem, jinak by ``RESTRICT`` zablokoval smazání.
+
     Pokud první DJ je typu *celokatastr* (``TYP_DJ_KATASTR``), přepočet se
     při běžném volání neprovádí – zachovává se původní semantika
     ``core.utils`` utility, která zde nedělala nic. **Výjimkou je mazání
@@ -500,7 +500,20 @@ def reassign_az(
         changed = _update_az_katastry_if_changed(az, exclude_kod=exclude_kod)
         if changed:
             az.refresh_from_db()
-        return az.hlavni_katastr
+        # Přepočet stojí na PIANech: ``_compute_az_katastr_assignment`` joinuje
+        # ``dokumentacni_jednotka`` na ``pian`` s vyplněným ``geom_sjtsk``.
+        # Když AZ žádnou takovou DJ nemá, vrátí se beze změny – a při mazání
+        # katastru by pak dál ukazoval na mizející záznam. FK má ``RESTRICT``,
+        # takže by ``katastr.delete()`` skončil ``RestrictedError``, katastr by
+        # v DB zůstal natrvalo a denní událost ``ZaniklyPrvek`` by se spotřebovala
+        # jen s poznámkou v auditu. Proto se tu nekončí, ale propadá se na
+        # stejnou fallback větev jako u celokatastr DJ.
+        if not _odkazuje_na_mazany_katastr(az, exclude_kod):
+            return az.hlavni_katastr
+        logger.warning(
+            "heslar.ruian_sync.reassign.reassign_az.fallback_bez_pianu",
+            extra={"ident_cely": az.ident_cely, "exclude_kod": exclude_kod},
+        )
 
     # Celokatastr DJ nemá smysl řešit PIAN intersectem – původní
     # `update_all_katastr_within_akce_or_lokalita` v tomto případě vůbec nic
@@ -824,27 +837,6 @@ def reassign_neident_akce(
 _REASSIGN_MODELS = ("projekt", "az", "sn")
 
 
-def _print_progress(label: str, current: int, total: int, last_pct: int) -> int:
-    """
-    Vypíše progress (1% throttle) na stdout a vrátí naposledy vypsané procento.
-
-    :param label: Krátký prefix řádku (např. ``"projekt"``).
-    :param current: Kolik záznamů již zpracováno (1-based).
-    :param total: Celkový počet záznamů ke zpracování.
-    :param last_pct: Naposledy vypsané procento – aby se nevypisovalo pro každý záznam.
-
-        :return: Nové ``last_pct`` (vrátí se stejná hodnota, pokud se ještě
-            nevypsalo nové procento).
-    """
-    if total <= 0:
-        return last_pct
-    pct = int(current * 100 / total)
-    if pct > last_pct:
-        print(f"  {label}: {current}/{total} ({pct}%)", flush=True)
-        return pct
-    return last_pct
-
-
 def _iter_pk_chunks(queryset, chunk_size: int = 1000) -> Iterator:
     """
     Iteruje queryset po dávkách řazených podle PK (keyset pagination).
@@ -972,7 +964,7 @@ def _reassign_all_projekt() -> Dict[str, int]:
                 extra={"ident_cely": projekt.ident_cely, "error": str(err)[:500]},
             )
             counts["errors"] += 1
-            last_pct = _print_progress("projekt", idx, total, last_pct)
+            last_pct = print_progress("projekt", idx, total, last_pct)
             continue
         if new_kat is None:
             counts["skipped"] += 1
@@ -980,7 +972,7 @@ def _reassign_all_projekt() -> Dict[str, int]:
             counts["changed"] += 1
         else:
             counts["unchanged"] += 1
-        last_pct = _print_progress("projekt", idx, total, last_pct)
+        last_pct = print_progress("projekt", idx, total, last_pct)
     return counts
 
 
@@ -1008,7 +1000,6 @@ def _reassign_all_az() -> Dict[str, int]:
         ArcheologickyZaznam.objects.filter(Exists(has_dj))
         .select_related("hlavni_katastr")
         .defer("hlavni_katastr__hranice")
-        .prefetch_related("dokumentacni_jednotky_akce__komponenty__komponenty", "katastry")
     )
     total = qs.count()
     print(f"AZ: zpracovávám {total} záznamů (jen s DJ)", flush=True)
@@ -1023,7 +1014,7 @@ def _reassign_all_az() -> Dict[str, int]:
                 extra={"ident_cely": az.ident_cely, "error": str(err)[:500]},
             )
             counts["errors"] += 1
-            last_pct = _print_progress("az", idx, total, last_pct)
+            last_pct = print_progress("az", idx, total, last_pct)
             continue
         if new_kat is None:
             counts["skipped"] += 1
@@ -1031,7 +1022,7 @@ def _reassign_all_az() -> Dict[str, int]:
             counts["changed"] += 1
         else:
             counts["unchanged"] += 1
-        last_pct = _print_progress("az", idx, total, last_pct)
+        last_pct = print_progress("az", idx, total, last_pct)
     return counts
 
 
@@ -1062,7 +1053,7 @@ def _reassign_all_sn() -> Dict[str, int]:
                 extra={"ident_cely": sn.ident_cely, "error": str(err)[:500]},
             )
             counts["errors"] += 1
-            last_pct = _print_progress("sn", idx, total, last_pct)
+            last_pct = print_progress("sn", idx, total, last_pct)
             continue
         if new_kat is None:
             counts["skipped"] += 1
@@ -1070,5 +1061,5 @@ def _reassign_all_sn() -> Dict[str, int]:
             counts["changed"] += 1
         else:
             counts["unchanged"] += 1
-        last_pct = _print_progress("sn", idx, total, last_pct)
+        last_pct = print_progress("sn", idx, total, last_pct)
     return counts

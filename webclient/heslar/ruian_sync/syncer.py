@@ -59,6 +59,7 @@ from heslar.ruian_sync.provider import (
     RuianOkresDTO,
     RuianSource,
 )
+from heslar.ruian_sync.prubeh import print_progress
 from heslar.ruian_sync.vfr_parser import RuianMissingMandatoryFieldError
 from neidentakce.models import NeidentAkce
 from pas.models import SamostatnyNalez
@@ -200,6 +201,19 @@ _MAX_ODCHYLKA_PLOCHY_PCT = 0.5
 #: ČÚZK jich mají nula – měřeno 8. 9. 2026 na všech 13 091 katastrech –, takže
 #: jakýkoli nevalidní polygon znamená vadu vstupu, ne běžný stav.
 _MAX_NEVALIDNICH_HRANIC = 0
+
+
+class RuianNesmazatelnyKatastrError(RuntimeError):
+    """
+    Katastr určený ke smazání zůstal v databázi kvůli ``RESTRICT`` vazbě.
+
+    Vyhazuje se **až po zpracování všech ostatních prvků**, aby se běh
+    nepřerušil uprostřed. Smyslem je nenechat den doběhnout jako úspěšný:
+    událost ``ZaniklyPrvek`` je vázaná na jeden konkrétní den a zdroj ji už
+    nezopakuje, takže „spotřebovat“ ji s pouhou poznámkou v auditu by
+    znamenalo, že katastr v heslářích zůstane natrvalo. Neúspěšný běh naopak
+    kotvu neposune a den se zkusí znovu.
+    """
 
 
 class RuianNeuplnyZdrojError(RuntimeError):
@@ -402,7 +416,7 @@ def _apply_full_state(
         existing_kraj = RuianKraj.objects.filter(kod=kraj_dto.kod).first() if kraj_dto.kod in db_kraj_codes else None
         if _upsert_kraj(existing_kraj, kraj_dto):
             run.kraj_upserts += 1
-        last_pct = _print_progress("kraj upsert", i, total_kraje, last_pct)
+        last_pct = print_progress("kraj upsert", i, total_kraje, last_pct)
 
     db_okres_codes = set(RuianOkres.objects.values_list("kod", flat=True))
     state_okres_codes = set()
@@ -413,7 +427,7 @@ def _apply_full_state(
         state_okres_codes.add(okres_dto.kod)
         if _upsert_okres(_najdi_okres_k_upsertu(db_okres_codes, okres_dto.kod), okres_dto):
             run.okres_upserts += 1
-        last_pct = _print_progress("okres upsert", i, total_okresy, last_pct)
+        last_pct = print_progress("okres upsert", i, total_okresy, last_pct)
 
     # Existující katastry: načítáme jen ``kod`` (bez geometrií ``hranice``/
     # ``definicni_bod``), abychom se vyhnuli jednomu obřímu SELECTu, který
@@ -434,7 +448,7 @@ def _apply_full_state(
         changed, _hranice_changed = _upsert_katastr(existing_katastr, katastr_dto, run)
         if changed:
             run.katastr_upserts += 1
-        last_pct = _print_progress("katastr upsert", i, total_katastry, last_pct)
+        last_pct = print_progress("katastr upsert", i, total_katastry, last_pct)
 
     # ---- Fáze 2: delete (katastr → okres → kraj, reverzně dle FK) ----
     print("Fáze 2 – delete (katastr → okres → kraj)", flush=True)
@@ -455,7 +469,7 @@ def _apply_full_state(
                 continue
             if _delete_katastr(katastr_to_delete, run):
                 run.katastr_deletes += 1
-            last_pct = _print_progress("katastr delete", i, total_del, last_pct)
+            last_pct = print_progress("katastr delete", i, total_del, last_pct)
     else:
         _append_run_note(run, "Mazání katastrů přeskočeno: zdroj neposkytl žádné KU.")
         logger.error("heslar.ruian_sync.syncer._apply_full_state.skip_katastr_delete")
@@ -474,7 +488,7 @@ def _apply_full_state(
                 continue
             if _delete_okres(okres_ke_smazani, run):
                 run.okres_deletes += 1
-            last_pct = _print_progress("okres delete", i, total_del, last_pct)
+            last_pct = print_progress("okres delete", i, total_del, last_pct)
     else:
         _append_run_note(run, "Mazání okresů přeskočeno: zdroj neposkytl žádné okresy (chybí ST_UKSH?).")
         logger.error("heslar.ruian_sync.syncer._apply_full_state.skip_okres_delete")
@@ -492,7 +506,7 @@ def _apply_full_state(
                 continue
             if _delete_kraj(kraj_ke_smazani, run):
                 run.kraj_deletes += 1
-            last_pct = _print_progress("kraj delete", i, total_del, last_pct)
+            last_pct = print_progress("kraj delete", i, total_del, last_pct)
     else:
         _append_run_note(run, "Mazání krajů přeskočeno: zdroj neposkytl žádné kraje (chybí ST_UKSH?).")
         logger.error("heslar.ruian_sync.syncer._apply_full_state.skip_kraj_delete")
@@ -585,11 +599,17 @@ def _apply_changes(
 
     # ---- Fáze 2: delete (katastr → okres → kraj, reverzně dle FK) ----
     db_katastr_codes = set(RuianKatastr.objects.values_list("kod", flat=True))
+    nesmazane = []
     for ev in bucket[LEVEL_KATASTR]:
         if ev.event_type == EVENT_DELETE and ev.kod in db_katastr_codes:
             katastr = RuianKatastr.objects.select_related("okres").filter(kod=ev.kod).first()
-            if katastr is not None and _delete_katastr(katastr, run):
+            if katastr is None:
+                # Mezitím zmizel jinou cestou – událost je tím pádem vyřízená.
+                continue
+            if _delete_katastr(katastr, run):
                 run.katastr_deletes += 1
+            else:
+                nesmazane.append(ev.kod)
 
     db_okres_codes = set(RuianOkres.objects.values_list("kod", flat=True))
     for ev in bucket[LEVEL_OKRES]:
@@ -608,6 +628,18 @@ def _apply_changes(
     _check_katastry_topology(run, plocha_pred)
 
     run.save()
+
+    if nesmazane:
+        # Až po dokončení všech ostatních prvků – viz RuianNesmazatelnyKatastrError.
+        logger.error(
+            "heslar.ruian_sync.syncer._apply_changes.nesmazane_katastry",
+            extra={"run_id": run.pk, "kody": sorted(nesmazane)},
+        )
+        raise RuianNesmazatelnyKatastrError(
+            f"Katastry {sorted(nesmazane)} nešlo smazat kvůli navázaným záznamům; "
+            f"den se neuzavírá jako úspěšný, aby se zopakoval."
+        )
+
     return hranice_changed_kody
 
 
@@ -1129,7 +1161,13 @@ def _upsert_katastr(
         # Vynucený zápis při opakování neúspěšného dne – viz ``_upsert_kraj``.
         existing.save()
 
-    if name_changed:
+    # Při opakování dne po selhání se propagace spustí i bez změny názvu.
+    # Callback se registruje jen ``if name_changed``, jenže po pádu uprostřed
+    # něj je nový název v DB už zapsaný – při dalším pokusu proto ``name_changed``
+    # vyjde ``False`` a propagace (historie + metadata navázaných záznamů) by
+    # se nikdy nedokončila. ``vynutit_metadata`` je právě příznak opakovaného
+    # dne, viz :func:`sync_delta`.
+    if name_changed or vynutit_metadata:
         # ``_log_katastr_rename`` volá ``save()`` nad Projekt/AZ/SN, a ty přes
         # signály posílají živé HTTP zápisy do Fedory. Tato funkce přitom běží
         # v ``@transaction.atomic`` – kdyby cokoli po nich vyhodilo výjimku,
@@ -1142,7 +1180,12 @@ def _upsert_katastr(
         # v callbacku se do auditu ještě promítnou.
         def _rename_po_commitu():
             """Dopíše historii a aktualizuje Fedoru pro záznamy navázané na katastr."""
-            affected = _log_katastr_rename(existing, old_nazev=old_nazev, new_nazev=dto.nazev)
+            affected = _log_katastr_rename(
+                existing,
+                old_nazev=old_nazev,
+                new_nazev=dto.nazev,
+                zapsat_historii=not vynutit_metadata,
+            )
             run.affected_projekt += affected.get("projekt", 0)
             run.affected_az += affected.get("az", 0)
             run.affected_sn += affected.get("sn", 0)
@@ -1158,11 +1201,23 @@ def _upsert_katastr(
 # ---------------------------------------------------------------------------
 
 
-#: SQL kandidátů Projekt: projekty s vyplněným ``geom_sjtsk``, které buď
-#: ukazují na změněný katastr přes ``hlavni_katastr`` FK, nebo jejich bod
-#: nově padá do polygonu změněného katastru. ``katastr.hranice`` je od
-#: migrace 0013 v EPSG:5514; join proti ``projekt.geom_sjtsk`` (5514)
-#: drží obě strany v jednom CRS a využívá spatial index.
+#: SQL kandidátů Projekt: projekty, které buď ukazují na změněný katastr přes
+#: ``hlavni_katastr`` FK, nebo jejich bod nově padá do polygonu změněného
+#: katastru. ``katastr.hranice`` je od migrace 0013 v EPSG:5514; join proti
+#: ``projekt.geom_sjtsk`` (5514) drží obě strany v jednom CRS a využívá
+#: spatial index.
+#:
+#: FK větev se **neváže na ``geom_sjtsk``**, ale na existenci *jakékoli*
+#: použitelné geometrie. Sloupec ``geom_sjtsk`` je nullable a ``_prefer_sjtsk``
+#: existuje právě proto, aby se u starších záznamů použil ``geom`` ve 4326;
+#: kdyby podmínka platila pro celý dotaz, takový projekt by z kandidátů vypadl
+#: a vazba by mu po změně hranic tiše zůstala zastaralá.
+#:
+#: Projekt **bez geometrie** ale kandidátem být nemá: ``reassign_projekt`` mu
+#: nemá z čeho spočítat bod, vrátí ``None`` a jen zaloguje ``no_geometry``.
+#: Takových projektů je zhruba polovina (naměřeno 10. 9. 2026: 124 488
+#: z 238 307), takže bez téhle podmínky by každá změna hranic vygenerovala
+#: tisíce hlášek o práci, která nemohla dopadnout jinak.
 #:
 #: M2M ``projekt.katastry`` tu vědomě není: podle zadání issue #372 se další
 #: katastry projektu při změně hranic nemění, mění se jen hlavní katastr.
@@ -1170,8 +1225,14 @@ _SQL_PROJEKT_CANDIDATES = """
     SELECT DISTINCT p.id
     FROM projekt p
     JOIN ruian_katastr k ON k.kod = ANY(%s::int[])
-    WHERE p.geom_sjtsk IS NOT NULL
-      AND (p.hlavni_katastr = k.id OR ST_Intersects(k.hranice, p.geom_sjtsk))
+    WHERE (
+            p.hlavni_katastr = k.id
+            AND (
+                 (p.geom_sjtsk IS NOT NULL AND NOT ST_IsEmpty(p.geom_sjtsk))
+              OR (p.geom IS NOT NULL AND NOT ST_IsEmpty(p.geom))
+            )
+          )
+       OR (p.geom_sjtsk IS NOT NULL AND ST_Intersects(k.hranice, p.geom_sjtsk))
 """
 
 #: SQL kandidátů AZ: AZ ukazující ``hlavni_katastr`` na změněný katastr
@@ -1211,14 +1272,23 @@ _SQL_AZ_CANDIDATES = """
     WHERE k.kod = ANY(%s::int[])
 """
 
-#: SQL kandidátů SN: SN s vyplněným ``geom_sjtsk`` (5514) ukazující na
-#: změněný katastr nebo jehož bod nově padá do polygonu změněného katastru.
+#: SQL kandidátů SN: SN ukazující na změněný katastr, nebo jehož bod nově
+#: padá do polygonu změněného katastru. Stejná logika jako
+#: :data:`_SQL_PROJEKT_CANDIDATES` – FK větev nevyžaduje zrovna JTSK, ale
+#: nějakou použitelnou geometrii. U samostatných nálezů to platí o to víc,
+#: že jejich check constraint stav „jen 4326“ výslovně připouští.
 _SQL_SN_CANDIDATES = """
     SELECT DISTINCT s.id
     FROM samostatny_nalez s
     JOIN ruian_katastr k ON k.kod = ANY(%s::int[])
-    WHERE s.geom_sjtsk IS NOT NULL
-      AND (s.katastr = k.id OR ST_Intersects(k.hranice, s.geom_sjtsk))
+    WHERE (
+            s.katastr = k.id
+            AND (
+                 (s.geom_sjtsk IS NOT NULL AND NOT ST_IsEmpty(s.geom_sjtsk))
+              OR (s.geom IS NOT NULL AND NOT ST_IsEmpty(s.geom))
+            )
+          )
+       OR (s.geom_sjtsk IS NOT NULL AND ST_Intersects(k.hranice, s.geom_sjtsk))
 """
 
 
@@ -2260,47 +2330,28 @@ def _print_section(label: str, total: int) -> None:
     print(f"  {label} ({total})...", flush=True)
 
 
-def _print_progress(label: str, current: int, total: int, last_pct: int) -> int:
-    """
-    Vytiskne řádek progresu na stdout, **pouze pokud** procento vzrostlo o ≥ 1.
-
-    Slouží pro interaktivní sledování dlouho běžících fází (zejména upsert /
-    delete katastrů, kterých je řádově 13 000 a běh trvá minuty). Návratová
-    hodnota se používá v dalším volání pro throttling – volající si drží
-    ``last_pct`` proměnnou.
-
-    Příklad použití::
-
-        last_pct = 0
-        total = len(state.katastry)
-        for i, dto in enumerate(state.katastry, 1):
-            _upsert_katastr(...)
-            last_pct = _print_progress("katastr upsert", i, total, last_pct)
-
-    :param label: Krátký popis fáze pro identifikaci v konzoli.
-    :param current: Pořadí aktuálně zpracovaného prvku (1-based).
-    :param total: Celkový počet prvků k zpracování.
-    :param last_pct: Procento, které bylo naposledy vytištěno (0 na začátku).
-
-        :return: Aktuální procento (k uložení do ``last_pct`` pro další volání).
-    """
-    if total <= 0:
-        return last_pct
-    pct = int(current * 100 / total)
-    if pct > last_pct or current == total:
-        print(f"    {label}: {current}/{total} ({pct} %)", flush=True)
-        return pct
-    return last_pct
-
-
-def _log_katastr_rename(katastr: RuianKatastr, old_nazev: str, new_nazev: str) -> dict:
+def _log_katastr_rename(
+    katastr: RuianKatastr,
+    old_nazev: str,
+    new_nazev: str,
+    *,
+    zapsat_historii: bool = True,
+) -> dict:
     """
     Zapíše záznam do historie a aktualizuje Fedoru pro všechny záznamy
     navázané na přejmenovaný katastr (Projekt, AZ, SN, NeidentAkce).
 
+    Výjimka u jednoho záznamu propagaci nezastaví – zaloguje se a pokračuje se
+    dalším. Původně se chytaly jen chyby Fedory, takže cokoli jiného (typicky
+    databázová chyba) callback ukončilo a zbylé záznamy zůstaly nedotčené.
+
     :param katastr: Přejmenovaný katastr.
     :param old_nazev: Původní název.
     :param new_nazev: Nový název.
+    :param zapsat_historii: Když ``False``, jen se obnoví metadata ve Fedoře
+        bez zápisu do historie. Používá se při opakování dne, kdy už řádky
+        historie mohly vzniknout při předchozím pokusu – viz
+        :func:`_upsert_katastr`.
 
         :return: Slovník s počty dotčených záznamů
             ``{"projekt": int, "az": int, "sn": int, "neident_akce": int}``.
@@ -2308,14 +2359,17 @@ def _log_katastr_rename(katastr: RuianKatastr, old_nazev: str, new_nazev: str) -
     counts = {"projekt": 0, "az": 0, "sn": 0, "neident_akce": 0}
 
     for projekt in Projekt.objects.filter(Q(hlavni_katastr=katastr) | Q(katastry=katastr)).distinct():
-        reassign_mod.log_katastr_change(projekt.historie_id, old_nazev, new_nazev)
+        if zapsat_historii:
+            reassign_mod.log_katastr_change(
+                projekt.historie_id, reassign_mod._popis_zmeny_hlavniho(old_nazev, new_nazev)
+            )
         fedora_tx = FedoraTransaction()
         success = False
         try:
             projekt.active_transaction = fedora_tx
             projekt.save()
             success = True
-        except (FedoraError, FedoraTransactionCommitFailedError) as err:
+        except Exception as err:  # noqa: BLE001 – jeden vadný záznam nesmí zastavit propagaci
             logger.error(
                 "heslar.ruian_sync.syncer._log_katastr_rename.projekt_fedora_error",
                 extra={"ident_cely": projekt.ident_cely, "error": str(err)[:500]},
@@ -2325,14 +2379,15 @@ def _log_katastr_rename(katastr: RuianKatastr, old_nazev: str, new_nazev: str) -
         counts["projekt"] += 1
 
     for az in ArcheologickyZaznam.objects.filter(Q(hlavni_katastr=katastr) | Q(katastry=katastr)).distinct():
-        reassign_mod.log_katastr_change(az.historie_id, old_nazev, new_nazev)
+        if zapsat_historii:
+            reassign_mod.log_katastr_change(az.historie_id, reassign_mod._popis_zmeny_hlavniho(old_nazev, new_nazev))
         fedora_tx = FedoraTransaction()
         success = False
         try:
             az.active_transaction = fedora_tx
             az.save()
             success = True
-        except (FedoraError, FedoraTransactionCommitFailedError) as err:
+        except Exception as err:  # noqa: BLE001 – jeden vadný záznam nesmí zastavit propagaci
             logger.error(
                 "heslar.ruian_sync.syncer._log_katastr_rename.az_fedora_error",
                 extra={"ident_cely": az.ident_cely, "error": str(err)[:500]},
@@ -2342,14 +2397,15 @@ def _log_katastr_rename(katastr: RuianKatastr, old_nazev: str, new_nazev: str) -
         counts["az"] += 1
 
     for sn in SamostatnyNalez.objects.filter(katastr=katastr):
-        reassign_mod.log_katastr_change(sn.historie_id, old_nazev, new_nazev)
+        if zapsat_historii:
+            reassign_mod.log_katastr_change(sn.historie_id, reassign_mod._popis_zmeny_hlavniho(old_nazev, new_nazev))
         fedora_tx = FedoraTransaction()
         success = False
         try:
             sn.active_transaction = fedora_tx
             sn.save()
             success = True
-        except (FedoraError, FedoraTransactionCommitFailedError) as err:
+        except Exception as err:  # noqa: BLE001 – jeden vadný záznam nesmí zastavit propagaci
             logger.error(
                 "heslar.ruian_sync.syncer._log_katastr_rename.sn_fedora_error",
                 extra={"ident_cely": sn.ident_cely, "error": str(err)[:500]},
@@ -2362,7 +2418,7 @@ def _log_katastr_rename(katastr: RuianKatastr, old_nazev: str, new_nazev: str) -
     for neident_akce in NeidentAkce.objects.filter(katastr=katastr):
         try:
             neident_akce.save()
-        except (FedoraError, FedoraTransactionCommitFailedError) as err:
+        except Exception as err:  # noqa: BLE001 – jeden vadný záznam nesmí zastavit propagaci
             logger.error(
                 "heslar.ruian_sync.syncer._log_katastr_rename.neident_akce_fedora_error",
                 extra={"pk": neident_akce.pk, "error": str(err)[:500]},

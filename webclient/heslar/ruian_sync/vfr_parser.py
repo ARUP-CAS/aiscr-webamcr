@@ -20,8 +20,8 @@ Implementační poznámky:
 * ZIP archiv otevírá přes ``zipfile.ZipFile`` a streamuje XML přímo z něj
   bez rozbalování na disk;
 * geometrie zůstává v EPSG:5514 (RÚIAN heslář je od migrace 0013 primárně
-  JTSK) — parser jen normalizuje případné záporné S-JTSK z VFR na kladnou
-  East-North konvenci přes :func:`_normalize_sjtsk_wkt`;
+  JTSK) — parser jen normalizuje S-JTSK z VFR na **zápornou** (West-South)
+  konvenci projektu přes :func:`_normalize_sjtsk_wkt`; VFR dodává obě formy;
 * okres katastru se rezolvuje přes přechodný map ``obec_kod → okres_kod``
   z téhož souboru; pokud obec ve změnovém souboru chybí, syncer dohledá
   okres z DB.
@@ -64,6 +64,7 @@ from heslar.ruian_sync.provider import (
     RuianKrajDTO,
     RuianOkresDTO,
 )
+from heslar.ruian_sync.sjtsk import negate_wkt as _negate_coords
 from lxml import etree
 
 logger = logging.getLogger(__name__)
@@ -1170,7 +1171,7 @@ def _coords_from_poslist(pos_list: str, *, close_ring: bool = True):
 
 
 # ---------------------------------------------------------------------------
-# Normalizace znaménka S-JTSK (VFR ↔ PostGIS EPSG:5514 East-North)
+# Normalizace znaménka S-JTSK (VFR na zápornou West-South konvenci projektu)
 # ---------------------------------------------------------------------------
 
 
@@ -1216,27 +1217,6 @@ def _sample_xy(wkt: str) -> Tuple[Optional[float], Optional[float]]:
         return float(match.group(1)), float(match.group(2))
     except ValueError:
         return None, None
-
-
-def _negate_coords(wkt: str) -> str:
-    """
-    Invertuje znaménka u všech čísel ve WKT řetězci.
-
-    Záměrně jednoduché – WKT obsahuje čísla pouze v souřadnicích, ne
-    v klíčových slovech.
-
-    :param wkt: Vstupní WKT.
-
-        :return: WKT se všemi čísly s opačným znaménkem.
-    """
-
-    def _flip(match):
-        s = match.group(0)
-        if s.startswith("-"):
-            return s[1:]
-        return "-" + s
-
-    return re.sub(r"-?\d+(?:\.\d+)?", _flip, wkt)
 
 
 # ---------------------------------------------------------------------------

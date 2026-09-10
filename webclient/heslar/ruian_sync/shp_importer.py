@@ -14,11 +14,11 @@ Kombinace pokrývá data, která zachycuje současný stav DB a co aplikace
 potřebuje pro spatial intersect (`core/utils.py`) i UI markery, **bez nutnosti
 stahovat 6258 per-obec VFR souborů**.
 
-Polygony i body jsou v EPSG:5514 (S-JTSK Krovak East-North) a v tomtéž
-CRS se ukládají do DB — RÚIAN heslář je od migrace 0013 primárně JTSK.
-Modul žádnou CRS transformaci neprovádí; jen normalizuje SHP polygony
-na ``MULTIPOLYGON`` a případně invertuje znaménko UZSZ bodů z historické
-záporné formy na kladnou (PostGIS EPSG:5514 East-North konvence).
+Polygony i body jsou v EPSG:5514 (S-JTSK Křovák) a v tomtéž CRS se ukládají
+do DB — RÚIAN heslář je od migrace 0013 primárně JTSK. Modul žádnou CRS
+transformaci neprovádí; jen normalizuje SHP polygony na ``MULTIPOLYGON``
+a sjednocuje znaménko na **zápornou** (West-South) konvenci projektu, viz
+:mod:`heslar.ruian_sync.sjtsk`. SHP dodává kladnou formu, UZSZ body obojí.
 
 Architektura:
 
@@ -48,6 +48,7 @@ from heslar.ruian_sync.provider import (
     RuianOkresDTO,
     RuianSource,
 )
+from heslar.ruian_sync.sjtsk import negate_wkt
 from lxml import etree
 
 logger = logging.getLogger(__name__)
@@ -62,15 +63,6 @@ _SHP_LAYERS = {
     "kraj": "VUSC_P",
     "okres": "OKRESY_P",
     "katastr": "KATUZE_P",
-}
-
-#: Konstanty pro extrakci atributů z DBF (sloupce mají různé názvy podle vrstvy).
-#:
-#: Klíč = úroveň, hodnota = mapa logického jména na DBF sloupec.
-_SHP_ATTR_MAP = {
-    "kraj": {"kod": "KOD", "nazev": "NAZEV"},
-    "okres": {"kod": "KOD", "nazev": "NAZEV", "kraj_kod": "VUSC_KOD"},
-    "katastr": {"kod": "KOD", "nazev": "NAZEV", "okres_kod": "OKRES_KOD"},
 }
 
 #: Identifikační prefixy elementů ``gml:id`` v UZSZ pro mapování na úroveň.
@@ -562,29 +554,6 @@ class ShpUzszSource(RuianSource):
     # se při importu **vždy** invertují znaménka. UZSZ ``gml:pos`` může být
     # kladné i záporné – autodetekcí normalizujeme na zápornou formu.
 
-    @staticmethod
-    def _negate_wkt(wkt: str) -> str:
-        """
-        Invertuje znaménka všech čísel ve WKT řetězci.
-
-        Sdílená helper funkce pro přechod mezi kladnou a zápornou konvencí
-        EPSG:5514 (WKT obsahuje čísla jen v souřadnicích, ne v klíčových
-        slovech, takže regex přes všechna čísla je bezpečný).
-
-        :param wkt: Vstupní WKT.
-
-            :return: WKT se všemi čísly s opačným znaménkem.
-        """
-        import re
-
-        def _flip(match):
-            s = match.group(0)
-            if s.startswith("-"):
-                return s[1:]
-            return "-" + s
-
-        return re.sub(r"-?\d+(?:\.\d+)?", _flip, wkt)
-
     @classmethod
     def _ensure_negative_wkt(cls, wkt: str) -> str:
         """
@@ -592,7 +561,7 @@ class ShpUzszSource(RuianSource):
 
         Autodetekce podle prvního souřadnicového čísla **uvnitř závorek**:
         pokud už je záporné, WKT se vrátí beze změny; pokud je kladné,
-        použije se :meth:`_negate_wkt` na invertování všech znamének.
+        použije se :func:`~heslar.ruian_sync.sjtsk.negate_wkt`.
 
         :param wkt: Vstupní WKT (kladný nebo záporný 5514).
 
@@ -604,7 +573,7 @@ class ShpUzszSource(RuianSource):
         m = re.search(r"\(\s*\(?\s*\(?\s*(-?)(\d)", wkt)
         if m and m.group(1) == "-":
             return wkt  # už je záporné
-        return cls._negate_wkt(wkt)
+        return negate_wkt(wkt)
 
     @classmethod
     def _geom_to_multipolygon_wkt(cls, geom) -> Optional[str]:

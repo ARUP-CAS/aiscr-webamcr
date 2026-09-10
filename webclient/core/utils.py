@@ -253,6 +253,41 @@ def get_cadastre_from_point(point, exclude_kod=None):
         return None
 
 
+def reprezentativni_bod_sql(sloupec: str) -> str:
+    """
+    Vrátí SQL výraz pro reprezentativní bod PIANu.
+
+    Do prostorového porovnání s katastrem nevstupuje celá geometrie PIANu, ale
+    jediný bod – viz issue #315: dokud se porovnávala celá geometrie, PIAN
+    ležící přes dvě katastrální území matchoval obě a hlavní katastr vycházel
+    nejednoznačně. Bod se volí podle typu geometrie:
+
+    * ``LineString`` – ``ST_LineInterpolatePoint(geom, 0.5)``, střed linie;
+    * ``Polygon`` / ``MultiPolygon`` – ``ST_PointOnSurface(geom)``, který na
+      rozdíl od centroidu leží vždy uvnitř plochy;
+    * ostatní – ``ST_Centroid(geom)``.
+
+    Funkce existuje proto, aby týž výraz nebyl opsaný na dvou místech: používá
+    ho :func:`get_all_pians_with_akce` i
+    ``heslar.ruian_sync.reassign._compute_az_katastr_assignment``. Rozcházely
+    by se jinak tiše a hlavní katastr by u téhož PIANu vycházel jinak podle
+    toho, kterou cestou se počítá.
+
+    :param sloupec: SQL výraz s geometrií PIANu v EPSG:5514 (název sloupce
+        včetně aliasu tabulky, např. ``pian.geom_sjtsk``).
+    :return: SQL ``CASE`` výraz vracející bod.
+    """
+    return (
+        "CASE "
+        f"WHEN ST_GeometryType({sloupec}) = 'ST_LineString' "
+        f"THEN ST_LineInterpolatePoint({sloupec}, 0.5) "
+        f"WHEN ST_GeometryType({sloupec}) IN ('ST_Polygon', 'ST_MultiPolygon') "
+        f"THEN ST_PointOnSurface({sloupec}) "
+        f"ELSE ST_Centroid({sloupec}) "
+        "END"
+    )
+
+
 def get_all_pians_with_akce(ident_cely, exclude_kod=None):
     """
     Funkce pro získaní všech pianů s akci.
@@ -295,6 +330,7 @@ def get_all_pians_with_akce(ident_cely, exclude_kod=None):
     exclude_clause = ""
     if exclude_kod is not None:
         exclude_clause = " AND katastr.kod != %s"
+    reprezentativni_bod = reprezentativni_bod_sql("pian.geom_sjtsk")
     query = f"""
         (SELECT A.id,
               A.ident_cely,
@@ -307,11 +343,7 @@ def get_all_pians_with_akce(ident_cely, exclude_kod=None):
          (SELECT pian.id,
                  pian.ident_cely,
                  pian.geom AS geom_wgs84,
-                 CASE
-                     WHEN ST_GeometryType(pian.geom_sjtsk) = 'ST_LineString' THEN ST_LineInterpolatePoint(pian.geom_sjtsk, 0.5)
-                     WHEN ST_GeometryType(pian.geom_sjtsk) IN ('ST_Polygon', 'ST_MultiPolygon') THEN ST_PointOnSurface(pian.geom_sjtsk)
-                     ELSE ST_Centroid(pian.geom_sjtsk)
-                 END AS geom,
+                 {reprezentativni_bod} AS geom,
                  dj.ident_cely AS dj
           FROM public.pian pian
           JOIN public.dokumentacni_jednotka dj ON pian.id=dj.pian

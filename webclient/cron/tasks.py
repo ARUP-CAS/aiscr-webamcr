@@ -1,4 +1,3 @@
-import contextlib
 import datetime
 import json
 import logging
@@ -57,6 +56,7 @@ from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.hesla_dynamicka import DOKUMENT_LICENCE_NEZNAMA, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar
+from heslar.ruian_sync.zamek import RUIAN_SYNC_LOCK_KEY, ruian_sync_lock  # noqa: F401 – reexport
 from historie.models import Historie
 from lokalita.models import Lokalita
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
@@ -1198,37 +1198,11 @@ def _zkontroluj_stari_poslednich_dat(today: datetime.date) -> None:
         )
 
 
-#: Klíč Postgres advisory locku serializujícího běhy :func:`sync_ruian_changes`.
-#: Advisory lock (ne Redis) proto, že drží po celou dobu session a nemůže
-#: uprostřed běhu vypršet – catch-up přes desítky dní trvá klidně hodiny,
-#: takže jakýkoli TTL by musel mít heartbeat. Uvolní se i tvrdým pádem
-#: workeru, protože ho Postgres pustí se zánikem spojení.
-RUIAN_SYNC_LOCK_KEY = 372_004_066
-
-
-@contextlib.contextmanager
-def _ruian_sync_lock():
-    """
-    Zajistí, že ``sync_ruian_changes`` neběží ve dvou instancích současně.
-
-    Souběžné běhy by četly stejnou kotvu ``RuianSyncRun.last_successful()``,
-    stahovaly do stejné cílové cesty (včetně ``.tmp``) a dvakrát aplikovaly
-    tytéž změny do DB, historie i Fedory.
-
-    :return: Generátor vracející ``True``, když byl zámek získán, jinak
-        ``False``; volající v tom případě běh přeskočí.
-    """
-    from django.db import connection as db_connection
-
-    with db_connection.cursor() as cursor:
-        cursor.execute("SELECT pg_try_advisory_lock(%s)", [RUIAN_SYNC_LOCK_KEY])
-        ziskan = bool(cursor.fetchone()[0])
-    try:
-        yield ziskan
-    finally:
-        if ziskan:
-            with db_connection.cursor() as cursor:
-                cursor.execute("SELECT pg_advisory_unlock(%s)", [RUIAN_SYNC_LOCK_KEY])
+# Zámek serializující běhy RÚIAN synchronizace žije v
+# ``heslar.ruian_sync.zamek``: sdílí ho i ruční plný sync
+# (``manage.py aktualizuj_ruian_shp``), takže nepatří do cronu.
+# Reexport drží zpětnou kompatibilitu pro volající i testy.
+_ruian_sync_lock = ruian_sync_lock
 
 
 @shared_task

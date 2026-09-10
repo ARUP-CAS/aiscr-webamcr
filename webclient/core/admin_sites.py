@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import random
+import secrets
 import string
 import zipfile
 
@@ -345,6 +346,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
         :return: Odpověď ``TemplateResponse`` s formulářem nebo stránkou průběhu.
         """
         from heslar.forms import UpdateKatastryFileForm
+        from heslar.views import UPDATE_KATASTRY_PREFIX, UPDATE_KATASTRY_REDIS_EXPIRATION
 
         context = {
             "app_list": self.get_app_list(request),
@@ -357,9 +359,16 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 uploaded_file = form.cleaned_data["ident_list_file"]
                 sheet = self._read_file(uploaded_file, context)
                 if isinstance(sheet, pd.DataFrame):
-                    job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
-                    job_id = f"update_katastry_{job_id}"
-                    self.redis_connector.set(job_id, "0;" + ";".join(sheet.index.unique().tolist()))
+                    # ``secrets`` místo ``random``: ``random`` je předvídatelný
+                    # generátor, a kdo klíč uhodne, může cizí job přepsat.
+                    # Expirace brání tomu, aby nedokončené joby zůstaly
+                    # v Redis natrvalo – stejně jako u ``import_data_*``.
+                    job_id = f"{UPDATE_KATASTRY_PREFIX}{secrets.token_urlsafe(24)}"
+                    self.redis_connector.set(
+                        job_id,
+                        "0;" + ";".join(sheet.index.unique().tolist()),
+                        ex=UPDATE_KATASTRY_REDIS_EXPIRATION,
+                    )
                     context["url"] = reverse("heslar:continue-processing-katastry", args=[job_id])
             return TemplateResponse(request, "admin/update_running_job.html", context)
         else:

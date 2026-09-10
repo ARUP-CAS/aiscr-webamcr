@@ -24,8 +24,9 @@ def _po_davkach(iterable, velikost):
     """
     Rozdělí iterátor na seznamy o nejvýše ``velikost`` položkách.
 
-    Slouží k tomu, aby se při paralelním zpracování nemusel celý queryset
-    materializovat najednou – viz :meth:`Command._process_queryset`.
+    Slouží k tomu, aby se při paralelním zpracování netvořily instance všech
+    záznamů naráz – viz :meth:`Command._process_queryset` včetně poznámky
+    o vypnutých server-side kurzorech.
 
     :param iterable: Vstupní iterátor (typicky ``queryset.iterator()``).
     :param velikost: Maximální počet položek v jedné dávce.
@@ -169,10 +170,20 @@ class Command(BaseCommand):
 
         Paralelní větev předává executoru práci po dávkách (:func:`_po_davkach`).
         ``Executor.map`` totiž bez parametru ``buffersize`` (Python 3.14+) vyčerpá
-        celý vstupní iterátor hned na začátku a odešle ``submit()`` pro každou
-        položku – tím by se queryset materializoval v paměti najednou a
-        ``.iterator(chunk_size=…)`` by ztratil smysl právě v té větvi, která je
-        určená pro velké dávky.
+        celý vstupní iterátor hned na začátku a odeslal by ``submit()`` pro každou
+        položku – v paměti by pak naráz ležely instance všech záznamů, ne jen
+        rozpracovaná dávka.
+
+        .. warning::
+           ``.iterator(chunk_size=…)`` **nedrží konstantní paměť**: obě databázová
+           spojení mají ``DISABLE_SERVER_SIDE_CURSORS: True`` (viz
+           ``settings.base``), takže psycopg načte celou výslednou sadu na klienta
+           a ``chunk_size`` řídí jen po kolika se z ní tvoří instance modelů.
+           Dávkování výše tedy omezuje počet **živých instancí**, ne velikost
+           načtených dat. U běhu přes celý model je proto paměťová náročnost
+           úměrná počtu řádků – stejné omezení popisuje
+           :func:`heslar.ruian_sync.reassign._iter_pk_chunks`, která ho obchází
+           čtením po blocích primárních klíčů.
 
         :param queryset: Django QuerySet záznamů ke zpracování.
         :param workers: Počet paralelních vláken (1 = sekvenční zpracování).

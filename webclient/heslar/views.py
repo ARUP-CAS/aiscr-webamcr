@@ -1,14 +1,14 @@
 import logging
 
 from dal import autocomplete
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import OperationalError, ProgrammingError
 from django.db.models import IntegerField, Value
 from django.http import JsonResponse
 from django.utils.translation import get_language
-from django.views import View
+from fedora_management.views import AdminRecordProcessingView
 from heslar.hesla import HESLAR_DOKUMENT_FORMAT, HESLAR_DOKUMENT_TYP, HESLAR_PRISTUPNOST
 from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_FORMATS, MODEL_3D_DOKUMENT_TYPES
 from heslar.models import Heslar, HeslarHierarchie, HeslarNazev, RuianKatastr
@@ -93,6 +93,39 @@ def heslar_12(druha, prvni_kat, id=False):
     return merge_heslare(prvni, druha)
 
 
+def _souradnice_ze_starych_parametru(request):
+    """
+    Převede zastaralé parametry ``long``/``lat`` (EPSG:4326) na JTSK.
+
+    Endpoint dřív bral WGS84; kontrakt se změnil naráz, takže prohlížeč
+    s cachovaným starším skriptem posílá stále původní jména. Bez tohohle
+    přemostění by dostal prázdnou odpověď a uživatel by jen viděl, že se
+    katastr „nedoplnil“.
+
+    :param request: HTTP GET požadavek.
+    :return: Dvojice ``(x, y)`` v EPSG:5514, nebo ``None`` když staré
+        parametry chybí nebo je nejde převést.
+    """
+    from core.coordTransform import transform_geom_to_sjtsk
+
+    try:
+        lon = float(request.GET["long"])
+        lat = float(request.GET["lat"])
+    except (KeyError, ValueError):
+        return None
+
+    wkt, stav = transform_geom_to_sjtsk(f"POINT({lon} {lat})")
+    if stav != "OK" or not wkt:
+        return None
+
+    logger.warning(
+        "heslar.views.zjisti_katastr_souradnic.zastarale_parametry",
+        extra={"reason": "Volající posílá long/lat; jde nejspíš o cachovaný starší mapa_projekty.js."},
+    )
+    bod = GEOSGeometry(wkt, srid=5514)
+    return bod.x, bod.y
+
+
 def zjisti_katastr_souradnic(request):
     """
     Vrátí katastr obsahující zadaný bod v EPSG:5514 (S-JTSK).
@@ -101,7 +134,15 @@ def zjisti_katastr_souradnic(request):
     je v JTSK CRS ``mapa_settings_jtsk.js``). Vstupem jsou GET parametry
     ``x`` a ``y`` v EPSG:5514 v konvenci projektu (záporné hodnoty).
 
-    :param request: GET s parametry ``x`` a ``y`` v EPSG:5514.
+    Přechodně se přijímají i původní parametry ``long``/``lat``. Kontrakt se
+    měnil z WGS84 na JTSK v jednom kroku, takže prohlížeč s cachovaným starším
+    ``mapa_projekty.js`` posílá pořád stará jména – dostal by prázdný objekt
+    a políčko katastru by zůstalo nevyplněné bez jakékoli hlášky. Souřadnice
+    se v takovém případě převedou přes ``core.coordTransform``; až cache
+    doběhne, dá se větev odstranit.
+
+    :param request: GET s parametry ``x`` a ``y`` v EPSG:5514, nebo přechodně
+        ``long`` a ``lat`` v EPSG:4326.
 
         :return: JsonResponse s ``id`` a ``value`` katastru, nebo prázdný.
     """
@@ -109,11 +150,14 @@ def zjisti_katastr_souradnic(request):
         x_val = float(request.GET["x"])
         y_val = float(request.GET["y"])
     except (KeyError, ValueError):
-        logger.warning(
-            "heslar.views.zjisti_katastr_souradnic.invalid_params",
-            extra={"GET": dict(request.GET)},
-        )
-        return JsonResponse({})
+        souradnice = _souradnice_ze_starych_parametru(request)
+        if souradnice is None:
+            logger.warning(
+                "heslar.views.zjisti_katastr_souradnic.invalid_params",
+                extra={"GET": dict(request.GET)},
+            )
+            return JsonResponse({})
+        x_val, y_val = souradnice
     bod = GEOSGeometry(f"POINT({x_val} {y_val})", srid=5514)
     nalezene_katastry = RuianKatastr.objects.filter(hranice__contains=bod)
     if nalezene_katastry.count() == 1:
@@ -270,92 +314,63 @@ def heslar_list(heslo_nazev, filter={}, use_exclude=False):
         return list(hesla_filtered.values_list("id", "heslo"))
 
 
-class ContinueKatastrProcessing(LoginRequiredMixin, View):
+#: Prefix Redis klíčů jobů hromadného přepočtu katastrů. Redis je sdílený
+#: napříč celou aplikací (``import_data_*``, ``update_metadata_*``,
+#: ``update_pid_*``…), takže endpoint nesmí sáhnout na klíč, který mu nepatří.
+UPDATE_KATASTRY_PREFIX = "update_katastry_"
+
+#: Expirace jobu v Redis. Nedokončený job zmizí sám, stejně jako u importu dat.
+UPDATE_KATASTRY_REDIS_EXPIRATION = 6 * 60 * 60
+
+
+class ContinueKatastrProcessing(UserPassesTestMixin, AdminRecordProcessingView):
     """
     Async processor pro hromadný přepočet katastrů u Projekt/AZ/SN.
 
     Volá se z admin stránky ``/admin/update-katastry/`` opakovaným polováním
     z JS – každé volání zpracuje další záznam v Redis frontě (klíč
-    ``update_katastry_<random>``). Pro jeden ``ident_cely`` načte záznam,
-    podle typu (Projekt/AZ/SN) zavolá příslušnou ``reassign_*`` funkci a
-    vrátí JSON s progresem a výsledkem.
+    ``update_katastry_<token>``).
+
+    Vlastní protokol (čtení fronty, posun indexu, progres, ošetření chyb)
+    dodává :class:`~fedora_management.views.AdminRecordProcessingView`; tahle
+    třída doplňuje jen oprávnění a to, co se s jedním záznamem stane.
     """
 
-    def get(self, request, **kwargs):
-        """
-        Zpracuje další záznam ve frontě a vrátí JSON s progresem.
+    job_id_prefix = UPDATE_KATASTRY_PREFIX
+    job_expirace = UPDATE_KATASTRY_REDIS_EXPIRATION
 
-        :param request: HTTP GET požadavek.
-        :param kwargs: Klíčové argumenty včetně ``job_id``.
-
-            :return: ``JsonResponse`` se strukturou ``{progress, remaining, ident_cely, result, detail}``.
+    def test_func(self):
         """
-        from core.connectors import RedisConnector
-        from core.ident_cely import get_record_from_ident
-        from core.repository_connector import FedoraError, FedoraTransactionCommitFailedError
-        from django.http import Http404
+        Endpoint smí volat jen superuživatel, stejně jako zakládání úlohy.
+
+        Job vzniká v ``core.admin_sites.update_katastry_file_upload`` pod
+        podmínkou ``request.user.is_superuser``; kdyby pokračování stačilo
+        běžnému přihlášenému uživateli, dala by se cizí úloha posouvat
+        i dokončovat. Zpracování navíc mění data a metadata ve Fedoře.
+
+        :return: ``True``, když je přihlášený uživatel superuživatel.
+        """
+        return bool(self.request.user.is_authenticated and self.request.user.is_superuser)
+
+    def process_record(self, record, result, **kwargs):
+        """
+        Přepočítá katastr jednoho záznamu a doplní výsledek do odpovědi.
+
+        :param record: Instance Projekt/ArcheologickyZaznam/SamostatnyNalez.
+        :param result: Slovník s průběhem, který se vrací do JSON odpovědi.
+        :param kwargs: Klíčové argumenty z URL.
+        :return: Doplněný slovník ``result``.
+        """
         from django.utils.translation import gettext as _t
         from heslar.ruian_sync import reassign as reassign_mod
 
-        r = RedisConnector().get_connection()
-        job_id = kwargs.get("job_id")
-        raw = r.get(job_id)
-        if raw is None:
-            return JsonResponse({"progress": 100, "remaining": 0, "result": "expired"})
-
-        job_data = raw.decode("utf-8")
-        iterator, *ident_list = job_data.split(";")
-        ident_list = [x for x in ident_list if x]
-        iterator = int(iterator)
-        item_count = max(len(ident_list), 1)
-        result = {
-            "progress": (iterator + 1) / item_count * 100,
-            "remaining": len(ident_list) - iterator,
-            "detail": None,
-            "is_error": False,
-        }
-        if iterator >= len(ident_list):
-            return JsonResponse(result)
-
-        ident_cely = ident_list[iterator]
-        result["ident_cely"] = ident_cely
-        # Kurzor posouváme ještě před zpracováním záměrně: kdyby se posouval až
-        # po úspěchu, jeden trvale padající záznam by frontu zablokoval a JS by
-        # ho polloval donekonečna. Cenou je, že selhání se nezopakuje – proto
-        # musí být každé selhání níže odchycené, zalogované na ERROR a vrácené
-        # v odpovědi jako ``is_error``, aby operátor věděl, které identy
-        # zůstaly nepřepočítané. Neodchycená výjimka by skončila jako HTTP 500,
-        # polling by se zastavil a přeskočily by se i všechny zbývající identy.
-        r.set(job_id, f"{iterator + 1};{';'.join(ident_list)}")
-
-        try:
-            record = get_record_from_ident(ident_cely)
-        except Http404:
-            record = None
-        if record is None:
-            logger.debug("heslar.views.ContinueKatastrProcessing.not_found", extra={"ident_cely": ident_cely})
-            result["result"] = _t("heslar.views.ContinueKatastrProcessing.record_not_found")
-            result["is_error"] = True
-            return JsonResponse(result)
-
-        try:
-            changed = self._process(record, reassign_mod)
-            result["result"] = (
-                _t("heslar.views.ContinueKatastrProcessing.changed")
-                if changed
-                else _t("heslar.views.ContinueKatastrProcessing.no_change")
-            )
-        except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
-            # ``FedoraTransactionCommitFailedError`` není potomkem ``FedoraError``,
-            # takže dřív propadala ven jako HTTP 500. ``ValueError`` vyhazují
-            # ``reassign_*`` funkce nad nekonzistentní geometrií.
-            logger.error(
-                "heslar.views.ContinueKatastrProcessing.reassign_error",
-                extra={"ident_cely": ident_cely, "error": str(err)[:500]},
-            )
-            result["result"] = _t("heslar.views.ContinueKatastrProcessing.error")
-            result["is_error"] = True
-        return JsonResponse(result)
+        changed = self._process(record, reassign_mod)
+        result["result"] = (
+            _t("heslar.views.ContinueKatastrProcessing.changed")
+            if changed
+            else _t("heslar.views.ContinueKatastrProcessing.no_change")
+        )
+        return result
 
     @staticmethod
     def _process(record, reassign_mod) -> bool:

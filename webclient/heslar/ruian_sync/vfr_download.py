@@ -293,20 +293,65 @@ def download_change_file(day: date, target_dir: Path) -> Optional[Path]:
 # ---------------------------------------------------------------------------
 
 
+class RuianAtomFeedTooLargeError(Exception):
+    """ATOM feed přesáhl povolenou velikost a nebyl zpracován."""
+
+
+#: Strop velikosti staženého ATOM feedu. Reálný feed ČÚZK má jednotky set
+#: kilobajtů; 16 MiB je s velkou rezervou nad tím a zároveň brání tomu, aby
+#: podvržená odpověď vyčerpala paměť workeru. ``atom_feed_url`` je totiž
+#: editovatelná za běhu přes :class:`CustomAdminSettings`, takže obsah feedu
+#: není o nic důvěryhodnější než jakýkoli jiný vzdálený vstup.
+_MAX_ATOM_BYTES = 16 * 1024 * 1024
+
+
+def _stahni_atom_feed(feed_url: str, timeout: int) -> bytes:
+    """
+    Stáhne ATOM feed streamovaně a s limitem velikosti.
+
+    :param feed_url: URL ATOM feedu.
+    :param timeout: HTTP timeout v sekundách.
+    :return: Obsah feedu jako ``bytes``.
+    :raises requests.HTTPError: Při HTTP chybě.
+    :raises RuianAtomFeedTooLargeError: Když feed překročí
+        :data:`_MAX_ATOM_BYTES`.
+    """
+    with requests.get(feed_url, timeout=timeout, stream=True) as resp:
+        resp.raise_for_status()
+        data = bytearray()
+        for kus in resp.iter_content(chunk_size=64 * 1024):
+            data.extend(kus)
+            if len(data) > _MAX_ATOM_BYTES:
+                logger.error(
+                    "heslar.ruian_sync.vfr_download._stahni_atom_feed.prilis_velky",
+                    extra={"url": feed_url, "limit_bytes": _MAX_ATOM_BYTES},
+                )
+                raise RuianAtomFeedTooLargeError(f"ATOM feed {feed_url} přesáhl {_MAX_ATOM_BYTES} B a byl odmítnut.")
+    return bytes(data)
+
+
 def _parse_atom_feed(feed_url: str, timeout: int = 60) -> list:
     """
     Stáhne a parsuje ATOM feed; vrací seznam ``(title, href)`` dvojic.
+
+    Parsuje se s ``resolve_entities=False`` a bez načítání DTD, stejně jako
+    změnové VFR v :mod:`heslar.ruian_sync.vfr_parser`. Bez toho by podvržený
+    feed mohl expanzí entit vyčerpat paměť workeru (billion laughs) a přes
+    ``file://`` entitu dostat obsah lokálních souborů do hodnot ``title`` a
+    ``href``, se kterými se dál pracuje. Velikost odpovědi hlídá
+    :func:`_stahni_atom_feed`.
 
     :param feed_url: URL ATOM feedu (např. https://atom.cuzk.gov.cz/...).
     :param timeout: HTTP timeout v sekundách.
 
         :return: Seznam dvojic ``(entry_title, entry_link_href)``.
         :raises requests.HTTPError: Při HTTP chybě.
+        :raises RuianAtomFeedTooLargeError: Když feed překročí limit velikosti.
     """
     logger.debug("heslar.ruian_sync.vfr_download._parse_atom_feed.start", extra={"url": feed_url})
-    resp = requests.get(feed_url, timeout=timeout)
-    resp.raise_for_status()
-    root = etree.fromstring(resp.content)
+    obsah = _stahni_atom_feed(feed_url, timeout)
+    parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True, huge_tree=False)
+    root = etree.fromstring(obsah, parser=parser)
     entries = []
     ns = "{http://www.w3.org/2005/Atom}"
     for entry in root.findall(f"{ns}entry"):

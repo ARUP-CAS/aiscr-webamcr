@@ -126,17 +126,6 @@ Funkce
 
    :param today: Dnešní datum (předává volající, ať se dá test ustálit).
 
-.. py:function:: _ruian_sync_lock()
-
-   Zajistí, že ``sync_ruian_changes`` neběží ve dvou instancích současně.
-
-   Souběžné běhy by četly stejnou kotvu ``RuianSyncRun.last_successful()``,
-   stahovaly do stejné cílové cesty (včetně ``.tmp``) a dvakrát aplikovaly
-   tytéž změny do DB, historie i Fedory.
-
-   :return: Generátor vracející ``True``, když byl zámek získán, jinak
-       ``False``; volající v tom případě běh přeskočí.
-
 .. py:function:: sync_ruian_changes(reassign_records)
 
    Periodická aktualizace heslářů RÚIAN podle denních změnových VFR souborů.

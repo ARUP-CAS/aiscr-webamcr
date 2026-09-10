@@ -17,6 +17,7 @@ import datetime
 import logging
 from unittest import mock
 
+from core.utils import reprezentativni_bod_sql
 from cron import tasks
 from django.contrib.gis.geos import MultiPolygon, Point, Polygon
 from django.db import connection, transaction
@@ -396,14 +397,13 @@ class HistorieZmenyKatastruTests(TestCase):
 
     Zápis do :class:`~historie.models.Historie` je odstíněný mockem: testuje se
     **kolik** řádků vznikne a s jakou poznámkou, ne uložení jako takové. Bez
-    toho by test potřeboval celý graf uživatel → organizace, který s testovanou
+    toho by test potřeboval existujícího admin uživatele, který s testovanou
     logikou nesouvisí.
     """
 
     def setUp(self):
         """Nahradí zápis historie i načtení uživatele mockem."""
         self.historie = mock.patch.object(reassign_mod, "Historie").start()
-        mock.patch.object(reassign_mod, "User").start()
         self.addCleanup(mock.patch.stopall)
 
     def _poznamky(self):
@@ -1467,3 +1467,217 @@ class SouladUrovniTests(TestCase):
             syncer._zkontroluj_soulad_urovni(self.run)
 
         self.assertTrue(any("chybi_geometrie" in radek for radek in zachyt.output), zachyt.output)
+
+
+class KandidatiBezJtskTests(SimpleTestCase):
+    """
+    Testy podmínky na ``geom_sjtsk`` v dotazech na kandidáty (N1).
+
+    Sloupec je nullable a ``_prefer_sjtsk`` existuje právě proto, aby se
+    u starších záznamů použil ``geom`` ve 4326. Kdyby podmínka platila pro celý
+    dotaz, vypadl by z kandidátů záznam, který na změněný katastr ukazuje cizím
+    klíčem – a cílený reassign je jediná automatická cesta, jak se přepočítá.
+    """
+
+    def test_fk_vetev_nevyzaduje_zrovna_jtsk(self):
+        """
+        Cizí klíč musí vybrat kandidáta i bez vyplněného ``geom_sjtsk``.
+
+        Sloupec je nullable a ``_prefer_sjtsk`` existuje právě proto, aby se
+        u starších záznamů použil ``geom`` ve 4326.
+        """
+        for sql in (syncer._SQL_PROJEKT_CANDIDATES, syncer._SQL_SN_CANDIDATES):
+            self.assertIn("geom IS NOT NULL AND NOT ST_IsEmpty(", sql)
+
+    def test_fk_vetev_vyzaduje_nejakou_geometrii(self):
+        """
+        Záznam bez geometrie kandidátem být nemá.
+
+        Přepočet mu nemá z čeho spočítat bod, skončil by na ``no_geometry`` –
+        a takových projektů je zhruba polovina, takže by každá změna hranic
+        vygenerovala tisíce hlášek o práci, která nemohla dopadnout jinak.
+        """
+        for sql in (syncer._SQL_PROJEKT_CANDIDATES, syncer._SQL_SN_CANDIDATES):
+            self.assertEqual(sql.count("NOT ST_IsEmpty("), 2, sql)
+
+    def test_prostorova_vetev_geometrii_vyzaduje(self):
+        """Prostorový intersect bez JTSK geometrie provést nejde."""
+        for sql in (syncer._SQL_PROJEKT_CANDIDATES, syncer._SQL_SN_CANDIDATES):
+            self.assertIn("geom_sjtsk IS NOT NULL AND ST_Intersects", sql)
+
+
+class ReprezentativniBodTests(SimpleTestCase):
+    """
+    Testy sdíleného SQL výrazu pro reprezentativní bod PIANu (B3).
+
+    Výraz byl opsaný ve dvou modulech; kdyby se rozešly, vycházel by hlavní
+    katastr u téhož PIANu jinak podle toho, kterou cestou se počítá.
+    """
+
+    def test_vsechny_tri_vetve(self):
+        """Linie, plocha i ostatní typy mají vlastní větev."""
+        vyraz = reprezentativni_bod_sql("x.geom")
+
+        self.assertIn("ST_LineInterpolatePoint(x.geom, 0.5)", vyraz)
+        self.assertIn("ST_PointOnSurface(x.geom)", vyraz)
+        self.assertIn("ST_Centroid(x.geom)", vyraz)
+
+    def test_sloupec_se_propise_vsude(self):
+        """Výraz se skládá kolem předaného sloupce, ne kolem pevného jména."""
+        vyraz = reprezentativni_bod_sql("dp.pian_geom")
+
+        self.assertNotIn("geom_sjtsk", vyraz)
+        self.assertEqual(vyraz.count("dp.pian_geom"), 5)
+
+
+class DatumSnapshotuTests(SimpleTestCase):
+    """
+    Testy křížové kontroly ``--valid-to`` proti názvu ÚZSZ souboru (N10).
+
+    ``valid_to`` se ukládá jako kotva a cron od ní pokračuje dál; pozdější
+    hodnota než snapshot tiše přeskočí denní změny a hlídač stáří dat mlčí,
+    protože kotva vypadá čerstvě.
+    """
+
+    def setUp(self):
+        """Připraví instanci příkazu bez spouštění."""
+        from heslar.management.commands.aktualizuj_ruian_shp import Command
+
+        self.command = Command()
+
+    def test_datum_se_vycte_z_nazvu(self):
+        """Očekávaný tvar ``YYYYMMDD_ST_UZSZ.xml.zip``."""
+        from pathlib import Path
+
+        self.assertEqual(
+            self.command._datum_snapshotu(Path("/data/20260731_ST_UZSZ.xml.zip")),
+            datetime.date(2026, 7, 31),
+        )
+
+    def test_nerozpoznany_nazev_vraci_none(self):
+        """Ručně přejmenovaný soubor se nemá o co opřít."""
+        from pathlib import Path
+
+        self.assertIsNone(self.command._datum_snapshotu(Path("/data/uzsz.xml.zip")))
+
+    def test_valid_to_v_budoucnosti_se_odmitne(self):
+        """
+        Stav, který ještě neexistuje, nemohl být stažen.
+
+        Kotva by přeskočila všechny dny až k zadanému datu a protože by
+        vypadala čerstvě, nespustil by se ani hlídač stáří dat.
+        """
+        from pathlib import Path
+
+        from django.core.management.base import CommandError
+
+        zitra = datetime.date.today() + datetime.timedelta(days=1)
+        with self.assertRaises(CommandError) as chyceno:
+            self.command._zkontroluj_valid_to(Path("/d/20260731_ST_UZSZ.xml.zip"), zitra)
+
+        self.assertIn("leží v budoucnosti", str(chyceno.exception))
+
+    def test_starsi_uzsz_nez_valid_to_je_v_poradku(self):
+        """
+        ÚZSZ starší než ``--valid-to`` je běžný provoz, ne chyba.
+
+        Polygony nese nedatované ``1.zip`` (stejná URL vrací aktuální stav),
+        zatímco ÚZSZ s definičními body vychází řidčeji – kombinace ÚZSZ
+        z 31. 7. a dat platných k 13. 8. je tedy správná.
+        """
+        from pathlib import Path
+
+        self.command._zkontroluj_valid_to(Path("/d/20260731_ST_UZSZ.xml.zip"), datetime.date(2026, 8, 13))
+
+    def test_shodne_valid_to_projde(self):
+        """Datum shodné s vydáním ÚZSZ je také správné použití."""
+        from pathlib import Path
+
+        self.command._zkontroluj_valid_to(Path("/d/20260731_ST_UZSZ.xml.zip"), datetime.date(2026, 7, 31))
+
+
+class PollingProtokolTests(SimpleTestCase):
+    """
+    Testy sdíleného polling protokolu a jeho tří oprav (N7).
+
+    ``ContinueKatastrProcessing`` protokol dřív reimplementoval a nesl tři
+    opravy, které bázová třída neměla: dělení nulou u prázdné fronty,
+    ``AttributeError`` u vypršelého klíče a odchyt
+    ``FedoraTransactionCommitFailedError``.
+    """
+
+    def test_je_podtridou_sdilene_baze(self):
+        """Protokol se nesmí implementovat podruhé."""
+        from fedora_management.views import AdminRecordProcessingView
+        from heslar.views import ContinueKatastrProcessing
+
+        self.assertTrue(issubclass(ContinueKatastrProcessing, AdminRecordProcessingView))
+
+    def test_baze_odchytava_i_commit_failed(self):
+        """
+        ``FedoraTransactionCommitFailedError`` není potomek ``FedoraError``.
+
+        Bez explicitního uvedení by prošla ven jako HTTP 500 – a to až poté,
+        co se index v Redis posunul, tedy s přeskočením zbytku fronty.
+        """
+        from core.repository_connector import FedoraError, FedoraTransactionCommitFailedError
+        from fedora_management.views import AdminRecordProcessingView
+
+        self.assertFalse(issubclass(FedoraTransactionCommitFailedError, FedoraError))
+        self.assertIn(FedoraTransactionCommitFailedError, AdminRecordProcessingView.zpracovani_chyby)
+
+    def test_cizi_redis_klic_se_odmitne(self):
+        """
+        Endpoint nesmí sáhnout na klíč jiné úlohy.
+
+        Redis je sdílený s ``import_data_*`` i ``update_metadata_*``; posun
+        indexu na cizím klíči by rozbil běžící úlohu.
+        """
+        from heslar.views import ContinueKatastrProcessing as C
+
+        self.assertTrue(C.je_platny_job_id("update_katastry_abc-DEF_123"))
+        for cizi in ("import_data_status_message_x", "update_metadata_1", "update_katastry_", "update_katastry_a;b"):
+            self.assertFalse(C.je_platny_job_id(cizi), cizi)
+
+    def test_klic_ma_expiraci(self):
+        """Nedokončená úloha nesmí v Redis zůstat natrvalo."""
+        from heslar.views import ContinueKatastrProcessing as C
+
+        self.assertEqual(C.job_expirace, 6 * 60 * 60)
+
+
+class ZastaraleParametryKatastruTests(SimpleTestCase):
+    """
+    Testy přechodného přijetí parametrů ``long``/``lat`` (N12).
+
+    Kontrakt endpointu se změnil z WGS84 na JTSK naráz; prohlížeč
+    s cachovaným starším skriptem by jinak dostal prázdný objekt a políčko
+    katastru by zůstalo nevyplněné bez jakékoli hlášky.
+    """
+
+    def setUp(self):
+        """Připraví továrnu na požadavky."""
+        from django.test import RequestFactory
+
+        self.rf = RequestFactory()
+
+    def test_stare_parametry_se_prevedou(self):
+        """Souřadnice Prahy ve 4326 dají zápornou JTSK dvojici."""
+        from heslar.views import _souradnice_ze_starych_parametru
+
+        x, y = _souradnice_ze_starych_parametru(self.rf.get("/", {"long": "14.42", "lat": "50.08"}))
+
+        self.assertLess(x, 0)
+        self.assertLess(y, 0)
+
+    def test_bez_starych_parametru_vraci_none(self):
+        """Nové volání se přemostěním nemá zdržovat."""
+        from heslar.views import _souradnice_ze_starych_parametru
+
+        self.assertIsNone(_souradnice_ze_starych_parametru(self.rf.get("/", {"x": "-1", "y": "-2"})))
+
+    def test_nesmyslna_hodnota_vraci_none(self):
+        """Nečíselný vstup není důvod k pádu."""
+        from heslar.views import _souradnice_ze_starych_parametru
+
+        self.assertIsNone(_souradnice_ze_starych_parametru(self.rf.get("/", {"long": "abc", "lat": "50"})))

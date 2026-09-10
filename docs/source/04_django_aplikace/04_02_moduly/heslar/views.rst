@@ -90,20 +90,33 @@ Třídy
 
    Volá se z admin stránky ``/admin/update-katastry/`` opakovaným polováním
    z JS – každé volání zpracuje další záznam v Redis frontě (klíč
-   ``update_katastry_<random>``). Pro jeden ``ident_cely`` načte záznam,
-   podle typu (Projekt/AZ/SN) zavolá příslušnou ``reassign_*`` funkci a
-   vrátí JSON s progresem a výsledkem.
+   ``update_katastry_<token>``).
+
+   Vlastní protokol (čtení fronty, posun indexu, progres, ošetření chyb)
+   dodává :class:`~fedora_management.views.AdminRecordProcessingView`; tahle
+   třída doplňuje jen oprávnění a to, co se s jedním záznamem stane.
 
    **Metody:**
 
-   .. py:method:: get()
+   .. py:method:: test_func()
 
-      Zpracuje další záznam ve frontě a vrátí JSON s progresem.
+      Endpoint smí volat jen superuživatel, stejně jako zakládání úlohy.
 
-      :param request: HTTP GET požadavek.
-      :param kwargs: Klíčové argumenty včetně ``job_id``.
+      Job vzniká v ``core.admin_sites.update_katastry_file_upload`` pod
+      podmínkou ``request.user.is_superuser``; kdyby pokračování stačilo
+      běžnému přihlášenému uživateli, dala by se cizí úloha posouvat
+      i dokončovat. Zpracování navíc mění data a metadata ve Fedoře.
 
-      :return: ``JsonResponse`` se strukturou ``{progress, remaining, ident_cely, result, detail}``.
+      :return: ``True``, když je přihlášený uživatel superuživatel.
+
+   .. py:method:: process_record()
+
+      Přepočítá katastr jednoho záznamu a doplní výsledek do odpovědi.
+
+      :param record: Instance Projekt/ArcheologickyZaznam/SamostatnyNalez.
+      :param result: Slovník s průběhem, který se vrací do JSON odpovědi.
+      :param kwargs: Klíčové argumenty z URL.
+      :return: Doplněný slovník ``result``.
 
    .. py:method:: _process()
 
@@ -141,6 +154,19 @@ Funkce
 
    :return: Vrací výsledek volání ``merge_heslare()``.
 
+.. py:function:: _souradnice_ze_starych_parametru(request)
+
+   Převede zastaralé parametry ``long``/``lat`` (EPSG:4326) na JTSK.
+
+   Endpoint dřív bral WGS84; kontrakt se změnil naráz, takže prohlížeč
+   s cachovaným starším skriptem posílá stále původní jména. Bez tohohle
+   přemostění by dostal prázdnou odpověď a uživatel by jen viděl, že se
+   katastr „nedoplnil“.
+
+   :param request: HTTP GET požadavek.
+   :return: Dvojice ``(x, y)`` v EPSG:5514, nebo ``None`` když staré
+       parametry chybí nebo je nejde převést.
+
 .. py:function:: zjisti_katastr_souradnic(request)
 
    Vrátí katastr obsahující zadaný bod v EPSG:5514 (S-JTSK).
@@ -149,7 +175,15 @@ Funkce
    je v JTSK CRS ``mapa_settings_jtsk.js``). Vstupem jsou GET parametry
    ``x`` a ``y`` v EPSG:5514 v konvenci projektu (záporné hodnoty).
 
-   :param request: GET s parametry ``x`` a ``y`` v EPSG:5514.
+   Přechodně se přijímají i původní parametry ``long``/``lat``. Kontrakt se
+   měnil z WGS84 na JTSK v jednom kroku, takže prohlížeč s cachovaným starším
+   ``mapa_projekty.js`` posílá pořád stará jména – dostal by prázdný objekt
+   a políčko katastru by zůstalo nevyplněné bez jakékoli hlášky. Souřadnice
+   se v takovém případě převedou přes ``core.coordTransform``; až cache
+   doběhne, dá se větev odstranit.
+
+   :param request: GET s parametry ``x`` a ``y`` v EPSG:5514, nebo přechodně
+       ``long`` a ``lat`` v EPSG:4326.
 
    :return: JsonResponse s ``id`` a ``value`` katastru, nebo prázdný.
 
