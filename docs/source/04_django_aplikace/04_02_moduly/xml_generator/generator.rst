@@ -47,12 +47,37 @@ Třídy
 
       :return: Vrací výsledek volání ``join()``.
 
+   .. py:method:: _get_schema_tree()
+
+      Načte a naparsuje XSD schema; výsledek je cachovaný po dobu běhu vlákna.
+
+      XSD soubor se během běhu nemění, opakované ``etree.parse()`` při každém
+      volání :func:`_parse_schema`/:func:`get_ref_type_attribute_name` bylo
+      zbytečné čtení a parsování ze disku (desítky ms na volání). Cache je
+      per-vlákno (viz ``_schema_tree_local``), ne sdílená přes všechna vlákna -
+      a klíčovaná podle ``schema_path``, ne jen jedna hodnota na vlákno, aby
+      metoda respektovala svůj vlastní argument (kdyby o stejného vlákna žádal
+      strom pro jinou cestu, dostal by mylně strom z první cesty).
+
+      :param schema_path: Cesta k XSD schema souboru.
+      :return: Naparsovaný ``lxml.etree._ElementTree``.
+
    .. py:method:: _parse_schema()
 
-             Zpracuje schema.
+      Vrátí prvky XSD schématu pro daný model; výsledek je cachovaný po vlákno.
+
+      XPath nad schématem je měřitelně drahý: volá se šestkrát na jeden dokument a
+      zabere 3-4 ms (issue #3967), což při stovkách tisíc záznamů dělá desítky minut
+      čistého CPU. Výsledek přitom závisí jen na ``model_name`` a na souboru se
+      schématem, který se za běhu nemění.
+
+      Cache leží ve stejném per-vláknovém úložišti jako samotný strom (viz
+      ``_get_schema_tree``) - vrácené prvky totiž do toho stromu patří a `lxml` není
+      bezpečné sdílet mezi vlákny. Prvky se používají jen pro čtení; výstupní dokument
+      se skládá do zvláštního stromu.
 
       :param model_name: Název modelu používaný pro cílení operace.
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam prvků schématu.
 
    .. py:method:: _get_prefix()
 
@@ -67,6 +92,27 @@ Třídy
 
       :param comment_text: Číselná hodnota ``comment_text`` použitá při výpočtu nebo transformaci.
       :return: Výstup funkce odpovídající implementované logice.
+
+   .. py:method:: _get_cached_related()
+
+      Ekvivalent ``getattr(record, attr_name[, default])``, ale ForeignKey se čte přes
+      cache platnou po dobu života tohoto ``DocumentGenerator``.
+
+      Jeden dokument odkazuje na tytéž řádky opakovaně (různé prvky schématu ukazují na
+      stejnou klasifikaci, osobu, uživatele nebo katastr), takže se bez cache tentýž
+      ``SELECT`` posílá znovu a znovu. Měřeno (issue #3967): duplicitní dotazy tvořily
+      11-24 % všech dotazů na jeden dokument, nejčastěji ``auth_user``, ``osoba``,
+      ``heslar`` a ``ruian_katastr``. Cache nepřežije jeden dokument, takže nehrozí
+      zastaralá data napříč záznamy; generování dokumentu je navíc jen čtení.
+
+      Klíč zahrnuje i cílový model - samotné ``pk`` nestačí, protože stejné číslo běžně
+      existuje ve víc tabulkách (``Osoba`` 5 vs ``User`` 5).
+
+      :param record: Instance modelu (nebo ``None``), ze které se atribut čte.
+      :param attr_name: Název atributu/pole.
+      :param default: Výchozí hodnota při chybějícím atributu; není-li zadána,
+          chová se jako ``getattr`` bez výchozí hodnoty (vyhodí ``AttributeError``).
+      :return: Hodnota atributu.
 
    .. py:method:: _get_attribute_of_record()
 

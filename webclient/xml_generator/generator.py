@@ -2,13 +2,14 @@ import datetime
 import logging
 import os
 import re
+import threading
 from dataclasses import dataclass
 from typing import Optional
 
 from adb.models import VyskovyBod
 from django.contrib.gis.db import models
 from django.contrib.gis.db.models.functions import AsGML, GeoFunc
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist
 from heslar.models import RuianKraj, RuianOkres
 from lxml import etree
 from lxml import etree as ET
@@ -18,6 +19,15 @@ AMCR_XSD_URL = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
 AMCR_XSD_FILENAME = "amcr.xsd"
 SCHEMA_LOCATION = "https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
 logger = logging.getLogger(__name__)
+
+#: Per-vláknová cache naparsovaného XSD stromu (viz ``DocumentGenerator._get_schema_tree``).
+#: XSD se během běhu procesu nemění, ale `lxml` `_ElementTree`/`xpath()` není bezpečné
+#: sdílet mezi vlákny (konkurentní XPath nad jedním sdíleným dokumentem je v `lxml`
+#: dlouhodobě zdroj hlášených pádů) - a `generate_metadata_fast --workers N` volá
+#: generování dokumentů z mnoha paralelních vláken. Proto per-vlákno, ne
+#: ``functools.lru_cache`` sdílený přes všechna vlákna - cena je pár desítek ms
+#: parsování navíc na vlákno (místo jednou celkem), riziko pádu je nula.
+_schema_tree_local = threading.local()
 
 
 class AsText(GeoFunc):
@@ -131,16 +141,62 @@ class DocumentGenerator:
         """
         return os.path.join("xml_generator/definitions/", AMCR_XSD_FILENAME)
 
+    @staticmethod
+    def _get_schema_tree(schema_path):
+        """
+        Načte a naparsuje XSD schema; výsledek je cachovaný po dobu běhu vlákna.
+
+        XSD soubor se během běhu nemění, opakované ``etree.parse()`` při každém
+        volání :func:`_parse_schema`/:func:`get_ref_type_attribute_name` bylo
+        zbytečné čtení a parsování ze disku (desítky ms na volání). Cache je
+        per-vlákno (viz ``_schema_tree_local``), ne sdílená přes všechna vlákna -
+        a klíčovaná podle ``schema_path``, ne jen jedna hodnota na vlákno, aby
+        metoda respektovala svůj vlastní argument (kdyby o stejného vlákna žádal
+        strom pro jinou cestu, dostal by mylně strom z první cesty).
+
+        :param schema_path: Cesta k XSD schema souboru.
+        :return: Naparsovaný ``lxml.etree._ElementTree``.
+        """
+        trees = getattr(_schema_tree_local, "trees", None)
+        if trees is None:
+            trees = {}
+            _schema_tree_local.trees = trees
+        tree = trees.get(schema_path)
+        if tree is None:
+            tree = etree.parse(schema_path, etree.XMLParser())
+            trees[schema_path] = tree
+            # Nový strom znamená, že dříve nacachované prvky patří jinému dokumentu -
+            # viz `_parse_schema`, které je drží ve stejném úložišti.
+            _schema_tree_local.xpath_cache = {}
+        return tree
+
     def _parse_schema(self, model_name):
         """
-               Zpracuje schema.
+        Vrátí prvky XSD schématu pro daný model; výsledek je cachovaný po vlákno.
 
-               :param model_name: Název modelu používaný pro cílení operace.
-        :return: Výstup funkce odpovídající implementované logice.
+        XPath nad schématem je měřitelně drahý: volá se šestkrát na jeden dokument a
+        zabere 3-4 ms (issue #3967), což při stovkách tisíc záznamů dělá desítky minut
+        čistého CPU. Výsledek přitom závisí jen na ``model_name`` a na souboru se
+        schématem, který se za běhu nemění.
+
+        Cache leží ve stejném per-vláknovém úložišti jako samotný strom (viz
+        ``_get_schema_tree``) - vrácené prvky totiž do toho stromu patří a `lxml` není
+        bezpečné sdílet mezi vlákny. Prvky se používají jen pro čtení; výstupní dokument
+        se skládá do zvláštního stromu.
+
+        :param model_name: Název modelu používaný pro cílení operace.
+        :return: Seznam prvků schématu.
         """
-        parser = etree.XMLParser()
-        tree = etree.parse(self.get_path_to_schema(), parser)
-        return tree.xpath(self._create_xpath_query(model_name))
+        schema_path = self.get_path_to_schema()
+        tree = self._get_schema_tree(schema_path)
+        cache = getattr(_schema_tree_local, "xpath_cache", None)
+        if cache is None:
+            cache = {}
+            _schema_tree_local.xpath_cache = cache
+        klic = (schema_path, model_name)
+        if klic not in cache:
+            cache[klic] = tree.xpath(self._create_xpath_query(model_name))
+        return cache[klic]
 
     @staticmethod
     def _get_prefix(comment_text: str) -> str:
@@ -179,6 +235,56 @@ class DocumentGenerator:
         elif len(attribute_list) == 3:
             return ParsedComment(attribute_list[-1], attribute_list[:-1])
 
+    _MISSING = object()
+
+    def _get_cached_related(self, record, attr_name, default=_MISSING):
+        """
+        Ekvivalent ``getattr(record, attr_name[, default])``, ale ForeignKey se čte přes
+        cache platnou po dobu života tohoto ``DocumentGenerator``.
+
+        Jeden dokument odkazuje na tytéž řádky opakovaně (různé prvky schématu ukazují na
+        stejnou klasifikaci, osobu, uživatele nebo katastr), takže se bez cache tentýž
+        ``SELECT`` posílá znovu a znovu. Měřeno (issue #3967): duplicitní dotazy tvořily
+        11-24 % všech dotazů na jeden dokument, nejčastěji ``auth_user``, ``osoba``,
+        ``heslar`` a ``ruian_katastr``. Cache nepřežije jeden dokument, takže nehrozí
+        zastaralá data napříč záznamy; generování dokumentu je navíc jen čtení.
+
+        Klíč zahrnuje i cílový model - samotné ``pk`` nestačí, protože stejné číslo běžně
+        existuje ve víc tabulkách (``Osoba`` 5 vs ``User`` 5).
+
+        :param record: Instance modelu (nebo ``None``), ze které se atribut čte.
+        :param attr_name: Název atributu/pole.
+        :param default: Výchozí hodnota při chybějícím atributu; není-li zadána,
+            chová se jako ``getattr`` bez výchozí hodnoty (vyhodí ``AttributeError``).
+        :return: Hodnota atributu.
+        """
+        field = None
+        if record is not None:
+            try:
+                field = record._meta.get_field(attr_name)
+            except FieldDoesNotExist:
+                field = None
+        if field is not None and getattr(field, "many_to_one", False) and field.related_model is not None:
+            if field.is_cached(record):
+                # Instance už hodnotu má (Django ji nacachoval dřív, např. eagerní
+                # čtení v __init__ některých modelů) - použij ji, ať se nedotazuje
+                # znovu cestou přes _fk_cache zbytečně navíc.
+                return field.get_cached_value(record)
+            fk_id = getattr(record, field.attname, None)
+            if fk_id is None:
+                return None
+            klic = (field.related_model, fk_id)
+            if klic not in self._fk_cache:
+                # `.get()`, ne `.filter().first()` - rozbitá FK musí vyhodit
+                # `DoesNotExist` stejně jako by to udělal obyčejný FK descriptor přes
+                # `getattr()` (chování před zavedením cache). Negativní výsledek se
+                # neukládá, ať se chyba neschová jen proto, že šlo o druhé volání.
+                self._fk_cache[klic] = field.related_model._base_manager.get(pk=fk_id)
+            return self._fk_cache[klic]
+        if default is self._MISSING:
+            return getattr(record, attr_name)
+        return getattr(record, attr_name, default)
+
     def _get_attribute_of_record(self, attribute_name, record=None):
         """
         Vrací attribute of record.
@@ -193,7 +299,7 @@ class DocumentGenerator:
         if attribute_name.lower() == "self":
             return record
         if "." not in attribute_name and "(" not in attribute_name:
-            attribute_value = getattr(record, attribute_name, None)
+            attribute_value = self._get_cached_related(record, attribute_name, None)
         elif (
             "st_asgml" in attribute_name.lower()
             or "st_astext" in attribute_name.lower()
@@ -205,46 +311,57 @@ class DocumentGenerator:
             from pian.models import Pian
             from projekt.models import Projekt
 
-            if isinstance(record, Projekt):
-                record = record.__class__.objects.annotate(
-                    geom_st_asgml=AsGML("geom", nprefix="gml"),
-                    geom_st_astext=AsText("geom"),
-                    geom_sjtsk_st_asgml=AsGML("geom_sjtsk", nprefix="gml"),
-                    geom_sjtsk_st_astext=AsText("geom_sjtsk"),
-                ).get(pk=record.pk)
-            elif isinstance(record, DokumentExtraData):
-                try:
+            # Stejný záznam (`record.pk` v rámci jedné třídy) se v rámci jednoho
+            # dokumentu často žádá o víc geometrických atributů (st_asgml/st_astext/
+            # st_srid) - bez cache by se pro každý z nich zbytečně opakoval stejný
+            # anotovaný dotaz. Cache nikdy nepřežije jeden dokument (viz __init__).
+            cache_key = (record.__class__, record.pk)
+            if cache_key in self._geom_annotation_cache:
+                record = self._geom_annotation_cache[cache_key]
+            else:
+                if isinstance(record, Projekt):
                     record = record.__class__.objects.annotate(
                         geom_st_asgml=AsGML("geom", nprefix="gml"),
                         geom_st_astext=AsText("geom"),
                         geom_sjtsk_st_asgml=AsGML("geom_sjtsk", nprefix="gml"),
                         geom_sjtsk_st_astext=AsText("geom_sjtsk"),
                     ).get(pk=record.pk)
-                except ObjectDoesNotExist:
-                    record = DokumentExtraData()
-                    setattr(record, "geom_st_asgml", None)
-                    setattr(record, "geom_st_astext", None)
-                    setattr(record, "geom_sjtsk_st_asgml", None)
-                    setattr(record, "geom_sjtsk_st_astext", None)
-            elif isinstance(record, VyskovyBod):
-                record = record.__class__.objects.annotate(
-                    geom_st_asgml=AsGML("geom", nprefix="gml"),
-                    geom_st_astext=AsText("geom"),
-                ).get(pk=record.pk)
-            elif isinstance(record, SamostatnyNalez) or isinstance(record, Pian):
-                record = record.__class__.objects.annotate(
-                    geom_st_asgml=AsGML("geom", nprefix="gml"),
-                    geom_st_astext=AsText("geom"),
-                    geom_sjtsk_st_asgml=AsGML("geom_sjtsk", nprefix="gml"),
-                    geom_sjtsk_st_astext=AsText("geom_sjtsk"),
-                ).get(pk=record.pk)
-            elif isinstance(record, RuianKatastr) or isinstance(record, RuianKraj) or isinstance(record, RuianOkres):
-                record = record.__class__.objects.annotate(
-                    definicni_bod_st_asgml=AsGML("definicni_bod", nprefix="gml"),
-                    definicni_bod_st_astext=AsText("definicni_bod"),
-                    hranice_st_asgml=AsGML("hranice", nprefix="gml"),
-                    hranice_st_astext=AsText("hranice"),
-                ).get(pk=record.pk)
+                elif isinstance(record, DokumentExtraData):
+                    try:
+                        record = record.__class__.objects.annotate(
+                            geom_st_asgml=AsGML("geom", nprefix="gml"),
+                            geom_st_astext=AsText("geom"),
+                            geom_sjtsk_st_asgml=AsGML("geom_sjtsk", nprefix="gml"),
+                            geom_sjtsk_st_astext=AsText("geom_sjtsk"),
+                        ).get(pk=record.pk)
+                    except ObjectDoesNotExist:
+                        record = DokumentExtraData()
+                        setattr(record, "geom_st_asgml", None)
+                        setattr(record, "geom_st_astext", None)
+                        setattr(record, "geom_sjtsk_st_asgml", None)
+                        setattr(record, "geom_sjtsk_st_astext", None)
+                elif isinstance(record, VyskovyBod):
+                    record = record.__class__.objects.annotate(
+                        geom_st_asgml=AsGML("geom", nprefix="gml"),
+                        geom_st_astext=AsText("geom"),
+                    ).get(pk=record.pk)
+                elif isinstance(record, SamostatnyNalez) or isinstance(record, Pian):
+                    record = record.__class__.objects.annotate(
+                        geom_st_asgml=AsGML("geom", nprefix="gml"),
+                        geom_st_astext=AsText("geom"),
+                        geom_sjtsk_st_asgml=AsGML("geom_sjtsk", nprefix="gml"),
+                        geom_sjtsk_st_astext=AsText("geom_sjtsk"),
+                    ).get(pk=record.pk)
+                elif (
+                    isinstance(record, RuianKatastr) or isinstance(record, RuianKraj) or isinstance(record, RuianOkres)
+                ):
+                    record = record.__class__.objects.annotate(
+                        definicni_bod_st_asgml=AsGML("definicni_bod", nprefix="gml"),
+                        definicni_bod_st_astext=AsText("definicni_bod"),
+                        hranice_st_asgml=AsGML("hranice", nprefix="gml"),
+                        hranice_st_astext=AsText("hranice"),
+                    ).get(pk=record.pk)
+                self._geom_annotation_cache[cache_key] = record
             if "st_asgml" in attribute_name.lower():
                 field_name = attribute_name.lower().replace("st_asgml", "").replace("(", "").replace(")", "")
                 attribute_value = getattr(record, f"{field_name}_st_asgml")
@@ -260,21 +377,20 @@ class DocumentGenerator:
         else:
             record_name_split = attribute_name.split(".")
             if len(record_name_split) == 2:
-                related_record = getattr(record, record_name_split[0], None)
-                attribute_value = getattr(related_record, record_name_split[1], None)
+                related_record = self._get_cached_related(record, record_name_split[0], None)
+                attribute_value = self._get_cached_related(related_record, record_name_split[1], None)
             elif len(record_name_split) == 3:
-                related_record = getattr(record, record_name_split[0], None)
-                second_related_record = getattr(related_record, record_name_split[1], None)
-                attribute_value = getattr(second_related_record, record_name_split[2], None)
+                related_record = self._get_cached_related(record, record_name_split[0], None)
+                second_related_record = self._get_cached_related(related_record, record_name_split[1], None)
+                attribute_value = self._get_cached_related(second_related_record, record_name_split[2], None)
             elif len(record_name_split) == 4:
-                related_record_1 = getattr(record, record_name_split[0], None)
-                related_record_2 = getattr(related_record_1, record_name_split[1], None)
-                related_record_3 = getattr(related_record_2, record_name_split[2], None)
-                attribute_value = getattr(related_record_3, record_name_split[3], None)
+                related_record_1 = self._get_cached_related(record, record_name_split[0], None)
+                related_record_2 = self._get_cached_related(related_record_1, record_name_split[1], None)
+                related_record_3 = self._get_cached_related(related_record_2, record_name_split[2], None)
+                attribute_value = self._get_cached_related(related_record_3, record_name_split[3], None)
         return attribute_value
 
-    @staticmethod
-    def _get_attribute_of_record_unbounded(record, parsed_comment: ParsedComment, schema_element) -> dict:
+    def _get_attribute_of_record_unbounded(self, record, parsed_comment: ParsedComment, schema_element) -> dict:
         """
         Vrací attribute of record unbounded.
 
@@ -297,14 +413,14 @@ class DocumentGenerator:
             attributes = []
             record_name_split = attribute_name.split(".")
             if len(record_name_split) == 1:
-                record_attribute = getattr(record, record_name_split[0])
+                record_attribute = self._get_cached_related(record, record_name_split[0])
                 if hasattr(record_attribute, "all"):
                     attributes = [x for x in record_attribute.all()]
                 else:
                     attributes = [record_attribute]
             elif len(record_name_split) == 2:
                 try:
-                    related_record = getattr(record, record_name_split[0])
+                    related_record = self._get_cached_related(record, record_name_split[0])
                 except ObjectDoesNotExist:
                     related_record = None
                     from uzivatel.models import User
@@ -321,10 +437,10 @@ class DocumentGenerator:
                         )
                 if related_record and hasattr(related_record, "all"):
                     for item in related_record.all():
-                        attributes.append(getattr(item, record_name_split[1], None))
+                        attributes.append(self._get_cached_related(item, record_name_split[1], None))
                 elif related_record:
-                    related_record = getattr(record, record_name_split[0], None)
-                    related_record = getattr(related_record, record_name_split[1], None)
+                    related_record = self._get_cached_related(record, record_name_split[0], None)
+                    related_record = self._get_cached_related(related_record, record_name_split[1], None)
                     if hasattr(related_record, "all"):
                         attributes = []
                         try:
@@ -336,15 +452,15 @@ class DocumentGenerator:
                                 extra={"error": err},
                             )
             elif len(record_name_split) == 3:
-                related_record = getattr(record, record_name_split[0])
+                related_record = self._get_cached_related(record, record_name_split[0])
                 if hasattr(related_record, "all"):
                     for record in related_record.all():
-                        first_related = getattr(record, record_name_split[1], None)
+                        first_related = self._get_cached_related(record, record_name_split[1], None)
                         if first_related is not None:
-                            second_related = getattr(first_related, record_name_split[2], None)
+                            second_related = self._get_cached_related(first_related, record_name_split[2], None)
                             attributes.append(second_related)
                 else:
-                    related_record = getattr(related_record, record_name_split[1], None)
+                    related_record = self._get_cached_related(related_record, record_name_split[1], None)
                     if hasattr(related_record, "all"):
                         attributes = [x for x in related_record.all()]
             if schema_element.attrib["type"] == "xs:date":
@@ -611,10 +727,9 @@ class DocumentGenerator:
 
             :return: Vrací výsledek volání ``get()``.
         """
-        parser = etree.XMLParser()
         type_name = type_name.replace("amcr:", "")
         if type_name not in self.attribute_names:
-            tree = etree.parse(self.get_path_to_schema(), parser)
+            tree = self._get_schema_tree(self.get_path_to_schema())
             xpath_query = f"//*[@name='{type_name}']/*/*/*"
             elements = tree.xpath(xpath_query)
             if "name" in elements[0].attrib:
@@ -681,6 +796,8 @@ class DocumentGenerator:
         :param document_object: Parametr ``document_object`` slouží jako vstup pro logiku funkce ``__init__``.
         """
         self.document_object = document_object
+        self._fk_cache = {}
+        self._geom_annotation_cache = {}
         ET.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
         ET.register_namespace("gml", "http://www.opengis.net/gml/3.2")
         ET.register_namespace("amcr", AMCR_NAMESPACE_URL)
