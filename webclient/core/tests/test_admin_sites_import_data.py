@@ -11,23 +11,12 @@ from core.admin_sites import AmcrCustomAdminSite
 from core.connectors import RedisConnector
 from core.forms import ImportDataAdminForm
 from core.tests.fake_redis import FakeRedis
+from core.tests.stub_user import _StubUser
 from cron import tasks
 from django.http import HttpResponse
 from django.test import RequestFactory, SimpleTestCase
 
 USER_ID = 42
-
-
-class _StubUser:
-    """Minimální náhrada uživatele pro ``RequestFactory`` — nese jen atributy čtené view."""
-
-    def __init__(self, user_id):
-        self.id = user_id
-        self.pk = user_id
-        self.is_superuser = True
-        self.is_staff = True
-        self.is_active = True
-        self.is_authenticated = True
 
 
 class ImportDataUploadRecoveryMetadataTest(SimpleTestCase):

@@ -17,6 +17,7 @@ import openpyxl
 from core.forms import ImportDataAdminForm
 from core.setting_models import CustomAdminSettings
 from core.tests.fake_redis import FakeRedis
+from core.tests.stub_user import _StubUser
 from core.utils import (
     ImportReportIndexError,
     check_import_report_directory,
@@ -412,21 +413,6 @@ class BuildImportFedoraTargetDataframeTest(TestCase):
         )
         df = build_import_fedora_target_dataframe(JOB_ID, fake_redis)
         self.assertEqual(len(df), 0)
-
-
-class _StubUser:
-    """Minimální náhrada uživatele pro ``RequestFactory`` — nese jen atributy čtené view/mixinem."""
-
-    def __init__(self, user_id, is_superuser=True):
-        """
-        :param user_id: Hodnota ``id`` porovnávaná s vlastníkem úlohy v Redis.
-        :param is_superuser: Zda je uživatel superuživatel (brána na začátku view).
-        """
-        self.id = user_id
-        self.pk = user_id
-        self.is_superuser = is_superuser
-        self.is_active = True
-        self.is_authenticated = True
 
 
 class DataImportProgressReportViewTest(SimpleTestCase):

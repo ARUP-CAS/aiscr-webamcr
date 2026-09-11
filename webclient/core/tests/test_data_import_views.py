@@ -11,6 +11,7 @@ from unittest import mock
 
 from core.connectors import RedisConnector
 from core.tests.fake_redis import FakeRedis
+from core.tests.stub_user import _StubUser
 from core.views import DataImportCancel, DataImportProgress, DataImportReset, DataImportStop
 from cron import tasks
 from django.core.exceptions import PermissionDenied
@@ -19,21 +20,6 @@ from django.test import RequestFactory, SimpleTestCase
 JOB = "job-abc-123"
 OWNER_ID = 7
 OTHER_ID = 99
-
-
-class _StubUser:
-    """Minimální náhrada uživatele pro ``RequestFactory`` — nese jen atributy čtené view/mixinem."""
-
-    def __init__(self, user_id, is_superuser=True):
-        """
-        :param user_id: Hodnota ``id`` porovnávaná s vlastníkem úlohy v Redis.
-        :param is_superuser: Zda je uživatel superuživatel (brána na začátku view).
-        """
-        self.id = user_id
-        self.pk = user_id
-        self.is_superuser = is_superuser
-        self.is_active = True
-        self.is_authenticated = True
 
 
 def _fake(phase, *, user_id=OWNER_ID, extra=None):
