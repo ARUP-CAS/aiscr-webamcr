@@ -85,6 +85,29 @@ class FakeRedisEvalDispatchTests(SimpleTestCase):
         self.assertTrue(claimed)
         self.assertEqual(token, TOKEN.encode("utf-8"))
         self.assertEqual(fake.get(f"import_data_phase_{JOB}"), b"importing")
+        self.assertEqual(fake.ttl(RedisConnector.IMPORT_DATA_LOCK_KEY), 60)
+
+    def test_rejected_claim_preserves_phase_and_lock_ttl(self):
+        """Odmítnutý nárok nesmí změnit fázi ani TTL cizího nebo vlastního locku."""
+        for key, value in (
+            (f"import_data_phase_{JOB}", "importing"),
+            (f"import_data_valid_{JOB}", "0"),
+            (f"import_data_lock_token_{JOB}", "stale-token"),
+            (RedisConnector.IMPORT_DATA_LOCK_KEY, "other-token"),
+        ):
+            with self.subTest(key=key):
+                state = self._claimable_state()
+                state[key] = value
+                fake = FakeRedis(initial=state)
+                fake.expire(RedisConnector.IMPORT_DATA_LOCK_KEY, 30)
+                claimed, token = RedisConnector.claim_awaiting_import(fake, JOB, "awaiting_approval", "importing", 60)
+                self.assertFalse(claimed)
+                self.assertIsNone(token)
+                self.assertEqual(fake.get(f"import_data_phase_{JOB}"), state[f"import_data_phase_{JOB}"].encode())
+                self.assertEqual(fake.ttl(RedisConnector.IMPORT_DATA_LOCK_KEY), 30)
+                self.assertEqual(
+                    fake.get(RedisConnector.IMPORT_DATA_LOCK_KEY), state[RedisConnector.IMPORT_DATA_LOCK_KEY].encode()
+                )
 
     def test_claim_awaiting_import_rejects_wrong_phase(self):
         """Nárokování selže, pokud úloha není v očekávané fázi (souběžný druhý Start)."""
@@ -145,9 +168,43 @@ class FakeRedisEvalDispatchTests(SimpleTestCase):
     def test_finalize_validation_transitions_on_success(self):
         """Finalizace validace přepne fázi do ``awaiting_approval``, pokud nedošlo ke stopu."""
         fake = FakeRedis(initial=self._validating_state())
+        fake.expire(RedisConnector.IMPORT_DATA_LOCK_KEY, 30)
         result = RedisConnector.finalize_validation(fake, JOB)
         self.assertTrue(result)
         self.assertEqual(fake.get(f"import_data_phase_{JOB}"), b"awaiting_approval")
+        self.assertEqual(fake.ttl(RedisConnector.IMPORT_DATA_LOCK_KEY), -1)
+
+    def test_rejected_finalization_preserves_phase_and_lock_ttl(self):
+        """Odmítnutá finalizace nesmí přepnout fázi ani odstranit expiraci locku."""
+        for key, value in (
+            (f"import_data_phase_{JOB}", "importing"),
+            (f"import_data_stop_{JOB}", "1"),
+            (f"import_data_lock_token_{JOB}", "stale-token"),
+            (RedisConnector.IMPORT_DATA_LOCK_KEY, "other-token"),
+        ):
+            with self.subTest(key=key):
+                state = self._validating_state()
+                state[key] = value
+                fake = FakeRedis(initial=state)
+                fake.expire(RedisConnector.IMPORT_DATA_LOCK_KEY, 30)
+                self.assertFalse(RedisConnector.finalize_validation(fake, JOB))
+                self.assertEqual(fake.get(f"import_data_phase_{JOB}"), state[f"import_data_phase_{JOB}"].encode())
+                self.assertEqual(fake.ttl(RedisConnector.IMPORT_DATA_LOCK_KEY), 30)
+                self.assertEqual(
+                    fake.get(RedisConnector.IMPORT_DATA_LOCK_KEY), state[RedisConnector.IMPORT_DATA_LOCK_KEY].encode()
+                )
+
+    def test_finalize_then_claim_restores_lock_expiry(self):
+        """Lock při čekání na schválení neexpiruje a při spuštění získá požadované TTL."""
+        fake = FakeRedis(initial=self._validating_state())
+        fake.expire(RedisConnector.IMPORT_DATA_LOCK_KEY, 30)
+        fake.set(f"import_data_valid_{JOB}", "1")
+        self.assertTrue(RedisConnector.finalize_validation(fake, JOB))
+        self.assertEqual(fake.ttl(RedisConnector.IMPORT_DATA_LOCK_KEY), -1)
+        claimed, token = RedisConnector.claim_awaiting_import(fake, JOB, "awaiting_approval", "importing", 48 * 3600)
+        self.assertTrue(claimed)
+        self.assertEqual(token, TOKEN.encode())
+        self.assertEqual(fake.ttl(RedisConnector.IMPORT_DATA_LOCK_KEY), 48 * 3600)
 
     def test_finalize_validation_rejects_when_stop_requested(self):
         """Finalizace selže, pokud byl mezitím zapsán stop příznak validace."""

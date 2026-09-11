@@ -263,14 +263,14 @@ class FakeRedis:
         """Vykoná simulaci ``RedisConnector._CLAIM_AWAITING_IMPORT_SCRIPT``.
 
         Ověří fázi, validitu a vlastnictví locku úlohy a při shodě atomicky přepne fázi na
-        ``new_phase`` — stejně jako reálný Lua skript, ale nad in-memory úložištěm.
+        ``new_phase`` a obnoví TTL globálního locku podle ``ttl_seconds``.
 
         :param keys: ``(phase_key, valid_key, lock_token_key, global_lock_key)`` z ``KEYS``.
         :param argv: ``(expected_phase, new_phase, ttl_seconds)`` z ``ARGV``.
         :return: ``[1, token]`` při úspěšném nároku, jinak ``[0, ""]``.
         """
         phase_key, valid_key, lock_token_key, global_lock_key = keys
-        expected_phase, new_phase, _ttl_seconds = argv
+        expected_phase, new_phase, ttl_seconds = argv
         if self._kv.get(phase_key) != self._encode(expected_phase):
             return [0, ""]
         if self._kv.get(valid_key) != self._encode("1"):
@@ -279,6 +279,7 @@ class FakeRedis:
         if token_raw is None or self._kv.get(global_lock_key) != token_raw:
             return [0, ""]
         self.set(phase_key, new_phase)
+        self.expire(global_lock_key, int(ttl_seconds))
         return [1, self._maybe_decode(token_raw)]
 
     def _eval_cancel_awaiting_import(self, keys, argv):
@@ -302,7 +303,7 @@ class FakeRedis:
         return 1
 
     def _eval_finalize_validation(self, keys, argv):
-        """Simuluje atomický přechod validace do awaiting_approval."""
+        """Simuluje přechod validace do awaiting_approval a zrušení expirace globálního locku."""
         phase_key, stop_key, token_key, global_lock_key = keys
         expected_phase, new_phase = argv
         token = self._kv.get(token_key)
@@ -314,6 +315,7 @@ class FakeRedis:
         ):
             return 0
         self.set(phase_key, new_phase)
+        self.persist(global_lock_key)
         return 1
 
     class FakePipeline:
