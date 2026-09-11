@@ -195,7 +195,7 @@ class FakeRedis:
         :param script: Zdrojový text Lua skriptu — musí být přesně jedna z konstant
             ``RedisConnector._RELEASE_LOCK_SCRIPT`` / ``_REFRESH_LOCK_SCRIPT`` /
             ``_PERSIST_LOCK_SCRIPT`` / ``_CLAIM_AWAITING_IMPORT_SCRIPT`` /
-            ``_CANCEL_AWAITING_IMPORT_SCRIPT`` / ``_FINALIZE_VALIDATION_SCRIPT``.
+            ``_CANCEL_AWAITING_IMPORT_SCRIPT`` / ``_FINALIZE_VALIDATION_SCRIPT`` / ``_RESET_IMPORT_SCRIPT``.
         :param numkeys: Počet KEYS argumentů na začátku ``keys_and_args``.
         :param keys_and_args: KEYS následované ARGV, stejně jako u reálného Redis ``eval``.
         :return: První zbývající hodnota z ``eval_results``, nebo výsledek simulace.
@@ -215,6 +215,8 @@ class FakeRedis:
             return self._eval_compare_then_delete(keys, argv)
         if script == RedisConnector._REFRESH_LOCK_SCRIPT:
             return self._eval_compare_then_expire(keys, argv)
+        if script == RedisConnector._RESET_IMPORT_SCRIPT:
+            return self._eval_begin_import_reset(keys, argv)
         if script == RedisConnector._PERSIST_LOCK_SCRIPT:
             return self._eval_compare_then_persist(keys, argv)
         raise ValueError(
@@ -238,14 +240,35 @@ class FakeRedis:
     def _eval_compare_then_expire(self, keys, argv):
         """Simuluje ``RedisConnector._REFRESH_LOCK_SCRIPT`` (compare-then-expire).
 
-        :param keys: ``(key,)`` — klíč locku.
-        :param argv: ``(expected_value, ttl_seconds)`` — očekávaná hodnota a nové TTL.
+        :param keys: Klíč locku; u workeru navíc token úlohy, značka aktivity a fáze.
+        :param argv: Očekávaný token, TTL locku a u workeru také TTL značky aktivity.
         :return: Výsledek ``expire()``, pokud hodnota odpovídá; jinak ``0``.
         """
         key, expected_value = keys[0], argv[0]
         if self._kv.get(key) != self._encode(expected_value):
             return 0
+        if len(keys) > 1:
+            if self._kv.get(keys[1]) != self._encode(expected_value):
+                return 0
+            if self._kv.get(keys[3]) not in (b"validating", b"importing"):
+                return 0
+            self.set(keys[2], "1", ex=int(argv[2]))
         return int(self.expire(key, int(argv[1])))
+
+    def _eval_begin_import_reset(self, keys, argv):
+        """Odmítne čerstvou aktivitu, jinak nastaví stop, terminální fázi a uvolní vlastní lock."""
+        phase_key, recent_key, stop_key, token_key, lock_key = keys
+        phase = self._kv.get(phase_key)
+        if phase not in (b"validating", b"importing", b"awaiting_approval"):
+            return 0
+        if phase != b"awaiting_approval" and recent_key in self._kv:
+            return 0
+        self.set(stop_key, "1", ex=int(argv[0]))
+        self.set(phase_key, "failed", ex=int(argv[1]))
+        token = self._kv.get(token_key)
+        if token is not None and self._kv.get(lock_key) == token:
+            self.delete(lock_key)
+        return 1
 
     def _eval_compare_then_persist(self, keys, argv):
         """Simuluje ``RedisConnector._PERSIST_LOCK_SCRIPT`` (compare-then-persist).

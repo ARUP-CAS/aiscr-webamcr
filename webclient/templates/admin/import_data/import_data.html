@@ -72,6 +72,7 @@
           <input type="button" id="resetImportBusy" class="default"
                  value="{% trans "core.templates.admin.import_data.reset_import" %}">
         </p>
+        <p id="resetImportBusyStatus" class="errornote" role="status"></p>
         <script>
             // Manual, admin-only recovery for a lock stuck by a dead worker. No job_id here (this is
             // another admin's job), so the endpoint resolves it from IMPORT_DATA_ACTIVE_JOB_KEY.
@@ -91,6 +92,8 @@
                     if (response.ok) {
                         window.location.reload()
                     } else {
+                        const data = await response.json().catch(() => null)
+                        document.getElementById("resetImportBusyStatus").textContent = data?.status_message || ""
                         resetButton.disabled = false
                     }
                 })

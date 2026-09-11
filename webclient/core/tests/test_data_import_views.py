@@ -392,3 +392,113 @@ class DataImportResetTest(SimpleTestCase):
 
         with self.assertRaises(PermissionDenied):
             self._post(fake, user_id=OWNER_ID, is_superuser=False)
+
+    def test_reset_refuses_recent_worker_checkpoint_without_mutation(self):
+        """Čerstvý checkpoint zablokuje oba reset endpointy bez úklidu dat nebo locku."""
+        for phase in (tasks.IMPORT_PHASE_VALIDATING, tasks.IMPORT_PHASE_IMPORTING):
+            for job_id in (JOB, None):
+                with self.subTest(phase=phase, job_id=job_id):
+                    fake = _fake(phase, extra={RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY: JOB})
+                    self.assertTrue(RedisConnector.refresh_import_lock(fake, "tok-xyz", 3600, job_id=JOB))
+                    before = (fake._kv.copy(), fake._ttl.copy())
+                    response = self._post(fake, user_id=OTHER_ID, job_id=job_id)
+                    self.assertEqual(response.status_code, 409)
+                    self.assertEqual((fake._kv, fake._ttl), before)
+
+    def test_reset_succeeds_after_activity_marker_expires(self):
+        """Po vypršení pětiminutové značky lze zaseklou úlohu resetovat."""
+        fake = _fake(tasks.IMPORT_PHASE_IMPORTING)
+        RedisConnector.refresh_import_lock(fake, "tok-xyz", 3600, job_id=JOB)
+        recent_key = f"import_data_recent_progress_{JOB}"
+        self.assertEqual(fake.ttl(recent_key), RedisConnector.IMPORT_DATA_RESET_QUIET_SECONDS)
+        # FakeRedis does not advance time; deletion represents Redis expiry.
+        fake.delete(recent_key)
+        self.assertEqual(self._post(fake).status_code, 200)
+        self._assert_reset(fake)
+        self.assertFalse(RedisConnector.refresh_import_lock(fake, "tok-xyz", 3600, job_id=JOB))
+
+    def test_reset_rechecks_activity_after_view_reads_phase(self):
+        """Checkpoint mezi čtením fáze ve view a resetem musí reset atomicky odmítnout."""
+        fake = _fake(tasks.IMPORT_PHASE_IMPORTING)
+        reset = tasks.reset_import_job
+
+        def checkpoint_then_reset(connection, job_id):
+            RedisConnector.refresh_import_lock(connection, "tok-xyz", 3600, job_id=job_id)
+            return reset(connection, job_id)
+
+        with mock.patch("cron.tasks.reset_import_job", side_effect=checkpoint_then_reset):
+            self.assertEqual(self._post(fake).status_code, 409)
+        self.assertEqual(fake.get(RedisConnector.IMPORT_DATA_LOCK_KEY), "tok-xyz")
+        self.assertIsNone(fake.get(f"import_data_stop_{JOB}"))
+
+    def test_approval_reset_ignores_recent_validation_checkpoint(self):
+        """Čekání na schválení nemá aktivního workera a nevyžaduje čekání na expiraci značky."""
+        fake = _fake(tasks.IMPORT_PHASE_AWAITING_APPROVAL, extra={f"import_data_recent_progress_{JOB}": "1"})
+        self.assertEqual(self._post(fake).status_code, 200)
+
+    def test_worker_rejects_lost_job_state_without_refreshing_foreign_lock(self):
+        """Worker nesmí pokračovat po ztrátě tokenu, fáze nebo vlastnictví globálního locku."""
+        for key, value in (
+            (f"import_data_lock_token_{JOB}", None),
+            (f"import_data_phase_{JOB}", None),
+            (f"import_data_phase_{JOB}", tasks.IMPORT_PHASE_FAILED),
+            (RedisConnector.IMPORT_DATA_LOCK_KEY, "replacement-token"),
+        ):
+            with self.subTest(key=key, value=value):
+                fake = _fake(tasks.IMPORT_PHASE_IMPORTING)
+                fake.expire(RedisConnector.IMPORT_DATA_LOCK_KEY, 60)
+                if value is None:
+                    fake.delete(key)
+                else:
+                    fake.set(key, value, ex=60)
+                before = (fake._kv.copy(), fake._ttl.copy())
+                self.assertFalse(RedisConnector.refresh_import_lock(fake, "tok-xyz", 3600, job_id=JOB))
+                self.assertEqual((fake._kv, fake._ttl), before)
+
+    def test_workers_abort_before_work_when_job_token_is_missing(self):
+        """Oba skutečné tasky skončí před zpracováním dat, pokud zmizel per-job token."""
+        for phase, worker, args in (
+            (tasks.IMPORT_PHASE_VALIDATING, tasks.run_data_import_validation, (JOB, OWNER_ID, "tok-xyz", "INSERT")),
+            (tasks.IMPORT_PHASE_IMPORTING, tasks.run_data_import, (JOB, OWNER_ID, "tok-xyz")),
+        ):
+            with self.subTest(phase=phase):
+                fake = _fake(phase)
+                fake.delete(f"import_data_lock_token_{JOB}")
+                with mock.patch("core.connectors.RedisConnector.get_connection", return_value=fake), mock.patch(
+                    "cron.tasks.check_import_report_directory"
+                ) as directory:
+                    worker(*args)
+                directory.assert_not_called()
+                self.assertEqual(fake.get(f"import_data_phase_{JOB}"), tasks.IMPORT_PHASE_FAILED)
+
+    def test_import_aborts_when_lock_is_replaced_after_initial_checkpoint(self):
+        """Ztráta locku po spuštění zastaví worker před prvním záznamem a zachová cizí lock."""
+        fake = FakeRedis(
+            initial={
+                f"import_data_phase_{JOB}": tasks.IMPORT_PHASE_IMPORTING,
+                f"import_data_lock_token_{JOB}": "tok-xyz",
+                RedisConnector.IMPORT_DATA_LOCK_KEY: "tok-xyz",
+                f"import_data_count_{JOB}": "1",
+                f"import_performed_action_{JOB}": "INSERT",
+            }
+        )
+
+        def replace_lock(**kwargs):
+            fake.set(RedisConnector.IMPORT_DATA_LOCK_KEY, "replacement-token", ex=60)
+            return _StubUser(OWNER_ID)
+
+        with mock.patch("core.connectors.RedisConnector.get_connection", return_value=fake), mock.patch(
+            "cron.tasks.check_import_report_directory", return_value=("/unused", "/unused/reports", None)
+        ), mock.patch("cron.tasks.save_import_report_to_disk", return_value="/unused/report.xlsx"), mock.patch(
+            "cron.tasks.User.objects.get", side_effect=replace_lock
+        ), mock.patch(
+            "cron.tasks.transaction.atomic"
+        ), mock.patch(
+            "cron.tasks.ImportModelMapper.get_import_data_mapper"
+        ) as mapper:
+            tasks.run_data_import(JOB, OWNER_ID, "tok-xyz")
+        mapper.assert_not_called()
+        self.assertEqual(fake.get(f"import_data_phase_{JOB}"), b"failed")
+        self.assertIn(b"failed_lock_lost", fake.get(f"import_data_status_message_tr_{JOB}"))
+        self.assertEqual(fake.get(RedisConnector.IMPORT_DATA_LOCK_KEY), b"replacement-token")
+        self.assertEqual(fake.ttl(RedisConnector.IMPORT_DATA_LOCK_KEY), 60)

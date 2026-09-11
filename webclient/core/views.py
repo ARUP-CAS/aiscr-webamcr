@@ -3325,6 +3325,8 @@ class DataImportReset(LoginRequiredMixin, View):
         povolen pro libovolnou ne-terminální fázi (``validating``/``importing``/``awaiting_approval``)
         a smí ho provést kterýkoli superuživatel — dead-worker úlohu typicky nemůže uvolnit
         její vlastník. Vlastní úklid a token-checked uvolnění locku provádí ``tasks.reset_import_job``.
+        Aktivní validaci/import odmítne, pokud worker provedl checkpoint v posledních pěti minutách.
+        Ani starší checkpoint nenahrazuje ruční ověření, že worker skutečně skončil.
 
         :param request: HTTP požadavek přihlášeného superuživatele.
         :param kwargs: Volitelně ``job_id`` identifikující importní úlohu.
@@ -3347,7 +3349,11 @@ class DataImportReset(LoginRequiredMixin, View):
                 {"result": "error", "status_message": _("core.templates.admin.import_data.nothing_to_reset")},
                 status=409,
             )
-        tasks.reset_import_job(redis_connector, job_id)
+        if not tasks.reset_import_job(redis_connector, job_id):
+            return JsonResponse(
+                {"result": "error", "status_message": _("core.templates.admin.import_data.reset_recent_progress")},
+                status=409,
+            )
         logger.warning(
             "core.views.DataImportReset.reset", extra={"job_id": job_id, "by_user": request.user.id, "phase": phase}
         )

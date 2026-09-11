@@ -820,8 +820,13 @@ def reset_import_job(redis_connector, job_id):
     ukazatel běžící úlohy uživatele i zpětný odkaz ``IMPORT_DATA_ACTIVE_JOB_KEY``, uvolní případný
     nastagovaný ZIP a per-job datové klíče pouze expiruje (report zůstane stažitelný).
 
+    Aktivní validaci/import lze resetovat až po pěti minutách bez checkpointu workeru.
+    Značka ``import_data_recent_progress`` má vlastní krátké TTL; nesmí se persistovat
+    společně s daty reportu. Stáří není důkazem ukončení workeru.
+
     :param redis_connector: Dekódující Redis spojení.
     :param job_id: Identifikátor resetované importní úlohy.
+    :return: Zda byl reset přijat; při nedávné aktivitě nebo terminální fázi vrací ``False``.
     """
     logger.warning("cron.tasks.reset_import_job.start", extra={"job_id": job_id})
 
@@ -831,11 +836,11 @@ def reset_import_job(redis_connector, job_id):
     def to_str(value):
         return value.decode("utf-8") if isinstance(value, bytes) else value
 
-    # Halt any still-alive task first, then token-checked release so a re-acquired lock is untouched.
-    redis_connector.set(job_key("import_data_stop"), 1, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
-    lock_token = to_str(redis_connector.get(job_key("import_data_lock_token")))
-    if lock_token:
-        RedisConnector.release_import_lock(redis_connector, lock_token)
+    # Check freshness and revoke ownership atomically against worker checkpoints and Start.
+    if not RedisConnector.begin_import_reset(
+        redis_connector, job_id, IMPORT_DATA_RUNNING_TTL_SECONDS, IMPORT_DATA_EXPIRATION_SECONDS
+    ):
+        return False
 
     redis_connector.set(job_key("import_data_phase"), IMPORT_PHASE_FAILED, ex=IMPORT_DATA_EXPIRATION_SECONDS)
     redis_connector.set(
@@ -878,6 +883,7 @@ def reset_import_job(redis_connector, job_id):
         pipe.expire("import_data_{}_record_{}".format(job_id, i), IMPORT_DATA_EXPIRATION_SECONDS)
     pipe.execute()
     logger.warning("cron.tasks.reset_import_job.done", extra={"job_id": job_id, "job_user": job_user})
+    return True
 
 
 def _translate_status_value_for_report(raw):
@@ -1139,7 +1145,9 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         return "import_data_file_{}_{}".format(job_id, index)
 
     def refresh_lock_or_raise():
-        if not RedisConnector.refresh_import_lock(redis_connector, lock_token, IMPORT_DATA_RUNNING_TTL_SECONDS):
+        if not RedisConnector.refresh_import_lock(
+            redis_connector, lock_token, IMPORT_DATA_RUNNING_TTL_SECONDS, job_id=job_id
+        ):
             raise ImportLockLostError("Import data lock lost during validation")
 
     # Per-job datové klíče: na úspěšné cestě se persistují (bez TTL) pro okno awaiting_approval,
@@ -1650,7 +1658,9 @@ def run_data_import(job_id, user_id, lock_token):
             return "import_data_{}_record_{}".format(job_id, record_id)
 
         def refresh_import_lock():
-            if not RedisConnector.refresh_import_lock(redis_connector, lock_token, IMPORT_DATA_RUNNING_TTL_SECONDS):
+            if not RedisConnector.refresh_import_lock(
+                redis_connector, lock_token, IMPORT_DATA_RUNNING_TTL_SECONDS, job_id=job_id
+            ):
                 redis_connector.set(
                     job_key("import_data_status_message_tr"),
                     translation_value("cron.tasks.run_data_import.failed_lock_lost"),
@@ -1658,7 +1668,9 @@ def run_data_import(job_id, user_id, lock_token):
                 redis_connector.set(job_key("import_data_stop"), 1)
                 raise ImportLockLostError("Import data lock lost")
 
-        if not RedisConnector.refresh_import_lock(redis_connector, lock_token, IMPORT_DATA_RUNNING_TTL_SECONDS):
+        if not RedisConnector.refresh_import_lock(
+            redis_connector, lock_token, IMPORT_DATA_RUNNING_TTL_SECONDS, job_id=job_id
+        ):
             redis_connector.set(
                 job_key("import_data_status_message_tr"),
                 translation_value("cron.tasks.run_data_import.failed_lock_acquisition"),
@@ -2110,6 +2122,7 @@ def run_data_import(job_id, user_id, lock_token):
                 if not failed and not stopped and pending_soubor_fedora_deletes:
                     try:
                         for entry in pending_soubor_fedora_deletes:
+                            refresh_import_lock()
                             soubor = entry["soubor"]
                             navazany_objekt = entry["navazany_objekt"]
                             delete_fedora_transaction = FedoraDeletionOnlyTransaction()
@@ -2132,6 +2145,8 @@ def run_data_import(job_id, user_id, lock_token):
                                 FedoraRepositoryConnector(
                                     navazany_objekt, delete_fedora_transaction
                                 ).delete_binary_file(soubor)
+                    except ImportLockLostError:
+                        raise
                     except Exception as err:
                         logger.error(
                             "cron.tasks.run_data_import.soubor_delete.error",
@@ -2172,6 +2187,9 @@ def run_data_import(job_id, user_id, lock_token):
                         logger.error(
                             "cron.tasks.run_data_import.fedora_plan_report_save_failed", extra={"job_id": job_id}
                         )
+                if not failed and not stopped:
+                    # Recheck before committing a batch whose last work unit may have taken a long time.
+                    refresh_import_lock()
                 if failed or stopped:
                     # Nothing from this batch will persist — do not leave the queued Fedora
                     # transactions open.
@@ -2894,6 +2912,10 @@ def run_data_import(job_id, user_id, lock_token):
                         translation_value("cron.tasks.run_data_import.failed_during_fedora"),
                     )
                     failed = True
+                except ImportLockLostError:
+                    if fedora_transaction is not None:
+                        fedora_transaction.rollback_transaction()
+                    raise
                 except Exception as err:
                     if fedora_transaction is not None:
                         fedora_transaction.rollback_transaction()

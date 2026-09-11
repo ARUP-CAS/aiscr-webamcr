@@ -21,6 +21,7 @@ class RedisConnector:
     r = None
     r_decode = None
     IMPORT_DATA_LOCK_KEY = "import_data_lock"
+    IMPORT_DATA_RESET_QUIET_SECONDS = 5 * 60
     # Zpětný odkaz lock → job_id: jediný singleton klíč (bez ``_{job_id}`` sufixu), který drží
     # id právě běžící importní úlohy. Umožňuje superuživateli ručně resetovat zaseklou úlohu i
     # z „import běží (jiný admin)“ stránky, kde stránka zná jen existenci locku, nikoli job_id.
@@ -33,9 +34,25 @@ return 0
 """
     _REFRESH_LOCK_SCRIPT = """
 if redis.call("get", KEYS[1]) == ARGV[1] then
+    if #KEYS > 1 then
+        if redis.call("get", KEYS[2]) ~= ARGV[1] then return 0 end
+        local phase = redis.call("get", KEYS[4])
+        if phase ~= "validating" and phase ~= "importing" then return 0 end
+        redis.call("set", KEYS[3], "1", "EX", ARGV[3])
+    end
     return redis.call("expire", KEYS[1], ARGV[2])
 end
 return 0
+"""
+    _RESET_IMPORT_SCRIPT = """
+local phase = redis.call("get", KEYS[1])
+if phase ~= "validating" and phase ~= "importing" and phase ~= "awaiting_approval" then return 0 end
+if phase ~= "awaiting_approval" and redis.call("exists", KEYS[2]) ~= 0 then return 0 end
+redis.call("set", KEYS[3], "1", "EX", ARGV[1])
+redis.call("set", KEYS[1], "failed", "EX", ARGV[2])
+local token = redis.call("get", KEYS[4])
+if token and redis.call("get", KEYS[5]) == token then redis.call("del", KEYS[5]) end
+return 1
 """
     _PERSIST_LOCK_SCRIPT = """
 if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -141,16 +158,55 @@ return 1
         return bool(connection.set(cls.IMPORT_DATA_LOCK_KEY, token, nx=True, ex=ttl_seconds))
 
     @classmethod
-    def refresh_import_lock(cls, connection: redis.Redis, token: str, ttl_seconds: int) -> bool:
+    def refresh_import_lock(cls, connection: redis.Redis, token: str, ttl_seconds: int, job_id: str = None) -> bool:
         """
         Prodlouží expiraci importního locku pouze tehdy, pokud ho stále vlastní zadaný token.
 
         :param connection: Redis spojení, přes které se lock obnovuje.
         :param token: Jedinečný token vlastníka locku.
         :param ttl_seconds: Nová doba expirace locku v sekundách.
+        :param job_id: U workeru ověří také token a aktivní fázi úlohy a na pět minut označí aktivitu.
         :return: ``True``, pokud byl lock úspěšně obnoven; jinak ``False``.
         """
+        if job_id is not None:
+            return bool(
+                connection.eval(
+                    cls._REFRESH_LOCK_SCRIPT,
+                    4,
+                    cls.IMPORT_DATA_LOCK_KEY,
+                    f"import_data_lock_token_{job_id}",
+                    f"import_data_recent_progress_{job_id}",
+                    f"import_data_phase_{job_id}",
+                    token,
+                    ttl_seconds,
+                    cls.IMPORT_DATA_RESET_QUIET_SECONDS,
+                )
+            )
         return bool(connection.eval(cls._REFRESH_LOCK_SCRIPT, 1, cls.IMPORT_DATA_LOCK_KEY, token, ttl_seconds))
+
+    @classmethod
+    def begin_import_reset(cls, connection, job_id, running_ttl, retention_ttl):
+        """Atomicky odmítne aktivní úlohu, jinak nastaví stop a uvolní pouze její lock.
+
+        :param connection: Redis spojení.
+        :param job_id: Resetovaná úloha.
+        :param running_ttl: Doba uchování stop příznaku v sekundách.
+        :param retention_ttl: Doba uchování terminální fáze v sekundách.
+        :return: Zda byl reset přijat; odmítnutí nemění žádné klíče.
+        """
+        return bool(
+            connection.eval(
+                cls._RESET_IMPORT_SCRIPT,
+                5,
+                f"import_data_phase_{job_id}",
+                f"import_data_recent_progress_{job_id}",
+                f"import_data_stop_{job_id}",
+                f"import_data_lock_token_{job_id}",
+                cls.IMPORT_DATA_LOCK_KEY,
+                running_ttl,
+                retention_ttl,
+            )
+        )
 
     @classmethod
     def persist_import_lock(cls, connection: redis.Redis, token: str) -> bool:

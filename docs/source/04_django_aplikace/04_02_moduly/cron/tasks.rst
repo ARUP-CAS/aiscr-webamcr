@@ -218,8 +218,13 @@ Funkce
    ukazatel běžící úlohy uživatele i zpětný odkaz ``IMPORT_DATA_ACTIVE_JOB_KEY``, uvolní případný
    nastagovaný ZIP a per-job datové klíče pouze expiruje (report zůstane stažitelný).
 
+   Aktivní validaci/import lze resetovat až po pěti minutách bez checkpointu workeru.
+   Značka ``import_data_recent_progress`` má vlastní krátké TTL; nesmí se persistovat
+   společně s daty reportu. Stáří není důkazem ukončení workeru.
+
    :param redis_connector: Dekódující Redis spojení.
    :param job_id: Identifikátor resetované importní úlohy.
+   :return: Zda byl reset přijat; při nedávné aktivitě nebo terminální fázi vrací ``False``.
 
 .. py:function:: _translate_status_value_for_report(raw)
 

@@ -858,6 +858,8 @@ Třídy
       povolen pro libovolnou ne-terminální fázi (``validating``/``importing``/``awaiting_approval``)
       a smí ho provést kterýkoli superuživatel — dead-worker úlohu typicky nemůže uvolnit
       její vlastník. Vlastní úklid a token-checked uvolnění locku provádí ``tasks.reset_import_job``.
+      Aktivní validaci/import odmítne, pokud worker provedl checkpoint v posledních pěti minutách.
+      Ani starší checkpoint nenahrazuje ruční ověření, že worker skutečně skončil.
 
       :param request: HTTP požadavek přihlášeného superuživatele.
       :param kwargs: Volitelně ``job_id`` identifikující importní úlohu.

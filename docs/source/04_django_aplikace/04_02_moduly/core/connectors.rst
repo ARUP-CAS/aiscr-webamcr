@@ -52,7 +52,18 @@ Třídy
       :param connection: Redis spojení, přes které se lock obnovuje.
       :param token: Jedinečný token vlastníka locku.
       :param ttl_seconds: Nová doba expirace locku v sekundách.
+      :param job_id: U workeru ověří také token a aktivní fázi úlohy a na pět minut označí aktivitu.
       :return: ``True``, pokud byl lock úspěšně obnoven; jinak ``False``.
+
+   .. py:method:: begin_import_reset()
+
+      Atomicky odmítne aktivní úlohu, jinak nastaví stop a uvolní pouze její lock.
+
+      :param connection: Redis spojení.
+      :param job_id: Resetovaná úloha.
+      :param running_ttl: Doba uchování stop příznaku v sekundách.
+      :param retention_ttl: Doba uchování terminální fáze v sekundách.
+      :return: Zda byl reset přijat; odmítnutí nemění žádné klíče.
 
    .. py:method:: persist_import_lock()
 
