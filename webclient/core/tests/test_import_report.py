@@ -432,6 +432,46 @@ class _StubUser:
 class DataImportProgressReportViewTest(SimpleTestCase):
     """Testy pro ``DataImportProgressReportView`` — stažení živého XLSX reportu úlohy."""
 
+    def test_download_matches_disk_sheet_order_and_contents(self):
+        """Živý i archivovaný report mají stejné pořadí listů a všechny hodnoty buněk."""
+        disk_redis = FakeRedis()
+        live_redis = FakeRedis(decode_responses=True)
+        for connection in (disk_redis, live_redis):
+            _populate_report_redis(connection, phase="failed")
+            connection.set(f"import_data_user_{JOB_ID}", 7)
+            connection.set(
+                f"import_fedora_target_results_tr_{JOB_ID}",
+                json.dumps(
+                    [
+                        {"ident_cely": "C-1", "transaction_uid": "tx-1", "record_ids": [0], "result": "success"},
+                        {"ident_cely": "C-2", "transaction_uid": None, "record_ids": [1], "result": "unattempted"},
+                    ]
+                ),
+            )
+        request = RequestFactory().get(f"/data-import-report/{JOB_ID}")
+        request.user = _StubUser(user_id=7)
+        with tempfile.TemporaryDirectory() as reports_directory:
+            path = save_import_report_to_disk(JOB_ID, disk_redis, reports_directory)
+            self.assertIsNotNone(path)
+            with patch("core.views.RedisConnector.get_connection_decode", return_value=live_redis):
+                response = DataImportProgressReportView.as_view()(request, job_id=JOB_ID)
+            self.assertEqual(response.status_code, 200)
+            disk_workbook = openpyxl.load_workbook(path)
+            live_workbook = openpyxl.load_workbook(BytesIO(response.content))
+            try:
+                self.assertEqual(disk_workbook.sheetnames, ["Import", "Fedora"])
+                self.assertEqual(live_workbook.sheetnames, disk_workbook.sheetnames)
+                for name in disk_workbook.sheetnames:
+                    self.assertGreater(disk_workbook[name].max_row, 1)
+                    self.assertEqual(list(live_workbook[name].values), list(disk_workbook[name].values))
+                entries = read_import_report_index(reports_directory)
+                self.assertEqual(len(entries), 1)
+                self.assertEqual(entries[0]["job_id"], JOB_ID)
+                self.assertEqual(entries[0]["stage"], "failed")
+            finally:
+                disk_workbook.close()
+                live_workbook.close()
+
     def test_download_has_both_import_and_fedora_sheets(self):
         """Stažený report musí obsahovat oba listy — stejné jako na disk uložená kopie."""
         fake_redis = FakeRedis(decode_responses=True)

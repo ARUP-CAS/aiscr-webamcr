@@ -280,6 +280,15 @@ Funkce
    :param redis_connector: Dekódující Redis spojení.
    :return: DataFrame se sloupci ``ident_cely``, ID transakce Fedora a přeložený výsledek.
 
+.. py:function:: write_import_report_sheets(writer, job_id, redis_connector)
+
+   Zapíše společné listy živého i archivovaného reportu v pořadí Import, Fedora.
+
+   :param writer: Otevřený Excel writer spravovaný volajícím.
+   :param job_id: Identifikátor importní úlohy, jejíž data se načítají z Redis.
+   :param redis_connector: Redis spojení s bytovými nebo dekódovanými odpověďmi.
+   :return: Fáze načtená při sestavení listu Import pro zápis do indexu reportů.
+
 .. py:function:: save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
 
    Uloží aktuální stav reportu importní úlohy jako XLSX do adresáře reportů.

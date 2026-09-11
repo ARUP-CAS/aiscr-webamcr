@@ -1066,6 +1066,21 @@ def build_import_fedora_target_dataframe(job_id, redis_connector):
     return pd.DataFrame(rows, columns=columns)
 
 
+def write_import_report_sheets(writer, job_id, redis_connector):
+    """Zapíše společné listy živého i archivovaného reportu v pořadí Import, Fedora.
+
+    :param writer: Otevřený Excel writer spravovaný volajícím.
+    :param job_id: Identifikátor importní úlohy, jejíž data se načítají z Redis.
+    :param redis_connector: Redis spojení s bytovými nebo dekódovanými odpověďmi.
+    :return: Fáze načtená při sestavení listu Import pro zápis do indexu reportů.
+    """
+    dataframe, phase = build_import_report_dataframe(job_id, redis_connector)
+    fedora_dataframe = build_import_fedora_target_dataframe(job_id, redis_connector)
+    for sheet_name, sheet in (("Import", dataframe), ("Fedora", fedora_dataframe)):
+        sheet.to_excel(writer, index=False, sheet_name=sheet_name)
+    return phase
+
+
 def save_import_report_to_disk(job_id, redis_connector, reports_directory_path):
     """Uloží aktuální stav reportu importní úlohy jako XLSX do adresáře reportů.
 
@@ -1083,15 +1098,12 @@ def save_import_report_to_disk(job_id, redis_connector, reports_directory_path):
     report_path = None
     try:
         report_path = get_or_create_import_report_path(job_id, redis_connector, reports_directory_path)
-        df, phase = build_import_report_dataframe(job_id, redis_connector)
-        fedora_df = build_import_fedora_target_dataframe(job_id, redis_connector)
         # openpyxl's ExcelWriter validates the file extension against the engine, so the temp file
         # must still end in .xlsx (a plain ".tmp" suffix raises ValueError before anything is written).
         base_path, ext = os.path.splitext(report_path)
         tmp_path = "{}.tmp{}".format(base_path, ext)
         with pd.ExcelWriter(tmp_path, engine="openpyxl") as writer:
-            df.to_excel(writer, index=False, sheet_name="Import")
-            fedora_df.to_excel(writer, index=False, sheet_name="Fedora")
+            phase = write_import_report_sheets(writer, job_id, redis_connector)
         os.replace(tmp_path, report_path)
         # Both the file and the index are derived from the validated directory, never a Redis path.
         upsert_import_report_index_entry(os.path.dirname(report_path), job_id, os.path.basename(report_path), phase)
