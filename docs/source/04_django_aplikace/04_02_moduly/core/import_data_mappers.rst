@@ -2246,6 +2246,21 @@ Třídy
       :return: Vedoucí uživatel navázaný na spolupráci.
 
 
+.. py:class:: UserRelationErrorIdentityMixin
+
+   Sdílí sestavení identifikátoru a názvu relace pro chyby importu uživatelů.
+
+   **Metody:**
+
+   .. py:method:: _get_user_relation_error_identity()
+
+      Sestaví identifikátor řádku a název uživatelské relace pro chybu integrity.
+
+      :param value_dict: Importovaný řádek s uživatelem a hodnotou relace.
+      :param relation_field: Sloupec ``skupina`` nebo ``notifikace`` určující cílovou relaci.
+      :return: Dvojice slovníku identifikátoru a názvu relace modelu User.
+
+
 .. py:class:: UzivatelOpravneniMapper
 
    Mapovač pro přiřazení skupinových oprávnění uživateli (model User).

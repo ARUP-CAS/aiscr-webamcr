@@ -4657,8 +4657,25 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
         return record.vedouci
 
 
+class UserRelationErrorIdentityMixin:
+    """Sdílí sestavení identifikátoru a názvu relace pro chyby importu uživatelů."""
+
+    @staticmethod
+    def _get_user_relation_error_identity(value_dict, relation_field):
+        """Sestaví identifikátor řádku a název uživatelské relace pro chybu integrity.
+
+        :param value_dict: Importovaný řádek s uživatelem a hodnotou relace.
+        :param relation_field: Sloupec ``skupina`` nebo ``notifikace`` určující cílovou relaci.
+        :return: Dvojice slovníku identifikátoru a názvu relace modelu User.
+        """
+        relation_labels = {"skupina": "User.groups", "notifikace": "User.notification_types"}
+        return {"uzivatel": value_dict["uzivatel"], relation_field: value_dict[relation_field]}, relation_labels[
+            relation_field
+        ]
+
+
 @ImportModelMapper.register("uzivatele_opravneni")
-class UzivatelOpravneniMapper(ImportModelMapper):
+class UzivatelOpravneniMapper(ImportModelMapper, UserRelationErrorIdentityMixin):
     """Mapovač pro přiřazení skupinových oprávnění uživateli (model User)."""
 
     model_class = User
@@ -4704,8 +4721,8 @@ class UzivatelOpravneniMapper(ImportModelMapper):
         try:
             return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
         except User.DoesNotExist:
-            record_id = {"uzivatel": self.value_dict["uzivatel"], "skupina": self.value_dict["skupina"]}
-            raise ImportDataIntegrityError(record_id, "User.groups", performed_action)
+            record_id, label = self._get_user_relation_error_identity(self.value_dict, "skupina")
+            raise ImportDataIntegrityError(record_id, label, performed_action)
 
     def import_validation(self, performed_action, *args, **kwargs):
         """
@@ -4726,11 +4743,11 @@ class UzivatelOpravneniMapper(ImportModelMapper):
             relation_exists = user.groups.filter(pk=group.pk).exists()
         except (User.DoesNotExist, Group.DoesNotExist):
             relation_exists = False
-        record_id = {"uzivatel": self.value_dict["uzivatel"], "skupina": self.value_dict["skupina"]}
+        record_id, label = self._get_user_relation_error_identity(self.value_dict, "skupina")
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and relation_exists:
-            raise ImportDataIntegrityError(record_id, "User.groups", performed_action)
+            raise ImportDataIntegrityError(record_id, label, performed_action)
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE and not relation_exists:
-            raise ImportDataIntegrityError(record_id, "User.groups", performed_action)
+            raise ImportDataIntegrityError(record_id, label, performed_action)
         return self._get_filter_kwargs_primary_key()
 
     @staticmethod
@@ -4880,7 +4897,7 @@ class SouborMapper(ImportModelMapper):
 
 
 @ImportModelMapper.register("uzivatele_notifikace")
-class UzivatelNotifikaceMapper(ImportModelMapper):
+class UzivatelNotifikaceMapper(ImportModelMapper, UserRelationErrorIdentityMixin):
     """Mapovač pro přiřazení typů notifikací uživateli (model User)."""
 
     model_class = User
@@ -4926,8 +4943,8 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
         try:
             return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
         except User.DoesNotExist:
-            record_id = {"uzivatel": self.value_dict["uzivatel"], "notifikace": self.value_dict["notifikace"]}
-            raise ImportDataIntegrityError(record_id, "User.notification_types", performed_action)
+            record_id, label = self._get_user_relation_error_identity(self.value_dict, "notifikace")
+            raise ImportDataIntegrityError(record_id, label, performed_action)
 
     def import_validation(self, performed_action, *args, **kwargs):
         """
@@ -4948,11 +4965,11 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
             relation_exists = user.notification_types.filter(pk=notification_type.pk).exists()
         except (User.DoesNotExist, UserNotificationType.DoesNotExist):
             relation_exists = False
-        record_id = {"uzivatel": self.value_dict["uzivatel"], "notifikace": self.value_dict["notifikace"]}
+        record_id, label = self._get_user_relation_error_identity(self.value_dict, "notifikace")
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and relation_exists:
-            raise ImportDataIntegrityError(record_id, "User.notification_types", performed_action)
+            raise ImportDataIntegrityError(record_id, label, performed_action)
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE and not relation_exists:
-            raise ImportDataIntegrityError(record_id, "User.notification_types", performed_action)
+            raise ImportDataIntegrityError(record_id, label, performed_action)
         return self._get_filter_kwargs_primary_key()
 
     @staticmethod
