@@ -103,6 +103,7 @@ class DataImportCancelTest(SimpleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.content)["result"], "ok")
         self.assertIsNotNone(fake.get(f"import_data_stop_{JOB}"))
+        self.assertEqual(fake.ttl(f"import_data_stop_{JOB}"), tasks.IMPORT_DATA_RUNNING_TTL_SECONDS)
         self.assertEqual(fake.get(f"import_data_phase_{JOB}"), tasks.IMPORT_PHASE_VALIDATING)
 
     def test_validating_non_owner_forbidden(self):

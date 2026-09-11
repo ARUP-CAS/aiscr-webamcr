@@ -3296,7 +3296,7 @@ class DataImportCancel(LoginRequiredMixin, View):
                     {"result": "error", "status_message": _("core.templates.admin.import_data.not_owner")},
                     status=403,
                 )
-            redis_connector.set(f"import_data_stop_{job_id}", 1)
+            redis_connector.set(f"import_data_stop_{job_id}", 1, ex=tasks.IMPORT_DATA_RUNNING_TTL_SECONDS)
             return JsonResponse({"result": "ok"})
 
         # importing → use Stop (the import task owns the lock); terminal phases → nothing to cancel.
