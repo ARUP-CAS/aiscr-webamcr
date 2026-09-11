@@ -279,7 +279,7 @@ class GeometryTransformMixinUpdateTest(TestCase):
 
     def test_update_missing_record_uses_target_model_default_geom_system(self):
         """Bez existujícího řádku (např. Dokument bez DokumentExtraData) se použije výchozí
-        ``geom_system`` cílového modelu, aby se odvozená geometrie dopočítala (r3703505252)."""
+        ``geom_system`` cílového modelu, aby se odvozená geometrie dopočítala."""
         mapping = {"geom": WKT_WGS84}
         mapper = _fake_mapper(None, target_model=DokumentExtraData)
         with patch(
@@ -290,7 +290,7 @@ class GeometryTransformMixinUpdateTest(TestCase):
         self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
 
     def test_update_full_export_blank_geometry_columns_preserves_db_geometry(self):
-        """[r3917104061] Full-export CSV UPDATE s prázdnými geom/geom_sjtsk/geom_system buňkami
+        """Full-export CSV UPDATE s prázdnými geom/geom_sjtsk/geom_system buňkami
         (řádek mění jen jiné pole, např. licenci) nesmí smazat existující geometrii záznamu — blank
         buňky ve všech třech geometrických sloupcích znamenají "netýká se", ne "vymaž"."""
         mapping = {"geom": None, "geom_sjtsk": "", "geom_system": None, "licence": "nova-licence"}

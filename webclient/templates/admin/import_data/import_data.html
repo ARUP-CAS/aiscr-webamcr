@@ -310,8 +310,8 @@
       function renderTables(data) {
           const table = document.getElementById("result_list")
           if (table && data.validation_results) {
-              // The server now returns only the rows appended since validationCursor (review
-              // r3703505264), so every entry here is new — append all of them directly.
+              // The server returns only the rows appended since validationCursor,
+              // so every entry here is new — append all of them directly.
               for (const vr of data.validation_results) {
                   const row = table.insertRow(-1)
                   row.insertCell(-1).innerText = (vr.item_order + 1)
@@ -372,7 +372,7 @@
               if (stopRequests) {
                   return -1
               }
-              // Ask the server for only the validation rows appended since our last poll (r3703505264).
+              // Ask the server for only the validation rows appended since our last poll.
               const fetchUrl = new URL(url, window.location.origin)
               fetchUrl.searchParams.set("validation_since", String(validationCursor))
               const response = await fetch(fetchUrl)

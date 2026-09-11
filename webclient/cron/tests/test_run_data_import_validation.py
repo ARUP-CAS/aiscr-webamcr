@@ -447,18 +447,13 @@ class RunDataImportValidationTest(TestCase):
         self.assertGreaterEqual(self.validation_report_save_mock.call_count, 2)
 
     def test_nonexistent_user_insert_in_uzivatele_opravneni_is_rejected_per_row(self):
-        """[r3917104054] INSERT s neexistujícím uživatelem v uzivatele_opravneni.csv.
+        """INSERT s neexistujícím uživatelem v uzivatele_opravneni.csv odmítne konkrétní řádek.
 
-        Reviewer's finding claimed ``create_records`` (bare ``User.objects.get``) would raise an
-        uncaught ``User.DoesNotExist`` and fail the whole job with a generic ``error``, because
-        ``import_validation`` lets a nonexistent user through on INSERT (no relation exists yet,
-        which is correct for INSERT). This test shows that does NOT happen on the actual
-        ``run_data_import_validation`` pipeline: ``map()`` runs before ``import_validation``/
-        ``create_records`` (cron/tasks.py ~line 1356) and ``UzivatelOpravneniMapper.get_mapping()``
-        already resolves ``uzivatel`` through ``LookupImportField(User)``, which raises
-        ``ImportDataMissingReferencedValueError`` (an ``ImportDataError``) for a missing user —
-        caught by the per-row handler — so ``create_records`` is never reached for this row.
-        The job is correctly rejected as ``validation_rejected``, not ``error``.
+        ``map()`` proběhne před ``import_validation`` a ``create_records``. Metoda
+        ``UzivatelOpravneniMapper.get_mapping()`` dohledává uživatele přes ``LookupImportField(User)``;
+        chybějící uživatel vyvolá ``ImportDataMissingReferencedValueError`` (potomka ``ImportDataError``).
+        Obsluha chyby řádku ji zachytí a ``create_records`` se pro tento řádek nezavolá.
+        Úloha skončí s důvodem ``validation_rejected``, nikoli obecnou chybou ``error``.
         """
         archive = io.BytesIO()
         with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -646,7 +641,7 @@ class RunDataImportValidationTest(TestCase):
         self.assertIsNotNone(fake_redis.get(f"import_data_count_{JOB_ID}"))
         self.assertIsNotNone(fake_redis.get(f"import_data_valid_{JOB_ID}"))
         # Klíč musí zůstat bez TTL — terminální flush nesmí tiše vrátit 48h TTL po persist()u
-        # (r3917103970): reviewer by jinak po dlouhé awaiting_approval našel prázdný report.
+        # reviewer by jinak po dlouhé awaiting_approval našel prázdný report.
         self.assertEqual(fake_redis.ttl(f"import_data_validation_results_{JOB_ID}"), -1)
         # Per-user pointer se na úspěšné cestě persistuje (nesmí se smazat).
         self.assertIsNotNone(fake_redis.get(f"import_data_current_job_{self.runner.id}"))

@@ -1556,7 +1556,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
             if user_pointer is not None:
                 if isinstance(user_pointer, bytes):
                     user_pointer = user_pointer.decode("utf-8")
-                # Compare-then-delete: a replacement job may already own this pointer (r3703505227).
+                # Compare-then-delete: a replacement job may already own this pointer.
                 RedisConnector.delete_if_value_matches(
                     redis_connector, "import_data_current_job_{}".format(user_pointer), job_id
                 )
@@ -3013,7 +3013,7 @@ def run_data_import(job_id, user_id, lock_token):
         if job_user is not None:
             if isinstance(job_user, bytes):
                 job_user = job_user.decode("utf-8")
-            # Compare-then-delete: a replacement job may already own this pointer (r3703505227).
+            # Compare-then-delete: a replacement job may already own this pointer.
             RedisConnector.delete_if_value_matches(
                 redis_connector, "import_data_current_job_{}".format(job_user), job_id
             )

@@ -14,6 +14,7 @@ from io import BytesIO
 from unittest.mock import patch
 
 import openpyxl
+from core.forms import ImportDataAdminForm
 from core.setting_models import CustomAdminSettings
 from core.tests.fake_redis import FakeRedis
 from core.utils import (
@@ -272,7 +273,7 @@ class SaveImportReportToDiskTest(TestCase):
         self.assertIsNone(fake_redis.get("import_data_report_saved_path_{}".format(JOB_ID)))
 
 
-class RunDataImportReportGateTest(TestCase):
+class RunDataImportReportGateTest(SimpleTestCase):
     """Ověřuje, že první durabilní report je bránou před všemi mutacemi importu."""
 
     LOCK_TOKEN = "report-gate-lock-token"
@@ -285,6 +286,11 @@ class RunDataImportReportGateTest(TestCase):
                 f"import_data_phase_{JOB_ID}": cron_tasks.IMPORT_PHASE_IMPORTING,
                 f"import_data_lock_token_{JOB_ID}": self.LOCK_TOKEN,
                 f"import_data_user_{JOB_ID}": self.USER_ID,
+                f"import_data_count_{JOB_ID}": "1",
+                f"import_performed_action_{JOB_ID}": ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+                f"import_data_{JOB_ID}_record_0": json.dumps(
+                    {"__file_name": "osoba.csv", "jmeno": "Test", "prijmeni": "Report"}
+                ),
             }
         )
         with patch("core.connectors.RedisConnector.get_connection", return_value=fake_redis), patch(
@@ -292,7 +298,7 @@ class RunDataImportReportGateTest(TestCase):
         ), patch(
             "cron.tasks.check_import_report_directory",
             return_value=(os.path.dirname(reports_directory), reports_directory, None),
-        ), failure_patch, patch(
+        ), failure_patch as report_failure_mock, patch(
             "cron.tasks.User.objects.get"
         ) as user_get_mock, patch(
             "cron.tasks.transaction.atomic"
@@ -300,6 +306,7 @@ class RunDataImportReportGateTest(TestCase):
             "cron.tasks.FedoraTransaction"
         ) as fedora_transaction_mock:
             cron_tasks.run_data_import(JOB_ID, self.USER_ID, self.LOCK_TOKEN)
+            report_failure_mock.assert_called()
         return fake_redis, user_get_mock, atomic_mock, fedora_transaction_mock
 
     def _assert_failed_before_mutation(self, fake_redis, user_get_mock, atomic_mock, fedora_transaction_mock):

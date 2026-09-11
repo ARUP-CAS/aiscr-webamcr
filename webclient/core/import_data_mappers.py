@@ -1963,7 +1963,7 @@ class GeometryTransformMixin:
                 geom_system = getattr(db_record, "geom_system", None)
             else:
                 # No existing geometry row (e.g. Dokument without DokumentExtraData yet) — use the
-                # target model's own default, matching what create_records() will persist (r3703505252).
+                # target model's own default, matching what create_records() will persist.
                 try:
                     geom_system = self._geometry_target_model()._meta.get_field("geom_system").get_default()
                 except FieldDoesNotExist:
