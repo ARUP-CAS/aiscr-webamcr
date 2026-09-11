@@ -1,5 +1,5 @@
 """
-Testy přejmenování souborů změnou suffixu (issue #3487).
+Testy přejmenování souborů změnou suffixu.
 
 Pokrývají výpočet volných suffixů pro dokumenty (včetně prázdného slotu) a samostatné nálezy
 (``F01``–``F99``) a logiku přejmenování potomků ve Fedoře (parsování ``ldp:contains`` a sestavení

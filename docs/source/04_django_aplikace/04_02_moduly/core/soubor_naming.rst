@@ -6,7 +6,7 @@ Modul soubor_naming.
 Přehled modulu
 --------------
 
-Pomocné funkce pro suffixové schéma názvů souborů (issue #3487).
+Pomocné funkce pro suffixové schéma názvů souborů.
 
 Suffix je část názvu mezi identem záznamu (bez pomlček) a příponou:
 

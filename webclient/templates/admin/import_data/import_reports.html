@@ -1,0 +1,54 @@
+{% extends 'admin/change_list.html' %}
+{% load i18n %}
+
+{% block pagination %}{% endblock %}
+{% block filters %}{% endblock filters %}
+{% block object-tools %}{% endblock object-tools %}
+{% block search %}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans "core.templates.admin.import_data.home_link" %}</a>
+    &rsaquo; <a href="{% url 'admin:import_data' %}">{% trans "core.admin_site.AmcrCustomAdminSite.hromadny_import" %}</a>
+    &rsaquo; {% trans "core.admin_site.AmcrCustomAdminSite.hromadny_import_reporty" %}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div id="content-main">
+    <h2>{% trans "core.templates.admin.import_reports.heading" %}</h2>
+    {% if error_message %}
+      <p class="errornote">{{ error_message }}</p>
+    {% endif %}
+    {% if entries %}
+      <table id="result_list" class="table table-bordered table-striped">
+        <tr>
+          <th>{% trans "core.templates.admin.import_reports.job_id" %}</th>
+          <th>{% trans "core.templates.admin.import_reports.file_name" %}</th>
+          <th>{% trans "core.templates.admin.import_reports.stage" %}</th>
+          <th>{% trans "core.templates.admin.import_reports.updated_at" %}</th>
+          <th>{% trans "core.templates.admin.import_reports.download" %}</th>
+        </tr>
+        {% for entry in entries %}
+          <tr>
+            <td>{{ entry.job_id }}</td>
+            <td>{{ entry.file_name }}</td>
+            <td>{{ entry.stage_label }}</td>
+            <td>{{ entry.updated_at }}</td>
+            <td>
+              {% if entry.exists %}
+                <a href="{% url 'core:data-import-report-download' entry.job_id %}" target="_blank" rel="noopener">
+                  {% trans "core.templates.admin.import_reports.download" %}
+                </a>
+              {% else %}
+                <span class="errornote">{% trans "core.templates.admin.import_reports.file_missing" %}</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% elif not error_message %}
+      <p>{% trans "core.templates.admin.import_reports.empty" %}</p>
+    {% endif %}
+  </div>
+{% endblock content %}
