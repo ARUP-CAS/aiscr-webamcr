@@ -255,11 +255,8 @@ Funkce
 
    Sestaví DataFrame listu ``Import`` reportu importní úlohy z aktuálního stavu v Redis.
 
-   Sdílený mechanismus mezi periodickým ukládáním na disk (``save_import_report_to_disk``,
-   volané z ``run_data_import_validation``/``run_data_import``) a stahováním přes
-   ``DataImportProgressReportView``. Pokrývá pouze list ``Import`` — list ``Fedora`` musí obě
-   strany sestavit stejně přes ``build_import_fedora_target_dataframe``, jinak si stažený a na
-   disk uložený report neodpovídají.
+   Sestavení celého živého i archivovaného reportu popisuje
+   :py:func:`write_import_report_sheets`.
 
    :param job_id: Identifikátor importní úlohy.
    :param redis_connector: Dekódující Redis spojení (klíče i hodnoty jako ``str``).
