@@ -1681,3 +1681,145 @@ class ZastaraleParametryKatastruTests(SimpleTestCase):
         from heslar.views import _souradnice_ze_starych_parametru
 
         self.assertIsNone(_souradnice_ze_starych_parametru(self.rf.get("/", {"long": "abc", "lat": "50"})))
+
+
+class OdkazZAtomFeeduTests(SimpleTestCase):
+    """
+    Testy ověření odkazu z ATOM feedu před stažením (S1).
+
+    Dřív stačilo, aby odkaz jméno souboru obsahoval – podvržený feed tak mohl
+    stahování nasměrovat kamkoli. Povolený hostitel přitom **není** hostitel
+    feedu: ČÚZK podává feed z ``atom.cuzk.cz`` a soubory z ``vdp.cuzk.gov.cz``
+    (ověřeno 17. 9. 2026).
+    """
+
+    FEED = "https://atom.cuzk.cz/RUIAN-S-K-Z/datasetFeeds/CZ-00025712-CUZK_RUIAN-S-K-Z_1.xml"
+    JMENO = "20260915_ST_ZKSH.xml.zip"
+    HOSTY = {"vdp.cuzk.gov.cz", "atom.cuzk.cz"}
+
+    def _over(self, href):
+        """
+        Ověří odkaz proti pevné sadě povolených hostitelů.
+
+        :param href: Testovaný odkaz.
+        :return: Výsledek ověření.
+        """
+        from heslar.ruian_sync.vfr_download import _je_duveryhodny_odkaz
+
+        return _je_duveryhodny_odkaz(href, self.FEED, self.JMENO, povolene_hosty=self.HOSTY)
+
+    def test_skutecny_odkaz_cuzk_projde(self):
+        """Reálný tvar odkazu z datového feedu ČÚZK musí projít."""
+        self.assertTrue(self._over(f"https://vdp.cuzk.gov.cz/vymenny_format/soucasna/{self.JMENO}"))
+
+    def test_cizi_hostitel_se_odmitne(self):
+        """Blind SSRF – ani interní adresa, ani cizí server."""
+        self.assertFalse(self._over(f"https://evil.example/{self.JMENO}"))
+        self.assertFalse(self._over(f"http://169.254.169.254/latest/{self.JMENO}"))
+
+    def test_nepovolene_schema_se_odmitne(self):
+        """``file://`` a podobná schémata se nestahují."""
+        self.assertFalse(self._over(f"file:///etc/{self.JMENO}"))
+
+    def test_jmeno_musi_sedet_presne(self):
+        """Jméno souboru jen jako podřetězec nestačí."""
+        self.assertFalse(self._over(f"https://vdp.cuzk.gov.cz/x/{self.JMENO}.exe"))
+        self.assertFalse(self._over(f"https://vdp.cuzk.gov.cz/x/?f={self.JMENO}"))
+
+
+class ZnamenkovaKonvenceTests(SimpleTestCase):
+    """
+    Testy sdílené detekce formy S-JTSK (D2).
+
+    Dřív měl plný sync i denní delta vlastní predikát – jeden se rozhodoval
+    podle znaménka první souřadnice X, druhý podle obou souřadnic.
+    """
+
+    def test_kladna_forma_se_prevrati(self):
+        """SHP dodává kladnou formu, projekt ukládá zápornou."""
+        from heslar.ruian_sync.sjtsk import na_zapornou_formu
+
+        self.assertEqual(na_zapornou_formu("POINT(751802.14 1177969.41)"), "POINT(-751802.14 -1177969.41)")
+
+    def test_zaporna_forma_zustane(self):
+        """Už záporné WKT se nesmí převrátit zpět."""
+        from heslar.ruian_sync.sjtsk import na_zapornou_formu
+
+        wkt = "MULTIPOLYGON(((-1 -2, -3 -4, -1 -2)))"
+        self.assertEqual(na_zapornou_formu(wkt), wkt)
+
+    def test_smisena_forma_se_nemeni(self):
+        """Smíšená znaménka jsou vadný vstup – měnit je by chybu zakrylo."""
+        from heslar.ruian_sync.sjtsk import je_kladna_forma
+
+        self.assertFalse(je_kladna_forma(751802.14, -1177969.41))
+
+    def test_plny_sync_a_delta_rozhoduji_stejne(self):
+        """Obě cesty musí dát pro tentýž vstup stejný výsledek."""
+        from heslar.ruian_sync.shp_importer import ShpUzszSource
+        from heslar.ruian_sync.vfr_parser import _normalize_sjtsk_wkt
+
+        for wkt in ("POINT(1 2)", "POINT(-1 -2)", "MULTIPOLYGON(((5 6, 7 8, 5 6)))"):
+            self.assertEqual(ShpUzszSource._ensure_negative_wkt(wkt), _normalize_sjtsk_wkt(wkt), wkt)
+
+    def test_bod_z_pos(self):
+        """Převod ``gml:pos`` sdílí plný sync i delta."""
+        from heslar.ruian_sync.sjtsk import bod_z_pos
+
+        self.assertEqual(bod_z_pos("751802.14 1177969.41"), "POINT(-751802.14 -1177969.41)")
+        self.assertIsNone(bod_z_pos("abc"))
+        self.assertIsNone(bod_z_pos(None))
+
+
+class LogNeplatnychParametruTests(SimpleTestCase):
+    """
+    Testy logování neplatných parametrů veřejného endpointu (S2).
+
+    Endpoint volá i nepřihlášený formulář oznámení, takže obsah parametrů je
+    libovolný text od kohokoli a nesmí se propisovat do varovného logu.
+    """
+
+    def test_obsah_parametru_se_neloguje(self):
+        """Do logu jdou jen jména parametrů a na DEBUG."""
+        from django.test import RequestFactory
+        from heslar import views
+
+        pozadavek = RequestFactory().get("/", {"x": "abc", "podvrh": "<script>zly obsah</script>"})
+        with self.assertLogs(views.logger, level=logging.DEBUG) as zachyt:
+            views.zjisti_katastr_souradnic(pozadavek)
+
+        zaznam = next(r for r in zachyt.records if "invalid_params" in r.getMessage())
+        self.assertEqual(zaznam.levelno, logging.DEBUG)
+        self.assertNotIn("zly obsah", str(zaznam.__dict__))
+
+
+class PropagacePrejmenovaniTests(TestCase):
+    """
+    Testy propagace přejmenování katastru přes sdílený blok transakce (D1).
+
+    Dřív tu byly tři kopírované bloky bez pojistek sdíleného ``_db_a_fedora``;
+    výjimka z rollbacku ve ``finally`` ukončila celou propagaci.
+    """
+
+    def test_chyba_u_zaznamu_nezastavi_propagaci(self):
+        """Selhání jednoho záznamu vrátí ``False``, ale nevyhodí výjimku."""
+        zaznam = mock.Mock(ident_cely="C-TEST", historie_id=1)
+        zaznam.save.side_effect = RuntimeError("Fedora spadla")
+        with mock.patch.object(reassign_mod, "FedoraTransaction", _FakeFedoraTransakce), mock.patch.object(
+            reassign_mod, "log_katastr_change"
+        ):
+            with self.assertLogs(syncer.logger, level=logging.ERROR):
+                vysledek = syncer._propaguj_prejmenovani(zaznam, "projekt", "A -> B", zapsat_historii=True)
+
+        self.assertFalse(vysledek)
+
+    def test_bez_historie_se_nezapisuje(self):
+        """Při opakování dne se jen obnoví metadata, historie se nezdvojí."""
+        zaznam = mock.Mock(ident_cely="C-TEST", historie_id=1)
+        with mock.patch.object(reassign_mod, "FedoraTransaction", _FakeFedoraTransakce), mock.patch.object(
+            reassign_mod, "log_katastr_change"
+        ) as historie:
+            syncer._propaguj_prejmenovani(zaznam, "projekt", "A -> B", zapsat_historii=False)
+
+        historie.assert_not_called()
+        zaznam.save.assert_called_once()

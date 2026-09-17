@@ -48,7 +48,6 @@ from __future__ import annotations
 
 import logging
 import math
-import re
 import zipfile
 from pathlib import Path
 from typing import Iterator, Optional, Tuple
@@ -64,7 +63,7 @@ from heslar.ruian_sync.provider import (
     RuianKrajDTO,
     RuianOkresDTO,
 )
-from heslar.ruian_sync.sjtsk import negate_wkt as _negate_coords
+from heslar.ruian_sync.sjtsk import bod_z_pos, na_zapornou_formu
 from lxml import etree
 
 logger = logging.getLogger(__name__)
@@ -652,16 +651,7 @@ def _extract_definicni_bod(elem) -> Optional[str]:
             break  # první gml:pos vyhraje
     if not pos_text:
         return None
-    coords = pos_text.split()
-    if len(coords) < 2:
-        return None
-    try:
-        x = float(coords[0])
-        y = float(coords[1])
-    except ValueError:
-        return None
-    wkt_5514 = f"POINT({x} {y})"
-    return _normalize_sjtsk_wkt(wkt_5514)
+    return bod_z_pos(pos_text)
 
 
 #: AMČR potřebuje vždy originální hranice. Pokud ``OriginalniHranice``
@@ -1177,46 +1167,16 @@ def _coords_from_poslist(pos_list: str, *, close_ring: bool = True):
 
 def _normalize_sjtsk_wkt(wkt_5514: str) -> str:
     """
-    Normalizuje WKT v EPSG:5514 do **záporné** (West-South) konvence,
-    kterou používá zbytek projektu (``pian.geom_sjtsk``, ``adb.geom``
-    a ``ruian_katastr.hranice`` po migraci 0013).
+    Normalizuje WKT v EPSG:5514 do záporné (West-South) konvence projektu.
 
-    Konvence projektu:
+    VFR z ČÚZK dodává kladnou i zápornou formu. Rozhodnutí o formě i negace
+    žijí ve sdíleném :mod:`heslar.ruian_sync.sjtsk`, aby se plný sync a denní
+    delta nemohly rozejít.
 
-    * ``core.coordTransform.convertToJTSK`` vrací ``[-Y, -X]`` (záporné).
-    * Všechna 5514 data v DB jsou v této konvenci uložena.
-    * PostGIS ``ST_Intersects`` funguje matematicky správně dokud jsou obě
-      strany ve stejné konvenci (neinterpretuje osy — porovnává souřadnice).
-
-    VFR z ČÚZK může dodávat kladné (standardní EPSG:5514 East-North)
-    i záporné souřadnice. Helper detekuje znaménko podle první dvojice
-    a v případě **kladných** hodnot invertuje znaménka v celém WKT řetězci.
-
-    :param wkt_5514: WKT v EPSG:5514 (kladný nebo záporný S-JTSK).
-
-        :return: WKT v EPSG:5514 v záporné konvenci projektu.
+    :param wkt_5514: WKT v libovolné formě EPSG:5514.
+    :return: WKT v záporné formě.
     """
-    sample_x, sample_y = _sample_xy(wkt_5514)
-    if sample_x is not None and sample_x > 0 and sample_y is not None and sample_y > 0:
-        return _negate_coords(wkt_5514)
-    return wkt_5514
-
-
-def _sample_xy(wkt: str) -> Tuple[Optional[float], Optional[float]]:
-    """
-    Vyzvedne první dvojici souřadnic (x, y) z WKT řetězce pro detekci znaménka.
-
-    :param wkt: WKT řetězec.
-
-        :return: ``(x, y)`` nebo ``(None, None)`` při neúspěchu.
-    """
-    match = re.search(r"(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)", wkt)
-    if not match:
-        return None, None
-    try:
-        return float(match.group(1)), float(match.group(2))
-    except ValueError:
-        return None, None
+    return na_zapornou_formu(wkt_5514)
 
 
 # ---------------------------------------------------------------------------

@@ -366,6 +366,63 @@ def _parse_atom_feed(feed_url: str, timeout: int = 60) -> list:
     return entries
 
 
+#: Schémata, přes která se smí stahovat soubor odkazovaný z ATOM feedu.
+_POVOLENA_SCHEMATA_ODKAZU = frozenset({"http", "https"})
+
+
+def _je_duveryhodny_odkaz(href: str, feed_url: str, expected_filename: str, povolene_hosty=None) -> bool:
+    """
+    Ověří, že odkaz z ATOM feedu míří na očekávaný soubor u důvěryhodného hostitele.
+
+    Obsah feedu je nedůvěryhodný vstup (``atom_feed_url`` se mění za běhu přes
+    :class:`CustomAdminSettings`). Dřív stačilo, aby ``href`` jméno souboru
+    **obsahoval** – podvržený záznam tak mohl stahování nasměrovat na libovolnou
+    adresu včetně interní sítě (blind SSRF). Proto se vyžaduje:
+
+    * schéma ``http``/``https`` (ne ``file://``, ``gopher://``…),
+    * hostitel mezi povolenými – viz níže,
+    * poslední segment cesty **přesně** rovný očekávanému jménu souboru.
+
+    **Povolený hostitel není hostitel feedu.** ČÚZK soubory servíruje odjinud,
+    než odkud podává feed: ověřeno 17. 9. 2026 – hlavní feed je na
+    ``atom.cuzk.gov.cz``, datové feedy na ``atom.cuzk.cz`` a samotné ZKSH
+    soubory na ``vdp.cuzk.gov.cz``. Kontrola proti hostiteli feedu by odmítla
+    každý legitimní soubor. Povolený je proto hostitel z nastaveného
+    ``base_url`` (odkud se soubory stahují i bez ATOM) a hostitel feedu.
+
+    Nevyhovující odkaz se zaloguje a přeskočí.
+
+    :param href: Odkaz ze záznamu ATOM feedu.
+    :param feed_url: URL feedu, ze kterého odkaz pochází.
+    :param expected_filename: Očekávané jméno souboru pro daný den.
+    :param povolene_hosty: Množina povolených hostitelů; ``None`` = hostitel
+        ``base_url`` z :class:`CustomAdminSettings` a hostitel feedu.
+    :return: ``True``, když je odkaz bezpečné stáhnout.
+    """
+    from urllib.parse import unquote, urlsplit
+
+    odkaz = urlsplit(href)
+    jmeno = unquote(odkaz.path.rsplit("/", 1)[-1])
+    if jmeno != expected_filename:
+        return False
+
+    if povolene_hosty is None:
+        povolene_hosty = {urlsplit(feed_url).hostname, urlsplit(_get_setting("base_url") or "").hostname}
+    povolene_hosty = {h.lower() for h in povolene_hosty if h}
+
+    if odkaz.scheme.lower() not in _POVOLENA_SCHEMATA_ODKAZU or not odkaz.hostname:
+        duvod = "nepovolene_schema"
+    elif odkaz.hostname.lower() not in povolene_hosty:
+        duvod = "cizi_hostitel"
+    else:
+        return True
+    logger.warning(
+        "heslar.ruian_sync.vfr_download._je_duveryhodny_odkaz.odmitnuto",
+        extra={"duvod": duvod, "href": href[:200], "povolene_hosty": sorted(povolene_hosty)},
+    )
+    return False
+
+
 def download_via_atom(
     day: date,
     target_dir: Path,
@@ -389,7 +446,7 @@ def download_via_atom(
     feed = feed_url or _get_setting("atom_feed_url")
     expected_filename = _change_filename(day)
     for _title, href in _parse_atom_feed(feed):
-        if expected_filename in href:
+        if _je_duveryhodny_odkaz(href, feed, expected_filename):
             target_path = Path(target_dir) / expected_filename
             return _stream_to_file(href, target_path)
     logger.debug(

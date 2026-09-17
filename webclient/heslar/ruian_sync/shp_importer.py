@@ -48,7 +48,7 @@ from heslar.ruian_sync.provider import (
     RuianOkresDTO,
     RuianSource,
 )
-from heslar.ruian_sync.sjtsk import negate_wkt
+from heslar.ruian_sync.sjtsk import bod_z_pos, na_zapornou_formu
 from lxml import etree
 
 logger = logging.getLogger(__name__)
@@ -559,21 +559,13 @@ class ShpUzszSource(RuianSource):
         """
         Normalizuje WKT do záporné konvence EPSG:5514 (West-South).
 
-        Autodetekce podle prvního souřadnicového čísla **uvnitř závorek**:
-        pokud už je záporné, WKT se vrátí beze změny; pokud je kladné,
-        použije se :func:`~heslar.ruian_sync.sjtsk.negate_wkt`.
+        Detekce formy i negace žijí ve sdíleném :mod:`heslar.ruian_sync.sjtsk`,
+        aby plný sync a denní delta rozhodovaly o formě stejně.
 
-        :param wkt: Vstupní WKT (kladný nebo záporný 5514).
-
-            :return: WKT v EPSG:5514 v záporné konvenci.
+        :param wkt: WKT v kladné nebo záporné formě.
+        :return: WKT v záporné formě.
         """
-        # Najdi první číslo _uvnitř_ souřadnicové části (po první levé závorce).
-        # Regex vynechává klíčová slova jako "POLYGON", "MULTIPOLYGON", "POINT"
-        # a vždy hledá první číslo za "(" – to je vždy X-souřadnice prvního bodu.
-        m = re.search(r"\(\s*\(?\s*\(?\s*(-?)(\d)", wkt)
-        if m and m.group(1) == "-":
-            return wkt  # už je záporné
-        return negate_wkt(wkt)
+        return na_zapornou_formu(wkt)
 
     @classmethod
     def _geom_to_multipolygon_wkt(cls, geom) -> Optional[str]:
@@ -664,26 +656,13 @@ class ShpUzszSource(RuianSource):
         """
         Převede ``gml:pos`` na WKT POINT v záporné EPSG:5514.
 
-        UZSZ může dodávat souřadnice v kladné i záporné formě S-JTSK.
-        Konvence projektu je záporná (West-South) – helper normalizuje
-        obojí na zápornou formu.
+        Deleguje na :func:`heslar.ruian_sync.sjtsk.bod_z_pos`, který používá
+        i parser změnových VFR.
 
-        :param pos_text: Text obsahu ``gml:pos`` (např. ``"751802.14 1177969.41"``
-            nebo ``"-751802.14 -1177969.41"``).
-
-            :return: WKT ``POINT(x y)`` v EPSG:5514 (záporná forma) nebo ``None``.
+        :param pos_text: Text obsahu ``gml:pos``.
+        :return: WKT ``POINT(x y)`` v záporné formě, nebo ``None``.
         """
-        parts = pos_text.split()
-        if len(parts) < 2:
-            return None
-        try:
-            x, y = float(parts[0]), float(parts[1])
-        except ValueError:
-            return None
-        # Normalizace na zápornou formu (konvence projektu – West-South).
-        if x > 0 and y > 0:
-            x, y = -x, -y
-        return f"POINT({x} {y})"
+        return bod_z_pos(pos_text)
 
     # ------------------------------------------------------------------
     # Helpers

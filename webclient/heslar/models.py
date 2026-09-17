@@ -533,11 +533,9 @@ class RuianSyncRun(models.Model):
 
     TRIGGER_MANAGE = "manage"
     TRIGGER_CRON = "cron"
-    TRIGGER_ADMIN = "admin"
     TRIGGER_CHOICES = [
         (TRIGGER_MANAGE, _("heslar.models.RuianSyncRun.triggered_by.manage")),
         (TRIGGER_CRON, _("heslar.models.RuianSyncRun.triggered_by.cron")),
-        (TRIGGER_ADMIN, _("heslar.models.RuianSyncRun.triggered_by.admin")),
     ]
 
     STATUS_RUNNING = "running"

@@ -50,7 +50,6 @@ class Migration(migrations.Migration):
                         choices=[
                             ("manage", "heslar.models.RuianSyncRun.triggered_by.manage"),
                             ("cron", "heslar.models.RuianSyncRun.triggered_by.cron"),
-                            ("admin", "heslar.models.RuianSyncRun.triggered_by.admin"),
                         ],
                         db_index=True,
                         max_length=8,

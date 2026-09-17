@@ -38,7 +38,7 @@ from datetime import date
 from typing import Iterable, List, Optional, Set, Tuple
 
 from arch_z.models import ArcheologickyZaznam
-from core.repository_connector import FedoraError, FedoraTransaction, FedoraTransactionCommitFailedError
+from core.repository_connector import FedoraError, FedoraTransactionCommitFailedError
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.geos.error import GEOSException
 from django.db import DatabaseError, connection, transaction
@@ -1095,7 +1095,10 @@ def _upsert_katastr(
         U vytvoření nového katastru je ``hranice_changed=True`` (nová
         hranice se objevuje v DB).
     """
-    okres = RuianOkres.objects.filter(kod=dto.okres_kod).first()
+    # Z okresu se používá jen jeho identita pro cizí klíč. Bez ``.only()`` by se
+    # s každým upsertem katastru načetl celý řádek okresu včetně polygonu
+    # ``hranice`` – při plném synchu 13 tisíckrát.
+    okres = RuianOkres.objects.filter(kod=dto.okres_kod).only("id", "kod").first()
     if existing is None and okres is None:
         okres = _dohledej_okres_prostorove(dto)
     if existing is None:
@@ -1362,7 +1365,9 @@ def _reassign_records_in_changed_katastry_inner(kody_list: list, run: RuianSyncR
         cursor.execute(_SQL_PROJEKT_CANDIDATES, [kody_list])
         projekt_ids = [row[0] for row in cursor.fetchall()]
     print(f"  Projekt kandidátů: {len(projekt_ids)}", flush=True)
-    for projekt in Projekt.objects.filter(pk__in=projekt_ids).select_related("hlavni_katastr"):
+    for projekt in (
+        Projekt.objects.filter(pk__in=projekt_ids).select_related("hlavni_katastr").defer("hlavni_katastr__hranice")
+    ):
         old_pk = projekt.hlavni_katastr_id
         try:
             new_kat = reassign_mod.reassign_projekt(projekt)
@@ -1382,7 +1387,11 @@ def _reassign_records_in_changed_katastry_inner(kody_list: list, run: RuianSyncR
         cursor.execute(_SQL_AZ_CANDIDATES, [kody_list, kody_list, kody_list])
         az_ids = [row[0] for row in cursor.fetchall()]
     print(f"  AZ kandidátů:      {len(az_ids)}", flush=True)
-    for az in ArcheologickyZaznam.objects.filter(pk__in=az_ids).select_related("hlavni_katastr"):
+    for az in (
+        ArcheologickyZaznam.objects.filter(pk__in=az_ids)
+        .select_related("hlavni_katastr")
+        .defer("hlavni_katastr__hranice")
+    ):
         old_pk = az.hlavni_katastr_id
         try:
             new_kat = reassign_mod.reassign_az(
@@ -1403,7 +1412,7 @@ def _reassign_records_in_changed_katastry_inner(kody_list: list, run: RuianSyncR
         cursor.execute(_SQL_SN_CANDIDATES, [kody_list])
         sn_ids = [row[0] for row in cursor.fetchall()]
     print(f"  SN kandidátů:      {len(sn_ids)}", flush=True)
-    for sn in SamostatnyNalez.objects.filter(pk__in=sn_ids).select_related("katastr"):
+    for sn in SamostatnyNalez.objects.filter(pk__in=sn_ids).select_related("katastr").defer("katastr__hranice"):
         old_pk = sn.katastr_id
         try:
             new_kat = reassign_mod.reassign_sn(sn)
@@ -1462,6 +1471,7 @@ def _delete_katastr(
         Projekt.objects.filter(Q(hlavni_katastr=katastr) | Q(katastry=katastr))
         .distinct()
         .select_related("hlavni_katastr")
+        .defer("hlavni_katastr__hranice")
     )
     for projekt in affected_projekty:
         hlavni_was_deleted = projekt.hlavni_katastr_id == katastr.pk
@@ -1520,6 +1530,7 @@ def _delete_katastr(
         ArcheologickyZaznam.objects.filter(Q(hlavni_katastr=katastr) | Q(katastry=katastr))
         .distinct()
         .select_related("hlavni_katastr")
+        .defer("hlavni_katastr__hranice")
     )
     for az in affected_az:
         hlavni_was_deleted = az.hlavni_katastr_id == katastr.pk
@@ -1538,7 +1549,7 @@ def _delete_katastr(
         run.affected_az += 1
 
     # SN – FK katastr, historie stejně jako Projekt/AZ
-    for sn in SamostatnyNalez.objects.filter(katastr=katastr):
+    for sn in SamostatnyNalez.objects.filter(katastr=katastr).select_related("katastr").defer("katastr__hranice"):
         try:
             reassign_mod.reassign_sn(
                 sn,
@@ -2330,6 +2341,41 @@ def _print_section(label: str, total: int) -> None:
     print(f"  {label} ({total})...", flush=True)
 
 
+def _propaguj_prejmenovani(zaznam, druh: str, popis: str, *, zapsat_historii: bool) -> bool:
+    """
+    Zapíše historii a obnoví metadata ve Fedoře u jednoho záznamu po přejmenování katastru.
+
+    Používá sdílený :func:`heslar.ruian_sync.reassign._db_a_fedora` místo
+    vlastního bloku s transakcí. Dřív tu byly tři ručně kopírované bloky bez
+    jeho pojistek – bez kontroly dvojitého uzavření transakce a bez odchytu
+    výjimky z rollbacku. Výjimka z rollbacku ve ``finally`` pak ukončila celou
+    propagaci, což je přesně případ, na který se narazilo při plném synchu
+    z 8. 9. 2026.
+
+    Řádek historie je uvnitř bloku, takže se při selhání vrátí spolu s DB.
+    Chyba u jednoho záznamu se zaloguje a propagace pokračuje dalším.
+
+    :param zaznam: Instance Projekt/ArcheologickyZaznam/SamostatnyNalez.
+    :param druh: Druh záznamu pro log (``projekt``/``az``/``sn``).
+    :param popis: Text poznámky do historie.
+    :param zapsat_historii: Když ``False``, jen se obnoví metadata.
+    :return: ``True``, když zápis proběhl, jinak ``False``.
+    """
+    try:
+        with reassign_mod._db_a_fedora(zaznam.ident_cely) as fedora_tx:
+            if zapsat_historii:
+                reassign_mod.log_katastr_change(zaznam.historie_id, popis)
+            zaznam.active_transaction = fedora_tx
+            zaznam.save()
+    except Exception as err:  # noqa: BLE001 – jeden vadný záznam nesmí zastavit propagaci
+        logger.error(
+            f"heslar.ruian_sync.syncer._log_katastr_rename.{druh}_error",
+            extra={"ident_cely": zaznam.ident_cely, "error": str(err)[:500]},
+        )
+        return False
+    return True
+
+
 def _log_katastr_rename(
     katastr: RuianKatastr,
     old_nazev: str,
@@ -2357,62 +2403,32 @@ def _log_katastr_rename(
             ``{"projekt": int, "az": int, "sn": int, "neident_akce": int}``.
     """
     counts = {"projekt": 0, "az": 0, "sn": 0, "neident_akce": 0}
+    popis = reassign_mod._popis_zmeny_hlavniho(old_nazev, new_nazev)
 
-    for projekt in Projekt.objects.filter(Q(hlavni_katastr=katastr) | Q(katastry=katastr)).distinct():
-        if zapsat_historii:
-            reassign_mod.log_katastr_change(
-                projekt.historie_id, reassign_mod._popis_zmeny_hlavniho(old_nazev, new_nazev)
-            )
-        fedora_tx = FedoraTransaction()
-        success = False
-        try:
-            projekt.active_transaction = fedora_tx
-            projekt.save()
-            success = True
-        except Exception as err:  # noqa: BLE001 – jeden vadný záznam nesmí zastavit propagaci
-            logger.error(
-                "heslar.ruian_sync.syncer._log_katastr_rename.projekt_fedora_error",
-                extra={"ident_cely": projekt.ident_cely, "error": str(err)[:500]},
-            )
-        finally:
-            fedora_tx.mark_transaction_as_closed() if success else fedora_tx.rollback_transaction()
-        counts["projekt"] += 1
-
-    for az in ArcheologickyZaznam.objects.filter(Q(hlavni_katastr=katastr) | Q(katastry=katastr)).distinct():
-        if zapsat_historii:
-            reassign_mod.log_katastr_change(az.historie_id, reassign_mod._popis_zmeny_hlavniho(old_nazev, new_nazev))
-        fedora_tx = FedoraTransaction()
-        success = False
-        try:
-            az.active_transaction = fedora_tx
-            az.save()
-            success = True
-        except Exception as err:  # noqa: BLE001 – jeden vadný záznam nesmí zastavit propagaci
-            logger.error(
-                "heslar.ruian_sync.syncer._log_katastr_rename.az_fedora_error",
-                extra={"ident_cely": az.ident_cely, "error": str(err)[:500]},
-            )
-        finally:
-            fedora_tx.mark_transaction_as_closed() if success else fedora_tx.rollback_transaction()
-        counts["az"] += 1
-
-    for sn in SamostatnyNalez.objects.filter(katastr=katastr):
-        if zapsat_historii:
-            reassign_mod.log_katastr_change(sn.historie_id, reassign_mod._popis_zmeny_hlavniho(old_nazev, new_nazev))
-        fedora_tx = FedoraTransaction()
-        success = False
-        try:
-            sn.active_transaction = fedora_tx
-            sn.save()
-            success = True
-        except Exception as err:  # noqa: BLE001 – jeden vadný záznam nesmí zastavit propagaci
-            logger.error(
-                "heslar.ruian_sync.syncer._log_katastr_rename.sn_fedora_error",
-                extra={"ident_cely": sn.ident_cely, "error": str(err)[:500]},
-            )
-        finally:
-            fedora_tx.mark_transaction_as_closed() if success else fedora_tx.rollback_transaction()
-        counts["sn"] += 1
+    zaznamy = (
+        (
+            "projekt",
+            Projekt.objects.filter(Q(hlavni_katastr=katastr) | Q(katastry=katastr))
+            .distinct()
+            .select_related("hlavni_katastr")
+            .defer("hlavni_katastr__hranice"),
+        ),
+        (
+            "az",
+            ArcheologickyZaznam.objects.filter(Q(hlavni_katastr=katastr) | Q(katastry=katastr))
+            .distinct()
+            .select_related("hlavni_katastr")
+            .defer("hlavni_katastr__hranice"),
+        ),
+        (
+            "sn",
+            SamostatnyNalez.objects.filter(katastr=katastr).select_related("katastr").defer("katastr__hranice"),
+        ),
+    )
+    for druh, queryset in zaznamy:
+        for zaznam in queryset:
+            if _propaguj_prejmenovani(zaznam, druh, popis, zapsat_historii=zapsat_historii):
+                counts[druh] += 1
 
     # NeidentAkce nemá historii; Fedora update zajistí post_save signál přes nadřazený dokument.
     for neident_akce in NeidentAkce.objects.filter(katastr=katastr):

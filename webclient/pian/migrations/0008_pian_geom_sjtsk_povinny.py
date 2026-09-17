@@ -84,8 +84,17 @@ def _doplnit_geom_sjtsk(apps, schema_editor):
     Vypnutí, backfill i zapnutí jsou **tři oddělené transakce**, ne jedna.
     Zámek ``ACCESS EXCLUSIVE`` z ``ALTER TABLE`` se tak drží jen na okamžik
     (viz :func:`_prepni_trigger`) a jednotlivé dávky se průběžně commitují,
-    takže neúspěch nezahodí celou dosud odvedenou práci. Zapnutí zpět je ve
-    ``finally``, takže trigger nezůstane vypnutý ani při chybě uprostřed.
+    takže neúspěch nezahodí celou dosud odvedenou práci.
+
+    Zapnutí zpět je ve ``finally``, takže trigger obnoví každá **výjimka**
+    uprostřed backfillu. Tvrdé ukončení procesu (``SIGKILL``, OOM killer,
+    výpadek stroje) ale ``finally`` nespustí a trigger pak zůstane vypnutý –
+    v jedné transakci s backfillem by ho vrátil rollback, jenže ta varianta
+    držela ``ACCESS EXCLUSIVE`` po celou dobu běhu. Po migraci je proto nutné
+    stav triggeru ověřit; postup je v runbooku
+    ``docs/source/02_instalace_nasazeni/ruian_sync_nasazeni.rst``. Opakované
+    spuštění migrace trigger zapne, protože nedokončená migrace se znovu
+    provede celá.
     """
     from core.coordTransform import transform_geom_to_sjtsk
 

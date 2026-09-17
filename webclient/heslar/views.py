@@ -152,9 +152,13 @@ def zjisti_katastr_souradnic(request):
     except (KeyError, ValueError):
         souradnice = _souradnice_ze_starych_parametru(request)
         if souradnice is None:
-            logger.warning(
+            # Endpoint je volaný i nepřihlášeně (veřejný formulář oznámení),
+            # takže obsah parametrů je libovolný text od kohokoli. Do logu jde
+            # jen seznam jmen parametrů a na DEBUG – jinak by šlo zvenčí
+            # plnit varovný log vlastním obsahem.
+            logger.debug(
                 "heslar.views.zjisti_katastr_souradnic.invalid_params",
-                extra={"GET": dict(request.GET)},
+                extra={"parametry": sorted(request.GET.keys())[:20]},
             )
             return JsonResponse({})
         x_val, y_val = souradnice
