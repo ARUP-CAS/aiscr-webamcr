@@ -234,16 +234,32 @@ class _FastFedoraWriter:
     (begin/commit) na dávku mutací, ale při stovkách tisíc záznamů jde o řádový rozdíl
     v místě na disku, ne v rychlosti.
 
+    Jeden záznam se ale zapisuje ve **dvou** transakcích: container + metadata + soubory
+    (``create_record``) a zvlášť model link (``create_member_link``). Důvodem je deadlock:
+    commit containment indexu aktualizuje po jednom řádku každého dotčeného rodiče, a
+    dokud jedna transakce sahala jak na ``/record``, tak na ``/model/{model}/member``,
+    mohly se dvě souběžné transakce zamknout navzájem (viz ``_process_record``). OCFL
+    verze to nestojí - link je samostatný OCFL objekt, takže i dřív vznikaly dva.
+
     Fedora model name se odvozuje z ``_get_schema_by_name()`` (ne z vlastní tabulky) a
     RDF šablony (``_creator_rdf``, ``_creator_sparql_update``) jsou textově shodné s
     ``FedoraRepositoryConnector`` (``_get_model_name``, ``_get_creator_rdf_data``).
     Tuhle shodu hlídá test ``core/tests/test_fast_writer_rdf_parity.py``, ne jen tento
     komentář (review PR #4262).
+
+    **Každá metoda tady má v docstringu uvedený svůj oficiální protějšek** ("Rychlá
+    náhrada za ..."), případně poznámku, že protějšek nemá. Když se mění odpovídající
+    funkce v ``core/repository_connector.py`` (nebo ``xml_generator/models.py``), projdi
+    je a změnu promítni i sem - `grep -n "Rychlá náhrada za" ` je vypíše všechny.
     """
 
     def __init__(self, base_url, user_ident):
         """
         Inicializuje zapisovač.
+
+        Rychlá náhrada za ``FedoraRepositoryConnector.__init__`` a ``FedoraRepositoryConnector.get_base_url``.
+        Při změně oficiální funkce je potřeba změnu promítnout i sem.
+        Base URL sem ale přichází hotová z ``Command._get_writer`` (už s IP místo jména).
 
         :param base_url: Základní URL Fedora repozitáře (``.../rest/{FEDORA_SERVER_NAME}``),
             už s IP adresou místo jména - viz ``Command._get_writer``.
@@ -270,6 +286,10 @@ class _FastFedoraWriter:
         commit/rollback transakce (admin identita) viz ``_admin_session``, NIKDY ne
         tahle metoda (jiná identita na stejné session by sdílela cookie jar).
 
+        Rychlá náhrada za session + ``FedoraRepositoryConnector._get_auth`` (větev běžné identity).
+        Při změně oficiální funkce je potřeba změnu promítnout i sem.
+        Connector session nedrží - skládá ji uvnitř ``_send_request`` pro každý požadavek.
+
         :return: Session aktuálního vlákna pro běžnou identitu.
         """
         session = getattr(self._thread_local, "session", None)
@@ -295,6 +315,10 @@ class _FastFedoraWriter:
         sdílená session způsobovala 403 na admin-only operacích). Proto samostatná
         session i tady, přestože obě běží ve stejném vlákně.
 
+        Rychlá náhrada za ``FedoraRepositoryConnector._get_auth`` (admin větev) a auth v
+        ``FedoraTransaction._send_transaction_request``.
+        Při změně oficiální funkce je potřeba změnu promítnout i sem.
+
         :return: Session aktuálního vlákna pro admin identitu.
         """
         session = getattr(self._thread_local, "admin_session", None)
@@ -315,6 +339,8 @@ class _FastFedoraWriter:
         serveru. Právě v tom překladu (``getaddrinfo``) uvízlo vlákno a zastavilo celý
         běh (issue #3967) - méně nových spojení tedy znamená méně příležitostí k uváznutí.
 
+        Bez protějšku - connection pooling connector neřeší.
+
         :param session: ``requests.Session``, které se pool nastavuje.
         """
         adapter = requests.adapters.HTTPAdapter(pool_connections=_POOL_SIZE, pool_maxsize=_POOL_SIZE)
@@ -324,6 +350,11 @@ class _FastFedoraWriter:
     def _creator_rdf(self):
         """
         Vrací turtle fragment s ``dcterms:creator`` pro vložení do nově vytvářeného zdroje.
+
+        Rychlá náhrada za turtle literál uvnitř ``FedoraRepositoryConnector._create_container`` a
+        ``save_binary_file``.
+        Při změně oficiální funkce je potřeba změnu promítnout i sem.
+        Shodu hlídá ``core/tests/test_fast_writer_rdf_parity.py``.
 
         :return: Turtle RDF řetězec.
         """
@@ -336,6 +367,10 @@ class _FastFedoraWriter:
         """
         Vrací SPARQL update, který nastaví ``dcterms:creator`` (bez GET kontroly stávající hodnoty).
 
+        Rychlá náhrada za ``FedoraRepositoryConnector._get_creator_rdf_data``.
+        Při změně oficiální funkce je potřeba změnu promítnout i sem.
+        Shodu hlídá ``core/tests/test_fast_writer_rdf_parity.py``.
+
         :return: SPARQL update řetězec.
         """
         return (
@@ -347,6 +382,10 @@ class _FastFedoraWriter:
     def _request(self, method, url, headers, data, tx_url=None):
         """
         Odešle HTTP požadavek a ověří, že odpověď je 2xx.
+
+        Rychlá náhrada za ``FedoraRepositoryConnector._send_request``.
+        Při změně oficiální funkce je potřeba změnu promítnout i sem.
+        Bez retry logiky a bez mapování na ``FedoraError`` - opakování řeší až ``Command._process_record``.
 
         :param method: ``"post"`` nebo ``"patch"``.
         :param url: Cílová URL.
@@ -371,6 +410,9 @@ class _FastFedoraWriter:
         """
         Založí novou Fedora transakci.
 
+        Rychlá náhrada za ``FedoraTransaction.__create_transaction``.
+        Při změně oficiální funkce je potřeba změnu promítnout i sem.
+
         :return: URL transakce (pro hlavičku ``Atomic-ID`` na dalších požadavcích a
             pro ``commit_transaction``/``rollback_transaction``).
 
@@ -394,6 +436,9 @@ class _FastFedoraWriter:
         Potvrdí transakci - všechny mutace provedené s touto ``Atomic-ID`` se sbalí do
         jedné nové OCFL verze na dotčený objekt (viz docstring třídy).
 
+        Rychlá náhrada za ``FedoraTransaction._send_transaction_request`` (operace COMMIT).
+        Při změně oficiální funkce je potřeba změnu promítnout i sem.
+
         :param tx_url: URL transakce z ``begin_transaction``.
 
             :raises FastFedoraWriteError: Pokud commit selže.
@@ -416,6 +461,9 @@ class _FastFedoraWriter:
         ``409 ... is being updated by another transaction`` (reálně se to stalo, issue #3967).
         Proto se kontroluje i návratový kód (dřív se hlídala jen síťová výjimka, takže
         odmítnutý rollback prošel bez povšimnutí) a jednou se to zkusí znovu.
+
+        Rychlá náhrada za ``FedoraTransaction.rollback_transaction`` / ``_send_transaction_request``.
+        Při změně oficiální funkce je potřeba změnu promítnout i sem.
 
         :param tx_url: URL transakce z ``begin_transaction``.
         """
@@ -448,6 +496,9 @@ class _FastFedoraWriter:
         opakováním se neosvědčil, protože po neúspěšném commitu je záznam ve Fedoře
         viditelný až se zpožděním několika sekund (měřeno, issue #3967).
 
+        Bez protějšku - connector kolizi Slugu neřeší, protože zapisuje po jednom záznamu a existenci kontejneru si
+        ověřuje předem (``_check_container``).
+
         :param ident_cely: Požadovaný identifikátor.
         :param response: Odpověď na POST, který zdroj zakládal.
         :param ocekavany_suffix: Cesta, na kterou musí ``Location`` končit.
@@ -458,16 +509,21 @@ class _FastFedoraWriter:
         if location and not location.endswith(ocekavany_suffix):
             raise FedoraSlugCollision(ident_cely, location)
 
-    def create_record(self, ident_cely, model_name, document: bytes, hash512: str, tx_url=None):
+    def create_record(self, ident_cely, document: bytes, hash512: str, tx_url=None):
         """
-        Vytvoří kompletní záznam (container, model link, metadata) jedním průchodem.
+        Vytvoří container záznamu a jeho metadata.
+
+        Rychlá náhrada za ``FedoraRepositoryConnector._create_container`` + ``save_metadata``.
+        Při změně oficiální funkce je potřeba změnu promítnout i sem.
+
+        Model link se **záměrně** zapisuje zvlášť (``create_member_link``) v samostatné
+        transakci - viz ``_process_record``, důvodem je deadlock na containment indexu.
 
         :param ident_cely: Celý identifikátor záznamu (``Slug`` containeru).
-        :param model_name: Fedora model name pro link (viz ``_get_schema_by_name``).
         :param document: Vygenerovaný XML dokument metadat.
         :param hash512: SHA-512 hash ``document``.
-        :param tx_url: URL aktivní Fedora transakce (viz ``begin_transaction``) - všechny
-            čtyři requesty se sbalí do jedné OCFL verze při ``commit_transaction``.
+        :param tx_url: URL aktivní Fedora transakce (viz ``begin_transaction``) - requesty
+            se sbalí do jedné OCFL verze při ``commit_transaction``.
         """
         record_url = f"{self.base_url}/record/"
         response = self._request(
@@ -482,18 +538,6 @@ class _FastFedoraWriter:
             tx_url=tx_url,
         )
         self._zkontroluj_slug(ident_cely, response, f"/record/{ident_cely}")
-        link_url = f"{self.base_url}/model/{model_name}/member"
-        response = self._request(
-            "post",
-            link_url,
-            {"Slug": ident_cely, "Content-Type": "text/turtle"},
-            "@prefix ore: <http://www.openarchives.org/ore/terms/> . "
-            "@prefix dcterms: <http://purl.org/dc/terms/> . "
-            f"<> ore:proxyFor <info:fedora/{self.server_name}/record/{ident_cely}> ; "
-            f"dcterms:creator <info:fedora/{self.server_name}/record/{self.user_ident}> .",
-            tx_url=tx_url,
-        )
-        self._zkontroluj_slug(ident_cely, response, f"/model/{model_name}/member/{ident_cely}")
         # CREATE_METADATA se posílá na container (ne na `/metadata`) se `Slug: metadata` -
         # stejně jako `FedoraRepositoryConnector.save_metadata`/`_get_request_url`.
         metadata_url = f"{self.base_url}/record/{ident_cely}/metadata"
@@ -517,6 +561,38 @@ class _FastFedoraWriter:
             tx_url=tx_url,
         )
 
+    def create_member_link(self, ident_cely, model_name, tx_url=None):
+        """
+        Vytvoří link zdroj ``/model/{model}/member/{ident}`` ukazující na záznam.
+
+        Rychlá náhrada za ``FedoraRepositoryConnector.create_link``.
+        Při změně oficiální funkce je potřeba změnu promítnout i sem.
+
+        Běží v **samostatné** transakci od ``create_record`` (viz ``_process_record``):
+        commit containment indexu aktualizuje po jednom řádku každého dotčeného rodiče,
+        a kdyby jedna transakce sahala jak na ``/record``, tak na ``/model/{model}/member``,
+        mohly by se dvě souběžné transakce zamknout navzájem. S jedním sdíleným rodičem
+        na transakci cyklus vzniknout nemůže.
+
+        Link je samostatný OCFL objekt (ověřeno v ``ocfl_id_map``), takže rozdělení
+        nepřidává žádnou OCFL verzi navíc.
+
+        :param ident_cely: Celý identifikátor záznamu (``Slug`` link zdroje).
+        :param model_name: Fedora model name (viz ``_get_schema_by_name``).
+        :param tx_url: URL aktivní Fedora transakce (viz ``begin_transaction``).
+        """
+        response = self._request(
+            "post",
+            f"{self.base_url}/model/{model_name}/member",
+            {"Slug": ident_cely, "Content-Type": "text/turtle"},
+            "@prefix ore: <http://www.openarchives.org/ore/terms/> . "
+            "@prefix dcterms: <http://purl.org/dc/terms/> . "
+            f"<> ore:proxyFor <info:fedora/{self.server_name}/record/{ident_cely}> ; "
+            f"dcterms:creator <info:fedora/{self.server_name}/record/{self.user_ident}> .",
+            tx_url=tx_url,
+        )
+        self._zkontroluj_slug(ident_cely, response, f"/model/{model_name}/member/{ident_cely}")
+
     def list_model_members(self, model_name):
         """
         Vrátí množinu identifikátorů zapsaných ve Fedoře pod ``/model/{model}/member``.
@@ -524,6 +600,11 @@ class _FastFedoraWriter:
         Používá se pro závěrečnou kontrolu konzistence (viz ``Command._zkontroluj_konzistenci``).
         Odpověď se čte proudově - u velkých modelů (``pian`` mívá přes 70 tisíc členů) jde
         o řádově megabajty ``ldp:contains`` trojic a není důvod je držet v paměti naráz.
+
+        Rychlá náhrada za ``FedoraRepositoryConnector._parse_ldp_children`` (parsování ``ldp:contains``).
+        Při změně oficiální funkce je potřeba změnu promítnout i sem.
+        Connector ho používá nad jedním kontejnerem, tady se čte celý ``/model/{model}/member`` kvůli kontrole
+        konzistence.
 
         :param model_name: Fedora model name (viz ``_get_schema_by_name``).
 
@@ -573,6 +654,9 @@ class _FastFedoraWriter:
         metoda odhalit) může mít úplný výpis containment trojic desítky MB; není důvod
         stahovat ho celý, když stačí najít jeden triple.
 
+        Bez přímého protějšku - connector se ptá vždy na konkrétní záznam (``container_exists``,
+        ``check_container_deleted_or_not_exists``), ne na prázdnost celého ``/record``.
+
         :return: ``True``, pokud ``/record`` neobsahuje žádný ``ldp:contains`` triple
             (nebo vůbec neexistuje), jinak ``False``.
 
@@ -604,6 +688,10 @@ class _FastFedoraWriter:
         """
         Vytvoří sdílený ``/file`` container záznamu (jednou na záznam, ne na soubor).
 
+        Rychlá náhrada za ``FedoraRepositoryConnector._create_binary_file_container`` (a jeho kontrola
+        ``_check_binary_file_container``).
+        Při změně oficiální funkce je potřeba změnu promítnout i sem.
+
         :param ident_cely: Celý identifikátor záznamu.
         :param tx_url: URL aktivní Fedora transakce (viz ``begin_transaction``).
         """
@@ -634,6 +722,10 @@ class _FastFedoraWriter:
 
         ``uuid`` se pošle jako ``Slug``, takže výsledná cesta v repozitáři odpovídá
         už existujícímu ``soubor.path`` v DB - žádný zápis do DB není potřeba.
+
+        Rychlá náhrada za ``FedoraRepositoryConnector.save_binary_file`` + ``save_thumbs``.
+        Při změně oficiální funkce je potřeba změnu promítnout i sem.
+        Náhledy se sem předávají hotové z manifestu, negenerují se (``__generate_thumb`` se tedy nepoužívá).
 
         :param ident_cely: Celý identifikátor záznamu, pod který soubor patří.
         :param uuid: UUID souboru z existujícího ``soubor.path`` (`.../file/{uuid}`).
@@ -972,6 +1064,16 @@ class Command(BaseCommand):
         """
         Vygeneruje XML metadata pro jeden záznam a vloží je do Fedory rychlou cestou.
 
+        Zapisuje se ve dvou fázích, každá ve vlastní transakci a každá samostatně
+        opakovatelná: nejdřív záznam (container, metadata, soubory), pak model link.
+        Není to kosmetika - dokud šlo obojí v jedné transakci, sahala na dva sdílené
+        řádky containment indexu (``/record`` a ``/model/{model}/member``) a dvě souběžné
+        transakce téhož modelu se mohly zamknout navzájem. S jedním sdíleným rodičem na
+        transakci cyklus vzniknout nemůže. Cenou je ztráta atomicity mezi záznamem a
+        linkem, proto se kolize ``Slug`` v první fázi bere jako "záznam už existuje,
+        dopiš link", ne jako důvod záznam vzdát - jinak by po selhání druhé fáze zůstal
+        záznam natrvalo bez linku.
+
         Pokud má záznam vlastní soubory (``Projekt``/``Dokument``/``SamostatnyNalez`` -
         viz ``obj.soubory``) a je předaný ``placeholders`` (načtený manifest, viz
         ``_load_placeholders``), vloží se **ve stejné transakci** jako metadata. Soubory
@@ -992,6 +1094,11 @@ class Command(BaseCommand):
         placeholder pro konkrétní mimetype je stejný případ - přeskočí se jen ten soubor
         (zbytek záznamu i metadata se uloží normálně), ale skip se taky zapíše do
         ``failures``, ať jde po běhu dohledat (jinak by o něm věděl jen log).
+
+        Rychlá náhrada za ``ModelWithMetadata.save_metadata`` v ``xml_generator/models.py`` (tedy celou cestu zápisu
+        jednoho záznamu do Fedory).
+        Při změně oficiální funkce je potřeba změnu promítnout i sem.
+        Oficiální cesta se spouští ze signálů nad jedním záznamem; tady se volá přímo ve smyčce nad celým querysetem.
 
         :param obj: Instance modelu (``ModelWithMetadata``).
         :param writer: Sdílený ``_FastFedoraWriter``.
@@ -1070,105 +1177,151 @@ class Command(BaseCommand):
                 for pk_souboru, _uuid, _nazev, mimetype_souboru, _entry in zapisovatelne:
                     db_updates[mimetype_souboru].append(pk_souboru)
 
-        attempt = 0
-        while True:
-            tx_url = None
-            try:
-                tx_url = writer.begin_transaction()
-                writer.create_record(obj.ident_cely, model_name, document, hash512, tx_url=tx_url)
-                if melo_soubory:
-                    # Kontejner `/file` se zakládá podle toho, jestli záznam má soubory v DB,
-                    # ne podle `zapisovatelne` - u záznamu, jehož všechny soubory nemají
-                    # placeholder, tak zůstane chování stejné jako dřív (prázdný kontejner).
-                    writer.create_file_container(obj.ident_cely, tx_url=tx_url)
-                    for pk, uuid, nazev, mimetype, entry in zapisovatelne:
-                        writer.create_binary_file(
-                            obj.ident_cely,
-                            uuid,
-                            nazev,
-                            mimetype,
-                            entry["orig_bytes"],
-                            entry["orig_sha512"],
-                            entry["thumb_bytes"],
-                            entry["thumb_sha512"],
-                            entry["thumb_large_bytes"],
-                            entry["thumb_large_sha512"],
-                            tx_url=tx_url,
-                        )
-                writer.commit_transaction(tx_url)
-                zaeviduj_db_updates()
-                return
-            except FedoraSlugCollision as exc:
-                # Zaznam uz ve Fedore je - tenhle pokus byl zbytecny (typicky opakovani po
-                # 409, jehoz commit ve skutecnosti prosel). Rollback zahodi rozdelanou
-                # transakci i s prejmenovanym duplikatem, takze ve Fedore po nas nic
-                # nezustane. Neni to chyba behu, jen se dal nepokousime.
-                if tx_url:
-                    writer.rollback_transaction(tx_url)
-                # Fedora commituje transakce atomicky, takže dřívější pokus, který kolizi
-                # způsobil, uložil záznam včetně všech jeho souborů - z pohledu DB je to
-                # úspěch a `Soubor.sha_512`/`size_mb` se má přepsat.
-                zaeviduj_db_updates()
-                logger.warning(
-                    "core.management.commands.generate_metadata_fast.uz_existuje",
-                    extra={
-                        "pk": obj.pk,
-                        "ident_cely": obj.ident_cely,
-                        "attempt": attempt,
-                        "location": exc.location,
-                    },
-                )
-                return
-            except Exception as exc:
-                if tx_url:
-                    writer.rollback_transaction(tx_url)
-                if not _is_retryable(exc):
-                    logger.error(
-                        "core.management.commands.generate_metadata_fast.record_failed",
-                        extra={"pk": obj.pk, "ident_cely": obj.ident_cely, "error": str(exc)},
-                    )
-                    failures.append((obj.pk, obj.ident_cely, str(exc)))
-                    return
-                attempt += 1
-                uplynulo = time.time() - zacatek
-                if attempt > max_retries or uplynulo > _RECORD_TIME_BUDGET:
-                    duvod = "vyčerpané pokusy" if attempt > max_retries else "vyčerpaný časový strop"
-                    logger.error(
-                        "core.management.commands.generate_metadata_fast.retries_exhausted",
+        def proved_fazi(nazev_faze, akce):
+            """
+            Provede jednu fázi zápisu ve vlastní Fedora transakci, s opakováním přechodných chyb.
+
+            Fáze jsou dvě a každá má vlastní transakci právě proto, aby žádná nesahala na víc
+            než jednoho sdíleného rodiče v containment indexu (viz ``create_member_link``).
+            Každá se proto musí umět zopakovat **samostatně**: když projde zápis záznamu a
+            selže až link, opakování nesmí záznam zahodit, ale dokončit jen chybějící část -
+            proto se kolize ``Slug`` bere jako "hotovo", ne jako důvod záznam vzdát.
+
+            :param nazev_faze: Název fáze do logu (``"zaznam"`` / ``"link"``).
+            :param akce: Funkce ``akce(tx_url)`` provádějící zápisy dané fáze.
+            :return: ``True``, je-li fáze hotová (včetně případu, že zdroj už existoval),
+                ``False`` při selhání (to už je zapsané v logu i ve ``failures``).
+            """
+            attempt = 0
+            while True:
+                tx_url = None
+                try:
+                    tx_url = writer.begin_transaction()
+                    akce(tx_url)
+                    writer.commit_transaction(tx_url)
+                    return True
+                except FedoraSlugCollision as exc:
+                    # Zdroj uz ve Fedore je - typicky opakovani po chybe, jejiz commit ve
+                    # skutecnosti prosel. Rollback zahodi rozdelanou transakci i s
+                    # prejmenovanym duplikatem, takze po nas nic nezustane.
+                    if tx_url:
+                        writer.rollback_transaction(tx_url)
+                    logger.warning(
+                        "core.management.commands.generate_metadata_fast.uz_existuje",
                         extra={
                             "pk": obj.pk,
                             "ident_cely": obj.ident_cely,
-                            "attempts": attempt,
-                            "elapsed": round(uplynulo),
-                            "reason": duvod,
+                            "faze": nazev_faze,
+                            "attempt": attempt,
+                            "location": exc.location,
+                        },
+                    )
+                    return True
+                except Exception as exc:
+                    if tx_url:
+                        writer.rollback_transaction(tx_url)
+                    if not _is_retryable(exc):
+                        logger.error(
+                            "core.management.commands.generate_metadata_fast.record_failed",
+                            extra={
+                                "pk": obj.pk,
+                                "ident_cely": obj.ident_cely,
+                                "faze": nazev_faze,
+                                "error": str(exc),
+                            },
+                        )
+                        failures.append((obj.pk, obj.ident_cely, f"[{nazev_faze}] {exc}"))
+                        return False
+                    attempt += 1
+                    uplynulo = time.time() - zacatek
+                    if attempt > max_retries or uplynulo > _RECORD_TIME_BUDGET:
+                        duvod = "vyčerpané pokusy" if attempt > max_retries else "vyčerpaný časový strop"
+                        logger.error(
+                            "core.management.commands.generate_metadata_fast.retries_exhausted",
+                            extra={
+                                "pk": obj.pk,
+                                "ident_cely": obj.ident_cely,
+                                "faze": nazev_faze,
+                                "attempts": attempt,
+                                "elapsed": round(uplynulo),
+                                "reason": duvod,
+                                "error": str(exc),
+                            },
+                        )
+                        failures.append((obj.pk, obj.ident_cely, f"[{nazev_faze}] {duvod} ({attempt}. pokus): {exc}"))
+                        return False
+                    # Konflikt na sdíleném rodiči (409/410, viz _RETRYABLE_STATUS_CODES) se
+                    # sám o sobě nevyřeší rychle - potřebuje čas, ať se aktuálně běžící
+                    # konkurenční transakce na tomtéž kontejneru stihnou zkomitovat. Krátký
+                    # backoff (dřív max ~3,5 s součtem přes 3 pokusy) na to nestačil, proto
+                    # vyšší základ i strop a jitter škálovaný s backoffem samotným (ne pevných
+                    # 0-0,5 s) - ať se různá vlákna, co narazila na stejný konflikt zároveň,
+                    # při retry víc rozprostřou v čase místo opětovné kolize nastejno.
+                    base_backoff = min(60.0, 2.0 * (2 ** (attempt - 1)))
+                    backoff = base_backoff + random.uniform(0, base_backoff * 0.5)
+                    # Bez tohohle logu je opakování zcela neviditelne - v logu se objevi jen
+                    # vycerpane retries, takze uspesne opakovani (a tedy i pripadny duplikat,
+                    # ktery pri nem vznikne) projde jako ciste uspesny zaznam.
+                    logger.warning(
+                        "core.management.commands.generate_metadata_fast.retry",
+                        extra={
+                            "pk": obj.pk,
+                            "ident_cely": obj.ident_cely,
+                            "faze": nazev_faze,
+                            "attempt": attempt,
+                            "backoff": round(backoff, 1),
                             "error": str(exc),
                         },
                     )
-                    failures.append((obj.pk, obj.ident_cely, f"{duvod} ({attempt}. pokus): {exc}"))
-                    return
-                # Konflikt na sdíleném rodiči (409/410, viz _RETRYABLE_STATUS_CODES) se
-                # sám o sobě nevyřeší rychle - potřebuje čas, ať se aktuálně běžící
-                # konkurenční transakce na tomtéž kontejneru stihnou zkomitovat. Krátký
-                # backoff (dřív max ~3,5 s součtem přes 3 pokusy) na to nestačil, proto
-                # vyšší základ i strop a jitter škálovaný s backoffem samotným (ne pevných
-                # 0-0,5 s) - ať se různá vlákna, co narazila na stejný konflikt zároveň,
-                # při retry víc rozprostřou v čase místo opětovné kolize nastejno.
-                base_backoff = min(60.0, 2.0 * (2 ** (attempt - 1)))
-                backoff = base_backoff + random.uniform(0, base_backoff * 0.5)
-                # Bez tohohle logu je opakování zcela neviditelne - v logu se objevi jen
-                # vycerpane retries, takze uspesne opakovani (a tedy i pripadny duplikat,
-                # ktery pri nem vznikne) projde jako ciste uspesny zaznam.
-                logger.warning(
-                    "core.management.commands.generate_metadata_fast.retry",
-                    extra={
-                        "pk": obj.pk,
-                        "ident_cely": obj.ident_cely,
-                        "attempt": attempt,
-                        "backoff": round(backoff, 1),
-                        "error": str(exc),
-                    },
-                )
-                time.sleep(backoff)
+                    time.sleep(backoff)
+
+        def zapis_zaznam(tx_url):
+            """
+            Fáze 1 - container záznamu, metadata a jeho soubory.
+
+            Ze sdílených rodičů sahá jen na ``/record``; ``/record/{ident}`` a
+            ``/record/{ident}/file`` jsou per-záznam, o ty se nikdo jiný nepere.
+
+            :param tx_url: URL aktivní transakce.
+            """
+            writer.create_record(obj.ident_cely, document, hash512, tx_url=tx_url)
+            if melo_soubory:
+                # Kontejner `/file` se zakládá podle toho, jestli záznam má soubory v DB,
+                # ne podle `zapisovatelne` - u záznamu, jehož všechny soubory nemají
+                # placeholder, tak zůstane chování stejné jako dřív (prázdný kontejner).
+                writer.create_file_container(obj.ident_cely, tx_url=tx_url)
+                for pk, uuid, nazev, mimetype, entry in zapisovatelne:
+                    writer.create_binary_file(
+                        obj.ident_cely,
+                        uuid,
+                        nazev,
+                        mimetype,
+                        entry["orig_bytes"],
+                        entry["orig_sha512"],
+                        entry["thumb_bytes"],
+                        entry["thumb_sha512"],
+                        entry["thumb_large_bytes"],
+                        entry["thumb_large_sha512"],
+                        tx_url=tx_url,
+                    )
+
+        def zapis_link(tx_url):
+            """
+            Fáze 2 - model link záznamu.
+
+            Ze sdílených rodičů sahá jen na ``/model/{model}/member``.
+
+            :param tx_url: URL aktivní transakce.
+            """
+            writer.create_member_link(obj.ident_cely, model_name, tx_url=tx_url)
+
+        if not proved_fazi("zaznam", zapis_zaznam):
+            # Bez záznamu nemá smysl zakládat link, který by na něj ukazoval.
+            return
+        # Soubory jsou po commitu fáze 1 ve Fedoře i v případě, že link teprve selže,
+        # takže `Soubor.sha_512`/`size_mb` se má přepsat bez ohledu na druhou fázi.
+        zaeviduj_db_updates()
+        proved_fazi("link", zapis_link)
 
     def _run_parallel(self, work_items, worker_fn, workers, total=None):
         """
@@ -1322,6 +1475,9 @@ class Command(BaseCommand):
         # "neopakovat", a mlčky by z ní udělalo 3 pokusy (review PR #4262).
         max_retries = options["max_retries"]
         aktualizovat_db = bool(options.get("aktualizovat_db"))
+
+        from xml_generator.generator import sdilena_fk_cache
+
         # Jedna smyčka pro `--model` i pro všechny modely - dřív byl celý blok (failures,
         # db_updates, `_run_parallel`, report, flush) rozepsaný dvakrát, takže oprava
         # provedená jen v jedné větvi by `--model X` rozešla s plným během nad týmiž daty
@@ -1329,27 +1485,34 @@ class Command(BaseCommand):
         # 15 modelů (stejné chování jako u generate_metadata) - jako navázání po pádu dává
         # smysl jen pro model, na kterém běh spadl; pro ostatní se tím zbytečně přeskočí
         # záznamy s nižším pk. Použij `--start-with-pk` vždy spolu s `--model`.
-        for _nazev_tridy, (current_class, _fedora_name) in self._polozky_ke_zpracovani(model_class):
-            queryset = self._queryset_pro_model(current_class, start_with_pk, limit)
-            total = queryset.count()
-            self.stdout.write(f"== {current_class.__name__} ({total}) ==")
-            failures = []
-            # db_updates/lock jsou nové pro každý model - _flush_db_updates se volá
-            # hned po doběhnutí (ne až na konci celého běhu), ať se dopad případného
-            # pádu na aktualizaci DB omezí na jeden rozpracovaný model, ne na celý běh.
-            db_updates = defaultdict(list) if aktualizovat_db else None
-            db_updates_lock = Lock() if aktualizovat_db else None
-            self._zaseknute_ulohy += self._run_parallel(
-                queryset.iterator(chunk_size=500),
-                lambda obj: self._process_record(
-                    obj, writer, max_retries, failures, placeholders, db_updates, db_updates_lock
-                ),
-                workers,
-                total=total,
-            )
-            self._report_failures(failures)
-            self._pocet_selhani += len(failures)
-            self._flush_db_updates(db_updates, db_updates_lock, placeholders)
+        # Číselníky (Heslar a spol.) se během běhu nemění, ale `_fk_cache` v generátoru
+        # žije jen jeden dokument - tentýž heslářový řádek se proto načítal znovu pro
+        # každý záznam. Měřeno na celé DB: samotný `heslar` je 32 % všech SQL dotazů,
+        # 1460 řádků se čte ~7000x každý. Sdílená cache je proto zapnutá jen tady, na
+        # dobu dávkového běhu; web ji nezapíná, protože tam se číselníky z administrace
+        # mění a cache by servírovala zastaralá data (issue #3967).
+        with sdilena_fk_cache():
+            for _nazev_tridy, (current_class, _fedora_name) in self._polozky_ke_zpracovani(model_class):
+                queryset = self._queryset_pro_model(current_class, start_with_pk, limit)
+                total = queryset.count()
+                self.stdout.write(f"== {current_class.__name__} ({total}) ==")
+                failures = []
+                # db_updates/lock jsou nové pro každý model - _flush_db_updates se volá
+                # hned po doběhnutí (ne až na konci celého běhu), ať se dopad případného
+                # pádu na aktualizaci DB omezí na jeden rozpracovaný model, ne na celý běh.
+                db_updates = defaultdict(list) if aktualizovat_db else None
+                db_updates_lock = Lock() if aktualizovat_db else None
+                self._zaseknute_ulohy += self._run_parallel(
+                    queryset.iterator(chunk_size=500),
+                    lambda obj: self._process_record(
+                        obj, writer, max_retries, failures, placeholders, db_updates, db_updates_lock
+                    ),
+                    workers,
+                    total=total,
+                )
+                self._report_failures(failures)
+                self._pocet_selhani += len(failures)
+                self._flush_db_updates(db_updates, db_updates_lock, placeholders)
 
     @staticmethod
     def _polozky_ke_zpracovani(model_class):

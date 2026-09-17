@@ -209,3 +209,23 @@ Třídy
 
       :param document_object: Parametr ``document_object`` slouží jako vstup pro logiku funkce ``__init__``.
 
+
+Funkce
+------
+
+.. py:function:: sdilena_fk_cache(modely)
+
+   Context manager, který na dobu bloku zapne sdílenou cache číselníkových FK.
+
+   Mimo blok se nic nemění, takže běžný provoz aplikace není dotčený. Uvnitř bloku
+   se řádky vyjmenovaných modelů načtou z DB nejvýš jednou za celý běh místo jednou
+   za dokument.
+
+   Cache je sdílená přes všechna vlákna (ne thread-local), aby se nedržela N× v paměti.
+   Zápis do dictu je pod GIL atomický, takže nejhorší možný důsledek souběhu je, že si
+   dvě vlákna tentýž řádek načtou dvakrát - ne poškozená data.
+
+   Instance v cache se **nesmí měnit**; generování dokumentu je jen čtení.
+
+   :param modely: Iterovatelný seznam ``"app_label.Model"``, které se smí sdílet.
+   :return: Context manager.

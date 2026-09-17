@@ -108,11 +108,34 @@ class CreatorRdfParityTest(SimpleTestCase):
             return mock.Mock()
 
         with mock.patch.object(writer, "_request", side_effect=zachyt), mock.patch.object(writer, "_zkontroluj_slug"):
-            writer.create_record(IDENT_CELY, MODEL_NAME, b"<xml/>", "0" * 128)
+            writer.create_member_link(IDENT_CELY, MODEL_NAME)
 
         link_data = [data for url, data in zachyceno if "/member" in url]
         self.assertEqual(len(link_data), 1, f"očekáván jeden zápis link resource, zachyceno: {zachyceno}")
         self.assertEqual(link_data[0], ocekavane)
+
+    def test_create_record_uz_nezapisuje_link(self):
+        """
+        ``create_record`` nesmí sahat na ``/model/{model}/member``.
+
+        Je to podmínka toho, aby jedna transakce měla nejvýš jednoho sdíleného rodiče
+        v containment indexu, což vylučuje deadlock (viz ``create_member_link``).
+        """
+        writer = self._writer()
+        zachyceno = []
+
+        def zachyt(method, url, headers, data, tx_url=None):
+            zachyceno.append(url)
+            return mock.Mock()
+
+        with mock.patch.object(writer, "_request", side_effect=zachyt), mock.patch.object(writer, "_zkontroluj_slug"):
+            writer.create_record(IDENT_CELY, b"<xml/>", "0" * 128)
+
+        self.assertEqual(
+            [u for u in zachyceno if "/member" in u],
+            [],
+            f"create_record zapsal do /member, tím by se vrátil deadlock: {zachyceno}",
+        )
 
 
 class ModelNameParityTest(SimpleTestCase):

@@ -29,6 +29,62 @@ logger = logging.getLogger(__name__)
 #: parsování navíc na vlákno (místo jednou celkem), riziko pádu je nula.
 _schema_tree_local = threading.local()
 
+#: Modely, jejichž řádky se během jednoho dávkového běhu nemění (číselníky), a smí se
+#: proto držet v paměti napříč dokumenty. Měřeno na generování celé DB (issue #3967):
+#: samotný ``Heslar`` je **32 % všech SQL dotazů** - 1460 řádků se načítá ~7000× každý,
+#: protože ``_fk_cache`` žije jen jeden dokument. S ``auth_user``, ``ruian_katastr``
+#: a ``osoba`` jde dohromady o ~46 % dotazů.
+SDILENE_CISELNIKY = (
+    "heslar.Heslar",
+    "heslar.RuianKatastr",
+    "heslar.RuianOkres",
+    "heslar.RuianKraj",
+    "uzivatel.User",
+    "uzivatel.Osoba",
+    "uzivatel.Organizace",
+)
+
+#: Sdílená cache číselníkových FK, ``None`` = vypnuto. **Výchozí stav je vypnuto** a web
+#: ji nikdy nezapíná: v běžném provozu se číselníky z administrace mění a cache by
+#: servírovala zastaralá data. Zapíná ji jen dávkové generování (viz ``sdilena_fk_cache``),
+#: kde je repozitář jen čten a číselníky se po dobu běhu nemění.
+_sdilena_fk_cache_data = None
+_sdilena_fk_cache_modely = frozenset()
+
+
+def sdilena_fk_cache(modely=SDILENE_CISELNIKY):
+    """
+    Context manager, který na dobu bloku zapne sdílenou cache číselníkových FK.
+
+    Mimo blok se nic nemění, takže běžný provoz aplikace není dotčený. Uvnitř bloku
+    se řádky vyjmenovaných modelů načtou z DB nejvýš jednou za celý běh místo jednou
+    za dokument.
+
+    Cache je sdílená přes všechna vlákna (ne thread-local), aby se nedržela N× v paměti.
+    Zápis do dictu je pod GIL atomický, takže nejhorší možný důsledek souběhu je, že si
+    dvě vlákna tentýž řádek načtou dvakrát - ne poškozená data.
+
+    Instance v cache se **nesmí měnit**; generování dokumentu je jen čtení.
+
+    :param modely: Iterovatelný seznam ``"app_label.Model"``, které se smí sdílet.
+    :return: Context manager.
+    """
+    from contextlib import contextmanager
+
+    @contextmanager
+    def _cm():
+        global _sdilena_fk_cache_data, _sdilena_fk_cache_modely
+        puvodni_data, puvodni_modely = _sdilena_fk_cache_data, _sdilena_fk_cache_modely
+        _sdilena_fk_cache_data = {}
+        _sdilena_fk_cache_modely = frozenset(modely)
+        try:
+            yield _sdilena_fk_cache_data
+        finally:
+            _sdilena_fk_cache_data = puvodni_data
+            _sdilena_fk_cache_modely = puvodni_modely
+
+    return _cm()
+
 
 class AsText(GeoFunc):
     """Implementuje komponentu ``AsText`` v rámci aplikace."""
@@ -274,13 +330,20 @@ class DocumentGenerator:
             if fk_id is None:
                 return None
             klic = (field.related_model, fk_id)
-            if klic not in self._fk_cache:
+            # U číselníků se cache sdílí napříč dokumenty, pokud to volající zapnul
+            # (viz `sdilena_fk_cache`); jinak platí jen cache tohoto dokumentu.
+            cache = self._fk_cache
+            if _sdilena_fk_cache_data is not None:
+                meta = field.related_model._meta
+                if "%s.%s" % (meta.app_label, field.related_model.__name__) in _sdilena_fk_cache_modely:
+                    cache = _sdilena_fk_cache_data
+            if klic not in cache:
                 # `.get()`, ne `.filter().first()` - rozbitá FK musí vyhodit
                 # `DoesNotExist` stejně jako by to udělal obyčejný FK descriptor přes
                 # `getattr()` (chování před zavedením cache). Negativní výsledek se
                 # neukládá, ať se chyba neschová jen proto, že šlo o druhé volání.
-                self._fk_cache[klic] = field.related_model._base_manager.get(pk=fk_id)
-            return self._fk_cache[klic]
+                cache[klic] = field.related_model._base_manager.get(pk=fk_id)
+            return cache[klic]
         if default is self._MISSING:
             return getattr(record, attr_name)
         return getattr(record, attr_name, default)
