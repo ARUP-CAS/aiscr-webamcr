@@ -63,15 +63,6 @@ Třídy
    Slouží pouze jako provozní nastavení vazby polí ve formuláři pro zápis a editaci dokumentu.
    Řada dokumentu se z této vazby neodvozuje – přiděluje se fixně při zápisu, resp. importu (#3421).
 
-   **Metody:**
-
-   .. py:method:: __init__()
-
-      Inicializuje instanci třídy.
-
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
 
 .. py:class:: HeslarHierarchie
 

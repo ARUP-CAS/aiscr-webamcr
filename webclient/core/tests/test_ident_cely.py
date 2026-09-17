@@ -6,11 +6,15 @@ Pokrývají nový sufix projektových akcí (``A##``), rozpoznání identifikát
 identifikátoru. Testy nepotřebují databázi – dotazy do DB jsou nahrazeny mockem.
 """
 
-import re
 from unittest import mock
 
 from core.exceptions import MaximalEventCount
-from core.ident_cely import get_dokument_rada_from_ident, get_project_event_ident
+from core.ident_cely import (
+    get_dokument_rada_from_ident,
+    get_dokument_region_from_ident,
+    get_project_event_ident,
+    get_record_from_ident,
+)
 from django.test import SimpleTestCase
 
 
@@ -78,36 +82,65 @@ class ProjectEventIdentTest(SimpleTestCase):
         self.assertIsNone(get_project_event_ident(_Projekt("")))
 
 
-class RecordFromIdentPatternTest(SimpleTestCase):
-    """Testy vzorů pro rozpoznání typu záznamu podle identifikátoru."""
+class RecordFromIdentTest(SimpleTestCase):
+    """
+    Testy rozpoznání typu záznamu podle identifikátoru v :func:`core.ident_cely.get_record_from_ident`.
 
-    AKCE = r"(C|M|X-C|X-M)-\d{9}\D{1}\d{0,2}"
-    DJ = r"(C|M|X-C|X-M)-\w{7,10}\D{1}\d{0,2}-D\d{2}"
-    KOMPONENTA = r"(C|M|X-C|X-M)-\w{7,10}\D{1}\d{0,2}-K\d{3}"
-    KOMPONENTA_LOKALITY = r"(C|M|X-C|X-M)-(N|L|K)\d{7,9}-K\d{3}"
-    DOKUMENT = r"(C|M|X-C|X-M)-\D{2}-\d{9}"
+    Volá se přímo produkční funkce; dohledání záznamu v databázi je nahrazeno mockem, který vrací
+    název modelu a dohledávaný identifikátor. Změna vzorů v produkčním kódu se tak v testech projeví.
+    """
 
-    def test_akce_pattern_matches_both_suffixes(self):
-        """Vzor akce pokrývá historický jednopísmenný i nový dvojciferný sufix."""
-        self.assertTrue(re.fullmatch(self.AKCE, "C-202302249A"))
-        self.assertTrue(re.fullmatch(self.AKCE, "C-202302249A01"))
+    def _rozpoznej(self, ident_cely):
+        """
+        Vrátí dvojici (model, dohledávaný identifikátor), kterou by funkce předala do databáze.
 
-    def test_dj_and_komponenta_patterns_match_new_suffix(self):
-        """Vzory DJ a komponenty akce fungují i s novým sufixem akce."""
-        self.assertTrue(re.fullmatch(self.DJ, "C-202302249A01-D01"))
-        self.assertTrue(re.fullmatch(self.DJ, "X-M-9000123456A-D01"))
-        self.assertTrue(re.fullmatch(self.KOMPONENTA, "C-202302249A01-K001"))
+        :param ident_cely: Rozpoznávaný identifikátor.
+        :return: Dvojice názvu modelu a identifikátoru, nebo ``None`` pokud identifikátor nerozpozná.
+        """
 
-    def test_komponenta_lokality_pattern(self):
-        """Komponenta lokality má vlastní vzor, obecný vzor komponenty na ni nesedí."""
-        self.assertIsNone(re.fullmatch(self.KOMPONENTA, "C-N202302249-K001"))
-        self.assertTrue(re.fullmatch(self.KOMPONENTA_LOKALITY, "C-N202302249-K001"))
-        self.assertTrue(re.fullmatch(self.KOMPONENTA_LOKALITY, "C-K0751394-K001"))
+        def podvrh(model, **kwargs):
+            return model.__name__, kwargs.get("ident_cely")
 
-    def test_dokument_ident_is_not_matched_as_akce(self):
-        """Identifikátor dokumentu se nesmí zaměnit za akci."""
-        self.assertIsNone(re.fullmatch(self.AKCE, "M-DD-202100034"))
-        self.assertTrue(re.fullmatch(self.DOKUMENT, "M-DD-202100034"))
+        with mock.patch("core.ident_cely.get_object_or_404", side_effect=podvrh):
+            return get_record_from_ident(ident_cely)
+
+    def test_akce_stary_i_novy_sufix(self):
+        """Projektová akce se rozpozná s historickým jednopísmenným i novým dvojciferným sufixem."""
+        self.assertEqual(self._rozpoznej("C-202302249A"), ("ArcheologickyZaznam", "C-202302249A"))
+        self.assertEqual(self._rozpoznej("C-202302249A01"), ("ArcheologickyZaznam", "C-202302249A01"))
+        self.assertEqual(self._rozpoznej("X-M-000001234A01"), ("ArcheologickyZaznam", "X-M-000001234A01"))
+
+    def test_samostatna_akce(self):
+        """Samostatná akce si ponechává písmenný sufix."""
+        self.assertEqual(self._rozpoznej("X-M-9000123456A"), ("ArcheologickyZaznam", "X-M-9000123456A"))
+
+    def test_dokumentacni_jednotka_akce(self):
+        """Dokumentační jednotka akce se rozpozná se starým i novým sufixem akce."""
+        self.assertEqual(self._rozpoznej("C-202302249A-D01"), ("DokumentacniJednotka", "C-202302249A-D01"))
+        self.assertEqual(self._rozpoznej("C-202302249A01-D01"), ("DokumentacniJednotka", "C-202302249A01-D01"))
+
+    def test_komponenta_akce(self):
+        """Komponenta akce se rozpozná se starým i novým sufixem akce."""
+        self.assertEqual(self._rozpoznej("C-202302249A-K001"), ("Komponenta", "C-202302249A-K001"))
+        self.assertEqual(self._rozpoznej("C-202302249A01-K001"), ("Komponenta", "C-202302249A01-K001"))
+
+    def test_lokalita_a_jeji_potomci(self):
+        """Lokalita, její dokumentační jednotka i komponenta se rozpoznají jako správné typy."""
+        self.assertEqual(self._rozpoznej("C-N1000001"), ("ArcheologickyZaznam", "C-N1000001"))
+        self.assertEqual(self._rozpoznej("C-N1000001-D01"), ("DokumentacniJednotka", "C-N1000001-D01"))
+        self.assertEqual(self._rozpoznej("C-N1000001-K001"), ("Komponenta", "C-N1000001-K001"))
+        self.assertEqual(self._rozpoznej("C-K0751394-K001"), ("Komponenta", "C-K0751394-K001"))
+
+    def test_dokument_neni_zamenen_za_akci(self):
+        """Identifikátor dokumentu a jeho části vedou na dokument, ne na archeologický záznam."""
+        self.assertEqual(self._rozpoznej("M-DD-202100034"), ("Dokument", "M-DD-202100034"))
+        self.assertEqual(self._rozpoznej("M-DD-202100034-D001"), ("Dokument", "M-DD-202100034"))
+        self.assertEqual(self._rozpoznej("M-DD-202100034-K001"), ("Dokument", "M-DD-202100034"))
+
+    def test_projekt_a_samostatny_nalez(self):
+        """Projekt a samostatný nález se nezamění s projektovou akcí."""
+        self.assertEqual(self._rozpoznej("C-202302249"), ("Projekt", "C-202302249"))
+        self.assertEqual(self._rozpoznej("C-202302249-N00001"), ("SamostatnyNalez", "C-202302249-N00001"))
 
 
 class DokumentRadaFromIdentTest(SimpleTestCase):
@@ -140,3 +173,29 @@ class DokumentRadaFromIdentTest(SimpleTestCase):
         for ident in ("", None, "M-DD-2021000", "X-M-DD-202100034", "C-3D-202100034", "M-DD-202100034-D001"):
             with self.subTest(ident=ident):
                 self.assertIsNone(get_dokument_rada_from_ident(ident))
+
+    def test_nulove_poradi_se_odmitne(self):
+        """Pořadí 00000 se odmítne, protože by rozbilo hledání mezer při přidělování trvalých identů."""
+        with self._with_heslar(object()):
+            self.assertIsNone(get_dokument_rada_from_ident("M-DD-202600000"))
+            self.assertIsNotNone(get_dokument_rada_from_ident("M-DD-202600001"))
+
+    def test_unicodove_cislice_se_odmitnou(self):
+        """Číslice mimo ASCII (např. arabské) se nepřijmou jako pořadí identifikátoru."""
+        with self._with_heslar(object()):
+            self.assertIsNone(get_dokument_rada_from_ident("M-DD-٢٠٢٦٠٠٠٠١"))
+
+
+class DokumentRegionFromIdentTest(SimpleTestCase):
+    """Testy odvození regionu z ručně zadaného identifikátoru dokumentu (#3421)."""
+
+    def test_region_prefix(self):
+        """Vrací se prefix regionu včetně pomlčky, tedy ve tvaru hodnot pole ``region``."""
+        self.assertEqual(get_dokument_region_from_ident("M-DD-202100034"), "M-")
+        self.assertEqual(get_dokument_region_from_ident("C-TX-198500123"), "C-")
+
+    def test_invalid_shapes_return_none(self):
+        """Neplatné tvary identifikátoru vrací ``None``, aby se kontrola regionu neprováděla."""
+        for ident in ("", None, "M-DD-2021000", "X-M-DD-202100034", "C-3D-202100034", "M-DD-202600000"):
+            with self.subTest(ident=ident):
+                self.assertIsNone(get_dokument_region_from_ident(ident))

@@ -392,18 +392,3 @@ Třídy
 
       :return: Vrací výsledek volání ``reverse()``.
 
-
-Funkce
-------
-
-.. py:function:: get_dokument_soubor_name(dokument, filename)
-
-   Funkce pro získaní správného jména souboru dokumentu.
-
-   Název má tvar ``{ident bez pomlček}F###.{přípona}`` a přiděluje se již prvnímu souboru (#3421).
-   Pořadové číslo se určuje navýšením nejvyššího obsazeného čísla, obsazená čísla se přeskakují.
-   Uvolnění či změnu pozice řeší přejmenování souboru.
-
-   :param dokument: Dokument, ke kterému se soubor nahrává.
-   :param filename: Původní název nahrávaného souboru (použije se jeho přípona).
-   :return: Nový název souboru, nebo ``False`` při vyčerpání všech pořadových čísel.

@@ -56,7 +56,6 @@ from core.repository_connector import (
     FedoraUpdatedByAnotherTransactionError,
 )
 from core.soubor_naming import (
-    MAX_SUFFIX_NUMBER,
     get_free_suffixes,
     get_next_soubor_name,
     get_soubor_suffix,
@@ -109,7 +108,7 @@ from django_filters.views import FilterView
 from django_prometheus.exports import ExportToDjangoView
 from django_tables2 import SingleTableMixin
 from django_tables2.export import ExportMixin, TableExport
-from dokument.models import Dokument, get_dokument_soubor_name
+from dokument.models import Dokument
 from ez.models import ExterniZdroj
 from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PRISTUPNOST
@@ -1092,12 +1091,12 @@ class NewFileUploadView(BasePostUploadView):
             dokument = Dokument.objects.filter(ident_cely=ident_cely).first()
             if dokument:
                 objekt = dokument
-                new_name = get_dokument_soubor_name(objekt, filename)
+                new_name = get_next_soubor_name(objekt, filename)
         elif typ_vazby == "pas":
             samostatny_nalez = SamostatnyNalez.objects.filter(ident_cely=ident_cely).first()
             if samostatny_nalez:
                 objekt = samostatny_nalez
-                new_name = get_finds_soubor_name(objekt, filename)
+                new_name = get_next_soubor_name(objekt, filename)
 
         if objekt is None:
             self.fedora_transaction.rollback_transaction()
@@ -1346,27 +1345,6 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
                 return JsonResponse({"error": str(PRISTUP_ZAKAZAN)}, status=403)
 
         return True
-
-
-def get_finds_soubor_name(find, filename):
-    """
-    Funkce pro získaní jména souboru pro samostatný nález.
-
-    Název má tvar ``{ident bez pomlček}F###.{přípona}`` (#3421). Pořadové číslo se určuje navýšením
-    nejvyššího obsazeného čísla, takže číslování navazuje i na starší dvojciferné suffixy ``F01`` … ``F99``.
-    Uvolnění či změnu pozice řeší přejmenování souboru.
-
-    :param find: Samostatný nález, ke kterému se soubor nahrává.
-    :param filename: Původní název nahrávaného souboru (použije se jeho přípona).
-    :return: Nový název souboru, nebo ``False`` při vyčerpání všech pořadových čísel.
-    """
-    new_name = get_next_soubor_name(find, filename)
-    if new_name is False:
-        logger.warning(
-            "core.views.get_finds_soubor_name.cannot_upload",
-            extra={"file": filename, "ident_cely": find.ident_cely, "maximum": MAX_SUFFIX_NUMBER},
-        )
-    return new_name
 
 
 def get_projekt_soubor_name(projekt: Projekt, file_name):

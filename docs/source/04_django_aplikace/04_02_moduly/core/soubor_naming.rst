@@ -57,7 +57,8 @@ Funkce
 
    :param navazany_objekt: Dokument nebo samostatný nález, ke kterému se soubor nahrává.
    :param filename: Původní název nahrávaného souboru (použije se jeho přípona).
-   :return: Nový název souboru, nebo ``False`` při vyčerpání všech pořadových čísel.
+   :return: Nový název souboru, nebo ``False`` při vyčerpání všech pořadových čísel (vyčerpání se
+       zaloguje jako varování).
 
 .. py:function:: get_free_suffixes(navazany_objekt, current_soubor)
 

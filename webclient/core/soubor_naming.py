@@ -12,6 +12,7 @@ Tyto suffixy se nově nepřidělují, jen se u přejmenovávaného souboru ponec
 Modul záměrně nezávisí na modelech ani views, aby jej mohly používat obě vrstvy bez cyklických importů.
 """
 
+import logging
 import os
 import re
 
@@ -25,6 +26,8 @@ MAX_SUFFIX_NUMBER = 10**SUFFIX_DIGIT_COUNT - 1
 SUFFIX_NABIDKA_REZERVA = 50
 
 _SUFFIX_REGEX = re.compile(r"^F(\d+)$")
+
+logger = logging.getLogger(__name__)
 
 
 def format_suffix(number: int) -> str:
@@ -84,12 +87,17 @@ def get_next_soubor_name(navazany_objekt, filename: str):
 
     :param navazany_objekt: Dokument nebo samostatný nález, ke kterému se soubor nahrává.
     :param filename: Původní název nahrávaného souboru (použije se jeho přípona).
-    :return: Nový název souboru, nebo ``False`` při vyčerpání všech pořadových čísel.
+    :return: Nový název souboru, nebo ``False`` při vyčerpání všech pořadových čísel (vyčerpání se
+        zaloguje jako varování).
     """
     base = navazany_objekt.ident_cely.replace("-", "")
     obsazena = _obsazena_cisla(_obsazene_suffixy(navazany_objekt, base))
     dalsi = max(obsazena, default=0) + 1
     if dalsi > MAX_SUFFIX_NUMBER:
+        logger.warning(
+            "core.soubor_naming.get_next_soubor_name.vycerpano",
+            extra={"ident_cely": navazany_objekt.ident_cely, "file": filename, "maximum": MAX_SUFFIX_NUMBER},
+        )
         return False
     return f"{base}{format_suffix(dalsi)}{os.path.splitext(filename)[1]}"
 

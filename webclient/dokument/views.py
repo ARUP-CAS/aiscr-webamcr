@@ -2558,7 +2558,7 @@ def zapsat(request, zaznam=None):
                 else:
                     # Řada se přiděluje fixně, věcné dělení nesou pouze typ a materiál.
                     dokument.rada = Heslar.objects.get(id=DOKUMENT_RADA_VYCHOZI)
-                    prefix = region_zaznamu or form_d.cleaned_data["region"]
+                    prefix = form_d.get_efektivni_region()
                     dokument.ident_cely = get_temp_dokument_ident(rada=dokument.rada.zkratka, region=prefix)
             except MaximalIdentNumberError:
                 fedora_transaction.error_message = MAXIMUM_IDENT_DOSAZEN
@@ -2570,45 +2570,66 @@ def zapsat(request, zaznam=None):
                     "dokument.views.zapsat.vychozi_rada_neexistuje",
                     extra={"heslar_id": DOKUMENT_RADA_VYCHOZI},
                 )
+                # Formulář se zobrazí znovu na adrese bez identifikátoru záznamu, takže hlášku
+                # z Fedora transakce by middleware nezobrazil – předáváme ji uživateli přímo.
+                messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
                 fedora_transaction.rollback_transaction()
             else:
                 if FedoraRepositoryConnector.check_container_deleted_or_not_exists(dokument.ident_cely, "dokument"):
                     dokument.stav = D_STAV_ZAPSANY
-                    dokument.save()
-                    dokument.set_zapsany(request.user)
-                    i = 1
-                    for autor in form_d.cleaned_data["autori"]:
-                        DokumentAutor(
-                            dokument=dokument,
-                            autor=autor,
-                            poradi=i,
-                        ).save()
-                        i = i + 1
-
-                    # Vytvořit výchozí část dokumentu.
-                    if zaznam:
-                        if isinstance(zaznam, ArcheologickyZaznam):
-                            dc = DokumentCast(
-                                dokument=dokument,
-                                ident_cely=get_cast_dokumentu_ident(dokument),
-                                archeologicky_zaznam=zaznam,
+                    try:
+                        # Savepoint: ručně zadaný identifikátor mohl mezi validací formuláře a uložením
+                        # obsadit souběžný zápis. Selhání unikátního omezení se musí zachytit tak,
+                        # aby požadavek (ATOMIC_REQUESTS) mohl pokračovat zobrazením formuláře.
+                        with transaction.atomic():
+                            dokument.save()
+                    except IntegrityError:
+                        logger.info(
+                            "dokument.views.zapsat.ident_cely_obsazen",
+                            extra={"ident_cely": dokument.ident_cely},
+                        )
+                        fedora_transaction.rollback_transaction()
+                        if vlastni_ident_cely:
+                            form_d.add_error(
+                                "vlastni_ident_cely", _("dokument.forms.editDokumentForm.vlastniIdentCely.obsazeny")
                             )
-                            dc.active_transaction = fedora_transaction
-                            dc.save()
                         else:
-                            dc = DokumentCast(
+                            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
+                    else:
+                        dokument.set_zapsany(request.user)
+                        i = 1
+                        for autor in form_d.cleaned_data["autori"]:
+                            DokumentAutor(
                                 dokument=dokument,
-                                ident_cely=get_cast_dokumentu_ident(dokument),
-                                projekt=zaznam,
-                            )
-                            dc.active_transaction = fedora_transaction
-                            dc.save()
+                                autor=autor,
+                                poradi=i,
+                            ).save()
+                            i = i + 1
 
-                    form_d.save_m2m()
-                    dokument.close_active_transaction_when_finished = True
-                    dokument.save()
+                        # Vytvořit výchozí část dokumentu.
+                        if zaznam:
+                            if isinstance(zaznam, ArcheologickyZaznam):
+                                dc = DokumentCast(
+                                    dokument=dokument,
+                                    ident_cely=get_cast_dokumentu_ident(dokument),
+                                    archeologicky_zaznam=zaznam,
+                                )
+                                dc.active_transaction = fedora_transaction
+                                dc.save()
+                            else:
+                                dc = DokumentCast(
+                                    dokument=dokument,
+                                    ident_cely=get_cast_dokumentu_ident(dokument),
+                                    projekt=zaznam,
+                                )
+                                dc.active_transaction = fedora_transaction
+                                dc.save()
 
-                    return redirect("dokument:detail", ident_cely=dokument.ident_cely)
+                        form_d.save_m2m()
+                        dokument.close_active_transaction_when_finished = True
+                        dokument.save()
+
+                        return redirect("dokument:detail", ident_cely=dokument.ident_cely)
                 else:
                     logger.debug(
                         "dokument.views.zapsat.check_container_deleted_or_not_exists.invalid",

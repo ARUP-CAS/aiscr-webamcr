@@ -173,18 +173,6 @@ class HeslarDokumentTypMaterial(ExportModelOperationsMixin("heslar_dokument_typ_
         unique_together = (("dokument_typ", "dokument_material"),)
         verbose_name_plural = "Heslář dokument typ materiál"
 
-    def __init__(self, *args, **kwargs):
-        """
-        Inicializuje instanci třídy.
-
-        :param args: Parametr ``args`` se předává do volání ``__init__()``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
-        """
-        super(HeslarDokumentTypMaterial, self).__init__(*args, **kwargs)
-        self.initial_dokument_typ = self.dokument_typ
-        self.initial_dokument_material = self.dokument_material
-        self.suppress_signal = False
-
 
 class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.Model):
     """Databázový model hierarchie hesláře."""

@@ -68,6 +68,16 @@ Třídy
       :param can_edit_datum_zverejneni: Zda lze editovat datum zveřejnění.
       :param kwargs: Klíčové argumenty včetně create, allow_vlastni_ident a region_zaznamu.
 
+   .. py:method:: get_efektivni_region()
+
+      Vrátí region, pod kterým se dokument zapisuje.
+
+      Region nadřazeného záznamu má přednost před volbou uživatele v poli ``region``. Používá jej
+      jak kontrola ručně zadaného identifikátoru, tak view při sestavení dočasného identifikátoru,
+      aby se obě místa nemohla rozejít.
+
+      :return: Prefix regionu ("C-" nebo "M-"), nebo ``None`` pokud region není znám.
+
    .. py:method:: clean()
 
       Ověří ručně zadaný identifikátor dokumentu a zjistí jeho řadu (#3421).

@@ -21,7 +21,6 @@ from core.constants import (
 )
 from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
 from core.models import ModelWithMetadata, Soubor, SouborVazby, prvni_soubor_dle_nazvu
-from core.soubor_naming import MAX_SUFFIX_NUMBER, get_next_soubor_name
 from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -1164,28 +1163,3 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
         :return: Vrací výsledek volání ``reverse()``.
         """
         return reverse("admin:dokument_let_change", args=[self.pk])
-
-
-def get_dokument_soubor_name(dokument: Dokument, filename: str):
-    """
-    Funkce pro získaní správného jména souboru dokumentu.
-
-    Název má tvar ``{ident bez pomlček}F###.{přípona}`` a přiděluje se již prvnímu souboru (#3421).
-    Pořadové číslo se určuje navýšením nejvyššího obsazeného čísla, obsazená čísla se přeskakují.
-    Uvolnění či změnu pozice řeší přejmenování souboru.
-
-    :param dokument: Dokument, ke kterému se soubor nahrává.
-    :param filename: Původní název nahrávaného souboru (použije se jeho přípona).
-    :return: Nový název souboru, nebo ``False`` při vyčerpání všech pořadových čísel.
-    """
-    logger.debug(
-        "dokument.models.get_dokument_soubor_name.start",
-        extra={"ident_cely": dokument.ident_cely},
-    )
-    new_name = get_next_soubor_name(dokument, filename)
-    if new_name is False:
-        logger.warning(
-            "dokument.models.get_dokument_soubor_name.cannot_be_loaded",
-            extra={"ident_cely": dokument.ident_cely, "maximum": MAX_SUFFIX_NUMBER},
-        )
-    return new_name

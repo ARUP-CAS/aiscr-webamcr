@@ -196,7 +196,7 @@ Zápis pod konkrétním ID
   Na přidělování identifikátorů z tabulky `dokument_sekvence` to nemá vliv, protože obsazená pořadová
   čísla se přeskakují.
 
-* Kód: `zapsat` v ``webclient/dokument/views.py``, validace v ``EditDokumentForm.clean_vlastni_ident_cely``
+* Kód: `zapsat` v ``webclient/dokument/views.py``, validace v ``EditDokumentForm.clean()``
   a ``core.ident_cely.get_dokument_rada_from_ident``
 
 ===============

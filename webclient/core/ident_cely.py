@@ -104,8 +104,11 @@ def get_project_event_ident(project: Projekt) -> Optional[str]:
 
 
 #: Tvar permanentního identifikátoru dokumentu, např. "M-DD-202100034". Dvojice nečíselných znaků
-#: v řadě záměrně vylučuje řadu 3D, která má vlastní formulář pro zápis.
-DOKUMENT_IDENT_REGEX = re.compile(r"(?P<region>C|M)-(?P<rada>\D{2})-(?P<cislo>\d{9})")
+#: v řadě záměrně vylučuje řadu 3D, která má vlastní formulář pro zápis. Pořadové číslo nesmí být
+#: nulové – sekvence začínají od 1 a hledání mezer v ``Dokument.set_permanent_ident_cely`` by na
+#: identifikátoru s nulovým pořadím selhalo. ``re.ASCII`` zajišťuje, že ``\d`` přijme jen číslice 0–9,
+#: ne jejich unicodové obdoby, které by prošly kontrolou jedinečnosti jako jiný řetězec.
+DOKUMENT_IDENT_REGEX = re.compile(r"(?P<region>C|M)-(?P<rada>\D{2})-(?P<rok>\d{4})(?P<poradi>(?!0{5})\d{5})", re.ASCII)
 
 
 def get_dokument_rada_from_ident(ident_cely: str) -> Optional[Heslar]:

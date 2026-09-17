@@ -553,7 +553,7 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
         zapis_dokumentu = self.instance.pk is None
         if not zapis_dokumentu:
             del self.fields["region"]
-        #: Řada odvozená z ručně zadaného identifikátoru; naplní ji ``clean_vlastni_ident_cely``.
+        #: Řada odvozená z ručně zadaného identifikátoru; naplní ji ``clean()``.
         self.vlastni_ident_rada = None
         self.allow_vlastni_ident = allow_vlastni_ident
         #: Region nadřazeného záznamu; má přednost před volbou uživatele v poli ``region``.
@@ -653,6 +653,18 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
             # samostatně zapisovaný dokument jej musí mít zvolený.
             self.fields["region"].required = region_zaznamu is None
 
+    def get_efektivni_region(self):
+        """
+        Vrátí region, pod kterým se dokument zapisuje.
+
+        Region nadřazeného záznamu má přednost před volbou uživatele v poli ``region``. Používá jej
+        jak kontrola ručně zadaného identifikátoru, tak view při sestavení dočasného identifikátoru,
+        aby se obě místa nemohla rozejít.
+
+        :return: Prefix regionu ("C-" nebo "M-"), nebo ``None`` pokud region není znám.
+        """
+        return self.region_zaznamu or getattr(self, "cleaned_data", {}).get("region") or None
+
     def clean(self):
         """
         Ověří ručně zadaný identifikátor dokumentu a zjistí jeho řadu (#3421).
@@ -683,7 +695,7 @@ class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
         if Dokument.objects.filter(ident_cely=ident_cely).exists():
             self.add_error("vlastni_ident_cely", _("dokument.forms.editDokumentForm.vlastniIdentCely.obsazeny"))
             return cleaned_data
-        ocekavany_region = self.region_zaznamu or cleaned_data.get("region")
+        ocekavany_region = self.get_efektivni_region()
         if ocekavany_region and get_dokument_region_from_ident(ident_cely) != ocekavany_region:
             self.add_error("vlastni_ident_cely", _("dokument.forms.editDokumentForm.vlastniIdentCely.jinyRegion"))
             return cleaned_data
