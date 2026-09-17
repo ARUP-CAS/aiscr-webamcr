@@ -163,3 +163,80 @@ Třídy
 
       :param mock_get: Mock pro ``requests.get``.
 
+
+.. py:class:: DedupGeoLocationsTest
+
+   Testy deterministického odstranění duplicit v ``geoLocations``.
+
+   Původní implementace používala ``list(set(...))``. Iterační pořadí množiny závisí na hashích
+   řetězců, které Python randomizuje pro každý proces, takže každý uWSGI i Celery worker
+   generoval pro tentýž záznam jiné pořadí prvků a v OCFL vznikaly zbytečné verze.
+
+   **Metody:**
+
+   .. py:method:: _misto()
+
+      Sestaví lokalizaci obsahující pouze ``geoLocationPlace``.
+
+      :param nazev: Textový popis polohy vkládaný do ``geoLocationPlace``.
+      :return: Lokalizace ve tvaru ``frozenset`` odpovídajícím ``serialize_geom``.
+
+   .. py:method:: _bod()
+
+      Sestaví lokalizaci s popisem polohy i souřadnicemi.
+
+      :param nazev: Textový popis polohy vkládaný do ``geoLocationPlace``.
+      :param sirka: Zeměpisná šířka centroidu geometrie.
+      :param delka: Zeměpisná délka centroidu geometrie.
+      :return: Lokalizace ve tvaru ``frozenset`` odpovídajícím ``serialize_geom``.
+
+   .. py:method:: test_odstrani_duplicity()
+
+      Shodné lokalizace se ve výsledku objeví jen jednou.
+
+   .. py:method:: test_poradi_nezavisi_na_poradi_vstupu()
+
+      Výsledek je stejný bez ohledu na pořadí, v jakém lokalizace přišly z databáze.
+
+   .. py:method:: test_poradi_je_stabilni_i_pro_lokalizace_se_souradnicemi()
+
+      Stabilní pořadí platí i pro lokalizace s vnořeným ``geoLocationPoint``.
+
+   .. py:method:: test_vnorene_souradnice_jsou_prevedeny_na_slovnik()
+
+      Vnořený ``frozenset`` souřadnic je ve výstupu převeden na slovník.
+
+   .. py:method:: test_prazdny_vstup()
+
+      Prázdná kolekce vrátí prázdný seznam.
+
+
+.. py:class:: GetFormatsTest
+
+   Testy deterministického pořadí prvků ``formats`` v metadatech dokumentu.
+
+   **Metody:**
+
+   .. py:method:: _formats()
+
+      Zavolá ``_get_formats`` nad serializerem s podvrženými soubory.
+
+      :param mimetypy: Seznam mimetypů souborů navázaných na dokument.
+      :return: Seznam formátů vrácený metodou ``_get_formats``.
+
+   .. py:method:: test_formaty_jsou_serazene()
+
+      Mimetypy jsou vráceny abecedně seřazené, nikoli v pořadí množiny.
+
+   .. py:method:: test_poradi_nezavisi_na_poradi_souboru()
+
+      Stejná sada mimetypů dá stejný výsledek bez ohledu na pořadí souborů.
+
+   .. py:method:: test_duplicitni_mimetypy_se_neopakuji()
+
+      Více souborů se shodným mimetypem se ve ``formats`` objeví jen jednou.
+
+   .. py:method:: test_bez_souboru_vraci_prazdny_seznam()
+
+      Dokument bez souborů nemá žádné formáty.
+

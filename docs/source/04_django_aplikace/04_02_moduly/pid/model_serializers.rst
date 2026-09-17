@@ -595,6 +595,23 @@ Funkce
    :param item: Jedna položka zpracovávané kolekce.
    :return: Výstup funkce odpovídající implementované logice.
 
+.. py:function:: geo_location_sort_key(item)
+
+   Sestaví kanonický textový klíč geografické lokalizace pro deterministické řazení.
+
+   :param item: Geografická lokalizace serializovaná funkcí ``serialize_geom`` do ``frozenset``.
+   :return: Textový klíč složený ze seřazených dvojic klíč=hodnota včetně vnořených ``frozenset``.
+
+.. py:function:: dedup_geo_locations(geo_locations)
+
+   Odstraní duplicitní geografické lokalizace a vrátí je v deterministickém pořadí.
+
+   Iterační pořadí ``set`` závisí na hashích řetězců, které Python randomizuje pro každý proces.
+   Bez explicitního seřazení proto každý worker generuje jiné pořadí prvků ``geoLocations``.
+
+   :param geo_locations: Kolekce lokalizací serializovaných funkcí ``serialize_geom``.
+   :return: Seznam slovníků s lokalizacemi bez duplicit, seřazený podle kanonického klíče.
+
 .. py:function:: serialize_ez_creator(autor)
 
    Serializuje osobu jako tvůrce externího zdroje do formátu DataCite.

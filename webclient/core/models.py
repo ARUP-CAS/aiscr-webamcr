@@ -230,8 +230,11 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 opclasses=["text_ops"],
             ),
         ]
+        # "id" je tiebreaker: "nazev" není unikátní a PostgreSQL pořadí shodných klíčů negarantuje,
+        # což vede k nedeterministickému pořadí elementů <amcr:soubor> v exportovaném XML.
         ordering = [
             "nazev",
+            "id",
         ]
 
     def __init__(self, *args, **kwargs):

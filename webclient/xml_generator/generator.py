@@ -8,7 +8,7 @@ from typing import Optional
 from adb.models import VyskovyBod
 from django.contrib.gis.db import models
 from django.contrib.gis.db.models.functions import AsGML, GeoFunc
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import FieldError, ObjectDoesNotExist
 from heslar.models import RuianKraj, RuianOkres
 from lxml import etree
 from lxml import etree as ET
@@ -24,6 +24,33 @@ class AsText(GeoFunc):
     """Implementuje komponentu ``AsText`` v rámci aplikace."""
 
     output_field = models.TextField()
+
+
+def stable_related_records(related_manager):
+    """
+    Vrátí záznamy relace v deterministickém pořadí doplněním primárního klíče jako posledního kritéria.
+
+    Výchozí řazení modelů není jednoznačné (např. ``Soubor.nazev`` nebo ``NalezObjekt.druh__razeni``
+    se mohou opakovat) a PostgreSQL pořadí řádků se shodným klíčem negarantuje. Bez tiebreakeru
+    pak tentýž záznam generuje XML s přeházenými elementy a v OCFL vzniká zbytečná verze.
+
+    :param related_manager: Manažer nebo QuerySet relace, ze které se načítají navázané záznamy.
+    :return: QuerySet se stabilním řazením; při nemožnosti doplnit řazení původní QuerySet.
+    """
+    queryset = related_manager.all()
+    if not hasattr(queryset, "query") or not hasattr(queryset, "model"):
+        return queryset
+    ordering = list(queryset.query.order_by) or list(queryset.model._meta.ordering or [])
+    if any(isinstance(field, str) and field.lstrip("-") in ("pk", "id") for field in ordering):
+        return queryset
+    try:
+        return queryset.order_by(*ordering, "pk")
+    except (FieldError, TypeError, ValueError) as err:
+        logger.warning(
+            "xml_generator.generator.stable_related_records.order_by.error",
+            extra={"model": queryset.model.__name__, "error": err},
+        )
+        return queryset
 
 
 @dataclass
@@ -299,7 +326,7 @@ class DocumentGenerator:
             if len(record_name_split) == 1:
                 record_attribute = getattr(record, record_name_split[0])
                 if hasattr(record_attribute, "all"):
-                    attributes = [x for x in record_attribute.all()]
+                    attributes = list(stable_related_records(record_attribute))
                 else:
                     attributes = [record_attribute]
             elif len(record_name_split) == 2:
@@ -320,7 +347,7 @@ class DocumentGenerator:
                             },
                         )
                 if related_record and hasattr(related_record, "all"):
-                    for item in related_record.all():
+                    for item in stable_related_records(related_record):
                         attributes.append(getattr(item, record_name_split[1], None))
                 elif related_record:
                     related_record = getattr(record, record_name_split[0], None)
@@ -328,7 +355,7 @@ class DocumentGenerator:
                     if hasattr(related_record, "all"):
                         attributes = []
                         try:
-                            for x in related_record.all():
+                            for x in stable_related_records(related_record):
                                 attributes.append(x)
                         except Exception as err:
                             logger.info(
@@ -338,7 +365,7 @@ class DocumentGenerator:
             elif len(record_name_split) == 3:
                 related_record = getattr(record, record_name_split[0])
                 if hasattr(related_record, "all"):
-                    for record in related_record.all():
+                    for record in stable_related_records(related_record):
                         first_related = getattr(record, record_name_split[1], None)
                         if first_related is not None:
                             second_related = getattr(first_related, record_name_split[2], None)
@@ -346,7 +373,7 @@ class DocumentGenerator:
                 else:
                     related_record = getattr(related_record, record_name_split[1], None)
                     if hasattr(related_record, "all"):
-                        attributes = [x for x in related_record.all()]
+                        attributes = list(stable_related_records(related_record))
             if schema_element.attrib["type"] == "xs:date":
                 attributes = [x.date() for x in attributes]
             return attributes

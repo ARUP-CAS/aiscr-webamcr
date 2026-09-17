@@ -1,7 +1,7 @@
 import re
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import Dict, List
+from typing import Dict, Iterable, List
 
 from arch_z.models import AkceVedouci, ArcheologickyZaznam, ExterniOdkaz
 from core.constants import (
@@ -413,6 +413,34 @@ def convert_geo_location_to_dict(item) -> Dict:
     if "geoLocationPoint" in item:
         item["geoLocationPoint"] = dict(item["geoLocationPoint"])
     return item
+
+
+def geo_location_sort_key(item: frozenset) -> str:
+    """
+    Sestaví kanonický textový klíč geografické lokalizace pro deterministické řazení.
+
+    :param item: Geografická lokalizace serializovaná funkcí ``serialize_geom`` do ``frozenset``.
+    :return: Textový klíč složený ze seřazených dvojic klíč=hodnota včetně vnořených ``frozenset``.
+    """
+    parts = []
+    for key, value in sorted(item, key=lambda pair: str(pair[0])):
+        if isinstance(value, frozenset):
+            value = geo_location_sort_key(value)
+        parts.append(f"{key}={value}")
+    return "|".join(parts)
+
+
+def dedup_geo_locations(geo_locations: Iterable[frozenset]) -> List[Dict]:
+    """
+    Odstraní duplicitní geografické lokalizace a vrátí je v deterministickém pořadí.
+
+    Iterační pořadí ``set`` závisí na hashích řetězců, které Python randomizuje pro každý proces.
+    Bez explicitního seřazení proto každý worker generuje jiné pořadí prvků ``geoLocations``.
+
+    :param geo_locations: Kolekce lokalizací serializovaných funkcí ``serialize_geom``.
+    :return: Seznam slovníků s lokalizacemi bez duplicit, seřazený podle kanonického klíče.
+    """
+    return [convert_geo_location_to_dict(item) for item in sorted(set(geo_locations), key=geo_location_sort_key)]
 
 
 def serialize_ez_creator(autor: Osoba) -> Dict[str, str]:
@@ -874,8 +902,7 @@ class DokumentSerializer(ModelSerializer):
                 for katastr in cast.archeologicky_zaznam.katastry.all():
                     katastr: RuianKatastr
                     geo_locations.append(serialize_geom(katastr.definicni_bod, katastr, verejne))
-        result = [convert_geo_location_to_dict(item) for item in list(set(geo_locations))]
-        return result
+        return dedup_geo_locations(geo_locations)
 
     def _serialize_related_identifiers(self):
         """
@@ -1041,7 +1068,8 @@ class DokumentSerializer(ModelSerializer):
         result = []
         soubory_queryset = self._get_soubory_queryset()
         if soubory_queryset and soubory_queryset.exists():
-            result = list(set([soubor.mimetype for soubor in soubory_queryset.all()]))
+            # sorted() kvůli determinismu: iterační pořadí množiny se mezi procesy liší.
+            result = sorted({soubor.mimetype for soubor in soubory_queryset.all()})
         if self.record.rada.pk == DOKUMENT_RADA_DATA_3D:
             if self.record.extra_data and self.record.extra_data.format:
                 result.append(self.record.extra_data.format.heslo_en)
@@ -1478,8 +1506,7 @@ class LokalitaSerializer(ModelSerializer):
         for katastr in self.record.archeologicky_zaznam.katastry.all():
             katastr: RuianKatastr
             geo_locations.append(serialize_geom(katastr.definicni_bod, katastr, verejne))
-        result = [convert_geo_location_to_dict(item) for item in list(set(geo_locations))]
-        return result
+        return dedup_geo_locations(geo_locations)
 
     def _get_publication_year(self):
         """

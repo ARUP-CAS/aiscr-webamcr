@@ -163,3 +163,17 @@ Třídy
 
       :param document_object: Parametr ``document_object`` slouží jako vstup pro logiku funkce ``__init__``.
 
+
+Funkce
+------
+
+.. py:function:: stable_related_records(related_manager)
+
+   Vrátí záznamy relace v deterministickém pořadí doplněním primárního klíče jako posledního kritéria.
+
+   Výchozí řazení modelů není jednoznačné (např. ``Soubor.nazev`` nebo ``NalezObjekt.druh__razeni``
+   se mohou opakovat) a PostgreSQL pořadí řádků se shodným klíčem negarantuje. Bez tiebreakeru
+   pak tentýž záznam generuje XML s přeházenými elementy a v OCFL vzniká zbytečná verze.
+
+   :param related_manager: Manažer nebo QuerySet relace, ze které se načítají navázané záznamy.
+   :return: QuerySet se stabilním řazením; při nemožnosti doplnit řazení původní QuerySet.

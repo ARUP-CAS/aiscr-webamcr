@@ -37,7 +37,7 @@ Knihovny instalované pomocí Node.js
    * - dropzone
      - 5.9.3
      - MIT
-     - http://www.dropzonejs.com
+     - https://www.dropzone.dev/
    * - jquery
      - 3.7.1
      - MIT
