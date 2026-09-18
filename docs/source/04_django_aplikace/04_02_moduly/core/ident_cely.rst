@@ -92,7 +92,7 @@ Funkce
 
    Logika složení je: ident_cely arch záznamu + "-D" + pořadové číslo DJ per arch záznam doplněno na 2 číslice nulami.
    Při překročení maxima DJ u archeologického záznamu (99) se uživateli na web vrátí chybová hláška.
-   Příklad: "M-202100034A-D01"
+   Příklad: "M-202100034A01-D01"
 
    :param event: Parametr ``event`` pracuje se s atributy ``dokumentacni_jednotky_akce``, ``ident_cely``.
    :return: Vrací výsledek operace.
@@ -103,9 +103,9 @@ Funkce
 
    Vypočítá identifikátor komponenty pro dokumentační jednotku nebo dokument.
 
-   Logika složení je: ident_cely arch záznamu nebo dokumentu + "-D" + pořadové číslo komponenty per záznam doplněno na 3 číslice nulami.
+   Logika složení je: ident_cely arch záznamu nebo dokumentu + "-K" + pořadové číslo komponenty per záznam doplněno na 3 číslice nulami.
    Při překročení maxima komponent u záznamu (999) se uživateli na web vrátí chybová hláška.
-   Příklad: "M-202100034A-K001", "M-DD-202100034-K001"
+   Příklad: "M-202100034A01-K001", "M-DD-202100034-K001"
 
    :param zaznam: Archeologický záznam nebo dokument k zpracování.
    :param fedora_transaction: Aktivní transakce Fedora pro práci s repozitářem.
@@ -137,7 +137,7 @@ Funkce
 
    Logika složení je: ident_cely projektu + "-N" + pořadové číslo SN per projekt doplněno na 5 číslic nulami.
    Při překročení maxima SN u projektu (99999) se uživateli na web vrátí chybová hláška.
-   Příklad: "M-202100034A-N00001"
+   Příklad: "M-202100034-N00001"
 
    :param projekt: Parametr ``projekt`` předává se do volání ``filter()``, pracuje se s atributy ``ident_cely``.
    :return: Vrací výsledek operace.
