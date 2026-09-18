@@ -209,6 +209,71 @@ def _is_retryable(exc: Exception) -> bool:
     return False
 
 
+class _Pojistka:
+    """
+    Přeruší běh, když Fedora přestane přijímat zápisy úplně.
+
+    Jednotlivá selhání běh vědomě nezastavují (viz ``_process_record``) - u statisíců
+    záznamů by jediný problémový záznam shodil hodiny práce. Jenže bez horní hranice to
+    platí i pro selhání **všech** záznamů: při výpadku Fedory je každý zápis retryovatelná
+    chyba, takže se na každém záznamu vyčerpá ``_RECORD_TIME_BUDGET`` (600 s) a běh se
+    vleče dál nad celým zbytkem querysetu. ``failures`` přitom roste do paměti a závěrečná
+    kontrola konzistence (a s ní i nenulový exit kód) se nikdy nespustí, protože orchestrace
+    24hodinový běh dřív odstřelí - navenek tedy výpadek vypadá stejně jako zabitý běh
+    (review PR #4262).
+
+    Počítají se jen selhání **bezprostředně po sobě**; jakýkoli úspěch čítač vynuluje.
+    Roztroušené chyby (rozbitá data jednotlivých záznamů) tak běh nezastaví, souvislá
+    série ano.
+    """
+
+    def __init__(self, limit):
+        """
+        :param limit: Počet selhání po sobě, po kterém se pojistka spustí. ``0`` (nebo
+            ``None``) pojistku vypne - běh pak pokračuje bez ohledu na počet selhání.
+        """
+        self._limit = limit or 0
+        self._lock = Lock()
+        self._po_sobe = 0
+        self.spustena = False
+        self.vrchol = 0
+
+    def uspech(self):
+        """Zaznamená úspěšně zpracovaný záznam - vynuluje sérii selhání."""
+        with self._lock:
+            self._po_sobe = 0
+
+    def selhani(self):
+        """
+        Zaznamená selhaný záznam a případně pojistku spustí.
+
+        :return: ``True``, pokud je pojistka (už) spuštěná.
+        """
+        with self._lock:
+            self._po_sobe += 1
+            self.vrchol = max(self.vrchol, self._po_sobe)
+            if self._limit and self._po_sobe >= self._limit:
+                self.spustena = True
+            return self.spustena
+
+
+def _dokud_pojistka_drzi(polozky, pojistka):
+    """
+    Obalí iterátor položek tak, aby po spuštění pojistky přestal dodávat další práci.
+
+    Řeší se to tady, a ne v ``_run_parallel``, aby zastavení nestálo za průchod zbytkem
+    querysetu: generátor se prostě ukončí a executor jen dobere rozpracované úlohy.
+
+    :param polozky: Iterátor položek ke zpracování.
+    :param pojistka: Instance ``_Pojistka``, nebo ``None`` (pak se nic neomezuje).
+    :return: Generátor položek.
+    """
+    for polozka in polozky:
+        if pojistka is not None and pojistka.spustena:
+            return
+        yield polozka
+
+
 class _FastFedoraWriter:
     """
     Minimalistický zapisovač do Fedory pro hromadné generování obsahu do **prázdné**
@@ -767,7 +832,15 @@ class _FastFedoraWriter:
             tx_url=tx_url,
         )
 
-        thumb_stem = file_name[: file_name.rfind(".")] if "." in file_name else file_name
+        # Znak po znaku totéž co `save_thumbs` v repository_connector.py - jméno náhledu
+        # musí vyjít stejně, ať záznam vytvoří migrace nebo aplikace (hlídá
+        # `test_fast_writer_rdf_parity`). Ošetření jména bez tečky tu schválně není: `rfind`
+        # by vrátil -1 a ukrojil poslední znak, jenže takové jméno nevznikne. `Soubor.nazev`
+        # se generuje systémově jako `{ident}F01{přípona}` a upload příponu přepíše podle
+        # detekovaného mime - typ, pro který žádná přípona není, odmítne s HTTP 400
+        # (`core/views.py`, `post_upload`). Ověřeno i v datech: ze 392 325 souborů
+        # s vyplněnou `path` nemá `Soubor.nazev` tečku ani jeden (review PR #4262).
+        thumb_stem = file_name[: file_name.rfind(".")]
         for data, sha512, slug in (
             (thumb_bytes, thumb_sha512, "thumb"),
             (thumb_large_bytes, thumb_large_sha512, "thumb-large"),
@@ -803,11 +876,14 @@ def _load_placeholders(manifest_path=_PLACEHOLDER_MANIFEST_PATH):
     dopočítaná hodnota. Kdyby se poslal `Digest: sha-512=<manifest>` neodpovídající
     tělu požadavku, Fedora by na každý takový soubor vracela 409.
 
-    Neshoda proti manifestu se zaloguje jako WARNING (`placeholder_hash_mismatch`)
-    a načtení nespadne. **Není to očekávaný stav** - konce řádků chrání
-    `.gitattributes` (`placeholders/** -text`), takže každý checkout dostane bajty
-    shodné s blobem. Neshoda tedy znamená buď zastaralý manifest, nebo změněný či
-    poškozený placeholder, a je třeba ji prošetřit: v issue #3967 přesně takto vyšlo
+    Neshoda proti manifestu je **tvrdá chyba**: vyhodí `ValueError`, které `handle`
+    převede na `CommandError`, takže běh skončí dřív, než se do Fedory cokoli zapíše.
+    Dřív to bylo jen WARNING, jenže varování v logu 24hodinového běhu zapadne, bajty
+    se do Fedory zapíšou nevratně a s `--aktualizovat-db` se tentýž dopočítaný hash
+    uloží i do DB - tím se neshoda "zahojí" a zpětně už nejde poznat (review PR #4262).
+    Konce řádků chrání `.gitattributes` (`placeholders/** -text`), takže každý checkout
+    dostane bajty shodné s blobem. Neshoda tedy znamená buď zastaralý manifest, nebo
+    změněný či poškozený placeholder, a je třeba ji prošetřit: v issue #3967 přesně takto vyšlo
     najevo, že `placeholder_01.pdf` a `placeholder_20.txt` mají v manifestu hash
     CRLF-poškozených bajtů (u PDF s rozbitými `xref` offsety), protože manifest byl
     vygenerován na Windows working tree, který git po opravě `.gitattributes` už
@@ -829,9 +905,13 @@ def _load_placeholders(manifest_path=_PLACEHOLDER_MANIFEST_PATH):
             data = f.read()
         computed_sha512 = hashlib.sha512(data).hexdigest()
         if computed_sha512 != manifest_sha512:
-            logger.warning(
+            logger.error(
                 "core.management.commands.generate_metadata_fast.placeholder_hash_mismatch",
                 extra={"file": rel_path, "manifest_sha512": manifest_sha512, "computed_sha512": computed_sha512},
+            )
+            raise ValueError(
+                f"placeholder '{rel_path}' nesouhlasí s manifestem (manifest {manifest_sha512[:16]}..., "
+                f"soubor {computed_sha512[:16]}..., {len(data)} B)"
             )
         return data, computed_sha512
 
@@ -934,6 +1014,15 @@ class Command(BaseCommand):
             type=int,
             default=20,
             help=_("core.management.commands.generate_metadata_fast.Command.add_arguments.max_retries_help"),
+        )
+        # 50: roztroušená selhání pojistku nespustí (každý úspěch čítač nuluje), takže
+        # hranici přeleze jen souvislá série, tedy systémový problém - a to je záměrně
+        # vysoko nad tím, co dá shluk přechodných chyb na sdíleném rodiči. 0 = nehlídat.
+        parser.add_argument(
+            "--max-selhani-po-sobe",
+            type=int,
+            default=50,
+            help=_("core.management.commands.generate_metadata_fast.Command.add_arguments.max_selhani_po_sobe_help"),
         )
         parser.add_argument(
             "--bez-souboru",
@@ -1060,7 +1149,16 @@ class Command(BaseCommand):
             )
 
     @staticmethod
-    def _process_record(obj, writer, max_retries, failures, placeholders=None, db_updates=None, db_updates_lock=None):
+    def _process_record(
+        obj,
+        writer,
+        max_retries,
+        failures,
+        placeholders=None,
+        db_updates=None,
+        db_updates_lock=None,
+        pojistka=None,
+    ):
         """
         Vygeneruje XML metadata pro jeden záznam a vloží je do Fedory rychlou cestou.
 
@@ -1090,7 +1188,9 @@ class Command(BaseCommand):
         Selhání (vyčerpané retries, nebo rovnou trvalá chyba - viz ``_is_retryable``)
         nezastaví celý běh - zaloguje se a záznam se přidá do ``failures`` k pozdějšímu
         dohledání/opakování (přes ``--start-with-pk``); u běhu na statisících záznamů
-        by jinak jediný problémový záznam shodil celé hodiny běžící generování. Chybějící
+        by jinak jediný problémový záznam shodil celé hodiny běžící generování. To platí
+        pro **roztroušená** selhání; souvislou sérii (tedy systémový problém, ne vadná
+        data) běh zastaví - viz ``_Pojistka``. Chybějící
         placeholder pro konkrétní mimetype je stejný případ - přeskočí se jen ten soubor
         (zbytek záznamu i metadata se uloží normálně), ale skip se taky zapíše do
         ``failures``, ať jde po běhu dohledat (jinak by o něm věděl jen log).
@@ -1112,15 +1212,38 @@ class Command(BaseCommand):
             ``UPDATE`` proběhne hromadně až po doběhnutí celého modelu.
         :param db_updates_lock: Zámek pro ``db_updates`` (sdílený mezi vlákny), povinný
             pokud je ``db_updates`` zadané.
+        :param pojistka: Sdílená ``_Pojistka`` hlídající sérii selhání po sobě, nebo
+            ``None`` (pak se počet selhání nehlídá).
         """
         from core.models import SouborVazby
         from xml_generator.generator import DocumentGenerator
+
+        def ohlas_pojistce(uspesne):
+            """Nahlásí výsledek celého záznamu pojistce (viz ``_Pojistka``)."""
+            if pojistka is None:
+                return
+            if uspesne:
+                pojistka.uspech()
+            else:
+                pojistka.selhani()
+
+        if pojistka is not None and pojistka.spustena:
+            # Pojistka už spadla; rozpracované úlohy jen doběhnou naprázdno, ať se nečeká
+            # dalších `_RECORD_TIME_BUDGET` sekund na záznam, který stejně nemá kam zapsat.
+            return
 
         if not obj.ident_cely:
             logger.warning(
                 "core.management.commands.generate_metadata_fast.missing_ident_cely",
                 extra={"pk": obj.pk, "model": obj.__class__.__name__},
             )
+            # Bez `ident_cely` nejde záznam ve Fedoře pojmenovat, takže se nezapíše - a to
+            # je selhání, ne přeskočení. Do `failures` musí, jinak o něm ví jen log:
+            # `_zkontroluj_konzistenci` prázdné identy odfiltrovává na obou stranách, takže
+            # by chybějící záznam neohlásila, `_pocet_selhani` by zůstal nulový a běh by
+            # skončil nulovým exit kódem (review PR #4262).
+            failures.append((obj.pk, obj.ident_cely, "Záznam nemá ident_cely, ve Fedoře ho nelze pojmenovat."))
+            ohlas_pojistce(False)
             return
         model_name = _get_schema_by_name()[obj.__class__.__name__][1]
         zacatek = time.time()
@@ -1142,6 +1265,7 @@ class Command(BaseCommand):
                 extra={"pk": obj.pk, "ident_cely": obj.ident_cely, "error": str(exc)},
             )
             failures.append((obj.pk, obj.ident_cely, str(exc)))
+            ohlas_pojistce(False)
             return
 
         # Chybějící placeholder je vlastnost dat záznamu, ne pokusu o zápis - vyhodnotí se
@@ -1317,11 +1441,15 @@ class Command(BaseCommand):
 
         if not proved_fazi("zaznam", zapis_zaznam):
             # Bez záznamu nemá smysl zakládat link, který by na něj ukazoval.
+            ohlas_pojistce(False)
             return
         # Soubory jsou po commitu fáze 1 ve Fedoře i v případě, že link teprve selže,
         # takže `Soubor.sha_512`/`size_mb` se má přepsat bez ohledu na druhou fázi.
         zaeviduj_db_updates()
-        proved_fazi("link", zapis_link)
+        # Chybějící placeholder (`no_placeholder` výše) se do pojistky nepočítá - záznam se
+        # zapsal, jen mu chybí soubor; jinak by systematicky chybějící mimetype zastavil běh
+        # ve chvíli, kdy je Fedora zcela v pořádku.
+        ohlas_pojistce(proved_fazi("link", zapis_link))
 
     def _run_parallel(self, work_items, worker_fn, workers, total=None):
         """
@@ -1459,6 +1587,11 @@ class Command(BaseCommand):
         """
         Zpracuje XML metadata a (pokud záznam nějaké má) i jeho soubory ve stejné transakci.
 
+        Selhání jednotlivých záznamů se jen sbírají do ``failures`` a promítnou se do
+        ``_pocet_selhani`` (odtud nenulový exit kód). Souvislá série selhání ale běh
+        ukončí ``CommandError`` hned - viz ``_Pojistka`` a ``--max-selhani-po-sobe``.
+        Pojistka je jedna pro všechny modely, protože výpadek Fedory hranice modelů nezná.
+
         :param options: Parametry příkazu.
         :param writer: Sdílený ``_FastFedoraWriter`` (repozitář už byl ověřen jako prázdný).
         :param placeholders: Mapa mimetype -> placeholder obsah (``_load_placeholders``),
@@ -1475,6 +1608,9 @@ class Command(BaseCommand):
         # "neopakovat", a mlčky by z ní udělalo 3 pokusy (review PR #4262).
         max_retries = options["max_retries"]
         aktualizovat_db = bool(options.get("aktualizovat_db"))
+        # Pojistka je sdílená přes všechny modely, ne per model - výpadek Fedory nezná
+        # hranice modelů a série selhání může začít na konci jednoho a pokračovat do dalšího.
+        pojistka = _Pojistka(options.get("max_selhani_po_sobe"))
 
         from xml_generator.generator import sdilena_fk_cache
 
@@ -1503,16 +1639,28 @@ class Command(BaseCommand):
                 db_updates = defaultdict(list) if aktualizovat_db else None
                 db_updates_lock = Lock() if aktualizovat_db else None
                 self._zaseknute_ulohy += self._run_parallel(
-                    queryset.iterator(chunk_size=500),
+                    _dokud_pojistka_drzi(queryset.iterator(chunk_size=500), pojistka),
                     lambda obj: self._process_record(
-                        obj, writer, max_retries, failures, placeholders, db_updates, db_updates_lock
+                        obj, writer, max_retries, failures, placeholders, db_updates, db_updates_lock, pojistka
                     ),
                     workers,
                     total=total,
                 )
                 self._report_failures(failures)
                 self._pocet_selhani += len(failures)
+                # Flush musí proběhnout i při spuštěné pojistce - záznamy zapsané před
+                # výpadkem ve Fedoře jsou a jejich `Soubor.sha_512` se má srovnat s DB.
                 self._flush_db_updates(db_updates, db_updates_lock, placeholders)
+                if pojistka.spustena:
+                    raise CommandError(
+                        f"Přerušeno pojistkou: {pojistka.vrchol} záznamů po sobě selhalo "
+                        f"(--max-selhani-po-sobe {options.get('max_selhani_po_sobe')}). "
+                        "Vypadá to na systémový problém (Fedora nedostupná, plný disk, rozpadlé "
+                        "spojení do DB), ne na vadná data - oprav příčinu a navaž běh přes "
+                        "--force a --start-with-pk za posledním úspěšně zpracovaným záznamem. "
+                        "Kontrola konzistence se záměrně nespustila, nad nedoběhnutým během "
+                        "by hlásila jen chybějící zbytek."
+                    )
 
     @staticmethod
     def _polozky_ke_zpracovani(model_class):

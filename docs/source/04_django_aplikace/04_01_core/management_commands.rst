@@ -169,6 +169,10 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
      - ``int``
      - ``20``
      - core.management.commands.generate_metadata_fast.Command.add_arguments.max_retries_help
+   * - ``--max-selhani-po-sobe``
+     - ``int``
+     - ``50``
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.max_selhani_po_sobe_help
    * - ``--bez-souboru``
      - 
      - ``False``

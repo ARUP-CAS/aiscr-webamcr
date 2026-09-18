@@ -44,6 +44,20 @@ SDILENE_CISELNIKY = (
     "uzivatel.Organizace",
 )
 
+#: Pole, která se u sdílených číselníků do cache **nenačítají**. RUIAN modely nesou
+#: polygonovou ``hranice`` a bod ``definicni_bod``; načtení všech 13 091 katastrů stojí
+#: 104,7 MB RSS s geometrií a 8,2 MB bez ní (měřeno), tedy 96,5 MB navíc. Cache žije celý běh,
+#: takže by si tu geometrii držela do konce - a k ničemu: do XML se geometrie nedostává
+#: přes tuhle instanci, ale zvlášť anotovaným dotazem (``AsGML``/``AsText``, viz
+#: ``_geom_annotation_cache`` v ``_get_attribute_of_record``), který si záznam načte znovu
+#: a celý. Kdyby na odložené pole přesto někdo sáhl, Django ho dotáhne dodatečným dotazem,
+#: takže jde o úsporu paměti, ne o změnu chování (review PR #4262).
+SDILENA_CACHE_ODLOZENA_POLE = {
+    "heslar.RuianKatastr": ("hranice", "definicni_bod"),
+    "heslar.RuianOkres": ("hranice", "definicni_bod"),
+    "heslar.RuianKraj": ("hranice", "definicni_bod"),
+}
+
 #: Sdílená cache číselníkových FK, ``None`` = vypnuto. **Výchozí stav je vypnuto** a web
 #: ji nikdy nezapíná: v běžném provozu se číselníky z administrace mění a cache by
 #: servírovala zastaralá data. Zapíná ji jen dávkové generování (viz ``sdilena_fk_cache``),
@@ -333,16 +347,22 @@ class DocumentGenerator:
             # U číselníků se cache sdílí napříč dokumenty, pokud to volající zapnul
             # (viz `sdilena_fk_cache`); jinak platí jen cache tohoto dokumentu.
             cache = self._fk_cache
+            odlozena = ()
             if _sdilena_fk_cache_data is not None:
                 meta = field.related_model._meta
-                if "%s.%s" % (meta.app_label, field.related_model.__name__) in _sdilena_fk_cache_modely:
+                nazev_modelu = "%s.%s" % (meta.app_label, field.related_model.__name__)
+                if nazev_modelu in _sdilena_fk_cache_modely:
                     cache = _sdilena_fk_cache_data
+                    # Jen u sdílené cache - cache jednoho dokumentu zaniká s ním, takže se
+                    # tam odkládat nevyplácí a chování webu zůstává beze změny.
+                    odlozena = SDILENA_CACHE_ODLOZENA_POLE.get(nazev_modelu, ())
             if klic not in cache:
                 # `.get()`, ne `.filter().first()` - rozbitá FK musí vyhodit
                 # `DoesNotExist` stejně jako by to udělal obyčejný FK descriptor přes
                 # `getattr()` (chování před zavedením cache). Negativní výsledek se
                 # neukládá, ať se chyba neschová jen proto, že šlo o druhé volání.
-                cache[klic] = field.related_model._base_manager.get(pk=fk_id)
+                manager = field.related_model._base_manager
+                cache[klic] = (manager.defer(*odlozena) if odlozena else manager).get(pk=fk_id)
             return cache[klic]
         if default is self._MISSING:
             return getattr(record, attr_name)
