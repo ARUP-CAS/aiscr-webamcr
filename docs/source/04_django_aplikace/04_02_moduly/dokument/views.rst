@@ -696,6 +696,18 @@ Funkce
    :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
    :raises ValueError: Vyvolá se s textem "dokument.views.smazat.deleted".
 
+.. py:function:: get_region_zaznamu(zaznam)
+
+   Odvodí prefix regionu z identifikátoru záznamu, do kterého se dokument zapisuje.
+
+   Dokument zapisovaný do projektu nebo archeologického záznamu přebírá region z nadřazeného
+   záznamu, nikoli z volby uživatele. U dočasných identifikátorů archeologického záznamu je
+   region až za prefixem "X-".
+
+   :param zaznam: Projekt nebo archeologický záznam, do kterého se dokument zapisuje; ``None``
+       u samostatně zapisovaného dokumentu.
+   :return: Prefix regionu včetně pomlčky ("C-" nebo "M-"), nebo ``None`` pokud záznam není zadán.
+
 .. py:function:: get_hierarchie_dokument_typ()
 
    Funkce pro získaní hierarchie pro heslař.

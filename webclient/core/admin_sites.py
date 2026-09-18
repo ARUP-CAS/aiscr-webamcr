@@ -123,7 +123,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
             [
                 find_model("heslar", "Heslar"),
                 find_model("heslar", "HeslarDatace"),
-                find_model("heslar", "HeslarDokumentTypMaterialRada"),
+                find_model("heslar", "HeslarDokumentTypMaterial"),
                 find_model("heslar", "HeslarHierarchie"),
                 find_model("heslar", "HeslarNazev"),
                 find_model("heslar", "HeslarOdkaz"),

@@ -8,7 +8,6 @@ from core.constants import DOKUMENT_CAST_RELATION_TYPE, IDENTIFIKATOR_DOCASNY_PR
 from core.exceptions import (
     MaximalEventCount,
     MaximalIdentNumberError,
-    NelzeZjistitRaduError,
     NeznamaGeometrieError,
     PianNotInKladysm5Error,
 )
@@ -20,7 +19,8 @@ from django.db import connection, connections
 from django.shortcuts import get_object_or_404
 from dokument.models import Dokument, Let
 from ez.models import ExterniZdroj
-from heslar.models import Heslar, HeslarDokumentTypMaterialRada, RuianKatastr, RuianKraj, RuianOkres
+from heslar.hesla import HESLAR_DOKUMENT_RADA
+from heslar.models import Heslar, RuianKatastr, RuianKraj, RuianOkres
 from komponenta.models import Komponenta, KomponentaVazby
 from pas.models import SamostatnyNalez
 from pian.models import Pian
@@ -62,62 +62,88 @@ def get_project_event_ident(project: Projekt) -> Optional[str]:
     """
     Metoda pro výpočet identu projektové akce.
 
-    Logika složení je: ident_cely projektu + písmeno abecedy v posloupnosti od A po Z
-    Při překročení maxima čísla sekvence (99999) se uživateli na web vrátí chybová hláška.
-    Příklad: "M-202100034A"
+    Logika složení je: ident_cely projektu + "A" + pořadové číslo akce v rámci projektu
+    doplněné na 2 číslice nulami. Historické akce označené jedním písmenem (A–Z)
+    se do pořadí nezapočítávají, nová řada čísel začíná vždy od "A01".
+    Při překročení maxima akcí na projekt (99) se uživateli na web vrátí chybová hláška.
+    Příklad: "M-202100034A01"
 
     :param project: Parametr ``project`` pracuje se s atributy ``ident_cely``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
     :return: Vrací výsledek operace.
 
-        :raises MaximalEventCount: Vyvolá se při splnění podmínky ``len(idents) < MAXIMAL_PROJECT_EVENTS``.
+        :raises MaximalEventCount: Vyvolá se při vyčerpání všech pořadových čísel akcí projektu.
     """
-    MAXIMAL_PROJECT_EVENTS: int = 26
-    if project.ident_cely:
-        with connection.cursor() as cursor:
-            predicate = project.ident_cely + "%"
-            query = "select id, ident_cely from public.archeologicky_zaznam where ident_cely like %s order by ident_cely desc"
-            cursor.execute(query, [predicate])
-            idents = cursor.fetchall()
-
-            if len(idents) < MAXIMAL_PROJECT_EVENTS:
-                if idents:
-                    last_ident = idents[0][1]  # Předpoklad: druhý sloupec je `ident_cely`.
-                    return project.ident_cely + chr(ord(last_ident[-1]) + 1)
-                else:
-                    return project.ident_cely + "A"
-            else:
-                logger.error(
-                    "core.ident_cely.get_project_event_ident.error",
-                    extra={"error": "Maximal number of project events is 26."},
-                )
-                raise MaximalEventCount(MAXIMAL_PROJECT_EVENTS)
-    else:
+    MAXIMAL_PROJECT_EVENTS: int = 99
+    last_digit_count = 2
+    if not project.ident_cely:
         logger.error("core.ident_cely.get_project_event_ident.error", extra={"error": "Project is missing ident_cely"})
         return None
-
-
-def get_dokument_rada(typ, material):
-    """
-    Metoda pro získaní rady dokumentu podle typu a materiálu dokumentu.
-
-    :param typ: Parametr ``typ`` předává se do volání ``filter()``, ``error()``, pracuje se s atributy ``id``.
-    :param material: Parametr ``material`` se předává do volání ``filter()``, ``error()``, pracuje se s atributy ``id``.
-
-        :return: Vrací atribut objektu.
-        :raises NelzeZjistitRaduError: Vyvolá se při splnění podmínky ``len(instances) == 1``.
-    """
-    instances = HeslarDokumentTypMaterialRada.objects.filter(dokument_typ=typ, dokument_material=material)
-    if len(instances) == 1:
-        return instances[0].dokument_rada
-    else:
-        logger.error(
-            "core.ident_cely.get_dokument_rada.error",
-            extra={
-                "error": "Nelze priradit radu k dokumentu. Neznama/nejednoznacna kombinace "
-                f"typu {typ.id} a materialu. {material.id}"
-            },
+    with connection.cursor() as cursor:
+        predicate = project.ident_cely + "%"
+        query = (
+            "select id, ident_cely from public.archeologicky_zaznam where ident_cely like %s order by ident_cely desc"
         )
-        raise NelzeZjistitRaduError()
+        cursor.execute(query, [predicate])
+        idents = {row[1] for row in cursor.fetchall()}  # Předpoklad: druhý sloupec je `ident_cely`.
+    suffix_pattern = re.compile(rf"^A(\d{{{last_digit_count}}})$")
+    max_count = 0
+    for ident in idents:
+        match = suffix_pattern.match(ident[len(project.ident_cely) :])
+        if match:
+            max_count = max(max_count, int(match.group(1)))
+    # Obsazená čísla se přeskakují, aby se předešlo kolizi s importovanými identifikátory.
+    for number in range(max_count + 1, MAXIMAL_PROJECT_EVENTS + 1):
+        ident = project.ident_cely + "A" + str(number).zfill(last_digit_count)
+        if ident not in idents:
+            return ident
+    logger.error(
+        "core.ident_cely.get_project_event_ident.error",
+        extra={"error": f"Maximal number of project events is {MAXIMAL_PROJECT_EVENTS}."},
+    )
+    raise MaximalEventCount(MAXIMAL_PROJECT_EVENTS)
+
+
+#: Tvar permanentního identifikátoru dokumentu, např. "M-DD-202100034". Dvojice nečíselných znaků
+#: v řadě záměrně vylučuje řadu 3D, která má vlastní formulář pro zápis. Pořadové číslo nesmí být
+#: nulové – sekvence začínají od 1 a hledání mezer v ``Dokument.set_permanent_ident_cely`` by na
+#: identifikátoru s nulovým pořadím selhalo. ``re.ASCII`` zajišťuje, že ``\d`` přijme jen číslice 0–9,
+#: ne jejich unicodové obdoby, které by prošly kontrolou jedinečnosti jako jiný řetězec.
+DOKUMENT_IDENT_REGEX = re.compile(r"(?P<region>C|M)-(?P<rada>\D{2})-(?P<rok>\d{4})(?P<poradi>(?!0{5})\d{5})", re.ASCII)
+
+
+def get_dokument_rada_from_ident(ident_cely: str) -> Optional[Heslar]:
+    """
+    Vrátí heslo řady dokumentu odvozené z permanentního identifikátoru dokumentu.
+
+    Používá se při zápisu dokumentu pod ručně zadaným identifikátorem (#3421), kdy se řada
+    neurčuje z nastavení, ale musí odpovídat zadanému identifikátoru.
+
+    :param ident_cely: Permanentní identifikátor dokumentu, např. "M-DD-202100034".
+    :return: Heslo řady dokumentu, nebo ``None`` pokud identifikátor neodpovídá tvaru
+        permanentního identu dokumentu nebo jeho řada v hesláři neexistuje.
+    """
+    match = DOKUMENT_IDENT_REGEX.fullmatch(ident_cely or "")
+    if not match:
+        return None
+    return Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_RADA, zkratka=match.group("rada")).first()
+
+
+def get_dokument_region_from_ident(ident_cely: str) -> Optional[str]:
+    """
+    Vrátí prefix regionu odvozený z permanentního identifikátoru dokumentu.
+
+    Používá se při zápisu dokumentu pod ručně zadaným identifikátorem (#3421) pro kontrolu, že se
+    region v identifikátoru shoduje s regionem zvoleným ve formuláři, resp. s regionem nadřazeného
+    záznamu. Tvar prefixu ("C-" nebo "M-") odpovídá hodnotám pole ``region``.
+
+    :param ident_cely: Permanentní identifikátor dokumentu, např. "M-DD-202100034".
+    :return: Prefix regionu včetně pomlčky, nebo ``None`` pokud identifikátor neodpovídá tvaru
+        permanentního identu dokumentu.
+    """
+    match = DOKUMENT_IDENT_REGEX.fullmatch(ident_cely or "")
+    if not match:
+        return None
+    return match.group("region") + "-"
 
 
 def get_temp_dokument_ident(rada, region):
@@ -173,7 +199,7 @@ def get_dj_ident(event: ArcheologickyZaznam) -> str:
 
     Logika složení je: ident_cely arch záznamu + "-D" + pořadové číslo DJ per arch záznam doplněno na 2 číslice nulami.
     Při překročení maxima DJ u archeologického záznamu (99) se uživateli na web vrátí chybová hláška.
-    Příklad: "M-202100034A-D01"
+    Příklad: "M-202100034A01-D01"
 
     :param event: Parametr ``event`` pracuje se s atributy ``dokumentacni_jednotky_akce``, ``ident_cely``.
     :return: Vrací výsledek operace.
@@ -199,9 +225,9 @@ def get_komponenta_ident(zaznam: ArcheologickyZaznam | Dokument, fedora_transact
     """
     Vypočítá identifikátor komponenty pro dokumentační jednotku nebo dokument.
 
-    Logika složení je: ident_cely arch záznamu nebo dokumentu + "-D" + pořadové číslo komponenty per záznam doplněno na 3 číslice nulami.
+    Logika složení je: ident_cely arch záznamu nebo dokumentu + "-K" + pořadové číslo komponenty per záznam doplněno na 3 číslice nulami.
     Při překročení maxima komponent u záznamu (999) se uživateli na web vrátí chybová hláška.
-    Příklad: "M-202100034A-K001", "M-DD-202100034-K001"
+    Příklad: "M-202100034A01-K001", "M-DD-202100034-K001"
 
     :param zaznam: Archeologický záznam nebo dokument k zpracování.
     :param fedora_transaction: Aktivní transakce Fedora pro práci s repozitářem.
@@ -279,7 +305,7 @@ def get_sn_ident(projekt: Projekt) -> str:
 
     Logika složení je: ident_cely projektu + "-N" + pořadové číslo SN per projekt doplněno na 5 číslic nulami.
     Při překročení maxima SN u projektu (99999) se uživateli na web vrátí chybová hláška.
-    Příklad: "M-202100034A-N00001"
+    Příklad: "M-202100034-N00001"
 
     :param projekt: Parametr ``projekt`` předává se do volání ``filter()``, pracuje se s atributy ``ident_cely``.
     :return: Vrací výsledek operace.
@@ -465,7 +491,8 @@ def get_record_from_ident(ident_cely):
     if bool(re.fullmatch(r"(C|M|X-C|X-M)-\d{9}", ident_cely)):
         logger.debug("core.ident_cely.get_record_from_ident.project", extra={"ident_cely": ident_cely})
         return get_object_or_404(Projekt, ident_cely=ident_cely)
-    if bool(re.fullmatch(r"(C|M|X-C|X-M)-\d{9}\D{1}", ident_cely)):
+    # Sufix projektové akce je historicky jedno písmeno, nově "A" + dvojciferné pořadí.
+    if bool(re.fullmatch(r"(C|M|X-C|X-M)-\d{9}\D{1}\d{0,2}", ident_cely)):
         logger.debug("core.ident_cely.get_record_from_ident.archeologicka_akce", extra={"ident_cely": ident_cely})
         return get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if bool(re.fullmatch(r"(C|M|X-C|X-M)-9\d{6,9}\D{1}", ident_cely)):
@@ -477,7 +504,7 @@ def get_record_from_ident(ident_cely):
     if bool(re.fullmatch(r"(BIB|X-BIB)-\d{7,9}", ident_cely)):
         logger.debug("core.ident_cely.get_record_from_ident.zdroj", extra={"ident_cely": ident_cely})
         return get_object_or_404(ExterniZdroj, ident_cely=ident_cely)
-    if bool(re.fullmatch(r"(C|M|X-C|X-M)-\w{7,10}\D{1}-D\d{2}", ident_cely)):
+    if bool(re.fullmatch(r"(C|M|X-C|X-M)-\w{7,10}\D{1}\d{0,2}-D\d{2}", ident_cely)):
         logger.debug("core.ident_cely.get_record_from_ident.dokumentacni_jednotka", extra={"ident_cely": ident_cely})
         return get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     if bool(re.fullmatch(r"(C|M|X-C|X-M)-(N|L|K)\d{7,9}-D\d{2}", ident_cely)):
@@ -485,9 +512,15 @@ def get_record_from_ident(ident_cely):
             "core.ident_cely.get_record_from_ident.dokumentacni_jednotka_lokality", extra={"ident_cely": ident_cely}
         )
         return get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
-    if bool(re.fullmatch(r"(C|M|X-C|X-M)-\w{7,10}\D{1}-K\d{3}", ident_cely)):
+    if bool(re.fullmatch(r"(C|M|X-C|X-M)-\w{7,10}\D{1}\d{0,2}-K\d{3}", ident_cely)):
         logger.debug(
             "core.ident_cely.get_record_from_ident.komponenta_on_dokumentacni_jednotka",
+            extra={"ident_cely": ident_cely},
+        )
+        return get_object_or_404(Komponenta, ident_cely=ident_cely)
+    if bool(re.fullmatch(r"(C|M|X-C|X-M)-(N|L|K)\d{7,9}-K\d{3}", ident_cely)):
+        logger.debug(
+            "core.ident_cely.get_record_from_ident.komponenta_on_dokumentacni_jednotka_lokality",
             extra={"ident_cely": ident_cely},
         )
         return get_object_or_404(Komponenta, ident_cely=ident_cely)
