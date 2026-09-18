@@ -1001,6 +1001,9 @@ class Permissions(models.Model):
         dok_tvary_edit = "dok_tvary_edit", _("core.models.permissions.actionChoices.dok_tvary_edit")
         dok_tvary_smazat = "dok_tvary_smazat", _("core.models.permissions.actionChoices.dok_tvary_smazat")
         dok_zapsat_do_archz = "dok_zapsat_do_archz", _("core.models.permissions.actionChoices.dok_zapsat_do_archz")
+        dok_zapsat_vlastni_ident = "dok_zapsat_vlastni_ident", _(
+            "core.models.permissions.actionChoices.dok_zapsat_vlastni_ident"
+        )
         dok_zapsat_do_projekt = "dok_zapsat_do_projekt", _(
             "core.models.permissions.actionChoices.dok_zapsat_do_projekt"
         )
