@@ -67,13 +67,21 @@ migraci proto ověřte, že je zapnutý:
    SELECT tgenabled FROM pg_trigger
    WHERE tgname = 'trg_validate_geometries' AND NOT tgisinternal;
 
-Výsledek musí být ``O``. Hodnota ``D`` znamená vypnutý trigger – buď spusťte
-migraci znovu (není zaznamenaná jako hotová, takže proběhne celá a trigger na
-konci zapne), nebo ho zapněte ručně:
+Výsledek musí být ``O``. Hodnota ``D`` znamená vypnutý trigger. Správné
+řešení je **spustit migraci znovu**: tvrdě ukončená migrace není zaznamenaná
+jako hotová, takže proběhne celá, dokončí backfill a trigger na konci zapne.
+
+Ruční zapnutí
 
 .. code-block:: sql
 
    ALTER TABLE pian ENABLE TRIGGER trg_validate_geometries;
+
+je jen **dočasná záplata, ne náhrada**. Migrace zůstane nezaznamenaná, takže ji
+``entrypoint.sh`` spustí při příštím nasazení – a ta trigger na dobu backfillu
+zase vypne, tentokrát nečekaně a za běhu aplikace. Po ručním zapnutí proto
+migraci co nejdřív doběhněte podle postupu v `Postup prvního nasazení`_
+(zastavená aplikace, pak ``migrate``).
 
 Totéž hlídá test ``PianGeomTriggerTests.test_migrace_nechala_trigger_zapnuty``.
 

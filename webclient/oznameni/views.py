@@ -2,7 +2,6 @@ import logging
 
 import simplejson as json
 from core.constants import OBLAST_CECHY, PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_OZNAMENY, PROJEKT_STAV_VYTVORENY
-from core.coordTransform import convertToJTSK
 from core.decorators import odstavka_in_progress
 from core.forms import CheckStavNotChangedForm
 from core.ident_cely import get_temporary_project_ident
@@ -99,13 +98,14 @@ class OznameniZapsatView(OznameniView):
                 projekt.suppress_signal = True
                 projekt.typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
                 dalsi_katastry = form_projekt.cleaned_data["katastry"]
-                wgs84_x1 = float(request.POST.get("coordinate_x1"))
-                wgs84_x2 = float(request.POST.get("coordinate_x2"))
-                try:
-                    sjtsk_x1 = float(request.POST.get("coordinate_sjtsk_x1"))
-                    sjtsk_x2 = float(request.POST.get("coordinate_sjtsk_x2"))
-                except (TypeError, ValueError):
-                    sjtsk_x1, sjtsk_x2 = convertToJTSK(wgs84_x1, wgs84_x2)
+                # Všechna čtyři souřadnicová pole jsou ve formuláři povinná
+                # (``ProjektOznameniForm``), takže sem se dostane jen požadavek,
+                # který je má vyplněná – dřívější dopočet JTSK z WGS84 byl
+                # nedosažitelný, protože formulář by neprošel validací.
+                wgs84_x1 = float(request.POST["coordinate_x1"])
+                wgs84_x2 = float(request.POST["coordinate_x2"])
+                sjtsk_x1 = float(request.POST["coordinate_sjtsk_x1"])
+                sjtsk_x2 = float(request.POST["coordinate_sjtsk_x2"])
                 projekt.geom_sjtsk = Point(sjtsk_x1, sjtsk_x2, srid=5514)
                 projekt.geom = Point(wgs84_x1, wgs84_x2)
                 projekt.geom_system = "5514"

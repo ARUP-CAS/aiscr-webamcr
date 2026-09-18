@@ -1695,11 +1695,11 @@ class OdkazZAtomFeeduTests(SimpleTestCase):
 
     FEED = "https://atom.cuzk.cz/RUIAN-S-K-Z/datasetFeeds/CZ-00025712-CUZK_RUIAN-S-K-Z_1.xml"
     JMENO = "20260915_ST_ZKSH.xml.zip"
-    HOSTY = {"vdp.cuzk.gov.cz", "atom.cuzk.cz"}
+    HOSTY = {"https://vdp.cuzk.gov.cz/vymenny_format/soucasna/", "https://atom.cuzk.cz/"}
 
     def _over(self, href):
         """
-        Ověří odkaz proti pevné sadě povolených hostitelů.
+        Ověří odkaz proti pevné sadě povolených původů.
 
         :param href: Testovaný odkaz.
         :return: Výsledek ověření.
@@ -1725,6 +1725,19 @@ class OdkazZAtomFeeduTests(SimpleTestCase):
         """Jméno souboru jen jako podřetězec nestačí."""
         self.assertFalse(self._over(f"https://vdp.cuzk.gov.cz/x/{self.JMENO}.exe"))
         self.assertFalse(self._over(f"https://vdp.cuzk.gov.cz/x/?f={self.JMENO}"))
+
+    def test_jiny_port_je_jiny_puvod(self):
+        """
+        Port patří k původu.
+
+        ``urlsplit().hostname`` ho zahazuje, takže bez porovnání portu by
+        ``vdp.cuzk.gov.cz:8080`` prošel jako povolený ``vdp.cuzk.gov.cz``.
+        """
+        self.assertFalse(self._over(f"https://vdp.cuzk.gov.cz:8080/x/{self.JMENO}"))
+
+    def test_vychozi_port_schematu_je_tentyz_puvod(self):
+        """``https://h`` a ``https://h:443`` jsou totéž."""
+        self.assertTrue(self._over(f"https://vdp.cuzk.gov.cz:443/vymenny_format/soucasna/{self.JMENO}"))
 
 
 class ZnamenkovaKonvenceTests(SimpleTestCase):
@@ -1823,3 +1836,80 @@ class PropagacePrejmenovaniTests(TestCase):
 
         historie.assert_not_called()
         zaznam.save.assert_called_once()
+
+
+class PresmerovaniPriStahovaniTests(SimpleTestCase):
+    """
+    Testy ověřování přesměrování při stahování (S3).
+
+    Kontrola odkazu z feedu se dívá jen na první skok. Kdyby ``requests`` směl
+    přesměrování vyřídit sám, stačilo by z povolené adresy odpovědět ``302``
+    na libovolnou jinou a soubor by se stáhl odtamtud – přesně ta třída SSRF,
+    kterou měla kontrola zavřít.
+    """
+
+    POVOLENE = {("vdp.cuzk.gov.cz", 443)}
+
+    @staticmethod
+    def _odpoved(status, location=None):
+        """
+        Sestaví odpověď ``requests`` s daným stavem a hlavičkou ``Location``.
+
+        :param status: HTTP stavový kód.
+        :param location: Hodnota hlavičky ``Location``, nebo ``None``.
+        :return: Instance :class:`requests.Response`.
+        """
+        import requests
+
+        odpoved = requests.Response()
+        odpoved.status_code = status
+        odpoved.raw = mock.Mock()
+        if location:
+            odpoved.headers["Location"] = location
+        return odpoved
+
+    def test_presmerovani_mimo_povolene_puvody_se_odmitne(self):
+        """Skok na cizí původ stahování zastaví, ne přesměruje."""
+        from heslar.ruian_sync import vfr_download
+
+        odpovedi = [self._odpoved(302, "https://evil.example/soubor.zip")]
+        with mock.patch.object(vfr_download.requests, "get", side_effect=odpovedi):
+            with self.assertRaises(vfr_download.RuianNeduveryhodnePresmerovaniError):
+                vfr_download._otevri_s_overenim_presmerovani(
+                    "https://vdp.cuzk.gov.cz/a.zip", timeout=5, povolene_puvody=self.POVOLENE
+                )
+
+    def test_presmerovani_v_ramci_povoleneho_puvodu_projde(self):
+        """Přesměrování uvnitř téhož původu je legitimní."""
+        from heslar.ruian_sync import vfr_download
+
+        odpovedi = [
+            self._odpoved(301, "https://vdp.cuzk.gov.cz/jinam/a.zip"),
+            self._odpoved(200),
+        ]
+        with mock.patch.object(vfr_download.requests, "get", side_effect=odpovedi):
+            odpoved = vfr_download._otevri_s_overenim_presmerovani(
+                "https://vdp.cuzk.gov.cz/a.zip", timeout=5, povolene_puvody=self.POVOLENE
+            )
+
+        self.assertEqual(odpoved.status_code, 200)
+
+    def test_zacykleni_se_utne(self):
+        """Nekonečná smyčka přesměrování skončí chybou, ne zatuhnutím."""
+        from heslar.ruian_sync import vfr_download
+
+        smycka = [self._odpoved(302, "https://vdp.cuzk.gov.cz/a.zip") for _ in range(20)]
+        with mock.patch.object(vfr_download.requests, "get", side_effect=smycka):
+            with self.assertRaises(vfr_download.RuianNeduveryhodnePresmerovaniError):
+                vfr_download._otevri_s_overenim_presmerovani(
+                    "https://vdp.cuzk.gov.cz/a.zip", timeout=5, povolene_puvody=self.POVOLENE
+                )
+
+    def test_bez_presmerovani_vrati_odpoved(self):
+        """Běžné stažení se nemá čím zdržet."""
+        from heslar.ruian_sync import vfr_download
+
+        with mock.patch.object(vfr_download.requests, "get", side_effect=[self._odpoved(200)]):
+            odpoved = vfr_download._otevri_s_overenim_presmerovani("https://vdp.cuzk.gov.cz/a.zip", timeout=5)
+
+        self.assertEqual(odpoved.status_code, 200)

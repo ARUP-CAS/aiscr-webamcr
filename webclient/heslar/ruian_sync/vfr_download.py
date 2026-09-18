@@ -190,24 +190,74 @@ def build_change_url(day: date) -> str:
 # ---------------------------------------------------------------------------
 
 
+class RuianNeduveryhodnePresmerovaniError(Exception):
+    """Stahování bylo přesměrováno mimo povolené původy."""
+
+
+#: Kolik přesměrování se nejvýš projde, než se stahování vzdá.
+_MAX_PRESMEROVANI = 5
+
+
+def _otevri_s_overenim_presmerovani(url: str, *, timeout: int, povolene_puvody=None):
+    """
+    Otevře streamovaný požadavek a přesměrování projde ručně s kontrolou původu.
+
+    :param url: Výchozí URL.
+    :param timeout: HTTP timeout v sekundách.
+    :param povolene_puvody: Množina povolených původů ``(hostitel, port)``;
+        ``None`` povolí jen původ výchozí adresy.
+    :return: Otevřená odpověď ``requests.Response`` (volající ji uzavře).
+    :raises RuianNeduveryhodnePresmerovaniError: Při přesměrování mimo povolené
+        původy nebo při překročení :data:`_MAX_PRESMEROVANI`.
+    """
+    povolene = set(povolene_puvody) if povolene_puvody else {_puvod(url)}
+    aktualni = url
+    for _ in range(_MAX_PRESMEROVANI + 1):
+        resp = requests.get(aktualni, stream=True, timeout=timeout, allow_redirects=False)
+        if not resp.is_redirect and not resp.is_permanent_redirect:
+            return resp
+        umisteni = resp.headers.get("Location", "")
+        resp.close()
+        cil = urljoin(aktualni, umisteni)
+        if _puvod(cil) not in povolene:
+            logger.error(
+                "heslar.ruian_sync.vfr_download._otevri_s_overenim_presmerovani.cizi_puvod",
+                extra={"z": aktualni[:200], "na": cil[:200], "povolene_puvody": sorted(map(str, povolene))},
+            )
+            raise RuianNeduveryhodnePresmerovaniError(f"Přesměrování z {aktualni} na {cil} míří mimo povolené původy.")
+        aktualni = cil
+    raise RuianNeduveryhodnePresmerovaniError(f"Stahování {url} překročilo {_MAX_PRESMEROVANI} přesměrování.")
+
+
 def _stream_to_file(
     url: str,
     target_path: Path,
     *,
     chunk_size: int = _DEFAULT_CHUNK_SIZE,
     timeout: int = _DEFAULT_TIMEOUT,
+    povolene_puvody=None,
 ) -> Optional[Path]:
     """
     Stáhne URL streamovaně do lokálního souboru.
+
+    Přesměrování se **nenásledují automaticky**. Ověření odkazu z ATOM feedu
+    (:func:`_je_duveryhodny_odkaz`) kontroluje jen první skok; kdyby ``requests``
+    směl přesměrování vyřídit sám, stačilo by odpovědět z povolené adresy
+    ``302`` na libovolnou jinou a soubor by se stáhl odtamtud. Každý skok proto
+    prochází stejnou kontrolou původu.
 
     :param url: URL ke stažení.
     :param target_path: Cílová cesta na disku.
     :param chunk_size: Velikost chunku v bytech.
     :param timeout: HTTP timeout v sekundách.
+    :param povolene_puvody: Množina původů ``(hostitel, port)``, na které se smí
+        přesměrovat; ``None`` povolí jen původ samotného ``url``.
 
         :return: ``target_path`` při úspěchu, ``None`` při HTTP 404.
         :raises requests.HTTPError: Při jiných HTTP chybách než 404.
         :raises requests.RequestException: Při síťové chybě.
+        :raises RuianNeduveryhodnePresmerovaniError: Při přesměrování mimo
+            povolené původy nebo při zacyklení.
         :raises RuianDownloadTooLargeError: Pokud přenos přeroste
             :data:`_MAX_DOWNLOAD_BYTES`; rozdělaný ``.tmp`` soubor se smaže.
     """
@@ -215,7 +265,7 @@ def _stream_to_file(
     target_path.parent.mkdir(parents=True, exist_ok=True)
     temp_path = target_path.with_name(target_path.name + ".tmp")
     try:
-        with requests.get(url, stream=True, timeout=timeout) as resp:
+        with _otevri_s_overenim_presmerovani(url, timeout=timeout, povolene_puvody=povolene_puvody) as resp:
             if resp.status_code == 404:
                 logger.debug("heslar.ruian_sync.vfr_download._stream_to_file.not_found", extra={"url": url})
                 return None
@@ -370,6 +420,38 @@ def _parse_atom_feed(feed_url: str, timeout: int = 60) -> list:
 _POVOLENA_SCHEMATA_ODKAZU = frozenset({"http", "https"})
 
 
+def _puvod(url: str):
+    """
+    Vrátí původ URL jako dvojici ``(hostitel, port)``.
+
+    Port je součástí původu schválně: ``urlsplit().hostname`` ho zahazuje, takže
+    ``vdp.cuzk.gov.cz:8080`` by se jinak tvářil jako povolený ``vdp.cuzk.gov.cz``.
+    Chybějící port se doplní podle schématu, aby ``https://h`` a ``https://h:443``
+    byly tentýž původ.
+
+    :param url: URL nebo jen ``scheme://host``.
+    :return: Dvojice ``(hostitel malými písmeny, port)``; ``(None, None)``
+        u adresy bez hostitele.
+    """
+    from urllib.parse import urlsplit
+
+    rozklad = urlsplit(url)
+    if not rozklad.hostname:
+        return (None, None)
+    port = rozklad.port or {"https": 443, "http": 80}.get(rozklad.scheme.lower())
+    return (rozklad.hostname.lower(), port)
+
+
+def _puvody(urls) -> set:
+    """
+    Převede adresy na množinu původů pro porovnání.
+
+    :param urls: Iterovatelné URL adres.
+    :return: Množina dvojic ``(hostitel, port)`` bez prázdných hodnot.
+    """
+    return {_puvod(u) for u in urls if u} - {(None, None)}
+
+
 def _je_duveryhodny_odkaz(href: str, feed_url: str, expected_filename: str, povolene_hosty=None) -> bool:
     """
     Ověří, že odkaz z ATOM feedu míří na očekávaný soubor u důvěryhodného hostitele.
@@ -407,18 +489,18 @@ def _je_duveryhodny_odkaz(href: str, feed_url: str, expected_filename: str, povo
         return False
 
     if povolene_hosty is None:
-        povolene_hosty = {urlsplit(feed_url).hostname, urlsplit(_get_setting("base_url") or "").hostname}
-    povolene_hosty = {h.lower() for h in povolene_hosty if h}
+        povolene_hosty = {feed_url, _get_setting("base_url") or ""}
+    povolene = _puvody(povolene_hosty)
 
     if odkaz.scheme.lower() not in _POVOLENA_SCHEMATA_ODKAZU or not odkaz.hostname:
         duvod = "nepovolene_schema"
-    elif odkaz.hostname.lower() not in povolene_hosty:
-        duvod = "cizi_hostitel"
+    elif _puvod(href) not in povolene:
+        duvod = "cizi_puvod"
     else:
         return True
     logger.warning(
         "heslar.ruian_sync.vfr_download._je_duveryhodny_odkaz.odmitnuto",
-        extra={"duvod": duvod, "href": href[:200], "povolene_hosty": sorted(povolene_hosty)},
+        extra={"duvod": duvod, "href": href[:200], "povolene_puvody": sorted(map(str, povolene))},
     )
     return False
 
@@ -432,7 +514,8 @@ def download_via_atom(
     """
     Stáhne ``ZKSH`` soubor pro daný den přes ATOM feed (fallback k deterministické URL).
 
-    Hledá v ATOM feedu položku, jejíž URL obsahuje očekávaný název souboru
+    Hledá v ATOM feedu položku, jejíž URL končí přesně očekávaným názvem
+    souboru a míří na povolený původ (viz :func:`_je_duveryhodny_odkaz`)
     (``<YYYYMMDD>_ST_ZKSH.xml.zip``). Pokud taková položka neexistuje, vrací
     ``None``.
 
@@ -448,7 +531,11 @@ def download_via_atom(
     for _title, href in _parse_atom_feed(feed):
         if _je_duveryhodny_odkaz(href, feed, expected_filename):
             target_path = Path(target_dir) / expected_filename
-            return _stream_to_file(href, target_path)
+            return _stream_to_file(
+                href,
+                target_path,
+                povolene_puvody=_puvody({feed, _get_setting("base_url") or ""}),
+            )
     logger.debug(
         "heslar.ruian_sync.vfr_download.download_via_atom.not_found",
         extra={"day": day.isoformat(), "expected": expected_filename},
