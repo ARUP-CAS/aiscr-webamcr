@@ -207,28 +207,84 @@ Funkce
 
    :return: Vrací proměnná ``mime_type``.
 
-.. py:function:: get_cadastre_from_point(point)
+.. py:function:: get_cadastre_from_point(point, exclude_kod)
 
-   Funkce pro získaní katastru z bodu geomu.
+   Vrátí katastr obsahující zadaný bod v EPSG:5514 (S-JTSK).
 
-   :param point: Parametr ``point`` předává se do volání ``raw()``, ``debug()``.
+   Vstup je v JTSK v konvenci projektu (záporné hodnoty, viz
+   ``core.coordTransform.convertToJTSK`` vracející ``[-Y, -X]``)
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``katastr``, None.
+   :param point: Dvojice ``(x, y)`` v EPSG:5514 (záporná konvence projektu).
+   :param exclude_kod: Volitelný kód katastru, který má být ze spatial query
+       vyloučen. Používá se např. v ``heslar.ruian_sync.reassign`` při mazání
+       katastru – aby spatial intersect nevrátil právě mazaný katastr (který
+       je stále v DB až do okamžiku ``katastr.delete()``) a reassign měl
+       šanci najít druhý nejbližší.
 
-.. py:function:: get_cadastre_from_point_with_geometry(point)
+   :return: Instance :class:`RuianKatastr` nebo ``None``.
 
-   Funkce pro získaní katastru s geometrií z bodu geomu.
+.. py:function:: reprezentativni_bod_sql(sloupec)
 
-   :param point: Parametr ``point`` předává se do volání ``debug()``, ``execute()``.
+   Vrátí SQL výraz pro reprezentativní bod PIANu.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: seznam, None.
+   Do prostorového porovnání s katastrem nevstupuje celá geometrie PIANu, ale
+   jediný bod – viz issue #315: dokud se porovnávala celá geometrie, PIAN
+   ležící přes dvě katastrální území matchoval obě a hlavní katastr vycházel
+   nejednoznačně. Bod se volí podle typu geometrie:
 
-.. py:function:: get_all_pians_with_akce(ident_cely)
+   * ``LineString`` – ``ST_LineInterpolatePoint(geom, 0.5)``, střed linie;
+   * ``Polygon`` / ``MultiPolygon`` – ``ST_PointOnSurface(geom)``, který na
+     rozdíl od centroidu leží vždy uvnitř plochy;
+   * ostatní – ``ST_Centroid(geom)``.
+
+   Funkce existuje proto, aby týž výraz nebyl opsaný na dvou místech: používá
+   ho :func:`get_all_pians_with_akce` i
+   ``heslar.ruian_sync.reassign._compute_az_katastr_assignment``. Rozcházely
+   by se jinak tiše a hlavní katastr by u téhož PIANu vycházel jinak podle
+   toho, kterou cestou se počítá.
+
+   :param sloupec: SQL výraz s geometrií PIANu v EPSG:5514 (název sloupce
+       včetně aliasu tabulky, např. ``pian.geom_sjtsk``).
+   :return: SQL ``CASE`` výraz vracející bod.
+
+.. py:function:: get_all_pians_with_akce(ident_cely, exclude_kod)
 
    Funkce pro získaní všech pianů s akci.
 
+   Spatial intersect probíhá v EPSG:5514, vrácená geometrie ``pian_geom`` je
+   ale ve WGS84 (EPSG:4326).
+
+   Do ``ST_Intersects`` nevstupuje celá geometrie PIANu, ale **jediný
+   reprezentativní bod**. Důvod je z issue #315: dokud se porovnávala celá
+   geometrie, PIAN ležící přes dvě katastrální území matchoval obě a hlavní
+   katastr vycházel nejednoznačně. Bod se volí podle typu geometrie:
+
+   * ``LineString`` – ``ST_LineInterpolatePoint(geom, 0.5)``, střed linie;
+   * ``Polygon`` / ``MultiPolygon`` – ``ST_PointOnSurface(geom)``, který leží
+     **vždy uvnitř** (centroid může u konkávních tvarů padnout mimo);
+   * ostatní (typicky ``Point``) – ``ST_Centroid(geom)``.
+
+   .. note::
+      Větev pro linie byla zamýšlená už při zavedení ``CASE`` (2022), ale
+      kvůli dvěma shodným podmínkám na ``ST_LineString`` byla nedosažitelná –
+      fakticky se pro všechny typy geometrie používal centroid. Issue #372
+      mrtvou větev odstranilo a plochy navíc převedlo na
+      ``ST_PointOnSurface``. Volba hlavního katastru se proto může u linií
+      a konkávních ploch lišit od stavu před #372.
+
+      Určení ``zm10``/``zm50`` PIANu (a tím i jeho ``ident_cely``) to
+      **neovlivňuje** – počítá se nezávisle v :mod:`pian.forms` a
+      :mod:`core.management.commands.check_pian_properties`, které si
+      reprezentativní bod odvozují samy a u ploch dál používají centroid.
+
    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``execute()``.
-   :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
+   :param exclude_kod: Volitelný kód katastru, který se vyloučí ze
+       spatial intersect (``ST_Intersects``). Používá se v
+       ``heslar.ruian_sync.reassign`` při mazání katastru.
+
+   :return: Seznam slovníků s klíči ``id``, ``pian_ident_cely``, ``pian_geom``,
+       ``dj``, ``dj_katastr`` a ``dj_katastr_id``; ``None``, pokud dotaz skončí
+       výjimkou.
 
 .. py:function:: update_main_katastr_within_ku(ident_cely, katastr)
 
@@ -237,22 +293,34 @@ Funkce
    :param ident_cely: Parametr ``ident_cely`` pracuje se s atributy ``split``.
    :param katastr: Parametr ``katastr`` předává se do volání ``execute()``, pracuje se s atributy ``pk``.
 
-.. py:function:: update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
+.. py:function:: update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction, exclude_kod)
 
    Aktualizuje katastry pro všechny akce a lokality související s dokumentační jednotkou.
 
    :param dj: Dokumentační jednotka obsahující odkaz na akci/lokalitu.
    :param fedora_transaction: Aktivní Fedora transakce pro uložení metadat.
+   :param exclude_kod: Volitelný kód katastru, který se vyloučí ze spatial
+       intersect při výpočtu hlavního i ostatních katastrů. Používá se
+       v ``heslar.ruian_sync.reassign.reassign_az`` při mazání katastru
+       – aby se právě mazaný katastr nevybral zpět jako nové přiřazení.
 
 .. py:function:: get_pians_from_akce(katastr, akce_ident_cely)
 
-   Funkce pro bodu, geomu a presnosti z akce.
+   Funkce pro sestavení seznamu bodů, geometrií a přesností pianů dokumentačních jednotek akce.
 
-   :param katastr: Parametr ``katastr`` předává se do volání ``debug()``, ``raw()``, pracuje se s atributy ``pk``.
-   :param akce_ident_cely: Identifikátor ``akce_ident_cely`` používaný pro dohledání cílového záznamu.
+   Pro každou dokumentační jednotku akce s napojeným pianem vrátí centroid geometrie pianu,
+   její WKT (mimo DJ typu katastr), zkratku přesnosti a barvu odlišující zobrazovanou DJ.
+   Pokud akce žádné piany nemá, vrátí jediný bod s definičním bodem katastru a jeho bounding boxem.
+   Definiční bod i hranice katastru jsou v DB v EPSG:5514 a transformují se na EPSG:4326 pro frontend.
 
-   :return: Vrací proměnná ``pians``.
-   :raises CannotFindCadasterCentre: Vyvolá se při zpracování zachycené výjimky typu ``IndexError``.
+   :param katastr: Katastr, z jehož definičního bodu a hranice se odvodí výchozí bod a bbox mapy.
+   :param akce_ident_cely: Ident_cely akce nebo dokumentační jednotky; DJ se dohledávají
+       podle prefixu před ``-D``.
+
+   :return: Seznam slovníků s klíči ``lat``, ``lng``, ``zoom``, ``geom``, ``presnost``,
+       ``pian_ident_cely``, ``color``, ``bbox`` a (u pianů DJ) ``DJ_ident_cely``.
+   :raises CannotFindCadasterCentre: Pokud se nepodaří transformovat definiční bod nebo hranici
+       katastru do EPSG:4326, nebo pokud při zpracování dat dojde k ``IndexError``.
 
 .. py:function:: get_dj_pians_centroid(ident_cely, lat, lng)
 

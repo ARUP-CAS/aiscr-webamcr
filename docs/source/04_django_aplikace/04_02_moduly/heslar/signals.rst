@@ -95,6 +95,11 @@ Funkce
 
    Provádí operaci ruian katastr delete repository container.
 
+   Pokud má instance ``suppress_signal=True``, signál neprovede žádnou
+   operaci ve Fedora repozitáři – stejné chování jako u ostatních signálů.
+   Volající tak může explicitně potlačit Fedora zápis přes
+   ``instance.suppress_signal = True`` před voláním ``.delete()``.
+
    :param sender: Model třídy, která poslala signál.
    :param instance: Parametr ``instance`` předává se do volání ``get_or_create_transaction()``, ``on_commit()``.
    :param kwargs: Další klíčové argumenty signálu.
@@ -103,6 +108,9 @@ Funkce
 
    Provádí operaci ruian kraj delete repository container.
 
+   Respektuje ``instance.suppress_signal`` – při ``True`` se Fedora
+   operace neprovede.
+
    :param sender: Model třídy, která poslala signál.
    :param instance: Parametr ``instance`` předává se do volání ``get_or_create_transaction()``, ``on_commit()``.
    :param kwargs: Další klíčové argumenty signálu.
@@ -110,6 +118,9 @@ Funkce
 .. py:function:: ruian_okres_delete_repository_container(sender, instance)
 
    Provádí operaci ruian okres delete repository container.
+
+   Respektuje ``instance.suppress_signal`` – při ``True`` se Fedora
+   operace neprovede.
 
    :param sender: Model třídy, která poslala signál.
    :param instance: Instance modelu, která byla uložena.

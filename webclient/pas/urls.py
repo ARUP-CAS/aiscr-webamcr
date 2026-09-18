@@ -36,11 +36,6 @@ urlpatterns = [
         views.post_point_position_2_katastre,
         name="post_point_position_2_katastre",
     ),
-    path(
-        "mapa-zjisti-katastr-geom",
-        views.post_point_position_2_katastre_with_geom,
-        name="post_point_position_2_katastre_with_geom",
-    ),
     path("spoluprace/smazat/<int:pk>", views.smazat_spolupraci, name="spoluprace_smazani"),
     path(
         "spoluprace/projekty/<int:pk>",

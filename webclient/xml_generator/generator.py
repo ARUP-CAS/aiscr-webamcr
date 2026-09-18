@@ -1,4 +1,5 @@
 import datetime
+import functools
 import logging
 import os
 import re
@@ -131,6 +132,21 @@ class DocumentGenerator:
         """
         return os.path.join("xml_generator/definitions/", AMCR_XSD_FILENAME)
 
+    @staticmethod
+    @functools.lru_cache(maxsize=1)
+    def _get_schema_tree(schema_path):
+        """
+        Načte a naparsuje XSD schema, výsledek je cachovaný po celou dobu běhu procesu.
+
+        XSD soubor se během běhu nemění, opakované ``etree.parse()`` při každém
+        volání :func:`_parse_schema`/:func:`get_ref_type_attribute_name` bylo
+        zbytečné čtení a parsování ze disku (desítky ms na volání).
+
+        :param schema_path: Cesta k XSD schema souboru.
+        :return: Naparsovaný ``lxml.etree._ElementTree``.
+        """
+        return etree.parse(schema_path, etree.XMLParser())
+
     def _parse_schema(self, model_name):
         """
                Zpracuje schema.
@@ -138,8 +154,7 @@ class DocumentGenerator:
                :param model_name: Název modelu používaný pro cílení operace.
         :return: Výstup funkce odpovídající implementované logice.
         """
-        parser = etree.XMLParser()
-        tree = etree.parse(self.get_path_to_schema(), parser)
+        tree = self._get_schema_tree(self.get_path_to_schema())
         return tree.xpath(self._create_xpath_query(model_name))
 
     @staticmethod
@@ -205,46 +220,53 @@ class DocumentGenerator:
             from pian.models import Pian
             from projekt.models import Projekt
 
-            if isinstance(record, Projekt):
-                record = record.__class__.objects.annotate(
-                    geom_st_asgml=AsGML("geom", nprefix="gml"),
-                    geom_st_astext=AsText("geom"),
-                    geom_sjtsk_st_asgml=AsGML("geom_sjtsk", nprefix="gml"),
-                    geom_sjtsk_st_astext=AsText("geom_sjtsk"),
-                ).get(pk=record.pk)
-            elif isinstance(record, DokumentExtraData):
-                try:
+            cache_key = (record.__class__, record.pk)
+            if cache_key in self._geom_annotation_cache:
+                record = self._geom_annotation_cache[cache_key]
+            else:
+                if isinstance(record, Projekt):
                     record = record.__class__.objects.annotate(
                         geom_st_asgml=AsGML("geom", nprefix="gml"),
                         geom_st_astext=AsText("geom"),
                         geom_sjtsk_st_asgml=AsGML("geom_sjtsk", nprefix="gml"),
                         geom_sjtsk_st_astext=AsText("geom_sjtsk"),
                     ).get(pk=record.pk)
-                except ObjectDoesNotExist:
-                    record = DokumentExtraData()
-                    setattr(record, "geom_st_asgml", None)
-                    setattr(record, "geom_st_astext", None)
-                    setattr(record, "geom_sjtsk_st_asgml", None)
-                    setattr(record, "geom_sjtsk_st_astext", None)
-            elif isinstance(record, VyskovyBod):
-                record = record.__class__.objects.annotate(
-                    geom_st_asgml=AsGML("geom", nprefix="gml"),
-                    geom_st_astext=AsText("geom"),
-                ).get(pk=record.pk)
-            elif isinstance(record, SamostatnyNalez) or isinstance(record, Pian):
-                record = record.__class__.objects.annotate(
-                    geom_st_asgml=AsGML("geom", nprefix="gml"),
-                    geom_st_astext=AsText("geom"),
-                    geom_sjtsk_st_asgml=AsGML("geom_sjtsk", nprefix="gml"),
-                    geom_sjtsk_st_astext=AsText("geom_sjtsk"),
-                ).get(pk=record.pk)
-            elif isinstance(record, RuianKatastr) or isinstance(record, RuianKraj) or isinstance(record, RuianOkres):
-                record = record.__class__.objects.annotate(
-                    definicni_bod_st_asgml=AsGML("definicni_bod", nprefix="gml"),
-                    definicni_bod_st_astext=AsText("definicni_bod"),
-                    hranice_st_asgml=AsGML("hranice", nprefix="gml"),
-                    hranice_st_astext=AsText("hranice"),
-                ).get(pk=record.pk)
+                elif isinstance(record, DokumentExtraData):
+                    try:
+                        record = record.__class__.objects.annotate(
+                            geom_st_asgml=AsGML("geom", nprefix="gml"),
+                            geom_st_astext=AsText("geom"),
+                            geom_sjtsk_st_asgml=AsGML("geom_sjtsk", nprefix="gml"),
+                            geom_sjtsk_st_astext=AsText("geom_sjtsk"),
+                        ).get(pk=record.pk)
+                    except ObjectDoesNotExist:
+                        record = DokumentExtraData()
+                        setattr(record, "geom_st_asgml", None)
+                        setattr(record, "geom_st_astext", None)
+                        setattr(record, "geom_sjtsk_st_asgml", None)
+                        setattr(record, "geom_sjtsk_st_astext", None)
+                elif isinstance(record, VyskovyBod):
+                    record = record.__class__.objects.annotate(
+                        geom_st_asgml=AsGML("geom", nprefix="gml"),
+                        geom_st_astext=AsText("geom"),
+                    ).get(pk=record.pk)
+                elif isinstance(record, SamostatnyNalez) or isinstance(record, Pian):
+                    record = record.__class__.objects.annotate(
+                        geom_st_asgml=AsGML("geom", nprefix="gml"),
+                        geom_st_astext=AsText("geom"),
+                        geom_sjtsk_st_asgml=AsGML("geom_sjtsk", nprefix="gml"),
+                        geom_sjtsk_st_astext=AsText("geom_sjtsk"),
+                    ).get(pk=record.pk)
+                elif (
+                    isinstance(record, RuianKatastr) or isinstance(record, RuianKraj) or isinstance(record, RuianOkres)
+                ):
+                    record = record.__class__.objects.annotate(
+                        definicni_bod_st_asgml=AsGML("definicni_bod", nprefix="gml"),
+                        definicni_bod_st_astext=AsText("definicni_bod"),
+                        hranice_st_asgml=AsGML("hranice", nprefix="gml"),
+                        hranice_st_astext=AsText("hranice"),
+                    ).get(pk=record.pk)
+                self._geom_annotation_cache[cache_key] = record
             if "st_asgml" in attribute_name.lower():
                 field_name = attribute_name.lower().replace("st_asgml", "").replace("(", "").replace(")", "")
                 attribute_value = getattr(record, f"{field_name}_st_asgml")
@@ -611,10 +633,9 @@ class DocumentGenerator:
 
             :return: Vrací výsledek volání ``get()``.
         """
-        parser = etree.XMLParser()
         type_name = type_name.replace("amcr:", "")
         if type_name not in self.attribute_names:
-            tree = etree.parse(self.get_path_to_schema(), parser)
+            tree = self._get_schema_tree(self.get_path_to_schema())
             xpath_query = f"//*[@name='{type_name}']/*/*/*"
             elements = tree.xpath(xpath_query)
             if "name" in elements[0].attrib:
@@ -681,6 +702,7 @@ class DocumentGenerator:
         :param document_object: Parametr ``document_object`` slouží jako vstup pro logiku funkce ``__init__``.
         """
         self.document_object = document_object
+        self._geom_annotation_cache = {}
         ET.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
         ET.register_namespace("gml", "http://www.opengis.net/gml/3.2")
         ET.register_namespace("amcr", AMCR_NAMESPACE_URL)

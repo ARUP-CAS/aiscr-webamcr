@@ -98,3 +98,80 @@ Funkce
    :param lock_token: Token pro ověření vlastnictví importního zámku v Redis.
 
    :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem "Missing required DIRECTORY_PATH setting".
+
+.. py:function:: _zkontroluj_stari_poslednich_dat(today)
+
+   Zaloguje ``ERROR``, pokud se déle než :data:`RUIAN_NO_DOWNLOAD_ERROR_DAYS`
+   dnů nepodařilo stáhnout žádný změnový soubor.
+
+   Hlásí se ve dvou úrovních podle toho, jestli se mezera dá ještě dohnat:
+
+   * od :data:`RUIAN_NO_DOWNLOAD_ERROR_DAYS` dnů – ``dlouho_bez_dat``, tedy
+     „něco je špatně, ověřte URL“; zameškané dny jsou pořád ke stažení,
+   * od :data:`RUIAN_RETENCE_ZDROJE_DNU` dnů – ``mimo_retenci_zdroje``:
+     soubory už ze serveru zmizely, denní sync mezeru nedožene a operátor
+     musí spustit plný sync ``manage.py aktualizuj_ruian_shp``.
+
+   Hledá poslední :class:`~heslar.models.RuianSyncRun` s neprázdným
+   ``source_path`` – tedy běh, který skutečně dostal data. Běhy uzavřené jako
+   ``no_changes (404)`` ``source_path`` nemají, takže se do stáří nezapočítají
+   a dlouhá série 404 (typicky změněná URL u poskytovatele) se projeví.
+
+   Volá se **až po** stažení všech dostupných dnů, ne před ním. Delší pauza
+   v publikování je normální stav; kdyby se kontrola pouštěla na začátku,
+   hlásila by chybu i tehdy, když ji právě probíhající běh vzápětí dožene.
+
+   Nic nevyhazuje ani neblokuje sync – jen upozorní do logu, aby si toho
+   monitoring všiml.
+
+   :param today: Dnešní datum (předává volající, ať se dá test ustálit).
+
+.. py:function:: sync_ruian_changes(reassign_records)
+
+   Periodická aktualizace heslářů RÚIAN podle denních změnových VFR souborů.
+
+   Naváže na poslední úspěšný :class:`heslar.models.RuianSyncRun` (kotva
+   ``data_valid_to``) a postupně stáhne a aplikuje denní změnové VFR od
+   následujícího dne až do dnešního data. Pro každý zpracovaný den vznikne
+   jeden ``RuianSyncRun`` s vlastním auditem.
+
+   Po úspěšné aplikaci se stažený VFR ZIP **smaže** – jinak by se
+   v cílovém adresáři (``target_dir`` z ``CustomAdminSettings``,
+   skupina ``ruian_sync``) akumuloval (cca 10–30 MB / den). Při selhání
+   syncu soubor zůstane na disku pro post-mortem; další pokus stejného
+   dne ho přepíše. Cesta zůstává v ``RuianSyncRun.source_path``.
+
+   Bezpečnostní pojistka: pokud zatím neexistuje žádný úspěšný běh
+   (typicky před prvotním plným syncem přes ``manage.py
+   aktualizuj_ruian_shp``), task pouze zaloguje chybu a skončí – nestahuje
+   ani nemodifikuje data.
+
+   :param reassign_records: Pokud ``True`` (default pro produkční cron),
+       po aplikaci denních změn proběhne **cílený** spatial reassign
+       Projekt/AZ/SN dotčených změnou hranic katastrů – viz
+       :func:`heslar.ruian_sync.syncer._reassign_records_in_changed_katastry`.
+       Iteruje jen kandidáty (záznamy s vazbou na změněné katastry nebo
+       s geometrií protínající jejich novou hranici), nikoli celou DB.
+
+       Předání ``False`` (např. při ručním spuštění z shellu pro test
+       pouhého přijetí dat) reassign přeskočí; navázané záznamy se pak
+       nepřepočítají, ale upserty/delete katastrů proběhnou normálně.
+       Lze pak dohnat samostatně přes ``reassign_all`` nebo
+       ``/admin/update-katastry/``.
+
+.. py:function:: _potvrd_prazdne_dny(runy)
+
+   Uzavře jako úspěšné dny, které skončily na 404 a čekaly na potvrzení.
+
+   Volá se ve chvíli, kdy se nějaký pozdější den opravdu stáhl – tím je
+   doloženo, že URL funguje, a předcházející 404 tedy znamenaly „ten den
+   nebyly změny“, ne nedostupný zdroj.
+
+   :param runy: Seznam :class:`heslar.models.RuianSyncRun` čekajících na
+       potvrzení, v pořadí podle dne.
+
+.. py:function:: _sync_ruian_changes_locked(reassign_records)
+
+   Vlastní tělo :func:`sync_ruian_changes` běžící pod advisory lockem.
+
+   :param reassign_records: Viz :func:`sync_ruian_changes`.
