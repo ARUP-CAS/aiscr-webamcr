@@ -2,8 +2,8 @@
   "schema_version": "2",
   "generated_at": "2026-03-09T21:13:14Z",
   "task_id": "T03+T03b+T03c+T03d",
-  "note": "Kompletní analýza všech modelů. T03a pokryla: core, projekt, arch_z, uzivatel (přímé čtení). T03b doplnila: heslar, pian, pas, adb, oznameni, xml_generator (přímé čtení) + ORM vzory ve views. T03c doplnila: dokument, historie, ez, xml_generator (abstraktní modely). T03d doplnila: komponenta, lokalita, nalez, dj, neidentakce, notifikace_projekty. Coverage gap uzavřen — všech 19 Django aplikací s modely je nyní pokryto.",
-  "github_issues_crossref": "GitHub Issues nebyly přístupné bez autentizace. Bugy označeny 'nelze ověřit'. Doporučeno ruční prohledání před vytvořením issues.",
+  "note": "Complete analysis of all models. T03a covered: core, projekt, arch_z, uzivatel (direct reading). T03b added: heslar, pian, pas, adb, oznameni, xml_generator (direct reading) + ORM patterns in the views. T03c added: dokument, historie, ez, xml_generator (abstract models). T03d added: komponenta, lokalita, nalez, dj, neidentakce, notifikace_projekty. Coverage gap closed — all 19 Django applications with models are now covered.",
+  "github_issues_crossref": "GitHub Issues were not accessible without authentication. Bugs marked 'cannot verify'. Manual search recommended before creating issues.",
 
   "models": {
     "core.SouborVazby": {
@@ -12,7 +12,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": [],
       "migration_count": 26,
-      "notes": "Vazební tabulka pro soubory; typy vazeb definovány konstantami."
+      "notes": "Link table for files; the link types are defined by constants."
     },
     "core.Soubor": {
       "fields_count": 12,
@@ -20,7 +20,7 @@
       "potential_missing_indexes": ["mimetype", "sha_512"],
       "foreign_keys": ["vazba → SouborVazby"],
       "migration_count": 26,
-      "notes": "Model souboru; obsahuje antivirus check logiku a generování thumbnailů."
+      "notes": "File model; contains antivirus check logic and thumbnail generation."
     },
     "core.ProjektSekvence": {
       "fields_count": 3,
@@ -28,7 +28,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": [],
       "migration_count": 26,
-      "notes": "Sekvence pro generování ident_cely projektů. Přistupuje se přes databázi 'urgent'."
+      "notes": "Sequence for generating project ident_cely. Accessed via the 'urgent' database."
     },
     "core.OdstavkaSystemu": {
       "fields_count": 4,
@@ -43,7 +43,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": [],
       "migration_count": 26,
-      "notes": "Tabulka oprávnění pro různé typy záznamů."
+      "notes": "Permissions table for various record types."
     },
     "projekt.Projekt": {
       "fields_count": 19,
@@ -58,10 +58,10 @@
         "organizace → uzivatel.Organizace",
         "hlavni_katastr → heslar.RuianKatastr",
         "pristupnost_snapshot → heslar.Heslar",
-        "katastry M2M → heslar.RuianKatastr (přes ProjektKatastr)"
+        "katastry M2M → heslar.RuianKatastr (via ProjektKatastr)"
       ],
       "migration_count": 11,
-      "notes": "Hlavní doménový model. Obsahuje dvě geometry pole (WGS84 + S-JTSK). Stav workflow modelován přes SmallIntegerField s CHOICES."
+      "notes": "The main domain model. Contains two geometry fields (WGS84 + S-JTSK). The workflow state is modeled via a SmallIntegerField with CHOICES."
     },
     "projekt.ProjektKatastr": {
       "fields_count": 2,
@@ -69,7 +69,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": ["projekt → Projekt", "katastr → heslar.RuianKatastr"],
       "migration_count": 11,
-      "notes": "M2M vazební tabulka Projekt–RuianKatastr."
+      "notes": "M2M link table Projekt–RuianKatastr."
     },
     "arch_z.ArcheologickyZaznam": {
       "fields_count": 8,
@@ -79,7 +79,7 @@
         "pristupnost → heslar.Heslar",
         "historie → historie.HistorieVazby",
         "hlavni_katastr → heslar.RuianKatastr",
-        "katastry M2M → heslar.RuianKatastr (přes ArcheologickyZaznamKatastr)"
+        "katastry M2M → heslar.RuianKatastr (via ArcheologickyZaznamKatastr)"
       ],
       "migration_count": 20,
       "compound_indexes": [
@@ -90,7 +90,7 @@
         ["hlavni_katastr", "ident_cely", "historie"],
         ["hlavni_katastr", "ident_cely", "historie", "stav"]
       ],
-      "notes": "Dobré compound indexování. Model zahrnuje lokality i akce (diskriminační pole typ_zaznamu). Metoda save() dělá extra SELECT při každém uložení (viz n_plus_one_candidates NP1-008)."
+      "notes": "Good compound indexing. The model covers both lokality and akce (the discriminating field typ_zaznamu). The save() method does an extra SELECT on every save (see n_plus_one_candidates NP1-008)."
     },
     "arch_z.Akce": {
       "fields_count": 14,
@@ -157,7 +157,7 @@
         ["organizace", "history_vazba"],
         ["osoba", "history_vazba"]
       ],
-      "notes": "POZOR: Import cached_property z distlib.util (balíčkovací knihovna) místo functools nebo django.utils.functional — viz BUG-003 v bugs.md."
+      "notes": "WARNING: Import of cached_property from distlib.util (a packaging library) instead of functools or django.utils.functional — see BUG-003 in bugs.md."
     },
     "uzivatel.Organizace": {
       "fields_count": 17,
@@ -191,15 +191,15 @@
       "potential_missing_indexes": ["created_at", "user", "notification_type"],
       "foreign_keys": ["notification_type → UserNotificationType", "user → User"],
       "migration_count": 31,
-      "notes": "Log notifikací bez indexu na created_at — potencionálně pomalé časové dotazy."
+      "notes": "Notifications log without an index on created_at — potentially slow time-based queries."
     },
     "heslar.Heslar": {
       "fields_count": 7,
       "indexed_fields": ["ident_cely unique"],
-      "potential_missing_indexes": ["nazev_heslare FK bez explicitního db_index"],
+      "potential_missing_indexes": ["nazev_heslare FK without an explicit db_index"],
       "foreign_keys": ["nazev_heslare → HeslarNazev"],
       "migration_count": 12,
-      "notes": "Centrální číselníková tabulka. Používá se s limit_choices_to v mnoha FK; chybí explicitní index na nazev_heslare."
+      "notes": "Central controlled-vocabulary table. Used with limit_choices_to in many FKs; an explicit index on nazev_heslare is missing."
     },
     "heslar.RuianKatastr": {
       "fields_count": 6,
@@ -207,7 +207,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": ["okres → RuianOkres", "pian → pian.Pian OneToOne"],
       "migration_count": 12,
-      "notes": "Obsahuje geometrická pole (definicni_bod, hranice). Rozsáhlá tabulka (~13 000 katastrů)."
+      "notes": "Contains geometry fields (definicni_bod, hranice). A large table (~13,000 cadastres)."
     },
     "heslar.RuianKraj": {
       "fields_count": 7,
@@ -235,7 +235,7 @@
         "historie → historie.HistorieVazby"
       ],
       "migration_count": 8,
-      "notes": "Obsahuje dvě geometry pole (WGS84 + S-JTSK). Vlastnost pristupnost dělá N+1 dotaz při každém přístupu."
+      "notes": "Contains two geometry fields (WGS84 + S-JTSK). The pristupnost property does an N+1 query on every access."
     },
     "pian.Kladyzm": {
       "fields_count": 3,
@@ -243,7 +243,7 @@
       "potential_missing_indexes": ["kategorie"],
       "foreign_keys": [],
       "migration_count": 8,
-      "notes": "Prostorový index the_geom závisí na nastavení databáze."
+      "notes": "The spatial index the_geom depends on the database configuration."
     },
     "pian.PianSekvence": {
       "fields_count": 3,
@@ -270,7 +270,7 @@
         "historie → historie.HistorieVazby"
       ],
       "migration_count": 13,
-      "notes": "Model má málo db_index=True na FK polích — u tabulky s pravděpodobně tisíci záznamy je to problém pro filtrování."
+      "notes": "The model has few db_index=True on its FK fields — for a table with probably thousands of records this is a problem for filtering."
     },
     "adb.Kladysm5": {
       "fields_count": 4,
@@ -282,25 +282,25 @@
     "adb.Adb": {
       "fields_count": 12,
       "indexed_fields": ["dokumentacni_jednotka (PK+OneToOne)", "typ_sondy", "autor_popisu", "rok_popisu", "autor_revize", "rok_revize"],
-      "potential_missing_indexes": ["podnet FK bez db_index", "sm5 FK bez db_index"],
+      "potential_missing_indexes": ["podnet FK without db_index", "sm5 FK without db_index"],
       "foreign_keys": [
         "dokumentacni_jednotka → dj.DokumentacniJednotka (PK)",
         "typ_sondy → heslar.Heslar",
-        "podnet → heslar.Heslar (bez db_index)",
+        "podnet → heslar.Heslar (without db_index)",
         "autor_popisu → uzivatel.Osoba",
         "autor_revize → uzivatel.Osoba",
-        "sm5 → Kladysm5 (bez db_index)"
+        "sm5 → Kladysm5 (without db_index)"
       ],
       "migration_count": 7,
-      "notes": "Používá FieldTracker z model_utils pro sledování změn — alternativa k initial_ vzoru."
+      "notes": "Uses FieldTracker from model_utils for change tracking — an alternative to the initial_ pattern."
     },
     "adb.VyskovyBod": {
       "fields_count": 4,
       "indexed_fields": ["ident_cely unique", "geom spatial 5514 3D"],
-      "potential_missing_indexes": ["adb FK bez db_index", "typ FK bez db_index"],
+      "potential_missing_indexes": ["adb FK without db_index", "typ FK without db_index"],
       "foreign_keys": [
-        "adb → Adb (bez db_index)",
-        "typ → heslar.Heslar (bez db_index)"
+        "adb → Adb (without db_index)",
+        "typ → heslar.Heslar (without db_index)"
       ],
       "migration_count": 7
     },
@@ -317,31 +317,31 @@
       "potential_missing_indexes": [],
       "foreign_keys": ["projekt → projekt.Projekt (cascade, PK)"],
       "migration_count": 3,
-      "notes": "Jednoduchý model bez ORM problémů."
+      "notes": "A simple model without ORM problems."
     },
     "heslar.Heslar": {
       "fields_count": 7,
       "indexed_fields": ["ident_cely unique"],
-      "potential_missing_indexes": ["nazev_heslare FK bez db_index — kritické, viz BUG-005"],
-      "foreign_keys": ["nazev_heslare → HeslarNazev (bez db_index)"],
+      "potential_missing_indexes": ["nazev_heslare FK without db_index — critical, see BUG-005"],
+      "foreign_keys": ["nazev_heslare → HeslarNazev (without db_index)"],
       "migration_count": 12,
-      "notes": "nazev_heslare je filtrováno v limit_choices_to v desítkách FK polí napříč aplikací. Absence indexu způsobuje table scan při každém formulářovém dotazu."
+      "notes": "nazev_heslare is filtered in limit_choices_to in dozens of FK fields across the application. The absence of an index causes a table scan on every form query."
     },
     "heslar.HeslarHierarchie": {
       "fields_count": 3,
       "indexed_fields": [],
       "potential_missing_indexes": ["heslo_podrazene FK", "heslo_nadrazene FK"],
-      "foreign_keys": ["heslo_podrazene → Heslar (bez db_index)", "heslo_nadrazene → Heslar (bez db_index)"],
+      "foreign_keys": ["heslo_podrazene → Heslar (without db_index)", "heslo_nadrazene → Heslar (without db_index)"],
       "migration_count": 12,
-      "notes": "GOOD: __init__() správně ukládá initial hodnoty FK polí."
+      "notes": "GOOD: __init__() correctly stores the initial values of the FK fields."
     },
     "heslar.HeslarOdkaz": {
       "fields_count": 6,
       "indexed_fields": [],
       "potential_missing_indexes": ["heslo FK"],
-      "foreign_keys": ["heslo → Heslar (bez db_index)"],
+      "foreign_keys": ["heslo → Heslar (without db_index)"],
       "migration_count": 12,
-      "notes": "GOOD: __init__() ukládá initial_heslo."
+      "notes": "GOOD: __init__() stores initial_heslo."
     },
     "pas.UzivatelSpoluprace": {
       "fields_count": 4,
@@ -355,7 +355,7 @@
       "migration_count": 13
     },
 
-    "_t03c_t03d_separator": "--- T03c/T03d: modely doplněné v rámci coverage-gap analýzy ---",
+    "_t03c_t03d_separator": "--- T03c/T03d: models added as part of the coverage-gap analysis ---",
 
     "dokument.Dokument": {
       "fields_count": 22,
@@ -372,11 +372,11 @@
         "soubory → core.SouborVazby (OneToOne)",
         "historie → historie.HistorieVazby (OneToOne)",
         "licence → heslar.Heslar",
-        "jazyky M2M → heslar.Heslar (přes DokumentJazyk)",
-        "posudky M2M → heslar.Heslar (přes DokumentPosudek)",
-        "osoby M2M → uzivatel.Osoba (přes DokumentOsoba)",
-        "autori M2M → uzivatel.Osoba (přes DokumentAutor)",
-        "tvary M2M → heslar.Heslar (přes Tvar)"
+        "jazyky M2M → heslar.Heslar (via DokumentJazyk)",
+        "posudky M2M → heslar.Heslar (via DokumentPosudek)",
+        "osoby M2M → uzivatel.Osoba (via DokumentOsoba)",
+        "autori M2M → uzivatel.Osoba (via DokumentAutor)",
+        "tvary M2M → heslar.Heslar (via Tvar)"
       ],
       "compound_indexes": [
         ["stav", "ident_cely"],
@@ -386,7 +386,7 @@
         ["stav", "ident_cely", "typ_dokumentu", "organizace"]
       ],
       "migration_count": 18,
-      "notes": "Druhý nejkomplexnější doménový model (po Projekt). Vysoký fan-out (8 cross-app importů dle dependency_graph). Obsahuje eval(i) v set_permanent_ident_cely (viz SEC-ORM-004). N+1 v check_pred_odeslanim (viz NP1-015). GOOD: __init__() ukládá initial_let."
+      "notes": "The second most complex domain model (after Projekt). High fan-out (8 cross-app imports per dependency_graph). Contains eval(i) in set_permanent_ident_cely (see SEC-ORM-004). N+1 in check_pred_odeslanim (see NP1-015). GOOD: __init__() stores initial_let."
     },
     "dokument.DokumentCast": {
       "fields_count": 6,
@@ -407,7 +407,7 @@
         ["komponenty", "dokument", "ident_cely"]
       ],
       "migration_count": 18,
-      "notes": "CheckConstraint zabraňuje současnému napojení na arch_z i projekt. GOOD: propracované compound indexy. initial_archeologicky_zaznam/initial_projekt properties dělají objects.get() při každém přístupu — extra SELECT (viz NP1-017, NP1-018)."
+      "notes": "A CheckConstraint prevents simultaneous linking to both arch_z and projekt. GOOD: well-designed compound indexes. The initial_archeologicky_zaznam/initial_projekt properties do objects.get() on every access — extra SELECT (see NP1-017, NP1-018)."
     },
     "dokument.DokumentExtraData": {
       "fields_count": 17,
@@ -422,7 +422,7 @@
         "udalost_typ → heslar.Heslar"
       ],
       "migration_count": 18,
-      "notes": "Rozšiřující data pro 3D modely. Obsahuje dvě geometry pole (WGS84 + S-JTSK) a CheckConstraint pro rozsah duveryhodnost (0–100)."
+      "notes": "Extension data for 3D models. Contains two geometry fields (WGS84 + S-JTSK) and a CheckConstraint for the duveryhodnost range (0–100)."
     },
     "dokument.DokumentAutor": {
       "fields_count": 3,
@@ -430,7 +430,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": ["dokument → Dokument (CASCADE)", "autor → uzivatel.Osoba"],
       "migration_count": 18,
-      "notes": "M2M vazební tabulka s pořadím. unique_together: (dokument, autor) a (dokument, poradi)."
+      "notes": "M2M link table with ordering. unique_together: (dokument, autor) and (dokument, poradi)."
     },
     "dokument.DokumentJazyk": {
       "fields_count": 2,
@@ -438,7 +438,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": ["dokument → Dokument (CASCADE)", "jazyk → heslar.Heslar"],
       "migration_count": 18,
-      "notes": "M2M vazební tabulka. unique_together: (dokument, jazyk)."
+      "notes": "M2M link table. unique_together: (dokument, jazyk)."
     },
     "dokument.DokumentOsoba": {
       "fields_count": 2,
@@ -446,7 +446,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": ["dokument → Dokument (CASCADE)", "osoba → uzivatel.Osoba"],
       "migration_count": 18,
-      "notes": "M2M vazební tabulka. unique_together: (dokument, osoba)."
+      "notes": "M2M link table. unique_together: (dokument, osoba)."
     },
     "dokument.DokumentPosudek": {
       "fields_count": 2,
@@ -454,7 +454,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": ["dokument → Dokument (CASCADE)", "posudek → heslar.Heslar"],
       "migration_count": 18,
-      "notes": "M2M vazební tabulka. unique_together: (dokument, posudek)."
+      "notes": "M2M link table. unique_together: (dokument, posudek)."
     },
     "dokument.Tvar": {
       "fields_count": 3,
@@ -462,7 +462,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": ["dokument → Dokument (CASCADE)", "tvar → heslar.Heslar"],
       "migration_count": 18,
-      "notes": "M2M vazební tabulka leteckých tvarů. unique_together: (dokument, tvar, poznamka). Řazeno dle tvar__razeni."
+      "notes": "M2M link table of aerial shapes. unique_together: (dokument, tvar, poznamka). Ordered by tvar__razeni."
     },
     "dokument.DokumentSekvence": {
       "fields_count": 4,
@@ -470,7 +470,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": ["rada → heslar.Heslar"],
       "migration_count": 18,
-      "notes": "Sekvence pro generování ident_cely dokumentů. UniqueConstraint na (rada, region, rok). Používá databázi 'urgent'."
+      "notes": "Sequence for generating document ident_cely. UniqueConstraint on (rada, region, rok). Uses the 'urgent' database."
     },
     "dokument.Let": {
       "fields_count": 13,
@@ -485,7 +485,7 @@
         "organizace → uzivatel.Organizace"
       ],
       "migration_count": 18,
-      "notes": "Model letu pro leteckou archeologii. Dědí z ModelWithMetadata. save() kontroluje existenci kontejneru ve Fedoře."
+      "notes": "Flight model for aerial archaeology. Inherits from ModelWithMetadata. save() checks for the existence of the container in Fedora."
     },
 
     "historie.Historie": {
@@ -506,7 +506,7 @@
         ["uzivatel (covering idx, include id)"]
       ],
       "migration_count": 12,
-      "notes": "Centrální audit log pro celou aplikaci. 42 typů změn (CHOICES) pokrývající všechny doménové entity. Propracované compound indexy. save_record_deletion_record je classmethod volaný z ModelWithMetadata."
+      "notes": "Central audit log for the entire application. 42 change types (CHOICES) covering all domain entities. Well-designed compound indexes. save_record_deletion_record is a classmethod called from ModelWithMetadata."
     },
     "historie.HistorieVazby": {
       "fields_count": 1,
@@ -514,7 +514,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": [],
       "migration_count": 12,
-      "notes": "Architektonicky kritický model — používán jako OneToOne FK z Projekt, Dokument, ArcheologickyZaznam, SamostatnyNalez, Pian, ExterniZdroj, User. Vlastnost navazany_objekt používá hasattr() řetěz k nalezení napojeného objektu."
+      "notes": "An architecturally critical model — used as a OneToOne FK from Projekt, Dokument, ArcheologickyZaznam, SamostatnyNalez, Pian, ExterniZdroj, User. The navazany_objekt property uses a hasattr() chain to find the linked object."
     },
 
     "ez.ExterniZdroj": {
@@ -525,11 +525,11 @@
         "typ → heslar.Heslar",
         "typ_dokumentu → heslar.Heslar",
         "historie → historie.HistorieVazby (OneToOne, SET_NULL)",
-        "autori M2M → uzivatel.Osoba (přes ExterniZdrojAutor)",
-        "editori M2M → uzivatel.Osoba (přes ExterniZdrojEditor)"
+        "autori M2M → uzivatel.Osoba (via ExterniZdrojAutor)",
+        "editori M2M → uzivatel.Osoba (via ExterniZdrojEditor)"
       ],
       "migration_count": 11,
-      "notes": "Bibliografické zdroje. Dědí z ModelWithMetadata. eval(i) v get_perm_ez_ident (viz SEC-ORM-005). Chybí db_index na stav a typ — při filtrování dle stavu může být pomalé. N+1 v set_snapshots (viz NP1-019)."
+      "notes": "Bibliographic sources. Inherits from ModelWithMetadata. eval(i) in get_perm_ez_ident (see SEC-ORM-005). Missing db_index on stav and typ — filtering by state may be slow. N+1 in set_snapshots (see NP1-019)."
     },
     "ez.ExterniZdrojAutor": {
       "fields_count": 3,
@@ -537,7 +537,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": ["externi_zdroj → ExterniZdroj (CASCADE)", "autor → uzivatel.Osoba"],
       "migration_count": 11,
-      "notes": "M2M vazební tabulka s pořadím. unique_together: (externi_zdroj, autor), (externi_zdroj, poradi)."
+      "notes": "M2M link table with ordering. unique_together: (externi_zdroj, autor), (externi_zdroj, poradi)."
     },
     "ez.ExterniZdrojEditor": {
       "fields_count": 3,
@@ -545,7 +545,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": ["externi_zdroj → ExterniZdroj (CASCADE)", "editor → uzivatel.Osoba"],
       "migration_count": 11,
-      "notes": "M2M vazební tabulka s pořadím. unique_together: (externi_zdroj, editor), (poradi, externi_zdroj)."
+      "notes": "M2M link table with ordering. unique_together: (externi_zdroj, editor), (poradi, externi_zdroj)."
     },
     "ez.ExterniZdrojSekvence": {
       "fields_count": 2,
@@ -553,7 +553,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": [],
       "migration_count": 11,
-      "notes": "Singleton sekvence pro BIB-* identifikátory. CheckConstraint vynucuje id=1. Používá databázi 'urgent'."
+      "notes": "Singleton sequence for BIB-* identifiers. A CheckConstraint enforces id=1. Uses the 'urgent' database."
     },
 
     "xml_generator.BaseAmcrModel": {
@@ -562,7 +562,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": [],
       "migration_count": 0,
-      "notes": "Abstraktní base model pro všechny modely AMČR. Poskytuje __str__() a get_ident_cely_link property. Importován 10+ aplikacemi."
+      "notes": "Abstract base model for all AMČR models. Provides __str__() and the get_ident_cely_link property. Imported by 10+ applications."
     },
     "xml_generator.ModelWithMetadata": {
       "fields_count": 1,
@@ -570,7 +570,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": [],
       "migration_count": 0,
-      "notes": "Abstraktní model s klíčovými architektonickými metodami: save_metadata, record_deletion, record_ident_change, save_record_deletion_record. Spravuje vazbu na Fedora Repository. record_ident_change obsahuje kaskádové metadata uložení přes on_commit (vizuální projev: 7 isinstance větví pro různé typy záznamů). check_if_task_queued() kontroluje Celery frontu. Částečně analyzován v NP1-014."
+      "notes": "Abstract model with key architectural methods: save_metadata, record_deletion, record_ident_change, save_record_deletion_record. Manages the link to the Fedora Repository. record_ident_change contains cascading metadata saving via on_commit (visible form: 7 isinstance branches for different record types). check_if_task_queued() checks the Celery queue. Partially analyzed in NP1-014."
     },
 
     "komponenta.KomponentaVazby": {
@@ -579,7 +579,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": [],
       "migration_count": 2,
-      "notes": "Vazební tabulka pro komponenty (typ_vazby: dokumentacni_jednotka nebo dokument_cast). Analogie k historie.HistorieVazby. navazany_objekt property s hasattr() řetězem."
+      "notes": "Link table for components (typ_vazby: dokumentacni_jednotka or dokument_cast). Analogous to historie.HistorieVazby. navazany_objekt property with a hasattr() chain."
     },
     "komponenta.Komponenta": {
       "fields_count": 7,
@@ -589,10 +589,10 @@
         "obdobi → heslar.Heslar",
         "areal → heslar.Heslar",
         "komponenta_vazby → KomponentaVazby (CASCADE)",
-        "aktivity M2M → heslar.Heslar (přes KomponentaAktivita)"
+        "aktivity M2M → heslar.Heslar (via KomponentaAktivita)"
       ],
       "migration_count": 2,
-      "notes": "Dědí z BaseAmcrModel. pocet_nalezu property dělá 2 COUNT dotazy (objekty + predmety) místo jednoho. get_absolute_url() sleduje 3–4 FK hopu bez select_related."
+      "notes": "Inherits from BaseAmcrModel. The pocet_nalezu property does 2 COUNT queries (objekty + predmety) instead of one. get_absolute_url() follows 3–4 FK hops without select_related."
     },
     "komponenta.KomponentaAktivita": {
       "fields_count": 2,
@@ -600,7 +600,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": ["komponenta → Komponenta (CASCADE)", "aktivita → heslar.Heslar"],
       "migration_count": 2,
-      "notes": "M2M vazební tabulka. unique_together: (komponenta, aktivita)."
+      "notes": "M2M link table. unique_together: (komponenta, aktivita)."
     },
 
     "lokalita.Lokalita": {
@@ -615,7 +615,7 @@
         "archeologicky_zaznam → arch_z.ArcheologickyZaznam (OneToOne, PK, CASCADE)"
       ],
       "migration_count": 3,
-      "notes": "Rozšíření ArcheologickyZaznam pro typ_zaznamu=lokalita. Vlastní PID management (IGSN). set_snapshots dělá katastry.all() + katastry.count() (dva dotazy místo jednoho). get_by_ident_cely filtruje přes FK (archeologicky_zaznam__ident_cely)."
+      "notes": "Extension of ArcheologickyZaznam for typ_zaznamu=lokalita. Custom PID management (IGSN). set_snapshots does katastry.all() + katastry.count() (two queries instead of one). get_by_ident_cely filters via the FK (archeologicky_zaznam__ident_cely)."
     },
 
     "nalez.NalezObjekt": {
@@ -628,7 +628,7 @@
         "specifikace → heslar.Heslar"
       ],
       "migration_count": 4,
-      "notes": "Nálezový objekt navázaný na komponentu. Řazení dle druh__razeni, specifikace__razeni. GOOD: db_index na FK polích."
+      "notes": "Find object linked to a component. Ordered by druh__razeni, specifikace__razeni. GOOD: db_index on the FK fields."
     },
     "nalez.NalezPredmet": {
       "fields_count": 5,
@@ -640,7 +640,7 @@
         "specifikace → heslar.Heslar"
       ],
       "migration_count": 4,
-      "notes": "BUG: __init_ definováno s jedním podtržítkem místo __init__ (řádek 116) — custom init kód (close_active_transaction_when_finished, active_transaction) se nikdy nespustí. Viz BUG-015."
+      "notes": "BUG: __init_ defined with a single underscore instead of __init__ (line 116) — the custom init code (close_active_transaction_when_finished, active_transaction) never runs. See BUG-015."
     },
 
     "dj.DokumentacniJednotka": {
@@ -654,7 +654,7 @@
         "archeologicky_zaznam → arch_z.ArcheologickyZaznam (CASCADE)"
       ],
       "migration_count": 6,
-      "notes": "Dědí z BaseAmcrModel. Klíčový model spojující ArcheologickyZaznam s Komponentami a PIANy. Používá FieldTracker z model_utils. GOOD: __init__() ukládá initial_pian_id. initial_pian property dělá objects.get() — extra SELECT, ale s try/except DoesNotExist."
+      "notes": "Inherits from BaseAmcrModel. A key model linking ArcheologickyZaznam with Komponenty and PIANs. Uses FieldTracker from model_utils. GOOD: __init__() stores initial_pian_id. The initial_pian property does objects.get() — extra SELECT, but with try/except DoesNotExist."
     },
 
     "neidentakce.NeidentAkce": {
@@ -664,10 +664,10 @@
       "foreign_keys": [
         "katastr → heslar.RuianKatastr",
         "dokument_cast → dokument.DokumentCast (OneToOne, PK, CASCADE)",
-        "vedouci M2M → uzivatel.Osoba (přes NeidentAkceVedouci)"
+        "vedouci M2M → uzivatel.Osoba (via NeidentAkceVedouci)"
       ],
       "migration_count": 4,
-      "notes": "Neidentifikované akce navázané na DokumentCast. __init__() přistupuje k self.dokument_cast.dokument — potenciální extra dotaz při instanciaci."
+      "notes": "Unidentified akce linked to DokumentCast. __init__() accesses self.dokument_cast.dokument — a potential extra query on instantiation."
     },
     "neidentakce.NeidentAkceVedouci": {
       "fields_count": 2,
@@ -675,7 +675,7 @@
       "potential_missing_indexes": [],
       "foreign_keys": ["neident_akce → NeidentAkce (CASCADE)", "vedouci → uzivatel.Osoba"],
       "migration_count": 4,
-      "notes": "M2M vazební tabulka. unique_together: (neident_akce, vedouci)."
+      "notes": "M2M link table. unique_together: (neident_akce, vedouci)."
     },
 
     "notifikace_projekty.Pes": {
@@ -690,7 +690,7 @@
         ["content_type", "object_id"]
       ],
       "migration_count": 1,
-      "notes": "Hlídací pes — GenericForeignKey pro sledování libovolného záznamu. UniqueConstraint na (user, content_type, object_id). Chybí db_index na user FK — při dotazech 'moji hlídací psi' může být pomalé."
+      "notes": "Watchdog (hlídací pes) — a GenericForeignKey for tracking an arbitrary record. UniqueConstraint on (user, content_type, object_id). Missing db_index on the user FK — queries for 'my watchdogs' may be slow."
     }
   },
 
@@ -727,19 +727,19 @@
       "pattern": "select_related / prefetch_related",
       "occurrences": 67,
       "files": ["projekt/views.py (7)", "dokument/views.py (10)", "arch_z/views.py (15)", "pas/views.py (6)", "uzivatel/views.py (3)", "ez/views.py (10)", "lokalita/views.py (2)", "pas/filters.py (8)", "cron/tasks.py (1)"],
-      "assessment": "Celkový počet je relativně nízký pro rozsah aplikace. Views obsahují select_related, ale modely samotné v property a check_pred_* metodách prefetch nepoužívají."
+      "assessment": "The total count is relatively low for the scope of the application. The views contain select_related, but the models themselves in properties and check_pred_* methods do not use prefetch."
     },
     {
       "pattern": "raw SQL .raw()",
       "occurrences": 10,
       "files": ["core/utils.py (5)", "core/management/commands/transform_to_sjtsk.py (8)"],
-      "assessment": "Používáno převážně pro komplexní PostGIS prostorové dotazy. V core/utils.py jsou raw dotazy parametrizovány. V management command jsou dotazy bez parametrů."
+      "assessment": "Used mostly for complex PostGIS spatial queries. In core/utils.py the raw queries are parameterized. In the management command the queries are without parameters."
     },
     {
       "pattern": ".extra(where=[...])",
       "occurrences": 2,
       "files": ["arch_z/filters.py:773-775"],
-      "assessment": "Parametrizované extra() pro ST_Z(geom) — bezpečné, ale deprecated od Django 4+."
+      "assessment": "Parameterized extra() for ST_Z(geom) — safe, but deprecated since Django 4+."
     }
   ],
 
@@ -748,147 +748,147 @@
       "id": "NP1-001",
       "location": "projekt/models.py",
       "method": "Projekt.check_pred_archivaci()",
-      "description": "Iteruje self.akce_set.all() bez prefetch_related. Pro každou akci přistupuje k akce.archeologicky_zaznam (další dotaz). Typicky 5–50 akcí na projekt.",
-      "severity": "Střední"
+      "description": "Iterates self.akce_set.all() without prefetch_related. For each akce it accesses akce.archeologicky_zaznam (another query). Typically 5–50 akce per project.",
+      "severity": "Medium"
     },
     {
       "id": "NP1-002",
       "location": "projekt/models.py",
       "method": "Projekt.check_pred_uzavrenim()",
-      "description": "Volá self.akce_set.all() dvakrát (jednou pro len(), jednou pro iteraci). Uvnitř iterace volá a.archeologicky_zaznam.check_pred_odeslanim() — kaskádové N+1.",
-      "severity": "Vysoká"
+      "description": "Calls self.akce_set.all() twice (once for len(), once for iteration). Inside the iteration it calls a.archeologicky_zaznam.check_pred_odeslanim() — cascading N+1.",
+      "severity": "High"
     },
     {
       "id": "NP1-003",
       "location": "projekt/models.py",
       "method": "Projekt.check_pred_smazanim(), check_pred_navrzeni_k_zruseni()",
-      "description": "Používá len(self.akce_set.all()) místo .count() — zbytečně načítá všechny záznamy do paměti.",
-      "severity": "Nízká"
+      "description": "Uses len(self.akce_set.all()) instead of .count() — needlessly loads all records into memory.",
+      "severity": "Low"
     },
     {
       "id": "NP1-004",
       "location": "projekt/models.py",
       "method": "Projekt.set_pristupnost()",
-      "description": "Iteruje přes samostatne_nalezy nebo akce bez prefetch_related. Uvnitř přistupuje k vnořeným FK (pristupnost).",
-      "severity": "Střední"
+      "description": "Iterates over samostatne_nalezy or akce without prefetch_related. Inside it accesses nested FKs (pristupnost).",
+      "severity": "Medium"
     },
     {
       "id": "NP1-005",
       "location": "projekt/models.py:183",
       "method": "Projekt.datum_oznameni (property)",
-      "description": "Dělá DB dotaz self.historie.historie_set.order_by(...).first() při každém přístupu. Není cachovano.",
-      "severity": "Střední"
+      "description": "Does a DB query self.historie.historie_set.order_by(...).first() on every access. Not cached.",
+      "severity": "Medium"
     },
     {
       "id": "NP1-006",
       "location": "arch_z/models.py:240-268",
       "method": "ArcheologickyZaznam.check_pred_odeslanim()",
-      "description": "Volá self.dokumentacni_jednotky_akce.all() dvakrát a pro každou DJ iteruje dj.komponenty.komponenty.all() — vnořené N+1. Volá doc_cast.dokument.check_pred_odeslanim() pro každou cast dokumentu.",
-      "severity": "Vysoká"
+      "description": "Calls self.dokumentacni_jednotky_akce.all() twice and, for each DJ, iterates dj.komponenty.komponenty.all() — nested N+1. Calls doc_cast.dokument.check_pred_odeslanim() for each document part.",
+      "severity": "High"
     },
     {
       "id": "NP1-007",
       "location": "arch_z/models.py:354-364",
       "method": "ArcheologickyZaznam._set_connected_records_ident()",
-      "description": "Vnořené smyčky: pro každou DJ iteruje komponenty, každou komponentu ukládá individuálně. Potenciálně N*M DB zápisů bez bulk_update.",
-      "severity": "Střední"
+      "description": "Nested loops: for each DJ it iterates the components, saving each component individually. Potentially N*M DB writes without bulk_update.",
+      "severity": "Medium"
     },
     {
       "id": "NP1-008",
       "location": "arch_z/models.py:531",
       "method": "ArcheologickyZaznam.save()",
-      "description": "Při každém uložení záznamu (kde pk != None) dělá SELECT get(pk=self.pk) pro zjištění změny pristupnost. Zbytečný extra SELECT při každé operaci save().",
-      "severity": "Střední"
+      "description": "On every record save (where pk != None) it does a SELECT get(pk=self.pk) to detect a change of pristupnost. An unnecessary extra SELECT on every save() operation.",
+      "severity": "Medium"
     },
     {
       "id": "NP1-009",
       "location": "uzivatel/models.py:334-337",
       "method": "User.save()",
-      "description": "Iteruje spoluprace_query a volá spoluprace.save() individuálně. Mělo by být nahrazeno bulk_update().",
-      "severity": "Nízká"
+      "description": "Iterates spoluprace_query and calls spoluprace.save() individually. Should be replaced with bulk_update().",
+      "severity": "Low"
     },
     {
       "id": "NP1-010",
       "location": "uzivatel/models.py:228-244",
       "method": "User.moje_spolupracujici_organizace()",
-      "description": "Volá Group.objects.get() čtyřikrát při každém volání metody. Mohlo by být nahrazeno jedním dotazem s filter() nebo cachováno.",
-      "severity": "Nízká"
+      "description": "Calls Group.objects.get() four times on every call of the method. Could be replaced with a single query using filter() or cached.",
+      "severity": "Low"
     },
     {
       "id": "NP1-011",
       "location": "pian/models.py:103-115",
       "method": "Pian.pristupnost_pom (property)",
-      "description": "Iteruje over dok_jednotky bez select_related, přistupuje k dok_jednotka.archeologicky_zaznam.pristupnost — dvojité N+1. Property není cachovana.",
-      "severity": "Střední"
+      "description": "Iterates over dok_jednotky without select_related, accesses dok_jednotka.archeologicky_zaznam.pristupnost — double N+1. The property is not cached.",
+      "severity": "Medium"
     },
     {
       "id": "NP1-012",
       "location": "pas/models.py:182-186",
       "method": "SamostatnyNalez.save()",
-      "description": "Extra SELECT get(pk=self.pk) při každém uložení záznamu pro zjištění změny pristupnost. Model má initial_pristupnost property, ale ta je nastavována PO extra SELECT, nikoliv v __init__(). Vzor je neúplný — viz BUG-004.",
-      "severity": "Nízká",
-      "note": "Oprava T03a: závažnost snížena z Střední na Nízká — počet samostatných nálezů je typicky menší než počet arch. záznamů."
+      "description": "Extra SELECT get(pk=self.pk) on every record save to detect a change of pristupnost. The model has an initial_pristupnost property, but it is set AFTER the extra SELECT, not in __init__(). The pattern is incomplete — see BUG-004.",
+      "severity": "Low",
+      "note": "T03a correction: severity lowered from Medium to Low — the number of samostatný nález records is typically smaller than the number of archaeological records."
     },
     {
       "id": "NP1-013",
       "location": "pian/models.py:220-240",
       "method": "Pian.get_create_org()",
-      "description": "Triple-hop N+1: pro každou DJ přistupuje k dok_jednotka.archeologicky_zaznam.akce.projekt.organizace bez select_related. Každý z těchto přístupů může spustit samostatný DB dotaz.",
-      "severity": "Střední"
+      "description": "Triple-hop N+1: for each DJ it accesses dok_jednotka.archeologicky_zaznam.akce.projekt.organizace without select_related. Each of these accesses may trigger a separate DB query.",
+      "severity": "Medium"
     },
     {
       "id": "NP1-014",
       "location": "xml_generator/models.py:325-345",
       "method": "ModelWithMetadata.record_deletion()",
-      "description": "Dva oddělené for-cykly přes self.soubory.soubory.all() bez prefetch. Celkový dopad je nízký (jen při mazání).",
-      "severity": "Nízká"
+      "description": "Two separate for-loops over self.soubory.soubory.all() without prefetch. The overall impact is low (only during deletion).",
+      "severity": "Low"
     },
     {
       "id": "NP1-015",
       "location": "dokument/models.py:352-355",
       "method": "Dokument.check_pred_odeslanim()",
-      "description": "Pro 3D dokumenty přistupuje k self.casti.all()[0].komponenty.komponenty.all()[0].obdobi a .areal bez prefetch_related — kaskádové N+1 přes DokumentCast → KomponentaVazby → Komponenta.",
-      "severity": "Střední",
+      "description": "For 3D documents it accesses self.casti.all()[0].komponenty.komponenty.all()[0].obdobi and .areal without prefetch_related — cascading N+1 through DokumentCast → KomponentaVazby → Komponenta.",
+      "severity": "Medium",
       "added_by": "T03c"
     },
     {
       "id": "NP1-016",
       "location": "dokument/models.py:569-580",
       "method": "Dokument.set_snapshots()",
-      "description": "Iteruje dokumentautor_set.order_by('poradi').all() a dokumentosoba_set.order_by().all() s vnořeným .autor.vypis_cely / .osoba.vypis_cely — N+1 pro každého autora/osobu.",
-      "severity": "Nízká",
+      "description": "Iterates dokumentautor_set.order_by('poradi').all() and dokumentosoba_set.order_by().all() with nested .autor.vypis_cely / .osoba.vypis_cely — N+1 for each author/person.",
+      "severity": "Low",
       "added_by": "T03c"
     },
     {
       "id": "NP1-017",
       "location": "dokument/models.py:781-783",
       "method": "DokumentCast.initial_archeologicky_zaznam (property)",
-      "description": "Dělá ArcheologickyZaznam.objects.get(pk=...) při každém přístupu — extra SELECT. Stejný anti-pattern jako NP1-008/BUG-004.",
-      "severity": "Nízká",
+      "description": "Does ArcheologickyZaznam.objects.get(pk=...) on every access — extra SELECT. The same anti-pattern as NP1-008/BUG-004.",
+      "severity": "Low",
       "added_by": "T03c"
     },
     {
       "id": "NP1-018",
       "location": "dokument/models.py:792-794",
       "method": "DokumentCast.initial_projekt (property)",
-      "description": "Dělá Projekt.objects.get(pk=...) při každém přístupu — extra SELECT.",
-      "severity": "Nízká",
+      "description": "Does Projekt.objects.get(pk=...) on every access — extra SELECT.",
+      "severity": "Low",
       "added_by": "T03c"
     },
     {
       "id": "NP1-019",
       "location": "ez/models.py:226-237",
       "method": "ExterniZdroj.set_snapshots()",
-      "description": "Iteruje externizdrojautor_set a externizdrojeditor_set s vnořeným .autor.vypis_cely / .editor.vypis_cely — N+1.",
-      "severity": "Nízká",
+      "description": "Iterates externizdrojautor_set and externizdrojeditor_set with nested .autor.vypis_cely / .editor.vypis_cely — N+1.",
+      "severity": "Low",
       "added_by": "T03c"
     },
     {
       "id": "NP1-020",
       "location": "lokalita/models.py:83-90",
       "method": "Lokalita.set_snapshots()",
-      "description": "Volá katastry.all() a poté katastry.count() — dvojitý dotaz místo jednoho.",
-      "severity": "Nízká",
+      "description": "Calls katastry.all() and then katastry.count() — a double query instead of one.",
+      "severity": "Low",
       "added_by": "T03d"
     }
   ],
@@ -916,42 +916,42 @@
       "id": "SEC-ORM-001",
       "location": "projekt/models.py:663",
       "method": "Projekt.set_permanent_ident_cely()",
-      "type": "eval() na datech z DB",
-      "description": "eval(i) je volán na hodnotách získaných z databáze (ident_cely segmenty). Správná náhrada je int(i). I když jsou ident_cely kontrolovaná data, eval() je špatná praxe. Viz BUG-001 v bugs.md.",
-      "severity": "Střední"
+      "type": "eval() on data from the DB",
+      "description": "eval(i) is called on values obtained from the database (ident_cely segments). The correct replacement is int(i). Even though ident_cely is controlled data, eval() is bad practice. See BUG-001 in bugs.md.",
+      "severity": "Medium"
     },
     {
       "id": "SEC-ORM-002",
       "location": "arch_z/models.py:331",
       "method": "ArcheologickyZaznam.set_lokalita_permanent_ident_cely()",
-      "type": "eval() na datech z DB",
-      "description": "Stejný vzor jako SEC-ORM-001. Viz BUG-001.",
-      "severity": "Střední"
+      "type": "eval() on data from the DB",
+      "description": "The same pattern as SEC-ORM-001. See BUG-001.",
+      "severity": "Medium"
     },
     {
       "id": "SEC-ORM-003",
       "location": "arch_z/models.py:889",
       "method": "get_akce_ident()",
-      "type": "eval() na datech z DB",
-      "description": "Stejný vzor jako SEC-ORM-001. Viz BUG-001.",
-      "severity": "Střední"
+      "type": "eval() on data from the DB",
+      "description": "The same pattern as SEC-ORM-001. See BUG-001.",
+      "severity": "Medium"
     },
     {
       "id": "SEC-ORM-004",
       "location": "dokument/models.py:441",
       "method": "Dokument.set_permanent_ident_cely()",
-      "type": "eval() na datech z DB",
-      "description": "eval(i) na segmentech ident_cely získaných z DB. Stejný vzor jako SEC-ORM-001. Nahradit int(i). Viz BUG-001.",
-      "severity": "Střední",
+      "type": "eval() on data from the DB",
+      "description": "eval(i) on ident_cely segments obtained from the DB. The same pattern as SEC-ORM-001. Replace with int(i). See BUG-001.",
+      "severity": "Medium",
       "added_by": "T03c"
     },
     {
       "id": "SEC-ORM-005",
       "location": "ez/models.py:301",
       "method": "get_perm_ez_ident()",
-      "type": "eval() na datech z DB",
-      "description": "eval(i) na segmentech BIB-* ident_cely získaných z DB. Stejný vzor jako SEC-ORM-001. Nahradit int(i). Viz BUG-001.",
-      "severity": "Střední",
+      "type": "eval() on data from the DB",
+      "description": "eval(i) on BIB-* ident_cely segments obtained from the DB. The same pattern as SEC-ORM-001. Replace with int(i). See BUG-001.",
+      "severity": "Medium",
       "added_by": "T03c"
     }
   ],
@@ -960,30 +960,30 @@
     {
       "file": "core/utils.py",
       "lines": [216, 389, 467, 526],
-      "reason": "PostGIS prostorové dotazy (ST_Distance, ST_DWithin) — legitimní použití, parametrizované",
-      "risk": "Nízké"
+      "reason": "PostGIS spatial queries (ST_Distance, ST_DWithin) — legitimate use, parameterized",
+      "risk": "Low"
     },
     {
       "file": "core/management/commands/transform_to_sjtsk.py",
       "lines": [98, 100, 178, 180, 258, 260, 338, 340],
-      "reason": "Management command pro transformaci geometrií — SQL bez parametrů (interní administrativní příkaz)",
-      "risk": "Nízké (produkční přístup omezen)"
+      "reason": "Management command for transforming geometries — SQL without parameters (an internal administrative command)",
+      "risk": "Low (production access restricted)"
     },
     {
       "file": "arch_z/filters.py",
       "lines": [773, 775],
-      "reason": ".extra(where=['ST_Z(geom) >= %s']) pro Z-souřadnici — deprecated od Django 4+",
-      "risk": "Nízké (parametrizované), Technický dluh (deprecated API)"
+      "reason": ".extra(where=['ST_Z(geom) >= %s']) for the Z coordinate — deprecated since Django 4+",
+      "risk": "Low (parameterized), Technical debt (deprecated API)"
     }
   ],
 
   "positive_findings": [
-    "Indexování je vesměs důsledné — většina FK polí má db_index=True",
-    "ArcheologickyZaznam má propracované compound indexy",
-    "cached_property používáno pro výpočetně náročné properties (Akce.vedouci)",
-    "CheckConstraint používáno pro datovou integritu (akce_typ_check, samostatny_nalez_geom_check)",
-    "ExportModelOperationsMixin ze django-prometheus pro monitoring DB operací",
-    "Konzistentní vzor set_*() metod pro workflow přechody stavů",
-    "Vzor 'urgent' database pro sekvence (ProjektSekvence, AkceSekvence) — správné řešení pro souběžnost"
+    "Indexing is mostly consistent — most FK fields have db_index=True",
+    "ArcheologickyZaznam has well-designed compound indexes",
+    "cached_property used for computationally expensive properties (Akce.vedouci)",
+    "CheckConstraint used for data integrity (akce_typ_check, samostatny_nalez_geom_check)",
+    "ExportModelOperationsMixin from django-prometheus for monitoring DB operations",
+    "Consistent pattern of set_*() methods for workflow state transitions",
+    "The 'urgent' database pattern for sequences (ProjektSekvence, AkceSekvence) — a correct solution for concurrency"
   ]
 }
