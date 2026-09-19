@@ -2199,6 +2199,17 @@ def run_data_import(job_id, user_id, lock_token):
                 if not failed and not stopped:
                     # Recheck before committing a batch whose last work unit may have taken a long time.
                     refresh_import_lock()
+                    # A stop can arrive while the final work unit or its durable report is being
+                    # written.  It must still abort this open data transaction rather than leave
+                    # the batch committed and only halt the later phases.
+                    stopped = redis_connector.get(job_key("import_data_stop")) is not None
+                    if stopped:
+                        transaction.set_rollback(True)
+                        data_rolled_back = True
+                        redis_connector.set(
+                            job_key("import_data_status_message_tr"),
+                            translation_value("cron.tasks.run_data_import.stopped_by_user"),
+                        )
                 if failed or stopped:
                     # Nothing from this batch will persist — do not leave the queued Fedora
                     # transactions open.

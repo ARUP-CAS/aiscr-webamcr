@@ -148,8 +148,16 @@ class RunDataImportUzivatelTest(TestCase):
         fake_redis: FakeRedis,
         save_metadata_side_effect=None,
         refresh_lock_side_effect=None,
+        report_save_side_effect=None,
     ):
-        """Spustí ``run_data_import`` s mocknutým Redis a Fedora; vrátí seznam volání ``save_metadata``."""
+        """Spustí ``run_data_import`` s mocknutým Redis a Fedora; vrátí seznam volání ``save_metadata``.
+
+        :param fake_redis: Izolované Redis úložiště importní úlohy.
+        :param save_metadata_side_effect: Volitelná simulace zápisu metadat do Fedory.
+        :param refresh_lock_side_effect: Volitelná odpověď obnovy importního locku.
+        :param report_save_side_effect: Volitelná simulace zápisu průběžného XLSX reportu.
+        :return: Seznam objektů, pro které byl zavolán zápis metadat.
+        """
         save_metadata_calls: list = []
 
         def default_side_effect(self, *args, **kwargs):
@@ -160,6 +168,11 @@ class RunDataImportUzivatelTest(TestCase):
             {"side_effect": refresh_lock_side_effect}
             if refresh_lock_side_effect is not None
             else {"return_value": True}
+        )
+        report_save_kwargs = (
+            {"side_effect": report_save_side_effect}
+            if report_save_side_effect is not None
+            else {"return_value": "/tmp/fake-import-dir/reports/report.xlsx"}
         )
         with patch("core.connectors.RedisConnector.get_connection", return_value=fake_redis), patch(
             "core.connectors.RedisConnector.refresh_import_lock", **refresh_lock_kwargs
@@ -197,7 +210,7 @@ class RunDataImportUzivatelTest(TestCase):
             "cron.tasks.check_import_report_directory",
             return_value=("/tmp/fake-import-dir", "/tmp/fake-import-dir/reports", None),
         ), patch(
-            "cron.tasks.save_import_report_to_disk", return_value="/tmp/fake-import-dir/reports/report.xlsx"
+            "cron.tasks.save_import_report_to_disk", **report_save_kwargs
         ):
             fedora_transaction_mock.return_value = MagicMock(uid="test-fedora-uid")
             fedora_deletion_mock.return_value = MagicMock(uid="test-fedora-deletion-uid", updated_ident_cely=set())
@@ -401,6 +414,26 @@ class RunDataImportUzivatelTest(TestCase):
             details,
             "Po rollbacku nesmí v detailech zůstat značka ``success``.",
         )
+
+    def test_stop_after_final_data_recheck_rolls_back_and_relabels_records(self):
+        """Stop přijatý při zápisu posledního datového reportu odvolá otevřenou dávku."""
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_INSERT)
+        report_saves = 0
+
+        def save_report_and_stop(*args, **kwargs):
+            nonlocal report_saves
+            report_saves += 1
+            if report_saves == 2:
+                fake_redis.set(f"import_data_stop_{JOB_ID}", "1")
+            return "/tmp/fake-import-dir/reports/report.xlsx"
+
+        self._run_import(fake_redis, report_save_side_effect=save_report_and_stop)
+
+        self.assertFalse(User.objects.filter(ident_cely=USER_IDENT).exists())
+        self._assert_terminal_cleanup(fake_redis, cron_tasks.IMPORT_PHASE_STOPPED)
+        details = [d.decode("utf-8") for d in fake_redis.lrange(f"import_data_progress_details_tr_{JOB_ID}", 0, -1)]
+        self.assertIn("cron.tasks.run_data_import.rolled_back", details)
+        self.assertNotIn("cron.tasks.run_data_import.success", details)
 
     def test_update_of_nonexistent_record_marks_import_as_failed(self):
         """UPDATE záznamu, který v DB neexistuje, vyvolá ``DoesNotExist`` a import skončí jako selhalý."""
