@@ -13,7 +13,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from core.forms import ImportDataAdminForm
-from core.import_data_mappers import ProjektMapper
+from core.import_data_mappers import ImportDataError, ProjektMapper
 from django.contrib.gis.geos import GEOSGeometry
 from django.test import TestCase
 from dokument.models import DokumentExtraData
@@ -41,6 +41,17 @@ class GeometryTransformMixinStringComparisonTest(TestCase):
         ) as mock_transform:
             ProjektMapper.transform_geometries(None, mapping, INSERT)
         mock_transform.assert_called_once_with(WKT_WGS84)
+        self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
+
+    def test_whitespace_around_4326_triggers_sjtsk_transform(self):
+        """SRID s okolními mezerami se normalizuje před transformací WGS84→SJTSK."""
+        mapping = _mapping(" 4326 ", geom=WKT_WGS84)
+        with patch(
+            "core.import_data_mappers.transform_geom_to_sjtsk", return_value=(WKT_SJTSK, "OK")
+        ) as mock_transform:
+            ProjektMapper.transform_geometries(None, mapping, INSERT)
+        mock_transform.assert_called_once_with(WKT_WGS84)
+        self.assertEqual(mapping["geom_system"], "4326")
         self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
 
     def test_update_none_geom_system_falls_back_without_persisting_blank_value(self):
@@ -124,19 +135,19 @@ class GeometryTransformMixinTupleUnpackTest(TestCase):
         self.assertEqual(mapping["geom"], WKT_WGS84)
         self.assertNotIsInstance(mapping["geom"], tuple)
 
-    def test_failed_transform_does_not_overwrite_geom_sjtsk(self):
-        """Pokud transformace selže (status != 'OK'), geom_sjtsk se nepřepíše."""
+    def test_failed_transform_raises_import_error_for_sjtsk(self):
+        """Neúspěšná transformace při INSERTu označí řádek importu jako chybný."""
         mapping = _mapping("4326", geom=WKT_WGS84, geom_sjtsk="original")
         with patch("core.import_data_mappers.transform_geom_to_sjtsk", return_value=("", "parse error")):
-            ProjektMapper.transform_geometries(None, mapping, INSERT)
-        self.assertEqual(mapping["geom_sjtsk"], "original")
+            with self.assertRaisesMessage(ImportDataError, "Transformace geometrie do S-JTSK selhala: parse error"):
+                ProjektMapper.transform_geometries(None, mapping, INSERT)
 
-    def test_failed_transform_does_not_overwrite_geom(self):
-        """Pokud transformace selže (status != 'OK'), geom se nepřepíše."""
+    def test_failed_transform_raises_import_error_for_wgs84(self):
+        """Neúspěšná transformace při INSERTu označí řádek importu jako chybný."""
         mapping = _mapping("5514", geom="original", geom_sjtsk=WKT_SJTSK)
         with patch("core.import_data_mappers.transform_geom_to_wgs84", return_value=("", "Not strig")):
-            ProjektMapper.transform_geometries(None, mapping, INSERT)
-        self.assertEqual(mapping["geom"], "original")
+            with self.assertRaisesMessage(ImportDataError, "Transformace geometrie do WGS84 selhala: Not strig"):
+                ProjektMapper.transform_geometries(None, mapping, INSERT)
 
 
 class GeometryTransformMixinGEOSGeometryInputTest(TestCase):

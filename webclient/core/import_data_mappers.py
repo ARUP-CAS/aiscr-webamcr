@@ -1935,19 +1935,21 @@ class GeometryTransformMixin:
                 if not str(mapping_dict.get(column) or "").strip():
                     mapping_dict.pop(column, None)
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
-            geom_system = str(mapping_dict.get("geom_system") or "")
+            geom_system = str(mapping_dict.get("geom_system") or "").strip()
+            if "geom_system" in mapping_dict:
+                mapping_dict["geom_system"] = geom_system
             if geom_system == "4326" and mapping_dict.get("geom"):
-                converted, ok = GeometryTransformMixin._transform_geometry(
-                    mapping_dict["geom"], transform_geom_to_sjtsk
-                )
-                if ok:
-                    mapping_dict["geom_sjtsk"] = converted
+                converted, status = transform_geom_to_sjtsk(getattr(mapping_dict["geom"], "wkt", mapping_dict["geom"]))
+                if status != "OK":
+                    raise ImportDataError(f"Transformace geometrie do S-JTSK selhala: {status}")
+                mapping_dict["geom_sjtsk"] = converted
             elif geom_system == "5514" and mapping_dict.get("geom_sjtsk"):
-                converted, ok = GeometryTransformMixin._transform_geometry(
-                    mapping_dict["geom_sjtsk"], transform_geom_to_wgs84
+                converted, status = transform_geom_to_wgs84(
+                    getattr(mapping_dict["geom_sjtsk"], "wkt", mapping_dict["geom_sjtsk"])
                 )
-                if ok:
-                    mapping_dict["geom"] = converted
+                if status != "OK":
+                    raise ImportDataError(f"Transformace geometrie do WGS84 selhala: {status}")
+                mapping_dict["geom"] = converted
         elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
             has_any_geometry_column = any(column in mapping_dict for column in GeometryTransformMixin.GEOMETRY_COLUMNS)
             if not has_any_geometry_column:
