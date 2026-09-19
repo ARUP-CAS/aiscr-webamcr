@@ -53,7 +53,7 @@ from core.repository_connector import (
     FedoraRepositoryConnector,
     FedoraTransaction,
 )
-from core.utils import check_import_report_directory, upsert_import_report_index_entry
+from core.utils import check_import_report_directory, translate_status_value, upsert_import_report_index_entry
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.db import connection, transaction
@@ -189,7 +189,7 @@ def translation_value(message_id: str, raw: bool = False, **params) -> str:
 # do ``_()``, aby ho ``makemessages``/``xgettext`` extrahoval do .po souborů — hodnoty se nepoužívají
 # za běhu (Redis stále dostává pouze bare ID přes ``translation_value``), slouží výhradně jako zdroj
 # pro extrakci překladů. Při přidání nového překladového ID ho přidejte do ``TRANSLATABLE_MESSAGE_IDS``,
-# jinak zůstane nepřeloženo (``_translate_status_value`` vrátí na čtenáři neaplikovaný key doslova).
+# jinak zůstane nepřeloženo (``translate_status_value`` vrátí na čtenáři neaplikovaný key doslova).
 TRANSLATABLE_MESSAGE_IDS = (
     _("cron.tasks.run_data_import.validating"),
     _("cron.tasks.run_data_import.stopped_by_user"),
@@ -886,35 +886,6 @@ def reset_import_job(redis_connector, job_id):
     return True
 
 
-def _translate_status_value_for_report(raw):
-    """Přeloží hodnotu z Redis (ID nebo obálka ``{id, params}``) do aktivního jazyka.
-
-    Zrcadlí ``core.views._translate_status_value`` — nedovolat odtud, aby ``cron.tasks`` (načítaný
-    při startu Celery workeru) nezávisel na ``core.views`` na úrovni modulu.
-
-    :param raw: Hodnota z Redis — ``None``, plain ID (str), nebo JSON obálka (str) s ``id`` a
-        ``params``.
-    :return: Přeložený řetězec, nebo ``None``, pokud je vstup ``None``.
-    """
-    if raw is None:
-        return None
-    if isinstance(raw, bytes):
-        raw = raw.decode("utf-8")
-    try:
-        obj = json.loads(raw)
-    except (TypeError, ValueError, json.JSONDecodeError):
-        return _(raw)
-    if isinstance(obj, dict) and "id" in obj:
-        params = obj.get("params") or {}
-        if obj.get("raw"):
-            return params.get("message", "")
-        try:
-            return _(obj["id"]).format(**params)
-        except (KeyError, IndexError, ValueError):
-            return _(obj["id"])
-    return _(raw)
-
-
 def get_or_create_import_report_path(job_id, redis_connector, reports_directory_path):
     """Vrátí cestu k XLSX reportu importní úlohy, poprvé ji odvodí a uloží do Redis.
 
@@ -964,7 +935,7 @@ def build_import_report_dataframe(job_id, redis_connector):
         for detail in redis_connector.lrange("import_data_validation_details_{}".format(job_id), 0, -1)
     ]
     validation_results = [
-        {**item, "validation_result": _translate_status_value_for_report(item.get("validation_result", ""))}
+        {**item, "validation_result": translate_status_value(item.get("validation_result", ""))}
         for item in validation_results_raw
     ]
     primary_keys = json.loads(redis_connector.get("import_data_primary_keys_{}".format(job_id)) or "{}")
@@ -973,17 +944,15 @@ def build_import_report_dataframe(job_id, redis_connector):
         for pid in redis_connector.lrange("import_data_progress_ids_{}".format(job_id), 0, -1)
     ]
     progress_details = redis_connector.lrange("import_data_progress_details_tr_{}".format(job_id), 0, -1)
-    serialized_results = {
-        rid: _translate_status_value_for_report(detail) for rid, detail in zip(progress_ids, progress_details)
-    }
+    serialized_results = {rid: translate_status_value(detail) for rid, detail in zip(progress_ids, progress_details)}
     history_record_result = {
-        rid: _translate_status_value_for_report(value)
+        rid: translate_status_value(value)
         for rid, value in json.loads(
             redis_connector.get("import_data_history_record_result_tr_{}".format(job_id)) or "{}"
         ).items()
     }
     fedora_update_result = {
-        rid: [_translate_status_value_for_report(item) for item in items]
+        rid: [translate_status_value(item) for item in items]
         for rid, items in json.loads(redis_connector.get("import_fedora_result_tr_{}".format(job_id)) or "{}").items()
     }
 
@@ -1047,7 +1016,7 @@ def build_import_fedora_target_dataframe(job_id, redis_connector):
             columns[0]: ident_cely or "",
             columns[1]: transaction_uid or "",
             columns[2]: ", ".join(str(record_id + 1) for record_id in record_ids or []),
-            columns[3]: _translate_status_value_for_report(result_id),
+            columns[3]: translate_status_value(result_id),
         }
 
     rows = [
@@ -1576,7 +1545,7 @@ def run_data_import(job_id, user_id, lock_token):
 
     Možné hodnoty Redis klíče ``import_data_status_message_tr_{job_id}`` (ukládá se překladové
     ID, případně obálka ``{id, params}`` pro parametrizované zprávy; překlad provádí až čtenář
-    v locale přihlášeného admina — viz ``translation_value`` a ``_translate_status_value``):
+    v locale přihlášeného admina — viz ``translation_value`` a ``translate_status_value``):
 
     .. list-table::
         :header-rows: 1

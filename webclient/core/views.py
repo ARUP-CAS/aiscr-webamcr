@@ -69,6 +69,7 @@ from core.utils import (
     is_maintenance_in_progress,
     read_import_report_index,
     replace_last,
+    translate_status_value,
 )
 from django.conf import settings
 from django.contrib import messages
@@ -2760,41 +2761,6 @@ def _check_import_ownership(request, job_id, redis_connector) -> bool:
 
 # Per-job Redis datové klíče, které se na terminální cestě expirují (ne mažou) kvůli retenci
 # reportu. Zrcadlí sadu, kterou expiruje run_data_import a validační task.
-def _translate_status_value(raw):
-    """Přeloží hodnotu načtenou z Redis (ID nebo obálka ``{id, params}``).
-
-    Standardizační pravidlo: worker ukládá do Redis pouze překladová ID (případně obálku
-    ``{"id": <id>, "params": {...}}`` pro parametrizované zprávy), nikoli přeložené texty. Tento
-    helper překlad provádí v locale přihlášeného admina až na straně čtenáře.
-
-    :param raw: Hodnota z Redis — ``None``, plain ID (str), nebo JSON obálka (str) s ``id`` a
-        ``params``. Zpětně kompatibilní: pokud hodnota není obálka, přeloží se jako ID; pokud
-        překlad chybí, ``_()`` vrátí ID doslova.
-    :return: Přeložený řetězec, nebo ``None`` pokud je vstup ``None``.
-    """
-    if raw is None:
-        return None
-    if isinstance(raw, bytes):
-        raw = raw.decode("utf-8")
-    try:
-        obj = json.loads(raw)
-    except (TypeError, ValueError, json.JSONDecodeError):
-        return _(raw)
-    if isinstance(obj, dict) and "id" in obj:
-        params = obj.get("params") or {}
-        if obj.get("raw"):
-            # Raw exception message — composed at raise time from translated mapper fragments +
-            # runtime data; rendered verbatim (carve-out, see translation_value docstring).
-            return params.get("message", "")
-        try:
-            return _(obj["id"]).format(**params)
-        except (KeyError, IndexError, ValueError):
-            # ValueError covers a stray/literal brace in the translated string that breaks
-            # str.format(); fall back to the untouched translation.
-            return _(obj["id"])
-    return _(raw)
-
-
 def _status_message_id(raw):
     """Vrátí samotné ID stavové zprávy bez překladu/parametrů (pro porovnání v UI).
 
@@ -2872,7 +2838,7 @@ class DataImportProgress(LoginRequiredMixin, View):
             record_count = int(record_count_raw)
             phase_progress = int(redis_connector.get(f"import_data_progress_{job_id}") or 0)
             status_message_raw = redis_connector.get(f"import_data_status_message_tr_{job_id}")
-            status_message = _translate_status_value(status_message_raw)
+            status_message = translate_status_value(status_message_raw)
             status_message_id = _status_message_id(status_message_raw)
             stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
 
@@ -2881,7 +2847,7 @@ class DataImportProgress(LoginRequiredMixin, View):
             progress_details = redis_connector.lrange(f"import_data_progress_details_tr_{job_id}", 0, -1)
             # Per-row status values are translation IDs/envelopes — translate each in the admin's locale.
             serialized_results = {
-                rid: _translate_status_value(detail) for rid, detail in zip(progress_ids, progress_details)
+                rid: translate_status_value(detail) for rid, detail in zip(progress_ids, progress_details)
             }
             # File table: each entry's additional_info_tr is a translation ID/envelope (or raw envelope
             # for the mimetype); translate it, keep the rest of the dict verbatim.
@@ -2890,20 +2856,20 @@ class DataImportProgress(LoginRequiredMixin, View):
             for entry in serialized_results_files_raw:
                 translated_entry = dict(entry)
                 if "additional_info_tr" in translated_entry:
-                    translated_entry["additional_info"] = _translate_status_value(
+                    translated_entry["additional_info"] = translate_status_value(
                         translated_entry.pop("additional_info_tr")
                     )
                 else:
                     translated_entry.setdefault("additional_info", "")
                 serialized_results_files.append(translated_entry)
             import_history_record_result = {
-                rid: _translate_status_value(value)
+                rid: translate_status_value(value)
                 for rid, value in json.loads(
                     redis_connector.get(f"import_data_history_record_result_tr_{job_id}") or "{}"
                 ).items()
             }
             import_fedora_update_result = {
-                rid: [_translate_status_value(item) for item in items]
+                rid: [translate_status_value(item) for item in items]
                 for rid, items in json.loads(redis_connector.get(f"import_fedora_result_tr_{job_id}") or "{}").items()
             }
 
@@ -2933,11 +2899,11 @@ class DataImportProgress(LoginRequiredMixin, View):
             )
             # validation_result is a translation ID for valid rows, or a raw translated exception
             # message for invalid rows (carve-out: mapper exceptions compose the message at raise
-            # time). _translate_status_value renders both correctly in the admin's locale.
+            # time). translate_status_value renders both correctly in the admin's locale.
             validation_results = [
                 {
                     **json.loads(item),
-                    "validation_result": _translate_status_value(json.loads(item).get("validation_result", "")),
+                    "validation_result": translate_status_value(json.loads(item).get("validation_result", "")),
                 }
                 for item in validation_details
             ]

@@ -1,8 +1,8 @@
-"""Jednotkové testy pro ``cron.tasks.translation_value`` a ``core.views._translate_status_value``."""
+"""Jednotkové testy pro ``cron.tasks.translation_value`` a ``core.utils.translate_status_value``."""
 
 import json
 
-from core.views import _translate_status_value
+from core.utils import translate_status_value
 from cron.tasks import translation_value
 from django.test import SimpleTestCase
 
@@ -52,34 +52,34 @@ class TranslationValueTest(SimpleTestCase):
 
 
 class TranslationValueRoundTripTest(SimpleTestCase):
-    """Ověřuje round-trip ``translation_value`` -> ``_translate_status_value`` pro čtenáře v core.views."""
+    """Ověřuje round-trip ``translation_value`` -> ``translate_status_value`` pro oba čtenáře (views i tasks)."""
 
     def test_round_trip_raw_envelope_returns_message_verbatim(self):
         """Obálka s ``raw=True`` se musí vrátit doslova — beze změny a bez pokusu o překlad."""
         message = "Simulované selhání Fedora repozitáře: Traceback (most recent call last): ..."
         value = translation_value("cron.tasks.run_data_import.error.raw", raw=True, message=message)
 
-        self.assertEqual(_translate_status_value(value), message)
+        self.assertEqual(translate_status_value(value), message)
 
     def test_round_trip_raw_message_with_braces_is_not_treated_as_format_template(self):
         """Zprávy obsahující ``{``/``}`` (např. dict repr, traceback) se nesmí lámat na ``str.format``."""
         message = "MIME mismatch for record {pk: 42, 'extra': {'nested': True}}"
         value = translation_value("cron.tasks.run_data_import.error.raw", raw=True, message=message)
 
-        self.assertEqual(_translate_status_value(value), message)
+        self.assertEqual(translate_status_value(value), message)
 
     def test_round_trip_formatted_envelope_interpolates_params(self):
         """Bez ``raw`` se ID přeloží (zde beze změny, žádný .po není zkompilován) a naformátuje parametry."""
         value = translation_value("Row {n}/{total}", n=3, total=10)
 
-        self.assertEqual(_translate_status_value(value), "Row 3/10")
+        self.assertEqual(translate_status_value(value), "Row 3/10")
 
     def test_round_trip_plain_id_returns_translated_string(self):
         """Plain ID (bez parametrů) projde překladem beze změny, když není zkompilován žádný ``.po``."""
         value = translation_value("cron.tasks.run_data_import.finished")
 
-        self.assertEqual(_translate_status_value(value), "cron.tasks.run_data_import.finished")
+        self.assertEqual(translate_status_value(value), "cron.tasks.run_data_import.finished")
 
     def test_round_trip_none_returns_none(self):
         """``None`` (klíč v Redis dosud neexistuje) se musí vrátit jako ``None``, nikoli vyhodit výjimku."""
-        self.assertIsNone(_translate_status_value(None))
+        self.assertIsNone(translate_status_value(None))

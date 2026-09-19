@@ -1049,19 +1049,6 @@ Funkce
    :param redis_connector: Dekódující Redis spojení.
    :return: ``True`` pokud je uživatel vlastníkem úlohy; jinak ``False``.
 
-.. py:function:: _translate_status_value(raw)
-
-   Přeloží hodnotu načtenou z Redis (ID nebo obálka ``{id, params}``).
-
-   Standardizační pravidlo: worker ukládá do Redis pouze překladová ID (případně obálku
-   ``{"id": <id>, "params": {...}}`` pro parametrizované zprávy), nikoli přeložené texty. Tento
-   helper překlad provádí v locale přihlášeného admina až na straně čtenáře.
-
-   :param raw: Hodnota z Redis — ``None``, plain ID (str), nebo JSON obálka (str) s ``id`` a
-       ``params``. Zpětně kompatibilní: pokud hodnota není obálka, přeloží se jako ID; pokud
-       překlad chybí, ``_()`` vrátí ID doslova.
-   :return: Přeložený řetězec, nebo ``None`` pokud je vstup ``None``.
-
 .. py:function:: _status_message_id(raw)
 
    Vrátí samotné ID stavové zprávy bez překladu/parametrů (pro porovnání v UI).

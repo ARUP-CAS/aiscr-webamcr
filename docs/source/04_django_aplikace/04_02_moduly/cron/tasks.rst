@@ -226,17 +226,6 @@ Funkce
    :param job_id: Identifikátor resetované importní úlohy.
    :return: Zda byl reset přijat; při nedávné aktivitě nebo terminální fázi vrací ``False``.
 
-.. py:function:: _translate_status_value_for_report(raw)
-
-   Přeloží hodnotu z Redis (ID nebo obálka ``{id, params}``) do aktivního jazyka.
-
-   Zrcadlí ``core.views._translate_status_value`` — nedovolat odtud, aby ``cron.tasks`` (načítaný
-   při startu Celery workeru) nezávisel na ``core.views`` na úrovni modulu.
-
-   :param raw: Hodnota z Redis — ``None``, plain ID (str), nebo JSON obálka (str) s ``id`` a
-       ``params``.
-   :return: Přeložený řetězec, nebo ``None``, pokud je vstup ``None``.
-
 .. py:function:: get_or_create_import_report_path(job_id, redis_connector, reports_directory_path)
 
    Vrátí cestu k XLSX reportu importní úlohy, poprvé ji odvodí a uloží do Redis.
@@ -334,7 +323,7 @@ Funkce
 
    Možné hodnoty Redis klíče ``import_data_status_message_tr_{job_id}`` (ukládá se překladové
    ID, případně obálka ``{id, params}`` pro parametrizované zprávy; překlad provádí až čtenář
-   v locale přihlášeného admina — viz ``translation_value`` a ``_translate_status_value``):
+   v locale přihlášeného admina — viz ``translation_value`` a ``translate_status_value``):
 
    .. list-table::
        :header-rows: 1

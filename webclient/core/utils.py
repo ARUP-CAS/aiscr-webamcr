@@ -1605,6 +1605,46 @@ def is_maintenance_in_progress():
     return False
 
 
+def translate_status_value(raw):
+    """Přeloží hodnotu načtenou z Redis (ID nebo obálka ``{id, params}``).
+
+    Standardizační pravidlo: worker ukládá do Redis pouze překladová ID (případně obálku
+    ``{"id": <id>, "params": {...}}`` pro parametrizované zprávy), nikoli přeložené texty. Tento
+    helper překlad provádí až na straně čtenáře — v ``core.views`` v locale přihlášeného admina,
+    v ``cron.tasks`` v jazyce aktivním při zápisu XLSX reportu.
+
+    Protipól k ``cron.tasks.translation_value``, který obálku vytváří. Bydlí v ``core.utils``,
+    protože ho potřebují oba čtenáři (``core.views`` i ``cron.tasks``) a ``cron.tasks`` (načítaný
+    při startu Celery workeru) nesmí na úrovni modulu záviset na ``core.views``.
+
+    :param raw: Hodnota z Redis — ``None``, plain ID (str/bytes), nebo JSON obálka (str/bytes)
+        s klíči ``id``, volitelně ``params`` a ``raw``. Zpětně kompatibilní: pokud hodnota není
+        obálka, přeloží se jako ID; pokud překlad chybí, ``_()`` vrátí ID doslova.
+    :return: Přeložený řetězec, nebo ``None`` pokud je vstup ``None``.
+    """
+    if raw is None:
+        return None
+    if isinstance(raw, bytes):
+        raw = raw.decode("utf-8")
+    try:
+        obj = json.loads(raw)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return _(raw)
+    if isinstance(obj, dict) and "id" in obj:
+        params = obj.get("params") or {}
+        if obj.get("raw"):
+            # Raw exception message — composed at raise time from translated mapper fragments +
+            # runtime data; rendered verbatim (carve-out, see translation_value docstring).
+            return params.get("message", "")
+        try:
+            return _(obj["id"]).format(**params)
+        except (KeyError, IndexError, ValueError):
+            # ValueError covers a stray/literal brace in the translated string that breaks
+            # str.format(); fall back to the untouched translation.
+            return _(obj["id"])
+    return _(raw)
+
+
 IMPORT_REPORT_SUBDIRECTORY = "reports"
 
 
