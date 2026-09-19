@@ -60,15 +60,6 @@ class FakeRedisEvalDispatchTests(SimpleTestCase):
         self.assertTrue(RedisConnector.refresh_import_lock(fake, TOKEN, 60))
         self.assertEqual(fake.ttl(RedisConnector.IMPORT_DATA_LOCK_KEY), 60)
 
-    def test_persist_lock_script_clears_ttl_only_on_matching_token(self):
-        """Compare-then-persist skript zruší TTL pouze při shodě tokenu."""
-        fake = FakeRedis()
-        fake.set(RedisConnector.IMPORT_DATA_LOCK_KEY, TOKEN, ex=30)
-        self.assertFalse(RedisConnector.persist_import_lock(fake, "wrong-token"))
-        self.assertEqual(fake.ttl(RedisConnector.IMPORT_DATA_LOCK_KEY), 30)
-        self.assertTrue(RedisConnector.persist_import_lock(fake, TOKEN))
-        self.assertEqual(fake.ttl(RedisConnector.IMPORT_DATA_LOCK_KEY), -1)
-
     def _claimable_state(self):
         """Sestaví stav Redis, ve kterém lze úlohu ``JOB`` nárokovat ze stavu ``awaiting_approval``."""
         return {

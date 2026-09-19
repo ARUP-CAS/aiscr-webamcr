@@ -674,9 +674,7 @@ class RunDataImportValidationTest(TestCase):
 
         with patch("core.connectors.RedisConnector.get_connection", return_value=fake_redis), patch(
             "core.connectors.RedisConnector.refresh_import_lock", return_value=True
-        ), patch("core.connectors.RedisConnector.persist_import_lock", return_value=True), patch(
-            "core.connectors.RedisConnector.release_import_lock", return_value=True
-        ), patch(
+        ), patch("core.connectors.RedisConnector.release_import_lock", return_value=True), patch(
             "core.models.Soubor.check_antivirus", return_value=AntivirusCheckResult.PASSES
         ), patch(
             "xml_generator.models.ModelWithMetadata.save_metadata"

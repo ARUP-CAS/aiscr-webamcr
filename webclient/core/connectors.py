@@ -54,13 +54,6 @@ local token = redis.call("get", KEYS[4])
 if token and redis.call("get", KEYS[5]) == token then redis.call("del", KEYS[5]) end
 return 1
 """
-    _PERSIST_LOCK_SCRIPT = """
-if redis.call('get', KEYS[1]) == ARGV[1] then
-    return redis.call('persist', KEYS[1])
-else
-    return 0
-end
-"""
     # Atomic phase/validity check + lock refresh, so two concurrent Start requests can't both
     # observe awaiting_approval and dispatch the import task twice.
     _CLAIM_AWAITING_IMPORT_SCRIPT = """
@@ -207,17 +200,6 @@ return 1
                 retention_ttl,
             )
         )
-
-    @classmethod
-    def persist_import_lock(cls, connection: redis.Redis, token: str) -> bool:
-        """
-        Odstraní expiraci importního locku pouze tehdy, pokud ho stále vlastní zadaný token.
-
-        :param connection: Redis spojení, přes které se lock upravuje.
-        :param token: Jedinečný token vlastníka locku.
-        :return: ``True``, pokud byla expirace odstraněna; jinak ``False``.
-        """
-        return bool(connection.eval(cls._PERSIST_LOCK_SCRIPT, 1, cls.IMPORT_DATA_LOCK_KEY, token))
 
     @classmethod
     def release_import_lock(cls, connection: redis.Redis, token: str) -> bool:
