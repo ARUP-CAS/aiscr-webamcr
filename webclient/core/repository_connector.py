@@ -2261,7 +2261,9 @@ class FedoraTransaction(BaseFedoraTransaction):
         logger.debug(
             "core_repository_connector.FedoraTransaction.rollback_transaction.start", extra={"transaction": self.uid}
         )
-        if self.__status != FedoraTransactionStatus.ABORTED:
+        # A committed transaction no longer exists in Fedora, so rolling it back would just
+        # raise a fresh commit-failed error over an unrelated one already being handled.
+        if self.__status not in (FedoraTransactionStatus.ABORTED, FedoraTransactionStatus.COMMITTED):
             self._send_transaction_request(FedoraTransactionOperation.ROLLBACK)
             self.__status = FedoraTransactionStatus.ABORTED
         logger.debug(

@@ -2649,6 +2649,14 @@ def run_data_import(job_id, user_id, lock_token):
                                 filename, mimetype, bio, soubor.repository_uuid, save_thumbs=True
                             )
 
+                        # Commit Fedora before touching the DB: a failed commit here leaves nothing
+                        # to roll back (no DB write happened yet), while committing first and saving
+                        # second means a later DB failure only leaves an orphaned Fedora binary that
+                        # no DB row points to — harmless and acceptable, unlike a DB row pointing at
+                        # content Fedora never actually committed. Not deleting it back out avoids a
+                        # second fallible operation on top of the one that already failed.
+                        fedora_transaction.mark_transaction_as_closed()
+
                         soubor.mimetype = mimetype
                         soubor.size_mb = rep_bin_file.size_mb
                         soubor.sha_512 = rep_bin_file.sha_512
@@ -2699,7 +2707,6 @@ def run_data_import(job_id, user_id, lock_token):
                         )
                         soubor.active_transaction = fedora_transaction
                         soubor.save()
-                        fedora_transaction.mark_transaction_as_closed()
                         navazany = soubor.vazba.navazany_objekt
                         nav_key = (navazany.__class__, navazany.pk)
                         if nav_key not in pending_related_metadata:
