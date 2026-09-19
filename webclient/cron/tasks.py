@@ -230,6 +230,7 @@ TRANSLATABLE_MESSAGE_IDS = (
     _("cron.tasks.run_data_import.failed_mime_extension_mismatch"),
     _("cron.tasks.run_data_import.failed_mime_not_allowed"),
     _("cron.tasks.run_data_import.finished"),
+    _("cron.tasks.run_data_import.finished_with_skipped_files"),
     _("cron.tasks.run_data_import.cancelled"),
     _("cron.tasks.run_data_import.validation_rejected"),
     _("cron.tasks.run_data_import.validation_done"),
@@ -2506,6 +2507,7 @@ def run_data_import(job_id, user_id, lock_token):
             save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
 
         import_results_files = []
+        skipped_files: list = []
         if (
             not failed
             and not stopped
@@ -2557,6 +2559,43 @@ def run_data_import(job_id, user_id, lock_token):
                     )
                     redis_connector.set(job_key("import_data_files_progress"), 0, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
                     pending_related_metadata: dict = {}
+
+                    def skip_file(skipped_ident_cely, skipped_filename, reason_tr, skipped_index):
+                        """Zapíše přeskočený soubor do reportu a posune ukazatel průběhu.
+
+                        Přeskočení se týká pouze deterministických podmínek vázaných na jeden řádek
+                        (konflikt názvu, chybějící binární soubor). Zbytek importu pokračuje dál.
+
+                        :param skipped_ident_cely: Identifikátor navázaného záznamu.
+                        :param skipped_filename: Název přeskočeného souboru.
+                        :param reason_tr: Překladové ID důvodu přeskočení.
+                        :param skipped_index: Pořadí souboru v ``import_files_list``.
+                        """
+                        import_results_files.append(
+                            {
+                                "ident_cely": skipped_ident_cely,
+                                "file_name": skipped_filename,
+                                "size_mb": None,
+                                "additional_info_tr": reason_tr,
+                            }
+                        )
+                        skipped_files.append(skipped_filename)
+                        redis_connector.set(job_key("import_data_files"), json.dumps(import_results_files))
+                        redis_connector.set(
+                            job_key("import_data_files_progress"),
+                            skipped_index + 1,
+                            ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+                        )
+                        logger.info(
+                            "cron.tasks.run_data_import.files.skipped",
+                            extra={
+                                "job_id": job_id,
+                                "ident_cely": skipped_ident_cely,
+                                "import_filename": skipped_filename,
+                                "reason": reason_tr,
+                            },
+                        )
+
                     for file_index, soubor in enumerate(import_files_list):
                         fedora_transaction = None
                         record_id = None
@@ -2582,60 +2621,20 @@ def run_data_import(job_id, user_id, lock_token):
                         name_conflict_query = Soubor.objects.filter(nazev=filename, vazba=soubor.vazba)
                         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
                             if name_conflict_query.exists():
-                                import_results_files.append(
-                                    {
-                                        "ident_cely": ident_cely,
-                                        "file_name": filename,
-                                        "size_mb": None,
-                                        "additional_info_tr": "cron.tasks.run_data_import.already_exists",
-                                    }
-                                )
-                                redis_connector.set(job_key("import_data_files"), json.dumps(import_results_files))
-                                failed = True
-                                stopped = True
-                                redis_connector.set(job_key("import_data_stop"), 1)
-                                redis_connector.set(
-                                    job_key("import_data_status_message_tr"),
-                                    translation_value("cron.tasks.run_data_import.failed_during_data_import"),
-                                )
-                                break
+                                skip_file(ident_cely, filename, "cron.tasks.run_data_import.already_exists", file_index)
+                                continue
                         elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
                             if name_conflict_query.exclude(pk=soubor.pk).exists():
-                                import_results_files.append(
-                                    {
-                                        "ident_cely": ident_cely,
-                                        "file_name": filename,
-                                        "size_mb": None,
-                                        "additional_info_tr": "cron.tasks.run_data_import.already_exists",
-                                    }
-                                )
-                                redis_connector.set(job_key("import_data_files"), json.dumps(import_results_files))
-                                failed = True
-                                stopped = True
-                                redis_connector.set(job_key("import_data_stop"), 1)
-                                redis_connector.set(
-                                    job_key("import_data_status_message_tr"),
-                                    translation_value("cron.tasks.run_data_import.failed_during_data_import"),
-                                )
-                                break
+                                skip_file(ident_cely, filename, "cron.tasks.run_data_import.already_exists", file_index)
+                                continue
                         if not os.path.isfile(file_path):
-                            import_results_files.append(
-                                {
-                                    "ident_cely": ident_cely,
-                                    "file_name": filename,
-                                    "size_mb": None,
-                                    "additional_info_tr": "cron.tasks.run_data_import.file_not_found_in_directory",
-                                }
+                            skip_file(
+                                ident_cely,
+                                filename,
+                                "cron.tasks.run_data_import.file_not_found_in_directory",
+                                file_index,
                             )
-                            redis_connector.set(job_key("import_data_files"), json.dumps(import_results_files))
-                            failed = True
-                            stopped = True
-                            redis_connector.set(job_key("import_data_stop"), 1)
-                            redis_connector.set(
-                                job_key("import_data_status_message_tr"),
-                                translation_value("cron.tasks.run_data_import.cannot_read_from_directory"),
-                            )
-                            break
+                            continue
                         record_id = getattr(soubor, "import_record_id", None)
                         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
                             soubor = name_conflict_query.first() or soubor
@@ -2961,7 +2960,13 @@ def run_data_import(job_id, user_id, lock_token):
             )
             redis_connector.set(
                 job_key("import_data_status_message_tr"),
-                translation_value("cron.tasks.run_data_import.finished"),
+                (
+                    translation_value("cron.tasks.run_data_import.finished")
+                    if not skipped_files
+                    else translation_value(
+                        "cron.tasks.run_data_import.finished_with_skipped_files", skipped=len(skipped_files)
+                    )
+                ),
             )
         if reports_directory_path:
             save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
