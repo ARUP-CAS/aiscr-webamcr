@@ -2843,17 +2843,27 @@ class DataImportProgress(LoginRequiredMixin, View):
             stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
 
             import_data_primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}") or "{}")
-            progress_ids = redis_connector.lrange(f"import_data_progress_ids_{job_id}", 0, -1)
-            progress_details = redis_connector.lrange(f"import_data_progress_details_tr_{job_id}", 0, -1)
-            # Per-row status values are translation IDs/envelopes — translate each in the admin's locale.
+            # The browser sends the number of already rendered rows.  Slice both lists before
+            # translating so a one-second poll only translates newly appended progress entries.
+            try:
+                progress_since = max(int(request.GET.get("progress_since", 0)), 0)
+            except (TypeError, ValueError):
+                progress_since = 0
+            progress_ids = redis_connector.lrange(f"import_data_progress_ids_{job_id}", progress_since, -1)
+            progress_details = redis_connector.lrange(f"import_data_progress_details_tr_{job_id}", progress_since, -1)
             serialized_results = {
                 rid: translate_status_value(detail) for rid, detail in zip(progress_ids, progress_details)
             }
-            # File table: each entry's additional_info_tr is a translation ID/envelope (or raw envelope
-            # for the mimetype); translate it, keep the rest of the dict verbatim.
+            progress_cursor = progress_since + len(serialized_results)
+            # File entries are append-only too, so only translate the entries the browser has not
+            # already rendered.
+            try:
+                files_since = max(int(request.GET.get("files_since", 0)), 0)
+            except (TypeError, ValueError):
+                files_since = 0
             serialized_results_files_raw = json.loads(redis_connector.get(f"import_data_files_{job_id}") or "[]")
             serialized_results_files = []
-            for entry in serialized_results_files_raw:
+            for entry in serialized_results_files_raw[files_since:]:
                 translated_entry = dict(entry)
                 if "additional_info_tr" in translated_entry:
                     translated_entry["additional_info"] = translate_status_value(
@@ -2862,6 +2872,7 @@ class DataImportProgress(LoginRequiredMixin, View):
                 else:
                     translated_entry.setdefault("additional_info", "")
                 serialized_results_files.append(translated_entry)
+            files_cursor = files_since + len(serialized_results_files)
             import_history_record_result = {
                 rid: translate_status_value(value)
                 for rid, value in json.loads(
@@ -2958,7 +2969,7 @@ class DataImportProgress(LoginRequiredMixin, View):
                     fraction * (IMPORT_PROGRESS_PHASE_HISTORY_DONE - IMPORT_PROGRESS_PHASE_DATA_DONE)
                 )
             elif record_count:
-                progress_data = math.floor((len(serialized_results) / record_count) * IMPORT_PROGRESS_PHASE_DATA_DONE)
+                progress_data = math.floor((progress_cursor / record_count) * IMPORT_PROGRESS_PHASE_DATA_DONE)
             else:
                 progress_data = 0
             if phase in (IMPORT_PHASE_FINISHED, IMPORT_PHASE_STOPPED, IMPORT_PHASE_FAILED, IMPORT_PHASE_CANCELED):
@@ -2973,13 +2984,15 @@ class DataImportProgress(LoginRequiredMixin, View):
                 "phase": phase,
                 "record_count": record_count,
                 "progress_data": progress_data,
-                "finished_record_count": len(serialized_results),
+                "finished_record_count": progress_cursor,
                 "serialized_results": serialized_results,
+                "progress_cursor": progress_cursor,
                 "primary_keys": import_data_primary_keys,
                 "history_record_result": import_history_record_result,
                 "fedora_update_result": import_fedora_update_result,
                 "status": status,
                 "serialized_results_files": serialized_results_files,
+                "files_cursor": files_cursor,
                 "status_message": status_message or _("core.templates.admin.import_data.starting"),
                 "status_message_id": status_message_id,
                 "validation_results": validation_results,

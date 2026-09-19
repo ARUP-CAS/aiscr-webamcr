@@ -187,24 +187,33 @@ class DataImportOwnershipTest(SimpleTestCase):
         self.assertEqual(json.loads(response.content)["result"], "error")
 
 
-class DataImportProgressValidationCursorTest(SimpleTestCase):
-    """Testy pro ``DataImportProgress`` — ``validation_since``/``validation_cursor``."""
+class DataImportProgressCursorTest(SimpleTestCase):
+    """Testy pro kurzory validačních a importních výsledků ``DataImportProgress``."""
 
     def setUp(self):
         """Připraví ``RequestFactory`` sdílenou napříč testy."""
         self.factory = RequestFactory()
 
-    def _get(self, fake, validation_since=None, user_id=OWNER_ID):
-        """Zavolá ``DataImportProgress`` s volitelným query parametrem ``validation_since``.
+    def _get(self, fake, validation_since=None, progress_since=None, files_since=None, user_id=OWNER_ID):
+        """Zavolá ``DataImportProgress`` s volitelnými kurzory výsledků.
 
         :param fake: ``FakeRedis`` vrácený z ``get_connection_decode()``.
         :param validation_since: Hodnota query parametru, nebo ``None`` pro jeho vynechání.
+        :param progress_since: Hodnota query parametru pro importní výsledky, nebo ``None`` pro jeho vynechání.
+        :param files_since: Hodnota query parametru pro výsledky souborů, nebo ``None`` pro jeho vynechání.
         :param user_id: ``id`` přihlášeného uživatele.
         :return: HTTP odpověď view.
         """
         url = f"/data-import/{JOB}"
+        query_params = []
         if validation_since is not None:
-            url += f"?validation_since={validation_since}"
+            query_params.append(f"validation_since={validation_since}")
+        if progress_since is not None:
+            query_params.append(f"progress_since={progress_since}")
+        if files_since is not None:
+            query_params.append(f"files_since={files_since}")
+        if query_params:
+            url += "?" + "&".join(query_params)
         request = self.factory.get(url)
         request.user = _StubUser(user_id, is_superuser=True)
         with mock.patch("core.views.RedisConnector.get_connection_decode", return_value=fake):
@@ -279,6 +288,46 @@ class DataImportProgressValidationCursorTest(SimpleTestCase):
         data = json.loads(response.content)
         self.assertEqual(len(data["validation_results"]), 2)
         self.assertEqual(data["validation_cursor"], 2)
+
+    @staticmethod
+    def _push_progress_rows(fake, count):
+        """Přidá ``count`` importních výsledků do Redis seznamů průběhu.
+
+        :param fake: ``FakeRedis``, do kterého se řádky zapíší.
+        :param count: Počet výsledků k zápisu.
+        """
+        for i in range(count):
+            fake.rpush(f"import_data_progress_ids_{JOB}", i)
+            fake.rpush(f"import_data_progress_details_tr_{JOB}", "cron.tasks.run_data_import.success")
+
+    def test_progress_since_returns_only_appended_results_and_cursor(self):
+        """``progress_since`` vrátí jen nové výsledky a celkový kurzor pro další poll."""
+        fake = _fake(tasks.IMPORT_PHASE_IMPORTING, extra={f"import_data_count_{JOB}": 5})
+        self._push_progress_rows(fake, 5)
+
+        response = self._get(fake, progress_since=3)
+
+        data = json.loads(response.content)
+        self.assertEqual(
+            data["serialized_results"],
+            {"3": "cron.tasks.run_data_import.success", "4": "cron.tasks.run_data_import.success"},
+        )
+        self.assertEqual(data["finished_record_count"], 5)
+        self.assertEqual(data["progress_cursor"], 5)
+
+    def test_files_since_returns_only_appended_results_and_cursor(self):
+        """``files_since`` vrátí jen nové soubory a celkový kurzor pro další poll."""
+        files = [
+            {"ident_cely": f"F-{i}", "file_name": f"soubor-{i}.pdf", "size_mb": i, "additional_info_tr": "ok"}
+            for i in range(3)
+        ]
+        fake = _fake(tasks.IMPORT_PHASE_IMPORTING, extra={f"import_data_files_{JOB}": json.dumps(files)})
+
+        response = self._get(fake, files_since=1)
+
+        data = json.loads(response.content)
+        self.assertEqual([item["ident_cely"] for item in data["serialized_results_files"]], ["F-1", "F-2"])
+        self.assertEqual(data["files_cursor"], 3)
 
 
 class DataImportResetTest(SimpleTestCase):
