@@ -4659,25 +4659,88 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
         return record.vedouci
 
 
-class UserRelationErrorIdentityMixin:
-    """Sdílí sestavení identifikátoru a názvu relace pro chyby importu uživatelů."""
+class UserRelationMapperMixin:
+    """Sdílí import relací uživatele parametrizovaných cílovým modelem a jeho lookupem."""
 
-    @staticmethod
-    def _get_user_relation_error_identity(value_dict, relation_field):
-        """Sestaví identifikátor řádku a název uživatelské relace pro chybu integrity.
+    relation_field = None
+    relation_model = None
+    relation_lookup_field = None
+    user_relation_accessor = None
+    relation_error_label = None
 
-        :param value_dict: Importovaný řádek s uživatelem a hodnotou relace.
-        :param relation_field: Sloupec ``skupina`` nebo ``notifikace`` určující cílovou relaci.
-        :return: Dvojice slovníku identifikátoru a názvu relace modelu User.
+    def get_mapping(self, include_primary_key=False):
+        """Vrátí mapování uživatele a související hodnoty relace.
+
+        :param include_primary_key: Zachovaný parametr jednotného rozhraní mapperů, mapování relace neovlivňuje.
+        :return: Slovník importních polí pro uživatele a cílovou relaci.
         """
-        relation_labels = {"skupina": "User.groups", "notifikace": "User.notification_types"}
-        return {"uzivatel": value_dict["uzivatel"], relation_field: value_dict[relation_field]}, relation_labels[
-            relation_field
-        ]
+        return {
+            "uzivatel": LookupImportField(User),
+            self.relation_field: LookupImportField(self.relation_model, self.relation_lookup_field),
+        }
+
+    def _get_filter_kwargs_primary_key(self) -> dict:
+        """Vrátí podmínku pro dohledání uživatele podle jeho úplného identifikátoru."""
+        return {"ident_cely": self.value_dict["uzivatel"]}
+
+    def _get_relation_error_identity(self) -> tuple[dict, str]:
+        """Sestaví identifikátor řádku a název relace pro chybu integrity importu."""
+        return {
+            "uzivatel": self.value_dict["uzivatel"],
+            self.relation_field: self.value_dict[self.relation_field],
+        }, self.relation_error_label
+
+    def _validate_supported_action(self, performed_action) -> None:
+        """Ověří, zda mapper podporuje požadovanou importní akci."""
+        if performed_action not in self.supported_actions:
+            raise ImportDataError(
+                _("core_admin.ImportDataError.message.invalid_performed_action") + ": " + str(performed_action)
+            )
+
+    def create_records(self, performed_action) -> list:
+        """Dohledá uživatele, který bude při importu relace uložen nebo upraven.
+
+        :param performed_action: Požadovaná importní akce, která musí patřit mezi podporované akce mapperu.
+        :return: Jednoprvkový seznam s dohledaným uživatelem.
+        :raises ImportDataError: Pokud mapper nepodporuje požadovanou importní akci.
+        :raises ImportDataIntegrityError: Pokud importovaný uživatel neexistuje.
+        """
+        self._validate_supported_action(performed_action)
+        try:
+            return [User.objects.get(**self._get_filter_kwargs_primary_key())]
+        except User.DoesNotExist:
+            record_id, label = self._get_relation_error_identity()
+            raise ImportDataIntegrityError(record_id, label, performed_action)
+
+    def import_validation(self, performed_action, *args, **kwargs) -> dict:
+        """Ověří, že import relace uživatele způsobí skutečnou změnu.
+
+        :param performed_action: Požadovaná importní akce, která určuje očekávaný stav relace.
+        :param args: Nepoužité poziční argumenty zachované kvůli jednotnému rozhraní mapperů.
+        :param kwargs: Nepoužité pojmenované argumenty zachované kvůli jednotnému rozhraní mapperů.
+        :return: Podmínka pro dohledání cílového uživatele.
+        :raises ImportDataError: Pokud mapper nepodporuje požadovanou importní akci.
+        :raises ImportDataIntegrityError: Pokud by import relace nezměnil její aktuální stav.
+        """
+        self._validate_supported_action(performed_action)
+        try:
+            user = User.objects.get(**self._get_filter_kwargs_primary_key())
+            relation = self.relation_model.objects.get(
+                **{self.relation_lookup_field: self.value_dict[self.relation_field]}
+            )
+            relation_exists = getattr(user, self.user_relation_accessor).filter(pk=relation.pk).exists()
+        except (User.DoesNotExist, self.relation_model.DoesNotExist):
+            relation_exists = False
+        record_id, label = self._get_relation_error_identity()
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and relation_exists:
+            raise ImportDataIntegrityError(record_id, label, performed_action)
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE and not relation_exists:
+            raise ImportDataIntegrityError(record_id, label, performed_action)
+        return self._get_filter_kwargs_primary_key()
 
 
 @ImportModelMapper.register("uzivatele_opravneni")
-class UzivatelOpravneniMapper(ImportModelMapper, UserRelationErrorIdentityMixin):
+class UzivatelOpravneniMapper(UserRelationMapperMixin, ImportModelMapper):
     """Mapovač pro přiřazení skupinových oprávnění uživateli (model User)."""
 
     model_class = User
@@ -4688,69 +4751,11 @@ class UzivatelOpravneniMapper(ImportModelMapper, UserRelationErrorIdentityMixin)
         ImportDataAdminForm.PERFORMED_ACTION_DELETE,
     )
     column_to_field_mapping = {"uzivatel": "ident_cely"}
-
-    def get_mapping(cls, include_primary_key=False):
-        """
-        Vrací mapping. v aplikaci.
-
-        :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
-
-            :return: Vrací proměnná ``field_mapping``.
-        """
-        field_mapping = {"uzivatel": LookupImportField(User), "skupina": LookupImportField(Group, "name")}
-        return field_mapping
-
-    def _get_filter_kwargs_primary_key(self) -> dict | None:
-        """
-        Vrací filter kwargs primary key.
-
-        :return: Načtená data odpovídající zadaným vstupům.
-        """
-        return {"ident_cely": self.value_dict["uzivatel"]}
-
-    def create_records(self, performed_action):
-        """
-        Vytvoří records. v aplikaci.
-
-        :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``create_records``.
-
-            :return: Vrací seznam.
-        """
-        if performed_action not in self.supported_actions:
-            raise ImportDataError(
-                _("core_admin.ImportDataError.message.invalid_performed_action") + ": " + str(performed_action)
-            )
-        try:
-            return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
-        except User.DoesNotExist:
-            record_id, label = self._get_user_relation_error_identity(self.value_dict, "skupina")
-            raise ImportDataIntegrityError(record_id, label, performed_action)
-
-    def import_validation(self, performed_action, *args, **kwargs):
-        """
-        Ověří, že import oprávnění provede skutečnou změnu.
-
-        :param performed_action: Požadovaná importní akce.
-        :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
-        :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
-        :return: Slovník s podmínkou pro dohledání cílového uživatele.
-        """
-        if performed_action not in self.supported_actions:
-            raise ImportDataError(
-                _("core_admin.ImportDataError.message.invalid_performed_action") + ": " + str(performed_action)
-            )
-        try:
-            user = User.objects.get(ident_cely=self.value_dict["uzivatel"])
-            group = Group.objects.get(name=self.value_dict["skupina"])
-            relation_exists = user.groups.filter(pk=group.pk).exists()
-        except (User.DoesNotExist, Group.DoesNotExist):
-            relation_exists = False
-        record_id, label = self._get_user_relation_error_identity(self.value_dict, "skupina")
-        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and relation_exists:
-            raise ImportDataIntegrityError(record_id, label, performed_action)
-        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE and not relation_exists:
-            raise ImportDataIntegrityError(record_id, label, performed_action)
-        return self._get_filter_kwargs_primary_key()
+    relation_field = "skupina"
+    relation_model = Group
+    relation_lookup_field = "name"
+    user_relation_accessor = "groups"
+    relation_error_label = "User.groups"
 
     @staticmethod
     def get_record_history(record: User):
@@ -4899,7 +4904,7 @@ class SouborMapper(ImportModelMapper):
 
 
 @ImportModelMapper.register("uzivatele_notifikace")
-class UzivatelNotifikaceMapper(ImportModelMapper, UserRelationErrorIdentityMixin):
+class UzivatelNotifikaceMapper(UserRelationMapperMixin, ImportModelMapper):
     """Mapovač pro přiřazení typů notifikací uživateli (model User)."""
 
     model_class = User
@@ -4910,69 +4915,11 @@ class UzivatelNotifikaceMapper(ImportModelMapper, UserRelationErrorIdentityMixin
         ImportDataAdminForm.PERFORMED_ACTION_DELETE,
     )
     column_to_field_mapping = {"uzivatel": "ident_cely"}
-
-    def get_mapping(cls, include_primary_key=False):
-        """
-        Vrací mapping. v aplikaci.
-
-        :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
-
-            :return: Vrací proměnná ``field_mapping``.
-        """
-        field_mapping = {"uzivatel": LookupImportField(User), "notifikace": LookupImportField(UserNotificationType)}
-        return field_mapping
-
-    def _get_filter_kwargs_primary_key(self) -> dict | None:
-        """
-        Vrací filter kwargs primary key.
-
-        :return: Načtená data odpovídající zadaným vstupům.
-        """
-        return {"ident_cely": self.value_dict["uzivatel"]}
-
-    def create_records(self, performed_action):
-        """
-        Vytvoří records. v aplikaci.
-
-        :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``create_records``.
-
-            :return: Vrací seznam.
-        """
-        if performed_action not in self.supported_actions:
-            raise ImportDataError(
-                _("core_admin.ImportDataError.message.invalid_performed_action") + ": " + str(performed_action)
-            )
-        try:
-            return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
-        except User.DoesNotExist:
-            record_id, label = self._get_user_relation_error_identity(self.value_dict, "notifikace")
-            raise ImportDataIntegrityError(record_id, label, performed_action)
-
-    def import_validation(self, performed_action, *args, **kwargs):
-        """
-        Ověří, že import notifikace provede skutečnou změnu.
-
-        :param performed_action: Požadovaná importní akce.
-        :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
-        :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
-        :return: Slovník s podmínkou pro dohledání cílového uživatele.
-        """
-        if performed_action not in self.supported_actions:
-            raise ImportDataError(
-                _("core_admin.ImportDataError.message.invalid_performed_action") + ": " + str(performed_action)
-            )
-        try:
-            user = User.objects.get(ident_cely=self.value_dict["uzivatel"])
-            notification_type = UserNotificationType.objects.get(ident_cely=self.value_dict["notifikace"])
-            relation_exists = user.notification_types.filter(pk=notification_type.pk).exists()
-        except (User.DoesNotExist, UserNotificationType.DoesNotExist):
-            relation_exists = False
-        record_id, label = self._get_user_relation_error_identity(self.value_dict, "notifikace")
-        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and relation_exists:
-            raise ImportDataIntegrityError(record_id, label, performed_action)
-        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE and not relation_exists:
-            raise ImportDataIntegrityError(record_id, label, performed_action)
-        return self._get_filter_kwargs_primary_key()
+    relation_field = "notifikace"
+    relation_model = UserNotificationType
+    relation_lookup_field = "ident_cely"
+    user_relation_accessor = "notification_types"
+    relation_error_label = "User.notification_types"
 
     @staticmethod
     def get_record_history(record: User):

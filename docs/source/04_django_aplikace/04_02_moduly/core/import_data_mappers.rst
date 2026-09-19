@@ -2246,19 +2246,50 @@ Třídy
       :return: Vedoucí uživatel navázaný na spolupráci.
 
 
-.. py:class:: UserRelationErrorIdentityMixin
+.. py:class:: UserRelationMapperMixin
 
-   Sdílí sestavení identifikátoru a názvu relace pro chyby importu uživatelů.
+   Sdílí import relací uživatele parametrizovaných cílovým modelem a jeho lookupem.
 
    **Metody:**
 
-   .. py:method:: _get_user_relation_error_identity()
+   .. py:method:: get_mapping()
 
-      Sestaví identifikátor řádku a název uživatelské relace pro chybu integrity.
+      Vrátí mapování uživatele a související hodnoty relace.
 
-      :param value_dict: Importovaný řádek s uživatelem a hodnotou relace.
-      :param relation_field: Sloupec ``skupina`` nebo ``notifikace`` určující cílovou relaci.
-      :return: Dvojice slovníku identifikátoru a názvu relace modelu User.
+      :param include_primary_key: Zachovaný parametr jednotného rozhraní mapperů, mapování relace neovlivňuje.
+      :return: Slovník importních polí pro uživatele a cílovou relaci.
+
+   .. py:method:: _get_filter_kwargs_primary_key()
+
+      Vrátí podmínku pro dohledání uživatele podle jeho úplného identifikátoru.
+
+   .. py:method:: _get_relation_error_identity()
+
+      Sestaví identifikátor řádku a název relace pro chybu integrity importu.
+
+   .. py:method:: _validate_supported_action()
+
+      Ověří, zda mapper podporuje požadovanou importní akci.
+
+   .. py:method:: create_records()
+
+      Dohledá uživatele, který bude při importu relace uložen nebo upraven.
+
+      :param performed_action: Požadovaná importní akce, která musí patřit mezi podporované akce mapperu.
+      :return: Jednoprvkový seznam s dohledaným uživatelem.
+      :raises ImportDataError: Pokud mapper nepodporuje požadovanou importní akci.
+      :raises ImportDataIntegrityError: Pokud importovaný uživatel neexistuje.
+
+   .. py:method:: import_validation()
+
+      Ověří, že import relace uživatele způsobí skutečnou změnu.
+
+      :param performed_action: Požadovaná importní akce, která určuje očekávaný stav relace.
+      :param args: Nepoužité poziční argumenty zachované kvůli jednotnému rozhraní mapperů.
+      :param kwargs: Nepoužité pojmenované argumenty zachované kvůli jednotnému rozhraní mapperů.
+      :return: Podmínka pro dohledání cílového uživatele.
+      :raises ImportDataError: Pokud mapper nepodporuje požadovanou importní akci.
+      :raises ImportDataIntegrityError: Pokud by import relace nezměnil její aktuální stav.
 
 
 .. py:class:: UzivatelOpravneniMapper
@@ -2266,37 +2297,6 @@ Třídy
    Mapovač pro přiřazení skupinových oprávnění uživateli (model User).
 
    **Metody:**
-
-   .. py:method:: get_mapping()
-
-      Vrací mapping. v aplikaci.
-
-      :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
-
-      :return: Vrací proměnná ``field_mapping``.
-
-   .. py:method:: _get_filter_kwargs_primary_key()
-
-      Vrací filter kwargs primary key.
-
-      :return: Načtená data odpovídající zadaným vstupům.
-
-   .. py:method:: create_records()
-
-      Vytvoří records. v aplikaci.
-
-      :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``create_records``.
-
-      :return: Vrací seznam.
-
-   .. py:method:: import_validation()
-
-      Ověří, že import oprávnění provede skutečnou změnu.
-
-      :param performed_action: Požadovaná importní akce.
-      :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
-      :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
-      :return: Slovník s podmínkou pro dohledání cílového uživatele.
 
    .. py:method:: get_record_history()
 
@@ -2390,37 +2390,6 @@ Třídy
    Mapovač pro přiřazení typů notifikací uživateli (model User).
 
    **Metody:**
-
-   .. py:method:: get_mapping()
-
-      Vrací mapping. v aplikaci.
-
-      :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
-
-      :return: Vrací proměnná ``field_mapping``.
-
-   .. py:method:: _get_filter_kwargs_primary_key()
-
-      Vrací filter kwargs primary key.
-
-      :return: Načtená data odpovídající zadaným vstupům.
-
-   .. py:method:: create_records()
-
-      Vytvoří records. v aplikaci.
-
-      :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``create_records``.
-
-      :return: Vrací seznam.
-
-   .. py:method:: import_validation()
-
-      Ověří, že import notifikace provede skutečnou změnu.
-
-      :param performed_action: Požadovaná importní akce.
-      :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
-      :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
-      :return: Slovník s podmínkou pro dohledání cílového uživatele.
 
    .. py:method:: get_record_history()
 
