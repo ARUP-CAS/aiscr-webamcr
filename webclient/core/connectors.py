@@ -91,7 +91,7 @@ if redis.call("exists", KEYS[2]) ~= 0 then return 0 end
 local token = redis.call("get", KEYS[3])
 if not token or redis.call("get", KEYS[4]) ~= token then return 0 end
 redis.call("set", KEYS[1], ARGV[2])
-redis.call("persist", KEYS[4])
+redis.call("expire", KEYS[4], ARGV[3])
 return 1
 """
 
@@ -287,11 +287,12 @@ return 1
         )
 
     @classmethod
-    def finalize_validation(cls, connection: redis.Redis, job_id: str) -> bool:
+    def finalize_validation(cls, connection: redis.Redis, job_id: str, approval_ttl_seconds: int) -> bool:
         """Atomicky převede vlastníkem drženou validaci do čekání na schválení.
 
         :param connection: Redis spojení použité pro atomické spuštění Lua skriptu.
         :param job_id: Identifikátor finalizované importní úlohy.
+        :param approval_ttl_seconds: Doba v sekundách, po kterou lock zůstane při čekání na schválení platný.
         :return: ``True``, pokud úloha stále vlastní lock a přechod proběhl; jinak ``False``.
         """
         return bool(
@@ -304,6 +305,7 @@ return 1
                 cls.IMPORT_DATA_LOCK_KEY,
                 "validating",
                 "awaiting_approval",
+                approval_ttl_seconds,
             )
         )
 

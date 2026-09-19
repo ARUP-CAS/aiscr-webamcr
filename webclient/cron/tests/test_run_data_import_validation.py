@@ -343,11 +343,11 @@ class RunDataImportValidationTest(TestCase):
         fake_redis = self._build_redis(blob=_build_zip([_uzivatel_row()]))
         real_finalize_validation = cron_tasks.RedisConnector.finalize_validation
 
-        def reset_then_finalize(connection, job_id):
+        def reset_then_finalize(connection, job_id, approval_ttl_seconds):
             connection.set(f"import_data_stop_{job_id}", "1")
             connection.set(f"import_data_phase_{job_id}", cron_tasks.IMPORT_PHASE_FAILED)
             connection.delete(cron_tasks.RedisConnector.IMPORT_DATA_LOCK_KEY)
-            return real_finalize_validation(connection, job_id)
+            return real_finalize_validation(connection, job_id, approval_ttl_seconds)
 
         release_lock_mock = self._run_validation(
             fake_redis,
@@ -364,11 +364,11 @@ class RunDataImportValidationTest(TestCase):
         fake_redis = self._build_redis(blob=_build_zip([_uzivatel_row()]))
         real_finalize_validation = cron_tasks.RedisConnector.finalize_validation
 
-        def stop_then_finalize(connection, job_id):
+        def stop_then_finalize(connection, job_id, approval_ttl_seconds):
             # Only the stop sentinel is set (as core.views.DataImportStop does) — phase stays
             # "validating", unlike an admin reset which also rewrites the phase.
             connection.set(f"import_data_stop_{job_id}", "1")
-            return real_finalize_validation(connection, job_id)
+            return real_finalize_validation(connection, job_id, approval_ttl_seconds)
 
         self._run_validation(
             fake_redis,
@@ -388,11 +388,11 @@ class RunDataImportValidationTest(TestCase):
         replacement_token = "replacement-lock-token"
         replacement_job_id = "replacement-job"
 
-        def replace_lock_then_finalize(connection, job_id):
+        def replace_lock_then_finalize(connection, job_id, approval_ttl_seconds):
             connection.set(cron_tasks.RedisConnector.IMPORT_DATA_LOCK_KEY, replacement_token)
             connection.set(cron_tasks.RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, replacement_job_id)
             connection.set(f"import_data_current_job_{self.runner.id}", replacement_job_id)
-            return real_finalize_validation(connection, job_id)
+            return real_finalize_validation(connection, job_id, approval_ttl_seconds)
 
         self._run_validation(
             fake_redis,
@@ -632,21 +632,27 @@ class RunDataImportValidationTest(TestCase):
         chunks_raw = fake_redis.get(f"import_data_file_chunks_{JOB_ID}")
         self.assertIsNone(chunks_raw)
 
-    def test_success_path_persists_per_job_data_keys(self):
-        """Na úspěšné cestě se per-job datové klíče persistují (bez TTL) pro awaiting_approval okno."""
+    def test_success_path_expires_per_job_data_keys_after_approval_window(self):
+        """Na úspěšné cestě mají per-job datové klíče sedmidenní TTL pro awaiting_approval okno."""
         blob = _build_zip([_uzivatel_row()])
         fake_redis = self._build_redis(blob=blob)
 
         self._run_validation(fake_redis)
 
         self._assert_phase(fake_redis, cron_tasks.IMPORT_PHASE_AWAITING_APPROVAL)
-        self.assertIsNotNone(fake_redis.get(f"import_data_validation_details_{JOB_ID}"))
+        self.assertTrue(fake_redis.lrange(f"import_data_validation_details_{JOB_ID}", 0, -1))
         self.assertIsNotNone(fake_redis.get(f"import_data_count_{JOB_ID}"))
         self.assertIsNotNone(fake_redis.get(f"import_data_valid_{JOB_ID}"))
-        # Klíč musí zůstat bez TTL, aby reviewer po dlouhé awaiting_approval našel úplný report.
-        self.assertEqual(fake_redis.ttl(f"import_data_validation_details_{JOB_ID}"), -1)
-        # Per-user pointer se na úspěšné cestě persistuje (nesmí se smazat).
+        self.assertEqual(
+            fake_redis.ttl(f"import_data_validation_details_{JOB_ID}"),
+            cron_tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS,
+        )
+        # Per-user pointer zůstává během omezeného okna schválení dostupný.
         self.assertIsNotNone(fake_redis.get(f"import_data_current_job_{self.runner.id}"))
+        self.assertEqual(
+            fake_redis.ttl(f"import_data_current_job_{self.runner.id}"),
+            cron_tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS,
+        )
 
     def test_read_only_contract_no_db_writes_during_validation(self):
         """Během validace se do DB nezapíše — žádný INSERT/UPDATE/DELETE (read-only kontrakt)."""

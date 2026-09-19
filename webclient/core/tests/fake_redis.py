@@ -312,9 +312,9 @@ class FakeRedis:
         return 1
 
     def _eval_finalize_validation(self, keys, argv):
-        """Simuluje přechod validace do awaiting_approval a zrušení expirace globálního locku."""
+        """Simuluje přechod validace do awaiting_approval a nastavení dlouhé expirace locku."""
         phase_key, stop_key, token_key, global_lock_key = keys
-        expected_phase, new_phase = argv
+        expected_phase, new_phase, approval_ttl_seconds = argv
         token = self._kv.get(token_key)
         if (
             self._kv.get(phase_key) != self._encode(expected_phase)
@@ -324,7 +324,7 @@ class FakeRedis:
         ):
             return 0
         self.set(phase_key, new_phase)
-        self.persist(global_lock_key)
+        self.expire(global_lock_key, int(approval_ttl_seconds))
         return 1
 
     class FakePipeline:

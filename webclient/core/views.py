@@ -3208,11 +3208,34 @@ class DataImportStart(LoginRequiredMixin, View):
                 {"result": "error", "status_message": _("cron.tasks.run_data_import.failed_lock_lost")},
                 status=409,
             )
+        # Approval-state keys have a bounded seven-day TTL. Renew every staged record and routing
+        # pointer before dispatching so an approval near the deadline cannot expire mid-import.
+        _expire_import_data_keys(redis_connector, job_id, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS)
+        renewal_pipe = redis_connector.pipeline()
+        renewal_pipe.expire(f"import_data_current_job_{request.user.id}", tasks.IMPORT_DATA_RUNNING_TTL_SECONDS)
+        renewal_pipe.expire(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS)
+        renewal_pipe.execute()
         try:
             tasks.run_data_import.delay(job_id, request.user.id, lock_token)
         except Exception:
             # The job is still resumable — do NOT release the lock; revert the phase and return 500.
-            redis_connector.set(f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_AWAITING_APPROVAL)
+            redis_connector.set(
+                f"import_data_phase_{job_id}",
+                tasks.IMPORT_PHASE_AWAITING_APPROVAL,
+                ex=tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS,
+            )
+            RedisConnector.refresh_import_lock(
+                redis_connector, lock_token, tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS
+            )
+            _expire_import_data_keys(redis_connector, job_id, tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS)
+            approval_pipe = redis_connector.pipeline()
+            approval_pipe.expire(
+                f"import_data_current_job_{request.user.id}", tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS
+            )
+            approval_pipe.expire(
+                RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS
+            )
+            approval_pipe.execute()
             return JsonResponse(
                 {"result": "error", "status_message": _("core.admin.import_data.error.import_error")},
                 status=500,

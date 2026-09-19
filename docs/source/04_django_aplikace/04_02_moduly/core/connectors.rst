@@ -117,6 +117,7 @@ Třídy
 
       :param connection: Redis spojení použité pro atomické spuštění Lua skriptu.
       :param job_id: Identifikátor finalizované importní úlohy.
+      :param approval_ttl_seconds: Doba v sekundách, po kterou lock zůstane při čekání na schválení platný.
       :return: ``True``, pokud úloha stále vlastní lock a přechod proběhl; jinak ``False``.
 
    .. py:method:: prepare_model_for_redis()

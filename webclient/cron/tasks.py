@@ -80,6 +80,7 @@ logger = logging.getLogger(__name__)
 
 IMPORT_DATA_EXPIRATION_SECONDS = 6 * 60 * 60  # 6 hodin — retence reportu po ukončení úlohy
 IMPORT_DATA_RUNNING_TTL_SECONDS = 48 * 60 * 60  # 48 hodin — maximální očekávaná délka importu
+IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS = 7 * 24 * 60 * 60  # 7 dní — maximální doba pro schválení validace
 
 # Procentuální checkpointy sjednoceného progress baru importu (po dokončení dané fáze).
 IMPORT_PROGRESS_PHASE_FAILED = 0
@@ -1134,7 +1135,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         ):
             raise ImportLockLostError("Import data lock lost during validation")
 
-    # Per-job datové klíče: na úspěšné cestě se persistují (bez TTL) pro okno awaiting_approval,
+    # Per-job datové klíče: na úspěšné cestě expirují po sedmi dnech ve stavu awaiting_approval,
     # na terminální cestě expirují na 6 h kvůli retenci reportu. Sdílený zdroj pravdy — viz
     # ``IMPORT_DATA_JOB_KEY_SUFFIXES``.
     per_job_data_keys = list(IMPORT_DATA_JOB_KEY_SUFFIXES)
@@ -1456,10 +1457,12 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         all_data_keys += [record_key(i) for i in range(record_id)]
 
         if not stopped and failure_reason is None:
-            # Validation OK, all rows valid → hold the lock across awaiting_approval and persist the
-            # lock and every per-job data key (remove the TTL) so a slow reviewer does not find the
-            # job gone. No refresher runs during awaiting_approval.
-            if not RedisConnector.finalize_validation(redis_connector, job_id):
+            # Validation OK, all rows valid → hold the lock across awaiting_approval for a bounded
+            # seven-day approval window. No refresher runs while awaiting approval, so a rollback
+            # cannot leave an indefinite lock behind.
+            if not RedisConnector.finalize_validation(
+                redis_connector, job_id, IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS
+            ):
                 # The script refuses on phase change, stop sentinel, or lock loss alike — re-read
                 # the stop sentinel/phase to tell a deliberate stop from a real lock loss. A phase
                 # already moved past "validating" to something other than "stopped" (e.g. an admin
@@ -1487,18 +1490,19 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                     redis_connector.set(job_key("import_data_stop"), 1, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
                     stopped = False
             else:
-                persist_pipe = redis_connector.pipeline()
+                expiration_pipe = redis_connector.pipeline()
                 for key in all_data_keys:
-                    persist_pipe.persist(key)
+                    expiration_pipe.expire(key, IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS)
                 # The per-user "current job" pointer is keyed by user_id, not job_id, so it is NOT in
-                # per_job_data_keys. Persist it too on the success path — otherwise its 6 h TTL from the
-                # POST expires during a long awaiting_approval review and the owner is locked out of
-                # their own still-valid, still-lock-holding job ("Leave and come back" case).
-                persist_pipe.persist("import_data_current_job_{}".format(user_id))
-                # Keep the lock → job back-reference alive exactly as long as the (now persisted) lock,
-                # so a manual reset can still target this job during a long awaiting_approval review.
-                persist_pipe.persist(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
-                persist_pipe.execute()
+                # per_job_data_keys. Keep it, and the lock → job back-reference, for the same bounded
+                # approval window so the reviewer can return to the job and an administrator can reset it.
+                expiration_pipe.expire(
+                    "import_data_current_job_{}".format(user_id), IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS
+                )
+                expiration_pipe.expire(
+                    RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS
+                )
+                expiration_pipe.execute()
         if stopped or failure_reason is not None:
             # Terminal failure/stop → release the lock, clear the per-user pointer, and expire (not
             # delete) the data keys to 6 h so the page can still show why validation failed and the

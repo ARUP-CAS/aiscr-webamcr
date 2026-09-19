@@ -68,6 +68,30 @@ class DataImportStartConcurrencyTest(SimpleTestCase):
         self.assertEqual(self.fake.get(f"import_data_phase_{JOB_ID}"), tasks.IMPORT_PHASE_IMPORTING)
         self.assertEqual(self.fake.get(RedisConnector.IMPORT_DATA_LOCK_KEY), LOCK_TOKEN)
 
+    def test_claim_renews_staged_data_and_pointers_for_running_import(self):
+        """Start prodlouží data čekající na schválení i ukazatele na běžné TTL importu."""
+        keys = (
+            f"import_data_count_{JOB_ID}",
+            f"import_data_{JOB_ID}_record_0",
+            f"import_data_current_job_{USER_ID}",
+            RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY,
+        )
+        self.fake.set(f"import_data_count_{JOB_ID}", 1, ex=tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS)
+        self.fake.set(f"import_data_{JOB_ID}_record_0", "staged", ex=tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS)
+        self.fake.set(f"import_data_current_job_{USER_ID}", JOB_ID, ex=tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS)
+        self.fake.set(
+            RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY,
+            JOB_ID,
+            ex=tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS,
+        )
+
+        response, delay_mock = self._post()
+
+        self.assertEqual(response.status_code, 200)
+        delay_mock.assert_called_once_with(JOB_ID, USER_ID, LOCK_TOKEN)
+        for key in keys:
+            self.assertEqual(self.fake.ttl(key), tasks.IMPORT_DATA_RUNNING_TTL_SECONDS)
+
     def test_claim_fails_when_global_lock_token_does_not_match(self):
         """Pokud globální lock mezitím ztratil vlastnictví (jiný token), claim selže a fáze se
         přepne na ``failed``; ukazatele novější úlohy přitom nesmí smazat."""
