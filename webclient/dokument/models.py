@@ -2,9 +2,7 @@ import calendar
 import datetime
 import logging
 import math
-import os
 from functools import cached_property
-from string import ascii_uppercase as letters
 from typing import Optional
 
 from arch_z.models import ArcheologickyZaznam
@@ -240,15 +238,17 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     @staticmethod
     def set_permanent_identificator(dokument, request, messages, fedora_transaction) -> Optional[JsonResponse]:
         """
-               Nastaví permanent identificator.
+        Nahradí dočasný identifikátor dokumentu trvalým podle jeho řady.
 
-               :param dokument: Parametr ``dokument`` předává se do volání ``get_dokument_rada()``, ``set_permanent_ident_cely()``, pracuje se s atributy ``ident_cely``, ``typ_dokumentu``.
-               :param request: Parametr ``request`` předává se do volání ``add_message()``.
-               :param messages: Parametr ``messages`` předává se do volání ``add_message()``, pracuje se s atributy ``add_message``, ``SUCCESS``.
-               :param fedora_transaction: Parametr ``fedora_transaction`` pracuje se s atributy ``rollback_transaction``.
-        Výsledek provedené změny nad cílovým objektem.
+        Dokumenty, které už trvalý identifikátor mají (zapsané pod konkrétním ID), zůstávají beze změny.
+        Při vyčerpání pořadových čísel řady se transakce zruší a uživatel je přesměrován zpět na detail.
 
-            :return: Vrací hodnotu typu ``Optional[JsonResponse]`` (výsledek volání ``JsonResponse()``).
+        :param dokument: Dokument, jehož identifikátor se má ztrvalit; řada se bere z ``dokument.rada``.
+        :param request: Požadavek, do jehož session se zapisuje hlášení o vyčerpání identifikátorů.
+        :param messages: Modul hlášení Djanga použitý pro oznámení chyby uživateli.
+        :param fedora_transaction: Aktivní Fedora transakce, která se při chybě zruší.
+
+            :return: ``None`` při úspěchu, jinak ``JsonResponse`` s přesměrováním a stavem 403.
         """
         from core.message_constants import MAXIMUM_IDENT_DOSAZEN
         from dokument.views import get_detail_json_view
@@ -256,11 +256,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         dokument: Dokument
         ident_cely = dokument.ident_cely
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
-            from core.ident_cely import get_dokument_rada
-
-            rada = get_dokument_rada(dokument.typ_dokumentu, dokument.material_originalu)
             try:
-                dokument.set_permanent_ident_cely(dokument.ident_cely[2], rada)
+                dokument.set_permanent_ident_cely(dokument.ident_cely[2], dokument.rada)
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
                 fedora_transaction.rollback_transaction()
@@ -1166,48 +1163,3 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
         :return: Vrací výsledek volání ``reverse()``.
         """
         return reverse("admin:dokument_let_change", args=[self.pk])
-
-
-def get_dokument_soubor_name(dokument: Dokument, filename: str, add_to_index=1):
-    """
-    Funkce pro získaní správného jména souboru.
-
-    První soubor dostane základní název bez písmene (``{ident}.{ext}``), další se přidělují navýšením
-    podle nejvyššího obsazeného písmenného suffixu (``A`` … ``Z``). Toto výchozí chování se záměrně
-    nemění – uvolnění či změnu pozice (včetně základního slotu) řeší přejmenování souboru.
-
-    :param dokument: Parametr ``dokument`` předává se do volání ``debug()``, ``filter()``, pracuje se s atributy ``ident_cely``, ``soubory``, vstupuje do návratové hodnoty.
-    :param filename: Parametr ``filename`` se předává do volání ``splitext()``, vstupuje do návratové hodnoty.
-    :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
-
-        :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.
-    """
-    logger.debug(
-        "dokument.models.get_dokument_soubor_name.start",
-        extra={"ident_cely": dokument.ident_cely, "index": add_to_index},
-    )
-    files = dokument.soubory.soubory.all().filter(nazev__icontains=dokument.ident_cely.replace("-", ""))
-    logger.debug("dokument.models.get_dokument_soubor_name", extra={"file": files})
-    if not files.exists():
-        return dokument.ident_cely.replace("-", "") + os.path.splitext(filename)[1]
-    else:
-        filtered_files = files.filter(nazev__iregex=r"(([A-Z]\.\w+)$)")
-        if filtered_files.exists():
-            list_last_char = []
-            for file in filtered_files:
-                split_file = os.path.splitext(file.nazev)
-                list_last_char.append(split_file[0][-1])
-            last_char = max(list_last_char)
-            logger.debug("dokument.models.get_dokument_soubor_name", extra={"value": last_char})
-            if last_char != "Z" or add_to_index == 0:
-                return (
-                    dokument.ident_cely.replace("-", "")
-                    + letters[(letters.index(last_char) + add_to_index)]
-                    + os.path.splitext(filename)[1]
-                )
-            else:
-                logger.warning("dokument.models.get_dokument_soubor_name.cannot_be_loaded", extra={"value": last_char})
-                return False
-
-        else:
-            return dokument.ident_cely.replace("-", "") + "A" + os.path.splitext(filename)[1]

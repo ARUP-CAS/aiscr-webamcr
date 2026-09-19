@@ -114,6 +114,8 @@ HESLAR_CONSTANTS = {
     "GEOMETRY_LINIE": "HES-001134",
     "GEOMETRY_BOD": "HES-001133",
     "DOKUMENT_RADA_DATA_3D": "HES-000870",
+    # Výchozí řada přidělovaná fixně při zápisu dokumentu.
+    "DOKUMENT_RADA_VYCHOZI": "HES-000871",
     "MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR": "HES-000217",
     # Typy dokumentu povolené k zápisu
     "TYP_DOKUMENTU_NALEZOVA_ZPRAVA": "HES-001075",

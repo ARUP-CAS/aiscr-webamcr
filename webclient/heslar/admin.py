@@ -7,7 +7,7 @@ from heslar.forms import HeslarHierarchieForm, HeslarOdkazForm, OrganizaceAdminF
 from heslar.models import (
     Heslar,
     HeslarDatace,
-    HeslarDokumentTypMaterialRada,
+    HeslarDokumentTypMaterial,
     HeslarHierarchie,
     HeslarNazev,
     HeslarOdkaz,
@@ -207,26 +207,24 @@ class HeslarDataceAdmin(admin.ModelAdmin):
         return obj.obdobi.ident_cely
 
 
-@admin.register(HeslarDokumentTypMaterialRada)
-class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
+@admin.register(HeslarDokumentTypMaterial)
+class HeslarDokumentTypMaterialAdmin(admin.ModelAdmin):
     """
     Admin část pro prohlížení modelu heslař dokument typ material.
 
     Práva na změnu jsou zakázaná.
     """
 
-    list_display = ("dokument_rada", "dokument_typ", "dokument_material")
-    readonly_fields = ("dokument_rada", "dokument_typ", "dokument_material")
-    fields = ("dokument_rada", "dokument_typ", "dokument_material")
+    list_display = ("dokument_typ", "dokument_material")
+    readonly_fields = ("dokument_typ", "dokument_material")
+    fields = ("dokument_typ", "dokument_material")
     search_fields = (
-        "dokument_rada__heslo",
         "dokument_typ__heslo",
         "dokument_material__heslo",
-        "dokument_rada__ident_cely",
         "dokument_typ__ident_cely",
         "dokument_material__ident_cely",
     )
-    list_filter = ("dokument_rada", "dokument_typ", "dokument_material")
+    list_filter = ("dokument_typ", "dokument_material")
 
     def has_add_permission(self, request, obj=None):
         """

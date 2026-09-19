@@ -27,24 +27,39 @@ Funkce
 
    Metoda pro výpočet identu projektové akce.
 
-   Logika složení je: ident_cely projektu + písmeno abecedy v posloupnosti od A po Z
-   Při překročení maxima čísla sekvence (99999) se uživateli na web vrátí chybová hláška.
-   Příklad: "M-202100034A"
+   Logika složení je: ident_cely projektu + "A" + pořadové číslo akce v rámci projektu
+   doplněné na 2 číslice nulami. Historické akce označené jedním písmenem (A–Z)
+   se do pořadí nezapočítávají, nová řada čísel začíná vždy od "A01".
+   Při překročení maxima akcí na projekt (99) se uživateli na web vrátí chybová hláška.
+   Příklad: "M-202100034A01"
 
    :param project: Parametr ``project`` pracuje se s atributy ``ident_cely``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :return: Vrací výsledek operace.
 
-   :raises MaximalEventCount: Vyvolá se při splnění podmínky ``len(idents) < MAXIMAL_PROJECT_EVENTS``.
+   :raises MaximalEventCount: Vyvolá se při vyčerpání všech pořadových čísel akcí projektu.
 
-.. py:function:: get_dokument_rada(typ, material)
+.. py:function:: get_dokument_rada_from_ident(ident_cely)
 
-   Metoda pro získaní rady dokumentu podle typu a materiálu dokumentu.
+   Vrátí heslo řady dokumentu odvozené z permanentního identifikátoru dokumentu.
 
-   :param typ: Parametr ``typ`` předává se do volání ``filter()``, ``error()``, pracuje se s atributy ``id``.
-   :param material: Parametr ``material`` se předává do volání ``filter()``, ``error()``, pracuje se s atributy ``id``.
+   Používá se při zápisu dokumentu pod ručně zadaným identifikátorem (#3421), kdy se řada
+   neurčuje z nastavení, ale musí odpovídat zadanému identifikátoru.
 
-   :return: Vrací atribut objektu.
-   :raises NelzeZjistitRaduError: Vyvolá se při splnění podmínky ``len(instances) == 1``.
+   :param ident_cely: Permanentní identifikátor dokumentu, např. "M-DD-202100034".
+   :return: Heslo řady dokumentu, nebo ``None`` pokud identifikátor neodpovídá tvaru
+       permanentního identu dokumentu nebo jeho řada v hesláři neexistuje.
+
+.. py:function:: get_dokument_region_from_ident(ident_cely)
+
+   Vrátí prefix regionu odvozený z permanentního identifikátoru dokumentu.
+
+   Používá se při zápisu dokumentu pod ručně zadaným identifikátorem (#3421) pro kontrolu, že se
+   region v identifikátoru shoduje s regionem zvoleným ve formuláři, resp. s regionem nadřazeného
+   záznamu. Tvar prefixu ("C-" nebo "M-") odpovídá hodnotám pole ``region``.
+
+   :param ident_cely: Permanentní identifikátor dokumentu, např. "M-DD-202100034".
+   :return: Prefix regionu včetně pomlčky, nebo ``None`` pokud identifikátor neodpovídá tvaru
+       permanentního identu dokumentu.
 
 .. py:function:: get_temp_dokument_ident(rada, region)
 
@@ -77,7 +92,7 @@ Funkce
 
    Logika složení je: ident_cely arch záznamu + "-D" + pořadové číslo DJ per arch záznam doplněno na 2 číslice nulami.
    Při překročení maxima DJ u archeologického záznamu (99) se uživateli na web vrátí chybová hláška.
-   Příklad: "M-202100034A-D01"
+   Příklad: "M-202100034A01-D01"
 
    :param event: Parametr ``event`` pracuje se s atributy ``dokumentacni_jednotky_akce``, ``ident_cely``.
    :return: Vrací výsledek operace.
@@ -88,9 +103,9 @@ Funkce
 
    Vypočítá identifikátor komponenty pro dokumentační jednotku nebo dokument.
 
-   Logika složení je: ident_cely arch záznamu nebo dokumentu + "-D" + pořadové číslo komponenty per záznam doplněno na 3 číslice nulami.
+   Logika složení je: ident_cely arch záznamu nebo dokumentu + "-K" + pořadové číslo komponenty per záznam doplněno na 3 číslice nulami.
    Při překročení maxima komponent u záznamu (999) se uživateli na web vrátí chybová hláška.
-   Příklad: "M-202100034A-K001", "M-DD-202100034-K001"
+   Příklad: "M-202100034A01-K001", "M-DD-202100034-K001"
 
    :param zaznam: Archeologický záznam nebo dokument k zpracování.
    :param fedora_transaction: Aktivní transakce Fedora pro práci s repozitářem.
@@ -122,7 +137,7 @@ Funkce
 
    Logika složení je: ident_cely projektu + "-N" + pořadové číslo SN per projekt doplněno na 5 číslic nulami.
    Při překročení maxima SN u projektu (99999) se uživateli na web vrátí chybová hláška.
-   Příklad: "M-202100034A-N00001"
+   Příklad: "M-202100034-N00001"
 
    :param projekt: Parametr ``projekt`` předává se do volání ``filter()``, pracuje se s atributy ``ident_cely``.
    :return: Vrací výsledek operace.

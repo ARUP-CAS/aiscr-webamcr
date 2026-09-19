@@ -68,7 +68,7 @@ aiscr-webamcr/
 
 - Python 3.11+
 - Docker a Docker Compose
-- Node.js 18+ a npm (pro SCSS / JS build)
+- Node.js 20.19+ a npm (pro SCSS / JS build)
 
 ---
 
