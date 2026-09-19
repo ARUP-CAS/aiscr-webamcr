@@ -286,6 +286,7 @@ class RunDataImportMapperTestBase(TestCase):
         refresh_lock_side_effect=None,
         pre_redis_keys: dict | None = None,
         extra_patches: list | None = None,
+        redis_set_observer=None,
     ):
         """Spustí pomocný importní scénář pro test.
 
@@ -297,7 +298,9 @@ class RunDataImportMapperTestBase(TestCase):
         :param stop_after_fedora_close_count: Po kolika uzavřených Fedora transakcích nastavit stop sentinel.
         :param refresh_lock_side_effect: Hodnota použitá v testovacím importním scénáři.
         :param pre_redis_keys: Hodnota použitá v testovacím importním scénáři.
-        :param extra_patches: Hodnota použitá v testovacím importním scénáři."""
+        :param extra_patches: Hodnota použitá v testovacím importním scénáři.
+        :param redis_set_observer: Volitelný callback volaný před každým zápisem do testovacího Redis.
+        """
         redis_data = {
             f"import_data_count_{JOB_ID}": str(len(payloads)),
             f"import_performed_action_{JOB_ID}": performed_action,
@@ -308,6 +311,14 @@ class RunDataImportMapperTestBase(TestCase):
             for key, value in pre_redis_keys.items():
                 redis_data[key] = value
         fake_redis = FakeRedis(redis_data)
+        if redis_set_observer is not None:
+            original_set = fake_redis.set
+
+            def observe_redis_set(key, *args, **kwargs):
+                redis_set_observer(key)
+                return original_set(key, *args, **kwargs)
+
+            fake_redis.set = observe_redis_set
         save_metadata_calls: list = []
 
         def default_save_metadata_side_effect(self, *args, **kwargs):

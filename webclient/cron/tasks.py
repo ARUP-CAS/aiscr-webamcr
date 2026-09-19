@@ -2426,9 +2426,11 @@ def run_data_import(job_id, user_id, lock_token):
                                 "cron.tasks.run_data_import.fedora_record", raw=True, message=fedora_result_str
                             )
                         )
-                    redis_connector.set(job_key("import_fedora_target_results_tr"), json.dumps(fedora_target_results))
                     if (fedora_index + 1) % HISTORY_REDIS_UPDATE_INTERVAL == 0:
                         redis_connector.set(job_key("import_fedora_result_tr"), json.dumps(import_fedora_result))
+                        redis_connector.set(
+                            job_key("import_fedora_target_results_tr"), json.dumps(fedora_target_results)
+                        )
                 except Exception as err:
                     if fedora_transaction is not None:
                         try:
