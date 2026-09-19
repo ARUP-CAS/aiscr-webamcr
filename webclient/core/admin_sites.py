@@ -8,6 +8,7 @@ import string
 import pandas as pd
 from django.contrib import admin
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.translation import gettext as _
@@ -16,6 +17,7 @@ from rosetta.templatetags.rosetta import can_translate as rosetta_can_translate
 from .connectors import RedisConnector
 from .forms import ImportDataAdminForm
 from .import_data_mappers import ImportDataMissingFileError
+from .import_maintenance import acquire_import_lock_during_maintenance
 from .setting_models import CustomAdminSettings
 from .utils import (
     ImportReportIndexError,
@@ -495,9 +497,13 @@ class AmcrCustomAdminSite(admin.AdminSite):
 
             # Atomic acquire is the real serialization guarantee; on a TOCTOU race with
             # another upload, fall back to the import_is_running page.
-            if not RedisConnector.acquire_import_lock(
+            acquired = acquire_import_lock_during_maintenance(
                 self.redis_connector, lock_token, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS
-            ):
+            )
+            if acquired is None:
+                context["maintenance"] = False
+                return TemplateResponse(request, "admin/import_data/import_data.html", context)
+            if not acquired:
                 return self._render_lock_busy(request, context)
 
             ttl = tasks.IMPORT_DATA_RUNNING_TTL_SECONDS
@@ -649,7 +655,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
             ),
             path(
                 "import-data/",
-                self.admin_view(self.import_data),
+                transaction.non_atomic_requests(self.admin_view(self.import_data)),
                 name="import_data",
             ),
             path(

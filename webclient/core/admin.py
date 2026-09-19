@@ -12,6 +12,7 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import transaction
 from django.http import HttpResponse
 from django.http.request import HttpRequest
 from django.shortcuts import redirect
@@ -25,6 +26,11 @@ from .connectors import RedisConnector
 from .constants import ROLE_NASTAVENI_ODSTAVKY
 from .exceptions import WrongCSVError, WrongSheetError
 from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
+from .import_maintenance import (
+    MaintenanceImportConflict,
+    ensure_maintenance_change_allowed,
+    lock_maintenance_configuration,
+)
 from .models import OdstavkaSystemu, Permissions, PermissionsSkip
 from .setting_models import CustomAdminSettings
 
@@ -47,6 +53,80 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
     )
     form = OdstavkaSystemuForm
 
+    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
+        """Zobrazí odmítnutí ukončení odstávky jako zprávu administrátorovi.
+
+        :param request: HTTP požadavek administrace.
+        :param object_id: Identifikátor upravované odstávky.
+        :param form_url: Cílová URL formuláře.
+        :param extra_context: Dodatečný kontext šablony.
+        :return: Formulář nebo přesměrování se zprávou po odmítnuté změně.
+        """
+        try:
+            return super().changeform_view(request, object_id, form_url, extra_context)
+        except MaintenanceImportConflict as exc:
+            self.message_user(request, str(exc), messages.ERROR)
+            return redirect(request.path)
+
+    def delete_view(self, request, object_id, extra_context=None):
+        """Zobrazí důvod odmítnutého smazání odstávky.
+
+        :param request: HTTP požadavek administrace.
+        :param object_id: Identifikátor mazané odstávky.
+        :param extra_context: Dodatečný kontext šablony.
+        :return: Potvrzení smazání nebo přesměrování se zprávou.
+        """
+        try:
+            return super().delete_view(request, object_id, extra_context)
+        except MaintenanceImportConflict as exc:
+            self.message_user(request, str(exc), messages.ERROR)
+            return redirect(request.path)
+
+    def response_action(self, request, queryset):
+        """Zobrazí důvod odmítnutého hromadného smazání odstávek.
+
+        :param request: HTTP požadavek administrace.
+        :param queryset: Řádky vybrané pro akci.
+        :return: Odpověď akce nebo přesměrování se zprávou.
+        """
+        try:
+            with transaction.atomic():
+                return super().response_action(request, queryset)
+        except MaintenanceImportConflict as exc:
+            self.message_user(request, str(exc), messages.ERROR)
+            return redirect(request.path)
+
+    @transaction.atomic
+    def delete_model(self, request, obj):
+        """Smaže odstávku pouze po ověření, že nechrání běžící import.
+
+        :param request: HTTP požadavek administrace.
+        :param obj: Odstávka určená ke smazání.
+        :raises MaintenanceImportConflict: Odstávka chrání import.
+        """
+        for current in lock_maintenance_configuration():
+            if current.pk == obj.pk:
+                ensure_maintenance_change_allowed(current)
+        super().delete_model(request, obj)
+        transaction.on_commit(lambda: cache.delete("maintenance"))
+
+    @transaction.atomic
+    def delete_queryset(self, request, queryset):
+        """Ověří všechny odstávky před hromadným smazáním.
+
+        :param request: HTTP požadavek administrace.
+        :param queryset: Odstávky vybrané ke smazání.
+        :raises MaintenanceImportConflict: Některá odstávka chrání import.
+        """
+        configurations = lock_maintenance_configuration()
+        selected_ids = set(queryset.values_list("pk", flat=True))
+        for current in configurations:
+            if current.pk in selected_ids:
+                ensure_maintenance_change_allowed(current)
+        super().delete_queryset(request, queryset)
+        transaction.on_commit(lambda: cache.delete("maintenance"))
+
+    @transaction.atomic
     def save_model(self, request, obj, form, change):
         """
         Metoda na uložení modelu odstávky.
@@ -59,6 +139,9 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         :param form: Parametr ``form`` se předává do volání ``file_handler()``, ``save_model()``, pracuje se s atributy ``cleaned_data``.
         :param change: Parametr ``change`` se předává do volání ``save_model()``.
         """
+        for current in lock_maintenance_configuration():
+            if current.pk == obj.pk:
+                ensure_maintenance_change_allowed(current, obj)
         locale_path = settings.LOCALE_PATHS[0]
         languages = settings.LANGUAGES
         for code, lang in languages:
@@ -71,7 +154,6 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
             po_filepath, ext = os.path.splitext(path)
             po_file.save_as_mofile(po_filepath + ".mo")
             self.file_handler(code, form)
-        cache.delete("maintenance")
         should_try_wsgi_reload = (
             settings.ROSETTA_WSGI_AUTO_RELOAD
             and "mod_wsgi.process_group" in request.environ
@@ -94,6 +176,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
                 logger.debug("core.admin.OdstavkaSystemuAdmin.exception", extra={"exception": e})
                 pass  # aplikace nemusí běžet pod uWSGI.
         super().save_model(request, obj, form, change)
+        transaction.on_commit(lambda: cache.delete("maintenance"))
 
     def has_module_permission(self, request):
         """

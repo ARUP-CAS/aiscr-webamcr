@@ -25,6 +25,13 @@ class ImportDataUploadRecoveryMetadataTest(SimpleTestCase):
     def setUp(self):
         """Připraví ``RequestFactory`` sdílenou napříč testy."""
         self.factory = RequestFactory()
+        # Databázový guard má vlastní integrační testy; zde ověřujeme staging a úklid Redis.
+        self.enterContext(
+            patch(
+                "core.admin_sites.acquire_import_lock_during_maintenance",
+                side_effect=RedisConnector.acquire_import_lock,
+            )
+        )
 
     def _post(self, data_file):
         """Zavolá ``AmcrCustomAdminSite.import_data`` s mocknutým formulářem a daným souborem.
@@ -210,6 +217,18 @@ class ImportDataUploadRecoveryMetadataTest(SimpleTestCase):
         self.assertEqual(fake.get(f"import_data_phase_{job_id}"), tasks.IMPORT_PHASE_VALIDATING)
         self.assertEqual(fake.get(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY), job_id)
         self.assertEqual(fake.get(f"import_data_current_job_{USER_ID}"), job_id)
+
+    def test_maintenance_ended_after_cached_gate_rejects_upload(self):
+        """Čerstvá kontrola odstávky odmítne upload před čtením ZIPu i dispatchnutím tasku."""
+        data_file = MagicMock()
+        with patch("core.admin_sites.acquire_import_lock_during_maintenance", return_value=None), patch(
+            "cron.tasks.run_data_import_validation.delay"
+        ) as delay_mock:
+            response, fake, _fake_bytes = self._post(data_file)
+        self.assertFalse(response.context_data["maintenance"])
+        data_file.read.assert_not_called()
+        delay_mock.assert_not_called()
+        self.assertIsNone(fake.get(RedisConnector.IMPORT_DATA_LOCK_KEY))
 
 
 class ImportDataReportDirectoryGateTest(SimpleTestCase):
