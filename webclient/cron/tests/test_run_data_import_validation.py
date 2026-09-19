@@ -155,7 +155,6 @@ class RunDataImportValidationTest(TestCase):
         fake_redis.set(cron_tasks.RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, JOB_ID)
         fake_redis.set(f"import_data_validation_total_{JOB_ID}", 0)
         fake_redis.set(f"import_data_validation_progress_{JOB_ID}", 0)
-        fake_redis.set(f"import_data_validation_results_{JOB_ID}", json.dumps([]))
         fake_redis.set(f"import_data_valid_{JOB_ID}", "0")
         if blob is not None:
             _stage_zip(fake_redis, blob)
@@ -441,7 +440,9 @@ class RunDataImportValidationTest(TestCase):
         self.assertTrue(release_lock_mock.called, "Při validation_rejected se lock musí uvolnit.")
         details = fake_redis.lrange(f"import_data_validation_details_{JOB_ID}", 0, -1)
         self.assertEqual(len(details), 2)
-        persisted_results = json.loads(fake_redis.get(f"import_data_validation_results_{JOB_ID}"))
+        persisted_results = [
+            json.loads(item) for item in fake_redis.lrange(f"import_data_validation_details_{JOB_ID}", 0, -1)
+        ]
         self.assertEqual(len(persisted_results), 2)
         self.assertEqual([result["item_order"] for result in persisted_results], [0, 1])
         self.assertGreaterEqual(self.validation_report_save_mock.call_count, 2)
@@ -520,7 +521,7 @@ class RunDataImportValidationTest(TestCase):
 
         self._assert_phase(fake_redis, cron_tasks.IMPORT_PHASE_FAILED)
         self.assertEqual(fake_redis.get(f"import_data_valid_{JOB_ID}").decode("utf-8"), "0")
-        results = json.loads(fake_redis.get(f"import_data_validation_results_{JOB_ID}"))
+        results = [json.loads(item) for item in fake_redis.lrange(f"import_data_validation_details_{JOB_ID}", 0, -1)]
         self.assertEqual(len(results), 2)
         self.assertEqual([item["file_name"] for item in results], ["soubory.csv", "soubory.csv"])
         self.assertEqual(results[0]["validation_result"], "core.admin.import_data.record_valid")
@@ -581,7 +582,9 @@ class RunDataImportValidationTest(TestCase):
         self._run_validation(fake_redis, refresh_lock_side_effect=stop_before_third_row)
 
         self._assert_phase(fake_redis, cron_tasks.IMPORT_PHASE_STOPPED)
-        persisted_results = json.loads(fake_redis.get(f"import_data_validation_results_{JOB_ID}"))
+        persisted_results = [
+            json.loads(item) for item in fake_redis.lrange(f"import_data_validation_details_{JOB_ID}", 0, -1)
+        ]
         self.assertEqual(len(persisted_results), 2)
         self.assertEqual([result["item_order"] for result in persisted_results], [0, 1])
         self.assertGreaterEqual(self.validation_report_save_mock.call_count, 2)
@@ -618,11 +621,11 @@ class RunDataImportValidationTest(TestCase):
         self._run_validation(fake_redis, antivirus_result=AntivirusCheckResult.VIRUS_FOUND)
 
         # Datové klíče musí stále existovat.
-        self.assertIsNotNone(fake_redis.get(f"import_data_validation_results_{JOB_ID}"))
+        self.assertIsNotNone(fake_redis.get(f"import_data_validation_progress_{JOB_ID}"))
         self.assertIsNotNone(fake_redis.get(f"import_data_status_message_tr_{JOB_ID}"))
-        # TTL musí zůstat na 6 h (terminální flush nesmí klíč tiše prodloužit zpět na 48 h).
+        # TTL musí zůstat na 6 h i bez řádků validačního detailu.
         self.assertEqual(
-            fake_redis.ttl(f"import_data_validation_results_{JOB_ID}"),
+            fake_redis.ttl(f"import_data_validation_progress_{JOB_ID}"),
             cron_tasks.IMPORT_DATA_EXPIRATION_SECONDS,
         )
         # Chunk klíče se naopak mažou (ne expirují).
@@ -637,12 +640,11 @@ class RunDataImportValidationTest(TestCase):
         self._run_validation(fake_redis)
 
         self._assert_phase(fake_redis, cron_tasks.IMPORT_PHASE_AWAITING_APPROVAL)
-        self.assertIsNotNone(fake_redis.get(f"import_data_validation_results_{JOB_ID}"))
+        self.assertIsNotNone(fake_redis.get(f"import_data_validation_details_{JOB_ID}"))
         self.assertIsNotNone(fake_redis.get(f"import_data_count_{JOB_ID}"))
         self.assertIsNotNone(fake_redis.get(f"import_data_valid_{JOB_ID}"))
-        # Klíč musí zůstat bez TTL — terminální flush nesmí tiše vrátit 48h TTL po persist()u
-        # reviewer by jinak po dlouhé awaiting_approval našel prázdný report.
-        self.assertEqual(fake_redis.ttl(f"import_data_validation_results_{JOB_ID}"), -1)
+        # Klíč musí zůstat bez TTL, aby reviewer po dlouhé awaiting_approval našel úplný report.
+        self.assertEqual(fake_redis.ttl(f"import_data_validation_details_{JOB_ID}"), -1)
         # Per-user pointer se na úspěšné cestě persistuje (nesmí se smazat).
         self.assertIsNotNone(fake_redis.get(f"import_data_current_job_{self.runner.id}"))
 

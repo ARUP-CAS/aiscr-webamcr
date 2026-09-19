@@ -128,13 +128,16 @@ class CheckImportReportDirectoryTest(TestCase):
 def _populate_report_redis(fake_redis, phase="importing"):
     """Naplní ``FakeRedis`` typickými daty jedné importní úlohy pro sestavení reportu."""
     fake_redis.set("import_data_phase_{}".format(JOB_ID), phase)
-    fake_redis.set(
-        "import_data_validation_results_{}".format(JOB_ID),
+    fake_redis.rpush(
+        "import_data_validation_details_{}".format(JOB_ID),
         json.dumps(
-            [
-                {"item_order": 0, "file_name": "dokument.csv", "primary_key_import": "C-1", "validation_result": "ok"},
-                {"item_order": 1, "file_name": "dokument.csv", "primary_key_import": "C-2", "validation_result": "ok"},
-            ]
+            {"item_order": 0, "file_name": "dokument.csv", "primary_key_import": "C-1", "validation_result": "ok"}
+        ),
+    )
+    fake_redis.rpush(
+        "import_data_validation_details_{}".format(JOB_ID),
+        json.dumps(
+            {"item_order": 1, "file_name": "dokument.csv", "primary_key_import": "C-2", "validation_result": "ok"}
         ),
     )
     fake_redis.set("import_data_primary_keys_{}".format(JOB_ID), json.dumps({"0": "1", "1": "2"}))
@@ -386,13 +389,9 @@ class BuildImportFedoraTargetDataframeTest(TestCase):
     def test_records_without_a_fedora_target_get_a_skipped_row_with_blank_transaction(self):
         """Záznam bez Fedora cíle dostane placeholder ``fedora_target_skipped`` s prázdným transaction_uid."""
         fake_redis = FakeRedis(decode_responses=False)
-        fake_redis.set(
-            "import_data_validation_results_{}".format(JOB_ID),
-            json.dumps(
-                [
-                    {"item_order": 0, "file_name": "x.csv", "primary_key_import": "C-1", "validation_result": "ok"},
-                ]
-            ),
+        fake_redis.rpush(
+            "import_data_validation_details_{}".format(JOB_ID),
+            json.dumps({"item_order": 0, "file_name": "x.csv", "primary_key_import": "C-1", "validation_result": "ok"}),
         )
         fake_redis.set(
             "import_fedora_result_tr_{}".format(JOB_ID),

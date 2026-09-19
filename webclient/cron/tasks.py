@@ -143,9 +143,8 @@ IMPORT_DATA_JOB_KEY_SUFFIXES = (
     "import_data_report_saved_path",
 )
 
-# Jak často validační task zapisuje JSON snapshot ``import_data_validation_results_{job_id}`` pro report
-# (živý seznam ``import_data_validation_details`` se plní ``rpush`` každý řádek). Zrcadlí
-# ``HISTORY_REDIS_UPDATE_INTERVAL``.
+# Jak často validační task aktualizuje textový stav průběhu. Výsledky se přidávají po řádcích do
+# ``import_data_validation_details`` a report je rekonstruuje až při čtení.
 VALIDATION_REDIS_UPDATE_INTERVAL = 50
 
 # Standardizační pravidlo: do Redis se ukládají pouze ID překladových řetězců (nikoli přeložené
@@ -959,7 +958,10 @@ def build_import_report_dataframe(job_id, redis_connector):
     # below match regardless of which connector mode the caller used.
     phase_raw = redis_connector.get("import_data_phase_{}".format(job_id)) or "unknown"
     phase = phase_raw.decode("utf-8") if isinstance(phase_raw, bytes) else phase_raw
-    validation_results_raw = json.loads(redis_connector.get("import_data_validation_results_{}".format(job_id)) or "[]")
+    validation_results_raw = [
+        json.loads(detail)
+        for detail in redis_connector.lrange("import_data_validation_details_{}".format(job_id), 0, -1)
+    ]
     validation_results = [
         {**item, "validation_result": _translate_status_value_for_report(item.get("validation_result", ""))}
         for item in validation_results_raw
@@ -1025,7 +1027,10 @@ def build_import_fedora_target_dataframe(job_id, redis_connector):
     """
     targets_raw = json.loads(redis_connector.get("import_fedora_target_results_tr_{}".format(job_id)) or "[]")
     fedora_result_raw = json.loads(redis_connector.get("import_fedora_result_tr_{}".format(job_id)) or "{}")
-    validation_results_raw = json.loads(redis_connector.get("import_data_validation_results_{}".format(job_id)) or "[]")
+    validation_results_raw = [
+        json.loads(detail)
+        for detail in redis_connector.lrange("import_data_validation_details_{}".format(job_id), 0, -1)
+    ]
     skipped_identity_by_record_id = {
         str(item["item_order"]): item.get("primary_key_import", "") for item in validation_results_raw
     }
@@ -1173,7 +1178,6 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
     chunk_count_raw = redis_connector.get(job_key("import_data_file_chunks"))
     chunk_count = int(chunk_count_raw) if chunk_count_raw else 0
     records: list = []
-    validation_results: list = []
     invalid_records: list = []
     record_id = 0  # index platných záznamů — sufix Redis klíče a records_count
     row_order = 0  # index každého CSV řádku (platný i neplatný) — item_order ve validačních výsledcích
@@ -1199,26 +1203,11 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         redis_connector.set(job_key("import_data_stop"), 1, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
 
     def push_validation_result(vr):
-        # rpush the live incremental-rendering lists the UI reads; checkpoint the JSON
-        # report snapshot every VALIDATION_REDIS_UPDATE_INTERVAL rows.
-        validation_results.append(vr)
+        # Append each result once. Both the polling UI and XLSX reports reconstruct their output
+        # from this list, avoiding repeated serialization of the complete growing result set.
         redis_connector.rpush(job_key("import_data_validation_details"), json.dumps(vr.to_dict()))
         redis_connector.rpush(job_key("import_data_validation_ids"), vr.item_order)
         redis_connector.incr(job_key("import_data_validation_progress"))
-        if len(validation_results) % VALIDATION_REDIS_UPDATE_INTERVAL == 0:
-            redis_connector.set(
-                job_key("import_data_validation_results"),
-                json.dumps([r.to_dict() for r in validation_results]),
-                ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
-            )
-
-    def flush_validation_results():
-        """Zapíše kompletní validační seznam před terminálním XLSX snapshotem."""
-        redis_connector.set(
-            job_key("import_data_validation_results"),
-            json.dumps([result.to_dict() for result in validation_results]),
-            ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
-        )
 
     LookupImportField.clear_cache()
     LookupImportField.clear_records()
@@ -1450,11 +1439,6 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         redis_connector.set(
             job_key("import_data_valid"), "1" if not invalid_records else "0", ex=IMPORT_DATA_RUNNING_TTL_SECONDS
         )
-        redis_connector.set(
-            job_key("import_data_validation_results"),
-            json.dumps([r.to_dict() for r in validation_results]),
-            ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
-        )
         redis_connector.set(job_key("import_data_primary_keys"), json.dumps({}), ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
         redis_connector.set(job_key("import_data_files"), json.dumps([]), ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
         redis_connector.set(
@@ -1500,12 +1484,6 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
 
         all_data_keys = [job_key(k) for k in per_job_data_keys]
         all_data_keys += [record_key(i) for i in range(record_id)]
-
-        # Flush before the persist/expire branching below, not after: whichever branch runs next
-        # decides the key's final TTL (persist strips it, expire sets 6h) — flushing afterwards
-        # would silently re-apply this 48h TTL on top of that decision.
-        if reports_directory_path:
-            flush_validation_results()
 
         if not stopped and failure_reason is None:
             # Validation OK, all rows valid → hold the lock across awaiting_approval and persist the
