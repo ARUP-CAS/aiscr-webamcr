@@ -315,6 +315,26 @@ class DataImportProgressCursorTest(SimpleTestCase):
         self.assertEqual(data["finished_record_count"], 5)
         self.assertEqual(data["progress_cursor"], 5)
 
+    def test_terminal_phase_refetches_relabelled_progress_rows(self):
+        """Terminální stav vrátí i přeznačené řádky před kurzorem po rollbacku."""
+        fake = _fake(tasks.IMPORT_PHASE_STOPPED, extra={f"import_data_count_{JOB}": 3})
+        self._push_progress_rows(fake, 3)
+        fake.lset(f"import_data_progress_details_tr_{JOB}", 0, "cron.tasks.run_data_import.rolled_back")
+
+        response = self._get(fake, progress_since=3)
+
+        data = json.loads(response.content)
+        self.assertEqual(
+            data["serialized_results"],
+            {
+                "0": "cron.tasks.run_data_import.rolled_back",
+                "1": "cron.tasks.run_data_import.success",
+                "2": "cron.tasks.run_data_import.success",
+            },
+        )
+        self.assertEqual(data["finished_record_count"], 3)
+        self.assertEqual(data["progress_cursor"], 3)
+
     def test_files_since_returns_only_appended_results_and_cursor(self):
         """``files_since`` vrátí jen nové soubory a celkový kurzor pro další poll."""
         files = [

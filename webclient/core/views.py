@@ -2806,20 +2806,39 @@ class DataImportProgress(LoginRequiredMixin, View):
             status_message = translate_status_value(status_message_raw)
             status_message_id = _status_message_id(status_message_raw)
             stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
+            phase = redis_connector.get(f"import_data_phase_{job_id}") or "unknown"
+
+            from cron.tasks import (
+                IMPORT_PHASE_CANCELED,
+                IMPORT_PHASE_FAILED,
+                IMPORT_PHASE_FINISHED,
+                IMPORT_PHASE_STOPPED,
+                IMPORT_PHASE_VALIDATING,
+                IMPORT_PROGRESS_PHASE_DATA_DONE,
+                IMPORT_PROGRESS_PHASE_FEDORA_DONE,
+                IMPORT_PROGRESS_PHASE_FINISHED,
+                IMPORT_PROGRESS_PHASE_HISTORY_DONE,
+            )
 
             import_data_primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}") or "{}")
-            # The browser sends the number of already rendered rows.  Slice both lists before
-            # translating so a one-second poll only translates newly appended progress entries.
+            # The browser normally receives only rows appended after its cursor.  On a terminal
+            # phase, retrieve the complete range once: rollback may have relabelled previously
+            # rendered ``success`` rows to ``rolled_back`` in place.
             try:
                 progress_since = max(int(request.GET.get("progress_since", 0)), 0)
             except (TypeError, ValueError):
                 progress_since = 0
-            progress_ids = redis_connector.lrange(f"import_data_progress_ids_{job_id}", progress_since, -1)
-            progress_details = redis_connector.lrange(f"import_data_progress_details_tr_{job_id}", progress_since, -1)
+            progress_start = (
+                0
+                if phase in (IMPORT_PHASE_FINISHED, IMPORT_PHASE_STOPPED, IMPORT_PHASE_FAILED, IMPORT_PHASE_CANCELED)
+                else progress_since
+            )
+            progress_ids = redis_connector.lrange(f"import_data_progress_ids_{job_id}", progress_start, -1)
+            progress_details = redis_connector.lrange(f"import_data_progress_details_tr_{job_id}", progress_start, -1)
             serialized_results = {
                 rid: translate_status_value(detail) for rid, detail in zip(progress_ids, progress_details)
             }
-            progress_cursor = progress_since + len(serialized_results)
+            progress_cursor = progress_start + len(serialized_results)
             # File entries are append-only too, so only translate the entries the browser has not
             # already rendered.
             try:
@@ -2848,19 +2867,6 @@ class DataImportProgress(LoginRequiredMixin, View):
                 rid: [translate_status_value(item) for item in items]
                 for rid, items in json.loads(redis_connector.get(f"import_fedora_result_tr_{job_id}") or "{}").items()
             }
-
-            phase = redis_connector.get(f"import_data_phase_{job_id}") or "unknown"
-            from cron.tasks import (
-                IMPORT_PHASE_CANCELED,
-                IMPORT_PHASE_FAILED,
-                IMPORT_PHASE_FINISHED,
-                IMPORT_PHASE_STOPPED,
-                IMPORT_PHASE_VALIDATING,
-                IMPORT_PROGRESS_PHASE_DATA_DONE,
-                IMPORT_PROGRESS_PHASE_FEDORA_DONE,
-                IMPORT_PROGRESS_PHASE_FINISHED,
-                IMPORT_PROGRESS_PHASE_HISTORY_DONE,
-            )
 
             # Live validation rows (incremental UI path) — read from the rpush-ed list, not the
             # JSON snapshot the report reads. The client sends back how many rows it already has
