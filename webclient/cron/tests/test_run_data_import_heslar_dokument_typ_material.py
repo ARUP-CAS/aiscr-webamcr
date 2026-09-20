@@ -1,4 +1,4 @@
-"""Jednotkové testy pro ``cron.tasks.run_data_import`` — import HeslarDokumentTypMaterialRada."""
+"""Jednotkové testy pro ``cron.tasks.run_data_import`` — import HeslarDokumentTypMaterial."""
 
 import json
 from unittest.mock import MagicMock, patch
@@ -11,26 +11,24 @@ from django.contrib.auth.models import Group
 from django.test import TestCase
 from heslar.hesla import (
     HESLAR_DOKUMENT_MATERIAL,
-    HESLAR_DOKUMENT_RADA,
     HESLAR_DOKUMENT_TYP,
     HESLAR_LICENCE,
     HESLAR_ORGANIZACE_TYP,
     HESLAR_PRISTUPNOST,
 )
-from heslar.models import Heslar, HeslarDokumentTypMaterialRada, HeslarNazev
+from heslar.models import Heslar, HeslarDokumentTypMaterial, HeslarNazev
 from uzivatel.models import Organizace, User
 
-FILE_KEY = "heslar_dokument_typ_material_rada"
+FILE_KEY = "heslar_dokument_typ_material"
 JOB_ID = "test-job-hdtm"
 LOCK_TOKEN = "test-lock-token"
 
 TYP_IDENT = "HES-200001"
 MATERIAL_IDENT = "HES-200002"
-RADA_IDENT = "HES-200003"
 
 
-class RunDataImportHeslarDokumentTypMaterialRadaTest(TestCase):
-    """Testy ``run_data_import`` pro ``HeslarDokumentTypMaterialRadaMapper``."""
+class RunDataImportHeslarDokumentTypMaterialTest(TestCase):
+    """Testy ``run_data_import`` pro ``HeslarDokumentTypMaterialMapper``."""
 
     @classmethod
     def setUpTestData(cls):
@@ -61,19 +59,6 @@ class RunDataImportHeslarDokumentTypMaterialRadaTest(TestCase):
                     "heslo": "Material",
                     "heslo_en": "Material",
                     "zkratka": "MA",
-                    "razeni": 1,
-                },
-            )
-            rada_nazev, _ = HeslarNazev.objects.get_or_create(
-                id=HESLAR_DOKUMENT_RADA, defaults={"nazev": "dokument_rada"}
-            )
-            cls.rada_heslar, _ = Heslar.objects.get_or_create(
-                ident_cely=RADA_IDENT,
-                defaults={
-                    "nazev_heslare": rada_nazev,
-                    "heslo": "Rada",
-                    "heslo_en": "Series",
-                    "zkratka": "RA",
                     "razeni": 1,
                 },
             )
@@ -126,7 +111,6 @@ class RunDataImportHeslarDokumentTypMaterialRadaTest(TestCase):
             "__file_name": FILE_KEY,
             "dokument_typ": TYP_IDENT,
             "dokument_material": material_ident,
-            "dokument_rada": RADA_IDENT,
         }
 
     def _build_redis_for_insert(self, material_ident: str = MATERIAL_IDENT) -> FakeRedis:
@@ -206,11 +190,10 @@ class RunDataImportHeslarDokumentTypMaterialRadaTest(TestCase):
             cron_tasks.run_data_import(JOB_ID, self.user.id, LOCK_TOKEN)
         return save_metadata_calls
 
-    def _create_existing_record(self, material_heslar=None) -> HeslarDokumentTypMaterialRada:
-        return HeslarDokumentTypMaterialRada.objects.create(
+    def _create_existing_record(self, material_heslar=None) -> HeslarDokumentTypMaterial:
+        return HeslarDokumentTypMaterial.objects.create(
             dokument_typ=self.typ_heslar,
             dokument_material=material_heslar or self.material_heslar,
-            dokument_rada=self.rada_heslar,
         )
 
     def _assert_import_failed(self, fake_redis: FakeRedis):
@@ -226,7 +209,7 @@ class RunDataImportHeslarDokumentTypMaterialRadaTest(TestCase):
         self._run_import(fake_redis)
 
         self.assertTrue(
-            HeslarDokumentTypMaterialRada.objects.filter(
+            HeslarDokumentTypMaterial.objects.filter(
                 dokument_typ=self.typ_heslar, dokument_material=self.material_heslar
             ).exists()
         )
@@ -239,8 +222,8 @@ class RunDataImportHeslarDokumentTypMaterialRadaTest(TestCase):
         self._run_import(fake_redis)
 
         # Pole stejná, ale UPDATE prošel (save_metadata bylo voláno přes signál).
-        refreshed = HeslarDokumentTypMaterialRada.objects.get(pk=existing.pk)
-        self.assertEqual(refreshed.dokument_rada_id, self.rada_heslar.pk)
+        refreshed = HeslarDokumentTypMaterial.objects.get(pk=existing.pk)
+        self.assertEqual(refreshed.dokument_material_id, self.material_heslar.pk)
 
     def test_delete_removes_record(self):
         """Ověřuje, že DELETE import smaže záznam record."""
@@ -249,23 +232,23 @@ class RunDataImportHeslarDokumentTypMaterialRadaTest(TestCase):
 
         self._run_import(fake_redis)
 
-        self.assertFalse(HeslarDokumentTypMaterialRada.objects.filter(pk=existing.pk).exists())
+        self.assertFalse(HeslarDokumentTypMaterial.objects.filter(pk=existing.pk).exists())
 
     def test_database_save_failure_marks_import_as_failed(self):
-        """Ověřuje, že selhání databázového uložení záznamu heslar dokument typ material rada označí import jako selhaný."""
+        """Ověřuje, že selhání databázového uložení záznamu heslar dokument typ material označí import jako selhaný."""
         fake_redis = self._build_redis_for_insert()
 
         def failing_save(self, *args, **kwargs):
             raise RuntimeError("Selhání DB.")
 
-        with patch.object(HeslarDokumentTypMaterialRada, "save", failing_save):
+        with patch.object(HeslarDokumentTypMaterial, "save", failing_save):
             self._run_import(fake_redis)
 
         self._assert_import_failed(fake_redis)
 
     def test_history_save_failure_marks_import_as_failed(self):
-        """Ověřuje, že selhání uložení historie záznamu heslar dokument typ material rada označí import jako selhaný."""
-        from core.import_data_mappers import HeslarDokumentTypMaterialRadaMapper
+        """Ověřuje, že selhání uložení historie záznamu heslar dokument typ material označí import jako selhaný."""
+        from core.import_data_mappers import HeslarDokumentTypMaterialMapper
         from historie.models import Historie
 
         fake_redis = self._build_redis_for_insert()
@@ -274,22 +257,11 @@ class RunDataImportHeslarDokumentTypMaterialRadaTest(TestCase):
             raise RuntimeError("Selhání Historie.")
 
         with patch.object(
-            HeslarDokumentTypMaterialRadaMapper,
+            HeslarDokumentTypMaterialMapper,
             "get_record_history",
             staticmethod(lambda record: record),
         ), patch.object(Historie, "save", failing_save):
             self._run_import(fake_redis)
-
-        self._assert_import_failed(fake_redis)
-
-    def test_fedora_save_failure_marks_import_as_failed(self):
-        """Ověřuje, že selhání uložení metadat Fedory pro záznam heslar dokument typ material rada označí import jako selhaný."""
-        fake_redis = self._build_redis_for_insert()
-
-        def failing_save_metadata(self, *args, **kwargs):
-            raise RuntimeError("Selhání Fedory.")
-
-        self._run_import(fake_redis, save_metadata_side_effect=failing_save_metadata)
 
         self._assert_import_failed(fake_redis)
 
@@ -304,7 +276,7 @@ class RunDataImportHeslarDokumentTypMaterialRadaTest(TestCase):
 
     def test_failure_mid_batch_rolls_back_all_inserted_records(self):
         # 2. záznam má stejnou kombinaci (typ, material) → IntegrityError na unique_together.
-        """Ověřuje, že selhání uprostřed dávky vrátí vložené záznamy heslar dokument typ material rada zpět."""
+        """Ověřuje, že selhání uprostřed dávky vrátí vložené záznamy heslar dokument typ material zpět."""
         first = self._build_insert_payload(MATERIAL_IDENT)
         duplicate = self._build_insert_payload(MATERIAL_IDENT)
         fake_redis = self._build_multi_record_redis([first, duplicate])
@@ -312,14 +284,14 @@ class RunDataImportHeslarDokumentTypMaterialRadaTest(TestCase):
         self._run_import(fake_redis)
 
         self.assertFalse(
-            HeslarDokumentTypMaterialRada.objects.filter(
+            HeslarDokumentTypMaterial.objects.filter(
                 dokument_typ=self.typ_heslar, dokument_material=self.material_heslar
             ).exists()
         )
         self._assert_import_failed(fake_redis)
 
     def test_user_stop_during_import_marks_status_as_stopped(self):
-        """Ověřuje, že uživatelské zastavení importu záznamu heslar dokument typ material rada nastaví stav zastaveno."""
+        """Ověřuje, že uživatelské zastavení importu záznamu heslar dokument typ material nastaví stav zastaveno."""
         fake_redis = self._build_redis_for_insert()
         fake_redis.set(f"import_data_stop_{JOB_ID}", "1")
 
@@ -330,7 +302,7 @@ class RunDataImportHeslarDokumentTypMaterialRadaTest(TestCase):
         self.assertIn("stopped_by_user", status_raw.decode("utf-8"))
 
     def test_update_of_nonexistent_record_marks_import_as_failed(self):
-        """Ověřuje, že UPDATE neexistujícího záznamu heslar dokument typ material rada označí import jako selhaný."""
+        """Ověřuje, že UPDATE neexistujícího záznamu heslar dokument typ material označí import jako selhaný."""
         fake_redis = self._build_redis_for_update("hdtm-9999999")
 
         self._run_import(fake_redis)
@@ -338,7 +310,7 @@ class RunDataImportHeslarDokumentTypMaterialRadaTest(TestCase):
         self._assert_import_failed(fake_redis)
 
     def test_insert_of_duplicate_combination_marks_import_as_failed(self):
-        """Ověřuje, že INSERT duplicitního combination pro záznam heslar dokument typ material rada označí import jako selhaný."""
+        """Ověřuje, že INSERT duplicitního combination pro záznam heslar dokument typ material označí import jako selhaný."""
         self._create_existing_record()
         fake_redis = self._build_redis_for_insert()
 
@@ -347,7 +319,7 @@ class RunDataImportHeslarDokumentTypMaterialRadaTest(TestCase):
         self._assert_import_failed(fake_redis)
 
     def test_lock_lost_mid_import_sets_failed_lock_lost_status(self):
-        """Ověřuje, že ztráta importního locku při importu záznamu heslar dokument typ material rada nastaví stav failed_lock_lost."""
+        """Ověřuje, že ztráta importního locku při importu záznamu heslar dokument typ material nastaví stav failed_lock_lost."""
         fake_redis = self._build_redis_for_insert()
 
         self._run_import(fake_redis, refresh_lock_side_effect=[True, False, False, False, False])
@@ -358,7 +330,7 @@ class RunDataImportHeslarDokumentTypMaterialRadaTest(TestCase):
         self._assert_import_failed(fake_redis)
 
     def test_successful_import_writes_success_marker_into_progress_details(self):
-        """Ověřuje, že úspěšný import záznamu heslar dokument typ material rada zapíše success marker do detailu průběhu."""
+        """Ověřuje, že úspěšný import záznamu heslar dokument typ material zapíše success marker do detailu průběhu."""
         fake_redis = self._build_redis_for_insert()
 
         self._run_import(fake_redis)

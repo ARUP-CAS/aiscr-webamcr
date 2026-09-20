@@ -2237,21 +2237,14 @@ class HeslarDokumentTypMaterialMapper(ImportModelMapper):
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
             verbose_limit_choices_to=_(
-                "core.import_data_mappers.HeslarDokumentTypMaterialRadaMapper.dokument_typ.limit_choices"
+                "core.import_data_mappers.HeslarDokumentTypMaterialMapper.dokument_typ.limit_choices"
             ),
         )
         field_mapping["dokument_material"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL},
             verbose_limit_choices_to=_(
-                "core.import_data_mappers.HeslarDokumentTypMaterialRadaMapper.dokument_material.limit_choices"
-            ),
-        )
-        field_mapping["dokument_rada"] = LookupImportField(
-            Heslar,
-            limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},
-            verbose_limit_choices_to=_(
-                "core.import_data_mappers.HeslarDokumentTypMaterialRadaMapper.dokument_rada.limit_choices"
+                "core.import_data_mappers.HeslarDokumentTypMaterialMapper.dokument_material.limit_choices"
             ),
         )
         return field_mapping
