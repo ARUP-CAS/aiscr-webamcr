@@ -12,7 +12,7 @@ from unittest import mock
 from core.connectors import RedisConnector
 from core.tests.fake_redis import FakeRedis
 from core.tests.stub_user import _StubUser
-from core.views import DataImportCancel, DataImportProgress, DataImportReset, DataImportStop
+from core.views import DataImportCancel, DataImportProgress, DataImportReset, DataImportStop, _cursor_param
 from cron import tasks
 from django.core.exceptions import PermissionDenied
 from django.test import RequestFactory, SimpleTestCase
@@ -48,6 +48,13 @@ class DataImportCancelTest(SimpleTestCase):
     def setUp(self):
         """Připraví ``RequestFactory`` sdílenou napříč testy."""
         self.factory = RequestFactory()
+
+    def test_cursor_param_applies_shared_wire_contract(self):
+        """Všechny kurzory používají nezáporné celé číslo a při chybě se vrací na nulu."""
+        for raw_value, expected in ((None, 0), ("4", 4), ("invalid", 0), ("-4", 0)):
+            with self.subTest(raw_value=raw_value):
+                url = "/data-import/" if raw_value is None else f"/data-import/?cursor={raw_value}"
+                self.assertEqual(_cursor_param(self.factory.get(url), "cursor"), expected)
 
     def _post(self, fake, user_id=OWNER_ID, is_superuser=True):
         """Zavolá ``DataImportCancel`` přes ``RequestFactory`` s daným uživatelem a fakem Redis.

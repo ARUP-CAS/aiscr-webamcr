@@ -2724,6 +2724,19 @@ def _check_import_ownership(request, job_id, redis_connector) -> bool:
     return owner is not None and str(owner) == str(request.user.id)
 
 
+def _cursor_param(request, name) -> int:
+    """Vrátí nezápornou celočíselnou hodnotu kurzoru z query parametrů.
+
+    :param request: HTTP požadavek s query parametry průběžného načítání.
+    :param name: Název parametru kurzoru.
+    :return: Hodnota kurzoru; při chybějící, neplatné nebo záporné hodnotě vrací ``0``.
+    """
+    try:
+        return max(int(request.GET.get(name, 0)), 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 # Per-job Redis datové klíče, které se na terminální cestě expirují (ne mažou) kvůli retenci
 # reportu. Zrcadlí sadu, kterou expiruje run_data_import a validační task.
 def _status_message_id(raw):
@@ -2824,10 +2837,7 @@ class DataImportProgress(LoginRequiredMixin, View):
             # The browser normally receives only rows appended after its cursor.  On a terminal
             # phase, retrieve the complete range once: rollback may have relabelled previously
             # rendered ``success`` rows to ``rolled_back`` in place.
-            try:
-                progress_since = max(int(request.GET.get("progress_since", 0)), 0)
-            except (TypeError, ValueError):
-                progress_since = 0
+            progress_since = _cursor_param(request, "progress_since")
             progress_start = (
                 0
                 if phase in (IMPORT_PHASE_FINISHED, IMPORT_PHASE_STOPPED, IMPORT_PHASE_FAILED, IMPORT_PHASE_CANCELED)
@@ -2841,10 +2851,7 @@ class DataImportProgress(LoginRequiredMixin, View):
             progress_cursor = progress_start + len(serialized_results)
             # File entries are append-only too, so only translate the entries the browser has not
             # already rendered.
-            try:
-                files_since = max(int(request.GET.get("files_since", 0)), 0)
-            except (TypeError, ValueError):
-                files_since = 0
+            files_since = _cursor_param(request, "files_since")
             serialized_results_files_raw = json.loads(redis_connector.get(f"import_data_files_{job_id}") or "[]")
             serialized_results_files = []
             for entry in serialized_results_files_raw[files_since:]:
@@ -2872,10 +2879,7 @@ class DataImportProgress(LoginRequiredMixin, View):
             # JSON snapshot the report reads. The client sends back how many rows it already has
             # (validation_since) so each poll only pays for the rows appended since the last one,
             # instead of re-reading/re-translating the whole growing list every tick.
-            try:
-                validation_since = max(int(request.GET.get("validation_since", 0)), 0)
-            except (TypeError, ValueError):
-                validation_since = 0
+            validation_since = _cursor_param(request, "validation_since")
             validation_details = redis_connector.lrange(
                 f"import_data_validation_details_{job_id}", validation_since, -1
             )

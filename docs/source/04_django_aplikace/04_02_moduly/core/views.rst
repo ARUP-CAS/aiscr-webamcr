@@ -1036,6 +1036,14 @@ Funkce
    :param redis_connector: Dekódující Redis spojení.
    :return: ``True`` pokud je uživatel vlastníkem úlohy; jinak ``False``.
 
+.. py:function:: _cursor_param(request, name)
+
+   Vrátí nezápornou celočíselnou hodnotu kurzoru z query parametrů.
+
+   :param request: HTTP požadavek s query parametry průběžného načítání.
+   :param name: Název parametru kurzoru.
+   :return: Hodnota kurzoru; při chybějící, neplatné nebo záporné hodnotě vrací ``0``.
+
 .. py:function:: _status_message_id(raw)
 
    Vrátí samotné ID stavové zprávy bez překladu/parametrů (pro porovnání v UI).
