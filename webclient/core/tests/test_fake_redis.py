@@ -52,6 +52,20 @@ class FakeRedisEvalDispatchTests(SimpleTestCase):
         self.assertTrue(RedisConnector.delete_if_value_matches(fake, key, JOB))
         self.assertIsNone(fake.get(key))
 
+    def test_schedule_import_routing_pointer_expirations_updates_both_pointers(self):
+        """Plánované expirace obnoví ukazatel uživatele i globální zpětný odkaz importu."""
+        user_id = 7
+        ttl_seconds = 60
+        user_key = f"import_data_current_job_{user_id}"
+        fake = FakeRedis(initial={user_key: JOB, RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY: JOB})
+
+        pipeline = fake.pipeline()
+        RedisConnector.schedule_import_routing_pointer_expirations(pipeline, user_id, ttl_seconds)
+        pipeline.execute()
+
+        self.assertEqual(fake.ttl(user_key), ttl_seconds)
+        self.assertEqual(fake.ttl(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY), ttl_seconds)
+
     def test_refresh_lock_script_extends_ttl_only_on_matching_token(self):
         """Compare-then-expire skript prodlouží TTL pouze při shodě tokenu."""
         fake = FakeRedis(initial={RedisConnector.IMPORT_DATA_LOCK_KEY: TOKEN})

@@ -3183,8 +3183,9 @@ class DataImportStart(LoginRequiredMixin, View):
         # pointer before dispatching so an approval near the deadline cannot expire mid-import.
         _expire_import_data_keys(redis_connector, job_id, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS)
         renewal_pipe = redis_connector.pipeline()
-        renewal_pipe.expire(f"import_data_current_job_{request.user.id}", tasks.IMPORT_DATA_RUNNING_TTL_SECONDS)
-        renewal_pipe.expire(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS)
+        RedisConnector.schedule_import_routing_pointer_expirations(
+            renewal_pipe, request.user.id, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS
+        )
         renewal_pipe.execute()
         try:
             tasks.run_data_import.delay(job_id, request.user.id, lock_token)
@@ -3200,11 +3201,8 @@ class DataImportStart(LoginRequiredMixin, View):
             )
             _expire_import_data_keys(redis_connector, job_id, tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS)
             approval_pipe = redis_connector.pipeline()
-            approval_pipe.expire(
-                f"import_data_current_job_{request.user.id}", tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS
-            )
-            approval_pipe.expire(
-                RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS
+            RedisConnector.schedule_import_routing_pointer_expirations(
+                approval_pipe, request.user.id, tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS
             )
             approval_pipe.execute()
             return JsonResponse(

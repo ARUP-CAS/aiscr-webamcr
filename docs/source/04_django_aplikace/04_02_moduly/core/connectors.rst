@@ -86,6 +86,14 @@ Třídy
       :param expected_value: Hodnota, kterou musí klíč stále mít, aby ke smazání došlo.
       :return: ``True``, pokud byl klíč smazán; jinak ``False``.
 
+   .. py:method:: schedule_import_routing_pointer_expirations()
+
+      Přidá expiraci obou ukazatelů importní úlohy do Redis pipeline.
+
+      :param pipeline: Redis pipeline, do níž se vloží příkazy expirace.
+      :param user_id: Identifikátor uživatele, kterému importní úloha patří.
+      :param ttl_seconds: Doba expirace ukazatelů v sekundách.
+
    .. py:method:: claim_awaiting_import()
 
       Atomicky ověří fázi, platnost validace i vlastnictví locku importní úlohy a v jediném

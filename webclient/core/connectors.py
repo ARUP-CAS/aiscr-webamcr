@@ -229,6 +229,17 @@ return 1
         return bool(connection.eval(cls._RELEASE_LOCK_SCRIPT, 1, key, expected_value))
 
     @classmethod
+    def schedule_import_routing_pointer_expirations(cls, pipeline, user_id, ttl_seconds) -> None:
+        """Přidá expiraci obou ukazatelů importní úlohy do Redis pipeline.
+
+        :param pipeline: Redis pipeline, do níž se vloží příkazy expirace.
+        :param user_id: Identifikátor uživatele, kterému importní úloha patří.
+        :param ttl_seconds: Doba expirace ukazatelů v sekundách.
+        """
+        pipeline.expire(f"import_data_current_job_{user_id}", ttl_seconds)
+        pipeline.expire(cls.IMPORT_DATA_ACTIVE_JOB_KEY, ttl_seconds)
+
+    @classmethod
     def claim_awaiting_import(
         cls, connection: redis.Redis, job_id: str, expected_phase: str, new_phase: str, ttl_seconds: int
     ) -> tuple:

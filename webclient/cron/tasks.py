@@ -1496,11 +1496,8 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                 # The per-user "current job" pointer is keyed by user_id, not job_id, so it is NOT in
                 # per_job_data_keys. Keep it, and the lock → job back-reference, for the same bounded
                 # approval window so the reviewer can return to the job and an administrator can reset it.
-                expiration_pipe.expire(
-                    "import_data_current_job_{}".format(user_id), IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS
-                )
-                expiration_pipe.expire(
-                    RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS
+                RedisConnector.schedule_import_routing_pointer_expirations(
+                    expiration_pipe, user_id, IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS
                 )
                 expiration_pipe.execute()
         if stopped or failure_reason is not None:
