@@ -32,7 +32,14 @@ Funkce
    :param maintenance: Uložená nebo navrhovaná konfigurace odstávky.
    :return: Zda je odstávka zapnutá, zveřejněná a její začátek již nastal.
 
-.. py:function:: ensure_maintenance_change_allowed(current, replacement)
+.. py:function:: import_is_protected()
+
+   Zjistí, zda Redis eviduje aktivní nebo nedokončený import.
+
+   :return: ``True``, pokud import drží lock nebo jeho aktivní ukazatel není v terminální fázi.
+   :raises MaintenanceImportConflict: Stav importu nelze bezpečně ověřit.
+
+.. py:function:: ensure_maintenance_change_allowed(current, replacement, import_protected)
 
    Odmítne ukončení aktivní odstávky, pokud import ještě drží ochranu.
 
@@ -40,6 +47,7 @@ Funkce
 
    :param current: Aktuální zamčený řádek odstávky.
    :param replacement: Navrhovaná konfigurace; ``None`` znamená smazání.
+   :param import_protected: Předem načtený stav ochrany importu; bez hodnoty se načte z Redis.
    :raises MaintenanceImportConflict: Import běží nebo nelze jeho stav bezpečně ověřit.
 
 .. py:function:: acquire_import_lock_during_maintenance(connection, token, ttl_seconds)

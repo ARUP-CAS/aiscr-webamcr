@@ -29,6 +29,7 @@ from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImpo
 from .import_maintenance import (
     MaintenanceImportConflict,
     ensure_maintenance_change_allowed,
+    import_is_protected,
     lock_maintenance_configuration,
 )
 from .models import OdstavkaSystemu, Permissions, PermissionsSkip
@@ -111,9 +112,10 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         :param obj: Odstávka určená ke smazání.
         :raises MaintenanceImportConflict: Odstávka chrání import.
         """
+        import_protected = import_is_protected()
         for current in lock_maintenance_configuration():
             if current.pk == obj.pk:
-                ensure_maintenance_change_allowed(current)
+                ensure_maintenance_change_allowed(current, import_protected=import_protected)
         super().delete_model(request, obj)
         transaction.on_commit(lambda: cache.delete("maintenance"))
 
@@ -125,11 +127,12 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         :param queryset: Odstávky vybrané ke smazání.
         :raises MaintenanceImportConflict: Některá odstávka chrání import.
         """
+        import_protected = import_is_protected()
         configurations = lock_maintenance_configuration()
         selected_ids = set(queryset.values_list("pk", flat=True))
         for current in configurations:
             if current.pk in selected_ids:
-                ensure_maintenance_change_allowed(current)
+                ensure_maintenance_change_allowed(current, import_protected=import_protected)
         super().delete_queryset(request, queryset)
         transaction.on_commit(lambda: cache.delete("maintenance"))
 
@@ -146,9 +149,10 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         :param form: Parametr ``form`` se předává do volání ``file_handler()``, ``save_model()``, pracuje se s atributy ``cleaned_data``.
         :param change: Parametr ``change`` se předává do volání ``save_model()``.
         """
+        import_protected = import_is_protected()
         for current in lock_maintenance_configuration():
             if current.pk == obj.pk:
-                ensure_maintenance_change_allowed(current, obj)
+                ensure_maintenance_change_allowed(current, obj, import_protected)
         locale_path = settings.LOCALE_PATHS[0]
         languages = settings.LANGUAGES
         for code, lang in languages:

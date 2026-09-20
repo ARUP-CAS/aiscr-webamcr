@@ -13,6 +13,7 @@ from core.import_maintenance import (
     MaintenanceImportConflict,
     acquire_import_lock_during_maintenance,
     ensure_maintenance_change_allowed,
+    import_is_protected,
     lock_maintenance_configuration,
 )
 from core.models import OdstavkaSystemu
@@ -55,6 +56,15 @@ class MaintenanceImportGuardTest(SimpleTestCase):
                     self.redis.set("import_data_phase_job", phase)
                 with self.assertRaises(MaintenanceImportConflict):
                     ensure_maintenance_change_allowed(self.current, self.disabled)
+
+    def test_import_protection_snapshot_reports_redis_state(self):
+        """Předem načtený stav Redis rozliší aktivní a terminální import bez zámku řádku."""
+        self.redis.set(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, "job")
+        self.redis.set("import_data_phase_job", "importing")
+        self.assertTrue(import_is_protected())
+
+        self.redis.set("import_data_phase_job", "finished")
+        self.assertFalse(import_is_protected())
 
     def test_lock_protects_staging_and_terminal_cleanup(self):
         """Držený lock blokuje vypnutí před založením metadat i po zápisu terminální fáze."""
