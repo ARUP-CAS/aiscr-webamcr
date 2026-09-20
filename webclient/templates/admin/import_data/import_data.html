@@ -62,52 +62,12 @@
         {% trans "core.admin_site.AmcrCustomAdminSite.hromadny_import_reporty" %}
       </a>
     </p>
-    {% if not maintenance %}
-      <p>{% trans "core.templates.admin.import_data.not_maintenance" %}</p>
-    {% elif import_data_running and not job_id %}
-      <p>{% trans "core.templates.admin.import_data.import_is_running" %}</p>
-      {% if url_reset %}
-        {% csrf_token %}
-        <p>
-          <input type="button" id="resetImportBusy" class="default"
-                 value="{% trans "core.templates.admin.import_data.reset_import" %}">
-        </p>
-        <p id="resetImportBusyStatus" class="errornote" role="status"></p>
-        <script>
-            // Manual, admin-only recovery for a lock stuck by a dead worker. No job_id here (this is
-            // another admin's job), so the endpoint resolves it from IMPORT_DATA_ACTIVE_JOB_KEY.
-            (function () {
-                const resetButton = document.getElementById("resetImportBusy")
-                if (!resetButton) {
-                    return
-                }
-                const resetUrl = "{{ url_reset }}"
-                const csrfToken = document.cookie.split("; ").find(row => row.startsWith("csrftoken="))?.split("=")[1]
-                resetButton.addEventListener("click", async () => {
-                    if (!window.confirm("{% trans 'core.templates.admin.import_data.reset_confirm' %}")) {
-                        return
-                    }
-                    resetButton.disabled = true
-                    const response = await fetch(resetUrl, {method: "POST", headers: {"X-CSRFToken": csrfToken}})
-                    if (response.ok) {
-                        window.location.reload()
-                    } else {
-                        const data = await response.json().catch(() => null)
-                        document.getElementById("resetImportBusyStatus").textContent = data?.status_message || ""
-                        resetButton.disabled = false
-                    }
-                })
-            })()
-        </script>
-      {% endif %}
-    {% elif error_message %}
-      <p class="errornote">{{ error_message }}</p>
-      {% if error_message_details %}
-        <p>{{ error_message_details }}</p>
-      {% endif %}
-    {% elif job_id %}
-      {# Polling UI: a thin shell — all import/validation data is rendered by JS from the #}
-      {# progress endpoint. No validation table is rendered from server context. #}
+    {% if job_id %}
+      {# Polling UI wins over the maintenance check: a running job's UI (and its reset #}
+      {# affordance) must stay reachable even after maintenance ends while the job is still #}
+      {# alive, since jobs carry up to a 48h TTL and there is no reaper. #}
+      {# Thin shell — all import/validation data is rendered by JS from the progress endpoint. #}
+      {# No validation table is rendered from server context. #}
       {% csrf_token %}
       <div class="submit-row">
         <div id="progressBarBoxData" class="progressBarBox" style="margin-bottom: 1rem">
@@ -171,6 +131,49 @@
       <hr style="margin: 2rem 0;">
       <p><strong>{% trans "core.templates.admin.import_data.import_directory_not_configured" %}</strong></p>
       {% endif %}
+    {% elif import_data_running %}
+      <p>{% trans "core.templates.admin.import_data.import_is_running" %}</p>
+      {% if url_reset %}
+        {% csrf_token %}
+        <p>
+          <input type="button" id="resetImportBusy" class="default"
+                 value="{% trans "core.templates.admin.import_data.reset_import" %}">
+        </p>
+        <p id="resetImportBusyStatus" class="errornote" role="status"></p>
+        <script>
+            // Manual, admin-only recovery for a lock stuck by a dead worker. No job_id here (this is
+            // another admin's job), so the endpoint resolves it from IMPORT_DATA_ACTIVE_JOB_KEY.
+            (function () {
+                const resetButton = document.getElementById("resetImportBusy")
+                if (!resetButton) {
+                    return
+                }
+                const resetUrl = "{{ url_reset }}"
+                const csrfToken = document.cookie.split("; ").find(row => row.startsWith("csrftoken="))?.split("=")[1]
+                resetButton.addEventListener("click", async () => {
+                    if (!window.confirm("{% trans 'core.templates.admin.import_data.reset_confirm' %}")) {
+                        return
+                    }
+                    resetButton.disabled = true
+                    const response = await fetch(resetUrl, {method: "POST", headers: {"X-CSRFToken": csrfToken}})
+                    if (response.ok) {
+                        window.location.reload()
+                    } else {
+                        const data = await response.json().catch(() => null)
+                        document.getElementById("resetImportBusyStatus").textContent = data?.status_message || ""
+                        resetButton.disabled = false
+                    }
+                })
+            })()
+        </script>
+      {% endif %}
+    {% elif error_message %}
+      <p class="errornote">{{ error_message }}</p>
+      {% if error_message_details %}
+        <p>{{ error_message_details }}</p>
+      {% endif %}
+    {% elif not maintenance %}
+      <p>{% trans "core.templates.admin.import_data.not_maintenance" %}</p>
     {% else %}
       <p>
         {% trans "core.templates.admin.import_data.no_active_job_notice" %}

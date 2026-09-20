@@ -455,14 +455,17 @@ class AmcrCustomAdminSite(admin.AdminSite):
             ):
                 return self._render_import_polling_ui(request, context, current_job_id)
 
+        # Global-lock-busy gate (maintenance-independent): another admin's pipeline holds the
+        # lock. Checked before the maintenance gate so the reset affordance stays reachable even
+        # after maintenance ends while that job is still running (jobs carry up to a 48h TTL and
+        # there is no reaper — manual reset is the only recovery).
+        if import_data_running:
+            return self._render_lock_busy(request, context)
+
         # Maintenance gate: reject uploads outside maintenance mode.
         if not maintenance:
             context["form"] = ImportDataAdminForm()
             return TemplateResponse(request, "admin/import_data/import_data.html", context)
-
-        # Global-lock-busy gate: another admin's pipeline holds the lock.
-        if import_data_running:
-            return self._render_lock_busy(request, context)
 
         # Report-directory gate: the XLSX report is the durable record of every run (customer
         # decision) — an import that cannot save its report must not be allowed to start at all,
