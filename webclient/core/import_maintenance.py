@@ -50,15 +50,14 @@ def ensure_maintenance_change_allowed(current, replacement=None):
     if not maintenance_is_active(current) or (replacement is not None and maintenance_is_active(replacement)):
         return
     try:
+        from cron import tasks
+
         connection = RedisConnector.get_connection_decode()
         protected = bool(connection.get(RedisConnector.IMPORT_DATA_LOCK_KEY))
         if not protected:
             job_id = connection.get(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
-            protected = bool(job_id) and connection.get(f"import_data_phase_{job_id}") not in (
-                "finished",
-                "stopped",
-                "canceled",
-                "failed",
+            protected = (
+                bool(job_id) and connection.get(f"import_data_phase_{job_id}") not in tasks.IMPORT_TERMINAL_PHASES
             )
     except RedisError as exc:
         raise MaintenanceImportConflict(

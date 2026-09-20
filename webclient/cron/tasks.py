@@ -97,6 +97,12 @@ IMPORT_PHASE_FINISHED = "finished"
 IMPORT_PHASE_STOPPED = "stopped"
 IMPORT_PHASE_CANCELED = "canceled"
 IMPORT_PHASE_FAILED = "failed"
+IMPORT_TERMINAL_PHASES = (
+    IMPORT_PHASE_FINISHED,
+    IMPORT_PHASE_STOPPED,
+    IMPORT_PHASE_CANCELED,
+    IMPORT_PHASE_FAILED,
+)
 
 # Diskriminátor terminální fáze ``failed`` (klíč ``import_data_failure_reason_{job_id}``).
 IMPORT_FAILURE_REASON_VALIDATION_REJECTED = "validation_rejected"
