@@ -2737,6 +2737,34 @@ def _cursor_param(request, name) -> int:
         return 0
 
 
+def _memoized_translator():
+    """Vrátí ``translate_status_value`` s pamětí výsledků v rámci jednoho požadavku.
+
+    Historie a Fedora výsledky se v Redis přepisují jako celé slovníky (hodnota záznamu se může
+    dodatečně změnit), takže je nelze krájet kurzorem jako append-only kanály. Počet *různých*
+    hodnot je ale malý (``success``, chybová hláška, MIME typ …), zatímco počet položek roste s
+    během — memoizace proto sníží počet skutečných překladů z O(n) na počet unikátních hodnot.
+
+    Paměť žije pouze v rámci jednoho požadavku, takže se nemůže přenést locale jednoho admina
+    do odpovědi jiného.
+
+    :return: Funkce ``(raw) -> přeložená hodnota`` se sdílenou pamětí výsledků.
+    """
+    cache = {}
+
+    def translate(raw):
+        """Přeloží hodnotu z Redis, opakované hodnoty vrátí z paměti.
+
+        :param raw: Hodnota z Redis (ID, obálka ``{id, params}`` nebo ``None``).
+        :return: Přeložený řetězec, nebo ``None`` pro ``None`` na vstupu.
+        """
+        if raw not in cache:
+            cache[raw] = translate_status_value(raw)
+        return cache[raw]
+
+    return translate
+
+
 # Per-job Redis datové klíče, které se na terminální cestě expirují (ne mažou) kvůli retenci
 # reportu. Zrcadlí sadu, kterou expiruje run_data_import a validační task.
 def _status_message_id(raw):
@@ -2811,6 +2839,7 @@ class DataImportProgress(LoginRequiredMixin, View):
                 {"result": "error", "status_message": _("core.templates.admin.import_data.not_owner")},
                 status=403,
             )
+        translate = _memoized_translator()
         try:
             record_count_raw = redis_connector.get(f"import_data_count_{job_id}") or 0
             record_count = int(record_count_raw)
@@ -2845,33 +2874,31 @@ class DataImportProgress(LoginRequiredMixin, View):
             )
             progress_ids = redis_connector.lrange(f"import_data_progress_ids_{job_id}", progress_start, -1)
             progress_details = redis_connector.lrange(f"import_data_progress_details_tr_{job_id}", progress_start, -1)
-            serialized_results = {
-                rid: translate_status_value(detail) for rid, detail in zip(progress_ids, progress_details)
-            }
+            serialized_results = {rid: translate(detail) for rid, detail in zip(progress_ids, progress_details)}
             progress_cursor = progress_start + len(serialized_results)
-            # File entries are append-only too, so only translate the entries the browser has not
-            # already rendered.
+            # File entries are an append-only list, so read only the range the browser has not
+            # rendered yet instead of fetching and parsing the whole growing key every poll.
             files_since = _cursor_param(request, "files_since")
-            serialized_results_files_raw = json.loads(redis_connector.get(f"import_data_files_{job_id}") or "[]")
             serialized_results_files = []
-            for entry in serialized_results_files_raw[files_since:]:
-                translated_entry = dict(entry)
+            for raw_entry in redis_connector.lrange(f"import_data_files_{job_id}", files_since, -1):
+                translated_entry = json.loads(raw_entry)
                 if "additional_info_tr" in translated_entry:
-                    translated_entry["additional_info"] = translate_status_value(
-                        translated_entry.pop("additional_info_tr")
-                    )
+                    translated_entry["additional_info"] = translate(translated_entry.pop("additional_info_tr"))
                 else:
                     translated_entry.setdefault("additional_info", "")
                 serialized_results_files.append(translated_entry)
             files_cursor = files_since + len(serialized_results_files)
+            # These two are rewritten as whole dicts (a record's value can be revised later), so a
+            # cursor would drop revisions — the memoized translator keeps the per-poll cost at the
+            # number of distinct values instead of one translation per entry.
             import_history_record_result = {
-                rid: translate_status_value(value)
+                rid: translate(value)
                 for rid, value in json.loads(
                     redis_connector.get(f"import_data_history_record_result_tr_{job_id}") or "{}"
                 ).items()
             }
             import_fedora_update_result = {
-                rid: [translate_status_value(item) for item in items]
+                rid: [translate(item) for item in items]
                 for rid, items in json.loads(redis_connector.get(f"import_fedora_result_tr_{job_id}") or "{}").items()
             }
 

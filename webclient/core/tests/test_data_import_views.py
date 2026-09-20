@@ -348,13 +348,49 @@ class DataImportProgressCursorTest(SimpleTestCase):
             {"ident_cely": f"F-{i}", "file_name": f"soubor-{i}.pdf", "size_mb": i, "additional_info_tr": "ok"}
             for i in range(3)
         ]
-        fake = _fake(tasks.IMPORT_PHASE_IMPORTING, extra={f"import_data_files_{JOB}": json.dumps(files)})
+        fake = _fake(tasks.IMPORT_PHASE_IMPORTING)
+        for entry in files:
+            fake.rpush(f"import_data_files_{JOB}", json.dumps(entry))
 
         response = self._get(fake, files_since=1)
 
         data = json.loads(response.content)
         self.assertEqual([item["ident_cely"] for item in data["serialized_results_files"]], ["F-1", "F-2"])
         self.assertEqual(data["files_cursor"], 3)
+
+    def test_history_and_fedora_dicts_translate_each_distinct_value_once(self):
+        """Slovníky historie/Fedory se nepřekládají po položkách — překlad platí za unikátní hodnotu.
+
+        Obě sady se v Redis přepisují jako celek (hodnota záznamu se může zpětně změnit), takže je
+        nelze krájet kurzorem; cena pollu ale nesmí růst s délkou běhu.
+        """
+        record_count = 50
+        fake = _fake(
+            tasks.IMPORT_PHASE_IMPORTING,
+            extra={
+                f"import_data_count_{JOB}": record_count,
+                f"import_data_history_record_result_tr_{JOB}": json.dumps(
+                    {str(i): "cron.tasks.run_data_import.success" for i in range(record_count)}
+                ),
+                f"import_fedora_result_tr_{JOB}": json.dumps(
+                    {str(i): ["cron.tasks.run_data_import.success"] for i in range(record_count)}
+                ),
+            },
+        )
+
+        with mock.patch("core.views.translate_status_value", side_effect=lambda raw: raw) as translate_mock:
+            response = self._get(fake)
+
+        data = json.loads(response.content)
+        self.assertEqual(len(data["history_record_result"]), record_count)
+        self.assertEqual(len(data["fedora_update_result"]), record_count)
+        translated_values = {call.args[0] for call in translate_mock.call_args_list}
+        self.assertEqual(
+            translate_mock.call_count,
+            len(translated_values),
+            "Každá unikátní hodnota se smí přeložit nejvýše jednou za poll.",
+        )
+        self.assertLess(translate_mock.call_count, record_count)
 
 
 class DataImportResetTest(SimpleTestCase):

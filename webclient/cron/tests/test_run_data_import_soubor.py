@@ -135,8 +135,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         return json.loads(raw.decode("utf-8"))
 
     def _file_import_results(self, fake_redis):
-        raw = fake_redis.get(f"import_data_files_{JOB_ID}")
-        return json.loads(raw.decode("utf-8"))
+        return [json.loads(entry.decode("utf-8")) for entry in fake_redis.lrange(f"import_data_files_{JOB_ID}", 0, -1)]
 
     def assert_delete_binary_file_called_for_soubor(self, deleted_soubor):
         """Ověří, že byl zavolán ``FedoraRepositoryConnector.delete_binary_file(soubor)``.

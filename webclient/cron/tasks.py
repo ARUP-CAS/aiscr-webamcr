@@ -1422,7 +1422,8 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
             job_key("import_data_valid"), "1" if not invalid_records else "0", ex=IMPORT_DATA_RUNNING_TTL_SECONDS
         )
         redis_connector.set(job_key("import_data_primary_keys"), json.dumps({}), ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
-        redis_connector.set(job_key("import_data_files"), json.dumps([]), ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+        # Append-only list (the progress poll reads it by cursor), so reset means delete, not set.
+        redis_connector.delete(job_key("import_data_files"))
         redis_connector.set(
             job_key("import_data_history_record_result_tr"), json.dumps({}), ex=IMPORT_DATA_RUNNING_TTL_SECONDS
         )
@@ -1692,8 +1693,11 @@ def run_data_import(job_id, user_id, lock_token):
             return
         performed_action_raw = redis_connector.get(job_key("import_performed_action"))
         performed_action = performed_action_raw.decode("utf-8") if performed_action_raw else None
-        redis_connector.delete(job_key("import_data_progress_ids"), job_key("import_data_progress_details_tr"))
-        redis_connector.set(job_key("import_data_files"), json.dumps([]), ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+        redis_connector.delete(
+            job_key("import_data_progress_ids"),
+            job_key("import_data_progress_details_tr"),
+            job_key("import_data_files"),
+        )
         redis_connector.set(
             job_key("import_data_history_record_result_tr"), json.dumps({}), ex=IMPORT_DATA_RUNNING_TTL_SECONDS
         )
@@ -2497,7 +2501,6 @@ def run_data_import(job_id, user_id, lock_token):
         if reports_directory_path:
             save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
 
-        import_results_files = []
         skipped_files: list = []
         if (
             not failed
@@ -2562,16 +2565,18 @@ def run_data_import(job_id, user_id, lock_token):
                         :param reason_tr: Překladové ID důvodu přeskočení.
                         :param skipped_index: Pořadí souboru v ``import_files_list``.
                         """
-                        import_results_files.append(
-                            {
-                                "ident_cely": skipped_ident_cely,
-                                "file_name": skipped_filename,
-                                "size_mb": None,
-                                "additional_info_tr": reason_tr,
-                            }
-                        )
                         skipped_files.append(skipped_filename)
-                        redis_connector.set(job_key("import_data_files"), json.dumps(import_results_files))
+                        redis_connector.rpush(
+                            job_key("import_data_files"),
+                            json.dumps(
+                                {
+                                    "ident_cely": skipped_ident_cely,
+                                    "file_name": skipped_filename,
+                                    "size_mb": None,
+                                    "additional_info_tr": reason_tr,
+                                }
+                            ),
+                        )
                         redis_connector.set(
                             job_key("import_data_files_progress"),
                             skipped_index + 1,
@@ -2734,17 +2739,19 @@ def run_data_import(job_id, user_id, lock_token):
                             }
                         if record_id is not None:
                             pending_related_metadata[nav_key]["record_ids"].add(record_id)
-                        import_results_files.append(
-                            {
-                                "ident_cely": ident_cely,
-                                "file_name": filename,
-                                "size_mb": round(rep_bin_file.size_mb, 3),
-                                "additional_info_tr": translation_value(
-                                    "cron.tasks.run_data_import.file_mime_type", raw=True, message=mimetype
-                                ),
-                            }
+                        redis_connector.rpush(
+                            job_key("import_data_files"),
+                            json.dumps(
+                                {
+                                    "ident_cely": ident_cely,
+                                    "file_name": filename,
+                                    "size_mb": round(rep_bin_file.size_mb, 3),
+                                    "additional_info_tr": translation_value(
+                                        "cron.tasks.run_data_import.file_mime_type", raw=True, message=mimetype
+                                    ),
+                                }
+                            ),
                         )
-                        redis_connector.set(job_key("import_data_files"), json.dumps(import_results_files))
                         redis_connector.set(
                             job_key("import_data_files_progress"),
                             file_index + 1,

@@ -1044,6 +1044,20 @@ Funkce
    :param name: Název parametru kurzoru.
    :return: Hodnota kurzoru; při chybějící, neplatné nebo záporné hodnotě vrací ``0``.
 
+.. py:function:: _memoized_translator()
+
+   Vrátí ``translate_status_value`` s pamětí výsledků v rámci jednoho požadavku.
+
+   Historie a Fedora výsledky se v Redis přepisují jako celé slovníky (hodnota záznamu se může
+   dodatečně změnit), takže je nelze krájet kurzorem jako append-only kanály. Počet *různých*
+   hodnot je ale malý (``success``, chybová hláška, MIME typ …), zatímco počet položek roste s
+   během — memoizace proto sníží počet skutečných překladů z O(n) na počet unikátních hodnot.
+
+   Paměť žije pouze v rámci jednoho požadavku, takže se nemůže přenést locale jednoho admina
+   do odpovědi jiného.
+
+   :return: Funkce ``(raw) -> přeložená hodnota`` se sdílenou pamětí výsledků.
+
 .. py:function:: _status_message_id(raw)
 
    Vrátí samotné ID stavové zprávy bez překladu/parametrů (pro porovnání v UI).
