@@ -14,6 +14,14 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: _maintenance_conflict_response()
+
+      Zobrazí chybu konfliktu odstávky s importem a vrátí přesměrování.
+
+      :param request: HTTP požadavek administrace.
+      :param exc: Výjimka oznamující konflikt odstávky s importem.
+      :return: Přesměrování zpět na aktuální stránku administrace.
+
    .. py:method:: changeform_view()
 
       Zobrazí odmítnutí ukončení odstávky jako zprávu administrátorovi.

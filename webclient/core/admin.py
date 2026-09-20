@@ -53,6 +53,16 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
     )
     form = OdstavkaSystemuForm
 
+    def _maintenance_conflict_response(self, request, exc):
+        """Zobrazí chybu konfliktu odstávky s importem a vrátí přesměrování.
+
+        :param request: HTTP požadavek administrace.
+        :param exc: Výjimka oznamující konflikt odstávky s importem.
+        :return: Přesměrování zpět na aktuální stránku administrace.
+        """
+        self.message_user(request, str(exc), messages.ERROR)
+        return redirect(request.path)
+
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
         """Zobrazí odmítnutí ukončení odstávky jako zprávu administrátorovi.
 
@@ -65,8 +75,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         try:
             return super().changeform_view(request, object_id, form_url, extra_context)
         except MaintenanceImportConflict as exc:
-            self.message_user(request, str(exc), messages.ERROR)
-            return redirect(request.path)
+            return self._maintenance_conflict_response(request, exc)
 
     def delete_view(self, request, object_id, extra_context=None):
         """Zobrazí důvod odmítnutého smazání odstávky.
@@ -79,8 +88,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         try:
             return super().delete_view(request, object_id, extra_context)
         except MaintenanceImportConflict as exc:
-            self.message_user(request, str(exc), messages.ERROR)
-            return redirect(request.path)
+            return self._maintenance_conflict_response(request, exc)
 
     def response_action(self, request, queryset):
         """Zobrazí důvod odmítnutého hromadného smazání odstávek.
@@ -93,8 +101,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
             with transaction.atomic():
                 return super().response_action(request, queryset)
         except MaintenanceImportConflict as exc:
-            self.message_user(request, str(exc), messages.ERROR)
-            return redirect(request.path)
+            return self._maintenance_conflict_response(request, exc)
 
     @transaction.atomic
     def delete_model(self, request, obj):
