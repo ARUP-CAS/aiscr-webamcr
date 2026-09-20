@@ -113,11 +113,13 @@ IMPORT_FAILURE_REASON_ERROR = "error"
 # o aktualizaci — zákaznický požadavek, transaction_uid zůstává prázdné).
 FEDORA_SKIPPED_ID = "cron.tasks.run_data_import.fedora_skipped"
 
+# Suffix pro Redis klíče, jejichž hodnota je překladové ID nebo obálka ``{id, params}``.
+TRANSLATABLE_KEY_SUFFIX = "_tr"
+
 # Suffixy per-job datových klíčů importní úlohy (bez sufixu ``_{job_id}``). Jedinný zdroj pravdy
 # sdílený validačním taskem (persist/expire), importním taskem (terminální finally) a view
 # (``_expire_import_data_keys``). Nový per-job klíč se přidává pouze sem.
 IMPORT_DATA_JOB_KEY_SUFFIXES = (
-    "import_data_validation_results",
     "import_data_validation_details",
     "import_data_validation_ids",
     "import_data_validation_progress",
@@ -129,11 +131,11 @@ IMPORT_DATA_JOB_KEY_SUFFIXES = (
     "import_data_phase",
     "import_data_primary_keys",
     "import_data_files",
-    "import_data_history_record_result_tr",
-    "import_fedora_result_tr",
-    "import_fedora_target_results_tr",
+    f"import_data_history_record_result{TRANSLATABLE_KEY_SUFFIX}",
+    f"import_fedora_result{TRANSLATABLE_KEY_SUFFIX}",
+    f"import_fedora_target_results{TRANSLATABLE_KEY_SUFFIX}",
     "import_data_progress",
-    "import_data_progress_details_tr",
+    f"import_data_progress_details{TRANSLATABLE_KEY_SUFFIX}",
     "import_data_progress_ids",
     "import_data_history_progress",
     "import_data_history_total",
@@ -141,7 +143,7 @@ IMPORT_DATA_JOB_KEY_SUFFIXES = (
     "import_data_fedora_total",
     "import_data_files_progress",
     "import_data_files_total",
-    "import_data_status_message_tr",
+    f"import_data_status_message{TRANSLATABLE_KEY_SUFFIX}",
     "import_performed_action",
     "import_data_user",
     "import_data_lock_token",
@@ -159,9 +161,6 @@ VALIDATION_REDIS_UPDATE_INTERVAL = 50
 # ``DataImportProgressReportView``) v locale přihlášeného admina. Klíče, které drží překladové
 # ID (případně obálku ``{id, params}`` pro parametrizované zprávy), mají suffix ``_tr``, takže je
 # z názvu klíče poznat, že hodnotu je třeba před zobrazením přeložit.
-
-# Suffix pro Redis klíče, jejichž hodnota je překladové ID nebo obálka ``{id, params}``.
-TRANSLATABLE_KEY_SUFFIX = "_tr"
 
 
 def translation_value(message_id: str, raw: bool = False, **params) -> str:
@@ -950,17 +949,19 @@ def build_import_report_dataframe(job_id, redis_connector):
         pid.decode("utf-8") if isinstance(pid, bytes) else pid
         for pid in redis_connector.lrange("import_data_progress_ids_{}".format(job_id), 0, -1)
     ]
-    progress_details = redis_connector.lrange("import_data_progress_details_tr_{}".format(job_id), 0, -1)
+    progress_details = redis_connector.lrange(f"import_data_progress_details{TRANSLATABLE_KEY_SUFFIX}_{job_id}", 0, -1)
     serialized_results = {rid: translate_status_value(detail) for rid, detail in zip(progress_ids, progress_details)}
     history_record_result = {
         rid: translate_status_value(value)
         for rid, value in json.loads(
-            redis_connector.get("import_data_history_record_result_tr_{}".format(job_id)) or "{}"
+            redis_connector.get(f"import_data_history_record_result{TRANSLATABLE_KEY_SUFFIX}_{job_id}") or "{}"
         ).items()
     }
     fedora_update_result = {
         rid: [translate_status_value(item) for item in items]
-        for rid, items in json.loads(redis_connector.get("import_fedora_result_tr_{}".format(job_id)) or "{}").items()
+        for rid, items in json.loads(
+            redis_connector.get(f"import_fedora_result{TRANSLATABLE_KEY_SUFFIX}_{job_id}") or "{}"
+        ).items()
     }
 
     def build_row(item):
@@ -1002,8 +1003,12 @@ def build_import_fedora_target_dataframe(job_id, redis_connector):
     :param redis_connector: Dekódující Redis spojení.
     :return: DataFrame se sloupci ``ident_cely``, ID transakce Fedora a přeložený výsledek.
     """
-    targets_raw = json.loads(redis_connector.get("import_fedora_target_results_tr_{}".format(job_id)) or "[]")
-    fedora_result_raw = json.loads(redis_connector.get("import_fedora_result_tr_{}".format(job_id)) or "{}")
+    targets_raw = json.loads(
+        redis_connector.get(f"import_fedora_target_results{TRANSLATABLE_KEY_SUFFIX}_{job_id}") or "[]"
+    )
+    fedora_result_raw = json.loads(
+        redis_connector.get(f"import_fedora_result{TRANSLATABLE_KEY_SUFFIX}_{job_id}") or "{}"
+    )
     validation_results_raw = [
         json.loads(detail)
         for detail in redis_connector.lrange("import_data_validation_details_{}".format(job_id), 0, -1)
@@ -2361,7 +2366,17 @@ def run_data_import(job_id, user_id, lock_token):
                     )
                 if failed or stopped:
                     break
-                refresh_import_lock()
+                try:
+                    refresh_import_lock()
+                except ImportLockLostError:
+                    redis_connector.set(
+                        job_key(f"import_fedora_result{TRANSLATABLE_KEY_SUFFIX}"), json.dumps(import_fedora_result)
+                    )
+                    redis_connector.set(
+                        job_key(f"import_fedora_target_results{TRANSLATABLE_KEY_SUFFIX}"),
+                        json.dumps(fedora_target_results),
+                    )
+                    raise
                 if not failed and not stopped:
                     redis_connector.set(
                         job_key("import_data_status_message_tr"),

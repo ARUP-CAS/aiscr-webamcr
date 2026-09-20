@@ -328,7 +328,6 @@ class AmcrCustomAdminSite(admin.AdminSite):
             context["form"] = UpdateMetadataFileForm()
         return TemplateResponse(request, "admin/fedora_management/update_metadata.html", context)
 
-    IMPORT_DATA_REDIS_EXPIRATION = 6 * 60 * 60  # 6 hodin
     IMPORT_ZIP_MAX_UNCOMPRESSED_SIZE = 1024 * 1024 * 1024  # 1024 MB
     # Velikost chunku komprimovaného ZIPu ve stagingu do Redis. Zdrojová konstanta,
     # neladí se za běhu; drží každý SET/GET v řádu desítek ms a hodnotu pod proto-max-bulk-len.
@@ -543,7 +542,6 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 self.redis_connector.set(f"import_data_file_chunks_{job_id}", chunk_count, ex=ttl)
                 self.redis_connector.set(f"import_data_validation_total_{job_id}", 0, ex=ttl)
                 self.redis_connector.set(f"import_data_validation_progress_{job_id}", 0, ex=ttl)
-                self.redis_connector.set(f"import_data_validation_results_{job_id}", json.dumps([]), ex=ttl)
                 self.redis_connector.set(f"import_data_valid_{job_id}", "0", ex=ttl)
 
                 tasks.run_data_import_validation.delay(job_id, request.user.id, lock_token, performed_action)

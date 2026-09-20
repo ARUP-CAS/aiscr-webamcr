@@ -115,7 +115,6 @@ class DataImportStartConcurrencyTest(SimpleTestCase):
                 self.setUp()
                 retained_keys = {
                     f"import_data_count_{JOB_ID}": "2",
-                    f"import_data_validation_results_{JOB_ID}": "[]",
                     f"import_data_{JOB_ID}_record_0": "first record",
                     f"import_data_{JOB_ID}_record_1": "second record",
                 }
