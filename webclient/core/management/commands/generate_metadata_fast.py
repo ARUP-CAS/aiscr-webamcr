@@ -800,9 +800,13 @@ class _FastFedoraWriter:
         :param mimetype: Mimetype ``orig`` obsahu.
         :param orig_bytes: Obsah placeholderu pro ``orig``.
         :param orig_sha512: SHA-512 hash ``orig_bytes``.
-        :param thumb_bytes: Obsah placeholder náhledu (100x100 PNG), nebo ``None`` pro přeskočení.
+        :param thumb_bytes: Obsah placeholder náhledu (PNG), nebo ``None`` pro přeskočení. Rozměr je shora
+            omezen konstantou ``THUMB_MAX_PX`` z ``core/repository_connector.py``; ``Image.thumbnail``
+            nikdy nezvětšuje, takže skutečné rozměry odpovídají menší předloze - rastry jsou 300×300,
+            image/bmp 100×100.
         :param thumb_sha512: SHA-512 hash ``thumb_bytes``.
-        :param thumb_large_bytes: Obsah placeholder velkého náhledu (800x800 PNG), nebo ``None``.
+        :param thumb_large_bytes: Obsah placeholder velkého náhledu (PNG), nebo ``None``. Rozměr je shora
+            omezen konstantou ``THUMB_LARGE_MAX_PX`` z ``core/repository_connector.py``.
         :param thumb_large_sha512: SHA-512 hash ``thumb_large_bytes``.
         :param tx_url: URL aktivní Fedora transakce (viz ``begin_transaction``) - ideálně
             sdílená s ostatními soubory téhož záznamu (a s ``create_file_container``),

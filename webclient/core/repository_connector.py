@@ -1174,7 +1174,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             Změní velikost obrázku na zadaný rozměr a vrátí jako PNG v BytesIO.
 
             :param image: Vstupní obrázek v binární podobě k převzorkování.
-            :param large_inner: Příznak pro výběr max. rozměru (False: 100x100px, True: 800x800px).
+            :param large_inner: Příznak pro výběr max. rozměru (False: maximální hrana malého náhledu
+                ``THUMB_MAX_PX``, True: maximální hrana velkého náhledu ``THUMB_LARGE_MAX_PX``).
             :return: Změněný obrázek jako PNG v BytesIO bufferu.
             """
             image = Image.open(image)
