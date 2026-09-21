@@ -26,6 +26,15 @@ from redis import ResponseError
 
 logger = logging.getLogger(__name__)
 
+#: Maximální hrana malého náhledu v pixelech (``Image.thumbnail`` zachovává poměr stran
+#: a obrázek **nikdy nezvětšuje**, takže menší předloha si rozměr podrží).
+THUMB_MAX_PX = 100
+
+#: Totéž pro velký náhled. Obě hodnoty byly dřív schované ve výrazu
+#: ``(1 + large * 7) * 100``; jako konstanty na ně může odkazovat i test, který hlídá
+#: rozměry předgenerovaných placeholder náhledů (review PR #4262).
+THUMB_LARGE_MAX_PX = 800
+
 
 def _build_fedora_adapter() -> HTTPAdapter:
     """
@@ -1250,12 +1259,14 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             Změní velikost obrázku na zadaný rozměr a vrátí jako PNG v BytesIO.
 
             :param image: Vstupní obrázek v binární podobě k převzorkování.
-            :param large_inner: Příznak pro výběr max. rozměru (False: 100x100px, True: 800x800px).
+            :param large_inner: Příznak pro výběr max. rozměru (False: maximální hrana malého náhledu
+                ``THUMB_MAX_PX``, True: maximální hrana velkého náhledu ``THUMB_LARGE_MAX_PX``).
             :return: Změněný obrázek jako PNG v BytesIO bufferu.
             """
             image = Image.open(image)
             image = ImageOps.exif_transpose(image)
-            max_size = ((1 + large_inner * 7) * 100, (1 + large_inner * 7) * 100)
+            hrana = THUMB_LARGE_MAX_PX if large_inner else THUMB_MAX_PX
+            max_size = (hrana, hrana)
             image.thumbnail(max_size)
             output_buffer = BytesIO()
             image.save(output_buffer, format="PNG")
