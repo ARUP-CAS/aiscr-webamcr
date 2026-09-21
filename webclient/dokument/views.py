@@ -15,6 +15,7 @@ from core.constants import (
     DOKUMENT_CAST_RELATION_TYPE,
     DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
     IDENTIFIKATOR_DOCASNY_PREFIX,
+    LETECKE_RADY_DOKUMENTU,
     ODESLANI_DOK,
     ROLE_ADMIN_ID,
     ROLE_ARCHIVAR_ID,
@@ -115,6 +116,7 @@ from heslar.hesla import (
 from heslar.hesla_dynamicka import (
     DOKUMENT_RADA_DATA_3D,
     DOKUMENT_RADA_VYCHOZI,
+    LETECKE_DOKUMENT_TYPES,
     MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR,
     MODEL_3D_DOKUMENT_TYPES,
     PRIMARNE_DIGITALNI,
@@ -618,7 +620,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         context["tvar_concurrent_changes"] = self.request.session.pop(
             f"tvar_concurrent_changes_{dokument.ident_cely}", None
         )
-        if dokument.rada.zkratka in ["LD", "LN", "DL"]:
+        if show["tvary"]:
             TvarFormset = inlineformset_factory(
                 Dokument,
                 Tvar,
@@ -2465,6 +2467,23 @@ def get_history_dates(historie_vazby, request_user):
     return historie
 
 
+def dokument_ma_tvary(dokument):
+    """
+    Zjistí, zda se u dokumentu evidují tvary.
+
+    Tvary nesou letecké fotografie. Do #3421 je bylo možné poznat podle řady dokumentu
+    (LD/LN/DL), protože řada se odvozovala z typu a materiálu. Od #3421 se řada přiděluje
+    fixně, takže věcné dělení nese typ dokumentu; u starších záznamů se proto kontroluje
+    i původní letecká řada.
+
+    :param dokument: Dokument, u kterého se zjišťuje evidence tvarů.
+    :return: ``True`` pokud se u dokumentu mají zobrazit tvary, jinak ``False``.
+    """
+    if dokument.typ_dokumentu_id in LETECKE_DOKUMENT_TYPES:
+        return True
+    return dokument.rada is not None and dokument.rada.zkratka in LETECKE_RADY_DOKUMENTU
+
+
 def get_detail_template_shows(dokument, user):
     """
     Funkce pro získaní kontextu pro zobrazování možností na stránkách.
@@ -2492,7 +2511,7 @@ def get_detail_template_shows(dokument, user):
         soubor_prejmenovat = check_permissions(p.actionChoices.soubor_prejmenovat_dokument, user, dokument.ident_cely)
         vypis = check_permissions(p.actionChoices.vypis_dokument, user, dokument.ident_cely)
     show_arch_links = dokument.stav == D_STAV_ARCHIVOVANY
-    show_tvary = True if dokument.rada.zkratka in ["LD", "LN", "DL"] else False
+    show_tvary = dokument_ma_tvary(dokument)
     show = {
         "vratit_link": check_permissions(p.actionChoices.dok_vratit, user, dokument.ident_cely),
         "odeslat_link": check_permissions(p.actionChoices.dok_odeslat, user, dokument.ident_cely),
