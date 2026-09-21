@@ -859,19 +859,6 @@ Funkce
    :param pk: Primární klíč přejmenovávaného souboru.
    :return: Vrací modal (GET) nebo ``JsonResponse`` s přesměrováním či chybou (POST).
 
-.. py:function:: get_finds_soubor_name(find, filename, add_to_index)
-
-   Funkce pro získaní jména souboru pro samostatný nález.
-
-   Název se přiděluje navýšením podle nejvyššího obsazeného suffixu (``F01`` … ``F99``). Toto výchozí
-   chování se záměrně nemění – uvolnění či změnu pozice řeší přejmenování souboru.
-
-   :param find: Textový název, klíč nebo výraz ``find`` používaný v rámci operace.
-   :param filename: Parametr ``filename`` se předává do volání ``splitext()``, ``warning()``, vstupuje do návratové hodnoty.
-   :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
-
-   :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.
-
 .. py:function:: get_projekt_soubor_name(projekt, file_name)
 
    Vygeneruje bezpečný název souboru pro upload do projektu.

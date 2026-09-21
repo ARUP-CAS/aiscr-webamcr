@@ -160,6 +160,7 @@ dokument,tvar/edit/<str:ident_cely>,dok_tvary_edit,X,*,*,*,*,D1,D1,<D3,<D3,D.my,
 dokument,tvar/smazat/<str:ident_cely>/<int:pk>,dok_tvary_smazat,X,*,*,*,*,D1,D1,<D3,<D3,D.my,D.ours,*,*,*,*,*,*,
 dokument,vyber,,X,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,
 dokument,zapsat,,X,X,X,*,*,X,X,*,*,X,X,*,*,X,X,*,*,
+dokument,zapsat,dok_zapsat_vlastni_ident,X,X,X,*,*,X,X,*,*,X,X,*,*,X,X,*,*,
 dokument,zapsat/do-arch-z/<str:arch_z_ident_cely>,dok_zapsat_do_archz,X,*,*,*,*,AZ1,AZ1,<AZ3,<AZ3,AZ.my,AZ.ours,*,*,*,*,*,*,
 dokument,zapsat/do-projektu/<str:proj_ident_cely>,dok_zapsat_do_projekt,X,X,*,*,*,X,P2-P4,P2-P5,P2-P5,X,P.ours,*,*,X,*,*,*,pouze typ průzkum
 dokument,zjisti-licenci-organizace/,,X,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,

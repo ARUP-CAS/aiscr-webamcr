@@ -246,7 +246,6 @@
       <xs:element name="razeni" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{razeni}" -->
       <xs:element name="hierarchie_vyse" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_vyseType"/> <!-- "{nadrazena_hesla}" -->
       <xs:element name="hierarchie_nize" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_nizeType"/> <!-- "{podrazena_hesla}" -->
-      <xs:element name="dokument_typ_material_rada" minOccurs="0" maxOccurs="unbounded" type="amcr:dokument_typ_material_radaType"/> <!-- "{dokument_typ_material_rada}" -->
       <xs:element name="datace" minOccurs="0" maxOccurs="1" type="amcr:dataceType"/> <!-- "{datace_obdobi}" -->
       <xs:element name="odkaz" minOccurs="0" maxOccurs="unbounded" type="amcr:odkazType"/> <!-- "{heslar_odkaz}" -->
     </xs:sequence>
@@ -605,13 +604,6 @@
       <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "hier-{id}" -->
       <xs:element name="heslo_podrazene" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{heslo_podrazene.ident_cely}" | "{heslo_podrazene.heslo}" -->
       <xs:element name="typ" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> <!-- "{typ}" -->         
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="dokument_typ_material_radaType">
-    <xs:sequence>
-      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "hdtm-{id}" -->
-      <xs:element name="dokument_typ" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{dokument_typ.ident_cely}" | "{dokument_typ.heslo}" -->
-      <xs:element name="dokument_material" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{dokument_material.ident_cely}" | "{dokument_material.heslo}" -->        
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="dataceType">

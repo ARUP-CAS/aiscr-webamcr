@@ -11,7 +11,6 @@ from io import BytesIO
 from typing import Optional, Union
 
 import requests
-from celery import Celery
 from core.connectors import RedisConnector
 from core.log_middleware import LogMiddleware
 from core.utils import get_mime_type
@@ -1177,15 +1176,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             self._update_creator(FedoraRequestType.METADATA_UPDATE_RDF_DATA)
         elif update is True:
             document, headers = generate_metadata()
-            try:
-                current_metadata = self.get_metadata()
-                metadata_changed = current_metadata != document
-            except FedoraError:
-                logger.warning(
-                    "core_repository_connector.save_metadata.get_metadata_failed_proceeding_with_update",
-                    extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
-                )
-                metadata_changed = True
+            # result už drží aktuální metadata z GET výše. Volání self.get_metadata() by přes
+            # save_metadata(False) vyvolalo rekurzi a tři další HTTP volání do Fedory.
+            metadata_changed = result.content != document
             if metadata_changed:
                 url = self._get_request_url(FedoraRequestType.UPDATE_METADATA)
                 self._send_request(url, FedoraRequestType.UPDATE_METADATA, headers=headers, data=document)
@@ -2409,12 +2402,11 @@ class FedoraTransaction(BaseFedoraTransaction):
         """
         from cron.tasks import call_digiarchiv_update_task
 
+        from webclient.celery import app as celery_app
+
         logger.debug("core_repository_connector.FedoraTransaction.call_digiarchiv_update.start")
         try:
-            app = Celery("webclient")
-            app.config_from_object("django.conf:settings", namespace="CELERY")
-            app.autodiscover_tasks()
-            i = app.control.inspect(["worker1@amcr"])
+            i = celery_app.control.inspect(["worker1@amcr"])
             queues = (
                 i.scheduled(),
                 i.active(),
@@ -2422,9 +2414,10 @@ class FedoraTransaction(BaseFedoraTransaction):
         except Exception as e:
             logger.warning(
                 "core_repository_connector.FedoraTransaction.call_digiarchiv_update.Celery_warning",
-                extra={"error": e, "app": app},
+                extra={"error": e, "app": celery_app},
             )
             call_digiarchiv_update_task.apply_async()
+            return
         for queue in queues:
             if queue is None:
                 logger.warning(
