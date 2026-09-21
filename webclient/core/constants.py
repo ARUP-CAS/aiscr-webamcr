@@ -113,10 +113,6 @@ VRACENI_EXT_ZD: Final = "EZ-1"  # New
 
 IDENTIFIKATOR_DOCASNY_PREFIX: Final = "X-"
 
-# Zkratky historických leteckých řad dokumentu; od #3421 se řada nově zapsaným dokumentům
-# přiděluje fixně, takže tyto hodnoty mají jen dříve zapsané nebo importované dokumenty.
-LETECKE_RADY_DOKUMENTU: Final = ("LD", "LN", "DL")
-
 OBLAST_CECHY = "C"
 OBLAST_MORAVA = "M"
 OBLAST_CHOICES = (

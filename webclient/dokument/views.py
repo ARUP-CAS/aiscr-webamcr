@@ -15,7 +15,6 @@ from core.constants import (
     DOKUMENT_CAST_RELATION_TYPE,
     DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
     IDENTIFIKATOR_DOCASNY_PREFIX,
-    LETECKE_RADY_DOKUMENTU,
     ODESLANI_DOK,
     ROLE_ADMIN_ID,
     ROLE_ARCHIVAR_ID,
@@ -117,6 +116,7 @@ from heslar.hesla_dynamicka import (
     DOKUMENT_RADA_DATA_3D,
     DOKUMENT_RADA_VYCHOZI,
     LETECKE_DOKUMENT_TYPES,
+    LETECKE_RADY_DOKUMENTU,
     MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR,
     MODEL_3D_DOKUMENT_TYPES,
     PRIMARNE_DIGITALNI,
@@ -2481,7 +2481,7 @@ def dokument_ma_tvary(dokument):
     """
     if dokument.typ_dokumentu_id in LETECKE_DOKUMENT_TYPES:
         return True
-    return dokument.rada is not None and dokument.rada.zkratka in LETECKE_RADY_DOKUMENTU
+    return dokument.rada_id in LETECKE_RADY_DOKUMENTU
 
 
 def get_detail_template_shows(dokument, user):

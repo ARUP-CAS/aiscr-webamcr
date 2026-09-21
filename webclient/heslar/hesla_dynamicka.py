@@ -116,6 +116,11 @@ HESLAR_CONSTANTS = {
     "DOKUMENT_RADA_DATA_3D": "HES-000870",
     # Výchozí řada přidělovaná fixně při zápisu dokumentu.
     "DOKUMENT_RADA_VYCHOZI": "HES-000871",
+    # Historické letecké řady dokumentu; od #3421 se řada nově zapsaným dokumentům
+    # přiděluje fixně, takže tyto hodnoty mají jen dříve zapsané nebo importované dokumenty.
+    "DOKUMENT_RADA_LD": "HES-000880",
+    "DOKUMENT_RADA_LN": "HES-000882",
+    "DOKUMENT_RADA_DL": "HES-000872",
     "MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR": "HES-000217",
     # Typy dokumentu povolené k zápisu
     "TYP_DOKUMENTU_NALEZOVA_ZPRAVA": "HES-001075",
@@ -268,6 +273,13 @@ HESLAR_COMPOSITE_CONSTANTS = {
         "TYP_DOKUMENTU_LETECKA_FOTOGRAFIE_SNEZNYCH_PRIZNAKU",
         "TYP_DOKUMENTU_LETECKA_FOTOGRAFIE_STINOVYCH_PRIZNAKU",
         "TYP_DOKUMENTU_LETECKA_FOTOGRAFIE_VEGETACNICH_PRIZNAKU",
+    ],
+    # Zkratky historických leteckých řad dokumentu; od #3421 se řada nově zapsaným dokumentům
+    # přiděluje fixně, takže tyto hodnoty mají jen dříve zapsané nebo importované dokumenty.
+    "LETECKE_RADY_DOKUMENTU": [
+        "DOKUMENT_RADA_LD",
+        "DOKUMENT_RADA_LN",
+        "DOKUMENT_RADA_DL",
     ],
 }
 
