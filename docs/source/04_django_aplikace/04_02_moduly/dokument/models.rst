@@ -45,15 +45,17 @@ Třídy
 
    .. py:method:: set_permanent_identificator()
 
-             Nastaví permanent identificator.
+      Nahradí dočasný identifikátor dokumentu trvalým podle jeho řady.
 
-      :param dokument: Parametr ``dokument`` předává se do volání ``get_dokument_rada()``, ``set_permanent_ident_cely()``, pracuje se s atributy ``ident_cely``, ``typ_dokumentu``.
-      :param request: Parametr ``request`` předává se do volání ``add_message()``.
-      :param messages: Parametr ``messages`` předává se do volání ``add_message()``, pracuje se s atributy ``add_message``, ``SUCCESS``.
-      :param fedora_transaction: Parametr ``fedora_transaction`` pracuje se s atributy ``rollback_transaction``.
-      Výsledek provedené změny nad cílovým objektem.
+      Dokumenty, které už trvalý identifikátor mají (zapsané pod konkrétním ID), zůstávají beze změny.
+      Při vyčerpání pořadových čísel řady se transakce zruší a uživatel je přesměrován zpět na detail.
 
-      :return: Vrací hodnotu typu ``Optional[JsonResponse]`` (výsledek volání ``JsonResponse()``).
+      :param dokument: Dokument, jehož identifikátor se má ztrvalit; řada se bere z ``dokument.rada``.
+      :param request: Požadavek, do jehož session se zapisuje hlášení o vyčerpání identifikátorů.
+      :param messages: Modul hlášení Djanga použitý pro oznámení chyby uživateli.
+      :param fedora_transaction: Aktivní Fedora transakce, která se při chybě zruší.
+
+      :return: ``None`` při úspěchu, jinak ``JsonResponse`` s přesměrováním a stavem 403.
 
    .. py:method:: set_odeslany()
 
@@ -390,20 +392,3 @@ Třídy
 
       :return: Vrací výsledek volání ``reverse()``.
 
-
-Funkce
-------
-
-.. py:function:: get_dokument_soubor_name(dokument, filename, add_to_index)
-
-   Funkce pro získaní správného jména souboru.
-
-   První soubor dostane základní název bez písmene (``{ident}.{ext}``), další se přidělují navýšením
-   podle nejvyššího obsazeného písmenného suffixu (``A`` … ``Z``). Toto výchozí chování se záměrně
-   nemění – uvolnění či změnu pozice (včetně základního slotu) řeší přejmenování souboru.
-
-   :param dokument: Parametr ``dokument`` předává se do volání ``debug()``, ``filter()``, pracuje se s atributy ``ident_cely``, ``soubory``, vstupuje do návratové hodnoty.
-   :param filename: Parametr ``filename`` se předává do volání ``splitext()``, vstupuje do návratové hodnoty.
-   :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
-
-   :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.
