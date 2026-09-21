@@ -722,6 +722,18 @@ Funkce
    :param request_user: Uživatel nebo osoba ``request_user``, v jejímž kontextu se operace provádí.
    :return: Slovník dat jednotlivých změn stavu pro zobrazení v historii.
 
+.. py:function:: dokument_ma_tvary(dokument)
+
+   Zjistí, zda se u dokumentu evidují tvary.
+
+   Tvary nesou letecké fotografie. Do #3421 je bylo možné poznat podle řady dokumentu
+   (LD/LN/DL), protože řada se odvozovala z typu a materiálu. Od #3421 se řada přiděluje
+   fixně, takže věcné dělení nese typ dokumentu; u starších záznamů se proto kontroluje
+   i původní letecká řada.
+
+   :param dokument: Dokument, u kterého se zjišťuje evidence tvarů.
+   :return: ``True`` pokud se u dokumentu mají zobrazit tvary, jinak ``False``.
+
 .. py:function:: get_detail_template_shows(dokument, user)
 
    Funkce pro získaní kontextu pro zobrazování možností na stránkách.
