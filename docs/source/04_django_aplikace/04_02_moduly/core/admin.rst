@@ -14,6 +14,57 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: _maintenance_conflict_response()
+
+      Zobrazí chybu konfliktu odstávky s importem a vrátí přesměrování.
+
+      :param request: HTTP požadavek administrace.
+      :param exc: Výjimka oznamující konflikt odstávky s importem.
+      :return: Přesměrování zpět na aktuální stránku administrace.
+
+   .. py:method:: changeform_view()
+
+      Zobrazí odmítnutí ukončení odstávky jako zprávu administrátorovi.
+
+      :param request: HTTP požadavek administrace.
+      :param object_id: Identifikátor upravované odstávky.
+      :param form_url: Cílová URL formuláře.
+      :param extra_context: Dodatečný kontext šablony.
+      :return: Formulář nebo přesměrování se zprávou po odmítnuté změně.
+
+   .. py:method:: delete_view()
+
+      Zobrazí důvod odmítnutého smazání odstávky.
+
+      :param request: HTTP požadavek administrace.
+      :param object_id: Identifikátor mazané odstávky.
+      :param extra_context: Dodatečný kontext šablony.
+      :return: Potvrzení smazání nebo přesměrování se zprávou.
+
+   .. py:method:: response_action()
+
+      Zobrazí důvod odmítnutého hromadného smazání odstávek.
+
+      :param request: HTTP požadavek administrace.
+      :param queryset: Řádky vybrané pro akci.
+      :return: Odpověď akce nebo přesměrování se zprávou.
+
+   .. py:method:: delete_model()
+
+      Smaže odstávku pouze po ověření, že nechrání běžící import.
+
+      :param request: HTTP požadavek administrace.
+      :param obj: Odstávka určená ke smazání.
+      :raises MaintenanceImportConflict: Odstávka chrání import.
+
+   .. py:method:: delete_queryset()
+
+      Ověří všechny odstávky před hromadným smazáním.
+
+      :param request: HTTP požadavek administrace.
+      :param queryset: Odstávky vybrané ke smazání.
+      :raises MaintenanceImportConflict: Některá odstávka chrání import.
+
    .. py:method:: save_model()
 
       Metoda na uložení modelu odstávky.
