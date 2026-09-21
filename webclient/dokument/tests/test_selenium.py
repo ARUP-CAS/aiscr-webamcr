@@ -876,14 +876,14 @@ class AkceDokumenty(BaseSeleniumTestClass):
 
         # Úprava části dokumentu
         time = self.getTime()
-        self.goToAddress("/dokument/detail/C-DL-202500001/cast/C-DL-202500001-D001")
+        self.goToAddress(f"/dokument/detail/{new_ident}/cast/{new_ident}-D001")
         self.ElementClick(By.ID, "button-edit-cast")
         self.ElementSendKeys(By.ID, "id_editcast-poznamka", "test")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/update_dokument_cast")
 
-        # Úprava komponenty C-DL-202500001-D004
+        # Úprava komponenty C-DD-202500001-D004
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, f"#el_li_komponenta_{new_ident.replace('-','_')}_K001 a")
         self.ElementClick(By.ID, f"id_{new_ident}-K001-presna_datace")
@@ -1049,7 +1049,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         time = self.getTime()
         file = Soubor.objects.filter(vazba__dokument_souboru__ident_cely="X-C-TX-000000002").first().pk
         self.ElementClick(By.ID, f"file-prejmenovat-{file}")
-        self.select_dynamic_selectpicker_option("id_suffix", "XCTX000000002I.jpg")
+        self.select_dynamic_selectpicker_option("id_suffix", "XCTX000000002F010.jpg")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/rename_dokument")
