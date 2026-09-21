@@ -25,6 +25,15 @@ from redis import ResponseError
 
 logger = logging.getLogger(__name__)
 
+#: Maximální hrana malého náhledu v pixelech (``Image.thumbnail`` zachovává poměr stran
+#: a obrázek **nikdy nezvětšuje**, takže menší předloha si rozměr podrží).
+THUMB_MAX_PX = 100
+
+#: Totéž pro velký náhled. Obě hodnoty byly dřív schované ve výrazu
+#: ``(1 + large * 7) * 100``; jako konstanty na ně může odkazovat i test, který hlídá
+#: rozměry předgenerovaných placeholder náhledů (review PR #4262).
+THUMB_LARGE_MAX_PX = 800
+
 
 class FedoraValidationError(Exception):
     """Implementuje komponentu ``FedoraValidationError`` v rámci aplikace."""
@@ -1177,7 +1186,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             """
             image = Image.open(image)
             image = ImageOps.exif_transpose(image)
-            max_size = ((1 + large_inner * 7) * 100, (1 + large_inner * 7) * 100)
+            hrana = THUMB_LARGE_MAX_PX if large_inner else THUMB_MAX_PX
+            max_size = (hrana, hrana)
             image.thumbnail(max_size)
             output_buffer = BytesIO()
             image.save(output_buffer, format="PNG")

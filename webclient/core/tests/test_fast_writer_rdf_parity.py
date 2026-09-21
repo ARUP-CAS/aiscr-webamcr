@@ -12,7 +12,7 @@ Data se odebírají tak, jak by odešla na drát - odesílací metoda se nahrad�
 takže se testuje reálné chování obou implementací, ne podoba jejich zdrojáku.
 
 Connector má tentýž turtle fragment rozepsaný na víc místech (čtyřikrát creator, třikrát
-link). ``CreatorRdfParityTest`` spouští ta místa, která se obejdou bez DB;
+link). ``CreatorRdfParityTest`` spouští všechna a porovnává, co z nich odešlo;
 ``PocetKopiiTurtleTest`` navíc hlídá, že žádná další kopie nepřibyla - nová kopie by se
 jinak mohla rozejít, aniž by o tom kterýkoli test věděl (review PR #4262).
 """
@@ -132,9 +132,9 @@ class CreatorRdfParityTest(SimpleTestCase):
         """
         Každá spustitelná kopie creator turtle v connectoru musí být shodná s ``_creator_rdf``.
 
-        Connector má tenhle fragment rozepsaný na čtyřech místech. Tři z nich se obejdou
-        bez DB a porovnávají se tady; čtvrté (``migrate_binary_file``) potřebuje uložený
-        ``Soubor``, takže ho hlídá jen ``PocetKopiiTurtleTest``.
+        Connector má tenhle fragment rozepsaný na čtyřech místech a porovnávají se
+        všechna: ``_create_container``, ``_create_binary_file_container``,
+        ``save_binary_file`` a ``migrate_binary_file``.
         """
         ocekavane = self._writer()._creator_rdf()
 
@@ -165,6 +165,21 @@ class CreatorRdfParityTest(SimpleTestCase):
         )
         self.assertEqual(
             self._data_pozadavku(odeslane, FedoraRequestType.CREATE_BINARY_FILE), ocekavane, "save_binary_file"
+        )
+
+        # `migrate_binary_file` se s `include_content=False` obejde bez DB i bez čtení
+        # souboru: `Soubor` jí stačí jako atrapa s `repository_uuid=None` (jinak by hned
+        # vrátila None) a zápis `soubor.save()` spolkne mock (review PR #4262).
+        connector = self._connector()
+        odeslane = self._odeslana_data(
+            connector,
+            lambda: connector.migrate_binary_file(
+                mock.Mock(pk=1, repository_uuid=None, nazev="a.txt"), include_content=False
+            ),
+            obejit=("_check_binary_file_container",),
+        )
+        self.assertEqual(
+            self._data_pozadavku(odeslane, FedoraRequestType.CREATE_BINARY_FILE), ocekavane, "migrate_binary_file"
         )
 
     def test_creator_sparql_update_je_shodny(self):
@@ -310,8 +325,8 @@ class PocetKopiiTurtleTest(SimpleTestCase):
     že se musí ručně zkontrolovat shoda s ``_FastFedoraWriter``.
     """
 
-    #: Metody, které smí obsahovat creator turtle. Tři z nich pokrývá parity test,
-    #: ``migrate_binary_file`` potřebuje uložený ``Soubor``, takže jen tady.
+    #: Metody, které smí obsahovat creator turtle - obsah všech čtyř porovnává parity
+    #: test, tenhle seznam navíc odhalí pátou kopii, na kterou by parity test nesáhl.
     OCEKAVANE_CREATOR = {
         "_create_container",
         "_create_binary_file_container",

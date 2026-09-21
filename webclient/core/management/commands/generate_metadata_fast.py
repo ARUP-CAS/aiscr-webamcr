@@ -265,11 +265,13 @@ def _dokud_pojistka_drzi(polozky, pojistka):
     querysetu: generátor se prostě ukončí a executor jen dobere rozpracované úlohy.
 
     :param polozky: Iterátor položek ke zpracování.
-    :param pojistka: Instance ``_Pojistka``, nebo ``None`` (pak se nic neomezuje).
+    :param pojistka: Instance ``_Pojistka``. Vypnutou pojistku zastupuje ``_Pojistka(0)``,
+        ne ``None`` - tolerovat ``None`` by znamenalo jen tiše propustit volajícího, který
+        ji zapomněl předat (review PR #4262).
     :return: Generátor položek.
     """
     for polozka in polozky:
-        if pojistka is not None and pojistka.spustena:
+        if pojistka.spustena:
             return
         yield polozka
 
@@ -1154,10 +1156,10 @@ class Command(BaseCommand):
         writer,
         max_retries,
         failures,
+        pojistka,
         placeholders=None,
         db_updates=None,
         db_updates_lock=None,
-        pojistka=None,
     ):
         """
         Vygeneruje XML metadata pro jeden záznam a vloží je do Fedory rychlou cestou.
@@ -1204,6 +1206,8 @@ class Command(BaseCommand):
         :param writer: Sdílený ``_FastFedoraWriter``.
         :param max_retries: Maximální počet opakování při přechodných chybách.
         :param failures: Sdílený seznam pro zápis ``(pk, ident_cely, error)`` při selhání.
+        :param pojistka: Sdílená ``_Pojistka`` hlídající sérii selhání po sobě. Vypnutou
+            pojistku zastupuje ``_Pojistka(0)``, ne ``None``.
         :param placeholders: Mapa mimetype -> placeholder obsah (``_load_placeholders``),
             nebo ``None`` při ``--bez-souboru`` - pak se soubory záznamu vůbec neřeší.
         :param db_updates: Sdílený ``defaultdict(list)`` mimetype -> ``[Soubor.pk, ...]``
@@ -1212,22 +1216,18 @@ class Command(BaseCommand):
             ``UPDATE`` proběhne hromadně až po doběhnutí celého modelu.
         :param db_updates_lock: Zámek pro ``db_updates`` (sdílený mezi vlákny), povinný
             pokud je ``db_updates`` zadané.
-        :param pojistka: Sdílená ``_Pojistka`` hlídající sérii selhání po sobě, nebo
-            ``None`` (pak se počet selhání nehlídá).
         """
         from core.models import SouborVazby
         from xml_generator.generator import DocumentGenerator
 
         def ohlas_pojistce(uspesne):
             """Nahlásí výsledek celého záznamu pojistce (viz ``_Pojistka``)."""
-            if pojistka is None:
-                return
             if uspesne:
                 pojistka.uspech()
             else:
                 pojistka.selhani()
 
-        if pojistka is not None and pojistka.spustena:
+        if pojistka.spustena:
             # Pojistka už spadla; rozpracované úlohy jen doběhnou naprázdno, ať se nečeká
             # dalších `_RECORD_TIME_BUDGET` sekund na záznam, který stejně nemá kam zapsat.
             return
@@ -1641,7 +1641,7 @@ class Command(BaseCommand):
                 self._zaseknute_ulohy += self._run_parallel(
                     _dokud_pojistka_drzi(queryset.iterator(chunk_size=500), pojistka),
                     lambda obj: self._process_record(
-                        obj, writer, max_retries, failures, placeholders, db_updates, db_updates_lock, pojistka
+                        obj, writer, max_retries, failures, pojistka, placeholders, db_updates, db_updates_lock
                     ),
                     workers,
                     total=total,
@@ -1866,6 +1866,34 @@ class Command(BaseCommand):
         if len(failures) > 20:
             self.stdout.write(self.style.ERROR(f"  ... a dalších {len(failures) - 20} (viz log)."))
 
+    def _ukonci_natvrdo(self, problemy):
+        """
+        Ukončí proces přes ``os._exit(1)``, když zůstala vlákna zaseknutá.
+
+        Uvízlé vlákno je non-daemon, takže by na něj interpret při ukončení čekal navěky
+        (visí v systémovém volání, ze kterého se nevrátí) - proces by tedy nikdy nedoběhl
+        a volající skript by nedostal žádný exit kód. Veškerá práce i případná kontrola
+        jsou v tu chvíli hotové, takže se ukončuje natvrdo. ``os._exit`` obchází i
+        vyhazování ``CommandError``, proto se exit kód předává přímo.
+
+        Volá se ze dvou míst: po normálním doběhnutí a z větve, kde ``_handle_metadata``
+        skončilo výjimkou (pojistka) - tam by jinak výjimka tvrdé ukončení přeskočila
+        (review PR #4262).
+
+        :param problemy: Popisy problémů do závěrečné hlášky.
+        """
+        self.stdout.write(
+            self.style.WARNING(
+                f"Ukončuji natvrdo - {self._zaseknute_ulohy} vláken zůstalo zaseknutých "
+                "v systémovém volání a nelze je ukončit."
+            )
+        )
+        self.stdout.write(self.style.ERROR("Běh nedokončen bez chyb: " + ", ".join(problemy) + "."))
+        self.stdout.flush()
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(1)
+
     def handle(self, *args, **options):
         """
         Spustí generování XML metadat (a souborů, pokud záznam nějaké má) do Fedory.
@@ -1910,7 +1938,17 @@ class Command(BaseCommand):
                 "a smí běžet jen nad prázdnou Fedorou. Pro navázání po pádu spusť znovu s "
                 "--force a --start-with-pk nastaveným za poslední úspěšně zpracovaný záznam."
             )
-        self._handle_metadata(options, writer, placeholders)
+        try:
+            self._handle_metadata(options, writer, placeholders)
+        except CommandError as exc:
+            # Pojistka (`--max-selhani-po-sobe`) ukončuje běh výjimkou, jenže ta by
+            # proletěla kolem tvrdého ukončení níž - a právě při výpadku, kvůli kterému
+            # pojistka existuje, můžou vlákna uvíznout v systémovém volání. Jsou
+            # non-daemon, takže by je interpret při ukončení joinoval a proces by visel
+            # bez jakéhokoli exit kódu pro orchestraci (review PR #4262).
+            if self._zaseknute_ulohy:
+                self._ukonci_natvrdo([str(exc), f"{self._zaseknute_ulohy} vláken zůstalo zaseknutých"])
+            raise
 
         konzistentni = True
         if not options.get("bez_kontroly"):
@@ -1929,22 +1967,7 @@ class Command(BaseCommand):
             problemy.append(f"{self._zaseknute_ulohy} vláken zůstalo zaseknutých")
 
         if self._zaseknute_ulohy:
-            # Uvízlé vlákno je non-daemon, takže by na něj interpret při ukončení čekal
-            # navěky (u syscallu, ze kterého se nevrátí). Veškerá práce i kontrola jsou
-            # v tuhle chvíli hotové, takže proces ukončíme natvrdo - jinak by to vypadalo
-            # jako další zásek. `os._exit` obchází i vyhazování `CommandError` níže, proto
-            # se exit kód předává přímo.
-            self.stdout.write(
-                self.style.WARNING(
-                    f"Ukončuji natvrdo - {self._zaseknute_ulohy} vláken zůstalo zaseknutých "
-                    "v systémovém volání a nelze je ukončit."
-                )
-            )
-            self.stdout.write(self.style.ERROR("Běh nedokončen bez chyb: " + ", ".join(problemy) + "."))
-            self.stdout.flush()
-            sys.stdout.flush()
-            sys.stderr.flush()
-            os._exit(1)
+            self._ukonci_natvrdo(problemy)
 
         if problemy:
             raise CommandError("Běh dokončen s chybami: " + ", ".join(problemy) + " (podrobnosti viz log).")

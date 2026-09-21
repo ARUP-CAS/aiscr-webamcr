@@ -20,6 +20,7 @@ import json
 import os
 import tempfile
 from types import SimpleNamespace
+from unittest import mock
 
 from core.management.commands.generate_metadata_fast import (
     _PLACEHOLDER_MANIFEST_PATH,
@@ -27,7 +28,8 @@ from core.management.commands.generate_metadata_fast import (
     _load_placeholders,
     _Pojistka,
 )
-from django.core.management.base import BaseCommand
+from core.repository_connector import THUMB_LARGE_MAX_PX, THUMB_MAX_PX
+from django.core.management.base import BaseCommand, CommandError
 from django.test import SimpleTestCase
 from PIL import Image
 
@@ -87,9 +89,14 @@ class PojistkaTest(SimpleTestCase):
         # pojistka spadla), ale rozhodně nesmí projít zbytek querysetu.
         self.assertLessEqual(len(odebrane), 3)
 
-    def test_bez_pojistky_se_nic_neomezuje(self):
-        """``None`` místo pojistky (výchozí stav ``_process_record``) nesmí nic filtrovat."""
-        self.assertEqual(list(_dokud_pojistka_drzi(range(5), None)), [0, 1, 2, 3, 4])
+    def test_vypnuta_pojistka_nic_neomezuje(self):
+        """
+        Vypnutá pojistka (``_Pojistka(0)``) nesmí nic filtrovat.
+
+        Vypnutý stav se vyjadřuje nulovým limitem, ne ``None`` - volající pojistku
+        předává vždy, aby se nedalo omylem projít bez ní (review PR #4262).
+        """
+        self.assertEqual(list(_dokud_pojistka_drzi(range(5), _Pojistka(0))), [0, 1, 2, 3, 4])
 
 
 class ChybejiciIdentTest(SimpleTestCase):
@@ -147,6 +154,77 @@ class ChybejiciIdentTest(SimpleTestCase):
         self.assertIsInstance(Command(), BaseCommand)
 
 
+class TvrdeUkonceniTest(SimpleTestCase):
+    """Zaseknutá vlákna musí vést na ``os._exit(1)`` i když běh ukončila pojistka."""
+
+    @staticmethod
+    def _volby(**zmeny):
+        """
+        Sestaví slovník voleb tak, jak by ho dodal argparse.
+
+        :param zmeny: Volby, které se mají přepsat proti výchozím hodnotám.
+        :return: Slovník voleb pro ``handle``.
+        """
+        from core.management.commands.generate_metadata_fast import Command
+
+        parser = Command().create_parser("manage.py", "generate_metadata_fast")
+        volby = vars(parser.parse_args(["--bez-souboru", "--force", "--bez-kontroly"]))
+        volby.update(zmeny)
+        return volby
+
+    def _spust_handle(self, zaseknutych, vyjimka):
+        """
+        Zavolá ``handle`` s podvrženým ``_handle_metadata`` a odchyceným ``os._exit``.
+
+        :param zaseknutych: Hodnota, kterou má ``_handle_metadata`` nastavit do
+            ``_zaseknute_ulohy``.
+        :param vyjimka: Výjimka, kterou má ``_handle_metadata`` vyhodit, nebo ``None``.
+        :return: Dvojice ``(mock os._exit, zachycená výjimka nebo None)``.
+        """
+        from core.management.commands.generate_metadata_fast import Command
+
+        command = Command(stdout=io.StringIO(), stderr=io.StringIO())
+
+        def falesne_handle_metadata(options, writer, placeholders):
+            command._zaseknute_ulohy = zaseknutych
+            command._pocet_selhani = 0
+            if vyjimka is not None:
+                raise vyjimka
+
+        with mock.patch.object(command, "_handle_metadata", side_effect=falesne_handle_metadata), mock.patch.object(
+            command, "_get_writer", return_value=mock.Mock()
+        ), mock.patch("os._exit") as tvrdy_exit:
+            zachycena = None
+            try:
+                command.handle(**self._volby())
+            except BaseException as exc:  # noqa: BLE001 - test musí vidět jakýkoli konec
+                zachycena = exc
+        return tvrdy_exit, zachycena
+
+    def test_pojistka_se_zaseknutymi_vlakny_konci_tvrde(self):
+        """
+        Výjimka z pojistky nesmí přeskočit tvrdé ukončení.
+
+        Bez toho by ``CommandError`` prolétla kolem bloku s ``os._exit(1)`` a interpret
+        by při ukončení joinoval non-daemon vlákna uvízlá v systémovém volání - proces by
+        visel a orchestrace by nedostala žádný exit kód (review PR #4262).
+        """
+        tvrdy_exit, zachycena = self._spust_handle(2, CommandError("Přerušeno pojistkou"))
+        tvrdy_exit.assert_called_once_with(1)
+        self.assertIsInstance(zachycena, CommandError)
+
+    def test_bez_zaseknutych_vlaken_se_tvrde_nekonci(self):
+        """Když nic neuvízlo, výjimka se jen propaguje - ``os._exit`` se volat nesmí."""
+        tvrdy_exit, zachycena = self._spust_handle(0, CommandError("Přerušeno pojistkou"))
+        tvrdy_exit.assert_not_called()
+        self.assertIsInstance(zachycena, CommandError)
+
+    def test_zaseknuta_vlakna_bez_vyjimky_konci_tvrde(self):
+        """Původní cesta (běh doběhl, ale něco uvízlo) musí fungovat dál."""
+        tvrdy_exit, _zachycena = self._spust_handle(3, None)
+        tvrdy_exit.assert_called_once_with(1)
+
+
 class PlaceholderHashTest(SimpleTestCase):
     """Placeholder neodpovídající manifestu musí načtení zastavit, ne jen zalogovat."""
 
@@ -193,8 +271,11 @@ class PlaceholderHashTest(SimpleTestCase):
         """
         Náhledy obrázkových placeholderů musí mít rozměry, jaké by dala sama aplikace.
 
-        ``FedoraRepositoryConnector.__generate_thumb`` volá ``Image.thumbnail((100,100))``,
-        resp. ``((800,800))``, a ``thumbnail`` obrázek **nikdy nezvětšuje**. U placeholderu,
+        ``FedoraRepositoryConnector.__generate_thumb`` volá ``Image.thumbnail`` s hranou
+        ``THUMB_MAX_PX``, resp. ``THUMB_LARGE_MAX_PX``, a ``thumbnail`` obrázek **nikdy
+        nezvětšuje**. Meze se sem proto importují z connectoru, ne přepisují číslem -
+        jinak by změna v aplikaci nechala tenhle test zeleně kontrolovat zastaralá
+        očekávání (review PR #4262). U placeholderu,
         který je menší než cílový rozměr, proto oba náhledy vyjdou stejně - a je to
         správně, ne chyba manifestu: ``image/bmp`` má originál 100x100, takže jeho
         ``thumb`` i ``thumb_large`` jsou tentýž obrázek, zatímco ostatní rastry mají
@@ -218,7 +299,7 @@ class PlaceholderHashTest(SimpleTestCase):
                 original.load()
             except Exception:
                 continue  # formát, který Pillow neotevře (např. svg) - náhled se dělá z ikony
-            for klic, max_rozmer in (("thumb", 100), ("thumb_large", 800)):
+            for klic, max_rozmer in (("thumb", THUMB_MAX_PX), ("thumb_large", THUMB_LARGE_MAX_PX)):
                 nahled = polozka.get(klic)
                 if not nahled:
                     continue
