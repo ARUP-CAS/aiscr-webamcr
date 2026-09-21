@@ -2851,7 +2851,6 @@ class DataImportProgress(LoginRequiredMixin, View):
             phase = redis_connector.get(f"import_data_phase_{job_id}") or "unknown"
 
             from cron.tasks import (
-                IMPORT_PHASE_CANCELED,
                 IMPORT_PHASE_FAILED,
                 IMPORT_PHASE_FINISHED,
                 IMPORT_PHASE_STOPPED,
@@ -2860,6 +2859,7 @@ class DataImportProgress(LoginRequiredMixin, View):
                 IMPORT_PROGRESS_PHASE_FEDORA_DONE,
                 IMPORT_PROGRESS_PHASE_FINISHED,
                 IMPORT_PROGRESS_PHASE_HISTORY_DONE,
+                IMPORT_TERMINAL_PHASES,
             )
 
             import_data_primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}") or "{}")
@@ -2867,11 +2867,7 @@ class DataImportProgress(LoginRequiredMixin, View):
             # phase, retrieve the complete range once: rollback may have relabelled previously
             # rendered ``success`` rows to ``rolled_back`` in place.
             progress_since = _cursor_param(request, "progress_since")
-            progress_start = (
-                0
-                if phase in (IMPORT_PHASE_FINISHED, IMPORT_PHASE_STOPPED, IMPORT_PHASE_FAILED, IMPORT_PHASE_CANCELED)
-                else progress_since
-            )
+            progress_start = 0 if phase in IMPORT_TERMINAL_PHASES else progress_since
             progress_ids = redis_connector.lrange(f"import_data_progress_ids_{job_id}", progress_start, -1)
             progress_details = redis_connector.lrange(f"import_data_progress_details_tr_{job_id}", progress_start, -1)
             serialized_results = {rid: translate(detail) for rid, detail in zip(progress_ids, progress_details)}
@@ -2974,7 +2970,7 @@ class DataImportProgress(LoginRequiredMixin, View):
                 progress_data = math.floor((progress_cursor / record_count) * IMPORT_PROGRESS_PHASE_DATA_DONE)
             else:
                 progress_data = 0
-            if phase in (IMPORT_PHASE_FINISHED, IMPORT_PHASE_STOPPED, IMPORT_PHASE_FAILED, IMPORT_PHASE_CANCELED):
+            if phase in IMPORT_TERMINAL_PHASES:
                 status = phase
             elif phase_progress >= IMPORT_PROGRESS_PHASE_FINISHED:
                 status = IMPORT_PHASE_FINISHED

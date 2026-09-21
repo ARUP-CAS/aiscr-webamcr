@@ -2266,7 +2266,13 @@ def run_data_import(job_id, user_id, lock_token):
                 )
             if failed or stopped:
                 break
-            refresh_import_lock()
+            try:
+                refresh_import_lock()
+            except ImportLockLostError:
+                redis_connector.set(
+                    job_key("import_data_history_record_result_tr"), json.dumps(import_history_record_result)
+                )
+                raise
             if not failed and not stopped:
                 redis_connector.set(
                     job_key("import_data_status_message_tr"),

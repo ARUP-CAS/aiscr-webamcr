@@ -3,8 +3,8 @@ vůči ``maintenance``.
 
 Ověřuje přímo vykreslením šablony (bez ``AmcrCustomAdminSite.import_data``/``change_list.html``
 scaffoldingu), že polling UI běžící úlohy a lock-busy reset zůstávají dosažitelné i po skončení
-odstávky — viz PR #3895 review comment r3994266199 (``{% if not maintenance %}`` dřív blokoval
-obě větve, zatímco polling ``<script>`` byl vázaný jen na ``job_id`` a padal na chybějících
+odstávky (``{% if not maintenance %}`` dřív blokoval obě větve, zatímco polling ``<script>``
+byl vázaný jen na ``job_id`` a padal na chybějících
 DOM elementech).
 """
 
