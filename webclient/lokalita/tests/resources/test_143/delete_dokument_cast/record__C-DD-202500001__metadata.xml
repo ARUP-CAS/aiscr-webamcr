@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:dokument>
-    <amcr:ident_cely>C-TX-202500002</amcr:ident_cely>
+    <amcr:ident_cely>C-DD-202500001</amcr:ident_cely>
     <amcr:stav>2</amcr:stav>
     <amcr:typ_dokumentu xml:lang="cs" id="HES-001075">nálezová zpráva</amcr:typ_dokumentu>
     <amcr:material_originalu xml:lang="cs" id="HES-000217">digitální soubor</amcr:material_originalu>
-    <amcr:rada xml:lang="cs" id="HES-000883">zprávy a hlášení</amcr:rada>
+    <amcr:rada xml:lang="cs" id="HES-000871">data</amcr:rada>
     <amcr:autor id="OS-002151" poradi="1">Pavloň, Tomáš</amcr:autor>
     <amcr:rok_vzniku>2023</amcr:rok_vzniku>
     <amcr:organizace xml:lang="cs" id="ORG-000104">Archeologický ústav AV ČR, Brno, v.v.i.</amcr:organizace>
@@ -24,18 +24,18 @@
       <amcr:id>hist-0000001</amcr:id>
       <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
-      <amcr:poznamka>X-C-TX-000000009 -&gt; C-TX-202500002</amcr:poznamka>
+      <amcr:poznamka>X-C-DD-000000009 -&gt; C-DD-202500001</amcr:poznamka>
       <amcr:typ_zmeny>D12</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:soubor>
       <amcr:id>soub-0000001</amcr:id>
-      <amcr:path>rest/AMCR-selenium-test/record/C-TX-202500002/file/UUID-REMOVED</amcr:path>
-      <amcr:nazev>CTX202500002.jpg</amcr:nazev>
+      <amcr:path>rest/AMCR-selenium-test/record/C-DD-202500001/file/UUID-REMOVED</amcr:path>
+      <amcr:nazev>CDD202500001F001.jpg</amcr:nazev>
       <amcr:mimetype>image/jpeg</amcr:mimetype>
       <amcr:rozsah>1</amcr:rozsah>
       <amcr:size_mb>0.0048723221</amcr:size_mb>
       <amcr:sha_512>e4a286b41334ffa0f4dbe9218519e5e6913d5759d5ddbb481fd67a4d1a8c22d30a53d9d1af2bc6873fe6e99e79dcaccd2ab8c0e332201b0c267d89e7f81738b7</amcr:sha_512>
-      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/C-TX-202500002/file/UUID-REMOVED</amcr:url>
+      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/C-DD-202500001/file/UUID-REMOVED</amcr:url>
       <amcr:historie>
         <amcr:id>hist-0000001</amcr:id>
         <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
