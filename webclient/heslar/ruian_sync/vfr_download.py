@@ -204,7 +204,7 @@ def _otevri_s_overenim_presmerovani(url: str, *, timeout: int, povolene_puvody=N
 
     :param url: Výchozí URL.
     :param timeout: HTTP timeout v sekundách.
-    :param povolene_puvody: Množina povolených původů ``(hostitel, port)``;
+    :param povolene_puvody: Množina povolených původů ``(schéma, hostitel, port)``;
         ``None`` povolí jen původ výchozí adresy.
     :return: Otevřená odpověď ``requests.Response`` (volající ji uzavře).
     :raises RuianNeduveryhodnePresmerovaniError: Při přesměrování mimo povolené
@@ -250,8 +250,8 @@ def _stream_to_file(
     :param target_path: Cílová cesta na disku.
     :param chunk_size: Velikost chunku v bytech.
     :param timeout: HTTP timeout v sekundách.
-    :param povolene_puvody: Množina původů ``(hostitel, port)``, na které se smí
-        přesměrovat; ``None`` povolí jen původ samotného ``url``.
+    :param povolene_puvody: Množina původů ``(schéma, hostitel, port)``, na které
+        se smí přesměrovat; ``None`` povolí jen původ samotného ``url``.
 
         :return: ``target_path`` při úspěchu, ``None`` při HTTP 404.
         :raises requests.HTTPError: Při jiných HTTP chybách než 404.
@@ -420,26 +420,47 @@ def _parse_atom_feed(feed_url: str, timeout: int = 60) -> list:
 _POVOLENA_SCHEMATA_ODKAZU = frozenset({"http", "https"})
 
 
+#: Původ, který se nepodařilo z adresy určit. Nikdy se nerovná platnému
+#: původu, takže porovnání takovou adresu spolehlivě odmítne.
+_NEZNAMY_PUVOD = (None, None, None)
+
+
 def _puvod(url: str):
     """
-    Vrátí původ URL jako dvojici ``(hostitel, port)``.
+    Vrátí původ URL jako trojici ``(schéma, hostitel, port)``.
 
-    Port je součástí původu schválně: ``urlsplit().hostname`` ho zahazuje, takže
-    ``vdp.cuzk.gov.cz:8080`` by se jinak tvářil jako povolený ``vdp.cuzk.gov.cz``.
-    Chybějící port se doplní podle schématu, aby ``https://h`` a ``https://h:443``
-    byly tentýž původ.
+    **Schéma** je součástí původu, protože jinak by ``http://h:443`` odpovídalo
+    ``https://h``: ``urlsplit`` u obou vrátí tentýž hostitel i port. První odkaz
+    schéma kontroluje :func:`_je_duveryhodny_odkaz`, u dalších skoků
+    přesměrování by ale bez něj invariant držela jen knihovna ``requests``.
+
+    **Port** je v původu taky schválně: ``urlsplit().hostname`` ho zahazuje,
+    takže ``vdp.cuzk.gov.cz:8080`` by se tvářil jako povolený
+    ``vdp.cuzk.gov.cz``. Chybějící port se doplní podle schématu, aby
+    ``https://h`` a ``https://h:443`` byly tentýž původ.
+
+    Adresa bez hostitele nebo s nesmyslným portem (``:abc``, ``:99999``) vrací
+    :data:`_NEZNAMY_PUVOD`. Vstupem jsou nedůvěryhodné hodnoty – ``href``
+    z ATOM feedu a hlavička ``Location`` z přesměrování –, u kterých by
+    ``urlsplit().port`` vyhodil ``ValueError``; ten by pak z ověřování unikl
+    jako nečekaná chyba místo zalogovaného odmítnutí.
 
     :param url: URL nebo jen ``scheme://host``.
-    :return: Dvojice ``(hostitel malými písmeny, port)``; ``(None, None)``
-        u adresy bez hostitele.
+    :return: Trojice ``(schéma, hostitel malými písmeny, port)``, nebo
+        :data:`_NEZNAMY_PUVOD`, když adresu nejde vyhodnotit.
     """
     from urllib.parse import urlsplit
 
-    rozklad = urlsplit(url)
-    if not rozklad.hostname:
-        return (None, None)
-    port = rozklad.port or {"https": 443, "http": 80}.get(rozklad.scheme.lower())
-    return (rozklad.hostname.lower(), port)
+    try:
+        rozklad = urlsplit(url)
+        hostitel = rozklad.hostname
+        port = rozklad.port
+    except ValueError:
+        return _NEZNAMY_PUVOD
+    if not hostitel:
+        return _NEZNAMY_PUVOD
+    schema = rozklad.scheme.lower()
+    return (schema, hostitel.lower(), port or {"https": 443, "http": 80}.get(schema))
 
 
 def _puvody(urls) -> set:
@@ -447,9 +468,10 @@ def _puvody(urls) -> set:
     Převede adresy na množinu původů pro porovnání.
 
     :param urls: Iterovatelné URL adres.
-    :return: Množina dvojic ``(hostitel, port)`` bez prázdných hodnot.
+    :return: Množina trojic ``(schéma, hostitel, port)`` bez nevyhodnotitelných
+        adres.
     """
-    return {_puvod(u) for u in urls if u} - {(None, None)}
+    return {_puvod(u) for u in urls if u} - {_NEZNAMY_PUVOD}
 
 
 def _je_duveryhodny_odkaz(href: str, feed_url: str, expected_filename: str, povolene_hosty=None) -> bool:
@@ -477,8 +499,8 @@ def _je_duveryhodny_odkaz(href: str, feed_url: str, expected_filename: str, povo
     :param href: Odkaz ze záznamu ATOM feedu.
     :param feed_url: URL feedu, ze kterého odkaz pochází.
     :param expected_filename: Očekávané jméno souboru pro daný den.
-    :param povolene_hosty: Množina povolených hostitelů; ``None`` = hostitel
-        ``base_url`` z :class:`CustomAdminSettings` a hostitel feedu.
+    :param povolene_hosty: Adresy, jejichž původ je povolený; ``None`` =
+        ``base_url`` z :class:`CustomAdminSettings` a URL feedu.
     :return: ``True``, když je odkaz bezpečné stáhnout.
     """
     from urllib.parse import unquote, urlsplit

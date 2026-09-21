@@ -1739,6 +1739,26 @@ class OdkazZAtomFeeduTests(SimpleTestCase):
         """``https://h`` a ``https://h:443`` jsou totéž."""
         self.assertTrue(self._over(f"https://vdp.cuzk.gov.cz:443/vymenny_format/soucasna/{self.JMENO}"))
 
+    def test_vadny_port_se_odmitne_bez_vyjimky(self):
+        """
+        Nesmyslný port je odmítnutí, ne pád.
+
+        ``urlsplit().port`` u ``:abc`` i u hodnoty mimo rozsah vyhazuje
+        ``ValueError``; z ověřování by unikl jako nečekaná chyba místo
+        zalogovaného odmítnutí.
+        """
+        for vadny in (f"https://vdp.cuzk.gov.cz:abc/{self.JMENO}", f"https://vdp.cuzk.gov.cz:99999/{self.JMENO}"):
+            self.assertFalse(self._over(vadny), vadny)
+
+    def test_schema_je_soucasti_puvodu(self):
+        """
+        ``http://h:443`` nesmí projít jako ``https://h``.
+
+        Obojí má po rozložení tentýž hostitel i port, takže bez schématu
+        v původu by se rovnaly.
+        """
+        self.assertFalse(self._over(f"http://vdp.cuzk.gov.cz:443/vymenny_format/soucasna/{self.JMENO}"))
+
 
 class ZnamenkovaKonvenceTests(SimpleTestCase):
     """
@@ -1848,7 +1868,7 @@ class PresmerovaniPriStahovaniTests(SimpleTestCase):
     kterou měla kontrola zavřít.
     """
 
-    POVOLENE = {("vdp.cuzk.gov.cz", 443)}
+    POVOLENE = {("https", "vdp.cuzk.gov.cz", 443)}
 
     @staticmethod
     def _odpoved(status, location=None):
@@ -1900,6 +1920,33 @@ class PresmerovaniPriStahovaniTests(SimpleTestCase):
 
         smycka = [self._odpoved(302, "https://vdp.cuzk.gov.cz/a.zip") for _ in range(20)]
         with mock.patch.object(vfr_download.requests, "get", side_effect=smycka):
+            with self.assertRaises(vfr_download.RuianNeduveryhodnePresmerovaniError):
+                vfr_download._otevri_s_overenim_presmerovani(
+                    "https://vdp.cuzk.gov.cz/a.zip", timeout=5, povolene_puvody=self.POVOLENE
+                )
+
+    def test_presmerovani_na_jine_schema_se_odmitne(self):
+        """
+        Skok z ``https`` na ``http`` na stejném hostiteli je změna původu.
+
+        První odkaz schéma kontroluje ``_je_duveryhodny_odkaz``, u dalších
+        skoků by bez schématu v původu invariant držela jen knihovna.
+        """
+        from heslar.ruian_sync import vfr_download
+
+        odpovedi = [self._odpoved(302, "http://vdp.cuzk.gov.cz:443/a.zip")]
+        with mock.patch.object(vfr_download.requests, "get", side_effect=odpovedi):
+            with self.assertRaises(vfr_download.RuianNeduveryhodnePresmerovaniError):
+                vfr_download._otevri_s_overenim_presmerovani(
+                    "https://vdp.cuzk.gov.cz/a.zip", timeout=5, povolene_puvody=self.POVOLENE
+                )
+
+    def test_presmerovani_s_vadnym_portem_se_odmitne(self):
+        """Nesmyslný port v ``Location`` je odmítnutí, ne ``ValueError``."""
+        from heslar.ruian_sync import vfr_download
+
+        odpovedi = [self._odpoved(302, "https://vdp.cuzk.gov.cz:abc/a.zip")]
+        with mock.patch.object(vfr_download.requests, "get", side_effect=odpovedi):
             with self.assertRaises(vfr_download.RuianNeduveryhodnePresmerovaniError):
                 vfr_download._otevri_s_overenim_presmerovani(
                     "https://vdp.cuzk.gov.cz/a.zip", timeout=5, povolene_puvody=self.POVOLENE
