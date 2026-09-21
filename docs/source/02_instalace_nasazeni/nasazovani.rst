@@ -134,6 +134,11 @@ Niže je přehled dostupných parametrů.
    - **Popis**: Tento parametr se používa pro nasazení specifické verze nebo konfigurace obrazu.
 * `-i`: Zobrazí aktuální dostupné verze k nasazení.
 
+.. important::
+
+   Před aktualizací aplikace musí správce ověřit, že neběží žádná validace
+   ani import dat.
+
 **Předpoklady**: existující definice docker secrets, tyto secrets musejí být vytvořené přes příkaz ``docker secrets create <název secretu> <cesta k souboru s obsahem ze kterého se secret má vytvořit>``
 
 * db_conf - přihlašovací údaje a nastavení pro připojení k databázi
@@ -233,4 +238,3 @@ Každý kontejner používá jinou sadu charakteristik k odvození příslušné
 * Kontejner `proxy`, kontrola návratu HTTP status code 200 na http socketu 8080, implementováno ve skriptu `run-healthcheck_proxy.sh`.
 * Kontejner `celery`, metrika je odezva na příkaz celery ping, který musí mít nulový návratový kód, implemetováno ve skriptu `run-healthcheck_celery.sh`.
 * Kontejner `redis` metrika je odevzva na příkaz redis ping, očekáván nulový návratový kód, implementováno ve skriptu `run-healthcheck_redis.sh`.
-
