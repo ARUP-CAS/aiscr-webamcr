@@ -1160,10 +1160,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         time = self.getTime()
         self.goToAddress("/id/M-TX-202000166")
         self.ElementClick(By.ID, "edit-btn")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_let .btn")
-        element_text = self.driver.find_element(By.CSS_SELECTOR, "#bs-select-10-411 > .text").text
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-10-411 > .text")
-        self.assertEqual(element_text, "C-LET-00413")
+        self.select_dynamic_selectpicker_option("id_let", "C-LET-00413")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
         self.check_fedora_change(time, "dokument/tests/resources/test_142/pripojeni_dokument")
@@ -1172,8 +1169,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         time = self.getTime()
         self.goToAddress("/id/M-TX-202000166")
         self.ElementClick(By.ID, "edit-btn")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_let .btn")
-        self.ElementClick(By.ID, "bs-select-10-0")
+        self.select_nth_selectpicker_option("id_let", 0, include_empty=True)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
         self.check_fedora_change(time, "dokument/tests/resources/test_142/odpojeni_dokument")

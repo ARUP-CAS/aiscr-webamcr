@@ -1169,16 +1169,21 @@ return new Date('2025-06-28T12:00:00Z');}};
             )
         )
 
-    def select_nth_selectpicker_option(self, field_id, index=0, wait_ajax=False, timeout=10):
+    def select_nth_selectpicker_option(self, field_id, index=0, wait_ajax=False, timeout=10, include_empty=False):
         """
-        Vybere neprázdnou, neskrytou volbu v selectpickeru na zadané pozici.
+        Vybere neskrytou volbu v selectpickeru na zadané pozici.
+
+        Ve výchozím stavu se prázdná volba (``value == ""``, typicky úvodní "-- vyberte --")
+        do pořadí nezapočítává. S ``include_empty=True`` se započítává, takže ji lze vybrat
+        (např. pro vyprázdnění pole).
 
         :param field_id: HTML id atribut podkladového ``<select>`` elementu (bez ``#``).
-        :param index: Index volby mezi neprázdnými neskrytými volbami (výchozí 0 = první).
+        :param index: Index volby mezi uvažovanými neskrytými volbami (výchozí 0 = první).
         :param wait_ajax: Pokud ``True``, po výběru počká na dokončení všech XHR požadavků
             (včetně nativního XMLHttpRequest). Použij, když výběr spouští AJAX, který
             upravuje závislé selecty.
         :param timeout: Maximální doba čekání na dokončení XHR požadavků v sekundách.
+        :param include_empty: Pokud ``True``, započítá se do pořadí i prázdná volba.
         """
         if wait_ajax:
             self._inject_xhr_tracker()
@@ -1186,14 +1191,25 @@ return new Date('2025-06-28T12:00:00Z');}};
             """
             var sel = document.getElementById(arguments[0]);
             if (!sel) { return 'element not found: ' + arguments[0]; }
-            var opts = Array.from(sel.options).filter(function(o) { return !o.hidden && o.value !== ''; });
+            var includeEmpty = arguments[2];
+            var opts = Array.from(sel.options).filter(function(o) {
+                return !o.hidden && (includeEmpty || o.value !== '');
+            });
             var idx = arguments[1];
             if (idx >= opts.length) { return 'index ' + idx + ' out of range, ' + opts.length + ' options available'; }
-            $(sel).selectpicker('val', opts[idx].value).trigger('change');
+            // Hodnotu je nutne nastavit pres API selectpickeru, jinak si widget drzi predchozi
+            // vyber a pouhe prepsani selectedIndex se neprojevi (typicky pri vyprazdneni pole).
+            if (window.jQuery && $(sel).data('selectpicker')) {
+                $(sel).selectpicker('val', opts[idx].value);
+            } else {
+                sel.selectedIndex = opts[idx].index;
+            }
+            $(sel).trigger('change');
             return null;
             """,
             field_id,
             index,
+            include_empty,
         )
         if result:
             raise AssertionError(f"select_nth_selectpicker_option('{field_id}', {index}): {result}")
