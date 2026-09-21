@@ -301,9 +301,9 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
 
         # reC projektová akce
         self.createFedoraRecord("C-202111043", "archivar")
-        self.createFedoraRecord("C-202111043A", "archivar")
+        self.createFedoraRecord("C-202111043A01", "archivar")
         self.uploadFileToFedora(364200, "projekt/tests/resources/test.pdf", "archivar")
-        self.goToAddress("/id/C-202111043A")
+        self.goToAddress("/id/C-202111043A01")
         self.ElementClick(By.ID, "otherOptions")
         self.ElementClick(By.ID, "akce-smazat")
         with WaitForPageLoad(self.driver):
@@ -314,7 +314,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "actionSubmitBtn")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/recreate_projektova_akce")
-        self.check_fedora_delete(["model/deleted/member/C-202111043A"])
+        self.check_fedora_delete(["model/deleted/member/C-202111043A01"])
 
         logger.info("ProjektSeleniumTest.test_145_test_Fedora_projekt_001.end")
 
