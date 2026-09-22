@@ -1,5 +1,5 @@
 """
-Testy přejmenování souborů změnou suffixu (issue #3487, #3421).
+Testy přejmenování souborů změnou suffixu.
 
 Pokrývají přidělování názvů a výpočet volných suffixů ve jednotném schématu ``F001``–``F999``
 pro dokumenty i samostatné nálezy (včetně chování u historických názvů) a logiku přejmenování
