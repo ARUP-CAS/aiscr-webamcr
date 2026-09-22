@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 
 from bs4 import BeautifulSoup
 from core.constants import AZ_STAV_ODESLANY, D_STAV_ODESLANY
@@ -689,7 +688,7 @@ class TranslationImportForm(forms.Form):
         file = cleaned_data.get("file")
         if file.size < 1000:
             raise forms.ValidationError({"file": TRANSLATION_FILE_TOOSMALL})
-        if os.path.splitext(file.name)[1] != ".po":
+        if file.name.split(".")[-1] != "po":
             raise forms.ValidationError({"file": TRANSLATION_FILE_WRONG_FORMAT})
         return cleaned_data
 

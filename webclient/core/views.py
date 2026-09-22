@@ -58,7 +58,6 @@ from core.soubor_naming import (
     get_free_suffixes,
     get_next_soubor_name,
     get_soubor_suffix,
-    get_updated_soubor_name,
 )
 from core.utils import (
     SessionIdentifier,
@@ -1207,6 +1206,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
         soubor_instance.active_transaction = self.fedora_transaction
         logger.debug("core.views.post_upload.update", extra={"pk": soubor_instance.pk})
         objekt = soubor_instance.vazba.navazany_objekt
+        new_name = soubor_instance.nazev
         original_name = soubor.name
         if soubor_instance.vazba.typ_vazby is None:
             self.fedora_transaction.rollback_transaction()
@@ -1223,13 +1223,16 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
             help_translation = _("core.views.post_upload.mime_rename_failed")
             self.fedora_transaction.rollback_transaction()
             return JsonResponse({"error": f"{help_translation}"}, status=400)
-        new_name = get_updated_soubor_name(soubor_instance.nazev, soubor.name, mime_extensions)
-        renamed = new_name != soubor_instance.nazev
-        if renamed:
+        file_name_extension = new_name.split(".")[-1].lower()
+        if file_name_extension not in mime_extensions:
+            new_name = new_name.replace(new_name.split(".")[-1], mime_extensions[0])
+            renamed = True
             logger.debug(
                 "core.views.post_upload.check_mime_for_url.rename",
                 extra={"mime_type": mimetype, "old": original_name, "new": new_name},
             )
+        else:
+            renamed = False
         if (
             mimetype in ["image/png", "image/jpeg", "image/tiff"]
             and soubor_instance.vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE
@@ -1237,6 +1240,8 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
             soubor_data = Soubor.remove_gps_data(soubor_data)
         rep_bin_file = None
         if soubor_instance.repository_uuid is not None:
+            extension = soubor.name.split(".")[-1]
+            new_name = f"{'.'.join(soubor_instance.nazev.split('.')[:-1])}.{extension}"
             try:
                 rep_bin_file = conn.update_binary_file(new_name, mimetype, soubor_data, soubor_instance.repository_uuid)
             except FedoraUpdatedByAnotherTransactionError as err:
