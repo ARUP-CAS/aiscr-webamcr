@@ -36,7 +36,7 @@ class OznameniSeleniumTest(BaseSeleniumTestClass):
         self.driver.execute_script("$(window).scrollTop(1500 );")
         self.driver.execute_script("""map.setZoom(17); return map.getZoom();""")
         self.wait(0.5)
-        self.clickAtMapCoord(15.1700002, 49.84)
+        self.clickAtMapCoordJTSK(-693174.81, -1077354.27)
         self.wait(0.5)
         self.ElementClick(By.ID, "id_planovane_zahajeni")
         self.driver.find_element(By.ID, "id_planovane_zahajeni").send_keys("28.11.2024 - 30.11.2024")

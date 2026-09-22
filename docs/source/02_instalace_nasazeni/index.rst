@@ -12,4 +12,5 @@ Tato sekce popisuje instalaci a nasazení aplikace WebAMČR.
    secrets
    nasazeni_databaze
    fedora_repository
+   ruian_sync_nasazeni
 
