@@ -82,3 +82,21 @@ Funkce
 
    :param soubor: Soubor, jehož suffix se zjišťuje.
    :return: Řetězec suffixu (může být prázdný); ``None`` pokud název neodpovídá očekávanému vzoru.
+
+.. py:function:: get_updated_soubor_name(current_name, uploaded_name, mime_extensions)
+
+   Vrátí název souboru po nahrazení jeho obsahu novou verzí.
+
+   Základ názvu (ident záznamu a suffix) zůstává, mění se jen přípona. Ta se přebírá
+   z nahrazujícího souboru, ale pouze když odpovídá některé z přípon odvozených z detekovaného
+   MIME typu; jinak se použije první přípona z ``mime_extensions``, aby se do názvu nedostala
+   přípona neodpovídající skutečnému obsahu. Velikost písmen platné přípony se zachovává, aby
+   nahrazení například ``.JPG`` souboru jeho novou verzí název neměnilo.
+
+   Název bez tečky (ať už nahrávaný, nebo současný) se nikdy nestane příponou – u nahrávaného
+   se přípona odvodí z MIME typu, u současného zůstane celý základem názvu.
+
+   :param current_name: Současný název souboru v databázi.
+   :param uploaded_name: Název nahrávaného souboru od uživatele.
+   :param mime_extensions: Přípony odpovídající detekovanému MIME typu; první z nich je výchozí.
+   :return: Nový název souboru.
