@@ -46,8 +46,8 @@ from core.repository_connector import (
     FedoraTransactionStatus,
 )
 from core.setting_models import CustomAdminSettings
+from core.soubor_naming import get_next_soubor_name
 from core.utils import get_cadastre_from_point
-from core.views import get_finds_soubor_name
 from django.conf import settings
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.contrib.gis.geos import Point as GEOSPoint
@@ -3406,7 +3406,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
-        new_name = get_finds_soubor_name(instance, uploaded_file.name)
+        new_name = get_next_soubor_name(instance, uploaded_file.name)
         if new_name is False:
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(

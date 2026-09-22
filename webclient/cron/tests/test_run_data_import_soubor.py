@@ -33,9 +33,6 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             size_mb=0.001,
             sha_512="sha",
             url_without_domain="/fedora/import-test.txt",
-            # Skutečný ``RepositoryBinaryFile`` atribut vždy má; import z něj po uložení souboru
-            # doplňuje historii náhledů.
-            thumb_writes=[],
         )
         self.connector_instances: list[MagicMock] = []
 
@@ -138,8 +135,7 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         return json.loads(raw.decode("utf-8"))
 
     def _file_import_results(self, fake_redis):
-        raw = fake_redis.get(f"import_data_files_{JOB_ID}")
-        return json.loads(raw.decode("utf-8"))
+        return [json.loads(entry.decode("utf-8")) for entry in fake_redis.lrange(f"import_data_files_{JOB_ID}", 0, -1)]
 
     def assert_delete_binary_file_called_for_soubor(self, deleted_soubor):
         """Ověří, že byl zavolán ``FedoraRepositoryConnector.delete_binary_file(soubor)``.
@@ -169,6 +165,16 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
                 deleted_soubor.nazev, len(matching), len(self.connector_instances)
             ),
         )
+
+    def assert_skipped_files_reported(self, fake_redis, expected_skipped):
+        """Ověří závěrečnou stavovou zprávu importu s přeskočenými soubory.
+
+        :param fake_redis: Testovací Redis použitý v importním scénáři.
+        :param expected_skipped: Očekávaný počet přeskočených souborů."""
+        raw = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}").decode("utf-8")
+        status_message = json.loads(raw)
+        self.assertEqual(status_message["id"], "cron.tasks.run_data_import.finished_with_skipped_files")
+        self.assertEqual(status_message["params"]["skipped"], expected_skipped)
 
     def assert_history_record_result_contains_item(self, fake_redis, record_id="0"):
         """Ověří pomocnou podmínku importního testu.
@@ -701,8 +707,11 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             transaction_mock.rollback_transaction.assert_called()
         self.assertTrue(Soubor.objects.filter(id=existing.id).exists())
 
-    def test_update_rename_to_conflicting_name_marks_import_as_failed(self):
-        """UPDATE Souboru, jehož cílový ``nazev`` je již obsazen jiným souborem téže vazby, nesmí uspět."""
+    def test_update_rename_to_conflicting_name_skips_file(self):
+        """UPDATE Souboru na již obsazený ``nazev`` téže vazby přeskočí soubor, import ale doběhne.
+
+        Konflikt názvu je deterministická podmínka vázaná na jeden řádek a nastává ještě před
+        otevřením Fedora transakce — nesmí proto shodit celý import."""
         existing = self._create_existing_soubor(nazev="old-name.txt")
         self._create_existing_soubor(nazev="taken-name.txt", vazba=self.dokument.soubory)
         fake_redis, _ = self._run_soubor_import(
@@ -716,34 +725,66 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
             performed_action=ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
         )
 
-        self.assert_import_failed(fake_redis)
+        self.assert_import_success(fake_redis)
         file_results = self._file_import_results(fake_redis)
         self.assertEqual(file_results[0]["file_name"], "taken-name.txt")
         self.assertIn("already_exists", file_results[0]["additional_info_tr"])
+        self.assert_skipped_files_reported(fake_redis, 1)
 
-    def test_insert_existing_target_file_record_marks_import_as_failed(self):
-        """INSERT Souboru na existující ``nazev`` + ``vazba`` nesmí skončit jako úspěšný import."""
+    def test_insert_existing_target_file_record_skips_file(self):
+        """INSERT Souboru na existující ``nazev`` + ``vazba`` přeskočí soubor, import ale doběhne."""
         self._create_existing_soubor(nazev="already-present.txt", vazba=self.dokument.soubory)
         fake_redis, _ = self._run_soubor_import(
             [{"vazba": self.dokument.ident_cely, "nazev": "already-present.txt"}],
         )
 
-        self.assert_import_failed(fake_redis)
+        self.assert_import_success(fake_redis)
         file_results = self._file_import_results(fake_redis)
         self.assertEqual(file_results[0]["file_name"], "already-present.txt")
         self.assertIn("already_exists", file_results[0]["additional_info_tr"])
+        self.assert_skipped_files_reported(fake_redis, 1)
 
-    def test_missing_binary_file_marks_import_as_failed(self):
-        """Chybějící binární soubor v importním adresáři nesmí skončit jako úspěšný import."""
+    def test_missing_binary_file_skips_file(self):
+        """Chybějící binární soubor v importním adresáři přeskočí soubor, import ale doběhne."""
         fake_redis, _ = self._run_soubor_import(
             [{"vazba": self.dokument.ident_cely, "nazev": "missing-binary.txt"}],
             extra_patches=[patch("cron.tasks.os.path.isfile", return_value=False)],
         )
 
-        self.assert_import_failed(fake_redis)
+        self.assert_import_success(fake_redis)
         file_results = self._file_import_results(fake_redis)
         self.assertEqual(file_results[0]["file_name"], "missing-binary.txt")
         self.assertIn("file_not_found_in_directory", file_results[0]["additional_info_tr"])
+        self.assert_skipped_files_reported(fake_redis, 1)
+
+    def test_skipped_file_does_not_block_remaining_files(self):
+        """Přeskočený soubor nesmí zabránit importu ostatních souborů ani aktualizaci Fedora metadat.
+
+        Dříve se při konfliktu názvu přerušil celý cyklus, takže následující soubory zůstaly
+        neimportované a navázaným záznamům se nepřegenerovala Fedora metadata."""
+        self._create_existing_soubor(nazev="conflicting.txt", vazba=self.dokument.soubory)
+        fake_redis, save_metadata_calls = self._run_soubor_import(
+            [
+                {"vazba": self.dokument.ident_cely, "nazev": "conflicting.txt"},
+                {"vazba": self.dokument.ident_cely, "nazev": "importable.txt"},
+            ],
+        )
+
+        self.assert_import_success(fake_redis)
+        file_results = self._file_import_results(fake_redis)
+        results_by_name = {item["file_name"]: item for item in file_results}
+        self.assertIn("already_exists", results_by_name["conflicting.txt"]["additional_info_tr"])
+        self.assertIsNone(results_by_name["conflicting.txt"]["size_mb"])
+        self.assertIsNotNone(
+            results_by_name["importable.txt"]["size_mb"],
+            "Soubor následující po přeskočeném musí být normálně naimportován.",
+        )
+        self.assertTrue(
+            Soubor.objects.filter(nazev="importable.txt", vazba=self.dokument.soubory).exists(),
+            "Soubor následující po přeskočeném musí mít záznam v databázi.",
+        )
+        self.assert_related_record_metadata_updated(save_metadata_calls, self.dokument)
+        self.assert_skipped_files_reported(fake_redis, 1)
 
     def test_insert_file_with_mismatched_extension_marks_import_as_failed(self):
         """INSERT souboru, jehož přípona neodpovídá MIME typu detekovanému z obsahu, nesmí uspět."""

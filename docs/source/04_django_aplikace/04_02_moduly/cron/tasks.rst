@@ -205,33 +205,6 @@ Funkce
    :param pk: Primární klíč z mapperu, typicky slovník složeného klíče nebo skalární hodnota.
    :return: Textová reprezentace klíče vhodná pro zobrazení ve validační tabulce.
 
-.. py:function:: _import_job_record_keys(redis_connector, job_id, record_count)
-
-   Vrátí klíče jednotlivých naimportovaných záznamů dané úlohy.
-
-   Primárně se rozsah odvodí z čítače ``import_data_count_{job_id}``. Pokud čítač chybí nebo
-   není číslo (úloha už doběhla a čítač vyexpiroval), klíče se dohledají scanem — jinak by
-   zůstaly bez TTL napořád: validace je na úspěšné cestě ``persist``uje, takže by je nic
-   nesmazalo (review #4197, Fix 6).
-
-   :param redis_connector: Redis spojení, nad kterým se klíče dohledávají.
-   :param job_id: Identifikátor importní úlohy.
-   :param record_count: Počet záznamů, pokud ho volající zná; jinak se zjistí z čítače.
-   :return: Seznam klíčů ``import_data_{job_id}_record_{i}``.
-
-.. py:function:: expire_import_job_keys(redis_connector, job_id, ttl_seconds, record_count)
-
-   Nastaví expiraci všem per-job klíčům importní úlohy.
-
-   Klíče se pouze expirují, nikdy nemažou — report musí zůstat stažitelný po dobu retence.
-   Jediný zdroj pravdy pro terminální úklid: volá ho validační i importní task, ruční reset
-   (``reset_import_job``) a zrušení úlohy z view.
-
-   :param redis_connector: Redis spojení, nad kterým se expirace nastavuje.
-   :param job_id: Identifikátor importní úlohy.
-   :param ttl_seconds: Doba retence v sekundách.
-   :param record_count: Počet naimportovaných záznamů, pokud ho volající zná.
-
 .. py:function:: reset_import_job(redis_connector, job_id)
 
    Ruční superuživatelský reset zaseklé importní úlohy: uvolní globální lock a úlohu ukončí.
@@ -245,19 +218,13 @@ Funkce
    ukazatel běžící úlohy uživatele i zpětný odkaz ``IMPORT_DATA_ACTIVE_JOB_KEY``, uvolní případný
    nastagovaný ZIP a per-job datové klíče pouze expiruje (report zůstane stažitelný).
 
+   Aktivní validaci/import lze resetovat až po pěti minutách bez checkpointu workeru.
+   Značka ``import_data_recent_progress`` má vlastní krátké TTL; nesmí se persistovat
+   společně s daty reportu. Stáří není důkazem ukončení workeru.
+
    :param redis_connector: Dekódující Redis spojení.
    :param job_id: Identifikátor resetované importní úlohy.
-
-.. py:function:: _translate_status_value_for_report(raw)
-
-   Přeloží hodnotu z Redis (ID nebo obálka ``{id, params}``) do aktivního jazyka.
-
-   Zrcadlí ``core.views._translate_status_value`` — nedovolat odtud, aby ``cron.tasks`` (načítaný
-   při startu Celery workeru) nezávisel na ``core.views`` na úrovni modulu.
-
-   :param raw: Hodnota z Redis — ``None``, plain ID (str), nebo JSON obálka (str) s ``id`` a
-       ``params``.
-   :return: Přeložený řetězec, nebo ``None``, pokud je vstup ``None``.
+   :return: Zda byl reset přijat; při nedávné aktivitě nebo terminální fázi vrací ``False``.
 
 .. py:function:: get_or_create_import_report_path(job_id, redis_connector, reports_directory_path)
 
@@ -275,12 +242,10 @@ Funkce
 
 .. py:function:: build_import_report_dataframe(job_id, redis_connector)
 
-   Sestaví DataFrame reportu importní úlohy z aktuálního stavu v Redis.
+   Sestaví DataFrame listu ``Import`` reportu importní úlohy z aktuálního stavu v Redis.
 
-   Sdílený mechanismus mezi periodickým ukládáním na disk (``save_import_report_to_disk``,
-   volané z ``run_data_import_validation``/``run_data_import``) a stahováním přes
-   ``DataImportProgressReportView`` — obě strany čtou stejná Redis data stejným způsobem, takže
-   stažený a na disk uložený report si vždy odpovídají.
+   Sestavení celého živého i archivovaného reportu popisuje
+   :py:func:`write_import_report_sheets`.
 
    :param job_id: Identifikátor importní úlohy.
    :param redis_connector: Dekódující Redis spojení (klíče i hodnoty jako ``str``).
@@ -301,6 +266,15 @@ Funkce
    :param redis_connector: Dekódující Redis spojení.
    :return: DataFrame se sloupci ``ident_cely``, ID transakce Fedora a přeložený výsledek.
 
+.. py:function:: write_import_report_sheets(writer, job_id, redis_connector)
+
+   Zapíše společné listy živého i archivovaného reportu v pořadí Import, Fedora.
+
+   :param writer: Otevřený Excel writer spravovaný volajícím.
+   :param job_id: Identifikátor importní úlohy, jejíž data se načítají z Redis.
+   :param redis_connector: Redis spojení s bytovými nebo dekódovanými odpověďmi.
+   :return: Fáze načtená při sestavení listu Import pro zápis do indexu reportů.
+
 .. py:function:: save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
 
    Uloží aktuální stav reportu importní úlohy jako XLSX do adresáře reportů.
@@ -308,8 +282,8 @@ Funkce
    Volá se na začátku validace/importu a po každé fázové tranzici i v except/finally větvích
    (zákaznický požadavek — report musí přežít TTL Redis klíčů). Zápis je
    atomický (dočasný soubor + ``os.replace``), takže souběžné čtení nikdy neuvidí částečně
-   zapsaný XLSX. Chyba zápisu se loguje a nesmí přerušit import — volající proto výjimku
-   nepropaguje dál.
+   zapsaný XLSX. Chyba zápisu se loguje a vrací se ``None``; úvodní snapshot validačního či
+   importního tasku tuto hodnotu používá jako fail-closed bránu před další prací.
 
    :param job_id: Identifikátor importní úlohy.
    :param redis_connector: Dekódující Redis spojení.
@@ -349,7 +323,7 @@ Funkce
 
    Možné hodnoty Redis klíče ``import_data_status_message_tr_{job_id}`` (ukládá se překladové
    ID, případně obálka ``{id, params}`` pro parametrizované zprávy; překlad provádí až čtenář
-   v locale přihlášeného admina — viz ``translation_value`` a ``_translate_status_value``):
+   v locale přihlášeného admina — viz ``translation_value`` a ``translate_status_value``):
 
    .. list-table::
        :header-rows: 1

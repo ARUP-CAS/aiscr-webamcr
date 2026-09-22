@@ -52,15 +52,18 @@ Třídy
       :param connection: Redis spojení, přes které se lock obnovuje.
       :param token: Jedinečný token vlastníka locku.
       :param ttl_seconds: Nová doba expirace locku v sekundách.
+      :param job_id: U workeru ověří také token a aktivní fázi úlohy a na pět minut označí aktivitu.
       :return: ``True``, pokud byl lock úspěšně obnoven; jinak ``False``.
 
-   .. py:method:: persist_import_lock()
+   .. py:method:: begin_import_reset()
 
-      Odstraní expiraci importního locku pouze tehdy, pokud ho stále vlastní zadaný token.
+      Atomicky odmítne aktivní úlohu, jinak nastaví stop a uvolní pouze její lock.
 
-      :param connection: Redis spojení, přes které se lock upravuje.
-      :param token: Jedinečný token vlastníka locku.
-      :return: ``True``, pokud byla expirace odstraněna; jinak ``False``.
+      :param connection: Redis spojení.
+      :param job_id: Resetovaná úloha.
+      :param running_ttl: Doba uchování stop příznaku v sekundách.
+      :param retention_ttl: Doba uchování terminální fáze v sekundách.
+      :return: Zda byl reset přijat; odmítnutí nemění žádné klíče.
 
    .. py:method:: release_import_lock()
 
@@ -83,6 +86,14 @@ Třídy
       :param expected_value: Hodnota, kterou musí klíč stále mít, aby ke smazání došlo.
       :return: ``True``, pokud byl klíč smazán; jinak ``False``.
 
+   .. py:method:: schedule_import_routing_pointer_expirations()
+
+      Přidá expiraci obou ukazatelů importní úlohy do Redis pipeline.
+
+      :param pipeline: Redis pipeline, do níž se vloží příkazy expirace.
+      :param user_id: Identifikátor uživatele, kterému importní úloha patří.
+      :param ttl_seconds: Doba expirace ukazatelů v sekundách.
+
    .. py:method:: claim_awaiting_import()
 
       Atomicky ověří fázi, platnost validace i vlastnictví locku importní úlohy a v jediném
@@ -97,6 +108,25 @@ Třídy
       :param ttl_seconds: Nová doba expirace globálního locku v sekundách.
       :return: Dvojice ``(claimed, lock_token)``; ``claimed`` je ``True`` při úspěchu, ``lock_token``
           je vlastnící token nebo ``None``, pokud úloha nebyla nárokována.
+
+   .. py:method:: cancel_awaiting_import()
+
+      Atomicky zruší dosud nespouštěný import, pokud stále vlastní jeho lock.
+
+      :param connection: Redis spojení použité pro atomické spuštění Lua skriptu.
+      :param job_id: Identifikátor rušené importní úlohy.
+      :param job_user: Identifikátor vlastníka úlohy použitý pro nalezení uživatelského ukazatele.
+      :param status_message: Překladový identifikátor stavu uložený po úspěšném zrušení.
+      :return: ``True``, pokud byla úloha zrušena; jinak ``False``.
+
+   .. py:method:: finalize_validation()
+
+      Atomicky převede vlastníkem drženou validaci do čekání na schválení.
+
+      :param connection: Redis spojení použité pro atomické spuštění Lua skriptu.
+      :param job_id: Identifikátor finalizované importní úlohy.
+      :param approval_ttl_seconds: Doba v sekundách, po kterou lock zůstane při čekání na schválení platný.
+      :return: ``True``, pokud úloha stále vlastní lock a přechod proběhl; jinak ``False``.
 
    .. py:method:: prepare_model_for_redis()
 

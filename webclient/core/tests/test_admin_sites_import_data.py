@@ -11,23 +11,12 @@ from core.admin_sites import AmcrCustomAdminSite
 from core.connectors import RedisConnector
 from core.forms import ImportDataAdminForm
 from core.tests.fake_redis import FakeRedis
+from core.tests.stub_user import _StubUser
 from cron import tasks
 from django.http import HttpResponse
 from django.test import RequestFactory, SimpleTestCase
 
 USER_ID = 42
-
-
-class _StubUser:
-    """Minimální náhrada uživatele pro ``RequestFactory`` — nese jen atributy čtené view."""
-
-    def __init__(self, user_id):
-        self.id = user_id
-        self.pk = user_id
-        self.is_superuser = True
-        self.is_staff = True
-        self.is_active = True
-        self.is_authenticated = True
 
 
 class ImportDataUploadRecoveryMetadataTest(SimpleTestCase):
@@ -36,6 +25,13 @@ class ImportDataUploadRecoveryMetadataTest(SimpleTestCase):
     def setUp(self):
         """Připraví ``RequestFactory`` sdílenou napříč testy."""
         self.factory = RequestFactory()
+        # Databázový guard má vlastní integrační testy; zde ověřujeme staging a úklid Redis.
+        self.enterContext(
+            patch(
+                "core.admin_sites.acquire_import_lock_during_maintenance",
+                side_effect=RedisConnector.acquire_import_lock,
+            )
+        )
 
     def _post(self, data_file):
         """Zavolá ``AmcrCustomAdminSite.import_data`` s mocknutým formulářem a daným souborem.
@@ -222,6 +218,18 @@ class ImportDataUploadRecoveryMetadataTest(SimpleTestCase):
         self.assertEqual(fake.get(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY), job_id)
         self.assertEqual(fake.get(f"import_data_current_job_{USER_ID}"), job_id)
 
+    def test_maintenance_ended_after_cached_gate_rejects_upload(self):
+        """Čerstvá kontrola odstávky odmítne upload před čtením ZIPu i dispatchnutím tasku."""
+        data_file = MagicMock()
+        with patch("core.admin_sites.acquire_import_lock_during_maintenance", return_value=None), patch(
+            "cron.tasks.run_data_import_validation.delay"
+        ) as delay_mock:
+            response, fake, _fake_bytes = self._post(data_file)
+        self.assertFalse(response.context_data["maintenance"])
+        data_file.read.assert_not_called()
+        delay_mock.assert_not_called()
+        self.assertIsNone(fake.get(RedisConnector.IMPORT_DATA_LOCK_KEY))
+
 
 class ImportDataReportDirectoryGateTest(SimpleTestCase):
     """Ověřuje, že bez nakonfigurovaného/zapisovatelného adresáře reportů import nejde ani spustit
@@ -287,46 +295,3 @@ class ImportDataReportDirectoryGateTest(SimpleTestCase):
         delay_mock.assert_not_called()
         self.assertIsNone(fake.get(f"import_data_current_job_{USER_ID}"))
         data_file.read.assert_not_called()
-
-
-class ImportDataMaintenanceGateTest(SimpleTestCase):
-    """Ověřuje zpětnou vazbu při odeslání formuláře mimo režim údržby."""
-
-    def setUp(self):
-        """Připraví ``RequestFactory`` sdílenou napříč testy."""
-        self.factory = RequestFactory()
-
-    def _call(self, method):
-        """Zavolá ``import_data`` mimo režim údržby zadanou HTTP metodou.
-
-        :param method: ``"get"`` nebo ``"post"``.
-        :return: ``TemplateResponse`` vrácená view.
-        """
-        fake = FakeRedis(decode_responses=True)
-        request = getattr(self.factory, method)("/admin/core/import-data/")
-        request.user = _StubUser(USER_ID)
-        request._dont_enforce_csrf_checks = True
-
-        with patch.object(AmcrCustomAdminSite, "get_app_list", return_value=[]), patch.object(
-            AmcrCustomAdminSite, "each_context", return_value={}
-        ), patch.object(AmcrCustomAdminSite, "redis_connector", fake), patch(
-            "core.admin_sites.is_maintenance_in_progress", return_value=False
-        ):
-            return AmcrCustomAdminSite().import_data(request)
-
-    def test_post_outside_maintenance_reports_why_nothing_happened(self):
-        """POST mimo údržbu musí vysvětlit, proč se import nespustil — ne jen překreslit stránku."""
-        response = self._call("post")
-
-        self.assertIn("error_message", response.context_data)
-        self.assertEqual(
-            str(response.context_data["error_message_details"]),
-            "core.templates.admin.import_data.not_maintenance",
-        )
-
-    def test_get_outside_maintenance_shows_no_error(self):
-        """Pouhé otevření stránky mimo údržbu chybu nehlásí — uživatel zatím nic neodeslal."""
-        response = self._call("get")
-
-        self.assertNotIn("error_message", response.context_data)
-        self.assertIn("form", response.context_data)

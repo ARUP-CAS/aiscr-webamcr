@@ -16,7 +16,6 @@ from celery import shared_task
 from core.connectors import RedisConnector
 from core.constants import (
     IMPORT,
-    NAHRANI_DISTRIBUCE,
     OBLAST_CECHY,
     PRISTUPNOST_MIN_RAZENI,
     PROJEKT_STAV_VYTVORENY,
@@ -25,18 +24,14 @@ from core.constants import (
     RUSENI_PROJ,
     RUSENI_STARE_PROJ,
     SCHVALENI_OZNAMENI_PROJ,
-    SMAZANI_DISTRIBUCE,
     STARY_PROJEKT_ZRUSEN,
     UDAJ_ODSTRANEN,
-    UPDATE_DISTRIBUCE,
     ZAPSANI_PROJ,
 )
 from core.forms import ImportDataAdminForm
 from core.ident_cely import get_record_from_ident
 from core.import_data_mappers import (
-    DistribuceMapper,
     ImportDataBatchOrderingError,
-    ImportDataDistributionPrefixCollisionError,
     ImportDataEmptyError,
     ImportDataError,
     ImportDataIntegrityError,
@@ -46,7 +41,6 @@ from core.import_data_mappers import (
     ImportDataValidationResult,
     ImportModelMapper,
     LookupImportField,
-    ParadataMapper,
     SouborMapper,
     UzivatelNotifikaceMapper,
     UzivatelOpravneniMapper,
@@ -56,11 +50,10 @@ from core.repository_connector import (
     DryRunFedoraTransaction,
     FedoraDeletionOnlyTransaction,
     FedoraError,
-    FedoraNoResponseError,
     FedoraRepositoryConnector,
     FedoraTransaction,
 )
-from core.utils import check_import_report_directory, upsert_import_report_index_entry
+from core.utils import check_import_report_directory, translate_status_value, upsert_import_report_index_entry
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.db import connection, transaction
@@ -87,6 +80,7 @@ logger = logging.getLogger(__name__)
 
 IMPORT_DATA_EXPIRATION_SECONDS = 6 * 60 * 60  # 6 hodin — retence reportu po ukončení úlohy
 IMPORT_DATA_RUNNING_TTL_SECONDS = 48 * 60 * 60  # 48 hodin — maximální očekávaná délka importu
+IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS = 7 * 24 * 60 * 60  # 7 dní — maximální doba pro schválení validace
 
 # Procentuální checkpointy sjednoceného progress baru importu (po dokončení dané fáze).
 IMPORT_PROGRESS_PHASE_FAILED = 0
@@ -103,6 +97,12 @@ IMPORT_PHASE_FINISHED = "finished"
 IMPORT_PHASE_STOPPED = "stopped"
 IMPORT_PHASE_CANCELED = "canceled"
 IMPORT_PHASE_FAILED = "failed"
+IMPORT_TERMINAL_PHASES = (
+    IMPORT_PHASE_FINISHED,
+    IMPORT_PHASE_STOPPED,
+    IMPORT_PHASE_CANCELED,
+    IMPORT_PHASE_FAILED,
+)
 
 # Diskriminátor terminální fáze ``failed`` (klíč ``import_data_failure_reason_{job_id}``).
 IMPORT_FAILURE_REASON_VALIDATION_REJECTED = "validation_rejected"
@@ -113,11 +113,13 @@ IMPORT_FAILURE_REASON_ERROR = "error"
 # o aktualizaci — zákaznický požadavek, transaction_uid zůstává prázdné).
 FEDORA_SKIPPED_ID = "cron.tasks.run_data_import.fedora_skipped"
 
+# Suffix pro Redis klíče, jejichž hodnota je překladové ID nebo obálka ``{id, params}``.
+TRANSLATABLE_KEY_SUFFIX = "_tr"
+
 # Suffixy per-job datových klíčů importní úlohy (bez sufixu ``_{job_id}``). Jedinný zdroj pravdy
 # sdílený validačním taskem (persist/expire), importním taskem (terminální finally) a view
 # (``_expire_import_data_keys``). Nový per-job klíč se přidává pouze sem.
 IMPORT_DATA_JOB_KEY_SUFFIXES = (
-    "import_data_validation_results",
     "import_data_validation_details",
     "import_data_validation_ids",
     "import_data_validation_progress",
@@ -129,11 +131,11 @@ IMPORT_DATA_JOB_KEY_SUFFIXES = (
     "import_data_phase",
     "import_data_primary_keys",
     "import_data_files",
-    "import_data_history_record_result_tr",
-    "import_fedora_result_tr",
-    "import_fedora_target_results_tr",
+    f"import_data_history_record_result{TRANSLATABLE_KEY_SUFFIX}",
+    f"import_fedora_result{TRANSLATABLE_KEY_SUFFIX}",
+    f"import_fedora_target_results{TRANSLATABLE_KEY_SUFFIX}",
     "import_data_progress",
-    "import_data_progress_details_tr",
+    f"import_data_progress_details{TRANSLATABLE_KEY_SUFFIX}",
     "import_data_progress_ids",
     "import_data_history_progress",
     "import_data_history_total",
@@ -141,16 +143,17 @@ IMPORT_DATA_JOB_KEY_SUFFIXES = (
     "import_data_fedora_total",
     "import_data_files_progress",
     "import_data_files_total",
-    "import_data_status_message_tr",
+    f"import_data_status_message{TRANSLATABLE_KEY_SUFFIX}",
     "import_performed_action",
     "import_data_user",
     "import_data_lock_token",
     "import_data_stop",
+    "import_data_report_path",
+    "import_data_report_saved_path",
 )
 
-# Jak často validační task zapisuje JSON snapshot ``import_data_validation_results_{job_id}`` pro report
-# (živý seznam ``import_data_validation_details`` se plní ``rpush`` každý řádek). Zrcadlí
-# ``HISTORY_REDIS_UPDATE_INTERVAL``.
+# Jak často validační task aktualizuje textový stav průběhu. Výsledky se přidávají po řádcích do
+# ``import_data_validation_details`` a report je rekonstruuje až při čtení.
 VALIDATION_REDIS_UPDATE_INTERVAL = 50
 
 # Standardizační pravidlo: do Redis se ukládají pouze ID překladových řetězců (nikoli přeložené
@@ -158,9 +161,6 @@ VALIDATION_REDIS_UPDATE_INTERVAL = 50
 # ``DataImportProgressReportView``) v locale přihlášeného admina. Klíče, které drží překladové
 # ID (případně obálku ``{id, params}`` pro parametrizované zprávy), mají suffix ``_tr``, takže je
 # z názvu klíče poznat, že hodnotu je třeba před zobrazením přeložit.
-
-# Suffix pro Redis klíče, jejichž hodnota je překladové ID nebo obálka ``{id, params}``.
-TRANSLATABLE_KEY_SUFFIX = "_tr"
 
 
 def translation_value(message_id: str, raw: bool = False, **params) -> str:
@@ -195,7 +195,7 @@ def translation_value(message_id: str, raw: bool = False, **params) -> str:
 # do ``_()``, aby ho ``makemessages``/``xgettext`` extrahoval do .po souborů — hodnoty se nepoužívají
 # za běhu (Redis stále dostává pouze bare ID přes ``translation_value``), slouží výhradně jako zdroj
 # pro extrakci překladů. Při přidání nového překladového ID ho přidejte do ``TRANSLATABLE_MESSAGE_IDS``,
-# jinak zůstane nepřeloženo (``_translate_status_value`` vrátí na čtenáři neaplikovaný key doslova).
+# jinak zůstane nepřeloženo (``translate_status_value`` vrátí na čtenáři neaplikovaný key doslova).
 TRANSLATABLE_MESSAGE_IDS = (
     _("cron.tasks.run_data_import.validating"),
     _("cron.tasks.run_data_import.stopped_by_user"),
@@ -220,6 +220,7 @@ TRANSLATABLE_MESSAGE_IDS = (
     _("cron.tasks.run_data_import.fedora_target_success"),
     _("cron.tasks.run_data_import.fedora_target_error"),
     _("cron.tasks.run_data_import.fedora_target_skipped"),
+    _("cron.tasks.run_data_import.fedora_target_unattempted"),
     _("cron.tasks.run_data_import.failed_during_fedora"),
     _("cron.tasks.run_data_import.finalizing"),
     _("cron.tasks.run_data_import.file_import.validating_directory_settings"),
@@ -235,6 +236,7 @@ TRANSLATABLE_MESSAGE_IDS = (
     _("cron.tasks.run_data_import.failed_mime_extension_mismatch"),
     _("cron.tasks.run_data_import.failed_mime_not_allowed"),
     _("cron.tasks.run_data_import.finished"),
+    _("cron.tasks.run_data_import.finished_with_skipped_files"),
     _("cron.tasks.run_data_import.cancelled"),
     _("cron.tasks.run_data_import.validation_rejected"),
     _("cron.tasks.run_data_import.validation_done"),
@@ -812,51 +814,6 @@ def _format_import_primary_key(pk):
     return str(pk)
 
 
-def _import_job_record_keys(redis_connector, job_id, record_count=None) -> list:
-    """Vrátí klíče jednotlivých naimportovaných záznamů dané úlohy.
-
-    Primárně se rozsah odvodí z čítače ``import_data_count_{job_id}``. Pokud čítač chybí nebo
-    není číslo (úloha už doběhla a čítač vyexpiroval), klíče se dohledají scanem — jinak by
-    zůstaly bez TTL napořád: validace je na úspěšné cestě ``persist``uje, takže by je nic
-    nesmazalo (review #4197, Fix 6).
-
-    :param redis_connector: Redis spojení, nad kterým se klíče dohledávají.
-    :param job_id: Identifikátor importní úlohy.
-    :param record_count: Počet záznamů, pokud ho volající zná; jinak se zjistí z čítače.
-    :return: Seznam klíčů ``import_data_{job_id}_record_{i}``.
-    """
-    if record_count is None:
-        count_raw = redis_connector.get("import_data_count_{}".format(job_id))
-        try:
-            record_count = int(count_raw) if count_raw else None
-        except (TypeError, ValueError):
-            record_count = None
-    if record_count:
-        return ["import_data_{}_record_{}".format(job_id, i) for i in range(record_count)]
-    pattern = "import_data_{}_record_*".format(job_id)
-    return [key.decode("utf-8") if isinstance(key, bytes) else key for key in redis_connector.scan_iter(match=pattern)]
-
-
-def expire_import_job_keys(redis_connector, job_id, ttl_seconds, record_count=None):
-    """Nastaví expiraci všem per-job klíčům importní úlohy.
-
-    Klíče se pouze expirují, nikdy nemažou — report musí zůstat stažitelný po dobu retence.
-    Jediný zdroj pravdy pro terminální úklid: volá ho validační i importní task, ruční reset
-    (``reset_import_job``) a zrušení úlohy z view.
-
-    :param redis_connector: Redis spojení, nad kterým se expirace nastavuje.
-    :param job_id: Identifikátor importní úlohy.
-    :param ttl_seconds: Doba retence v sekundách.
-    :param record_count: Počet naimportovaných záznamů, pokud ho volající zná.
-    """
-    pipe = redis_connector.pipeline()
-    for suffix in IMPORT_DATA_JOB_KEY_SUFFIXES:
-        pipe.expire("{}_{}".format(suffix, job_id), ttl_seconds)
-    for key in _import_job_record_keys(redis_connector, job_id, record_count):
-        pipe.expire(key, ttl_seconds)
-    pipe.execute()
-
-
 def reset_import_job(redis_connector, job_id):
     """Ruční superuživatelský reset zaseklé importní úlohy: uvolní globální lock a úlohu ukončí.
 
@@ -869,8 +826,13 @@ def reset_import_job(redis_connector, job_id):
     ukazatel běžící úlohy uživatele i zpětný odkaz ``IMPORT_DATA_ACTIVE_JOB_KEY``, uvolní případný
     nastagovaný ZIP a per-job datové klíče pouze expiruje (report zůstane stažitelný).
 
+    Aktivní validaci/import lze resetovat až po pěti minutách bez checkpointu workeru.
+    Značka ``import_data_recent_progress`` má vlastní krátké TTL; nesmí se persistovat
+    společně s daty reportu. Stáří není důkazem ukončení workeru.
+
     :param redis_connector: Dekódující Redis spojení.
     :param job_id: Identifikátor resetované importní úlohy.
+    :return: Zda byl reset přijat; při nedávné aktivitě nebo terminální fázi vrací ``False``.
     """
     logger.warning("cron.tasks.reset_import_job.start", extra={"job_id": job_id})
 
@@ -880,11 +842,11 @@ def reset_import_job(redis_connector, job_id):
     def to_str(value):
         return value.decode("utf-8") if isinstance(value, bytes) else value
 
-    # Halt any still-alive task first, then token-checked release so a re-acquired lock is untouched.
-    redis_connector.set(job_key("import_data_stop"), 1, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
-    lock_token = to_str(redis_connector.get(job_key("import_data_lock_token")))
-    if lock_token:
-        RedisConnector.release_import_lock(redis_connector, lock_token)
+    # Check freshness and revoke ownership atomically against worker checkpoints and Start.
+    if not RedisConnector.begin_import_reset(
+        redis_connector, job_id, IMPORT_DATA_RUNNING_TTL_SECONDS, IMPORT_DATA_EXPIRATION_SECONDS
+    ):
+        return False
 
     redis_connector.set(job_key("import_data_phase"), IMPORT_PHASE_FAILED, ex=IMPORT_DATA_EXPIRATION_SECONDS)
     redis_connector.set(
@@ -915,37 +877,19 @@ def reset_import_job(redis_connector, job_id):
         redis_connector.delete(*stray_keys)
 
     # Expire (not delete) the per-job data keys so the report stays downloadable during retention.
-    expire_import_job_keys(redis_connector, job_id, IMPORT_DATA_EXPIRATION_SECONDS)
-    logger.warning("cron.tasks.reset_import_job.done", extra={"job_id": job_id, "job_user": job_user})
-
-
-def _translate_status_value_for_report(raw):
-    """Přeloží hodnotu z Redis (ID nebo obálka ``{id, params}``) do aktivního jazyka.
-
-    Zrcadlí ``core.views._translate_status_value`` — nedovolat odtud, aby ``cron.tasks`` (načítaný
-    při startu Celery workeru) nezávisel na ``core.views`` na úrovni modulu.
-
-    :param raw: Hodnota z Redis — ``None``, plain ID (str), nebo JSON obálka (str) s ``id`` a
-        ``params``.
-    :return: Přeložený řetězec, nebo ``None``, pokud je vstup ``None``.
-    """
-    if raw is None:
-        return None
-    if isinstance(raw, bytes):
-        raw = raw.decode("utf-8")
+    count_raw = redis_connector.get(job_key("import_data_count"))
     try:
-        obj = json.loads(raw)
-    except (TypeError, ValueError, json.JSONDecodeError):
-        return _(raw)
-    if isinstance(obj, dict) and "id" in obj:
-        params = obj.get("params") or {}
-        if obj.get("raw"):
-            return params.get("message", "")
-        try:
-            return _(obj["id"]).format(**params)
-        except (KeyError, IndexError, ValueError):
-            return _(obj["id"])
-    return _(raw)
+        count = int(count_raw) if count_raw else 0
+    except (TypeError, ValueError):
+        count = 0
+    pipe = redis_connector.pipeline()
+    for suffix in IMPORT_DATA_JOB_KEY_SUFFIXES:
+        pipe.expire(job_key(suffix), IMPORT_DATA_EXPIRATION_SECONDS)
+    for i in range(count):
+        pipe.expire("import_data_{}_record_{}".format(job_id, i), IMPORT_DATA_EXPIRATION_SECONDS)
+    pipe.execute()
+    logger.warning("cron.tasks.reset_import_job.done", extra={"job_id": job_id, "job_user": job_user})
+    return True
 
 
 def get_or_create_import_report_path(job_id, redis_connector, reports_directory_path):
@@ -963,21 +907,25 @@ def get_or_create_import_report_path(job_id, redis_connector, reports_directory_
     """
     key = "import_data_report_path_{}".format(job_id)
     existing = redis_connector.get(key)
+    reports_directory_path = os.path.realpath(reports_directory_path)
     if existing:
-        return existing.decode("utf-8") if isinstance(existing, bytes) else existing
+        existing = existing.decode("utf-8") if isinstance(existing, bytes) else existing
+        if os.path.commonpath((reports_directory_path, os.path.realpath(existing))) == reports_directory_path:
+            return existing
+        raise ValueError(_("cron.tasks.get_or_create_import_report_path.persisted_path_outside_reports_directory"))
     started_at = timezone.now().strftime("%Y%m%d_%H%M%S")
     report_path = os.path.join(reports_directory_path, "import_report_{}_{}.xlsx".format(started_at, job_id))
+    if os.path.commonpath((reports_directory_path, os.path.realpath(report_path))) != reports_directory_path:
+        raise ValueError(_("cron.tasks.get_or_create_import_report_path.generated_path_outside_reports_directory"))
     redis_connector.set(key, report_path, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
     return report_path
 
 
 def build_import_report_dataframe(job_id, redis_connector):
-    """Sestaví DataFrame reportu importní úlohy z aktuálního stavu v Redis.
+    """Sestaví DataFrame listu ``Import`` reportu importní úlohy z aktuálního stavu v Redis.
 
-    Sdílený mechanismus mezi periodickým ukládáním na disk (``save_import_report_to_disk``,
-    volané z ``run_data_import_validation``/``run_data_import``) a stahováním přes
-    ``DataImportProgressReportView`` — obě strany čtou stejná Redis data stejným způsobem, takže
-    stažený a na disk uložený report si vždy odpovídají.
+    Sestavení celého živého i archivovaného reportu popisuje
+    :py:func:`write_import_report_sheets`.
 
     :param job_id: Identifikátor importní úlohy.
     :param redis_connector: Dekódující Redis spojení (klíče i hodnoty jako ``str``).
@@ -988,9 +936,12 @@ def build_import_report_dataframe(job_id, redis_connector):
     # below match regardless of which connector mode the caller used.
     phase_raw = redis_connector.get("import_data_phase_{}".format(job_id)) or "unknown"
     phase = phase_raw.decode("utf-8") if isinstance(phase_raw, bytes) else phase_raw
-    validation_results_raw = json.loads(redis_connector.get("import_data_validation_results_{}".format(job_id)) or "[]")
+    validation_results_raw = [
+        json.loads(detail)
+        for detail in redis_connector.lrange("import_data_validation_details_{}".format(job_id), 0, -1)
+    ]
     validation_results = [
-        {**item, "validation_result": _translate_status_value_for_report(item.get("validation_result", ""))}
+        {**item, "validation_result": translate_status_value(item.get("validation_result", ""))}
         for item in validation_results_raw
     ]
     primary_keys = json.loads(redis_connector.get("import_data_primary_keys_{}".format(job_id)) or "{}")
@@ -998,19 +949,19 @@ def build_import_report_dataframe(job_id, redis_connector):
         pid.decode("utf-8") if isinstance(pid, bytes) else pid
         for pid in redis_connector.lrange("import_data_progress_ids_{}".format(job_id), 0, -1)
     ]
-    progress_details = redis_connector.lrange("import_data_progress_details_tr_{}".format(job_id), 0, -1)
-    serialized_results = {
-        rid: _translate_status_value_for_report(detail) for rid, detail in zip(progress_ids, progress_details)
-    }
+    progress_details = redis_connector.lrange(f"import_data_progress_details{TRANSLATABLE_KEY_SUFFIX}_{job_id}", 0, -1)
+    serialized_results = {rid: translate_status_value(detail) for rid, detail in zip(progress_ids, progress_details)}
     history_record_result = {
-        rid: _translate_status_value_for_report(value)
+        rid: translate_status_value(value)
         for rid, value in json.loads(
-            redis_connector.get("import_data_history_record_result_tr_{}".format(job_id)) or "{}"
+            redis_connector.get(f"import_data_history_record_result{TRANSLATABLE_KEY_SUFFIX}_{job_id}") or "{}"
         ).items()
     }
     fedora_update_result = {
-        rid: [_translate_status_value_for_report(item) for item in items]
-        for rid, items in json.loads(redis_connector.get("import_fedora_result_tr_{}".format(job_id)) or "{}").items()
+        rid: [translate_status_value(item) for item in items]
+        for rid, items in json.loads(
+            redis_connector.get(f"import_fedora_result{TRANSLATABLE_KEY_SUFFIX}_{job_id}") or "{}"
+        ).items()
     }
 
     def build_row(item):
@@ -1052,27 +1003,39 @@ def build_import_fedora_target_dataframe(job_id, redis_connector):
     :param redis_connector: Dekódující Redis spojení.
     :return: DataFrame se sloupci ``ident_cely``, ID transakce Fedora a přeložený výsledek.
     """
-    targets_raw = json.loads(redis_connector.get("import_fedora_target_results_tr_{}".format(job_id)) or "[]")
-    fedora_result_raw = json.loads(redis_connector.get("import_fedora_result_tr_{}".format(job_id)) or "{}")
-    validation_results_raw = json.loads(redis_connector.get("import_data_validation_results_{}".format(job_id)) or "[]")
+    targets_raw = json.loads(
+        redis_connector.get(f"import_fedora_target_results{TRANSLATABLE_KEY_SUFFIX}_{job_id}") or "[]"
+    )
+    fedora_result_raw = json.loads(
+        redis_connector.get(f"import_fedora_result{TRANSLATABLE_KEY_SUFFIX}_{job_id}") or "{}"
+    )
+    validation_results_raw = [
+        json.loads(detail)
+        for detail in redis_connector.lrange("import_data_validation_details_{}".format(job_id), 0, -1)
+    ]
     skipped_identity_by_record_id = {
         str(item["item_order"]): item.get("primary_key_import", "") for item in validation_results_raw
     }
     columns = [
         _("core.templates.admin.import_data.fedora_target.ident_cely"),
         _("core.templates.admin.import_data.fedora_target.transaction_uid"),
+        _("core.templates.admin.import_data.fedora_target.affected_records"),
         _("core.templates.admin.import_data.fedora_target.result"),
     ]
 
-    def build_row(ident_cely, transaction_uid, result_id):
+    def build_row(ident_cely, transaction_uid, record_ids, result_id):
         return {
             columns[0]: ident_cely or "",
             columns[1]: transaction_uid or "",
-            columns[2]: _translate_status_value_for_report(result_id),
+            columns[2]: ", ".join(str(record_id + 1) for record_id in record_ids or []),
+            columns[3]: translate_status_value(result_id),
         }
 
     rows = [
-        build_row(item.get("ident_cely"), item.get("transaction_uid"), item.get("result", "")) for item in targets_raw
+        build_row(
+            item.get("ident_cely"), item.get("transaction_uid"), item.get("record_ids", []), item.get("result", "")
+        )
+        for item in targets_raw
     ]
     for record_id, items in fedora_result_raw.items():
         if items == [FEDORA_SKIPPED_ID]:
@@ -1080,10 +1043,26 @@ def build_import_fedora_target_dataframe(job_id, redis_connector):
                 build_row(
                     skipped_identity_by_record_id.get(record_id, ""),
                     None,
-                    "cron.tasks.run_data_import.fedora_target_skipped",
+                    [int(record_id)],
+                    _("cron.tasks.run_data_import.fedora_target_skipped"),
                 )
             )
     return pd.DataFrame(rows, columns=columns)
+
+
+def write_import_report_sheets(writer, job_id, redis_connector):
+    """Zapíše společné listy živého i archivovaného reportu v pořadí Import, Fedora.
+
+    :param writer: Otevřený Excel writer spravovaný volajícím.
+    :param job_id: Identifikátor importní úlohy, jejíž data se načítají z Redis.
+    :param redis_connector: Redis spojení s bytovými nebo dekódovanými odpověďmi.
+    :return: Fáze načtená při sestavení listu Import pro zápis do indexu reportů.
+    """
+    dataframe, phase = build_import_report_dataframe(job_id, redis_connector)
+    fedora_dataframe = build_import_fedora_target_dataframe(job_id, redis_connector)
+    for sheet_name, sheet in (("Import", dataframe), ("Fedora", fedora_dataframe)):
+        sheet.to_excel(writer, index=False, sheet_name=sheet_name)
+    return phase
 
 
 def save_import_report_to_disk(job_id, redis_connector, reports_directory_path):
@@ -1092,27 +1071,26 @@ def save_import_report_to_disk(job_id, redis_connector, reports_directory_path):
     Volá se na začátku validace/importu a po každé fázové tranzici i v except/finally větvích
     (zákaznický požadavek — report musí přežít TTL Redis klíčů). Zápis je
     atomický (dočasný soubor + ``os.replace``), takže souběžné čtení nikdy neuvidí částečně
-    zapsaný XLSX. Chyba zápisu se loguje a nesmí přerušit import — volající proto výjimku
-    nepropaguje dál.
+    zapsaný XLSX. Chyba zápisu se loguje a vrací se ``None``; úvodní snapshot validačního či
+    importního tasku tuto hodnotu používá jako fail-closed bránu před další prací.
 
     :param job_id: Identifikátor importní úlohy.
     :param redis_connector: Dekódující Redis spojení.
     :param reports_directory_path: Adresář reportů (z ``check_import_report_directory``).
     :return: Cesta k uloženému souboru při úspěchu, jinak ``None``.
     """
-    report_path = get_or_create_import_report_path(job_id, redis_connector, reports_directory_path)
+    report_path = None
     try:
-        df, phase = build_import_report_dataframe(job_id, redis_connector)
-        fedora_df = build_import_fedora_target_dataframe(job_id, redis_connector)
+        report_path = get_or_create_import_report_path(job_id, redis_connector, reports_directory_path)
         # openpyxl's ExcelWriter validates the file extension against the engine, so the temp file
         # must still end in .xlsx (a plain ".tmp" suffix raises ValueError before anything is written).
         base_path, ext = os.path.splitext(report_path)
         tmp_path = "{}.tmp{}".format(base_path, ext)
         with pd.ExcelWriter(tmp_path, engine="openpyxl") as writer:
-            df.to_excel(writer, index=False, sheet_name="Import")
-            fedora_df.to_excel(writer, index=False, sheet_name="Fedora")
+            phase = write_import_report_sheets(writer, job_id, redis_connector)
         os.replace(tmp_path, report_path)
-        upsert_import_report_index_entry(reports_directory_path, job_id, os.path.basename(report_path), phase)
+        # Both the file and the index are derived from the validated directory, never a Redis path.
+        upsert_import_report_index_entry(os.path.dirname(report_path), job_id, os.path.basename(report_path), phase)
         redis_connector.set(
             "import_data_report_saved_path_{}".format(job_id), report_path, ex=IMPORT_DATA_RUNNING_TTL_SECONDS
         )
@@ -1163,19 +1141,25 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         return "import_data_file_{}_{}".format(job_id, index)
 
     def refresh_lock_or_raise():
-        if not RedisConnector.refresh_import_lock(redis_connector, lock_token, IMPORT_DATA_RUNNING_TTL_SECONDS):
+        if not RedisConnector.refresh_import_lock(
+            redis_connector, lock_token, IMPORT_DATA_RUNNING_TTL_SECONDS, job_id=job_id
+        ):
             raise ImportLockLostError("Import data lock lost during validation")
 
-    # Per-job datové klíče: na úspěšné cestě se persistují (bez TTL) pro okno awaiting_approval,
+    # Per-job datové klíče: na úspěšné cestě expirují po sedmi dnech ve stavu awaiting_approval,
     # na terminální cestě expirují na 6 h kvůli retenci reportu. Sdílený zdroj pravdy — viz
     # ``IMPORT_DATA_JOB_KEY_SUFFIXES``.
     per_job_data_keys = list(IMPORT_DATA_JOB_KEY_SUFFIXES)
 
     failure_reason = None  # None = úspěch; jinak IMPORT_FAILURE_REASON_*
     stopped = False
-    chunk_count = 0
+    # Read before the early-return gates below (lock-lost, report directory, first report save) so
+    # the finally block's chunk cleanup can free the staged ZIP even on those paths — otherwise it
+    # runs with chunk_count == 0 and only the counter key is deleted, leaving the chunks themselves
+    # to their 48h TTL.
+    chunk_count_raw = redis_connector.get(job_key("import_data_file_chunks"))
+    chunk_count = int(chunk_count_raw) if chunk_count_raw else 0
     records: list = []
-    validation_results: list = []
     invalid_records: list = []
     record_id = 0  # index platných záznamů — sufix Redis klíče a records_count
     row_order = 0  # index každého CSV řádku (platný i neplatný) — item_order ve validačních výsledcích
@@ -1201,18 +1185,11 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         redis_connector.set(job_key("import_data_stop"), 1, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
 
     def push_validation_result(vr):
-        # rpush the live incremental-rendering lists the UI reads; checkpoint the JSON
-        # report snapshot every VALIDATION_REDIS_UPDATE_INTERVAL rows.
-        validation_results.append(vr)
+        # Append each result once. Both the polling UI and XLSX reports reconstruct their output
+        # from this list, avoiding repeated serialization of the complete growing result set.
         redis_connector.rpush(job_key("import_data_validation_details"), json.dumps(vr.to_dict()))
         redis_connector.rpush(job_key("import_data_validation_ids"), vr.item_order)
         redis_connector.incr(job_key("import_data_validation_progress"))
-        if len(validation_results) % VALIDATION_REDIS_UPDATE_INTERVAL == 0:
-            redis_connector.set(
-                job_key("import_data_validation_results"),
-                json.dumps([r.to_dict() for r in validation_results]),
-                ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
-            )
 
     LookupImportField.clear_cache()
     LookupImportField.clear_records()
@@ -1242,11 +1219,11 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
             )
             fail_error("cron.tasks.run_data_import.import_directory_not_configured")
             return
-        save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
+        if save_import_report_to_disk(job_id, redis_connector, reports_directory_path) is None:
+            fail_error("core.admin.import_data.error.unexpected_error")
+            return
 
-        # Reassemble the staged ZIP from Redis chunks.
-        chunk_count_raw = redis_connector.get(job_key("import_data_file_chunks"))
-        chunk_count = int(chunk_count_raw) if chunk_count_raw else 0
+        # Reassemble the staged ZIP from Redis chunks (chunk_count already read above).
         blob = bytearray()
         if chunk_count:
             pipe = redis_connector.pipeline()
@@ -1307,6 +1284,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                 # across all CSVs. The sheets stay transient — the main loop re-reads each file, and
                 # any real parse error surfaces there, not here.
                 total_rows = 0
+                seen_in_batch_by_mapper: dict[str, set] = {}
                 for file_name in file_names:
                     try:
                         with zf.open(file_name) as file:
@@ -1322,10 +1300,10 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                         sheet = pd.read_csv(file, dtype=str)
                     file_name = _normalize_import_file_name(file_name)
                     mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
-                    seen_in_batch: set = set()
+                    seen_in_batch = seen_in_batch_by_mapper.setdefault(file_name, set())
                     try:
                         mapper_class.validate_batch_ordering(sheet.to_dict("records"))
-                    except (ImportDataBatchOrderingError, ImportDataDistributionPrefixCollisionError) as err:
+                    except ImportDataBatchOrderingError as err:
                         push_validation_result(
                             ImportDataValidationResult(
                                 item_order=row_order,
@@ -1432,14 +1410,6 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
             # ValueError carries a translation ID (e.g. zip_too_large) raised above.
             fail_error(str(err))
             return
-        except FedoraNoResponseError as err:
-            logger.warning(
-                "cron.tasks.run_data_import_validation.fedora_unavailable",
-                extra={"job_id": job_id},
-                exc_info=True,
-            )
-            fail_error("cron.tasks.run_data_import.error.raw", raw=True, message=str(err))
-            return
         except Exception:
             logger.exception("cron.tasks.run_data_import_validation.unexpected_error", extra={"job_id": job_id})
             fail_error("core.admin.import_data.error.unexpected_error")
@@ -1451,13 +1421,9 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         redis_connector.set(
             job_key("import_data_valid"), "1" if not invalid_records else "0", ex=IMPORT_DATA_RUNNING_TTL_SECONDS
         )
-        redis_connector.set(
-            job_key("import_data_validation_results"),
-            json.dumps([r.to_dict() for r in validation_results]),
-            ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
-        )
         redis_connector.set(job_key("import_data_primary_keys"), json.dumps({}), ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
-        redis_connector.set(job_key("import_data_files"), json.dumps([]), ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+        # Append-only list (the progress poll reads it by cursor), so reset means delete, not set.
+        redis_connector.delete(job_key("import_data_files"))
         redis_connector.set(
             job_key("import_data_history_record_result_tr"), json.dumps({}), ex=IMPORT_DATA_RUNNING_TTL_SECONDS
         )
@@ -1503,24 +1469,50 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         all_data_keys += [record_key(i) for i in range(record_id)]
 
         if not stopped and failure_reason is None:
-            # Validation OK, all rows valid → hold the lock across awaiting_approval and persist the
-            # lock and every per-job data key (remove the TTL) so a slow reviewer does not find the
-            # job gone. No refresher runs during awaiting_approval.
-            redis_connector.set(job_key("import_data_phase"), IMPORT_PHASE_AWAITING_APPROVAL)
-            RedisConnector.persist_import_lock(redis_connector, lock_token)
-            persist_pipe = redis_connector.pipeline()
-            for key in all_data_keys:
-                persist_pipe.persist(key)
-            # The per-user "current job" pointer is keyed by user_id, not job_id, so it is NOT in
-            # per_job_data_keys. Persist it too on the success path — otherwise its 6 h TTL from the
-            # POST expires during a long awaiting_approval review and the owner is locked out of
-            # their own still-valid, still-lock-holding job ("Leave and come back" case).
-            persist_pipe.persist("import_data_current_job_{}".format(user_id))
-            # Keep the lock → job back-reference alive exactly as long as the (now persisted) lock,
-            # so a manual reset can still target this job during a long awaiting_approval review.
-            persist_pipe.persist(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
-            persist_pipe.execute()
-        else:
+            # Validation OK, all rows valid → hold the lock across awaiting_approval for a bounded
+            # seven-day approval window. No refresher runs while awaiting approval, so a rollback
+            # cannot leave an indefinite lock behind.
+            if not RedisConnector.finalize_validation(
+                redis_connector, job_id, IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS
+            ):
+                # The script refuses on phase change, stop sentinel, or lock loss alike — re-read
+                # the stop sentinel/phase to tell a deliberate stop from a real lock loss. A phase
+                # already moved past "validating" to something other than "stopped" (e.g. an admin
+                # reset, which also sets the stop sentinel) is a real termination, not a plain stop.
+                current_phase = redis_connector.get(job_key("import_data_phase"))
+                if isinstance(current_phase, bytes):
+                    current_phase = current_phase.decode("utf-8")
+                stop_requested = redis_connector.get(job_key("import_data_stop")) is not None
+                if current_phase == IMPORT_PHASE_STOPPED or (
+                    current_phase == IMPORT_PHASE_VALIDATING and stop_requested
+                ):
+                    stopped = True
+                    redis_connector.set(
+                        job_key("import_data_status_message_tr"),
+                        translation_value("cron.tasks.run_data_import.stopped_by_user"),
+                        ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+                    )
+                else:
+                    failure_reason = IMPORT_FAILURE_REASON_ERROR
+                    redis_connector.set(
+                        job_key("import_data_status_message_tr"),
+                        translation_value("cron.tasks.run_data_import.failed_lock_lost"),
+                        ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+                    )
+                    redis_connector.set(job_key("import_data_stop"), 1, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+                    stopped = False
+            else:
+                expiration_pipe = redis_connector.pipeline()
+                for key in all_data_keys:
+                    expiration_pipe.expire(key, IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS)
+                # The per-user "current job" pointer is keyed by user_id, not job_id, so it is NOT in
+                # per_job_data_keys. Keep it, and the lock → job back-reference, for the same bounded
+                # approval window so the reviewer can return to the job and an administrator can reset it.
+                RedisConnector.schedule_import_routing_pointer_expirations(
+                    expiration_pipe, user_id, IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS
+                )
+                expiration_pipe.execute()
+        if stopped or failure_reason is not None:
             # Terminal failure/stop → release the lock, clear the per-user pointer, and expire (not
             # delete) the data keys to 6 h so the page can still show why validation failed and the
             # report stays downloadable.
@@ -1534,12 +1526,15 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
             if user_pointer is not None:
                 if isinstance(user_pointer, bytes):
                     user_pointer = user_pointer.decode("utf-8")
-                # Compare-then-delete: a replacement job may already own this pointer (r3703505227).
+                # Compare-then-delete: a replacement job may already own this pointer.
                 RedisConnector.delete_if_value_matches(
                     redis_connector, "import_data_current_job_{}".format(user_pointer), job_id
                 )
             RedisConnector.delete_if_value_matches(redis_connector, RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, job_id)
-            expire_import_job_keys(redis_connector, job_id, IMPORT_DATA_EXPIRATION_SECONDS, record_count=record_id)
+            expire_pipe = redis_connector.pipeline()
+            for key in all_data_keys:
+                expire_pipe.expire(key, IMPORT_DATA_EXPIRATION_SECONDS)
+            expire_pipe.execute()
 
         # Terminal snapshot — phase is now awaiting_approval/stopped/failed above, so this is the
         # report an operator sees if they never return to the polling page.
@@ -1563,7 +1558,7 @@ def run_data_import(job_id, user_id, lock_token):
 
     Možné hodnoty Redis klíče ``import_data_status_message_tr_{job_id}`` (ukládá se překladové
     ID, případně obálka ``{id, params}`` pro parametrizované zprávy; překlad provádí až čtenář
-    v locale přihlášeného admina — viz ``translation_value`` a ``_translate_status_value``):
+    v locale přihlášeného admina — viz ``translation_value`` a ``translate_status_value``):
 
     .. list-table::
         :header-rows: 1
@@ -1633,7 +1628,9 @@ def run_data_import(job_id, user_id, lock_token):
             return "import_data_{}_record_{}".format(job_id, record_id)
 
         def refresh_import_lock():
-            if not RedisConnector.refresh_import_lock(redis_connector, lock_token, IMPORT_DATA_RUNNING_TTL_SECONDS):
+            if not RedisConnector.refresh_import_lock(
+                redis_connector, lock_token, IMPORT_DATA_RUNNING_TTL_SECONDS, job_id=job_id
+            ):
                 redis_connector.set(
                     job_key("import_data_status_message_tr"),
                     translation_value("cron.tasks.run_data_import.failed_lock_lost"),
@@ -1641,7 +1638,9 @@ def run_data_import(job_id, user_id, lock_token):
                 redis_connector.set(job_key("import_data_stop"), 1)
                 raise ImportLockLostError("Import data lock lost")
 
-        if not RedisConnector.refresh_import_lock(redis_connector, lock_token, IMPORT_DATA_RUNNING_TTL_SECONDS):
+        if not RedisConnector.refresh_import_lock(
+            redis_connector, lock_token, IMPORT_DATA_RUNNING_TTL_SECONDS, job_id=job_id
+        ):
             redis_connector.set(
                 job_key("import_data_status_message_tr"),
                 translation_value("cron.tasks.run_data_import.failed_lock_acquisition"),
@@ -1665,7 +1664,14 @@ def run_data_import(job_id, user_id, lock_token):
             )
             redis_connector.set(job_key("import_data_stop"), 1)
             return
-        save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
+        if save_import_report_to_disk(job_id, redis_connector, reports_directory_path) is None:
+            redis_connector.set(
+                job_key("import_data_status_message_tr"),
+                translation_value("cron.tasks.run_data_import.failed_during_data_import"),
+            )
+            redis_connector.set(job_key("import_data_stop"), 1)
+            logger.error("cron.tasks.run_data_import.initial_report_save_failed", extra={"job_id": job_id})
+            return
 
         record_count_raw = redis_connector.get(job_key("import_data_count"))
         record_count = int(record_count_raw.decode("utf-8")) if record_count_raw else 0
@@ -1687,8 +1693,11 @@ def run_data_import(job_id, user_id, lock_token):
             return
         performed_action_raw = redis_connector.get(job_key("import_performed_action"))
         performed_action = performed_action_raw.decode("utf-8") if performed_action_raw else None
-        redis_connector.delete(job_key("import_data_progress_ids"), job_key("import_data_progress_details_tr"))
-        redis_connector.set(job_key("import_data_files"), json.dumps([]), ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+        redis_connector.delete(
+            job_key("import_data_progress_ids"),
+            job_key("import_data_progress_details_tr"),
+            job_key("import_data_files"),
+        )
         redis_connector.set(
             job_key("import_data_history_record_result_tr"), json.dumps({}), ex=IMPORT_DATA_RUNNING_TTL_SECONDS
         )
@@ -1702,17 +1711,14 @@ def run_data_import(job_id, user_id, lock_token):
         mapper_classes = {}
         import_files_list: list[Soubor] = []
         import_files_record_ids: set = set()
-        # Alternative distributions and paradata operate on existing files, so they are collected
-        # here and written to Fedora in the binary phase, not saved as database records (#3527).
-        import_distributions_list: list[Soubor] = []
-        import_paradata_list: list[Soubor] = []
         stopped = False
         fedora_update_targets_dict: dict = {}
         fedora_update_targets_record_ids_dict = defaultdict(set)
         updated_history_dict = defaultdict(lambda: {"files": set(), "record_ids": set()})
         import_fedora_result = defaultdict(list)
-        # One entry per deduplicated Fedora target actually processed (not per import record) — the
-        # "Fedora" report sheet (customer requirement).
+        # One entry per planned deduplicated Fedora target (not per import record) — including
+        # targets that remain unattempted after a failure or stop.
+        fedora_target_items: list = []
         fedora_target_results: list = []
         transaction_user = User.objects.get(pk=user_id)
 
@@ -1819,223 +1825,15 @@ def run_data_import(job_id, user_id, lock_token):
                 fedora_update_targets_dict.setdefault(item, None)
                 fedora_update_targets_record_ids_dict[item].add(record_id)
 
-        def import_distributions_and_paradata():
-            """Zapíše do Fedory alternativní distribuce a paradata nasbíraná v datové fázi.
-
-            Distribuce i paradata pracují s existujícími soubory, takže se neukládají jako
-            databázní záznamy — mění se pouze Fedora, u distribucí navíc historie souboru
-            a metadata navázaného záznamu. Volá se z binární fáze, aby chyby spadly do jejích
-            ošetření; proto se přes ``nonlocal`` udržují ``failed``, ``stopped``, ``record_id``,
-            ``filename`` a ``fedora_transaction``, ze kterých ošetření skládají hlášení
-            a provádějí rollback.
-
-            Fáze **není atomická**: každá položka má vlastní Fedora transakci, kterou potvrdí
-            hned po zápisu, a záznam historie vzniká rovnou. Selhání uprostřed dávky tedy nechá
-            dříve zpracované distribuce zapsané — stejně jako u importu binárních souborů, se
-            kterým tato fáze sdílí ošetření chyb. Rollback zpět přes už potvrzené položky by
-            znamenal mazat obsah, který si uživatel mohl mezitím stáhnout; opakovaný import
-            téhož CSV je proto zamýšlená cesta k dorovnání stavu.
-
-            Historie distribucí se zapisuje pod ``ADMIN_USER``, jak vyžaduje zadání #3527.
-            Náhledy oproti tomu eviduje ``Soubor.zaznamenej_distribuce()`` pod uživatelem,
-            který soubor nahrál — jde o dvě různá pravidla, ne o nekonzistenci.
-            """
-            nonlocal failed, stopped, record_id, filename, fedora_transaction
-
-            record_id = None
-            filename = None
-            fedora_transaction = None
-            # Records whose metadata must be refreshed once all distributions are written.
-            pending_distribution_metadata: dict = {}
-            admin_user = User.objects.get(pk=hesla_dynamicka.ADMIN_USER)
-            distribution_items = [(False, item) for item in import_distributions_list] + [
-                (True, item) for item in import_paradata_list
-            ]
-            # Overall file count for the status message: soubory already imported + this phase.
-            total_files = len(import_files_list) + len(distribution_items)
-            processed_files = len(import_files_list)
-            for is_paradata, soubor in distribution_items:
-                fedora_transaction = None
-                refresh_import_lock()
-                soubor: Soubor
-                if redis_connector.get(job_key("import_data_stop")) is not None:
-                    stopped = True
-                    logger.info("cron.tasks.run_data_import.distribution.stopped", extra={"job_id": job_id})
-                    redis_connector.set(
-                        job_key("import_data_status_message_tr"),
-                        translation_value("cron.tasks.run_data_import.stopped_by_user"),
-                    )
-                    break
-                record_id = getattr(soubor, "import_record_id", None)
-                if is_paradata:
-                    distribution = soubor.paradata_distribution
-                    item_action = soubor.paradata_performed_action
-                    filename = soubor.paradata_nazev
-                    mimetype = soubor.paradata_mimetype
-                else:
-                    distribution = soubor.distribution_name
-                    item_action = soubor.distribution_performed_action
-                    filename = soubor.distribution_nazev
-                    mimetype = soubor.distribution_mimetype
-                navazany_objekt = soubor.vazba.navazany_objekt
-                ident_cely = navazany_objekt.ident_cely
-                redis_connector.set(
-                    job_key("import_data_status_message_tr"),
-                    translation_value(
-                        "cron.tasks.run_data_import.importing_distribution",
-                        n=processed_files + 1,
-                        total=total_files,
-                        filename=distribution,
-                        ident_cely=ident_cely,
-                    ),
-                )
-                binary_content = None
-                if item_action != ImportDataAdminForm.PERFORMED_ACTION_DELETE:
-                    file_path = os.path.join(import_directory_path, filename)
-                    if not os.path.isfile(file_path):
-                        import_results_files.append(
-                            {
-                                "ident_cely": ident_cely,
-                                "file_name": filename,
-                                "size_mb": None,
-                                "additional_info_tr": "cron.tasks.run_data_import.file_not_found_in_directory",
-                            }
-                        )
-                        redis_connector.set(job_key("import_data_files"), json.dumps(import_results_files))
-                        failed = True
-                        stopped = True
-                        redis_connector.set(job_key("import_data_stop"), 1)
-                        redis_connector.set(
-                            job_key("import_data_status_message_tr"),
-                            translation_value("cron.tasks.run_data_import.cannot_read_from_directory"),
-                        )
-                        break
-                    with open(file_path, "rb") as f:
-                        binary_content = BytesIO(f.read())
-                fedora_transaction = FedoraTransaction()
-                conn = FedoraRepositoryConnector(navazany_objekt, fedora_transaction, skip_container_check=False)
-                uuid = soubor.repository_uuid
-                # The mimetype from the CSV is stored as given, without detection (#3527).
-                if item_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
-                    if is_paradata:
-                        conn.delete_paradata(uuid, distribution)
-                    else:
-                        conn.delete_distribution(uuid, distribution)
-                    typ_zmeny = SMAZANI_DISTRIBUCE
-                    rep_bin_file = None
-                elif item_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
-                    if is_paradata:
-                        rep_bin_file = conn.save_paradata(uuid, distribution, filename, mimetype, binary_content)
-                    else:
-                        rep_bin_file = conn.save_distribution(uuid, distribution, filename, mimetype, binary_content)
-                    typ_zmeny = NAHRANI_DISTRIBUCE
-                else:
-                    if is_paradata:
-                        rep_bin_file = conn.update_paradata(uuid, distribution, filename, mimetype, binary_content)
-                    else:
-                        rep_bin_file = conn.update_distribution(uuid, distribution, filename, mimetype, binary_content)
-                    typ_zmeny = UPDATE_DISTRIBUCE
-                if not is_paradata:
-                    # Paradata leave no trace in the database — no history, no metadata
-                    # refresh — while distributions are recorded in the file history.
-                    history_record = Historie.objects.create(
-                        typ_zmeny=typ_zmeny,
-                        uzivatel=admin_user,
-                        vazba=soubor.historie,
-                        poznamka=distribution,
-                    )
-                    nav_key = (navazany_objekt.__class__, navazany_objekt.pk)
-                    if nav_key not in pending_distribution_metadata:
-                        pending_distribution_metadata[nav_key] = {
-                            "ident_cely": ident_cely,
-                            "record_ids": set(),
-                        }
-                    if record_id is not None:
-                        pending_distribution_metadata[nav_key]["record_ids"].add(record_id)
-                        # The history phase labels every unrecognised record_id as "skipped";
-                        # distributions write their own DIST* record here, so relabel it now.
-                        import_history_record_result[record_id] = translation_value(
-                            "cron.tasks.run_data_import.history_record_created", pk=history_record.pk
-                        )
-                        redis_connector.set(
-                            job_key("import_data_history_record_result_tr"),
-                            json.dumps(import_history_record_result),
-                        )
-                elif record_id is not None:
-                    # Paradata trigger no metadata refresh, so the row would otherwise stay
-                    # labelled as waiting for the data import that never comes.
-                    import_fedora_result[record_id] = [
-                        translation_value(
-                            "cron.tasks.run_data_import.paradata_written",
-                            raw=True,
-                            message=distribution,
-                        )
-                    ]
-                    redis_connector.set(job_key("import_fedora_result_tr"), json.dumps(import_fedora_result))
-                fedora_transaction.mark_transaction_as_closed()
-                logger.info(
-                    "cron.tasks.run_data_import.distribution.saved",
-                    extra={
-                        "distribution": distribution,
-                        "paradata": is_paradata,
-                        "action": item_action,
-                        "ident_cely": ident_cely,
-                        "job_id": job_id,
-                    },
-                )
-                import_results_files.append(
-                    {
-                        "ident_cely": ident_cely,
-                        "file_name": filename or distribution,
-                        "size_mb": round(rep_bin_file.size_mb, 3) if rep_bin_file else None,
-                        "additional_info_tr": translation_value(
-                            "cron.tasks.run_data_import.distribution_written",
-                            raw=True,
-                            message=distribution,
-                        ),
-                    }
-                )
-                redis_connector.set(job_key("import_data_files"), json.dumps(import_results_files))
-                processed_files += 1
-                redis_connector.set(
-                    job_key("import_data_files_progress"),
-                    processed_files,
-                    ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
-                )
-            if not failed and not stopped:
-                record_id = None
-                for (obj_class, obj_pk), entry in pending_distribution_metadata.items():
-                    fedora_transaction = None
-                    refresh_import_lock()
-                    # Like the distribution write loop, the metadata refresh polls the stop
-                    # sentinel so a user stop does not have to wait for lock loss. The check sits
-                    # before the transaction is opened so an in-flight Fedora write is never torn.
-                    if redis_connector.get(job_key("import_data_stop")) is not None:
-                        stopped = True
-                        logger.info(
-                            "cron.tasks.run_data_import.distribution.metadata.stopped", extra={"job_id": job_id}
-                        )
-                        redis_connector.set(
-                            job_key("import_data_status_message_tr"),
-                            translation_value("cron.tasks.run_data_import.stopped_by_user"),
-                        )
-                        break
-                    fedora_transaction = FedoraTransaction()
-                    obj = obj_class.objects.get(pk=obj_pk)
-                    obj.active_transaction = fedora_transaction
-                    obj.save_metadata(fedora_transaction)
-                    fedora_transaction.mark_transaction_as_closed()
-                    for rid in entry["record_ids"]:
-                        if import_fedora_result.get(rid) == [fedora_waiting_data_import_id]:
-                            import_fedora_result[rid] = []
-                        import_fedora_result[rid].append(
-                            translation_value(
-                                "cron.tasks.run_data_import.fedora_record",
-                                raw=True,
-                                message="{} ({})".format(fedora_transaction.uid, entry["ident_cely"]),
-                            )
-                        )
-                    redis_connector.set(job_key("import_fedora_result_tr"), json.dumps(import_fedora_result))
+        def fedora_target_identity(item):
+            """Return a stable, actionable identity without relying on a model instance repr."""
+            if isinstance(item, str):
+                return item
+            if isinstance(item, tuple) and len(item) == 2:
+                item_class, item_pk = item
+                model_label = getattr(getattr(item_class, "_meta", None), "label", item_class.__name__)
+                return "{}:{}".format(model_label, item_pk)
+            return str(item)
 
         # Tracks whether the data-phase atomic() block was rolled back (via set_rollback or a
         # propagating exception). Drives the success -> rolled_back relabel.
@@ -2104,21 +1902,6 @@ def run_data_import(job_id, user_id, lock_token):
                             import_files_list += records
                             import_files_record_ids.add(record_id)
                             record: Soubor = records[0]
-                            redis_connector.rpush(job_key("import_data_progress_ids"), record_id)
-                            redis_connector.rpush(
-                                job_key("import_data_progress_details_tr"), "cron.tasks.run_data_import.file"
-                            )
-                            continue
-                        if mapper_class in (DistribuceMapper, ParadataMapper):
-                            # Distributions and paradata change only Fedora; the returned Soubor is an
-                            # existing row that must not be saved or deleted by the generic branch below.
-                            for record in records:
-                                record.import_record_id = record_id
-                            if mapper_class is DistribuceMapper:
-                                import_distributions_list += records
-                            else:
-                                import_paradata_list += records
-                            import_files_record_ids.add(record_id)
                             redis_connector.rpush(job_key("import_data_progress_ids"), record_id)
                             redis_connector.rpush(
                                 job_key("import_data_progress_details_tr"), "cron.tasks.run_data_import.file"
@@ -2312,6 +2095,7 @@ def run_data_import(job_id, user_id, lock_token):
                 if not failed and not stopped and pending_soubor_fedora_deletes:
                     try:
                         for entry in pending_soubor_fedora_deletes:
+                            refresh_import_lock()
                             soubor = entry["soubor"]
                             navazany_objekt = entry["navazany_objekt"]
                             delete_fedora_transaction = FedoraDeletionOnlyTransaction()
@@ -2334,6 +2118,8 @@ def run_data_import(job_id, user_id, lock_token):
                                 FedoraRepositoryConnector(
                                     navazany_objekt, delete_fedora_transaction
                                 ).delete_binary_file(soubor)
+                    except ImportLockLostError:
+                        raise
                     except Exception as err:
                         logger.error(
                             "cron.tasks.run_data_import.soubor_delete.error",
@@ -2347,6 +2133,47 @@ def run_data_import(job_id, user_id, lock_token):
                             translation_value("cron.tasks.run_data_import.failed_during_data_import"),
                         )
                         redis_connector.set(job_key("import_data_stop"), 1)
+                if not failed and not stopped:
+                    fedora_target_items = list(fedora_update_targets_dict)
+                    fedora_target_results = [
+                        {
+                            "ident_cely": fedora_target_identity(item),
+                            "transaction_uid": None,
+                            "record_ids": sorted(fedora_update_targets_record_ids_dict.get(item, set())),
+                            "result": translation_value("cron.tasks.run_data_import.fedora_target_unattempted"),
+                        }
+                        for item in fedora_target_items
+                    ]
+                    redis_connector.set(job_key("import_fedora_target_results_tr"), json.dumps(fedora_target_results))
+                    # Fail closed before the data transaction commits. Once the commit succeeds, a
+                    # hard worker exit can no longer leave committed database changes without the
+                    # complete actionable Fedora plan already present in the durable XLSX report.
+                    if save_import_report_to_disk(job_id, redis_connector, reports_directory_path) is None:
+                        transaction.set_rollback(True)
+                        data_rolled_back = True
+                        failed = True
+                        redis_connector.set(
+                            job_key("import_data_status_message_tr"),
+                            translation_value("cron.tasks.run_data_import.failed_during_data_import"),
+                        )
+                        redis_connector.set(job_key("import_data_stop"), 1)
+                        logger.error(
+                            "cron.tasks.run_data_import.fedora_plan_report_save_failed", extra={"job_id": job_id}
+                        )
+                if not failed and not stopped:
+                    # Recheck before committing a batch whose last work unit may have taken a long time.
+                    refresh_import_lock()
+                    # A stop can arrive while the final work unit or its durable report is being
+                    # written.  It must still abort this open data transaction rather than leave
+                    # the batch committed and only halt the later phases.
+                    stopped = redis_connector.get(job_key("import_data_stop")) is not None
+                    if stopped:
+                        transaction.set_rollback(True)
+                        data_rolled_back = True
+                        redis_connector.set(
+                            job_key("import_data_status_message_tr"),
+                            translation_value("cron.tasks.run_data_import.stopped_by_user"),
+                        )
                 if failed or stopped:
                     # Nothing from this batch will persist — do not leave the queued Fedora
                     # transactions open.
@@ -2382,6 +2209,9 @@ def run_data_import(job_id, user_id, lock_token):
             failed = True
             fedora_update_targets_dict = {}
             updated_history_dict = defaultdict(lambda: {"files": set(), "record_ids": set()})
+            fedora_target_items = []
+            fedora_target_results = []
+            redis_connector.set(job_key("import_fedora_target_results_tr"), json.dumps(fedora_target_results))
             pending_fedora_update.clear()
             pending_history_update.clear()
 
@@ -2436,7 +2266,13 @@ def run_data_import(job_id, user_id, lock_token):
                 )
             if failed or stopped:
                 break
-            refresh_import_lock()
+            try:
+                refresh_import_lock()
+            except ImportLockLostError:
+                redis_connector.set(
+                    job_key("import_data_history_record_result_tr"), json.dumps(import_history_record_result)
+                )
+                raise
             if not failed and not stopped:
                 redis_connector.set(
                     job_key("import_data_status_message_tr"),
@@ -2508,14 +2344,13 @@ def run_data_import(job_id, user_id, lock_token):
                 job_key("import_data_status_message_tr"),
                 translation_value("cron.tasks.run_data_import.updating_fedora_records"),
             )
-        if reports_directory_path:
-            save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
-
         fedora_total = len(fedora_update_targets_dict)
         redis_connector.set(job_key("import_data_fedora_total"), fedora_total, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
         redis_connector.set(job_key("import_data_fedora_progress"), 0, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
         fedora_skipped_id = FEDORA_SKIPPED_ID
         fedora_waiting_data_import_id = "cron.tasks.run_data_import.fedora_waiting_data_import"
+        if reports_directory_path:
+            save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
         if not failed and not stopped:
             fedora_pending_record_ids = set()
             for affected_ids in fedora_update_targets_record_ids_dict.values():
@@ -2529,7 +2364,7 @@ def run_data_import(job_id, user_id, lock_token):
                     else:
                         import_fedora_result[record_id] = [fedora_skipped_id]
             redis_connector.set(job_key("import_fedora_result_tr"), json.dumps(import_fedora_result))
-            for fedora_index, item in enumerate(fedora_update_targets_dict):
+            for fedora_index, item in enumerate(fedora_target_items):
                 # Honor a stop that first arrives during the Fedora phase. Each Fedora
                 # update is its own committed transaction, so this only halts further work — it does
                 # not (and cannot) roll back the updates already committed.
@@ -2541,7 +2376,17 @@ def run_data_import(job_id, user_id, lock_token):
                     )
                 if failed or stopped:
                     break
-                refresh_import_lock()
+                try:
+                    refresh_import_lock()
+                except ImportLockLostError:
+                    redis_connector.set(
+                        job_key(f"import_fedora_result{TRANSLATABLE_KEY_SUFFIX}"), json.dumps(import_fedora_result)
+                    )
+                    redis_connector.set(
+                        job_key(f"import_fedora_target_results{TRANSLATABLE_KEY_SUFFIX}"),
+                        json.dumps(fedora_target_results),
+                    )
+                    raise
                 if not failed and not stopped:
                     redis_connector.set(
                         job_key("import_data_status_message_tr"),
@@ -2553,6 +2398,7 @@ def run_data_import(job_id, user_id, lock_token):
                     )
                 affected_record_ids = fedora_update_targets_record_ids_dict.get(item, set())
                 record = None
+                fedora_transaction = None
                 try:
                     if isinstance(item, tuple) and len(item) == 2:
                         item_class, item_pk = item
@@ -2562,9 +2408,10 @@ def run_data_import(job_id, user_id, lock_token):
                     fedora_transaction = FedoraTransaction(transaction_user=transaction_user)
                     record.save_metadata(fedora_transaction)
                     fedora_transaction.mark_transaction_as_closed()
-                    fedora_target_results.append(
+                    fedora_target_results[fedora_index].update(
                         {
-                            "ident_cely": getattr(record, "ident_cely", None),
+                            "ident_cely": getattr(record, "ident_cely", None)
+                            or fedora_target_results[fedora_index]["ident_cely"],
                             "transaction_uid": fedora_transaction.uid,
                             "result": translation_value("cron.tasks.run_data_import.fedora_target_success"),
                         }
@@ -2587,6 +2434,14 @@ def run_data_import(job_id, user_id, lock_token):
                             job_key("import_fedora_target_results_tr"), json.dumps(fedora_target_results)
                         )
                 except Exception as err:
+                    if fedora_transaction is not None:
+                        try:
+                            fedora_transaction.rollback_transaction()
+                        except Exception as rollback_err:
+                            logger.error(
+                                "cron.tasks.run_data_import.fedora_rollback.error",
+                                extra={"job_id": job_id, "error": rollback_err},
+                            )
                     fedora_error_stack = traceback.format_exc()
                     logger.error(
                         "cron.tasks.run_data_import.fedora.error",
@@ -2607,11 +2462,11 @@ def run_data_import(job_id, user_id, lock_token):
                     redis_connector.set(job_key("import_fedora_result_tr"), json.dumps(import_fedora_result))
                     # record may be unset (the exception can occur before it's assigned above), and its
                     # ident_cely may be missing even when set — fall back to the raw target key.
-                    fedora_target_results.append(
+                    fedora_target_results[fedora_index].update(
                         {
                             "ident_cely": getattr(record, "ident_cely", None)
-                            or (item if isinstance(item, str) else None),
-                            "transaction_uid": None,
+                            or fedora_target_results[fedora_index]["ident_cely"],
+                            "transaction_uid": getattr(fedora_transaction, "uid", None),
                             "result": translation_value("cron.tasks.run_data_import.fedora_target_error"),
                         }
                     )
@@ -2652,18 +2507,17 @@ def run_data_import(job_id, user_id, lock_token):
         if reports_directory_path:
             save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
 
-        import_results_files = []
-        # Distributions and paradata need the binary phase for every action, including DELETE —
-        # unlike soubory, where the delete happens in the data phase (#3527).
-        import_binary_phase_needed = bool(import_distributions_list or import_paradata_list) or (
-            bool(import_files_list)
+        skipped_files: list = []
+        if (
+            not failed
+            and not stopped
+            and import_files_list
             and performed_action
             in (
                 ImportDataAdminForm.PERFORMED_ACTION_INSERT,
                 ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
             )
-        )
-        if not failed and not stopped and import_binary_phase_needed:
+        ):
             refresh_import_lock()
             redis_connector.set(
                 job_key("import_data_status_message_tr"),
@@ -2692,6 +2546,7 @@ def run_data_import(job_id, user_id, lock_token):
                 fedora_transaction = None
                 filename = None
                 record_id = None
+                related_metadata_log_context = {}
                 try:
                     redis_connector.set(
                         job_key("import_data_status_message_tr"),
@@ -2699,11 +2554,50 @@ def run_data_import(job_id, user_id, lock_token):
                     )
                     redis_connector.set(
                         job_key("import_data_files_total"),
-                        len(import_files_list) + len(import_distributions_list) + len(import_paradata_list),
+                        len(import_files_list),
                         ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
                     )
                     redis_connector.set(job_key("import_data_files_progress"), 0, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
                     pending_related_metadata: dict = {}
+
+                    def skip_file(skipped_ident_cely, skipped_filename, reason_tr, skipped_index):
+                        """Zapíše přeskočený soubor do reportu a posune ukazatel průběhu.
+
+                        Přeskočení se týká pouze deterministických podmínek vázaných na jeden řádek
+                        (konflikt názvu, chybějící binární soubor). Zbytek importu pokračuje dál.
+
+                        :param skipped_ident_cely: Identifikátor navázaného záznamu.
+                        :param skipped_filename: Název přeskočeného souboru.
+                        :param reason_tr: Překladové ID důvodu přeskočení.
+                        :param skipped_index: Pořadí souboru v ``import_files_list``.
+                        """
+                        skipped_files.append(skipped_filename)
+                        redis_connector.rpush(
+                            job_key("import_data_files"),
+                            json.dumps(
+                                {
+                                    "ident_cely": skipped_ident_cely,
+                                    "file_name": skipped_filename,
+                                    "size_mb": None,
+                                    "additional_info_tr": reason_tr,
+                                }
+                            ),
+                        )
+                        redis_connector.set(
+                            job_key("import_data_files_progress"),
+                            skipped_index + 1,
+                            ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+                        )
+                        logger.info(
+                            "cron.tasks.run_data_import.files.skipped",
+                            extra={
+                                "job_id": job_id,
+                                "ident_cely": skipped_ident_cely,
+                                "import_filename": skipped_filename,
+                                "reason": reason_tr,
+                            },
+                        )
+
                     for file_index, soubor in enumerate(import_files_list):
                         fedora_transaction = None
                         record_id = None
@@ -2729,60 +2623,20 @@ def run_data_import(job_id, user_id, lock_token):
                         name_conflict_query = Soubor.objects.filter(nazev=filename, vazba=soubor.vazba)
                         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
                             if name_conflict_query.exists():
-                                import_results_files.append(
-                                    {
-                                        "ident_cely": ident_cely,
-                                        "file_name": filename,
-                                        "size_mb": None,
-                                        "additional_info_tr": "cron.tasks.run_data_import.already_exists",
-                                    }
-                                )
-                                redis_connector.set(job_key("import_data_files"), json.dumps(import_results_files))
-                                failed = True
-                                stopped = True
-                                redis_connector.set(job_key("import_data_stop"), 1)
-                                redis_connector.set(
-                                    job_key("import_data_status_message_tr"),
-                                    translation_value("cron.tasks.run_data_import.failed_during_data_import"),
-                                )
-                                break
+                                skip_file(ident_cely, filename, "cron.tasks.run_data_import.already_exists", file_index)
+                                continue
                         elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
                             if name_conflict_query.exclude(pk=soubor.pk).exists():
-                                import_results_files.append(
-                                    {
-                                        "ident_cely": ident_cely,
-                                        "file_name": filename,
-                                        "size_mb": None,
-                                        "additional_info_tr": "cron.tasks.run_data_import.already_exists",
-                                    }
-                                )
-                                redis_connector.set(job_key("import_data_files"), json.dumps(import_results_files))
-                                failed = True
-                                stopped = True
-                                redis_connector.set(job_key("import_data_stop"), 1)
-                                redis_connector.set(
-                                    job_key("import_data_status_message_tr"),
-                                    translation_value("cron.tasks.run_data_import.failed_during_data_import"),
-                                )
-                                break
+                                skip_file(ident_cely, filename, "cron.tasks.run_data_import.already_exists", file_index)
+                                continue
                         if not os.path.isfile(file_path):
-                            import_results_files.append(
-                                {
-                                    "ident_cely": ident_cely,
-                                    "file_name": filename,
-                                    "size_mb": None,
-                                    "additional_info_tr": "cron.tasks.run_data_import.file_not_found_in_directory",
-                                }
+                            skip_file(
+                                ident_cely,
+                                filename,
+                                "cron.tasks.run_data_import.file_not_found_in_directory",
+                                file_index,
                             )
-                            redis_connector.set(job_key("import_data_files"), json.dumps(import_results_files))
-                            failed = True
-                            stopped = True
-                            redis_connector.set(job_key("import_data_stop"), 1)
-                            redis_connector.set(
-                                job_key("import_data_status_message_tr"),
-                                translation_value("cron.tasks.run_data_import.cannot_read_from_directory"),
-                            )
-                            break
+                            continue
                         record_id = getattr(soubor, "import_record_id", None)
                         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
                             soubor = name_conflict_query.first() or soubor
@@ -2824,6 +2678,14 @@ def run_data_import(job_id, user_id, lock_token):
                                 filename, mimetype, bio, soubor.repository_uuid, save_thumbs=True
                             )
 
+                        # Commit Fedora before touching the DB: a failed commit here leaves nothing
+                        # to roll back (no DB write happened yet), while committing first and saving
+                        # second means a later DB failure only leaves an orphaned Fedora binary that
+                        # no DB row points to — harmless and acceptable, unlike a DB row pointing at
+                        # content Fedora never actually committed. Not deleting it back out avoids a
+                        # second fallible operation on top of the one that already failed.
+                        fedora_transaction.mark_transaction_as_closed()
+
                         soubor.mimetype = mimetype
                         soubor.size_mb = rep_bin_file.size_mb
                         soubor.sha_512 = rep_bin_file.sha_512
@@ -2833,9 +2695,6 @@ def run_data_import(job_id, user_id, lock_token):
                         soubor.save()
                         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
                             soubor.create_soubor_vazby()
-                        # Až tady má soubor vazbu na historii — u INSERTu vzniká řádek i vazba
-                        # teprve po zápisu do Fedory, takže náhledy se do historie doplňují zde.
-                        soubor.zaznamenej_distribuce(rep_bin_file.thumb_writes, transaction_user)
                         history_record = Historie(
                             typ_zmeny=IMPORT,
                             uzivatel=transaction_user,
@@ -2877,7 +2736,6 @@ def run_data_import(job_id, user_id, lock_token):
                         )
                         soubor.active_transaction = fedora_transaction
                         soubor.save()
-                        fedora_transaction.mark_transaction_as_closed()
                         navazany = soubor.vazba.navazany_objekt
                         nav_key = (navazany.__class__, navazany.pk)
                         if nav_key not in pending_related_metadata:
@@ -2887,17 +2745,19 @@ def run_data_import(job_id, user_id, lock_token):
                             }
                         if record_id is not None:
                             pending_related_metadata[nav_key]["record_ids"].add(record_id)
-                        import_results_files.append(
-                            {
-                                "ident_cely": ident_cely,
-                                "file_name": filename,
-                                "size_mb": round(rep_bin_file.size_mb, 3),
-                                "additional_info_tr": translation_value(
-                                    "cron.tasks.run_data_import.file_mime_type", raw=True, message=mimetype
-                                ),
-                            }
+                        redis_connector.rpush(
+                            job_key("import_data_files"),
+                            json.dumps(
+                                {
+                                    "ident_cely": ident_cely,
+                                    "file_name": filename,
+                                    "size_mb": round(rep_bin_file.size_mb, 3),
+                                    "additional_info_tr": translation_value(
+                                        "cron.tasks.run_data_import.file_mime_type", raw=True, message=mimetype
+                                    ),
+                                }
+                            ),
                         )
-                        redis_connector.set(job_key("import_data_files"), json.dumps(import_results_files))
                         redis_connector.set(
                             job_key("import_data_files_progress"),
                             file_index + 1,
@@ -2905,7 +2765,13 @@ def run_data_import(job_id, user_id, lock_token):
                         )
                     if not failed and not stopped:
                         record_id = None
+                        filename = None
                         for (obj_class, obj_pk), entry in pending_related_metadata.items():
+                            related_metadata_log_context = {
+                                "related_metadata_model": obj_class._meta.label,
+                                "related_metadata_pk": obj_pk,
+                                "related_metadata_ident_cely": entry["ident_cely"],
+                            }
                             fedora_transaction = None
                             refresh_import_lock()
                             fedora_transaction = FedoraTransaction()
@@ -2931,14 +2797,18 @@ def run_data_import(job_id, user_id, lock_token):
                                     )
                                 )
                             redis_connector.set(job_key("import_fedora_result_tr"), json.dumps(import_fedora_result))
-                    if not failed and not stopped and (import_distributions_list or import_paradata_list):
-                        import_distributions_and_paradata()
                 except SouborMissingRepositoryUuidError as err:
                     if fedora_transaction is not None:
                         fedora_transaction.rollback_transaction()
                     logger.error(
                         "cron.tasks.run_data_import.files.missing_repository_uuid",
-                        extra={"error": err, "job_id": job_id, "import_filename": filename, "soubor_pk": err.soubor_pk},
+                        extra={
+                            "error": err,
+                            "job_id": job_id,
+                            "import_filename": filename,
+                            "soubor_pk": err.soubor_pk,
+                            **related_metadata_log_context,
+                        },
                     )
                     if record_id is not None:
                         import_fedora_result[record_id] = [
@@ -2960,6 +2830,7 @@ def run_data_import(job_id, user_id, lock_token):
                             "error": err,
                             "job_id": job_id,
                             "import_filename": filename,
+                            **related_metadata_log_context,
                             "detected_mime": err.mime_type,
                         },
                     )
@@ -2983,6 +2854,7 @@ def run_data_import(job_id, user_id, lock_token):
                             "error": err,
                             "job_id": job_id,
                             "import_filename": filename,
+                            **related_metadata_log_context,
                             "detected_mime": err.mime_type,
                         },
                     )
@@ -3006,6 +2878,7 @@ def run_data_import(job_id, user_id, lock_token):
                             "error": err,
                             "job_id": job_id,
                             "import_filename": filename,
+                            **related_metadata_log_context,
                             "detected_mime": err.mime_type,
                             "navazany_ident_cely": err.navazany_ident_cely,
                         },
@@ -3032,6 +2905,7 @@ def run_data_import(job_id, user_id, lock_token):
                             "job_id": job_id,
                             "import_filename": filename,
                             "traceback": fedora_error_stack,
+                            **related_metadata_log_context,
                         },
                     )
                     fedora_error_result = translation_value(
@@ -3048,13 +2922,23 @@ def run_data_import(job_id, user_id, lock_token):
                         translation_value("cron.tasks.run_data_import.failed_during_fedora"),
                     )
                     failed = True
+                except ImportLockLostError:
+                    if fedora_transaction is not None:
+                        fedora_transaction.rollback_transaction()
+                    raise
                 except Exception as err:
                     if fedora_transaction is not None:
                         fedora_transaction.rollback_transaction()
                     error_stack = traceback.format_exc()
                     logger.error(
                         "cron.tasks.run_data_import.directory_error",
-                        extra={"error": err, "job_id": job_id, "import_filename": filename, "traceback": error_stack},
+                        extra={
+                            "error": err,
+                            "job_id": job_id,
+                            "import_filename": filename,
+                            "traceback": error_stack,
+                            **related_metadata_log_context,
+                        },
                     )
                     error_result = translation_value(
                         "cron.tasks.run_data_import.cannot_read_from_directory",
@@ -3087,7 +2971,13 @@ def run_data_import(job_id, user_id, lock_token):
             )
             redis_connector.set(
                 job_key("import_data_status_message_tr"),
-                translation_value("cron.tasks.run_data_import.finished"),
+                (
+                    translation_value("cron.tasks.run_data_import.finished")
+                    if not skipped_files
+                    else translation_value(
+                        "cron.tasks.run_data_import.finished_with_skipped_files", skipped=len(skipped_files)
+                    )
+                ),
             )
         if reports_directory_path:
             save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
@@ -3113,9 +3003,10 @@ def run_data_import(job_id, user_id, lock_token):
     finally:
         LookupImportField.clear_cache()
         LookupImportField.clear_records()
-        # record_count je 0 i tehdy, když se čítač nepodařilo přečíst — helper v tom případě
-        # klíče záznamů dohledá scanem, aby po validaci nezůstaly bez TTL napořád.
-        expire_import_job_keys(redis_connector, job_id, IMPORT_DATA_EXPIRATION_SECONDS, record_count=record_count)
+        for suffix in IMPORT_DATA_JOB_KEY_SUFFIXES:
+            redis_connector.expire(job_key(suffix), IMPORT_DATA_EXPIRATION_SECONDS)
+        for record_id in range(record_count):
+            redis_connector.expire(record_key(record_id), IMPORT_DATA_EXPIRATION_SECONDS)
         # Set the terminal phase matching the outcome, clear the per-user in-flight pointer, and
         # defensively delete any staged ZIP chunk keys the validation task should already have
         # removed.
@@ -3138,17 +3029,14 @@ def run_data_import(job_id, user_id, lock_token):
         if job_user is not None:
             if isinstance(job_user, bytes):
                 job_user = job_user.decode("utf-8")
-            # Compare-then-delete: a replacement job may already own this pointer (r3703505227).
+            # Compare-then-delete: a replacement job may already own this pointer.
             RedisConnector.delete_if_value_matches(
                 redis_connector, "import_data_current_job_{}".format(job_user), job_id
             )
         RedisConnector.delete_if_value_matches(redis_connector, RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, job_id)
         leftover_chunks_raw = redis_connector.get(job_key("import_data_file_chunks"))
         if leftover_chunks_raw:
-            try:
-                leftover_count = int(leftover_chunks_raw)
-            except (TypeError, ValueError):
-                leftover_count = 0
+            leftover_count = int(leftover_chunks_raw)
             stray_keys = ["import_data_file_{}_{}".format(job_id, i) for i in range(leftover_count)]
             stray_keys.append(job_key("import_data_file_chunks"))
             redis_connector.delete(*stray_keys)

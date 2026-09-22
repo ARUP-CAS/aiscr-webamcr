@@ -166,3 +166,17 @@ class UzivatelNotifikaceMapperValidationTest(TestCase):
 
         with self.assertRaises(ImportDataError):
             mapper.create_records("replace")
+
+    def test_create_records_rejects_nonexistent_user(self):
+        """INSERT s neexistujícím uživatelem vyvolá ImportDataIntegrityError pro daný řádek."""
+        missing_user = "U-NOT-MISSING"
+        mapper = UzivatelNotifikaceMapper({"uzivatel": missing_user, "notifikace": self.notification_type.ident_cely})
+
+        with self.assertRaises(ImportDataIntegrityError) as context:
+            mapper.create_records(INSERT)
+
+        self.assertEqual(
+            context.exception.record_id,
+            {"uzivatel": missing_user, "notifikace": self.notification_type.ident_cely},
+        )
+        self.assertEqual(context.exception.model_name, "User.notification_types")

@@ -13,7 +13,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from core.forms import ImportDataAdminForm
-from core.import_data_mappers import ProjektMapper
+from core.import_data_mappers import ImportDataError, ProjektMapper
 from django.contrib.gis.geos import GEOSGeometry
 from django.test import TestCase
 from dokument.models import DokumentExtraData
@@ -42,6 +42,41 @@ class GeometryTransformMixinStringComparisonTest(TestCase):
             ProjektMapper.transform_geometries(None, mapping, INSERT)
         mock_transform.assert_called_once_with(WKT_WGS84)
         self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
+
+    def test_whitespace_around_4326_triggers_sjtsk_transform(self):
+        """SRID s okolními mezerami se normalizuje před transformací WGS84→SJTSK."""
+        mapping = _mapping(" 4326 ", geom=WKT_WGS84)
+        with patch(
+            "core.import_data_mappers.transform_geom_to_sjtsk", return_value=(WKT_SJTSK, "OK")
+        ) as mock_transform:
+            ProjektMapper.transform_geometries(None, mapping, INSERT)
+        mock_transform.assert_called_once_with(WKT_WGS84)
+        self.assertEqual(mapping["geom_system"], "4326")
+        self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
+
+    def test_update_none_geom_system_falls_back_without_persisting_blank_value(self):
+        """Hodnota ``None`` se chová jako chybějící údaj a do modelu se nepřenese."""
+        mapping = {"geom_system": None, "geom": WKT_WGS84}
+        mapper = _fake_mapper(SimpleNamespace(geom_system="4326", geom=None, geom_sjtsk=None))
+        with patch(
+            "core.import_data_mappers.transform_geom_to_sjtsk", return_value=(WKT_SJTSK, "OK")
+        ) as mock_transform:
+            ProjektMapper.transform_geometries(mapper, mapping, UPDATE)
+        mock_transform.assert_called_once_with(WKT_WGS84)
+        self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
+        self.assertNotIn("geom_system", mapping)
+
+    def test_update_whitespace_geom_system_falls_back_without_persisting_blank_value(self):
+        """Řetězec tvořený mezerami se chová jako chybějící údaj a do modelu se nepřenese."""
+        mapping = {"geom_system": "   ", "geom": WKT_WGS84}
+        mapper = _fake_mapper(SimpleNamespace(geom_system="4326", geom=None, geom_sjtsk=None))
+        with patch(
+            "core.import_data_mappers.transform_geom_to_sjtsk", return_value=(WKT_SJTSK, "OK")
+        ) as mock_transform:
+            ProjektMapper.transform_geometries(mapper, mapping, UPDATE)
+        mock_transform.assert_called_once_with(WKT_WGS84)
+        self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
+        self.assertNotIn("geom_system", mapping)
 
     def test_empty_geom_with_4326_does_not_trigger_transform(self):
         """geom_system='4326' ale geom=None nespustí transformaci."""
@@ -100,19 +135,19 @@ class GeometryTransformMixinTupleUnpackTest(TestCase):
         self.assertEqual(mapping["geom"], WKT_WGS84)
         self.assertNotIsInstance(mapping["geom"], tuple)
 
-    def test_failed_transform_does_not_overwrite_geom_sjtsk(self):
-        """Pokud transformace selže (status != 'OK'), geom_sjtsk se nepřepíše."""
+    def test_failed_transform_raises_import_error_for_sjtsk(self):
+        """Neúspěšná transformace při INSERTu označí řádek importu jako chybný."""
         mapping = _mapping("4326", geom=WKT_WGS84, geom_sjtsk="original")
         with patch("core.import_data_mappers.transform_geom_to_sjtsk", return_value=("", "parse error")):
-            ProjektMapper.transform_geometries(None, mapping, INSERT)
-        self.assertEqual(mapping["geom_sjtsk"], "original")
+            with self.assertRaisesMessage(ImportDataError, "Transformace geometrie do S-JTSK selhala: parse error"):
+                ProjektMapper.transform_geometries(None, mapping, INSERT)
 
-    def test_failed_transform_does_not_overwrite_geom(self):
-        """Pokud transformace selže (status != 'OK'), geom se nepřepíše."""
+    def test_failed_transform_raises_import_error_for_wgs84(self):
+        """Neúspěšná transformace při INSERTu označí řádek importu jako chybný."""
         mapping = _mapping("5514", geom="original", geom_sjtsk=WKT_SJTSK)
         with patch("core.import_data_mappers.transform_geom_to_wgs84", return_value=("", "Not strig")):
-            ProjektMapper.transform_geometries(None, mapping, INSERT)
-        self.assertEqual(mapping["geom"], "original")
+            with self.assertRaisesMessage(ImportDataError, "Transformace geometrie do WGS84 selhala: Not strig"):
+                ProjektMapper.transform_geometries(None, mapping, INSERT)
 
 
 class GeometryTransformMixinGEOSGeometryInputTest(TestCase):
@@ -251,10 +286,11 @@ class GeometryTransformMixinUpdateTest(TestCase):
             ProjektMapper.transform_geometries(mapper, mapping, UPDATE)
         mock_transform.assert_called_once_with(WKT_WGS84)
         self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
+        self.assertNotIn("geom_system", mapping)
 
     def test_update_missing_record_uses_target_model_default_geom_system(self):
         """Bez existujícího řádku (např. Dokument bez DokumentExtraData) se použije výchozí
-        ``geom_system`` cílového modelu, aby se odvozená geometrie dopočítala (r3703505252)."""
+        ``geom_system`` cílového modelu, aby se odvozená geometrie dopočítala."""
         mapping = {"geom": WKT_WGS84}
         mapper = _fake_mapper(None, target_model=DokumentExtraData)
         with patch(
@@ -263,3 +299,23 @@ class GeometryTransformMixinUpdateTest(TestCase):
             ProjektMapper.transform_geometries(mapper, mapping, UPDATE)
         mock_transform.assert_called_once_with(WKT_WGS84)
         self.assertEqual(mapping["geom_sjtsk"], WKT_SJTSK)
+
+    def test_update_full_export_blank_geometry_columns_preserves_db_geometry(self):
+        """Full-export CSV UPDATE s prázdnými geom/geom_sjtsk/geom_system buňkami
+        (řádek mění jen jiné pole, např. licenci) nesmí smazat existující geometrii záznamu — blank
+        buňky ve všech třech geometrických sloupcích znamenají "netýká se", ne "vymaž"."""
+        mapping = {"geom": None, "geom_sjtsk": "", "geom_system": None, "licence": "nova-licence"}
+        mapper = _fake_mapper(SimpleNamespace(geom_system="4326", geom=WKT_WGS84, geom_sjtsk=WKT_SJTSK))
+        with patch("core.import_data_mappers.transform_geom_to_sjtsk") as mock_sjtsk, patch(
+            "core.import_data_mappers.transform_geom_to_wgs84"
+        ) as mock_wgs84:
+            result = ProjektMapper.transform_geometries(mapper, mapping, UPDATE)
+        mock_sjtsk.assert_not_called()
+        mock_wgs84.assert_not_called()
+        self.assertNotIn("geom", result)
+        self.assertNotIn("geom_sjtsk", result)
+        self.assertNotIn("geom_system", result)
+        self.assertEqual(result["licence"], "nova-licence")
+        # Explicit clearing (geom_system supplied, geom blank) must still work — see
+        # test_update_clearing_geom_clears_geom_sjtsk; the fix above only changes rows that don't
+        # touch geometry at all (blank geom_system).

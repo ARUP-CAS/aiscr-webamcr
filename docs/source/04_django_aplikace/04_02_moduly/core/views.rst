@@ -858,6 +858,8 @@ Třídy
       povolen pro libovolnou ne-terminální fázi (``validating``/``importing``/``awaiting_approval``)
       a smí ho provést kterýkoli superuživatel — dead-worker úlohu typicky nemůže uvolnit
       její vlastník. Vlastní úklid a token-checked uvolnění locku provádí ``tasks.reset_import_job``.
+      Aktivní validaci/import odmítne, pokud worker provedl checkpoint v posledních pěti minutách.
+      Ani starší checkpoint nenahrazuje ruční ověření, že worker skutečně skončil.
 
       :param request: HTTP požadavek přihlášeného superuživatele.
       :param kwargs: Volitelně ``job_id`` identifikující importní úlohu.
@@ -927,19 +929,6 @@ Funkce
    :param ident_cely: Identifikátor záznamu, u kterého se soubor přejmenovává.
    :param pk: Primární klíč přejmenovávaného souboru.
    :return: Vrací modal (GET) nebo ``JsonResponse`` s přesměrováním či chybou (POST).
-
-.. py:function:: get_finds_soubor_name(find, filename, add_to_index)
-
-   Funkce pro získaní jména souboru pro samostatný nález.
-
-   Název se přiděluje navýšením podle nejvyššího obsazeného suffixu (``F01`` … ``F99``). Toto výchozí
-   chování se záměrně nemění – uvolnění či změnu pozice řeší přejmenování souboru.
-
-   :param find: Textový název, klíč nebo výraz ``find`` používaný v rámci operace.
-   :param filename: Parametr ``filename`` se předává do volání ``splitext()``, ``warning()``, vstupuje do návratové hodnoty.
-   :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
-
-   :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.
 
 .. py:function:: get_projekt_soubor_name(projekt, file_name)
 
@@ -1047,18 +1036,27 @@ Funkce
    :param redis_connector: Dekódující Redis spojení.
    :return: ``True`` pokud je uživatel vlastníkem úlohy; jinak ``False``.
 
-.. py:function:: _translate_status_value(raw)
+.. py:function:: _cursor_param(request, name)
 
-   Přeloží hodnotu načtenou z Redis (ID nebo obálka ``{id, params}``).
+   Vrátí nezápornou celočíselnou hodnotu kurzoru z query parametrů.
 
-   Standardizační pravidlo: worker ukládá do Redis pouze překladová ID (případně obálku
-   ``{"id": <id>, "params": {...}}`` pro parametrizované zprávy), nikoli přeložené texty. Tento
-   helper překlad provádí v locale přihlášeného admina až na straně čtenáře.
+   :param request: HTTP požadavek s query parametry průběžného načítání.
+   :param name: Název parametru kurzoru.
+   :return: Hodnota kurzoru; při chybějící, neplatné nebo záporné hodnotě vrací ``0``.
 
-   :param raw: Hodnota z Redis — ``None``, plain ID (str), nebo JSON obálka (str) s ``id`` a
-       ``params``. Zpětně kompatibilní: pokud hodnota není obálka, přeloží se jako ID; pokud
-       překlad chybí, ``_()`` vrátí ID doslova.
-   :return: Přeložený řetězec, nebo ``None`` pokud je vstup ``None``.
+.. py:function:: _memoized_translator()
+
+   Vrátí ``translate_status_value`` s pamětí výsledků v rámci jednoho požadavku.
+
+   Historie a Fedora výsledky se v Redis přepisují jako celé slovníky (hodnota záznamu se může
+   dodatečně změnit), takže je nelze krájet kurzorem jako append-only kanály. Počet *různých*
+   hodnot je ale malý (``success``, chybová hláška, MIME typ …), zatímco počet položek roste s
+   během — memoizace proto sníží počet skutečných překladů z O(n) na počet unikátních hodnot.
+
+   Paměť žije pouze v rámci jednoho požadavku, takže se nemůže přenést locale jednoho admina
+   do odpovědi jiného.
+
+   :return: Funkce ``(raw) -> přeložená hodnota`` se sdílenou pamětí výsledků.
 
 .. py:function:: _status_message_id(raw)
 
@@ -1069,3 +1067,14 @@ Funkce
 
    :param raw: Hodnota z Redis (ID nebo obálka ``{id, params}``).
    :return: ID překladového řetězce, nebo ``None``.
+
+.. py:function:: _expire_import_data_keys(redis_connector, job_id, ttl_seconds)
+
+   Nastaví expiraci všem per-job datovým klíčům importní úlohy na ``ttl_seconds``.
+
+   Klíče se pouze expirují, nikdy nemažou — report musí zůstat stažitelný po dobu retence.
+   Seznam suffixů sdílí jediný zdroj pravdy s ``cron.tasks`` (``IMPORT_DATA_JOB_KEY_SUFFIXES``).
+
+   :param redis_connector: Dekódující Redis spojení.
+   :param job_id: Identifikátor importní úlohy.
+   :param ttl_seconds: Doba retence v sekundách.

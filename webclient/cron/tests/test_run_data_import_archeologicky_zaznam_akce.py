@@ -143,7 +143,7 @@ class RunDataImportArcheologickyZaznamAkceTest(TestCase):
             "cron.tasks.check_import_report_directory",
             return_value=("/tmp/fake-import-dir", "/tmp/fake-import-dir/reports", None),
         ), patch(
-            "cron.tasks.save_import_report_to_disk", return_value=None
+            "cron.tasks.save_import_report_to_disk", return_value="/tmp/fake-import-dir/reports/report.xlsx"
         ):
             fedora_transaction_mock.return_value = MagicMock(uid="test-fedora-uid", updated_ident_cely=set())
             fedora_deletion_mock.return_value = MagicMock(uid="test-fedora-deletion-uid", updated_ident_cely=set())

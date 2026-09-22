@@ -47,18 +47,6 @@ class DJNemaPianError(Exception):
         super().__init__(self.dj)
 
 
-class NelzeZjistitRaduError(Exception):
-    """Implementuje komponentu ``NelzeZjistitRaduError`` v rámci aplikace."""
-
-    def __init__(self, message="Nelze zjistit radu dokumentu"):
-        """
-        Inicializuje výjimku pro případ, kdy nelze určit řadu dokumentu.
-
-        :param message: Textová zpráva popisující důvod výjimky.
-        """
-        self.message = message
-
-
 class NeocekavanaRadaError(Exception):
     """Implementuje komponentu ``NeocekavanaRadaError`` v rámci aplikace."""
 

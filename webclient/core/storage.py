@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import unquote, urlsplit
 
 from django.contrib.staticfiles.storage import ManifestStaticFilesStorage
 
@@ -22,6 +23,10 @@ class NonStrictManifestStaticFilesStorage(ManifestStaticFilesStorage):
         na zdrojové mapy (``.map``) chybějící v kolekci. Pro ostatní chybějící soubory
         je výjimka znovu vyhozena, aby selhání bylo viditelné při spuštění collectstatic.
 
+        Cesta se před kontrolou čistí stejně jako v Djangu (odstranění query/fragmentu
+        a okrajových mezer), protože CSS vzor ``/*# sourceMappingURL=... */`` zachytí
+        i mezeru před ``*/`` (např. dropzone 6.x).
+
         :param name: Relativní cesta k souboru.
         :param content: Obsah souboru, nebo ``None`` při vyhledávání v manifestu.
         :param filename: Název souboru pro hašování, pokud se liší od ``name``.
@@ -31,7 +36,7 @@ class NonStrictManifestStaticFilesStorage(ManifestStaticFilesStorage):
         try:
             return super().hashed_name(name, content, filename)
         except ValueError as exc:
-            target = filename or name
+            target = urlsplit(unquote(filename or name)).path.strip()
             if target.lower().endswith(".map") and not self.exists(target):
                 logger.warning(
                     "Statický soubor nenalezen při post-processingu, přeskočen: name=%s filename=%s chyba=%s",

@@ -522,6 +522,24 @@ Funkce
 
    :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
+.. py:function:: translate_status_value(raw)
+
+   Přeloží hodnotu načtenou z Redis (ID nebo obálka ``{id, params}``).
+
+   Standardizační pravidlo: worker ukládá do Redis pouze překladová ID (případně obálku
+   ``{"id": <id>, "params": {...}}`` pro parametrizované zprávy), nikoli přeložené texty. Tento
+   helper překlad provádí až na straně čtenáře — v ``core.views`` v locale přihlášeného admina,
+   v ``cron.tasks`` v jazyce aktivním při zápisu XLSX reportu.
+
+   Protipól k ``cron.tasks.translation_value``, který obálku vytváří. Bydlí v ``core.utils``,
+   protože ho potřebují oba čtenáři (``core.views`` i ``cron.tasks``) a ``cron.tasks`` (načítaný
+   při startu Celery workeru) nesmí na úrovni modulu záviset na ``core.views``.
+
+   :param raw: Hodnota z Redis — ``None``, plain ID (str/bytes), nebo JSON obálka (str/bytes)
+       s klíči ``id``, volitelně ``params`` a ``raw``. Zpětně kompatibilní: pokud hodnota není
+       obálka, přeloží se jako ID; pokud překlad chybí, ``_()`` vrátí ID doslova.
+   :return: Přeložený řetězec, nebo ``None`` pokud je vstup ``None``.
+
 .. py:function:: check_import_report_directory(check_writable)
 
    Ověří konfiguraci importního adresáře a připraví v něm podadresář pro reporty.

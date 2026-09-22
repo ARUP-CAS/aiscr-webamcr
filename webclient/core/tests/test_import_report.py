@@ -10,10 +10,14 @@ adresáře (ne DB tabulkou) — testy zde pokrývají sdílenou kontrolu adresá
 import json
 import os
 import tempfile
+from io import BytesIO
+from unittest.mock import patch
 
 import openpyxl
+from core.forms import ImportDataAdminForm
 from core.setting_models import CustomAdminSettings
 from core.tests.fake_redis import FakeRedis
+from core.tests.stub_user import _StubUser
 from core.utils import (
     ImportReportIndexError,
     check_import_report_directory,
@@ -21,13 +25,15 @@ from core.utils import (
     read_import_report_index,
     upsert_import_report_index_entry,
 )
+from core.views import DataImportProgressReportView
+from cron import tasks as cron_tasks
 from cron.tasks import (
     build_import_fedora_target_dataframe,
     build_import_report_dataframe,
     get_or_create_import_report_path,
     save_import_report_to_disk,
 )
-from django.test import TestCase
+from django.test import RequestFactory, SimpleTestCase, TestCase
 
 JOB_ID = "report-test-job"
 
@@ -122,13 +128,16 @@ class CheckImportReportDirectoryTest(TestCase):
 def _populate_report_redis(fake_redis, phase="importing"):
     """Naplní ``FakeRedis`` typickými daty jedné importní úlohy pro sestavení reportu."""
     fake_redis.set("import_data_phase_{}".format(JOB_ID), phase)
-    fake_redis.set(
-        "import_data_validation_results_{}".format(JOB_ID),
+    fake_redis.rpush(
+        "import_data_validation_details_{}".format(JOB_ID),
         json.dumps(
-            [
-                {"item_order": 0, "file_name": "dokument.csv", "primary_key_import": "C-1", "validation_result": "ok"},
-                {"item_order": 1, "file_name": "dokument.csv", "primary_key_import": "C-2", "validation_result": "ok"},
-            ]
+            {"item_order": 0, "file_name": "dokument.csv", "primary_key_import": "C-1", "validation_result": "ok"}
+        ),
+    )
+    fake_redis.rpush(
+        "import_data_validation_details_{}".format(JOB_ID),
+        json.dumps(
+            {"item_order": 1, "file_name": "dokument.csv", "primary_key_import": "C-2", "validation_result": "ok"}
         ),
     )
     fake_redis.set("import_data_primary_keys_{}".format(JOB_ID), json.dumps({"0": "1", "1": "2"}))
@@ -193,6 +202,15 @@ class SaveImportReportToDiskTest(TestCase):
             self.assertTrue(first.startswith(tmp))
             self.assertIn(JOB_ID, first)
             self.assertTrue(first.endswith(".xlsx"))
+
+    def test_persisted_path_outside_reports_directory_is_rejected(self):
+        """Redisem podvržená cesta nesmí přesměrovat XLSX ani index mimo validovaný adresář reportů."""
+        fake_redis = FakeRedis(decode_responses=False)
+        with tempfile.TemporaryDirectory() as tmp:
+            reports_dir = os.path.join(tmp, "reports")
+            os.makedirs(reports_dir)
+            fake_redis.set("import_data_report_path_{}".format(JOB_ID), os.path.join(tmp, "outside.xlsx"))
+            self.assertIsNone(save_import_report_to_disk(JOB_ID, fake_redis, reports_dir))
 
     def test_save_writes_readable_xlsx_and_sets_redis_flag(self):
         """Úspěšné uložení zapíše čitelný XLSX (s listem ``Fedora``) a nastaví Redis příznak."""
@@ -259,6 +277,79 @@ class SaveImportReportToDiskTest(TestCase):
         self.assertIsNone(fake_redis.get("import_data_report_saved_path_{}".format(JOB_ID)))
 
 
+class RunDataImportReportGateTest(SimpleTestCase):
+    """Ověřuje, že první durabilní report je bránou před všemi mutacemi importu."""
+
+    LOCK_TOKEN = "report-gate-lock-token"
+    USER_ID = 42
+
+    def _run_with_report_failure(self, reports_directory, failure_patch):
+        """Spustí import s poruchou reportu a vrátí Redis i mocky všech mutačních hranic."""
+        fake_redis = FakeRedis(
+            {
+                f"import_data_phase_{JOB_ID}": cron_tasks.IMPORT_PHASE_IMPORTING,
+                f"import_data_lock_token_{JOB_ID}": self.LOCK_TOKEN,
+                f"import_data_user_{JOB_ID}": self.USER_ID,
+                f"import_data_count_{JOB_ID}": "1",
+                f"import_performed_action_{JOB_ID}": ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+                f"import_data_{JOB_ID}_record_0": json.dumps(
+                    {"__file_name": "osoba.csv", "jmeno": "Test", "prijmeni": "Report"}
+                ),
+            }
+        )
+        with patch("core.connectors.RedisConnector.get_connection", return_value=fake_redis), patch(
+            "core.connectors.RedisConnector.refresh_import_lock", return_value=True
+        ), patch(
+            "cron.tasks.check_import_report_directory",
+            return_value=(os.path.dirname(reports_directory), reports_directory, None),
+        ), failure_patch as report_failure_mock, patch(
+            "cron.tasks.User.objects.get"
+        ) as user_get_mock, patch(
+            "cron.tasks.transaction.atomic"
+        ) as atomic_mock, patch(
+            "cron.tasks.FedoraTransaction"
+        ) as fedora_transaction_mock:
+            cron_tasks.run_data_import(JOB_ID, self.USER_ID, self.LOCK_TOKEN)
+            report_failure_mock.assert_called()
+        return fake_redis, user_get_mock, atomic_mock, fedora_transaction_mock
+
+    def _assert_failed_before_mutation(self, fake_redis, user_get_mock, atomic_mock, fedora_transaction_mock):
+        """Ověří terminální selhání a absenci DB/Fedora mutačních operací."""
+        self.assertEqual(
+            fake_redis.get(f"import_data_phase_{JOB_ID}"),
+            cron_tasks.IMPORT_PHASE_FAILED.encode("utf-8"),
+        )
+        self.assertIn(
+            "failed_during_data_import",
+            fake_redis.get(f"import_data_status_message_tr_{JOB_ID}").decode("utf-8"),
+        )
+        user_get_mock.assert_not_called()
+        atomic_mock.assert_not_called()
+        fedora_transaction_mock.assert_not_called()
+
+    def test_xlsx_creation_failure_prevents_database_and_fedora_mutation(self):
+        """Chyba vytvoření XLSX ukončí task ještě před načtením uživatele a mutačními fázemi."""
+        with tempfile.TemporaryDirectory() as tmp:
+            reports_directory = os.path.join(tmp, "reports")
+            os.makedirs(reports_directory)
+            result = self._run_with_report_failure(
+                reports_directory,
+                patch("cron.tasks.pd.ExcelWriter", side_effect=OSError("xlsx write failed")),
+            )
+        self._assert_failed_before_mutation(*result)
+
+    def test_index_upsert_failure_prevents_database_and_fedora_mutation(self):
+        """Chyba indexu po atomické náhradě XLSX stále zabrání všem importním mutacím."""
+        with tempfile.TemporaryDirectory() as tmp:
+            reports_directory = os.path.join(tmp, "reports")
+            os.makedirs(reports_directory)
+            result = self._run_with_report_failure(
+                reports_directory,
+                patch("cron.tasks.upsert_import_report_index_entry", side_effect=OSError("index write failed")),
+            )
+        self._assert_failed_before_mutation(*result)
+
+
 class BuildImportFedoraTargetDataframeTest(TestCase):
     """Testy pro ``cron.tasks.build_import_fedora_target_dataframe`` (list ``Fedora``)."""
 
@@ -267,7 +358,7 @@ class BuildImportFedoraTargetDataframeTest(TestCase):
         fake_redis = FakeRedis(decode_responses=False)
         df = build_import_fedora_target_dataframe(JOB_ID, fake_redis)
         self.assertEqual(len(df), 0)
-        self.assertEqual(len(df.columns), 3)
+        self.assertEqual(len(df.columns), 4)
 
     def test_translates_result_and_keeps_raw_transaction_data(self):
         """Sloupec výsledku se přeloží z translation ID, ident_cely a transaction_uid zůstanou syrová data."""
@@ -298,13 +389,9 @@ class BuildImportFedoraTargetDataframeTest(TestCase):
     def test_records_without_a_fedora_target_get_a_skipped_row_with_blank_transaction(self):
         """Záznam bez Fedora cíle dostane placeholder ``fedora_target_skipped`` s prázdným transaction_uid."""
         fake_redis = FakeRedis(decode_responses=False)
-        fake_redis.set(
-            "import_data_validation_results_{}".format(JOB_ID),
-            json.dumps(
-                [
-                    {"item_order": 0, "file_name": "x.csv", "primary_key_import": "C-1", "validation_result": "ok"},
-                ]
-            ),
+        fake_redis.rpush(
+            "import_data_validation_details_{}".format(JOB_ID),
+            json.dumps({"item_order": 0, "file_name": "x.csv", "primary_key_import": "C-1", "validation_result": "ok"}),
         )
         fake_redis.set(
             "import_fedora_result_tr_{}".format(JOB_ID),
@@ -325,6 +412,66 @@ class BuildImportFedoraTargetDataframeTest(TestCase):
         )
         df = build_import_fedora_target_dataframe(JOB_ID, fake_redis)
         self.assertEqual(len(df), 0)
+
+
+class DataImportProgressReportViewTest(SimpleTestCase):
+    """Testy pro ``DataImportProgressReportView`` — stažení živého XLSX reportu úlohy."""
+
+    def test_download_matches_disk_sheet_order_and_contents(self):
+        """Živý i archivovaný report mají stejné pořadí listů a všechny hodnoty buněk."""
+        disk_redis = FakeRedis()
+        live_redis = FakeRedis(decode_responses=True)
+        for connection in (disk_redis, live_redis):
+            _populate_report_redis(connection, phase="failed")
+            connection.set(f"import_data_user_{JOB_ID}", 7)
+            connection.set(
+                f"import_fedora_target_results_tr_{JOB_ID}",
+                json.dumps(
+                    [
+                        {"ident_cely": "C-1", "transaction_uid": "tx-1", "record_ids": [0], "result": "success"},
+                        {"ident_cely": "C-2", "transaction_uid": None, "record_ids": [1], "result": "unattempted"},
+                    ]
+                ),
+            )
+        request = RequestFactory().get(f"/data-import-report/{JOB_ID}")
+        request.user = _StubUser(user_id=7)
+        with tempfile.TemporaryDirectory() as reports_directory:
+            path = save_import_report_to_disk(JOB_ID, disk_redis, reports_directory)
+            self.assertIsNotNone(path)
+            with patch("core.views.RedisConnector.get_connection_decode", return_value=live_redis):
+                response = DataImportProgressReportView.as_view()(request, job_id=JOB_ID)
+            self.assertEqual(response.status_code, 200)
+            disk_workbook = openpyxl.load_workbook(path)
+            live_workbook = openpyxl.load_workbook(BytesIO(response.content))
+            try:
+                self.assertEqual(disk_workbook.sheetnames, ["Import", "Fedora"])
+                self.assertEqual(live_workbook.sheetnames, disk_workbook.sheetnames)
+                for name in disk_workbook.sheetnames:
+                    self.assertGreater(disk_workbook[name].max_row, 1)
+                    self.assertEqual(list(live_workbook[name].values), list(disk_workbook[name].values))
+                entries = read_import_report_index(reports_directory)
+                self.assertEqual(len(entries), 1)
+                self.assertEqual(entries[0]["job_id"], JOB_ID)
+                self.assertEqual(entries[0]["stage"], "failed")
+            finally:
+                disk_workbook.close()
+                live_workbook.close()
+
+    def test_download_has_both_import_and_fedora_sheets(self):
+        """Stažený report musí obsahovat oba listy — stejné jako na disk uložená kopie."""
+        fake_redis = FakeRedis(decode_responses=True)
+        _populate_report_redis(fake_redis)
+        fake_redis.set("import_data_user_{}".format(JOB_ID), 7)
+
+        request = RequestFactory().get("/data-import-report/{}".format(JOB_ID))
+        request.user = _StubUser(user_id=7)
+        with patch("core.views.RedisConnector.get_connection_decode", return_value=fake_redis):
+            response = DataImportProgressReportView.as_view()(request, job_id=JOB_ID)
+
+        self.assertEqual(response.status_code, 200)
+        workbook = openpyxl.load_workbook(BytesIO(response.content))
+        self.assertIn("Import", workbook.sheetnames)
+        self.assertIn("Fedora", workbook.sheetnames)
 
 
 class ImportReportIndexTest(TestCase):

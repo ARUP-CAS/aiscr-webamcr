@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 from core.connectors import RedisConnector
 from core.tests.fake_redis import FakeRedis
+from core.tests.stub_user import _StubUser
 from core.views import DataImportStart
 from cron import tasks
 from django.test import RequestFactory, SimpleTestCase
@@ -18,18 +19,6 @@ from django.test import RequestFactory, SimpleTestCase
 USER_ID = 42
 JOB_ID = "job-under-test"
 LOCK_TOKEN = "lock-token-abc"
-
-
-class _StubUser:
-    """Minimální náhrada uživatele pro ``RequestFactory`` — nese jen atributy čtené view."""
-
-    def __init__(self, user_id):
-        self.id = user_id
-        self.pk = user_id
-        self.is_superuser = True
-        self.is_staff = True
-        self.is_active = True
-        self.is_authenticated = True
 
 
 class DataImportStartConcurrencyTest(SimpleTestCase):
@@ -79,13 +68,82 @@ class DataImportStartConcurrencyTest(SimpleTestCase):
         self.assertEqual(self.fake.get(f"import_data_phase_{JOB_ID}"), tasks.IMPORT_PHASE_IMPORTING)
         self.assertEqual(self.fake.get(RedisConnector.IMPORT_DATA_LOCK_KEY), LOCK_TOKEN)
 
+    def test_claim_renews_staged_data_and_pointers_for_running_import(self):
+        """Start prodlouží data čekající na schválení i ukazatele na běžné TTL importu."""
+        keys = (
+            f"import_data_count_{JOB_ID}",
+            f"import_data_{JOB_ID}_record_0",
+            f"import_data_current_job_{USER_ID}",
+            RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY,
+        )
+        self.fake.set(f"import_data_count_{JOB_ID}", 1, ex=tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS)
+        self.fake.set(f"import_data_{JOB_ID}_record_0", "staged", ex=tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS)
+        self.fake.set(f"import_data_current_job_{USER_ID}", JOB_ID, ex=tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS)
+        self.fake.set(
+            RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY,
+            JOB_ID,
+            ex=tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS,
+        )
+
+        response, delay_mock = self._post()
+
+        self.assertEqual(response.status_code, 200)
+        delay_mock.assert_called_once_with(JOB_ID, USER_ID, LOCK_TOKEN)
+        for key in keys:
+            self.assertEqual(self.fake.ttl(key), tasks.IMPORT_DATA_RUNNING_TTL_SECONDS)
+
     def test_claim_fails_when_global_lock_token_does_not_match(self):
         """Pokud globální lock mezitím ztratil vlastnictví (jiný token), claim selže a fáze se
-        přepne na ``failed`` — reflektuje větev „lock lost“ ve view."""
+        přepne na ``failed``; ukazatele novější úlohy přitom nesmí smazat."""
+        replacement_job_id = "replacement-job"
         self.fake.set(RedisConnector.IMPORT_DATA_LOCK_KEY, "someone-elses-token")
+        self.fake.set(f"import_data_current_job_{USER_ID}", replacement_job_id)
+        self.fake.set(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, replacement_job_id)
 
         response, delay_mock = self._post()
 
         self.assertEqual(response.status_code, 409)
         delay_mock.assert_not_called()
         self.assertEqual(self.fake.get(f"import_data_phase_{JOB_ID}"), tasks.IMPORT_PHASE_FAILED)
+        self.assertEqual(self.fake.get(f"import_data_current_job_{USER_ID}"), replacement_job_id)
+        self.assertEqual(self.fake.get(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY), replacement_job_id)
+
+    def test_lost_claim_expires_job_data_and_preserves_replacement(self):
+        """Ztráta locku nastaví retenci dat a záznamů, ale nezmění novější úlohu."""
+        for replacement_token in (None, "replacement-token"):
+            with self.subTest(replacement_token=replacement_token):
+                self.setUp()
+                retained_keys = {
+                    f"import_data_count_{JOB_ID}": "2",
+                    f"import_data_{JOB_ID}_record_0": "first record",
+                    f"import_data_{JOB_ID}_record_1": "second record",
+                }
+                for key, value in retained_keys.items():
+                    self.fake.set(key, value)
+                    self.assertEqual(self.fake.ttl(key), -1)
+                replacement_keys = {
+                    f"import_data_current_job_{USER_ID}": "replacement-job",
+                    RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY: "replacement-job",
+                    "import_data_phase_replacement-job": tasks.IMPORT_PHASE_IMPORTING,
+                }
+                self.fake.delete(RedisConnector.IMPORT_DATA_LOCK_KEY)
+                if replacement_token is not None:
+                    replacement_keys[RedisConnector.IMPORT_DATA_LOCK_KEY] = replacement_token
+                for key, value in replacement_keys.items():
+                    self.fake.set(key, value, ex=1234)
+
+                response, delay_mock = self._post()
+
+                self.assertEqual(response.status_code, 409)
+                delay_mock.assert_not_called()
+                self.assertEqual(self.fake.get(f"import_data_phase_{JOB_ID}"), tasks.IMPORT_PHASE_FAILED)
+                for key, value in retained_keys.items():
+                    self.assertEqual(self.fake.get(key), value)
+                    self.assertEqual(self.fake.ttl(key), tasks.IMPORT_DATA_EXPIRATION_SECONDS)
+                for suffix in ("import_data_user", "import_data_valid", "import_data_lock_token"):
+                    self.assertEqual(self.fake.ttl(f"{suffix}_{JOB_ID}"), tasks.IMPORT_DATA_EXPIRATION_SECONDS)
+                for key, value in replacement_keys.items():
+                    self.assertEqual(self.fake.get(key), value)
+                    self.assertEqual(self.fake.ttl(key), 1234)
+                if replacement_token is None:
+                    self.assertIsNone(self.fake.get(RedisConnector.IMPORT_DATA_LOCK_KEY))

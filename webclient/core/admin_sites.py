@@ -1,12 +1,14 @@
 import json
 import logging
 import os
+import random
 import secrets
 import string
 
 import pandas as pd
 from django.contrib import admin
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.translation import gettext as _
@@ -15,6 +17,7 @@ from rosetta.templatetags.rosetta import can_translate as rosetta_can_translate
 from .connectors import RedisConnector
 from .forms import ImportDataAdminForm
 from .import_data_mappers import ImportDataMissingFileError
+from .import_maintenance import acquire_import_lock_during_maintenance
 from .setting_models import CustomAdminSettings
 from .utils import (
     ImportReportIndexError,
@@ -120,7 +123,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
             [
                 find_model("heslar", "Heslar"),
                 find_model("heslar", "HeslarDatace"),
-                find_model("heslar", "HeslarDokumentTypMaterialRada"),
+                find_model("heslar", "HeslarDokumentTypMaterial"),
                 find_model("heslar", "HeslarHierarchie"),
                 find_model("heslar", "HeslarNazev"),
                 find_model("heslar", "HeslarOdkaz"),
@@ -287,7 +290,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 uploaded_file = form.cleaned_data["ident_list_file"]
                 sheet = self._read_file(uploaded_file, context)
                 if isinstance(sheet, pd.DataFrame):
-                    job_id = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(20))
+                    job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
                     job_id = f"update_pid_{job_id}"
                     self.redis_connector.set(job_id, "0;" + ";".join(sheet.index.unique().tolist()))
                     performed_action = form.cleaned_data["performed_action"]
@@ -316,7 +319,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 uploaded_file = form.cleaned_data["ident_list_file"]
                 sheet = self._read_file(uploaded_file, context)
                 if isinstance(sheet, pd.DataFrame):
-                    job_id = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(20))
+                    job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
                     job_id = f"update_metadata_{job_id}"
                     self.redis_connector.set(job_id, "0;" + ";".join(sheet.index.unique().tolist()))
                     context["url"] = reverse("fedora:continue-processing", args=[job_id])
@@ -325,7 +328,6 @@ class AmcrCustomAdminSite(admin.AdminSite):
             context["form"] = UpdateMetadataFileForm()
         return TemplateResponse(request, "admin/fedora_management/update_metadata.html", context)
 
-    IMPORT_DATA_REDIS_EXPIRATION = 6 * 60 * 60  # 6 hodin
     IMPORT_ZIP_MAX_UNCOMPRESSED_SIZE = 1024 * 1024 * 1024  # 1024 MB
     # Velikost chunku komprimovaného ZIPu ve stagingu do Redis. Zdrojová konstanta,
     # neladí se za běhu; drží každý SET/GET v řádu desítek ms a hodnotu pod proto-max-bulk-len.
@@ -453,19 +455,17 @@ class AmcrCustomAdminSite(admin.AdminSite):
             ):
                 return self._render_import_polling_ui(request, context, current_job_id)
 
+        # Global-lock-busy gate (maintenance-independent): another admin's pipeline holds the
+        # lock. Checked before the maintenance gate so the reset affordance stays reachable even
+        # after maintenance ends while that job is still running (jobs carry up to a 48h TTL and
+        # there is no reaper — manual reset is the only recovery).
+        if import_data_running:
+            return self._render_lock_busy(request, context)
+
         # Maintenance gate: reject uploads outside maintenance mode.
         if not maintenance:
             context["form"] = ImportDataAdminForm()
-            # Formulář se zobrazuje i mimo režim údržby, ale odeslání se tady zastaví — bez
-            # hlášky by POST skončil tichým překreslením stránky bez jakékoli zpětné vazby.
-            if request.method == "POST":
-                context["error_message"] = _("core.admin.import_data.error.import_error")
-                context["error_message_details"] = _("core.templates.admin.import_data.not_maintenance")
             return TemplateResponse(request, "admin/import_data/import_data.html", context)
-
-        # Global-lock-busy gate: another admin's pipeline holds the lock.
-        if import_data_running:
-            return self._render_lock_busy(request, context)
 
         # Report-directory gate: the XLSX report is the durable record of every run (customer
         # decision) — an import that cannot save its report must not be allowed to start at all,
@@ -499,9 +499,13 @@ class AmcrCustomAdminSite(admin.AdminSite):
 
             # Atomic acquire is the real serialization guarantee; on a TOCTOU race with
             # another upload, fall back to the import_is_running page.
-            if not RedisConnector.acquire_import_lock(
+            acquired = acquire_import_lock_during_maintenance(
                 self.redis_connector, lock_token, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS
-            ):
+            )
+            if acquired is None:
+                context["maintenance"] = False
+                return TemplateResponse(request, "admin/import_data/import_data.html", context)
+            if not acquired:
                 return self._render_lock_busy(request, context)
 
             ttl = tasks.IMPORT_DATA_RUNNING_TTL_SECONDS
@@ -541,7 +545,6 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 self.redis_connector.set(f"import_data_file_chunks_{job_id}", chunk_count, ex=ttl)
                 self.redis_connector.set(f"import_data_validation_total_{job_id}", 0, ex=ttl)
                 self.redis_connector.set(f"import_data_validation_progress_{job_id}", 0, ex=ttl)
-                self.redis_connector.set(f"import_data_validation_results_{job_id}", json.dumps([]), ex=ttl)
                 self.redis_connector.set(f"import_data_valid_{job_id}", "0", ex=ttl)
 
                 tasks.run_data_import_validation.delay(job_id, request.user.id, lock_token, performed_action)
@@ -653,7 +656,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
             ),
             path(
                 "import-data/",
-                self.admin_view(self.import_data),
+                transaction.non_atomic_requests(self.admin_view(self.import_data)),
                 name="import_data",
             ),
             path(

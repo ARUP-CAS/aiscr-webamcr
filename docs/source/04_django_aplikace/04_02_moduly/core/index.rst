@@ -25,6 +25,7 @@ Dokumentace modulu core.
    exceptions
    ident_cely
    import_data_mappers
+   import_maintenance
    log_middleware
    logging_filters
    message_constants

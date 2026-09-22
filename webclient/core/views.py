@@ -54,7 +54,11 @@ from core.repository_connector import (
     FedoraTransactionStatus,
     FedoraUpdatedByAnotherTransactionError,
 )
-from core.soubor_naming import get_dokument_free_suffixes, get_finds_free_suffixes, get_soubor_suffix
+from core.soubor_naming import (
+    get_free_suffixes,
+    get_next_soubor_name,
+    get_soubor_suffix,
+)
 from core.utils import (
     SessionIdentifier,
     check_import_report_directory,
@@ -69,6 +73,7 @@ from core.utils import (
     is_maintenance_in_progress,
     read_import_report_index,
     replace_last,
+    translate_status_value,
 )
 from django.conf import settings
 from django.contrib import messages
@@ -105,7 +110,7 @@ from django_filters.views import FilterView
 from django_prometheus.exports import ExportToDjangoView
 from django_tables2 import SingleTableMixin
 from django_tables2.export import ExportMixin, TableExport
-from dokument.models import Dokument, get_dokument_soubor_name
+from dokument.models import Dokument
 from ez.models import ExterniZdroj
 from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PRISTUPNOST
@@ -414,10 +419,8 @@ def rename_file(request, typ_vazby, ident_cely, pk):
     navazany_objekt = soubor.vazba.navazany_objekt
     base = navazany_objekt.ident_cely.replace("-", "")
     extension = os.path.splitext(soubor.nazev)[1]
-    if isinstance(navazany_objekt, Dokument):
-        free_suffixes = get_dokument_free_suffixes(navazany_objekt, soubor)
-    elif isinstance(navazany_objekt, SamostatnyNalez):
-        free_suffixes = get_finds_free_suffixes(navazany_objekt, soubor)
+    if isinstance(navazany_objekt, (Dokument, SamostatnyNalez)):
+        free_suffixes = get_free_suffixes(navazany_objekt, soubor)
     else:
         logger.warning(
             "core.views.rename_file.unsupported_record",
@@ -447,10 +450,7 @@ def rename_file(request, typ_vazby, ident_cely, pk):
                 # Zámek nadřazeného záznamu serializuje souběžná přejmenování; po zamčení znovu
                 # ověříme, že zvolený suffix je stále volný (jiný požadavek jej mohl mezitím obsadit).
                 type(navazany_objekt).objects.select_for_update().get(pk=navazany_objekt.pk)
-                if isinstance(navazany_objekt, Dokument):
-                    current_free = get_dokument_free_suffixes(navazany_objekt, soubor)
-                else:
-                    current_free = get_finds_free_suffixes(navazany_objekt, soubor)
+                current_free = get_free_suffixes(navazany_objekt, soubor)
                 if chosen_suffix not in current_free:
                     raise _SuffixNoLongerFreeError()
                 connector = FedoraRepositoryConnector(navazany_objekt, fedora_transaction)
@@ -545,20 +545,11 @@ class DownloadFile(LoginRequiredMixin, View):
                 safe_redirect = "/"
             return redirect(safe_redirect)
         soubor: Soubor = get_object_or_404(Soubor, id=pk)
-        distribution = kwargs.get("distribution")
         if soubor.repository_uuid:
             if self.thumb_small and soubor.small_thumbnail is not None:
                 return soubor.small_thumbnail
             elif self.thumb_large and soubor.large_thumbnail is not None:
                 return soubor.large_thumbnail
-            elif distribution:
-                # Only distributions the file actually offers may be downloaded; a raw name from the
-                # URL must not reach Fedora, otherwise it could address any container under the file.
-                if distribution not in soubor.available_distributions():
-                    raise Http404
-                distribution_response = soubor.get_distribution_response(distribution)
-                if distribution_response is not None:
-                    return distribution_response
             elif soubor.content_file_response is not None:
                 return soubor.content_file_response
         raise Http404
@@ -1040,13 +1031,10 @@ class NewFileUploadView(BasePostUploadView):
         logger.debug("core.views.post_upload.saving", extra={"instance": soubor_instance})
         soubor_instance.save()
         if not request.user.is_authenticated:
-            historie_uzivatel = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
+            user_admin = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
+            soubor_instance.zaznamenej_nahrani(user_admin, self.original_filename)
         else:
-            historie_uzivatel = request.user
-        soubor_instance.zaznamenej_nahrani(historie_uzivatel, self.original_filename)
-        # Historie náhledů se zapisuje až tady — při volání ``save_binary_file`` výše ještě
-        # záznam ``Soubor`` neexistoval, takže connector vrátil jen přehled zapsaných náhledů.
-        soubor_instance.zaznamenej_distribuce(rep_bin_file.thumb_writes, historie_uzivatel)
+            soubor_instance.zaznamenej_nahrani(request.user, self.original_filename)
         duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk").exclude(id=soubor_instance.id)
         response_data = self._append_duplicate_message(response_data, duplikat)
         response_data = self._append_rename_message(response_data, renamed, new_name)
@@ -1105,12 +1093,12 @@ class NewFileUploadView(BasePostUploadView):
             dokument = Dokument.objects.filter(ident_cely=ident_cely).first()
             if dokument:
                 objekt = dokument
-                new_name = get_dokument_soubor_name(objekt, filename)
+                new_name = get_next_soubor_name(objekt, filename)
         elif typ_vazby == "pas":
             samostatny_nalez = SamostatnyNalez.objects.filter(ident_cely=ident_cely).first()
             if samostatny_nalez:
                 objekt = samostatny_nalez
-                new_name = get_finds_soubor_name(objekt, filename)
+                new_name = get_next_soubor_name(objekt, filename)
 
         if objekt is None:
             self.fedora_transaction.rollback_transaction()
@@ -1137,10 +1125,8 @@ class NewFileUploadView(BasePostUploadView):
             # Nejvyšší suffix už nelze přidělit. Pokud jsou nižší sloty volné (vznikly přejmenováním
             # či smazáním), poradíme uživateli je uvolnit přejmenováním; jinak je záznam skutečně plný.
             free_suffixes = []
-            if typ_vazby in ("dokument", "model3d"):
-                free_suffixes = get_dokument_free_suffixes(objekt)
-            elif typ_vazby == "pas":
-                free_suffixes = get_finds_free_suffixes(objekt)
+            if typ_vazby in ("dokument", "model3d", "pas"):
+                free_suffixes = get_free_suffixes(objekt)
             if free_suffixes:
                 return JsonResponse({"error": str(SOUBOR_NEJVYSSI_SUFFIX_OBSAZEN)}, status=403)
             return JsonResponse(
@@ -1277,7 +1263,6 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
             soubor_instance.binary_data = soubor_data
             soubor_instance.save()
             soubor_instance.zaznamenej_nahrani_nove_verze(request.user, original_name)
-            soubor_instance.zaznamenej_distribuce(rep_bin_file.thumb_writes, request.user)
         if rep_bin_file is not None:
             duplikat = Soubor.objects.filter(sha_512=rep_bin_file.sha_512).exclude(id=soubor_instance.id).order_by("pk")
             response_data = {"filename": soubor_instance.nazev}
@@ -1362,38 +1347,6 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
                 return JsonResponse({"error": str(PRISTUP_ZAKAZAN)}, status=403)
 
         return True
-
-
-def get_finds_soubor_name(find, filename, add_to_index=1):
-    """
-    Funkce pro získaní jména souboru pro samostatný nález.
-
-    Název se přiděluje navýšením podle nejvyššího obsazeného suffixu (``F01`` … ``F99``). Toto výchozí
-    chování se záměrně nemění – uvolnění či změnu pozice řeší přejmenování souboru.
-
-    :param find: Textový název, klíč nebo výraz ``find`` používaný v rámci operace.
-    :param filename: Parametr ``filename`` se předává do volání ``splitext()``, ``warning()``, vstupuje do návratové hodnoty.
-    :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
-
-        :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.
-    """
-    ident_cely_sanitized = find.ident_cely.replace("-", "")
-    files = find.soubory.soubory.filter(nazev__contains=ident_cely_sanitized)
-    if not files.exists():
-        return (f"{ident_cely_sanitized}F01") + os.path.splitext(filename)[1]
-    else:
-        list_last_char = [int(os.path.splitext(file.nazev)[0][-2:]) for file in files]
-        last_char = max(list_last_char)
-        if last_char != 99 or add_to_index == 0:
-            new_last_char = str(last_char + add_to_index).zfill(2)
-            extension = os.path.splitext(filename)[1]
-            return f"{find.ident_cely.replace('-', '')}F{new_last_char}{extension}"
-        else:
-            logger.warning(
-                "core.views.get_finds_soubor_name.cannot_upload",
-                extra={"file": filename, "value": list_last_char},
-            )
-            return False
 
 
 def get_projekt_soubor_name(projekt: Projekt, file_name):
@@ -2771,43 +2724,49 @@ def _check_import_ownership(request, job_id, redis_connector) -> bool:
     return owner is not None and str(owner) == str(request.user.id)
 
 
+def _cursor_param(request, name) -> int:
+    """Vrátí nezápornou celočíselnou hodnotu kurzoru z query parametrů.
+
+    :param request: HTTP požadavek s query parametry průběžného načítání.
+    :param name: Název parametru kurzoru.
+    :return: Hodnota kurzoru; při chybějící, neplatné nebo záporné hodnotě vrací ``0``.
+    """
+    try:
+        return max(int(request.GET.get(name, 0)), 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _memoized_translator():
+    """Vrátí ``translate_status_value`` s pamětí výsledků v rámci jednoho požadavku.
+
+    Historie a Fedora výsledky se v Redis přepisují jako celé slovníky (hodnota záznamu se může
+    dodatečně změnit), takže je nelze krájet kurzorem jako append-only kanály. Počet *různých*
+    hodnot je ale malý (``success``, chybová hláška, MIME typ …), zatímco počet položek roste s
+    během — memoizace proto sníží počet skutečných překladů z O(n) na počet unikátních hodnot.
+
+    Paměť žije pouze v rámci jednoho požadavku, takže se nemůže přenést locale jednoho admina
+    do odpovědi jiného.
+
+    :return: Funkce ``(raw) -> přeložená hodnota`` se sdílenou pamětí výsledků.
+    """
+    cache = {}
+
+    def translate(raw):
+        """Přeloží hodnotu z Redis, opakované hodnoty vrátí z paměti.
+
+        :param raw: Hodnota z Redis (ID, obálka ``{id, params}`` nebo ``None``).
+        :return: Přeložený řetězec, nebo ``None`` pro ``None`` na vstupu.
+        """
+        if raw not in cache:
+            cache[raw] = translate_status_value(raw)
+        return cache[raw]
+
+    return translate
+
+
 # Per-job Redis datové klíče, které se na terminální cestě expirují (ne mažou) kvůli retenci
 # reportu. Zrcadlí sadu, kterou expiruje run_data_import a validační task.
-def _translate_status_value(raw):
-    """Přeloží hodnotu načtenou z Redis (ID nebo obálka ``{id, params}``).
-
-    Standardizační pravidlo: worker ukládá do Redis pouze překladová ID (případně obálku
-    ``{"id": <id>, "params": {...}}`` pro parametrizované zprávy), nikoli přeložené texty. Tento
-    helper překlad provádí v locale přihlášeného admina až na straně čtenáře.
-
-    :param raw: Hodnota z Redis — ``None``, plain ID (str), nebo JSON obálka (str) s ``id`` a
-        ``params``. Zpětně kompatibilní: pokud hodnota není obálka, přeloží se jako ID; pokud
-        překlad chybí, ``_()`` vrátí ID doslova.
-    :return: Přeložený řetězec, nebo ``None`` pokud je vstup ``None``.
-    """
-    if raw is None:
-        return None
-    if isinstance(raw, bytes):
-        raw = raw.decode("utf-8")
-    try:
-        obj = json.loads(raw)
-    except (TypeError, ValueError, json.JSONDecodeError):
-        return _(raw)
-    if isinstance(obj, dict) and "id" in obj:
-        params = obj.get("params") or {}
-        if obj.get("raw"):
-            # Raw exception message — composed at raise time from translated mapper fragments +
-            # runtime data; rendered verbatim (carve-out, see translation_value docstring).
-            return params.get("message", "")
-        try:
-            return _(obj["id"]).format(**params)
-        except (KeyError, IndexError, ValueError):
-            # ValueError covers a stray/literal brace in the translated string that breaks
-            # str.format(); fall back to the untouched translation.
-            return _(obj["id"])
-    return _(raw)
-
-
 def _status_message_id(raw):
     """Vrátí samotné ID stavové zprávy bez překladu/parametrů (pro porovnání v UI).
 
@@ -2828,6 +2787,32 @@ def _status_message_id(raw):
     if isinstance(obj, dict) and "id" in obj:
         return obj["id"]
     return raw
+
+
+def _expire_import_data_keys(redis_connector, job_id, ttl_seconds):
+    """
+    Nastaví expiraci všem per-job datovým klíčům importní úlohy na ``ttl_seconds``.
+
+    Klíče se pouze expirují, nikdy nemažou — report musí zůstat stažitelný po dobu retence.
+    Seznam suffixů sdílí jediný zdroj pravdy s ``cron.tasks`` (``IMPORT_DATA_JOB_KEY_SUFFIXES``).
+
+    :param redis_connector: Dekódující Redis spojení.
+    :param job_id: Identifikátor importní úlohy.
+    :param ttl_seconds: Doba retence v sekundách.
+    """
+    from cron.tasks import IMPORT_DATA_JOB_KEY_SUFFIXES
+
+    count_raw = redis_connector.get(f"import_data_count_{job_id}") or 0
+    try:
+        count = int(count_raw)
+    except (TypeError, ValueError):
+        count = 0
+    pipe = redis_connector.pipeline()
+    for suffix in IMPORT_DATA_JOB_KEY_SUFFIXES:
+        pipe.expire(f"{suffix}_{job_id}", ttl_seconds)
+    for i in range(count):
+        pipe.expire(f"import_data_{job_id}_record_{i}", ttl_seconds)
+    pipe.execute()
 
 
 class DataImportProgress(LoginRequiredMixin, View):
@@ -2854,49 +2839,18 @@ class DataImportProgress(LoginRequiredMixin, View):
                 {"result": "error", "status_message": _("core.templates.admin.import_data.not_owner")},
                 status=403,
             )
+        translate = _memoized_translator()
         try:
             record_count_raw = redis_connector.get(f"import_data_count_{job_id}") or 0
             record_count = int(record_count_raw)
             phase_progress = int(redis_connector.get(f"import_data_progress_{job_id}") or 0)
             status_message_raw = redis_connector.get(f"import_data_status_message_tr_{job_id}")
-            status_message = _translate_status_value(status_message_raw)
+            status_message = translate_status_value(status_message_raw)
             status_message_id = _status_message_id(status_message_raw)
             stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
-
-            import_data_primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}") or "{}")
-            progress_ids = redis_connector.lrange(f"import_data_progress_ids_{job_id}", 0, -1)
-            progress_details = redis_connector.lrange(f"import_data_progress_details_tr_{job_id}", 0, -1)
-            # Per-row status values are translation IDs/envelopes — translate each in the admin's locale.
-            serialized_results = {
-                rid: _translate_status_value(detail) for rid, detail in zip(progress_ids, progress_details)
-            }
-            # File table: each entry's additional_info_tr is a translation ID/envelope (or raw envelope
-            # for the mimetype); translate it, keep the rest of the dict verbatim.
-            serialized_results_files_raw = json.loads(redis_connector.get(f"import_data_files_{job_id}") or "[]")
-            serialized_results_files = []
-            for entry in serialized_results_files_raw:
-                translated_entry = dict(entry)
-                if "additional_info_tr" in translated_entry:
-                    translated_entry["additional_info"] = _translate_status_value(
-                        translated_entry.pop("additional_info_tr")
-                    )
-                else:
-                    translated_entry.setdefault("additional_info", "")
-                serialized_results_files.append(translated_entry)
-            import_history_record_result = {
-                rid: _translate_status_value(value)
-                for rid, value in json.loads(
-                    redis_connector.get(f"import_data_history_record_result_tr_{job_id}") or "{}"
-                ).items()
-            }
-            import_fedora_update_result = {
-                rid: [_translate_status_value(item) for item in items]
-                for rid, items in json.loads(redis_connector.get(f"import_fedora_result_tr_{job_id}") or "{}").items()
-            }
-
             phase = redis_connector.get(f"import_data_phase_{job_id}") or "unknown"
+
             from cron.tasks import (
-                IMPORT_PHASE_CANCELED,
                 IMPORT_PHASE_FAILED,
                 IMPORT_PHASE_FINISHED,
                 IMPORT_PHASE_STOPPED,
@@ -2905,28 +2859,63 @@ class DataImportProgress(LoginRequiredMixin, View):
                 IMPORT_PROGRESS_PHASE_FEDORA_DONE,
                 IMPORT_PROGRESS_PHASE_FINISHED,
                 IMPORT_PROGRESS_PHASE_HISTORY_DONE,
+                IMPORT_TERMINAL_PHASES,
             )
+
+            import_data_primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}") or "{}")
+            # The browser normally receives only rows appended after its cursor.  On a terminal
+            # phase, retrieve the complete range once: rollback may have relabelled previously
+            # rendered ``success`` rows to ``rolled_back`` in place.
+            progress_since = _cursor_param(request, "progress_since")
+            progress_start = 0 if phase in IMPORT_TERMINAL_PHASES else progress_since
+            progress_ids = redis_connector.lrange(f"import_data_progress_ids_{job_id}", progress_start, -1)
+            progress_details = redis_connector.lrange(f"import_data_progress_details_tr_{job_id}", progress_start, -1)
+            serialized_results = {rid: translate(detail) for rid, detail in zip(progress_ids, progress_details)}
+            progress_cursor = progress_start + len(serialized_results)
+            # File entries are an append-only list, so read only the range the browser has not
+            # rendered yet instead of fetching and parsing the whole growing key every poll.
+            files_since = _cursor_param(request, "files_since")
+            serialized_results_files = []
+            for raw_entry in redis_connector.lrange(f"import_data_files_{job_id}", files_since, -1):
+                translated_entry = json.loads(raw_entry)
+                if "additional_info_tr" in translated_entry:
+                    translated_entry["additional_info"] = translate(translated_entry.pop("additional_info_tr"))
+                else:
+                    translated_entry.setdefault("additional_info", "")
+                serialized_results_files.append(translated_entry)
+            files_cursor = files_since + len(serialized_results_files)
+            # These two are rewritten as whole dicts (a record's value can be revised later), so a
+            # cursor would drop revisions — the memoized translator keeps the per-poll cost at the
+            # number of distinct values instead of one translation per entry.
+            import_history_record_result = {
+                rid: translate(value)
+                for rid, value in json.loads(
+                    redis_connector.get(f"import_data_history_record_result_tr_{job_id}") or "{}"
+                ).items()
+            }
+            import_fedora_update_result = {
+                rid: [translate(item) for item in items]
+                for rid, items in json.loads(redis_connector.get(f"import_fedora_result_tr_{job_id}") or "{}").items()
+            }
 
             # Live validation rows (incremental UI path) — read from the rpush-ed list, not the
             # JSON snapshot the report reads. The client sends back how many rows it already has
             # (validation_since) so each poll only pays for the rows appended since the last one,
             # instead of re-reading/re-translating the whole growing list every tick.
-            try:
-                validation_since = max(int(request.GET.get("validation_since", 0)), 0)
-            except (TypeError, ValueError):
-                validation_since = 0
+            validation_since = _cursor_param(request, "validation_since")
             validation_details = redis_connector.lrange(
                 f"import_data_validation_details_{job_id}", validation_since, -1
             )
             # validation_result is a translation ID for valid rows, or a raw translated exception
             # message for invalid rows (carve-out: mapper exceptions compose the message at raise
-            # time). _translate_status_value renders both correctly in the admin's locale.
-            validation_results = []
-            for item in validation_details:
-                # Jeden ``json.loads`` na řádek — poll běží každou vteřinu nad rostoucím seznamem.
-                row = json.loads(item)
-                row["validation_result"] = _translate_status_value(row.get("validation_result", ""))
-                validation_results.append(row)
+            # time). translate_status_value renders both correctly in the admin's locale.
+            validation_results = [
+                {
+                    **json.loads(item),
+                    "validation_result": translate_status_value(json.loads(item).get("validation_result", "")),
+                }
+                for item in validation_details
+            ]
             validation_cursor = validation_since + len(validation_details)
             invalid_records = json.loads(redis_connector.get(f"import_data_invalid_records_{job_id}") or "[]")
             failure_reason = (
@@ -2978,10 +2967,10 @@ class DataImportProgress(LoginRequiredMixin, View):
                     fraction * (IMPORT_PROGRESS_PHASE_HISTORY_DONE - IMPORT_PROGRESS_PHASE_DATA_DONE)
                 )
             elif record_count:
-                progress_data = math.floor((len(serialized_results) / record_count) * IMPORT_PROGRESS_PHASE_DATA_DONE)
+                progress_data = math.floor((progress_cursor / record_count) * IMPORT_PROGRESS_PHASE_DATA_DONE)
             else:
                 progress_data = 0
-            if phase in (IMPORT_PHASE_FINISHED, IMPORT_PHASE_STOPPED, IMPORT_PHASE_FAILED, IMPORT_PHASE_CANCELED):
+            if phase in IMPORT_TERMINAL_PHASES:
                 status = phase
             elif phase_progress >= IMPORT_PROGRESS_PHASE_FINISHED:
                 status = IMPORT_PHASE_FINISHED
@@ -2993,13 +2982,15 @@ class DataImportProgress(LoginRequiredMixin, View):
                 "phase": phase,
                 "record_count": record_count,
                 "progress_data": progress_data,
-                "finished_record_count": len(serialized_results),
+                "finished_record_count": progress_cursor,
                 "serialized_results": serialized_results,
+                "progress_cursor": progress_cursor,
                 "primary_keys": import_data_primary_keys,
                 "history_record_result": import_history_record_result,
                 "fedora_update_result": import_fedora_update_result,
                 "status": status,
                 "serialized_results_files": serialized_results_files,
+                "files_cursor": files_cursor,
                 "status_message": status_message or _("core.templates.admin.import_data.starting"),
                 "status_message_id": status_message_id,
                 "validation_results": validation_results,
@@ -3073,14 +3064,12 @@ class DataImportProgressReportView(LoginRequiredMixin, View):
         if not _check_import_ownership(request, job_id, redis_connector):
             raise PermissionDenied
 
-        # Shared with the periodic on-disk snapshot (cron.tasks.save_import_report_to_disk) so the
-        # downloaded and disk-persisted reports always match.
-        from cron.tasks import build_import_report_dataframe
+        # Sheet selection, ordering and data sources are shared with the on-disk snapshot.
+        from cron.tasks import write_import_report_sheets
 
-        df, _phase = build_import_report_dataframe(job_id, redis_connector)
         output = BytesIO()
         with pandas.ExcelWriter(output, engine="openpyxl") as writer:
-            df.to_excel(writer, index=False, sheet_name="Import")
+            write_import_report_sheets(writer, job_id, redis_connector)
         output.seek(0)
 
         response = HttpResponse(
@@ -3208,22 +3197,41 @@ class DataImportStart(LoginRequiredMixin, View):
                 tasks.IMPORT_FAILURE_REASON_ERROR,
                 ex=tasks.IMPORT_DATA_EXPIRATION_SECONDS,
             )
-            redis_connector.delete(f"import_data_current_job_{request.user.id}")
-            redis_connector.delete(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
-            redis_connector.expire(f"import_data_lock_token_{job_id}", tasks.IMPORT_DATA_EXPIRATION_SECONDS)
+            RedisConnector.delete_if_value_matches(
+                redis_connector, f"import_data_current_job_{request.user.id}", job_id
+            )
+            RedisConnector.delete_if_value_matches(redis_connector, RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, job_id)
+            _expire_import_data_keys(redis_connector, job_id, tasks.IMPORT_DATA_EXPIRATION_SECONDS)
             return JsonResponse(
                 {"result": "error", "status_message": _("cron.tasks.run_data_import.failed_lock_lost")},
                 status=409,
             )
+        # Approval-state keys have a bounded seven-day TTL. Renew every staged record and routing
+        # pointer before dispatching so an approval near the deadline cannot expire mid-import.
+        _expire_import_data_keys(redis_connector, job_id, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS)
+        renewal_pipe = redis_connector.pipeline()
+        RedisConnector.schedule_import_routing_pointer_expirations(
+            renewal_pipe, request.user.id, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS
+        )
+        renewal_pipe.execute()
         try:
             tasks.run_data_import.delay(job_id, request.user.id, lock_token)
         except Exception:
             # The job is still resumable — do NOT release the lock; revert the phase and return 500.
-            # claim_awaiting_import put the running TTL back on the lock, which validation had made
-            # persistent for the awaiting_approval window; restore it, otherwise a reviewer slower
-            # than the running TTL would find the lock expired and the job unstartable.
-            RedisConnector.persist_import_lock(redis_connector, lock_token)
-            redis_connector.set(f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_AWAITING_APPROVAL)
+            redis_connector.set(
+                f"import_data_phase_{job_id}",
+                tasks.IMPORT_PHASE_AWAITING_APPROVAL,
+                ex=tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS,
+            )
+            RedisConnector.refresh_import_lock(
+                redis_connector, lock_token, tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS
+            )
+            _expire_import_data_keys(redis_connector, job_id, tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS)
+            approval_pipe = redis_connector.pipeline()
+            RedisConnector.schedule_import_routing_pointer_expirations(
+                approval_pipe, request.user.id, tasks.IMPORT_DATA_AWAITING_APPROVAL_TTL_SECONDS
+            )
+            approval_pipe.execute()
             return JsonResponse(
                 {"result": "error", "status_message": _("core.admin.import_data.error.import_error")},
                 status=500,
@@ -3259,23 +3267,20 @@ class DataImportCancel(LoginRequiredMixin, View):
 
         redis_connector = RedisConnector.get_connection_decode()
         phase = redis_connector.get(f"import_data_phase_{job_id}")
-        lock_token = redis_connector.get(f"import_data_lock_token_{job_id}")
         job_user = redis_connector.get(f"import_data_user_{job_id}")
-
-        if phase == tasks.IMPORT_PHASE_AWAITING_APPROVAL:
-            # Direct lock release — this is what frees the slot for other admins. Any superuser may
-            # force-cancel a stuck awaiting_approval job, so no ownership check here.
-            if lock_token:
-                RedisConnector.release_import_lock(redis_connector, lock_token)
-            redis_connector.set(f"import_data_phase_{job_id}", tasks.IMPORT_PHASE_CANCELED)
-            redis_connector.set(
-                f"import_data_status_message_tr_{job_id}",
+        if phase == tasks.IMPORT_PHASE_AWAITING_APPROVAL and job_user is not None:
+            # Any superuser may force-cancel, but the CAS makes this mutually exclusive with Start.
+            if not RedisConnector.cancel_awaiting_import(
+                redis_connector,
+                job_id,
+                job_user,
                 tasks.translation_value("cron.tasks.run_data_import.cancelled"),
-            )
-            tasks.expire_import_job_keys(redis_connector, job_id, tasks.IMPORT_DATA_EXPIRATION_SECONDS)
-            if job_user is not None:
-                redis_connector.delete(f"import_data_current_job_{job_user}")
-            redis_connector.delete(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
+            ):
+                return JsonResponse(
+                    {"result": "error", "status_message": _("core.templates.admin.import_data.cancel_not_allowed")},
+                    status=409,
+                )
+            _expire_import_data_keys(redis_connector, job_id, tasks.IMPORT_DATA_EXPIRATION_SECONDS)
             return JsonResponse({"result": "ok"})
 
         if phase == tasks.IMPORT_PHASE_VALIDATING:
@@ -3285,7 +3290,7 @@ class DataImportCancel(LoginRequiredMixin, View):
                     {"result": "error", "status_message": _("core.templates.admin.import_data.not_owner")},
                     status=403,
                 )
-            redis_connector.set(f"import_data_stop_{job_id}", 1)
+            redis_connector.set(f"import_data_stop_{job_id}", 1, ex=tasks.IMPORT_DATA_RUNNING_TTL_SECONDS)
             return JsonResponse({"result": "ok"})
 
         # importing → use Stop (the import task owns the lock); terminal phases → nothing to cancel.
@@ -3314,6 +3319,8 @@ class DataImportReset(LoginRequiredMixin, View):
         povolen pro libovolnou ne-terminální fázi (``validating``/``importing``/``awaiting_approval``)
         a smí ho provést kterýkoli superuživatel — dead-worker úlohu typicky nemůže uvolnit
         její vlastník. Vlastní úklid a token-checked uvolnění locku provádí ``tasks.reset_import_job``.
+        Aktivní validaci/import odmítne, pokud worker provedl checkpoint v posledních pěti minutách.
+        Ani starší checkpoint nenahrazuje ruční ověření, že worker skutečně skončil.
 
         :param request: HTTP požadavek přihlášeného superuživatele.
         :param kwargs: Volitelně ``job_id`` identifikující importní úlohu.
@@ -3336,7 +3343,11 @@ class DataImportReset(LoginRequiredMixin, View):
                 {"result": "error", "status_message": _("core.templates.admin.import_data.nothing_to_reset")},
                 status=409,
             )
-        tasks.reset_import_job(redis_connector, job_id)
+        if not tasks.reset_import_job(redis_connector, job_id):
+            return JsonResponse(
+                {"result": "error", "status_message": _("core.templates.admin.import_data.reset_recent_progress")},
+                status=409,
+            )
         logger.warning(
             "core.views.DataImportReset.reset", extra={"job_id": job_id, "by_user": request.user.id, "phase": phase}
         )

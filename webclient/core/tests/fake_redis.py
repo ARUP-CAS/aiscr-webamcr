@@ -1,6 +1,6 @@
 """Sdílená in-memory náhrada za Redis pro účely jednotkových testů."""
 
-import fnmatch
+from core.connectors import RedisConnector
 
 
 class FakeRedis:
@@ -8,11 +8,17 @@ class FakeRedis:
 
     Podporuje operace, které využívá importní pipeline (``cron.tasks.run_data_import`` i
     ``cron.tasks.run_data_import_validation``) a další taskové cesty:
-    ``get``/``set``/``delete``/``expire``/``persist``/``rpush``/``lrange``/``lset``/``incr``/
-    ``scan_iter`` a konfigurabilní ``eval``. ``pipeline()`` vrací ``FakePipeline``, který operace zaznamená
+    ``get``/``set``/``delete``/``expire``/``persist``/``rpush``/``lrange``/``lset``/``incr``
+    a ``eval`` dispatchovaný přes přesnou shodu se skriptovými konstantami ``RedisConnector``
+    (viz ``eval()``). ``pipeline()`` vrací ``FakePipeline``, který operace zaznamená
     a při ``execute()`` je sekvenčně provede nad stejným úložištěm; podporuje ``get``/``set``/
     ``delete``/``expire``/``persist``/``rpush``/``incr``. Pokud bude test potřebovat další
     metody, doplňte je sem.
+
+    TTL se nesimuluje reálným časem (nic samo nevyprší), ale ``set(ex=...)``/``expire``/
+    ``persist`` si pamatují poslední zadanou hodnotu TTL na klíč, dostupnou přes ``ttl()`` —
+    stačí to k ověření, že kód nastavil/zrušil TTL ve správném pořadí, aniž by test čekal na
+    reálné vypršení.
     """
 
     def __init__(self, initial: dict | None = None, eval_results: list | None = None, decode_responses: bool = False):
@@ -30,6 +36,7 @@ class FakeRedis:
         """
         self._kv: dict[str, bytes] = {}
         self._lists: dict[str, list[bytes]] = {}
+        self._ttl: dict[str, int] = {}
         self._eval_results: list = list(eval_results) if eval_results is not None else []
         self._decode = decode_responses
         for key, value in (initial or {}).items():
@@ -58,7 +65,7 @@ class FakeRedis:
 
         :param key: Klíč v úložišti.
         :param value: Hodnota k uložení (kóduje se na ``bytes``).
-        :param ex: Ignorováno — FakeRedis neimplementuje TTL.
+        :param ex: TTL v sekundách; jako u reálného Redis ``SET`` bez ``ex`` zruší dřívější TTL.
         :param nx: Pokud ``True`` a klíč existuje, nic se nezapíše a vrátí se ``False``.
         :return: ``True`` při zápisu, ``False`` pokud byl ``nx=True`` a klíč již existoval.
         """
@@ -66,6 +73,10 @@ class FakeRedis:
         if nx and key in self._kv:
             return False
         self._kv[key] = encoded
+        if ex is not None:
+            self._ttl[key] = ex
+        else:
+            self._ttl.pop(key, None)
         return True
 
     def get(self, key):
@@ -84,35 +95,42 @@ class FakeRedis:
         for key in keys:
             removed += int(self._kv.pop(key, None) is not None)
             removed += int(self._lists.pop(key, None) is not None)
+            self._ttl.pop(key, None)
         return removed
 
     def expire(self, key, seconds):
-        """No-op: FakeRedis nesleduje TTL; vrací ``True``, pokud klíč existuje.
+        """Nastaví TTL na existující klíč a vrátí ``True``, pokud klíč existuje.
 
         :param key: Redis klíč, pro který se nastavuje TTL.
-        :param seconds: Počet sekund TTL ignorovaný fake implementací.
+        :param seconds: Počet sekund TTL.
         """
-        return key in self._kv or key in self._lists
+        exists = key in self._kv or key in self._lists
+        if exists:
+            self._ttl[key] = seconds
+        return exists
 
     def persist(self, key):
-        """No-op symetrický k ``expire``: vrací ``True``, pokud klíč existuje (TTL se neřeší).
+        """Zruší TTL existujícího klíče a vrátí ``True``, pokud klíč existuje.
 
         :param key: Redis klíč, u kterého se má zrušit expirace.
         """
-        return key in self._kv or key in self._lists
+        exists = key in self._kv or key in self._lists
+        if exists:
+            self._ttl.pop(key, None)
+        return exists
 
-    def scan_iter(self, match=None):
-        """Projde klíče úložiště odpovídající glob vzoru (zjednodušený ``SCAN``).
+    def ttl(self, key):
+        """Vrátí aktuální TTL v sekundách, ``-1`` pokud klíč nemá TTL, ``-2`` pokud neexistuje.
 
-        Reálný Redis nezaručuje pořadí ani unikátnost napříč iteracemi; fake vrací klíče
-        v pořadí vložení, což pro testy stačí.
+        Zrcadlí sémantiku ``redis-py`` ``ttl()``, ale bez plynutí reálného času — vrací poslední
+        hodnotu nastavenou přes ``set(ex=...)``/``expire``, dokud ji nezruší ``persist`` nebo
+        přepsání bez ``ex``.
 
-        :param match: Glob vzor (např. ``import_data_ABC_record_*``); ``None`` vrátí vše.
-        :return: Generátor klíčů odpovídajících vzoru.
+        :param key: Redis klíč, jehož TTL se zjišťuje.
         """
-        for key in list(self._kv.keys()) + list(self._lists.keys()):
-            if match is None or fnmatch.fnmatchcase(key, match):
-                yield key
+        if key not in self._kv and key not in self._lists:
+            return -2
+        return self._ttl.get(key, -1)
 
     def rpush(self, key, value):
         """Přidá hodnotu na konec listu pod klíčem a vrátí novou délku listu.
@@ -163,49 +181,105 @@ class FakeRedis:
         return FakeRedis.FakePipeline(self)
 
     def eval(self, script, numkeys, *keys_and_args):
-        """Simuluje Redis Lua skript — vrací hodnotu z ``eval_results``, jinak reálně vykoná
-        compare-then-delete (``RedisConnector._RELEASE_LOCK_SCRIPT``/``delete_if_value_matches``)
-        nebo compare-then-transition (``RedisConnector._CLAIM_AWAITING_IMPORT_SCRIPT``).
+        """Simuluje Redis Lua skript — vrací hodnotu z ``eval_results``, jinak vykoná simulaci
+        odpovídající skriptu.
+
+        Dispatch probíhá přes přesnou shodu (``==``) se skriptovými konstantami definovanými na
+        ``RedisConnector`` (ne přes hledání podřetězců) — pokud se přijatý skript neshoduje s žádnou
+        známou konstantou, vyhodí ``ValueError``, aby budoucí úprava Lua skriptu v ``connectors.py``
+        neprošla testem tiše se špatným (obecným) chováním.
 
         Pokud byl při inicializaci předán ``eval_results``, odebere a vrátí první položku seznamu
-        (beze změny úložiště) — pro testy, které chtějí vynutit konkrétní výsledek locku. Jinak,
-        pro compare-then-delete skript klíč skutečně smaže, pokud jeho hodnota odpovídá
-        očekávané; pro claim skript ověří fázi/validitu/token a fázi skutečně přepne
-        (bez toho nešel otestovat souběh dvou Start požadavků);
-        jiné skripty (refresh/persist) vrací ``1`` beze změny úložiště.
+        (beze změny úložiště) — pro testy, které chtějí vynutit konkrétní výsledek locku.
 
-        :param script: Zdrojový text Lua skriptu (rozlišuje se dle přítomnosti ``\"del\"``
-            resp. ``\"return {1, token}\"``).
+        :param script: Zdrojový text Lua skriptu — musí být přesně jedna z konstant
+            ``RedisConnector._RELEASE_LOCK_SCRIPT`` / ``_REFRESH_LOCK_SCRIPT`` /
+            ``_CLAIM_AWAITING_IMPORT_SCRIPT`` /
+            ``_CANCEL_AWAITING_IMPORT_SCRIPT`` / ``_FINALIZE_VALIDATION_SCRIPT`` / ``_RESET_IMPORT_SCRIPT``.
         :param numkeys: Počet KEYS argumentů na začátku ``keys_and_args``.
         :param keys_and_args: KEYS následované ARGV, stejně jako u reálného Redis ``eval``.
         :return: První zbývající hodnota z ``eval_results``, nebo výsledek simulace.
+        :raises ValueError: Pokud ``script`` neodpovídá žádné známé konstantě ``RedisConnector``.
         """
         if self._eval_results:
             return self._eval_results.pop(0)
         keys = keys_and_args[:numkeys]
         argv = keys_and_args[numkeys:]
-        if "return {1, token}" in script:
+        if script == RedisConnector._CLAIM_AWAITING_IMPORT_SCRIPT:
             return self._eval_claim_awaiting_import(keys, argv)
-        if "del" in script and keys and argv:
-            key = keys[0]
-            if self._kv.get(key) == self._encode(argv[0]):
-                self.delete(key)
-                return 1
+        if script == RedisConnector._CANCEL_AWAITING_IMPORT_SCRIPT:
+            return self._eval_cancel_awaiting_import(keys, argv)
+        if script == RedisConnector._FINALIZE_VALIDATION_SCRIPT:
+            return self._eval_finalize_validation(keys, argv)
+        if script == RedisConnector._RELEASE_LOCK_SCRIPT:
+            return self._eval_compare_then_delete(keys, argv)
+        if script == RedisConnector._REFRESH_LOCK_SCRIPT:
+            return self._eval_compare_then_expire(keys, argv)
+        if script == RedisConnector._RESET_IMPORT_SCRIPT:
+            return self._eval_begin_import_reset(keys, argv)
+        raise ValueError(
+            "FakeRedis.eval: neznámý Lua skript neodpovídá žádné konstantě RedisConnector — "
+            "doplňte simulaci nebo použijte eval_results."
+        )
+
+    def _eval_compare_then_delete(self, keys, argv):
+        """Simuluje ``RedisConnector._RELEASE_LOCK_SCRIPT`` (compare-then-delete).
+
+        :param keys: ``(key,)`` — klíč, jehož hodnota se porovnává.
+        :param argv: ``(expected_value,)`` — očekávaná hodnota klíče.
+        :return: ``1`` a smaže klíč, pokud hodnota odpovídá; jinak ``0``.
+        """
+        key = keys[0]
+        if self._kv.get(key) == self._encode(argv[0]):
+            self.delete(key)
+            return 1
+        return 0
+
+    def _eval_compare_then_expire(self, keys, argv):
+        """Simuluje ``RedisConnector._REFRESH_LOCK_SCRIPT`` (compare-then-expire).
+
+        :param keys: Klíč locku; u workeru navíc token úlohy, značka aktivity a fáze.
+        :param argv: Očekávaný token, TTL locku a u workeru také TTL značky aktivity.
+        :return: Výsledek ``expire()``, pokud hodnota odpovídá; jinak ``0``.
+        """
+        key, expected_value = keys[0], argv[0]
+        if self._kv.get(key) != self._encode(expected_value):
             return 0
+        if len(keys) > 1:
+            if self._kv.get(keys[1]) != self._encode(expected_value):
+                return 0
+            if self._kv.get(keys[3]) not in (b"validating", b"importing"):
+                return 0
+            self.set(keys[2], "1", ex=int(argv[2]))
+        return int(self.expire(key, int(argv[1])))
+
+    def _eval_begin_import_reset(self, keys, argv):
+        """Odmítne čerstvou aktivitu, jinak nastaví stop, terminální fázi a uvolní vlastní lock."""
+        phase_key, recent_key, stop_key, token_key, lock_key = keys
+        phase = self._kv.get(phase_key)
+        if phase not in (b"validating", b"importing", b"awaiting_approval"):
+            return 0
+        if phase != b"awaiting_approval" and recent_key in self._kv:
+            return 0
+        self.set(stop_key, "1", ex=int(argv[0]))
+        self.set(phase_key, "failed", ex=int(argv[1]))
+        token = self._kv.get(token_key)
+        if token is not None and self._kv.get(lock_key) == token:
+            self.delete(lock_key)
         return 1
 
     def _eval_claim_awaiting_import(self, keys, argv):
         """Vykoná simulaci ``RedisConnector._CLAIM_AWAITING_IMPORT_SCRIPT``.
 
         Ověří fázi, validitu a vlastnictví locku úlohy a při shodě atomicky přepne fázi na
-        ``new_phase`` — stejně jako reálný Lua skript, ale nad in-memory úložištěm.
+        ``new_phase`` a obnoví TTL globálního locku podle ``ttl_seconds``.
 
         :param keys: ``(phase_key, valid_key, lock_token_key, global_lock_key)`` z ``KEYS``.
         :param argv: ``(expected_phase, new_phase, ttl_seconds)`` z ``ARGV``.
         :return: ``[1, token]`` při úspěšném nároku, jinak ``[0, ""]``.
         """
         phase_key, valid_key, lock_token_key, global_lock_key = keys
-        expected_phase, new_phase, _ttl_seconds = argv
+        expected_phase, new_phase, ttl_seconds = argv
         if self._kv.get(phase_key) != self._encode(expected_phase):
             return [0, ""]
         if self._kv.get(valid_key) != self._encode("1"):
@@ -214,7 +288,44 @@ class FakeRedis:
         if token_raw is None or self._kv.get(global_lock_key) != token_raw:
             return [0, ""]
         self.set(phase_key, new_phase)
+        self.expire(global_lock_key, int(ttl_seconds))
         return [1, self._maybe_decode(token_raw)]
+
+    def _eval_cancel_awaiting_import(self, keys, argv):
+        """Simuluje atomické zrušení dosud nespouštěného importu."""
+        phase_key, token_key, global_lock_key, status_key, user_pointer_key, active_job_key = keys
+        expected_phase, canceled_phase, status_message, job_id = argv
+        token = self._kv.get(token_key)
+        if (
+            self._kv.get(phase_key) != self._encode(expected_phase)
+            or not token
+            or self._kv.get(global_lock_key) != token
+        ):
+            return 0
+        self.set(phase_key, canceled_phase)
+        self.set(status_key, status_message)
+        self.delete(global_lock_key)
+        if self._kv.get(user_pointer_key) == self._encode(job_id):
+            self.delete(user_pointer_key)
+        if self._kv.get(active_job_key) == self._encode(job_id):
+            self.delete(active_job_key)
+        return 1
+
+    def _eval_finalize_validation(self, keys, argv):
+        """Simuluje přechod validace do awaiting_approval a nastavení dlouhé expirace locku."""
+        phase_key, stop_key, token_key, global_lock_key = keys
+        expected_phase, new_phase, approval_ttl_seconds = argv
+        token = self._kv.get(token_key)
+        if (
+            self._kv.get(phase_key) != self._encode(expected_phase)
+            or stop_key in self._kv
+            or not token
+            or self._kv.get(global_lock_key) != token
+        ):
+            return 0
+        self.set(phase_key, new_phase)
+        self.expire(global_lock_key, int(approval_ttl_seconds))
+        return 1
 
     class FakePipeline:
         """Record-then-execute pipeline nad ``FakeRedis`` — operace se provedou až při ``execute()``."""
@@ -240,7 +351,7 @@ class FakeRedis:
 
             :param key: Redis klíč zapisované hodnoty.
             :param value: Hodnota k uložení.
-            :param ex: Ignorováno — FakeRedis neimplementuje TTL.
+            :param ex: TTL v sekundách (viz ``FakeRedis.set``).
             :param nx: Pokud ``True``, zapiš pouze při neexistenci klíče.
             """
             self._ops.append(("set", key, value, ex, nx))
@@ -258,7 +369,7 @@ class FakeRedis:
             """Zaznamená ``expire`` operaci do fronty.
 
             :param key: Redis klíč, pro který se nastavuje TTL.
-            :param seconds: Počet sekund TTL (fake implementací ignorováno).
+            :param seconds: Počet sekund TTL.
             """
             self._ops.append(("expire", key, seconds))
             return self
