@@ -1,0 +1,582 @@
+"""
+HTTP klient pro stahování **denních změnových** VFR souborů z ČÚZK.
+
+Modul stahuje **vždy variantu ZKSH** = denní změnový (Z), kompletní (K),
+současná RÚIAN (S), s **originálními** hranicemi katastrů (H).
+Generalizované hranice (varianta ``ZKSG``) ani jiné kombinace
+projekt nepoužívá – pro účely AMČR jsou potřeba pouze originální hranice
+(``ZKSH``), proto v API nejsou žádné parametry varianty.
+
+Plný (initial) sync se z VFR **nestahuje** – používá se SHP + ``ST_UZSZ``
+přes :class:`heslar.ruian_sync.shp_importer.ShpUzszSource`.
+
+Konvence názvu souboru (z PDF *DL058RR2 v4.0 kap. 4.2.4*)::
+
+    <YYYYMMDD>_ST_ZKSH.xml.zip
+
+Příklad: ``20260501_ST_ZKSH.xml.zip`` = denní změnový pro celou ČR
+ke dni 1. 5. 2026 s originálními hranicemi.
+
+Stahování probíhá streamovaně (``requests.get(stream=True)``).
+
+URL pro stahování (``base_url``, ``atom_feed_url``, ``prefer_atom``)
+se načítají z DB záznamu :class:`core.setting_models.CustomAdminSettings`
+se skupinou ``ruian_sync`` a item_id ``vfr_download``. Hodnoty se čtou
+**fresh při každém volání**, takže admin může URL přepsat za běhu bez
+restartu workeru. Pokud DB záznam neexistuje (např. před spuštěním
+migrací) nebo má neplatný JSON, použijí se modulové defaulty.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+from datetime import date
+from pathlib import Path
+from typing import Any, Optional
+from urllib.parse import urljoin
+
+import requests
+from lxml import etree
+
+logger = logging.getLogger(__name__)
+
+
+#: Pevná varianta VFR souborů, kterou AMČR používá – kompletní sada
+#: s originálními hranicemi katastrů (ne generalizovanými).
+_VARIANT = "ZKSH"
+
+#: Default chunk size pro streamované stahování (8 MB).
+_DEFAULT_CHUNK_SIZE = 8 * 1024 * 1024
+
+#: Strop na velikost stahovaného změnového souboru. Tudy tečou **pouze denní
+#: delty** (``download_change_file`` / ``download_via_atom``) – stavový archiv
+#: ``1.zip`` se nasazuje ručně a tímto kódem neprochází. Reálné delty mají
+#: jednotky MB, takže 256 MiB je řádově nad legitimním provozem a přitom
+#: zabrání zaplnění disku, kdyby na druhé straně stálo něco nepřátelského.
+_MAX_DOWNLOAD_BYTES = 256 * 1024 * 1024
+
+
+class RuianDownloadTooLargeError(Exception):
+    """
+    Vyhozeno, pokud stahovaný změnový soubor přeroste
+    :data:`_MAX_DOWNLOAD_BYTES`.
+
+    Rozdělaný ``.tmp`` soubor se smaže, takže na disku nic nezůstane.
+    Volající (syncer) zachytí, zaloguje a označí ``RuianSyncRun.status="failed"``.
+    """
+
+
+#: HTTP timeout v sekundách pro celé spojení (headers + body); pro velké
+#: soubory záměrně dlouhý.
+_DEFAULT_TIMEOUT = 600
+
+#: Skupina a id záznamu v ``CustomAdminSettings`` s konfigurací stahování.
+_SETTINGS_GROUP = "ruian_sync"
+_SETTINGS_ITEM = "vfr_download"
+
+#: Modulové defaulty – použijí se, pokud DB záznam chybí nebo je neplatný.
+#: Soubory leží ploše v ``vdp.cuzk.gov.cz/vymenny_format/soucasna/``
+#: (žádné rozdělení po letech/měsících v cestě), retence sahá zhruba
+#: rok zpět. ATOM feed ``RUIAN-S-K-Z`` listuje pouze posledních ~15 dnů
+#: jako *novinky*, ale starší soubory v té cestě stejně existují.
+#: ``target_dir`` je cílový adresář pro stažené VFR ZIP soubory na lokálním
+#: filesystému kontejneru (mapuje se z hostitelského ``/home/migrace``).
+_DEFAULTS = {
+    "base_url": "https://vdp.cuzk.gov.cz/vymenny_format/soucasna/",
+    "atom_feed_url": "https://atom.cuzk.gov.cz/RUIAN-S-K-Z/RUIAN-S-K-Z.xml",
+    "prefer_atom": False,
+    "target_dir": "/vol/data-migrace/ruian_delta/",
+}
+
+
+# ---------------------------------------------------------------------------
+# Konfigurace z CustomAdminSettings
+# ---------------------------------------------------------------------------
+
+
+def _load_settings() -> dict:
+    """
+    Načte konfiguraci z :class:`CustomAdminSettings` (skupina ``ruian_sync``,
+    item ``vfr_download``) a sloučí ji s modulovými defaulty.
+
+    Záznam v DB má JSON ``value`` s klíči ``base_url`` / ``atom_feed_url`` /
+    ``prefer_atom``. Chybějící klíče se doplní z :data:`_DEFAULTS`.
+
+    Chyby (DB záznam neexistuje, neplatný JSON, ProgrammingError při
+    migraci) se tiše ignorují a vrátí se čisté defaulty – sync nesmí
+    spadnout kvůli chybějící konfiguraci.
+
+        :return: Slovník s klíči ``base_url``, ``atom_feed_url``, ``prefer_atom``.
+    """
+    merged = dict(_DEFAULTS)
+    try:
+        from core.setting_models import CustomAdminSettings
+
+        obj = CustomAdminSettings.objects.filter(item_group=_SETTINGS_GROUP, item_id=_SETTINGS_ITEM).first()
+        if obj is None:
+            return merged
+        payload = json.loads(obj.value)
+        if isinstance(payload, dict):
+            for key in _DEFAULTS:
+                if key in payload and payload[key] is not None:
+                    merged[key] = payload[key]
+    except Exception as err:  # noqa: BLE001 — fallback na defaulty
+        logger.debug(
+            "heslar.ruian_sync.vfr_download._load_settings.fallback",
+            extra={"error": str(err)},
+        )
+    return merged
+
+
+def _get_setting(key: str) -> Any:
+    """
+    Vrátí konkrétní hodnotu z konfigurace (s fallback na default).
+
+    :param key: Klíč v JSON konfiguraci (``base_url`` / ``atom_feed_url`` /
+        ``prefer_atom`` / ``target_dir``).
+
+        :return: Hodnota z DB nebo z :data:`_DEFAULTS`.
+    """
+    return _load_settings().get(key, _DEFAULTS.get(key))
+
+
+def get_target_dir() -> Path:
+    """
+    Vrátí cílový adresář pro stažené denní změnové VFR ZIP soubory.
+
+    Hodnota se čte z :class:`CustomAdminSettings` (skupina ``ruian_sync``,
+    item ``vfr_download``, klíč ``target_dir``); fallback je modulový default
+    z :data:`_DEFAULTS`. Adresář **nemusí existovat** – :func:`download_change_file`
+    ho vytvoří přes ``Path.parent.mkdir(parents=True, exist_ok=True)``.
+
+        :return: Cesta jako :class:`pathlib.Path`.
+    """
+    return Path(_get_setting("target_dir"))
+
+
+# ---------------------------------------------------------------------------
+# URL builders
+# ---------------------------------------------------------------------------
+
+
+def _change_filename(day: date) -> str:
+    """
+    Sestaví název denního změnového VFR souboru pro variantu ``ZKSH``.
+
+    :param day: Datum platnosti dat.
+
+        :return: Název souboru ``YYYYMMDD_ST_ZKSH.xml.zip``.
+    """
+    return f"{day.strftime('%Y%m%d')}_ST_{_VARIANT}.xml.zip"
+
+
+def build_change_url(day: date) -> str:
+    """
+    Sestaví URL pro stažení denního změnového VFR (varianta ``ZKSH``).
+
+    Cesta na serveru je plochá – ``vdp.cuzk.gov.cz/vymenny_format/soucasna/``
+    obsahuje všechny soubory přímo, bez rozdělení po letech či měsících.
+
+    :param day: Konkrétní den, pro který se má soubor stáhnout.
+
+        :return: Plně kvalifikovaná URL k dennímu změnovému VFR souboru.
+    """
+    return urljoin(_get_setting("base_url"), _change_filename(day))
+
+
+# ---------------------------------------------------------------------------
+# Streaming download
+# ---------------------------------------------------------------------------
+
+
+class RuianNeduveryhodnePresmerovaniError(Exception):
+    """Stahování bylo přesměrováno mimo povolené původy."""
+
+
+#: Kolik přesměrování se nejvýš projde, než se stahování vzdá.
+_MAX_PRESMEROVANI = 5
+
+
+def _otevri_s_overenim_presmerovani(url: str, *, timeout: int, povolene_puvody=None):
+    """
+    Otevře streamovaný požadavek a přesměrování projde ručně s kontrolou původu.
+
+    :param url: Výchozí URL.
+    :param timeout: HTTP timeout v sekundách.
+    :param povolene_puvody: Množina povolených původů ``(schéma, hostitel, port)``;
+        ``None`` povolí jen původ výchozí adresy.
+    :return: Otevřená odpověď ``requests.Response`` (volající ji uzavře).
+    :raises RuianNeduveryhodnePresmerovaniError: Při přesměrování mimo povolené
+        původy nebo při překročení :data:`_MAX_PRESMEROVANI`.
+    """
+    povolene = set(povolene_puvody) if povolene_puvody else {_puvod(url)}
+    aktualni = url
+    for _ in range(_MAX_PRESMEROVANI + 1):
+        resp = requests.get(aktualni, stream=True, timeout=timeout, allow_redirects=False)
+        if not resp.is_redirect and not resp.is_permanent_redirect:
+            return resp
+        umisteni = resp.headers.get("Location", "")
+        resp.close()
+        cil = urljoin(aktualni, umisteni)
+        if _puvod(cil) not in povolene:
+            logger.error(
+                "heslar.ruian_sync.vfr_download._otevri_s_overenim_presmerovani.cizi_puvod",
+                extra={"z": aktualni[:200], "na": cil[:200], "povolene_puvody": sorted(map(str, povolene))},
+            )
+            raise RuianNeduveryhodnePresmerovaniError(f"Přesměrování z {aktualni} na {cil} míří mimo povolené původy.")
+        aktualni = cil
+    raise RuianNeduveryhodnePresmerovaniError(f"Stahování {url} překročilo {_MAX_PRESMEROVANI} přesměrování.")
+
+
+def _stream_to_file(
+    url: str,
+    target_path: Path,
+    *,
+    chunk_size: int = _DEFAULT_CHUNK_SIZE,
+    timeout: int = _DEFAULT_TIMEOUT,
+    povolene_puvody=None,
+) -> Optional[Path]:
+    """
+    Stáhne URL streamovaně do lokálního souboru.
+
+    Přesměrování se **nenásledují automaticky**. Ověření odkazu z ATOM feedu
+    (:func:`_je_duveryhodny_odkaz`) kontroluje jen první skok; kdyby ``requests``
+    směl přesměrování vyřídit sám, stačilo by odpovědět z povolené adresy
+    ``302`` na libovolnou jinou a soubor by se stáhl odtamtud. Každý skok proto
+    prochází stejnou kontrolou původu.
+
+    :param url: URL ke stažení.
+    :param target_path: Cílová cesta na disku.
+    :param chunk_size: Velikost chunku v bytech.
+    :param timeout: HTTP timeout v sekundách.
+    :param povolene_puvody: Množina původů ``(schéma, hostitel, port)``, na které
+        se smí přesměrovat; ``None`` povolí jen původ samotného ``url``.
+
+        :return: ``target_path`` při úspěchu, ``None`` při HTTP 404.
+        :raises requests.HTTPError: Při jiných HTTP chybách než 404.
+        :raises requests.RequestException: Při síťové chybě.
+        :raises RuianNeduveryhodnePresmerovaniError: Při přesměrování mimo
+            povolené původy nebo při zacyklení.
+        :raises RuianDownloadTooLargeError: Pokud přenos přeroste
+            :data:`_MAX_DOWNLOAD_BYTES`; rozdělaný ``.tmp`` soubor se smaže.
+    """
+    logger.debug("heslar.ruian_sync.vfr_download._stream_to_file.start", extra={"url": url})
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = target_path.with_name(target_path.name + ".tmp")
+    try:
+        with _otevri_s_overenim_presmerovani(url, timeout=timeout, povolene_puvody=povolene_puvody) as resp:
+            if resp.status_code == 404:
+                logger.debug("heslar.ruian_sync.vfr_download._stream_to_file.not_found", extra={"url": url})
+                return None
+            resp.raise_for_status()
+            stazeno = 0
+            with open(temp_path, "wb") as fh:
+                for chunk in resp.iter_content(chunk_size=chunk_size):
+                    if chunk:
+                        stazeno += len(chunk)
+                        if stazeno > _MAX_DOWNLOAD_BYTES:
+                            raise RuianDownloadTooLargeError(
+                                f"Stahování {url} překročilo limit "
+                                f"{_MAX_DOWNLOAD_BYTES} B (staženo nejméně {stazeno} B)."
+                            )
+                        fh.write(chunk)
+        if target_path.exists():
+            logger.warning(
+                "heslar.ruian_sync.vfr_download._stream_to_file.overwrite",
+                extra={"path": str(target_path)},
+            )
+        temp_path.replace(target_path)
+    except Exception:
+        if temp_path.exists():
+            temp_path.unlink(missing_ok=True)
+        raise
+    logger.debug(
+        "heslar.ruian_sync.vfr_download._stream_to_file.end",
+        extra={"url": url, "size": target_path.stat().st_size, "path": str(target_path)},
+    )
+    return target_path
+
+
+def download_change_file(day: date, target_dir: Path) -> Optional[Path]:
+    """
+    Stáhne denní změnový VFR (``ZKSH``) pro daný den do ``target_dir``.
+
+    Pokud server vrátí HTTP 404, znamená to, že daný den nebyly v RÚIAN
+    žádné změny (typicky víkend nebo státní svátek) – funkce vrací
+    ``None`` a cron tento den přeskočí.
+
+    :param day: Konkrétní den.
+    :param target_dir: Cílový adresář.
+
+        :return: Cesta ke staženému souboru, nebo ``None`` při 404.
+    """
+    if bool(_get_setting("prefer_atom")):
+        try:
+            z_atomu = download_via_atom(day, target_dir)
+        except Exception as err:  # noqa: BLE001 — fallback na deterministické URL
+            logger.warning(
+                "heslar.ruian_sync.vfr_download.download_change_file.atom_failed",
+                extra={"day": day.isoformat(), "error": str(err)},
+            )
+        else:
+            if z_atomu is not None:
+                return z_atomu
+            # ATOM feed drží jen posledních ~15 dní, takže pro starší den
+            # vrátí ``None`` (ne výjimku). Bez propadnutí na deterministickou
+            # URL by volající dostal ``None`` a cron by to vyhodnotil jako
+            # „ten den nebyly změny" – při dohánění delšího výpadku by se
+            # reálné změny ztratily a běh by přitom skončil jako úspěšný.
+            logger.info(
+                "heslar.ruian_sync.vfr_download.download_change_file.atom_miss_fallback",
+                extra={"day": day.isoformat()},
+            )
+
+    url = build_change_url(day)
+    filename = url.rsplit("/", 1)[-1]
+    target_path = Path(target_dir) / filename
+    return _stream_to_file(url, target_path)
+
+
+# ---------------------------------------------------------------------------
+# ATOM feed fallback
+# ---------------------------------------------------------------------------
+
+
+class RuianAtomFeedTooLargeError(Exception):
+    """ATOM feed přesáhl povolenou velikost a nebyl zpracován."""
+
+
+#: Strop velikosti staženého ATOM feedu. Reálný feed ČÚZK má jednotky set
+#: kilobajtů; 16 MiB je s velkou rezervou nad tím a zároveň brání tomu, aby
+#: podvržená odpověď vyčerpala paměť workeru. ``atom_feed_url`` je totiž
+#: editovatelná za běhu přes :class:`CustomAdminSettings`, takže obsah feedu
+#: není o nic důvěryhodnější než jakýkoli jiný vzdálený vstup.
+_MAX_ATOM_BYTES = 16 * 1024 * 1024
+
+
+def _stahni_atom_feed(feed_url: str, timeout: int) -> bytes:
+    """
+    Stáhne ATOM feed streamovaně a s limitem velikosti.
+
+    :param feed_url: URL ATOM feedu.
+    :param timeout: HTTP timeout v sekundách.
+    :return: Obsah feedu jako ``bytes``.
+    :raises requests.HTTPError: Při HTTP chybě.
+    :raises RuianAtomFeedTooLargeError: Když feed překročí
+        :data:`_MAX_ATOM_BYTES`.
+    :raises RuianNeduveryhodnePresmerovaniError: Když feed přesměruje mimo
+        svůj vlastní původ.
+    """
+    # Přesměrování se ověřuje stejně jako u stahovaných souborů. ``atom_feed_url``
+    # je editovatelná za běhu, takže i tenhle požadavek může skončit jinde, než
+    # kam mířil – bez kontroly by šlo o slepý GET z workeru na cizí adresu.
+    # Povolený je původ samotného feedu; jiné URL nastaví admin v nastavení.
+    with _otevri_s_overenim_presmerovani(feed_url, timeout=timeout) as resp:
+        resp.raise_for_status()
+        data = bytearray()
+        for kus in resp.iter_content(chunk_size=64 * 1024):
+            data.extend(kus)
+            if len(data) > _MAX_ATOM_BYTES:
+                logger.error(
+                    "heslar.ruian_sync.vfr_download._stahni_atom_feed.prilis_velky",
+                    extra={"url": feed_url, "limit_bytes": _MAX_ATOM_BYTES},
+                )
+                raise RuianAtomFeedTooLargeError(f"ATOM feed {feed_url} přesáhl {_MAX_ATOM_BYTES} B a byl odmítnut.")
+    return bytes(data)
+
+
+def _parse_atom_feed(feed_url: str, timeout: int = 60) -> list:
+    """
+    Stáhne a parsuje ATOM feed; vrací seznam ``(title, href)`` dvojic.
+
+    Parsuje se s ``resolve_entities=False`` a bez načítání DTD, stejně jako
+    změnové VFR v :mod:`heslar.ruian_sync.vfr_parser`. Bez toho by podvržený
+    feed mohl expanzí entit vyčerpat paměť workeru (billion laughs) a přes
+    ``file://`` entitu dostat obsah lokálních souborů do hodnot ``title`` a
+    ``href``, se kterými se dál pracuje. Velikost odpovědi hlídá
+    :func:`_stahni_atom_feed`.
+
+    :param feed_url: URL ATOM feedu (např. https://atom.cuzk.gov.cz/...).
+    :param timeout: HTTP timeout v sekundách.
+
+        :return: Seznam dvojic ``(entry_title, entry_link_href)``.
+        :raises requests.HTTPError: Při HTTP chybě.
+        :raises RuianAtomFeedTooLargeError: Když feed překročí limit velikosti.
+    """
+    logger.debug("heslar.ruian_sync.vfr_download._parse_atom_feed.start", extra={"url": feed_url})
+    obsah = _stahni_atom_feed(feed_url, timeout)
+    parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True, huge_tree=False)
+    root = etree.fromstring(obsah, parser=parser)
+    entries = []
+    ns = "{http://www.w3.org/2005/Atom}"
+    for entry in root.findall(f"{ns}entry"):
+        title_el = entry.find(f"{ns}title")
+        link_el = entry.find(f"{ns}link")
+        if title_el is None or link_el is None:
+            continue
+        title = (title_el.text or "").strip()
+        href = link_el.get("href", "")
+        if href:
+            entries.append((title, href))
+    return entries
+
+
+#: Schémata, přes která se smí stahovat soubor odkazovaný z ATOM feedu.
+_POVOLENA_SCHEMATA_ODKAZU = frozenset({"http", "https"})
+
+
+#: Původ, který se nepodařilo z adresy určit. Nikdy se nerovná platnému
+#: původu, takže porovnání takovou adresu spolehlivě odmítne.
+_NEZNAMY_PUVOD = (None, None, None)
+
+
+def _puvod(url: str):
+    """
+    Vrátí původ URL jako trojici ``(schéma, hostitel, port)``.
+
+    **Schéma** je součástí původu, protože jinak by ``http://h:443`` odpovídalo
+    ``https://h``: ``urlsplit`` u obou vrátí tentýž hostitel i port. První odkaz
+    schéma kontroluje :func:`_je_duveryhodny_odkaz`, u dalších skoků
+    přesměrování by ale bez něj invariant držela jen knihovna ``requests``.
+
+    **Port** je v původu taky schválně: ``urlsplit().hostname`` ho zahazuje,
+    takže ``vdp.cuzk.gov.cz:8080`` by se tvářil jako povolený
+    ``vdp.cuzk.gov.cz``. Chybějící port se doplní podle schématu, aby
+    ``https://h`` a ``https://h:443`` byly tentýž původ.
+
+    Adresa bez hostitele nebo s nesmyslným portem (``:abc``, ``:99999``) vrací
+    :data:`_NEZNAMY_PUVOD`. Vstupem jsou nedůvěryhodné hodnoty – ``href``
+    z ATOM feedu a hlavička ``Location`` z přesměrování –, u kterých by
+    ``urlsplit().port`` vyhodil ``ValueError``; ten by pak z ověřování unikl
+    jako nečekaná chyba místo zalogovaného odmítnutí.
+
+    :param url: URL nebo jen ``scheme://host``.
+    :return: Trojice ``(schéma, hostitel malými písmeny, port)``, nebo
+        :data:`_NEZNAMY_PUVOD`, když adresu nejde vyhodnotit.
+    """
+    from urllib.parse import urlsplit
+
+    try:
+        rozklad = urlsplit(url)
+        hostitel = rozklad.hostname
+        port = rozklad.port
+    except ValueError:
+        return _NEZNAMY_PUVOD
+    if not hostitel:
+        return _NEZNAMY_PUVOD
+    schema = rozklad.scheme.lower()
+    return (schema, hostitel.lower(), port or {"https": 443, "http": 80}.get(schema))
+
+
+def _puvody(urls) -> set:
+    """
+    Převede adresy na množinu původů pro porovnání.
+
+    :param urls: Iterovatelné URL adres.
+    :return: Množina trojic ``(schéma, hostitel, port)`` bez nevyhodnotitelných
+        adres.
+    """
+    return {_puvod(u) for u in urls if u} - {_NEZNAMY_PUVOD}
+
+
+def _je_duveryhodny_odkaz(href: str, feed_url: str, expected_filename: str, povolene_hosty=None) -> bool:
+    """
+    Ověří, že odkaz z ATOM feedu míří na očekávaný soubor u důvěryhodného hostitele.
+
+    Obsah feedu je nedůvěryhodný vstup (``atom_feed_url`` se mění za běhu přes
+    :class:`CustomAdminSettings`). Dřív stačilo, aby ``href`` jméno souboru
+    **obsahoval** – podvržený záznam tak mohl stahování nasměrovat na libovolnou
+    adresu včetně interní sítě (blind SSRF). Proto se vyžaduje:
+
+    * schéma ``http``/``https`` (ne ``file://``, ``gopher://``…),
+    * hostitel mezi povolenými – viz níže,
+    * poslední segment cesty **přesně** rovný očekávanému jménu souboru.
+
+    **Povolený hostitel není hostitel feedu.** ČÚZK soubory servíruje odjinud,
+    než odkud podává feed: ověřeno 17. 9. 2026 – hlavní feed je na
+    ``atom.cuzk.gov.cz``, datové feedy na ``atom.cuzk.cz`` a samotné ZKSH
+    soubory na ``vdp.cuzk.gov.cz``. Kontrola proti hostiteli feedu by odmítla
+    každý legitimní soubor. Povolený je proto hostitel z nastaveného
+    ``base_url`` (odkud se soubory stahují i bez ATOM) a hostitel feedu.
+
+    Nevyhovující odkaz se zaloguje a přeskočí.
+
+    :param href: Odkaz ze záznamu ATOM feedu.
+    :param feed_url: URL feedu, ze kterého odkaz pochází.
+    :param expected_filename: Očekávané jméno souboru pro daný den.
+    :param povolene_hosty: Adresy, jejichž původ je povolený; ``None`` =
+        ``base_url`` z :class:`CustomAdminSettings` a URL feedu.
+    :return: ``True``, když je odkaz bezpečné stáhnout.
+    """
+    from urllib.parse import unquote, urlsplit
+
+    try:
+        odkaz = urlsplit(href)
+        cesta = odkaz.path
+    except ValueError:
+        # Rozbitá adresa (např. ``https://]h/...`` vyhodí "Invalid IPv6 URL")
+        # nesmí uniknout jako nečekaná výjimka – kontrakt téhle funkce je
+        # zalogovat a přeskočit, ne spadnout. Totéž řeší ``_puvod`` o patro níž.
+        logger.warning(
+            "heslar.ruian_sync.vfr_download._je_duveryhodny_odkaz.odmitnuto",
+            extra={"duvod": "nerozlozitelna_adresa", "href": href[:200]},
+        )
+        return False
+    jmeno = unquote(cesta.rsplit("/", 1)[-1])
+    if jmeno != expected_filename:
+        return False
+
+    if povolene_hosty is None:
+        povolene_hosty = {feed_url, _get_setting("base_url") or ""}
+    povolene = _puvody(povolene_hosty)
+
+    if odkaz.scheme.lower() not in _POVOLENA_SCHEMATA_ODKAZU or not odkaz.hostname:
+        duvod = "nepovolene_schema"
+    elif _puvod(href) not in povolene:
+        duvod = "cizi_puvod"
+    else:
+        return True
+    logger.warning(
+        "heslar.ruian_sync.vfr_download._je_duveryhodny_odkaz.odmitnuto",
+        extra={"duvod": duvod, "href": href[:200], "povolene_puvody": sorted(map(str, povolene))},
+    )
+    return False
+
+
+def download_via_atom(
+    day: date,
+    target_dir: Path,
+    *,
+    feed_url: Optional[str] = None,
+) -> Optional[Path]:
+    """
+    Stáhne ``ZKSH`` soubor pro daný den přes ATOM feed (fallback k deterministické URL).
+
+    Hledá v ATOM feedu položku, jejíž URL končí přesně očekávaným názvem
+    souboru a míří na povolený původ (viz :func:`_je_duveryhodny_odkaz`)
+    (``<YYYYMMDD>_ST_ZKSH.xml.zip``). Pokud taková položka neexistuje, vrací
+    ``None``.
+
+    :param day: Den platnosti.
+    :param target_dir: Cílový adresář.
+    :param feed_url: Volitelný override ATOM feedu (jinak se vezme
+        ``atom_feed_url`` z :class:`CustomAdminSettings`).
+
+        :return: Cesta ke staženému souboru nebo ``None``.
+    """
+    feed = feed_url or _get_setting("atom_feed_url")
+    expected_filename = _change_filename(day)
+    for _title, href in _parse_atom_feed(feed):
+        if _je_duveryhodny_odkaz(href, feed, expected_filename):
+            target_path = Path(target_dir) / expected_filename
+            return _stream_to_file(
+                href,
+                target_path,
+                povolene_puvody=_puvody({feed, _get_setting("base_url") or ""}),
+            )
+    logger.debug(
+        "heslar.ruian_sync.vfr_download.download_via_atom.not_found",
+        extra={"day": day.isoformat(), "expected": expected_filename},
+    )
+    return None

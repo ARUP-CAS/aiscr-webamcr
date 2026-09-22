@@ -2,6 +2,7 @@ from django.urls import path
 from uzivatel.views import OsobaAutocomplete, create_osoba
 
 from .views import (
+    ContinueKatastrProcessing,
     DokumentFormatAutocomplete,
     DokumentTypAutocomplete,
     HeslarAutocompleteView,
@@ -31,4 +32,9 @@ urlpatterns = [
     path("pristupnost/", PristupnostAutocomplete.as_view(), name="pristupnost-autocomplete"),
     path("heslar/autocomplete/", HeslarAutocompleteView.as_view(), name="heslar-autocomplete"),
     path("heslar-nazev/autocomplete/", HeslarNazevAutocompleteView.as_view(), name="heslar_nazev-autocomplete"),
+    path(
+        "continue-processing-katastry/<str:job_id>",
+        ContinueKatastrProcessing.as_view(),
+        name="continue-processing-katastry",
+    ),
 ]
