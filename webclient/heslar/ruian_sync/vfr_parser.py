@@ -19,7 +19,7 @@ Implementační poznámky:
   prefixy);
 * ZIP archiv otevírá přes ``zipfile.ZipFile`` a streamuje XML přímo z něj
   bez rozbalování na disk;
-* geometrie zůstává v EPSG:5514 (RÚIAN heslář je od migrace 0013 primárně
+* geometrie zůstává v EPSG:5514 (RÚIAN heslář je od migrace heslar.0014 primárně
   JTSK) — parser jen normalizuje S-JTSK z VFR na **zápornou** (West-South)
   konvenci projektu přes :func:`_normalize_sjtsk_wkt`; VFR dodává obě formy;
 * okres katastru se rezolvuje přes přechodný map ``obec_kod → okres_kod``

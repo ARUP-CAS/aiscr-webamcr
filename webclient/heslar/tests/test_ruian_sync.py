@@ -1750,6 +1750,16 @@ class OdkazZAtomFeeduTests(SimpleTestCase):
         for vadny in (f"https://vdp.cuzk.gov.cz:abc/{self.JMENO}", f"https://vdp.cuzk.gov.cz:99999/{self.JMENO}"):
             self.assertFalse(self._over(vadny), vadny)
 
+    def test_nerozlozitelna_adresa_se_odmitne_bez_vyjimky(self):
+        """
+        Rozbitá adresa je odmítnutí, ne pád.
+
+        ``urlsplit("https://]h/…")`` vyhodí ``ValueError: Invalid IPv6 URL``
+        ještě dřív, než se řeší port; z ověřování by to uniklo jako nečekaná
+        chyba místo zalogovaného přeskočení.
+        """
+        self.assertFalse(self._over(f"https://]h/{self.JMENO}"))
+
     def test_schema_je_soucasti_puvodu(self):
         """
         ``http://h:443`` nesmí projít jako ``https://h``.
@@ -1951,6 +1961,20 @@ class PresmerovaniPriStahovaniTests(SimpleTestCase):
                 vfr_download._otevri_s_overenim_presmerovani(
                     "https://vdp.cuzk.gov.cz/a.zip", timeout=5, povolene_puvody=self.POVOLENE
                 )
+
+    def test_stazeni_feedu_overuje_presmerovani(self):
+        """
+        I stažení ATOM feedu prochází kontrolou původu.
+
+        ``atom_feed_url`` je editovatelná za běhu, takže požadavek může skončit
+        jinde, než kam mířil – bez kontroly by šlo o slepý GET z workeru.
+        """
+        from heslar.ruian_sync import vfr_download
+
+        odpovedi = [self._odpoved(302, "https://evil.example/feed.xml")]
+        with mock.patch.object(vfr_download.requests, "get", side_effect=odpovedi):
+            with self.assertRaises(vfr_download.RuianNeduveryhodnePresmerovaniError):
+                vfr_download._stahni_atom_feed("https://atom.cuzk.cz/feed.xml", 5)
 
     def test_bez_presmerovani_vrati_odpoved(self):
         """Běžné stažení se nemá čím zdržet."""

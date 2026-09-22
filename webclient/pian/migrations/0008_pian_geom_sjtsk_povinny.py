@@ -5,7 +5,7 @@
 # Dokud byl sloupec nullable, procházely DB záznamy bez JTSK a spatial
 # dotazy určující katastr (``core.utils.get_all_pians_with_akce`` →
 # ``ST_Intersects`` proti ``ruian_katastr.hranice``, od migrace
-# ``heslar.0013`` v EPSG:5514) na nich vracely ``NULL``. Katastr se
+# ``heslar.0014`` v EPSG:5514) na nich vracely ``NULL``. Katastr se
 # nedohledal a připojení pianu k archeologickému záznamu jeho
 # ``hlavni_katastr`` tiše neaktualizovalo.
 #

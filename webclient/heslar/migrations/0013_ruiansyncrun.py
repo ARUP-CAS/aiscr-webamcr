@@ -11,7 +11,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("heslar", "0011_ruiankraj_email"),
+        ("heslar", "0012_heslardokumenttypmaterial"),
     ]
 
     operations = [

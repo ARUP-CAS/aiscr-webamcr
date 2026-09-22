@@ -13,9 +13,9 @@ Webový kontejner spouští ``manage.py migrate`` sám ve vstupním skriptu
 startují nezávisle na něm. Při výchozím ``docker compose up`` by tak vznikla
 tři okna, kdy nad databází běží kód jiné verze, než odpovídá jejímu schématu:
 
-* **nový celery kód před dokončením** ``heslar.0013`` – čte geometrie ještě
+* **nový celery kód před dokončením** ``heslar.0014`` – čte geometrie ještě
   v EPSG:4326 jako EPSG:5514;
-* **starý kód po** ``heslar.0013`` – dotazy na katastr podle bodu tiše
+* **starý kód po** ``heslar.0014`` – dotazy na katastr podle bodu tiše
   nenajdou nic nebo najdou jiný katastr, protože geometrie už jsou v jiné
   soustavě;
 * **jakýkoli kód během backfillu** ``pian.0008`` – trigger
@@ -40,7 +40,7 @@ Pořadí migrací
 
 Migrace musí projít **před** prvním plným syncem ze SHP, v tomto pořadí:
 
-1. ``heslar.0013_ruian_geom_srid_5514`` – převede ``hranice``
+1. ``heslar.0014_ruian_geom_srid_5514`` – převede ``hranice``
    a ``definicni_bod`` u krajů, okresů a katastrů z EPSG:4326 na EPSG:5514.
    Čte i zapisuje po dávkách přes dočasnou tabulku, ale celý krok je jedna
    transakce: mezi zahozením a naplněním geometrie tabulky geometrii nemají,
@@ -51,7 +51,7 @@ Migrace musí projít **před** prvním plným syncem ze SHP, v tomto pořadí:
    ``trg_validate_geometries``; vypnutí i zapnutí jsou krátké samostatné
    transakce, aby se ``ACCESS EXCLUSIVE`` na ``pian`` nedržel po celý běh.
 
-Plný sync zapisuje geometrie v EPSG:5514, které sloupce před migrací ``0013``
+Plný sync zapisuje geometrie v EPSG:5514, které sloupce před migrací ``0014``
 nepřijmou – opačné pořadí proto skončí chybou.
 
 Trigger po migraci

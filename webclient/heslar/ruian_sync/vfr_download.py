@@ -365,8 +365,14 @@ def _stahni_atom_feed(feed_url: str, timeout: int) -> bytes:
     :raises requests.HTTPError: Při HTTP chybě.
     :raises RuianAtomFeedTooLargeError: Když feed překročí
         :data:`_MAX_ATOM_BYTES`.
+    :raises RuianNeduveryhodnePresmerovaniError: Když feed přesměruje mimo
+        svůj vlastní původ.
     """
-    with requests.get(feed_url, timeout=timeout, stream=True) as resp:
+    # Přesměrování se ověřuje stejně jako u stahovaných souborů. ``atom_feed_url``
+    # je editovatelná za běhu, takže i tenhle požadavek může skončit jinde, než
+    # kam mířil – bez kontroly by šlo o slepý GET z workeru na cizí adresu.
+    # Povolený je původ samotného feedu; jiné URL nastaví admin v nastavení.
+    with _otevri_s_overenim_presmerovani(feed_url, timeout=timeout) as resp:
         resp.raise_for_status()
         data = bytearray()
         for kus in resp.iter_content(chunk_size=64 * 1024):
@@ -505,8 +511,19 @@ def _je_duveryhodny_odkaz(href: str, feed_url: str, expected_filename: str, povo
     """
     from urllib.parse import unquote, urlsplit
 
-    odkaz = urlsplit(href)
-    jmeno = unquote(odkaz.path.rsplit("/", 1)[-1])
+    try:
+        odkaz = urlsplit(href)
+        cesta = odkaz.path
+    except ValueError:
+        # Rozbitá adresa (např. ``https://]h/...`` vyhodí "Invalid IPv6 URL")
+        # nesmí uniknout jako nečekaná výjimka – kontrakt téhle funkce je
+        # zalogovat a přeskočit, ne spadnout. Totéž řeší ``_puvod`` o patro níž.
+        logger.warning(
+            "heslar.ruian_sync.vfr_download._je_duveryhodny_odkaz.odmitnuto",
+            extra={"duvod": "nerozlozitelna_adresa", "href": href[:200]},
+        )
+        return False
+    jmeno = unquote(cesta.rsplit("/", 1)[-1])
     if jmeno != expected_filename:
         return False
 

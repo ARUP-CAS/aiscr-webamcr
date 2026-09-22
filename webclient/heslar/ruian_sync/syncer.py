@@ -1206,7 +1206,7 @@ def _upsert_katastr(
 
 #: SQL kandidátů Projekt: projekty, které buď ukazují na změněný katastr přes
 #: ``hlavni_katastr`` FK, nebo jejich bod nově padá do polygonu změněného
-#: katastru. ``katastr.hranice`` je od migrace 0013 v EPSG:5514; join proti
+#: katastru. ``katastr.hranice`` je od migrace heslar.0014 v EPSG:5514; join proti
 #: ``projekt.geom_sjtsk`` (5514) drží obě strany v jednom CRS a využívá
 #: spatial index.
 #:

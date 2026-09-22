@@ -465,7 +465,7 @@ def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
         katastru do EPSG:4326, nebo pokud při zpracování dat dojde k ``IndexError``.
     """
     logger.debug("core.utils.get_pians_from_akce.start", extra={"katastr": katastr, "ident_cely": akce_ident_cely})
-    # katastr.definicni_bod a katastr.hranice jsou od migrace 0013 v EPSG:5514.
+    # katastr.definicni_bod a katastr.hranice jsou od migrace heslar.0014 v EPSG:5514.
     # Přečteme jako WKT a v Pythonu transformujeme na 4326 pro frontend (Leaflet).
     query = (
         "select id, ST_AsText(definicni_bod) AS db_wkt, ST_AsText(ST_Envelope(hranice)) AS bbox_wkt "

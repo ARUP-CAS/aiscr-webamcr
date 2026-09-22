@@ -15,7 +15,7 @@ potřebuje pro spatial intersect (`core/utils.py`) i UI markery, **bez nutnosti
 stahovat 6258 per-obec VFR souborů**.
 
 Polygony i body jsou v EPSG:5514 (S-JTSK Křovák) a v tomtéž CRS se ukládají
-do DB — RÚIAN heslář je od migrace 0013 primárně JTSK. Modul žádnou CRS
+do DB — RÚIAN heslář je od migrace heslar.0014 primárně JTSK. Modul žádnou CRS
 transformaci neprovádí; jen normalizuje SHP polygony na ``MULTIPOLYGON``
 a sjednocuje znaménko na **zápornou** (West-South) konvenci projektu, viz
 :mod:`heslar.ruian_sync.sjtsk`. SHP dodává kladnou formu, UZSZ body obojí.

@@ -235,7 +235,7 @@ def backwards(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("heslar", "0012_ruiansyncrun"),
+        ("heslar", "0013_ruiansyncrun"),
     ]
 
     operations = [
