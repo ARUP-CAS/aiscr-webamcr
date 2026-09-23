@@ -36,6 +36,12 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 30
     target-branch: test
+    groups:
+      elastic-stack:
+        patterns:
+          - "elasticsearch/elasticsearch"
+          - "kibana/kibana"
+          - "logstash/logstash"
 
   - package-ecosystem: "github-actions"
     directory: "/"
