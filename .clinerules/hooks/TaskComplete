@@ -1,0 +1,19 @@
+#!/bin/sh
+# Cline TaskComplete hook — Unix (POSIX sh) counterpart of TaskComplete.ps1.
+# Hook intent: aiscr-hook-intents.md § "usage-log-closeout-reminder"
+# Governance: AIS CR management hub — advisory-only, never cancels the task.
+
+# Best-effort JSON validation: if python3 is available, verify stdin is parseable JSON.
+if command -v python3 >/dev/null 2>&1; then
+    python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null || true
+fi
+
+message=""
+if command -v git >/dev/null 2>&1; then
+    changed=$(git status --short -- .agents .cursor .claude .codex .gemini .clinerules 2>/dev/null || true)
+    if [ -n "$changed" ]; then
+        message="AIS CR close-out reminder: this session changed governed assistant/config paths; update the rolling usage log and run the relevant validation checks before reporting completion."
+    fi
+fi
+
+printf '{"cancel":false,"contextModification":"%s","errorMessage":""}\n' "$message"
