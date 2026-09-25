@@ -308,7 +308,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.32.7
+     - 4.0.3
      - MIT
      - https://github.com/tox-dev/py-filelock
    * - freezegun
@@ -388,7 +388,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache-2.0 OR BSD-2-Clause
      - https://github.com/pypa/packaging
    * - pandas
-     - 3.0.5
+     - 3.0.6
      - BSD License
      - https://pandas.pydata.org
    * - pdf2image
@@ -416,7 +416,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/raimon49/pip-licenses
    * - platformdirs
-     - 4.11.12
+     - 4.11.13
      - MIT
      - https://github.com/tox-dev/platformdirs
    * - polib
@@ -564,7 +564,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.grantjenks.com/docs/sortedcontainers/
    * - soupsieve
-     - 2.9.2
+     - 2.10
      - MIT
      - https://github.com/facelessuser/soupsieve
    * - sphinx_rtd_theme
@@ -660,12 +660,12 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.9.1
+     - 21.12.1
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
-     - 0.8.4
-     - MIT
+     - 0.9.1
+     - MIT License
      - https://github.com/jquast/wcwidth
    * - websocket-client
      - 1.9.2
