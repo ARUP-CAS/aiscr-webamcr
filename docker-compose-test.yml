@@ -14,6 +14,7 @@ services:
     volumes:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
+      - $HOME/translations_backup:/backup
       - nginx_data:/vol/web/nginx/data
       - /home/migrace:/vol/data-migrace
       - /opt/selenium_test:/vol/web/selenium_test

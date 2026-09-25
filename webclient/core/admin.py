@@ -1,7 +1,6 @@
 import csv
 import json
 import logging
-import os
 import random
 import string
 
@@ -19,7 +18,6 @@ from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.translation import gettext as _
-from polib import pofile
 from uzivatel.models import User
 
 from .connectors import RedisConnector
@@ -141,8 +139,8 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         """
         Metoda na uložení modelu odstávky.
 
-        Jednotlivé texty z modelu se ukladají do textú prekladů a template.
-        Po uložení se restartuje wsgi pro načítaní nových prekladů.
+        Texty odstávky se uloží do modelu a texty chybových stránek se zapíší
+        do příslušných šablon proxy.
 
         :param request: Parametr ``request`` se předává do volání ``int()``, ``utime()``, pracuje se s atributy ``environ``.
         :param obj: Parametr ``obj`` předává se do volání ``save_model()``.
@@ -153,39 +151,9 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         for current in lock_maintenance_configuration():
             if current.pk == obj.pk:
                 ensure_maintenance_change_allowed(current, obj, import_protected)
-        locale_path = settings.LOCALE_PATHS[0]
-        languages = settings.LANGUAGES
-        for code, lang in languages:
-            path = locale_path + "/" + code + "/LC_MESSAGES/django.po"
-            po_file = pofile(path)
-            entry = po_file.find("base.odstavka.text")
-            text = "text_" + code
-            entry.msgstr = form.cleaned_data[text]
-            po_file.save()
-            po_filepath, ext = os.path.splitext(path)
-            po_file.save_as_mofile(po_filepath + ".mo")
+        for code, language_code in settings.LANGUAGES:
             self.file_handler(code, form)
-        should_try_wsgi_reload = (
-            settings.ROSETTA_WSGI_AUTO_RELOAD
-            and "mod_wsgi.process_group" in request.environ
-            and request.environ.get("mod_wsgi.process_group", None)
-            and "SCRIPT_FILENAME" in request.environ
-            and int(request.environ.get("mod_wsgi.script_reloading", 0))
-        )
-        if should_try_wsgi_reload:
-            try:
-                os.utime(request.environ.get("SCRIPT_FILENAME"), None)
-            except OSError:
-                pass
-        # Try auto-reloading via uwsgi daemon reload mechanism
-        if settings.ROSETTA_UWSGI_AUTO_RELOAD:
-            try:
-                import uwsgi
-
-                uwsgi.reload()  # pretty easy right?
-            except Exception as e:
-                logger.debug("core.admin.OdstavkaSystemuAdmin.exception", extra={"exception": e})
-                pass  # aplikace nemusí běžet pod uWSGI.
+        cache.delete("maintenance")
         super().save_model(request, obj, form, change)
         transaction.on_commit(lambda: cache.delete("maintenance"))
 
