@@ -1858,6 +1858,32 @@ return new Date('2025-06-28T12:00:00Z');}};
         for child in element:
             self.odstran_uuid_z_xml(child)
 
+    GENEROVANE_PDF_REGEX = re.compile(r"^oznameni_.+\.pdf$")
+
+    def neutralizuj_generovana_pdf(self, root):
+        """
+        U souborů dynamicky generovaného oznámení (``oznameni_*.pdf``) nahradí ``size_mb`` a ``sha_512``
+        pevnými hodnotami.
+
+        PDF generuje ReportLab za běhu a jeho bajtová podoba závisí na prostředí (fonty, obrázky
+        v záhlaví, verze knihovny), proto se velikost a hash liší mezi lokálním během a serverem.
+        Obsah PDF se ověřuje zvlášť vykreslením v :meth:`porovnej_pdf_obsah`. Elementy se neodstraňují,
+        aby XML zůstalo validní vůči XSD.
+
+        :param root: Kořenový element XML, který se upravuje na místě.
+        """
+        ns = "{https://api.aiscr.cz/schema/amcr/2.2/}"
+        for soubor in root.iter(f"{ns}soubor"):
+            nazev = soubor.find(f"{ns}nazev")
+            if nazev is None or not nazev.text or not self.GENEROVANE_PDF_REGEX.match(nazev.text):
+                continue
+            size_mb = soubor.find(f"{ns}size_mb")
+            if size_mb is not None:
+                size_mb.text = "0"
+            sha_512 = soubor.find(f"{ns}sha_512")
+            if sha_512 is not None:
+                sha_512.text = "SHA512-REMOVED"
+
     def serad_xml_podle_tagu_a_obsahu(self, element):
         """
         Rekurzivně seřadí pouze sousední XML elementy se stejným tagem
@@ -1944,6 +1970,7 @@ return new Date('2025-06-28T12:00:00Z');}};
             ignorovane_tagy_trans.update({key.replace("amcr:", "{https://api.aiscr.cz/schema/amcr/2.2/}"): item})
         self.odstran_elementy(root, ignorovane_tagy_trans)
         self.odstran_uuid_z_xml(root)
+        self.neutralizuj_generovana_pdf(root)
         self.nahrad_element_id_rekurzivne(root, "hist")
         self.nahrad_element_id_rekurzivne(root, "soub")
         self.serad_xml_podle_tagu_a_obsahu(root)
