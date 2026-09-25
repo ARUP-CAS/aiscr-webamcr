@@ -114,6 +114,10 @@ start_time=$(date +%Y%m%dT%H%M%S)
 log_file="${start_time}_git_prod-deployment.log"
 mkdir -p ${log_dir}
 
+#TRANSLATION backups path
+tr_path="$HOME/translations_backup"
+mkdir -p ${tr_path}
+
 #REDIRECT to log
 exec > >(tee "${log_dir}/${log_file}" )
 exec 2>&1

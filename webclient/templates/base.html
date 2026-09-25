@@ -111,7 +111,10 @@
       {% get_maintenance as action %}
       {% if action %}
       <div class="maintenance">
-        <p class="d-block px-3 py-2 text-center text-bold text-white old-bv">{% trans "base.odstavka.text" %}</p>
+        <p class="d-block px-3 py-2 text-center text-bold text-white old-bv">
+          {% get_current_language as LANGUAGE_CODE %}
+          {% if LANGUAGE_CODE == "en" %}{{ action.text_en }}{% else %}{{ action.text_cs }}{% endif %}
+        </p>
       </div>
       {% endif %}
     {% endblock%}

@@ -69,8 +69,8 @@ Třídy
 
       Metoda na uložení modelu odstávky.
 
-      Jednotlivé texty z modelu se ukladají do textú prekladů a template.
-      Po uložení se restartuje wsgi pro načítaní nových prekladů.
+      Texty odstávky se uloží do modelu a texty chybových stránek se zapíší
+      do příslušných šablon proxy.
 
       :param request: Parametr ``request`` se předává do volání ``int()``, ``utime()``, pracuje se s atributy ``environ``.
       :param obj: Parametr ``obj`` předává se do volání ``save_model()``.

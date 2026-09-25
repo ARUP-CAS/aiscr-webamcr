@@ -9,12 +9,10 @@ from core.widgets import AutocompleteSelect2Multiple
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from django import forms
-from django.conf import settings
 from django.utils import formats
 from django.utils.translation import gettext_lazy as _
 from dokument.models import Dokument
 from heslar.models import Heslar
-from polib import pofile
 
 logger = logging.getLogger(__name__)
 
@@ -307,7 +305,7 @@ class OdstavkaSystemuForm(forms.ModelForm):
     """
     Formulář pro nastavení a úpravu odstávky.
 
-    Vrámci načítáni formuláře se doplní načítají hodnoty z template odstávky.
+    V rámci načítání formuláře se doplní hodnoty textů chybových stránek.
     """
 
     error_text_cs = forms.CharField(
@@ -344,6 +342,8 @@ class OdstavkaSystemuForm(forms.ModelForm):
             "datum_odstavky",
             "cas_odstavky",
             "status",
+            "text_cs",
+            "text_en",
         )
 
     def __init__(self, *args, **kwargs):
@@ -366,14 +366,6 @@ class OdstavkaSystemuForm(forms.ModelForm):
         with open("/vol/web/nginx/data/en/oznameni/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
         self.fields["error_text_oznam_en"].initial = p.get_text(strip=True) if (p := soup.find("p")) else ""
-        locale_path = settings.LOCALE_PATHS[0]
-        languages = settings.LANGUAGES
-        for code, lang in languages:
-            path = locale_path + "/" + code + "/LC_MESSAGES/django.po"
-            po_file = pofile(path)
-            entry = po_file.find("base.odstavka.text")
-            text = "text_" + code
-            self.fields[text].initial = entry.msgstr
 
 
 class PermissionImportForm(forms.Form):

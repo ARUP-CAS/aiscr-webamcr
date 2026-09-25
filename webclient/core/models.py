@@ -1002,6 +1002,8 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
     datum_odstavky = models.DateField(_("core.model.OdstavkaSystemu.datumOdstavky.label"))
     cas_odstavky = models.TimeField(_("core.model.OdstavkaSystemu.casOdstavky.label"))
     status = models.BooleanField(_("core.model.OdstavkaSystemu.status.label"), default=True)
+    text_cs = models.TextField(blank=True, default="", verbose_name=_("core.forms.OdstavkaSystemuForm.textCs.label"))
+    text_en = models.TextField(blank=True, default="", verbose_name=_("core.forms.OdstavkaSystemuForm.textEn.label"))
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
