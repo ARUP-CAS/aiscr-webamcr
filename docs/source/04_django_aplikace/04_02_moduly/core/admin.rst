@@ -79,7 +79,7 @@ Třídy
 
    .. py:method:: has_module_permission()
 
-      Metoda pro určení práv na modul odstávky.
+      Metoda pro určení práv na modul oSdstávky.
 
       :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
 
