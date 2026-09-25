@@ -76,7 +76,7 @@ from core.message_constants import (
 )
 from core.models import Permissions
 from core.models import Permissions as p
-from core.models import check_permissions
+from core.models import Soubor, check_permissions
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.utils import (
     get_heatmap_project,
@@ -202,7 +202,11 @@ def detail(request, ident_cely):
         .prefetch_related("soubory__soubory")
     ).order_by("ident_cely")
     context["akce"] = akce
-    soubory = projekt.soubory.soubory.all().order_by("nazev")
+    soubory = (
+        projekt.soubory.soubory.select_related("historie")
+        .prefetch_related(Soubor.distribution_history_prefetch())
+        .order_by("nazev")
+    )
     context["soubory"] = soubory
     context["dalsi_katastry"] = projekt.katastry.all()
     context["history_dates"] = get_history_dates(projekt.historie, request.user)

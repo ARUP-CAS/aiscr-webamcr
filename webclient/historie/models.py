@@ -11,6 +11,7 @@ from core.constants import (
     ARCHIVACE_SN,
     DOKUMENT_RELATION_TYPE,
     EXTERNI_ZDROJ_RELATION_TYPE,
+    NAHRANI_DISTRIBUCE,
     NAHRANI_SBR,
     NAVRZENI_KE_ZRUSENI_PROJ,
     ODESLANI_AZ,
@@ -30,10 +31,12 @@ from core.constants import (
     RUSENI_STARE_PROJ,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
     SCHVALENI_OZNAMENI_PROJ,
+    SMAZANI_DISTRIBUCE,
     SPOLUPRACE_AKTIVACE,
     SPOLUPRACE_DEAKTIVACE,
     SPOLUPRACE_ZADOST,
     UKONCENI_V_TERENU_PROJ,
+    UPDATE_DISTRIBUCE,
     UZAVRENI_PROJ,
     UZIVATEL_RELATION_TYPE,
     UZIVATEL_SPOLUPRACE_RELATION_TYPE,
@@ -130,6 +133,10 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         # Soubor.
         (NAHRANI_SBR, _("historie.models.historieStav.soubor.SBR0")),
         (PREJMENOVANI_SBR, _("historie.models.historieStav.soubor.SBR1")),
+        # Alternativní distribuce souborů.
+        (NAHRANI_DISTRIBUCE, _("historie.models.historieStav.distribuce.DIST01")),
+        (UPDATE_DISTRIBUCE, _("historie.models.historieStav.distribuce.DIST11")),
+        (SMAZANI_DISTRIBUCE, _("historie.models.historieStav.distribuce.DIST10")),
     )
 
     datum_zmeny = models.DateTimeField(
