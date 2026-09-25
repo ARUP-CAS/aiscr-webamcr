@@ -159,7 +159,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
 
     def has_module_permission(self, request):
         """
-        Metoda pro určení práv na modul oSdstávky.
+        Metoda pro určení práv na modul odstávky.
 
         :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
 
