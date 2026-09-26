@@ -1,7 +1,7 @@
 {
   "items": [
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-DL-202500001/file/UUID-REMOVED",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-DD-202500001/file/UUID-REMOVED",
       "mime_type": null,
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#Container",
@@ -15,7 +15,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-DL-202500001/metadata",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-DD-202500001/metadata",
       "mime_type": "application/xml",
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#Binary",
