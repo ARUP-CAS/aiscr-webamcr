@@ -142,3 +142,28 @@ def get_soubor_suffix(soubor):
     if stem.startswith(base):
         return stem[len(base) :]
     return None
+
+
+def get_mime_safe_soubor_name(current_name: str, uploaded_name: str, mime_extensions) -> str:
+    """
+    Vrátí název souboru s příponou odpovídající detekovanému MIME typu.
+
+    Základ názvu se bere z ``current_name`` (ident záznamu a suffix), přípona z ``uploaded_name``,
+    ale jen když odpovídá některé z přípon odvozených z detekovaného MIME typu; jinak se použije
+    první přípona z ``mime_extensions``, aby se do názvu nedostala přípona neodpovídající skutečnému
+    obsahu. Přípona se vždy převádí na malá písmena, takže uložené názvy jsou kanonické.
+
+    Používá se při nahrání nového souboru (oba parametry jsou vygenerovaný název, jehož přípona pochází
+    od uživatele) i při nahrazení souboru novou verzí (současný název v databázi a název nahrávaného
+    souboru). Název bez tečky se nikdy nestane příponou – u ``uploaded_name`` se přípona odvodí
+    z MIME typu, u ``current_name`` zůstane celý základem názvu.
+
+    :param current_name: Název, z něhož se bere základ (vygenerovaný název nebo současný název v databázi).
+    :param uploaded_name: Název, z něhož se bere přípona (obvykle pochází od uživatele).
+    :param mime_extensions: Přípony odpovídající detekovanému MIME typu (malými písmeny); první je výchozí.
+    :return: Název souboru se základem z ``current_name`` a příponou malými písmeny.
+    """
+    extension = os.path.splitext(uploaded_name)[1].lstrip(".").lower()
+    if extension not in mime_extensions:
+        extension = mime_extensions[0]
+    return f"{os.path.splitext(current_name)[0]}.{extension}"
