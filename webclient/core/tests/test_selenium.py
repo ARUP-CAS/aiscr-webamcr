@@ -435,6 +435,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             stranky1 = convert_from_bytes(bin1)
             stranky2 = convert_from_bytes(bin2)
         except Exception:
+            # Selhání konverze (chybějící Poppler, nečitelné PDF) není rozdíl obsahu – zaloguj příčinu.
+            logger.exception("BaseSeleniumTestClass.porovnej_pdf_obsah.convert_error")
             return False
 
         if len(stranky1) != len(stranky2):
@@ -1479,10 +1481,15 @@ return new Date('2025-06-28T12:00:00Z');}};
                         continue
                     except (NoSuchElementException, StaleElementReferenceException):
                         pass
+                # Element mohl mezitím zastarat; hodnota pole je jen doplněk diagnostiky.
+                try:
+                    search_value = repr(search.get_attribute("value"))
+                except (NoSuchElementException, StaleElementReferenceException):
+                    search_value = "<nedostupná>"
                 raise AssertionError(
                     f"select_dynamic_select2_autocomplete_option('{field_id}', '{search_text}', {index}): "
                     f"no matching option at index {index} loaded within {timeout}s "
-                    f"(hodnota vyhledávacího pole: {search.get_attribute('value')!r})"
+                    f"(hodnota vyhledávacího pole: {search_value})"
                 )
 
         # Najdi index-tou shodu a klikni na ni; kliknutí spustí výběr i 'change' událost Select2.

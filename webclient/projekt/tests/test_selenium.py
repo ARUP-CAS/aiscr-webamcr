@@ -333,8 +333,8 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
 
         Steps:
         - Vytvoření oznámení
-        - Smazání dokumentu u projektu
         - Schválení projektu - změna ident-cely projektu
+        - Smazání dokumentu u projektu
         - Vytvoření průzkumného projektu
         - Vytvoření části dokumentu projektu
         - Vytvoření záznamu PAS
@@ -361,7 +361,6 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.goToAddress(f"/id/{ident}")
         time = self.getTime()
         self.ElementClick(By.ID, "projekt-schvalit")
-        # self.ElementClick(By.CSS_SELECTOR, "#div_id_send_mail label")
         with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
             with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "submit-btn")
