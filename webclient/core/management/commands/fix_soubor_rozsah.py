@@ -1,10 +1,7 @@
-import io
 import logging
 
 from core.repository_connector import FedoraRepositoryConnector
 from django.core.management.base import BaseCommand
-from PIL import Image
-from pypdf import PdfReader
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +65,6 @@ class Command(BaseCommand):
             return
 
         success_count = 0
-        fallback_count = 0
         error_count = 0
 
         for index, soubor in enumerate(qs.iterator(chunk_size=100)):
@@ -99,25 +95,7 @@ class Command(BaseCommand):
                     )
                     continue
 
-                content: io.BytesIO = rep_bin_file.content
-                nazev = soubor.nazev.lower()
-                if nazev.endswith(".pdf"):
-                    try:
-                        reader = PdfReader(content)
-                        rozsah = len(reader.pages)
-                    except Exception:
-                        rozsah = 1
-                        fallback_count += 1
-                elif nazev.endswith((".tif", ".tiff")):
-                    try:
-                        img = Image.open(content)
-                        rozsah = img.n_frames  # type: ignore[attr-defined]
-                    except Exception:
-                        rozsah = 1
-                        fallback_count += 1
-                else:
-                    rozsah = 1
-
+                rozsah = soubor.calculate_rozsah(binary_data=rep_bin_file.content)
                 Soubor.objects.filter(pk=soubor.pk).update(rozsah=rozsah)
                 success_count += 1
                 logger.info(
@@ -137,7 +115,6 @@ class Command(BaseCommand):
         self.stdout.write("=" * 50)
         self.stdout.write(f"Celkem:   {total}")
         self.stdout.write(f"Úspěšně:  {success_count}")
-        self.stdout.write(f"Fallback: {fallback_count}")
         self.stdout.write(f"Chyby:    {error_count}")
         self.stdout.write("=" * 50)
 

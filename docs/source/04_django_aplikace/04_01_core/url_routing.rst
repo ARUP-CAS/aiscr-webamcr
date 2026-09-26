@@ -245,9 +245,21 @@ CORE
    * - ``data-import-start``
      - ``data-import-start/<str:job_id>``
      - ``views.DataImportStart.as_view()``
+   * - ``data-import-cancel``
+     - ``data-import-cancel/<str:job_id>``
+     - ``views.DataImportCancel.as_view()``
+   * - ``data-import-reset``
+     - ``data-import-reset/<str:job_id>``
+     - ``views.DataImportReset.as_view()``
+   * - ``data-import-reset-active``
+     - ``data-import-reset``
+     - ``views.DataImportReset.as_view()``
    * - ``data-import-progress-report``
      - ``data-import-progress-report/<str:job_id>``
      - ``views.DataImportProgressReportView.as_view()``
+   * - ``data-import-report-download``
+     - ``data-import-report-download/<str:job_id>``
+     - ``views.DataImportReportDownloadView.as_view()``
 
 DJ
 --
@@ -518,6 +530,9 @@ HESLAR
    * - ``heslar_nazev-autocomplete``
      - ``heslar-nazev/autocomplete/``
      - ``HeslarNazevAutocompleteView.as_view()``
+   * - ``continue-processing-katastry``
+     - ``continue-processing-katastry/<str:job_id>``
+     - ``ContinueKatastrProcessing.as_view()``
 
 HISTORIE
 --------
@@ -777,9 +792,6 @@ PAS
    * - ``post_point_position_2_katastre``
      - ``mapa-zjisti-katastr``
      - ``views.post_point_position_2_katastre``
-   * - ``post_point_position_2_katastre_with_geom``
-     - ``mapa-zjisti-katastr-geom``
-     - ``views.post_point_position_2_katastre_with_geom``
    * - ``spoluprace_smazani``
      - ``spoluprace/smazat/<int:pk>``
      - ``views.smazat_spolupraci``

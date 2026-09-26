@@ -127,10 +127,12 @@ var fill_katastr = () => {
             document.getElementById("id_katastr").value = rs.katastr_name
         }
     };
+    const sjtsk_x1 = document.getElementById('id_coordinate_sjtsk_x1').value;
+    const sjtsk_x2 = document.getElementById('id_coordinate_sjtsk_x2').value;
     xhr.send(JSON.stringify(
         {
-            'x2': parseFloat(point_global_WGS84[1]),
-            'x1': parseFloat(point_global_WGS84[0]),
+            'x1': parseFloat(sjtsk_x1),
+            'x2': parseFloat(sjtsk_x2),
         }))
 };
 
@@ -207,11 +209,11 @@ let set_numeric_coordinates = async (push=false,addComa=false) => {
         }
         point_leaf=[point_global_WGS84[1],point_global_WGS84[0]]
         addUniquePointToPoiLayer(point_leaf,"");
-        fill_katastr();
         document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
         document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
         document.getElementById('id_coordinate_sjtsk_x1').value = point_global_JTSK[0]
         document.getElementById('id_coordinate_sjtsk_x2').value = point_global_JTSK[1]
+        fill_katastr();
         return true;
     }
     return false;

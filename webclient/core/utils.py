@@ -1,4 +1,5 @@
 import glob
+import json
 import logging
 import mimetypes
 import os
@@ -20,6 +21,7 @@ from core.constants import (
     ZAPSANI_SN,
 )
 from core.coordTransform import transform_geom_to_sjtsk, transform_geom_to_wgs84
+from core.setting_models import CustomAdminSettings
 from dj.models import DokumentacniJednotka
 from django.apps import apps
 from django.conf import ENVIRONMENT_VARIABLE, settings
@@ -29,6 +31,7 @@ from django.core.paginator import Paginator
 from django.db import connection, connections
 from django.db.models import QuerySet
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.html import format_html
 from django.utils.translation import gettext as _
@@ -211,23 +214,41 @@ def get_mime_type(file_name):
     return mime_type
 
 
-def get_cadastre_from_point(point):
+def get_cadastre_from_point(point, exclude_kod=None):
     """
-    Funkce pro získaní katastru z bodu geomu.
+    Vrátí katastr obsahující zadaný bod v EPSG:5514 (S-JTSK).
 
-    :param point: Parametr ``point`` předává se do volání ``raw()``, ``debug()``.
+    Vstup je v JTSK v konvenci projektu (záporné hodnoty, viz
+    ``core.coordTransform.convertToJTSK`` vracející ``[-Y, -X]``)
 
-        :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``katastr``, None.
+    :param point: Dvojice ``(x, y)`` v EPSG:5514 (záporná konvence projektu).
+    :param exclude_kod: Volitelný kód katastru, který má být ze spatial query
+        vyloučen. Používá se např. v ``heslar.ruian_sync.reassign`` při mazání
+        katastru – aby spatial intersect nevrátil právě mazaný katastr (který
+        je stále v DB až do okamžiku ``katastr.delete()``) a reassign měl
+        šanci najít druhý nejbližší.
+
+    :return: Instance :class:`RuianKatastr` nebo ``None``.
     """
-    query = (
-        "select id, nazev from public.ruian_katastr where "
-        "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) limit 1"
-    )
+    wkt_5514 = f"POINT({point[0]} {point[1]})"
+    if exclude_kod is None:
+        query = (
+            "select id, nazev from public.ruian_katastr where "
+            "ST_Contains(hranice, ST_GeomFromText(%s, 5514)) limit 1"
+        )
+        params = [wkt_5514]
+    else:
+        query = (
+            "select id, nazev from public.ruian_katastr where "
+            "ST_Contains(hranice, ST_GeomFromText(%s, 5514)) "
+            "AND kod != %s limit 1"
+        )
+        params = [wkt_5514, exclude_kod]
     try:
-        katastr = RuianKatastr.objects.raw(query, [point[0], point[1]])[0]
+        katastr = RuianKatastr.objects.raw(query, params)[0]
         logger.debug(
             "core.utils.get_cadastre_from_point.start",
-            extra={"X": point[0], "Y": point[1], "katastr": katastr},
+            extra={"X": point[0], "Y": point[1], "katastr": katastr, "exclude_kod": exclude_kod},
         )
         return katastr
     except IndexError:
@@ -235,46 +256,88 @@ def get_cadastre_from_point(point):
         return None
 
 
-def get_cadastre_from_point_with_geometry(point):
+def reprezentativni_bod_sql(sloupec: str) -> str:
     """
-    Funkce pro získaní katastru s geometrií z bodu geomu.
+    Vrátí SQL výraz pro reprezentativní bod PIANu.
 
-    :param point: Parametr ``point`` předává se do volání ``debug()``, ``execute()``.
+    Do prostorového porovnání s katastrem nevstupuje celá geometrie PIANu, ale
+    jediný bod – viz issue #315: dokud se porovnávala celá geometrie, PIAN
+    ležící přes dvě katastrální území matchoval obě a hlavní katastr vycházel
+    nejednoznačně. Bod se volí podle typu geometrie:
 
-        :return: Vrací hodnotu podle větve zpracování, typicky: seznam, None.
+    * ``LineString`` – ``ST_LineInterpolatePoint(geom, 0.5)``, střed linie;
+    * ``Polygon`` / ``MultiPolygon`` – ``ST_PointOnSurface(geom)``, který na
+      rozdíl od centroidu leží vždy uvnitř plochy;
+    * ostatní – ``ST_Centroid(geom)``.
+
+    Funkce existuje proto, aby týž výraz nebyl opsaný na dvou místech: používá
+    ho :func:`get_all_pians_with_akce` i
+    ``heslar.ruian_sync.reassign._compute_az_katastr_assignment``. Rozcházely
+    by se jinak tiše a hlavní katastr by u téhož PIANu vycházel jinak podle
+    toho, kterou cestou se počítá.
+
+    :param sloupec: SQL výraz s geometrií PIANu v EPSG:5514 (název sloupce
+        včetně aliasu tabulky, např. ``pian.geom_sjtsk``).
+    :return: SQL ``CASE`` výraz vracející bod.
     """
-    query = (
-        "select id, nazev,ST_AsText(definicni_bod) AS db, ST_AsText(hranice) AS hranice from public.ruian_katastr where "
-        "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) limit 1"
+    return (
+        "CASE "
+        f"WHEN ST_GeometryType({sloupec}) = 'ST_LineString' "
+        f"THEN ST_LineInterpolatePoint({sloupec}, 0.5) "
+        f"WHEN ST_GeometryType({sloupec}) IN ('ST_Polygon', 'ST_MultiPolygon') "
+        f"THEN ST_PointOnSurface({sloupec}) "
+        f"ELSE ST_Centroid({sloupec}) "
+        "END"
     )
-    try:
-        logger.debug(
-            "core.utils.get_cadastre_from_point.start",
-            extra={"X": point[0], "Y": point[1]},
-        )
-        cursor = connection.cursor()
-        cursor.execute(query, [point[0], point[1]])
-        line = cursor.fetchone()
-        return [line[1], line[2], line[3]]
-    except IndexError:
-        logger.error(
-            "core.utils.get_cadastre_from_point_with_geometry.error",
-            extra={"geom": point},
-        )
-        return None
 
 
-def get_all_pians_with_akce(ident_cely):
+def get_all_pians_with_akce(ident_cely, exclude_kod=None):
     """
     Funkce pro získaní všech pianů s akci.
 
+    Spatial intersect probíhá v EPSG:5514, vrácená geometrie ``pian_geom`` je
+    ale ve WGS84 (EPSG:4326).
+
+    Do ``ST_Intersects`` nevstupuje celá geometrie PIANu, ale **jediný
+    reprezentativní bod**. Důvod je z issue #315: dokud se porovnávala celá
+    geometrie, PIAN ležící přes dvě katastrální území matchoval obě a hlavní
+    katastr vycházel nejednoznačně. Bod se volí podle typu geometrie:
+
+    * ``LineString`` – ``ST_LineInterpolatePoint(geom, 0.5)``, střed linie;
+    * ``Polygon`` / ``MultiPolygon`` – ``ST_PointOnSurface(geom)``, který leží
+      **vždy uvnitř** (centroid může u konkávních tvarů padnout mimo);
+    * ostatní (typicky ``Point``) – ``ST_Centroid(geom)``.
+
+    .. note::
+       Větev pro linie byla zamýšlená už při zavedení ``CASE`` (2022), ale
+       kvůli dvěma shodným podmínkám na ``ST_LineString`` byla nedosažitelná –
+       fakticky se pro všechny typy geometrie používal centroid. Issue #372
+       mrtvou větev odstranilo a plochy navíc převedlo na
+       ``ST_PointOnSurface``. Volba hlavního katastru se proto může u linií
+       a konkávních ploch lišit od stavu před #372.
+
+       Určení ``zm10``/``zm50`` PIANu (a tím i jeho ``ident_cely``) to
+       **neovlivňuje** – počítá se nezávisle v :mod:`pian.forms` a
+       :mod:`core.management.commands.check_pian_properties`, které si
+       reprezentativní bod odvozují samy a u ploch dál používají centroid.
+
     :param ident_cely: Parametr ``ident_cely`` se předává do volání ``execute()``.
-    :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
+    :param exclude_kod: Volitelný kód katastru, který se vyloučí ze
+        spatial intersect (``ST_Intersects``). Používá se v
+        ``heslar.ruian_sync.reassign`` při mazání katastru.
+
+    :return: Seznam slovníků s klíči ``id``, ``pian_ident_cely``, ``pian_geom``,
+        ``dj``, ``dj_katastr`` a ``dj_katastr_id``; ``None``, pokud dotaz skončí
+        výjimkou.
     """
-    query = """
+    exclude_clause = ""
+    if exclude_kod is not None:
+        exclude_clause = " AND katastr.kod != %s"
+    reprezentativni_bod = reprezentativni_bod_sql("pian.geom_sjtsk")
+    query = f"""
         (SELECT A.id,
               A.ident_cely,
-              ST_AsText(A.geom) AS geometry,
+              ST_AsText(A.geom_wgs84) AS geometry,
               A.dj,
               katastr.nazev AS katastr_nazev,
               katastr.id AS ku_id
@@ -282,16 +345,13 @@ def get_all_pians_with_akce(ident_cely):
         JOIN
          (SELECT pian.id,
                  pian.ident_cely,
-                 CASE
-                     WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN st_centroid(pian.geom)
-                     WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN st_lineinterpolatepoint(pian.geom, 0.5)
-                     ELSE st_centroid(pian.geom)
-                 END AS geom,
+                 pian.geom AS geom_wgs84,
+                 {reprezentativni_bod} AS geom,
                  dj.ident_cely AS dj
           FROM public.pian pian
           JOIN public.dokumentacni_jednotka dj ON pian.id=dj.pian
           AND dj.ident_cely LIKE %s
-          WHERE dj.ident_cely IS NOT NULL) AS A ON ST_Intersects(katastr.hranice, geom)
+          WHERE dj.ident_cely IS NOT NULL) AS A ON ST_Intersects(katastr.hranice, A.geom){exclude_clause}
         ORDER BY A.dj,
                 katastr.nazev
         LIMIT 1)
@@ -305,15 +365,19 @@ def get_all_pians_with_akce(ident_cely):
         FROM public.pian pian
         LEFT JOIN public.dokumentacni_jednotka dj ON pian.id=dj.pian
         AND dj.ident_cely LIKE %s
-        LEFT JOIN public.ruian_katastr katastr ON ST_Intersects(katastr.hranice, pian.geom)
+        LEFT JOIN public.ruian_katastr katastr ON ST_Intersects(katastr.hranice, pian.geom_sjtsk){exclude_clause}
         WHERE dj.ident_cely IS NOT NULL
         ORDER BY dj.ident_cely,
                 katastr_nazev
         LIMIT 990)
         """
+    if exclude_kod is None:
+        params = [ident_cely + "-%", ident_cely + "-%"]
+    else:
+        params = [ident_cely + "-%", exclude_kod, ident_cely + "-%", exclude_kod]
     try:
         cursor = connection.cursor()
-        cursor.execute(query, [ident_cely + "-%", ident_cely + "-%"])
+        cursor.execute(query, params)
         back = []
         for line in cursor.fetchall():
             back.append(
@@ -351,12 +415,16 @@ def update_main_katastr_within_ku(ident_cely: str, katastr: RuianKatastr):
     cursor.execute(query_update_archz, [katastr.pk, akce_ident_cely])
 
 
-def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction):
+def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction, exclude_kod=None):
     """
     Aktualizuje katastry pro všechny akce a lokality související s dokumentační jednotkou.
 
     :param dj: Dokumentační jednotka obsahující odkaz na akci/lokalitu.
     :param fedora_transaction: Aktivní Fedora transakce pro uložení metadat.
+    :param exclude_kod: Volitelný kód katastru, který se vyloučí ze spatial
+        intersect při výpočtu hlavního i ostatních katastrů. Používá se
+        v ``heslar.ruian_sync.reassign.reassign_az`` při mazání katastru
+        – aby se právě mazaný katastr nevybral zpět jako nové přiřazení.
     """
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.start")
     if dj.typ.id == TYP_DJ_KATASTR:
@@ -365,7 +433,7 @@ def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction):
         akce_ident_cely = dj.archeologicky_zaznam.ident_cely
         hlavni_id = None
         ostatni_id = []
-        for line in get_all_pians_with_akce(akce_ident_cely):
+        for line in get_all_pians_with_akce(akce_ident_cely, exclude_kod=exclude_kod):
             if hlavni_id is None:
                 hlavni_id = line["dj_katastr_id"]
             elif hlavni_id != line["dj_katastr_id"] and line["dj_katastr_id"] not in ostatni_id:
@@ -383,21 +451,48 @@ def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction):
 
 def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
     """
-    Funkce pro bodu, geomu a presnosti z akce.
+    Funkce pro sestavení seznamu bodů, geometrií a přesností pianů dokumentačních jednotek akce.
 
-    :param katastr: Parametr ``katastr`` předává se do volání ``debug()``, ``raw()``, pracuje se s atributy ``pk``.
-    :param akce_ident_cely: Identifikátor ``akce_ident_cely`` používaný pro dohledání cílového záznamu.
+    Pro každou dokumentační jednotku akce s napojeným pianem vrátí centroid geometrie pianu,
+    její WKT (mimo DJ typu katastr), zkratku přesnosti a barvu odlišující zobrazovanou DJ.
+    Pokud akce žádné piany nemá, vrátí jediný bod s definičním bodem katastru a jeho bounding boxem.
+    Definiční bod i hranice katastru jsou v DB v EPSG:5514 a transformují se na EPSG:4326 pro frontend.
 
-        :return: Vrací proměnná ``pians``.
-        :raises CannotFindCadasterCentre: Vyvolá se při zpracování zachycené výjimky typu ``IndexError``.
+    :param katastr: Katastr, z jehož definičního bodu a hranice se odvodí výchozí bod a bbox mapy.
+    :param akce_ident_cely: Ident_cely akce nebo dokumentační jednotky; DJ se dohledávají
+        podle prefixu před ``-D``.
+
+    :return: Seznam slovníků s klíči ``lat``, ``lng``, ``zoom``, ``geom``, ``presnost``,
+        ``pian_ident_cely``, ``color``, ``bbox`` a (u pianů DJ) ``DJ_ident_cely``.
+    :raises CannotFindCadasterCentre: Pokud se nepodaří transformovat definiční bod nebo hranici
+        katastru do EPSG:4326, nebo pokud při zpracování dat dojde k ``IndexError``.
     """
     logger.debug("core.utils.get_pians_from_akce.start", extra={"katastr": katastr, "ident_cely": akce_ident_cely})
+    # katastr.definicni_bod a katastr.hranice jsou od migrace heslar.0014 v EPSG:5514.
+    # Přečteme jako WKT a v Pythonu transformujeme na 4326 pro frontend (Leaflet).
     query = (
-        "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng,ST_AsText(ST_Envelope(hranice)) as bbox "
+        "select id, ST_AsText(definicni_bod) AS db_wkt, ST_AsText(ST_Envelope(hranice)) AS bbox_wkt "
         " from public.ruian_katastr where "
         " id=%s"
     )
-    bod_ku = RuianKatastr.objects.raw(query, [katastr.pk])[0]
+    from types import SimpleNamespace
+
+    row = RuianKatastr.objects.raw(query, [katastr.pk])[0]
+    db_wkt_4326, db_status = transform_geom_to_wgs84(row.db_wkt)
+    bbox_wkt_4326, bbox_status = transform_geom_to_wgs84(row.bbox_wkt)
+    if db_status != "OK" or bbox_status != "OK":
+        logger.warning(
+            "core.utils.get_pians_from_akce.transform_failed",
+            extra={"db_status": db_status, "bbox_status": bbox_status, "katastr": katastr.pk},
+        )
+        raise CannotFindCadasterCentre()
+    # Vyparsuj lat/lng z 4326 POINT WKT ``POINT(x y)`` → (lng, lat).
+    _db_coords = db_wkt_4326[db_wkt_4326.index("(") + 1 : db_wkt_4326.rindex(")")].split()
+    bod_ku = SimpleNamespace(
+        lng=float(_db_coords[0]),
+        lat=float(_db_coords[1]),
+        bbox=bbox_wkt_4326,
+    )
     pians = []
     try:
         if len(akce_ident_cely) > 1:
@@ -1600,6 +1695,204 @@ def is_maintenance_in_progress():
         ) <= datetime.now(get_timezone()):
             return True
     return False
+
+
+def translate_status_value(raw):
+    """Přeloží hodnotu načtenou z Redis (ID nebo obálka ``{id, params}``).
+
+    Standardizační pravidlo: worker ukládá do Redis pouze překladová ID (případně obálku
+    ``{"id": <id>, "params": {...}}`` pro parametrizované zprávy), nikoli přeložené texty. Tento
+    helper překlad provádí až na straně čtenáře — v ``core.views`` v locale přihlášeného admina,
+    v ``cron.tasks`` v jazyce aktivním při zápisu XLSX reportu.
+
+    Protipól k ``cron.tasks.translation_value``, který obálku vytváří. Bydlí v ``core.utils``,
+    protože ho potřebují oba čtenáři (``core.views`` i ``cron.tasks``) a ``cron.tasks`` (načítaný
+    při startu Celery workeru) nesmí na úrovni modulu záviset na ``core.views``.
+
+    :param raw: Hodnota z Redis — ``None``, plain ID (str/bytes), nebo JSON obálka (str/bytes)
+        s klíči ``id``, volitelně ``params`` a ``raw``. Zpětně kompatibilní: pokud hodnota není
+        obálka, přeloží se jako ID; pokud překlad chybí, ``_()`` vrátí ID doslova.
+    :return: Přeložený řetězec, nebo ``None`` pokud je vstup ``None``.
+    """
+    if raw is None:
+        return None
+    if isinstance(raw, bytes):
+        raw = raw.decode("utf-8")
+    try:
+        obj = json.loads(raw)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return _(raw)
+    if isinstance(obj, dict) and "id" in obj:
+        params = obj.get("params") or {}
+        if obj.get("raw"):
+            # Raw exception message — composed at raise time from translated mapper fragments +
+            # runtime data; rendered verbatim (carve-out, see translation_value docstring).
+            return params.get("message", "")
+        try:
+            return _(obj["id"]).format(**params)
+        except (KeyError, IndexError, ValueError):
+            # ValueError covers a stray/literal brace in the translated string that breaks
+            # str.format(); fall back to the untouched translation.
+            return _(obj["id"])
+    return _(raw)
+
+
+IMPORT_REPORT_SUBDIRECTORY = "reports"
+
+
+def check_import_report_directory(check_writable=True):
+    """
+    Ověří konfiguraci importního adresáře a připraví v něm podadresář pro reporty.
+
+    Sdílená kontrola pro ``cron.tasks`` (běžící úlohy) i ``core.admin_sites`` (formulář před
+    nahráním) — obě strany musí souhlasit, jinak by admin nahrál soubor, který by úloha odmítla
+    zpracovat (a report by neměl kam uložit). Podadresář ``reports`` se vytvoří, pokud chybí;
+    zápis se ověřuje vytvořením a smazáním dočasného souboru.
+
+    :param check_writable: Pokud ``True``, ověří zapisovatelnost podadresáře reports vytvořením
+        a smazáním dočasného souboru.
+    :return: Trojice ``(import_directory_path, reports_directory_path, error)``. Při úspěchu je
+        ``error`` ``None``; při chybě jsou obě cesty ``None`` a ``error`` obsahuje popis problému.
+    """
+    try:
+        import_directory_settings_obj = CustomAdminSettings.objects.get(item_id="import_directory_settings")
+        import_directory_settings = json.loads(import_directory_settings_obj.value)
+        import_directory_path = import_directory_settings.get("DIRECTORY_PATH")
+        if not import_directory_path:
+            return None, None, "core.utils.check_import_report_directory.missing_directory_path"
+        if not os.path.isdir(import_directory_path):
+            return (
+                None,
+                None,
+                "core.utils.check_import_report_directory.directory_not_found: {}".format(import_directory_path),
+            )
+    except (CustomAdminSettings.DoesNotExist, json.JSONDecodeError, ValueError, KeyError) as err:
+        return None, None, "core.utils.check_import_report_directory.invalid_settings: {}".format(err)
+
+    reports_directory_path = os.path.join(import_directory_path, IMPORT_REPORT_SUBDIRECTORY)
+    try:
+        os.makedirs(reports_directory_path, exist_ok=True)
+    except OSError as err:
+        return None, None, "core.utils.check_import_report_directory.cannot_create_reports_directory: {}".format(err)
+
+    if check_writable:
+        probe_path = os.path.join(reports_directory_path, ".write_check_{}".format(uuid.uuid4().hex))
+        try:
+            with open(probe_path, "wb"):
+                pass
+            os.remove(probe_path)
+        except OSError as err:
+            return None, None, "core.utils.check_import_report_directory.reports_directory_not_writable: {}".format(err)
+
+    return import_directory_path, reports_directory_path, None
+
+
+IMPORT_REPORT_INDEX_FILENAME = "index.json"
+
+
+class ImportReportIndexError(Exception):
+    """Vyvoláno, když index reportů odkazuje na XLSX soubor, který na disku fyzicky chybí."""
+
+    def __init__(self, missing_job_ids):
+        """
+        Inicializuje instanci třídy.
+
+        :param missing_job_ids: Seznam ``job_id`` úloh, jejichž report v indexu chybí na disku.
+        """
+        self.missing_job_ids = missing_job_ids
+        super().__init__("Import report index references missing files for job_ids={}".format(missing_job_ids))
+
+
+def _import_report_index_path(reports_directory_path):
+    """
+    Vrátí cestu k JSON indexu uložených importních reportů.
+
+    :param reports_directory_path: Adresář reportů (z ``check_import_report_directory``).
+    :return: Absolutní cesta k souboru ``index.json``.
+    """
+    return os.path.join(reports_directory_path, IMPORT_REPORT_INDEX_FILENAME)
+
+
+def read_import_report_index(reports_directory_path):
+    """
+    Načte index uložených importních reportů, seřazený od nejnovějšího.
+
+    Chybějící nebo poškozený index se považuje za prázdný seznam (report ještě nebyl uložen,
+    nebo je index dočasně nekonzistentní) — čtenář kvůli tomu nesmí spadnout.
+
+    :param reports_directory_path: Adresář reportů (z ``check_import_report_directory``).
+    :return: Seznam záznamů ``{"job_id", "file_name", "stage", "updated_at"}``.
+    """
+    index_path = _import_report_index_path(reports_directory_path)
+    try:
+        with open(index_path, "r", encoding="utf-8") as f:
+            entries = json.load(f)
+    except FileNotFoundError:
+        return []
+    except (OSError, ValueError) as err:
+        logger.error(
+            "core.utils.read_import_report_index.corrupt_index",
+            extra={"index_path": index_path, "error": str(err)},
+        )
+        return []
+    entries.sort(key=lambda entry: entry.get("updated_at", ""), reverse=True)
+    return entries
+
+
+def upsert_import_report_index_entry(reports_directory_path, job_id, file_name, stage):
+    """
+    Zapíše nebo aktualizuje záznam importní úlohy v JSON indexu reportů.
+
+    Volá se pokaždé, když ``cron.tasks.save_import_report_to_disk`` úspěšně zapíše XLSX, takže
+    index vždy odpovídá poslední známé fázi úlohy — dohledatelnost reportů i po expiraci Redis
+    klíčů (zákaznický požadavek). Zápis je atomický (dočasný soubor + ``os.replace``).
+
+    :param reports_directory_path: Adresář reportů (z ``check_import_report_directory``).
+    :param job_id: Identifikátor importní úlohy.
+    :param file_name: Jméno XLSX souboru reportu (bez cesty).
+    :param stage: Aktuální fáze úlohy (``cron.tasks.IMPORT_PHASE_*``).
+    """
+    index_path = _import_report_index_path(reports_directory_path)
+    entries = [entry for entry in read_import_report_index(reports_directory_path) if entry.get("job_id") != job_id]
+    entries.append(
+        {
+            "job_id": job_id,
+            "file_name": file_name,
+            "stage": stage,
+            "updated_at": timezone.now().isoformat(),
+        }
+    )
+    tmp_path = "{}.tmp".format(index_path)
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        json.dump(entries, f, ensure_ascii=False, indent=2)
+    os.replace(tmp_path, index_path)
+
+
+def check_import_report_index_files_exist(entries, reports_directory_path):
+    """
+    Ověří, že pro každý záznam indexu existuje odpovídající XLSX soubor na disku.
+
+    Každému záznamu doplní klíč ``"exists"`` (mutace in-place), takže volající může zobrazit
+    i položky s chybějícím souborem. Přesto na konci vyvolá výjimku, pokud nějaký soubor chybí —
+    volající musí chybu buď zachytit a zobrazit, nebo ji nechat propagovat (zákaznický požadavek:
+    nesoulad indexu a disku se nesmí tiše přehlédnout).
+
+    :param entries: Seznam záznamů z ``read_import_report_index``.
+    :param reports_directory_path: Adresář reportů (z ``check_import_report_directory``).
+    :raises ImportReportIndexError: Pokud index odkazuje na soubor, který na disku chybí.
+    """
+    missing_job_ids = []
+    for entry in entries:
+        file_name = os.path.basename(entry.get("file_name") or "")
+        entry["exists"] = bool(file_name) and os.path.isfile(os.path.join(reports_directory_path, file_name))
+        if not entry["exists"]:
+            missing_job_ids.append(entry.get("job_id"))
+    if missing_job_ids:
+        logger.error(
+            "core.utils.check_import_report_index_files_exist.missing_files",
+            extra={"job_ids": missing_job_ids, "reports_directory_path": reports_directory_path},
+        )
+        raise ImportReportIndexError(missing_job_ids)
 
 
 def get_timezone():

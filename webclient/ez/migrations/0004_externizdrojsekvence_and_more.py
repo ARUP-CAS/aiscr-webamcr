@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="externizdrojsekvence",
             constraint=models.CheckConstraint(
-                check=models.Q(("id", 1)), name="constraint_only_one_sekvence"
+                condition=models.Q(("id", 1)), name="constraint_only_one_sekvence"
             ),
         ),
     ]

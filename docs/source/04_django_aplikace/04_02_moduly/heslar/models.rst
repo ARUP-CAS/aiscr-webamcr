@@ -12,12 +12,6 @@ Třídy
 
    **Metody:**
 
-   .. py:method:: dokument_typ_material_rada()
-
-      Vrací navázané záznamy třídy ``HeslarDokumentTypMaterialRada``.
-
-      :return: QuerySet záznamů.
-
    .. py:method:: podrazena_hesla()
 
       Vrací podřazené záznamy třídy ``HeslarHierarchie``.
@@ -62,18 +56,12 @@ Třídy
       :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
-.. py:class:: HeslarDokumentTypMaterialRada
+.. py:class:: HeslarDokumentTypMaterial
 
-   Databázový model vazby typu dokumentu, materiálu a řady.
+   Databázový model povolených kombinací typu a materiálu dokumentu.
 
-   **Metody:**
-
-   .. py:method:: __init__()
-
-      Inicializuje instanci třídy.
-
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+   Slouží pouze jako provozní nastavení vazby polí ve formuláři pro zápis a editaci dokumentu.
+   Řada dokumentu se z této vazby neodvozuje – přiděluje se fixně při zápisu, resp. importu (#3421).
 
 
 .. py:class:: HeslarHierarchie
@@ -207,4 +195,34 @@ Třídy
       :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
 
       :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_okres')``.
+
+
+.. py:class:: RuianSyncRun
+
+   Záznam o jednom běhu synchronizace heslářů RÚIAN se zdrojem ČÚZK.
+
+   Slouží jako audit log a zároveň jako stavový token pro inkrementální cron –
+   pole ``data_valid_to`` posledního úspěšného běhu určuje, od kterého dne má
+   cron pokračovat ve stahování denních změnových VFR souborů.
+
+   **Metody:**
+
+   .. py:method:: __str__()
+
+      Vrací textovou reprezentaci běhu.
+
+      :return: Řetězec ve formátu ``YYYY-MM-DD HH:MM mode (status)``.
+
+   .. py:method:: last_successful()
+
+      Vrací poslední úspěšně dokončený běh seřazený podle ``started_at``.
+
+      Používá se cronem k určení, od jakého data má pokračovat ve stahování
+      denních změnových VFR souborů. Řazení podle ``started_at`` (a ne
+      podle ``data_valid_to``) je nutné proto, aby opětovný **plný** sync
+      (např. z nového SHP snapshotu se staršími ``data_valid_to``) resetoval
+      čítač – jinak by cron pokračoval od posledního delta, jako by nový
+      plný sync nikdy neproběhl.
+
+      :return: Instance ``RuianSyncRun`` nebo ``None``, pokud žádný úspěšný běh dosud neexistuje.
 

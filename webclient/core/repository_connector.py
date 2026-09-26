@@ -3,6 +3,7 @@ import io
 import logging
 import os
 import re
+import threading
 from abc import ABC
 from datetime import datetime, timezone
 from enum import Enum
@@ -10,13 +11,13 @@ from io import BytesIO
 from typing import Optional, Union
 
 import requests
-from celery import Celery
 from core.connectors import RedisConnector
 from core.log_middleware import LogMiddleware
 from core.utils import get_mime_type
 from django.conf import settings
 from pdf2image import convert_from_bytes
 from PIL import Image, ImageOps
+from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 from xml_generator.generator import DocumentGenerator
 from xml_generator.models import ModelWithMetadata
@@ -24,6 +25,78 @@ from xml_generator.models import ModelWithMetadata
 from redis import ResponseError
 
 logger = logging.getLogger(__name__)
+
+#: Maximální hrana malého náhledu v pixelech (``Image.thumbnail`` zachovává poměr stran
+#: a obrázek **nikdy nezvětšuje**, takže menší předloha si rozměr podrží).
+THUMB_MAX_PX = 100
+
+#: Totéž pro velký náhled. Obě hodnoty byly dřív schované ve výrazu
+#: ``(1 + large * 7) * 100``; jako konstanty na ně může odkazovat i test, který hlídá
+#: rozměry předgenerovaných placeholder náhledů (review PR #4262).
+THUMB_LARGE_MAX_PX = 800
+
+
+def _build_fedora_adapter() -> HTTPAdapter:
+    """
+    Sestaví ``HTTPAdapter`` se sdíleným connection poolem pro Fedora repozitář.
+
+    HTTP keep-alive a sdružený pool socketů zásadně sníží počet otevíraných TCP
+    spojení (a tedy i tlak na efemerální porty pod paralelní zátěží). Adapter
+    se proto **sdílí napříč vlákny** – ``urllib3.PoolManager`` pod ním je
+    thread-safe a pool zůstane jeden pro celý proces. Kdyby si každé vlákno
+    stavělo vlastní adapter, násobil by se i pool a smysl sdružování socketů
+    by se ztratil.
+
+    :return: Nakonfigurovaná ``HTTPAdapter`` instance.
+    """
+    pool_size = getattr(settings, "FEDORA_HTTP_POOL_SIZE", 50)
+    return HTTPAdapter(pool_connections=pool_size, pool_maxsize=pool_size, pool_block=True)
+
+
+#: Sdílené adaptery – drží connection pool společný pro všechna vlákna.
+_fedora_adapter = _build_fedora_adapter()
+
+#: Úložiště session per vlákno. ``requests.Session`` **není** thread-safe:
+#: nese mutable stav, především cookie jar. Fedora (Tomcat + Shiro) si po
+#: přihlášení ukládá subjekt do servletové session a vrací cookie
+#: ``JSESSIONID``; při sdílené session si vlákna můžou tuhle cookie navzájem
+#: přepsat a request pak odejde s identifikátorem session, kterou Shiro už
+#: nemusí uznat. ``generate_metadata --workers`` posílá requesty právě
+#: z několika vláken najednou, proto má každé vlastní session.
+_thread_local = threading.local()
+
+
+def _build_fedora_session() -> requests.Session:
+    """
+    Sestaví ``requests.Session`` napojenou na sdílený connection pool.
+
+    :return: Nakonfigurovaná ``requests.Session`` instance.
+    """
+    session = requests.Session()
+    session.mount("http://", _fedora_adapter)
+    session.mount("https://", _fedora_adapter)
+    return session
+
+
+def _get_fedora_session(*, admin: bool = False) -> requests.Session:
+    """
+    Vrátí Fedora session pro aktuální vlákno a zadanou identitu.
+
+    Session se **nesmí** sdílet napříč identitami, jinak by cookie
+    ``JSESSIONID`` přenesla do admin požadavku subjekt přihlášený jako
+    ``FEDORA_USER``. Mazání tombstone (viz ``_delete_link``) pak skončí na
+    HTTP 403, protože role ``fedoraUser`` na něj nemá právo. Každá dvojice
+    (vlákno, identita) má proto vlastní session; connection pool je společný.
+
+    :param admin: ``True`` pro identitu ``FEDORA_ADMIN_USER``, jinak ``FEDORA_USER``.
+    :return: Session příslušná aktuálnímu vláknu a identitě.
+    """
+    atribut = "admin_session" if admin else "session"
+    session = getattr(_thread_local, atribut, None)
+    if session is None:
+        session = _build_fedora_session()
+        setattr(_thread_local, atribut, session)
+    return session
 
 
 class FedoraValidationError(Exception):
@@ -207,6 +280,19 @@ class FedoraRequestType(Enum):
     GET_BINARY_FILE_CHILD_RDF = 1043
 
 
+#: Typy požadavků, které Fedora povolí jen roli ``fedoraAdmin`` (mazání kontejnerů a tombstone).
+_ADMIN_REQUEST_TYPES = frozenset(
+    {
+        FedoraRequestType.DELETE_CONTAINER,
+        FedoraRequestType.DELETE_TOMBSTONE,
+        FedoraRequestType.DELETE_LINK_CONTAINER,
+        FedoraRequestType.DELETE_LINK_TOMBSTONE,
+        FedoraRequestType.CONNECT_DELETED_RECORD_3,
+        FedoraRequestType.CONNECT_DELETED_RECORD_4,
+    }
+)
+
+
 class FedoraRepositoryConnector:
     """Implementuje komponentu ``FedoraRepositoryConnector`` v rámci aplikace."""
 
@@ -215,7 +301,7 @@ class FedoraRepositoryConnector:
         Inicializuje instanci třídy.
 
         :param record: Parametr ``record`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``.
-        :param transaction: Parametr ``transaction`` se předává do volání ``isinstance()``, ``FedoraTransaction()``, pracuje se s atributy ``uid``, ``main_record``, ovlivňuje větvení podmínek.
+        :param transaction: Parametr ``transaction`` se předává do volání ``isinstance()``, ``FedoraTransaction()``, pracuje se s atributy ``uid``, ``main_record``, ``override_tombstone``, ovlivňuje větvení podmínek.
         :param skip_container_check: Parametr ``skip_container_check`` slouží jako vstup pro logiku funkce ``__init__``.
         """
         from core.models import ModelWithMetadata
@@ -243,6 +329,21 @@ class FedoraRepositoryConnector:
             "core_repository_connector.__init__.end",
             extra={"transaction": self.transaction_uid, "ident_cely": record.ident_cely},
         )
+
+    @property
+    def override_tombstone(self) -> bool:
+        """Vrací hodnotu ``override_tombstone`` z navázané transakce; bez transakce ``False``.
+
+        Jediným zdrojem pravdy je ``BaseFedoraTransaction.override_tombstone``; connector
+        tuto vlastnost pouze čte. Důvod: ``run_data_import`` neinstanciuje connectory přímo
+        (vznikají uvnitř signálů a ``ModelWithMetadata`` metod), ale transakci propaguje
+        do všech volání, takže nastavením příznaku jen na transakci ovlivní všechny
+        downstream connectory automaticky.
+
+        :return: ``True``, pokud má navázaná transakce nastaveno ``override_tombstone=True``;
+            v ostatních případech (včetně absence transakce) ``False``.
+        """
+        return self.transaction.override_tombstone if self.transaction else False
 
     def _get_model_name(self):
         """
@@ -488,7 +589,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 :return: Vrací proměnná ``response``.
             """
             auth = cls._get_auth(request_type)
-            response = requests.get(url, auth=auth, verify=False)
+            response = cls._get_session(request_type).get(url, auth=auth, verify=False)
             return response
 
         result = send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
@@ -536,18 +637,24 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         :param request_type: Parametr ``request_type`` ovlivňuje větvení podmínek.
         :return: Načtená data odpovídající zadaným vstupům.
         """
-        if request_type in (
-            FedoraRequestType.DELETE_CONTAINER,
-            FedoraRequestType.DELETE_TOMBSTONE,
-            FedoraRequestType.DELETE_LINK_CONTAINER,
-            FedoraRequestType.DELETE_LINK_TOMBSTONE,
-            FedoraRequestType.CONNECT_DELETED_RECORD_3,
-            FedoraRequestType.CONNECT_DELETED_RECORD_4,
-        ):
+        if request_type in _ADMIN_REQUEST_TYPES:
             auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
         else:
             auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
         return auth
+
+    @classmethod
+    def _get_session(cls, request_type: FedoraRequestType) -> requests.Session:
+        """
+        Vrací ``requests.Session`` odpovídající identitě, pod kterou se požadavek odesílá.
+
+        Session nesmí být sdílená napříč identitami ani napříč vlákny; obojí řeší
+        :func:`_get_fedora_session`, viz komentář u ``_thread_local``.
+
+        :param request_type: Typ požadavku určující, zda se použije admin nebo běžný účet.
+        :return: Session aktuálního vlákna pro danou identitu.
+        """
+        return _get_fedora_session(admin=request_type in _ADMIN_REQUEST_TYPES)
 
     def _send_request(
         self, url: str, request_type: FedoraRequestType, *, headers=None, data=None
@@ -569,6 +676,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             extra["data"] = data
         logger.debug("core_repository_connector._send_request.start", extra=extra)
         auth = self._get_auth(request_type)
+        session = self._get_session(request_type)
         response = None
         if self.transaction_uid:
             if headers is None:
@@ -598,7 +706,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             FedoraRequestType.GET_BINARY_FILE_CHILD_RDF,
         ):
             try:
-                response = requests.get(url, headers=headers, auth=auth, verify=False)
+                response = session.get(url, headers=headers, auth=auth, verify=False)
             except requests.exceptions.RequestException as exc:
                 logger.warning(
                     "core_repository_connector._send_request.get_request_failed",
@@ -608,29 +716,29 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         else:
             try:
                 if request_type in (FedoraRequestType.CREATE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
-                    response = requests.post(url, headers=headers, data=data, auth=auth, verify=False)
+                    response = session.post(url, headers=headers, data=data, auth=auth, verify=False)
                 elif request_type in (
                     FedoraRequestType.CREATE_METADATA,
                     FedoraRequestType.RECORD_DELETION_ADD_MARK,
                     FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4,
                     FedoraRequestType.CREATE_LINK,
                 ):
-                    response = requests.post(url, headers=headers, data=data, auth=auth, verify=False)
+                    response = session.post(url, headers=headers, data=data, auth=auth, verify=False)
                 elif request_type in (
                     FedoraRequestType.CREATE_BINARY_FILE_CONTENT,
                     FedoraRequestType.CREATE_BINARY_FILE_THUMB,
                     FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE,
                 ):
-                    response = requests.post(url, headers=headers, data=data, auth=auth, verify=False, timeout=10)
+                    response = session.post(url, headers=headers, data=data, auth=auth, verify=False, timeout=10)
                 elif request_type in (
                     FedoraRequestType.UPDATE_METADATA,
                     FedoraRequestType.UPDATE_BINARY_FILE_CONTENT,
                     FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB,
                     FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE,
                 ):
-                    response = requests.put(url, headers=headers, data=data, auth=auth, verify=False)
+                    response = session.put(url, headers=headers, data=data, auth=auth, verify=False)
                 elif request_type == FedoraRequestType.CREATE_BINARY_FILE:
-                    response = requests.post(url, headers=headers, auth=auth, data=data, verify=False)
+                    response = session.post(url, headers=headers, auth=auth, data=data, verify=False)
                 elif request_type in (
                     FedoraRequestType.DELETE_CONTAINER,
                     FedoraRequestType.DELETE_TOMBSTONE,
@@ -641,7 +749,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.CONNECT_DELETED_RECORD_4,
                     FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5,
                 ):
-                    response = requests.delete(url, headers=headers, auth=auth)
+                    response = session.delete(url, headers=headers, auth=auth)
                 elif request_type in (
                     FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
                     FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
@@ -655,7 +763,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.THUMB_LARGE_CONTENT_UPDATE_RDF_DATA,
                     FedoraRequestType.BINARY_FILE_CHILD_UPDATE_RDF_DATA,
                 ):
-                    response = requests.patch(url, auth=auth, headers=headers, data=data)
+                    response = session.patch(url, auth=auth, headers=headers, data=data)
             except requests.exceptions.ConnectionError as exc:
                 logger.error(
                     "core_repository_connector._send_request.connection_error",
@@ -1092,15 +1200,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             self._update_creator(FedoraRequestType.METADATA_UPDATE_RDF_DATA)
         elif update is True:
             document, headers = generate_metadata()
-            try:
-                current_metadata = self.get_metadata()
-                metadata_changed = current_metadata != document
-            except FedoraError:
-                logger.warning(
-                    "core_repository_connector.save_metadata.get_metadata_failed_proceeding_with_update",
-                    extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
-                )
-                metadata_changed = True
+            # result už drží aktuální metadata z GET výše. Volání self.get_metadata() by přes
+            # save_metadata(False) vyvolalo rekurzi a tři další HTTP volání do Fedory.
+            metadata_changed = result.content != document
             if metadata_changed:
                 url = self._get_request_url(FedoraRequestType.UPDATE_METADATA)
                 self._send_request(url, FedoraRequestType.UPDATE_METADATA, headers=headers, data=document)
@@ -1172,12 +1274,14 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             Změní velikost obrázku na zadaný rozměr a vrátí jako PNG v BytesIO.
 
             :param image: Vstupní obrázek v binární podobě k převzorkování.
-            :param large_inner: Příznak pro výběr max. rozměru (False: 100x100px, True: 800x800px).
+            :param large_inner: Příznak pro výběr max. rozměru (False: maximální hrana malého náhledu
+                ``THUMB_MAX_PX``, True: maximální hrana velkého náhledu ``THUMB_LARGE_MAX_PX``).
             :return: Změněný obrázek jako PNG v BytesIO bufferu.
             """
             image = Image.open(image)
             image = ImageOps.exif_transpose(image)
-            max_size = ((1 + large_inner * 7) * 100, (1 + large_inner * 7) * 100)
+            hrana = THUMB_LARGE_MAX_PX if large_inner else THUMB_MAX_PX
+            max_size = (hrana, hrana)
             image.thumbnail(max_size)
             output_buffer = BytesIO()
             image.save(output_buffer, format="PNG")
@@ -1247,7 +1351,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         else:
             return __generate_thumb_from_icon(file_name, file_content, large)
 
-    def save_thumbs(self, file_name, file, uuid, update=False, ident_cely_old=None):
+    def save_thumbs(self, file_name, file, uuid, update=False, ident_cely_old=None, source_thumbs=None):
         """
         Uloží thumbs. v aplikaci.
 
@@ -1256,6 +1360,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
         :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
         :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
+        :param source_thumbs: Volitelný slovník ``{True: bytes|None, False: bytes|None}`` s již existujícím
+            obsahem náhledů (velký/malý). Pokud je pro danou velikost k dispozici, náhled se nahraje přímo
+            místo přegenerování z ``file`` (např. při migraci souboru na nový identifikátor).
         """
         logger.debug(
             "core_repository_connector._save_thumb.start",
@@ -1268,22 +1375,24 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             },
         )
         for large in (True, False):
-            file.seek(0)
-            data = self.__generate_thumb(file_name, file, large)
-            if not data:
-                logger.info(
-                    "core_repository_connector._save_thumb.error",
-                    extra={
-                        "file": file_name,
-                        "ident_cely": self.record.ident_cely,
-                        "large": large,
-                        "update": update,
-                        "uuid": uuid,
-                        "transaction": self.transaction_uid,
-                    },
-                )
-                continue
-            data = data.read()
+            data = source_thumbs.get(large) if source_thumbs else None
+            if data is None:
+                file.seek(0)
+                generated = self.__generate_thumb(file_name, file, large)
+                if not generated:
+                    logger.info(
+                        "core_repository_connector._save_thumb.error",
+                        extra={
+                            "file": file_name,
+                            "ident_cely": self.record.ident_cely,
+                            "large": large,
+                            "update": update,
+                            "uuid": uuid,
+                            "transaction": self.transaction_uid,
+                        },
+                    )
+                    continue
+                data = generated.read()
             file_sha_512 = hashlib.sha512(data).hexdigest()
             thumb_file_name = file_name[: file_name.rfind(".")]
             headers = {
@@ -1368,6 +1477,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         if soubor.repository_uuid is not None and check_if_exists:
             return None
         self._check_binary_file_container()
+        source_thumbs = None
         if include_content:
             if soubor.repository_uuid is None:
                 with open(soubor.path, mode="rb") as file:
@@ -1379,6 +1489,16 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 data = old_rep_bin_file.content
                 file_sha_512 = old_rep_bin_file.sha_512
                 data.seek(0)
+                # Náhledy pro soubor už existují na starém umístění - stačí je zkopírovat, ne přegenerovat.
+                # Musí se číst přes soubor.get_repository_content (netransakční spojení) stejně jako orig výše -
+                # `self` je transakční připojení, ve kterém record_ident_change už smazal starý kontejner,
+                # takže by zde GET na starý container vracel 404.
+                old_large_thumb = soubor.get_repository_content(ident_cely_old, thumb_large=True)
+                old_small_thumb = soubor.get_repository_content(ident_cely_old, thumb_small=True)
+                source_thumbs = {
+                    True: old_large_thumb.content.read() if old_large_thumb else None,
+                    False: old_small_thumb.content.read() if old_small_thumb else None,
+                }
         else:
             data = None
             file_sha_512 = None
@@ -1394,7 +1514,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         soubor.save()
         if include_content:
             content_type = get_mime_type(soubor.nazev)
-            rep_bin_file = RepositoryBinaryFile(uuid, data, soubor.nazev)
+            rep_bin_file = RepositoryBinaryFile(result.text, data, soubor.nazev)
             headers = {
                 "Content-Type": content_type,
                 "Content-Disposition": f'attachment; filename="{soubor.nazev}"'.encode("utf-8"),
@@ -1404,7 +1524,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
             self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
             self._update_creator(FedoraRequestType.FILE_CONTENT_UPDATE_RDF_DATA, uuid)
-            self.save_thumbs(soubor.nazev, data, soubor.repository_uuid)
+            self.save_thumbs(soubor.nazev, data, soubor.repository_uuid, source_thumbs=source_thumbs)
             logger.debug(
                 "core_repository_connector.migrate_binary_file.end",
                 extra={"uuid": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -1455,7 +1575,10 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             file = io.BytesIO()
             file.write(response.content)
             file.seek(0)
-            rep_bin_file = RepositoryBinaryFile(uuid, file)
+            container_url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
+            if ident_cely_old is not None:
+                container_url = container_url.replace(self.record.ident_cely, ident_cely_old)
+            rep_bin_file = RepositoryBinaryFile(container_url, file)
             logger.debug(
                 "core_repository_connector.get_binary_file.end",
                 extra={
@@ -1493,7 +1616,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 "option": save_thumbs,
             },
         )
-        rep_bin_file = RepositoryBinaryFile(uuid, file, file_name)
+        url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, uuid=uuid)
+        container_url = url.removesuffix("/orig")
+        rep_bin_file = RepositoryBinaryFile(container_url, file, file_name)
         data = file.read()
         file_sha_512 = hashlib.sha512(data).hexdigest()
         headers = {
@@ -1501,7 +1626,6 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             "Content-Disposition": f'attachment; filename="{file_name}"',
             "Digest": f"sha-512={file_sha_512}",
         }
-        url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, uuid=uuid)
         self._send_request(url, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, headers=headers, data=data)
         if save_thumbs:
             self.save_thumbs(file_name, file, uuid, True)
@@ -1803,7 +1927,15 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         )
 
     def record_deletion(self):
-        """Označí záznam jako smazaný v Fedoře přidáním 'deleted' markeru."""
+        """Označí záznam jako smazaný v Fedoře přidáním 'deleted' markeru.
+
+        Pokud má navázaná transakce ``override_tombstone == True`` (čte se přes
+        ``self.override_tombstone``), přidá k POST požadavku, který vytváří proxy
+        ``/model/deleted/member/<ident_cely>``, hlavičku ``Overwrite-Tombstone: true``.
+        Cyklus INSERT → DELETE → INSERT → DELETE totiž zanechá na této URL tombstone,
+        který by jinak druhý DELETE tiše rozbil; hlavička dovolí Fedoře tombstone
+        při opětovném vytvoření proxy přepsat.
+        """
         logger.debug(
             "core_repository_connector.record_deletion.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -1827,6 +1959,8 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
             url = self._get_request_url(FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS)
             self._send_request(url, FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS, headers=headers, data=data)
             headers = {"Slug": self.record.ident_cely, "Content-Type": "text/turtle"}
+            if self.override_tombstone:
+                headers["Overwrite-Tombstone"] = "true"
             data = (
                 "@prefix ore: <http://www.openarchives.org/ore/terms/> . "
                 "@prefix dcterms: <http://purl.org/dc/terms/> . "
@@ -2019,6 +2153,7 @@ class BaseFedoraTransaction(ABC):
     def __init__(self):
         """Inicializuje instanci třídy."""
         self.uid = None
+        self.override_tombstone = False
 
     def mark_transaction_as_closed(self):
         """Označí transakci jako uzavřenou. Výchozí implementace neprovádí žádnou akci."""
@@ -2181,7 +2316,7 @@ class FedoraTransaction(BaseFedoraTransaction):
         )
         auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
         if operation == FedoraTransactionOperation.COMMIT:
-            response = requests.put(url, auth=auth, verify=False)
+            response = _get_fedora_session(admin=True).put(url, auth=auth, verify=False)
             try:
                 self._save_transaction_result_to_redis(FedoraTransactionResult.COMMITED)
             except ResponseError as err:
@@ -2190,7 +2325,7 @@ class FedoraTransaction(BaseFedoraTransaction):
                     extra={"transaction": self.uid, "error": err},
                 )
         elif operation == FedoraTransactionOperation.ROLLBACK:
-            response = requests.delete(url, auth=auth, verify=False)
+            response = _get_fedora_session(admin=True).delete(url, auth=auth, verify=False)
             try:
                 self._save_transaction_result_to_redis(FedoraTransactionResult.ABORTED)
             except ResponseError as err:
@@ -2215,7 +2350,9 @@ class FedoraTransaction(BaseFedoraTransaction):
         logger.debug(
             "core_repository_connector.FedoraTransaction.rollback_transaction.start", extra={"transaction": self.uid}
         )
-        if self.__status != FedoraTransactionStatus.ABORTED:
+        # A committed transaction no longer exists in Fedora, so rolling it back would just
+        # raise a fresh commit-failed error over an unrelated one already being handled.
+        if self.__status not in (FedoraTransactionStatus.ABORTED, FedoraTransactionStatus.COMMITTED):
             self._send_transaction_request(FedoraTransactionOperation.ROLLBACK)
             self.__status = FedoraTransactionStatus.ABORTED
         logger.debug(
@@ -2272,7 +2409,7 @@ class FedoraTransaction(BaseFedoraTransaction):
         )
         auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
         try:
-            response = requests.post(url, auth=auth, verify=False)
+            response = _get_fedora_session().post(url, auth=auth, verify=False)
         except requests.exceptions.ConnectionError as exc:
             logger.error(
                 "core_repository_connector.FedoraTransaction.__create_transaction.connection_error",
@@ -2308,12 +2445,11 @@ class FedoraTransaction(BaseFedoraTransaction):
         """
         from cron.tasks import call_digiarchiv_update_task
 
+        from webclient.celery import app as celery_app
+
         logger.debug("core_repository_connector.FedoraTransaction.call_digiarchiv_update.start")
         try:
-            app = Celery("webclient")
-            app.config_from_object("django.conf:settings", namespace="CELERY")
-            app.autodiscover_tasks()
-            i = app.control.inspect(["worker1@amcr"])
+            i = celery_app.control.inspect(["worker1@amcr"])
             queues = (
                 i.scheduled(),
                 i.active(),
@@ -2321,9 +2457,10 @@ class FedoraTransaction(BaseFedoraTransaction):
         except Exception as e:
             logger.warning(
                 "core_repository_connector.FedoraTransaction.call_digiarchiv_update.Celery_warning",
-                extra={"error": e, "app": app},
+                extra={"error": e, "app": celery_app},
             )
             call_digiarchiv_update_task.apply_async()
+            return
         for queue in queues:
             if queue is None:
                 logger.warning(

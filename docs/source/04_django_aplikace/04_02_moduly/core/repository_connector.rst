@@ -112,8 +112,21 @@ Třídy
       Inicializuje instanci třídy.
 
       :param record: Parametr ``record`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``.
-      :param transaction: Parametr ``transaction`` se předává do volání ``isinstance()``, ``FedoraTransaction()``, pracuje se s atributy ``uid``, ``main_record``, ovlivňuje větvení podmínek.
+      :param transaction: Parametr ``transaction`` se předává do volání ``isinstance()``, ``FedoraTransaction()``, pracuje se s atributy ``uid``, ``main_record``, ``override_tombstone``, ovlivňuje větvení podmínek.
       :param skip_container_check: Parametr ``skip_container_check`` slouží jako vstup pro logiku funkce ``__init__``.
+
+   .. py:method:: override_tombstone()
+
+      Vrací hodnotu ``override_tombstone`` z navázané transakce; bez transakce ``False``.
+
+      Jediným zdrojem pravdy je ``BaseFedoraTransaction.override_tombstone``; connector
+      tuto vlastnost pouze čte. Důvod: ``run_data_import`` neinstanciuje connectory přímo
+      (vznikají uvnitř signálů a ``ModelWithMetadata`` metod), ale transakci propaguje
+      do všech volání, takže nastavením příznaku jen na transakci ovlivní všechny
+      downstream connectory automaticky.
+
+      :return: ``True``, pokud má navázaná transakce nastaveno ``override_tombstone=True``;
+          v ostatních případech (včetně absence transakce) ``False``.
 
    .. py:method:: _get_model_name()
 
@@ -183,6 +196,16 @@ Třídy
 
       :param request_type: Parametr ``request_type`` ovlivňuje větvení podmínek.
       :return: Načtená data odpovídající zadaným vstupům.
+
+   .. py:method:: _get_session()
+
+      Vrací ``requests.Session`` odpovídající identitě, pod kterou se požadavek odesílá.
+
+      Session nesmí být sdílená napříč identitami ani napříč vlákny; obojí řeší
+      :func:`_get_fedora_session`, viz komentář u ``_thread_local``.
+
+      :param request_type: Typ požadavku určující, zda se použije admin nebo běžný účet.
+      :return: Session aktuálního vlákna pro danou identitu.
 
    .. py:method:: _send_request()
 
@@ -326,6 +349,9 @@ Třídy
       :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
       :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
       :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
+      :param source_thumbs: Volitelný slovník ``{True: bytes|None, False: bytes|None}`` s již existujícím
+          obsahem náhledů (velký/malý). Pokud je pro danou velikost k dispozici, náhled se nahraje přímo
+          místo přegenerování z ``file`` (např. při migraci souboru na nový identifikátor).
 
    .. py:method:: migrate_binary_file()
 
@@ -437,6 +463,13 @@ Třídy
    .. py:method:: record_deletion()
 
       Označí záznam jako smazaný v Fedoře přidáním 'deleted' markeru.
+
+      Pokud má navázaná transakce ``override_tombstone == True`` (čte se přes
+      ``self.override_tombstone``), přidá k POST požadavku, který vytváří proxy
+      ``/model/deleted/member/<ident_cely>``, hlavičku ``Overwrite-Tombstone: true``.
+      Cyklus INSERT → DELETE → INSERT → DELETE totiž zanechá na této URL tombstone,
+      který by jinak druhý DELETE tiše rozbil; hlavička dovolí Fedoře tombstone
+      při opětovném vytvoření proxy přepsat.
 
    .. py:method:: add_replaces_triple()
 
@@ -657,3 +690,38 @@ Třídy
 
       :param ident_cely: Parametr ``ident_cely`` se předává do volání ``add()``.
 
+
+Funkce
+------
+
+.. py:function:: _build_fedora_adapter()
+
+   Sestaví ``HTTPAdapter`` se sdíleným connection poolem pro Fedora repozitář.
+
+   HTTP keep-alive a sdružený pool socketů zásadně sníží počet otevíraných TCP
+   spojení (a tedy i tlak na efemerální porty pod paralelní zátěží). Adapter
+   se proto **sdílí napříč vlákny** – ``urllib3.PoolManager`` pod ním je
+   thread-safe a pool zůstane jeden pro celý proces. Kdyby si každé vlákno
+   stavělo vlastní adapter, násobil by se i pool a smysl sdružování socketů
+   by se ztratil.
+
+   :return: Nakonfigurovaná ``HTTPAdapter`` instance.
+
+.. py:function:: _build_fedora_session()
+
+   Sestaví ``requests.Session`` napojenou na sdílený connection pool.
+
+   :return: Nakonfigurovaná ``requests.Session`` instance.
+
+.. py:function:: _get_fedora_session()
+
+   Vrátí Fedora session pro aktuální vlákno a zadanou identitu.
+
+   Session se **nesmí** sdílet napříč identitami, jinak by cookie
+   ``JSESSIONID`` přenesla do admin požadavku subjekt přihlášený jako
+   ``FEDORA_USER``. Mazání tombstone (viz ``_delete_link``) pak skončí na
+   HTTP 403, protože role ``fedoraUser`` na něj nemá právo. Každá dvojice
+   (vlákno, identita) má proto vlastní session; connection pool je společný.
+
+   :param admin: ``True`` pro identitu ``FEDORA_ADMIN_USER``, jinak ``FEDORA_USER``.
+   :return: Session příslušná aktuálnímu vláknu a identitě.

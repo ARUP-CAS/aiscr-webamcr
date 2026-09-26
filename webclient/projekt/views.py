@@ -387,6 +387,8 @@ def create(request):
             logger.debug("projekt.views.create.form_valid")
             x2 = form_projekt.cleaned_data["coordinate_x2"]
             x1 = form_projekt.cleaned_data["coordinate_x1"]
+            sjtsk_x1 = form_projekt.cleaned_data.get("coordinate_sjtsk_x1")
+            sjtsk_x2 = form_projekt.cleaned_data.get("coordinate_sjtsk_x2")
             projekt = form_projekt.save(commit=False)
             if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
                 # Kontrola oznamovatele
@@ -404,9 +406,10 @@ def create(request):
                         },
                     )
             fedora_transaction: FedoraTransaction = projekt.create_transaction(request.user, ZAZNAM_USPESNE_VYTVOREN)
-            if x1 and x2:
+
+            if sjtsk_x1 and sjtsk_x2 and x1 and x2:
+                projekt.geom_sjtsk = Point(sjtsk_x1, sjtsk_x2, srid=5514)
                 projekt.geom = Point(x1, x2)
-                projekt.geom_sjtsk = Point(*convertToJTSK(x1, x2))
                 projekt.geom_system = "5514"
             try:
                 projekt.set_permanent_ident_cely(False)
@@ -552,26 +555,55 @@ def edit(request, ident_cely):
             ):
                 x1 = projekt.geom.coords[0]
                 x2 = projekt.geom.coords[1]
+                if projekt.geom_sjtsk is not None:
+                    sjtsk_x1 = projekt.geom_sjtsk.coords[0]
+                    sjtsk_x2 = projekt.geom_sjtsk.coords[1]
+                else:
+                    sjtsk_x1, sjtsk_x2 = convertToJTSK(x1, x2)
             else:
                 x1 = form.cleaned_data["coordinate_x1"]
                 x2 = form.cleaned_data["coordinate_x2"]
+                sjtsk_x1 = form.cleaned_data.get("coordinate_sjtsk_x1")
+                sjtsk_x2 = form.cleaned_data.get("coordinate_sjtsk_x2")
+                if not (sjtsk_x1 and sjtsk_x2) and x1 and x2:
+                    # ``EditProjektForm`` nemá (na rozdíl od ``CreateProjektForm``)
+                    # validaci vyžadující všechny čtyři souřadnice a SJTSK pole
+                    # jsou ``required=False``. Kdyby je JS nevyplnil (zastaralá
+                    # cache po nasazení, výpadek klik-handleru), podmínka níže
+                    # by celý blok přeskočila a poloha by se tiše neuložila.
+                    # Dopočítáme je proto z WGS84 stejně jako ve větvi výše.
+                    sjtsk_x1, sjtsk_x2 = convertToJTSK(x1, x2)
+                    logger.warning(
+                        "projekt.views.edit.form_valid.sjtsk_dopocitano",
+                        extra={"ident_cely": projekt.ident_cely},
+                    )
             # Obcházení kontroly změny lon/lat; důležitá je pouze geometrie.
             form.fields["coordinate_x1"].initial = x1
             form.fields["coordinate_x2"].initial = x2
+            form.fields["coordinate_sjtsk_x1"].initial = sjtsk_x1
+            form.fields["coordinate_sjtsk_x2"].initial = sjtsk_x2
             fedora_transaction = projekt.create_transaction(request.user)
             fedora_transaction.redirect_on_error = True
             projekt = form.save(commit=False)
             projekt.save()
             old_geom = projekt.geom
-            if x1 and x2:
+            if sjtsk_x1 and sjtsk_x2 and x1 and x2:
+                new_sjtsk = Point(sjtsk_x1, sjtsk_x2, srid=5514)
                 new_geom = Point(x1, x2)
                 if old_geom is None or new_geom.coords != old_geom.coords:
                     projekt.geom = new_geom
-                    projekt.geom_sjtsk = Point(*convertToJTSK(x1, x2))
+                    projekt.geom_sjtsk = new_sjtsk
                     projekt.save()
                     logger.debug("projekt.views.edit.form_valid.geom_updated", extra={"geom": projekt.geom})
                 else:
-                    logger.warning("projekt.views.edit.form_valid.geom_not_updated")
+                    logger.debug("projekt.views.edit.form_valid.geom_not_updated")
+            else:
+                # Sem se lze dostat jen při chybějícím WGS84 páru – ten je ve
+                # formuláři povinný, takže jde o anomálii, ne o běžný stav.
+                logger.warning(
+                    "projekt.views.edit.form_valid.geom_preskocena",
+                    extra={"ident_cely": projekt.ident_cely, "x1": x1, "x2": x2},
+                )
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             form.save_m2m()
