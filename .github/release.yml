@@ -1,0 +1,28 @@
+# .github/release.yml
+
+changelog:
+  exclude:
+    labels:
+      - wontfix
+  categories:
+    - title: Features
+      labels:
+        - feature
+        - feat
+        - GUI
+        - Feature
+    - title: Bug fixes
+      labels:
+        - bug
+        - fix
+        - Bug
+    - title: Dependencies and automations
+      labels:
+        - dependencies
+        - pre-commit
+      authors:
+        - dependabot
+        - dependabot[bot]
+    - title: Other
+      labels:
+        - "*"

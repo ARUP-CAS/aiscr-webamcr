@@ -13,7 +13,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-201121404A/metadata",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-201121404A01/metadata",
       "mime_type": "application/xml",
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#Binary",

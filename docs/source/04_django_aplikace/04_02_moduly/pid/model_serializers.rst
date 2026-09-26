@@ -613,6 +613,10 @@ Funkce
 
    Serializuje geometrii a katastr do formátu geoLocationPoint/geoLocationPlace pro DataCite metadata.
 
+   DataCite ``geoLocationPoint`` je definovaný ve WGS84 (EPSG:4326), takže
+   geometrie v EPSG:5514 se před serializací převede. Když transformace selže,
+   souřadnice se do metadat neuvedou vůbec (raději chybějící než chybné).
+
    :param geom: Geometrie záznamu (bod nebo polygon), z níž se použije centroid; ``None`` přeskočí souřadnice.
    :param katastr: Katastrální území záznamu použité pro textový popis polohy; ``None`` přeskočí lokalitu.
    :param verejne: Příznak, zda má být záznam zobrazen veřejně — ovlivňuje úroveň detailu souřadnic.

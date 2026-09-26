@@ -2805,14 +2805,31 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                         )
                     )
 
-                geom_wgs84 = instance.geom
-                if geom_wgs84 is None and instance.geom_sjtsk is not None:
-                    # Clone so that the stored geom_sjtsk field is never mutated; WGS-84 is
-                    # only needed transiently to identify the cadastre.
-                    geom_wgs84 = instance.geom_sjtsk.clone()
-                    geom_wgs84.transform(4326)
-                if geom_wgs84:
-                    instance.katastr = get_cadastre_from_point(geom_wgs84)
+                sjtsk_pt = instance.geom_sjtsk
+                if sjtsk_pt is None and instance.geom is not None:
+                    sjtsk_wkt, sjtsk_status = transform_geom_to_sjtsk(instance.geom.wkt)
+                    if sjtsk_status == "OK":
+                        sjtsk_pt = GEOSGeometry(sjtsk_wkt, srid=5514)
+                    else:
+                        # Geometrie dodaná byla, jen se ji nepodařilo převést do
+                        # EPSG:5514, takže katastr určit nelze. Bez tohoto větvení
+                        # by nález prošel importem bez katastru a bez varování –
+                        # nekonzistentní s kontrolou o pár řádků níž, která
+                        # neurčitelný katastr hlásí jako chybu.
+                        logger.warning(
+                            "api.views.SamostatnyNalezXmlImportView.post.sjtsk_transform_failed",
+                            extra={"status": sjtsk_status, "wkt": instance.geom.wkt[:120]},
+                        )
+                        raise ImportValidationException(
+                            ImportValidationIssue(
+                                line=elem.sourceline,
+                                column=None,
+                                message=_("api.views.SamostatnyNalezXmlImportView.post.katastr_not_found"),
+                                error_type=ImportErrorType.INVALID_DATA,
+                            )
+                        )
+                if sjtsk_pt is not None:
+                    instance.katastr = get_cadastre_from_point(sjtsk_pt)
                     if instance.katastr is None:
                         raise ImportValidationException(
                             ImportValidationIssue(

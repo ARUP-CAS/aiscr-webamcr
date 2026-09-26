@@ -1,0 +1,62 @@
+{% extends 'admin/change_list.html' %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+{% load static %}
+
+{% block extrastyle %}
+{{block.super}}
+  <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+  <style>
+      .form-group {
+          display: flex;
+          align-items: center;
+          margin-bottom: 1rem;
+      }
+
+      .form-label {
+          width: 300px;
+          margin-right: 10px;
+      }
+  </style>
+{% endblock %}
+
+{% block pagination %}{% endblock %}
+{% block filters %}{% endblock filters %}
+{% block object-tools %}{% endblock object-tools %}
+{% block search %}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans "core.templates.admin.fedora_management.home_link" %}</a>
+    {% if page_name %} &rsaquo; {{ page_name }}{% endif %}
+  </div>
+{% endblock %}
+
+<h2>{% trans "heslar.templates.admin.update_katastry.heading" %}</h2>
+
+{% block content %}
+  {% if request.user.is_superuser %}
+    <div id="content-main">
+      <p>{% trans "heslar.templates.admin.update_katastry.description" %}</p>
+      <form method="post" enctype="multipart/form-data">
+        <div>
+          <fieldset class="module aligned">
+            {{ form.non_field_errors }}
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="id_ident_list_file" class="form-label">
+                {{ form.ident_list_file.label }}
+              </label>
+              <input type="file" id="id_ident_list_file" name="ident_list_file" required accept=".xlsx, .xls, .csv">
+            </div>
+          </fieldset>
+          <div class="submit-row">
+            <input type="submit" value="{% trans 'Save' %}" class="default" name="_save">
+          </div>
+        </div>
+      </form>
+    </div>
+  {% else %}
+    <p>{% trans "core.templates.admin.fedora_management.not_superuser" %}</p>
+  {% endif %}
+{% endblock content %}

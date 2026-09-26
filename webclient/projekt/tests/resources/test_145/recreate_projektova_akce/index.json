@@ -13,7 +13,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-202111043A",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-202111043A01",
       "mime_type": null,
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#ArchivalGroup",
@@ -28,7 +28,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-202111043A/metadata",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-202111043A01/metadata",
       "mime_type": "application/xml",
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#Binary",

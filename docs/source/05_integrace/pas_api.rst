@@ -1,350 +1,410 @@
-PAS API — Endpointy pro import samostatných nálezů
-===================================================
+PAS API — příjem a zpracování záznamů samostatných nálezů
+=========================================================
 
-Tato sekce popisuje REST API endpointy pro programatický import a aktualizaci
-samostatných nálezů v systému AMČR.
+Tato stránka popisuje, jak AMČR zpracovává požadavky **PAS API** — rozhraní, jehož
+prostřednictvím externí aplikace zakládají samostatné nálezy, aktualizují jejich evidenční
+čísla a připojují k nim fotografie. Je určena vývojářům a správcům AMČR a integrátorům, kteří
+potřebují rozumět chování serveru hlouběji, než jak jej popisuje veřejná reference.
 
-Všechny endpointy vyžadují:
+.. note::
 
-- **Autentizaci** Bearer tokenem (hlavička ``Authorization: Bearer <token>``).
-- **Oprávnění** závisí na konkrétním endpointu (viz detail níže); minimální podmínkou je splnění
-  standardních pravidel pro zápis nálezů k projektu, včetně omezení na typ projektu průzkum.
+   **Referenční popis rozhraní** — endpointy, struktura importního XML, stavové kódy, limity
+   a příklady volání — je veden v angličtině na webu AMCR API:
+   `AMCR-PAS API <https://arup-cas.github.io/aiscr-api-home/pas-api/>`__.
+   Tato stránka jej neopakuje a zaměřuje se na to, co se děje uvnitř aplikace.
 
-Přihlášení a získání tokenu
----------------------------
+Rozhraní vzniklo spolu s integrací AMČR a sbírkového systému **MUSEION** (Axiell) v rámci
+projektu PRAK-25-45. MUSEION je jeho prvním a referenčním klientem, rozhraní však není na
+MUSEION vázáno: je otevřené jakémukoli integrátorovi s odpovídajícím účtem a oprávněními,
+například dalším sbírkovým systémům nebo aplikacím pro evidenci nálezů v terénu.
 
-Před voláním jakéhokoli API endpointu je nutné získat autentizační token.
-Token má platnost **24 hodin**; po vypršení je nutné přihlášení zopakovat.
+Implementace je v modulu ``webclient/api/`` (``views.py``, ``urls.py``, ``models.py``);
+podrobný popis tříd a metod je v :doc:`/04_django_aplikace/04_02_moduly/api/views`.
 
-.. code-block:: text
 
-    POST /api/token-auth/
+Pořadí kontrol požadavku
+------------------------
 
-**Tělo požadavku** (``application/json``):
+Všechny tři endpointy PAS API (``import-xml``, ``evidencni-cislo``, ``upload-foto``) sdílejí
+společný základ ``PasApiBaseView``: stejnou autentizaci, přístupová pravidla i omezení četnosti.
+Kontroly probíhají v tomto pořadí; požadavek, který některou nesplní, dál nepokračuje.
 
-.. code-block:: json
+.. mermaid::
+   :align: center
 
-    {
-        "username": "<uživatelské jméno>",
-        "password": "<heslo>"
-    }
-
-**Odpověď** (HTTP 200):
-
-.. code-block:: json
-
-    {
-        "token": "<váš-bearer-token>"
-    }
-
-Získaný token předávejte v hlavičce ``Authorization`` všech následujících volání:
-
-.. code-block:: text
-
-    Authorization: Bearer <váš-bearer-token>
-
-**Příklad v Pythonu**:
-
-.. code-block:: python
-
-    import requests
-
-    response = requests.post(
-        "https://<host>/api/token-auth/",
-        json={"username": "<jméno>", "password": "<heslo>"},
-    )
-    token = response.json()["token"]
-
-    headers = {"Authorization": f"Bearer {token}"}
-
-Přehled endpointů
------------------
+   flowchart TD
+       R["Požadavek na /api/pas/..."] --> M{"access_mode = closed?"}
+       M -- ano --> E503["503"]
+       M -- ne --> A{"Platný Bearer token?"}
+       A -- ne --> E401["401"]
+       A -- ano --> P{"Přístupová pravidla<br/>IP a uživatel, access_mode"}
+       P -- zamítnuto --> E403["403"]
+       P -- povoleno --> T{"Omezení četnosti<br/>min. interval, rate_limits"}
+       T -- překročeno --> E429a["429 + Retry-After"]
+       T -- povoleno --> L["Založení záznamu ApiRequestLog"]
+       L --> H["Kontrola vstupu a oprávnění k záznamu"]
+       H --> Z{"Zámek záznamu?<br/>jen PATCH a fotografie"}
+       Z -- nezískán --> E429b["429 bez Retry-After"]
+       Z -- získán, nebo import --> O["Validace a zápis<br/>databáze a Fedora"]
+       O --> S["200 / 201"]
 
 .. list-table::
    :header-rows: 1
-   :widths: 40 10 15 35
+   :widths: 30 70
 
-   * - Adresa
-     - Metoda
-     - Vstup
-     - Popis
-   * - ``/api/token-auth/``
-     - ``POST``
-     - JSON
-     - Přihlášení a získání Bearer tokenu
-   * - ``/api/uzivatel-info/``
-     - ``GET``
-     - —
-     - Vrací XML metadata přihlášeného uživatele
-   * - ``/api/pas/import-xml``
-     - ``POST``
-     - XML soubor
-     - Import nového záznamu samostatného nálezu z XML souboru ve formátu AMČR 2.2
-   * - ``/api/pas/nalez/{ident_cely}/evidencni-cislo``
-     - ``PATCH``
-     - Query parametr
-     - Aktualizace evidenčního čísla existujícího záznamu
-   * - ``/api/pas/nalez/{ident_cely}/upload-foto``
-     - ``POST``
-     - Soubor fotografie
-     - Nahrání fotografie k existujícímu záznamu
+   * - Vrstva
+     - Chování
+   * - ``dispatch`` (režim ``closed``)
+     - Vrací ``503`` ještě před autentizací, aby uzavřené API nevypadalo jako chyba oprávnění.
+   * - ``IsAuthenticated``
+     - Token ``TokenAuthenticationBearer``; chybějící nebo neplatný token vrací ``401``.
+   * - ``IpBlacklistPermission``
+     - Zamítne IP adresy z aktivních pravidel ``ip_blacklist`` — **v každém režimu**.
+   * - ``ApiAccessModePermission``
+     - ``open`` propustí vše; ``whitelist_only`` vyžaduje alespoň jedno aktivní whitelist pravidlo.
+   * - ``IpWhitelistPermission``, ``UserWhitelistPermission``
+     - Uplatní se **jen v režimu** ``whitelist_only``; každá třída propustí požadavek, pokud pro
+       svůj typ nemá žádné aktivní pravidlo.
+   * - ``UserBlacklistPermission``
+     - Zamítne uživatele z aktivních pravidel ``user_blacklist`` (porovnává se e-mail účtu).
+   * - ``ApiImportThrottle``
+     - Omezení četnosti; viz :ref:`pas-api-throttling`.
 
-Detail endpointů
+Záznam ``ApiRequestLog`` zakládá až obslužná metoda endpointu. Požadavky odmítnuté v předchozích
+vrstvách (``503``, ``401``, ``403`` z přístupových pravidel, ``429`` z omezení četnosti) se do něj
+**nezapisují**; zachycuje je pouze aplikační log.
+
+
+Import samostatného nálezu
+--------------------------
+
+``POST /api/pas/import-xml`` (``SamostatnyNalezXmlImportView``) zpracovává jeden dokument
+v tomto sledu:
+
+#. **Příjem souboru.** Chybějící pole ``file`` vrací ``400``. Hlavička ``Content-Digest`` se ověřuje
+   proti SHA-512 bajtů nahraného souboru (nikoli celého multipart těla); chybějící, nevalidní
+   i neshodný digest vrací u importu ``400``.
+#. **Parsování.** XML se čte bez DTD, bez rozvíjení entit a bez síťového přístupu; syntaktická
+   chyba vrací ``400``.
+#. **Deklarace schématu.** Namespace ``amcr`` i odpovídající položka ``xsi:schemaLocation`` musí
+   přesně odpovídat schématu, které aplikace podporuje (konstanty ``AMCR_NAMESPACE_URL``
+   a ``AMCR_XSD_URL`` v ``xml_generator.generator``, aktuálně verze 2.2). Nastavení
+   ``allowed_schema_versions`` může povolené verze dále zúžit, **nepřidá však verzi**, kterou kód
+   nepodporuje — podpora nové verze schématu vyžaduje změnu kódu. Nesoulad vrací ``422``.
+#. **Validace proti XSD.** Schéma se načítá ze sítě, viz :ref:`pas-api-xsd`. Chyby se vracejí
+   v poli ``schema_errors`` se stavem ``422``.
+#. **Kořen dokumentu.** Prázdný kořen ``amcr:amcr`` vrací ``400``, více elementů
+   ``amcr:samostatny_nalez`` ``422`` a jakýkoli jiný obsah kořene rovněž ``422``. Od tohoto bodu
+   má záznam ``ApiRequestLog`` stav ``processing``.
+#. **Převod elementů** (``_parse_nalez_element``):
+
+   - Hesla a organizace se určují **podle atributu** ``id``; serializer ověřuje, že identifikátor
+     patří do správného hesláře (například období nelze zadat heslem druhu nálezu). Text elementu
+     a atribut ``xml:lang`` se nepoužívají; ignorovaný jazyk se zaznamená do logu.
+   - ``nalezce`` s ``id=":tba"``: text ve tvaru ``Příjmení, Jméno`` se nejprve hledá mezi
+     existujícími osobami (shoda příjmení a jména); **teprve pokud osoba neexistuje**, připraví se
+     nová a uloží se ve stejné transakci jako nález. Chybný formát vrací ``422``.
+   - Geometrie musí být **bod** (WKT ``POINT``). ``geom_system`` (v XSD ``xs:string``) určuje
+     zdroj: ``4326`` čte ``geom_wkt`` (pořadí délka, šířka), ``5514`` čte ``geom_sjtsk_wkt``;
+     druhá reprezentace se dopočítá a zdrojová reprezentace druhého systému se ignoruje.
+   - Ignorují se ``okres``, ``chranene_udaje/katastr``, ``igsn``, ``geom_updated_at``,
+     ``geom_sjtsk_updated_at``, ``geom_gml``, ``geom_sjtsk_gml``, ``historie`` a ``soubor``;
+     identifikátor ``ident_cely`` přiděluje systém bez ohledu na zadanou hodnotu.
+
+#. **Projekt a oprávnění.** Neexistující projekt vrací ``404``. Oprávnění (``_has_import_permissions``)
+   vyžaduje cílový stav 1–3, u badatele nejvýše stav 1, a projekt z množiny
+   ``Projekt.get_pruzkum_projekty_pro_uzivatele`` — tedy průzkumný projekt dostupný danému
+   uživateli. Jinak ``403``.
+#. **Zápis v transakci.** V databázové transakci spojené s Fedora transakcí se uloží případná nová
+   osoba, data projdou serializerem, přidělí se ``ident_cely`` (``get_sn_ident``) a uplatní se
+   pravidla podle cílového stavu:
+
+   - od stavu 2 je povinná geometrie;
+   - stav 3 navíc vyžaduje ``evidencni_cislo``, ``predano`` s hodnotou ``true``
+     a ``predano_organizace`` (pravidla převzatá z ``pas.forms.PotvrditNalezForm``);
+   - katastr se určí z bodu WGS 84 (u S-JTSK po transformaci); bod mimo všechna katastrální
+     území vrací ``422``;
+   - pro stavy 2 a 3 proběhnou kontroly ``check_pred_odeslanim``, pro stav 3 též
+     ``check_pred_potvrzenim`` — obě **s vynechanou kontrolou souborů**, protože fotografie se
+     nahrávají samostatným endpointem.
+
+   Nakonec se záznam uloží a vytvoří se záznamy historie (viz :ref:`pas-api-stavy`).
+#. **Ověření zápisu ve Fedoře.** Po potvrzení databázové transakce se metadata záznamu načtou zpět
+   z Fedory v rámci téže Fedora transakce a transakce se uzavře. Pokud čtení selže, Fedora
+   transakce se vrátí a endpoint vrátí ``500`` — **záznam v databázi však už existuje**. Proto
+   veřejná reference klientům ukládá, aby po chybě ``500`` nebo vypršení spojení ověřili výsledek
+   dříve, než import zopakují.
+#. **Odpověď.** ``201`` s XML metadaty, hlavičkou ``X-Record-ID`` (přidělený ``ident_cely``)
+   a ``Location`` (``OAI_PURL`` + ``ident_cely``, výchozí ``https://api.aiscr.cz/id/``).
+
+Import nepoužívá zámek záznamu: každé úspěšné volání zakládá nový záznam. Opakovaný import téhož
+nálezu proto vytvoří duplicitu.
+
+
+.. _pas-api-stavy:
+
+Stavy a historie záznamu
+------------------------
+
+Import zakládá záznam přímo v cílovém stavu 1, 2 nebo 3 a zapíše do historie všechny přechody,
+které by v aplikaci vedly do tohoto stavu. Každý z nich nese poznámku, že záznam pochází
+z importu z externího zdroje. Stav 4 (archivovaný) přes API nastavit nelze; archivaci provádějí
+archiváři AMČR a nález k ní musí mít nahrané fotografie.
+
+.. mermaid::
+   :align: center
+
+   stateDiagram-v2
+       direction LR
+       state "1 zapsaný" as SN1
+       state "2 odeslaný" as SN2
+       state "3 potvrzený" as SN3
+       state "4 archivovaný" as SN4
+       [*] --> SN1: import stav 1 — SN01
+       [*] --> SN2: import stav 2 — SN01, SN12
+       [*] --> SN3: import stav 3 — SN01, SN12, SN23
+       SN1 --> SN2: odeslání — SN12
+       SN2 --> SN3: potvrzení — SN23
+       SN3 --> SN4: archivace v AMČR — SN34
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - Kód
+     - Kdy vzniká přes API
+   * - ``SN01``, ``SN12``, ``SN23``
+     - Při importu, podle cílového stavu (``_create_import_history_records``).
+   * - ``SN-UPD``
+     - Při aktualizaci evidenčního čísla; poznámka obsahuje původní a novou hodnotu.
+   * - ``SN34``
+     - Tichá rearchivace, když se evidenční číslo nebo fotografie mění u archivovaného záznamu.
+
+
+Aktualizace evidenčního čísla
+-----------------------------
+
+``PATCH /api/pas/nalez/{ident_cely}/evidencni-cislo`` (``SamostatnyNalezEvidencniCisloPatchView``):
+
+#. Chybějící query parametr ``evidencni_cislo`` vrací ``400``. Hodnota se ořízne o okrajové
+   mezery; prázdná nebo delší než 255 znaků (limit rozhraní, model pole nemá) vrací ``422``.
+#. Neexistující záznam vrací ``404``. Oprávnění vyžaduje ``pas_edit`` pro daný záznam
+   s ``skip_status=True`` (tedy v libovolném stavu včetně archivovaného) **a** hlavní roli
+   archeolog nebo vyšší; badatel oprávnění nemá. Jinak ``403``.
+#. Hodnota shodná s aktuálním evidenčním číslem vrací ``422``.
+#. Získání :ref:`zámku záznamu <pas-api-zamek>`; při neúspěchu ``429``.
+#. Uložení hodnoty, záznam ``SN-UPD`` do historie; u archivovaného záznamu navíc ``SN34``
+   a aktualizace metadat IGSN.
+#. ``200`` s XML metadaty a hlavičkami ``X-Record-ID`` a ``Location``.
+
+
+Nahrání fotografie
+------------------
+
+``POST /api/pas/nalez/{ident_cely}/upload-foto`` (``SamostatnyNalezFotografieUploadView``):
+
+#. Neexistující záznam ``404``. Oprávnění ``soubor_nahrat_pas``: archeolog a vyšší role
+   s ``skip_status=True`` (libovolný stav včetně archivovaného), badatel podle standardních
+   pravidel AMČR (typicky vlastní nález ve stavu 1). Jinak ``403``.
+#. Právě jeden soubor v poli ``file``; chybějící nebo více souborů vrací ``400``.
+#. Velikost nejvýše ``MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES`` (250 MiB); šifrovaný soubor nebo
+   nepodporovaný MIME typ ``422``.
+#. ``Content-Digest`` nad bajty souboru; chybějící nebo nevalidní hlavička ``400``, **neshoda
+   digestu zde vrací** ``422``.
+#. Antivirová kontrola: nalezený virus ``422``, nedokončená kontrola ``500``.
+#. Získání :ref:`zámku záznamu <pas-api-zamek>`; při neúspěchu ``429``.
+#. Přípona se odvodí z MIME typu a soubor se přejmenuje podle pravidel pro soubory nálezů
+   (``get_finds_soubor_name``); neúspěch vrací ``422``. U formátů JPEG, PNG a TIFF se
+   **odstraní GPS metadata**.
+#. Uložení do Fedory; u archivovaného záznamu ``SN34`` a aktualizace IGSN.
+#. ``201`` s aktualizovanými XML metadaty záznamu.
+
+
+.. _pas-api-zamek:
+
+Zámek záznamu
+-------------
+
+Zámek chrání PATCH a nahrání fotografie nad týmž ``ident_cely`` před souběžnými změnami. Import jej
+nepoužívá.
+
+- Klíč v Redis cache má tvar ``pas_api_record_lock_<ident_cely>``; hodnota ``1`` znamená zamčeno,
+  ``0`` uvolněno.
+- ``_acquire_record_lock`` zkouší zámek získat nejvýše ``max_retries``-krát s prodlevou
+  ``retry_delay`` (nastavení ``record_lock_params``). Kdo zámek nezíská, dostane ``429``
+  s polem ``detail`` a **bez** hlavičky ``Retry-After``.
+- Zámek vyprší nejpozději po ``record_lock_ttl`` sekundách, takže záznam nezůstane zamčený, pokud
+  pracovní proces spadne.
+
+.. warning::
+
+   Zámek poskytuje **serializaci „best effort“**, nikoli striktní záruku. První získání klíče je
+   atomické (``cache.add``), ale opětovné převzetí uvolněného klíče (hodnota ``0``) probíhá čtením
+   a zápisem, které atomické nejsou; vlákna serializuje ``threading.Lock`` jen v rámci jednoho
+   pracovního procesu. Dva procesy tak mohou výjimečně získat zámek současně. Testy souběhu
+   v ``test_record_lock_cache.py`` začínají se smazaným klíčem, a pokrývají tedy jen atomické
+   první získání.
+
+
+.. _pas-api-throttling:
+
+Omezení četnosti
 ----------------
 
-POST /api/pas/import-xml
-~~~~~~~~~~~~~~~~~~~~~~~~
+``ApiImportThrottle`` platí pro všechny tři endpointy a vyhodnocuje dva mechanismy; požadavek
+projde, jen pokud splní oba:
 
-Vytvoří nový záznam samostatného nálezu na základě XML souboru ve formátu AMČR.
-XML je validováno oproti XSD schématu a datovým pravidlům systému.
-Po úspěšném importu je záznam automaticky zapsán, odeslán či potvrzen a
-nález vstupuje do systému ve zvoleném stavu. Do historie záznamu jsou zapsány
-události odpovídající celému řetězci transakcí až do cílového stavu (SN-01,
-SN-12, SN-23); u nich je jako poznámka uvedeno, že záznam pochází z importu
-z externího zdroje.
+- **Minimální interval** (``min_request_intervals``) mezi požadavky téhož uživatele a téže IP
+  adresy. Porovnává se časová značka posledního povoleného požadavku, takže interval 100 ms
+  znamená rozestup, nikoli povolení k dávce deseti požadavků za sekundu.
+- **Limity** ``rate_limits`` s pevným časovým oknem pro rozsahy ``user``, ``ip`` a ``record``.
+  Rozsah ``record`` je klíčován ``ident_cely`` z URL a sdílí se mezi endpointy, takže jej nelze
+  obejít střídáním PATCH a nahrání fotografie.
 
-**Požadavek**
+Překročení vrací ``429``; čekací doba z ``wait()`` se promítne do hlavičky ``Retry-After``.
+Poškozený limit (nečitelná hodnota ``rate``) se vyhodnotí jako překročený (**fail closed**)
+a odpověď pak ``Retry-After`` nenese. Uživatel se identifikuje e-mailem účtu, IP adresa podle
+``get_client_ip`` (viz ``trusted_proxies`` níže).
 
-- ``Content-Type: multipart/form-data``
-- Pole ``file`` — XML soubor odpovídající aktuálnímu schématu AMČR
-  (např. schéma v2.2: ``https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd``).
-- Dokument musí obsahovat právě jeden element ``amcr:samostatny_nalez``.
-- Hlavička ``Content-Digest`` je povinná; obsahuje SHA-512 hash odesílaného souboru
-  ve formátu dle RFC 9530: ``sha-512=:<base64>:``.
 
-**Struktura elementu ``amcr:samostatny_nalez``**
+.. _pas-api-xsd:
+
+Načítání XSD schématu
+---------------------
+
+``_get_amcr_schema`` stahuje XSD deklarované v ``xsi:schemaLocation`` a všechna schémata, která
+importuje (W3C ``xml.xsd``, GML). Síťové čtení je povoleno jen pro URL z pevného allowlistu
+(``_ALLOWED_SCHEMA_URL_PATTERNS``, ``_ALLOWED_XML_XSD_URLS``); jiné URL import odmítne s ``422``.
+Chrání to server před podvržením schématu a před požadavky na libovolné adresy (SSRF).
+
+- Bajty XSD se ukládají do paměti procesu a do Redis (``schema_cache_ttl``); zkompilované schéma
+  si proces drží po dobu ``schema_cache_ttl``. Paměťová kopie bajtů nemá expiraci, takže
+  **změna publikovaného XSD se v pracovním procesu projeví až po jeho restartu**.
+- Místní kopie schémat se záměrně nebalí. Pokud je zdroj schématu nedostupný (časový limit
+  ``schema_fetch_timeout``), import vrací ``422``. Dostupnost ``api.aiscr.cz/schema/`` je proto
+  provozní podmínkou importu.
+
+
+Konfigurace
+-----------
+
+Chování PAS API řídí záznamy modelu ``CustomAdminSettings`` ve skupině ``pas_api``, spravované
+v administraci Django. Hodnota ``value`` je JSON. Při uložení záznam validuje
+``CustomAdminSettings.clean()`` (``validate_custom_admin_setting``) a signály ``post_save``
+a ``post_delete`` vymažou cache, takže změna platí **okamžitě**. Jinak se hodnoty drží v cache
+po dobu ``cache_ttl``.
 
 .. list-table::
    :header-rows: 1
-   :widths: 30 15 55
+   :widths: 22 30 18 30
 
-   * - Element
-     - Typ
+   * - ``item_id``
+     - Formát
+     - Bez záznamu
      - Poznámka
-   * - ``amcr:ident_cely``
-     - ``xs:string``
-     - Vždy ``:tba`` — systém jej přidělí automaticky podle platných pravidel.
-   * - ``amcr:projekt``
-     - ``xs:string``
-     - Identifikátor projektu; ověřuje se oprávnění přihlášeného uživatele a odvozuje se ``amcr:ident_cely``.
-   * - ``amcr:hloubka``
-     - ``xs:integer``
-     - Hloubka nálezu v centimetrech.
-   * - ``amcr:okolnosti``
-     - ``xs:string``
-     - Hodnota z číselníku; atribut ``id`` obsahuje kód hesláře.
-   * - ``amcr:obdobi``
-     - ``xs:string``
-     - Hodnota z číselníku; atribut ``id`` obsahuje kód hesláře.
-   * - ``amcr:presna_datace``
-     - ``xs:string``
-     - Textový upřesňující popis datace; volitelné.
-   * - ``amcr:druh_nalezu``
-     - ``xs:string``
-     - Hodnota z číselníku; atribut ``id`` obsahuje kód hesláře.
-   * - ``amcr:specifikace``
-     - ``xs:string``
-     - Hodnota z číselníku; atribut ``id`` obsahuje kód hesláře.
-   * - ``amcr:pocet``
-     - ``xs:string``
-     - Počet nálezových položek; volitelné.
-   * - ``amcr:poznamka``
-     - ``xs:string``
-     - Volná textová poznámka; volitelné.
-   * - ``amcr:nalezce``
-     - ``xs:string``
-     - Atribut ``id`` obsahuje identifikátor osoby z hesláře. Pokud osoba v hesláři neexistuje,
-       uvede se ``id=":tba"`` a tělo elementu obsahuje jméno ve formátu ``Příjmení, Jméno`` —
-       osoba bude automaticky vytvořena jako nová položka hesláře.
-   * - ``amcr:datum_nalezu``
-     - ``xs:date``
-     - Datum nálezu ve formátu ``YYYY-MM-DD``.
-   * - ``amcr:predano``
-     - ``xs:boolean``
-     - Příznak předání nálezu.
-   * - ``amcr:predano_organizace``
-     - ``xs:string``
-     - Atribut ``id`` obsahuje ``ident_cely`` organizace (např. ``ORG-000123``).
-   * - ``amcr:geom_system``
-     - ``xs:integer``
-     - EPSG kód souřadnicového systému: ``4326`` (WGS 84) nebo ``5514`` (S-JTSK).
-   * - ``amcr:pristupnost``
-     - ``xs:string``
-     - Hodnota z číselníku; atribut ``id`` obsahuje kód hesláře.
-   * - ``amcr:chranene_udaje/amcr:lokalizace``
-     - ``xs:string``
-     - Textový popis lokalizace nálezu.
-   * - ``amcr:chranene_udaje/amcr:geom_wkt``
-     - ``xs:string``
-     - Použije se, pokud ``amcr:geom_system`` je ``4326``; atribut ``EPSG`` obsahuje kód souřadnicového systému.
-   * - ``amcr:chranene_udaje/amcr:geom_sjtsk_wkt``
-     - ``xs:string``
-     - Použije se, pokud ``amcr:geom_system`` je ``5514``; atribut ``EPSG`` obsahuje kód souřadnicového systému.
+   * - ``access_mode``
+     - ``"open"``, ``"whitelist_only"``, ``"closed"``
+     - ``open``
+     - ``closed`` vrací ``503``; ``whitelist_only`` bez aktivního whitelist pravidla zamítne vše.
+   * - ``access_rules``
+     - seznam ``{rule_type, value, active}``; typy ``ip_blacklist``, ``ip_whitelist``,
+       ``user_blacklist``, ``user_whitelist``
+     - žádná pravidla
+     - IP jako adresa nebo CIDR (IPv4 i IPv6), případně rozsah ``od-do`` (jen IPv4); uživatel
+       e-mailem. ``active`` výchozí ``true``.
+   * - ``trusted_proxies``
+     - seznam CIDR, IP nebo DNS názvů
+     - ``[]``
+     - Hlavička ``X-Forwarded-For`` se čte jen tehdy, je-li ``REMOTE_ADDR`` důvěryhodný;
+       zprava doleva se vrátí první nedůvěryhodná adresa.
+   * - ``rate_limits``
+     - seznam ``{scope, value, rate, active}``; ``rate`` ve tvaru ``počet/jednotka``
+       s jednotkami ``ms``, ``s``, ``m``, ``h``, ``d``
+     - žádné limity
+     - ``value`` je povinné pro ``user`` a ``ip``.
+   * - ``min_request_intervals``
+     - ``{"user_ms": …, "ip_ms": …}``
+     - vypnuto
+     - Hodnota ``0`` daný limit vypíná.
+   * - ``record_lock_params``
+     - ``{"retry_delay": …, "max_retries": …}``
+     - 0,5 s, 10 pokusů
+     -
+   * - ``record_lock_ttl``
+     - celé číslo (s)
+     - 300
+     -
+   * - ``allowed_schema_versions``
+     - seznam čísel, např. ``[2.2]``
+     - bez omezení
+     - Jen zužuje verze podporované kódem.
+   * - ``cache_ttl``
+     - celé číslo (s)
+     - 3600
+     - Platnost cache nastavení.
+   * - ``schema_fetch_timeout``
+     - celé číslo (s)
+     - 10
+     -
+   * - ``schema_cache_ttl``
+     - celé číslo (s)
+     - 3600
+     -
 
-U elementů s atributem ``xml:lang`` se očekává hodnota ``cs``.
+Provozní upozornění
+~~~~~~~~~~~~~~~~~~~
 
-Elementy odkazující na heslář (``okolnosti``, ``obdobi``, ``druh_nalezu``, ``specifikace``,
-``pristupnost``) a na organizaci (``predano_organizace``) se uvádějí celé včetně textové hodnoty, protože
-XML musí projít validací schématu. Pro import se ale využívá pouze atribut ``id``; systém ověřuje, že zadaná
-hodnota ``id`` patří do správného typu hesláře (např. nelze do pole ``obdobi`` uvést kód hesláře
-pro druh nálezu). Textový obsah elementu se při importu ignoruje.
+- **Vzorová pravidla** ``access_rules`` s hodnotami ``0.0.0.0/0`` nebo ukázkovým e-mailem slouží
+  jako šablona. Při potřebě omezení je nahraďte skutečnými hodnotami, nepřepínejte jen
+  ``active``: aktivní ``ip_blacklist`` s ``0.0.0.0/0`` zablokuje všechny klienty IPv4 v každém
+  režimu, a v režimu ``whitelist_only`` by aktivní vzorové ``user_whitelist`` pravidlo propustilo
+  jen neexistující účet.
+- **Nastavení** ``trusted_proxies`` musí odpovídat skutečné síťové topologii. Není-li reverzní
+  proxy důvěryhodná, považuje se za klienta její adresa — IP pravidla i omezení četnosti podle IP
+  pak sdílí všichni klienti společně.
+- **Bez záznamu** ``min_request_intervals`` není minimální interval aktivní vůbec.
 
-Některé elementy systém stanoví nebo generuje automaticky a v importu se ignorují:
 
-- ``amcr:okres``, ``amcr:katastr`` — určí systém automaticky podle souřadnic; v importu se ingnorují.
-  Při ``geom_system=4326`` se katastr odvozuje z ``geom_wkt``, při ``geom_system=5514`` se ``geom_sjtsk_wkt``
-  nejprve transformuje do WGS-84 a katastr se odvozuje z výsledku.
-  Pokud souřadnice nespadají do žádného katastru (např. bod mimo území ČR), import selže s HTTP 422.
-- ``amcr:stav`` — musí být jedna z povolených hodnot (1, 2, 3); určuje cílový stav záznamu po importu;
-  import přímo do stavu 4 (archivováno) není možný.
-- ``amcr:igsn``, ``amcr:geom_gml``, ``amcr:geom_sjtsk_gml``, ``amcr:historie``, ``amcr:soubor`` — pouze
-  pro export; import elementy ignoruje.
+Auditní záznam ``ApiRequestLog``
+--------------------------------
 
-**Šablona vstupního XML**
+Každý požadavek, který dojde do obslužné metody endpointu, zanechá záznam ``ApiRequestLog``
+(``webclient/api/models.py``), dostupný v administraci Django:
 
-Prvky označené v ukázce XML jako komentáře jsou při importu zcela ignorovány,
-i pokud jsou v dokumentu přítomny.
+- ``request_target`` — ``samostatny_nalez_xml_import``, ``samostatny_nalez_evidencni_cislo_patch``
+  nebo ``samostatny_nalez_fotografie_upload``;
+- ``status`` — ``received``, ``processing``, ``success``, ``failure``;
+- ``user``, ``client_ip``, ``received_at``, ``finished_at``, ``filename``, ``file_size``;
+- ``ident_cely`` a vazba ``samostatny_nalez`` u úspěšných operací; ``errors`` s tělem chybové odpovědi.
 
-.. code-block:: xml
+Záznamy slouží k dohledání jednotlivých operací a zároveň jako ukazatel využívání integrace na
+straně zápisu: počty operací podle cíle a výsledku. Neobsahují požadavky odmítnuté před
+obslužnou metodou (viz `Pořadí kontrol požadavku`_).
 
-    <?xml version="1.0" encoding="utf-8" ?>
-    <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xmlns:gml="http://www.opengis.net/gml/3.2" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd">
-      <amcr:samostatny_nalez>
-        <amcr:ident_cely>:tba</amcr:ident_cely>
-        <amcr:evidencni_cislo>xs:string</amcr:evidencni_cislo>
-        <!-- <amcr:igsn>xs:string</amcr:igsn> -->
-        <amcr:projekt id="xs:string">xs:string</amcr:projekt> <!-- kontrola autorizace -->
-        <!-- <amcr:okres id="xs:string" xml:lang="cs">xs:string</amcr:okres> --> <!-- stanoví se podle souřadnic automaticky -->
-        <amcr:hloubka>xs:integer</amcr:hloubka>
-        <amcr:okolnosti id="xs:string" xml:lang="cs">xs:string</amcr:okolnosti>
-        <amcr:obdobi id="xs:string" xml:lang="cs">xs:string</amcr:obdobi>
-        <amcr:presna_datace>xs:string</amcr:presna_datace>
-        <amcr:druh_nalezu id="xs:string" xml:lang="cs">xs:string</amcr:druh_nalezu>
-        <amcr:specifikace id="xs:string" xml:lang="cs">xs:string</amcr:specifikace>
-        <amcr:pocet>xs:string</amcr:pocet>
-        <amcr:poznamka>xs:string</amcr:poznamka>
-        <amcr:nalezce id="xs:string">xs:string, xs:string</amcr:nalezce>
-        <amcr:datum_nalezu>xs:date</amcr:datum_nalezu>
-        <amcr:stav>xs:integer</amcr:stav>
-        <amcr:predano>xs:boolean</amcr:predano>
-        <amcr:predano_organizace id="xs:string" xml:lang="cs">xs:string</amcr:predano_organizace>
-        <amcr:geom_system>xs:integer</amcr:geom_system>
-        <amcr:pristupnost id="xs:string" xml:lang="cs">xs:string</amcr:pristupnost>
-        <amcr:chranene_udaje>
-          <!-- <amcr:katastr id="xs:string" xml:lang="cs">xs:string</amcr:katastr> --> <!-- stanoví se podle souřadnic automaticky -->
-          <amcr:lokalizace>xs:string</amcr:lokalizace>
-          <!-- <amcr:geom_gml><gml:*></amcr:geom_gml> -->
-          <amcr:geom_wkt EPSG="xs:integer">xs:string</amcr:geom_wkt> <!-- použije se, pokud amcr:geom_system je 4326 -->
-          <!-- <amcr:geom_sjtsk_gml><gml:*></amcr:geom_sjtsk_gml> -->
-          <amcr:geom_sjtsk_wkt EPSG="xs:integer">xs:string</amcr:geom_sjtsk_wkt> <!-- použije se, pokud amcr:geom_system je 5514 -->
-        </amcr:chranene_udaje>
-        <!-- <amcr:historie><amcr:*></amcr:historie> -->
-        <!-- <amcr:soubor><amcr:*></amcr:soubor> -->
-      </amcr:samostatny_nalez>
-    </amcr:amcr>
 
-**Odpovědi**
+Mapování slovníků
+-----------------
 
-.. list-table::
-   :header-rows: 1
-   :widths: 15 85
+Předpokladem exportu je, že klient spáruje své slovníky s hesláři AMČR. Hesláře poskytuje od
+počátku OAI-PMH API v sadách ``heslo:*``; postup pro integrátory popisuje veřejná reference
+v části `Vocabulary mapping <https://arup-cas.github.io/aiscr-api-home/pas-api/#vocabulary-mapping>`__.
+Import pak hesla určuje výhradně podle jejich identifikátorů (viz převod elementů výše).
 
-   * - HTTP kód
-     - Popis
-   * - ``201``
-     - Záznam byl úspěšně vytvořen; tělo obsahuje XML metadata nového záznamu.
-       Hlavička ``Location`` obsahuje PURL nového záznamu (konfigurovatelné přes secret ``OAI_PURL``).
-   * - ``400``
-     - Chybí soubor ``file``, neplatná syntaxe XML nebo neplatná hlavička ``Content-Digest``.
-   * - ``401`` / ``403``
-     - Chybí nebo neplatný token, nebo nedostatečné oprávnění.
-   * - ``404``
-     - Projekt zadaný v XML nebyl nalezen.
-   * - ``422``
-     - XML neodpovídá XSD schématu, obsahuje neplatná datová pole, chybí geometrie nebo souřadnice nespadají do žádného katastru.
-   * - ``429``
-     - Překročen povolený počet požadavků; zkuste to znovu za chvíli.
-   * - ``503``
-     - API je dočasně nedostupné.
 
-PATCH /api/pas/nalez/{ident_cely}/evidencni-cislo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Testy
+-----
 
-Aktualizuje pole evidenčního čísla existujícího záznamu samostatného nálezu.
-Endpoint rozlišuje mezi chybějícím parametrem a parametrem s prázdnou hodnotou,
-aby bylo možné oba případy na straně klienta zpracovat odlišně.
-Operaci lze provést na záznamu v libovolném stavu včetně archivovaného.
-Vyžaduje roli Archeolog nebo vyšší; badatel není oprávněn.
+Testy PAS API jsou v ``webclient/api/tests/``: ``test_api.py`` (endpointy), ``test_api_permissions.py``
+(přístupová pravidla, omezení četnosti a validace nastavení), ``test_record_lock_cache.py`` (zámek
+záznamu) a ``test_models.py``. Vzorové importní dokumenty jsou v ``webclient/api/tests/data/``;
+například ``minimal_nalez_stav1_no_geom.xml`` je nejmenší dokument, který import přijme.
 
-**Požadavek**
 
-Hodnota se předává jako query parametr v URL; tělo požadavku se neposílá.
+Související dokumentace
+-----------------------
 
-**Parametry**
-
-- ``{ident_cely}`` (cesta) — identifikátor záznamu (např. ``M-202400001-N00001``).
-- ``evidencni_cislo`` (query parametr, povinný) — nová hodnota; max. 255 znaků, nesmí být prázdná ani složená výhradně z mezer. Vedoucí a koncové mezery jsou automaticky oříznuty; vnitřní mezery jsou povoleny.
-
-Příklad::
-
-    PATCH /api/pas/nalez/M-202400001-N00001/evidencni-cislo?evidencni_cislo=EC-2024-001
-
-**Odpovědi**
-
-.. list-table::
-   :header-rows: 1
-   :widths: 15 85
-
-   * - HTTP kód
-     - Popis
-   * - ``200``
-     - Evidenční číslo bylo aktualizováno; tělo obsahuje XML metadata záznamu.
-   * - ``400``
-     - Chybí query parametr ``evidencni_cislo``.
-   * - ``401`` / ``403``
-     - Chybí nebo neplatný token, nebo nedostatečné oprávnění.
-   * - ``404``
-     - Záznam se zadaným ``ident_cely`` nebyl nalezen.
-   * - ``422``
-     - Prázdná hodnota (po oříznutí mezer), příliš dlouhá hodnota (> 255 znaků) nebo hodnota shodná s aktuální.
-   * - ``429``
-     - Záznam je právě zpracováván jiným požadavkem (zámek záznamu); zkuste to znovu za chvíli.
-
-POST /api/pas/nalez/{ident_cely}/upload-foto
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Nahraje fotografii k existujícímu záznamu samostatného nálezu a připojí ji k němu.
-Soubor je přijat jako binární příloha, ověřen proti poskytnutému SHA-512 digestu
-a zkontrolován na povolený formát. Operaci lze provést na záznamu v libovolném stavu
-včetně archivovaného; v takovém případě je v historii záznamu zaznamenána tichá rearchivace.
-Badatel může nahrát fotografii ke svému nálezu podle standardních podmínek; archeolog a vyšší
-role mohou nahrát fotografii k záznamu v libovolném stavu včetně archivovaného.
-
-**Požadavek**
-
-- ``Content-Type: multipart/form-data``
-- ``{ident_cely}`` (cesta) — identifikátor záznamu samostatného nálezu.
-- Pole ``file`` — soubor fotografie.
-- Hlavička ``Content-Digest`` je povinná; obsahuje SHA-512 hash odesílaného souboru
-  ve formátu dle RFC 9530: ``sha-512=:<base64>:``.
-
-**Odpovědi**
-
-.. list-table::
-   :header-rows: 1
-   :widths: 15 85
-
-   * - HTTP kód
-     - Popis
-   * - ``201``
-     - Fotografie byla nahrána; tělo obsahuje XML metadata aktualizovaného záznamu.
-   * - ``400``
-     - Chybí soubor ``file``, v požadavku je více než jeden soubor, chybí nebo je neplatná hlavička ``Content-Digest``.
-   * - ``401`` / ``403``
-     - Chybí nebo neplatný token, nebo nedostatečné oprávnění.
-   * - ``404``
-     - Záznam se zadaným ``ident_cely`` nebyl nalezen.
-   * - ``422``
-     - Nepodporovaný formát souboru, soubor je příliš velký, nesedí ``Content-Digest`` nebo je název souboru příliš dlouhý.
-   * - ``429``
-     - Záznam je právě zpracováván jiným požadavkem (zámek záznamu); zkuste to znovu za chvíli.
+- `AMCR-PAS API <https://arup-cas.github.io/aiscr-api-home/pas-api/>`__ — veřejná reference rozhraní (anglicky).
+- :doc:`export_structure` — struktura XML podle schématu AMČR.
+- :doc:`/04_django_aplikace/04_02_moduly/api/views` — referenční popis modulu ``api.views``.
+- `Příručky systému MUSEION <https://doc.axiell.cz/prirucky/>`__ — dokumentace referenčního
+  klienta, včetně příručky integrace s AMČR a popisu služby ``NalezyAmcrService``.
