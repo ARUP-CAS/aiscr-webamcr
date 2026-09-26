@@ -143,19 +143,20 @@ Distribution catalogue
      - `aiscr-webamcr#2590 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/2590>`__
    * - ``atr/alto-xml``
      - ``application/xml``
-     - ATR service, or the existing mass-OCR ALTO
+     - the OCR connector (external OCR or the backup engine on the cluster), or the existing
+       mass-OCR ALTO
      - `aiscr-webamcr#3529 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3529>`__
    * - ``atr/lines-csv``
      - ``text/csv``
-     - alto-postprocess (per-line quality table)
-     - `aiscr-webamcr#3530 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3530>`__,
-       `aiscr-digiarchiv-2#714 <https://github.com/ARUP-CAS/aiscr-digiarchiv-2/issues/714>`__
+     - the per-line quality table, derived from the record's lines for every origin (OCR and
+       born-digital)
+     - `aiscr-webamcr#3530 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3530>`__
    * - ``atr/teitok-xml``
      - ``application/xml``
      - nlp-enrich
      - `aiscr-webamcr#3531 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3531>`__,
-       `aiscr-digiarchiv-2#711 <https://github.com/ARUP-CAS/aiscr-digiarchiv-2/issues/711>`__,
        `aiscr-digiarchiv-2#113 <https://github.com/ARUP-CAS/aiscr-digiarchiv-2/issues/113>`__
+       (the TEITOK view)
    * - ``cva/coco-json``
      - ``application/json``
      - vision-detect (ARÚB; family kept open)
@@ -177,6 +178,14 @@ Kept only in the record, with no file of their own:
   evaluation baseline, candidates for new vocabulary terms;
 - **born-digital text lines**, whose persistent source is the original itself.
 
+**Discovery reads the record** (Agreed). The Digital Archive indexes page classes, lemmas,
+entities, both keyword kinds and quality from the record, which carries the same blocks for every
+origin
+(`aiscr-digiarchiv-2#710 <https://github.com/ARUP-CAS/aiscr-digiarchiv-2/issues/710>`__,
+`aiscr-digiarchiv-2#711 <https://github.com/ARUP-CAS/aiscr-digiarchiv-2/issues/711>`__,
+`aiscr-digiarchiv-2#714 <https://github.com/ARUP-CAS/aiscr-digiarchiv-2/issues/714>`__). The
+files serve download, reuse and the TEITOK view.
+
 The ``atrium/`` family is reserved for the record, and ``atrium/document-json`` is its final name.
 It matches the tools' ``.document.json`` files and the ``atrium_document`` schema.
 
@@ -184,6 +193,29 @@ It matches the tools' ``.document.json`` files and the ``atrium_document`` schem
 record; converting the DROID output into another format, which would add a conversion to
 maintain. The name ``atr/stats-csv``, used only on a temporary test fixture, is replaced by
 ``atr/lines-csv``.
+
+
+Inputs
+------
+
+**Agreed** as rules; the routing is built with the orchestration (Open).
+
+- **Every accepted type.** Every file type AMČR accepts for upload is processed by the reader for
+  its kind: born-digital documents by the born-digital converter, scans and images through OCR,
+  existing ALTO directly. A type that no reader handles yet is listed as pending in the job
+  report, with the reason; it is never forced through another route. The routing table lives
+  with the orchestration in
+  `ARUP-CAS/aiscr-docs-pipeline <https://github.com/ARUP-CAS/aiscr-docs-pipeline>`__.
+- **OCR text layers are not trusted.** A text layer left in a PDF by an earlier OCR run is not
+  reused: such documents are recognised again, so the text has a known origin. The layer stays in
+  ``orig`` and can serve as a comparison.
+- **Mixed documents.** Pages of a born-digital document without a usable text layer go to OCR, and
+  their lines join the same record.
+- **Signals, not gates.** Page classes and quality do not decide what is processed (see
+  `Text quality`_).
+
+*Considered and rejected:* a fixed list of formats, which silently skips any type added later;
+trusting existing OCR layers, whose engine and quality are unknown.
 
 
 Text quality
@@ -233,6 +265,9 @@ published in the Digital Archive, so nothing that is published lacks it.
   English metadata.
 - **Consumed** by
   `aiscr-digiarchiv-2#496 <https://github.com/ARUP-CAS/aiscr-digiarchiv-2/issues/496>`__.
+- **Pilot scope:** the pilot translates ``metadata-en`` only, in the translator's ``replace`` mode;
+  the AMČR 2.2 schema accepts that output and refuses ``append``. Translation of the full text is
+  a later decision, and no translated-ALTO distribution is defined.
 
 Any future record-level rendition follows the same pattern: a sibling of ``metadata``, with its
 paradata under ``record/{ident_cely}/paradata/``.
@@ -250,8 +285,8 @@ Paradata
 `Process Run Crate <https://w3id.org/ro/wfrun/process>`__ profile. Each event is one schema.org
 ``CreateAction``.
 
-- ``instrument``: the ``SoftwareApplication`` with its ``softwareVersion``, and for services the
-  ``ContainerImage`` with its digest;
+- ``instrument``: the ``SoftwareApplication`` with its ``version`` (required by RO-Crate 1.2), and
+  for services the ``ContainerImage`` with its digest;
 - ``object``: the inputs, named by distribution;
 - ``result``: the output distribution;
 - ``agent``: who ran it (``Organization`` or ``Person``);
@@ -355,6 +390,9 @@ creates the first version of each record itself, and it uses SHA-512 throughout.
   - ``source.sha512`` (the Fedora digest of ``orig``);
   - the required keys.
 
+  ``source.origin`` is left unset: the tool that reads the document sets it, because the origin
+  decides which tool writes the page and line data.
+
   Every later stage inherits the baseline's ``doc_id``, and the first writer of each ``source``
   field wins. So identity does not depend on filenames.
 - **SHA-512 throughout.** The Fedora digest, the OCFL inventory, DROID's hash in ``orig-format``
@@ -453,15 +491,24 @@ record is an RO-Crate. AMČR stores ``ro-crate-metadata.json`` at the root of th
 container, with ``@id`` values relative to the record. The same document is valid on disk and on
 the web.
 
+- **Version** (Confirmed): RO-Crate 1.2 with the Process Run Crate profile 0.5, the newest pair
+  the RO-Crate validator supports, validated in two runs (the 1.2 base and the 0.5 profile). The
+  crate and the paradata move to RO-Crate 1.3 with Process Run Crate 0.6 once the validator
+  supports them; a version change rides along the next planned bulk pass rather than getting one of
+  its own. Tests name the validator profile explicitly.
 - **On disk:** Fedora keeps each binary at its record-relative path inside the record's OCFL
-  object (``metadata``, ``file/{file_id}/orig``, ``file/{file_id}/atr/alto-xml``). With the
-  metadata file at the root, the OCFL object is an *Attached* RO-Crate 1.2 that can be read without
-  Fedora or AMČR. Fedora's own files (``.fcrepo/``, ``~fcr-desc.nt``, ``fcr-container.nt``) are
-  simply not described, which the specification allows.
+  object (``metadata``, ``file/{file_id}/orig``, ``file/{file_id}/atr/alto-xml``). OCFL stores the
+  content under ``vN/content/`` per version, so the crate root is the object's head version as OCFL
+  materialises it (for example an OCFL export), not the raw object directory. That state, with the
+  metadata file at its root, is an *Attached* RO-Crate that can be read without Fedora or AMČR.
+  Fedora's own files (``.fcrepo/``, ``~fcr-desc.nt``, ``fcr-container.nt``) are simply not
+  described, which the specification allows.
 - **On the web:** the File API mirrors the same paths, so the document served at
   ``/id/{ident_cely}/ro-crate`` (no extension, like the other PURLs) resolves its relative
-  ``@id`` values to File API URLs. The name ``ro-crate-metadata.json`` is required only for the
-  file on disk and for the descriptor's ``@id`` inside the JSON-LD.
+  ``@id`` values to File API URLs. RO-Crate 1.2 resolves them against the final URL after
+  redirects, so the crate is served without a redirect to another path, from the host whose
+  ``/id/{ident_cely}/`` tree also serves the files. The name ``ro-crate-metadata.json`` is required
+  only for the file on disk and for the descriptor's ``@id`` inside the JSON-LD.
 - **Which records:** those that go through archiving: ``projekt``, ``archeologicky_zaznam``
   (events and sites), ``dokument`` (including the 3D library), ``samostatny_nalez``,
   ``ext_zdroj`` and ``pian``. Reference records (vocabulary terms, persons, organisations, users,
@@ -471,16 +518,23 @@ the web.
   It is generated deterministically and written only when it changed, in the transaction of the
   change that caused it. A bulk service on the admin pages creates or refreshes crates for
   archived records, after imports, and after changes of the generator.
-- **No fixity:** the crate carries no digests or sizes. The OCFL inventory (a SHA-512 manifest)
-  and ``premis:hasMessageDigest`` hold fixity; core RO-Crate 1.2 has no checksum property and
-  leaves fixity to the packaging layer.
+- **No fixity:** the crate carries no digests. The OCFL inventory (a SHA-512 manifest) and
+  ``premis:hasMessageDigest`` hold fixity; core RO-Crate 1.2 has no checksum property and leaves
+  fixity to the packaging layer. Files carry ``contentSize``, which RO-Crate 1.2 recommends: a size
+  changes only when the bytes change, which is a structural change that rewrites the crate anyway.
+- **Restricted and absent files:** a file whose access is restricted is still present in the
+  payload; Fedora holds it and only the File API's access rules deny it, so its relative ``@id``
+  stays valid. A file that is really absent from a record is not described with a relative
+  ``@id``.
 - **Formats:** ``encodingFormat`` is the MIME type and the PRONOM URI from DROID
   (``orig-format``).
 - **Paradata:** the ``CreateAction`` of each distribution's paradata is part of the crate's graph.
 - **Root entity:** only the RO-Crate MUSTs and citation data, taken from public fields only (never
-  from ``chranene_udaje``). The root ``@id`` is the Digital Archive URL
-  (``https://digiarchiv.aiscr.cz/id/{ident_cely}``); ``identifier`` and ``cite-as`` carry the DOI
-  or IGSN where one exists. ``name`` and ``creditText`` follow the Digital Archive's citations and
+  from ``chranene_udaje``). The root ``@id`` is ``./``: RO-Crate 1.2 refuses an absolute root
+  beside relative data entities. The Digital Archive URL
+  (``https://digiarchiv.aiscr.cz/id/{ident_cely}``) is in ``url`` and ``identifier``;
+  ``identifier`` and ``cite-as`` also carry the DOI or IGSN where one exists. ``name`` and
+  ``creditText`` follow the Digital Archive's citations and
   BibTeX: ``Document {ident_cely}`` for documents, the title for external sources, and
   ``AMCR record {ident_cely}`` otherwise. ``datePublished`` is the archiving date for every type.
   ``license`` is the document's own licence (its SPDX URI), otherwise AMČR's default CC BY-NC 4.0.
@@ -535,11 +589,25 @@ every record by the number of stages.
 Open points
 -----------
 
-- **Requests to the ATRIUM tool maintainers:** accept a seeded baseline and pass
-  ``source.sha512`` through; return paradata as a Process Run Crate ``CreateAction``; provide a
-  record-only mode; align ``atrium_rocrate.py`` with the record crate (RO-Crate 1.2, stable run and
-  tool identifiers, tool authors on each ``SoftwareApplication``, an embeddable fragment); a
-  ``keywords`` block for the uncontrolled keywords of nlp-enrich.
+- **Requests to the ATRIUM tool maintainers,** posted on 26 September 2026 as proposals for the
+  meeting of 30 September:
+
+  - `atrium-project#67 <https://github.com/ufal/atrium-project/issues/67>`__: accept a seeded
+    baseline and pass ``source.sha512`` through; return paradata as a Process Run Crate
+    ``CreateAction``; provide a record-only mode; align ``atrium_rocrate.py`` with the record crate
+    (RO-Crate 1.2 with Process Run Crate 0.5, ``version`` on each tool, stable run and tool
+    identifiers, tool authors on each ``SoftwareApplication``, an embeddable fragment); a
+    ``keywords`` block for the uncontrolled keywords of nlp-enrich; an optional document-level
+    quality summary; the tool architecture cleanup;
+  - `atrium-llm-enrich#10 <https://github.com/ufal/atrium-llm-enrich/issues/10>`__: the
+    born-digital path as a service of its own, for every born-digital type AMČR accepts, with the
+    OCR hand-off into the same record;
+  - `atrium-project#40 <https://github.com/ufal/atrium-project/issues/40>`__: immutable releases and
+    reusable workflows referenced by commit;
+  - `atrium-project#53 <https://github.com/ufal/atrium-project/issues/53>`__: configurable limits,
+    no silent truncation, and the limits reported in ``/info``;
+  - `atrium-project#6 <https://github.com/ufal/atrium-project/issues/6>`__: the licence
+    declarations.
 
 
 Where each part is implemented
@@ -582,8 +650,12 @@ Where each part is implemented
      - `aiscr-digiarchiv-2#140 <https://github.com/ARUP-CAS/aiscr-digiarchiv-2/issues/140>`__
    * - DROID pairing
      - `aiscr-webamcr#4038 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/4038>`__
+   * - Orchestration: route step, Temporal workflows, trust gate
+     - `ARUP-CAS/aiscr-docs-pipeline <https://github.com/ARUP-CAS/aiscr-docs-pipeline>`__ (issues to
+       follow)
    * - Requests to the ATRIUM tools
-     - `ufal/atrium-project <https://github.com/ufal/atrium-project>`__ (issues to follow)
+     - `atrium-project#67 <https://github.com/ufal/atrium-project/issues/67>`__ and the threads it
+       links
    * - Published contract (selection)
      - `aiscr-api-home#29 <https://github.com/ARUP-CAS/aiscr-api-home/issues/29>`__ (File API
        page), and the AMČR help where fitting
