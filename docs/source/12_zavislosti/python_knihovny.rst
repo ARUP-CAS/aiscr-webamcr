@@ -364,7 +364,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://github.com/miurahr/multivolume
    * - nodeenv
-     - 1.10.0
+     - 1.11.0
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
@@ -416,7 +416,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/raimon49/pip-licenses
    * - platformdirs
-     - 4.11.13
+     - 4.11.14
      - MIT
      - https://github.com/tox-dev/platformdirs
    * - polib
