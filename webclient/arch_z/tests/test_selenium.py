@@ -2952,7 +2952,7 @@ class AkceSamostatneAkce(AkceTestClass):
         with WaitForPageLoad(self.driver):
             self.goToAddress("/id/X-C-9000000002A")
         self.wait(1)
-        self.ElementClick(By.ID, "dokument-odpojit-X-C-TX-000000009")
+        self.ElementClick(By.ID, "dokument-odpojit-X-C-DD-000000009")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_dokument_cast")

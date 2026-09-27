@@ -30,6 +30,7 @@ from django.db import connection
 from django.http import Http404
 from django.test import LiveServerTestCase
 from lxml import etree
+from pdf2image import convert_from_bytes
 from PIL import Image, ImageChops
 from rdflib import XSD, Graph, Literal, URIRef
 from selenium import webdriver
@@ -44,6 +45,7 @@ from selenium.common.exceptions import (
 from selenium.webdriver.chrome.webdriver import WebDriver as ChromeDriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from uzivatel.models import User
 from xml_generator.generator import DocumentGenerator
@@ -279,12 +281,71 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                         members.append(result)
         return members
 
-    def save_container_content(self, container_path, path):
+    FILE_UUID_REGEX = re.compile(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}")
+
+    def _build_file_uuid_map(self, fedora_ids):
+        """
+        Sestaví mapování reálných UUID souborů na stabilní placeholdery použité při tvorbě
+        názvu referenčního souboru.
+
+        Pokud záznam (kontejner) obsahuje jediný soubor, placeholder je prázdný řetězec, aby se
+        zachovaly názvy stávajících referenčních souborů. Pokud obsahuje souborů víc, jsou
+        rozlišeny podle stabilního názvu souboru (``Soubor.nazev``) dohledaného v databázi podle
+        reálného UUID, nikoli podle pořadí, ve kterém položky vrátí Fedora ``fcr:search``.
+
+        :param fedora_ids: Seznam ``fedora_id`` položek vrácených z Fedora ``fcr:search``.
+        :return: Slovník mapující reálné UUID na placeholder použitý v názvu referenčního souboru.
+        """
+        prefixes = {}
+        for fedora_id in fedora_ids:
+            filename = (
+                str(fedora_id.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__").replace(":", "--")
+            )
+            if "__file__" not in filename:
+                continue
+            match = self.FILE_UUID_REGEX.search(filename)
+            if not match:
+                continue
+            prefix = filename.split("__file__", 1)[0]
+            uid = match.group(0)
+            uids = prefixes.setdefault(prefix, [])
+            if uid not in uids:
+                uids.append(uid)
+
+        uuid_map = {}
+        for uids in prefixes.values():
+            if len(uids) == 1:
+                uuid_map[uids[0]] = ""
+                continue
+            used = set()
+            for uid in uids:
+                soubor = Soubor.objects.filter(path__endswith=f"/{uid}").first()
+                placeholder = re.sub(r"[^A-Za-z0-9_.-]", "_", soubor.nazev) if soubor else uid
+                if placeholder in used:
+                    placeholder = f"{placeholder}-{uid}"
+                used.add(placeholder)
+                uuid_map[uid] = placeholder
+        return uuid_map
+
+    def _apply_file_uuid_map(self, filename, uuid_map):
+        """
+        Nahradí v názvu referenčního souboru reálné UUID souboru stabilním placeholderem.
+
+        :param filename: Název sestavený z Fedora cesty (před nahrazením UUID).
+        :param uuid_map: Mapování reálného UUID na placeholder, viz :func:`_build_file_uuid_map`.
+        :return: Název s nahrazeným UUID.
+        """
+        if "__file__" in filename:
+            filename = self.FILE_UUID_REGEX.sub(lambda m: uuid_map.get(m.group(0), ""), filename)
+        return filename
+
+    def save_container_content(self, container_path, path, uuid_map=None):
         """
         Uloží container content.
 
         :param container_path: Parametr ``container_path`` se předává do volání ``get()``, ``str()``, pracuje se s atributy ``split``.
         :param path: Parametr ``path`` se předává do volání ``open()``, ``xml_to_string_bez_ignorovanych_z_textu()``.
+        :param uuid_map: Mapování reálného UUID souboru na stabilní placeholder, viz :func:`_build_file_uuid_map`.
 
             :return: Vrací proměnná ``members``.
         """
@@ -303,8 +364,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__").replace(":", "--")
         )
         extension = extensions[response.headers.get("Content-Type", "").split(";")[0].strip()]
-        if "__file__" in filename:
-            filename = re.sub(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", "", filename)
+        filename = self._apply_file_uuid_map(filename, uuid_map or {})
         if response.status_code == 200:
             f = open(f"{path}/{filename}.{extension}", "wb")
             if extension == "xml":
@@ -358,12 +418,46 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         rozdil = ImageChops.difference(img1, img2)
         return not rozdil.getbbox()
 
-    def check_container_content(self, container_path, path):
+    def porovnej_pdf_obsah(self, bin1, bin2):
+        """
+        Porovná dva PDF dokumenty zadané jako binární řetězce.
+
+        Binární porovnání PDF selhává i u vizuálně totožného dokumentu, pokud se změní generátor
+        PDF (např. verze knihovny), proto se každá stránka převede na obrázek a obrázky se porovnají
+        stejně jako u PNG (viz :func:`porovnej_png_obsah`).
+
+        :param bin1: První binární vstup použitý při porovnání.
+        :param bin2: Druhý binární vstup použitý při porovnání.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
+        try:
+            stranky1 = convert_from_bytes(bin1)
+            stranky2 = convert_from_bytes(bin2)
+        except Exception:
+            # Selhání konverze (chybějící Poppler, nečitelné PDF) není rozdíl obsahu – zaloguj příčinu.
+            logger.exception("BaseSeleniumTestClass.porovnej_pdf_obsah.convert_error")
+            return False
+
+        if len(stranky1) != len(stranky2):
+            return False
+
+        for stranka1, stranka2 in zip(stranky1, stranky2):
+            buf1 = BytesIO()
+            buf2 = BytesIO()
+            stranka1.save(buf1, format="PNG")
+            stranka2.save(buf2, format="PNG")
+            if not self.porovnej_png_obsah(buf1.getvalue(), buf2.getvalue()):
+                return False
+        return True
+
+    def check_container_content(self, container_path, path, uuid_map=None):
         """
         Stáhne obsah z URL kontejneru a porovná ho s referenčním souborem na disku.
 
         :param container_path: URL kontejneru (Fedora) ke stažení obsahu.
         :param path: Adresář s referenčními soubory pro porovnání.
+        :param uuid_map: Mapování reálného UUID souboru na stabilní placeholder, viz :func:`_build_file_uuid_map`.
         :return: True pokud se obsah shoduje.
         """
         headers = {}
@@ -381,8 +475,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__").replace(":", "--")
         )
         extension = extensions[response.headers.get("Content-Type", "").split(";")[0].strip()]
-        if "__file__" in filename:
-            filename = re.sub(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", "", filename)
+        filename = self._apply_file_uuid_map(filename, uuid_map or {})
         if response.status_code == 200:
             f = open(f"{path}/{filename}.{extension}", "rb")
             sample_file = f.read()
@@ -411,6 +504,14 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
         elif extension == "png":
             assert self.porovnej_png_obsah(sample_file, response.content)
+        elif extension == "pdf":
+            res = self.porovnej_pdf_obsah(sample_file, response.content)
+            if res is False:
+                logger.error(
+                    "BaseSeleniumTestClass.fedora_error.check_container_content.pdf",
+                    extra={"data": filename},
+                )
+            assert res
         else:
             res = sample_file == response.content
             if res is False:
@@ -450,8 +551,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             f.write(json.dumps(index, indent=2).encode("utf-8"))
             f.close()
             res = json.loads(response.text)
+            uuid_map = self._build_file_uuid_map([n["fedora_id"] for n in res["items"]])
             for n in res["items"]:
-                self.save_container_content(n["fedora_id"], path)
+                self.save_container_content(n["fedora_id"], path, uuid_map)
 
     def check_fedora_change(self, time, path):
         """
@@ -486,8 +588,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
 
             res = json.loads(response.text)
+            uuid_map = self._build_file_uuid_map([n["fedora_id"] for n in res["items"]])
             for n in res["items"]:
-                self.check_container_content(n["fedora_id"], path)
+                self.check_container_content(n["fedora_id"], path, uuid_map)
 
     def check_fedora_delete(self, records):
         """
@@ -1068,16 +1171,21 @@ return new Date('2025-06-28T12:00:00Z');}};
             )
         )
 
-    def select_nth_selectpicker_option(self, field_id, index=0, wait_ajax=False, timeout=10):
+    def select_nth_selectpicker_option(self, field_id, index=0, wait_ajax=False, timeout=10, include_empty=False):
         """
-        Vybere neprázdnou, neskrytou volbu v selectpickeru na zadané pozici.
+        Vybere neskrytou volbu v selectpickeru na zadané pozici.
+
+        Ve výchozím stavu se prázdná volba (``value == ""``, typicky úvodní "-- vyberte --")
+        do pořadí nezapočítává. S ``include_empty=True`` se započítává, takže ji lze vybrat
+        (např. pro vyprázdnění pole).
 
         :param field_id: HTML id atribut podkladového ``<select>`` elementu (bez ``#``).
-        :param index: Index volby mezi neprázdnými neskrytými volbami (výchozí 0 = první).
+        :param index: Index volby mezi uvažovanými neskrytými volbami (výchozí 0 = první).
         :param wait_ajax: Pokud ``True``, po výběru počká na dokončení všech XHR požadavků
             (včetně nativního XMLHttpRequest). Použij, když výběr spouští AJAX, který
             upravuje závislé selecty.
         :param timeout: Maximální doba čekání na dokončení XHR požadavků v sekundách.
+        :param include_empty: Pokud ``True``, započítá se do pořadí i prázdná volba.
         """
         if wait_ajax:
             self._inject_xhr_tracker()
@@ -1085,14 +1193,25 @@ return new Date('2025-06-28T12:00:00Z');}};
             """
             var sel = document.getElementById(arguments[0]);
             if (!sel) { return 'element not found: ' + arguments[0]; }
-            var opts = Array.from(sel.options).filter(function(o) { return !o.hidden && o.value !== ''; });
+            var includeEmpty = arguments[2];
+            var opts = Array.from(sel.options).filter(function(o) {
+                return !o.hidden && (includeEmpty || o.value !== '');
+            });
             var idx = arguments[1];
             if (idx >= opts.length) { return 'index ' + idx + ' out of range, ' + opts.length + ' options available'; }
-            $(sel).selectpicker('val', opts[idx].value).trigger('change');
+            // Hodnotu je nutne nastavit pres API selectpickeru, jinak si widget drzi predchozi
+            // vyber a pouhe prepsani selectedIndex se neprojevi (typicky pri vyprazdneni pole).
+            if (window.jQuery && $(sel).data('selectpicker')) {
+                $(sel).selectpicker('val', opts[idx].value);
+            } else {
+                sel.selectedIndex = opts[idx].index;
+            }
+            $(sel).trigger('change');
             return null;
             """,
             field_id,
             index,
+            include_empty,
         )
         if result:
             raise AssertionError(f"select_nth_selectpicker_option('{field_id}', {index}): {result}")
@@ -1339,13 +1458,39 @@ return new Date('2025-06-28T12:00:00Z');}};
                 index,
             )
 
-        try:
-            WebDriverWait(self.driver, timeout).until(_option_present)
-        except TimeoutException:
-            raise AssertionError(
-                f"select_dynamic_select2_autocomplete_option('{field_id}', '{search_text}', {index}): "
-                f"no matching option at index {index} loaded within {timeout}s"
-            )
+        # Select2 (django-autocomplete-light) debounceuje psaní na 250 ms a při rychlém či pod
+        # zátěží zaseknutém psaní může vystřelit dva AJAX dotazy za sebou (částečný prefix + plný
+        # text). Když se odpovědi vrátí mimo pořadí, zůstane v dropdownu stránka výsledků bez
+        # hledané volby a čekání marně vyprší, i když je záznam v DB. Proto při prvním neúspěchu
+        # pole vyčisti a text napiš znovu – tím se spustí jeden čistý, už nekonkurenční dotaz.
+        for attempt in range(2):
+            try:
+                WebDriverWait(self.driver, timeout).until(_option_present)
+                break
+            except TimeoutException:
+                if attempt == 0:
+                    try:
+                        # Dropdown zůstává otevřený; vyzvedni si vyhledávací pole znovu (mohlo
+                        # zastarat při překreslení výsledků) a přepiš do něj hledaný text.
+                        search = self.driver.find_element(
+                            By.CSS_SELECTOR, ".select2-container--open .select2-search__field"
+                        )
+                        search.send_keys(Keys.CONTROL, "a")
+                        search.send_keys(Keys.DELETE)
+                        search.send_keys(search_text)
+                        continue
+                    except (NoSuchElementException, StaleElementReferenceException):
+                        pass
+                # Element mohl mezitím zastarat; hodnota pole je jen doplněk diagnostiky.
+                try:
+                    search_value = repr(search.get_attribute("value"))
+                except (NoSuchElementException, StaleElementReferenceException):
+                    search_value = "<nedostupná>"
+                raise AssertionError(
+                    f"select_dynamic_select2_autocomplete_option('{field_id}', '{search_text}', {index}): "
+                    f"no matching option at index {index} loaded within {timeout}s "
+                    f"(hodnota vyhledávacího pole: {search_value})"
+                )
 
         # Najdi index-tou shodu a klikni na ni; kliknutí spustí výběr i 'change' událost Select2.
         needle = search_text.lower()
@@ -1453,20 +1598,46 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Provádí operaci login.
 
+        Před vyplněním formuláře ověří, že prohlížeč skutečně zobrazuje přihlašovací
+        stránku. Element ``#czech`` je i v hlavičce přihlášené aplikace, takže při
+        neúspěšném odhlášení by se kliklo na přepínač jazyka v dashboardu a formulář
+        by chyběl. Pokud je session ještě přihlášená, odhlásí se znovu.
+
         :param type: Parametr ``type`` předává se do volání ``send_keys()``, ``_username()``.
+
+            :raises Exception: Vyvolá se s textem "LoginPageNotDisplayedError", pokud se
+                po přechodu na úvodní stránku nezobrazí přihlašovací formulář.
         """
         self.goToAddress()
+        if self.findElement(By.ID, "buttonLogout"):
+            logger.warning(
+                "BaseSeleniumTestClass.login.stillLoggedIn", extra={"url": self.driver.current_url, "type": type}
+            )
+            self.logout()
+            self.goToAddress()
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "czech")
 
+        if not self.wait_for(self.findElement, By.ID, "id_username"):
+            logger.warning(
+                "BaseSeleniumTestClass.login.loginFormNotFound", extra={"url": self.driver.current_url, "type": type}
+            )
+            raise Exception("LoginPageNotDisplayedError")
         self.driver.find_element(By.ID, "id_username").send_keys(self._username(type))
         self.driver.find_element(By.ID, "id_password").send_keys(self._password(type))
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, ".btn")
 
     def logout(self):
-        """Provádí operaci logout."""
-        self.ElementClick(By.ID, "buttonLogout")
+        """
+        Provádí operaci logout.
+
+        Odhlášení je POST formuláře s přesměrováním na úvodní stránku. Bez čekání na
+        dokončení navigace může následné ``driver.get()`` request zrušit a session
+        zůstane přihlášená.
+        """
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "buttonLogout")
 
     def goToAddress(self, rel_address="/"):
         """
@@ -1694,6 +1865,32 @@ return new Date('2025-06-28T12:00:00Z');}};
         for child in element:
             self.odstran_uuid_z_xml(child)
 
+    GENEROVANE_PDF_REGEX = re.compile(r"^oznameni_.+\.pdf$")
+
+    def neutralizuj_generovana_pdf(self, root):
+        """
+        U souborů dynamicky generovaného oznámení (``oznameni_*.pdf``) nahradí ``size_mb`` a ``sha_512``
+        pevnými hodnotami.
+
+        PDF generuje ReportLab za běhu a jeho bajtová podoba závisí na prostředí (fonty, obrázky
+        v záhlaví, verze knihovny), proto se velikost a hash liší mezi lokálním během a serverem.
+        Obsah PDF se ověřuje zvlášť vykreslením v :meth:`porovnej_pdf_obsah`. Elementy se neodstraňují,
+        aby XML zůstalo validní vůči XSD.
+
+        :param root: Kořenový element XML, který se upravuje na místě.
+        """
+        ns = "{https://api.aiscr.cz/schema/amcr/2.2/}"
+        for soubor in root.iter(f"{ns}soubor"):
+            nazev = soubor.find(f"{ns}nazev")
+            if nazev is None or not nazev.text or not self.GENEROVANE_PDF_REGEX.match(nazev.text):
+                continue
+            size_mb = soubor.find(f"{ns}size_mb")
+            if size_mb is not None:
+                size_mb.text = "0"
+            sha_512 = soubor.find(f"{ns}sha_512")
+            if sha_512 is not None:
+                sha_512.text = "SHA512-REMOVED"
+
     def serad_xml_podle_tagu_a_obsahu(self, element):
         """
         Rekurzivně seřadí pouze sousední XML elementy se stejným tagem
@@ -1780,6 +1977,7 @@ return new Date('2025-06-28T12:00:00Z');}};
             ignorovane_tagy_trans.update({key.replace("amcr:", "{https://api.aiscr.cz/schema/amcr/2.2/}"): item})
         self.odstran_elementy(root, ignorovane_tagy_trans)
         self.odstran_uuid_z_xml(root)
+        self.neutralizuj_generovana_pdf(root)
         self.nahrad_element_id_rekurzivne(root, "hist")
         self.nahrad_element_id_rekurzivne(root, "soub")
         self.serad_xml_podle_tagu_a_obsahu(root)

@@ -92,7 +92,7 @@ from heslar.hesla_dynamicka import TYP_DJ_KATASTR
 from heslar.models import (
     Heslar,
     HeslarDatace,
-    HeslarDokumentTypMaterialRada,
+    HeslarDokumentTypMaterial,
     HeslarHierarchie,
     HeslarNazev,
     HeslarOdkaz,
@@ -2376,11 +2376,11 @@ class HeslarDataceMapper(ImportModelMapper):
         return [record.obdobi]
 
 
-@ImportModelMapper.register("heslar_dokument_typ_material_rada")
-class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
-    """Mapovač pro model HeslarDokumentTypMaterialRada."""
+@ImportModelMapper.register("heslar_dokument_typ_material")
+class HeslarDokumentTypMaterialMapper(ImportModelMapper):
+    """Mapovač pro model HeslarDokumentTypMaterial."""
 
-    model_class = HeslarDokumentTypMaterialRada
+    model_class = HeslarDokumentTypMaterial
     primary_key = "id"
     primary_key_prefix = "hdtm"
 
@@ -2398,34 +2398,17 @@ class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
             verbose_limit_choices_to=_(
-                "core.import_data_mappers.HeslarDokumentTypMaterialRadaMapper.dokument_typ.limit_choices"
+                "core.import_data_mappers.HeslarDokumentTypMaterialMapper.dokument_typ.limit_choices"
             ),
         )
         field_mapping["dokument_material"] = LookupImportField(
             Heslar,
             limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL},
             verbose_limit_choices_to=_(
-                "core.import_data_mappers.HeslarDokumentTypMaterialRadaMapper.dokument_material.limit_choices"
-            ),
-        )
-        field_mapping["dokument_rada"] = LookupImportField(
-            Heslar,
-            limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},
-            verbose_limit_choices_to=_(
-                "core.import_data_mappers.HeslarDokumentTypMaterialRadaMapper.dokument_rada.limit_choices"
+                "core.import_data_mappers.HeslarDokumentTypMaterialMapper.dokument_material.limit_choices"
             ),
         )
         return field_mapping
-
-    @staticmethod
-    def _get_updated_ident_cely_record_list(record: HeslarDokumentTypMaterialRada) -> list:
-        """
-        Vrátí dokumentovou řadu navázanou na importovanou kombinaci typu a materiálu.
-
-        :param record: Záznam ``HeslarDokumentTypMaterialRada`` po importu.
-        :return: Seznam s navázanou hodnotou ``dokument_rada``.
-        """
-        return [record.dokument_rada]
 
 
 @ImportModelMapper.register("heslar_hierarchie")
