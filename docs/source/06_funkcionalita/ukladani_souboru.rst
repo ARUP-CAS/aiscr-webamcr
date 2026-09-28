@@ -93,6 +93,8 @@ documented for users in
   the paradata of ``orig``.
 - **Reserved names**, each with its whole subtree: ``orig``, ``paradata`` and ``thumb/page``. At the
   record root, ``ro-crate-metadata.json`` is reserved as well (Agreed; see `Record crate (RO-Crate)`_).
+  ``thumb/page`` is reserved because the Digital Archive serves page thumbnails there: JPEG images of
+  the pages, rendered by its ``ThumbnailsGenerator`` and kept on its own storage, not in Fedora.
 - **Name rules** (``core/distribution_names.py``):
 
   - a name is normalised by trimming whitespace and leading and trailing ``/``;
@@ -130,8 +132,8 @@ Distribution catalogue
      - upload or import (Implemented)
      - —
    * - ``thumb``, ``thumb-large``
-     - ``image/png``, ``image/jpeg``
-     - AMČR (Implemented)
+     - ``image/png``
+     - AMČR, rendered as PNG at upload (Implemented)
      - `aiscr-webamcr#3527 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3527>`__
    * - ``orig-format``
      - ``text/csv``
