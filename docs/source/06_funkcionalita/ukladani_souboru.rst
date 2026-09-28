@@ -56,7 +56,7 @@ per record per run (see `Write plan`_).
        F --> O["orig"]
        F --> T["thumb · thumb-large"]
        F --> OF["orig-format"]
-       F --> AT["atr/alto-xml · atr/lines-csv · atr/teitok-xml"]
+       F --> AT["atr/json · atr/alto-xml · atr/teitok-xml"]
        F --> CV["cva/coco-json · cva/wadm"]
        F --> DJ["atrium/document-json"]
        F --> P["paradata/orig · paradata/{distribution}"]
@@ -141,20 +141,23 @@ Distribution catalogue
      - ``application/json``
      - every processing run
      - `aiscr-webamcr#2590 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/2590>`__
+   * - ``atr/json``
+     - ``application/json``
+     - the ATR service, its main output going forward (name for now); a source's other format is
+       converted into it, and the one-off HPC run delivers it for bulk import
+     - `aiscr-atr#1 <https://github.com/ARUP-CAS/aiscr-atr/issues/1>`__,
+       `aiscr-webamcr#3529 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3529>`__
    * - ``atr/alto-xml``
      - ``application/xml``
-     - the OCR connector (external OCR or the backup engine on the cluster), or the existing
-       mass-OCR ALTO
-     - `aiscr-webamcr#3529 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3529>`__
-   * - ``atr/lines-csv``
-     - ``text/csv``
-     - the per-line quality table, derived from the record's lines for every origin (OCR and
-       born-digital)
-     - `aiscr-webamcr#3530 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3530>`__
+     - the ATR service, derived from ``atr/json`` and kept as the standard output for
+       compatibility (content parity with ``atr/json`` enforced later), or the existing
+       mass-OCR ALTO imported in bulk
+     - `aiscr-atr#1 <https://github.com/ARUP-CAS/aiscr-atr/issues/1>`__,
+       `aiscr-webamcr#3529 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3529>`__
    * - ``atr/teitok-xml``
      - ``application/xml``
      - nlp-enrich
-     - `aiscr-webamcr#3531 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3531>`__,
+     - `aiscr-docs-pipeline#4 <https://github.com/ARUP-CAS/aiscr-docs-pipeline/issues/4>`__,
        `aiscr-digiarchiv-2#113 <https://github.com/ARUP-CAS/aiscr-digiarchiv-2/issues/113>`__
        (the TEITOK view)
    * - ``cva/coco-json``
@@ -176,6 +179,10 @@ Kept only in the record, with no file of their own:
   keywords from nlp-enrich, with method and score (a ``keywords`` block, requested from the tool
   maintainers). The default method is KeyBERT; YAKE and the legacy KER method stay selectable. Consumers decide how to use them: free keywords, schema.org ``keywords``, an
   evaluation baseline, candidates for new vocabulary terms;
+- **line quality** (``lines[]`` with categories and scores, and the page summaries in
+  ``pages[]``). No consumer reads a per-line table: the Digital Archive indexes page and file
+  aggregates from the record, and the pipeline builds nlp-enrich's input table from the record
+  in memory;
 - **born-digital text lines**, whose persistent source is the original itself.
 
 **Discovery reads the record** (Agreed). The Digital Archive indexes page classes, lemmas,
@@ -190,9 +197,10 @@ The ``atrium/`` family is reserved for the record, and ``atrium/document-json`` 
 It matches the tools' ``.document.json`` files and the ``atrium_document`` schema.
 
 *Considered and rejected:* a ``cva/pages-csv`` file for page classification, which duplicates the
-record; converting the DROID output into another format, which would add a conversion to
-maintain. The name ``atr/stats-csv``, used only on a temporary test fixture, is replaced by
-``atr/lines-csv``.
+record; a per-line quality table ``atr/lines-csv`` (``text/csv``), which duplicates the record's
+lines and has no consumer (a human-readable table can be generated on demand if someone asks);
+converting the DROID output into another format, which would add a conversion to maintain. The
+name ``atr/stats-csv`` was used only on a temporary test fixture.
 
 
 Inputs
@@ -629,10 +637,9 @@ Where each part is implemented
        user documentation in
        `aiscr-api-home#41 <https://github.com/ARUP-CAS/aiscr-api-home/pull/41>`__
    * - Distribution catalogue: producers
-     - `aiscr-webamcr#3528 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3528>`__,
+     - `aiscr-docs-pipeline#1 <https://github.com/ARUP-CAS/aiscr-docs-pipeline/issues/1>`__ and its stage issues,
+       `aiscr-atr#1 <https://github.com/ARUP-CAS/aiscr-atr/issues/1>`__,
        `aiscr-webamcr#3529 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3529>`__,
-       `aiscr-webamcr#3530 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3530>`__,
-       `aiscr-webamcr#3531 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3531>`__,
        `aiscr-webamcr#3583 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3583>`__,
        `aiscr-webamcr#4038 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/4038>`__
    * - Distribution catalogue: consumers
