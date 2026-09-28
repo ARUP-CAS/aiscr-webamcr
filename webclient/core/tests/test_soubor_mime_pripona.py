@@ -127,3 +127,32 @@ class NovySouborTest(SimpleTestCase):
             get_mime_safe_soubor_name("CDL202500001F001.JPG", "CDL202500001F001.JPG", JPEG_EXTENSIONS),
             "CDL202500001F001.jpg",
         )
+
+
+class ObnovaZeStorageTest(SimpleTestCase):
+    """
+    Testy korekce názvu při obnově souboru ze storage (``save_single_file_from_storage_impl``).
+
+    Oba parametry jsou název v databázi a volá se s ``keep_case=True``, aby dávková obnova neměnila
+    existující názvy jen kvůli velikosti písmen přípony.
+    """
+
+    def _obnov(self, nazev, mime_extensions):
+        """Zavolá helper stejně jako obnova ze storage."""
+        return get_mime_safe_soubor_name(nazev, nazev, mime_extensions, keep_case=True)
+
+    def test_velka_platna_pripona_zustane(self):
+        """Historický název s ``.JPG`` u JPEG obsahu zůstane beze změny."""
+        self.assertEqual(self._obnov("CDL202500001F001.JPG", JPEG_EXTENSIONS), "CDL202500001F001.JPG")
+
+    def test_neodpovidajici_pripona_se_opravi(self):
+        """Název s příponou neodpovídající obsahu dostane příponu z MIME typu malými písmeny."""
+        self.assertEqual(self._obnov("CDL202500001F001.JPG", PDF_EXTENSIONS), "CDL202500001F001.pdf")
+
+    def test_nazev_bez_tecky_si_zachova_ident_a_suffix(self):
+        """
+        Název v databázi bez tečky si ponechá ident i suffix a dostane příponu z MIME typu.
+
+        Dříve ``replace_last`` nahradil celý název příponou, takže ze záznamu zbylo jen ``pdf``.
+        """
+        self.assertEqual(self._obnov("CDL202500001F001", PDF_EXTENSIONS), "CDL202500001F001.pdf")
