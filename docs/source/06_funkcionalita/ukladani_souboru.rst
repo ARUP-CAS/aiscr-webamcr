@@ -353,11 +353,14 @@ the transaction of the event it describes, so it adds no extra version.
   the agent, date, device, software and settings, and the physical original where known.
 - **Ingest:** upload, bulk import or migration, with the user or import batch, the date and the
   source system. Mass digitisation is recorded once per import batch.
-- **Archival optimisation:** at archiving, PDFs are converted to PDF/A-2b with Adobe Acrobat
-  Preflight, using the published profile
-  (`Formáty souborů <https://amcr-help.aiscr.cz/amcr/dokumenty.html#form%C3%A1ty-soubor%C5%AF>`__).
-  The event records the archivist, the software, the profile, and the SHA-512 of the old and the
-  new bytes. It replaces the bytes of ``orig``, so ``orig-format`` is regenerated in the same
+- **Archival optimisation:** a PDF is converted to PDF/A-2b with Adobe Acrobat Preflight, using
+  the published profile
+  (`Formáty souborů <https://amcr-help.aiscr.cz/amcr/dokumenty.html#form%C3%A1ty-soubor%C5%AF>`__),
+  and uploaded as a new version of the file through AMČR's file-update feature. That is possible
+  only while the record is open for edits; archiving itself is a metadata operation and never
+  changes the bytes of ``orig``. The event records the archivist, the software, the profile, and
+  the SHA-512 of the old and the new bytes, and it is written in the transaction of that upload.
+  Any new version replaces the bytes of ``orig``, so ``orig-format`` is regenerated in the same
   transaction.
 
 It does not describe the technical format (``orig-format``), fixity (the Fedora digest), rights
@@ -369,7 +372,7 @@ It does not describe the technical format (``orig-format``), fixity (the Fedora 
 
    flowchart LR
        C["capture<br/>digitisation or born-digital"] --> I["ingest<br/>upload, import or migration"]
-       I --> O["archival optimisation<br/>PDF/A-2b"]
+       I --> O["archival optimisation<br/>new version, PDF/A-2b"]
        O -. "orig bytes change" .-> F["orig-format regenerated"]
 
 
@@ -457,8 +460,9 @@ When processing runs
   orchestration. It follows the existing admin operations on ``FedoraCustomAdminSite``
   (``update_doi``, ``update_metadata_file_upload``).
 - **Optional automatic trigger,** switchable per task. When enabled, it fires on archiving, not on
-  upload: archiving can replace the bytes of ``orig`` (the PDF/A optimisation), and only archived
-  records are published.
+  upload: only archived records are published, and the bytes of an archived record's ``orig`` do
+  not change until the record is reopened for edits, because only a new version upload changes
+  them and archiving itself is a metadata operation.
 - **Staleness is detected:** a record whose ``source.sha512`` differs from the current digest of
   ``orig`` is out of date, and can be listed for the next invocation.
 
