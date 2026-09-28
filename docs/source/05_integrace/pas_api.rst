@@ -213,9 +213,11 @@ Nahrání fotografie
    digestu zde vrací** ``422``.
 #. Antivirová kontrola: nalezený virus ``422``, nedokončená kontrola ``500``.
 #. Získání :ref:`zámku záznamu <pas-api-zamek>`; při neúspěchu ``429``.
-#. Přípona se odvodí z MIME typu a soubor se přejmenuje podle pravidel pro soubory nálezů
-   (``get_finds_soubor_name``); neúspěch vrací ``422``. U formátů JPEG, PNG a TIFF se
-   **odstraní GPS metadata**.
+#. Soubor dostane název podle pravidel pro soubory nálezů (``get_next_soubor_name``, tvar
+   ``{ident}F###``) a přípona se ověří proti detekovanému MIME typu
+   (``get_mime_safe_soubor_name``): neodpovídá-li obsahu, nahradí se příponou z MIME typu, a vždy se
+   uloží malými písmeny. MIME typ bez známé přípony nebo vyčerpané pořadové číslo vrací ``422``.
+   U formátů JPEG, PNG a TIFF se **odstraní GPS metadata**.
 #. Uložení do Fedory; u archivovaného záznamu ``SN34`` a aktualizace IGSN.
 #. ``201`` s aktualizovanými XML metadaty záznamu.
 

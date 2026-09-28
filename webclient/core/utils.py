@@ -1521,24 +1521,6 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
     return list(sorted(ret))
 
 
-def replace_last(source_string, old, new):
-    """
-    Nahradí poslední výskyt řetězce v textu novým řetězcem.
-
-    :param source_string: Vstupní text.
-    :param old: Řetězec k nahrazení.
-    :param new: Nový řetězec.
-    :return: Text s nahrazeným poslední výskytem.
-    """
-    index = source_string.rfind(old)
-    if index != -1:
-        start_part = source_string[:index]
-        replace_part = source_string[index : index + len(old)].replace(old, new)
-        end_part = source_string[index + len(old) :]
-        return start_part + replace_part + end_part
-    return source_string
-
-
 class SessionIdentifier:
     """Implementuje komponentu ``SessionIdentifier`` v rámci aplikace."""
 
