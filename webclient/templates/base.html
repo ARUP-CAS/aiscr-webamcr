@@ -111,7 +111,11 @@
       {% get_maintenance as action %}
       {% if action %}
       <div class="maintenance">
-        <p class="d-block px-3 py-2 text-center text-bold text-white old-bv">{% trans "base.odstavka.text" %}</p>
+        <div class="maintenance__message d-block px-3 py-2 text-center text-bold text-white old-bv"
+             data-maintenance-toggle>
+          <span class="maintenance__text" id="maintenance-text">{% trans "base.odstavka.text" %}</span>
+          <span class="material-icons maintenance__icon" aria-hidden="true" hidden>expand_more</span>
+        </div>
       </div>
       {% endif %}
     {% endblock%}
@@ -235,5 +239,6 @@
 {% endblock %}
 {% block script2 %}
 {% endblock %}
+<script src="{% static 'js/maintenance_toggle.js' %}"></script>
 </body>
 </html>
