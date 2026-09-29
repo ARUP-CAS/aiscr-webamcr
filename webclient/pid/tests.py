@@ -6,7 +6,8 @@ from unittest.mock import AsyncMock, patch
 
 import httpx
 import requests
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
+from pid.model_serializers import DokumentSerializer, dedup_geo_locations, sorted_unique
 from pid.views import DoiAutocompleteView, WikiDataAutocompleteView
 
 
@@ -332,3 +333,160 @@ class WikiDataAutocompleteViewApiCallTest(TestCase):
 
         WikiDataAutocompleteView.check_availability()
         mock_get.assert_called_once()
+
+
+class DedupGeoLocationsTest(SimpleTestCase):
+    """
+    Testy deterministického odstranění duplicit v ``geoLocations``.
+
+    Původní implementace používala ``list(set(...))``. Iterační pořadí množiny závisí na hashích
+    řetězců, které Python randomizuje pro každý proces, takže každý uWSGI i Celery worker
+    generoval pro tentýž záznam jiné pořadí prvků v metadatech odesílaných do DataCite.
+    """
+
+    @staticmethod
+    def _misto(nazev):
+        """
+        Sestaví lokalizaci obsahující pouze ``geoLocationPlace``.
+
+        :param nazev: Textový popis polohy vkládaný do ``geoLocationPlace``.
+        :return: Lokalizace ve tvaru ``frozenset`` odpovídajícím ``serialize_geom``.
+        """
+        return frozenset({"geoLocationPlace": nazev}.items())
+
+    @staticmethod
+    def _bod(nazev, sirka, delka):
+        """
+        Sestaví lokalizaci s popisem polohy i souřadnicemi.
+
+        :param nazev: Textový popis polohy vkládaný do ``geoLocationPlace``.
+        :param sirka: Zeměpisná šířka centroidu geometrie.
+        :param delka: Zeměpisná délka centroidu geometrie.
+        :return: Lokalizace ve tvaru ``frozenset`` odpovídajícím ``serialize_geom``.
+        """
+        return frozenset(
+            {
+                "geoLocationPlace": nazev,
+                "geoLocationPoint": frozenset({"pointLatitude": sirka, "pointLongitude": delka}.items()),
+            }.items()
+        )
+
+    def test_odstrani_duplicity(self):
+        """Shodné lokalizace se ve výsledku objeví jen jednou."""
+        misto = self._misto("Praha, Czech Republic")
+        self.assertEqual(dedup_geo_locations([misto, misto, misto]), [{"geoLocationPlace": "Praha, Czech Republic"}])
+
+    def test_poradi_nezavisi_na_poradi_vstupu(self):
+        """Výsledek je stejný bez ohledu na pořadí, v jakém lokalizace přišly z databáze."""
+        polozky = [self._misto("Brno"), self._misto("Praha"), self._misto("Plzeň")]
+        self.assertEqual(dedup_geo_locations(polozky), dedup_geo_locations(list(reversed(polozky))))
+
+    def test_poradi_je_stabilni_i_pro_lokalizace_se_souradnicemi(self):
+        """Stabilní pořadí platí i pro lokalizace s vnořeným ``geoLocationPoint``."""
+        polozky = [
+            self._bod("Brno", 49.2, 16.6),
+            self._bod("Praha", 50.1, 14.4),
+            self._bod("Brno", 49.3, 16.7),
+        ]
+        self.assertEqual(dedup_geo_locations(polozky), dedup_geo_locations(list(reversed(polozky))))
+
+    def test_vnorene_souradnice_jsou_prevedeny_na_slovnik(self):
+        """Vnořený ``frozenset`` souřadnic je ve výstupu převeden na slovník."""
+        vysledek = dedup_geo_locations([self._bod("Praha", 50.1, 14.4)])
+        self.assertEqual(
+            vysledek,
+            [
+                {
+                    "geoLocationPlace": "Praha",
+                    "geoLocationPoint": {"pointLatitude": 50.1, "pointLongitude": 14.4},
+                }
+            ],
+        )
+
+    def test_prazdny_vstup(self):
+        """Prázdná kolekce vrátí prázdný seznam."""
+        self.assertEqual(dedup_geo_locations([]), [])
+
+
+class SortedUniqueTest(SimpleTestCase):
+    """Testy deterministického odstranění duplicit v ``dates`` a ``subjects`` DataCite metadat."""
+
+    @staticmethod
+    def _datum(datum, typ):
+        """
+        Sestaví položku ``dates`` ve tvaru, v jakém ji skládají serializery.
+
+        :param datum: Hodnota pole ``date``.
+        :param typ: Hodnota pole ``dateType``.
+        :return: Položka ve tvaru ``frozenset``.
+        """
+        return frozenset({"date": datum, "dateType": typ}.items())
+
+    @staticmethod
+    def _heslo(ident):
+        """
+        Sestaví předmětové heslo ve tvaru vraceném funkcí ``serialize_subject``.
+
+        :param ident: Identifikátor hesla použitý jako ``subject`` i ``classificationCode``.
+        :return: Položka ve tvaru ``frozenset``.
+        """
+        return frozenset({"subject": ident, "classificationCode": ident, "lang": "en"}.items())
+
+    def test_data_nezavisi_na_poradi_vstupu(self):
+        """Pořadí dat je stejné bez ohledu na pořadí záznamů historie a komponent."""
+        polozky = [
+            self._datum("2024-05-01", "Created"),
+            self._datum("2024-06-01", "Issued"),
+            self._datum("-5500/-4900", "Coverage"),
+        ]
+        self.assertEqual(sorted_unique(polozky), sorted_unique(list(reversed(polozky))))
+
+    def test_hesla_bez_duplicit_a_stabilne(self):
+        """Opakovaná hesla z více komponent se objeví jednou a ve stabilním pořadí."""
+        polozky = [self._heslo("HES-000123"), self._heslo("HES-000045"), self._heslo("HES-000123")]
+        vysledek = sorted_unique(polozky)
+        self.assertEqual(len(vysledek), 2)
+        self.assertEqual(vysledek, sorted_unique(list(reversed(polozky))))
+
+    def test_prazdne_heslo_zustane_pro_filtraci_volajicim(self):
+        """Prázdný ``frozenset`` (heslo ``None``) se neodstraňuje; filtruje ho až volající přes ``if item``."""
+        vysledek = [dict(item) for item in sorted_unique([frozenset(), self._heslo("HES-1")]) if item]
+        self.assertEqual(vysledek, [dict(self._heslo("HES-1"))])
+
+
+class GetFormatsTest(SimpleTestCase):
+    """Testy deterministického pořadí prvků ``formats`` v metadatech dokumentu."""
+
+    def _formats(self, mimetypy):
+        """
+        Zavolá ``_get_formats`` nad serializerem s podvrženými soubory.
+
+        :param mimetypy: Seznam mimetypů souborů navázaných na dokument.
+        :return: Seznam formátů vrácený metodou ``_get_formats``.
+        """
+        soubory = [SimpleNamespace(mimetype=mimetype) for mimetype in mimetypy]
+        queryset = SimpleNamespace(exists=lambda: bool(soubory), all=lambda: soubory)
+        serializer = DokumentSerializer.__new__(DokumentSerializer)
+        serializer.record = SimpleNamespace(rada=SimpleNamespace(pk=None))
+        serializer._get_soubory_queryset = lambda: queryset
+        return serializer._get_formats()
+
+    def test_formaty_jsou_serazene(self):
+        """Mimetypy jsou vráceny abecedně seřazené, nikoli v pořadí množiny."""
+        self.assertEqual(
+            self._formats(["image/jpeg", "application/pdf", "image/tiff"]),
+            ["application/pdf", "image/jpeg", "image/tiff"],
+        )
+
+    def test_poradi_nezavisi_na_poradi_souboru(self):
+        """Stejná sada mimetypů dá stejný výsledek bez ohledu na pořadí souborů."""
+        mimetypy = ["image/jpeg", "application/pdf", "image/tiff", "text/plain"]
+        self.assertEqual(self._formats(mimetypy), self._formats(list(reversed(mimetypy))))
+
+    def test_duplicitni_mimetypy_se_neopakuji(self):
+        """Více souborů se shodným mimetypem se ve ``formats`` objeví jen jednou."""
+        self.assertEqual(self._formats(["application/pdf", "application/pdf"]), ["application/pdf"])
+
+    def test_bez_souboru_vraci_prazdny_seznam(self):
+        """Dokument bez souborů nemá žádné formáty."""
+        self.assertEqual(self._formats([]), [])

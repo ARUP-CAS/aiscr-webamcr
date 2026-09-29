@@ -595,6 +595,34 @@ Funkce
    :param item: Jedna položka zpracovávané kolekce.
    :return: Výstup funkce odpovídající implementované logice.
 
+.. py:function:: frozenset_sort_key(item)
+
+   Sestaví kanonický textový klíč položky DataCite metadat serializované do ``frozenset``.
+
+   Klíč nezávisí na hashích řetězců, takže je stejný ve všech procesech. Vnořené ``frozenset``
+   (např. ``geoLocationPoint``) se převádějí rekurzivně.
+
+   :param item: Položka ve tvaru ``frozenset`` dvojic klíč-hodnota (lokalizace, datum, předmětové heslo).
+   :return: Textový klíč složený ze seřazených dvojic klíč=hodnota včetně vnořených ``frozenset``.
+
+.. py:function:: sorted_unique(items)
+
+   Odstraní duplicitní položky a vrátí je v deterministickém pořadí.
+
+   Iterační pořadí ``set`` závisí na hashích řetězců, které Python randomizuje pro každý proces.
+   Bez explicitního seřazení proto každý worker generuje pro tentýž záznam jiné pořadí prvků
+   v DataCite metadatech.
+
+   :param items: Kolekce položek serializovaných do ``frozenset``.
+   :return: Seznam položek bez duplicit seřazený podle :func:`frozenset_sort_key`.
+
+.. py:function:: dedup_geo_locations(geo_locations)
+
+   Odstraní duplicitní geografické lokalizace a vrátí je v deterministickém pořadí.
+
+   :param geo_locations: Kolekce lokalizací serializovaných funkcí ``serialize_geom``.
+   :return: Seznam slovníků s lokalizacemi bez duplicit, seřazený podle kanonického klíče.
+
 .. py:function:: serialize_ez_creator(autor)
 
    Serializuje osobu jako tvůrce externího zdroje do formátu DataCite.
