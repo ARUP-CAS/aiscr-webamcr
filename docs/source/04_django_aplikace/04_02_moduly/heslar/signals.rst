@@ -74,15 +74,6 @@ Funkce
    :param created: Parametr ``created`` slouží jako vstup pro logiku funkce ``save_metadata_heslar_datace``.
    :param kwargs: Další klíčové argumenty signálu.
 
-.. py:function:: save_metadata_heslar_dokument_typ_material_rada(sender, instance, created)
-
-   Funkce pro uložení metadat heslář - hierarchie.
-
-   :param sender: Model třídy, která poslala signál.
-   :param instance: Parametr ``instance`` pracuje se s atributy ``suppress_signal``, ovlivňuje větvení podmínek.
-   :param created: Parametr ``created`` ovlivňuje větvení podmínek.
-   :param kwargs: Další klíčové argumenty signálu.
-
 .. py:function:: save_metadata_heslar_odkaz(sender, instance, created)
 
    Funkce pro uložení metadat heslář - odkaz.
@@ -104,6 +95,11 @@ Funkce
 
    Provádí operaci ruian katastr delete repository container.
 
+   Pokud má instance ``suppress_signal=True``, signál neprovede žádnou
+   operaci ve Fedora repozitáři – stejné chování jako u ostatních signálů.
+   Volající tak může explicitně potlačit Fedora zápis přes
+   ``instance.suppress_signal = True`` před voláním ``.delete()``.
+
    :param sender: Model třídy, která poslala signál.
    :param instance: Parametr ``instance`` předává se do volání ``get_or_create_transaction()``, ``on_commit()``.
    :param kwargs: Další klíčové argumenty signálu.
@@ -111,6 +107,9 @@ Funkce
 .. py:function:: ruian_kraj_delete_repository_container(sender, instance)
 
    Provádí operaci ruian kraj delete repository container.
+
+   Respektuje ``instance.suppress_signal`` – při ``True`` se Fedora
+   operace neprovede.
 
    :param sender: Model třídy, která poslala signál.
    :param instance: Parametr ``instance`` předává se do volání ``get_or_create_transaction()``, ``on_commit()``.
@@ -120,6 +119,9 @@ Funkce
 
    Provádí operaci ruian okres delete repository container.
 
+   Respektuje ``instance.suppress_signal`` – při ``True`` se Fedora
+   operace neprovede.
+
    :param sender: Model třídy, která poslala signál.
    :param instance: Instance modelu, která byla uložena.
    :param kwargs: Další klíčové argumenty signálu.
@@ -127,14 +129,6 @@ Funkce
 .. py:function:: delete_uppdate_related_heslar_hierarchie(sender, instance)
 
    Funkce pro uložení metadat navázaného hesláře při smazání heslář - hierarchie.
-
-   :param sender: Model třídy, která poslala signál.
-   :param instance: Instance modelu, která byla uložena.
-   :param kwargs: Další klíčové argumenty signálu.
-
-.. py:function:: delete_uppdate_related_heslar_dokument_typ_material_rada(sender, instance)
-
-   Funkce pro uložení metadat navázaného hesláře při smazání heslář - dokument typ materiál řada.
 
    :param sender: Model třídy, která poslala signál.
    :param instance: Instance modelu, která byla uložena.

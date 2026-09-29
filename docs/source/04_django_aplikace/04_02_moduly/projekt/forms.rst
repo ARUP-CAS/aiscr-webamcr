@@ -23,10 +23,14 @@ Třídy
 
    .. py:method:: clean()
 
-      Provádí operaci clean.
+      Ověří, že uživatel klikl do mapy – musí být vyplněné oba páry
+      souřadnic (WGS84 i SJTSK), protože ``projekt.views.create`` je
+      potřebuje současně pro ``projekt.geom`` a ``projekt.geom_sjtsk``.
 
       :return: Vrací proměnná ``cleaned_data``.
-      :raises forms.ValidationError: Vyvolá se při splnění podmínky ``not coordinate_x1 or not coordinate_x2``.
+      :raises forms.ValidationError: Vyvolá se, pokud kterákoli ze čtyř
+          souřadnic (``coordinate_x1/x2``, ``coordinate_sjtsk_x1/x2``)
+          chybí.
 
 
 .. py:class:: EditProjektForm

@@ -208,9 +208,6 @@ HESLAR
    * - ``HeslarDatace``
      - ``post_save``
      - ``save_metadata_heslar_datace``
-   * - ``HeslarDokumentTypMaterialRada``
-     - ``post_save``
-     - ``save_metadata_heslar_dokument_typ_material_rada``
    * - ``HeslarOdkaz``
      - ``post_save``
      - ``save_metadata_heslar_odkaz``
@@ -229,9 +226,6 @@ HESLAR
    * - ``HeslarHierarchie``
      - ``post_delete``
      - ``delete_uppdate_related_heslar_hierarchie``
-   * - ``HeslarDokumentTypMaterialRada``
-     - ``post_delete``
-     - ``delete_uppdate_related_heslar_dokument_typ_material_rada``
    * - ``HeslarOdkaz``
      - ``post_delete``
      - ``delete_uppdate_related_heslar_odkaz``

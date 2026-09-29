@@ -8073,8 +8073,8 @@ Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
 
 - Vytvoření oznámení
-- Smazání dokumentu u projektu
 - Schválení projektu - změna ident-cely projektu
+- Smazání dokumentu u projektu
 - Vytvoření průzkumného projektu
 - Vytvoření části dokumentu projektu
 - Vytvoření záznamu PAS

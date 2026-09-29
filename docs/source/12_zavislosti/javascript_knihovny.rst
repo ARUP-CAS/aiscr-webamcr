@@ -35,9 +35,9 @@ Knihovny instalované pomocí Node.js
      - MIT
      - https://github.com/dangrossman/daterangepicker
    * - dropzone
-     - 5.9.3
+     - 6.3.4
      - MIT
-     - http://www.dropzonejs.com
+     - https://www.dropzone.dev/
    * - jquery
      - 4.0.0
      - MIT
@@ -71,7 +71,7 @@ Knihovny instalované pomocí Node.js
      - MIT
      - https://github.com/Leaflet/Leaflet.markercluster
    * - moment
-     - 2.30.1
+     - 2.31.0
      - MIT
      - https://momentjs.com
    * - spin.js

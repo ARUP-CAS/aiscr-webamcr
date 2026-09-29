@@ -13,6 +13,38 @@ from uzivatel.models import Organizace, Osoba
 logger = logging.getLogger(__name__)
 
 
+class UpdateKatastryFileForm(forms.Form):
+    """
+    Formulář pro nahrání seznamu identifikátorů (Projekt/AZ/SN) k hromadnému
+    přepočtu příslušnosti ke katastrům.
+
+    Vstupní soubor je CSV/XLSX se sloupcem ``ident_cely`` (jeden záznam na řádek);
+    zpracování provádí ``heslar.views.ContinueKatastrProcessing`` na pozadí.
+    """
+
+    ident_list_file = forms.FileField(
+        required=True,
+        label=_("heslar.forms.UpdateKatastryFileForm.file.label"),
+        widget=forms.FileInput(
+            attrs={
+                "accept": (
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, "
+                    "application/vnd.ms-excel, text/csv"
+                )
+            }
+        ),
+    )
+
+    def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
+        super().__init__(*args, **kwargs)
+
+
 class HeslarHierarchieForm(forms.ModelForm):
     """Implementuje komponentu ``HeslarHierarchieForm`` v rámci aplikace."""
 

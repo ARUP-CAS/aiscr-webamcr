@@ -1,7 +1,7 @@
 {
   "items": [
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/model/dokument/member/X-C-TX-000000009",
+      "fedora_id": "info:test-base/AMCR-selenium-test/model/dokument/member/X-C-DD-000000009",
       "mime_type": null,
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#Container",
@@ -15,19 +15,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-L000000003/metadata",
-      "mime_type": "application/xml",
-      "rdf_type": [
-        "http://fedora.info/definitions/v4/repository#Binary",
-        "http://fedora.info/definitions/v4/repository#Resource",
-        "http://mementoweb.org/ns#OriginalResource",
-        "http://mementoweb.org/ns#TimeGate",
-        "http://www.w3.org/ns/ldp#NonRDFSource",
-        "http://www.w3.org/ns/ldp#Resource"
-      ]
-    },
-    {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-TX-000000009",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-DD-000000009",
       "mime_type": null,
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#ArchivalGroup",
@@ -42,7 +30,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-TX-000000009/file",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-DD-000000009/file",
       "mime_type": null,
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#Container",
@@ -56,7 +44,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-TX-000000009/file/UUID-REMOVED",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-DD-000000009/file/UUID-REMOVED",
       "mime_type": null,
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#Container",
@@ -70,7 +58,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-TX-000000009/file/UUID-REMOVED/orig",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-DD-000000009/file/UUID-REMOVED/orig",
       "mime_type": "image/jpeg",
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#Binary",
@@ -82,7 +70,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-TX-000000009/file/UUID-REMOVED/orig/fcr:metadata",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-DD-000000009/file/UUID-REMOVED/orig/fcr:metadata",
       "mime_type": null,
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#NonRdfSourceDescription",
@@ -94,7 +82,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-TX-000000009/file/UUID-REMOVED/thumb",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-DD-000000009/file/UUID-REMOVED/thumb",
       "mime_type": "image/png",
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#Binary",
@@ -106,7 +94,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-TX-000000009/file/UUID-REMOVED/thumb-large",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-DD-000000009/file/UUID-REMOVED/thumb-large",
       "mime_type": "image/png",
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#Binary",
@@ -118,7 +106,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-TX-000000009/file/UUID-REMOVED/thumb-large/fcr:metadata",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-DD-000000009/file/UUID-REMOVED/thumb-large/fcr:metadata",
       "mime_type": null,
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#NonRdfSourceDescription",
@@ -130,7 +118,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-TX-000000009/file/UUID-REMOVED/thumb/fcr:metadata",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-DD-000000009/file/UUID-REMOVED/thumb/fcr:metadata",
       "mime_type": null,
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#NonRdfSourceDescription",
@@ -142,7 +130,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-TX-000000009/metadata",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-DD-000000009/metadata",
       "mime_type": "application/xml",
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#Binary",
@@ -154,7 +142,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-TX-000000009/metadata/fcr:metadata",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-DD-000000009/metadata/fcr:metadata",
       "mime_type": null,
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#NonRdfSourceDescription",
@@ -162,6 +150,18 @@
         "http://mementoweb.org/ns#OriginalResource",
         "http://mementoweb.org/ns#TimeGate",
         "http://www.w3.org/ns/ldp#RDFSource",
+        "http://www.w3.org/ns/ldp#Resource"
+      ]
+    },
+    {
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-L000000003/metadata",
+      "mime_type": "application/xml",
+      "rdf_type": [
+        "http://fedora.info/definitions/v4/repository#Binary",
+        "http://fedora.info/definitions/v4/repository#Resource",
+        "http://mementoweb.org/ns#OriginalResource",
+        "http://mementoweb.org/ns#TimeGate",
+        "http://www.w3.org/ns/ldp#NonRDFSource",
         "http://www.w3.org/ns/ldp#Resource"
       ]
     }

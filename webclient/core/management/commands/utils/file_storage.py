@@ -10,7 +10,7 @@ import logging
 import os
 
 from core.models import AntivirusCheckResult, Soubor
-from core.utils import replace_last
+from core.soubor_naming import get_mime_safe_soubor_name
 from django.utils.translation import gettext_lazy as _
 
 logger = logging.getLogger(__name__)
@@ -94,10 +94,8 @@ def save_single_file_from_storage_impl(
     mime_extensions = Soubor.get_file_extension_by_mime(soubor_data)
     if len(mime_extensions) == 0:
         return
-    file_name_extension = record.nazev.split(".")[-1].lower()
-    if file_name_extension not in mime_extensions:
-        new_name = replace_last(record.nazev, record.nazev.split(".")[-1], mime_extensions[0])
-        record.nazev = new_name
+    # Obnova ze storage mění název jen při neshodě přípony s obsahem, velikost písmen existujících názvů zůstává.
+    record.nazev = get_mime_safe_soubor_name(record.nazev, record.nazev, mime_extensions, keep_case=True)
     if isinstance(mimetype, set):
         mimetype = list(mimetype)[0]
     elif mimetype is False:
