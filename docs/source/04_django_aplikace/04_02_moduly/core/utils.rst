@@ -569,15 +569,6 @@ Funkce
 
    :return: Vrací výsledek volání ``list()``.
 
-.. py:function:: replace_last(source_string, old, new)
-
-   Nahradí poslední výskyt řetězce v textu novým řetězcem.
-
-   :param source_string: Vstupní text.
-   :param old: Řetězec k nahrazení.
-   :param new: Nový řetězec.
-   :return: Text s nahrazeným poslední výskytem.
-
 .. py:function:: get_set_maintenance_in_cache()
 
    Funkce pro získání nastavení údržby z cache.

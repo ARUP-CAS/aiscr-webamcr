@@ -46,8 +46,46 @@ body {
   font-size: 20px;
   background-color: #322348;
 
-  p {
+  &__message {
+    cursor: default;
+
     margin-bottom: 0px !important;
+  }
+
+  &__text {
+    display: block;
+  }
+
+  &__icon {
+    display: none;
+    vertical-align: middle;
+    transition: transform .2s ease;
+  }
+
+  @media (max-width: 600px) {
+    &__message.is-collapsible {
+      cursor: pointer;
+
+      &:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: -4px;
+      }
+
+      &:not(.is-expanded) .maintenance__text {
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+      }
+
+      .maintenance__icon {
+        display: inline-block;
+      }
+
+      &.is-expanded .maintenance__icon {
+        transform: rotate(180deg);
+      }
+    }
   }
 
 }

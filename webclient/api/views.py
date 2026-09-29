@@ -46,7 +46,7 @@ from core.repository_connector import (
     FedoraTransactionStatus,
 )
 from core.setting_models import CustomAdminSettings
-from core.soubor_naming import get_next_soubor_name
+from core.soubor_naming import get_mime_safe_soubor_name, get_next_soubor_name
 from core.utils import get_cadastre_from_point
 from django.conf import settings
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
@@ -3437,6 +3437,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
                 },
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
+        new_name = get_mime_safe_soubor_name(new_name, new_name, mime_extensions)
 
         if mimetype in ["image/png", "image/jpeg", "image/tiff"]:
             binary_data = Soubor.remove_gps_data(binary_data)

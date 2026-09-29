@@ -142,3 +142,34 @@ def get_soubor_suffix(soubor):
     if stem.startswith(base):
         return stem[len(base) :]
     return None
+
+
+def get_mime_safe_soubor_name(current_name: str, uploaded_name: str, mime_extensions, keep_case: bool = False) -> str:
+    """
+    Vrátí název souboru s příponou odpovídající detekovanému MIME typu.
+
+    Základ názvu se bere z ``current_name`` (ident záznamu a suffix), přípona z ``uploaded_name``,
+    ale jen když odpovídá některé z přípon odvozených z detekovaného MIME typu; jinak se použije
+    první přípona z ``mime_extensions``, aby se do názvu nedostala přípona neodpovídající skutečnému
+    obsahu. Ve výchozím nastavení se přípona převádí na malá písmena, takže uložené názvy jsou kanonické.
+
+    Používá se při nahrání nového souboru (oba parametry jsou vygenerovaný název, jehož přípona pochází
+    od uživatele), při nahrazení souboru novou verzí (současný název v databázi a název nahrávaného
+    souboru) a při obnově souboru ze storage (oba parametry jsou název v databázi, s ``keep_case``).
+    Název bez tečky se nikdy nestane příponou – u ``uploaded_name`` se přípona odvodí z MIME typu,
+    u ``current_name`` zůstane celý základem názvu.
+
+    :param current_name: Název, z něhož se bere základ (vygenerovaný název nebo současný název v databázi).
+    :param uploaded_name: Název, z něhož se bere přípona (od uživatele nebo z databáze).
+    :param mime_extensions: Přípony odpovídající detekovanému MIME typu (malými písmeny); první je výchozí.
+    :param keep_case: Při ``True`` se platné příponě ponechá původní velikost písmen, aby se existující
+        názvy (např. historické ``.JPG``) neměnily jen kvůli velikosti písmen; náhradní přípona z MIME
+        typu je vždy malými písmeny.
+    :return: Název souboru se základem z ``current_name`` a příponou odpovídající MIME typu.
+    """
+    extension = os.path.splitext(uploaded_name)[1].lstrip(".")
+    if extension.lower() not in mime_extensions:
+        extension = mime_extensions[0]
+    elif not keep_case:
+        extension = extension.lower()
+    return f"{os.path.splitext(current_name)[0]}.{extension}"
