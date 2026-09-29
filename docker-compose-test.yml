@@ -104,7 +104,8 @@ services:
 
   celery_worker:
     image: docker.io/library/test_prod
-    command: celery -A webclient worker -l DEBUG -n worker1@amcr
+    # Viz komentář v docker-compose.yml; testovací prostředí má nižší zátěž, stačí 2 procesy.
+    command: celery -A webclient worker -l DEBUG -n worker1@amcr --concurrency=2 --max-tasks-per-child=50
     environment:
       - IMAGE_TAG=${IMAGE_TAG}
     secrets:
