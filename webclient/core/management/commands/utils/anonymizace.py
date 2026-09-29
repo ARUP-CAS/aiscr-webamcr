@@ -209,7 +209,7 @@ def zastupny_pid(prefix, ident_cely):
     Sestaví hodnotu DOI nebo IGSN s prefixem cílové instance.
 
     Formát odpovídá setterům ``Dokument.set_doi`` a ``Lokalita.set_igsn``.
-    Prázdný prefix znamená, že instance identifikátory neraží – v tom případě
+    Prázdný prefix znamená, že instance identifikátory nepřiděluje – v tom případě
     se vrací ``None`` a volající hodnotu v databázi vynuluje, aby v ní
     nezůstal produkční identifikátor ani nevznikl nesmyslný tvar ``/D-XXXX``.
 

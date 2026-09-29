@@ -108,8 +108,10 @@ class Command(BaseCommand):
       s katastrem), a další katastry chráněných projektů se nahradí náhodnými
       katastry téhož okresu. U částečně přesunutého záznamu se katastry počítají
       jen z přesunutých PIANů.
-    - Běžní uživatelé se po anonymizaci nepřihlásí heslem; použitelné zůstávají
-      administrátorské účty a přihlášení přes CAS.
+    - Anonymizované účty dostanou nepoužitelné heslo a nepřihlásí se vůbec –
+      jiný způsob přihlášení než e-mail a heslo aplikace nemá. Použitelné
+      zůstávají jen účty vyloučené z anonymizace (administrátoři a umělé účty
+      s ``Anonym`` v příjmení); jinému účtu je potřeba heslo nastavit ručně.
     - Staré verze metadat ve Fedoře a OCFL příkaz nečistí, to řeší migrace dat.
     - PIANy, jejichž geometrie porušuje pravidla databáze už v produkci, se
       zapíšou s dočasně vypnutým triggerem ``trg_validate_geometries`` – jen
@@ -601,7 +603,7 @@ class Command(BaseCommand):
         Přepíše uložené hodnoty ``doi`` a ``igsn`` na prefix cílové instance.
 
         Hodnoty se skládají existujícími settery modelů, aby formát zůstal na
-        jediném místě. Prázdný prefix znamená, že instance identifikátory neraží
+        jediném místě. Prázdný prefix znamená, že instance identifikátory nepřiděluje
         – hodnota se pak vynuluje, aby v databázi nezůstal produkční identifikátor.
 
         :param options: Pojmenované argumenty z příkazového řádku.
