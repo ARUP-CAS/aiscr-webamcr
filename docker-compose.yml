@@ -86,7 +86,13 @@ services:
 
   celery_worker:
     image: ${amcr_image}
-    command: celery -A webclient worker -l DEBUG -n worker1@amcr
+    # Prefork pool bez --concurrency startuje tolik child procesů, kolik má host jader;
+    # každý nese celý import graf aplikace (~300 MB). Úlohy jsou převážně I/O bound
+    # (HTTP do Fedory), takže stačí pevně 4 procesy místo počtu jader.
+    # --max-tasks-per-child restartuje child po 50 úlohách a vrátí nastrádanou paměť
+    # (analogie max-requests v scripts/uwsgi_site.ini).
+    # -n worker1@amcr musí zůstat, inspectuje se podle něj fronta.
+    command: celery -A webclient worker -l DEBUG -n worker1@amcr --concurrency=4 --max-tasks-per-child=50
     environment:
       - IMAGE_TAG=${IMAGE_TAG}
     secrets:
