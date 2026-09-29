@@ -53,9 +53,39 @@
       </td>
       {% if show.soubor_stahnout %}
       <td>
-        <a href="{% url 'core:download_file' vazba_trida ident soubor.id %}" target="_blank">
-          <span class="material-icons">get_app</span>
-        </a>
+        {% with distribuce=soubor.available_distributions %}
+          {% if distribuce|length > 1 %}
+            {# More than orig is available – let the user pick which rendition to download. Each #}
+            {# rendition gets its own server-rendered link with a static, trusted href; the select #}
+            {# only ever toggles which one is visible, so no href is ever built or read from the DOM. #}
+            <select class="form-control form-control-sm d-inline-block w-auto align-middle mr-1 file-distribution-select"
+                    id="file-distribution-{{ soubor.id }}"
+                    data-target-prefix="file-download-{{ soubor.id }}-">
+              {% for distribution in distribuce %}
+                <option value="{{ forloop.counter0 }}">{{ distribution }}</option>
+              {% endfor %}
+            </select>
+            {% for distribution in distribuce %}
+              {% if forloop.first %}
+                <a id="file-download-{{ soubor.id }}-{{ forloop.counter0 }}"
+                   href="{% url 'core:download_file' vazba_trida ident soubor.id %}" target="_blank">
+                  <span class="material-icons">get_app</span>
+                </a>
+              {% else %}
+                <a id="file-download-{{ soubor.id }}-{{ forloop.counter0 }}"
+                   href="{% url 'core:download_file_distribution' vazba_trida ident soubor.id distribution %}"
+                   target="_blank" style="display:none">
+                  <span class="material-icons">get_app</span>
+                </a>
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            <a id="file-download-{{ soubor.id }}"
+               href="{% url 'core:download_file' vazba_trida ident soubor.id %}" target="_blank">
+              <span class="material-icons">get_app</span>
+            </a>
+          {% endif %}
+        {% endwith %}
       </td>
       {% endif %}
       {% if allow_replace and show.soubor_nahradit %}
@@ -76,6 +106,34 @@
   {% endfor %}
   </tbody>
 </table>
+<script>
+  (function () {
+    // Every rendition already has its own server-rendered <a href="..."> (a static, trusted URL
+    // baked in by Django); the select only toggles which one is shown. No href is ever built or
+    // read from the DOM, so there is no client-side URL/HTML sink to sanitize.
+    //
+    // This template is an include, so a page with two file tables runs the script twice and
+    // querySelectorAll would match every select both times. Bind each select only once.
+    var distributionSelects = document.querySelectorAll('select.file-distribution-select');
+    distributionSelects.forEach(function (selectEl) {
+      if (selectEl.dataset.distributionBound === '1') {
+        return;
+      }
+      selectEl.dataset.distributionBound = '1';
+      selectEl.addEventListener('change', function () {
+        var prefix = selectEl.getAttribute('data-target-prefix');
+        var links = document.querySelectorAll('a[id^="' + prefix + '"]');
+        links.forEach(function (linkEl) {
+          linkEl.style.display = 'none';
+        });
+        var selected = document.getElementById(prefix + selectEl.value);
+        if (selected) {
+          selected.style.display = '';
+        }
+      });
+    });
+  })();
+</script>
 
 {% include "soubor_modal.html" %}
 

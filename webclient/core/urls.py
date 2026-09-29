@@ -31,6 +31,12 @@ urlpatterns = [
         "soubor/stahnout/<str:typ_vazby>/<str:ident_cely>/<int:pk>", views.DownloadFile.as_view(), name="download_file"
     ),
     path(
+        # The distribution name may contain slashes (e.g. ocr/alto-xml), hence <path:distribution>.
+        "soubor/stahnout/<str:typ_vazby>/<str:ident_cely>/<int:pk>/<path:distribution>",
+        views.DownloadFile.as_view(),
+        name="download_file_distribution",
+    ),
+    path(
         "soubor/stahnout-nahled/<str:typ_vazby>/<str:ident_cely>/<int:pk>",
         views.DownloadThumbnailSmall.as_view(),
         name="download_thumbnail",

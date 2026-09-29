@@ -255,7 +255,6 @@ Komponenta dokumentu
 
 * Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L164 `get_komponenta_ident`
 
-=======
 Soubory
 =======
 

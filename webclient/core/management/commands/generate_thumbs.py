@@ -4,6 +4,8 @@ import pandas as pd
 from core.repository_connector import FedoraRepositoryConnector
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.translation import gettext as _
+from heslar.hesla_dynamicka import ADMIN_USER
+from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +139,8 @@ class Command(BaseCommand):
                     rep_bin_file = conn.get_binary_file(soubor.repository_uuid)
                     if rep_bin_file:
                         try:
-                            conn.save_thumbs(soubor.nazev, rep_bin_file.content, soubor.repository_uuid)
+                            thumb_writes = conn.save_thumbs(soubor.nazev, rep_bin_file.content, soubor.repository_uuid)
+                            soubor.zaznamenej_distribuce(thumb_writes, User.objects.filter(pk=ADMIN_USER).first())
                             success_count += 1
                             logger.info(
                                 "core.management.commands.generate_thumbs.thumbs_generated",

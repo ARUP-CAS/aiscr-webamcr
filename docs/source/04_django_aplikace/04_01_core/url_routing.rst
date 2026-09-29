@@ -170,6 +170,9 @@ CORE
    * - ``download_file``
      - ``soubor/stahnout/<str:typ_vazby>/<str:ident_cely>/<int:pk>``
      - ``views.DownloadFile.as_view()``
+   * - ``download_file_distribution``
+     - ``soubor/stahnout/<str:typ_vazby>/<str:ident_cely>/<int:pk>/<path:distribution>``
+     - ``views.DownloadFile.as_view()``
    * - ``download_thumbnail``
      - ``soubor/stahnout-nahled/<str:typ_vazby>/<str:ident_cely>/<int:pk>``
      - ``views.DownloadThumbnailSmall.as_view()``

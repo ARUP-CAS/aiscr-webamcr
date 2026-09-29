@@ -12,6 +12,8 @@ import os
 from core.models import AntivirusCheckResult, Soubor
 from core.soubor_naming import get_mime_safe_soubor_name
 from django.utils.translation import gettext_lazy as _
+from heslar.hesla_dynamicka import ADMIN_USER
+from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -109,4 +111,7 @@ def save_single_file_from_storage_impl(
     record.size_mb = rep_bin_file.size_mb
     record.sha_512 = rep_bin_file.sha_512
     record.save()
+    # Historie náhledů se zapisuje až po uložení souboru — u nově zakládaného souboru vzniká
+    # ``path`` (a tím i vazba na Fedoru) teprve z výsledku ``save_binary_file``.
+    record.zaznamenej_distribuce(rep_bin_file.thumb_writes, User.objects.filter(pk=ADMIN_USER).first())
     fedora_transaction.mark_transaction_as_closed()
