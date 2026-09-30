@@ -81,7 +81,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-DEV
-    command: celery -A webclient worker -l INFO -n worker1@amcr
+    # Kontejner má limit 1G / 0.1 CPU, víc než jeden child proces se sem nevejde.
+    command: celery -A webclient worker -l INFO -n worker1@amcr --concurrency=1 --max-tasks-per-child=50
     secrets:
       - db_conf
       - mail_conf

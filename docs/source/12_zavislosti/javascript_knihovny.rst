@@ -39,9 +39,13 @@ Knihovny instalované pomocí Node.js
      - MIT
      - https://www.dropzone.dev/
    * - jquery
-     - 3.7.1
+     - 4.0.0
      - MIT
      - https://jquery.com
+   * - jquery-migrate
+     - 4.0.2
+     - 
+     - https://github.com/jquery/jquery-migrate
    * - leaflet
      - 1.9.4
      - BSD-2-Clause
