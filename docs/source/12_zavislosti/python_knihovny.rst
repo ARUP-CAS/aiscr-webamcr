@@ -52,7 +52,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Licence
      - Odkaz
    * - Django
-     - 6.0.1
+     - 6.0.8
      - BSD-3-Clause
      - https://www.djangoproject.com/
    * - Jinja2
