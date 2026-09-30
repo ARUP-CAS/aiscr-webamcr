@@ -40,7 +40,7 @@ Knihovny instalované pomocí Node.js
      - https://www.dropzone.dev/
    * - jquery
      - 4.0.0
-     - MIT
+     - 
      - https://jquery.com
    * - jquery-migrate
      - 4.0.2
