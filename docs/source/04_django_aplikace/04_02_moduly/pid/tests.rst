@@ -194,13 +194,17 @@ Třídy
 
       Shodné lokalizace se ve výsledku objeví jen jednou.
 
-   .. py:method:: test_poradi_nezavisi_na_poradi_vstupu()
+   .. py:method:: test_poradi_je_pevne_dane()
 
-      Výsledek je stejný bez ohledu na pořadí, v jakém lokalizace přišly z databáze.
+      Lokalizace jsou seřazené podle kanonického klíče, nikoli v pořadí množiny.
 
-   .. py:method:: test_poradi_je_stabilni_i_pro_lokalizace_se_souradnicemi()
+      Porovnání dvou volání v jednom procesu by regresi nezachytilo, protože ``list(set(...))``
+      dává v rámci procesu pokaždé stejné pořadí. Test proto fixuje očekávané pořadí; se šesti
+      prvky je šance, že se s ním pořadí množiny shoduje náhodou, 1 : 720.
 
-      Stabilní pořadí platí i pro lokalizace s vnořeným ``geoLocationPoint``.
+   .. py:method:: test_poradi_lokalizaci_se_souradnicemi()
+
+      Shodné místo s různými souřadnicemi se řadí podle ``geoLocationPoint``.
 
    .. py:method:: test_vnorene_souradnice_jsou_prevedeny_na_slovnik()
 
@@ -232,13 +236,21 @@ Třídy
       :param ident: Identifikátor hesla použitý jako ``subject`` i ``classificationCode``.
       :return: Položka ve tvaru ``frozenset``.
 
-   .. py:method:: test_data_nezavisi_na_poradi_vstupu()
+   .. py:method:: test_poradi_dat_je_pevne_dane()
 
-      Pořadí dat je stejné bez ohledu na pořadí záznamů historie a komponent.
+      Data jsou seřazená podle hodnoty ``date``, nikoli v pořadí množiny.
 
-   .. py:method:: test_hesla_bez_duplicit_a_stabilne()
+   .. py:method:: test_hesla_bez_duplicit_v_pevnem_poradi()
 
-      Opakovaná hesla z více komponent se objeví jednou a ve stabilním pořadí.
+      Opakovaná hesla z více komponent se objeví jednou a v pevně daném pořadí.
+
+   .. py:method:: test_klic_rozlisi_hodnotu_s_oddelovacem()
+
+      Hodnota obsahující znaky oddělovače nedá stejný klíč jako jiná kombinace dvojic.
+
+   .. py:method:: test_klic_rozlisi_typ_hodnoty()
+
+      Číslo a stejně vypadající text dají různé klíče.
 
    .. py:method:: test_prazdne_heslo_zustane_pro_filtraci_volajicim()
 
@@ -256,15 +268,20 @@ Třídy
       Zavolá ``_get_formats`` nad serializerem s podvrženými soubory.
 
       :param mimetypy: Seznam mimetypů souborů navázaných na dokument.
+      :param format_3d: Formát z ``extra_data`` 3D dokumentu; ``None`` znamená dokument jiné řady.
       :return: Seznam formátů vrácený metodou ``_get_formats``.
 
    .. py:method:: test_formaty_jsou_serazene()
 
       Mimetypy jsou vráceny abecedně seřazené, nikoli v pořadí množiny.
 
-   .. py:method:: test_poradi_nezavisi_na_poradi_souboru()
+   .. py:method:: test_format_3d_je_zarazen_do_serazeni()
 
-      Stejná sada mimetypů dá stejný výsledek bez ohledu na pořadí souborů.
+      Formát 3D dokumentu se řadí spolu s mimetypy a nepřipojuje se na konec.
+
+   .. py:method:: test_format_3d_se_neopakuje()
+
+      Formát 3D dokumentu shodný s mimetypem souboru se ve ``formats`` objeví jen jednou.
 
    .. py:method:: test_duplicitni_mimetypy_se_neopakuji()
 

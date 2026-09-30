@@ -7,7 +7,8 @@ from unittest.mock import AsyncMock, patch
 import httpx
 import requests
 from django.test import SimpleTestCase, TestCase
-from pid.model_serializers import DokumentSerializer, dedup_geo_locations, sorted_unique
+from heslar.hesla_dynamicka import DOKUMENT_RADA_DATA_3D
+from pid.model_serializers import DokumentSerializer, dedup_geo_locations, frozenset_sort_key, sorted_unique
 from pid.views import DoiAutocompleteView, WikiDataAutocompleteView
 
 
@@ -376,19 +377,34 @@ class DedupGeoLocationsTest(SimpleTestCase):
         misto = self._misto("Praha, Czech Republic")
         self.assertEqual(dedup_geo_locations([misto, misto, misto]), [{"geoLocationPlace": "Praha, Czech Republic"}])
 
-    def test_poradi_nezavisi_na_poradi_vstupu(self):
-        """Výsledek je stejný bez ohledu na pořadí, v jakém lokalizace přišly z databáze."""
-        polozky = [self._misto("Brno"), self._misto("Praha"), self._misto("Plzeň")]
-        self.assertEqual(dedup_geo_locations(polozky), dedup_geo_locations(list(reversed(polozky))))
+    def test_poradi_je_pevne_dane(self):
+        """
+        Lokalizace jsou seřazené podle kanonického klíče, nikoli v pořadí množiny.
 
-    def test_poradi_je_stabilni_i_pro_lokalizace_se_souradnicemi(self):
-        """Stabilní pořadí platí i pro lokalizace s vnořeným ``geoLocationPoint``."""
-        polozky = [
-            self._bod("Brno", 49.2, 16.6),
-            self._bod("Praha", 50.1, 14.4),
-            self._bod("Brno", 49.3, 16.7),
-        ]
-        self.assertEqual(dedup_geo_locations(polozky), dedup_geo_locations(list(reversed(polozky))))
+        Porovnání dvou volání v jednom procesu by regresi nezachytilo, protože ``list(set(...))``
+        dává v rámci procesu pokaždé stejné pořadí. Test proto fixuje očekávané pořadí; se šesti
+        prvky je šance, že se s ním pořadí množiny shoduje náhodou, 1 : 720.
+        """
+        mista = ["Praha", "Ostrava", "Brno", "Plzeň", "Olomouc", "Liberec"]
+        vysledek = dedup_geo_locations([self._misto(m) for m in mista])
+        self.assertEqual(
+            [d["geoLocationPlace"] for d in vysledek],
+            ["Brno", "Liberec", "Olomouc", "Ostrava", "Plzeň", "Praha"],
+        )
+
+    def test_poradi_lokalizaci_se_souradnicemi(self):
+        """Shodné místo s různými souřadnicemi se řadí podle ``geoLocationPoint``."""
+        vysledek = dedup_geo_locations(
+            [
+                self._bod("Praha", 50.1, 14.4),
+                self._bod("Brno", 49.3, 16.7),
+                self._bod("Brno", 49.2, 16.6),
+            ]
+        )
+        self.assertEqual(
+            [(d["geoLocationPlace"], d["geoLocationPoint"]["pointLatitude"]) for d in vysledek],
+            [("Brno", 49.2), ("Brno", 49.3), ("Praha", 50.1)],
+        )
 
     def test_vnorene_souradnice_jsou_prevedeny_na_slovnik(self):
         """Vnořený ``frozenset`` souřadnic je ve výstupu převeden na slovník."""
@@ -432,21 +448,40 @@ class SortedUniqueTest(SimpleTestCase):
         """
         return frozenset({"subject": ident, "classificationCode": ident, "lang": "en"}.items())
 
-    def test_data_nezavisi_na_poradi_vstupu(self):
-        """Pořadí dat je stejné bez ohledu na pořadí záznamů historie a komponent."""
+    def test_poradi_dat_je_pevne_dane(self):
+        """Data jsou seřazená podle hodnoty ``date``, nikoli v pořadí množiny."""
         polozky = [
-            self._datum("2024-05-01", "Created"),
             self._datum("2024-06-01", "Issued"),
+            self._datum("2024-05-01", "Created"),
             self._datum("-5500/-4900", "Coverage"),
+            self._datum("2024-05-20", "Submitted"),
+            self._datum("2024-07-01", "Withdrawn"),
+            self._datum("-1200/-800", "Coverage"),
         ]
-        self.assertEqual(sorted_unique(polozky), sorted_unique(list(reversed(polozky))))
+        self.assertEqual(
+            [dict(item)["date"] for item in sorted_unique(polozky)],
+            ["-1200/-800", "-5500/-4900", "2024-05-01", "2024-05-20", "2024-06-01", "2024-07-01"],
+        )
 
-    def test_hesla_bez_duplicit_a_stabilne(self):
-        """Opakovaná hesla z více komponent se objeví jednou a ve stabilním pořadí."""
-        polozky = [self._heslo("HES-000123"), self._heslo("HES-000045"), self._heslo("HES-000123")]
-        vysledek = sorted_unique(polozky)
-        self.assertEqual(len(vysledek), 2)
-        self.assertEqual(vysledek, sorted_unique(list(reversed(polozky))))
+    def test_hesla_bez_duplicit_v_pevnem_poradi(self):
+        """Opakovaná hesla z více komponent se objeví jednou a v pevně daném pořadí."""
+        idents = ["HES-000123", "HES-000045", "HES-000900", "HES-000123", "HES-000001", "HES-000450", "HES-000045"]
+        self.assertEqual(
+            [dict(item)["classificationCode"] for item in sorted_unique(self._heslo(i) for i in idents)],
+            ["HES-000001", "HES-000045", "HES-000123", "HES-000450", "HES-000900"],
+        )
+
+    def test_klic_rozlisi_hodnotu_s_oddelovacem(self):
+        """Hodnota obsahující znaky oddělovače nedá stejný klíč jako jiná kombinace dvojic."""
+        a = frozenset({"a": "b", "c": "d"}.items())
+        b = frozenset({"a": "b|c=d"}.items())
+        self.assertNotEqual(frozenset_sort_key(a), frozenset_sort_key(b))
+
+    def test_klic_rozlisi_typ_hodnoty(self):
+        """Číslo a stejně vypadající text dají různé klíče."""
+        self.assertNotEqual(
+            frozenset_sort_key(frozenset({"x": 1}.items())), frozenset_sort_key(frozenset({"x": "1"}.items()))
+        )
 
     def test_prazdne_heslo_zustane_pro_filtraci_volajicim(self):
         """Prázdný ``frozenset`` (heslo ``None``) se neodstraňuje; filtruje ho až volající přes ``if item``."""
@@ -457,31 +492,46 @@ class SortedUniqueTest(SimpleTestCase):
 class GetFormatsTest(SimpleTestCase):
     """Testy deterministického pořadí prvků ``formats`` v metadatech dokumentu."""
 
-    def _formats(self, mimetypy):
+    def _formats(self, mimetypy, format_3d=None):
         """
         Zavolá ``_get_formats`` nad serializerem s podvrženými soubory.
 
         :param mimetypy: Seznam mimetypů souborů navázaných na dokument.
+        :param format_3d: Formát z ``extra_data`` 3D dokumentu; ``None`` znamená dokument jiné řady.
         :return: Seznam formátů vrácený metodou ``_get_formats``.
         """
         soubory = [SimpleNamespace(mimetype=mimetype) for mimetype in mimetypy]
         queryset = SimpleNamespace(exists=lambda: bool(soubory), all=lambda: soubory)
         serializer = DokumentSerializer.__new__(DokumentSerializer)
-        serializer.record = SimpleNamespace(rada=SimpleNamespace(pk=None))
+        if format_3d is None:
+            serializer.record = SimpleNamespace(rada=SimpleNamespace(pk=None))
+        else:
+            serializer.record = SimpleNamespace(
+                rada=SimpleNamespace(pk=DOKUMENT_RADA_DATA_3D),
+                extra_data=SimpleNamespace(format=SimpleNamespace(heslo_en=format_3d)),
+            )
         serializer._get_soubory_queryset = lambda: queryset
         return serializer._get_formats()
 
     def test_formaty_jsou_serazene(self):
         """Mimetypy jsou vráceny abecedně seřazené, nikoli v pořadí množiny."""
         self.assertEqual(
-            self._formats(["image/jpeg", "application/pdf", "image/tiff"]),
-            ["application/pdf", "image/jpeg", "image/tiff"],
+            self._formats(
+                ["text/plain", "image/jpeg", "application/zip", "application/pdf", "image/png", "image/tiff"]
+            ),
+            ["application/pdf", "application/zip", "image/jpeg", "image/png", "image/tiff", "text/plain"],
         )
 
-    def test_poradi_nezavisi_na_poradi_souboru(self):
-        """Stejná sada mimetypů dá stejný výsledek bez ohledu na pořadí souborů."""
-        mimetypy = ["image/jpeg", "application/pdf", "image/tiff", "text/plain"]
-        self.assertEqual(self._formats(mimetypy), self._formats(list(reversed(mimetypy))))
+    def test_format_3d_je_zarazen_do_serazeni(self):
+        """Formát 3D dokumentu se řadí spolu s mimetypy a nepřipojuje se na konec."""
+        self.assertEqual(
+            self._formats(["image/jpeg", "text/plain"], format_3d="model/obj"),
+            ["image/jpeg", "model/obj", "text/plain"],
+        )
+
+    def test_format_3d_se_neopakuje(self):
+        """Formát 3D dokumentu shodný s mimetypem souboru se ve ``formats`` objeví jen jednou."""
+        self.assertEqual(self._formats(["model/obj"], format_3d="model/obj"), ["model/obj"])
 
     def test_duplicitni_mimetypy_se_neopakuji(self):
         """Více souborů se shodným mimetypem se ve ``formats`` objeví jen jednou."""

@@ -420,22 +420,26 @@ def convert_geo_location_to_dict(item) -> Dict:
     return item
 
 
-def frozenset_sort_key(item: frozenset) -> str:
+def frozenset_sort_key(item: frozenset) -> tuple:
     """
-    Sestaví kanonický textový klíč položky DataCite metadat serializované do ``frozenset``.
+    Sestaví kanonický klíč položky DataCite metadat serializované do ``frozenset``.
 
-    Klíč nezávisí na hashích řetězců, takže je stejný ve všech procesech. Vnořené ``frozenset``
-    (např. ``geoLocationPoint``) se převádějí rekurzivně.
+    Klíč nezávisí na hashích řetězců, takže je stejný ve všech procesech. Je to vnořená n-tice,
+    nikoli spojený text, aby dvě různé položky nemohly dát shodný klíč (např. hodnota obsahující
+    oddělovač). Hodnoty nesou značku typu, takže se nikdy neporovnává text s n-ticí a ``1``
+    se neslévá s ``"1"``. Vnořené ``frozenset`` (např. ``geoLocationPoint``) se převádějí rekurzivně.
 
     :param item: Položka ve tvaru ``frozenset`` dvojic klíč-hodnota (lokalizace, datum, předmětové heslo).
-    :return: Textový klíč složený ze seřazených dvojic klíč=hodnota včetně vnořených ``frozenset``.
+    :return: N-tice seřazených dvojic ``(klíč, (značka, typ, hodnota))`` včetně vnořených ``frozenset``.
     """
-    parts = []
-    for key, value in sorted(item, key=lambda pair: str(pair[0])):
+    pairs = []
+    for key, value in item:
         if isinstance(value, frozenset):
-            value = frozenset_sort_key(value)
-        parts.append(f"{key}={value}")
-    return "|".join(parts)
+            encoded = (1, "frozenset", frozenset_sort_key(value))
+        else:
+            encoded = (0, type(value).__name__, str(value))
+        pairs.append((str(key), encoded))
+    return tuple(sorted(pairs))
 
 
 def sorted_unique(items: Iterable[frozenset]) -> List[frozenset]:
@@ -1096,15 +1100,15 @@ class DokumentSerializer(ModelSerializer):
 
         :return: Načtená data odpovídající zadaným vstupům.
         """
-        result = []
+        formats = set()
         soubory_queryset = self._get_soubory_queryset()
         if soubory_queryset and soubory_queryset.exists():
-            # sorted() kvůli determinismu: iterační pořadí množiny se mezi procesy liší.
-            result = sorted({soubor.mimetype for soubor in soubory_queryset.all()})
+            formats = {soubor.mimetype for soubor in soubory_queryset.all()}
         if self.record.rada.pk == DOKUMENT_RADA_DATA_3D:
             if self.record.extra_data and self.record.extra_data.format:
-                result.append(self.record.extra_data.format.heslo_en)
-        return result
+                formats.add(self.record.extra_data.format.heslo_en)
+        # sorted() kvůli determinismu: iterační pořadí množiny se mezi procesy liší.
+        return sorted(formats)
 
 
 class SamostatnyNalezSerializer(ModelSerializer):
@@ -1256,7 +1260,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
                     dates += [dict(serialized_date_coverage)]
         except ObjectDoesNotExist:
             pass
-        return dates
+        return [dict(item) for item in sorted_unique(frozenset(d.items()) for d in dates) if item]
 
     def _serialize_descriptions(self):
         """

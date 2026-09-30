@@ -597,13 +597,15 @@ Funkce
 
 .. py:function:: frozenset_sort_key(item)
 
-   Sestaví kanonický textový klíč položky DataCite metadat serializované do ``frozenset``.
+   Sestaví kanonický klíč položky DataCite metadat serializované do ``frozenset``.
 
-   Klíč nezávisí na hashích řetězců, takže je stejný ve všech procesech. Vnořené ``frozenset``
-   (např. ``geoLocationPoint``) se převádějí rekurzivně.
+   Klíč nezávisí na hashích řetězců, takže je stejný ve všech procesech. Je to vnořená n-tice,
+   nikoli spojený text, aby dvě různé položky nemohly dát shodný klíč (např. hodnota obsahující
+   oddělovač). Hodnoty nesou značku typu, takže se nikdy neporovnává text s n-ticí a ``1``
+   se neslévá s ``"1"``. Vnořené ``frozenset`` (např. ``geoLocationPoint``) se převádějí rekurzivně.
 
    :param item: Položka ve tvaru ``frozenset`` dvojic klíč-hodnota (lokalizace, datum, předmětové heslo).
-   :return: Textový klíč složený ze seřazených dvojic klíč=hodnota včetně vnořených ``frozenset``.
+   :return: N-tice seřazených dvojic ``(klíč, (značka, typ, hodnota))`` včetně vnořených ``frozenset``.
 
 .. py:function:: sorted_unique(items)
 

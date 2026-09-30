@@ -34,6 +34,10 @@ Třídy
 
       Explicitní ``order_by`` na QuerySetu má přednost před výchozím řazením modelu.
 
+   .. py:method:: test_vycistene_razeni_neobnovuje_vychozi()
+
+      Po ``order_by()`` bez argumentů se výchozí řazení modelu neobnoví, doplní se jen ``pk``.
+
    .. py:method:: test_objekt_bez_querysetu_projde_beze_zmeny()
 
       Kolekce, která není QuerySet, se vrátí beze změny a nezpůsobí chybu.

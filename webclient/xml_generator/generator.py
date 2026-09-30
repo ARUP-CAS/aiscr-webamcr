@@ -123,7 +123,10 @@ def stable_related_records(related_manager):
     queryset = related_manager.all()
     if not hasattr(queryset, "query") or not hasattr(queryset, "model"):
         return queryset
-    ordering = list(queryset.query.order_by) or list(queryset.model._meta.ordering or [])
+    ordering = list(queryset.query.order_by)
+    # Prázdné order_by() vypíná výchozí řazení modelu; to se pak neobnovuje, zůstane jen pk.
+    if not ordering and queryset.query.default_ordering:
+        ordering = list(queryset.model._meta.ordering or [])
     if any(isinstance(field, str) and field.lstrip("-") in ("pk", "id") for field in ordering):
         return queryset
     try:

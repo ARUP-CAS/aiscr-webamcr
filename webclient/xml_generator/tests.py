@@ -32,6 +32,11 @@ class StableRelatedRecordsTest(SimpleTestCase):
         queryset = stable_related_records(Soubor.objects.order_by("-mimetype"))
         self.assertEqual(list(queryset.query.order_by), ["-mimetype", "pk"])
 
+    def test_vycistene_razeni_neobnovuje_vychozi(self):
+        """Po ``order_by()`` bez argumentů se výchozí řazení modelu neobnoví, doplní se jen ``pk``."""
+        queryset = stable_related_records(Historie.objects.order_by())
+        self.assertEqual(list(queryset.query.order_by), ["pk"])
+
     def test_objekt_bez_querysetu_projde_beze_zmeny(self):
         """Kolekce, která není QuerySet, se vrátí beze změny a nezpůsobí chybu."""
 
