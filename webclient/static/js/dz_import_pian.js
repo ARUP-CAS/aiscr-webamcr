@@ -1,5 +1,3 @@
-Dropzone.autoDiscover = false;
-
 const UploadResultsEnum = {
     success: 0,
     error: 2,

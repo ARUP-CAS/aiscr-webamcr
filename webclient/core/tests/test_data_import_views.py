@@ -1,0 +1,602 @@
+"""Jednotkové testy autorizace a fázového větvení importních view.
+
+Pokrývá ``DataImportCancel`` (uvolnění locku / stop podle fáze) a kontrolu vlastnictví
+úlohy (``_check_import_ownership``) na ``DataImportStop`` a ``DataImportProgress``. Všechna
+tři view pracují výhradně s Redis (žádný přístup do DB), takže se testují přes
+``RequestFactory`` s odlehčeným uživatelem a ``FakeRedis`` v decode režimu — bez databáze.
+"""
+
+import json
+from unittest import mock
+
+from core.connectors import RedisConnector
+from core.tests.fake_redis import FakeRedis
+from core.tests.stub_user import _StubUser
+from core.views import DataImportCancel, DataImportProgress, DataImportReset, DataImportStop, _cursor_param
+from cron import tasks
+from django.core.exceptions import PermissionDenied
+from django.test import RequestFactory, SimpleTestCase
+
+JOB = "job-abc-123"
+OWNER_ID = 7
+OTHER_ID = 99
+
+
+def _fake(phase, *, user_id=OWNER_ID, extra=None):
+    """Sestaví ``FakeRedis`` v decode režimu se stavem jedné importní úlohy.
+
+    :param phase: Hodnota ``import_data_phase_{JOB}``.
+    :param user_id: Vlastník úlohy zapsaný do ``import_data_user_{JOB}``.
+    :param extra: Volitelné další klíče/hodnoty k předvyplnění.
+    :return: Instance ``FakeRedis`` emulující ``get_connection_decode()``.
+    """
+    initial = {
+        f"import_data_phase_{JOB}": phase,
+        f"import_data_user_{JOB}": user_id,
+        f"import_data_lock_token_{JOB}": "tok-xyz",
+        RedisConnector.IMPORT_DATA_LOCK_KEY: "tok-xyz",
+        f"import_data_current_job_{user_id}": JOB,
+    }
+    if extra:
+        initial.update(extra)
+    return FakeRedis(initial=initial, decode_responses=True)
+
+
+class DataImportCancelTest(SimpleTestCase):
+    """Testy fázového větvení a autorizace view ``DataImportCancel``."""
+
+    def setUp(self):
+        """Připraví ``RequestFactory`` sdílenou napříč testy."""
+        self.factory = RequestFactory()
+
+    def test_cursor_param_applies_shared_wire_contract(self):
+        """Všechny kurzory používají nezáporné celé číslo a při chybě se vrací na nulu."""
+        for raw_value, expected in ((None, 0), ("4", 4), ("invalid", 0), ("-4", 0)):
+            with self.subTest(raw_value=raw_value):
+                url = "/data-import/" if raw_value is None else f"/data-import/?cursor={raw_value}"
+                self.assertEqual(_cursor_param(self.factory.get(url), "cursor"), expected)
+
+    def _post(self, fake, user_id=OWNER_ID, is_superuser=True):
+        """Zavolá ``DataImportCancel`` přes ``RequestFactory`` s daným uživatelem a fakem Redis.
+
+        :param fake: ``FakeRedis`` vrácený z ``get_connection_decode()``.
+        :param user_id: ``id`` přihlášeného uživatele.
+        :param is_superuser: Zda je uživatel superuživatel.
+        :return: HTTP odpověď view.
+        """
+        request = self.factory.post(f"/data-import-cancel/{JOB}")
+        request.user = _StubUser(user_id, is_superuser)
+        # RequestFactory nemá CSRF token; obejdi csrf_protect stejně jako testovací Client.
+        request._dont_enforce_csrf_checks = True
+        with mock.patch("core.views.RedisConnector.get_connection_decode", return_value=fake):
+            return DataImportCancel.as_view()(request, job_id=JOB)
+
+    def test_awaiting_approval_releases_lock_and_marks_canceled(self):
+        """awaiting_approval: kterýkoli superuživatel uvolní lock, fáze → canceled, ukazatel zmizí."""
+        fake = _fake(tasks.IMPORT_PHASE_AWAITING_APPROVAL)
+
+        # Force-cancel smí provést i jiný než vlastník — proto OTHER_ID.
+        response = self._post(fake, user_id=OTHER_ID)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.content)["result"], "ok")
+        self.assertEqual(fake.get(f"import_data_phase_{JOB}"), tasks.IMPORT_PHASE_CANCELED)
+        self.assertEqual(
+            fake.get(f"import_data_status_message_tr_{JOB}"),
+            tasks.translation_value("cron.tasks.run_data_import.cancelled"),
+        )
+        self.assertIsNone(fake.get(f"import_data_current_job_{OWNER_ID}"))
+
+    def test_validating_owner_sets_stop_sentinel(self):
+        """validating: vlastník cancel ≡ stop — nastaví stop sentinel, fázi nemění."""
+        fake = _fake(tasks.IMPORT_PHASE_VALIDATING)
+
+        response = self._post(fake, user_id=OWNER_ID)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.content)["result"], "ok")
+        self.assertIsNotNone(fake.get(f"import_data_stop_{JOB}"))
+        self.assertEqual(fake.ttl(f"import_data_stop_{JOB}"), tasks.IMPORT_DATA_RUNNING_TTL_SECONDS)
+        self.assertEqual(fake.get(f"import_data_phase_{JOB}"), tasks.IMPORT_PHASE_VALIDATING)
+
+    def test_validating_non_owner_forbidden(self):
+        """validating: cizí superuživatel je odmítnut (403) a stop se nenastaví."""
+        fake = _fake(tasks.IMPORT_PHASE_VALIDATING)
+
+        response = self._post(fake, user_id=OTHER_ID)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(json.loads(response.content)["result"], "error")
+        self.assertIsNone(fake.get(f"import_data_stop_{JOB}"))
+
+    def test_importing_phase_conflict(self):
+        """importing: cancel se odmítne (409) — běžící import se ukončuje přes Stop."""
+        fake = _fake(tasks.IMPORT_PHASE_IMPORTING)
+
+        response = self._post(fake, user_id=OWNER_ID)
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(json.loads(response.content)["result"], "error")
+
+    def test_claimed_job_is_not_changed_by_stale_cancel(self):
+        """Start, který už atomicky převedl job do importing, vyhraje nad současným Cancel požadavkem."""
+        fake = _fake(tasks.IMPORT_PHASE_IMPORTING)
+
+        response = self._post(fake, user_id=OTHER_ID)
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(fake.get(f"import_data_phase_{JOB}"), tasks.IMPORT_PHASE_IMPORTING)
+        self.assertEqual(fake.get(RedisConnector.IMPORT_DATA_LOCK_KEY), "tok-xyz")
+
+    def test_terminal_phase_conflict(self):
+        """Terminální fáze (finished): není co rušit → 409."""
+        fake = _fake(tasks.IMPORT_PHASE_FINISHED)
+
+        response = self._post(fake, user_id=OWNER_ID)
+
+        self.assertEqual(response.status_code, 409)
+
+    def test_requires_superuser(self):
+        """Ne-superuživatel dostane PermissionDenied bez ohledu na fázi."""
+        fake = _fake(tasks.IMPORT_PHASE_AWAITING_APPROVAL)
+
+        with self.assertRaises(PermissionDenied):
+            self._post(fake, user_id=OWNER_ID, is_superuser=False)
+
+
+class DataImportOwnershipTest(SimpleTestCase):
+    """Testy kontroly vlastnictví úlohy na ``DataImportStop`` a ``DataImportProgress``."""
+
+    def setUp(self):
+        """Připraví ``RequestFactory`` sdílenou napříč testy."""
+        self.factory = RequestFactory()
+
+    def _get(self, view, fake, user_id):
+        """Zavolá GET view přes ``RequestFactory`` s daným uživatelem a fakem Redis.
+
+        :param view: Třída view (``DataImportStop`` / ``DataImportProgress``).
+        :param fake: ``FakeRedis`` vrácený z ``get_connection_decode()``.
+        :param user_id: ``id`` přihlášeného uživatele.
+        :return: HTTP odpověď view.
+        """
+        request = self.factory.get(f"/data-import/{JOB}")
+        request.user = _StubUser(user_id, is_superuser=True)
+        with mock.patch("core.views.RedisConnector.get_connection_decode", return_value=fake):
+            return view.as_view()(request, job_id=JOB)
+
+    def test_stop_owner_allowed(self):
+        """Vlastník smí zastavit svou úlohu — stop sentinel se nastaví."""
+        fake = _fake(tasks.IMPORT_PHASE_IMPORTING)
+
+        response = self._get(DataImportStop, fake, OWNER_ID)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.content)["result"], "ok")
+        self.assertIsNotNone(fake.get(f"import_data_stop_{JOB}"))
+
+    def test_stop_non_owner_forbidden(self):
+        """Cizí superuživatel nesmí zastavit cizí úlohu (403) a stop se nenastaví."""
+        fake = _fake(tasks.IMPORT_PHASE_IMPORTING)
+
+        response = self._get(DataImportStop, fake, OTHER_ID)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(json.loads(response.content)["result"], "error")
+        self.assertIsNone(fake.get(f"import_data_stop_{JOB}"))
+
+    def test_progress_non_owner_forbidden(self):
+        """Progress endpoint vystavuje validační data — cizímu uživateli vrátí 403."""
+        fake = _fake(tasks.IMPORT_PHASE_VALIDATING)
+
+        response = self._get(DataImportProgress, fake, OTHER_ID)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(json.loads(response.content)["result"], "error")
+
+
+class DataImportProgressCursorTest(SimpleTestCase):
+    """Testy pro kurzory validačních a importních výsledků ``DataImportProgress``."""
+
+    def setUp(self):
+        """Připraví ``RequestFactory`` sdílenou napříč testy."""
+        self.factory = RequestFactory()
+
+    def _get(self, fake, validation_since=None, progress_since=None, files_since=None, user_id=OWNER_ID):
+        """Zavolá ``DataImportProgress`` s volitelnými kurzory výsledků.
+
+        :param fake: ``FakeRedis`` vrácený z ``get_connection_decode()``.
+        :param validation_since: Hodnota query parametru, nebo ``None`` pro jeho vynechání.
+        :param progress_since: Hodnota query parametru pro importní výsledky, nebo ``None`` pro jeho vynechání.
+        :param files_since: Hodnota query parametru pro výsledky souborů, nebo ``None`` pro jeho vynechání.
+        :param user_id: ``id`` přihlášeného uživatele.
+        :return: HTTP odpověď view.
+        """
+        url = f"/data-import/{JOB}"
+        query_params = []
+        if validation_since is not None:
+            query_params.append(f"validation_since={validation_since}")
+        if progress_since is not None:
+            query_params.append(f"progress_since={progress_since}")
+        if files_since is not None:
+            query_params.append(f"files_since={files_since}")
+        if query_params:
+            url += "?" + "&".join(query_params)
+        request = self.factory.get(url)
+        request.user = _StubUser(user_id, is_superuser=True)
+        with mock.patch("core.views.RedisConnector.get_connection_decode", return_value=fake):
+            return DataImportProgress.as_view()(request, job_id=JOB)
+
+    @staticmethod
+    def _push_validation_rows(fake, count):
+        """Přidá ``count`` validačních řádků do ``import_data_validation_details_{JOB}``.
+
+        :param fake: ``FakeRedis``, do kterého se řádky zapíší.
+        :param count: Počet řádků k zápisu.
+        """
+        for i in range(count):
+            fake.rpush(
+                f"import_data_validation_details_{JOB}",
+                json.dumps(
+                    {"item_order": i, "file_name": "f", "primary_key_import": str(i), "validation_result": "ok"}
+                ),
+            )
+
+    def test_no_since_param_returns_all_rows_and_cursor(self):
+        """Bez ``validation_since`` vrátí všechny řádky a ``validation_cursor`` rovný jejich počtu."""
+        fake = _fake(tasks.IMPORT_PHASE_VALIDATING)
+        self._push_validation_rows(fake, 3)
+
+        response = self._get(fake)
+
+        data = json.loads(response.content)
+        self.assertEqual(len(data["validation_results"]), 3)
+        self.assertEqual(data["validation_cursor"], 3)
+
+    def test_since_param_returns_only_appended_rows(self):
+        """S ``validation_since`` vrátí jen řádky přidané od tohoto indexu, cursor je nová celková délka."""
+        fake = _fake(tasks.IMPORT_PHASE_VALIDATING)
+        self._push_validation_rows(fake, 5)
+
+        response = self._get(fake, validation_since=3)
+
+        data = json.loads(response.content)
+        self.assertEqual(len(data["validation_results"]), 2)
+        self.assertEqual(data["validation_cursor"], 5)
+
+    def test_since_param_beyond_list_length_returns_empty_and_stable_cursor(self):
+        """``validation_since`` za koncem seznamu vrátí prázdný delta a cursor beze změny."""
+        fake = _fake(tasks.IMPORT_PHASE_VALIDATING)
+        self._push_validation_rows(fake, 2)
+
+        response = self._get(fake, validation_since=2)
+
+        data = json.loads(response.content)
+        self.assertEqual(data["validation_results"], [])
+        self.assertEqual(data["validation_cursor"], 2)
+
+    def test_invalid_since_param_falls_back_to_zero(self):
+        """Neplatný (nečíselný) ``validation_since`` se chová jako 0 (vrátí vše)."""
+        fake = _fake(tasks.IMPORT_PHASE_VALIDATING)
+        self._push_validation_rows(fake, 2)
+
+        response = self._get(fake, validation_since="not-a-number")
+
+        data = json.loads(response.content)
+        self.assertEqual(len(data["validation_results"]), 2)
+        self.assertEqual(data["validation_cursor"], 2)
+
+    def test_negative_since_param_clamped_to_zero(self):
+        """Záporný ``validation_since`` se ořeže na 0 (vrátí vše), nikoli chybný záporný lrange."""
+        fake = _fake(tasks.IMPORT_PHASE_VALIDATING)
+        self._push_validation_rows(fake, 2)
+
+        response = self._get(fake, validation_since=-5)
+
+        data = json.loads(response.content)
+        self.assertEqual(len(data["validation_results"]), 2)
+        self.assertEqual(data["validation_cursor"], 2)
+
+    @staticmethod
+    def _push_progress_rows(fake, count):
+        """Přidá ``count`` importních výsledků do Redis seznamů průběhu.
+
+        :param fake: ``FakeRedis``, do kterého se řádky zapíší.
+        :param count: Počet výsledků k zápisu.
+        """
+        for i in range(count):
+            fake.rpush(f"import_data_progress_ids_{JOB}", i)
+            fake.rpush(f"import_data_progress_details_tr_{JOB}", "cron.tasks.run_data_import.success")
+
+    def test_progress_since_returns_only_appended_results_and_cursor(self):
+        """``progress_since`` vrátí jen nové výsledky a celkový kurzor pro další poll."""
+        fake = _fake(tasks.IMPORT_PHASE_IMPORTING, extra={f"import_data_count_{JOB}": 5})
+        self._push_progress_rows(fake, 5)
+
+        response = self._get(fake, progress_since=3)
+
+        data = json.loads(response.content)
+        self.assertEqual(
+            data["serialized_results"],
+            {"3": "cron.tasks.run_data_import.success", "4": "cron.tasks.run_data_import.success"},
+        )
+        self.assertEqual(data["finished_record_count"], 5)
+        self.assertEqual(data["progress_cursor"], 5)
+
+    def test_terminal_phase_refetches_relabelled_progress_rows(self):
+        """Terminální stav vrátí i přeznačené řádky před kurzorem po rollbacku."""
+        fake = _fake(tasks.IMPORT_PHASE_STOPPED, extra={f"import_data_count_{JOB}": 3})
+        self._push_progress_rows(fake, 3)
+        fake.lset(f"import_data_progress_details_tr_{JOB}", 0, "cron.tasks.run_data_import.rolled_back")
+
+        response = self._get(fake, progress_since=3)
+
+        data = json.loads(response.content)
+        self.assertEqual(
+            data["serialized_results"],
+            {
+                "0": "cron.tasks.run_data_import.rolled_back",
+                "1": "cron.tasks.run_data_import.success",
+                "2": "cron.tasks.run_data_import.success",
+            },
+        )
+        self.assertEqual(data["finished_record_count"], 3)
+        self.assertEqual(data["progress_cursor"], 3)
+
+    def test_files_since_returns_only_appended_results_and_cursor(self):
+        """``files_since`` vrátí jen nové soubory a celkový kurzor pro další poll."""
+        files = [
+            {"ident_cely": f"F-{i}", "file_name": f"soubor-{i}.pdf", "size_mb": i, "additional_info_tr": "ok"}
+            for i in range(3)
+        ]
+        fake = _fake(tasks.IMPORT_PHASE_IMPORTING)
+        for entry in files:
+            fake.rpush(f"import_data_files_{JOB}", json.dumps(entry))
+
+        response = self._get(fake, files_since=1)
+
+        data = json.loads(response.content)
+        self.assertEqual([item["ident_cely"] for item in data["serialized_results_files"]], ["F-1", "F-2"])
+        self.assertEqual(data["files_cursor"], 3)
+
+    def test_history_and_fedora_dicts_translate_each_distinct_value_once(self):
+        """Slovníky historie/Fedory se nepřekládají po položkách — překlad platí za unikátní hodnotu.
+
+        Obě sady se v Redis přepisují jako celek (hodnota záznamu se může zpětně změnit), takže je
+        nelze krájet kurzorem; cena pollu ale nesmí růst s délkou běhu.
+        """
+        record_count = 50
+        fake = _fake(
+            tasks.IMPORT_PHASE_IMPORTING,
+            extra={
+                f"import_data_count_{JOB}": record_count,
+                f"import_data_history_record_result_tr_{JOB}": json.dumps(
+                    {str(i): "cron.tasks.run_data_import.success" for i in range(record_count)}
+                ),
+                f"import_fedora_result_tr_{JOB}": json.dumps(
+                    {str(i): ["cron.tasks.run_data_import.success"] for i in range(record_count)}
+                ),
+            },
+        )
+
+        with mock.patch("core.views.translate_status_value", side_effect=lambda raw: raw) as translate_mock:
+            response = self._get(fake)
+
+        data = json.loads(response.content)
+        self.assertEqual(len(data["history_record_result"]), record_count)
+        self.assertEqual(len(data["fedora_update_result"]), record_count)
+        translated_values = {call.args[0] for call in translate_mock.call_args_list}
+        self.assertEqual(
+            translate_mock.call_count,
+            len(translated_values),
+            "Každá unikátní hodnota se smí přeložit nejvýše jednou za poll.",
+        )
+        self.assertLess(translate_mock.call_count, record_count)
+
+
+class DataImportResetTest(SimpleTestCase):
+    """Testy ručního superuživatelského resetu zaseklé importní úlohy (``DataImportReset``)."""
+
+    def setUp(self):
+        """Připraví ``RequestFactory`` sdílenou napříč testy."""
+        self.factory = RequestFactory()
+
+    def _post(self, fake, user_id=OWNER_ID, is_superuser=True, job_id=JOB):
+        """Zavolá ``DataImportReset`` přes ``RequestFactory``.
+
+        :param fake: ``FakeRedis`` vrácený z ``get_connection_decode()``.
+        :param user_id: ``id`` přihlášeného uživatele.
+        :param is_superuser: Zda je uživatel superuživatel.
+        :param job_id: ``job_id`` v URL; ``None`` testuje no-arg variantu (přes active_job_id).
+        :return: HTTP odpověď view.
+        """
+        request = self.factory.post("/data-import-reset")
+        request.user = _StubUser(user_id, is_superuser)
+        request._dont_enforce_csrf_checks = True
+        kwargs = {"job_id": job_id} if job_id is not None else {}
+        with mock.patch("core.views.RedisConnector.get_connection_decode", return_value=fake):
+            return DataImportReset.as_view()(request, **kwargs)
+
+    def _assert_reset(self, fake):
+        """Ověří společné efekty úspěšného resetu na fake Redis."""
+        self.assertEqual(fake.get(f"import_data_phase_{JOB}"), tasks.IMPORT_PHASE_FAILED)
+        self.assertEqual(fake.get(f"import_data_failure_reason_{JOB}"), tasks.IMPORT_FAILURE_REASON_ERROR)
+        self.assertEqual(
+            fake.get(f"import_data_status_message_tr_{JOB}"),
+            tasks.translation_value("cron.tasks.run_data_import.reset_by_admin"),
+        )
+        self.assertIsNotNone(fake.get(f"import_data_stop_{JOB}"))
+        self.assertIsNone(fake.get(f"import_data_current_job_{OWNER_ID}"))
+        self.assertIsNone(fake.get(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY))
+
+    def test_reset_validating_job(self):
+        """validating: reset ukončí úlohu (failed), uvolní lock a vyčistí ukazatele."""
+        fake = _fake(tasks.IMPORT_PHASE_VALIDATING, extra={RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY: JOB})
+
+        response = self._post(fake, user_id=OWNER_ID)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.content)["result"], "ok")
+        self._assert_reset(fake)
+
+    def test_reset_importing_job(self):
+        """importing: reset zaseklého importu je povolen a ukončí úlohu."""
+        fake = _fake(tasks.IMPORT_PHASE_IMPORTING, extra={RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY: JOB})
+
+        response = self._post(fake, user_id=OWNER_ID)
+
+        self.assertEqual(response.status_code, 200)
+        self._assert_reset(fake)
+
+    def test_reset_by_any_superuser(self):
+        """Reset smí provést kterýkoli superuživatel, ne jen vlastník (dead-worker recovery)."""
+        fake = _fake(tasks.IMPORT_PHASE_IMPORTING, extra={RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY: JOB})
+
+        response = self._post(fake, user_id=OTHER_ID)
+
+        self.assertEqual(response.status_code, 200)
+        self._assert_reset(fake)
+
+    def test_reset_awaiting_approval_job(self):
+        """awaiting_approval: reset je rovněž povolen (superset force-cancelu)."""
+        fake = _fake(tasks.IMPORT_PHASE_AWAITING_APPROVAL, extra={RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY: JOB})
+
+        response = self._post(fake, user_id=OWNER_ID)
+
+        self.assertEqual(response.status_code, 200)
+        self._assert_reset(fake)
+
+    def test_reset_no_arg_resolves_active_job(self):
+        """No-arg varianta dohledá job přes ``IMPORT_DATA_ACTIVE_JOB_KEY`` (blokovaný admin)."""
+        fake = _fake(tasks.IMPORT_PHASE_IMPORTING, extra={RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY: JOB})
+
+        response = self._post(fake, user_id=OTHER_ID, job_id=None)
+
+        self.assertEqual(response.status_code, 200)
+        self._assert_reset(fake)
+
+    def test_reset_terminal_phase_conflict(self):
+        """Terminální fáze (finished): není co resetovat → 409, stav se nemění."""
+        fake = _fake(tasks.IMPORT_PHASE_FINISHED, extra={RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY: JOB})
+
+        response = self._post(fake, user_id=OWNER_ID)
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(json.loads(response.content)["result"], "error")
+        self.assertEqual(fake.get(f"import_data_phase_{JOB}"), tasks.IMPORT_PHASE_FINISHED)
+
+    def test_reset_requires_superuser(self):
+        """Ne-superuživatel dostane PermissionDenied."""
+        fake = _fake(tasks.IMPORT_PHASE_VALIDATING, extra={RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY: JOB})
+
+        with self.assertRaises(PermissionDenied):
+            self._post(fake, user_id=OWNER_ID, is_superuser=False)
+
+    def test_reset_refuses_recent_worker_checkpoint_without_mutation(self):
+        """Čerstvý checkpoint zablokuje oba reset endpointy bez úklidu dat nebo locku."""
+        for phase in (tasks.IMPORT_PHASE_VALIDATING, tasks.IMPORT_PHASE_IMPORTING):
+            for job_id in (JOB, None):
+                with self.subTest(phase=phase, job_id=job_id):
+                    fake = _fake(phase, extra={RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY: JOB})
+                    self.assertTrue(RedisConnector.refresh_import_lock(fake, "tok-xyz", 3600, job_id=JOB))
+                    before = (fake._kv.copy(), fake._ttl.copy())
+                    response = self._post(fake, user_id=OTHER_ID, job_id=job_id)
+                    self.assertEqual(response.status_code, 409)
+                    self.assertEqual((fake._kv, fake._ttl), before)
+
+    def test_reset_succeeds_after_activity_marker_expires(self):
+        """Po vypršení pětiminutové značky lze zaseklou úlohu resetovat."""
+        fake = _fake(tasks.IMPORT_PHASE_IMPORTING)
+        RedisConnector.refresh_import_lock(fake, "tok-xyz", 3600, job_id=JOB)
+        recent_key = f"import_data_recent_progress_{JOB}"
+        self.assertEqual(fake.ttl(recent_key), RedisConnector.IMPORT_DATA_RESET_QUIET_SECONDS)
+        # FakeRedis does not advance time; deletion represents Redis expiry.
+        fake.delete(recent_key)
+        self.assertEqual(self._post(fake).status_code, 200)
+        self._assert_reset(fake)
+        self.assertFalse(RedisConnector.refresh_import_lock(fake, "tok-xyz", 3600, job_id=JOB))
+
+    def test_reset_rechecks_activity_after_view_reads_phase(self):
+        """Checkpoint mezi čtením fáze ve view a resetem musí reset atomicky odmítnout."""
+        fake = _fake(tasks.IMPORT_PHASE_IMPORTING)
+        reset = tasks.reset_import_job
+
+        def checkpoint_then_reset(connection, job_id):
+            RedisConnector.refresh_import_lock(connection, "tok-xyz", 3600, job_id=job_id)
+            return reset(connection, job_id)
+
+        with mock.patch("cron.tasks.reset_import_job", side_effect=checkpoint_then_reset):
+            self.assertEqual(self._post(fake).status_code, 409)
+        self.assertEqual(fake.get(RedisConnector.IMPORT_DATA_LOCK_KEY), "tok-xyz")
+        self.assertIsNone(fake.get(f"import_data_stop_{JOB}"))
+
+    def test_approval_reset_ignores_recent_validation_checkpoint(self):
+        """Čekání na schválení nemá aktivního workera a nevyžaduje čekání na expiraci značky."""
+        fake = _fake(tasks.IMPORT_PHASE_AWAITING_APPROVAL, extra={f"import_data_recent_progress_{JOB}": "1"})
+        self.assertEqual(self._post(fake).status_code, 200)
+
+    def test_worker_rejects_lost_job_state_without_refreshing_foreign_lock(self):
+        """Worker nesmí pokračovat po ztrátě tokenu, fáze nebo vlastnictví globálního locku."""
+        for key, value in (
+            (f"import_data_lock_token_{JOB}", None),
+            (f"import_data_phase_{JOB}", None),
+            (f"import_data_phase_{JOB}", tasks.IMPORT_PHASE_FAILED),
+            (RedisConnector.IMPORT_DATA_LOCK_KEY, "replacement-token"),
+        ):
+            with self.subTest(key=key, value=value):
+                fake = _fake(tasks.IMPORT_PHASE_IMPORTING)
+                fake.expire(RedisConnector.IMPORT_DATA_LOCK_KEY, 60)
+                if value is None:
+                    fake.delete(key)
+                else:
+                    fake.set(key, value, ex=60)
+                before = (fake._kv.copy(), fake._ttl.copy())
+                self.assertFalse(RedisConnector.refresh_import_lock(fake, "tok-xyz", 3600, job_id=JOB))
+                self.assertEqual((fake._kv, fake._ttl), before)
+
+    def test_workers_abort_before_work_when_job_token_is_missing(self):
+        """Oba skutečné tasky skončí před zpracováním dat, pokud zmizel per-job token."""
+        for phase, worker, args in (
+            (tasks.IMPORT_PHASE_VALIDATING, tasks.run_data_import_validation, (JOB, OWNER_ID, "tok-xyz", "INSERT")),
+            (tasks.IMPORT_PHASE_IMPORTING, tasks.run_data_import, (JOB, OWNER_ID, "tok-xyz")),
+        ):
+            with self.subTest(phase=phase):
+                fake = _fake(phase)
+                fake.delete(f"import_data_lock_token_{JOB}")
+                with mock.patch("core.connectors.RedisConnector.get_connection", return_value=fake), mock.patch(
+                    "cron.tasks.check_import_report_directory"
+                ) as directory:
+                    worker(*args)
+                directory.assert_not_called()
+                self.assertEqual(fake.get(f"import_data_phase_{JOB}"), tasks.IMPORT_PHASE_FAILED)
+
+    def test_import_aborts_when_lock_is_replaced_after_initial_checkpoint(self):
+        """Ztráta locku po spuštění zastaví worker před prvním záznamem a zachová cizí lock."""
+        fake = FakeRedis(
+            initial={
+                f"import_data_phase_{JOB}": tasks.IMPORT_PHASE_IMPORTING,
+                f"import_data_lock_token_{JOB}": "tok-xyz",
+                RedisConnector.IMPORT_DATA_LOCK_KEY: "tok-xyz",
+                f"import_data_count_{JOB}": "1",
+                f"import_performed_action_{JOB}": "INSERT",
+            }
+        )
+
+        def replace_lock(**kwargs):
+            fake.set(RedisConnector.IMPORT_DATA_LOCK_KEY, "replacement-token", ex=60)
+            return _StubUser(OWNER_ID)
+
+        with mock.patch("core.connectors.RedisConnector.get_connection", return_value=fake), mock.patch(
+            "cron.tasks.check_import_report_directory", return_value=("/unused", "/unused/reports", None)
+        ), mock.patch("cron.tasks.save_import_report_to_disk", return_value="/unused/report.xlsx"), mock.patch(
+            "cron.tasks.User.objects.get", side_effect=replace_lock
+        ), mock.patch(
+            "cron.tasks.transaction.atomic"
+        ), mock.patch(
+            "cron.tasks.ImportModelMapper.get_import_data_mapper"
+        ) as mapper:
+            tasks.run_data_import(JOB, OWNER_ID, "tok-xyz")
+        mapper.assert_not_called()
+        self.assertEqual(fake.get(f"import_data_phase_{JOB}"), b"failed")
+        self.assertIn(b"failed_lock_lost", fake.get(f"import_data_status_message_tr_{JOB}"))
+        self.assertEqual(fake.get(RedisConnector.IMPORT_DATA_LOCK_KEY), b"replacement-token")
+        self.assertEqual(fake.ttl(RedisConnector.IMPORT_DATA_LOCK_KEY), 60)

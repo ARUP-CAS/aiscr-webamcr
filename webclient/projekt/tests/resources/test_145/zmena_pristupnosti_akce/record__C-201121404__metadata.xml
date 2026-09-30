@@ -44,6 +44,6 @@
       <amcr:telefon>775123123</amcr:telefon>
       <amcr:email>test@test.eu</amcr:email>
     </amcr:oznamovatel>
-    <amcr:archeologicky_zaznam id="C-201121404A">C-201121404A</amcr:archeologicky_zaznam>
+    <amcr:archeologicky_zaznam id="C-201121404A01">C-201121404A01</amcr:archeologicky_zaznam>
   </amcr:projekt>
 </amcr:amcr>

@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 
 from bs4 import BeautifulSoup
 from core.constants import AZ_STAV_ODESLANY, D_STAV_ODESLANY
@@ -263,7 +264,11 @@ class RenameSouborForm(forms.Form):
         label=_("core.forms.RenameSouborForm.suffix.label"),
         required=True,
         help_text=_("core.forms.RenameSouborForm.suffix.tooltip"),
-        widget=forms.Select(attrs={"class": "selectpicker", "data-live-search": "true"}),
+        # Virtuální scrollování bootstrap-select se vypíná záměrně: od 600 položek si dopočítává
+        # šířku nabídky sám a v modálním okně ji roztáhne přes celé okno.
+        widget=forms.Select(
+            attrs={"class": "selectpicker", "data-live-search": "true", "data-virtual-scroll": "false"}
+        ),
     )
 
     def __init__(self, *args, suffix_choices=None, **kwargs):
@@ -684,7 +689,7 @@ class TranslationImportForm(forms.Form):
         file = cleaned_data.get("file")
         if file.size < 1000:
             raise forms.ValidationError({"file": TRANSLATION_FILE_TOOSMALL})
-        if file.name.split(".")[-1] != "po":
+        if os.path.splitext(file.name)[1] != ".po":
             raise forms.ValidationError({"file": TRANSLATION_FILE_WRONG_FORMAT})
         return cleaned_data
 

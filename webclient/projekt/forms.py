@@ -27,6 +27,8 @@ class CreateProjektForm(forms.ModelForm):
 
     coordinate_x1 = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_x2 = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_sjtsk_x1 = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_sjtsk_x2 = forms.FloatField(required=False, widget=HiddenInput())
     planovane_zahajeni = DateRangeField(
         required=True,
         label=_("projekt.forms.createProjekt.planovaneZahajeni.label"),
@@ -126,6 +128,8 @@ class CreateProjektForm(forms.ModelForm):
                                 Div("planovane_zahajeni", css_class="col-sm-3"),
                                 Div("coordinate_x1", css_class="hidden"),
                                 Div("coordinate_x2", css_class="hidden"),
+                                Div("coordinate_sjtsk_x1", css_class="hidden"),
+                                Div("coordinate_sjtsk_x2", css_class="hidden"),
                                 css_class="row",
                             ),
                             css_class="col-md-6 col-12",
@@ -159,17 +163,24 @@ class CreateProjektForm(forms.ModelForm):
 
     def clean(self):
         """
-        Provádí operaci clean.
+        Ověří, že uživatel klikl do mapy – musí být vyplněné oba páry
+        souřadnic (WGS84 i SJTSK), protože ``projekt.views.create`` je
+        potřebuje současně pro ``projekt.geom`` a ``projekt.geom_sjtsk``.
 
         :return: Vrací proměnná ``cleaned_data``.
-        :raises forms.ValidationError: Vyvolá se při splnění podmínky ``not coordinate_x1 or not coordinate_x2``.
+        :raises forms.ValidationError: Vyvolá se, pokud kterákoli ze čtyř
+            souřadnic (``coordinate_x1/x2``, ``coordinate_sjtsk_x1/x2``)
+            chybí.
         """
         cleaned_data = super().clean()
 
-        coordinate_x1 = cleaned_data.get("coordinate_x1")
-        coordinate_x2 = cleaned_data.get("coordinate_x2")
-
-        if not coordinate_x1 or not coordinate_x2:
+        required_coords = (
+            "coordinate_x1",
+            "coordinate_x2",
+            "coordinate_sjtsk_x1",
+            "coordinate_sjtsk_x2",
+        )
+        if not all(cleaned_data.get(field) for field in required_coords):
             raise forms.ValidationError(_("projekt.forms.CreateProjektForm.clean.missing_coords"))
         return cleaned_data
 
@@ -181,6 +192,8 @@ class EditProjektForm(OptimisticLockingMixin, forms.ModelForm):
 
     coordinate_x1 = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_x2 = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_sjtsk_x1 = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_sjtsk_x2 = forms.FloatField(required=False, widget=HiddenInput())
     planovane_zahajeni = DateRangeField(
         required=True,
         label=_("projekt.forms.editProjekt.planovaneZahajeni.label"),
@@ -378,6 +391,8 @@ class EditProjektForm(OptimisticLockingMixin, forms.ModelForm):
                         Div("kulturni_pamatka_popis", css_class="col-sm-6 col-lg-4"),
                         Div("coordinate_x1", css_class="hidden"),
                         Div("coordinate_x2", css_class="hidden"),
+                        Div("coordinate_sjtsk_x1", css_class="hidden"),
+                        Div("coordinate_sjtsk_x2", css_class="hidden"),
                         Div("optimistic_lock_data", css_class="d-none"),
                         Div(
                             HTML('<span class="app-divider-label">'),

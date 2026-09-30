@@ -81,14 +81,21 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
     def set_snapshots(self):
         """Nastaví snapshots. v aplikaci."""
-        if not self.archeologicky_zaznam.katastry.all():
-            self.dalsi_katastry_snapshot = None
-        else:
-            self.dalsi_katastry_snapshot = (
-                "; ".join([x.nazev for x in self.archeologicky_zaznam.katastry.order_by("nazev").all()])
-                if self.archeologicky_zaznam.katastry.count() > 0
-                else None
-            )
+        nazvy = list(self.archeologicky_zaznam.katastry.order_by("nazev").values_list("nazev", flat=True))
+        self.dalsi_katastry_snapshot = self.sestav_snapshot_katastru(nazvy)
+
+    @staticmethod
+    def sestav_snapshot_katastru(nazvy):
+        """
+        Sestaví text ``dalsi_katastry_snapshot`` z názvů katastrů.
+
+        Formát je na jednom místě, aby ho mohla použít i hromadná přegenerace
+        v anonymizaci databáze, která názvy načítá pro celou dávku najednou.
+
+        :param nazvy: Názvy dalších katastrů seřazené podle názvu.
+        :return: Názvy oddělené ``"; "``, nebo ``None`` pro prázdný seznam.
+        """
+        return "; ".join(nazvy) if nazvy else None
 
     @property
     def redis_snapshot_id(self):

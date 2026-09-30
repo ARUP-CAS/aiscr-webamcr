@@ -26,6 +26,16 @@ Třídy
 
       Nastaví snapshots. v aplikaci.
 
+   .. py:method:: sestav_snapshot_katastru()
+
+      Sestaví text ``dalsi_katastry_snapshot`` z názvů katastrů.
+
+      Formát je na jednom místě, aby ho mohla použít i hromadná přegenerace
+      v anonymizaci databáze, která názvy načítá pro celou dávku najednou.
+
+      :param nazvy: Názvy dalších katastrů seřazené podle názvu.
+      :return: Názvy oddělené ``"; "``, nebo ``None`` pro prázdný seznam.
+
    .. py:method:: redis_snapshot_id()
 
       Vrací identifikátor snímku v Redis.

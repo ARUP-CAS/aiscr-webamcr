@@ -1,4 +1,4 @@
-FROM fcrepo/fcrepo:6.5.1-tomcat9
+FROM fcrepo/fcrepo:7.0.0-tomcat10
 
 RUN apt-get update
 RUN apt-get install -y python3-pip

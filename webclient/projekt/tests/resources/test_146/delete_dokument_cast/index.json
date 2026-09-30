@@ -1,7 +1,7 @@
 {
   "items": [
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/model/deleted/member/X-C-TX-000000009",
+      "fedora_id": "info:test-base/AMCR-selenium-test/model/deleted/member/X-C-DD-000000009",
       "mime_type": null,
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#Container",
@@ -27,7 +27,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-TX-000000009",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-DD-000000009",
       "mime_type": null,
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#ArchivalGroup",
@@ -42,7 +42,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-TX-000000009/metadata",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-DD-000000009/metadata",
       "mime_type": "application/xml",
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#Binary",
