@@ -229,3 +229,17 @@ Funkce
 
    :param modely: Iterovatelný seznam ``"app_label.Model"``, které se smí sdílet.
    :return: Context manager.
+
+.. py:function:: stable_related_records(related_manager)
+
+   Vrátí záznamy relace v deterministickém pořadí doplněním primárního klíče jako posledního kritéria.
+
+   Výchozí řazení modelů není jednoznačné (např. ``Soubor.nazev`` nebo ``NalezObjekt.druh__razeni``
+   se mohou opakovat) a PostgreSQL pořadí řádků se shodným klíčem negarantuje. Bez tiebreakeru
+   pak tentýž záznam generuje XML s přeházenými elementy a v OCFL vzniká zbytečná verze.
+
+   Volání ``order_by()`` obchází prefetch cache: pokud by se do cesty generátoru přidal
+   ``prefetch_related``, přednačtená data se nepoužijí a relace se dotáže znovu.
+
+   :param related_manager: Manažer nebo QuerySet relace, ze které se načítají navázané záznamy.
+   :return: QuerySet se stabilním řazením; při nemožnosti doplnit řazení původní QuerySet.
