@@ -88,7 +88,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-DEV
-    command: celery -A webclient worker -l INFO -n worker1@amcr
+    # Bez --concurrency by prefork pool nastartoval tolik child procesů, kolik má stroj jader;
+    # pro lokální vývoj stačí 2. --max-tasks-per-child uvolňuje paměť nastrádanou v C rozšířeních.
+    command: celery -A webclient worker -l INFO -n worker1@amcr --concurrency=2 --max-tasks-per-child=50
     secrets:
       - db_conf
       - redis_pass
