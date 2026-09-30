@@ -48,6 +48,7 @@ from core.message_constants import (
 )
 from core.models import AntivirusCheckResult, Soubor
 from core.repository_connector import (
+    FedoraBinaryFileAlreadyDeletedError,
     FedoraError,
     FedoraRepositoryConnector,
     FedoraTransaction,
@@ -204,21 +205,31 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
     soubor.active_transaction = fedora_transaction
     soubor_pk = soubor.pk
     transaction_error = False
-    with transaction.atomic():
-        try:
+    # try je vně atomic bloku, aby výjimka z Fedory odrolovala i smazání v DB (savepoint);
+    # jinak by DB smazání zůstalo zapsané, zatímco Fedora transakce je už odvolaná.
+    try:
+        with transaction.atomic():
             soubor.delete()
             connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt, fedora_transaction)
             logger.debug("core.views.delete_file_DZ.deleted.delete_binary_file_completely", extra={"pk": soubor_pk})
             connector.delete_binary_file_completely(soubor)
             fedora_transaction.mark_transaction_as_closed()
             return JsonResponse({"success": True})
-        except FedoraUpdatedByAnotherTransactionError as err:
-            logger.debug(
-                "core.views.delete_file_DZ.another_transaction",
-                extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
-            )
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
-            transaction_error = True
+    except FedoraUpdatedByAnotherTransactionError as err:
+        logger.debug(
+            "core.views.delete_file_DZ.another_transaction",
+            extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
+        )
+        messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
+        transaction_error = True
+    except FedoraBinaryFileAlreadyDeletedError as err:
+        # Soubor mezitím smazal souběžný požadavek z jiného okna (issue #4174).
+        logger.info(
+            "core.views.delete_file_DZ.already_deleted",
+            extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
+        )
+        messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+        transaction_error = True
     if transaction_error is False and Soubor.objects.filter(pk=soubor_pk).exists():
         # Není jisté, zda je 404 jediná správná varianta.
         logger.debug("core.views.delete_file_DZ.not_deleted", extra={"soubor": soubor})
@@ -287,24 +298,33 @@ def delete_file(request, typ_vazby, ident_cely, pk):
         soubor.active_transaction = fedora_transaction
         soubor_pk = soubor.pk
         transaction_error = False
-        with transaction.atomic():
-            try:
+        # try je vně atomic bloku, aby výjimka z Fedory odrolovala i smazání v DB (savepoint).
+        try:
+            with transaction.atomic():
                 soubor.delete()
                 connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt, fedora_transaction)
                 logger.debug("core.views.delete_file.deleted.delete_binary_file", extra={"pk": soubor_pk})
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
                 connector.delete_binary_file(soubor)
-
-            except FedoraUpdatedByAnotherTransactionError as err:
-                logger.debug(
-                    "core.views.delete_file.another_transaction",
-                    extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
-                )
-                messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
-                transaction_error = True
-                if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                    fedora_transaction.rollback_transaction()
-                return JsonResponse({"success": False}, status=400)
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+        except FedoraUpdatedByAnotherTransactionError as err:
+            logger.debug(
+                "core.views.delete_file.another_transaction",
+                extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
+            )
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return JsonResponse({"success": False}, status=400)
+        except FedoraBinaryFileAlreadyDeletedError as err:
+            # Soubor mezitím smazal souběžný požadavek z jiného okna (issue #4174).
+            logger.info(
+                "core.views.delete_file.already_deleted",
+                extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
+            )
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return JsonResponse({"success": False}, status=400)
         if transaction_error is False and Soubor.objects.filter(pk=soubor_pk).exists():
             # Není jisté, zda je 404 jediná správná varianta.
             logger.debug("core.views.delete_file.not_deleted", extra={"soubor": soubor})
