@@ -176,10 +176,12 @@ Kept only in the record, with no file of their own:
 - **page classification** (``page_categories``, ``pages[].category*``). Its results are already
   persisted in the record, and the Digital Archive reads them from there
   (`aiscr-digiarchiv-2#710 <https://github.com/ARUP-CAS/aiscr-digiarchiv-2/issues/710>`__);
-- **keywords**, in two kinds labelled by kind: *controlled* keywords from the vocabulary step of
-  llm-enrich (its ``enrichment`` block, with concept identifiers), and *uncontrolled* statistical
-  keywords from nlp-enrich, with method and score (a ``keywords`` block, requested from the tool
-  maintainers). The default method is KeyBERT; YAKE and the legacy KER method stay selectable. Consumers decide how to use them: free keywords, schema.org ``keywords``, an
+- **keywords**, in two kinds, both from keyword-extractor: *controlled* keywords from the
+  vocabularies (the ``enrichment`` block, with concept identifiers), and *uncontrolled*
+  statistical keywords with method and score (a ``keywords`` block, requested from the tool
+  maintainers). The two kinds are never merged: every keyword states the method that produced
+  it. The default statistical method is KeyBERT; YAKE and the legacy KER method stay selectable.
+  Consumers decide how to use them: free keywords, schema.org ``keywords``, an
   evaluation baseline, candidates for new vocabulary terms;
 - **line quality** (``lines[]`` with categories and scores, and the page summaries in
   ``pages[]``). No consumer reads a per-line table: the Digital Archive indexes page and file
