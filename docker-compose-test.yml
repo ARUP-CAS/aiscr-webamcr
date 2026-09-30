@@ -57,7 +57,7 @@ services:
       start_period: 30s
 
   sidecar:
-    image: eeacms/rsync:3.0
+    image: eeacms/rsync:3.1
     environment:
       - CRON_TASK_1=*/1 * * * * rsync -a /vol/web/locale/* /backup/
     volumes:
