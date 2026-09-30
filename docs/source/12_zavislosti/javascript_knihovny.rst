@@ -44,7 +44,7 @@ Knihovny instalované pomocí Node.js
      - https://jquery.com
    * - jquery-migrate
      - 4.0.2
-     - MIT
+     - 
      - https://github.com/jquery/jquery-migrate
    * - leaflet
      - 1.9.4
