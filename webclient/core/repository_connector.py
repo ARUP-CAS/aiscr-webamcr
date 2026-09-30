@@ -135,6 +135,17 @@ class FedoraUpdatedByAnotherTransactionError(FedoraError):
     pass
 
 
+class FedoraBinaryFileAlreadyDeletedError(FedoraError):
+    """
+    Mazaný binární soubor ve Fedoře už neexistuje, typicky proto, že ho mezitím smazal souběžný požadavek.
+
+    Vyvolá ji ``_send_request`` u požadavků na smazání binárního souboru, pokud Fedora odpoví
+    chybou a následný ověřovací dotaz mimo transakci potvrdí, že zdroj vrací 404 nebo 410.
+    """
+
+    pass
+
+
 class IdentChangeFedoraError(Exception):
     """Implementuje komponentu ``IdentChangeFedoraError`` v rámci aplikace."""
 
@@ -289,6 +300,15 @@ _ADMIN_REQUEST_TYPES = frozenset(
         FedoraRequestType.DELETE_LINK_TOMBSTONE,
         FedoraRequestType.CONNECT_DELETED_RECORD_3,
         FedoraRequestType.CONNECT_DELETED_RECORD_4,
+    }
+)
+
+#: Typy požadavků na smazání binárního souboru, u kterých se chybová odpověď ověřuje,
+#: zda soubor mezitím nesmazal souběžný požadavek (issue #4174).
+_BINARY_FILE_DELETE_REQUEST_TYPES = frozenset(
+    {
+        FedoraRequestType.DELETE_BINARY_FILE,
+        FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY,
     }
 )
 
@@ -656,6 +676,36 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         return _get_fedora_session(admin=request_type in _ADMIN_REQUEST_TYPES)
 
+    def _is_resource_gone(self, url: str) -> bool:
+        """
+        Ověří mimo transakci, zda zdroj na ``url`` ve Fedoře už neexistuje.
+
+        Chybová odpověď na smazání binárního souboru sama nerozliší, zda soubor mezitím smazal
+        souběžný požadavek, nebo jde o skutečnou chybu (autentizace, konfigurace, výpadek); v hlášeném
+        případě navíc přišla 403 z Tomcatu, ne odpověď Fedory. Proto se stav ověří samostatným GET
+        bez hlavičky ``Atomic-ID`` (transakce už je v tu chvíli odvolaná).
+
+        :param url: URL mazaného binárního souboru.
+        :return: ``True``, pokud Fedora na zdroj vrátí 404 nebo 410; jinak ``False``, včetně
+            selhání samotného dotazu.
+        """
+        request_type = FedoraRequestType.GET_BINARY_FILE_CONTAINER
+        try:
+            response = self._get_session(request_type).get(
+                url, auth=self._get_auth(request_type), verify=False, timeout=10
+            )
+        except requests.exceptions.RequestException as exc:
+            logger.warning(
+                "core_repository_connector._is_resource_gone.request_failed",
+                extra={"url": url, "transaction": self.transaction_uid, "error": exc},
+            )
+            return False
+        logger.debug(
+            "core_repository_connector._is_resource_gone.response",
+            extra={"url": url, "status_code": response.status_code, "transaction": self.transaction_uid},
+        )
+        return response.status_code in (404, 410)
+
     def _send_request(
         self, url: str, request_type: FedoraRequestType, *, headers=None, data=None
     ) -> requests.Response | None:
@@ -669,7 +719,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         :return: Textová reprezentace UID transakce.
 
             :raises FedoraUpdatedByAnotherTransactionError: Vyvolá se při splnění podmínky ``response.status_code == 409``.
-            :raises FedoraError: Vyvolá se při splnění podmínky ``response.status_code == 409``.
+            :raises FedoraBinaryFileAlreadyDeletedError: Vyvolá se, pokud smazání binárního souboru skončí
+                chybou a ``_is_resource_gone`` potvrdí, že soubor už ve Fedoře není.
+            :raises FedoraError: Vyvolá se při jiné chybové odpovědi Fedory.
         """
         extra = {"info": url, "request_type": request_type, "transaction": self.transaction_uid}
         if isinstance(data, str) and len(data) < 1000:
@@ -820,6 +872,13 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                         "core_repository_connector._send_request.response.another_transaction_error", extra=extra
                     )
                     raise FedoraUpdatedByAnotherTransactionError(
+                        url, response.text, response.status_code, response.headers, self.transaction
+                    )
+                elif request_type in _BINARY_FILE_DELETE_REQUEST_TYPES and self._is_resource_gone(url):
+                    logger.info(
+                        "core_repository_connector._send_request.response.binary_file_already_deleted", extra=extra
+                    )
+                    raise FedoraBinaryFileAlreadyDeletedError(
                         url, response.text, response.status_code, response.headers, self.transaction
                     )
                 else:
