@@ -469,21 +469,36 @@ def _mapuj_radu(souradnice, funkce, uzavrena_kopie):
     """
     Použije transformační funkci na řadu souřadnic.
 
-    :param souradnice: Posloupnost dvojic ``(x, y)``.
+    Funkce mění jen rovinné souřadnice. Další složky vrcholu – typicky ``z``
+    u trojrozměrné geometrie – se přenesou beze změny. Trigger sice dnes 3D
+    geometrii PIANu odmítá, ve starších datech se ale vyskytnout může, a jediná
+    taková linie nebo plocha by jinak shodila celou sekci ``geometrie``.
+
+    :param souradnice: Posloupnost vrcholů ``(x, y)`` nebo ``(x, y, z)``.
     :param funkce: Funkce ``(x, y)`` vracející novou dvojici souřadnic.
     :param uzavrena_kopie: Pokud ``True`` a řada je uzavřená, poslední vrchol
         převezme hodnotu prvního.
-    :return: Seznam nových dvojic souřadnic.
+    :return: Seznam nových vrcholů se stejným počtem složek jako vstup.
     """
     body = list(souradnice)
     je_uzavrena = len(body) > 2 and body[0] == body[-1]
 
+    def mapuj(vrchol):
+        """
+        Převede jeden vrchol a zachová jeho další složky.
+
+        :param vrchol: N-tice ``(x, y, *dalsi)``.
+        :return: N-tice s převedenými ``x``, ``y`` a nezměněným zbytkem.
+        """
+        x, y, *dalsi = vrchol
+        return (*funkce(x, y), *dalsi)
+
     if uzavrena_kopie and je_uzavrena:
-        nove = [funkce(x, y) for x, y in body[:-1]]
+        nove = [mapuj(vrchol) for vrchol in body[:-1]]
         nove.append(nove[0])
         return nove
 
-    return [funkce(x, y) for x, y in body]
+    return [mapuj(vrchol) for vrchol in body]
 
 
 class GeneratorPoloh:

@@ -111,32 +111,6 @@ class TestZastupneHodnoty(SimpleTestCase):
         validate_phone_number(anonymizace.ANONYM_TELEFON)
 
 
-class TestVyjimkyUzivatelu(SimpleTestCase):
-    """Predikát vyloučených účtů musí odpovídat filtru použitému v příkazu."""
-
-    def test_umele_ucty_jsou_vyloucene(self):
-        """Účty s ``Anonym`` v příjmení se podle zadání nemění."""
-        self.assertTrue(anonymizace.je_vyjimka_prijmeni("Anonym"))
-        self.assertTrue(anonymizace.je_vyjimka_prijmeni("anonym"))
-        self.assertTrue(anonymizace.je_vyjimka_prijmeni("ANONYM"))
-
-    def test_bezne_prijmeni_neni_vylouceno(self):
-        """Skutečné příjmení ani prázdná hodnota výjimku nespouští."""
-        self.assertFalse(anonymizace.je_vyjimka_prijmeni("Novák"))
-        self.assertFalse(anonymizace.je_vyjimka_prijmeni(""))
-        self.assertFalse(anonymizace.je_vyjimka_prijmeni(None))
-
-    def test_zastupne_prijmeni_nespousti_vyjimku(self):
-        """
-        Klíčové pro opakovaný běh: anonymizovaný účet nesmí spadnout do výjimky.
-
-        Jinak by druhý běh přeskočil účty, u kterých ještě nebyl anonymizovaný
-        e-mail – přesně ten stav, ve kterém testovací server je.
-        """
-        for pk in (1, 42, 4625):
-            self.assertFalse(anonymizace.je_vyjimka_prijmeni(anonymizace.zastupne_prijmeni(pk)))
-
-
 class TestPrefixPid(SimpleTestCase):
     """Přepis DOI a IGSN na prefix cílové instance."""
 
@@ -567,6 +541,80 @@ class TestZapisSVypnutymTriggerem(SimpleTestCase):
         from core.management.commands.anonymizace_dat import Command
 
         self.assertFalse(Command._zdroj_wgs_je_vadny(SimpleNamespace(geom=None)))
+
+
+class TestTrojrozmernaGeometrie(SimpleTestCase):
+    """Linie a plocha se souřadnicí ``z`` nesmí shodit posun ani deformaci."""
+
+    LINIE_3D = "SRID=5514;LINESTRING Z(-700000 -1000000 10, -700100 -1000100 11, -700200 -1000050 12)"
+    PLOCHA_3D = (
+        "SRID=5514;POLYGON Z((-700000 -1000000 5, -700100 -1000000 6, "
+        "-700100 -1000100 7, -700000 -1000100 8, -700000 -1000000 5))"
+    )
+
+    @staticmethod
+    def _vysky(geom):
+        """
+        Vrátí souřadnice ``z`` vrcholů linie nebo vnějšího prstence.
+
+        :param geom: Geometrie se souřadnicí ``z``.
+        :return: Seznam výšek.
+        """
+        souradnice = geom.coords if geom.geom_type == "LineString" else geom.coords[0]
+        return [vrchol[2] for vrchol in souradnice]
+
+    def test_posun_zachova_vysky(self):
+        """Posun mění jen polohu, výšky vrcholů zůstanou."""
+        for wkt in (self.LINIE_3D, self.PLOCHA_3D):
+            with self.subTest(wkt=wkt[:30]):
+                geom = GEOSGeometry(wkt)
+                posunuta = posun_geometrii(geom, 100.0, 200.0)
+                self.assertTrue(posunuta.hasz)
+                self.assertEqual(self._vysky(posunuta), self._vysky(geom))
+
+    def test_deformace_zachova_vysky(self):
+        """Deformace posouvá vrcholy jen v rovině."""
+        for wkt in (self.LINIE_3D, self.PLOCHA_3D):
+            with self.subTest(wkt=wkt[:30]):
+                geom = GEOSGeometry(wkt)
+                deformovana, zmeneno = deformuj_geometrii(geom, 10.0, random.Random(1))
+                self.assertTrue(zmeneno)
+                self.assertEqual(self._vysky(deformovana), self._vysky(geom))
+
+
+class TestDuvodyBodovychModelu(SimpleTestCase):
+    """Přeskočený projekt, nález nebo dokument musí mít v souhrnu důvod i identifikátor."""
+
+    def _prikaz(self):
+        """
+        Připraví příkaz bez databáze.
+
+        :return: Instance příkazu.
+        """
+        from core.management.commands.anonymizace_dat import Command
+
+        prikaz = Command(stdout=io.StringIO(), stderr=io.StringIO())
+        prikaz.statistika["geometrie"] = {"zpracovano": 0, "zmeneno": 0, "preskoceno": 0, "chyb": 0}
+        return prikaz
+
+    def test_zaznam_bez_okresu_se_zapise_s_identem(self):
+        """Když nejde určit okres, zapíše se důvod i ``ident_cely``."""
+        from types import SimpleNamespace
+
+        prikaz = self._prikaz()
+        zaznam = SimpleNamespace(pk=7, ident_cely="C-202699007", geom_sjtsk=GEOSGeometry(BOD))
+
+        self.assertIsNone(prikaz._nova_poloha_zaznamu(zaznam, None, {"min_posun_m": 100.0}))
+        self.assertEqual(prikaz.identy_preskocenych["bod_bez_okresu"], ["C-202699007"])
+
+    def test_dokument_bez_vlastniho_identu_bere_ident_dokumentu(self):
+        """``DokumentExtraData`` nemá ``ident_cely``, použije se identifikátor dokumentu."""
+        from types import SimpleNamespace
+
+        from core.management.commands.anonymizace_dat import Command
+
+        extra = SimpleNamespace(pk=3, dokument=SimpleNamespace(ident_cely="C-TX-202699001"))
+        self.assertEqual(Command._ident_zaznamu(extra), "C-TX-202699001")
 
 
 class TestMinimalniPosun(SimpleTestCase):
@@ -1076,6 +1124,84 @@ class TestSekceNadDatabazi(TestCase):
         _spust_sekci("uzivatele", omezeni)
         self.assertEqual([stav(uzivatel) for uzivatel in vsichni], po_prvnim)
 
+    def test_projekt_bez_snapshotu_pristupnosti_se_bere_jako_chraneny(self):
+        """
+        Projekt s ``pristupnost_snapshot = NULL`` se anonymizuje jako chráněný.
+
+        Neznámá přístupnost může znamenat chráněný projekt; nechat ho na skutečné
+        poloze je horší než ho přesunout zbytečně.
+        """
+        from core.management.commands.anonymizace_dat import Command
+        from projekt.models import Projekt
+
+        projekt = Projekt.objects.bulk_create(
+            [
+                Projekt(
+                    typ_projektu=self.d.projekt.typ_projektu,
+                    ident_cely="C-202699003",
+                    hlavni_katastr=self.d.projekt.hlavni_katastr,
+                    pristupnost_snapshot=None,
+                )
+            ]
+        )[0]
+        self.assertTrue(Projekt.objects.filter(Command._chraneny_projekt(), pk=projekt.pk).exists())
+
+    def test_ucet_s_anonymizovanym_jmenem_se_dokonci(self):
+        """
+        Účet, který má zástupné jméno, ale skutečný e-mail, se anonymizuje celý.
+
+        To je stav testovacího serveru po dřívější ruční anonymizaci. Zástupné
+        příjmení ``Příjmení_{pk}`` proto nesmí spadnout do výjimky pro umělé
+        účty (filtr ``last_name__icontains``), jinak by e-mail zůstal skutečný.
+        """
+        from uzivatel.models import User
+
+        bezny = self.d.bezny
+        User.objects.filter(pk=bezny.pk).update(
+            first_name=anonymizace.zastupne_jmeno(bezny.pk), last_name=anonymizace.zastupne_prijmeni(bezny.pk)
+        )
+        _spust_sekci("uzivatele", {User: [bezny.pk]})
+        bezny.refresh_from_db()
+        self.assertEqual(bezny.email, anonymizace.zastupny_email_uzivatele(bezny.pk))
+
+    def test_neprazdna_poznamka_oznamovatele_se_nahradi(self):
+        """
+        Neprázdná poznámka dostane zástupnou hodnotu podle sdílené předpony.
+
+        Větev s prázdnou poznámkou pokrývá :meth:`test_oznamovatele_se_anonymizuji`;
+        tady se hlídá, že SQL výraz příkazu a funkce ``zastupny_udaj_oznamovatele``
+        dávají totéž.
+        """
+        from oznameni.models import Oznamovatel
+        from projekt.models import Projekt
+
+        projekt = Projekt.objects.bulk_create(
+            [
+                Projekt(
+                    typ_projektu=self.d.projekt.typ_projektu,
+                    ident_cely="C-202699002",
+                    hlavni_katastr=self.d.projekt.hlavni_katastr,
+                    pristupnost_snapshot=self.d.chranena,
+                )
+            ]
+        )[0]
+        ozn = Oznamovatel.objects.bulk_create(
+            [
+                Oznamovatel(
+                    projekt=projekt,
+                    email="petr@firma.cz",
+                    adresa="Vedlejší 2",
+                    odpovedna_osoba="Petr Svoboda",
+                    oznamovatel="Stavby a.s.",
+                    telefon="+420 777 333 444",
+                    poznamka="Volat po 16. hodině",
+                )
+            ]
+        )[0]
+        _spust_sekci("oznamovatele", {Oznamovatel: [ozn.pk]})
+        ozn.refresh_from_db()
+        self.assertEqual(ozn.poznamka, anonymizace.zastupny_udaj_oznamovatele("poznamka", ozn.pk))
+
     def test_oznamovatele_se_anonymizuji(self):
         """Kontaktní údaje oznamovatele se nahradí, telefon projde validátorem."""
         from core.validators import validate_phone_number
@@ -1085,10 +1211,11 @@ class TestSekceNadDatabazi(TestCase):
         _spust_sekci("oznamovatele", {Oznamovatel: [ozn.pk]})
 
         ozn.refresh_from_db()
-        self.assertEqual(ozn.oznamovatel, anonymizace.zastupny_text("oznamovatel", ozn.pk))
+        self.assertEqual(ozn.oznamovatel, anonymizace.zastupny_udaj_oznamovatele("oznamovatel", ozn.pk))
         # ``osoba_`` místo ``odpovedna_osoba_`` je převzato z dřívější ruční anonymizace.
         self.assertEqual(ozn.odpovedna_osoba, f"osoba_{ozn.pk}")
-        self.assertEqual(ozn.adresa, anonymizace.zastupny_text("adresa", ozn.pk))
+        self.assertEqual(ozn.odpovedna_osoba, anonymizace.zastupny_udaj_oznamovatele("odpovedna_osoba", ozn.pk))
+        self.assertEqual(ozn.adresa, anonymizace.zastupny_udaj_oznamovatele("adresa", ozn.pk))
         self.assertEqual(ozn.email, anonymizace.zastupny_email_oznamovatele(ozn.pk))
         self.assertEqual(ozn.telefon, anonymizace.ANONYM_TELEFON)
         validate_phone_number(ozn.telefon)

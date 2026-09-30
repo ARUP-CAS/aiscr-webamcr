@@ -41,6 +41,27 @@ NEPOUZITELNE_HESLO = "!"
 #: se takové účty neanonymizují.
 VYJIMKA_PRIJMENI = "Anonym"
 
+#: Předpony zástupných hodnot, na které se skládá výsledek ``{předpona}{pk}``.
+#:
+#: Jsou tu jediný domov formátu: používají je funkce níže i SQL výrazy příkazu
+#: (``Concat(Value(předpona), pk)``). Kdyby příkaz psal předponu vlastním
+#: literálem, mohla by se tiše rozejít s funkcemi, podle kterých testy ověřují
+#: výsledek.
+PREDPONA_JMENA = "Jméno_"
+PREDPONA_PRIJMENI = "Příjmení_"
+PREDPONA_EMAILU_UZIVATELE = "uzivatel_"
+PREDPONA_EMAILU_NOTIFIKACE = "notifikace_"
+
+#: Předpony zástupných údajů oznamovatele podle pole modelu. Odpovědná osoba
+#: má ``osoba_`` místo ``odpovedna_osoba_`` – tvar je převzatý z dřívější ruční
+#: anonymizace, aby se hodnoty na testovacím serveru nezměnily.
+PREDPONY_OZNAMOVATELE = {
+    "oznamovatel": "oznamovatel_",
+    "odpovedna_osoba": "osoba_",
+    "adresa": "adresa_",
+    "poznamka": "poznamka_",
+}
+
 #: Chráněná textová pole podle typů ``*-chranene_udajeType`` v ``amcr.xsd``.
 #: Klíč je ``app_label.ModelName``, hodnota dvojice (název elementu v XSD,
 #: název pole modelu) – obojí proto, že se místy liší a test parity s XSD
@@ -116,6 +137,16 @@ OZNAMOVATEL_POLE = (
 )
 
 
+def predpona_textu(nazev_pole):
+    """
+    Vrátí předponu zástupné hodnoty chráněného textového pole.
+
+    :param nazev_pole: Název pole modelu.
+    :return: Řetězec ``{nazev_pole}_``.
+    """
+    return f"{nazev_pole}_"
+
+
 def zastupny_text(nazev_pole, pk):
     """
     Sestaví zástupnou hodnotu textového pole ve tvaru ``{nazev_pole}_{pk}``.
@@ -127,7 +158,7 @@ def zastupny_text(nazev_pole, pk):
     :param pk: Primární klíč záznamu.
     :return: Zástupná hodnota jako řetězec.
     """
-    return f"{nazev_pole}_{pk}"
+    return f"{predpona_textu(nazev_pole)}{pk}"
 
 
 def zastupne_jmeno(pk):
@@ -137,7 +168,7 @@ def zastupne_jmeno(pk):
     :param pk: Primární klíč uživatele.
     :return: Řetězec ``Jméno_{pk}``.
     """
-    return f"Jméno_{pk}"
+    return f"{PREDPONA_JMENA}{pk}"
 
 
 def zastupne_prijmeni(pk):
@@ -145,12 +176,13 @@ def zastupne_prijmeni(pk):
     Vrací zástupné příjmení uživatele.
 
     Vzor záměrně neobsahuje řetězec :data:`VYJIMKA_PRIJMENI`, aby anonymizovaný
-    účet nespadl do výjimky pro umělé účty a druhý běh ho zpracoval znovu.
+    účet nespadl do výjimky pro umělé účty (filtr ``last_name__icontains``
+    v příkazu) a druhý běh ho zpracoval znovu.
 
     :param pk: Primární klíč uživatele.
     :return: Řetězec ``Příjmení_{pk}``.
     """
-    return f"Příjmení_{pk}"
+    return f"{PREDPONA_PRIJMENI}{pk}"
 
 
 def zastupny_email_uzivatele(pk):
@@ -163,7 +195,7 @@ def zastupny_email_uzivatele(pk):
     :param pk: Primární klíč uživatele.
     :return: Řetězec ``uzivatel_{pk}@example.cz``.
     """
-    return f"uzivatel_{pk}@{ANONYM_DOMENA}"
+    return f"{PREDPONA_EMAILU_UZIVATELE}{pk}@{ANONYM_DOMENA}"
 
 
 def zastupny_email_oznamovatele(pk):
@@ -179,6 +211,17 @@ def zastupny_email_oznamovatele(pk):
     return f"{pk}@{ANONYM_DOMENA}"
 
 
+def zastupny_udaj_oznamovatele(nazev_pole, pk):
+    """
+    Vrací zástupnou hodnotu textového údaje oznamovatele.
+
+    :param nazev_pole: Název pole modelu ``Oznamovatel`` z :data:`PREDPONY_OZNAMOVATELE`.
+    :param pk: Primární klíč oznamovatele, tedy ``projekt_id``.
+    :return: Řetězec ``{předpona}{pk}``.
+    """
+    return f"{PREDPONY_OZNAMOVATELE[nazev_pole]}{pk}"
+
+
 def zastupny_email_notifikace(pk):
     """
     Vrací zástupnou adresu příjemce v logu notifikací.
@@ -186,22 +229,7 @@ def zastupny_email_notifikace(pk):
     :param pk: Primární klíč záznamu ``NotificationsLog``.
     :return: Řetězec ``notifikace_{pk}@example.cz``.
     """
-    return f"notifikace_{pk}@{ANONYM_DOMENA}"
-
-
-def je_vyjimka_prijmeni(prijmeni):
-    """
-    Určí, zda příjmení označuje umělý účet vyloučený z anonymizace.
-
-    Porovnává se bez ohledu na velikost písmen, stejně jako to dělá databázový
-    filtr ``last_name__icontains`` použitý v příkazu.
-
-    :param prijmeni: Hodnota ``User.last_name``; ``None`` se bere jako neshoda.
-    :return: ``True``, pokud příjmení obsahuje :data:`VYJIMKA_PRIJMENI`.
-    """
-    if not prijmeni:
-        return False
-    return VYJIMKA_PRIJMENI.casefold() in prijmeni.casefold()
+    return f"{PREDPONA_EMAILU_NOTIFIKACE}{pk}@{ANONYM_DOMENA}"
 
 
 def zastupny_pid(prefix, ident_cely):

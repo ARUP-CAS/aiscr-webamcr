@@ -82,7 +82,9 @@ class Command(BaseCommand):
     Parametry:
     - --potvrzuji-testovaci-server: Povinné potvrzení, že běh míří na testovací server.
     - --ocekavana-databaze: Název databáze, se kterým se musí shodovat cílová databáze.
-    - --dry-run: Pouze vypíše počty dotčených záznamů, nic neuloží.
+    - --dry-run: Pouze vypíše počty dotčených záznamů, nic neuloží. U sekce
+      ``geometrie`` jsou to meze (``nejvýš``/``nejméně``), protože co se opravdu
+      přesune, závisí na náhodně vybraných polohách.
     - --jen: Čárkou oddělený seznam sekcí, které se mají provést.
     - --vynechat: Čárkou oddělený seznam sekcí, které se mají přeskočit.
     - --batch-size: Velikost dávky při zápisu geometrií a identifikátorů.
@@ -185,7 +187,7 @@ class Command(BaseCommand):
             "--dry-run",
             action="store_true",
             default=False,
-            help="Pouze vypíše počty dotčených záznamů, nic neuloží.",
+            help="Pouze vypíše počty dotčených záznamů, nic neuloží. U geometrie jde o meze, ne přesné počty.",
         )
         parser.add_argument(
             "--jen",
@@ -420,6 +422,10 @@ class Command(BaseCommand):
             ),
             "bez_deformace": "tvar se nepodařilo zdeformovat, PIAN je pouze posunutý",
             "bez_nahodneho_katastru": "okres nemá jiný katastr, hlavní katastr záznamu zůstal původní",
+            "bod_bez_okresu": "u projektu, nálezu nebo dokumentu nejde určit okres, poloha zůstala původní",
+            "bod_bez_nove_polohy": "u projektu, nálezu nebo dokumentu se nenašla nová poloha v okresu",
+            "bod_bez_katastru": "nová poloha projektu nebo nálezu neleží v žádném katastru, poloha zůstala původní",
+            "transformace_selhala": "převod nové polohy do WGS-84 selhal, poloha zůstala původní",
         }
         if not self.duvody_preskoceni:
             return
@@ -470,7 +476,13 @@ class Command(BaseCommand):
         self._zapocti("uzivatele", zpracovano=pocet)
         self.stdout.write(f"Uživatelů k anonymizaci: {pocet} z {vsichni.count()}")
 
-        kolize = vsichni.filter(email__regex=r"^uzivatel_[0-9]+@" + anonymizace.ANONYM_DOMENA.replace(".", r"\.") + "$")
+        kolize = vsichni.filter(
+            email__regex="^"
+            + anonymizace.PREDPONA_EMAILU_UZIVATELE
+            + r"[0-9]+@"
+            + anonymizace.ANONYM_DOMENA.replace(".", r"\.")
+            + "$"
+        )
         kolize = kolize.exclude(pk__in=k_anonymizaci.values("pk"))
         if kolize.exists():
             identy = ", ".join(kolize.values_list("ident_cely", flat=True)[:10])
@@ -481,10 +493,10 @@ class Command(BaseCommand):
 
         pks = list(k_anonymizaci.values_list("pk", flat=True))
         zmeneno = User.objects.filter(pk__in=pks).update(
-            first_name=Concat(Value("Jméno_"), Cast("id", TextField()), output_field=TextField()),
-            last_name=Concat(Value("Příjmení_"), Cast("id", TextField()), output_field=TextField()),
+            first_name=Concat(Value(anonymizace.PREDPONA_JMENA), Cast("id", TextField()), output_field=TextField()),
+            last_name=Concat(Value(anonymizace.PREDPONA_PRIJMENI), Cast("id", TextField()), output_field=TextField()),
             email=Concat(
-                Value("uzivatel_"),
+                Value(anonymizace.PREDPONA_EMAILU_UZIVATELE),
                 Cast("id", TextField()),
                 Value(f"@{anonymizace.ANONYM_DOMENA}"),
                 output_field=TextField(),
@@ -517,14 +529,28 @@ class Command(BaseCommand):
             return
 
         zmeneno = k_anonymizaci.update(
-            oznamovatel=Concat(Value("oznamovatel_"), Cast("pk", TextField()), output_field=TextField()),
-            odpovedna_osoba=Concat(Value("osoba_"), Cast("pk", TextField()), output_field=TextField()),
-            adresa=Concat(Value("adresa_"), Cast("pk", TextField()), output_field=TextField()),
+            oznamovatel=Concat(
+                Value(anonymizace.PREDPONY_OZNAMOVATELE["oznamovatel"]),
+                Cast("pk", TextField()),
+                output_field=TextField(),
+            ),
+            odpovedna_osoba=Concat(
+                Value(anonymizace.PREDPONY_OZNAMOVATELE["odpovedna_osoba"]),
+                Cast("pk", TextField()),
+                output_field=TextField(),
+            ),
+            adresa=Concat(
+                Value(anonymizace.PREDPONY_OZNAMOVATELE["adresa"]), Cast("pk", TextField()), output_field=TextField()
+            ),
             telefon=Value(anonymizace.ANONYM_TELEFON),
             email=Concat(Cast("pk", TextField()), Value(f"@{anonymizace.ANONYM_DOMENA}"), output_field=TextField()),
             poznamka=Case(
                 When(Q(poznamka__isnull=True) | Q(poznamka=""), then=F("poznamka")),
-                default=Concat(Value("poznamka_"), Cast("pk", TextField()), output_field=TextField()),
+                default=Concat(
+                    Value(anonymizace.PREDPONY_OZNAMOVATELE["poznamka"]),
+                    Cast("pk", TextField()),
+                    output_field=TextField(),
+                ),
                 output_field=TextField(),
             ),
         )
@@ -551,7 +577,7 @@ class Command(BaseCommand):
         zmeneno = prihlaseni.update(ip_adresa=anonymizace.ANONYM_IP)
         zmeneno += notifikace.update(
             receiver_address=Concat(
-                Value("notifikace_"),
+                Value(anonymizace.PREDPONA_EMAILU_NOTIFIKACE),
                 Cast("id", TextField()),
                 Value(f"@{anonymizace.ANONYM_DOMENA}"),
                 output_field=TextField(),
@@ -592,7 +618,9 @@ class Command(BaseCommand):
             for _element, nazev_pole in pole:
                 zmeny[nazev_pole] = Case(
                     When(Q(**{f"{nazev_pole}__isnull": True}) | Q(**{nazev_pole: ""}), then=F(nazev_pole)),
-                    default=Concat(Value(f"{nazev_pole}_"), Cast("pk", TextField()), output_field=TextField()),
+                    default=Concat(
+                        Value(anonymizace.predpona_textu(nazev_pole)), Cast("pk", TextField()), output_field=TextField()
+                    ),
                     output_field=TextField(),
                 )
             zmeneno = k_anonymizaci.update(**zmeny)
@@ -1020,6 +1048,7 @@ class Command(BaseCommand):
         :return: Dvojice ``(dx, dy)`` s vektorem posunu, nebo ``None`` při neúspěchu.
         """
         from core.utils import get_cadastre_from_point
+        from django.contrib.gis.geos import Point
         from heslar.models import RuianKatastr
         from pian.models import get_ZM_from_point
 
@@ -1032,20 +1061,22 @@ class Command(BaseCommand):
         self.generator_nahody.shuffle(kandidati)
         neplatnych = 0
 
-        for kandidat_id in kandidati:
-            katastr = RuianKatastr.objects.filter(pk=kandidat_id).first()
-            if katastr is None or katastr.hranice is None:
+        for kandidat_id, novy_bod, definicni_bod in kandidati:
+            # Levné kontroly jdou nad body z jednoho dotazu na kandidáty; polygon
+            # hranice se načte až u kandidáta, který jimi projde.
+            if not splnuje_minimalni_posun(stary_bod, Point(*novy_bod, srid=5514), options["min_posun_m"]):
                 continue
-            if not splnuje_minimalni_posun(stary_bod, reprezentativni_bod(katastr.hranice), options["min_posun_m"]):
-                continue
-            zm10, zm50 = get_ZM_from_point(katastr.definicni_bod)
+            zm10, zm50 = get_ZM_from_point(Point(*definicni_bod, srid=5514))
             if zm10 is None or zm50 is None or zm50.pk != zm50_gid:
                 continue
-            if not self._uloz_geometrii_pianu(pian, katastr.hranice, zm10):
+            hranice = RuianKatastr.objects.filter(pk=kandidat_id).values_list("hranice", flat=True).first()
+            if hranice is None:
+                continue
+            if not self._uloz_geometrii_pianu(pian, hranice, zm10):
                 # Hranice neprošla kontrolou databáze (třeba po převodu do WGS-84); zkusíme jiný katastr.
                 neplatnych += 1
                 continue
-            return spocitej_posun(stary_bod, reprezentativni_bod(katastr.hranice))
+            return spocitej_posun(stary_bod, reprezentativni_bod(hranice))
 
         logger.debug(
             "core.management.commands.anonymizace_dat.pian.bez_nahradniho_katastru",
@@ -1095,19 +1126,27 @@ class Command(BaseCommand):
         :param okres_id: Primární klíč okresu.
         :param zm50_gid: Identifikátor listu ZM50.
         :param vyloucit_id: Primární klíč katastru, který se do výběru nezahrne.
-        :return: Seznam primárních klíčů katastrů.
+        :return: Seznam trojic ``(pk, (x, y) reprezentativního bodu, (x, y)
+            definičního bodu)`` v EPSG:5514.
         """
         from core.constants import KLADYZM50
 
+        # Spolu s klíčem se vrací i reprezentativní a definiční bod, aby kontroly
+        # minimálního posunu a mapového listu nemusely u každého kandidáta
+        # načítat celý polygon hranice. ST_PointOnSurface odpovídá tomu, co
+        # u multipolygonu vrací reprezentativni_bod().
         dotaz = """
-            SELECT k.id
+            SELECT k.id,
+                   ST_X(ST_PointOnSurface(k.hranice)), ST_Y(ST_PointOnSurface(k.hranice)),
+                   ST_X(k.definicni_bod), ST_Y(k.definicni_bod)
             FROM ruian_katastr k
             JOIN kladyzm z ON z.kategorie = %s AND ST_Contains(z.the_geom, k.definicni_bod)
-            WHERE k.okres = %s AND k.id <> %s AND z.gid = %s
+            WHERE k.okres = %s AND k.id <> %s AND z.gid = %s AND k.hranice IS NOT NULL
+            ORDER BY k.id
         """
         with connection.cursor() as kurzor:
             kurzor.execute(dotaz, [KLADYZM50, okres_id, vyloucit_id, zm50_gid])
-            return [radek[0] for radek in kurzor.fetchall()]
+            return [(radek[0], (radek[1], radek[2]), (radek[3], radek[4])) for radek in kurzor.fetchall()]
 
     def _uloz_geometrii_pianu(self, pian, nova_geom_sjtsk, zm10):
         """
@@ -1186,7 +1225,9 @@ class Command(BaseCommand):
         if options["dry_run"]:
             pocet = queryset.count()
             self._zapocti("geometrie", zpracovano=pocet)
-            self.stdout.write(f"Výškových bodů u chráněných PIANů: {pocet}")
+            # Posunou se jen body PIANů, které se opravdu přesunou; to dry-run
+            # nezjistí, protože výsledek závisí na náhodně vybraných polohách.
+            self.stdout.write(f"Výškových bodů k posunu: nejvýš {pocet}")
             return
 
         jitter = options["deformace_m"] * POMER_JITTERU_VB
@@ -1244,7 +1285,7 @@ class Command(BaseCommand):
         if options["dry_run"]:
             pocet = zaznamy.count()
             self._zapocti("geometrie", zpracovano=pocet)
-            self.stdout.write(f"Archeologických záznamů k přepočtu katastrů: {pocet}")
+            self.stdout.write(f"Archeologických záznamů k přepočtu katastrů: nejvýš {pocet}")
             return
 
         zmeneno = 0
@@ -1311,7 +1352,9 @@ class Command(BaseCommand):
                 zaznamy = zaznamy.exclude(dokumentacni_jednotky_akce__pian_id__in=list(posunute_piany))
             pocet = zaznamy.count()
             self._zapocti("geometrie", zpracovano=pocet)
-            self.stdout.write(f"Chráněných archeologických záznamů k náhodným katastrům: {pocet}")
+            # Ostrý běh sem přidá i záznamy, jejichž PIANy se nakonec nepřesunou,
+            # takže skutečný počet může být vyšší.
+            self.stdout.write(f"Chráněných archeologických záznamů k náhodným katastrům: nejméně {pocet}")
             return
 
         zmeneno = self._nahodne_katastry_zaznamu(
@@ -1470,9 +1513,7 @@ class Command(BaseCommand):
         from projekt.models import Projekt
 
         presunute_projekty = self._posun_bodovy_model(
-            Projekt.objects.filter(
-                pristupnost_snapshot__razeni__gt=PRISTUPNOST_MIN_RAZENI, geom_sjtsk__isnull=False
-            ).select_related("hlavni_katastr"),
+            Projekt.objects.filter(self._chraneny_projekt(), geom_sjtsk__isnull=False).select_related("hlavni_katastr"),
             lambda zaznam: zaznam.hlavni_katastr.okres_id,
             "hlavni_katastr_id",
             options,
@@ -1489,7 +1530,7 @@ class Command(BaseCommand):
         self._posun_bodovy_model(
             DokumentExtraData.objects.filter(
                 dokument__pristupnost__razeni__gt=PRISTUPNOST_MIN_RAZENI, geom_sjtsk__isnull=False
-            ),
+            ).select_related("dokument"),
             self._okres_podle_polohy,
             None,
             options,
@@ -1511,7 +1552,7 @@ class Command(BaseCommand):
         """
         from projekt.models import Projekt, ProjektKatastr
 
-        projekty = Projekt.objects.filter(pristupnost_snapshot__razeni__gt=PRISTUPNOST_MIN_RAZENI)
+        projekty = Projekt.objects.filter(self._chraneny_projekt())
 
         if options["dry_run"]:
             pocet = projekty.count()
@@ -1528,6 +1569,21 @@ class Command(BaseCommand):
             options=options,
         )
         self.stdout.write(f"Náhodné katastry u chráněných projektů: {zmeneno}")
+
+    @staticmethod
+    def _chraneny_projekt():
+        """
+        Vrátí podmínku pro projekty, které se mají anonymizovat.
+
+        Kromě projektů s přístupností vyšší než A zahrnuje i projekty bez
+        vyplněného ``pristupnost_snapshot``. Sloupec je nepovinný a neznámá
+        přístupnost může znamenat chráněný projekt – u anonymizace je bezpečnější
+        takový projekt přesunout zbytečně, než ho nechat na skutečné poloze.
+        V produkčních datech k 30. 9. 2026 žádný takový projekt není.
+
+        :return: Podmínka ``Q`` nad modelem ``Projekt``.
+        """
+        return Q(pristupnost_snapshot__razeni__gt=PRISTUPNOST_MIN_RAZENI) | Q(pristupnost_snapshot__isnull=True)
 
     @staticmethod
     def _okres_samostatneho_nalezu(nalez):
@@ -1596,6 +1652,7 @@ class Command(BaseCommand):
             for zaznam in davka:
                 poloha = self._nova_poloha_zaznamu(zaznam, zjisti_okres(zaznam), options)
                 if poloha is None:
+                    # Důvod i identifikátor zapsal už _nova_poloha_zaznamu.
                     self._zapocti("geometrie", preskoceno=1)
                 else:
                     pripravene.append((zaznam, poloha[0], poloha[1]))
@@ -1609,6 +1666,7 @@ class Command(BaseCommand):
                     katastr_id = katastry[poradi]
                     if katastr_id is None:
                         self._zapocti("geometrie", preskoceno=1)
+                        self._zapocti_duvod("bod_bez_katastru", self._ident_zaznamu(zaznam))
                         continue
                     setattr(zaznam, nazev_pole_katastru, katastr_id)
                 presunute[zaznam.pk] = puvodni_katastr
@@ -1640,17 +1698,36 @@ class Command(BaseCommand):
             pokud se polohu nepodařilo najít.
         """
         if okres_id is None:
+            self._zapocti_duvod("bod_bez_okresu", self._ident_zaznamu(zaznam))
             return None
 
         novy_bod = self.generator_poloh.nova_poloha_v_okrese(okres_id, zaznam.geom_sjtsk, options["min_posun_m"])
         if novy_bod is None:
+            self._zapocti_duvod("bod_bez_nove_polohy", self._ident_zaznamu(zaznam))
             return None
 
         wgs_wkt, vysledek = transform_geom_to_wgs84(novy_bod.wkt)
         if vysledek != "OK":
             self._zapocti("geometrie", chyb=1)
+            self._zapocti_duvod("transformace_selhala", self._ident_zaznamu(zaznam))
             return None
         return novy_bod, GEOSGeometry(wgs_wkt, srid=4326)
+
+    @staticmethod
+    def _ident_zaznamu(zaznam):
+        """
+        Vrátí identifikátor záznamu pro výpis důvodů.
+
+        ``DokumentExtraData`` vlastní ``ident_cely`` nemá, bere se z dokumentu.
+
+        :param zaznam: Projekt, samostatný nález nebo ``DokumentExtraData``.
+        :return: ``ident_cely`` záznamu nebo dokumentu.
+        """
+        ident = getattr(zaznam, "ident_cely", None)
+        if ident:
+            return ident
+        dokument = getattr(zaznam, "dokument", None)
+        return getattr(dokument, "ident_cely", None) or str(zaznam.pk)
 
     def _katastry_pro_body(self, body):
         """

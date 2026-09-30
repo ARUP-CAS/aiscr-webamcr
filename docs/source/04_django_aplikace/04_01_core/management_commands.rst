@@ -94,7 +94,7 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
    * - ``--dry-run``
      - 
      - ``False``
-     - Pouze vypíše počty dotčených záznamů, nic neuloží.
+     - Pouze vypíše počty dotčených záznamů, nic neuloží. U geometrie jde o meze, ne přesné počty.
    * - ``--jen``
      - ``str``
      - ``None``
