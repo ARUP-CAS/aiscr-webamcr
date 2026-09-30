@@ -1,7 +1,7 @@
 {
   "items": [
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-L0000001/metadata",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-DD-202500001/metadata",
       "mime_type": "application/xml",
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#Binary",
@@ -13,7 +13,7 @@
       ]
     },
     {
-      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-TX-202500002/metadata",
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-L0000001/metadata",
       "mime_type": "application/xml",
       "rdf_type": [
         "http://fedora.info/definitions/v4/repository#Binary",

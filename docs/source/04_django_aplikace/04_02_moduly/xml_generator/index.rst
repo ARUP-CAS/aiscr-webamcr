@@ -9,3 +9,4 @@ Dokumentace modulu xml_generator.
 
    models
    generator
+   tests

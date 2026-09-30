@@ -91,7 +91,7 @@ python manage.py migrate
 python manage.py runserver
 
 # 4. Spustit Celery worker (v samostatném terminálu)
-celery -A webclient worker -l info
+celery -A webclient worker -l info --concurrency=2 --max-tasks-per-child=50
 ```
 
 Podrobná instalační příručka:  

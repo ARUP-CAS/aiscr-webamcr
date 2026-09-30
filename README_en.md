@@ -87,7 +87,7 @@ python manage.py migrate
 python manage.py runserver
 
 # 4. Start Celery worker (in a separate terminal)
-celery -A webclient worker -l info
+celery -A webclient worker -l info --concurrency=2 --max-tasks-per-child=50
 ```
 
 Detailed installation guide:  

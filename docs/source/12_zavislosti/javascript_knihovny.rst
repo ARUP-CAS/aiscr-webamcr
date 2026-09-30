@@ -35,13 +35,17 @@ Knihovny instalované pomocí Node.js
      - MIT
      - https://github.com/dangrossman/daterangepicker
    * - dropzone
-     - 6.3.1
+     - 6.3.4
      - MIT
-     - http://www.dropzonejs.com
+     - https://www.dropzone.dev/
    * - jquery
-     - 3.7.1
-     - MIT
+     - 4.0.0
+     - 
      - https://jquery.com
+   * - jquery-migrate
+     - 4.0.2
+     - 
+     - https://github.com/jquery/jquery-migrate
    * - leaflet
      - 1.9.4
      - BSD-2-Clause
@@ -67,7 +71,7 @@ Knihovny instalované pomocí Node.js
      - MIT
      - https://github.com/Leaflet/Leaflet.markercluster
    * - moment
-     - 2.30.1
+     - 2.31.0
      - MIT
      - https://momentjs.com
    * - spin.js

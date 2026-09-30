@@ -33,6 +33,14 @@ Třídy
    Implementuje komponentu ``FedoraUpdatedByAnotherTransactionError`` v rámci aplikace.
 
 
+.. py:class:: FedoraBinaryFileAlreadyDeletedError
+
+   Mazaný binární soubor ve Fedoře už neexistuje, typicky proto, že ho mezitím smazal souběžný požadavek.
+
+   Vyvolá ji ``_send_request`` u požadavků na smazání binárního souboru, pokud Fedora odpoví
+   chybou a následný ověřovací dotaz mimo transakci potvrdí, že zdroj vrací 404 nebo 410.
+
+
 .. py:class:: IdentChangeFedoraError
 
    Implementuje komponentu ``IdentChangeFedoraError`` v rámci aplikace.
@@ -207,6 +215,19 @@ Třídy
       :param request_type: Typ požadavku určující, zda se použije admin nebo běžný účet.
       :return: Session aktuálního vlákna pro danou identitu.
 
+   .. py:method:: _is_resource_gone()
+
+      Ověří mimo transakci, zda zdroj na ``url`` ve Fedoře už neexistuje.
+
+      Chybová odpověď na smazání binárního souboru sama nerozliší, zda soubor mezitím smazal
+      souběžný požadavek, nebo jde o skutečnou chybu (autentizace, konfigurace, výpadek); v hlášeném
+      případě navíc přišla 403 z Tomcatu, ne odpověď Fedory. Proto se stav ověří samostatným GET
+      bez hlavičky ``Atomic-ID`` (transakce už je v tu chvíli odvolaná).
+
+      :param url: URL mazaného binárního souboru.
+      :return: ``True``, pokud Fedora na zdroj vrátí 404 nebo 410; jinak ``False``, včetně
+          selhání samotného dotazu.
+
    .. py:method:: _send_request()
 
       Odešle request.
@@ -218,7 +239,9 @@ Třídy
       :return: Textová reprezentace UID transakce.
 
       :raises FedoraUpdatedByAnotherTransactionError: Vyvolá se při splnění podmínky ``response.status_code == 409``.
-      :raises FedoraError: Vyvolá se při splnění podmínky ``response.status_code == 409``.
+      :raises FedoraBinaryFileAlreadyDeletedError: Vyvolá se, pokud smazání binárního souboru skončí
+              chybou a ``_is_resource_gone`` potvrdí, že soubor už ve Fedoře není.
+      :raises FedoraError: Vyvolá se při jiné chybové odpovědi Fedory.
 
    .. py:method:: _create_container()
 
