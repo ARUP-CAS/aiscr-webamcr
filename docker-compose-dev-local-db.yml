@@ -77,7 +77,7 @@ services:
 
   redis:
     build: ./redis
-    image: redis:8.10.0
+    image: redis:8.10.1
     ports:
       - "6379:6379"
     secrets:
@@ -90,7 +90,8 @@ services:
       dockerfile: Dockerfile-DEV
     # Bez --concurrency by prefork pool nastartoval tolik child procesů, kolik má stroj jader;
     # pro lokální vývoj stačí 2. --max-tasks-per-child uvolňuje paměť nastrádanou v C rozšířeních.
-    command: celery -A webclient worker -l INFO -n worker1@amcr --concurrency=2 --max-tasks-per-child=50
+    command: celery -A webclient worker -l INFO -n worker1@amcr --concurrency=2 
+      --max-tasks-per-child=50
     secrets:
       - db_conf
       - redis_pass
