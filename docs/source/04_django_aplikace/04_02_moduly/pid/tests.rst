@@ -233,8 +233,8 @@ Třídy
 
       Sestaví předmětové heslo ve tvaru vraceném funkcí ``serialize_subject``.
 
-      :param ident: Identifikátor hesla použitý jako ``subject`` i ``classificationCode``.
-      :return: Položka ve tvaru ``frozenset``.
+      :param ident: Identifikátor hesla použitý jako ``subject``, ``classificationCode`` i v ``valueUri``.
+      :return: Položka ve tvaru ``frozenset`` se stejnými klíči, jaké vrací ``serialize_subject``.
 
    .. py:method:: test_poradi_dat_je_pevne_dane()
 

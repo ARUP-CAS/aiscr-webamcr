@@ -443,10 +443,19 @@ class SortedUniqueTest(SimpleTestCase):
         """
         Sestaví předmětové heslo ve tvaru vraceném funkcí ``serialize_subject``.
 
-        :param ident: Identifikátor hesla použitý jako ``subject`` i ``classificationCode``.
-        :return: Položka ve tvaru ``frozenset``.
+        :param ident: Identifikátor hesla použitý jako ``subject``, ``classificationCode`` i v ``valueUri``.
+        :return: Položka ve tvaru ``frozenset`` se stejnými klíči, jaké vrací ``serialize_subject``.
         """
-        return frozenset({"subject": ident, "classificationCode": ident, "lang": "en"}.items())
+        return frozenset(
+            {
+                "subject": ident,
+                "valueUri": f"https://api.aiscr.cz/id/{ident}",
+                "schemeUri": "https://api.aiscr.cz/id/",
+                "subjectScheme": "AMCR",
+                "lang": "en",
+                "classificationCode": ident,
+            }.items()
+        )
 
     def test_poradi_dat_je_pevne_dane(self):
         """Data jsou seřazená podle hodnoty ``date``, nikoli v pořadí množiny."""
@@ -504,7 +513,9 @@ class GetFormatsTest(SimpleTestCase):
         queryset = SimpleNamespace(exists=lambda: bool(soubory), all=lambda: soubory)
         serializer = DokumentSerializer.__new__(DokumentSerializer)
         if format_3d is None:
-            serializer.record = SimpleNamespace(rada=SimpleNamespace(pk=None))
+            # Sentinel místo None: DOKUMENT_RADA_DATA_3D je None, když selže načtení z heslaře
+            # (např. prázdná testovací DB), a pk=None by se pak omylem vyhodnotilo jako 3D řada.
+            serializer.record = SimpleNamespace(rada=SimpleNamespace(pk=object()))
         else:
             serializer.record = SimpleNamespace(
                 rada=SimpleNamespace(pk=DOKUMENT_RADA_DATA_3D),
