@@ -308,7 +308,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 4.0.7
+     - 4.0.8
      - MIT
      - https://github.com/tox-dev/py-filelock
    * - freezegun
@@ -660,7 +660,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.14.1
+     - 21.14.2
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
