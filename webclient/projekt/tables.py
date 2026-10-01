@@ -3,8 +3,8 @@ from datetime import timedelta
 
 import django_tables2 as tables
 from core.utils import SearchTable
+from django.db.backends.postgresql.psycopg_any import DateRange
 from django.utils.translation import gettext_lazy as _
-from psycopg2._range import DateRange
 
 from .models import Projekt, get_show_oznamovatel
 

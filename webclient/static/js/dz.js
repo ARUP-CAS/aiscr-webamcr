@@ -1,4 +1,3 @@
-Dropzone.autoDiscover = false;
 const get_params = () => {
     if (typeof object_id !== 'undefined') {
         return { 'objectID': object_id };

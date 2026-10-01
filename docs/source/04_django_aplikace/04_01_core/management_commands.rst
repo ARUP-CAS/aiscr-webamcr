@@ -66,6 +66,61 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
    docker exec -it $(sudo docker ps -q -f name=swarm_webamcr_web) python3 manage.py <název_příkazu> [parametry] --settings=webclient.settings.production
 
 
+``anonymizace_dat``
+-------------------
+
+.. automodule:: core.management.commands.anonymizace_dat
+   :members: Command
+   :undoc-members:
+
+**Parametry:**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 20 20 30
+
+   * - Název
+     - Typ
+     - Výchozí hodnota
+     - Popis
+   * - ``--potvrzuji-testovaci-server``
+     - 
+     - ``False``
+     - Povinné potvrzení, že cílová databáze je testovací a data se smí nevratně přepsat.
+   * - ``--ocekavana-databaze``
+     - ``str``
+     - ``None``
+     - Název databáze, se kterým se musí shodovat cílová databáze.
+   * - ``--dry-run``
+     - 
+     - ``False``
+     - Pouze vypíše počty dotčených záznamů, nic neuloží. U geometrie jde o meze, ne přesné počty.
+   * - ``--jen``
+     - ``str``
+     - ``None``
+     - Čárkou oddělený seznam sekcí, které se mají provést.
+   * - ``--vynechat``
+     - ``str``
+     - ``None``
+     - Čárkou oddělený seznam sekcí, které se mají přeskočit.
+   * - ``--batch-size``
+     - ``int``
+     - ``1000``
+     - Velikost dávky při zápisu geometrií a identifikátorů.
+   * - ``--deformace-m``
+     - ``float``
+     - ``10.0``
+     - Horní mez posunu jednoho vrcholu při deformaci tvaru; nula deformaci vypne.
+   * - ``--min-posun-m``
+     - ``float``
+     - ``100.0``
+     - Minimální vzdálenost nové polohy od původní v metrech; nula kontrolu vypne.
+   * - ``--seed``
+     - ``int``
+     - ``None``
+     - Zrno generátoru náhody pro reprodukovatelný běh.
+
+
 ``check_pian_properties``
 -------------------------
 
@@ -130,6 +185,77 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
      - ``int``
      - ``None``
      - core.management.commands.generate_metadata.Command.add_arguments.start_with_pk_help
+   * - ``--workers``
+     - ``int``
+     - ``1``
+     - core.management.commands.generate_metadata.Command.add_arguments.workers_help
+   * - ``--max-retries``
+     - ``int``
+     - ``3``
+     - core.management.commands.generate_metadata.Command.add_arguments.max_retries_help
+
+
+``generate_metadata_fast``
+--------------------------
+
+.. automodule:: core.management.commands.generate_metadata_fast
+   :members: Command
+   :undoc-members:
+
+**Parametry:**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 20 20 30
+
+   * - Název
+     - Typ
+     - Výchozí hodnota
+     - Popis
+   * - ``--model``
+     - ``str``
+     - ``None``
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.model_help
+   * - ``--limit``
+     - ``int``
+     - ``None``
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.limit_help
+   * - ``--start-with-pk``
+     - ``int``
+     - ``None``
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.start_with_pk_help
+   * - ``--workers``
+     - ``int``
+     - ``1``
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.workers_help
+   * - ``--max-retries``
+     - ``int``
+     - ``20``
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.max_retries_help
+   * - ``--max-selhani-po-sobe``
+     - ``int``
+     - ``50``
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.max_selhani_po_sobe_help
+   * - ``--bez-souboru``
+     - 
+     - ``False``
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.bez_souboru_help
+   * - ``--force``
+     - 
+     - ``False``
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.force_help
+   * - ``--jen-kontrola``
+     - 
+     - ``False``
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.jen_kontrola_help
+   * - ``--bez-kontroly``
+     - 
+     - ``False``
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.bez_kontroly_help
+   * - ``--aktualizovat-db``
+     - 
+     - ``False``
+     - core.management.commands.generate_metadata_fast.Command.add_arguments.aktualizovat_db_help
 
 
 ``generate_thumbs``

@@ -28,7 +28,8 @@ if "test" not in sys.argv:
         "debug_toolbar.panels.sql.SQLPanel",
         "debug_toolbar.panels.staticfiles.StaticFilesPanel",
         "debug_toolbar.panels.templates.TemplatesPanel",
-        "debug_toolbar.panels.cache.CachePanel",
+        # CachePanel vypnut: django-debug-toolbar 8.0.0 porovnává výsledek cache.get přes ==, u pandas DataFrame padá (import PIANu)
+        # "debug_toolbar.panels.cache.CachePanel",
         "debug_toolbar.panels.signals.SignalsPanel",
         "debug_toolbar.panels.logging.LoggingPanel",
         "debug_toolbar.panels.redirects.RedirectsPanel",

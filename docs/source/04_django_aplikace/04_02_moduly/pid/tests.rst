@@ -163,3 +163,131 @@ Třídy
 
       :param mock_get: Mock pro ``requests.get``.
 
+
+.. py:class:: DedupGeoLocationsTest
+
+   Testy deterministického odstranění duplicit v ``geoLocations``.
+
+   Původní implementace používala ``list(set(...))``. Iterační pořadí množiny závisí na hashích
+   řetězců, které Python randomizuje pro každý proces, takže každý uWSGI i Celery worker
+   generoval pro tentýž záznam jiné pořadí prvků v metadatech odesílaných do DataCite.
+
+   **Metody:**
+
+   .. py:method:: _misto()
+
+      Sestaví lokalizaci obsahující pouze ``geoLocationPlace``.
+
+      :param nazev: Textový popis polohy vkládaný do ``geoLocationPlace``.
+      :return: Lokalizace ve tvaru ``frozenset`` odpovídajícím ``serialize_geom``.
+
+   .. py:method:: _bod()
+
+      Sestaví lokalizaci s popisem polohy i souřadnicemi.
+
+      :param nazev: Textový popis polohy vkládaný do ``geoLocationPlace``.
+      :param sirka: Zeměpisná šířka centroidu geometrie.
+      :param delka: Zeměpisná délka centroidu geometrie.
+      :return: Lokalizace ve tvaru ``frozenset`` odpovídajícím ``serialize_geom``.
+
+   .. py:method:: test_odstrani_duplicity()
+
+      Shodné lokalizace se ve výsledku objeví jen jednou.
+
+   .. py:method:: test_poradi_je_pevne_dane()
+
+      Lokalizace jsou seřazené podle kanonického klíče, nikoli v pořadí množiny.
+
+      Porovnání dvou volání v jednom procesu by regresi nezachytilo, protože ``list(set(...))``
+      dává v rámci procesu pokaždé stejné pořadí. Test proto fixuje očekávané pořadí; se šesti
+      prvky je šance, že se s ním pořadí množiny shoduje náhodou, 1 : 720.
+
+   .. py:method:: test_poradi_lokalizaci_se_souradnicemi()
+
+      Shodné místo s různými souřadnicemi se řadí podle ``geoLocationPoint``.
+
+   .. py:method:: test_vnorene_souradnice_jsou_prevedeny_na_slovnik()
+
+      Vnořený ``frozenset`` souřadnic je ve výstupu převeden na slovník.
+
+   .. py:method:: test_prazdny_vstup()
+
+      Prázdná kolekce vrátí prázdný seznam.
+
+
+.. py:class:: SortedUniqueTest
+
+   Testy deterministického odstranění duplicit v ``dates`` a ``subjects`` DataCite metadat.
+
+   **Metody:**
+
+   .. py:method:: _datum()
+
+      Sestaví položku ``dates`` ve tvaru, v jakém ji skládají serializery.
+
+      :param datum: Hodnota pole ``date``.
+      :param typ: Hodnota pole ``dateType``.
+      :return: Položka ve tvaru ``frozenset``.
+
+   .. py:method:: _heslo()
+
+      Sestaví předmětové heslo ve tvaru vraceném funkcí ``serialize_subject``.
+
+      :param ident: Identifikátor hesla použitý jako ``subject``, ``classificationCode`` i v ``valueUri``.
+      :return: Položka ve tvaru ``frozenset`` se stejnými klíči, jaké vrací ``serialize_subject``.
+
+   .. py:method:: test_poradi_dat_je_pevne_dane()
+
+      Data jsou seřazená podle hodnoty ``date``, nikoli v pořadí množiny.
+
+   .. py:method:: test_hesla_bez_duplicit_v_pevnem_poradi()
+
+      Opakovaná hesla z více komponent se objeví jednou a v pevně daném pořadí.
+
+   .. py:method:: test_klic_rozlisi_hodnotu_s_oddelovacem()
+
+      Hodnota obsahující znaky oddělovače nedá stejný klíč jako jiná kombinace dvojic.
+
+   .. py:method:: test_klic_rozlisi_typ_hodnoty()
+
+      Číslo a stejně vypadající text dají různé klíče.
+
+   .. py:method:: test_prazdne_heslo_zustane_pro_filtraci_volajicim()
+
+      Prázdný ``frozenset`` (heslo ``None``) se neodstraňuje; filtruje ho až volající přes ``if item``.
+
+
+.. py:class:: GetFormatsTest
+
+   Testy deterministického pořadí prvků ``formats`` v metadatech dokumentu.
+
+   **Metody:**
+
+   .. py:method:: _formats()
+
+      Zavolá ``_get_formats`` nad serializerem s podvrženými soubory.
+
+      :param mimetypy: Seznam mimetypů souborů navázaných na dokument.
+      :param format_3d: Formát z ``extra_data`` 3D dokumentu; ``None`` znamená dokument jiné řady.
+      :return: Seznam formátů vrácený metodou ``_get_formats``.
+
+   .. py:method:: test_formaty_jsou_serazene()
+
+      Mimetypy jsou vráceny abecedně seřazené, nikoli v pořadí množiny.
+
+   .. py:method:: test_format_3d_je_zarazen_do_serazeni()
+
+      Formát 3D dokumentu se řadí spolu s mimetypy a nepřipojuje se na konec.
+
+   .. py:method:: test_format_3d_se_neopakuje()
+
+      Formát 3D dokumentu shodný s mimetypem souboru se ve ``formats`` objeví jen jednou.
+
+   .. py:method:: test_duplicitni_mimetypy_se_neopakuji()
+
+      Více souborů se shodným mimetypem se ve ``formats`` objeví jen jednou.
+
+   .. py:method:: test_bez_souboru_vraci_prazdny_seznam()
+
+      Dokument bez souborů nemá žádné formáty.
+

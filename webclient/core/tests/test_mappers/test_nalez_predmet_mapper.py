@@ -1,0 +1,124 @@
+from core.forms import ImportDataAdminForm
+from core.import_data_mappers import (
+    ImportDataError,
+    ImportDataIncorrectStructureError,
+    NalezPredmetMapper,
+)
+from django.test import TestCase
+
+INSERT = ImportDataAdminForm.PERFORMED_ACTION_INSERT
+UPDATE = ImportDataAdminForm.PERFORMED_ACTION_UPDATE
+
+VALID_ROW = {
+    "pocet": "3",
+    "poznamka": "test",
+    "komponenta": "C-AZ-999999999-D01-K001",
+    "druh": "HES-PREDDRUH-001",
+    "specifikace": "HES-PREDSPEC-001",
+}
+
+MAP_SAFE_ROW = {
+    "pocet": "3",
+    "poznamka": "test",
+    "komponenta": None,
+    "druh": None,
+    "specifikace": None,
+}
+
+
+class NalezPredmetMapperInvalidStructureTest(TestCase):
+    """Testy pro NalezPredmetMapper — neplatná struktura dat."""
+
+    def test_unknown_column_raises_error(self):
+        """map() vyvolá ImportDataIncorrectStructureError při neznámém sloupci."""
+        row = VALID_ROW.copy()
+        row["neznamy_sloupec"] = "hodnota"
+        mapper = NalezPredmetMapper(row)
+        with self.assertRaises(ImportDataIncorrectStructureError):
+            mapper.map(INSERT, serialize=True, include_primary_key=True)
+
+    def test_missing_komponenta_raises_error(self):
+        """map() vyvolá ImportDataIncorrectStructureError při chybějícím sloupci komponenta."""
+        row = VALID_ROW.copy()
+        del row["komponenta"]
+        mapper = NalezPredmetMapper(row)
+        with self.assertRaises(ImportDataIncorrectStructureError):
+            mapper.map(INSERT, serialize=True, include_primary_key=True)
+
+    def test_missing_druh_raises_error(self):
+        """map() vyvolá ImportDataIncorrectStructureError při chybějícím sloupci druh."""
+        row = VALID_ROW.copy()
+        del row["druh"]
+        mapper = NalezPredmetMapper(row)
+        with self.assertRaises(ImportDataIncorrectStructureError):
+            mapper.map(INSERT, serialize=True, include_primary_key=True)
+
+    def test_empty_dict_raises_error(self):
+        """map() vyvolá ImportDataIncorrectStructureError pro prázdný slovník."""
+        mapper = NalezPredmetMapper({})
+        with self.assertRaises(ImportDataIncorrectStructureError):
+            mapper.map(INSERT, serialize=True, include_primary_key=True)
+
+    def test_update_missing_id_raises_error(self):
+        """map() UPDATE vyvolá ImportDataIncorrectStructureError, pokud chybí primární klíč id."""
+        mapper = NalezPredmetMapper(VALID_ROW.copy())
+        with self.assertRaises(ImportDataIncorrectStructureError):
+            mapper.map(UPDATE, serialize=True, include_primary_key=True)
+
+
+class NalezPredmetMapperCheckRequiredFieldsTest(TestCase):
+    """Testy pro NalezPredmetMapper.check_required_fields — bez DB."""
+
+    def test_komponenta_none_raises_error(self):
+        """check_required_fields() vyvolá ImportDataError, pokud je komponenta None (not null FK)."""
+        row = VALID_ROW.copy()
+        row["komponenta"] = None
+        mapper = NalezPredmetMapper(row)
+        with self.assertRaises(ImportDataError):
+            mapper.check_required_fields(INSERT)
+
+    def test_druh_none_raises_error(self):
+        """check_required_fields() vyvolá ImportDataError, pokud je druh None (not null FK)."""
+        row = VALID_ROW.copy()
+        row["druh"] = None
+        mapper = NalezPredmetMapper(row)
+        with self.assertRaises(ImportDataError):
+            mapper.check_required_fields(INSERT)
+
+    def test_specifikace_none_passes(self):
+        """check_required_fields() projde bez výjimky, pokud je specifikace None (nullable FK)."""
+        row = VALID_ROW.copy()
+        row["specifikace"] = None
+        mapper = NalezPredmetMapper(row)
+        mapper.check_required_fields(INSERT)
+
+    def test_pocet_none_passes(self):
+        """check_required_fields() projde bez výjimky, pokud je pocet None (nullable pole)."""
+        row = VALID_ROW.copy()
+        row["pocet"] = None
+        mapper = NalezPredmetMapper(row)
+        mapper.check_required_fields(INSERT)
+
+    def test_poznamka_none_passes(self):
+        """check_required_fields() projde bez výjimky, pokud je poznamka None (nullable pole)."""
+        row = VALID_ROW.copy()
+        row["poznamka"] = None
+        mapper = NalezPredmetMapper(row)
+        mapper.check_required_fields(INSERT)
+
+
+class NalezPredmetMapperMapValidTest(TestCase):
+    """Testy pro NalezPredmetMapper — platný dataset pro map()."""
+
+    def test_map_returns_dict(self):
+        """map() vrátí slovník pro platný řádek."""
+        mapper = NalezPredmetMapper(MAP_SAFE_ROW.copy())
+        result = mapper.map(INSERT, serialize=True, include_primary_key=True)
+        self.assertIsInstance(result, dict)
+
+    def test_map_includes_all_expected_keys(self):
+        """map() vrátí všechny očekávané klíče."""
+        mapper = NalezPredmetMapper(MAP_SAFE_ROW.copy())
+        result = mapper.map(INSERT, serialize=True, include_primary_key=True)
+        expected_keys = {"pocet", "poznamka", "komponenta", "druh", "specifikace"}
+        self.assertEqual(set(result.keys()), expected_keys)

@@ -696,6 +696,18 @@ Funkce
    :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
    :raises ValueError: Vyvolá se s textem "dokument.views.smazat.deleted".
 
+.. py:function:: get_region_zaznamu(zaznam)
+
+   Odvodí prefix regionu z identifikátoru záznamu, do kterého se dokument zapisuje.
+
+   Dokument zapisovaný do projektu nebo archeologického záznamu přebírá region z nadřazeného
+   záznamu, nikoli z volby uživatele. U dočasných identifikátorů archeologického záznamu je
+   region až za prefixem "X-".
+
+   :param zaznam: Projekt nebo archeologický záznam, do kterého se dokument zapisuje; ``None``
+       u samostatně zapisovaného dokumentu.
+   :return: Prefix regionu včetně pomlčky ("C-" nebo "M-"), nebo ``None`` pokud záznam není zadán.
+
 .. py:function:: get_hierarchie_dokument_typ()
 
    Funkce pro získaní hierarchie pro heslař.
@@ -709,6 +721,18 @@ Funkce
    :param historie_vazby: Kolekce ``historie_vazby`` zpracovávaná touto funkcí.
    :param request_user: Uživatel nebo osoba ``request_user``, v jejímž kontextu se operace provádí.
    :return: Slovník dat jednotlivých změn stavu pro zobrazení v historii.
+
+.. py:function:: dokument_ma_tvary(dokument)
+
+   Zjistí, zda se u dokumentu evidují tvary.
+
+   Tvary nesou letecké fotografie. Do #3421 je bylo možné poznat podle řady dokumentu
+   (LD/LN/DL), protože řada se odvozovala z typu a materiálu. Od #3421 se řada přiděluje
+   fixně, takže věcné dělení nese typ dokumentu; u starších záznamů se proto kontroluje
+   i původní letecká řada.
+
+   :param dokument: Dokument, u kterého se zjišťuje evidence tvarů.
+   :return: ``True`` pokud se u dokumentu mají zobrazit tvary, jinak ``False``.
 
 .. py:function:: get_detail_template_shows(dokument, user)
 

@@ -1,7 +1,6 @@
 import logging
 from typing import Optional
 
-from celery import Celery
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
 from django.urls import reverse
@@ -21,16 +20,15 @@ def check_if_task_queued(class_name, pk, task_name):
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
     """
+    from webclient.celery import app as celery_app
+
     try:
-        app = Celery("webclient")
-        app.config_from_object("django.conf:settings", namespace="CELERY")
-        app.autodiscover_tasks()
-        i = app.control.inspect(["worker1@amcr"])
+        i = celery_app.control.inspect(["worker1@amcr"])
         queues = (i.scheduled(),)
     except Exception as e:
         logger.warning(
             "xml_generator.models.ModelWithMetadata.check_if_task_queued.Celery_warning",
-            extra={"exception": e, "app": app},
+            extra={"exception": e, "app": celery_app},
         )
         return False
     for queue in queues:

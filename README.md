@@ -68,7 +68,7 @@ aiscr-webamcr/
 
 - Python 3.11+
 - Docker a Docker Compose
-- Node.js 18+ a npm (pro SCSS / JS build)
+- Node.js 20.19+ a npm (pro SCSS / JS build)
 
 ---
 
@@ -89,7 +89,7 @@ python manage.py migrate
 python manage.py runserver
 
 # 4. Spustit Celery worker (v samostatném terminálu)
-celery -A webclient worker -l info
+celery -A webclient worker -l info --concurrency=2 --max-tasks-per-child=50
 ```
 
 Podrobná instalační příručka:  

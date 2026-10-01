@@ -14,6 +14,7 @@ from core.filters import GeomIntersectsFilterMixin
 from core.forms import SelectMultipleSeparator
 from core.widgets import AutocompleteModelSelect2Multiple
 from crispy_forms.layout import HTML, Div, Layout
+from django.db.backends.postgresql.psycopg_any import DateRange
 from django.db.models import Q, QuerySet
 from django.forms import SelectMultiple
 from django.utils.translation import gettext_lazy as _
@@ -32,7 +33,6 @@ from heslar.views import heslar_12
 from historie.models import Historie
 from projekt.forms import ProjektFilterForm
 from projekt.models import Projekt
-from psycopg2._range import DateRange
 from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)

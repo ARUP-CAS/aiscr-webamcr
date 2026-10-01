@@ -200,7 +200,7 @@ class AktivaceDeaktivaceColumn(tables.TemplateColumn):
         if perm_check:
             return super().render(record, table, value, bound_column, **kwargs)
         else:
-            return format_html("")
+            return ""
 
 
 class smazatColumn(tables.TemplateColumn):
@@ -223,7 +223,7 @@ class smazatColumn(tables.TemplateColumn):
         if check_permissions(p.actionChoices.spoluprace_smazat, table.request.user, record.id):
             return super().render(record, table, value, bound_column, **kwargs)
         else:
-            return format_html("")
+            return ""
 
 
 class EditProjektyColumn(tables.TemplateColumn):
@@ -370,7 +370,7 @@ class UzivatelSpolupraceTable(SearchTable):
         """
         projekt_list = record.projekty.all()
         if not projekt_list:
-            return format_html('<span class="text-muted">&mdash;</span>')
+            return mark_safe('<span class="text-muted">&mdash;</span>')
         tooltip = ", ".join(proj.ident_cely for proj in projekt_list)
         links = [
             format_html('<a href="{}">{}</a>', reverse("projekt:detail", args=[proj.ident_cely]), proj.ident_cely)

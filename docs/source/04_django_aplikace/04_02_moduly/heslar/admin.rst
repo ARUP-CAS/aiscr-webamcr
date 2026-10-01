@@ -134,7 +134,7 @@ Třídy
       :return: Vrací atribut objektu.
 
 
-.. py:class:: HeslarDokumentTypMaterialRadaAdmin
+.. py:class:: HeslarDokumentTypMaterialAdmin
 
    Admin část pro prohlížení modelu heslař dokument typ material.
 
@@ -294,4 +294,42 @@ Třídy
 .. py:class:: HeslarRuianKatastrAdmin
 
    Admin část pro správu modelu ruian katastr.
+
+
+.. py:class:: RuianSyncRunAdmin
+
+   Read-only admin pro audit log běhů synchronizace RÚIAN.
+
+   **Metody:**
+
+   .. py:method:: note_flag()
+
+      Zobrazí ⚠ pokud run obsahuje poznámku (varování nebo chybu reassignu).
+
+      :param obj: Instance :class:`~heslar.models.RuianSyncRun`.
+
+      :return: Řetězec ``"⚠"`` nebo prázdný řetězec.
+
+   .. py:method:: has_add_permission()
+
+      Zakazuje ruční přidávání záznamů do audit logu.
+
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce.
+      :return: Vždy ``False``.
+
+   .. py:method:: has_change_permission()
+
+      Zakazuje editaci audit logu.
+
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce.
+      :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce.
+      :return: Vždy ``False``.
+
+   .. py:method:: has_delete_permission()
+
+      Zakazuje mazání audit logu.
+
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce.
+      :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce.
+      :return: Vždy ``False``.
 

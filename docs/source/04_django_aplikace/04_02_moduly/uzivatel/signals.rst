@@ -26,6 +26,9 @@ Funkce
 
    Přidelení identu celý pro usera.
 
+   Zároveň potlačí navazující signál u uložení, které není změnou dat uživatele -- zápis
+   ``last_login`` při přihlášení a přehashování hesla starým hasherem.
+
    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``create_ident_cely``.
    :param instance: Parametr ``instance`` předává se do volání ``filter()``, ``check_container_deleted_or_not_exists()``, pracuje se s atributy ``id``, ``old``, ovlivňuje větvení podmínek.
    :param kwargs: Parametr ``kwargs`` se předává do volání ``len()``, ovlivňuje větvení podmínek.

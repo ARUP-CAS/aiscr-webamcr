@@ -5,12 +5,12 @@ import re
 
 from core import constants
 from django import template
+from django.db.backends.postgresql.psycopg_any import DateRange
 from django.utils.translation import gettext_lazy as _
 from dokument.models import DokumentAutor
 from ez.models import ExterniZdrojAutor, ExterniZdrojEditor
 from heslar import hesla_dynamicka
 from heslar.models import RuianKatastr
-from psycopg2._range import DateRange
 from uzivatel.models import Osoba
 
 register = template.Library()

@@ -56,6 +56,7 @@
     </form>
   </div>
 
+
   <div class="modal fade app-modal-form" tabindex="-1" role="dialog" id="modal-form-region" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
       <div class="modal-content form" id="id-modal-region">
@@ -126,9 +127,13 @@
               reinitMaterialSelect();
           });
           {% if samostatny %}
+          {% if not formDokument.region.value %}
+          // Dialog se otevírá jen dokud region není vybraný. Po neúspěšné validaci formuláře už
+          // zvolenou hodnotu drží pole `region`, takže uživatele znovu neobtěžujeme.
           document.addEventListener('DOMContentLoaded', function (event) {
             $("#modal-form-region").modal("show")
           });
+          {% endif %}
           $('#modal-form-region').on('hidden.bs.modal', function () {
             // Místo refresh se používá destroy+reinit, aby se předešlo chybě bootstrap-select
             // 1.14.0-beta3, kdy buildData() přidává data do main.data místo jejich nahrazení.
@@ -141,6 +146,19 @@
               e.preventDefault();
               }
             })
+          {% endif %}
+          {% if allow_vlastni_ident %}
+          // Pole pro konkrétní ID je přístupné jen se zaškrtnutou volbou. Validaci tvaru identifikátoru
+          // i kontrolu kolize s existujícím dokumentem dělá formulář na serveru.
+          function prepniVlastniIdent() {
+            const zaskrtnuto = $('#id_pouzit_vlastni_ident').is(':checked');
+            $('#id_vlastni_ident_cely').prop('disabled', !zaskrtnuto);
+            if (!zaskrtnuto) {
+              $('#id_vlastni_ident_cely').val('');
+            }
+          }
+          $('#id_pouzit_vlastni_ident').on('change', prepniVlastniIdent);
+          document.addEventListener('DOMContentLoaded', prepniVlastniIdent);
           {% endif %}
           const successFunction = function(settings, response) {
             const newOption = new Option(response.text, response.value, true, true);

@@ -58,7 +58,7 @@ Tyto image jsou standardní open-source image používané pro provoz podpůrný
 redis
 ~~~~~
 
-- **Verze:** 8.8.0
+- **Verze:** 8.10.1
 - **Licence:** RSALv2, SSPLv1
 - **Odkaz:** https://github.com/redis/redis
 
@@ -76,7 +76,7 @@ PostgreSQL databáze s PostGIS rozšířením pro geografická data. Používá 
 postgres
 ~~~~~~~~
 
-- **Verze:** 12.3
+- **Verze:** 17.11
 - **Licence:** PostgreSQL License
 - **Odkaz:** https://github.com/docker-library/postgres
 
@@ -85,7 +85,7 @@ PostgreSQL databáze pro Fedora repository. Používá se jako databázový back
 eeacms/rsync
 ~~~~~~~~~~~~
 
-- **Verze:** 3.0
+- **Verze:** 3.1
 - **Licence:**
 - **Odkaz:** https://github.com/eea/eea.docker.rsync
 
@@ -94,7 +94,7 @@ Image pro synchronizaci souborů pomocí rsync. Používá se pro zálohování 
 oliver006/redis_exporter
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** v1.86.0-alpine
+- **Verze:** v1.91.1-alpine
 - **Licence:** MIT license
 - **Odkaz:** https://github.com/oliver006/redis_exporter
 
@@ -112,7 +112,7 @@ Exportér metrik pro Celery úlohy pro Prometheus. Monitoruje stav a výkon asyn
 grafana/grafana-enterprise
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 13.1
+- **Verze:** 13.2
 - **Licence:** AGPL-3.0 License
 - **Odkaz:** https://github.com/grafana/grafana
 
@@ -121,7 +121,7 @@ Grafana Enterprise pro vizualizaci metrik a monitoringu. Poskytuje dashboardy pr
 prom/prometheus
 ~~~~~~~~~~~~~~~
 
-- **Verze:** v3.13.1
+- **Verze:** v3.14.0
 - **Licence:** Apache-2.0 License
 - **Odkaz:** https://github.com/prometheus/prometheus
 
@@ -130,7 +130,7 @@ Prometheus pro sběr a ukládání metrik. Slouží jako centrální systém pro
 docker.elastic.co/logstash/logstash
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 9.4.3
+- **Verze:** 9.5.4
 - **Licence:** SSPL, Elastic License 2.0, Apache License 2.0
 - **Odkaz:** https://github.com/elastic/logstash
 
@@ -139,7 +139,7 @@ Logstash pro zpracování a transformaci logů. Zajišťuje parsování a indexo
 docker.elastic.co/elasticsearch/elasticsearch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 9.4.3
+- **Verze:** 9.5.4
 - **Licence:** SSPL, Elastic License 2.0, Apache License 2.0
 - **Odkaz:** https://github.com/elastic/elasticsearch
 
@@ -148,7 +148,7 @@ Elasticsearch pro fulltextové vyhledávání a analýzu logů. Ukládá a index
 docker.elastic.co/kibana/kibana
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 9.4.3
+- **Verze:** 9.5.4
 - **Licence:** SSPL, Elastic License 2.0, Apache License 2.0
 - **Odkaz:** https://github.com/elastic/kibana
 
@@ -157,7 +157,7 @@ Kibana pro vizualizaci a analýzu logů z Elasticsearch. Poskytuje webové rozhr
 selenium/standalone-chromium
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 149.0
+- **Verze:** 152.0
 - **Licence:** Apache License 2.0
 - **Odkaz:** https://github.com/SeleniumHQ/docker-selenium
 
@@ -202,7 +202,7 @@ Memcached pro ukládání cache v paměti. Používá se pro zrychlení aplikace
 fcrepo/fcrepo
 ~~~~~~~~~~~~~
 
-- **Verze:** 6.5.1-tomcat9
+- **Verze:** 7.0.0-tomcat10
 - **Licence:** Apache-2.0 License
 - **Odkaz:** https://github.com/fcrepo/fcrepo
 

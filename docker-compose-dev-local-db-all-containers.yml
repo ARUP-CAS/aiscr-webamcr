@@ -97,7 +97,7 @@ services:
 
   redis:
     build: ./redis
-    image: redis:8.8.0
+    image: redis:8.10.1
     ports:
       - "6379:6379"
     secrets:
@@ -105,7 +105,7 @@ services:
     command: sh -c 'redis-server /home/redis/redis.conf'
 
   redis-exporter:
-    image: oliver006/redis_exporter:v1.86.0-alpine
+    image: oliver006/redis_exporter:v1.91.1-alpine
     ports:
       - "9121:9121"
     secrets:
@@ -118,7 +118,7 @@ services:
     entrypoint: ["/bin/sh", "/docker-entrypoint.d/redis_exporter_entrypoint.sh"]
 
   grafana:
-    image: grafana/grafana-enterprise:13.1
+    image: grafana/grafana-enterprise:13.2
     restart: always
     depends_on:
       - prometheus
@@ -133,7 +133,7 @@ services:
       - "3000:3000"
 
   prometheus:
-    image: prom/prometheus:v3.13.1
+    image: prom/prometheus:v3.14.0
     volumes:
       - ./prometheus:/etc/prometheus
     ports:
@@ -143,7 +143,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-DEV
-    command: celery -A webclient worker -l INFO -n worker1@amcr
+    # Bez --concurrency by prefork pool nastartoval tolik child procesů, kolik má stroj jader;
+    # pro lokální vývoj stačí 2. --max-tasks-per-child uvolňuje paměť nastrádanou v C rozšířeních.
+    command: celery -A webclient worker -l INFO -n worker1@amcr --concurrency=2 
+      --max-tasks-per-child=50
     secrets:
       - db_conf
       - redis_pass
@@ -193,14 +196,14 @@ services:
     entrypoint: ["/bin/sh", "/docker-entrypoint.d/celery_exporter_entrypoint.sh"]
 
   selenium:
-    image: selenium/standalone-chromium:149.0
+    image: selenium/standalone-chromium:152.0
     ports:
       - 4444:4444
       - 5900:5900
     shm_size: '2gb'
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:9.4.3
+    image: docker.elastic.co/logstash/logstash:9.5.4
     depends_on:
       - elasticsearch
     ports:
@@ -211,7 +214,7 @@ services:
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.4.3
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.4
     environment:
       - discovery.type=single-node
       - http.host=0.0.0.0
@@ -223,7 +226,7 @@ services:
       - elasticsearch_volume:/usr/share/elasticsearch/data
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:9.4.3
+    image: docker.elastic.co/kibana/kibana:9.5.4
     restart: always
     ports:
       - 5601:5601
@@ -231,7 +234,7 @@ services:
       - elasticsearch
 
   fcrepo:
-    image: fcrepo/fcrepo:6.5.1-tomcat9
+    image: fcrepo/fcrepo:7.0.0-tomcat10
     build:
       context: .
       dockerfile: ./fedora/Dockerfile
@@ -259,7 +262,7 @@ services:
         condition: service_started
 
   fcrepo-postgres:
-    image: postgres:12.3
+    image: postgres:17.11
     secrets:
       - db_conf
     restart: always

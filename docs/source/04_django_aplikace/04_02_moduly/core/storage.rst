@@ -24,6 +24,10 @@ Třídy
       na zdrojové mapy (``.map``) chybějící v kolekci. Pro ostatní chybějící soubory
       je výjimka znovu vyhozena, aby selhání bylo viditelné při spuštění collectstatic.
 
+      Cesta se před kontrolou čistí stejně jako v Djangu (odstranění query/fragmentu
+      a okrajových mezer), protože CSS vzor ``/*# sourceMappingURL=... */`` zachytí
+      i mezeru před ``*/`` (např. dropzone 6.x).
+
       :param name: Relativní cesta k souboru.
       :param content: Obsah souboru, nebo ``None`` při vyhledávání v manifestu.
       :param filename: Název souboru pro hašování, pokud se liší od ``name``.
