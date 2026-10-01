@@ -84,7 +84,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-2-Clause
      - https://www.sphinx-doc.org/
    * - Werkzeug
-     - 3.1.8
+     - 3.1.9
      - BSD-3-Clause
      - https://github.com/pallets/werkzeug/
    * - alabaster
@@ -168,7 +168,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.16.1
+     - 7.16.2
      - Apache-2.0
      - https://github.com/coveragepy/coveragepy
    * - crispy-bootstrap5
@@ -308,7 +308,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 4.0.7
+     - 4.0.8
      - MIT
      - https://github.com/tox-dev/py-filelock
    * - freezegun
@@ -396,7 +396,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.39
+     - 9.0.40
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -660,7 +660,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.14.1
+     - 21.14.2
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
