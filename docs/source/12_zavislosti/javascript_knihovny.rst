@@ -40,11 +40,11 @@ Knihovny instalované pomocí Node.js
      - https://www.dropzone.dev/
    * - jquery
      - 4.0.0
-     - MIT
+     - 
      - https://jquery.com
    * - jquery-migrate
      - 4.0.2
-     - MIT
+     - 
      - https://github.com/jquery/jquery-migrate
    * - leaflet
      - 1.9.4
