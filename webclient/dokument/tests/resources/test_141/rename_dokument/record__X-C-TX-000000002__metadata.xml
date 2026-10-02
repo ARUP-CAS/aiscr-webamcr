@@ -23,7 +23,7 @@
     <amcr:soubor>
       <amcr:id>soub-0000001</amcr:id>
       <amcr:path>rest/AMCR-selenium-test/record/X-C-TX-000000002/file/UUID-REMOVED</amcr:path>
-      <amcr:nazev>XCTX000000002I.jpg</amcr:nazev>
+      <amcr:nazev>XCTX000000002F010.jpg</amcr:nazev>
       <amcr:mimetype>image/jpeg</amcr:mimetype>
       <amcr:rozsah>1</amcr:rozsah>
       <amcr:size_mb>0.0048723221</amcr:size_mb>
@@ -33,7 +33,7 @@
         <amcr:id>hist-0000001</amcr:id>
         <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
         <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
-        <amcr:poznamka>XCTX000000002.jpg -&gt; XCTX000000002I.jpg</amcr:poznamka>
+        <amcr:poznamka>XCTX000000002F001.jpg -&gt; XCTX000000002F010.jpg</amcr:poznamka>
         <amcr:typ_zmeny>SBR1</amcr:typ_zmeny>
       </amcr:historie>
       <amcr:historie>

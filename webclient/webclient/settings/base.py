@@ -258,6 +258,7 @@ _NPM_VENDOR_PACKAGE_NAMES = (
     "daterangepicker",
     "dropzone",
     "jquery",
+    "jquery-migrate",
     "leaflet",
     "leaflet-draw",
     "leaflet-fullscreen",

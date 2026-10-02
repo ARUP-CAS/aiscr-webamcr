@@ -48,6 +48,7 @@ from core.message_constants import (
 )
 from core.models import AntivirusCheckResult, Soubor
 from core.repository_connector import (
+    FedoraBinaryFileAlreadyDeletedError,
     FedoraError,
     FedoraRepositoryConnector,
     FedoraTransaction,
@@ -56,6 +57,7 @@ from core.repository_connector import (
 )
 from core.soubor_naming import (
     get_free_suffixes,
+    get_mime_safe_soubor_name,
     get_next_soubor_name,
     get_soubor_suffix,
 )
@@ -72,7 +74,6 @@ from core.utils import (
     get_pian_from_envelope,
     is_maintenance_in_progress,
     read_import_report_index,
-    replace_last,
     translate_status_value,
 )
 from django.conf import settings
@@ -204,21 +205,31 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
     soubor.active_transaction = fedora_transaction
     soubor_pk = soubor.pk
     transaction_error = False
-    with transaction.atomic():
-        try:
+    # try je vně atomic bloku, aby výjimka z Fedory odrolovala i smazání v DB (savepoint);
+    # jinak by DB smazání zůstalo zapsané, zatímco Fedora transakce je už odvolaná.
+    try:
+        with transaction.atomic():
             soubor.delete()
             connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt, fedora_transaction)
             logger.debug("core.views.delete_file_DZ.deleted.delete_binary_file_completely", extra={"pk": soubor_pk})
             connector.delete_binary_file_completely(soubor)
             fedora_transaction.mark_transaction_as_closed()
             return JsonResponse({"success": True})
-        except FedoraUpdatedByAnotherTransactionError as err:
-            logger.debug(
-                "core.views.delete_file_DZ.another_transaction",
-                extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
-            )
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
-            transaction_error = True
+    except FedoraUpdatedByAnotherTransactionError as err:
+        logger.debug(
+            "core.views.delete_file_DZ.another_transaction",
+            extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
+        )
+        messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
+        transaction_error = True
+    except FedoraBinaryFileAlreadyDeletedError as err:
+        # Soubor mezitím smazal souběžný požadavek z jiného okna (issue #4174).
+        logger.info(
+            "core.views.delete_file_DZ.already_deleted",
+            extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
+        )
+        messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+        transaction_error = True
     if transaction_error is False and Soubor.objects.filter(pk=soubor_pk).exists():
         # Není jisté, zda je 404 jediná správná varianta.
         logger.debug("core.views.delete_file_DZ.not_deleted", extra={"soubor": soubor})
@@ -287,24 +298,33 @@ def delete_file(request, typ_vazby, ident_cely, pk):
         soubor.active_transaction = fedora_transaction
         soubor_pk = soubor.pk
         transaction_error = False
-        with transaction.atomic():
-            try:
+        # try je vně atomic bloku, aby výjimka z Fedory odrolovala i smazání v DB (savepoint).
+        try:
+            with transaction.atomic():
                 soubor.delete()
                 connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt, fedora_transaction)
                 logger.debug("core.views.delete_file.deleted.delete_binary_file", extra={"pk": soubor_pk})
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
                 connector.delete_binary_file(soubor)
-
-            except FedoraUpdatedByAnotherTransactionError as err:
-                logger.debug(
-                    "core.views.delete_file.another_transaction",
-                    extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
-                )
-                messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
-                transaction_error = True
-                if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                    fedora_transaction.rollback_transaction()
-                return JsonResponse({"success": False}, status=400)
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+        except FedoraUpdatedByAnotherTransactionError as err:
+            logger.debug(
+                "core.views.delete_file.another_transaction",
+                extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
+            )
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return JsonResponse({"success": False}, status=400)
+        except FedoraBinaryFileAlreadyDeletedError as err:
+            # Soubor mezitím smazal souběžný požadavek z jiného okna (issue #4174).
+            logger.info(
+                "core.views.delete_file.already_deleted",
+                extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
+            )
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return JsonResponse({"success": False}, status=400)
         if transaction_error is False and Soubor.objects.filter(pk=soubor_pk).exists():
             # Není jisté, zda je 404 jediná správná varianta.
             logger.debug("core.views.delete_file.not_deleted", extra={"soubor": soubor})
@@ -993,17 +1013,15 @@ class NewFileUploadView(BasePostUploadView):
             logger.debug("core.views.post_upload.check_mime_for_url.rejected")
             help_translation = _("core.views.post_upload.mime_rename_failed")
             return JsonResponse({"error": f"{help_translation}"}, status=400)
-        file_name_extension = new_name.split(".")[-1].lower()
-        if file_name_extension not in mime_extensions:
-            old_name = new_name
-            new_name = replace_last(new_name, new_name.split(".")[-1], mime_extensions[0])
-            renamed = True
+        old_name = new_name
+        new_name = get_mime_safe_soubor_name(old_name, old_name, mime_extensions)
+        # Samotný převod přípony na malá písmena se uživateli jako přejmenování nehlásí.
+        renamed = new_name.lower() != old_name.lower()
+        if renamed:
             logger.debug(
                 "core.views.post_upload.check_mime_for_url.rename",
                 extra={"mime_type": mimetype, "old": old_name, "new": new_name},
             )
-        else:
-            renamed = False
         if mimetype in ["image/png", "image/jpeg", "image/tiff"] and isinstance(objekt, SamostatnyNalez):
             soubor_data = Soubor.remove_gps_data(soubor_data)
         try:
@@ -1206,7 +1224,6 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
         soubor_instance.active_transaction = self.fedora_transaction
         logger.debug("core.views.post_upload.update", extra={"pk": soubor_instance.pk})
         objekt = soubor_instance.vazba.navazany_objekt
-        new_name = soubor_instance.nazev
         original_name = soubor.name
         if soubor_instance.vazba.typ_vazby is None:
             self.fedora_transaction.rollback_transaction()
@@ -1223,16 +1240,14 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
             help_translation = _("core.views.post_upload.mime_rename_failed")
             self.fedora_transaction.rollback_transaction()
             return JsonResponse({"error": f"{help_translation}"}, status=400)
-        file_name_extension = new_name.split(".")[-1].lower()
-        if file_name_extension not in mime_extensions:
-            new_name = new_name.replace(new_name.split(".")[-1], mime_extensions[0])
-            renamed = True
+        new_name = get_mime_safe_soubor_name(soubor_instance.nazev, soubor.name, mime_extensions)
+        # Samotný převod přípony na malá písmena se uživateli jako přejmenování nehlásí.
+        renamed = new_name.lower() != soubor_instance.nazev.lower()
+        if renamed:
             logger.debug(
                 "core.views.post_upload.check_mime_for_url.rename",
                 extra={"mime_type": mimetype, "old": original_name, "new": new_name},
             )
-        else:
-            renamed = False
         if (
             mimetype in ["image/png", "image/jpeg", "image/tiff"]
             and soubor_instance.vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE
@@ -1240,8 +1255,6 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
             soubor_data = Soubor.remove_gps_data(soubor_data)
         rep_bin_file = None
         if soubor_instance.repository_uuid is not None:
-            extension = soubor.name.split(".")[-1]
-            new_name = f"{'.'.join(soubor_instance.nazev.split('.')[:-1])}.{extension}"
             try:
                 rep_bin_file = conn.update_binary_file(new_name, mimetype, soubor_data, soubor_instance.repository_uuid)
             except FedoraUpdatedByAnotherTransactionError as err:
