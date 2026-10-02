@@ -38,6 +38,10 @@ repos:
         entry: python docs/check_method_docstrings.py
         language: python
         types: [python]
+        # Hub-delivered AIS CR tooling under .agents/scripts/ is governed by the
+        # management hub's own lint (ruff/pylint), not this repo's Django reST
+        # docstring style guide; exclude it from this app-code reminder.
+        exclude: '^\.agents/scripts/'
       - id: generate-module-docs
         name: Generate module documentation
         entry: python docs/generate_module_docs.py

@@ -118,8 +118,5 @@ logstash/logstash.conf
 /webclient/core/tests/resources/ssl.crt
 /webclient/core/tests/resources/ssl.key
 
-# agents
-.codex/
-.claude/
-.cursor/
+# secrets
 .env

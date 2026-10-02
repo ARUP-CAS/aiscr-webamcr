@@ -7,75 +7,75 @@
     {
       "name": "Run tests",
       "file": ".github/workflows/run-tests.yml",
-      "trigger": "workflow_dispatch (manuální spuštění s parametry)",
+      "trigger": "workflow_dispatch (manual run with parameters)",
       "timeout_minutes": 180,
       "notes": [
-        "Spouští Selenium testy na vzdáleném DEV serveru přes VPN a SSH.",
-        "Výsledky ukládá do XLSX a krátkého .env souboru na serveru, které následně stahuje jako artefakt.",
-        "Používá `concurrency` skupinu tests-${repo} pro zabránění paralelního běhu."
+        "Runs Selenium tests on a remote DEV server via VPN and SSH.",
+        "Stores the results in XLSX and a short .env file on the server, which it then downloads as an artifact.",
+        "Uses the `concurrency` group tests-${repo} to prevent parallel runs."
       ]
     },
     {
       "name": "Pre-commit",
       "file": ".github/workflows/pre_commit.yml",
-      "trigger": "push na dev, PR do dev/test, workflow_dispatch",
+      "trigger": "push to dev, PR to dev/test, workflow_dispatch",
       "timeout_minutes": 15,
       "notes": [
-        "Instaluje Python 3.12 a závislosti z `webclient/requirements.txt` plus `pip-licenses` a `pre-commit`.",
-        "Před samotným pre-commit během může (podle vstupů) vygenerovat licenční dokument `python_knihovny.rst`.",
-        "Pre-commit log je parsován kvůli docstring a flake8 varováním; výstup je publikován do GitHub Summary a jako sticky komentář na PR.",
-        "Pokud pre-commit vygeneruje změny, vytvoří se automatický PR `pre-commit-fixes/...` pomocí `peter-evans/create-pull-request`."
+        "Installs Python 3.12 and the dependencies from `webclient/requirements.txt` plus `pip-licenses` and `pre-commit`.",
+        "Before the pre-commit run itself it may (depending on the inputs) generate the license document `python_knihovny.rst`.",
+        "The pre-commit log is parsed for docstring and flake8 warnings; the output is published to the GitHub Summary and as a sticky comment on the PR.",
+        "If pre-commit generates changes, an automatic PR `pre-commit-fixes/...` is created using `peter-evans/create-pull-request`."
       ]
     },
     {
       "name": "Deployment to selected environment",
       "file": ".github/workflows/deployment.yml",
-      "trigger": "workflow_dispatch (tag + výběr DEV/TEST a zdroje Docker image)",
+      "trigger": "workflow_dispatch (tag + selection of DEV/TEST and the Docker image source)",
       "timeout_minutes": 60,
       "notes": [
-        "Přes VPN a SSH nasazuje daný tag na DEV nebo TEST server pomocí `scripts/ci_deployment/deploy_server.sh`.",
-        "Používá `concurrency` skupinu deploy-${repo}-${environment} pro oddělení DEV/TEST běhů."
+        "Via VPN and SSH, deploys the given tag to the DEV or TEST server using `scripts/ci_deployment/deploy_server.sh`.",
+        "Uses the `concurrency` group deploy-${repo}-${environment} to separate DEV/TEST runs."
       ]
     },
     {
       "name": "Docker Scout",
       "file": ".github/workflows/docker_scout.yml",
-      "trigger": "pull_request do větve dev",
+      "trigger": "pull_request to the dev branch",
       "timeout_minutes": 60,
       "notes": [
-        "Buildne Docker image z Dockerfile a pomocí Docker Scout porovnává zranitelnosti vůči poslední verzi v registru.",
-        "Filtruje pouze kritické a vysoké zranitelnosti; výsledek komentuje na PR."
+        "Builds the Docker image from the Dockerfile and, using Docker Scout, compares vulnerabilities against the latest version in the registry.",
+        "Filters only critical and high vulnerabilities; comments the result on the PR."
       ]
     },
     {
       "name": "Pre-commit autoupdate",
       "file": ".github/workflows/pre_commit_update.yml",
-      "trigger": "cron (každé pondělí 03:00) + workflow_dispatch",
+      "trigger": "cron (every Monday 03:00) + workflow_dispatch",
       "timeout_minutes": 30,
       "notes": [
-        "Spouští `pre-commit autoupdate` na větvi test a v případě změn vytváří PR `pre-commit-autoupdate`.",
-        "Log z autoupdate je vložen do těla PR."
+        "Runs `pre-commit autoupdate` on the test branch and, in case of changes, creates a PR `pre-commit-autoupdate`.",
+        "The log from autoupdate is inserted into the PR body."
       ]
     },
     {
       "name": "Build and publish Docker images",
       "file": ".github/workflows/publish_images.yml",
-      "trigger": "workflow_call (vyvolán z `new-version.yml`)",
+      "trigger": "workflow_call (invoked from `new-version.yml`)",
       "timeout_minutes": 30,
       "notes": [
-        "Buildí a publikuje Docker image pro prod/proxy/redis do GHCR a DockerHubu, včetně cache, cosign podpisu, SLSA provenance a SBOM (Trivy).",
-        "Z výsledných SBOM a vulnerability scanů generuje a nahrává SARIF reporty přes `github/codeql-action/upload-sarif`."
+        "Builds and publishes the Docker image for prod/proxy/redis to GHCR and DockerHub, including cache, a cosign signature, SLSA provenance, and an SBOM (Trivy).",
+        "From the resulting SBOM and vulnerability scans it generates and uploads SARIF reports via `github/codeql-action/upload-sarif`."
       ]
     },
     {
       "name": "New version",
       "file": ".github/workflows/new-version.yml",
-      "trigger": "workflow_dispatch (nový tag vX.Y.Z, volitelný update CITATION.cff, prostředí testing/production)",
+      "trigger": "workflow_dispatch (new tag vX.Y.Z, optional CITATION.cff update, testing/production environment)",
       "timeout_minutes": 60,
       "notes": [
-        "Nejprve (job update_files) aktualizuje `CITATION.cff` na větvi dev (pokud povoleno) pomocí `yq` a vygeneruje commit.",
-        "Následně vytvoří anotovaný Git tag přes `rickstaa/action-create-tag` a předá jej do workflow `publish_images.yml` k build/publish.",
-        "Používá GitHub App token (AISCR AMCR Actions) pro zápis do repozitáře."
+        "First (job update_files) it updates `CITATION.cff` on the dev branch (if enabled) using `yq` and generates a commit.",
+        "Then it creates an annotated Git tag via `rickstaa/action-create-tag` and passes it to the `publish_images.yml` workflow for build/publish.",
+        "Uses a GitHub App token (AISCR AMCR Actions) for writing to the repository."
       ]
     }
   ],
@@ -86,34 +86,34 @@
         "id": "isort",
         "repo": "https://github.com/pycqa/isort",
         "rev": "8.0.1",
-        "notes": ["Používá profil black; sjednocuje importy napříč projektem."]
+        "notes": ["Uses the black profile; unifies imports across the project."]
       },
       {
         "id": "black",
         "repo": "https://github.com/psf/black",
         "rev": "26.3.0",
-        "notes": ["Formátování s line-length 120 znaků."]
+        "notes": ["Formatting with a line-length of 120 characters."]
       },
       {
         "id": "flake8",
         "repo": "https://github.com/pycqa/flake8",
         "rev": "7.3.0",
-        "notes": ["Vynucuje PEP8 + projektové výjimky (viz .flake8)."]
+        "notes": ["Enforces PEP8 + project exceptions (see .flake8)."]
       },
       {
         "id": "method-docstring-style-reminder",
         "repo": "local",
-        "notes": ["Neblokující připomínka na styl docstringů pro metody; spouští `docs/check_method_docstrings.py`."]
+        "notes": ["A non-blocking reminder about the docstring style for methods; runs `docs/check_method_docstrings.py`."]
       },
       {
         "id": "generate-module-docs",
         "repo": "local",
-        "notes": ["Vždy spouští `docs/generate_module_docs.py`; generovaná dokumentace je součástí pre-commit běhu."]
+        "notes": ["Always runs `docs/generate_module_docs.py`; the generated documentation is part of the pre-commit run."]
       },
       {
         "id": "generate-selenium-test-docs",
         "repo": "local",
-        "notes": ["Vždy spouští `docs/generate_selenium_test_docs.py`; synchronizuje dokumentaci Selenium testů."]
+        "notes": ["Always runs `docs/generate_selenium_test_docs.py`; synchronizes the documentation of the Selenium tests."]
       }
     ]
   },
@@ -149,27 +149,27 @@
     "selenium_compose": "docker-compose-test.yml",
     "test_docs": "docs/source/09_testovani/",
     "notes": [
-      "Selenium testy běží na vzdáleném prostředí (viz `scripts/start_selenium_tests.sh` a docker-compose-test.yml mount `/opt/selenium_test`).",
-      "Dokumentace testů (`selenium_testy.rst`) je generována automaticky v rámci pre-commit hooků."
+      "Selenium tests run on a remote environment (see `scripts/start_selenium_tests.sh` and the docker-compose-test.yml mount `/opt/selenium_test`).",
+      "The test documentation (`selenium_testy.rst`) is generated automatically as part of the pre-commit hooks."
     ]
   },
   "security_scanning": {
-    "dependabot": "N/A (není definován .github/dependabot.yml)",
-    "codeql": "Nepoužívá se samostatný CodeQL workflow; místo toho se využívá Trivy + upload SARIF přes `github/codeql-action/upload-sarif` v publish_images.yml.",
-    "note": "Bez samostatného statického code-scan workflow; bezpečnostní skenování je zaměřeno na Docker image (Trivy, Docker Scout) a ne na Python kód."
+    "dependabot": "N/A (no .github/dependabot.yml is defined)",
+    "codeql": "No separate CodeQL workflow is used; instead, Trivy + SARIF upload via `github/codeql-action/upload-sarif` in publish_images.yml is used.",
+    "note": "Without a separate static code-scan workflow; security scanning is focused on the Docker image (Trivy, Docker Scout) and not on the Python code."
   },
   "issues": [
     {
-      "severity": "Nízká",
+      "severity": "Low",
       "area": "Security scanning",
-      "description": "Projekt spoléhá na Docker Scout a Trivy SARIF pro image scanning, ale nemá samostatný CodeQL workflow pro statickou analýzu Python kódu ani Dependabot konfiguraci pro sledování závislostí.",
-      "recommendation": "Zvážit přidání `.github/dependabot.yml` pro Python a GitHub Actions a jednoduchého CodeQL workflow zaměřeného na Python (aspoň na větvi dev)."
+      "description": "The project relies on Docker Scout and Trivy SARIF for image scanning, but has no separate CodeQL workflow for static analysis of the Python code or a Dependabot configuration for dependency tracking.",
+      "recommendation": "Consider adding `.github/dependabot.yml` for Python and GitHub Actions and a simple CodeQL workflow focused on Python (at least on the dev branch)."
     },
     {
-      "severity": "Nízká",
+      "severity": "Low",
       "area": "CI performance",
-      "description": "Workflow `pre_commit.yml` instaluje plné `webclient/requirements.txt` pro každé spuštění, což může být časově náročné; vzhledem k mírnějšímu limitu 15 minut to ale aktuálně není problém.",
-      "recommendation": "Pokud by běhy začaly timeoutovat, oddělit minimální requirements pro pre-commit (lint/format) do samostatného souboru."
+      "description": "The `pre_commit.yml` workflow installs the full `webclient/requirements.txt` for every run, which can be time-consuming; however, given the more lenient 15-minute limit, this is not currently a problem.",
+      "recommendation": "If the runs start to time out, separate a minimal requirements set for pre-commit (lint/format) into a separate file."
     }
   ]
 }
