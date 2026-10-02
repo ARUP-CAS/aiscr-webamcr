@@ -282,10 +282,11 @@ def log_katastr_change(historie_vazba_id: Optional[int], *casti: str) -> None:
     )
 
 
-def _compute_az_katastr_assignment(
+def compute_az_katastr_assignment(
     az_ident_cely: str,
     *,
     exclude_kod: Optional[int] = None,
+    pian_ids: Optional[List[int]] = None,
 ) -> Tuple[Optional[int], List[int]]:
     """
     Vrátí cílové přiřazení katastrů pro AZ podle PIAN intersect jeho DJ.
@@ -326,6 +327,10 @@ def _compute_az_katastr_assignment(
         ``ident_cely LIKE '<az>-%'``.
     :param exclude_kod: Volitelný kód katastru, který se vyloučí z prostorové
         query (typicky mazaný katastr v ``_delete_katastr``).
+    :param pian_ids: Volitelný seznam ID PIANů, ze kterých se katastry
+        počítají; ostatní PIANy záznamu se ignorují. Používá anonymizace
+        databáze, aby katastry částečně přesunutého záznamu neprozradily
+        polohu PIANů, které zůstaly na místě. ``None`` znamená všechny PIANy.
 
         :return: Dvojice ``(hlavni_id, ostatni_ids)``. ``hlavni_id`` je ID
             prvního unikátního katastru v deterministickém pořadí, ostatní
@@ -340,6 +345,7 @@ def _compute_az_katastr_assignment(
             JOIN public.pian pian ON dj.pian = pian.id
             WHERE dj.ident_cely LIKE %s
               AND pian.geom_sjtsk IS NOT NULL
+              AND (%s::int[] IS NULL OR pian.id = ANY(%s::int[]))
         ) dp
         JOIN public.ruian_katastr k ON ST_Intersects(k.hranice, dp.pian_geom)
         WHERE %s::int IS NULL OR k.kod <> %s::int
@@ -348,7 +354,7 @@ def _compute_az_katastr_assignment(
                  k.nazev
     """
     with connection.cursor() as cursor:
-        cursor.execute(query, [f"{az_ident_cely}-%", exclude_kod, exclude_kod])
+        cursor.execute(query, [f"{az_ident_cely}-%", pian_ids, pian_ids, exclude_kod, exclude_kod])
         rows = cursor.fetchall()
 
     hlavni_id: Optional[int] = None
@@ -363,6 +369,12 @@ def _compute_az_katastr_assignment(
         else:
             ostatni_ids.append(katastr_id)
     return hlavni_id, ostatni_ids
+
+
+#: Zpětně kompatibilní jméno. Výpočet používá i anonymizace databáze
+#: (``core.management.commands.anonymizace_dat``), proto má funkce veřejné
+#: jméno – sahat zvenčí na podtržítkové API by bylo křehké.
+_compute_az_katastr_assignment = compute_az_katastr_assignment
 
 
 def _update_az_katastry_if_changed(
@@ -391,7 +403,7 @@ def _update_az_katastry_if_changed(
         :return: ``True`` pokud byly provedeny změny (proběhl save),
             ``False`` pokud nový stav je identický se stávajícím.
     """
-    new_hlavni_id, new_ostatni_ids = _compute_az_katastr_assignment(az.ident_cely, exclude_kod=exclude_kod)
+    new_hlavni_id, new_ostatni_ids = compute_az_katastr_assignment(az.ident_cely, exclude_kod=exclude_kod)
 
     if new_hlavni_id is None:
         # AZ nemá DJ s PIAN intersectem – necháme stávající stav,
