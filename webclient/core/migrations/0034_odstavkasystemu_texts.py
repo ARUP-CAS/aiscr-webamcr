@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("core", "0031_alter_permissions_action"),
+        ("core", "0033_alter_soubor_options"),
     ]
 
     operations = [
