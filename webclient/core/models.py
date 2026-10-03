@@ -1282,22 +1282,24 @@ class Permissions(models.Model):
         spoluprace_edit_projekty = "spoluprace_edit_projekty", _(
             "core.models.permissions.actionChoices.spoluprace_edit_projekty"
         )
-        pian_import_new = "pian_import_new", "core.models.permissions.actionChoices.pian_import_new"
-        pian_import_change = "pian_import_change", "core.models.permissions.actionChoices.pian_import_change"
-        akce_dj_zakladni = "akce_dj_zakladni", "core.models.permissions.actionChoices.akce_dj_zakladni"
+        pian_import_new = "pian_import_new", _("core.models.permissions.actionChoices.pian_import_new")
+        pian_import_change = "pian_import_change", _("core.models.permissions.actionChoices.pian_import_change")
+        akce_dj_zakladni = "akce_dj_zakladni", _("core.models.permissions.actionChoices.akce_dj_zakladni")
         akce_pripojit_pian_mapa = (
             "akce_pripojit_pian_mapa",
-            "core.models.permissions.actionChoices.akce_pripojit_pian_mapa",
+            _("core.models.permissions.actionChoices.akce_pripojit_pian_mapa"),
         )
-        akce_pripojit_pian_id = "akce_pripojit_pian_id", "core.models.permissions.actionChoices.akce_pripojit_pian_id"
-        lokalita_dj_zakladni = "lokalita_dj_zakladni", "core.models.permissions.actionChoices.lokalita_dj_zakladni"
+        akce_pripojit_pian_id = "akce_pripojit_pian_id", _(
+            "core.models.permissions.actionChoices.akce_pripojit_pian_id"
+        )
+        lokalita_dj_zakladni = "lokalita_dj_zakladni", _("core.models.permissions.actionChoices.lokalita_dj_zakladni")
         lokalita_pripojit_pian_mapa = (
             "lokalita_pripojit_pian_mapa",
-            "core.models.permissions.actionChoices.lokalita_pripojit_pian_mapa",
+            _("core.models.permissions.actionChoices.lokalita_pripojit_pian_mapa"),
         )
         lokalita_pripojit_pian_id = (
             "lokalita_pripojit_pian_id",
-            "core.models.permissions.actionChoices.lokalita_pripojit_pian_id",
+            _("core.models.permissions.actionChoices.lokalita_pripojit_pian_id"),
         )
         dokumenty_tabulka_projekt = "dokumenty_tabulka_projekt", _(
             "core.models.permissions.actionChoices.dokumenty_tabulka_projekt"

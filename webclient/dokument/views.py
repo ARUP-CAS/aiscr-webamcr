@@ -56,6 +56,7 @@ from core.message_constants import (
 from core.models import Permissions as p
 from core.models import Soubor, check_permissions, soubor_nazev_razeni_klic
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
+from core.translation import format_message
 from core.utils import TwoQueryPaginator, get_3d_from_envelope
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
@@ -75,6 +76,7 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_noop
 from django.views import View
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
@@ -2770,9 +2772,7 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
         warnings = []
         if remove_orphan:
             warnings.append(
-                "Nearchivovaný dokument "
-                + str(orphan_dokument)
-                + " nemá žádnou jinou relaci a odpojením bude automaticky smazán."
+                format_message(gettext_noop("dokument.views.odpojit.orphan_warning"), dokument=orphan_dokument)
             )
         return render(
             request,
