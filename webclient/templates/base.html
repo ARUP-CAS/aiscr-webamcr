@@ -117,7 +117,8 @@
       <div class="maintenance">
         <div class="maintenance__message d-block px-3 py-2 text-center text-bold text-white old-bv"
              data-maintenance-toggle>
-          <span class="maintenance__text" id="maintenance-text">{% trans "base.odstavka.text" %}</span>
+          {% get_current_language as LANGUAGE_CODE %}
+          <span class="maintenance__text" id="maintenance-text">{% if LANGUAGE_CODE == "en" %}{{ action.text_en }}{% else %}{{ action.text_cs }}{% endif %}</span>
           <span class="material-icons maintenance__icon" aria-hidden="true" hidden>expand_more</span>
         </div>
       </div>
