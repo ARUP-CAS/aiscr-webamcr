@@ -17,9 +17,16 @@ Rosetta
 Pomocí rozšíření je možné spravovat překlady pro všechny jazyky aplikace.
 Rosetta pracuje s katalogy na runtime volume. Změna provedená přímo v běžící
 aplikaci platí do dalšího nasazení; při nasazení ji nahradí obsah z repozitáře.
-Před přepsáním existujícího katalogu entrypoint vytvoří jeho kopii
-``django_backup_DDMMYYYYHHMMSS.po`` ve stejném adresáři na volume
+Před přepsáním existujícího katalogu entrypoint porovná aktuální katalog na
+volume s nově vygenerovaným katalogem. Pokud jsou soubory shodné, záloha se
+nevytvoří a v logu se uvede, že byla přeskočena. Tím se při běžném restartu
+nevytvářejí opakované shodné zálohy. Pokud se katalogy liší, entrypoint vytvoří
+kopii ``django_backup_DDMMYYYYHHMMSS.po`` ve stejném adresáři na volume
 ``locale_data``. Zálohy jsou tak uložené vedle katalogu daného jazyka.
+
+Entrypoint průběžně udržuje počet záloh v rozumných mezích. Zálohy starší než
+365 dní odstraní a následně ponechá nejvýše 100 nejnovějších záloh pro každý
+jazyk. Pravidla se vztahují na zálohy vytvořené entrypointem i Rosettou.
 Služba ``sidecar`` zůstává beze změny a průběžně synchronizuje obsah volume
 ``locale_data`` do svého zálohovacího umístění.
 
