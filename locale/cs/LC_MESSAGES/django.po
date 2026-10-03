@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-03 13:18+0200\n"
-"PO-Revision-Date: 2026-10-03 13:18+0200\n"
+"POT-Creation-Date: 2026-10-03 14:14+0200\n"
+"PO-Revision-Date: 2026-10-03 14:14+0200\n"
 "Last-Translator: David Novák <novak@arup.cas.cz>\n"
 "Language-Team: AIS CR <info@amapa.cz>\n"
 "Language: cs_CZ\n"
@@ -879,12 +879,12 @@ msgid "arch_z.filters.AkceFilter.datum_ukonceni.label"
 msgstr "Datum ukončení (od-do)"
 
 #: arch_z/filters.py:504
-msgid "arch_z.filters.AkceFilter.je_nz.ne"
-msgstr "ne"
-
-#: arch_z/filters.py:504
 msgid "arch_z.filters.AkceFilter.je_nz.ano"
 msgstr "ano"
+
+#: arch_z/filters.py:504
+msgid "arch_z.filters.AkceFilter.je_nz.ne"
+msgstr "ne"
 
 #: arch_z/filters.py:505
 msgid "arch_z.filters.AkceFilter.je_nz.label"
@@ -1327,12 +1327,12 @@ msgid "arch_z.tables.AkceTable.je_nz.label"
 msgstr "Nahrazuje NZ"
 
 #: arch_z/tables.py:133
-msgid "arch_z.tables.AkceTable.je_nz.ano"
-msgstr "ano"
-
-#: arch_z/tables.py:133
 msgid "arch_z.tables.AkceTable.je_nz.ne"
 msgstr "ne"
+
+#: arch_z/tables.py:133
+msgid "arch_z.tables.AkceTable.je_nz.ano"
+msgstr "ano"
 
 #: arch_z/tables.py:136
 msgid "arch_z.tables.AkceTable.odlozena_nz.label"
@@ -2534,7 +2534,7 @@ msgstr "Správa API"
 
 #: core/admin_sites.py:389 core/forms.py:707 core/views.py:2937
 msgid "core.forms.ImportDataAdminForm.insert"
-msgstr "insert (nové záznamy)."
+msgstr "insert (nové záznamy)"
 
 #: core/admin_sites.py:390 core/forms.py:708 core/views.py:2938
 msgid "core.forms.ImportDataAdminForm.update"
@@ -2547,7 +2547,7 @@ msgstr "delete (odstranění)"
 #: core/admin_sites.py:526 core/admin_sites.py:539 core/admin_sites.py:613
 #: core/views.py:3247
 msgid "core.admin.import_data.error.import_error"
-msgstr "Chyba importu."
+msgstr "Chyba importu"
 
 #: core/admin_sites.py:527 cron/tasks.py:233
 msgid "cron.tasks.run_data_import.import_directory_not_configured"
@@ -2612,12 +2612,12 @@ msgid "core.constants.cs.text"
 msgstr "čeština"
 
 #: core/constants.py:156
-msgid "core.constants.dok.mesto_brno"
-msgstr "Brno"
-
-#: core/constants.py:156
 msgid "core.constants.dok.mesto_praha"
 msgstr "Praha"
+
+#: core/constants.py:156
+msgid "core.constants.dok.mesto_brno"
+msgstr "Brno"
 
 #: core/constants.py:157
 msgid "core.constants.dok.v_praze"
@@ -2628,12 +2628,12 @@ msgid "core.constants.dok.v_brne"
 msgstr "v Brně"
 
 #: core/constants.py:158
-msgid "core.constants.dok.adresa_praha"
-msgstr "Letenská 123/4, 118 01 Praha 1 - Malá Strana"
-
-#: core/constants.py:158
 msgid "core.constants.dok.adresa_brno"
 msgstr "Čechyňská 363/19, 602 00 Brno"
+
+#: core/constants.py:158
+msgid "core.constants.dok.adresa_praha"
+msgstr "Letenská 123/4, 118 01 Praha 1 - Malá Strana"
 
 #: core/constants.py:160
 msgid "core.constants.dok.telefon"
@@ -5505,7 +5505,7 @@ msgstr "se nepodařilo nahrát. Pravděpodobně je v chybném formátu."
 #: core/templates/core/upload_file.html:82
 #: oznameni/templates/oznameni/index_2.html:170
 msgid "core.templates.core.upload_file.dz.alertsUploadErrorPart1"
-msgstr "Soubor. "
+msgstr "Soubor "
 
 #: core/templates/core/upload_file.html:83
 #: oznameni/templates/oznameni/index_2.html:171
@@ -5537,7 +5537,7 @@ msgstr " úspěšně odstraněn."
 #: core/templates/core/upload_file.html:88
 #: oznameni/templates/oznameni/index_2.html:176
 msgid "core.templates.core.upload_file.dz.alertsDeleteErrorPart1"
-msgstr "Soubor. "
+msgstr "Soubor "
 
 #: core/templates/core/upload_file.html:89
 #: oznameni/templates/oznameni/index_2.html:177
@@ -5820,7 +5820,7 @@ msgstr "Import záznamů {n}/{total}"
 
 #: cron/tasks.py:210
 msgid "cron.tasks.run_data_import.success"
-msgstr "Úspěšně importován."
+msgstr "Úspěšně importován"
 
 #: cron/tasks.py:211
 msgid "cron.tasks.run_data_import.file"
@@ -5844,7 +5844,7 @@ msgstr "Přeskočeno"
 
 #: cron/tasks.py:216
 msgid "cron.tasks.run_data_import.history_record_created"
-msgstr "Vytvořen záznam v historii."
+msgstr "Vytvořen záznam v historii"
 
 #: cron/tasks.py:217
 msgid "cron.tasks.run_data_import.failed_during_history"
@@ -8272,11 +8272,11 @@ msgstr "EZ1 - zapsaný"
 
 #: ez/models.py:35
 msgid "ez.models.externiZdroj.states.odeslany.label"
-msgstr "EZ2 - odeslaný."
+msgstr "EZ2 - odeslaný"
 
 #: ez/models.py:36
 msgid "ez.models.externiZdroj.states.potvrzeny.label"
-msgstr "EZ3 - potvrzený."
+msgstr "EZ3 - potvrzený"
 
 #: ez/tables.py:11
 msgid "ez.tables.ezTable.ident_cely.label"
@@ -8738,7 +8738,7 @@ msgstr "Záznam se nepodařilo najít."
 #: fedora_management/views.py:154 fedora_management/views.py:180
 msgid ""
 "fedora_management.admin.YourCustomAdminSite.update_metadata_file_upload.error"
-msgstr "Chyba."
+msgstr "Chyba"
 
 #: fedora_management/views.py:178
 msgid ""
@@ -10470,7 +10470,7 @@ msgstr "Zpět"
 
 #: oznameni/templates/oznameni/header.html:6
 msgid "oznameni.templates.oznameni.header.img.mapa.title"
-msgstr "Archeologická mapa České republiky."
+msgstr "Archeologická mapa České republiky"
 
 #: oznameni/templates/oznameni/header.html:13
 msgid "oznameni.templates.oznameni.header.img.praha.title"
@@ -10482,7 +10482,7 @@ msgstr "Archeologický ústav AV ČR, Brno, v. v. i."
 
 #: oznameni/templates/oznameni/header.html:35
 msgid "templates.registration.login.toggleTheme.title"
-msgstr "Přepnout světlý/tmavý režim."
+msgstr "Přepnout světlý/tmavý režim"
 
 #: oznameni/templates/oznameni/index.html:6
 msgid "oznameni.templates.oznameni.index.title"
@@ -11197,11 +11197,11 @@ msgstr "SN1 - zapsaný"
 
 #: pas/models.py:46
 msgid "pas.models.samostatnyNalez.states.odeslany.label"
-msgstr "SN2 - odeslaný."
+msgstr "SN2 - odeslaný"
 
 #: pas/models.py:47
 msgid "pas.models.samostatnyNalez.states.potvrzeny.label"
-msgstr "SN3 - potvrzený."
+msgstr "SN3 - potvrzený"
 
 #: pas/models.py:48
 msgid "pas.models.samostatnyNalez.states.archivovany.label"
@@ -11870,11 +11870,11 @@ msgstr "Přesnost vymezení PIAN."
 
 #: pian/models.py:38
 msgid "pian.models.pian.states.nepotvrzen"
-msgstr "PI1 - nepotvrzený."
+msgstr "PI1 - nepotvrzený"
 
 #: pian/models.py:39
 msgid "pian.models.pian.states.potvrzen"
-msgstr "PI2 - potvrzený."
+msgstr "PI2 - potvrzený"
 
 #: pian/models.py:188
 msgid "pian.models.Pian.get_absolute_url.noDJ.message.text"
@@ -13686,7 +13686,7 @@ msgstr ""
 
 #: templates/admin/app_list.html:8
 msgid "core.templates.admin.appList.models"
-msgstr "Modely v aplikaci. "
+msgstr "Modely v aplikaci "
 
 #: templates/admin/app_list.html:19
 msgid "core.templates.admin.appList.add"
@@ -13704,17 +13704,17 @@ msgstr "Upravit"
 msgid "core.templates.admin.appList.noPermissions"
 msgstr "Nemáte oprávnění nic zobrazovat ani upravovat."
 
+#: templates/admin/base_site.html:25 templates/admin/base_site.html:28
+#: templates/base.html:109 templates/base.html:112
+msgid "base.testing_env.title"
+msgstr "Testovací verze AMČR"
+
 #: templates/admin/base_site.html:25 templates/base.html:109
 msgid "base.testing_env.text"
 msgstr ""
 "Veškerá obsažená data vznikla pouze pro účely testování či školení. "
 "Produkční verzi naleznete na adrese: <a href=\"https://amcr.aiscr.cz/\" "
 "target=\"_blank\">https://amcr.aiscr.cz</a>"
-
-#: templates/admin/base_site.html:25 templates/admin/base_site.html:28
-#: templates/base.html:109 templates/base.html:112
-msgid "base.testing_env.title"
-msgstr "Testovací verze AMČR"
 
 #: templates/admin/doi_management/update_doi.html:30
 msgid "core.templates.admin.doi_management.home_link"
@@ -14154,7 +14154,7 @@ msgstr "Informace"
 
 #: templates/base_logged_in.html:348
 msgid "templates.baseLogedIn.navbar.uzivatel.title"
-msgstr "Informace o uživateli."
+msgstr "Informace o uživateli"
 
 #: templates/base_logged_in.html:350
 msgid "templates.baseLogedIn.navbar.uzivatel"
@@ -14166,7 +14166,7 @@ msgstr "Odhlásit"
 
 #: templates/base_logged_in.html:367
 msgid "templates.baseLogedIn.navbar.toggleTheme"
-msgstr "Přepnout světlý/tmavý režim."
+msgstr "Přepnout světlý/tmavý režim"
 
 #: templates/base_logged_in.html:401 templates/base_logged_in.html:918
 msgid "templates.baseLogedIn.footer.logos.show"
@@ -14182,11 +14182,11 @@ msgstr "Evropská unie"
 
 #: templates/base_logged_in.html:411 templates/base_logged_in.html:412
 msgid "templates.baseLogedIn.footer.logo.msmt"
-msgstr "Ministerstvo školství, mládeže a tělovýchovy."
+msgstr "Ministerstvo školství, mládeže a tělovýchovy"
 
 #: templates/base_logged_in.html:414 templates/base_logged_in.html:415
 msgid "templates.baseLogedIn.footer.logo.avcr"
-msgstr "Akademie věd České republiky."
+msgstr "Akademie věd České republiky"
 
 #: templates/base_logged_in.html:417 templates/base_logged_in.html:418
 msgid "templates.baseLogedIn.footer.logo.arub"
@@ -14198,11 +14198,11 @@ msgstr "Archeologický ústav AV ČR, Praha, v. v. i."
 
 #: templates/base_logged_in.html:423 templates/base_logged_in.html:424
 msgid "templates.baseLogedIn.footer.logo.ais"
-msgstr "Archeologický informační systém České republiky."
+msgstr "Archeologický informační systém České republiky"
 
 #: templates/base_logged_in.html:426 templates/base_logged_in.html:427
 msgid "templates.baseLogedIn.footer.logo.vvi"
-msgstr "Velké výzkumné infrastruktury."
+msgstr "Velké výzkumné infrastruktury"
 
 #: templates/base_logged_in.html:433
 msgid "templates.baseLogedIn.footer.copyright"
@@ -14672,18 +14672,18 @@ msgstr "Zapomněli jste heslo"
 
 #: templates/registration/login.html:48
 msgid "templates.registration.login.forgottenPassword.title"
-msgstr "Zapomněli jste heslo."
+msgstr "Zapomněli jste heslo"
 
 #: templates/registration/login.html:51
 msgid "templates.registration.login.noAccount.header"
 msgstr "Nemáte účet"
 
 #: templates/registration/login.html:52
-msgid "templates.registration.login.register.text"
+msgid "templates.registration.login.register.title"
 msgstr "Zaregistrovat se"
 
 #: templates/registration/login.html:52
-msgid "templates.registration.login.register.title"
+msgid "templates.registration.login.register.text"
 msgstr "Zaregistrovat se"
 
 #: templates/registration/login.html:72
@@ -14803,16 +14803,16 @@ msgid "templates.registration.passwordResetConfirm.confirmButton.nastav"
 msgstr "Nastav heslo"
 
 #: templates/registration/password_reset_confirm.html:16
+msgid "templates.registration.passwordResetConfirm.nevalidniLink.linkTitle"
+msgstr "nový reset hesla"
+
+#: templates/registration/password_reset_confirm.html:16
 msgid "templates.registration.passwordResetConfirm.nevalidniLink.text"
 msgstr "Link již není validní. Prosím požádejte o"
 
 #: templates/registration/password_reset_confirm.html:16
 msgid "templates.registration.passwordResetConfirm.nevalidniLink.linkText"
 msgstr "nový reset hesla"
-
-#: templates/registration/password_reset_confirm.html:16
-msgid "templates.registration.passwordResetConfirm.nevalidniLink.linkTitle"
-msgstr "nový reset hesla."
 
 #: templates/registration/password_reset_done.html:4
 msgid "templates.registration.passwordResetDone.title"
@@ -14849,11 +14849,11 @@ msgid "templates.registration.passwordResetForm.loginAgain.header"
 msgstr "Pokusit se přihlásit znovu"
 
 #: templates/registration/password_reset_form.html:15
-msgid "templates.registration.passwordResetForm.loginAgain.linkText"
+msgid "templates.registration.passwordResetForm.loginAgain.title"
 msgstr "Přihlásit"
 
 #: templates/registration/password_reset_form.html:15
-msgid "templates.registration.passwordResetForm.loginAgain.title"
+msgid "templates.registration.passwordResetForm.loginAgain.linkText"
 msgstr "Přihlásit"
 
 #: templates/rosetta/file-list.html:20 templates/rosetta/file-list.html:42
@@ -15973,7 +15973,7 @@ msgstr ""
 
 #: uzivatel/templates/admin/admin_user_change.html:7
 msgid "admin.admin_user_change.historieUzivatele.title"
-msgstr "Historie stavů / Verze."
+msgstr "Historie stavů / Verze"
 
 #: uzivatel/templates/admin/admin_user_change.html:8
 msgid "admin.admin_user_change.historieUzivatele"
@@ -17540,12 +17540,12 @@ msgid "vypis.akce.sub_header.je_nz.Nie"
 msgstr "Ne"
 
 #: vypis/templates/vypis/akce/sub_header.html:5
-msgid "vypis.akce.sub_header.odlozena_nz.Ano"
-msgstr "Ano"
-
-#: vypis/templates/vypis/akce/sub_header.html:5
 msgid "vypis.akce.sub_header.odlozena_nz.Nie"
 msgstr "Ne"
+
+#: vypis/templates/vypis/akce/sub_header.html:5
+msgid "vypis.akce.sub_header.odlozena_nz.Ano"
+msgstr "Ano"
 
 #: vypis/templates/vypis/vypis.html:17
 msgid "vypis.templates.vypis.index.title"

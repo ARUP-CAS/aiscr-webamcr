@@ -912,10 +912,8 @@ class BasePostUploadView(View):
                 if duplikat.first().vazba.navazany_objekt is not None
                 else ""
             )
-            response_data["duplicate"] = (
-                format_message(
-                    gettext_noop("core.views.post_upload.duplikat2"), file=self.original_filename, ident=parent_ident
-                ),
+            response_data["duplicate"] = format_message(
+                gettext_noop("core.views.post_upload.duplikat2"), file=self.original_filename, ident=parent_ident
             )
         return response_data
 
@@ -931,10 +929,8 @@ class BasePostUploadView(View):
         :return: Upravený slovník odpovědi (beze změny, pokud k přejmenování nedošlo).
         """
         if renamed:
-            response_data["file_renamed"] = (
-                format_message(
-                    gettext_noop("core.views.post_upload.renamed"), file=self.original_filename, new_name=new_name
-                ),
+            response_data["file_renamed"] = format_message(
+                gettext_noop("core.views.post_upload.renamed"), file=self.original_filename, new_name=new_name
             )
         return response_data
 
