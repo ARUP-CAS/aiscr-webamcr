@@ -109,6 +109,7 @@ RUN mkdir -p /vol/web/media /vol/web/static /vol/web/locale/cs/LC_MESSAGES /vol/
     usermod -aG sudo user
 
 WORKDIR /code
+COPY --chown=user:user ./locale /default_locale
 COPY --chown=user:user ./scripts /scripts
 COPY --chown=user:user ./proxy/custom_html /custom_html
 
