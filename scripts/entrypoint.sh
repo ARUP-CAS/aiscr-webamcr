@@ -79,7 +79,6 @@ languages=( "cs" "en" )
 default_locale="/default_locale"
 volume_locale_root="/vol/web/locale"
 code_locale_root="/code/locale"
-backup_locale_root="/backup"
 
 for lang_item in "${languages[@]}"; do
   volume_locale="${volume_locale_root}/${lang_item}/LC_MESSAGES"
@@ -91,11 +90,12 @@ for lang_item in "${languages[@]}"; do
   mkdir -p "${volume_locale}" "${code_locale}"
 
   if test -f "${volume_po}"; then
-    backup_locale="${backup_locale_root}/${lang_item}/LC_MESSAGES"
-    test -d "${backup_locale_root}" && test -w "${backup_locale_root}"
-    mkdir -p "${backup_locale}"
-    backup_timestamp=$(date -u +%Y%m%d%H%M%S)
-    cp "${volume_po}" "${backup_locale}/django_backup_${backup_timestamp}.po"
+    if test ! -w "${volume_locale}"; then
+      echo "Translation backup directory is not writable: ${volume_locale}" >&2
+      exit 1
+    fi
+    backup_timestamp=$(date +%d%m%Y%H%M%S)
+    cp "${volume_po}" "${volume_locale}/django_backup_${backup_timestamp}.po"
   fi
 
   find "${code_locale}" -mindepth 1 -maxdepth 1 -type f -delete
@@ -103,7 +103,7 @@ for lang_item in "${languages[@]}"; do
 
   echo "#makemessages ${lang_item}"
   python3 manage.py makemessages -l "${lang_item}"
-  python3 manage.py compilemessages -l "${lang_item}"
+  msgfmt -o "${code_locale}/django.mo" "${code_locale}/django.po"
 
   cp "${code_locale}/django.po" "${volume_locale}/django.po.tmp"
   mv "${volume_locale}/django.po.tmp" "${volume_locale}/django.po"
@@ -113,5 +113,7 @@ for lang_item in "${languages[@]}"; do
 done
 
 python3 manage.py send_test_emails
+
+python3 manage.py clear_maintenance_cache
 
 sudo uwsgi /scripts/uwsgi_site.ini

@@ -153,7 +153,6 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
                 ensure_maintenance_change_allowed(current, obj, import_protected)
         for code, language_code in settings.LANGUAGES:
             self.file_handler(code, form)
-        cache.delete("maintenance")
         super().save_model(request, obj, form, change)
         transaction.on_commit(lambda: cache.delete("maintenance"))
 
