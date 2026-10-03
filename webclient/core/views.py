@@ -61,6 +61,7 @@ from core.soubor_naming import (
     get_next_soubor_name,
     get_soubor_suffix,
 )
+from core.translation import format_message
 from core.utils import (
     SessionIdentifier,
     check_import_report_directory,
@@ -100,6 +101,7 @@ from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_noop
 from django.views import View
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
@@ -910,12 +912,8 @@ class BasePostUploadView(View):
                 if duplikat.first().vazba.navazany_objekt is not None
                 else ""
             )
-            help_translation = _("core.views.post_upload.duplikat2.text1")
-            help_translation2 = _("core.views.post_upload.duplikat2.text2")
-            help_translation3 = _("core.views.post_upload.duplikat2.text3")
-            response_data["duplicate"] = (
-                f"{help_translation} {self.original_filename} {help_translation2} "
-                f"{parent_ident}. {help_translation3}",
+            response_data["duplicate"] = format_message(
+                gettext_noop("core.views.post_upload.duplikat2"), file=self.original_filename, ident=parent_ident
             )
         return response_data
 
@@ -931,10 +929,8 @@ class BasePostUploadView(View):
         :return: Upravený slovník odpovědi (beze změny, pokud k přejmenování nedošlo).
         """
         if renamed:
-            help_translation = _("core.views.post_upload.renamed.text1")
-            help_translation2 = _("core.views.post_upload.renamed.text2")
-            response_data["file_renamed"] = (
-                f"{help_translation} {self.original_filename} {help_translation2} " f"{new_name}",
+            response_data["file_renamed"] = format_message(
+                gettext_noop("core.views.post_upload.renamed"), file=self.original_filename, new_name=new_name
             )
         return response_data
 
@@ -1149,10 +1145,8 @@ class NewFileUploadView(BasePostUploadView):
                 return JsonResponse({"error": str(SOUBOR_NEJVYSSI_SUFFIX_OBSAZEN)}, status=403)
             return JsonResponse(
                 {
-                    "error": (
-                        _("core.views.post_upload.error.maximal_file_name_exceeded_part_1")
-                        + f" {ident_cely} "
-                        + _("core.views.post_upload.error.maximal_file_name_exceeded_part_2")
+                    "error": format_message(
+                        gettext_noop("core.views.post_upload.error.maximal_file_name_exceeded"), ident=ident_cely
                     )
                 },
                 status=403,

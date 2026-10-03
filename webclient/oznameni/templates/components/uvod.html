@@ -4,7 +4,7 @@
   <h1>{% trans "oznameni.templates.components.uvod.title" %}</h1>
   {% trans "oznameni.templates.components.uvod.text" %}
   <div class="oznameni-warning">{% trans "oznameni.templates.components.warning.text" %}</div>
-  {% blocktranslate with mail_arup=ARUP_MAIL|safe mail_arub=ARUB_MAIL|safe %}
+  {% blocktranslate trimmed with mail_arup=ARUP_MAIL|safe mail_arub=ARUB_MAIL|safe %}
   oznameni.templates.components.uvod.collapsed.text{{mail_arup}}{{mail_arub}}
   {% endblocktranslate %}
 </div>

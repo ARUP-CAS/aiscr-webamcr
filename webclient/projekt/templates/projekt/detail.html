@@ -658,7 +658,7 @@
         {% if samostatne_nalezy %}
         <table class="table table-striped table-hover table-sm mb-0">
           <div class="loader" style="text-align:center;" >
-            <img src="{% static "django_tables2_column_shifter/img/loader.gif" %}" style="margin:5px auto;" alt="loader"/>
+            <img src="{% static "django_tables2_column_shifter/img/loader.gif" %}" style="margin:5px auto;" alt="{% trans 'templates.a11y.loading' %}"/>
             {% trans "templates.bootstrap4Table.loading"%}
           </div> 
           <thead style="display: none">

@@ -173,8 +173,7 @@ class OrganizaceMapperInsertValidTest(TestCase):
         message = str(ctx.exception)
         self.assertEqual(ctx.exception.import_field_verbose_name, "typ_organizace")
         self.assertIn(str(_("core.import_data_mappers.OrganizaceMapper.typ_organizace.limit_choices")), message)
-        self.assertIn("core_admin.ImportDataLimitChoicesError.message.part_2", message)
-        self.assertIn("core_admin.ImportDataLimitChoicesError.message.part_3", message)
+        self.assertIn("core_admin.ImportDataLimitChoicesError.message", message)
         self.assertIn("typ_organizace", message)
         self.assertNotIn(f"nazev_heslare: {HESLAR_ORGANIZACE_TYP}", message)
 

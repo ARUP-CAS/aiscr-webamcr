@@ -106,10 +106,10 @@
     {% get_test_env as test_env %}
     {% if test_env %}
       <div class="test-version">
-        <p>{% trans "base.testing_env.text" %}</p>
+        <p><strong class="text-uppercase">{% trans "base.testing_env.title" %}</strong><br />{% trans "base.testing_env.text" %}</p>
       </div>
       <div class="test-version-mobile">
-        <p>{% trans "base.testing_env.text_mobile" %}</p>
+        <p><strong class="text-uppercase">{% trans "base.testing_env.title" %}</strong></p>
       </div>
       {% endif %}
       {% get_maintenance as action %}
@@ -135,7 +135,7 @@
       {% for message in messages %}
         <div class="alert alert-{% if message.tags == "notclosing warning" %}warning notclosing{% elif message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show app-alert-floating" role="alert" style="top: {%  message_top forloop.counter0 %}px">
           {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% trans 'templates.a11y.close' %}">
           </button>
         </div>
       {% endfor %}

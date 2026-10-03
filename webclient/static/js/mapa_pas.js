@@ -327,7 +327,7 @@ function showPosition(position) {
     map.setView(latlng, 10);
     setPositionPAS(longitude, latitude);  
     L.marker(latlng,{icon:pinIconGreenPin}).addTo(poi_sugest)
-        .bindPopup("Vaše současná poloha")
+        .bindPopup(map_translations['CurrentLocation'])
         .openPopup();
 };
 

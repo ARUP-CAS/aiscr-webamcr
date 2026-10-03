@@ -19,16 +19,13 @@
         <div class="card-body">
           <p>
             {% if not object.aktivni %}
-              {% trans "pas.templates.potvrdit_spolupraci.part_1" %}
-              {{ object.spolupracovnik }}
-              {% trans "pas.templates.potvrdit_spolupraci.part_2" %}
-              {{ object.vedouci }}?
+              {% blocktranslate trimmed with spolupracovnik=object.spolupracovnik vedouci=object.vedouci %}
+              pas.templates.potvrdit_spolupraci.question{{ spolupracovnik }}{{ vedouci }}
+              {% endblocktranslate %}
             {% else %}
-              {% trans "pas.templates.potvrdit_spolupraci.already_active.part_1" %}
-              {{ object.spolupracovnik }}
-              {% trans "pas.templates.potvrdit_spolupraci.already_active.part_2" %}
-              {{ object.vedouci }}
-              {% trans "pas.templates.potvrdit_spolupraci.already_active.part_3" %}
+              {% blocktranslate trimmed with spolupracovnik=object.spolupracovnik vedouci=object.vedouci %}
+              pas.templates.potvrdit_spolupraci.already_active{{ spolupracovnik }}{{ vedouci }}
+              {% endblocktranslate %}
             {% endif %}
           </p>
           <div class="mt-3">

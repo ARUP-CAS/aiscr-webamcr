@@ -343,13 +343,13 @@ Funkce
          - Selže zpracování datového záznamu, databázová transakce nebo hlavní fáze importu dat.
        * - ``cron.tasks.run_data_import.creating_history_records``
          - Hlavní import dat doběhl bez chyby a začíná fáze vytváření historie.
-       * - ``cron.tasks.run_data_import.creating_history_records {n}/{total}``
+       * - ``cron.tasks.run_data_import.creating_history_records_progress {n}/{total}``
          - Během fáze historie, před vytvořením konkrétního historického záznamu.
        * - ``cron.tasks.run_data_import.failed_during_history``
          - Selže vytvoření některého záznamu historie.
        * - ``cron.tasks.run_data_import.updating_fedora_records``
          - Historie doběhla bez chyby a začíná fáze aktualizace Fedora metadat.
-       * - ``cron.tasks.run_data_import.updating_fedora_records {n}/{total}``
+       * - ``cron.tasks.run_data_import.updating_fedora_records_progress {n}/{total}``
          - Během aktualizace jednotlivých Fedora záznamů.
        * - ``cron.tasks.run_data_import.failed_during_fedora``
          - Selže uložení metadat do Fedory pro některý z dotčených záznamů.
