@@ -247,9 +247,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             # dokumentační jednotka musí být záporná.
             if not dj.negativni_jednotka and len(dj.komponenty.komponenty.all()) == 0:
                 result.append(
-                    _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pozitivni.text1")
-                    + str(dj.ident_cely)
-                    + _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pozitivni.text2")
+                    _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pozitivni").format(ident=str(dj.ident_cely))
                 )
                 logger.debug(
                     "arch_z.models.ArcheologickyZaznam.dj_komponenta_negativni", extra={"ident_cely": dj.ident_cely}
@@ -257,9 +255,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             # Každá dokumentační jednotka navázaná na projektovou akci musí mít platnou vazbu na PIAN.
             if dj.pian is None:
                 result.append(
-                    _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pian.text1")
-                    + str(dj.ident_cely)
-                    + _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pian.text2")
+                    _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pian").format(ident=str(dj.ident_cely))
                 )
                 logger.debug("arch_z.models.ArcheologickyZaznam.dj_nema_pian", extra={"ident_cely": dj.ident_cely})
         for dokument_cast in self.casti_dokumentu.all():
@@ -290,16 +286,14 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         for dc in self.casti_dokumentu.all():
             if dc.dokument.stav != D_STAV_ARCHIVOVANY:
                 doc_result.append(
-                    _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dokument.text1")
-                    + dc.dokument.ident_cely
-                    + _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dokument.text2")
+                    _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dokument").format(
+                        ident=dc.dokument.ident_cely
+                    )
                 )
         for dj in self.dokumentacni_jednotky_akce.all():
             if dj.pian and dj.pian.stav != PIAN_POTVRZEN:
                 result.append(
-                    _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.text1")
-                    + str(dj.ident_cely)
-                    + _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.text2")
+                    _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj").format(ident=str(dj.ident_cely))
                 )
         doc_result = [str(x) for x in doc_result]
         result = [str(x) for x in result]

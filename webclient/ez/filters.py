@@ -114,7 +114,7 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
     vlastnik = ModelMultipleChoiceFilter(
         queryset=User.objects.select_related("organizace").all(),
         field_name="historie__historie__uzivatel",
-        label="Vlastník",
+        label=_("ez.filters.vlastnik.label"),
         widget=SelectMultipleSeparator(),
     )
 

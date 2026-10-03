@@ -202,13 +202,9 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.WARNING(
                     "\n"
-                    + _("core.management.commands.generate_thumbs.finished_with_errors")
-                    + " "
-                    + str(success_count)
-                    + ", "
-                    + _("core.management.commands.generate_thumbs.errors")
-                    + " "
-                    + str(error_count)
+                    + _("core.management.commands.generate_thumbs.finished_with_errors").format(
+                        success=success_count, errors=error_count
+                    )
                 )
             )
         else:

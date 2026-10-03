@@ -142,13 +142,9 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write(
             self.style.SUCCESS(
-                _("core.management.commands.transform_to_sjtsk.Command._transform_pian.finished_transformed")
-                + " "
-                + str(success_count)
-                + ", "
-                + _("core.management.commands.transform_to_sjtsk.Command._transform_pian.finished_errors")
-                + " "
-                + str(error_count)
+                _("core.management.commands.transform_to_sjtsk.Command._transform_pian.finished").format(
+                    success=success_count, errors=error_count
+                )
             )
         )
 
@@ -222,13 +218,9 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write(
             self.style.SUCCESS(
-                _("core.management.commands.transform_to_sjtsk.Command._transform_nalez.finished_transformed")
-                + " "
-                + str(success_count)
-                + ", "
-                + _("core.management.commands.transform_to_sjtsk.Command._transform_nalez.finished_errors")
-                + " "
-                + str(error_count)
+                _("core.management.commands.transform_to_sjtsk.Command._transform_nalez.finished").format(
+                    success=success_count, errors=error_count
+                )
             )
         )
 
@@ -302,13 +294,9 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write(
             self.style.SUCCESS(
-                _("core.management.commands.transform_to_sjtsk.Command._transform_projekt.finished_transformed")
-                + " "
-                + str(success_count)
-                + ", "
-                + _("core.management.commands.transform_to_sjtsk.Command._transform_projekt.finished_errors")
-                + " "
-                + str(error_count)
+                _("core.management.commands.transform_to_sjtsk.Command._transform_projekt.finished").format(
+                    success=success_count, errors=error_count
+                )
             )
         )
 
@@ -399,12 +387,8 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write(
             self.style.SUCCESS(
-                _("core.management.commands.transform_to_sjtsk.Command._transform_dokument.finished_transformed")
-                + " "
-                + str(success_count)
-                + ", "
-                + _("core.management.commands.transform_to_sjtsk.Command._transform_dokument.finished_errors")
-                + " "
-                + str(error_count)
+                _("core.management.commands.transform_to_sjtsk.Command._transform_dokument.finished").format(
+                    success=success_count, errors=error_count
+                )
             )
         )

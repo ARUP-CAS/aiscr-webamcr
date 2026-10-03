@@ -1088,7 +1088,7 @@ switchMap = function (overview = false) {
 
 function loadKatastry() {
     addLogText("arch_z_detail_map.loadKatastry")
-    akce_ident_cely = document.getElementById("id-app-entity-item").textContent.trim().split("Zpět")[0]
+    akce_ident_cely = document.getElementById("id-app-entity-item").dataset.ident
     let xhr = new XMLHttpRequest();
     xhr.open('POST', '/arch-z/mapa-dalsi-katastry');
     xhr.setRequestHeader('Content-type', 'application/json');

@@ -2769,11 +2769,7 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
     else:
         warnings = []
         if remove_orphan:
-            warnings.append(
-                "Nearchivovaný dokument "
-                + str(orphan_dokument)
-                + " nemá žádnou jinou relaci a odpojením bude automaticky smazán."
-            )
+            warnings.append(_("dokument.views.odpojit.orphan_warning").format(dokument=orphan_dokument))
         return render(
             request,
             "core/transakce_modal.html",

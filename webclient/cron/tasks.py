@@ -44,6 +44,7 @@ from core.import_data_mappers import (
     SouborMapper,
     UzivatelNotifikaceMapper,
     UzivatelOpravneniMapper,
+    format_import_message,
 )
 from core.models import AntivirusCheckResult, Soubor, SouborVazby
 from core.repository_connector import (
@@ -62,6 +63,7 @@ from django.db.models.functions import Coalesce, Upper
 from django.forms.models import model_to_dict
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_noop
 from dokument.models import Dokument
 from ez.models import ExterniZdroj
 from heslar import hesla_dynamicka
@@ -199,6 +201,7 @@ def translation_value(message_id: str, raw: bool = False, **params) -> str:
 # jinak zůstane nepřeloženo (``translate_status_value`` vrátí na čtenáři neaplikovaný key doslova).
 TRANSLATABLE_MESSAGE_IDS = (
     _("cron.tasks.run_data_import.validating"),
+    _("cron.tasks.run_data_import.validating_progress"),
     _("cron.tasks.run_data_import.stopped_by_user"),
     _("cron.tasks.run_data_import.failed_lock_lost"),
     _("cron.tasks.run_data_import.failed_lock_acquisition"),
@@ -208,11 +211,13 @@ TRANSLATABLE_MESSAGE_IDS = (
     _("cron.tasks.run_data_import.file"),
     _("cron.tasks.run_data_import.rolled_back"),
     _("cron.tasks.run_data_import.creating_history_records"),
+    _("cron.tasks.run_data_import.creating_history_records_progress"),
     _("cron.tasks.run_data_import.history_record_skipped"),
     _("cron.tasks.run_data_import.history_record_created"),
     _("cron.tasks.run_data_import.failed_during_history"),
     _("cron.tasks.run_data_import.history_record_error"),
     _("cron.tasks.run_data_import.updating_fedora_records"),
+    _("cron.tasks.run_data_import.updating_fedora_records_progress"),
     _("cron.tasks.run_data_import.fedora_skipped"),
     _("cron.tasks.run_data_import.fedora_waiting_data_import"),
     _("cron.tasks.run_data_import.fedora_record"),
@@ -1335,7 +1340,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                             redis_connector.set(
                                 job_key("import_data_status_message_tr"),
                                 translation_value(
-                                    "cron.tasks.run_data_import.validating", n=row_order + 1, total=total_rows
+                                    "cron.tasks.run_data_import.validating_progress", n=row_order + 1, total=total_rows
                                 ),
                                 ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
                             )
@@ -1579,13 +1584,13 @@ def run_data_import(job_id, user_id, lock_token):
           - Selže zpracování datového záznamu, databázová transakce nebo hlavní fáze importu dat.
         * - ``cron.tasks.run_data_import.creating_history_records``
           - Hlavní import dat doběhl bez chyby a začíná fáze vytváření historie.
-        * - ``cron.tasks.run_data_import.creating_history_records {n}/{total}``
+        * - ``cron.tasks.run_data_import.creating_history_records_progress {n}/{total}``
           - Během fáze historie, před vytvořením konkrétního historického záznamu.
         * - ``cron.tasks.run_data_import.failed_during_history``
           - Selže vytvoření některého záznamu historie.
         * - ``cron.tasks.run_data_import.updating_fedora_records``
           - Historie doběhla bez chyby a začíná fáze aktualizace Fedora metadat.
-        * - ``cron.tasks.run_data_import.updating_fedora_records {n}/{total}``
+        * - ``cron.tasks.run_data_import.updating_fedora_records_progress {n}/{total}``
           - Během aktualizace jednotlivých Fedora záznamů.
         * - ``cron.tasks.run_data_import.failed_during_fedora``
           - Selže uložení metadat do Fedory pro některý z dotčených záznamů.
@@ -1778,19 +1783,13 @@ def run_data_import(job_id, user_id, lock_token):
                             "error": commit_err,
                         },
                     )
-                    # Raw error envelope: composed at runtime from a translated fragment plus the
-                    # identity of the object an operator has to clean up in Fedora by hand.
+                    # Parametrized envelope: the translation carries the whole sentence and names the
+                    # object an operator has to clean up in Fedora by hand.
                     import_fedora_result[entry["record_id"]].append(
                         translation_value(
                             "cron.tasks.run_data_import.fedora_delete_commit_failed",
-                            raw=True,
-                            message=(
-                                _("cron.tasks.run_data_import.fedora_delete_commit_failed")
-                                + " "
-                                + str(entry["identity"])
-                                + ": "
-                                + str(commit_err)
-                            ),
+                            identity=str(entry["identity"]),
+                            error=str(commit_err),
                         )
                     )
             pending_fedora_delete_commits.clear()
@@ -2046,7 +2045,7 @@ def run_data_import(job_id, user_id, lock_token):
                         data_rolled_back = True
                         redis_connector.rpush(job_key("import_data_progress_ids"), record_id)
                         # Raw error envelope: the row-failure message is composed at raise time from
-                        # translated fragments + runtime data (err, serialized_record, action, traceback);
+                        # a translated sentence + runtime data (err, serialized_record, action, traceback);
                         # rendered verbatim (carve-out, see translation_value docstring).
                         redis_connector.rpush(
                             job_key("import_data_progress_details_tr"),
@@ -2054,17 +2053,13 @@ def run_data_import(job_id, user_id, lock_token):
                                 "cron.tasks.run_data_import.error.row",
                                 raw=True,
                                 message=(
-                                    _("cron.tasks.run_data_import.error.part_1")
-                                    + ": "
-                                    + str(err)
-                                    + ", "
-                                    + _("cron.tasks.run_data_import.error.part_2")
-                                    + " "
-                                    + str(serialized_record)
-                                    + ", "
-                                    + _("cron.tasks.run_data_import.error.part_3")
-                                    + " "
-                                    + str(performed_action)
+                                    format_import_message(
+                                        gettext_noop("cron.tasks.run_data_import.error.message"),
+                                        error=err,
+                                        record=serialized_record,
+                                        action=performed_action,
+                                    )
+                                    + "\n"
                                     + traceback.format_exc()
                                 ),
                             ),
@@ -2278,7 +2273,7 @@ def run_data_import(job_id, user_id, lock_token):
                 redis_connector.set(
                     job_key("import_data_status_message_tr"),
                     translation_value(
-                        "cron.tasks.run_data_import.creating_history_records",
+                        "cron.tasks.run_data_import.creating_history_records_progress",
                         n=history_index + 1,
                         total=history_total,
                     ),
@@ -2313,7 +2308,7 @@ def run_data_import(job_id, user_id, lock_token):
                 )
                 redis_connector.set(job_key("import_data_stop"), 1)
                 history_error_value = translation_value(
-                    "cron.tasks.run_data_import.history_record_error", raw=True, message=str(err)
+                    "cron.tasks.run_data_import.history_record_error", message=str(err)
                 )
                 for record_id in record_ids:
                     import_history_record_result[record_id] = history_error_value
@@ -2392,7 +2387,7 @@ def run_data_import(job_id, user_id, lock_token):
                     redis_connector.set(
                         job_key("import_data_status_message_tr"),
                         translation_value(
-                            "cron.tasks.run_data_import.updating_fedora_records",
+                            "cron.tasks.run_data_import.updating_fedora_records_progress",
                             n=fedora_index + 1,
                             total=fedora_total,
                         ),
@@ -2754,7 +2749,7 @@ def run_data_import(job_id, user_id, lock_token):
                                     "file_name": filename,
                                     "size_mb": round(rep_bin_file.size_mb, 3),
                                     "additional_info_tr": translation_value(
-                                        "cron.tasks.run_data_import.file_mime_type", raw=True, message=mimetype
+                                        "cron.tasks.run_data_import.file_mime_type", message=mimetype
                                     ),
                                 }
                             ),

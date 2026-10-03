@@ -1049,9 +1049,7 @@ def zadost(request):
                 messages.add_message(
                     request,
                     messages.ERROR,
-                    _("pas.views.zadost.existuje.error.part1")
-                    + uzivatel_email
-                    + _("pas.views.zadost.existuje.error.part2"),
+                    _("pas.views.zadost.existuje.error").format(email=uzivatel_email),
                 )
                 logger.debug(
                     "pas.views.zadost.post.error",
@@ -1264,10 +1262,9 @@ def aktivace(request, pk):
     context = {
         "object": spoluprace,
         "title": (
-            _("pas.views.aktivace.title.part1")
-            + spoluprace.vedouci.email
-            + _("pas.views.aktivace.title.part2")
-            + spoluprace.spolupracovnik.email
+            _("pas.views.aktivace.title").format(
+                vedouci=spoluprace.vedouci.email, spolupracovnik=spoluprace.spolupracovnik.email
+            )
         ),
         "id_tag": "aktivace-spoluprace-form",
         "button": _("pas.views.aktivace.submitButton.text"),
@@ -1334,10 +1331,9 @@ class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
         context = {
             "object": obj,
             "title": (
-                _("pas.views.deaktivace.title.part1")
-                + obj.vedouci.email
-                + _("pas.views.deaktivace.title.part2")
-                + obj.spolupracovnik.email
+                _("pas.views.deaktivace.title").format(
+                    vedouci=obj.vedouci.email, spolupracovnik=obj.spolupracovnik.email
+                )
             ),
             "id_tag": "deaktivace-spoluprace-form",
             "button": _("pas.views.deaktivace.submitButton.text"),
@@ -1440,10 +1436,9 @@ def smazat_spolupraci(request, pk):
         context = {
             "object": spoluprace,
             "title": (
-                _("pas.views.smazatSpolupraci.title.part1")
-                + spoluprace.vedouci.email
-                + _("pas.views.smazatSpolupraci.title.part2")
-                + spoluprace.spolupracovnik.email
+                _("pas.views.smazatSpolupraci.title").format(
+                    vedouci=spoluprace.vedouci.email, spolupracovnik=spoluprace.spolupracovnik.email
+                )
             ),
             "id_tag": "smazani-spoluprace-form",
             "button": _("pas.views.smazatSpolupraci.submitButton.text"),

@@ -26,6 +26,7 @@ from django.db import models
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_noop
 from dokument.models import (
     Dokument,
     DokumentAutor,
@@ -140,6 +141,27 @@ class ImportDataValidationResult:
         }
 
 
+def format_import_message(message_id, **params) -> str:
+    """
+    Přeloží zprávu s pojmenovanými zástupnými znaky a dosadí do ní parametry.
+
+    Překlad drží celou větu (``{child}``, ``{field}`` …), takže pořadí slov řídí překladatel,
+    ne skládání fragmentů v kódu. Chybí-li překlad (``_()`` vrátí ID doslova), parametry se
+    připojí za ID ve tvaru ``klíč=hodnota``, aby se informace ze zprávy neztratila.
+
+    :param message_id: Překladové ID zprávy.
+    :param params: Hodnoty pro zástupné znaky v přeložené zprávě.
+    :return: Přeložená zpráva s dosazenými hodnotami.
+    """
+    text = str(_(message_id))
+    if text == message_id:
+        return " ".join([message_id] + [f"{key}={value}" for key, value in params.items()])
+    try:
+        return text.format(**params)
+    except (KeyError, IndexError, ValueError):
+        return text
+
+
 class ImportDataError(Exception):
     """Základní výjimka pro chyby při importu dat."""
 
@@ -158,18 +180,22 @@ class ImportDataIncorrectStructureError(ImportDataError):
         :param missing_columns: Parametr ``missing_columns`` se předává do volání ``__init__()``, ``join()``.
         :param excess_columns: Číselná hodnota ``excess_columns`` použitá při výpočtu nebo transformaci.
         """
-        message = "{} ".format(_("core_admin.ImportDataIncorrectStructureError.message.part_1"))
+        parts = [format_import_message(gettext_noop("core_admin.ImportDataIncorrectStructureError.message"))]
         if missing_columns:
-            message += "{}: {} ".format(
-                _("core_admin.ImportDataIncorrectStructureError.message.missing_columns"),
-                ", ".join(missing_columns),
+            parts.append(
+                format_import_message(
+                    gettext_noop("core_admin.ImportDataIncorrectStructureError.message.missing_columns"),
+                    columns=", ".join(missing_columns),
+                )
             )
         if excess_columns:
-            message += "{}: {} ".format(
-                _("core_admin.ImportDataIncorrectStructureError.message.excess_columns"),
-                ", ".join(excess_columns),
+            parts.append(
+                format_import_message(
+                    gettext_noop("core_admin.ImportDataIncorrectStructureError.message.excess_columns"),
+                    columns=", ".join(excess_columns),
+                )
             )
-        super().__init__(message)
+        super().__init__(" ".join(parts))
 
 
 class ImportDataIncorrectStructureContentObjectError(ImportDataError):
@@ -185,12 +211,10 @@ class ImportDataIncorrectStructureContentObjectError(ImportDataError):
         :param expected_colummns_options: Parametr ``expected_colummns_options`` se předává do volání ``__init__()``, ``join()``.
         """
         super().__init__(
-            "{} {}: {} {}: {} ".format(
-                _("core_admin.ImportDataIncorrectStructureContentObjectError.message.part_1"),
-                _("core_admin.ImportDataIncorrectStructureContentObjectError.message.columns"),
-                ", ".join(columns),
-                _("core_admin.ImportDataIncorrectStructureContentObjectError.message.expected_columns_options"),
-                "; ".join([str(op) for op in expected_colummns_options]),
+            format_import_message(
+                gettext_noop("core_admin.ImportDataIncorrectStructureContentObjectError.message"),
+                columns=", ".join(columns),
+                options="; ".join([str(op) for op in expected_colummns_options]),
             )
         )
 
@@ -211,22 +235,19 @@ class ImportDataMissingReferencedValueError(ImportDataError):
         self.missing_value_id = missing_value_id
         self.missing_model_name = missing_model_name
         self.missing_field_name = missing_field_name
-        message = "{} {} {} ".format(
-            _("core_admin.ImportDataMissingReferencedValueError.message.part_1"),
-            str(missing_value_id),
-            _("core_admin.ImportDataMissingReferencedValueError.message.part_2"),
+        if missing_model_name and missing_field_name:
+            message_id = gettext_noop("core_admin.ImportDataMissingReferencedValueError.message.model_field")
+        elif missing_model_name:
+            message_id = gettext_noop("core_admin.ImportDataMissingReferencedValueError.message.model")
+        elif missing_field_name:
+            message_id = gettext_noop("core_admin.ImportDataMissingReferencedValueError.message.field")
+        else:
+            message_id = gettext_noop("core_admin.ImportDataMissingReferencedValueError.message")
+        super().__init__(
+            format_import_message(
+                message_id, value=missing_value_id, model=missing_model_name, field=missing_field_name
+            )
         )
-        if missing_model_name:
-            message += "{} {} ".format(
-                str(missing_model_name),
-                _("core_admin.ImportDataMissingReferencedValueError.message.part_3"),
-            )
-        if missing_field_name:
-            message += "{} {}".format(
-                _("core_admin.ImportDataMissingReferencedValueError.message.part_4"),
-                str(missing_field_name),
-            )
-        super().__init__(message)
 
 
 class ImportDataIntegrityError(ImportDataError):
@@ -249,13 +270,11 @@ class ImportDataIntegrityError(ImportDataError):
         self.model_name = model_name
         self.performed_action = performed_action
         super().__init__(
-            "{} {} {} {} {} ({})".format(
-                _("core_admin.ImportDataIntegrityError.message.part_1"),
-                record_id,
-                _("core_admin.ImportDataIntegrityError.message.part_2"),
-                model_name,
-                _("core_admin.ImportDataIntegrityError.message.part_3"),
-                performed_action,
+            format_import_message(
+                gettext_noop("core_admin.ImportDataIntegrityError.message"),
+                record=record_id,
+                model=model_name,
+                action=performed_action,
             )
         )
 
@@ -278,11 +297,8 @@ class SouborImportIntegrityError(ImportDataError):
         self.vazba = vazba
         self.nazev = nazev
         super().__init__(
-            "{} {} {} {}".format(
-                _("core_admin.SouborImportIntegrityError.message.part_1"),
-                nazev,
-                _("core_admin.SouborImportIntegrityError.message.part_2"),
-                vazba,
+            format_import_message(
+                gettext_noop("core_admin.SouborImportIntegrityError.message"), nazev=nazev, vazba=vazba
             )
         )
 
@@ -306,11 +322,8 @@ class ImportDataFileExtensionNotAllowedError(ImportDataError):
         self.nazev = nazev
         self.vazba = vazba
         super().__init__(
-            "{} {} {} {}".format(
-                _("core_admin.ImportDataFileExtensionNotAllowedError.message.part_1"),
-                nazev,
-                _("core_admin.ImportDataFileExtensionNotAllowedError.message.part_2"),
-                vazba,
+            format_import_message(
+                gettext_noop("core_admin.ImportDataFileExtensionNotAllowedError.message"), nazev=nazev, vazba=vazba
             )
         )
 
@@ -332,13 +345,11 @@ class ImportDataLimitChoicesError(ImportDataError):
         self.target_field_verbose_name = target_field_verbose_name
         self.import_field_verbose_name = import_field_verbose_name
         super().__init__(
-            "{} {} {} {} {} {}".format(
-                _("core_admin.ImportDataLimitChoicesError.message.part_1"),
-                record_id,
-                _("core_admin.ImportDataLimitChoicesError.message.part_2"),
-                target_field_verbose_name,
-                _("core_admin.ImportDataLimitChoicesError.message.part_3"),
-                import_field_verbose_name,
+            format_import_message(
+                gettext_noop("core_admin.ImportDataLimitChoicesError.message"),
+                record=record_id,
+                import_field=import_field_verbose_name,
+                heslar=target_field_verbose_name,
             )
         )
 
@@ -364,15 +375,12 @@ class ImportDataMissingHeslarValueError(ImportDataError):
         self.target_field_verbose_name = target_field_verbose_name
         self.import_field_verbose_name = import_field_verbose_name
         super().__init__(
-            "{} {} {} {} {} {} {} {}".format(
-                _("core_admin.ImportDataMissingHeslarValueError.message.part_1"),
-                str(value),
-                _("core_admin.ImportDataMissingHeslarValueError.message.part_2"),
-                str(field_name),
-                _("core_admin.ImportDataMissingHeslarValueError.message.part_4"),
-                str(target_field_verbose_name),
-                _("core_admin.ImportDataMissingHeslarValueError.message.part_5"),
-                str(import_field_verbose_name),
+            format_import_message(
+                gettext_noop("core_admin.ImportDataMissingHeslarValueError.message"),
+                value=value,
+                import_field=import_field_verbose_name,
+                heslar=target_field_verbose_name,
+                field_name=field_name,
             )
         )
 
@@ -388,10 +396,9 @@ class ImportDataUnsupportedFileError(ImportDataError):
         """
         self.file_name = file_name
         super().__init__(
-            "{} {} {}".format(
-                _("core_admin.ImportDataUnsupportedFileError.message.part_1"),
-                file_name,
-                _("core_admin.ImportDataUnsupportedFileError.message.part_2"),
+            format_import_message(
+                gettext_noop("core_admin.ImportDataUnsupportedFileError.message"),
+                file=file_name,
             )
         )
 
@@ -409,10 +416,9 @@ class ImportDataUnsupportedFilesError(ImportDataError):
         """
         self.file_names = file_names
         super().__init__(
-            "{} {} {}".format(
-                _("core_admin.ImportDataUnsupportedFilesError.message.part_1"),
-                ", ".join(file_names),
-                _("core_admin.ImportDataUnsupportedFilesError.message.part_2"),
+            format_import_message(
+                gettext_noop("core_admin.ImportDataUnsupportedFilesError.message"),
+                files=", ".join(file_names),
             )
         )
 
@@ -501,13 +507,11 @@ class ImportDataBatchOrderingError(ImportDataError):
         self.parent_ident_cely = parent_ident_cely
         self.field_name = field_name
         super().__init__(
-            "{} {} {} {} {} {}".format(
-                _("core_admin.ImportDataBatchOrderingError.message.part_1"),
-                child_ident_cely,
-                _("core_admin.ImportDataBatchOrderingError.message.part_2"),
-                field_name,
-                _("core_admin.ImportDataBatchOrderingError.message.part_3"),
-                parent_ident_cely,
+            format_import_message(
+                gettext_noop("core_admin.ImportDataBatchOrderingError.message"),
+                child=child_ident_cely,
+                field=field_name,
+                parent=parent_ident_cely,
             )
         )
 
@@ -1591,7 +1595,9 @@ class ImportModelMapper(ABC):
             return DateRangeImportField()
         if isinstance(model_field, models.ForeignKey):
             return None
-        raise ImportDataError(_("core.admin.ImportModelMapper.map_field.error") + ": " + field_name)
+        raise ImportDataError(
+            format_import_message(gettext_noop("core.admin.ImportModelMapper.map_field.error"), field=field_name)
+        )
 
     @classmethod
     def is_field_required(cls, field_name) -> bool:
@@ -2854,7 +2860,11 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
         if typ == Akce.TYP_AKCE_PROJEKTOVA and projekt_is_null:
             raise ImportDataError(_("core_admin.ImportDataError.message.akce_typ_check.typ_r_requires_filled_projekt"))
         if not self._is_import_null(typ) and typ not in (Akce.TYP_AKCE_SAMOSTATNA, Akce.TYP_AKCE_PROJEKTOVA):
-            raise ImportDataError(_("core_admin.ImportDataError.message.akce_typ_check.invalid_typ") + ": " + str(typ))
+            raise ImportDataError(
+                format_import_message(
+                    gettext_noop("core_admin.ImportDataError.message.akce_typ_check.invalid_typ"), typ=typ
+                )
+            )
         return super().import_validation(performed_action, *args, **kwargs)
 
     @classmethod

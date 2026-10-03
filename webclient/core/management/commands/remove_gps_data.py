@@ -208,13 +208,9 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.WARNING(
                     "\n"
-                    + _("core.management.commands.remove_gps_data.finished_with_errors")
-                    + " "
-                    + str(updated_count)
-                    + ", "
-                    + _("core.management.commands.remove_gps_data.errors")
-                    + " "
-                    + str(error_count)
+                    + _("core.management.commands.remove_gps_data.finished_with_errors").format(
+                        success=updated_count, errors=error_count
+                    )
                 )
             )
         else:

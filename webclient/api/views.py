@@ -3428,13 +3428,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
-                {
-                    "detail": (
-                        _("core.views.post_upload.error.maximal_file_name_exceeded_part_1")
-                        + f" {ident_cely} "
-                        + _("core.views.post_upload.error.maximal_file_name_exceeded_part_2")
-                    )
-                },
+                {"detail": _("core.views.post_upload.error.maximal_file_name_exceeded").format(ident=ident_cely)},
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         new_name = get_mime_safe_soubor_name(new_name, new_name, mime_extensions)

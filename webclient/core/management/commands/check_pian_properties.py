@@ -184,13 +184,9 @@ class Command(BaseCommand):
         if pocet_zmenenych > 0:
             self.stdout.write(
                 self.style.SUCCESS(
-                    _("core.management.commands.check_pian_properties.finished_fixed")
-                    + " "
-                    + str(pocet_zmenenych)
-                    + " "
-                    + _("core.management.commands.check_pian_properties.of_total")
-                    + " "
-                    + str(pocet_pians)
+                    _("core.management.commands.check_pian_properties.finished_fixed").format(
+                        fixed=pocet_zmenenych, total=pocet_pians
+                    )
                 )
             )
         else:

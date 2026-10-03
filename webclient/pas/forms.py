@@ -40,9 +40,7 @@ def validate_uzivatel_email(email):
     user = User.objects.filter(email=email)
     if not user.exists():
         raise ValidationError(
-            _("pas.forms.te_uzivatel_email.error.noUser.part1")
-            + email
-            + _("pas.forms.te_uzivatel_email.error.noUser.part2"),
+            _("pas.forms.te_uzivatel_email.error.noUser").format(email=email),
         )
     if user[0].hlavni_role not in Group.objects.filter(id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)):
         logger.debug(
@@ -50,9 +48,7 @@ def validate_uzivatel_email(email):
             extra={"email": email, "info": user[0].hlavni_role},
         )
         raise ValidationError(
-            _("pas.forms.te_uzivatel_email.error.wrongGroup.part1")
-            + email
-            + _("pas.forms.te_uzivatel_email.error.wrongGroup.part2"),
+            _("pas.forms.te_uzivatel_email.error.wrongGroup").format(email=email),
         )
 
 

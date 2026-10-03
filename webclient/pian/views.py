@@ -194,11 +194,7 @@ def odpojit(request, dj_ident_cely):
             "title": _("pian.views.odpojit.title.text"),
             "id_tag": "odpojit-pian-form",
             "button": _("pian.views.odpojit.submit.button"),
-            "text": _("pian.views.odpojit.text.part1")
-            + pian.ident_cely
-            + _("pian.views.odpojit.text.part2")
-            + dj.ident_cely
-            + "?",
+            "text": _("pian.views.odpojit.text").format(pian=pian.ident_cely, dj=dj.ident_cely),
             "form": PianOdpojitForm(dj=dj),
         }
         return render(request, "core/transakce_modal.html", context)
@@ -503,14 +499,14 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
         docfile = request.FILES["file"]
         if docfile.size == 0:
             logger.debug("pian.views.ImportovatPianView.post.label_check.fileEmpty")
-            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.fileEmpty."))
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.fileEmpty"))
         try:
             sheet = pd.read_csv(docfile, sep=",", dtype=str)
         except ValueError as err:
             logger.debug("pian.views.ImportovatPianView.post.label_check.unreadable_or_empty", extra={"error": err})
-            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty"))
         if sheet.shape[1] == 0:
-            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty"))
         if sheet.shape[1] != 3:
             logger.debug(
                 "pian.views.ImportovatPianView.post.label_check.incorrect_column_count",
@@ -554,7 +550,7 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
                 "pian.views.ImportovatPianView.post.sheet_apply.key_error",
                 extra={"columns": sheet.columns, "error": err},
             )
-            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty"))
         context = self.get_context_data()
         context["table"] = new_sheet
         cache.set(str(request.user.id) + "_geom", new_sheet, timeout=60 * 60)
