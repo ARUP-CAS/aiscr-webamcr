@@ -16,6 +16,7 @@ from core.message_constants import (
 )
 from core.models import Permissions
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
+from core.translation import format_message
 from core.utils import (
     file_validate_epsg,
     get_dj_akce_for_pian,
@@ -36,6 +37,7 @@ from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_noop
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
 from fedora_management.decorators import handle_fedora_error
@@ -194,7 +196,7 @@ def odpojit(request, dj_ident_cely):
             "title": _("pian.views.odpojit.title.text"),
             "id_tag": "odpojit-pian-form",
             "button": _("pian.views.odpojit.submit.button"),
-            "text": _("pian.views.odpojit.text").format(pian=pian.ident_cely, dj=dj.ident_cely),
+            "text": format_message(gettext_noop("pian.views.odpojit.text"), pian=pian.ident_cely, dj=dj.ident_cely),
             "form": PianOdpojitForm(dj=dj),
         }
         return render(request, "core/transakce_modal.html", context)

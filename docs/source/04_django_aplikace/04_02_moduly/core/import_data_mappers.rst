@@ -2420,18 +2420,3 @@ Třídy
       :param record: Záznam ``Historie`` po importu.
       :return: Seznam objektů navázaných přes ``vazba``, jejichž identifikátory je třeba aktualizovat.
 
-
-Funkce
-------
-
-.. py:function:: format_import_message(message_id)
-
-   Přeloží zprávu s pojmenovanými zástupnými znaky a dosadí do ní parametry.
-
-   Překlad drží celou větu (``{child}``, ``{field}`` …), takže pořadí slov řídí překladatel,
-   ne skládání fragmentů v kódu. Chybí-li překlad (``_()`` vrátí ID doslova), parametry se
-   připojí za ID ve tvaru ``klíč=hodnota``, aby se informace ze zprávy neztratila.
-
-   :param message_id: Překladové ID zprávy.
-   :param params: Hodnoty pro zástupné znaky v přeložené zprávě.
-   :return: Přeložená zpráva s dosazenými hodnotami.

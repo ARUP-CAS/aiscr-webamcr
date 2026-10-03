@@ -12,10 +12,7 @@ Do aktivačního formuláře zadejte následující aktivační klíč:
 
 Tento odkaz expiruje za {{ expiration_days }} dní.
 
-------------------------------
-Toto je automaticky generovaná zpráva systému AMČR. V případě potřeby kontaktujte administrátora ARÚ Praha (amcr@arup.cas.cz) nebo ARÚ Brno (amcr@arub.cz).
-Odesláno z: {% get_server_domain %}
-
+{% language "cs" %}{% include "email_footer.txt" %}{% endlanguage %}
 ------------------------------------------------------------
 
 Hello,
@@ -30,6 +27,4 @@ Insert the following activation key to the activation form:
 
 This link expires in {{ expiration_days }} days.
 
-------------------------------
-This is an automatically generated message from the AMCR system. If needed, please contact the administrator at IA Prague (amcr@arup.cas.cz) or IA Brno (amcr@arub.cz).
-Sent from: {% get_server_domain %}
+{% language "en" %}{% include "email_footer.txt" %}{% endlanguage %}

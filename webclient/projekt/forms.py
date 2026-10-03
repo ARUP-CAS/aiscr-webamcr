@@ -780,7 +780,7 @@ class ZruseniProjektForm(forms.Form):
                 Div(
                     "reason_text",
                     css_class="col-sm-12",
-                    title="projekt.forms.zruseni.duvodTooltip.text",
+                    title=_("projekt.forms.zruseni.duvod.tooltip"),
                 ),
                 css_class="row",
             ),

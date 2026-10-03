@@ -1,10 +1,12 @@
 import logging
 
 from core.repository_connector import FedoraTransaction
+from core.translation import format_message
 from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import GeometryCollection, LineString, MultiPolygon, Point, Polygon
 from django.core.management.base import BaseCommand
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_noop
 
 logger = logging.getLogger(__name__)
 
@@ -184,8 +186,10 @@ class Command(BaseCommand):
         if pocet_zmenenych > 0:
             self.stdout.write(
                 self.style.SUCCESS(
-                    _("core.management.commands.check_pian_properties.finished_fixed").format(
-                        fixed=pocet_zmenenych, total=pocet_pians
+                    format_message(
+                        gettext_noop("core.management.commands.check_pian_properties.finished_fixed"),
+                        fixed=pocet_zmenenych,
+                        total=pocet_pians,
                     )
                 )
             )

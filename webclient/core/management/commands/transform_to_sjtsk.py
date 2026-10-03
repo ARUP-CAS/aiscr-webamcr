@@ -1,9 +1,11 @@
 import logging
 
 from core.coordTransform import transform_geom_to_sjtsk
+from core.translation import format_message
 from django.core.management.base import BaseCommand
 from django.db import connection
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_noop
 
 logger = logging.getLogger(__name__)
 
@@ -142,8 +144,10 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write(
             self.style.SUCCESS(
-                _("core.management.commands.transform_to_sjtsk.Command._transform_pian.finished").format(
-                    success=success_count, errors=error_count
+                format_message(
+                    gettext_noop("core.management.commands.transform_to_sjtsk.Command._transform_pian.finished"),
+                    success=success_count,
+                    errors=error_count,
                 )
             )
         )
@@ -218,8 +222,10 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write(
             self.style.SUCCESS(
-                _("core.management.commands.transform_to_sjtsk.Command._transform_nalez.finished").format(
-                    success=success_count, errors=error_count
+                format_message(
+                    gettext_noop("core.management.commands.transform_to_sjtsk.Command._transform_nalez.finished"),
+                    success=success_count,
+                    errors=error_count,
                 )
             )
         )
@@ -294,8 +300,10 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write(
             self.style.SUCCESS(
-                _("core.management.commands.transform_to_sjtsk.Command._transform_projekt.finished").format(
-                    success=success_count, errors=error_count
+                format_message(
+                    gettext_noop("core.management.commands.transform_to_sjtsk.Command._transform_projekt.finished"),
+                    success=success_count,
+                    errors=error_count,
                 )
             )
         )
@@ -387,8 +395,10 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write(
             self.style.SUCCESS(
-                _("core.management.commands.transform_to_sjtsk.Command._transform_dokument.finished").format(
-                    success=success_count, errors=error_count
+                format_message(
+                    gettext_noop("core.management.commands.transform_to_sjtsk.Command._transform_dokument.finished"),
+                    success=success_count,
+                    errors=error_count,
                 )
             )
         )

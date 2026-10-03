@@ -8,6 +8,7 @@ from core.constants import (
     ROLE_ARCHIVAR_ID,
 )
 from core.forms import BaseFilterForm, OptimisticLockingMixin, TwoLevelSelectField
+from core.translation import format_message
 from core.widgets import AutocompleteModelSelect2, AutocompleteSelect2Multiple
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
@@ -19,6 +20,7 @@ from django.db.models import Q
 from django.forms import ModelChoiceField
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_noop
 from heslar.hesla import HESLAR_OBDOBI, HESLAR_OBDOBI_KAT, HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT
 from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 from heslar.views import heslar_12
@@ -40,7 +42,7 @@ def validate_uzivatel_email(email):
     user = User.objects.filter(email=email)
     if not user.exists():
         raise ValidationError(
-            _("pas.forms.te_uzivatel_email.error.noUser").format(email=email),
+            format_message(gettext_noop("pas.forms.te_uzivatel_email.error.noUser"), email=email),
         )
     if user[0].hlavni_role not in Group.objects.filter(id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)):
         logger.debug(
@@ -48,7 +50,7 @@ def validate_uzivatel_email(email):
             extra={"email": email, "info": user[0].hlavni_role},
         )
         raise ValidationError(
-            _("pas.forms.te_uzivatel_email.error.wrongGroup").format(email=email),
+            format_message(gettext_noop("pas.forms.te_uzivatel_email.error.wrongGroup"), email=email),
         )
 
 

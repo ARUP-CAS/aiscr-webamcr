@@ -47,6 +47,7 @@ from core.message_constants import (
 from core.models import Permissions as p
 from core.models import check_permissions, soubor_nazev_razeni_klic
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
+from core.translation import format_message
 from core.utils import TwoQueryPaginator, get_cadastre_from_point
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from django.contrib import messages
@@ -63,6 +64,7 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_noop
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 from django.views.generic import CreateView, DetailView, TemplateView, View
@@ -1049,7 +1051,7 @@ def zadost(request):
                 messages.add_message(
                     request,
                     messages.ERROR,
-                    _("pas.views.zadost.existuje.error").format(email=uzivatel_email),
+                    format_message(gettext_noop("pas.views.zadost.existuje.error"), email=uzivatel_email),
                 )
                 logger.debug(
                     "pas.views.zadost.post.error",
@@ -1262,8 +1264,10 @@ def aktivace(request, pk):
     context = {
         "object": spoluprace,
         "title": (
-            _("pas.views.aktivace.title").format(
-                vedouci=spoluprace.vedouci.email, spolupracovnik=spoluprace.spolupracovnik.email
+            format_message(
+                gettext_noop("pas.views.aktivace.title"),
+                vedouci=spoluprace.vedouci.email,
+                spolupracovnik=spoluprace.spolupracovnik.email,
             )
         ),
         "id_tag": "aktivace-spoluprace-form",
@@ -1331,8 +1335,10 @@ class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
         context = {
             "object": obj,
             "title": (
-                _("pas.views.deaktivace.title").format(
-                    vedouci=obj.vedouci.email, spolupracovnik=obj.spolupracovnik.email
+                format_message(
+                    gettext_noop("pas.views.deaktivace.title"),
+                    vedouci=obj.vedouci.email,
+                    spolupracovnik=obj.spolupracovnik.email,
                 )
             ),
             "id_tag": "deaktivace-spoluprace-form",
@@ -1436,8 +1442,10 @@ def smazat_spolupraci(request, pk):
         context = {
             "object": spoluprace,
             "title": (
-                _("pas.views.smazatSpolupraci.title").format(
-                    vedouci=spoluprace.vedouci.email, spolupracovnik=spoluprace.spolupracovnik.email
+                format_message(
+                    gettext_noop("pas.views.smazatSpolupraci.title"),
+                    vedouci=spoluprace.vedouci.email,
+                    spolupracovnik=spoluprace.spolupracovnik.email,
                 )
             ),
             "id_tag": "smazani-spoluprace-form",

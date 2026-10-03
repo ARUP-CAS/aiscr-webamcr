@@ -44,7 +44,6 @@ from core.import_data_mappers import (
     SouborMapper,
     UzivatelNotifikaceMapper,
     UzivatelOpravneniMapper,
-    format_import_message,
 )
 from core.models import AntivirusCheckResult, Soubor, SouborVazby
 from core.repository_connector import (
@@ -54,6 +53,7 @@ from core.repository_connector import (
     FedoraRepositoryConnector,
     FedoraTransaction,
 )
+from core.translation import format_message
 from core.utils import check_import_report_directory, translate_status_value, upsert_import_report_index_entry
 from django.conf import settings
 from django.contrib.auth.models import Group
@@ -248,6 +248,9 @@ TRANSLATABLE_MESSAGE_IDS = (
     _("cron.tasks.run_data_import.validation_done"),
     _("cron.tasks.run_data_import.reset_by_admin"),
     _("core.admin.import_data.record_valid"),
+    _("core.admin.import_data.error.virus_found"),
+    _("core.admin.import_data.error.zip_too_large"),
+    _("core.admin.import_data.error.bad_zip_file"),
 )
 
 
@@ -2053,7 +2056,7 @@ def run_data_import(job_id, user_id, lock_token):
                                 "cron.tasks.run_data_import.error.row",
                                 raw=True,
                                 message=(
-                                    format_import_message(
+                                    format_message(
                                         gettext_noop("cron.tasks.run_data_import.error.message"),
                                         error=err,
                                         record=serialized_record,

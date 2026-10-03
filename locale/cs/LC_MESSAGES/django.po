@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-03 02:34+0200\n"
-"PO-Revision-Date: 2026-10-03 02:34+0200\n"
+"POT-Creation-Date: 2026-10-03 13:18+0200\n"
+"PO-Revision-Date: 2026-10-03 13:18+0200\n"
 "Last-Translator: David Novák <novak@arup.cas.cz>\n"
 "Language-Team: AIS CR <info@amapa.cz>\n"
 "Language: cs_CZ\n"
@@ -262,478 +262,478 @@ msgstr "Správa API"
 msgid "api.model.apiRequestLog.pasTargetRequiresField"
 msgstr "Pole „{field}“ je povinné pro cílový typ požadavku „{target}“."
 
-#: api/tests/test_api.py:2584 api/views.py:3230
+#: api/tests/test_api.py:2584 api/views.py:3231
 msgid "api.views.SamostatnyNalezEvidencniCisloPatchView.history.note"
 msgstr "Evidenční číslo"
 
-#: api/views.py:476
+#: api/views.py:477
 msgid "api.views.PasApiPermissionMixin.load_json_setting.invalid_json"
 msgstr "Hodnota nastavení „{item_id}“ musí být platný JSON."
 
-#: api/views.py:512
+#: api/views.py:513
 msgid "api.views.PasApiPermissionMixin.validate_access_rules.not_a_list"
 msgstr "Hodnota „access_rules“ musí být seznam."
 
-#: api/views.py:518
+#: api/views.py:519
 msgid "api.views.PasApiPermissionMixin.validate_access_rules.item_not_a_dict"
 msgstr "Položka „access_rules[{index}]“ musí být objekt."
 
-#: api/views.py:526
+#: api/views.py:527
 msgid ""
 "api.views.PasApiPermissionMixin.validate_access_rules.missing_required_keys"
 msgstr ""
 "Položka „access_rules[{index}]“ musí obsahovat klíče „rule_type“ a „value“."
 
-#: api/views.py:534
+#: api/views.py:535
 msgid "api.views.PasApiPermissionMixin.validate_access_rules.invalid_active"
 msgstr "Hodnota „access_rules[{index}].active“ musí být typu boolean."
 
-#: api/views.py:542
+#: api/views.py:543
 msgid ""
 "api.views.PasApiPermissionMixin.validate_access_rules.unsupported_rule_type"
 msgstr ""
 "Hodnota „{rule_type}“ v „access_rules[{index}].rule_type“ není podporována."
 
-#: api/views.py:551
+#: api/views.py:552
 msgid "api.views.PasApiPermissionMixin.validate_access_rules.invalid_ip_value"
 msgstr ""
 "Hodnota „{value}“ v „access_rules[{index}].value“ není platná IP adresa nebo"
 " IP rozsah."
 
-#: api/views.py:579
+#: api/views.py:580
 msgid ""
 "api.views.PasApiPermissionMixin.validate_custom_admin_setting.invalid_item_id"
 msgstr "Nastavení skupiny „{item_group}“ nepodporuje položku „{item_id}“."
 
-#: api/views.py:589
+#: api/views.py:590
 msgid ""
 "api.views.PasApiPermissionMixin.validate_custom_admin_setting.invalid_json"
 msgstr "Hodnota nastavení „{item_id}“ musí být platný JSON."
 
-#: api/views.py:643
+#: api/views.py:644
 msgid "api.views.PasApiPermissionMixin.validate_rate_limits.not_a_list"
 msgstr "Hodnota „rate_limits“ musí být seznam."
 
-#: api/views.py:649
+#: api/views.py:650
 msgid "api.views.PasApiPermissionMixin.validate_rate_limits.item_not_a_dict"
 msgstr "Položka „rate_limits[{index}]“ musí být objekt."
 
-#: api/views.py:657 api/views.py:689
+#: api/views.py:658 api/views.py:690
 msgid ""
 "api.views.PasApiPermissionMixin.validate_rate_limits.missing_required_keys"
 msgstr ""
 "Položka „rate_limits[{index}]“ musí obsahovat požadované klíče pro daný typ "
 "limitu."
 
-#: api/views.py:665
+#: api/views.py:666
 msgid "api.views.PasApiPermissionMixin.validate_rate_limits.invalid_active"
 msgstr "Hodnota „rate_limits[{index}].active“ musí být typu boolean."
 
-#: api/views.py:673
+#: api/views.py:674
 msgid "api.views.PasApiPermissionMixin.validate_rate_limits.invalid_rate"
 msgstr ""
 "Hodnota „{rate}“ v „rate_limits[{index}].rate“ nemá platný formát limitu."
 
-#: api/views.py:681
+#: api/views.py:682
 msgid "api.views.PasApiPermissionMixin.validate_rate_limits.unsupported_scope"
 msgstr "Hodnota „{scope}“ v „rate_limits[{index}].scope“ není podporována."
 
-#: api/views.py:697
+#: api/views.py:698
 msgid ""
 "api.views.PasApiPermissionMixin.validate_rate_limits.record_scope_unexpected_value"
 msgstr ""
 "Položka „rate_limits[{index}]“ se scope „record“ nesmí obsahovat klíč "
 "„value“."
 
-#: api/views.py:706
+#: api/views.py:707
 msgid "api.views.PasApiPermissionMixin.validate_rate_limits.invalid_ip_value"
 msgstr ""
 "Hodnota „{value}“ v „rate_limits[{index}].value“ není platná IP adresa nebo "
 "IP rozsah."
 
-#: api/views.py:747
+#: api/views.py:748
 msgid "api.views.PasApiPermissionMixin.validate_access_mode.invalid_value"
 msgstr "Hodnota „{value}“ v „access_mode“ není podporována."
 
-#: api/views.py:788
+#: api/views.py:789
 msgid "api.views.PasApiPermissionMixin.validate_trusted_proxies.not_a_list"
 msgstr "Hodnota „trusted_proxies“ musí být seznam."
 
-#: api/views.py:793
+#: api/views.py:794
 msgid "api.views.PasApiPermissionMixin.validate_trusted_proxies.invalid_entry"
 msgstr "Položka „trusted_proxies[{index}]“ musí být neprázdný řetězec."
 
-#: api/views.py:805
+#: api/views.py:806
 msgid "api.views.PasApiPermissionMixin.validate_trusted_proxies.invalid_cidr"
 msgstr ""
 "Hodnota „{value}“ v „trusted_proxies[{index}]“ není platná IP adresa nebo "
 "CIDR rozsah."
 
-#: api/views.py:851
+#: api/views.py:852
 msgid "api.views.PasApiPermissionMixin.validate_record_lock_params.not_a_dict"
 msgstr "Hodnota „record_lock_params“ musí být objekt."
 
-#: api/views.py:857
+#: api/views.py:858
 msgid ""
 "api.views.PasApiPermissionMixin.validate_record_lock_params.invalid_retry_delay"
 msgstr "Hodnota „record_lock_params.retry_delay“ musí být kladné číslo."
 
-#: api/views.py:863
+#: api/views.py:864
 msgid ""
 "api.views.PasApiPermissionMixin.validate_record_lock_params.invalid_max_retries"
 msgstr "Hodnota „record_lock_params.max_retries“ musí být kladné celé číslo."
 
-#: api/views.py:882
+#: api/views.py:883
 msgid ""
 "api.views.PasApiPermissionMixin.validate_allowed_schema_versions.not_a_nonempty_list"
 msgstr "Hodnota „allowed_schema_versions“ musí být neprázdný seznam."
 
-#: api/views.py:887
+#: api/views.py:888
 msgid ""
 "api.views.PasApiPermissionMixin.validate_allowed_schema_versions.invalid_version"
 msgstr ""
 "Položka „allowed_schema_versions[{index}]“ musí být číslo ve formátu verze "
 "schématu, např. [2.2]."
 
-#: api/views.py:933
+#: api/views.py:934
 msgid ""
 "api.views.PasApiPermissionMixin.validate_positive_int_setting.invalid_value"
 msgstr "Hodnota „{item_id}“ musí být kladné celé číslo."
 
-#: api/views.py:955
+#: api/views.py:956
 msgid ""
 "api.views.PasApiPermissionMixin.validate_min_request_intervals.not_a_dict"
 msgstr "Hodnota „min_request_intervals“ musí být objekt."
 
-#: api/views.py:963
+#: api/views.py:964
 msgid ""
 "api.views.PasApiPermissionMixin.validate_min_request_intervals.invalid_value"
 msgstr "Hodnota „min_request_intervals.{key}“ musí být nezáporné celé číslo."
 
-#: api/views.py:1326 api/views.py:1734
+#: api/views.py:1327 api/views.py:1735
 msgid "api.views.ApiAccessModePermission.closed"
 msgstr "REST API je aktuálně uzavřeno."
 
-#: api/views.py:1335
+#: api/views.py:1336
 msgid "api.views.ApiAccessModePermission.whitelist_only_without_rules"
 msgstr ""
 "REST API je v režimu whitelistu, ale není nastaveno žádné aktivní whitelist "
 "pravidlo."
 
-#: api/views.py:1844
+#: api/views.py:1845
 msgid "api.views.PasApiBaseView._verify_content_digest.missing_digest"
 msgstr "Chybí hlavička „Content-Digest“."
 
-#: api/views.py:1851
+#: api/views.py:1852
 msgid "api.views.PasApiBaseView._verify_content_digest.invalid_format"
 msgstr "Hlavička „Content-Digest“ nemá platný formát."
 
-#: api/views.py:1859
+#: api/views.py:1860
 msgid "api.views.PasApiBaseView._verify_content_digest.invalid_base64"
 msgstr "Hlavička „Content-Digest“ obsahuje neplatnou hodnotu Base64."
 
-#: api/views.py:1866
+#: api/views.py:1867
 msgid "api.views.PasApiBaseView._verify_content_digest.digest_mismatch"
 msgstr ""
 "Kontrolní součet nahraného souboru neodpovídá hodnotě v hlavičce „Content-"
 "Digest“."
 
-#: api/views.py:1966
+#: api/views.py:1967
 msgid ""
 "api.views.SamostatnyNalezXmlImportView._validate_declared_schema_version.unsupported_namespace"
 msgstr "XML dokument používá nepodporovaný jmenný prostor AMČR."
 
-#: api/views.py:1970
+#: api/views.py:1971
 msgid ""
 "api.views.SamostatnyNalezXmlImportView._validate_declared_schema_version.missing_schema_location"
 msgstr "XML dokument neobsahuje atribut „xsi:schemaLocation“."
 
-#: api/views.py:1974
+#: api/views.py:1975
 msgid ""
 "api.views.SamostatnyNalezXmlImportView._validate_declared_schema_version.invalid_schema_location"
 msgstr "Atribut „xsi:schemaLocation“ nemá platný formát."
 
-#: api/views.py:1979
+#: api/views.py:1980
 msgid ""
 "api.views.SamostatnyNalezXmlImportView._validate_declared_schema_version.unsupported_schema_location"
 msgstr "XML dokument odkazuje na nepodporované XSD schéma AMČR."
 
-#: api/views.py:1986
+#: api/views.py:1987
 msgid ""
 "api.views.SamostatnyNalezXmlImportView._validate_declared_schema_version.version_not_extractable"
 msgstr "Z deklarovaného XSD schématu se nepodařilo určit verzi AMČR."
 
-#: api/views.py:1991
+#: api/views.py:1992
 msgid ""
 "api.views.SamostatnyNalezXmlImportView._validate_declared_schema_version.version_not_allowed"
 msgstr "Použitá verze AMČR schématu není pro import povolena."
 
-#: api/views.py:2055 api/views.py:2089
+#: api/views.py:2056 api/views.py:2090
 msgid ""
 "api.views.SamostatnyNalezXmlImportView._get_amcr_schema.schema_not_available"
 msgstr "XSD schéma se nepodařilo načíst z URL."
 
-#: api/views.py:2071 api/views.py:2127
+#: api/views.py:2072 api/views.py:2128
 msgid ""
 "api.views.SamostatnyNalezXmlImportView._get_amcr_schema.disallowed_schema_url"
 msgstr "URL schématu není povolena."
 
-#: api/views.py:2102
+#: api/views.py:2103
 msgid ""
 "api.views.SamostatnyNalezXmlImportView._get_amcr_schema.schema_invalid_xml"
 msgstr "XSD schéma obsahuje neplatné XML."
 
-#: api/views.py:2160
+#: api/views.py:2161
 msgid "api.views.SamostatnyNalezXmlImportView.post.ignored_lang_attribute"
 msgstr ""
 "Atribut „xml:lang“ s hodnotou „%(lang)s“ u elementu „%(element)s“ byl "
 "ignorován."
 
-#: api/views.py:2248
+#: api/views.py:2249
 msgid "api.views.SamostatnyNalezXmlBaseView._parse_point_wkt.empty_wkt"
 msgstr "Hodnota geometrie nesmí být prázdná."
 
-#: api/views.py:2259 api/views.py:2270
+#: api/views.py:2260 api/views.py:2271
 msgid "api.views.SamostatnyNalezXmlBaseView._parse_point_wkt.invalid_wkt"
 msgstr "Hodnota geometrie není platný WKT zápis."
 
-#: api/views.py:2279
+#: api/views.py:2280
 msgid "api.views.SamostatnyNalezXmlBaseView._parse_point_wkt.not_a_point"
 msgstr "Geometrie musí být typu POINT."
 
-#: api/views.py:2328
+#: api/views.py:2329
 msgid ""
 "api.views.SamostatnyNalezXmlImportView._parse_nalez_element.missing_projekt"
 msgstr "Záznam musí obsahovat projekt."
 
-#: api/views.py:2341
+#: api/views.py:2342
 msgid ""
 "api.views.SamostatnyNalezXmlImportView._parse_nalez_element.ident_cely_must_be_tba"
 msgstr "Element „ident_cely“ musí mít při importu hodnotu „:tba“."
 
-#: api/views.py:2357
+#: api/views.py:2358
 msgid ""
 "api.views.SamostatnyNalezXmlBaseView._parse_nalez_element.unsupported_stav"
 msgstr "Zadaný stav záznamu není podporován."
 
-#: api/views.py:2391 api/views.py:2404
+#: api/views.py:2392 api/views.py:2405
 msgid ""
 "api.views.SamostatnyNalezXmlBaseView._parse_nalez_element.unsupported_geom_system"
 msgstr "Zadaný souřadnicový systém geometrie není podporován."
 
-#: api/views.py:2452 api/views.py:2475
+#: api/views.py:2453 api/views.py:2476
 msgid ""
 "api.views.SamostatnyNalezXmlBaseView._parse_geom_fields.conversion_error"
 msgstr ""
 "Geometrii se nepodařilo převést do požadovaného souřadnicového systému."
 
-#: api/views.py:2529
+#: api/views.py:2530
 msgid ""
 "api.views.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format_missing_separator"
 msgstr "hodnota musí být ve formátu „Příjmení, Jméno“."
 
-#: api/views.py:2531
+#: api/views.py:2532
 msgid ""
 "api.views.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format_missing_surname"
 msgstr "chybí příjmení."
 
-#: api/views.py:2533
+#: api/views.py:2534
 msgid ""
 "api.views.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format_missing_name"
 msgstr "chybí jméno."
 
-#: api/views.py:2535
+#: api/views.py:2536
 msgid "api.views.SamostatnyNalezXmlImportView._parse_nalezce.incorrect_format"
 msgstr "hodnota nemá platný formát."
 
-#: api/views.py:2576
+#: api/views.py:2577
 msgid "api.views.SamostatnyNalezXmlImportView.import_history_note"
 msgstr "REST API import."
 
-#: api/views.py:2609
+#: api/views.py:2610
 msgid "api.views.SamostatnyNalezXmlImportView.post.missing_file"
 msgstr "Chybí XML soubor."
 
-#: api/views.py:2637
+#: api/views.py:2638
 msgid "api.views.SamostatnyNalezXmlImportView.post.invalid_xml_syntax"
 msgstr "XML dokument nemá platnou syntaxi."
 
-#: api/views.py:2659
+#: api/views.py:2660
 msgid "api.views.SamostatnyNalezXmlImportView.post.schema_error_item"
 msgstr "Chyba validace XML."
 
-#: api/views.py:2685
+#: api/views.py:2686
 msgid "api.views.SamostatnyNalezXmlImportView.post.missing_samostatny_nalez"
 msgstr "XML dokument neobsahuje element „samostatny_nalez“."
 
-#: api/views.py:2691
+#: api/views.py:2692
 msgid "api.views.SamostatnyNalezXmlImportView.post.multiple_samostatny_nalez"
 msgstr "XML dokument obsahuje více než jeden element „samostatny_nalez“."
 
-#: api/views.py:2697
+#: api/views.py:2698
 msgid "api.views.SamostatnyNalezXmlImportView.post.invalid_root_content"
 msgstr "XML dokument musí obsahovat právě jeden element „samostatny_nalez“."
 
-#: api/views.py:2720
+#: api/views.py:2721
 msgid "api.views.SamostatnyNalezXmlImportView.post.projekt_not_found"
 msgstr "Zadaný projekt nebyl nalezen."
 
-#: api/views.py:2735
+#: api/views.py:2736
 msgid "api.views.SamostatnyNalezXmlImportView.post.permission_denied"
 msgstr "Chyba oprávnění."
 
-#: api/views.py:2766
+#: api/views.py:2767
 msgid "api.views.SamostatnyNalezXmlImportView.post.missing_geom"
 msgstr "Chybí geografické souřadnice."
 
-#: api/views.py:2794
+#: api/views.py:2795
 msgid ""
 "api.views.SamostatnyNalezXmlImportView.post.required_potvrzeni_field_missing"
 msgstr "pole je povinné pro potvrzený záznam."
 
-#: api/views.py:2803
+#: api/views.py:2804
 msgid "api.views.SamostatnyNalezXmlImportView.post.predano_must_be_true"
 msgstr "hodnota musí být „true“ pro potvrzený záznam."
 
-#: api/views.py:2827 api/views.py:2838
+#: api/views.py:2828 api/views.py:2839
 msgid "api.views.SamostatnyNalezXmlImportView.post.katastr_not_found"
 msgstr "Pro zadanou geometrii se nepodařilo určit katastr."
 
-#: api/views.py:2849
+#: api/views.py:2850
 msgid ""
 "api.views.SamostatnyNalezXmlImportView.post.check_pred_odeslanim_failed"
 msgstr "Kontrola před odesláním záznamu selhala."
 
-#: api/views.py:2862
+#: api/views.py:2863
 msgid ""
 "api.views.SamostatnyNalezXmlImportView.post.check_pred_potvrzenim_failed"
 msgstr "Kontrola před potvrzením záznamu selhala."
 
-#: api/views.py:2892
+#: api/views.py:2893
 msgid "api.views.SamostatnyNalezXmlImportView.post.nalezce_already_exists"
 msgstr "Osoba nálezce již existuje."
 
-#: api/views.py:2894
+#: api/views.py:2895
 msgid "api.views.SamostatnyNalezXmlImportView.post.integrity_error"
 msgstr "Záznam nelze uložit kvůli porušení databázové integrity."
 
-#: api/views.py:2906 api/views.py:2915 api/views.py:2924
+#: api/views.py:2907 api/views.py:2916 api/views.py:2925
 msgid "api.views.SamostatnyNalezXmlImportView.post.internal_error"
 msgstr "Neočekávaná chyba serveru."
 
-#: api/views.py:2943
+#: api/views.py:2944
 msgid ""
 "api.views.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving"
 msgstr ""
 "Záznam byl uložen, ale nepodařilo se načíst jeho metadata z repozitáře."
 
-#: api/views.py:3072
+#: api/views.py:3073
 msgid ""
 "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.missing_evidencni_cislo"
 msgstr "Chybí parametr „evidencni_cislo“."
 
-#: api/views.py:3084
+#: api/views.py:3085
 msgid ""
 "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.empty_evidencni_cislo"
 msgstr "Parametr „evidencni_cislo“ nesmí být prázdný."
 
-#: api/views.py:3091
+#: api/views.py:3092
 msgid ""
 "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.evidencni_cislo_too_long"
 msgstr "Příliš dlouhé evidenční číslo."
 
-#: api/views.py:3100
+#: api/views.py:3101
 msgid "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.not_found"
 msgstr "Záznam samostatného nálezu nebyl nalezen."
 
-#: api/views.py:3115
+#: api/views.py:3116
 msgid ""
 "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.permission_denied"
 msgstr "Nemáte oprávnění upravit evidenční číslo tohoto záznamu."
 
-#: api/views.py:3122
+#: api/views.py:3123
 msgid "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.no_change"
 msgstr "Shoda s existujícími údaji."
 
-#: api/views.py:3130 api/views.py:3409
+#: api/views.py:3131 api/views.py:3410
 msgid "api.views.PasApiBaseView.record_locked"
 msgstr ""
 "Záznam je aktuálně zpracováván jiným požadavkem. Zkuste akci zopakovat "
 "později."
 
-#: api/views.py:3156
+#: api/views.py:3157
 msgid ""
 "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.doi_update_error"
 msgstr "Evidenční číslo se nepodařilo propsat do DOI/IGSN."
 
-#: api/views.py:3166 api/views.py:3176 api/views.py:3188
+#: api/views.py:3167 api/views.py:3177 api/views.py:3189
 msgid "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error"
 msgstr "Neočekávaná chyba serveru."
 
-#: api/views.py:3205
+#: api/views.py:3206
 msgid ""
 "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error_reading_metadata"
 msgstr ""
 "Evidenční číslo bylo uloženo, ale nepodařilo se načíst metadata z "
 "repozitáře."
 
-#: api/views.py:3319
+#: api/views.py:3320
 msgid "api.views.SamostatnyNalezFotografieUploadView.post.not_found"
 msgstr "Záznam samostatného nálezu nebyl nalezen."
 
-#: api/views.py:3334
+#: api/views.py:3335
 msgid "api.views.SamostatnyNalezFotografieUploadView.post.permission_denied"
 msgstr "Nemáte oprávnění nahrát soubor k tomuto záznamu."
 
-#: api/views.py:3343
+#: api/views.py:3344
 msgid "api.views.SamostatnyNalezFotografieUploadView.post.missing_file"
 msgstr "Chybí nahrávaný soubor."
 
-#: api/views.py:3354
+#: api/views.py:3355
 msgid "api.views.SamostatnyNalezFotografieUploadView.post.multiple_files"
 msgstr "Požadavek smí obsahovat pouze jeden nahrávaný soubor."
 
-#: api/views.py:3361
+#: api/views.py:3362
 msgid "api.views.SamostatnyNalezFotografieUploadView.post.file_too_large"
 msgstr "Nahrávaný soubor překračuje maximální povolenou velikost."
 
-#: api/views.py:3369 core/views.py:854
+#: api/views.py:3370 core/views.py:856
 msgid "core.views.post_upload.encrypted"
 msgstr "Soubor je šifrován a chráněn heslem."
 
-#: api/views.py:3375 core/views.py:858
+#: api/views.py:3376 core/views.py:860
 msgid "core.views.post_upload.mime_check_failed"
 msgstr ""
 "Chybný formát souboru. Vkládejte pouze soubory v podporovaných formátech."
 
-#: api/views.py:3393 core/views.py:867
+#: api/views.py:3394 core/views.py:869
 msgid "core.views.post_upload.antivirus_check.virus_found"
 msgstr ""
 "V souboru byl detekován potenciálně škodlivý kód. Proveďte antivirovou "
 "kontrolu souboru, případně odstaňte jeho ochranu šifrováním."
 
-#: api/views.py:3399 core/views.py:874
+#: api/views.py:3400 core/views.py:876
 msgid "core.views.post_upload.antivirus_check.check_failed"
 msgstr ""
 "Nepodařilo se provést antivirovou kontrolu. Zkontrolujte čitelnost souboru a"
 " odstaňte jeho ochranu šifrováním."
 
-#: api/views.py:3422 core/views.py:1008 core/views.py:1228
+#: api/views.py:3423 core/views.py:1014 core/views.py:1238
 msgid "core.views.post_upload.mime_rename_failed"
 msgstr ""
 "Obsah souboru neodpovídá jeho příponě a chybu se nepodařilo automaticky "
 "opravit. Zkontrolujte správnost souboru."
 
-#: api/views.py:3431 core/views.py:1145
+#: api/views.py:3434 core/views.py:1153
 msgid "core.views.post_upload.error.maximal_file_name_exceeded"
 msgstr ""
 "U záznamu {ident} bylo dosaženo maximálního počtu přiložených souborů."
 
-#: api/views.py:3466 api/views.py:3476 api/views.py:3486 api/views.py:3496
+#: api/views.py:3471 api/views.py:3481 api/views.py:3491 api/views.py:3501
 msgid "api.views.SamostatnyNalezFotografieUploadView.post.internal_error"
 msgstr "Při nahrávání souboru došlo k interní chybě."
 
-#: api/views.py:3512
+#: api/views.py:3517
 msgid ""
 "api.views.SamostatnyNalezFotografieUploadView.post.fedora_error_reading_metadata"
 msgstr "Soubor byl uložen, ale nepodařilo se načíst metadata z repozitáře."
@@ -1168,77 +1168,77 @@ msgstr "Doplňková metoda výzkumu."
 msgid "arch_z.forms.CreateAkceForm.clean.odlozenaNz.error"
 msgstr "Akce nemůže zároveň nahrazovat NZ a mít odloženou NZ."
 
-#: arch_z/models.py:50
+#: arch_z/models.py:52
 msgid "arch_z.models.ArcheologickyZaznam.states.AZ1"
 msgstr "AZ1 - zapsaný"
 
-#: arch_z/models.py:51
+#: arch_z/models.py:53
 msgid "arch_z.models.ArcheologickyZaznam.states.AZ2"
 msgstr "AZ2 - odeslaný"
 
-#: arch_z/models.py:52
+#: arch_z/models.py:54
 msgid "arch_z.models.ArcheologickyZaznam.states.AZ3"
 msgstr "AZ3 - archivovaný"
 
-#: arch_z/models.py:203
+#: arch_z/models.py:205
 msgid ""
 "arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.datum_zahajeni.text"
 msgstr "Chybí datum zahájení."
 
-#: arch_z/models.py:207
+#: arch_z/models.py:209
 msgid ""
 "arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.datum_ukonceni.text"
 msgstr "Chybí datum ukončení."
 
-#: arch_z/models.py:211
+#: arch_z/models.py:213
 msgid ""
 "arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.lokalizace_okolnosti.text"
 msgstr "Chybí lokalizace/okolnosti."
 
-#: arch_z/models.py:215
+#: arch_z/models.py:217
 msgid ""
 "arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.specifikace_data.text"
 msgstr "Chybí přesnost data provedení."
 
-#: arch_z/models.py:217
+#: arch_z/models.py:219
 msgid "arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.organizace.text"
 msgstr "Chybí organizace."
 
-#: arch_z/models.py:218
+#: arch_z/models.py:220
 msgid "arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.hlavni_typ.text"
 msgstr "Chybí hlavní typ."
 
-#: arch_z/models.py:221
+#: arch_z/models.py:223
 msgid ""
 "arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.hlavni_vedouci.text"
 msgstr "Chybí hlavní vedoucí."
 
-#: arch_z/models.py:225
+#: arch_z/models.py:227
 msgid ""
 "arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.hlavni_katastr.text"
 msgstr "Chybí hlavní katastr."
 
-#: arch_z/models.py:234
+#: arch_z/models.py:236
 msgid "arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.nz.text"
 msgstr "Chybí nálezová zpráva."
 
-#: arch_z/models.py:241
+#: arch_z/models.py:243
 msgid "arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.dj.text"
 msgstr "Chybí dokumentační jednotka."
 
-#: arch_z/models.py:250
+#: arch_z/models.py:253
 msgid "arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pozitivni"
 msgstr "Pozitivní dokumentační jednotce {ident} chybí komponenty."
 
-#: arch_z/models.py:258
+#: arch_z/models.py:264
 msgid "arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pian"
 msgstr "Dokumentační jednotce {ident} chybí PIAN."
 
-#: arch_z/models.py:289
+#: arch_z/models.py:298
 msgid "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dokument"
 msgstr "Dokument {ident} musí být nejdřív archivován."
 
-#: arch_z/models.py:296
+#: arch_z/models.py:306
 msgid "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj"
 msgstr "Dokumentační jednotka {ident} má nepotvrzený PIAN."
 
@@ -2347,7 +2347,7 @@ msgstr "Smazat"
 msgid "arch_z.views.smazat_akce_vedouci.title.text"
 msgstr "Opravdu chcete smazat zvoleného vedoucího?"
 
-#: arch_z/views.py:1710 core/views.py:362
+#: arch_z/views.py:1710 core/views.py:364
 msgid "core.views.smazat.submitButton.text"
 msgstr "Smazat"
 
@@ -2532,20 +2532,20 @@ msgstr "Správa uživatelů"
 msgid "api.admin_site.AmcrCustomAdminSite.logy_api"
 msgstr "Správa API"
 
-#: core/admin_sites.py:389 core/forms.py:707 core/views.py:2927
+#: core/admin_sites.py:389 core/forms.py:707 core/views.py:2937
 msgid "core.forms.ImportDataAdminForm.insert"
 msgstr "insert (nové záznamy)."
 
-#: core/admin_sites.py:390 core/forms.py:708 core/views.py:2928
+#: core/admin_sites.py:390 core/forms.py:708 core/views.py:2938
 msgid "core.forms.ImportDataAdminForm.update"
 msgstr "update (aktualizace)"
 
-#: core/admin_sites.py:391 core/forms.py:709 core/views.py:2929
+#: core/admin_sites.py:391 core/forms.py:709 core/views.py:2939
 msgid "core.forms.ImportDataAdminForm.delete"
 msgstr "delete (odstranění)"
 
 #: core/admin_sites.py:526 core/admin_sites.py:539 core/admin_sites.py:613
-#: core/views.py:3237
+#: core/views.py:3247
 msgid "core.admin.import_data.error.import_error"
 msgstr "Chyba importu."
 
@@ -2604,12 +2604,12 @@ msgid "core.constants.morava.text"
 msgstr "Morava a Slezsko"
 
 #: core/constants.py:125
-msgid "core.constants.cs.text"
-msgstr "čeština"
-
-#: core/constants.py:125
 msgid "core.constants.en.text"
 msgstr "angličtina"
+
+#: core/constants.py:125
+msgid "core.constants.cs.text"
+msgstr "čeština"
 
 #: core/constants.py:156
 msgid "core.constants.dok.mesto_brno"
@@ -2660,20 +2660,20 @@ msgid "core.constants.dok.telefon_k132"
 msgstr "+420 553 821 603"
 
 #: core/constants.py:167
-msgid "core.constants.dok.email_praha"
-msgstr "oznameni@arup.cas.cz"
-
-#: core/constants.py:167
 msgid "core.constants.dok.email_brno"
 msgstr "oznameni@arub.cz"
 
-#: core/constants.py:168
-msgid "core.constants.dok.komu_praha"
-msgstr "Archeologickému ústavu AV ČR, Praha, v. v. i."
+#: core/constants.py:167
+msgid "core.constants.dok.email_praha"
+msgstr "oznameni@arup.cas.cz"
 
 #: core/constants.py:168
 msgid "core.constants.dok.komu_brno"
 msgstr "Archeologickému ústavu AV ČR, Brno, v. v. i."
+
+#: core/constants.py:168
+msgid "core.constants.dok.komu_praha"
+msgstr "Archeologickému ústavu AV ČR, Praha, v. v. i."
 
 #: core/constants.py:170
 msgid "core.constants.dok.reditel_praha"
@@ -2832,401 +2832,401 @@ msgstr "ZIP soubor s importem"
 msgid "core.forms.ImportDataAdminForm.action.label"
 msgstr "Operace"
 
-#: core/import_data_mappers.py:183
+#: core/import_data_mappers.py:163
 msgid "core_admin.ImportDataIncorrectStructureError.message"
 msgstr "Chybný formát CSV souboru s daty."
 
-#: core/import_data_mappers.py:187
+#: core/import_data_mappers.py:167
 msgid "core_admin.ImportDataIncorrectStructureError.message.missing_columns"
 msgstr "Chybějící sloupce: {columns}."
 
-#: core/import_data_mappers.py:194
+#: core/import_data_mappers.py:174
 msgid "core_admin.ImportDataIncorrectStructureError.message.excess_columns"
 msgstr "Přebývající sloupce: {columns}."
 
-#: core/import_data_mappers.py:215
+#: core/import_data_mappers.py:195
 msgid "core_admin.ImportDataIncorrectStructureContentObjectError.message"
 msgstr ""
 "Neplatná struktura obsahu importovaných dat. Sloupce: {columns}. Očekávané "
 "možnosti sloupců: {options}."
 
-#: core/import_data_mappers.py:239
+#: core/import_data_mappers.py:219
 msgid "core_admin.ImportDataMissingReferencedValueError.message.model_field"
 msgstr ""
 "Referencovaná hodnota {value} v poli {field} nebyla v modelu {model} "
 "nalezena."
 
-#: core/import_data_mappers.py:241
+#: core/import_data_mappers.py:221
 msgid "core_admin.ImportDataMissingReferencedValueError.message.model"
 msgstr "Referencovaná hodnota {value} nebyla v modelu {model} nalezena."
 
-#: core/import_data_mappers.py:243
+#: core/import_data_mappers.py:223
 msgid "core_admin.ImportDataMissingReferencedValueError.message.field"
 msgstr "Referencovaná hodnota {value} v poli {field} nebyla nalezena."
 
-#: core/import_data_mappers.py:245
+#: core/import_data_mappers.py:225
 msgid "core_admin.ImportDataMissingReferencedValueError.message"
 msgstr "Referencovaná hodnota {value} nebyla nalezena."
 
-#: core/import_data_mappers.py:274
+#: core/import_data_mappers.py:252
 msgid "core_admin.ImportDataIntegrityError.message"
 msgstr ""
 "Chyba integrity databáze při zpracování záznamu {record} v modelu {model} "
 "(operace: {action})."
 
-#: core/import_data_mappers.py:301
+#: core/import_data_mappers.py:278
 msgid "core_admin.SouborImportIntegrityError.message"
 msgstr ""
 "Soubor {nazev} u záznamu {vazba} již existuje v databázi nebo v importním "
 "souboru."
 
-#: core/import_data_mappers.py:326
+#: core/import_data_mappers.py:302
 msgid "core_admin.ImportDataFileExtensionNotAllowedError.message"
 msgstr "Přípona souboru {nazev} není u záznamu {vazba} povolena."
 
-#: core/import_data_mappers.py:349
+#: core/import_data_mappers.py:325
 msgid "core_admin.ImportDataLimitChoicesError.message"
 msgstr ""
 "Hodnotu v poli {import_field} záznamu {record} nelze použít. Přípustné jsou "
 "pouze hodnoty z hesláře {heslar}."
 
-#: core/import_data_mappers.py:379
+#: core/import_data_mappers.py:355
 msgid "core_admin.ImportDataMissingHeslarValueError.message"
 msgstr ""
 "Hodnota {value} v poli {import_field} nebyla nalezena v hesláři {heslar} "
 "(vyhledáno podle {field_name})."
 
-#: core/import_data_mappers.py:400
+#: core/import_data_mappers.py:376
 msgid "core_admin.ImportDataUnsupportedFileError.message"
 msgstr "Soubor {file} neodpovídá žádnému modelu."
 
-#: core/import_data_mappers.py:420
+#: core/import_data_mappers.py:396
 msgid "core_admin.ImportDataUnsupportedFilesError.message"
 msgstr "Soubory {files} se nepodařilo zpracovat."
 
-#: core/import_data_mappers.py:438
+#: core/import_data_mappers.py:414
 msgid "core_admin.ImportDataIncorrectPrimaryKeyFormatError.message"
 msgstr "Chybný formát primárního klíče."
 
-#: core/import_data_mappers.py:458
+#: core/import_data_mappers.py:434
 msgid "core_admin.ImportDataActiveUserCannotBeDeleted.message"
 msgstr "Aktivní uživatel provádějící import nemůže být smazán"
 
-#: core/import_data_mappers.py:474
+#: core/import_data_mappers.py:450
 msgid "core.admin.import_data.error.empty_import"
 msgstr "Importní soubor je prázdný."
 
-#: core/import_data_mappers.py:486
+#: core/import_data_mappers.py:462
 msgid "core.admin.import_data.error.missing_file"
 msgstr "Chybí importovaný soubor."
 
-#: core/import_data_mappers.py:511
+#: core/import_data_mappers.py:487
 msgid "core_admin.ImportDataBatchOrderingError.message"
 msgstr ""
 "Záznam {child} odkazuje v poli {field} na nadřazený záznam {parent}, který v"
 " databázi neexistuje a v importním souboru je uveden až později. Uveďte "
 "záznam {parent} v souboru před záznamem {child}."
 
-#: core/import_data_mappers.py:651 core/import_data_mappers.py:663
+#: core/import_data_mappers.py:627 core/import_data_mappers.py:639
 msgid "core_admin.ImportDataError.message.invalid_integer_value"
 msgstr "Neplatná celočíselná hodnota"
 
-#: core/import_data_mappers.py:682 core/import_data_mappers.py:687
+#: core/import_data_mappers.py:658 core/import_data_mappers.py:663
 msgid "core_admin.ImportDataError.message.invalid_positive_integer_value"
 msgstr "Neplatná kladná celočíselná hodnota"
 
-#: core/import_data_mappers.py:715
+#: core/import_data_mappers.py:691
 msgid "core_admin.DecimalImportField.message.invalid_decimal_value"
 msgstr "Chyba zpracování hodnoty typu desetinné číslo."
 
-#: core/import_data_mappers.py:742
+#: core/import_data_mappers.py:718
 msgid "core_admin.BooleanImportField.message.invalid_boolean_value"
 msgstr "Chyba zpracování hodnoty typu Boolean."
 
-#: core/import_data_mappers.py:827 core/import_data_mappers.py:830
+#: core/import_data_mappers.py:803 core/import_data_mappers.py:806
 msgid "core_admin.ImportDataError.message.invalid_date_value"
 msgstr "Neplatná hodnota data"
 
-#: core/import_data_mappers.py:908 core/import_data_mappers.py:912
+#: core/import_data_mappers.py:884 core/import_data_mappers.py:888
 msgid "core_admin.ImportDataError.message.invalid_date_time_value"
 msgstr "Neplatná hodnota data a času"
 
-#: core/import_data_mappers.py:952
+#: core/import_data_mappers.py:928
 msgid "core_admin.DateRangeImportField.message.invalid_date_range_value"
 msgstr "Chyba zpracování hodnoty typu daterange."
 
-#: core/import_data_mappers.py:990
+#: core/import_data_mappers.py:966
 msgid ""
 "core_admin.LookupImportField.message.limit_choices_to_unsupported_model"
 msgstr "Omezení limit_choices_to je podporováno pouze pro model Heslar."
 
-#: core/import_data_mappers.py:1281
+#: core/import_data_mappers.py:1257
 msgid "core_admin.GeomImportField.message.srid_mismatch"
 msgstr "Chyba při stanovení souřadnicového systému."
 
-#: core/import_data_mappers.py:1284
+#: core/import_data_mappers.py:1260
 msgid "core_admin.GeomImportField.message.invalid_date_value"
 msgstr "Chyba při zpracování hodnoty typu datum."
 
-#: core/import_data_mappers.py:1599
+#: core/import_data_mappers.py:1575
 msgid "core.admin.ImportModelMapper.map_field.error"
 msgstr "Pole {field} nelze namapovat."
 
-#: core/import_data_mappers.py:1633 core/import_data_mappers.py:4690
+#: core/import_data_mappers.py:1609 core/import_data_mappers.py:4664
 msgid "core_admin.ImportDataError.message.invalid_performed_action"
 msgstr "Neplatná operace importu"
 
-#: core/import_data_mappers.py:1785
+#: core/import_data_mappers.py:1761
 msgid "core_admin.ImportDataError.message.missing_required_field"
 msgstr "Chybí povinné pole"
 
-#: core/import_data_mappers.py:2209
+#: core/import_data_mappers.py:2185
 #: core/tests/test_mappers/test_heslar_datace_mapper.py:301
 #: core/tests/test_mappers/test_heslar_datace_mapper.py:317
 msgid "core.import_data_mappers.HeslarDataceMapper.obdobi.limit_choices"
 msgstr "obdobi"
 
-#: core/import_data_mappers.py:2245
+#: core/import_data_mappers.py:2221
 msgid ""
 "core.import_data_mappers.HeslarDokumentTypMaterialMapper.dokument_typ.limit_choices"
 msgstr "dokument_typ"
 
-#: core/import_data_mappers.py:2252
+#: core/import_data_mappers.py:2228
 msgid ""
 "core.import_data_mappers.HeslarDokumentTypMaterialMapper.dokument_material.limit_choices"
 msgstr "dokument_material"
 
-#: core/import_data_mappers.py:2398
+#: core/import_data_mappers.py:2374
 #: core/tests/test_mappers/test_organizace_mapper.py:175
 msgid "core.import_data_mappers.OrganizaceMapper.typ_organizace.limit_choices"
 msgstr "organizace_typ"
 
-#: core/import_data_mappers.py:2403
+#: core/import_data_mappers.py:2379
 msgid ""
 "core.import_data_mappers.OrganizaceMapper.zverejneni_pristupnost.limit_choices"
 msgstr "pristupnost"
 
-#: core/import_data_mappers.py:2410
+#: core/import_data_mappers.py:2386
 msgid "core.import_data_mappers.OrganizaceMapper.licence.limit_choices"
 msgstr "dokument_licence"
 
-#: core/import_data_mappers.py:2505
+#: core/import_data_mappers.py:2481
 msgid "core.import_data_mappers.ProjektMapper.typ_projektu.limit_choices"
 msgstr "projekt_typ"
 
-#: core/import_data_mappers.py:2513
+#: core/import_data_mappers.py:2489
 msgid "core.import_data_mappers.ProjektMapper.kulturni_pamatka.limit_choices"
 msgstr "pamatkova_ochrana"
 
-#: core/import_data_mappers.py:2666
+#: core/import_data_mappers.py:2642
 msgid ""
 "core.import_data_mappers.SamostatnyNalezMapper.pristupnost.limit_choices"
 msgstr "pristupnost"
 
-#: core/import_data_mappers.py:2672
+#: core/import_data_mappers.py:2648
 msgid "core.import_data_mappers.SamostatnyNalezMapper.okolnosti.limit_choices"
 msgstr "nalezove_okolnosti"
 
-#: core/import_data_mappers.py:2679
+#: core/import_data_mappers.py:2655
 msgid "core.import_data_mappers.SamostatnyNalezMapper.obdobi.limit_choices"
 msgstr "obdobi"
 
-#: core/import_data_mappers.py:2684
+#: core/import_data_mappers.py:2660
 msgid ""
 "core.import_data_mappers.SamostatnyNalezMapper.druh_nalezu.limit_choices"
 msgstr "predmet_druh"
 
-#: core/import_data_mappers.py:2689
+#: core/import_data_mappers.py:2665
 msgid ""
 "core.import_data_mappers.SamostatnyNalezMapper.specifikace.limit_choices"
 msgstr "predmet_specifikace"
 
-#: core/import_data_mappers.py:2768
+#: core/import_data_mappers.py:2744
 msgid ""
 "core.import_data_mappers.ArcheologickyZaznamAkceMapper.pristupnost.limit_choices"
 msgstr "pristupnost"
 
-#: core/import_data_mappers.py:2778
+#: core/import_data_mappers.py:2754
 msgid ""
 "core.import_data_mappers.ArcheologickyZaznamAkceMapper.specifikace_data.limit_choices"
 msgstr "datum_specifikace"
 
-#: core/import_data_mappers.py:2785
+#: core/import_data_mappers.py:2761
 msgid ""
 "core.import_data_mappers.ArcheologickyZaznamAkceMapper.hlavni_typ.limit_choices"
 msgstr "akce_typ"
 
-#: core/import_data_mappers.py:2792
+#: core/import_data_mappers.py:2768
 msgid ""
 "core.import_data_mappers.ArcheologickyZaznamAkceMapper.vedlejsi_typ.limit_choices"
 msgstr "akce_typ"
 
-#: core/import_data_mappers.py:2859
+#: core/import_data_mappers.py:2835
 msgid ""
 "core_admin.ImportDataError.message.akce_typ_check.typ_n_requires_empty_projekt"
 msgstr "Samostatná akce (typ N) nesmí mít vyplněný projekt."
 
-#: core/import_data_mappers.py:2861
+#: core/import_data_mappers.py:2837
 msgid ""
 "core_admin.ImportDataError.message.akce_typ_check.typ_r_requires_filled_projekt"
 msgstr "Projektová akce (typ R) musí mít vyplněný projekt."
 
-#: core/import_data_mappers.py:2865
+#: core/import_data_mappers.py:2840
 msgid "core_admin.ImportDataError.message.akce_typ_check.invalid_typ"
 msgstr "Neplatný typ akce {typ}. Povolené hodnoty jsou N a R."
 
-#: core/import_data_mappers.py:2947
+#: core/import_data_mappers.py:2921
 msgid "core.import_data_mappers.LokalitaMapper.pristupnost.limit_choices"
 msgstr "pristupnost"
 
-#: core/import_data_mappers.py:2953
+#: core/import_data_mappers.py:2927
 msgid "core.import_data_mappers.LokalitaMapper.typ_lokality.limit_choices"
 msgstr "lokalita_typ"
 
-#: core/import_data_mappers.py:2958
+#: core/import_data_mappers.py:2932
 msgid "core.import_data_mappers.LokalitaMapper.druh.limit_choices"
 msgstr "lokalita_druh"
 
-#: core/import_data_mappers.py:2963
+#: core/import_data_mappers.py:2937
 msgid "core.import_data_mappers.LokalitaMapper.zachovalost.limit_choices"
 msgstr "stav_dochovani"
 
-#: core/import_data_mappers.py:2968
+#: core/import_data_mappers.py:2942
 msgid "core.import_data_mappers.LokalitaMapper.jistota.limit_choices"
 msgstr "jistota_urceni"
 
-#: core/import_data_mappers.py:3132
+#: core/import_data_mappers.py:3106
 msgid "core.import_data_mappers.PianMapper.typ.limit_choices"
 msgstr "pian_typ"
 
-#: core/import_data_mappers.py:3137
+#: core/import_data_mappers.py:3111
 msgid "core.import_data_mappers.PianMapper.presnost.limit_choices"
 msgstr "pian_presnost"
 
-#: core/import_data_mappers.py:3191
+#: core/import_data_mappers.py:3165
 msgid "core.import_data_mappers.DokumentacniJednotkaMapper.typ.limit_choices"
 msgstr "dok_jednotka_typ"
 
-#: core/import_data_mappers.py:3267
+#: core/import_data_mappers.py:3241
 msgid "core.import_data_mappers.AdbMapper.typ_sondy.limit_choices"
 msgstr "adb_typ"
 
-#: core/import_data_mappers.py:3272
+#: core/import_data_mappers.py:3246
 msgid "core.import_data_mappers.AdbMapper.podnet.limit_choices"
 msgstr "adb_podnet"
 
-#: core/import_data_mappers.py:3322
+#: core/import_data_mappers.py:3296
 msgid "core.import_data_mappers.AdbVyskovyBod.typ.limit_choices"
 msgstr "vyskovy_bod_typ"
 
-#: core/import_data_mappers.py:3377
+#: core/import_data_mappers.py:3351
 msgid "core.import_data_mappers.DokumentLetMapper.letiste_start.limit_choices"
 msgstr "letiste"
 
-#: core/import_data_mappers.py:3382
+#: core/import_data_mappers.py:3356
 msgid "core.import_data_mappers.DokumentLetMapper.letiste_cil.limit_choices"
 msgstr "letiste"
 
-#: core/import_data_mappers.py:3389
+#: core/import_data_mappers.py:3363
 msgid "core.import_data_mappers.DokumentLetMapper.pocasi.limit_choices"
 msgstr "pocasi"
 
-#: core/import_data_mappers.py:3394
+#: core/import_data_mappers.py:3368
 msgid "core.import_data_mappers.DokumentLetMapper.dohlednost.limit_choices"
 msgstr "dohlednost"
 
-#: core/import_data_mappers.py:3449
+#: core/import_data_mappers.py:3423
 msgid "core.import_data_mappers.DokumentMapper.typ_dokumentu.limit_choices"
 msgstr "dokument_typ"
 
-#: core/import_data_mappers.py:3454
+#: core/import_data_mappers.py:3428
 msgid ""
 "core.import_data_mappers.DokumentMapper.material_originalu.limit_choices"
 msgstr "dokument_material"
 
-#: core/import_data_mappers.py:3459
+#: core/import_data_mappers.py:3433
 msgid "core.import_data_mappers.DokumentMapper.rada.limit_choices"
 msgstr "dokument_rada"
 
-#: core/import_data_mappers.py:3465
+#: core/import_data_mappers.py:3439
 msgid "core.import_data_mappers.DokumentMapper.pristupnost.limit_choices"
 msgstr "pristupnost"
 
-#: core/import_data_mappers.py:3470
+#: core/import_data_mappers.py:3444
 msgid ""
 "core.import_data_mappers.DokumentMapper.ulozeni_originalu.limit_choices"
 msgstr "dokument_ulozeni"
 
-#: core/import_data_mappers.py:3475
+#: core/import_data_mappers.py:3449
 msgid "core.import_data_mappers.DokumentMapper.licence.limit_choices"
 msgstr "dokument_licence"
 
-#: core/import_data_mappers.py:3480
+#: core/import_data_mappers.py:3454
 msgid "core.import_data_mappers.DokumentMapper.format.limit_choices"
 msgstr "dokument_format"
 
-#: core/import_data_mappers.py:3485
+#: core/import_data_mappers.py:3459
 msgid "core.import_data_mappers.DokumentMapper.zachovalost.limit_choices"
 msgstr "dokument_zachovalost"
 
-#: core/import_data_mappers.py:3490
+#: core/import_data_mappers.py:3464
 msgid "core.import_data_mappers.DokumentMapper.nahrada.limit_choices"
 msgstr "dokument_nahrada"
 
-#: core/import_data_mappers.py:3495
+#: core/import_data_mappers.py:3469
 msgid "core.import_data_mappers.DokumentMapper.udalost_typ.limit_choices"
 msgstr "udalost_typ"
 
-#: core/import_data_mappers.py:3500
+#: core/import_data_mappers.py:3474
 msgid "core.import_data_mappers.DokumentMapper.zeme.limit_choices"
 msgstr "zeme"
 
-#: core/import_data_mappers.py:3698
+#: core/import_data_mappers.py:3672
 msgid "core.import_data_mappers.DokumentJazykMapper.jazyk.limit_choices"
 msgstr "jazyk"
 
-#: core/import_data_mappers.py:3790
+#: core/import_data_mappers.py:3764
 msgid "core.import_data_mappers.DokumentPosudekMapper.posudek.limit_choices"
 msgstr "posudek_typ"
 
-#: core/import_data_mappers.py:3838
+#: core/import_data_mappers.py:3812
 msgid "core.import_data_mappers.TvarMapper.tvar.limit_choices"
 msgstr "letfoto_tvar"
 
-#: core/import_data_mappers.py:4021
+#: core/import_data_mappers.py:3995
 msgid "core.import_data_mappers.KomponentaMapper.obdobi.limit_choices"
 msgstr "obdobi"
 
-#: core/import_data_mappers.py:4026
+#: core/import_data_mappers.py:4000
 msgid "core.import_data_mappers.KomponentaMapper.areal.limit_choices"
 msgstr "areal"
 
-#: core/import_data_mappers.py:4090
+#: core/import_data_mappers.py:4064
 msgid ""
 "core.import_data_mappers.KomponentaAktivitaMapper.aktivita.limit_choices"
 msgstr "aktivita"
 
-#: core/import_data_mappers.py:4167
+#: core/import_data_mappers.py:4141
 msgid "core.import_data_mappers.NalezObjektMapper.druh.limit_choices"
 msgstr "objekt_druh"
 
-#: core/import_data_mappers.py:4172
+#: core/import_data_mappers.py:4146
 msgid "core.import_data_mappers.NalezObjektMapper.specifikace.limit_choices"
 msgstr "objekt_specifikace"
 
-#: core/import_data_mappers.py:4198
+#: core/import_data_mappers.py:4172
 msgid "core.import_data_mappers.NalezPredmetMapper.druh.limit_choices"
 msgstr "predmet_druh"
 
-#: core/import_data_mappers.py:4203
+#: core/import_data_mappers.py:4177
 msgid "core.import_data_mappers.NalezPredmetMapper.specifikace.limit_choices"
 msgstr "predmet_specifikace"
 
-#: core/import_data_mappers.py:4248
+#: core/import_data_mappers.py:4222
 msgid "core.import_data_mappers.ExterniZdrojMapper.typ.limit_choices"
 msgstr "ext_zdroj_typ"
 
-#: core/import_data_mappers.py:4253
+#: core/import_data_mappers.py:4227
 msgid ""
 "core.import_data_mappers.ExterniZdrojMapper.typ_dokumentu.limit_choices"
 msgstr "dokument_typ"
@@ -3244,57 +3244,57 @@ msgstr ""
 "Odstávku nelze ukončit, dokud probíhá import. Nejprve import dokončete nebo "
 "zrušte. Při selhání workeru použijte ruční reset importu."
 
-#: core/management/commands/check_pian_properties.py:37
+#: core/management/commands/check_pian_properties.py:39
 msgid "core.management.commands.check_pian_properties.Command.help"
 msgstr "Django management příkaz pro kontrolu a opravu vlastností PIANů."
 
-#: core/management/commands/check_pian_properties.py:65
+#: core/management/commands/check_pian_properties.py:67
 msgid "core.management.commands.check_pian_properties.total_pian"
 msgstr "Počet PIAN:"
 
-#: core/management/commands/check_pian_properties.py:66
+#: core/management/commands/check_pian_properties.py:68
 msgid "core.management.commands.check_pian_properties.processing_pian"
 msgstr "Zpracovávám PIAN"
 
-#: core/management/commands/check_pian_properties.py:80
+#: core/management/commands/check_pian_properties.py:82
 msgid "core.management.commands.check_pian_properties.change_typ"
 msgstr "Změna typu PIAN:"
 
-#: core/management/commands/check_pian_properties.py:103
+#: core/management/commands/check_pian_properties.py:105
 msgid "core.management.commands.check_pian_properties.change_zm10"
 msgstr "Změna listu ZM10:"
 
-#: core/management/commands/check_pian_properties.py:114
+#: core/management/commands/check_pian_properties.py:116
 msgid "core.management.commands.check_pian_properties.change_zm50"
 msgstr "Změna listu ZM50:"
 
-#: core/management/commands/check_pian_properties.py:126
-#: core/management/commands/check_pian_properties.py:156
+#: core/management/commands/check_pian_properties.py:128
+#: core/management/commands/check_pian_properties.py:158
 msgid "core.management.commands.check_pian_properties.changed"
 msgstr "Počet změněných:"
 
-#: core/management/commands/check_pian_properties.py:130
-#: core/management/commands/check_pian_properties.py:160
+#: core/management/commands/check_pian_properties.py:132
+#: core/management/commands/check_pian_properties.py:162
 msgid "core.management.commands.check_pian_properties.processed"
 msgstr "Počet zpracovaných:"
 
-#: core/management/commands/check_pian_properties.py:136
+#: core/management/commands/check_pian_properties.py:138
 msgid "core.management.commands.check_pian_properties.pian"
 msgstr "PIAN"
 
-#: core/management/commands/check_pian_properties.py:177
+#: core/management/commands/check_pian_properties.py:179
 msgid "core.management.commands.check_pian_properties.total_processed"
 msgstr "Celkem zpracováno:"
 
-#: core/management/commands/check_pian_properties.py:179
+#: core/management/commands/check_pian_properties.py:181
 msgid "core.management.commands.check_pian_properties.changed_count"
 msgstr "Celkem změněných:"
 
-#: core/management/commands/check_pian_properties.py:187
+#: core/management/commands/check_pian_properties.py:190
 msgid "core.management.commands.check_pian_properties.finished_fixed"
 msgstr "Celkem opraveno: {fixed} z {total}"
 
-#: core/management/commands/check_pian_properties.py:194
+#: core/management/commands/check_pian_properties.py:198
 msgid "core.management.commands.check_pian_properties.finished_no_changes"
 msgstr "Nebyly provedeny žádné změny, všechny PIAN jsou v pořádku."
 
@@ -3402,74 +3402,74 @@ msgstr ""
 "Přepsat v databázi kontrolní součet a velikost souborů hodnotami vložených "
 "zástupných souborů."
 
-#: core/management/commands/generate_thumbs.py:36
+#: core/management/commands/generate_thumbs.py:38
 msgid "core.management.commands.generate_thumbs.Command.help"
 msgstr "Django management příkaz pro generování náhledů souborů."
 
-#: core/management/commands/generate_thumbs.py:48
+#: core/management/commands/generate_thumbs.py:50
 msgid ""
 "core.management.commands.generate_thumbs.Command.add_arguments.pks_help"
 msgstr "Seznam primárních klíčů souborů (odděleno mezerami)."
 
-#: core/management/commands/generate_thumbs.py:55
+#: core/management/commands/generate_thumbs.py:57
 msgid ""
 "core.management.commands.generate_thumbs.Command.add_arguments.range_help"
 msgstr "Rozsah primárních klíčů ve formátu \"start end\"."
 
-#: core/management/commands/generate_thumbs.py:60
+#: core/management/commands/generate_thumbs.py:62
 msgid ""
 "core.management.commands.generate_thumbs.Command.add_arguments.csv_help"
 msgstr ""
 "Cesta k CSV souboru se seznamem umístění souborů ve sloupci \"record\" "
 "(repository path)."
 
-#: core/management/commands/generate_thumbs.py:78
+#: core/management/commands/generate_thumbs.py:80
 msgid "core.management.commands.generate_thumbs.argument_error"
 msgstr "Zadány chybné argumenty."
 
-#: core/management/commands/generate_thumbs.py:106
+#: core/management/commands/generate_thumbs.py:108
 msgid "core.management.commands.generate_thumbs.csv_read_error"
 msgstr "Chyba čtení CSV."
 
-#: core/management/commands/generate_thumbs.py:114
+#: core/management/commands/generate_thumbs.py:116
 msgid "core.management.commands.generate_thumbs.processing_total"
 msgstr "Celkem záznamů:"
 
-#: core/management/commands/generate_thumbs.py:121
+#: core/management/commands/generate_thumbs.py:123
 msgid "core.management.commands.generate_thumbs.progress"
 msgstr "Stav zpracování:"
 
-#: core/management/commands/generate_thumbs.py:170
+#: core/management/commands/generate_thumbs.py:172
 msgid "core.management.commands.generate_thumbs.error"
 msgstr "Chyba generování náhledu."
 
-#: core/management/commands/generate_thumbs.py:194
+#: core/management/commands/generate_thumbs.py:196
 msgid "core.management.commands.generate_thumbs.summary_header"
 msgstr "Výsledky zpracování"
 
-#: core/management/commands/generate_thumbs.py:195
+#: core/management/commands/generate_thumbs.py:197
 msgid "core.management.commands.generate_thumbs.summary_total"
 msgstr "Celkem zpracováno:"
 
-#: core/management/commands/generate_thumbs.py:196
+#: core/management/commands/generate_thumbs.py:198
 msgid "core.management.commands.generate_thumbs.summary_success"
 msgstr "Úspěšně zpracováno:"
 
-#: core/management/commands/generate_thumbs.py:197
+#: core/management/commands/generate_thumbs.py:199
 msgid "core.management.commands.generate_thumbs.summary_skipped"
 msgstr "Celkem přeskočeno:"
 
-#: core/management/commands/generate_thumbs.py:198
+#: core/management/commands/generate_thumbs.py:200
 msgid "core.management.commands.generate_thumbs.summary_errors"
 msgstr "Celkem chyb:"
 
-#: core/management/commands/generate_thumbs.py:205
+#: core/management/commands/generate_thumbs.py:208
 msgid "core.management.commands.generate_thumbs.finished_with_errors"
 msgstr ""
 "Zpracování skončilo s chybami. Úspěšně zpracováno: {success}, neúspěšně "
 "zpracováno: {errors}"
 
-#: core/management/commands/generate_thumbs.py:213
+#: core/management/commands/generate_thumbs.py:217
 msgid "core.management.commands.generate_thumbs.finished_success"
 msgstr "Zpracování skončilo bez chyb."
 
@@ -3486,71 +3486,71 @@ msgstr "Chyba při importu oprávnění."
 msgid "core.management.commands.import_permissions.finished_success"
 msgstr "Oprávnění úspěšně importována."
 
-#: core/management/commands/remove_gps_data.py:44
+#: core/management/commands/remove_gps_data.py:46
 msgid "core.management.commands.remove_gps_data.Command.help"
 msgstr ""
 "Django management příkaz pro odstranění GPS dat z existujících souborů."
 
-#: core/management/commands/remove_gps_data.py:55
+#: core/management/commands/remove_gps_data.py:57
 msgid ""
 "core.management.commands.remove_gps_data.Command.add_arguments.csv_file_help"
 msgstr "Cesta k CSV souboru se seznamem souborů."
 
-#: core/management/commands/remove_gps_data.py:86
+#: core/management/commands/remove_gps_data.py:88
 msgid "core.management.commands.remove_gps_data.admin_user_not_found"
 msgstr "Nepodařilo se najít účet administrátora:"
 
-#: core/management/commands/remove_gps_data.py:99
+#: core/management/commands/remove_gps_data.py:101
 msgid "core.management.commands.remove_gps_data.csv_read_error"
 msgstr "Chyba čtení CSV."
 
-#: core/management/commands/remove_gps_data.py:109
+#: core/management/commands/remove_gps_data.py:111
 msgid "core.management.commands.remove_gps_data.processing_total"
 msgstr "Záznamů celkem:"
 
-#: core/management/commands/remove_gps_data.py:116
+#: core/management/commands/remove_gps_data.py:118
 msgid "core.management.commands.remove_gps_data.progress"
 msgstr "Stav zpracování:"
 
-#: core/management/commands/remove_gps_data.py:159
+#: core/management/commands/remove_gps_data.py:161
 msgid "core.management.commands.remove_gps_data.file_not_found"
 msgstr "Soubor nenalezen."
 
-#: core/management/commands/remove_gps_data.py:174
+#: core/management/commands/remove_gps_data.py:176
 msgid "core.management.commands.remove_gps_data.error"
 msgstr "Chyba zpracování."
 
-#: core/management/commands/remove_gps_data.py:199
+#: core/management/commands/remove_gps_data.py:201
 msgid "core.management.commands.remove_gps_data.summary_header"
 msgstr "Výsledky zpracování"
 
-#: core/management/commands/remove_gps_data.py:200
+#: core/management/commands/remove_gps_data.py:202
 msgid "core.management.commands.remove_gps_data.summary_total"
 msgstr "Celkem záznamů:"
 
-#: core/management/commands/remove_gps_data.py:201
+#: core/management/commands/remove_gps_data.py:203
 msgid "core.management.commands.remove_gps_data.summary_success"
 msgstr "Úspěšně zpracováno:"
 
-#: core/management/commands/remove_gps_data.py:202
+#: core/management/commands/remove_gps_data.py:204
 msgid "core.management.commands.remove_gps_data.summary_updated"
 msgstr "Aktualizováno:"
 
-#: core/management/commands/remove_gps_data.py:203
+#: core/management/commands/remove_gps_data.py:205
 msgid "core.management.commands.remove_gps_data.summary_skipped"
 msgstr "Přeskočeno:"
 
-#: core/management/commands/remove_gps_data.py:204
+#: core/management/commands/remove_gps_data.py:206
 msgid "core.management.commands.remove_gps_data.summary_errors"
 msgstr "Chyby:"
 
-#: core/management/commands/remove_gps_data.py:211
+#: core/management/commands/remove_gps_data.py:214
 msgid "core.management.commands.remove_gps_data.finished_with_errors"
 msgstr ""
 "Zpracování skončilo s chybami. Úspěšně zpracováno: {success}, neúspěšně "
 "zpracováno: {errors}"
 
-#: core/management/commands/remove_gps_data.py:219
+#: core/management/commands/remove_gps_data.py:223
 msgid "core.management.commands.remove_gps_data.finished_success"
 msgstr "Zpracování skončilo bez chyb."
 
@@ -3643,123 +3643,123 @@ msgid "core.management.commands.send_test_emails.Command.help"
 msgstr ""
 "Django management příkaz pro odeslání testovacího emailu na zvolenou adresu."
 
-#: core/management/commands/transform_to_sjtsk.py:32
+#: core/management/commands/transform_to_sjtsk.py:34
 msgid "core.management.commands.transform_to_sjtsk.Command.help"
 msgstr ""
 "Django management příkaz pro transformaci souřadnic do systému S-JTSK."
 
-#: core/management/commands/transform_to_sjtsk.py:44
+#: core/management/commands/transform_to_sjtsk.py:46
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command.add_arguments.model_help"
 msgstr "Typ modelu pro transformaci (pian, nalez, projekt, dokument)."
 
-#: core/management/commands/transform_to_sjtsk.py:83
+#: core/management/commands/transform_to_sjtsk.py:85
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_pian.processing"
 msgstr "Probíhá zpracování."
 
-#: core/management/commands/transform_to_sjtsk.py:105
+#: core/management/commands/transform_to_sjtsk.py:107
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_pian.found"
 msgstr "Počet záznamů:"
 
-#: core/management/commands/transform_to_sjtsk.py:113
+#: core/management/commands/transform_to_sjtsk.py:115
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_pian.progress"
 msgstr "Stav zpracování:"
 
-#: core/management/commands/transform_to_sjtsk.py:134
+#: core/management/commands/transform_to_sjtsk.py:136
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_pian.error"
 msgstr "Chyba záznamu:"
 
-#: core/management/commands/transform_to_sjtsk.py:145
+#: core/management/commands/transform_to_sjtsk.py:148
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_pian.finished"
 msgstr ""
 "Zpracování dokončeno. Úspěšně zpracováno: {success}, neúspěšně zpracováno: "
 "{errors}"
 
-#: core/management/commands/transform_to_sjtsk.py:159
+#: core/management/commands/transform_to_sjtsk.py:163
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_nalez.processing"
 msgstr "Probíhá zpracování."
 
-#: core/management/commands/transform_to_sjtsk.py:181
+#: core/management/commands/transform_to_sjtsk.py:185
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_nalez.found"
 msgstr "Celkem záznamů:"
 
-#: core/management/commands/transform_to_sjtsk.py:189
+#: core/management/commands/transform_to_sjtsk.py:193
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_nalez.progress"
 msgstr "Stav zpracování:"
 
-#: core/management/commands/transform_to_sjtsk.py:210
+#: core/management/commands/transform_to_sjtsk.py:214
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_nalez.error"
 msgstr "Chyba záznamu:"
 
-#: core/management/commands/transform_to_sjtsk.py:221
+#: core/management/commands/transform_to_sjtsk.py:226
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_nalez.finished"
 msgstr ""
 "Zpracování dokončeno. Úspěšně zpracováno: {success}, neúspěšně zpracováno: "
 "{errors}"
 
-#: core/management/commands/transform_to_sjtsk.py:235
+#: core/management/commands/transform_to_sjtsk.py:241
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_projekt.processing"
 msgstr "Probíhá zpracování."
 
-#: core/management/commands/transform_to_sjtsk.py:257
+#: core/management/commands/transform_to_sjtsk.py:263
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_projekt.found"
 msgstr "Celkem záznamů:"
 
-#: core/management/commands/transform_to_sjtsk.py:265
+#: core/management/commands/transform_to_sjtsk.py:271
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_projekt.progress"
 msgstr "Stav zpracování:"
 
-#: core/management/commands/transform_to_sjtsk.py:286
+#: core/management/commands/transform_to_sjtsk.py:292
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_projekt.error"
 msgstr "Chyba záznamu:"
 
-#: core/management/commands/transform_to_sjtsk.py:297
+#: core/management/commands/transform_to_sjtsk.py:304
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_projekt.finished"
 msgstr ""
 "Zpracování dokončeno. Úspěšně zpracováno: {success}, neúspěšně zpracováno: "
 "{errors}"
 
-#: core/management/commands/transform_to_sjtsk.py:311
+#: core/management/commands/transform_to_sjtsk.py:319
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_dokument.processing"
 msgstr "Probíhá zpracování."
 
-#: core/management/commands/transform_to_sjtsk.py:333
+#: core/management/commands/transform_to_sjtsk.py:341
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_dokument.found"
 msgstr "Celkem záznamů:"
 
-#: core/management/commands/transform_to_sjtsk.py:341
+#: core/management/commands/transform_to_sjtsk.py:349
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_dokument.progress"
 msgstr "Stav zpracování:"
 
-#: core/management/commands/transform_to_sjtsk.py:363
+#: core/management/commands/transform_to_sjtsk.py:371
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_dokument.error"
 msgstr "Chyba záznamu:"
 
-#: core/management/commands/transform_to_sjtsk.py:379
+#: core/management/commands/transform_to_sjtsk.py:387
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_dokument.exception"
 msgstr "Chyba záznamu:"
 
-#: core/management/commands/transform_to_sjtsk.py:390
+#: core/management/commands/transform_to_sjtsk.py:399
 msgid ""
 "core.management.commands.transform_to_sjtsk.Command._transform_dokument.finished"
 msgstr ""
@@ -5041,87 +5041,119 @@ msgstr "spoluprace_smazat"
 msgid "core.models.permissions.actionChoices.spoluprace_edit_projekty"
 msgstr "spoluprace_edit_projekty"
 
+#: core/models.py:1285
+msgid "core.models.permissions.actionChoices.pian_import_new"
+msgstr "pian_import_new"
+
+#: core/models.py:1286
+msgid "core.models.permissions.actionChoices.pian_import_change"
+msgstr "pian_import_change"
+
+#: core/models.py:1287
+msgid "core.models.permissions.actionChoices.akce_dj_zakladni"
+msgstr "akce_dj_zakladni"
+
+#: core/models.py:1290
+msgid "core.models.permissions.actionChoices.akce_pripojit_pian_mapa"
+msgstr "akce_pripojit_pian_mapa"
+
+#: core/models.py:1292
+msgid "core.models.permissions.actionChoices.akce_pripojit_pian_id"
+msgstr "akce_pripojit_pian_id"
+
+#: core/models.py:1295
+msgid "core.models.permissions.actionChoices.lokalita_dj_zakladni"
+msgstr "lokalita_dj_zakladni"
+
+#: core/models.py:1298
+msgid "core.models.permissions.actionChoices.lokalita_pripojit_pian_mapa"
+msgstr "lokalita_pripojit_pian_mapa"
+
 #: core/models.py:1302
+msgid "core.models.permissions.actionChoices.lokalita_pripojit_pian_id"
+msgstr "lokalita_pripojit_pian_id"
+
+#: core/models.py:1304
 msgid "core.models.permissions.actionChoices.dokumenty_tabulka_projekt"
 msgstr "dokumenty_tabulka_projekt"
 
-#: core/models.py:1305
+#: core/models.py:1307
 msgid "core.models.permissions.actionChoices.dokumenty_tabulka_arch_z"
 msgstr "dokumenty_tabulka_arch_z"
 
-#: core/models.py:1308
+#: core/models.py:1310
 msgid "core.models.permissions.actionChoices.vypis_dokument"
 msgstr "vypis_dokument"
 
-#: core/models.py:1309
+#: core/models.py:1311
 msgid "core.models.permissions.actionChoices.vypis_projekt"
 msgstr "vypis_projekt"
 
-#: core/models.py:1310
+#: core/models.py:1312
 msgid "core.models.permissions.actionChoices.vypis_akce"
 msgstr "vypis_akce"
 
-#: core/models.py:1311
+#: core/models.py:1313
 msgid "core.models.permissions.actionChoices.vypis_lokalita"
 msgstr "vypis_lokalita"
 
-#: core/models.py:1312
+#: core/models.py:1314
 msgid "core.models.permissions.actionChoices.vypis_pas"
 msgstr "vypis_pas"
 
-#: core/models.py:1313
+#: core/models.py:1315
 msgid "core.models.permissions.actionChoices.vypis_model3d"
 msgstr "vypis_model3d"
 
-#: core/models.py:1314
+#: core/models.py:1316
 msgid "core.models.permissions.actionChoices.vypis_ez"
 msgstr "vypis_ez"
 
-#: core/models.py:1315
+#: core/models.py:1317
 msgid "core.models.permissions.actionChoices.historie_fedora"
 msgstr "historie_fedora"
 
-#: core/models.py:1326
+#: core/models.py:1328
 msgid "core.models.permissions.addressInApp"
 msgstr "URL"
 
-#: core/models.py:1332
+#: core/models.py:1334
 msgid "core.models.permissions.mainRole"
 msgstr "Role"
 
-#: core/models.py:1334
+#: core/models.py:1336
 msgid "core.models.permissions.base"
 msgstr "základní přístup"
 
-#: core/models.py:1337
+#: core/models.py:1339
 msgid "core.models.permissions.status"
 msgstr "Stav"
 
-#: core/models.py:1343
+#: core/models.py:1345
 msgid "core.models.permissions.ownership"
 msgstr "Vlastnictví"
 
-#: core/models.py:1350
+#: core/models.py:1352
 msgid "core.models.permissions.accessibility"
 msgstr "Přístupnost"
 
-#: core/models.py:1357
+#: core/models.py:1359
 msgid "core.models.permissions.action"
 msgstr "Akce"
 
-#: core/models.py:1366
+#: core/models.py:1368
 msgid "core.model.permissions.modelTitle.label"
 msgstr "oprávnění"
 
-#: core/models.py:1367
+#: core/models.py:1369
 msgid "core.model.permissions.modelTitles.label"
 msgstr "oprávnění"
 
-#: core/models.py:1606
+#: core/models.py:1608
 msgid "core.model.permissionsSkip.modelTitle.label"
 msgstr "výjimky oprávnění"
 
-#: core/models.py:1607
+#: core/models.py:1609
 msgid "core.model.permissionsSkip.modelTitles.label"
 msgstr "výjimky oprávnění"
 
@@ -5169,7 +5201,7 @@ msgstr ""
 "Tabulka obsahuje více než 50 000 záznamů, příprava exportu může trvat "
 "dlouhou dobu. Opravdu chcete data exportovat?"
 
-#: core/templates/core/export_modal.html:23 core/views.py:2343
+#: core/templates/core/export_modal.html:23 core/views.py:2353
 msgid "core.templates.core.export_modal.file_being_generated"
 msgstr "Váš export se připravuje."
 
@@ -5588,45 +5620,45 @@ msgstr "Minimální přípustné datum je 1. 1. 1600."
 msgid "core.validators.validate_date_min_1600.not_valid"
 msgstr "Minimální přípustné datum je 1. 1. 1600."
 
-#: core/views.py:360
+#: core/views.py:362
 msgid "core.views.delete_file.title.text"
 msgstr "Opravdu chcete smazat soubor"
 
-#: core/views.py:527
+#: core/views.py:529
 msgid "core.views.rename_file.title.text"
 msgstr "Přejmenovat soubor"
 
-#: core/views.py:529
+#: core/views.py:531
 msgid "core.views.rename_file.submitButton.text"
 msgstr "Přejmenovat"
 
-#: core/views.py:699
+#: core/views.py:701
 msgid "core.upload_file_replace.tooltip"
 msgstr ""
 "Nahrajte náhradu původního souboru. Velikost jednoho souboru nesmí "
 "přesáhnout 250 MB."
 
-#: core/views.py:736
+#: core/views.py:738
 msgid "core.upload_file_PAS.tooltip"
 msgstr ""
 "Lze nahrát soubory ve formátech TIFF, JPEG, PNG, HEIC nebo HEIF. Velikost "
 "jednoho souboru nesmí přesáhnout 250 MB. Počet souborů nesmí přesáhnout 99."
 
-#: core/views.py:739
+#: core/views.py:741
 msgid "core.upload_file_dokument.tooltip"
 msgstr ""
 "Lze nahrát soubory ve formátech PDF, TIFF, JPEG, PNG, SVG, TXT, XLSX nebo "
 "CSV. Velikost jednoho souboru nesmí přesáhnout 250 MB. Počet souborů nesmí "
 "přesáhnout 27."
 
-#: core/views.py:742
+#: core/views.py:744
 msgid "core.upload_file_model3d.tooltip"
 msgstr ""
 "Lze nahrát soubory ve formátech PDF, TIFF, JPEG, PNG, SVG, ZIP, RAR nebo 7z."
 " Velikost jednoho souboru nesmí přesáhnout 250 MB. Počet souborů nesmí "
 "přesáhnout 27."
 
-#: core/views.py:745
+#: core/views.py:747
 msgid "core.upload_file_projekt.tooltip"
 msgstr ""
 "Lze nahrát soubory ve formátech PDF, TIFF, JPEG, PNG, SVG, HEIC, HEIF, BMP, "
@@ -5634,125 +5666,125 @@ msgstr ""
 "Velikost jednoho souboru nesmí přesáhnout 250 MB. Počet souborů nesmí "
 "přesáhnout 40."
 
-#: core/views.py:914
+#: core/views.py:917
 msgid "core.views.post_upload.duplikat2"
 msgstr ""
 "Soubor {file} jsme uložili, ale stejný soubor na serveru již existuje a je "
 "připojen k záznamu {ident}. Zkontrolujte prosím duplicitu."
 
-#: core/views.py:931
+#: core/views.py:936
 msgid "core.views.post_upload.renamed"
 msgstr ""
 "Soubor {file} byl z důvodu chybné přípony automaticky přejmenován na "
 "{new_name}."
 
-#: core/views.py:941
+#: core/views.py:947
 msgid "core.views.post_upload.unknown_error"
 msgstr ""
 "Při nahrávání došlo k neznámé chybě. V případě opakujících se problémů "
 "kontaktujte správce systému."
 
-#: core/views.py:1025
+#: core/views.py:1031
 msgid "core.views.post_upload.upload_failed_another_transaction"
 msgstr ""
 "Soubor se nepodařilo nahrát, záznam je právě blokován jinou transakcí. "
 "Opakujte úpravu za okamžik."
 
-#: core/views.py:1029 core/views.py:1254
+#: core/views.py:1035 core/views.py:1264
 msgid "core.views.post_upload.fedora_error"
 msgstr ""
 "Při nahrávání došlo k chybě repozitáře. V případě opakujících se problémů "
 "kontaktujte správce systému."
 
-#: core/views.py:1091 core/views.py:1312
+#: core/views.py:1097 core/views.py:1322
 msgid "core.views.post_upload.error.invalid_typ_vazby"
 msgstr "Soubor se nepodařilo propojit s nadřazeným záznamem."
 
-#: core/views.py:1122 core/views.py:1336
+#: core/views.py:1128 core/views.py:1346
 msgid "core.views.post_upload.error.object_does_not_exist"
 msgstr "Nepodařilo se najít nadřazený záznam."
 
-#: core/views.py:1220
+#: core/views.py:1230
 msgid "core.views.post_upload.error.no_vazba"
 msgstr "Soubor se nepodařilo propojit s nadřazeným záznamem."
 
-#: core/views.py:1250
+#: core/views.py:1260
 msgid "core.views.post_upload.update_failed_another_transaction"
 msgstr ""
 "Soubor se nepodařilo nahrát, záznam je právě blokován jinou transakcí. "
 "Opakujte úpravu za okamžik."
 
-#: core/views.py:1499
+#: core/views.py:1509
 msgid "core.views.redirectView.noRedirectUrl.message.text"
 msgstr "Pro zadaný identifikátor není nastaveno přesměrování."
 
-#: core/views.py:1502
+#: core/views.py:1512
 msgid "core.views.redirectView.identnotmatchingregex.message.text"
 msgstr "Nepodařilo se dekódovat zadaný identifikátor."
 
-#: core/views.py:1779
+#: core/views.py:1789
 msgid "core.templates.core.export_modal.sending_data"
 msgstr "Odesílání dat"
 
-#: core/views.py:1794 core/views.py:1814
+#: core/views.py:1804 core/views.py:1824
 msgid "core.templates.core.export_modal.collecting_data"
 msgstr "Stahování dat"
 
-#: core/views.py:1839
+#: core/views.py:1849
 msgid "core.templates.core.export_modal.converting_data"
 msgstr "Konverze dat"
 
-#: core/views.py:1860
+#: core/views.py:1870
 msgid "core.views.SearchListView.create_export.export_format_not_supported"
 msgstr "Nepodporovaný formát exportu."
 
-#: core/views.py:1863
+#: core/views.py:1873
 msgid "core.templates.core.export_modal.file_generated"
 msgstr "Soubor se připravuje ke stažení."
 
-#: core/views.py:2627
+#: core/views.py:2637
 msgid "core.views.translationFileSmazatbackup.title.text"
 msgstr "Smazat soubor s překlady:"
 
-#: core/views.py:2629
+#: core/views.py:2639
 msgid "core.views.translationFileSmazatbackup.submitButton.text"
 msgstr "Smazat"
 
-#: core/views.py:2840 core/views.py:3041 core/views.py:3161 core/views.py:3291
+#: core/views.py:2850 core/views.py:3051 core/views.py:3171 core/views.py:3301
 msgid "core.templates.admin.import_data.not_owner"
 msgstr "Tuto akci může provést pouze uživatel, který import spustil."
 
-#: core/views.py:2995 templates/admin/import_data/import_data.html:491
+#: core/views.py:3005 templates/admin/import_data/import_data.html:491
 msgid "core.templates.admin.import_data.starting"
 msgstr "zahajuji import záznamů"
 
-#: core/views.py:3016
+#: core/views.py:3026
 msgid "core.views.dataImportProgress.unknown_import_status"
 msgstr "neznámý stav"
 
-#: core/views.py:3150 templates/admin/import_data/import_data.html:176
+#: core/views.py:3160 templates/admin/import_data/import_data.html:176
 msgid "core.templates.admin.import_data.not_maintenance"
 msgstr ""
 "Pro použití hromadného importu musí být systém uveden do stavu odstávky."
 
-#: core/views.py:3182
+#: core/views.py:3192
 msgid "core.templates.admin.import_data.invalid_records"
 msgstr "Import obsahuje chyby v těchto záznamech."
 
-#: core/views.py:3207 cron/tasks.py:206
+#: core/views.py:3217 cron/tasks.py:206
 msgid "cron.tasks.run_data_import.failed_lock_lost"
 msgstr ""
 "Import byl přerušen, úloha ztratila zámek importu. Nahrajte soubor znovu."
 
-#: core/views.py:3281 core/views.py:3299
+#: core/views.py:3291 core/views.py:3309
 msgid "core.templates.admin.import_data.cancel_not_allowed"
 msgstr "Import v této fázi nelze zrušit."
 
-#: core/views.py:3344
+#: core/views.py:3354
 msgid "core.templates.admin.import_data.nothing_to_reset"
 msgstr "Import v této fázi nelze resetovat."
 
-#: core/views.py:3349
+#: core/views.py:3359
 msgid "core.templates.admin.import_data.reset_recent_progress"
 msgstr "Import nelze resetovat, úloha v posledních pěti minutách pokročila."
 
@@ -5842,7 +5874,7 @@ msgstr "Čeká na import dat"
 msgid "cron.tasks.run_data_import.fedora_record"
 msgstr "Záznam ve Fedoře"
 
-#: cron/tasks.py:224 cron/tasks.py:2454 cron/tasks.py:2910
+#: cron/tasks.py:224 cron/tasks.py:2457 cron/tasks.py:2913
 msgid "cron.tasks.run_data_import.fedora_error"
 msgstr "Chyba zápisu do Fedory"
 
@@ -5859,7 +5891,7 @@ msgstr "Aktualizováno"
 msgid "cron.tasks.run_data_import.fedora_target_error"
 msgstr "Chyba"
 
-#: cron/tasks.py:228 cron/tasks.py:1053
+#: cron/tasks.py:228 cron/tasks.py:1056
 msgid "cron.tasks.run_data_import.fedora_target_skipped"
 msgstr "Přeskočeno"
 
@@ -5891,7 +5923,7 @@ msgstr "Soubor již existuje."
 msgid "cron.tasks.run_data_import.file_not_found_in_directory"
 msgstr "Zdrojový soubor se nepodařilo nalézt."
 
-#: cron/tasks.py:237 cron/tasks.py:2943
+#: cron/tasks.py:237 cron/tasks.py:2946
 msgid "cron.tasks.run_data_import.cannot_read_from_directory"
 msgstr "Chyba čtení adresáře s datovými soubory."
 
@@ -5948,87 +5980,99 @@ msgstr "Import byl resetován administrátorem."
 msgid "core.admin.import_data.record_valid"
 msgstr "záznam ověřen"
 
-#: cron/tasks.py:921
+#: cron/tasks.py:251
+msgid "core.admin.import_data.error.virus_found"
+msgstr "V souboru byl nalezen škodlivý kód."
+
+#: cron/tasks.py:252
+msgid "core.admin.import_data.error.zip_too_large"
+msgstr "ZIP soubor je příliš velký."
+
+#: cron/tasks.py:253
+msgid "core.admin.import_data.error.bad_zip_file"
+msgstr "ZIP soubor se nepodařilo přečíst."
+
+#: cron/tasks.py:924
 msgid ""
 "cron.tasks.get_or_create_import_report_path.persisted_path_outside_reports_directory"
 msgstr "Uložená cesta k reportu leží mimo adresář reportů."
 
-#: cron/tasks.py:925
+#: cron/tasks.py:928
 msgid ""
 "cron.tasks.get_or_create_import_report_path.generated_path_outside_reports_directory"
 msgstr "Vygenerovaná cesta k reportu leží mimo adresář reportů."
 
-#: cron/tasks.py:976 cron/tasks.py:990
+#: cron/tasks.py:979 cron/tasks.py:993
 #: templates/admin/import_data/import_data.html:110
 msgid "core.templates.admin.import_data.import_order"
 msgstr "Operace"
 
-#: cron/tasks.py:977 templates/admin/import_data/import_data.html:111
+#: cron/tasks.py:980 templates/admin/import_data/import_data.html:111
 msgid "core.templates.admin.import_data.fila_name"
 msgstr "CSV"
 
-#: cron/tasks.py:978 templates/admin/import_data/import_data.html:112
+#: cron/tasks.py:981 templates/admin/import_data/import_data.html:112
 msgid "core.templates.admin.import_data.primary_key_import"
 msgstr "ID v CSV"
 
-#: cron/tasks.py:979 templates/admin/import_data/import_data.html:113
+#: cron/tasks.py:982 templates/admin/import_data/import_data.html:113
 msgid "core.templates.admin.import_data.primary_key_database"
 msgstr "ID v DB"
 
-#: cron/tasks.py:980 templates/admin/import_data/import_data.html:114
+#: cron/tasks.py:983 templates/admin/import_data/import_data.html:114
 msgid "core.templates.admin.validation_result"
 msgstr "Výsledek validace"
 
-#: cron/tasks.py:981 templates/admin/import_data/import_data.html:115
+#: cron/tasks.py:984 templates/admin/import_data/import_data.html:115
 msgid "core.templates.admin.status"
 msgstr "Stav zpracování"
 
-#: cron/tasks.py:982 templates/admin/import_data/import_data.html:116
+#: cron/tasks.py:985 templates/admin/import_data/import_data.html:116
 msgid "core.templates.admin.import_data.history_record_result"
 msgstr "Záznam v historii"
 
-#: cron/tasks.py:983 templates/admin/import_data/import_data.html:117
+#: cron/tasks.py:986 templates/admin/import_data/import_data.html:117
 msgid "core.templates.admin.import_data.fedora_update_result"
 msgstr "Záznam ve Fedoře"
 
-#: cron/tasks.py:990
+#: cron/tasks.py:993
 msgid "core.templates.admin.import_data.partial_report_banner"
 msgstr "Report je neúplný, import stále probíhá."
 
-#: cron/tasks.py:1026
+#: cron/tasks.py:1029
 msgid "core.templates.admin.import_data.fedora_target.ident_cely"
 msgstr "ID"
 
-#: cron/tasks.py:1027
+#: cron/tasks.py:1030
 msgid "core.templates.admin.import_data.fedora_target.transaction_uid"
 msgstr "Transakce"
 
-#: cron/tasks.py:1028
+#: cron/tasks.py:1031
 msgid "core.templates.admin.import_data.fedora_target.affected_records"
 msgstr "Dotčené záznamy"
 
-#: cron/tasks.py:1029
+#: cron/tasks.py:1032
 msgid "core.templates.admin.import_data.fedora_target.result"
 msgstr "Výsledek"
 
-#: cron/tasks.py:1871
+#: cron/tasks.py:1874
 msgid "cron.tasks.run_data_import.update_now_allowed"
 msgstr "Aktualizace tohoto typu záznamu není povolena."
 
-#: cron/tasks.py:1982
+#: cron/tasks.py:1985
 msgid "cron.tasks.run_data_import.error.not_model"
 msgstr "Importovaný záznam není instancí modelu."
 
-#: cron/tasks.py:2057
+#: cron/tasks.py:2060
 msgid "cron.tasks.run_data_import.error.message"
 msgstr ""
 "Došlo k chybě importu: {error}, u záznamu {record} při operaci {action}."
 
-#: cron/tasks.py:2202
+#: cron/tasks.py:2205
 msgid "cron.tasks.run_data_import.error.database_error"
 msgstr "Při ukládání importovaných dat došlo k databázové chybě."
 
-#: cron/tasks.py:2699
+#: cron/tasks.py:2702
 msgid "cron.tasks.run_data_import.imported_file"
 msgstr "Importovaný soubor"
 
@@ -6820,7 +6864,7 @@ msgstr "Chybí vlastní identifikátor."
 msgid "dokument.forms.editDokumentForm.vlastniIdentCely.neplatnyTvar"
 msgstr "Identifikátor nemá platný tvar."
 
-#: dokument/forms.py:696 dokument/views.py:2613
+#: dokument/forms.py:696 dokument/views.py:2615
 msgid "dokument.forms.editDokumentForm.vlastniIdentCely.obsazeny"
 msgstr "Dokument s tímto identifikátorem již existuje."
 
@@ -7722,239 +7766,239 @@ msgstr ""
 "Nástroj pro výběr záznamů z Knihovny 3D pomocí vlastního nastavení parametrů"
 " výběru/filtru."
 
-#: dokument/views.py:275
+#: dokument/views.py:277
 msgid "dokument.views.Model3DListView.pageTitle.text"
 msgstr "AMČR - vybrat modely"
 
-#: dokument/views.py:276
+#: dokument/views.py:278
 msgid "dokument.views.Model3DListView.search_sum.text"
 msgstr "Počet nalezených záznamů"
 
-#: dokument/views.py:277
+#: dokument/views.py:279
 msgid "dokument.views.Model3DListView.pick_text.text"
 msgstr "Vybrat"
 
-#: dokument/views.py:278
+#: dokument/views.py:280
 msgid "dokument.views.Model3DListView.hasOnlyVybrat_header.text"
 msgstr "Vybrat"
 
-#: dokument/views.py:279
+#: dokument/views.py:281
 msgid "dokument.views.Model3DListView.hasOnlyVlastnik_header.text"
 msgstr "Moje záznamy"
 
-#: dokument/views.py:280
+#: dokument/views.py:282
 msgid "dokument.views.Model3DListView.hasOnlyArchive_header.text"
 msgstr "Archivovat"
 
-#: dokument/views.py:281
+#: dokument/views.py:283
 msgid "dokument.views.Model3DListView.hasOnlyNase_header.text"
 msgstr "Naše záznamy"
 
-#: dokument/views.py:282
+#: dokument/views.py:284
 msgid "dokument.views.Model3DListView.default_header.text"
 msgstr "Vybrat"
 
-#: dokument/views.py:400
+#: dokument/views.py:402
 msgid "dokument.views.DokumentListView.pageTitle.text"
 msgstr "AMČR - vybrat dokumenty"
 
-#: dokument/views.py:401
+#: dokument/views.py:403
 msgid "dokument.views.DokumentListView.search_sum.text"
 msgstr "Počet nalezených záznamů"
 
-#: dokument/views.py:402
+#: dokument/views.py:404
 msgid "dokument.views.DokumentListView.pick_text.text"
 msgstr "Vybrat"
 
-#: dokument/views.py:403
+#: dokument/views.py:405
 msgid "dokument.views.DokumentListView.hasOnlyVybrat_header.text"
 msgstr "Vybrat"
 
-#: dokument/views.py:404
+#: dokument/views.py:406
 msgid "dokument.views.DokumentListView.hasOnlyVlastnik_header.text"
 msgstr "Moje záznamy"
 
-#: dokument/views.py:405
+#: dokument/views.py:407
 msgid "dokument.views.DokumentListView.hasOnlyArchive_header.text"
 msgstr "Archivovat"
 
-#: dokument/views.py:406
+#: dokument/views.py:408
 msgid "dokument.views.DokumentListView.hasOnlyNase_header.text"
 msgstr "Naše záznamy"
 
-#: dokument/views.py:407
+#: dokument/views.py:409
 msgid "dokument.views.DokumentListView.default_header.text"
 msgstr "Vybrat"
 
-#: dokument/views.py:798
+#: dokument/views.py:800
 msgid "dokument.views.DokumentCastEditView.title.text"
 msgstr "Upravit část dokumentu"
 
-#: dokument/views.py:800
+#: dokument/views.py:802
 msgid "dokument.views.DokumentCastEditView.submitButton.text"
 msgstr "Uložit změny"
 
-#: dokument/views.py:1079
+#: dokument/views.py:1081
 msgid "dokument.views.TvarSmazatView.title.text"
 msgstr "Opravdu chcete smazat zvolený tvar?"
 
-#: dokument/views.py:1081
+#: dokument/views.py:1083
 msgid "dokument.views.TvarSmazatView.submitButton.text"
 msgstr "Smazat"
 
-#: dokument/views.py:1082
+#: dokument/views.py:1084
 msgid "dokument.views.TvarSmazatView.save_warning"
 msgstr ""
 "Při odstranění dojde k novému načtení celého formuláře. Nejdříve uložte "
 "případné jiné změny provedené v tabulce tvarů."
 
-#: dokument/views.py:1150
+#: dokument/views.py:1152
 msgid "dokument.views.VytvoritCastView.title.text"
 msgstr "Přidat část dokumentu"
 
-#: dokument/views.py:1152
+#: dokument/views.py:1154
 msgid "dokument.views.VytvoritCastView.submitButton.text"
 msgstr "Přidat"
 
-#: dokument/views.py:1221
+#: dokument/views.py:1223
 msgid "dokument.views.TransakceView.success"
 msgstr "Změny úspěšně uloženy."
 
-#: dokument/views.py:1324
+#: dokument/views.py:1326
 msgid "dokument.views.DokumentCastPripojitAkciView.title.text"
 msgstr "Připojit záznam k části dokumentu"
 
-#: dokument/views.py:1325
+#: dokument/views.py:1327
 msgid "dokument.views.DokumentCastPripojitAkciView.submitButton.text"
 msgstr "Připojit"
 
-#: dokument/views.py:1384
+#: dokument/views.py:1386
 msgid "dokument.views.DokumentCastPripojitProjektView.title.text"
 msgstr "Připojit projekt k části dokumentu"
 
-#: dokument/views.py:1385
+#: dokument/views.py:1387
 msgid "dokument.views.DokumentCastPripojitProjektView.submitButton.text"
 msgstr "Připojit"
 
-#: dokument/views.py:1437
+#: dokument/views.py:1439
 msgid "dokument.views.DokumentCastOdpojitView.title.text"
 msgstr "Odpojit od dokumentu záznam"
 
-#: dokument/views.py:1438
+#: dokument/views.py:1440
 msgid "dokument.views.DokumentCastOdpojitView.submitButton.text"
 msgstr "Odpojit"
 
-#: dokument/views.py:1521
+#: dokument/views.py:1523
 msgid "dokument.views.DokumentCastSmazatView.title.text"
 msgstr "Smazat část dokumentu"
 
-#: dokument/views.py:1522
+#: dokument/views.py:1524
 msgid "dokument.views.DokumentCastSmazatView.submitButton.text"
 msgstr "Smazat"
 
-#: dokument/views.py:1589
+#: dokument/views.py:1591
 msgid "dokument.views.DokumentNeidentAkceSmazatView.title.text"
 msgstr "Opravdu smazat neidentifikovanou akci?"
 
-#: dokument/views.py:1590
+#: dokument/views.py:1592
 msgid "dokument.views.DokumentNeidentAkceSmazatView.submitButton.text"
 msgstr "Smazat"
 
-#: dokument/views.py:1815
+#: dokument/views.py:1817
 msgid "dokument.forms.createModelExtraDataForm.souradnice.label"
 msgstr "Prostorové souřadnice"
 
-#: dokument/views.py:1836 dokument/views.py:1909 dokument/views.py:1924
+#: dokument/views.py:1838 dokument/views.py:1911 dokument/views.py:1926
 msgid "dokument.views.edit_model_3D.title"
 msgstr "AMČR - upravit model"
 
-#: dokument/views.py:1837 dokument/views.py:1910 dokument/views.py:1925
+#: dokument/views.py:1839 dokument/views.py:1912 dokument/views.py:1927
 msgid "dokument.views.edit_model_3D.header"
 msgstr "Upravit záznam"
 
-#: dokument/views.py:1838 dokument/views.py:1911 dokument/views.py:1926
+#: dokument/views.py:1840 dokument/views.py:1913 dokument/views.py:1928
 msgid "dokument.views.edit_model_3D.submitButton.text"
 msgstr "Uložit změny"
 
-#: dokument/views.py:2103
+#: dokument/views.py:2105
 msgid "dokument.views.create_model_3D.title"
 msgstr "AMČR - zapsat model"
 
-#: dokument/views.py:2104
+#: dokument/views.py:2106
 msgid "dokument.views.create_model_3D.header"
 msgstr "Nový záznam"
 
-#: dokument/views.py:2105
+#: dokument/views.py:2107
 msgid "dokument.views.create_model_3D.submitButton.text"
 msgstr "Zapsat"
 
-#: dokument/views.py:2106
+#: dokument/views.py:2108
 msgid "dokument.views.create_model_3D.toolbar_label"
 msgstr "Zapsat model"
 
-#: dokument/views.py:2159
+#: dokument/views.py:2161
 msgid "dokument.views.odeslat.title"
 msgstr "Odeslat dokument"
 
-#: dokument/views.py:2161
+#: dokument/views.py:2163
 msgid "dokument.views.odeslat.submitButton.text"
 msgstr "Odeslat"
 
-#: dokument/views.py:2252
+#: dokument/views.py:2254
 msgid "dokument.views.archivovat.title"
 msgstr "Archivovat dokument"
 
-#: dokument/views.py:2255
+#: dokument/views.py:2257
 msgid "dokument.views.archivovat.submitButton.text"
 msgstr "Archivovat"
 
-#: dokument/views.py:2308
+#: dokument/views.py:2310
 msgid "dokument.views.vratit.title"
 msgstr "Vrátit dokument"
 
-#: dokument/views.py:2310
+#: dokument/views.py:2312
 msgid "dokument.views.vratit.submitButton.text"
 msgstr "Vrátit"
 
-#: dokument/views.py:2370
+#: dokument/views.py:2372
 msgid "dokument.views.smazat.title"
 msgstr "Smazat dokument"
 
-#: dokument/views.py:2372
+#: dokument/views.py:2374
 msgid "dokument.views.smazat.submitButton.text"
 msgstr "Smazat"
 
-#: dokument/views.py:2693
+#: dokument/views.py:2695
 msgid "dokument.views.zapsat.dokument.toolbar_label"
 msgstr "Zapsat dokument"
 
-#: dokument/views.py:2772
+#: dokument/views.py:2775
 msgid "dokument.views.odpojit.orphan_warning"
 msgstr ""
 "Nearchivovaný dokument {dokument} nemá žádnou jinou relaci a odpojením bude "
 "automaticky smazán."
 
-#: dokument/views.py:2779
+#: dokument/views.py:2783
 msgid "dokument.views.odpojit.title"
 msgstr "Odpojit od záznamu dokument"
 
-#: dokument/views.py:2781
+#: dokument/views.py:2785
 msgid "dokument.views.odpojit.submitButton.text"
 msgstr "Odpojit"
 
-#: dokument/views.py:2805
+#: dokument/views.py:2809
 msgid "dokument.views.pripojit.pripojitDoAkce.title"
 msgstr "Připojit existující dokument k akci"
 
-#: dokument/views.py:2807
+#: dokument/views.py:2811
 msgid "dokument.views.pripojit.pripojitDoAkce.submitButton.text"
 msgstr "Připojit"
 
-#: dokument/views.py:2815
+#: dokument/views.py:2819
 msgid "dokument.views.pripojit.pripojitDoProjektu.title"
 msgstr "Připojit existující dokument k projektu"
 
-#: dokument/views.py:2817
+#: dokument/views.py:2821
 msgid "dokument.views.pripojit.pripojitDoProjektu.submitButton.text"
 msgstr "Připojit"
 
@@ -10947,203 +10991,203 @@ msgstr "Historie záznamu"
 msgid "pas.filters.UzivatelSpolupraceFilterFormHelper.history.divider.label"
 msgstr "Historie záznamu"
 
-#: pas/forms.py:43
+#: pas/forms.py:45
 msgid "pas.forms.te_uzivatel_email.error.noUser"
 msgstr "Uživatel s emailem {email} neexistuje, nebo nemůže být vedoucí."
 
-#: pas/forms.py:51
+#: pas/forms.py:53
 msgid "pas.forms.te_uzivatel_email.error.wrongGroup"
 msgstr "Uživatel s emailem {email} neexistuje, nebo nemůže být vedoucí."
 
-#: pas/forms.py:77
+#: pas/forms.py:79
 msgid "pas.forms.potvrditNalezForm.prenado.choice.ano"
 msgstr "Ano"
 
-#: pas/forms.py:78
+#: pas/forms.py:80
 msgid "pas.forms.potvrditNalezForm.prenado.choice.ne"
 msgstr "Ne"
 
-#: pas/forms.py:81
+#: pas/forms.py:83
 msgid "pas.forms.potvrditNalezForm.prenado.label"
 msgstr "Nález předán"
 
-#: pas/forms.py:82
+#: pas/forms.py:84
 msgid "pas.forms.potvrditNalezForm.prenado.tooltip"
 msgstr "Byl nález fyzicky předán?"
 
-#: pas/forms.py:84
+#: pas/forms.py:86
 msgid "pas.forms.potvrditNalezForm.prenado.errorMessage"
 msgstr "Před potvrzením musí být nález předán."
 
-#: pas/forms.py:104
+#: pas/forms.py:106
 msgid "pas.forms.potvrditNalezForm.evidencniCislo.label"
 msgstr "Evidenční číslo"
 
-#: pas/forms.py:105
+#: pas/forms.py:107
 msgid "pas.forms.potvrditNalezForm.predanoOrganizaci.label"
 msgstr "Předáno organizaci"
 
-#: pas/forms.py:106
+#: pas/forms.py:108
 msgid "pas.forms.potvrditNalezForm.pristupnost.label"
 msgstr "Přístupnost"
 
-#: pas/forms.py:109
+#: pas/forms.py:111
 msgid "pas.forms.potvrditNalezForm.evidencniCislo.tooltip"
 msgstr "Identifikační číslo nálezu v rámci organizace."
 
-#: pas/forms.py:110
+#: pas/forms.py:112
 msgid "pas.forms.potvrditNalezForm.predanoOrganizace.tooltip"
 msgstr "Organizace, kde bude nález trvale uložen."
 
-#: pas/forms.py:111
+#: pas/forms.py:113
 msgid "pas.forms.potvrditNalezForm.pristupnost.tooltip"
 msgstr "Minimální uživatelská role pro zobrazení polohy nálezu."
 
-#: pas/forms.py:170
+#: pas/forms.py:172
 msgid "pas.forms.createSamostatnyNalezForm.katastr.label"
 msgstr "Katastr"
 
-#: pas/forms.py:171
+#: pas/forms.py:173
 msgid "pas.forms.createSamostatnyNalezForm.katastr.errorMessage"
 msgstr "Je třeba vybrat bod na mapě."
 
-#: pas/forms.py:172
+#: pas/forms.py:174
 msgid "pas.forms.createSamostatnyNalezForm.katastr.tooltip"
 msgstr "Označte polohu v mapě, dojde k automatickému vyplnění."
 
-#: pas/forms.py:216 pas/forms.py:274
+#: pas/forms.py:218 pas/forms.py:276
 msgid "pas.forms.createSamostatnyNalezForm.projekt.label"
 msgstr "Projekt"
 
-#: pas/forms.py:217
+#: pas/forms.py:219
 msgid "pas.forms.createSamostatnyNalezForm.nalezce.label"
 msgstr "Nálezce"
 
-#: pas/forms.py:218
+#: pas/forms.py:220
 msgid "pas.forms.createSamostatnyNalezForm.datumNalezu.label"
 msgstr "Datum nálezu"
 
-#: pas/forms.py:219
+#: pas/forms.py:221
 msgid "pas.forms.createSamostatnyNalezForm.lokalizace.label"
 msgstr "Lokalizace"
 
-#: pas/forms.py:220
+#: pas/forms.py:222
 msgid "pas.forms.createSamostatnyNalezForm.okolnosti.label"
 msgstr "Nálezové okolnosti"
 
-#: pas/forms.py:221
+#: pas/forms.py:223
 msgid "pas.forms.createSamostatnyNalezForm.hloubka.label"
 msgstr "Hloubka (cm)"
 
-#: pas/forms.py:222 pas/forms.py:287
+#: pas/forms.py:224 pas/forms.py:289
 msgid "pas.forms.createSamostatnyNalezForm.obdobi.label"
 msgstr "Období"
 
-#: pas/forms.py:223 pas/forms.py:279
+#: pas/forms.py:225 pas/forms.py:281
 msgid "pas.forms.createSamostatnyNalezForm.druhNalezu.label"
 msgstr "Nález"
 
-#: pas/forms.py:224
+#: pas/forms.py:226
 msgid "pas.forms.createSamostatnyNalezForm.pocet.label"
 msgstr "Počet předmětů"
 
-#: pas/forms.py:225
+#: pas/forms.py:227
 msgid "pas.forms.createSamostatnyNalezForm.presnaDatace.label"
 msgstr "Přesná datace"
 
-#: pas/forms.py:226
+#: pas/forms.py:228
 msgid "pas.forms.createSamostatnyNalezForm.specifikace.label"
 msgstr "Materiál"
 
-#: pas/forms.py:227
+#: pas/forms.py:229
 msgid "pas.forms.createSamostatnyNalezForm.poznamka.label"
 msgstr "Poznámka / bližší popis"
 
-#: pas/forms.py:230
+#: pas/forms.py:232
 msgid "pas.forms.createSamostatnyNalezForm.nalezce.tooltip"
 msgstr "Jméno nálezce (pokud nechcete zveřejnit, zvolte <i>anonym</i>)."
 
-#: pas/forms.py:231
+#: pas/forms.py:233
 msgid "pas.forms.createSamostatnyNalezForm.datumNalezu.tooltip"
 msgstr "Přesné datum vyzvednutí."
 
-#: pas/forms.py:232
+#: pas/forms.py:234
 msgid "pas.forms.createSamostatnyNalezForm.lokalizace.tooltip"
 msgstr ""
 "Slovní popis lokalizace formou parcelního čísla a/nebo pomístního jména "
 "(jména ulic, tratí, poloh)."
 
-#: pas/forms.py:233
+#: pas/forms.py:235
 msgid "pas.forms.createSamostatnyNalezForm.okolnosti.tooltip"
 msgstr "Prostředí, ve kterém byl nález získán."
 
-#: pas/forms.py:234
+#: pas/forms.py:236
 msgid "pas.forms.createSamostatnyNalezForm.hloubka.tooltip"
 msgstr "Hloubka, ze které byl nález získán."
 
-#: pas/forms.py:235 pas/forms.py:292
+#: pas/forms.py:237 pas/forms.py:294
 msgid "pas.forms.createSamostatnyNalezForm.obdobi.tooltip"
 msgstr "Datace nálezu."
 
-#: pas/forms.py:236 pas/forms.py:284
+#: pas/forms.py:238 pas/forms.py:286
 msgid "pas.forms.createSamostatnyNalezForm.druhNalezu.tooltip"
 msgstr "Druh předmětu."
 
-#: pas/forms.py:237
+#: pas/forms.py:239
 msgid "pas.forms.createSamostatnyNalezForm.pocet.tooltip"
 msgstr "Počet shodných předmětů evidovaných záznamem."
 
-#: pas/forms.py:238
+#: pas/forms.py:240
 msgid "pas.forms.createSamostatnyNalezForm.presnaDatace.tooltip"
 msgstr "Absolutní či relativní upřesnění datace."
 
-#: pas/forms.py:239
+#: pas/forms.py:241
 msgid "pas.forms.createSamostatnyNalezForm.specifikace.tooltip"
 msgstr "Specifikace materiálu předmětu."
 
-#: pas/forms.py:240
+#: pas/forms.py:242
 msgid "pas.forms.createSamostatnyNalezForm.poznamka.tooltip"
 msgstr ""
 "Bližší interpretace a doplňující informace o nálezu a jeho okolnostech."
 
-#: pas/forms.py:273
+#: pas/forms.py:275
 msgid "pas.forms.createSamostatnyNalezForm.projekt.tooltip"
 msgstr "Projekt v jehož rámci byl nález učiněn."
 
-#: pas/forms.py:360
+#: pas/forms.py:362
 msgid "pas.forms.createZadostForm.emailUzivatele.label"
 msgstr "Uživatel"
 
-#: pas/forms.py:361
+#: pas/forms.py:363
 msgid "pas.forms.createZadostForm.emailUzivatele.placeholder"
 msgstr "Zadejte email vedoucího"
 
-#: pas/forms.py:364
+#: pas/forms.py:366
 msgid "pas.forms.createZadostForm.emailUzivatele.tooltip"
 msgstr ""
 "Zadejte email archeologa, se kterým jste se předem dohodli na spolupráci."
 
-#: pas/forms.py:369
+#: pas/forms.py:371
 msgid "pas.forms.createZadostForm.text.tooltip"
 msgstr "Upřesněte žádost o spolupráci podle dohody s archeologem."
 
-#: pas/forms.py:370
+#: pas/forms.py:372
 msgid "pas.forms.createZadostForm.text.label"
 msgstr "Text žádosti"
 
-#: pas/forms.py:395
+#: pas/forms.py:397
 msgid "pas.forms.DeaktivovatSpolupraciForm.reason.label"
 msgstr "Zdůvodnění ukončení spolupráce"
 
-#: pas/forms.py:397
+#: pas/forms.py:399
 msgid "pas.forms.DeaktivovatSpolupraciForm.reason.tooltip"
 msgstr "Stručně popište důvod deaktivace spolupráce."
 
-#: pas/forms.py:442
+#: pas/forms.py:444
 msgid "pas.forms.editSpolupraceProjekyForm.projekty.label"
 msgstr "Projekty"
 
-#: pas/forms.py:443
+#: pas/forms.py:445
 msgid "pas.forms.editSpolupraceProjekyForm.projekty.tooltip"
 msgstr "Projekty, ke kterým má spolupracovník přístup pro zápis nálezů."
 
@@ -11375,11 +11419,11 @@ msgstr "Upravit projekty"
 msgid "pas.tables.spolupraceTable.smazani.label"
 msgstr "Smazat"
 
-#: pas/templates/pas/aktivace_deaktivace_cell.html:6 pas/views.py:1213
+#: pas/templates/pas/aktivace_deaktivace_cell.html:6 pas/views.py:1215
 msgid "pas.templates.aktivace_deaktivace_cell.aktivovat"
 msgstr "Aktivovat"
 
-#: pas/templates/pas/aktivace_deaktivace_cell.html:10 pas/views.py:1212
+#: pas/templates/pas/aktivace_deaktivace_cell.html:10 pas/views.py:1214
 msgid "pas.templates.aktivace_deaktivace_cell.deaktivovat"
 msgstr "Deaktivovat"
 
@@ -11610,7 +11654,7 @@ msgstr ""
 msgid "pas.templates.potvrdit_spolupraci.submitButton"
 msgstr "Potvrdit spolupráci"
 
-#: pas/templates/pas/smazat_cell.html:6 pas/views.py:1214
+#: pas/templates/pas/smazat_cell.html:6 pas/views.py:1216
 msgid "pas.templates.smazat_cell.Smazat"
 msgstr "Smazat"
 
@@ -11638,177 +11682,177 @@ msgstr "Zažádat"
 msgid "pas.templates.zadost.backButton"
 msgstr "Zpět"
 
-#: pas/views.py:219
+#: pas/views.py:221
 msgid "pas.views.create.title"
 msgstr "AMČR-PAS - zapsat nález"
 
-#: pas/views.py:220
+#: pas/views.py:222
 msgid "pas.views.create.header"
 msgstr "Nový záznam"
 
-#: pas/views.py:221
+#: pas/views.py:223
 msgid "pas.views.create.submitButton.text"
 msgstr "Vytvořit samostatný nález"
 
-#: pas/views.py:249
+#: pas/views.py:251
 msgid "pas.views.zapsat.create.check_container_deleted_or_not_exists_error"
 msgstr ""
 "Záznam nelze zapsat, v repozitáři již existuje kontejner se stejným "
 "identifikátorem. Obraťte se na správce systému."
 
-#: pas/views.py:427
+#: pas/views.py:429
 msgid "pas.forms.createSamostatnyNalezForm.souradnice.label"
 msgstr "Prostorové souřadnice"
 
-#: pas/views.py:539
+#: pas/views.py:541
 msgid "pas.views.editUlozeni.title.text"
 msgstr "Upravit záznam"
 
-#: pas/views.py:541
+#: pas/views.py:543
 msgid "pas.views.editUlozeni.submitButton.text"
 msgstr "Uložit změny"
 
-#: pas/views.py:597
+#: pas/views.py:599
 msgid "pas.views.vratit.title.text"
 msgstr "Vrátit samostatný nález"
 
-#: pas/views.py:599
+#: pas/views.py:601
 msgid "pas.views.vratit.submitButton.text"
 msgstr "Vrátit"
 
-#: pas/views.py:658
+#: pas/views.py:660
 msgid "pas.views.odeslat.title.text"
 msgstr "Odeslat samostatný nález"
 
-#: pas/views.py:660
+#: pas/views.py:662
 msgid "pas.views.odeslat.submitButton.text"
 msgstr "Odeslat"
 
-#: pas/views.py:724
+#: pas/views.py:726
 msgid "pas.views.potvrdit.title.text"
 msgstr "Potvrdit samostatný nález"
 
-#: pas/views.py:726
+#: pas/views.py:728
 msgid "pas.views.potvrdit.submitButton.text"
 msgstr "Potvrdit"
 
-#: pas/views.py:793
+#: pas/views.py:795
 msgid "pas.views.archivovat.title.text"
 msgstr "Archivovat samostatný nález"
 
-#: pas/views.py:796
+#: pas/views.py:798
 msgid "pas.views.archivovat.submitButton.text"
 msgstr "Archivovat"
 
-#: pas/views.py:849
+#: pas/views.py:851
 msgid "pas.views.samostatnyNalezListView.pageTitle"
 msgstr "AMČR-PAS - vybrat nálezy"
 
-#: pas/views.py:850
+#: pas/views.py:852
 msgid "pas.views.samostatnyNalezListView.pocetVyhledanych"
 msgstr "Počet nalezených záznamů"
 
-#: pas/views.py:851
+#: pas/views.py:853
 msgid "pas.views.samostatnyNalezListView.pickText"
 msgstr "Vybrat"
 
-#: pas/views.py:852
+#: pas/views.py:854
 msgid "pas.views.samostatnyNalezListView.header.hasOnlyVybrat"
 msgstr "Vybrat"
 
-#: pas/views.py:853
+#: pas/views.py:855
 msgid "pas.views.samostatnyNalezListView.header.hasOnlyVlastnik"
 msgstr "Moje záznamy"
 
-#: pas/views.py:854
+#: pas/views.py:856
 msgid "pas.views.samostatnyNalezListView.header.hasOnlyArchive"
 msgstr "Archivovat"
 
-#: pas/views.py:855
+#: pas/views.py:857
 msgid "pas.views.samostatnyNalezListView.header.hasOnlyPotvrdit"
 msgstr "Potvrdit"
 
-#: pas/views.py:856
+#: pas/views.py:858
 msgid "pas.views.samostatnyNalezListView.hasOnlyNase_header.text"
 msgstr "Naše záznamy"
 
-#: pas/views.py:857
+#: pas/views.py:859
 msgid "pas.views.samostatnyNalezListView.header.default"
 msgstr "Vybrat"
 
-#: pas/views.py:1013
+#: pas/views.py:1015
 msgid "pas.views.smazat.title.text"
 msgstr "Smazat samostatný nález"
 
-#: pas/views.py:1015
+#: pas/views.py:1017
 msgid "pas.views.smazat.submitButton.text"
 msgstr "Smazat"
 
-#: pas/views.py:1043
+#: pas/views.py:1045
 msgid "pas.views.zadost.uzivatel.error"
 msgstr "Nelze vytvořit spolupráci sám se sebou."
 
-#: pas/views.py:1052
+#: pas/views.py:1054
 msgid "pas.views.zadost.existuje.error"
 msgstr "Spolupráce s uživatelem s emailem {email} již existuje."
 
-#: pas/views.py:1102
-msgid "pas.views.zadost.title.text"
-msgstr "Žádost o spolupráci"
-
-#: pas/views.py:1102
+#: pas/views.py:1104
 msgid "pas.views.zadost.header.text"
 msgstr "Nová žádost"
 
-#: pas/views.py:1125
+#: pas/views.py:1104
+msgid "pas.views.zadost.title.text"
+msgstr "Žádost o spolupráci"
+
+#: pas/views.py:1127
 msgid "pas.views.uzivatelSpolupraceListView.pageTitle"
 msgstr "AMČR-PAS - spolupráce"
 
-#: pas/views.py:1126
+#: pas/views.py:1128
 msgid "pas.views.uzivatelSpolupraceListView.pocetVyhledanych"
 msgstr "Počet nalezených záznamů"
 
-#: pas/views.py:1127
+#: pas/views.py:1129
 msgid "pas.views.uzivatelSpolupraceListView.pickText"
 msgstr "Vybrat"
 
-#: pas/views.py:1128
+#: pas/views.py:1130
 msgid "pas.views.uzivatelSpolupraceListView.toolbar.title"
 msgstr "Spolupráce"
 
-#: pas/views.py:1265
+#: pas/views.py:1268
 msgid "pas.views.aktivace.title"
 msgstr "Aktivovat spolupráci mezi {vedouci} a {spolupracovnik}"
 
-#: pas/views.py:1270
+#: pas/views.py:1274
 msgid "pas.views.aktivace.submitButton.text"
 msgstr "Aktivovat"
 
-#: pas/views.py:1334
+#: pas/views.py:1339
 msgid "pas.views.deaktivace.title"
 msgstr "Deaktivovat spolupráci mezi {vedouci} a {spolupracovnik}"
 
-#: pas/views.py:1339
+#: pas/views.py:1345
 msgid "pas.views.deaktivace.submitButton.text"
 msgstr "Deaktivovat"
 
-#: pas/views.py:1439
+#: pas/views.py:1446
 msgid "pas.views.smazatSpolupraci.title"
 msgstr "Smazat spolupráci mezi {vedouci} a {spolupracovnik}"
 
-#: pas/views.py:1444
+#: pas/views.py:1452
 msgid "pas.views.smazatSpolupraci.submitButton.text"
 msgstr "Smazat"
 
-#: pas/views.py:1476
+#: pas/views.py:1484
 msgid "pas.views.editSpolupraceProjeky.title"
 msgstr "Zpřístupnění projektů spolupracovníkovi"
 
-#: pas/views.py:1478
+#: pas/views.py:1486
 msgid "pas.views.editSpolupraceProjeky.submitButton.text"
 msgstr "Uložit"
 
-#: pas/views.py:1519
+#: pas/views.py:1527
 msgid "pas.views.editSpolupraceProjeky.success"
 msgstr "Nastavení přístupů úspěšně upraveno."
 
@@ -11900,67 +11944,67 @@ msgstr "Ověření"
 msgid "pian.templates.pian_import_table.checkResult.allOK"
 msgstr "OK"
 
-#: pian/views.py:194
+#: pian/views.py:196
 msgid "pian.views.odpojit.title.text"
 msgstr "Odpojení PIAN"
 
-#: pian/views.py:196
+#: pian/views.py:198
 msgid "pian.views.odpojit.submit.button"
 msgstr "Odpojit"
 
-#: pian/views.py:197
+#: pian/views.py:199
 msgid "pian.views.odpojit.text"
 msgstr "Skutečně odpojit PIAN {pian} od dokumentační jednotky {dj}?"
 
-#: pian/views.py:260
+#: pian/views.py:262
 msgid "pian.views.potvrdit.title.text"
 msgstr "Potvrdit PIAN"
 
-#: pian/views.py:262
+#: pian/views.py:264
 msgid "pian.views.potvrdit.submitButton.text"
 msgstr "Potvrdit"
 
-#: pian/views.py:263
+#: pian/views.py:265
 msgid "pian.views.potvrdit.text"
 msgstr "Skutečně potvrdit PIAN "
 
-#: pian/views.py:502
+#: pian/views.py:504
 msgid "pian.views.importovatPianView.check.fileEmpty"
 msgstr "Soubor neobsahuje žádná data."
 
-#: pian/views.py:507 pian/views.py:509 pian/views.py:553
+#: pian/views.py:509 pian/views.py:511 pian/views.py:555
 msgid "pian.views.importovatPianView.check.unreadable_or_empty"
 msgstr ""
 "Soubor je nečitelný nebo prázdný. Zkontrolujte také, že každý řádek obsahuje"
 " hodnotu v poli \"label\"."
 
-#: pian/views.py:516
+#: pian/views.py:518
 msgid "pian.views.importovatPianView.check.wrongColumnName"
 msgstr ""
 "Místo očekávaných sloupců \"label\", \"epsg\" a \"geometry\" CSV obsahuje "
 "sloupce:"
 
-#: pian/views.py:520
+#: pian/views.py:522
 msgid "pian.views.importovatPianView.check.no_data"
 msgstr "Soubor neobsahuje žádná data."
 
-#: pian/views.py:524
+#: pian/views.py:526
 msgid "pian.views.importovatPianView.check.wrongColumnName.Column0"
 msgstr "Místo očekávaného sloupce \"label\" CSV obsahuje sloupec:"
 
-#: pian/views.py:529
+#: pian/views.py:531
 msgid "pian.views.importovatPianView.check.wrongColumnName.Column1"
 msgstr "Místo očekávaného sloupce \"epsg\" CSV obsahuje sloupec:"
 
-#: pian/views.py:534
+#: pian/views.py:536
 msgid "pian.views.importovatPianView.check.wrongColumnName.Column2"
 msgstr "Místo očekávaného sloupce \"geometry\" CSV obsahuje sloupec:"
 
-#: pian/views.py:540
+#: pian/views.py:542
 msgid "pian.views.importovatPianView.check.notUniquelabel"
 msgstr "Označení geometrie není jedinečné."
 
-#: pian/views.py:543
+#: pian/views.py:545
 msgid "pian.views.importovatPianView.check.wrongEpsg"
 msgstr "Chyba ve sloupci \"epsg\". "
 
@@ -12623,7 +12667,7 @@ msgstr "Datum ukončení nemůže být před datem zahájení"
 msgid "projekt.forms.zruseni.duvod.label"
 msgstr "Zdůvodnění zrušení"
 
-#: projekt/forms.py:765
+#: projekt/forms.py:765 projekt/forms.py:783
 msgid "projekt.forms.zruseni.duvod.tooltip"
 msgstr ""
 "Popište důvod zrušení projektu (bude součástí informačního emailu pro "
@@ -14489,6 +14533,17 @@ msgstr ""
 "<li>Následně se budete moci přihlásit.</li>\n"
 "<li>Informace o zpracování vašich osobních údajů naleznete na stránce: <a href=\"https://amcr-help.aiscr.cz/zakladni-info/osobni-udaje.html\" target=\"_blank\">https://amcr-help.aiscr.cz/</a></li>"
 
+#: templates/email_footer.txt:2
+msgid "templates.emailFooter.automatic"
+msgstr ""
+"Toto je automaticky generovaná zpráva systému AMČR. V případě potřeby "
+"kontaktujte administrátora ARÚ Praha (amcr@arup.cas.cz) nebo ARÚ Brno "
+"(amcr@arub.cz)."
+
+#: templates/email_footer.txt:3
+msgid "templates.emailFooter.sentFrom"
+msgstr "Odesláno z"
+
 #: templates/fedora_error.html:11
 msgid "templates.fedorar_error.header"
 msgstr "Chyba repozitáře"
@@ -14612,12 +14667,12 @@ msgid "templates.registration.login.submitButton.prihlasit"
 msgstr "Přihlásit"
 
 #: templates/registration/login.html:48
-msgid "templates.registration.login.forgottenPassword.title"
-msgstr "Zapomněli jste heslo."
-
-#: templates/registration/login.html:48
 msgid "templates.registration.login.forgottenPassword.text"
 msgstr "Zapomněli jste heslo"
+
+#: templates/registration/login.html:48
+msgid "templates.registration.login.forgottenPassword.title"
+msgstr "Zapomněli jste heslo."
 
 #: templates/registration/login.html:51
 msgid "templates.registration.login.noAccount.header"
@@ -14728,12 +14783,12 @@ msgid "templates.registration.passwordResetComplete.header"
 msgstr "Reset hesla"
 
 #: templates/registration/password_reset_complete.html:9
-msgid "templates.registration.passwordResetComplete.nastaveno.text"
-msgstr "Vaše heslo bylo nastaveno."
-
-#: templates/registration/password_reset_complete.html:9
 msgid "templates.registration.passwordResetComplete.login"
 msgstr "Login"
+
+#: templates/registration/password_reset_complete.html:9
+msgid "templates.registration.passwordResetComplete.nastaveno.text"
+msgstr "Vaše heslo bylo nastaveno."
 
 #: templates/registration/password_reset_confirm.html:4
 msgid "templates.registration.passwordResetConfirm.title"
@@ -14748,16 +14803,16 @@ msgid "templates.registration.passwordResetConfirm.confirmButton.nastav"
 msgstr "Nastav heslo"
 
 #: templates/registration/password_reset_confirm.html:16
-msgid "templates.registration.passwordResetConfirm.nevalidniLink.linkTitle"
-msgstr "nový reset hesla."
-
-#: templates/registration/password_reset_confirm.html:16
 msgid "templates.registration.passwordResetConfirm.nevalidniLink.text"
 msgstr "Link již není validní. Prosím požádejte o"
 
 #: templates/registration/password_reset_confirm.html:16
 msgid "templates.registration.passwordResetConfirm.nevalidniLink.linkText"
 msgstr "nový reset hesla"
+
+#: templates/registration/password_reset_confirm.html:16
+msgid "templates.registration.passwordResetConfirm.nevalidniLink.linkTitle"
+msgstr "nový reset hesla."
 
 #: templates/registration/password_reset_done.html:4
 msgid "templates.registration.passwordResetDone.title"
@@ -15088,11 +15143,11 @@ msgid "templates.toolbarAkce.zmenitNaProjektovou.label"
 msgstr "Převést na projektovou akci"
 
 #: templates/toolbar_akce.html:68
-msgid "templates.toolbarAkce.vypis.label"
+msgid "templates.toolbarLokalita.vypis.label"
 msgstr "Tisknout výpis"
 
 #: templates/toolbar_akce.html:68
-msgid "templates.toolbarLokalita.vypis.label"
+msgid "templates.toolbarAkce.vypis.label"
 msgstr "Tisknout výpis"
 
 #: templates/toolbar_dokument.html:7
@@ -17477,12 +17532,12 @@ msgid "vypis.vypis_config.komponenta.jistota.Ano"
 msgstr "jisté"
 
 #: vypis/templates/vypis/akce/sub_header.html:4
-msgid "vypis.akce.sub_header.je_nz.Nie"
-msgstr "Ne"
-
-#: vypis/templates/vypis/akce/sub_header.html:4
 msgid "vypis.akce.sub_header.je_nz.Ano"
 msgstr "Ano"
+
+#: vypis/templates/vypis/akce/sub_header.html:4
+msgid "vypis.akce.sub_header.je_nz.Nie"
+msgstr "Ne"
 
 #: vypis/templates/vypis/akce/sub_header.html:5
 msgid "vypis.akce.sub_header.odlozena_nz.Ano"

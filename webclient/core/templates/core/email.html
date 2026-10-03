@@ -12,20 +12,12 @@
 <body>
     {% block content %}{% endblock %}
 <p>
-    ------------------------------
-    <br>
-    Toto je automaticky generovaná zpráva systému AMČR. V případě potřeby kontaktujte administrátora ARÚ Praha (amcr@arup.cas.cz) nebo ARÚ Brno (amcr@arub.cz).
-    <br>
-    Odesláno z: {% get_server_domain %}
+    {% language "cs" %}{% include "email_footer.txt" with html=True %}{% endlanguage %}
 </p>
     ------------------------------------------------------------
     {% block content_en %}{% endblock %}
 <p>
-    ------------------------------
-    <br>
-    This is an automatically generated message from the AMCR system. If needed, please contact the administrator at IA Prague (amcr@arup.cas.cz) or IA Brno (amcr@arub.cz).
-    <br>
-    Sent from: {% get_server_domain %}
+    {% language "en" %}{% include "email_footer.txt" with html=True %}{% endlanguage %}
 </p>
 </body>
 </html>

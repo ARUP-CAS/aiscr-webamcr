@@ -61,6 +61,7 @@ from core.soubor_naming import (
     get_next_soubor_name,
     get_soubor_suffix,
 )
+from core.translation import format_message
 from core.utils import (
     SessionIdentifier,
     check_import_report_directory,
@@ -100,6 +101,7 @@ from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_noop
 from django.views import View
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
@@ -911,7 +913,9 @@ class BasePostUploadView(View):
                 else ""
             )
             response_data["duplicate"] = (
-                _("core.views.post_upload.duplikat2").format(file=self.original_filename, ident=parent_ident),
+                format_message(
+                    gettext_noop("core.views.post_upload.duplikat2"), file=self.original_filename, ident=parent_ident
+                ),
             )
         return response_data
 
@@ -928,7 +932,9 @@ class BasePostUploadView(View):
         """
         if renamed:
             response_data["file_renamed"] = (
-                _("core.views.post_upload.renamed").format(file=self.original_filename, new_name=new_name),
+                format_message(
+                    gettext_noop("core.views.post_upload.renamed"), file=self.original_filename, new_name=new_name
+                ),
             )
         return response_data
 
@@ -1142,7 +1148,11 @@ class NewFileUploadView(BasePostUploadView):
             if free_suffixes:
                 return JsonResponse({"error": str(SOUBOR_NEJVYSSI_SUFFIX_OBSAZEN)}, status=403)
             return JsonResponse(
-                {"error": _("core.views.post_upload.error.maximal_file_name_exceeded").format(ident=ident_cely)},
+                {
+                    "error": format_message(
+                        gettext_noop("core.views.post_upload.error.maximal_file_name_exceeded"), ident=ident_cely
+                    )
+                },
                 status=403,
             )
         return objekt, new_name
