@@ -2481,7 +2481,7 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
             messages.add_message(self.request, messages.ERROR, str(e))
             return redirect(reverse("rosetta-file-list", args=[self.po_filter]))
         p = Path(self.po_file_path)
-        date_sufix = datetime.strftime(datetime.now(), "%d%m%Y%H%M")
+        date_sufix = datetime.strftime(datetime.now(), "%d%m%Y%H%M%S")
         p.rename(Path(p.parent, f"{p.stem}_backup_{date_sufix}{p.suffix}"))
         self.handle_uploaded_file(new_pofile)
         po_filepath, ext = os.path.splitext(self.po_file_path)

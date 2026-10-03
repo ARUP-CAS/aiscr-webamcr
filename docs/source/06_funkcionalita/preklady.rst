@@ -6,7 +6,8 @@ Výchozí překladové katalogy jsou součástí repozitáře v souborech
 Repozitář je autoritativním zdrojem obsahu. Při nasazení se katalogy z image
 zkopírují na volume ``locale_data`` v ``/vol/web/locale``, doplní se nové klíče
 pomocí ``makemessages`` a vytvoří se binární katalogy ``.mo`` pomocí
-``compilemessages``. Soubory ``.mo`` se do repozitáře neukládají.
+utility ``msgfmt`` v pracovním adresáři image. Soubory ``.mo`` se do repozitáře
+neukládají.
 
 Překlady je možné spravovat přímo v aplikaci přes administraci pomocí
 rozšíření ``rosetta``.
@@ -16,10 +17,11 @@ Rosetta
 Pomocí rozšíření je možné spravovat překlady pro všechny jazyky aplikace.
 Rosetta pracuje s katalogy na runtime volume. Změna provedená přímo v běžící
 aplikaci platí do dalšího nasazení; při nasazení ji nahradí obsah z repozitáře.
-Před přepsáním existujícího katalogu entrypoint vytvoří kopii
-``django_backup_DDMMYYYYHHMMSS.po`` v ``$HOME/translations_backup``. Vedle
-této kopie pokračuje v provozu také služba ``sidecar``, která volume průběžně
-synchronizuje do stejného zálohovacího umístění.
+Před přepsáním existujícího katalogu entrypoint vytvoří jeho kopii
+``django_backup_DDMMYYYYHHMMSS.po`` ve stejném adresáři na volume
+``locale_data``. Zálohy jsou tak uložené vedle katalogu daného jazyka.
+Služba ``sidecar`` zůstává beze změny a průběžně synchronizuje obsah volume
+``locale_data`` do svého zálohovacího umístění.
 
 **Úprava a přenos překladu do repozitáře**:
 
@@ -33,8 +35,8 @@ synchronizuje do stejného zálohovacího umístění.
    aplikace používá nově zacommitované hodnoty.
 
 Import nového souboru v Rosettě před uložením přejmenuje původní katalog na
-``django_backup_DDMMYYYYHHMMSS.po``. Záložní soubory Rosetty i zálohy
-z entrypointu zůstávají pouze na serveru a do repozitáře se nepřenášejí.
+``django_backup_DDMMYYYYHHMMSS.po``. Zálohy vytvořené Rosettou i entrypointem
+zůstávají na runtime volume a do repozitáře se nepřenášejí.
 
 Text odstávky
 -------------
@@ -44,4 +46,3 @@ Text provozní odstávky není překladový katalog. Ukládá se přímo v model
 těchto polí čte i zapisuje. Uložení odstávky proto nemění ``.po`` ani ``.mo``
 soubor. Výchozí katalog již neslouží jako úložiště klíče
 ``base.odstavka.text``.
-

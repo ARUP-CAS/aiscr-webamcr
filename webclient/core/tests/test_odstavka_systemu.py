@@ -6,7 +6,7 @@ from core.forms import OdstavkaSystemuForm
 from core.models import OdstavkaSystemu
 from core.templatetags import template_tags
 from django.template import Context, Template
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.utils.translation import override
 
 
@@ -77,7 +77,8 @@ class OdstavkaSystemuAdminTests(TestCase):
         )
         admin = OdstavkaSystemuAdmin(OdstavkaSystemu, MagicMock())
 
-        admin.save_model(MagicMock(), outage, MagicMock(), change=False)
+        with self.captureOnCommitCallbacks(execute=True):
+            admin.save_model(MagicMock(), outage, MagicMock(), change=False)
 
         stored = OdstavkaSystemu.objects.get(pk=outage.pk)
         self.assertEqual(stored.text_cs, "Česká zpráva")
@@ -90,10 +91,9 @@ class OdstavkaSystemuAdminTests(TestCase):
 class MaintenanceTemplateTests(TestCase):
     """Ověřuje vykreslení textu odstávky podle aktivního jazyka."""
 
-    @override_settings(LANGUAGE_CODE="cs")
     @patch.object(template_tags, "get_set_maintenance_in_cache")
-    def test_banner_uses_czech_model_text(self, get_maintenance):
-        """Kontroluje, že české prostředí zobrazí český text odstávky.
+    def test_banner_uses_model_text_for_active_language(self, get_maintenance):
+        """Kontroluje, že prostředí zobrazí text odstávky v aktivním jazyce.
 
         :param get_maintenance: Mock načtení aktuální odstávky z cache.
         """
@@ -104,21 +104,6 @@ class MaintenanceTemplateTests(TestCase):
             '{% if LANGUAGE_CODE == "en" %}{{ action.text_en }}{% else %}{{ action.text_cs }}{% endif %}'
         )
 
-        with override("cs"):
-            self.assertEqual(template.render(Context()), "Česká zpráva")
-
-    @patch.object(template_tags, "get_set_maintenance_in_cache")
-    def test_banner_uses_english_model_text(self, get_maintenance):
-        """Kontroluje, že anglické prostředí zobrazí anglický text odstávky.
-
-        :param get_maintenance: Mock načtení aktuální odstávky z cache.
-        """
-        get_maintenance.return_value = OdstavkaSystemu(text_cs="Česká zpráva", text_en="English message")
-        template = Template(
-            "{% load i18n template_tags %}{% get_maintenance as action %}"
-            "{% get_current_language as LANGUAGE_CODE %}"
-            '{% if LANGUAGE_CODE == "en" %}{{ action.text_en }}{% else %}{{ action.text_cs }}{% endif %}'
-        )
-
-        with override("en"):
-            self.assertEqual(template.render(Context()), "English message")
+        for language, expected_text in (("cs", "Česká zpráva"), ("en", "English message")):
+            with self.subTest(language=language), override(language):
+                self.assertEqual(template.render(Context()), expected_text)
