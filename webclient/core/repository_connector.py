@@ -312,7 +312,12 @@ class FedoraRequestType(Enum):
     GET_DISTRIBUTION_HISTORIE = 1047
 
 
+#: Hlavička ``Link`` vynucující uložení obsahu jako binárního zdroje i u RDF MIME typů (JSON-LD, Turtle).
+NON_RDF_SOURCE_LINK: str = '<http://www.w3.org/ns/ldp#NonRDFSource>; rel="type"'
+
 #: Typy požadavků, které Fedora povolí jen roli ``fedoraAdmin`` (mazání kontejnerů a tombstone).
+#: Patří sem i zakládání distribucí: posílá se s ``Overwrite-Tombstone`` a přepsání tombstonu
+#: po dřívějším smazání distribuce Fedora běžnému uživateli odmítne stavem 403.
 _ADMIN_REQUEST_TYPES = frozenset(
     {
         FedoraRequestType.DELETE_CONTAINER,
@@ -321,6 +326,8 @@ _ADMIN_REQUEST_TYPES = frozenset(
         FedoraRequestType.DELETE_LINK_TOMBSTONE,
         FedoraRequestType.CONNECT_DELETED_RECORD_3,
         FedoraRequestType.CONNECT_DELETED_RECORD_4,
+        FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER,
+        FedoraRequestType.CREATE_DISTRIBUTION_CONTENT,
     }
 )
 
@@ -500,9 +507,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
         :param ident_cely: Parametr ``ident_cely`` ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :param path: Relativní cesta pod kontejnerem souboru (např. ``ocr/alto-xml`` nebo
-            ``paradata/ocr/alto-xml``). U typů ``CREATE_*`` se předává cesta *nadřazeného* kontejneru,
-            protože POST cílí na rodiče a poslední segment jde v hlavičce ``Slug``; prázdná hodnota
-            zde znamená, že rodičem je přímo kontejner souboru.
+            ``paradata/ocr/alto-xml``). I u typů ``CREATE_*`` jde o cestu zakládaného zdroje, protože
+            se distribuce zakládají PUTem přímo na cílovou URL.
         :return: Načtená data odpovídající zadaným vstupům.
         """
         base_url = self.get_base_url()
@@ -574,13 +580,6 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         elif request_type in (
             FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER,
             FedoraRequestType.CREATE_DISTRIBUTION_CONTENT,
-        ):
-            ident_cely = ident_cely if ident_cely else self.record.ident_cely
-            # An empty parent path is the normal case: a distribution without a slash sits directly
-            # under the file container.
-            parent = f"/{path}" if path else ""
-            return f"{base_url}/record/{ident_cely}/file/{uuid}{parent}"
-        elif request_type in (
             FedoraRequestType.GET_DISTRIBUTION_CONTAINER,
             FedoraRequestType.GET_DISTRIBUTION_CONTENT,
             FedoraRequestType.UPDATE_DISTRIBUTION_CONTENT,
@@ -828,7 +827,6 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 if request_type in (
                     FedoraRequestType.CREATE_CONTAINER,
                     FedoraRequestType.CREATE_BINARY_FILE_CONTAINER,
-                    FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER,
                 ):
                     response = session.post(url, headers=headers, data=data, auth=auth, verify=False)
                 elif request_type in (
@@ -842,7 +840,6 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.CREATE_BINARY_FILE_CONTENT,
                     FedoraRequestType.CREATE_BINARY_FILE_THUMB,
                     FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE,
-                    FedoraRequestType.CREATE_DISTRIBUTION_CONTENT,
                 ):
                     response = session.post(url, headers=headers, data=data, auth=auth, verify=False, timeout=10)
                 elif request_type in (
@@ -851,6 +848,10 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB,
                     FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE,
                     FedoraRequestType.UPDATE_DISTRIBUTION_CONTENT,
+                    # Created at their exact URL: Fedora honours Overwrite-Tombstone only on PUT, while
+                    # a POST whose Slug hits a tombstone silently lands under a generated name.
+                    FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER,
+                    FedoraRequestType.CREATE_DISTRIBUTION_CONTENT,
                 ):
                     response = session.put(url, headers=headers, data=data, auth=auth, verify=False)
                 elif request_type == FedoraRequestType.CREATE_BINARY_FILE:
@@ -1815,8 +1816,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         Pro cestu ``ocr/alto-xml`` vznikne v případě potřeby kontejner ``ocr``; pro paradata
         i kontejner ``paradata``. Existence se nespoléhá na chování konkrétní verze Fedory,
         každý mezilehlý segment se ověří a případně založí explicitně. Za chybějící se považuje
-        i kontejner se stavem 410 (tombstone po dřívějším smazání) – zakládá se znovu
-        s hlavičkou ``Overwrite-Tombstone``, jinak by na něj následný zápis obsahu selhal.
+        i kontejner se stavem 410 (tombstone po dřívějším smazání). Kontejner se zakládá PUTem
+        přímo na jeho URL s hlavičkou ``Overwrite-Tombstone`` — tu Fedora respektuje jen u PUT;
+        POST se Slugem by tombstone nepřepsal a kontejner by vznikl pod vygenerovaným názvem.
 
         :param uuid: UUID kontejneru souboru, pod kterým distribuce leží.
         :param path: Relativní cesta distribuce (poslední segment je binární obsah, nezakládá se zde).
@@ -1830,14 +1832,13 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             )
             response = self._send_request(url, FedoraRequestType.GET_DISTRIBUTION_CONTAINER)
             if response is None or response.status_code in (404, 410):
-                parent_url = self._get_request_url(
+                container_url = self._get_request_url(
                     FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER,
                     uuid=uuid,
                     ident_cely=ident_cely,
-                    path=prefix,
+                    path=current,
                 )
                 headers = {
-                    "Slug": segment,
                     "Content-Type": "text/turtle",
                     "Overwrite-Tombstone": "true",
                 }
@@ -1846,7 +1847,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     f"<info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> ."
                 )
                 self._send_request(
-                    parent_url, FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER, headers=headers, data=rdf
+                    container_url, FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER, headers=headers, data=rdf
                 )
                 logger.debug(
                     "core_repository_connector._ensure_child_containers.created",
@@ -1860,13 +1861,17 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Vytvoří nový binární kontejner pod kontejnerem souboru (distribuce nebo paradata).
 
-        POST cílí na nadřazený kontejner a poslední segment cesty jde v hlavičce ``Slug``,
-        stejně jako u ``save_binary_file`` se Slugem ``orig``. Na rozdíl od ``orig`` je ale
-        cílová URL plně určena vstupem (uuid souboru a názvem distribuce), takže po dřívějším
-        smazání téže distribuce na ní zůstal tombstone a Fedora by nové vytvoření odmítla
-        stavem 410. Proto se – jako u proxy záznamu v ``record_deletion`` – posílá hlavička
-        ``Overwrite-Tombstone``; zde bezpodmínečně, protože INSERT probíhá až v samostatném
-        importním běhu, do kterého se příznak ``override_tombstone`` mazací transakce nedostane.
+        Obsah se vždy ukládá jako binární zdroj (``ldp:NonRDFSource``): bez hlavičky ``Link`` by
+        Fedora obsah v RDF serializaci (např. paradata v ``application/ld+json``) rozparsovala
+        jako RDF zdroj, který nemá ``fcr:metadata`` a nevrací původní bajty.
+
+        Cílová URL je plně určena vstupem (uuid souboru a název distribuce), takže po dřívějším
+        smazání téže distribuce na ní zůstává tombstone. Obsah se proto zakládá PUTem přímo na
+        tuto URL s hlavičkou ``Overwrite-Tombstone`` (zadání #3527): Fedora ji respektuje jen
+        u PUT, kdežto POST se Slugem kolidujícím s tombstonem uloží obsah pod vygenerovaný název
+        a cílová cesta zůstane tombstonem. Hlavička se posílá bezpodmínečně, protože INSERT probíhá
+        v samostatném importním běhu, do kterého se příznak ``override_tombstone`` mazací
+        transakce nedostane.
 
         :param uuid: UUID kontejneru souboru.
         :param path: Relativní cesta pod kontejnerem souboru, např. ``ocr/alto-xml``.
@@ -1877,8 +1882,6 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         :return: Wrapper nad uloženým obsahem s URL vzniklého kontejneru.
         """
         self._ensure_child_containers(uuid, path, ident_cely)
-        parent = path.rpartition("/")[0]
-        slug = path.rpartition("/")[2]
         file.seek(0)
         data = file.read()
         file_sha_512 = hashlib.sha512(data).hexdigest()
@@ -1886,11 +1889,11 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             "Content-Type": content_type,
             "Content-Disposition": f'attachment; filename="{file_name}"'.encode("utf-8"),
             "Digest": f"sha-512={file_sha_512}",
-            "Slug": slug,
             "Overwrite-Tombstone": "true",
+            "Link": NON_RDF_SOURCE_LINK,
         }
         url = self._get_request_url(
-            FedoraRequestType.CREATE_DISTRIBUTION_CONTENT, uuid=uuid, ident_cely=ident_cely, path=parent
+            FedoraRequestType.CREATE_DISTRIBUTION_CONTENT, uuid=uuid, ident_cely=ident_cely, path=path
         )
         self._send_request(url, FedoraRequestType.CREATE_DISTRIBUTION_CONTENT, headers=headers, data=data)
         self._update_creator(FedoraRequestType.DISTRIBUTION_CONTENT_UPDATE_RDF_DATA, uuid, ident_cely, path=path)
@@ -1933,6 +1936,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             "Content-Type": content_type,
             "Content-Disposition": f'attachment; filename="{file_name}"'.encode("utf-8"),
             "Digest": f"sha-512={file_sha_512}",
+            "Link": NON_RDF_SOURCE_LINK,
         }
         if overwrite_tombstone:
             headers["Overwrite-Tombstone"] = "true"

@@ -2,7 +2,7 @@
 Testy zápisu alternativních distribucí a paradat do Fedory (issue #3527).
 
 Pokrývají sestavení URL kontejnerů, zakládání mezilehlých kontejnerů u vnořených názvů,
-hlavičky ``Slug`` a ``Overwrite-Tombstone`` u INSERTu a odmítnutí vyhrazených názvů distribucí.
+zakládání PUTem na přesnou URL s hlavičkou ``Overwrite-Tombstone`` u INSERTu a odmítnutí vyhrazených názvů distribucí.
 Testy nepotřebují databázi ani běžící Fedoru – využívají odlehčené náhradní objekty
 a mock ``_send_request``.
 """
@@ -11,10 +11,12 @@ import io
 from unittest import mock
 
 from core.repository_connector import (
+    NON_RDF_SOURCE_LINK,
     FedoraRepositoryConnector,
     FedoraRequestType,
     FedoraValidationError,
 )
+from django.conf import settings
 from django.test import SimpleTestCase
 
 
@@ -56,11 +58,50 @@ class DistributionConnectorTestBase(SimpleTestCase):
         return io.BytesIO(data)
 
 
+class CreateDistributionMethodTest(DistributionConnectorTestBase):
+    """Testy HTTP metody, kterou se zakládají distribuce, paradata a jejich mezilehlé kontejnery."""
+
+    def test_create_requests_are_sent_as_put(self):
+        """Zakládání jde PUTem: ``Overwrite-Tombstone`` Fedora respektuje jen u PUT.
+
+        POST se Slugem kolidujícím s tombstonem po DIST10 by obsah uložil pod vygenerovaný
+        název a následný zápis creatora na ``…/{distribuce}/fcr:metadata`` by narazil na tombstone.
+        """
+        for request_type in (
+            FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER,
+            FedoraRequestType.CREATE_DISTRIBUTION_CONTENT,
+        ):
+            with self.subTest(request_type=request_type):
+                session = mock.MagicMock()
+                session.put.return_value = mock.MagicMock(status_code=201, text="", headers={})
+                with mock.patch.object(self.connector, "_get_session", return_value=session):
+                    self.connector._send_request(
+                        f"{self.file_url}/ocr", request_type, headers={"Overwrite-Tombstone": "true"}, data=b"x"
+                    )
+
+                session.put.assert_called_once()
+                self.assertEqual(session.put.call_args.args[0], f"{self.file_url}/ocr")
+                session.post.assert_not_called()
+
+    def test_create_requests_use_admin_identity(self):
+        """Přepsání tombstonu Fedora povolí jen ``fedoraAdmin``; běžný uživatel dostane 403."""
+        for request_type in (
+            FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER,
+            FedoraRequestType.CREATE_DISTRIBUTION_CONTENT,
+        ):
+            with self.subTest(request_type=request_type):
+                auth = FedoraRepositoryConnector._get_auth(request_type)
+                self.assertEqual(auth.username, settings.FEDORA_ADMIN_USER)
+
+
 class SaveDistributionTest(DistributionConnectorTestBase):
     """Testy vytvoření nové alternativní distribuce."""
 
-    def test_save_posts_to_file_container_with_slug(self):
-        """Distribuce bez lomítka se zakládá POSTem na kontejner souboru se Slugem názvu."""
+    def test_save_puts_to_exact_distribution_url(self):
+        """Distribuce se zakládá PUTem přímo na svou URL, bez Slugu.
+
+        POST se Slugem kolidujícím s tombstonem by Fedora uložila pod vygenerovaný název.
+        """
         with mock.patch.object(self.connector, "_update_creator"), mock.patch.object(
             self.connector, "_send_request", return_value=_Response(status_code=201)
         ) as send:
@@ -68,9 +109,9 @@ class SaveDistributionTest(DistributionConnectorTestBase):
 
         self.assertEqual(send.call_count, 1)
         call = send.call_args_list[0]
-        self.assertEqual(call.args[0], self.file_url)
+        self.assertEqual(call.args[0], f"{self.file_url}/alto-xml")
         self.assertEqual(call.args[1], FedoraRequestType.CREATE_DISTRIBUTION_CONTENT)
-        self.assertEqual(call.kwargs["headers"]["Slug"], "alto-xml")
+        self.assertNotIn("Slug", call.kwargs["headers"])
 
     def test_save_sends_overwrite_tombstone(self):
         """INSERT posílá ``Overwrite-Tombstone``, protože po dřívějším DIST10 zůstal na URL tombstone."""
@@ -94,6 +135,25 @@ class SaveDistributionTest(DistributionConnectorTestBase):
         self.assertTrue(headers["Digest"].startswith("sha-512="))
         self.assertEqual(send.call_args_list[0].kwargs["data"], b"data")
 
+    def test_rdf_mimetype_is_stored_as_binary(self):
+        """Obsah v RDF serializaci se ukládá jako ``ldp:NonRDFSource``, ne jako RDF zdroj.
+
+        Paradata jsou JSON-LD; bez hlavičky ``Link`` by je Fedora rozparsovala jako RDF a zdroj
+        by neměl ``fcr:metadata``, na které míří zápis creatora.
+        """
+        with mock.patch.object(self.connector, "_update_creator"), mock.patch.object(
+            self.connector, "_send_request", return_value=_Response(status_code=201)
+        ) as send:
+            self.connector.save_distribution(
+                self.UUID, "atrium/document-json", "z.jsonld", "application/ld+json", self._file()
+            )
+            self.connector.update_distribution(
+                self.UUID, "atrium/document-json", "z.jsonld", "application/ld+json", self._file()
+            )
+
+        for call in (send.call_args_list[-2], send.call_args_list[-1]):
+            self.assertEqual(call.kwargs["headers"]["Link"], NON_RDF_SOURCE_LINK)
+
     def test_save_nested_creates_missing_parent_container(self):
         """U vnořeného názvu se chybějící mezilehlý kontejner nejprve založí."""
         responses = [_Response(status_code=404), _Response(status_code=201), _Response(status_code=201)]
@@ -106,14 +166,14 @@ class SaveDistributionTest(DistributionConnectorTestBase):
         self.assertEqual(send.call_args_list[0].args[0], f"{self.file_url}/ocr")
         self.assertEqual(send.call_args_list[0].args[1], FedoraRequestType.GET_DISTRIBUTION_CONTAINER)
         container_call = send.call_args_list[1]
-        self.assertEqual(container_call.args[0], self.file_url)
+        self.assertEqual(container_call.args[0], f"{self.file_url}/ocr")
         self.assertEqual(container_call.args[1], FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER)
-        self.assertEqual(container_call.kwargs["headers"]["Slug"], "ocr")
+        self.assertNotIn("Slug", container_call.kwargs["headers"])
         self.assertEqual(container_call.kwargs["headers"]["Overwrite-Tombstone"], "true")
         content_call = send.call_args_list[2]
-        self.assertEqual(content_call.args[0], f"{self.file_url}/ocr")
+        self.assertEqual(content_call.args[0], f"{self.file_url}/ocr/alto-xml")
         self.assertEqual(content_call.args[1], FedoraRequestType.CREATE_DISTRIBUTION_CONTENT)
-        self.assertEqual(content_call.kwargs["headers"]["Slug"], "alto-xml")
+        self.assertNotIn("Slug", content_call.kwargs["headers"])
 
     def test_save_nested_skips_existing_parent_container(self):
         """Existující mezilehlý kontejner se znovu nezakládá."""
@@ -136,8 +196,8 @@ class SaveDistributionTest(DistributionConnectorTestBase):
 
         self.assertEqual(send.call_count, 3)
         container_call = send.call_args_list[1]
+        self.assertEqual(container_call.args[0], f"{self.file_url}/ocr")
         self.assertEqual(container_call.args[1], FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER)
-        self.assertEqual(container_call.kwargs["headers"]["Slug"], "ocr")
         self.assertEqual(container_call.kwargs["headers"]["Overwrite-Tombstone"], "true")
 
     def test_save_creates_parent_container_when_no_response(self):
@@ -164,14 +224,16 @@ class SaveDistributionTest(DistributionConnectorTestBase):
         ) as send:
             self.connector.save_distribution(self.UUID, "ocr/alto/xml", "soubor.xml", "text/xml", self._file())
 
-        self.assertEqual(send.call_args_list[0].args[0], f"{self.file_url}/ocr")
-        self.assertEqual(send.call_args_list[1].args[0], self.file_url)
-        self.assertEqual(send.call_args_list[1].kwargs["headers"]["Slug"], "ocr")
-        self.assertEqual(send.call_args_list[2].args[0], f"{self.file_url}/ocr/alto")
-        self.assertEqual(send.call_args_list[3].args[0], f"{self.file_url}/ocr")
-        self.assertEqual(send.call_args_list[3].kwargs["headers"]["Slug"], "alto")
-        self.assertEqual(send.call_args_list[4].args[0], f"{self.file_url}/ocr/alto")
-        self.assertEqual(send.call_args_list[4].kwargs["headers"]["Slug"], "xml")
+        self.assertEqual(
+            [call.args[0] for call in send.call_args_list],
+            [
+                f"{self.file_url}/ocr",
+                f"{self.file_url}/ocr",
+                f"{self.file_url}/ocr/alto",
+                f"{self.file_url}/ocr/alto",
+                f"{self.file_url}/ocr/alto/xml",
+            ],
+        )
 
     def test_created_parent_container_carries_creator(self):
         """Zakládaný mezilehlý kontejner nese jako RDF obsah ``dcterms:creator`` s aktuálním uživatelem."""
@@ -196,7 +258,7 @@ class SaveDistributionTest(DistributionConnectorTestBase):
                 self.UUID, "alto-xml", "soubor.xml", "text/xml", self._file(), ident_cely=other_ident
             )
 
-        expected = f"{FedoraRepositoryConnector.get_base_url()}/record/{other_ident}/file/{self.UUID}"
+        expected = f"{FedoraRepositoryConnector.get_base_url()}/record/{other_ident}/file/{self.UUID}/alto-xml"
         self.assertEqual(send.call_args_list[0].args[0], expected)
 
     def test_save_allows_thumb_containers(self):
@@ -207,7 +269,7 @@ class SaveDistributionTest(DistributionConnectorTestBase):
                     self.connector, "_send_request", return_value=_Response(status_code=201)
                 ) as send:
                     self.connector.save_distribution(self.UUID, distribution, "soubor.png", "image/png", self._file())
-                self.assertEqual(send.call_args_list[0].kwargs["headers"]["Slug"], distribution)
+                self.assertEqual(send.call_args_list[0].args[0], f"{self.file_url}/{distribution}")
 
     def test_save_updates_creator_of_new_container(self):
         """Po zápisu obsahu se nastaví ``dcterms:creator`` na URL vzniklé distribuce."""
@@ -337,10 +399,10 @@ class ParadataConnectorTest(DistributionConnectorTestBase):
             self.connector.save_paradata(self.UUID, "alto-xml", "soubor.xml", "text/xml", self._file())
 
         self.assertEqual(send.call_args_list[0].args[0], f"{self.file_url}/paradata")
-        self.assertEqual(send.call_args_list[1].kwargs["headers"]["Slug"], "paradata")
+        self.assertEqual(send.call_args_list[1].args[0], f"{self.file_url}/paradata")
+        self.assertEqual(send.call_args_list[1].args[1], FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER)
         content_call = send.call_args_list[2]
-        self.assertEqual(content_call.args[0], f"{self.file_url}/paradata")
-        self.assertEqual(content_call.kwargs["headers"]["Slug"], "alto-xml")
+        self.assertEqual(content_call.args[0], f"{self.file_url}/paradata/alto-xml")
         self.assertEqual(content_call.kwargs["headers"]["Overwrite-Tombstone"], "true")
 
     def test_save_paradata_nested_distribution(self):
@@ -357,8 +419,9 @@ class ParadataConnectorTest(DistributionConnectorTestBase):
             self.connector.save_paradata(self.UUID, "ocr/alto-xml", "soubor.xml", "text/xml", self._file())
 
         self.assertEqual(send.call_args_list[1].args[0], f"{self.file_url}/paradata/ocr")
-        self.assertEqual(send.call_args_list[2].kwargs["headers"]["Slug"], "ocr")
-        self.assertEqual(send.call_args_list[3].args[0], f"{self.file_url}/paradata/ocr")
+        self.assertEqual(send.call_args_list[2].args[0], f"{self.file_url}/paradata/ocr")
+        self.assertEqual(send.call_args_list[2].args[1], FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER)
+        self.assertEqual(send.call_args_list[3].args[0], f"{self.file_url}/paradata/ocr/alto-xml")
 
     def test_update_paradata_puts_to_paradata_url(self):
         """UPDATE paradat zapisuje PUTem na ``paradata/{distribuce}``."""
@@ -393,7 +456,7 @@ class ParadataConnectorTest(DistributionConnectorTestBase):
         ) as send:
             self.connector.save_paradata(self.UUID, "orig", "soubor.xml", "text/xml", self._file())
 
-        self.assertEqual(send.call_args_list[1].kwargs["headers"]["Slug"], "orig")
+        self.assertEqual(send.call_args_list[1].args[0], f"{self.file_url}/paradata/orig")
 
     def test_update_paradata_sends_overwrite_tombstone(self):
         """Paradata nemají historii, takže i UPDATE musí umět přepsat tombstone po dřívějším smazání."""
