@@ -73,7 +73,7 @@
                 </a>
               {% else %}
                 <a id="file-download-{{ soubor.id }}-{{ forloop.counter0 }}"
-                   href="{% url 'core:download_file_distribution' vazba_trida ident soubor.id distribution %}"
+                   href="{% url 'core:download_file' vazba_trida ident soubor.id %}?distribution={{ distribution|urlencode }}"
                    target="_blank" style="display:none">
                   <span class="material-icons">get_app</span>
                 </a>

@@ -544,7 +544,12 @@ class DownloadFile(LoginRequiredMixin, View):
         """
         Vrátí požadovaný soubor nebo jeho náhled po ověření vazby k záznamu.
 
-        :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek.
+        Alternativní distribuce se vybírá GET parametrem ``distribution`` (např.
+        ``?distribution=ocr/alto-xml``), nikoli samostatnou URL routou: požadavek tak zůstává na
+        routě ``download_file`` a ``PermissionMiddleware`` na něj uplatní stejná oprávnění jako
+        na běžné stažení souboru. Stáhnout lze jen distribuci z ``Soubor.available_distributions()``.
+
+        :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET`` (včetně ``distribution``), ovlivňuje větvení podmínek.
         :param typ_vazby: Typ vazby souboru na doménový záznam.
         :param ident_cely: Identifikátor záznamu, ke kterému soubor patří.
         :param pk: Primární klíč souboru.
@@ -567,7 +572,9 @@ class DownloadFile(LoginRequiredMixin, View):
                 safe_redirect = "/"
             return redirect(safe_redirect)
         soubor: Soubor = get_object_or_404(Soubor, id=pk)
-        distribution = kwargs.get("distribution")
+        # Passed as a query parameter so the request resolves to the download_file route and
+        # PermissionMiddleware applies the same permission rows as to the standard download.
+        distribution = request.GET.get("distribution")
         if soubor.repository_uuid:
             if self.thumb_small and soubor.small_thumbnail is not None:
                 return soubor.small_thumbnail
