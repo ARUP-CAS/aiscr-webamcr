@@ -22,7 +22,7 @@ import argparse
 import json
 import re
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Dict, List, Optional, Set
 
 LOG_PREFIX = "[static-vendor]"
@@ -95,6 +95,17 @@ def load_npm_dependencies(root: Path) -> Set[str]:
     return set(deps) if isinstance(deps, dict) else set()
 
 
+def is_static_relative(rel: str) -> bool:
+    """
+    Ověří, že cesta z manifestu je POSIX cesta relativní k ``webclient/static/`` a nevede mimo něj.
+
+    :param rel: Cesta z pole ``paths`` (např. ``vendor/leaflet-search/leaflet-search.js``).
+    :return: ``False`` pro absolutní cestu, cestu s diskem, zpětným lomítkem nebo komponentou ``..``.
+    """
+    path = PurePosixPath(rel)
+    return not ("\\" in rel or path.is_absolute() or ":" in path.parts[0] or ".." in path.parts)
+
+
 def check_entries(libraries: List[dict], static_dir: Path) -> tuple[List[str], Dict[str, str]]:
     """
     Zkontroluje povinná pole položek a existenci jejich cest.
@@ -120,6 +131,12 @@ def check_entries(libraries: List[dict], static_dir: Path) -> tuple[List[str], D
         for rel in paths:
             if not isinstance(rel, str) or not rel:
                 errors.append(f"knihovna '{label}': neplatná cesta {rel!r}")
+                continue
+            if not is_static_relative(rel):
+                errors.append(
+                    f"knihovna '{label}': cesta '{rel}' musí být relativní k {STATIC_DIR}/ "
+                    "(bez '..', '\\' a absolutní cesty)"
+                )
                 continue
             if rel in owners:
                 errors.append(f"cesta '{rel}' je uvedena u '{owners[rel]}' i u '{label}'")

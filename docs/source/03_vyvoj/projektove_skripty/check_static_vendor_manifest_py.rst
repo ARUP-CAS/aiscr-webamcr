@@ -53,6 +53,13 @@ Funkce
    :param root: Kořen repozitáře.
    :return: Klíče sekce ``dependencies``; prázdná množina, pokud soubor chybí.
 
+.. py:function:: is_static_relative(rel)
+
+   Ověří, že cesta z manifestu je POSIX cesta relativní k ``webclient/static/`` a nevede mimo něj.
+
+   :param rel: Cesta z pole ``paths`` (např. ``vendor/leaflet-search/leaflet-search.js``).
+   :return: ``False`` pro absolutní cestu, cestu s diskem, zpětným lomítkem nebo komponentou ``..``.
+
 .. py:function:: check_entries(libraries, static_dir)
 
    Zkontroluje povinná pole položek a existenci jejich cest.

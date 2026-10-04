@@ -54,6 +54,12 @@ Funkce
 
    :param tmp_path: Dočasný adresář pytestu použitý jako kořen repozitáře.
 
+.. py:function:: test_path_outside_static_is_rejected(tmp_path)
+
+   Cesty mimo webclient/static/ (``..``, absolutní, s diskem) manifest odmítne bez čtení souboru.
+
+   :param tmp_path: Dočasný adresář pytestu použitý jako kořen repozitáře.
+
 Zdrojový kód
 ------------
 

@@ -112,3 +112,17 @@ def test_css_url_to_missing_file(tmp_path):
     assert len(errors) == 1
     assert "foo.css:2" in errors[0]
     assert "../img/gone.png" in errors[0]
+
+
+def test_path_outside_static_is_rejected(tmp_path):
+    """Cesty mimo webclient/static/ (``..``, absolutní, s diskem) manifest odmítne bez čtení souboru.
+
+    :param tmp_path: Dočasný adresář pytestu použitý jako kořen repozitáře.
+    """
+    bad = ["../static_vendor.json", "/etc/passwd", "C:/x.css", r"vendor\leaflet-foo\foo.js"]
+    root = _repo(tmp_path, [_library(paths=["vendor/leaflet-foo/foo.js", *bad])])
+
+    errors = collect_errors(root)
+
+    assert len(errors) == len(bad)
+    assert all("musí být relativní" in e for e in errors)
