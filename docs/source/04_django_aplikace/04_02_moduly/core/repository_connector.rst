@@ -391,6 +391,10 @@ Třídy
 
       Migruje binární soubor do Fedora repositáře a vrátí wrapper se metadaty.
 
+      Do historie souboru (``DIST01``) se zapíší jen náhledy, které se zde nově vygenerovaly.
+      Náhledy zkopírované ze starého umístění při změně identifikátoru záznamu jsou přesunem
+      a svou historii už mají.
+
       :param soubor: Objekt `Soubor` k migraci s atributy ``pk`` a ``repository_uuid``.
       :param include_content: Pokud True, migruje i binární obsah souboru.
       :param check_if_exists: Pokud True, ověří existenci souboru v repositáři.

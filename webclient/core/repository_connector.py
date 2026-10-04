@@ -1607,6 +1607,10 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Migruje binární soubor do Fedora repositáře a vrátí wrapper se metadaty.
 
+        Do historie souboru (``DIST01``) se zapíší jen náhledy, které se zde nově vygenerovaly.
+        Náhledy zkopírované ze starého umístění při změně identifikátoru záznamu jsou přesunem
+        a svou historii už mají.
+
         :param soubor: Objekt `Soubor` k migraci s atributy ``pk`` a ``repository_uuid``.
         :param include_content: Pokud True, migruje i binární obsah souboru.
         :param check_if_exists: Pokud True, ověří existenci souboru v repositáři.
@@ -1670,7 +1674,11 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
             self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
             self._update_creator(FedoraRequestType.FILE_CONTENT_UPDATE_RDF_DATA, uuid)
-            self.save_thumbs(soubor.nazev, data, soubor.repository_uuid, source_thumbs=source_thumbs)
+            thumb_writes = self.save_thumbs(soubor.nazev, data, soubor.repository_uuid, source_thumbs=source_thumbs)
+            # Thumbnails copied from the old location are a move and keep their history;
+            # only the ones generated here are new and get a DIST01 record.
+            copied_thumbs = {f"thumb{'-large' * large}" for large, content in (source_thumbs or {}).items() if content}
+            soubor.zaznamenej_distribuce([write for write in thumb_writes if write[0] not in copied_thumbs])
             logger.debug(
                 "core_repository_connector.migrate_binary_file.end",
                 extra={"uuid": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -2678,7 +2686,8 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
         ):
             rep_bin_file = conn.get_binary_file(record.repository_uuid)
             if rep_bin_file:
-                conn.save_thumbs(record.nazev, rep_bin_file.content, record.repository_uuid)
+                thumb_writes = conn.save_thumbs(record.nazev, rep_bin_file.content, record.repository_uuid)
+                record.zaznamenej_distribuce(thumb_writes)
         fedora_transaction.mark_transaction_as_closed()
 
 

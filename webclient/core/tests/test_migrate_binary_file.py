@@ -37,6 +37,7 @@ class _FakeSoubor:
         self._repository_uuid = repository_uuid
         self._contents = contents  # {(thumb_small, thumb_large): bytes}
         self.saved = False
+        self.recorded_thumb_writes = None
 
     @property
     def repository_uuid(self):
@@ -49,9 +50,12 @@ class _FakeSoubor:
     def save(self):
         self.saved = True
 
+    def zaznamenej_distribuce(self, thumb_writes):
+        self.recorded_thumb_writes = thumb_writes
 
-class MigrateBinaryFileThumbSourceTests(SimpleTestCase):
-    """Ověřuje, odkud se berou náhledy při migraci souboru na nový identifikátor."""
+
+class _MigrateBinaryFileTestBase(SimpleTestCase):
+    """Společné pomocné metody pro testy migrace souboru; sama žádné testy neobsahuje."""
 
     def _make_connector(self):
         record = mock.Mock(ident_cely="C-202500001")
@@ -59,7 +63,7 @@ class MigrateBinaryFileThumbSourceTests(SimpleTestCase):
         transaction = FedoraTransaction(main_record=record, transaction_user=transaction_user, uid="fake-txn-uid")
         return FedoraRepositoryConnector(record, transaction=transaction)
 
-    def _migrate(self, connector, soubor):
+    def _migrate(self, connector, soubor, thumb_writes=()):
         with (
             mock.patch.object(connector, "_check_binary_file_container"),
             mock.patch.object(connector, "_update_creator"),
@@ -67,6 +71,7 @@ class MigrateBinaryFileThumbSourceTests(SimpleTestCase):
             mock.patch.object(connector, "get_binary_file") as mock_get_binary_file,
             mock.patch.object(connector, "_send_request") as mock_send_request,
         ):
+            mock_save_thumbs.return_value = list(thumb_writes)
             mock_send_request.return_value = mock.Mock(
                 text=f"{connector.get_base_url()}/record/C-202500001/file/new-uuid"
             )
@@ -74,6 +79,10 @@ class MigrateBinaryFileThumbSourceTests(SimpleTestCase):
                 soubor, include_content=True, check_if_exists=False, ident_cely_old="X-C-000000001"
             )
         return mock_save_thumbs, mock_get_binary_file
+
+
+class MigrateBinaryFileThumbSourceTests(_MigrateBinaryFileTestBase):
+    """Ověřuje, odkud se berou náhledy při migraci souboru na nový identifikátor."""
 
     def test_thumbs_are_copied_from_old_location_not_regenerated(self):
         """Náhledy se čtou přes soubor.get_repository_content, transakční get_binary_file se pro ně nesmí volat."""
@@ -115,3 +124,39 @@ class MigrateBinaryFileThumbSourceTests(SimpleTestCase):
             mock_save_thumbs.call_args.kwargs["source_thumbs"],
             {True: b"large-thumb-bytes", False: None},
         )
+
+
+class MigrateBinaryFileThumbHistoryTests(_MigrateBinaryFileTestBase):
+    """Ověřuje, které náhledy migrovaného souboru se zapíší do historie (issue #3527)."""
+
+    def test_copied_thumbs_are_not_recorded(self):
+        """Náhledy zkopírované ze starého umístění jsou přesunem, nový záznam DIST01 nevzniká."""
+        connector = self._make_connector()
+        soubor = _FakeSoubor(
+            "foto.jpg",
+            pk=3,
+            repository_uuid="old-uuid-3",
+            contents={
+                (False, False): b"orig-bytes",
+                (False, True): b"large-thumb-bytes",
+                (True, False): b"small-thumb-bytes",
+            },
+        )
+
+        self._migrate(connector, soubor, thumb_writes=[("thumb-large", False), ("thumb", False)])
+
+        self.assertEqual(soubor.recorded_thumb_writes, [])
+
+    def test_regenerated_thumb_is_recorded(self):
+        """Náhled, který na starém umístění chyběl a vygeneroval se znovu, se zapíše do historie."""
+        connector = self._make_connector()
+        soubor = _FakeSoubor(
+            "foto.jpg",
+            pk=4,
+            repository_uuid="old-uuid-4",
+            contents={(False, False): b"orig-bytes", (False, True): b"large-thumb-bytes"},
+        )
+
+        self._migrate(connector, soubor, thumb_writes=[("thumb-large", False), ("thumb", False)])
+
+        self.assertEqual(soubor.recorded_thumb_writes, [("thumb", False)])
