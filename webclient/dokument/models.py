@@ -1126,7 +1126,7 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
 
         db_table = "let"
         ordering = ["ident_cely"]
-        verbose_name_plural = "Lety"
+        verbose_name_plural = _("dokument.model.Let.modelTitles.label")
 
     def __str__(self):
         """

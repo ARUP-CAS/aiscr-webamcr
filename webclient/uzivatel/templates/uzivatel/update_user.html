@@ -27,7 +27,7 @@
                 <ul>
                     {% for item in sign_in_history %}
                         <li style="color: #6c757d;" class="small">{{ item.prihlaseni_datum_cas }}
-                          ({% trans "uzivatel.templates.updateUser.ip_address" %} {{ item.ip_adresa }})
+                          ({% trans "uzivatel.templates.updateUser.ip_address" %}: {{ item.ip_adresa }})
                         </li>
                     {% endfor %}
                 </ul>

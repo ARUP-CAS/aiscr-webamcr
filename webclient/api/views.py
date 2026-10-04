@@ -47,6 +47,7 @@ from core.repository_connector import (
 )
 from core.setting_models import CustomAdminSettings
 from core.soubor_naming import get_mime_safe_soubor_name, get_next_soubor_name
+from core.translation import format_message
 from core.utils import get_cadastre_from_point
 from django.conf import settings
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
@@ -61,7 +62,7 @@ from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
-from django.utils.translation import gettext_lazy
+from django.utils.translation import gettext_lazy, gettext_noop
 from heslar.hesla import (
     HESLAR_NALEZOVE_OKOLNOSTI,
     HESLAR_OBDOBI,
@@ -3429,10 +3430,8 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             return self._fail(
                 log_entry,
                 {
-                    "detail": (
-                        _("core.views.post_upload.error.maximal_file_name_exceeded_part_1")
-                        + f" {ident_cely} "
-                        + _("core.views.post_upload.error.maximal_file_name_exceeded_part_2")
+                    "detail": format_message(
+                        gettext_noop("core.views.post_upload.error.maximal_file_name_exceeded"), ident=ident_cely
                     )
                 },
                 status.HTTP_422_UNPROCESSABLE_ENTITY,

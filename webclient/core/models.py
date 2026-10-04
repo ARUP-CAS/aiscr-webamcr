@@ -1005,6 +1005,8 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
     datum_odstavky = models.DateField(_("core.model.OdstavkaSystemu.datumOdstavky.label"))
     cas_odstavky = models.TimeField(_("core.model.OdstavkaSystemu.casOdstavky.label"))
     status = models.BooleanField(_("core.model.OdstavkaSystemu.status.label"), default=True)
+    text_cs = models.TextField(blank=True, default="", verbose_name=_("core.forms.OdstavkaSystemuForm.textCs.label"))
+    text_en = models.TextField(blank=True, default="", verbose_name=_("core.forms.OdstavkaSystemuForm.textEn.label"))
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
@@ -1280,22 +1282,24 @@ class Permissions(models.Model):
         spoluprace_edit_projekty = "spoluprace_edit_projekty", _(
             "core.models.permissions.actionChoices.spoluprace_edit_projekty"
         )
-        pian_import_new = "pian_import_new", "core.models.permissions.actionChoices.pian_import_new"
-        pian_import_change = "pian_import_change", "core.models.permissions.actionChoices.pian_import_change"
-        akce_dj_zakladni = "akce_dj_zakladni", "core.models.permissions.actionChoices.akce_dj_zakladni"
+        pian_import_new = "pian_import_new", _("core.models.permissions.actionChoices.pian_import_new")
+        pian_import_change = "pian_import_change", _("core.models.permissions.actionChoices.pian_import_change")
+        akce_dj_zakladni = "akce_dj_zakladni", _("core.models.permissions.actionChoices.akce_dj_zakladni")
         akce_pripojit_pian_mapa = (
             "akce_pripojit_pian_mapa",
-            "core.models.permissions.actionChoices.akce_pripojit_pian_mapa",
+            _("core.models.permissions.actionChoices.akce_pripojit_pian_mapa"),
         )
-        akce_pripojit_pian_id = "akce_pripojit_pian_id", "core.models.permissions.actionChoices.akce_pripojit_pian_id"
-        lokalita_dj_zakladni = "lokalita_dj_zakladni", "core.models.permissions.actionChoices.lokalita_dj_zakladni"
+        akce_pripojit_pian_id = "akce_pripojit_pian_id", _(
+            "core.models.permissions.actionChoices.akce_pripojit_pian_id"
+        )
+        lokalita_dj_zakladni = "lokalita_dj_zakladni", _("core.models.permissions.actionChoices.lokalita_dj_zakladni")
         lokalita_pripojit_pian_mapa = (
             "lokalita_pripojit_pian_mapa",
-            "core.models.permissions.actionChoices.lokalita_pripojit_pian_mapa",
+            _("core.models.permissions.actionChoices.lokalita_pripojit_pian_mapa"),
         )
         lokalita_pripojit_pian_id = (
             "lokalita_pripojit_pian_id",
-            "core.models.permissions.actionChoices.lokalita_pripojit_pian_id",
+            _("core.models.permissions.actionChoices.lokalita_pripojit_pian_id"),
         )
         dokumenty_tabulka_projekt = "dokumenty_tabulka_projekt", _(
             "core.models.permissions.actionChoices.dokumenty_tabulka_projekt"
