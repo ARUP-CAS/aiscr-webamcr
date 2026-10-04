@@ -2,6 +2,7 @@ import logging
 
 from django.contrib import admin
 from django.http import StreamingHttpResponse
+from django.utils.translation import gettext_lazy as _
 from django_object_actions import DjangoObjectActions, action
 from heslar.forms import HeslarHierarchieForm, HeslarOdkazForm, OrganizaceAdminForm, OsobaAdminForm
 from heslar.models import (
@@ -25,7 +26,10 @@ logger = logging.getLogger(__name__)
 class ObjectWithMetadataAdmin(DjangoObjectActions, admin.ModelAdmin):
     """Implementuje komponentu ``ObjectWithMetadataAdmin`` v rámci aplikace."""
 
-    @action(label="Metadata", description="Download of metadata")
+    @action(
+        label=_("heslar.admin.ObjectWithMetadataAdmin.metadata.label"),
+        description=_("heslar.admin.ObjectWithMetadataAdmin.metadata.description"),
+    )
     def metadata(self, request, obj):
         """
         Provádí operaci metadata.

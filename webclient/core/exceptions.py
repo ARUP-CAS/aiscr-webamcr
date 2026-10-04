@@ -137,7 +137,7 @@ class ZaznamSouborNotmatching(Exception):
 class StateChangedError(Exception):
     """Implementuje komponentu ``StateChangedError`` v rámci aplikace."""
 
-    def __init__(self, message="Záznam byl mezitím změměn"):
+    def __init__(self, message="Záznam byl mezitím změněn"):
         """
         Inicializuje výjimku pro případ, kdy byl stav záznamu AMČR změněn jiným uživatelem od jeho načtení.
 

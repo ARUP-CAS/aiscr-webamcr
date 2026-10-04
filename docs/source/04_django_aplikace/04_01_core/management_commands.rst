@@ -129,6 +129,14 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
    :undoc-members:
 
 
+``clear_maintenance_cache``
+---------------------------
+
+.. automodule:: core.management.commands.clear_maintenance_cache
+   :members: Command
+   :undoc-members:
+
+
 ``fix_soubor_rozsah``
 ---------------------
 
