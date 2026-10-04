@@ -198,6 +198,66 @@ class RunDataImportDistribuceTest(RunDataImportDistributionTestBase):
             "Metadata navázaného záznamu se smí uložit právě jednou pro celou dávku distribucí.",
         )
 
+    def test_distribution_and_its_paradata_share_one_fedora_transaction(self):
+        """Distribuce, její paradata i metadata jednoho záznamu se zapíší v jediné Fedora transakci.
+
+        Každá potvrzená transakce vytváří novou verzi OCFL objektu záznamu, proto má jeden
+        záznam v jednom běhu dostat právě jednu transakci (#3527). Distribuce se zapíše dřív
+        než paradata, která na ni navazují.
+        """
+        soubor = self._create_existing_soubor()
+        paradata_row = {
+            "__file_name": "paradata",
+            "path": soubor.path,
+            "distribution": "ocr",
+            "nazev": "ocr-paradata.json",
+            "mimetype": "application/ld+json",
+        }
+
+        fake_redis, _ = self._run_distribution_import(
+            [self._insert_payload(soubor, distribution="ocr", nazev="ocr.txt"), paradata_row],
+        )
+
+        self.assert_import_success(fake_redis)
+        self.assertEqual(len(self.connector_instances), 1, "Záznam smí mít v binární fázi jediný connector.")
+        connector = self.connector_instances[0]
+        fedora_transaction = connector.init_args[1]
+        fedora_transaction.mark_transaction_as_closed.assert_called_once()
+        self.assertEqual(len(self.connector_calls("save_distribution")), 1)
+        self.assertEqual(len(self.connector_calls("save_paradata")), 1)
+        written = [name for name, *_ in connector.method_calls if name in ("save_distribution", "save_paradata")]
+        self.assertEqual(written, ["save_distribution", "save_paradata"])
+        self.assert_history_created(soubor, NAHRANI_DISTRIBUCE, "ocr")
+
+    def test_failure_inside_record_rolls_back_its_history(self):
+        """Selhání pozdější položky záznamu vrátí i historii dříve zapsaných distribucí téhož záznamu.
+
+        Záznam se zapisuje atomicky — Fedora transakce se nepotvrdí, takže v historii nesmí
+        zůstat ``DIST01`` k distribuci, která ve Fedoře nevznikla.
+        """
+        soubor = self._create_existing_soubor()
+
+        def fail_second_write(instance):
+            instance.save_distribution.side_effect = [
+                instance.save_distribution.return_value,
+                RuntimeError("Simulované selhání druhé distribuce."),
+            ]
+
+        fake_redis, _ = self._run_distribution_import(
+            [
+                self._insert_payload(soubor, distribution="ocr", nazev="ocr.txt"),
+                self._insert_payload(soubor, distribution="preview", nazev="preview.txt"),
+            ],
+            connector_overrides=fail_second_write,
+        )
+
+        self.assert_import_failed(fake_redis)
+        self.assertFalse(
+            Historie.objects.filter(vazba=soubor.historie, typ_zmeny=NAHRANI_DISTRIBUCE).exists(),
+            "Po selhání záznamu nesmí v historii zůstat žádná jeho distribuce.",
+        )
+        self.connector_instances[0].init_args[1].mark_transaction_as_closed.assert_not_called()
+
     def test_missing_binary_file_marks_import_as_failed(self):
         """Chybějící binární soubor v importním adresáři musí import označit jako selhalý."""
         soubor = self._create_existing_soubor()

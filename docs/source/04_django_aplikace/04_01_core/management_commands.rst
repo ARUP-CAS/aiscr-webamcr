@@ -66,6 +66,61 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
    docker exec -it $(sudo docker ps -q -f name=swarm_webamcr_web) python3 manage.py <název_příkazu> [parametry] --settings=webclient.settings.production
 
 
+``anonymizace_dat``
+-------------------
+
+.. automodule:: core.management.commands.anonymizace_dat
+   :members: Command
+   :undoc-members:
+
+**Parametry:**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 20 20 30
+
+   * - Název
+     - Typ
+     - Výchozí hodnota
+     - Popis
+   * - ``--potvrzuji-testovaci-server``
+     - 
+     - ``False``
+     - Povinné potvrzení, že cílová databáze je testovací a data se smí nevratně přepsat.
+   * - ``--ocekavana-databaze``
+     - ``str``
+     - ``None``
+     - Název databáze, se kterým se musí shodovat cílová databáze.
+   * - ``--dry-run``
+     - 
+     - ``False``
+     - Pouze vypíše počty dotčených záznamů, nic neuloží. U geometrie jde o meze, ne přesné počty.
+   * - ``--jen``
+     - ``str``
+     - ``None``
+     - Čárkou oddělený seznam sekcí, které se mají provést.
+   * - ``--vynechat``
+     - ``str``
+     - ``None``
+     - Čárkou oddělený seznam sekcí, které se mají přeskočit.
+   * - ``--batch-size``
+     - ``int``
+     - ``1000``
+     - Velikost dávky při zápisu geometrií a identifikátorů.
+   * - ``--deformace-m``
+     - ``float``
+     - ``10.0``
+     - Horní mez posunu jednoho vrcholu při deformaci tvaru; nula deformaci vypne.
+   * - ``--min-posun-m``
+     - ``float``
+     - ``100.0``
+     - Minimální vzdálenost nové polohy od původní v metrech; nula kontrolu vypne.
+   * - ``--seed``
+     - ``int``
+     - ``None``
+     - Zrno generátoru náhody pro reprodukovatelný běh.
+
+
 ``backfill_thumb_history``
 --------------------------
 
@@ -97,6 +152,14 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
 -------------------------
 
 .. automodule:: core.management.commands.check_pian_properties
+   :members: Command
+   :undoc-members:
+
+
+``clear_maintenance_cache``
+---------------------------
+
+.. automodule:: core.management.commands.clear_maintenance_cache
    :members: Command
    :undoc-members:
 

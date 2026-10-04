@@ -36,5 +36,6 @@ Dokumentace modulu core.
    setting_models
    soubor_naming
    storage
+   translation
    utils
    validators

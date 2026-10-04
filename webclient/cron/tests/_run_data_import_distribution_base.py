@@ -118,8 +118,8 @@ class RunDataImportDistributionTestBase(RunDataImportMapperTestBase):
         :param fake_redis: Testovací Redis použitý v importním běhu.
         :return: Seznam slovníků s výsledky jednotlivých souborů.
         """
-        raw = fake_redis.get("import_data_files_{}".format(JOB_ID))
-        return json.loads(raw.decode("utf-8"))
+        entries = fake_redis.lrange("import_data_files_{}".format(JOB_ID), 0, -1)
+        return [json.loads(entry.decode("utf-8")) for entry in entries]
 
     def fedora_result(self, fake_redis):
         """Vrátí report Fedora operací z Redisu.

@@ -802,9 +802,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 soubor.create_soubor_vazby()
             # Náhledy vznikly už při zápisu do Fedory, kdy záznam ``Soubor`` ještě neexistoval;
             # historie se proto doplňuje až tady, po vytvoření vazby na historii.
-            soubor.zaznamenej_distribuce(
-                rep_bin_file.thumb_writes, user or User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
-            )
+            soubor.zaznamenej_distribuce(rep_bin_file.thumb_writes)
             self.save()
         else:
             logger.debug(

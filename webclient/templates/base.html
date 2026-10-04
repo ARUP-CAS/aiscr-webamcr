@@ -31,6 +31,10 @@
   <!-- Optional JavaScript; choose one of the two! -->
   <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
   <script src="{% static 'jquery/dist/jquery.min.js' %}"></script>
+  <!-- jquery-migrate: doplnuje API odstranena v jQuery 4, na kterych stoji select2 4.0.13
+       z django-autocomplete-light (viz issue #4211). Az select2 pojede nativne na jQuery 4,
+       lze migrate odstranit. -->
+  <script src="{% static 'jquery-migrate/dist/jquery-migrate.min.js' %}"></script>
   <script src="{% static 'bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
   <!-- Bootstrap select -->
   <link rel="stylesheet"
@@ -102,10 +106,10 @@
     {% get_test_env as test_env %}
     {% if test_env %}
       <div class="test-version">
-        <p>{% trans "base.testing_env.text" %}</p>
+        <p><strong class="text-uppercase">{% trans "base.testing_env.title" %}</strong><br />{% trans "base.testing_env.text" %}</p>
       </div>
       <div class="test-version-mobile">
-        <p>{% trans "base.testing_env.text_mobile" %}</p>
+        <p><strong class="text-uppercase">{% trans "base.testing_env.title" %}</strong></p>
       </div>
       {% endif %}
       {% get_maintenance as action %}
@@ -113,7 +117,8 @@
       <div class="maintenance">
         <div class="maintenance__message d-block px-3 py-2 text-center text-bold text-white old-bv"
              data-maintenance-toggle>
-          <span class="maintenance__text" id="maintenance-text">{% trans "base.odstavka.text" %}</span>
+          {% get_current_language as LANGUAGE_CODE %}
+          <span class="maintenance__text" id="maintenance-text">{% if LANGUAGE_CODE == "en" %}{{ action.text_en }}{% else %}{{ action.text_cs }}{% endif %}</span>
           <span class="material-icons maintenance__icon" aria-hidden="true" hidden>expand_more</span>
         </div>
       </div>
@@ -130,7 +135,7 @@
       {% for message in messages %}
         <div class="alert alert-{% if message.tags == "notclosing warning" %}warning notclosing{% elif message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show app-alert-floating" role="alert" style="top: {%  message_top forloop.counter0 %}px">
           {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% trans 'templates.a11y.close' %}">
           </button>
         </div>
       {% endfor %}

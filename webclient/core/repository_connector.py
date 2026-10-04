@@ -11,7 +11,6 @@ from io import BytesIO
 from typing import Optional, Union
 
 import requests
-from celery import Celery
 from core.connectors import RedisConnector
 from core.distribution_names import (
     has_unsafe_distribution_segments,
@@ -31,7 +30,6 @@ from xml_generator.models import ModelWithMetadata
 from redis import ResponseError
 
 logger = logging.getLogger(__name__)
-
 
 #: Maximální hrana malého náhledu v pixelech (``Image.thumbnail`` zachovává poměr stran
 #: a obrázek **nikdy nezvětšuje**, takže menší předloha si rozměr podrží).
@@ -142,6 +140,17 @@ class FedoraUpdatedByAnotherTransactionError(FedoraError):
     pass
 
 
+class FedoraBinaryFileAlreadyDeletedError(FedoraError):
+    """
+    Mazaný binární soubor ve Fedoře už neexistuje, typicky proto, že ho mezitím smazal souběžný požadavek.
+
+    Vyvolá ji ``_send_request`` u požadavků na smazání binárního souboru, pokud Fedora odpoví
+    chybou a následný ověřovací dotaz mimo transakci potvrdí, že zdroj vrací 404 nebo 410.
+    """
+
+    pass
+
+
 class IdentChangeFedoraError(Exception):
     """Implementuje komponentu ``IdentChangeFedoraError`` v rámci aplikace."""
 
@@ -232,6 +241,8 @@ class RepositoryBinaryFile:
         # ``Soubor.zaznamenej_distribuce()``. Historii nelze zapsat už při zápisu do Fedory,
         # protože při vkládání souboru ještě neexistuje řádek ``Soubor``, ke kterému patří.
         self.thumb_writes: list = []
+        # MIME type stored with the content in Fedora; only filled when read from the repository.
+        self.content_type: Optional[str] = None
         self.content.seek(0)
         self._calculate_sha_512()
 
@@ -310,6 +321,15 @@ _ADMIN_REQUEST_TYPES = frozenset(
         FedoraRequestType.DELETE_LINK_TOMBSTONE,
         FedoraRequestType.CONNECT_DELETED_RECORD_3,
         FedoraRequestType.CONNECT_DELETED_RECORD_4,
+    }
+)
+
+#: Typy požadavků na smazání binárního souboru, u kterých se chybová odpověď ověřuje,
+#: zda soubor mezitím nesmazal souběžný požadavek (issue #4174).
+_BINARY_FILE_DELETE_REQUEST_TYPES = frozenset(
+    {
+        FedoraRequestType.DELETE_BINARY_FILE,
+        FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY,
     }
 )
 
@@ -710,6 +730,36 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         return _get_fedora_session(admin=request_type in _ADMIN_REQUEST_TYPES)
 
+    def _is_resource_gone(self, url: str) -> bool:
+        """
+        Ověří mimo transakci, zda zdroj na ``url`` ve Fedoře už neexistuje.
+
+        Chybová odpověď na smazání binárního souboru sama nerozliší, zda soubor mezitím smazal
+        souběžný požadavek, nebo jde o skutečnou chybu (autentizace, konfigurace, výpadek); v hlášeném
+        případě navíc přišla 403 z Tomcatu, ne odpověď Fedory. Proto se stav ověří samostatným GET
+        bez hlavičky ``Atomic-ID`` (transakce už je v tu chvíli odvolaná).
+
+        :param url: URL mazaného binárního souboru.
+        :return: ``True``, pokud Fedora na zdroj vrátí 404 nebo 410; jinak ``False``, včetně
+            selhání samotného dotazu.
+        """
+        request_type = FedoraRequestType.GET_BINARY_FILE_CONTAINER
+        try:
+            response = self._get_session(request_type).get(
+                url, auth=self._get_auth(request_type), verify=False, timeout=10
+            )
+        except requests.exceptions.RequestException as exc:
+            logger.warning(
+                "core_repository_connector._is_resource_gone.request_failed",
+                extra={"url": url, "transaction": self.transaction_uid, "error": exc},
+            )
+            return False
+        logger.debug(
+            "core_repository_connector._is_resource_gone.response",
+            extra={"url": url, "status_code": response.status_code, "transaction": self.transaction_uid},
+        )
+        return response.status_code in (404, 410)
+
     def _send_request(
         self, url: str, request_type: FedoraRequestType, *, headers=None, data=None
     ) -> requests.Response | None:
@@ -723,7 +773,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         :return: Textová reprezentace UID transakce.
 
             :raises FedoraUpdatedByAnotherTransactionError: Vyvolá se při splnění podmínky ``response.status_code == 409``.
-            :raises FedoraError: Vyvolá se při splnění podmínky ``response.status_code == 409``.
+            :raises FedoraBinaryFileAlreadyDeletedError: Vyvolá se, pokud smazání binárního souboru skončí
+                chybou a ``_is_resource_gone`` potvrdí, že soubor už ve Fedoře není.
+            :raises FedoraError: Vyvolá se při jiné chybové odpovědi Fedory.
         """
         extra = {"info": url, "request_type": request_type, "transaction": self.transaction_uid}
         if isinstance(data, str) and len(data) < 1000:
@@ -890,6 +942,13 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                         "core_repository_connector._send_request.response.another_transaction_error", extra=extra
                     )
                     raise FedoraUpdatedByAnotherTransactionError(
+                        url, response.text, response.status_code, response.headers, self.transaction
+                    )
+                elif request_type in _BINARY_FILE_DELETE_REQUEST_TYPES and self._is_resource_gone(url):
+                    logger.info(
+                        "core_repository_connector._send_request.response.binary_file_already_deleted", extra=extra
+                    )
+                    raise FedoraBinaryFileAlreadyDeletedError(
                         url, response.text, response.status_code, response.headers, self.transaction
                     )
                 else:
@@ -1271,15 +1330,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             self._update_creator(FedoraRequestType.METADATA_UPDATE_RDF_DATA)
         elif update is True:
             document, headers = generate_metadata()
-            try:
-                current_metadata = self.get_metadata()
-                metadata_changed = current_metadata != document
-            except FedoraError:
-                logger.warning(
-                    "core_repository_connector.save_metadata.get_metadata_failed_proceeding_with_update",
-                    extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
-                )
-                metadata_changed = True
+            # result už drží aktuální metadata z GET výše. Volání self.get_metadata() by přes
+            # save_metadata(False) vyvolalo rekurzi a tři další HTTP volání do Fedory.
+            metadata_changed = result.content != document
             if metadata_changed:
                 url = self._get_request_url(FedoraRequestType.UPDATE_METADATA)
                 self._send_request(url, FedoraRequestType.UPDATE_METADATA, headers=headers, data=document)
@@ -1351,12 +1404,14 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             Změní velikost obrázku na zadaný rozměr a vrátí jako PNG v BytesIO.
 
             :param image: Vstupní obrázek v binární podobě k převzorkování.
-            :param large_inner: Příznak pro výběr max. rozměru (False: 100x100px, True: 800x800px).
+            :param large_inner: Příznak pro výběr max. rozměru (False: maximální hrana malého náhledu
+                ``THUMB_MAX_PX``, True: maximální hrana velkého náhledu ``THUMB_LARGE_MAX_PX``).
             :return: Změněný obrázek jako PNG v BytesIO bufferu.
             """
             image = Image.open(image)
             image = ImageOps.exif_transpose(image)
-            max_size = ((1 + large_inner * 7) * 100, (1 + large_inner * 7) * 100)
+            hrana = THUMB_LARGE_MAX_PX if large_inner else THUMB_MAX_PX
+            max_size = (hrana, hrana)
             image.thumbnail(max_size)
             output_buffer = BytesIO()
             image.save(output_buffer, format="PNG")
@@ -1426,7 +1481,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         else:
             return __generate_thumb_from_icon(file_name, file_content, large)
 
-    def save_thumbs(self, file_name, file, uuid, update=False, ident_cely_old=None) -> list:
+    def save_thumbs(self, file_name, file, uuid, update=False, ident_cely_old=None, source_thumbs=None) -> list:
         """
         Uloží thumbs. v aplikaci.
 
@@ -1439,6 +1494,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
         :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
         :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
+        :param source_thumbs: Volitelný slovník ``{True: bytes|None, False: bytes|None}`` s již existujícím
+            obsahem náhledů (velký/malý). Pokud je pro danou velikost k dispozici, náhled se nahraje přímo
+            místo přegenerování z ``file`` (např. při migraci souboru na nový identifikátor).
         :return: Seznam dvojic ``(nazev_nahledu, aktualizace)``; ``aktualizace`` je ``True``,
             pokud šlo o přepis existujícího náhledu. Náhledy, které se nepodařilo vygenerovat,
             v seznamu nejsou.
@@ -1455,22 +1513,24 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             },
         )
         for large in (True, False):
-            file.seek(0)
-            data = self.__generate_thumb(file_name, file, large)
-            if not data:
-                logger.info(
-                    "core_repository_connector._save_thumb.error",
-                    extra={
-                        "file": file_name,
-                        "ident_cely": self.record.ident_cely,
-                        "large": large,
-                        "update": update,
-                        "uuid": uuid,
-                        "transaction": self.transaction_uid,
-                    },
-                )
-                continue
-            data = data.read()
+            data = source_thumbs.get(large) if source_thumbs else None
+            if data is None:
+                file.seek(0)
+                generated = self.__generate_thumb(file_name, file, large)
+                if not generated:
+                    logger.info(
+                        "core_repository_connector._save_thumb.error",
+                        extra={
+                            "file": file_name,
+                            "ident_cely": self.record.ident_cely,
+                            "large": large,
+                            "update": update,
+                            "uuid": uuid,
+                            "transaction": self.transaction_uid,
+                        },
+                    )
+                    continue
+                data = generated.read()
             file_sha_512 = hashlib.sha512(data).hexdigest()
             thumb_file_name = file_name[: file_name.rfind(".")]
             headers = {
@@ -1562,6 +1622,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         if soubor.repository_uuid is not None and check_if_exists:
             return None
         self._check_binary_file_container()
+        source_thumbs = None
         if include_content:
             if soubor.repository_uuid is None:
                 with open(soubor.path, mode="rb") as file:
@@ -1573,6 +1634,16 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 data = old_rep_bin_file.content
                 file_sha_512 = old_rep_bin_file.sha_512
                 data.seek(0)
+                # Náhledy pro soubor už existují na starém umístění - stačí je zkopírovat, ne přegenerovat.
+                # Musí se číst přes soubor.get_repository_content (netransakční spojení) stejně jako orig výše -
+                # `self` je transakční připojení, ve kterém record_ident_change už smazal starý kontejner,
+                # takže by zde GET na starý container vracel 404.
+                old_large_thumb = soubor.get_repository_content(ident_cely_old, thumb_large=True)
+                old_small_thumb = soubor.get_repository_content(ident_cely_old, thumb_small=True)
+                source_thumbs = {
+                    True: old_large_thumb.content.read() if old_large_thumb else None,
+                    False: old_small_thumb.content.read() if old_small_thumb else None,
+                }
         else:
             data = None
             file_sha_512 = None
@@ -1598,7 +1669,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
             self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
             self._update_creator(FedoraRequestType.FILE_CONTENT_UPDATE_RDF_DATA, uuid)
-            self.save_thumbs(soubor.nazev, data, soubor.repository_uuid)
+            self.save_thumbs(soubor.nazev, data, soubor.repository_uuid, source_thumbs=source_thumbs)
             logger.debug(
                 "core_repository_connector.migrate_binary_file.end",
                 extra={"uuid": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -1898,7 +1969,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         :param uuid: UUID kontejneru souboru.
         :param path: Relativní cesta pod kontejnerem souboru.
         :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
-        :return: Wrapper nad načteným obsahem, nebo ``None``, pokud kontejner neexistuje.
+        :return: Wrapper nad načteným obsahem s vyplněným ``content_type`` (MIME typ uložený ve Fedoře),
+            nebo ``None``, pokud kontejner neexistuje.
         """
         url = self._get_request_url(
             FedoraRequestType.GET_DISTRIBUTION_CONTENT, uuid=uuid, ident_cely=ident_cely, path=path
@@ -1909,7 +1981,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         file = io.BytesIO()
         file.write(response.content)
         file.seek(0)
-        return RepositoryBinaryFile(url, file)
+        rep_bin_file = RepositoryBinaryFile(url, file)
+        rep_bin_file.content_type = response.headers.get("Content-Type")
+        return rep_bin_file
 
     def save_distribution(
         self, uuid, distribution, file_name, content_type, file: io.BytesIO, ident_cely=None
@@ -2865,7 +2939,9 @@ class FedoraTransaction(BaseFedoraTransaction):
         logger.debug(
             "core_repository_connector.FedoraTransaction.rollback_transaction.start", extra={"transaction": self.uid}
         )
-        if self.__status != FedoraTransactionStatus.ABORTED:
+        # A committed transaction no longer exists in Fedora, so rolling it back would just
+        # raise a fresh commit-failed error over an unrelated one already being handled.
+        if self.__status not in (FedoraTransactionStatus.ABORTED, FedoraTransactionStatus.COMMITTED):
             self._send_transaction_request(FedoraTransactionOperation.ROLLBACK)
             self.__status = FedoraTransactionStatus.ABORTED
         logger.debug(
@@ -2958,12 +3034,11 @@ class FedoraTransaction(BaseFedoraTransaction):
         """
         from cron.tasks import call_digiarchiv_update_task
 
+        from webclient.celery import app as celery_app
+
         logger.debug("core_repository_connector.FedoraTransaction.call_digiarchiv_update.start")
         try:
-            app = Celery("webclient")
-            app.config_from_object("django.conf:settings", namespace="CELERY")
-            app.autodiscover_tasks()
-            i = app.control.inspect(["worker1@amcr"])
+            i = celery_app.control.inspect(["worker1@amcr"])
             queues = (
                 i.scheduled(),
                 i.active(),
@@ -2971,9 +3046,10 @@ class FedoraTransaction(BaseFedoraTransaction):
         except Exception as e:
             logger.warning(
                 "core_repository_connector.FedoraTransaction.call_digiarchiv_update.Celery_warning",
-                extra={"error": e, "app": app},
+                extra={"error": e, "app": celery_app},
             )
             call_digiarchiv_update_task.apply_async()
+            return
         for queue in queues:
             if queue is None:
                 logger.warning(

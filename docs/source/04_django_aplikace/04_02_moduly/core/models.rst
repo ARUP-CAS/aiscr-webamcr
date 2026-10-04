@@ -126,11 +126,13 @@ Třídy
       ``Soubor``, takže connector historii sám zapsat nemůže a vrací jen přehled zápisů
       (``RepositoryBinaryFile.thumb_writes``).
 
+      Změna se vždy připíše uživateli ``ADMIN_USER`` – stejně jako u distribucí nahraných importem
+      (zadání #3527), nikoli uživateli, který soubor nahrál; náhledy generuje systém.
+
       Zápis je best-effort — selhání se pouze zaloguje, protože ztráta záznamu v historii
       nesmí shodit nahrání souboru ani generování náhledů.
 
       :param thumb_writes: Seznam dvojic ``(nazev_nahledu, aktualizace)`` z ``save_thumbs()``.
-      :param user: Uživatel, kterému se změna v historii připíše.
 
    .. py:method:: zaznamenej_nahrani_nove_verze()
 
@@ -308,11 +310,22 @@ Třídy
       Vrátí obsah zvolené distribuce souboru jako HTTP odpověď.
 
       Distribuce má vlastní binární obsah, takže se ke stažení nabídne pod názvem odvozeným
-      z názvu souboru a distribuce (``scan.pdf`` + ``ocr/alto-xml`` → ``scan.pdf.ocr_alto-xml``).
-      Samotný ``nazev`` by u distribuce lhal — obsah je jiný formát než původní soubor.
+      z názvu souboru, distribuce a MIME typu uloženého ve Fedoře (``scan.pdf`` + ``ocr/alto-xml``
+      s ``application/xml`` → ``scan.pdf.ocr_alto-xml.xml``). Samotný ``nazev`` by u distribuce
+      lhal — obsah je jiný formát než původní soubor. Odpověď nese uložený MIME typ.
 
       :param distribution: Název distribuce; ``orig`` vrátí původní obsah souboru.
       :return: ``FileResponse`` s obsahem distribuce, nebo ``None``, pokud ji nelze načíst.
+
+   .. py:method:: _distribution_file_extension()
+
+      Odvodí příponu staženého souboru distribuce z jejího MIME typu.
+
+      Strukturované typy, které ``mimetypes`` nezná (např. ``application/ld+json`` paradat nebo
+      ``application/alto+xml``), dostanou příponu podle syntaxe ze suffixu ``+json``/``+xml``.
+
+      :param content_type: Hodnota ``Content-Type`` uložená u distribuce ve Fedoře, i s parametry.
+      :return: Přípona včetně tečky (např. ``.xml``), nebo ``None``, pokud ji nelze určit.
 
    .. py:method:: getMock()
 

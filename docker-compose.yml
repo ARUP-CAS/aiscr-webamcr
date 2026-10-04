@@ -36,7 +36,7 @@ services:
       - net.core.somaxconn=1024
 
   sidecar:
-    image: eeacms/rsync:3.0
+    image: eeacms/rsync:3.1
     environment:
       - CRON_TASK_1=*/1 * * * * rsync -a /vol/web/locale/* /backup/
     volumes:
@@ -67,7 +67,7 @@ services:
       start_period: 30s
   
   redis-exporter:
-    image: oliver006/redis_exporter:v1.89.0-alpine
+    image: oliver006/redis_exporter:v1.91.1-alpine
     ports:
       - "9121:9121"
     secrets:
@@ -86,7 +86,13 @@ services:
 
   celery_worker:
     image: ${amcr_image}
-    command: celery -A webclient worker -l DEBUG -n worker1@amcr
+    # Prefork pool bez --concurrency startuje tolik child procesů, kolik má host jader;
+    # každý nese celý import graf aplikace (~300 MB). Úlohy jsou převážně I/O bound
+    # (HTTP do Fedory), takže stačí pevně 4 procesy místo počtu jader.
+    # --max-tasks-per-child restartuje child po 50 úlohách a vrátí nastrádanou paměť
+    # (analogie max-requests v scripts/uwsgi_site.ini).
+    # -n worker1@amcr musí zůstat, inspectuje se podle něj fronta.
+    command: celery -A webclient worker -l DEBUG -n worker1@amcr --concurrency=4 --max-tasks-per-child=50
     environment:
       - IMAGE_TAG=${IMAGE_TAG}
     secrets:
@@ -152,7 +158,7 @@ services:
     entrypoint: ["/bin/sh", "/docker-entrypoint.d/celery_exporter_entrypoint.sh"]
 
   grafana:
-    image: grafana/grafana-enterprise:13.1
+    image: grafana/grafana-enterprise:13.2
     restart: always
     depends_on:
       - prometheus
@@ -169,7 +175,7 @@ services:
       - prod-net
 
   prometheus:
-    image: prom/prometheus:v3.13.2
+    image: prom/prometheus:v3.14.0
     restart: always
     volumes:
       - ./prometheus:/etc/prometheus
@@ -186,7 +192,7 @@ services:
       - "--web.enable-admin-api"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:9.5.2
+    image: docker.elastic.co/logstash/logstash:9.5.4
     restart: always
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
@@ -201,7 +207,7 @@ services:
       - logstash_elastic_host
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.4
     hostname: elasticsearch
     restart: always
     environment:
@@ -233,7 +239,7 @@ services:
           memory: "4G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:9.5.2
+    image: docker.elastic.co/kibana/kibana:9.5.4
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
@@ -247,7 +253,7 @@ services:
       - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
 
   selenium:
-    image: selenium/standalone-chromium:151.0
+    image: selenium/standalone-chromium:152.0
     ports:
       - 4444:4444
       - 7900:7900

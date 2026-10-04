@@ -24,6 +24,7 @@ class Command(BaseCommand):
     nastavuje na čas příslušné verze, aby pořadí odpovídalo skutečnosti.
 
     Příkaz je idempotentní — soubory, které už pro daný náhled historii mají, přeskočí.
+    Souborům bez vazby na historii se vazba založí, aby i jejich náhledy dostaly záznamy.
 
     Příklady použití::
 
@@ -70,12 +71,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("Uživatel ADMIN_USER nebyl nalezen, historii nelze zapsat."))
             return
 
-        qs = (
-            Soubor.objects.exclude(path__isnull=True)
-            .exclude(historie__isnull=True)
-            .select_related("vazba", "historie")
-            .order_by("pk")
-        )
+        qs = Soubor.objects.exclude(path__isnull=True).select_related("vazba", "historie").order_by("pk")
         if limit is not None:
             qs = qs[:limit]
 
@@ -98,9 +94,12 @@ class Command(BaseCommand):
                     continue
                 connector = FedoraRepositoryConnector(related_record, None)
                 for distribution in THUMB_DISTRIBUTIONS:
-                    if soubor.historie.historie_set.filter(
-                        typ_zmeny__in=(NAHRANI_DISTRIBUCE, UPDATE_DISTRIBUCE), poznamka=distribution
-                    ).exists():
+                    if (
+                        soubor.historie is not None
+                        and soubor.historie.historie_set.filter(
+                            typ_zmeny__in=(NAHRANI_DISTRIBUCE, UPDATE_DISTRIBUCE), poznamka=distribution
+                        ).exists()
+                    ):
                         skipped_count += 1
                         continue
                     versions = connector.get_historie_distribution(soubor.repository_uuid, distribution)
@@ -111,6 +110,10 @@ class Command(BaseCommand):
                         created_count += 1
                         if dry_run:
                             continue
+                        if soubor.historie is None:
+                            # Only the history link is added; the record metadata in Fedora stays as is.
+                            soubor.suppress_signal = True
+                            soubor.create_soubor_vazby()
                         # ``datum_zmeny`` má auto_now_add, čas verze se proto nastaví až po uložení.
                         record = Historie.objects.create(
                             typ_zmeny=NAHRANI_DISTRIBUCE if order == 0 else UPDATE_DISTRIBUCE,

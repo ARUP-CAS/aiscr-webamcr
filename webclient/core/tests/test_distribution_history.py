@@ -216,17 +216,20 @@ class SouborZaznamenejDistribuceTest(TestCase):
     """Testy pro ``Soubor.zaznamenej_distribuce`` — doplnění historie náhledů po uložení souboru."""
 
     def setUp(self):
-        """Připraví dokument se souborem a uživatele, kterému se historie připisuje."""
+        """Připraví dokument se souborem a administrátora, kterému se historie náhledů připisuje."""
         Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
         self.dokument = create_dokument_fixture(ident_cely="C-TX-000601")
         self.soubor = create_soubor_fixture(self.dokument, uuid="11111111-2222-3333-4444-555555555555")
-        self.uzivatel = User.objects.create_user(  # type: ignore[attr-defined]
+        self.admin = User.objects.create_user(  # type: ignore[attr-defined]
             email="nahledy@example.cz",
             password="pass",
             is_active=True,
             ident_cely="U-990601",
             organizace=self.dokument.organizace,
         )
+        admin_patcher = mock.patch.object(hesla_dynamicka, "ADMIN_USER", self.admin.pk)
+        admin_patcher.start()
+        self.addCleanup(admin_patcher.stop)
 
     def _history(self, distribution):
         """Vrátí záznamy historie daného náhledu.
@@ -238,33 +241,42 @@ class SouborZaznamenejDistribuceTest(TestCase):
 
     def test_new_thumbnails_are_recorded_as_uploads(self):
         """Nově vygenerované náhledy se zapíší jako ``DIST01`` pro každý kontejner zvlášť."""
-        self.soubor.zaznamenej_distribuce([("thumb", False), ("thumb-large", False)], self.uzivatel)
+        self.soubor.zaznamenej_distribuce([("thumb", False), ("thumb-large", False)])
 
         self.assertEqual([record.typ_zmeny for record in self._history("thumb")], [NAHRANI_DISTRIBUCE])
         self.assertEqual([record.typ_zmeny for record in self._history("thumb-large")], [NAHRANI_DISTRIBUCE])
 
     def test_overwritten_thumbnail_is_recorded_as_update(self):
         """Přepis existujícího náhledu se zapíše jako ``DIST11``."""
-        self.soubor.zaznamenej_distribuce([("thumb", True)], self.uzivatel)
+        self.soubor.zaznamenej_distribuce([("thumb", True)])
 
         self.assertEqual([record.typ_zmeny for record in self._history("thumb")], [UPDATE_DISTRIBUCE])
 
     def test_empty_input_writes_nothing(self):
         """Bez vygenerovaných náhledů nevznikne žádný záznam historie."""
-        self.soubor.zaznamenej_distribuce([], self.uzivatel)
+        self.soubor.zaznamenej_distribuce([])
 
         self.assertEqual(self.soubor.historie.historie_set.count(), 0)
 
+    def test_history_is_attributed_to_admin_user(self):
+        """Náhledy generuje systém, proto se změna vždy připíše ``ADMIN_USER`` (zadání #3527)."""
+        self.soubor.zaznamenej_distribuce([("thumb", False), ("thumb-large", True)])
+
+        self.assertEqual(
+            {record.uzivatel_id for record in self.soubor.historie.historie_set.all()},
+            {self.admin.pk},
+        )
+
     def test_organizace_snapshot_is_filled_from_the_user(self):
         """Zápis musí projít signálem ``pre_save``, který doplňuje snímek organizace."""
-        self.soubor.zaznamenej_distribuce([("thumb", False)], self.uzivatel)
+        self.soubor.zaznamenej_distribuce([("thumb", False)])
 
-        self.assertEqual(self._history("thumb")[0].organizace_snapshot, self.uzivatel.organizace)
+        self.assertEqual(self._history("thumb")[0].organizace_snapshot, self.admin.organizace)
 
     def test_failure_is_swallowed_so_upload_is_not_broken(self):
         """Selhání zápisu historie nesmí shodit nahrání souboru — jen se zaloguje."""
         with mock.patch("core.models.Historie.save", side_effect=RuntimeError("boom")):
-            self.soubor.zaznamenej_distribuce([("thumb", False)], self.uzivatel)
+            self.soubor.zaznamenej_distribuce([("thumb", False)])
 
         self.assertEqual(self._history("thumb"), [])
 
@@ -369,6 +381,26 @@ class BackfillThumbHistoryCommandTest(TestCase):
         self._run_command({"thumb": [{"datetime": BASE_TIME}]})
 
         self.assertEqual(soubor_bez_cesty.historie.historie_set.count(), 0)
+
+    def test_file_without_history_link_gets_one_and_is_backfilled(self):
+        """Soubor bez vazby na historii dostane vazbu a jeho náhledy se doplní jako u ostatních."""
+        Soubor.objects.filter(pk=self.soubor.pk).update(historie=None)
+
+        self._run_command({"thumb": [{"datetime": BASE_TIME}]})
+
+        self.soubor.refresh_from_db()
+        self.assertIsNotNone(self.soubor.historie)
+        self.assertEqual([record.typ_zmeny for record in self._thumb_history("thumb")], [NAHRANI_DISTRIBUCE])
+
+    def test_dry_run_does_not_create_history_link(self):
+        """Dry-run nesmí souboru bez vazby na historii vazbu založit."""
+        Soubor.objects.filter(pk=self.soubor.pk).update(historie=None)
+
+        output = self._run_command({"thumb": [{"datetime": BASE_TIME}]}, dry_run=True)
+
+        self.soubor.refresh_from_db()
+        self.assertIsNone(self.soubor.historie)
+        self.assertIn("Záznamů historie:   1", output)
 
     def test_missing_admin_user_aborts_without_writing(self):
         """Bez administrátorského uživatele příkaz skončí chybou a nic nezapíše."""

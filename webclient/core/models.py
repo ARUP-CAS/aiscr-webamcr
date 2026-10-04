@@ -1,6 +1,7 @@
 import datetime
 import io
 import logging
+import mimetypes
 import os
 import re
 import time
@@ -233,8 +234,11 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 opclasses=["text_ops"],
             ),
         ]
+        # "id" je tiebreaker: "nazev" není unikátní a PostgreSQL pořadí shodných klíčů negarantuje,
+        # což vede k nedeterministickému pořadí elementů <amcr:soubor> v exportovaném XML.
         ordering = [
             "nazev",
+            "id",
         ]
 
     def __init__(self, *args, **kwargs):
@@ -372,7 +376,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         ).save()
         logger.debug("core.models.soubor.zaznamenej_nahrani.finished", extra={"historie": hist})
 
-    def zaznamenej_distribuce(self, thumb_writes, user):
+    def zaznamenej_distribuce(self, thumb_writes):
         """
         Metoda pro zapsání vzniku nebo aktualizace náhledů souboru do historie.
 
@@ -382,17 +386,21 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         ``Soubor``, takže connector historii sám zapsat nemůže a vrací jen přehled zápisů
         (``RepositoryBinaryFile.thumb_writes``).
 
+        Změna se vždy připíše uživateli ``ADMIN_USER`` – stejně jako u distribucí nahraných importem
+        (zadání #3527), nikoli uživateli, který soubor nahrál; náhledy generuje systém.
+
         Zápis je best-effort — selhání se pouze zaloguje, protože ztráta záznamu v historii
         nesmí shodit nahrání souboru ani generování náhledů.
 
         :param thumb_writes: Seznam dvojic ``(nazev_nahledu, aktualizace)`` z ``save_thumbs()``.
-        :param user: Uživatel, kterému se změna v historii připíše.
         """
         from core.constants import NAHRANI_DISTRIBUCE, UPDATE_DISTRIBUCE
+        from heslar import hesla_dynamicka
 
         if not thumb_writes:
             return
         try:
+            admin_user = User.objects.get(pk=hesla_dynamicka.ADMIN_USER)
             if self.historie is None:
                 self.create_soubor_vazby()
             for distribution, updated in thumb_writes:
@@ -400,7 +408,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 # kterým se do záznamu doplňuje ``organizace_snapshot``.
                 Historie(
                     typ_zmeny=UPDATE_DISTRIBUCE if updated else NAHRANI_DISTRIBUCE,
-                    uzivatel=user,
+                    uzivatel=admin_user,
                     vazba=self.historie,
                     poznamka=distribution,
                 ).save()
@@ -1043,8 +1051,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         Vrátí obsah zvolené distribuce souboru jako HTTP odpověď.
 
         Distribuce má vlastní binární obsah, takže se ke stažení nabídne pod názvem odvozeným
-        z názvu souboru a distribuce (``scan.pdf`` + ``ocr/alto-xml`` → ``scan.pdf.ocr_alto-xml``).
-        Samotný ``nazev`` by u distribuce lhal — obsah je jiný formát než původní soubor.
+        z názvu souboru, distribuce a MIME typu uloženého ve Fedoře (``scan.pdf`` + ``ocr/alto-xml``
+        s ``application/xml`` → ``scan.pdf.ocr_alto-xml.xml``). Samotný ``nazev`` by u distribuce
+        lhal — obsah je jiný formát než původní soubor. Odpověď nese uložený MIME typ.
 
         :param distribution: Název distribuce; ``orig`` vrátí původní obsah souboru.
         :return: ``FileResponse`` s obsahem distribuce, nebo ``None``, pokud ji nelze načíst.
@@ -1060,9 +1069,36 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         rep_bin_file = connector.get_distribution(self.repository_uuid, distribution)
         if rep_bin_file is None:
             return None
-        return self._create_file_response(
-            rep_bin_file, filename="{}.{}".format(self.nazev, distribution.replace("/", "_"))
-        )
+        filename = "{}.{}".format(self.nazev, distribution.replace("/", "_"))
+        extension = self._distribution_file_extension(rep_bin_file.content_type)
+        if extension and not filename.lower().endswith(extension):
+            filename += extension
+        response = self._create_file_response(rep_bin_file, filename=filename)
+        if rep_bin_file.content_type:
+            response["Content-Type"] = rep_bin_file.content_type
+        return response
+
+    @staticmethod
+    def _distribution_file_extension(content_type) -> str | None:
+        """
+        Odvodí příponu staženého souboru distribuce z jejího MIME typu.
+
+        Strukturované typy, které ``mimetypes`` nezná (např. ``application/ld+json`` paradat nebo
+        ``application/alto+xml``), dostanou příponu podle syntaxe ze suffixu ``+json``/``+xml``.
+
+        :param content_type: Hodnota ``Content-Type`` uložená u distribuce ve Fedoře, i s parametry.
+        :return: Přípona včetně tečky (např. ``.xml``), nebo ``None``, pokud ji nelze určit.
+        """
+        if not content_type:
+            return None
+        mime = content_type.split(";")[0].strip().lower()
+        extension = mimetypes.guess_extension(mime)
+        if extension:
+            return extension
+        for suffix in ("json", "xml"):
+            if mime.endswith("+" + suffix):
+                return "." + suffix
+        return None
 
     def getMock(self):
         """
@@ -1146,6 +1182,8 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
     datum_odstavky = models.DateField(_("core.model.OdstavkaSystemu.datumOdstavky.label"))
     cas_odstavky = models.TimeField(_("core.model.OdstavkaSystemu.casOdstavky.label"))
     status = models.BooleanField(_("core.model.OdstavkaSystemu.status.label"), default=True)
+    text_cs = models.TextField(blank=True, default="", verbose_name=_("core.forms.OdstavkaSystemuForm.textCs.label"))
+    text_en = models.TextField(blank=True, default="", verbose_name=_("core.forms.OdstavkaSystemuForm.textEn.label"))
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
@@ -1421,22 +1459,24 @@ class Permissions(models.Model):
         spoluprace_edit_projekty = "spoluprace_edit_projekty", _(
             "core.models.permissions.actionChoices.spoluprace_edit_projekty"
         )
-        pian_import_new = "pian_import_new", "core.models.permissions.actionChoices.pian_import_new"
-        pian_import_change = "pian_import_change", "core.models.permissions.actionChoices.pian_import_change"
-        akce_dj_zakladni = "akce_dj_zakladni", "core.models.permissions.actionChoices.akce_dj_zakladni"
+        pian_import_new = "pian_import_new", _("core.models.permissions.actionChoices.pian_import_new")
+        pian_import_change = "pian_import_change", _("core.models.permissions.actionChoices.pian_import_change")
+        akce_dj_zakladni = "akce_dj_zakladni", _("core.models.permissions.actionChoices.akce_dj_zakladni")
         akce_pripojit_pian_mapa = (
             "akce_pripojit_pian_mapa",
-            "core.models.permissions.actionChoices.akce_pripojit_pian_mapa",
+            _("core.models.permissions.actionChoices.akce_pripojit_pian_mapa"),
         )
-        akce_pripojit_pian_id = "akce_pripojit_pian_id", "core.models.permissions.actionChoices.akce_pripojit_pian_id"
-        lokalita_dj_zakladni = "lokalita_dj_zakladni", "core.models.permissions.actionChoices.lokalita_dj_zakladni"
+        akce_pripojit_pian_id = "akce_pripojit_pian_id", _(
+            "core.models.permissions.actionChoices.akce_pripojit_pian_id"
+        )
+        lokalita_dj_zakladni = "lokalita_dj_zakladni", _("core.models.permissions.actionChoices.lokalita_dj_zakladni")
         lokalita_pripojit_pian_mapa = (
             "lokalita_pripojit_pian_mapa",
-            "core.models.permissions.actionChoices.lokalita_pripojit_pian_mapa",
+            _("core.models.permissions.actionChoices.lokalita_pripojit_pian_mapa"),
         )
         lokalita_pripojit_pian_id = (
             "lokalita_pripojit_pian_id",
-            "core.models.permissions.actionChoices.lokalita_pripojit_pian_id",
+            _("core.models.permissions.actionChoices.lokalita_pripojit_pian_id"),
         )
         dokumenty_tabulka_projekt = "dokumenty_tabulka_projekt", _(
             "core.models.permissions.actionChoices.dokumenty_tabulka_projekt"

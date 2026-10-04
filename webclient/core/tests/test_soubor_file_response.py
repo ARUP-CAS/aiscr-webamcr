@@ -16,13 +16,15 @@ NASTY_NAME = "zpráva o průzkumu.pdf"
 
 
 class _FakeBinaryFile:
-    """Minimální náhrada ``RepositoryBinaryFile`` — nese jen ``content``."""
+    """Minimální náhrada ``RepositoryBinaryFile`` — nese jen ``content`` a ``content_type``."""
 
-    def __init__(self, data=b"obsah"):
+    def __init__(self, data=b"obsah", content_type=None):
         """
         :param data: Binární obsah vrácený v odpovědi.
+        :param content_type: MIME typ uložený u obsahu ve Fedoře.
         """
         self.content = io.BytesIO(data)
+        self.content_type = content_type
 
 
 class SouborFileResponseTest(SimpleTestCase):
@@ -93,3 +95,37 @@ class SouborFileResponseTest(SimpleTestCase):
             response = soubor.get_distribution_response("ocr/alto-xml")
 
         self.assertEqual(response["Content-Disposition"], 'attachment; filename="scan.pdf.ocr_alto-xml"')
+
+    def _distribution_response(self, nazev, distribution, content_type):
+        """Vrátí odpověď ke stažení distribuce s mocknutým repozitářem.
+
+        :param nazev: Název souboru.
+        :param distribution: Název distribuce.
+        :param content_type: MIME typ uložený u distribuce ve Fedoře.
+        :return: ``FileResponse`` s obsahem distribuce.
+        """
+        soubor = self._soubor(nazev)
+        with mock.patch.object(Soubor, "repository_uuid", "uuid-1"), mock.patch.object(
+            Soubor, "vazba", mock.Mock(navazany_objekt=mock.Mock())
+        ), mock.patch("core.repository_connector.FedoraRepositoryConnector") as connector:
+            connector.return_value.get_distribution.return_value = _FakeBinaryFile(b"{}", content_type)
+            return soubor.get_distribution_response(distribution)
+
+    def test_distribution_name_gets_extension_from_stored_mimetype(self):
+        """Přípona staženého souboru se odvodí z MIME typu distribuce a odpověď ho nese."""
+        response = self._distribution_response("scan.pdf", "atr/json", "application/json")
+
+        self.assertEqual(response["Content-Disposition"], 'attachment; filename="scan.pdf.atr_json.json"')
+        self.assertEqual(response["Content-Type"], "application/json")
+
+    def test_structured_suffix_mimetype_gets_syntax_extension(self):
+        """Typ se suffixem ``+xml``/``+json``, který ``mimetypes`` nezná, dostane příponu podle syntaxe."""
+        response = self._distribution_response("scan.pdf", "ocr/alto-xml", "application/alto+xml; charset=utf-8")
+
+        self.assertEqual(response["Content-Disposition"], 'attachment; filename="scan.pdf.ocr_alto-xml.xml"')
+
+    def test_unknown_mimetype_keeps_name_without_extension(self):
+        """Neznámý MIME typ název nemění — přípona se nehádá."""
+        response = self._distribution_response("scan.pdf", "cva/raw", "application/x-amcr-unknown")
+
+        self.assertEqual(response["Content-Disposition"], 'attachment; filename="scan.pdf.cva_raw"')

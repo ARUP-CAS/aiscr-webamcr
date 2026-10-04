@@ -19,12 +19,13 @@ from django.test import SimpleTestCase
 
 
 class _Response:
-    """Náhrada za ``requests.Response`` s textem, obsahem a stavovým kódem."""
+    """Náhrada za ``requests.Response`` s textem, obsahem, hlavičkami a stavovým kódem."""
 
-    def __init__(self, text="", status_code=200, content=b""):
+    def __init__(self, text="", status_code=200, content=b"", headers=None):
         self.text = text
         self.status_code = status_code
         self.content = content
+        self.headers = headers or {}
 
 
 class _Record:
@@ -266,13 +267,16 @@ class UpdateDeleteDistributionTest(DistributionConnectorTestBase):
     def test_get_returns_content(self):
         """Načtená distribuce se vrátí jako wrapper s obsahem a URL."""
         with mock.patch.object(
-            self.connector, "_send_request", return_value=_Response(status_code=200, content=b"data")
+            self.connector,
+            "_send_request",
+            return_value=_Response(status_code=200, content=b"data", headers={"Content-Type": "application/xml"}),
         ) as send:
             result = self.connector.get_distribution(self.UUID, "ocr/alto-xml")
 
         self.assertEqual(send.call_args_list[0].args[1], FedoraRequestType.GET_DISTRIBUTION_CONTENT)
         self.assertEqual(result.url, f"{self.file_url}/ocr/alto-xml")
         self.assertEqual(result.content.read(), b"data")
+        self.assertEqual(result.content_type, "application/xml")
 
     def test_get_returns_none_when_missing(self):
         """Neexistující distribuce vrátí ``None`` místo výjimky."""

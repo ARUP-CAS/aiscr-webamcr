@@ -48,6 +48,7 @@ from core.message_constants import (
 )
 from core.models import AntivirusCheckResult, Soubor
 from core.repository_connector import (
+    FedoraBinaryFileAlreadyDeletedError,
     FedoraError,
     FedoraRepositoryConnector,
     FedoraTransaction,
@@ -60,6 +61,7 @@ from core.soubor_naming import (
     get_next_soubor_name,
     get_soubor_suffix,
 )
+from core.translation import format_message
 from core.utils import (
     SessionIdentifier,
     check_import_report_directory,
@@ -99,6 +101,7 @@ from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_noop
 from django.views import View
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
@@ -204,21 +207,31 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
     soubor.active_transaction = fedora_transaction
     soubor_pk = soubor.pk
     transaction_error = False
-    with transaction.atomic():
-        try:
+    # try je vně atomic bloku, aby výjimka z Fedory odrolovala i smazání v DB (savepoint);
+    # jinak by DB smazání zůstalo zapsané, zatímco Fedora transakce je už odvolaná.
+    try:
+        with transaction.atomic():
             soubor.delete()
             connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt, fedora_transaction)
             logger.debug("core.views.delete_file_DZ.deleted.delete_binary_file_completely", extra={"pk": soubor_pk})
             connector.delete_binary_file_completely(soubor)
             fedora_transaction.mark_transaction_as_closed()
             return JsonResponse({"success": True})
-        except FedoraUpdatedByAnotherTransactionError as err:
-            logger.debug(
-                "core.views.delete_file_DZ.another_transaction",
-                extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
-            )
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
-            transaction_error = True
+    except FedoraUpdatedByAnotherTransactionError as err:
+        logger.debug(
+            "core.views.delete_file_DZ.another_transaction",
+            extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
+        )
+        messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
+        transaction_error = True
+    except FedoraBinaryFileAlreadyDeletedError as err:
+        # Soubor mezitím smazal souběžný požadavek z jiného okna (issue #4174).
+        logger.info(
+            "core.views.delete_file_DZ.already_deleted",
+            extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
+        )
+        messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+        transaction_error = True
     if transaction_error is False and Soubor.objects.filter(pk=soubor_pk).exists():
         # Není jisté, zda je 404 jediná správná varianta.
         logger.debug("core.views.delete_file_DZ.not_deleted", extra={"soubor": soubor})
@@ -287,24 +300,33 @@ def delete_file(request, typ_vazby, ident_cely, pk):
         soubor.active_transaction = fedora_transaction
         soubor_pk = soubor.pk
         transaction_error = False
-        with transaction.atomic():
-            try:
+        # try je vně atomic bloku, aby výjimka z Fedory odrolovala i smazání v DB (savepoint).
+        try:
+            with transaction.atomic():
                 soubor.delete()
                 connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt, fedora_transaction)
                 logger.debug("core.views.delete_file.deleted.delete_binary_file", extra={"pk": soubor_pk})
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
                 connector.delete_binary_file(soubor)
-
-            except FedoraUpdatedByAnotherTransactionError as err:
-                logger.debug(
-                    "core.views.delete_file.another_transaction",
-                    extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
-                )
-                messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
-                transaction_error = True
-                if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                    fedora_transaction.rollback_transaction()
-                return JsonResponse({"success": False}, status=400)
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+        except FedoraUpdatedByAnotherTransactionError as err:
+            logger.debug(
+                "core.views.delete_file.another_transaction",
+                extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
+            )
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return JsonResponse({"success": False}, status=400)
+        except FedoraBinaryFileAlreadyDeletedError as err:
+            # Soubor mezitím smazal souběžný požadavek z jiného okna (issue #4174).
+            logger.info(
+                "core.views.delete_file.already_deleted",
+                extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
+            )
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            return JsonResponse({"success": False}, status=400)
         if transaction_error is False and Soubor.objects.filter(pk=soubor_pk).exists():
             # Není jisté, zda je 404 jediná správná varianta.
             logger.debug("core.views.delete_file.not_deleted", extra={"soubor": soubor})
@@ -899,12 +921,8 @@ class BasePostUploadView(View):
                 if duplikat.first().vazba.navazany_objekt is not None
                 else ""
             )
-            help_translation = _("core.views.post_upload.duplikat2.text1")
-            help_translation2 = _("core.views.post_upload.duplikat2.text2")
-            help_translation3 = _("core.views.post_upload.duplikat2.text3")
-            response_data["duplicate"] = (
-                f"{help_translation} {self.original_filename} {help_translation2} "
-                f"{parent_ident}. {help_translation3}",
+            response_data["duplicate"] = format_message(
+                gettext_noop("core.views.post_upload.duplikat2"), file=self.original_filename, ident=parent_ident
             )
         return response_data
 
@@ -920,10 +938,8 @@ class BasePostUploadView(View):
         :return: Upravený slovník odpovědi (beze změny, pokud k přejmenování nedošlo).
         """
         if renamed:
-            help_translation = _("core.views.post_upload.renamed.text1")
-            help_translation2 = _("core.views.post_upload.renamed.text2")
-            response_data["file_renamed"] = (
-                f"{help_translation} {self.original_filename} {help_translation2} " f"{new_name}",
+            response_data["file_renamed"] = format_message(
+                gettext_noop("core.views.post_upload.renamed"), file=self.original_filename, new_name=new_name
             )
         return response_data
 
@@ -1038,13 +1054,13 @@ class NewFileUploadView(BasePostUploadView):
         logger.debug("core.views.post_upload.saving", extra={"instance": soubor_instance})
         soubor_instance.save()
         if not request.user.is_authenticated:
-            historie_uzivatel = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
+            user_admin = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
+            soubor_instance.zaznamenej_nahrani(user_admin, self.original_filename)
         else:
-            historie_uzivatel = request.user
-        soubor_instance.zaznamenej_nahrani(historie_uzivatel, self.original_filename)
+            soubor_instance.zaznamenej_nahrani(request.user, self.original_filename)
         # Historie náhledů se zapisuje až tady — při volání ``save_binary_file`` výše ještě
         # záznam ``Soubor`` neexistoval, takže connector vrátil jen přehled zapsaných náhledů.
-        soubor_instance.zaznamenej_distribuce(rep_bin_file.thumb_writes, historie_uzivatel)
+        soubor_instance.zaznamenej_distribuce(rep_bin_file.thumb_writes)
         duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk").exclude(id=soubor_instance.id)
         response_data = self._append_duplicate_message(response_data, duplikat)
         response_data = self._append_rename_message(response_data, renamed, new_name)
@@ -1141,10 +1157,8 @@ class NewFileUploadView(BasePostUploadView):
                 return JsonResponse({"error": str(SOUBOR_NEJVYSSI_SUFFIX_OBSAZEN)}, status=403)
             return JsonResponse(
                 {
-                    "error": (
-                        _("core.views.post_upload.error.maximal_file_name_exceeded_part_1")
-                        + f" {ident_cely} "
-                        + _("core.views.post_upload.error.maximal_file_name_exceeded_part_2")
+                    "error": format_message(
+                        gettext_noop("core.views.post_upload.error.maximal_file_name_exceeded"), ident=ident_cely
                     )
                 },
                 status=403,
@@ -1268,7 +1282,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
             soubor_instance.binary_data = soubor_data
             soubor_instance.save()
             soubor_instance.zaznamenej_nahrani_nove_verze(request.user, original_name)
-            soubor_instance.zaznamenej_distribuce(rep_bin_file.thumb_writes, request.user)
+            soubor_instance.zaznamenej_distribuce(rep_bin_file.thumb_writes)
         if rep_bin_file is not None:
             duplikat = Soubor.objects.filter(sha_512=rep_bin_file.sha_512).exclude(id=soubor_instance.id).order_by("pk")
             response_data = {"filename": soubor_instance.nazev}
@@ -2474,7 +2488,7 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
             messages.add_message(self.request, messages.ERROR, str(e))
             return redirect(reverse("rosetta-file-list", args=[self.po_filter]))
         p = Path(self.po_file_path)
-        date_sufix = datetime.strftime(datetime.now(), "%d%m%Y%H%M")
+        date_sufix = datetime.strftime(datetime.now(), "%d%m%Y%H%M%S")
         p.rename(Path(p.parent, f"{p.stem}_backup_{date_sufix}{p.suffix}"))
         self.handle_uploaded_file(new_pofile)
         po_filepath, ext = os.path.splitext(self.po_file_path)

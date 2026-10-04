@@ -2360,42 +2360,57 @@ Třídy
       :return: Vedoucí uživatel navázaný na spolupráci.
 
 
-.. py:class:: UzivatelOpravneniMapper
+.. py:class:: UserRelationMapperMixin
 
-   Mapovač pro přiřazení skupinových oprávnění uživateli (model User).
+   Sdílí import relací uživatele parametrizovaných cílovým modelem a jeho lookupem.
 
    **Metody:**
 
    .. py:method:: get_mapping()
 
-      Vrací mapping. v aplikaci.
+      Vrátí mapování uživatele a související hodnoty relace.
 
-      :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
-
-      :return: Vrací proměnná ``field_mapping``.
+      :param include_primary_key: Zachovaný parametr jednotného rozhraní mapperů, mapování relace neovlivňuje.
+      :return: Slovník importních polí pro uživatele a cílovou relaci.
 
    .. py:method:: _get_filter_kwargs_primary_key()
 
-      Vrací filter kwargs primary key.
+      Vrátí podmínku pro dohledání uživatele podle jeho úplného identifikátoru.
 
-      :return: Načtená data odpovídající zadaným vstupům.
+   .. py:method:: _get_relation_error_identity()
+
+      Sestaví identifikátor řádku a název relace pro chybu integrity importu.
+
+   .. py:method:: _validate_supported_action()
+
+      Ověří, zda mapper podporuje požadovanou importní akci.
 
    .. py:method:: create_records()
 
-      Vytvoří records. v aplikaci.
+      Dohledá uživatele, který bude při importu relace uložen nebo upraven.
 
-      :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``create_records``.
-
-      :return: Vrací seznam.
+      :param performed_action: Požadovaná importní akce, která musí patřit mezi podporované akce mapperu.
+      :return: Jednoprvkový seznam s dohledaným uživatelem.
+      :raises ImportDataError: Pokud mapper nepodporuje požadovanou importní akci.
+      :raises ImportDataIntegrityError: Pokud importovaný uživatel neexistuje.
 
    .. py:method:: import_validation()
 
-      Ověří, že import oprávnění provede skutečnou změnu.
+      Ověří, že import relace uživatele způsobí skutečnou změnu.
 
-      :param performed_action: Požadovaná importní akce.
-      :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
-      :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
-      :return: Slovník s podmínkou pro dohledání cílového uživatele.
+      :param performed_action: Požadovaná importní akce, která určuje očekávaný stav relace.
+      :param args: Nepoužité poziční argumenty zachované kvůli jednotnému rozhraní mapperů.
+      :param kwargs: Nepoužité pojmenované argumenty zachované kvůli jednotnému rozhraní mapperů.
+      :return: Podmínka pro dohledání cílového uživatele.
+      :raises ImportDataError: Pokud mapper nepodporuje požadovanou importní akci.
+      :raises ImportDataIntegrityError: Pokud by import relace nezměnil její aktuální stav.
+
+
+.. py:class:: UzivatelOpravneniMapper
+
+   Mapovač pro přiřazení skupinových oprávnění uživateli (model User).
+
+   **Metody:**
 
    .. py:method:: get_record_history()
 
@@ -2700,9 +2715,15 @@ Třídy
       Duplicitní dvojice (soubor, distribuce) v jedné dávce se odmítá, protože by druhý řádek
       beze stopy přepsal první.
 
+      Při INSERTu se za existující považuje i distribuce, kterou zakládá tentýž import
+      (``pending_distributions``): distribuce se zapisují před paradaty v jedné Fedora transakci
+      záznamu, takže distribuce i její paradata mohou přijít v jedné dávce.
+
       :param performed_action: Prováděná importní akce.
       :param seen_in_batch: Množina klíčů ``(soubor_pk, distribuce)`` již zpracovaných řádků dávky;
           pokud je předána, detekuje duplicity v rámci jednoho importu.
+      :param pending_distributions: Množina klíčů ``(soubor_pk, distribuce)`` z ``distribution.csv``
+          téže dávky; při INSERTu se tyto distribuce považují za existující.
       :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní.
       :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní.
       :return: Slovník s primárním klíčem pro dohledání souboru.
@@ -2764,37 +2785,6 @@ Třídy
    Mapovač pro přiřazení typů notifikací uživateli (model User).
 
    **Metody:**
-
-   .. py:method:: get_mapping()
-
-      Vrací mapping. v aplikaci.
-
-      :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
-
-      :return: Vrací proměnná ``field_mapping``.
-
-   .. py:method:: _get_filter_kwargs_primary_key()
-
-      Vrací filter kwargs primary key.
-
-      :return: Načtená data odpovídající zadaným vstupům.
-
-   .. py:method:: create_records()
-
-      Vytvoří records. v aplikaci.
-
-      :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``create_records``.
-
-      :return: Vrací seznam.
-
-   .. py:method:: import_validation()
-
-      Ověří, že import notifikace provede skutečnou změnu.
-
-      :param performed_action: Požadovaná importní akce.
-      :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
-      :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
-      :return: Slovník s podmínkou pro dohledání cílového uživatele.
 
    .. py:method:: get_record_history()
 

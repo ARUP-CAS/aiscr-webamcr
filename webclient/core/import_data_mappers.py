@@ -22,6 +22,7 @@ from core.distribution_names import (
 from core.forms import ImportDataAdminForm
 from core.ident_cely import get_record_from_ident
 from core.models import Soubor, SouborVazby
+from core.translation import format_message
 from dj.models import DokumentacniJednotka
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
@@ -33,6 +34,7 @@ from django.db import models
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_noop
 from dokument.models import (
     Dokument,
     DokumentAutor,
@@ -165,18 +167,22 @@ class ImportDataIncorrectStructureError(ImportDataError):
         :param missing_columns: Parametr ``missing_columns`` se předává do volání ``__init__()``, ``join()``.
         :param excess_columns: Číselná hodnota ``excess_columns`` použitá při výpočtu nebo transformaci.
         """
-        message = "{} ".format(_("core_admin.ImportDataIncorrectStructureError.message.part_1"))
+        parts = [format_message(gettext_noop("core_admin.ImportDataIncorrectStructureError.message"))]
         if missing_columns:
-            message += "{}: {} ".format(
-                _("core_admin.ImportDataIncorrectStructureError.message.missing_columns"),
-                ", ".join(missing_columns),
+            parts.append(
+                format_message(
+                    gettext_noop("core_admin.ImportDataIncorrectStructureError.message.missing_columns"),
+                    columns=", ".join(missing_columns),
+                )
             )
         if excess_columns:
-            message += "{}: {} ".format(
-                _("core_admin.ImportDataIncorrectStructureError.message.excess_columns"),
-                ", ".join(excess_columns),
+            parts.append(
+                format_message(
+                    gettext_noop("core_admin.ImportDataIncorrectStructureError.message.excess_columns"),
+                    columns=", ".join(excess_columns),
+                )
             )
-        super().__init__(message)
+        super().__init__(" ".join(parts))
 
 
 class ImportDataIncorrectStructureContentObjectError(ImportDataError):
@@ -192,12 +198,10 @@ class ImportDataIncorrectStructureContentObjectError(ImportDataError):
         :param expected_colummns_options: Parametr ``expected_colummns_options`` se předává do volání ``__init__()``, ``join()``.
         """
         super().__init__(
-            "{} {}: {} {}: {} ".format(
-                _("core_admin.ImportDataIncorrectStructureContentObjectError.message.part_1"),
-                _("core_admin.ImportDataIncorrectStructureContentObjectError.message.columns"),
-                ", ".join(columns),
-                _("core_admin.ImportDataIncorrectStructureContentObjectError.message.expected_columns_options"),
-                "; ".join([str(op) for op in expected_colummns_options]),
+            format_message(
+                gettext_noop("core_admin.ImportDataIncorrectStructureContentObjectError.message"),
+                columns=", ".join(columns),
+                options="; ".join([str(op) for op in expected_colummns_options]),
             )
         )
 
@@ -218,22 +222,17 @@ class ImportDataMissingReferencedValueError(ImportDataError):
         self.missing_value_id = missing_value_id
         self.missing_model_name = missing_model_name
         self.missing_field_name = missing_field_name
-        message = "{} {} {} ".format(
-            _("core_admin.ImportDataMissingReferencedValueError.message.part_1"),
-            str(missing_value_id),
-            _("core_admin.ImportDataMissingReferencedValueError.message.part_2"),
+        if missing_model_name and missing_field_name:
+            message_id = gettext_noop("core_admin.ImportDataMissingReferencedValueError.message.model_field")
+        elif missing_model_name:
+            message_id = gettext_noop("core_admin.ImportDataMissingReferencedValueError.message.model")
+        elif missing_field_name:
+            message_id = gettext_noop("core_admin.ImportDataMissingReferencedValueError.message.field")
+        else:
+            message_id = gettext_noop("core_admin.ImportDataMissingReferencedValueError.message")
+        super().__init__(
+            format_message(message_id, value=missing_value_id, model=missing_model_name, field=missing_field_name)
         )
-        if missing_model_name:
-            message += "{} {} ".format(
-                str(missing_model_name),
-                _("core_admin.ImportDataMissingReferencedValueError.message.part_3"),
-            )
-        if missing_field_name:
-            message += "{} {}".format(
-                _("core_admin.ImportDataMissingReferencedValueError.message.part_4"),
-                str(missing_field_name),
-            )
-        super().__init__(message)
 
 
 class ImportDataIntegrityError(ImportDataError):
@@ -256,13 +255,11 @@ class ImportDataIntegrityError(ImportDataError):
         self.model_name = model_name
         self.performed_action = performed_action
         super().__init__(
-            "{} {} {} {} {} ({})".format(
-                _("core_admin.ImportDataIntegrityError.message.part_1"),
-                record_id,
-                _("core_admin.ImportDataIntegrityError.message.part_2"),
-                model_name,
-                _("core_admin.ImportDataIntegrityError.message.part_3"),
-                performed_action,
+            format_message(
+                gettext_noop("core_admin.ImportDataIntegrityError.message"),
+                record=record_id,
+                model=model_name,
+                action=performed_action,
             )
         )
 
@@ -285,12 +282,7 @@ class SouborImportIntegrityError(ImportDataError):
         self.vazba = vazba
         self.nazev = nazev
         super().__init__(
-            "{} {} {} {}".format(
-                _("core_admin.SouborImportIntegrityError.message.part_1"),
-                nazev,
-                _("core_admin.SouborImportIntegrityError.message.part_2"),
-                vazba,
-            )
+            format_message(gettext_noop("core_admin.SouborImportIntegrityError.message"), nazev=nazev, vazba=vazba)
         )
 
 
@@ -313,11 +305,8 @@ class ImportDataFileExtensionNotAllowedError(ImportDataError):
         self.nazev = nazev
         self.vazba = vazba
         super().__init__(
-            "{} {} {} {}".format(
-                _("core_admin.ImportDataFileExtensionNotAllowedError.message.part_1"),
-                nazev,
-                _("core_admin.ImportDataFileExtensionNotAllowedError.message.part_2"),
-                vazba,
+            format_message(
+                gettext_noop("core_admin.ImportDataFileExtensionNotAllowedError.message"), nazev=nazev, vazba=vazba
             )
         )
 
@@ -519,13 +508,11 @@ class ImportDataLimitChoicesError(ImportDataError):
         self.target_field_verbose_name = target_field_verbose_name
         self.import_field_verbose_name = import_field_verbose_name
         super().__init__(
-            "{} {} {} {} {} {}".format(
-                _("core_admin.ImportDataLimitChoicesError.message.part_1"),
-                record_id,
-                _("core_admin.ImportDataLimitChoicesError.message.part_2"),
-                target_field_verbose_name,
-                _("core_admin.ImportDataLimitChoicesError.message.part_3"),
-                import_field_verbose_name,
+            format_message(
+                gettext_noop("core_admin.ImportDataLimitChoicesError.message"),
+                record=record_id,
+                import_field=import_field_verbose_name,
+                heslar=target_field_verbose_name,
             )
         )
 
@@ -551,15 +538,12 @@ class ImportDataMissingHeslarValueError(ImportDataError):
         self.target_field_verbose_name = target_field_verbose_name
         self.import_field_verbose_name = import_field_verbose_name
         super().__init__(
-            "{} {} {} {} {} {} {} {}".format(
-                _("core_admin.ImportDataMissingHeslarValueError.message.part_1"),
-                str(value),
-                _("core_admin.ImportDataMissingHeslarValueError.message.part_2"),
-                str(field_name),
-                _("core_admin.ImportDataMissingHeslarValueError.message.part_4"),
-                str(target_field_verbose_name),
-                _("core_admin.ImportDataMissingHeslarValueError.message.part_5"),
-                str(import_field_verbose_name),
+            format_message(
+                gettext_noop("core_admin.ImportDataMissingHeslarValueError.message"),
+                value=value,
+                import_field=import_field_verbose_name,
+                heslar=target_field_verbose_name,
+                field_name=field_name,
             )
         )
 
@@ -575,10 +559,9 @@ class ImportDataUnsupportedFileError(ImportDataError):
         """
         self.file_name = file_name
         super().__init__(
-            "{} {} {}".format(
-                _("core_admin.ImportDataUnsupportedFileError.message.part_1"),
-                file_name,
-                _("core_admin.ImportDataUnsupportedFileError.message.part_2"),
+            format_message(
+                gettext_noop("core_admin.ImportDataUnsupportedFileError.message"),
+                file=file_name,
             )
         )
 
@@ -596,10 +579,9 @@ class ImportDataUnsupportedFilesError(ImportDataError):
         """
         self.file_names = file_names
         super().__init__(
-            "{} {} {}".format(
-                _("core_admin.ImportDataUnsupportedFilesError.message.part_1"),
-                ", ".join(file_names),
-                _("core_admin.ImportDataUnsupportedFilesError.message.part_2"),
+            format_message(
+                gettext_noop("core_admin.ImportDataUnsupportedFilesError.message"),
+                files=", ".join(file_names),
             )
         )
 
@@ -688,13 +670,11 @@ class ImportDataBatchOrderingError(ImportDataError):
         self.parent_ident_cely = parent_ident_cely
         self.field_name = field_name
         super().__init__(
-            "{} {} {} {} {} {}".format(
-                _("core_admin.ImportDataBatchOrderingError.message.part_1"),
-                child_ident_cely,
-                _("core_admin.ImportDataBatchOrderingError.message.part_2"),
-                field_name,
-                _("core_admin.ImportDataBatchOrderingError.message.part_3"),
-                parent_ident_cely,
+            format_message(
+                gettext_noop("core_admin.ImportDataBatchOrderingError.message"),
+                child=child_ident_cely,
+                field=field_name,
+                parent=parent_ident_cely,
             )
         )
 
@@ -1778,7 +1758,9 @@ class ImportModelMapper(ABC):
             return DateRangeImportField()
         if isinstance(model_field, models.ForeignKey):
             return None
-        raise ImportDataError(_("core.admin.ImportModelMapper.map_field.error") + ": " + field_name)
+        raise ImportDataError(
+            format_message(gettext_noop("core.admin.ImportModelMapper.map_field.error"), field=field_name)
+        )
 
     @classmethod
     def is_field_required(cls, field_name) -> bool:
@@ -2108,20 +2090,35 @@ class GeometryTransformMixin:
 
             :return: Vrací proměnná ``mapping_dict``.
         """
+        # CSV empty cells become either ``None`` or whitespace strings.  They mean "not supplied",
+        # never an instruction to persist an invalid blank coordinate-system value.
+        geom_system_supplied = bool(str(mapping_dict.get("geom_system") or "").strip())
+        if not geom_system_supplied:
+            mapping_dict.pop("geom_system", None)
+            # A blank geom_system means the row is not editing geometry at all — a full-export CSV
+            # always carries the geom/geom_sjtsk headers too, so a blank cell there in that case must
+            # mean "not touched", not "clear this", or every export-and-reimport would wipe geometry.
+            # When geom_system IS explicitly supplied, a blank geom/geom_sjtsk still means an explicit
+            # clear (see the elif branches below) — the user deliberately touched the geometry group.
+            for column in ("geom", "geom_sjtsk"):
+                if not str(mapping_dict.get(column) or "").strip():
+                    mapping_dict.pop(column, None)
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
-            geom_system = str(mapping_dict.get("geom_system") or "")
+            geom_system = str(mapping_dict.get("geom_system") or "").strip()
+            if "geom_system" in mapping_dict:
+                mapping_dict["geom_system"] = geom_system
             if geom_system == "4326" and mapping_dict.get("geom"):
-                converted, ok = GeometryTransformMixin._transform_geometry(
-                    mapping_dict["geom"], transform_geom_to_sjtsk
-                )
-                if ok:
-                    mapping_dict["geom_sjtsk"] = converted
+                converted, status = transform_geom_to_sjtsk(getattr(mapping_dict["geom"], "wkt", mapping_dict["geom"]))
+                if status != "OK":
+                    raise ImportDataError(f"Transformace geometrie do S-JTSK selhala: {status}")
+                mapping_dict["geom_sjtsk"] = converted
             elif geom_system == "5514" and mapping_dict.get("geom_sjtsk"):
-                converted, ok = GeometryTransformMixin._transform_geometry(
-                    mapping_dict["geom_sjtsk"], transform_geom_to_wgs84
+                converted, status = transform_geom_to_wgs84(
+                    getattr(mapping_dict["geom_sjtsk"], "wkt", mapping_dict["geom_sjtsk"])
                 )
-                if ok:
-                    mapping_dict["geom"] = converted
+                if status != "OK":
+                    raise ImportDataError(f"Transformace geometrie do WGS84 selhala: {status}")
+                mapping_dict["geom"] = converted
         elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
             has_any_geometry_column = any(column in mapping_dict for column in GeometryTransformMixin.GEOMETRY_COLUMNS)
             if not has_any_geometry_column:
@@ -2137,7 +2134,7 @@ class GeometryTransformMixin:
                 geom_system = getattr(db_record, "geom_system", None)
             else:
                 # No existing geometry row (e.g. Dokument without DokumentExtraData yet) — use the
-                # target model's own default, matching what create_records() will persist (r3703505252).
+                # target model's own default, matching what create_records() will persist.
                 try:
                     geom_system = self._geometry_target_model()._meta.get_field("geom_system").get_default()
                 except FieldDoesNotExist:
@@ -2228,14 +2225,25 @@ class MultipleClassImportModelMapper(ImportModelMapper):
             raise ImportDataIntegrityError(
                 self._get_filter_kwargs_primary_key(), self.model_class.__name__, performed_action
             )
-        elif (
-            performed_action
-            in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE)
-            and not self.model_class.objects.filter(ident_cely=self.value_dict["ident_cely"]).exists()
+        elif performed_action in (
+            ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+            ImportDataAdminForm.PERFORMED_ACTION_DELETE,
         ):
-            raise ImportDataIntegrityError(
-                self._get_filter_kwargs_primary_key(), self.model_class.__name__, performed_action
-            )
+            if not self.model_class.objects.filter(ident_cely=self.value_dict["ident_cely"]).exists():
+                raise ImportDataIntegrityError(
+                    self._get_filter_kwargs_primary_key(), self.model_class.__name__, performed_action
+                )
+            # class_0 (self.model_class) existing does not guarantee its class_1 companion row
+            # does too (e.g. an ArcheologickyZaznam whose typ_zaznamu does not match this mapper's
+            # specialization) — without this check, create_records()'s classes[1][1].objects.get()
+            # would raise an unguarded DoesNotExist instead of a per-row ImportDataIntegrityError.
+            class_1_alias, class_1_model, class_1_fk_field = self.classes[1]
+            if not class_1_model.objects.filter(
+                **{"{}__ident_cely".format(class_1_fk_field): self.value_dict["ident_cely"]}
+            ).exists():
+                raise ImportDataIntegrityError(
+                    self._get_filter_kwargs_primary_key(), class_1_model.__name__, performed_action
+                )
         return self._get_filter_kwargs_primary_key()
 
     def _get_filter_kwargs_primary_key(self):
@@ -3015,7 +3023,9 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
         if typ == Akce.TYP_AKCE_PROJEKTOVA and projekt_is_null:
             raise ImportDataError(_("core_admin.ImportDataError.message.akce_typ_check.typ_r_requires_filled_projekt"))
         if not self._is_import_null(typ) and typ not in (Akce.TYP_AKCE_SAMOSTATNA, Akce.TYP_AKCE_PROJEKTOVA):
-            raise ImportDataError(_("core_admin.ImportDataError.message.akce_typ_check.invalid_typ") + ": " + str(typ))
+            raise ImportDataError(
+                format_message(gettext_noop("core_admin.ImportDataError.message.akce_typ_check.invalid_typ"), typ=typ)
+            )
         return super().import_validation(performed_action, *args, **kwargs)
 
     @classmethod
@@ -4803,8 +4813,88 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
         return record.vedouci
 
 
+class UserRelationMapperMixin:
+    """Sdílí import relací uživatele parametrizovaných cílovým modelem a jeho lookupem."""
+
+    relation_field = None
+    relation_model = None
+    relation_lookup_field = None
+    user_relation_accessor = None
+    relation_error_label = None
+
+    def get_mapping(self, include_primary_key=False):
+        """Vrátí mapování uživatele a související hodnoty relace.
+
+        :param include_primary_key: Zachovaný parametr jednotného rozhraní mapperů, mapování relace neovlivňuje.
+        :return: Slovník importních polí pro uživatele a cílovou relaci.
+        """
+        return {
+            "uzivatel": LookupImportField(User),
+            self.relation_field: LookupImportField(self.relation_model, self.relation_lookup_field),
+        }
+
+    def _get_filter_kwargs_primary_key(self) -> dict:
+        """Vrátí podmínku pro dohledání uživatele podle jeho úplného identifikátoru."""
+        return {"ident_cely": self.value_dict["uzivatel"]}
+
+    def _get_relation_error_identity(self) -> tuple[dict, str]:
+        """Sestaví identifikátor řádku a název relace pro chybu integrity importu."""
+        return {
+            "uzivatel": self.value_dict["uzivatel"],
+            self.relation_field: self.value_dict[self.relation_field],
+        }, self.relation_error_label
+
+    def _validate_supported_action(self, performed_action) -> None:
+        """Ověří, zda mapper podporuje požadovanou importní akci."""
+        if performed_action not in self.supported_actions:
+            raise ImportDataError(
+                _("core_admin.ImportDataError.message.invalid_performed_action") + ": " + str(performed_action)
+            )
+
+    def create_records(self, performed_action) -> list:
+        """Dohledá uživatele, který bude při importu relace uložen nebo upraven.
+
+        :param performed_action: Požadovaná importní akce, která musí patřit mezi podporované akce mapperu.
+        :return: Jednoprvkový seznam s dohledaným uživatelem.
+        :raises ImportDataError: Pokud mapper nepodporuje požadovanou importní akci.
+        :raises ImportDataIntegrityError: Pokud importovaný uživatel neexistuje.
+        """
+        self._validate_supported_action(performed_action)
+        try:
+            return [User.objects.get(**self._get_filter_kwargs_primary_key())]
+        except User.DoesNotExist:
+            record_id, label = self._get_relation_error_identity()
+            raise ImportDataIntegrityError(record_id, label, performed_action)
+
+    def import_validation(self, performed_action, *args, **kwargs) -> dict:
+        """Ověří, že import relace uživatele způsobí skutečnou změnu.
+
+        :param performed_action: Požadovaná importní akce, která určuje očekávaný stav relace.
+        :param args: Nepoužité poziční argumenty zachované kvůli jednotnému rozhraní mapperů.
+        :param kwargs: Nepoužité pojmenované argumenty zachované kvůli jednotnému rozhraní mapperů.
+        :return: Podmínka pro dohledání cílového uživatele.
+        :raises ImportDataError: Pokud mapper nepodporuje požadovanou importní akci.
+        :raises ImportDataIntegrityError: Pokud by import relace nezměnil její aktuální stav.
+        """
+        self._validate_supported_action(performed_action)
+        try:
+            user = User.objects.get(**self._get_filter_kwargs_primary_key())
+            relation = self.relation_model.objects.get(
+                **{self.relation_lookup_field: self.value_dict[self.relation_field]}
+            )
+            relation_exists = getattr(user, self.user_relation_accessor).filter(pk=relation.pk).exists()
+        except (User.DoesNotExist, self.relation_model.DoesNotExist):
+            relation_exists = False
+        record_id, label = self._get_relation_error_identity()
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and relation_exists:
+            raise ImportDataIntegrityError(record_id, label, performed_action)
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE and not relation_exists:
+            raise ImportDataIntegrityError(record_id, label, performed_action)
+        return self._get_filter_kwargs_primary_key()
+
+
 @ImportModelMapper.register("uzivatele_opravneni")
-class UzivatelOpravneniMapper(ImportModelMapper):
+class UzivatelOpravneniMapper(UserRelationMapperMixin, ImportModelMapper):
     """Mapovač pro přiřazení skupinových oprávnění uživateli (model User)."""
 
     model_class = User
@@ -4815,65 +4905,11 @@ class UzivatelOpravneniMapper(ImportModelMapper):
         ImportDataAdminForm.PERFORMED_ACTION_DELETE,
     )
     column_to_field_mapping = {"uzivatel": "ident_cely"}
-
-    def get_mapping(cls, include_primary_key=False):
-        """
-        Vrací mapping. v aplikaci.
-
-        :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
-
-            :return: Vrací proměnná ``field_mapping``.
-        """
-        field_mapping = {"uzivatel": LookupImportField(User), "skupina": LookupImportField(Group, "name")}
-        return field_mapping
-
-    def _get_filter_kwargs_primary_key(self) -> dict | None:
-        """
-        Vrací filter kwargs primary key.
-
-        :return: Načtená data odpovídající zadaným vstupům.
-        """
-        return {"ident_cely": self.value_dict["uzivatel"]}
-
-    def create_records(self, performed_action):
-        """
-        Vytvoří records. v aplikaci.
-
-        :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``create_records``.
-
-            :return: Vrací seznam.
-        """
-        if performed_action not in self.supported_actions:
-            raise ImportDataError(
-                _("core_admin.ImportDataError.message.invalid_performed_action") + ": " + str(performed_action)
-            )
-        return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
-
-    def import_validation(self, performed_action, *args, **kwargs):
-        """
-        Ověří, že import oprávnění provede skutečnou změnu.
-
-        :param performed_action: Požadovaná importní akce.
-        :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
-        :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
-        :return: Slovník s podmínkou pro dohledání cílového uživatele.
-        """
-        if performed_action not in self.supported_actions:
-            raise ImportDataError(
-                _("core_admin.ImportDataError.message.invalid_performed_action") + ": " + str(performed_action)
-            )
-        try:
-            user = User.objects.get(ident_cely=self.value_dict["uzivatel"])
-            group = Group.objects.get(name=self.value_dict["skupina"])
-            relation_exists = user.groups.filter(pk=group.pk).exists()
-        except (User.DoesNotExist, Group.DoesNotExist):
-            relation_exists = False
-        record_id = {"uzivatel": self.value_dict["uzivatel"], "skupina": self.value_dict["skupina"]}
-        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and relation_exists:
-            raise ImportDataIntegrityError(record_id, "User.groups", performed_action)
-        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE and not relation_exists:
-            raise ImportDataIntegrityError(record_id, "User.groups", performed_action)
-        return self._get_filter_kwargs_primary_key()
+    relation_field = "skupina"
+    relation_model = Group
+    relation_lookup_field = "name"
+    user_relation_accessor = "groups"
+    relation_error_label = "User.groups"
 
     @staticmethod
     def get_record_history(record: User):
@@ -5340,7 +5376,14 @@ class ParadataMapper(DistribuceMapper):
     KEY_COLUMN = "path"
     PATH_COLUMN = "path"
 
-    def import_validation(self, performed_action, *args, seen_in_batch: set | None = None, **kwargs):
+    def import_validation(
+        self,
+        performed_action,
+        *args,
+        seen_in_batch: set | None = None,
+        pending_distributions: set | None = None,
+        **kwargs,
+    ):
         """
         Ověří vstup pro import paradat.
 
@@ -5354,9 +5397,15 @@ class ParadataMapper(DistribuceMapper):
         Duplicitní dvojice (soubor, distribuce) v jedné dávce se odmítá, protože by druhý řádek
         beze stopy přepsal první.
 
+        Při INSERTu se za existující považuje i distribuce, kterou zakládá tentýž import
+        (``pending_distributions``): distribuce se zapisují před paradaty v jedné Fedora transakci
+        záznamu, takže distribuce i její paradata mohou přijít v jedné dávce.
+
         :param performed_action: Prováděná importní akce.
         :param seen_in_batch: Množina klíčů ``(soubor_pk, distribuce)`` již zpracovaných řádků dávky;
             pokud je předána, detekuje duplicity v rámci jednoho importu.
+        :param pending_distributions: Množina klíčů ``(soubor_pk, distribuce)`` z ``distribution.csv``
+            téže dávky; při INSERTu se tyto distribuce považují za existující.
         :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní.
         :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní.
         :return: Slovník s primárním klíčem pro dohledání souboru.
@@ -5381,7 +5430,11 @@ class ParadataMapper(DistribuceMapper):
         if performed_action != ImportDataAdminForm.PERFORMED_ACTION_DELETE:
             self._validate_import_filename()
         soubor = self._get_soubor(path, self.PATH_COLUMN)
-        if not self.distribution_exists(soubor, distribution):
+        inserted_in_batch = performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and (
+            soubor.pk,
+            distribution,
+        ) in (pending_distributions or ())
+        if not inserted_in_batch and not self.distribution_exists(soubor, distribution):
             raise DistribuceImportIntegrityError(path, distribution, performed_action)
         paradata_exists = self.paradata_exists(soubor, distribution)
         self._raise_if_existence_mismatched(path, distribution, performed_action, paradata_exists)
@@ -5453,7 +5506,7 @@ class ParadataMapper(DistribuceMapper):
 
 
 @ImportModelMapper.register("uzivatele_notifikace")
-class UzivatelNotifikaceMapper(ImportModelMapper):
+class UzivatelNotifikaceMapper(UserRelationMapperMixin, ImportModelMapper):
     """Mapovač pro přiřazení typů notifikací uživateli (model User)."""
 
     model_class = User
@@ -5464,65 +5517,11 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
         ImportDataAdminForm.PERFORMED_ACTION_DELETE,
     )
     column_to_field_mapping = {"uzivatel": "ident_cely"}
-
-    def get_mapping(cls, include_primary_key=False):
-        """
-        Vrací mapping. v aplikaci.
-
-        :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
-
-            :return: Vrací proměnná ``field_mapping``.
-        """
-        field_mapping = {"uzivatel": LookupImportField(User), "notifikace": LookupImportField(UserNotificationType)}
-        return field_mapping
-
-    def _get_filter_kwargs_primary_key(self) -> dict | None:
-        """
-        Vrací filter kwargs primary key.
-
-        :return: Načtená data odpovídající zadaným vstupům.
-        """
-        return {"ident_cely": self.value_dict["uzivatel"]}
-
-    def create_records(self, performed_action):
-        """
-        Vytvoří records. v aplikaci.
-
-        :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``create_records``.
-
-            :return: Vrací seznam.
-        """
-        if performed_action not in self.supported_actions:
-            raise ImportDataError(
-                _("core_admin.ImportDataError.message.invalid_performed_action") + ": " + str(performed_action)
-            )
-        return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
-
-    def import_validation(self, performed_action, *args, **kwargs):
-        """
-        Ověří, že import notifikace provede skutečnou změnu.
-
-        :param performed_action: Požadovaná importní akce.
-        :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
-        :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
-        :return: Slovník s podmínkou pro dohledání cílového uživatele.
-        """
-        if performed_action not in self.supported_actions:
-            raise ImportDataError(
-                _("core_admin.ImportDataError.message.invalid_performed_action") + ": " + str(performed_action)
-            )
-        try:
-            user = User.objects.get(ident_cely=self.value_dict["uzivatel"])
-            notification_type = UserNotificationType.objects.get(ident_cely=self.value_dict["notifikace"])
-            relation_exists = user.notification_types.filter(pk=notification_type.pk).exists()
-        except (User.DoesNotExist, UserNotificationType.DoesNotExist):
-            relation_exists = False
-        record_id = {"uzivatel": self.value_dict["uzivatel"], "notifikace": self.value_dict["notifikace"]}
-        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and relation_exists:
-            raise ImportDataIntegrityError(record_id, "User.notification_types", performed_action)
-        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE and not relation_exists:
-            raise ImportDataIntegrityError(record_id, "User.notification_types", performed_action)
-        return self._get_filter_kwargs_primary_key()
+    relation_field = "notifikace"
+    relation_model = UserNotificationType
+    relation_lookup_field = "ident_cely"
+    user_relation_accessor = "notification_types"
+    relation_error_label = "User.notification_types"
 
     @staticmethod
     def get_record_history(record: User):

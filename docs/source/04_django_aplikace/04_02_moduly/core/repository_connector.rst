@@ -33,6 +33,14 @@ Třídy
    Implementuje komponentu ``FedoraUpdatedByAnotherTransactionError`` v rámci aplikace.
 
 
+.. py:class:: FedoraBinaryFileAlreadyDeletedError
+
+   Mazaný binární soubor ve Fedoře už neexistuje, typicky proto, že ho mezitím smazal souběžný požadavek.
+
+   Vyvolá ji ``_send_request`` u požadavků na smazání binárního souboru, pokud Fedora odpoví
+   chybou a následný ověřovací dotaz mimo transakci potvrdí, že zdroj vrací 404 nebo 410.
+
+
 .. py:class:: IdentChangeFedoraError
 
    Implementuje komponentu ``IdentChangeFedoraError`` v rámci aplikace.
@@ -212,6 +220,19 @@ Třídy
       :param request_type: Typ požadavku určující, zda se použije admin nebo běžný účet.
       :return: Session aktuálního vlákna pro danou identitu.
 
+   .. py:method:: _is_resource_gone()
+
+      Ověří mimo transakci, zda zdroj na ``url`` ve Fedoře už neexistuje.
+
+      Chybová odpověď na smazání binárního souboru sama nerozliší, zda soubor mezitím smazal
+      souběžný požadavek, nebo jde o skutečnou chybu (autentizace, konfigurace, výpadek); v hlášeném
+      případě navíc přišla 403 z Tomcatu, ne odpověď Fedory. Proto se stav ověří samostatným GET
+      bez hlavičky ``Atomic-ID`` (transakce už je v tu chvíli odvolaná).
+
+      :param url: URL mazaného binárního souboru.
+      :return: ``True``, pokud Fedora na zdroj vrátí 404 nebo 410; jinak ``False``, včetně
+          selhání samotného dotazu.
+
    .. py:method:: _send_request()
 
       Odešle request.
@@ -223,7 +244,9 @@ Třídy
       :return: Textová reprezentace UID transakce.
 
       :raises FedoraUpdatedByAnotherTransactionError: Vyvolá se při splnění podmínky ``response.status_code == 409``.
-      :raises FedoraError: Vyvolá se při splnění podmínky ``response.status_code == 409``.
+      :raises FedoraBinaryFileAlreadyDeletedError: Vyvolá se, pokud smazání binárního souboru skončí
+              chybou a ``_is_resource_gone`` potvrdí, že soubor už ve Fedoře není.
+      :raises FedoraError: Vyvolá se při jiné chybové odpovědi Fedory.
 
    .. py:method:: _create_container()
 
@@ -358,6 +381,9 @@ Třídy
       :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
       :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
       :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
+      :param source_thumbs: Volitelný slovník ``{True: bytes|None, False: bytes|None}`` s již existujícím
+          obsahem náhledů (velký/malý). Pokud je pro danou velikost k dispozici, náhled se nahraje přímo
+          místo přegenerování z ``file`` (např. při migraci souboru na nový identifikátor).
       :return: Seznam dvojic ``(nazev_nahledu, aktualizace)``; ``aktualizace`` je ``True``,
           pokud šlo o přepis existujícího náhledu. Náhledy, které se nepodařilo vygenerovat,
           v seznamu nejsou.
@@ -479,7 +505,8 @@ Třídy
       :param uuid: UUID kontejneru souboru.
       :param path: Relativní cesta pod kontejnerem souboru.
       :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
-      :return: Wrapper nad načteným obsahem, nebo ``None``, pokud kontejner neexistuje.
+      :return: Wrapper nad načteným obsahem s vyplněným ``content_type`` (MIME typ uložený ve Fedoře),
+          nebo ``None``, pokud kontejner neexistuje.
 
    .. py:method:: save_distribution()
 

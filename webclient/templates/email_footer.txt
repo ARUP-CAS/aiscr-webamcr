@@ -1,0 +1,3 @@
+{% load i18n %}{% load template_tags %}------------------------------{% if html %}<br>{% endif %}
+{% trans "templates.emailFooter.automatic" %}{% if html %}<br>{% endif %}
+{% trans "templates.emailFooter.sentFrom" %}: {% get_server_domain %}

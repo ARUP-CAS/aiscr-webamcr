@@ -67,6 +67,8 @@ class RunDataImportSamostatnyNalezTest(RunDataImportMapperTestBase):
             size_mb=0.001,
             sha_512="sha",
             url_without_domain="/fedora/import-test.txt",
+            # Mirrors RepositoryBinaryFile: thumbnails written alongside the content (#3527).
+            thumb_writes=[],
         )
         connector = MagicMock()
         connector.save_binary_file.return_value = binary_result

@@ -168,7 +168,7 @@
   </script>
   <script>
       jQuery(function ($) {
-          $('#djEditForm').bind('submit', function () {
+          $('#djEditForm').on('submit', function () {
               $(this).find('#pian_select').find(':input').prop('disabled', false);
           });
       });

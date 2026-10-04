@@ -181,6 +181,34 @@ class ParadataMapperValidationTest(TestCase):
                 {"path": self.soubor.path},
             )
 
+    def test_insert_accepts_distribution_added_by_the_same_batch(self):
+        """INSERT paradat projde, i když distribuci ve Fedoře teprve zakládá tentýž import."""
+        pending = {(self.soubor.pk, "ocr/alto-xml")}
+        with self._fedora(distribution_exists=False):
+            result = ParadataMapper(self._row(distribution="ocr/alto-xml")).import_validation(
+                INSERT, pending_distributions=pending
+            )
+
+        self.assertEqual(result, {"path": self.soubor.path})
+
+    def test_pending_distribution_of_other_file_is_not_accepted(self):
+        """Distribuce zakládaná dávkou pro jiný soubor existenci cílové distribuce nenahradí."""
+        pending = {(self.soubor.pk + 1, "ocr/alto-xml")}
+        with self._fedora(distribution_exists=False):
+            with self.assertRaises(DistribuceImportIntegrityError):
+                ParadataMapper(self._row(distribution="ocr/alto-xml")).import_validation(
+                    INSERT, pending_distributions=pending
+                )
+
+    def test_pending_distribution_does_not_apply_to_update(self):
+        """UPDATE paradat vyžaduje distribuci, která ve Fedoře už existuje."""
+        pending = {(self.soubor.pk, "ocr/alto-xml")}
+        with self._fedora(distribution_exists=False, paradata_exists=True):
+            with self.assertRaises(DistribuceImportIntegrityError):
+                ParadataMapper(self._row(distribution="ocr/alto-xml")).import_validation(
+                    UPDATE, pending_distributions=pending
+                )
+
     def test_insert_passes_when_paradata_missing(self):
         """INSERT projde, pokud paradata dané distribuce ve Fedoře ještě nejsou."""
         with self._fedora(distribution_exists=True, paradata_exists=False):
