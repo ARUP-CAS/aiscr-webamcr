@@ -13,6 +13,7 @@ from core.forms import ImportDataAdminForm
 from core.import_data_mappers import (
     DistribuceImportIntegrityError,
     DistribuceMissingRepositoryUuidError,
+    ImportDataDistributionPathConflictError,
     ImportDataError,
     ImportDataIncorrectStructureError,
     ImportDataInvalidDistributionError,
@@ -128,6 +129,12 @@ class ParadataMapperValidationTest(TestCase):
         """Vytvoří dokument a soubor s cestou do Fedory."""
         cls.dokument = create_dokument_fixture(ident_cely="C-TX-PARA-001")
         cls.soubor = create_soubor_fixture(cls.dokument)
+
+    def setUp(self):
+        """Nahradí kontrolu kolize cesty paradat se stavem Fedory odpovědí „bez konfliktu“."""
+        patcher = patch.object(FedoraRepositoryConnector, "find_paradata_path_conflict", return_value=None)
+        self.path_conflict_mock = patcher.start()
+        self.addCleanup(patcher.stop)
 
     def _row(self, **overrides):
         """Sestaví řádek importu ukazující na testovací soubor."""
@@ -297,6 +304,24 @@ class ParadataMapperValidationTest(TestCase):
             ParadataMapper(self._row(distribution="thumb")).import_validation(INSERT, seen_in_batch=seen)
 
         self.assertEqual(len(seen), 2)
+
+    def test_insert_rejects_path_conflicting_with_fedora(self):
+        """INSERT odmítne paradata, jejichž cesta pod ``paradata/`` koliduje se stavem Fedory."""
+        self.path_conflict_mock.return_value = "paradata/ocr"
+
+        with self._fedora(distribution_exists=True, paradata_exists=False):
+            with self.assertRaises(ImportDataDistributionPathConflictError) as ctx:
+                ParadataMapper(self._row(distribution="ocr/alto-xml")).import_validation(INSERT)
+
+        self.assertEqual(ctx.exception.conflicting_path, "paradata/ocr")
+        self.path_conflict_mock.assert_called_once_with(self.soubor.repository_uuid, "ocr/alto-xml")
+
+    def test_delete_skips_path_conflict_check(self):
+        """DELETE novou cestu nezakládá, takže se kolize cesty neověřuje."""
+        with self._fedora(distribution_exists=True, paradata_exists=True):
+            ParadataMapper({"path": self.soubor.path, "distribution": "orig"}).import_validation(DELETE)
+
+        self.path_conflict_mock.assert_not_called()
 
 
 class ParadataMapperCreateRecordsTest(TestCase):

@@ -2009,6 +2009,10 @@ def run_data_import(job_id, user_id, lock_token):
                             typ_zmeny = UPDATE_DISTRIBUCE
                         # Paradata leave no trace in the database — no history, no metadata
                         # refresh — while distributions are recorded in the file history.
+                        if not row["is_paradata"] and soubor.historie is None:
+                            # Older files may lack a history link; the record metadata is refreshed below.
+                            soubor.suppress_signal = True
+                            soubor.create_soubor_vazby()
                         row["history_record"] = (
                             None
                             if row["is_paradata"]

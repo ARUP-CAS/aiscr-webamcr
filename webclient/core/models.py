@@ -17,7 +17,7 @@ from core.constants import ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_BADATEL_ID
 from core.distribution_names import IMPLICIT_DISTRIBUTION_NAMES, ORIGINAL_DISTRIBUTION_NAME
 from django.conf import settings
 from django.contrib.auth.models import Group
-from django.db import models
+from django.db import models, transaction
 from django.forms import ValidationError
 from django.http import FileResponse
 from django.urls import reverse
@@ -390,7 +390,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         (zadání #3527), nikoli uživateli, který soubor nahrál; náhledy generuje systém.
 
         Zápis je best-effort — selhání se pouze zaloguje, protože ztráta záznamu v historii
-        nesmí shodit nahrání souboru ani generování náhledů.
+        nesmí shodit nahrání souboru ani generování náhledů. Probíhá ve vlastním savepointu
+        (``transaction.atomic()``): volající často běží v otevřené databázové transakci a zachycená
+        databázová chyba bez savepointu by ji poškodila, takže by selhal až další dotaz volajícího.
 
         :param thumb_writes: Seznam dvojic ``(nazev_nahledu, aktualizace)`` z ``save_thumbs()``.
         """
@@ -399,24 +401,29 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
         if not thumb_writes:
             return
+        historie_id_before = self.historie_id
         try:
-            admin_user = User.objects.get(pk=hesla_dynamicka.ADMIN_USER)
-            if self.historie is None:
-                self.create_soubor_vazby()
-            for distribution, updated in thumb_writes:
-                # Ukládá se po jednom, ne přes ``bulk_create`` — ten nespouští ``pre_save``,
-                # kterým se do záznamu doplňuje ``organizace_snapshot``.
-                Historie(
-                    typ_zmeny=UPDATE_DISTRIBUCE if updated else NAHRANI_DISTRIBUCE,
-                    uzivatel=admin_user,
-                    vazba=self.historie,
-                    poznamka=distribution,
-                ).save()
+            with transaction.atomic():
+                admin_user = User.objects.get(pk=hesla_dynamicka.ADMIN_USER)
+                if self.historie is None:
+                    self.create_soubor_vazby()
+                for distribution, updated in thumb_writes:
+                    # Ukládá se po jednom, ne přes ``bulk_create`` — ten nespouští ``pre_save``,
+                    # kterým se do záznamu doplňuje ``organizace_snapshot``.
+                    Historie(
+                        typ_zmeny=UPDATE_DISTRIBUCE if updated else NAHRANI_DISTRIBUCE,
+                        uzivatel=admin_user,
+                        vazba=self.historie,
+                        poznamka=distribution,
+                    ).save()
             logger.debug(
                 "core.models.soubor.zaznamenej_distribuce.finished",
                 extra={"soubor": self.pk, "distribuce": thumb_writes},
             )
         except Exception as err:
+            if self.historie_id != historie_id_before:
+                # The savepoint rolled back the history link created above; drop it from memory too.
+                self.historie = None
             logger.warning(
                 "core.models.soubor.zaznamenej_distribuce.failed",
                 extra={"soubor": self.pk, "distribuce": thumb_writes, "error": err},

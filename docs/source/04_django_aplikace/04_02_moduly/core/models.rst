@@ -130,7 +130,9 @@ Třídy
       (zadání #3527), nikoli uživateli, který soubor nahrál; náhledy generuje systém.
 
       Zápis je best-effort — selhání se pouze zaloguje, protože ztráta záznamu v historii
-      nesmí shodit nahrání souboru ani generování náhledů.
+      nesmí shodit nahrání souboru ani generování náhledů. Probíhá ve vlastním savepointu
+      (``transaction.atomic()``): volající často běží v otevřené databázové transakci a zachycená
+      databázová chyba bez savepointu by ji poškodila, takže by selhal až další dotaz volajícího.
 
       :param thumb_writes: Seznam dvojic ``(nazev_nahledu, aktualizace)`` z ``save_thumbs()``.
 

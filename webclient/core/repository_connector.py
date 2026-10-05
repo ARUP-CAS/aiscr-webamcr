@@ -2151,6 +2151,72 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         # už znovu validovat nesmí, protože ``paradata`` je vyhrazený prefix.
         return self._container_exists(uuid, self._get_paradata_path(distribution), ident_cely)
 
+    def find_distribution_path_conflict(self, uuid, distribution, ident_cely=None) -> Optional[str]:
+        """
+        Najde ve Fedoře zdroj, který by znemožnil založit distribuci na zadané cestě.
+
+        Kontrola dávky (``find_distribution_prefix_collisions``) porovnává jen názvy jednoho CSV;
+        tato metoda doplňuje stav, který už ve Fedoře je. Viz ``_find_path_conflict``.
+
+        :param uuid: UUID kontejneru souboru.
+        :param distribution: Název zakládané distribuce, např. ``ocr/alto-xml``.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: Cesta konfliktního zdroje pod souborem, nebo ``None``, pokud konflikt není.
+        :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+        :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+        """
+        return self._find_path_conflict(uuid, self._normalize_distribution_name(distribution), ident_cely)
+
+    def find_paradata_path_conflict(self, uuid, distribution, ident_cely=None) -> Optional[str]:
+        """
+        Najde ve Fedoře zdroj, který by znemožnil založit paradata dané distribuce.
+
+        Kontejner ``paradata`` sám je kontejnerem záměrně, takže se jako konflikt nehodnotí.
+
+        :param uuid: UUID kontejneru souboru.
+        :param distribution: Název distribuce, ke které paradata patří.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: Cesta konfliktního zdroje pod souborem, nebo ``None``, pokud konflikt není.
+        :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+        :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+        """
+        return self._find_path_conflict(uuid, self._get_paradata_path(distribution), ident_cely, skip_segments=1)
+
+    def _find_path_conflict(self, uuid, path, ident_cely=None, skip_segments=0) -> Optional[str]:
+        """
+        Najde zdroj, kvůli kterému by zápis binárního obsahu na cestu ve Fedoře selhal.
+
+        Konflikt nastane ve dvou případech: některý nadřazený segment cesty už je binárním
+        obsahem (např. ``thumb`` při zakládání ``thumb/x``), takže pod ním nelze založit kontejner,
+        nebo na samotné cestě už je kontejner s potomky (např. ``ocr`` při existujícím
+        ``ocr/alto-xml``), který nelze přepsat binárním obsahem. Binární obsah se pozná podle
+        ``fcr:metadata``, které mají jen binární zdroje; obsah se tak nestahuje.
+
+        Volá se jen pro INSERT po ověření, že cesta sama binárním obsahem není. Tombstone (410)
+        konfliktem není, zápis jej přepíše hlavičkou ``Overwrite-Tombstone``.
+
+        :param uuid: UUID kontejneru souboru.
+        :param path: Relativní cesta zakládaného binárního obsahu pod kontejnerem souboru.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :param skip_segments: Počet úvodních segmentů, které jsou kontejnerem záměrně (``paradata``).
+        :return: Cesta konfliktního zdroje, nebo ``None``, pokud konflikt není.
+        :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+        """
+        segments = path.split("/")
+        for depth in range(skip_segments + 1, len(segments)):
+            ancestor = "/".join(segments[:depth])
+            if self._container_exists(uuid, ancestor, ident_cely):
+                return ancestor
+        url = self._get_request_url(
+            FedoraRequestType.GET_DISTRIBUTION_CONTAINER, uuid=uuid, ident_cely=ident_cely, path=path
+        )
+        response = self._send_request(url, FedoraRequestType.GET_DISTRIBUTION_CONTAINER)
+        if response is None:
+            raise FedoraNoResponseError(url, "No Fedora response", None, fedora_transaction=self.transaction)
+        if str(response.status_code)[0] == "2":
+            return path
+        return None
+
     def _get_paradata_path(self, distribution) -> str:
         """
         Sestaví cestu paradat pro zadanou distribuci.

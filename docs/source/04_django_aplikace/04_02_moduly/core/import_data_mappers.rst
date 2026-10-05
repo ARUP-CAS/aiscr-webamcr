@@ -179,6 +179,26 @@ Třídy
       :param descendant: Název distribuce, který je potomkem ``ancestor`` v cestě.
 
 
+.. py:class:: ImportDataDistributionPathConflictError
+
+   Výjimka vyvolaná při INSERTu distribuce (nebo paradat), jejíž cesta koliduje se stavem Fedory.
+
+   Doplňuje ``ImportDataDistributionPrefixCollisionError``, která hlídá jen názvy jedné dávky:
+   nadřazený segment cesty už ve Fedoře existuje jako binární obsah (``thumb`` pro ``thumb/x``),
+   nebo na cestě už je kontejner jiných distribucí (``ocr`` při existujícím ``ocr/alto-xml``).
+   Řádek se odmítne už při validaci, aby import neselhal až při zápisu do repozitáře.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param soubor_ref: Identifikace dotčeného souboru z importu (``id`` nebo ``path``).
+      :param distribution: Název zakládané distribuce.
+      :param conflicting_path: Cesta zdroje ve Fedoře (pod souborem), se kterým zápis koliduje.
+
+
 .. py:class:: DistribuceMissingRepositoryUuidError
 
    Výjimka vyvolaná, pokud dotčený soubor nemá ve ``path`` uloženou cestu do Fedory.
@@ -2567,6 +2587,29 @@ Třídy
       :raises FedoraNoResponseError: Pokud repozitář neodpoví – existence se nedá určit
           a validace nesmí pokračovat s nepodloženým předpokladem.
 
+   .. py:method:: path_conflict()
+
+      Zjistí, zda zápis distribuce do Fedory nenarazí na už uložený zdroj na její cestě.
+
+      Dotaz je read-only, v souladu s kontraktem validační fáze.
+
+      :param soubor: Dotčený existující ``Soubor`` s vyplněnou cestou do Fedory.
+      :param distribution: Normalizovaný název zakládané distribuce.
+      :return: Cesta konfliktního zdroje pod souborem, nebo ``None``.
+      :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+
+   .. py:method:: _raise_if_path_conflict()
+
+      Při INSERTu odmítne řádek, jehož cesta ve Fedoře koliduje s už uloženým zdrojem.
+
+      UPDATE a DELETE pracují s existujícím binárním obsahem a novou cestu nezakládají.
+
+      :param soubor_ref: Identifikace souboru z importu pro chybové hlášení (``id`` nebo ``path``).
+      :param soubor: Dotčený ``Soubor``.
+      :param distribution: Normalizovaný název distribuce.
+      :param performed_action: Prováděná importní akce.
+      :raises ImportDataDistributionPathConflictError: Pokud cesta koliduje se stavem Fedory.
+
    .. py:method:: _validate_distribution_name()
 
       Ověří a vrátí normalizovaný název distribuce ze sloupce ``distribution``.
@@ -2647,6 +2690,8 @@ Třídy
       :raises DistribuceMissingVazbaError: Pokud soubor nemá vazbu na nadřazený záznam.
       :raises DistribuceImportIntegrityError: Při porušení předpokladu o existenci distribuce
           nebo při opakování téže distribuce v jedné dávce.
+      :raises ImportDataDistributionPathConflictError: Pokud cesta INSERTované distribuce koliduje
+          se zdrojem, který už je ve Fedoře uložen.
 
    .. py:method:: _raise_if_existence_mismatched()
 
@@ -2738,6 +2783,8 @@ Třídy
       :raises DistribuceImportIntegrityError: Pokud cílová distribuce není dostupná, existenční
           stav paradat neodpovídá prováděné akci, nebo se táž dvojice (soubor, distribuce)
           v dávce opakuje.
+      :raises ImportDataDistributionPathConflictError: Pokud cesta INSERTovaných paradat koliduje
+          se zdrojem, který už je ve Fedoře uložen.
 
    .. py:method:: paradata_exists()
 
@@ -2753,6 +2800,15 @@ Třídy
       :return: ``True``, pokud paradata dané distribuce existují, jinak ``False``.
       :raises FedoraNoResponseError: Pokud repozitář neodpoví — existence se nedá určit
           a validace nesmí pokračovat s nepodloženým předpokladem.
+
+   .. py:method:: path_conflict()
+
+      Zjistí, zda zápis paradat do Fedory nenarazí na už uložený zdroj pod ``paradata/``.
+
+      :param soubor: Dotčený existující ``Soubor`` s vyplněnou cestou do Fedory.
+      :param distribution: Normalizovaný název distribuce, ke které paradata patří.
+      :return: Cesta konfliktního zdroje pod souborem, nebo ``None``.
+      :raises FedoraNoResponseError: Pokud repozitář neodpoví.
 
    .. py:method:: create_records()
 

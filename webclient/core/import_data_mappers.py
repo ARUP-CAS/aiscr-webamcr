@@ -389,6 +389,37 @@ class ImportDataDistributionPrefixCollisionError(ImportDataError):
         )
 
 
+class ImportDataDistributionPathConflictError(ImportDataError):
+    """
+    Výjimka vyvolaná při INSERTu distribuce (nebo paradat), jejíž cesta koliduje se stavem Fedory.
+
+    Doplňuje ``ImportDataDistributionPrefixCollisionError``, která hlídá jen názvy jedné dávky:
+    nadřazený segment cesty už ve Fedoře existuje jako binární obsah (``thumb`` pro ``thumb/x``),
+    nebo na cestě už je kontejner jiných distribucí (``ocr`` při existujícím ``ocr/alto-xml``).
+    Řádek se odmítne už při validaci, aby import neselhal až při zápisu do repozitáře.
+    """
+
+    def __init__(self, soubor_ref, distribution, conflicting_path):
+        """
+        Inicializuje instanci třídy.
+
+        :param soubor_ref: Identifikace dotčeného souboru z importu (``id`` nebo ``path``).
+        :param distribution: Název zakládané distribuce.
+        :param conflicting_path: Cesta zdroje ve Fedoře (pod souborem), se kterým zápis koliduje.
+        """
+        self.soubor_ref = soubor_ref
+        self.distribution = distribution
+        self.conflicting_path = conflicting_path
+        super().__init__(
+            "{}: {} -> {} ({})".format(
+                _("core_admin.ImportDataDistributionPathConflictError.message"),
+                distribution,
+                conflicting_path,
+                soubor_ref,
+            )
+        )
+
+
 class DistribuceMissingRepositoryUuidError(ImportDataError):
     """
     Výjimka vyvolaná, pokud dotčený soubor nemá ve ``path`` uloženou cestu do Fedory.
@@ -5158,6 +5189,41 @@ class DistribuceMapper(DistributionColumnsMixin, ImportModelMapper):
         connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt)
         return connector.distribution_exists(soubor.repository_uuid, distribution)
 
+    @staticmethod
+    def path_conflict(soubor: Soubor, distribution: str) -> str | None:
+        """
+        Zjistí, zda zápis distribuce do Fedory nenarazí na už uložený zdroj na její cestě.
+
+        Dotaz je read-only, v souladu s kontraktem validační fáze.
+
+        :param soubor: Dotčený existující ``Soubor`` s vyplněnou cestou do Fedory.
+        :param distribution: Normalizovaný název zakládané distribuce.
+        :return: Cesta konfliktního zdroje pod souborem, nebo ``None``.
+        :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+        """
+        from core.repository_connector import FedoraRepositoryConnector
+
+        connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt)
+        return connector.find_distribution_path_conflict(soubor.repository_uuid, distribution)
+
+    def _raise_if_path_conflict(self, soubor_ref, soubor: Soubor, distribution: str, performed_action) -> None:
+        """
+        Při INSERTu odmítne řádek, jehož cesta ve Fedoře koliduje s už uloženým zdrojem.
+
+        UPDATE a DELETE pracují s existujícím binárním obsahem a novou cestu nezakládají.
+
+        :param soubor_ref: Identifikace souboru z importu pro chybové hlášení (``id`` nebo ``path``).
+        :param soubor: Dotčený ``Soubor``.
+        :param distribution: Normalizovaný název distribuce.
+        :param performed_action: Prováděná importní akce.
+        :raises ImportDataDistributionPathConflictError: Pokud cesta koliduje se stavem Fedory.
+        """
+        if performed_action != ImportDataAdminForm.PERFORMED_ACTION_INSERT:
+            return
+        conflicting_path = self.path_conflict(soubor, distribution)
+        if conflicting_path is not None:
+            raise ImportDataDistributionPathConflictError(soubor_ref, distribution, conflicting_path)
+
     def _validate_distribution_name(self, allow_implicit=False):
         """
         Ověří a vrátí normalizovaný název distribuce ze sloupce ``distribution``.
@@ -5278,6 +5344,8 @@ class DistribuceMapper(DistributionColumnsMixin, ImportModelMapper):
         :raises DistribuceMissingVazbaError: Pokud soubor nemá vazbu na nadřazený záznam.
         :raises DistribuceImportIntegrityError: Při porušení předpokladu o existenci distribuce
             nebo při opakování téže distribuce v jedné dávce.
+        :raises ImportDataDistributionPathConflictError: Pokud cesta INSERTované distribuce koliduje
+            se zdrojem, který už je ve Fedoře uložen.
         """
         distribution = self._validate_distribution_name()
         if performed_action != ImportDataAdminForm.PERFORMED_ACTION_DELETE:
@@ -5285,6 +5353,7 @@ class DistribuceMapper(DistributionColumnsMixin, ImportModelMapper):
         soubor = self._get_soubor(self.value_dict.get("id"), "id")
         exists = self.distribution_exists(soubor, distribution)
         self._raise_if_existence_mismatched(self.value_dict.get("id"), distribution, performed_action, exists)
+        self._raise_if_path_conflict(self.value_dict.get("id"), soubor, distribution, performed_action)
         if seen_in_batch is not None:
             key = (soubor.pk, distribution)
             if key in seen_in_batch:
@@ -5420,6 +5489,8 @@ class ParadataMapper(DistribuceMapper):
         :raises DistribuceImportIntegrityError: Pokud cílová distribuce není dostupná, existenční
             stav paradat neodpovídá prováděné akci, nebo se táž dvojice (soubor, distribuce)
             v dávce opakuje.
+        :raises ImportDataDistributionPathConflictError: Pokud cesta INSERTovaných paradat koliduje
+            se zdrojem, který už je ve Fedoře uložen.
         """
         path = (self.value_dict.get(self.PATH_COLUMN) or "").strip()
         if not path:
@@ -5438,6 +5509,7 @@ class ParadataMapper(DistribuceMapper):
             raise DistribuceImportIntegrityError(path, distribution, performed_action)
         paradata_exists = self.paradata_exists(soubor, distribution)
         self._raise_if_existence_mismatched(path, distribution, performed_action, paradata_exists)
+        self._raise_if_path_conflict(path, soubor, distribution, performed_action)
         if seen_in_batch is not None:
             key = (soubor.pk, distribution)
             if key in seen_in_batch:
@@ -5465,6 +5537,21 @@ class ParadataMapper(DistribuceMapper):
 
         connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt)
         return connector.paradata_exists(soubor.repository_uuid, distribution)
+
+    @staticmethod
+    def path_conflict(soubor: Soubor, distribution: str) -> str | None:
+        """
+        Zjistí, zda zápis paradat do Fedory nenarazí na už uložený zdroj pod ``paradata/``.
+
+        :param soubor: Dotčený existující ``Soubor`` s vyplněnou cestou do Fedory.
+        :param distribution: Normalizovaný název distribuce, ke které paradata patří.
+        :return: Cesta konfliktního zdroje pod souborem, nebo ``None``.
+        :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+        """
+        from core.repository_connector import FedoraRepositoryConnector
+
+        connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt)
+        return connector.find_paradata_path_conflict(soubor.repository_uuid, distribution)
 
     def create_records(self, performed_action):
         """

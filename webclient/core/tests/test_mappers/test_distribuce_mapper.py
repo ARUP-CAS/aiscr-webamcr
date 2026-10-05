@@ -16,6 +16,7 @@ from core.import_data_mappers import (
     DistribuceMissingRepositoryUuidError,
     DistribuceMissingVazbaError,
     DistribuceUnsafeFilenameError,
+    ImportDataDistributionPathConflictError,
     ImportDataDistributionPrefixCollisionError,
     ImportDataError,
     ImportDataIncorrectStructureError,
@@ -167,6 +168,12 @@ class DistribuceMapperValidationTest(TestCase):
         cls.dokument = create_dokument_fixture(ident_cely="C-TX-DIST-001")
         cls.soubor = create_soubor_fixture(cls.dokument)
 
+    def setUp(self):
+        """Nahradí kontrolu kolize cesty se stavem Fedory odpovědí „bez konfliktu“."""
+        patcher = patch.object(FedoraRepositoryConnector, "find_distribution_path_conflict", return_value=None)
+        self.path_conflict_mock = patcher.start()
+        self.addCleanup(patcher.stop)
+
     def _row(self, **overrides):
         """Sestaví řádek importu ukazující na testovací soubor."""
         row = VALID_ROW.copy()
@@ -286,6 +293,25 @@ class DistribuceMapperValidationTest(TestCase):
             DistribuceMapper(self._row(distribution="ocr/hocr")).import_validation(INSERT, seen_in_batch=seen)
 
         self.assertEqual(len(seen), 2)
+
+    def test_insert_rejects_path_conflicting_with_fedora(self):
+        """INSERT odmítne distribuci, jejíž cesta koliduje se zdrojem už uloženým ve Fedoře."""
+        self.path_conflict_mock.return_value = "thumb"
+
+        with self._fedora(exists=False):
+            with self.assertRaises(ImportDataDistributionPathConflictError) as ctx:
+                DistribuceMapper(self._row(distribution="thumb/x")).import_validation(INSERT)
+
+        self.assertEqual(ctx.exception.conflicting_path, "thumb")
+        self.path_conflict_mock.assert_called_once_with(self.soubor.repository_uuid, "thumb/x")
+
+    def test_update_and_delete_skip_path_conflict_check(self):
+        """UPDATE a DELETE novou cestu nezakládají, takže se kolize cesty neověřuje."""
+        with self._fedora(exists=True):
+            DistribuceMapper(self._row()).import_validation(UPDATE)
+            DistribuceMapper({"id": f"soub-{self.soubor.pk}", "distribution": "ocr/alto-xml"}).import_validation(DELETE)
+
+        self.path_conflict_mock.assert_not_called()
 
 
 class DistribuceMapperCreateRecordsTest(TestCase):

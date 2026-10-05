@@ -616,6 +616,53 @@ Třídy
       :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
       :raises FedoraNoResponseError: Pokud repozitář neodpoví.
 
+   .. py:method:: find_distribution_path_conflict()
+
+      Najde ve Fedoře zdroj, který by znemožnil založit distribuci na zadané cestě.
+
+      Kontrola dávky (``find_distribution_prefix_collisions``) porovnává jen názvy jednoho CSV;
+      tato metoda doplňuje stav, který už ve Fedoře je. Viz ``_find_path_conflict``.
+
+      :param uuid: UUID kontejneru souboru.
+      :param distribution: Název zakládané distribuce, např. ``ocr/alto-xml``.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :return: Cesta konfliktního zdroje pod souborem, nebo ``None``, pokud konflikt není.
+      :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+      :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+
+   .. py:method:: find_paradata_path_conflict()
+
+      Najde ve Fedoře zdroj, který by znemožnil založit paradata dané distribuce.
+
+      Kontejner ``paradata`` sám je kontejnerem záměrně, takže se jako konflikt nehodnotí.
+
+      :param uuid: UUID kontejneru souboru.
+      :param distribution: Název distribuce, ke které paradata patří.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :return: Cesta konfliktního zdroje pod souborem, nebo ``None``, pokud konflikt není.
+      :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+      :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+
+   .. py:method:: _find_path_conflict()
+
+      Najde zdroj, kvůli kterému by zápis binárního obsahu na cestu ve Fedoře selhal.
+
+      Konflikt nastane ve dvou případech: některý nadřazený segment cesty už je binárním
+      obsahem (např. ``thumb`` při zakládání ``thumb/x``), takže pod ním nelze založit kontejner,
+      nebo na samotné cestě už je kontejner s potomky (např. ``ocr`` při existujícím
+      ``ocr/alto-xml``), který nelze přepsat binárním obsahem. Binární obsah se pozná podle
+      ``fcr:metadata``, které mají jen binární zdroje; obsah se tak nestahuje.
+
+      Volá se jen pro INSERT po ověření, že cesta sama binárním obsahem není. Tombstone (410)
+      konfliktem není, zápis jej přepíše hlavičkou ``Overwrite-Tombstone``.
+
+      :param uuid: UUID kontejneru souboru.
+      :param path: Relativní cesta zakládaného binárního obsahu pod kontejnerem souboru.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :param skip_segments: Počet úvodních segmentů, které jsou kontejnerem záměrně (``paradata``).
+      :return: Cesta konfliktního zdroje, nebo ``None``, pokud konflikt není.
+      :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+
    .. py:method:: _get_paradata_path()
 
       Sestaví cestu paradat pro zadanou distribuci.

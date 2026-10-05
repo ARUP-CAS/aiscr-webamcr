@@ -107,6 +107,19 @@ class RunDataImportDistribuceTest(RunDataImportDistributionTestBase):
             ),
         )
 
+    def test_insert_for_file_without_history_link_creates_the_link(self):
+        """Soubor bez vazby na historii dostane vazbu a záznam DIST01 místo pádu importu."""
+        soubor = self._create_existing_soubor()
+        Soubor.objects.filter(pk=soubor.pk).update(historie=None)
+        soubor.refresh_from_db()
+
+        fake_redis, _ = self._run_distribution_import([self._insert_payload(soubor, distribution="ocr")])
+
+        self.assert_import_success(fake_redis)
+        soubor.refresh_from_db()
+        self.assertIsNotNone(soubor.historie, "Import musí souboru bez historie založit vazbu na historii.")
+        self.assert_history_created(soubor, NAHRANI_DISTRIBUCE, "ocr")
+
     def test_update_calls_update_distribution_and_writes_dist11_history(self):
         """UPDATE volá ``update_distribution`` a zapisuje historii DIST11."""
         soubor = self._create_existing_soubor()

@@ -12,6 +12,7 @@ from unittest import mock
 
 from core.repository_connector import (
     NON_RDF_SOURCE_LINK,
+    FedoraNoResponseError,
     FedoraRepositoryConnector,
     FedoraRequestType,
     FedoraValidationError,
@@ -591,3 +592,71 @@ class ReservedSubtreeTest(DistributionConnectorTestBase):
             with self.assertRaises(FedoraValidationError):
                 self.connector.paradata_exists(self.UUID, "paradata")
         send.assert_not_called()
+
+
+class PathConflictTest(DistributionConnectorTestBase):
+    """Testy hledání kolize cesty nové distribuce nebo paradat se stavem Fedory."""
+
+    def _fedora(self, responses):
+        """Nahradí ``_send_request`` odpověďmi podle URL; neznámá URL vrátí 404.
+
+        :param responses: Slovník relativní cesta pod souborem → stavový kód.
+        :return: Patch ``_send_request``.
+        """
+
+        def send(url, request_type, **kwargs):
+            relative = url[len(self.file_url) + 1 :]
+            return _Response(status_code=responses.get(relative, 404))
+
+        return mock.patch.object(self.connector, "_send_request", side_effect=send)
+
+    def test_binary_ancestor_is_a_conflict(self):
+        """Pod binárním náhledem ``thumb`` nelze založit ``thumb/x``."""
+        with self._fedora({"thumb/fcr:metadata": 200}):
+            conflict = self.connector.find_distribution_path_conflict(self.UUID, "thumb/x")
+
+        self.assertEqual(conflict, "thumb")
+
+    def test_existing_container_on_the_path_is_a_conflict(self):
+        """Na místě kontejneru ``ocr`` s potomkem ``ocr/alto-xml`` nelze založit binární ``ocr``."""
+        with self._fedora({"ocr": 200}):
+            conflict = self.connector.find_distribution_path_conflict(self.UUID, "ocr")
+
+        self.assertEqual(conflict, "ocr")
+
+    def test_container_ancestor_is_not_a_conflict(self):
+        """Existující kontejner ``ocr`` je pro ``ocr/alto-xml`` v pořádku — jen se do něj zapíše."""
+        with self._fedora({"ocr": 200}) as send:
+            conflict = self.connector.find_distribution_path_conflict(self.UUID, "ocr/alto-xml")
+
+        self.assertIsNone(conflict)
+        self.assertEqual(send.call_args_list[0].args[0], f"{self.file_url}/ocr/fcr:metadata")
+
+    def test_tombstone_on_the_path_is_not_a_conflict(self):
+        """Tombstone po smazané distribuci zápis přepíše hlavičkou ``Overwrite-Tombstone``."""
+        with self._fedora({"ocr/alto-xml": 410}):
+            conflict = self.connector.find_distribution_path_conflict(self.UUID, "ocr/alto-xml")
+
+        self.assertIsNone(conflict)
+
+    def test_paradata_container_itself_is_not_checked(self):
+        """Kontejner ``paradata`` je kontejnerem záměrně; hlídají se až segmenty pod ním."""
+        with self._fedora({"paradata/ocr/fcr:metadata": 200}) as send:
+            conflict = self.connector.find_paradata_path_conflict(self.UUID, "ocr/alto-xml")
+
+        self.assertEqual(conflict, "paradata/ocr")
+        urls = [call.args[0] for call in send.call_args_list]
+        self.assertNotIn(f"{self.file_url}/paradata/fcr:metadata", urls)
+
+    def test_reserved_name_is_rejected_before_querying_fedora(self):
+        """Vyhrazený název se odmítne dřív, než se odešle požadavek do Fedory."""
+        with mock.patch.object(self.connector, "_send_request") as send:
+            with self.assertRaises(FedoraValidationError):
+                self.connector.find_distribution_path_conflict(self.UUID, "orig/x")
+        send.assert_not_called()
+
+    def test_no_response_raises(self):
+        """Bez odpovědi Fedory nelze kolizi vyloučit, validace se musí zastavit."""
+        with mock.patch.object(self.connector, "_send_request", return_value=None):
+            with self.assertRaises(FedoraNoResponseError):
+                self.connector.find_distribution_path_conflict(self.UUID, "ocr")

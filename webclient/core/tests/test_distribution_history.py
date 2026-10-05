@@ -16,6 +16,7 @@ from core.tests.test_mappers.fixtures import create_dokument_fixture, create_sou
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.management import call_command
+from django.db import DatabaseError, connection, transaction
 from django.test import TestCase
 from django.utils import timezone
 from heslar import hesla_dynamicka
@@ -279,6 +280,36 @@ class SouborZaznamenejDistribuceTest(TestCase):
             self.soubor.zaznamenej_distribuce([("thumb", False)])
 
         self.assertEqual(self._history("thumb"), [])
+
+    def test_database_error_does_not_break_the_callers_transaction(self):
+        """Databázová chyba při zápisu historie nesmí poškodit transakci volajícího.
+
+        Nahrání souboru volá metodu uvnitř ``transaction.atomic()`` a po ní dál pracuje s databází;
+        bez vlastního savepointu by další dotaz selhal na přerušené (aborted) transakci PostgreSQL.
+        """
+
+        def failing_save(*args, **kwargs):
+            # A real failing query puts the PostgreSQL transaction into the aborted state.
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1 / 0")
+
+        with transaction.atomic():
+            with mock.patch("core.models.Historie.save", side_effect=failing_save):
+                self.soubor.zaznamenej_distribuce([("thumb", False)])
+            # The caller's next query must still work inside the same transaction.
+            self.assertTrue(Soubor.objects.filter(pk=self.soubor.pk).exists())
+
+    def test_failed_write_rolls_back_a_newly_created_history_link(self):
+        """Vazba na historii založená v rámci neúspěšného zápisu se vrátí i v paměti instance."""
+        Soubor.objects.filter(pk=self.soubor.pk).update(historie=None)
+        self.soubor.refresh_from_db()
+
+        with mock.patch("core.models.Historie.save", side_effect=DatabaseError("boom")):
+            self.soubor.zaznamenej_distribuce([("thumb", False)])
+
+        self.assertIsNone(self.soubor.historie)
+        self.soubor.refresh_from_db()
+        self.assertIsNone(self.soubor.historie)
 
 
 class BackfillThumbHistoryCommandTest(TestCase):
