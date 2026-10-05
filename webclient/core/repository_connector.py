@@ -13,6 +13,7 @@ from typing import Optional, Union
 import requests
 from core.connectors import RedisConnector
 from core.distribution_names import (
+    IMPLICIT_DISTRIBUTION_NAMES,
     has_unsafe_distribution_segments,
     is_reserved_distribution_name,
     normalize_distribution_name,
@@ -1611,6 +1612,10 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         Náhledy zkopírované ze starého umístění při změně identifikátoru záznamu jsou přesunem
         a svou historii už mají.
 
+        Při změně identifikátoru záznamu se do nového kontejneru souboru zkopírují i alternativní
+        distribuce a paradata (``_collect_file_children``); jinak by zanikly se starým kontejnerem,
+        přestože historie souboru je dál nabízí ke stažení. Historie se přitom nemění.
+
         :param soubor: Objekt `Soubor` k migraci s atributy ``pk`` a ``repository_uuid``.
         :param include_content: Pokud True, migruje i binární obsah souboru.
         :param check_if_exists: Pokud True, ověří existenci souboru v repositáři.
@@ -1628,6 +1633,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             return None
         self._check_binary_file_container()
         source_thumbs = None
+        old_children = []
         if include_content:
             if soubor.repository_uuid is None:
                 with open(soubor.path, mode="rb") as file:
@@ -1649,6 +1655,11 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     True: old_large_thumb.content.read() if old_large_thumb else None,
                     False: old_small_thumb.content.read() if old_small_thumb else None,
                 }
+                # Alternative distributions and paradata live only under the old container; read them
+                # now, outside the transaction and before soubor.path changes, like orig and thumbs above.
+                old_children = FedoraRepositoryConnector(self.record)._collect_file_children(
+                    soubor.repository_uuid, ident_cely_old
+                )
         else:
             data = None
             file_sha_512 = None
@@ -1679,6 +1690,13 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             # only the ones generated here are new and get a DIST01 record.
             copied_thumbs = {f"thumb{'-large' * large}" for large, content in (source_thumbs or {}).items() if content}
             soubor.zaznamenej_distribuce([write for write in thumb_writes if write[0] not in copied_thumbs])
+            for path, filename, child_content_type, child_content in old_children:
+                # File names follow the same ident substitution as soubor.nazev in record_ident_change.
+                if filename and ident_cely_old:
+                    filename = filename.replace(
+                        ident_cely_old.replace("-", ""), self.record.ident_cely.replace("-", "")
+                    )
+                self._save_file_child(uuid, path, filename, child_content_type, child_content)
             logger.debug(
                 "core_repository_connector.migrate_binary_file.end",
                 extra={"uuid": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -2421,6 +2439,77 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 # Potomek není binární soubor – jde o (pod)kontejner, zanoříme se hlouběji.
                 renamed_count += self._rename_filenames_in_container(child_url, old_base, new_base, depth + 1)
         return renamed_count
+
+    def _collect_file_children(self, uuid, ident_cely, container_url=None, depth=0) -> list:
+        """
+        Načte alternativní distribuce a paradata souboru, aby je šlo zkopírovat jinam.
+
+        Potomci se zjišťují stejně jako v ``_rename_filenames_in_container``: z ``ldp:contains``
+        kontejneru a podle ``fcr:metadata`` (404 znamená kontejner, do kterého se zanoří). Kontejnery
+        vznikající při importu souboru (``orig``, ``thumb``, ``thumb-large``) se vynechají, protože
+        je ``migrate_binary_file`` kopíruje sám. Volá se na netransakčním spojení, protože starý
+        kontejner už transakce změny identifikátoru smazala.
+
+        :param uuid: UUID kontejneru souboru na starém umístění.
+        :param ident_cely: Identifikátor záznamu, pod kterým soubor leží (starý identifikátor).
+        :param container_url: URL právě procházeného kontejneru; ``None`` znamená kontejner souboru.
+        :param depth: Aktuální hloubka rekurze.
+        :return: Seznam čtveřic ``(relativni_cesta, nazev_souboru, mime_typ, obsah)`` binárních potomků.
+        :raises FedoraError: Pokud kontejner nebo metadata potomka nejsou dostupné, nebo byla překročena
+            maximální hloubka rekurze — aby změna identifikátoru neproběhla se ztrátou dat.
+        """
+        file_url = f"{self.get_base_url()}/record/{ident_cely}/file/{uuid}"
+        container_url = container_url or file_url
+        if depth > self.MAX_RENAME_DEPTH:
+            raise FedoraError(
+                container_url,
+                "core_repository_connector._collect_file_children.max_depth_reached",
+                None,
+                fedora_transaction=self.transaction,
+            )
+        response = self._send_request(
+            container_url, FedoraRequestType.GET_BINARY_FILE_CHILDREN, headers={"Accept": "application/n-triples"}
+        )
+        if response is None or str(response.status_code)[0] != "2":
+            raise FedoraError(
+                container_url,
+                "core_repository_connector._collect_file_children.container_unavailable",
+                response.status_code if response is not None else None,
+                fedora_transaction=self.transaction,
+            )
+        filename_pattern = re.compile(r"<" + re.escape(self.EBUCORE_FILENAME_PREDICATE) + r">\s+\"((?:[^\"\\]|\\.)*)\"")
+        children = []
+        for child_url in self._parse_ldp_children(response.text):
+            path = child_url[len(file_url) + 1 :]
+            if depth == 0 and path in IMPLICIT_DISTRIBUTION_NAMES:
+                continue
+            metadata_url = f"{child_url}/fcr:metadata"
+            metadata = self._send_request(
+                metadata_url, FedoraRequestType.GET_BINARY_FILE_CHILD_RDF, headers={"Accept": "application/n-triples"}
+            )
+            if metadata is not None and metadata.status_code == 404:
+                children += self._collect_file_children(uuid, ident_cely, child_url, depth + 1)
+                continue
+            if metadata is None or str(metadata.status_code)[0] != "2":
+                raise FedoraError(
+                    metadata_url,
+                    "core_repository_connector._collect_file_children.metadata_unavailable",
+                    metadata.status_code if metadata is not None else None,
+                    fedora_transaction=self.transaction,
+                )
+            filenames = filename_pattern.findall(metadata.text)
+            rep_bin_file = self._get_file_child(uuid, path, ident_cely)
+            if rep_bin_file is None:
+                raise FedoraError(
+                    child_url,
+                    "core_repository_connector._collect_file_children.content_unavailable",
+                    None,
+                    fedora_transaction=self.transaction,
+                )
+            children.append(
+                (path, filenames[0] if filenames else path, rep_bin_file.content_type, rep_bin_file.content)
+            )
+        return children
 
     def _parse_ldp_children(self, ntriples_text):
         """

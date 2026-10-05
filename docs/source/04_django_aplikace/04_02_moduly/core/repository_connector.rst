@@ -395,6 +395,10 @@ Třídy
       Náhledy zkopírované ze starého umístění při změně identifikátoru záznamu jsou přesunem
       a svou historii už mají.
 
+      Při změně identifikátoru záznamu se do nového kontejneru souboru zkopírují i alternativní
+      distribuce a paradata (``_collect_file_children``); jinak by zanikly se starým kontejnerem,
+      přestože historie souboru je dál nabízí ke stažení. Historie se přitom nemění.
+
       :param soubor: Objekt `Soubor` k migraci s atributy ``pk`` a ``repository_uuid``.
       :param include_content: Pokud True, migruje i binární obsah souboru.
       :param check_if_exists: Pokud True, ověří existenci souboru v repositáři.
@@ -753,6 +757,24 @@ Třídy
       :param new_base: Nový název souboru bez přípony.
       :param depth: Aktuální hloubka rekurze.
       :return: Počet úspěšně odeslaných PATCH úprav ``ebucore:filename`` v celém podstromu.
+
+   .. py:method:: _collect_file_children()
+
+      Načte alternativní distribuce a paradata souboru, aby je šlo zkopírovat jinam.
+
+      Potomci se zjišťují stejně jako v ``_rename_filenames_in_container``: z ``ldp:contains``
+      kontejneru a podle ``fcr:metadata`` (404 znamená kontejner, do kterého se zanoří). Kontejnery
+      vznikající při importu souboru (``orig``, ``thumb``, ``thumb-large``) se vynechají, protože
+      je ``migrate_binary_file`` kopíruje sám. Volá se na netransakčním spojení, protože starý
+      kontejner už transakce změny identifikátoru smazala.
+
+      :param uuid: UUID kontejneru souboru na starém umístění.
+      :param ident_cely: Identifikátor záznamu, pod kterým soubor leží (starý identifikátor).
+      :param container_url: URL právě procházeného kontejneru; ``None`` znamená kontejner souboru.
+      :param depth: Aktuální hloubka rekurze.
+      :return: Seznam čtveřic ``(relativni_cesta, nazev_souboru, mime_typ, obsah)`` binárních potomků.
+      :raises FedoraError: Pokud kontejner nebo metadata potomka nejsou dostupné, nebo byla překročena
+          maximální hloubka rekurze — aby změna identifikátoru neproběhla se ztrátou dat.
 
    .. py:method:: _parse_ldp_children()
 

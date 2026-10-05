@@ -13,7 +13,7 @@ přegenerovávaly z obrazových dat.
 import io
 from unittest import mock
 
-from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
+from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from django.test import SimpleTestCase
 from uzivatel.models import User
 
@@ -63,8 +63,12 @@ class _MigrateBinaryFileTestBase(SimpleTestCase):
         transaction = FedoraTransaction(main_record=record, transaction_user=transaction_user, uid="fake-txn-uid")
         return FedoraRepositoryConnector(record, transaction=transaction)
 
-    def _migrate(self, connector, soubor, thumb_writes=()):
+    def _migrate(self, connector, soubor, thumb_writes=(), children=()):
         with (
+            mock.patch.object(
+                FedoraRepositoryConnector, "_collect_file_children", return_value=list(children)
+            ) as mock_collect_children,
+            mock.patch.object(connector, "_save_file_child") as mock_save_file_child,
             mock.patch.object(connector, "_check_binary_file_container"),
             mock.patch.object(connector, "_update_creator"),
             mock.patch.object(connector, "save_thumbs") as mock_save_thumbs,
@@ -78,6 +82,8 @@ class _MigrateBinaryFileTestBase(SimpleTestCase):
             connector.migrate_binary_file(
                 soubor, include_content=True, check_if_exists=False, ident_cely_old="X-C-000000001"
             )
+        self.mock_collect_children = mock_collect_children
+        self.mock_save_file_child = mock_save_file_child
         return mock_save_thumbs, mock_get_binary_file
 
 
@@ -160,3 +166,111 @@ class MigrateBinaryFileThumbHistoryTests(_MigrateBinaryFileTestBase):
         self._migrate(connector, soubor, thumb_writes=[("thumb-large", False), ("thumb", False)])
 
         self.assertEqual(soubor.recorded_thumb_writes, [("thumb", False)])
+
+
+class _ChildResponse:
+    """Náhrada za ``requests.Response`` pro průchod potomky kontejneru souboru."""
+
+    def __init__(self, status_code=200, text="", content=b"", headers=None):
+        self.status_code = status_code
+        self.text = text
+        self.content = content
+        self.headers = headers or {}
+
+
+class MigrateBinaryFileChildrenTests(_MigrateBinaryFileTestBase):
+    """Ověřuje kopírování alternativních distribucí a paradat při změně identifikátoru (issue #3527)."""
+
+    OLD_IDENT = "X-C-000000001"
+    OLD_UUID = "old-uuid"
+
+    def _listing(self, parent, *children):
+        """Sestaví n-triples výpis ``ldp:contains`` kontejneru.
+
+        :param parent: URL kontejneru.
+        :param children: URL potomků.
+        :return: Odpověď s výpisem potomků.
+        """
+        lines = [f"<{parent}> <{FedoraRepositoryConnector.LDP_CONTAINS_PREDICATE}> <{child}> ." for child in children]
+        return _ChildResponse(text="\n".join(lines))
+
+    def _metadata(self, filename):
+        """Sestaví ``fcr:metadata`` binárního potomka s ``ebucore:filename``.
+
+        :param filename: Název souboru uložený ve Fedoře.
+        :return: Odpověď s metadaty.
+        """
+        return _ChildResponse(text=f'<x> <{FedoraRepositoryConnector.EBUCORE_FILENAME_PREDICATE}> "{filename}" .')
+
+    def _old_file_tree(self, connector):
+        """Připraví odpovědi Fedory pro starý kontejner souboru s distribucí i paradaty.
+
+        :param connector: Connector, pro který se staví URL.
+        :return: Slovník URL → odpověď; neznámá URL odpoví 404.
+        """
+        file_url = f"{connector.get_base_url()}/record/{self.OLD_IDENT}/file/{self.OLD_UUID}"
+        f = file_url
+        return {
+            f: self._listing(f, f + "/orig", f + "/thumb", f + "/thumb-large", f + "/ocr", f + "/paradata"),
+            f + "/ocr": self._listing(f + "/ocr", f + "/ocr/alto-xml"),
+            f + "/ocr/alto-xml/fcr:metadata": self._metadata("scan_XC000000001.xml"),
+            f + "/ocr/alto-xml": _ChildResponse(content=b"alto", headers={"Content-Type": "application/xml"}),
+            f + "/paradata": self._listing(f + "/paradata", f + "/paradata/ocr"),
+            f + "/paradata/ocr": self._listing(f + "/paradata/ocr", f + "/paradata/ocr/alto-xml"),
+            f + "/paradata/ocr/alto-xml/fcr:metadata": self._metadata("paradata.json"),
+            f
+            + "/paradata/ocr/alto-xml": _ChildResponse(content=b"{}", headers={"Content-Type": "application/ld+json"}),
+        }
+
+    def test_children_are_collected_from_old_location_without_implicit_containers(self):
+        """Projdou se vnořené distribuce i paradata; ``orig`` a náhledy se vynechají."""
+        connector = self._make_connector()
+        responses = self._old_file_tree(connector)
+
+        def send(url, request_type, **kwargs):
+            return responses.get(url, _ChildResponse(status_code=404))
+
+        with mock.patch.object(connector, "_send_request", side_effect=send) as send_mock:
+            children = connector._collect_file_children(self.OLD_UUID, self.OLD_IDENT)
+
+        self.assertEqual(
+            [(path, filename, content_type, content.read()) for path, filename, content_type, content in children],
+            [
+                ("ocr/alto-xml", "scan_XC000000001.xml", "application/xml", b"alto"),
+                ("paradata/ocr/alto-xml", "paradata.json", "application/ld+json", b"{}"),
+            ],
+        )
+        requested = [call.args[0] for call in send_mock.call_args_list]
+        self.assertFalse([url for url in requested if url.rsplit("/", 1)[-1] in ("orig", "thumb", "thumb-large")])
+
+    def test_unavailable_container_raises(self):
+        """Nedostupný kontejner zastaví změnu identifikátoru, místo aby se data tiše ztratila."""
+        connector = self._make_connector()
+
+        with mock.patch.object(connector, "_send_request", return_value=_ChildResponse(status_code=500)):
+            with self.assertRaises(FedoraError):
+                connector._collect_file_children(self.OLD_UUID, self.OLD_IDENT)
+
+    def test_children_are_written_to_new_container(self):
+        """Potomci se zapíší pod nové UUID se stejnou cestou, MIME typem a názvem s novým identem."""
+        connector = self._make_connector()
+        soubor = _FakeSoubor("foto.jpg", pk=5, repository_uuid=self.OLD_UUID, contents={(False, False): b"orig-bytes"})
+        content = io.BytesIO(b"alto")
+
+        self._migrate(
+            connector, soubor, children=[("ocr/alto-xml", "scan_XC000000001.xml", "application/xml", content)]
+        )
+
+        self.mock_collect_children.assert_called_once_with(self.OLD_UUID, self.OLD_IDENT)
+        self.mock_save_file_child.assert_called_once_with(
+            "new-uuid", "ocr/alto-xml", "scan_C202500001.xml", "application/xml", content
+        )
+
+    def test_file_without_children_writes_nothing_extra(self):
+        """Soubor bez distribucí a paradat se migruje jako dosud."""
+        connector = self._make_connector()
+        soubor = _FakeSoubor("foto.jpg", pk=6, repository_uuid=self.OLD_UUID, contents={(False, False): b"orig-bytes"})
+
+        self._migrate(connector, soubor)
+
+        self.mock_save_file_child.assert_not_called()
