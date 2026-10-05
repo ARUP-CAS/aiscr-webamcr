@@ -17681,3 +17681,9 @@ msgid "vypis.templates.vypis_list.error.500"
 msgstr ""
 "The record could not be displayed due to a server error. If the problem "
 "persists,please contact your system administrator."
+
+msgid "pas.filters.samostatnyNalezFilter.organizaceNalezu.label"
+msgstr "Owner organisation"
+
+msgid "pas.filters.samostatnyNalezFilter.projektOrganizace.label"
+msgstr "Project organisation"

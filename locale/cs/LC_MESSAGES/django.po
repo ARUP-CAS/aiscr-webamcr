@@ -17600,3 +17600,9 @@ msgid "vypis.templates.vypis_list.error.500"
 msgstr ""
 "Záznam se nepodařilo vypsat z důvodu chyby serveru. V případě opakujících se"
 " problémů kontaktujte správce systému."
+
+msgid "pas.filters.samostatnyNalezFilter.organizaceNalezu.label"
+msgstr "Organizace vlastníka"
+
+msgid "pas.filters.samostatnyNalezFilter.projektOrganizace.label"
+msgstr "Organizace projektu"
