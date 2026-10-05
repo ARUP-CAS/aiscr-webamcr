@@ -10987,10 +10987,6 @@ msgstr "Type of change"
 msgid "pas.filters.samostatnyNalezFilter.pristupnost.label"
 msgstr "Accessibility"
 
-#: pas/filters.py:217
-msgid "arch_z.filters.samostatnyNalezFilter.projekt_roganizace.label"
-msgstr "Responsible organisation"
-
 #: pas/filters.py:224
 msgid "pas.filters.samostatnyNalezFilter.obdobi.label"
 msgstr "Period"
@@ -17681,3 +17677,9 @@ msgid "vypis.templates.vypis_list.error.500"
 msgstr ""
 "The record could not be displayed due to a server error. If the problem "
 "persists,please contact your system administrator."
+
+msgid "pas.filters.samostatnyNalezFilter.organizaceNalezu.label"
+msgstr "Responsible organisation"
+
+msgid "pas.filters.samostatnyNalezFilter.projektOrganizace.label"
+msgstr "Project organisation"

@@ -10941,10 +10941,6 @@ msgstr "Typ změny"
 msgid "pas.filters.samostatnyNalezFilter.pristupnost.label"
 msgstr "Přístupnost"
 
-#: pas/filters.py:217
-msgid "arch_z.filters.samostatnyNalezFilter.projekt_roganizace.label"
-msgstr "Odpovědná organizace"
-
 #: pas/filters.py:224
 msgid "pas.filters.samostatnyNalezFilter.obdobi.label"
 msgstr "Období"
@@ -17600,3 +17596,9 @@ msgid "vypis.templates.vypis_list.error.500"
 msgstr ""
 "Záznam se nepodařilo vypsat z důvodu chyby serveru. V případě opakujících se"
 " problémů kontaktujte správce systému."
+
+msgid "pas.filters.samostatnyNalezFilter.organizaceNalezu.label"
+msgstr "Odpovědná organizace"
+
+msgid "pas.filters.samostatnyNalezFilter.projektOrganizace.label"
+msgstr "Organizace projektu"
