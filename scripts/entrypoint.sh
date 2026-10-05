@@ -115,7 +115,9 @@ for lang_item in "${languages[@]}"; do
   msgfmt -o "${code_locale}/django.mo" "${code_locale}/django.po"
 
   if test -f "${volume_po}"; then
-    if cmp -s "${volume_po}" "${code_locale}/django.po"; then
+    # makemessages rewrites POT-Creation-Date on every run, so ignore it.
+    if cmp -s <(grep -v '^"POT-Creation-Date:' "${volume_po}") \
+              <(grep -v '^"POT-Creation-Date:' "${code_locale}/django.po"); then
       echo "Translation catalog is unchanged for ${lang_item}; backup skipped."
     else
       if test ! -w "${volume_locale}"; then
