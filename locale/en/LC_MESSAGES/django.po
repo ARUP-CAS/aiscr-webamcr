@@ -10987,10 +10987,6 @@ msgstr "Type of change"
 msgid "pas.filters.samostatnyNalezFilter.pristupnost.label"
 msgstr "Accessibility"
 
-#: pas/filters.py:217
-msgid "arch_z.filters.samostatnyNalezFilter.projekt_roganizace.label"
-msgstr "Responsible organisation"
-
 #: pas/filters.py:224
 msgid "pas.filters.samostatnyNalezFilter.obdobi.label"
 msgstr "Period"
@@ -17683,7 +17679,7 @@ msgstr ""
 "persists,please contact your system administrator."
 
 msgid "pas.filters.samostatnyNalezFilter.organizaceNalezu.label"
-msgstr "Owner organisation"
+msgstr "Responsible organisation"
 
 msgid "pas.filters.samostatnyNalezFilter.projektOrganizace.label"
 msgstr "Project organisation"
