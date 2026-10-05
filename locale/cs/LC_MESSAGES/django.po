@@ -10941,10 +10941,6 @@ msgstr "Typ změny"
 msgid "pas.filters.samostatnyNalezFilter.pristupnost.label"
 msgstr "Přístupnost"
 
-#: pas/filters.py:217
-msgid "arch_z.filters.samostatnyNalezFilter.projekt_roganizace.label"
-msgstr "Odpovědná organizace"
-
 #: pas/filters.py:224
 msgid "pas.filters.samostatnyNalezFilter.obdobi.label"
 msgstr "Období"
@@ -17602,7 +17598,7 @@ msgstr ""
 " problémů kontaktujte správce systému."
 
 msgid "pas.filters.samostatnyNalezFilter.organizaceNalezu.label"
-msgstr "Organizace vlastníka"
+msgstr "Odpovědná organizace"
 
 msgid "pas.filters.samostatnyNalezFilter.projektOrganizace.label"
 msgstr "Organizace projektu"
