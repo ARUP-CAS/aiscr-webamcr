@@ -192,7 +192,7 @@ fi
 
 #Build commands
 cmd_stack_rm="docker stack rm ${stack_name}"
-cmd_create_images="docker build -t test_prod -f Dockerfile --build-arg VERSION_APP=\"$(git rev-parse --short HEAD | head -c 8)\" --build-arg TAG_APP=local_build  ."
+cmd_create_images="docker build -t test_web -f Dockerfile --build-arg INSTALL_TEST_REQUIREMENTS=true --build-arg VERSION_APP=\"$(git rev-parse --short HEAD | head -c 8)\" --build-arg TAG_APP=local_build  ."
 cmd_create_images_proxy="docker build -t test_proxy -f proxy/Dockerfile --build-arg VERSION_APP="$(git rev-parse --short HEAD | head -c 8)" --build-arg TAG_APP=local_build  ./proxy"
 cmd_create_images_redis="docker build -t test_redis -f redis/Dockerfile --build-arg VERSION_APP="$(git rev-parse --short HEAD | head -c 8)" --build-arg TAG_APP=local_build  ./redis"
 cmd_deploy_base="docker stack deploy --compose-file"

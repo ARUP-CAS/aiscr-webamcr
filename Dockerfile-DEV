@@ -33,10 +33,11 @@ RUN echo $TZ > /etc/timezone && \
     locale-gen cs_CZ.utf8 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-COPY ./webclient/requirements.txt /tmp/requirements.txt
+COPY ./webclient/requirements.txt ./webclient/requirements-test.txt ./webclient/requirements-dev.txt /tmp/
 
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt
+    pip3 wheel --wheel-dir /wheels \
+        -r /tmp/requirements.txt -r /tmp/requirements-test.txt -r /tmp/requirements-dev.txt
 
 FROM ghcr.io/osgeo/gdal:ubuntu-small-3.13.3 AS runtime
 

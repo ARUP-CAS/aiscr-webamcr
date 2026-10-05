@@ -34,10 +34,17 @@ RUN echo $TZ > /etc/timezone && \
     locale-gen cs_CZ.utf8 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-COPY ./webclient/requirements.txt /tmp/requirements.txt
+# Testovací závislosti (selenium aj.) jen pro testovací image test_web, viz scripts/test_deploy.sh.
+ARG INSTALL_TEST_REQUIREMENTS=false
+
+COPY ./webclient/requirements.txt ./webclient/requirements-test.txt /tmp/
 
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt
+    if [ "${INSTALL_TEST_REQUIREMENTS}" = "true" ]; then \
+        pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt -r /tmp/requirements-test.txt; \
+    else \
+        pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt; \
+    fi
 
 FROM python-builder AS app-builder
 

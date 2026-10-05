@@ -90,12 +90,14 @@
 - **Soubory:** `webclient/requirements.txt`
 - **Popis:** Selenium, debug-toolbar, pre-commit, coverage, sphinx aj. jsou v produkčním requirements.txt. Produkční image je zbytečně velký.
 - **Doporučení:** Rozdělit na requirements.txt, requirements-dev.txt, requirements-test.txt.
+- **Stav:** Řešeno v #4258 — `webclient/requirements*.in` se kompilují do `requirements.txt` / `requirements-test.txt` / `requirements-dev.txt` / `requirements-docs.txt`.
 - **Náročnost:** S
 
 ### [T08] DOCS-01: Oddělit requirements pro build dokumentace
 - **Soubory:** `readthedocs.yaml`, `webclient/requirements.txt`
 - **Popis:** Read the Docs build instaluje kompletní `webclient/requirements.txt`, který obsahuje i vývojové a testovací balíčky (Selenium, debug-toolbar, Sphinx atd.). Pro build dokumentace to není nutné a zvyšuje čas i riziko konfliktů závislostí.
 - **Doporučení:** Vytvořit samostatný soubor (např. `docs/requirements.txt`) s minimální sadou balíků pro dokumentaci a v `.readthedocs.yaml` přepnout instalaci na tento soubor.
+- **Stav:** Řešeno v #4258 — `webclient/requirements*.in` se kompilují do `requirements.txt` / `requirements-test.txt` / `requirements-dev.txt` / `requirements-docs.txt`.
 - **Náročnost:** S
 
 ### [T08] DOCS-02: Zlepšit error handling v generátoru licencí

@@ -77,7 +77,7 @@ aiscr-webamcr/
 python -m venv .venv
 .venv/Scripts/activate   # Windows
 # source .venv/bin/activate  # Linux / macOS
-pip install -r requirements.txt
+pip install -r requirements.txt -r requirements-test.txt -r requirements-dev.txt
 
 # 2. Start infrastructure services
 docker compose -f docker-compose-dev-local-db-all-containers.yml up -d
@@ -89,6 +89,8 @@ python manage.py runserver
 # 4. Start Celery worker (in a separate terminal)
 celery -A webclient worker -l info --concurrency=2 --max-tasks-per-child=50
 ```
+
+Python dependencies in `webclient/` are split into groups: `requirements.txt` (production), `requirements-test.txt`, `requirements-dev.txt` and `requirements-docs.txt`. The `requirements*.txt` files are generated and contain full transitive pins. Edit only the authored `requirements*.in` files, then run `scripts/compile_requirements.sh` (requires Docker).
 
 Detailed installation guide:  
 <https://aiscr-webamcr.readthedocs.io/>

@@ -117,10 +117,31 @@ Runtime závislosti:
 
 .. code-block:: dockerfile
 
-    COPY ./webclient/requirements.txt /tmp/requirements.txt
+    ARG INSTALL_TEST_REQUIREMENTS=false
+
+    COPY ./webclient/requirements.txt ./webclient/requirements-test.txt /tmp/
 
     RUN --mount=type=cache,target=/root/.cache/pip \
-        pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt
+        if [ "${INSTALL_TEST_REQUIREMENTS}" = "true" ]; then \
+            pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt -r /tmp/requirements-test.txt; \
+        else \
+            pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt; \
+        fi
+
+**Skupiny Python závislostí**
+
+Závislosti jsou ve ``webclient/`` rozdělené do skupin. Autorské soubory ``requirements*.in`` se
+skriptem ``scripts/compile_requirements.sh`` (pip-tools) kompilují do ``requirements*.txt`` s úplnými
+tranzitivními piny:
+
+* ``requirements.txt`` - produkční závislosti, jediné instalované do produkčního obrazu
+* ``requirements-test.txt`` - selenium, freezegun, coverage
+* ``requirements-dev.txt`` - pre-commit, debug-toolbar, livereload, Werkzeug (``runserver_plus``) aj.
+* ``requirements-docs.txt`` - Sphinx a jeho rozšíření (Read the Docs)
+
+Build argument ``INSTALL_TEST_REQUIREMENTS=true`` přidá testovací závislosti. Používá jej pouze
+testovací obraz ``test_web`` na testovacím serveru (``scripts/test_deploy.sh``), ve kterém
+běží selenium testy. Publikovaný produkční obraz se staví bez něj.
 
 **BuildKit cache mount**
 
@@ -319,6 +340,9 @@ Rozdíly: Dockerfile vs Dockerfile-DEV
     * - Velikost obrazu
       - Menší
       - Větší (obsahuje dev nástroje)
+    * - Python závislosti
+      - ``requirements.txt`` (+ ``requirements-test.txt`` s ``INSTALL_TEST_REQUIREMENTS=true``)
+      - ``requirements.txt``, ``requirements-test.txt``, ``requirements-dev.txt``
     * - Health check
       - Ano
       - Ne
@@ -364,7 +388,7 @@ BuildKit cache mounts
 
 * Pip cache přetrvává mezi buildy
 * Balíčky se stahují pouze jednou
-* Zrychluje opakované buildy při změně ``requirements.txt``
+* Zrychluje opakované buildy při změně ``requirements*.txt``
 * Nulový download při nezměněných závislostech
 
 **Aktivace**

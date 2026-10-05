@@ -57,7 +57,7 @@ jobs:
       - uses: actions/cache@v6
         with:
           path: ~/.cache/pip
-          key: pip-${{ runner.os }}-${{ hashFiles('webclient/requirements.txt', '.pre-commit-config.yaml') }}
+          key: pip-${{ runner.os }}-${{ hashFiles('webclient/requirements*.txt', '.pre-commit-config.yaml') }}
           restore-keys: |
             pip-${{ runner.os }}-
 
@@ -70,8 +70,8 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pip-licenses
-          pip install -r webclient/requirements.txt
-          pip install pre-commit
+          pip install -r webclient/requirements.txt -r webclient/requirements-test.txt \
+            -r webclient/requirements-dev.txt -r webclient/requirements-docs.txt
 
       - name: Run convert_to_rst.py
         if: |

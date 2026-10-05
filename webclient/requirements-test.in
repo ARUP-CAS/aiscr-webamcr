@@ -1,0 +1,8 @@
+# Testovací závislosti (selenium testy, unit testy).
+# Instalují se navíc k requirements.txt: Dockerfile-DEV a test image
+# (Dockerfile s --build-arg INSTALL_TEST_REQUIREMENTS=true).
+-c requirements.txt
+
+selenium==4.49.0
+freezegun==1.5.5
+coverage==7.16.2

@@ -1,0 +1,8 @@
+# Závislosti pro build Sphinx dokumentace (Read the Docs).
+# docs/source/conf.py volá django.setup(), proto se instalují navíc k requirements.txt.
+-c requirements.txt
+
+sphinx==9.1.0
+sphinx-rtd-theme==3.1.0
+sphinxcontrib-googleanalytics==0.5
+sphinxcontrib-mermaid==2.0.2
