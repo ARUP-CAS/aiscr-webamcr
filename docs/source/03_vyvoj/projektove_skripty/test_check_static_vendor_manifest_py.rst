@@ -60,6 +60,12 @@ Funkce
 
    :param tmp_path: Dočasný adresář pytestu použitý jako kořen repozitáře.
 
+.. py:function:: test_symlink_outside_static_is_rejected(tmp_path)
+
+   Symlink ve static/ mířící mimo strom se odmítne a jeho obsah se nečte.
+
+   :param tmp_path: Dočasný adresář pytestu použitý jako kořen repozitáře.
+
 Zdrojový kód
 ------------
 

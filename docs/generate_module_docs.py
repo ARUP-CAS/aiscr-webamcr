@@ -3152,6 +3152,13 @@ def build_static_rst_table(libraries: List[dict]) -> str:
         "Generováno z ``webclient/static_vendor.json``; soulad s obsahem ``webclient/static/``",
         "hlídá ``scripts/check_static_vendor_manifest.py``.",
         "",
+    ]
+
+    if not libraries:
+        lines += ["Manifest neobsahuje žádné knihovny.", "", STATIC_END_MARKER]
+        return "\n".join(lines) + "\n"
+
+    lines += [
         ".. list-table:: Knihovny v jazyce Javascript vkládané jako statické soubory",
         "   :widths: 20 12 13 35 20",
         "   :header-rows: 1",
@@ -3247,11 +3254,11 @@ def generate_js_libraries_rst() -> bool:
 
     new_content = insert_generated_block(existing_content, table_block)
 
+    # Blok se přepisuje i při prázdném manifestu, aby v dokumentaci nezůstaly staré řádky.
     static_libraries = load_static_vendor_libraries(project_root / "webclient/static_vendor.json")
-    if static_libraries:
-        new_content = insert_generated_block(
-            new_content, build_static_rst_table(static_libraries), STATIC_BEGIN_MARKER, STATIC_END_MARKER
-        )
+    new_content = insert_generated_block(
+        new_content, build_static_rst_table(static_libraries), STATIC_BEGIN_MARKER, STATIC_END_MARKER
+    )
 
     if check_content_changed(new_content, output_file):
 

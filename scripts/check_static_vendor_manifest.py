@@ -100,10 +100,26 @@ def is_static_relative(rel: str) -> bool:
     Ověří, že cesta z manifestu je POSIX cesta relativní k ``webclient/static/`` a nevede mimo něj.
 
     :param rel: Cesta z pole ``paths`` (např. ``vendor/leaflet-search/leaflet-search.js``).
-    :return: ``False`` pro absolutní cestu, cestu s diskem, zpětným lomítkem nebo komponentou ``..``.
+    :return: ``False`` pro prázdnou cestu (``.``), absolutní cestu, cestu s diskem, zpětným lomítkem
+        nebo komponentou ``..``.
     """
     path = PurePosixPath(rel)
-    return not ("\\" in rel or path.is_absolute() or ":" in path.parts[0] or ".." in path.parts)
+    if "\\" in rel or not path.parts:
+        return False
+    return not (path.is_absolute() or ":" in path.parts[0] or ".." in path.parts)
+
+
+def is_inside(static_dir: Path, path: Path) -> bool:
+    """
+    Ověří, že cesta po vyřešení symlinků leží uvnitř ``webclient/static/``.
+
+    Doplňuje lexikální :func:`is_static_relative`: symlink ve ``static/`` mířící ven neprojde.
+
+    :param static_dir: Adresář ``webclient/static``.
+    :param path: Kontrolovaná cesta (nemusí existovat).
+    :return: ``True``, pokud ``path.resolve()`` je pod ``static_dir.resolve()``.
+    """
+    return path.resolve().is_relative_to(static_dir.resolve())
 
 
 def check_entries(libraries: List[dict], static_dir: Path) -> tuple[List[str], Dict[str, str]]:
@@ -142,7 +158,9 @@ def check_entries(libraries: List[dict], static_dir: Path) -> tuple[List[str], D
                 errors.append(f"cesta '{rel}' je uvedena u '{owners[rel]}' i u '{label}'")
                 continue
             owners[rel] = label
-            if not (static_dir / rel).is_file():
+            if not is_inside(static_dir, static_dir / rel):
+                errors.append(f"knihovna '{label}': cesta '{rel}' vede přes symlink mimo {STATIC_DIR}/")
+            elif not (static_dir / rel).is_file():
                 errors.append(f"knihovna '{label}': soubor '{rel}' neexistuje ve {STATIC_DIR}/")
     return errors, owners
 
@@ -187,15 +205,18 @@ def check_css_urls(static_dir: Path, owners: Dict[str, str]) -> List[str]:
     errors: List[str] = []
     for rel in sorted(owners):
         path = static_dir / rel
-        if path.suffix != ".css" or not path.is_file():
+        if path.suffix != ".css" or not is_inside(static_dir, path) or not path.is_file():
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
         for match in CSS_URL_RE.finditer(text):
             target = match.group(1).strip().strip("'\"").split("?")[0].split("#")[0]
             if not target or re.match(r"^([a-z]+:|/|#)", target, re.IGNORECASE):
                 continue
-            if not (path.parent / target).resolve().is_file():
-                line = text.count("\n", 0, match.start()) + 1
+            line = text.count("\n", 0, match.start()) + 1
+            resolved = path.parent / target
+            if not is_inside(static_dir, resolved):
+                errors.append(f"{rel}:{line}: url('{target}') míří mimo {STATIC_DIR}/")
+            elif not resolved.is_file():
                 errors.append(f"{rel}:{line}: url('{target}') míří na neexistující soubor")
     return errors
 

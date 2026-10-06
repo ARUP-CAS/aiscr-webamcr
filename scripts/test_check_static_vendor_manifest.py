@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from scripts.check_static_vendor_manifest import collect_errors
 
 
@@ -119,10 +121,31 @@ def test_path_outside_static_is_rejected(tmp_path):
 
     :param tmp_path: Dočasný adresář pytestu použitý jako kořen repozitáře.
     """
-    bad = ["../static_vendor.json", "/etc/passwd", "C:/x.css", r"vendor\leaflet-foo\foo.js"]
+    bad = ["../static_vendor.json", "/etc/passwd", "C:/x.css", r"vendor\leaflet-foo\foo.js", ".", "./"]
     root = _repo(tmp_path, [_library(paths=["vendor/leaflet-foo/foo.js", *bad])])
 
     errors = collect_errors(root)
 
     assert len(errors) == len(bad)
     assert all("musí být relativní" in e for e in errors)
+
+
+def test_symlink_outside_static_is_rejected(tmp_path):
+    """Symlink ve static/ mířící mimo strom se odmítne a jeho obsah se nečte.
+
+    :param tmp_path: Dočasný adresář pytestu použitý jako kořen repozitáře.
+    """
+    outside = tmp_path / "secret.css"
+    _write(outside, ".a{background:url(../gone.png)}")
+    link = tmp_path / "webclient/static/vendor/leaflet-foo/link.css"
+    try:
+        _write(tmp_path / "webclient/static/vendor/leaflet-foo/foo.js", "// foo")
+        link.symlink_to(outside)
+    except OSError:
+        pytest.skip("vytváření symlinků není v tomto prostředí povoleno")
+    root = _repo(tmp_path, [_library(paths=["vendor/leaflet-foo/foo.js", "vendor/leaflet-foo/link.css"])])
+
+    errors = collect_errors(root)
+
+    assert len(errors) == 1
+    assert "symlink" in errors[0]

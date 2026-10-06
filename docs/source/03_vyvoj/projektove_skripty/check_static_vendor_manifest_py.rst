@@ -58,7 +58,18 @@ Funkce
    Ověří, že cesta z manifestu je POSIX cesta relativní k ``webclient/static/`` a nevede mimo něj.
 
    :param rel: Cesta z pole ``paths`` (např. ``vendor/leaflet-search/leaflet-search.js``).
-   :return: ``False`` pro absolutní cestu, cestu s diskem, zpětným lomítkem nebo komponentou ``..``.
+   :return: ``False`` pro prázdnou cestu (``.``), absolutní cestu, cestu s diskem, zpětným lomítkem
+       nebo komponentou ``..``.
+
+.. py:function:: is_inside(static_dir, path)
+
+   Ověří, že cesta po vyřešení symlinků leží uvnitř ``webclient/static/``.
+
+   Doplňuje lexikální :func:`is_static_relative`: symlink ve ``static/`` mířící ven neprojde.
+
+   :param static_dir: Adresář ``webclient/static``.
+   :param path: Kontrolovaná cesta (nemusí existovat).
+   :return: ``True``, pokud ``path.resolve()`` je pod ``static_dir.resolve()``.
 
 .. py:function:: check_entries(libraries, static_dir)
 
