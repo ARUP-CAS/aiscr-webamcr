@@ -8,8 +8,8 @@ pip-tools==7.6.1
 django-debug-toolbar==8.0.0
 django-debug-toolbar-template-profiler==2.1.0
 django-livereload-server==0.5.1
-# runserver_plus v scripts/entrypoint.dev.sh
-Werkzeug==3.1.9
+# runserver_plus v scripts/entrypoint.dev.sh; bez pinu, verzi určuje requirements-test.txt.
+Werkzeug
 pyOpenSSL==26.4.0
 # Bez pinu: verzi PyYAML a packaging určuje constraint z requirements.txt (tranzitivně je tam táhne tablib a kombu).
 # docs/generate_module_docs.py (volá jej i docs/licenses/convert_to_rst.py)
