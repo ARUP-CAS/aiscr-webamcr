@@ -2895,21 +2895,22 @@ def npm_package_page_url(package_name: str) -> str:
     return f"https://www.npmjs.com/package/{encoded}"
 
 
-def parse_preserved_js_library_links(rst_content: str) -> Dict[str, str]:
-    """Z existujícího RST vytáhne mapu ``název balíčku → odkaz`` z generovaného bloku.
+def _parse_generated_js_library_column(rst_content: str, column: int) -> Dict[str, str]:
+    """Z existujícího RST vytáhne mapu ``název balíčku → hodnota sloupce`` z generovaného bloku.
 
     Parsuje řádky ``list-table`` mezi značkami ``.. BEGIN GENERATED NODEJS LIBRARIES``
     a ``.. END GENERATED NODEJS LIBRARIES``. Řádek záhlaví tabulky
-    (``Název knihovny``) se přeskočí. Slouží k zachování odkazů při běhu bez
-    ``node_modules`` (např. CI), aby se nepřepisovaly platné URL hodnotami
-    z :func:`npm_package_page_url`.
+    (``Název knihovny``) se přeskočí, stejně jako řádky s prázdnou hodnotou
+    ve zvoleném sloupci.
 
     Očekává stejný čtyřřádkový tvar řádků tabulky jako :func:`build_rst_table`;
     ruční zalamování buněk může parsování rozhodit.
 
     :param rst_content: Obsah souboru ``javascript_knihovny.rst`` (nebo ekvivalent).
     :type rst_content: str
-    :return: Slovník ``{název balíčku: URL}`` pro neprázdné odkazy.
+    :param column: Index sloupce za názvem knihovny (``1`` verze, ``2`` licence, ``3`` odkaz).
+    :type column: int
+    :return: Slovník ``{název balíčku: hodnota}`` pro neprázdné hodnoty.
     :rtype: Dict[str, str]
     """
     if BEGIN_MARKER not in rst_content or END_MARKER not in rst_content:
@@ -2925,19 +2926,44 @@ def parse_preserved_js_library_links(rst_content: str) -> Dict[str, str]:
         line = lines[i]
         if line.startswith("   * - "):
             name = line[7:].strip()
-            if (
-                i + 3 < len(lines)
-                and lines[i + 1].startswith("     - ")
-                and lines[i + 2].startswith("     - ")
-                and lines[i + 3].startswith("     - ")
-            ):
-                url = lines[i + 3][len("     - ") :].strip()
-                if name != "Název knihovny" and url:
-                    preserved[name] = url
+            # Prázdná buňka může po odstranění koncových mezer skončit jako "     -"
+            if i + 3 < len(lines) and all(lines[i + k].startswith("     -") for k in (1, 2, 3)):
+                value = lines[i + column][len("     -") :].strip()
+                if name != "Název knihovny" and value:
+                    preserved[name] = value
                 i += 4
                 continue
         i += 1
     return preserved
+
+
+def parse_preserved_js_library_links(rst_content: str) -> Dict[str, str]:
+    """Z existujícího RST vytáhne mapu ``název balíčku → odkaz`` z generovaného bloku.
+
+    Slouží k zachování odkazů při běhu bez ``node_modules`` (např. CI), aby se
+    nepřepisovaly platné URL hodnotami z :func:`npm_package_page_url`.
+
+    :param rst_content: Obsah souboru ``javascript_knihovny.rst`` (nebo ekvivalent).
+    :type rst_content: str
+    :return: Slovník ``{název balíčku: URL}`` pro neprázdné odkazy.
+    :rtype: Dict[str, str]
+    """
+    return _parse_generated_js_library_column(rst_content, 3)
+
+
+def parse_preserved_js_library_licenses(rst_content: str) -> Dict[str, str]:
+    """Z existujícího RST vytáhne mapu ``název balíčku → licence`` z generovaného bloku.
+
+    Slouží k zachování licencí při běhu bez ``node_modules`` (např. CI) u balíčků,
+    jejichž záznam v ``package-lock.json`` neobsahuje pole ``license``
+    (např. ``jquery``) — bez zálohy by se sloupec Licence vyprázdnil.
+
+    :param rst_content: Obsah souboru ``javascript_knihovny.rst`` (nebo ekvivalent).
+    :type rst_content: str
+    :return: Slovník ``{název balíčku: licence}`` pro neprázdné licence.
+    :rtype: Dict[str, str]
+    """
+    return _parse_generated_js_library_column(rst_content, 2)
 
 
 def load_dependencies(package_json: dict) -> Dict[str, str]:
@@ -3028,12 +3054,14 @@ def collect_libraries(
     dependencies: Dict[str, str],
     lock_licenses: Dict[str, str],
     preserved_links: Optional[Dict[str, str]] = None,
+    preserved_licenses: Optional[Dict[str, str]] = None,
 ) -> List[JsLibrary]:
     """Sestaví seznam Node.js knihoven obohacený o licence a URL.
 
     Pro každou závislost z ``dependencies`` nejprve hledá licenci v ``lock_licenses``
     (ze souboru ``package-lock.json``), a pokud ji nenajde, čte ji přímo
-    ze souboru ``package.json`` v ``node_modules``. Homepage se čte z
+    ze souboru ``package.json`` v ``node_modules``; chybí-li i tam, použije se
+    licence z ``preserved_licenses`` (poslední generovaný blok v RST). Homepage se čte z
     ``node_modules``; chybí-li, použije se dříve uložený odkaz z ``preserved_links``
     (poslední generovaný blok v RST — stabilizuje CI bez ``npm ci``), jinak URL
     stránky balíčku na npm (:func:`npm_package_page_url`). Nový balíček bez
@@ -3048,6 +3076,8 @@ def collect_libraries(
     :type lock_licenses: Dict[str, str]
     :param preserved_links: Volitelně odkazy z existujícího generovaného bloku RST.
     :type preserved_links: Optional[Dict[str, str]]
+    :param preserved_licenses: Volitelně licence z existujícího generovaného bloku RST.
+    :type preserved_licenses: Optional[Dict[str, str]]
     :return: Seřazený seznam objektů :class:`JsLibrary`.
     :rtype: List[JsLibrary]
     """
@@ -3063,6 +3093,8 @@ def collect_libraries(
 
         if not license_val:
             license_val = nm_license
+        if not license_val and preserved_licenses:
+            license_val = preserved_licenses.get(name, "")
 
         homepage = nm_homepage
         if not homepage and preserved_links:
@@ -3211,7 +3243,8 @@ def insert_generated_block(
 def generate_js_libraries_rst() -> bool:
     """Vygeneruje tabulku Node.js JavaScript knihoven pro javascript_knihovny.rst.
 
-    Licences berou z ``package-lock.json``; odkazy nejprve z ``node_modules``,
+    Licence se berou z ``package-lock.json``, pak z ``node_modules``, nakonec
+    z existujícího generovaného bloku v souboru; odkazy nejprve z ``node_modules``,
     při jejich absenci z existujícího generovaného bloku v souboru, jinak z
     :func:`npm_package_page_url`. Pro aktualizaci odkazů z metadat balíčků
     (homepage, repository) je potřeba mít nainstalované závislosti (``npm ci``).
@@ -3248,7 +3281,8 @@ def generate_js_libraries_rst() -> bool:
         existing_content = output_file.read_text(encoding="utf-8")
 
     preserved_links = parse_preserved_js_library_links(existing_content)
-    rows = collect_libraries(project_root, dependencies, lock_licenses, preserved_links)
+    preserved_licenses = parse_preserved_js_library_licenses(existing_content)
+    rows = collect_libraries(project_root, dependencies, lock_licenses, preserved_links, preserved_licenses)
 
     table_block = build_rst_table(rows)
 

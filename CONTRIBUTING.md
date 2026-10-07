@@ -214,7 +214,7 @@ Pravidla:
 1. Ručně neupravujte auto-generované bloky.
 2. Po změně Selenium testů spusťte generátor dokumentace.
 3. Po změně závislostí zkontrolujte generování seznamu knihoven. Po změně tagů Docker image v compose nebo v `Dockerfile-DB` spusťte `docs/generate_module_docs.py` (nebo `docs/licenses/convert_to_rst.py`), aby zůstal v souladu soubor `docs/source/12_zavislosti/docker_images.rst`.
-4. Tabulka Node.js knihoven (`docs/source/12_zavislosti/javascript_knihovny.rst`): sloupec Odkaz se bere z `node_modules/`; chybí-li (např. jen Python pre-commit v CI), zůstane odkaz z posledního uloženého generovaného bloku, jinak se doplní URL na npmjs.com. Pro odkazy z `homepage` / `repository` v `package.json` spusťte `npm ci` a znovu `docs/generate_module_docs.py`.
+4. Tabulka Node.js knihoven (`docs/source/12_zavislosti/javascript_knihovny.rst`): sloupec Odkaz se bere z `node_modules/`; chybí-li (např. jen Python pre-commit v CI), zůstane odkaz z posledního uloženého generovaného bloku, jinak se doplní URL na npmjs.com. Sloupec Licence se bere z `package-lock.json`, pak z `node_modules/` a nakonec z posledního uloženého generovaného bloku. Pro odkazy z `homepage` / `repository` v `package.json` spusťte `npm ci` a znovu `docs/generate_module_docs.py`.
 5. Tabulka knihoven vkládaných jako statické soubory ve stejném souboru se generuje z `webclient/static_vendor.json`; upravujte manifest, ne RST.
 
 ---
