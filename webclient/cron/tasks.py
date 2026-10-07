@@ -776,21 +776,6 @@ def update_materialized_views():
 
 
 @shared_task
-def write_value_to_redis(key, value):
-    """
-    Zapíše value to redis.
-
-    :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
-    :param value: Parametr ``value`` předává se do volání ``set()``, vstupuje do návratové hodnoty.
-
-        :return: Vrací n-tici.
-    """
-    redis_connection = RedisConnector.get_connection()
-    redis_connection.set(key, value)
-    return key, value
-
-
-@shared_task
 def call_digiarchiv_update_task():
     """Zavolá URL digiarchívu pro spuštění aktualizace dat."""
     logger.debug("cron.tasks.call_digiarchiv_update_task.start")

@@ -178,15 +178,6 @@ Funkce
 
    Aktualizuje materialized views.
 
-.. py:function:: write_value_to_redis(key, value)
-
-   Zapíše value to redis.
-
-   :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
-   :param value: Parametr ``value`` předává se do volání ``set()``, vstupuje do návratové hodnoty.
-
-   :return: Vrací n-tici.
-
 .. py:function:: call_digiarchiv_update_task()
 
    Zavolá URL digiarchívu pro spuštění aktualizace dat.

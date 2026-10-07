@@ -22,6 +22,7 @@ Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``
    prod_deploy_sh
    redis_exporter_entrypoint_sh
    restore_database_sh
+   run_healthcheck_celery_beat_sh
    run_healthcheck_celery_sh
    run_healthcheck_sh
    start_selenium_tests_sh
