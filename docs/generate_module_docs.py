@@ -2821,6 +2821,8 @@ def _extract_version(full_tag: str) -> str:
 
 BEGIN_MARKER = ".. BEGIN GENERATED NODEJS LIBRARIES"
 END_MARKER = ".. END GENERATED NODEJS LIBRARIES"
+STATIC_BEGIN_MARKER = ".. BEGIN GENERATED STATIC LIBRARIES"
+STATIC_END_MARKER = ".. END GENERATED STATIC LIBRARIES"
 
 
 @dataclass
@@ -3146,16 +3148,90 @@ def build_rst_table(rows: List[JsLibrary]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def insert_generated_block(content: str, block: str) -> str:
+def load_static_vendor_libraries(manifest_file: Path) -> List[dict]:
+    """Načte knihovny vložené jako statické soubory z manifestu ``webclient/static_vendor.json``.
+
+    :param manifest_file: Cesta k manifestu.
+    :type manifest_file: Path
+    :return: Položky pole ``libraries`` seřazené podle názvu; prázdný seznam, pokud manifest chybí.
+    :rtype: List[dict]
+    """
+    if not manifest_file.exists():
+        return []
+    libraries = load_json(manifest_file).get("libraries", [])
+    return sorted(libraries, key=lambda lib: lib.get("name", "").lower())
+
+
+def build_static_rst_table(libraries: List[dict]) -> str:
+    """Sestaví RST blok s tabulkou knihoven vložených jako statické soubory.
+
+    Tabulka je ohraničena značkami ``STATIC_BEGIN_MARKER`` a ``STATIC_END_MARKER``
+    a obsahuje sloupce Název knihovny, Verze, Licence, Úpravy a Odkaz. Sloupec
+    Úpravy obsahuje poznámku z manifestu, u upravených knihoven s prefixem ``Upraveno.``
+
+    :param libraries: Položky manifestu z :func:`load_static_vendor_libraries`.
+    :type libraries: List[dict]
+    :return: Řetězec s RST obsahem tabulky včetně ohraničujících značek.
+    :rtype: str
+    """
+
+    lines = [
+        STATIC_BEGIN_MARKER,
+        "",
+        "Knihovny vkládané jako statické soubory",
+        "----------------------------------------",
+        "",
+        "Generováno z ``webclient/static_vendor.json``; soulad s obsahem ``webclient/static/``",
+        "hlídá ``scripts/check_static_vendor_manifest.py``.",
+        "",
+    ]
+
+    if not libraries:
+        lines += ["Manifest neobsahuje žádné knihovny.", "", STATIC_END_MARKER]
+        return "\n".join(lines) + "\n"
+
+    lines += [
+        ".. list-table:: Knihovny v jazyce Javascript vkládané jako statické soubory",
+        "   :widths: 20 12 13 35 20",
+        "   :header-rows: 1",
+        "",
+        "   * - Název knihovny",
+        "     - Verze",
+        "     - Licence",
+        "     - Úpravy",
+        "     - Odkaz",
+    ]
+
+    for lib in libraries:
+        note = lib.get("note", "")
+        if lib.get("modified"):
+            note = f"Upraveno. {note}".strip()
+        lines.append(f"   * - {lib.get('name', '')}")
+        lines.append(f"     - {lib.get('version', '')}")
+        lines.append(f"     - {lib.get('license', '')}")
+        lines.append(f"     - {note}")
+        lines.append(f"     - {lib.get('source', '')}")
+
+    lines.append("")
+    lines.append(STATIC_END_MARKER)
+
+    return "\n".join(lines) + "\n"
+
+
+def insert_generated_block(
+    content: str, block: str, begin_marker: str = BEGIN_MARKER, end_marker: str = END_MARKER
+) -> str:
     """Vloží nebo nahradí generovaný blok mezi značkami v RST obsahu.
 
     :param content: Původní text souboru (např. ``.rst``).
     :param block: Nový generovaný úsek včetně značek začátku a konce.
+    :param begin_marker: Značka začátku bloku (výchozí blok Node.js knihoven).
+    :param end_marker: Značka konce bloku.
     :return: Obsah po vložení bloku, jinak ``block`` předřazený před ``content``.
     """
-    if BEGIN_MARKER in content and END_MARKER in content:
-        start = content.index(BEGIN_MARKER)
-        end = content.index(END_MARKER) + len(END_MARKER)
+    if begin_marker in content and end_marker in content:
+        start = content.index(begin_marker)
+        end = content.index(end_marker) + len(end_marker)
         # Consume the trailing newline after END_MARKER to prevent
         # accumulation on each run
         if end < len(content) and content[end] == "\n":
@@ -3212,12 +3288,21 @@ def generate_js_libraries_rst() -> bool:
 
     new_content = insert_generated_block(existing_content, table_block)
 
+    # Blok se přepisuje i při prázdném manifestu, aby v dokumentaci nezůstaly staré řádky.
+    static_libraries = load_static_vendor_libraries(project_root / "webclient/static_vendor.json")
+    new_content = insert_generated_block(
+        new_content, build_static_rst_table(static_libraries), STATIC_BEGIN_MARKER, STATIC_END_MARKER
+    )
+
     if check_content_changed(new_content, output_file):
 
         output_file.parent.mkdir(parents=True, exist_ok=True)
         output_file.write_text(new_content, encoding="utf-8")
 
-        vprint(f"  ✓ Updated {output_file.name} with {len(rows)} Node.js packages")
+        vprint(
+            f"  ✓ Updated {output_file.name} with {len(rows)} Node.js packages"
+            f" and {len(static_libraries)} static libraries"
+        )
 
         changes_detected = True
 

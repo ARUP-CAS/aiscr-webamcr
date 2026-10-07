@@ -1,0 +1,144 @@
+{
+  "_comment": "Manifest knihoven třetích stran vložených jako statické soubory do webclient/static/. Knihovny dostupné na npm patří do package.json. Kontrola: scripts/check_static_vendor_manifest.py; tabulka v docs/source/12_zavislosti/javascript_knihovny.rst se generuje z tohoto souboru.",
+  "libraries": [
+    {
+      "name": "Bootstrap-datepicker – česká lokalizace",
+      "version": "1.10.1",
+      "license": "Apache-2.0",
+      "source": "https://github.com/uxsolutions/bootstrap-datepicker/blob/v1.10.1/js/locales/bootstrap-datepicker.cs.js",
+      "paths": [
+        "vendor/bootstrap-datepicker-locale/datepicker-cs.js"
+      ],
+      "modified": true,
+      "note": "Formát data změněn na d.m.yyyy."
+    },
+    {
+      "name": "Bootstrap-select – lokalizace cs/en",
+      "version": "1.13.17",
+      "license": "MIT",
+      "source": "https://github.com/snapappointments/bootstrap-select/tree/v1.13.17/js/i18n",
+      "paths": [
+        "vendor/bootstrap-select-locale/selectpicker-cs.js",
+        "vendor/bootstrap-select-locale/selectpicker-en.js"
+      ],
+      "modified": true,
+      "note": "Výchozí nastavení AMČR (actionsBox, oddělovač u en); jádro knihovny je z npm."
+    },
+    {
+      "name": "Django admin – DateTimeShortcuts",
+      "version": "5.1.1",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/django/django/blob/5.1.1/django/contrib/admin/static/admin/js/admin/DateTimeShortcuts.js",
+      "paths": [
+        "admin/js/admin/DateTimeShortcuts.js"
+      ],
+      "modified": true,
+      "note": "Přepisuje soubor Django adminu (cesta je závazná); tlačítko Dnes používá první formát z DATE_INPUT_FORMATS."
+    },
+    {
+      "name": "Easytimer.js",
+      "version": "4.5.1",
+      "license": "MIT",
+      "source": "https://github.com/albert-gonzalez/easytimer.js",
+      "paths": [
+        "vendor/easytimer/timer.js"
+      ],
+      "modified": true,
+      "note": "Zdrojový ES soubor bez importů (TimeCounter a EventEmitter vloženy), verze odvozena z data vložení."
+    },
+    {
+      "name": "Heatmap.js a Leaflet Heatmap Overlay",
+      "version": "2.0.5",
+      "license": "MIT",
+      "source": "https://github.com/pa7/heatmap.js",
+      "paths": [
+        "vendor/heatmap.js/heatmap.js",
+        "vendor/heatmap.js/leaflet-heatmap.js"
+      ],
+      "modified": true,
+      "note": "Canvas s willReadFrequently, omezení poloměru na 5000, rozšířené hranice mapy (pad(1))."
+    },
+    {
+      "name": "html-to-rtf-browser",
+      "version": "1.6.1",
+      "license": "MIT",
+      "source": "https://github.com/antoniolucasnobar/html-to-rtf-browser",
+      "paths": [
+        "js/html-to-rtf-browser.js"
+      ],
+      "modified": true,
+      "note": "Browserify bundle; závislosti odpovídají cheerio 1.0.0-rc.12, parse5 7.2.1, juice 7.0.0 (ověřeno rekonstrukcí buildu). Úpravy AMČR jen v app/src (allowed-html-tags, html-tags.module, color, charset, rtf.class): mapování tříd výpisu na RTF, ignorované třídy, absolutní odkazy, barva odkazů, obrázky nahrazeny textem „Stáhnout soubor“ (cs/en). Náhrada řeší #3648."
+    },
+    {
+      "name": "Leaflet Context Menu",
+      "version": "1.5.1",
+      "license": "MIT",
+      "source": "https://github.com/aratcliffe/Leaflet.contextmenu/tree/v1.5.1",
+      "paths": [
+        "vendor/leaflet-contextmenu/leaflet.contextmenu.min.css",
+        "vendor/leaflet-contextmenu/leaflet.contextmenu.min.js"
+      ],
+      "modified": false,
+      "note": "Na npm je nejnovější 1.4.0."
+    },
+    {
+      "name": "Leaflet Control Search",
+      "version": "3.0.2",
+      "license": "MIT",
+      "source": "https://github.com/stefanocudini/leaflet-search",
+      "paths": [
+        "vendor/leaflet-search/leaflet-search.css",
+        "vendor/leaflet-search/leaflet-search.js"
+      ],
+      "modified": true,
+      "note": "Vyhledávání přes služby ČÚZK (RÚIAN); verze odvozena porovnáním s npm."
+    },
+    {
+      "name": "Leaflet Coordinates",
+      "version": "0.1.5",
+      "license": "CC-BY-3.0",
+      "source": "https://github.com/MrMufflon/Leaflet.Coordinates",
+      "paths": [
+        "vendor/leaflet-coordinates/leaflet.coor.css",
+        "vendor/leaflet-coordinates/leaflet.coor.js"
+      ],
+      "modified": true,
+      "note": "Doplněno zobrazení souřadnic S-JTSK."
+    },
+    {
+      "name": "Leaflet Measure",
+      "version": "c31cafb",
+      "license": "neuvedena",
+      "source": "https://github.com/aprilandjan/leaflet.measure",
+      "paths": [
+        "vendor/leaflet-measure/leaflet.measure.css",
+        "vendor/leaflet-measure/leaflet.measure.js"
+      ],
+      "modified": true,
+      "note": "Upstream nemá vydání ani licenci; upravené volby (title, keyboard) a doplněná událost measure:start."
+    },
+    {
+      "name": "Leaflet Messagebox",
+      "version": "1.1",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/tinuzz/leaflet-messagebox",
+      "paths": [
+        "vendor/leaflet-messagebox/leaflet-messagebox.css",
+        "vendor/leaflet-messagebox/leaflet-messagebox.js"
+      ],
+      "modified": true,
+      "note": "Doplněna metoda hide() a parametr timeout v show()."
+    },
+    {
+      "name": "Leaflet TileLayer Grayscale",
+      "version": "97d1417",
+      "license": "WTFPL",
+      "source": "https://github.com/Zverik/leaflet-grayscale",
+      "paths": [
+        "vendor/leaflet-grayscale/leaflet-grayscale.js"
+      ],
+      "modified": false,
+      "note": "Upstream nemá vydání; verze je commit v master."
+    }
+  ]
+}

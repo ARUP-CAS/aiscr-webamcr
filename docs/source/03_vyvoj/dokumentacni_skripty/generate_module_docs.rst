@@ -732,12 +732,36 @@ Funkce
    :return: Řetězec s RST obsahem tabulky včetně ohraničujících značek.
    :rtype: str
 
-.. py:function:: insert_generated_block(content, block)
+.. py:function:: load_static_vendor_libraries(manifest_file)
+
+   Načte knihovny vložené jako statické soubory z manifestu ``webclient/static_vendor.json``.
+
+   :param manifest_file: Cesta k manifestu.
+   :type manifest_file: Path
+   :return: Položky pole ``libraries`` seřazené podle názvu; prázdný seznam, pokud manifest chybí.
+   :rtype: List[dict]
+
+.. py:function:: build_static_rst_table(libraries)
+
+   Sestaví RST blok s tabulkou knihoven vložených jako statické soubory.
+
+   Tabulka je ohraničena značkami ``STATIC_BEGIN_MARKER`` a ``STATIC_END_MARKER``
+   a obsahuje sloupce Název knihovny, Verze, Licence, Úpravy a Odkaz. Sloupec
+   Úpravy obsahuje poznámku z manifestu, u upravených knihoven s prefixem ``Upraveno.``
+
+   :param libraries: Položky manifestu z :func:`load_static_vendor_libraries`.
+   :type libraries: List[dict]
+   :return: Řetězec s RST obsahem tabulky včetně ohraničujících značek.
+   :rtype: str
+
+.. py:function:: insert_generated_block(content, block, begin_marker, end_marker)
 
    Vloží nebo nahradí generovaný blok mezi značkami v RST obsahu.
 
    :param content: Původní text souboru (např. ``.rst``).
    :param block: Nový generovaný úsek včetně značek začátku a konce.
+   :param begin_marker: Značka začátku bloku (výchozí blok Node.js knihoven).
+   :param end_marker: Značka konce bloku.
    :return: Obsah po vložení bloku, jinak ``block`` předřazený před ``content``.
 
 .. py:function:: generate_js_libraries_rst()
