@@ -22,7 +22,7 @@
     "leaflet.markercluster": "1.5.3",
     "moment": "2.31.0",
     "spin.js": "2.3.2",
-    "vanilla-cookieconsent": "3.0.0"
+    "vanilla-cookieconsent": "3.1.0"
   },
   "overrides": {
     "bootstrap-select": {
