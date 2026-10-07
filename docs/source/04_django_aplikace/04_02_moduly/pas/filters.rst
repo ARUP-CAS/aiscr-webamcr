@@ -67,6 +67,19 @@ Třídy
 
       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``filter()``, proměnná ``queryset``.
 
+   .. py:method:: filter_organizace_nalezu()
+
+      Filtruje nálezy, u kterých je některá ze zvolených organizací organizací projektu nebo cílovou organizací nálezu.
+
+      Podmínka odpovídá vlastnictví nálezu organizací (viz ``PasPermissionFilterMixin.add_ownership_lookup``).
+
+      :param queryset: Queryset samostatných nálezů, který se dále zužuje.
+      :param name: Název filtru (nepoužívá se).
+      :param value: Seznam zvolených organizací.
+
+      :return: Queryset nálezů, kde ``projekt__organizace`` nebo ``predano_organizace`` je mezi zvolenými organizacemi;
+          při nevyplněném filtru nezměněný ``queryset``.
+
 
 .. py:class:: UzivatelSpolupraceFilter
 
