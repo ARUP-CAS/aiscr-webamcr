@@ -27,6 +27,7 @@ from heslar.ruian_sync import reassign as reassign_mod
 from heslar.ruian_sync import syncer
 from heslar.ruian_sync.provider import (
     EVENT_UPSERT,
+    LEVEL_KATASTR,
     LEVEL_KRAJ,
     RuianChangeEvent,
     RuianFullState,
@@ -1066,6 +1067,80 @@ class RozpoznaniOpakovaniTests(TestCase):
     def test_selhani_bez_stazeni_metadata_nevynuti(self):
         """Běh, který skončil na 404, se k datům nedostal."""
         self.assertFalse(self._spust([(RuianSyncRun.STATUS_FAILED, "")]))
+
+    def test_preruseny_beh_se_bere_jako_selhani(self):
+        """
+        Běh zabitý zvenčí zůstal ``running`` – i ten musí vynutit opakování.
+
+        Odpovídá incidentu na testu (6. 10. 2026), kdy swarm při restartu
+        stacku zabil celery worker uprostřed přepočtu navázaných záznamů.
+        """
+        self.assertTrue(self._spust([(RuianSyncRun.STATUS_RUNNING, "/tmp/20260404_ST_ZKSH.xml.zip")]))
+
+    def test_preruseny_beh_se_uzavre_jako_failed(self):
+        """Osiřelý ``running`` řádek se v auditu uzavře s vysvětlující chybou."""
+        self._spust([(RuianSyncRun.STATUS_RUNNING, "/tmp/20260404_ST_ZKSH.xml.zip")])
+
+        preruseny = RuianSyncRun.objects.get(data_valid_to=self.DEN, error=tasks.ERROR_PRERUSENY_BEH)
+        self.assertEqual(preruseny.status, RuianSyncRun.STATUS_FAILED)
+        self.assertIsNotNone(preruseny.finished_at)
+        self.assertFalse(
+            RuianSyncRun.objects.filter(status=RuianSyncRun.STATUS_RUNNING).exists(),
+            "po běhu nesmí zůstat žádný řádek running",
+        )
+
+
+@_BEZ_CACHEOPS
+class OpakovaniReassignuTests(TestCase):
+    """
+    Testy, že opakovaný den znovu spustí přepočet navázaných záznamů.
+
+    Předchozí pokus mohl hranice zapsat a přepočet nedokončit. Při opakování
+    jsou hranice v DB stejné jako v souboru, takže by je upsert nevyhodnotil
+    jako změněné a přepočet by se už nikdy nedoběhl.
+    """
+
+    KOD = 990001
+
+    def _spust(self, *, vynutit_metadata, hranice_wkt):
+        """
+        Aplikuje jednu událost katastru, jehož data se proti DB nezměnila.
+
+        :param vynutit_metadata: Příznak opakování dne předávaný syncerem.
+        :param hranice_wkt: Hranice v DTO, nebo ``None`` pro událost bez hranice.
+        :return: Množina kódů katastrů určených k přepočtu.
+        """
+        run = RuianSyncRun.objects.create(
+            mode=RuianSyncRun.MODE_DELTA,
+            source="file_vfr",
+            triggered_by=RuianSyncRun.TRIGGER_CRON,
+            data_valid_to=datetime.date(2026, 10, 4),
+            variant="ZKSH",
+        )
+        udalost = RuianChangeEvent(
+            level=LEVEL_KATASTR,
+            event_type=EVENT_UPSERT,
+            kod=self.KOD,
+            payload=RuianKatastrDTO(kod=self.KOD, nazev="x", okres_kod=1, hranice_wkt=hranice_wkt),
+        )
+        with mock.patch.object(syncer, "_upsert_katastr", return_value=(False, False)), mock.patch.object(
+            syncer, "_check_katastry_topology"
+        ), mock.patch.object(syncer, "_soucet_plochy_katastru", return_value=None):
+            return syncer._apply_changes([udalost], run, vynutit_metadata=vynutit_metadata)
+
+    def test_bezny_beh_neprepocitava_nezmenene(self):
+        """Za běžného běhu se katastr se shodnou hranicí nepřepočítává."""
+        self.assertEqual(self._spust(vynutit_metadata=False, hranice_wkt="MULTIPOLYGON(((0 0,1 0,1 1,0 0)))"), set())
+
+    def test_opakovani_prepocita_katastr_s_hranici(self):
+        """Při opakování dne se přepočet zopakuje i pro nezměněnou hranici."""
+        self.assertEqual(
+            self._spust(vynutit_metadata=True, hranice_wkt="MULTIPOLYGON(((0 0,1 0,1 1,0 0)))"), {self.KOD}
+        )
+
+    def test_opakovani_bez_hranice_neprepocitava(self):
+        """Událost bez hranice (např. jen přejmenování) přepočet nespouští ani při opakování."""
+        self.assertEqual(self._spust(vynutit_metadata=True, hranice_wkt=None), set())
 
 
 @_BEZ_CACHEOPS
