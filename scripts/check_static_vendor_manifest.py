@@ -109,17 +109,31 @@ def is_static_relative(rel: str) -> bool:
     return not (path.is_absolute() or ":" in path.parts[0] or ".." in path.parts)
 
 
-def is_inside(static_dir: Path, path: Path) -> bool:
+def is_inside(base: Path, path: Path) -> bool:
     """
-    Ověří, že cesta po vyřešení symlinků leží uvnitř ``webclient/static/``.
+    Ověří, že cesta po vyřešení symlinků leží uvnitř adresáře ``base``.
 
-    Doplňuje lexikální :func:`is_static_relative`: symlink ve ``static/`` mířící ven neprojde.
+    Doplňuje lexikální :func:`is_static_relative`: symlink mířící ven z kontrolovaného stromu
+    (``webclient/static/`` u manifestu, ``webclient/`` u šablon) neprojde.
 
-    :param static_dir: Adresář ``webclient/static``.
+    :param base: Kořen povoleného stromu.
     :param path: Kontrolovaná cesta (nemusí existovat).
-    :return: ``True``, pokud ``path.resolve()`` je pod ``static_dir.resolve()``.
+    :return: ``True``, pokud ``path.resolve()`` je pod ``base.resolve()``.
     """
-    return path.resolve().is_relative_to(static_dir.resolve())
+    return path.resolve().is_relative_to(base.resolve())
+
+
+def normalize(rel: str) -> str:
+    """
+    Převede cestu relativní k ``webclient/static/`` na kanonický tvar (bez ``./`` a ``//``).
+
+    Klíče v mapě vlastníků i všechna vyhledávání v ní používají tento tvar, takže zápis
+    ``./vendor/x.css`` a ``vendor/x.css`` je táž cesta.
+
+    :param rel: Cesta, která prošla :func:`is_static_relative`.
+    :return: Normalizovaná POSIX cesta.
+    """
+    return PurePosixPath(rel).as_posix()
 
 
 def check_entries(libraries: List[dict], static_dir: Path) -> tuple[List[str], Dict[str, str]]:
@@ -154,6 +168,7 @@ def check_entries(libraries: List[dict], static_dir: Path) -> tuple[List[str], D
                     "(bez '..', '\\' a absolutní cesty)"
                 )
                 continue
+            rel = normalize(rel)
             if rel in owners:
                 errors.append(f"cesta '{rel}' je uvedena u '{owners[rel]}' i u '{label}'")
                 continue
@@ -225,6 +240,9 @@ def check_template_references(templates_root: Path, owners: Dict[str, str]) -> L
     """
     Zkontroluje, že odkazy ``{% static 'vendor/...' %}`` v šablonách míří na soubory z manifestu.
 
+    Čtou se jen běžné soubory, které po vyřešení symlinků leží pod ``templates_root``;
+    symlink ven ze stromu ani speciální soubor (např. ``/dev/zero``) se nečte.
+
     :param templates_root: Adresář, pod kterým se hledají šablony ``*.html``.
     :param owners: Mapa cesta → název knihovny z :func:`check_entries`.
     :return: Seznam chyb.
@@ -233,9 +251,11 @@ def check_template_references(templates_root: Path, owners: Dict[str, str]) -> L
     for template in sorted(templates_root.rglob("*.html")):
         if "node_modules" in template.parts:
             continue
+        if not is_inside(templates_root, template) or not template.is_file():
+            continue
         text = template.read_text(encoding="utf-8", errors="replace")
         for match in STATIC_VENDOR_REF_RE.finditer(text):
-            if match.group(1) not in owners:
+            if normalize(match.group(1)) not in owners:
                 line = text.count("\n", 0, match.start()) + 1
                 rel = template.relative_to(templates_root.parent).as_posix()
                 errors.append(f"{rel}:{line}: odkaz na '{match.group(1)}', který není v {MANIFEST}")

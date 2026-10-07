@@ -66,6 +66,18 @@ Funkce
 
    :param tmp_path: Dočasný adresář pytestu použitý jako kořen repozitáře.
 
+.. py:function:: test_non_canonical_path_is_normalized(tmp_path)
+
+   Zápis ``./vendor/...`` nebo ``vendor//...`` je táž cesta: bez falešné chyby, s detekcí duplicity.
+
+   :param tmp_path: Dočasný adresář pytestu použitý jako kořen repozitáře.
+
+.. py:function:: test_template_symlink_outside_is_not_read(tmp_path)
+
+   Šablona, která je symlinkem mimo strom ``webclient/``, se nečte.
+
+   :param tmp_path: Dočasný adresář pytestu použitý jako kořen repozitáře.
+
 Zdrojový kód
 ------------
 

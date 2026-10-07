@@ -61,15 +61,26 @@ Funkce
    :return: ``False`` pro prázdnou cestu (``.``), absolutní cestu, cestu s diskem, zpětným lomítkem
        nebo komponentou ``..``.
 
-.. py:function:: is_inside(static_dir, path)
+.. py:function:: is_inside(base, path)
 
-   Ověří, že cesta po vyřešení symlinků leží uvnitř ``webclient/static/``.
+   Ověří, že cesta po vyřešení symlinků leží uvnitř adresáře ``base``.
 
-   Doplňuje lexikální :func:`is_static_relative`: symlink ve ``static/`` mířící ven neprojde.
+   Doplňuje lexikální :func:`is_static_relative`: symlink mířící ven z kontrolovaného stromu
+   (``webclient/static/`` u manifestu, ``webclient/`` u šablon) neprojde.
 
-   :param static_dir: Adresář ``webclient/static``.
+   :param base: Kořen povoleného stromu.
    :param path: Kontrolovaná cesta (nemusí existovat).
-   :return: ``True``, pokud ``path.resolve()`` je pod ``static_dir.resolve()``.
+   :return: ``True``, pokud ``path.resolve()`` je pod ``base.resolve()``.
+
+.. py:function:: normalize(rel)
+
+   Převede cestu relativní k ``webclient/static/`` na kanonický tvar (bez ``./`` a ``//``).
+
+   Klíče v mapě vlastníků i všechna vyhledávání v ní používají tento tvar, takže zápis
+   ``./vendor/x.css`` a ``vendor/x.css`` je táž cesta.
+
+   :param rel: Cesta, která prošla :func:`is_static_relative`.
+   :return: Normalizovaná POSIX cesta.
 
 .. py:function:: check_entries(libraries, static_dir)
 
@@ -102,6 +113,9 @@ Funkce
 .. py:function:: check_template_references(templates_root, owners)
 
    Zkontroluje, že odkazy ``{% static 'vendor/...' %}`` v šablonách míří na soubory z manifestu.
+
+   Čtou se jen běžné soubory, které po vyřešení symlinků leží pod ``templates_root``;
+   symlink ven ze stromu ani speciální soubor (např. ``/dev/zero``) se nečte.
 
    :param templates_root: Adresář, pod kterým se hledají šablony ``*.html``.
    :param owners: Mapa cesta → název knihovny z :func:`check_entries`.

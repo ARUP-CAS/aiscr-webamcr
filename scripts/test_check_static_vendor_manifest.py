@@ -149,3 +149,36 @@ def test_symlink_outside_static_is_rejected(tmp_path):
 
     assert len(errors) == 1
     assert "symlink" in errors[0]
+
+
+def test_non_canonical_path_is_normalized(tmp_path):
+    """Zápis ``./vendor/...`` nebo ``vendor//...`` je táž cesta: bez falešné chyby, s detekcí duplicity.
+
+    :param tmp_path: Dočasný adresář pytestu použitý jako kořen repozitáře.
+    """
+    root = _repo(tmp_path, [_library(paths=["./vendor/leaflet-foo/foo.js"])])
+    _write(root / "webclient/templates/base.html", "{% static 'vendor//leaflet-foo/foo.js' %}")
+    assert collect_errors(root) == []
+
+    root = _repo(tmp_path, [_library(paths=["vendor/leaflet-foo/foo.js", "./vendor/leaflet-foo/foo.js"])])
+    errors = collect_errors(root)
+    assert len(errors) == 1
+    assert "je uvedena u" in errors[0]
+
+
+def test_template_symlink_outside_is_not_read(tmp_path):
+    """Šablona, která je symlinkem mimo strom ``webclient/``, se nečte.
+
+    :param tmp_path: Dočasný adresář pytestu použitý jako kořen repozitáře.
+    """
+    outside = tmp_path / "outside.html"
+    _write(outside, "{% static 'vendor/gone/gone.js' %}")
+    root = _repo(tmp_path, [_library()])
+    link = root / "webclient/templates/link.html"
+    link.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        link.symlink_to(outside)
+    except OSError:
+        pytest.skip("vytváření symlinků není v tomto prostředí povoleno")
+
+    assert collect_errors(root) == []
