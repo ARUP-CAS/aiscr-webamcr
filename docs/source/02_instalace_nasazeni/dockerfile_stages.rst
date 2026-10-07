@@ -150,6 +150,9 @@ běží selenium testy. Publikovaný produkční obraz se staví bez něj.
 * Dependabot (``.github/dependabot.yml``) aktualizuje přímé závislosti z ``requirements*.in``
   a bezpečnostní opravy. Soubory kompiluje vlastním pip-compile: přepínače čte z hlavičky
   ``requirements*.txt`` a pořadí vrstev zná jen z řádků ``-r``, proto se vrstvy nepropojují přes ``-c``.
+  Balíčky, které spolu obvykle přicházejí nebo bez sebe nemohou být aktualizovány (např. Django
+  s django-celery-beat), seskupuje do jednoho PR; skupiny i jejich důvody jsou v ``.github/dependabot.yml``.
+  Bezpečnostní opravy zůstávají jako samostatné PR.
 * Workflow ``.github/workflows/pre_commit.yml`` při každém PR do ``test`` nebo ``main`` a při pushi
   do ``main`` znovu zkompiluje ``requirements*.txt`` bez aktualizací; nesoulad s ``requirements*.in``
   opraví v auto-fix PR.
