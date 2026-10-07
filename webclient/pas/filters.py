@@ -214,9 +214,16 @@ class SamostatnyNalezFilter(GeomIntersectsFilterMixin, HistorieFilter, filters.F
     projekt_organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
         field_name="projekt__organizace",
-        label=_("arch_z.filters.samostatnyNalezFilter.projekt_roganizace.label"),
+        label=_("pas.filters.samostatnyNalezFilter.projektOrganizace.label"),
         widget=SelectMultipleSeparator(),
         distinct=True,
+    )
+
+    organizace_nalezu = ModelMultipleChoiceFilter(
+        queryset=Organizace.objects.all(),
+        method="filter_organizace_nalezu",
+        label=_("pas.filters.samostatnyNalezFilter.organizaceNalezu.label"),
+        widget=SelectMultipleSeparator(),
     )
 
     obdobi = MultipleChoiceFilter(
@@ -367,6 +374,24 @@ class SamostatnyNalezFilter(GeomIntersectsFilterMixin, HistorieFilter, filters.F
         if value == OBLAST_MORAVA:
             return queryset.filter(ident_cely__contains="M-")
         return queryset
+
+    def filter_organizace_nalezu(self, queryset, name, value):
+        """
+        Filtruje nálezy, u kterých je některá ze zvolených organizací organizací projektu nebo cílovou organizací nálezu.
+
+        Podmínka odpovídá vlastnictví nálezu organizací (viz ``PasPermissionFilterMixin.add_ownership_lookup``).
+
+        :param queryset: Queryset samostatných nálezů, který se dále zužuje.
+        :param name: Název filtru (nepoužívá se).
+        :param value: Seznam zvolených organizací.
+
+        :return: Queryset nálezů, kde ``projekt__organizace`` nebo ``predano_organizace`` je mezi zvolenými organizacemi;
+            při nevyplněném filtru nezměněný ``queryset``.
+        """
+        # Nevyplněné pole vrací prázdný QuerySet (ne []), který django-filter nepovažuje za prázdnou hodnotu.
+        if not value:
+            return queryset
+        return queryset.filter(Q(projekt__organizace__in=value) | Q(predano_organizace__in=value))
 
 
 class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
@@ -536,6 +561,7 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
                     Div("okres", css_class="col-sm-6 col-lg-2"),
                     Div("kraj", css_class="col-sm-6 col-lg-2"),
                     Div("oblast", css_class="col-sm-6 col-lg-2"),
+                    Div("projekt_organizace", css_class="col-sm-6 col-lg-2"),
                     Div("popisne_udaje", css_class="col-sm-6 col-lg-4"),
                     Div("obdobi", css_class="col-sm-6 col-lg-2"),
                     Div("druh_nalezu", css_class="col-sm-6 col-lg-2"),
@@ -545,6 +571,7 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
                     Div("hloubka_do", css_class="col-sm-6 col-lg-2"),
                     Div("pristupnost", css_class="col-sm-6 col-lg-2"),
                     Div("stav", css_class="col-sm-6 col-lg-2"),
+                    Div("organizace_nalezu", css_class="col-sm-6 col-lg-2"),
                     css_class="row",
                 ),
                 Div(

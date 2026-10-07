@@ -33,6 +33,13 @@ repos:
         pass_filenames: false
         files: ^(package\.json|webclient/webclient/settings/base\.py)$
         require_serial: true
+      - id: static-vendor-manifest
+        name: Static vendor libraries vs static_vendor.json
+        entry: python scripts/check_static_vendor_manifest.py
+        language: python
+        pass_filenames: false
+        files: ^(package\.json|webclient/static_vendor\.json|webclient/static/.*|webclient/.*\.html)$
+        require_serial: true
       - id: method-docstring-style-reminder
         name: Method docstring style reminder
         entry: python docs/check_method_docstrings.py

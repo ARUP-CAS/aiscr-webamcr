@@ -17,11 +17,11 @@
   <link rel="stylesheet" href="{% static 'leaflet/dist/leaflet.css' %}"/>
   <script src="{% static 'leaflet/dist/leaflet.js' %}"></script>
   <!--contextmenu-->
-  <script src="{% static 'js/Leaflet.contextmenu1.5.1/leaflet.contextmenu.min.js' %}"></script>
-  <link rel="stylesheet" href="{% static 'js/Leaflet.contextmenu1.5.1/leaflet.contextmenu.min.css' %}"/>
+  <script src="{% static 'vendor/leaflet-contextmenu/leaflet.contextmenu.min.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'vendor/leaflet-contextmenu/leaflet.contextmenu.min.css' %}"/>
   <!--Leaflet Buttons-->
-  <link rel="stylesheet" href="{% static 'js/Leaflet.EasyButton2.4.0/easy-button.css' %}">
-  <script src="{% static 'js/Leaflet.EasyButton2.4.0/easy-button.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'leaflet-easybutton/src/easy-button.css' %}">
+  <script src="{% static 'leaflet-easybutton/src/easy-button.js' %}"></script>
   <!--Leaflet Draw-->
   <script src="{% static 'leaflet-draw/dist/leaflet.draw-src.js' %}"></script>
   <link rel="stylesheet" href="{% static 'leaflet-draw/dist/leaflet.draw.css' %}">
@@ -32,13 +32,13 @@
   <link href='{% static 'leaflet-fullscreen/dist/leaflet.fullscreen.css' %}'rel='stylesheet'/>
 
   <!--Leaflet MessageBox-->
-  <script src='{% static 'js/Leaflet.messagebox/leaflet-messagebox.js' %}'></script>
-  <link href='{% static 'js/Leaflet.messagebox/leaflet-messagebox.css' %}'rel='stylesheet'/>
+  <script src='{% static 'vendor/leaflet-messagebox/leaflet-messagebox.js' %}'></script>
+  <link href='{% static 'vendor/leaflet-messagebox/leaflet-messagebox.css' %}'rel='stylesheet'/>
 
   <!--Mark Cluster-->
 
 
-  <link rel="stylesheet" type="text/css" href="{% static 'css/bs-stepper.min.css' %}"/>
+  <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper/dist/css/bs-stepper.min.css' %}"/>
 
   <!-- Autocomplete media files -->
   <link href="{% static 'admin/css/vendor/select2/select2.css' %}" media="screen" rel="stylesheet" type="text/css">
@@ -51,8 +51,8 @@
 
 
   <script src="{% static 'js/coordTransform.js' %}"></script>
-  <script src="{% static 'js/heatmap/heatmap.js' %}"></script>
-  <script src="{% static 'js/heatmap/leaflet-heatmap.js' %}"></script>
+  <script src="{% static 'vendor/heatmap.js/heatmap.js' %}"></script>
+  <script src="{% static 'vendor/heatmap.js/leaflet-heatmap.js' %}"></script>
   <script src="{% static 'leaflet.markercluster/dist/leaflet.markercluster-src.js' %}"></script>
   <link rel="stylesheet" href="{% static 'leaflet.markercluster/dist/MarkerCluster.css' %}" />
   <link rel="stylesheet" href="{% static 'leaflet.markercluster/dist/MarkerCluster.Default.css' %}" />
@@ -63,13 +63,13 @@
       const global_csrftoken = '{{ csrf_token }}';
   </script>
   <!-- static leaflet additional import-->
-  <link rel="stylesheet" href="{% static 'css/leaflet.measure.css' %}"/>
-  <script src="{% static 'js/leaflet.measure.js' %}"></script>
-  <script type="text/javascript" src="{% static 'js/leaflet.coor.js' %}"></script>
-  <link rel="stylesheet" href="{% static 'css/leaflet.coor.css' %}"/>
+  <link rel="stylesheet" href="{% static 'vendor/leaflet-measure/leaflet.measure.css' %}"/>
+  <script src="{% static 'vendor/leaflet-measure/leaflet.measure.js' %}"></script>
+  <script type="text/javascript" src="{% static 'vendor/leaflet-coordinates/leaflet.coor.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'vendor/leaflet-coordinates/leaflet.coor.css' %}"/>
 
-  <link rel="stylesheet" href="{% static 'css/leaflet-search.css' %}"/>
-  <script src="{% static 'js/leaflet-search.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'vendor/leaflet-search/leaflet-search.css' %}"/>
+  <script src="{% static 'vendor/leaflet-search/leaflet-search.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -289,7 +289,7 @@
   <script src="{% static 'js/coor_precision.js' %}"></script>
   <script src="{% static 'spin.js/spin.js' %}"></script>
   <script src="{% static 'leaflet-spin/leaflet.spin.min.js' %}"></script>
-  <script src="{% static 'js/leaflet-grayscale.js' %}"></script>
+  <script src="{% static 'vendor/leaflet-grayscale/leaflet-grayscale.js' %}"></script>
   <script src="{% static 'js/mapa_settings_jtsk.js' %}"></script>
   <script src="{% static 'js/mapa_functions.js' %}"></script>
   <script src="{% static 'js/mapa_arch_z.js' %}"></script>
