@@ -11,6 +11,7 @@ Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``
    celery_exporter_entrypoint_sh
    check_container_image_reference_parity_py
    check_npm_vendor_package_names_py
+   check_static_vendor_manifest_py
    copy_custom_html_py
    crontab_txt
    dev_deploy_sh
@@ -26,5 +27,6 @@ Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``
    run_healthcheck_sh
    start_selenium_tests_sh
    test_check_container_image_reference_parity_py
+   test_check_static_vendor_manifest_py
    test_deploy_sh
    uwsgi_site_ini
