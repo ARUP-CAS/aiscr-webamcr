@@ -31,5 +31,5 @@ sphinx:
 # Optionally declare the Python requirements required to build your docs
 python:
   install:
-    - requirements: webclient/requirements.txt
+    # requirements-docs.txt obsahuje i produkční piny (conf.py volá django.setup()).
     - requirements: webclient/requirements-docs.txt

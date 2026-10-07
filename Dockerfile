@@ -35,13 +35,14 @@ RUN echo $TZ > /etc/timezone && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Testovací závislosti (selenium aj.) jen pro testovací image test_web, viz scripts/test_deploy.sh.
+# requirements-test.txt obsahuje i všechny produkční piny, proto stačí sám.
 ARG INSTALL_TEST_REQUIREMENTS=false
 
 COPY ./webclient/requirements.txt ./webclient/requirements-test.txt /tmp/
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     if [ "${INSTALL_TEST_REQUIREMENTS}" = "true" ]; then \
-        pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt -r /tmp/requirements-test.txt; \
+        pip3 wheel --wheel-dir /wheels -r /tmp/requirements-test.txt; \
     else \
         pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt; \
     fi

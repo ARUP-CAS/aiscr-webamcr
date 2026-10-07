@@ -5,6 +5,12 @@
 
 version: 2
 updates:
+  # Python: autorské webclient/requirements*.in se kompilují (pip-tools) do requirements*.txt.
+  # Dependabot nespouští scripts/compile_requirements.sh, kompiluje vlastním pip-compile:
+  # - přepínače (např. --strip-extras) čte z hlavičky vygenerovaného .txt,
+  # - pořadí vrstev (prod → test → dev, prod → docs) zná jen z řádků -r v .in souborech.
+  # Aktualizuje přímé závislosti z .in a bezpečnostní opravy; tranzitivní piny obnovuje
+  # job refresh-python-pins v .github/workflows/pre_commit.yml (PR do test).
   - package-ecosystem: "pip"
     directory: "/webclient/"
     schedule:
