@@ -1,0 +1,10 @@
+// --- BOOTSTRAP OVERRIDES ---
+// Hodnoty přenesené z dříve vendorované kopie Bootstrap SCSS (static/bootstrap5/_variables.scss),
+// kde byly upraveny přímo ve zdroji. Importovat před 'bootstrap/scss/bootstrap'.
+
+$link-decoration: none !default;
+$link-hover-decoration: underline !default;
+$navbar-light-color: rgba(var(--bs-emphasis-color-rgb), .5) !default;
+
+// není proměnnou Bootstrapu 5, používá ji scss/_app-global.scss
+$pagination-line-height: 1.25 !default;
