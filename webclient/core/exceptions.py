@@ -47,18 +47,6 @@ class DJNemaPianError(Exception):
         super().__init__(self.dj)
 
 
-class NeocekavanaRadaError(Exception):
-    """Implementuje komponentu ``NeocekavanaRadaError`` v rámci aplikace."""
-
-    def __init__(self, message="Neocekavana rada dokumentu."):
-        """
-        Inicializuje výjimku pro případ, kdy je zjištěna neočekávaná řada dokumentu.
-
-        :param message: Textová zpráva popisující důvod výjimky.
-        """
-        self.message = message
-
-
 class WrongSheetError(Exception):
     """Implementuje komponentu ``WrongSheetError`` v rámci aplikace."""
 

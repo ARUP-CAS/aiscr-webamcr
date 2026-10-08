@@ -14,7 +14,6 @@ from core.constants import (
     D_STAV_ZAPSANY,
     DOKUMENT_CAST_RELATION_TYPE,
     DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
-    IDENTIFIKATOR_DOCASNY_PREFIX,
     ODESLANI_DOK,
     ROLE_ADMIN_ID,
     ROLE_ARCHIVAR_ID,
@@ -2197,17 +2196,9 @@ def archivovat(request, ident_cely):
         try:
             with transaction.atomic():
                 # Nastav identifikátor na permanentní.
-                if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
-                    try:
-                        dokument.set_permanent_ident_cely(dokument.ident_cely[2], dokument.rada)
-                    except MaximalIdentNumberError:
-                        fedora_transaction.error_message = MAXIMUM_IDENT_DOSAZEN
-                        fedora_transaction.rollback_transaction()
-                        dokument.close_active_transaction_when_finished = True
-                        return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
-                    else:
-                        dokument.save()
-                        logger.debug("dokument.views.archivovat.permanent", extra={"ident_cely": dokument.ident_cely})
+                returned_value = Dokument.set_permanent_identificator(dokument, request, messages, fedora_transaction)
+                if isinstance(returned_value, JsonResponse):
+                    return returned_value
                 dokument.set_archivovany(request.user, old_ident)
                 dokument.doi_publish()
                 dokument.set_doi()
@@ -2656,6 +2647,10 @@ def zapsat(request, zaznam=None):
                         "dokument.views.zapsat.check_container_deleted_or_not_exists.invalid",
                         extra={"ident_cely": dokument.ident_cely},
                     )
+                    # Kontejner pro identifikátor ve Fedoře už existuje, dokument nelze zapsat.
+                    # Hlášku předáváme přímo, middleware ji na adrese bez identifikátoru nezobrazí.
+                    messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
+                    fedora_transaction.rollback_transaction()
         else:
             logger.debug("dokument.views.zapsat.not_valid", extra={"error": form_d.errors})
 
