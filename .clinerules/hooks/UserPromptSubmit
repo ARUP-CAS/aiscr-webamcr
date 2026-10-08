@@ -1,0 +1,32 @@
+#!/bin/sh
+# Cline UserPromptSubmit hook — Unix (POSIX sh) counterpart of UserPromptSubmit.ps1.
+# Hook intent: aiscr-hook-intents.md § "high-impact-script-approval-reminder"
+# Governance: AIS CR management hub — advisory-only, never cancels the task.
+
+prompt_text=""
+if command -v python3 >/dev/null 2>&1; then
+    prompt_text=$(python3 -c "
+import sys, json
+try:
+    payload = json.load(sys.stdin)
+    parts = []
+    for key in ('prompt', 'message', 'text', 'userPrompt'):
+        val = payload.get(key, '')
+        if val:
+            parts.append(str(val))
+    print(' '.join(parts))
+except Exception:
+    pass
+" 2>/dev/null || true)
+fi
+
+message=""
+if [ -n "$prompt_text" ]; then
+    case "$prompt_text" in
+        *orchestrate_local_agent_sync.py*|*port_workspace_safety_config.py*)
+            message="AIS CR approval reminder: high-impact sync or workspace-safety scripts require explicit human approval and dry-run/inspect evidence before apply."
+            ;;
+    esac
+fi
+
+printf '{"cancel":false,"contextModification":"%s","errorMessage":""}\n' "$message"

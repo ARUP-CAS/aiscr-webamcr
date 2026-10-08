@@ -1,0 +1,14 @@
+#!/bin/sh
+# Cline TaskStart hook — Unix (POSIX sh) counterpart of TaskStart.ps1.
+# Hook intent: aiscr-hook-intents.md § "planning-baseline-reminder"
+# Governance: AIS CR management hub — advisory-only, never cancels the task.
+
+# Best-effort JSON validation: if python3 is available, verify stdin is parseable JSON.
+# If python3 is absent, skip validation and continue (advisory-only contract).
+if command -v python3 >/dev/null 2>&1; then
+    python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null || true
+fi
+
+message="AIS CR planning baseline: before mutating work, confirm branch/upstream state, read the active OpenSpec change artifacts, and keep sibling apply steps dry-run/approval gated."
+
+printf '{"cancel":false,"contextModification":"%s","errorMessage":""}\n' "$message"
