@@ -1,7 +1,8 @@
 # Testovací závislosti (selenium testy, unit testy).
-# Instalují se navíc k requirements.txt: Dockerfile-DEV a test image
-# (Dockerfile s --build-arg INSTALL_TEST_REQUIREMENTS=true).
--c requirements.txt
+# Vrstva nad requirements.txt: díky -r obsahuje i všechny produkční piny, takže
+# requirements-test.txt stačí sám pro test image (Dockerfile s --build-arg
+# INSTALL_TEST_REQUIREMENTS=true). Proč -r a ne -c: viz scripts/compile_requirements.sh.
+-r requirements.txt
 
 selenium==4.49.0
 freezegun==1.5.5

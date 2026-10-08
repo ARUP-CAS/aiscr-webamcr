@@ -79,7 +79,7 @@ aiscr-webamcr/
 python -m venv .venv
 .venv/Scripts/activate   # Windows
 # source .venv/bin/activate  # Linux / macOS
-pip install -r requirements.txt -r requirements-test.txt -r requirements-dev.txt
+pip install -r requirements-dev.txt
 
 # 2. Spustit infrastrukturní služby
 docker compose -f docker-compose-dev-local-db-all-containers.yml up -d
@@ -92,7 +92,7 @@ python manage.py runserver
 celery -A webclient worker -l info --concurrency=2 --max-tasks-per-child=50
 ```
 
-Závislosti Pythonu jsou ve `webclient/` rozdělené do skupin: `requirements.txt` (produkce), `requirements-test.txt`, `requirements-dev.txt` a `requirements-docs.txt`. Soubory `requirements*.txt` jsou generované a obsahují úplné tranzitivní piny. Upravujte jen autorské `requirements*.in` a pak spusťte `scripts/compile_requirements.sh` (potřebuje Docker).
+Závislosti Pythonu jsou ve `webclient/` rozdělené do skupin: `requirements.txt` (produkce), `requirements-test.txt`, `requirements-dev.txt` a `requirements-docs.txt`. Soubory `requirements*.txt` jsou generované a obsahují úplné tranzitivní piny; každá vyšší skupina obsahuje i piny skupin pod sebou (`requirements-dev.txt` ⊇ `requirements-test.txt` ⊇ `requirements.txt`, `requirements-docs.txt` ⊇ `requirements.txt`), takže každé prostředí instaluje jediný soubor. Upravujte jen autorské `requirements*.in` a pak spusťte `scripts/compile_requirements.sh` (potřebuje Docker).
 
 Podrobná instalační příručka:  
 <https://aiscr-webamcr.readthedocs.io/>
