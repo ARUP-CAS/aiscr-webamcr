@@ -110,6 +110,13 @@ navazující workflows (PR založené přes ``GITHUB_TOKEN`` běhy nespouští);
 ``pre-commit-fixes/*`` a ``deps/python-pins-refresh`` jsou proto v jobu
 ``pre-commit`` vynechány (režim ``none``), aby nevznikala řetězená opravná PR.
 
+Opravný PR se zakládá z merge commitu původního PR (``refs/pull/<číslo>/merge``),
+takže vedle oprav hooků nese i sloučení cílové větve s hlavou PR. Přebírá tím i
+změny, které se do větve mezitím dostaly – typicky sladění ``main`` do ``test``.
+Je to zamýšlené: opravný PR tak drží aktuální stav cílové větve a sloučení větví
+proběhne spolu s opravami. Je ale nutné **nikdy neprovádět squash-merge** na 
+tomto PR, protože by se ztratil merge commit původního PR.
+
 .. mermaid::
    :align: center
 
