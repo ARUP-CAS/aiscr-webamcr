@@ -1091,6 +1091,127 @@ class RozpoznaniOpakovaniTests(TestCase):
 
 
 @_BEZ_CACHEOPS
+class UnieKatastruTests(TestCase):
+    """
+    Testy kontroly pokrytí sjednocením (:func:`syncer._zkontroluj_unii_pokryti`).
+
+    Pokrytí tvoří mřížka 3 × 3 sousedících katastrů. Levý sloupec patří do
+    jednoho okresu, zbytek do druhého, takže vady na rozhraní sloupců prochází
+    oběma stupni sjednocení – uvnitř okresu i mezi okresy.
+
+    Dotaz sjednocuje celou tabulku, proto se reálná data, která testovací
+    databáze může obsahovat, na dobu testu skryjí nahrazením ``hranice``
+    prázdným multipolygonem (sloupec je NOT NULL; prázdná geometrie do
+    sjednocení nic nepřispěje) – vrátí se s rollbackem transakce testu.
+    """
+
+    STRANA = 1000.0
+    X0 = -600000.0
+    Y0 = -1100000.0
+
+    def setUp(self):
+        """Skryje existující hranice a připraví dva okresy pro mřížku."""
+        RuianKatastr.objects.update(hranice=MultiPolygon(srid=5514))
+        kraj, self.okres_levy, _ = _vytvor_ruian_data(0, prefix=950000)
+        self.okres_pravy = RuianOkres.objects.create(
+            nazev="Testovací okres 950002",
+            kraj=kraj,
+            spz="T96",
+            kod=950002,
+            nazev_en="Test district 950002",
+        )
+        self.run = RuianSyncRun.objects.create(
+            mode=RuianSyncRun.MODE_DELTA,
+            source="file_vfr",
+            triggered_by=RuianSyncRun.TRIGGER_CRON,
+            data_valid_to=datetime.date(2026, 10, 6),
+            variant="ZKSH",
+        )
+
+    def _mrizka(self, *, vynechat=(), uprava=None):
+        """
+        Uloží mřížku 3 × 3 katastrů.
+
+        :param vynechat: Pozice ``(sloupec, radek)``, kde katastr nebude.
+        :param uprava: Volitelná funkce ``(sloupec, radek, x0, y0, x1, y1)``
+            vracející upravené souřadnice obdélníku – slouží k vyrobení vady.
+        """
+        katastry = []
+        for sloupec in range(3):
+            for radek in range(3):
+                if (sloupec, radek) in vynechat:
+                    continue
+                x0 = self.X0 + sloupec * self.STRANA
+                y0 = self.Y0 + radek * self.STRANA
+                x1, y1 = x0 + self.STRANA, y0 + self.STRANA
+                if uprava is not None:
+                    x0, y0, x1, y1 = uprava(sloupec, radek, x0, y0, x1, y1)
+                ctverec = Polygon(((x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)), srid=5514)
+                kod = 950100 + sloupec * 10 + radek
+                katastry.append(
+                    RuianKatastr(
+                        okres=self.okres_levy if sloupec == 0 else self.okres_pravy,
+                        nazev=f"Testovací KÚ {kod}",
+                        kod=kod,
+                        definicni_bod=Point((x0 + x1) / 2, (y0 + y1) / 2, srid=5514),
+                        hranice=MultiPolygon(ctverec, srid=5514),
+                    )
+                )
+        RuianKatastr.objects.bulk_create(katastry)
+
+    def test_ciste_pokryti_projde(self):
+        """Souvislé pokrytí bez děr a překryvů není podezřelé."""
+        self._mrizka()
+
+        self.assertFalse(syncer._zkontroluj_unii_pokryti(self.run))
+        self.assertEqual(self.run.note, "")
+
+    def test_dira_se_odhali(self):
+        """
+        Chybějící prostřední katastr nechá v pokrytí díru.
+
+        Díra sousedí s oběma okresy, takže se musí projevit až ve druhém
+        stupni sjednocení.
+        """
+        self._mrizka(vynechat={(1, 1)})
+
+        self.assertTrue(syncer._zkontroluj_unii_pokryti(self.run))
+        self.assertIn("1 děr v pokrytí", self.run.note)
+
+    def test_prekryv_mezi_okresy_se_odhali(self):
+        """
+        Katastr přesahující o 50 m do sousedního okresu je podezřelý.
+
+        GEOS může překryv buď změřit (součet ploch převýší plochu sjednocení),
+        nebo sjednocení odmítnout výjimkou – obojí kontrola hlásí jako nález.
+        """
+
+        def presah(sloupec, radek, x0, y0, x1, y1):
+            if (sloupec, radek) == (0, 1):
+                x1 += 50
+            return x0, y0, x1, y1
+
+        self._mrizka(uprava=presah)
+
+        self.assertTrue(syncer._zkontroluj_unii_pokryti(self.run))
+
+    def test_selhani_dotazu_nezablokuje_transakci(self):
+        """
+        Chyba databáze je nález a díky savepointu nechá spojení použitelné.
+
+        Bez savepointu by uvnitř transakce další dotaz spadl na
+        „current transaction is aborted“.
+        """
+        self._mrizka()
+
+        with mock.patch.object(syncer, "_SQL_UNIE_POKRYTI", "SELECT 1 / 0"):
+            self.assertTrue(syncer._zkontroluj_unii_pokryti(self.run))
+
+        self.assertIn("Sjednocení pokrytí selhalo", self.run.note)
+        self.assertEqual(RuianKatastr.objects.filter(okres=self.okres_pravy).count(), 6)
+
+
+@_BEZ_CACHEOPS
 class OpakovaniReassignuTests(TestCase):
     """
     Testy, že opakovaný den znovu spustí přepočet navázaných záznamů.
