@@ -60,7 +60,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/pallets/jinja/
    * - MarkupSafe
-     - 3.0.3
+     - 3.0.4
      - BSD-3-Clause
      - https://github.com/pallets/markupsafe/
    * - PyRTF3
@@ -100,7 +100,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://anyio.readthedocs.io/en/stable/versionhistory.html
    * - asgiref
-     - 3.12.1
+     - 3.11.1
      - BSD License
      - https://github.com/django/asgiref/
    * - attrs
@@ -127,6 +127,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.2.0
      - MIT
      - https://github.com/google/brotli
+   * - build
+     - 1.6.1
+     - MIT
+     - https://build.pypa.io
    * - celery
      - 5.6.3
      - BSD-3-Clause
@@ -232,7 +236,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/django-extensions/django-extensions
    * - django-filter
-     - 26.1
+     - 26.2
      - BSD License
      - https://github.com/carltongibson/django-filter/tree/main
    * - django-libsass
@@ -308,7 +312,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 4.0.8
+     - 4.0.10
      - MIT
      - https://github.com/tox-dev/py-filelock
    * - freezegun
@@ -415,8 +419,12 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 5.5.5
      - MIT
      - https://github.com/raimon49/pip-licenses
+   * - pip-tools
+     - 7.6.1
+     - BSD License
+     - https://github.com/jazzband/pip-tools/
    * - platformdirs
-     - 4.12.2
+     - 4.12.3
      - MIT
      - https://github.com/tox-dev/platformdirs
    * - polib
@@ -464,7 +472,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://github.com/eliben/pycparser
    * - pycryptodomex
-     - 3.23.0
+     - 3.24.0
      - BSD License; Public Domain
      - https://www.pycryptodome.org
    * - pyparsing
@@ -479,6 +487,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.3.1
      - LGPL-2.1-or-later
      - https://pyppmd.readthedocs.io/
+   * - pyproject_hooks
+     - 1.3.3
+     - MIT
+     - https://github.com/pypa/pyproject-hooks
    * - python-crontab
      - 3.4.0
      - LGPLv3
@@ -500,7 +512,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://github.com/ahupp/python-magic
    * - pytz
-     - 2026.3.post1
+     - 2026.5
      - MIT License
      - http://pythonhosted.org/pytz
    * - rarfile
@@ -535,8 +547,12 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 4.1.0
      - 0BSD OR CC0-1.0
      - https://github.com/AA-Turner/roman-numerals/blob/master/CHANGES.rst
+   * - ruamel.yaml
+     - 0.19.1
+     - MIT License
+     - https://sourceforge.net/p/ruamel-yaml/code/ci/default/tree/
    * - selenium
-     - 4.49.0
+     - 4.50.0
      - Apache-2.0
      - https://www.selenium.dev
    * - setuptools
@@ -544,7 +560,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pypa/setuptools
    * - simplejson
-     - 4.1.2
+     - 4.2.0
      - MIT OR AFL-2.1
      - https://github.com/simplejson/simplejson
    * - six
@@ -596,8 +612,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - http://sphinx-doc.org/
    * - sphinxcontrib-mermaid
-     - 2.1.1
-     - BSD-2-Clause
+     - 2.0.2
+     - BSD License
      - https://github.com/mgaitan/sphinxcontrib-mermaid
    * - sphinxcontrib-qthelp
      - 2.0.0
@@ -640,7 +656,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - PSF-2.0
      - https://github.com/python/typing_extensions
    * - tzdata
-     - 2026.4
+     - 2026.5
      - Apache-2.0
      - https://github.com/python/tzdata
    * - tzlocal
@@ -660,7 +676,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.14.2
+     - 21.14.5
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
@@ -671,6 +687,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.9.2
      - Apache-2.0
      - https://github.com/websocket-client/websocket-client
+   * - wheel
+     - 0.48.0
+     - MIT
+     - https://github.com/pypa/wheel
    * - wrapt
      - 2.5.0
      - Copyright (c) 2013-2025, Graham Dumpleton
