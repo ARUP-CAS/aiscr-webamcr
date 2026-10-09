@@ -199,6 +199,65 @@ Pokud `python` / `python3` není dostupný v prostředí:
 
 ---
 
+## Automatické kontroly a opravy CI
+
+Workflow `.github/workflows/pre_commit.yml` má jeden požadovaný check `pre-commit`.
+PR do `main` (otevření, znovuotevření nebo aktualizace) a push do `main` obnoví
+tranzitivní piny pomocí `scripts/compile_requirements.sh --upgrade`. Poté nainstaluje
+zkompilované závislosti, spustí regresní testy workflow, obnoví dokumentaci závislostí
+přes `docs/licenses/convert_to_rst.py` a provede hooky. Přímé autorské piny v
+`requirements*.in` se nemění. Běžné PR do `test` kompilují bez `--upgrade` a
+spouštějí kontroly bez obnovy dokumentace závislostí.
+
+Běhy vyvolané účtem s příponou `[bot]`, PR autora Dependabot a zdrojové větve
+`dependabot/*`, `pre-commit-fixes/*` a `deps/python-pins-refresh` jsou úspěšné
+no-op běhy s vysvětlením ve workflow summary. Vyloučení platí i při aktualizaci
+nebo opakování běhu člověkem. Zahrnuje push `CITATION.cff` z release App: během
+release nevzniká další opravné PR. Ruční výběr režimu vyloučení neobchází.
+
+Ruční spuštění používá jediný vstup `mode` místo původních `dependencies` a
+`upgrade_python_pins`:
+
+| Režim | Kompilace a kontroly | Obnova pinů | Dokumentace závislostí |
+| --- | --- | --- | --- |
+| `checks` | Ano | Ne | Ne |
+| `docs` (výchozí) | Ano | Ne | Ano |
+| `refresh` | Ano | Ano | Ano |
+
+CLI/API klienti musí posílat vstup `mode`, například:
+
+```bash
+gh workflow run pre_commit.yml --ref test -f mode=refresh
+gh workflow run pre_commit.yml --ref test -f mode=docs -f bypass_docstring_exclusions=true
+
+gh api --method POST repos/ARUP-CAS/aiscr-webamcr/actions/workflows/pre_commit.yml/dispatches \
+  -f ref=test -f 'inputs[mode]=docs'
+```
+
+PR běh pracuje přímo se zdrojovým commitem PR; push a ruční běh s commitem daného
+spuštění. Změny pinů, dokumentace a hooků se stageují společně a nabídnou v jediném
+opravném PR. Oprava původního PR míří do jeho zdrojové větve; oprava po pushi do
+`main` míří do `main`. Ruční běh cílí do vybrané větve. Tyto opravné PR nepřenášejí
+historii cílové větve do zdrojové a nevyžadují výjimku z běžných pravidel squash merge.
+
+`scripts/pre_commit_report.py` jednou zachytí skutečný staged diff před commitem.
+Popis opravného PR, sticky komentář na původním PR a Actions summary z něj sdílejí
+seznam souborů, typy změn a počty přidaných/odebraných řádků. Uvádějí také režim,
+zdrojový commit, cílovou větev, provedené operace a diagnostiku; komentář a summary
+odkazují na vytvořené nebo aktualizované opravné PR. Neuvádějí možné změny, které
+se nestaly. Bez změn opravné PR nevzniká; opakovaný běh aktualizuje existující PR
+a komentář. Selhání kompilace, instalace, testů nebo generátoru zabrání publikaci.
+Nenulový výsledek hooků zůstává selháním checku, i když jsou jejich automatické
+opravy nabídnuty k review. Publikační selhání je označeno samostatně.
+
+Cílené regresní testy lze spustit bez Dockeru a GitHub přístupu:
+
+```bash
+python -m unittest discover -s scripts -p 'test_pre_commit*.py' -v
+```
+
+---
+
 ## Generovaná dokumentace a artefakty
 
 Některé soubory jsou modifikovány automaticky skripty nebo hooky:
@@ -264,7 +323,7 @@ Technický dluh a auditní výstupy jsou evidovány v `.agents/`.
 
 Otevřete nový kontext AI agenta a jako první zprávu vložte:
 
-```
+```text
 Read .agents/prompts/review_codebase.md and continue the review.
 ```
 

@@ -2,6 +2,7 @@ name: Pre-commit
 
 on:
   pull_request:
+    types: [opened, reopened, synchronize]
     branches:
       - main
       - test
@@ -10,16 +11,17 @@ on:
       - main
   workflow_dispatch:
     inputs:
-      dependencies:
-        description: "Update the list of dependencies"
-        type: boolean
-        default: true
+      mode:
+        description: "Checks; dependency docs without upgrades; or pin refresh with dependency docs"
+        type: choice
+        required: true
+        default: docs
+        options:
+          - checks
+          - docs
+          - refresh
       bypass_docstring_exclusions:
         description: "Bypass file/class/method exclusions in docstring reminder hook"
-        type: boolean
-        default: false
-      upgrade_python_pins:
-        description: "Refresh compiled Python pins on test (opens/updates a PR into test)"
         type: boolean
         default: false
 
@@ -32,10 +34,11 @@ concurrency:
 
 jobs:
   pre-commit:
-    # Job-level `if` by ponechal požadovaný check ve stavu skipped, který ruleset vyhodnocuje
-    # jako nesplněný (PR zůstane BLOCKED). Job proto běží vždy a vlastní práci řídí krok `gate`.
+    # Požadovaný check existuje i pro vyloučenou automatiku; gate vypíše důvod.
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
     steps:
       - name: Decide pre-commit mode
@@ -43,34 +46,44 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           ACTOR: ${{ github.actor }}
-          # Pro pull_request je github.ref_name "<číslo>/merge"; zdrojovou větev nese github.head_ref.
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           BRANCH: ${{ github.head_ref || github.ref_name }}
           BASE: ${{ github.base_ref }}
-          DEPENDENCIES: ${{ github.event.inputs.dependencies }}
+          MANUAL_MODE: ${{ inputs.mode }}
         run: |
-          # none     = automatické větve (opravné PR, refresh pinů) nebo bot aktér - žádné hooky
-          # standard = vývojové PR - běžné hooky
-          # full     = cokoliv mířící do main (PR do main i push do main) - běžné hooky
-          #            navíc s regenerací dokumentace závislostí; ruční dispatch je full
-          #            jen se zapnutým vstupem dependencies
-          mode=standard
+          mode=checks
+          reason="Standard checks for a development PR."
 
+          # Opravné PR nesmějí založit další opravné PR; Dependabot je mimo tento CI.
           case "$BRANCH" in
-            pre-commit-fixes/* | deps/python-pins-refresh) mode=none ;;
+            dependabot/* | pre-commit-fixes/* | deps/python-pins-refresh)
+              mode=none
+              reason="Excluded automation source branch."
+              ;;
           esac
-
-          # Jakýkoliv bot (github-actions[bot], dependabot[bot], App) je automatika - žádné hooky.
+          if [ "$PR_AUTHOR" = "dependabot[bot]" ]; then
+            mode=none
+            reason="Dependabot PRs are outside this CI."
+          fi
+          # Zahrnuje release App: CITATION push probíhá uvnitř release, bez následného fix PR.
           case "$ACTOR" in
-            *'[bot]') mode=none ;;
+            *'[bot]')
+              mode=none
+              reason="Bot-triggered automation is excluded, including release citation pushes."
+              ;;
           esac
 
           if [ "$mode" != "none" ]; then
-            if [ "$EVENT_NAME" = "pull_request" ] && [ "$BASE" = "main" ]; then
-              mode=full
-            elif [ "$EVENT_NAME" = "push" ] && [ "$BRANCH" = "main" ]; then
-              mode=full
-            elif [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$DEPENDENCIES" = "true" ]; then
-              mode=full
+            if { [ "$EVENT_NAME" = "pull_request" ] && [ "$BASE" = "main" ]; } || \
+               { [ "$EVENT_NAME" = "push" ] && [ "$BRANCH" = "main" ]; }; then
+              mode=refresh
+              reason="Refresh pins and dependency documentation for main."
+            elif [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+              case "${MANUAL_MODE:-docs}" in
+                checks | docs | refresh) mode="${MANUAL_MODE:-docs}" ;;
+                *) echo "::error::Unknown manual mode."; exit 1 ;;
+              esac
+              reason="Selected manual mode: $mode."
             fi
           fi
 
@@ -80,20 +93,24 @@ jobs:
           else
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
-          if [ "$mode" = "full" ]; then
+          if [ "$mode" = "docs" ] || [ "$mode" = "refresh" ]; then
             echo "full=true" >> "$GITHUB_OUTPUT"
           else
             echo "full=false" >> "$GITHUB_OUTPUT"
           fi
+          printf 'Mode: %s\n%s\n' "$mode" "$reason" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Checkout
+      - name: Checkout source commit
+        id: checkout
         if: steps.gate.outputs.run == 'true'
         uses: actions/checkout@v7
         with:
+          ref: ${{ env.SOURCE_SHA }}
           fetch-depth: 0
           persist-credentials: false
 
       - name: Set up Python
+        id: python
         if: steps.gate.outputs.run == 'true'
         uses: actions/setup-python@v7
         with:
@@ -123,23 +140,34 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      # Kontrola synchronizace: requirements*.txt musí odpovídat autorským requirements*.in.
-      # Bez --upgrade, takže PR nepřebírá nesouvisející aktualizace; případné rozdíly
-      # skončí v auto-fix PR níže. Obnovu tranzitivních pinů dělá job refresh-python-pins.
-      - name: Compile Python requirements
+      # Refresh i docs čtou stejné .txt; přímé autorské piny v .in se nemění.
+      - name: Compile or refresh Python requirements
+        id: compile
         if: steps.gate.outputs.run == 'true'
-        run: bash scripts/compile_requirements.sh
+        env:
+          RUN_MODE: ${{ steps.gate.outputs.mode }}
+        run: |
+          if [ "$RUN_MODE" = "refresh" ]; then
+            bash scripts/compile_requirements.sh --upgrade
+          else
+            bash scripts/compile_requirements.sh
+          fi
 
       - name: Install dependencies
+        id: install
         if: steps.gate.outputs.run == 'true'
         run: |
           python -m pip install --upgrade pip
           pip install pip-licenses
-          # dev obsahuje prod + test + dev, docs obsahuje prod + docs.
           pip install -r webclient/requirements-dev.txt -r webclient/requirements-docs.txt
 
+      - name: Test pre-commit workflow and reports
+        id: tests
+        if: steps.gate.outputs.run == 'true'
+        run: python -m unittest discover -s scripts -p 'test_pre_commit*.py' -v
+
       - name: Run convert_to_rst.py
-        # Plný běh (full) regeneruje dokumentaci závislostí.
+        id: docs
         if: steps.gate.outputs.full == 'true'
         run: python docs/licenses/convert_to_rst.py
 
@@ -207,26 +235,39 @@ jobs:
 
           exit 0
 
-      - name: Check for file changes
-        id: changes
+      - name: Stage generated changes
+        id: stage
         if: steps.gate.outputs.run == 'true'
-        run: |
-          git update-index -q --refresh
-          if ! git diff-index --quiet HEAD -- || [ -n "$(git ls-files --others --exclude-standard)" ]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          fi
+        run: git add --all
 
-      - name: Compute short SHA
-        id: vars
-        if: steps.gate.outputs.run == 'true'
-        run: echo "sha_short=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      # Snapshot indexu zůstane v RUNNER_TEMP i po commitu. Text hooků vstupuje pouze přes env.
+      - name: Capture staged changes and check results
+        id: capture
+        if: always() && steps.checkout.outcome == 'success' && steps.python.outcome == 'success'
+        env:
+          RUN_MODE: ${{ steps.gate.outputs.mode }}
+          FIX_DESTINATION: ${{ github.head_ref || github.ref_name }}
+          COMPILE_OUTCOME: ${{ steps.compile.outcome }}
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+          DOCS_OUTCOME: ${{ steps.docs.outcome }}
+          HOOKS_OUTCOME: ${{ steps.hooks.outcome }}
+          STAGE_OUTCOME: ${{ steps.stage.outcome }}
+          HOOK_EXIT_CODE: ${{ steps.hooks.outputs.exit_code }}
+          LOG_WARNINGS: ${{ steps.hooks.outputs.log_warnings }}
+          DOC_WARNINGS: ${{ steps.hooks.outputs.doc_warnings }}
+          FLAKE_ERRORS: ${{ steps.hooks.outputs.flake_errors }}
+          IMAGE_PARITY_LOG: ${{ steps.hooks.outputs.image_parity_log }}
+          NPM_VENDOR_LOG: ${{ steps.hooks.outputs.npm_vendor_log }}
+        run: python scripts/pre_commit_report.py capture --record "$RUNNER_TEMP/precommit-report.json"
 
-      # PR zakládá GitHub App token, aby jeho události spouštěly navazující workflows
-      # (GITHUB_TOKEN vytvořené PR běhy nespouští).
+      - name: Prepare fix PR description
+        if: steps.capture.outputs.changed == 'true'
+        run: python scripts/pre_commit_report.py render --record "$RUNNER_TEMP/precommit-report.json" --output-dir "$RUNNER_TEMP/precommit-report"
+
+      # App token spouští kontroly opravných PR; jejich vlastní pre-commit gate je no-op.
       - name: Log-in as AMCR app
-        if: steps.gate.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
+        if: steps.capture.outputs.changed == 'true'
         uses: actions/create-github-app-token@v3
         id: app-token
         with:
@@ -236,7 +277,8 @@ jobs:
           permission-pull-requests: write
 
       - name: Publish fix branch and PR
-        if: steps.gate.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
+        id: publish
+        if: steps.capture.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
@@ -244,293 +286,74 @@ jobs:
           FIX_BRANCH: pre-commit-fixes/${{ github.event.pull_request.number || github.ref_name }}
           IS_PR: ${{ github.event_name == 'pull_request' }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          SHA_SHORT: ${{ steps.vars.outputs.sha_short }}
           ACTOR: ${{ github.actor }}
         run: |
           set -euo pipefail
           git config user.name "${APP_SLUG}[bot]"
           git config user.email "${APP_SLUG}[bot]@users.noreply.github.com"
           git checkout -B "$FIX_BRANCH"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No changes to publish."
-            exit 0
-          fi
-          git commit -m "chore: apply pre-commit fixes and update licenses"
+          # Nic dalšího se nestaguje: commit přesně odpovídá zachycenému indexu.
+          git commit -m "chore: apply CI fixes and update dependency documentation"
           gh auth setup-git
           git push --force origin "$FIX_BRANCH"
 
           if [ "$IS_PR" = "true" ]; then
             title="Pre-commit fixes for PR #${PR_NUMBER}"
           else
-            title="Pre-commit fixes for commit ${SHA_SHORT}"
+            title="Pre-commit fixes for commit ${SOURCE_SHA:0:7}"
           fi
 
-          cat > "${RUNNER_TEMP}/fix-pr-body.md" <<'EOF'
-          This PR was automatically generated by CI.
-
-          It is branched from the original PR's merge commit, so besides the hook fixes
-          it also carries the base branch as merged into the PR head (for example a
-          `main` into `test` alignment). That is intentional, but to **never use squash
-          -merge** on this PR, because it would lose the original PR's merge commit.
-
-          It includes:
-          - Pre-commit formatting fixes
-          - Recompiled `webclient/requirements*.txt` (when they were out of sync with `requirements*.in`)
-          - Container image / compose alignment (when the parity hook applied changes)
-          - NPM vendor names in `base.py` (when the npm-vendor hook applied changes)
-          - Updated `python_knihovny.rst`
-
-          Please merge this PR to make the original PR pass.
-          EOF
-
-          pr_number="$(gh pr list --head "$FIX_BRANCH" --repo "$GITHUB_REPOSITORY" --json number --jq '.[0].number')"
+          pr_number="$(gh pr list --head "$FIX_BRANCH" --base "$BASE" --repo "$GITHUB_REPOSITORY" --json number --jq '.[0].number')"
           if [ -n "$pr_number" ]; then
-            gh pr edit "$pr_number" --title "$title" --body-file "${RUNNER_TEMP}/fix-pr-body.md"
+            gh pr edit "$pr_number" --title "$title" --body-file "$RUNNER_TEMP/precommit-report/fix-pr-body.md"
           else
             gh pr create --base "$BASE" --head "$FIX_BRANCH" \
-              --title "$title" --body-file "${RUNNER_TEMP}/fix-pr-body.md" \
+              --title "$title" --body-file "$RUNNER_TEMP/precommit-report/fix-pr-body.md" \
               --label pre-commit --assignee "$ACTOR"
           fi
+          pr_url="$(gh pr view "$FIX_BRANCH" --repo "$GITHUB_REPOSITORY" --json url --jq .url)"
+          printf 'url=%s\n' "$pr_url" >> "$GITHUB_OUTPUT"
 
       - name: Publish workflow summary
-        if: steps.gate.outputs.run == 'true'
-        # Výstupy hooků obsahují text z PR (cesty, hlášky validátorů) — do shellu jen přes env,
-        # nikdy přímou interpolací ${{ }} do run: (command injection).
+        id: reports
+        if: always() && steps.capture.outcome == 'success'
         env:
-          EXIT_CODE: ${{ steps.hooks.outputs.exit_code }}
-          CHANGED: ${{ steps.changes.outputs.changed }}
-          LOG_WARNINGS: ${{ steps.hooks.outputs.log_warnings }}
-          DOC_WARNINGS: ${{ steps.hooks.outputs.doc_warnings }}
-          FLAKE_ERRORS: ${{ steps.hooks.outputs.flake_errors }}
-          IMAGE_PARITY_LOG: ${{ steps.hooks.outputs.image_parity_log }}
-          NPM_VENDOR_LOG: ${{ steps.hooks.outputs.npm_vendor_log }}
+          APP_OUTCOME: ${{ steps.app-token.outcome }}
+          PUBLISH_OUTCOME: ${{ steps.publish.outcome }}
+          FIX_PR_URL: ${{ steps.publish.outputs.url }}
         run: |
-          section() {
-            # $1 = nadpis, $2 = obsah; prázdný obsah sekci vynechá
-            if [ -n "$2" ]; then
-              printf '### %s\n```\n%s\n```\n' "$1" "$2"
-            fi
-          }
-
-          if [ "$EXIT_CODE" = "0" ] && [ "$CHANGED" != "true" ] && \
-             [ -z "$LOG_WARNINGS" ] && [ -z "$DOC_WARNINGS" ] && [ -z "$FLAKE_ERRORS" ]; then
-            {
-              echo "## ✅ Pre-commit checks passed"
-              echo ""
-              echo "All hooks finished successfully."
-              echo ""
-              section "Container image reference parity" "$IMAGE_PARITY_LOG"
-              section "NPM / static vendor libraries" "$NPM_VENDOR_LOG"
-            } >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-
-          {
-            echo "## ⚠️ Pre-commit results"
-            echo ""
-            printf -- '- Exit code: %s\n' "$EXIT_CODE"
-            printf -- '- Changes detected: %s\n' "$CHANGED"
-            echo ""
-            section "Log warnings" "$LOG_WARNINGS"
-            section "Docstring warnings" "$DOC_WARNINGS"
-            section "Flake8 errors" "$FLAKE_ERRORS"
-            section "Container image reference parity" "$IMAGE_PARITY_LOG"
-            section "NPM / static vendor libraries" "$NPM_VENDOR_LOG"
-          } >> "$GITHUB_STEP_SUMMARY"
+          python scripts/pre_commit_report.py render --record "$RUNNER_TEMP/precommit-report.json" --output-dir "$RUNNER_TEMP/precommit-report"
+          cat "$RUNNER_TEMP/precommit-report/summary.md" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Comment on original PR (sticky)
-        if: steps.gate.outputs.run == 'true' && github.event_name == 'pull_request'
+        if: always() && steps.reports.outcome == 'success' && github.event_name == 'pull_request'
         uses: actions/github-script@v9
+        env:
+          REPORT_COMMENT_FILE: ${{ runner.temp }}/precommit-report/pr-comment.md
         with:
           script: |
-            const changed = ${{ toJSON(steps.changes.outputs.changed) }} === "true";
-            const exitCode = ${{ toJSON(steps.hooks.outputs.exit_code) }};
-            const logWarnings = ${{ toJSON(steps.hooks.outputs.log_warnings || '') }};
-            const docWarnings = ${{ toJSON(steps.hooks.outputs.doc_warnings || '') }};
-            const flakeErrors = ${{ toJSON(steps.hooks.outputs.flake_errors || '') }};
-            const imageParityLog = ${{ toJSON(steps.hooks.outputs.image_parity_log || '') }};
-            const npmVendorLog = ${{ toJSON(steps.hooks.outputs.npm_vendor_log || '') }};
-            const runUrl = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}";
+            const body = require("fs").readFileSync(process.env.REPORT_COMMENT_FILE, "utf8");
             const marker = "<!-- precommit-bot-comment -->";
-
-            const cleanRun =
-              exitCode === "0" &&
-              !changed &&
-              (!logWarnings || !logWarnings.trim()) &&
-              (!docWarnings || !docWarnings.trim()) &&
-              (!flakeErrors || !flakeErrors.trim());
-
-            let body;
-
-            if (cleanRun) {
-              let hookLogBlocks = "";
-              if (imageParityLog && imageParityLog.trim()) {
-                hookLogBlocks += `\n\n### Container image reference parity\n\n\`\`\`\n${imageParityLog}\n\`\`\`\n`;
-              }
-              if (npmVendorLog && npmVendorLog.trim()) {
-                hookLogBlocks += `\n\n### NPM / static vendor libraries\n\n\`\`\`\n${npmVendorLog}\n\`\`\`\n`;
-              }
-              body = `${marker}
-            ## ✅ Pre-commit checks passed
-
-            All pre-commit hooks finished successfully and no flake/doc/log warnings were detected.${hookLogBlocks}
-            - Workflow run: [View logs](${runUrl})
-            `;
-            } else {
-
-              const sections = [];
-
-              if (logWarnings && logWarnings.trim()) {
-                sections.push(`### Log warnings\n\`\`\`\n${logWarnings}\n\`\`\``);
-              }
-
-              if (docWarnings && docWarnings.trim()) {
-                sections.push(`### Docstring warnings\n\`\`\`\n${docWarnings}\n\`\`\``);
-              }
-
-              if (flakeErrors && flakeErrors.trim()) {
-                sections.push(`### Flake8 errors\n\`\`\`\n${flakeErrors}\n\`\`\``);
-              }
-
-              if (imageParityLog && imageParityLog.trim()) {
-                sections.push(`### Container image reference parity\n\`\`\`\n${imageParityLog}\n\`\`\``);
-              }
-
-              if (npmVendorLog && npmVendorLog.trim()) {
-                sections.push(`### NPM / static vendor libraries\n\`\`\`\n${npmVendorLog}\n\`\`\``);
-              }
-
-              body = `${marker}
-            ## ⚠️ Pre-commit results
-
-            - Exit code: ${exitCode}
-            - Changes detected: ${changed}
-            - Workflow run: [View logs](${runUrl})
-
-            ${sections.join("\n\n")}
-            `;
-            }
-
-            body = body.replace(/^[ \t]+/gm, '');
-
-            const { data: comments } = await github.rest.issues.listComments({
+            const params = {
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
-            });
-
+            };
+            const comments = await github.paginate(github.rest.issues.listComments, params);
             const existing = comments.find(
-              c => c.user.type === "Bot" && c.body && c.body.includes(marker)
+              c => c.user?.type === "Bot" && c.body?.includes(marker)
             );
-
             if (existing) {
               await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
+                owner: params.owner,
+                repo: params.repo,
                 comment_id: existing.id,
                 body,
               });
             } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.pull_request.number,
-                body,
-              });
+              await github.rest.issues.createComment({ ...params, body });
             }
 
-      - name: Fail if pre-commit failed without auto-fix PR
-        if: steps.gate.outputs.run == 'true' && steps.hooks.outputs.exit_code != '0' && steps.changes.outputs.changed != 'true'
-        env:
-          EXIT_CODE: ${{ steps.hooks.outputs.exit_code }}
-        run: |
-          echo "Pre-commit exited with $EXIT_CODE and no fix PR was generated."
-          exit 1
-
-  refresh-python-pins:
-    # Obnova tranzitivních pinů po každém pushi do main (merge test → main, commit CITATION.cff
-    # z release workflow) nebo ručně. Pracuje nad větví test a udržuje jeden průběžný PR do test,
-    # takže aktualizace projdou běžným testovacím cyklem (viz CONTRIBUTING.md). Dependabot
-    # pokrývá přímé závislosti z requirements*.in a bezpečnostní opravy.
-    #
-    # Job-level `if` by ponechal požadovaný check ve stavu skipped, který ruleset vyhodnocuje
-    # jako nesplněný (PR zůstane BLOCKED). Job proto běží vždy a vlastní práci řídí krok `gate`.
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Decide whether to refresh pins
-        id: gate
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          REF_NAME: ${{ github.ref_name }}
-          UPGRADE_INPUT: ${{ inputs.upgrade_python_pins }}
-        run: |
-          if { [ "$EVENT_NAME" = "push" ] && [ "$REF_NAME" = "main" ]; } || \
-             { [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$UPGRADE_INPUT" = "true" ]; }; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "run=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Checkout test
-        if: steps.gate.outputs.run == 'true'
-        uses: actions/checkout@v7
-        with:
-          ref: test
-          persist-credentials: false
-
-      - name: Upgrade compiled Python requirements
-        if: steps.gate.outputs.run == 'true'
-        run: bash scripts/compile_requirements.sh --upgrade
-
-      # PR zakládá GitHub App token, aby jeho události spouštěly navazující workflows
-      # (GITHUB_TOKEN vytvořené PR běhy nespouští).
-      - name: Log-in as AMCR app
-        if: steps.gate.outputs.run == 'true'
-        uses: actions/create-github-app-token@v3
-        id: app-token
-        with:
-          client-id: ${{ vars.AISCR_AMCR_ACTIONS_CLIENT_ID }}
-          private-key: ${{ secrets.AISCR_AMCR_ACTIONS_KEY }}
-          permission-contents: write
-          permission-pull-requests: write
-
-      - name: Publish refresh branch and PR
-        if: steps.gate.outputs.run == 'true'
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
-        run: |
-          set -euo pipefail
-          git config user.name "${APP_SLUG}[bot]"
-          git config user.email "${APP_SLUG}[bot]@users.noreply.github.com"
-          git checkout -B deps/python-pins-refresh
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No pin changes to publish."
-            exit 0
-          fi
-          git commit -m "chore(deps): refresh compiled Python pins"
-          gh auth setup-git
-          git push --force origin deps/python-pins-refresh
-
-          cat > "${RUNNER_TEMP}/pins-pr-body.md" <<'EOF'
-          This PR was automatically generated by CI (`refresh-python-pins` in `pre_commit.yml`).
-
-          It runs `scripts/compile_requirements.sh --upgrade` on `test`: direct pins in
-          `webclient/requirements*.in` stay as they are, transitive pins in the compiled
-          `webclient/requirements*.txt` move to the newest compatible versions.
-
-          The PR is updated on every push to `main` until it is merged.
-          EOF
-
-          pr_number="$(gh pr list --head deps/python-pins-refresh --repo "$GITHUB_REPOSITORY" --json number --jq '.[0].number')"
-          if [ -n "$pr_number" ]; then
-            gh pr edit "$pr_number" --title "Refresh compiled Python pins" --body-file "${RUNNER_TEMP}/pins-pr-body.md"
-          else
-            gh pr create --base test --head deps/python-pins-refresh \
-              --title "Refresh compiled Python pins" --body-file "${RUNNER_TEMP}/pins-pr-body.md" \
-              --label dependencies
-          fi
+      - name: Fail if processing, publication, or checks failed
+        if: always() && steps.capture.outcome == 'success'
+        run: python scripts/pre_commit_report.py check --record "$RUNNER_TEMP/precommit-report.json"

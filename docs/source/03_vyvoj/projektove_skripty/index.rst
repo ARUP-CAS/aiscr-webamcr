@@ -20,6 +20,7 @@ Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``
    entrypoint_sh
    git_prod_deploy_sh
    healthcheck_sh
+   pre_commit_report_py
    prod_deploy_sh
    redis_exporter_entrypoint_sh
    restore_database_sh
@@ -30,4 +31,6 @@ Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``
    test_check_container_image_reference_parity_py
    test_check_static_vendor_manifest_py
    test_deploy_sh
+   test_pre_commit_report_py
+   test_pre_commit_workflow_py
    uwsgi_site_ini

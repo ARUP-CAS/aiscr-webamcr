@@ -94,6 +94,8 @@ celery -A webclient worker -l info --concurrency=2 --max-tasks-per-child=50
 
 Závislosti Pythonu jsou ve `webclient/` rozdělené do skupin: `requirements.txt` (produkce), `requirements-test.txt`, `requirements-dev.txt` a `requirements-docs.txt`. Soubory `requirements*.txt` jsou generované a obsahují úplné tranzitivní piny; každá vyšší skupina obsahuje i piny skupin pod sebou (`requirements-dev.txt` ⊇ `requirements-test.txt` ⊇ `requirements.txt`, `requirements-docs.txt` ⊇ `requirements.txt`), takže každé prostředí instaluje jediný soubor. Upravujte jen autorské `requirements*.in` a pak spusťte `scripts/compile_requirements.sh` (potřebuje Docker).
 
+Automatická obnova pinů, generování dokumentace závislostí a opravná PR jsou popsány v [pravidlech CI](CONTRIBUTING.md#automatické-kontroly-a-opravy-ci).
+
 Podrobná instalační příručka:  
 <https://aiscr-webamcr.readthedocs.io/>
 
