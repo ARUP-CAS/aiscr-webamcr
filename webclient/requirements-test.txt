@@ -89,7 +89,7 @@ defusedxml==0.7.1
     #   odfpy
 distlib==0.4.3
     # via -r requirements.txt
-django==6.0.8
+django==6.0.9
     # via
     #   -r requirements.txt
     #   crispy-bootstrap5

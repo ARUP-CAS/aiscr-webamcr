@@ -1,7 +1,7 @@
 # Produkční (runtime) závislosti aplikace.
 # Autorský soubor: po úpravě spusťte scripts/compile_requirements.sh,
 # který vygeneruje requirements.txt s úplnými tranzitivními piny.
-Django==6.0.8
+Django==6.0.9
 asgiref==3.11.1
 psycopg2-binary==2.9.13
 simplejson==4.2.0
