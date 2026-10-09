@@ -46,13 +46,13 @@
   <script src="{% static 'bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
   {% get_current_language as LANGUAGE_CODE %}
   {% if "en" in LANGUAGE_CODE %}
-  <script src="{% static 'js/selectpicker-en.js' %}"></script>
+  <script src="{% static 'vendor/bootstrap-select-locale/selectpicker-en.js' %}"></script>
   {% else %}
-  <script src="{% static 'js/selectpicker-cs.js' %}"></script>
+  <script src="{% static 'vendor/bootstrap-select-locale/selectpicker-cs.js' %}"></script>
   {% endif %}
-  <script src="{% static 'js/datepicker-cs.js' %}"></script>
+  <script src="{% static 'vendor/bootstrap-datepicker-locale/datepicker-cs.js' %}"></script>
   <script src="{% static 'js/pridani_title_pro_disabled.js' %}"></script>
-  <script src="{% static 'js/timer.js' %}"></script>
+  <script src="{% static 'vendor/easytimer/timer.js' %}"></script>
   <script src="{% static 'js/modal_forms_class.js' %}"></script>
   <script src="{% static 'js/submit_button.js' %}"></script>
   <link rel="shortcut icon" id="dynamic-favicon" href="{%  static 'loga/favicon.png' %}">
@@ -67,13 +67,13 @@
   <script src='{% static 'leaflet-fullscreen/dist/Leaflet.fullscreen.min.js' %}'></script>
   <link href='{% static 'leaflet-fullscreen/dist/leaflet.fullscreen.css' %}'rel='stylesheet'/>
   <!-- static leaflet additional import-->
-  <link rel="stylesheet" href="{% static 'css/leaflet.measure.css' %}" />
-  <script src="{% static 'js/leaflet.measure.js' %}"></script>
-  <script type="text/javascript" src="{% static 'js/leaflet.coor.js' %}"></script>
-  <link rel="stylesheet" href="{% static 'css/leaflet.coor.css' %}" />
+  <link rel="stylesheet" href="{% static 'vendor/leaflet-measure/leaflet.measure.css' %}" />
+  <script src="{% static 'vendor/leaflet-measure/leaflet.measure.js' %}"></script>
+  <script type="text/javascript" src="{% static 'vendor/leaflet-coordinates/leaflet.coor.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'vendor/leaflet-coordinates/leaflet.coor.css' %}" />
 
-  <link rel="stylesheet" href="{% static 'css/leaflet-search.css' %}"/>
-  <script src="{% static 'js/leaflet-search.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'vendor/leaflet-search/leaflet-search.css' %}"/>
+  <script src="{% static 'vendor/leaflet-search/leaflet-search.js' %}"></script>
   <title>{% block title %}{% endblock %}</title>
   {% include "cookie_panel.html" %}
   <style>
@@ -106,10 +106,10 @@
     {% get_test_env as test_env %}
     {% if test_env %}
       <div class="test-version">
-        <p>{% trans "base.testing_env.text" %}</p>
+        <p><strong class="text-uppercase">{% trans "base.testing_env.title" %}</strong><br />{% trans "base.testing_env.text" %}</p>
       </div>
       <div class="test-version-mobile">
-        <p>{% trans "base.testing_env.text_mobile" %}</p>
+        <p><strong class="text-uppercase">{% trans "base.testing_env.title" %}</strong></p>
       </div>
       {% endif %}
       {% get_maintenance as action %}
@@ -117,7 +117,8 @@
       <div class="maintenance">
         <div class="maintenance__message d-block px-3 py-2 text-center text-bold text-white old-bv"
              data-maintenance-toggle>
-          <span class="maintenance__text" id="maintenance-text">{% trans "base.odstavka.text" %}</span>
+          {% get_current_language as LANGUAGE_CODE %}
+          <span class="maintenance__text" id="maintenance-text">{% if LANGUAGE_CODE == "en" %}{{ action.text_en }}{% else %}{{ action.text_cs }}{% endif %}</span>
           <span class="material-icons maintenance__icon" aria-hidden="true" hidden>expand_more</span>
         </div>
       </div>
@@ -134,7 +135,7 @@
       {% for message in messages %}
         <div class="alert alert-{% if message.tags == "notclosing warning" %}warning notclosing{% elif message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show app-alert-floating" role="alert" style="top: {%  message_top forloop.counter0 %}px">
           {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% trans 'templates.a11y.close' %}">
           </button>
         </div>
       {% endfor %}

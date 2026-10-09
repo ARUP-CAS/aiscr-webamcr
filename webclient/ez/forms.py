@@ -10,7 +10,7 @@ from django import forms
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from dokument.forms import AutoriField
+from dokument.forms import AutoriField, nastav_nabidku_osob
 from pid.fields import DoiAutocompleteField
 from uzivatel.models import Osoba
 
@@ -216,16 +216,8 @@ class ExterniZdrojForm(OptimisticLockingMixin, forms.ModelForm):
         self.helper.form_tag = False
         if self.optimistic_lock_field_name in self.fields:
             self.helper.layout[0].append(Div(self.optimistic_lock_field_name, css_class="d-none"))
-        self.fields["autori"].widget.choices = list(
-            Osoba.objects.filter(externizdrojautor__externi_zdroj__pk=self.instance.pk)
-            .order_by("externizdrojautor__poradi")
-            .values_list("id", "vypis_cely")
-        )
-        self.fields["editori"].widget.choices = list(
-            Osoba.objects.filter(externizdrojeditor__externi_zdroj__pk=self.instance.pk)
-            .order_by("externizdrojeditor__poradi")
-            .values_list("id", "vypis_cely")
-        )
+        nastav_nabidku_osob(self, "autori", "externizdrojautor__externi_zdroj", "externizdrojautor__poradi")
+        nastav_nabidku_osob(self, "editori", "externizdrojeditor__externi_zdroj", "externizdrojeditor__poradi")
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if required or required_next:

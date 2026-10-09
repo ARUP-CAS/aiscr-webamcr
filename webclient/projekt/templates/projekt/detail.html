@@ -15,8 +15,8 @@
   <link rel="stylesheet" href="{% static 'leaflet/dist/leaflet.css' %}"/>
         <script src="{% static 'leaflet/dist/leaflet.js' %}"></script>
   </script>
-    <script src="{% static 'js/heatmap/heatmap.js' %}"></script>
-    <script src="{% static 'js/heatmap/leaflet-heatmap.js' %}"></script>
+    <script src="{% static 'vendor/heatmap.js/heatmap.js' %}"></script>
+    <script src="{% static 'vendor/heatmap.js/leaflet-heatmap.js' %}"></script>
     <script src="{% static 'leaflet.markercluster/dist/leaflet.markercluster-src.js' %}"></script>
     <link rel="stylesheet" href="{% static 'leaflet.markercluster/dist/MarkerCluster.css' %}" />
     <link rel="stylesheet" href="{% static 'leaflet.markercluster/dist/MarkerCluster.Default.css' %}" />
@@ -28,17 +28,17 @@
   const global_csrftoken = '{{ csrf_token }}';
   </script>
 
-  <link rel="stylesheet" href="{% static 'js/Leaflet.EasyButton2.4.0/easy-button.css' %}">
-  <script src="{% static 'js/Leaflet.EasyButton2.4.0/easy-button.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'leaflet-easybutton/src/easy-button.css' %}">
+  <script src="{% static 'leaflet-easybutton/src/easy-button.js' %}"></script>
 
-  <link rel="stylesheet" type="text/css" href="{% static 'css/bs-stepper.min.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper/dist/css/bs-stepper.min.css' %}" />
   <!-- static leaflet additional import-->
-    <link rel="stylesheet" href="{% static 'css/leaflet.measure.css' %}"/>
-    <script src="{% static 'js/leaflet.measure.js' %}"></script>
-    <script type="text/javascript" src="{% static 'js/leaflet.coor.js' %}"></script>
-    <link rel="stylesheet" href="{% static 'css/leaflet.coor.css' %}"/>
-    <link rel="stylesheet" href="{% static 'css/leaflet-search.css' %}"/>
-    <script src="{% static 'js/leaflet-search.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'vendor/leaflet-measure/leaflet.measure.css' %}"/>
+    <script src="{% static 'vendor/leaflet-measure/leaflet.measure.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/leaflet-coordinates/leaflet.coor.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'vendor/leaflet-coordinates/leaflet.coor.css' %}"/>
+    <link rel="stylesheet" href="{% static 'vendor/leaflet-search/leaflet-search.css' %}"/>
+    <script src="{% static 'vendor/leaflet-search/leaflet-search.js' %}"></script>
   <!-- Autocomplete media files -->
     <link href="{% static 'admin/css/vendor/select2/select2.css' %}" media="screen" rel="stylesheet" type="text/css">
     <link href="{% static 'admin/css/autocomplete.css' %}" media="screen" rel="stylesheet" type="text/css">
@@ -428,7 +428,7 @@
             <script src="{% static 'js/mapa_pins.js' %}"></script>
             <script src="{% static 'js/coor_precision.js' %}"></script>
             <script src="{% static 'js/coordTransform.js' %}"></script>
-            <script src="{% static 'js/leaflet-grayscale.js' %}"></script>
+            <script src="{% static 'vendor/leaflet-grayscale/leaflet-grayscale.js' %}"></script>
             <script src="{% static 'js/mapa_settings_jtsk.js' %}"></script>
             <script src="{% static 'js/mapa_functions.js' %}"></script>
             <script src="{% static 'js/mapa_basic_functions.js' %}"></script>
@@ -658,7 +658,7 @@
         {% if samostatne_nalezy %}
         <table class="table table-striped table-hover table-sm mb-0">
           <div class="loader" style="text-align:center;" >
-            <img src="{% static "django_tables2_column_shifter/img/loader.gif" %}" style="margin:5px auto;" alt="loader"/>
+            <img src="{% static "django_tables2_column_shifter/img/loader.gif" %}" style="margin:5px auto;" alt="{% trans 'templates.a11y.loading' %}"/>
             {% trans "templates.bootstrap4Table.loading"%}
           </div> 
           <thead style="display: none">

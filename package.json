@@ -8,18 +8,21 @@
     "bootstrap-datepicker": "1.10.1",
     "bootstrap-icons": "1.13.1",
     "bootstrap-select": "1.14.0-beta3",
+    "bs-stepper": "1.7.0",
     "daterangepicker": "3.1.0",
-    "dropzone": "6.3.4",
+    "dropzone": "6.3.5",
     "jquery": "4.0.0",
     "jquery-migrate": "4.0.2",
     "leaflet": "1.9.4",
     "leaflet-draw": "1.0.4",
+    "leaflet-easybutton": "2.4.0",
     "leaflet-fullscreen": "1.0.2",
     "leaflet-spin": "1.1.2",
     "leaflet.featuregroup.subgroup": "1.0.2",
     "leaflet.markercluster": "1.5.3",
     "moment": "2.31.0",
-    "spin.js": "2.3.2"
+    "spin.js": "2.3.2",
+    "vanilla-cookieconsent": "3.1.0"
   },
   "overrides": {
     "bootstrap-select": {

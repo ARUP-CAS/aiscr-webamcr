@@ -48,11 +48,12 @@ Třídy
       Nahradí dočasný identifikátor dokumentu trvalým podle jeho řady.
 
       Dokumenty, které už trvalý identifikátor mají (zapsané pod konkrétním ID), zůstávají beze změny.
-      Při vyčerpání pořadových čísel řady se transakce zruší a uživatel je přesměrován zpět na detail.
+      Při vyčerpání pořadových čísel řady se transakci nastaví chybová hláška ``MAXIMUM_IDENT_DOSAZEN``,
+      transakce se zruší (hlášku pak uživateli zobrazí middleware) a uživatel je přesměrován zpět na detail.
 
       :param dokument: Dokument, jehož identifikátor se má ztrvalit; řada se bere z ``dokument.rada``.
-      :param request: Požadavek, do jehož session se zapisuje hlášení o vyčerpání identifikátorů.
-      :param messages: Modul hlášení Djanga použitý pro oznámení chyby uživateli.
+      :param request: Požadavek volajícího pohledu; metoda jej nevyužívá, zůstává kvůli stávajícím voláním.
+      :param messages: Modul hlášení Djanga; metoda jej nevyužívá, zůstává kvůli stávajícím voláním.
       :param fedora_transaction: Aktivní Fedora transakce, která se při chybě zruší.
 
       :return: ``None`` při úspěchu, jinak ``JsonResponse`` s přesměrováním a stavem 403.

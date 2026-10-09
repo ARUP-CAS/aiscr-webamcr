@@ -1,0 +1,10 @@
+# Závislosti pro build Sphinx dokumentace (Read the Docs).
+# docs/source/conf.py volá django.setup(), proto vrstva stojí nad requirements.txt:
+# díky -r obsahuje i produkční piny a Read the Docs instaluje jen requirements-docs.txt.
+# Proč -r a ne -c: viz scripts/compile_requirements.sh.
+-r requirements.txt
+
+sphinx==9.1.0
+sphinx-rtd-theme==3.1.0
+sphinxcontrib-googleanalytics==0.5
+sphinxcontrib-mermaid==2.0.2

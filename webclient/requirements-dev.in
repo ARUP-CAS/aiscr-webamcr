@@ -1,0 +1,20 @@
+# Vývojové závislosti (dev kontejner, pre-commit, generátory dokumentace).
+# Vrstva nad requirements-test.txt (a tím i requirements.txt): requirements-dev.txt
+# obsahuje produkční, testovací i vývojové piny a stačí sám pro Dockerfile-DEV
+# i lokální vývoj. Proč -r a ne -c: viz scripts/compile_requirements.sh.
+-r requirements-test.txt
+
+pre-commit==4.6.2
+pip-tools==7.6.1
+django-debug-toolbar==8.0.0
+django-debug-toolbar-template-profiler==2.1.0
+django-livereload-server==0.5.1
+# runserver_plus v scripts/entrypoint.dev.sh; bez pinu, verzi určuje requirements-test.txt.
+Werkzeug
+pyOpenSSL==26.4.0
+# Bez pinu: verzi PyYAML a packaging určuje pin z requirements.txt (tranzitivně je tam táhne tablib a kombu).
+# docs/generate_module_docs.py (volá jej i docs/licenses/convert_to_rst.py)
+PyYAML
+# scripts/check_container_image_reference_parity.py
+packaging
+ruamel.yaml==0.19.1

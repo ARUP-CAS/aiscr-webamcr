@@ -426,7 +426,7 @@ class EditProjektForm(OptimisticLockingMixin, forms.ModelForm):
         if {"datum_zahajeni", "datum_ukonceni"} <= cleaned_data.keys():
             if cleaned_data.get("datum_zahajeni") and cleaned_data.get("datum_ukonceni"):
                 if cleaned_data.get("datum_zahajeni") > cleaned_data.get("datum_ukonceni"):
-                    raise forms.ValidationError("Datum zahájení nemůže být po datu ukončení")
+                    raise forms.ValidationError(_("projekt.forms.EditProjektForm.validation.datum_ukonceni.error"))
         return self.cleaned_data
 
 
@@ -780,7 +780,7 @@ class ZruseniProjektForm(forms.Form):
                 Div(
                     "reason_text",
                     css_class="col-sm-12",
-                    title="projekt.forms.zruseni.duvodTooltip.text",
+                    title=_("projekt.forms.zruseni.duvod.tooltip"),
                 ),
                 css_class="row",
             ),

@@ -30,15 +30,15 @@
   <script type="text/javascript" src="{% static 'daterangepicker/daterangepicker.js' %}"></script>
   <link rel="stylesheet" type="text/css" href="{% static 'daterangepicker/daterangepicker.css' %}"/>
 
-  <link rel="stylesheet" type="text/css" href="{% static 'css/bs-stepper.min.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper/dist/css/bs-stepper.min.css' %}" />
   <!-- static leaflet additional import-->
-  <link rel="stylesheet" href="{% static 'css/leaflet.measure.css' %}"/>
-  <script src="{% static 'js/leaflet.measure.js' %}"></script>
-  <script type="text/javascript" src="{% static 'js/leaflet.coor.js' %}"></script>
-  <link rel="stylesheet" href="{% static 'css/leaflet.coor.css' %}"/>
+  <link rel="stylesheet" href="{% static 'vendor/leaflet-measure/leaflet.measure.css' %}"/>
+  <script src="{% static 'vendor/leaflet-measure/leaflet.measure.js' %}"></script>
+  <script type="text/javascript" src="{% static 'vendor/leaflet-coordinates/leaflet.coor.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'vendor/leaflet-coordinates/leaflet.coor.css' %}"/>
 
-  <link rel="stylesheet" href="{% static 'css/leaflet-search.css' %}"/>
-  <script src="{% static 'js/leaflet-search.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'vendor/leaflet-search/leaflet-search.css' %}"/>
+  <script src="{% static 'vendor/leaflet-search/leaflet-search.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -104,7 +104,7 @@
             <div class="modal-content">
               <div class="modal-header">
                 <h5 class="modal-title" id="exampleModalLabel">{% trans "oznameni.templates.oznameni.index.informaceGDPR" %}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'templates.a11y.close' %}">
                 </button>
               </div>
               <div class="modal-body">
@@ -182,7 +182,7 @@
   <script src="{% static 'js/oznameni_csrf_refresh.js' %}"></script>
   <script src="{% static 'js/coor_precision.js' %}"></script>
   <script src="{% static 'js/coordTransform.js' %}"></script>
-  <script src="{% static 'js/leaflet-grayscale.js' %}"></script>
+  <script src="{% static 'vendor/leaflet-grayscale/leaflet-grayscale.js' %}"></script>
   <script src="{% static 'js/mapa_settings_jtsk.js' %}"></script>
   <script src="{% static 'js/mapa_functions.js' %}"></script>
   <script src="{% static 'js/mapa_basic_functions.js' %}"></script>

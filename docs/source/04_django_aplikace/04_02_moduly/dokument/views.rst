@@ -673,7 +673,7 @@ Funkce
    Funkce pohledu pro archivaci dokumentu cez modal.
 
    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``debug()``, pracuje se s atributy ``startswith``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``debug()``, ``get_detail_json_view()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
    :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 

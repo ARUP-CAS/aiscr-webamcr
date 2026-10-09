@@ -51,7 +51,7 @@
           }
 
           function hasOnlyPotvrdit(actualParams, actualValues) {
-              if (listMatch(['stav', 'predano_organizace'], actualParams) && listMatch([STAV_ODESLANY], actualValues)) {
+              if (listMatch(['stav', 'organizace_nalezu'], actualParams) && listMatch([STAV_ODESLANY], actualValues)) {
                 setHeader("{{hasOnlyPotvrdit_header}}")
                   return true
               } else {

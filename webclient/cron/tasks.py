@@ -53,6 +53,7 @@ from core.repository_connector import (
     FedoraRepositoryConnector,
     FedoraTransaction,
 )
+from core.translation import format_message
 from core.utils import check_import_report_directory, translate_status_value, upsert_import_report_index_entry
 from django.conf import settings
 from django.contrib.auth.models import Group
@@ -62,6 +63,7 @@ from django.db.models.functions import Coalesce, Upper
 from django.forms.models import model_to_dict
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_noop
 from dokument.models import Dokument
 from ez.models import ExterniZdroj
 from heslar import hesla_dynamicka
@@ -199,6 +201,7 @@ def translation_value(message_id: str, raw: bool = False, **params) -> str:
 # jinak zůstane nepřeloženo (``translate_status_value`` vrátí na čtenáři neaplikovaný key doslova).
 TRANSLATABLE_MESSAGE_IDS = (
     _("cron.tasks.run_data_import.validating"),
+    _("cron.tasks.run_data_import.validating_progress"),
     _("cron.tasks.run_data_import.stopped_by_user"),
     _("cron.tasks.run_data_import.failed_lock_lost"),
     _("cron.tasks.run_data_import.failed_lock_acquisition"),
@@ -208,11 +211,13 @@ TRANSLATABLE_MESSAGE_IDS = (
     _("cron.tasks.run_data_import.file"),
     _("cron.tasks.run_data_import.rolled_back"),
     _("cron.tasks.run_data_import.creating_history_records"),
+    _("cron.tasks.run_data_import.creating_history_records_progress"),
     _("cron.tasks.run_data_import.history_record_skipped"),
     _("cron.tasks.run_data_import.history_record_created"),
     _("cron.tasks.run_data_import.failed_during_history"),
     _("cron.tasks.run_data_import.history_record_error"),
     _("cron.tasks.run_data_import.updating_fedora_records"),
+    _("cron.tasks.run_data_import.updating_fedora_records_progress"),
     _("cron.tasks.run_data_import.fedora_skipped"),
     _("cron.tasks.run_data_import.fedora_waiting_data_import"),
     _("cron.tasks.run_data_import.fedora_record"),
@@ -243,6 +248,9 @@ TRANSLATABLE_MESSAGE_IDS = (
     _("cron.tasks.run_data_import.validation_done"),
     _("cron.tasks.run_data_import.reset_by_admin"),
     _("core.admin.import_data.record_valid"),
+    _("core.admin.import_data.error.virus_found"),
+    _("core.admin.import_data.error.zip_too_large"),
+    _("core.admin.import_data.error.bad_zip_file"),
 )
 
 
@@ -765,21 +773,6 @@ def update_materialized_views():
     cursor = connection.cursor()
     cursor.execute(query)
     logger.debug("cron.tasks.update_materialized_views.end")
-
-
-@shared_task
-def write_value_to_redis(key, value):
-    """
-    Zapíše value to redis.
-
-    :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
-    :param value: Parametr ``value`` předává se do volání ``set()``, vstupuje do návratové hodnoty.
-
-        :return: Vrací n-tici.
-    """
-    redis_connection = RedisConnector.get_connection()
-    redis_connection.set(key, value)
-    return key, value
 
 
 @shared_task
@@ -1335,7 +1328,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                             redis_connector.set(
                                 job_key("import_data_status_message_tr"),
                                 translation_value(
-                                    "cron.tasks.run_data_import.validating", n=row_order + 1, total=total_rows
+                                    "cron.tasks.run_data_import.validating_progress", n=row_order + 1, total=total_rows
                                 ),
                                 ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
                             )
@@ -1579,13 +1572,13 @@ def run_data_import(job_id, user_id, lock_token):
           - Selže zpracování datového záznamu, databázová transakce nebo hlavní fáze importu dat.
         * - ``cron.tasks.run_data_import.creating_history_records``
           - Hlavní import dat doběhl bez chyby a začíná fáze vytváření historie.
-        * - ``cron.tasks.run_data_import.creating_history_records {n}/{total}``
+        * - ``cron.tasks.run_data_import.creating_history_records_progress {n}/{total}``
           - Během fáze historie, před vytvořením konkrétního historického záznamu.
         * - ``cron.tasks.run_data_import.failed_during_history``
           - Selže vytvoření některého záznamu historie.
         * - ``cron.tasks.run_data_import.updating_fedora_records``
           - Historie doběhla bez chyby a začíná fáze aktualizace Fedora metadat.
-        * - ``cron.tasks.run_data_import.updating_fedora_records {n}/{total}``
+        * - ``cron.tasks.run_data_import.updating_fedora_records_progress {n}/{total}``
           - Během aktualizace jednotlivých Fedora záznamů.
         * - ``cron.tasks.run_data_import.failed_during_fedora``
           - Selže uložení metadat do Fedory pro některý z dotčených záznamů.
@@ -1778,19 +1771,13 @@ def run_data_import(job_id, user_id, lock_token):
                             "error": commit_err,
                         },
                     )
-                    # Raw error envelope: composed at runtime from a translated fragment plus the
-                    # identity of the object an operator has to clean up in Fedora by hand.
+                    # Parametrized envelope: the translation carries the whole sentence and names the
+                    # object an operator has to clean up in Fedora by hand.
                     import_fedora_result[entry["record_id"]].append(
                         translation_value(
                             "cron.tasks.run_data_import.fedora_delete_commit_failed",
-                            raw=True,
-                            message=(
-                                _("cron.tasks.run_data_import.fedora_delete_commit_failed")
-                                + " "
-                                + str(entry["identity"])
-                                + ": "
-                                + str(commit_err)
-                            ),
+                            identity=str(entry["identity"]),
+                            error=str(commit_err),
                         )
                     )
             pending_fedora_delete_commits.clear()
@@ -2046,7 +2033,7 @@ def run_data_import(job_id, user_id, lock_token):
                         data_rolled_back = True
                         redis_connector.rpush(job_key("import_data_progress_ids"), record_id)
                         # Raw error envelope: the row-failure message is composed at raise time from
-                        # translated fragments + runtime data (err, serialized_record, action, traceback);
+                        # a translated sentence + runtime data (err, serialized_record, action, traceback);
                         # rendered verbatim (carve-out, see translation_value docstring).
                         redis_connector.rpush(
                             job_key("import_data_progress_details_tr"),
@@ -2054,17 +2041,13 @@ def run_data_import(job_id, user_id, lock_token):
                                 "cron.tasks.run_data_import.error.row",
                                 raw=True,
                                 message=(
-                                    _("cron.tasks.run_data_import.error.part_1")
-                                    + ": "
-                                    + str(err)
-                                    + ", "
-                                    + _("cron.tasks.run_data_import.error.part_2")
-                                    + " "
-                                    + str(serialized_record)
-                                    + ", "
-                                    + _("cron.tasks.run_data_import.error.part_3")
-                                    + " "
-                                    + str(performed_action)
+                                    format_message(
+                                        gettext_noop("cron.tasks.run_data_import.error.message"),
+                                        error=err,
+                                        record=serialized_record,
+                                        action=performed_action,
+                                    )
+                                    + "\n"
                                     + traceback.format_exc()
                                 ),
                             ),
@@ -2278,7 +2261,7 @@ def run_data_import(job_id, user_id, lock_token):
                 redis_connector.set(
                     job_key("import_data_status_message_tr"),
                     translation_value(
-                        "cron.tasks.run_data_import.creating_history_records",
+                        "cron.tasks.run_data_import.creating_history_records_progress",
                         n=history_index + 1,
                         total=history_total,
                     ),
@@ -2313,7 +2296,7 @@ def run_data_import(job_id, user_id, lock_token):
                 )
                 redis_connector.set(job_key("import_data_stop"), 1)
                 history_error_value = translation_value(
-                    "cron.tasks.run_data_import.history_record_error", raw=True, message=str(err)
+                    "cron.tasks.run_data_import.history_record_error", message=str(err)
                 )
                 for record_id in record_ids:
                     import_history_record_result[record_id] = history_error_value
@@ -2392,7 +2375,7 @@ def run_data_import(job_id, user_id, lock_token):
                     redis_connector.set(
                         job_key("import_data_status_message_tr"),
                         translation_value(
-                            "cron.tasks.run_data_import.updating_fedora_records",
+                            "cron.tasks.run_data_import.updating_fedora_records_progress",
                             n=fedora_index + 1,
                             total=fedora_total,
                         ),
@@ -2754,7 +2737,7 @@ def run_data_import(job_id, user_id, lock_token):
                                     "file_name": filename,
                                     "size_mb": round(rep_bin_file.size_mb, 3),
                                     "additional_info_tr": translation_value(
-                                        "cron.tasks.run_data_import.file_mime_type", raw=True, message=mimetype
+                                        "cron.tasks.run_data_import.file_mime_type", message=mimetype
                                     ),
                                 }
                             ),
@@ -3091,6 +3074,10 @@ RUIAN_MAX_404_POKUSU_ZA_BEH = 60
 #: aby se pro tentýž den nehromadily duplicitní řádky auditu.
 NOTE_404_NEPOTVRZENO = "no_changes_nepotvrzeno (404)"
 
+#: Text chyby, kterým se uzavírá běh přerušený zvenčí (SIGKILL, OOM, restart
+#: kontejneru). Takový běh nestihl zapsat ani ``failed``, ani ``success``.
+ERROR_PRERUSENY_BEH = "Běh byl přerušen zvenčí (zabití procesu nebo restart kontejneru) a nedokončil se."
+
 #: Po kolika dnech bez jediného **skutečně staženého** souboru se zaloguje
 #: ``ERROR``.
 #:
@@ -3276,6 +3263,46 @@ def _potvrd_prazdne_dny(runy: list) -> None:
     )
 
 
+def _uzavri_prerusene_behy() -> None:
+    """
+    Uzavře jako ``failed`` běhy, které zůstaly ve stavu ``running``.
+
+    Do stavu ``running`` se běh dostane při založení a opustí ho až ve
+    vlastním ``except`` nebo po úspěchu. Proces zabitý zvenčí (SIGKILL po
+    vypršení ``stop_grace_period`` při restartu swarm stacku, OOM killer)
+    nestihne ani jedno, takže řádek zůstane ``running`` navždy. Detekce
+    opakování dne v :func:`_sync_ruian_changes_locked` ale hledá jen
+    ``failed`` – přerušený den by se pak zopakoval jako první pokus, bez
+    vynuceného zápisu metadat a bez opakovaného přepočtu navázaných záznamů.
+
+    Volá se pod advisory lockem :func:`heslar.ruian_sync.zamek.ruian_sync_lock`,
+    který drží každý tvůrce ``RuianSyncRun`` (denní cron i
+    ``aktualizuj_ruian_shp``). Žádný jiný běh tedy právě neprobíhá a každý
+    ``running`` řádek je bezpečně osiřelý.
+    """
+    from heslar.models import RuianSyncRun
+
+    prerusene = list(
+        RuianSyncRun.objects.filter(status=RuianSyncRun.STATUS_RUNNING).values_list("pk", "data_valid_to", "mode")
+    )
+    if not prerusene:
+        return
+    RuianSyncRun.objects.filter(pk__in=[pk for pk, _, _ in prerusene]).update(
+        status=RuianSyncRun.STATUS_FAILED,
+        finished_at=timezone.now(),
+        error=ERROR_PRERUSENY_BEH,
+    )
+    logger.warning(
+        "cron.tasks.sync_ruian_changes.prerusene_behy_uzavreny",
+        extra={
+            "run_ids": [pk for pk, _, _ in prerusene],
+            "dny": [den.isoformat() for _, den, _ in prerusene],
+            "mody": [mod for _, _, mod in prerusene],
+            "reason": "Běhy zůstaly ve stavu running po zabití procesu; den se zopakuje jako po selhání.",
+        },
+    )
+
+
 def _sync_ruian_changes_locked(reassign_records: bool = True):
     """
     Vlastní tělo :func:`sync_ruian_changes` běžící pod advisory lockem.
@@ -3289,6 +3316,8 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
         from heslar.ruian_sync import FileVfrSource
         from heslar.ruian_sync import syncer as ruian_syncer
         from heslar.ruian_sync.vfr_download import get_target_dir
+
+        _uzavri_prerusene_behy()
 
         last_run = RuianSyncRun.last_successful()
         if last_run is None:
@@ -3413,6 +3442,11 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                     # upsert by je vyhodnotil jako nezměněné a metadata by se
                     # už nikdy nedopsala. Vynuceným zápisem se dohoní.
                     #
+                    # Ze stejného důvodu se při opakování zopakuje i přepočet
+                    # navázaných záznamů: hranice už v DB jsou, takže by je
+                    # upsert nevyhodnotil jako změněné a nedokončený přepočet
+                    # (typicky po zabití procesu) by se už nikdy nedoběhl.
+                    #
                     # Filtr na neprázdný ``source_path`` je podstatný: běh, který
                     # skončil na 404, se k datům vůbec nedostal a nemá co dohánět.
                     opakovani_po_selhani = (
@@ -3433,7 +3467,8 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                                 "run_id": run.pk,
                                 "reason": (
                                     "Dřívější pokus o tento den selhal po stažení dat. "
-                                    "Metadata se do Fedory zapíšou i u nezměněných prvků."
+                                    "Metadata se do Fedory zapíšou i u nezměněných prvků "
+                                    "a přepočet navázaných záznamů proběhne znovu."
                                 ),
                             },
                         )
