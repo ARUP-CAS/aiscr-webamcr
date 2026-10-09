@@ -238,7 +238,7 @@ PR běh pracuje přímo se zdrojovým commitem PR; push a ruční běh s commite
 spuštění. Změny pinů, dokumentace a hooků se stageují společně a nabídnou v jediném
 opravném PR. Oprava původního PR míří do jeho zdrojové větve; oprava po pushi do
 `main` míří do `main`. Ruční běh cílí do vybrané větve. Tyto opravné PR nepřenášejí
-historii cílové větve do zdrojové a nevyžadují výjimku z běžných pravidel squash merge.
+historii cílové větve do zdrojové.
 
 `scripts/pre_commit_report.py` jednou zachytí skutečný staged diff před commitem.
 Popis opravného PR, sticky komentář na původním PR a Actions summary z něj sdílejí
@@ -250,10 +250,18 @@ a komentář. Selhání kompilace, instalace, testů nebo generátoru zabrání 
 Nenulový výsledek hooků zůstává selháním checku, i když jsou jejich automatické
 opravy nabídnuty k review. Publikační selhání je označeno samostatně.
 
+Konec logu hooků (`log_tail`, posledních 80 řádků) je dostupný ve sbalitelné sekci
+všech tří reportů. Každý diagnostický výpis má limit 6 000 bajtů UTF-8; při
+zkrácení konce logu zůstávají poslední řádky. Celkový rozpočet diagnostiky respektuje
+60 000 bajtů reportu po vložení metadat a úplného seznamu změn. Zkrácení je označeno;
+úplná diagnostika je v odkazovaném workflow logu. Velké výpisy tak nevytlačí ostatní
+diagnostické sekce ani seznam změn ze sticky komentáře.
+
 Cílené regresní testy lze spustit bez Dockeru a GitHub přístupu:
 
 ```bash
 python -m unittest discover -s scripts -p 'test_pre_commit*.py' -v
+python -m unittest discover -s scripts -p 'test_generate_js_libraries.py' -v
 ```
 
 ---
@@ -273,7 +281,7 @@ Pravidla:
 1. Ručně neupravujte auto-generované bloky.
 2. Po změně Selenium testů spusťte generátor dokumentace.
 3. Po změně závislostí zkontrolujte generování seznamu knihoven. Po změně tagů Docker image v compose nebo v `Dockerfile-DB` spusťte `docs/generate_module_docs.py` (nebo `docs/licenses/convert_to_rst.py`), aby zůstal v souladu soubor `docs/source/12_zavislosti/docker_images.rst`.
-4. Tabulka Node.js knihoven (`docs/source/12_zavislosti/javascript_knihovny.rst`): sloupec Odkaz se bere z `node_modules/`; chybí-li (např. jen Python pre-commit v CI), zůstane odkaz z posledního uloženého generovaného bloku, jinak se doplní URL na npmjs.com. Sloupec Licence se bere z `package-lock.json`, pak z `node_modules/` a nakonec z posledního uloženého generovaného bloku. Pro odkazy z `homepage` / `repository` v `package.json` spusťte `npm ci` a znovu `docs/generate_module_docs.py`.
+4. Tabulka Node.js knihoven (`docs/source/12_zavislosti/javascript_knihovny.rst`): metadata z `node_modules/` se použijí jen při shodě instalované verze s přesným pinem v `package.json`. Při nesouladu generátor vypíše upozornění s doporučením `npm ci` a cizí URL ani licenci nepoužije. Sloupec Odkaz se bere z platných metadat; chybí-li, zůstane odkaz z posledního uloženého generovaného bloku, jinak se doplní URL na npmjs.com. Sloupec Licence se bere z `package-lock.json`, pak z platných metadat a nakonec z posledního uloženého generovaného bloku. Pro aktualizaci odkazů z `homepage` / `repository` spusťte `npm ci` a znovu `docs/generate_module_docs.py`.
 5. Tabulka knihoven vkládaných jako statické soubory ve stejném souboru se generuje z `webclient/static_vendor.json`; upravujte manifest, ne RST.
 
 ---

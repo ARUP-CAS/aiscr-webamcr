@@ -59,6 +59,15 @@ Funkce
    :param value: Víceřádkový diagnostický výstup hooku.
    :return: Blok kódu s oddělovačem delším než značky obsažené v diagnostice.
 
+.. py:function:: diagnostic_section(title, value, limit)
+
+   Omezí velikost diagnostiky a konec logu zobrazí ve sbalitelné sekci.
+
+   :param title: Název diagnostiky; konec logu zachovává poslední znaky místo prvních.
+   :param value: Doslovný text hooku, který se vloží do bezpečně ohraničeného bloku kódu.
+   :param limit: Zbývající rozpočet sekce v bajtech UTF-8 včetně značek a zprávy o zkrácení.
+   :return: Sekce Markdown v rámci rozpočtu nebo prázdný řetězec při nedostatku místa.
+
 .. py:function:: processing_failures(record)
 
    Najde selhané či zrušené kroky zpracování odděleně od výsledku hooků.

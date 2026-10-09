@@ -26,13 +26,13 @@ Projekt má nakonfigurované následující hooky v souboru
   * statická kontrola kvality Python kódu,
   * upozorňuje na porušení PEP8 a běžné chyby.
 
-* ``method-docstring-style-reminder`` (lokální hook, **neblokující**)
+* ``method-docstring-style-reminder`` (lokální hook)
 
-  * kontroluje veřejné metody tříd v Python souborech,
+  * kontroluje veřejné funkce a metody tříd v Python souborech,
   * běží skript ``docs/check_method_docstrings.py``,
   * vypíše upozornění, pokud docstring chybí nebo neodpovídá základní
     struktuře (shrnutí, ``:param:``, ``:return:``),
-  * vrací vždy úspěšný kód, takže commit nezablokuje,
+  * při nalezených nedostatcích vrací nenulový kód a blokuje commit,
   * slouží jako průběžná připomínka standardu popsaného v dokumentu
     ``04_django_aplikace/04_01_core/docstring_style_guide``.
 
@@ -68,8 +68,7 @@ Jak zajistit správný běh
 4. Před commitem oprav nalezené problémy:
 
    * formátovací hooky (``isort``, ``black``) často opraví soubory automaticky,
-   * neblokující docstring hook vypisuje upozornění, která je potřeba průběžně
-     zapracovávat podle style guide.
+   * upozornění docstring hooku oprav podle style guide, aby kontrola prošla.
 
 Doporučený workflow vývojáře
 ----------------------------
@@ -84,60 +83,63 @@ Kontrola v CI (workflow ``Pre-commit``)
 ---------------------------------------
 
 Kromě lokálního spuštění vynucuje pravidla i workflow GitHub Actions
-``Pre-commit`` (``.github/workflows/pre_commit.yml``). Spouští se při pull
-requestu do větví ``main`` a ``test``, při pushi do ``main`` a ručně
-(``workflow_dispatch``). Má dva nezávislé joby, které běží vždy, aby požadované
-status checky nekončily stavem ``skipped``. Job ``pre-commit`` rozlišuje tři
-režimy podle toho, odkud změna přichází:
+``Pre-commit`` (``.github/workflows/pre_commit.yml``). Má jediný požadovaný job
+``pre-commit``. Spouští se při otevření, znovuotevření nebo aktualizaci PR do
+``main`` či ``test``, při pushi do ``main`` a ručně (``workflow_dispatch``).
+Úplná pravidla včetně CLI/API příkladů jsou v
+`CONTRIBUTING.md <https://github.com/ARUP-CAS/aiscr-webamcr/blob/test/CONTRIBUTING.md#automatické-kontroly-a-opravy-ci>`_.
 
-* **none** – automatické větve (``pre-commit-fixes/*``, ``deps/python-pins-refresh``)
-  nebo bot aktér: hooky se nespouští, check jen projde.
-* **standard** – vývojové PR (typicky do ``test``): spustí se běžné hooky a při
-  nalezených úpravách se založí opravný PR ``pre-commit-fixes/…``; pokud hooky
-  selžou a žádná oprava nevznikne, check selže.
-* **full** – cokoliv mířící do ``main`` (PR do ``main`` i push do ``main``),
-  případně ruční ``workflow_dispatch`` se zapnutým vstupem ``dependencies``:
-  jako ``standard``, navíc se přes ``docs/licenses/convert_to_rst.py``
-  regeneruje dokumentace závislostí, aby výsledný image z ``main`` odpovídal
-  závislostem i dokumentaci.
+Způsobilé PR do ``main`` a push do ``main`` používají režim ``refresh``:
+obnova tranzitivních pinů, instalace výsledných závislostí, regresní testy,
+generování dokumentace přes ``docs/licenses/convert_to_rst.py`` a hooky
+proběhnou v tomto pořadí ve stejném jobu. Běžné PR do ``test`` používají
+``checks``: kompilace bez upgradu a standardní kontroly. Přímé piny v
+``requirements*.in`` se automaticky neupgradují.
 
-Druhý job ``refresh-python-pins`` po pushi do ``main`` (nebo ručně) obnoví
-tranzitivní piny v ``webclient/requirements*.txt`` a založí/aktualizuje PR
-``deps/python-pins-refresh`` do větve ``test``.
+Ruční vstup ``mode`` nabízí ``checks`` (kontroly), ``docs`` (kontroly a
+dokumentace bez upgradu; výchozí) a ``refresh`` (kontroly, obnova pinů a
+dokumentace). Samostatný vstup ``bypass_docstring_exclusions`` rozšíří rozsah
+docstring kontroly; neobchází vyloučení celého běhu.
 
-Automaticky zakládané PR používá GitHub App token, aby jejich události spouštěly
-navazující workflows (PR založené přes ``GITHUB_TOKEN`` běhy nespouští); větve
-``pre-commit-fixes/*`` a ``deps/python-pins-refresh`` jsou proto v jobu
-``pre-commit`` vynechány (režim ``none``), aby nevznikala řetězená opravná PR.
+Účty s příponou ``[bot]`` včetně release App, PR autora Dependabot a zdrojové
+větve ``dependabot/*``, ``pre-commit-fixes/*`` a historická
+``deps/python-pins-refresh`` jsou vyloučeny. Job úspěšně skončí bez změn nebo
+opravného PR a vypíše důvod v summary. To platí i při ručním spuštění či
+lidské aktualizaci vyloučeného PR; release push ``CITATION.cff`` tak nezaloží
+opravné PR mezi kroky vydání.
 
-Opravný PR se zakládá z merge commitu původního PR (``refs/pull/<číslo>/merge``),
-takže vedle oprav hooků nese i sloučení cílové větve s hlavou PR. Přebírá tím i
-změny, které se do větve mezitím dostaly – typicky sladění ``main`` do ``test``.
-Je to zamýšlené: opravný PR tak drží aktuální stav cílové větve a sloučení větví
-proběhne spolu s opravami. Je ale nutné **nikdy neprovádět squash-merge** na 
-tomto PR, protože by se ztratil merge commit původního PR.
+Checkout používá zdrojový SHA původního PR, u pushů a ručních běhů SHA události.
+Neimportuje historii cílové větve. Po všech generátorech a hookách se změny
+stageují společně. Jediné opravné PR ``pre-commit-fixes/…`` míří do zdrojové
+větve původního PR, po pushi do ``main`` do ``main`` a po ručním spuštění do
+vybrané větve. Opakování aktualizuje existující PR; prázdný diff žádné nevytvoří.
+Publikace používá GitHub App token a vyloučení opravných větví brání rekurzi.
+
+Společný report popisu opravného PR, sticky komentáře původního PR a Actions
+summary čte jediný snapshot staged diffu před commitem. Odděluje provedené
+operace od skutečně změněných souborů, uvádí typy změn a počty řádků, režim,
+zdrojový commit, cílovou větev a odkazy na workflow a publikované PR. Diagnostika
+obsahuje sbalitelný konec logu hooků; výpisy jsou velikostně omezené a úplný log
+je dostupný v odkazovaném workflow. Selhání zpracování zabrání publikaci;
+nenulový kód hooků zůstává selháním checku i po nabídnutí automatických oprav.
+Selhání publikace je uvedeno samostatně.
 
 .. mermaid::
    :align: center
 
    flowchart TD
-       subgraph PC["job: pre-commit"]
-           direction TB
-           M{"automatická větev nebo bot aktér?"}
-           M -- "ano" --> NONE["režim none - žádné hooky, check projde"]
-           M -- "ne" --> MAIN{"PR do main, push do main nebo dispatch s dependencies?"}
-           MAIN -- "ano" --> FULL["režim full - hooky + regenerace dokumentace závislostí"]
-           MAIN -- "ne" --> STD["režim standard - běžné hooky (vývojové PR)"]
-           FULL --> FIX["při změnách založí nebo aktualizuje opravný PR pre-commit-fixes/…"]
-           STD --> FIX
-       end
-
-       subgraph RP["job: refresh-python-pins"]
-           direction TB
-           G2{"push do main nebo dispatch s upgrade_python_pins?"}
-           G2 -- "ano" --> W2["checkout větve test, compile --upgrade, založí nebo aktualizuje PR deps/python-pins-refresh"]
-           G2 -- "ne" --> N2["bez akce (check projde)"]
-       end
-
-       T([Trigger: PR do main nebo test, push do main, workflow_dispatch]) --> M
-       T --> G2
+       T["PR do main/test, push do main, ruční spuštění"] --> G{"Vyloučený účet, autor nebo větev?"}
+       G -- "ano" --> N["Úspěšný check bez změn; důvod v summary"]
+       G -- "ne" --> M["main: refresh; test: checks; ručně: mode"]
+       M --> C["Checkout zdrojového SHA; kompilace, upgrade jen v refresh"]
+       C --> I["Instalace závislostí a regresní testy"]
+       I --> D["Dokumentace závislostí v docs a refresh"]
+       D --> H["Hooky; zachování jejich návratového kódu"]
+       H --> S["Stage a společný snapshot změn"]
+       S --> F{"Změnily se soubory?"}
+       F -- "ano" --> P["Vytvořit nebo aktualizovat jediné opravné PR"]
+       F -- "ne" --> R["Společné reporty a výsledný check"]
+       P --> R
+       C -- "selhání" --> E["Report selhání; bez publikace; check selže"]
+       I -- "selhání" --> E
+       D -- "selhání" --> E

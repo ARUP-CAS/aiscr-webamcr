@@ -169,6 +169,23 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(STEPS["capture"]["env"]["FIX_DESTINATION"], "${{ github.head_ref || github.ref_name }}")
         self.assertEqual(STEPS["publish"]["env"]["BASE"], "${{ github.head_ref || github.ref_name }}")
 
+    def test_hook_log_tail_reaches_capture_and_keeps_last_eighty_lines(self):
+        """Skutečný hook shell předá posledních osmdesát řádků i původní kód selhání."""
+        self.assertEqual(STEPS["capture"]["env"]["LOG_TAIL"], "${{ steps.hooks.outputs.log_tail }}")
+        stub = (
+            'pre-commit() { for n in $(seq 1 100); do printf "hook line %s\\n" "$n"; done; '
+            'printf "Final hook failure\\n"; return 1; }\n'
+        )
+        result = self.run_shell(stub + STEPS["hooks"]["run"])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        outputs = (self.root / "outputs").read_text(encoding="utf-8")
+        self.assertIn("exit_code=1\n", outputs)
+        tail = outputs.split("log_tail<<", 1)[1].splitlines()
+        self.assertEqual(tail[-1], tail[0])
+        self.assertEqual(len(tail[1:-1]), 80)
+        self.assertEqual(tail[1], "hook line 22")
+        self.assertEqual(tail[-2], "Final hook failure")
+
     def publication_fixture(self, existing="", fail="0", base="test", is_pr="true"):
         """Shellové funkce zajistí, že publikace neprovede skutečný zápis do Gitu či GitHubu.
 

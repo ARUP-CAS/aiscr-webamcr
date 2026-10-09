@@ -56,6 +56,10 @@ Třídy
 
       Workflow používá obnovené soubory, zachytí je po hookách a znovu nestageuje.
 
+   .. py:method:: test_hook_log_tail_reaches_capture_and_keeps_last_eighty_lines()
+
+      Skutečný hook shell předá posledních osmdesát řádků i původní kód selhání.
+
    .. py:method:: publication_fixture()
 
       Shellové funkce zajistí, že publikace neprovede skutečný zápis do Gitu či GitHubu.

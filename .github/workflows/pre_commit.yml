@@ -161,10 +161,12 @@ jobs:
           pip install pip-licenses
           pip install -r webclient/requirements-dev.txt -r webclient/requirements-docs.txt
 
-      - name: Test pre-commit workflow and reports
+      - name: Test workflow, reports, and dependency documentation
         id: tests
         if: steps.gate.outputs.run == 'true'
-        run: python -m unittest discover -s scripts -p 'test_pre_commit*.py' -v
+        run: |
+          python -m unittest discover -s scripts -p 'test_pre_commit*.py' -v
+          python -m unittest discover -s scripts -p 'test_generate_js_libraries.py' -v
 
       - name: Run convert_to_rst.py
         id: docs
@@ -259,6 +261,7 @@ jobs:
           FLAKE_ERRORS: ${{ steps.hooks.outputs.flake_errors }}
           IMAGE_PARITY_LOG: ${{ steps.hooks.outputs.image_parity_log }}
           NPM_VENDOR_LOG: ${{ steps.hooks.outputs.npm_vendor_log }}
+          LOG_TAIL: ${{ steps.hooks.outputs.log_tail }}
         run: python scripts/pre_commit_report.py capture --record "$RUNNER_TEMP/precommit-report.json"
 
       - name: Prepare fix PR description

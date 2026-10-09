@@ -22,8 +22,12 @@ DIAGNOSTICS = {
     "FLAKE_ERRORS": "Flake8 errors",
     "IMAGE_PARITY_LOG": "Container image reference parity",
     "NPM_VENDOR_LOG": "NPM / static vendor libraries",
+    "LOG_TAIL": "Hook log tail",
 }
 CHANGE_TYPES = {"A": "Added", "M": "Modified", "D": "Deleted", "R": "Renamed", "C": "Copied", "T": "Type changed"}
+# Leave room for the fix-PR introduction and sticky marker in GitHub's body limit.
+MAX_REPORT_BYTES = 60_000
+MAX_DIAGNOSTIC_BYTES = 6_000
 
 
 def git_output(*args: str) -> str:
@@ -133,6 +137,33 @@ def fenced(value: str) -> str:
     return f"{fence}\n{value.rstrip()}\n{fence}"
 
 
+def diagnostic_section(title: str, value: str, limit: int) -> str:
+    """Omezí velikost diagnostiky a konec logu zobrazí ve sbalitelné sekci.
+
+    :param title: Název diagnostiky; konec logu zachovává poslední znaky místo prvních.
+    :param value: Doslovný text hooku, který se vloží do bezpečně ohraničeného bloku kódu.
+    :param limit: Zbývající rozpočet sekce v bajtech UTF-8 včetně značek a zprávy o zkrácení.
+    :return: Sekce Markdown v rámci rozpočtu nebo prázdný řetězec při nedostatku místa.
+    """
+    encoded = value.encode("utf-8", "backslashreplace")
+    tail = title == "Hook log tail"
+    size = min(len(encoded), limit)
+    while size > 0:
+        excerpt = (encoded[-size:] if tail else encoded[:size]).decode("utf-8", "ignore")
+        notice = "\n\nExcerpt truncated; see the workflow logs linked above." if size < len(encoded) else ""
+        block = fenced(excerpt) + notice
+        section = (
+            f"<details>\n<summary>Hook log tail (last 80 lines)</summary>\n\n{block}\n\n</details>"
+            if tail
+            else f"### {title}\n\n{block}"
+        )
+        excess = len(section.encode("utf-8")) - limit
+        if excess <= 0:
+            return section
+        size -= min(max(excess, 1), max(size // 2, 1))
+    return ""
+
+
 def processing_failures(record: dict) -> list[str]:
     """Najde selhané či zrušené kroky zpracování odděleně od výsledku hooků.
 
@@ -227,10 +258,16 @@ def common_report(record: dict) -> str:
             staged_section(record),
         ]
     )
-    for title, value in record["diagnostics"].items():
-        if value.strip():
-            lines.extend(["", f"### {title}", "", fenced(value)])
-    return "\n".join(lines) + "\n"
+    report = "\n".join(lines) + "\n"
+    diagnostics = [(title, value) for title, value in record["diagnostics"].items() if value.strip()]
+    for index, (title, value) in enumerate(diagnostics):
+        remaining = MAX_REPORT_BYTES - len(report.encode("utf-8"))
+        # Share the remaining space so earlier diagnostics cannot crowd out the log tail.
+        limit = min(MAX_DIAGNOSTIC_BYTES, remaining // (len(diagnostics) - index) - 2)
+        section = diagnostic_section(title, value, limit)
+        if section:
+            report += "\n" + section + "\n"
+    return report
 
 
 def render(record: dict, output_dir: Path) -> None:

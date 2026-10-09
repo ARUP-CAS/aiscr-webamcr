@@ -67,6 +67,18 @@ Třídy
 
       Nedůvěryhodné názvy a logy zůstanou ve všech reportech doslovné.
 
+   .. py:method:: test_log_tail_is_collapsed_and_shared_without_changing_hook_status()
+
+      Konec logu zůstane dostupný ve všech výstupech při úspěchu i selhání hooků.
+
+   .. py:method:: test_large_diagnostics_preserve_changes_and_end_of_log_within_budget()
+
+      Velké Unicode logy nepřekročí rozpočet komentáře ani nevytlačí skutečné změny.
+
+   .. py:method:: test_diagnostic_budget_includes_delimiters_and_truncation_notice()
+
+      I dlouhé vložené backticky zůstanou v bezpečném bloku v rámci rozpočtu.
+
 
 Funkce
 ------

@@ -105,7 +105,9 @@ class ReportTests(unittest.TestCase):
         (self.root / "added.txt").write_text("new file\n", encoding="utf-8")
         git("add", "--all")
         environment = {f"{step.upper()}_OUTCOME": "success" for step in report.STEPS}
-        environment.update(RUN_MODE="docs", HOOK_EXIT_CODE="0", GITHUB_OUTPUT=str(self.root / "outputs"))
+        environment.update(
+            RUN_MODE="docs", HOOK_EXIT_CODE="0", GITHUB_OUTPUT=str(self.root / "outputs"), LOG_TAIL="Final hook result"
+        )
         previous = Path.cwd()
         try:
             os.chdir(self.root)
@@ -114,6 +116,7 @@ class ReportTests(unittest.TestCase):
         finally:
             os.chdir(previous)
         self.assertEqual({item["status"][0] for item in captured["changes"]}, {"A", "D", "M", "R"})
+        self.assertEqual(captured["diagnostics"]["Hook log tail"], "Final hook result")
         git("commit", "-m", "fixture generated changes")
         self.assertEqual(git("diff", "--cached", "--name-only").stdout, b"")
         frozen = json.loads((self.root / "record.json").read_text(encoding="utf-8"))
@@ -239,6 +242,54 @@ class ReportTests(unittest.TestCase):
         """Nedůvěryhodné názvy a logy zůstanou ve všech reportech doslovné."""
         self.assertEqual(report.inline("a`b\nfile"), "`` a`b\\nfile ``")
         self.assertTrue(report.fenced("```\ntext\n```").startswith("````\n"))
+
+    def test_log_tail_is_collapsed_and_shared_without_changing_hook_status(self):
+        """Konec logu zůstane dostupný ve všech výstupech při úspěchu i selhání hooků."""
+        for hook_exit in (0, 1):
+            with self.subTest(hook_exit=hook_exit):
+                record = record_fixture()
+                record["hook_exit"] = hook_exit
+                record["diagnostics"]["Hook log tail"] = (
+                    "formatter passed\nlast hook failed" if hook_exit else "All passed"
+                )
+                self.assert_shared_reports(record)
+                rendered = report.common_report(record)
+                self.assertIn("<details>\n<summary>Hook log tail (last 80 lines)</summary>", rendered)
+                self.assertIn(record["diagnostics"]["Hook log tail"], rendered)
+                self.assertIn(f"exit code {hook_exit}", rendered)
+                self.assertIn(record["workflow_url"], rendered)
+
+    def test_large_diagnostics_preserve_changes_and_end_of_log_within_budget(self):
+        """Velké Unicode logy nepřekročí rozpočet komentáře ani nevytlačí skutečné změny."""
+        record = record_fixture()
+        record["changes"] = report.parse_changes("M\0docs/table.rst\0", "33\t13\tdocs/table.rst\0")
+        for title in record["diagnostics"]:
+            record["diagnostics"][title] = "Příliš dlouhý řádek\n" * 10_000
+        record["diagnostics"]["Hook log tail"] += "Terminal hook failure"
+        record["hook_exit"] = 1
+        self.assert_shared_reports(record)
+        rendered = report.common_report(record)
+        self.assertLessEqual(len(rendered.encode("utf-8")), report.MAX_REPORT_BYTES)
+        self.assertIn("Terminal hook failure", rendered)
+        self.assertIn("Modified: ` docs/table.rst ` (+33 / −13 lines)", rendered)
+        self.assertIn("Checks reported failures (hook exit code 1)", rendered)
+        for title in record["diagnostics"]:
+            self.assertIn(title, rendered)
+        self.assertIn("Excerpt truncated; see the workflow logs", rendered)
+        for name in ("fix-pr-body.md", "pr-comment.md", "summary.md"):
+            self.assertLess(len((self.root / "reports" / name).read_bytes()), 65_536)
+        # Tight remaining space is shared across diagnostics rather than consumed by the first.
+        with patch.object(report, "MAX_REPORT_BYTES", 4_000):
+            self.assertLessEqual(len(report.common_report(record).encode("utf-8")), 4_000)
+            self.assertIn("Terminal hook failure", report.common_report(record))
+
+    def test_diagnostic_budget_includes_delimiters_and_truncation_notice(self):
+        """I dlouhé vložené backticky zůstanou v bezpečném bloku v rámci rozpočtu."""
+        section = report.diagnostic_section("Hook log tail", "`" * 20_000 + "\nFinal failure", 1_000)
+        self.assertLessEqual(len(section.encode("utf-8")), 1_000)
+        self.assertIn("Final failure", section)
+        self.assertIn("Excerpt truncated", section)
+        self.assertEqual(report.diagnostic_section("Hook log tail", "failure", 10), "")
 
 
 if __name__ == "__main__":
