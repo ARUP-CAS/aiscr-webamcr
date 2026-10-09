@@ -153,12 +153,12 @@ běží selenium testy. Publikovaný produkční obraz se staví bez něj.
   Balíčky, které spolu obvykle přicházejí nebo bez sebe nemohou být aktualizovány (např. Django
   s django-celery-beat), seskupuje do jednoho PR; skupiny i jejich důvody jsou v ``.github/dependabot.yml``.
   Bezpečnostní opravy zůstávají jako samostatné PR.
-* Workflow ``.github/workflows/pre_commit.yml`` při každém PR do ``test`` nebo ``main`` a při pushi
-  do ``main`` znovu zkompiluje ``requirements*.txt`` bez aktualizací; nesoulad s ``requirements*.in``
-  opraví v auto-fix PR.
-* Job ``refresh-python-pins`` téhož workflow po každém pushi do ``main`` (nebo ručně) spustí
-  ``scripts/compile_requirements.sh --upgrade`` nad větví ``test`` a udržuje průběžný PR
-  ``deps/python-pins-refresh`` do ``test`` s obnovenými tranzitivními piny.
+* Job ``pre-commit`` ve workflow ``.github/workflows/pre_commit.yml`` pro způsobilé PR do ``main``
+  a push do ``main`` spustí ``scripts/compile_requirements.sh --upgrade`` a poté nainstaluje
+  výsledné závislosti, obnoví jejich dokumentaci a provede kontroly. Běžná PR do ``test``
+  kompilují bez upgradu. Jediné opravné PR cílí do zdrojové větve původního PR, po pushi
+  do ``main`` do ``main``. Dependabot, release App a opravné větve jsou vyloučeny;
+  ruční režimy a úplná pravidla popisuje :doc:`../03_vyvoj/kodovaci_standardy`.
 
 **BuildKit cache mount**
 

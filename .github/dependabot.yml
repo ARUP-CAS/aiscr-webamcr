@@ -10,7 +10,8 @@ updates:
   # - přepínače (např. --strip-extras) čte z hlavičky vygenerovaného .txt,
   # - pořadí vrstev (prod → test → dev, prod → docs) zná jen z řádků -r v .in souborech.
   # Aktualizuje přímé závislosti z .in a bezpečnostní opravy; tranzitivní piny obnovuje
-  # job refresh-python-pins v .github/workflows/pre_commit.yml (PR do test).
+  # job pre-commit v .github/workflows/pre_commit.yml pro způsobilé PR/push na main nebo ruční mode=refresh.
+  # Dependabot PR a větve dependabot/* jsou z tohoto CI vyloučeny i při lidském opakování běhu.
   - package-ecosystem: "pip"
     directory: "/webclient/"
     schedule:
