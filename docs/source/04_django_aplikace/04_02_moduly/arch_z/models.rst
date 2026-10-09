@@ -54,15 +54,19 @@ Třídy
 
       Je připojená aspoň jedna dokumentační jednotka se všemi relevantními relacemi.
 
+      Připojené dokumenty, které dosud nejsou archivované, projdou svou kontrolou před odesláním.
+      Archivované dokumenty se nekontrolují (jejich neúplnost typicky pochází ze staršího importu).
+
+      :param kontrolovat_dokumenty: Pokud je ``False``, obsahová kontrola připojených dokumentů se vynechá úplně.
       :return: Vrací proměnná ``result``.
 
    .. py:method:: check_pred_archivaci()
 
       Metoda pro kontrolu prerekvizit před archivací:
 
-      kontrola jako před odesláním a navíc
+      kontrola jako před odesláním (bez obsahové kontroly připojených dokumentů) a navíc
 
-      všechny pripojené dokumenty jsou archivované.
+      všechny pripojené dokumenty jsou archivované (vrací se zvlášť jako varování k potvrzení).
 
       všechny DJ mají potvrzený pian
 

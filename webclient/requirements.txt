@@ -104,7 +104,7 @@ django-crispy-forms==2.7
     #   crispy-bootstrap5
 django-extensions==4.1
     # via -r requirements.in
-django-filter==26.1
+django-filter==26.2
     # via -r requirements.in
 django-libsass==0.9
     # via -r requirements.in
@@ -221,7 +221,7 @@ python-logstash==0.4.8
     # via -r requirements.in
 python-magic==0.4.27
     # via -r requirements.in
-pytz==2026.3.post1
+pytz==2026.5
     # via -r requirements.in
 pyyaml==6.0.3
     # via tablib
@@ -243,7 +243,7 @@ requests==2.34.2
     #   django-rosetta
 rjsmin==1.2.5
     # via django-compressor
-simplejson==4.1.2
+simplejson==4.2.0
     # via -r requirements.in
 six==1.17.0
     # via python-dateutil

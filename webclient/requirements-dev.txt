@@ -159,7 +159,7 @@ django-debug-toolbar-template-profiler==2.1.0
     # via -r requirements-dev.in
 django-extensions==4.1
     # via -r requirements-test.txt
-django-filter==26.1
+django-filter==26.2
     # via -r requirements-test.txt
 django-libsass==0.9
     # via -r requirements-test.txt
@@ -362,7 +362,7 @@ python-logstash==0.4.8
     # via -r requirements-test.txt
 python-magic==0.4.27
     # via -r requirements-test.txt
-pytz==2026.3.post1
+pytz==2026.5
     # via -r requirements-test.txt
 pyyaml==6.0.3
     # via
@@ -393,9 +393,9 @@ rjsmin==1.2.5
     #   django-compressor
 ruamel-yaml==0.19.1
     # via -r requirements-dev.in
-selenium==4.49.0
+selenium==4.50.0
     # via -r requirements-test.txt
-simplejson==4.1.2
+simplejson==4.2.0
     # via -r requirements-test.txt
 six==1.17.0
     # via
