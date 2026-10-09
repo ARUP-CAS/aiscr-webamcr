@@ -6,23 +6,22 @@ Modul news_feed.
 Přehled modulu
 --------------
 
-News feed client and cache for fetching and parsing news from aiscr-news.
+Klient a cache novinkového kanálu pro načítání a zpracování novinek ze služby aiscr-news.
 
-This module provides functionality to fetch news feed data from the
-aiscr-news service and transform it into a standardized format for
-use in the AMČR web application.
+Modul zajišťuje načítání dat novinkového kanálu ze služby aiscr-news
+a jejich převod do standardizovaného formátu pro použití ve webové
+aplikaci AMČR.
 
-The feed data is fetched from the aiscr-news repository and is
-considered trusted content. The html field is rendered as trusted
-HTML because it is generated and published by the controlled
-aiscr-news repository.
+Data kanálu se načítají z repozitáře aiscr-news a považují se za
+důvěryhodný obsah. Pole html se vykresluje jako důvěryhodné HTML,
+protože je generuje a publikuje kontrolovaný repozitář aiscr-news.
 
 Třídy
 ------
 
 .. py:class:: NewsItem
 
-   Represents a single news item from the feed.
+   Představuje jednu novinku z kanálu.
 
    **Metody:**
 
@@ -35,81 +34,81 @@ Třídy
 
 .. py:class:: NewsFeedClient
 
-   Client for fetching and parsing news feed data.
+   Klient pro načítání a zpracování dat novinkového kanálu.
 
    **Metody:**
 
    .. py:method:: __init__()
 
-      Initialize the news feed client.
+      Inicializuje klienta novinkového kanálu.
 
-      :param base_url: Base URL for fetching feed data from aiscr-news.
-      :param timeout: Request timeout in seconds.
+      :param base_url: Základní URL pro načítání dat kanálu ze služby aiscr-news.
+      :param timeout: Časový limit požadavku v sekundách.
 
    .. py:method:: fetch_feed()
 
-      Fetch and parse the news feed for the specified language.
+      Načte a zpracuje novinkový kanál pro zadaný jazyk.
 
-      Fetches the feed from aiscr-news and transforms it into a
-      list of NewsItem objects.
+      Načte kanál ze služby aiscr-news a převede jej na seznam
+      objektů NewsItem.
 
-      :param language: Language code for the feed (e.g., "cs" or "en").
-      :return: List of NewsItem objects.
-      :raises NewsFeedError: If the feed cannot be fetched or parsed.
+      :param language: Kód jazyka kanálu (např. "cs" nebo "en").
+      :return: Seznam objektů NewsItem.
+      :raises NewsFeedError: Pokud kanál nelze načíst nebo zpracovat.
 
    .. py:method:: _parse_feed()
 
-      Parse the feed data into NewsItem objects.
+      Zpracuje data kanálu na objekty NewsItem.
 
-      :param data: Parsed JSON data from the feed.
-      :return: List of NewsItem objects.
-      :raises NewsFeedError: If data is not a valid dictionary.
+      :param data: Zpracovaná JSON data kanálu.
+      :return: Seznam objektů NewsItem.
+      :raises NewsFeedError: Pokud data nejsou platný slovník.
 
    .. py:method:: _parse_item()
 
-      Parse a single item from the feed data.
+      Zpracuje jednu položku z dat kanálu.
 
-      :param item_data: Data for a single news item.
-      :return: NewsItem object or None if the item cannot be parsed.
+      :param item_data: Data jedné novinky.
+      :return: Objekt NewsItem, nebo None, pokud položku nelze zpracovat.
 
 
 .. py:class:: NewsFeedError
 
-   Exception raised when news feed operations fail.
+   Výjimka vyvolaná při selhání operací novinkového kanálu.
 
 
 .. py:class:: NewsFeedCache
 
-   Cache wrapper for the news feed client.
+   Cache obalující klienta novinkového kanálu.
 
    **Metody:**
 
    .. py:method:: __init__()
 
-      Initialize the news feed cache.
+      Inicializuje cache novinkového kanálu.
 
-      :param client: NewsFeedClient instance to wrap.
-      :param cache_key_prefix: Prefix for cache keys.
-      :param default_ttl: Default time-to-live in seconds for fresh copies.
-      :param stale_ttl: Time-to-live in seconds for stale copies.
-      :param block_height: Height of collapsed news block in pixels.
+      :param client: Instance NewsFeedClient, která se obaluje.
+      :param cache_key_prefix: Prefix klíčů cache.
+      :param default_ttl: Výchozí doba platnosti v sekundách pro čerstvé kopie.
+      :param stale_ttl: Doba platnosti v sekundách pro zastaralé kopie.
+      :param block_height: Výška sbaleného bloku novinek v pixelech.
 
    .. py:method:: get_feed()
 
-      Get the news feed, using cache if available.
+      Vrátí novinkový kanál s využitím cache, je-li k dispozici.
 
-      Implements a fresh-copy-first strategy:
-      1. Try to get a fresh copy from cache
-      2. If expired or missing, fetch from the feed service
-      3. If fetch fails, return the last successful copy (stale copy)
+      Uplatňuje strategii čerstvé kopie přednostně:
+      1. Pokusí se získat čerstvou kopii z cache
+      2. Pokud vypršela nebo chybí, načte kanál ze služby
+      3. Pokud načtení selže, vrátí poslední úspěšnou kopii (zastaralou kopii)
 
-      :param language: Language code for the feed.
-      :return: List of news items, or empty list if unavailable.
+      :param language: Kód jazyka kanálu.
+      :return: Seznam novinek, nebo prázdný seznam, pokud nejsou dostupné.
 
    .. py:method:: set_stale()
 
-      Set a stale copy in the cache.
+      Uloží zastaralou kopii do cache.
 
-      :param language: Language code for the feed.
-      :param feed: List of news items to cache as stale.
+      :param language: Kód jazyka kanálu.
+      :param feed: Seznam novinek, který se uloží do cache jako zastaralý.
 

@@ -670,7 +670,7 @@ SKIP_SELENIUM_TESTS = False
 
 CELERY_BROKER_URL = f"redis://{get_redis_pass()}{REDIS_HOST}:{REDIS_PORT}"
 
-# News feed settings
+# Nastavení novinkového kanálu
 NEWS_FEED_URL = "https://arup-cas.github.io/aiscr-news/feed/amcr-info"
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"

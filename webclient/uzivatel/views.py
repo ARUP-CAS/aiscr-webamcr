@@ -267,13 +267,13 @@ class UserLoginView(LoginView):
         """
         context = super().get_context_data(**kwargs)
 
-        # Get timeout from settings with proper fallback
+        # Načte časový limit z nastavení s odpovídající náhradní hodnotou
         timeout_setting = CustomAdminSettings.objects.filter(
             item_group="news_feed", item_id="news_feed_timeout"
         ).first()
         try:
             timeout_value = int(timeout_setting.value) if timeout_setting else 10
-            # Validate timeout is positive
+            # Ověří, že časový limit je kladný
             if timeout_value <= 0:
                 logger.warning(f"Invalid timeout value ({timeout_value}), using default: {10}")
                 timeout_value = 10
@@ -282,7 +282,7 @@ class UserLoginView(LoginView):
             logger.warning(f"Invalid timeout value in settings, using default: {10}")
             timeout = 10
 
-        # Get block height from settings with proper fallback
+        # Načte výšku bloku z nastavení s odpovídající náhradní hodnotou
         block_height_setting = CustomAdminSettings.objects.filter(
             item_group="news_feed", item_id="news_feed_block_height"
         ).first()

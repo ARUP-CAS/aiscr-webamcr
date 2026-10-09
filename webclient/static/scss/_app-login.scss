@@ -416,18 +416,18 @@
             background: rgba(255, 255, 255, 0.7);
         }
 
-        // ── News item expansion ──
+        // ── Rozbalování položky novinky ──
         .news-item {
             .news-item-html {
-                // Hide HTML content by default until user clicks expand button
+                // HTML obsah je ve výchozím stavu skrytý, dokud uživatel neklikne na tlačítko rozbalení
                 display: none;
             }
         }
 
-        // ── News item image ──
+        // ── Obrázek položky novinky ──
         .news-item-image {
             .news-item-image-img {
-                // Constrain image to fit within col-2 column
+                // Omezí obrázek tak, aby se vešel do sloupce col-2
                 max-width: 100%;
                 height: auto;
                 max-height: 80px;
@@ -436,7 +436,7 @@
             }
         }
 
-        // ── News item badge icon ──
+        // ── Ikona odznaku položky novinky ──
         .news-item-date-badge {
             display: flex;
             align-items: center;
@@ -465,7 +465,7 @@
             }
         }
 
-        // ── News item title ──
+        // ── Titulek položky novinky ──
         .news-item-title {
             .news-item-title-text {
                 font-size: 1rem;
@@ -476,7 +476,7 @@
             }
         }
 
-        // ── News item authors ──
+        // ── Autoři položky novinky ──
         .news-item-authors {
             font-size: 0.875rem;
             color: #6c757d;

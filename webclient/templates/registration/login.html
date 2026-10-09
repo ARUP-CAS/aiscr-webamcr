@@ -296,7 +296,7 @@
 
       window.addEventListener("resize", updateToggleVisibility);
 
-      // Handle per-item expansion
+      // Obsluha rozbalování jednotlivých položek
       const newsItems = document.querySelectorAll(".news-item");
       newsItems.forEach(function (item) {
         const expandBtn = item.querySelector(".news-item-expand");
@@ -314,7 +314,7 @@
           return;
         }
 
-        // Check if HTML adds content beyond excerpt
+        // Ověří, zda HTML přidává obsah nad rámec perexu
         const excerptText = excerpt ? excerpt.textContent.trim() : "";
         const htmlText = htmlContent.textContent.trim();
 
@@ -323,21 +323,21 @@
           return;
         }
 
-        // Initialize aria-expanded based on current state
+        // Inicializuje aria-expanded podle aktuálního stavu
         const isExpanded = item.classList.contains("is-expanded");
         expandBtn.setAttribute("aria-expanded", isExpanded ? "true" : "false");
 
-        // Add click handler for per-item expansion
+        // Přidá obsluhu kliknutí pro rozbalení jednotlivé položky
         expandBtn.addEventListener("click", function () {
           if (item.classList.contains("is-expanded")) {
-            // Collapse item
+            // Sbalí položku
             item.classList.remove("is-expanded");
             item.classList.add("is-collapsed");
             htmlContent.style.display = "none";
             expandBtn.textContent = expandBtn.dataset.expandLabel;
             expandBtn.setAttribute("aria-expanded", "false");
           } else {
-            // Expand item
+            // Rozbalí položku
             item.classList.remove("is-collapsed");
             item.classList.add("is-expanded");
             htmlContent.style.display = "block";

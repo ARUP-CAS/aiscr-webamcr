@@ -1,14 +1,13 @@
 """
-News feed client and cache for fetching and parsing news from aiscr-news.
+Klient a cache novinkového kanálu pro načítání a zpracování novinek ze služby aiscr-news.
 
-This module provides functionality to fetch news feed data from the
-aiscr-news service and transform it into a standardized format for
-use in the AMČR web application.
+Modul zajišťuje načítání dat novinkového kanálu ze služby aiscr-news
+a jejich převod do standardizovaného formátu pro použití ve webové
+aplikaci AMČR.
 
-The feed data is fetched from the aiscr-news repository and is
-considered trusted content. The html field is rendered as trusted
-HTML because it is generated and published by the controlled
-aiscr-news repository.
+Data kanálu se načítají z repozitáře aiscr-news a považují se za
+důvěryhodný obsah. Pole html se vykresluje jako důvěryhodné HTML,
+protože je generuje a publikuje kontrolovaný repozitář aiscr-news.
 """
 
 import json
@@ -25,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class NewsItem:
-    """Represents a single news item from the feed."""
+    """Představuje jednu novinku z kanálu."""
 
     date: datetime
     title: str
@@ -45,7 +44,7 @@ class NewsItem:
         if self.authors is None:
             self.authors = ""
         elif isinstance(self.authors, list) and len(self.authors) > 0:
-            # Ensure authors is a list of strings (authors come as dicts from feed)
+            # Zajistí, aby autoři byli seznam řetězců (z kanálu přicházejí jako slovníky).
             logger.debug(f"Parsing authors: {self.authors[0]}")
             authors_list = []
             for author in self.authors:
@@ -61,7 +60,7 @@ class NewsItem:
 
 
 class NewsFeedClient:
-    """Client for fetching and parsing news feed data."""
+    """Klient pro načítání a zpracování dat novinkového kanálu."""
 
     def __init__(
         self,
@@ -69,27 +68,27 @@ class NewsFeedClient:
         timeout: int = 10,
     ):
         """
-        Initialize the news feed client.
+        Inicializuje klienta novinkového kanálu.
 
-        :param base_url: Base URL for fetching feed data from aiscr-news.
-        :param timeout: Request timeout in seconds.
+        :param base_url: Základní URL pro načítání dat kanálu ze služby aiscr-news.
+        :param timeout: Časový limit požadavku v sekundách.
         """
         self.base_url = base_url
         self.timeout = timeout
 
     def fetch_feed(self, language: str = "cs") -> list[NewsItem]:
         """
-        Fetch and parse the news feed for the specified language.
+        Načte a zpracuje novinkový kanál pro zadaný jazyk.
 
-        Fetches the feed from aiscr-news and transforms it into a
-        list of NewsItem objects.
+        Načte kanál ze služby aiscr-news a převede jej na seznam
+        objektů NewsItem.
 
-        :param language: Language code for the feed (e.g., "cs" or "en").
-        :return: List of NewsItem objects.
-        :raises NewsFeedError: If the feed cannot be fetched or parsed.
+        :param language: Kód jazyka kanálu (např. "cs" nebo "en").
+        :return: Seznam objektů NewsItem.
+        :raises NewsFeedError: Pokud kanál nelze načíst nebo zpracovat.
         """
         try:
-            # Use /amcr/ prefix in the feed endpoint
+            # Adresa kanálu obsahuje prefix /amcr/
             feed_url = f"{self.base_url}/{language}.json"
             response = requests.get(feed_url, timeout=self.timeout)
             response.raise_for_status()
@@ -104,18 +103,18 @@ class NewsFeedClient:
 
     def _parse_feed(self, data: Any) -> list[NewsItem]:
         """
-        Parse the feed data into NewsItem objects.
+        Zpracuje data kanálu na objekty NewsItem.
 
-        :param data: Parsed JSON data from the feed.
-        :return: List of NewsItem objects.
-        :raises NewsFeedError: If data is not a valid dictionary.
+        :param data: Zpracovaná JSON data kanálu.
+        :return: Seznam objektů NewsItem.
+        :raises NewsFeedError: Pokud data nejsou platný slovník.
         """
-        # Validate that data is a dictionary (handle malformed but valid JSON)
+        # Ověří, že data jsou slovník (ošetření poškozeného, ale syntakticky platného JSON).
         if not isinstance(data, dict):
             logger.warning(f"Feed data is not a dictionary: {type(data).__name__}: {data}")
             raise json.JSONDecodeError("Feed data is not a dictionary", str(data), 0)
 
-        # Validate that items is a list
+        # Ověří, že položky jsou seznam.
         items_list = data.get("items")
         if not isinstance(items_list, list):
             logger.warning(f"Feed items is not a list: {type(items_list).__name__}: {items_list}")
@@ -130,13 +129,13 @@ class NewsFeedClient:
 
     def _parse_item(self, item_data: dict[str, Any]) -> Optional[NewsItem]:
         """
-        Parse a single item from the feed data.
+        Zpracuje jednu položku z dat kanálu.
 
-        :param item_data: Data for a single news item.
-        :return: NewsItem object or None if the item cannot be parsed.
+        :param item_data: Data jedné novinky.
+        :return: Objekt NewsItem, nebo None, pokud položku nelze zpracovat.
         """
         try:
-            # Ensure item_data is a dict (handle malformed but valid JSON)
+            # Ověří, že item_data je slovník (ošetření poškozeného, ale syntakticky platného JSON).
             if not isinstance(item_data, dict):
                 logger.warning(f"Item is not a dictionary: {item_data}")
                 return None
@@ -172,13 +171,13 @@ class NewsFeedClient:
 
 
 class NewsFeedError(Exception):
-    """Exception raised when news feed operations fail."""
+    """Výjimka vyvolaná při selhání operací novinkového kanálu."""
 
     pass
 
 
 class NewsFeedCache:
-    """Cache wrapper for the news feed client."""
+    """Cache obalující klienta novinkového kanálu."""
 
     def __init__(
         self,
@@ -189,13 +188,13 @@ class NewsFeedCache:
         block_height: int = None,
     ):
         """
-        Initialize the news feed cache.
+        Inicializuje cache novinkového kanálu.
 
-        :param client: NewsFeedClient instance to wrap.
-        :param cache_key_prefix: Prefix for cache keys.
-        :param default_ttl: Default time-to-live in seconds for fresh copies.
-        :param stale_ttl: Time-to-live in seconds for stale copies.
-        :param block_height: Height of collapsed news block in pixels.
+        :param client: Instance NewsFeedClient, která se obaluje.
+        :param cache_key_prefix: Prefix klíčů cache.
+        :param default_ttl: Výchozí doba platnosti v sekundách pro čerstvé kopie.
+        :param stale_ttl: Doba platnosti v sekundách pro zastaralé kopie.
+        :param block_height: Výška sbaleného bloku novinek v pixelech.
         """
         self.client = client
         self.cache_key_prefix = cache_key_prefix
@@ -205,25 +204,25 @@ class NewsFeedCache:
 
     def get_feed(self, language: str = "cs") -> list:
         """
-        Get the news feed, using cache if available.
+        Vrátí novinkový kanál s využitím cache, je-li k dispozici.
 
-        Implements a fresh-copy-first strategy:
-        1. Try to get a fresh copy from cache
-        2. If expired or missing, fetch from the feed service
-        3. If fetch fails, return the last successful copy (stale copy)
+        Uplatňuje strategii čerstvé kopie přednostně:
+        1. Pokusí se získat čerstvou kopii z cache
+        2. Pokud vypršela nebo chybí, načte kanál ze služby
+        3. Pokud načtení selže, vrátí poslední úspěšnou kopii (zastaralou kopii)
 
-        :param language: Language code for the feed.
-        :return: List of news items, or empty list if unavailable.
+        :param language: Kód jazyka kanálu.
+        :return: Seznam novinek, nebo prázdný seznam, pokud nejsou dostupné.
         """
         cache_key = f"{self.cache_key_prefix}:{language}"
 
-        # Try to get fresh copy from cache
+        # Pokusí se získat čerstvou kopii z cache
         cached = cache.get(cache_key)
         if cached is not None:
             logger.debug(f"Cache hit for {cache_key}")
             return cached
 
-        # Cache miss - try to fetch from feed service
+        # Zásah do cache minul - pokusí se načíst ze služby
         try:
             logger.debug(f"Cache miss for {cache_key}, fetching from feed service")
             feed = self.client.fetch_feed(language)
@@ -234,7 +233,7 @@ class NewsFeedCache:
         except NewsFeedError as e:
             logger.warning(f"Failed to fetch news feed: {e}")
 
-            # Try to get stale copy from cache
+            # Pokusí se získat zastaralou kopii z cache
             stale_key = f"{cache_key}:stale"
             stale_feed = cache.get(stale_key)
             if stale_feed is not None:
@@ -244,10 +243,10 @@ class NewsFeedCache:
             logger.warning(f"No stale copy available for {cache_key}")
             return []
         except (AttributeError, TypeError) as e:
-            # Handle malformed but valid JSON (e.g., list instead of dict, scalar instead of list)
+            # Ošetření poškozeného, ale syntakticky platného JSON (např. seznam místo slovníku, skalár místo seznamu)
             logger.error(f"Malformed JSON in news feed (not a mapping): {e}")
 
-            # Try to get stale copy from cache instead of raising an error
+            # Pokusí se získat zastaralou kopii z cache místo vyvolání chyby
             stale_key = f"{cache_key}:stale"
             stale_feed = cache.get(stale_key)
             if stale_feed is not None:
@@ -259,10 +258,10 @@ class NewsFeedCache:
 
     def set_stale(self, language: str = "cs", feed: list = None) -> None:
         """
-        Set a stale copy in the cache.
+        Uloží zastaralou kopii do cache.
 
-        :param language: Language code for the feed.
-        :param feed: List of news items to cache as stale.
+        :param language: Kód jazyka kanálu.
+        :param feed: Seznam novinek, který se uloží do cache jako zastaralý.
         """
         cache_key = f"{self.cache_key_prefix}:{language}:stale"
         if feed is not None:
