@@ -13,7 +13,9 @@ from core.message_constants import (
 )
 from core.models import Permissions as p
 from core.models import check_permissions
+from core.news_feed import NewsFeedCache, NewsFeedClient
 from core.repository_connector import FedoraTransaction
+from core.setting_models import CustomAdminSettings
 from core.views import PermissionFilterMixin
 from dal import autocomplete
 from django.conf import settings
@@ -255,6 +257,50 @@ class UserLoginView(LoginView):
     """Třída pohledu pro prihlášení uživatele."""
 
     authentication_form = AuthUserLoginForm
+
+    def get_context_data(self, **kwargs):
+        """
+        Vrací context data pro stránku přihlášení.
+
+        :param kwargs: Volitelné parametry pro přizpůsobení kontextu.
+        :return: Slovník s proměnnými pro šablonu přihlášení.
+        """
+        context = super().get_context_data(**kwargs)
+
+        # Get timeout from settings with proper fallback
+        timeout_setting = CustomAdminSettings.objects.filter(
+            item_group="news_feed", item_id="news_feed_timeout"
+        ).first()
+        try:
+            timeout_value = int(timeout_setting.value) if timeout_setting else 10
+            # Validate timeout is positive
+            if timeout_value <= 0:
+                logger.warning(f"Invalid timeout value ({timeout_value}), using default: {10}")
+                timeout_value = 10
+            timeout = timeout_value
+        except (ValueError, TypeError):
+            logger.warning(f"Invalid timeout value in settings, using default: {10}")
+            timeout = 10
+
+        # Get block height from settings with proper fallback
+        block_height_setting = CustomAdminSettings.objects.filter(
+            item_group="news_feed", item_id="news_feed_block_height"
+        ).first()
+        try:
+            block_height = int(block_height_setting.value) if block_height_setting else 300
+        except (ValueError, TypeError):
+            logger.warning(f"Invalid block height value in settings, using default: {300}")
+            block_height = 300
+
+        context["news_feed"] = NewsFeedCache(
+            NewsFeedClient(
+                base_url=settings.NEWS_FEED_URL,
+                timeout=timeout,
+            ),
+            block_height=block_height,
+        ).get_feed(language=self.request.LANGUAGE_CODE)
+        context["news_feed_block_height"] = block_height
+        return context
 
 
 class UserLogoutView(LogoutView):

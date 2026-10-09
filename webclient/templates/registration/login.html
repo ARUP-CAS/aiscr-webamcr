@@ -146,8 +146,59 @@
     <div class="container-fluid login-container">
       <h3 class="login-news-heading">{% trans "templates.registration.login.novinky.header" %}</h3>
       <div class="login-news-content-wrapper">
-        <div class="login-news-content" id="loginNewsContent">
-          {% trans "templates.registration.login.novinky.text" %}
+        <div class="login-news-content" id="loginNewsContent" style="max-height: {{ news_feed_block_height|default:300 }}px; overflow: hidden;">
+          {% if news_feed %}
+            {% for item in news_feed %}
+              <div class="news-item" data-has-html="{% if item.html %}true{% else %}false{% endif %}">
+                <div class="row align-items-start">
+                  <div class="news-item-date-badge">
+                      <span class="material-symbols-outlined news-item-date-icon">calendar_today</span>
+                      {{ item.date|date:"d. M. Y" }}
+                      {% if item.badge %}
+                        <span class="news-item-badge">{{ item.badge }}</span>
+                    {% endif %}
+                    </div>
+                  <div class="col-10">
+                    
+                    <div class="news-item-title">
+                      <h3 class="news-item-title-text">{{ item.title }}</h3>
+                    </div>
+                    <div class="news-item-excerpt">{{ item.excerpt }}</div>
+                    {% if item.html or item.authors %}
+                      <div class="news-item-html" id="news-item-html-{{ forloop.counter }}" data-html="{{ item.html|escapejs }}" style="display: none;">
+                        {{ item.html|safe }}
+                      </div>
+                      {% if item.authors %}
+                      <div class="news-item-authors">
+                          <span class="news-item-author">{{ item.authors }}</span>
+                      </div>
+                    {% endif %}
+                      <button
+                        type="button"
+                        class="btn btn-link news-item-expand"
+                        data-target="news-item-html-{{ forloop.counter }}"
+                        data-expand-label="{% trans 'templates.registration.login.novinky.showMore' %}"
+                        data-collapse-label="{% trans 'templates.registration.login.novinky.showLess' %}"
+                        aria-expanded="false"
+                        aria-controls="news-item-html-{{ forloop.counter }}"
+                      >
+                        {% trans "templates.registration.login.novinky.showMore" %}
+                      </button>
+                    {% endif %}
+                  </div>
+                  <div class="col-2">
+                    {% if item.image %}
+                      <div class="news-item-image">
+                        <img src="{{ item.image }}" alt="{{ item.title }}" class="news-item-image-img" />
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-muted">{% trans 'templates.registration.login.novinky.noNews' %}</p>
+          {% endif %}
         </div>
         <button
           type="button"
@@ -193,7 +244,7 @@
   </script>
   <script>
     window.addEventListener("DOMContentLoaded", function () {
-      const collapsedHeight = 300;
+      const collapsedHeight = {{ news_feed_block_height|default:300 }};
       const newsContent = document.querySelector("#loginNewsContent");
       const newsToggle = document.querySelector("#loginNewsToggle");
 
@@ -244,6 +295,57 @@
       });
 
       window.addEventListener("resize", updateToggleVisibility);
+
+      // Handle per-item expansion
+      const newsItems = document.querySelectorAll(".news-item");
+      newsItems.forEach(function (item) {
+        const expandBtn = item.querySelector(".news-item-expand");
+        const htmlContent = item.querySelector(".news-item-html");
+
+        if (!expandBtn || !htmlContent) {
+          return;
+        }
+
+        const hasHtml = item.dataset.hasHtml === "true";
+        const excerpt = item.querySelector(".news-item-excerpt");
+
+        if (!hasHtml) {
+          expandBtn.remove();
+          return;
+        }
+
+        // Check if HTML adds content beyond excerpt
+        const excerptText = excerpt ? excerpt.textContent.trim() : "";
+        const htmlText = htmlContent.textContent.trim();
+
+        if (excerptText === htmlText) {
+          expandBtn.remove();
+          return;
+        }
+
+        // Initialize aria-expanded based on current state
+        const isExpanded = item.classList.contains("is-expanded");
+        expandBtn.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+
+        // Add click handler for per-item expansion
+        expandBtn.addEventListener("click", function () {
+          if (item.classList.contains("is-expanded")) {
+            // Collapse item
+            item.classList.remove("is-expanded");
+            item.classList.add("is-collapsed");
+            htmlContent.style.display = "none";
+            expandBtn.textContent = expandBtn.dataset.expandLabel;
+            expandBtn.setAttribute("aria-expanded", "false");
+          } else {
+            // Expand item
+            item.classList.remove("is-collapsed");
+            item.classList.add("is-expanded");
+            htmlContent.style.display = "block";
+            expandBtn.textContent = expandBtn.dataset.collapseLabel;
+            expandBtn.setAttribute("aria-expanded", "true");
+          }
+        });
+      });
     });
   </script>
 {% endblock %}
