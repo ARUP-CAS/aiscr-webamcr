@@ -79,3 +79,65 @@ Doporučený workflow vývojáře
   (bez nechtěně přegenerovaných souborů).
 * Pro jednotný styl docstringů používej checklist v dokumentu
   ``docstring_style_guide.rst``.
+
+Kontrola v CI (workflow ``Pre-commit``)
+---------------------------------------
+
+Kromě lokálního spuštění vynucuje pravidla i workflow GitHub Actions
+``Pre-commit`` (``.github/workflows/pre_commit.yml``). Spouští se při pull
+requestu do větví ``main`` a ``test``, při pushi do ``main`` a ručně
+(``workflow_dispatch``). Má dva nezávislé joby, které běží vždy, aby požadované
+status checky nekončily stavem ``skipped``. Job ``pre-commit`` rozlišuje tři
+režimy podle toho, odkud změna přichází:
+
+* **none** – automatické větve (``pre-commit-fixes/*``, ``deps/python-pins-refresh``)
+  nebo bot aktér: hooky se nespouští, check jen projde.
+* **standard** – vývojové PR (typicky do ``test``): spustí se běžné hooky a při
+  nalezených úpravách se založí opravný PR ``pre-commit-fixes/…``; pokud hooky
+  selžou a žádná oprava nevznikne, check selže.
+* **full** – cokoliv mířící do ``main`` (PR do ``main`` i push do ``main``),
+  případně ruční ``workflow_dispatch`` se zapnutým vstupem ``dependencies``:
+  jako ``standard``, navíc se přes ``docs/licenses/convert_to_rst.py``
+  regeneruje dokumentace závislostí, aby výsledný image z ``main`` odpovídal
+  závislostem i dokumentaci.
+
+Druhý job ``refresh-python-pins`` po pushi do ``main`` (nebo ručně) obnoví
+tranzitivní piny v ``webclient/requirements*.txt`` a založí/aktualizuje PR
+``deps/python-pins-refresh`` do větve ``test``.
+
+Automaticky zakládané PR používá GitHub App token, aby jejich události spouštěly
+navazující workflows (PR založené přes ``GITHUB_TOKEN`` běhy nespouští); větve
+``pre-commit-fixes/*`` a ``deps/python-pins-refresh`` jsou proto v jobu
+``pre-commit`` vynechány (režim ``none``), aby nevznikala řetězená opravná PR.
+
+Opravný PR se zakládá z merge commitu původního PR (``refs/pull/<číslo>/merge``),
+takže vedle oprav hooků nese i sloučení cílové větve s hlavou PR. Přebírá tím i
+změny, které se do větve mezitím dostaly – typicky sladění ``main`` do ``test``.
+Je to zamýšlené: opravný PR tak drží aktuální stav cílové větve a sloučení větví
+proběhne spolu s opravami. Je ale nutné **nikdy neprovádět squash-merge** na 
+tomto PR, protože by se ztratil merge commit původního PR.
+
+.. mermaid::
+   :align: center
+
+   flowchart TD
+       subgraph PC["job: pre-commit"]
+           direction TB
+           M{"automatická větev nebo bot aktér?"}
+           M -- "ano" --> NONE["režim none - žádné hooky, check projde"]
+           M -- "ne" --> MAIN{"PR do main, push do main nebo dispatch s dependencies?"}
+           MAIN -- "ano" --> FULL["režim full - hooky + regenerace dokumentace závislostí"]
+           MAIN -- "ne" --> STD["režim standard - běžné hooky (vývojové PR)"]
+           FULL --> FIX["při změnách založí nebo aktualizuje opravný PR pre-commit-fixes/…"]
+           STD --> FIX
+       end
+
+       subgraph RP["job: refresh-python-pins"]
+           direction TB
+           G2{"push do main nebo dispatch s upgrade_python_pins?"}
+           G2 -- "ano" --> W2["checkout větve test, compile --upgrade, založí nebo aktualizuje PR deps/python-pins-refresh"]
+           G2 -- "ne" --> N2["bez akce (check projde)"]
+       end
+
+       T([Trigger: PR do main nebo test, push do main, workflow_dispatch]) --> M
+       T --> G2

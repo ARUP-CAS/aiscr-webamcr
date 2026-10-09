@@ -52,7 +52,7 @@ COMPOSE_CROSS_FILE_WHITELIST: Dict[str, Set[str]] = {
         "postgres",
     },
     "docker-compose-test.yml": {
-        "docker.io/library/test_prod",
+        "docker.io/library/test_web",
         "docker.io/library/test_proxy",
         "docker.io/library/test_redis",
     },
