@@ -433,6 +433,23 @@ Funkce
    :param runy: Seznam :class:`heslar.models.RuianSyncRun` čekajících na
        potvrzení, v pořadí podle dne.
 
+.. py:function:: _uzavri_prerusene_behy()
+
+   Uzavře jako ``failed`` běhy, které zůstaly ve stavu ``running``.
+
+   Do stavu ``running`` se běh dostane při založení a opustí ho až ve
+   vlastním ``except`` nebo po úspěchu. Proces zabitý zvenčí (SIGKILL po
+   vypršení ``stop_grace_period`` při restartu swarm stacku, OOM killer)
+   nestihne ani jedno, takže řádek zůstane ``running`` navždy. Detekce
+   opakování dne v :func:`_sync_ruian_changes_locked` ale hledá jen
+   ``failed`` – přerušený den by se pak zopakoval jako první pokus, bez
+   vynuceného zápisu metadat a bez opakovaného přepočtu navázaných záznamů.
+
+   Volá se pod advisory lockem :func:`heslar.ruian_sync.zamek.ruian_sync_lock`,
+   který drží každý tvůrce ``RuianSyncRun`` (denní cron i
+   ``aktualizuj_ruian_shp``). Žádný jiný běh tedy právě neprobíhá a každý
+   ``running`` řádek je bezpečně osiřelý.
+
 .. py:function:: _sync_ruian_changes_locked(reassign_records)
 
    Vlastní tělo :func:`sync_ruian_changes` běžící pod advisory lockem.
