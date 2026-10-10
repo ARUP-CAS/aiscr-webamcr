@@ -6,12 +6,19 @@ import re
 import threading
 from abc import ABC
 from datetime import datetime, timezone
+from email.message import Message
 from enum import Enum
 from io import BytesIO
 from typing import Optional, Union
 
 import requests
 from core.connectors import RedisConnector
+from core.distribution_names import (
+    IMPLICIT_DISTRIBUTION_NAMES,
+    has_unsafe_distribution_segments,
+    is_reserved_distribution_name,
+    normalize_distribution_name,
+)
 from core.log_middleware import LogMiddleware
 from core.utils import get_mime_type
 from django.conf import settings
@@ -232,6 +239,12 @@ class RepositoryBinaryFile:
         self.content = content
         self.filename = filename
         self.size = content.getbuffer().nbytes
+        # Náhledy zapsané při uložení obsahu — dvojice ``(distribuce, aktualizace)`` pro
+        # ``Soubor.zaznamenej_distribuce()``. Historii nelze zapsat už při zápisu do Fedory,
+        # protože při vkládání souboru ještě neexistuje řádek ``Soubor``, ke kterému patří.
+        self.thumb_writes: list = []
+        # MIME type stored with the content in Fedora; only filled when read from the repository.
+        self.content_type: Optional[str] = None
         self.content.seek(0)
         self._calculate_sha_512()
 
@@ -272,6 +285,12 @@ class FedoraRequestType(Enum):
     THUMB_CONTENT_UPDATE_RDF_DATA = 42
     THUMB_LARGE_CONTENT_UPDATE_RDF_DATA = 43
     BINARY_FILE_CHILD_UPDATE_RDF_DATA = 44
+    # Alternative distributions and paradata; paradata reuse these types with a path under ``paradata/``.
+    CREATE_DISTRIBUTION_CONTAINER = 45
+    CREATE_DISTRIBUTION_CONTENT = 46
+    UPDATE_DISTRIBUTION_CONTENT = 47
+    DELETE_DISTRIBUTION = 48
+    DISTRIBUTION_CONTENT_UPDATE_RDF_DATA = 49
 
     # dotazy, které nemění Fedoru
     GET_CONTAINER = 1001
@@ -289,9 +308,18 @@ class FedoraRequestType(Enum):
     GET_BINARY_FILE_METADATA_VERSION = 1041
     GET_BINARY_FILE_CHILDREN = 1042
     GET_BINARY_FILE_CHILD_RDF = 1043
+    GET_DISTRIBUTION_CONTAINER = 1044
+    GET_DISTRIBUTION_CONTENT = 1045
+    GET_DISTRIBUTION_METADATA = 1046
+    GET_DISTRIBUTION_HISTORIE = 1047
 
+
+#: Hlavička ``Link`` vynucující uložení obsahu jako binárního zdroje i u RDF MIME typů (JSON-LD, Turtle).
+NON_RDF_SOURCE_LINK: str = '<http://www.w3.org/ns/ldp#NonRDFSource>; rel="type"'
 
 #: Typy požadavků, které Fedora povolí jen roli ``fedoraAdmin`` (mazání kontejnerů a tombstone).
+#: Patří sem i zakládání distribucí: posílá se s ``Overwrite-Tombstone`` a přepsání tombstonu
+#: po dřívějším smazání distribuce Fedora běžnému uživateli odmítne stavem 403.
 _ADMIN_REQUEST_TYPES = frozenset(
     {
         FedoraRequestType.DELETE_CONTAINER,
@@ -300,6 +328,8 @@ _ADMIN_REQUEST_TYPES = frozenset(
         FedoraRequestType.DELETE_LINK_TOMBSTONE,
         FedoraRequestType.CONNECT_DELETED_RECORD_3,
         FedoraRequestType.CONNECT_DELETED_RECORD_4,
+        FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER,
+        FedoraRequestType.CREATE_DISTRIBUTION_CONTENT,
     }
 )
 
@@ -437,16 +467,17 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             return value.rstrip("/").split("/")[-1]
         return value.strip()
 
-    def _update_creator(self, request_type: FedoraRequestType, uuid=None, ident_cely=None):
+    def _update_creator(self, request_type: FedoraRequestType, uuid=None, ident_cely=None, path=None):
         """
         Aktualizuje creator.
 
         :param request_type: Parametr ``request_type`` předává se do volání ``_get_request_url()``, ``_send_request()``.
         :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
         :param ident_cely: Parametr ``ident_cely`` se předává do volání ``_get_request_url()``.
+        :param path: Relativní cesta distribuce nebo paradat pod kontejnerem souboru.
         :return: Textová reprezentace UID transakce.
         """
-        url = self._get_request_url(request_type, uuid=uuid, ident_cely=ident_cely)
+        url = self._get_request_url(request_type, uuid=uuid, ident_cely=ident_cely, path=path)
         existing_creator = self._get_creator(url, only_uri=True)
         if existing_creator != self.user:
             self._send_request(
@@ -468,13 +499,18 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             f"{settings.FEDORA_SERVER_NAME}"
         )
 
-    def _get_request_url(self, request_type: FedoraRequestType, *, uuid=None, ident_cely=None) -> Optional[str]:
+    def _get_request_url(
+        self, request_type: FedoraRequestType, *, uuid=None, ident_cely=None, path=None
+    ) -> Optional[str]:
         """
         Vrací request url.
 
         :param request_type: Parametr ``request_type`` předává se do volání ``error()``, ovlivňuje větvení podmínek.
         :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
         :param ident_cely: Parametr ``ident_cely`` ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param path: Relativní cesta pod kontejnerem souboru (např. ``ocr/alto-xml`` nebo
+            ``paradata/ocr/alto-xml``). I u typů ``CREATE_*`` jde o cestu zakládaného zdroje, protože
+            se distribuce zakládají PUTem přímo na cílovou URL.
         :return: Načtená data odpovídající zadaným vstupům.
         """
         base_url = self.get_base_url()
@@ -543,6 +579,25 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         elif request_type == FedoraRequestType.THUMB_LARGE_CONTENT_UPDATE_RDF_DATA:
             ident_cely = ident_cely if ident_cely else self.record.ident_cely
             return f"{base_url}/record/{ident_cely}/file/{uuid}/thumb-large/fcr:metadata"
+        elif request_type in (
+            FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER,
+            FedoraRequestType.CREATE_DISTRIBUTION_CONTENT,
+            FedoraRequestType.GET_DISTRIBUTION_CONTAINER,
+            FedoraRequestType.GET_DISTRIBUTION_CONTENT,
+            FedoraRequestType.UPDATE_DISTRIBUTION_CONTENT,
+            FedoraRequestType.DELETE_DISTRIBUTION,
+        ):
+            ident_cely = ident_cely if ident_cely else self.record.ident_cely
+            return f"{base_url}/record/{ident_cely}/file/{uuid}/{path}"
+        elif request_type == FedoraRequestType.GET_DISTRIBUTION_HISTORIE:
+            ident_cely = ident_cely if ident_cely else self.record.ident_cely
+            return f"{base_url}/record/{ident_cely}/file/{uuid}/{path}/fcr:versions"
+        elif request_type in (
+            FedoraRequestType.DISTRIBUTION_CONTENT_UPDATE_RDF_DATA,
+            FedoraRequestType.GET_DISTRIBUTION_METADATA,
+        ):
+            ident_cely = ident_cely if ident_cely else self.record.ident_cely
+            return f"{base_url}/record/{ident_cely}/file/{uuid}/{path}/fcr:metadata"
         elif request_type == FedoraRequestType.DELETE_TOMBSTONE:
             return f"{base_url}/record/{self.record.ident_cely}/fcr:tombstone"
         elif request_type == FedoraRequestType.DELETE_LINK_TOMBSTONE:
@@ -756,6 +811,10 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             FedoraRequestType.GET_BINARY_FILE_CONTENT_HISTORIE,
             FedoraRequestType.GET_BINARY_FILE_CHILDREN,
             FedoraRequestType.GET_BINARY_FILE_CHILD_RDF,
+            FedoraRequestType.GET_DISTRIBUTION_CONTAINER,
+            FedoraRequestType.GET_DISTRIBUTION_CONTENT,
+            FedoraRequestType.GET_DISTRIBUTION_METADATA,
+            FedoraRequestType.GET_DISTRIBUTION_HISTORIE,
         ):
             try:
                 response = session.get(url, headers=headers, auth=auth, verify=False)
@@ -767,7 +826,10 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 return None
         else:
             try:
-                if request_type in (FedoraRequestType.CREATE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
+                if request_type in (
+                    FedoraRequestType.CREATE_CONTAINER,
+                    FedoraRequestType.CREATE_BINARY_FILE_CONTAINER,
+                ):
                     response = session.post(url, headers=headers, data=data, auth=auth, verify=False)
                 elif request_type in (
                     FedoraRequestType.CREATE_METADATA,
@@ -787,6 +849,11 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.UPDATE_BINARY_FILE_CONTENT,
                     FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB,
                     FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE,
+                    FedoraRequestType.UPDATE_DISTRIBUTION_CONTENT,
+                    # Created at their exact URL: Fedora honours Overwrite-Tombstone only on PUT, while
+                    # a POST whose Slug hits a tombstone silently lands under a generated name.
+                    FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER,
+                    FedoraRequestType.CREATE_DISTRIBUTION_CONTENT,
                 ):
                     response = session.put(url, headers=headers, data=data, auth=auth, verify=False)
                 elif request_type == FedoraRequestType.CREATE_BINARY_FILE:
@@ -800,6 +867,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.CONNECT_DELETED_RECORD_3,
                     FedoraRequestType.CONNECT_DELETED_RECORD_4,
                     FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5,
+                    FedoraRequestType.DELETE_DISTRIBUTION,
                 ):
                     response = session.delete(url, headers=headers, auth=auth)
                 elif request_type in (
@@ -814,6 +882,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.THUMB_CONTENT_UPDATE_RDF_DATA,
                     FedoraRequestType.THUMB_LARGE_CONTENT_UPDATE_RDF_DATA,
                     FedoraRequestType.BINARY_FILE_CHILD_UPDATE_RDF_DATA,
+                    FedoraRequestType.DISTRIBUTION_CONTENT_UPDATE_RDF_DATA,
                 ):
                     response = session.patch(url, auth=auth, headers=headers, data=data)
             except requests.exceptions.ConnectionError as exc:
@@ -851,6 +920,10 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE,
             FedoraRequestType.GET_BINARY_FILE_CHILDREN,
             FedoraRequestType.GET_BINARY_FILE_CHILD_RDF,
+            FedoraRequestType.GET_DISTRIBUTION_CONTAINER,
+            FedoraRequestType.GET_DISTRIBUTION_CONTENT,
+            FedoraRequestType.GET_DISTRIBUTION_METADATA,
+            FedoraRequestType.GET_DISTRIBUTION_HISTORIE,
         ):
             if str(response.status_code)[0] == "2":
                 logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
@@ -887,6 +960,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         elif request_type in (
             FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
             FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE,
+            FedoraRequestType.GET_DISTRIBUTION_CONTENT,
         ):
             if str(response.status_code)[0] == "2":
                 return response
@@ -1308,7 +1382,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
         self._update_creator(FedoraRequestType.FILE_CONTENT_UPDATE_RDF_DATA, uuid)
         if save_thumbs:
-            self.save_thumbs(file_name, file, uuid)
+            rep_bin_file.thumb_writes = self.save_thumbs(file_name, file, uuid)
         logger.debug(
             "core_repository_connector.save_binary_file.end",
             extra={"uuid": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -1410,9 +1484,13 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         else:
             return __generate_thumb_from_icon(file_name, file_content, large)
 
-    def save_thumbs(self, file_name, file, uuid, update=False, ident_cely_old=None, source_thumbs=None):
+    def save_thumbs(self, file_name, file, uuid, update=False, ident_cely_old=None, source_thumbs=None) -> list:
         """
         Uloží thumbs. v aplikaci.
+
+        Vrací přehled skutečně zapsaných náhledů, aby volající mohl doplnit historii souboru
+        (``DIST01``/``DIST11``) až po jeho uložení do databáze. Historii nelze zapsat zde:
+        při vkládání souboru se náhledy generují dřív, než vůbec vznikne řádek ``Soubor``.
 
         :param file_name: Parametr ``file_name`` se předává do volání ``debug()``, ``__generate_thumb()``, pracuje se s atributy ``rfind``.
         :param file: Soubor nebo cesta k souboru používaná při operaci.
@@ -1422,7 +1500,11 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         :param source_thumbs: Volitelný slovník ``{True: bytes|None, False: bytes|None}`` s již existujícím
             obsahem náhledů (velký/malý). Pokud je pro danou velikost k dispozici, náhled se nahraje přímo
             místo přegenerování z ``file`` (např. při migraci souboru na nový identifikátor).
+        :return: Seznam dvojic ``(nazev_nahledu, aktualizace)``; ``aktualizace`` je ``True``,
+            pokud šlo o přepis existujícího náhledu. Náhledy, které se nepodařilo vygenerovat,
+            v seznamu nejsou.
         """
+        thumb_writes = []
         logger.debug(
             "core_repository_connector._save_thumb.start",
             extra={
@@ -1502,6 +1584,12 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 else:
                     self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_THUMB, headers=headers, data=data)
                 self._update_creator(FedoraRequestType.THUMB_CONTENT_UPDATE_RDF_DATA, uuid, ident_cely)
+            thumb_writes.append(
+                (
+                    f"thumb{'-large' * large}",
+                    bool(update and (existing_large_thumb if large else existing_small_thumb) is not None),
+                )
+            )
             logger.debug(
                 "core_repository_connector._save_thumb.end",
                 extra={
@@ -1513,12 +1601,21 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     "transaction": self.transaction_uid,
                 },
             )
+        return thumb_writes
 
     def migrate_binary_file(
         self, soubor, include_content=True, check_if_exists=True, ident_cely_old=None
     ) -> Optional[RepositoryBinaryFile]:
         """
         Migruje binární soubor do Fedora repositáře a vrátí wrapper se metadaty.
+
+        Do historie souboru (``DIST01``) se zapíší jen náhledy, které se zde nově vygenerovaly.
+        Náhledy zkopírované ze starého umístění při změně identifikátoru záznamu jsou přesunem
+        a svou historii už mají.
+
+        Při změně identifikátoru záznamu se do nového kontejneru souboru zkopírují i alternativní
+        distribuce a paradata (``_collect_file_children``); jinak by zanikly se starým kontejnerem,
+        přestože historie souboru je dál nabízí ke stažení. Historie se přitom nemění.
 
         :param soubor: Objekt `Soubor` k migraci s atributy ``pk`` a ``repository_uuid``.
         :param include_content: Pokud True, migruje i binární obsah souboru.
@@ -1537,6 +1634,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             return None
         self._check_binary_file_container()
         source_thumbs = None
+        old_children = []
         if include_content:
             if soubor.repository_uuid is None:
                 with open(soubor.path, mode="rb") as file:
@@ -1558,6 +1656,11 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     True: old_large_thumb.content.read() if old_large_thumb else None,
                     False: old_small_thumb.content.read() if old_small_thumb else None,
                 }
+                # Alternative distributions and paradata live only under the old container; read them
+                # now, outside the transaction and before soubor.path changes, like orig and thumbs above.
+                old_children = FedoraRepositoryConnector(self.record)._collect_file_children(
+                    soubor.repository_uuid, ident_cely_old
+                )
         else:
             data = None
             file_sha_512 = None
@@ -1583,7 +1686,18 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
             self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
             self._update_creator(FedoraRequestType.FILE_CONTENT_UPDATE_RDF_DATA, uuid)
-            self.save_thumbs(soubor.nazev, data, soubor.repository_uuid, source_thumbs=source_thumbs)
+            thumb_writes = self.save_thumbs(soubor.nazev, data, soubor.repository_uuid, source_thumbs=source_thumbs)
+            # Thumbnails copied from the old location are a move and keep their history;
+            # only the ones generated here are new and get a DIST01 record.
+            copied_thumbs = {f"thumb{'-large' * large}" for large, content in (source_thumbs or {}).items() if content}
+            soubor.zaznamenej_distribuce([write for write in thumb_writes if write[0] not in copied_thumbs])
+            for path, filename, child_content_type, child_content in old_children:
+                # File names follow the same ident substitution as soubor.nazev in record_ident_change.
+                if filename and ident_cely_old:
+                    filename = filename.replace(
+                        ident_cely_old.replace("-", ""), self.record.ident_cely.replace("-", "")
+                    )
+                self._save_file_child(uuid, path, filename, child_content_type, child_content)
             logger.debug(
                 "core_repository_connector.migrate_binary_file.end",
                 extra={"uuid": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -1687,12 +1801,565 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         }
         self._send_request(url, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, headers=headers, data=data)
         if save_thumbs:
-            self.save_thumbs(file_name, file, uuid, True)
+            rep_bin_file.thumb_writes = self.save_thumbs(file_name, file, uuid, True)
         logger.debug(
             "core_repository_connector.update_binary_file.end",
             extra={"uuid": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
         )
         return rep_bin_file
+
+    # Container name holding the paradata of individual distributions.
+    PARADATA_CONTAINER = "paradata"
+
+    @staticmethod
+    def _normalize_distribution_name(distribution: str, *, allow_orig: bool = False) -> str:
+        """
+        Ověří a normalizuje název distribuce použitý jako cesta kontejneru ve Fedoře.
+
+        Pravidla jsou sdílená s validační fází importu (``core.distribution_names``), aby mapper
+        i connector odmítly stejné hodnoty: vyhrazené názvy a segmenty, které by umožnily
+        opustit kontejner souboru (``.``, ``..``, prázdný segment).
+
+        :param distribution: Název distribuce z importu, např. ``ocr/alto-xml``.
+        :param allow_orig: Pokud ``True``, je povolen název ``orig`` – používá se pro paradata,
+            která lze připojit i k původní distribuci souboru.
+        :return: Normalizovaný název bez okrajových lomítek a bílých znaků.
+        :raises FedoraValidationError: Pokud je název prázdný, obsahuje nepovolený segment
+            nebo je vyhrazený.
+        """
+        normalized = normalize_distribution_name(distribution)
+        if not normalized:
+            raise FedoraValidationError("core_repository_connector.distribution.empty_name")
+        if has_unsafe_distribution_segments(normalized):
+            raise FedoraValidationError("core_repository_connector.distribution.invalid_name")
+        if is_reserved_distribution_name(normalized) and not (allow_orig and normalized == "orig"):
+            raise FedoraValidationError("core_repository_connector.distribution.reserved_name")
+        return normalized
+
+    def _ensure_child_containers(self, uuid, path, ident_cely=None):
+        """
+        Zajistí existenci mezilehlých kontejnerů na cestě k distribuci nebo paradatům.
+
+        Pro cestu ``ocr/alto-xml`` vznikne v případě potřeby kontejner ``ocr``; pro paradata
+        i kontejner ``paradata``. Existence se nespoléhá na chování konkrétní verze Fedory,
+        každý mezilehlý segment se ověří a případně založí explicitně. Za chybějící se považuje
+        i kontejner se stavem 410 (tombstone po dřívějším smazání). Kontejner se zakládá PUTem
+        přímo na jeho URL s hlavičkou ``Overwrite-Tombstone`` — tu Fedora respektuje jen u PUT;
+        POST se Slugem by tombstone nepřepsal a kontejner by vznikl pod vygenerovaným názvem.
+
+        :param uuid: UUID kontejneru souboru, pod kterým distribuce leží.
+        :param path: Relativní cesta distribuce (poslední segment je binární obsah, nezakládá se zde).
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        """
+        prefix = ""
+        for segment in path.split("/")[:-1]:
+            current = f"{prefix}/{segment}" if prefix else segment
+            url = self._get_request_url(
+                FedoraRequestType.GET_DISTRIBUTION_CONTAINER, uuid=uuid, ident_cely=ident_cely, path=current
+            )
+            response = self._send_request(url, FedoraRequestType.GET_DISTRIBUTION_CONTAINER)
+            if response is None or response.status_code in (404, 410):
+                container_url = self._get_request_url(
+                    FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER,
+                    uuid=uuid,
+                    ident_cely=ident_cely,
+                    path=current,
+                )
+                headers = {
+                    "Content-Type": "text/turtle",
+                    "Overwrite-Tombstone": "true",
+                }
+                rdf = (
+                    "@prefix dcterms: <http://purl.org/dc/terms/> . <> dcterms:creator "
+                    f"<info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> ."
+                )
+                self._send_request(
+                    container_url, FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER, headers=headers, data=rdf
+                )
+                logger.debug(
+                    "core_repository_connector._ensure_child_containers.created",
+                    extra={"uuid": uuid, "path": current, "transaction": self.transaction_uid},
+                )
+            prefix = current
+
+    @staticmethod
+    def _file_child_write_payload(file: io.BytesIO, file_name, content_type, overwrite_tombstone) -> tuple:
+        """
+        Připraví obsah a hlavičky pro zápis binárního obsahu distribuce nebo paradat.
+
+        Sdílí ho ``_save_file_child`` i ``_update_file_child``, aby se hlavičky zápisu nemohly
+        rozejít. Obsah se vždy ukládá jako binární zdroj (``Link: ldp:NonRDFSource``) a nese
+        SHA-512 digest, podle kterého Fedora ověří, že dorazil celý.
+
+        :param file: Ukládaný binární obsah; čte se od začátku.
+        :param file_name: Název souboru zapsaný do ``Content-Disposition``.
+        :param content_type: MIME typ ukládaného obsahu.
+        :param overwrite_tombstone: Pokud ``True``, přidá hlavičku ``Overwrite-Tombstone``.
+        :return: Dvojice ``(data, headers)`` pro PUT do Fedory.
+        """
+        file.seek(0)
+        data = file.read()
+        headers = {
+            "Content-Type": content_type,
+            "Content-Disposition": f'attachment; filename="{file_name}"'.encode("utf-8"),
+            "Digest": f"sha-512={hashlib.sha512(data).hexdigest()}",
+            "Link": NON_RDF_SOURCE_LINK,
+        }
+        if overwrite_tombstone:
+            headers["Overwrite-Tombstone"] = "true"
+        return data, headers
+
+    def _save_file_child(
+        self, uuid, path, file_name, content_type, file: io.BytesIO, ident_cely=None
+    ) -> RepositoryBinaryFile:
+        """
+        Vytvoří nový binární kontejner pod kontejnerem souboru (distribuce nebo paradata).
+
+        Obsah se vždy ukládá jako binární zdroj (``ldp:NonRDFSource``): bez hlavičky ``Link`` by
+        Fedora obsah v RDF serializaci (např. paradata v ``application/ld+json``) rozparsovala
+        jako RDF zdroj, který nemá ``fcr:metadata`` a nevrací původní bajty.
+
+        Cílová URL je plně určena vstupem (uuid souboru a název distribuce), takže po dřívějším
+        smazání téže distribuce na ní zůstává tombstone. Obsah se proto zakládá PUTem přímo na
+        tuto URL s hlavičkou ``Overwrite-Tombstone`` (zadání #3527): Fedora ji respektuje jen
+        u PUT, kdežto POST se Slugem kolidujícím s tombstonem uloží obsah pod vygenerovaný název
+        a cílová cesta zůstane tombstonem. Hlavička se posílá bezpodmínečně, protože INSERT probíhá
+        v samostatném importním běhu, do kterého se příznak ``override_tombstone`` mazací
+        transakce nedostane.
+
+        :param uuid: UUID kontejneru souboru.
+        :param path: Relativní cesta pod kontejnerem souboru, např. ``ocr/alto-xml``.
+        :param file_name: Název souboru zapsaný do ``Content-Disposition``.
+        :param content_type: MIME typ ukládaného obsahu.
+        :param file: Binární obsah k uložení.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: Wrapper nad uloženým obsahem s URL vzniklého kontejneru.
+        """
+        self._ensure_child_containers(uuid, path, ident_cely)
+        data, headers = self._file_child_write_payload(file, file_name, content_type, overwrite_tombstone=True)
+        url = self._get_request_url(
+            FedoraRequestType.CREATE_DISTRIBUTION_CONTENT, uuid=uuid, ident_cely=ident_cely, path=path
+        )
+        self._send_request(url, FedoraRequestType.CREATE_DISTRIBUTION_CONTENT, headers=headers, data=data)
+        self._update_creator(FedoraRequestType.DISTRIBUTION_CONTENT_UPDATE_RDF_DATA, uuid, ident_cely, path=path)
+        content_url = self._get_request_url(
+            FedoraRequestType.GET_DISTRIBUTION_CONTENT, uuid=uuid, ident_cely=ident_cely, path=path
+        )
+        logger.debug(
+            "core_repository_connector._save_file_child.end",
+            extra={"uuid": uuid, "path": path, "file": file_name, "transaction": self.transaction_uid},
+        )
+        return RepositoryBinaryFile(content_url, file, file_name)
+
+    def _update_file_child(
+        self, uuid, path, file_name, content_type, file: io.BytesIO, ident_cely=None, overwrite_tombstone=False
+    ) -> RepositoryBinaryFile:
+        """
+        Přepíše obsah existujícího kontejneru distribuce nebo paradat.
+
+        PUT na živý zdroj zakládá ve Fedoře novou verzi obsahu, takže historie zůstane dostupná
+        stejně jako u ``update_binary_file``.
+
+        :param uuid: UUID kontejneru souboru.
+        :param path: Relativní cesta pod kontejnerem souboru.
+        :param file_name: Název souboru zapsaný do ``Content-Disposition``.
+        :param content_type: MIME typ ukládaného obsahu.
+        :param file: Nový binární obsah.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :param overwrite_tombstone: Pokud ``True``, přidá hlavičku ``Overwrite-Tombstone``. Používá se
+            pro paradata, u kterých se nevede historie, takže nelze rozlišit aktualizaci živého zdroje
+            od opětovného nahrání na URL po dřívějším smazání, kde zůstal tombstone.
+        :return: Wrapper nad uloženým obsahem s URL kontejneru.
+        """
+        url = self._get_request_url(
+            FedoraRequestType.UPDATE_DISTRIBUTION_CONTENT, uuid=uuid, ident_cely=ident_cely, path=path
+        )
+        data, headers = self._file_child_write_payload(file, file_name, content_type, overwrite_tombstone)
+        self._send_request(url, FedoraRequestType.UPDATE_DISTRIBUTION_CONTENT, headers=headers, data=data)
+        self._update_creator(FedoraRequestType.DISTRIBUTION_CONTENT_UPDATE_RDF_DATA, uuid, ident_cely, path=path)
+        logger.debug(
+            "core_repository_connector._update_file_child.end",
+            extra={"uuid": uuid, "path": path, "file": file_name, "transaction": self.transaction_uid},
+        )
+        return RepositoryBinaryFile(url, file, file_name)
+
+    def _delete_file_child(self, uuid, path, ident_cely=None):
+        """
+        Smaže kontejner distribuce nebo paradat.
+
+        Tombstone se záměrně neodstraňuje: případné opětovné nahrání téže distribuce jej přepíše
+        hlavičkou ``Overwrite-Tombstone`` v ``_save_file_child``.
+
+        :param uuid: UUID kontejneru souboru.
+        :param path: Relativní cesta pod kontejnerem souboru.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        """
+        url = self._get_request_url(FedoraRequestType.DELETE_DISTRIBUTION, uuid=uuid, ident_cely=ident_cely, path=path)
+        self._send_request(url, FedoraRequestType.DELETE_DISTRIBUTION)
+        logger.debug(
+            "core_repository_connector._delete_file_child.end",
+            extra={"uuid": uuid, "path": path, "transaction": self.transaction_uid},
+        )
+
+    def _get_file_child(self, uuid, path, ident_cely=None) -> Optional[RepositoryBinaryFile]:
+        """
+        Načte obsah kontejneru distribuce nebo paradat.
+
+        :param uuid: UUID kontejneru souboru.
+        :param path: Relativní cesta pod kontejnerem souboru.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: Wrapper nad načteným obsahem s vyplněným ``content_type`` (MIME typ uložený ve Fedoře),
+            nebo ``None``, pokud kontejner neexistuje.
+        """
+        url = self._get_request_url(
+            FedoraRequestType.GET_DISTRIBUTION_CONTENT, uuid=uuid, ident_cely=ident_cely, path=path
+        )
+        response = self._send_request(url, FedoraRequestType.GET_DISTRIBUTION_CONTENT)
+        if response is None:
+            return None
+        file = io.BytesIO()
+        file.write(response.content)
+        file.seek(0)
+        rep_bin_file = RepositoryBinaryFile(url, file, self._filename_from_content_disposition(response.headers))
+        rep_bin_file.content_type = response.headers.get("Content-Type")
+        return rep_bin_file
+
+    @staticmethod
+    def _filename_from_content_disposition(headers) -> Optional[str]:
+        """
+        Vrátí název souboru z hlavičky ``Content-Disposition`` odpovědi Fedory.
+
+        Fedora hlavičku sestavuje z uloženého ``ebucore:filename``, tedy z názvu zapsaného při
+        uložení nebo přejmenování obsahu. Název zapisujeme jako UTF-8, ``requests`` ale hlavičky
+        dekóduje jako latin-1, proto se diakritika převede zpět; nejde-li to, vrátí se název beze změny.
+
+        :param headers: Hlavičky odpovědi.
+        :return: Uložený název souboru, nebo ``None``, pokud ho hlavička nenese.
+        """
+        value = headers.get("Content-Disposition")
+        if not value:
+            return None
+        message = Message()
+        message["Content-Disposition"] = value
+        filename = message.get_filename()
+        if not filename:
+            return None
+        try:
+            return filename.encode("latin-1").decode("utf-8")
+        except UnicodeError:
+            return filename
+
+    def save_distribution(
+        self, uuid, distribution, file_name, content_type, file: io.BytesIO, ident_cely=None
+    ) -> RepositoryBinaryFile:
+        """
+        Uloží novou alternativní distribuci souboru do kontejneru ``file/{uuid}/{distribution}``.
+
+        :param uuid: UUID kontejneru souboru.
+        :param distribution: Název distribuce, např. ``ocr/alto-xml``.
+        :param file_name: Název souboru zapsaný do ``Content-Disposition``.
+        :param content_type: MIME typ ukládaného obsahu.
+        :param file: Binární obsah distribuce.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: Wrapper nad uloženým obsahem.
+        :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+        """
+        distribution = self._normalize_distribution_name(distribution)
+        return self._save_file_child(uuid, distribution, file_name, content_type, file, ident_cely)
+
+    def update_distribution(
+        self, uuid, distribution, file_name, content_type, file: io.BytesIO, ident_cely=None
+    ) -> RepositoryBinaryFile:
+        """
+        Přepíše obsah existující alternativní distribuce souboru.
+
+        :param uuid: UUID kontejneru souboru.
+        :param distribution: Název distribuce, např. ``ocr/alto-xml``.
+        :param file_name: Název souboru zapsaný do ``Content-Disposition``.
+        :param content_type: MIME typ ukládaného obsahu.
+        :param file: Nový binární obsah distribuce.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: Wrapper nad uloženým obsahem.
+        :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+        """
+        distribution = self._normalize_distribution_name(distribution)
+        return self._update_file_child(uuid, distribution, file_name, content_type, file, ident_cely)
+
+    def delete_distribution(self, uuid, distribution, ident_cely=None):
+        """
+        Smaže alternativní distribuci souboru včetně jejích paradat.
+
+        Paradata leží mimo kontejner distribuce (``paradata/{distribuce}``), takže je smazání
+        distribuce samo neodstraní; bez distribuce ale nesmí zůstat. Maže se jen tehdy, když
+        paradata existují — DELETE neexistujícího zdroje by odvolal celou Fedora transakci.
+
+        :param uuid: UUID kontejneru souboru.
+        :param distribution: Název distribuce, např. ``ocr/alto-xml``.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+        :raises FedoraNoResponseError: Pokud repozitář na dotaz na existenci paradat neodpoví.
+        """
+        distribution = self._normalize_distribution_name(distribution)
+        self._delete_file_child(uuid, distribution, ident_cely)
+        if self.paradata_exists(uuid, distribution, ident_cely):
+            self.delete_paradata(uuid, distribution, ident_cely)
+
+    def get_distribution(self, uuid, distribution, ident_cely=None) -> Optional[RepositoryBinaryFile]:
+        """
+        Načte obsah alternativní distribuce souboru.
+
+        :param uuid: UUID kontejneru souboru.
+        :param distribution: Název distribuce, např. ``ocr/alto-xml``.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: Wrapper nad načteným obsahem, nebo ``None``, pokud distribuce neexistuje.
+        :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+        """
+        distribution = self._normalize_distribution_name(distribution)
+        return self._get_file_child(uuid, distribution, ident_cely)
+
+    def distribution_exists(self, uuid, distribution, ident_cely=None) -> bool:
+        """
+        Zjistí, zda ve Fedoře existuje kontejner dané distribuce souboru.
+
+        Dotazuje se na ``fcr:metadata`` distribuce, aby se nepřenášel binární obsah. Smazaná
+        distribuce vrací ``410`` (tombstone) a považuje se za neexistující – stejně jako ``404``.
+        Na rozdíl od zápisových metod je povolen i název ``orig`` a náhledy, protože jde
+        o čistě čtecí dotaz, kterým se lze ptát na libovolný kontejner souboru.
+
+        :param uuid: UUID kontejneru souboru.
+        :param distribution: Název distribuce, např. ``ocr/alto-xml``.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: ``True``, pokud kontejner existuje, jinak ``False``.
+        :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+        :raises FedoraNoResponseError: Pokud repozitář neodpoví – existenci nelze určit a volající
+            se nesmí spolehnout na domnělou neexistenci.
+        """
+        return self._container_exists(
+            uuid, self._normalize_distribution_name(distribution, allow_orig=True), ident_cely
+        )
+
+    def _container_exists(self, uuid, path, ident_cely=None) -> bool:
+        """
+        Zjistí, zda ve Fedoře existuje kontejner na zadané cestě pod souborem.
+
+        Cestu už nevaliduje — volající ji buď ověřil, nebo si ji sám sestavil (paradata).
+        Díky tomu neprochází vnitřně skládaná cesta ``paradata/{distribuce}`` kontrolou
+        vyhrazených názvů, která by ji odmítla, přestože ji vytvořil sám connector.
+
+        :param uuid: UUID kontejneru souboru.
+        :param path: Relativní cesta pod kontejnerem souboru.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: ``True``, pokud kontejner existuje, jinak ``False``.
+        :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+        """
+        url = self._get_request_url(
+            FedoraRequestType.GET_DISTRIBUTION_METADATA, uuid=uuid, ident_cely=ident_cely, path=path
+        )
+        response = self._send_request(url, FedoraRequestType.GET_DISTRIBUTION_METADATA)
+        if response is None:
+            raise FedoraNoResponseError(url, "No Fedora response", None, fedora_transaction=self.transaction)
+        exists = str(response.status_code)[0] == "2"
+        logger.debug(
+            "core_repository_connector.distribution_exists.end",
+            extra={
+                "uuid": uuid,
+                "path": path,
+                "status_code": response.status_code,
+                "exists": exists,
+                "transaction": self.transaction_uid,
+            },
+        )
+        return exists
+
+    def get_historie_distribution(self, uuid, distribution, ident_cely=None) -> list:
+        """
+        Vrátí verze kontejneru distribuce z ``fcr:versions``.
+
+        Používá se pro doplnění historie u náhledů vzniklých dřív, než se pro ně historie
+        zapisovala; z časů verzí lze rekonstruovat první nahrání i následné aktualizace.
+
+        :param uuid: UUID kontejneru souboru.
+        :param distribution: Název distribuce, např. ``thumb``.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: Seznam slovníků ``{"datetime": …, "timestamp": …}`` seřazený tak, jak jej vrátila
+            Fedora; prázdný seznam, pokud kontejner neexistuje nebo verze nemá.
+        """
+        distribution = self._normalize_distribution_name(distribution, allow_orig=True)
+        url = self._get_request_url(
+            FedoraRequestType.GET_DISTRIBUTION_HISTORIE, uuid=uuid, ident_cely=ident_cely, path=distribution
+        )
+        response = self._send_request(
+            url, FedoraRequestType.GET_DISTRIBUTION_HISTORIE, headers={"Accept": "text/turtle"}
+        )
+        if response is None or str(response.status_code)[0] != "2":
+            return []
+        return self.parse_historie(response.text)
+
+    def paradata_exists(self, uuid, distribution, ident_cely=None) -> bool:
+        """
+        Zjistí, zda ve Fedoře existují paradata dané distribuce.
+
+        :param uuid: UUID kontejneru souboru.
+        :param distribution: Název distribuce, ke které paradata patří.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: ``True``, pokud kontejner paradat existuje, jinak ``False``.
+        :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+        :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+        """
+        # ``_get_paradata_path`` název distribuce ověří sám; výsledná cesta pod ``paradata/``
+        # už znovu validovat nesmí, protože ``paradata`` je vyhrazený prefix.
+        return self._container_exists(uuid, self._get_paradata_path(distribution), ident_cely)
+
+    def find_distribution_path_conflict(self, uuid, distribution, ident_cely=None) -> Optional[str]:
+        """
+        Najde ve Fedoře zdroj, který by znemožnil založit distribuci na zadané cestě.
+
+        Kontrola dávky (``find_distribution_prefix_collisions``) porovnává jen názvy jednoho CSV;
+        tato metoda doplňuje stav, který už ve Fedoře je. Viz ``_find_path_conflict``.
+
+        :param uuid: UUID kontejneru souboru.
+        :param distribution: Název zakládané distribuce, např. ``ocr/alto-xml``.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: Cesta konfliktního zdroje pod souborem, nebo ``None``, pokud konflikt není.
+        :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+        :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+        """
+        return self._find_path_conflict(uuid, self._normalize_distribution_name(distribution), ident_cely)
+
+    def find_paradata_path_conflict(self, uuid, distribution, ident_cely=None) -> Optional[str]:
+        """
+        Najde ve Fedoře zdroj, který by znemožnil založit paradata dané distribuce.
+
+        Kontejner ``paradata`` sám je kontejnerem záměrně, takže se jako konflikt nehodnotí.
+
+        :param uuid: UUID kontejneru souboru.
+        :param distribution: Název distribuce, ke které paradata patří.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: Cesta konfliktního zdroje pod souborem, nebo ``None``, pokud konflikt není.
+        :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+        :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+        """
+        return self._find_path_conflict(uuid, self._get_paradata_path(distribution), ident_cely, skip_segments=1)
+
+    def _find_path_conflict(self, uuid, path, ident_cely=None, skip_segments=0) -> Optional[str]:
+        """
+        Najde zdroj, kvůli kterému by zápis binárního obsahu na cestu ve Fedoře selhal.
+
+        Konflikt nastane ve dvou případech: některý nadřazený segment cesty už je binárním
+        obsahem (např. ``thumb`` při zakládání ``thumb/x``), takže pod ním nelze založit kontejner,
+        nebo na samotné cestě už je kontejner s potomky (např. ``ocr`` při existujícím
+        ``ocr/alto-xml``), který nelze přepsat binárním obsahem. Binární obsah se pozná podle
+        ``fcr:metadata``, které mají jen binární zdroje; obsah se tak nestahuje.
+
+        Volá se jen pro INSERT po ověření, že cesta sama binárním obsahem není. Tombstone (410)
+        konfliktem není, zápis jej přepíše hlavičkou ``Overwrite-Tombstone``.
+
+        :param uuid: UUID kontejneru souboru.
+        :param path: Relativní cesta zakládaného binárního obsahu pod kontejnerem souboru.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :param skip_segments: Počet úvodních segmentů, které jsou kontejnerem záměrně (``paradata``).
+        :return: Cesta konfliktního zdroje, nebo ``None``, pokud konflikt není.
+        :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+        """
+        segments = path.split("/")
+        for depth in range(skip_segments + 1, len(segments)):
+            ancestor = "/".join(segments[:depth])
+            if self._container_exists(uuid, ancestor, ident_cely):
+                return ancestor
+        url = self._get_request_url(
+            FedoraRequestType.GET_DISTRIBUTION_CONTAINER, uuid=uuid, ident_cely=ident_cely, path=path
+        )
+        response = self._send_request(url, FedoraRequestType.GET_DISTRIBUTION_CONTAINER)
+        if response is None:
+            raise FedoraNoResponseError(url, "No Fedora response", None, fedora_transaction=self.transaction)
+        if str(response.status_code)[0] == "2":
+            return path
+        return None
+
+    def _get_paradata_path(self, distribution) -> str:
+        """
+        Sestaví cestu paradat pro zadanou distribuci.
+
+        Paradata lze připojit i k původní distribuci ``orig``, proto je tento název na rozdíl
+        od alternativních distribucí povolen.
+
+        :param distribution: Název distribuce, ke které paradata patří.
+        :return: Relativní cesta ``paradata/{distribution}`` pod kontejnerem souboru.
+        :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+        """
+        distribution = self._normalize_distribution_name(distribution, allow_orig=True)
+        return f"{self.PARADATA_CONTAINER}/{distribution}"
+
+    def save_paradata(
+        self, uuid, distribution, file_name, content_type, file: io.BytesIO, ident_cely=None
+    ) -> RepositoryBinaryFile:
+        """
+        Uloží paradata distribuce do kontejneru ``file/{uuid}/paradata/{distribution}``.
+
+        :param uuid: UUID kontejneru souboru.
+        :param distribution: Název distribuce, ke které paradata patří.
+        :param file_name: Název souboru zapsaný do ``Content-Disposition``.
+        :param content_type: MIME typ ukládaného obsahu.
+        :param file: Binární obsah paradat.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: Wrapper nad uloženým obsahem.
+        :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+        """
+        return self._save_file_child(
+            uuid, self._get_paradata_path(distribution), file_name, content_type, file, ident_cely
+        )
+
+    def update_paradata(
+        self, uuid, distribution, file_name, content_type, file: io.BytesIO, ident_cely=None
+    ) -> RepositoryBinaryFile:
+        """
+        Přepíše obsah existujících paradat distribuce.
+
+        Zápis se posílá s hlavičkou ``Overwrite-Tombstone``: paradata nemají vlastní historii ani
+        databázový záznam, takže nelze ověřit, zda cílová URL patří živému zdroji, nebo zda na ní
+        po dřívějším smazání paradat zůstal tombstone, který by PUT odmítl stavem 410.
+
+        :param uuid: UUID kontejneru souboru.
+        :param distribution: Název distribuce, ke které paradata patří.
+        :param file_name: Název souboru zapsaný do ``Content-Disposition``.
+        :param content_type: MIME typ ukládaného obsahu.
+        :param file: Nový binární obsah paradat.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: Wrapper nad uloženým obsahem.
+        :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+        """
+        return self._update_file_child(
+            uuid,
+            self._get_paradata_path(distribution),
+            file_name,
+            content_type,
+            file,
+            ident_cely,
+            overwrite_tombstone=True,
+        )
+
+    def delete_paradata(self, uuid, distribution, ident_cely=None):
+        """
+        Smaže paradata distribuce.
+
+        :param uuid: UUID kontejneru souboru.
+        :param distribution: Název distribuce, ke které paradata patří.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+        """
+        self._delete_file_child(uuid, self._get_paradata_path(distribution), ident_cely)
+
+    def get_paradata(self, uuid, distribution, ident_cely=None) -> Optional[RepositoryBinaryFile]:
+        """
+        Načte obsah paradat distribuce.
+
+        :param uuid: UUID kontejneru souboru.
+        :param distribution: Název distribuce, ke které paradata patří.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: Wrapper nad načteným obsahem, nebo ``None``, pokud paradata neexistují.
+        :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+        """
+        return self._get_file_child(uuid, self._get_paradata_path(distribution), ident_cely)
 
     EBUCORE_FILENAME_PREDICATE = "http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#filename"
     LDP_CONTAINS_PREDICATE = "http://www.w3.org/ns/ldp#contains"
@@ -1770,6 +2437,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         Potomci se zjišťují dynamicky z ``ldp:contains``. Pokud potomek není binární soubor (nemá
         ``fcr:metadata``), zanoří se do něj jako do kontejneru – tím se pokryjí i vnořené distribuce
         a paradata (např. ``file/{soubor}/paradata/{child}``), jejichž zastoupení nelze předvídat.
+        Stejný průchod používá ``_collect_file_children``; změnu protokolu je třeba promítnout do obou.
 
         :param container_url: URL kontejneru, jehož potomci se procházejí.
         :param old_base: Původní název souboru bez přípony.
@@ -1813,6 +2481,77 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 # Potomek není binární soubor – jde o (pod)kontejner, zanoříme se hlouběji.
                 renamed_count += self._rename_filenames_in_container(child_url, old_base, new_base, depth + 1)
         return renamed_count
+
+    def _collect_file_children(self, uuid, ident_cely, container_url=None, depth=0) -> list:
+        """
+        Načte alternativní distribuce a paradata souboru, aby je šlo zkopírovat jinam.
+
+        Potomci se zjišťují stejně jako v ``_rename_filenames_in_container``: z ``ldp:contains``
+        kontejneru a podle ``fcr:metadata`` (404 znamená kontejner, do kterého se zanoří). Kontejnery
+        vznikající při importu souboru (``orig``, ``thumb``, ``thumb-large``) se vynechají, protože
+        je ``migrate_binary_file`` kopíruje sám. Volá se na netransakčním spojení, protože starý
+        kontejner už transakce změny identifikátoru smazala.
+
+        :param uuid: UUID kontejneru souboru na starém umístění.
+        :param ident_cely: Identifikátor záznamu, pod kterým soubor leží (starý identifikátor).
+        :param container_url: URL právě procházeného kontejneru; ``None`` znamená kontejner souboru.
+        :param depth: Aktuální hloubka rekurze.
+        :return: Seznam čtveřic ``(relativni_cesta, nazev_souboru, mime_typ, obsah)`` binárních potomků.
+        :raises FedoraError: Pokud kontejner nebo metadata potomka nejsou dostupné, nebo byla překročena
+            maximální hloubka rekurze — aby změna identifikátoru neproběhla se ztrátou dat.
+        """
+        file_url = f"{self.get_base_url()}/record/{ident_cely}/file/{uuid}"
+        container_url = container_url or file_url
+        if depth > self.MAX_RENAME_DEPTH:
+            raise FedoraError(
+                container_url,
+                "core_repository_connector._collect_file_children.max_depth_reached",
+                None,
+                fedora_transaction=self.transaction,
+            )
+        response = self._send_request(
+            container_url, FedoraRequestType.GET_BINARY_FILE_CHILDREN, headers={"Accept": "application/n-triples"}
+        )
+        if response is None or str(response.status_code)[0] != "2":
+            raise FedoraError(
+                container_url,
+                "core_repository_connector._collect_file_children.container_unavailable",
+                response.status_code if response is not None else None,
+                fedora_transaction=self.transaction,
+            )
+        filename_pattern = re.compile(r"<" + re.escape(self.EBUCORE_FILENAME_PREDICATE) + r">\s+\"((?:[^\"\\]|\\.)*)\"")
+        children = []
+        for child_url in self._parse_ldp_children(response.text):
+            path = child_url[len(file_url) + 1 :]
+            if depth == 0 and path in IMPLICIT_DISTRIBUTION_NAMES:
+                continue
+            metadata_url = f"{child_url}/fcr:metadata"
+            metadata = self._send_request(
+                metadata_url, FedoraRequestType.GET_BINARY_FILE_CHILD_RDF, headers={"Accept": "application/n-triples"}
+            )
+            if metadata is not None and metadata.status_code == 404:
+                children += self._collect_file_children(uuid, ident_cely, child_url, depth + 1)
+                continue
+            if metadata is None or str(metadata.status_code)[0] != "2":
+                raise FedoraError(
+                    metadata_url,
+                    "core_repository_connector._collect_file_children.metadata_unavailable",
+                    metadata.status_code if metadata is not None else None,
+                    fedora_transaction=self.transaction,
+                )
+            filenames = filename_pattern.findall(metadata.text)
+            rep_bin_file = self._get_file_child(uuid, path, ident_cely)
+            if rep_bin_file is None:
+                raise FedoraError(
+                    child_url,
+                    "core_repository_connector._collect_file_children.content_unavailable",
+                    None,
+                    fedora_transaction=self.transaction,
+                )
+            children.append(
+                (path, filenames[0] if filenames else path, rep_bin_file.content_type, rep_bin_file.content)
+            )
+        return children
 
     def _parse_ldp_children(self, ntriples_text):
         """
@@ -2121,31 +2860,6 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
                 self.migrate_binary_file(
                     item, include_content=True, check_if_exists=False, ident_cely_old=ident_cely_old
                 )
-
-    @classmethod
-    def generate_thumb_for_single_file(cls, record) -> None:
-        """
-        Vygeneruje thumb for single file.
-
-        :param record: Parametr ``record`` předává se do volání ``isinstance()``, ``get()``, pracuje se s atributy ``vazba``, ``active_transaction``, ovlivňuje větvení podmínek.
-        """
-        from core.models import Soubor
-        from xml_generator.models import ModelWithMetadata
-
-        if isinstance(record, int):
-            record = Soubor.objects.get(pk=record)
-        record: Soubor
-        related_record: ModelWithMetadata = record.vazba.navazany_objekt
-        fedora_transaction = FedoraTransaction()
-        record.active_transaction = fedora_transaction
-        conn = FedoraRepositoryConnector(related_record, fedora_transaction)
-        if not conn.get_binary_file(record.repository_uuid, thumb_small=True) and not conn.get_binary_file(
-            record, thumb_large=True
-        ):
-            rep_bin_file = conn.get_binary_file(record.repository_uuid)
-            if rep_bin_file:
-                conn.save_thumbs(record.nazev, rep_bin_file.content, record.repository_uuid)
-        fedora_transaction.mark_transaction_as_closed()
 
 
 class FedoraTransactionQueueClosedError(Exception):

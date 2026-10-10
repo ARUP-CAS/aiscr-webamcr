@@ -21,7 +21,12 @@ Třídy
 
       Vrátí požadovaný soubor nebo jeho náhled po ověření vazby k záznamu.
 
-      :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek.
+      Alternativní distribuce se vybírá GET parametrem ``distribution`` (např.
+      ``?distribution=ocr/alto-xml``), nikoli samostatnou URL routou: požadavek tak zůstává na
+      routě ``download_file`` a ``PermissionMiddleware`` na něj uplatní stejná oprávnění jako
+      na běžné stažení souboru. Stáhnout lze jen distribuci z ``Soubor.available_distributions()``.
+
+      :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET`` (včetně ``distribution``), ovlivňuje větvení podmínek.
       :param typ_vazby: Typ vazby souboru na doménový záznam.
       :param ident_cely: Identifikátor záznamu, ke kterému soubor patří.
       :param pk: Primární klíč souboru.

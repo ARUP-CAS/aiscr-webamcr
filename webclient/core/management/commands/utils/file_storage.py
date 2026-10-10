@@ -109,4 +109,7 @@ def save_single_file_from_storage_impl(
     record.size_mb = rep_bin_file.size_mb
     record.sha_512 = rep_bin_file.sha_512
     record.save()
+    # Historie náhledů se zapisuje až po uložení souboru — u nově zakládaného souboru vzniká
+    # ``path`` (a tím i vazba na Fedoru) teprve z výsledku ``save_binary_file``.
+    record.zaznamenej_distribuce(rep_bin_file.thumb_writes)
     fedora_transaction.mark_transaction_as_closed()

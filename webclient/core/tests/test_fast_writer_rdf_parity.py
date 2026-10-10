@@ -332,6 +332,8 @@ class PocetKopiiTurtleTest(SimpleTestCase):
         "_create_binary_file_container",
         "save_binary_file",
         "migrate_binary_file",
+        # Intermediate distribution containers (#3527); the fast writer never creates them.
+        "_ensure_child_containers",
     }
     #: Metody, které smí obsahovat link (proxy) turtle - všechny pokrývá parity test.
     OCEKAVANE_LINK = {"create_link", "record_deletion", "record_ident_change"}

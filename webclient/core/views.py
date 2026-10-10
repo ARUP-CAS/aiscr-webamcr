@@ -544,7 +544,12 @@ class DownloadFile(LoginRequiredMixin, View):
         """
         Vrátí požadovaný soubor nebo jeho náhled po ověření vazby k záznamu.
 
-        :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek.
+        Alternativní distribuce se vybírá GET parametrem ``distribution`` (např.
+        ``?distribution=ocr/alto-xml``), nikoli samostatnou URL routou: požadavek tak zůstává na
+        routě ``download_file`` a ``PermissionMiddleware`` na něj uplatní stejná oprávnění jako
+        na běžné stažení souboru. Stáhnout lze jen distribuci z ``Soubor.available_distributions()``.
+
+        :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET`` (včetně ``distribution``), ovlivňuje větvení podmínek.
         :param typ_vazby: Typ vazby souboru na doménový záznam.
         :param ident_cely: Identifikátor záznamu, ke kterému soubor patří.
         :param pk: Primární klíč souboru.
@@ -567,11 +572,22 @@ class DownloadFile(LoginRequiredMixin, View):
                 safe_redirect = "/"
             return redirect(safe_redirect)
         soubor: Soubor = get_object_or_404(Soubor, id=pk)
+        # Passed as a query parameter so the request resolves to the download_file route and
+        # PermissionMiddleware applies the same permission rows as to the standard download.
+        distribution = request.GET.get("distribution")
         if soubor.repository_uuid:
             if self.thumb_small and soubor.small_thumbnail is not None:
                 return soubor.small_thumbnail
             elif self.thumb_large and soubor.large_thumbnail is not None:
                 return soubor.large_thumbnail
+            elif distribution:
+                # Only distributions the file actually offers may be downloaded; a raw name from the
+                # URL must not reach Fedora, otherwise it could address any container under the file.
+                if distribution not in soubor.available_distributions():
+                    raise Http404
+                distribution_response = soubor.get_distribution_response(distribution)
+                if distribution_response is not None:
+                    return distribution_response
             elif soubor.content_file_response is not None:
                 return soubor.content_file_response
         raise Http404
@@ -1049,6 +1065,9 @@ class NewFileUploadView(BasePostUploadView):
             soubor_instance.zaznamenej_nahrani(user_admin, self.original_filename)
         else:
             soubor_instance.zaznamenej_nahrani(request.user, self.original_filename)
+        # Historie náhledů se zapisuje až tady — při volání ``save_binary_file`` výše ještě
+        # záznam ``Soubor`` neexistoval, takže connector vrátil jen přehled zapsaných náhledů.
+        soubor_instance.zaznamenej_distribuce(rep_bin_file.thumb_writes)
         duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk").exclude(id=soubor_instance.id)
         response_data = self._append_duplicate_message(response_data, duplikat)
         response_data = self._append_rename_message(response_data, renamed, new_name)
@@ -1270,6 +1289,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
             soubor_instance.binary_data = soubor_data
             soubor_instance.save()
             soubor_instance.zaznamenej_nahrani_nove_verze(request.user, original_name)
+            soubor_instance.zaznamenej_distribuce(rep_bin_file.thumb_writes)
         if rep_bin_file is not None:
             duplikat = Soubor.objects.filter(sha_512=rep_bin_file.sha_512).exclude(id=soubor_instance.id).order_by("pk")
             response_data = {"filename": soubor_instance.nazev}
@@ -2916,13 +2936,12 @@ class DataImportProgress(LoginRequiredMixin, View):
             # validation_result is a translation ID for valid rows, or a raw translated exception
             # message for invalid rows (carve-out: mapper exceptions compose the message at raise
             # time). translate_status_value renders both correctly in the admin's locale.
-            validation_results = [
-                {
-                    **json.loads(item),
-                    "validation_result": translate_status_value(json.loads(item).get("validation_result", "")),
-                }
-                for item in validation_details
-            ]
+            validation_results = []
+            for item in validation_details:
+                # One json.loads per row — the poll runs every second over a growing list.
+                row = json.loads(item)
+                row["validation_result"] = translate_status_value(row.get("validation_result", ""))
+                validation_results.append(row)
             validation_cursor = validation_since + len(validation_details)
             invalid_records = json.loads(redis_connector.get(f"import_data_invalid_records_{job_id}") or "[]")
             failure_reason = (

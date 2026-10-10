@@ -139,7 +139,12 @@ class Command(BaseCommand):
                     rep_bin_file = conn.get_binary_file(soubor.repository_uuid)
                     if rep_bin_file:
                         try:
-                            conn.save_thumbs(soubor.nazev, rep_bin_file.content, soubor.repository_uuid)
+                            # update=True overwrites a thumbnail that already exists (logged as DIST11)
+                            # and creates only the missing one (DIST01).
+                            thumb_writes = conn.save_thumbs(
+                                soubor.nazev, rep_bin_file.content, soubor.repository_uuid, update=True
+                            )
+                            soubor.zaznamenej_distribuce(thumb_writes)
                             success_count += 1
                             logger.info(
                                 "core.management.commands.generate_thumbs.thumbs_generated",

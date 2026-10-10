@@ -116,6 +116,26 @@ Třídy
       :param user: Parametr ``user`` se předává do volání ``Historie()``.
       :param file_name: Parametr ``file_name`` se předává do volání ``Historie()``.
 
+   .. py:method:: zaznamenej_distribuce()
+
+      Metoda pro zapsání vzniku nebo aktualizace náhledů souboru do historie.
+
+      Náhledy jsou distribuce souboru jako každé jiné, takže se evidují stejnými typy změn
+      (``DIST01``/``DIST11``) s poznámkou ``thumb``, resp. ``thumb-large``. Volá se až po
+      uložení souboru: náhledy se do Fedory zapisují dřív, než při vkládání vznikne řádek
+      ``Soubor``, takže connector historii sám zapsat nemůže a vrací jen přehled zápisů
+      (``RepositoryBinaryFile.thumb_writes``).
+
+      Změna se vždy připíše uživateli ``ADMIN_USER`` – stejně jako u distribucí nahraných importem
+      (zadání #3527), nikoli uživateli, který soubor nahrál; náhledy generuje systém.
+
+      Zápis je best-effort — selhání se pouze zaloguje, protože ztráta záznamu v historii
+      nesmí shodit nahrání souboru ani generování náhledů. Probíhá ve vlastním savepointu
+      (``transaction.atomic()``): volající často běží v otevřené databázové transakci a zachycená
+      databázová chyba bez savepointu by ji poškodila, takže by selhal až další dotaz volajícího.
+
+      :param thumb_writes: Seznam dvojic ``(nazev_nahledu, aktualizace)`` z ``save_thumbs()``.
+
    .. py:method:: zaznamenej_nahrani_nove_verze()
 
       Metoda pro zapsáni nahrání nové verze souboru do historie.
@@ -226,7 +246,18 @@ Třídy
 
       Vytvoří file response.
 
+      Hlavičku ``Content-Disposition`` sestaví ``FileResponse``: název uvozovkuje a pro
+      neasciiové znaky doplní tvar ``filename*=utf-8''…`` podle RFC 6266. Ruční skládání
+      hlavičky vedlo u názvů s mezerou nebo diakritikou (v AMČR běžné) k oříznutému
+      nebo rozsypanému názvu staženého souboru.
+
+      ``as_attachment`` je nutné předávat explicitně — ``FileResponse`` bez něj sestaví
+      hlavičku s ``inline``, takže by se soubor v prohlížeči zobrazil místo stažení.
+
       :param rep_bin_file: Parametr ``rep_bin_file`` pracuje se s atributy ``content``.
+      :param filename: Název, pod kterým se soubor nabídne ke stažení; výchozí je ``nazev``.
+      :param as_attachment: Pokud ``False``, obsah se nabídne k zobrazení (``inline``)
+          místo ke stažení; používají náhledy vykreslované přímo ve stránce.
       :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: large_thumbnail()
@@ -246,6 +277,47 @@ Třídy
       Vrátí soubor jako HTTP response.
 
       :return: FileResponse se souborem nebo None.
+
+   .. py:method:: distribution_history_prefetch()
+
+      Vrátí ``Prefetch`` pro hromadné načtení historie distribucí u tabulky souborů.
+
+      Bez něj se ``available_distributions()`` doptává na historii pro každý řádek zvlášť,
+      takže počet dotazů roste s počtem souborů záznamu. Vyfiltrovaná a seřazená data se
+      ukládají do ``distribuce_historie``, odkud si je metoda vyzvedne.
+
+      Použití: ``.select_related("historie").prefetch_related(Soubor.distribution_history_prefetch())``
+
+      :return: ``Prefetch`` k předání do ``prefetch_related()``.
+
+   .. py:method:: available_distributions()
+
+      Vrátí názvy distribucí souboru dostupných ke stažení, včetně původní ``orig``.
+
+      Seznam se skládá z historie souboru: distribuce je dostupná, pokud k ní existuje záznam
+      ``DIST01`` a zároveň neexistuje mladší ``DIST10`` se stejnou poznámkou. Na rozdíl od
+      validace importu, která se ptá přímo Fedory, se zde čte z databáze — tabulka souborů
+      vykresluje seznam pro každý řádek a jeden HTTP dotaz do repozitáře na řádek by byl
+      neúnosný. Zdrojem tohoto pravidla je zadání issue #3527.
+
+      Kontejnery vznikající už při importu souboru (``IMPLICIT_DISTRIBUTION_NAMES``) se do
+      seznamu nezahrnují: ``orig`` je do něj přidán zvlášť jako první položka a náhledy mají
+      vlastní endpointy (``core:download_thumbnail``, ``core:download_thumbnail_large``).
+      Historii ``DIST01``/``DIST11`` si přitom náhledy vedou stejně jako ostatní distribuce.
+
+      :return: Seznam názvů distribucí; ``orig`` je vždy první.
+
+   .. py:method:: get_distribution_response()
+
+      Vrátí obsah zvolené distribuce souboru jako HTTP odpověď.
+
+      Distribuce má vlastní binární obsah, takže se ke stažení nabídne pod názvem uloženým ve Fedoře
+      (``ebucore:filename``, tj. ``nazev`` z importního CSV); přípona se nedoplňuje — chybí-li, je to
+      záměr. Jen když Fedora název nevrátí, odvodí se z názvu souboru a distribuce
+      (``scan.pdf`` + ``ocr/alto-xml`` → ``scan.pdf.ocr_alto-xml``). Odpověď nese uložený MIME typ.
+
+      :param distribution: Název distribuce; ``orig`` vrátí původní obsah souboru.
+      :return: ``FileResponse`` s obsahem distribuce, nebo ``None``, pokud ji nelze načíst.
 
    .. py:method:: getMock()
 
