@@ -1881,6 +1881,33 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 )
             prefix = current
 
+    @staticmethod
+    def _file_child_write_payload(file: io.BytesIO, file_name, content_type, overwrite_tombstone) -> tuple:
+        """
+        Připraví obsah a hlavičky pro zápis binárního obsahu distribuce nebo paradat.
+
+        Sdílí ho ``_save_file_child`` i ``_update_file_child``, aby se hlavičky zápisu nemohly
+        rozejít. Obsah se vždy ukládá jako binární zdroj (``Link: ldp:NonRDFSource``) a nese
+        SHA-512 digest, podle kterého Fedora ověří, že dorazil celý.
+
+        :param file: Ukládaný binární obsah; čte se od začátku.
+        :param file_name: Název souboru zapsaný do ``Content-Disposition``.
+        :param content_type: MIME typ ukládaného obsahu.
+        :param overwrite_tombstone: Pokud ``True``, přidá hlavičku ``Overwrite-Tombstone``.
+        :return: Dvojice ``(data, headers)`` pro PUT do Fedory.
+        """
+        file.seek(0)
+        data = file.read()
+        headers = {
+            "Content-Type": content_type,
+            "Content-Disposition": f'attachment; filename="{file_name}"'.encode("utf-8"),
+            "Digest": f"sha-512={hashlib.sha512(data).hexdigest()}",
+            "Link": NON_RDF_SOURCE_LINK,
+        }
+        if overwrite_tombstone:
+            headers["Overwrite-Tombstone"] = "true"
+        return data, headers
+
     def _save_file_child(
         self, uuid, path, file_name, content_type, file: io.BytesIO, ident_cely=None
     ) -> RepositoryBinaryFile:
@@ -1908,16 +1935,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         :return: Wrapper nad uloženým obsahem s URL vzniklého kontejneru.
         """
         self._ensure_child_containers(uuid, path, ident_cely)
-        file.seek(0)
-        data = file.read()
-        file_sha_512 = hashlib.sha512(data).hexdigest()
-        headers = {
-            "Content-Type": content_type,
-            "Content-Disposition": f'attachment; filename="{file_name}"'.encode("utf-8"),
-            "Digest": f"sha-512={file_sha_512}",
-            "Overwrite-Tombstone": "true",
-            "Link": NON_RDF_SOURCE_LINK,
-        }
+        data, headers = self._file_child_write_payload(file, file_name, content_type, overwrite_tombstone=True)
         url = self._get_request_url(
             FedoraRequestType.CREATE_DISTRIBUTION_CONTENT, uuid=uuid, ident_cely=ident_cely, path=path
         )
@@ -1955,17 +1973,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         url = self._get_request_url(
             FedoraRequestType.UPDATE_DISTRIBUTION_CONTENT, uuid=uuid, ident_cely=ident_cely, path=path
         )
-        file.seek(0)
-        data = file.read()
-        file_sha_512 = hashlib.sha512(data).hexdigest()
-        headers = {
-            "Content-Type": content_type,
-            "Content-Disposition": f'attachment; filename="{file_name}"'.encode("utf-8"),
-            "Digest": f"sha-512={file_sha_512}",
-            "Link": NON_RDF_SOURCE_LINK,
-        }
-        if overwrite_tombstone:
-            headers["Overwrite-Tombstone"] = "true"
+        data, headers = self._file_child_write_payload(file, file_name, content_type, overwrite_tombstone)
         self._send_request(url, FedoraRequestType.UPDATE_DISTRIBUTION_CONTENT, headers=headers, data=data)
         self._update_creator(FedoraRequestType.DISTRIBUTION_CONTENT_UPDATE_RDF_DATA, uuid, ident_cely, path=path)
         logger.debug(

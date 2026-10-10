@@ -457,6 +457,20 @@ Třídy
       :param path: Relativní cesta distribuce (poslední segment je binární obsah, nezakládá se zde).
       :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
 
+   .. py:method:: _file_child_write_payload()
+
+      Připraví obsah a hlavičky pro zápis binárního obsahu distribuce nebo paradat.
+
+      Sdílí ho ``_save_file_child`` i ``_update_file_child``, aby se hlavičky zápisu nemohly
+      rozejít. Obsah se vždy ukládá jako binární zdroj (``Link: ldp:NonRDFSource``) a nese
+      SHA-512 digest, podle kterého Fedora ověří, že dorazil celý.
+
+      :param file: Ukládaný binární obsah; čte se od začátku.
+      :param file_name: Název souboru zapsaný do ``Content-Disposition``.
+      :param content_type: MIME typ ukládaného obsahu.
+      :param overwrite_tombstone: Pokud ``True``, přidá hlavičku ``Overwrite-Tombstone``.
+      :return: Dvojice ``(data, headers)`` pro PUT do Fedory.
+
    .. py:method:: _save_file_child()
 
       Vytvoří nový binární kontejner pod kontejnerem souboru (distribuce nebo paradata).
