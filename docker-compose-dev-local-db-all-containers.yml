@@ -105,7 +105,7 @@ services:
     command: sh -c 'redis-server /home/redis/redis.conf'
 
   redis-exporter:
-    image: oliver006/redis_exporter:v1.91.1-alpine
+    image: oliver006/redis_exporter:v1.93.0-alpine
     ports:
       - "9121:9121"
     secrets:
@@ -133,7 +133,7 @@ services:
       - "3000:3000"
 
   prometheus:
-    image: prom/prometheus:v3.14.0
+    image: prom/prometheus:v3.15.0
     volumes:
       - ./prometheus:/etc/prometheus
     ports:
@@ -203,7 +203,7 @@ services:
     shm_size: '2gb'
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:9.5.4
+    image: docker.elastic.co/logstash/logstash:9.5.5
     depends_on:
       - elasticsearch
     ports:
@@ -214,7 +214,7 @@ services:
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.4
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.5
     environment:
       - discovery.type=single-node
       - http.host=0.0.0.0
@@ -226,7 +226,7 @@ services:
       - elasticsearch_volume:/usr/share/elasticsearch/data
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:9.5.4
+    image: docker.elastic.co/kibana/kibana:9.5.5
     restart: always
     ports:
       - 5601:5601

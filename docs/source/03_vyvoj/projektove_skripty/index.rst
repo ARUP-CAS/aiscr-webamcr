@@ -12,6 +12,7 @@ Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``
    check_container_image_reference_parity_py
    check_npm_vendor_package_names_py
    check_static_vendor_manifest_py
+   compile_requirements_sh
    copy_custom_html_py
    crontab_txt
    dev_deploy_sh
@@ -22,6 +23,7 @@ Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``
    prod_deploy_sh
    redis_exporter_entrypoint_sh
    restore_database_sh
+   run_healthcheck_celery_beat_sh
    run_healthcheck_celery_sh
    run_healthcheck_sh
    start_selenium_tests_sh

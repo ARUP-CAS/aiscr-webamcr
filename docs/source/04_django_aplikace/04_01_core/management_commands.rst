@@ -489,30 +489,3 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
 .. automodule:: core.management.commands.update_snapshot_fields
    :members: Command
    :undoc-members:
-
-
-``write_value_to_redis``
-------------------------
-
-.. automodule:: core.management.commands.write_value_to_redis
-   :members: Command
-   :undoc-members:
-
-**Parametry:**
-
-.. list-table::
-   :header-rows: 1
-   :widths: 30 20 20 30
-
-   * - Název
-     - Typ
-     - Výchozí hodnota
-     - Popis
-   * - ``key``
-     - ``str``
-     - 
-     - core.management.commands.write_value_to_redis.Command.add_arguments.key_help
-   * - ``value``
-     - ``str``
-     - 
-     - core.management.commands.write_value_to_redis.Command.add_arguments.value_help

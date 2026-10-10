@@ -18,9 +18,12 @@ on:
         description: "Bypass file/class/method exclusions in docstring reminder hook"
         type: boolean
         default: false
+      upgrade_python_pins:
+        description: "Refresh compiled Python pins on test (opens/updates a PR into test)"
+        type: boolean
+        default: false
 
 permissions:
-  contents: write
   pull-requests: write
 
 concurrency:
@@ -29,59 +32,120 @@ concurrency:
 
 jobs:
   pre-commit:
-    if: |
-      github.actor != 'github-actions[bot]' &&
-      github.actor != 'dependabot[bot]' &&
-      !startsWith(github.ref_name, 'pre-commit-fixes/')
-
+    # Job-level `if` by ponechal požadovaný check ve stavu skipped, který ruleset vyhodnocuje
+    # jako nesplněný (PR zůstane BLOCKED). Job proto běží vždy a vlastní práci řídí krok `gate`.
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v7
+      - name: Decide pre-commit mode
+        id: gate
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          ACTOR: ${{ github.actor }}
+          # Pro pull_request je github.ref_name "<číslo>/merge"; zdrojovou větev nese github.head_ref.
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+          BASE: ${{ github.base_ref }}
+          DEPENDENCIES: ${{ github.event.inputs.dependencies }}
+        run: |
+          # none     = automatické větve (opravné PR, refresh pinů) nebo bot aktér - žádné hooky
+          # standard = vývojové PR - běžné hooky
+          # full     = cokoliv mířící do main (PR do main i push do main) - běžné hooky
+          #            navíc s regenerací dokumentace závislostí; ruční dispatch je full
+          #            jen se zapnutým vstupem dependencies
+          mode=standard
+
+          case "$BRANCH" in
+            pre-commit-fixes/* | deps/python-pins-refresh) mode=none ;;
+          esac
+
+          # Jakýkoliv bot (github-actions[bot], dependabot[bot], App) je automatika - žádné hooky.
+          case "$ACTOR" in
+            *'[bot]') mode=none ;;
+          esac
+
+          if [ "$mode" != "none" ]; then
+            if [ "$EVENT_NAME" = "pull_request" ] && [ "$BASE" = "main" ]; then
+              mode=full
+            elif [ "$EVENT_NAME" = "push" ] && [ "$BRANCH" = "main" ]; then
+              mode=full
+            elif [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$DEPENDENCIES" = "true" ]; then
+              mode=full
+            fi
+          fi
+
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          if [ "$mode" = "none" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+          if [ "$mode" = "full" ]; then
+            echo "full=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "full=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-python@v7
+      - name: Set up Python
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
-      - uses: actions/cache@v6
+      - name: Cache pre-commit
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/cache@v6
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: |
             pre-commit-${{ runner.os }}-
 
-      - uses: actions/cache@v6
+      - name: Cache pip
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/cache@v6
         with:
           path: ~/.cache/pip
-          key: pip-${{ runner.os }}-${{ hashFiles('webclient/requirements.txt', '.pre-commit-config.yaml') }}
+          key: pip-${{ runner.os }}-${{ hashFiles('webclient/requirements*.txt', '.pre-commit-config.yaml') }}
           restore-keys: |
             pip-${{ runner.os }}-
 
       - name: Configure git
+        if: steps.gate.outputs.run == 'true'
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+      # Kontrola synchronizace: requirements*.txt musí odpovídat autorským requirements*.in.
+      # Bez --upgrade, takže PR nepřebírá nesouvisející aktualizace; případné rozdíly
+      # skončí v auto-fix PR níže. Obnovu tranzitivních pinů dělá job refresh-python-pins.
+      - name: Compile Python requirements
+        if: steps.gate.outputs.run == 'true'
+        run: bash scripts/compile_requirements.sh
+
       - name: Install dependencies
+        if: steps.gate.outputs.run == 'true'
         run: |
           python -m pip install --upgrade pip
           pip install pip-licenses
-          pip install -r webclient/requirements.txt
-          pip install pre-commit
+          # dev obsahuje prod + test + dev, docs obsahuje prod + docs.
+          pip install -r webclient/requirements-dev.txt -r webclient/requirements-docs.txt
 
       - name: Run convert_to_rst.py
-        if: |
-          (github.event_name == 'pull_request' && github.base_ref == 'main') ||
-          (github.event_name == 'push' && github.ref_name == 'main') ||
-          (github.event_name == 'workflow_dispatch' && github.event.inputs.dependencies == 'true')
+        # Plný běh (full) regeneruje dokumentaci závislostí.
+        if: steps.gate.outputs.full == 'true'
         run: python docs/licenses/convert_to_rst.py
 
       - name: Run pre-commit
         id: hooks
+        if: steps.gate.outputs.run == 'true'
         env:
           DOCSTRING_CHECK_BYPASS_EXCLUSIONS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.bypass_docstring_exclusions == 'true' || 'false' }}
         run: |
@@ -145,6 +209,7 @@ jobs:
 
       - name: Check for file changes
         id: changes
+        if: steps.gate.outputs.run == 'true'
         run: |
           git update-index -q --refresh
           if ! git diff-index --quiet HEAD -- || [ -n "$(git ls-files --others --exclude-standard)" ]; then
@@ -155,37 +220,81 @@ jobs:
 
       - name: Compute short SHA
         id: vars
+        if: steps.gate.outputs.run == 'true'
         run: echo "sha_short=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
-      - name: Create Pull Request with fixes
-        id: create_pr
-        if: steps.changes.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v8
+      # PR zakládá GitHub App token, aby jeho události spouštěly navazující workflows
+      # (GITHUB_TOKEN vytvořené PR běhy nespouští).
+      - name: Log-in as AMCR app
+        if: steps.gate.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
+        uses: actions/create-github-app-token@v3
+        id: app-token
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: pre-commit-fixes/${{ github.event.pull_request.number || github.ref_name }}
-          delete-branch: true
-          commit-message: "chore: apply pre-commit fixes and update licenses"
-          title: >-
-            ${{ github.event_name == 'pull_request'
-                && format('Pre-commit fixes for PR #{0}', github.event.pull_request.number)
-                || format('Pre-commit fixes for commit {0}', steps.vars.outputs.sha_short) }}
-          base: ${{ github.head_ref || github.ref_name }}
-          labels: |
-            pre-commit
-          body: |
-            This PR was automatically generated by CI.
+          client-id: ${{ vars.AISCR_AMCR_ACTIONS_CLIENT_ID }}
+          private-key: ${{ secrets.AISCR_AMCR_ACTIONS_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
 
-            It includes:
-            - Pre-commit formatting fixes
-            - Container image / compose alignment (when the parity hook applied changes)
-            - NPM vendor names in `base.py` (when the npm-vendor hook applied changes)
-            - Updated `python_knihovny.rst`
+      - name: Publish fix branch and PR
+        if: steps.gate.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          BASE: ${{ github.head_ref || github.ref_name }}
+          FIX_BRANCH: pre-commit-fixes/${{ github.event.pull_request.number || github.ref_name }}
+          IS_PR: ${{ github.event_name == 'pull_request' }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SHA_SHORT: ${{ steps.vars.outputs.sha_short }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${APP_SLUG}[bot]@users.noreply.github.com"
+          git checkout -B "$FIX_BRANCH"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to publish."
+            exit 0
+          fi
+          git commit -m "chore: apply pre-commit fixes and update licenses"
+          gh auth setup-git
+          git push --force origin "$FIX_BRANCH"
 
-            Please merge this PR to make the original PR pass.
-          assignees: ${{ github.actor }}
+          if [ "$IS_PR" = "true" ]; then
+            title="Pre-commit fixes for PR #${PR_NUMBER}"
+          else
+            title="Pre-commit fixes for commit ${SHA_SHORT}"
+          fi
+
+          cat > "${RUNNER_TEMP}/fix-pr-body.md" <<'EOF'
+          This PR was automatically generated by CI.
+
+          It is branched from the original PR's merge commit, so besides the hook fixes
+          it also carries the base branch as merged into the PR head (for example a
+          `main` into `test` alignment). That is intentional, but to **never use squash
+          -merge** on this PR, because it would lose the original PR's merge commit.
+
+          It includes:
+          - Pre-commit formatting fixes
+          - Recompiled `webclient/requirements*.txt` (when they were out of sync with `requirements*.in`)
+          - Container image / compose alignment (when the parity hook applied changes)
+          - NPM vendor names in `base.py` (when the npm-vendor hook applied changes)
+          - Updated `python_knihovny.rst`
+
+          Please merge this PR to make the original PR pass.
+          EOF
+
+          pr_number="$(gh pr list --head "$FIX_BRANCH" --repo "$GITHUB_REPOSITORY" --json number --jq '.[0].number')"
+          if [ -n "$pr_number" ]; then
+            gh pr edit "$pr_number" --title "$title" --body-file "${RUNNER_TEMP}/fix-pr-body.md"
+          else
+            gh pr create --base "$BASE" --head "$FIX_BRANCH" \
+              --title "$title" --body-file "${RUNNER_TEMP}/fix-pr-body.md" \
+              --label pre-commit --assignee "$ACTOR"
+          fi
 
       - name: Publish workflow summary
+        if: steps.gate.outputs.run == 'true'
         # Výstupy hooků obsahují text z PR (cesty, hlášky validátorů) — do shellu jen přes env,
         # nikdy přímou interpolací ${{ }} do run: (command injection).
         env:
@@ -231,7 +340,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Comment on original PR (sticky)
-        if: github.event_name == 'pull_request'
+        if: steps.gate.outputs.run == 'true' && github.event_name == 'pull_request'
         uses: actions/github-script@v9
         with:
           script: |
@@ -332,9 +441,96 @@ jobs:
             }
 
       - name: Fail if pre-commit failed without auto-fix PR
-        if: steps.hooks.outputs.exit_code != '0' && steps.changes.outputs.changed != 'true'
+        if: steps.gate.outputs.run == 'true' && steps.hooks.outputs.exit_code != '0' && steps.changes.outputs.changed != 'true'
         env:
           EXIT_CODE: ${{ steps.hooks.outputs.exit_code }}
         run: |
           echo "Pre-commit exited with $EXIT_CODE and no fix PR was generated."
           exit 1
+
+  refresh-python-pins:
+    # Obnova tranzitivních pinů po každém pushi do main (merge test → main, commit CITATION.cff
+    # z release workflow) nebo ručně. Pracuje nad větví test a udržuje jeden průběžný PR do test,
+    # takže aktualizace projdou běžným testovacím cyklem (viz CONTRIBUTING.md). Dependabot
+    # pokrývá přímé závislosti z requirements*.in a bezpečnostní opravy.
+    #
+    # Job-level `if` by ponechal požadovaný check ve stavu skipped, který ruleset vyhodnocuje
+    # jako nesplněný (PR zůstane BLOCKED). Job proto běží vždy a vlastní práci řídí krok `gate`.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Decide whether to refresh pins
+        id: gate
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          UPGRADE_INPUT: ${{ inputs.upgrade_python_pins }}
+        run: |
+          if { [ "$EVENT_NAME" = "push" ] && [ "$REF_NAME" = "main" ]; } || \
+             { [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$UPGRADE_INPUT" = "true" ]; }; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout test
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/checkout@v7
+        with:
+          ref: test
+          persist-credentials: false
+
+      - name: Upgrade compiled Python requirements
+        if: steps.gate.outputs.run == 'true'
+        run: bash scripts/compile_requirements.sh --upgrade
+
+      # PR zakládá GitHub App token, aby jeho události spouštěly navazující workflows
+      # (GITHUB_TOKEN vytvořené PR běhy nespouští).
+      - name: Log-in as AMCR app
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ vars.AISCR_AMCR_ACTIONS_CLIENT_ID }}
+          private-key: ${{ secrets.AISCR_AMCR_ACTIONS_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Publish refresh branch and PR
+        if: steps.gate.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        run: |
+          set -euo pipefail
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${APP_SLUG}[bot]@users.noreply.github.com"
+          git checkout -B deps/python-pins-refresh
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No pin changes to publish."
+            exit 0
+          fi
+          git commit -m "chore(deps): refresh compiled Python pins"
+          gh auth setup-git
+          git push --force origin deps/python-pins-refresh
+
+          cat > "${RUNNER_TEMP}/pins-pr-body.md" <<'EOF'
+          This PR was automatically generated by CI (`refresh-python-pins` in `pre_commit.yml`).
+
+          It runs `scripts/compile_requirements.sh --upgrade` on `test`: direct pins in
+          `webclient/requirements*.in` stay as they are, transitive pins in the compiled
+          `webclient/requirements*.txt` move to the newest compatible versions.
+
+          The PR is updated on every push to `main` until it is merged.
+          EOF
+
+          pr_number="$(gh pr list --head deps/python-pins-refresh --repo "$GITHUB_REPOSITORY" --json number --jq '.[0].number')"
+          if [ -n "$pr_number" ]; then
+            gh pr edit "$pr_number" --title "Refresh compiled Python pins" --body-file "${RUNNER_TEMP}/pins-pr-body.md"
+          else
+            gh pr create --base test --head deps/python-pins-refresh \
+              --title "Refresh compiled Python pins" --body-file "${RUNNER_TEMP}/pins-pr-body.md" \
+              --label dependencies
+          fi

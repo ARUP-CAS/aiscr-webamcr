@@ -5,12 +5,61 @@
 
 version: 2
 updates:
+  # Python: autorské webclient/requirements*.in se kompilují (pip-tools) do requirements*.txt.
+  # Dependabot nespouští scripts/compile_requirements.sh, kompiluje vlastním pip-compile:
+  # - přepínače (např. --strip-extras) čte z hlavičky vygenerovaného .txt,
+  # - pořadí vrstev (prod → test → dev, prod → docs) zná jen z řádků -r v .in souborech.
+  # Aktualizuje přímé závislosti z .in a bezpečnostní opravy; tranzitivní piny obnovuje
+  # job refresh-python-pins v .github/workflows/pre_commit.yml (PR do test).
   - package-ecosystem: "pip"
     directory: "/webclient/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 30
     target-branch: test
+    # Skupiny: balíčky, které spolu obvykle přicházejí nebo bez sebe nemohou být aktualizovány.
+    # Balíček patří do první skupiny, které odpovídá; názvy jsou normalizované (malá písmena, "-").
+    groups:
+      django-celery:
+        # django-celery-beat omezuje horní verzi Django i celery, django-celery-results celery,
+        # django-prometheus Django; Django vyžaduje minimální verzi asgiref (pinovaného v .in).
+        patterns:
+          - "django"
+          - "asgiref"
+          - "celery"
+          - "django-celery-*"
+          - "django-prometheus"
+      cryptography:
+        # pyOpenSSL omezuje horní verzi cryptography.
+        patterns:
+          - "cryptography"
+          - "pyopenssl"
+      sphinx:
+        # sphinx-rtd-theme omezuje horní verzi sphinx; rozšíření sphinxcontrib-* na něm staví.
+        patterns:
+          - "sphinx*"
+      crispy-forms:
+        # Šablonový balík crispy-bootstrap5 vyžaduje minimální verzi django-crispy-forms.
+        patterns:
+          - "django-crispy-forms"
+          - "crispy-bootstrap5"
+      django-tables2:
+        # Plugin django-tables2-column-shifter.
+        patterns:
+          - "django-tables2*"
+      django-compressor:
+        # django-libsass je filtr django-compressor.
+        patterns:
+          - "django-compressor"
+          - "django-libsass"
+      django-debug-toolbar:
+        # Panel django-debug-toolbar-template-profiler.
+        patterns:
+          - "django-debug-toolbar*"
+      djangorestframework:
+        # XML renderer djangorestframework-xml.
+        patterns:
+          - "djangorestframework*"
 
   - package-ecosystem: "npm"
     directory: "/"
@@ -18,7 +67,29 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 30
     target-branch: test
-    
+    groups:
+      leaflet:
+        # Leaflet pluginy omezují horní verzi leaflet; leaflet-spin závisí na spin.js.
+        patterns:
+          - "leaflet*"
+          - "spin.js"
+      jquery:
+        # jquery-migrate je vázaný na konkrétní major verzi jQuery.
+        patterns:
+          - "jquery"
+          - "jquery-migrate"
+      daterangepicker:
+        # daterangepicker závisí na moment.
+        patterns:
+          - "daterangepicker"
+          - "moment"
+      bootstrap:
+        # bootstrap-select má peer závislost na bootstrap; bootstrap-icons je ze stejného projektu.
+        patterns:
+          - "bootstrap"
+          - "bootstrap-icons"
+          - "bootstrap-select"
+
   - package-ecosystem: "docker"
     directories:
       - "/" 
@@ -49,6 +120,15 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 30
     target-branch: test
+    groups:
+      docker-actions:
+        # login, setup-buildx, metadata, build-push a scout se používají společně (publish_images.yml).
+        patterns:
+          - "docker/*"
+      attest:
+        # attest-build-provenance je obal nad actions/attest.
+        patterns:
+          - "actions/attest*"
 
   - package-ecosystem: "pre-commit"
     directory: "/"

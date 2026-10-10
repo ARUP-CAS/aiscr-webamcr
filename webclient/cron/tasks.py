@@ -783,21 +783,6 @@ def update_materialized_views():
 
 
 @shared_task
-def write_value_to_redis(key, value):
-    """
-    Zapíše value to redis.
-
-    :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
-    :param value: Parametr ``value`` předává se do volání ``set()``, vstupuje do návratové hodnoty.
-
-        :return: Vrací n-tici.
-    """
-    redis_connection = RedisConnector.get_connection()
-    redis_connection.set(key, value)
-    return key, value
-
-
-@shared_task
 def call_digiarchiv_update_task():
     """Zavolá URL digiarchívu pro spuštění aktualizace dat."""
     logger.debug("cron.tasks.call_digiarchiv_update_task.start")
@@ -3394,6 +3379,10 @@ RUIAN_MAX_404_POKUSU_ZA_BEH = 60
 #: aby se pro tentýž den nehromadily duplicitní řádky auditu.
 NOTE_404_NEPOTVRZENO = "no_changes_nepotvrzeno (404)"
 
+#: Text chyby, kterým se uzavírá běh přerušený zvenčí (SIGKILL, OOM, restart
+#: kontejneru). Takový běh nestihl zapsat ani ``failed``, ani ``success``.
+ERROR_PRERUSENY_BEH = "Běh byl přerušen zvenčí (zabití procesu nebo restart kontejneru) a nedokončil se."
+
 #: Po kolika dnech bez jediného **skutečně staženého** souboru se zaloguje
 #: ``ERROR``.
 #:
@@ -3579,6 +3568,46 @@ def _potvrd_prazdne_dny(runy: list) -> None:
     )
 
 
+def _uzavri_prerusene_behy() -> None:
+    """
+    Uzavře jako ``failed`` běhy, které zůstaly ve stavu ``running``.
+
+    Do stavu ``running`` se běh dostane při založení a opustí ho až ve
+    vlastním ``except`` nebo po úspěchu. Proces zabitý zvenčí (SIGKILL po
+    vypršení ``stop_grace_period`` při restartu swarm stacku, OOM killer)
+    nestihne ani jedno, takže řádek zůstane ``running`` navždy. Detekce
+    opakování dne v :func:`_sync_ruian_changes_locked` ale hledá jen
+    ``failed`` – přerušený den by se pak zopakoval jako první pokus, bez
+    vynuceného zápisu metadat a bez opakovaného přepočtu navázaných záznamů.
+
+    Volá se pod advisory lockem :func:`heslar.ruian_sync.zamek.ruian_sync_lock`,
+    který drží každý tvůrce ``RuianSyncRun`` (denní cron i
+    ``aktualizuj_ruian_shp``). Žádný jiný běh tedy právě neprobíhá a každý
+    ``running`` řádek je bezpečně osiřelý.
+    """
+    from heslar.models import RuianSyncRun
+
+    prerusene = list(
+        RuianSyncRun.objects.filter(status=RuianSyncRun.STATUS_RUNNING).values_list("pk", "data_valid_to", "mode")
+    )
+    if not prerusene:
+        return
+    RuianSyncRun.objects.filter(pk__in=[pk for pk, _, _ in prerusene]).update(
+        status=RuianSyncRun.STATUS_FAILED,
+        finished_at=timezone.now(),
+        error=ERROR_PRERUSENY_BEH,
+    )
+    logger.warning(
+        "cron.tasks.sync_ruian_changes.prerusene_behy_uzavreny",
+        extra={
+            "run_ids": [pk for pk, _, _ in prerusene],
+            "dny": [den.isoformat() for _, den, _ in prerusene],
+            "mody": [mod for _, _, mod in prerusene],
+            "reason": "Běhy zůstaly ve stavu running po zabití procesu; den se zopakuje jako po selhání.",
+        },
+    )
+
+
 def _sync_ruian_changes_locked(reassign_records: bool = True):
     """
     Vlastní tělo :func:`sync_ruian_changes` běžící pod advisory lockem.
@@ -3592,6 +3621,8 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
         from heslar.ruian_sync import FileVfrSource
         from heslar.ruian_sync import syncer as ruian_syncer
         from heslar.ruian_sync.vfr_download import get_target_dir
+
+        _uzavri_prerusene_behy()
 
         last_run = RuianSyncRun.last_successful()
         if last_run is None:
@@ -3716,6 +3747,11 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                     # upsert by je vyhodnotil jako nezměněné a metadata by se
                     # už nikdy nedopsala. Vynuceným zápisem se dohoní.
                     #
+                    # Ze stejného důvodu se při opakování zopakuje i přepočet
+                    # navázaných záznamů: hranice už v DB jsou, takže by je
+                    # upsert nevyhodnotil jako změněné a nedokončený přepočet
+                    # (typicky po zabití procesu) by se už nikdy nedoběhl.
+                    #
                     # Filtr na neprázdný ``source_path`` je podstatný: běh, který
                     # skončil na 404, se k datům vůbec nedostal a nemá co dohánět.
                     opakovani_po_selhani = (
@@ -3736,7 +3772,8 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                                 "run_id": run.pk,
                                 "reason": (
                                     "Dřívější pokus o tento den selhal po stažení dat. "
-                                    "Metadata se do Fedory zapíšou i u nezměněných prvků."
+                                    "Metadata se do Fedory zapíšou i u nezměněných prvků "
+                                    "a přepočet navázaných záznamů proběhne znovu."
                                 ),
                             },
                         )
