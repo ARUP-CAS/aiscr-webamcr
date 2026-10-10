@@ -2835,32 +2835,6 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
                     item, include_content=True, check_if_exists=False, ident_cely_old=ident_cely_old
                 )
 
-    @classmethod
-    def generate_thumb_for_single_file(cls, record) -> None:
-        """
-        Vygeneruje thumb for single file.
-
-        :param record: Parametr ``record`` předává se do volání ``isinstance()``, ``get()``, pracuje se s atributy ``vazba``, ``active_transaction``, ovlivňuje větvení podmínek.
-        """
-        from core.models import Soubor
-        from xml_generator.models import ModelWithMetadata
-
-        if isinstance(record, int):
-            record = Soubor.objects.get(pk=record)
-        record: Soubor
-        related_record: ModelWithMetadata = record.vazba.navazany_objekt
-        fedora_transaction = FedoraTransaction()
-        record.active_transaction = fedora_transaction
-        conn = FedoraRepositoryConnector(related_record, fedora_transaction)
-        if not conn.get_binary_file(record.repository_uuid, thumb_small=True) and not conn.get_binary_file(
-            record, thumb_large=True
-        ):
-            rep_bin_file = conn.get_binary_file(record.repository_uuid)
-            if rep_bin_file:
-                thumb_writes = conn.save_thumbs(record.nazev, rep_bin_file.content, record.repository_uuid)
-                record.zaznamenej_distribuce(thumb_writes)
-        fedora_transaction.mark_transaction_as_closed()
-
 
 class FedoraTransactionQueueClosedError(Exception):
     """Implementuje komponentu ``FedoraTransactionQueueClosedError`` v rámci aplikace."""

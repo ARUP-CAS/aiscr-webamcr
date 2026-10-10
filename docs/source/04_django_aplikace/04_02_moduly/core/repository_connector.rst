@@ -866,12 +866,6 @@ Třídy
       :param delete_container: Pokud True, smaže původní kontejner po přejmenování.
       :raises IdentChangeFedoraError: Vyvolá se, pokud staný identifikátor není zadán nebo se rovná novému.
 
-   .. py:method:: generate_thumb_for_single_file()
-
-      Vygeneruje thumb for single file.
-
-      :param record: Parametr ``record`` předává se do volání ``isinstance()``, ``get()``, pracuje se s atributy ``vazba``, ``active_transaction``, ovlivňuje větvení podmínek.
-
 
 .. py:class:: FedoraTransactionQueueClosedError
 
