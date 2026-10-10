@@ -2403,6 +2403,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         Potomci se zjišťují dynamicky z ``ldp:contains``. Pokud potomek není binární soubor (nemá
         ``fcr:metadata``), zanoří se do něj jako do kontejneru – tím se pokryjí i vnořené distribuce
         a paradata (např. ``file/{soubor}/paradata/{child}``), jejichž zastoupení nelze předvídat.
+        Stejný průchod používá ``_collect_file_children``; změnu protokolu je třeba promítnout do obou.
 
         :param container_url: URL kontejneru, jehož potomci se procházejí.
         :param old_base: Původní název souboru bez přípony.
