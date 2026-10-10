@@ -1815,7 +1815,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Ověří a normalizuje název distribuce použitý jako cesta kontejneru ve Fedoře.
 
-        Pravidla jsou sdílená s validační fází importu (``core.constants``), aby mapper
+        Pravidla jsou sdílená s validační fází importu (``core.distribution_names``), aby mapper
         i connector odmítly stejné hodnoty: vyhrazené názvy a segmenty, které by umožnily
         opustit kontejner souboru (``.``, ``..``, prázdný segment).
 

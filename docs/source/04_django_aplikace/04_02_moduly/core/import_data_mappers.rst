@@ -2614,7 +2614,7 @@ Třídy
 
       Ověří a vrátí normalizovaný název distribuce ze sloupce ``distribution``.
 
-      Používá stejná pravidla jako ``FedoraRepositoryConnector`` (funkce v ``core.constants``),
+      Používá stejná pravidla jako ``FedoraRepositoryConnector`` (funkce v ``core.distribution_names``),
       aby se neplatná hodnota zachytila už při validaci CSV, a ne až při zápisu do Fedory.
 
       :param allow_implicit: Pokud ``True``, jsou povoleny názvy kontejnerů vznikajících
