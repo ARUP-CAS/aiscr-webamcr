@@ -327,9 +327,8 @@ class ImportDataReservedDistributionError(ImportDataError):
         """
         self.distribution = distribution
         super().__init__(
-            "{} {}".format(
-                _("core_admin.ImportDataReservedDistributionError.message.part_1"),
-                distribution,
+            format_message(
+                gettext_noop("core_admin.ImportDataReservedDistributionError.message"), distribution=distribution
             )
         )
 
@@ -351,9 +350,8 @@ class ImportDataInvalidDistributionError(ImportDataError):
         """
         self.distribution = distribution
         super().__init__(
-            "{} {}".format(
-                _("core_admin.ImportDataInvalidDistributionError.message.part_1"),
-                distribution,
+            format_message(
+                gettext_noop("core_admin.ImportDataInvalidDistributionError.message"), distribution=distribution
             )
         )
 
@@ -436,10 +434,7 @@ class DistribuceMissingRepositoryUuidError(ImportDataError):
         """
         self.soubor_id = soubor_id
         super().__init__(
-            "{} {}".format(
-                _("core_admin.DistribuceMissingRepositoryUuidError.message.part_1"),
-                soubor_id,
-            )
+            format_message(gettext_noop("core_admin.DistribuceMissingRepositoryUuidError.message"), soubor_id=soubor_id)
         )
 
 
@@ -460,10 +455,7 @@ class DistribuceMissingVazbaError(ImportDataError):
         """
         self.soubor_id = soubor_id
         super().__init__(
-            "{} {}".format(
-                _("core_admin.DistribuceMissingVazbaError.message.part_1"),
-                soubor_id,
-            )
+            format_message(gettext_noop("core_admin.DistribuceMissingVazbaError.message"), soubor_id=soubor_id)
         )
 
 
@@ -483,12 +475,7 @@ class DistribuceUnsafeFilenameError(ImportDataError):
         :param nazev: Neplatný název souboru z importu.
         """
         self.nazev = nazev
-        super().__init__(
-            "{} {}".format(
-                _("core_admin.DistribuceUnsafeFilenameError.message.part_1"),
-                nazev,
-            )
-        )
+        super().__init__(format_message(gettext_noop("core_admin.DistribuceUnsafeFilenameError.message"), nazev=nazev))
 
 
 class DistribuceImportIntegrityError(ImportDataError):
@@ -511,13 +498,11 @@ class DistribuceImportIntegrityError(ImportDataError):
         self.distribution = distribution
         self.performed_action = performed_action
         super().__init__(
-            "{} {} {} {} {} ({})".format(
-                _("core_admin.DistribuceImportIntegrityError.message.part_1"),
-                distribution,
-                _("core_admin.DistribuceImportIntegrityError.message.part_2"),
-                soubor_id,
-                _("core_admin.DistribuceImportIntegrityError.message.part_3"),
-                performed_action,
+            format_message(
+                gettext_noop("core_admin.DistribuceImportIntegrityError.message"),
+                distribution=distribution,
+                soubor_id=soubor_id,
+                performed_action=performed_action,
             )
         )
 
