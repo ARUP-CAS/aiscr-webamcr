@@ -30,6 +30,7 @@ Dokumentace modulu core.
    message_constants
    middleware
    mixins
+   news_feed
    repository_connector
    services
    setting_models

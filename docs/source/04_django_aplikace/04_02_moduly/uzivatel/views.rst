@@ -96,6 +96,15 @@ Třídy
 
    Třída pohledu pro prihlášení uživatele.
 
+   **Metody:**
+
+   .. py:method:: get_context_data()
+
+      Vrací context data pro stránku přihlášení.
+
+      :param kwargs: Volitelné parametry pro přizpůsobení kontextu.
+      :return: Slovník s proměnnými pro šablonu přihlášení.
+
 
 .. py:class:: UserLogoutView
 
