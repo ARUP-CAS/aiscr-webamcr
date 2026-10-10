@@ -534,6 +534,17 @@ Třídy
       :return: Wrapper nad načteným obsahem s vyplněným ``content_type`` (MIME typ uložený ve Fedoře),
           nebo ``None``, pokud kontejner neexistuje.
 
+   .. py:method:: _filename_from_content_disposition()
+
+      Vrátí název souboru z hlavičky ``Content-Disposition`` odpovědi Fedory.
+
+      Fedora hlavičku sestavuje z uloženého ``ebucore:filename``, tedy z názvu zapsaného při
+      uložení nebo přejmenování obsahu. Název zapisujeme jako UTF-8, ``requests`` ale hlavičky
+      dekóduje jako latin-1, proto se diakritika převede zpět; nejde-li to, vrátí se název beze změny.
+
+      :param headers: Hlavičky odpovědi.
+      :return: Uložený název souboru, nebo ``None``, pokud ho hlavička nenese.
+
    .. py:method:: save_distribution()
 
       Uloží novou alternativní distribuci souboru do kontejneru ``file/{uuid}/{distribution}``.

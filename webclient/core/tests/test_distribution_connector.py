@@ -355,6 +355,23 @@ class UpdateDeleteDistributionTest(DistributionConnectorTestBase):
         self.assertEqual(result.content.read(), b"data")
         self.assertEqual(result.content_type, "application/xml")
 
+    def test_get_reads_stored_filename(self):
+        """Název ze ``Content-Disposition`` (uložený ``ebucore:filename``) se vrátí i s diakritikou."""
+        # requests decodes headers as latin-1, so the UTF-8 name arrives as mojibake.
+        disposition = 'attachment; filename="zpráva.xml"; size=4'.encode("utf-8").decode("latin-1")
+        response = _Response(status_code=200, content=b"data", headers={"Content-Disposition": disposition})
+        with mock.patch.object(self.connector, "_send_request", return_value=response):
+            result = self.connector.get_distribution(self.UUID, "ocr/alto-xml")
+
+        self.assertEqual(result.filename, "zpráva.xml")
+
+    def test_get_without_content_disposition_has_no_filename(self):
+        """Bez hlavičky ``Content-Disposition`` zůstane název prázdný."""
+        with mock.patch.object(self.connector, "_send_request", return_value=_Response(status_code=200, content=b"x")):
+            result = self.connector.get_distribution(self.UUID, "ocr/alto-xml")
+
+        self.assertIsNone(result.filename)
+
     def test_get_returns_none_when_missing(self):
         """Neexistující distribuce vrátí ``None`` místo výjimky."""
         with mock.patch.object(self.connector, "_send_request", return_value=None):

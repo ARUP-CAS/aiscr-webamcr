@@ -6,6 +6,7 @@ import re
 import threading
 from abc import ABC
 from datetime import datetime, timezone
+from email.message import Message
 from enum import Enum
 from io import BytesIO
 from typing import Optional, Union
@@ -2019,9 +2020,34 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         file = io.BytesIO()
         file.write(response.content)
         file.seek(0)
-        rep_bin_file = RepositoryBinaryFile(url, file)
+        rep_bin_file = RepositoryBinaryFile(url, file, self._filename_from_content_disposition(response.headers))
         rep_bin_file.content_type = response.headers.get("Content-Type")
         return rep_bin_file
+
+    @staticmethod
+    def _filename_from_content_disposition(headers) -> Optional[str]:
+        """
+        Vrátí název souboru z hlavičky ``Content-Disposition`` odpovědi Fedory.
+
+        Fedora hlavičku sestavuje z uloženého ``ebucore:filename``, tedy z názvu zapsaného při
+        uložení nebo přejmenování obsahu. Název zapisujeme jako UTF-8, ``requests`` ale hlavičky
+        dekóduje jako latin-1, proto se diakritika převede zpět; nejde-li to, vrátí se název beze změny.
+
+        :param headers: Hlavičky odpovědi.
+        :return: Uložený název souboru, nebo ``None``, pokud ho hlavička nenese.
+        """
+        value = headers.get("Content-Disposition")
+        if not value:
+            return None
+        message = Message()
+        message["Content-Disposition"] = value
+        filename = message.get_filename()
+        if not filename:
+            return None
+        try:
+            return filename.encode("latin-1").decode("utf-8")
+        except UnicodeError:
+            return filename
 
     def save_distribution(
         self, uuid, distribution, file_name, content_type, file: io.BytesIO, ident_cely=None

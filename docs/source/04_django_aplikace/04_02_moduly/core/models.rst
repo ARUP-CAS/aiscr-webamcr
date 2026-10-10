@@ -311,23 +311,13 @@ Třídy
 
       Vrátí obsah zvolené distribuce souboru jako HTTP odpověď.
 
-      Distribuce má vlastní binární obsah, takže se ke stažení nabídne pod názvem odvozeným
-      z názvu souboru, distribuce a MIME typu uloženého ve Fedoře (``scan.pdf`` + ``ocr/alto-xml``
-      s ``application/xml`` → ``scan.pdf.ocr_alto-xml.xml``). Samotný ``nazev`` by u distribuce
-      lhal — obsah je jiný formát než původní soubor. Odpověď nese uložený MIME typ.
+      Distribuce má vlastní binární obsah, takže se ke stažení nabídne pod názvem uloženým ve Fedoře
+      (``ebucore:filename``, tj. ``nazev`` z importního CSV); přípona se nedoplňuje — chybí-li, je to
+      záměr. Jen když Fedora název nevrátí, odvodí se z názvu souboru a distribuce
+      (``scan.pdf`` + ``ocr/alto-xml`` → ``scan.pdf.ocr_alto-xml``). Odpověď nese uložený MIME typ.
 
       :param distribution: Název distribuce; ``orig`` vrátí původní obsah souboru.
       :return: ``FileResponse`` s obsahem distribuce, nebo ``None``, pokud ji nelze načíst.
-
-   .. py:method:: _distribution_file_extension()
-
-      Odvodí příponu staženého souboru distribuce z jejího MIME typu.
-
-      Strukturované typy, které ``mimetypes`` nezná (např. ``application/ld+json`` paradat nebo
-      ``application/alto+xml``), dostanou příponu podle syntaxe ze suffixu ``+json``/``+xml``.
-
-      :param content_type: Hodnota ``Content-Type`` uložená u distribuce ve Fedoře, i s parametry.
-      :return: Přípona včetně tečky (např. ``.xml``), nebo ``None``, pokud ji nelze určit.
 
    .. py:method:: getMock()
 

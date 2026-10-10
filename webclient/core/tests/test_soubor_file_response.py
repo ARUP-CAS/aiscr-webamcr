@@ -16,15 +16,17 @@ NASTY_NAME = "zpráva o průzkumu.pdf"
 
 
 class _FakeBinaryFile:
-    """Minimální náhrada ``RepositoryBinaryFile`` — nese jen ``content`` a ``content_type``."""
+    """Minimální náhrada ``RepositoryBinaryFile`` — nese jen ``content``, ``content_type`` a ``filename``."""
 
-    def __init__(self, data=b"obsah", content_type=None):
+    def __init__(self, data=b"obsah", content_type=None, filename=None):
         """
         :param data: Binární obsah vrácený v odpovědi.
         :param content_type: MIME typ uložený u obsahu ve Fedoře.
+        :param filename: Název uložený u obsahu ve Fedoře (``ebucore:filename``).
         """
         self.content = io.BytesIO(data)
         self.content_type = content_type
+        self.filename = filename
 
 
 class SouborFileResponseTest(SimpleTestCase):
@@ -81,51 +83,38 @@ class SouborFileResponseTest(SimpleTestCase):
 
         self.assertEqual(response["Content-Disposition"], 'attachment; filename="plain.pdf.png"')
 
-    def test_distribution_name_is_derived_from_the_distribution(self):
-        """Distribuce se stáhne pod názvem odvozeným z distribuce, ne pod názvem souboru.
-
-        Lomítka v názvu distribuce se nahrazují podtržítkem, aby název zůstal jedním segmentem.
-        """
-        soubor = self._soubor("scan.pdf")
-        # ``vazba`` je FK deskriptor, který Mock odmítne — nahrazuje se proto na úrovni třídy.
-        with mock.patch.object(Soubor, "repository_uuid", "uuid-1"), mock.patch.object(
-            Soubor, "vazba", mock.Mock(navazany_objekt=mock.Mock())
-        ), mock.patch("core.repository_connector.FedoraRepositoryConnector") as connector:
-            connector.return_value.get_distribution.return_value = _FakeBinaryFile(b"<xml/>")
-            response = soubor.get_distribution_response("ocr/alto-xml")
-
-        self.assertEqual(response["Content-Disposition"], 'attachment; filename="scan.pdf.ocr_alto-xml"')
-
-    def _distribution_response(self, nazev, distribution, content_type):
+    def _distribution_response(self, nazev, distribution, content_type=None, filename=None):
         """Vrátí odpověď ke stažení distribuce s mocknutým repozitářem.
 
         :param nazev: Název souboru.
         :param distribution: Název distribuce.
         :param content_type: MIME typ uložený u distribuce ve Fedoře.
+        :param filename: Název uložený u distribuce ve Fedoře.
         :return: ``FileResponse`` s obsahem distribuce.
         """
         soubor = self._soubor(nazev)
+        # ``vazba`` je FK deskriptor, který Mock odmítne — nahrazuje se proto na úrovni třídy.
         with mock.patch.object(Soubor, "repository_uuid", "uuid-1"), mock.patch.object(
             Soubor, "vazba", mock.Mock(navazany_objekt=mock.Mock())
         ), mock.patch("core.repository_connector.FedoraRepositoryConnector") as connector:
-            connector.return_value.get_distribution.return_value = _FakeBinaryFile(b"{}", content_type)
+            connector.return_value.get_distribution.return_value = _FakeBinaryFile(b"{}", content_type, filename)
             return soubor.get_distribution_response(distribution)
 
-    def test_distribution_name_gets_extension_from_stored_mimetype(self):
-        """Přípona staženého souboru se odvodí z MIME typu distribuce a odpověď ho nese."""
-        response = self._distribution_response("scan.pdf", "atr/json", "application/json")
+    def test_distribution_is_downloaded_under_stored_name(self):
+        """Distribuce se stáhne pod názvem uloženým ve Fedoře a odpověď nese uložený MIME typ."""
+        response = self._distribution_response("scan.pdf", "ocr/alto-xml", "application/xml", "scan_alto.xml")
 
-        self.assertEqual(response["Content-Disposition"], 'attachment; filename="scan.pdf.atr_json.json"')
-        self.assertEqual(response["Content-Type"], "application/json")
+        self.assertEqual(response["Content-Disposition"], 'attachment; filename="scan_alto.xml"')
+        self.assertEqual(response["Content-Type"], "application/xml")
 
-    def test_structured_suffix_mimetype_gets_syntax_extension(self):
-        """Typ se suffixem ``+xml``/``+json``, který ``mimetypes`` nezná, dostane příponu podle syntaxe."""
-        response = self._distribution_response("scan.pdf", "ocr/alto-xml", "application/alto+xml; charset=utf-8")
+    def test_stored_name_without_extension_is_kept(self):
+        """Uložený název bez přípony se nemění — chybějící přípona je záměr, nedoplňuje se z MIME typu."""
+        response = self._distribution_response("scan.pdf", "atr/json", "application/json", "atributy")
 
-        self.assertEqual(response["Content-Disposition"], 'attachment; filename="scan.pdf.ocr_alto-xml.xml"')
+        self.assertEqual(response["Content-Disposition"], 'attachment; filename="atributy"')
 
-    def test_unknown_mimetype_keeps_name_without_extension(self):
-        """Neznámý MIME typ název nemění — přípona se nehádá."""
-        response = self._distribution_response("scan.pdf", "cva/raw", "application/x-amcr-unknown")
+    def test_missing_stored_name_falls_back_to_distribution(self):
+        """Bez uloženého názvu se název odvodí ze souboru a distribuce; lomítka se nahradí podtržítkem."""
+        response = self._distribution_response("scan.pdf", "ocr/alto-xml", "application/xml")
 
-        self.assertEqual(response["Content-Disposition"], 'attachment; filename="scan.pdf.cva_raw"')
+        self.assertEqual(response["Content-Disposition"], 'attachment; filename="scan.pdf.ocr_alto-xml"')
