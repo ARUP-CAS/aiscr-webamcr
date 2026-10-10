@@ -2715,20 +2715,6 @@ Třídy
       :param performed_action: Prováděná importní akce.
       :return: Jednoprvkový seznam s dotčeným souborem.
 
-   .. py:method:: get_record_history()
-
-      Vrátí soubor jako cíl pro zápis historie distribuce.
-
-      :param record: Dotčený ``Soubor``.
-      :return: Přímo předaný soubor.
-
-   .. py:method:: _get_updated_ident_cely_record_list()
-
-      Vrátí objekt navázaný na soubor, jehož metadata je po importu distribuce třeba aktualizovat.
-
-      :param record: Dotčený ``Soubor``.
-      :return: Seznam s navázaným objektem souboru, jinak prázdný seznam.
-
 
 .. py:class:: ParadataMapper
 
@@ -2820,20 +2806,6 @@ Třídy
 
       :param performed_action: Prováděná importní akce.
       :return: Jednoprvkový seznam s dotčeným souborem.
-
-   .. py:method:: get_record_history()
-
-      Paradata se do historie nezapisují — vrací ``None``.
-
-      :param record: Dotčený ``Soubor``.
-      :return: Vždy ``None``.
-
-   .. py:method:: _get_updated_ident_cely_record_list()
-
-      Paradata nemění metadata záznamu, takže žádný objekt k aktualizaci nevrací.
-
-      :param record: Dotčený ``Soubor``.
-      :return: Vždy prázdný seznam.
 
 
 .. py:class:: UzivatelNotifikaceMapper

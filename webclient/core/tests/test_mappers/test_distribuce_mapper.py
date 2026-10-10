@@ -375,26 +375,6 @@ class DistribuceMapperCreateRecordsTest(TestCase):
         self.assertTrue(Soubor.objects.filter(pk=self.soubor.pk).exists())
 
 
-class DistribuceMapperHistoryTargetsTest(TestCase):
-    """Testy cílů historie a aktualizace metadat po importu distribuce."""
-
-    @classmethod
-    def setUpTestData(cls):
-        """Vytvoří dokument a soubor pro dotazy na cíle historie a metadat."""
-        cls.dokument = create_dokument_fixture(ident_cely="C-TX-DIST-004")
-        cls.soubor = create_soubor_fixture(cls.dokument)
-
-    def test_history_target_is_soubor(self):
-        """Historie distribuce se zapisuje přímo k souboru."""
-        self.assertIs(DistribuceMapper.get_record_history(self.soubor), self.soubor)
-
-    def test_metadata_target_is_related_record(self):
-        """Metadata se po importu distribuce obnovují u navázaného záznamu."""
-        targets = DistribuceMapper.fedora_update_targets(self.soubor)
-
-        self.assertEqual(targets, {(self.dokument.__class__, self.dokument.pk)})
-
-
 class DistribuceMapperBatchCollisionTest(TestCase):
     """Testy dávkové kontroly křížení názvů distribucí v cestě (předko-potomk vztah)."""
 

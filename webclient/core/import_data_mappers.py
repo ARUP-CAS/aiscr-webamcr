@@ -5409,29 +5409,6 @@ class DistribuceMapper(DistributionColumnsMixin, ImportModelMapper):
         soubor.distribution_performed_action = performed_action
         return [soubor]
 
-    @staticmethod
-    def get_record_history(record: Soubor):
-        """
-        Vrátí soubor jako cíl pro zápis historie distribuce.
-
-        :param record: Dotčený ``Soubor``.
-        :return: Přímo předaný soubor.
-        """
-        return record
-
-    @staticmethod
-    def _get_updated_ident_cely_record_list(record: Soubor) -> list:
-        """
-        Vrátí objekt navázaný na soubor, jehož metadata je po importu distribuce třeba aktualizovat.
-
-        :param record: Dotčený ``Soubor``.
-        :return: Seznam s navázaným objektem souboru, jinak prázdný seznam.
-        """
-        navazany_objekt = record.vazba.navazany_objekt if record.vazba_id else None
-        if isinstance(navazany_objekt, ModelWithMetadata):
-            return [navazany_objekt]
-        return []
-
 
 @ImportModelMapper.register("paradata")
 class ParadataMapper(DistribuceMapper):
@@ -5581,26 +5558,6 @@ class ParadataMapper(DistribuceMapper):
         soubor.paradata_mimetype = self.value_dict.get(self.MIMETYPE_COLUMN)
         soubor.paradata_performed_action = performed_action
         return [soubor]
-
-    @staticmethod
-    def get_record_history(record: Soubor):
-        """
-        Paradata se do historie nezapisují — vrací ``None``.
-
-        :param record: Dotčený ``Soubor``.
-        :return: Vždy ``None``.
-        """
-        return None
-
-    @staticmethod
-    def _get_updated_ident_cely_record_list(record: Soubor) -> list:
-        """
-        Paradata nemění metadata záznamu, takže žádný objekt k aktualizaci nevrací.
-
-        :param record: Dotčený ``Soubor``.
-        :return: Vždy prázdný seznam.
-        """
-        return []
 
 
 @ImportModelMapper.register("uzivatele_notifikace")

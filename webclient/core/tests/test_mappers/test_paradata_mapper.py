@@ -375,21 +375,3 @@ class ParadataMapperCreateRecordsTest(TestCase):
 
         self.assertEqual(records[0].pk, self.soubor.pk)
         self.assertTrue(Soubor.objects.filter(pk=self.soubor.pk).exists())
-
-
-class ParadataMapperNoSideEffectTargetsTest(TestCase):
-    """Testy, že paradata nezapisují historii ani neobnovují metadata záznamu."""
-
-    @classmethod
-    def setUpTestData(cls):
-        """Vytvoří dokument a soubor pro dotazy na cíle historie a metadat."""
-        cls.dokument = create_dokument_fixture(ident_cely="C-TX-PARA-005")
-        cls.soubor = create_soubor_fixture(cls.dokument)
-
-    def test_no_history_target(self):
-        """Paradata se do historie nezapisují."""
-        self.assertIsNone(ParadataMapper.get_record_history(self.soubor))
-
-    def test_no_metadata_target(self):
-        """Paradata nemění metadata záznamu, takže nevrací žádný cíl aktualizace."""
-        self.assertEqual(ParadataMapper.fedora_update_targets(self.soubor), set())
