@@ -24,6 +24,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core import cache
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db.models import Q
@@ -56,6 +57,10 @@ from uzivatel.forms import (
 from uzivatel.models import NotificationsLog, Osoba, User, UserNotificationType, UzivatelPrihlaseniLog
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_NEWS_FEED_CACHE_TIMEOUT = 300  # 5 minut
+DEFAULT_NEWS_FEED_TIMEOUT = 10  # 10 sekund
+DEFAULT_NEWS_FEED_BLOCK_HEIGHT = 300  # výška bloku v pixelech
 
 
 class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
@@ -267,37 +272,55 @@ class UserLoginView(LoginView):
         """
         context = super().get_context_data(**kwargs)
 
-        # Načte časový limit z nastavení s odpovídající náhradní hodnotou
-        timeout_setting = CustomAdminSettings.objects.filter(
-            item_group="news_feed", item_id="news_feed_timeout"
-        ).first()
-        try:
-            timeout_value = int(timeout_setting.value) if timeout_setting else 10
-            # Ověří, že časový limit je kladný
-            if timeout_value <= 0:
-                logger.warning(f"Invalid timeout value ({timeout_value}), using default: {10}")
-                timeout_value = 10
-            timeout = timeout_value
-        except (ValueError, TypeError):
-            logger.warning(f"Invalid timeout value in settings, using default: {10}")
-            timeout = 10
+        # Načte nastavení novinek z cache (klíč je unikátní pro tuto aplikaci)
+        cache_key = "news_feed_settings:v1"
+        settings_dict = cache.cache.get(cache_key)
+        if not settings_dict:
+            news_feed_settings = CustomAdminSettings.objects.filter(
+                item_group="news_feed",
+                item_id__in=("news_feed_cache_timeout", "news_feed_timeout", "news_feed_block_height"),
+            ).values("item_id", "value")
+            settings_dict = {item["item_id"]: item["value"] for item in news_feed_settings}
+            cache.cache.set(cache_key, settings_dict, 3600)  # 1 hodina cache
 
-        # Načte výšku bloku z nastavení s odpovídající náhradní hodnotou
-        block_height_setting = CustomAdminSettings.objects.filter(
-            item_group="news_feed", item_id="news_feed_block_height"
-        ).first()
+        # Časový limit pro cache
+        cache_ttl_value = settings_dict.get("news_feed_cache_timeout")
         try:
-            block_height = int(block_height_setting.value) if block_height_setting else 300
+            cache_timeout_value = int(cache_ttl_value) if cache_ttl_value else DEFAULT_NEWS_FEED_CACHE_TIMEOUT
+            if cache_timeout_value <= 0:
+                logger.warning(
+                    f"Invalid cachetimeout value ({cache_timeout_value}), using default: {DEFAULT_NEWS_FEED_CACHE_TIMEOUT}"
+                )
+                cache_timeout_value = DEFAULT_NEWS_FEED_CACHE_TIMEOUT
+            cache_timeout = cache_timeout_value
         except (ValueError, TypeError):
-            logger.warning(f"Invalid block height value in settings, using default: {300}")
-            block_height = 300
+            logger.warning(f"Invalid cache timeout value in settings, using default: {DEFAULT_NEWS_FEED_CACHE_TIMEOUT}")
+            cache_timeout = DEFAULT_NEWS_FEED_CACHE_TIMEOUT
+
+        # Timeout pro HTTP požadavek
+        timeout_value = settings_dict.get("news_feed_timeout")
+        try:
+            timeout_value_int = int(timeout_value) if timeout_value else DEFAULT_NEWS_FEED_TIMEOUT
+            if timeout_value_int <= 0:
+                logger.warning(
+                    f"Invalid timeout value ({timeout_value_int}), using default: {DEFAULT_NEWS_FEED_TIMEOUT}"
+                )
+                timeout_value_int = DEFAULT_NEWS_FEED_TIMEOUT
+            timeout = timeout_value_int
+        except (ValueError, TypeError):
+            logger.warning(f"Invalid timeout value in settings, using default: {DEFAULT_NEWS_FEED_TIMEOUT}")
+            timeout = DEFAULT_NEWS_FEED_TIMEOUT
+
+        # Výška bloku novinek
+        block_height_value = settings_dict.get("news_feed_block_height")
+        try:
+            block_height = int(block_height_value) if block_height_value else DEFAULT_NEWS_FEED_BLOCK_HEIGHT
+        except (ValueError, TypeError):
+            logger.warning(f"Invalid block height value in settings, using default: {DEFAULT_NEWS_FEED_BLOCK_HEIGHT}")
+            block_height = DEFAULT_NEWS_FEED_BLOCK_HEIGHT
 
         context["news_feed"] = NewsFeedCache(
-            NewsFeedClient(
-                base_url=settings.NEWS_FEED_URL,
-                timeout=timeout,
-            ),
-            block_height=block_height,
+            NewsFeedClient(base_url=settings.NEWS_FEED_URL, timeout=timeout), default_ttl=cache_timeout
         ).get_feed(language=self.request.LANGUAGE_CODE)
         context["news_feed_block_height"] = block_height
         return context

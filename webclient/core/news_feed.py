@@ -29,34 +29,10 @@ class NewsItem:
     date: datetime
     title: str
     excerpt: str
-    url: str = ""
     html: Optional[str] = None
     badge: Optional[str] = None
     image: Optional[str] = None
-    authors: list[dict] = None
-
-    def __post_init__(self):
-        """
-        Inicializuje seznam autorů, pokud není definován.
-
-        :return: None.
-        """
-        if self.authors is None:
-            self.authors = ""
-        elif isinstance(self.authors, list) and len(self.authors) > 0:
-            # Zajistí, aby autoři byli seznam řetězců (z kanálu přicházejí jako slovníky).
-            logger.debug(f"Parsing authors: {self.authors[0]}")
-            authors_list = []
-            for author in self.authors:
-                if isinstance(author, dict):
-                    name = author.get("name", "")
-                    role = author.get("role", "")
-                    authors_list.append(f"{name} ({role})" if role else name)
-                else:
-                    authors_list.append(str(author))
-            self.authors = ", ".join(authors_list)
-        else:
-            self.authors = ""
+    authors: Optional[str] = None
 
 
 class NewsFeedClient:
@@ -64,8 +40,8 @@ class NewsFeedClient:
 
     def __init__(
         self,
-        base_url: str = "https://raw.githubusercontent.com/ARUP-CAS/aiscr-news/main",
-        timeout: int = 10,
+        base_url: str,
+        timeout: int,
     ):
         """
         Inicializuje klienta novinkového kanálu.
@@ -75,6 +51,29 @@ class NewsFeedClient:
         """
         self.base_url = base_url
         self.timeout = timeout
+
+    def process_authors(self, authors_data: list[dict]) -> str:
+        """
+        Inicializuje seznam autorů.
+
+        :param authors_data: Seznam autorů z kanálu.
+        :return: Seznam autorů jako řetězec, oddělený čárkami, nebo prázdný řetězec, pokud nejsou autoři k dispozici.
+        """
+        if authors_data is None:
+            return ""
+        elif isinstance(authors_data, list) and len(authors_data) > 0:
+            # Zajistí, aby autoři byli seznam řetězců (z kanálu přicházejí jako slovníky).
+            authors_list = []
+            for author in authors_data:
+                if isinstance(author, dict):
+                    name = author.get("name", "")
+                    role = author.get("role", "")
+                    authors_list.append(f"{name} ({role})" if role else name)
+                else:
+                    authors_list.append(str(author))
+            return ", ".join(authors_list)
+        else:
+            return ""
 
     def fetch_feed(self, language: str = "cs") -> list[NewsItem]:
         """
@@ -107,7 +106,7 @@ class NewsFeedClient:
 
         :param data: Zpracovaná JSON data kanálu.
         :return: Seznam objektů NewsItem.
-        :raises NewsFeedError: Pokud data nejsou platný slovník.
+        :raises json.JSONDecodeError: Pokud data nejsou platný slovník.
         """
         # Ověří, že data jsou slovník (ošetření poškozeného, ale syntakticky platného JSON).
         if not isinstance(data, dict):
@@ -152,9 +151,7 @@ class NewsFeedClient:
             html = item_data.get("html")
             badge = item_data.get("badge")
             image = item_data.get("image")
-            authors = item_data.get("authors", [])
-            url = item_data.get("url", "")
-
+            authors = self.process_authors(item_data.get("authors", []))
             return NewsItem(
                 date=date,
                 title=title,
@@ -163,7 +160,6 @@ class NewsFeedClient:
                 badge=badge,
                 image=image,
                 authors=authors if authors else [],
-                url=url,
             )
         except (KeyError, ValueError, TypeError) as e:
             logger.warning(f"Failed to parse item: {item_data}, error: {e}")
@@ -179,28 +175,17 @@ class NewsFeedError(Exception):
 class NewsFeedCache:
     """Cache obalující klienta novinkového kanálu."""
 
-    def __init__(
-        self,
-        client: NewsFeedClient,
-        cache_key_prefix: str = "news_feed",
-        default_ttl: int = 300,
-        stale_ttl: int = 600,
-        block_height: int = None,
-    ):
+    def __init__(self, client: NewsFeedClient, default_ttl: int, cache_key_prefix: str = "news_feed"):
         """
         Inicializuje cache novinkového kanálu.
 
         :param client: Instance NewsFeedClient, která se obaluje.
         :param cache_key_prefix: Prefix klíčů cache.
         :param default_ttl: Výchozí doba platnosti v sekundách pro čerstvé kopie.
-        :param stale_ttl: Doba platnosti v sekundách pro zastaralé kopie.
-        :param block_height: Výška sbaleného bloku novinek v pixelech.
         """
         self.client = client
         self.cache_key_prefix = cache_key_prefix
         self.default_ttl = default_ttl
-        self.stale_ttl = stale_ttl
-        self.block_height = block_height
 
     def get_feed(self, language: str = "cs") -> list:
         """
@@ -223,18 +208,18 @@ class NewsFeedCache:
             return cached
 
         # Zásah do cache minul - pokusí se načíst ze služby
+        stale_key = f"{cache_key}:stale"
         try:
             logger.debug(f"Cache miss for {cache_key}, fetching from feed service")
             feed = self.client.fetch_feed(language)
             cache.set(cache_key, feed, self.default_ttl)
-            self.set_stale(language, feed)
+            self.set_stale(stale_key, feed)
             logger.info(f"Fresh feed fetched and cached for {cache_key}")
             return feed
         except NewsFeedError as e:
             logger.warning(f"Failed to fetch news feed: {e}")
 
             # Pokusí se získat zastaralou kopii z cache
-            stale_key = f"{cache_key}:stale"
             stale_feed = cache.get(stale_key)
             if stale_feed is not None:
                 logger.info(f"Using stale copy from cache for {cache_key}")
@@ -242,28 +227,14 @@ class NewsFeedCache:
 
             logger.warning(f"No stale copy available for {cache_key}")
             return []
-        except (AttributeError, TypeError) as e:
-            # Ošetření poškozeného, ale syntakticky platného JSON (např. seznam místo slovníku, skalár místo seznamu)
-            logger.error(f"Malformed JSON in news feed (not a mapping): {e}")
 
-            # Pokusí se získat zastaralou kopii z cache místo vyvolání chyby
-            stale_key = f"{cache_key}:stale"
-            stale_feed = cache.get(stale_key)
-            if stale_feed is not None:
-                logger.info(f"Using stale copy from cache for {cache_key} due to malformed JSON")
-                return stale_feed
-
-            logger.warning(f"No stale copy available for {cache_key} due to malformed JSON")
-            return []
-
-    def set_stale(self, language: str = "cs", feed: list = None) -> None:
+    def set_stale(self, stale_key: str, feed: list = None) -> None:
         """
         Uloží zastaralou kopii do cache.
 
-        :param language: Kód jazyka kanálu.
+        :param stale_key: Klíč cache pro zastaralou kopii.
         :param feed: Seznam novinek, který se uloží do cache jako zastaralý.
         """
-        cache_key = f"{self.cache_key_prefix}:{language}:stale"
         if feed is not None:
-            cache.set(cache_key, feed, self.stale_ttl)
-            logger.info(f"Stale copy set for {cache_key}")
+            cache.set(stale_key, feed, None)  # Zastaralá kopie nemá časový limit
+            logger.info(f"Stale copy set for {stale_key}")

@@ -165,7 +165,7 @@
                     </div>
                     <div class="news-item-excerpt">{{ item.excerpt }}</div>
                     {% if item.html or item.authors %}
-                      <div class="news-item-html" id="news-item-html-{{ forloop.counter }}" data-html="{{ item.html|escapejs }}" style="display: none;">
+                      <div class="news-item-html" id="news-item-html-{{ forloop.counter }}" style="display: none;">
                         {{ item.html|safe }}
                       </div>
                       {% if item.authors %}
@@ -176,7 +176,6 @@
                       <button
                         type="button"
                         class="btn btn-link news-item-expand"
-                        data-target="news-item-html-{{ forloop.counter }}"
                         data-expand-label="{% trans 'templates.registration.login.novinky.showMore' %}"
                         data-collapse-label="{% trans 'templates.registration.login.novinky.showLess' %}"
                         aria-expanded="false"

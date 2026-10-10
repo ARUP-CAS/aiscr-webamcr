@@ -23,14 +23,6 @@ Třídy
 
    Představuje jednu novinku z kanálu.
 
-   **Metody:**
-
-   .. py:method:: __post_init__()
-
-      Inicializuje seznam autorů, pokud není definován.
-
-      :return: None.
-
 
 .. py:class:: NewsFeedClient
 
@@ -44,6 +36,13 @@ Třídy
 
       :param base_url: Základní URL pro načítání dat kanálu ze služby aiscr-news.
       :param timeout: Časový limit požadavku v sekundách.
+
+   .. py:method:: process_authors()
+
+      Inicializuje seznam autorů.
+
+      :param authors_data: Seznam autorů z kanálu.
+      :return: Seznam autorů jako řetězec, oddělený čárkami, nebo prázdný řetězec, pokud nejsou autoři k dispozici.
 
    .. py:method:: fetch_feed()
 
@@ -62,7 +61,7 @@ Třídy
 
       :param data: Zpracovaná JSON data kanálu.
       :return: Seznam objektů NewsItem.
-      :raises NewsFeedError: Pokud data nejsou platný slovník.
+      :raises json.JSONDecodeError: Pokud data nejsou platný slovník.
 
    .. py:method:: _parse_item()
 
@@ -90,8 +89,6 @@ Třídy
       :param client: Instance NewsFeedClient, která se obaluje.
       :param cache_key_prefix: Prefix klíčů cache.
       :param default_ttl: Výchozí doba platnosti v sekundách pro čerstvé kopie.
-      :param stale_ttl: Doba platnosti v sekundách pro zastaralé kopie.
-      :param block_height: Výška sbaleného bloku novinek v pixelech.
 
    .. py:method:: get_feed()
 
@@ -109,6 +106,6 @@ Třídy
 
       Uloží zastaralou kopii do cache.
 
-      :param language: Kód jazyka kanálu.
+      :param stale_key: Klíč cache pro zastaralou kopii.
       :param feed: Seznam novinek, který se uloží do cache jako zastaralý.
 
