@@ -1854,6 +1854,17 @@ def run_data_import(job_id, user_id, lock_token):
                 return "{}:{}".format(model_label, item_pk)
             return str(item)
 
+        def save_distribution_results():
+            """Zapíše do Redisu celé výsledky historie a Fedory, které čte živý přehled i report.
+
+            Obě struktury pokrývají všechny řádky běhu a zapisují se vcelku, takže fáze distribucí
+            je ukládá jen po dávkách skupin; poslední stav uloží volající v ``finally``.
+            """
+            redis_connector.set(
+                job_key("import_data_history_record_result_tr"), json.dumps(import_history_record_result)
+            )
+            redis_connector.set(job_key("import_fedora_result_tr"), json.dumps(import_fedora_result))
+
         def import_distributions_and_paradata():
             """Zapíše do Fedory alternativní distribuce a paradata nasbíraná v datové fázi.
 
@@ -1899,7 +1910,7 @@ def run_data_import(job_id, user_id, lock_token):
             # Overall file count for the status message: soubory already imported + this phase.
             total_files = len(import_files_list) + len(import_distributions_list) + len(import_paradata_list)
             processed_files = len(import_files_list)
-            for (obj_class, obj_pk), group in record_groups.items():
+            for group_index, ((obj_class, obj_pk), group) in enumerate(record_groups.items()):
                 fedora_transaction = None
                 record_id = None
                 filename = None
@@ -2094,10 +2105,9 @@ def run_data_import(job_id, user_id, lock_token):
                         ),
                     )
                 processed_files += len(rows)
-                redis_connector.set(
-                    job_key("import_data_history_record_result_tr"), json.dumps(import_history_record_result)
-                )
-                redis_connector.set(job_key("import_fedora_result_tr"), json.dumps(import_fedora_result))
+                # Both dicts cover the whole run and are re-encoded on every write; throttle like validation.
+                if group_index % VALIDATION_REDIS_UPDATE_INTERVAL == 0:
+                    save_distribution_results()
                 redis_connector.set(
                     job_key("import_data_files_progress"),
                     processed_files,
@@ -3083,7 +3093,11 @@ def run_data_import(job_id, user_id, lock_token):
                                 )
                             redis_connector.set(job_key("import_fedora_result_tr"), json.dumps(import_fedora_result))
                     if not failed and not stopped and (import_distributions_list or import_paradata_list):
-                        import_distributions_and_paradata()
+                        try:
+                            import_distributions_and_paradata()
+                        finally:
+                            # Throttled writes may lag; the last state must reach the report on every exit.
+                            save_distribution_results()
                 except SouborMissingRepositoryUuidError as err:
                     if fedora_transaction is not None:
                         fedora_transaction.rollback_transaction()

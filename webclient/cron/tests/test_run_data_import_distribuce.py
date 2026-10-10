@@ -193,6 +193,23 @@ class RunDataImportDistribuceTest(RunDataImportDistributionTestBase):
         self.assert_no_connector_method_called("delete_paradata")
         self.assert_history_created(soubor, SMAZANI_DISTRIBUCE, "ocr")
 
+    def test_results_of_unthrottled_groups_reach_redis_after_the_phase(self):
+        """Výsledky skupin, které omezený průběžný zápis vynechá, se uloží závěrečným zápisem po fázi."""
+        first = self._create_existing_soubor()
+        second = self._create_existing_soubor(vazba=self._create_dokument("C-FD-991000009").soubory)
+
+        fake_redis, _ = self._run_distribution_import(
+            [
+                self._insert_payload(first, distribution="ocr", nazev="ocr-1.txt"),
+                self._insert_payload(second, distribution="ocr", nazev="ocr-2.txt"),
+            ]
+        )
+
+        self.assert_import_success(fake_redis)
+        history = self.history_record_result(fake_redis)
+        self.assertIn("history_record_created", history["0"])
+        self.assertIn("history_record_created", history["1"], "Druhá skupina se zapisuje až po skončení fáze.")
+
     def test_import_does_not_change_the_soubor_database_row(self):
         """Import distribuce nesmí měnit databázi — mění se pouze Fedora a historie.
 
