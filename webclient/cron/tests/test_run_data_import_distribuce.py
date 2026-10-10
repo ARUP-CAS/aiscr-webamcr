@@ -120,6 +120,32 @@ class RunDataImportDistribuceTest(RunDataImportDistributionTestBase):
         self.assertIsNotNone(soubor.historie, "Import musí souboru bez historie založit vazbu na historii.")
         self.assert_history_created(soubor, NAHRANI_DISTRIBUCE, "ocr")
 
+    def test_multiple_inserts_for_file_without_history_link_share_one_link(self):
+        """Více distribucí souboru bez historie v jedné dávce zapíše DIST01 pod jedinou vazbu na historii."""
+        soubor = self._create_existing_soubor()
+        Soubor.objects.filter(pk=soubor.pk).update(historie=None)
+        soubor.refresh_from_db()
+
+        fake_redis, _ = self._run_distribution_import(
+            [
+                self._insert_payload(soubor, distribution="ocr", nazev="ocr.txt"),
+                self._insert_payload(soubor, distribution="preview", nazev="preview.txt"),
+            ]
+        )
+
+        self.assert_import_success(fake_redis)
+        soubor.refresh_from_db()
+        self.assert_history_created(soubor, NAHRANI_DISTRIBUCE, "ocr")
+        self.assert_history_created(soubor, NAHRANI_DISTRIBUCE, "preview")
+        self.assertEqual(
+            Historie.objects.filter(typ_zmeny=NAHRANI_DISTRIBUCE, poznamka__in=["ocr", "preview"])
+            .values("vazba")
+            .distinct()
+            .count(),
+            1,
+            "Distribuce jednoho souboru musí sdílet jedinou vazbu na historii.",
+        )
+
     def test_update_calls_update_distribution_and_writes_dist11_history(self):
         """UPDATE volá ``update_distribution`` a zapisuje historii DIST11."""
         soubor = self._create_existing_soubor()
