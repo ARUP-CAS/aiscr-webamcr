@@ -396,6 +396,47 @@ class BackfillThumbHistoryCommandTest(TestCase):
 
         self.assertEqual(len(self._thumb_history("thumb")), 1)
 
+    def test_thumbnail_regenerated_after_deploy_gets_its_older_versions(self):
+        """Náhled přegenerovaný po nasazení má jen DIST11; doplní se starší verze, nejstarší jako DIST01."""
+        Historie.objects.create(
+            typ_zmeny=UPDATE_DISTRIBUCE, uzivatel=self.admin, vazba=self.soubor.historie, poznamka="thumb"
+        )
+        versions = [
+            {"datetime": BASE_TIME},
+            {"datetime": BASE_TIME + datetime.timedelta(minutes=10)},
+            {"datetime": BASE_TIME + datetime.timedelta(minutes=20)},
+        ]
+
+        self._run_command({"thumb": versions})
+
+        records = self._thumb_history("thumb")
+        self.assertEqual(
+            [record.typ_zmeny for record in records], [NAHRANI_DISTRIBUCE, UPDATE_DISTRIBUCE, UPDATE_DISTRIBUCE]
+        )
+        self.assertEqual([record.datum_zmeny for record in records[:2]], [BASE_TIME, versions[1]["datetime"]])
+
+    def test_interrupted_container_is_written_completely_on_the_next_run(self):
+        """Selhání uprostřed kontejneru nezanechá neúplnou historii, další běh ji zapíše celou."""
+        versions = {"thumb": [{"datetime": BASE_TIME}, {"datetime": BASE_TIME + datetime.timedelta(minutes=10)}]}
+        create = Historie.objects.create
+        calls = []
+
+        def fail_on_second(**kwargs):
+            calls.append(kwargs)
+            if len(calls) == 2:
+                raise RuntimeError("interrupted")
+            return create(**kwargs)
+
+        with mock.patch.object(Historie.objects, "create", side_effect=fail_on_second):
+            self._run_command(versions)
+        self.assertEqual(self._thumb_history("thumb"), [])
+
+        self._run_command(versions)
+
+        self.assertEqual(
+            [record.typ_zmeny for record in self._thumb_history("thumb")], [NAHRANI_DISTRIBUCE, UPDATE_DISTRIBUCE]
+        )
+
     def test_dry_run_writes_nothing(self):
         """Dry-run pouze spočítá záznamy, do databáze nezapíše nic."""
         output = self._run_command({"thumb": [{"datetime": BASE_TIME}]}, dry_run=True)
