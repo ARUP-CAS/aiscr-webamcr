@@ -16,7 +16,8 @@ from typing import Final
 RESERVED_DISTRIBUTION_PREFIXES: Final = frozenset({"orig", "paradata", "thumb/page"})
 # Název kontejneru s původním obsahem souboru; výchozí volba při stahování.
 ORIGINAL_DISTRIBUTION_NAME: Final = "orig"
-# Kontejnery, které pro soubor vznikají už při jeho importu, takže k nim nevede záznam ``DIST01``.
+# Containers created with the file itself, not by a distribution import; excluded from the distribution
+# list and the child walk. Thumbnails still get DIST01/DIST11 history like other distributions.
 IMPLICIT_DISTRIBUTION_NAMES: Final = frozenset({"orig", "thumb", "thumb-large"})
 # Segmenty, které by dovolily opustit kontejner souboru nebo vytvořit prázdný segment cesty.
 UNSAFE_DISTRIBUTION_SEGMENTS: Final = frozenset({"", ".", ".."})
