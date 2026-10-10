@@ -1974,6 +1974,8 @@ def run_data_import(job_id, user_id, lock_token):
                     break
                 fedora_transaction = FedoraTransaction()
                 conn = FedoraRepositoryConnector(group["record"], fedora_transaction, skip_container_check=False)
+                # (soubor pk, distribution) pairs whose paradata delete_distribution already removed.
+                deleted_distributions = set()
                 with transaction.atomic():
                     for row_index, row in enumerate(rows):
                         record_id = row["record_id"]
@@ -1994,9 +1996,12 @@ def run_data_import(job_id, user_id, lock_token):
                         # The mimetype from the CSV is stored as given, without detection (#3527).
                         if row["action"] == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
                             if row["is_paradata"]:
-                                conn.delete_paradata(uuid, distribution)
+                                # A second DELETE of the same path would answer 410 and roll back the record.
+                                if (soubor.pk, distribution) not in deleted_distributions:
+                                    conn.delete_paradata(uuid, distribution)
                             else:
                                 conn.delete_distribution(uuid, distribution)
+                                deleted_distributions.add((soubor.pk, distribution))
                             typ_zmeny = SMAZANI_DISTRIBUCE
                             row["rep_bin_file"] = None
                         elif row["action"] == ImportDataAdminForm.PERFORMED_ACTION_INSERT:

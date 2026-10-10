@@ -548,12 +548,17 @@ Třídy
 
    .. py:method:: delete_distribution()
 
-      Smaže alternativní distribuci souboru.
+      Smaže alternativní distribuci souboru včetně jejích paradat.
+
+      Paradata leží mimo kontejner distribuce (``paradata/{distribuce}``), takže je smazání
+      distribuce samo neodstraní; bez distribuce ale nesmí zůstat. Maže se jen tehdy, když
+      paradata existují — DELETE neexistujícího zdroje by odvolal celou Fedora transakci.
 
       :param uuid: UUID kontejneru souboru.
       :param distribution: Název distribuce, např. ``ocr/alto-xml``.
       :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
       :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+      :raises FedoraNoResponseError: Pokud repozitář na dotaz na existenci paradat neodpoví.
 
    .. py:method:: get_distribution()
 

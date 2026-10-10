@@ -319,13 +319,27 @@ class UpdateDeleteDistributionTest(DistributionConnectorTestBase):
         self.assertNotIn("Overwrite-Tombstone", send.call_args_list[0].kwargs["headers"])
 
     def test_delete_targets_distribution_url(self):
-        """DELETE míří na URL distribuce; tombstone se záměrně nemaže."""
-        with mock.patch.object(self.connector, "_send_request", return_value=_Response(status_code=204)) as send:
+        """DELETE míří na URL distribuce; tombstone se záměrně nemaže a chybějící paradata se nemažou."""
+        with mock.patch.object(
+            self.connector, "_send_request", side_effect=[_Response(status_code=204), _Response(status_code=404)]
+        ) as send:
             self.connector.delete_distribution(self.UUID, "ocr/alto-xml")
 
-        self.assertEqual(send.call_count, 1)
+        self.assertEqual(send.call_count, 2)
         self.assertEqual(send.call_args_list[0].args[0], f"{self.file_url}/ocr/alto-xml")
         self.assertEqual(send.call_args_list[0].args[1], FedoraRequestType.DELETE_DISTRIBUTION)
+        self.assertEqual(send.call_args_list[1].args[0], f"{self.file_url}/paradata/ocr/alto-xml/fcr:metadata")
+        self.assertEqual(send.call_args_list[1].args[1], FedoraRequestType.GET_DISTRIBUTION_METADATA)
+
+    def test_delete_removes_existing_paradata_of_the_distribution(self):
+        """Smazání distribuce smaže i její paradata, aby po ní nezůstala jako sirotek."""
+        responses = [_Response(status_code=204), _Response(status_code=200), _Response(status_code=204)]
+        with mock.patch.object(self.connector, "_send_request", side_effect=responses) as send:
+            self.connector.delete_distribution(self.UUID, "ocr/alto-xml")
+
+        self.assertEqual(send.call_count, 3)
+        self.assertEqual(send.call_args_list[2].args[0], f"{self.file_url}/paradata/ocr/alto-xml")
+        self.assertEqual(send.call_args_list[2].args[1], FedoraRequestType.DELETE_DISTRIBUTION)
 
     def test_get_returns_content(self):
         """Načtená distribuce se vrátí jako wrapper s obsahem a URL."""

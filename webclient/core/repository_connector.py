@@ -2053,15 +2053,22 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
 
     def delete_distribution(self, uuid, distribution, ident_cely=None):
         """
-        Smaže alternativní distribuci souboru.
+        Smaže alternativní distribuci souboru včetně jejích paradat.
+
+        Paradata leží mimo kontejner distribuce (``paradata/{distribuce}``), takže je smazání
+        distribuce samo neodstraní; bez distribuce ale nesmí zůstat. Maže se jen tehdy, když
+        paradata existují — DELETE neexistujícího zdroje by odvolal celou Fedora transakci.
 
         :param uuid: UUID kontejneru souboru.
         :param distribution: Název distribuce, např. ``ocr/alto-xml``.
         :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
         :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
+        :raises FedoraNoResponseError: Pokud repozitář na dotaz na existenci paradat neodpoví.
         """
         distribution = self._normalize_distribution_name(distribution)
         self._delete_file_child(uuid, distribution, ident_cely)
+        if self.paradata_exists(uuid, distribution, ident_cely):
+            self.delete_paradata(uuid, distribution, ident_cely)
 
     def get_distribution(self, uuid, distribution, ident_cely=None) -> Optional[RepositoryBinaryFile]:
         """

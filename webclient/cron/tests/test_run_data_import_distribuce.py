@@ -178,6 +178,21 @@ class RunDataImportDistribuceTest(RunDataImportDistributionTestBase):
         self.assert_no_connector_method_called("save_distribution", "update_distribution")
         self.assert_history_created(soubor, SMAZANI_DISTRIBUCE, "ocr")
 
+    def test_delete_skips_paradata_already_removed_with_the_distribution(self):
+        """DELETE paradat téže distribuce v jedné dávce se přeskočí — smazal je už ``delete_distribution``."""
+        soubor = self._create_existing_soubor()
+        paradata_row = {"__file_name": "paradata", "path": soubor.path, "distribution": "ocr"}
+
+        fake_redis, _ = self._run_distribution_import(
+            [self._delete_payload(soubor, distribution="ocr"), paradata_row],
+            performed_action=ImportDataAdminForm.PERFORMED_ACTION_DELETE,
+        )
+
+        self.assert_import_success(fake_redis)
+        self.assertEqual(len(self.connector_calls("delete_distribution")), 1)
+        self.assert_no_connector_method_called("delete_paradata")
+        self.assert_history_created(soubor, SMAZANI_DISTRIBUCE, "ocr")
+
     def test_import_does_not_change_the_soubor_database_row(self):
         """Import distribuce nesmí měnit databázi — mění se pouze Fedora a historie.
 
