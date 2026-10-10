@@ -342,6 +342,14 @@ class DistribuceMapperCreateRecordsTest(TestCase):
         self.assertEqual(record.distribution_mimetype, "text/xml")
         self.assertEqual(record.distribution_performed_action, INSERT)
 
+    def test_loads_relations_read_by_the_import(self):
+        """Navázaný záznam a vazba na historii se načtou spolu se souborem, import se na ně už nedoptává."""
+        record = DistribuceMapper(self._row()).create_records(INSERT)[0]
+
+        with self.assertNumQueries(0):
+            self.assertEqual(record.vazba.navazany_objekt.pk, self.dokument.pk)
+            record.historie
+
     def test_normalizes_distribution_name(self):
         """Přechodný atribut nese normalizovaný název distribuce."""
         records = DistribuceMapper(self._row(distribution=" /ocr/alto-xml/ ")).create_records(INSERT)

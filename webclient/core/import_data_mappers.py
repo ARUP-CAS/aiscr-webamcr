@@ -5163,6 +5163,13 @@ class DistribuceMapper(DistributionColumnsMixin, ImportModelMapper):
     primary_key = "id"
     primary_key_prefix = "soub"
     KEY_COLUMN = "id"
+    # Relations the import reads for every row (record grouping, history link); loaded with the row.
+    SOUBOR_RELATED = (
+        "historie",
+        "vazba__dokument_souboru",
+        "vazba__projekt_souboru",
+        "vazba__samostatny_nalez_souboru",
+    )
 
     @staticmethod
     def distribution_exists(soubor: Soubor, distribution: str) -> bool:
@@ -5393,7 +5400,9 @@ class DistribuceMapper(DistributionColumnsMixin, ImportModelMapper):
         :param performed_action: Prováděná importní akce.
         :return: Jednoprvkový seznam s dotčeným souborem.
         """
-        soubor = self.model_class.objects.get(**self._get_filter_kwargs_primary_key())
+        soubor = self.model_class.objects.select_related(*self.SOUBOR_RELATED).get(
+            **self._get_filter_kwargs_primary_key()
+        )
         soubor.distribution_name = normalize_distribution_name(self.value_dict.get(self.DISTRIBUTION_COLUMN))
         soubor.distribution_nazev = self.value_dict.get(self.NAZEV_COLUMN)
         soubor.distribution_mimetype = self.value_dict.get(self.MIMETYPE_COLUMN)
@@ -5564,7 +5573,9 @@ class ParadataMapper(DistribuceMapper):
         :param performed_action: Prováděná importní akce.
         :return: Jednoprvkový seznam s dotčeným souborem.
         """
-        soubor = self.model_class.objects.get(**self._get_filter_kwargs_primary_key())
+        soubor = self.model_class.objects.select_related(*self.SOUBOR_RELATED).get(
+            **self._get_filter_kwargs_primary_key()
+        )
         soubor.paradata_distribution = normalize_distribution_name(self.value_dict.get(self.DISTRIBUTION_COLUMN))
         soubor.paradata_nazev = self.value_dict.get(self.NAZEV_COLUMN)
         soubor.paradata_mimetype = self.value_dict.get(self.MIMETYPE_COLUMN)
