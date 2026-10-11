@@ -2039,6 +2039,8 @@ def run_data_import(job_id, user_id, lock_token):
                 for row in rows:
                     rid = row["record_id"]
                     distribution = row["distribution"]
+                    # Distribution deletes drop their paradata too, so every written row stales the file table.
+                    row["soubor"].invalidate_paradata_cache()
                     if rid is not None and row["is_paradata"]:
                         # Paradata trigger no metadata refresh, so the row would otherwise stay
                         # labelled as waiting for the data import that never comes.

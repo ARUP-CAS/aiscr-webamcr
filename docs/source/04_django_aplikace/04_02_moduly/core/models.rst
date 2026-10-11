@@ -325,13 +325,30 @@ Třídy
 
       Paradata nemají záznam v databázi ani v historii (zadání #3527), takže jejich existenci lze
       zjistit jen dotazem do Fedory. Nejprve se jedním dotazem ověří kontejner ``paradata``
-      a teprve když existuje, ověří se jednotlivé distribuce. Výsledek se ukládá na instanci,
-      aby ho tabulka souborů mohla číst opakovaně bez dalších dotazů.
+      a teprve když existuje, ověří se jednotlivé distribuce. Výsledek se ukládá na instanci
+      a navíc do sdílené cache (``PARADATA_CACHE_TIMEOUT``), aby tabulka souborů neposílala
+      do Fedory dotaz za každý řádek při každém zobrazení detailu záznamu. Cache vyprazdňuje
+      import distribucí a paradat (``invalidate_paradata_cache()``).
 
       Nedostupnost Fedory nebo neplatný název distribuce v historii se pouze zalogují a vrátí se
-      prázdná množina — chyba při zjišťování paradat nesmí shodit vykreslení detailu záznamu.
+      prázdná množina, která se do cache neukládá — chyba při zjišťování paradat nesmí shodit
+      vykreslení detailu záznamu ani skrýt paradata po obnovení Fedory.
 
       :return: Množina názvů distribucí (včetně ``orig``), které mají paradata.
+
+   .. py:method:: paradata_cache_key()
+
+      Vrátí klíč sdílené cache, pod kterým ``paradata_distributions`` ukládá výsledek pro soubor.
+
+      :param repository_uuid: UUID kontejneru souboru ve Fedoře.
+      :return: Klíč cache.
+
+   .. py:method:: invalidate_paradata_cache()
+
+      Odstraní z cache uložený výsledek ``paradata_distributions`` pro tento soubor.
+
+      Volá se po zápisu distribucí nebo paradat do Fedory, aby tabulka souborů ukázala nový stav
+      hned, a ne až po vypršení ``PARADATA_CACHE_TIMEOUT``.
 
    .. py:method:: get_paradata_response()
 

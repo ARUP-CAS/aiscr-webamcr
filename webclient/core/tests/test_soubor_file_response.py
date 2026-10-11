@@ -10,7 +10,8 @@ import io
 from unittest import mock
 
 from core.models import Soubor
-from django.test import SimpleTestCase
+from django.core.cache import cache
+from django.test import SimpleTestCase, override_settings
 
 ASCII_NAME = "plain.pdf"
 NASTY_NAME = "zpráva o průzkumu.pdf"
@@ -152,8 +153,13 @@ class SouborFileResponseTest(SimpleTestCase):
         self.assertEqual(response["Content-Disposition"], 'attachment; filename="scan.pdf.ocr_alto-xml.paradata"')
 
 
+@override_settings(CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}})
 class SouborParadataDistributionsTest(SimpleTestCase):
     """Testy pro ``Soubor.paradata_distributions`` — které distribuce v tabulce souborů dostanou ikonu paradat."""
+
+    def setUp(self):
+        """Vyprázdní cache, aby výsledek jednoho testu neovlivnil další."""
+        cache.clear()
 
     def _paradata_distributions(self, has_paradata, with_paradata=(), error=None):
         """Vrátí ``paradata_distributions`` souboru s distribucemi ``orig``, ``ocr`` a ``atr``.
@@ -196,3 +202,32 @@ class SouborParadataDistributionsTest(SimpleTestCase):
         )
 
         self.assertEqual(result, frozenset())
+
+    def test_result_is_cached_across_instances(self):
+        """Další vykreslení tabulky souborů čte výsledek z cache a do Fedory se neptá."""
+        self._paradata_distributions(has_paradata=True, with_paradata=("orig",))
+
+        result, connector = self._paradata_distributions(has_paradata=False)
+
+        self.assertEqual(result, frozenset({"orig"}))
+        connector.has_paradata.assert_not_called()
+
+    def test_fedora_failure_is_not_cached(self):
+        """Po výpadku Fedory se paradata zjistí znovu, místo aby prázdný výsledek zůstal v cache."""
+        from core.repository_connector import FedoraNoResponseError
+
+        self._paradata_distributions(has_paradata=True, error=FedoraNoResponseError("url", "No Fedora response", None))
+
+        result, _ = self._paradata_distributions(has_paradata=True, with_paradata=("ocr",))
+
+        self.assertEqual(result, frozenset({"ocr"}))
+
+    def test_invalidate_paradata_cache_forces_new_check(self):
+        """Po zápisu z importu (``invalidate_paradata_cache``) se paradata znovu ověří ve Fedoře."""
+        self._paradata_distributions(has_paradata=False)
+        with mock.patch.object(Soubor, "repository_uuid", "uuid-1"):
+            Soubor(nazev="scan.pdf").invalidate_paradata_cache()
+
+        result, _ = self._paradata_distributions(has_paradata=True, with_paradata=("atr",))
+
+        self.assertEqual(result, frozenset({"atr"}))

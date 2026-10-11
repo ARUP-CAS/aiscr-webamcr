@@ -16,6 +16,7 @@ from core.constants import ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_BADATEL_ID
 from core.distribution_names import IMPLICIT_DISTRIBUTION_NAMES, ORIGINAL_DISTRIBUTION_NAME
 from django.conf import settings
 from django.contrib.auth.models import Group
+from django.core.cache import cache
 from django.db import models, transaction
 from django.forms import ValidationError
 from django.http import FileResponse
@@ -176,6 +177,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     path = models.CharField(max_length=500, null=True)
     size_mb = models.DecimalField(decimal_places=10, max_digits=150)
     sha_512 = models.CharField(max_length=128, null=True, blank=True, db_index=True)
+
+    # Lifetime of the cached paradata probe; the import clears it, so this only bounds out-of-band Fedora edits.
+    PARADATA_CACHE_TIMEOUT = 60 * 60
 
     @property
     def url(self):
@@ -1088,11 +1092,14 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
         Paradata nemají záznam v databázi ani v historii (zadání #3527), takže jejich existenci lze
         zjistit jen dotazem do Fedory. Nejprve se jedním dotazem ověří kontejner ``paradata``
-        a teprve když existuje, ověří se jednotlivé distribuce. Výsledek se ukládá na instanci,
-        aby ho tabulka souborů mohla číst opakovaně bez dalších dotazů.
+        a teprve když existuje, ověří se jednotlivé distribuce. Výsledek se ukládá na instanci
+        a navíc do sdílené cache (``PARADATA_CACHE_TIMEOUT``), aby tabulka souborů neposílala
+        do Fedory dotaz za každý řádek při každém zobrazení detailu záznamu. Cache vyprazdňuje
+        import distribucí a paradat (``invalidate_paradata_cache()``).
 
         Nedostupnost Fedory nebo neplatný název distribuce v historii se pouze zalogují a vrátí se
-        prázdná množina — chyba při zjišťování paradat nesmí shodit vykreslení detailu záznamu.
+        prázdná množina, která se do cache neukládá — chyba při zjišťování paradat nesmí shodit
+        vykreslení detailu záznamu ani skrýt paradata po obnovení Fedory.
 
         :return: Množina názvů distribucí (včetně ``orig``), které mají paradata.
         """
@@ -1101,21 +1108,48 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         record = self.vazba.navazany_objekt if self.repository_uuid else None
         if record is None:
             return frozenset()
+        cache_key = self.paradata_cache_key(self.repository_uuid)
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
         connector = FedoraRepositoryConnector(record)
         try:
             if not connector.has_paradata(self.repository_uuid):
-                return frozenset()
-            return frozenset(
-                distribution
-                for distribution in self.available_distributions()
-                if connector.paradata_exists(self.repository_uuid, distribution)
-            )
+                result = frozenset()
+            else:
+                result = frozenset(
+                    distribution
+                    for distribution in self.available_distributions()
+                    if connector.paradata_exists(self.repository_uuid, distribution)
+                )
         except (FedoraError, FedoraValidationError) as err:
             logger.warning(
                 "core.models.soubor.paradata_distributions.failed",
                 extra={"soubor": self.pk, "error": err},
             )
             return frozenset()
+        cache.set(cache_key, result, self.PARADATA_CACHE_TIMEOUT)
+        return result
+
+    @staticmethod
+    def paradata_cache_key(repository_uuid) -> str:
+        """
+        Vrátí klíč sdílené cache, pod kterým ``paradata_distributions`` ukládá výsledek pro soubor.
+
+        :param repository_uuid: UUID kontejneru souboru ve Fedoře.
+        :return: Klíč cache.
+        """
+        return f"soubor_paradata_distributions:{repository_uuid}"
+
+    def invalidate_paradata_cache(self):
+        """
+        Odstraní z cache uložený výsledek ``paradata_distributions`` pro tento soubor.
+
+        Volá se po zápisu distribucí nebo paradat do Fedory, aby tabulka souborů ukázala nový stav
+        hned, a ne až po vypršení ``PARADATA_CACHE_TIMEOUT``.
+        """
+        if self.repository_uuid:
+            cache.delete(self.paradata_cache_key(self.repository_uuid))
 
     def get_paradata_response(self, distribution) -> FileResponse | None:
         """
