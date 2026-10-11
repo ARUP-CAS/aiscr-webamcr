@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from core.message_constants import AUTOLOGOUT_AFTER_LOGOUT
@@ -671,7 +672,23 @@ SKIP_SELENIUM_TESTS = False
 CELERY_BROKER_URL = f"redis://{get_redis_pass()}{REDIS_HOST}:{REDIS_PORT}"
 
 # Nastavení novinkového kanálu
-NEWS_FEED_URL = "https://arup-cas.github.io/aiscr-news/feed/amcr-info"
+NEWS_FEED_BASE_URL = "https://arup-cas.github.io/aiscr-news/feed/amcr-info"
+NEWS_FEED_LANGUAGES = ["cs", "en"]  # Supported languages
+NEWS_FEED_CACHE_TTL = 3600  # 1 hour (default)
+NEWS_FEED_CACHE_KEY_PREFIX = "news_feed"
+NEWS_FEED_TIMEOUT = 10
+
+# Celery periodic tasks
+CELERY_BEAT_SCHEDULE = {
+    "load-news-feed": {
+        "task": "webclient.cron.tasks_news_feed.load_news_feed",
+        "schedule": timedelta(seconds=(NEWS_FEED_CACHE_TTL - 60)),  # 59 minutes (cache_ttl - 60 = 3600 - 60)
+        "options": {
+            "max_retries": 3,
+        },
+    }
+}
+
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 

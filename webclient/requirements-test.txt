@@ -26,6 +26,8 @@ billiard==4.3.0
     # via
     #   -r requirements.txt
     #   celery
+bleach==6.4.0
+    # via -r requirements.txt
 brotli==1.2.0
     # via
     #   -r requirements.txt
@@ -400,6 +402,10 @@ wcwidth==0.9.1
     # via
     #   -r requirements.txt
     #   prompt-toolkit
+webencodings==0.6.1
+    # via
+    #   -r requirements.txt
+    #   bleach
 websocket-client==1.9.2
     # via selenium
 werkzeug==3.1.9

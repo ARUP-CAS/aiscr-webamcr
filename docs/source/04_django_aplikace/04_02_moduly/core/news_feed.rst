@@ -6,15 +6,19 @@ Modul news_feed.
 Přehled modulu
 --------------
 
-Klient a cache novinkového kanálu pro načítání a zpracování novinek ze služby aiscr-news.
+Data model novinkového kanálu.
 
-Modul zajišťuje načítání dat novinkového kanálu ze služby aiscr-news
-a jejich převod do standardizovaného formátu pro použití ve webové
-aplikaci AMČR.
+Modul definuje dataclass NewsItem pro reprezentaci položky novinkového kanálu.
+Tato třída je používána pro standardizaci struktury novinek z externího zdroje.
 
 Data kanálu se načítají z repozitáře aiscr-news a považují se za
 důvěryhodný obsah. Pole html se vykresluje jako důvěryhodné HTML,
 protože je generuje a publikuje kontrolovaný repozitář aiscr-news.
+
+Bezpečnostní upozornění: HTML obsah je sanitizován pomocí knihovny bleach
+pro odstranění potenciálně nebezpečných prvků (scripty, event handlers atd.).
+Pokud se zdroj kanálu změní nebo zdrojní repozitář nebude kontrolován,
+je nutné přezkoumat konfiguraci sanitizace.
 
 Třídy
 ------
@@ -24,88 +28,23 @@ Třídy
    Představuje jednu novinku z kanálu.
 
 
-.. py:class:: NewsFeedClient
+Funkce
+------
 
-   Klient pro načítání a zpracování dat novinkového kanálu.
+.. py:function:: _parse_feed(data)
 
-   **Metody:**
+   Zpracuje data kanálu na seznam novinek.
 
-   .. py:method:: __init__()
+.. py:function:: sanitize_html(html)
 
-      Inicializuje klienta novinkového kanálu.
+   Sanitize HTML using bleach library.
 
-      :param base_url: Základní URL pro načítání dat kanálu ze služby aiscr-news.
-      :param timeout: Časový limit požadavku v sekundách.
+   Removes potentially dangerous HTML elements while preserving safe content.
+   This is used to sanitize HTML from the news feed before rendering.
 
-   .. py:method:: process_authors()
+   :param html: Raw HTML string from the feed
+   :return: Sanitized HTML string
 
-      Inicializuje seznam autorů.
+.. py:function:: _process_authors(authors_data)
 
-      :param authors_data: Seznam autorů z kanálu.
-      :return: Seznam autorů jako řetězec, oddělený čárkami, nebo prázdný řetězec, pokud nejsou autoři k dispozici.
-
-   .. py:method:: fetch_feed()
-
-      Načte a zpracuje novinkový kanál pro zadaný jazyk.
-
-      Načte kanál ze služby aiscr-news a převede jej na seznam
-      objektů NewsItem.
-
-      :param language: Kód jazyka kanálu (např. "cs" nebo "en").
-      :return: Seznam objektů NewsItem.
-      :raises NewsFeedError: Pokud kanál nelze načíst nebo zpracovat.
-
-   .. py:method:: _parse_feed()
-
-      Zpracuje data kanálu na objekty NewsItem.
-
-      :param data: Zpracovaná JSON data kanálu.
-      :return: Seznam objektů NewsItem.
-      :raises json.JSONDecodeError: Pokud data nejsou platný slovník.
-
-   .. py:method:: _parse_item()
-
-      Zpracuje jednu položku z dat kanálu.
-
-      :param item_data: Data jedné novinky.
-      :return: Objekt NewsItem, nebo None, pokud položku nelze zpracovat.
-
-
-.. py:class:: NewsFeedError
-
-   Výjimka vyvolaná při selhání operací novinkového kanálu.
-
-
-.. py:class:: NewsFeedCache
-
-   Cache obalující klienta novinkového kanálu.
-
-   **Metody:**
-
-   .. py:method:: __init__()
-
-      Inicializuje cache novinkového kanálu.
-
-      :param client: Instance NewsFeedClient, která se obaluje.
-      :param cache_key_prefix: Prefix klíčů cache.
-      :param default_ttl: Výchozí doba platnosti v sekundách pro čerstvé kopie.
-
-   .. py:method:: get_feed()
-
-      Vrátí novinkový kanál s využitím cache, je-li k dispozici.
-
-      Uplatňuje strategii čerstvé kopie přednostně:
-      1. Pokusí se získat čerstvou kopii z cache
-      2. Pokud vypršela nebo chybí, načte kanál ze služby
-      3. Pokud načtení selže, vrátí poslední úspěšnou kopii (zastaralou kopii)
-
-      :param language: Kód jazyka kanálu.
-      :return: Seznam novinek, nebo prázdný seznam, pokud nejsou dostupné.
-
-   .. py:method:: set_stale()
-
-      Uloží zastaralou kopii do cache.
-
-      :param stale_key: Klíč cache pro zastaralou kopii.
-      :param feed: Seznam novinek, který se uloží do cache jako zastaralý.
-
+   Inicializuje seznam autorů.

@@ -13,7 +13,6 @@ from core.message_constants import (
 )
 from core.models import Permissions as p
 from core.models import check_permissions
-from core.news_feed import NewsFeedCache, NewsFeedClient
 from core.repository_connector import FedoraTransaction
 from core.setting_models import CustomAdminSettings
 from core.views import PermissionFilterMixin
@@ -58,8 +57,6 @@ from uzivatel.models import NotificationsLog, Osoba, User, UserNotificationType,
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_NEWS_FEED_CACHE_TIMEOUT = 300  # 5 minut
-DEFAULT_NEWS_FEED_TIMEOUT = 10  # 10 sekund
 DEFAULT_NEWS_FEED_BLOCK_HEIGHT = 300  # výška bloku v pixelech
 
 
@@ -273,55 +270,29 @@ class UserLoginView(LoginView):
         context = super().get_context_data(**kwargs)
 
         # Načte nastavení novinek z cache (klíč je unikátní pro tuto aplikaci)
-        cache_key = "news_feed_settings:v1"
-        settings_dict = cache.cache.get(cache_key)
-        if not settings_dict:
-            news_feed_settings = CustomAdminSettings.objects.filter(
-                item_group="news_feed",
-                item_id__in=("news_feed_cache_timeout", "news_feed_timeout", "news_feed_block_height"),
-            ).values("item_id", "value")
-            settings_dict = {item["item_id"]: item["value"] for item in news_feed_settings}
-            cache.cache.set(cache_key, settings_dict, 3600)  # 1 hodina cache
-
-        # Časový limit pro cache
-        cache_ttl_value = settings_dict.get("news_feed_cache_timeout")
-        try:
-            cache_timeout_value = int(cache_ttl_value) if cache_ttl_value else DEFAULT_NEWS_FEED_CACHE_TIMEOUT
-            if cache_timeout_value <= 0:
-                logger.warning(
-                    f"Invalid cachetimeout value ({cache_timeout_value}), using default: {DEFAULT_NEWS_FEED_CACHE_TIMEOUT}"
-                )
-                cache_timeout_value = DEFAULT_NEWS_FEED_CACHE_TIMEOUT
-            cache_timeout = cache_timeout_value
-        except (ValueError, TypeError):
-            logger.warning(f"Invalid cache timeout value in settings, using default: {DEFAULT_NEWS_FEED_CACHE_TIMEOUT}")
-            cache_timeout = DEFAULT_NEWS_FEED_CACHE_TIMEOUT
-
-        # Timeout pro HTTP požadavek
-        timeout_value = settings_dict.get("news_feed_timeout")
-        try:
-            timeout_value_int = int(timeout_value) if timeout_value else DEFAULT_NEWS_FEED_TIMEOUT
-            if timeout_value_int <= 0:
-                logger.warning(
-                    f"Invalid timeout value ({timeout_value_int}), using default: {DEFAULT_NEWS_FEED_TIMEOUT}"
-                )
-                timeout_value_int = DEFAULT_NEWS_FEED_TIMEOUT
-            timeout = timeout_value_int
-        except (ValueError, TypeError):
-            logger.warning(f"Invalid timeout value in settings, using default: {DEFAULT_NEWS_FEED_TIMEOUT}")
-            timeout = DEFAULT_NEWS_FEED_TIMEOUT
+        cache_key = "news_feed_block_height:v1"
+        block_height_value = cache.cache.get(cache_key)
+        if not block_height_value:
+            try:
+                block_height_value = CustomAdminSettings.objects.get(
+                    item_group="news_feed",
+                    item_id=("news_feed_block_height"),
+                ).value
+                cache.cache.set(cache_key, block_height_value, 3600)  # 1 hodina cache
+            except CustomAdminSettings.DoesNotExist:
+                logger.warning("News feed block height setting not found, using default.")
+                block_height_value = None
 
         # Výška bloku novinek
-        block_height_value = settings_dict.get("news_feed_block_height")
         try:
             block_height = int(block_height_value) if block_height_value else DEFAULT_NEWS_FEED_BLOCK_HEIGHT
         except (ValueError, TypeError):
             logger.warning(f"Invalid block height value in settings, using default: {DEFAULT_NEWS_FEED_BLOCK_HEIGHT}")
             block_height = DEFAULT_NEWS_FEED_BLOCK_HEIGHT
 
-        context["news_feed"] = NewsFeedCache(
-            NewsFeedClient(base_url=settings.NEWS_FEED_URL, timeout=timeout), default_ttl=cache_timeout
-        ).get_feed(language=self.request.LANGUAGE_CODE)
+        # Načíst novinky z cache (bude automaticky načteno Celery taskem)
+        cache_key = f"news_feed:{self.request.LANGUAGE_CODE}"
+        context["news_feed"] = cache.cache.get(cache_key) or cache.cache.get(f"{cache_key}:stale") or []
         context["news_feed_block_height"] = block_height
         return context
 

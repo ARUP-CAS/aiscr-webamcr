@@ -455,3 +455,13 @@ Funkce
    Vlastní tělo :func:`sync_ruian_changes` běžící pod advisory lockem.
 
    :param reassign_records: Viz :func:`sync_ruian_changes`.
+
+.. py:function:: load_news_feed(self)
+
+   Načte a uloží novinkový kanál do cache.
+
+   Tato úloha je volána při startu aplikace a periodicky v intervalu
+   definovaném v settings (cache_ttl - 60 sekund).
+
+   Pokud dojde k chybě při načítání některého jazyka, úloha se automaticky
+   zopakuje s maximálně 3 pokusy.

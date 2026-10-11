@@ -52,6 +52,7 @@ from core.import_data_mappers import (
     UzivatelOpravneniMapper,
 )
 from core.models import AntivirusCheckResult, Soubor, SouborVazby
+from core.news_feed import _parse_feed
 from core.repository_connector import (
     DryRunFedoraTransaction,
     FedoraDeletionOnlyTransaction,
@@ -63,6 +64,7 @@ from core.translation import format_message
 from core.utils import check_import_report_directory, translate_status_value, upsert_import_report_index_entry
 from django.conf import settings
 from django.contrib.auth.models import Group
+from django.core.cache import cache
 from django.db import connection, transaction
 from django.db.models import F, Min, Model, Prefetch, Q
 from django.db.models.functions import Coalesce, Upper
@@ -3849,3 +3851,57 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
             "cron.tasks.sync_ruian_changes.do.error",
             extra={"error": str(err), "traceback": traceback.format_exc()},
         )
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+def load_news_feed(self):
+    """
+    Načte a uloží novinkový kanál do cache.
+
+    Tato úloha je volána při startu aplikace a periodicky v intervalu
+    definovaném v settings (cache_ttl - 60 sekund).
+
+    Pokud dojde k chybě při načítání některého jazyka, úloha se automaticky
+    zopakuje s maximálně 3 pokusy.
+    """
+    try:
+        # Získat cache_ttl z settings
+        cache_ttl = settings.NEWS_FEED_CACHE_TTL
+
+        # Získat nastavení z base.py (base_url a languages)
+        base_url = settings.NEWS_FEED_BASE_URL
+        languages = settings.NEWS_FEED_LANGUAGES
+
+        # Načíst feed pro všechny jazyky
+        errornous = 0
+        for language in languages:
+            feed_url = f"{base_url}/{language}.json"
+            try:
+                response = requests.get(feed_url, timeout=settings.NEWS_FEED_TIMEOUT)
+                response.raise_for_status()
+                data = response.json()
+                feed = _parse_feed(data)
+                cache_key = f"news_feed:{language}"
+                cache.set(cache_key, feed, cache_ttl)
+
+                # Uložit zastaralou kopii
+                stale_key = f"{cache_key}:stale"
+                cache.set(stale_key, feed, None)  # Bez TTL
+
+                logger.info(f"Successfully loaded news feed for {language}")
+            except Exception as e:
+                logger.error(f"Failed to load news feed for {language}: {e}")
+                # Pokračovat v načítání ostatních jazyků
+                errornous += 1
+
+    except Exception as e:
+        logger.error(f"Failed to load news feed: {e}")
+        errornous += 1
+
+    if errornous > 0:
+        logger.warning(f"News feed loading completed with {errornous} errors. Retrying...")
+        # Retry the task with exponential backoff
+        raise self.retry(max_retries=self.max_retries, countdown=60)
+
+    logger.info("News feed loading completed successfully")
+    return True
