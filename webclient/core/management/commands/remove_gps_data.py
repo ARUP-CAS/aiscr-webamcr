@@ -138,6 +138,8 @@ class Command(BaseCommand):
                         record.size_mb = rep_bin_file.size_mb
                         record.sha_512 = rep_bin_file.sha_512
                         record.zaznamenej_nahrani_nove_verze(admin_user, record.nazev)
+                        # update_binary_file regenerated the thumbnails, so log them as DIST01/DIST11.
+                        record.zaznamenej_distribuce(rep_bin_file.thumb_writes)
                         record.save()
                         updated_count += 1
                         logger.info(
