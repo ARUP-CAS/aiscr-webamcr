@@ -1,9 +1,9 @@
 """
 Testy stahování alternativních distribucí souboru přes ``core.views.DownloadFile`` (issue #3527).
 
-Pokrývají hlídání názvu distribuce proti seznamu dostupných distribucí souboru, předání
-víceúrovňového názvu GET parametrem ``distribution``, zachování původního chování při stahování
-bez distribuce a uplatnění stejných oprávnění jako u běžného stažení (``PermissionMiddleware``).
+Pokrývají hlídání názvu distribuce proti seznamu dostupných distribucí souboru (i při stažení
+paradat GET parametrem ``paradata``), předání víceúrovňového názvu GET parametrem ``distribution``,
+zachování původního chování při stahování bez distribuce a uplatnění stejných oprávnění jako u běžného stažení (``PermissionMiddleware``).
 Testy nepotřebují databázi ani běžící Fedoru – využívají mock ``Soubor`` a ``RequestFactory``.
 """
 
@@ -40,31 +40,36 @@ class DownloadDistributionViewTest(SimpleTestCase):
         soubor.content_file_response = mock.sentinel.original_content
         soubor.available_distributions.return_value = list(available)
         soubor.get_distribution_response.return_value = mock.sentinel.distribution_content
+        soubor.get_paradata_response.return_value = mock.sentinel.paradata_content
         return soubor
 
-    def _request(self, distribution=None):
-        """Sestaví GET request na stažení souboru, případně jeho distribuce.
+    def _request(self, distribution=None, paradata=False):
+        """Sestaví GET request na stažení souboru, případně jeho distribuce nebo paradat.
 
         :param distribution: Název distribuce; ``None`` znamená stažení původního obsahu.
+        :param paradata: Pokud ``True``, žádá se o paradata distribuce (GET parametr ``paradata``).
         :return: Request s přihlášeným uživatelem.
         """
         path = reverse("core:download_file", kwargs={"typ_vazby": TYP_VAZBY, "ident_cely": IDENT_CELY, "pk": SOUBOR_PK})
         query = {"distribution": distribution} if distribution else {}
+        if paradata:
+            query["paradata"] = "1"
         request = RequestFactory().get(path, query)
         request.user = mock.Mock(is_authenticated=True, pk=1)
         return request
 
-    def _call_view(self, soubor, distribution=None):
+    def _call_view(self, soubor, distribution=None, paradata=False):
         """Zavolá ``DownloadFile.get`` s mocknutým souborem a vazbou.
 
         :param soubor: Mock ``Soubor`` vracený z ``get_object_or_404``.
         :param distribution: Název distribuce předaný GET parametrem ``distribution``.
+        :param paradata: Pokud ``True``, žádá se o paradata distribuce.
         :return: Odpověď pohledu.
         """
         with mock.patch("core.views.get_object_or_404", return_value=soubor), mock.patch(
             "core.views.check_soubor_vazba"
         ):
-            return DownloadFile().get(self._request(distribution), TYP_VAZBY, IDENT_CELY, SOUBOR_PK)
+            return DownloadFile().get(self._request(distribution, paradata), TYP_VAZBY, IDENT_CELY, SOUBOR_PK)
 
     def test_available_distribution_is_returned(self):
         """Distribuce uvedená mezi dostupnými se stáhne z repozitáře."""
@@ -142,6 +147,42 @@ class DownloadDistributionViewTest(SimpleTestCase):
         request = self._request(distribution="ocr/alto-xml")
 
         self.assertEqual(request.GET.get("distribution"), "ocr/alto-xml")
+
+    def test_paradata_of_available_distribution_are_returned(self):
+        """Paradata dostupné distribuce se stáhnou místo distribuce samotné."""
+        soubor = self._soubor(available=("orig", "ocr/alto-xml"))
+
+        response = self._call_view(soubor, distribution="ocr/alto-xml", paradata=True)
+
+        self.assertIs(response, mock.sentinel.paradata_content)
+        soubor.get_paradata_response.assert_called_once_with("ocr/alto-xml")
+        soubor.get_distribution_response.assert_not_called()
+
+    def test_paradata_without_distribution_belong_to_the_original(self):
+        """Bez parametru ``distribution`` se stahují paradata původního souboru (``orig``)."""
+        soubor = self._soubor()
+
+        response = self._call_view(soubor, paradata=True)
+
+        self.assertIs(response, mock.sentinel.paradata_content)
+        soubor.get_paradata_response.assert_called_once_with("orig")
+
+    def test_paradata_of_unavailable_distribution_raise_404_without_touching_repository(self):
+        """Paradata lze stáhnout jen k distribuci, kterou soubor nabízí — stejná kontrola jako u distribucí."""
+        soubor = self._soubor(available=("orig", "ocr"))
+
+        with self.assertRaises(Http404):
+            self._call_view(soubor, distribution="thumb/page", paradata=True)
+
+        soubor.get_paradata_response.assert_not_called()
+
+    def test_missing_paradata_raise_404(self):
+        """Neexistující paradata skončí 404, nikoli staženým původním souborem."""
+        soubor = self._soubor()
+        soubor.get_paradata_response.return_value = None
+
+        with self.assertRaises(Http404):
+            self._call_view(soubor, paradata=True)
 
     def test_anonymous_user_is_redirected_to_login(self):
         """Nepřihlášený uživatel se ke stažení distribuce nedostane."""

@@ -22,6 +22,7 @@ from core.constants import (
     ROLE_BADATEL_ID,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
 )
+from core.distribution_names import ORIGINAL_DISTRIBUTION_NAME
 from core.forms import CheckStavNotChangedForm, RenameSouborForm, TranslationImportForm
 from core.ident_cely import get_record_from_ident
 from core.message_constants import (
@@ -548,8 +549,10 @@ class DownloadFile(LoginRequiredMixin, View):
         ``?distribution=ocr/alto-xml``), nikoli samostatnou URL routou: požadavek tak zůstává na
         routě ``download_file`` a ``PermissionMiddleware`` na něj uplatní stejná oprávnění jako
         na běžné stažení souboru. Stáhnout lze jen distribuci z ``Soubor.available_distributions()``.
+        Stejně se přes GET parametr ``paradata`` (např. ``?paradata=1&distribution=ocr/alto-xml``)
+        stahují paradata zvolené distribuce; bez ``distribution`` jde o paradata původního souboru.
 
-        :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET`` (včetně ``distribution``), ovlivňuje větvení podmínek.
+        :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET`` (včetně ``distribution`` a ``paradata``), ovlivňuje větvení podmínek.
         :param typ_vazby: Typ vazby souboru na doménový záznam.
         :param ident_cely: Identifikátor záznamu, ke kterému soubor patří.
         :param pk: Primární klíč souboru.
@@ -580,6 +583,14 @@ class DownloadFile(LoginRequiredMixin, View):
                 return soubor.small_thumbnail
             elif self.thumb_large and soubor.large_thumbnail is not None:
                 return soubor.large_thumbnail
+            elif request.GET.get("paradata"):
+                # Paradata are only offered for distributions the file actually has (same gate as below).
+                distribution = distribution or ORIGINAL_DISTRIBUTION_NAME
+                if distribution not in soubor.available_distributions():
+                    raise Http404
+                paradata_response = soubor.get_paradata_response(distribution)
+                if paradata_response is not None:
+                    return paradata_response
             elif distribution:
                 # Only distributions the file actually offers may be downloaded; a raw name from the
                 # URL must not reach Fedora, otherwise it could address any container under the file.

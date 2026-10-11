@@ -1081,6 +1081,68 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             response["Content-Type"] = rep_bin_file.content_type
         return response
 
+    @cached_property
+    def paradata_distributions(self) -> frozenset:
+        """
+        Vrátí názvy distribucí z ``available_distributions()``, ke kterým ve Fedoře existují paradata.
+
+        Paradata nemají záznam v databázi ani v historii (zadání #3527), takže jejich existenci lze
+        zjistit jen dotazem do Fedory. Nejprve se jedním dotazem ověří kontejner ``paradata``
+        a teprve když existuje, ověří se jednotlivé distribuce. Výsledek se ukládá na instanci,
+        aby ho tabulka souborů mohla číst opakovaně bez dalších dotazů.
+
+        Nedostupnost Fedory nebo neplatný název distribuce v historii se pouze zalogují a vrátí se
+        prázdná množina — chyba při zjišťování paradat nesmí shodit vykreslení detailu záznamu.
+
+        :return: Množina názvů distribucí (včetně ``orig``), které mají paradata.
+        """
+        from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraValidationError
+
+        record = self.vazba.navazany_objekt if self.repository_uuid else None
+        if record is None:
+            return frozenset()
+        connector = FedoraRepositoryConnector(record)
+        try:
+            if not connector.has_paradata(self.repository_uuid):
+                return frozenset()
+            return frozenset(
+                distribution
+                for distribution in self.available_distributions()
+                if connector.paradata_exists(self.repository_uuid, distribution)
+            )
+        except (FedoraError, FedoraValidationError) as err:
+            logger.warning(
+                "core.models.soubor.paradata_distributions.failed",
+                extra={"soubor": self.pk, "error": err},
+            )
+            return frozenset()
+
+    def get_paradata_response(self, distribution) -> FileResponse | None:
+        """
+        Vrátí paradata zvolené distribuce souboru jako HTTP odpověď.
+
+        Paradata se nabídnou ke stažení pod názvem uloženým ve Fedoře (``nazev`` z importního CSV
+        ``paradata.csv``) a s uloženým MIME typem. Jen když Fedora název nevrátí, odvodí se z názvu
+        souboru a distribuce (``scan.pdf`` + ``ocr/alto-xml`` → ``scan.pdf.ocr_alto-xml.paradata``).
+
+        :param distribution: Název distribuce, ke které paradata patří; ``orig`` pro původní soubor.
+        :return: ``FileResponse`` s obsahem paradat, nebo ``None``, pokud je nelze načíst.
+        """
+        from core.repository_connector import FedoraRepositoryConnector
+
+        record = self.vazba.navazany_objekt
+        if record is None or self.repository_uuid is None:
+            return None
+        connector = FedoraRepositoryConnector(record)
+        rep_bin_file = connector.get_paradata(self.repository_uuid, distribution)
+        if rep_bin_file is None:
+            return None
+        filename = rep_bin_file.filename or f"{self.nazev}.{distribution.replace('/', '_')}.paradata"
+        response = self._create_file_response(rep_bin_file, filename=filename)
+        if rep_bin_file.content_type:
+            response["Content-Type"] = rep_bin_file.content_type
+        return response
+
     def getMock(self):
         """
         Vrátí mock reprezentaci souboru.

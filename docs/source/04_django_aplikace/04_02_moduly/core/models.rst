@@ -319,6 +319,31 @@ Třídy
       :param distribution: Název distribuce; ``orig`` vrátí původní obsah souboru.
       :return: ``FileResponse`` s obsahem distribuce, nebo ``None``, pokud ji nelze načíst.
 
+   .. py:method:: paradata_distributions()
+
+      Vrátí názvy distribucí z ``available_distributions()``, ke kterým ve Fedoře existují paradata.
+
+      Paradata nemají záznam v databázi ani v historii (zadání #3527), takže jejich existenci lze
+      zjistit jen dotazem do Fedory. Nejprve se jedním dotazem ověří kontejner ``paradata``
+      a teprve když existuje, ověří se jednotlivé distribuce. Výsledek se ukládá na instanci,
+      aby ho tabulka souborů mohla číst opakovaně bez dalších dotazů.
+
+      Nedostupnost Fedory nebo neplatný název distribuce v historii se pouze zalogují a vrátí se
+      prázdná množina — chyba při zjišťování paradat nesmí shodit vykreslení detailu záznamu.
+
+      :return: Množina názvů distribucí (včetně ``orig``), které mají paradata.
+
+   .. py:method:: get_paradata_response()
+
+      Vrátí paradata zvolené distribuce souboru jako HTTP odpověď.
+
+      Paradata se nabídnou ke stažení pod názvem uloženým ve Fedoře (``nazev`` z importního CSV
+      ``paradata.csv``) a s uloženým MIME typem. Jen když Fedora název nevrátí, odvodí se z názvu
+      souboru a distribuce (``scan.pdf`` + ``ocr/alto-xml`` → ``scan.pdf.ocr_alto-xml.paradata``).
+
+      :param distribution: Název distribuce, ke které paradata patří; ``orig`` pro původní soubor.
+      :return: ``FileResponse`` s obsahem paradat, nebo ``None``, pokud je nelze načíst.
+
    .. py:method:: getMock()
 
       Vrátí mock reprezentaci souboru.

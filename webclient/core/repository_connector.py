@@ -2210,6 +2210,29 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         # už znovu validovat nesmí, protože ``paradata`` je vyhrazený prefix.
         return self._container_exists(uuid, self._get_paradata_path(distribution), ident_cely)
 
+    def has_paradata(self, uuid, ident_cely=None) -> bool:
+        """
+        Zjistí, zda má soubor ve Fedoře kontejner ``paradata`` pro paradata libovolné distribuce.
+
+        Slouží jako levné předběžné ověření pro tabulku souborů: naprostá většina souborů paradata
+        nemá, takže jedním dotazem odpadne ověřování každé distribuce zvlášť přes ``paradata_exists``.
+
+        Na rozdíl od ``_container_exists`` se dotazuje přímo na URL kontejneru: ``paradata`` je RDF
+        kontejner, nikoli binární obsah, takže ``fcr:metadata`` nemá a Fedora by vrátila ``404``.
+
+        :param uuid: UUID kontejneru souboru.
+        :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+        :return: ``True``, pokud kontejner ``paradata`` existuje, jinak ``False``.
+        :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+        """
+        url = self._get_request_url(
+            FedoraRequestType.GET_DISTRIBUTION_CONTAINER, uuid=uuid, ident_cely=ident_cely, path=self.PARADATA_CONTAINER
+        )
+        response = self._send_request(url, FedoraRequestType.GET_DISTRIBUTION_CONTAINER)
+        if response is None:
+            raise FedoraNoResponseError(url, "No Fedora response", None, fedora_transaction=self.transaction)
+        return str(response.status_code)[0] == "2"
+
     def find_distribution_path_conflict(self, uuid, distribution, ident_cely=None) -> Optional[str]:
         """
         Najde ve Fedoře zdroj, který by znemožnil založit distribuci na zadané cestě.

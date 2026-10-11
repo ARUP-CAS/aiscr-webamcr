@@ -650,6 +650,21 @@ Třídy
       :raises FedoraValidationError: Pokud je název distribuce vyhrazený nebo neplatný.
       :raises FedoraNoResponseError: Pokud repozitář neodpoví.
 
+   .. py:method:: has_paradata()
+
+      Zjistí, zda má soubor ve Fedoře kontejner ``paradata`` pro paradata libovolné distribuce.
+
+      Slouží jako levné předběžné ověření pro tabulku souborů: naprostá většina souborů paradata
+      nemá, takže jedním dotazem odpadne ověřování každé distribuce zvlášť přes ``paradata_exists``.
+
+      Na rozdíl od ``_container_exists`` se dotazuje přímo na URL kontejneru: ``paradata`` je RDF
+      kontejner, nikoli binární obsah, takže ``fcr:metadata`` nemá a Fedora by vrátila ``404``.
+
+      :param uuid: UUID kontejneru souboru.
+      :param ident_cely: Identifikátor záznamu; není-li zadán, použije se ident navázaného záznamu.
+      :return: ``True``, pokud kontejner ``paradata`` existuje, jinak ``False``.
+      :raises FedoraNoResponseError: Pokud repozitář neodpoví.
+
    .. py:method:: find_distribution_path_conflict()
 
       Najde ve Fedoře zdroj, který by znemožnil založit distribuci na zadané cestě.

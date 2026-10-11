@@ -617,6 +617,18 @@ class ReservedSubtreeTest(DistributionConnectorTestBase):
         self.assertFalse(exists)
         self.assertEqual(send.call_args_list[0].args[0], f"{self.file_url}/paradata/orig/fcr:metadata")
 
+    def test_has_paradata_queries_the_container_itself(self):
+        """Kontejner ``paradata`` je RDF kontejner bez ``fcr:metadata``; dotaz musí jít přímo na jeho URL.
+
+        Dotaz na ``paradata/fcr:metadata`` vrací ve Fedoře vždy 404, takže by tabulka souborů
+        ikonu paradat nikdy nezobrazila.
+        """
+        with mock.patch.object(self.connector, "_send_request", return_value=_Response(status_code=200)) as send:
+            exists = self.connector.has_paradata(self.UUID)
+
+        self.assertTrue(exists)
+        self.assertEqual(send.call_args_list[0].args[0], f"{self.file_url}/paradata")
+
     def test_paradata_still_rejects_a_reserved_distribution(self):
         """Paradata k ``paradata`` nedávají smysl a odmítnou se i po rozšíření kontroly."""
         with mock.patch.object(self.connector, "_send_request") as send:

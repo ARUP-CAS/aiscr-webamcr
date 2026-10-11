@@ -70,6 +70,7 @@ else:
         "uzivatel.tests.test_selenium",
         "heslar.tests.test_selenium",
         "core.tests.test_fedora_integration_child_walk",
+        "core.tests.test_fedora_integration_paradata",
     ]
 
 

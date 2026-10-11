@@ -2,6 +2,7 @@
 
 Hlavičku sestavuje ``FileResponse`` podle RFC 6266; testy hlídají, že se název neořízne
 u mezer a nerozsype u diakritiky a že se nezmění typ dispozice (``attachment``/``inline``).
+Obsahují i testy stažení a zjišťování paradat (``get_paradata_response``, ``paradata_distributions``).
 Nepotřebují databázi ani Fedoru — pracují nad neuloženou instancí ``Soubor`` a fake obsahem.
 """
 
@@ -118,3 +119,80 @@ class SouborFileResponseTest(SimpleTestCase):
         response = self._distribution_response("scan.pdf", "ocr/alto-xml", "application/xml")
 
         self.assertEqual(response["Content-Disposition"], 'attachment; filename="scan.pdf.ocr_alto-xml"')
+
+    def _paradata_response(self, nazev, distribution, content_type=None, filename=None):
+        """Vrátí odpověď ke stažení paradat distribuce s mocknutým repozitářem.
+
+        :param nazev: Název souboru.
+        :param distribution: Název distribuce, ke které paradata patří.
+        :param content_type: MIME typ uložený u paradat ve Fedoře.
+        :param filename: Název uložený u paradat ve Fedoře.
+        :return: ``FileResponse`` s obsahem paradat.
+        """
+        soubor = self._soubor(nazev)
+        with mock.patch.object(Soubor, "repository_uuid", "uuid-1"), mock.patch.object(
+            Soubor, "vazba", mock.Mock(navazany_objekt=mock.Mock())
+        ), mock.patch("core.repository_connector.FedoraRepositoryConnector") as connector:
+            connector.return_value.get_paradata.return_value = _FakeBinaryFile(b"{}", content_type, filename)
+            response = soubor.get_paradata_response(distribution)
+        connector.return_value.get_paradata.assert_called_once_with("uuid-1", distribution)
+        return response
+
+    def test_paradata_are_downloaded_under_stored_name(self):
+        """Paradata se stáhnou pod názvem uloženým ve Fedoře a odpověď nese uložený MIME typ."""
+        response = self._paradata_response("scan.pdf", "ocr/alto-xml", "application/json", "alto_paradata.json")
+
+        self.assertEqual(response["Content-Disposition"], 'attachment; filename="alto_paradata.json"')
+        self.assertEqual(response["Content-Type"], "application/json")
+
+    def test_missing_paradata_name_falls_back_to_distribution(self):
+        """Bez uloženého názvu se název paradat odvodí ze souboru a distribuce, aby se nepletl s distribucí."""
+        response = self._paradata_response("scan.pdf", "ocr/alto-xml")
+
+        self.assertEqual(response["Content-Disposition"], 'attachment; filename="scan.pdf.ocr_alto-xml.paradata"')
+
+
+class SouborParadataDistributionsTest(SimpleTestCase):
+    """Testy pro ``Soubor.paradata_distributions`` — které distribuce v tabulce souborů dostanou ikonu paradat."""
+
+    def _paradata_distributions(self, has_paradata, with_paradata=(), error=None):
+        """Vrátí ``paradata_distributions`` souboru s distribucemi ``orig``, ``ocr`` a ``atr``.
+
+        :param has_paradata: Výsledek ověření kontejneru ``paradata``.
+        :param with_paradata: Distribuce, pro které ``paradata_exists`` vrátí ``True``.
+        :param error: Výjimka vyvolaná při ověření kontejneru ``paradata``.
+        :return: Dvojice (výsledek, mock instance connectoru).
+        """
+        soubor = Soubor(nazev="scan.pdf", mimetype="application/pdf", size_mb=1)
+        with mock.patch.object(Soubor, "repository_uuid", "uuid-1"), mock.patch.object(
+            Soubor, "vazba", mock.Mock(navazany_objekt=mock.Mock())
+        ), mock.patch.object(Soubor, "available_distributions", return_value=["orig", "ocr", "atr"]), mock.patch(
+            "core.repository_connector.FedoraRepositoryConnector"
+        ) as connector:
+            connector.return_value.has_paradata.return_value = has_paradata
+            connector.return_value.has_paradata.side_effect = error
+            connector.return_value.paradata_exists.side_effect = lambda uuid, dist: dist in with_paradata
+            return soubor.paradata_distributions, connector.return_value
+
+    def test_file_without_paradata_container_needs_no_per_distribution_checks(self):
+        """Bez kontejneru ``paradata`` stačí jediný dotaz; jednotlivé distribuce se do Fedory neověřují."""
+        result, connector = self._paradata_distributions(has_paradata=False)
+
+        self.assertEqual(result, frozenset())
+        connector.paradata_exists.assert_not_called()
+
+    def test_only_distributions_with_paradata_are_returned(self):
+        """Ikonu dostanou jen distribuce, ke kterým paradata ve Fedoře existují — včetně ``orig``."""
+        result, _ = self._paradata_distributions(has_paradata=True, with_paradata=("orig", "atr"))
+
+        self.assertEqual(result, frozenset({"orig", "atr"}))
+
+    def test_unreachable_fedora_does_not_break_the_file_table(self):
+        """Nedostupná Fedora se projeví jen chybějící ikonou paradat, ne pádem detailu záznamu."""
+        from core.repository_connector import FedoraNoResponseError
+
+        result, _ = self._paradata_distributions(
+            has_paradata=True, error=FedoraNoResponseError("url", "No Fedora response", None)
+        )
+
+        self.assertEqual(result, frozenset())
