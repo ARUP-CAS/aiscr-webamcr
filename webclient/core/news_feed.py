@@ -19,6 +19,7 @@ from datetime import datetime
 from typing import Optional
 
 import bleach
+from bs4 import BeautifulSoup
 
 # Konfigurace sanitizace HTML pomocí bleach
 ALLOWED_TAGS = [
@@ -120,13 +121,12 @@ def sanitize_html(html: str) -> str:
     if not html:
         return ""
 
-    # First, remove script tags and their content (bleach doesn't strip content by default)
-    import re
-
-    html = re.sub(r"<script[^>]*>.*?</script>", "", html, flags=re.DOTALL | re.IGNORECASE)
-
-    # Remove style tags and their content
-    html = re.sub(r"<style[^>]*>.*?</style>", "", html, flags=re.DOTALL | re.IGNORECASE)
+    # Remove script/style tags and their content using an HTML parser
+    # This is more robust than regex for handling malformed HTML
+    soup = BeautifulSoup(html, "html.parser")
+    for tag in soup.find_all(["script", "style"]):
+        tag.decompose()
+    html = str(soup)
 
     return bleach.clean(
         html,
