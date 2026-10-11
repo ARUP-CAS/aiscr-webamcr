@@ -91,12 +91,14 @@
 - **Description:** Selenium, debug-toolbar, pre-commit, coverage, sphinx, etc. are in the production requirements.txt. The production image is unnecessarily large.
 - **Recommendation:** Split into requirements.txt, requirements-dev.txt, requirements-test.txt.
 - **Effort:** S
+- **Status:** Resolved in #4258 — the `webclient/requirements*.in` files are compiled into `requirements.txt` / `requirements-test.txt` / `requirements-dev.txt` / `requirements-docs.txt`.
 
 ### [T08] DOCS-01: Separate requirements for the documentation build
 - **Files:** `readthedocs.yaml`, `webclient/requirements.txt`
 - **Description:** The Read the Docs build installs the complete `webclient/requirements.txt`, which also contains development and testing packages (Selenium, debug-toolbar, Sphinx, etc.). For a documentation build this is unnecessary and increases both time and the risk of dependency conflicts.
 - **Recommendation:** Create a separate file (e.g. `docs/requirements.txt`) with the minimal set of packages for the documentation and switch the installation in `.readthedocs.yaml` to that file.
 - **Effort:** S
+- **Status:** Resolved in #4258 — `webclient/requirements*.in` files are compiled into `requirements.txt` / `requirements-test.txt` / `requirements-dev.txt` / `requirements-docs.txt`.
 
 ### [T08] DOCS-02: Improve error handling in the license generator
 - **Files:** `docs/licenses/convert_to_rst.py`

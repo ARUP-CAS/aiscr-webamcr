@@ -21,6 +21,7 @@ Dokumentace modulu core.
    context_processors
    coordTransform
    decorators
+   distribution_names
    exceptions
    ident_cely
    import_data_mappers

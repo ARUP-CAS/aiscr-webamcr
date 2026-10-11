@@ -185,7 +185,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         ).save()
         self.save()
 
-    def check_pred_odeslanim(self):
+    def check_pred_odeslanim(self, kontrolovat_dokumenty=True):
         """
         Metoda pro kontrolu prerekvizit před posunem do stavu odeslaný:
 
@@ -195,6 +195,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
         Je připojená aspoň jedna dokumentační jednotka se všemi relevantními relacemi.
 
+        Připojené dokumenty, které dosud nejsou archivované, projdou svou kontrolou před odesláním.
+        Archivované dokumenty se nekontrolují (jejich neúplnost typicky pochází ze staršího importu).
+
+            :param kontrolovat_dokumenty: Pokud je ``False``, obsahová kontrola připojených dokumentů se vynechá úplně.
             :return: Vrací proměnná ``result``.
         """
         result = []
@@ -266,7 +270,12 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                     )
                 )
                 logger.debug("arch_z.models.ArcheologickyZaznam.dj_nema_pian", extra={"ident_cely": dj.ident_cely})
-        for dokument_cast in self.casti_dokumentu.all():
+        dokumenty_ke_kontrole = (
+            self.casti_dokumentu.exclude(dokument__stav=D_STAV_ARCHIVOVANY).select_related("dokument")
+            if kontrolovat_dokumenty
+            else []
+        )
+        for dokument_cast in dokumenty_ke_kontrole:
             dokument_warning = dokument_cast.dokument.check_pred_odeslanim()
             if dokument_warning:
                 result.append("Dokument " + dokument_cast.dokument.ident_cely + ": " + ", ".join(dokument_warning))
@@ -281,15 +290,15 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         """
         Metoda pro kontrolu prerekvizit před archivací:
 
-        kontrola jako před odesláním a navíc
+        kontrola jako před odesláním (bez obsahové kontroly připojených dokumentů) a navíc
 
-        všechny pripojené dokumenty jsou archivované.
+        všechny pripojené dokumenty jsou archivované (vrací se zvlášť jako varování k potvrzení).
 
         všechny DJ mají potvrzený pian
 
             :return: Vrací n-tici.
         """
-        result = self.check_pred_odeslanim()
+        result = self.check_pred_odeslanim(kontrolovat_dokumenty=False)
         doc_result = []
         for dc in self.casti_dokumentu.all():
             if dc.dokument.stav != D_STAV_ARCHIVOVANY:

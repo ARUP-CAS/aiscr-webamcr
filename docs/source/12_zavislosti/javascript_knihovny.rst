@@ -39,9 +39,9 @@ Knihovny instalované pomocí Node.js
      - MIT
      - https://github.com/dangrossman/daterangepicker
    * - dropzone
-     - 6.3.4
+     - 6.3.5
      - MIT
-     - https://www.dropzone.dev/
+     - http://www.dropzonejs.com
    * - jquery
      - 4.0.0
      - MIT
@@ -87,7 +87,7 @@ Knihovny instalované pomocí Node.js
      - BSD-2-Clause
      - https://github.com/fgnass/spin.js
    * - vanilla-cookieconsent
-     - 3.0.0
+     - 3.1.0
      - MIT
      - https://cookieconsent.orestbida.com
 

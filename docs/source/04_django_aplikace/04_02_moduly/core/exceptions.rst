@@ -48,19 +48,6 @@ Třídy
       :param message: Textová zpráva popisující důvod výjimky.
 
 
-.. py:class:: NeocekavanaRadaError
-
-   Implementuje komponentu ``NeocekavanaRadaError`` v rámci aplikace.
-
-   **Metody:**
-
-   .. py:method:: __init__()
-
-      Inicializuje výjimku pro případ, kdy je zjištěna neočekávaná řada dokumentu.
-
-      :param message: Textová zpráva popisující důvod výjimky.
-
-
 .. py:class:: WrongSheetError
 
    Implementuje komponentu ``WrongSheetError`` v rámci aplikace.
