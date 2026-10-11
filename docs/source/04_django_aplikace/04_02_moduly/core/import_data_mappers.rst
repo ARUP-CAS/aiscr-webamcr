@@ -235,7 +235,8 @@ Třídy
 .. py:class:: DistribuceUnsafeFilenameError
 
    Výjimka vyvolaná, pokud název souboru z importu (``distribution_nazev`` / ``paradata_nazev``)
-   není prostý název – obsahuje oddělovač cesty, ``..`` nebo je absolutní.
+   není prostý název – obsahuje oddělovač cesty, ``..``, je absolutní, nebo obsahuje uvozovky
+   či konec řádku, které by poškodily hlavičku ``Content-Disposition`` ve Fedoře.
 
    Takový název by se spojil s importním adresářem a mohl by z něj opustit, proto se kontroluje
    už při validaci, aby byl řádek označen jako neplatný místo pádu celé dávky ve fázi zápisu.
@@ -2632,10 +2633,12 @@ Třídy
       s importním adresářem, takže nesmí obsahovat oddělovače cesty ani ``..`` – jinak by
       mohl opustit importní adresář. Zakázání obou oddělovačů (``/`` i ``\``) vylučuje i
       absolutní cestu. Kontroluje se už při validaci, aby se neplatný řádek označil jako
-      neplatný místo pádu celé dávky ve fázi zápisu. DELETE se nevyhodnocuje, protože
-      nemaže soubor z importního adresáře.
+      neplatný místo pádu celé dávky ve fázi zápisu. Odmítnou se i uvozovky a konce řádků,
+      protože se název zapisuje do hlavičky ``Content-Disposition`` ve Fedoře, odkud se pak
+      čte název pro stažení. DELETE se nevyhodnocuje, protože nemaže soubor z importního adresáře.
 
-      :raises DistribuceUnsafeFilenameError: Pokud název souboru chybí, obsahuje cestu nebo ``..``.
+      :raises DistribuceUnsafeFilenameError: Pokud název souboru chybí, obsahuje cestu, ``..``,
+          uvozovky nebo konec řádku.
 
    .. py:method:: validate_batch_ordering()
 

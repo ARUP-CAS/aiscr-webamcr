@@ -68,6 +68,12 @@ class HasUnsafeDistributionSegmentsTest(SimpleTestCase):
             with self.subTest(name=name):
                 self.assertTrue(has_unsafe_distribution_segments(name))
 
+    def test_detects_url_significant_characters(self):
+        """Segment se znakem, který mění URL Fedory (kódovaná tečka, dotaz, fragment, mezera), se odhalí."""
+        for name in ("ocr/%2e%2e/orig", "%2E%2E", "ocr?x", "ocr#x", "ocr alto"):
+            with self.subTest(name=name):
+                self.assertTrue(has_unsafe_distribution_segments(name))
+
     def test_allows_ordinary_nested_names(self):
         """Běžný vnořený název projde."""
         self.assertFalse(has_unsafe_distribution_segments("ocr/alto-xml"))

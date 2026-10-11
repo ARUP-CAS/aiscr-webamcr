@@ -42,9 +42,11 @@ Funkce
 
    Ověří, zda název distribuce obsahuje segment, který by vedl mimo kontejner souboru.
 
-   Zachytí prázdné segmenty (``ocr//alto``) i průchod adresáři (``ocr/../orig``). Validace
-   importu i connector používají tuto funkci, aby CSV neprošlo validací jen proto, že by
-   chybu zachytil až zápis do Fedory.
+   Zachytí prázdné segmenty (``ocr//alto``), průchod adresáři (``ocr/../orig``) i segmenty se
+   znaky mimo ``A-Z``, ``a-z``, ``0-9``, ``.``, ``_`` a ``-``. Název se do URL Fedory vkládá
+   bez kódování, takže např. ``%2e%2e`` by mohlo být dekódováno na ``..`` a ``?`` nebo ``#``
+   by cestu zkrátily. Validace importu i connector používají tuto funkci, aby CSV neprošlo
+   validací jen proto, že by chybu zachytil až zápis do Fedory.
 
    :param name: Název distribuce z importu.
    :return: ``True``, pokud je některý segment nepovolený, jinak ``False``.

@@ -8,6 +8,7 @@ takže musí projít stejnou kontrolou na obou vrstvách: při validaci importn�
 odděleně od ``core.constants``, kam patří jen konstanty bez logiky.
 """
 
+import re
 from typing import Final
 
 # Vyhrazené názvy distribucí — vyhrazený je vždy i celý podstrom pod nimi. ``paradata`` chrání
@@ -21,6 +22,8 @@ ORIGINAL_DISTRIBUTION_NAME: Final = "orig"
 IMPLICIT_DISTRIBUTION_NAMES: Final = frozenset({"orig", "thumb", "thumb-large"})
 # Segmenty, které by dovolily opustit kontejner souboru nebo vytvořit prázdný segment cesty.
 UNSAFE_DISTRIBUTION_SEGMENTS: Final = frozenset({"", ".", ".."})
+# Characters allowed in one segment; anything URL-significant (e.g. %2e%2e, ?, #) would change the Fedora path.
+SAFE_DISTRIBUTION_SEGMENT: Final = re.compile(r"[A-Za-z0-9._-]+")
 
 
 def normalize_distribution_name(name: str) -> str:
@@ -54,15 +57,20 @@ def is_reserved_distribution_name(name: str) -> bool:
 def has_unsafe_distribution_segments(name: str) -> bool:
     """Ověří, zda název distribuce obsahuje segment, který by vedl mimo kontejner souboru.
 
-    Zachytí prázdné segmenty (``ocr//alto``) i průchod adresáři (``ocr/../orig``). Validace
-    importu i connector používají tuto funkci, aby CSV neprošlo validací jen proto, že by
-    chybu zachytil až zápis do Fedory.
+    Zachytí prázdné segmenty (``ocr//alto``), průchod adresáři (``ocr/../orig``) i segmenty se
+    znaky mimo ``A-Z``, ``a-z``, ``0-9``, ``.``, ``_`` a ``-``. Název se do URL Fedory vkládá
+    bez kódování, takže např. ``%2e%2e`` by mohlo být dekódováno na ``..`` a ``?`` nebo ``#``
+    by cestu zkrátily. Validace importu i connector používají tuto funkci, aby CSV neprošlo
+    validací jen proto, že by chybu zachytil až zápis do Fedory.
 
     :param name: Název distribuce z importu.
     :return: ``True``, pokud je některý segment nepovolený, jinak ``False``.
     """
     normalized = normalize_distribution_name(name)
-    return any(segment in UNSAFE_DISTRIBUTION_SEGMENTS for segment in normalized.split("/"))
+    return any(
+        segment in UNSAFE_DISTRIBUTION_SEGMENTS or not SAFE_DISTRIBUTION_SEGMENT.fullmatch(segment)
+        for segment in normalized.split("/")
+    )
 
 
 def find_distribution_prefix_collisions(names) -> list[tuple[str, str]]:

@@ -137,8 +137,8 @@ class DistribuceMapperNameValidationTest(TestCase):
                     DistribuceMapper(row).import_validation(INSERT)
 
     def test_unsafe_filename_rejected(self):
-        """Název souboru s průchodem adresáři nebo absolutní cestou se odmítne už při validaci."""
-        for nazev in ("../secret", "..\\secret", "/etc/passwd", "sub/file.xml", ".", ".."):
+        """Název souboru s průchodem adresáři, absolutní cestou, uvozovkami nebo koncem řádku se odmítne už při validaci."""
+        for nazev in ("../secret", "..\\secret", "/etc/passwd", "sub/file.xml", ".", "..", 'a"b.xml', "a\r\nb.xml"):
             with self.subTest(nazev=nazev):
                 row = VALID_ROW.copy()
                 row["nazev"] = nazev

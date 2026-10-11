@@ -459,10 +459,15 @@ class DistribuceMissingVazbaError(ImportDataError):
         )
 
 
+# Path separators would escape the import directory; quotes and line breaks would break Content-Disposition.
+UNSAFE_IMPORT_FILENAME_CHARS = ("/", "\\", '"', "\r", "\n")
+
+
 class DistribuceUnsafeFilenameError(ImportDataError):
     """
     Výjimka vyvolaná, pokud název souboru z importu (``distribution_nazev`` / ``paradata_nazev``)
-    není prostý název – obsahuje oddělovač cesty, ``..`` nebo je absolutní.
+    není prostý název – obsahuje oddělovač cesty, ``..``, je absolutní, nebo obsahuje uvozovky
+    či konec řádku, které by poškodily hlavičku ``Content-Disposition`` ve Fedoře.
 
     Takový název by se spojil s importním adresářem a mohl by z něj opustit, proto se kontroluje
     už při validaci, aby byl řádek označen jako neplatný místo pádu celé dávky ve fázi zápisu.
@@ -5251,13 +5256,15 @@ class DistribuceMapper(DistributionColumnsMixin, ImportModelMapper):
         s importním adresářem, takže nesmí obsahovat oddělovače cesty ani ``..`` – jinak by
         mohl opustit importní adresář. Zakázání obou oddělovačů (``/`` i ``\\``) vylučuje i
         absolutní cestu. Kontroluje se už při validaci, aby se neplatný řádek označil jako
-        neplatný místo pádu celé dávky ve fázi zápisu. DELETE se nevyhodnocuje, protože
-        nemaže soubor z importního adresáře.
+        neplatný místo pádu celé dávky ve fázi zápisu. Odmítnou se i uvozovky a konce řádků,
+        protože se název zapisuje do hlavičky ``Content-Disposition`` ve Fedoře, odkud se pak
+        čte název pro stažení. DELETE se nevyhodnocuje, protože nemaže soubor z importního adresáře.
 
-        :raises DistribuceUnsafeFilenameError: Pokud název souboru chybí, obsahuje cestu nebo ``..``.
+        :raises DistribuceUnsafeFilenameError: Pokud název souboru chybí, obsahuje cestu, ``..``,
+            uvozovky nebo konec řádku.
         """
         nazev = self.value_dict.get(self.NAZEV_COLUMN)
-        if not nazev or "/" in nazev or "\\" in nazev or nazev in (".", ".."):
+        if not nazev or any(char in nazev for char in UNSAFE_IMPORT_FILENAME_CHARS) or nazev in (".", ".."):
             raise DistribuceUnsafeFilenameError(nazev)
 
     @classmethod
