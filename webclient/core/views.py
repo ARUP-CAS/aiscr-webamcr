@@ -22,6 +22,7 @@ from core.constants import (
     ROLE_BADATEL_ID,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
 )
+from core.distribution_names import ORIGINAL_DISTRIBUTION_NAME
 from core.forms import CheckStavNotChangedForm, RenameSouborForm, TranslationImportForm
 from core.ident_cely import get_record_from_ident
 from core.message_constants import (
@@ -61,6 +62,7 @@ from core.soubor_naming import (
     get_next_soubor_name,
     get_soubor_suffix,
 )
+from core.translation import format_message
 from core.utils import (
     SessionIdentifier,
     check_import_report_directory,
@@ -100,6 +102,7 @@ from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_noop
 from django.views import View
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
@@ -542,7 +545,14 @@ class DownloadFile(LoginRequiredMixin, View):
         """
         Vrátí požadovaný soubor nebo jeho náhled po ověření vazby k záznamu.
 
-        :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek.
+        Alternativní distribuce se vybírá GET parametrem ``distribution`` (např.
+        ``?distribution=ocr/alto-xml``), nikoli samostatnou URL routou: požadavek tak zůstává na
+        routě ``download_file`` a ``PermissionMiddleware`` na něj uplatní stejná oprávnění jako
+        na běžné stažení souboru. Stáhnout lze jen distribuci z ``Soubor.available_distributions()``.
+        Stejně se přes GET parametr ``paradata`` (např. ``?paradata=1&distribution=ocr/alto-xml``)
+        stahují paradata zvolené distribuce; bez ``distribution`` jde o paradata původního souboru.
+
+        :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET`` (včetně ``distribution`` a ``paradata``), ovlivňuje větvení podmínek.
         :param typ_vazby: Typ vazby souboru na doménový záznam.
         :param ident_cely: Identifikátor záznamu, ke kterému soubor patří.
         :param pk: Primární klíč souboru.
@@ -565,11 +575,30 @@ class DownloadFile(LoginRequiredMixin, View):
                 safe_redirect = "/"
             return redirect(safe_redirect)
         soubor: Soubor = get_object_or_404(Soubor, id=pk)
+        # Passed as a query parameter so the request resolves to the download_file route and
+        # PermissionMiddleware applies the same permission rows as to the standard download.
+        distribution = request.GET.get("distribution")
         if soubor.repository_uuid:
             if self.thumb_small and soubor.small_thumbnail is not None:
                 return soubor.small_thumbnail
             elif self.thumb_large and soubor.large_thumbnail is not None:
                 return soubor.large_thumbnail
+            elif request.GET.get("paradata"):
+                # Paradata are only offered for distributions the file actually has (same gate as below).
+                distribution = distribution or ORIGINAL_DISTRIBUTION_NAME
+                if distribution not in soubor.available_distributions():
+                    raise Http404
+                paradata_response = soubor.get_paradata_response(distribution)
+                if paradata_response is not None:
+                    return paradata_response
+            elif distribution:
+                # Only distributions the file actually offers may be downloaded; a raw name from the
+                # URL must not reach Fedora, otherwise it could address any container under the file.
+                if distribution not in soubor.available_distributions():
+                    raise Http404
+                distribution_response = soubor.get_distribution_response(distribution)
+                if distribution_response is not None:
+                    return distribution_response
             elif soubor.content_file_response is not None:
                 return soubor.content_file_response
         raise Http404
@@ -910,12 +939,8 @@ class BasePostUploadView(View):
                 if duplikat.first().vazba.navazany_objekt is not None
                 else ""
             )
-            help_translation = _("core.views.post_upload.duplikat2.text1")
-            help_translation2 = _("core.views.post_upload.duplikat2.text2")
-            help_translation3 = _("core.views.post_upload.duplikat2.text3")
-            response_data["duplicate"] = (
-                f"{help_translation} {self.original_filename} {help_translation2} "
-                f"{parent_ident}. {help_translation3}",
+            response_data["duplicate"] = format_message(
+                gettext_noop("core.views.post_upload.duplikat2"), file=self.original_filename, ident=parent_ident
             )
         return response_data
 
@@ -931,10 +956,8 @@ class BasePostUploadView(View):
         :return: Upravený slovník odpovědi (beze změny, pokud k přejmenování nedošlo).
         """
         if renamed:
-            help_translation = _("core.views.post_upload.renamed.text1")
-            help_translation2 = _("core.views.post_upload.renamed.text2")
-            response_data["file_renamed"] = (
-                f"{help_translation} {self.original_filename} {help_translation2} " f"{new_name}",
+            response_data["file_renamed"] = format_message(
+                gettext_noop("core.views.post_upload.renamed"), file=self.original_filename, new_name=new_name
             )
         return response_data
 
@@ -1053,6 +1076,9 @@ class NewFileUploadView(BasePostUploadView):
             soubor_instance.zaznamenej_nahrani(user_admin, self.original_filename)
         else:
             soubor_instance.zaznamenej_nahrani(request.user, self.original_filename)
+        # Historie náhledů se zapisuje až tady — při volání ``save_binary_file`` výše ještě
+        # záznam ``Soubor`` neexistoval, takže connector vrátil jen přehled zapsaných náhledů.
+        soubor_instance.zaznamenej_distribuce(rep_bin_file.thumb_writes)
         duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk").exclude(id=soubor_instance.id)
         response_data = self._append_duplicate_message(response_data, duplikat)
         response_data = self._append_rename_message(response_data, renamed, new_name)
@@ -1149,10 +1175,8 @@ class NewFileUploadView(BasePostUploadView):
                 return JsonResponse({"error": str(SOUBOR_NEJVYSSI_SUFFIX_OBSAZEN)}, status=403)
             return JsonResponse(
                 {
-                    "error": (
-                        _("core.views.post_upload.error.maximal_file_name_exceeded_part_1")
-                        + f" {ident_cely} "
-                        + _("core.views.post_upload.error.maximal_file_name_exceeded_part_2")
+                    "error": format_message(
+                        gettext_noop("core.views.post_upload.error.maximal_file_name_exceeded"), ident=ident_cely
                     )
                 },
                 status=403,
@@ -1276,6 +1300,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
             soubor_instance.binary_data = soubor_data
             soubor_instance.save()
             soubor_instance.zaznamenej_nahrani_nove_verze(request.user, original_name)
+            soubor_instance.zaznamenej_distribuce(rep_bin_file.thumb_writes)
         if rep_bin_file is not None:
             duplikat = Soubor.objects.filter(sha_512=rep_bin_file.sha_512).exclude(id=soubor_instance.id).order_by("pk")
             response_data = {"filename": soubor_instance.nazev}
@@ -2481,7 +2506,7 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
             messages.add_message(self.request, messages.ERROR, str(e))
             return redirect(reverse("rosetta-file-list", args=[self.po_filter]))
         p = Path(self.po_file_path)
-        date_sufix = datetime.strftime(datetime.now(), "%d%m%Y%H%M")
+        date_sufix = datetime.strftime(datetime.now(), "%d%m%Y%H%M%S")
         p.rename(Path(p.parent, f"{p.stem}_backup_{date_sufix}{p.suffix}"))
         self.handle_uploaded_file(new_pofile)
         po_filepath, ext = os.path.splitext(self.po_file_path)
@@ -2922,13 +2947,12 @@ class DataImportProgress(LoginRequiredMixin, View):
             # validation_result is a translation ID for valid rows, or a raw translated exception
             # message for invalid rows (carve-out: mapper exceptions compose the message at raise
             # time). translate_status_value renders both correctly in the admin's locale.
-            validation_results = [
-                {
-                    **json.loads(item),
-                    "validation_result": translate_status_value(json.loads(item).get("validation_result", "")),
-                }
-                for item in validation_details
-            ]
+            validation_results = []
+            for item in validation_details:
+                # One json.loads per row — the poll runs every second over a growing list.
+                row = json.loads(item)
+                row["validation_result"] = translate_status_value(row.get("validation_result", ""))
+                validation_results.append(row)
             validation_cursor = validation_since + len(validation_details)
             invalid_records = json.loads(redis_connector.get(f"import_data_invalid_records_{job_id}") or "[]")
             failure_reason = (

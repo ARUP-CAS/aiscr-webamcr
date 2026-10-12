@@ -21,6 +21,7 @@ Dokumentace modulu core.
    context_processors
    coordTransform
    decorators
+   distribution_names
    exceptions
    ident_cely
    import_data_mappers
@@ -35,5 +36,6 @@ Dokumentace modulu core.
    setting_models
    soubor_naming
    storage
+   translation
    utils
    validators

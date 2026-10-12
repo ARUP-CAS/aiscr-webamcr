@@ -173,7 +173,7 @@ Třídy
 
    Formulář pro nastavení a úpravu odstávky.
 
-   Vrámci načítáni formuláře se doplní načítají hodnoty z template odstávky.
+   V rámci načítání formuláře se doplní hodnoty textů chybových stránek.
 
    **Metody:**
 

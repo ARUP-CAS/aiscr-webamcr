@@ -1705,10 +1705,10 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
         logger.debug("arch_z.views.smazat_akce_vedoucí.get", extra={"ident_cely": ident_cely, "pk": akce_vedouci_id})
         context = {
             "object": zaznam,
-            "title": _("arch_z.views.smazat_akce_vedoucí.title.text"),
+            "title": _("arch_z.views.smazat_akce_vedouci.title.text"),
             "id_tag": "smazat-objekt-form",
             "button": _("core.views.smazat.submitButton.text"),
-            "warnings": [_("arch_z.views.smazat_akce_vedoucí.save_warning")],
+            "warnings": [_("arch_z.views.smazat_akce_vedouci.save_warning")],
         }
         return render(request, "core/transakce_modal.html", context)
 

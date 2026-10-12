@@ -251,7 +251,7 @@ class EditProjektyColumn(tables.TemplateColumn):
 class UzivatelSpolupraceTable(SearchTable):
     """Definuje tabulku uživatelských spoluprací pro přehled i export."""
 
-    stav = tables.Column(verbose_name="Stav", default="")
+    stav = tables.Column(verbose_name=_("pas.tables.UzivatelSpolupraceTable.stav.label"), default="")
     vedouci = tables.Column(
         accessor="vedouci__name_and_id",
         verbose_name=_("pas.tables.spolupraceTable.vedouci.label"),

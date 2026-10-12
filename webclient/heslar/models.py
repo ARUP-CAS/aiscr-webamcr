@@ -60,7 +60,7 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
             ("nazev_heslare", "heslo_en"),
         )
         ordering = ["razeni"]
-        verbose_name_plural = "Heslář"
+        verbose_name_plural = _("heslar.model.Heslar.modelTitles.label")
 
     def __str__(self):
         """
@@ -123,7 +123,7 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
 
         db_table = "heslar_datace"
-        verbose_name_plural = "Heslář datace"
+        verbose_name_plural = _("heslar.model.HeslarDatace.modelTitles.label")
 
     def __init__(self, *args, **kwargs):
         """
@@ -171,7 +171,7 @@ class HeslarDokumentTypMaterial(ExportModelOperationsMixin("heslar_dokument_typ_
 
         db_table = "heslar_dokument_typ_material"
         unique_together = (("dokument_typ", "dokument_material"),)
-        verbose_name_plural = "Heslář dokument typ materiál"
+        verbose_name_plural = _("heslar.model.HeslarDokumentTypMaterial.modelTitles.label")
 
 
 class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.Model):
@@ -204,7 +204,7 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
 
         db_table = "heslar_hierarchie"
         unique_together = (("heslo_podrazene", "heslo_nadrazene", "typ"),)
-        verbose_name_plural = "Heslář hierarchie"
+        verbose_name_plural = _("heslar.model.HeslarHierarchie.modelTitles.label")
         constraints = [
             CheckConstraint(
                 condition=(Q(typ__in=["podřízenost", "uplatnění", "výchozí hodnota"])),
@@ -249,7 +249,7 @@ class HeslarNazev(ExportModelOperationsMixin("heslar_nazev"), models.Model):
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
 
         db_table = "heslar_nazev"
-        verbose_name_plural = "Heslář název"
+        verbose_name_plural = _("heslar.model.HeslarNazev.modelTitles.label")
 
 
 class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
@@ -285,7 +285,7 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
 
         db_table = "heslar_odkaz"
-        verbose_name_plural = "Heslář odkaz"
+        verbose_name_plural = _("heslar.model.HeslarOdkaz.modelTitles.label")
 
     def __init__(self, *args, **kwargs):
         """
@@ -338,7 +338,7 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
 
         db_table = "ruian_katastr"
         ordering = ["nazev"]
-        verbose_name_plural = "Ruian katastry"
+        verbose_name_plural = _("heslar.model.RuianKatastr.modelTitles.label")
 
     def __str__(self):
         """
@@ -394,7 +394,7 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
 
         db_table = "ruian_kraj"
         ordering = ["nazev"]
-        verbose_name_plural = "Ruian kraje"
+        verbose_name_plural = _("heslar.model.RuianKraj.modelTitles.label")
 
     def __str__(self):
         """
@@ -452,7 +452,7 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
 
         db_table = "ruian_okres"
         ordering = ["nazev"]
-        verbose_name_plural = "Ruian okresy"
+        verbose_name_plural = _("heslar.model.RuianOkres.modelTitles.label")
 
     def __str__(self):
         """

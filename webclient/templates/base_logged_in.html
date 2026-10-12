@@ -145,7 +145,7 @@
               <li><a href="{% url 'pas:list' %}?projekt_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.naseNalezy" %}</a></li>
               {% endif %}
               {% if show_pas_potvrdit %}
-              <li><a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}&sort=nalezce&sort=datum_nalezu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.potvrdit" %}</a></li>
+              <li><a href="{% url 'pas:list' %}?stav=2&organizace_nalezu={{ user.organizace.id }}&sort=nalezce&sort=datum_nalezu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.potvrdit" %}</a></li>
               {% endif %}
               {% if show_pas_archivovat %}
               <li><a href="{% url 'pas:list' %}?stav=3&sort=datum_nalezu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.archivovat" %}</a></li>
@@ -315,7 +315,7 @@
       {% endif %}
     </span>
     <button class="navbar-toggler" id="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMobile"
-            aria-controls="navbarMobile" aria-expanded="false" aria-label="Toggle navigation">
+            aria-controls="navbarMobile" aria-expanded="false" aria-label="{% trans 'templates.a11y.toggleNavigation' %}">
       <span class="navbar-toggler-icon"></span>
     </button>
 
@@ -324,7 +324,7 @@
         <li class="nav-item d-lg-none d-xl-block">
           <span class="nav-link" rel="tooltip" data-bs-placement="top"  title="{{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})">
             <small>
-              <strong>{% trans "templates.baseLogedIn.navbar.prihlasen" %}</strong> {{ user.ident_cely }}
+              <strong>{% trans "templates.baseLogedIn.navbar.prihlasen" %}:</strong> {{ user.ident_cely }}
             </small>
           </span>
         </li>
@@ -332,7 +332,7 @@
         <li class="nav-item d-lg-none d-xl-block">
           <span class="nav-link">
             <small>
-              <strong>{% trans "templates.baseLogedIn.navbar.autoLogoutTime" %}</strong> <span id="time">01:00</span>
+              <strong>{% trans "templates.baseLogedIn.navbar.autoLogoutTime" %}:</strong> <span id="time">01:00</span>
             </small>
           </span>
         </li>

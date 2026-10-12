@@ -6,7 +6,7 @@
   <form method="POST" id="{{ id_tag }}">
     <div class="modal-header">
       <h5 class="modal-title">{{ title }} {{ object_identification }}{% if question %}?{% endif %}</h5>
-      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'templates.a11y.close' %}">
       </button>
     </div>
     {% if warnings or pid_confirmation %}

@@ -370,7 +370,10 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                 )
             },
         ),
-        ("Oprávnění", {"fields": ("is_active", "datum_potvrzeni_emailu", "is_superuser")}),
+        (
+            _("uzivatel.admin.CustomUserAdmin.fieldsets.opravneni"),
+            {"fields": ("is_active", "datum_potvrzeni_emailu", "is_superuser")},
+        ),
     )
     add_fieldsets = (
         (

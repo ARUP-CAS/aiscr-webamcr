@@ -71,7 +71,7 @@
     </div>
 </div>
 {% block pagination %}
-<nav aria-label="Table navigation" class="table-navigation row">
+<nav aria-label="{% trans 'templates.a11y.tableNavigation' %}" class="table-navigation row">
     <ul class="pagination  jump-page settings col-9 col-md-3">
         <form id="{{table.prefix}}jump" method="get" action="">
             <div class="form-group row">

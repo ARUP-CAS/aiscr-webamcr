@@ -19,6 +19,7 @@ from core.constants import (
     ZAPSANI_AZ,
 )
 from core.exceptions import MaximalIdentNumberError
+from core.translation import format_message
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import CheckConstraint, Q
@@ -26,6 +27,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_noop
 from django_prometheus.models import ExportModelOperationsMixin
 from ez.models import ExterniZdroj
 from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_DATUM_SPECIFIKACE, HESLAR_LOKALITA_TYP, HESLAR_PRISTUPNOST
@@ -183,7 +185,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         ).save()
         self.save()
 
-    def check_pred_odeslanim(self):
+    def check_pred_odeslanim(self, kontrolovat_dokumenty=True):
         """
         Metoda pro kontrolu prerekvizit před posunem do stavu odeslaný:
 
@@ -193,6 +195,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
         Je připojená aspoň jedna dokumentační jednotka se všemi relevantními relacemi.
 
+        Připojené dokumenty, které dosud nejsou archivované, projdou svou kontrolou před odesláním.
+        Archivované dokumenty se nekontrolují (jejich neúplnost typicky pochází ze staršího importu).
+
+            :param kontrolovat_dokumenty: Pokud je ``False``, obsahová kontrola připojených dokumentů se vynechá úplně.
             :return: Vrací proměnná ``result``.
         """
         result = []
@@ -247,9 +253,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             # dokumentační jednotka musí být záporná.
             if not dj.negativni_jednotka and len(dj.komponenty.komponenty.all()) == 0:
                 result.append(
-                    _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pozitivni.text1")
-                    + str(dj.ident_cely)
-                    + _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pozitivni.text2")
+                    format_message(
+                        gettext_noop("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pozitivni"),
+                        ident=str(dj.ident_cely),
+                    )
                 )
                 logger.debug(
                     "arch_z.models.ArcheologickyZaznam.dj_komponenta_negativni", extra={"ident_cely": dj.ident_cely}
@@ -257,12 +264,18 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             # Každá dokumentační jednotka navázaná na projektovou akci musí mít platnou vazbu na PIAN.
             if dj.pian is None:
                 result.append(
-                    _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pian.text1")
-                    + str(dj.ident_cely)
-                    + _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pian.text2")
+                    format_message(
+                        gettext_noop("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pian"),
+                        ident=str(dj.ident_cely),
+                    )
                 )
                 logger.debug("arch_z.models.ArcheologickyZaznam.dj_nema_pian", extra={"ident_cely": dj.ident_cely})
-        for dokument_cast in self.casti_dokumentu.all():
+        dokumenty_ke_kontrole = (
+            self.casti_dokumentu.exclude(dokument__stav=D_STAV_ARCHIVOVANY).select_related("dokument")
+            if kontrolovat_dokumenty
+            else []
+        )
+        for dokument_cast in dokumenty_ke_kontrole:
             dokument_warning = dokument_cast.dokument.check_pred_odeslanim()
             if dokument_warning:
                 result.append("Dokument " + dokument_cast.dokument.ident_cely + ": " + ", ".join(dokument_warning))
@@ -277,29 +290,31 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         """
         Metoda pro kontrolu prerekvizit před archivací:
 
-        kontrola jako před odesláním a navíc
+        kontrola jako před odesláním (bez obsahové kontroly připojených dokumentů) a navíc
 
-        všechny pripojené dokumenty jsou archivované.
+        všechny pripojené dokumenty jsou archivované (vrací se zvlášť jako varování k potvrzení).
 
         všechny DJ mají potvrzený pian
 
             :return: Vrací n-tici.
         """
-        result = self.check_pred_odeslanim()
+        result = self.check_pred_odeslanim(kontrolovat_dokumenty=False)
         doc_result = []
         for dc in self.casti_dokumentu.all():
             if dc.dokument.stav != D_STAV_ARCHIVOVANY:
                 doc_result.append(
-                    _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dokument.text1")
-                    + dc.dokument.ident_cely
-                    + _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dokument.text2")
+                    format_message(
+                        gettext_noop("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dokument"),
+                        ident=dc.dokument.ident_cely,
+                    )
                 )
         for dj in self.dokumentacni_jednotky_akce.all():
             if dj.pian and dj.pian.stav != PIAN_POTVRZEN:
                 result.append(
-                    _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.text1")
-                    + str(dj.ident_cely)
-                    + _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.text2")
+                    format_message(
+                        gettext_noop("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj"),
+                        ident=str(dj.ident_cely),
+                    )
                 )
         doc_result = [str(x) for x in doc_result]
         result = [str(x) for x in result]

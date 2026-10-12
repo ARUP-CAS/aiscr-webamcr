@@ -117,10 +117,50 @@ Runtime závislosti:
 
 .. code-block:: dockerfile
 
-    COPY ./webclient/requirements.txt /tmp/requirements.txt
+    ARG INSTALL_TEST_REQUIREMENTS=false
+
+    COPY ./webclient/requirements.txt ./webclient/requirements-test.txt /tmp/
 
     RUN --mount=type=cache,target=/root/.cache/pip \
-        pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt
+        if [ "${INSTALL_TEST_REQUIREMENTS}" = "true" ]; then \
+            pip3 wheel --wheel-dir /wheels -r /tmp/requirements-test.txt; \
+        else \
+            pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt; \
+        fi
+
+**Skupiny Python závislostí**
+
+Závislosti jsou ve ``webclient/`` rozdělené do skupin. Autorské soubory ``requirements*.in`` se
+skriptem ``scripts/compile_requirements.sh`` (pip-tools) kompilují do ``requirements*.txt`` s úplnými
+tranzitivními piny. Vyšší skupina zahrnuje nižší přes ``-r``, takže každý soubor je úplný zámek
+pro své prostředí a instaluje se samostatně:
+
+* ``requirements.txt`` - produkční závislosti, jediné instalované do produkčního obrazu
+* ``requirements-test.txt`` - produkční + selenium, freezegun, coverage
+* ``requirements-dev.txt`` - produkční + testovací + pre-commit, debug-toolbar, livereload,
+  Werkzeug (``runserver_plus``) aj. (Dockerfile-DEV, lokální vývoj)
+* ``requirements-docs.txt`` - produkční + Sphinx a jeho rozšíření (Read the Docs)
+
+Build argument ``INSTALL_TEST_REQUIREMENTS=true`` přepne build na ``requirements-test.txt``. Používá
+jej pouze testovací obraz ``test_web`` na testovacím serveru (``scripts/test_deploy.sh``), ve kterém
+běží selenium testy. Publikovaný produkční obraz se staví bez něj.
+
+**Aktualizace Python závislostí**
+
+* Dependabot (``.github/dependabot.yml``) aktualizuje přímé závislosti z ``requirements*.in``
+  a bezpečnostní opravy. Soubory kompiluje vlastním pip-compile: přepínače čte z hlavičky
+  ``requirements*.txt`` a pořadí vrstev zná jen z řádků ``-r``, proto se vrstvy nepropojují přes ``-c``.
+  Balíčky, které spolu obvykle přicházejí nebo bez sebe nemohou být aktualizovány (např. Django
+  s django-celery-beat), seskupuje do jednoho PR; skupiny i jejich důvody jsou v ``.github/dependabot.yml``.
+  Bezpečnostní opravy zůstávají jako samostatné PR.
+* Job ``pre-commit`` ve workflow ``.github/workflows/pre_commit.yml`` pro release PR ``test → main``
+  spustí ``scripts/compile_requirements.sh --upgrade`` a poté nainstaluje výsledné závislosti,
+  obnoví jejich dokumentaci a provede kontroly; opravné PR s obnovenými piny míří do ``test``.
+  Ostatní PR do ``main`` a push do ``main`` kompilují bez upgradu, obnoví dokumentaci
+  závislostí a provedou kontroly; běžná PR do ``test`` kompilují bez upgradu. Jediné opravné
+  PR cílí do zdrojové větve původního PR, po pushi do ``main`` do ``main``. Dependabot, release
+  App a opravné větve jsou vyloučeny; ruční režimy a úplná pravidla popisuje
+  :doc:`../03_vyvoj/kodovaci_standardy`.
 
 **BuildKit cache mount**
 
@@ -319,6 +359,9 @@ Rozdíly: Dockerfile vs Dockerfile-DEV
     * - Velikost obrazu
       - Menší
       - Větší (obsahuje dev nástroje)
+    * - Python závislosti
+      - ``requirements.txt`` (``requirements-test.txt`` s ``INSTALL_TEST_REQUIREMENTS=true``)
+      - ``requirements-dev.txt`` (obsahuje produkční i testovací piny)
     * - Health check
       - Ano
       - Ne
@@ -364,7 +407,7 @@ BuildKit cache mounts
 
 * Pip cache přetrvává mezi buildy
 * Balíčky se stahují pouze jednou
-* Zrychluje opakované buildy při změně ``requirements.txt``
+* Zrychluje opakované buildy při změně ``requirements*.txt``
 * Nulový download při nezměněných závislostech
 
 **Aktivace**

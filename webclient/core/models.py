@@ -13,9 +13,11 @@ import piexif
 import py7zr
 import rarfile
 from core.constants import ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_BADATEL_ID
+from core.distribution_names import IMPLICIT_DISTRIBUTION_NAMES, ORIGINAL_DISTRIBUTION_NAME
 from django.conf import settings
 from django.contrib.auth.models import Group
-from django.db import models
+from django.core.cache import cache
+from django.db import models, transaction
 from django.forms import ValidationError
 from django.http import FileResponse
 from django.urls import reverse
@@ -175,6 +177,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     path = models.CharField(max_length=500, null=True)
     size_mb = models.DecimalField(decimal_places=10, max_digits=150)
     sha_512 = models.CharField(max_length=128, null=True, blank=True, db_index=True)
+
+    # Lifetime of the cached paradata probe; the import clears it, so this only bounds out-of-band Fedora edits.
+    PARADATA_CACHE_TIMEOUT = 60 * 60
 
     @property
     def url(self):
@@ -373,6 +378,59 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             vazba=self.historie,
         ).save()
         logger.debug("core.models.soubor.zaznamenej_nahrani.finished", extra={"historie": hist})
+
+    def zaznamenej_distribuce(self, thumb_writes):
+        """
+        Metoda pro zapsání vzniku nebo aktualizace náhledů souboru do historie.
+
+        Náhledy jsou distribuce souboru jako každé jiné, takže se evidují stejnými typy změn
+        (``DIST01``/``DIST11``) s poznámkou ``thumb``, resp. ``thumb-large``. Volá se až po
+        uložení souboru: náhledy se do Fedory zapisují dřív, než při vkládání vznikne řádek
+        ``Soubor``, takže connector historii sám zapsat nemůže a vrací jen přehled zápisů
+        (``RepositoryBinaryFile.thumb_writes``).
+
+        Změna se vždy připíše uživateli ``ADMIN_USER`` – stejně jako u distribucí nahraných importem
+        (zadání #3527), nikoli uživateli, který soubor nahrál; náhledy generuje systém.
+
+        Zápis je best-effort — selhání se pouze zaloguje, protože ztráta záznamu v historii
+        nesmí shodit nahrání souboru ani generování náhledů. Probíhá ve vlastním savepointu
+        (``transaction.atomic()``): volající často běží v otevřené databázové transakci a zachycená
+        databázová chyba bez savepointu by ji poškodila, takže by selhal až další dotaz volajícího.
+
+        :param thumb_writes: Seznam dvojic ``(nazev_nahledu, aktualizace)`` z ``save_thumbs()``.
+        """
+        from core.constants import NAHRANI_DISTRIBUCE, UPDATE_DISTRIBUCE
+        from heslar import hesla_dynamicka
+
+        if not thumb_writes:
+            return
+        historie_id_before = self.historie_id
+        try:
+            with transaction.atomic():
+                admin_user = User.objects.get(pk=hesla_dynamicka.ADMIN_USER)
+                if self.historie is None:
+                    self.create_soubor_vazby()
+                for distribution, updated in thumb_writes:
+                    # Ukládá se po jednom, ne přes ``bulk_create`` — ten nespouští ``pre_save``,
+                    # kterým se do záznamu doplňuje ``organizace_snapshot``.
+                    Historie(
+                        typ_zmeny=UPDATE_DISTRIBUCE if updated else NAHRANI_DISTRIBUCE,
+                        uzivatel=admin_user,
+                        vazba=self.historie,
+                        poznamka=distribution,
+                    ).save()
+            logger.debug(
+                "core.models.soubor.zaznamenej_distribuce.finished",
+                extra={"soubor": self.pk, "distribuce": thumb_writes},
+            )
+        except Exception as err:
+            if self.historie_id != historie_id_before:
+                # The savepoint rolled back the history link created above; drop it from memory too.
+                self.historie = None
+            logger.warning(
+                "core.models.soubor.zaznamenej_distribuce.failed",
+                extra={"soubor": self.pk, "distribuce": thumb_writes, "error": err},
+            )
 
     def zaznamenej_nahrani_nove_verze(self, user, nazev=None):
         """
@@ -865,19 +923,31 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 return AntivirusCheckResult.CHECK_FAILED
         return AntivirusCheckResult.SKIPPED
 
-    def _create_file_response(self, rep_bin_file: RepositoryBinaryFile) -> FileResponse:
+    def _create_file_response(
+        self, rep_bin_file: RepositoryBinaryFile, filename=None, as_attachment=True
+    ) -> FileResponse:
         """
         Vytvoří file response.
 
+        Hlavičku ``Content-Disposition`` sestaví ``FileResponse``: název uvozovkuje a pro
+        neasciiové znaky doplní tvar ``filename*=utf-8''…`` podle RFC 6266. Ruční skládání
+        hlavičky vedlo u názvů s mezerou nebo diakritikou (v AMČR běžné) k oříznutému
+        nebo rozsypanému názvu staženého souboru.
+
+        ``as_attachment`` je nutné předávat explicitně — ``FileResponse`` bez něj sestaví
+        hlavičku s ``inline``, takže by se soubor v prohlížeči zobrazil místo stažení.
+
         :param rep_bin_file: Parametr ``rep_bin_file`` pracuje se s atributy ``content``.
+        :param filename: Název, pod kterým se soubor nabídne ke stažení; výchozí je ``nazev``.
+        :param as_attachment: Pokud ``False``, obsah se nabídne k zobrazení (``inline``)
+            místo ke stažení; používají náhledy vykreslované přímo ve stránce.
         :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         content = rep_bin_file.content
-        response = FileResponse(content, filename=self.nazev)
+        response = FileResponse(content, filename=filename or self.nazev, as_attachment=as_attachment)
         content.seek(0)
         response["Content-Length"] = content.getbuffer().nbytes
         content.seek(0)
-        response["Content-Disposition"] = f"attachment; filename={self.nazev}"
         return response
 
     @cached_property
@@ -889,9 +959,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         """
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_large=True)
         if self.repository_uuid is not None and rep_bin_file:
-            response = self._create_file_response(rep_bin_file)
+            response = self._create_file_response(rep_bin_file, filename=f"{self.nazev}.png")
             response["Content-Type"] = "image/png"
-            response["Content-Disposition"] = f"attachment; filename={self.nazev}.png"
             return response
         return None
 
@@ -904,9 +973,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         """
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_small=True)
         if self.repository_uuid is not None and rep_bin_file:
-            response = self._create_file_response(rep_bin_file)
+            response = self._create_file_response(rep_bin_file, filename=f"{self.nazev}.png", as_attachment=False)
             response["Content-Type"] = "image/png"
-            response["Content-Disposition"] = f'inline; filename="{self.nazev}.png"'
             response["Cache-Control"] = "private, max-age=43200"
             return response
         return None
@@ -922,6 +990,192 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         if self.repository_uuid is not None and rep_bin_file and rep_bin_file.size_mb > 0:
             return self._create_file_response(rep_bin_file)
         return None
+
+    @staticmethod
+    def distribution_history_prefetch():
+        """
+        Vrátí ``Prefetch`` pro hromadné načtení historie distribucí u tabulky souborů.
+
+        Bez něj se ``available_distributions()`` doptává na historii pro každý řádek zvlášť,
+        takže počet dotazů roste s počtem souborů záznamu. Vyfiltrovaná a seřazená data se
+        ukládají do ``distribuce_historie``, odkud si je metoda vyzvedne.
+
+        Použití: ``.select_related("historie").prefetch_related(Soubor.distribution_history_prefetch())``
+
+        :return: ``Prefetch`` k předání do ``prefetch_related()``.
+        """
+        from core.constants import NAHRANI_DISTRIBUCE, SMAZANI_DISTRIBUCE
+
+        return models.Prefetch(
+            "historie__historie_set",
+            queryset=Historie.objects.filter(typ_zmeny__in=(NAHRANI_DISTRIBUCE, SMAZANI_DISTRIBUCE)).order_by(
+                "datum_zmeny"
+            ),
+            to_attr="distribuce_historie",
+        )
+
+    def available_distributions(self) -> list:
+        """
+        Vrátí názvy distribucí souboru dostupných ke stažení, včetně původní ``orig``.
+
+        Seznam se skládá z historie souboru: distribuce je dostupná, pokud k ní existuje záznam
+        ``DIST01`` a zároveň neexistuje mladší ``DIST10`` se stejnou poznámkou. Na rozdíl od
+        validace importu, která se ptá přímo Fedory, se zde čte z databáze — tabulka souborů
+        vykresluje seznam pro každý řádek a jeden HTTP dotaz do repozitáře na řádek by byl
+        neúnosný. Zdrojem tohoto pravidla je zadání issue #3527.
+
+        Kontejnery vznikající už při importu souboru (``IMPLICIT_DISTRIBUTION_NAMES``) se do
+        seznamu nezahrnují: ``orig`` je do něj přidán zvlášť jako první položka a náhledy mají
+        vlastní endpointy (``core:download_thumbnail``, ``core:download_thumbnail_large``).
+        Historii ``DIST01``/``DIST11`` si přitom náhledy vedou stejně jako ostatní distribuce.
+
+        :return: Seznam názvů distribucí; ``orig`` je vždy první.
+        """
+        from core.constants import NAHRANI_DISTRIBUCE, SMAZANI_DISTRIBUCE
+
+        distributions = [ORIGINAL_DISTRIBUTION_NAME]
+        if not self.historie_id:
+            return distributions
+        posledni_nahrani = {}
+        posledni_smazani = {}
+        # Přednostně se použijí data z ``distribution_history_prefetch()``; bez něj se historie
+        # dotáhne pro tento jeden soubor (volající mimo tabulku souborů).
+        zaznamy = getattr(self.historie, "distribuce_historie", None)
+        if zaznamy is None:
+            zaznamy = self.historie.historie_set.filter(
+                typ_zmeny__in=(NAHRANI_DISTRIBUCE, SMAZANI_DISTRIBUCE)
+            ).order_by("datum_zmeny")
+        for zaznam in zaznamy:
+            cil = posledni_nahrani if zaznam.typ_zmeny == NAHRANI_DISTRIBUCE else posledni_smazani
+            cil[zaznam.poznamka] = zaznam.datum_zmeny
+        for distribution, nahrani in posledni_nahrani.items():
+            if distribution in IMPLICIT_DISTRIBUTION_NAMES:
+                continue
+            smazani = posledni_smazani.get(distribution)
+            if distribution and (smazani is None or smazani <= nahrani):
+                distributions.append(distribution)
+        return distributions
+
+    def get_distribution_response(self, distribution) -> FileResponse | None:
+        """
+        Vrátí obsah zvolené distribuce souboru jako HTTP odpověď.
+
+        Distribuce má vlastní binární obsah, takže se ke stažení nabídne pod názvem uloženým ve Fedoře
+        (``ebucore:filename``, tj. ``nazev`` z importního CSV); přípona se nedoplňuje — chybí-li, je to
+        záměr. Jen když Fedora název nevrátí, odvodí se z názvu souboru a distribuce
+        (``scan.pdf`` + ``ocr/alto-xml`` → ``scan.pdf.ocr_alto-xml``). Odpověď nese uložený MIME typ.
+
+        :param distribution: Název distribuce; ``orig`` vrátí původní obsah souboru.
+        :return: ``FileResponse`` s obsahem distribuce, nebo ``None``, pokud ji nelze načíst.
+        """
+        from core.repository_connector import FedoraRepositoryConnector
+
+        if distribution in (None, "", ORIGINAL_DISTRIBUTION_NAME):
+            return self.content_file_response
+        record = self.vazba.navazany_objekt
+        if record is None or self.repository_uuid is None:
+            return None
+        connector = FedoraRepositoryConnector(record, skip_container_check=False)
+        rep_bin_file = connector.get_distribution(self.repository_uuid, distribution)
+        if rep_bin_file is None:
+            return None
+        filename = rep_bin_file.filename or f"{self.nazev}.{distribution.replace('/', '_')}"
+        response = self._create_file_response(rep_bin_file, filename=filename)
+        if rep_bin_file.content_type:
+            response["Content-Type"] = rep_bin_file.content_type
+        return response
+
+    @cached_property
+    def paradata_distributions(self) -> frozenset:
+        """
+        Vrátí názvy distribucí z ``available_distributions()``, ke kterým ve Fedoře existují paradata.
+
+        Paradata nemají záznam v databázi ani v historii (zadání #3527), takže jejich existenci lze
+        zjistit jen dotazem do Fedory. Nejprve se jedním dotazem ověří kontejner ``paradata``
+        a teprve když existuje, ověří se jednotlivé distribuce. Výsledek se ukládá na instanci
+        a navíc do sdílené cache (``PARADATA_CACHE_TIMEOUT``), aby tabulka souborů neposílala
+        do Fedory dotaz za každý řádek při každém zobrazení detailu záznamu. Cache vyprazdňuje
+        import distribucí a paradat (``invalidate_paradata_cache()``).
+
+        Nedostupnost Fedory nebo neplatný název distribuce v historii se pouze zalogují a vrátí se
+        prázdná množina, která se do cache neukládá — chyba při zjišťování paradat nesmí shodit
+        vykreslení detailu záznamu ani skrýt paradata po obnovení Fedory.
+
+        :return: Množina názvů distribucí (včetně ``orig``), které mají paradata.
+        """
+        from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraValidationError
+
+        record = self.vazba.navazany_objekt if self.repository_uuid else None
+        if record is None:
+            return frozenset()
+        cache_key = self.paradata_cache_key(self.repository_uuid)
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
+        connector = FedoraRepositoryConnector(record)
+        try:
+            if not connector.has_paradata(self.repository_uuid):
+                result = frozenset()
+            else:
+                result = frozenset(
+                    distribution
+                    for distribution in self.available_distributions()
+                    if connector.paradata_exists(self.repository_uuid, distribution)
+                )
+        except (FedoraError, FedoraValidationError) as err:
+            logger.warning(
+                "core.models.soubor.paradata_distributions.failed",
+                extra={"soubor": self.pk, "error": err},
+            )
+            return frozenset()
+        cache.set(cache_key, result, self.PARADATA_CACHE_TIMEOUT)
+        return result
+
+    @staticmethod
+    def paradata_cache_key(repository_uuid) -> str:
+        """
+        Vrátí klíč sdílené cache, pod kterým ``paradata_distributions`` ukládá výsledek pro soubor.
+
+        :param repository_uuid: UUID kontejneru souboru ve Fedoře.
+        :return: Klíč cache.
+        """
+        return f"soubor_paradata_distributions:{repository_uuid}"
+
+    def invalidate_paradata_cache(self):
+        """
+        Odstraní z cache uložený výsledek ``paradata_distributions`` pro tento soubor.
+
+        Volá se po zápisu distribucí nebo paradat do Fedory, aby tabulka souborů ukázala nový stav
+        hned, a ne až po vypršení ``PARADATA_CACHE_TIMEOUT``.
+        """
+        if self.repository_uuid:
+            cache.delete(self.paradata_cache_key(self.repository_uuid))
+
+    def get_paradata_response(self, distribution) -> FileResponse | None:
+        """
+        Vrátí paradata zvolené distribuce souboru jako HTTP odpověď.
+
+        Paradata se nabídnou ke stažení pod názvem uloženým ve Fedoře (``nazev`` z importního CSV
+        ``paradata.csv``) a s uloženým MIME typem. Jen když Fedora název nevrátí, odvodí se z názvu
+        souboru a distribuce (``scan.pdf`` + ``ocr/alto-xml`` → ``scan.pdf.ocr_alto-xml.paradata``).
+
+        :param distribution: Název distribuce, ke které paradata patří; ``orig`` pro původní soubor.
+        :return: ``FileResponse`` s obsahem paradat, nebo ``None``, pokud je nelze načíst.
+        """
+        from core.repository_connector import FedoraRepositoryConnector
+
+        record = self.vazba.navazany_objekt
+        if record is None or self.repository_uuid is None:
+            return None
+        connector = FedoraRepositoryConnector(record)
+        rep_bin_file = connector.get_paradata(self.repository_uuid, distribution)
+        if rep_bin_file is None:
+            return None
+        filename = rep_bin_file.filename or f"{self.nazev}.{distribution.replace('/', '_')}.paradata"
+        response = self._create_file_response(rep_bin_file, filename=filename)
+        if rep_bin_file.content_type:
+            response["Content-Type"] = rep_bin_file.content_type
+        return response
 
     def getMock(self):
         """
@@ -1005,6 +1259,8 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
     datum_odstavky = models.DateField(_("core.model.OdstavkaSystemu.datumOdstavky.label"))
     cas_odstavky = models.TimeField(_("core.model.OdstavkaSystemu.casOdstavky.label"))
     status = models.BooleanField(_("core.model.OdstavkaSystemu.status.label"), default=True)
+    text_cs = models.TextField(blank=True, default="", verbose_name=_("core.forms.OdstavkaSystemuForm.textCs.label"))
+    text_en = models.TextField(blank=True, default="", verbose_name=_("core.forms.OdstavkaSystemuForm.textEn.label"))
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
@@ -1280,22 +1536,24 @@ class Permissions(models.Model):
         spoluprace_edit_projekty = "spoluprace_edit_projekty", _(
             "core.models.permissions.actionChoices.spoluprace_edit_projekty"
         )
-        pian_import_new = "pian_import_new", "core.models.permissions.actionChoices.pian_import_new"
-        pian_import_change = "pian_import_change", "core.models.permissions.actionChoices.pian_import_change"
-        akce_dj_zakladni = "akce_dj_zakladni", "core.models.permissions.actionChoices.akce_dj_zakladni"
+        pian_import_new = "pian_import_new", _("core.models.permissions.actionChoices.pian_import_new")
+        pian_import_change = "pian_import_change", _("core.models.permissions.actionChoices.pian_import_change")
+        akce_dj_zakladni = "akce_dj_zakladni", _("core.models.permissions.actionChoices.akce_dj_zakladni")
         akce_pripojit_pian_mapa = (
             "akce_pripojit_pian_mapa",
-            "core.models.permissions.actionChoices.akce_pripojit_pian_mapa",
+            _("core.models.permissions.actionChoices.akce_pripojit_pian_mapa"),
         )
-        akce_pripojit_pian_id = "akce_pripojit_pian_id", "core.models.permissions.actionChoices.akce_pripojit_pian_id"
-        lokalita_dj_zakladni = "lokalita_dj_zakladni", "core.models.permissions.actionChoices.lokalita_dj_zakladni"
+        akce_pripojit_pian_id = "akce_pripojit_pian_id", _(
+            "core.models.permissions.actionChoices.akce_pripojit_pian_id"
+        )
+        lokalita_dj_zakladni = "lokalita_dj_zakladni", _("core.models.permissions.actionChoices.lokalita_dj_zakladni")
         lokalita_pripojit_pian_mapa = (
             "lokalita_pripojit_pian_mapa",
-            "core.models.permissions.actionChoices.lokalita_pripojit_pian_mapa",
+            _("core.models.permissions.actionChoices.lokalita_pripojit_pian_mapa"),
         )
         lokalita_pripojit_pian_id = (
             "lokalita_pripojit_pian_id",
-            "core.models.permissions.actionChoices.lokalita_pripojit_pian_id",
+            _("core.models.permissions.actionChoices.lokalita_pripojit_pian_id"),
         )
         dokumenty_tabulka_projekt = "dokumenty_tabulka_projekt", _(
             "core.models.permissions.actionChoices.dokumenty_tabulka_projekt"

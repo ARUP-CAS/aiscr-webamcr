@@ -178,15 +178,6 @@ Funkce
 
    Aktualizuje materialized views.
 
-.. py:function:: write_value_to_redis(key, value)
-
-   Zapíše value to redis.
-
-   :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
-   :param value: Parametr ``value`` předává se do volání ``set()``, vstupuje do návratové hodnoty.
-
-   :return: Vrací n-tici.
-
 .. py:function:: call_digiarchiv_update_task()
 
    Zavolá URL digiarchívu pro spuštění aktualizace dat.
@@ -343,13 +334,13 @@ Funkce
          - Selže zpracování datového záznamu, databázová transakce nebo hlavní fáze importu dat.
        * - ``cron.tasks.run_data_import.creating_history_records``
          - Hlavní import dat doběhl bez chyby a začíná fáze vytváření historie.
-       * - ``cron.tasks.run_data_import.creating_history_records {n}/{total}``
+       * - ``cron.tasks.run_data_import.creating_history_records_progress {n}/{total}``
          - Během fáze historie, před vytvořením konkrétního historického záznamu.
        * - ``cron.tasks.run_data_import.failed_during_history``
          - Selže vytvoření některého záznamu historie.
        * - ``cron.tasks.run_data_import.updating_fedora_records``
          - Historie doběhla bez chyby a začíná fáze aktualizace Fedora metadat.
-       * - ``cron.tasks.run_data_import.updating_fedora_records {n}/{total}``
+       * - ``cron.tasks.run_data_import.updating_fedora_records_progress {n}/{total}``
          - Během aktualizace jednotlivých Fedora záznamů.
        * - ``cron.tasks.run_data_import.failed_during_fedora``
          - Selže uložení metadat do Fedory pro některý z dotčených záznamů.
@@ -441,6 +432,23 @@ Funkce
 
    :param runy: Seznam :class:`heslar.models.RuianSyncRun` čekajících na
        potvrzení, v pořadí podle dne.
+
+.. py:function:: _uzavri_prerusene_behy()
+
+   Uzavře jako ``failed`` běhy, které zůstaly ve stavu ``running``.
+
+   Do stavu ``running`` se běh dostane při založení a opustí ho až ve
+   vlastním ``except`` nebo po úspěchu. Proces zabitý zvenčí (SIGKILL po
+   vypršení ``stop_grace_period`` při restartu swarm stacku, OOM killer)
+   nestihne ani jedno, takže řádek zůstane ``running`` navždy. Detekce
+   opakování dne v :func:`_sync_ruian_changes_locked` ale hledá jen
+   ``failed`` – přerušený den by se pak zopakoval jako první pokus, bez
+   vynuceného zápisu metadat a bez opakovaného přepočtu navázaných záznamů.
+
+   Volá se pod advisory lockem :func:`heslar.ruian_sync.zamek.ruian_sync_lock`,
+   který drží každý tvůrce ``RuianSyncRun`` (denní cron i
+   ``aktualizuj_ruian_shp``). Žádný jiný běh tedy právě neprobíhá a každý
+   ``running`` řádek je bezpečně osiřelý.
 
 .. py:function:: _sync_ruian_changes_locked(reassign_records)
 

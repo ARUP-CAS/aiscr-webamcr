@@ -157,13 +157,13 @@ class SectionNameWithAccessor(SimpleSectionTemplateName):
         if self.foreign_key:
             if getattr(instance, self.foreign_key):
                 return format_html(
-                    "{}&nbsp;{}",
+                    "{}:&nbsp;{}",
                     self.name,
                     getattr(getattr(instance, self.foreign_key), self.accessor),
                 )
             else:
                 return None
-        return format_html("{}&nbsp;{}", self.name, getattr(instance, self.accessor))
+        return format_html("{}:&nbsp;{}", self.name, getattr(instance, self.accessor))
 
 
 class PianSectionNameWithAccessor(SectionNameWithAccessor):
@@ -181,7 +181,7 @@ class PianSectionNameWithAccessor(SectionNameWithAccessor):
             pian = getattr(instance, self.foreign_key)
             stav = getattr(pian, self.accessor[1])()
             return format_html(
-                "<div>{}&nbsp;{}&nbsp;({})&nbsp;-&nbsp;{}&nbsp;({})</div>",
+                "<div>{}:&nbsp;{}&nbsp;({})&nbsp;-&nbsp;{}&nbsp;({})</div>",
                 self.name,
                 getattr(pian, self.accessor[0]),
                 stav,
@@ -912,14 +912,14 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
         """
         if len(self.accessor) > 2:
             new_name = format_html(
-                "<span class='ps-0'>{}&nbsp;{}&nbsp;-&nbsp;{}</span>",
+                "<span class='ps-0'>{}:&nbsp;{}&nbsp;-&nbsp;{}</span>",
                 self.name,
                 getattr(instance, self.accessor[0]),
                 getattr(instance, self.accessor[1]),
             )
         else:
             new_name = format_html(
-                "<span class='ps-0'>{}&nbsp;{}</span>",
+                "<span class='ps-0'>{}:&nbsp;{}</span>",
                 self.name,
                 getattr(instance, self.accessor[0]),
             )
@@ -952,7 +952,7 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
 
             :return: Název sekce jako HTML přes ``format_html`` (``SafeString``).
         """
-        new_name = format_html("<span class='ps-0'>{}&nbsp;{}</span>", self.name, getattr(instance, self.accessor[0]))
+        new_name = format_html("<span class='ps-0'>{}:&nbsp;{}</span>", self.name, getattr(instance, self.accessor[0]))
         if getattr(instance, self.accessor[-1]):
             return format_html(
                 "<span class='ps-0'>{}<div class='mime-type' style='white-space: pre;'> ({})</div></span>",
@@ -993,7 +993,7 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
         if aktivity:
             third_part = f" ({'; '.join([str(a) for a in aktivity])})"
         return format_html(
-            "<span class='ps-0'>{}&nbsp;{}&nbsp;-&nbsp;{}{}&nbsp;-&nbsp;{}{}</span>",
+            "<span class='ps-0'>{}:&nbsp;{}&nbsp;-&nbsp;{}{}&nbsp;-&nbsp;{}{}</span>",
             self.name,
             getattr(instance, self.accessor[0]),
             obdobi,

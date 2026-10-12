@@ -553,10 +553,10 @@ class TokenAuthenticationBearer(TokenAuthentication):
             raise exceptions.AuthenticationFailed(_("uzivatel.views.tokenAuthenticationBearer.invalidToken"))
 
         if not token.user.is_active:
-            raise exceptions.AuthenticationFailed(_("uzivatel.views.tokenAuthenticationBearer.userInactiveOrDeleted."))
+            raise exceptions.AuthenticationFailed(_("uzivatel.views.tokenAuthenticationBearer.userInactiveOrDeleted"))
 
         if not token.created + datetime.timedelta(hours=settings.TOKEN_EXPIRATION_HOURS) > timezone.now():
-            raise exceptions.AuthenticationFailed(_("uzivatel.views.tokenAuthenticationBearer.userTokenTooOld."))
+            raise exceptions.AuthenticationFailed(_("uzivatel.views.tokenAuthenticationBearer.userTokenTooOld"))
 
         return (token.user, token)
 

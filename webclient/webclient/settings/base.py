@@ -255,19 +255,51 @@ _NPM_VENDOR_PACKAGE_NAMES = (
     "bootstrap-datepicker",
     "bootstrap-icons",
     "bootstrap-select",
+    "bs-stepper",
     "daterangepicker",
     "dropzone",
     "jquery",
     "jquery-migrate",
     "leaflet",
     "leaflet-draw",
+    "leaflet-easybutton",
     "leaflet-fullscreen",
     "leaflet-spin",
     "leaflet.featuregroup.subgroup",
     "leaflet.markercluster",
     "moment",
     "spin.js",
+    "vanilla-cookieconsent",
 )
+
+
+def _npm_package_json():
+    """
+    Najde kořenový ``package.json`` u kořene repozitáře (``BASE_DIR.parent``) nebo vedle
+    projektu (``BASE_DIR``).
+
+    :return: Cesta k ``package.json``, nebo ``None``, pokud neexistuje.
+    """
+    for candidate in (BASE_DIR.parent / "package.json", BASE_DIR / "package.json"):
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _npm_node_modules_root():
+    """
+    Najde adresář ``node_modules`` u ``BASE_DIR.parent``, u ``BASE_DIR`` a nakonec vedle
+    nalezeného ``package.json``.
+
+    :return: Cesta k ``node_modules``, nebo ``None``, pokud neexistuje.
+    """
+    for candidate in (BASE_DIR.parent / "node_modules", BASE_DIR / "node_modules"):
+        if candidate.is_dir():
+            return candidate
+    pkg_json = _npm_package_json()
+    if pkg_json is not None and (pkg_json.parent / "node_modules").is_dir():
+        return pkg_json.parent / "node_modules"
+    return None
 
 
 def _npm_staticfiles_dirs():
@@ -275,33 +307,15 @@ def _npm_staticfiles_dirs():
     Vrací dvojice (prefix, cesta) pro přímé závislosti z ``package.json`` v ``node_modules``.
 
     Omezí ``collectstatic`` jen na tyto adresáře místo celého stromu ``node_modules``.
-
-    ``package.json`` se hledá u kořene repozitáře (``BASE_DIR.parent``) nebo vedle projektu
-    (``BASE_DIR``). Chybí-li soubor nebo sekce ``dependencies``, použije se
-    ``_NPM_VENDOR_PACKAGE_NAMES``.
-
-    ``node_modules`` se hledá u ``BASE_DIR.parent``, u ``BASE_DIR`` a vedle nalezeného
-    ``package.json``.
+    Chybí-li ``package.json`` nebo sekce ``dependencies``, použije se
+    ``_NPM_VENDOR_PACKAGE_NAMES``. Umístění souborů hledají :func:`_npm_package_json`
+    a :func:`_npm_node_modules_root`.
 
     :return: Seznam dvojic ``(jméno_balíčku, Path)`` pro existující adresáře; při chybě
         ``node_modules`` prázdný seznam.
     """
-    pkg_json = None
-    for candidate in (BASE_DIR.parent / "package.json", BASE_DIR / "package.json"):
-        if candidate.is_file():
-            pkg_json = candidate
-            break
-
-    node_root = None
-    for candidate in (BASE_DIR.parent / "node_modules", BASE_DIR / "node_modules"):
-        if candidate.is_dir():
-            node_root = candidate
-            break
-    if node_root is None and pkg_json is not None:
-        fallback_root = pkg_json.parent / "node_modules"
-        if fallback_root.is_dir():
-            node_root = fallback_root
-
+    pkg_json = _npm_package_json()
+    node_root = _npm_node_modules_root()
     if node_root is None:
         return []
 
@@ -590,6 +604,9 @@ LOGGING = {
 }
 
 COMPRESS_PRECOMPILERS = (("text/x-scss", "django_libsass.SassCompiler"),)
+# Kořen ``node_modules`` jako include path pro libsass: SCSS importuje Bootstrap z npm
+# (``@import 'bootstrap/scss/bootstrap'``), ne z vendorované kopie ve ``static/``.
+LIBSASS_ADDITIONAL_INCLUDE_PATHS = [str(p) for p in (_npm_node_modules_root(),) if p is not None]
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",

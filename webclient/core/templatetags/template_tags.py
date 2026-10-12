@@ -143,13 +143,12 @@ def querystring_multi(parser, token):
 @register.simple_tag
 def get_maintenance():
     """
-    Vrací maintenance. v aplikaci.
+    Vrátí aktuální odstávku pro zobrazení v šabloně.
 
-    :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+    :return: Aktivní instance ``OdstavkaSystemu`` nebo ``False``, pokud není
+        aktivní žádná odstávka.
     """
-    if get_set_maintenance_in_cache():
-        return True
-    return False
+    return get_set_maintenance_in_cache() or False
 
 
 @register.simple_tag

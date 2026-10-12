@@ -2,8 +2,10 @@ import logging
 
 import pandas as pd
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
+from core.translation import format_message
 from django.core.management.base import BaseCommand
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_noop
 
 logger = logging.getLogger(__name__)
 
@@ -136,6 +138,8 @@ class Command(BaseCommand):
                         record.size_mb = rep_bin_file.size_mb
                         record.sha_512 = rep_bin_file.sha_512
                         record.zaznamenej_nahrani_nove_verze(admin_user, record.nazev)
+                        # update_binary_file regenerated the thumbnails, so log them as DIST01/DIST11.
+                        record.zaznamenej_distribuce(rep_bin_file.thumb_writes)
                         record.save()
                         updated_count += 1
                         logger.info(
@@ -208,13 +212,11 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.WARNING(
                     "\n"
-                    + _("core.management.commands.remove_gps_data.finished_with_errors")
-                    + " "
-                    + str(updated_count)
-                    + ", "
-                    + _("core.management.commands.remove_gps_data.errors")
-                    + " "
-                    + str(error_count)
+                    + format_message(
+                        gettext_noop("core.management.commands.remove_gps_data.finished_with_errors"),
+                        success=updated_count,
+                        errors=error_count,
+                    )
                 )
             )
         else:

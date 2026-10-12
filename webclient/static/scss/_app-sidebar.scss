@@ -1,7 +1,8 @@
 // --- SIDEBAR ---
 
 @import 'app-variables';
-@import './bootstrap5/bootstrap';
+@import 'app-bootstrap-overrides';
+@import 'bootstrap/scss/bootstrap';
 @import 'app-mixins';
 @import 'app-global';
 

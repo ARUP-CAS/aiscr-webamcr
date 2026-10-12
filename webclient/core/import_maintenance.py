@@ -53,9 +53,7 @@ def import_is_protected() -> bool:
         job_id = connection.get(RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY)
         return bool(job_id) and connection.get(f"import_data_phase_{job_id}") not in tasks.IMPORT_TERMINAL_PHASES
     except RedisError as exc:
-        raise MaintenanceImportConflict(
-            _("Maintenance cannot be ended because the import status could not be verified. Please try again later.")
-        ) from exc
+        raise MaintenanceImportConflict(_("core.import_maintenance.import_is_protected.status_unverifiable")) from exc
 
 
 def ensure_maintenance_change_allowed(current, replacement=None, import_protected=None):
@@ -76,12 +74,7 @@ def ensure_maintenance_change_allowed(current, replacement=None, import_protecte
         # The preflight snapshot can become stale while this caller waits for the row lock.
         import_protected = import_is_protected()
     if import_protected:
-        raise MaintenanceImportConflict(
-            _(
-                "Maintenance cannot be ended while an import is active. Complete or cancel the import first. "
-                "For a failed worker, use the existing manual import reset procedure."
-            )
-        )
+        raise MaintenanceImportConflict(_("core.import_maintenance.ensure_maintenance_change_allowed.import_active"))
 
 
 def acquire_import_lock_during_maintenance(connection, token, ttl_seconds):

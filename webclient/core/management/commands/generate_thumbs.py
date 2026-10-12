@@ -2,8 +2,10 @@ import logging
 
 import pandas as pd
 from core.repository_connector import FedoraRepositoryConnector
+from core.translation import format_message
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_noop
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +139,12 @@ class Command(BaseCommand):
                     rep_bin_file = conn.get_binary_file(soubor.repository_uuid)
                     if rep_bin_file:
                         try:
-                            conn.save_thumbs(soubor.nazev, rep_bin_file.content, soubor.repository_uuid)
+                            # update=True overwrites a thumbnail that already exists (logged as DIST11)
+                            # and creates only the missing one (DIST01).
+                            thumb_writes = conn.save_thumbs(
+                                soubor.nazev, rep_bin_file.content, soubor.repository_uuid, update=True
+                            )
+                            soubor.zaznamenej_distribuce(thumb_writes)
                             success_count += 1
                             logger.info(
                                 "core.management.commands.generate_thumbs.thumbs_generated",
@@ -202,13 +209,11 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.WARNING(
                     "\n"
-                    + _("core.management.commands.generate_thumbs.finished_with_errors")
-                    + " "
-                    + str(success_count)
-                    + ", "
-                    + _("core.management.commands.generate_thumbs.errors")
-                    + " "
-                    + str(error_count)
+                    + format_message(
+                        gettext_noop("core.management.commands.generate_thumbs.finished_with_errors"),
+                        success=success_count,
+                        errors=error_count,
+                    )
                 )
             )
         else:

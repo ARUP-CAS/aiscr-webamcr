@@ -491,8 +491,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
 
         db_table = "auth_user"
-        verbose_name = "Uživatel"
-        verbose_name_plural = "Uživatelé"
+        verbose_name = _("uzivatel.model.User.modelTitle.label")
+        verbose_name_plural = _("uzivatel.model.User.modelTitles.label")
         indexes = [
             models.Index(fields=["osoba", "organizace"]),
             models.Index(fields=["osoba", "organizace", "history_vazba"]),
@@ -672,8 +672,8 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
 
         db_table = "organizace"
         ordering = [Collate("nazev_zkraceny", "cs-CZ-x-icu")]
-        verbose_name = "Organizace"
-        verbose_name_plural = "Organizace"
+        verbose_name = _("uzivatel.model.Organizace.modelTitle.label")
+        verbose_name_plural = _("uzivatel.model.Organizace.modelTitles.label")
         constraints = [
             CheckConstraint(
                 condition=Q(mesicu_do_zverejneni__lte=ORGANIZACE_MESICU_DO_ZVEREJNENI_MAX),
@@ -731,8 +731,8 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
         db_table = "osoba"
         ordering = ["vypis_cely"]
         constraints = [models.UniqueConstraint(fields=["jmeno", "prijmeni"], name="osoba_jmeno_prijmeni_key")]
-        verbose_name = "Osoba"
-        verbose_name_plural = "Osoby"
+        verbose_name = _("uzivatel.model.Osoba.modelTitle.label")
+        verbose_name_plural = _("uzivatel.model.Osoba.modelTitles.label")
 
     def __str__(self):
         """

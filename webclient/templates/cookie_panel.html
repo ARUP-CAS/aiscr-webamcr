@@ -1,9 +1,9 @@
 {% load static %}
 {% load i18n %}
-<link href="{% static 'cookie-consent/cookieconsent.css' %}" rel="stylesheet"/>
+<link href="{% static 'vanilla-cookieconsent/dist/cookieconsent.css' %}" rel="stylesheet"/>
 <script type="module">
-    import "{% static 'cookie-consent/cookieconsent.umd.js' %}";
-    import * as CookieConsent from "{% static 'cookie-consent/cookieconsent.esm.js' %}";
+    import "{% static 'vanilla-cookieconsent/dist/cookieconsent.umd.js' %}";
+    import * as CookieConsent from "{% static 'vanilla-cookieconsent/dist/cookieconsent.esm.js' %}";
 
     CookieConsent.run({
         // root (parent) element where the modal will be appended as a last child

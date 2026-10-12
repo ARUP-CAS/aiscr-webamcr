@@ -300,7 +300,8 @@ body.app-dark-theme {
         .card-body {
             color: $body-text-dark;
 
-            .material-icons {
+            .material-icons,
+            .paradata-icon {
                 color: $body-text-dark;
             }
         }
@@ -422,7 +423,8 @@ body.app-dark-theme {
             &:nth-child(odd) td {
                 background-color: $gray-300-dark;
 
-                a span.material-icons {
+                a span.material-icons,
+                a svg.paradata-icon {
                     color: $body-text-dark;
                 }
             }
@@ -430,7 +432,8 @@ body.app-dark-theme {
             &:nth-child(even) td {
                 background-color: $gray-200-dark;
 
-                a span.material-icons {
+                a span.material-icons,
+                a svg.paradata-icon {
                     color: $body-text-dark;
                 }
             }

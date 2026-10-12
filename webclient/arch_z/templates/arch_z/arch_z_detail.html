@@ -213,7 +213,7 @@
     let archivovat_akci_modal;
     let smazat_akci_modal;
     if(global_map_projekt_ident.length==0){
-      global_map_projekt_ident=document.getElementById("id-app-entity-item").textContent.trim().split("Zpět")[0];
+      global_map_projekt_ident=document.getElementById("id-app-entity-item").dataset.ident;
     }
     //modal scripts
     document.addEventListener('DOMContentLoaded', function (event) {

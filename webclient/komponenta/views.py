@@ -362,7 +362,7 @@ def smazat(request, typ_vazby, ident_cely):
     else:
         context = {
             "object": komponenta,
-            "title": _("komponenta.views..smazat.title.text"),
+            "title": _("komponenta.views.smazat.title.text"),
             "id_tag": "smazat-komponenta-form",
             "button": _("komponenta.views.smazat.submitButton.text"),
         }

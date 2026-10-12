@@ -130,9 +130,11 @@ def sync_delta(
         katastru, zápis do historie, aktualizace Fedory). Default ``False``
         – navázané záznamy se nepřepočítávají.
     :param vynutit_metadata: Pokud ``True``, u prvků beze změny se stejně
-        zavolá ``save()``, aby se přegenerovala metadata ve Fedoře. Předává
-        se při **opakování dne, jehož předchozí pokus selhal** – viz
-        :func:`_upsert_kraj` a vysvětlení níže.
+        zavolá ``save()``, aby se přegenerovala metadata ve Fedoře, a spatial
+        reassign proběhne pro všechny katastry s hranicí ze souboru, ne jen
+        pro ty se změněnou hranicí – předchozí pokus ho mohl nedokončit.
+        Předává se při **opakování dne, jehož předchozí pokus selhal** nebo
+        byl přerušen – viz :func:`_upsert_kraj` a vysvětlení níže.
     :raises Exception: Propaguje výjimku zdroje/DB.
     """
     logger.debug(
@@ -311,7 +313,7 @@ def _zkontroluj_uplnost_zdroje(state: RuianFullState, run: RuianSyncRun) -> None
     databáze; ta ze své podstaty běží až po zápisu a sync nezastavuje.
 
     Zbývající rozdíl proti úplné topologii je vědomý: skutečné díry a překryvy
-    mezi sousedy odhalí až ``ST_CoverageUnion`` (~11 s nad naplněnou tabulkou),
+    mezi sousedy odhalí až ``ST_CoverageUnion`` (~2 s nad naplněnou tabulkou),
     což by znamenalo nahrát celý zdroj do dočasné tabulky ještě před vlastním
     zápisem. Součet ploch je jeho laciný zástupce – stojí 0,4 s a zachytí každou
     odchylku, která se v ploše projeví.
@@ -544,11 +546,13 @@ def _apply_changes(
     :param events: Iterable událostí ze změnového VFR.
     :param run: Audit záznam, do kterého se zapisují countery.
     :param vynutit_metadata: Vynutí přegenerování metadat i u prvků, jejichž
-        data se proti databázi nezměnila – viz :func:`sync_delta`.
-
-        :return: Množina ``kod`` katastrů, u kterých došlo ke změně polygonu
-            ``hranice`` (= kandidáti pro spatial reassign). Mazané katastry
-            ve výsledku **nejsou** – ty řeší ``_delete_katastr`` přímo.
+        data se proti databázi nezměnila – viz :func:`sync_delta`. Zároveň
+        rozšíří výsledek o všechny katastry s hranicí ze souboru, aby se
+        zopakoval i přepočet navázaných záznamů.
+    :return: Množina ``kod`` katastrů, u kterých došlo ke změně polygonu
+        ``hranice`` (= kandidáti pro spatial reassign); s ``vynutit_metadata``
+        navíc všechny upsertované katastry, které hranici nesou. Mazané
+        katastry ve výsledku **nejsou** – ty řeší ``_delete_katastr`` přímo.
     """
     # Setříděné batche podle úrovně, abychom neporušili FK pořadí
     # Výchozí pokrytí pro závěrečnou kontrolu díry (viz _zkontroluj_pokryti).
@@ -594,7 +598,12 @@ def _apply_changes(
             changed, hranice_changed = _upsert_katastr(existing, ev.payload, run, vynutit_metadata=vynutit_metadata)
             if changed:
                 run.katastr_upserts += 1
-            if hranice_changed:
+            # Při opakování dne už hranice z předchozího pokusu v DB jsou,
+            # takže ``hranice_changed`` vyjde ``False`` – přepočet navázaných
+            # záznamů, který předchozí pokus nedokončil, by se pak už nikdy
+            # nespustil. Kandidátem je proto každý katastr s hranicí ze
+            # souboru; reassign je idempotentní a nezměněné záznamy přeskočí.
+            if hranice_changed or (vynutit_metadata and ev.payload.hranice_wkt):
                 hranice_changed_kody.add(ev.kod)
 
     # ---- Fáze 2: delete (katastr → okres → kraj, reverzně dle FK) ----
@@ -1843,7 +1852,7 @@ def _zkontroluj_pokryti(run: RuianSyncRun, plocha_pred: Optional[float]) -> Opti
       naměřeno, že při posunu hranice o 0,2 m součet ploch dokonce **stoupl**
       o 6 m², přestože sjednocení našlo 20 děr.
 
-    Součet ploch je navíc o dva řády levnější (~0,4 s proti ~11 s), takže
+    Součet ploch je navíc několikrát levnější (~0,4 s proti ~2 s), takže
     slouží i jako pojistka, kdyby ``ST_CoverageUnion`` selhalo výjimkou.
 
     Nic nevyhazuje. Sama o sobě **nic nehlásí jako chybu**. Naměřený úbytek vrací volajícímu
@@ -1918,17 +1927,32 @@ _TOPOLOGY_MAX_LOGGED = 50
 #: ``ST_Union``. ``MATERIALIZED`` je podstatné – bez něj by PostgreSQL CTE
 #: inlinoval a sjednocení počítal dvakrát.
 #:
+#: Sjednocuje se **dvoustupňově** – nejdřív katastry po okresech, pak okresní
+#: výsledky dohromady. Jednorázové sjednocení všech ~13 000 katastrů drží
+#: v GEOS najednou všechny vrcholy a backend PostgreSQL si vezme ~900 MB;
+#: na testu (20 GB RAM, plný swap) to 6. 10. 2026 rozhodilo celý stroj
+#: a swarm restartoval stack. Po okresech je špička ~270 MB a běh je zhruba
+#: 4× rychlejší. Výsledek je totožný: vnitřní hrany okresu se rozpustí už
+#: v prvním stupni, ve druhém zbydou jen hranice mezi okresy, takže díra
+#: i překryv na hranici okresů se projeví stejně jako uvnitř.
+#:
 #: Z jednoho sjednocení se čte vše potřebné:
 #:
 #: * ``soucet_ploch`` vs ``plocha_unie`` – rozdíl je celková plocha překryvů;
 #: * vnitřní prstence sjednocení – to jsou díry, včetně pozice;
 #: * počet netriviálních částí – >1 znamená, že pokrytí není spojité.
 _SQL_UNIE_POKRYTI = """
-WITH u AS MATERIALIZED (
+WITH po_okresech AS MATERIALIZED (
     SELECT ST_CoverageUnion(hranice) AS g,
            SUM(ST_Area(hranice)) AS soucet_ploch
     FROM ruian_katastr
     WHERE hranice IS NOT NULL
+    GROUP BY okres
+),
+u AS MATERIALIZED (
+    SELECT ST_CoverageUnion(g) AS g,
+           SUM(soucet_ploch) AS soucet_ploch
+    FROM po_okresech
 ),
 souhrn AS (
     SELECT soucet_ploch,
@@ -1985,14 +2009,15 @@ def _zkontroluj_unii_pokryti(run: RuianSyncRun) -> bool:
     logger.debug("heslar.ruian_sync.syncer._zkontroluj_unii_pokryti.start", extra={"run_id": run.pk})
 
     try:
-        with connection.cursor() as cursor:
+        # Savepoint: kdyby kontrolu někdo zavolal uvnitř transakce (testy,
+        # budoucí volající), neúspěšný dotaz by ji jinak otrávil a další
+        # dotaz by spadl na „current transaction is aborted“.
+        with transaction.atomic(), connection.cursor() as cursor:
             cursor.execute(_SQL_UNIE_POKRYTI, {"min_m2": _TOPOLOGY_HOLE_MIN_M2})
             rows = cursor.fetchall()
     except DatabaseError as err:
         # TopologyException apod. – pokrytí je natolik rozbité, že ho GEOS
-        # nedokáže sjednotit. Sám o sobě to je nález. Kontroly běží
-        # v autocommitu (``_apply_*`` atomické nejsou, transakci si otevírají
-        # až jednotlivé upserty), takže neúspěšný dotaz nezablokuje ty další.
+        # nedokáže sjednotit. Sám o sobě to je nález.
         logger.error(
             "heslar.ruian_sync.syncer._zkontroluj_unii_pokryti.selhalo",
             extra={"run_id": run.pk, "error": str(err)[:500]},
@@ -2260,14 +2285,14 @@ def _check_katastry_topology(run: RuianSyncRun, plocha_pred: Optional[float] = N
        a po syncu (~0,4 s). Laciná pojistka, která funguje i kdyby sjednocení
        níže selhalo výjimkou;
     2. **sjednocení pokrytí** – :func:`_zkontroluj_unii_pokryti` spočítá
-       ``ST_CoverageUnion`` (~11 s) a z něj odvodí díry (vnitřní prstence
+       ``ST_CoverageUnion`` (~2 s) a z něj odvodí díry (vnitřní prstence
        sjednocení), celkový překryv i to, jestli pokrytí nerozpadlo na víc
        nesouvislých částí;
     3. **dvojice katastrů** – :func:`_zkontroluj_prekryvy_dvojic` (~13 s)
        pojmenuje konkrétní překrývající se dvojice. Spouští se **jen když**
        stupeň 2 označil pokrytí za podezřelé – tedy při díře, nespojitosti,
        naměřeném překryvu nebo selhání sjednocení. V čistém stavu se
-       neprovede a celá kontrola stojí jen stupně 1 a 2 (~11 s).
+       neprovede a celá kontrola stojí jen stupně 1 a 2 (~2 s).
 
     Čtvrtý stupeň stojí stranou téhle posloupnosti: **soulad úrovní** –
     :func:`_zkontroluj_soulad_urovni` (~0,15 s) porovná součet ploch katastrů

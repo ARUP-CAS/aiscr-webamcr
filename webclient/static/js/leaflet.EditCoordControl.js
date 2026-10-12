@@ -2,12 +2,12 @@
 
 L.Control.EditCoordControl = L.Control.extend({
     options: {
-        saveText: 'Uložit změny',
-        stornoText: 'Storno',
-        tooltipText: 'Klikněte pro vybrání bodu',
+        saveText: '',
+        stornoText: '',
+        tooltipText: '',
         tooltipSubText: '',
-        titleText: 'Editovat souřadnice',
-        modifyText: 'Upravit',
+        titleText: '',
+        modifyText: '',
     },
 
     initialize: function (options) {
