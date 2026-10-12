@@ -364,7 +364,7 @@ sphinxcontrib-jquery==4.1
     # via sphinx-rtd-theme
 sphinxcontrib-jsmath==1.0.1
     # via sphinx
-sphinxcontrib-mermaid==2.0.2
+sphinxcontrib-mermaid==2.1.1
     # via -r requirements-docs.in
 sphinxcontrib-qthelp==2.0.0
     # via sphinx
