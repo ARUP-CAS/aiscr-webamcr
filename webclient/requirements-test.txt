@@ -167,7 +167,7 @@ django-timezone-field==7.2.2
     #   django-celery-beat
 django-widget-tweaks==1.5.1
     # via -r requirements.txt
-djangorestframework==3.18.1
+djangorestframework==3.18.3
     # via -r requirements.txt
 djangorestframework-xml==2.0.0
     # via -r requirements.txt
