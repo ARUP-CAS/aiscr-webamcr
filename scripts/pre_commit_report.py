@@ -328,6 +328,8 @@ def main() -> int:
         return 0
     record = json.loads(args.record.read_text(encoding="utf-8"))
     if args.command == "check":
+        # Hook auto-fixes keep the check red even after a fix PR is published, until the fix PR
+        # is merged into the source branch, so the fixes cannot be left behind after a merge.
         return int(
             bool(processing_failures(record))
             or not record["captured"]

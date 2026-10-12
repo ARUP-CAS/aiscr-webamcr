@@ -202,12 +202,16 @@ Pokud `python` / `python3` není dostupný v prostředí:
 ## Automatické kontroly a opravy CI
 
 Workflow `.github/workflows/pre_commit.yml` má jeden požadovaný check `pre-commit`.
-PR do `main` (otevření, znovuotevření nebo aktualizace) a push do `main` obnoví
-tranzitivní piny pomocí `scripts/compile_requirements.sh --upgrade`. Poté nainstaluje
-zkompilované závislosti, spustí regresní testy workflow, obnoví dokumentaci závislostí
-přes `docs/licenses/convert_to_rst.py` a provede hooky. Přímé autorské piny v
-`requirements*.in` se nemění. Běžné PR do `test` kompilují bez `--upgrade` a
-spouštějí kontroly bez obnovy dokumentace závislostí.
+Release PR `test → main` (otevření, znovuotevření nebo aktualizace) obnoví
+tranzitivní piny pomocí `scripts/compile_requirements.sh --upgrade` (režim `refresh`).
+Poté nainstaluje zkompilované závislosti, spustí regresní testy workflow, obnoví
+dokumentaci závislostí přes `docs/licenses/convert_to_rst.py` a provede hooky. Jeho
+opravné PR míří do `test`, takže obnovené piny projdou běžným testovacím cyklem.
+Ostatní PR do `main` (např. `hotfix/*`) a push do `main` běží v režimu `docs`:
+kompilují bez `--upgrade`, obnoví dokumentaci závislostí a provedou hooky, takže do
+nich nevstoupí nesouvisející upgrady pinů. Přímé autorské piny v `requirements*.in`
+se nemění. Běžné PR do `test` kompilují bez `--upgrade` a spouštějí kontroly bez
+obnovy dokumentace závislostí.
 
 Běhy vyvolané účtem s příponou `[bot]`, PR autora Dependabot a zdrojové větve
 `dependabot/*`, `pre-commit-fixes/*` a `deps/python-pins-refresh` jsou úspěšné
@@ -247,8 +251,12 @@ zdrojový commit, cílovou větev, provedené operace a diagnostiku; komentář 
 odkazují na vytvořené nebo aktualizované opravné PR. Neuvádějí možné změny, které
 se nestaly. Bez změn opravné PR nevzniká; opakovaný běh aktualizuje existující PR
 a komentář. Selhání kompilace, instalace, testů nebo generátoru zabrání publikaci.
-Nenulový výsledek hooků zůstává selháním checku, i když jsou jejich automatické
-opravy nabídnuty k review. Publikační selhání je označeno samostatně.
+Nenulový výsledek hooků zůstává záměrně selháním checku, i když jsou jejich
+automatické opravy nabídnuty k review: hooky jako `black`, `isort` nebo generátory
+dokumentace vracejí nenulový kód i tehdy, když soubor jen opraví. Původní PR proto
+zůstane červené, dokud se jeho opravné PR nesloučí do zdrojové větve a další běh
+neprojde. Po mergi tak nezůstávají zapomenuté opravné PR ani commity. Publikační
+selhání je označeno samostatně.
 
 Konec logu hooků (`log_tail`, posledních 80 řádků) je dostupný ve sbalitelné sekci
 všech tří reportů. Každý diagnostický výpis má limit 6 000 bajtů UTF-8; při

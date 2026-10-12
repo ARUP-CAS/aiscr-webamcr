@@ -220,13 +220,19 @@ class ReportTests(unittest.TestCase):
 
     def test_check_command_fails_for_processing_hooks_and_publication(self):
         """Požadovaný check selže při každém sledovaném typu selhání."""
-        for failure in ("compile", "hooks", "publication", "incomplete", "none"):
+        for failure in ("compile", "hooks", "published-hooks", "publication", "incomplete", "none"):
             with self.subTest(failure=failure):
                 record = record_fixture()
                 if failure == "compile":
                     record["outcomes"]["compile"] = "failure"
                 if failure == "hooks":
                     record["hook_exit"] = 1
+                if failure == "published-hooks":
+                    # A published fix PR does not turn the check green before it is merged.
+                    record["hook_exit"] = 1
+                    record["changes"] = report.parse_changes("M\0code.py\0", "1\t1\tcode.py\0")
+                    record["publication"] = "published"
+                    record["fix_pr_url"] = "https://github.com/example/project/pull/124"
                 if failure == "publication":
                     record["publication"] = "failed"
                 if failure == "incomplete":

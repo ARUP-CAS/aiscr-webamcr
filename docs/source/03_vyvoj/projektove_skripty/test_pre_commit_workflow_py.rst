@@ -38,7 +38,7 @@ Třídy
 
    .. py:method:: test_automatic_events_and_manual_choices()
 
-      Události na main obnoví piny, vývojové kontroly je zachovají a ruční režimy fungují.
+      Piny obnoví jen release PR test → main; jiné PR a push do main obnoví dokumentaci bez upgradu.
 
    .. py:method:: test_release_dependabot_and_generated_branches_remain_noops()
 

@@ -74,10 +74,15 @@ jobs:
           esac
 
           if [ "$mode" != "none" ]; then
-            if { [ "$EVENT_NAME" = "pull_request" ] && [ "$BASE" = "main" ]; } || \
-               { [ "$EVENT_NAME" = "push" ] && [ "$BRANCH" = "main" ]; }; then
+            # Piny obnoví jen release PR test → main; jeho opravné PR míří do test.
+            # Ostatní PR do main (hotfix) a push do main obnoví dokumentaci bez upgradu.
+            if [ "$EVENT_NAME" = "pull_request" ] && [ "$BASE" = "main" ] && [ "$BRANCH" = "test" ]; then
               mode=refresh
-              reason="Refresh pins and dependency documentation for main."
+              reason="Refresh pins and dependency documentation for the release PR test -> main."
+            elif { [ "$EVENT_NAME" = "pull_request" ] && [ "$BASE" = "main" ]; } || \
+                 { [ "$EVENT_NAME" = "push" ] && [ "$BRANCH" = "main" ]; }; then
+              mode=docs
+              reason="Dependency documentation and checks for main without pin refresh."
             elif [ "$EVENT_NAME" = "workflow_dispatch" ]; then
               case "${MANUAL_MODE:-docs}" in
                 checks | docs | refresh) mode="${MANUAL_MODE:-docs}" ;;

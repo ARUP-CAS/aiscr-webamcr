@@ -84,10 +84,12 @@ class WorkflowTests(unittest.TestCase):
         return dict(line.split("=", 1) for line in (self.root / "outputs").read_text(encoding="utf-8").splitlines())
 
     def test_automatic_events_and_manual_choices(self):
-        """Události na main obnoví piny, vývojové kontroly je zachovají a ruční režimy fungují."""
+        """Piny obnoví jen release PR test → main; jiné PR a push do main obnoví dokumentaci bez upgradu."""
         for values, expected in (
-            ({"BASE": "main"}, "refresh"),
-            ({"EVENT_NAME": "push", "BRANCH": "main", "BASE": ""}, "refresh"),
+            ({"BASE": "main", "BRANCH": "test"}, "refresh"),
+            ({"BASE": "main"}, "docs"),
+            ({"BASE": "main", "BRANCH": "hotfix/200-critical-security"}, "docs"),
+            ({"EVENT_NAME": "push", "BRANCH": "main", "BASE": ""}, "docs"),
             ({}, "checks"),
             ({"EVENT_NAME": "workflow_dispatch", "MANUAL_MODE": "checks"}, "checks"),
             ({"EVENT_NAME": "workflow_dispatch", "MANUAL_MODE": "docs"}, "docs"),

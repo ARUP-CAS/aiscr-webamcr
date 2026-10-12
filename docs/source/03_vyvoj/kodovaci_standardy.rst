@@ -89,10 +89,13 @@ Kromě lokálního spuštění vynucuje pravidla i workflow GitHub Actions
 Úplná pravidla včetně CLI/API příkladů jsou v
 `CONTRIBUTING.md <https://github.com/ARUP-CAS/aiscr-webamcr/blob/test/CONTRIBUTING.md#automatické-kontroly-a-opravy-ci>`_.
 
-Způsobilé PR do ``main`` a push do ``main`` používají režim ``refresh``:
-obnova tranzitivních pinů, instalace výsledných závislostí, regresní testy,
-generování dokumentace přes ``docs/licenses/convert_to_rst.py`` a hooky
-proběhnou v tomto pořadí ve stejném jobu. Běžné PR do ``test`` používají
+Release PR ``test → main`` používá režim ``refresh``: obnova tranzitivních
+pinů, instalace výsledných závislostí, regresní testy, generování dokumentace
+přes ``docs/licenses/convert_to_rst.py`` a hooky proběhnou v tomto pořadí ve
+stejném jobu. Jeho opravné PR míří do ``test``, takže obnovené piny projdou
+běžným testovacím cyklem. Ostatní PR do ``main`` (např. hotfix) a push do
+``main`` používají ``docs``: kompilace bez upgradu, dokumentace závislostí a
+hooky, bez nesouvisejících upgradů pinů. Běžné PR do ``test`` používají
 ``checks``: kompilace bez upgradu a standardní kontroly. Přímé piny v
 ``requirements*.in`` se automaticky neupgradují.
 
@@ -121,7 +124,10 @@ operace od skutečně změněných souborů, uvádí typy změn a počty řádk�
 zdrojový commit, cílovou větev a odkazy na workflow a publikované PR. Diagnostika
 obsahuje sbalitelný konec logu hooků; výpisy jsou velikostně omezené a úplný log
 je dostupný v odkazovaném workflow. Selhání zpracování zabrání publikaci;
-nenulový kód hooků zůstává selháním checku i po nabídnutí automatických oprav.
+nenulový kód hooků zůstává záměrně selháním checku i po nabídnutí automatických
+oprav, protože formátovací hooky a generátory vracejí nenulový kód i při pouhé
+opravě souboru. Původní PR zůstane červené, dokud se opravné PR nesloučí do
+zdrojové větve a další běh neprojde; po mergi tak nezůstávají zapomenuté opravy.
 Selhání publikace je uvedeno samostatně.
 
 .. mermaid::
@@ -130,7 +136,7 @@ Selhání publikace je uvedeno samostatně.
    flowchart TD
        T["PR do main/test, push do main, ruční spuštění"] --> G{"Vyloučený účet, autor nebo větev?"}
        G -- "ano" --> N["Úspěšný check bez změn; důvod v summary"]
-       G -- "ne" --> M["main: refresh; test: checks; ručně: mode"]
+       G -- "ne" --> M["test→main: refresh; jiné PR do main a push do main: docs; test: checks; ručně: mode"]
        M --> C["Checkout zdrojového SHA; kompilace, upgrade jen v refresh"]
        C --> I["Instalace závislostí a regresní testy"]
        I --> D["Dokumentace závislostí v docs a refresh"]
