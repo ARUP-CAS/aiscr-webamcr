@@ -285,7 +285,7 @@ pillow==12.3.0
     #   -r requirements-test.txt
     #   pdf2image
     #   reportlab
-pip-tools==7.6.1
+pip-tools==7.6.2
     # via -r requirements-dev.in
 platformdirs==4.13.0
     # via virtualenv
