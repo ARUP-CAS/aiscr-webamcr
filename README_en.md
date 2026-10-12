@@ -92,6 +92,8 @@ celery -A webclient worker -l info --concurrency=2 --max-tasks-per-child=50
 
 Python dependencies in `webclient/` are split into groups: `requirements.txt` (production), `requirements-test.txt`, `requirements-dev.txt` and `requirements-docs.txt`. The `requirements*.txt` files are generated and contain full transitive pins; each higher group also contains the pins of the groups below it (`requirements-dev.txt` ⊇ `requirements-test.txt` ⊇ `requirements.txt`, `requirements-docs.txt` ⊇ `requirements.txt`), so every environment installs a single file. Edit only the authored `requirements*.in` files, then run `scripts/compile_requirements.sh` (requires Docker).
 
+Automatic pin refresh, dependency documentation, and fix PRs are described in the [CI workflow guide](CONTRIBUTING.md#automatické-kontroly-a-opravy-ci).
+
 Detailed installation guide:  
 <https://aiscr-webamcr.readthedocs.io/>
 

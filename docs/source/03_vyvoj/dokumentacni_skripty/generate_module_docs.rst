@@ -676,7 +676,7 @@ Funkce
    :return: Slovník ``{název balíčku: licence}``.
    :rtype: Dict[str, str]
 
-.. py:function:: read_node_module_metadata(project_root, name)
+.. py:function:: read_node_module_metadata(project_root, name, expected_version)
 
    Načte licenci a URL domovské stránky balíčku z adresáře ``node_modules``.
 
@@ -685,10 +685,16 @@ Funkce
    ``type`` (starší formát npm). URL repozitáře je normalizována pomocí
    :func:`normalize_repo_url`.
 
+   Je-li zadána očekávaná verze, metadata jiné či neznámé instalované verze
+   se nepoužijí. Generátor tak nespojí verzi z manifestu s URL či licencí
+   zastaralého lokálního balíčku; vypíše upozornění s doporučením ``npm ci``.
+
    :param project_root: Kořenový adresář projektu obsahující ``node_modules``.
    :type project_root: Path
    :param name: Název balíčku (např. ``bootstrap``).
    :type name: str
+   :param expected_version: Přesný pin z manifestu; ``None`` vypne kontrolu instalované verze.
+   :type expected_version: Optional[str]
    :return: Dvojice ``(licence, homepage_url)``.
    :rtype: tuple[str, str]
 
@@ -700,7 +706,9 @@ Funkce
    (ze souboru ``package-lock.json``), a pokud ji nenajde, čte ji přímo
    ze souboru ``package.json`` v ``node_modules``; chybí-li i tam, použije se
    licence z ``preserved_licenses`` (poslední generovaný blok v RST). Homepage se čte z
-   ``node_modules``; chybí-li, použije se dříve uložený odkaz z ``preserved_links``
+   ``node_modules`` pouze při shodě instalované verze s přesným pinem z manifestu.
+   Nesouhlasící metadata se nepoužijí ani pro licenci. Chybí-li platná homepage,
+   použije se dříve uložený odkaz z ``preserved_links``
    (poslední generovaný blok v RST — stabilizuje CI bez ``npm ci``), jinak URL
    stránky balíčku na npm (:func:`npm_package_page_url`). Nový balíček bez
    uloženého odkazu tedy dostane vždy npm URL. Záznamy jsou seřazeny abecedně
@@ -773,6 +781,9 @@ Funkce
    při jejich absenci z existujícího generovaného bloku v souboru, jinak z
    :func:`npm_package_page_url`. Pro aktualizaci odkazů z metadat balíčků
    (homepage, repository) je potřeba mít nainstalované závislosti (``npm ci``).
+   Metadata z ``node_modules`` se použijí pouze při shodě instalované verze
+   s přesným pinem v ``package.json``; zastaralá instalace vypíše upozornění
+   a použijí se stejné záložní zdroje jako při chybějící instalaci.
 
    :return: True v případě úspěchu, False v opačném případě.
    :rtype: bool
