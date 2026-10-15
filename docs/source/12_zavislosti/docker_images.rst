@@ -190,15 +190,6 @@ dpage/pgadmin4
 
 pgAdmin4 webové rozhraní pro správu PostgreSQL databází. Používá se pro lokální vývoj a správu databáze.
 
-memcached
-~~~~~~~~~
-
-- **Verze:** latest
-- **Licence:** BSD License
-- **Odkaz:** https://github.com/docker-library/memcached
-
-Memcached pro ukládání cache v paměti. Používá se pro zrychlení aplikace pomocí cache vrstvy.
-
 fcrepo/fcrepo
 ~~~~~~~~~~~~~
 

@@ -53,14 +53,6 @@ updates:
         patterns:
           - "django-compressor"
           - "django-libsass"
-      django-debug-toolbar:
-        # Panel django-debug-toolbar-template-profiler.
-        patterns:
-          - "django-debug-toolbar*"
-      djangorestframework:
-        # XML renderer djangorestframework-xml.
-        patterns:
-          - "djangorestframework*"
 
   - package-ecosystem: "npm"
     directory: "/"

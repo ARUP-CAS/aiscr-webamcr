@@ -205,7 +205,6 @@ Při specifických způsobech nasazení, kdy výše uvedené automatizační skr
 * `./docker-compose.yml` - obsahuje služby potřebné pro běh aplikace WebAMČR, (**nutnost existence systémové proměnné IMAGE_TAG, která definuje požadovanou verzi aplikace WebAMČR, která má být stažena z docker-hub repozitáře, tj. latest, nebo v0.3.0 apod.**)
  
  * web - aplikace WebAMČR
- * memcached - cachovací server
  * sidecar - pomocná služba pro zálohování locale na lokální úložiště
  * redis - chachovací server
  * celery_worker - worker pro asynchronní úlohy
