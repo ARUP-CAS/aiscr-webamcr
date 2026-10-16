@@ -518,7 +518,7 @@ def rename_file(request, typ_vazby, ident_cely, pk):
             return _rename_file_messages_response(request, SOUBOR_SE_NEPOVEDLO_PREJMENOVAT)
         logger.debug(
             "core.views.rename_file.success",
-            extra={"pk": pk, "old_nazev": old_nazev, "new_nazev": new_nazev, "transaction": fedora_transaction.uid},
+            extra={"pk": pk, "old": old_nazev, "new": new_nazev, "transaction": fedora_transaction.uid},
         )
         messages.add_message(request, messages.SUCCESS, SOUBOR_USPESNE_PREJMENOVAN)
         return JsonResponse({"redirect": _rename_file_safe_redirect(request)})
@@ -1010,7 +1010,7 @@ class NewFileUploadView(BasePostUploadView):
         ident_cely = kwargs.get("ident_cely")
         logger.debug(
             "core.views.post_upload.start",
-            extra={"pk": ident_cely, "source_url": self.source_url},
+            extra={"ident_cely": ident_cely, "source_url": self.source_url},
         )
 
         if not request.user.is_authenticated:
@@ -1160,7 +1160,7 @@ class NewFileUploadView(BasePostUploadView):
                 self.fedora_transaction.rollback_transaction()
                 logger.warning(
                     "core.views._resolve_object_and_name.permission_denied",
-                    extra={"user": request.user.pk, "action": action, "ident_cely": ident_cely},
+                    extra={"user": request.user.pk, "value": action, "ident_cely": ident_cely},
                 )
                 return JsonResponse({"error": str(PRISTUP_ZAKAZAN)}, status=403)
 
@@ -1343,7 +1343,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
             self.fedora_transaction.rollback_transaction()
             logger.error(
                 "core.views.post_upload.error.invalid_typ_vazby_for_update",
-                extra={"typ_vazby": typ_vazby, "ident_cely": ident_cely, "file_id": file_id},
+                extra={"typ_vazby": typ_vazby, "ident_cely": ident_cely, "pk": file_id},
             )
             return JsonResponse(
                 {"error": _("core.views.post_upload.error.invalid_typ_vazby") + f": {typ_vazby}"},
@@ -1367,7 +1367,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
             self.fedora_transaction.rollback_transaction()
             logger.error(
                 "core.views.post_upload.error.object_does_not_exist_or_type_mismatch_update",
-                extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "file_id": file_id},
+                extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": file_id},
             )
             return JsonResponse(
                 {"error": _("core.views.post_upload.error.object_does_not_exist") + " " + ident_cely},
@@ -1380,7 +1380,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
                 self.fedora_transaction.rollback_transaction()
                 logger.warning(
                     "core.views._check_update_permissions.permission_denied",
-                    extra={"user": request.user.pk, "action": action, "ident_cely": ident_cely, "file_id": file_id},
+                    extra={"user": request.user.pk, "value": action, "ident_cely": ident_cely, "pk": file_id},
                 )
                 return JsonResponse({"error": str(PRISTUP_ZAKAZAN)}, status=403)
 
@@ -2279,7 +2279,7 @@ def post_ajax_get_list_map_data(request, layer):
 
     base_qs, type_label, geom_field = get_list_map_records_in_envelope(layer, bounds, request)
     if base_qs is None:
-        logger.warning("core.views.post_ajax_get_list_map_data.unknown_layer", extra={"layer": layer})
+        logger.warning("core.views.post_ajax_get_list_map_data.unknown_layer", extra={"value": layer})
         return JsonResponse({"points": [], "algorithm": "detail", "count": 0}, status=200)
 
     # U projektů posíláme i stav, aby je klient rozdělil do vrstev „Projekty - P1 … P7-P8“ jako v detailu.
@@ -3152,7 +3152,7 @@ class DataImportReportDownloadView(LoginRequiredMixin, View):
         if not file_name or not os.path.isfile(file_path):
             logger.error(
                 "core.views.DataImportReportDownloadView.missing_file",
-                extra={"job_id": job_id, "file_path": file_path},
+                extra={"job_id": job_id, "file": file_path},
             )
             raise Http404("core.views.DataImportReportDownloadView.missing_file")
 
@@ -3386,6 +3386,6 @@ class DataImportReset(LoginRequiredMixin, View):
                 status=409,
             )
         logger.warning(
-            "core.views.DataImportReset.reset", extra={"job_id": job_id, "by_user": request.user.id, "phase": phase}
+            "core.views.DataImportReset.reset", extra={"job_id": job_id, "by_user": request.user.id, "value": phase}
         )
         return JsonResponse({"result": "ok"})

@@ -142,7 +142,7 @@ def sync_delta(
         extra={
             "run_id": run.pk,
             "day": day.isoformat(),
-            "reassign_records": reassign_records,
+            "option": reassign_records,
             "vynutit_metadata": vynutit_metadata,
         },
     )
@@ -351,7 +351,7 @@ def _zkontroluj_uplnost_zdroje(state: RuianFullState, run: RuianSyncRun) -> None
             "heslar.ruian_sync.syncer._zkontroluj_uplnost_zdroje.ok",
             extra={
                 "run_id": run.pk,
-                "kraje": len(state.kraje),
+                "count": len(state.kraje),
                 "okresy": len(state.okresy),
                 "katastry": len(state.katastry),
                 "prah_ubytku_katastru": _MAX_UBYTEK_KATASTRU,
@@ -365,7 +365,7 @@ def _zkontroluj_uplnost_zdroje(state: RuianFullState, run: RuianSyncRun) -> None
     run.save()
     logger.error(
         "heslar.ruian_sync.syncer._zkontroluj_uplnost_zdroje.neuplny_zdroj",
-        extra={"run_id": run.pk, "problemy": problemy},
+        extra={"run_id": run.pk, "info": problemy},
     )
     raise RuianNeuplnyZdrojError(duvod)
 
@@ -561,7 +561,7 @@ def _apply_changes(
     bucket = {LEVEL_KRAJ: [], LEVEL_OKRES: [], LEVEL_KATASTR: []}
     for ev in events:
         if ev.level not in bucket:
-            logger.error("heslar.ruian_sync.syncer._apply_changes.unknown_level", extra={"level": ev.level})
+            logger.error("heslar.ruian_sync.syncer._apply_changes.unknown_level", extra={"value": ev.level})
             continue
         bucket[ev.level].append(ev)
 
@@ -642,7 +642,7 @@ def _apply_changes(
         # Až po dokončení všech ostatních prvků – viz RuianNesmazatelnyKatastrError.
         logger.error(
             "heslar.ruian_sync.syncer._apply_changes.nesmazane_katastry",
-            extra={"run_id": run.pk, "kody": sorted(nesmazane)},
+            extra={"run_id": run.pk, "list": sorted(nesmazane)},
         )
         raise RuianNesmazatelnyKatastrError(
             f"Katastry {sorted(nesmazane)} nešlo smazat kvůli navázaným záznamům; "
@@ -765,7 +765,7 @@ def _delete_kraj(kraj: RuianKraj, run: Optional[RuianSyncRun] = None) -> bool:
     except RestrictedError as err:
         logger.error(
             "heslar.ruian_sync.syncer._delete_kraj.restricted",
-            extra={"kod": kraj.kod, "nazev": kraj.nazev, "error": str(err)},
+            extra={"kod": kraj.kod, "name": kraj.nazev, "error": str(err)},
         )
         if run is not None:
             _append_run_note(run, f"Kraj {kraj.kod} ({kraj.nazev}) nelze smazat: {err}")
@@ -774,7 +774,7 @@ def _delete_kraj(kraj: RuianKraj, run: Optional[RuianSyncRun] = None) -> bool:
         # DB delete proběhl, jen Fedora kontejner neexistoval (viz _delete_katastr).
         logger.error(
             "heslar.ruian_sync.syncer._delete_kraj.fedora_error",
-            extra={"kod": kraj.kod, "nazev": kraj.nazev, "error": str(err)},
+            extra={"kod": kraj.kod, "name": kraj.nazev, "error": str(err)},
         )
         if run is not None:
             _append_run_note(
@@ -919,7 +919,7 @@ def _upsert_okres(
         if kraj is None:
             logger.error(
                 "heslar.ruian_sync.syncer._upsert_okres.missing_kraj",
-                extra={"okres_kod": dto.kod, "kraj_kod": dto.kraj_kod},
+                extra={"kod": dto.kod, "kraj_kod": dto.kraj_kod},
             )
             return False
         if not dto.spz:
@@ -941,7 +941,7 @@ def _upsert_okres(
         stary_kod = existing.kod
         logger.warning(
             "heslar.ruian_sync.syncer._upsert_okres.precislovani",
-            extra={"stary_kod": stary_kod, "novy_kod": dto.kod, "nazev": existing.nazev},
+            extra={"old": stary_kod, "kod": dto.kod, "name": existing.nazev},
         )
         existing.kod = dto.kod
         changed = True
@@ -1007,7 +1007,7 @@ def _delete_okres(okres: RuianOkres, run: Optional[RuianSyncRun] = None) -> bool
     except RestrictedError as err:
         logger.error(
             "heslar.ruian_sync.syncer._delete_okres.restricted",
-            extra={"kod": okres.kod, "nazev": okres.nazev, "error": str(err)},
+            extra={"kod": okres.kod, "name": okres.nazev, "error": str(err)},
         )
         if run is not None:
             _append_run_note(run, f"Okres {okres.kod} ({okres.nazev}) nelze smazat: {err}")
@@ -1016,7 +1016,7 @@ def _delete_okres(okres: RuianOkres, run: Optional[RuianSyncRun] = None) -> bool
         # DB delete proběhl, jen Fedora kontejner neexistoval (viz _delete_katastr).
         logger.error(
             "heslar.ruian_sync.syncer._delete_okres.fedora_error",
-            extra={"kod": okres.kod, "nazev": okres.nazev, "error": str(err)},
+            extra={"kod": okres.kod, "name": okres.nazev, "error": str(err)},
         )
         if run is not None:
             _append_run_note(
@@ -1063,16 +1063,16 @@ def _dohledej_okres_prostorove(dto: RuianKatastrDTO) -> Optional[RuianOkres]:
     if okres is None:
         logger.error(
             "heslar.ruian_sync.syncer._dohledej_okres_prostorove.nenalezen",
-            extra={"katastr_kod": dto.kod, "bod": dto.definicni_bod_wkt},
+            extra={"kod": dto.kod, "geom": dto.definicni_bod_wkt},
         )
         return None
     logger.warning(
         "heslar.ruian_sync.syncer._dohledej_okres_prostorove.ok",
         extra={
-            "katastr_kod": dto.kod,
+            "kod": dto.kod,
             "okres_kod": okres.kod,
-            "okres_nazev": okres.nazev,
-            "zdroj": zdroj,
+            "name": okres.nazev,
+            "source_url": zdroj,
         },
     )
     return okres
@@ -1119,7 +1119,7 @@ def _upsert_katastr(
             # den skončí jako failed a další spuštění cronu ho zkusí znovu.
             logger.error(
                 "heslar.ruian_sync.syncer._upsert_katastr.missing_okres",
-                extra={"katastr_kod": dto.kod, "okres_kod": dto.okres_kod},
+                extra={"kod": dto.kod, "okres_kod": dto.okres_kod},
             )
             raise RuianMissingMandatoryFieldError("katastr", dto.kod, ["okres"])
         katastr = RuianKatastr(
@@ -1349,7 +1349,7 @@ def _reassign_records_in_changed_katastry(
     kody_list = list(kody)
     logger.debug(
         "heslar.ruian_sync.syncer._reassign_records_in_changed_katastry.start",
-        extra={"changed_kody_count": len(kody_list)},
+        extra={"count": len(kody_list)},
     )
     print(
         f"Cílený reassign po změně hranic: {len(kody_list)} změněných katastrů",
@@ -1500,7 +1500,7 @@ def _delete_katastr(
             except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
                 logger.error(
                     "heslar.ruian_sync.syncer._delete_katastr.reassign_projekt_fedora_error",
-                    extra={"katastr_kod": katastr.kod, "ident_cely": projekt.ident_cely, "error": str(err)[:500]},
+                    extra={"kod": katastr.kod, "ident_cely": projekt.ident_cely, "error": str(err)[:500]},
                 )
                 reassign_mod.log_katastr_change(projekt.historie_id, *historie_parts)
                 continue
@@ -1515,7 +1515,7 @@ def _delete_katastr(
         except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
             logger.error(
                 "heslar.ruian_sync.syncer._delete_katastr.reassign_projekt_dalsi_fedora_error",
-                extra={"katastr_kod": katastr.kod, "ident_cely": projekt.ident_cely, "error": str(err)[:500]},
+                extra={"kod": katastr.kod, "ident_cely": projekt.ident_cely, "error": str(err)[:500]},
             )
         # I při selhání druhého kroku se zapíše to, co se skutečně povedlo.
         reassign_mod.log_katastr_change(projekt.historie_id, *historie_parts)
@@ -1552,7 +1552,7 @@ def _delete_katastr(
         except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
             logger.error(
                 "heslar.ruian_sync.syncer._delete_katastr.reassign_az_fedora_error",
-                extra={"katastr_kod": katastr.kod, "ident_cely": az.ident_cely, "error": str(err)[:500]},
+                extra={"kod": katastr.kod, "ident_cely": az.ident_cely, "error": str(err)[:500]},
             )
             continue
         run.affected_az += 1
@@ -1568,7 +1568,7 @@ def _delete_katastr(
         except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
             logger.error(
                 "heslar.ruian_sync.syncer._delete_katastr.reassign_sn_fedora_error",
-                extra={"katastr_kod": katastr.kod, "ident_cely": sn.ident_cely, "error": str(err)[:500]},
+                extra={"kod": katastr.kod, "ident_cely": sn.ident_cely, "error": str(err)[:500]},
             )
             continue
         run.affected_sn += 1
@@ -1588,8 +1588,8 @@ def _delete_katastr(
             logger.error(
                 "heslar.ruian_sync.syncer._delete_katastr.reassign_neident_akce_fedora_error",
                 extra={
-                    "katastr_kod": katastr.kod,
-                    "neident_akce_pk": neident_akce.pk,
+                    "kod": katastr.kod,
+                    "pk": neident_akce.pk,
                     "error": str(err)[:500],
                 },
             )
@@ -1608,7 +1608,7 @@ def _delete_katastr(
     except RestrictedError as err:
         logger.error(
             "heslar.ruian_sync.syncer._delete_katastr.restricted",
-            extra={"kod": katastr.kod, "nazev": katastr.nazev, "error": str(err)},
+            extra={"kod": katastr.kod, "name": katastr.nazev, "error": str(err)},
         )
         _append_run_note(run, f"Katastr {katastr.kod} ({katastr.nazev}) nelze smazat: {err}")
         return False
@@ -1621,7 +1621,7 @@ def _delete_katastr(
         # Záznam v DB je pryč, sync pokračuje.
         logger.error(
             "heslar.ruian_sync.syncer._delete_katastr.fedora_error",
-            extra={"kod": katastr.kod, "nazev": katastr.nazev, "error": str(err)},
+            extra={"kod": katastr.kod, "name": katastr.nazev, "error": str(err)},
         )
         _append_run_note(
             run,
@@ -1659,7 +1659,7 @@ def _geos_or_none(wkt: Optional[str]):
     except (GEOSException, ValueError) as err:
         logger.error(
             "heslar.ruian_sync.syncer._geos_or_none.invalid_wkt",
-            extra={"wkt_prefix": wkt[:120], "wkt_length": len(wkt), "error": str(err)},
+            extra={"geom": wkt[:120], "wkt_length": len(wkt), "error": str(err)},
         )
         return None
 
@@ -1739,9 +1739,9 @@ def _log_hranice_change_if_significant(
                 logger.warning(
                     "heslar.ruian_sync.syncer._log_hranice_change_if_significant.significant",
                     extra={
-                        "level": level,
+                        "value": level,
                         "kod": kod,
-                        "nazev": nazev,
+                        "name": nazev,
                         "area_old_m2": round(old_area, 1),
                         "area_new_m2": round(new_area, 1),
                         "area_diff_pct": round(area_diff_pct, 2),
@@ -1764,11 +1764,11 @@ def _log_hranice_change_if_significant(
             logger.error(
                 "heslar.ruian_sync.syncer._log_hranice_change_if_significant.bod_outside",
                 extra={
-                    "level": level,
+                    "value": level,
                     "kod": kod,
-                    "nazev": nazev,
-                    "definicni_bod_x": float(new_definicni_bod.x),
-                    "definicni_bod_y": float(new_definicni_bod.y),
+                    "name": nazev,
+                    "X": float(new_definicni_bod.x),
+                    "Y": float(new_definicni_bod.y),
                     "distance_m": distance_m,
                 },
             )
@@ -2034,12 +2034,12 @@ def _zkontroluj_unii_pokryti(run: RuianSyncRun) -> bool:
     for plocha, bod in dery[:_TOPOLOGY_MAX_LOGGED]:
         logger.error(
             "heslar.ruian_sync.syncer._zkontroluj_unii_pokryti.dira",
-            extra={"run_id": run.pk, "plocha_m2": round(plocha, 4), "bod_5514": bod},
+            extra={"run_id": run.pk, "plocha_m2": round(plocha, 4), "geom": bod},
         )
     if len(dery) > _TOPOLOGY_MAX_LOGGED:
         logger.error(
             "heslar.ruian_sync.syncer._zkontroluj_unii_pokryti.dalsi_dery",
-            extra={"run_id": run.pk, "nevypsano": len(dery) - _TOPOLOGY_MAX_LOGGED},
+            extra={"run_id": run.pk, "count": len(dery) - _TOPOLOGY_MAX_LOGGED},
         )
     if dery:
         _append_run_note(
@@ -2063,10 +2063,10 @@ def _zkontroluj_unii_pokryti(run: RuianSyncRun) -> bool:
         "heslar.ruian_sync.syncer._zkontroluj_unii_pokryti.end",
         extra={
             "run_id": run.pk,
-            "dery": len(dery),
+            "count": len(dery),
             "casti": casti,
             "prekryv_m2": round(prekryv_m2, 4),
-            "podezrele": podezrele,
+            "option": podezrele,
         },
     )
     return podezrele
@@ -2181,7 +2181,7 @@ def _zkontroluj_soulad_urovni(run: RuianSyncRun) -> None:
         problemy.append(f"{nazev}: {chybi} z {celkem} nemá vyplněnou hranici")
         logger.error(
             "heslar.ruian_sync.syncer._zkontroluj_soulad_urovni.chybi_geometrie",
-            extra={"run_id": run.pk, "uroven": nazev, "bez_hranice": chybi, "celkem": celkem},
+            extra={"run_id": run.pk, "uroven": nazev, "count": chybi, "celkem": celkem},
         )
 
     if celkem_kat and "katastrů" not in bez_geometrie:
@@ -2257,8 +2257,8 @@ def _ohlas_ubytek_pokryti(run: RuianSyncRun, ubytek: float, *, podezrele: bool) 
         "run_id": run.pk,
         "ubytek_m2": round(ubytek, 1),
         "limit_m2": _PLOCHA_POKRYTI_DROP_WARN_M2,
-        "mode": run.mode,
-        "sjednoceni_podezrele": podezrele,
+        "value": run.mode,
+        "option": podezrele,
     }
     if prisne:
         logger.error("heslar.ruian_sync.syncer._zkontroluj_pokryti.dira", extra=extra)
@@ -2331,7 +2331,7 @@ def _check_katastry_topology(run: RuianSyncRun, plocha_pred: Optional[float] = N
 
     logger.debug(
         "heslar.ruian_sync.syncer._check_katastry_topology.end",
-        extra={"run_id": run.pk, "overlaps": overlaps_count},
+        extra={"run_id": run.pk, "count": overlaps_count},
     )
 
 

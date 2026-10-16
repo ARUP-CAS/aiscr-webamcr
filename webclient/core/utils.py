@@ -483,7 +483,7 @@ def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
     if db_status != "OK" or bbox_status != "OK":
         logger.warning(
             "core.utils.get_pians_from_akce.transform_failed",
-            extra={"db_status": db_status, "bbox_status": bbox_status, "katastr": katastr.pk},
+            extra={"value": db_status, "bbox_status": bbox_status, "katastr": katastr.pk},
         )
         raise CannotFindCadasterCentre()
     # Vyparsuj lat/lng z 4326 POINT WKT ``POINT(x y)`` → (lng, lat).
@@ -1327,7 +1327,7 @@ class TwoQueryPaginator(Paginator):
             # klíče opakují a stránka by byla neúplná. Zopakujeme s distinct().
             logger.warning(
                 "core.utils.TwoQueryPaginator.page.duplicate_pks",
-                extra={"model": queryset.model.__name__},
+                extra={"class_name": queryset.model.__name__},
             )
             pk_list = list(pk_qs.distinct()[bottom:top])
 
@@ -1814,7 +1814,7 @@ def read_import_report_index(reports_directory_path):
     except (OSError, ValueError) as err:
         logger.error(
             "core.utils.read_import_report_index.corrupt_index",
-            extra={"index_path": index_path, "error": str(err)},
+            extra={"file": index_path, "error": str(err)},
         )
         return []
     entries.sort(key=lambda entry: entry.get("updated_at", ""), reverse=True)
@@ -1872,7 +1872,7 @@ def check_import_report_index_files_exist(entries, reports_directory_path):
     if missing_job_ids:
         logger.error(
             "core.utils.check_import_report_index_files_exist.missing_files",
-            extra={"job_ids": missing_job_ids, "reports_directory_path": reports_directory_path},
+            extra={"job_id": missing_job_ids, "file": reports_directory_path},
         )
         raise ImportReportIndexError(missing_job_ids)
 
@@ -1888,3 +1888,42 @@ def get_timezone():
     except Exception as err:
         logger.error("core.utils.get_timezone.error", extra={"error": err, "value": settings.TIME_ZONE})
         return pytz.timezone("Europe/Prague")
+
+
+def hodnota_pro_log(hodnota):
+    """
+    Převede strukturovanou hodnotu na JSON řetězec pro textové pole v ``extra`` logu.
+
+    Šablona ``amcr_template`` v Elasticsearch mapuje pole jako ``data``, ``error``,
+    ``initial`` nebo ``warning`` na typ ``text``. ``python-logstash`` posílá ``dict``
+    a ``list`` beze změny (včetně podtříd jako ``QueryDict`` nebo ``ErrorDict``),
+    takže v takovém poli dorazí JSON objekt, Elasticsearch dokument odmítne a Logstash
+    celou událost zahodí (issue #4397). Proto se hodnota serializuje na řetězec už
+    v aplikaci.
+
+    Chyby formulářů (``ErrorDict``, ``ErrorList``) se převádí přes ``get_json_data()``:
+    ``ErrorList`` je ``UserList``, takže přímý ``json.dumps`` by z něj udělal prázdný
+    seznam. Vnořený řetězec, který je sám JSON objektem nebo polem (např.
+    ``optimistic_lock_data`` ve ``form.initial``), se rozbalí, aby se nezakódoval podruhé
+    a v logu nebyl plný escapovaných uvozovek. Ostatní neserializovatelné objekty (lazy
+    překlady, modely, data, ``Decimal``) se převádí přes ``str()``.
+
+    :param hodnota: Libovolná hodnota - dict, list, chyby formuláře či formsetu.
+    :return: JSON řetězec (``ensure_ascii=False``).
+    """
+
+    def _normalizuj(obj):
+        if hasattr(obj, "get_json_data"):
+            return obj.get_json_data()
+        if isinstance(obj, dict):
+            return {str(klic): _normalizuj(polozka) for klic, polozka in obj.items()}
+        if isinstance(obj, (list, tuple, set)):
+            return [_normalizuj(polozka) for polozka in obj]
+        if isinstance(obj, str) and obj[:1] in ("{", "["):
+            try:
+                return _normalizuj(json.loads(obj))
+            except ValueError:
+                return obj
+        return obj
+
+    return json.dumps(_normalizuj(hodnota), ensure_ascii=False, default=str)

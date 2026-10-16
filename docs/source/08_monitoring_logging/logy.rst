@@ -288,6 +288,9 @@ Nastavení Elasticsearch je součástí docker-compose.yml souborů.
             }
          }
          },
+         "duration_s": {
+         "type": "float"
+         },
          "element": {
          "type": "text",
          "fields": {
@@ -474,6 +477,9 @@ Nastavení Elasticsearch je součástí docker-compose.yml souborů.
             }
          }
          },
+         "job_id": {
+         "type": "keyword"
+         },
          "katastr": {
          "type": "text",
          "fields": {
@@ -491,6 +497,9 @@ Nastavení Elasticsearch je součástí docker-compose.yml souborů.
                "ignore_above": 256
             }
          }
+         },
+         "kod": {
+         "type": "keyword"
          },
          "komponenta": {
          "type": "text",
@@ -725,6 +734,9 @@ Nastavení Elasticsearch je součástí docker-compose.yml souborů.
          "right": {
          "type": "float"
          },
+         "run_id": {
+         "type": "long"
+         },
          "s_pk": {
          "type": "long"
          },
@@ -952,6 +964,22 @@ Zde je seznam doporučených jmen atributů extra při logování v Django. Je m
 jakékoliv jiné názvy, ale obsah vyjmenovaných proměnných je indexován a je možné 
 hodnoty dále vyhledávat nebo podle nich třídit výsledky.
 
+Šablona má ``"dynamic": false`` a pevné typy polí. Pokud hodnota v ``extra`` typu neodpovídá,
+Elasticsearch celou událost odmítne a Logstash ji zahodí. Proto platí:
+
+- Do polí typu ``Text`` a ``Keyword`` se nesmí posílat ``dict`` ani seznam objektů (např. ``form.errors``,
+  ``formset.errors``, ``request.POST``, výsledky ``check_pred_*``). Takovou hodnotu převeďte na řetězec
+  helperem ``core.utils.hodnota_pro_log``.
+- Do polí typu ``Long``, ``Float`` a ``Boolean`` patří jen číslo, resp. ``True``/``False`` nebo ``None``,
+  nikdy identifikátor, řetězec ``"None"`` ani objekt modelu (např. ``pk=user.pk``, ne ``pk=user``).
+  Identifikátor záznamu patří do ``ident_cely``.
+- Pole ``path``, ``type``, ``level``, ``host``, ``logger_name`` a ``message`` plní ``python-logstash`` a pole
+  ``url`` a ``user_id`` filtr ``core.logging_filters.UserLogFilter``. Klíč stejného jména v ``extra``
+  hodnotu přepíše, nebo se sám ztratí. Cestu k souboru logujte do ``file``, cílovou URL do ``request_url``.
+- Nový klíč mimo seznam nevytvářejte, pokud jde použít existující pole (``name``, ``info``, ``count``,
+  ``value``, ``file``, ``error`` …). Klíče mimo šablonu se uloží jen do ``_source`` a nelze podle nich
+  vyhledávat.
+
 +--------------------+---------+
 | Jméno   proměnné   | typ     |
 +====================+=========+
@@ -984,6 +1012,8 @@ hodnoty dále vyhledávat nebo podle nich třídit výsledky.
 | data               | Text    |
 +--------------------+---------+
 | dj                 | Text    |
++--------------------+---------+
+| duration_s         | Float   |
 +--------------------+---------+
 | element            | Text    |
 +--------------------+---------+
@@ -1035,9 +1065,13 @@ hodnoty dále vyhledávat nebo podle nich třídit výsledky.
 +--------------------+---------+
 | ip                 | Text    |
 +--------------------+---------+
+| job_id             | Keyword |
++--------------------+---------+
 | katastr            | Text    |
 +--------------------+---------+
 | key                | Text    |
++--------------------+---------+
+| kod                | Keyword |
 +--------------------+---------+
 | komponenta         | Text    |
 +--------------------+---------+
@@ -1092,6 +1126,8 @@ hodnoty dále vyhledávat nebo podle nich třídit výsledky.
 | result             | Boolean |
 +--------------------+---------+
 | right              | Float   |
++--------------------+---------+
+| run_id             | Long    |
 +--------------------+---------+
 | s_pk               | Long    |
 +--------------------+---------+

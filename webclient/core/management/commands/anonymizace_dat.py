@@ -242,7 +242,7 @@ class Command(BaseCommand):
 
         logger.debug(
             "core.management.commands.anonymizace_dat.start",
-            extra={"sekce": ",".join(sekce), "dry_run": options["dry_run"]},
+            extra={"value": ",".join(sekce), "option": options["dry_run"]},
         )
         self._vypis_banner(sekce, options)
 
@@ -254,7 +254,7 @@ class Command(BaseCommand):
 
         self._invaliduj_cache(options)
         self._vypis_shrnuti(options)
-        logger.debug("core.management.commands.anonymizace_dat.end", extra={"statistika": str(self.statistika)})
+        logger.debug("core.management.commands.anonymizace_dat.end", extra={"info": str(self.statistika)})
 
     def _overr_pojistky(self, options):
         """
@@ -435,7 +435,7 @@ class Command(BaseCommand):
             self._vypis_identy(duvod)
         logger.info(
             "core.management.commands.anonymizace_dat.geometrie.duvody",
-            extra={"duvody": str(self.duvody_preskoceni), "identy": str(self.identy_preskocenych)},
+            extra={"info": str(self.duvody_preskoceni), "list": str(self.identy_preskocenych)},
         )
 
     def _vypis_identy(self, duvod):
@@ -866,7 +866,7 @@ class Command(BaseCommand):
             kurzor.execute(f"ALTER TABLE public.pian {prikaz} TRIGGER {TRIGGER_VALIDACE_PIANU}")
         logger.debug(
             "core.management.commands.anonymizace_dat.trigger",
-            extra={"trigger": TRIGGER_VALIDACE_PIANU, "zapnut": zapnout},
+            extra={"value": TRIGGER_VALIDACE_PIANU, "option": zapnout},
         )
 
     def _chranene_piany(self):
@@ -1020,7 +1020,7 @@ class Command(BaseCommand):
 
         logger.debug(
             "core.management.commands.anonymizace_dat.pian.bez_nove_polohy",
-            extra={"pian": pian.ident_cely, "zm50": zm50_gid, "okres": okres_id, "duvod": duvod},
+            extra={"pian": pian.ident_cely, "zm50": zm50_gid, "okres": okres_id, "info": duvod},
         )
         if duvod == "neplatna_geometrie":
             duvod = self._duvod_neplatne_geometrie(pian)
@@ -1080,7 +1080,7 @@ class Command(BaseCommand):
 
         logger.debug(
             "core.management.commands.anonymizace_dat.pian.bez_nahradniho_katastru",
-            extra={"pian": pian.ident_cely, "okres": okres_id, "zm50": zm50_gid, "neplatnych": neplatnych},
+            extra={"pian": pian.ident_cely, "okres": okres_id, "zm50": zm50_gid, "count": neplatnych},
         )
         self._zapocti_duvod("neplatna_geometrie" if neplatnych else "bez_nahradniho_katastru", pian.ident_cely)
         return None
@@ -1165,7 +1165,7 @@ class Command(BaseCommand):
         if vysledek != "OK":
             logger.error(
                 "core.management.commands.anonymizace_dat.pian.transformace_selhala",
-                extra={"pian": pian.ident_cely, "vysledek": vysledek},
+                extra={"pian": pian.ident_cely, "info": vysledek},
             )
             self._zapocti("geometrie", chyb=1)
             return False

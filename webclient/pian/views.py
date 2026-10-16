@@ -20,6 +20,7 @@ from core.translation import format_message
 from core.utils import (
     file_validate_epsg,
     get_dj_akce_for_pian,
+    hodnota_pro_log,
     update_all_katastr_within_akce_or_lokalita,
     validate_and_split_geometry,
 )
@@ -90,7 +91,7 @@ def detail(request, ident_cely):
             request.session[f"dj_concurrent_changes_{dj.ident_cely}"] = conflicting_labels
             logger.info(
                 "pian.views.detail.dj_concurrent_changes",
-                extra={"ident_cely": dj.ident_cely, "fields": dj_conflicting_fields},
+                extra={"ident_cely": dj.ident_cely, "columns": dj_conflicting_fields},
             )
             return redirect(dj.get_absolute_url())
         logger.debug("pian.views.detail.form.valid", extra={"ident_cely": pian.ident_cely})
@@ -106,7 +107,7 @@ def detail(request, ident_cely):
         logger.debug("pian.views.detail.form.finished", extra={"transaction": fedora_transaction.uid})
         response = redirect(dj.get_absolute_url())
     else:
-        logger.debug("pian.views.detail.form.not_valid", extra={"error": form.errors})
+        logger.debug("pian.views.detail.form.not_valid", extra={"error": hodnota_pro_log(form.errors)})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         for errors in form.errors.values():
             for error in errors:
@@ -137,7 +138,7 @@ def odpojit(request, dj_ident_cely):
         if not odpojit_form.is_valid():
             logger.info(
                 "pian.views.odpojit.form.not_valid",
-                extra={"ident_cely": dj.ident_cely, "errors": odpojit_form.errors},
+                extra={"ident_cely": dj.ident_cely, "error": hodnota_pro_log(odpojit_form.errors)},
             )
             return JsonResponse({"redirect": dj.get_absolute_url()})
         dj_conflicting_fields = odpojit_form.get_dj_conflicting_fields()
@@ -151,7 +152,7 @@ def odpojit(request, dj_ident_cely):
             request.session[f"dj_concurrent_changes_{dj.ident_cely}"] = conflicting_labels
             logger.info(
                 "pian.views.odpojit.dj_concurrent_changes",
-                extra={"ident_cely": dj.ident_cely, "fields": dj_conflicting_fields},
+                extra={"ident_cely": dj.ident_cely, "columns": dj_conflicting_fields},
             )
             return JsonResponse({"redirect": dj.get_absolute_url()})
         fedora_transaction = dj.archeologicky_zaznam.create_transaction(request.user)
@@ -222,7 +223,7 @@ def potvrdit(request, dj_ident_cely):
     form = PianCreateForm(instance=pian)
     ok = form.run_loaded_validation()
     if not ok:
-        logger.info("pian.views.potvrdit.not_valid", extra={"error": form.errors})
+        logger.info("pian.views.potvrdit.not_valid", extra={"error": hodnota_pro_log(form.errors)})
         for errors in form.errors.values():
             for error in errors:
                 messages.error(request, str(error))
@@ -294,7 +295,7 @@ def create(request, dj_ident_cely):
             request.session[f"dj_concurrent_changes_{dj.ident_cely}"] = conflicting_labels
             logger.info(
                 "pian.views.create.dj_concurrent_changes",
-                extra={"ident_cely": dj.ident_cely, "fields": dj_conflicting_fields},
+                extra={"ident_cely": dj.ident_cely, "columns": dj_conflicting_fields},
             )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
             return redirect(dj.get_absolute_url())
@@ -330,7 +331,7 @@ def create(request, dj_ident_cely):
                 fedora_transaction.rollback_transaction()
         response = redirect(dj.get_absolute_url())
     else:
-        logger.info("pian.views.create.not_valid", extra={"error": form.errors})
+        logger.info("pian.views.create.not_valid", extra={"error": hodnota_pro_log(form.errors)})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
         for errors in form.errors.values():
             for error in errors:

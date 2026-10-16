@@ -60,7 +60,12 @@ from core.repository_connector import (
     FedoraTransaction,
 )
 from core.translation import format_message
-from core.utils import check_import_report_directory, translate_status_value, upsert_import_report_index_entry
+from core.utils import (
+    check_import_report_directory,
+    hodnota_pro_log,
+    translate_status_value,
+    upsert_import_report_index_entry,
+)
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.db import connection, transaction
@@ -1099,7 +1104,7 @@ def save_import_report_to_disk(job_id, redis_connector, reports_directory_path):
     except Exception as err:
         logger.error(
             "cron.tasks.save_import_report_to_disk.error",
-            extra={"job_id": job_id, "report_path": report_path, "error": str(err)},
+            extra={"job_id": job_id, "file": report_path, "error": str(err)},
         )
         return None
 
@@ -1549,7 +1554,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
 
     logger.debug(
         "cron.tasks.run_data_import_validation.end",
-        extra={"job_id": job_id, "failure_reason": failure_reason, "stopped": stopped, "record_count": record_id},
+        extra={"job_id": job_id, "info": failure_reason, "stopped": stopped, "count": record_id},
     )
 
 
@@ -1694,7 +1699,7 @@ def run_data_import(job_id, user_id, lock_token):
             )
             logger.error(
                 "cron.tasks.run_data_import.invalid_record_count",
-                extra={"job_id": job_id, "record_count": record_count, "record_count_raw": record_count_raw},
+                extra={"job_id": job_id, "count": record_count, "record_count_raw": record_count_raw},
             )
             return
         performed_action_raw = redis_connector.get(job_key("import_performed_action"))
@@ -1760,7 +1765,7 @@ def run_data_import(job_id, user_id, lock_token):
                 except Exception as rollback_err:
                     logger.error(
                         "cron.tasks.run_data_import.fedora_delete_rollback.error",
-                        extra={"job_id": job_id, "record_id": entry["record_id"], "error": rollback_err},
+                        extra={"job_id": job_id, "index": entry["record_id"], "error": rollback_err},
                     )
             pending_fedora_delete_commits.clear()
 
@@ -1782,8 +1787,8 @@ def run_data_import(job_id, user_id, lock_token):
                         "cron.tasks.run_data_import.fedora_delete_commit.error",
                         extra={
                             "job_id": job_id,
-                            "record_id": entry["record_id"],
-                            "identity": entry["identity"],
+                            "index": entry["record_id"],
+                            "list": hodnota_pro_log(entry["identity"]),
                             "error": commit_err,
                         },
                     )
@@ -2068,8 +2073,8 @@ def run_data_import(job_id, user_id, lock_token):
                         "cron.tasks.run_data_import.distribution.saved",
                         extra={
                             "distribution": distribution,
-                            "paradata": row["is_paradata"],
-                            "action": row["action"],
+                            "option": row["is_paradata"],
+                            "value": row["action"],
                             "ident_cely": ident_cely,
                             "transaction": fedora_transaction.uid,
                             "job_id": job_id,
@@ -2301,9 +2306,7 @@ def run_data_import(job_id, user_id, lock_token):
                         pending_fedora_update.clear()
 
                         add_item_fedora_update_target(fedora_transaction.updated_ident_cely, record_id)
-                        logger.info(
-                            "cron.tasks.run_data_import.success", extra={"record_id": record_id, "job_id": job_id}
-                        )
+                        logger.info("cron.tasks.run_data_import.success", extra={"index": record_id, "job_id": job_id})
                         redis_connector.rpush(job_key("import_data_progress_ids"), record_id)
                         redis_connector.rpush(
                             job_key("import_data_progress_details_tr"), "cron.tasks.run_data_import.success"
@@ -2320,7 +2323,7 @@ def run_data_import(job_id, user_id, lock_token):
                     except Exception as err:
                         logger.info(
                             "cron.tasks.run_data_import.error",
-                            extra={"error": err, "record_id": record_id, "job_id": job_id},
+                            extra={"error": err, "index": record_id, "job_id": job_id},
                         )
                         fedora_transaction.rollback_transaction()
                         transaction.set_rollback(True)
@@ -2401,7 +2404,7 @@ def run_data_import(job_id, user_id, lock_token):
                     except Exception as err:
                         logger.error(
                             "cron.tasks.run_data_import.soubor_delete.error",
-                            extra={"job_id": job_id, "soubor_pk": soubor.pk, "error": err},
+                            extra={"job_id": job_id, "pk": soubor.pk, "error": err},
                         )
                         transaction.set_rollback(True)
                         data_rolled_back = True
@@ -2725,7 +2728,7 @@ def run_data_import(job_id, user_id, lock_token):
                         "cron.tasks.run_data_import.fedora.error",
                         extra={
                             "job_id": job_id,
-                            "record_ids": affected_record_ids,
+                            "list": affected_record_ids,
                             "error": err,
                             "traceback": fedora_error_stack,
                         },
@@ -2872,8 +2875,8 @@ def run_data_import(job_id, user_id, lock_token):
                             extra={
                                 "job_id": job_id,
                                 "ident_cely": skipped_ident_cely,
-                                "import_filename": skipped_filename,
-                                "reason": reason_tr,
+                                "file": skipped_filename,
+                                "info": reason_tr,
                             },
                         )
 
@@ -2884,7 +2887,7 @@ def run_data_import(job_id, user_id, lock_token):
                         soubor: Soubor
                         logger.debug(
                             "cron.tasks.run_data_import.files.import_started",
-                            extra={"job_id": job_id, "file_index": file_index, "file_name": soubor.nazev},
+                            extra={"job_id": job_id, "index": file_index, "file": soubor.nazev},
                         )
                         if stopped:
                             break
@@ -3011,7 +3014,7 @@ def run_data_import(job_id, user_id, lock_token):
                         logger.info(
                             "cron.tasks.run_data_import.files.insert.saved",
                             extra={
-                                "imported_filename": filename,
+                                "file": filename,
                                 "ident_cely": ident_cely,
                                 "job_id": job_id,
                             },
@@ -3093,8 +3096,8 @@ def run_data_import(job_id, user_id, lock_token):
                         extra={
                             "error": err,
                             "job_id": job_id,
-                            "import_filename": filename,
-                            "soubor_pk": err.soubor_pk,
+                            "file": filename,
+                            "pk": err.soubor_pk,
                             **related_metadata_log_context,
                         },
                     )
@@ -3117,9 +3120,9 @@ def run_data_import(job_id, user_id, lock_token):
                         extra={
                             "error": err,
                             "job_id": job_id,
-                            "import_filename": filename,
+                            "file": filename,
                             **related_metadata_log_context,
-                            "detected_mime": err.mime_type,
+                            "mime_type": err.mime_type,
                         },
                     )
                     if record_id is not None:
@@ -3141,9 +3144,9 @@ def run_data_import(job_id, user_id, lock_token):
                         extra={
                             "error": err,
                             "job_id": job_id,
-                            "import_filename": filename,
+                            "file": filename,
                             **related_metadata_log_context,
-                            "detected_mime": err.mime_type,
+                            "mime_type": err.mime_type,
                         },
                     )
                     if record_id is not None:
@@ -3165,10 +3168,10 @@ def run_data_import(job_id, user_id, lock_token):
                         extra={
                             "error": err,
                             "job_id": job_id,
-                            "import_filename": filename,
+                            "file": filename,
                             **related_metadata_log_context,
-                            "detected_mime": err.mime_type,
-                            "navazany_ident_cely": err.navazany_ident_cely,
+                            "mime_type": err.mime_type,
+                            "ident_cely_old": err.navazany_ident_cely,
                         },
                     )
                     if record_id is not None:
@@ -3191,7 +3194,7 @@ def run_data_import(job_id, user_id, lock_token):
                         extra={
                             "error": err,
                             "job_id": job_id,
-                            "import_filename": filename,
+                            "file": filename,
                             "traceback": fedora_error_stack,
                             **related_metadata_log_context,
                         },
@@ -3223,7 +3226,7 @@ def run_data_import(job_id, user_id, lock_token):
                         extra={
                             "error": err,
                             "job_id": job_id,
-                            "import_filename": filename,
+                            "file": filename,
                             "traceback": error_stack,
                             **related_metadata_log_context,
                         },
@@ -3333,9 +3336,7 @@ def run_data_import(job_id, user_id, lock_token):
             redis_connector.delete(*stray_keys)
         RedisConnector.release_import_lock(redis_connector, lock_token)
 
-    logger.debug(
-        "cron.tasks.run_data_import.end", extra={"job_id": job_id, "failed": failed, "record_count": record_count}
-    )
+    logger.debug("cron.tasks.run_data_import.end", extra={"job_id": job_id, "failed": failed, "count": record_count})
 
 
 #: Kolik dní zpět musí den být, aby se HTTP 404 na jeho změnovém VFR dal
@@ -3443,7 +3444,7 @@ def _zkontroluj_stari_poslednich_dat(today: datetime.date) -> None:
     if posledni_s_daty is None:
         logger.error(
             "cron.tasks.sync_ruian_changes.zadna_stazena_data",
-            extra={"reason": "Neexistuje žádný běh s neprázdným source_path – zkontrolujte URL zdroje."},
+            extra={"info": "Neexistuje žádný běh s neprázdným source_path – zkontrolujte URL zdroje."},
         )
         return
 
@@ -3455,11 +3456,11 @@ def _zkontroluj_stari_poslednich_dat(today: datetime.date) -> None:
         logger.error(
             "cron.tasks.sync_ruian_changes.mimo_retenci_zdroje",
             extra={
-                "dnu_bez_dat": stari,
-                "retence_zdroje_dnu": RUIAN_RETENCE_ZDROJE_DNU,
+                "count": stari,
+                "limit": RUIAN_RETENCE_ZDROJE_DNU,
                 "posledni_data_valid_to": posledni_s_daty.data_valid_to.isoformat(),
-                "posledni_run_id": posledni_s_daty.pk,
-                "reason": (
+                "run_id": posledni_s_daty.pk,
+                "info": (
                     f"Denní sync stojí {stari} dnů, což je za hranicí retence zdroje "
                     f"({RUIAN_RETENCE_ZDROJE_DNU} dnů). Zameškané změnové soubory už na "
                     "serveru ČÚZK nejsou a denní sync je nedožene. Je nutné spustit plný "
@@ -3473,11 +3474,11 @@ def _zkontroluj_stari_poslednich_dat(today: datetime.date) -> None:
         logger.error(
             "cron.tasks.sync_ruian_changes.dlouho_bez_dat",
             extra={
-                "dnu_bez_dat": stari,
+                "count": stari,
                 "limit": RUIAN_NO_DOWNLOAD_ERROR_DAYS,
                 "posledni_data_valid_to": posledni_s_daty.data_valid_to.isoformat(),
-                "posledni_run_id": posledni_s_daty.pk,
-                "reason": (
+                "run_id": posledni_s_daty.pk,
+                "info": (
                     "Déle než "
                     f"{RUIAN_NO_DOWNLOAD_ERROR_DAYS} dnů se nestáhl žádný změnový VFR. "
                     "Může jít o změnu URL na straně ČÚZK – ověřte base_url/atom_feed_url "
@@ -3535,7 +3536,7 @@ def sync_ruian_changes(reassign_records: bool = True):
             # hustěji, než stíhá doběhnout – obojí je potřeba vidět.
             logger.error(
                 "cron.tasks.sync_ruian_changes.lock_not_acquired",
-                extra={"reason": "Jiný běh sync_ruian_changes stále drží advisory lock, přeskakuji."},
+                extra={"info": "Jiný běh sync_ruian_changes stále drží advisory lock, přeskakuji."},
             )
             return
         _sync_ruian_changes_locked(reassign_records)
@@ -3563,7 +3564,7 @@ def _potvrd_prazdne_dny(runy: list) -> None:
     logger.info(
         "cron.tasks.sync_ruian_changes.prazdne_dny_potvrzeny",
         extra={
-            "pocet_dnu": len(runy),
+            "count": len(runy),
             "od": runy[0].data_valid_to.isoformat(),
             "do": runy[-1].data_valid_to.isoformat(),
         },
@@ -3602,10 +3603,10 @@ def _uzavri_prerusene_behy() -> None:
     logger.warning(
         "cron.tasks.sync_ruian_changes.prerusene_behy_uzavreny",
         extra={
-            "run_ids": [pk for pk, _, _ in prerusene],
-            "dny": [den.isoformat() for _, den, _ in prerusene],
+            "run_id": [pk for pk, _, _ in prerusene],
+            "list": [den.isoformat() for _, den, _ in prerusene],
             "mody": [mod for _, _, mod in prerusene],
-            "reason": "Běhy zůstaly ve stavu running po zabití procesu; den se zopakuje jako po selhání.",
+            "info": "Běhy zůstaly ve stavu running po zabití procesu; den se zopakuje jako po selhání.",
         },
     )
 
@@ -3630,7 +3631,7 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
         if last_run is None:
             logger.error(
                 "cron.tasks.sync_ruian_changes.no_initial_state",
-                extra={"reason": "Před spuštěním cronu je nutné provést prvotní full sync."},
+                extra={"info": "Před spuštěním cronu je nutné provést prvotní full sync."},
             )
             return
 
@@ -3702,10 +3703,10 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                             logger.error(
                                 "cron.tasks.sync_ruian_changes.podezrela_serie_404",
                                 extra={
-                                    "pocet_dnu": len(nepotvrzene_404),
+                                    "count": len(nepotvrzene_404),
                                     "od": nepotvrzene_404[0].data_valid_to.isoformat(),
                                     "do": nepotvrzene_404[-1].data_valid_to.isoformat(),
-                                    "reason": (
+                                    "info": (
                                         "Souvislá série 404 na změnových VFR. Kotva se neposouvá, "
                                         "dny se po opravě stáhnou znovu. Ověřte base_url/atom_feed_url "
                                         "v CustomAdminSettings (skupina ruian_sync, item vfr_download)."
@@ -3716,10 +3717,10 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                             logger.error(
                                 "cron.tasks.sync_ruian_changes.strop_404_pokusu",
                                 extra={
-                                    "pocet_dnu": len(nepotvrzene_404),
+                                    "count": len(nepotvrzene_404),
                                     "od": nepotvrzene_404[0].data_valid_to.isoformat(),
                                     "do": nepotvrzene_404[-1].data_valid_to.isoformat(),
-                                    "reason": (
+                                    "info": (
                                         "Dosažen strop 404 pokusů na jeden běh, končím. "
                                         "Zbytek se zkusí při dalším spuštění cronu."
                                     ),
@@ -3772,7 +3773,7 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                             extra={
                                 "day": day.isoformat(),
                                 "run_id": run.pk,
-                                "reason": (
+                                "info": (
                                     "Dřívější pokus o tento den selhal po stažení dat. "
                                     "Metadata se do Fedory zapíšou i u nezměněných prvků "
                                     "a přepočet navázaných záznamů proběhne znovu."
@@ -3802,14 +3803,14 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                             source_path.unlink(missing_ok=True)
                             logger.debug(
                                 "cron.tasks.sync_ruian_changes.source_removed",
-                                extra={"day": day.isoformat(), "path": str(source_path)},
+                                extra={"day": day.isoformat(), "file": str(source_path)},
                             )
                         except OSError as cleanup_err:
                             logger.warning(
                                 "cron.tasks.sync_ruian_changes.source_remove_failed",
                                 extra={
                                     "day": day.isoformat(),
-                                    "path": str(source_path),
+                                    "file": str(source_path),
                                     "error": str(cleanup_err),
                                 },
                             )
@@ -3835,7 +3836,7 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                 logger.info(
                     "cron.tasks.sync_ruian_changes.prazdne_dny_cekaji",
                     extra={
-                        "pocet_dnu": len(nepotvrzene_404),
+                        "count": len(nepotvrzene_404),
                         "od": nepotvrzene_404[0].data_valid_to.isoformat(),
                         "do": nepotvrzene_404[-1].data_valid_to.isoformat(),
                     },

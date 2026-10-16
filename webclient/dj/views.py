@@ -18,7 +18,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
-from core.utils import update_all_katastr_within_akce_or_lokalita
+from core.utils import hodnota_pro_log, update_all_katastr_within_akce_or_lokalita
 from dj.forms import ChangeKatastrForm, CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
@@ -151,7 +151,10 @@ def detail(request, typ_vazby, ident_cely):
             if dj.typ != Heslar.objects.get(id=TYP_DJ_KATASTR):
                 pian_db.save()
     else:
-        logger.warning("dj.views.detail.form_is_not_valid", extra={"error": form.errors, "ident_cely": dj.ident_cely})
+        logger.warning(
+            "dj.views.detail.form_is_not_valid",
+            extra={"error": hodnota_pro_log(form.errors), "ident_cely": dj.ident_cely},
+        )
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     if "adb_detail" in request.POST:
@@ -182,7 +185,7 @@ def detail(request, typ_vazby, ident_cely):
         else:
             logger.debug(
                 "dj.views.detail.adb_detail.form_is_not_valid",
-                extra={"error": form.errors, "ident_cely": ident_cely, "adb_ident_cely": ident_cely},
+                extra={"error": hodnota_pro_log(form.errors), "ident_cely": ident_cely, "adb_ident_cely": ident_cely},
             )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
             request.session["_old_adb_post"] = request.POST
@@ -307,7 +310,7 @@ def zapsat(request, arch_z_ident_cely):
                 if blocking_typ is not None:
                     logger.debug(
                         "dj.views.detail.zapsat.blocking_typ_exists",
-                        extra={"arch_z": arch_z_ident_cely, "blocking_typ": blocking_typ, "novy_typ": typ.id},
+                        extra={"ident_cely_old": arch_z_ident_cely, "blocking_typ": blocking_typ, "novy_typ": typ.id},
                     )
                     messages.add_message(request, messages.ERROR, _unique_typy.get(blocking_typ, _unique_typy[typ.id]))
                     return az.get_redirect()
@@ -317,7 +320,7 @@ def zapsat(request, arch_z_ident_cely):
                 ):
                     logger.debug(
                         "dj.views.detail.zapsat.unique_typ_already_exists",
-                        extra={"arch_z": arch_z_ident_cely, "novy_typ": typ.id},
+                        extra={"ident_cely_old": arch_z_ident_cely, "novy_typ": typ.id},
                     )
                     messages.add_message(request, messages.ERROR, _unique_typy[typ.id])
                     return az.get_redirect()

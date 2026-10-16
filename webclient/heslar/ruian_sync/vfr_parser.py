@@ -194,7 +194,7 @@ def parse_changes(path: Path) -> Iterator[RuianChangeEvent]:
 
         :return: Generátor :class:`RuianChangeEvent` v pořadí (Vusc, Okres, KU, ZaniklePrvek).
     """
-    logger.debug("heslar.ruian_sync.vfr_parser.parse_changes.start", extra={"path": str(path)})
+    logger.debug("heslar.ruian_sync.vfr_parser.parse_changes.start", extra={"file": str(path)})
 
     # Pro upserty potřebujeme obec_okres mapu z toho samého souboru
     # (změnový obsahuje jen změněné obce – ostatní okres rezolvujeme z DB).
@@ -430,7 +430,7 @@ def _parse_kraj_dto(elem) -> Optional[RuianKrajDTO]:
     if kod is None or not nazev:
         logger.debug(
             "heslar.ruian_sync.vfr_parser._parse_kraj_dto.skip_incomplete",
-            extra={"kod": kod, "nazev": nazev},
+            extra={"kod": kod, "name": nazev},
         )
         return None
     db_wkt = _extract_definicni_bod(elem)
@@ -470,7 +470,7 @@ def _parse_okres_dto(elem) -> Optional[RuianOkresDTO]:
     if kod is None or not nazev:
         logger.debug(
             "heslar.ruian_sync.vfr_parser._parse_okres_dto.skip_incomplete",
-            extra={"kod": kod, "nazev": nazev},
+            extra={"kod": kod, "name": nazev},
         )
         return None
     vusc_kod = _nested_int(elem, "Vusc", "Kod") or 0
@@ -514,7 +514,7 @@ def _parse_katastr_dto(elem, *, obec_okres_map: dict) -> Optional[RuianKatastrDT
     if kod is None or not nazev:
         logger.debug(
             "heslar.ruian_sync.vfr_parser._parse_katastr_dto.skip_incomplete",
-            extra={"kod": kod, "nazev": nazev},
+            extra={"kod": kod, "name": nazev},
         )
         return None
     obec_kod = _nested_int(elem, "Obec", "Kod")
@@ -901,7 +901,7 @@ def _linearize_arcstring(control_points):
     if len(control_points) < 3 or len(control_points) % 2 == 0:
         logger.warning(
             "heslar.ruian_sync.vfr_parser._linearize_arcstring.invalid_point_count",
-            extra={"point_count": len(control_points)},
+            extra={"count": len(control_points)},
         )
         return []
     out = []
@@ -986,8 +986,8 @@ def _gml_multisurface_to_wkt(hranice_elem) -> Optional[str]:
         logger.error(
             "heslar.ruian_sync.vfr_parser._gml_multisurface_to_wkt.nepodporovany_prvek",
             extra={
-                "typ": neznamy,
-                "duvod": (
+                "value": neznamy,
+                "info": (
                     "známý typ, který parser neumí"
                     if neznamy in _FOREIGN_CURVED_LOCALNAMES
                     else "typ mimo seznam podporovaných"

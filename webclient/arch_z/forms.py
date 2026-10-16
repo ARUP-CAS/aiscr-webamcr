@@ -4,6 +4,7 @@ import re
 
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
 from core.forms import BaseFilterForm, OptimisticLockingMixin, TwoLevelSelectField
+from core.utils import hodnota_pro_log
 from core.validators import validate_date_min_1600
 from core.widgets import AutocompleteModelSelect2, AutocompleteModelSelect2Multiple
 from crispy_forms.helper import FormHelper
@@ -98,7 +99,9 @@ def create_akce_vedouci_objekt_form(readonly=True):
             """
             super(CreateAkceVedouciObjektForm, self).__init__(*args, **kwargs)
             self.readonly = readonly
-            logger.debug("CreateAkceVedouciObjektForm.init", extra={"option": readonly, "initial": self.initial})
+            logger.debug(
+                "CreateAkceVedouciObjektForm.init", extra={"option": readonly, "initial": hodnota_pro_log(self.initial)}
+            )
             if readonly:
                 self.fields["organizace"].required = False
                 self.fields["vedouci"].required = False
