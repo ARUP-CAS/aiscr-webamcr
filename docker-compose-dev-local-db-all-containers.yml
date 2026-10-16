@@ -90,11 +90,6 @@ services:
       db:
         condition: service_healthy
 
-  memcached:
-    image: memcached:latest
-    ports:
-      - "11211:11211"
-
   redis:
     build: ./redis
     image: redis:8.10.1

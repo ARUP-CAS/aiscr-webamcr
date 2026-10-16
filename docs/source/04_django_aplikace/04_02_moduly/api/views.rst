@@ -1034,19 +1034,20 @@ Třídy
 
 .. py:class:: MyXMLRenderer
 
-   Override třídy pro nastavení správnych tagů.
+   Renderer pro odpovědi, jejichž data jsou už hotové XML.
+
+   Nic neserializuje, jen nastaví content-type ``application/xml; charset=utf-8``.
 
    **Metody:**
 
    .. py:method:: render()
 
-      Renders `data` into serialized XML.
+      Vrátí data beze změny; očekává se, že už jsou serializované XML.
 
-      :param data: Kolekce ``data`` zpracovávaná touto funkcí.
-      :param accepted_media_type: Parametr ``accepted_media_type`` slouží jako vstup pro logiku funkce ``render``.
-      :param renderer_context: Kolekce ``renderer_context`` zpracovávaná touto funkcí.
-
-      :return: Vrací proměnná ``data``.
+      :param data: Serializované XML (``str`` nebo ``bytes``), např. metadata uživatele z Fedory.
+      :param accepted_media_type: Media type vybraný při content negotiation; nepoužívá se.
+      :param renderer_context: Kontext rendereru od DRF; nepoužívá se.
+      :return: Nezměněná ``data``.
 
 
 .. py:class:: GetUserInfo
