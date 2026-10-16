@@ -108,8 +108,8 @@ class LogMiddleware:
                 payload = {
                     "method": request.method,
                     "status_code": status,
-                    "duration_s": round(duration, 6),
-                    "view_name": view_info["view_name"],
+                    "duration": round(duration, 6),
+                    "name": view_info["view_name"],
                     "view_module": view_info["view_module"],
                     "url_kwargs": view_info["url_kwargs"],
                 }
@@ -120,8 +120,8 @@ class LogMiddleware:
             view_info = _resolve_view_info(request)
             payload = {
                 "method": request.method,
-                "duration_s": round(duration, 6),
-                "view_name": view_info["view_name"],
+                "duration": round(duration, 6),
+                "name": view_info["view_name"],
                 "view_module": view_info["view_module"],
                 "url_kwargs": view_info["url_kwargs"],
             }

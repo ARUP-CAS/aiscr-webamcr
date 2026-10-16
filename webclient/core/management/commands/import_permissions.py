@@ -56,7 +56,7 @@ class Command(BaseCommand):
         else:
             logger.info(
                 "core.management.commands.import_permissions.results",
-                extra={"data": sheet.to_string(), "missing": str(missing)},
+                extra={"data": sheet.to_string(), "list": str(missing)},
             )
             self.stdout.write(self.style.SUCCESS(_("core.management.commands.import_permissions.finished_success")))
         logger.debug("core.management.commands.import_permissions.end")

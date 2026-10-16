@@ -77,7 +77,7 @@ class Command(BaseCommand):
                     error_count += 1
                     logger.warning(
                         "core.management.commands.fix_soubor_rozsah.orphaned_soubor",
-                        extra={"pk": soubor.pk, "path": soubor.path},
+                        extra={"pk": soubor.pk, "file": soubor.path},
                     )
                     self.stdout.write(self.style.WARNING(f"\nOsirely soubor pk={soubor.pk}, preskoceno."))
                     continue
@@ -88,7 +88,7 @@ class Command(BaseCommand):
                     error_count += 1
                     logger.error(
                         "core.management.commands.fix_soubor_rozsah.binary_not_found",
-                        extra={"pk": soubor.pk, "path": soubor.path},
+                        extra={"pk": soubor.pk, "file": soubor.path},
                     )
                     self.stdout.write(
                         self.style.ERROR(f"\nSoubor nenalezen v repozitari pk={soubor.pk}: {soubor.path}")
@@ -100,7 +100,7 @@ class Command(BaseCommand):
                 success_count += 1
                 logger.info(
                     "core.management.commands.fix_soubor_rozsah.updated",
-                    extra={"pk": soubor.pk, "rozsah": rozsah},
+                    extra={"pk": soubor.pk, "value": rozsah},
                 )
 
             except Exception as err:

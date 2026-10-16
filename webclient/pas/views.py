@@ -48,7 +48,7 @@ from core.models import Permissions as p
 from core.models import Soubor, check_permissions, soubor_nazev_razeni_klic
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.translation import format_message
-from core.utils import TwoQueryPaginator, get_cadastre_from_point
+from core.utils import TwoQueryPaginator, get_cadastre_from_point, hodnota_pro_log
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -283,7 +283,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
 
             :return: Vrací výsledek volání ``form_invalid()``.
         """
-        logger.info("pas.views.create.form_invalid", extra={"error": form.errors})
+        logger.info("pas.views.create.form_invalid", extra={"error": hodnota_pro_log(form.errors)})
         messages.error(self.request, FORM_NOT_VALID)
         return super().form_invalid(form)
 
@@ -464,7 +464,7 @@ def edit(request, ident_cely):
                 )
             return redirect("pas:detail", ident_cely=ident_cely)
         else:
-            logger.info("pas.views.edit.form_invalid", extra={"error": form.errors})
+            logger.info("pas.views.edit.form_invalid", extra={"error": hodnota_pro_log(form.errors)})
             return redirect("pas:detail", ident_cely=ident_cely)
     else:
         form = CreateSamostatnyNalezForm(
@@ -528,7 +528,7 @@ def edit_ulozeni(request, ident_cely):
         else:
             logger.info(
                 "pas.views.edit_ulozeni.form_invalid",
-                extra={"error": form.errors},
+                extra={"error": hodnota_pro_log(form.errors)},
             )
     else:
         form = PotvrditNalezForm(
@@ -593,7 +593,7 @@ def vratit(request, ident_cely):
                     sn.igsn_publish(False)
             return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.info("pas.views.vratit.form_invalid", extra={"error": form.errors})
+            logger.info("pas.views.vratit.form_invalid", extra={"error": hodnota_pro_log(form.errors)})
     else:
         form = VratitForm(initial={"old_stav": sn.stav})
     context = {
@@ -649,7 +649,7 @@ def odeslat(request, ident_cely):
         return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
 
     warnings = sn.check_pred_odeslanim()
-    logger.info("pas.views.odeslat.warnings", extra={"warning": warnings})
+    logger.info("pas.views.odeslat.warnings", extra={"warning": hodnota_pro_log(warnings)})
     if warnings:
         request.session["temp_data"] = warnings
         messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NELZE_ODESLAT)
@@ -696,7 +696,7 @@ def potvrdit(request, ident_cely):
             status=403,
         )
     warnings = sn.check_pred_odeslanim()
-    logger.info("pas.views.potvrdit.warnings", extra={"warning": warnings})
+    logger.info("pas.views.potvrdit.warnings", extra={"warning": hodnota_pro_log(warnings)})
     if warnings:
         request.session["temp_data"] = warnings
         messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NELZE_POTVRDIT)
@@ -714,7 +714,7 @@ def potvrdit(request, ident_cely):
             form_obj.save()
             return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.info("pas.views.potvrdit.form_invalid", extra={"error": form.errors})
+            logger.info("pas.views.potvrdit.form_invalid", extra={"error": hodnota_pro_log(form.errors)})
     else:
         form = PotvrditNalezForm(
             instance=sn,
@@ -757,7 +757,7 @@ def archivovat(request, ident_cely):
             status=403,
         )
     warnings = sn.check_pred_odeslanim()
-    logger.info("pas.views.archivovat.warnings", extra={"warning": warnings})
+    logger.info("pas.views.archivovat.warnings", extra={"warning": hodnota_pro_log(warnings)})
     if warnings:
         request.session["temp_data"] = warnings
         messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NELZE_ARCHIVOVAT)
@@ -1097,7 +1097,7 @@ def zadost(request):
                 )
                 return redirect("pas:spoluprace_list")
         else:
-            logger.info("pas.views.zadost.form_invalid", extra={"error": form.errors})
+            logger.info("pas.views.zadost.form_invalid", extra={"error": hodnota_pro_log(form.errors)})
     else:
         form = CreateZadostForm()
 
@@ -1260,7 +1260,7 @@ def aktivace(request, pk):
             return redirect(reverse("pas:spoluprace_list"))
     else:
         warnings = spoluprace.check_pred_aktivaci()
-        logger.info("pas.views.aktivace.warnings", extra={"warning": warnings})
+        logger.info("pas.views.aktivace.warnings", extra={"warning": hodnota_pro_log(warnings)})
         if warnings:
             messages.add_message(request, messages.ERROR, f"{SPOLUPRACI_NELZE_AKTIVOVAT} {warnings[0]}")
             return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
@@ -1363,7 +1363,7 @@ class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
         context = self.get_context_data()
         warnings = context["object"].check_pred_deaktivaci()
         if warnings:
-            logger.info("pas.views.deaktivace.warnings", extra={"warning": warnings})
+            logger.info("pas.views.deaktivace.warnings", extra={"warning": hodnota_pro_log(warnings)})
             messages.add_message(request, messages.ERROR, f"{SPOLUPRACI_NELZE_DEAKTIVOVAT} {warnings[0]}")
             return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
         return self.render_to_response(context)
@@ -1603,7 +1603,7 @@ def post_point_position_2_katastre(request):
         :return: JsonResponse s ``katastr_name`` (prázdný pokud nenalezen).
     """
     body = json.loads(request.body.decode("utf-8"))
-    logger.debug("pas.views.post_point_position_2_katastre", extra={"data": body})
+    logger.debug("pas.views.post_point_position_2_katastre", extra={"data": hodnota_pro_log(body)})
     katastr = get_cadastre_from_point((body["x1"], body["x2"]))
     if katastr is not None:
         return JsonResponse({"katastr_name": katastr.nazev}, status=200)

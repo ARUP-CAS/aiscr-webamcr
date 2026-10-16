@@ -4,6 +4,7 @@ from typing import Union
 from core.constants import DOKUMENT_CAST_RELATION_TYPE
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_SE_NEPOVEDLO_SMAZAT, ZAZNAM_USPESNE_SMAZAN
 from core.repository_connector import FedoraTransaction
+from core.utils import hodnota_pro_log
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -175,7 +176,10 @@ def edit_nalez(request, typ_vazby, komp_ident_cely):
     else:
         logger.debug(
             "nalez.views.edit_nalez.form_not_valid",
-            extra={"form_error": formset_predmet.errors, "error": formset_objekt.errors},
+            extra={
+                "form_error": hodnota_pro_log(formset_predmet.errors),
+                "error": hodnota_pro_log(formset_objekt.errors),
+            },
         )
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         request.session["_old_nalez_post"] = request.POST

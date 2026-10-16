@@ -240,13 +240,13 @@ class UserRegistrationView(RegistrationView):
             super().send_activation_email(user)
             notification_type = UserNotificationType.objects.get(ident_cely="E-U-01")
             Mailer._log_notification(notification_type, user, user.email, "OK", None, record_ident_cely=user.ident_cely)
-            logger.debug("uzivatel.views.UserRegistrationView.send_activation_email.sent", extra={"pk": user})
+            logger.debug("uzivatel.views.UserRegistrationView.send_activation_email.sent", extra={"pk": user.pk})
         except SMTPException as err:
             messages.add_message(
                 self.request, messages.ERROR, _("uzivatel.views.UserRegistrationView.send_activation_email.error")
             )
             logger.error(
-                "uzivatel.views.UserRegistrationView.send_activation_email.error", extra={"pk": user, "error": err}
+                "uzivatel.views.UserRegistrationView.send_activation_email.error", extra={"pk": user.pk, "error": err}
             )
 
 

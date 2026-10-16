@@ -549,7 +549,7 @@ class _FastFedoraWriter:
                 time.sleep(1)
         logger.warning(
             "core.management.commands.generate_metadata_fast.rollback_failed",
-            extra={"tx_url": tx_url, "error": duvod},
+            extra={"request_url": tx_url, "error": duvod},
         )
 
     @staticmethod
@@ -1151,7 +1151,7 @@ class Command(BaseCommand):
         if zbyva:
             logger.warning(
                 "core.management.commands.generate_metadata_fast.db_updates_neodeslane",
-                extra={"pocet": zbyva, "pruchodu": _FLUSH_MAX_PRUCHODU},
+                extra={"count": zbyva, "maximum": _FLUSH_MAX_PRUCHODU},
             )
 
     @staticmethod
@@ -1239,7 +1239,7 @@ class Command(BaseCommand):
         if not obj.ident_cely:
             logger.warning(
                 "core.management.commands.generate_metadata_fast.missing_ident_cely",
-                extra={"pk": obj.pk, "model": obj.__class__.__name__},
+                extra={"pk": obj.pk, "class_name": obj.__class__.__name__},
             )
             # Bez `ident_cely` nejde záznam ve Fedoře pojmenovat, takže se nezapíše - a to
             # je selhání, ne přeskočení. Do `failures` musí, jinak o něm ví jen log:
@@ -1283,7 +1283,7 @@ class Command(BaseCommand):
             if entry is None:
                 logger.warning(
                     "core.management.commands.generate_metadata_fast.no_placeholder",
-                    extra={"pk": pk, "mimetype": mimetype, "ident_cely": obj.ident_cely},
+                    extra={"pk": pk, "mime_type": mimetype, "ident_cely": obj.ident_cely},
                 )
                 failures.append((pk, obj.ident_cely, f"Chybí placeholder pro mimetype '{mimetype}'."))
                 continue
@@ -1339,9 +1339,9 @@ class Command(BaseCommand):
                         extra={
                             "pk": obj.pk,
                             "ident_cely": obj.ident_cely,
-                            "faze": nazev_faze,
-                            "attempt": attempt,
-                            "location": exc.location,
+                            "value": nazev_faze,
+                            "number": attempt,
+                            "request_url": exc.location,
                         },
                     )
                     return True
@@ -1354,7 +1354,7 @@ class Command(BaseCommand):
                             extra={
                                 "pk": obj.pk,
                                 "ident_cely": obj.ident_cely,
-                                "faze": nazev_faze,
+                                "value": nazev_faze,
                                 "error": str(exc),
                             },
                         )
@@ -1369,10 +1369,10 @@ class Command(BaseCommand):
                             extra={
                                 "pk": obj.pk,
                                 "ident_cely": obj.ident_cely,
-                                "faze": nazev_faze,
-                                "attempts": attempt,
-                                "elapsed": round(uplynulo),
-                                "reason": duvod,
+                                "value": nazev_faze,
+                                "number": attempt,
+                                "duration": round(uplynulo),
+                                "info": duvod,
                                 "error": str(exc),
                             },
                         )
@@ -1395,8 +1395,8 @@ class Command(BaseCommand):
                         extra={
                             "pk": obj.pk,
                             "ident_cely": obj.ident_cely,
-                            "faze": nazev_faze,
-                            "attempt": attempt,
+                            "value": nazev_faze,
+                            "number": attempt,
                             "backoff": round(backoff, 1),
                             "error": str(exc),
                         },
@@ -1546,7 +1546,7 @@ class Command(BaseCommand):
                     extra={
                         "pk": getattr(polozka, "pk", None),
                         "ident_cely": getattr(polozka, "ident_cely", None),
-                        "elapsed": round(nyni - odeslano),
+                        "duration": round(nyni - odeslano),
                     },
                 )
                 self.stdout.write("")

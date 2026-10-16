@@ -55,6 +55,7 @@ from core.utils import (
     get_dj_pians_centroid,
     get_message,
     get_pians_from_akce,
+    hodnota_pro_log,
 )
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
@@ -987,7 +988,7 @@ def archivovat(request, ident_cely):
         return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         warnings, docs_warings = az.check_pred_archivaci()
-        logger.debug("arch_z.views.archivovat", extra={"warning": warnings})
+        logger.debug("arch_z.views.archivovat", extra={"warning": hodnota_pro_log(warnings)})
         if warnings:
             request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, get_message(az, "NELZE_ARCHIVOVAT"))
@@ -1115,7 +1116,7 @@ def vratit(request, ident_cely):
                     az.igsn_lokalita_publish(check_status=False)
             return JsonResponse({"redirect": az.get_absolute_url()})
         else:
-            logger.debug("arch_z.views.vratit.not_valid", extra={"error": form.errors})
+            logger.debug("arch_z.views.vratit.not_valid", extra={"error": hodnota_pro_log(form.errors)})
     else:
         form = VratitFormAZ(az=az, initial={"old_stav": az.stav})
     context = {
@@ -1260,7 +1261,7 @@ def zapsat(request, projekt_ident_cely=None):
                     else:
                         logger.debug(
                             "arch_z.views.zapsat.form_not_valid",
-                            extra={"error": ostatni_vedouci_objekt_formset.errors},
+                            extra={"error": hodnota_pro_log(ostatni_vedouci_objekt_formset.errors)},
                         )
                     akce.set_snapshots()
                     fedora_transaction.success_message = get_message(az, "USPESNE_ZAPSANA")
@@ -1278,7 +1279,10 @@ def zapsat(request, projekt_ident_cely=None):
                         extra={"ident_cely": az.ident_cely},
                     )
         else:
-            logger.debug("arch_z.views.zapsat.not_valid", extra={"az_error": form_az, "error": form_akce.errors})
+            logger.debug(
+                "arch_z.views.zapsat.not_valid",
+                extra={"az_error": hodnota_pro_log(form_az.errors), "error": hodnota_pro_log(form_akce.errors)},
+            )
 
     else:
         ostatni_vedouci_objekt_formset = inlineformset_factory(
@@ -1501,7 +1505,7 @@ def post_akce2kat(request):
         :return: Vrací výsledek volání ``JsonResponse()``.
     """
     body = json.loads(request.body.decode("utf-8"))
-    logger.debug("arch_z.views.post_akce2kat.start", extra={"data": body})
+    logger.debug("arch_z.views.post_akce2kat.start", extra={"data": hodnota_pro_log(body)})
     katastr_name = body["cadastre"]
     try:
         kod = katastr_name[katastr_name.find(";") + 1 : katastr_name.find(")")].strip()
@@ -2051,7 +2055,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         else:
             logger.debug(
                 "arch_z.views.SamostatnaAkceChange.post.not_valid",
-                extra={"error": form.errors, "form_error": form.non_field_errors},
+                extra={"error": hodnota_pro_log(form.errors), "form_error": hodnota_pro_log(form.non_field_errors())},
             )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 

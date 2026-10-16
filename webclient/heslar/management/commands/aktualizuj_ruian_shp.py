@@ -123,7 +123,7 @@ class Command(BaseCommand):
         logger.debug(
             "heslar.management.commands.aktualizuj_ruian_shp.handle.start",
             extra={
-                "shp": str(shp_path),
+                "file": str(shp_path),
                 "uzsz": str(uzsz_path),
                 "valid_to": valid_to.isoformat(),
             },
