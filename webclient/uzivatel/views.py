@@ -14,6 +14,7 @@ from core.message_constants import (
 from core.models import Permissions as p
 from core.models import check_permissions
 from core.repository_connector import FedoraTransaction
+from core.setting_models import CustomAdminSettings
 from core.views import PermissionFilterMixin
 from dal import autocomplete
 from django.conf import settings
@@ -22,6 +23,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core import cache
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db.models import Q
@@ -54,6 +56,8 @@ from uzivatel.forms import (
 from uzivatel.models import NotificationsLog, Osoba, User, UserNotificationType, UzivatelPrihlaseniLog
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_NEWS_FEED_BLOCK_HEIGHT = 300  # výška bloku v pixelech
 
 
 class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
@@ -255,6 +259,44 @@ class UserLoginView(LoginView):
     """Třída pohledu pro prihlášení uživatele."""
 
     authentication_form = AuthUserLoginForm
+
+    def get_context_data(self, **kwargs):
+        """
+        Vrací context data pro stránku přihlášení.
+
+        :param kwargs: Volitelné parametry pro přizpůsobení kontextu.
+        :return: Slovník s proměnnými pro šablonu přihlášení.
+        """
+        context = super().get_context_data(**kwargs)
+
+        # Načte nastavení novinek z cache (klíč je unikátní pro tuto aplikaci)
+        cache_key = "news_feed_block_height:v1"
+        cache_key_prefix = settings.NEWS_FEED_CACHE_KEY_PREFIX
+
+        block_height_value = cache.cache.get(cache_key)
+        if not block_height_value:
+            try:
+                block_height_value = CustomAdminSettings.objects.get(
+                    item_group="news_feed",
+                    item_id=("news_feed_block_height"),
+                ).value
+                cache.cache.set(cache_key, block_height_value, 3600)  # 1 hodina cache
+            except CustomAdminSettings.DoesNotExist:
+                logger.warning("News feed block height setting not found, using default.")
+                block_height_value = None
+
+        # Výška bloku novinek
+        try:
+            block_height = int(block_height_value) if block_height_value else DEFAULT_NEWS_FEED_BLOCK_HEIGHT
+        except (ValueError, TypeError):
+            logger.warning(f"Invalid block height value in settings, using default: {DEFAULT_NEWS_FEED_BLOCK_HEIGHT}")
+            block_height = DEFAULT_NEWS_FEED_BLOCK_HEIGHT
+
+        # Načíst novinky z cache (bude automaticky načteno Celery taskem)
+        cache_key = f"{cache_key_prefix}:{self.request.LANGUAGE_CODE}"
+        context["news_feed"] = cache.cache.get(cache_key) or cache.cache.get(f"{cache_key}:stale") or []
+        context["news_feed_block_height"] = block_height
+        return context
 
 
 class UserLogoutView(LogoutView):

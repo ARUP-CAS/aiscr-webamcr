@@ -455,3 +455,32 @@ Funkce
    Vlastní tělo :func:`sync_ruian_changes` běžící pod advisory lockem.
 
    :param reassign_records: Viz :func:`sync_ruian_changes`.
+
+.. py:function:: load_news_feed(self)
+
+   Načte a uloží novinkový kanál do cache.
+
+   Tato úloha je volána při startu aplikace a periodicky v intervalu
+   definovaném v settings (cache_ttl - 60 sekund).
+
+   Pokud dojde k chybě při načítání některého jazyka, úloha se automaticky
+   zopakuje s maximálně 3 pokusy.
+
+.. py:function:: run_news_feed_warmup()
+
+   Spustí úlohu load_news_feed v pozadí jako nezávislý proces.
+
+   Slouží jako alternativa k synchronnímu volání při startu kontejneru.
+   Úloha běží v pozadí (nohup ... &), takže neblokují spuštění uwsgi/runserver.
+   Pokud úloha selže, je zachycena a zalogována, nikdy se nešíří výjimka
+   do entrypointu (safety_guard).
+
+   Tato funkce je volána z entrypoint.sh a entrypoint.dev.sh.
+
+.. py:function:: safety_guard(func)
+
+   Dekorátor, který zajistí, že volaná funkce nikdy nevrátí výjimku.
+
+   Slouží jako safeguard pro background warm-up. Pokud by funkce selhala,
+   je chyba zachycena a zalogována, ale nikdy se nešíří do entrypointu.
+   :param func: Funkce, kterou je třeba chránit výjimkami.
