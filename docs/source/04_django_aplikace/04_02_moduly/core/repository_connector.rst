@@ -185,6 +185,31 @@ Třídy
           se distribuce zakládají PUTem přímo na cílovou URL.
       :return: Načtená data odpovídající zadaným vstupům.
 
+   .. py:method:: _get_binary_file_container_url()
+
+      Sestaví URL kontejneru binárního souboru ``{base}/record/{ident_cely}/file/{uuid}``.
+
+      Jediné místo, odkud se odvozuje URL předávané do ``RepositoryBinaryFile`` a tím i hodnota
+      ``Soubor.path`` (``url_without_domain``). Autorita (schéma, host, port) se bere vždy z nastavení
+      přes ``get_base_url()``, nikdy z odpovědi Fedory.
+
+      :param uuid: UUID binárního souboru ve Fedoře.
+      :param ident_cely: Identifikátor záznamu, pod kterým soubor leží; bez zadání ``self.record.ident_cely``.
+      :return: Absolutní URL kontejneru binárního souboru.
+
+   .. py:method:: _create_binary_file_resource()
+
+      Vytvoří ve Fedoře prázdný kontejner binárního souboru a vrátí jeho UUID a URL.
+
+      UUID se převezme z URI, které vrátí Fedora; URL se pak sestaví přes
+      ``_get_binary_file_container_url``, aby se ``Soubor.path`` shodoval s ostatními cestami
+      (``get_binary_file``, ``update_binary_file``). Porovnává se jen cesta bez autority - jinou
+      autoritu (např. Fedora za proxy) toleruje. Pokud Fedora vytvořila zdroj na jiné cestě,
+      vyvolá ``FedoraError``, aby se do ``Soubor.path`` nezapsala neexistující cesta.
+
+      :return: Dvojice ``(uuid, container_url)``.
+      :raises FedoraError: Pokud se cesta vrácená Fedorou liší od sestavené cesty kontejneru.
+
    .. py:method:: check_container_deleted()
 
       Ověří container deleted.
