@@ -900,19 +900,19 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 if status == "OK":
                     logger.debug(
                         "core.models.Soubor.check_antivirus.passes",
-                        extra={"response": status, "duration": round(duration_ms / 1000, 3)},
+                        extra={"response": status, "duration_s": round(duration_ms / 1000, 3)},
                     )
                     return AntivirusCheckResult.PASSES
                 elif status == "ERROR":
                     logger.debug(
                         "core.models.Soubor.check_antivirus.error",
-                        extra={"response": status, "duration": round(duration_ms / 1000, 3)},
+                        extra={"response": status, "duration_s": round(duration_ms / 1000, 3)},
                     )
                     return AntivirusCheckResult.CHECK_FAILED
                 else:
                     logger.debug(
                         "core.models.Soubor.check_antivirus.virus_found",
-                        extra={"response": status, "info": reason, "duration": round(duration_ms / 1000, 3)},
+                        extra={"response": status, "info": reason, "duration_s": round(duration_ms / 1000, 3)},
                     )
                     return AntivirusCheckResult.VIRUS_FOUND
             except ClamdConnectionError as err:

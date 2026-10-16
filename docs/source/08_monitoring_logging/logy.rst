@@ -288,7 +288,7 @@ Nastavení Elasticsearch je součástí docker-compose.yml souborů.
             }
          }
          },
-         "duration": {
+         "duration_s": {
          "type": "float"
          },
          "element": {
@@ -1013,7 +1013,7 @@ Elasticsearch celou událost odmítne a Logstash ji zahodí. Proto platí:
 +--------------------+---------+
 | dj                 | Text    |
 +--------------------+---------+
-| duration           | Float   |
+| duration_s         | Float   |
 +--------------------+---------+
 | element            | Text    |
 +--------------------+---------+

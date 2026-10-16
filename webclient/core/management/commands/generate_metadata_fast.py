@@ -1371,7 +1371,7 @@ class Command(BaseCommand):
                                 "ident_cely": obj.ident_cely,
                                 "value": nazev_faze,
                                 "number": attempt,
-                                "duration": round(uplynulo),
+                                "duration_s": round(uplynulo),
                                 "info": duvod,
                                 "error": str(exc),
                             },
@@ -1546,7 +1546,7 @@ class Command(BaseCommand):
                     extra={
                         "pk": getattr(polozka, "pk", None),
                         "ident_cely": getattr(polozka, "ident_cely", None),
-                        "duration": round(nyni - odeslano),
+                        "duration_s": round(nyni - odeslano),
                     },
                 )
                 self.stdout.write("")
