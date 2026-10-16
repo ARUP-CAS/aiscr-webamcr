@@ -12,9 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-LICENSES_MANUAL_FIXES = {
-    "wrapt": "Copyright (c) 2013-2025, Graham Dumpleton",
-}
+LICENSES_MANUAL_FIXES = {}
 
 
 def csv_to_rst_table():

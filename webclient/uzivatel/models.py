@@ -1,4 +1,5 @@
 import logging
+from functools import cached_property
 from typing import Optional, Union
 
 from core.constants import (
@@ -25,7 +26,6 @@ from core.constants import (
 )
 from core.mixins import ManyToManyRestrictedClassMixin
 from core.validators import validate_phone_number
-from distlib.util import cached_property
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import Group, PermissionsMixin
 from django.core.exceptions import ValidationError
