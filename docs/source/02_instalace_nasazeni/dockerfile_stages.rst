@@ -334,9 +334,11 @@ Místo samostatného ``RUN chown``, používáme ``COPY --chown``:
 
     HEALTHCHECK --interval=30s --timeout=10s \
                 --start-period=40s --retries=3 \
-        CMD curl -f http://localhost:8000/ || exit 1
+        CMD bash /scripts/run-healthcheck.sh
 
-* Automatická kontrola zdraví kontejneru
+* Automatická kontrola zdraví kontejneru stejným skriptem ``run-healthcheck.sh`` jako v compose souborech (Django ``/healthcheck`` na http-socketu 8001, databáze, Fedora)
+* Port 8000 je uwsgi socket v nativním protokolu (``uwsgi_pass`` z proxy), ne HTTP, proto se na něj healthcheck neptá
+* Healthcheck definovaný v compose souboru má přednost; image-level healthcheck se uplatní tam, kde compose vlastní nemá (např. ``git_docker-compose.yml``)
 * Orchestrační nástroje (Kubernetes, Docker Swarm) mohou restartovat nefunkční kontejnery
 
 ========================================
