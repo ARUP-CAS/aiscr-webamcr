@@ -671,6 +671,17 @@ SKIP_SELENIUM_TESTS = False
 CELERY_BROKER_URL = f"redis://{get_redis_pass()}{REDIS_HOST}:{REDIS_PORT}"
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+# Liveness ping workeru (viz cron.tasks.celery_worker_liveness_ping a scripts/run-healthcheck_celery.sh).
+# DatabaseScheduler si položku při startu beatu zapíše do django_celery_beat.PeriodicTask.
+CELERY_BEAT_SCHEDULE = {
+    "celery_worker_liveness_ping": {
+        "task": "cron.tasks.celery_worker_liveness_ping",
+        "schedule": 120.0,
+        # Ping se nesmí hromadit ve frontě zaseknutého workeru; prošlý ping worker jen zahodí
+        # (neobnoví klíč), ve frontě ho ale healthcheck dál vidí jako čekající práci.
+        "options": {"expires": 120},
+    },
+}
 
 FEDORA_USER = get_secret("FEDORA_USER", "")
 FEDORA_USER_PASSWORD = get_secret("FEDORA_USER_PASSWORD", "")
