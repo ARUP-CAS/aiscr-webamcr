@@ -3,6 +3,7 @@ import io
 import json
 import logging
 import os
+import subprocess
 import traceback
 import zipfile
 from collections import defaultdict
@@ -3864,6 +3865,7 @@ def load_news_feed(self):
     Pokud dojde k chybě při načítání některého jazyka, úloha se automaticky
     zopakuje s maximálně 3 pokusy.
     """
+    errornous = 0
     try:
         # Získat cache_ttl z settings
         cache_ttl = settings.NEWS_FEED_CACHE_TTL
@@ -3873,7 +3875,6 @@ def load_news_feed(self):
         languages = settings.NEWS_FEED_LANGUAGES
 
         # Načíst feed pro všechny jazyky
-        errornous = 0
         for language in languages:
             feed_url = f"{base_url}/{language}.json"
             try:
@@ -3905,3 +3906,44 @@ def load_news_feed(self):
 
     logger.info("News feed loading completed successfully")
     return True
+
+
+def run_news_feed_warmup():
+    """
+    Spustí úlohu load_news_feed v pozadí jako nezávislý proces.
+
+    Slouží jako alternativa k synchronnímu volání při startu kontejneru.
+    Úloha běží v pozadí (nohup ... &), takže neblokují spuštění uwsgi/runserver.
+    Pokud úloha selže, je zachycena a zalogována, nikdy se nešíří výjimka
+    do entrypointu (safety_guard).
+
+    Tato funkce je volána z entrypoint.sh a entrypoint.dev.sh.
+    """
+    logger.info("Starting background news feed warm-up")
+
+    # Spustit úlohu jako nezávislý Celery worker proces
+    warmup_command = 'python manage.py shell -c "from cron.tasks import load_news_feed; load_news_feed()"'
+    # nohup zajistí, že proces přežije i po ukončení entrypointu
+    background_command = f"nohup {warmup_command} >/proc/1/fd/1 2>&1 </dev/null &"
+    subprocess.run(background_command, shell=True)
+    logger.info("Background news feed warm-up started")
+
+
+def safety_guard(func):
+    """
+    Dekorátor, který zajistí, že volaná funkce nikdy nevrátí výjimku.
+
+    Slouží jako safeguard pro background warm-up. Pokud by funkce selhala,
+    je chyba zachycena a zalogována, ale nikdy se nešíří do entrypointu.
+    :param func: Funkce, kterou je třeba chránit výjimkami.
+    """
+
+    def wrapper(*args, **kwargs):
+        try:
+            result = func(*args, **kwargs)
+            return result
+        except Exception as e:
+            logger.error(f"News feed warm-up failed: {e}")
+            return None
+
+    return wrapper

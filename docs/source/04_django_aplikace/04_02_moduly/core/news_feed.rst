@@ -31,6 +31,18 @@ Třídy
 Funkce
 ------
 
+.. py:function:: _log_warning_rate_limited(slug, message)
+
+   Logs a warning only once per hour for the same slug.
+
+.. py:function:: _parse_item(item_data)
+
+   Parsuje jeden záznam novinky.
+
+   Pokud chybí nebo je neplatný datum, název nebo úvodní text, použije se
+   překladovaný placeholder pro název a pole excerpt i date zůstanou prázdná.
+   Položka se ponechá a v případě problému do logu se zapíše varování.
+
 .. py:function:: _parse_feed(data)
 
    Zpracuje data kanálu na seznam novinek.

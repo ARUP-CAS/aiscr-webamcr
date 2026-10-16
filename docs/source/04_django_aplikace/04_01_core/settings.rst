@@ -8,57 +8,41 @@ Novinkový kanál (News Feed)
 
 .. setting:: NEWS_FEED_BASE_URL
 
-   Základní URL pro novinkový kanál ze služby aiscr-news.
+   Základní URL novinkového kanálu ze služby aiscr-news:
 
-   .. code-block:: python
-
-      NEWS_FEED_BASE_URL = "https://arup-cas.github.io/aiscr-news/feed/amcr-info"
+   .. autodata:: webclient.settings.base.NEWS_FEED_BASE_URL
+      :value:
 
 .. setting:: NEWS_FEED_LANGUAGES
 
-   Seznam podporovaných jazyků novinkového kanálu.
+   Podporované jazyky novinkového kanálu:
 
-   .. code-block:: python
-
-      NEWS_FEED_LANGUAGES = ["cs", "en"]
+   .. autodata:: webclient.settings.base.NEWS_FEED_LANGUAGES
+      :value:
 
 .. setting:: NEWS_FEED_CACHE_TTL
 
-   Doba platnosti cache pro novinkový kanál v sekundách.
+   Doba platnosti cache pro novinkový kanál:
 
-   .. code-block:: python
-
-      NEWS_FEED_CACHE_TTL = 3600  # 1 hodina
+   .. autodata:: webclient.settings.base.NEWS_FEED_CACHE_TTL
+      :value:
 
 .. setting:: NEWS_FEED_CACHE_KEY_PREFIX
 
-   Prefix pro klíče cache novinkového kanálu.
+   Prefix pro klíče cache novinkového kanálu:
 
-   .. code-block:: python
-
-      NEWS_FEED_CACHE_KEY_PREFIX = "news_feed"
+   .. autodata:: webclient.settings.base.NEWS_FEED_CACHE_KEY_PREFIX
+      :value:
 
 Periodické úlohy (Celery Beat)
 ------------------------------
 
 .. setting:: CELERY_BEAT_SCHEDULE
 
-   Konfigurace periodických úloh pro Celery.
+   Konfigurace periodických úloh pro Celery, včetně obnovy novinkového kanálu:
 
-   .. code-block:: python
+   .. autodata:: webclient.settings.base.CELERY_BEAT_SCHEDULE
+      :value:
 
-      CELERY_BEAT_SCHEDULE = {
-          "load-news-feed": {
-              "task": "webclient.cron.tasks_news_feed.load_news_feed",
-              "schedule": timedelta(seconds=(NEWS_FEED_CACHE_TTL - 60)),
-              "options": {
-                  "max_retries": 3,
-              },
-          }
-      }
-
-   Úloha ``load-news-feed`` načítá novinkový kanál pro všechny podporované jazyky
-   a ukládá je do cache. Spouští se každých 59 minut (cache_ttl - 60 sekund).
-   Při chybě se úloha automaticky zopakuje s maximálně 3 pokusy.
-
+   Perioda obnovy novinkového kanálu se odvozuje od ``NEWS_FEED_CACHE_TTL``.
 

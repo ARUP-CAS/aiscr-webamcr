@@ -677,11 +677,12 @@ NEWS_FEED_LANGUAGES = ["cs", "en"]  # Supported languages
 NEWS_FEED_CACHE_TTL = 3600  # 1 hour (default)
 NEWS_FEED_CACHE_KEY_PREFIX = "news_feed"
 NEWS_FEED_TIMEOUT = 10
+NEWS_FEED_WARNING_RATE_LIMIT = 3600  # seconds; same error per item logged at most once per this window
 
 # Celery periodic tasks
 CELERY_BEAT_SCHEDULE = {
     "load-news-feed": {
-        "task": "webclient.cron.tasks_news_feed.load_news_feed",
+        "task": "cron.tasks.load_news_feed",
         "schedule": timedelta(seconds=(NEWS_FEED_CACHE_TTL - 60)),  # 59 minutes (cache_ttl - 60 = 3600 - 60)
         "options": {
             "max_retries": 3,

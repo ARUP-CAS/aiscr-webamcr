@@ -271,6 +271,8 @@ class UserLoginView(LoginView):
 
         # Načte nastavení novinek z cache (klíč je unikátní pro tuto aplikaci)
         cache_key = "news_feed_block_height:v1"
+        cache_key_prefix = settings.NEWS_FEED_CACHE_KEY_PREFIX
+
         block_height_value = cache.cache.get(cache_key)
         if not block_height_value:
             try:
@@ -291,7 +293,7 @@ class UserLoginView(LoginView):
             block_height = DEFAULT_NEWS_FEED_BLOCK_HEIGHT
 
         # Načíst novinky z cache (bude automaticky načteno Celery taskem)
-        cache_key = f"news_feed:{self.request.LANGUAGE_CODE}"
+        cache_key = f"{cache_key_prefix}:{self.request.LANGUAGE_CODE}"
         context["news_feed"] = cache.cache.get(cache_key) or cache.cache.get(f"{cache_key}:stale") or []
         context["news_feed_block_height"] = block_height
         return context

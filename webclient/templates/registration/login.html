@@ -146,7 +146,7 @@
     <div class="container-fluid login-container">
       <h3 class="login-news-heading">{% trans "templates.registration.login.novinky.header" %}</h3>
       <div class="login-news-content-wrapper">
-        <div class="login-news-content" id="loginNewsContent" style="max-height: {{ news_feed_block_height|default:300 }}px; overflow: hidden;">
+        <div class="login-news-content" id="loginNewsContent" style="max-height: {{ news_feed_block_height}}px; overflow: hidden;">
           {% if news_feed %}
             {% for item in news_feed %}
               <div class="news-item" data-has-html="{% if item.html %}true{% else %}false{% endif %}">
@@ -188,7 +188,7 @@
                   <div class="col-2">
                     {% if item.image %}
                       <div class="news-item-image">
-                        <img src="{{ item.image }}" alt="{{ item.title }}" class="news-item-image-img" />
+                        <img src="{{ item.image }}" alt="{{ item.title }}" class="news-item-image-img" loading="lazy" />
                       </div>
                     {% endif %}
                   </div>
@@ -243,7 +243,7 @@
   </script>
   <script>
     window.addEventListener("DOMContentLoaded", function () {
-      const collapsedHeight = {{ news_feed_block_height|default:300 }};
+      const collapsedHeight = {{ news_feed_block_height}};
       const newsContent = document.querySelector("#loginNewsContent");
       const newsToggle = document.querySelector("#loginNewsToggle");
 

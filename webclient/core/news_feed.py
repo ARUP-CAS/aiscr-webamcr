@@ -14,12 +14,21 @@ Pokud se zdroj kanálu změní nebo zdrojní repozitář nebude kontrolován,
 je nutné přezkoumat konfiguraci sanitizace.
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
 import bleach
 from bs4 import BeautifulSoup
+from django.conf import settings
+from django.utils.translation import gettext_noop
+
+logger = logging.getLogger(__name__)
+
+# Placeholder pro název, pokud je v položce chybějící nebo neplatný.
+# Překlad drží celou větu v mo/po souborech, ID je extrahováno makrem gettext_noop.
+TITLE_PLACEHOLDER = gettext_noop("news_feed.invalid_title")
 
 # Konfigurace sanitizace HTML pomocí bleach
 ALLOWED_TAGS = [
@@ -68,17 +77,77 @@ ALLOWED_ATTRIBUTES = {
 ALLOWED_PROTOCOLS = ["http", "https", "mailto"]
 
 
+# Rate limiting for warnings to avoid log flooding
+_warning_cache = {}
+
+
+def _log_warning_rate_limited(slug: Optional[str], message: str):
+    """Logs a warning only once per hour for the same slug."""
+    if not slug:
+        logger.warning(message)
+        return
+
+    current_time = datetime.now()
+    last_logged = _warning_cache.get(slug)
+
+    if last_logged is None or (current_time - last_logged).total_seconds() > settings.NEWS_FEED_WARNING_RATE_LIMIT:
+        logger.warning(message)
+        _warning_cache[slug] = current_time
+
+
 @dataclass
 class NewsItem:
     """Představuje jednu novinku z kanálu."""
 
-    date: datetime
     title: str
     excerpt: str
+    date: Optional[datetime] = None
     html: Optional[str] = None
     badge: Optional[str] = None
     image: Optional[str] = None
     authors: Optional[str] = None
+
+
+def _parse_item(item_data: dict) -> NewsItem:
+    """Parsuje jeden záznam novinky.
+
+    Pokud chybí nebo je neplatný datum, název nebo úvodní text, použije se
+    překladovaný placeholder pro název a pole excerpt i date zůstanou prázdná.
+    Položka se ponechá a v případě problému do logu se zapíše varování.
+    """
+    slug = item_data.get("slug")
+
+    date = None
+    try:
+        date_str = item_data.get("date")
+        if date_str:
+            date = datetime.fromisoformat(date_str)
+    except (ValueError, TypeError):
+        _log_warning_rate_limited(slug, f"Neplatné datum položky novinek: {date_str}")
+
+    title = item_data.get("title")
+    excerpt = item_data.get("excerpt")
+
+    if not date or not title or not excerpt:
+        _log_warning_rate_limited(
+            slug,
+            f"Položka novinek '{slug}' má chybějící nebo neplatný údaj; " f"použito placeholder '{TITLE_PLACEHOLDER}'.",
+        )
+        return NewsItem(
+            title=TITLE_PLACEHOLDER,
+            excerpt=None,
+            date=None,
+        )
+
+    return NewsItem(
+        title=title,
+        excerpt=excerpt,
+        date=date,
+        html=sanitize_html(item_data.get("html")),
+        badge=item_data.get("badge"),
+        image=item_data.get("image"),
+        authors=_process_authors(item_data.get("authors", [])),
+    )
 
 
 def _parse_feed(data):
@@ -93,18 +162,9 @@ def _parse_feed(data):
     items = []
     for item_data in items_list:
         if isinstance(item_data, dict):
-            # Zpracovat všechny pole přímo z item_data
-            items.append(
-                NewsItem(
-                    date=datetime.fromisoformat(item_data.get("date", "")),
-                    title=item_data.get("title", ""),
-                    excerpt=item_data.get("excerpt", ""),
-                    html=sanitize_html(item_data.get("html")),
-                    badge=item_data.get("badge"),
-                    image=item_data.get("image"),
-                    authors=_process_authors(item_data.get("authors", [])),
-                )
-            )
+            item = _parse_item(item_data)
+            if item:
+                items.append(item)
     return items
 
 

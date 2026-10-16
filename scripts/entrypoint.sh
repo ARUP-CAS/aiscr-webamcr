@@ -142,6 +142,6 @@ python3 manage.py send_test_emails
 
 python3 manage.py clear_maintenance_cache
 
-python manage.py shell -c "from cron.tasks import load_news_feed; load_news_feed()"
+python manage.py shell -c "from cron.tasks import safety_guard, run_news_feed_warmup; safety_guard(run_news_feed_warmup)()"
 
 sudo uwsgi /scripts/uwsgi_site.ini
