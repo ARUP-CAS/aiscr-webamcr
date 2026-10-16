@@ -136,7 +136,7 @@ tranzitivními piny. Vyšší skupina zahrnuje nižší přes ``-r``, takže ka�
 pro své prostředí a instaluje se samostatně:
 
 * ``requirements.txt`` - produkční závislosti, jediné instalované do produkčního obrazu
-* ``requirements-test.txt`` - produkční + selenium, freezegun, coverage
+* ``requirements-test.txt`` - produkční + selenium, freezegun
 * ``requirements-dev.txt`` - produkční + testovací + pre-commit, debug-toolbar, livereload,
   Werkzeug (``runserver_plus``) aj. (Dockerfile-DEV, lokální vývoj)
 * ``requirements-docs.txt`` - produkční + Sphinx a jeho rozšíření (Read the Docs)

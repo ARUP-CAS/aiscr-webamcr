@@ -47,7 +47,6 @@ COMPOSE_CONSUMERS = [
 COMPOSE_CROSS_FILE_WHITELIST: Dict[str, Set[str]] = {
     "docker-compose-dev-local-db-all-containers.yml": {
         "dpage/pgadmin4",
-        "memcached",
         "fcrepo/fcrepo",
         "postgres",
     },
