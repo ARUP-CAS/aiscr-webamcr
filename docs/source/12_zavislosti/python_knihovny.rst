@@ -171,10 +171,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 3.3.1
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
-   * - coverage
-     - 7.16.2
-     - Apache-2.0
-     - https://github.com/coveragepy/coveragepy
    * - crispy-bootstrap5
      - 2026.9
      - MIT
@@ -227,10 +223,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 8.0.0
      - BSD License
      - https://github.com/django-commons/django-debug-toolbar
-   * - django-debug-toolbar-template-profiler
-     - 2.1.0
-     - BSD License
-     - https://github.com/node13h/django-debug-toolbar-template-profiler
    * - django-extensions
      - 4.1
      - MIT
@@ -296,13 +288,9 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://django-compressor.readthedocs.io/en/latest/
    * - djangorestframework
-     - 3.18.1
+     - 3.18.3
      - BSD-3-Clause
      - https://www.django-rest-framework.org
-   * - djangorestframework-xml
-     - 2.0.0
-     - BSD License
-     - https://github.com/jpadilla/django-rest-framework-xml
    * - docutils
      - 0.22.4
      - BSD License; GNU General Public License (GPL); Public Domain
@@ -400,7 +388,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.40
+     - 9.0.41
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -420,8 +408,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/raimon49/pip-licenses
    * - pip-tools
-     - 7.6.1
-     - BSD License
+     - 7.6.2
+     - BSD-3-Clause
      - https://github.com/jazzband/pip-tools/
    * - platformdirs
      - 4.13.0
@@ -612,8 +600,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - http://sphinx-doc.org/
    * - sphinxcontrib-mermaid
-     - 2.0.2
-     - BSD License
+     - 2.1.1
+     - BSD-2-Clause
      - https://github.com/mgaitan/sphinxcontrib-mermaid
    * - sphinxcontrib-qthelp
      - 2.0.0
@@ -691,10 +679,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0.48.0
      - MIT
      - https://github.com/pypa/wheel
-   * - wrapt
-     - 2.5.0
-     - Copyright (c) 2013-2025, Graham Dumpleton
-     - https://github.com/GrahamDumpleton/wrapt
    * - wsproto
      - 1.3.2
      - MIT

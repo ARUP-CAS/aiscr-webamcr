@@ -78,10 +78,7 @@ cron-descriptor==1.4.5
 defusedxml==0.7.1
     # via
     #   -r requirements.txt
-    #   djangorestframework-xml
     #   odfpy
-distlib==0.4.3
-    # via -r requirements.txt
 django==6.0.8
     # via
     #   -r requirements.txt
@@ -161,8 +158,6 @@ django-timezone-field==7.2.2
 django-widget-tweaks==1.5.1
     # via -r requirements.txt
 djangorestframework==3.18.3
-    # via -r requirements.txt
-djangorestframework-xml==2.0.0
     # via -r requirements.txt
 docutils==0.22.4
     # via
