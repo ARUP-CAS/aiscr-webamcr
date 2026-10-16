@@ -1,17 +1,8 @@
 #!/bin/bash
 
-ram_limit=95
-
-ram_utilization=$(free | awk '/Mem/{printf("%.2f"), $3/$2*100}')
-rounded_ram_utilization=$(printf "%.0f" "$ram_utilization")
-
-if [ "$rounded_ram_utilization" -lt ${ram_limit} ]; then
-  echo "RAM utilization is lower than ${ram_limit}% ($ram_utilization%)."
-  ram_status=0
-else
-  echo "RAM utilization is higher than or equal to ${ram_limit}% ($ram_utilization%)."
-  ram_status=1
-fi
+# Vytížení RAM se záměrně nekontroluje: kontejner nemá memory limit, takže `free`
+# ukazuje paměť celého hostitele a restart webu ji neuvolní (#4417).
+# Zátěž hostitele hlídá monitoring (node_exporter / Grafana).
 
 status_code="$(curl -s -L -o /dev/null -w '%{http_code}'  127.0.0.1:8001/healthcheck)"
 
@@ -34,15 +25,15 @@ fedora_status_code=$(curl -o /dev/null -s -w "%{http_code}" -u "${fedora_user}":
 echo "HTTP status code from FEDORA is ${fedora_status_code}"
 
 
-test "${status_code}" -eq "200" && test "${fedora_status_code}" -eq "200" && python /scripts/db/db_connection_from_docker-web.py && test ${ram_status} -eq 0 && true || false
+test "${status_code}" -eq "200" && test "${fedora_status_code}" -eq "200" && python /scripts/db/db_connection_from_docker-web.py && true || false
 
 exit_code="$?"
 
 
 if [ ${exit_code} -eq 0 ] ; then
-    echo "Django application is running with RAM ${rounded_ram_utilization} %."
+    echo "Django application is running."
     exit 0
 else
-    echo "Django application is not running or RAM limit exceeded or Fedora is not running."
+    echo "Django application, database or Fedora is not running."
     exit 1
 fi

@@ -6,7 +6,6 @@
 
 selenium==4.50.0
 freezegun==1.5.5
-coverage==7.16.2
 # core/tests/custom_server.py (HTTPS testovací server pro selenium);
 # make_ssl_devcert generuje certifikát za běhu a potřebuje cryptography.
 Werkzeug==3.1.9
