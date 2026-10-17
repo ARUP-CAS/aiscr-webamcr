@@ -206,6 +206,11 @@ table {
     @include setIcon($position: bottom);
     color: initial;
   }
+
+  // Inline SVG icons (currentColor) must match the material icons, not the link colour.
+  .paradata-icon {
+    color: initial;
+  }
 }
 
 .formset-table form table tbody tr div .small {

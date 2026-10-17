@@ -3,7 +3,8 @@
 @import 'scss/app-variables';
 
 // app styles
-@import 'bootstrap5/bootstrap';
+@import 'scss/app-bootstrap-overrides';
+@import 'bootstrap/scss/bootstrap';
 @import 'scss/app-mixins';
 @import 'scss/app-global';
 @import 'scss/app-layout';

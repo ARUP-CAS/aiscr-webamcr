@@ -96,7 +96,9 @@ urlpatterns = [
 if "rosetta" in settings.INSTALLED_APPS:
     urlpatterns += [re_path(r"^rosetta/", include("rosetta.urls"))]
 
-if settings.DEBUG and not any("celery" in arg for arg in sys.argv):
+# DEBUG chrání před zveřejněním toolbaru, INSTALLED_APPS před ImportError tam, kde balíček chybí
+# (django-debug-toolbar je jen v requirements-dev.txt; settings docs i produkce mohou mít DEBUG=True).
+if settings.DEBUG and "debug_toolbar" in settings.INSTALLED_APPS and not any("celery" in arg for arg in sys.argv):
     import debug_toolbar
 
     urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]

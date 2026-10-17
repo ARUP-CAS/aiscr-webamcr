@@ -34,10 +34,18 @@ RUN echo $TZ > /etc/timezone && \
     locale-gen cs_CZ.utf8 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-COPY ./webclient/requirements.txt /tmp/requirements.txt
+# Testovací závislosti (selenium aj.) jen pro testovací image test_web, viz scripts/test_deploy.sh.
+# requirements-test.txt obsahuje i všechny produkční piny, proto stačí sám.
+ARG INSTALL_TEST_REQUIREMENTS=false
+
+COPY ./webclient/requirements.txt ./webclient/requirements-test.txt /tmp/
 
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt
+    if [ "${INSTALL_TEST_REQUIREMENTS}" = "true" ]; then \
+        pip3 wheel --wheel-dir /wheels -r /tmp/requirements-test.txt; \
+    else \
+        pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt; \
+    fi
 
 FROM python-builder AS app-builder
 
@@ -122,7 +130,7 @@ RUN chmod +x /scripts/* && \
     sed -i "s/YYYY/$(date +%Y)/g" ./templates/base_logged_in.html
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
+    CMD bash /scripts/run-healthcheck.sh
 
 USER user
 CMD ["entrypoint.sh"]

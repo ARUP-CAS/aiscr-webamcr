@@ -16,6 +16,7 @@ from celery import shared_task
 from core.connectors import RedisConnector
 from core.constants import (
     IMPORT,
+    NAHRANI_DISTRIBUCE,
     OBLAST_CECHY,
     PRISTUPNOST_MIN_RAZENI,
     PROJEKT_STAV_VYTVORENY,
@@ -24,14 +25,18 @@ from core.constants import (
     RUSENI_PROJ,
     RUSENI_STARE_PROJ,
     SCHVALENI_OZNAMENI_PROJ,
+    SMAZANI_DISTRIBUCE,
     STARY_PROJEKT_ZRUSEN,
     UDAJ_ODSTRANEN,
+    UPDATE_DISTRIBUCE,
     ZAPSANI_PROJ,
 )
 from core.forms import ImportDataAdminForm
 from core.ident_cely import get_record_from_ident
 from core.import_data_mappers import (
+    DistribuceMapper,
     ImportDataBatchOrderingError,
+    ImportDataDistributionPrefixCollisionError,
     ImportDataEmptyError,
     ImportDataError,
     ImportDataIntegrityError,
@@ -41,6 +46,7 @@ from core.import_data_mappers import (
     ImportDataValidationResult,
     ImportModelMapper,
     LookupImportField,
+    ParadataMapper,
     SouborMapper,
     UzivatelNotifikaceMapper,
     UzivatelOpravneniMapper,
@@ -235,6 +241,7 @@ TRANSLATABLE_MESSAGE_IDS = (
     _("cron.tasks.run_data_import.already_exists"),
     _("cron.tasks.run_data_import.file_not_found_in_directory"),
     _("cron.tasks.run_data_import.cannot_read_from_directory"),
+    _("cron.tasks.run_data_import.importing_distribution"),
     _("cron.tasks.run_data_import.importing_file"),
     _("cron.tasks.run_data_import.file_mime_type"),
     _("cron.tasks.run_data_import.failed_missing_repository_uuid"),
@@ -776,21 +783,6 @@ def update_materialized_views():
 
 
 @shared_task
-def write_value_to_redis(key, value):
-    """
-    Zapíše value to redis.
-
-    :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
-    :param value: Parametr ``value`` předává se do volání ``set()``, vstupuje do návratové hodnoty.
-
-        :return: Vrací n-tici.
-    """
-    redis_connection = RedisConnector.get_connection()
-    redis_connection.set(key, value)
-    return key, value
-
-
-@shared_task
 def call_digiarchiv_update_task():
     """Zavolá URL digiarchívu pro spuštění aktualizace dat."""
     logger.debug("cron.tasks.call_digiarchiv_update_task.start")
@@ -1312,7 +1304,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                     seen_in_batch = seen_in_batch_by_mapper.setdefault(file_name, set())
                     try:
                         mapper_class.validate_batch_ordering(sheet.to_dict("records"))
-                    except ImportDataBatchOrderingError as err:
+                    except (ImportDataBatchOrderingError, ImportDataDistributionPrefixCollisionError) as err:
                         push_validation_result(
                             ImportDataValidationResult(
                                 item_order=row_order,
@@ -1352,9 +1344,14 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                                 mapper = mapper_class(row.to_dict())
                                 record = mapper.map(performed_action, serialize=True, include_primary_key=True)
                                 mapper.check_required_fields(performed_action)
-                                primary_key = mapper.import_validation(
-                                    performed_action, user_id, seen_in_batch=seen_in_batch
-                                )
+                                validation_kwargs = {"seen_in_batch": seen_in_batch}
+                                if mapper_class is ParadataMapper:
+                                    # distribution.csv is validated first, so its keys name the
+                                    # distributions this batch adds before the paradata are written.
+                                    validation_kwargs["pending_distributions"] = seen_in_batch_by_mapper.get(
+                                        "{}.csv".format(ImportModelMapper.get_file_name_for_mapper(DistribuceMapper))
+                                    )
+                                primary_key = mapper.import_validation(performed_action, user_id, **validation_kwargs)
                                 # create_records is called for serialization only and must remain
                                 # read-only — it must not call save()/delete() or otherwise mutate
                                 # the DB during validation (read-only contract).
@@ -1720,6 +1717,10 @@ def run_data_import(job_id, user_id, lock_token):
         mapper_classes = {}
         import_files_list: list[Soubor] = []
         import_files_record_ids: set = set()
+        # Alternative distributions and paradata operate on existing files, so they are collected
+        # here and written to Fedora in the binary phase, not saved as database records (#3527).
+        import_distributions_list: list[Soubor] = []
+        import_paradata_list: list[Soubor] = []
         stopped = False
         fedora_update_targets_dict: dict = {}
         fedora_update_targets_record_ids_dict = defaultdict(set)
@@ -1838,6 +1839,269 @@ def run_data_import(job_id, user_id, lock_token):
                 return "{}:{}".format(model_label, item_pk)
             return str(item)
 
+        def save_distribution_results():
+            """Zapíše do Redisu celé výsledky historie a Fedory, které čte živý přehled i report.
+
+            Obě struktury pokrývají všechny řádky běhu a zapisují se vcelku, takže fáze distribucí
+            je ukládá jen po dávkách skupin; poslední stav uloží volající v ``finally``.
+            """
+            redis_connector.set(
+                job_key("import_data_history_record_result_tr"), json.dumps(import_history_record_result)
+            )
+            redis_connector.set(job_key("import_fedora_result_tr"), json.dumps(import_fedora_result))
+
+        def import_distributions_and_paradata():
+            """Zapíše do Fedory alternativní distribuce a paradata nasbíraná v datové fázi.
+
+            Distribuce i paradata pracují s existujícími soubory, takže se neukládají jako
+            databázní záznamy — mění se pouze Fedora, u distribucí navíc historie souboru
+            a metadata navázaného záznamu. Volá se z binární fáze, aby chyby spadly do jejích
+            ošetření; proto se přes ``nonlocal`` udržují ``failed``, ``stopped``, ``record_id``,
+            ``filename`` a ``fedora_transaction``, ze kterých ošetření skládají hlášení
+            a provádějí rollback.
+
+            Položky se zpracují po záznamech (navázaný objekt souboru): všechny distribuce,
+            jejich paradata, historie i aktualizace metadat jednoho záznamu se zapíší v jediné
+            Fedora transakci. Každá potvrzená transakce vytváří novou verzi celého OCFL objektu
+            záznamu, takže jedna transakce na záznam a běh drží počet verzí na minimu i při
+            hromadných importech. Distribuce se v rámci záznamu zapisují před paradaty, aby
+            paradata mohla navázat na distribuci zakládanou týmž importem.
+
+            Záznam je atomický: historie vzniká v databázové transakci, která se potvrdí až po
+            commitu Fedora transakce, a selhání kterékoli položky vrátí celý záznam. Mezi záznamy
+            atomická fáze není — dříve potvrzené záznamy zůstanou zapsané, stejně jako u importu
+            binárních souborů; opakovaný import téhož CSV je zamýšlená cesta k dorovnání stavu.
+
+            Historie distribucí se zapisuje pod ``ADMIN_USER``, jak vyžaduje zadání #3527;
+            stejně ji pro náhledy zapisuje ``Soubor.zaznamenej_distribuce()``.
+            """
+            nonlocal failed, stopped, record_id, filename, fedora_transaction
+
+            record_id = None
+            filename = None
+            fedora_transaction = None
+            admin_user = User.objects.get(pk=hesla_dynamicka.ADMIN_USER)
+            # Items grouped by the record that owns the file; dict order keeps distributions
+            # (collected first) ahead of paradata within every group.
+            record_groups: dict = {}
+            for is_paradata, soubor in [(False, item) for item in import_distributions_list] + [
+                (True, item) for item in import_paradata_list
+            ]:
+                navazany_objekt = soubor.vazba.navazany_objekt
+                group = record_groups.setdefault(
+                    (navazany_objekt.__class__, navazany_objekt.pk), {"record": navazany_objekt, "items": []}
+                )
+                group["items"].append((is_paradata, soubor))
+            # Overall file count for the status message: soubory already imported + this phase.
+            total_files = len(import_files_list) + len(import_distributions_list) + len(import_paradata_list)
+            processed_files = len(import_files_list)
+            for group_index, ((obj_class, obj_pk), group) in enumerate(record_groups.items()):
+                fedora_transaction = None
+                record_id = None
+                filename = None
+                refresh_import_lock()
+                # Polled before the transaction is opened so an in-flight Fedora write is never torn.
+                if redis_connector.get(job_key("import_data_stop")) is not None:
+                    stopped = True
+                    logger.info("cron.tasks.run_data_import.distribution.stopped", extra={"job_id": job_id})
+                    redis_connector.set(
+                        job_key("import_data_status_message_tr"),
+                        translation_value("cron.tasks.run_data_import.stopped_by_user"),
+                    )
+                    break
+                ident_cely = group["record"].ident_cely
+                rows = []
+                for is_paradata, soubor in group["items"]:
+                    soubor: Soubor
+                    if is_paradata:
+                        row = {
+                            "distribution": soubor.paradata_distribution,
+                            "action": soubor.paradata_performed_action,
+                            "filename": soubor.paradata_nazev,
+                            "mimetype": soubor.paradata_mimetype,
+                        }
+                    else:
+                        row = {
+                            "distribution": soubor.distribution_name,
+                            "action": soubor.distribution_performed_action,
+                            "filename": soubor.distribution_nazev,
+                            "mimetype": soubor.distribution_mimetype,
+                        }
+                    row.update(
+                        {
+                            "is_paradata": is_paradata,
+                            "soubor": soubor,
+                            "record_id": getattr(soubor, "import_record_id", None),
+                            "content": None,
+                        }
+                    )
+                    rows.append(row)
+                # Every binary of the record is read before the transaction is opened, so a missing
+                # file stops the import without leaving a half-written record behind.
+                for row in rows:
+                    if row["action"] == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+                        continue
+                    record_id = row["record_id"]
+                    filename = row["filename"]
+                    file_path = os.path.join(import_directory_path, filename)
+                    if not os.path.isfile(file_path):
+                        redis_connector.rpush(
+                            job_key("import_data_files"),
+                            json.dumps(
+                                {
+                                    "ident_cely": ident_cely,
+                                    "file_name": filename,
+                                    "size_mb": None,
+                                    "additional_info_tr": "cron.tasks.run_data_import.file_not_found_in_directory",
+                                }
+                            ),
+                        )
+                        failed = True
+                        stopped = True
+                        redis_connector.set(job_key("import_data_stop"), 1)
+                        redis_connector.set(
+                            job_key("import_data_status_message_tr"),
+                            translation_value("cron.tasks.run_data_import.cannot_read_from_directory"),
+                        )
+                        break
+                    with open(file_path, "rb") as f:
+                        row["content"] = BytesIO(f.read())
+                if failed:
+                    break
+                fedora_transaction = FedoraTransaction()
+                conn = FedoraRepositoryConnector(group["record"], fedora_transaction, skip_container_check=False)
+                # (soubor pk, distribution) pairs whose paradata delete_distribution already removed.
+                deleted_distributions = set()
+                with transaction.atomic():
+                    for row_index, row in enumerate(rows):
+                        record_id = row["record_id"]
+                        filename = row["filename"]
+                        soubor = row["soubor"]
+                        distribution = row["distribution"]
+                        redis_connector.set(
+                            job_key("import_data_status_message_tr"),
+                            translation_value(
+                                "cron.tasks.run_data_import.importing_distribution",
+                                n=processed_files + row_index + 1,
+                                total=total_files,
+                                filename=distribution,
+                                ident_cely=ident_cely,
+                            ),
+                        )
+                        uuid = soubor.repository_uuid
+                        # The mimetype from the CSV is stored as given, without detection (#3527).
+                        if row["action"] == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+                            if row["is_paradata"]:
+                                # A second DELETE of the same path would answer 410 and roll back the record.
+                                if (soubor.pk, distribution) not in deleted_distributions:
+                                    conn.delete_paradata(uuid, distribution)
+                            else:
+                                conn.delete_distribution(uuid, distribution)
+                                deleted_distributions.add((soubor.pk, distribution))
+                            typ_zmeny = SMAZANI_DISTRIBUCE
+                            row["rep_bin_file"] = None
+                        elif row["action"] == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
+                            save = conn.save_paradata if row["is_paradata"] else conn.save_distribution
+                            row["rep_bin_file"] = save(uuid, distribution, filename, row["mimetype"], row["content"])
+                            typ_zmeny = NAHRANI_DISTRIBUCE
+                        else:
+                            update = conn.update_paradata if row["is_paradata"] else conn.update_distribution
+                            row["rep_bin_file"] = update(uuid, distribution, filename, row["mimetype"], row["content"])
+                            typ_zmeny = UPDATE_DISTRIBUCE
+                        # Paradata leave no trace in the database — no history, no metadata
+                        # refresh — while distributions are recorded in the file history.
+                        if not row["is_paradata"] and soubor.historie is None:
+                            # Each row holds its own instance; an earlier row may have created the link already.
+                            soubor.refresh_from_db(fields=["historie"])
+                        if not row["is_paradata"] and soubor.historie is None:
+                            # Older files may lack a history link; the record metadata is refreshed below.
+                            soubor.suppress_signal = True
+                            soubor.create_soubor_vazby()
+                        row["history_record"] = (
+                            None
+                            if row["is_paradata"]
+                            else Historie.objects.create(
+                                typ_zmeny=typ_zmeny,
+                                uzivatel=admin_user,
+                                vazba=soubor.historie,
+                                poznamka=distribution,
+                            )
+                        )
+                    record_id = None
+                    filename = None
+                    has_distribution = any(not row["is_paradata"] for row in rows)
+                    if has_distribution:
+                        obj = obj_class.objects.get(pk=obj_pk)
+                        obj.active_transaction = fedora_transaction
+                        obj.save_metadata(fedora_transaction)
+                    # Committed inside atomic(): a failed commit also discards the history rows.
+                    fedora_transaction.mark_transaction_as_closed()
+                for row in rows:
+                    rid = row["record_id"]
+                    distribution = row["distribution"]
+                    # Distribution deletes drop their paradata too, so every written row stales the file table.
+                    row["soubor"].invalidate_paradata_cache()
+                    if rid is not None and row["is_paradata"]:
+                        # Paradata trigger no metadata refresh, so the row would otherwise stay
+                        # labelled as waiting for the data import that never comes.
+                        import_fedora_result[rid] = [
+                            translation_value(
+                                "cron.tasks.run_data_import.paradata_written", raw=True, message=distribution
+                            )
+                        ]
+                    elif rid is not None:
+                        # The history phase labels every unrecognised record_id as "skipped";
+                        # distributions write their own DIST* record here, so relabel it now.
+                        import_history_record_result[rid] = translation_value(
+                            "cron.tasks.run_data_import.history_record_created", pk=row["history_record"].pk
+                        )
+                        if import_fedora_result.get(rid) == [fedora_waiting_data_import_id]:
+                            import_fedora_result[rid] = []
+                        import_fedora_result.setdefault(rid, []).append(
+                            translation_value(
+                                "cron.tasks.run_data_import.fedora_record",
+                                raw=True,
+                                message="{} ({})".format(fedora_transaction.uid, ident_cely),
+                            )
+                        )
+                    logger.info(
+                        "cron.tasks.run_data_import.distribution.saved",
+                        extra={
+                            "distribution": distribution,
+                            "paradata": row["is_paradata"],
+                            "action": row["action"],
+                            "ident_cely": ident_cely,
+                            "transaction": fedora_transaction.uid,
+                            "job_id": job_id,
+                        },
+                    )
+                    rep_bin_file = row["rep_bin_file"]
+                    redis_connector.rpush(
+                        job_key("import_data_files"),
+                        json.dumps(
+                            {
+                                "ident_cely": ident_cely,
+                                "file_name": row["filename"] or distribution,
+                                "size_mb": round(rep_bin_file.size_mb, 3) if rep_bin_file else None,
+                                "additional_info_tr": translation_value(
+                                    "cron.tasks.run_data_import.distribution_written",
+                                    raw=True,
+                                    message=distribution,
+                                ),
+                            }
+                        ),
+                    )
+                processed_files += len(rows)
+                # Both dicts cover the whole run and are re-encoded on every write; throttle like validation.
+                if group_index % VALIDATION_REDIS_UPDATE_INTERVAL == 0:
+                    save_distribution_results()
+                redis_connector.set(
+                    job_key("import_data_files_progress"),
+                    processed_files,
+                    ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+                )
+            fedora_transaction = None
+
         # Tracks whether the data-phase atomic() block was rolled back (via set_rollback or a
         # propagating exception). Drives the success -> rolled_back relabel.
         data_rolled_back = False
@@ -1905,6 +2169,21 @@ def run_data_import(job_id, user_id, lock_token):
                             import_files_list += records
                             import_files_record_ids.add(record_id)
                             record: Soubor = records[0]
+                            redis_connector.rpush(job_key("import_data_progress_ids"), record_id)
+                            redis_connector.rpush(
+                                job_key("import_data_progress_details_tr"), "cron.tasks.run_data_import.file"
+                            )
+                            continue
+                        if mapper_class in (DistribuceMapper, ParadataMapper):
+                            # Distributions and paradata change only Fedora; the returned Soubor is an
+                            # existing row that must not be saved or deleted by the generic branch below.
+                            for record in records:
+                                record.import_record_id = record_id
+                            if mapper_class is DistribuceMapper:
+                                import_distributions_list += records
+                            else:
+                                import_paradata_list += records
+                            import_files_record_ids.add(record_id)
                             redis_connector.rpush(job_key("import_data_progress_ids"), record_id)
                             redis_connector.rpush(
                                 job_key("import_data_progress_details_tr"), "cron.tasks.run_data_import.file"
@@ -2507,16 +2786,17 @@ def run_data_import(job_id, user_id, lock_token):
             save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
 
         skipped_files: list = []
-        if (
-            not failed
-            and not stopped
-            and import_files_list
+        # Distributions and paradata need the binary phase for every action, including DELETE —
+        # unlike soubory, where the delete happens in the data phase (#3527).
+        import_binary_phase_needed = bool(import_distributions_list or import_paradata_list) or (
+            bool(import_files_list)
             and performed_action
             in (
                 ImportDataAdminForm.PERFORMED_ACTION_INSERT,
                 ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
             )
-        ):
+        )
+        if not failed and not stopped and import_binary_phase_needed:
             refresh_import_lock()
             redis_connector.set(
                 job_key("import_data_status_message_tr"),
@@ -2553,7 +2833,7 @@ def run_data_import(job_id, user_id, lock_token):
                     )
                     redis_connector.set(
                         job_key("import_data_files_total"),
-                        len(import_files_list),
+                        len(import_files_list) + len(import_distributions_list) + len(import_paradata_list),
                         ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
                     )
                     redis_connector.set(job_key("import_data_files_progress"), 0, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
@@ -2694,6 +2974,9 @@ def run_data_import(job_id, user_id, lock_token):
                         soubor.save()
                         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
                             soubor.create_soubor_vazby()
+                        # Až tady má soubor vazbu na historii — u INSERTu vzniká řádek i vazba
+                        # teprve po zápisu do Fedory, takže náhledy se do historie doplňují zde.
+                        soubor.zaznamenej_distribuce(rep_bin_file.thumb_writes)
                         history_record = Historie(
                             typ_zmeny=IMPORT,
                             uzivatel=transaction_user,
@@ -2796,6 +3079,12 @@ def run_data_import(job_id, user_id, lock_token):
                                     )
                                 )
                             redis_connector.set(job_key("import_fedora_result_tr"), json.dumps(import_fedora_result))
+                    if not failed and not stopped and (import_distributions_list or import_paradata_list):
+                        try:
+                            import_distributions_and_paradata()
+                        finally:
+                            # Throttled writes may lag; the last state must reach the report on every exit.
+                            save_distribution_results()
                 except SouborMissingRepositoryUuidError as err:
                     if fedora_transaction is not None:
                         fedora_transaction.rollback_transaction()
@@ -3035,7 +3324,10 @@ def run_data_import(job_id, user_id, lock_token):
         RedisConnector.delete_if_value_matches(redis_connector, RedisConnector.IMPORT_DATA_ACTIVE_JOB_KEY, job_id)
         leftover_chunks_raw = redis_connector.get(job_key("import_data_file_chunks"))
         if leftover_chunks_raw:
-            leftover_count = int(leftover_chunks_raw)
+            try:
+                leftover_count = int(leftover_chunks_raw)
+            except (TypeError, ValueError):
+                leftover_count = 0
             stray_keys = ["import_data_file_{}_{}".format(job_id, i) for i in range(leftover_count)]
             stray_keys.append(job_key("import_data_file_chunks"))
             redis_connector.delete(*stray_keys)
@@ -3088,6 +3380,10 @@ RUIAN_MAX_404_POKUSU_ZA_BEH = 60
 #: úspěšně staženým dnem. Slouží i k recyklaci takového běhu při dalším cronu,
 #: aby se pro tentýž den nehromadily duplicitní řádky auditu.
 NOTE_404_NEPOTVRZENO = "no_changes_nepotvrzeno (404)"
+
+#: Text chyby, kterým se uzavírá běh přerušený zvenčí (SIGKILL, OOM, restart
+#: kontejneru). Takový běh nestihl zapsat ani ``failed``, ani ``success``.
+ERROR_PRERUSENY_BEH = "Běh byl přerušen zvenčí (zabití procesu nebo restart kontejneru) a nedokončil se."
 
 #: Po kolika dnech bez jediného **skutečně staženého** souboru se zaloguje
 #: ``ERROR``.
@@ -3274,6 +3570,46 @@ def _potvrd_prazdne_dny(runy: list) -> None:
     )
 
 
+def _uzavri_prerusene_behy() -> None:
+    """
+    Uzavře jako ``failed`` běhy, které zůstaly ve stavu ``running``.
+
+    Do stavu ``running`` se běh dostane při založení a opustí ho až ve
+    vlastním ``except`` nebo po úspěchu. Proces zabitý zvenčí (SIGKILL po
+    vypršení ``stop_grace_period`` při restartu swarm stacku, OOM killer)
+    nestihne ani jedno, takže řádek zůstane ``running`` navždy. Detekce
+    opakování dne v :func:`_sync_ruian_changes_locked` ale hledá jen
+    ``failed`` – přerušený den by se pak zopakoval jako první pokus, bez
+    vynuceného zápisu metadat a bez opakovaného přepočtu navázaných záznamů.
+
+    Volá se pod advisory lockem :func:`heslar.ruian_sync.zamek.ruian_sync_lock`,
+    který drží každý tvůrce ``RuianSyncRun`` (denní cron i
+    ``aktualizuj_ruian_shp``). Žádný jiný běh tedy právě neprobíhá a každý
+    ``running`` řádek je bezpečně osiřelý.
+    """
+    from heslar.models import RuianSyncRun
+
+    prerusene = list(
+        RuianSyncRun.objects.filter(status=RuianSyncRun.STATUS_RUNNING).values_list("pk", "data_valid_to", "mode")
+    )
+    if not prerusene:
+        return
+    RuianSyncRun.objects.filter(pk__in=[pk for pk, _, _ in prerusene]).update(
+        status=RuianSyncRun.STATUS_FAILED,
+        finished_at=timezone.now(),
+        error=ERROR_PRERUSENY_BEH,
+    )
+    logger.warning(
+        "cron.tasks.sync_ruian_changes.prerusene_behy_uzavreny",
+        extra={
+            "run_ids": [pk for pk, _, _ in prerusene],
+            "dny": [den.isoformat() for _, den, _ in prerusene],
+            "mody": [mod for _, _, mod in prerusene],
+            "reason": "Běhy zůstaly ve stavu running po zabití procesu; den se zopakuje jako po selhání.",
+        },
+    )
+
+
 def _sync_ruian_changes_locked(reassign_records: bool = True):
     """
     Vlastní tělo :func:`sync_ruian_changes` běžící pod advisory lockem.
@@ -3287,6 +3623,8 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
         from heslar.ruian_sync import FileVfrSource
         from heslar.ruian_sync import syncer as ruian_syncer
         from heslar.ruian_sync.vfr_download import get_target_dir
+
+        _uzavri_prerusene_behy()
 
         last_run = RuianSyncRun.last_successful()
         if last_run is None:
@@ -3411,6 +3749,11 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                     # upsert by je vyhodnotil jako nezměněné a metadata by se
                     # už nikdy nedopsala. Vynuceným zápisem se dohoní.
                     #
+                    # Ze stejného důvodu se při opakování zopakuje i přepočet
+                    # navázaných záznamů: hranice už v DB jsou, takže by je
+                    # upsert nevyhodnotil jako změněné a nedokončený přepočet
+                    # (typicky po zabití procesu) by se už nikdy nedoběhl.
+                    #
                     # Filtr na neprázdný ``source_path`` je podstatný: běh, který
                     # skončil na 404, se k datům vůbec nedostal a nemá co dohánět.
                     opakovani_po_selhani = (
@@ -3431,7 +3774,8 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                                 "run_id": run.pk,
                                 "reason": (
                                     "Dřívější pokus o tento den selhal po stažení dat. "
-                                    "Metadata se do Fedory zapíšou i u nezměněných prvků."
+                                    "Metadata se do Fedory zapíšou i u nezměněných prvků "
+                                    "a přepočet navázaných záznamů proběhne znovu."
                                 ),
                             },
                         )

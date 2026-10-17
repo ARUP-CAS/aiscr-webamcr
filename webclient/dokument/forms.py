@@ -382,33 +382,41 @@ class RegionForm(forms.Form):
     region = make_region_field()
 
 
-def nastav_nabidku_autoru(form):
+def nastav_nabidku_osob(form, nazev_pole, vazba, poradi):
     """
-    Naplní nabídku widgetu pole ``autori`` popisky osob, které se mají vykreslit.
+    Naplní nabídku widgetu pole s osobami popisky osob, které se mají vykreslit.
 
     Našeptávací widget vykresluje pouze vybrané hodnoty a popisek k nim hledá ve svých volbách;
     pro hodnotu bez odpovídající volby zobrazí místo jména holé ID. U odeslaného formuláře proto
-    musí nabídka vycházet z odeslaných hodnot, jinak by se po neúspěšné validaci místo jmen autorů
-    zobrazila jejich čísla. U nového dokumentu je nabídka prázdná, u existujícího vychází
-    z navázaných autorů v jejich pořadí.
+    musí nabídka vycházet z odeslaných hodnot, jinak by se po neúspěšné validaci místo jmen osob
+    zobrazila jejich čísla. U nového záznamu je nabídka prázdná, u existujícího vychází
+    z navázaných osob v jejich pořadí.
 
-    :param form: Formulář dokumentu nebo 3D modelu s polem ``autori``.
+    :param form: Formulář s polem ``nazev_pole`` a instancí záznamu, ke kterému jsou osoby navázány.
+    :param nazev_pole: Název pole formuláře s výběrem osob (např. ``autori``).
+    :param vazba: Lookup z ``Osoba`` na záznam formuláře (např. ``dokumentautor__dokument``).
+    :param poradi: Lookup z ``Osoba`` na pořadí osoby u záznamu (např. ``dokumentautor__poradi``).
     """
     if form.is_bound:
-        hodnoty = form["autori"].value() or []
+        hodnoty = form[nazev_pole].value() or []
         if not isinstance(hodnoty, (list, tuple)):
             hodnoty = [hodnoty]
         ids = [int(hodnota) for hodnota in hodnoty if str(hodnota).isdigit()]
     elif form.instance.pk:
-        ids = list(
-            Osoba.objects.filter(dokumentautor__dokument=form.instance)
-            .order_by("dokumentautor__poradi")
-            .values_list("id", flat=True)
-        )
+        ids = list(Osoba.objects.filter(**{vazba: form.instance}).order_by(poradi).values_list("id", flat=True))
     else:
         ids = []
     popisky = dict(Osoba.objects.filter(pk__in=ids).values_list("id", "vypis_cely"))
-    form.fields["autori"].widget.choices = [(pk, popisky[pk]) for pk in ids if pk in popisky]
+    form.fields[nazev_pole].widget.choices = [(pk, popisky[pk]) for pk in ids if pk in popisky]
+
+
+def nastav_nabidku_autoru(form):
+    """
+    Naplní nabídku widgetu pole ``autori`` formuláře dokumentu popisky autorů (viz :func:`nastav_nabidku_osob`).
+
+    :param form: Formulář dokumentu nebo 3D modelu s polem ``autori``.
+    """
+    nastav_nabidku_osob(form, "autori", "dokumentautor__dokument", "dokumentautor__poradi")
 
 
 class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):

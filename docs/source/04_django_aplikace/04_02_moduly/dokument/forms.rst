@@ -200,15 +200,24 @@ Funkce
 
    :return: Instanci ``forms.ChoiceField`` pro výběr regionu.
 
-.. py:function:: nastav_nabidku_autoru(form)
+.. py:function:: nastav_nabidku_osob(form, nazev_pole, vazba, poradi)
 
-   Naplní nabídku widgetu pole ``autori`` popisky osob, které se mají vykreslit.
+   Naplní nabídku widgetu pole s osobami popisky osob, které se mají vykreslit.
 
    Našeptávací widget vykresluje pouze vybrané hodnoty a popisek k nim hledá ve svých volbách;
    pro hodnotu bez odpovídající volby zobrazí místo jména holé ID. U odeslaného formuláře proto
-   musí nabídka vycházet z odeslaných hodnot, jinak by se po neúspěšné validaci místo jmen autorů
-   zobrazila jejich čísla. U nového dokumentu je nabídka prázdná, u existujícího vychází
-   z navázaných autorů v jejich pořadí.
+   musí nabídka vycházet z odeslaných hodnot, jinak by se po neúspěšné validaci místo jmen osob
+   zobrazila jejich čísla. U nového záznamu je nabídka prázdná, u existujícího vychází
+   z navázaných osob v jejich pořadí.
+
+   :param form: Formulář s polem ``nazev_pole`` a instancí záznamu, ke kterému jsou osoby navázány.
+   :param nazev_pole: Název pole formuláře s výběrem osob (např. ``autori``).
+   :param vazba: Lookup z ``Osoba`` na záznam formuláře (např. ``dokumentautor__dokument``).
+   :param poradi: Lookup z ``Osoba`` na pořadí osoby u záznamu (např. ``dokumentautor__poradi``).
+
+.. py:function:: nastav_nabidku_autoru(form)
+
+   Naplní nabídku widgetu pole ``autori`` formuláře dokumentu popisky autorů (viz :func:`nastav_nabidku_osob`).
 
    :param form: Formulář dokumentu nebo 3D modelu s polem ``autori``.
 

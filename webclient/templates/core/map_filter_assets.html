@@ -68,20 +68,20 @@
 <link rel="stylesheet" href="{% static 'leaflet.markercluster/dist/MarkerCluster.css' %}"/>
 <link rel="stylesheet" href="{% static 'leaflet.markercluster/dist/MarkerCluster.Default.css' %}"/>
 <!-- Heatmap -->
-<script src="{% static 'js/heatmap/heatmap.js' %}"></script>
-<script src="{% static 'js/heatmap/leaflet-heatmap.js' %}"></script>
+<script src="{% static 'vendor/heatmap.js/heatmap.js' %}"></script>
+<script src="{% static 'vendor/heatmap.js/leaflet-heatmap.js' %}"></script>
 <!-- FullScreen -->
 <script src="{% static 'leaflet-fullscreen/dist/Leaflet.fullscreen.min.js' %}"></script>
 <link href="{% static 'leaflet-fullscreen/dist/leaflet.fullscreen.css' %}" rel="stylesheet"/>
 <!-- Measure -->
-<link rel="stylesheet" href="{% static 'css/leaflet.measure.css' %}"/>
-<script src="{% static 'js/leaflet.measure.js' %}"></script>
+<link rel="stylesheet" href="{% static 'vendor/leaflet-measure/leaflet.measure.css' %}"/>
+<script src="{% static 'vendor/leaflet-measure/leaflet.measure.js' %}"></script>
 <!-- Coordinates display -->
-<script src="{% static 'js/leaflet.coor.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/leaflet.coor.css' %}"/>
+<script src="{% static 'vendor/leaflet-coordinates/leaflet.coor.js' %}"></script>
+<link rel="stylesheet" href="{% static 'vendor/leaflet-coordinates/leaflet.coor.css' %}"/>
 <!-- Search -->
-<link rel="stylesheet" href="{% static 'css/leaflet-search.css' %}"/>
-<script src="{% static 'js/leaflet-search.js' %}"></script>
+<link rel="stylesheet" href="{% static 'vendor/leaflet-search/leaflet-search.css' %}"/>
+<script src="{% static 'vendor/leaflet-search/leaflet-search.js' %}"></script>
 <!-- Draw (prostorový výběr) -->
 <script src="{% static 'leaflet-draw/dist/leaflet.draw-src.js' %}"></script>
 <link rel="stylesheet" href="{% static 'leaflet-draw/dist/leaflet.draw.css' %}"/>
@@ -90,7 +90,7 @@
 <script src="{% static 'js/mapa_pins.js' %}"></script>
 <script src="{% static 'js/coor_precision.js' %}"></script>
 <script src="{% static 'js/coordTransform.js' %}"></script>
-<script src="{% static 'js/leaflet-grayscale.js' %}"></script>
+<script src="{% static 'vendor/leaflet-grayscale/leaflet-grayscale.js' %}"></script>
 {% if map_layer == "3d" %}
   <!-- Knihovna 3D je ve Web Mercator (EPSG:3857), ne v S-JTSK -->
   <script src="{% static 'js/mapa_settings_mercator.js' %}"></script>

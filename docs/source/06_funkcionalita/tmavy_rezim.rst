@@ -66,12 +66,12 @@ Struktura souborů
    * - ``webclient/static/theme.scss``
      - Kořenový SCSS vstupní bod — importuje proměnné → Bootstrap →
        app styly → dark theme naposled
-   * - ``webclient/static/bootstrap5/_variables-dark.scss``
-     - Vlastní dark-mode proměnné Bootstrap 5 (využívané BS interně)
+   * - ``node_modules/bootstrap/scss/_variables-dark.scss``
+     - Dark-mode proměnné Bootstrap 5 z npm (využívané BS interně)
    * - ``webclient/static/js/theme-toggle.js``
      - JS třída ``ThemeManager`` + inicializace toggle tlačítka
-   * - ``webclient/static/cookie-consent/css-components/dark-scheme.css``
-     - Dark mode widgetu cookie-consent (``.cc--darkmode``)
+   * - ``node_modules/vanilla-cookieconsent/dist/cookieconsent.css``
+     - Dark mode widgetu cookie-consent (``.cc--darkmode``), balíček z npm
    * - ``webclient/static/img/login-bg-dark.svg``
      - Tmavá varianta pozadí přihlašovací stránky
 
@@ -81,12 +81,13 @@ Pořadí importů v ``theme.scss``
 .. code-block:: scss
 
    @import 'scss/app-variables';       // 1. Světlé výchozí hodnoty
-   @import 'bootstrap5/bootstrap';      // 2. Bootstrap 5
-   @import 'scss/app-mixins';           // 3. App mixiny
-   @import 'scss/app-global';           // 4. Globální app styly
-   @import 'scss/app-layout';           // 5. Layout
-   @import 'scss/app-select2';          // 6. Select2 přepisy
-   @import 'scss/app-theme-dark';       // 7. Tmavé téma (poslední — přepisuje vše výše)
+   @import 'scss/app-bootstrap-overrides'; // 2. Přepisy proměnných Bootstrapu
+   @import 'bootstrap/scss/bootstrap';  // 3. Bootstrap 5 z npm
+   @import 'scss/app-mixins';           // 4. App mixiny
+   @import 'scss/app-global';           // 5. Globální app styly
+   @import 'scss/app-layout';           // 6. Layout
+   @import 'scss/app-select2';          // 7. Select2 přepisy
+   @import 'scss/app-theme-dark';       // 8. Tmavé téma (poslední — přepisuje vše výše)
 
 Barevné škály
 -------------

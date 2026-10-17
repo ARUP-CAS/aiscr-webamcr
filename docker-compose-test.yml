@@ -1,7 +1,7 @@
 
 services:
   web:
-    image: docker.io/library/test_prod
+    image: docker.io/library/test_web
     ulimits:
       nofile:
         soft: 65536
@@ -88,7 +88,7 @@ services:
       start_period: 30s
   
   redis-exporter:
-    image: oliver006/redis_exporter:v1.91.1-alpine
+    image: oliver006/redis_exporter:v1.93.0-alpine
     ports:
       - "9121:9121"
     secrets:
@@ -103,7 +103,7 @@ services:
     entrypoint: ["/bin/sh", "/docker-entrypoint.d/redis_exporter_entrypoint.sh"]
 
   celery_worker:
-    image: docker.io/library/test_prod
+    image: docker.io/library/test_web
     # Viz komentář v docker-compose.yml; testovací prostředí má nižší zátěž, stačí 2 procesy.
     command: celery -A webclient worker -l DEBUG -n worker1@amcr --concurrency=2 --max-tasks-per-child=50
     environment:
@@ -120,7 +120,7 @@ services:
     networks:
       - prod-net
     healthcheck:
-      test: ["CMD-SHELL", "bash /scripts/run-healthcheck_celery.sh && bash /code/celery_redis_write.sh"]
+      test: ["CMD-SHELL", "bash /scripts/run-healthcheck_celery.sh"]
       interval: 1m30s
       timeout: 30s
       retries: 5
@@ -129,7 +129,7 @@ services:
       - redis
 
   celery_beat:
-    image: docker.io/library/test_prod
+    image: docker.io/library/test_web
     command: celery -A webclient beat -l INFO
     environment:
       - IMAGE_TAG=${IMAGE_TAG}
@@ -145,7 +145,7 @@ services:
     networks:
       - prod-net
     healthcheck:
-      test: ["CMD-SHELL", "bash /scripts/run-healthcheck_celery.sh && bash /code/celery_redis_write.sh"]
+      test: ["CMD-SHELL", "bash /scripts/run-healthcheck_celery_beat.sh"]
       interval: 1m30s
       timeout: 30s
       retries: 5
@@ -186,7 +186,7 @@ services:
       - prod-net
 
   prometheus:
-    image: prom/prometheus:v3.14.0
+    image: prom/prometheus:v3.15.0
     restart: always
     volumes:
       - ./prometheus:/etc/prometheus
@@ -204,7 +204,7 @@ services:
 
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:9.5.4
+    image: docker.elastic.co/logstash/logstash:9.5.5
     restart: always
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
@@ -219,7 +219,7 @@ services:
       - logstash_elastic_host
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.4
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.5
     hostname: elasticsearch
     restart: always
     environment:
@@ -247,7 +247,7 @@ services:
           memory: "2G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:9.5.4
+    image: docker.elastic.co/kibana/kibana:9.5.5
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200

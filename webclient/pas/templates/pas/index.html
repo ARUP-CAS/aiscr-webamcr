@@ -63,7 +63,7 @@
       {% endif %}
       {% if show_pas_potvrdit %}
         <div class="col">
-          <a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}&sort=nalezce&sort=datum_nalezu&sort=ident_cely" class="card app-card-entity app-card-potvrdit">
+          <a href="{% url 'pas:list' %}?stav=2&organizace_nalezu={{ user.organizace.id }}&sort=nalezce&sort=datum_nalezu&sort=ident_cely" class="card app-card-entity app-card-potvrdit">
             <div class="card-body card-body-background">
               <img src="{% static 'img/logo-am-mark.png' %}" />
             </div>

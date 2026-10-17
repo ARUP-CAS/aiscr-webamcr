@@ -28,28 +28,28 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.AlterModelOptions(
-            name='heslar_hierarchie',
+            name='heslarhierarchie',
             options={
                 'verbose_name_plural': 'heslar.model.HeslarHierarchie.modelTitles.label',
                 'db_table': 'heslar_hierarchie',
             },
         ),
         migrations.AlterModelOptions(
-            name='heslar_nazev',
+            name='heslarnazev',
             options={
                 'verbose_name_plural': 'heslar.model.HeslarNazev.modelTitles.label',
                 'db_table': 'heslar_nazev',
             },
         ),
         migrations.AlterModelOptions(
-            name='heslar_odkaz',
+            name='heslarodkaz',
             options={
                 'verbose_name_plural': 'heslar.model.HeslarOdkaz.modelTitles.label',
                 'db_table': 'heslar_odkaz',
             },
         ),
         migrations.AlterModelOptions(
-            name='ruian_kraj',
+            name='ruiankraj',
             options={
                 'verbose_name_plural': 'heslar.model.RuianKraj.modelTitles.label',
                 'db_table': 'ruian_kraj',
@@ -57,14 +57,14 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.AlterModelOptions(
-            name='heslar_datace',
+            name='heslardatace',
             options={
                 'verbose_name_plural': 'heslar.model.HeslarDatace.modelTitles.label',
                 'db_table': 'heslar_datace',
             },
         ),
         migrations.AlterModelOptions(
-            name='ruian_okres',
+            name='ruianokres',
             options={
                 'verbose_name_plural': 'heslar.model.RuianOkres.modelTitles.label',
                 'db_table': 'ruian_okres',
@@ -72,7 +72,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.AlterModelOptions(
-            name='ruian_katastr',
+            name='ruiankatastr',
             options={
                 'verbose_name_plural': 'heslar.model.RuianKatastr.modelTitles.label',
                 'db_table': 'ruian_katastr',

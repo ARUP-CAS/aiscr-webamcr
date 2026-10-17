@@ -145,7 +145,7 @@
               <li><a href="{% url 'pas:list' %}?projekt_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.naseNalezy" %}</a></li>
               {% endif %}
               {% if show_pas_potvrdit %}
-              <li><a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}&sort=nalezce&sort=datum_nalezu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.potvrdit" %}</a></li>
+              <li><a href="{% url 'pas:list' %}?stav=2&organizace_nalezu={{ user.organizace.id }}&sort=nalezce&sort=datum_nalezu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.potvrdit" %}</a></li>
               {% endif %}
               {% if show_pas_archivovat %}
               <li><a href="{% url 'pas:list' %}?stav=3&sort=datum_nalezu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.archivovat" %}</a></li>

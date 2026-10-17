@@ -26,13 +26,13 @@ Projekt má nakonfigurované následující hooky v souboru
   * statická kontrola kvality Python kódu,
   * upozorňuje na porušení PEP8 a běžné chyby.
 
-* ``method-docstring-style-reminder`` (lokální hook, **neblokující**)
+* ``method-docstring-style-reminder`` (lokální hook)
 
-  * kontroluje veřejné metody tříd v Python souborech,
+  * kontroluje veřejné funkce a metody tříd v Python souborech,
   * běží skript ``docs/check_method_docstrings.py``,
   * vypíše upozornění, pokud docstring chybí nebo neodpovídá základní
     struktuře (shrnutí, ``:param:``, ``:return:``),
-  * vrací vždy úspěšný kód, takže commit nezablokuje,
+  * při nalezených nedostatcích vrací nenulový kód a blokuje commit,
   * slouží jako průběžná připomínka standardu popsaného v dokumentu
     ``04_django_aplikace/04_01_core/docstring_style_guide``.
 
@@ -68,8 +68,7 @@ Jak zajistit správný běh
 4. Před commitem oprav nalezené problémy:
 
    * formátovací hooky (``isort``, ``black``) často opraví soubory automaticky,
-   * neblokující docstring hook vypisuje upozornění, která je potřeba průběžně
-     zapracovávat podle style guide.
+   * upozornění docstring hooku oprav podle style guide, aby kontrola prošla.
 
 Doporučený workflow vývojáře
 ----------------------------
@@ -79,3 +78,74 @@ Doporučený workflow vývojáře
   (bez nechtěně přegenerovaných souborů).
 * Pro jednotný styl docstringů používej checklist v dokumentu
   ``docstring_style_guide.rst``.
+
+Kontrola v CI (workflow ``Pre-commit``)
+---------------------------------------
+
+Kromě lokálního spuštění vynucuje pravidla i workflow GitHub Actions
+``Pre-commit`` (``.github/workflows/pre_commit.yml``). Má jediný požadovaný job
+``pre-commit``. Spouští se při otevření, znovuotevření nebo aktualizaci PR do
+``main`` či ``test``, při pushi do ``main`` a ručně (``workflow_dispatch``).
+Úplná pravidla včetně CLI/API příkladů jsou v
+`CONTRIBUTING.md <https://github.com/ARUP-CAS/aiscr-webamcr/blob/test/CONTRIBUTING.md#automatické-kontroly-a-opravy-ci>`_.
+
+Release PR ``test → main`` používá režim ``refresh``: obnova tranzitivních
+pinů, instalace výsledných závislostí, regresní testy, generování dokumentace
+přes ``docs/licenses/convert_to_rst.py`` a hooky proběhnou v tomto pořadí ve
+stejném jobu. Jeho opravné PR míří do ``test``, takže obnovené piny projdou
+běžným testovacím cyklem. Ostatní PR do ``main`` (např. hotfix) a push do
+``main`` používají ``docs``: kompilace bez upgradu, dokumentace závislostí a
+hooky, bez nesouvisejících upgradů pinů. Běžné PR do ``test`` používají
+``checks``: kompilace bez upgradu a standardní kontroly. Přímé piny v
+``requirements*.in`` se automaticky neupgradují.
+
+Ruční vstup ``mode`` nabízí ``checks`` (kontroly), ``docs`` (kontroly a
+dokumentace bez upgradu; výchozí) a ``refresh`` (kontroly, obnova pinů a
+dokumentace). Samostatný vstup ``bypass_docstring_exclusions`` rozšíří rozsah
+docstring kontroly; neobchází vyloučení celého běhu.
+
+Účty s příponou ``[bot]`` včetně release App, PR autora Dependabot a zdrojové
+větve ``dependabot/*``, ``pre-commit-fixes/*`` a historická
+``deps/python-pins-refresh`` jsou vyloučeny. Job úspěšně skončí bez změn nebo
+opravného PR a vypíše důvod v summary. To platí i při ručním spuštění či
+lidské aktualizaci vyloučeného PR; release push ``CITATION.cff`` tak nezaloží
+opravné PR mezi kroky vydání.
+
+Checkout používá zdrojový SHA původního PR, u pushů a ručních běhů SHA události.
+Neimportuje historii cílové větve. Po všech generátorech a hookách se změny
+stageují společně. Jediné opravné PR ``pre-commit-fixes/…`` míří do zdrojové
+větve původního PR, po pushi do ``main`` do ``main`` a po ručním spuštění do
+vybrané větve. Opakování aktualizuje existující PR; prázdný diff žádné nevytvoří.
+Publikace používá GitHub App token a vyloučení opravných větví brání rekurzi.
+
+Společný report popisu opravného PR, sticky komentáře původního PR a Actions
+summary čte jediný snapshot staged diffu před commitem. Odděluje provedené
+operace od skutečně změněných souborů, uvádí typy změn a počty řádků, režim,
+zdrojový commit, cílovou větev a odkazy na workflow a publikované PR. Diagnostika
+obsahuje sbalitelný konec logu hooků; výpisy jsou velikostně omezené a úplný log
+je dostupný v odkazovaném workflow. Selhání zpracování zabrání publikaci;
+nenulový kód hooků zůstává záměrně selháním checku i po nabídnutí automatických
+oprav, protože formátovací hooky a generátory vracejí nenulový kód i při pouhé
+opravě souboru. Původní PR zůstane červené, dokud se opravné PR nesloučí do
+zdrojové větve a další běh neprojde; po mergi tak nezůstávají zapomenuté opravy.
+Selhání publikace je uvedeno samostatně.
+
+.. mermaid::
+   :align: center
+
+   flowchart TD
+       T["PR do main/test, push do main, ruční spuštění"] --> G{"Vyloučený účet, autor nebo větev?"}
+       G -- "ano" --> N["Úspěšný check bez změn; důvod v summary"]
+       G -- "ne" --> M["test→main: refresh; jiné PR do main a push do main: docs; test: checks; ručně: mode"]
+       M --> C["Checkout zdrojového SHA; kompilace, upgrade jen v refresh"]
+       C --> I["Instalace závislostí a regresní testy"]
+       I --> D["Dokumentace závislostí v docs a refresh"]
+       D --> H["Hooky; zachování jejich návratového kódu"]
+       H --> S["Stage a společný snapshot změn"]
+       S --> F{"Změnily se soubory?"}
+       F -- "ano" --> P["Vytvořit nebo aktualizovat jediné opravné PR"]
+       F -- "ne" --> R["Společné reporty a výsledný check"]
+       P --> R
+       C -- "selhání" --> E["Report selhání; bez publikace; check selže"]
+       I -- "selhání" --> E
+       D -- "selhání" --> E
