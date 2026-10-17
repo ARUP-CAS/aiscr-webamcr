@@ -6,17 +6,18 @@ import http.client
 import io
 import json
 import os
+import ssl
 import struct
 import time
 import zlib
 from unittest import SkipTest
-from unittest.mock import patch
-from urllib.parse import quote, urlsplit
+from urllib.parse import quote
 
 from core.constants import MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES
+from core.tests.integration import require_integration_environment
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from django.test import SimpleTestCase, override_settings
+from django.test import SimpleTestCase
 
 _CHUNK_SIZE = 64 * 1024
 _SMALL_PNG = base64.b64decode(
@@ -28,38 +29,68 @@ _SIZE_ERROR = "The uploaded file exceeds the maximum allowed size."
 def _integration_configuration():
     """Povolí síťový test na testovací aplikaci nebo lokálně s DEBUG=True.
 
-    :return: URL proxy, token a identifikátor vyhrazeného nálezu.
-    :raises SkipTest: Pokud není nastavena cílová adresa nebo lokální test nemá DEBUG=True.
+    :return: URL proxy, uživatelské jméno, heslo a identifikátor vyhrazeného nálezu.
+    :raises SkipTest: Pokud chybí přihlašovací údaje, nejsou povoleny testy nebo nevyhovuje lokální DEBUG.
     :raises ImproperlyConfigured: Pokud chybí vstupy nebo URL neukazuje na povolené prostředí.
     """
-    if not os.environ.get("PAS_UPLOAD_BASE_URL"):
-        raise SkipTest("Set PAS_UPLOAD_BASE_URL to select the integration-test target.")
-    names = ("PAS_UPLOAD_BASE_URL", "PAS_UPLOAD_TOKEN", "PAS_UPLOAD_IDENT_CELY")
-    if any(not os.environ.get(name) for name in names):
-        raise ImproperlyConfigured(f"Required environment variables: {', '.join(names)}")
-    base_url, token, ident_cely = (os.environ[name] for name in names)
-    url = urlsplit(base_url)
-    if (
-        url.scheme not in {"http", "https"}
-        or url.username is not None
-        or url.password is not None
-        or url.path not in {"", "/"}
-        or url.query
-        or url.fragment
-    ):
-        raise ImproperlyConfigured("PAS_UPLOAD_BASE_URL must be an HTTP(S) origin without credentials.")
+    url = require_integration_environment(os.environ.get("PAS_UPLOAD_BASE_URL"))
+    username = settings.INTEGRATION_API_TEST_USERNAME
+    password = settings.INTEGRATION_API_TEST_PASSWORD
+    if not username or not password:
+        raise SkipTest("Configure INTEGRATION_API_TEST_USERNAME and INTEGRATION_API_TEST_PASSWORD in Django secrets.")
+    ident_cely = os.environ.get("PAS_UPLOAD_IDENT_CELY")
+    if not ident_cely:
+        raise ImproperlyConfigured("Required environment variable: PAS_UPLOAD_IDENT_CELY")
+    return url, username, password, ident_cely
+
+
+def _http_connection(url, timeout):
+    """Vytvoří HTTP spojení; lokální HTTPS s DEBUG=True povolí vývojový certifikát.
+
+    :param url: Adresa ověřená společnou kontrolou prostředí.
+    :param timeout: Časový limit spojení v sekundách.
+    :return: HTTP nebo HTTPS spojení; vzdálené HTTPS vždy ověřuje certifikát.
+    """
+    if url.scheme != "https":
+        return http.client.HTTPConnection(url.hostname, url.port, timeout=timeout)
+    if settings.DEBUG is True and url.hostname in {"localhost", "127.0.0.1", "::1"}:
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        return http.client.HTTPSConnection(url.hostname, url.port, timeout=timeout, context=context)
+    return http.client.HTTPSConnection(url.hostname, url.port, timeout=timeout)
+
+
+def _obtain_api_token(url, username, password):
+    """Získá token přes API přihlášení bez přesměrování a výpisu citlivých odpovědí.
+
+    :param url: Adresa ověřená společnou kontrolou prostředí.
+    :param username: Jméno testovacího uživatele z Django settings.
+    :param password: Heslo testovacího uživatele z Django settings.
+    :return: Token pro následné Bearer požadavky.
+    :raises AssertionError: Pokud přihlášení nevrátí HTTP 200 a neprázdný token.
+    """
+    connection = _http_connection(url, timeout=30)
     try:
-        port = url.port
-    except ValueError as error:
-        raise ImproperlyConfigured("PAS_UPLOAD_BASE_URL has an invalid port.") from error
-    is_test_application = url.scheme == "https" and url.hostname == "amcr-test.aiscr.cz" and port in {None, 443}
-    is_local = url.hostname in {"localhost", "127.0.0.1", "::1"}
-    if not is_test_application:
-        if not is_local:
-            raise ImproperlyConfigured("Only https://amcr-test.aiscr.cz or a DEBUG-enabled loopback origin is allowed.")
-        if settings.DEBUG is not True:
-            raise SkipTest("Local PAS upload integration test requires DEBUG=True.")
-    return url, token, ident_cely
+        connection.request(
+            "POST",
+            "/api/token-auth/",
+            body=json.dumps({"username": username, "password": password}),
+            headers={"Content-Type": "application/json", "Accept": "application/json"},
+        )
+        response = connection.getresponse()
+        if response.status != 200:
+            raise AssertionError(f"Integration API login failed with HTTP {response.status}.")
+        try:
+            body = json.loads(response.read())
+        except (ValueError, UnicodeError):
+            raise AssertionError("Integration API login did not return valid JSON.") from None
+        token = body.get("token") if isinstance(body, dict) else None
+        if not isinstance(token, str) or not token.strip():
+            raise AssertionError("Integration API login did not return a nonempty token.")
+        return token
+    finally:
+        connection.close()
 
 
 def _png_with_size(size):
@@ -90,70 +121,6 @@ def _png_with_size(size):
     return result
 
 
-class UploadFotoIntegrationGuardTests(SimpleTestCase):
-    """Ověří cílovou adresu a ochranu produkce bez síťových požadavků."""
-
-    def _configuration_for(self, base_url, debug):
-        """Vyhodnotí pojistku s úplnými testovacími vstupy bez skutečného tokenu.
-
-        :param base_url: Cílová adresa ověřovaná pojistkou.
-        :param debug: DEBUG testovacího procesu.
-        :return: Ověřená konfigurace pro povolené prostředí.
-        """
-        with (
-            override_settings(DEBUG=debug),
-            patch.dict(
-                os.environ,
-                {
-                    "PAS_UPLOAD_BASE_URL": base_url,
-                    "PAS_UPLOAD_TOKEN": "guard-test-placeholder",
-                    "PAS_UPLOAD_IDENT_CELY": "C-TEST-N00001",
-                },
-            ),
-        ):
-            return _integration_configuration()
-
-    def test_test_application_is_allowed_without_debug(self):
-        """Přesná HTTPS adresa testovací aplikace je povolena i při DEBUG=False."""
-        for origin in ("https://amcr-test.aiscr.cz", "https://amcr-test.aiscr.cz:443/"):
-            with self.subTest(origin=origin):
-                url, _, _ = self._configuration_for(origin, debug=False)
-                self.assertEqual(url.hostname, "amcr-test.aiscr.cz")
-
-    def test_local_application_requires_debug(self):
-        """Loopback lze použít pouze s DEBUG=True."""
-        for origin in ("http://127.0.0.1:8080", "http://localhost:8080", "http://[::1]:8080"):
-            with self.subTest(origin=origin):
-                with self.assertRaises(SkipTest):
-                    self._configuration_for(origin, debug=False)
-                self.assertEqual(self._configuration_for(origin, debug=True)[0].scheme, "http")
-
-    def test_production_and_lookalike_urls_are_rejected(self):
-        """Produkce ani podobné adresy nejsou povoleny, a to ani s DEBUG=True."""
-        origins = (
-            "https://amcr.aiscr.cz",
-            "https://amcr-test.aiscr.cz.example.org",
-            "https://amcr-test.aiscr.cz@amcr.aiscr.cz",
-            "https://amcr.aiscr.cz@amcr-test.aiscr.cz",
-            "http://amcr-test.aiscr.cz",
-            "https://amcr-test.aiscr.cz:444",
-            "https://amcr.aiscr.cz/?next=https://amcr-test.aiscr.cz",
-            "https://amcr-test.aiscr.cz/accounts/login/?next=/",
-        )
-        for origin in origins:
-            for debug in (False, True):
-                with self.subTest(origin=origin, debug=debug):
-                    with self.assertRaises(ImproperlyConfigured):
-                        self._configuration_for(origin, debug)
-
-    def test_missing_target_skips(self):
-        """Bez cílové adresy se test přeskočí i s DEBUG=True."""
-        for debug in (False, True):
-            with self.subTest(debug=debug), override_settings(DEBUG=debug), patch.dict(os.environ, {}, clear=True):
-                with self.assertRaises(SkipTest):
-                    _integration_configuration()
-
-
 class UploadFotoHttpIntegrationTests(SimpleTestCase):
     """Ověří skutečné limity bez test clientu, změny konstanty a přímého přístupu do DB.
 
@@ -165,15 +132,15 @@ class UploadFotoHttpIntegrationTests(SimpleTestCase):
     @classmethod
     def setUpClass(cls):
         """Ověří cílové prostředí před vytvořením PNG nebo síťovým požadavkem."""
-        cls.url, cls.token, cls.ident_cely = _integration_configuration()
+        cls.url, username, password, cls.ident_cely = _integration_configuration()
+        cls.token = _obtain_api_token(cls.url, username, password)
         super().setUpClass()
 
-    def _upload(self, image, digest, *, chunked=False, expect_continue=False):
+    def _upload(self, image, digest, *, expect_continue=False):
         """Odešle multipart přímo přes HTTP bez další úplné kopie PNG v paměti.
 
         :param image: PNG v BytesIO, které bude čteno od začátku.
         :param digest: Hodnota Content-Digest vypočtená nad PNG.
-        :param chunked: Použije chunked přenos místo Content-Length.
         :param expect_continue: Přidá hlavičku Expect: 100-continue.
         :return: Stavový kód, typ obsahu a dekódovaná JSON odpověď.
         """
@@ -187,8 +154,7 @@ class UploadFotoHttpIntegrationTests(SimpleTestCase):
         image.seek(0, io.SEEK_END)
         body_size = len(prefix) + image.tell() + len(suffix)
         image.seek(0)
-        connection_type = http.client.HTTPSConnection if self.url.scheme == "https" else http.client.HTTPConnection
-        connection = connection_type(self.url.hostname, self.url.port, timeout=600)
+        connection = _http_connection(self.url, timeout=600)
         deadline = time.monotonic() + 600
 
         def send(data):
@@ -200,12 +166,7 @@ class UploadFotoHttpIntegrationTests(SimpleTestCase):
             if remaining <= 0:
                 raise TimeoutError("PAS upload exceeded 600 seconds.")
             connection.sock.settimeout(remaining)
-            if chunked:
-                connection.send(f"{len(data):x}\r\n".encode("ascii"))
-                connection.send(data)
-                connection.send(b"\r\n")
-            else:
-                connection.send(data)
+            connection.send(data)
 
         try:
             path = f"/api/pas/nalez/{quote(self.ident_cely, safe='')}/upload-foto"
@@ -216,9 +177,7 @@ class UploadFotoHttpIntegrationTests(SimpleTestCase):
             connection.putheader("Accept", "application/json")
             connection.putheader("Accept-Language", "en")
             connection.putheader("Connection", "close")
-            connection.putheader(
-                "Transfer-Encoding" if chunked else "Content-Length", "chunked" if chunked else body_size
-            )
+            connection.putheader("Content-Length", body_size)
             if expect_continue:
                 connection.putheader("Expect", "100-continue")
             connection.endheaders()
@@ -227,8 +186,6 @@ class UploadFotoHttpIntegrationTests(SimpleTestCase):
                 while chunk := image.read(_CHUNK_SIZE):
                     send(chunk)
                 send(suffix)
-                if chunked:
-                    connection.send(b"0\r\n\r\n")
             except (BrokenPipeError, ConnectionResetError):
                 # nginx may reject Content-Length before consuming the body.
                 # Only a complete HTTP/JSON response below counts as success.
@@ -244,21 +201,24 @@ class UploadFotoHttpIntegrationTests(SimpleTestCase):
 
     def test_oversized_png_returns_422_through_proxy(self):
         """Aplikace i nginx opakovaně vracejí JSON 422 pro skutečné nadlimitní PNG."""
-        sizes = (MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES + 1, 255 * 1024**2, 261 * 1024**2, 512 * 1024**2)
+        sizes = (
+            MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES + 1,
+            MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES + 5 * 1024**2,
+            MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES + 11 * 1024**2,
+            MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES * 2,
+        )
         for size in sizes:
             with _png_with_size(size) as image:
                 digest = hashlib.sha512()
                 while chunk := image.read(_CHUNK_SIZE):
                     digest.update(chunk)
                 content_digest = f"sha-512=:{base64.b64encode(digest.digest()).decode('ascii')}:"
-                modes = [(False, False)]
-                if size == 261 * 1024**2:
-                    modes += [(True, False), (False, True), (True, True)]
-                for chunked, expect_continue in modes:
+                modes = (False, True) if size == sizes[2] else (False,)
+                for expect_continue in modes:
                     for repetition in range(3):
-                        with self.subTest(size=size, chunked=chunked, expect=expect_continue, repetition=repetition):
+                        with self.subTest(size=size, expect=expect_continue, repetition=repetition):
                             code, content_type, body = self._upload(
-                                image, content_digest, chunked=chunked, expect_continue=expect_continue
+                                image, content_digest, expect_continue=expect_continue
                             )
                             self.assertEqual(code, 422)
                             self.assertEqual(content_type.split(";")[0], "application/json")

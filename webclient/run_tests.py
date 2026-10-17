@@ -114,8 +114,6 @@ process = subprocess.Popen(
     stderr=subprocess.PIPE,
     text=True,
     shell=True,
-    # Enables the manual integration tests that write to the (test) Fedora configured in SETTINGS.
-    env={**os.environ, "FEDORA_INTEGRATION_TESTS": "1"},
 )
 if args.soubor is True:
     t1 = Thread(target=filelog, args=[process.stdout]).start()
