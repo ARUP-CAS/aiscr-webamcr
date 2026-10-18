@@ -209,6 +209,21 @@ Třídy
       :param check_archive: Parametr ``check_archive`` předává se do volání ``debug()``, ovlivňuje větvení podmínek.
       :return: Načtená data odpovídající zadaným vstupům.
 
+   .. py:method:: is_heif()
+
+      Rozpozná HEIF podle obsahu a vrátí stream na začátek.
+
+      :param content: Binární obsah fotografie; původní pozice streamu se nezachovává.
+      :return: Zda hlavička odpovídá formátu podporovanému knihovnou libheif.
+
+   .. py:method:: remove_heif_gps_data()
+
+      Odstraní GPS ze všech obrázků; chyby předá volajícímu bez návratu originálu.
+
+      :param content: Obsah HEIC/HEIF fotografie včetně případných vedlejších obrázků.
+      :return: Stream bez GPS na pozici nula, nebo původní stream, pokud GPS neobsahoval.
+      :raises ValueError: Pokud kontrola uloženého kontejneru najde zbývající GPS.
+
    .. py:method:: remove_gps_data()
 
       Odstraní GPS metadata z fotografie uložené v paměti.
@@ -218,7 +233,8 @@ Třídy
       tagy (např. UserComment, MakerNote apod.), automaticky je odstraní,
       aby bylo možné obrázek úspěšně uložit.
 
-      V případě jakékoli chyby vrací původní vstupní soubor beze změny.
+      HEIC/HEIF čistí ve všech obrázcích kontejneru a při chybě vyvolá výjimku.
+      U ostatních formátů při chybě vrací původní vstupní soubor beze změny.
 
       :param bytes_io: Obsah souboru připravený ke kontrole antivirem.
       :return: Vrací výsledek operace odstranění.

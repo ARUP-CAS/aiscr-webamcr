@@ -63,3 +63,16 @@ iterovatelný objekt, např. seznam nebo rozsah.
 
 .. code:: py
   FedoraRepositoryConnector.save_files_from_storage(range(646372, 646373), "/vol/data-migrace")
+
+Formáty fotografií PAS
+---------------------
+
+PAS přijímá fotografie JPEG, PNG, TIFF, HEIC a HEIF. Před uložením se
+odstraňují GPS souřadnice z EXIF. HEIC a HEIF zpracovává knihovna
+``pillow-heif`` s ``libheif``; čištění zahrnuje všechny obrázky kontejneru.
+Ostatní EXIF metadata se zachovávají. Při chybě zpracování HEIC/HEIF
+se původní soubor nearchivuje. Náhledy nadále používají existující ikonu.
+
+Změna nečistí již archivované fotografie automaticky. Jejich počet a případné
+GPS údaje je nutné ověřit v provozním prostředí; následně lze pro vybrané
+soubory využít příkaz ``remove_gps_data``.

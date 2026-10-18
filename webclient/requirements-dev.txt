@@ -273,7 +273,10 @@ pillow==12.3.0
     # via
     #   -r requirements-test.txt
     #   pdf2image
+    #   pillow-heif
     #   reportlab
+pillow-heif==1.8.1
+    # via -r requirements-test.txt
 pip-tools==7.6.2
     # via -r requirements-dev.in
 platformdirs==4.13.0
