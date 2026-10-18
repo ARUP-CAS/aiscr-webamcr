@@ -1,6 +1,7 @@
 #!/bin/bash
 
-redis-cli -a $(cat /run/secrets/redis_pass) ping 2>1 | grep PONG
+# Heslo jde přes REDISCLI_AUTH, aby nebylo vidět v /proc/<pid>/cmdline.
+REDISCLI_AUTH="$(cat /run/secrets/redis_pass)" redis-cli ping 2>&1 | grep PONG
 result="$?"
 
 

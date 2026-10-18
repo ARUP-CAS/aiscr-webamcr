@@ -15,7 +15,8 @@ if ! tr '\0' ' ' < /proc/1/cmdline | grep -q "celery .* beat"; then
     exit 1
 fi
 
-if [ "$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" --no-auth-warning -a "$REDIS_PASSWORD" PING)" != "PONG" ]; then
+# Heslo jde přes REDISCLI_AUTH, aby nebylo vidět v /proc/<pid>/cmdline.
+if [ "$(REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" PING)" != "PONG" ]; then
     echo "Redis $REDIS_HOST:$REDIS_PORT neodpovídá."
     exit 1
 fi
