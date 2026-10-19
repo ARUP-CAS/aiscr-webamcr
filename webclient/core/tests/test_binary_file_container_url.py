@@ -39,6 +39,9 @@ class _FakeSoubor:
     def save(self):
         pass
 
+    def zaznamenej_distribuce(self, thumb_writes):
+        self.recorded_thumb_writes = thumb_writes
+
 
 @override_settings(
     FEDORA_PROTOCOL="http", FEDORA_SERVER_HOSTNAME="fcrepo", FEDORA_PORT_NUMBER=8080, FEDORA_SERVER_NAME="AMCR"
@@ -125,7 +128,7 @@ class BinaryFileContainerUrlTests(SimpleTestCase):
         with (
             mock.patch.object(connector, "_check_binary_file_container"),
             mock.patch.object(connector, "_update_creator"),
-            mock.patch.object(connector, "save_thumbs"),
+            mock.patch.object(connector, "save_thumbs", return_value=[]),
             mock.patch.object(connector, "_send_request", return_value=self._fedora_create_response(connector)) as send,
         ):
             migrated = connector.migrate_binary_file(soubor, include_content=True, check_if_exists=False)
