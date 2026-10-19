@@ -430,7 +430,7 @@ def _parse_kraj_dto(elem) -> Optional[RuianKrajDTO]:
     if kod is None or not nazev:
         logger.debug(
             "heslar.ruian_sync.vfr_parser._parse_kraj_dto.skip_incomplete",
-            extra={"kod": kod, "name": nazev},
+            extra={"kod": kod, "nazev": nazev},
         )
         return None
     db_wkt = _extract_definicni_bod(elem)
@@ -470,7 +470,7 @@ def _parse_okres_dto(elem) -> Optional[RuianOkresDTO]:
     if kod is None or not nazev:
         logger.debug(
             "heslar.ruian_sync.vfr_parser._parse_okres_dto.skip_incomplete",
-            extra={"kod": kod, "name": nazev},
+            extra={"kod": kod, "nazev": nazev},
         )
         return None
     vusc_kod = _nested_int(elem, "Vusc", "Kod") or 0
@@ -514,7 +514,7 @@ def _parse_katastr_dto(elem, *, obec_okres_map: dict) -> Optional[RuianKatastrDT
     if kod is None or not nazev:
         logger.debug(
             "heslar.ruian_sync.vfr_parser._parse_katastr_dto.skip_incomplete",
-            extra={"kod": kod, "name": nazev},
+            extra={"kod": kod, "nazev": nazev},
         )
         return None
     obec_kod = _nested_int(elem, "Obec", "Kod")

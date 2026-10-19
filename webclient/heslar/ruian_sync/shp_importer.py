@@ -495,7 +495,7 @@ class ShpUzszSource(RuianSource):
                 raise FileNotFoundError(f"SHP layer nenalezen: {target}")
             logger.info(
                 "heslar.ruian_sync.shp_importer._resolve_shp_layer.directory",
-                extra={"file": basename, "path": str(target)},
+                extra={"file": str(target)},
             )
             return target
 
@@ -644,9 +644,9 @@ class ShpUzszSource(RuianSource):
             "heslar.ruian_sync.shp_importer._centroid_wkt.fallback_used",
             extra={
                 "kod": kod,
-                "level": level,
+                "value": level,
                 "centroid_wkt": wkt,
-                "reason": reason,
+                "info": reason,
             },
         )
         return wkt

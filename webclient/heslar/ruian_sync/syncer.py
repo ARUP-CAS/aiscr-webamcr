@@ -765,7 +765,7 @@ def _delete_kraj(kraj: RuianKraj, run: Optional[RuianSyncRun] = None) -> bool:
     except RestrictedError as err:
         logger.error(
             "heslar.ruian_sync.syncer._delete_kraj.restricted",
-            extra={"kod": kraj.kod, "name": kraj.nazev, "error": str(err)},
+            extra={"kod": kraj.kod, "nazev": kraj.nazev, "error": str(err)},
         )
         if run is not None:
             _append_run_note(run, f"Kraj {kraj.kod} ({kraj.nazev}) nelze smazat: {err}")
@@ -774,7 +774,7 @@ def _delete_kraj(kraj: RuianKraj, run: Optional[RuianSyncRun] = None) -> bool:
         # DB delete proběhl, jen Fedora kontejner neexistoval (viz _delete_katastr).
         logger.error(
             "heslar.ruian_sync.syncer._delete_kraj.fedora_error",
-            extra={"kod": kraj.kod, "name": kraj.nazev, "error": str(err)},
+            extra={"kod": kraj.kod, "nazev": kraj.nazev, "error": str(err)},
         )
         if run is not None:
             _append_run_note(
@@ -941,7 +941,7 @@ def _upsert_okres(
         stary_kod = existing.kod
         logger.warning(
             "heslar.ruian_sync.syncer._upsert_okres.precislovani",
-            extra={"old": stary_kod, "kod": dto.kod, "name": existing.nazev},
+            extra={"old": stary_kod, "kod": dto.kod, "nazev": existing.nazev},
         )
         existing.kod = dto.kod
         changed = True
@@ -1007,7 +1007,7 @@ def _delete_okres(okres: RuianOkres, run: Optional[RuianSyncRun] = None) -> bool
     except RestrictedError as err:
         logger.error(
             "heslar.ruian_sync.syncer._delete_okres.restricted",
-            extra={"kod": okres.kod, "name": okres.nazev, "error": str(err)},
+            extra={"kod": okres.kod, "nazev": okres.nazev, "error": str(err)},
         )
         if run is not None:
             _append_run_note(run, f"Okres {okres.kod} ({okres.nazev}) nelze smazat: {err}")
@@ -1016,7 +1016,7 @@ def _delete_okres(okres: RuianOkres, run: Optional[RuianSyncRun] = None) -> bool
         # DB delete proběhl, jen Fedora kontejner neexistoval (viz _delete_katastr).
         logger.error(
             "heslar.ruian_sync.syncer._delete_okres.fedora_error",
-            extra={"kod": okres.kod, "name": okres.nazev, "error": str(err)},
+            extra={"kod": okres.kod, "nazev": okres.nazev, "error": str(err)},
         )
         if run is not None:
             _append_run_note(
@@ -1071,7 +1071,7 @@ def _dohledej_okres_prostorove(dto: RuianKatastrDTO) -> Optional[RuianOkres]:
         extra={
             "kod": dto.kod,
             "okres_kod": okres.kod,
-            "name": okres.nazev,
+            "nazev": okres.nazev,
             "source_url": zdroj,
         },
     )
@@ -1608,7 +1608,7 @@ def _delete_katastr(
     except RestrictedError as err:
         logger.error(
             "heslar.ruian_sync.syncer._delete_katastr.restricted",
-            extra={"kod": katastr.kod, "name": katastr.nazev, "error": str(err)},
+            extra={"kod": katastr.kod, "nazev": katastr.nazev, "error": str(err)},
         )
         _append_run_note(run, f"Katastr {katastr.kod} ({katastr.nazev}) nelze smazat: {err}")
         return False
@@ -1621,7 +1621,7 @@ def _delete_katastr(
         # Záznam v DB je pryč, sync pokračuje.
         logger.error(
             "heslar.ruian_sync.syncer._delete_katastr.fedora_error",
-            extra={"kod": katastr.kod, "name": katastr.nazev, "error": str(err)},
+            extra={"kod": katastr.kod, "nazev": katastr.nazev, "error": str(err)},
         )
         _append_run_note(
             run,
@@ -1741,7 +1741,7 @@ def _log_hranice_change_if_significant(
                     extra={
                         "value": level,
                         "kod": kod,
-                        "name": nazev,
+                        "nazev": nazev,
                         "area_old_m2": round(old_area, 1),
                         "area_new_m2": round(new_area, 1),
                         "area_diff_pct": round(area_diff_pct, 2),
@@ -1766,7 +1766,7 @@ def _log_hranice_change_if_significant(
                 extra={
                     "value": level,
                     "kod": kod,
-                    "name": nazev,
+                    "nazev": nazev,
                     "X": float(new_definicni_bod.x),
                     "Y": float(new_definicni_bod.y),
                     "distance_m": distance_m,

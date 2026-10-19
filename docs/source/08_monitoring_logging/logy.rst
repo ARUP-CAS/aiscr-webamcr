@@ -973,12 +973,19 @@ Elasticsearch celou událost odmítne a Logstash ji zahodí. Proto platí:
 - Do polí typu ``Long``, ``Float`` a ``Boolean`` patří jen číslo, resp. ``True``/``False`` nebo ``None``,
   nikdy identifikátor, řetězec ``"None"`` ani objekt modelu (např. ``pk=user.pk``, ne ``pk=user``).
   Identifikátor záznamu patří do ``ident_cely``.
-- Pole ``path``, ``type``, ``level``, ``host``, ``logger_name`` a ``message`` plní ``python-logstash`` a pole
-  ``url`` a ``user_id`` filtr ``core.logging_filters.UserLogFilter``. Klíč stejného jména v ``extra``
-  hodnotu přepíše, nebo se sám ztratí. Cestu k souboru logujte do ``file``, cílovou URL do ``request_url``.
-- Nový klíč mimo seznam nevytvářejte, pokud jde použít existující pole (``name``, ``info``, ``count``,
-  ``value``, ``file``, ``error`` …). Klíče mimo šablonu se uloží jen do ``_source`` a nelze podle nich
-  vyhledávat.
+- Nepoužívejte jména ze :ref:`seznamu vyhrazených jmen <seznam-vyhrazenych-jmen>`. Mají tři různé důsledky:
+
+  - atributy Pythonového ``LogRecord`` (např. ``name``, ``message``, ``lineno``, ``process``, ``module``,
+    ``filename``, ``levelname``, ``args``) – ``logging`` při takovém klíči v ``extra`` vyhodí ``KeyError``
+    a volání loggeru spadne; v middlewaru nebo v rámci úlohy tím shodí celý požadavek či běh,
+  - pole, která nastavuje ``python-logstash`` (``path``, ``type``, ``host``, ``level``, ``logger_name``,
+    ``tags``) – klíč z ``extra`` hodnotu formatteru **přepíše** (např. ``level`` přepíše úroveň logu),
+  - pole ``url`` a ``user_id``, která nastavuje filtr ``core.logging_filters.UserLogFilter`` – hodnota
+    z ``extra`` se **ztratí**.
+
+  Cestu k souboru logujte do ``file``, cílovou URL do ``request_url``.
+- Nový klíč mimo seznam nevytvářejte, pokud jde použít existující pole (``info``, ``count``, ``value``,
+  ``file``, ``error`` …). Klíče mimo šablonu se uloží jen do ``_source`` a nelze podle nich vyhledávat.
 
 +--------------------+---------+
 | Jméno   proměnné   | typ     |
@@ -1189,6 +1196,8 @@ Elasticsearch celou událost odmítne a Logstash ji zahodí. Proto platí:
 +--------------------+---------+
 | zaznam             | Text    |
 +--------------------+---------+
+
+.. _seznam-vyhrazenych-jmen:
 
 Seznam vyhrazených jmen
 ~~~~~~~~~~~~~~~~~~~~~~~

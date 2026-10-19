@@ -2728,7 +2728,7 @@ def run_data_import(job_id, user_id, lock_token):
                         "cron.tasks.run_data_import.fedora.error",
                         extra={
                             "job_id": job_id,
-                            "list": affected_record_ids,
+                            "list": sorted(affected_record_ids, key=str),
                             "error": err,
                             "traceback": fedora_error_stack,
                         },

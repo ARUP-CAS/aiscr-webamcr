@@ -14,6 +14,7 @@ from core.management.commands.utils.anonymizace_geometrie import (
     splnuje_pravidla_databaze,
     spocitej_posun,
 )
+from core.utils import hodnota_pro_log
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.management.base import BaseCommand, CommandError
@@ -254,7 +255,7 @@ class Command(BaseCommand):
 
         self._invaliduj_cache(options)
         self._vypis_shrnuti(options)
-        logger.debug("core.management.commands.anonymizace_dat.end", extra={"info": str(self.statistika)})
+        logger.debug("core.management.commands.anonymizace_dat.end", extra={"info": hodnota_pro_log(self.statistika)})
 
     def _overr_pojistky(self, options):
         """
@@ -435,7 +436,7 @@ class Command(BaseCommand):
             self._vypis_identy(duvod)
         logger.info(
             "core.management.commands.anonymizace_dat.geometrie.duvody",
-            extra={"info": str(self.duvody_preskoceni), "list": str(self.identy_preskocenych)},
+            extra={"info": hodnota_pro_log(self.duvody_preskoceni), "list": hodnota_pro_log(self.identy_preskocenych)},
         )
 
     def _vypis_identy(self, duvod):

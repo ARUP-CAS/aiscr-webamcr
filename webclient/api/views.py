@@ -2664,11 +2664,14 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
             ]
             # Schema validation details and user ID are logged intentionally to
             # support import troubleshooting and incident investigation. These
-            # are operational diagnostics, not secrets.
+            # are operational diagnostics, not secrets. The "errors" key is intentionally
+            # not mapped in amcr_template: lxml messages quote values from the uploaded XML
+            # (including find coordinates), so they stay in _source only and are not
+            # full-text searchable.
             # codeql[py/clear-text-logging-sensitive-data]
             logger.warning(
                 "api.views.SamostatnyNalezXmlImportView.post.schema_invalid",
-                extra={"error": hodnota_pro_log([error.to_dict() for error in errors]), "user": request.user.pk},
+                extra={"errors": hodnota_pro_log([error.to_dict() for error in errors]), "user": request.user.pk},
             )
             return self._fail(
                 log_entry,

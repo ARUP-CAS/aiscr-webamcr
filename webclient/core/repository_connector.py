@@ -1952,7 +1952,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         )
         logger.debug(
             "core_repository_connector._save_file_child.end",
-            extra={"uuid": uuid, "path": path, "file": file_name, "transaction": self.transaction_uid},
+            extra={"uuid": uuid, "value": path, "file": file_name, "transaction": self.transaction_uid},
         )
         return RepositoryBinaryFile(content_url, file, file_name)
 
@@ -1984,7 +1984,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         self._update_creator(FedoraRequestType.DISTRIBUTION_CONTENT_UPDATE_RDF_DATA, uuid, ident_cely, path=path)
         logger.debug(
             "core_repository_connector._update_file_child.end",
-            extra={"uuid": uuid, "path": path, "file": file_name, "transaction": self.transaction_uid},
+            extra={"uuid": uuid, "value": path, "file": file_name, "transaction": self.transaction_uid},
         )
         return RepositoryBinaryFile(url, file, file_name)
 
