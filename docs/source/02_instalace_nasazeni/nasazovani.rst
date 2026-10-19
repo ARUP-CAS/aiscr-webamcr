@@ -252,7 +252,7 @@ nezávislý signál z výkonné roviny, který nevyžaduje spuštění Djanga p�
   nezamaskoval zaseknutý.
 * Beat každé 2 minuty pošle prázdnou úlohu `cron.tasks.celery_worker_liveness_ping` (`CELERY_BEAT_SCHEDULE`
   v nastavení; `DatabaseScheduler` ji při startu zapíše do periodických úloh), aby se klíč obnovoval i u nečinného
-  workeru. Výsledek úlohy se neukládá a platnost pingu (`expires`) je 120 s, aby se u zaseknutého workeru
+  workeru. Výsledek úlohy se neukládá a platnost pingu (`expire_seconds` v `options`; klíč `expires` by `DatabaseScheduler` zahodil) je 120 s, aby se u zaseknutého workeru
   nehromadil; prošlý ping worker zahodí bez obnovení klíče.
 * Healthcheck klíč přečte přes `redis-cli`. Je-li starší než 10 minut, zjistí délku fronty (`LLEN celery`) a přes
   jedno volání Pythonu počet aktivních a rezervovaných úloh a velikost poolu. Kontejner je `unhealthy` jen tehdy, když

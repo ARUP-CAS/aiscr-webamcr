@@ -9,6 +9,7 @@ from cron.tasks import (
 )
 from django.conf import settings
 from django.test import SimpleTestCase
+from django_celery_beat.schedulers import ModelEntry
 
 import redis
 
@@ -65,12 +66,16 @@ class CeleryWorkerLivenessTest(SimpleTestCase):
         )
 
     def test_beat_schedule_points_to_ping_task(self):
-        """Položka v ``CELERY_BEAT_SCHEDULE`` odkazuje na registrovanou ping úlohu a neukládá výsledek."""
+        """
+        Položka v ``CELERY_BEAT_SCHEDULE`` odkazuje na registrovanou ping úlohu, neukládá výsledek
+        a platnost pingu přežije převod na ``PeriodicTask`` v ``DatabaseScheduler``.
+        """
         entry = settings.CELERY_BEAT_SCHEDULE["celery_worker_liveness_ping"]
 
         self.assertEqual(entry["task"], celery_worker_liveness_ping.name)
         self.assertTrue(celery_worker_liveness_ping.ignore_result)
-        self.assertEqual(entry["options"]["expires"], entry["schedule"])
+        # Stejný převod options, jaký dělá DatabaseScheduler při zápisu položky do DB.
+        self.assertEqual(ModelEntry._unpack_options(**entry["options"])["expire_seconds"], entry["schedule"])
 
 
 def _task_on(hostname):

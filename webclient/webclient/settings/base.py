@@ -679,7 +679,8 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": 120.0,
         # Ping se nesmí hromadit ve frontě zaseknutého workeru; prošlý ping worker jen zahodí
         # (neobnoví klíč), ve frontě ho ale healthcheck dál vidí jako čekající práci.
-        "options": {"expires": 120},
+        # DatabaseScheduler (ModelEntry._unpack_options) bere jen klíč expire_seconds, expires zahodí.
+        "options": {"expire_seconds": 120},
     },
 }
 
