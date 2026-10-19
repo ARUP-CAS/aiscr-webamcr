@@ -19,6 +19,7 @@ from unittest import mock
 
 from core.utils import reprezentativni_bod_sql
 from cron import tasks
+from django.apps import apps as django_apps
 from django.contrib.gis.geos import MultiPolygon, Point, Polygon
 from django.db import connection, transaction
 from django.test import SimpleTestCase, TestCase, override_settings
@@ -302,7 +303,7 @@ class UplnostZdrojeTests(TestCase):
             syncer._zkontroluj_uplnost_zdroje(self._stav(chybi_katastru=syncer._MAX_UBYTEK_KATASTRU + 1), self.run)
 
         self.run.refresh_from_db()
-        self.assertIn("Neúplný zdroj", self.run.note or "", "důvod zastavení musí zůstat v auditu")
+        self.assertIn("Neúplný zdroj", self.run.warnings or "", "důvod zastavení musí zůstat v auditu")
 
     def test_chybejici_okresy_zastavi_beh(self):
         """Zánik okresu je změna „jednou za generaci“, víc než jeden = vadný vstup."""
@@ -1091,6 +1092,89 @@ class RozpoznaniOpakovaniTests(TestCase):
 
 
 @_BEZ_CACHEOPS
+class VarovaniBehuTests(TestCase):
+    """
+    Testy oddělení varování od informativních poznámek běhu.
+
+    Sloupec ⚠ ve výpisu běhů dřív hlídal ``note``, a tak se objevoval i u
+    úspěšného dne bez změn s poznámkou ``no_changes (404)``. Varování proto
+    mají vlastní pole ``warnings`` a ⚠ reaguje jen na ně.
+    """
+
+    def _run(self, **pole):
+        """
+        Založí audit záznam běhu.
+
+        :param pole: Hodnoty polí ``note``/``warnings``.
+        :return: Uložená instance :class:`RuianSyncRun`.
+        """
+        return RuianSyncRun.objects.create(
+            mode=RuianSyncRun.MODE_DELTA,
+            source="file_vfr",
+            triggered_by=RuianSyncRun.TRIGGER_CRON,
+            data_valid_to=datetime.date(2026, 10, 6),
+            variant="ZKSH",
+            status=RuianSyncRun.STATUS_SUCCESS,
+            **pole,
+        )
+
+    def _sloupec(self, run):
+        """
+        Vrátí obsah sloupce ⚠ pro daný běh.
+
+        :param run: Instance :class:`RuianSyncRun`.
+        :return: HTML buňky sloupce.
+        """
+        from django.contrib.admin.sites import site
+        from heslar.admin import RuianSyncRunAdmin
+
+        return RuianSyncRunAdmin(RuianSyncRun, site).warnings_flag(run)
+
+    def test_informativni_poznamka_varovani_nevyvola(self):
+        """Úspěšný den bez změn (``no_changes (404)``) nemá ⚠."""
+        self.assertEqual(self._sloupec(self._run(note="no_changes (404)")), "")
+
+    def test_varovani_ukaze_pocet_a_text(self):
+        """Sloupec ukáže počet varování a jejich text v tooltipu."""
+        bunka = self._sloupec(self._run(warnings="Díra v pokrytí\nKatastr 1 nelze smazat"))
+
+        self.assertIn("⚠ 2", bunka)
+        self.assertIn('title="Díra v pokrytí', bunka)
+
+    def test_zapis_varovani_nemeni_poznamku(self):
+        """Varování ze synceru jde do ``warnings``, informativní ``note`` zůstane."""
+        run = self._run(note="uzsz=UZSZ.xml.zip")
+
+        syncer._append_run_warning(run, "První")
+        syncer._append_run_warning(run, "Druhé")
+        run.refresh_from_db()
+
+        self.assertEqual(run.warnings, "První\nDruhé")
+        self.assertEqual(run.note, "uzsz=UZSZ.xml.zip")
+
+    def test_migrace_presune_jen_varovani(self):
+        """
+        Datová migrace přesune do ``warnings`` jen varování.
+
+        Informativní řádky (404 poznámky, soubor ÚZSZ) zůstanou v ``note``.
+        """
+        import importlib
+
+        migrace = importlib.import_module("heslar.migrations.0016_ruiansyncrun_warnings")
+        jen_info = self._run(note="no_changes (404)")
+        smisene = self._run(note="uzsz=UZSZ.xml.zip\nTopologická kontrola: 1 děr v pokrytí")
+
+        migrace.presun_varovani(django_apps, None)
+        jen_info.refresh_from_db()
+        smisene.refresh_from_db()
+
+        self.assertEqual((jen_info.note, jen_info.warnings), ("no_changes (404)", ""))
+        self.assertEqual(
+            (smisene.note, smisene.warnings), ("uzsz=UZSZ.xml.zip", "Topologická kontrola: 1 děr v pokrytí")
+        )
+
+
+@_BEZ_CACHEOPS
 class UnieKatastruTests(TestCase):
     """
     Testy kontroly pokrytí sjednocením (:func:`syncer._zkontroluj_unii_pokryti`).
@@ -1164,7 +1248,7 @@ class UnieKatastruTests(TestCase):
         self._mrizka()
 
         self.assertFalse(syncer._zkontroluj_unii_pokryti(self.run))
-        self.assertEqual(self.run.note, "")
+        self.assertEqual(self.run.warnings, "")
 
     def test_dira_se_odhali(self):
         """
@@ -1176,7 +1260,7 @@ class UnieKatastruTests(TestCase):
         self._mrizka(vynechat={(1, 1)})
 
         self.assertTrue(syncer._zkontroluj_unii_pokryti(self.run))
-        self.assertIn("1 děr v pokrytí", self.run.note)
+        self.assertIn("1 děr v pokrytí", self.run.warnings)
 
     def test_prekryv_mezi_okresy_se_odhali(self):
         """
@@ -1207,7 +1291,7 @@ class UnieKatastruTests(TestCase):
         with mock.patch.object(syncer, "_SQL_UNIE_POKRYTI", "SELECT 1 / 0"):
             self.assertTrue(syncer._zkontroluj_unii_pokryti(self.run))
 
-        self.assertIn("Sjednocení pokrytí selhalo", self.run.note)
+        self.assertIn("Sjednocení pokrytí selhalo", self.run.warnings)
         self.assertEqual(RuianKatastr.objects.filter(okres=self.okres_pravy).count(), 6)
 
 
@@ -1491,7 +1575,7 @@ class UbytekPokrytiTests(TestCase):
             syncer._ohlas_ubytek_pokryti(run, self.UBYTEK, podezrele=podezrele)
         run.refresh_from_db()
         uroven, _, hlaska = zachyt.output[0].partition(":")
-        return uroven, hlaska, run.note or ""
+        return uroven, hlaska, run.warnings or ""
 
     def test_full_bez_anomalie_je_jen_varovani(self):
         """Plošná výměna hranic při plném synchu není chyba."""
@@ -1590,7 +1674,7 @@ class SouladUrovniTests(TestCase):
             syncer._zkontroluj_soulad_urovni(self.run)
 
         self.run.refresh_from_db()
-        self.assertEqual(self.run.note or "", "")
+        self.assertEqual(self.run.warnings or "", "")
 
     def test_rozejity_okres_se_ohlasi(self):
         """
@@ -1606,7 +1690,7 @@ class SouladUrovniTests(TestCase):
 
         self.assertTrue(any("nesoulad" in radek for radek in zachyt.output), zachyt.output)
         self.run.refresh_from_db()
-        self.assertIn("okresů", self.run.note or "")
+        self.assertIn("okresů", self.run.warnings or "")
 
     def test_hlasi_se_kazda_rozejita_uroven(self):
         """Rozejdou-li se obě nadřazené úrovně, musí být v poznámce obě."""
@@ -1616,8 +1700,8 @@ class SouladUrovniTests(TestCase):
             syncer._zkontroluj_soulad_urovni(self.run)
 
         self.run.refresh_from_db()
-        self.assertIn("okresů", self.run.note or "")
-        self.assertIn("krajů", self.run.note or "")
+        self.assertIn("okresů", self.run.warnings or "")
+        self.assertIn("krajů", self.run.warnings or "")
 
     def test_chybejici_geometrie_je_chyba(self):
         """
@@ -1633,7 +1717,7 @@ class SouladUrovniTests(TestCase):
 
         self.assertTrue(any("chybi_geometrie" in radek for radek in zachyt.output), zachyt.output)
         self.run.refresh_from_db()
-        self.assertIn("nemá vyplněnou hranici", self.run.note or "")
+        self.assertIn("nemá vyplněnou hranici", self.run.warnings or "")
 
     def test_pri_chybejici_geometrii_se_plochy_neporovnavaji(self):
         """
