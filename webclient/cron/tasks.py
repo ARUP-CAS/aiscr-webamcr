@@ -3,6 +3,7 @@ import io
 import json
 import logging
 import os
+import time
 import traceback
 import zipfile
 from collections import defaultdict
@@ -13,6 +14,7 @@ import requests
 from arch_z.models import Akce
 from cacheops import invalidate_model
 from celery import shared_task
+from celery.signals import task_postrun
 from core.connectors import RedisConnector
 from core.constants import (
     IMPORT,
@@ -84,6 +86,8 @@ from projekt.models import Projekt
 from services.mailer import Mailer
 from uzivatel.models import Osoba, User, UserNotificationType
 from xml_generator.models import ModelWithMetadata
+
+import redis
 
 logger = logging.getLogger(__name__)
 
@@ -789,6 +793,50 @@ def call_digiarchiv_update_task():
     url = settings.DIGIARCHIV_UPDATE
     requests.get(url, timeout=10)
     logger.debug("cron.tasks.call_digiarchiv_update_task.end")
+
+
+# Prefix klíče s unix časem poslední úlohy dokončené workerem; celý klíč je
+# ``<prefix>:<hostname workeru>`` (např. ``celery_worker_last_task_done:worker1@amcr``).
+# Čte ho healthcheck scripts/run-healthcheck_celery.sh (redis-cli GET), prefix musí zůstat shodný.
+CELERY_WORKER_LAST_TASK_DONE_KEY_PREFIX = "celery_worker_last_task_done"
+
+
+@task_postrun.connect
+def record_celery_worker_task_done(task=None, **kwargs):
+    """
+    Po každé dokončené úloze (úspěšné i neúspěšné) zapíše do Redisu aktuální unix čas
+    pod klíč ``CELERY_WORKER_LAST_TASK_DONE_KEY_PREFIX:<hostname workeru>``.
+
+    Handler běží v potomkovi prefork poolu, který úlohu vykonal, takže klíč dokládá, že worker
+    úlohy skutečně zpracovává, nejen že hlavní proces odpovídá na řídící příkazy. Klíč je
+    oddělený pro každý worker, aby zdravý worker nezamaskoval zaseknutý. Signál se posílá ještě
+    před odebráním požadavku ze zásobníku, takže ``task.request.hostname`` je k dispozici. Úlohy
+    spuštěné mimo worker (bez hostname) se nezapisují. Chyba Redisu se jen zaloguje, aby
+    neovlivnila výsledek úlohy.
+
+    :param task: Instance dokončené úlohy (argument ``task`` signálu ``task_postrun``).
+    :param kwargs: Ostatní argumenty signálu ``task_postrun`` (nepoužívají se).
+    """
+    hostname = getattr(getattr(task, "request", None), "hostname", None)
+    if not hostname:
+        return
+    try:
+        RedisConnector.get_connection().set(f"{CELERY_WORKER_LAST_TASK_DONE_KEY_PREFIX}:{hostname}", int(time.time()))
+    except redis.RedisError as err:
+        logger.warning("cron.tasks.record_celery_worker_task_done.redis_error", extra={"error": err})
+
+
+@shared_task(ignore_result=True)
+def celery_worker_liveness_ping():
+    """
+    Prázdná úloha, kterou beat posílá každé 2 minuty (``CELERY_BEAT_SCHEDULE``).
+
+    Zajišťuje, že i nečinný worker pravidelně dokončí úlohu, a tím obnoví klíč
+    ``CELERY_WORKER_LAST_TASK_DONE_KEY_PREFIX`` (handler ``record_celery_worker_task_done``). Počet jejích
+    úspěšných běhů exportuje celery_exporter jako ``celery_task_succeeded_total``, nad kterým lze
+    postavit alert v monitoringu. Výsledek se neukládá, aby nepřibývaly záznamy
+    v ``django_celery_results``.
+    """
 
 
 def _normalize_import_file_name(name: str) -> str:

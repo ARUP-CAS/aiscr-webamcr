@@ -235,6 +235,45 @@ Každý kontejner používá jinou sadu charakteristik k odvození příslušné
 
 * Kontejner `web` (aplikace WebAMCR) má nejkomplexnější metriku implementovanou v `run-healthcheck.sh`, která se skládá z dostupnosti databáze (skript `db_connection_from_docker-web.py`), dostupnosti Fedory (HTTP status code 200 z REST API repozitáře) a výsledku `django checks` reportovaného jako HTTP odpověď ve formátu JSON (musí být HTTP status code 200). V rámci této odpovědi zasílané na http-socketu 8001 se agreguje výsledek tzv. interních django checks (`manage.py checks`) a také (`manage.py checks --database default`). Pospojováním jednotlivých výsledků dílčích metrik pomocí operace AND pak vznikne souhrnný status code `0` (healthy) nebo `1` (not healthy). Vytížení paměti se záměrně nekontroluje: kontejner nemá memory limit, `free` by ukazoval paměť celého hostitele a restart webu by ji neuvolnil, jen by ukončil rozběhnuté příkazy spuštěné přes `docker exec`. Zátěž hostitele hlídá monitoring.
 * Kontejner `proxy`, kontrola návratu HTTP status code 200 z endpointu `/nginx-health` na http socketu 8080, implementováno ve skriptu `run-healthcheck_proxy.sh`. Endpoint obsluhuje přímo nginx (`proxy/default.conf`) bez průchodu do Djanga, takže proxy nepadá při zapnuté odstávce systému (Django vrací 503) ani při výpadku kontejneru `web`.
-* Kontejner `celery_worker`, metrika je odpověď workeru `worker1@amcr` na příkaz `celery inspect scheduled` (bez odpovědi nenulový návratový kód) a zároveň žádná naplánovaná úloha nesmí být déle než 120 s po svém ETA, implementováno ve skriptu `run-healthcheck_celery.sh`.
+* Kontejner `celery_worker`, metrika je odpověď workeru `worker1@amcr` na příkaz `celery inspect scheduled` (bez odpovědi nenulový návratový kód), žádná naplánovaná úloha nesmí být déle než 120 s po svém ETA a worker musí skutečně zpracovávat úlohy (viz `Kontrola zpracování úloh workerem`_), implementováno ve skriptu `run-healthcheck_celery.sh`.
 * Kontejner `celery_beat`, kontroluje se, že běží proces `celery beat` a že jsou dostupné Redis (`redis-cli PING`) a databáze (`pg_isready`), implementováno ve skriptu `run-healthcheck_celery_beat.sh`. Stav workeru se zde nekontroluje.
 * Kontejner `redis` metrika je odevzva na příkaz redis ping, očekáván nulový návratový kód, implementováno ve skriptu `run-healthcheck_redis.sh`.
+
+Kontrola zpracování úloh workerem
+---------------------------------
+
+Odpověď na `celery inspect` dokládá jen to, že žije hlavní proces workeru (řídící rovina). Pokud uvíznou potomci
+prefork poolu, hlavní proces dál odpovídá a worker by se hlásil jako zdravý, i když úlohy nezpracovává. Proto existuje
+nezávislý signál z výkonné roviny, který nevyžaduje spuštění Djanga při každé kontrole:
+
+* Handler signálu `task_postrun` (`cron.tasks.record_celery_worker_task_done`) po každé dokončené úloze zapíše do
+  Redisu unix čas pod klíč `celery_worker_last_task_done:<hostname workeru>` (např.
+  `celery_worker_last_task_done:worker1@amcr`). Klíč je oddělený pro každý worker, aby při škálování zdravý worker
+  nezamaskoval zaseknutý.
+* Beat každé 2 minuty pošle prázdnou úlohu `cron.tasks.celery_worker_liveness_ping` (`CELERY_BEAT_SCHEDULE`
+  v nastavení; `DatabaseScheduler` ji při startu zapíše do periodických úloh), aby se klíč obnovoval i u nečinného
+  workeru. Výsledek úlohy se neukládá a platnost pingu (`expire_seconds` v `options`; klíč `expires` by `DatabaseScheduler` zahodil) je 120 s, aby se u zaseknutého workeru
+  nehromadil; prošlý ping worker zahodí bez obnovení klíče.
+* Healthcheck klíč přečte přes `redis-cli`. Je-li starší než 10 minut, zjistí délku fronty (`LLEN celery`) a přes
+  jedno volání Pythonu počet aktivních a rezervovaných úloh a velikost poolu. Kontejner je `unhealthy` jen tehdy, když
+  na worker čeká práce (fronta nebo rezervované úlohy) a zároveň má volné potomky.
+
+Kompromisy:
+
+* Zaneprázdněný worker (všichni potomci vykonávají úlohu, např. dlouhý import) se hlásí jako zdravý, i když klíč
+  zestárne. Uvíznutí všech potomků současně je tak od dlouhých úloh nerozlišitelné; rozlišit by šlo až zavedením
+  časových limitů úloh (`time_limit`), které zatím nejsou nastavené.
+* Prázdná fronta znamená zdravý stav, takže výpadek beatu (ping se neposílá) worker nerestartuje.
+* Docker Swarm nezdravý kontejner restartuje a tím přeruší rozpracované úlohy; práh 10 minut je proto
+  s rezervou proti periodě pingu.
+
+Stejný signál je dostupný i v monitoringu. `celery_exporter` (stahovaný Prometheem, job `celery`) počítá úspěšně
+dokončené pingy v metrice `celery_task_succeeded_total`. Alert v Grafaně nebo v Prometheu (Alertmanager) lze postavit
+nad výrazem::
+
+    (sum(increase(celery_task_succeeded_total{name="cron.tasks.celery_worker_liveness_ping"}[15m])) or vector(0)) == 0
+
+Za 15 minut se běžně dokončí asi 7 pingů. Výraz se spustí, když se nedokončí žádný, tedy i při výpadku beatu, exporteru
+nebo když ping čeká ve frontě déle než 15 minut za jinými úlohami. Část `or vector(0)` zajistí, že alert vystřelí
+i ve chvíli, kdy metrika úplně chybí (např. po restartu exporteru). Konfigurace Promethea a Grafany je mimo repozitář
+(secrets), alert je proto potřeba nastavit tam.
