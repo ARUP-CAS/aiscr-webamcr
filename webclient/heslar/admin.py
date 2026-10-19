@@ -2,6 +2,7 @@ import logging
 
 from django.contrib import admin
 from django.http import StreamingHttpResponse
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_object_actions import DjangoObjectActions, action
 from heslar.forms import HeslarHierarchieForm, HeslarOdkazForm, OrganizaceAdminForm, OsobaAdminForm
@@ -540,7 +541,7 @@ class RuianSyncRunAdmin(admin.ModelAdmin):
         "triggered_by",
         "data_valid_to",
         "status",
-        "note_flag",
+        "warnings_flag",
         "kraj_upserts",
         "kraj_deletes",
         "okres_upserts",
@@ -554,18 +555,25 @@ class RuianSyncRunAdmin(admin.ModelAdmin):
         "finished_at",
     )
     list_filter = ("status", "mode", "triggered_by", "variant")
-    search_fields = ("source", "source_path", "note")
+    search_fields = ("source", "source_path", "note", "warnings")
 
-    @admin.display(description="⚠")
-    def note_flag(self, obj):
+    @admin.display(description=_("heslar.admin.RuianSyncRunAdmin.warnings_flag"))
+    def warnings_flag(self, obj):
         """
-        Zobrazí ⚠ pokud run obsahuje poznámku (varování nebo chybu reassignu).
+        Zobrazí ⚠ s počtem varování, která má operátor prověřit.
+
+        Reaguje jen na pole ``warnings`` – informativní ``note`` (např.
+        ``no_changes (404)`` u dne bez změn) ⚠ nevyvolá. Dřív sloupec hlídal
+        ``note``, takže se ⚠ objevovalo i u úspěšných běhů bez jakéhokoli
+        problému. Text varování je v tooltipu, celý pak v detailu běhu.
 
         :param obj: Instance :class:`~heslar.models.RuianSyncRun`.
-
-            :return: Řetězec ``"⚠"`` nebo prázdný řetězec.
+        :return: ``⚠ <počet>`` s tooltipem, nebo prázdný řetězec.
         """
-        return "⚠" if obj.note else ""
+        radky = [r for r in (obj.warnings or "").splitlines() if r.strip()]
+        if not radky:
+            return ""
+        return format_html('<span title="{}">⚠ {}</span>', "\n".join(radky), len(radky))
 
     date_hierarchy = "started_at"
     readonly_fields = (
@@ -590,6 +598,7 @@ class RuianSyncRunAdmin(admin.ModelAdmin):
         "affected_neident_akce",
         "status",
         "error",
+        "warnings",
         "note",
     )
 
