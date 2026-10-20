@@ -1045,7 +1045,7 @@ class NewFileUploadView(BasePostUploadView):
                 "core.views.post_upload.check_mime_for_url.rename",
                 extra={"mime_type": mimetype, "old": old_name, "new": new_name},
             )
-        if mimetype in ["image/png", "image/jpeg", "image/tiff"] and isinstance(objekt, SamostatnyNalez):
+        if mimetype in Soubor.PAS_ACCEPTED_MIMES and isinstance(objekt, SamostatnyNalez):
             soubor_data = Soubor.remove_gps_data(soubor_data)
         try:
             rep_bin_file = conn.save_binary_file(new_name, mimetype, soubor_data)
@@ -1272,10 +1272,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
                 "core.views.post_upload.check_mime_for_url.rename",
                 extra={"mime_type": mimetype, "old": original_name, "new": new_name},
             )
-        if (
-            mimetype in ["image/png", "image/jpeg", "image/tiff"]
-            and soubor_instance.vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE
-        ):
+        if mimetype in Soubor.PAS_ACCEPTED_MIMES and soubor_instance.vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
             soubor_data = Soubor.remove_gps_data(soubor_data)
         rep_bin_file = None
         if soubor_instance.repository_uuid is not None:

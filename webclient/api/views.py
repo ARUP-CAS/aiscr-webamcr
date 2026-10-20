@@ -3437,7 +3437,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             )
         new_name = get_mime_safe_soubor_name(new_name, new_name, mime_extensions)
 
-        if mimetype in ["image/png", "image/jpeg", "image/tiff"]:
+        if mimetype in Soubor.PAS_ACCEPTED_MIMES:
             binary_data = Soubor.remove_gps_data(binary_data)
 
         fedora_transaction = FedoraTransaction(transaction_user=request.user)
