@@ -3171,7 +3171,7 @@ def run_data_import(job_id, user_id, lock_token):
                             "file": filename,
                             **related_metadata_log_context,
                             "mime_type": err.mime_type,
-                            "ident_cely_old": err.navazany_ident_cely,
+                            "info": err.navazany_ident_cely,
                         },
                     )
                     if record_id is not None:

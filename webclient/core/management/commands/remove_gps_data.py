@@ -144,7 +144,7 @@ class Command(BaseCommand):
                         updated_count += 1
                         logger.info(
                             "core.management.commands.remove_gps_data.file_updated",
-                            extra={"ident_cely": row["record"], "pk": record.pk},
+                            extra={"file": row["record"], "ident_cely": related_record.ident_cely, "pk": record.pk},
                         )
                     else:
                         skipped_count += 1
@@ -152,7 +152,11 @@ class Command(BaseCommand):
                     skipped_count += 1
                     logger.warning(
                         "core.management.commands.remove_gps_data.binary_file_not_found",
-                        extra={"ident_cely": row["record"], "uuid": record.repository_uuid},
+                        extra={
+                            "file": row["record"],
+                            "ident_cely": related_record.ident_cely,
+                            "uuid": record.repository_uuid,
+                        },
                     )
 
                 fedora_transaction.mark_transaction_as_closed()
@@ -163,14 +167,14 @@ class Command(BaseCommand):
                 error_msg = _("core.management.commands.remove_gps_data.file_not_found") + " " + str(row["record"])
                 logger.warning(
                     "core.management.commands.remove_gps_data.file_not_found",
-                    extra={"ident_cely": row["record"]},
+                    extra={"file": row["record"]},
                 )
                 self.stdout.write(self.style.WARNING("\n" + error_msg))
             except Exception as err:
                 error_count += 1
                 logger.error(
                     "core.management.commands.remove_gps_data.error",
-                    extra={"ident_cely": row["record"], "error": str(err)},
+                    extra={"file": row["record"], "error": str(err)},
                 )
                 self.stdout.write(
                     self.style.ERROR(

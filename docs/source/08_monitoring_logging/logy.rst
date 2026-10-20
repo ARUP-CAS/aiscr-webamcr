@@ -978,8 +978,9 @@ Elasticsearch celou událost odmítne a Logstash ji zahodí. Proto platí:
   - atributy Pythonového ``LogRecord`` (např. ``name``, ``message``, ``lineno``, ``process``, ``module``,
     ``filename``, ``levelname``, ``args``) – ``logging`` při takovém klíči v ``extra`` vyhodí ``KeyError``
     a volání loggeru spadne; v middlewaru nebo v rámci úlohy tím shodí celý požadavek či běh,
-  - pole, která nastavuje ``python-logstash`` (``path``, ``type``, ``host``, ``level``, ``logger_name``,
-    ``tags``) – klíč z ``extra`` hodnotu formatteru **přepíše** (např. ``level`` přepíše úroveň logu),
+  - pole, která nastavuje ``python-logstash`` (``@timestamp``, ``@version``, ``path``, ``type``, ``host``,
+    ``level``, ``logger_name``, ``tags``) – klíč z ``extra`` hodnotu formatteru **přepíše** (např. ``level``
+    přepíše úroveň logu, ``@timestamp`` čas události),
   - pole ``url`` a ``user_id``, která nastavuje filtr ``core.logging_filters.UserLogFilter`` – hodnota
     z ``extra`` se **ztratí**.
 

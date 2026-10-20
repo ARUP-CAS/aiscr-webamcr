@@ -310,7 +310,7 @@ def zapsat(request, arch_z_ident_cely):
                 if blocking_typ is not None:
                     logger.debug(
                         "dj.views.detail.zapsat.blocking_typ_exists",
-                        extra={"ident_cely_old": arch_z_ident_cely, "blocking_typ": blocking_typ, "novy_typ": typ.id},
+                        extra={"ident_cely": arch_z_ident_cely, "blocking_typ": blocking_typ, "novy_typ": typ.id},
                     )
                     messages.add_message(request, messages.ERROR, _unique_typy.get(blocking_typ, _unique_typy[typ.id]))
                     return az.get_redirect()
@@ -320,7 +320,7 @@ def zapsat(request, arch_z_ident_cely):
                 ):
                     logger.debug(
                         "dj.views.detail.zapsat.unique_typ_already_exists",
-                        extra={"ident_cely_old": arch_z_ident_cely, "novy_typ": typ.id},
+                        extra={"ident_cely": arch_z_ident_cely, "novy_typ": typ.id},
                     )
                     messages.add_message(request, messages.ERROR, _unique_typy[typ.id])
                     return az.get_redirect()

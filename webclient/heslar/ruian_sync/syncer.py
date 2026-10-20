@@ -1072,7 +1072,7 @@ def _dohledej_okres_prostorove(dto: RuianKatastrDTO) -> Optional[RuianOkres]:
             "kod": dto.kod,
             "okres_kod": okres.kod,
             "nazev": okres.nazev,
-            "source_url": zdroj,
+            "info": zdroj,
         },
     )
     return okres
