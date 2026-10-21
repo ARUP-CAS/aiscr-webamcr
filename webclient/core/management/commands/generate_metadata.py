@@ -135,7 +135,7 @@ class Command(BaseCommand):
                             "core.management.commands.generate_metadata.rollback_failed",
                             extra={
                                 "pk": getattr(obj, "pk", None),
-                                "transaction_uid": getattr(fedora_transaction, "uid", None),
+                                "transaction": getattr(fedora_transaction, "uid", None),
                             },
                             exc_info=True,
                         )
@@ -143,7 +143,7 @@ class Command(BaseCommand):
                 if attempt > max_retries:
                     logger.error(
                         "core.management.commands.generate_metadata.retries_exhausted",
-                        extra={"pk": getattr(obj, "pk", None), "attempts": attempt, "error": str(exc)},
+                        extra={"pk": getattr(obj, "pk", None), "number": attempt, "error": str(exc)},
                     )
                     raise
                 backoff = min(30.0, 0.5 * (2 ** (attempt - 1))) + random.uniform(0, 0.5)
@@ -151,7 +151,7 @@ class Command(BaseCommand):
                     "core.management.commands.generate_metadata.retry",
                     extra={
                         "pk": getattr(obj, "pk", None),
-                        "attempt": attempt,
+                        "number": attempt,
                         "backoff": backoff,
                         "error": str(exc),
                     },

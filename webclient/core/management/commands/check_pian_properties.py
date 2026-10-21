@@ -172,7 +172,7 @@ class Command(BaseCommand):
 
         logger.debug(
             "core.management.commands.check_pian_properties.end",
-            extra={"total": pocet_pians, "changed": pocet_zmenenych},
+            extra={"count": pocet_pians, "changed": pocet_zmenenych},
         )
 
         self.stdout.write("=" * 50)

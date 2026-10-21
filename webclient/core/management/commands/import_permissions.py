@@ -2,6 +2,7 @@ import logging
 
 from core.exceptions import WrongCSVError
 from core.services import PermissionService
+from core.utils import hodnota_pro_log
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management.base import BaseCommand
 from django.utils.translation import gettext as _
@@ -56,7 +57,7 @@ class Command(BaseCommand):
         else:
             logger.info(
                 "core.management.commands.import_permissions.results",
-                extra={"data": sheet.to_string(), "missing": str(missing)},
+                extra={"data": sheet.to_string(), "list": hodnota_pro_log(missing)},
             )
             self.stdout.write(self.style.SUCCESS(_("core.management.commands.import_permissions.finished_success")))
         logger.debug("core.management.commands.import_permissions.end")

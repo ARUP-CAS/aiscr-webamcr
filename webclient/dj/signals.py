@@ -66,7 +66,7 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
         logger.debug(
             "dj.signals.save_dokumentacni_jednotka.update_pian",
             extra={
-                "pk": instance.initial_pian_id if instance.initial_pian_id else "None",
+                "pk": instance.initial_pian_id,
                 "pian": instance.pian.ident_cely if instance.pian else "None",
                 "transaction": fedora_transaction.uid,
             },

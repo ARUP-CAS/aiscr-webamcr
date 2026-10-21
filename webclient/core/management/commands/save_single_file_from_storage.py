@@ -77,14 +77,14 @@ class Command(BaseCommand):
 
         logger.debug(
             "core.management.commands.save_single_file_from_storage.start",
-            extra={"pk": pk, "storage_path": storage_path},
+            extra={"pk": pk, "file": storage_path},
         )
 
         save_single_file_from_storage_impl(pk, storage_path, save_thumbs, disable_antivirus)
 
         logger.debug(
             "core.management.commands.save_single_file_from_storage.end",
-            extra={"pk": pk, "storage_path": storage_path},
+            extra={"pk": pk, "file": storage_path},
         )
         self.stdout.write(
             self.style.SUCCESS(

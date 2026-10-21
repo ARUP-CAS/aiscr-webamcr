@@ -81,7 +81,7 @@ class Command(BaseCommand):
 
         logger.debug(
             "core.management.commands.generate_thumbs.start",
-            extra={"pks": pks, "range": pk_range, "csv_file": csv_file},
+            extra={"list": pks, "range": pk_range, "file": csv_file},
         )
 
         from core.models import Soubor
@@ -102,7 +102,7 @@ class Command(BaseCommand):
             except Exception as e:
                 logger.error(
                     "core.management.commands.generate_thumbs.csv_read_error",
-                    extra={"csv_file": csv_file, "error": str(e)},
+                    extra={"file": csv_file, "error": str(e)},
                 )
                 self.stdout.write(
                     self.style.ERROR(_("core.management.commands.generate_thumbs.csv_read_error") + " " + str(e))
@@ -148,7 +148,7 @@ class Command(BaseCommand):
                             success_count += 1
                             logger.info(
                                 "core.management.commands.generate_thumbs.thumbs_generated",
-                                extra={"pk": soubor.pk, "path": soubor.path},
+                                extra={"pk": soubor.pk, "file": soubor.path},
                             )
                         except Exception as thumb_error:
                             error_count += 1
@@ -188,10 +188,10 @@ class Command(BaseCommand):
         logger.debug(
             "core.management.commands.generate_thumbs.end",
             extra={
-                "total": total,
+                "count": total,
                 "success": success_count,
                 "skipped": skipped_count,
-                "errors": error_count,
+                "error": error_count,
             },
         )
 
