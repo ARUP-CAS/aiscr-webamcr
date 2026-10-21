@@ -4,7 +4,7 @@
 # i lokální vývoj. Proč -r a ne -c: viz scripts/compile_requirements.sh.
 -r requirements-test.txt
 
-pre-commit==4.6.2
+pre-commit==4.7.0
 pip-tools==7.6.2
 django-debug-toolbar==8.0.0
 django-livereload-server==0.5.1
