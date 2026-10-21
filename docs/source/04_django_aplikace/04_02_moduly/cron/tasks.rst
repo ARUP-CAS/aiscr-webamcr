@@ -182,6 +182,31 @@ Funkce
 
    Zavolá URL digiarchívu pro spuštění aktualizace dat.
 
+.. py:function:: record_celery_worker_task_done(task)
+
+   Po každé dokončené úloze (úspěšné i neúspěšné) zapíše do Redisu aktuální unix čas
+   pod klíč ``CELERY_WORKER_LAST_TASK_DONE_KEY_PREFIX:<hostname workeru>``.
+
+   Handler běží v potomkovi prefork poolu, který úlohu vykonal, takže klíč dokládá, že worker
+   úlohy skutečně zpracovává, nejen že hlavní proces odpovídá na řídící příkazy. Klíč je
+   oddělený pro každý worker, aby zdravý worker nezamaskoval zaseknutý. Signál se posílá ještě
+   před odebráním požadavku ze zásobníku, takže ``task.request.hostname`` je k dispozici. Úlohy
+   spuštěné mimo worker (bez hostname) se nezapisují. Chyba Redisu se jen zaloguje, aby
+   neovlivnila výsledek úlohy.
+
+   :param task: Instance dokončené úlohy (argument ``task`` signálu ``task_postrun``).
+   :param kwargs: Ostatní argumenty signálu ``task_postrun`` (nepoužívají se).
+
+.. py:function:: celery_worker_liveness_ping()
+
+   Prázdná úloha, kterou beat posílá každé 2 minuty (``CELERY_BEAT_SCHEDULE``).
+
+   Zajišťuje, že i nečinný worker pravidelně dokončí úlohu, a tím obnoví klíč
+   ``CELERY_WORKER_LAST_TASK_DONE_KEY_PREFIX`` (handler ``record_celery_worker_task_done``). Počet jejích
+   úspěšných běhů exportuje celery_exporter jako ``celery_task_succeeded_total``, nad kterým lze
+   postavit alert v monitoringu. Výsledek se neukládá, aby nepřibývaly záznamy
+   v ``django_celery_results``.
+
 .. py:function:: _normalize_import_file_name(name)
 
    Normalizuje název souboru ze ZIP archivu na formát pro porovnání s mapery.
