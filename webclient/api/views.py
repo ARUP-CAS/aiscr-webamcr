@@ -2441,7 +2441,9 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                 converted, result_status = transform_geom_to_sjtsk(wkt)
                 ok = result_status == "OK"
             except Exception as exc:
-                logger.warning("api.views._parse_geom_fields.sjtsk_conversion_failed", extra={"error": str(exc)})
+                # Klíč "exc" záměrně není v šabloně amcr_template: text výjimky cituje souřadnice
+                # z chráněného bloku, proto zůstává jen v _source a není vyhledatelný (#4397).
+                logger.warning("api.views._parse_geom_fields.sjtsk_conversion_failed", extra={"exc": str(exc)})
                 ok = False
             if not ok:
                 raise ImportValidationException(
@@ -2464,7 +2466,9 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                 converted, result_status = transform_geom_to_wgs84(wkt_sjtsk)
                 ok = result_status == "OK"
             except Exception as exc:
-                logger.warning("api.views._parse_geom_fields.wgs84_conversion_failed", extra={"error": str(exc)})
+                # Klíč "exc" záměrně není v šabloně amcr_template: text výjimky cituje souřadnice
+                # z chráněného bloku, proto zůstává jen v _source a není vyhledatelný (#4397).
+                logger.warning("api.views._parse_geom_fields.wgs84_conversion_failed", extra={"exc": str(exc)})
                 ok = False
             if not ok:
                 raise ImportValidationException(
@@ -2819,9 +2823,11 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                         # by nález prošel importem bez katastru a bez varování –
                         # nekonzistentní s kontrolou o pár řádků níž, která
                         # neurčitelný katastr hlásí jako chybu.
+                        # Geometrie je z chráněného bloku, proto pod nemapovaným klíčem "wkt"
+                        # (jen v _source, není vyhledatelná), ne v poli "geom" (#4397).
                         logger.warning(
                             "api.views.SamostatnyNalezXmlImportView.post.sjtsk_transform_failed",
-                            extra={"value": sjtsk_status, "geom": instance.geom.wkt[:120]},
+                            extra={"value": sjtsk_status, "wkt": instance.geom.wkt[:120]},
                         )
                         raise ImportValidationException(
                             ImportValidationIssue(

@@ -253,7 +253,11 @@ def detail(request, typ_vazby, ident_cely):
         else:
             logger.debug(
                 "dj.views.detail.adb_zapsat_vyskove_body.form_set_is_not_valid",
-                extra={"error": str(formset.errors), "ident_cely": dj.ident_cely, "adb_ident_cely": adb_ident_cely},
+                extra={
+                    "error": hodnota_pro_log(formset.errors),
+                    "ident_cely": dj.ident_cely,
+                    "adb_ident_cely": adb_ident_cely,
+                },
             )
             messages.add_message(
                 request,

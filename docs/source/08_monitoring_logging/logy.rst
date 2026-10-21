@@ -980,7 +980,8 @@ Elasticsearch celou událost odmítne a Logstash ji zahodí. Proto platí:
     a volání loggeru spadne; v middlewaru nebo v rámci úlohy tím shodí celý požadavek či běh,
   - pole, která nastavuje ``python-logstash`` (``@timestamp``, ``@version``, ``path``, ``type``, ``host``,
     ``level``, ``logger_name``, ``tags``) – klíč z ``extra`` hodnotu formatteru **přepíše** (např. ``level``
-    přepíše úroveň logu, ``@timestamp`` čas události),
+    přepíše úroveň logu, ``@timestamp`` čas události); při logování výjimky (``exc_info``) navíc
+    ``stack_trace`` a ``thread_name``, a to až po ``extra``, takže hodnota z ``extra`` se ztratí,
   - pole ``url`` a ``user_id``, která nastavuje filtr ``core.logging_filters.UserLogFilter`` – hodnota
     z ``extra`` se **ztratí**.
 
@@ -1227,6 +1228,8 @@ extra při logování.
 | path        | Text |
 +-------------+------+
 | stack_trace | Text |
++-------------+------+
+| tags        | Text |
 +-------------+------+
 | type        | Text |
 +-------------+------+

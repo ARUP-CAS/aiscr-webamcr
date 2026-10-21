@@ -11,6 +11,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
+from core.utils import hodnota_pro_log
 from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.contrib import messages
@@ -69,7 +70,7 @@ def zapsat(request, dj_ident_cely):
                 )
                 messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
     else:
-        logger.debug("adb.views.zapsat.not_valid", extra={"error": str(form.errors)})
+        logger.debug("adb.views.zapsat.not_valid", extra={"error": hodnota_pro_log(form.errors)})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
     return redirect(dj.get_absolute_url())

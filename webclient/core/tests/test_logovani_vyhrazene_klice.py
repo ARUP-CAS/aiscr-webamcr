@@ -23,6 +23,9 @@ ATRIBUTY_LOGRECORD = set(logging.LogRecord("x", logging.INFO, "x", 1, "x", None,
 }
 #: Pole, která nastavuje formatter ``python-logstash`` (``LogstashFormatterVersion1``) – klíč z ``extra`` je přepíše.
 POLE_FORMATTERU = {"@timestamp", "@version", "path", "type", "host", "level", "logger_name", "tags"}
+#: Pole, která formatter přidá z ``get_debug_fields()`` při ``exc_info`` až po ``extra`` (``lineno``,
+#: ``process`` a ``funcName`` jsou zároveň atributy ``LogRecord``, ty hlídá ``ATRIBUTY_LOGRECORD``).
+POLE_FORMATTERU_PRI_VYJIMCE = {"stack_trace", "thread_name"}
 #: Pole, která nastavuje ``core.logging_filters.UserLogFilter`` – hodnota z ``extra`` se ztratí.
 POLE_FILTRU = {"url", "user_id"}
 
@@ -124,5 +127,7 @@ class VyhrazeneKliceExtraTest(SimpleTestCase):
 
     def test_zadne_pole_formatteru_ani_filtru(self):
         """Klíč jako ``level`` přepíše úroveň logu, ``url`` přepíše ``UserLogFilter``."""
-        kolize = [f"{s}:{r} {k}" for s, r, k in self.klice if k in POLE_FORMATTERU | POLE_FILTRU]
+        kolize = [
+            f"{s}:{r} {k}" for s, r, k in self.klice if k in POLE_FORMATTERU | POLE_FORMATTERU_PRI_VYJIMCE | POLE_FILTRU
+        ]
         self.assertEqual(kolize, [])

@@ -812,7 +812,7 @@ def edit(request, ident_cely):
         else:
             logger.warning(
                 "arch_z.views.edit.form_az_valid",
-                extra={"az_error": str(form_az.errors), "error": str(form_akce.errors)},
+                extra={"az_error": hodnota_pro_log(form_az.errors), "error": hodnota_pro_log(form_akce.errors)},
             )
             messages.add_message(request, messages.WARNING, FORM_NOT_VALID)
     else:
@@ -905,7 +905,9 @@ def odeslat(request, ident_cely):
         return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         warnings = az.check_pred_odeslanim()
-        logger.debug("arch_z.views.odeslat.warnings", extra={"ident_cely": ident_cely, "warning": str(warnings)})
+        logger.debug(
+            "arch_z.views.odeslat.warnings", extra={"ident_cely": ident_cely, "warning": hodnota_pro_log(warnings)}
+        )
 
         if warnings:
             request.session["temp_data"] = warnings

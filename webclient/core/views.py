@@ -74,6 +74,7 @@ from core.utils import (
     get_message,
     get_pas_from_envelope,
     get_pian_from_envelope,
+    hodnota_pro_log,
     is_maintenance_in_progress,
     read_import_report_index,
     translate_status_value,
@@ -1448,13 +1449,13 @@ def check_stav_changed(request, zaznam, prefix=None):
                     messages.add_message(request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV)
                     logger.debug(
                         "core.views.check_stav_changed.state_changed.error",
-                        extra={"value": DOKUMENT_NEKDO_ZMENIL_STAV, "form_error": str(form_check.errors)},
+                        extra={"value": DOKUMENT_NEKDO_ZMENIL_STAV, "form_error": hodnota_pro_log(form_check.errors)},
                     )
                 elif isinstance(zaznam, Projekt):
                     messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
                     logger.debug(
                         "core.views.check_stav_changed.state_changed.error",
-                        extra={"value": PROJEKT_NEKDO_ZMENIL_STAV, "form_error": str(form_check.errors)},
+                        extra={"value": PROJEKT_NEKDO_ZMENIL_STAV, "form_error": hodnota_pro_log(form_check.errors)},
                     )
                 return True
 
