@@ -35,6 +35,13 @@ Funkce
 
    Logs a warning only once per hour for the same slug.
 
+.. py:function:: get_news_feed_cache_keys(language)
+
+   Vrátí klíče čerstvé a zastaralé kopie kanálu pro daný jazyk.
+
+   :param language: Jazykový kód novinkového kanálu.
+   :return: Dvojice klíčů cache pro čerstvou a zastaralou kopii kanálu.
+
 .. py:function:: _parse_item(item_data)
 
    Parsuje jeden záznam novinky.

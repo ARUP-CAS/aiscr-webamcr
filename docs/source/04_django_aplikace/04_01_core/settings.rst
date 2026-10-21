@@ -34,6 +34,24 @@ Novinkový kanál (News Feed)
    .. autodata:: webclient.settings.base.NEWS_FEED_CACHE_KEY_PREFIX
       :value:
 
+.. setting:: NEWS_FEED_TIMEOUT
+
+   Časový limit HTTP požadavku na jeden jazykový kanál v sekundách (výchozí hodnota ``10``).
+   Po jeho překročení se načtení daného jazyka považuje za neúspěšné a Celery úloha jej zkusí
+   znovu podle nastavení opakování úlohy.
+
+   .. autodata:: webclient.settings.base.NEWS_FEED_TIMEOUT
+      :value:
+
+.. setting:: NEWS_FEED_WARNING_RATE_LIMIT
+
+   Interval v sekundách, během kterého se upozornění pro položku se stejným slugem zapíše do
+   logu nejvýše jednou; upozornění bez slugů se neomezují (výchozí hodnota ``3600``, tedy jedna
+   hodina).
+
+   .. autodata:: webclient.settings.base.NEWS_FEED_WARNING_RATE_LIMIT
+      :value:
+
 Periodické úlohy (Celery Beat)
 ------------------------------
 
@@ -45,4 +63,3 @@ Periodické úlohy (Celery Beat)
       :value:
 
    Perioda obnovy novinkového kanálu se odvozuje od ``NEWS_FEED_CACHE_TTL``.
-

@@ -684,9 +684,6 @@ CELERY_BEAT_SCHEDULE = {
     "load-news-feed": {
         "task": "cron.tasks.load_news_feed",
         "schedule": timedelta(seconds=(NEWS_FEED_CACHE_TTL - 60)),  # 59 minutes (cache_ttl - 60 = 3600 - 60)
-        "options": {
-            "max_retries": 3,
-        },
     }
 }
 

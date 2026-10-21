@@ -22,13 +22,12 @@ from typing import Optional
 import bleach
 from bs4 import BeautifulSoup
 from django.conf import settings
-from django.utils.translation import gettext_noop
+from django.utils.translation import gettext, gettext_noop
 
 logger = logging.getLogger(__name__)
 
-# Placeholder pro název, pokud je v položce chybějící nebo neplatný.
-# Překlad drží celou větu v mo/po souborech, ID je extrahováno makrem gettext_noop.
-TITLE_PLACEHOLDER = gettext_noop("news_feed.invalid_title")
+# Výchozí název neplatné položky; překlad probíhá při načítání kanálu pro jeho jazyk.
+TITLE_PLACEHOLDER = gettext_noop("core.news_feed.invalid_item_title")
 
 # Konfigurace sanitizace HTML pomocí bleach
 ALLOWED_TAGS = [
@@ -108,6 +107,16 @@ class NewsItem:
     authors: Optional[str] = None
 
 
+def get_news_feed_cache_keys(language: str) -> tuple[str, str]:
+    """Vrátí klíče čerstvé a zastaralé kopie kanálu pro daný jazyk.
+
+    :param language: Jazykový kód novinkového kanálu.
+    :return: Dvojice klíčů cache pro čerstvou a zastaralou kopii kanálu.
+    """
+    cache_key = f"{settings.NEWS_FEED_CACHE_KEY_PREFIX}:{language}"
+    return cache_key, f"{cache_key}:stale"
+
+
 def _parse_item(item_data: dict) -> NewsItem:
     """Parsuje jeden záznam novinky.
 
@@ -128,14 +137,20 @@ def _parse_item(item_data: dict) -> NewsItem:
     title = item_data.get("title")
     excerpt = item_data.get("excerpt")
 
-    if not date or not title or not excerpt:
+    if (
+        not date
+        or not isinstance(title, str)
+        or not title.strip()
+        or not isinstance(excerpt, str)
+        or not excerpt.strip()
+    ):
         _log_warning_rate_limited(
             slug,
             f"Položka novinek '{slug}' má chybějící nebo neplatný údaj; " f"použito placeholder '{TITLE_PLACEHOLDER}'.",
         )
         return NewsItem(
-            title=TITLE_PLACEHOLDER,
-            excerpt=None,
+            title=gettext(TITLE_PLACEHOLDER),
+            excerpt="",
             date=None,
         )
 
@@ -153,18 +168,17 @@ def _parse_item(item_data: dict) -> NewsItem:
 def _parse_feed(data):
     """Zpracuje data kanálu na seznam novinek."""
     if not isinstance(data, dict):
-        return []
+        raise ValueError("News feed response must be a JSON object.")
 
     items_list = data.get("items")
     if not isinstance(items_list, list):
-        return []
+        raise ValueError("News feed response must contain an items list.")
 
     items = []
     for item_data in items_list:
-        if isinstance(item_data, dict):
-            item = _parse_item(item_data)
-            if item:
-                items.append(item)
+        if not isinstance(item_data, dict):
+            raise ValueError("Every news feed item must be a JSON object.")
+        items.append(_parse_item(item_data))
     return items
 
 
@@ -200,17 +214,19 @@ def sanitize_html(html: str) -> str:
 
 def _process_authors(authors_data):
     """Inicializuje seznam autorů."""
-    if not authors_data:
+    if not isinstance(authors_data, list):
         return ""
 
-    if isinstance(authors_data, list) and len(authors_data) > 0:
-        authors_list = []
-        for author in authors_data:
-            if isinstance(author, dict):
-                name = author.get("name", "")
-                role = author.get("role", "")
-                authors_list.append(f"{name} ({role})" if role else name)
-            else:
-                authors_list.append(str(author))
-        return ", ".join(authors_list)
-    return ""
+    authors_list = []
+    for author in authors_data:
+        if isinstance(author, dict):
+            name = author.get("name")
+            if not isinstance(name, str) or not name.strip():
+                continue
+            name = name.strip()
+            role = author.get("role")
+            role = role.strip() if isinstance(role, str) else ""
+            authors_list.append(f"{name} ({role})" if role else name)
+        elif isinstance(author, str) and author.strip():
+            authors_list.append(author.strip())
+    return ", ".join(authors_list)

@@ -53,7 +53,7 @@ from core.import_data_mappers import (
     UzivatelOpravneniMapper,
 )
 from core.models import AntivirusCheckResult, Soubor, SouborVazby
-from core.news_feed import _parse_feed
+from core.news_feed import _parse_feed, get_news_feed_cache_keys
 from core.repository_connector import (
     DryRunFedoraTransaction,
     FedoraDeletionOnlyTransaction,
@@ -72,7 +72,7 @@ from django.db.models.functions import Coalesce, Upper
 from django.forms.models import model_to_dict
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from django.utils.translation import gettext_noop
+from django.utils.translation import gettext_noop, override
 from dokument.models import Dokument
 from ez.models import ExterniZdroj
 from heslar import hesla_dynamicka
@@ -3854,55 +3854,54 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
         )
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
-def load_news_feed(self):
+NEWS_FEED_MAX_RETRIES = 3
+NEWS_FEED_RETRY_DELAY = 60
+
+
+@shared_task(bind=True, max_retries=NEWS_FEED_MAX_RETRIES, default_retry_delay=NEWS_FEED_RETRY_DELAY)
+def load_news_feed(self, languages=None):
     """
     Načte a uloží novinkový kanál do cache.
 
     Tato úloha je volána při startu aplikace a periodicky v intervalu
     definovaném v settings (cache_ttl - 60 sekund).
 
-    Pokud dojde k chybě při načítání některého jazyka, úloha se automaticky
-    zopakuje s maximálně 3 pokusy.
+    Při chybě se opakují pouze jazyky, které se nepodařilo načíst.
+
+    :param languages: Seznam jazykových kódů ke zpracování; pokud není zadán,
+        použije se seznam z nastavení aplikace.
     """
-    errornous = 0
-    try:
-        # Získat cache_ttl z settings
-        cache_ttl = settings.NEWS_FEED_CACHE_TTL
+    cache_ttl = settings.NEWS_FEED_CACHE_TTL
+    base_url = settings.NEWS_FEED_BASE_URL
+    languages = settings.NEWS_FEED_LANGUAGES if languages is None else languages
+    failed_languages = []
 
-        # Získat nastavení z base.py (base_url a languages)
-        base_url = settings.NEWS_FEED_BASE_URL
-        languages = settings.NEWS_FEED_LANGUAGES
+    for language in languages:
+        feed_url = f"{base_url}/{language}.json"
+        try:
+            response = requests.get(feed_url, timeout=settings.NEWS_FEED_TIMEOUT)
+            response.raise_for_status()
+            with override(language):
+                feed = _parse_feed(response.json())
+            cache_key, stale_key = get_news_feed_cache_keys(language)
+            cache.set(cache_key, feed, cache_ttl)
 
-        # Načíst feed pro všechny jazyky
-        for language in languages:
-            feed_url = f"{base_url}/{language}.json"
-            try:
-                response = requests.get(feed_url, timeout=settings.NEWS_FEED_TIMEOUT)
-                response.raise_for_status()
-                data = response.json()
-                feed = _parse_feed(data)
-                cache_key = f"news_feed:{language}"
-                cache.set(cache_key, feed, cache_ttl)
+            if feed:
+                cache.set(stale_key, feed, None)
+            else:
+                logger.info("News feed for %s is valid but empty; preserving stale copy.", language)
 
-                # Uložit zastaralou kopii
-                stale_key = f"{cache_key}:stale"
-                cache.set(stale_key, feed, None)  # Bez TTL
+            logger.info("Successfully loaded news feed for %s", language)
+        except Exception:
+            logger.exception("Failed to load news feed for %s", language)
+            failed_languages.append(language)
 
-                logger.info(f"Successfully loaded news feed for {language}")
-            except Exception as e:
-                logger.error(f"Failed to load news feed for {language}: {e}")
-                # Pokračovat v načítání ostatních jazyků
-                errornous += 1
-
-    except Exception as e:
-        logger.error(f"Failed to load news feed: {e}")
-        errornous += 1
-
-    if errornous > 0:
-        logger.warning(f"News feed loading completed with {errornous} errors. Retrying...")
-        # Retry the task with exponential backoff
-        raise self.retry(max_retries=self.max_retries, countdown=60)
+    if failed_languages:
+        logger.warning("News feed loading failed for %s; retrying failed languages.", ", ".join(failed_languages))
+        raise self.retry(
+            exc=RuntimeError(f"Failed to load news feed for: {', '.join(failed_languages)}"),
+            kwargs={"languages": failed_languages},
+        )
 
     logger.info("News feed loading completed successfully")
     return True

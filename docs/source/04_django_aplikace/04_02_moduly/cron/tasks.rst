@@ -456,15 +456,17 @@ Funkce
 
    :param reassign_records: Viz :func:`sync_ruian_changes`.
 
-.. py:function:: load_news_feed(self)
+.. py:function:: load_news_feed(self, languages)
 
    Načte a uloží novinkový kanál do cache.
 
    Tato úloha je volána při startu aplikace a periodicky v intervalu
    definovaném v settings (cache_ttl - 60 sekund).
 
-   Pokud dojde k chybě při načítání některého jazyka, úloha se automaticky
-   zopakuje s maximálně 3 pokusy.
+   Při chybě se opakují pouze jazyky, které se nepodařilo načíst.
+
+   :param languages: Seznam jazykových kódů ke zpracování; pokud není zadán,
+       použije se seznam z nastavení aplikace.
 
 .. py:function:: run_news_feed_warmup()
 

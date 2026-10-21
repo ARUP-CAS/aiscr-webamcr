@@ -163,7 +163,9 @@
                     <div class="news-item-title">
                       <h3 class="news-item-title-text">{{ item.title }}</h3>
                     </div>
-                    <div class="news-item-excerpt">{{ item.excerpt }}</div>
+                    {% if item.excerpt %}
+                      <div class="news-item-excerpt">{{ item.excerpt }}</div>
+                    {% endif %}
                     {% if item.html or item.authors %}
                       <div class="news-item-html" id="news-item-html-{{ forloop.counter }}" style="display: none;">
                         {{ item.html|safe }}
