@@ -1429,7 +1429,7 @@ def check_stav_changed(request, zaznam, prefix=None):
                         "core.views.check_stav_changed.state_changed.error",
                         extra={
                             "value": SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
-                            "form_error": str(form_check.errors),
+                            "form_error": hodnota_pro_log(form_check.errors),
                         },
                     )
                 elif isinstance(zaznam, ArcheologickyZaznam):
@@ -1442,7 +1442,7 @@ def check_stav_changed(request, zaznam, prefix=None):
                         "core.views.check_stav_changed.state_changed.error",
                         extra={
                             "value": get_message(zaznam, "NEKDO_ZMENIL_STAV"),
-                            "form_error": str(form_check.errors),
+                            "form_error": hodnota_pro_log(form_check.errors),
                         },
                     )
                 elif isinstance(zaznam, Dokument):

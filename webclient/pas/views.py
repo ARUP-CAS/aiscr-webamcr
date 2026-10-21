@@ -460,7 +460,7 @@ def edit(request, ident_cely):
             if form.changed_data:
                 logger.debug(
                     "pas.views.edit.form_changed_data",
-                    extra={"data": str(form.changed_data)},
+                    extra={"data": hodnota_pro_log(form.changed_data)},
                 )
             return redirect("pas:detail", ident_cely=ident_cely)
         else:
@@ -522,7 +522,7 @@ def edit_ulozeni(request, ident_cely):
             if form.changed_data:
                 logger.debug(
                     "pas.views.edit_ulozeni.form_changed_data",
-                    extra={"data": str(form.changed_data)},
+                    extra={"data": hodnota_pro_log(form.changed_data)},
                 )
             return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
         else:

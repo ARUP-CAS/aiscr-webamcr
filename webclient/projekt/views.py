@@ -459,7 +459,9 @@ def create(request):
                         _("arch_z.views.zapsat.samostatnaAkce." "check_container_deleted_or_not_exists_error"),
                     )
         else:
-            logger.debug("projekt.views.create.form_projekt_not_valid", extra={"error": str(form_projekt.errors)})
+            logger.debug(
+                "projekt.views.create.form_projekt_not_valid", extra={"error": hodnota_pro_log(form_projekt.errors)}
+            )
     else:
         form_projekt = CreateProjektForm(required=required_fields, required_next=required_fields_next)
         form_oznamovatel = OznamovatelProjektCreateForm(uzamknout_formular=True)
@@ -1077,7 +1079,7 @@ def zahajit_v_terenu(request, ident_cely):
             projekt.save()
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.debug("projekt.views.zahajit_v_terenu.form_not_valid", extra={"error": str(form.errors)})
+            logger.debug("projekt.views.zahajit_v_terenu.form_not_valid", extra={"error": hodnota_pro_log(form.errors)})
     else:
         form = ZahajitVTerenuForm(instance=projekt, initial={"old_stav": projekt.stav})
     return render(
@@ -1202,7 +1204,7 @@ def uzavrit(request, ident_cely):
     else:
         # Ověří obchodní pravidla před uzavřením projektu.
         warnings = projekt.check_pred_uzavrenim()
-        logger.debug("projekt.views.uzavrit.warnings", extra={"warning": str(warnings)})
+        logger.debug("projekt.views.uzavrit.warnings", extra={"warning": hodnota_pro_log(warnings)})
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         if warnings:
             request.session["temp_data"] = []
@@ -1294,7 +1296,7 @@ def archivovat(request, ident_cely):
         return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
     else:
         warnings = projekt.check_pred_archivaci()
-        logger.debug("projekt.views.archivovat.warnings", extra={"warning": str(warnings)})
+        logger.debug("projekt.views.archivovat.warnings", extra={"warning": hodnota_pro_log(warnings)})
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         if warnings:
             request.session["temp_data"] = []
