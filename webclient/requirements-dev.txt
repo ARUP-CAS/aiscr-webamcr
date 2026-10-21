@@ -282,7 +282,7 @@ polib==1.2.0
     # via
     #   -r requirements-test.txt
     #   django-rosetta
-pre-commit==4.6.2
+pre-commit==4.7.0
     # via -r requirements-dev.in
 prometheus-client==0.26.0
     # via
