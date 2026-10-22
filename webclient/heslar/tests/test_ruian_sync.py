@@ -15,6 +15,7 @@ nespouští, takže se při testech do repozitáře nesahá.
 
 import datetime
 import logging
+import threading
 from unittest import mock
 
 from core.utils import reprezentativni_bod_sql
@@ -25,7 +26,7 @@ from django.db import connection, transaction
 from django.test import SimpleTestCase, TestCase, override_settings
 from heslar.models import RuianKatastr, RuianKraj, RuianOkres, RuianSyncRun
 from heslar.ruian_sync import reassign as reassign_mod
-from heslar.ruian_sync import syncer
+from heslar.ruian_sync import souhrn_varovani, syncer
 from heslar.ruian_sync.provider import (
     EVENT_UPSERT,
     LEVEL_KATASTR,
@@ -1089,6 +1090,126 @@ class RozpoznaniOpakovaniTests(TestCase):
             RuianSyncRun.objects.filter(status=RuianSyncRun.STATUS_RUNNING).exists(),
             "po běhu nesmí zůstat žádný řádek running",
         )
+
+    def test_opakovani_se_zapise_do_poznamky(self):
+        """
+        Opakování dne po selhání je informace, ne varování.
+
+        Zapíše se do ``note``, aby ve výpisu běhů nevyvolalo ⚠.
+        """
+        self._spust([(RuianSyncRun.STATUS_FAILED, "/tmp/20260404_ST_ZKSH.xml.zip")])
+
+        opakovany = RuianSyncRun.objects.filter(data_valid_to=self.DEN).order_by("-pk").first()
+        self.assertEqual(opakovany.note, tasks.NOTE_OPAKOVANI_PO_SELHANI)
+        self.assertEqual(opakovany.warnings, "")
+
+
+class SouhrnVarovaniTests(SimpleTestCase):
+    """
+    Testy souhrnu varování z logu do auditu běhu.
+
+    Varování z parseru, stahování a přepočtu se logují bez vazby na běh.
+    :class:`SberVarovani` je zachytí a do ``warnings`` zapíše jeden řádek za
+    druh události, aby byla vidět v administraci a tabulku nezaplavila.
+    """
+
+    def _sber(self, zaloguj, warnings=""):
+        """
+        Spustí sběr, zaloguje události a vrátí zapsané řádky.
+
+        :param zaloguj: Funkce, která během sběru loguje.
+        :param warnings: Výchozí obsah ``run.warnings``.
+        :return: Seznam řádků předaných do ``_append_run_warning``.
+        """
+        run = RuianSyncRun(warnings=warnings)
+        zapsano = []
+        sber = souhrn_varovani.SberVarovani(run).start()
+        try:
+            zaloguj()
+        finally:
+            with mock.patch.object(syncer, "_append_run_warning", lambda r, radek: zapsano.append(radek)):
+                sber.zapis()
+        return zapsano
+
+    def test_sledovana_udalost_se_shrne(self):
+        """Opakovaná událost dá jediný řádek s počtem, příklady a klíčem události."""
+        log = logging.getLogger("heslar.ruian_sync.reassign")
+
+        def zaloguj():
+            for ident in ("C-1", "C-2", "C-3"):
+                log.warning("heslar.ruian_sync.reassign.reassign_projekt.no_geometry", extra={"ident_cely": ident})
+
+        radky = self._sber(zaloguj)
+
+        self.assertEqual(len(radky), 1)
+        self.assertIn("Projekt bez geometrie", radky[0])
+        self.assertIn("3×", radky[0])
+        self.assertIn("C-1, C-2, C-3", radky[0])
+        self.assertIn("[heslar.ruian_sync.reassign.reassign_projekt.no_geometry]", radky[0])
+
+    def test_varovani_zapsana_syncerem_se_nezdvoji(self):
+        """
+        Události, které syncer zapisuje do ``warnings`` sám, se nesbírají.
+
+        Prefix ``_delete_katastr.reassign_`` zachytí chyby Fedory při přesunu
+        záznamů, ale ne ``_delete_katastr.restricted``.
+        """
+        log = logging.getLogger("heslar.ruian_sync.syncer")
+
+        def zaloguj():
+            log.error("heslar.ruian_sync.syncer._delete_katastr.restricted", extra={"kod": 1})
+            log.error("heslar.ruian_sync.syncer._delete_katastr.reassign_az_fedora_error", extra={"ident_cely": "C-9"})
+
+        radky = self._sber(zaloguj)
+
+        self.assertEqual(len(radky), 1)
+        self.assertIn("reassign_az_fedora_error", radky[0])
+
+    def test_nesledovana_a_debug_udalost_se_ignoruje(self):
+        """Debug zprávy ani nesledované události souhrn nevytvoří."""
+        log = logging.getLogger("heslar.ruian_sync.syncer")
+
+        def zaloguj():
+            log.debug("heslar.ruian_sync.syncer._log_hranice_change_if_significant.significant")
+            log.warning("heslar.ruian_sync.syncer.neco_jineho")
+
+        self.assertEqual(self._sber(zaloguj), [])
+
+    def test_jine_vlakno_se_nezapocita(self):
+        """Varování z jiného vlákna téhož procesu do auditu běhu nepatří."""
+        log = logging.getLogger("heslar.ruian_sync.syncer")
+
+        def zaloguj():
+            vlakno = threading.Thread(
+                target=lambda: log.warning("heslar.ruian_sync.syncer._upsert_okres.precislovani", extra={"kod": 5})
+            )
+            vlakno.start()
+            vlakno.join()
+
+        self.assertEqual(self._sber(zaloguj), [])
+
+    def test_stejny_radek_se_neopakuje(self):
+        """Opakovaný pokus o tentýž den nepřipíše identický řádek znovu."""
+        log = logging.getLogger("heslar.ruian_sync.vfr_download")
+
+        def zaloguj():
+            log.warning("heslar.ruian_sync.vfr_download.download_change_file.atom_failed", extra={"day": "2026-10-06"})
+
+        prvni = self._sber(zaloguj)
+        druhy = self._sber(zaloguj, warnings=prvni[0])
+
+        self.assertEqual(len(prvni), 1)
+        self.assertEqual(druhy, [])
+
+    def test_handler_se_po_zapisu_odpoji(self):
+        """Po zápisu nesmí na loggerech zůstat handler sběru."""
+        self._sber(lambda: None)
+
+        for jmeno in souhrn_varovani.LOGGERY:
+            self.assertFalse(
+                [h for h in logging.getLogger(jmeno).handlers if isinstance(h, souhrn_varovani._Handler)],
+                jmeno,
+            )
 
 
 @_BEZ_CACHEOPS
