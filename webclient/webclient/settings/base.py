@@ -683,6 +683,7 @@ CELERY_RESULT_BACKEND = "django-db"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # Liveness ping workeru (viz cron.tasks.celery_worker_liveness_ping a scripts/run-healthcheck_celery.sh).
 # DatabaseScheduler si položku při startu beatu zapíše do django_celery_beat.PeriodicTask.
+#: Konfigurace periodických úloh Celery Beat, včetně obnovy novinkového kanálu.
 CELERY_BEAT_SCHEDULE = {
     "celery_worker_liveness_ping": {
         "task": "cron.tasks.celery_worker_liveness_ping",

@@ -284,6 +284,18 @@
         }
       };
 
+      const updateCollapsedHeight = function () {
+        const newsContentTop = newsContent.getBoundingClientRect().top;
+        let maxHeight = collapsedHeight;
+
+        newsContent.querySelectorAll(".news-item.is-expanded").forEach(function (item) {
+          const itemBottom = item.getBoundingClientRect().bottom - newsContentTop;
+          maxHeight = Math.max(maxHeight, itemBottom);
+        });
+
+        newsContent.style.maxHeight = maxHeight + "px";
+      };
+
       updateToggleVisibility();
 
       newsToggle.addEventListener("click", function () {
@@ -344,6 +356,11 @@
             htmlContent.style.display = "block";
             expandBtn.textContent = expandBtn.dataset.collapseLabel;
             expandBtn.setAttribute("aria-expanded", "true");
+          }
+
+          updateToggleVisibility();
+          if (newsContent.classList.contains("is-collapsed")) {
+            updateCollapsedHeight();
           }
         });
       });
