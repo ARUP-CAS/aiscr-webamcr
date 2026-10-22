@@ -81,10 +81,13 @@ Níže je konfigurace systému Logstash.
 
    output {
        elasticsearch {
-           hosts => ["IP:9200"]
+           hosts => ["elasticsearch:9200"]
+           user => "amcr_logger"
+           password => "${ES_PASSWORD}"
            index => "amcr"
-           password => "CHANGE_ME"
-           user => "amcr"
+           action => "create"
+           manage_template => false
+           ilm_enabled => false
        }
    }
 
@@ -94,15 +97,26 @@ port => 5959: Tato část konfigurace určuje, že Logstash bude naslouchat
 na portu 5959 pro příchozí data. - codec => json: Tato část konfigurace
 určuje, že příchozí data budou ve formátu JSON.
 
-Output (výstup): - elasticsearch: Tato část konfigurace definuje
-Elasticsearch jako místo, kam Logstash pošle zpracovaná data. - hosts =>
-[“IP:9200”]: Toto určuje, že Logstash pošle zpracovaná data na adresu
-Elasticsearch hostitele, který je na IP adrese IP a na portu 9200. Je
-doporučeno používat IP adresy serverů v síti (tj. začínající 192.168.) -
-index => “amcr”: Toto určuje, že zpracovaná data budou uložena v
-Elasticsearch indexu nazvaném “amcr”. - user => “amcr” a password =>
-“CHANGE_ME”: Tyto části konfigurace definují jméno uživatele a heslo,
-které Logstash použije pro autentizaci u Elasticsearch.
+Output (výstup): Logstash posílá zpracovaná data do Elasticsearch.
+
+- ``hosts => ["elasticsearch:9200"]``: Elasticsearch se adresuje jménem
+  služby v síti Dockeru.
+- ``user => "amcr_logger"``: Účet jen pro zápis logů (viz níže).
+- ``password => "${ES_PASSWORD}"``: Heslo dosazuje Logstash z proměnné
+  prostředí, kterou entrypoint kontejneru načte ze swarm secretu
+  ``logstash_elastic_pass``. Image Logstashe proměnné ``*_FILE``
+  nepodporuje.
+- ``index => "amcr"``: Data se ukládají do indexu ``amcr``.
+- ``action => "create"``: Dokumenty se jen přidávají, nikdy nepřepisují.
+  Účet ``amcr_logger`` má právo ``create_doc``, výchozí akce ``index``
+  by skončila chybou ``403``.
+- ``manage_template => false`` a ``ilm_enabled => false``: Šablona
+  ``amcr_template`` a ILM politika se spravují ručně. Účet
+  ``amcr_logger`` k nim nemá práva a bez těchto voleb by Logstash při
+  startu skončil chybou ``403``.
+
+Soubor ``logstash/logstash.conf`` neobsahuje žádné heslo, je verzovaný v
+repozitáři a nasazuje se přímo z něj.
 
 .. _elasticsearch-1:
 
@@ -1289,12 +1303,17 @@ Níže je konfigurace systému Kibana
 Nasazení systému
 ----------------
 
-Po nasazení je potřeba sputit následující příkaz a nastavit hesla
-systémových účtů.
+Po prvním nasazení je potřeba nastavit heslo vestavěného superuživatele
+``elastic``. Heslo se neukládá do docker secretu, uchovává se mimo Docker
+(např. ve správci hesel). Příkaz nevyžaduje znalost současného hesla, takže
+jím lze heslo kdykoli změnit nebo obnovit; stejně lze změnit heslo
+libovolného uživatele (např. ``amcr_logger``):
 
 ::
 
    sudo docker exec -t -i $(sudo docker ps -q -f name=swarm_webamcr_elasticsearch) bin/elasticsearch-reset-password -u elastic -i --url http://localhost:9200
+
+Dále je potřeba nastavit heslo systémového účtu ``kibana_system``:
 
 ::
 
@@ -1314,8 +1333,35 @@ Tool na titulní stránce).
      }
    }
 
-Dále je nutné vytvořit roli ``amcr`` a uživatele ``amcr`` a nastavit mu
-stejné heslo jako v konfiguračním souboru ``logstash.conf``.
+Dále je nutné vytvořit roli a uživatele ``amcr_logger``, kterým Logstash
+zapisuje logy. Účet nesmí mít roli ``superuser``; stačí mu právo zápisu do
+indexů ``amcr*``. V konzoli Dev Tools:
+
+::
+
+   POST _security/role/amcr_logger
+   {
+     "cluster": ["monitor"],
+     "indices": [
+       {
+         "names": ["amcr*"],
+         "privileges": ["create_doc", "create_index", "view_index_metadata", "auto_configure"]
+       }
+     ]
+   }
+
+   POST _security/user/amcr_logger
+   {
+     "password": "<heslo ze secretu logstash_elastic_pass>",
+     "roles": ["amcr_logger"]
+   }
+
+Heslo účtu musí odpovídat swarm secretu ``logstash_elastic_pass``. Po jeho
+změně je potřeba secret znovu vytvořit a službu ``logstash`` restartovat.
+Pro správu (Kibana, ruční zásahy) slouží superuživatel ``amcr`` (role
+``amcr`` a ``superuser``), který se v konfiguraci Logstashe nepoužívá.
+
+Role a uživatele lze vytvořit i v rozhraní Kibana:
 
 Vytvoření role: Klikněte na ikonu “Management” (správa) v hlavním
 navigačním panelu. V sekci Stack Management vyberte možnost “Security” a
