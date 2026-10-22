@@ -307,7 +307,12 @@
         setCollapsedState();
       });
 
-      window.addEventListener("resize", updateToggleVisibility);
+      window.addEventListener("resize", function () {
+        updateToggleVisibility();
+        if (newsContent.classList.contains("is-collapsed")) {
+          updateCollapsedHeight();
+        }
+      });
 
       // Obsluha rozbalování jednotlivých položek
       const newsItems = document.querySelectorAll(".news-item");
