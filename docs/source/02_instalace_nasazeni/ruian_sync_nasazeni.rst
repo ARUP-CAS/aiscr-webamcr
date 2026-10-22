@@ -153,7 +153,11 @@ Výpis ``/admin/heslar/ruiansyncrun/`` má u každého běhu tři textová pole:
 * ``warnings`` – nálezy, které běh nezastavily, ale je třeba je **prověřit**:
   díry nebo překryvy v pokrytí, nesoulad ploch úrovní, nesmazatelné prvky,
   selhaný přepočet navázaných záznamů. Sloupec ⚠ ve výpisu ukazuje jejich
-  počet a po najetí myší i text;
+  počet a po najetí myší i text. Varování z hlubších vrstev (parser,
+  stahování, přepočet jednotlivých záznamů, výrazná změna hranice) se
+  zapisují jako **souhrn** – jeden řádek za druh události s počtem výskytů,
+  několika příklady a v hranatých závorkách klíčem události, podle kterého
+  se jednotlivé výskyty dohledají v logu (Kibana);
 * ``note`` – **informativní** poznámka bez nutnosti zásahu, např.
   ``no_changes (404)`` (den bez změn), ``not_published_yet (404)`` (ČÚZK
   soubor ještě nevydal) nebo ``uzsz=…`` (soubor ÚZSZ použitý plným syncem).
