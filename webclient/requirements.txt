@@ -8,7 +8,7 @@ amqp==5.4.1
     # via kombu
 anyio==4.15.1
     # via httpx
-asgiref==3.11.1
+asgiref==3.12.1
     # via
     #   -r requirements.in
     #   django
@@ -54,7 +54,7 @@ cron-descriptor==1.4.5
     # via django-celery-beat
 defusedxml==0.7.1
     # via odfpy
-django==6.0.8
+django==6.0.9
     # via
     #   -r requirements.in
     #   crispy-bootstrap5
