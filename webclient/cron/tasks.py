@@ -3,6 +3,7 @@ import io
 import json
 import logging
 import os
+import subprocess
 import time
 import traceback
 import zipfile
@@ -54,6 +55,7 @@ from core.import_data_mappers import (
     UzivatelOpravneniMapper,
 )
 from core.models import AntivirusCheckResult, Soubor, SouborVazby
+from core.news_feed import _parse_feed, get_news_feed_cache_keys
 from core.repository_connector import (
     DryRunFedoraTransaction,
     FedoraDeletionOnlyTransaction,
@@ -70,13 +72,14 @@ from core.utils import (
 )
 from django.conf import settings
 from django.contrib.auth.models import Group
+from django.core.cache import cache
 from django.db import connection, transaction
 from django.db.models import F, Min, Model, Prefetch, Q
 from django.db.models.functions import Coalesce, Upper
 from django.forms.models import model_to_dict
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from django.utils.translation import gettext_noop
+from django.utils.translation import gettext_noop, override
 from dokument.models import Dokument
 from ez.models import ExterniZdroj
 from heslar import hesla_dynamicka
@@ -3898,3 +3901,97 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
             "cron.tasks.sync_ruian_changes.do.error",
             extra={"error": str(err), "traceback": traceback.format_exc()},
         )
+
+
+NEWS_FEED_MAX_RETRIES = 3
+NEWS_FEED_RETRY_DELAY = 60
+
+
+@shared_task(bind=True, max_retries=NEWS_FEED_MAX_RETRIES, default_retry_delay=NEWS_FEED_RETRY_DELAY)
+def load_news_feed(self, languages=None):
+    """
+    Načte a uloží novinkový kanál do cache.
+
+    Tato úloha je volána při startu aplikace a periodicky v intervalu
+    definovaném v settings (cache_ttl - 60 sekund).
+
+    Při chybě se opakují pouze jazyky, které se nepodařilo načíst.
+
+    :param languages: Seznam jazykových kódů ke zpracování; pokud není zadán,
+        použije se seznam z nastavení aplikace.
+    """
+    cache_ttl = settings.NEWS_FEED_CACHE_TTL
+    base_url = settings.NEWS_FEED_BASE_URL
+    languages = settings.NEWS_FEED_LANGUAGES if languages is None else languages
+    failed_languages = []
+
+    for language in languages:
+        feed_url = f"{base_url}/{language}.json"
+        try:
+            response = requests.get(feed_url, timeout=settings.NEWS_FEED_TIMEOUT)
+            response.raise_for_status()
+            with override(language):
+                feed = _parse_feed(response.json())
+            cache_key, stale_key = get_news_feed_cache_keys(language)
+            cache.set(cache_key, feed, cache_ttl)
+
+            if feed:
+                cache.set(stale_key, feed, None)
+            else:
+                logger.info("News feed for %s is valid but empty; preserving stale copy.", language)
+
+            logger.info("Successfully loaded news feed for %s", language)
+        except Exception:
+            logger.exception("Failed to load news feed for %s", language)
+            failed_languages.append(language)
+
+    if failed_languages:
+        logger.warning("News feed loading failed for %s; retrying failed languages.", ", ".join(failed_languages))
+        raise self.retry(
+            exc=RuntimeError(f"Failed to load news feed for: {', '.join(failed_languages)}"),
+            kwargs={"languages": failed_languages},
+        )
+
+    logger.info("News feed loading completed successfully")
+    return True
+
+
+def run_news_feed_warmup():
+    """
+    Spustí úlohu load_news_feed v pozadí jako nezávislý proces.
+
+    Slouží jako alternativa k synchronnímu volání při startu kontejneru.
+    Úloha běží v pozadí (nohup ... &), takže neblokují spuštění uwsgi/runserver.
+    Pokud úloha selže, je zachycena a zalogována, nikdy se nešíří výjimka
+    do entrypointu (safety_guard).
+
+    Tato funkce je volána z entrypoint.sh a entrypoint.dev.sh.
+    """
+    logger.info("Starting background news feed warm-up")
+
+    # Spustit úlohu jako nezávislý Celery worker proces
+    warmup_command = 'python manage.py shell -c "from cron.tasks import load_news_feed; load_news_feed()"'
+    # nohup zajistí, že proces přežije i po ukončení entrypointu
+    background_command = f"nohup {warmup_command} >/proc/1/fd/1 2>&1 </dev/null &"
+    subprocess.run(background_command, shell=True)
+    logger.info("Background news feed warm-up started")
+
+
+def safety_guard(func):
+    """
+    Dekorátor, který zajistí, že volaná funkce nikdy nevrátí výjimku.
+
+    Slouží jako safeguard pro background warm-up. Pokud by funkce selhala,
+    je chyba zachycena a zalogována, ale nikdy se nešíří do entrypointu.
+    :param func: Funkce, kterou je třeba chránit výjimkami.
+    """
+
+    def wrapper(*args, **kwargs):
+        try:
+            result = func(*args, **kwargs)
+            return result
+        except Exception as e:
+            logger.error(f"News feed warm-up failed: {e}")
+            return None
+
+    return wrapper
