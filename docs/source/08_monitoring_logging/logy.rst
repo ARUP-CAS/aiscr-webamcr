@@ -1313,23 +1313,40 @@ libovolného uživatele (např. ``amcr_logger``):
 
    sudo docker exec -t -i $(sudo docker ps -q -f name=swarm_webamcr_elasticsearch) bin/elasticsearch-reset-password -u elastic -i --url http://localhost:9200
 
+Pro správu (Kibana, ruční zásahy) se používá superuživatel ``amcr``,
+nikoli vestavěný ``elastic``. V konzoli Dev Tools ho založte s dočasným
+heslem a skutečné heslo pak nastavte příkazem výše s ``-u amcr``:
+
+::
+
+   POST _security/user/amcr
+   {
+     "password": "<dočasné heslo>",
+     "roles": ["superuser"]
+   }
+
 Dále je potřeba nastavit heslo systémového účtu ``kibana_system``:
 
 ::
 
    sudo docker exec -t -i $(sudo docker ps -q -f name=swarm_webamcr_elasticsearch) bin/elasticsearch-reset-password -u kibana_system -i --url http://localhost:9200
 
-Po nastavení je nutné restartovat kontejner Kibana a vytvořit index
-``amcr`` s využitím konzole (konzoli lze otevřít kliknutím na odkaz Dev
-Tool na titulní stránce).
+Po nastavení je nutné restartovat kontejner Kibana a s využitím konzole
+(konzoli lze otevřít kliknutím na odkaz Dev Tool na titulní stránce)
+vytvořit první index ``amcr-000001`` se zapisovacím aliasem ``amcr``.
+Logstash zapisuje do aliasu ``amcr`` a ILM politika ze šablony
+``amcr_template`` (``rollover_alias: amcr``) pak zakládá další indexy
+``amcr-000002``, ``amcr-000003`` atd. Šablona musí existovat dřív než
+index, jinak se na něj nastavení ILM nepoužije.
 
 ::
 
-   PUT /amcr
+   PUT /amcr-000001
    {
-     "settings": {
-       "number_of_shards": 1,
-       "number_of_replicas": 0
+     "aliases": {
+       "amcr": {
+         "is_write_index": true
+       }
      }
    }
 
@@ -1356,10 +1373,28 @@ indexů ``amcr*``. V konzoli Dev Tools:
      "roles": ["amcr_logger"]
    }
 
-Heslo účtu musí odpovídat swarm secretu ``logstash_elastic_pass``. Po jeho
-změně je potřeba secret znovu vytvořit a službu ``logstash`` restartovat.
-Pro správu (Kibana, ruční zásahy) slouží superuživatel ``amcr`` (role
-``amcr`` a ``superuser``), který se v konfiguraci Logstashe nepoužívá.
+Heslo účtu musí odpovídat swarm secretu ``logstash_elastic_pass``.
+Superuživatel ``amcr`` se v konfiguraci Logstashe nepoužívá.
+
+Změna hesla ``amcr_logger``: swarm secret nejde upravit na místě a Docker
+nedovolí smazat secret, který používá běžící služba. Samotný restart služby
+nové heslo nenačte. Postup:
+
+::
+
+   # 1. nastavit nové heslo účtu
+   sudo docker exec -t -i $(sudo docker ps -q -f name=swarm_webamcr_elasticsearch) bin/elasticsearch-reset-password -u amcr_logger -i --url http://localhost:9200
+
+   # 2. uvolnit secret a vytvořit ho s novým heslem (heslo nezůstane v souboru na disku)
+   sudo docker service rm swarm_webamcr_logstash
+   sudo docker secret rm logstash_elastic_pass
+   printf '%s' '<nové heslo>' | sudo docker secret create logstash_elastic_pass -
+
+   # 3. znovu nasadit stack, který službu logstash vytvoří znovu
+
+Při nasazení přes ``git_docker-compose.yml`` (bez swarmu) stačí přepsat
+soubor ``logstash_elastic_password.txt`` a službu ``logstash`` znovu
+vytvořit (``docker compose up -d --force-recreate logstash``).
 
 Role a uživatele lze vytvořit i v rozhraní Kibana:
 

@@ -180,7 +180,7 @@ services:
     entrypoint:
       - bash
       - -c
-      - 'ES_PASSWORD="$$(cat /run/secrets/logstash_elastic_pass)" || exit 1; export ES_PASSWORD; exec /usr/local/bin/docker-entrypoint'
+      - 'ES_PASSWORD="$$(cat /run/secrets/logstash_elastic_pass)" && [ -n "$$ES_PASSWORD" ] || { echo "Secret logstash_elastic_pass chybí nebo je prázdný" >&2; exit 1; }; export ES_PASSWORD; exec /usr/local/bin/docker-entrypoint'
     volumes:
       - logs_volume:/logs
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf

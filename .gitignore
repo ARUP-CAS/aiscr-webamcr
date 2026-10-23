@@ -106,6 +106,7 @@ kibana/kibana.yml
 /scripts/test_preparaton.sh
 /scripts/temp_manual_test_scripts/
 /redis_pass.txt
+/logstash_elastic_password.txt
 
 # elasticsearch config
 /elasticsearch/elasticsearch.yml
