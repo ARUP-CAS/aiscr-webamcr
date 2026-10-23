@@ -56,7 +56,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="ruiansyncrun",
             name="warnings",
-            field=models.TextField(blank=True, default="", verbose_name="heslar.models.RuianSyncRun.warnings"),
+            field=models.TextField(
+                blank=True, db_default="", default="", verbose_name="heslar.models.RuianSyncRun.warnings"
+            ),
         ),
         migrations.RunPython(presun_varovani, vrat_varovani),
     ]

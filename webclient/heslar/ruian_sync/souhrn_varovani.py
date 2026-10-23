@@ -18,6 +18,8 @@ import threading
 from collections import OrderedDict
 from typing import Dict, List, Optional, Tuple
 
+logger = logging.getLogger(__name__)
+
 #: Loggery modulů, ze kterých se varování sbírají. Handler se věší přímo na
 #: ně, ne na společného předka – nezávisí tak na nastavení ``propagate``.
 LOGGERY = (
@@ -61,7 +63,12 @@ UDALOSTI: Dict[str, str] = OrderedDict(
             "Vnořená část plochy převedena na díru",
         ),
         ("heslar.ruian_sync.shp_importer._resolve_shp_layer.stale_unpacked", "Použit dříve rozbalený SHP"),
-        ("heslar.ruian_sync.shp_importer._centroid_wkt.", "Nepodařilo se spočítat centroid"),
+        (
+            "heslar.ruian_sync.shp_importer._centroid_wkt.fallback_used",
+            "ÚZSZ neposkytlo definiční bod, použit centroid polygonu",
+        ),
+        ("heslar.ruian_sync.shp_importer._centroid_wkt.error", "Nepodařilo se spočítat centroid"),
+        ("heslar.ruian_sync.shp_importer._centroid_wkt.empty_centroid", "Centroid polygonu vyšel prázdný"),
         # Přepočet navázaných záznamů
         (
             "heslar.ruian_sync.syncer._reassign_records_in_changed_katastry.",
@@ -88,7 +95,7 @@ UDALOSTI: Dict[str, str] = OrderedDict(
         # Stahování
         (
             "heslar.ruian_sync.vfr_download.download_change_file.atom_failed",
-            "ATOM feed selhal, soubor stažen z náhradní URL",
+            "Stažení přes ATOM feed selhalo, zkoušela se náhradní URL",
         ),
         ("heslar.ruian_sync.vfr_download._je_duveryhodny_odkaz.odmitnuto", "Odmítnut nedůvěryhodný odkaz z ATOM feedu"),
         ("cron.tasks.sync_ruian_changes.source_remove_failed", "Stažený soubor nešel smazat"),
@@ -212,15 +219,28 @@ class SberVarovani:
         Řádek, který už ve ``warnings`` je (opakovaný pokus o tentýž den se
         stejným výsledkem), se nepřidává znovu.
 
-        :return: Nově připsané řádky.
+        Volá se z ``finally``, proto **nikdy nevyhazuje**: selhání zápisu
+        (typicky ztracené spojení s databází u už selhaného běhu) by jinak
+        nahradilo skutečnou výjimku běhu, případně přeskočilo uložení
+        úspěšného stavu. Souhrn se pak jen zaloguje.
+
+        :return: Nově připsané řádky; prázdné, když se zápis nepodařil.
         """
         for jmeno in LOGGERY:
             logging.getLogger(jmeno).removeHandler(self._handler)
 
-        from heslar.ruian_sync.syncer import _append_run_warning
+        nove: Tuple[str, ...] = ()
+        try:
+            from heslar.ruian_sync.syncer import _append_run_warning
 
-        stavajici = set((self.run.warnings or "").splitlines())
-        nove = tuple(r for r in self.souhrn() if r not in stavajici)
-        for radek in nove:
-            _append_run_warning(self.run, radek)
+            stavajici = set((self.run.warnings or "").splitlines())
+            nove = tuple(r for r in self.souhrn() if r not in stavajici)
+            for radek in nove:
+                _append_run_warning(self.run, radek)
+        except Exception as err:  # noqa: BLE001 – zápis souhrnu nesmí shodit běh
+            logger.error(
+                "heslar.ruian_sync.souhrn_varovani.zapis_selhal",
+                extra={"run_id": getattr(self.run, "pk", None), "error": str(err)[:500], "souhrn": self.souhrn()},
+            )
+            return ()
         return nove
