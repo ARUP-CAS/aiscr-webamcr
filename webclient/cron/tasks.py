@@ -3433,6 +3433,10 @@ RUIAN_MAX_404_POKUSU_ZA_BEH = 60
 #: aby se pro tentýž den nehromadily duplicitní řádky auditu.
 NOTE_404_NEPOTVRZENO = "no_changes_nepotvrzeno (404)"
 
+#: Poznámka u dne, který se opakuje po dřívějším selhání se staženými daty
+#: (metadata se vynutí a přepočet navázaných záznamů proběhne znovu).
+NOTE_OPAKOVANI_PO_SELHANI = "opakovani_po_selhani"
+
 #: Text chyby, kterým se uzavírá běh přerušený zvenčí (SIGKILL, OOM, restart
 #: kontejneru). Takový běh nestihl zapsat ani ``failed``, ani ``success``.
 ERROR_PRERUSENY_BEH = "Běh byl přerušen zvenčí (zabití procesu nebo restart kontejneru) a nedokončil se."
@@ -3674,6 +3678,7 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
         from heslar.models import RuianSyncRun
         from heslar.ruian_sync import FileVfrSource
         from heslar.ruian_sync import syncer as ruian_syncer
+        from heslar.ruian_sync.souhrn_varovani import SberVarovani
         from heslar.ruian_sync.vfr_download import get_target_dir
 
         _uzavri_prerusene_behy()
@@ -3717,6 +3722,10 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                         since=last_run.data_valid_to,
                         variant="ZKSH",
                     )
+                # Varování z hlubších vrstev (parser, stahování, přepočet) se
+                # logují bez vazby na běh; sběr je shrne do ``run.warnings``,
+                # aby byla vidět v administraci – viz ``SberVarovani``.
+                sber_varovani = SberVarovani(run).start()
                 try:
                     source = FileVfrSource.download_for_day(day, target_dir=target_dir)
                     if source is None:
@@ -3819,6 +3828,9 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                         .exists()
                     )
                     if opakovani_po_selhani:
+                        # Informace, ne varování – do ``note``, aby nevyvolala ⚠.
+                        run.note = NOTE_OPAKOVANI_PO_SELHANI
+                        run.save(update_fields=["note"])
                         logger.warning(
                             "cron.tasks.sync_ruian_changes.opakovani_po_selhani",
                             extra={
@@ -3877,6 +3889,8 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                     # Neúspěšný den přerušuje běh – další pokus proběhne v dalším spuštění
                     # cronu, který naváže od stejného `day` (last_successful nezměněno).
                     return
+                finally:
+                    sber_varovani.zapis()
 
                 day += datetime.timedelta(days=1)
 

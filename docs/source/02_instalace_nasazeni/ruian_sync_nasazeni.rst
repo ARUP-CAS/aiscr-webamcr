@@ -144,6 +144,26 @@ neozve**: všechny hlídače stáří dat (``dlouho_bez_dat``,
 ``mimo_retenci_zdroje``) běží uvnitř samotné úlohy. Po založení ověřte, že
 se v ``RuianSyncRun`` druhý den objeví běh s ``triggered_by='cron'``.
 
+Audit běhů v administraci
+-------------------------
+
+Výpis ``/admin/heslar/ruiansyncrun/`` má u každého běhu tři textová pole:
+
+* ``error`` – traceback, když běh **selhal** (``status='failed'``);
+* ``warnings`` – nálezy, které běh nezastavily, ale je třeba je **prověřit**:
+  díry nebo překryvy v pokrytí, nesoulad ploch úrovní, nesmazatelné prvky,
+  selhaný přepočet navázaných záznamů. Sloupec ⚠ ve výpisu ukazuje jejich
+  počet a po najetí myší i text. Varování z hlubších vrstev (parser,
+  stahování, přepočet jednotlivých záznamů, výrazná změna hranice) se
+  zapisují jako **souhrn** – jeden řádek za druh události s počtem výskytů,
+  několika příklady a v hranatých závorkách klíčem události, podle kterého
+  se jednotlivé výskyty dohledají v logu (Kibana);
+* ``note`` – **informativní** poznámka bez nutnosti zásahu, např.
+  ``no_changes (404)`` (den bez změn), ``not_published_yet (404)`` (ČÚZK
+  soubor ještě nevydal) nebo ``uzsz=…`` (soubor ÚZSZ použitý plným syncem).
+
+Úspěšný běh s ⚠ tedy proběhl celý, ale některá kontrola něco našla.
+
 Když plný sync selže
 --------------------
 
@@ -152,7 +172,7 @@ zapisují do Fedory. Rollback databáze do stavu před během proto **neexistuje
 a obnova se dělá dopředu:
 
 1. Zjistit z auditu, kde běh skončil – ``RuianSyncRun`` s ``status='failed'``
-   nese v ``note`` důvod a v ``error`` traceback.
+   nese ve ``warnings`` důvod a v ``error`` traceback.
 2. Ověřit, jestli běh zastavila předletová kontrola
    (``RuianNeuplnyZdrojError``). Pokud ano, **do dat se nesáhlo** – stačí
    opravit vstup a spustit znovu.

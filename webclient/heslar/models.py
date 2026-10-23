@@ -562,6 +562,16 @@ class RuianSyncRun(models.Model):
         verbose_name=_("heslar.models.RuianSyncRun.status"),
     )
     error = models.TextField(blank=True, default="", verbose_name=_("heslar.models.RuianSyncRun.error"))
+    #: Nálezy, které běh nezastavily, ale operátor je má prověřit (díry
+    #: v pokrytí, nesmazatelné prvky, selhaný přepočet…). Odděleně od ``note``,
+    #: aby se v adminu daly odlišit od informativních poznámek.
+    #: ``db_default`` drží výchozí hodnotu i v databázi: při návratu na starší
+    #: image, který pole nezná, by jinak jeho INSERT narazil na NOT NULL.
+    warnings = models.TextField(
+        blank=True, default="", db_default="", verbose_name=_("heslar.models.RuianSyncRun.warnings")
+    )
+    #: Informativní poznámka bez nutnosti zásahu – např. ``no_changes (404)``
+    #: u dne bez změn nebo použitý soubor ÚZSZ u plného syncu.
     note = models.TextField(blank=True, default="", verbose_name=_("heslar.models.RuianSyncRun.note"))
 
     class Meta:

@@ -162,14 +162,13 @@ def sync_delta(
         except Exception as err:  # noqa: BLE001
             # Reassign chyba nesmí zhatit přijetí denních dat – už jsme
             # úspěšně aplikovali upserty/delete katastrů. Detail jde
-            # do run.note + log; další pokus může uživatel udělat ručně
+            # do run.warnings + log; další pokus může uživatel udělat ručně
             # přes reassign_all nebo /admin/update-katastry/.
             logger.error(
                 "heslar.ruian_sync.syncer.sync_delta.reassign_failed",
                 extra={"run_id": run.pk, "error": str(err)[:500]},
             )
-            _append_run_note(run, f"Reassign po hranice change selhal: {err}")
-            run.save(update_fields=["note"])
+            _append_run_warning(run, f"Reassign po hranice change selhal: {err}")
 
     logger.debug("heslar.ruian_sync.syncer.sync_delta.end", extra={"run_id": run.pk})
 
@@ -319,7 +318,7 @@ def _zkontroluj_uplnost_zdroje(state: RuianFullState, run: RuianSyncRun) -> None
     odchylku, která se v ploše projeví.
 
     :param state: Plný stav prvků RÚIAN ze zdroje.
-    :param run: Audit záznam; důvod zastavení se zapíše do ``run.note``.
+    :param run: Audit záznam; důvod zastavení se zapíše do ``run.warnings``.
     :raises RuianNeuplnyZdrojError: Když zdroj proti databázi postrádá víc
         prvků, než připouštějí prahy :data:`_MAX_UBYTEK_KATASTRU`,
         :data:`_MAX_UBYTEK_OKRESU` a :data:`_MAX_UBYTEK_KRAJU`, nebo když
@@ -361,7 +360,7 @@ def _zkontroluj_uplnost_zdroje(state: RuianFullState, run: RuianSyncRun) -> None
         return
 
     duvod = "Neúplný zdroj plného stavu – " + "; ".join(problemy)
-    _append_run_note(run, duvod)
+    _append_run_warning(run, duvod)
     run.save()
     logger.error(
         "heslar.ruian_sync.syncer._zkontroluj_uplnost_zdroje.neuplny_zdroj",
@@ -459,7 +458,7 @@ def _apply_full_state(
     # (typicky chybí ST_UKSH soubor v adresáři při OB_UKSH módu), syncer
     # NEMAŽE existující záznamy v DB. Prázdná úroveň znamená „nemám data
     # pro tuto úroveň" (≠ „v RÚIAN nic není"). Skip se zaloguje do
-    # ``run.note``, aby si operátor všiml.
+    # ``run.warnings``, aby si operátor všiml.
     if state.katastry:
         to_delete = sorted(db_katastr_codes - state_katastr_codes)
         total_del = len(to_delete)
@@ -473,7 +472,7 @@ def _apply_full_state(
                 run.katastr_deletes += 1
             last_pct = print_progress("katastr delete", i, total_del, last_pct)
     else:
-        _append_run_note(run, "Mazání katastrů přeskočeno: zdroj neposkytl žádné KU.")
+        _append_run_warning(run, "Mazání katastrů přeskočeno: zdroj neposkytl žádné KU.")
         logger.error("heslar.ruian_sync.syncer._apply_full_state.skip_katastr_delete")
 
     if state.okresy:
@@ -492,7 +491,7 @@ def _apply_full_state(
                 run.okres_deletes += 1
             last_pct = print_progress("okres delete", i, total_del, last_pct)
     else:
-        _append_run_note(run, "Mazání okresů přeskočeno: zdroj neposkytl žádné okresy (chybí ST_UKSH?).")
+        _append_run_warning(run, "Mazání okresů přeskočeno: zdroj neposkytl žádné okresy (chybí ST_UKSH?).")
         logger.error("heslar.ruian_sync.syncer._apply_full_state.skip_okres_delete")
 
     if state.kraje:
@@ -510,7 +509,7 @@ def _apply_full_state(
                 run.kraj_deletes += 1
             last_pct = print_progress("kraj delete", i, total_del, last_pct)
     else:
-        _append_run_note(run, "Mazání krajů přeskočeno: zdroj neposkytl žádné kraje (chybí ST_UKSH?).")
+        _append_run_warning(run, "Mazání krajů přeskočeno: zdroj neposkytl žádné kraje (chybí ST_UKSH?).")
         logger.error("heslar.ruian_sync.syncer._apply_full_state.skip_kraj_delete")
 
     _check_katastry_topology(run, plocha_pred)
@@ -751,10 +750,10 @@ def _delete_kraj(kraj: RuianKraj, run: Optional[RuianSyncRun] = None) -> bool:
 
     Pokud přesto na kraj ukazují okresy (typicky historické záznamy, které
     syncer ignoruje a nechává v DB), záznam neumažeme a pokračujeme dál; výpis
-    bude v ``run.note``.
+    bude v ``run.warnings``.
 
     :param kraj: Záznam ke smazání.
-    :param run: Audit záznam pro zápis do ``note``; volitelný (zachovává API).
+    :param run: Audit záznam pro zápis do ``warnings``; volitelný (zachovává API).
 
         :return: ``True`` pokud bylo smazáno, jinak ``False``.
     """
@@ -768,7 +767,7 @@ def _delete_kraj(kraj: RuianKraj, run: Optional[RuianSyncRun] = None) -> bool:
             extra={"kod": kraj.kod, "nazev": kraj.nazev, "error": str(err)},
         )
         if run is not None:
-            _append_run_note(run, f"Kraj {kraj.kod} ({kraj.nazev}) nelze smazat: {err}")
+            _append_run_warning(run, f"Kraj {kraj.kod} ({kraj.nazev}) nelze smazat: {err}")
         return False
     except FedoraError as err:
         # DB delete proběhl, jen Fedora kontejner neexistoval (viz _delete_katastr).
@@ -777,7 +776,7 @@ def _delete_kraj(kraj: RuianKraj, run: Optional[RuianSyncRun] = None) -> bool:
             extra={"kod": kraj.kod, "nazev": kraj.nazev, "error": str(err)},
         )
         if run is not None:
-            _append_run_note(
+            _append_run_warning(
                 run,
                 f"Kraj {kraj.kod} ({kraj.nazev}) smazán z DB, " f"Fedora kontejner nenalezen: {err}",
             )
@@ -905,7 +904,7 @@ def _upsert_okres(
     nový okres už ve fázi upsertu (:func:`_upsert_katastr` přepíná FK
     ``okres``), která běží před mazáním okresů, takže se maže až prázdný
     záznam. Pokud by na něj přesto něco ukazovalo, ``RESTRICT`` mazání
-    zablokuje a :func:`_delete_okres` to zaloguje do ``run.note``.
+    zablokuje a :func:`_delete_okres` to zaloguje do ``run.warnings``.
 
     :param existing: Stávající záznam nebo ``None``.
     :param dto: Nová data.
@@ -993,10 +992,10 @@ def _delete_okres(okres: RuianOkres, run: Optional[RuianSyncRun] = None) -> bool
 
     Pokud RESTRICT FK delete zablokuje (typicky stále existující katastry, které
     nebylo možno přepsat během reassignu), záznam ponecháme a pokračujeme dál;
-    detail bude v ``run.note``.
+    detail bude v ``run.warnings``.
 
     :param okres: Záznam ke smazání.
-    :param run: Audit záznam pro zápis do ``note``; volitelný.
+    :param run: Audit záznam pro zápis do ``warnings``; volitelný.
 
         :return: ``True`` pokud bylo smazáno, jinak ``False``.
     """
@@ -1010,7 +1009,7 @@ def _delete_okres(okres: RuianOkres, run: Optional[RuianSyncRun] = None) -> bool
             extra={"kod": okres.kod, "nazev": okres.nazev, "error": str(err)},
         )
         if run is not None:
-            _append_run_note(run, f"Okres {okres.kod} ({okres.nazev}) nelze smazat: {err}")
+            _append_run_warning(run, f"Okres {okres.kod} ({okres.nazev}) nelze smazat: {err}")
         return False
     except FedoraError as err:
         # DB delete proběhl, jen Fedora kontejner neexistoval (viz _delete_katastr).
@@ -1019,7 +1018,7 @@ def _delete_okres(okres: RuianOkres, run: Optional[RuianSyncRun] = None) -> bool
             extra={"kod": okres.kod, "nazev": okres.nazev, "error": str(err)},
         )
         if run is not None:
-            _append_run_note(
+            _append_run_warning(
                 run,
                 f"Okres {okres.kod} ({okres.nazev}) smazán z DB, " f"Fedora kontejner nenalezen: {err}",
             )
@@ -1341,7 +1340,7 @@ def _reassign_records_in_changed_katastry(
     :param kody: Množina kódů katastrů, jejichž hranice se v tomhle delta
         změnila (vrací :func:`_apply_changes`).
     :param run: Audit záznam – navyšují se ``affected_*`` countery
-        a poznámka ``note`` při chybě.
+        a varování ve ``warnings`` při chybě.
     """
     if not kody:
         return
@@ -1600,7 +1599,7 @@ def _delete_katastr(
     # Pokud přesto stále ukazuje (např. reassign vrátil týž katastr, protože spatial
     # query našla daný polygon zpět – fallback_point je definiční bod mazaného
     # katastru a leží v jeho vlastním polygonu), RESTRICT FK delete zablokuje.
-    # V tomto případě záznam ponecháme, zalogujeme do run.note a pokračujeme dál
+    # V tomto případě záznam ponecháme, zalogujeme do run.warnings a pokračujeme dál
     # – operátor pak uvidí v adminu seznam katastrů, které je potřeba zkontrolovat
     # a vyřešit ručně.
     try:
@@ -1610,7 +1609,7 @@ def _delete_katastr(
             "heslar.ruian_sync.syncer._delete_katastr.restricted",
             extra={"kod": katastr.kod, "nazev": katastr.nazev, "error": str(err)},
         )
-        _append_run_note(run, f"Katastr {katastr.kod} ({katastr.nazev}) nelze smazat: {err}")
+        _append_run_warning(run, f"Katastr {katastr.kod} ({katastr.nazev}) nelze smazat: {err}")
         return False
     except FedoraError as err:
         # DB delete proběhl úspěšně (atomic transakce už commitla – pre_delete
@@ -1623,7 +1622,7 @@ def _delete_katastr(
             "heslar.ruian_sync.syncer._delete_katastr.fedora_error",
             extra={"kod": katastr.kod, "nazev": katastr.nazev, "error": str(err)},
         )
-        _append_run_note(
+        _append_run_warning(
             run,
             f"Katastr {katastr.kod} ({katastr.nazev}) smazán z DB, "
             f"Fedora kontejner nenalezen (404 nebo jiná chyba): {err}",
@@ -1860,7 +1859,7 @@ def _zkontroluj_pokryti(run: RuianSyncRun, plocha_pred: Optional[float]) -> Opti
     sjednocení – pokles plochy totiž může znamenat díru, zánik hraničního
     katastru, ale taky jen plošnou výměnu hranic z nového zdroje.
 
-    :param run: Audit záznam, do jehož ``note`` se zapíše shrnutí.
+    :param run: Audit záznam, do jehož ``warnings`` se zapíše shrnutí.
     :param plocha_pred: Součet ploch v m² pořízený **před** aplikací změn;
         ``None`` kontrolu přeskočí (nemáme s čím porovnávat).
     :return: Úbytek plochy v m² (kladné číslo), když překročil
@@ -2000,7 +1999,7 @@ def _zkontroluj_unii_pokryti(run: RuianSyncRun) -> bool:
        Proto se dohledání dvojic spouští při **jakékoli** anomálii, ne podle
        naměřeného překryvu.
 
-    :param run: Audit záznam, do jehož ``note`` se zapíše shrnutí.
+    :param run: Audit záznam, do jehož ``warnings`` se zapíše shrnutí.
 
         :return: ``True`` pokud je pokrytí podezřelé (díra, nespojitost,
             naměřený překryv nebo selhání sjednocení) a volající má spustit
@@ -2022,7 +2021,7 @@ def _zkontroluj_unii_pokryti(run: RuianSyncRun) -> bool:
             "heslar.ruian_sync.syncer._zkontroluj_unii_pokryti.selhalo",
             extra={"run_id": run.pk, "error": str(err)[:500]},
         )
-        _append_run_note(run, f"Sjednocení pokrytí selhalo, hranice katastrů jsou poškozené: {str(err)[:200]}")
+        _append_run_warning(run, f"Sjednocení pokrytí selhalo, hranice katastrů jsou poškozené: {str(err)[:200]}")
         return True
 
     if not rows:
@@ -2042,7 +2041,7 @@ def _zkontroluj_unii_pokryti(run: RuianSyncRun) -> bool:
             extra={"run_id": run.pk, "count": len(dery) - _TOPOLOGY_MAX_LOGGED},
         )
     if dery:
-        _append_run_note(
+        _append_run_warning(
             run,
             f"Topologická kontrola: {len(dery)} děr v pokrytí " f"(největší {dery[0][0]:.4f} m² @ {dery[0][1]}).",
         )
@@ -2052,7 +2051,7 @@ def _zkontroluj_unii_pokryti(run: RuianSyncRun) -> bool:
             "heslar.ruian_sync.syncer._zkontroluj_unii_pokryti.nespojite",
             extra={"run_id": run.pk, "casti": casti},
         )
-        _append_run_note(run, f"Topologická kontrola: pokrytí není spojité, rozpadlo se na {casti} částí.")
+        _append_run_warning(run, f"Topologická kontrola: pokrytí není spojité, rozpadlo se na {casti} částí.")
 
     # Rozdíl může vyjít nepatrně negativní (plovoucí čárka); za překryv se
     # bere až kladná hodnota nad prahem. Viz varování v docstringu – tenhle
@@ -2084,7 +2083,7 @@ def _zkontroluj_prekryvy_dvojic(run: RuianSyncRun) -> int:
     Používá PostGIS spatial index přes ``ST_Overlaps`` (redukuje O(N²)
     na O(N log N)).
 
-    :param run: Audit záznam, do jehož ``note`` se zapíše shrnutí.
+    :param run: Audit záznam, do jehož ``warnings`` se zapíše shrnutí.
 
         :return: Počet nalezených překrývajících se dvojic.
     """
@@ -2116,7 +2115,7 @@ def _zkontroluj_prekryvy_dvojic(run: RuianSyncRun) -> int:
                 )
 
     if overlaps_count > 0:
-        _append_run_note(run, f"Topologická kontrola: {overlaps_count} překryvů dvojic katastrů.")
+        _append_run_warning(run, f"Topologická kontrola: {overlaps_count} překryvů dvojic katastrů.")
     return overlaps_count
 
 
@@ -2147,9 +2146,9 @@ def _zkontroluj_soulad_urovni(run: RuianSyncRun) -> None:
     U úrovně, které geometrie chybí, se plochy neporovnávají – rozdíl by jen
     opisoval chybějící prvky a zdvojoval hlášení.
 
-    Nic nevyhazuje – jen zaloguje a připíše do ``run.note``.
+    Nic nevyhazuje – jen zaloguje a připíše do ``run.warnings``.
 
-    :param run: Audit záznam, do jehož ``note`` se zapíše shrnutí.
+    :param run: Audit záznam, do jehož ``warnings`` se zapíše shrnutí.
     """
     with connection.cursor() as cursor:
         cursor.execute(_SQL_SOUCTY_UROVNI)
@@ -2216,7 +2215,7 @@ def _zkontroluj_soulad_urovni(run: RuianSyncRun) -> None:
         )
         return
 
-    _append_run_note(
+    _append_run_warning(
         run,
         f"Úrovně RÚIAN nesedí proti katastrům ({plocha_kat / 1e6:.4f} km²): " + "; ".join(problemy) + ".",
     )
@@ -2247,7 +2246,7 @@ def _ohlas_ubytek_pokryti(run: RuianSyncRun, ubytek: float, *, podezrele: bool) 
     Kdyby se i tady hlásil ``ERROR``, zazněl by při každém plném synchu a
     přestal by se číst.
 
-    :param run: Audit záznam, do jehož ``note`` se zapíše shrnutí.
+    :param run: Audit záznam, do jehož ``warnings`` se zapíše shrnutí.
     :param ubytek: Úbytek plochy v m² (kladné číslo).
     :param podezrele: Výsledek :func:`_zkontroluj_unii_pokryti` – ``True``,
         když sjednocení našlo anomálii nebo vůbec neproběhlo.
@@ -2262,13 +2261,13 @@ def _ohlas_ubytek_pokryti(run: RuianSyncRun, ubytek: float, *, podezrele: bool) 
     }
     if prisne:
         logger.error("heslar.ruian_sync.syncer._zkontroluj_pokryti.dira", extra=extra)
-        _append_run_note(
+        _append_run_warning(
             run,
             f"Pokrytí kleslo o {ubytek / 1e6:.4f} km² – v ČR pravděpodobně vznikla díra bez katastru.",
         )
         return
     logger.warning("heslar.ruian_sync.syncer._zkontroluj_pokryti.ubytek_bez_anomalie", extra=extra)
-    _append_run_note(
+    _append_run_warning(
         run,
         f"Pokrytí kleslo o {ubytek / 1e6:.4f} km², ale sjednocení nenašlo díru ani překryv – "
         "nejspíš plošná výměna hranic ze zdroje. Ověřte, že nezanikl hraniční katastr.",
@@ -2310,7 +2309,7 @@ def _check_katastry_topology(run: RuianSyncRun, plocha_pred: Optional[float] = N
     kvůli tomu nezastavuje.
 
     :param run: Audit záznam RuianSyncRun – shrnutí topologických issue se
-        připojí do jeho ``note``.
+        připojí do jeho ``warnings``.
     :param plocha_pred: Součet ploch katastrů v m² pořízený před aplikací
         změn (viz :func:`_soucet_plochy_katastru`); ``None`` kontrolu pokrytí
         přeskočí.
@@ -2335,20 +2334,21 @@ def _check_katastry_topology(run: RuianSyncRun, plocha_pred: Optional[float] = N
     )
 
 
-def _append_run_note(run: RuianSyncRun, message: str) -> None:
+def _append_run_warning(run: RuianSyncRun, message: str) -> None:
     """
-    Připojí jeden řádek k poli ``RuianSyncRun.note``.
+    Připojí jeden řádek k poli ``RuianSyncRun.warnings``.
 
-    Použití pro neúspěšné mazání prvků (RESTRICT FK), které nezpůsobí pád
-    celého běhu, ale operátor by je měl vidět v adminu.
+    Pro nálezy, které běh nezastaví, ale operátor je má prověřit – nesmazatelné
+    prvky (RESTRICT FK), díry a překryvy v pokrytí, selhaný přepočet navázaných
+    záznamů. Admin podle neprázdného pole zobrazí ve výpisu běhů ⚠. Informativní
+    poznámky (např. ``no_changes (404)``) sem nepatří, ty jdou do ``note``.
 
     :param run: Audit záznam.
-    :param message: Text, který se přidá na samostatný řádek do ``note``.
+    :param message: Text, který se přidá na samostatný řádek do ``warnings``.
     """
-    existing = run.note or ""
-    new_note = (existing + "\n" + message).strip() if existing else message
-    run.note = new_note
-    run.save(update_fields=["note"])
+    existing = run.warnings or ""
+    run.warnings = (existing + "\n" + message).strip() if existing else message
+    run.save(update_fields=["warnings"])
 
 
 def _print_section(label: str, total: int) -> None:
