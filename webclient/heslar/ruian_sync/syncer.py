@@ -753,7 +753,7 @@ def _delete_kraj(kraj: RuianKraj, run: Optional[RuianSyncRun] = None) -> bool:
     bude v ``run.warnings``.
 
     :param kraj: Záznam ke smazání.
-    :param run: Audit záznam pro zápis do ``note``; volitelný (zachovává API).
+    :param run: Audit záznam pro zápis do ``warnings``; volitelný (zachovává API).
 
         :return: ``True`` pokud bylo smazáno, jinak ``False``.
     """
@@ -995,7 +995,7 @@ def _delete_okres(okres: RuianOkres, run: Optional[RuianSyncRun] = None) -> bool
     detail bude v ``run.warnings``.
 
     :param okres: Záznam ke smazání.
-    :param run: Audit záznam pro zápis do ``note``; volitelný.
+    :param run: Audit záznam pro zápis do ``warnings``; volitelný.
 
         :return: ``True`` pokud bylo smazáno, jinak ``False``.
     """
@@ -1340,7 +1340,7 @@ def _reassign_records_in_changed_katastry(
     :param kody: Množina kódů katastrů, jejichž hranice se v tomhle delta
         změnila (vrací :func:`_apply_changes`).
     :param run: Audit záznam – navyšují se ``affected_*`` countery
-        a poznámka ``note`` při chybě.
+        a varování ve ``warnings`` při chybě.
     """
     if not kody:
         return
@@ -1859,7 +1859,7 @@ def _zkontroluj_pokryti(run: RuianSyncRun, plocha_pred: Optional[float]) -> Opti
     sjednocení – pokles plochy totiž může znamenat díru, zánik hraničního
     katastru, ale taky jen plošnou výměnu hranic z nového zdroje.
 
-    :param run: Audit záznam, do jehož ``note`` se zapíše shrnutí.
+    :param run: Audit záznam, do jehož ``warnings`` se zapíše shrnutí.
     :param plocha_pred: Součet ploch v m² pořízený **před** aplikací změn;
         ``None`` kontrolu přeskočí (nemáme s čím porovnávat).
     :return: Úbytek plochy v m² (kladné číslo), když překročil
@@ -1999,7 +1999,7 @@ def _zkontroluj_unii_pokryti(run: RuianSyncRun) -> bool:
        Proto se dohledání dvojic spouští při **jakékoli** anomálii, ne podle
        naměřeného překryvu.
 
-    :param run: Audit záznam, do jehož ``note`` se zapíše shrnutí.
+    :param run: Audit záznam, do jehož ``warnings`` se zapíše shrnutí.
 
         :return: ``True`` pokud je pokrytí podezřelé (díra, nespojitost,
             naměřený překryv nebo selhání sjednocení) a volající má spustit
@@ -2083,7 +2083,7 @@ def _zkontroluj_prekryvy_dvojic(run: RuianSyncRun) -> int:
     Používá PostGIS spatial index přes ``ST_Overlaps`` (redukuje O(N²)
     na O(N log N)).
 
-    :param run: Audit záznam, do jehož ``note`` se zapíše shrnutí.
+    :param run: Audit záznam, do jehož ``warnings`` se zapíše shrnutí.
 
         :return: Počet nalezených překrývajících se dvojic.
     """
@@ -2148,7 +2148,7 @@ def _zkontroluj_soulad_urovni(run: RuianSyncRun) -> None:
 
     Nic nevyhazuje – jen zaloguje a připíše do ``run.warnings``.
 
-    :param run: Audit záznam, do jehož ``note`` se zapíše shrnutí.
+    :param run: Audit záznam, do jehož ``warnings`` se zapíše shrnutí.
     """
     with connection.cursor() as cursor:
         cursor.execute(_SQL_SOUCTY_UROVNI)
@@ -2246,7 +2246,7 @@ def _ohlas_ubytek_pokryti(run: RuianSyncRun, ubytek: float, *, podezrele: bool) 
     Kdyby se i tady hlásil ``ERROR``, zazněl by při každém plném synchu a
     přestal by se číst.
 
-    :param run: Audit záznam, do jehož ``note`` se zapíše shrnutí.
+    :param run: Audit záznam, do jehož ``warnings`` se zapíše shrnutí.
     :param ubytek: Úbytek plochy v m² (kladné číslo).
     :param podezrele: Výsledek :func:`_zkontroluj_unii_pokryti` – ``True``,
         když sjednocení našlo anomálii nebo vůbec neproběhlo.
@@ -2309,7 +2309,7 @@ def _check_katastry_topology(run: RuianSyncRun, plocha_pred: Optional[float] = N
     kvůli tomu nezastavuje.
 
     :param run: Audit záznam RuianSyncRun – shrnutí topologických issue se
-        připojí do jeho ``note``.
+        připojí do jeho ``warnings``.
     :param plocha_pred: Součet ploch katastrů v m² pořízený před aplikací
         změn (viz :func:`_soucet_plochy_katastru`); ``None`` kontrolu pokrytí
         přeskočí.

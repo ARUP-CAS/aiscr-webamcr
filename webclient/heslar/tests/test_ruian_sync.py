@@ -1201,6 +1201,39 @@ class SouhrnVarovaniTests(SimpleTestCase):
         self.assertEqual(len(prvni), 1)
         self.assertEqual(druhy, [])
 
+    def test_fallback_centroidu_neni_chyba_vypoctu(self):
+        """Dopočítaný centroid z fallbacku má vlastní řádek, oddělený od chyb výpočtu."""
+        log = logging.getLogger("heslar.ruian_sync.shp_importer")
+
+        def zaloguj():
+            log.warning("heslar.ruian_sync.shp_importer._centroid_wkt.fallback_used", extra={"kod": 1})
+            log.warning("heslar.ruian_sync.shp_importer._centroid_wkt.error", extra={"kod": 2})
+
+        radky = self._sber(zaloguj)
+
+        self.assertEqual(len(radky), 2)
+        self.assertIn("použit centroid polygonu: 1×", radky[0])
+        self.assertIn("Nepodařilo se spočítat centroid: 1×", radky[1])
+
+    def test_selhani_zapisu_nevyhodi_vyjimku(self):
+        """
+        Selhaný zápis souhrnu jen zaloguje chybu.
+
+        Volá se z ``finally`` – výjimka by přebila skutečnou chybu běhu nebo
+        přeskočila uložení úspěšného stavu.
+        """
+        log = logging.getLogger("heslar.ruian_sync.syncer")
+        sber = souhrn_varovani.SberVarovani(RuianSyncRun(warnings="")).start()
+        log.warning("heslar.ruian_sync.syncer._upsert_okres.precislovani", extra={"kod": 5})
+
+        def selze(run, radek):
+            raise RuntimeError("spojení ztraceno")
+
+        with mock.patch.object(syncer, "_append_run_warning", selze), self.assertLogs(
+            "heslar.ruian_sync.souhrn_varovani", level="ERROR"
+        ):
+            self.assertEqual(sber.zapis(), ())
+
     def test_handler_se_po_zapisu_odpoji(self):
         """Po zápisu nesmí na loggerech zůstat handler sběru."""
         self._sber(lambda: None)
