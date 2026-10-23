@@ -194,9 +194,11 @@ services:
   logstash:
     image: docker.elastic.co/logstash/logstash:9.5.5
     restart: always
-    environment:
-      - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
-      - ELASTIC_HOSTS=logstash_elastic_host
+    # Image Logstashe neumí *_FILE proměnné; heslo pro logstash.conf (${ES_PASSWORD}) se načte ze secretu.
+    entrypoint:
+      - bash
+      - -c
+      - 'ES_PASSWORD="$$(cat /run/secrets/logstash_elastic_pass)" && [ -n "$$ES_PASSWORD" ] || { echo "Secret logstash_elastic_pass chybí nebo je prázdný" >&2; exit 1; }; export ES_PASSWORD; exec /usr/local/bin/docker-entrypoint'
     volumes:
       - logs_volume:/logs
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
@@ -204,7 +206,6 @@ services:
       - prod-net
     secrets:
       - logstash_elastic_pass
-      - logstash_elastic_host
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.5.5
@@ -216,7 +217,6 @@ services:
       - discovery.type=single-node
       - http.host=0.0.0.0
       - XPACK_MONITORING_ENABLED=false
-      - ELASTIC_PASSWORD=elastic_pass
       - bootstrap.memory_lock=true
     ulimits:
       memlock:
@@ -230,8 +230,6 @@ services:
       - 9200:9200
     networks:
       - prod-net
-    secrets:
-      - elastic_pass
     deploy:
       resources:
         limits:
@@ -320,8 +318,6 @@ secrets:
     external: true
   grafana_admin_password:
     external: true
-  elastic_pass:
-    external: true
   logstash_elastic_pass:
     external: true
   prometheus_config:
@@ -329,8 +325,6 @@ secrets:
   postgresql_exporter:
     external: true
   postgresql_exporter_uri:
-    external: true
-  logstash_elastic_host:
     external: true
 
 configs:

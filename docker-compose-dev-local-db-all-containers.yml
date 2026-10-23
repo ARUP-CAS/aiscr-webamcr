@@ -204,6 +204,9 @@ services:
     ports:
       - 9600:9600
       - 5959:5959
+    environment:
+      # Lokální Elasticsearch běží bez zabezpečení, heslo se ignoruje.
+      - ES_PASSWORD=unused
     volumes:
       - logs_volume:/logs:ro
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
