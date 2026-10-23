@@ -988,7 +988,7 @@ def smazat(request, ident_cely):
         try:
             nalez.igsn_delete()
             nalez.close_active_transaction_when_finished = True
-            nalez.record_deletion(nalez.active_transaction)
+            # Smazání ve Fedoře zaznamená pre_delete signál uvnitř DB transakce.
             resp1 = nalez.delete()
             if resp1:
                 logger.info(

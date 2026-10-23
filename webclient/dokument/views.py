@@ -1593,7 +1593,7 @@ class DokumentCastSmazatView(TransakceView):
                 extra={"error": err, "ident_cely": dokument.ident_cely},
             )
             transaction.set_rollback(True)
-            dokument.active_transaction.rollback()
+            cast.active_transaction.rollback_transaction()
             if lokalita_update:
                 lokalita_update.igsn_update(False, True)
         return JsonResponse({"redirect": dokument.get_absolute_url()})

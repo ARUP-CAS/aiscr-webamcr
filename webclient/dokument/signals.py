@@ -169,27 +169,18 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
         k: Komponenta
         k.delete()
         k.komponenta_vazby.delete()
-
-    def save_metadata(close_transaction=False):
-        """
-        Uloží metadata. v aplikaci.
-
-        :param close_transaction: Pokud ``True``, uzavře transakci po zapsání metadat.
-        """
-        for item in instance.casti.all():
-            item: DokumentCast
-            if item.archeologicky_zaznam is not None:
-                item.archeologicky_zaznam.save_metadata(fedora_transaction)
-            if item.projekt is not None:
-                item.projekt.save_metadata(fedora_transaction)
-        if instance.let:
-            instance.let.save_metadata(fedora_transaction)
-        instance.record_deletion(fedora_transaction, close_transaction=close_transaction)
-
+    # Zápisy do Fedory uvnitř DB transakce, aby chyba Fedory vedla k rollbacku smazání (#4437).
+    for item in instance.casti.all():
+        item: DokumentCast
+        if item.archeologicky_zaznam is not None:
+            item.archeologicky_zaznam.save_metadata(fedora_transaction)
+        if item.projekt is not None:
+            item.projekt.save_metadata(fedora_transaction)
+    if instance.let:
+        instance.let.save_metadata(fedora_transaction)
+    instance.record_deletion(fedora_transaction)
     if instance.close_active_transaction_when_finished:
-        transaction.on_commit(lambda: save_metadata(True))
-    else:
-        save_metadata()
+        transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
     logger.debug(
         "dokument.signals.dokument_delete_repository_container.end",
         extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid")},
@@ -284,26 +275,15 @@ def dokument_cast_save_metadata_delete(sender, instance: DokumentCast, **kwargs)
     fedora_transaction: FedoraTransaction = instance.active_transaction
     invalidate_model(Dokument)
     invalidate_model(Akce)
-
-    def save_metadata(close_transaction=False):
-        """
-        Uloží metadata. v aplikaci.
-
-        :param close_transaction: Pokud ``True``, uzavře transakci po zapsání metadat.
-        """
-        if instance.initial_archeologicky_zaznam_id is not None and instance.suppress_signal_arch_z is False:
-            instance.initial_archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=True)
-        if instance.initial_projekt_id is not None:
-            instance.initial_projekt.save_metadata(fedora_transaction, skip_container_check=True)
-        if not instance.suppress_dokument_signal:
-            instance.dokument.save_metadata(fedora_transaction, skip_container_check=True)
-        if close_transaction:
-            fedora_transaction.mark_transaction_as_closed()
-
+    # Zápisy do Fedory uvnitř DB transakce, aby chyba Fedory vedla k rollbacku smazání (#4437).
+    if instance.initial_archeologicky_zaznam_id is not None and instance.suppress_signal_arch_z is False:
+        instance.initial_archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=True)
+    if instance.initial_projekt_id is not None:
+        instance.initial_projekt.save_metadata(fedora_transaction, skip_container_check=True)
+    if not instance.suppress_dokument_signal:
+        instance.dokument.save_metadata(fedora_transaction, skip_container_check=True)
     if instance.close_active_transaction_when_finished:
-        transaction.on_commit(lambda: save_metadata(True))
-    else:
-        save_metadata()
+        transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
     logger.debug(
         "dokument.signals.dokument_cast_save_metadata.end", extra={"pk": instance.pk, "transaction": fedora_transaction}
     )
@@ -339,9 +319,8 @@ def tvar_delete(sender, instance: Tvar, **kwargs):
     """
     logger.debug("dokument.signals.tvar_delete.start", extra={"pk": instance.pk})
     if instance.dokument:
-        fedora_transaction = instance.active_transaction
-        if instance.close_active_transaction_when_finished:
-            transaction.on_commit(lambda: instance.dokument.save_metadata(fedora_transaction, close_transaction=True))
-        else:
-            instance.dokument.save_metadata(fedora_transaction)
+        # Zápis do Fedory uvnitř DB transakce, commit Fedora transakce se odloží do on_commit (#4437).
+        instance.dokument.save_metadata(
+            instance.active_transaction, close_transaction=instance.close_active_transaction_when_finished
+        )
     logger.debug("dokument.signals.tvar_delete.end", extra={"pk": instance.pk, "transaction": transaction})
