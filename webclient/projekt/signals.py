@@ -104,25 +104,15 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     invalidate_model(Akce)
     invalidate_model(SamostatnyNalez)
     if not instance.suppress_signal:
-
-        def save_metadata(close_transaction=False):
-            """
-                       Uloží metadata.
-
-                       :param close_transaction: Parametr ``close_transaction`` předává se do volání ``record_deletion()``.
-            Výsledek provedené změny nad cílovým objektem.
-            """
-            if instance.soubory and instance.soubory.pk:
-                instance.soubory.delete()
-            for dokument_pk in instance.initial_dokumenty:
-                dokument: Dokument = Dokument.objects.get(pk=dokument_pk)
-                dokument.save_metadata(fedora_transaction)
-            instance.record_deletion(fedora_transaction, close_transaction=close_transaction)
-
+        # Zápisy do DB i Fedory uvnitř DB transakce, aby chyba Fedory vedla k rollbacku smazání (#4437).
+        if instance.soubory and instance.soubory.pk:
+            instance.soubory.delete()
+        for dokument_pk in instance.initial_dokumenty:
+            dokument: Dokument = Dokument.objects.get(pk=dokument_pk)
+            dokument.save_metadata(fedora_transaction)
+        instance.record_deletion(fedora_transaction)
         if instance.close_active_transaction_when_finished:
-            transaction.on_commit(lambda: save_metadata(True))
-        else:
-            save_metadata()
+            transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
     logger.debug(
         "projekt.signals.projekt_pre_delete.end",
         extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)},
