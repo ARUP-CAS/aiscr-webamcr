@@ -43,6 +43,12 @@ def get_secret(setting, default_value=None):
         return secrets.get(setting, "X")
 
 
+# Sdílený přepínač síťových integračních testů; výchozí stav je vypnuto.
+FEDORA_INTEGRATION_TESTS = str(get_secret("FEDORA_INTEGRATION_TESTS", False)).lower() in {"true", "1"}
+INTEGRATION_API_TEST_USERNAME = get_secret("INTEGRATION_API_TEST_USERNAME", "")
+INTEGRATION_API_TEST_PASSWORD = get_secret("INTEGRATION_API_TEST_PASSWORD", "")
+
+
 def get_mail_secret(setting, default_value=None):
     """
     Vrací mail secret.
