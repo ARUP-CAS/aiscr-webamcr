@@ -233,11 +233,13 @@ Třídy
       tagy (např. UserComment, MakerNote apod.), automaticky je odstraní,
       aby bylo možné obrázek úspěšně uložit.
 
-      HEIC/HEIF čistí ve všech obrázcích kontejneru a při chybě vyvolá výjimku.
-      U ostatních formátů při chybě vrací původní vstupní soubor beze změny.
+      HEIC/HEIF čistí ve všech obrázcích kontejneru. Při chybě parsování,
+      odstranění nebo ověření GPS vyvolá výjimku, aby zabránila archivaci
+      původního souboru. Soubor bez GPS vrací beze změny.
 
       :param bytes_io: Obsah souboru připravený ke kontrole antivirem.
       :return: Vrací výsledek operace odstranění.
+      :raises GpsDataRemovalError: Pokud GPS nelze bezpečně odstranit nebo ověřit výstup.
 
    .. py:method:: check_mime_for_url()
 

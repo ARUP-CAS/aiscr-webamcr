@@ -37,6 +37,7 @@ from core.constants import (
 )
 from core.coordTransform import transform_geom_to_sjtsk, transform_geom_to_wgs84
 from core.decorators import odstavka_in_progress
+from core.exceptions import GpsDataRemovalError
 from core.ident_cely import get_sn_ident
 from core.models import AntivirusCheckResult, Permissions, Soubor, check_permissions
 from core.repository_connector import (
@@ -3437,11 +3438,10 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             )
         new_name = get_mime_safe_soubor_name(new_name, new_name, mime_extensions)
 
-        if mimetype in Soubor.PAS_ACCEPTED_MIMES:
-            binary_data = Soubor.remove_gps_data(binary_data)
-
         fedora_transaction = FedoraTransaction(transaction_user=request.user)
         try:
+            if mimetype in Soubor.PAS_ACCEPTED_MIMES:
+                binary_data = Soubor.remove_gps_data(binary_data)
             connector = FedoraRepositoryConnector(instance, fedora_transaction, skip_container_check=False)
             rep_bin_file = connector.save_binary_file(new_name, mimetype, binary_data)
             soubor_instance = Soubor(
@@ -3463,6 +3463,16 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
                 self._create_rearchive_history_record(instance, request.user)
                 soubor_instance.save()
             self._update_igsn_if_archived(instance)
+        except GpsDataRemovalError:
+            logger.exception("api.views.SamostatnyNalezFotografieUploadView.post.gps_cleanup_failed")
+            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                fedora_transaction.rollback_transaction()
+            self._release_record_lock(ident_cely, lock_ttl)
+            return self._fail(
+                log_entry,
+                {"detail": _("core.views.post_upload.gps_cleanup_failed")},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
         except DoiWriteError as err:
             logger.error("api.views.SamostatnyNalezFotografieUploadView.post.igsn_error", extra={"error": err})
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:

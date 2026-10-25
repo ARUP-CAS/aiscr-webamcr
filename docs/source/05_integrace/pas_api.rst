@@ -217,7 +217,11 @@ Nahrání fotografie
    ``{ident}F###``) a přípona se ověří proti detekovanému MIME typu
    (``get_mime_safe_soubor_name``): neodpovídá-li obsahu, nahradí se příponou z MIME typu, a vždy se
    uloží malými písmeny. MIME typ bez známé přípony nebo vyčerpané pořadové číslo vrací ``422``.
-   U formátů JPEG, PNG a TIFF se **odstraní GPS metadata**.
+   U všech přijímaných formátů JPEG, PNG, TIFF, HEIC a HEIF se před uložením
+   **odstraní GPS souřadnice z EXIF**. U HEIC a HEIF se kontrolují všechny obrázky
+   kontejneru. Pokud parsování, odstranění nebo ověření GPS selže, endpoint vrátí
+   ``500`` s konkrétní chybou v poli ``detail`` (v češtině „Z fotografie nelze
+   odstranit GPS souřadnice.“). Soubor se neuloží a zámek záznamu se uvolní.
 #. Uložení do Fedory; u archivovaného záznamu ``SN34`` a aktualizace IGSN.
 #. ``201`` s aktualizovanými XML metadaty záznamu.
 

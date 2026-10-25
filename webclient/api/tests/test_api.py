@@ -41,6 +41,7 @@ from core.constants import (
     SN_ZAPSANY,
     ZAPSANI_SN,
 )
+from core.exceptions import GpsDataRemovalError
 from core.models import AntivirusCheckResult, Permissions, Soubor, check_permissions
 from core.repository_connector import FedoraNoResponseError
 from core.setting_models import CustomAdminSettings
@@ -3332,6 +3333,19 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
                 else:
                     with Image.open(io.BytesIO(payload)) as stored:
                         self.assertFalse(stored.getexif().get_ifd(34853))
+
+    def test_gps_cleanup_failure_blocks_upload_and_releases_lock(self):
+        """Chyba čištění GPS nevytvoří soubor a uvolní zámek nálezu."""
+        with patch(
+            "api.views.Soubor.remove_gps_data", side_effect=GpsDataRemovalError("GPS cleanup failed")
+        ), patch.object(self, "_mock_binary_file", wraps=self._mock_binary_file) as archive:
+            response = self._post_file(IDENT_CELY, self._minimal_photo_bytes())
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(response.data["detail"], _("core.views.post_upload.gps_cleanup_failed"))
+        archive.assert_not_called()
+        self._assert_attached_files(self.nalez, 0)
+        self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_heic_mime_is_accepted(self):
         """Soubor s MIME typem ``image/heic`` projde validací a upload skončí HTTP 201."""

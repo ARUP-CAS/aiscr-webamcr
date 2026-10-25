@@ -15,6 +15,7 @@ import py7zr
 import rarfile
 from core.constants import ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_BADATEL_ID
 from core.distribution_names import IMPLICIT_DISTRIBUTION_NAMES, ORIGINAL_DISTRIBUTION_NAME
+from core.exceptions import GpsDataRemovalError
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.cache import cache
@@ -751,14 +752,19 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         tagy (např. UserComment, MakerNote apod.), automaticky je odstraní,
         aby bylo možné obrázek úspěšně uložit.
 
-        HEIC/HEIF čistí ve všech obrázcích kontejneru a při chybě vyvolá výjimku.
-        U ostatních formátů při chybě vrací původní vstupní soubor beze změny.
+        HEIC/HEIF čistí ve všech obrázcích kontejneru. Při chybě parsování,
+        odstranění nebo ověření GPS vyvolá výjimku, aby zabránila archivaci
+        původního souboru. Soubor bez GPS vrací beze změny.
 
         :param bytes_io: Obsah souboru připravený ke kontrole antivirem.
         :return: Vrací výsledek operace odstranění.
+        :raises GpsDataRemovalError: Pokud GPS nelze bezpečně odstranit nebo ověřit výstup.
         """
         if cls.is_heif(bytes_io):
-            return cls.remove_heif_gps_data(bytes_io)
+            try:
+                return cls.remove_heif_gps_data(bytes_io)
+            except Exception as err:
+                raise GpsDataRemovalError("HEIF GPS metadata cleanup failed") from err
         try:
             img = Image.open(bytes_io)
             exif_data = img.getexif().tobytes() if img.format == "TIFF" else img.info.get("exif")
@@ -769,8 +775,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 return bytes_io
         except Exception as err:
             logger.error("core.models.Soubor.remove_gps_data.cannot_open_file", extra={"error": err})
-            bytes_io.seek(0)
-            return bytes_io
+            raise GpsDataRemovalError("Cannot parse image GPS metadata") from err
         # Odstranění GPS dat, pokud existují
         if "GPS" in exif_dict and exif_dict["GPS"] != {}:
             del exif_dict["GPS"]
@@ -797,8 +802,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                         "core.models.Soubor.remove_gps_data.unhandled_exif_error",
                         extra={"error": msg},
                     )
-                    bytes_io.seek(0)
-                    return bytes_io
+                    raise GpsDataRemovalError("Cannot serialize cleaned EXIF metadata") from err
                 tag = int(match.group(1))
                 ifd = match.group(2)
                 logger.info(
@@ -810,18 +814,20 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         else:
             # nepodařilo se opravit ani po několika pokusech
             logger.error("core.models.Soubor.remove_gps_data.exif_cleanup_failed")
-            bytes_io.seek(0)
-            return bytes_io
+            raise GpsDataRemovalError("EXIF metadata repair attempts exhausted")
         try:
             output_io = io.BytesIO()
             img.save(output_io, format=img.format, exif=new_exif_bytes)
+            output_io.seek(0)
+            with Image.open(output_io) as stored:
+                if stored.getexif().get_ifd(34853):
+                    raise GpsDataRemovalError("Saved image still contains GPS metadata")
             output_io.seek(0)
             logger.debug("core.models.Soubor.remove_gps_data.GPS_data_removed")
             return output_io
         except Exception as err:
             logger.error("core.models.Soubor.remove_gps_data.cannot_save_file", extra={"error": err})
-            bytes_io.seek(0)
-            return bytes_io
+            raise GpsDataRemovalError("Cannot save or verify image without GPS metadata") from err
 
     # Povolené MIME typy podle typu uploadu — odpovídá whitelistu v `static/js/dz.js`.
     PAS_ACCEPTED_MIMES = frozenset(
