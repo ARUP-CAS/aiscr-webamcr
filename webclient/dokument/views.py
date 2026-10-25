@@ -56,7 +56,7 @@ from core.models import Permissions as p
 from core.models import Soubor, check_permissions, soubor_nazev_razeni_klic
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.translation import format_message
-from core.utils import TwoQueryPaginator, get_3d_from_envelope
+from core.utils import TwoQueryPaginator, get_3d_from_envelope, hodnota_pro_log
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
 from django.conf import settings
@@ -868,7 +868,7 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
             :return: Vrací výsledek volání ``form_invalid()``.
         """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger.debug("dokument.views.DokumentCastEditView.form_invalid", extra={"error": form.errors})
+        logger.debug("dokument.views.DokumentCastEditView.form_invalid", extra={"error": hodnota_pro_log(form.errors)})
         return super().form_invalid(form)
 
 
@@ -1036,7 +1036,10 @@ class TvarEditView(LoginRequiredMixin, View):
         else:
             logger.debug(
                 "dokument.views.TvarEditView.form_not_valid",
-                extra={"form_error": formset.errors, "error": formset.non_form_errors()},
+                extra={
+                    "form_error": hodnota_pro_log(formset.errors),
+                    "error": hodnota_pro_log(formset.non_form_errors()),
+                },
             )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         return redirect(dokument.get_absolute_url())
@@ -1216,7 +1219,9 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
                 }
             )
         else:
-            logger.debug("dokument.views.VytvoritCastView.post.form_not_valid", extra={"error": form.errors})
+            logger.debug(
+                "dokument.views.VytvoritCastView.post.form_not_valid", extra={"error": hodnota_pro_log(form.errors)}
+            )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         return JsonResponse({"redirect": zaznam.get_absolute_url()})
 
@@ -1380,7 +1385,10 @@ class DokumentCastPripojitAkciView(TransakceView):
             cast.close_active_transaction_when_finished = True
             cast.save()
         else:
-            logger.debug("dokument.views.DokumentCastPripojitAkciView.post.form_invalid", extra={"error": form.errors})
+            logger.debug(
+                "dokument.views.DokumentCastPripojitAkciView.post.form_invalid",
+                extra={"error": hodnota_pro_log(form.errors)},
+            )
         return JsonResponse({"redirect": cast.get_absolute_url()})
 
 
@@ -1433,7 +1441,8 @@ class DokumentCastPripojitProjektView(TransakceView):
             cast.save()
         else:
             logger.debug(
-                "dokument.views.DokumentCastPripojitProjektView.post.form_invalid", extra={"error": form.errors}
+                "dokument.views.DokumentCastPripojitProjektView.post.form_invalid",
+                extra={"error": hodnota_pro_log(form.errors)},
             )
         return JsonResponse({"redirect": cast.get_absolute_url()})
 
@@ -1734,7 +1743,7 @@ def edit(request, ident_cely):
         else:
             logger.debug(
                 "dokument.views.edit.forms_not_valid",
-                extra={"error": form_d.errors, "form_error": form_extra.errors},
+                extra={"error": hodnota_pro_log(form_d.errors), "form_error": hodnota_pro_log(form_extra.errors)},
             )
     else:
         form_d = EditDokumentForm(
@@ -1880,9 +1889,9 @@ def edit_model_3D(request, ident_cely):
             logger.debug(
                 "dokument.views.edit_model_3D.forms_not_valid",
                 extra={
-                    "error": form_d.errors,
-                    "form_error": form_extra.errors,
-                    "komponenta": form_komponenta.errors,
+                    "error": hodnota_pro_log(form_d.errors),
+                    "form_error": hodnota_pro_log(form_extra.errors),
+                    "komponenta": hodnota_pro_log(form_komponenta.errors),
                 },
             )
     else:
@@ -2080,9 +2089,9 @@ def create_model_3D(request):
             logger.debug(
                 "dokument.views.create_model_3D.forms_not_valid",
                 extra={
-                    "error": form_d.errors,
-                    "form_error": form_extra.errors,
-                    "komponenta": form_komponenta.errors,
+                    "error": hodnota_pro_log(form_d.errors),
+                    "form_error": hodnota_pro_log(form_extra.errors),
+                    "komponenta": hodnota_pro_log(form_komponenta.errors),
                 },
             )
             if "geom" in form_extra.errors:
@@ -2160,7 +2169,10 @@ def odeslat(request, ident_cely):
     else:
         warnings = dokument.check_pred_odeslanim()
         if warnings:
-            logger.debug("dokument.views.odeslat.warnings", extra={"warning": warnings, "ident_cely": ident_cely})
+            logger.debug(
+                "dokument.views.odeslat.warnings",
+                extra={"warning": hodnota_pro_log(warnings), "ident_cely": ident_cely},
+            )
             request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ODESLAT)
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
@@ -2243,7 +2255,7 @@ def archivovat(request, ident_cely):
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
     else:
         warnings = dokument.check_pred_archivaci()
-        logger.debug("dokument.views.archivovat.warnings", extra={"warning": warnings})
+        logger.debug("dokument.views.archivovat.warnings", extra={"warning": hodnota_pro_log(warnings)})
         if warnings:
             request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT)
@@ -2301,7 +2313,7 @@ def vratit(request, ident_cely):
                 transaction.set_rollback(True)
                 return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
         else:
-            logger.debug("dokument.views.vratit.not_valid", extra={"error": form.errors})
+            logger.debug("dokument.views.vratit.not_valid", extra={"error": hodnota_pro_log(form.errors)})
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     else:
         form = VratitForm(initial={"old_stav": dokument.stav})
@@ -2590,7 +2602,7 @@ def zapsat(request, zaznam=None):
                 # nelze dokument zapsat a otevřenou transakci je nutné zrušit.
                 logger.error(
                     "dokument.views.zapsat.vychozi_rada_neexistuje",
-                    extra={"heslar_id": DOKUMENT_RADA_VYCHOZI},
+                    extra={"heslar": DOKUMENT_RADA_VYCHOZI},
                 )
                 # Formulář se zobrazí znovu na adrese bez identifikátoru záznamu, takže hlášku
                 # z Fedora transakce by middleware nezobrazil – předáváme ji uživateli přímo.
@@ -2662,7 +2674,7 @@ def zapsat(request, zaznam=None):
                     messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
                     fedora_transaction.rollback_transaction()
         else:
-            logger.debug("dokument.views.zapsat.not_valid", extra={"error": form_d.errors})
+            logger.debug("dokument.views.zapsat.not_valid", extra={"error": hodnota_pro_log(form_d.errors)})
 
     else:
         form_d = EditDokumentForm(

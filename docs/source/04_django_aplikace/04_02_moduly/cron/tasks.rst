@@ -182,6 +182,31 @@ Funkce
 
    Zavolá URL digiarchívu pro spuštění aktualizace dat.
 
+.. py:function:: record_celery_worker_task_done(task)
+
+   Po každé dokončené úloze (úspěšné i neúspěšné) zapíše do Redisu aktuální unix čas
+   pod klíč ``CELERY_WORKER_LAST_TASK_DONE_KEY_PREFIX:<hostname workeru>``.
+
+   Handler běží v potomkovi prefork poolu, který úlohu vykonal, takže klíč dokládá, že worker
+   úlohy skutečně zpracovává, nejen že hlavní proces odpovídá na řídící příkazy. Klíč je
+   oddělený pro každý worker, aby zdravý worker nezamaskoval zaseknutý. Signál se posílá ještě
+   před odebráním požadavku ze zásobníku, takže ``task.request.hostname`` je k dispozici. Úlohy
+   spuštěné mimo worker (bez hostname) se nezapisují. Chyba Redisu se jen zaloguje, aby
+   neovlivnila výsledek úlohy.
+
+   :param task: Instance dokončené úlohy (argument ``task`` signálu ``task_postrun``).
+   :param kwargs: Ostatní argumenty signálu ``task_postrun`` (nepoužívají se).
+
+.. py:function:: celery_worker_liveness_ping()
+
+   Prázdná úloha, kterou beat posílá každé 2 minuty (``CELERY_BEAT_SCHEDULE``).
+
+   Zajišťuje, že i nečinný worker pravidelně dokončí úlohu, a tím obnoví klíč
+   ``CELERY_WORKER_LAST_TASK_DONE_KEY_PREFIX`` (handler ``record_celery_worker_task_done``). Počet jejích
+   úspěšných běhů exportuje celery_exporter jako ``celery_task_succeeded_total``, nad kterým lze
+   postavit alert v monitoringu. Výsledek se neukládá, aby nepřibývaly záznamy
+   v ``django_celery_results``.
+
 .. py:function:: _normalize_import_file_name(name)
 
    Normalizuje název souboru ze ZIP archivu na formát pro porovnání s mapery.
@@ -455,3 +480,34 @@ Funkce
    Vlastní tělo :func:`sync_ruian_changes` běžící pod advisory lockem.
 
    :param reassign_records: Viz :func:`sync_ruian_changes`.
+
+.. py:function:: load_news_feed(self, languages)
+
+   Načte a uloží novinkový kanál do cache.
+
+   Tato úloha je volána při startu aplikace a periodicky v intervalu
+   definovaném v settings (cache_ttl - 60 sekund).
+
+   Při chybě se opakují pouze jazyky, které se nepodařilo načíst.
+
+   :param languages: Seznam jazykových kódů ke zpracování; pokud není zadán,
+       použije se seznam z nastavení aplikace.
+
+.. py:function:: run_news_feed_warmup()
+
+   Spustí úlohu load_news_feed v pozadí jako nezávislý proces.
+
+   Slouží jako alternativa k synchronnímu volání při startu kontejneru.
+   Úloha běží v pozadí (nohup ... &), takže neblokují spuštění uwsgi/runserver.
+   Pokud úloha selže, je zachycena a zalogována, nikdy se nešíří výjimka
+   do entrypointu (safety_guard).
+
+   Tato funkce je volána z entrypoint.sh a entrypoint.dev.sh.
+
+.. py:function:: safety_guard(func)
+
+   Dekorátor, který zajistí, že volaná funkce nikdy nevrátí výjimku.
+
+   Slouží jako safeguard pro background warm-up. Pokud by funkce selhala,
+   je chyba zachycena a zalogována, ale nikdy se nešíří do entrypointu.
+   :param func: Funkce, kterou je třeba chránit výjimkami.

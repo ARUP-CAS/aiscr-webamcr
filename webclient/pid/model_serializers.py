@@ -515,7 +515,7 @@ def serialize_geom(geom=None, katastr: RuianKatastr | None = None, verejne: bool
             else:
                 logger.warning(
                     "pid.model_serializers.serialize_geom.transform_failed",
-                    extra={"status": status, "wkt": centroid.wkt},
+                    extra={"value": status, "geom": centroid.wkt},
                 )
                 centroid = None
         if centroid is not None:

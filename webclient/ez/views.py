@@ -35,7 +35,7 @@ from core.message_constants import (
 from core.models import Permissions as p
 from core.models import check_permissions
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
-from core.utils import get_message
+from core.utils import get_message, hodnota_pro_log
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
 from django.conf import settings
@@ -306,7 +306,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
             :return: Vrací výsledek volání ``form_invalid()``.
         """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
-        logger.debug("ez.views.ExterniZdrojCreateView.form_invalid", extra={"error": form.errors})
+        logger.debug("ez.views.ExterniZdrojCreateView.form_invalid", extra={"error": hodnota_pro_log(form.errors)})
         return super().form_invalid(form)
 
     @method_decorator(never_cache)
@@ -394,7 +394,7 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
             :return: Vrací výsledek volání ``form_invalid()``.
         """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger.debug("ez.views.ExterniZdrojEditView.form_invalid", extra={"error": form.errors})
+        logger.debug("ez.views.ExterniZdrojEditView.form_invalid", extra={"error": hodnota_pro_log(form.errors)})
         return super().form_invalid(form)
 
     @method_decorator(never_cache)
@@ -692,7 +692,7 @@ class ExterniZdrojVratitView(TransakceView):
             getattr(ExterniZdroj, self.action)(zaznam, request.user, zaznam.stav - 1, duvod)
             return JsonResponse({"redirect": zaznam.get_absolute_url()})
         else:
-            logger.debug("ez.views.ExterniZdrojVratitView.form_invalid", extra={"error": form.errors})
+            logger.debug("ez.views.ExterniZdrojVratitView.form_invalid", extra={"error": hodnota_pro_log(form.errors)})
             return self.render_to_response(context)
 
 
@@ -823,7 +823,7 @@ class ExterniOdkazPripojitView(TransakceView):
             :return: Vrací výsledek volání ``JsonResponse()``.
         """
         context = self.get_context_data(**kwargs)
-        logger.debug("ez.views.ExterniOdkazPripojitView.post.start", extra={"key": self.kwargs})
+        logger.debug("ez.views.ExterniOdkazPripojitView.post.start", extra={"key": hodnota_pro_log(self.kwargs)})
         ez = self.get_zaznam()
         form = PripojitArchZaznamForm(data=request.POST, type_arch=context["type"])
         if form.is_valid():
@@ -841,7 +841,9 @@ class ExterniOdkazPripojitView(TransakceView):
             eo.close_active_transaction_when_finished = True
             eo.save()
         else:
-            logger.debug("ez.views.ExterniOdkazPripojitView.post.form_error", extra={"error": form.errors})
+            logger.debug(
+                "ez.views.ExterniOdkazPripojitView.post.form_error", extra={"error": hodnota_pro_log(form.errors)}
+            )
         return JsonResponse({"redirect": ez.get_absolute_url()})
 
 
@@ -964,7 +966,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
             :return: Vrací výsledek volání ``form_invalid()``.
         """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger.debug("ez.views.ExterniOdkazEditView.form_invalid", extra={"error": form.errors})
+        logger.debug("ez.views.ExterniOdkazEditView.form_invalid", extra={"error": hodnota_pro_log(form.errors)})
         return super().form_invalid(form)
 
 
@@ -1207,7 +1209,9 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
             eo.suppress_signal = False
             eo.save()
         else:
-            logger.debug("ez.views.ExterniOdkazPripojitDoAzView.form_invalid", extra={"error": form.errors})
+            logger.debug(
+                "ez.views.ExterniOdkazPripojitDoAzView.form_invalid", extra={"error": hodnota_pro_log(form.errors)}
+            )
         return JsonResponse({"redirect": az.get_absolute_url()})
 
 

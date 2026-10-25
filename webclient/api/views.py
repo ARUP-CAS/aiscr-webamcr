@@ -49,7 +49,7 @@ from core.repository_connector import (
 from core.setting_models import CustomAdminSettings
 from core.soubor_naming import get_mime_safe_soubor_name, get_next_soubor_name
 from core.translation import format_message
-from core.utils import get_cadastre_from_point
+from core.utils import get_cadastre_from_point, hodnota_pro_log
 from django.conf import settings
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.contrib.gis.geos import Point as GEOSPoint
@@ -199,7 +199,7 @@ def _fetch_xsd_bytes(url: str) -> bytes:
         with response:
             content = response.read()
         if not content:
-            logger.warning("api.views._fetch_xsd_bytes.empty_response", extra={"url": url})
+            logger.warning("api.views._fetch_xsd_bytes.empty_response", extra={"request_url": url})
             raise ValueError(f"api.views._fetch_xsd_bytes.empty_response: {url}")
         cache.set(cache_key, content, timeout=PasApiPermissionMixin.get_schema_cache_ttl())
         _XSD_BYTES_CACHE[url] = content
@@ -1194,7 +1194,7 @@ class IpBlacklistPermission(PasApiPermissionMixin, BasePermission):
                 # codeql[py/clear-text-logging-sensitive-data]
                 logger.warning(
                     "api.views.IpBlacklistPermission.denied",
-                    extra={"ip": client_ip, "rule": rule["value"]},
+                    extra={"ip": client_ip, "value": rule["value"]},
                 )
                 return False
         return True
@@ -1482,7 +1482,7 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
             self.wait_seconds = max(window - (now - float(window_started)), min(window, 0.001))
             logger.warning(
                 "api.views.ApiImportThrottle.throttled",
-                extra={"cache_key": cache_key, "rate": rate},
+                extra={"key": cache_key, "rate": rate},
             )
             return False
         self.wait_seconds = None
@@ -1520,7 +1520,7 @@ class ApiImportThrottle(PasApiPermissionMixin, BaseThrottle):
                 self.wait_seconds = max(min_interval - elapsed, 0.001)
                 logger.warning(
                     "api.views.ApiImportThrottle.min_interval_throttled",
-                    extra={"scope": scope, "identifier": identifier, "wait": self.wait_seconds},
+                    extra={"value": scope, "identifier": identifier, "wait": self.wait_seconds},
                 )
                 return False
         cache.set(cache_key, now, timeout=ttl_seconds)
@@ -2442,6 +2442,8 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                 converted, result_status = transform_geom_to_sjtsk(wkt)
                 ok = result_status == "OK"
             except Exception as exc:
+                # Klíč "exc" záměrně není v šabloně amcr_template: text výjimky cituje souřadnice
+                # z chráněného bloku, proto zůstává jen v _source a není vyhledatelný (#4397).
                 logger.warning("api.views._parse_geom_fields.sjtsk_conversion_failed", extra={"exc": str(exc)})
                 ok = False
             if not ok:
@@ -2465,6 +2467,8 @@ class SamostatnyNalezXmlBaseView(PasApiBaseView):
                 converted, result_status = transform_geom_to_wgs84(wkt_sjtsk)
                 ok = result_status == "OK"
             except Exception as exc:
+                # Klíč "exc" záměrně není v šabloně amcr_template: text výjimky cituje souřadnice
+                # z chráněného bloku, proto zůstává jen v _source a není vyhledatelný (#4397).
                 logger.warning("api.views._parse_geom_fields.wgs84_conversion_failed", extra={"exc": str(exc)})
                 ok = False
             if not ok:
@@ -2665,11 +2669,14 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
             ]
             # Schema validation details and user ID are logged intentionally to
             # support import troubleshooting and incident investigation. These
-            # are operational diagnostics, not secrets.
+            # are operational diagnostics, not secrets. The "errors" key is intentionally
+            # not mapped in amcr_template: lxml messages quote values from the uploaded XML
+            # (including find coordinates), so they stay in _source only and are not
+            # full-text searchable.
             # codeql[py/clear-text-logging-sensitive-data]
             logger.warning(
                 "api.views.SamostatnyNalezXmlImportView.post.schema_invalid",
-                extra={"errors": [error.to_dict() for error in errors], "user": request.user.pk},
+                extra={"errors": hodnota_pro_log([error.to_dict() for error in errors]), "user": request.user.pk},
             )
             return self._fail(
                 log_entry,
@@ -2817,9 +2824,11 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                         # by nález prošel importem bez katastru a bez varování –
                         # nekonzistentní s kontrolou o pár řádků níž, která
                         # neurčitelný katastr hlásí jako chybu.
+                        # Geometrie je z chráněného bloku, proto pod nemapovaným klíčem "wkt"
+                        # (jen v _source, není vyhledatelná), ne v poli "geom" (#4397).
                         logger.warning(
                             "api.views.SamostatnyNalezXmlImportView.post.sjtsk_transform_failed",
-                            extra={"status": sjtsk_status, "wkt": instance.geom.wkt[:120]},
+                            extra={"value": sjtsk_status, "wkt": instance.geom.wkt[:120]},
                         )
                         raise ImportValidationException(
                             ImportValidationIssue(

@@ -70,7 +70,7 @@ def _prefer_sjtsk(sjtsk_geom, wgs84_geom):
     if status != "OK":
         logger.warning(
             "heslar.ruian_sync.reassign._prefer_sjtsk.transform_failed",
-            extra={"status": status, "wkt_prefix": wgs84_geom.wkt[:80]},
+            extra={"value": status, "geom": wgs84_geom.wkt[:80]},
         )
         return None
     return GEOSGeometry(wkt_5514, srid=5514)
@@ -118,7 +118,7 @@ def _close_or_rollback(fedora_tx: FedoraTransaction, success: bool) -> None:
     if fedora_tx.status is not FedoraTransactionStatus.ACTIVE:
         logger.debug(
             "heslar.ruian_sync.reassign._close_or_rollback.uz_uzavrena",
-            extra={"transaction": getattr(fedora_tx, "uid", None), "status": str(fedora_tx.status)},
+            extra={"transaction": getattr(fedora_tx, "uid", None), "value": str(fedora_tx.status)},
         )
         return
     if success:
@@ -196,7 +196,7 @@ def _db_a_fedora(ident_cely: str, *, commit_v_signalu: bool = False):
                 extra={
                     "ident_cely": ident_cely,
                     "transaction": getattr(fedora_tx, "uid", None),
-                    "reason": (
+                    "info": (
                         "Databaze je zapsana, ale zapis metadat do Fedory po commitu "
                         "selhal - repozitar ma u tohoto zaznamu zastarala metadata. "
                         "Nahradou je manage.py generate_metadata pro tento ident."
@@ -209,7 +209,7 @@ def _db_a_fedora(ident_cely: str, *, commit_v_signalu: bool = False):
                 extra={
                     "ident_cely": ident_cely,
                     "transaction": getattr(fedora_tx, "uid", None),
-                    "reason": (
+                    "info": (
                         "Fedora transakce uz byla commitnuta, ale databazova cast se "
                         "rollbackla - repozitar a DB se u tohoto zaznamu rozesly."
                     ),
@@ -278,7 +278,7 @@ def log_katastr_change(historie_vazba_id: Optional[int], *casti: str) -> None:
     )
     logger.debug(
         "heslar.ruian_sync.reassign.log_katastr_change",
-        extra={"vazba_id": historie_vazba_id, "poznamka": poznamka},
+        extra={"pk": historie_vazba_id, "info": poznamka},
     )
 
 
@@ -716,7 +716,7 @@ def reassign_projekt_dalsi_katastr(
     """
     logger.debug(
         "heslar.ruian_sync.reassign.reassign_projekt_dalsi_katastr.start",
-        extra={"ident_cely": projekt.ident_cely, "old_katastr_kod": old_katastr.kod},
+        extra={"ident_cely": projekt.ident_cely, "old": old_katastr.kod},
     )
 
     current = set(projekt.katastry.values_list("pk", flat=True))

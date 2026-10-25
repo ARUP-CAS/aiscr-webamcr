@@ -661,3 +661,24 @@ Funkce
    Funkce pro získání časového pásma z nastavení.
 
    :return: Vrací výsledek volání ``timezone()``.
+
+.. py:function:: hodnota_pro_log(hodnota)
+
+   Převede strukturovanou hodnotu na JSON řetězec pro textové pole v ``extra`` logu.
+
+   Šablona ``amcr_template`` v Elasticsearch mapuje pole jako ``data``, ``error``,
+   ``initial`` nebo ``warning`` na typ ``text``. ``python-logstash`` posílá ``dict``
+   a ``list`` beze změny (včetně podtříd jako ``QueryDict`` nebo ``ErrorDict``),
+   takže v takovém poli dorazí JSON objekt, Elasticsearch dokument odmítne a Logstash
+   celou událost zahodí (issue #4397). Proto se hodnota serializuje na řetězec už
+   v aplikaci.
+
+   Chyby formulářů (``ErrorDict``, ``ErrorList``) se převádí přes ``get_json_data()``:
+   ``ErrorList`` je ``UserList``, takže přímý ``json.dumps`` by z něj udělal prázdný
+   seznam. Vnořený řetězec, který je sám JSON objektem nebo polem (např.
+   ``optimistic_lock_data`` ve ``form.initial``), se rozbalí, aby se nezakódoval podruhé
+   a v logu nebyl plný escapovaných uvozovek. Ostatní neserializovatelné objekty (lazy
+   překlady, modely, data, ``Decimal``) se převádí přes ``str()``.
+
+   :param hodnota: Libovolná hodnota - dict, list, chyby formuláře či formsetu.
+   :return: JSON řetězec (``ensure_ascii=False``).
