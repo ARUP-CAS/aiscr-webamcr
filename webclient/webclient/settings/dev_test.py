@@ -65,9 +65,13 @@ FEDORA_DB_NAME = get_test_secret("TEST_FEDORA_DB_NAME")
 FEDORA_DB_TEMPLATE_NAME = get_test_secret("TEST_FEDORA_DB_TEMPLATE_NAME")
 
 TEST_SCREENSHOT_PATH = get_test_secret("TEST_SCREENSHOT_PATH")
+# heslar/hesla_dynamicka.py načítá pk konstant (hesla, ADMIN_USER...) při importu, ještě před přepnutím
+# na testovací DB. Proto se při startu čte ze vzorové DB (stejná pk jako klon), ne z klonu z minulého běhu,
+# který po obnově vzorové DB může mít jiná pk nebo nemusí vůbec existovat.
 _test_db_name = "test_" + DATABASES["default"]["NAME"]
-DATABASES["default"]["NAME"] = _test_db_name
-DATABASES["default"]["TEST"] = {"MIGRATE": False, "NAME": _test_db_name}
+for _alias in ("default", "urgent"):
+    DATABASES[_alias]["NAME"] = TEST_DATABASE_NAME
+    DATABASES[_alias]["TEST"] = {"MIGRATE": False, "NAME": _test_db_name}
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 LOGGING["handlers"]["console"]["level"] = "ERROR"
