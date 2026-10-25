@@ -86,6 +86,7 @@ from core.utils import (
     get_project_pian_from_envelope,
     get_projects_from_envelope,
     get_timezone,
+    hodnota_pro_log,
 )
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
@@ -397,7 +398,9 @@ def create(request):
             if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
                 # Kontrola oznamovatele
                 if not form_oznamovatel.is_valid():
-                    logger.debug("projekt.views.create.form_not_valid", extra={"error": form_oznamovatel.errors})
+                    logger.debug(
+                        "projekt.views.create.form_not_valid", extra={"error": hodnota_pro_log(form_oznamovatel.errors)}
+                    )
                     return render(
                         request,
                         "projekt/create.html",
@@ -456,7 +459,9 @@ def create(request):
                         _("arch_z.views.zapsat.samostatnaAkce." "check_container_deleted_or_not_exists_error"),
                     )
         else:
-            logger.debug("projekt.views.create.form_projekt_not_valid", extra={"error": str(form_projekt.errors)})
+            logger.debug(
+                "projekt.views.create.form_projekt_not_valid", extra={"error": hodnota_pro_log(form_projekt.errors)}
+            )
     else:
         form_projekt = CreateProjektForm(required=required_fields, required_next=required_fields_next)
         form_oznamovatel = OznamovatelProjektCreateForm(uzamknout_formular=True)
@@ -606,7 +611,7 @@ def edit(request, ident_cely):
                 # formuláři povinný, takže jde o anomálii, ne o běžný stav.
                 logger.warning(
                     "projekt.views.edit.form_valid.geom_preskocena",
-                    extra={"ident_cely": projekt.ident_cely, "x1": x1, "x2": x2},
+                    extra={"ident_cely": projekt.ident_cely, "X": x1, "Y": x2},
                 )
             projekt.close_active_transaction_when_finished = True
             projekt.save()
@@ -615,7 +620,7 @@ def edit(request, ident_cely):
             invalidate_model(Akce)
             return redirect("projekt:detail", ident_cely=ident_cely)
         else:
-            logger.debug("projekt.views.edit.form_valid.form_not_valid", extra={"error": form.errors})
+            logger.debug("projekt.views.edit.form_valid.form_not_valid", extra={"error": hodnota_pro_log(form.errors)})
 
     else:
         form = EditProjektForm(
@@ -1012,7 +1017,7 @@ def prihlasit(request, ident_cely):
             projekt.save()
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.debug("projekt.views.prihlasit.form_not_valid", extra={"error": form.errors})
+            logger.debug("projekt.views.prihlasit.form_not_valid", extra={"error": hodnota_pro_log(form.errors)})
     else:
         form = PrihlaseniProjektForm(
             instance=projekt,
@@ -1074,7 +1079,7 @@ def zahajit_v_terenu(request, ident_cely):
             projekt.save()
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.debug("projekt.views.zahajit_v_terenu.form_not_valid", extra={"error": str(form.errors)})
+            logger.debug("projekt.views.zahajit_v_terenu.form_not_valid", extra={"error": hodnota_pro_log(form.errors)})
     else:
         form = ZahajitVTerenuForm(instance=projekt, initial={"old_stav": projekt.stav})
     return render(
@@ -1128,7 +1133,7 @@ def ukoncit_v_terenu(request, ident_cely):
             projekt.save()
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.debug("projekt.views.ukoncit_v terenu.form_not_valid", extra={"error": form.errors})
+            logger.debug("projekt.views.ukoncit_v terenu.form_not_valid", extra={"error": hodnota_pro_log(form.errors)})
     else:
         form = UkoncitVTerenuForm(instance=projekt, initial={"old_stav": projekt.stav})
     return render(
@@ -1199,7 +1204,7 @@ def uzavrit(request, ident_cely):
     else:
         # Ověří obchodní pravidla před uzavřením projektu.
         warnings = projekt.check_pred_uzavrenim()
-        logger.debug("projekt.views.uzavrit.warnings", extra={"warning": str(warnings)})
+        logger.debug("projekt.views.uzavrit.warnings", extra={"warning": hodnota_pro_log(warnings)})
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         if warnings:
             request.session["temp_data"] = []
@@ -1291,7 +1296,7 @@ def archivovat(request, ident_cely):
         return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
     else:
         warnings = projekt.check_pred_archivaci()
-        logger.debug("projekt.views.archivovat.warnings", extra={"warning": str(warnings)})
+        logger.debug("projekt.views.archivovat.warnings", extra={"warning": hodnota_pro_log(warnings)})
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         if warnings:
             request.session["temp_data"] = []
@@ -1365,11 +1370,13 @@ def navrhnout_ke_zruseni(request, ident_cely):
             projekt.save()
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.debug("projekt.views.navrhnout_ke_zruseni.form_not_valid", extra={"error": form.errors})
+            logger.debug(
+                "projekt.views.navrhnout_ke_zruseni.form_not_valid", extra={"error": hodnota_pro_log(form.errors)}
+            )
             context = {"projekt": projekt, "form": form}
     else:
         warnings = projekt.check_pred_navrzeni_k_zruseni()
-        logger.debug("projekt.views.navrhnout_ke_zruseni.warnings", extra={"warning": warnings})
+        logger.debug("projekt.views.navrhnout_ke_zruseni.warnings", extra={"warning": hodnota_pro_log(warnings)})
 
         if warnings:
             request.session["temp_data"] = []
@@ -1432,7 +1439,7 @@ def zrusit(request, ident_cely):
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
             form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
-            logger.debug("projekt.views.zrusit.form_not_valid", extra={"error": form.errors})
+            logger.debug("projekt.views.zrusit.form_not_valid", extra={"error": hodnota_pro_log(form.errors)})
             context = {
                 "object": projekt,
                 "title": _("projekt.views.zrusit.title.text"),
@@ -1494,7 +1501,7 @@ def vratit(request, ident_cely):
             projekt.save()
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.debug("projekt.views.vratit.form_not_valid", extra={"error": form.errors})
+            logger.debug("projekt.views.vratit.form_not_valid", extra={"error": hodnota_pro_log(form.errors)})
     else:
         form = VratitForm(initial={"old_stav": projekt.stav})
     context = {
@@ -1546,7 +1553,9 @@ def vratit_navrh_zruseni(request, ident_cely):
             Mailer.send_ep05(project=projekt)
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.debug("projekt.views.vratit_navrh_zruseni.form_not_valid", extra={"error": form.errors})
+            logger.debug(
+                "projekt.views.vratit_navrh_zruseni.form_not_valid", extra={"error": hodnota_pro_log(form.errors)}
+            )
     else:
         form = VratitForm(initial={"old_stav": projekt.stav})
     context = {
@@ -1624,7 +1633,7 @@ def generovat_oznameni(request, ident_cely):
     """
     logger.debug(
         "projekt.views.generovat_oznameni.start",
-        extra={"ident_cely": ident_cely, "option": request.POST.get("odeslat_oznamovateli", False)},
+        extra={"ident_cely": ident_cely, "option": bool(request.POST.get("odeslat_oznamovateli", False))},
     )
     projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.typ_projektu.id != TYP_PROJEKTU_ZACHRANNY_ID:
@@ -2076,7 +2085,7 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
             messages.add_message(request, messages.ERROR, DATUM_OZNAMENI_SE_NEPOVEDLO_EDITOVAT)
             logger.debug(
                 "projekt.views.UpravitDatumOznameniView.form_invalid",
-                extra={"error": form.errors, "ident_cely": projekt.ident_cely},
+                extra={"error": hodnota_pro_log(form.errors), "ident_cely": projekt.ident_cely},
             )
 
         return JsonResponse({"redirect": projekt.get_absolute_url()})

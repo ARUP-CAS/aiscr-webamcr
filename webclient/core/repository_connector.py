@@ -547,7 +547,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         elif request_type == FedoraRequestType.GET_BINARY_FILE_METADATA_VERSION:
             return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/orig/fcr:metadata/fcr:versions"
         elif request_type == FedoraRequestType.GET_BINARY_FILE_CONTENT_HISTORIE:
-            return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/orig/fcr:versions"
+            ident_cely = ident_cely if ident_cely else self.record.ident_cely
+            return f"{base_url}/record/{ident_cely}/file/{uuid}/orig/fcr:versions"
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE):
             return f"{base_url}/record/{self.record.ident_cely}/file"
         elif request_type in (
@@ -560,16 +561,20 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             ident_cely = ident_cely if ident_cely else self.record.ident_cely
             return f"{base_url}/record/{ident_cely}/file/{uuid}"
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT):
-            return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/orig"
+            ident_cely = ident_cely if ident_cely else self.record.ident_cely
+            return f"{base_url}/record/{ident_cely}/file/{uuid}/orig"
         elif request_type == FedoraRequestType.FILE_CONTENT_UPDATE_RDF_DATA:
-            return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/orig/fcr:metadata"
+            ident_cely = ident_cely if ident_cely else self.record.ident_cely
+            return f"{base_url}/record/{ident_cely}/file/{uuid}/orig/fcr:metadata"
         elif request_type in (
             FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
             FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB,
         ):
-            return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/thumb"
+            ident_cely = ident_cely if ident_cely else self.record.ident_cely
+            return f"{base_url}/record/{ident_cely}/file/{uuid}/thumb"
         elif request_type == FedoraRequestType.THUMB_CONTENT_UPDATE_RDF_DATA:
-            return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/thumb/fcr:metadata"
+            ident_cely = ident_cely if ident_cely else self.record.ident_cely
+            return f"{base_url}/record/{ident_cely}/file/{uuid}/thumb/fcr:metadata"
         elif request_type in (
             FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE,
             FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE,
@@ -629,6 +634,62 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             else:
                 return f"{base_url}/model/deleted/member/{self.record.ident_cely}/fcr:tombstone"
         logger.error("core_repository_connector._get_request_url.not_implemented", extra={"request_type": request_type})
+
+    def _get_binary_file_container_url(self, uuid, ident_cely=None):
+        """
+        Sestaví URL kontejneru binárního souboru ``{base}/record/{ident_cely}/file/{uuid}``.
+
+        Jediné místo, odkud se odvozuje URL předávané do ``RepositoryBinaryFile`` a tím i hodnota
+        ``Soubor.path`` (``url_without_domain``). Autorita (schéma, host, port) se bere vždy z nastavení
+        přes ``get_base_url()``, nikdy z odpovědi Fedory.
+
+        :param uuid: UUID binárního souboru ve Fedoře.
+        :param ident_cely: Identifikátor záznamu, pod kterým soubor leží; bez zadání ``self.record.ident_cely``.
+        :return: Absolutní URL kontejneru binárního souboru.
+        """
+        return self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid, ident_cely=ident_cely)
+
+    def _create_binary_file_resource(self) -> tuple[str, str]:
+        """
+        Vytvoří ve Fedoře prázdný kontejner binárního souboru a vrátí jeho UUID a URL.
+
+        UUID se převezme z URI, které vrátí Fedora; URL se pak sestaví přes
+        ``_get_binary_file_container_url``, aby se ``Soubor.path`` shodoval s ostatními cestami
+        (``get_binary_file``, ``update_binary_file``). Porovnává se jen cesta bez autority - jinou
+        autoritu (např. Fedora za proxy) toleruje. Pokud Fedora vytvořila zdroj na jiné cestě,
+        vyvolá ``FedoraError``, aby se do ``Soubor.path`` nezapsala neexistující cesta.
+
+        :return: Dvojice ``(uuid, container_url)``.
+        :raises FedoraError: Pokud se cesta vrácená Fedorou liší od sestavené cesty kontejneru.
+        """
+        url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE)
+        headers = {
+            "Content-Type": "text/turtle",
+        }
+        rdf = f"@prefix dcterms: <http://purl.org/dc/terms/> . <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> ."
+        result = self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE, headers=headers, data=rdf)
+        fedora_url = result.text.strip()
+        uuid = fedora_url.split("/")[-1]
+        container_url = self._get_binary_file_container_url(uuid)
+        if RepositoryBinaryFile.get_url_without_domain(fedora_url) != RepositoryBinaryFile.get_url_without_domain(
+            container_url
+        ):
+            logger.error(
+                "core_repository_connector._create_binary_file_resource.path_mismatch",
+                extra={
+                    "fedora_url": fedora_url,
+                    "container_url": container_url,
+                    "ident_cely": self.record.ident_cely,
+                    "transaction": self.transaction_uid,
+                },
+            )
+            raise FedoraError(
+                fedora_url,
+                "core_repository_connector._create_binary_file_resource.path_mismatch",
+                None,
+                fedora_transaction=self.transaction,
+            )
+        return uuid, container_url
 
     def check_container_deleted(self, ident_cely):
         """
@@ -752,12 +813,12 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         except requests.exceptions.RequestException as exc:
             logger.warning(
                 "core_repository_connector._is_resource_gone.request_failed",
-                extra={"url": url, "transaction": self.transaction_uid, "error": exc},
+                extra={"request_url": url, "transaction": self.transaction_uid, "error": exc},
             )
             return False
         logger.debug(
             "core_repository_connector._is_resource_gone.response",
-            extra={"url": url, "status_code": response.status_code, "transaction": self.transaction_uid},
+            extra={"request_url": url, "status_code": response.status_code, "transaction": self.transaction_uid},
         )
         return response.status_code in (404, 410)
 
@@ -821,7 +882,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             except requests.exceptions.RequestException as exc:
                 logger.warning(
                     "core_repository_connector._send_request.get_request_failed",
-                    extra={"url": url, "request_type": request_type, "error": exc},
+                    extra={"request_url": url, "request_type": request_type, "error": exc},
                 )
                 return None
         else:
@@ -888,7 +949,12 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             except requests.exceptions.ConnectionError as exc:
                 logger.error(
                     "core_repository_connector._send_request.connection_error",
-                    extra={"url": url, "request_type": request_type, "transaction": self.transaction_uid, "error": exc},
+                    extra={
+                        "request_url": url,
+                        "request_type": request_type,
+                        "transaction": self.transaction_uid,
+                        "error": exc,
+                    },
                 )
                 raise FedoraNoResponseError(url, str(exc), None, fedora_transaction=self.transaction)
         extra["status_code"] = response.status_code
@@ -1362,14 +1428,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             extra={"file": file_name, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
         )
         self._check_binary_file_container()
-        url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE)
-        headers = {
-            "Content-Type": "text/turtle",
-        }
-        rdf = f"@prefix dcterms: <http://purl.org/dc/terms/> . <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> ."
-        result = self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE, headers=headers, data=rdf)
-        uuid = result.text.split("/")[-1]
-        rep_bin_file = RepositoryBinaryFile(result.text, file, file_name)
+        uuid, container_url = self._create_binary_file_resource()
+        rep_bin_file = RepositoryBinaryFile(container_url, file, file_name)
         data = file.read()
         file_sha_512 = hashlib.sha512(data).hexdigest()
         headers = {
@@ -1545,9 +1605,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             ident_cely = ident_cely_old if ident_cely_old and update else self.record.ident_cely
             existing_large_thumb, existing_small_thumb = None, None
             if large:
-                existing_large_thumb = self.get_binary_file(uuid, thumb_large=True)
+                existing_large_thumb = self.get_binary_file(uuid, ident_cely_old=ident_cely, thumb_large=True)
             else:
-                existing_small_thumb = self.get_binary_file(uuid, thumb_small=True)
+                existing_small_thumb = self.get_binary_file(uuid, ident_cely_old=ident_cely, thumb_small=True)
             if large:
                 if update and existing_large_thumb is not None:
                     url = self._get_request_url(
@@ -1638,9 +1698,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         if include_content:
             if soubor.repository_uuid is None:
                 with open(soubor.path, mode="rb") as file:
-                    data = file.read()
-                data = io.BytesIO(data)
-                file_sha_512 = hashlib.sha512(data).hexdigest()
+                    raw_data = file.read()
+                file_sha_512 = hashlib.sha512(raw_data).hexdigest()
+                data = io.BytesIO(raw_data)
             else:
                 old_rep_bin_file = soubor.get_repository_content(ident_cely_old)
                 data = old_rep_bin_file.content
@@ -1664,19 +1724,13 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         else:
             data = None
             file_sha_512 = None
-        url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE)
-        headers = {
-            "Content-Type": "text/turtle",
-        }
-        rdf = f"@prefix dcterms: <http://purl.org/dc/terms/> . <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> ."
-        result = self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE, headers=headers, data=rdf)
-        uuid = result.text.split("/")[-1]
-        soubor.path = RepositoryBinaryFile.get_url_without_domain(result.text)
+        uuid, container_url = self._create_binary_file_resource()
+        soubor.path = RepositoryBinaryFile.get_url_without_domain(container_url)
         soubor.suppress_signal = True
         soubor.save()
         if include_content:
             content_type = get_mime_type(soubor.nazev)
-            rep_bin_file = RepositoryBinaryFile(result.text, data, soubor.nazev)
+            rep_bin_file = RepositoryBinaryFile(container_url, data, soubor.nazev)
             headers = {
                 "Content-Type": content_type,
                 "Content-Disposition": f'attachment; filename="{soubor.nazev}"'.encode("utf-8"),
@@ -1728,19 +1782,23 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             },
         )
         if thumb_small:
-            url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB, uuid=uuid)
+            url = self._get_request_url(
+                FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB, uuid=uuid, ident_cely=ident_cely_old
+            )
         elif thumb_large:
-            url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE, uuid=uuid)
+            url = self._get_request_url(
+                FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE, uuid=uuid, ident_cely=ident_cely_old
+            )
         else:
-            url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTENT, uuid=uuid)
-        if ident_cely_old is not None:
-            url = url.replace(self.record.ident_cely, ident_cely_old)
+            url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTENT, uuid=uuid, ident_cely=ident_cely_old)
         if thumb_small:
             response = self._send_request(url, FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB)
         elif thumb_large:
             response = self._send_request(url, FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE)
         elif timestamp:
-            url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTENT_HISTORIE, uuid=uuid)
+            url = self._get_request_url(
+                FedoraRequestType.GET_BINARY_FILE_CONTENT_HISTORIE, uuid=uuid, ident_cely=ident_cely_old
+            )
             response = self._send_request(f"{url}/{timestamp}", FedoraRequestType.GET_BINARY_FILE_CONTENT_HISTORIE)
         else:
             response = self._send_request(url, FedoraRequestType.GET_BINARY_FILE_CONTENT)
@@ -1748,9 +1806,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             file = io.BytesIO()
             file.write(response.content)
             file.seek(0)
-            container_url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
-            if ident_cely_old is not None:
-                container_url = container_url.replace(self.record.ident_cely, ident_cely_old)
+            container_url = self._get_binary_file_container_url(uuid, ident_cely=ident_cely_old)
             rep_bin_file = RepositoryBinaryFile(container_url, file)
             logger.debug(
                 "core_repository_connector.get_binary_file.end",
@@ -1790,8 +1846,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             },
         )
         url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, uuid=uuid)
-        container_url = url.removesuffix("/orig")
-        rep_bin_file = RepositoryBinaryFile(container_url, file, file_name)
+        rep_bin_file = RepositoryBinaryFile(self._get_binary_file_container_url(uuid), file, file_name)
         data = file.read()
         file_sha_512 = hashlib.sha512(data).hexdigest()
         headers = {
@@ -1878,7 +1933,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 )
                 logger.debug(
                     "core_repository_connector._ensure_child_containers.created",
-                    extra={"uuid": uuid, "path": current, "transaction": self.transaction_uid},
+                    extra={"uuid": uuid, "file": current, "transaction": self.transaction_uid},
                 )
             prefix = current
 
@@ -1947,7 +2002,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         )
         logger.debug(
             "core_repository_connector._save_file_child.end",
-            extra={"uuid": uuid, "path": path, "file": file_name, "transaction": self.transaction_uid},
+            extra={"uuid": uuid, "value": path, "file": file_name, "transaction": self.transaction_uid},
         )
         return RepositoryBinaryFile(content_url, file, file_name)
 
@@ -1979,7 +2034,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         self._update_creator(FedoraRequestType.DISTRIBUTION_CONTENT_UPDATE_RDF_DATA, uuid, ident_cely, path=path)
         logger.debug(
             "core_repository_connector._update_file_child.end",
-            extra={"uuid": uuid, "path": path, "file": file_name, "transaction": self.transaction_uid},
+            extra={"uuid": uuid, "value": path, "file": file_name, "transaction": self.transaction_uid},
         )
         return RepositoryBinaryFile(url, file, file_name)
 
@@ -1998,7 +2053,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         self._send_request(url, FedoraRequestType.DELETE_DISTRIBUTION)
         logger.debug(
             "core_repository_connector._delete_file_child.end",
-            extra={"uuid": uuid, "path": path, "transaction": self.transaction_uid},
+            extra={"uuid": uuid, "file": path, "transaction": self.transaction_uid},
         )
 
     def _get_file_child(self, uuid, path, ident_cely=None) -> Optional[RepositoryBinaryFile]:
@@ -2163,9 +2218,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             "core_repository_connector.distribution_exists.end",
             extra={
                 "uuid": uuid,
-                "path": path,
+                "file": path,
                 "status_code": response.status_code,
-                "exists": exists,
+                "option": exists,
                 "transaction": self.transaction_uid,
             },
         )
@@ -2424,8 +2479,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             "core_repository_connector.update_file_name.start",
             extra={
                 "uuid": uuid,
-                "old_nazev": old_nazev,
-                "new_nazev": new_nazev,
+                "old": old_nazev,
+                "new": new_nazev,
                 "ident_cely": self.record.ident_cely,
                 "transaction": self.transaction_uid,
             },
@@ -2437,7 +2492,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             # nesmíme potvrdit úspěch, jinak by DB obsahovala nový název, ale Fedora starý.
             logger.warning(
                 "core_repository_connector.update_file_name.nothing_renamed",
-                extra={"uuid": uuid, "ident_cely": self.record.ident_cely, "old_base": old_base},
+                extra={"uuid": uuid, "ident_cely": self.record.ident_cely, "old": old_base},
             )
             raise FedoraError(
                 container_url,
@@ -2471,7 +2526,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         if depth > self.MAX_RENAME_DEPTH:
             logger.warning(
                 "core_repository_connector._rename_filenames_in_container.max_depth_reached",
-                extra={"container_url": container_url, "depth": depth},
+                extra={"request_url": container_url, "depth": depth},
             )
             # Nesmíme vrátit 0 a pokračovat – mělčí potomci už mohou být přejmenovaní a záznam by
             # se uložil jako úspěch, přestože hlubší potomci by zůstali se starým názvem.
@@ -2487,7 +2542,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         if container_response is None or str(container_response.status_code)[0] != "2":
             logger.warning(
                 "core_repository_connector.update_file_name.container_unavailable",
-                extra={"container_url": container_url, "ident_cely": self.record.ident_cely},
+                extra={"request_url": container_url, "ident_cely": self.record.ident_cely},
             )
             raise FedoraError(
                 container_url,
@@ -2614,7 +2669,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         if str(metadata_response.status_code)[0] != "2":
             logger.warning(
                 "core_repository_connector._rename_child_filename.metadata_unavailable",
-                extra={"child_url": child_url, "status_code": metadata_response.status_code},
+                extra={"request_url": child_url, "status_code": metadata_response.status_code},
             )
             raise FedoraError(
                 metadata_url,
@@ -3209,7 +3264,7 @@ class FedoraTransaction(BaseFedoraTransaction):
         except requests.exceptions.ConnectionError as exc:
             logger.error(
                 "core_repository_connector.FedoraTransaction.__create_transaction.connection_error",
-                extra={"url": url, "error": exc},
+                extra={"request_url": url, "error": exc},
             )
             raise FedoraNoResponseError(url, str(exc), None, fedora_transaction=None)
         if not str(response.status_code).startswith("2"):

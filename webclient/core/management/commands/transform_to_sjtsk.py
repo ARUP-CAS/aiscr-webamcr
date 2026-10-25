@@ -57,7 +57,7 @@ class Command(BaseCommand):
 
         logger.debug(
             "core.management.commands.transform_to_sjtsk.start",
-            extra={"model": model_type},
+            extra={"class_name": model_type},
         )
 
         if model_type == "pian":
@@ -71,7 +71,7 @@ class Command(BaseCommand):
 
         logger.debug(
             "core.management.commands.transform_to_sjtsk.end",
-            extra={"model": model_type},
+            extra={"class_name": model_type},
         )
 
     def _transform_pian(self):
@@ -128,7 +128,7 @@ class Command(BaseCommand):
                 error_count += 1
                 logger.error(
                     "core.management.commands.transform_to_sjtsk.Command._transform_pian.error",
-                    extra={"pian_id": pian.id, "error": geom[1]},
+                    extra={"pk": pian.id, "error": geom[1]},
                 )
                 self.stdout.write(
                     self.style.ERROR(
@@ -206,7 +206,7 @@ class Command(BaseCommand):
                 error_count += 1
                 logger.error(
                     "core.management.commands.transform_to_sjtsk.Command._transform_nalez.error",
-                    extra={"nalez_id": SN.id, "error": geom[1]},
+                    extra={"pk": SN.id, "error": geom[1]},
                 )
                 self.stdout.write(
                     self.style.ERROR(
@@ -284,7 +284,7 @@ class Command(BaseCommand):
                 error_count += 1
                 logger.error(
                     "core.management.commands.transform_to_sjtsk.Command._transform_projekt.error",
-                    extra={"projekt_id": PRJ.id, "ident_cely": PRJ.ident_cely, "error": geom[1]},
+                    extra={"pk": PRJ.id, "ident_cely": PRJ.ident_cely, "error": geom[1]},
                 )
                 self.stdout.write(
                     self.style.ERROR(
@@ -363,7 +363,7 @@ class Command(BaseCommand):
                     error_count += 1
                     logger.error(
                         "core.management.commands.transform_to_sjtsk.Command._transform_dokument.error",
-                        extra={"dokument_id": DOC.pk, "error": geom[1]},
+                        extra={"pk": DOC.pk, "error": geom[1]},
                     )
                     self.stdout.write(
                         self.style.ERROR(
@@ -379,7 +379,7 @@ class Command(BaseCommand):
                 error_count += 1
                 logger.warning(
                     "core.management.commands.transform_to_sjtsk.Command._transform_dokument.exception",
-                    extra={"dokument_id": DOC.pk, "error": str(err)},
+                    extra={"pk": DOC.pk, "error": str(err)},
                 )
                 self.stdout.write(
                     self.style.ERROR(

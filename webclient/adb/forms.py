@@ -3,6 +3,7 @@ import logging
 from adb.models import Adb, VyskovyBod
 from core.coordTransform import convertToJTSK
 from core.forms import OptimisticLockingMixin
+from core.utils import hodnota_pro_log
 from core.widgets import AutocompleteModelSelect2
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
@@ -297,7 +298,7 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
                 logger.debug(
                     "adb.forms.create_vyskovy_bod_form.has_initial_values",
                     extra={
-                        "data": cleaned_data,
+                        "data": hodnota_pro_log(cleaned_data),
                         "Z": niveleta,
                         "option": has_initial_values,
                     },

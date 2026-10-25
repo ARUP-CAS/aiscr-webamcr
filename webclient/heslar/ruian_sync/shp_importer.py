@@ -194,7 +194,7 @@ class ShpUzszSource(RuianSource):
         """
         logger.debug(
             "heslar.ruian_sync.shp_importer.fetch_full_state.start",
-            extra={"shp": str(self.shp_path), "uzsz": str(self.uzsz_path)},
+            extra={"file": str(self.shp_path), "uzsz": str(self.uzsz_path)},
         )
 
         def_bod_kraj, def_bod_okres, def_bod_katastr = self._load_uzsz_definicni_body()
@@ -205,7 +205,7 @@ class ShpUzszSource(RuianSource):
 
         logger.debug(
             "heslar.ruian_sync.shp_importer.fetch_full_state.end",
-            extra={"kraje": len(kraje), "okresy": len(okresy), "katastry": len(katastry)},
+            extra={"count": len(kraje), "okresy": len(okresy), "katastry": len(katastry)},
         )
         return RuianFullState(kraje=kraje, okresy=okresy, katastry=katastry)
 
@@ -294,7 +294,7 @@ class ShpUzszSource(RuianSource):
 
         logger.debug(
             "heslar.ruian_sync.shp_importer._load_uzsz_definicni_body",
-            extra={"kraje": len(kraj_pts), "okresy": len(okres_pts), "katastry": len(katastr_pts)},
+            extra={"count": len(kraj_pts), "okresy": len(okres_pts), "katastry": len(katastr_pts)},
         )
         return kraj_pts, okres_pts, katastr_pts
 
@@ -443,7 +443,7 @@ class ShpUzszSource(RuianSource):
         if fallback_count:
             logger.info(
                 "heslar.ruian_sync.shp_importer._load_katastry.fallback_summary",
-                extra={"katastry_with_centroid_fallback": fallback_count},
+                extra={"count": fallback_count},
             )
         return out
 
@@ -495,7 +495,7 @@ class ShpUzszSource(RuianSource):
                 raise FileNotFoundError(f"SHP layer nenalezen: {target}")
             logger.info(
                 "heslar.ruian_sync.shp_importer._resolve_shp_layer.directory",
-                extra={"basename": basename, "path": str(target)},
+                extra={"file": str(target)},
             )
             return target
 
@@ -510,7 +510,7 @@ class ShpUzszSource(RuianSource):
                 logger.warning(
                     "heslar.ruian_sync.shp_importer._resolve_shp_layer.stale_unpacked",
                     extra={
-                        "basename": basename,
+                        "file": basename,
                         "unpack_dir": str(unpack_dir),
                         "zip": str(self.shp_path),
                     },
@@ -534,7 +534,7 @@ class ShpUzszSource(RuianSource):
                                 extracted.replace(unpack_dir / member_path.name)
                 logger.info(
                     "heslar.ruian_sync.shp_importer._resolve_shp_layer.extracted",
-                    extra={"basename": basename, "unpack_dir": str(unpack_dir), "zip": str(self.shp_path)},
+                    extra={"file": basename, "unpack_dir": str(unpack_dir), "zip": str(self.shp_path)},
                 )
             if not target.exists():
                 raise FileNotFoundError(f"SHP layer {basename} nebyl v archivu {self.shp_path} nalezen.")
@@ -618,13 +618,13 @@ class ShpUzszSource(RuianSource):
         except Exception as err:  # noqa: BLE001
             logger.warning(
                 "heslar.ruian_sync.shp_importer._centroid_wkt.error",
-                extra={"error": str(err), "kod": kod, "level": level},
+                extra={"error": str(err), "kod": kod, "value": level},
             )
             return None
         if not wkt_positive:
             logger.warning(
                 "heslar.ruian_sync.shp_importer._centroid_wkt.empty_centroid",
-                extra={"kod": kod, "level": level},
+                extra={"kod": kod, "value": level},
             )
             return None
         wkt = cls._ensure_negative_wkt(wkt_positive)
@@ -644,9 +644,9 @@ class ShpUzszSource(RuianSource):
             "heslar.ruian_sync.shp_importer._centroid_wkt.fallback_used",
             extra={
                 "kod": kod,
-                "level": level,
+                "value": level,
                 "centroid_wkt": wkt,
-                "reason": reason,
+                "info": reason,
             },
         )
         return wkt
