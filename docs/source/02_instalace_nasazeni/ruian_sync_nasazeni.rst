@@ -149,10 +149,15 @@ Audit běhů v administraci
 
 Výpis ``/admin/heslar/ruiansyncrun/`` má u každého běhu tři textová pole:
 
-* ``error`` – traceback, když běh **selhal** (``status='failed'``);
-* ``warnings`` – nálezy, které běh nezastavily, ale je třeba je **prověřit**:
-  díry nebo překryvy v pokrytí, nesoulad ploch úrovní, nesmazatelné prvky,
-  selhaný přepočet navázaných záznamů. Sloupec ⚠ ve výpisu ukazuje jejich
+* ``error`` – u **neočekávaného selhání** (``status='failed'``) traceback.
+  U známých stavů nemusí traceback obsahovat: běh uzavřený po zabití procesu
+  nese pevnou větu o přerušení a den, jehož soubor ČÚZK ještě nevydal
+  (``not_published_yet (404)``), je ``failed`` s prázdným ``error``;
+* ``warnings`` – nálezy, které je třeba **prověřit**: díry nebo překryvy
+  v pokrytí, nesoulad ploch úrovní, nesmazatelné prvky, selhaný přepočet
+  navázaných záznamů. Většina z nich běh nezastaví; výjimkou je předletová
+  kontrola plného syncu (``RuianNeuplnyZdrojError``), která sem zapíše důvod
+  zastavení a běh skončí ``failed``. Sloupec ⚠ ve výpisu ukazuje jejich
   počet a po najetí myší i text. Varování z hlubších vrstev (parser,
   stahování, přepočet jednotlivých záznamů, výrazná změna hranice) se
   zapisují jako **souhrn** – jeden řádek za druh události s počtem výskytů,
@@ -160,7 +165,8 @@ Výpis ``/admin/heslar/ruiansyncrun/`` má u každého běhu tři textová pole:
   se jednotlivé výskyty dohledají v logu (Kibana);
 * ``note`` – **informativní** poznámka bez nutnosti zásahu, např.
   ``no_changes (404)`` (den bez změn), ``not_published_yet (404)`` (ČÚZK
-  soubor ještě nevydal) nebo ``uzsz=…`` (soubor ÚZSZ použitý plným syncem).
+  soubor ještě nevydal), ``opakovani_po_selhani`` (den se opakuje po dřívějším
+  selhání) nebo ``uzsz=…`` (soubor ÚZSZ použitý plným syncem).
 
 Úspěšný běh s ⚠ tedy proběhl celý, ale některá kontrola něco našla.
 
@@ -172,7 +178,8 @@ zapisují do Fedory. Rollback databáze do stavu před během proto **neexistuje
 a obnova se dělá dopředu:
 
 1. Zjistit z auditu, kde běh skončil – ``RuianSyncRun`` s ``status='failed'``
-   nese ve ``warnings`` důvod a v ``error`` traceback.
+   nese v ``error`` traceback; zastavila-li ho předletová kontrola, je důvod
+   navíc čitelně ve ``warnings``.
 2. Ověřit, jestli běh zastavila předletová kontrola
    (``RuianNeuplnyZdrojError``). Pokud ano, **do dat se nesáhlo** – stačí
    opravit vstup a spustit znovu.
