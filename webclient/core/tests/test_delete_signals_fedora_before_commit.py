@@ -27,7 +27,11 @@ from django.urls import reverse
 from dokument.models import DokumentCast
 from dokument.signals import dokument_cast_save_metadata_delete, dokument_delete_repository_container
 from komponenta.signals import komponenta_delete
-from pas.signals import dokument_delete_container_soubor_vazby, samostatny_nalez_delete_update_projekt
+from pas.signals import (
+    delete_uzivatel_spoluprce_connections,
+    dokument_delete_container_soubor_vazby,
+    samostatny_nalez_delete_update_projekt,
+)
 from pas.views import smazat
 from projekt.signals import projekt_pre_delete
 
@@ -74,6 +78,13 @@ POST_DELETE_CASES = [
         _instance,
         lambda i: i.projekt.save_metadata,
         [],
+    ),
+    (
+        "pas.delete_uzivatel_spoluprce_connections",
+        delete_uzivatel_spoluprce_connections,
+        _instance,
+        lambda i: i.spolupracovnik.save_metadata,
+        ["pas.signals.Historie"],
     ),
     (
         "arch_z.delete_arch_z_repository_update_connected_records",
@@ -172,6 +183,20 @@ class PostDeleteSignalsWriteBeforeCommitTests(SimpleTestCase):
                 write(instance).side_effect = _conflict()
                 with self.assertRaises(FedoraUpdatedByAnotherTransactionError):
                     self._run(handler, instance, patches)
+
+
+@mock.patch("pas.signals.Historie", mock.Mock())
+class UzivatelSpolupracePostDeleteTests(SimpleTestCase):
+    """Smazání spolupráce nesmí commitnout Fedoru uvnitř DB transakce přes ``User.save_metadata``."""
+
+    def test_user_save_metadata_called_without_close(self):
+        """``User.save_metadata`` zavírá synchronně, proto se mu příznak uzavření nepředává."""
+        spoluprace = _instance(True)
+        with mock.patch("django.db.transaction.on_commit"):
+            delete_uzivatel_spoluprce_connections(sender=None, instance=spoluprace)
+        spoluprace.spolupracovnik.save_metadata.assert_called_once_with(spoluprace.active_transaction)
+        spoluprace.vedouci.save_metadata.assert_called_once_with(spoluprace.active_transaction)
+        spoluprace.active_transaction.mark_transaction_as_closed.assert_not_called()
 
 
 @mock.patch("pas.signals.invalidate_model", mock.Mock())

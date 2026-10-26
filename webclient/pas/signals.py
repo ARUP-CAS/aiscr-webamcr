@@ -186,9 +186,11 @@ def delete_uzivatel_spoluprce_connections(sender, instance: UzivatelSpoluprace, 
     instance.vedouci.save_metadata(fedora_transaction)
     if instance.historie and instance.historie.pk:
         instance.historie.delete()
-    instance.spolupracovnik.save_metadata(
-        fedora_transaction, close_transaction=instance.close_active_transaction_when_finished
-    )
+    instance.spolupracovnik.save_metadata(fedora_transaction)
+    # User.save_metadata s close_transaction=True commitne Fedoru hned (na rozdíl od ModelWithMetadata),
+    # proto se commit Fedora transakce plánuje explicitně až po commitu DB.
+    if instance.close_active_transaction_when_finished:
+        transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
     logger.debug(
         "pas.signals.delete_uzivatel_spoluprce_connections.end",
         extra={"pk": instance.pk, "transaction": getattr(fedora_transaction, "uid", None)},
