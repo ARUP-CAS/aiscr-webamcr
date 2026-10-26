@@ -207,8 +207,9 @@ Nahrání fotografie
    s ``skip_status=True`` (libovolný stav včetně archivovaného), badatel podle standardních
    pravidel AMČR (typicky vlastní nález ve stavu 1). Jinak ``403``.
 #. Právě jeden soubor v poli ``file``; chybějící nebo více souborů vrací ``400``.
-#. Velikost nejvýše ``MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES`` (250 MiB); šifrovaný soubor nebo
-   nepodporovaný MIME typ ``422``.
+#. Velikost nejvýše ``MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES``: **250 MiB (262 144 000 bajtů)**.
+   Větší soubor vrací ``422`` s popisem chyby v poli ``detail``. Přesně 250 MiB projde kontrolou
+   velikosti. Šifrovaný soubor nebo nepodporovaný MIME typ rovněž vrací ``422``.
 #. ``Content-Digest`` nad bajty souboru; chybějící nebo nevalidní hlavička ``400``, **neshoda
    digestu zde vrací** ``422``.
 #. Antivirová kontrola: nalezený virus ``422``, nedokončená kontrola ``500``.
@@ -220,6 +221,24 @@ Nahrání fotografie
    U formátů JPEG, PNG a TIFF se **odstraní GPS metadata**.
 #. Uložení do Fedory; u archivovaného záznamu ``SN34`` a aktualizace IGSN.
 #. ``201`` s aktualizovanými XML metadaty záznamu.
+
+Limit proxy pro fotografie
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Nginx pro tuto cestu povoluje celé tělo požadavku do **260 MiB (272 629 760 bajtů)**.
+Rezerva oproti limitu souboru zahrnuje multipart hlavičky a umožňuje aplikaci vrátit validační
+chybu i pro soubor mírně nad 250 MiB. Nezvyšuje maximální povolenou velikost fotografie.
+Ostatní cesty zachovávají své dosavadní limity.
+
+Při překročení 260 MiB vrací nginx přímo ``422`` s JSON tělem ``{"detail": "…"}``, nikoli
+HTML odpověď ``413``. Použije stejný popis překročené velikosti v češtině nebo angličtině.
+Takový požadavek nedojde do Django, neprojde autentizací ani kontrolou oprávnění a nevytvoří
+``ApiRequestLog``; dohledává se v logu proxy. Požadavky odmítnuté kontrolou velikosti v aplikaci
+naopak vytvářejí neúspěšný auditní záznam. Případné další proxy před nginx musí zachovat tuto
+odpověď nebo implementovat stejné odmítnutí pro daný endpoint.
+
+Spuštění a scénář HTTP testu velikosti popisuje
+:doc:`/09_testovani/integracni_testy`.
 
 
 .. _pas-api-zamek:
