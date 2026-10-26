@@ -10,6 +10,7 @@ import time
 import zipfile
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import closing
 from datetime import datetime, timezone
 from io import BytesIO
 from typing import Optional
@@ -46,6 +47,7 @@ from selenium.webdriver.chrome.webdriver import WebDriver as ChromeDriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.remote.webdriver import WebDriver as RemoteWebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 from uzivatel.models import User
 from xml_generator.generator import DocumentGenerator
@@ -54,6 +56,12 @@ from xml_generator.models import ModelWithMetadata
 from webclient.settings.base import get_secret
 
 logger = logging.getLogger(__name__)
+
+#: Implicitní čekání WebDriveru na element (v sekundách) při ``find_element``.
+IMPLICIT_WAIT = 2
+
+#: Interval dotazování (v sekundách) v čekacích smyčkách ``wait_for``.
+POLL_INTERVAL = 0.1
 
 
 class LocalResolver(etree.Resolver):
@@ -138,8 +146,125 @@ class WaitForPageLoad:
             if condition_function():
                 return True
             else:
-                time.sleep(0.5)
+                time.sleep(POLL_INTERVAL)
         logger.error("SeleniumTest.WaitForPageLoad.timeout")
+
+
+class PreparedDatabaseClone:
+    """
+    Klon databáze ze šablony, jehož další kopie se připravuje na pozadí.
+
+    ``CREATE DATABASE ... WITH TEMPLATE`` trvá lokálně několik sekund (checkpoint a fsync),
+    proto se během běhu testu vytváří ``<cíl>_next`` a setUp dalšího testu ji jen
+    přejmenuje na cílovou databázi. Pokud připravená kopie není k dispozici (první test běhu
+    nebo chyba na pozadí), klonuje se přímo do cílové databáze.
+    """
+
+    _executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="selenium_db_clone")
+
+    def __init__(self, connect_kwargs, target, template, create_options=""):
+        """
+        Inicializuje instanci třídy.
+
+        :param connect_kwargs: Parametry ``psycopg2.connect()`` pro administrativní spojení
+            (nesmí směřovat na cílovou ani šablonovou databázi).
+        :param target: Název databáze, kterou používá testovaná aplikace.
+        :param template: Název šablonové databáze, ze které se klonuje.
+        :param create_options: Doplňující volby ``CREATE DATABASE`` (např. ``STRATEGY FILE_COPY``).
+        """
+        self.connect_kwargs = connect_kwargs
+        self.target = target
+        self.template = template
+        self.next_name = f"{target}_next"
+        self.create_options = create_options
+        self._future = None
+
+    def _connect(self):
+        """
+        Otevře administrativní spojení v režimu autocommit.
+
+        :return: Spojení ``psycopg2``.
+        """
+        conn = psycopg2.connect(**self.connect_kwargs)
+        conn.autocommit = True
+        return conn
+
+    @staticmethod
+    def _terminate(cursor, db_name):
+        """
+        Ukončí ostatní sezení připojená k databázi ``db_name``.
+
+        :param cursor: Kurzor administrativního spojení.
+        :param db_name: Název databáze.
+        """
+        cursor.execute(
+            "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = %s AND pid <> pg_backend_pid();",
+            (db_name,),
+        )
+
+    def _drop(self, cursor, db_name):
+        """
+        Smaže databázi ``db_name``; připojená sezení předtím ukončí.
+
+        Aplikace (např. Fedora s connection poolem) se může mezi ukončením sezení a ``DROP``
+        znovu připojit, proto se pokus až 10× opakuje. PostgreSQL 12 u Fedory ještě nezná
+        ``DROP DATABASE ... WITH (FORCE)``.
+
+        :param cursor: Kurzor administrativního spojení.
+        :param db_name: Název mazané databáze.
+        :raises psycopg2.errors.ObjectInUse: Pokud je databáze používána i po 10 pokusech.
+        """
+        last_err = None
+        for attempt in range(1, 11):
+            self._terminate(cursor, db_name)
+            try:
+                cursor.execute(f"DROP DATABASE IF EXISTS {db_name};")
+                return
+            except psycopg2.errors.ObjectInUse as err:
+                last_err = err
+                logger.warning(
+                    "PreparedDatabaseClone: DROP DATABASE %s selhal (pokus %d/10): %s", db_name, attempt, err
+                )
+                time.sleep(0.1)
+        raise last_err
+
+    def _create(self, cursor, db_name):
+        """
+        Vytvoří databázi ``db_name`` jako kopii šablony.
+
+        :param cursor: Kurzor administrativního spojení.
+        :param db_name: Název nové databáze.
+        """
+        self._terminate(cursor, self.template)
+        cursor.execute(f"CREATE DATABASE {db_name} WITH TEMPLATE {self.template} {self.create_options};")
+
+    def _create_next(self):
+        """Na pozadí znovu vytvoří připravenou kopii ``<cíl>_next``."""
+        with closing(self._connect()) as conn, conn.cursor() as cursor:
+            self._drop(cursor, self.next_name)
+            self._create(cursor, self.next_name)
+
+    def reset(self):
+        """
+        Nahradí cílovou databázi čistou kopií šablony a spustí přípravu další kopie.
+
+        Čeká na dokončení přípravy z předchozího volání; pokud selhala, klonuje přímo.
+        """
+        future, self._future = self._future, None
+        prepared = False
+        if future is not None:
+            try:
+                future.result()
+                prepared = True
+            except Exception as err:
+                logger.warning("PreparedDatabaseClone: příprava %s selhala: %s", self.next_name, err)
+        with closing(self._connect()) as conn, conn.cursor() as cursor:
+            self._drop(cursor, self.target)
+            if prepared:
+                cursor.execute(f"ALTER DATABASE {self.next_name} RENAME TO {self.target};")
+            else:
+                self._create(cursor, self.target)
+        self._future = self._executor.submit(self._create_next)
 
 
 # @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
@@ -253,7 +378,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         else:
             # self.driver = webdriver.Firefox()
             self.driver = webdriver.Chrome(options=options)
-        self.driver.implicitly_wait(2)
+        self.driver.implicitly_wait(IMPLICIT_WAIT)
         self.wait_interval = 2
         self.driver.set_page_load_timeout(120)
         self.driver.set_script_timeout(30)
@@ -649,105 +774,66 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         if response.status_code != 204:
             logger.warning("fcr:invalidate-caches vrátil %s: %s", response.status_code, response.text)
 
-    @staticmethod
-    def clone_Fedora_database():
-        """Naklonuje čistou Fedora postgres DB ze šablony, ať se srovná s baseline OCFL."""
+    _fedora_db_clone = None
+    _django_db_clone = None
+
+    @classmethod
+    def clone_Fedora_database(cls):
+        """
+        Nahradí Fedora postgres DB čistou kopií šablony, ať se srovná s baseline OCFL.
+
+        Kopie se připravuje na pozadí během předchozího testu, viz :class:`PreparedDatabaseClone`.
+        """
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.clone_Fedora_database")
-        db_name = settings.FEDORA_DB_NAME
-        template_name = settings.FEDORA_DB_TEMPLATE_NAME
-        admin_conn = None
-        admin_cursor = None
-        try:
-            admin_conn = psycopg2.connect(
-                host=settings.FEDORA_DB_HOST,
-                database="postgres",
-                user=settings.FEDORA_DB_USER,
-                password=settings.FEDORA_DB_PASS,
-                port=settings.FEDORA_DB_PORT,
+        if BaseSeleniumTestClass._fedora_db_clone is None:
+            BaseSeleniumTestClass._fedora_db_clone = PreparedDatabaseClone(
+                connect_kwargs={
+                    "host": settings.FEDORA_DB_HOST,
+                    "database": "postgres",
+                    "user": settings.FEDORA_DB_USER,
+                    "password": settings.FEDORA_DB_PASS,
+                    "port": settings.FEDORA_DB_PORT,
+                },
+                target=settings.FEDORA_DB_NAME,
+                template=settings.FEDORA_DB_TEMPLATE_NAME,
             )
-            admin_conn.autocommit = True
-            admin_cursor = admin_conn.cursor()
-            last_err = None
-            for attempt in range(1, 11):
-                admin_cursor.execute(
-                    f"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity "
-                    f"WHERE pg_stat_activity.datname IN ('{db_name}', '{template_name}') "
-                    f"AND pid <> pg_backend_pid();"
-                )
-                admin_cursor.execute(
-                    f"SELECT pid, application_name, client_addr, state FROM pg_stat_activity "
-                    f"WHERE datname = '{db_name}' AND pid <> pg_backend_pid();"
-                )
-                remaining = admin_cursor.fetchall()
-                if remaining:
-                    logger.warning(
-                        "clone_Fedora_database: k DB %s je stále připojeno %d sezení (pokus %d/10): %s",
-                        db_name,
-                        len(remaining),
-                        attempt,
-                        remaining,
-                    )
-                    time.sleep(0.1)
-                    continue
-                try:
-                    admin_cursor.execute(f"DROP DATABASE IF EXISTS {db_name};")
-                    last_err = None
-                    break
-                except psycopg2.errors.ObjectInUse as err:
-                    last_err = err
-                    logger.warning("clone_Fedora_database: DROP DATABASE selhal (pokus %d/10): %s", attempt, err)
-            if last_err is not None:
-                raise last_err
-            admin_cursor.execute(f"CREATE DATABASE {db_name} WITH TEMPLATE {template_name};")
+        try:
+            BaseSeleniumTestClass._fedora_db_clone.reset()
         except Exception as err:
             logger.error(
                 "core.tests.test_selenium.BaseSeleniumTestClass.clone_Fedora_database.general_exception",
                 extra={"error": err},
             )
             raise
-        finally:
-            if admin_cursor is not None:
-                admin_cursor.close()
-            if admin_conn is not None:
-                admin_conn.close()
 
-    @staticmethod
-    def clone_Database():
-        """Provádí operaci clone Database."""
+    @classmethod
+    def clone_Database(cls):
+        """
+        Nahradí testovací DB aplikace čistou kopií vzorové DB ``TEST_DATABASE_NAME``.
+
+        Kopie se připravuje na pozadí během předchozího testu, viz :class:`PreparedDatabaseClone`.
+        """
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.clone_Database")
-        prod_conn = None
-        prod_cursor = None
+        if BaseSeleniumTestClass._django_db_clone is None:
+            BaseSeleniumTestClass._django_db_clone = PreparedDatabaseClone(
+                connect_kwargs={
+                    "host": get_secret("DB_HOST"),
+                    "database": get_secret("DB_NAME"),
+                    "user": get_secret("DB_USER"),
+                    "password": get_secret("DB_PASS"),
+                    "port": get_secret("DB_PORT"),
+                },
+                target=connection.settings_dict["NAME"],
+                template=settings.TEST_DATABASE_NAME,
+                create_options="STRATEGY FILE_COPY",
+            )
         try:
-            prod_conn = psycopg2.connect(
-                host=get_secret("DB_HOST"),
-                database=get_secret("DB_NAME"),
-                user=get_secret("DB_USER"),
-                password=get_secret("DB_PASS"),
-                port=get_secret("DB_PORT"),
-            )
-            prod_conn.autocommit = True
-            prod_cursor = prod_conn.cursor()
-            prod_cursor.execute(
-                f"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{connection.settings_dict['NAME']}' AND pid <> pg_backend_pid();"
-            )
-            prod_cursor.execute(f"DROP DATABASE IF EXISTS {connection.settings_dict['NAME']};")
-            prod_cursor.execute(
-                f"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{settings.TEST_DATABASE_NAME}' AND pid <> pg_backend_pid();"
-            )
-            prod_cursor.execute(
-                f"CREATE DATABASE {connection.settings_dict['NAME']} WITH TEMPLATE {settings.TEST_DATABASE_NAME} strategy FILE_COPY;"
-            )
-            prod_conn.commit()
+            BaseSeleniumTestClass._django_db_clone.reset()
             invalidate_all()
         except Exception as err:
             logger.error(
                 "core.tests.test_selenium.BaseSeleniumTestClass.clone_Database.general_exception", extra={"error": err}
             )
-        finally:
-            if prod_cursor is not None:
-                prod_cursor.close()
-            if prod_conn is not None:
-                prod_conn.close()
         connection.connect()
 
     def assertIn2(self, member1, member2, container, msg=None):
@@ -880,11 +966,40 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 "core.tests.test_selenium.BaseSeleniumTestClass.tearDown.jquery_wait_ignored",
                 extra={"error": exc},
             )
+        self._quit_driver()
+        super().tearDown()
+
+    def _quit_driver(self):
+        """
+        Zavře prohlížeč a ukončí chromedriver.
+
+        ``driver.quit()`` lokálního Chrome volá ``Service.stop()``, které po požadavku
+        ``/shutdown`` čeká na ukončení chromedriveru ve smyčce se ``sleep(1)`` (cca 2 s
+        na každý test). Proto se u lokálního driveru po zavření session proces chromedriveru
+        rovnou ukončí a ``Service.stop()`` už jen uklidí logy a streamy.
+        """
+        service = getattr(self.driver, "service", None)
+        process = getattr(service, "process", None)
+        if process is None:
+            try:
+                self.driver.quit()
+            except Exception:
+                pass
+            return
         try:
-            self.driver.quit()
+            RemoteWebDriver.quit(self.driver)
         except Exception:
             pass
-        super().tearDown()
+        try:
+            if process.poll() is None:
+                process.terminate()
+                process.wait(10)
+            service.stop()
+        except Exception as exc:
+            logger.warning(
+                "core.tests.test_selenium.BaseSeleniumTestClass._quit_driver.service_stop_error",
+                extra={"error": exc},
+            )
 
     def _fixture_teardown(self):
         """
@@ -902,7 +1017,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         """
         time.sleep(interval)
 
-    def wait_for(self, condition_function, by, value, timeout=12, poll=0.5):
+    def wait_for(self, condition_function, by, value, timeout=12, poll=POLL_INTERVAL):
         """
         Provádí operaci wait for.
 
@@ -927,17 +1042,22 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def findElement(self, by, value):
         """
-        Provádí operaci findElement.
+        Okamžitě ověří, zda je element na stránce, bez implicitního čekání WebDriveru.
 
-        :param by: Číselná hodnota ``by`` použitá při výpočtu nebo transformaci.
-        :param value: Parametr ``value`` předává se do volání ``len()``, ``find_elements()``, vstupuje do návratové hodnoty.
+        Používá se v dotazovacích smyčkách :meth:`wait_for`, které čekají samy. S implicitním
+        čekáním by každý dotaz na chybějící element trval ``IMPLICIT_WAIT`` sekund.
 
-            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        :param by: Strategie vyhledání elementu (``By.ID``, ``By.CSS_SELECTOR`` …).
+        :param value: Hodnota selektoru.
+        :return: ``True``, pokud stránka obsahuje alespoň jeden odpovídající element.
         """
+        self.driver.implicitly_wait(0)
         try:
             return len(self.driver.find_elements(by, value)) > 0
         except StaleElementReferenceException:
             return False
+        finally:
+            self.driver.implicitly_wait(IMPLICIT_WAIT)
 
     def ElementIsClickable(self, by, value):
         """
@@ -988,6 +1108,63 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
         logger.warning("BaseSeleniumTestClass.ElementClick.failedAfterRetries", extra={"filed": by, "value": value})
         raise Exception("ElementClickError")
+
+    def wait_for_modal_shown(self, modal_id, timeout=10):
+        """
+        Počká, až je Bootstrap modální dialog plně otevřený, tj. doběhla animace otevírání.
+
+        Dialog otevíraný při načtení stránky (např. v ``DOMContentLoaded``) může být v DOM viditelný
+        dřív, než doběhne fade animace. Bootstrap během animace ignoruje požadavek na zavření, takže
+        kliknutí na zavírací tlačítko v tu chvíli nemá žádný efekt.
+
+        :param modal_id: HTML id atribut elementu ``.modal`` (bez ``#``).
+        :param timeout: Maximální doba čekání v sekundách.
+        :raises AssertionError: Dialog se v daném čase neotevřel.
+        """
+        try:
+            WebDriverWait(self.driver, timeout).until(
+                lambda driver: driver.execute_script(
+                    "var el = document.getElementById(arguments[0]);"
+                    "var m = el && window.bootstrap && bootstrap.Modal.getInstance(el);"
+                    "return !!(m && m._isShown && !m._isTransitioning);",
+                    modal_id,
+                )
+            )
+        except TimeoutException:
+            raise AssertionError(f"wait_for_modal_shown('{modal_id}'): modal not shown within {timeout}s")
+
+    def close_modal(self, modal_id, by=By.ID, value=None, timeout=10):
+        """
+        Zavře Bootstrap modální dialog kliknutím na tlačítko a počká, až dialog zmizí.
+
+        Nejdřív počká na plné otevření dialogu (:meth:`wait_for_modal_shown`) a pak tlačítko kliká
+        opakovaně, dokud dialog skutečně nezmizí. Opakování pokrývá případy, kdy Bootstrap kliknutí
+        ignoruje kvůli běžící animaci nebo kdy zavření zastaví handler ``hide.bs.modal``.
+
+        :param modal_id: HTML id atribut elementu ``.modal`` (bez ``#``).
+        :param by: Strategie vyhledání tlačítka; uplatní se jen se zadaným ``value``.
+        :param value: Hodnota pro vyhledání tlačítka. Pokud ``None``, klikne se na první prvek
+            s atributem ``data-bs-dismiss="modal"`` uvnitř dialogu.
+        :param timeout: Maximální doba čekání na otevření i na zavření dialogu v sekundách.
+        :raises AssertionError: Dialog se v daném čase neotevřel nebo nezavřel.
+        """
+        if value is None:
+            by, value = By.CSS_SELECTOR, f'#{modal_id} [data-bs-dismiss="modal"]'
+        self.wait_for_modal_shown(modal_id, timeout)
+
+        def _closed(driver):
+            if not driver.find_element(By.ID, modal_id).is_displayed():
+                return True
+            try:
+                driver.find_element(by, value).click()
+            except (ElementClickInterceptedException, StaleElementReferenceException):
+                pass
+            return False
+
+        try:
+            WebDriverWait(self.driver, timeout).until(_closed)
+        except TimeoutException:
+            raise AssertionError(f"close_modal('{modal_id}', '{value}'): modal not closed within {timeout}s")
 
     def ElementSendKeys(self, by, value, keys):
         """

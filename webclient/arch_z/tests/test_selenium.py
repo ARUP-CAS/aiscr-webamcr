@@ -1105,6 +1105,7 @@ class AkceProjektoveAkce(AkceTestClass):
 
         TestData:
         C-202401980
+        P-1212-100017
 
         Steps:
         - Uživatel se přihlásí
@@ -1122,31 +1123,25 @@ class AkceProjektoveAkce(AkceTestClass):
         self.uploadFileToFedora(646253, "projekt/tests/resources/test.pdf")
         pian_old = DokumentacniJednotka.objects.filter(ident_cely="C-202401980A-D01")[0].pian
         self.assertEqual(pian_old, None)
-
-        self.go_to_Projekty_vyper()
-        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401980")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "C-202401980")
-        self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
-        self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202401980A_D01 > strong")
-        self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_C-202401980A-D01 .btn-group:nth-child(1) .material-icons")
+        self.goToAddress("/arch-z/akce/detail/C-202401980A/dj/C-202401980A-D01")
+        self.ElementClick(By.ID, "add_others")
         self.ElementClick(By.ID, "show_menu_pian_from_map_id")
         self.wait(0.5)
         self.driver.execute_script("""map.setView([50.357377039,  13.795522698],19)""")
+        # Klik na konkrétní PIAN z TestData, ne na první vrstvu - pořadí PIANů z /mapa-pian-pas není dané
+        # (SQL bez ORDER BY) a první může být nepotvrzený PIAN jiné akce, který připojit nejde.
         js = """
 const done = arguments[arguments.length - 1];
+const ident = arguments[0];
 const deadline = Date.now() + 10000;
 
 (function tick() {
   const layers = (window.poi_pian && poi_pian._layers) ? Object.values(poi_pian._layers) : [];
-  const first = layers[0];
-   console.log(layers[0]);
-  if (window.L && window.map && first && typeof first.fire === "function") {
-    const latlng = L.latLng(50.357377039, 13.795522698);
-    console.log("log1");
-    first.fire("click", {
+  const target = layers.find((l) => l.getTooltip && l.getTooltip()
+    && String(l.getTooltip().getContent()).split(" ")[0] === ident);
+  if (window.L && window.map && target && typeof target.fire === "function") {
+    const latlng = target.getLatLng ? target.getLatLng() : target.getBounds().getCenter();
+    target.fire("click", {
       latlng,
       layerPoint: map.latLngToLayerPoint(latlng),
       containerPoint: map.latLngToContainerPoint(latlng),
@@ -1163,7 +1158,9 @@ const deadline = Date.now() + 10000;
 })();
 """
         self.driver.set_script_timeout(10)
-        self.driver.execute_async_script(js)
+        self.assertTrue(
+            self.driver.execute_async_script(js, "P-1212-100017"), "PIAN P-1212-100017 se v mapě nezobrazil"
+        )
         self.wait(0.5)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editDjSubmitButton")
@@ -1171,6 +1168,7 @@ const deadline = Date.now() + 10000;
         pian_new = DokumentacniJednotka.objects.filter(ident_cely="C-202401980A-D01")[0].pian
 
         self.assertNotEqual(pian_new, None)
+        self.assertEqual(pian_new.ident_cely, "P-1212-100017")
         logger.info("AkceProjektoveAkce.test_089_pripojeni_PIAN_projektove_akce_p_001.end")
 
     # 90 C-202307816A 202007232A
@@ -1344,7 +1342,7 @@ const deadline = Date.now() + 10000;
 
         TestData:
         C-202401980
-        P-0134-00000
+        P-0134-000003
 
         Steps:
         - Uživatel se přihlásí
