@@ -1303,41 +1303,47 @@ Níže je konfigurace systému Kibana
 Nasazení systému
 ----------------
 
-Po prvním nasazení je potřeba nastavit heslo vestavěného superuživatele
-``elastic``. Heslo se neukládá do docker secretu, uchovává se mimo Docker
-(např. ve správci hesel). Příkaz nevyžaduje znalost současného hesla, takže
-jím lze heslo kdykoli změnit nebo obnovit; stejně lze změnit heslo
-libovolného uživatele (např. ``amcr_logger``):
+Po prvním nasazení (a na existující instalaci, kde se heslo ``elastic``
+dosud nenastavovalo) je potřeba nastavit hesla vestavěného superuživatele
+``elastic`` a systémového účtu ``kibana_system``. Hesla se neukládají do
+docker secretů, uchovávají se mimo Docker (např. ve správci hesel). Příkaz
+nevyžaduje znalost současného hesla, takže jím lze heslo kdykoli změnit nebo
+obnovit i v případě, že Kibana není dostupná:
 
 ::
 
    sudo docker exec -t -i $(sudo docker ps -q -f name=swarm_webamcr_elasticsearch) bin/elasticsearch-reset-password -u elastic -i --url http://localhost:9200
-
-Pro správu (Kibana, ruční zásahy) se používá superuživatel ``amcr``,
-nikoli vestavěný ``elastic``. V konzoli Dev Tools ho založte s dočasným
-heslem a skutečné heslo pak nastavte příkazem výše s ``-u amcr``:
-
-::
-
-   POST _security/user/amcr
-   {
-     "password": "<dočasné heslo>",
-     "roles": ["superuser"]
-   }
-
-Dále je potřeba nastavit heslo systémového účtu ``kibana_system``:
-
-::
-
    sudo docker exec -t -i $(sudo docker ps -q -f name=swarm_webamcr_elasticsearch) bin/elasticsearch-reset-password -u kibana_system -i --url http://localhost:9200
 
-Po nastavení je nutné restartovat kontejner Kibana a s využitím konzole
-(konzoli lze otevřít kliknutím na odkaz Dev Tool na titulní stránce)
-vytvořit první index ``amcr-000001`` se zapisovacím aliasem ``amcr``.
-Logstash zapisuje do aliasu ``amcr`` a ILM politika ze šablony
-``amcr_template`` (``rollover_alias: amcr``) pak zakládá další indexy
-``amcr-000002``, ``amcr-000003`` atd. Šablona musí existovat dřív než
-index, jinak se na něj nastavení ILM nepoužije.
+Heslo ``kibana_system`` je nutné zapsat do ``elasticsearch.password`` v
+``kibana/kibana.yml`` (viz výše) a restartovat kontejner Kibana. Teprve pak
+se Kibana k Elasticsearch připojí a lze se do ní přihlásit účtem ``elastic``.
+Další kroky se provádějí v Kibaně: dotazy v konzoli Dev Tools (odkaz Dev
+Tools na titulní stránce), účty v sekci Stack Management.
+
+Uživatelské účty (``amcr``, ``amcr_logger``) se zakládají a jejich hesla
+mění v rozhraní Kibany: Stack Management → Security → Users. Nový účet
+tlačítkem “Create user” (vyplnit Username, Password a Roles), heslo
+existujícího účtu po otevření účtu tlačítkem “Change password”. Heslo se tak
+nepíše do konzole Dev Tools, jejíž historii si ukládá prohlížeč.
+
+Pro správu (Kibana, ruční zásahy) se používá superuživatel ``amcr`` s rolí
+``superuser``, nikoli vestavěný ``elastic``.
+
+Logstash zapisuje do zapisovacího aliasu ``amcr`` a ILM politika ze šablony
+``amcr_template`` (``rollover_alias: amcr``) zakládá další indexy
+``amcr-000002``, ``amcr-000003`` atd. Šablona musí existovat dřív než první
+index, jinak se na něj nastavení ILM nepoužije. Nejdřív ověřte, jestli alias
+už neexistuje:
+
+::
+
+   GET _cat/aliases/amcr?v
+   GET _cat/indices/amcr*?v
+
+Pokud alias ``amcr`` existuje (indexy ``amcr-000001`` atd.), je vše
+připravené a další krok se přeskočí. Na novém clusteru se vytvoří první index
+s aliasem:
 
 ::
 
@@ -1350,9 +1356,34 @@ index, jinak se na něj nastavení ILM nepoužije.
      }
    }
 
+Pokud místo aliasu existuje obyčejný index ``amcr`` (instalace podle starší
+verze tohoto návodu), alias se stejným jménem vytvořit nejde. Index je nutné
+převést: zastavit službu ``logstash``, vytvořit ``amcr-000001`` bez aliasu,
+přesunout do něj data, starý index smazat a alias přidat. Logstash pak znovu
+spustit.
+
+::
+
+   PUT /amcr-000001
+
+   POST _reindex?wait_for_completion=true
+   {
+     "source": { "index": "amcr" },
+     "dest": { "index": "amcr-000001" }
+   }
+
+   DELETE /amcr
+
+   POST _aliases
+   {
+     "actions": [
+       { "add": { "index": "amcr-000001", "alias": "amcr", "is_write_index": true } }
+     ]
+   }
+
 Dále je nutné vytvořit roli a uživatele ``amcr_logger``, kterým Logstash
 zapisuje logy. Účet nesmí mít roli ``superuser``; stačí mu právo zápisu do
-indexů ``amcr*``. V konzoli Dev Tools:
+indexů ``amcr*``. Roli je nejjednodušší vytvořit v konzoli Dev Tools:
 
 ::
 
@@ -1367,14 +1398,10 @@ indexů ``amcr*``. V konzoli Dev Tools:
      ]
    }
 
-   POST _security/user/amcr_logger
-   {
-     "password": "<heslo ze secretu logstash_elastic_pass>",
-     "roles": ["amcr_logger"]
-   }
-
-Heslo účtu musí odpovídat swarm secretu ``logstash_elastic_pass``.
-Superuživatel ``amcr`` se v konfiguraci Logstashe nepoužívá.
+Uživatele ``amcr_logger`` s rolí ``amcr_logger`` pak založte v rozhraní
+Kibany (viz výše). Jeho heslo musí odpovídat swarm secretu
+``logstash_elastic_pass``. Superuživatel ``amcr`` se v konfiguraci Logstashe
+nepoužívá.
 
 Změna hesla ``amcr_logger``: swarm secret nejde upravit na místě a Docker
 nedovolí smazat secret, který používá běžící služba. Samotný restart služby
@@ -1382,13 +1409,15 @@ nové heslo nenačte. Postup:
 
 ::
 
-   # 1. nastavit nové heslo účtu
-   sudo docker exec -t -i $(sudo docker ps -q -f name=swarm_webamcr_elasticsearch) bin/elasticsearch-reset-password -u amcr_logger -i --url http://localhost:9200
+   # 1. v Kibaně změnit heslo účtu amcr_logger (Users -> amcr_logger -> Change password)
 
-   # 2. uvolnit secret a vytvořit ho s novým heslem (heslo nezůstane v souboru na disku)
+   # 2. uvolnit secret a vytvořit ho s novým heslem; heslo se načte bez
+   #    zobrazení, takže nezůstane v historii shellu ani v souboru na disku
    sudo docker service rm swarm_webamcr_logstash
    sudo docker secret rm logstash_elastic_pass
-   printf '%s' '<nové heslo>' | sudo docker secret create logstash_elastic_pass -
+   read -r -s -p 'Heslo amcr_logger: ' ES_PASSWORD; echo
+   printf '%s' "$ES_PASSWORD" | sudo docker secret create logstash_elastic_pass -
+   unset ES_PASSWORD
 
    # 3. znovu nasadit stack, který službu logstash vytvoří znovu
 
