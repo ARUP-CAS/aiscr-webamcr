@@ -6,6 +6,11 @@ Modul repository_connector.
 Třídy
 ------
 
+.. py:class:: ThumbFailureReason
+
+   Příčina selhání generování náhledu z obrázku; hodnota se loguje v poli ``reason``.
+
+
 .. py:class:: FedoraValidationError
 
    Implementuje komponentu ``FedoraValidationError`` v rámci aplikace.
@@ -1118,6 +1123,29 @@ Třídy
 
 Funkce
 ------
+
+.. py:function:: _open_image_for_thumb(image)
+
+   Otevře obrázek pro generování náhledu, u JPEG i nad výchozím limitem pixelů Pillow.
+
+   Nejdřív se zkusí běžné ``Image.open``. Pokud skončí ``DecompressionBombError`` a vstup
+   je JPEG, otevře se znovu přímo přes ``JpegImagePlugin.JpegImageFile``, který kontrolu
+   globálního ``Image.MAX_IMAGE_PIXELS`` nedělá; ten se tak nemusí měnit pro celou aplikaci.
+   Místo něj se pak uplatní strop ``THUMB_JPEG_MAX_PIXELS``. Obrázek se jen otevře,
+   nedekóduje - dekódování v nízkém rozlišení zajistí až ``Image.thumbnail``.
+
+   :param image: Binární obsah obrázku.
+   :return: Otevřený, dosud nedekódovaný obrázek.
+   :raises Image.DecompressionBombError: Pokud jde o jiný formát než JPEG nad limitem Pillow,
+       nebo o JPEG nad stropem ``THUMB_JPEG_MAX_PIXELS``.
+
+.. py:function:: _thumb_failure_reason(err)
+
+   Zařadí výjimku z generování náhledu do kategorie pro log.
+
+   :param err: Výjimka vyvolaná při otevírání nebo zmenšování obrázku.
+   :return: ``ThumbFailureReason.PIXEL_LIMIT`` při překročení limitu pixelů,
+       ``ThumbFailureReason.OUT_OF_MEMORY`` při vyčerpání paměti, jinak ``ThumbFailureReason.ERROR``.
 
 .. py:function:: _build_fedora_adapter()
 

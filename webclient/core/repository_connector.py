@@ -23,7 +23,7 @@ from core.log_middleware import LogMiddleware
 from core.utils import get_mime_type
 from django.conf import settings
 from pdf2image import convert_from_bytes
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, JpegImagePlugin
 from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 from xml_generator.generator import DocumentGenerator
@@ -41,6 +41,69 @@ THUMB_MAX_PX = 100
 #: ``(1 + large * 7) * 100``; jako konstanty na ně může odkazovat i test, který hlídá
 #: rozměry předgenerovaných placeholder náhledů (review PR #4262).
 THUMB_LARGE_MAX_PX = 800
+
+#: Strop počtu pixelů, do kterého se náhled vygeneruje i z JPEG nad výchozím limitem Pillow
+#: (``Image.MAX_IMAGE_PIXELS``, chyba nad zhruba 179 MP). JPEG se dekóduje přes ``Image.draft``
+#: rovnou v měřítku 1/8, takže 1 Gpx stojí v paměti řádově desítky MB (issue #4229).
+#: Ostatní formáty se dekódují celé, a proto pro ně platí výchozí limit Pillow beze změny.
+THUMB_JPEG_MAX_PIXELS = 1_000_000_000
+
+#: Úvodní bajty JPEG (SOI marker a začátek dalšího markeru).
+_JPEG_MAGIC = b"\xff\xd8\xff"
+
+
+def _open_image_for_thumb(image: BytesIO) -> Image.Image:
+    """
+    Otevře obrázek pro generování náhledu, u JPEG i nad výchozím limitem pixelů Pillow.
+
+    Nejdřív se zkusí běžné ``Image.open``. Pokud skončí ``DecompressionBombError`` a vstup
+    je JPEG, otevře se znovu přímo přes ``JpegImagePlugin.JpegImageFile``, který kontrolu
+    globálního ``Image.MAX_IMAGE_PIXELS`` nedělá; ten se tak nemusí měnit pro celou aplikaci.
+    Místo něj se pak uplatní strop ``THUMB_JPEG_MAX_PIXELS``. Obrázek se jen otevře,
+    nedekóduje - dekódování v nízkém rozlišení zajistí až ``Image.thumbnail``.
+
+    :param image: Binární obsah obrázku.
+    :return: Otevřený, dosud nedekódovaný obrázek.
+    :raises Image.DecompressionBombError: Pokud jde o jiný formát než JPEG nad limitem Pillow,
+        nebo o JPEG nad stropem ``THUMB_JPEG_MAX_PIXELS``.
+    """
+    try:
+        return Image.open(image)
+    except Image.DecompressionBombError:
+        image.seek(0)
+        if image.read(len(_JPEG_MAGIC)) != _JPEG_MAGIC:
+            raise
+    image.seek(0)
+    jpeg = JpegImagePlugin.JpegImageFile(image)
+    pixels = jpeg.width * jpeg.height
+    if pixels > THUMB_JPEG_MAX_PIXELS:
+        raise Image.DecompressionBombError(
+            f"JPEG size ({pixels} pixels) exceeds thumbnail limit of {THUMB_JPEG_MAX_PIXELS} pixels."
+        )
+    return jpeg
+
+
+class ThumbFailureReason(Enum):
+    """Příčina selhání generování náhledu z obrázku; hodnota se loguje v poli ``reason``."""
+
+    PIXEL_LIMIT = "pixel_limit"
+    OUT_OF_MEMORY = "out_of_memory"
+    ERROR = "error"
+
+
+def _thumb_failure_reason(err: BaseException) -> ThumbFailureReason:
+    """
+    Zařadí výjimku z generování náhledu do kategorie pro log.
+
+    :param err: Výjimka vyvolaná při otevírání nebo zmenšování obrázku.
+    :return: ``ThumbFailureReason.PIXEL_LIMIT`` při překročení limitu pixelů,
+        ``ThumbFailureReason.OUT_OF_MEMORY`` při vyčerpání paměti, jinak ``ThumbFailureReason.ERROR``.
+    """
+    if isinstance(err, Image.DecompressionBombError):
+        return ThumbFailureReason.PIXEL_LIMIT
+    if isinstance(err, MemoryError):
+        return ThumbFailureReason.OUT_OF_MEMORY
+    return ThumbFailureReason.ERROR
 
 
 def _build_fedora_adapter() -> HTTPAdapter:
@@ -1466,16 +1529,23 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             """
             Změní velikost obrázku na zadaný rozměr a vrátí jako PNG v BytesIO.
 
+            Obrázek se nejdřív zmenší a teprve pak otočí podle EXIF orientace. ``Image.thumbnail``
+            totiž umí JPEG dekódovat rovnou ve zmenšeném měřítku (``Image.draft``) jen u dosud
+            nenačteného obrázku, kdežto ``ImageOps.exif_transpose`` jej načte v plném rozlišení.
+            Pořadí výsledné rozměry nemění, protože cílový rámeček je čtvercový.
+
             :param image: Vstupní obrázek v binární podobě k převzorkování.
             :param large_inner: Příznak pro výběr max. rozměru (False: maximální hrana malého náhledu
                 ``THUMB_MAX_PX``, True: maximální hrana velkého náhledu ``THUMB_LARGE_MAX_PX``).
             :return: Změněný obrázek jako PNG v BytesIO bufferu.
+            :raises Image.DecompressionBombError: Pokud obrázek překročí limit pixelů
+                (viz ``_open_image_for_thumb``).
             """
-            image = Image.open(image)
-            image = ImageOps.exif_transpose(image)
+            image = _open_image_for_thumb(image)
             hrana = THUMB_LARGE_MAX_PX if large_inner else THUMB_MAX_PX
             max_size = (hrana, hrana)
             image.thumbnail(max_size)
+            image = ImageOps.exif_transpose(image)
             output_buffer = BytesIO()
             image.save(output_buffer, format="PNG")
             output_buffer.seek(0)
@@ -1502,9 +1572,16 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     )
                     return thumbnail
                 except Exception as err:
-                    logger.info(
+                    # A supported image type ending with the type icon is a failure, not an expected path.
+                    logger.warning(
                         "core_repository_connector.__generate_thumb.error",
-                        extra={"error": err, "file": file_name, "large": large},
+                        extra={
+                            "reason": _thumb_failure_reason(err).value,
+                            "error": err,
+                            "file": file_name,
+                            "large": large,
+                            "mime_type": mime_type,
+                        },
                     )
                     if thumb_icon is not None:
                         try:

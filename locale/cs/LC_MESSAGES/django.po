@@ -3423,6 +3423,11 @@ msgstr ""
 "Cesta k CSV souboru se seznamem umístění souborů ve sloupci \"record\" "
 "(repository path)."
 
+#: core/management/commands/generate_thumbs.py:72
+msgid ""
+"core.management.commands.generate_thumbs.Command.add_arguments.force_help"
+msgstr "Přegeneruje náhledy i u souborů, které je už mají."
+
 #: core/management/commands/generate_thumbs.py:80
 msgid "core.management.commands.generate_thumbs.argument_error"
 msgstr "Zadány chybné argumenty."
