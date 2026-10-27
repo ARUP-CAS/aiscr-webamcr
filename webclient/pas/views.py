@@ -986,30 +986,34 @@ def smazat(request, ident_cely):
         nalez.deleted_by_user = request.user
         fedora_transaction = nalez.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
         try:
-            nalez.igsn_delete()
-            nalez.close_active_transaction_when_finished = True
-            # Smazání ve Fedoře zaznamená pre_delete signál uvnitř DB transakce.
-            resp1 = nalez.delete()
-            if resp1:
-                logger.info(
-                    "pas.views.smazat.deleted",
-                    extra={"value": resp1},
-                )
-                return JsonResponse({"redirect": reverse("pas:index")})
-            else:
-                logger.warning("pas.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
-                nalez.igsn_update(False, True)
-                fedora_transaction.rollback_transaction()
-                return JsonResponse(
-                    {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
-                    status=403,
-                )
+            # Savepoint: při chybě se smazání odroluje a spojení zůstane použitelné pro obnovu IGSN.
+            with transaction.atomic():
+                nalez.igsn_delete()
+                nalez.close_active_transaction_when_finished = True
+                # Smazání ve Fedoře zaznamená pre_delete signál uvnitř DB transakce.
+                resp1 = nalez.delete()
+                if resp1:
+                    logger.info(
+                        "pas.views.smazat.deleted",
+                        extra={"value": resp1},
+                    )
+                    return JsonResponse({"redirect": reverse("pas:index")})
+                else:
+                    logger.warning("pas.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
+                    nalez.igsn_update(False, True)
+                    fedora_transaction.rollback_transaction()
+                    return JsonResponse(
+                        {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+                        status=403,
+                    )
         except (DoiWriteError, FedoraError) as err:
             logger.info("pas.views.smazat.error", extra={"error": err, "ident_cely": ident_cely})
-            transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
             if isinstance(err, FedoraError):
+                # Obnova IGSN načítá záznam z DB, proto musí proběhnout před set_rollback(True);
+                # potom by každý dotaz skončil TransactionManagementError.
                 nalez.igsn_update(False, True)
+            transaction.set_rollback(True)
             return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav": nalez.stav})

@@ -242,9 +242,16 @@ class SamostatnyNalezSmazatViewTests(SimpleTestCase):
         fedora_transaction = nalez.create_transaction.return_value
         if delete_side_effect is not None:
             nalez.delete.side_effect = delete_side_effect
+        self.calls = mock.Mock()
+        self.calls.attach_mock(nalez.igsn_update, "igsn_update")
         with mock.patch("pas.views.get_object_or_404", return_value=nalez), mock.patch(
             "pas.views.check_stav_changed", return_value=False
-        ), mock.patch("pas.views.transaction.set_rollback") as set_rollback:
+        ), mock.patch("pas.views.transaction.set_rollback") as set_rollback, mock.patch(
+            "pas.views.transaction.atomic"
+        ) as atomic:
+            self.calls.attach_mock(set_rollback, "set_rollback")
+            self.calls.attach_mock(atomic.return_value.__exit__, "atomic_exit")
+            atomic.return_value.__exit__.return_value = False
             response = smazat(request, self.ident_cely)
         return response, nalez, fedora_transaction, set_rollback
 
@@ -258,6 +265,17 @@ class SamostatnyNalezSmazatViewTests(SimpleTestCase):
         set_rollback.assert_called_once_with(True)
         fedora_transaction.rollback_transaction.assert_called_once_with()
         nalez.igsn_update.assert_called_once_with(False, True)
+
+    def test_igsn_restored_after_savepoint_rollback_and_before_set_rollback(self):
+        """
+        Obnova IGSN načítá záznam z DB: musí proběhnout až po odrolování savepointu se smazáním
+        a před ``set_rollback(True)``, po kterém by každý dotaz skončil ``TransactionManagementError``.
+        """
+        self._run(_conflict())
+        names = [name for name, _args, _kwargs in self.calls.mock_calls]
+        self.assertEqual(names, ["atomic_exit", "igsn_update", "set_rollback"])
+        exc_type = self.calls.atomic_exit.call_args.args[0]
+        self.assertIs(exc_type, FedoraUpdatedByAnotherTransactionError)
 
     def test_success_does_not_call_record_deletion_in_view(self):
         """Úspěch: přesměrování na seznam; smazání ve Fedoře zaznamená signál, ne view."""
