@@ -147,7 +147,9 @@ se v ``RuianSyncRun`` druhý den objeví běh s ``triggered_by='cron'``.
 Audit běhů v administraci
 -------------------------
 
-Výpis ``/admin/heslar/ruiansyncrun/`` má u každého běhu tři textová pole:
+Výpis ``/admin/heslar/ruiansyncrun/`` ukazuje u každého běhu sloupec ⚠
+(varování, viz níže); detail běhu (``/admin/heslar/ruiansyncrun/<id>/change/``)
+má tři textová pole:
 
 * ``error`` – u **neočekávaného selhání** (``status='failed'``) traceback.
   U známých stavů nemusí traceback obsahovat: běh uzavřený po zabití procesu

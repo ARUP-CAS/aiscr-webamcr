@@ -2,7 +2,14 @@ from django.db import migrations, models
 
 #: Informativní poznámky, které cron a plný sync zapisují do ``note``.
 #: Všechno ostatní v ``note`` jsou varování zapsaná přes ``_append_run_note`` (dnes ``_append_run_warning``).
-INFORMATIVNI = {"no_changes (404)", "not_published_yet (404)", "no_changes_nepotvrzeno (404)"}
+#: ``opakovani_po_selhani`` zavádí tatáž změna; je tu kvůli návratu migrace
+#: a opětovnému nasazení, kdy by se jinak z ``note`` přesunula do ``warnings``.
+INFORMATIVNI = {
+    "no_changes (404)",
+    "not_published_yet (404)",
+    "no_changes_nepotvrzeno (404)",
+    "opakovani_po_selhani",
+}
 
 
 def _je_informativni(radek):

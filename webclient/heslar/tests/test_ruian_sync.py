@@ -1316,16 +1316,50 @@ class VarovaniBehuTests(TestCase):
 
         migrace = importlib.import_module("heslar.migrations.0016_ruiansyncrun_warnings")
         jen_info = self._run(note="no_changes (404)")
+        opakovany = self._run(note="opakovani_po_selhani")
         smisene = self._run(note="uzsz=UZSZ.xml.zip\nTopologická kontrola: 1 děr v pokrytí")
 
         migrace.presun_varovani(django_apps, None)
         jen_info.refresh_from_db()
+        opakovany.refresh_from_db()
         smisene.refresh_from_db()
 
         self.assertEqual((jen_info.note, jen_info.warnings), ("no_changes (404)", ""))
+        self.assertEqual((opakovany.note, opakovany.warnings), ("opakovani_po_selhani", ""))
         self.assertEqual(
             (smisene.note, smisene.warnings), ("uzsz=UZSZ.xml.zip", "Topologická kontrola: 1 děr v pokrytí")
         )
+
+
+class KlasifikacePoznamekMigraceTests(SimpleTestCase):
+    """
+    Testy, které řádky ``note`` migrace 0016 nechá jako informativní.
+
+    Informativní řádek přesunutý do ``warnings`` by vyvolal ⚠ za normální
+    stav – i po návratu migrace a jejím opětovném nasazení.
+    """
+
+    def setUp(self):
+        """Načte migraci (název modulu začíná číslicí, běžný import nejde)."""
+        import importlib
+
+        self.migrace = importlib.import_module("heslar.migrations.0016_ruiansyncrun_warnings")
+
+    def test_informativni_poznamky_cronu(self):
+        """Všechny poznámky, které cron a plný sync zapisují do ``note``, jsou informativní."""
+        for poznamka in (
+            "no_changes (404)",
+            "not_published_yet (404)",
+            tasks.NOTE_404_NEPOTVRZENO,
+            tasks.NOTE_OPAKOVANI_PO_SELHANI,
+            "uzsz=UZSZ.xml.zip",
+        ):
+            with self.subTest(poznamka=poznamka):
+                self.assertTrue(self.migrace._je_informativni(poznamka))
+
+    def test_varovani_neni_informativni(self):
+        """Text zapsaný dřív přes ``_append_run_note`` je varování."""
+        self.assertFalse(self.migrace._je_informativni("Topologická kontrola: 1 děr v pokrytí"))
 
 
 @_BEZ_CACHEOPS

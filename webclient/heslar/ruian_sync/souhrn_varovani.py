@@ -62,7 +62,10 @@ UDALOSTI: Dict[str, str] = OrderedDict(
             "heslar.ruian_sync.vfr_parser._gml_multisurface_to_wkt.vnorena_cast_jako_dira",
             "Vnořená část plochy převedena na díru",
         ),
-        ("heslar.ruian_sync.shp_importer._resolve_shp_layer.stale_unpacked", "Použit dříve rozbalený SHP"),
+        (
+            "heslar.ruian_sync.shp_importer._resolve_shp_layer.stale_unpacked",
+            "Rozbalená vrstva SHP byla starší než archiv, rozbalena znovu",
+        ),
         (
             "heslar.ruian_sync.shp_importer._centroid_wkt.fallback_used",
             "ÚZSZ neposkytlo definiční bod, použit centroid polygonu",
