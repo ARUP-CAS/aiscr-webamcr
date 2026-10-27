@@ -1303,9 +1303,12 @@ Níže je konfigurace systému Kibana
 Nasazení systému
 ----------------
 
-Po prvním nasazení (a na existující instalaci, kde se heslo ``elastic``
-dosud nenastavovalo) je potřeba nastavit hesla vestavěného superuživatele
-``elastic`` a systémového účtu ``kibana_system``. Hesla se neukládají do
+Po prvním nasazení a na **každé existující instalaci** je potřeba nastavit
+hesla vestavěného superuživatele ``elastic`` a systémového účtu
+``kibana_system``. Starší verze compose souborů předávaly
+``ELASTIC_PASSWORD=elastic_pass``, takže instalace založené podle nich mají
+heslo ``elastic`` doslova ``elastic_pass``, které je veřejně v historii
+repozitáře. Hesla se neukládají do
 docker secretů, uchovávají se mimo Docker (např. ve správci hesel). Příkaz
 nevyžaduje znalost současného hesla, takže jím lze heslo kdykoli změnit nebo
 obnovit i v případě, že Kibana není dostupná:
@@ -1315,20 +1318,33 @@ obnovit i v případě, že Kibana není dostupná:
    sudo docker exec -t -i $(sudo docker ps -q -f name=swarm_webamcr_elasticsearch) bin/elasticsearch-reset-password -u elastic -i --url http://localhost:9200
    sudo docker exec -t -i $(sudo docker ps -q -f name=swarm_webamcr_elasticsearch) bin/elasticsearch-reset-password -u kibana_system -i --url http://localhost:9200
 
+Secrety ``elastic_pass`` a ``logstash_elastic_host`` se už nepoužívají.
+Po nasazení této verze stacku je smažte (dokud je používá běžící stack,
+Docker je smazat nedovolí):
+
+::
+
+   sudo docker secret rm elastic_pass logstash_elastic_host
+
+Při nasazení přes ``git_docker-compose.yml`` smažte soubory
+``elastic_password.txt`` a ``logstash_elastic_host.txt`` v kořeni
+repozitáře.
+
 Heslo ``kibana_system`` je nutné zapsat do ``elasticsearch.password`` v
 ``kibana/kibana.yml`` (viz výše) a restartovat kontejner Kibana. Teprve pak
 se Kibana k Elasticsearch připojí a lze se do ní přihlásit účtem ``elastic``.
 Další kroky se provádějí v Kibaně: dotazy v konzoli Dev Tools (odkaz Dev
 Tools na titulní stránce), účty v sekci Stack Management.
 
-Uživatelské účty (``amcr``, ``amcr_logger``) se zakládají a jejich hesla
-mění v rozhraní Kibany: Stack Management → Security → Users. Nový účet
-tlačítkem “Create user” (vyplnit Username, Password a Roles), heslo
-existujícího účtu po otevření účtu tlačítkem “Change password”. Heslo se tak
-nepíše do konzole Dev Tools, jejíž historii si ukládá prohlížeč.
+Uživatelské účty se zakládají a jejich hesla mění v rozhraní Kibany:
+Stack Management → Security → Users. Nový účet tlačítkem “Create user”
+(vyplnit Username, Password a Roles), heslo existujícího účtu po otevření
+účtu tlačítkem “Change password”. Heslo se tak nepíše do konzole Dev Tools,
+jejíž historii si ukládá prohlížeč.
 
-Pro správu (Kibana, ruční zásahy) se používá superuživatel ``amcr`` s rolí
-``superuser``, nikoli vestavěný ``elastic``.
+Pro správu (Kibana, ruční zásahy) se používá superuživatel ``amcr``, nikoli
+vestavěný ``elastic``. Založte ho takto s rolí ``superuser``. Účet
+``amcr_logger`` se zakládá až po vytvoření jeho role (viz níže).
 
 Logstash zapisuje do zapisovacího aliasu ``amcr`` a ILM politika ze šablony
 ``amcr_template`` (``rollover_alias: amcr``) zakládá další indexy
@@ -1372,6 +1388,17 @@ spustit.
      "dest": { "index": "amcr-000001" }
    }
 
+   GET amcr/_count
+   POST amcr-000001/_refresh
+   GET amcr-000001/_count
+
+Starý index smažte, jen pokud odpověď ``_reindex`` má prázdné pole
+``failures`` a oba ``_count`` vrátily stejný počet dokumentů. Jinak index
+``amcr-000001`` smažte, příčinu (typicky konflikt typů polí se šablonou
+``amcr_template``) odstraňte a převod zopakujte.
+
+::
+
    DELETE /amcr
 
    POST _aliases
@@ -1393,13 +1420,15 @@ indexů ``amcr*``. Roli je nejjednodušší vytvořit v konzoli Dev Tools:
      "indices": [
        {
          "names": ["amcr*"],
-         "privileges": ["create_doc", "create_index", "view_index_metadata", "auto_configure"]
+         "privileges": ["create_doc", "create_index", "view_index_metadata"]
        }
      ]
    }
 
-Uživatele ``amcr_logger`` s rolí ``amcr_logger`` pak založte v rozhraní
-Kibany (viz výše). Jeho heslo musí odpovídat swarm secretu
+Role nemá clusterová práva ``manage_index_templates`` ani ``manage_ilm``,
+takže účet nemůže měnit šablony ani ILM politiky; zápis do existujícího
+aliasu ``amcr`` k tomu nepotřebuje ani právo ``auto_configure``. Uživatele ``amcr_logger`` s rolí ``amcr_logger`` pak založte v
+rozhraní Kibany (viz výše). Jeho heslo musí odpovídat swarm secretu
 ``logstash_elastic_pass``. Superuživatel ``amcr`` se v konfiguraci Logstashe
 nepoužívá.
 
@@ -1423,7 +1452,11 @@ nové heslo nenačte. Postup:
 
 Při nasazení přes ``git_docker-compose.yml`` (bez swarmu) stačí přepsat
 soubor ``logstash_elastic_password.txt`` a službu ``logstash`` znovu
-vytvořit (``docker compose up -d --force-recreate logstash``).
+vytvořit v projektu ``git_aiscr``:
+
+::
+
+   docker-compose -p git_aiscr -f git_docker-compose.yml -f git_docker-compose-proxy.yml up -d --force-recreate logstash
 
 Role a uživatele lze vytvořit i v rozhraní Kibana:
 
