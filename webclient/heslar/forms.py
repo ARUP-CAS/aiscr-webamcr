@@ -3,6 +3,7 @@ import logging
 from core.widgets import AutocompleteListSelect2, AutocompleteModelSelect2
 from dal import forward
 from django import forms
+from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from heslar.models import HeslarHierarchie, HeslarNazev, HeslarOdkaz
 from pid.fields import OrcidAutocompleteField, RorAutocompleteField, WikiDataAutocompleteField
@@ -189,3 +190,13 @@ class OrganizaceAdminForm(forms.ModelForm):
             instance=self.instance,
             required=False,
         )
+
+    def clean_soucast(self):
+        """Odmítne přiřadit organizaci samu sobě nebo některému z jejích potomků."""
+        selected_parent = self.cleaned_data.get("soucast")
+        if selected_parent and self.instance.pk:
+            if selected_parent.pk == self.instance.pk or selected_parent.pk in Organizace.get_subtree_ids(
+                self.instance.pk
+            ):
+                raise ValidationError(_("Organizace nemůže být součástí sama sebe ani své podřízené organizace."))
+        return selected_parent

@@ -924,6 +924,7 @@ def get_pian_from_envelope(bounds, zoom, request):
     from heslar.hesla import HESLAR_PIAN_PRESNOST
     from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_BADATEL_ID
     from heslar.models import Heslar
+    from uzivatel.models import Organizace
 
     bbox = """POLYGON((%s %s, %s %s, %s %s, %s %s, %s %s))"""
     bbox_query_params = [
@@ -943,12 +944,15 @@ def get_pian_from_envelope(bounds, zoom, request):
     querysum = f"""select sum(p.count) from amcr_heat_pian_l2 p where "p"."st_centroid" && ST_GeomFromText('{bbox}', {EPSG_WGS84})"""
 
     query = f"""select  p.ident_cely as "ident_cely", p.presnost-{presnost} as "presnost",'pian' as "type", ST_AsText(p.geom) as "geom",ST_AsText(ST_PointOnSurface(p.geom)) as "centroid" from pian p where ST_Intersects("p"."geom",ST_GeomFromText('{bbox}', {EPSG_WGS84}))"""
+    query_params = list(bbox_query_params)
     if request.user.hlavni_role.id == ROLE_BADATEL_ID:
         query1 = f""" and (exists (select 1 from historie h where h.vazba = p.historie and h.uzivatel = {request.user.id} and h.typ_zmeny = 'PI01') or exists (select 1 from dokumentacni_jednotka dj where dj.pian = p.id and exists (select 1 from archeologicky_zaznam az where az.id = dj.archeologicky_zaznam and exists (select 1 from historie h2 where h2.vazba = az.historie and h2.uzivatel = {request.user.id} and h2.typ_zmeny = 'AZ01'))) or (exists (select 1 from dokumentacni_jednotka dj1 where dj1.pian = p.id and exists (select 1 from archeologicky_zaznam az where az.id = dj1.archeologicky_zaznam and az.pristupnost in ({PRISTUPNOST_ANONYM_ID}, {PRISTUPNOST_BADATEL_ID}))) and p.stav ={PIAN_POTVRZEN})) """
         query += query1
     elif request.user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
-        query2 = f""" and (exists (select 1 from historie h where h.vazba = p.historie and h.organizace_snapshot_id = {request.user.organizace_id} and h.typ_zmeny = 'PI01') or exists (select 1 from dokumentacni_jednotka dj where dj.pian = p.id and exists (select 1 from archeologicky_zaznam az where az.id = dj.archeologicky_zaznam and exists (select 1 from historie h2 where h2.vazba = az.historie and h2.organizace_snapshot_id = {request.user.organizace_id} and h2.typ_zmeny = 'AZ01'))) or exists (select 1 from dokumentacni_jednotka dj where dj.pian = p.id and exists (select 1 from archeologicky_zaznam az where az.id = dj.archeologicky_zaznam and exists (select 1 from akce a1 where a1.archeologicky_zaznam = az.id and exists (select 1 from projekt p1 where p1.id = a1.projekt and p1.organizace = {request.user.organizace_id})))) or (exists (select 1 from dokumentacni_jednotka dj1 where dj1.pian = p.id and exists (select 1 from archeologicky_zaznam az where az.id = dj1.archeologicky_zaznam and az.pristupnost in ({PRISTUPNOST_ANONYM_ID}, {PRISTUPNOST_BADATEL_ID}, {PRISTUPNOST_ARCHEOLOG_ID}))) and p.stav = {PIAN_POTVRZEN}))"""
+        organization_ids = Organizace.get_subtree_ids(request.user.organizace_id)
+        query2 = f""" and (exists (select 1 from historie h where h.vazba = p.historie and h.organizace_snapshot_id = ANY(%s) and h.typ_zmeny = 'PI01') or exists (select 1 from dokumentacni_jednotka dj where dj.pian = p.id and exists (select 1 from archeologicky_zaznam az where az.id = dj.archeologicky_zaznam and exists (select 1 from historie h2 where h2.vazba = az.historie and h2.organizace_snapshot_id = ANY(%s) and h2.typ_zmeny = 'AZ01'))) or exists (select 1 from dokumentacni_jednotka dj where dj.pian = p.id and exists (select 1 from archeologicky_zaznam az where az.id = dj.archeologicky_zaznam and exists (select 1 from akce a1 where a1.archeologicky_zaznam = az.id and exists (select 1 from projekt p1 where p1.id = a1.projekt and p1.organizace = ANY(%s))))) or (exists (select 1 from dokumentacni_jednotka dj1 where dj1.pian = p.id and exists (select 1 from archeologicky_zaznam az where az.id = dj1.archeologicky_zaznam and az.pristupnost in ({PRISTUPNOST_ANONYM_ID}, {PRISTUPNOST_BADATEL_ID}, {PRISTUPNOST_ARCHEOLOG_ID}))) and p.stav = {PIAN_POTVRZEN}))"""
         query += query2
+        query_params.extend([organization_ids] * 3)
 
     pians = None
     with connection.cursor() as cursor:
@@ -956,7 +960,7 @@ def get_pian_from_envelope(bounds, zoom, request):
         result = cursor.fetchone()
         count = int(result[0]) if result[0] is not None else 0
         if count < LIMIT_PRVKU_ZOBRAZENI_HEATMAP * 2 or zoom > 7:
-            cursor.execute(query, bbox_query_params)
+            cursor.execute(query, query_params)
             pians = dictfetchall(cursor)
             count = len(pians)
 

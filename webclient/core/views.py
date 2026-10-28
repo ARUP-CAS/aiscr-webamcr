@@ -141,7 +141,7 @@ from rosetta.views import (
     TranslationFormView,
     get_app_name,
 )
-from uzivatel.models import User
+from uzivatel.models import Organizace, User
 
 from .connectors import RedisConnector
 from .exceptions import ZaznamSouborNotmatching
@@ -1715,7 +1715,12 @@ class PermissionFilterMixin:
         filter_historie = {"uzivatel": self.request.user}
         filtered_my = Historie.objects.filter(**filter_historie)
         if ownership == Permissions.ownershipChoices.our:
-            filter_historie = {"uzivatel__organizace": self.request.user.organizace}
+            organization_id = self.request.user.organizace_id
+            if organization_id is None:
+                filter_historie = {"uzivatel__organizace": None}
+            else:
+                organization_ids = Organizace.get_subtree_ids(organization_id)
+                filter_historie = {"uzivatel__organizace__in": organization_ids}
             filtered_our = Historie.objects.filter(**filter_historie)
             return Q(**{"historie_zapsat__in": filtered_our})
         else:

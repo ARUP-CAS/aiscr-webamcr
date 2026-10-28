@@ -31,7 +31,7 @@ from django.contrib.auth.models import Group, PermissionsMixin
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator
-from django.db import models
+from django.db import connection, models
 from django.db.models import CheckConstraint, Q
 from django.db.models.functions import Collate
 from django.utils import timezone
@@ -248,7 +248,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             )
             # Archeologům přidej ke spolupracím s jinými archeology i jejich organizaci.
             if self.hlavni_role == archeolog_group:
-                moje_spolupracujici_organizace.append(self.organizace)
+                if self.organizace_id:
+                    moje_spolupracujici_organizace.extend(Organizace.get_subtree_ids(self.organizace_id))
+                else:
+                    moje_spolupracujici_organizace.append(self.organizace_id)
             return moje_spolupracujici_organizace
         elif self.hlavni_role == archivar_group or self.hlavni_role == admin_group:
             # Admin a archivář standardně spolupracují se všemi organizacemi.
@@ -601,6 +604,37 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
         blank=True,
         null=True,
     )
+
+    @classmethod
+    def get_subtree_ids(cls, root_id):
+        """
+        Vrátí ID organizace a všech jejích přímých i nepřímých součástí.
+
+        :param root_id: ID organizace, od které se prohledávají potomci směrem dolů.
+        :return: ID kořene a všech dosažitelných potomků; pro chybějící kořen prázdný seznam.
+        """
+        if root_id is None:
+            return []
+
+        table = connection.ops.quote_name(cls._meta.db_table)
+        pk_column = connection.ops.quote_name(cls._meta.pk.column)
+        parent_column = connection.ops.quote_name(cls._meta.get_field("soucast").column)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                WITH RECURSIVE organizational_subtree(id) AS (
+                    SELECT {pk_column} FROM {table} WHERE {pk_column} = %s
+                    UNION
+                    SELECT child.{pk_column}
+                    FROM {table} AS child
+                    JOIN organizational_subtree AS parent
+                      ON child.{parent_column} = parent.id
+                )
+                SELECT id FROM organizational_subtree
+                """,
+                [root_id],
+            )
+            return [row[0] for row in cursor.fetchall()]
 
     def save(self, *args, **kwargs):
         """
