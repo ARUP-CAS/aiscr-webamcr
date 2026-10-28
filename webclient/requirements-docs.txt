@@ -236,7 +236,7 @@ phonenumbers==9.0.41
     # via -r requirements.txt
 piexif==1.1.3
     # via -r requirements.txt
-pillow==12.3.0
+pillow==13.0.0
     # via
     #   -r requirements.txt
     #   pdf2image
