@@ -288,7 +288,7 @@ python-crontab==3.4.0
     # via
     #   -r requirements.txt
     #   django-celery-beat
-python-dateutil==2.9.0.post0
+python-dateutil==3.0.0
     # via
     #   -r requirements.txt
     #   celery
@@ -390,6 +390,7 @@ tzdata==2026.5
     #   -r requirements.txt
     #   django-celery-beat
     #   kombu
+    #   python-dateutil
 tzlocal==5.4.4
     # via
     #   -r requirements.txt
