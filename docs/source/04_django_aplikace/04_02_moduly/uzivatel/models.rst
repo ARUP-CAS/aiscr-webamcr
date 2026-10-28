@@ -174,6 +174,13 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: get_subtree_ids()
+
+      Vrátí ID organizace a všech jejích přímých i nepřímých součástí.
+
+      :param root_id: ID organizace, od které se prohledávají potomci směrem dolů.
+      :return: ID kořene a všech dosažitelných potomků; pro chybějící kořen prázdný seznam.
+
    .. py:method:: save()
 
       Uloží změny objektu.

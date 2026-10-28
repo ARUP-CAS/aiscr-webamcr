@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from core.constants import ROLE_BADATEL_ID
 from core.forms import ImportDataAdminForm
+from core.import_data_mappers import OrganizaceMapper
 from core.tests.fake_redis import FakeRedis
 from cron import tasks as cron_tasks
 from django.contrib.auth.models import Group
@@ -265,6 +266,38 @@ class RunDataImportOrganizaceTest(TestCase):
             [getattr(record, "ident_cely", None) for record in save_metadata_calls],
             "save_metadata mělo být zavoláno i při UPDATE.",
         )
+
+    def test_update_revalidates_organization_hierarchy_after_approval(self):
+        """Před importem odmítne cyklus vytvořený změnou stromu po schválení validace."""
+        organization = self._create_existing_organizace()
+        payload = self._build_insert_payload(ORG_IDENT, ORG_NAZEV_ZKRACENY)
+        payload["soucast"] = self.user_organizace.ident_cely
+        OrganizaceMapper.validate_batch_ordering([payload], ImportDataAdminForm.PERFORMED_ACTION_UPDATE)
+
+        with patch(
+            "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
+            return_value=True,
+        ), patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None):
+            self.user_organizace.soucast = organization
+            self.user_organizace.save()
+
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_UPDATE)
+        serialized_record = self._build_insert_payload(ORG_IDENT, ORG_NAZEV_ZKRACENY)
+        serialized_record["soucast"] = self.user_organizace.ident_cely
+        fake_redis.set(
+            f"import_data_{JOB_ID}_record_0",
+            json.dumps(serialized_record),
+        )
+        fake_redis.set(f"import_data_organization_record_ids_{JOB_ID}", json.dumps([0]))
+
+        self._run_import(fake_redis)
+
+        organization.refresh_from_db()
+        self.assertIsNone(organization.soucast_id)
+        self.assertEqual(organization.nazev, "Původní org")
+        self.user_organizace.refresh_from_db()
+        self.assertEqual(self.user_organizace.soucast_id, organization.pk)
+        self._assert_import_failed(fake_redis)
 
     def test_delete_removes_organizace_from_database(self):
         """run_data_import s akcí DELETE odstraní záznam z databáze."""

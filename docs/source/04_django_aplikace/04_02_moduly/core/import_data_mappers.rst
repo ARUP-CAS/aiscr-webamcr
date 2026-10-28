@@ -399,6 +399,19 @@ Třídy
       :param field_name: Název pole, přes které je reference definována.
 
 
+.. py:class:: ImportDataOrganizationCycleError
+
+   Výjimka vyvolaná při vytvoření cyklu v hierarchii organizací.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje výjimku s identifikátory organizací tvořících cyklus.
+
+      :param cycle: Seřazené identifikátory cyklu včetně opakovaného uzlu na konci.
+
+
 .. py:class:: BaseImportField
 
    Základní třída pro importní pole. Neprovádí žádnou validaci ani zpracování hodnoty.
@@ -1296,13 +1309,15 @@ Třídy
 
    .. py:method:: validate_batch_ordering()
 
-      Ověří, že záznamy neobsahují dopřednou referenci v poli ``soucast`` (self-join FK na Organizace).
+      Ověří dopředné reference a cykly v úplné výsledné hierarchii organizací.
 
-      Pokud záznam odkazuje přes ``soucast`` na jinou organizaci, která se v CSV vyskytuje
-      až za ním a zároveň v databázi dosud neexistuje, vyvolá výjimku.
+      Graf zahrnuje nezměněné organizace v databázi i vztahy z importovaných řádků.
+      Prázdná hodnota ``soucast`` proto při aktualizaci vztah výslovně odstraní.
 
       :param payloads: Seznam surových řádkových slovníků ze CSV souboru v původním pořadí.
+      :param performed_action: Akce importu; při ``DELETE`` se hierarchie nemění.
       :raises ImportDataBatchOrderingError: Vyvolá se, pokud je ``soucast`` dopředná reference.
+      :raises ImportDataOrganizationCycleError: Vyvolá se, pokud výsledný graf obsahuje cyklus.
 
    .. py:method:: _get_updated_ident_cely_record_list()
 

@@ -47,6 +47,7 @@ from heslar.models import Heslar
 from historie.models import Historie
 from pian.forms import PianCreateForm, PianOdpojitForm
 from pian.models import Pian
+from uzivatel.models import Organizace
 
 logger = logging.getLogger(__name__)
 
@@ -419,20 +420,31 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
         filtered_pian_history = Historie.objects.filter(uzivatel=self.request.user)
         filtered_az_history = Historie.objects.filter(uzivatel=self.request.user)
         if ownership == Permissions.ownershipChoices.our:
-            filtered_pian_history_our = Historie.objects.filter(uzivatel__organizace=self.request.user.organizace)
+            organization_id = self.request.user.organizace_id
+            if organization_id is None:
+                filtered_pian_history_our = Historie.objects.filter(uzivatel__organizace=None)
+                organization_snapshot_lookup = Q(
+                    dokumentacni_jednotky_pianu__archeologicky_zaznam__historie__historie__organizace_snapshot=None
+                )
+                project_organization_lookup = Q(
+                    dokumentacni_jednotky_pianu__archeologicky_zaznam__akce__projekt__organizace=None
+                )
+            else:
+                organization_ids = Organizace.get_subtree_ids(organization_id)
+                filtered_pian_history_our = Historie.objects.filter(uzivatel__organizace__in=organization_ids)
+                organization_snapshot_lookup = Q(
+                    dokumentacni_jednotky_pianu__archeologicky_zaznam__historie__historie__organizace_snapshot__in=organization_ids
+                )
+                project_organization_lookup = Q(
+                    dokumentacni_jednotky_pianu__archeologicky_zaznam__akce__projekt__organizace__in=organization_ids
+                )
             return (
                 Q(**{"historie_zapsat_pian__in": filtered_pian_history_our})
                 | (
                     Q(dokumentacni_jednotky_pianu__archeologicky_zaznam__historie__historie__typ_zmeny=ZAPSANI_AZ)
-                    & Q(
-                        dokumentacni_jednotky_pianu__archeologicky_zaznam__historie__historie__organizace_snapshot=self.request.user.organizace
-                    )
+                    & organization_snapshot_lookup
                 )
-                | Q(
-                    **{
-                        "dokumentacni_jednotky_pianu__archeologicky_zaznam__akce__projekt__organizace": self.request.user.organizace
-                    }
-                )
+                | project_organization_lookup
             )
         else:
             return Q(**{"historie_zapsat_pian__in": filtered_pian_history}) | Q(
