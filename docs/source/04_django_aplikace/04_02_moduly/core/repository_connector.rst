@@ -226,6 +226,8 @@ Třídy
       :param model_name: Název modelu používaný pro cílení operace.
 
       :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+      :raises FedoraNoResponseError: Pokud Fedora na některý z dotazů neodpoví (výpadek spojení,
+              vypršení timeoutu).
 
    .. py:method:: _get_auth()
 
@@ -271,6 +273,9 @@ Třídy
       :raises FedoraBinaryFileAlreadyDeletedError: Vyvolá se, pokud smazání binárního souboru skončí
               chybou a ``_is_resource_gone`` potvrdí, že soubor už ve Fedoře není.
       :raises FedoraError: Vyvolá se při jiné chybové odpovědi Fedory.
+      :raises FedoraNoResponseError: Vyvolá se, pokud se zápisový požadavek nepodaří odeslat
+              nebo Fedora neodpoví v rámci timeoutu (``FEDORA_READ_TIMEOUT``, u obsahu souborů
+              ``FEDORA_CONTENT_READ_TIMEOUT``).
 
    .. py:method:: _create_container()
 
@@ -1068,7 +1073,8 @@ Třídy
       :return: Textová reprezentace UID transakce.
 
       :raises FedoraTransactionUnsupportedOperationError: Vyvolá se při splnění podmínky ``operation == FedoraTransactionOperation.ROLLBACK``.
-      :raises FedoraTransactionCommitFailedError: Vyvolá se při splnění podmínky ``not str(response.status_code).startswith('2')``.
+      :raises FedoraTransactionCommitFailedError: Vyvolá se při splnění podmínky ``not str(response.status_code).startswith('2')``;
+              nebo pokud Fedora na požadavek neodpoví (výpadek spojení, vypršení timeoutu).
 
    .. py:method:: rollback_transaction()
 
@@ -1150,3 +1156,11 @@ Funkce
 
    :param admin: ``True`` pro identitu ``FEDORA_ADMIN_USER``, jinak ``FEDORA_USER``.
    :return: Session příslušná aktuálnímu vláknu a identitě.
+
+.. py:function:: _get_fedora_timeout(content)
+
+   Vrátí timeout ``(connect, read)`` pro požadavek do Fedory.
+
+   :param content: ``True`` pro přenos obsahu binárního souboru nebo commit transakce,
+       kde se použije ``FEDORA_CONTENT_READ_TIMEOUT``; jinak ``FEDORA_READ_TIMEOUT``.
+   :return: Dvojice ``(connect, read)`` v sekundách pro parametr ``timeout`` knihovny ``requests``.
