@@ -83,8 +83,12 @@ elapsed=0
 while true; do
     # Získat seznam kontejnerů se stavem "health: starting"
     unhealthy=$(sudo docker ps --filter "health=starting" --format '{{.ID}}')
+    # Služby stacku, které ještě nemají spuštěné všechny repliky (např. se stahuje image
+    # a kontejner zatím neexistuje, takže ho filtr health=starting nevidí)
+    not_running=$(sudo docker service ls --filter "name=${stack_name}" --format '{{.Name}} {{.Replicas}}' \
+        | awk '{split($2, r, "/"); if (r[1] != r[2]) print $1 " (" $2 ")"}')
 
-    if [ -z "$unhealthy" ]; then
+    if [ -z "$unhealthy" ] && [ -z "$not_running" ]; then
         print_d1 "ALL CONTAINERS ARE HEALTHY"
         break
     fi
@@ -92,11 +96,15 @@ while true; do
     if [ "$elapsed" -ge "$timeout" ]; then
         print_d1 "TIMEOUT Some containers are still not healthy!"
         docker ps --filter "health=starting"
+        echo "${not_running}"
         exit 1
     fi
 
     print_d1 "Waiting... still unhealthy containers:"
     docker ps --filter "health=starting" --format '→ {{.Names}} ({{.Status}})'
+    if [ -n "$not_running" ]; then
+        echo "${not_running}" | sed 's/^/→ not running: /'
+    fi
 
     sleep "$interval"
     elapsed=$((elapsed + interval))
@@ -108,6 +116,18 @@ done
 #FINAL
 print_d1 "Cloning test database"
 docker exec -i $(docker ps -q -f name=swarm_webamcr_web) script -q -c "python3 /scripts/db/clone_test_db.py"
+
+# Kompakce paměti před testy. Build image a start stacku rozdrobí volnou paměť; bez souvislých
+# bloků pak kswapd při testech vyhazuje page cache i při několika GB volné RAM a testy se
+# zpomalí (Run tests #169: +11 min). Page cache zůstává, jen se přeskládají stránky.
+# /proc/buddyinfo = počet volných bloků podle řádu 0-10 (4 kB až 4 MB) v zóně Normal.
+print_d1 "Memory compaction"
+grep Normal /proc/buddyinfo
+if echo 1 > /proc/sys/vm/compact_memory; then
+    grep Normal /proc/buddyinfo
+else
+    echo "WARNING: memory compaction failed (requires root)"
+fi
 
 print_d1 "PUTTING TAG ${current_deployment_tag} as LAST into ${path_last_tag}"
 echo "${current_deployment_tag}" > ${path_last_tag}
