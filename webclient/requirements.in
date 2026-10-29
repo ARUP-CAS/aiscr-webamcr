@@ -18,7 +18,7 @@ django-autocomplete-light==5.0.0
 django-widget-tweaks==1.5.1
 django-rosetta==0.10.3
 django-auto-logout==0.5.1
-reportlab==5.0.1
+reportlab==5.1.0
 PyRTF3==0.47.5
 pypdf==6.19.0
 Pillow==12.3.0

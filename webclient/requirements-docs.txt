@@ -315,7 +315,7 @@ redis==8.1.0
     # via
     #   -r requirements.txt
     #   django-cacheops
-reportlab==5.0.1
+reportlab==5.1.0
     # via -r requirements.txt
 requests==2.34.2
     # via
