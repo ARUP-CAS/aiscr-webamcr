@@ -15,7 +15,12 @@ nespouští, takže se při testech do repozitáře nesahá.
 
 import datetime
 import logging
+import os
+import tempfile
 import threading
+import time
+import zipfile
+from pathlib import Path
 from unittest import mock
 
 from core.utils import reprezentativni_bod_sql
@@ -2452,3 +2457,86 @@ class PresmerovaniPriStahovaniTests(SimpleTestCase):
             odpoved = vfr_download._otevri_s_overenim_presmerovani("https://vdp.cuzk.gov.cz/a.zip", timeout=5)
 
         self.assertEqual(odpoved.status_code, 200)
+
+
+class ZastaralaRozbalenaVrstvaTests(SimpleTestCase):
+    """
+    Testy rozbalení vrstvy SHP z novějšího archivu (#4455).
+
+    Zastaralá rozbalená kopie se nesmí vrátit, když ji novější archiv
+    neobsahuje – plný sync by jinak tiše naimportoval data z předchozího
+    archivu.
+    """
+
+    def setUp(self):
+        """Připraví dočasný adresář pro archiv a jeho rozbalenou kopii."""
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.zip_path = Path(self._tmp.name) / "1.zip"
+        self.unpack_dir = Path(self._tmp.name) / "1_unpacked"
+
+    def _zapis_archiv(self, soubory):
+        """
+        Zapíše ``1.zip`` s danými soubory a nastaví mu mtime do budoucna.
+
+        :param soubory: Slovník ``{jméno v archivu: obsah}``.
+        """
+        with zipfile.ZipFile(self.zip_path, "w") as zf:
+            for jmeno, obsah in soubory.items():
+                zf.writestr(jmeno, obsah)
+        budouci = time.time() + 3600
+        os.utime(self.zip_path, (budouci, budouci))
+
+    def _zastarala_kopie(self):
+        """Vytvoří rozbalenou kopii vrstvy ``VUSC_P`` z předchozího archivu."""
+        self.unpack_dir.mkdir()
+        for pripona in (".shp", ".shx", ".dbf"):
+            (self.unpack_dir / f"VUSC_P{pripona}").write_bytes(b"stara")
+
+    def _zdroj(self):
+        """
+        Sestaví :class:`ShpUzszSource` bez kontroly UZSZ v konstruktoru.
+
+        :return: Instance s nastaveným ``shp_path``.
+        """
+        from heslar.ruian_sync.shp_importer import ShpUzszSource
+
+        zdroj = ShpUzszSource.__new__(ShpUzszSource)
+        zdroj.shp_path = self.zip_path
+        return zdroj
+
+    def test_vrstva_chybejici_v_novejsim_archivu_vyhodi_chybu(self):
+        """Novější archiv bez vrstvy skončí chybou a stará kopie zmizí."""
+        self._zastarala_kopie()
+        self._zapis_archiv({"OKRESY_P.shp": b"nova"})
+
+        with self.assertLogs("heslar.ruian_sync.shp_importer", level="WARNING"):
+            with self.assertRaises(FileNotFoundError):
+                self._zdroj()._resolve_shp_layer("VUSC_P")
+
+        self.assertEqual(list(self.unpack_dir.glob("VUSC_P.*")), [])
+
+    def test_vrstva_v_novejsim_archivu_se_rozbali_znovu(self):
+        """Novější archiv s vrstvou přepíše starou kopii novými daty."""
+        self._zastarala_kopie()
+        self._zapis_archiv({"data/VUSC_P.shp": b"nova", "data/VUSC_P.dbf": b"nova-dbf"})
+
+        with self.assertLogs("heslar.ruian_sync.shp_importer", level="WARNING"):
+            target = self._zdroj()._resolve_shp_layer("VUSC_P")
+
+        self.assertEqual(target, self.unpack_dir / "VUSC_P.shp")
+        self.assertEqual(target.read_bytes(), b"nova")
+        self.assertEqual((self.unpack_dir / "VUSC_P.dbf").read_bytes(), b"nova-dbf")
+        # .shx v novém archivu není, stará kopie se nesmí míchat s novými soubory.
+        self.assertFalse((self.unpack_dir / "VUSC_P.shx").exists())
+
+    def test_pozustatky_preruseneho_rozbaleni_se_smazou(self):
+        """Bez ``.shp`` se zbylé pomocné soubory nesmí míchat s novým rozbalením."""
+        self._zastarala_kopie()
+        (self.unpack_dir / "VUSC_P.shp").unlink()
+        self._zapis_archiv({"VUSC_P.shp": b"nova"})
+
+        target = self._zdroj()._resolve_shp_layer("VUSC_P")
+
+        self.assertEqual(target.read_bytes(), b"nova")
+        self.assertEqual(sorted(p.name for p in self.unpack_dir.glob("VUSC_P.*")), ["VUSC_P.shp"])
