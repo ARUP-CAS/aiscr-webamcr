@@ -158,14 +158,41 @@ Funkce
 
    Aktualizuje snapshot fields.
 
+.. py:function:: _iterate_by_pk(query, batch_size)
+
+   Prochází queryset po dávkách seřazených podle primárního klíče (keyset stránkování).
+
+   Každá dávka je samostatný krátký ``SELECT ... WHERE pk > posledni_pk ORDER BY pk LIMIT batch_size``.
+   Na rozdíl od ``QuerySet.iterator()`` při ``DISABLE_SERVER_SIDE_CURSORS = True`` se tak nestahuje
+   celá tabulka jedním dotazem, který musí (včetně přenosu všech řádků klientovi) doběhnout
+   v rámci ``statement_timeout``. Prefetch definovaný na querysetu se aplikuje na každou dávku.
+
+   :param query: Queryset, který se má projít.
+   :param batch_size: Počet záznamů načtených jedním dotazem.
+   :return: Generátor instancí modelu v pořadí podle primárního klíče.
+
+.. py:function:: _update_redis_snapshots_for_class(r, current_class, rewrite_existing)
+
+   Aktualizuje Redis snapshoty všech záznamů jedné třídy modelu.
+
+   :param r: Spojení na Redis.
+   :param current_class: Třída modelu s metodami ``redis_snapshot_id`` a ``generate_redis_snapshot()``.
+   :param rewrite_existing: Pokud je ``True``, přepíše i existující klíče; jinak zapisuje jen chybějící.
+   :return: N-tice (počet prošlých záznamů, počet zapsaných snapshotů).
+
 .. py:function:: update_all_redis_snapshots(rewrite_existing, classes)
 
    Aktualizuje Redis snapshots pro všechny nebo vybrané třídy modelů.
+
+   Záznamy se načítají po dávkách podle primárního klíče (viz ``_iterate_by_pk``). Chyba při zpracování
+   jedné třídy se zaloguje a pokračuje se další třídou; pokud některá třída selže, úloha na konci
+   vyvolá ``RuntimeError``, aby byl běh v Celery označen jako neúspěšný.
 
    :param rewrite_existing: Pokud je ``True``, přepíše i existující záznamy v Redis. Výchozí hodnota je ``False``.
    :param classes: Volitelný seznam tříd modelů, pro které se mají Redis snapshot záznamy aktualizovat.
        Pokud není zadán, použijí se výchozí třídy
        (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez).
+   :raises RuntimeError: Pokud zpracování alespoň jedné třídy selhalo.
 
 .. py:function:: update_single_redis_snapshot(class_name, record_pk)
 
