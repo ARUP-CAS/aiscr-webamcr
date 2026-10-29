@@ -340,7 +340,7 @@ soupsieve==3.0.3
     # via
     #   -r requirements.txt
     #   beautifulsoup4
-sphinx==9.2.0
+sphinx==9.1.0
     # via
     #   -r requirements-docs.in
     #   sphinx-rtd-theme
@@ -353,7 +353,7 @@ sphinxcontrib-applehelp==2.0.0
     # via sphinx
 sphinxcontrib-devhelp==2.0.0
     # via sphinx
-sphinxcontrib-googleanalytics==0.6
+sphinxcontrib-googleanalytics==0.5
     # via -r requirements-docs.in
 sphinxcontrib-htmlhelp==2.1.0
     # via sphinx
