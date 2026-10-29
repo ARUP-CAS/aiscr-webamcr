@@ -230,7 +230,11 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
 @receiver(post_delete, sender=ArcheologickyZaznam, weak=False)
 def delete_arch_z_repository_update_connected_records(sender, instance: ArcheologickyZaznam, **kwargs):
     """
-    Odstraní arch z repository update connected records.
+    Po smazání archeologického záznamu aktualizuje metadata projektu a zaznamená smazání v repozitáři.
+
+    Zápisy do Fedory probíhají uvnitř DB transakce, aby chyba Fedory (např. 409 při souběžné práci
+    na témže projektu) vedla k rollbacku smazání v DB. Do ``transaction.on_commit`` se odkládá jen
+    commit Fedora transakce (#4437).
 
     :param sender: Třída modelu, která vyslala signál (ArcheologickyZaznam).
     :param instance: Instance smazaného archeologického záznamu; aktualizuje metadata navázaného projektu a zaznamenává smazání v repozitáři.
@@ -241,28 +245,18 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
         extra={"ident_cely": instance.ident_cely},
     )
     fedora_transaction: FedoraTransaction = instance.active_transaction
-
-    def save_metadata(close_transaction=False):
-        """
-        Uloží metadata. v aplikaci.
-
-        :param close_transaction: Parametr ``close_transaction`` předává se do volání ``record_deletion()``.
-        """
-        invalidate_arch_z_related_models()
-        try:
-            if instance.akce and instance.akce.projekt is not None:
-                instance.akce.projekt.save_metadata(fedora_transaction)
-        except ObjectDoesNotExist as err:
-            logger.debug(
-                "arch_z.signals.delete_arch_z_repository_container_and_connections.no_akce",
-                extra={"ident_cely": instance.ident_cely, "error": err},
-            )
-        instance.record_deletion(fedora_transaction, close_transaction=close_transaction)
-
+    invalidate_arch_z_related_models()
+    try:
+        if instance.akce and instance.akce.projekt is not None:
+            instance.akce.projekt.save_metadata(fedora_transaction)
+    except ObjectDoesNotExist as err:
+        logger.debug(
+            "arch_z.signals.delete_arch_z_repository_container_and_connections.no_akce",
+            extra={"ident_cely": instance.ident_cely, "error": err},
+        )
+    instance.record_deletion(fedora_transaction)
     if instance.close_active_transaction_when_finished:
-        transaction.on_commit(lambda: save_metadata(True))
-    else:
-        save_metadata()
+        transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
     logger.debug(
         "arch_z.signals.delete_arch_z_repository_update_connected_records.end",
         extra={"ident_cely": instance.ident_cely, "transaction": transaction},
@@ -285,25 +279,13 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
     fedora_transaction = instance.active_transaction
     invalidate_model(ExterniZdroj)
     invalidate_arch_z_related_models()
-
-    def save_metadata(inner_close_transaction=False):
-        """
-        Uloží metadata. v aplikaci.
-
-        :param inner_close_transaction: Parametr ``inner_close_transaction`` ovlivňuje větvení podmínek.
-        """
-        if instance.suppress_signal_arch_z is False and instance.archeologicky_zaznam is not None:
-            instance.archeologicky_zaznam.save_metadata(fedora_transaction)
-        if instance.externi_zdroj is not None:
-            instance.externi_zdroj.save_metadata(fedora_transaction)
-        if inner_close_transaction:
-            fedora_transaction.mark_transaction_as_closed()
-
-    close_transaction = instance.close_active_transaction_when_finished
-    if close_transaction:
-        transaction.on_commit(lambda: save_metadata(True))
-    else:
-        save_metadata()
+    # Zápisy do Fedory uvnitř DB transakce, aby chyba Fedory vedla k rollbacku smazání (#4437).
+    if instance.suppress_signal_arch_z is False and instance.archeologicky_zaznam is not None:
+        instance.archeologicky_zaznam.save_metadata(fedora_transaction)
+    if instance.externi_zdroj is not None:
+        instance.externi_zdroj.save_metadata(fedora_transaction)
+    if instance.close_active_transaction_when_finished:
+        transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
     logger.debug(
         "arch_z.signals.delete_externi_odkaz_repository_container.end",
         extra={

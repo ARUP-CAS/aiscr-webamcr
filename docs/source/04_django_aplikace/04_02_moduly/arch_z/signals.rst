@@ -54,7 +54,11 @@ Funkce
 
 .. py:function:: delete_arch_z_repository_update_connected_records(sender, instance)
 
-   Odstraní arch z repository update connected records.
+   Po smazání archeologického záznamu aktualizuje metadata projektu a zaznamená smazání v repozitáři.
+
+   Zápisy do Fedory probíhají uvnitř DB transakce, aby chyba Fedory (např. 409 při souběžné práci
+   na témže projektu) vedla k rollbacku smazání v DB. Do ``transaction.on_commit`` se odkládá jen
+   commit Fedora transakce (#4437).
 
    :param sender: Třída modelu, která vyslala signál (ArcheologickyZaznam).
    :param instance: Instance smazaného archeologického záznamu; aktualizuje metadata navázaného projektu a zaznamenává smazání v repozitáři.
