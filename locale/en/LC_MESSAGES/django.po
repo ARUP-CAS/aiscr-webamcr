@@ -2924,6 +2924,14 @@ msgstr ""
 " not exist in the database and appears later in the import file. Place "
 "record {parent} before record {child} in the file."
 
+#: core/import_data_mappers.py
+msgid "core_admin.ImportDataOrganizationCycleError.message"
+msgstr "The organization hierarchy contains a cycle through the soucast field: {organizations}."
+
+#: heslar/forms.py
+msgid "heslar.forms.OrganizaceAdminForm.clean_soucast.invalid"
+msgstr "An organization cannot be part of itself or one of its descendants."
+
 #: core/import_data_mappers.py:627 core/import_data_mappers.py:639
 msgid "core_admin.ImportDataError.message.invalid_integer_value"
 msgstr "Invalid integer value"

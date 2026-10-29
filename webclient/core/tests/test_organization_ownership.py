@@ -75,10 +75,29 @@ class OrganizationOwnershipTest(TestCase):
         self.assertEqual(Organizace.get_subtree_ids(None), [])
         self.assertEqual(Organizace.get_subtree_ids(-1), [])
 
+    def test_user_reuses_organization_subtree_for_instance_lifetime(self):
+        """Ověří, že opakované čtení podstromu na uživateli provede pouze jeden dotaz."""
+        user = User(organizace=self.root)
+
+        with CaptureQueriesContext(connection) as queries:
+            first_result = user.organizace_podstrom_ids
+            second_result = user.organizace_podstrom_ids
+
+        self.assertEqual(len(queries), 1)
+        self.assertIs(first_result, second_result)
+        self.assertEqual(set(first_result), {self.root.pk, self.child.pk, self.grandchild.pk, self.sibling.pk})
+
+        new_child = self._make_organization("ORG-OWN-NEW-CHILD", "OWN-NEW-CHILD", soucast=self.root)
+        with CaptureQueriesContext(connection) as refresh_queries:
+            refreshed_result = user.organizace_podstrom_ids
+
+        self.assertEqual(len(refresh_queries), 1)
+        self.assertIn(new_child.pk, refreshed_result)
+
     def test_ownership_check_allows_descendants_but_not_ancestors_or_siblings(self):
         """Ověří dědičnost vlastnictví směrem k potomkům."""
         permission = Permissions(ownership=Permissions.ownershipChoices.our)
-        permission.logged_in_user = SimpleNamespace(organizace=self.root, organizace_id=self.root.pk)
+        permission.logged_in_user = User(organizace=self.root)
         permission.permission_object = MagicMock()
         permission.permission_object.get_create_user.return_value = ()
 
@@ -106,11 +125,8 @@ class OrganizationOwnershipTest(TestCase):
     def test_restricted_accessibility_inherits_only_the_ownership_bypass(self):
         """Ověří vlastnickou výjimku pro záznam s omezenou přístupností."""
         permission = Permissions(accessibility=Permissions.ownershipChoices.our)
-        permission.logged_in_user = SimpleNamespace(
-            organizace=self.root,
-            organizace_id=self.root.pk,
-            hlavni_role=SimpleNamespace(pk=ROLE_BADATEL_ID),
-        )
+        permission.logged_in_user = User(organizace=self.root)
+        permission.logged_in_user.hlavni_role = SimpleNamespace(pk=ROLE_BADATEL_ID)
         permission.permission_object = MagicMock()
         permission.permission_object.get_create_user.return_value = ()
         permission.permission_object.get_create_org.return_value = (self.grandchild,)
@@ -196,12 +212,9 @@ class OrganizationOwnershipTest(TestCase):
         """Ověří výběr projektů podle současné organizace po převodu."""
         request = SimpleNamespace(
             GET={"id": "42"},
-            user=SimpleNamespace(
-                hlavni_role=SimpleNamespace(pk=ROLE_ARCHEOLOG_ID),
-                organizace=self.child,
-                organizace_id=self.child.pk,
-            ),
+            user=User(organizace=self.child),
         )
+        request.user.hlavni_role = SimpleNamespace(pk=ROLE_ARCHEOLOG_ID)
         queryset = MagicMock()
         queryset.exists.return_value = True
         queryset.get.return_value = SimpleNamespace()
@@ -246,13 +259,8 @@ class OrganizationOwnershipTest(TestCase):
 
     def test_pian_raw_sql_map_uses_descendant_ids_for_snapshot_and_project_paths(self):
         """Ověří použití potomků v obou vlastnických větvích SQL mapy PIAN."""
-        request = SimpleNamespace(
-            user=SimpleNamespace(
-                hlavni_role=SimpleNamespace(id=ROLE_ARCHEOLOG_ID),
-                organizace_id=self.child.pk,
-                id=100,
-            )
-        )
+        request = SimpleNamespace(user=User(pk=100, organizace=self.child))
+        request.user.hlavni_role = SimpleNamespace(id=ROLE_ARCHEOLOG_ID)
         cursor = MagicMock()
         cursor.__enter__.return_value = cursor
         cursor.fetchone.return_value = (0,)

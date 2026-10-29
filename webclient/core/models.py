@@ -36,7 +36,7 @@ from notifikace_projekty.models import Pes
 from PIL import Image, UnidentifiedImageError
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
-from uzivatel.models import Organizace, User
+from uzivatel.models import User
 from xml_generator.models import ModelWithMetadata
 
 from .connectors import ClamdConnectionError, ClamdNetworkSocket, ClamdResponseError
@@ -1730,8 +1730,7 @@ class Permissions(models.Model):
                 if self.logged_in_user.organizace in create_orgs:
                     return True
                 if self.logged_in_user.organizace_id:
-                    organization_id = self.logged_in_user.organizace_id
-                    allowed_org_ids = set(Organizace.get_subtree_ids(organization_id))
+                    allowed_org_ids = set(self.logged_in_user.organizace_podstrom_ids)
                     if any(org and org.pk in allowed_org_ids for org in create_orgs):
                         return True
             return False

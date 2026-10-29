@@ -45,6 +45,10 @@ Třídy
 
       :return: Vrací atribut objektu.
 
+   .. py:method:: organizace_podstrom_ids()
+
+      Vrátí ID vlastní organizace a jejích potomků, načtená nejvýše jednou za změnu hierarchie.
+
    .. py:method:: display_name()
 
       Textová reprezentace uživatele pro tabulky a autocomplete pole.

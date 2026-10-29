@@ -86,7 +86,7 @@ from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
 from pid.exceptions import DoiConnectionError, DoiWriteError
 from projekt.models import Projekt
 from services.mailer import Mailer
-from uzivatel.models import Organizace, User
+from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -824,7 +824,7 @@ class PasPermissionFilterMixin(PermissionFilterMixin):
             organization_id = self.request.user.organizace_id
             if organization_id is None:
                 return Q(projekt__organizace=None) | Q(predano_organizace=None)
-            organization_ids = Organizace.get_subtree_ids(organization_id)
+            organization_ids = self.request.user.organizace_podstrom_ids
             return Q(projekt__organizace__in=organization_ids) | Q(predano_organizace__in=organization_ids)
         else:
             return Q(**{"historie_zapsat__in": filtered_my})
@@ -1198,7 +1198,7 @@ class UzivatelSpolupraceListView(SearchListView):
             if organization_id is None:
                 filtered_our = Q(vedouci__organizace=None)
             else:
-                filtered_our = Q(vedouci__organizace__in=Organizace.get_subtree_ids(organization_id))
+                filtered_our = Q(vedouci__organizace__in=self.request.user.organizace_podstrom_ids)
             return filtered_our | filtered_my
         else:
             return filtered_my

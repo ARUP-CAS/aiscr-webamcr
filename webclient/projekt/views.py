@@ -141,7 +141,7 @@ from projekt.models import Projekt, get_show_oznamovatel
 from projekt.tables import ProjektTable
 from services.mailer import Mailer
 from uzivatel.forms import OsobaForm
-from uzivatel.models import Organizace, User
+from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -701,7 +701,7 @@ class ProjektPermissionFilterMixin(PermissionFilterMixin):
             organization_id = self.request.user.organizace_id
             if organization_id is None:
                 return Q(organizace=None)
-            return Q(organizace__in=Organizace.get_subtree_ids(organization_id))
+            return Q(organizace__in=self.request.user.organizace_podstrom_ids)
         else:
             return Q()
 
@@ -1977,7 +1977,7 @@ class ProjectTableRowView(LoginRequiredMixin, View):
             if organization_id is None:
                 organization_filter = {"organizace": None}
             else:
-                organization_filter = {"organizace__in": Organizace.get_subtree_ids(organization_id)}
+                organization_filter = {"organizace__in": request.user.organizace_podstrom_ids}
             qs = Projekt.objects.filter(
                 id=projekt_id,
                 typ_projektu=TYP_PROJEKTU_PRUZKUM_ID,
