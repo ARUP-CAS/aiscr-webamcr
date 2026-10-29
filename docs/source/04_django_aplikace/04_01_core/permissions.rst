@@ -76,32 +76,31 @@ Způsob určování vlastnictví
    * - Archeologický záznam
      - AZ
      - ``AZ01.uzivatel`` = ``uzivatel``
-     - ``AZ01.uzivatel.organizace`` = ``uzivatel.organizace``
+     - ``AZ01.uzivatel.organizace`` je v podstromu ``uzivatel.organizace``
    * - Dokument
      - D
      - ``D01.uzivatel`` = ``uzivatel``
-     - ``D01.uzivatel.organizace`` = ``uzivatel.organizace``
+     - ``D01.uzivatel.organizace`` je v podstromu ``uzivatel.organizace``
    * - Extený zdroj
      - EZ
      - ``EZ01.uzivatel = uzivatel``
-     - ``EZ01.uzivatel.organizace``
-     - ``uzivatel.organizace``
+     - ``EZ01.uzivatel.organizace`` je v podstromu ``uzivatel.organizace``
    * - Projekt
      - P
      - N/A
-     - ``projekt.organizace`` = ``uzivatel.organizace``
+     - ``projekt.organizace`` je v podstromu ``uzivatel.organizace``
    * - Samostatný nález
      - SN
      - ``SN01.uzivatel`` = ``uzivatel``
-     - ``SN.projekt.organizace`` = ``uzivatel.organizace``
+     - ``SN.projekt.organizace`` je v podstromu ``uzivatel.organizace``
    * - Spolupráce
      - US
      - ``uzivatel_spoluprace.spolupracovnik`` = ``uzivatel``
-     - ``uzivatel_spoluprace.vedouci.organizace`` = ``uzivatel.organizace``
+     - ``uzivatel_spoluprace.vedouci.organizace`` je v podstromu ``uzivatel.organizace``
    * - PIAN
      - PI
      - ``PI01.uzivatel`` = ``uzivatel`` OR ``AZ01.uzivatel`` = ``uzivatel``
-     - ``PI01.uzivatel.organizace`` = ``uzivatel.organizace`` OR ``AZ01.uzivatel.organizace`` = ``uzivatel.organizace`` OR ``akce.projekt.organizace`` = ``uzivatel.organizace``
+     - ``PI01.uzivatel.organizace`` je v podstromu ``uzivatel.organizace`` nebo ``AZ01.uzivatel.organizace`` je v podstromu ``uzivatel.organizace`` nebo ``akce.projekt.organizace`` je v podstromu ``uzivatel.organizace``
    * - Uživatel
      - U
      - ``auth_user`` = ``uzivatel``
@@ -115,13 +114,13 @@ Vlastník:
 * **spolupráce** = dotčený spolupracovník
 * **uživatel** = dotčený uživatel
 
-Stejná organizace:
+Stejná organizace znamená organizaci uživatele nebo kteroukoli organizaci pod ní v hierarchii ``soucast``:
 
-* u **archeologického záznamu**, **dokumentu** či **exteního zdroje** (a jejich potomků) = uživatel (archeolog) s totožnou organizací, jako je organizace uživatele, který zapsal záznam
-* u **projektu** = uživatel (archeolog) s totožnou organizací, jako je v poli projekt.organizace
-* u **PIAN** = uživatel (archeolog) s totožnou organizací, jako je organizace uživatele, který PIAN vytvořil nebo zapsal archeologický záznam spojený s PIAN nebo patří k organizaci souvisejícího projektu
-* u **samostatného nálezu** = uživatel (archeolog) s totožnou organizací, jako je organizace u projektu, ke kterému je samostatný nález připojený (``projekt.organizace``), nebo s totožnou organizací jako je cílová organizace, které byl nález předán (``predano_organizace``)
-* u **spolupráce** = uživatel (archeolog) s totožnou organizací, jako je organizace dotčeného vedoucího
+* u **archeologického záznamu**, **dokumentu** či **exteního zdroje** (a jejich potomků) = organizace zapisovatele je organizací uživatele nebo její podřízenou organizací
+* u **projektu** = ``projekt.organizace`` je organizací uživatele nebo její podřízenou organizací
+* u **PIAN** = organizace uživatele, který PIAN vytvořil, zapsal související archeologický záznam nebo organizace souvisejícího projektu je organizací uživatele nebo její podřízenou organizací
+* u **samostatného nálezu** = organizace projektu (``projekt.organizace``) nebo cílová organizace (``predano_organizace``) je organizací uživatele nebo její podřízenou organizací
+* u **spolupráce** = organizace dotčeného vedoucího je organizací uživatele nebo její podřízenou organizací
 * u **uživatele** = nepoužívá se
 
 Uživatelské akce řízené pomocí oprávnění

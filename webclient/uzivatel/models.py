@@ -209,6 +209,16 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         else:
             return self.user_str
 
+    @property
+    def organizace_podstrom_ids(self):
+        """Vrátí ID vlastní organizace a jejích potomků, načtená nejvýše jednou za změnu hierarchie."""
+        cache = self.__dict__.get("_organizace_podstrom_ids")
+        generation = Organizace._subtree_cache_version
+        if cache is None or cache[0] != generation:
+            cache = (generation, Organizace.get_subtree_ids(self.organizace_id))
+            self.__dict__["_organizace_podstrom_ids"] = cache
+        return cache[1]
+
     def display_name(self, viewer=None):
         """
         Textová reprezentace uživatele pro tabulky a autocomplete pole.
@@ -249,7 +259,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             # Archeologům přidej ke spolupracím s jinými archeology i jejich organizaci.
             if self.hlavni_role == archeolog_group:
                 if self.organizace_id:
-                    moje_spolupracujici_organizace.extend(Organizace.get_subtree_ids(self.organizace_id))
+                    moje_spolupracujici_organizace.extend(self.organizace_podstrom_ids)
                 else:
                     moje_spolupracujici_organizace.append(self.organizace_id)
             return moje_spolupracujici_organizace
@@ -541,6 +551,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
 
     IDENT_PREFIX = "ORG"
     SEQUENCE_NAME = "organizace_ident_seq"
+    _subtree_cache_version = 0
 
     nazev = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev"), max_length=255, db_index=True)
     nazev_zkraceny = models.CharField(
@@ -660,6 +671,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
                 )
         else:
             super().save(*args, **kwargs)
+        type(self)._subtree_cache_version += 1
 
     def __str__(self):
         """

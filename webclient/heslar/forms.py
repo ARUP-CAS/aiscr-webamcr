@@ -1,10 +1,12 @@
 import logging
 
+from core.translation import format_message
 from core.widgets import AutocompleteListSelect2, AutocompleteModelSelect2
 from dal import forward
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_noop
 from heslar.models import HeslarHierarchie, HeslarNazev, HeslarOdkaz
 from pid.fields import OrcidAutocompleteField, RorAutocompleteField, WikiDataAutocompleteField
 from pid.forms import FormWithOrcid, FormWithWikidata
@@ -198,5 +200,7 @@ class OrganizaceAdminForm(forms.ModelForm):
             if selected_parent.pk == self.instance.pk or selected_parent.pk in Organizace.get_subtree_ids(
                 self.instance.pk
             ):
-                raise ValidationError(_("Organizace nemůže být součástí sama sebe ani své podřízené organizace."))
+                raise ValidationError(
+                    format_message(gettext_noop("heslar.forms.OrganizaceAdminForm.clean_soucast.invalid"))
+                )
         return selected_parent

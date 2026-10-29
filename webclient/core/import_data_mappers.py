@@ -711,8 +711,10 @@ class ImportDataOrganizationCycleError(ImportDataError):
         """
         self.cycle = cycle
         super().__init__(
-            _("Cyklus v hierarchii organizací přes pole součást: %(organizations)s.")
-            % {"organizations": " -> ".join(cycle)}
+            format_message(
+                gettext_noop("core_admin.ImportDataOrganizationCycleError.message"),
+                organizations=" -> ".join(cycle),
+            )
         )
 
 
