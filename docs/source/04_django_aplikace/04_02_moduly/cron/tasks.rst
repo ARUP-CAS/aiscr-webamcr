@@ -158,14 +158,28 @@ Funkce
 
    Aktualizuje snapshot fields.
 
+.. py:function:: _update_redis_snapshots_for_class(r, current_class, rewrite_existing)
+
+   Aktualizuje Redis snapshoty všech záznamů jedné třídy modelu.
+
+   :param r: Spojení na Redis.
+   :param current_class: Třída modelu s metodami ``redis_snapshot_id`` a ``generate_redis_snapshot()``.
+   :param rewrite_existing: Pokud je ``True``, přepíše i existující klíče; jinak zapisuje jen chybějící.
+   :return: N-tice (počet prošlých záznamů, počet zapsaných snapshotů).
+
 .. py:function:: update_all_redis_snapshots(rewrite_existing, classes)
 
    Aktualizuje Redis snapshots pro všechny nebo vybrané třídy modelů.
+
+   Záznamy se načítají po dávkách podle primárního klíče (viz ``core.utils.iter_pk_chunks``). Chyba při zpracování
+   jedné třídy se zaloguje a pokračuje se další třídou; pokud některá třída selže, úloha na konci
+   vyvolá ``RuntimeError``, aby byl běh v Celery označen jako neúspěšný.
 
    :param rewrite_existing: Pokud je ``True``, přepíše i existující záznamy v Redis. Výchozí hodnota je ``False``.
    :param classes: Volitelný seznam tříd modelů, pro které se mají Redis snapshot záznamy aktualizovat.
        Pokud není zadán, použijí se výchozí třídy
        (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez).
+   :raises RuntimeError: Pokud zpracování alespoň jedné třídy selhalo.
 
 .. py:function:: update_single_redis_snapshot(class_name, record_pk)
 
