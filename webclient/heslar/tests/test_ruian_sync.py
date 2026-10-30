@@ -2488,7 +2488,7 @@ class ZastaralaRozbalenaVrstvaTests(SimpleTestCase):
         os.utime(self.zip_path, (budouci, budouci))
 
     def _zastarala_kopie(self):
-        """Vytvoří rozbalenou kopii vrstvy ``VUSC_P`` z předchozího archivu."""
+        """Vytvoří rozbalenou kopii vrstvy ``VUSC_P`` s obsahem ``stara``."""
         self.unpack_dir.mkdir()
         for pripona in (".shp", ".shx", ".dbf"):
             (self.unpack_dir / f"VUSC_P{pripona}").write_bytes(b"stara")
@@ -2540,3 +2540,16 @@ class ZastaralaRozbalenaVrstvaTests(SimpleTestCase):
 
         self.assertEqual(target.read_bytes(), b"nova")
         self.assertEqual(sorted(p.name for p in self.unpack_dir.glob("VUSC_P.*")), ["VUSC_P.shp"])
+
+    def test_aktualni_kopie_se_nerozbaluje(self):
+        """Kopie novější než archiv se vrátí beze změny a archiv se neotevře."""
+        self._zastarala_kopie()
+        self._zapis_archiv({"VUSC_P.shp": b"nova"})
+        minuly = time.time() - 3600
+        os.utime(self.zip_path, (minuly, minuly))
+
+        with self.assertNoLogs("heslar.ruian_sync.shp_importer", level="INFO"):
+            target = self._zdroj()._resolve_shp_layer("VUSC_P")
+
+        self.assertEqual(target.read_bytes(), b"stara")
+        self.assertEqual((self.unpack_dir / "VUSC_P.dbf").read_bytes(), b"stara")
