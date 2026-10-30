@@ -1276,7 +1276,7 @@ Níže je konfigurace systému Kibana
    monitoring.ui.container.elasticsearch.enabled: true
    monitoring.ui.container.logstash.enabled: true
 
-   elasticsearch.username: user
+   elasticsearch.username: kibana_system
    elasticsearch.password: CHANGE_ME
 
 -  ``server.host: "0.0.0.0"``: Toto nastavení definuje IP adresu, na
@@ -1358,6 +1358,26 @@ dřív přihlašoval právě jím a jeho heslo bylo zapsané v serverové kopii
 (Users → ``amcr`` → “Change password”); starou kopii ``logstash.conf`` s
 heslem pak ze serveru smažte. Účet ``amcr_logger`` se zakládá až po
 vytvoření jeho role (viz níže).
+
+Změna hesla nezneplatní API klíče, které si uživatel dřív vytvořil. Klíče ve
+výchozím stavu neexpirují a klíč superuživatele dává plný přístup i po
+změně hesla. Na existující instalaci proto po změně hesel ``amcr`` a
+``elastic`` zkontrolujte jejich aktivní API klíče (Stack Management →
+Security → API Keys, nebo v konzoli Dev Tools) a neznámé klíče zrušte:
+
+::
+
+   GET _security/api_key?username=amcr&active_only=true
+   GET _security/api_key?username=elastic&active_only=true
+
+   DELETE _security/api_key
+   {
+     "username": "amcr"
+   }
+
+``DELETE`` podle ``username`` zruší všechny klíče daného uživatele. Pokud
+některý klíč používá jiná služba, zrušte místo toho jen konkrétní klíče
+podle ``"ids": ["<id klíče>"]``.
 
 Logstash zapisuje do zapisovacího aliasu ``amcr`` a ILM politika ze šablony
 ``amcr_template`` (``rollover_alias: amcr``) zakládá další indexy
