@@ -23,6 +23,7 @@ from core.constants import (
     SAMOSTATNY_NALEZ_RELATION_TYPE,
 )
 from core.distribution_names import ORIGINAL_DISTRIBUTION_NAME
+from core.exceptions import GpsDataRemovalError
 from core.forms import CheckStavNotChangedForm, RenameSouborForm, TranslationImportForm
 from core.ident_cely import get_record_from_ident
 from core.message_constants import (
@@ -904,7 +905,13 @@ class BasePostUploadView(View):
             help_translation = _("core.views.post_upload.antivirus_check.check_failed")
             return JsonResponse({"error": help_translation}, status=400)
         soubor.seek(0)
-        return self.handle_upload(request, soubor, soubor_data, *args, **kwargs)
+        try:
+            return self.handle_upload(request, soubor, soubor_data, *args, **kwargs)
+        except GpsDataRemovalError:
+            logger.exception("core.views.post_upload.gps_cleanup_failed")
+            if self.fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                self.fedora_transaction.rollback_transaction()
+            return JsonResponse({"error": _("core.views.post_upload.gps_cleanup_failed")}, status=500)
 
     def handle_upload(self, request, soubor, soubor_data, *args, **kwargs):
         """
@@ -1046,7 +1053,7 @@ class NewFileUploadView(BasePostUploadView):
                 "core.views.post_upload.check_mime_for_url.rename",
                 extra={"mime_type": mimetype, "old": old_name, "new": new_name},
             )
-        if mimetype in ["image/png", "image/jpeg", "image/tiff"] and isinstance(objekt, SamostatnyNalez):
+        if mimetype in Soubor.PAS_ACCEPTED_MIMES and isinstance(objekt, SamostatnyNalez):
             soubor_data = Soubor.remove_gps_data(soubor_data)
         try:
             rep_bin_file = conn.save_binary_file(new_name, mimetype, soubor_data)
@@ -1273,10 +1280,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
                 "core.views.post_upload.check_mime_for_url.rename",
                 extra={"mime_type": mimetype, "old": original_name, "new": new_name},
             )
-        if (
-            mimetype in ["image/png", "image/jpeg", "image/tiff"]
-            and soubor_instance.vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE
-        ):
+        if mimetype in Soubor.PAS_ACCEPTED_MIMES and soubor_instance.vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
             soubor_data = Soubor.remove_gps_data(soubor_data)
         rep_bin_file = None
         if soubor_instance.repository_uuid is not None:
