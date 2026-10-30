@@ -8789,6 +8789,10 @@ msgstr "Metadata"
 msgid "heslar.admin.ObjectWithMetadataAdmin.metadata.description"
 msgstr "Download metadata"
 
+#: heslar/admin.py:560
+msgid "heslar.admin.RuianSyncRunAdmin.warnings_flag"
+msgstr "⚠"
+
 #: heslar/forms.py:27
 msgid "heslar.forms.UpdateKatastryFileForm.file.label"
 msgstr "List of identifiers"
@@ -9238,6 +9242,10 @@ msgstr "Error"
 #: heslar/models.py:565
 msgid "heslar.models.RuianSyncRun.note"
 msgstr "Note"
+
+#: heslar/models.py:571
+msgid "heslar.models.RuianSyncRun.warnings"
+msgstr "Warnings"
 
 #: heslar/models.py:572
 msgid "heslar.models.RuianSyncRun.modelTitle"

@@ -302,13 +302,17 @@ Třídy
 
    **Metody:**
 
-   .. py:method:: note_flag()
+   .. py:method:: warnings_flag()
 
-      Zobrazí ⚠ pokud run obsahuje poznámku (varování nebo chybu reassignu).
+      Zobrazí ⚠ s počtem varování, která má operátor prověřit.
+
+      Reaguje jen na pole ``warnings`` – informativní ``note`` (např.
+      ``no_changes (404)`` u dne bez změn) ⚠ nevyvolá. Dřív sloupec hlídal
+      ``note``, takže se ⚠ objevovalo i u úspěšných běhů bez jakéhokoli
+      problému. Text varování je v tooltipu, celý pak v detailu běhu.
 
       :param obj: Instance :class:`~heslar.models.RuianSyncRun`.
-
-      :return: Řetězec ``"⚠"`` nebo prázdný řetězec.
+      :return: ``⚠ <počet>`` s tooltipem, nebo prázdný řetězec.
 
    .. py:method:: has_add_permission()
 

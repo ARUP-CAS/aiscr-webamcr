@@ -193,7 +193,8 @@ class FedoraError(Exception):
         self.code = code
         self.headers = headers
         self.fedora_transaction: FedoraTransaction = fedora_transaction
-        self.ident_cely: str = fedora_transaction.main_record.ident_cely if fedora_transaction else None
+        # Transakce vytvořená bez hlavního záznamu (``FedoraTransaction()``) nemá ``main_record``.
+        self.ident_cely: str = getattr(getattr(fedora_transaction, "main_record", None), "ident_cely", None)
         self.redirect = fedora_transaction.redirect_on_error if fedora_transaction else None
         self.redirect_url = self.fedora_transaction.redirect_url if fedora_transaction else None
         super().__init__(self.message)
@@ -3266,7 +3267,14 @@ class FedoraTransaction(BaseFedoraTransaction):
         if not str(response.status_code).startswith("2"):
             logger.error(
                 "core_repository_connector.FedoraTransaction.commit_transaction.failed",
-                extra={"transaction": self.uid, "response": response.text},
+                extra={
+                    "transaction": self.uid,
+                    "response": response.text,
+                    "operation": operation.name,
+                    # Při commitu z ``transaction.on_commit`` je DB už commitnutá a záznam je třeba
+                    # ve Fedoře dorovnat ručně, ident_cely k tomu slouží jako vodítko (#4437).
+                    "ident_cely": getattr(self.main_record, "ident_cely", None),
+                },
             )
             raise FedoraTransactionCommitFailedError(response.text)
         logger.debug(
