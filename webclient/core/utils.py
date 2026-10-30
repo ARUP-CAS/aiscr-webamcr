@@ -1927,3 +1927,34 @@ def hodnota_pro_log(hodnota):
         return obj
 
     return json.dumps(_normalizuj(hodnota), ensure_ascii=False, default=str)
+
+
+def iter_pk_chunks(queryset, chunk_size=1000):
+    """
+    Prochází queryset po dávkách seřazených podle primárního klíče (keyset stránkování).
+
+    Náhrada za ``QuerySet.iterator()``: obě databázová spojení mají ``DISABLE_SERVER_SIDE_CURSORS = True``,
+    takže ``iterator()`` nestreamuje, ale jedním ``SELECT`` natáhne celou výslednou sadu na klienta.
+    Takový dotaz musí včetně přenosu všech řádků doběhnout v rámci ``statement_timeout`` a u velkých
+    tabulek drží celou sadu v paměti procesu. Tato funkce místo toho načítá každou dávku samostatným
+    dotazem ``... WHERE pk > posledni_pk ORDER BY pk LIMIT chunk_size``, v paměti je vždy jen jedna
+    dávka. Prefetch a ``select_related`` definované na querysetu se aplikují na každou dávku.
+
+    Záznamy přidané během průchodu s vyšším PK se ještě zpracují, smazané se přeskočí; procházející
+    kód nesmí měnit PK ani příslušnost záznamu do iterované množiny.
+
+    :param queryset: Queryset ke zpracování (přeřadí se podle ``pk``).
+    :param chunk_size: Počet záznamů načtených jedním dotazem.
+    :return: Generátor instancí modelu v pořadí podle primárního klíče.
+    """
+    ordered = queryset.order_by("pk")
+    last_pk = None
+    while True:
+        chunk_query = ordered if last_pk is None else ordered.filter(pk__gt=last_pk)
+        chunk = list(chunk_query[:chunk_size])
+        if not chunk:
+            return
+        yield from chunk
+        if len(chunk) < chunk_size:
+            return
+        last_pk = chunk[-1].pk
