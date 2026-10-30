@@ -176,8 +176,11 @@ services:
 
   logstash:
     image: docker.elastic.co/logstash/logstash:9.5.5
-    environment:
-      - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
+    # Image Logstashe neumí *_FILE proměnné; heslo pro logstash.conf (${ES_PASSWORD}) se načte ze secretu.
+    entrypoint:
+      - bash
+      - -c
+      - 'ES_PASSWORD="$$(cat /run/secrets/logstash_elastic_pass)" && [ -n "$$ES_PASSWORD" ] || { echo "Secret logstash_elastic_pass chybí nebo je prázdný" >&2; exit 1; }; export ES_PASSWORD; exec /usr/local/bin/docker-entrypoint'
     volumes:
       - logs_volume:/logs
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
@@ -188,7 +191,6 @@ services:
     restart: always
     secrets:
       - logstash_elastic_pass
-      - logstash_elastic_host
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.5.5
@@ -198,7 +200,6 @@ services:
       - ES_JAVA_OPTS=-Xms750m -Xmx750m
       - http.host=0.0.0.0
       - XPACK_MONITORING_ENABLED=false
-      - ELASTIC_PASSWORD=elastic_pass
     volumes:
       - /opt/elastic_logs:/usr/share/elasticsearch/data
       - /opt/docker_logs/elastic_backup:/usr/share/elasticsearch/backup
@@ -207,8 +208,6 @@ services:
       - 9200:9200
     networks:
       - git-reverse-proxy
-    secrets:
-      - elastic_pass
     restart: always
     deploy:
       resources:
@@ -271,11 +270,7 @@ secrets:
     file: redis_host.txt
   grafana_admin_password:
     file: grafana_admin_password.txt
-  elastic_pass:
-    file: elastic_password.txt
   logstash_elastic_pass:
     file: logstash_elastic_password.txt
-  logstash_elastic_host:
-    file: logstash_elastic_host.txt
   prometheus_config:
     file: prometheus.yml
