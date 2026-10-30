@@ -237,6 +237,16 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: changeform_view()
+
+      Serializuje změny organizací, aby kontrola hierarchie pracovala s aktuálním stromem.
+
+      :param request: Požadavek správce; při metodě POST spouští transakční zpracování změny.
+      :param object_id: Identifikátor upravované organizace, případně ``None`` při vytvoření.
+      :param form_url: Cílová URL formuláře správy.
+      :param extra_context: Dodatečný kontext předaný standardnímu formuláři správy.
+      :return: HTTP odpověď vytvořená standardním pohledem Django Admin.
+
    .. py:method:: has_delete_permission()
 
       Určí, zda delete permission.

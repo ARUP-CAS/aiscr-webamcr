@@ -698,7 +698,10 @@ class ProjektPermissionFilterMixin(PermissionFilterMixin):
             :return: Vrací výsledek volání ``Q()``.
         """
         if ownership == Permissions.ownershipChoices.our:
-            return Q(**{"organizace": self.request.user.organizace})
+            organization_id = self.request.user.organizace_id
+            if organization_id is None:
+                return Q(organizace=None)
+            return Q(organizace__in=self.request.user.organizace_podstrom_ids)
         else:
             return Q()
 
@@ -1970,11 +1973,16 @@ class ProjectTableRowView(LoginRequiredMixin, View):
         if not projekt_id:
             raise Http404
         if request.user.hlavni_role and request.user.hlavni_role.pk == ROLE_ARCHEOLOG_ID:
+            organization_id = request.user.organizace_id
+            if organization_id is None:
+                organization_filter = {"organizace": None}
+            else:
+                organization_filter = {"organizace__in": request.user.organizace_podstrom_ids}
             qs = Projekt.objects.filter(
                 id=projekt_id,
                 typ_projektu=TYP_PROJEKTU_PRUZKUM_ID,
-                organizace=request.user.organizace,
                 stav__in=[PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_UKONCENY_V_TERENU],
+                **organization_filter,
             )
             if not qs.exists():
                 raise PermissionDenied

@@ -45,6 +45,10 @@ Třídy
 
       :return: Vrací atribut objektu.
 
+   .. py:method:: organizace_podstrom_ids()
+
+      Vrátí ID vlastní organizace a jejích potomků, načtená nejvýše jednou za změnu hierarchie.
+
    .. py:method:: display_name()
 
       Textová reprezentace uživatele pro tabulky a autocomplete pole.
@@ -173,6 +177,13 @@ Třídy
    Databázový model organizace.
 
    **Metody:**
+
+   .. py:method:: get_subtree_ids()
+
+      Vrátí ID organizace a všech jejích přímých i nepřímých součástí.
+
+      :param root_id: ID organizace, od které se prohledávají potomci směrem dolů.
+      :return: ID kořene a všech dosažitelných potomků; pro chybějící kořen prázdný seznam.
 
    .. py:method:: save()
 

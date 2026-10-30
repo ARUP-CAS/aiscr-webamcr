@@ -700,6 +700,24 @@ class ImportDataBatchOrderingError(ImportDataError):
         )
 
 
+class ImportDataOrganizationCycleError(ImportDataError):
+    """Výjimka vyvolaná při vytvoření cyklu v hierarchii organizací."""
+
+    def __init__(self, cycle):
+        """
+        Inicializuje výjimku s identifikátory organizací tvořících cyklus.
+
+        :param cycle: Seřazené identifikátory cyklu včetně opakovaného uzlu na konci.
+        """
+        self.cycle = cycle
+        super().__init__(
+            format_message(
+                gettext_noop("core_admin.ImportDataOrganizationCycleError.message"),
+                organizations=" -> ".join(cycle),
+            )
+        )
+
+
 class BaseImportField:
     """
     Základní třída pro importní pole. Neprovádí žádnou validaci ani zpracování hodnoty.
@@ -2596,15 +2614,17 @@ class OrganizaceMapper(ImportModelMapper):
         return field_mapping
 
     @classmethod
-    def validate_batch_ordering(cls, payloads: list[dict]) -> None:
+    def validate_batch_ordering(cls, payloads: list[dict], performed_action=None) -> None:
         """
-        Ověří, že záznamy neobsahují dopřednou referenci v poli ``soucast`` (self-join FK na Organizace).
+        Ověří dopředné reference a cykly v úplné výsledné hierarchii organizací.
 
-        Pokud záznam odkazuje přes ``soucast`` na jinou organizaci, která se v CSV vyskytuje
-        až za ním a zároveň v databázi dosud neexistuje, vyvolá výjimku.
+        Graf zahrnuje nezměněné organizace v databázi i vztahy z importovaných řádků.
+        Prázdná hodnota ``soucast`` proto při aktualizaci vztah výslovně odstraní.
 
         :param payloads: Seznam surových řádkových slovníků ze CSV souboru v původním pořadí.
+        :param performed_action: Akce importu; při ``DELETE`` se hierarchie nemění.
         :raises ImportDataBatchOrderingError: Vyvolá se, pokud je ``soucast`` dopředná reference.
+        :raises ImportDataOrganizationCycleError: Vyvolá se, pokud výsledný graf obsahuje cyklus.
         """
         seen: set[str] = set()
         for row in payloads:
@@ -2616,6 +2636,46 @@ class OrganizaceMapper(ImportModelMapper):
                     raise ImportDataBatchOrderingError(ident, soucast_str, "soucast")
             if ident is not None and str(ident).lower() not in ("nan", "none", ""):
                 seen.add(str(ident))
+
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+            return
+
+        organization_graph = dict(Organizace.objects.values_list("ident_cely", "soucast__ident_cely"))
+        existing_idents = set(organization_graph)
+
+        def normalized_ident(value):
+            if value is None or pd.isna(value):
+                return None
+            value = str(value)
+            return None if value.strip().lower() in ("nan", "none", "") else value
+
+        changed_idents: set[str] = set()
+        for row in payloads:
+            ident = normalized_ident(row.get("ident_cely"))
+            if ident is None or "soucast" not in row:
+                continue
+            if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and ident in existing_idents:
+                continue
+            parent_ident = normalized_ident(row.get("soucast"))
+            if ident not in organization_graph or organization_graph[ident] != parent_ident:
+                changed_idents.add(ident)
+            organization_graph[ident] = parent_ident
+
+        completed: set[str] = set()
+        for ident in changed_idents:
+            path: list[str] = []
+            path_indices: dict[str, int] = {}
+            current_ident = ident
+            while current_ident in organization_graph and current_ident not in completed:
+                if current_ident in path_indices:
+                    cycle = path[path_indices[current_ident] :] + [current_ident]
+                    raise ImportDataOrganizationCycleError(cycle)
+                path_indices[current_ident] = len(path)
+                path.append(current_ident)
+                current_ident = organization_graph[current_ident]
+                if current_ident is None:
+                    break
+            completed.update(path)
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Organizace) -> list:

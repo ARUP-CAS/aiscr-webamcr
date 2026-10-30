@@ -44,11 +44,13 @@ from core.import_data_mappers import (
     ImportDataError,
     ImportDataIntegrityError,
     ImportDataMissingFileError,
+    ImportDataOrganizationCycleError,
     ImportDataUnsupportedFileError,
     ImportDataUnsupportedFilesError,
     ImportDataValidationResult,
     ImportModelMapper,
     LookupImportField,
+    OrganizaceMapper,
     ParadataMapper,
     SouborMapper,
     UzivatelNotifikaceMapper,
@@ -149,6 +151,7 @@ IMPORT_DATA_JOB_KEY_SUFFIXES = (
     "import_data_failure_reason",
     "import_data_count",
     "import_data_valid",
+    "import_data_organization_record_ids",
     "import_data_phase",
     "import_data_primary_keys",
     "import_data_files",
@@ -1217,6 +1220,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
     chunk_count_raw = redis_connector.get(job_key("import_data_file_chunks"))
     chunk_count = int(chunk_count_raw) if chunk_count_raw else 0
     records: list = []
+    organization_record_ids: list[int] = []
     invalid_records: list = []
     record_id = 0  # index platných záznamů — sufix Redis klíče a records_count
     row_order = 0  # index každého CSV řádku (platný i neplatný) — item_order ve validačních výsledcích
@@ -1359,8 +1363,15 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                     mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
                     seen_in_batch = seen_in_batch_by_mapper.setdefault(file_name, set())
                     try:
-                        mapper_class.validate_batch_ordering(sheet.to_dict("records"))
-                    except (ImportDataBatchOrderingError, ImportDataDistributionPrefixCollisionError) as err:
+                        if mapper_class is OrganizaceMapper:
+                            mapper_class.validate_batch_ordering(sheet.to_dict("records"), performed_action)
+                        else:
+                            mapper_class.validate_batch_ordering(sheet.to_dict("records"))
+                    except (
+                        ImportDataBatchOrderingError,
+                        ImportDataDistributionPrefixCollisionError,
+                        ImportDataOrganizationCycleError,
+                    ) as err:
                         push_validation_result(
                             ImportDataValidationResult(
                                 item_order=row_order,
@@ -1447,6 +1458,8 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
                                     json.dumps(record),
                                     ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
                                 )
+                                if mapper_class is OrganizaceMapper:
+                                    organization_record_ids.append(record_id)
                                 record_id += 1
                             row_order += 1
                         else:
@@ -1480,6 +1493,11 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
         # Success path: all files parsed. Finalize the per-job keys the import phase/report consume.
         record_count = record_id
         redis_connector.set(job_key("import_data_count"), record_count, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
+        redis_connector.set(
+            job_key("import_data_organization_record_ids"),
+            json.dumps(organization_record_ids),
+            ex=IMPORT_DATA_RUNNING_TTL_SECONDS,
+        )
         redis_connector.set(
             job_key("import_data_valid"), "1" if not invalid_records else "0", ex=IMPORT_DATA_RUNNING_TTL_SECONDS
         )
@@ -2163,6 +2181,27 @@ def run_data_import(job_id, user_id, lock_token):
         data_rolled_back = False
         try:
             with transaction.atomic():
+                organization_record_ids_raw = redis_connector.get(job_key("import_data_organization_record_ids"))
+                # Existing approval jobs may predate this index; scan once to keep them importable.
+                organization_record_ids = (
+                    json.loads(organization_record_ids_raw.decode("utf-8"))
+                    if organization_record_ids_raw is not None
+                    else range(record_count)
+                )
+                organization_payloads = []
+                for staged_record_id in organization_record_ids:
+                    serialized_record = json.loads(redis_connector.get(record_key(staged_record_id)).decode("utf-8"))
+                    mapper_class = ImportModelMapper.get_import_data_mapper(serialized_record["__file_name"])
+                    if mapper_class is OrganizaceMapper:
+                        serialized_record.pop("__file_name")
+                        organization_payloads.append(serialized_record)
+                if organization_payloads and performed_action != ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+                    organization_table = connection.ops.quote_name(OrganizaceMapper.model_class._meta.db_table)
+                    with connection.cursor() as cursor:
+                        # Keep concurrent hierarchy changes out until this transaction commits.
+                        cursor.execute(f"LOCK TABLE {organization_table} IN SHARE ROW EXCLUSIVE MODE")
+                    OrganizaceMapper.validate_batch_ordering(organization_payloads, performed_action)
+
                 for record_id in range(record_count):
                     refresh_import_lock()
                     primary_key_record = None

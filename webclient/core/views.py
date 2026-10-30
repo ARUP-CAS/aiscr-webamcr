@@ -1715,7 +1715,12 @@ class PermissionFilterMixin:
         filter_historie = {"uzivatel": self.request.user}
         filtered_my = Historie.objects.filter(**filter_historie)
         if ownership == Permissions.ownershipChoices.our:
-            filter_historie = {"uzivatel__organizace": self.request.user.organizace}
+            organization_id = self.request.user.organizace_id
+            if organization_id is None:
+                filter_historie = {"uzivatel__organizace": None}
+            else:
+                organization_ids = self.request.user.organizace_podstrom_ids
+                filter_historie = {"uzivatel__organizace__in": organization_ids}
             filtered_our = Historie.objects.filter(**filter_historie)
             return Q(**{"historie_zapsat__in": filtered_our})
         else:

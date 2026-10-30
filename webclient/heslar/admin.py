@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib import admin
+from django.db import connection, transaction
 from django.http import StreamingHttpResponse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
@@ -448,6 +449,24 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
         "web",
     )
     readonly_fields = ("ident_cely",)
+
+    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
+        """Serializuje změny organizací, aby kontrola hierarchie pracovala s aktuálním stromem.
+
+        :param request: Požadavek správce; při metodě POST spouští transakční zpracování změny.
+        :param object_id: Identifikátor upravované organizace, případně ``None`` při vytvoření.
+        :param form_url: Cílová URL formuláře správy.
+        :param extra_context: Dodatečný kontext předaný standardnímu formuláři správy.
+        :return: HTTP odpověď vytvořená standardním pohledem Django Admin.
+        """
+        if request.method == "POST":
+            with transaction.atomic():
+                organization_table = connection.ops.quote_name(Organizace._meta.db_table)
+                with connection.cursor() as cursor:
+                    # Serialize hierarchy edits so clean_soucast validates against the committed tree.
+                    cursor.execute(f"LOCK TABLE {organization_table} IN SHARE ROW EXCLUSIVE MODE")
+                return super().changeform_view(request, object_id, form_url, extra_context)
+        return super().changeform_view(request, object_id, form_url, extra_context)
 
     def has_delete_permission(self, request, obj=None):
         """
