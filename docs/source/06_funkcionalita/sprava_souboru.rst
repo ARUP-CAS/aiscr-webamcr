@@ -1,6 +1,19 @@
 Správa souborů
 ================================
 
+Odstranění GPS z fotografií PAS
+-------------------------------
+
+Před uložením fotografií JPEG, PNG a TIFF se odstraňují GPS údaje z EXIF.
+JPEG se čistí bez dekódování a rekomprese obrazových dat. PNG a TIFF se
+zpracovávají do 200 milionů pixelů; větší obrázky se odmítnou, protože jejich
+zpracování vyžaduje úplné dekódování do paměti.
+
+Při chybě čtení, čištění, ukládání nebo ověření výsledku se původní soubor
+nearchivuje. Webové nahrání i nahrazení souboru a PAS API vrátí HTTP 500;
+API zároveň uvolní zámek záznamu. Administrativní import a příkaz
+``remove_gps_data`` zpracují výjimku jako chybu souboru.
+
 Adresářová struktura
 ---------------------
 

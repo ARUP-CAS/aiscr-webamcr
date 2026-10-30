@@ -6,7 +6,7 @@ import re
 import time
 import zipfile
 from enum import Enum
-from typing import Optional, Union
+from typing import Final, Optional, Union
 
 import magic
 import piexif
@@ -14,6 +14,7 @@ import py7zr
 import rarfile
 from core.constants import ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_BADATEL_ID
 from core.distribution_names import IMPLICIT_DISTRIBUTION_NAMES, ORIGINAL_DISTRIBUTION_NAME
+from core.exceptions import GpsDataRemovalError, GpsImagePixelLimitError
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.cache import cache
@@ -33,7 +34,7 @@ from heslar.hesla_dynamicka import (
 from historie.models import Historie, HistorieVazby
 from nalez.models import NalezObjekt, NalezPredmet
 from notifikace_projekty.models import Pes
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageFile, PngImagePlugin, TiffImagePlugin, UnidentifiedImageError
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 from uzivatel.models import User
@@ -51,6 +52,31 @@ from .constants import (
 from .repository_connector import RepositoryBinaryFile
 
 logger = logging.getLogger(__name__)
+
+# EXIF tag odkazující na adresář GPS metadat.
+EXIF_GPS_IFD_TAG: Final = 34853
+
+# Počet bajtů hlavičky pro rozpoznání obrazového formátu při čištění GPS.
+IMAGE_SIGNATURE_LENGTH: Final = 8
+
+PNG_SIGNATURE: Final = b"\x89PNG\r\n\x1a\n"
+
+# TIFF/BigTIFF: II = little-endian, MM = big-endian;
+# identifikátor 42 (*) značí TIFF, 43 (+) BigTIFF, \x00 je nulový bajt.
+TIFF_SIGNATURES: Final = (b"II*\x00", b"MM\x00*", b"II+\x00", b"MM\x00+")
+
+
+class _GpsTiffImageFile(TiffImagePlugin.TiffImageFile):
+    """TIFF dekodér s lokálním stropem pixelů pro odstranění GPS."""
+
+    def load_prepare(self):
+        """Zkontroluje i rozměr TIFF dlaždice před přidělením paměti dekodéru."""
+        if self._im is None:
+            width, height = self._tile_size
+            if width * height > Soubor.GPS_MAX_DECODE_PIXELS:
+                raise GpsImagePixelLimitError(_("core.models._GpsTiffImageFile.load_prepare.pixel_limit"))
+            self.im = Image.core.new(self.mode, self._tile_size)
+        ImageFile.ImageFile.load_prepare(self)
 
 
 class AntivirusCheckResult(Enum):
@@ -693,6 +719,36 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             logger.debug("core.models.Soubor.get_mime_type.end", extra={"mime_type": mime_type})
             return mime_type
 
+    # PNG/TIFF se dekódují celé; JPEG zpracováváme pouze jako metadata.
+    GPS_MAX_DECODE_PIXELS = 200_000_000
+
+    @classmethod
+    def _open_image_for_gps(cls, content: io.BytesIO) -> Image.Image:
+        """Otevře PNG/TIFF do 200 MP bez změny globálního limitu Pillow.
+
+        :param content: Obsah fotografie na libovolné pozici.
+        :return: Otevřený obrázek připravený ke čtení EXIF.
+        :raises GpsImagePixelLimitError: Pokud obrázek překročí strop pro úplné dekódování.
+        :raises Image.DecompressionBombError: Pokud Pillow odmítne jiný formát než PNG/TIFF.
+        """
+        content.seek(0)
+        try:
+            image = Image.open(content)
+        except Image.DecompressionBombError:
+            content.seek(0)
+            signature = content.read(IMAGE_SIGNATURE_LENGTH)
+            content.seek(0)
+            if signature == PNG_SIGNATURE:
+                image = PngImagePlugin.PngImageFile(content)
+            elif signature.startswith(TIFF_SIGNATURES):
+                image = _GpsTiffImageFile(content)
+            else:
+                raise
+        if image.width * image.height > cls.GPS_MAX_DECODE_PIXELS:
+            image.close()
+            raise GpsImagePixelLimitError(_("core.models.Soubor._open_image_for_gps.pixel_limit"))
+        return image
+
     @classmethod
     def remove_gps_data(cls, bytes_io: io.BytesIO) -> io.BytesIO:
         """
@@ -703,26 +759,39 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         tagy (např. UserComment, MakerNote apod.), automaticky je odstraní,
         aby bylo možné obrázek úspěšně uložit.
 
-        V případě jakékoli chyby vrací původní vstupní soubor beze změny.
+        U JPEG přepisuje pouze EXIF bez dekódování nebo rekomprese obrazových dat.
+        Odstranění GPS proto nezávisí na limitu pixelů Pillow ani nemění rozlišení.
+
+        PNG/TIFF zpracuje do 200 MP. Při chybě nebo překročení stropu vyvolá
+        výjimku místo předání původního souboru s GPS k archivaci.
 
         :param bytes_io: Obsah souboru připravený ke kontrole antivirem.
         :return: Vrací výsledek operace odstranění.
+        :raises GpsDataRemovalError: Pokud GPS nelze odstranit nebo ověřit výstup.
         """
         try:
-            img = Image.open(bytes_io)
-            exif_data = img.info.get("exif")
-            if exif_data:
-                exif_dict = piexif.load(exif_data)
+            bytes_io.seek(0)
+            is_jpeg = bytes_io.read(3) == b"\xff\xd8\xff"
+            bytes_io.seek(0)
+            if is_jpeg:
+                # JPEG metadata lze zpracovat bez otevření pixelů přes Pillow.
+                exif_dict = piexif.load(bytes_io.getvalue())
             else:
-                bytes_io.seek(0)
-                return bytes_io
+                img = cls._open_image_for_gps(bytes_io)
+                exif_data = img.getexif().tobytes() if img.format == "TIFF" else img.info.get("exif")
+                if exif_data:
+                    exif_dict = piexif.load(exif_data)
+                else:
+                    bytes_io.seek(0)
+                    return bytes_io
         except Exception as err:
             logger.error("core.models.Soubor.remove_gps_data.cannot_open_file", extra={"error": err})
-            bytes_io.seek(0)
-            return bytes_io
+            raise GpsDataRemovalError(_("core.models.Soubor.remove_gps_data.parse_error")) from err
         # Odstranění GPS dat, pokud existují
         if "GPS" in exif_dict and exif_dict["GPS"] != {}:
             del exif_dict["GPS"]
+            if not is_jpeg and img.format == "TIFF" and EXIF_GPS_IFD_TAG in img.tag_v2:
+                del img.tag_v2[EXIF_GPS_IFD_TAG]
         else:
             logger.debug("core.models.Soubor.remove_gps_data.no_GPS_data")
             bytes_io.seek(0)
@@ -743,8 +812,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                         "core.models.Soubor.remove_gps_data.unhandled_exif_error",
                         extra={"error": msg},
                     )
-                    bytes_io.seek(0)
-                    return bytes_io
+                    raise GpsDataRemovalError(_("core.models.Soubor.remove_gps_data.serialize_error")) from err
                 tag = int(match.group(1))
                 ifd = match.group(2)
                 logger.info(
@@ -756,18 +824,24 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         else:
             # nepodařilo se opravit ani po několika pokusech
             logger.error("core.models.Soubor.remove_gps_data.exif_cleanup_failed")
-            bytes_io.seek(0)
-            return bytes_io
+            raise GpsDataRemovalError(_("core.models.Soubor.remove_gps_data.repair_exhausted"))
         try:
             output_io = io.BytesIO()
-            img.save(output_io, format=img.format, exif=new_exif_bytes)
+            if is_jpeg:
+                piexif.insert(new_exif_bytes, bytes_io.getvalue(), output_io)
+                if piexif.load(output_io.getvalue()).get("GPS"):
+                    raise GpsDataRemovalError(_("core.models.Soubor.remove_gps_data.jpeg_verification_error"))
+            else:
+                img.save(output_io, format=img.format, exif=new_exif_bytes)
+                with cls._open_image_for_gps(output_io) as stored:
+                    if stored.getexif().get_ifd(EXIF_GPS_IFD_TAG):
+                        raise GpsDataRemovalError(_("core.models.Soubor.remove_gps_data.verification_error"))
             output_io.seek(0)
             logger.debug("core.models.Soubor.remove_gps_data.GPS_data_removed")
             return output_io
         except Exception as err:
             logger.error("core.models.Soubor.remove_gps_data.cannot_save_file", extra={"error": err})
-            bytes_io.seek(0)
-            return bytes_io
+            raise GpsDataRemovalError(_("core.models.Soubor.remove_gps_data.save_error")) from err
 
     # Povolené MIME typy podle typu uploadu — odpovídá whitelistu v `static/js/dz.js`.
     PAS_ACCEPTED_MIMES = frozenset(

@@ -6,6 +6,17 @@ Definice modelů.
 Třídy
 ------
 
+.. py:class:: _GpsTiffImageFile
+
+   TIFF dekodér s lokálním stropem pixelů pro odstranění GPS.
+
+   **Metody:**
+
+   .. py:method:: load_prepare()
+
+      Zkontroluje i rozměr TIFF dlaždice před přidělením paměti dekodéru.
+
+
 .. py:class:: AntivirusCheckResult
 
    Implementuje komponentu ``AntivirusCheckResult`` v rámci aplikace.
@@ -209,6 +220,15 @@ Třídy
       :param check_archive: Parametr ``check_archive`` předává se do volání ``debug()``, ovlivňuje větvení podmínek.
       :return: Načtená data odpovídající zadaným vstupům.
 
+   .. py:method:: _open_image_for_gps()
+
+      Otevře PNG/TIFF do 200 MP bez změny globálního limitu Pillow.
+
+      :param content: Obsah fotografie na libovolné pozici.
+      :return: Otevřený obrázek připravený ke čtení EXIF.
+      :raises GpsImagePixelLimitError: Pokud obrázek překročí strop pro úplné dekódování.
+      :raises Image.DecompressionBombError: Pokud Pillow odmítne jiný formát než PNG/TIFF.
+
    .. py:method:: remove_gps_data()
 
       Odstraní GPS metadata z fotografie uložené v paměti.
@@ -218,10 +238,15 @@ Třídy
       tagy (např. UserComment, MakerNote apod.), automaticky je odstraní,
       aby bylo možné obrázek úspěšně uložit.
 
-      V případě jakékoli chyby vrací původní vstupní soubor beze změny.
+      U JPEG přepisuje pouze EXIF bez dekódování nebo rekomprese obrazových dat.
+      Odstranění GPS proto nezávisí na limitu pixelů Pillow ani nemění rozlišení.
+
+      PNG/TIFF zpracuje do 200 MP. Při chybě nebo překročení stropu vyvolá
+      výjimku místo předání původního souboru s GPS k archivaci.
 
       :param bytes_io: Obsah souboru připravený ke kontrole antivirem.
       :return: Vrací výsledek operace odstranění.
+      :raises GpsDataRemovalError: Pokud GPS nelze odstranit nebo ověřit výstup.
 
    .. py:method:: check_mime_for_url()
 

@@ -23,6 +23,7 @@ from core.constants import (
     SAMOSTATNY_NALEZ_RELATION_TYPE,
 )
 from core.distribution_names import ORIGINAL_DISTRIBUTION_NAME
+from core.exceptions import GpsDataRemovalError
 from core.forms import CheckStavNotChangedForm, RenameSouborForm, TranslationImportForm
 from core.ident_cely import get_record_from_ident
 from core.message_constants import (
@@ -904,7 +905,16 @@ class BasePostUploadView(View):
             help_translation = _("core.views.post_upload.antivirus_check.check_failed")
             return JsonResponse({"error": help_translation}, status=400)
         soubor.seek(0)
-        return self.handle_upload(request, soubor, soubor_data, *args, **kwargs)
+        try:
+            return self.handle_upload(request, soubor, soubor_data, *args, **kwargs)
+        except GpsDataRemovalError:
+            logger.exception(
+                "core.views.post_upload.gps_cleanup_failed",
+                extra={"soubor": soubor.name, "user": request.user.pk},
+            )
+            if self.fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                self.fedora_transaction.rollback_transaction()
+            return self._unknown_error_response()
 
     def handle_upload(self, request, soubor, soubor_data, *args, **kwargs):
         """

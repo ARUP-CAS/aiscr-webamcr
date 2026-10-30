@@ -122,6 +122,14 @@ class ZaznamSouborNotmatching(Exception):
         self.message = message
 
 
+class GpsDataRemovalError(Exception):
+    """Fotografii nelze bezpečně zbavit GPS metadat a nesmí se archivovat."""
+
+
+class GpsImagePixelLimitError(Exception):
+    """Obrázek nebo TIFF dlaždice překračuje limit pixelů pro odstranění GPS."""
+
+
 class StateChangedError(Exception):
     """Implementuje komponentu ``StateChangedError`` v rámci aplikace."""
 
