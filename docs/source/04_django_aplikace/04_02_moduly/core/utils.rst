@@ -682,3 +682,21 @@ Funkce
 
    :param hodnota: Libovolná hodnota - dict, list, chyby formuláře či formsetu.
    :return: JSON řetězec (``ensure_ascii=False``).
+
+.. py:function:: iter_pk_chunks(queryset, chunk_size)
+
+   Prochází queryset po dávkách seřazených podle primárního klíče (keyset stránkování).
+
+   Náhrada za ``QuerySet.iterator()``: obě databázová spojení mají ``DISABLE_SERVER_SIDE_CURSORS = True``,
+   takže ``iterator()`` nestreamuje, ale jedním ``SELECT`` natáhne celou výslednou sadu na klienta.
+   Takový dotaz musí včetně přenosu všech řádků doběhnout v rámci ``statement_timeout`` a u velkých
+   tabulek drží celou sadu v paměti procesu. Tato funkce místo toho načítá každou dávku samostatným
+   dotazem ``... WHERE pk > posledni_pk ORDER BY pk LIMIT chunk_size``, v paměti je vždy jen jedna
+   dávka. Prefetch a ``select_related`` definované na querysetu se aplikují na každou dávku.
+
+   Záznamy přidané během průchodu s vyšším PK se ještě zpracují, smazané se přeskočí; procházející
+   kód nesmí měnit PK ani příslušnost záznamu do iterované množiny.
+
+   :param queryset: Queryset ke zpracování (přeřadí se podle ``pk``).
+   :param chunk_size: Počet záznamů načtených jedním dotazem.
+   :return: Generátor instancí modelu v pořadí podle primárního klíče.

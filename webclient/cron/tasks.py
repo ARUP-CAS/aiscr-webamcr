@@ -67,6 +67,7 @@ from core.translation import format_message
 from core.utils import (
     check_import_report_directory,
     hodnota_pro_log,
+    iter_pk_chunks,
     translate_status_value,
     upsert_import_report_index_entry,
 )
@@ -692,36 +693,6 @@ def update_snapshot_fields():
         logger.error("core.cron.update_snapshot_fields.do.error", extra={"error": err})
 
 
-REDIS_SNAPSHOT_BATCH_SIZE = 1000
-
-
-def _iterate_by_pk(query, batch_size=REDIS_SNAPSHOT_BATCH_SIZE):
-    """
-    Prochází queryset po dávkách seřazených podle primárního klíče (keyset stránkování).
-
-    Každá dávka je samostatný krátký ``SELECT ... WHERE pk > posledni_pk ORDER BY pk LIMIT batch_size``.
-    Na rozdíl od ``QuerySet.iterator()`` při ``DISABLE_SERVER_SIDE_CURSORS = True`` se tak nestahuje
-    celá tabulka jedním dotazem, který musí (včetně přenosu všech řádků klientovi) doběhnout
-    v rámci ``statement_timeout``. Prefetch definovaný na querysetu se aplikuje na každou dávku.
-
-    :param query: Queryset, který se má projít.
-    :param batch_size: Počet záznamů načtených jedním dotazem.
-    :return: Generátor instancí modelu v pořadí podle primárního klíče.
-    """
-    last_pk = None
-    while True:
-        batch_query = query.order_by("pk")
-        if last_pk is not None:
-            batch_query = batch_query.filter(pk__gt=last_pk)
-        batch = list(batch_query[:batch_size])
-        if not batch:
-            return
-        yield from batch
-        if len(batch) < batch_size:
-            return
-        last_pk = batch[-1].pk
-
-
 def _update_redis_snapshots_for_class(r, current_class, rewrite_existing):
     """
     Aktualizuje Redis snapshoty všech záznamů jedné třídy modelu.
@@ -746,7 +717,7 @@ def _update_redis_snapshots_for_class(r, current_class, rewrite_existing):
         )
     i = 0
     change_items = 0
-    for item in _iterate_by_pk(query):
+    for item in iter_pk_chunks(query):
         if rewrite_existing or not r.exists(item.redis_snapshot_id):
             key, value = item.generate_redis_snapshot()
             if key and value:
@@ -766,7 +737,7 @@ def update_all_redis_snapshots(rewrite_existing=False, classes=None):
     """
     Aktualizuje Redis snapshots pro všechny nebo vybrané třídy modelů.
 
-    Záznamy se načítají po dávkách podle primárního klíče (viz ``_iterate_by_pk``). Chyba při zpracování
+    Záznamy se načítají po dávkách podle primárního klíče (viz ``core.utils.iter_pk_chunks``). Chyba při zpracování
     jedné třídy se zaloguje a pokračuje se další třídou; pokud některá třída selže, úloha na konci
     vyvolá ``RuntimeError``, aby byl běh v Celery označen jako neúspěšný.
 
