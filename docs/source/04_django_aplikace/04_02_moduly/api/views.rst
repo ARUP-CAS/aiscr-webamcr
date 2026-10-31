@@ -1102,13 +1102,17 @@ Třídy
 
    .. py:method:: post()
 
-      Obsluhuje HTTP metodu POST.
+      Ověří přihlašovací údaje a vrátí platný API token uživatele.
 
-      :param request: Parametr ``request`` předává se do volání ``get_serializer()``, pracuje se s atributy ``data``.
-      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+      Po úspěšném ověření vyšle signál ``user_logged_in`` (bez vytvoření session), takže se stejně
+      jako při přihlášení do AMČR aktualizuje ``last_login`` a zapíše ``UzivatelPrihlaseniLog``.
+      Token starší než ``TOKEN_EXPIRATION_HOURS`` se nahradí novým.
 
-      :return: Vrací výsledek volání ``Response()``.
+      :param request: Požadavek s ``username`` a ``password`` v ``request.data``.
+      :param args: Poziční argumenty pohledu (nepoužívají se).
+      :param kwargs: Pojmenované argumenty pohledu (nepoužívají se).
+      :return: ``Response`` s klíčem ``token``.
+      :raises ValidationError: Při neplatných přihlašovacích údajích (DRF vrátí HTTP 400).
 
 
 Funkce
