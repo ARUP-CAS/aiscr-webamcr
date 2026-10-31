@@ -334,6 +334,34 @@ _ADMIN_REQUEST_TYPES = frozenset(
     }
 )
 
+#: Požadavky, které do Fedory posílají obsah binárního souboru. Fedora odpoví až po uložení
+#: a ověření digestu celého souboru, proto mají delší read timeout (#4454).
+_CONTENT_REQUEST_TYPES = frozenset(
+    {
+        FedoraRequestType.CREATE_BINARY_FILE_CONTENT,
+        FedoraRequestType.CREATE_BINARY_FILE_THUMB,
+        FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE,
+        FedoraRequestType.UPDATE_BINARY_FILE_CONTENT,
+        FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB,
+        FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE,
+        FedoraRequestType.UPDATE_DISTRIBUTION_CONTENT,
+        FedoraRequestType.CREATE_DISTRIBUTION_CONTENT,
+    }
+)
+
+
+def _get_fedora_timeout(content: bool = False) -> tuple[float, float]:
+    """
+    Vrátí timeout ``(connect, read)`` pro požadavek do Fedory.
+
+    :param content: ``True`` pro přenos obsahu binárního souboru nebo commit transakce,
+        kde se použije ``FEDORA_CONTENT_READ_TIMEOUT``; jinak ``FEDORA_READ_TIMEOUT``.
+    :return: Dvojice ``(connect, read)`` v sekundách pro parametr ``timeout`` knihovny ``requests``.
+    """
+    read_timeout = settings.FEDORA_CONTENT_READ_TIMEOUT if content else settings.FEDORA_READ_TIMEOUT
+    return settings.FEDORA_CONNECT_TIMEOUT, read_timeout
+
+
 #: Typy požadavků na smazání binárního souboru, u kterých se chybová odpověď ověřuje,
 #: zda soubor mezitím nesmazal souběžný požadavek (issue #4174).
 _BINARY_FILE_DELETE_REQUEST_TYPES = frozenset(
@@ -713,6 +741,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         :param model_name: Název modelu používaný pro cílení operace.
 
             :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+            :raises FedoraNoResponseError: Pokud Fedora na některý z dotazů neodpoví (výpadek spojení,
+                vypršení timeoutu).
         """
         logger.debug("core_repository_connector.check_container_is_deleted.start", extra={"ident_cely": ident_cely})
 
@@ -726,7 +756,16 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                 :return: Vrací proměnná ``response``.
             """
             auth = cls._get_auth(request_type)
-            response = cls._get_session(request_type).get(url, auth=auth, verify=False)
+            try:
+                response = cls._get_session(request_type).get(
+                    url, auth=auth, verify=False, timeout=_get_fedora_timeout()
+                )
+            except requests.exceptions.RequestException as exc:
+                logger.error(
+                    "core_repository_connector.check_container_is_deleted.request_failed",
+                    extra={"request_url": url, "request_type": request_type, "error": exc},
+                )
+                raise FedoraNoResponseError(url, str(exc), None, fedora_transaction=None) from exc
             return response
 
         result = send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
@@ -808,8 +847,10 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         request_type = FedoraRequestType.GET_BINARY_FILE_CONTAINER
         try:
+            # Krátký read timeout záměrně: jde jen o doplňující dotaz po chybě a jeho selhání
+            # se vyhodnotí jako „zdroj existuje“, takže na něj nemá smysl čekat výchozích 300 s.
             response = self._get_session(request_type).get(
-                url, auth=self._get_auth(request_type), verify=False, timeout=10
+                url, auth=self._get_auth(request_type), verify=False, timeout=(settings.FEDORA_CONNECT_TIMEOUT, 10)
             )
         except requests.exceptions.RequestException as exc:
             logger.warning(
@@ -839,6 +880,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             :raises FedoraBinaryFileAlreadyDeletedError: Vyvolá se, pokud smazání binárního souboru skončí
                 chybou a ``_is_resource_gone`` potvrdí, že soubor už ve Fedoře není.
             :raises FedoraError: Vyvolá se při jiné chybové odpovědi Fedory.
+            :raises FedoraNoResponseError: Vyvolá se, pokud se zápisový požadavek nepodaří odeslat
+                nebo Fedora neodpoví v rámci timeoutu (``FEDORA_READ_TIMEOUT``, u obsahu souborů
+                ``FEDORA_CONTENT_READ_TIMEOUT``).
         """
         extra = {"info": url, "request_type": request_type, "transaction": self.transaction_uid}
         if isinstance(data, str) and len(data) < 1000:
@@ -846,6 +890,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         logger.debug("core_repository_connector._send_request.start", extra=extra)
         auth = self._get_auth(request_type)
         session = self._get_session(request_type)
+        timeout = _get_fedora_timeout(content=request_type in _CONTENT_REQUEST_TYPES)
         response = None
         if self.transaction_uid:
             if headers is None:
@@ -879,7 +924,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             FedoraRequestType.GET_DISTRIBUTION_HISTORIE,
         ):
             try:
-                response = session.get(url, headers=headers, auth=auth, verify=False)
+                response = session.get(url, headers=headers, auth=auth, verify=False, timeout=timeout)
             except requests.exceptions.RequestException as exc:
                 logger.warning(
                     "core_repository_connector._send_request.get_request_failed",
@@ -892,20 +937,20 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.CREATE_CONTAINER,
                     FedoraRequestType.CREATE_BINARY_FILE_CONTAINER,
                 ):
-                    response = session.post(url, headers=headers, data=data, auth=auth, verify=False)
+                    response = session.post(url, headers=headers, data=data, auth=auth, verify=False, timeout=timeout)
                 elif request_type in (
                     FedoraRequestType.CREATE_METADATA,
                     FedoraRequestType.RECORD_DELETION_ADD_MARK,
                     FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4,
                     FedoraRequestType.CREATE_LINK,
                 ):
-                    response = session.post(url, headers=headers, data=data, auth=auth, verify=False)
+                    response = session.post(url, headers=headers, data=data, auth=auth, verify=False, timeout=timeout)
                 elif request_type in (
                     FedoraRequestType.CREATE_BINARY_FILE_CONTENT,
                     FedoraRequestType.CREATE_BINARY_FILE_THUMB,
                     FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE,
                 ):
-                    response = session.post(url, headers=headers, data=data, auth=auth, verify=False, timeout=10)
+                    response = session.post(url, headers=headers, data=data, auth=auth, verify=False, timeout=timeout)
                 elif request_type in (
                     FedoraRequestType.UPDATE_METADATA,
                     FedoraRequestType.UPDATE_BINARY_FILE_CONTENT,
@@ -917,9 +962,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.CREATE_DISTRIBUTION_CONTAINER,
                     FedoraRequestType.CREATE_DISTRIBUTION_CONTENT,
                 ):
-                    response = session.put(url, headers=headers, data=data, auth=auth, verify=False)
+                    response = session.put(url, headers=headers, data=data, auth=auth, verify=False, timeout=timeout)
                 elif request_type == FedoraRequestType.CREATE_BINARY_FILE:
-                    response = session.post(url, headers=headers, auth=auth, data=data, verify=False)
+                    response = session.post(url, headers=headers, auth=auth, data=data, verify=False, timeout=timeout)
                 elif request_type in (
                     FedoraRequestType.DELETE_CONTAINER,
                     FedoraRequestType.DELETE_TOMBSTONE,
@@ -931,7 +976,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5,
                     FedoraRequestType.DELETE_DISTRIBUTION,
                 ):
-                    response = session.delete(url, headers=headers, auth=auth)
+                    response = session.delete(url, headers=headers, auth=auth, timeout=timeout)
                 elif request_type in (
                     FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
                     FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
@@ -946,8 +991,10 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.BINARY_FILE_CHILD_UPDATE_RDF_DATA,
                     FedoraRequestType.DISTRIBUTION_CONTENT_UPDATE_RDF_DATA,
                 ):
-                    response = session.patch(url, auth=auth, headers=headers, data=data)
-            except requests.exceptions.ConnectionError as exc:
+                    response = session.patch(url, auth=auth, headers=headers, data=data, timeout=timeout)
+            # ``ReadTimeout`` není potomkem ``ConnectionError``; bez něj by vypršení timeoutu obešlo
+            # ``FedoraNoResponseError`` a rollback v ``handle_fedora_error`` (#4454).
+            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as exc:
                 logger.error(
                     "core_repository_connector._send_request.connection_error",
                     extra={
@@ -3157,7 +3204,8 @@ class FedoraTransaction(BaseFedoraTransaction):
         :return: Textová reprezentace UID transakce.
 
             :raises FedoraTransactionUnsupportedOperationError: Vyvolá se při splnění podmínky ``operation == FedoraTransactionOperation.ROLLBACK``.
-            :raises FedoraTransactionCommitFailedError: Vyvolá se při splnění podmínky ``not str(response.status_code).startswith('2')``.
+            :raises FedoraTransactionCommitFailedError: Vyvolá se při splnění podmínky ``not str(response.status_code).startswith('2')``;
+                nebo pokud Fedora na požadavek neodpoví (výpadek spojení, vypršení timeoutu).
         """
         logger.debug(
             "core_repository_connector.FedoraTransaction.commit_transaction.start", extra={"transaction": self.uid}
@@ -3167,8 +3215,29 @@ class FedoraTransaction(BaseFedoraTransaction):
             f"/rest/fcr:tx/{self.uid}"
         )
         auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
+        session = _get_fedora_session(admin=True)
+        try:
+            if operation == FedoraTransactionOperation.COMMIT:
+                # Commit přesouvá obsah transakce do OCFL včetně nahraných souborů, proto timeout jako u obsahu.
+                response = session.put(url, auth=auth, verify=False, timeout=_get_fedora_timeout(content=True))
+            elif operation == FedoraTransactionOperation.ROLLBACK:
+                response = session.delete(url, auth=auth, verify=False, timeout=_get_fedora_timeout())
+            else:
+                raise FedoraTransactionUnsupportedOperationError(operation)
+        except requests.exceptions.RequestException as exc:
+            # Po vypršení timeoutu commitu není jisté, zda Fedora transakci zapsala; ``ident_cely``
+            # slouží k ručnímu dorovnání stejně jako u chybové odpovědi níže.
+            logger.error(
+                "core_repository_connector.FedoraTransaction.commit_transaction.request_failed",
+                extra={
+                    "transaction": self.uid,
+                    "operation": operation.name,
+                    "error": exc,
+                    "ident_cely": getattr(self.main_record, "ident_cely", None),
+                },
+            )
+            raise FedoraTransactionCommitFailedError(f"{operation.name}: {exc}") from exc
         if operation == FedoraTransactionOperation.COMMIT:
-            response = _get_fedora_session(admin=True).put(url, auth=auth, verify=False)
             try:
                 self._save_transaction_result_to_redis(FedoraTransactionResult.COMMITED)
             except ResponseError as err:
@@ -3176,8 +3245,7 @@ class FedoraTransaction(BaseFedoraTransaction):
                     "core_repository_connector.FedoraTransaction._save_transaction_result_to_redis.commited.failed",
                     extra={"transaction": self.uid, "error": err},
                 )
-        elif operation == FedoraTransactionOperation.ROLLBACK:
-            response = _get_fedora_session(admin=True).delete(url, auth=auth, verify=False)
+        else:
             try:
                 self._save_transaction_result_to_redis(FedoraTransactionResult.ABORTED)
             except ResponseError as err:
@@ -3185,8 +3253,6 @@ class FedoraTransaction(BaseFedoraTransaction):
                     "core_repository_connector.FedoraTransaction._save_transaction_result_to_redis.rollback.failed",
                     extra={"transaction": self.uid, "error": err},
                 )
-        else:
-            raise FedoraTransactionUnsupportedOperationError(operation)
         if not str(response.status_code).startswith("2"):
             logger.error(
                 "core_repository_connector.FedoraTransaction.commit_transaction.failed",
@@ -3268,8 +3334,8 @@ class FedoraTransaction(BaseFedoraTransaction):
         )
         auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
         try:
-            response = _get_fedora_session().post(url, auth=auth, verify=False)
-        except requests.exceptions.ConnectionError as exc:
+            response = _get_fedora_session().post(url, auth=auth, verify=False, timeout=_get_fedora_timeout())
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as exc:
             logger.error(
                 "core_repository_connector.FedoraTransaction.__create_transaction.connection_error",
                 extra={"request_url": url, "error": exc},
