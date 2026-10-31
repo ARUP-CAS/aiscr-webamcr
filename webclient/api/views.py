@@ -3569,6 +3569,18 @@ class GetUserInfo(APIView):
         "get",
     ]
 
+    def __init__(self, **kwargs):
+        """
+        Inicializuje pohled a nastaví příznak ``is_exception`` na ``False``.
+
+        Příznak přepne ``handle_exception`` na ``True``; podle něj se chybová odpověď
+        vykreslí jako JSON místo XML.
+
+        :param kwargs: Atributy pohledu předané z ``as_view()``, předávají se do ``APIView.__init__()``.
+        """
+        super().__init__(**kwargs)
+        self.is_exception = False
+
     def get(self, request, format=None):
         """
         Vrací výsledek operace.
@@ -3594,36 +3606,34 @@ class GetUserInfo(APIView):
 
     def perform_content_negotiation(self, request, force=False):
         """
-        Provádí operaci perform content negotiation.
+        Vybere renderer odpovědi; po výjimce vždy JSON, jinak standardní negociace DRF (XML).
 
-        :param request: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
-        :param force: Parametr ``force`` se předává do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací hodnotu podle větve zpracování, typicky: n-tici, výsledek volání ``perform_content_negotiation()``.
+        :param request: Požadavek DRF předávaný do standardní negociace.
+        :param force: Předává se do ``APIView.perform_content_negotiation()``; při ``True`` se při
+            neshodě s hlavičkou ``Accept`` použije první renderer místo vyhození ``NotAcceptable``.
+        :return: Dvojice ``(renderer, media_type)``.
         """
-        try:
-            self.is_exception
+        if self.is_exception:
             return JSONRenderer(), JSONRenderer.media_type
-        except Exception:
-            return super().perform_content_negotiation(request, force)
+        return super().perform_content_negotiation(request, force)
 
     def finalize_response(self, request, response, *args, **kwargs):
         """
-        Provádí operaci finalize response.
+        Dokončí odpověď; po výjimce přepne renderer požadavku na JSON.
 
-        :param request: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, ``finalize_response()``, pracuje se s atributy ``accepted_renderer``, ``accepted_media_type``, vstupuje do návratové hodnoty.
-        :param response: Textový nebo strukturální vstup `response` používaný při sestavení nebo zpracování obsahu.
-        :param args: Parametr ``args`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
+        Případné výjimky se nepotlačují a propadnou do standardního zpracování Django/DRF.
 
-            :return: Vrací výsledek volání ``finalize_response()``.
+        :param request: Požadavek DRF; po výjimce se mu přepíšou ``accepted_renderer`` a ``accepted_media_type``.
+        :param response: Odpověď vrácená z ``get()`` nebo ``handle_exception()``.
+        :param args: Poziční argumenty předávané do ``APIView.finalize_response()``.
+        :param kwargs: Pojmenované argumenty předávané do ``APIView.finalize_response()``.
+        :return: Odpověď dokončená voláním ``APIView.finalize_response()``.
         """
-        try:
-            self.is_exception
-            neg = self.perform_content_negotiation(request, force=True)
-            request.accepted_renderer, request.accepted_media_type = neg
-        finally:
-            return super().finalize_response(request, response, *args, **kwargs)
+        if self.is_exception:
+            request.accepted_renderer, request.accepted_media_type = self.perform_content_negotiation(
+                request, force=True
+            )
+        return super().finalize_response(request, response, *args, **kwargs)
 
 
 @method_decorator(odstavka_in_progress, name="post")
