@@ -14,7 +14,8 @@ selhal zdrojový obrázek, ale ne ikona, ze které se dělá náhradní náhled.
 import io
 from unittest import mock
 
-from core import repository_connector
+from core import models
+from core.models import Soubor
 from core.repository_connector import THUMB_MAX_PX, FedoraRepositoryConnector, ThumbFailureReason
 from django.test import SimpleTestCase
 from PIL import Image
@@ -89,7 +90,7 @@ class GenerateThumbVelkyObrazekTest(SimpleTestCase):
     def test_jpeg_nad_stropem_nahledu_skonci_ikonou_s_duvodem(self):
         """JPEG nad ``THUMB_JPEG_MAX_PIXELS`` dostane ikonu a selhání je v logu s důvodem ``pixel_limit``."""
         with mock.patch.object(Image, "MAX_IMAGE_PIXELS", _NIZKY_LIMIT_PILLOW), mock.patch.object(
-            repository_connector, "THUMB_JPEG_MAX_PIXELS", 2 * _NIZKY_LIMIT_PILLOW
+            models, "THUMB_JPEG_MAX_PIXELS", 2 * _NIZKY_LIMIT_PILLOW
         ):
             with self.assertLogs("core.repository_connector", level="WARNING") as logy:
                 nahled = _generate_thumb("foto.jpg", _obrazek("JPEG"), large=False)
@@ -107,7 +108,7 @@ class GenerateThumbVelkyObrazekTest(SimpleTestCase):
 
     def test_vycerpani_pameti_se_v_logu_odlisi(self):
         """``MemoryError`` při otevření obrázku se zaloguje s důvodem ``out_of_memory``."""
-        puvodni = repository_connector._open_image_for_thumb
+        puvodni = Soubor._open_image_for_thumb
         volani = iter([MemoryError()])
 
         def _otevri(image):
@@ -116,7 +117,7 @@ class GenerateThumbVelkyObrazekTest(SimpleTestCase):
                 raise chyba
             return puvodni(image)
 
-        with mock.patch.object(repository_connector, "_open_image_for_thumb", side_effect=_otevri):
+        with mock.patch.object(Soubor, "_open_image_for_thumb", side_effect=_otevri):
             with self.assertLogs("core.repository_connector", level="WARNING") as logy:
                 nahled = _generate_thumb("foto.jpg", _obrazek("JPEG"), large=False)
         self.assertEqual(_rozmer(nahled), _NAHLED_Z_IKONY)
@@ -124,7 +125,7 @@ class GenerateThumbVelkyObrazekTest(SimpleTestCase):
 
     def test_other_error_is_logged_separately(self):
         """Jiná chyba dekodéru nesmí být zaměněna za paměť ani limit pixelů."""
-        original = repository_connector._open_image_for_thumb
+        original = Soubor._open_image_for_thumb
         calls = iter([OSError("invalid image")])
 
         def open_image(image):
@@ -133,7 +134,7 @@ class GenerateThumbVelkyObrazekTest(SimpleTestCase):
                 raise error
             return original(image)
 
-        with mock.patch.object(repository_connector, "_open_image_for_thumb", side_effect=open_image):
+        with mock.patch.object(Soubor, "_open_image_for_thumb", side_effect=open_image):
             with self.assertLogs("core.repository_connector", level="WARNING") as logs:
                 thumbnail = _generate_thumb("photo.jpg", _obrazek("JPEG"), large=False)
         self.assertEqual(_rozmer(thumbnail), _NAHLED_Z_IKONY)

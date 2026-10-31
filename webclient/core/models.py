@@ -49,7 +49,7 @@ from .constants import (
     SAMOSTATNY_NALEZ_RELATION_TYPE,
     SOUBOR_RELATION_TYPE,
 )
-from .repository_connector import RepositoryBinaryFile
+from .repository_connector import RepositoryBinaryFile, ThumbFailureReason
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +58,12 @@ EXIF_GPS_IFD_TAG: Final = 34853
 
 EXIF_SIGNATURE: Final = b"Exif\x00\x00"
 JPEG_APP1: Final = "APP1"
+
+#: Strop počtu pixelů, do kterého se náhled vygeneruje i z JPEG nad výchozím limitem Pillow
+#: (``Image.MAX_IMAGE_PIXELS``, chyba nad zhruba 179 MP). JPEG se dekóduje přes ``Image.draft``
+#: rovnou v měřítku 1/8, takže 1 Gpx stojí v paměti řádově desítky MB (issue #4229).
+#: Ostatní formáty se dekódují celé, a proto pro ně platí výchozí limit Pillow beze změny.
+THUMB_JPEG_MAX_PIXELS = 1_000_000_000
 
 # Značky JPEG a délka segmentu zahrnující samotné délkové pole.
 JPEG_MARKER_PREFIX: Final = 0xFF
@@ -770,6 +776,52 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     # PNG/TIFF se dekódují celé; JPEG zpracováváme pouze jako metadata.
     GPS_MAX_DECODE_PIXELS = 200_000_000
+
+    @staticmethod
+    def _open_image_for_thumb(image: io.BytesIO) -> Image.Image:
+        """
+        Otevře obrázek pro generování náhledu, u JPEG i nad výchozím limitem pixelů Pillow.
+
+        Nejdřív se zkusí běžné ``Image.open``. Pokud skončí ``DecompressionBombError`` a vstup
+        je JPEG, otevře se znovu přímo přes ``JpegImagePlugin.JpegImageFile``, který kontrolu
+        globálního ``Image.MAX_IMAGE_PIXELS`` nedělá; ten se tak nemusí měnit pro celou aplikaci.
+        Místo něj se pak uplatní strop ``THUMB_JPEG_MAX_PIXELS``. Obrázek se jen otevře,
+        nedekóduje - dekódování v nízkém rozlišení zajistí až ``Image.thumbnail``.
+
+        :param image: Binární obsah obrázku.
+        :return: Otevřený, dosud nedekódovaný obrázek.
+        :raises Image.DecompressionBombError: Pokud jde o jiný formát než JPEG nad limitem Pillow,
+            nebo o JPEG nad stropem ``THUMB_JPEG_MAX_PIXELS``.
+        """
+        try:
+            return Image.open(image)
+        except Image.DecompressionBombError:
+            image.seek(0)
+            if image.read(len(JPEG_SIGNATURE)) != JPEG_SIGNATURE:
+                raise
+        image.seek(0)
+        jpeg = JpegImagePlugin.JpegImageFile(image)
+        pixels = jpeg.width * jpeg.height
+        if pixels > THUMB_JPEG_MAX_PIXELS:
+            raise Image.DecompressionBombError(
+                f"JPEG size ({pixels} pixels) exceeds thumbnail limit of {THUMB_JPEG_MAX_PIXELS} pixels."
+            )
+        return jpeg
+
+    @staticmethod
+    def _thumb_failure_reason(err: BaseException) -> ThumbFailureReason:
+        """
+        Zařadí výjimku z generování náhledu do kategorie pro log.
+
+        :param err: Výjimka vyvolaná při otevírání nebo zmenšování obrázku.
+        :return: ``ThumbFailureReason.PIXEL_LIMIT`` při překročení limitu pixelů,
+            ``ThumbFailureReason.OUT_OF_MEMORY`` při vyčerpání paměti, jinak ``ThumbFailureReason.ERROR``.
+        """
+        if isinstance(err, Image.DecompressionBombError):
+            return ThumbFailureReason.PIXEL_LIMIT
+        if isinstance(err, MemoryError):
+            return ThumbFailureReason.OUT_OF_MEMORY
+        return ThumbFailureReason.ERROR
 
     @staticmethod
     def replace_exif(content: bytes, exif: bytes) -> bytes:
