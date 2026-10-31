@@ -139,3 +139,8 @@ Třídy
 
       :param message: Textová zpráva popisující důvod výjimky.
 
+
+.. py:class:: GpsDataRemovalError
+
+   Fotografii nelze bezpečně zbavit GPS metadat a nesmí se archivovat.
+

@@ -171,6 +171,15 @@ Distribution catalogue
      - AMČR, converted from ``cva/coco-json`` (family kept open)
      - `aiscr-webamcr#3583 <https://github.com/ARUP-CAS/aiscr-webamcr/issues/3583>`__
 
+.. note::
+
+   For PAS photographs, ``orig`` contains the image after GPS coordinates have been
+   removed from EXIF. This applies to JPEG, PNG and TIFF, and also to HEIC and HEIF;
+   HEIC/HEIF cleanup covers all images in the container. If parsing, cleanup or
+   verification fails, the file is not stored. A photograph confirmed to contain
+   no GPS is left unchanged. See :doc:`sprava_souboru` for the upload policy and
+   :doc:`/05_integrace/pas_api` for API error responses.
+
 Kept only in the record, with no file of their own:
 
 - **page classification** (``page_categories``, ``pages[].category*``). Its results are already

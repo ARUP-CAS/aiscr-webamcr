@@ -12,6 +12,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+import piexif
+import pillow_heif
 from api.models import ApiRequestLog
 from api.views import (
     _RECORD_LOCK_PREFIX,
@@ -42,6 +44,7 @@ from core.constants import (
     SN_ZAPSANY,
     ZAPSANI_SN,
 )
+from core.exceptions import GpsDataRemovalError
 from core.models import AntivirusCheckResult, Permissions, Soubor, check_permissions
 from core.repository_connector import FedoraNoResponseError
 from core.setting_models import CustomAdminSettings
@@ -60,6 +63,7 @@ from historie.models import Historie
 from lxml import etree
 from pas.models import SamostatnyNalez
 from pid.exceptions import DoiWriteError
+from PIL import Image
 from projekt.models import Projekt
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -3337,25 +3341,65 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         self.assertEqual(mock_mime.call_args.args[1], expected_path)
 
     @staticmethod
-    def _minimal_heif_container(major_brand: bytes) -> bytes:
-        """
-        Sestaví minimální ISO BMFF ``ftyp`` box s daným ``major_brand``.
+    def _heif_photo() -> bytes:
+        """Vytvoří dekódovatelnou HEIF fotografii pro test uploadu obou MIME variant."""
+        output = io.BytesIO()
+        pillow_heif.from_pillow(Image.new("RGB", (32, 32), "red")).save(output)
+        return output.getvalue()
 
-        Výstup je validní úvod HEIC/HEIF souboru (rozpoznatelný podle hlavičky),
-        nikoli kompletní obrazový soubor. Pro účely testů endpointu, který kontroluje
-        MIME typ a ukládá binární data, je tento prefix dostatečný.
+    def test_supported_photos_are_archived_without_gps(self):
+        """Každý přijímaný formát se do Fedory předá bez původních GPS souřadnic."""
+        exif = piexif.dump(
+            {
+                "GPS": {
+                    piexif.GPSIFD.GPSLatitudeRef: b"N",
+                    piexif.GPSIFD.GPSLatitude: ((50, 1), (5, 1), (0, 1)),
+                    piexif.GPSIFD.GPSLongitudeRef: b"E",
+                    piexif.GPSIFD.GPSLongitude: ((14, 1), (25, 1), (0, 1)),
+                }
+            }
+        )
+        for fmt, extension in (("JPEG", "jpg"), ("PNG", "png"), ("TIFF", "tiff"), ("HEIF", "heic"), ("HEIF", "heif")):
+            with self.subTest(format=fmt):
+                photo = io.BytesIO()
+                image = Image.new("RGB", (4, 4), "red")
+                if fmt == "HEIF":
+                    image.info["exif"] = exif
+                    pillow_heif.from_pillow(image).save(photo)
+                else:
+                    image.save(photo, format=fmt, exif=exif)
+                if fmt == "HEIF":
+                    self.assertTrue(piexif.load(pillow_heif.open_heif(photo.getvalue()).info["exif"])["GPS"])
+                else:
+                    with Image.open(io.BytesIO(photo.getvalue())) as original:
+                        self.assertTrue(original.getexif().get_ifd(34853))
+                with patch.object(self, "_mock_binary_file", wraps=self._mock_binary_file) as archive:
+                    response = self._post_file(IDENT_CELY, photo.getvalue(), filename=f"photo.{extension}")
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+                archive.assert_called_once()
+                payload = archive.call_args.args[2].getvalue()
+                if fmt == "HEIF":
+                    self.assertFalse(piexif.load(pillow_heif.open_heif(payload).info["exif"])["GPS"])
+                else:
+                    with Image.open(io.BytesIO(payload)) as stored:
+                        self.assertFalse(stored.getexif().get_ifd(34853))
 
-        :param major_brand: Čtyřznaková značka formátu (např. ``b"heic"`` nebo ``b"mif1"``).
-        :return: Bajtová sekvence odpovídající minimálnímu ``ftyp`` boxu.
-        """
-        compatible_brands = b"mif1" + b"heic" + b"heif"
-        box_body = major_brand + b"\x00\x00\x00\x00" + compatible_brands
-        box_size = (8 + len(box_body)).to_bytes(4, "big")
-        return box_size + b"ftyp" + box_body
+    def test_gps_cleanup_failure_blocks_upload_and_releases_lock(self):
+        """Chyba čištění GPS nevytvoří soubor a uvolní zámek nálezu."""
+        with patch(
+            "api.views.Soubor.remove_gps_data", side_effect=GpsDataRemovalError("GPS cleanup failed")
+        ), patch.object(self, "_mock_binary_file", wraps=self._mock_binary_file) as archive:
+            response = self._post_file(IDENT_CELY, self._minimal_photo_bytes())
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(response.data["detail"], _("core.views.post_upload.gps_cleanup_failed"))
+        archive.assert_not_called()
+        self._assert_attached_files(self.nalez, 0)
+        self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
     def test_heic_mime_is_accepted(self):
         """Soubor s MIME typem ``image/heic`` projde validací a upload skončí HTTP 201."""
-        heic_bytes = self._minimal_heif_container(b"heic")
+        heic_bytes = self._heif_photo()
 
         with (
             patch("api.views.Soubor.get_mime_types", return_value="image/heic"),
@@ -3369,7 +3413,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
 
     def test_heif_mime_is_accepted(self):
         """Soubor s MIME typem ``image/heif`` projde validací a upload skončí HTTP 201."""
-        heif_bytes = self._minimal_heif_container(b"mif1")
+        heif_bytes = self._heif_photo()
 
         with (
             patch("api.views.Soubor.get_mime_types", return_value="image/heif"),
