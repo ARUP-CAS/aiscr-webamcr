@@ -248,7 +248,8 @@ class PreparedDatabaseClone:
         """
         Nahradí cílovou databázi čistou kopií šablony a spustí přípravu další kopie.
 
-        Čeká na dokončení přípravy z předchozího volání; pokud selhala, klonuje přímo.
+        Čeká na dokončení přípravy z předchozího volání; pokud selhala nebo se připravenou kopii
+        nepodaří přejmenovat na cílovou DB, klonuje přímo, aby cílová DB po smazání nezůstala chybět.
         """
         future, self._future = self._future, None
         prepared = False
@@ -261,8 +262,17 @@ class PreparedDatabaseClone:
         with closing(self._connect()) as conn, conn.cursor() as cursor:
             self._drop(cursor, self.target)
             if prepared:
-                cursor.execute(f"ALTER DATABASE {self.next_name} RENAME TO {self.target};")
-            else:
+                try:
+                    cursor.execute(f"ALTER DATABASE {self.next_name} RENAME TO {self.target};")
+                except psycopg2.Error as err:
+                    logger.warning(
+                        "PreparedDatabaseClone: přejmenování %s na %s selhalo, klonuji přímo: %s",
+                        self.next_name,
+                        self.target,
+                        err,
+                    )
+                    prepared = False
+            if not prepared:
                 self._create(cursor, self.target)
         self._future = self._executor.submit(self._create_next)
 
@@ -834,6 +844,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             logger.error(
                 "core.tests.test_selenium.BaseSeleniumTestClass.clone_Database.general_exception", extra={"error": err}
             )
+            raise
         connection.connect()
 
     def assertIn2(self, member1, member2, container, msg=None):

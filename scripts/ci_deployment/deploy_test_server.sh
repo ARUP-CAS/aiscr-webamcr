@@ -84,9 +84,12 @@ while true; do
     # Získat seznam kontejnerů se stavem "health: starting"
     unhealthy=$(sudo docker ps --filter "health=starting" --format '{{.ID}}')
     # Služby stacku, které ještě nemají spuštěné všechny repliky (např. se stahuje image
-    # a kontejner zatím neexistuje, takže ho filtr health=starting nevidí)
-    not_running=$(sudo docker service ls --filter "name=${stack_name}" --format '{{.Name}} {{.Replicas}}' \
-        | awk '{split($2, r, "/"); if (r[1] != r[2]) print $1 " (" $2 ")"}')
+    # a kontejner zatím neexistuje, takže ho filtr health=starting nevidí). Filtr podle štítku
+    # stacku je přesný (name= je substring). Služby škálované na 0 mají 0/0, dokončené
+    # jednorázové joby ("0/1 (1/1 completed)") se přeskakují.
+    not_running=$(sudo docker service ls --filter "label=com.docker.stack.namespace=${stack_name}" \
+        --format '{{.Name}} {{.Replicas}}' \
+        | awk '!/completed/ {split($2, r, "/"); if (r[1] != r[2]) print $1 " (" $2 ")"}')
 
     if [ -z "$unhealthy" ] && [ -z "$not_running" ]; then
         print_d1 "ALL CONTAINERS ARE HEALTHY"
@@ -122,9 +125,9 @@ docker exec -i $(docker ps -q -f name=swarm_webamcr_web) script -q -c "python3 /
 # zpomalí (Run tests #169: +11 min). Page cache zůstává, jen se přeskládají stránky.
 # /proc/buddyinfo = počet volných bloků podle řádu 0-10 (4 kB až 4 MB) v zóně Normal.
 print_d1 "Memory compaction"
-grep Normal /proc/buddyinfo
+grep Normal /proc/buddyinfo || true
 if echo 1 > /proc/sys/vm/compact_memory; then
-    grep Normal /proc/buddyinfo
+    grep Normal /proc/buddyinfo || true
 else
     echo "WARNING: memory compaction failed (requires root)"
 fi
