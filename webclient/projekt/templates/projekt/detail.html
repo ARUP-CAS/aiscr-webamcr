@@ -656,26 +656,10 @@
       </div>
       <div class="card-body content-with-table-responsive">
         {% if samostatne_nalezy %}
-        <table class="table table-striped table-hover table-sm mb-0">
-          <div class="loader" style="text-align:center;" >
-            <img src="{% static "django_tables2_column_shifter/img/loader.gif" %}" style="margin:5px auto;" alt="{% trans 'templates.a11y.loading' %}"/>
-            {% trans "templates.bootstrap4Table.loading"%}
-          </div> 
-          <thead style="display: none">
-            <tr>
-              <th>{% trans "projekt.templates.detail.nalezyPart.table.nahled.label" %}</th>
-              <th>{% trans "projekt.templates.detail.nalezyPart.table.identCely.label" %}</th>
-              <th>{% trans "projekt.templates.detail.nalezyPart.table.stav.label" %}</th>
-              <th>{% trans "projekt.templates.detail.nalezyPart.table.katastr.label" %}</th>
-              <th>{% trans "projekt.templates.detail.nalezyPart.table.datumNalezu.label" %}</th>
-              <th>{% trans "projekt.templates.detail.nalezyPart.table.nalezce.label" %}</th>
-              <th>{% trans "projekt.templates.detail.nalezyPart.table.obdobi.label" %}</th>
-              <th>{% trans "projekt.templates.detail.nalezyPart.table.druhNalezu.label" %}</th>
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
+        <div class="loader" style="text-align:center;" >
+          <img src="{% static "django_tables2_column_shifter/img/loader.gif" %}" style="margin:5px auto;" alt="{% trans 'templates.a11y.loading' %}"/>
+          {% trans "templates.bootstrap4Table.loading"%}
+        </div>
         {% include "soubor_modal.html" %}
         {% else %}
         <div class="app-note">
@@ -868,8 +852,7 @@
               data: {},
               success : function(data) {
                 $('.app-card-samostatny_nalez .loader').css("display", "none");
-                $('.app-card-samostatny_nalez table thead').css("display", "table-header-group");
-                $('.app-card-samostatny_nalez table tbody').append(data);
+                $('.app-card-samostatny_nalez .content-with-table-responsive').prepend(data);
               }
       });          
         }

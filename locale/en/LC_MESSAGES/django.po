@@ -5233,6 +5233,10 @@ msgstr "Your export is being prepared."
 msgid "core.templates.core.export-modal.cancel"
 msgstr "Close"
 
+#: core/templates/core/nacist_zbyvajici.html:6
+msgid "core.templates.nacistZbyvajici.button.label"
+msgstr "Load remaining records"
+
 #: core/templates/core/filetable.html:7
 msgid "core.templates.filetable.columnHeader.nahled.label"
 msgstr "Preview"
