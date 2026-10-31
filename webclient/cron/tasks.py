@@ -2998,7 +2998,7 @@ def run_data_import(job_id, user_id, lock_token):
                             raise SouborMimeExtensionMismatchError(filename, file_extension, mimetype)
                         if mimetype not in Soubor.allowed_mimes_for_record(soubor.vazba.navazany_objekt):
                             raise SouborMimeNotAllowedError(filename, mimetype, ident_cely)
-                        if mimetype in ["image/png", "image/jpeg", "image/tiff"] and isinstance(
+                        if mimetype in Soubor.GPS_REMOVAL_MIMES and isinstance(
                             soubor.vazba.navazany_objekt, SamostatnyNalez
                         ):
                             bio = Soubor.remove_gps_data(bio)

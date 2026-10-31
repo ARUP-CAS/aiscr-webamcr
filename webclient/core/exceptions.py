@@ -125,9 +125,19 @@ class ZaznamSouborNotmatching(Exception):
 class GpsDataRemovalError(Exception):
     """Fotografii nelze bezpečně zbavit GPS metadat a nesmí se archivovat."""
 
+    reason = "error"
 
-class GpsImagePixelLimitError(Exception):
+
+class GpsImagePixelLimitError(GpsDataRemovalError):
     """Obrázek nebo TIFF dlaždice překračuje limit pixelů pro odstranění GPS."""
+
+    reason = "pixel_limit"
+
+
+class GpsImageMemoryError(GpsDataRemovalError):
+    """Při odstraňování GPS metadat došla paměť; původní soubor se nesmí archivovat."""
+
+    reason = "out_of_memory"
 
 
 class StateChangedError(Exception):

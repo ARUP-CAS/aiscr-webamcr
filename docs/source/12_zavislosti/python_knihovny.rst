@@ -111,10 +111,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 2.18.0
      - BSD License
      - https://babel.pocoo.org/
-   * - backports.zstd
-     - 1.8.0
-     - PSF-2.0
-     - https://github.com/rogdham/backports.zstd
    * - beautifulsoup4
      - 4.15.0
      - MIT License
@@ -123,6 +119,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 4.3.1
      - BSD License
      - https://github.com/celery/billiard
+   * - bleach
+     - 6.4.0
+     - Apache Software License
+     - https://github.com/mozilla/bleach
    * - brotli
      - 1.2.0
      - MIT
@@ -391,10 +391,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 9.0.41
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
-   * - piexif
-     - 1.1.3
-     - MIT License
-     - https://github.com/hMatoba/Piexif
    * - pillow
      - 12.3.0
      - MIT-CMU
@@ -420,7 +416,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/izimobil/polib/
    * - pre_commit
-     - 4.6.2
+     - 4.7.0
      - MIT
      - https://github.com/pre-commit/pre-commit
    * - prettytable
@@ -444,7 +440,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Library or Lesser General Public License (LGPL)
      - https://psycopg.org/
    * - py7zr
-     - 1.1.3
+     - 1.1.4
      - LGPL-2.1-or-later
      - https://py7zr.readthedocs.io/
    * - pyOpenSSL
@@ -671,6 +667,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0.9.2
      - MIT License
      - https://github.com/jquast/wcwidth
+   * - webencodings
+     - 0.6.1
+     - BSD License
+     - https://github.com/CourtBouillon/webencodings
    * - websocket-client
      - 1.9.2
      - Apache-2.0

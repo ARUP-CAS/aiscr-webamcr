@@ -137,6 +137,11 @@ Třídy
    Obrázek nebo TIFF dlaždice překračuje limit pixelů pro odstranění GPS.
 
 
+.. py:class:: GpsImageMemoryError
+
+   Při odstraňování GPS metadat došla paměť; původní soubor se nesmí archivovat.
+
+
 .. py:class:: StateChangedError
 
    Implementuje komponentu ``StateChangedError`` v rámci aplikace.

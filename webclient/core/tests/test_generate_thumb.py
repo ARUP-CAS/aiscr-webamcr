@@ -121,3 +121,20 @@ class GenerateThumbVelkyObrazekTest(SimpleTestCase):
                 nahled = _generate_thumb("foto.jpg", _obrazek("JPEG"), large=False)
         self.assertEqual(_rozmer(nahled), _NAHLED_Z_IKONY)
         self.assertEqual(logy.records[0].reason, ThumbFailureReason.OUT_OF_MEMORY.value)
+
+    def test_other_error_is_logged_separately(self):
+        """Jiná chyba dekodéru nesmí být zaměněna za paměť ani limit pixelů."""
+        original = repository_connector._open_image_for_thumb
+        calls = iter([OSError("invalid image")])
+
+        def open_image(image):
+            error = next(calls, None)
+            if error is not None:
+                raise error
+            return original(image)
+
+        with mock.patch.object(repository_connector, "_open_image_for_thumb", side_effect=open_image):
+            with self.assertLogs("core.repository_connector", level="WARNING") as logs:
+                thumbnail = _generate_thumb("photo.jpg", _obrazek("JPEG"), large=False)
+        self.assertEqual(_rozmer(thumbnail), _NAHLED_Z_IKONY)
+        self.assertEqual(logs.records[0].reason, "error")

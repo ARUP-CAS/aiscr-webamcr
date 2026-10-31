@@ -3,8 +3,7 @@
 import io
 from unittest import mock
 
-import piexif
-from core.exceptions import GpsDataRemovalError, GpsImagePixelLimitError
+from core.exceptions import GpsDataRemovalError, GpsImageMemoryError, GpsImagePixelLimitError
 from core.models import EXIF_GPS_IFD_TAG, Soubor
 from django.test import SimpleTestCase
 from PIL import Image, JpegImagePlugin, PngImagePlugin, TiffImagePlugin
@@ -25,15 +24,12 @@ class HighResolutionGpsTests(SimpleTestCase):
         :param size: Skutečné rozměry předlohy v pixelech.
         :param opener: Dekodér formátu pro kontrolu hlaviček bez globálního limitu Pillow.
         """
-        metadata = piexif.dump(
-            {
-                "0th": {piexif.ImageIFD.Make: b"Test camera"},
-                "GPS": {1: b"N", 2: ((50, 1), (5, 1), (0, 1))},
-            }
-        )
+        metadata = Image.Exif()
+        metadata[271] = "Test camera"
+        metadata[EXIF_GPS_IFD_TAG] = {1: "N", 2: (50.0, 5.0, 0.0)}
         content = io.BytesIO()
         with Image.new("L", size, 127) as image:
-            image.save(content, format=fmt, exif=metadata)
+            image.save(content, format=fmt, exif=metadata.tobytes())
         content.seek(0)
         # Pouze kontrola metadat používá přímý dekodér. Produkční kód ani limit se nemockují.
         with opener(io.BytesIO(content.getvalue())) as original:
@@ -46,7 +42,7 @@ class HighResolutionGpsTests(SimpleTestCase):
         with opener(result) as cleaned:
             self.assertEqual(cleaned.size, size)
             self.assertFalse(cleaned.getexif().get_ifd(EXIF_GPS_IFD_TAG))
-            self.assertEqual(cleaned.getexif()[piexif.ImageIFD.Make], "Test camera")
+            self.assertEqual(cleaned.getexif()[271], "Test camera")
 
     def test_large_jpeg(self):
         """JPEG o 16 MP se předá bez GPS a se zachovanými rozměry."""
@@ -92,7 +88,8 @@ class HighResolutionGpsTests(SimpleTestCase):
     def test_remaining_gps_in_encoded_output_is_rejected(self):
         """Kontrola výstupu nesmí přijmout kodér, který vrátí původní GPS."""
         content = io.BytesIO()
-        metadata = piexif.dump({"GPS": {1: b"N", 2: ((50, 1), (5, 1), (0, 1))}})
+        metadata = Image.Exif()
+        metadata[EXIF_GPS_IFD_TAG] = {1: "N", 2: (50.0, 5.0, 0.0)}
         with Image.new("L", (32, 32)) as image:
             image.save(content, format="PNG", exif=metadata)
         original = content.getvalue()
@@ -103,10 +100,31 @@ class HighResolutionGpsTests(SimpleTestCase):
     def test_encoder_failure_is_rejected(self):
         """Selhání zápisu PNG nesmí vrátit soubor s GPS."""
         content = io.BytesIO()
-        metadata = piexif.dump({"GPS": {1: b"N", 2: ((50, 1), (5, 1), (0, 1))}})
+        metadata = Image.Exif()
+        metadata[EXIF_GPS_IFD_TAG] = {1: "N", 2: (50.0, 5.0, 0.0)}
         with Image.new("L", (32, 32)) as image:
             image.save(content, format="PNG", exif=metadata)
         content.seek(0)
         with mock.patch.object(Image.Image, "save", side_effect=OSError("encoder failed")):
             with self.assertRaises(GpsDataRemovalError):
                 Soubor.remove_gps_data(content)
+
+    def test_cleanup_failures_keep_their_log_category(self):
+        """Limit pixelů, nedostatek paměti a jiné chyby mají rozlišitelnou příčinu."""
+        for error, reason in (
+            (Image.DecompressionBombError("pixels"), "pixel_limit"),
+            (MemoryError(), "out_of_memory"),
+            (OSError("unreadable"), "error"),
+        ):
+            with self.subTest(reason=reason):
+                with mock.patch.object(Soubor, "_open_image_for_gps", side_effect=error):
+                    with self.assertLogs("core.models", level="ERROR") as logs:
+                        with self.assertRaises(GpsDataRemovalError) as raised:
+                            Soubor.remove_gps_data(io.BytesIO(b"invalid"))
+                self.assertEqual(getattr(logs.records[0], "reason", None), reason)
+                self.assertEqual(getattr(raised.exception, "reason", None), reason)
+                self.assertIs(raised.exception.__cause__, error)
+                if reason == "out_of_memory":
+                    self.assertIsInstance(raised.exception, GpsImageMemoryError)
+                elif reason == "pixel_limit":
+                    self.assertIsInstance(raised.exception, GpsImagePixelLimitError)

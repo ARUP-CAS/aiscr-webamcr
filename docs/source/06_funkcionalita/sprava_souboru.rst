@@ -14,6 +14,12 @@ nearchivuje. Webové nahrání i nahrazení souboru a PAS API vrátí HTTP 500;
 API zároveň uvolní zámek záznamu. Administrativní import a příkaz
 ``remove_gps_data`` zpracují výjimku jako chybu souboru.
 
+Logy rozlišují příčinu v poli ``reason``: ``pixel_limit``, ``out_of_memory``
+nebo ``error``. Příkaz ``remove_gps_data`` u chyby uvádí také cestu souboru
+v poli ``file`` a samostatný počet chyb v souhrnu. Rozhodnutí o výběru
+archivovaných fotografií k dodatečné opravě a její provedení náleží správci;
+nejde o automatickou součást opravy aplikace.
+
 Adresářová struktura
 ---------------------
 

@@ -174,7 +174,8 @@ class Command(BaseCommand):
                 error_count += 1
                 logger.error(
                     "core.management.commands.remove_gps_data.error",
-                    extra={"file": row["record"], "error": str(err)},
+                    extra={"file": row["record"], "error": str(err), "reason": getattr(err, "reason", "error")},
+                    exc_info=True,
                 )
                 self.stdout.write(
                     self.style.ERROR(

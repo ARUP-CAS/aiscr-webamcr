@@ -4,17 +4,17 @@ import logging
 import os
 import re
 import time
+import warnings
 import zipfile
 from enum import Enum
 from typing import Final, Optional, Union
 
 import magic
-import piexif
 import py7zr
 import rarfile
 from core.constants import ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_BADATEL_ID
 from core.distribution_names import IMPLICIT_DISTRIBUTION_NAMES, ORIGINAL_DISTRIBUTION_NAME
-from core.exceptions import GpsDataRemovalError, GpsImagePixelLimitError
+from core.exceptions import GpsDataRemovalError, GpsImageMemoryError, GpsImagePixelLimitError
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.cache import cache
@@ -34,7 +34,7 @@ from heslar.hesla_dynamicka import (
 from historie.models import Historie, HistorieVazby
 from nalez.models import NalezObjekt, NalezPredmet
 from notifikace_projekty.models import Pes
-from PIL import Image, ImageFile, PngImagePlugin, TiffImagePlugin, UnidentifiedImageError
+from PIL import ExifTags, Image, ImageFile, JpegImagePlugin, PngImagePlugin, TiffImagePlugin, UnidentifiedImageError
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 from uzivatel.models import User
@@ -55,6 +55,55 @@ logger = logging.getLogger(__name__)
 
 # EXIF tag odkazující na adresář GPS metadat.
 EXIF_GPS_IFD_TAG: Final = 34853
+
+EXIF_SIGNATURE: Final = b"Exif\x00\x00"
+JPEG_APP1: Final = "APP1"
+
+# Značky JPEG a délka segmentu zahrnující samotné délkové pole.
+JPEG_MARKER_PREFIX: Final = 0xFF
+JPEG_MARKER_STUFFED_BYTE: Final = 0x00
+JPEG_MARKER_TEM: Final = 0x01
+JPEG_MARKER_RST_FIRST: Final = 0xD0
+JPEG_MARKER_RST_LAST: Final = 0xD7
+JPEG_MARKER_SOI: Final = 0xD8
+JPEG_MARKER_EOI: Final = 0xD9
+JPEG_MARKER_SOS: Final = 0xDA
+JPEG_MARKER_APP1: Final = 0xE1
+JPEG_SOI_SIGNATURE: Final = bytes((JPEG_MARKER_PREFIX, JPEG_MARKER_SOI))
+JPEG_SIGNATURE: Final = JPEG_SOI_SIGNATURE + bytes((JPEG_MARKER_PREFIX,))
+JPEG_APP1_SIGNATURE: Final = bytes((JPEG_MARKER_PREFIX, JPEG_MARKER_APP1))
+JPEG_SEGMENT_LENGTH_SIZE: Final = 2
+JPEG_MAX_SEGMENT_LENGTH: Final = 65535
+
+# Rozložení klasického TIFF v EXIF; offsety se počítají od hlavičky TIFF.
+BYTE_ORDER_BIG: Final = "big"
+BYTE_ORDER_LITTLE: Final = "little"
+TIFF_BIG_ENDIAN_SIGNATURE: Final = b"MM"
+TIFF_BYTE_ORDER_SIZE: Final = 2
+TIFF_HEADER_SIZE: Final = 8
+TIFF_FIRST_IFD_OFFSET_POSITION: Final = 4
+TIFF_OFFSET_SIZE: Final = 4
+TIFF_IFD_ENTRY_COUNT_SIZE: Final = 2
+TIFF_IFD_ENTRY_SIZE: Final = 12
+TIFF_WORD_ALIGNMENT: Final = 2
+TIFF_PADDING_BYTE: Final = 0
+TIFF_TYPE_LONG: Final = 4
+TIFF_TAG_STRIP_OFFSETS: Final = 273
+TIFF_TAG_STRIP_BYTE_COUNTS: Final = 279
+TIFF_TAG_TILE_OFFSETS: Final = 324
+TIFF_TAG_TILE_BYTE_COUNTS: Final = 325
+TIFF_TAG_JPEG_OFFSET: Final = 513
+TIFF_TAG_JPEG_LENGTH: Final = 514
+TIFF_TAG_EXIF_IFD: Final = 34665
+TIFF_TAG_INTEROP_IFD: Final = 40965
+TIFF_SECONDARY_UNSUPPORTED_OFFSET_TAGS: Final = (
+    TIFF_TAG_STRIP_OFFSETS,
+    TIFF_TAG_STRIP_BYTE_COUNTS,
+    TIFF_TAG_TILE_OFFSETS,
+    TIFF_TAG_TILE_BYTE_COUNTS,
+    TIFF_TAG_EXIF_IFD,
+    TIFF_TAG_INTEROP_IFD,
+)
 
 # Počet bajtů hlavičky pro rozpoznání obrazového formátu při čištění GPS.
 IMAGE_SIGNATURE_LENGTH: Final = 8
@@ -722,6 +771,126 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     # PNG/TIFF se dekódují celé; JPEG zpracováváme pouze jako metadata.
     GPS_MAX_DECODE_PIXELS = 200_000_000
 
+    @staticmethod
+    def replace_exif(content: bytes, exif: bytes) -> bytes:
+        """Nahradí EXIF APP1 a ostatní segmenty i komprimované skeny zachová doslova.
+
+        :param content: Původní JPEG včetně hlavičky a komprimovaných skenů.
+        :param exif: Serializovaná EXIF data začínající signaturou Exif.
+        :return: JPEG s novým EXIF segmentem a nezměněnými obrazovými daty.
+        :raises ValueError: Pokud JPEG obsahuje neúplnou hlavičku nebo EXIF přesahuje kapacitu APP1.
+        """
+        if not content.startswith(JPEG_SOI_SIGNATURE) or not exif.startswith(EXIF_SIGNATURE):
+            raise ValueError("core.models.Soubor.replace_exif.invalid_signature")
+        length = len(exif) + JPEG_SEGMENT_LENGTH_SIZE
+        if length > JPEG_MAX_SEGMENT_LENGTH:
+            raise ValueError("core.models.Soubor.replace_exif.exif_too_large")
+        replacement = JPEG_APP1_SIGNATURE + length.to_bytes(JPEG_SEGMENT_LENGTH_SIZE, BYTE_ORDER_BIG) + exif
+        segments = [content[: len(JPEG_SOI_SIGNATURE)]]
+        offset = len(JPEG_SOI_SIGNATURE)
+        replaced = False
+        while offset < len(content):
+            start = offset
+            if content[offset] != JPEG_MARKER_PREFIX:
+                raise ValueError("core.models.Soubor.replace_exif.invalid_marker")
+            while offset < len(content) and content[offset] == JPEG_MARKER_PREFIX:
+                offset += 1
+            if offset >= len(content):
+                break
+            marker = content[offset]
+            offset += 1
+            if marker == JPEG_MARKER_SOS:  # SOS: zbytek včetně všech skenů zůstane beze změny.
+                if not replaced:
+                    segments.append(replacement)
+                segments.append(content[start:])
+                return b"".join(segments)
+            if marker in (JPEG_MARKER_STUFFED_BYTE, JPEG_MARKER_SOI, JPEG_MARKER_EOI):
+                raise ValueError("core.models.Soubor.replace_exif.invalid_marker")
+            # TEM/RST nemají délku.
+            if marker == JPEG_MARKER_TEM or JPEG_MARKER_RST_FIRST <= marker <= JPEG_MARKER_RST_LAST:
+                segments.append(content[start:offset])
+                continue
+            length = int.from_bytes(content[offset : offset + JPEG_SEGMENT_LENGTH_SIZE], BYTE_ORDER_BIG)
+            end = offset + length
+            if length < JPEG_SEGMENT_LENGTH_SIZE or end > len(content):
+                raise ValueError("core.models.Soubor.replace_exif.truncated_segment")
+            if marker == JPEG_MARKER_APP1 and content[offset + JPEG_SEGMENT_LENGTH_SIZE : end].startswith(
+                EXIF_SIGNATURE
+            ):
+                if not replaced:
+                    segments.append(replacement)
+                    replaced = True
+            else:
+                segments.append(content[start:end])
+            offset = end
+        raise ValueError("core.models.Soubor.replace_exif.missing_scan")
+
+    @staticmethod
+    def preserve_secondary_ifd(original: bytes, cleaned: bytes) -> bytes:
+        """Zachová sekundární EXIF adresář a vložený JPEG po serializaci Pillow.
+
+        :param original: Původní EXIF data včetně signatury Exif.
+        :param cleaned: EXIF po odstranění GPS a serializaci nativním Pillow.
+        :return: Vyčištěný EXIF s obnoveným IFD1 a upraveným offsetem vloženého JPEG.
+        :raises ValueError: Pokud jsou offsety vadné nebo IFD1 obsahuje nepodporované obrazové odkazy.
+        """
+        exif_header_size = len(EXIF_SIGNATURE)
+        stream = io.BytesIO(original[exif_header_size:])
+        header = stream.read(TIFF_HEADER_SIZE)
+        root = TiffImagePlugin.ImageFileDirectory_v2(header)
+        stream.seek(root.next)
+        root.load(stream)
+        if not root.next:
+            return cleaned
+        if root._bigtiff:
+            raise ValueError("core.models.Soubor.preserve_secondary_ifd.bigtiff")
+        secondary = TiffImagePlugin.ImageFileDirectory_v2(header)
+        stream.seek(root.next)
+        secondary.load(stream)
+        # Jiné obrazové/podadresářové odkazy vyžadují vlastní přepočet offsetů.
+        if secondary.next or any(tag in secondary for tag in TIFF_SECONDARY_UNSUPPORTED_OFFSET_TAGS):
+            raise ValueError("core.models.Soubor.preserve_secondary_ifd.unsupported_offsets")
+        thumbnail = b""
+        if TIFF_TAG_JPEG_OFFSET in secondary or TIFF_TAG_JPEG_LENGTH in secondary:
+            start, size = secondary.get(TIFF_TAG_JPEG_OFFSET), secondary.get(TIFF_TAG_JPEG_LENGTH)
+            if not isinstance(start, int) or not isinstance(size, int) or start < 0 or size <= 0:
+                raise ValueError("core.models.Soubor.preserve_secondary_ifd.invalid_thumbnail")
+            stream.seek(start)
+            thumbnail = stream.read(size)
+            if len(thumbnail) != size:
+                raise ValueError("core.models.Soubor.preserve_secondary_ifd.truncated_thumbnail")
+        directory = TiffImagePlugin.ImageFileDirectory_v2(
+            cleaned[exif_header_size : exif_header_size + TIFF_HEADER_SIZE]
+        )
+        for tag in secondary:
+            if tag != ExifTags.IFD.GPSInfo:  # Ani sekundární adresář nesmí nést odkaz na GPS.
+                directory.tagtype[tag] = secondary.tagtype[tag]
+                directory[tag] = secondary[tag]
+        result = bytearray(cleaned)
+        if len(result) % TIFF_WORD_ALIGNMENT:
+            result.append(TIFF_PADDING_BYTE)
+        directory_offset = len(result) - exif_header_size
+        if thumbnail:
+            # LONG: délka offsetu se při přepočtu nesmí změnit.
+            directory.tagtype[TIFF_TAG_JPEG_OFFSET] = TIFF_TYPE_LONG
+            directory[TIFF_TAG_JPEG_OFFSET] = 0
+            directory[TIFF_TAG_JPEG_OFFSET] = directory_offset + len(directory.tobytes(directory_offset))
+        byteorder = (
+            BYTE_ORDER_BIG
+            if cleaned[exif_header_size : exif_header_size + TIFF_BYTE_ORDER_SIZE] == TIFF_BIG_ENDIAN_SIGNATURE
+            else BYTE_ORDER_LITTLE
+        )
+        first_offset_position = exif_header_size + TIFF_FIRST_IFD_OFFSET_POSITION
+        first = exif_header_size + int.from_bytes(
+            cleaned[first_offset_position : first_offset_position + TIFF_OFFSET_SIZE], byteorder
+        )
+        count = int.from_bytes(cleaned[first : first + TIFF_IFD_ENTRY_COUNT_SIZE], byteorder)
+        next_pointer = first + TIFF_IFD_ENTRY_COUNT_SIZE + count * TIFF_IFD_ENTRY_SIZE
+        result[next_pointer : next_pointer + TIFF_OFFSET_SIZE] = directory_offset.to_bytes(TIFF_OFFSET_SIZE, byteorder)
+        result.extend(directory.tobytes(directory_offset))
+        result.extend(thumbnail)
+        return bytes(result)
+
     @classmethod
     def _open_image_for_gps(cls, content: io.BytesIO) -> Image.Image:
         """Otevře PNG/TIFF do 200 MP bez změny globálního limitu Pillow.
@@ -754,10 +923,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         """
         Odstraní GPS metadata z fotografie uložené v paměti.
 
-        Funkce načte EXIF data z obrázku, odstraní GPS informace a pokusí se
-        znovu uložit EXIF. Pokud narazí na nevalidní nebo nekompatibilní EXIF
-        tagy (např. UserComment, MakerNote apod.), automaticky je odstraní,
-        aby bylo možné obrázek úspěšně uložit.
+        EXIF načte a zapíše nativně přes Pillow. Nevalidní metadata odmítne;
+        nestandardní tagy neopravuje ani automaticky neodstraňuje.
 
         U JPEG přepisuje pouze EXIF bez dekódování nebo rekomprese obrazových dat.
         Odstranění GPS proto nezávisí na limitu pixelů Pillow ani nemění rozlišení.
@@ -767,81 +934,83 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
         :param bytes_io: Obsah souboru připravený ke kontrole antivirem.
         :return: Vrací výsledek operace odstranění.
+        :raises GpsImagePixelLimitError: Pokud obrázek překročí lokální limit pixelů.
+        :raises GpsImageMemoryError: Pokud během čištění nebo ověření dojde paměť.
         :raises GpsDataRemovalError: Pokud GPS nelze odstranit nebo ověřit výstup.
         """
+        stage = "cannot_open_file"
         try:
             bytes_io.seek(0)
-            is_jpeg = bytes_io.read(3) == b"\xff\xd8\xff"
+            is_jpeg = bytes_io.read(len(JPEG_SIGNATURE)) == JPEG_SIGNATURE
             bytes_io.seek(0)
-            if is_jpeg:
-                # JPEG metadata lze zpracovat bez otevření pixelů přes Pillow.
-                exif_dict = piexif.load(bytes_io.getvalue())
-            else:
-                img = cls._open_image_for_gps(bytes_io)
-                exif_data = img.getexif().tobytes() if img.format == "TIFF" else img.info.get("exif")
-                if exif_data:
-                    exif_dict = piexif.load(exif_data)
-                else:
-                    bytes_io.seek(0)
-                    return bytes_io
-        except Exception as err:
-            logger.error("core.models.Soubor.remove_gps_data.cannot_open_file", extra={"error": err})
-            raise GpsDataRemovalError(_("core.models.Soubor.remove_gps_data.parse_error")) from err
-        # Odstranění GPS dat, pokud existují
-        if "GPS" in exif_dict and exif_dict["GPS"] != {}:
-            del exif_dict["GPS"]
-            if not is_jpeg and img.format == "TIFF" and EXIF_GPS_IFD_TAG in img.tag_v2:
-                del img.tag_v2[EXIF_GPS_IFD_TAG]
-        else:
-            logger.debug("core.models.Soubor.remove_gps_data.no_GPS_data")
-            bytes_io.seek(0)
-            return bytes_io
-        if 41729 in exif_dict["Exif"] and isinstance(exif_dict["Exif"][41729], int):
-            exif_dict["Exif"][41729] = str(exif_dict["Exif"][41729]).encode("utf-8")
-        MAX_FIX_ATTEMPTS = 10
-        for attempt in range(MAX_FIX_ATTEMPTS):
-            try:
-                new_exif_bytes = piexif.dump(exif_dict)
-                break
-            except ValueError as err:
-                msg = str(err)
-                # hledáme "37890 in Exif IFD"
-                match = re.search(r"(\d+)\s+in\s+(\w+)\s+IFD", msg)
-                if not match:
-                    logger.error(
-                        "core.models.Soubor.remove_gps_data.unhandled_exif_error",
-                        extra={"error": msg},
-                    )
-                    raise GpsDataRemovalError(_("core.models.Soubor.remove_gps_data.serialize_error")) from err
-                tag = int(match.group(1))
-                ifd = match.group(2)
-                logger.info(
-                    "core.models.Soubor.remove_gps_data.removing_broken_exif_tag",
-                    extra={"tag": tag, "ifd": ifd},
+            # Přímý JPEG dekodér načte jen hlavičku, bez limitu pixelů a bez load().
+            image_content = io.BytesIO(bytes_io.getvalue())
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", UserWarning)
+                image = (
+                    JpegImagePlugin.JpegImageFile(image_content) if is_jpeg else cls._open_image_for_gps(image_content)
                 )
-                # odstranění problémového tagu
-                exif_dict.get(ifd, {}).pop(tag, None)
-        else:
-            # nepodařilo se opravit ani po několika pokusech
-            logger.error("core.models.Soubor.remove_gps_data.exif_cleanup_failed")
-            raise GpsDataRemovalError(_("core.models.Soubor.remove_gps_data.repair_exhausted"))
-        try:
-            output_io = io.BytesIO()
-            if is_jpeg:
-                piexif.insert(new_exif_bytes, bytes_io.getvalue(), output_io)
-                if piexif.load(output_io.getvalue()).get("GPS"):
-                    raise GpsDataRemovalError(_("core.models.Soubor.remove_gps_data.jpeg_verification_error"))
-            else:
-                img.save(output_io, format=img.format, exif=new_exif_bytes)
-                with cls._open_image_for_gps(output_io) as stored:
-                    if stored.getexif().get_ifd(EXIF_GPS_IFD_TAG):
-                        raise GpsDataRemovalError(_("core.models.Soubor.remove_gps_data.verification_error"))
+            try:
+                if (
+                    is_jpeg
+                    and sum(name == JPEG_APP1 and data.startswith(EXIF_SIGNATURE) for name, data in image.applist) > 1
+                ):
+                    raise ValueError("core.models.Soubor.remove_gps_data.multiple_exif_segments")
+                with warnings.catch_warnings():
+                    # Pillow některá poškozená metadata jen varováním přeskočí.
+                    warnings.simplefilter("error", UserWarning)
+                    exif = image.getexif()
+                    if EXIF_GPS_IFD_TAG not in exif:
+                        bytes_io.seek(0)
+                        return bytes_io
+                    del exif[EXIF_GPS_IFD_TAG]
+                    stage = "cannot_save_file"
+                    new_exif_bytes = exif.tobytes()
+                    output_io = io.BytesIO()
+                    if is_jpeg:
+                        new_exif_bytes = cls.preserve_secondary_ifd(image.info["exif"], new_exif_bytes)
+                        output_io.write(cls.replace_exif(bytes_io.getvalue(), new_exif_bytes))
+                    else:
+                        if image.format == "TIFF" and EXIF_GPS_IFD_TAG in image.tag_v2:
+                            del image.tag_v2[EXIF_GPS_IFD_TAG]
+                        image.save(output_io, format=image.format, exif=new_exif_bytes)
+                    output_io.seek(0)
+                    verification_content = io.BytesIO(output_io.getvalue())
+                    stored = (
+                        JpegImagePlugin.JpegImageFile(verification_content)
+                        if is_jpeg
+                        else cls._open_image_for_gps(verification_content)
+                    )
+                    with stored:
+                        if EXIF_GPS_IFD_TAG in stored.getexif():
+                            raise GpsDataRemovalError(_("core.models.Soubor.remove_gps_data.verification_error"))
+            finally:
+                # Dekodéry pracují s vlastními streamy; vracený buffer zůstane otevřený.
+                image.close()
             output_io.seek(0)
             logger.debug("core.models.Soubor.remove_gps_data.GPS_data_removed")
             return output_io
         except Exception as err:
-            logger.error("core.models.Soubor.remove_gps_data.cannot_save_file", extra={"error": err})
-            raise GpsDataRemovalError(_("core.models.Soubor.remove_gps_data.save_error")) from err
+            error_class = GpsDataRemovalError
+            if isinstance(err, GpsDataRemovalError):
+                error_class = type(err)
+            elif isinstance(err, Image.DecompressionBombError):
+                error_class = GpsImagePixelLimitError
+            elif isinstance(err, MemoryError):
+                error_class = GpsImageMemoryError
+            logger.error(
+                "core.models.Soubor.remove_gps_data." + stage,
+                extra={"error": err, "reason": error_class.reason, "error_type": type(err).__name__},
+                exc_info=True,
+            )
+            message = (
+                _("core.models.Soubor.remove_gps_data.parse_error")
+                if stage == "cannot_open_file"
+                else _("core.models.Soubor.remove_gps_data.save_error")
+            )
+            raise error_class(message) from err
+
+    GPS_REMOVAL_MIMES = frozenset({"image/png", "image/jpeg", "image/tiff"})
 
     # Povolené MIME typy podle typu uploadu — odpovídá whitelistu v `static/js/dz.js`.
     PAS_ACCEPTED_MIMES = frozenset(

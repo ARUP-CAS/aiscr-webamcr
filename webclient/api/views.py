@@ -3449,7 +3449,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
 
         fedora_transaction = FedoraTransaction(transaction_user=request.user)
         try:
-            if mimetype in ["image/png", "image/jpeg", "image/tiff"]:
+            if mimetype in Soubor.GPS_REMOVAL_MIMES:
                 binary_data = Soubor.remove_gps_data(binary_data)
             connector = FedoraRepositoryConnector(instance, fedora_transaction, skip_container_check=False)
             rep_bin_file = connector.save_binary_file(new_name, mimetype, binary_data)
@@ -3472,8 +3472,11 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
                 self._create_rearchive_history_record(instance, request.user)
                 soubor_instance.save()
             self._update_igsn_if_archived(instance)
-        except GpsDataRemovalError:
-            logger.exception("api.views.SamostatnyNalezFotografieUploadView.post.gps_cleanup_failed")
+        except GpsDataRemovalError as err:
+            logger.exception(
+                "api.views.SamostatnyNalezFotografieUploadView.post.gps_cleanup_failed",
+                extra={"file": new_name, "ident_cely": ident_cely, "reason": err.reason},
+            )
             if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
                 fedora_transaction.rollback_transaction()
             self._release_record_lock(ident_cely, lock_ttl)
