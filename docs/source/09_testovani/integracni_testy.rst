@@ -99,10 +99,21 @@ V Django konfiguraci povolte společný přepínač a v prostředí nastavte vst
    * - ``PAS_UPLOAD_IDENT_CELY``
      - Identifikátor existujícího vyhrazeného testovacího nálezu
 
-Z adresáře ``webclient/`` spusťte se settings modulem nastaveným pro testovací proces::
+Z adresáře ``webclient/`` spusťte s explicitně zvoleným settings modulem. Bez parametru
+``--settings`` použije ``manage.py`` modul ``webclient.settings``, který sám nic nenastavuje,
+a příkaz selže už při inicializaci Django::
 
    python manage.py test api.tests.test_upload_foto_integration \
+       --settings=webclient.settings.dev \
        --testrunner django.test.runner.DiscoverRunner
+
+Ve vývojovém Dockeru lze použít stejný tvar jako u testů Fedory; kontejner settings modul
+nastavuje sám a vstupy PAS testu se předají přes ``-e``::
+
+   docker compose -f docker-compose-dev-local-db-all-containers.yml exec \
+       -e PAS_UPLOAD_BASE_URL -e PAS_UPLOAD_IDENT_CELY \
+       web python manage.py test api.tests.test_upload_foto_integration \
+       --testrunner django.test.runner.DiscoverRunner --debug-mode
 
 Pro lokální cíl přidejte ``--debug-mode``. Standardní Django test runner totiž jinak
 přepne ``DEBUG`` na ``False``; test sám DEBUG nezapíná. Pro vzdálenou testovací aplikaci
@@ -133,11 +144,12 @@ V běžícím vývojovém Dockeru spusťte oba moduly::
 
 Před příkazem povolte přepínač v připojené konfiguraci přes ``get_secret``.
 Při úplném Selenium běhu přes ``webclient/run_tests.py`` jsou oba moduly součástí výběru
-testů proti Fedoře z ``webclient.settings.dev_test``. Runner přepínač nepřepisuje; používá
-jeho hodnotu z Django settings. I v tomto běhu platí
-společná kontrola prostředí: pokud je ``SITE_URL`` lokální a testovací proces má
-``DEBUG=False``, Fedora testy se přeskočí. Pro jejich ruční lokální spuštění použijte
-uvedený příkaz s ``--debug-mode``. Samotný přepínač pravidla adresy a DEBUG neobchází.
+testů proti vyhrazené testovací Fedoře z ``webclient.settings.dev_test``, který přepínač
+``FEDORA_INTEGRATION_TESTS`` zapíná. Runner je spouští v samostatném procesu s ``--debug-mode``,
+protože ``SITE_URL`` v ``dev_test`` je lokální a společná kontrola prostředí by je při
+``DEBUG=False`` přeskočila. Selenium testy samotné běží dál s ``DEBUG=False``. Pokud se
+z Fedora modulů nespustí žádný test nebo je některý přeskočen, runner to započítá jako chybu
+a skončí nenulovým kódem. Samotný přepínač pravidla adresy a DEBUG neobchází.
 
 Vyhodnocení výsledků testu
 --------------------------

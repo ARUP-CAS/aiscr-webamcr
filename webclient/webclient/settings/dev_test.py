@@ -10,6 +10,8 @@ if "debug_toolbar.middleware.DebugToolbarMiddleware" in MIDDLEWARE:
     MIDDLEWARE.remove("debug_toolbar.middleware.DebugToolbarMiddleware")
 DEBUG_TOOLBAR_PANELS = []
 SITE_URL = "http://localhost:8000"
+# The Selenium run targets the dedicated TEST_FEDORA_* instance below, so its Fedora modules may write.
+FEDORA_INTEGRATION_TESTS = True
 
 CLAMD_HOST = get_secret("CLAMD_HOST")
 CLAMD_PORT = 3310
