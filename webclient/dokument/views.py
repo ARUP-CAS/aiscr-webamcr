@@ -3241,7 +3241,7 @@ class DokumentyAzTableView(LoginRequiredMixin, View):
             "prefix": "doc",
         }
         logger.debug(context)
-        return HttpResponse(render_to_string("dokument/dokument_table_only.html", context))
+        return HttpResponse(render_to_string("dokument/dokument_table_only.html", context, request=request))
 
 
 @login_required

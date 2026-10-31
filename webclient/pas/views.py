@@ -1672,4 +1672,4 @@ class ProjektPasTableView(LoginRequiredMixin, View):
         perm_object.typ_zmeny_lookup = ZAPSANI_SN
         qs = perm_object.check_filter_permission(qs, p.actionChoices.projekt_pas_zobrazit)
         context = {"samostatne_nalezy": qs}
-        return HttpResponse(render_to_string("pas/samostatne_nalezy_table.html", context))
+        return HttpResponse(render_to_string("pas/samostatne_nalezy_table.html", context, request=request))

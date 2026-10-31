@@ -1,0 +1,9 @@
+{% load i18n %}
+{% if omezene.zbyvajici_url %}
+<div class="app-nacist-zbyvajici text-center my-2">
+  <button type="button" class="btn btn-sm btn-outline-primary app-nacist-zbyvajici-btn"
+          data-url="{{ omezene.zbyvajici_url }}" data-klic="{{ omezene.klic }}">
+    {% trans "core.templates.nacistZbyvajici.button.label" %}
+  </button>
+</div>
+{% endif %}

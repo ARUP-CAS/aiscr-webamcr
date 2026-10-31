@@ -1,4 +1,6 @@
 {% load i18n %}
+{% load template_tags %}
+{% omezit_radky zaznamy "ez_odkazy_"|add:card_type as omezene %}
 <table class="table table-striped table-hover table-sm mb-0">
     <thead>
     <tr>
@@ -21,9 +23,10 @@
       {% endif %}
     </tr>
     </thead>
-    <tbody>
-    {% for z in zaznamy %}
+    <tbody data-radky="ez_odkazy_{{ card_type }}">
+    {% for z in omezene.radky %}
         {% include "ez/ez_odkazy_table_row.html" with arch_z=z.archeologicky_zaznam %}
     {% endfor %}
     </tbody>
   </table>
+{% include "core/nacist_zbyvajici.html" %}
