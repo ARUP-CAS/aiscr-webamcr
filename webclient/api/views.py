@@ -50,6 +50,7 @@ from core.soubor_naming import get_mime_safe_soubor_name, get_next_soubor_name
 from core.translation import format_message
 from core.utils import get_cadastre_from_point, hodnota_pro_log
 from django.conf import settings
+from django.contrib.auth.signals import user_logged_in
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.contrib.gis.geos import Point as GEOSPoint
 from django.core.cache import cache
@@ -3632,17 +3633,23 @@ class ObtainAuthTokenWithUpdate(ObtainAuthToken):
 
     def post(self, request, *args, **kwargs):
         """
-        Obsluhuje HTTP metodu POST.
+        Ověří přihlašovací údaje a vrátí platný API token uživatele.
 
-        :param request: Parametr ``request`` předává se do volání ``get_serializer()``, pracuje se s atributy ``data``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+        Po úspěšném ověření vyšle signál ``user_logged_in`` (bez vytvoření session), takže se stejně
+        jako při přihlášení do AMČR aktualizuje ``last_login`` a zapíše ``UzivatelPrihlaseniLog``.
+        Token starší než ``TOKEN_EXPIRATION_HOURS`` se nahradí novým.
 
-            :return: Vrací výsledek volání ``Response()``.
+        :param request: Požadavek s ``username`` a ``password`` v ``request.data``.
+        :param args: Poziční argumenty pohledu (nepoužívají se).
+        :param kwargs: Pojmenované argumenty pohledu (nepoužívají se).
+        :return: ``Response`` s klíčem ``token``.
+        :raises ValidationError: Při neplatných přihlašovacích údajích (DRF vrátí HTTP 400).
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
+        # Same signal as django.contrib.auth.login(), without creating a session.
+        user_logged_in.send(sender=user.__class__, request=request._request, user=user)
         token, created = Token.objects.get_or_create(user=user)
         if not token.created + datetime.timedelta(hours=settings.TOKEN_EXPIRATION_HOURS) > timezone.now():
             try:
