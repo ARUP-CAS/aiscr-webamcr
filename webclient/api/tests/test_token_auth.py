@@ -1,5 +1,6 @@
 """Testy evidence přihlášení přes ``POST /api/token-auth/`` (issue #4230)."""
 
+import secrets
 from unittest.mock import PropertyMock, patch
 
 from core.constants import ROLE_BADATEL_ID
@@ -13,7 +14,8 @@ from uzivatel.models import User, UzivatelPrihlaseniLog
 TOKEN_AUTH_URL = "/api/token-auth/"
 USER_INFO_URL = "/api/uzivatel-info/"
 EMAIL = "tokenauth@example.cz"
-PASSWORD = "Heslo-pro-test-4230"
+# Generated at runtime so no credential literal lives in the repo.
+PASSWORD = secrets.token_urlsafe(16)
 
 
 class ObtainAuthTokenLastLoginTests(TestCase):
@@ -68,7 +70,7 @@ class ObtainAuthTokenLastLoginTests(TestCase):
 
     def test_invalid_password_changes_nothing(self):
         """Neúspěšné ověření nemění ``last_login`` ani nezapisuje log přihlášení."""
-        response = self._obtain_token(password="spatne-heslo")
+        response = self._obtain_token(password=secrets.token_urlsafe(16))
 
         self.assertEqual(response.status_code, 400)
         self.user.refresh_from_db()
