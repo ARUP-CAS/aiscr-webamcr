@@ -1343,4 +1343,4 @@ class EzOdkazyTableView(LoginRequiredMixin, View):
             },
             "zaznam": zaznam,
         }
-        return HttpResponse(render_to_string("ez/ez_odkazy_table_only.html", context))
+        return HttpResponse(render_to_string("ez/ez_odkazy_table_only.html", context, request=request))
