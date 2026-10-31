@@ -3422,11 +3422,6 @@ msgstr ""
 "Path to the CSV file with the list of file locations in the \"record\" "
 "column (repository path)."
 
-#: core/management/commands/generate_thumbs.py:72
-msgid ""
-"core.management.commands.generate_thumbs.Command.add_arguments.force_help"
-msgstr "Regenerate previews even for files that already have them."
-
 #: core/management/commands/generate_thumbs.py:80
 msgid "core.management.commands.generate_thumbs.argument_error"
 msgstr "Incorrect arguments entered."
