@@ -104,9 +104,7 @@ Jsou definovány následující secrets:
 
 **Elasticsearch a monitoring**
 
-* ``elastic_pass`` - Heslo pro přístup k Elasticsearch clusteru
-* ``logstash_elastic_host`` - Adresa Elasticsearch hostu pro Logstash
-* ``logstash_elastic_pass`` - Heslo pro připojení Logstash k Elasticsearch
+* ``logstash_elastic_pass`` - Heslo účtu ``amcr_logger``, kterým Logstash zapisuje do Elasticsearch
 * ``postgresql_exporter`` - Konfigurace pro PostgreSQL Prometheus exporter
 * ``postgresql_exporter_uri`` - URI připojení pro PostgreSQL exporter
 
