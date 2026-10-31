@@ -6,6 +6,11 @@ Modul repository_connector.
 Třídy
 ------
 
+.. py:class:: ThumbFailureReason
+
+   Příčina selhání generování náhledu z obrázku; hodnota se loguje v poli ``reason``.
+
+
 .. py:class:: FedoraValidationError
 
    Implementuje komponentu ``FedoraValidationError`` v rámci aplikace.

@@ -23,7 +23,7 @@ from core.log_middleware import LogMiddleware
 from core.utils import get_mime_type
 from django.conf import settings
 from pdf2image import convert_from_bytes
-from PIL import Image, ImageOps
+from PIL import ImageOps
 from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 from xml_generator.generator import DocumentGenerator
@@ -41,6 +41,14 @@ THUMB_MAX_PX = 100
 #: ``(1 + large * 7) * 100``; jako konstanty na ně může odkazovat i test, který hlídá
 #: rozměry předgenerovaných placeholder náhledů (review PR #4262).
 THUMB_LARGE_MAX_PX = 800
+
+
+class ThumbFailureReason(Enum):
+    """Příčina selhání generování náhledu z obrázku; hodnota se loguje v poli ``reason``."""
+
+    PIXEL_LIMIT = "pixel_limit"
+    OUT_OF_MEMORY = "out_of_memory"
+    ERROR = "error"
 
 
 def _build_fedora_adapter() -> HTTPAdapter:
@@ -1461,22 +1469,31 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
 
             :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``thumbnail``, výsledek volání ``__generate_thumb_from_icon()``.
         """
+        from core.models import Soubor
+
         logger.debug("core_repository_connector.__generate_thumb.start", extra={"file": file_name, "large": large})
 
         def resize_image(image: BytesIO, large_inner=False):
             """
             Změní velikost obrázku na zadaný rozměr a vrátí jako PNG v BytesIO.
 
+            Obrázek se nejdřív zmenší a teprve pak otočí podle EXIF orientace. ``Image.thumbnail``
+            totiž umí JPEG dekódovat rovnou ve zmenšeném měřítku (``Image.draft``) jen u dosud
+            nenačteného obrázku, kdežto ``ImageOps.exif_transpose`` jej načte v plném rozlišení.
+            Pořadí výsledné rozměry nemění, protože cílový rámeček je čtvercový.
+
             :param image: Vstupní obrázek v binární podobě k převzorkování.
             :param large_inner: Příznak pro výběr max. rozměru (False: maximální hrana malého náhledu
                 ``THUMB_MAX_PX``, True: maximální hrana velkého náhledu ``THUMB_LARGE_MAX_PX``).
             :return: Změněný obrázek jako PNG v BytesIO bufferu.
+            :raises Image.DecompressionBombError: Pokud obrázek překročí limit pixelů
+                (viz ``_open_image_for_thumb``).
             """
-            image = Image.open(image)
-            image = ImageOps.exif_transpose(image)
+            image = Soubor._open_image_for_thumb(image)
             hrana = THUMB_LARGE_MAX_PX if large_inner else THUMB_MAX_PX
             max_size = (hrana, hrana)
             image.thumbnail(max_size)
+            image = ImageOps.exif_transpose(image)
             output_buffer = BytesIO()
             image.save(output_buffer, format="PNG")
             output_buffer.seek(0)
@@ -1492,8 +1509,6 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
 
                 :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``thumbnail``, výsledek volání ``resize_image()``, None.
             """
-            from core.models import Soubor
-
             thumb_icon, mime_type = Soubor.get_thumb_icon(file_content)
             if mime_type.startswith("image/"):
                 try:
@@ -1503,9 +1518,16 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     )
                     return thumbnail
                 except Exception as err:
-                    logger.info(
+                    # A supported image type ending with the type icon is a failure, not an expected path.
+                    logger.warning(
                         "core_repository_connector.__generate_thumb.error",
-                        extra={"error": err, "file": file_name, "large": large},
+                        extra={
+                            "reason": Soubor._thumb_failure_reason(err).value,
+                            "error": err,
+                            "file": file_name,
+                            "large": large,
+                            "mime_type": mime_type,
+                        },
                     )
                     if thumb_icon is not None:
                         try:

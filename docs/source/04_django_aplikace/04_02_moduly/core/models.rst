@@ -6,6 +6,17 @@ Definice modelů.
 Třídy
 ------
 
+.. py:class:: _GpsTiffImageFile
+
+   TIFF dekodér s lokálním stropem pixelů pro odstranění GPS.
+
+   **Metody:**
+
+   .. py:method:: load_prepare()
+
+      Zkontroluje i rozměr TIFF dlaždice před přidělením paměti dekodéru.
+
+
 .. py:class:: AntivirusCheckResult
 
    Implementuje komponentu ``AntivirusCheckResult`` v rámci aplikace.
@@ -209,19 +220,74 @@ Třídy
       :param check_archive: Parametr ``check_archive`` předává se do volání ``debug()``, ovlivňuje větvení podmínek.
       :return: Načtená data odpovídající zadaným vstupům.
 
+   .. py:method:: _open_image_for_thumb()
+
+      Otevře obrázek pro generování náhledu, u JPEG i nad výchozím limitem pixelů Pillow.
+
+      Nejdřív se zkusí běžné ``Image.open``. Pokud skončí ``DecompressionBombError`` a vstup
+      je JPEG, otevře se znovu přímo přes ``JpegImagePlugin.JpegImageFile``, který kontrolu
+      globálního ``Image.MAX_IMAGE_PIXELS`` nedělá; ten se tak nemusí měnit pro celou aplikaci.
+      Místo něj se pak uplatní strop ``THUMB_JPEG_MAX_PIXELS``. Obrázek se jen otevře,
+      nedekóduje - dekódování v nízkém rozlišení zajistí až ``Image.thumbnail``.
+
+      :param image: Binární obsah obrázku.
+      :return: Otevřený, dosud nedekódovaný obrázek.
+      :raises Image.DecompressionBombError: Pokud jde o jiný formát než JPEG nad limitem Pillow,
+          nebo o JPEG nad stropem ``THUMB_JPEG_MAX_PIXELS``.
+
+   .. py:method:: _thumb_failure_reason()
+
+      Zařadí výjimku z generování náhledu do kategorie pro log.
+
+      :param err: Výjimka vyvolaná při otevírání nebo zmenšování obrázku.
+      :return: ``ThumbFailureReason.PIXEL_LIMIT`` při překročení limitu pixelů,
+          ``ThumbFailureReason.OUT_OF_MEMORY`` při vyčerpání paměti, jinak ``ThumbFailureReason.ERROR``.
+
+   .. py:method:: replace_exif()
+
+      Nahradí EXIF APP1 a ostatní segmenty i komprimované skeny zachová doslova.
+
+      :param content: Původní JPEG včetně hlavičky a komprimovaných skenů.
+      :param exif: Serializovaná EXIF data začínající signaturou Exif.
+      :return: JPEG s novým EXIF segmentem a nezměněnými obrazovými daty.
+      :raises ValueError: Pokud JPEG obsahuje neúplnou hlavičku nebo EXIF přesahuje kapacitu APP1.
+
+   .. py:method:: preserve_secondary_ifd()
+
+      Zachová sekundární EXIF adresář a vložený JPEG po serializaci Pillow.
+
+      :param original: Původní EXIF data včetně signatury Exif.
+      :param cleaned: EXIF po odstranění GPS a serializaci nativním Pillow.
+      :return: Vyčištěný EXIF s obnoveným IFD1 a upraveným offsetem vloženého JPEG.
+      :raises ValueError: Pokud jsou offsety vadné nebo IFD1 obsahuje nepodporované obrazové odkazy.
+
+   .. py:method:: _open_image_for_gps()
+
+      Otevře PNG/TIFF do 200 MP bez změny globálního limitu Pillow.
+
+      :param content: Obsah fotografie na libovolné pozici.
+      :return: Otevřený obrázek připravený ke čtení EXIF.
+      :raises GpsImagePixelLimitError: Pokud obrázek překročí strop pro úplné dekódování.
+      :raises Image.DecompressionBombError: Pokud Pillow odmítne jiný formát než PNG/TIFF.
+
    .. py:method:: remove_gps_data()
 
       Odstraní GPS metadata z fotografie uložené v paměti.
 
-      Funkce načte EXIF data z obrázku, odstraní GPS informace a pokusí se
-      znovu uložit EXIF. Pokud narazí na nevalidní nebo nekompatibilní EXIF
-      tagy (např. UserComment, MakerNote apod.), automaticky je odstraní,
-      aby bylo možné obrázek úspěšně uložit.
+      EXIF načte a zapíše nativně přes Pillow. Nevalidní metadata odmítne;
+      nestandardní tagy neopravuje ani automaticky neodstraňuje.
 
-      V případě jakékoli chyby vrací původní vstupní soubor beze změny.
+      U JPEG přepisuje pouze EXIF bez dekódování nebo rekomprese obrazových dat.
+      Odstranění GPS proto nezávisí na limitu pixelů Pillow ani nemění rozlišení.
+
+      PNG/TIFF zpracuje do 200 MP. Při chybě nebo překročení stropu vyvolá
+      výjimku místo předání původního souboru s GPS k archivaci.
 
       :param bytes_io: Obsah souboru připravený ke kontrole antivirem.
       :return: Vrací výsledek operace odstranění.
+      :raises GpsImagePixelLimitError: Pokud obrázek překročí lokální limit pixelů.
+      :raises GpsImageMemoryError: Pokud během čištění nebo ověření dojde paměť.
+      :raises GpsDataRemovalError: Pokud GPS nelze odstranit nebo ověřit výstup.
 
    .. py:method:: check_mime_for_url()
 

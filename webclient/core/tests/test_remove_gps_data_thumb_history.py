@@ -10,6 +10,7 @@ import io
 from unittest import mock
 
 import pandas as pd
+from core.exceptions import GpsImageMemoryError
 from core.management.commands.remove_gps_data import Command
 from django.test import SimpleTestCase
 
@@ -19,9 +20,10 @@ COMMAND_MODULE = "core.management.commands.remove_gps_data"
 class RemoveGpsDataThumbHistoryTest(SimpleTestCase):
     """Testy, že ``remove_gps_data`` zapíše do historie přegenerované náhledy."""
 
-    def _run(self, gps_removed=True):
+    def _run(self, gps_removed=True, cleanup_error=None):
         """Spustí příkaz nad jedním souborem s mocknutou databází i Fedorou.
 
+        :param cleanup_error: Výjimka simulující selhání čištění metadat.
         :param gps_removed: Zda ``Soubor.remove_gps_data`` vrátí změněný obsah (GPS data byla nalezena).
         :return: Dvojice (mock zpracovaného ``Soubor``, mock ``RepositoryBinaryFile`` z ``update_binary_file``).
         """
@@ -36,7 +38,7 @@ class RemoveGpsDataThumbHistoryTest(SimpleTestCase):
             mock.patch("uzivatel.models.User.objects.get", return_value=mock.Mock()),
             mock.patch(COMMAND_MODULE + ".pd.read_csv", return_value=pd.DataFrame({"record": ["record/path"]})),
             mock.patch("core.models.Soubor.objects") as soubor_objects,
-            mock.patch("core.models.Soubor.remove_gps_data", return_value=new_content),
+            mock.patch("core.models.Soubor.remove_gps_data", return_value=new_content, side_effect=cleanup_error),
             mock.patch(COMMAND_MODULE + ".FedoraRepositoryConnector", return_value=connector),
             mock.patch(COMMAND_MODULE + ".FedoraTransaction"),
         ):
@@ -55,3 +57,16 @@ class RemoveGpsDataThumbHistoryTest(SimpleTestCase):
         record, _ = self._run(gps_removed=False)
 
         record.zaznamenej_distribuce.assert_not_called()
+
+    def test_failed_image_is_identified_and_counted_separately(self):
+        """Selhání paměti zachová cestu i příčinu a nesmí se započítat jako přeskočení."""
+        with self.assertLogs(COMMAND_MODULE, level="DEBUG") as logs:
+            self._run(cleanup_error=GpsImageMemoryError("cleanup failed"))
+        failure = next(record for record in logs.records if record.msg.endswith(".error"))
+        self.assertEqual(failure.file, "record/path")
+        self.assertEqual(failure.reason, "out_of_memory")
+        self.assertIsNotNone(failure.exc_info)
+        summary = next(record for record in logs.records if record.msg.endswith(".end"))
+        self.assertEqual(summary.success, 0)
+        self.assertEqual(summary.skipped, 0)
+        self.assertEqual(summary.error, 1)
