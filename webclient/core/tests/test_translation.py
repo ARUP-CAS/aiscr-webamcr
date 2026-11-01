@@ -57,10 +57,31 @@ class TranslateFormatTagTest(SimpleTestCase):
         self.assertEqual(rendered, "Záznam ORG-CHILD odkazuje na ORG-PARENT.")
 
     def test_tag_keeps_html_from_translated_message(self):
-        """HTML z překladu zůstane neescapované, stejně jako u nahrazeného blocktranslate."""
+        """HTML z překladu zůstane neescapované, protože katalog je důvěryhodný."""
+        with patch("core.translation.gettext", return_value="<p>Pište na {mail}.</p>"):
+            rendered = self.render(
+                '{% load translation_tags %}{% translate_format "test.message" mail=mail %}',
+                {"mail": "x@example.org"},
+            )
+        self.assertEqual(rendered, "<p>Pište na x@example.org.</p>")
+
+    def test_tag_escapes_html_in_parameters(self):
+        """HTML v hodnotě parametru se escapuje, stejně jako u nahrazeného blocktranslate."""
         with patch("core.translation.gettext", return_value="Pište na {mail}."):
             rendered = self.render(
                 '{% load translation_tags %}{% translate_format "test.message" mail=mail %}',
+                {"mail": '<a href="mailto:x@example.org">x@example.org</a>'},
+            )
+        self.assertEqual(
+            rendered,
+            "Pište na &lt;a href=&quot;mailto:x@example.org&quot;&gt;x@example.org&lt;/a&gt;.",
+        )
+
+    def test_tag_keeps_explicitly_safe_parameter(self):
+        """Hodnota označená jako bezpečná se neescapuje, takže výjimku lze povolit explicitně."""
+        with patch("core.translation.gettext", return_value="Pište na {mail}."):
+            rendered = self.render(
+                '{% load translation_tags %}{% translate_format "test.message" mail=mail|safe %}',
                 {"mail": '<a href="mailto:x@example.org">x@example.org</a>'},
             )
         self.assertEqual(rendered, 'Pište na <a href="mailto:x@example.org">x@example.org</a>.')

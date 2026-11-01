@@ -7997,7 +7997,7 @@ msgstr "Disconnect"
 
 #: dokument/views.py:2809
 msgid "dokument.views.pripojit.pripojitDoAkce.title"
-msgstr "Attach existing document to fieldwork"
+msgstr "Link existing document to fieldwork"
 
 #: dokument/views.py:2811
 msgid "dokument.views.pripojit.pripojitDoAkce.submitButton.text"
@@ -8005,7 +8005,7 @@ msgstr "Link"
 
 #: dokument/views.py:2819
 msgid "dokument.views.pripojit.pripojitDoProjektu.title"
-msgstr "Attach existing document to project"
+msgstr "Link existing document to project"
 
 #: dokument/views.py:2821
 msgid "dokument.views.pripojit.pripojitDoProjektu.submitButton.text"
@@ -8436,7 +8436,7 @@ msgstr "Add fieldwork"
 
 #: ez/templates/ez/detail.html:59
 msgid "ez.templates.detail.odkazy.tableAkce.label"
-msgstr "Attached fieldworks"
+msgstr "Attached fieldwork events"
 
 #: ez/templates/ez/detail.html:60
 msgid "ez.templates.detail.odkazy.zadnaAkce.text"
@@ -10410,7 +10410,7 @@ msgstr "Other cadastral areas"
 msgid "oznameni.forms.projektOznameniForm.podnet.tooltip"
 msgstr ""
 "Name of the construction or characteristics of another project (e.g. "
-"landscaping, raw material extraction logging, forestry, etc.)."
+"landscaping, raw material extraction, forestry logging, etc.)."
 
 #: oznameni/forms.py:317
 msgid "oznameni.forms.projektOznameniForm.lokalizace.tooltip"
@@ -12292,7 +12292,7 @@ msgstr ""
 msgid "projekt.forms.createProjekt.podnet.tooltip"
 msgstr ""
 "Name of the construction or characteristics of another project (e.g. "
-"landscaping, raw material extraction logging, forestry, etc.)."
+"landscaping, raw material extraction, forestry logging, etc.)."
 
 #: projekt/forms.py:87
 msgid "projekt.forms.createProjekt.lokalizace.tooltip"
@@ -12418,7 +12418,7 @@ msgstr ""
 msgid "projekt.forms.editProjekt.podnet.tooltip"
 msgstr ""
 "Name of the construction or characteristics of another project (e.g. "
-"landscaping, raw material extraction logging, forestry, etc.)."
+"landscaping, raw material extraction, forestry logging, etc.)."
 
 #: projekt/forms.py:289
 msgid "projekt.forms.editProjekt.lokalizace.tooltip"
@@ -13927,7 +13927,7 @@ msgstr "Home"
 
 #: templates/admin/update_running_job.html:40
 msgid "core.templates.admin.fedora_management.job_id"
-msgstr "Job ID"
+msgstr "Task ID"
 
 #: templates/admin/update_running_job.html:47
 msgid "core.templates.admin.fedora_management.stop_request"
@@ -17687,7 +17687,7 @@ msgstr "DIST11 - distribution update"
 msgid "oznameni.templates.components.uvod.collapsed.text"
 msgstr ""
 "<p>An area with archaeological finds refers not only to places where archaeological finds have been made in the past, but also to land where the terrain has not been directly disturbed by modern interventions and the occurrence of archaeological finds cannot be ruled out. <strong>The area with archaeological finds is therefore the entire territory of the Czech Republic</strong> with the exception of, for example, mined surface mines or sand pits. See more in the related <a href=\"https://isad.npu.cz/\" target=\"_blank\">services of the National Heritage Institute</a>.</p>\n"
-"<p>We recommend that you submit your announcement<strong>well in advance of the start of earthwork</strong> (no later than 30 days) so that all the necessary formalities associated with conducting a rescue archaeological fieldwork can be completed. This will prevent unnecessary delays to your project or possible damage to our shared cultural heritage.</p>\n"
+"<p>We recommend that you submit your announcement <strong>well in advance of the start of earthwork</strong> (no later than 30 days) so that all the necessary formalities associated with conducting a rescue archaeological fieldwork can be completed. This will prevent unnecessary delays to your project or possible damage to our shared cultural heritage.</p>\n"
 "<p>In the case of an archaeological find that was not made during archaeological fieldwork, it is necessary to proceed in accordance with <a href=\"https://www.zakonyprolidi.cz/cs/1987-20#cast3\" target=\"_blank\">Section 23(2) of Act No. 20/1987 Coll. on State Monument Care</a>, i.e. submit a notification to the Institute of Archaeology or the nearest museum, either directly or through the municipality in whose territorial jurisdiction the archaeological find occurred. <strong>The form below is not intended for this type of notification. </strong></p>\n"
 "<p>The information and documents provided in the announcement will be stored in the Archaeological Map of the Czech Republic system for the necessary period of time, and a summary will be sent to the email address you provide. </p>\n"
 "<p>If necessary, please do not hesitate to contact us at {mail_arup} (Bohemia) or {mail_arub} (Moravia and Silesia).</p>"
