@@ -5,6 +5,7 @@ from core.import_data_mappers import (
     ImportDataIncorrectStructureError,
     ImportDataIntegrityError,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from django.test import TestCase
 from heslar.hesla import HESLAR_DOKUMENT_MATERIAL, HESLAR_DOKUMENT_TYP
 from heslar.models import Heslar, HeslarDokumentTypMaterial, HeslarNazev
@@ -44,6 +45,7 @@ def _create_fixtures():
 class HeslarDokumentTypMaterialMapperInsertValidTest(TestCase):
     """Testy pro HeslarDokumentTypMaterialMapper — platný dataset (INSERT)."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data HeslarNazev a Heslar pro platný INSERT dataset."""
         self.heslar_typ, self.heslar_material = _create_fixtures()
@@ -133,6 +135,7 @@ class HeslarDokumentTypMaterialMapperInvalidStructureTest(TestCase):
 class HeslarDokumentTypMaterialMapperCreateRecordsTest(TestCase):
     """Testy pro HeslarDokumentTypMaterialMapper.create_records — akce INSERT."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data HeslarNazev a Heslar pro testy create_records INSERT."""
         self.heslar_typ, self.heslar_material = _create_fixtures()
@@ -168,6 +171,7 @@ class HeslarDokumentTypMaterialMapperCreateRecordsTest(TestCase):
 class HeslarDokumentTypMaterialMapperImportValidationTest(TestCase):
     """Testy pro HeslarDokumentTypMaterialMapper.import_validation."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data HeslarNazev a Heslar pro testy import_validation."""
         self.heslar_typ, self.heslar_material = _create_fixtures()
@@ -218,6 +222,7 @@ class HeslarDokumentTypMaterialMapperImportValidationTest(TestCase):
 class HeslarDokumentTypMaterialMapperCheckRequiredFieldsTest(TestCase):
     """Testy pro HeslarDokumentTypMaterialMapper.check_required_fields."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data HeslarNazev a Heslar pro testy check_required_fields."""
         _create_fixtures()

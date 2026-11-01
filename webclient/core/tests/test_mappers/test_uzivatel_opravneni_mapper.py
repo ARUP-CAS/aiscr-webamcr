@@ -8,6 +8,7 @@ from core.import_data_mappers import (
     ImportDataIntegrityError,
     UzivatelOpravneniMapper,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from django.contrib.auth.models import Group
 from django.test import TestCase
 from heslar.hesla import HESLAR_LICENCE, HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
@@ -62,6 +63,7 @@ class UzivatelOpravneniMapperValidationTest(TestCase):
     """Testy pro UzivatelOpravneniMapper — validace aktuálního stavu relace."""
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Vytvoří minimálního uživatele a skupinu pro validační testy relace."""
         Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})

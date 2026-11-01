@@ -6,6 +6,7 @@ from core.import_data_mappers import (
     ImportDataIncorrectStructureError,
     ImportDataIntegrityError,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from core.tests.test_mappers.fixtures import create_externi_zdroj_fixture
 from django.test import TestCase
 from ez.models import ExterniZdroj
@@ -24,6 +25,7 @@ VALID_ROW = {
 class ExterniOdkazMapperInsertValidTest(TestCase):
     """Testy pro ExterniOdkazMapper — platný dataset (INSERT)."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací fixture ExterniZdroj."""
         self.externi_zdroj = create_externi_zdroj_fixture()
@@ -102,6 +104,7 @@ class ExterniOdkazMapperInvalidStructureTest(TestCase):
 class ExterniOdkazMapperCreateRecordsInsertTest(TestCase):
     """Testy pro ExterniOdkazMapper.create_records — akce INSERT."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací fixture ExterniZdroj."""
         self.externi_zdroj = create_externi_zdroj_fixture()
@@ -136,6 +139,7 @@ class ExterniOdkazMapperCreateRecordsInsertTest(TestCase):
 class ExterniOdkazMapperImportValidationTest(TestCase):
     """Testy pro ExterniOdkazMapper.import_validation."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací fixture ExterniZdroj a uloží instanci ExterniOdkaz pro UPDATE testy."""
         self.externi_zdroj = create_externi_zdroj_fixture()
@@ -158,6 +162,7 @@ class ExterniOdkazMapperImportValidationTest(TestCase):
 class ExterniOdkazMapperCheckRequiredFieldsTest(TestCase):
     """Testy pro ExterniOdkazMapper.check_required_fields."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací fixture ExterniZdroj."""
         self.externi_zdroj = create_externi_zdroj_fixture()

@@ -5,6 +5,7 @@ from core.import_data_mappers import (
     ImportDataIntegrityError,
     TvarMapper,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from core.tests.test_mappers.fixtures import create_dokument_fixture
 from django.test import TestCase
 from dokument.models import Dokument, Tvar
@@ -25,6 +26,7 @@ VALID_ROW = {
 class TvarMapperInsertValidTest(TestCase):
     """Testy pro TvarMapper — platný dataset (INSERT)."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data Dokument, HeslarNazev a Heslar pro platný INSERT dataset."""
         self.dokument = create_dokument_fixture()
@@ -126,6 +128,7 @@ class TvarMapperInvalidStructureTest(TestCase):
 class TvarMapperCreateRecordsInsertTest(TestCase):
     """Testy pro TvarMapper.create_records — akce INSERT."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data Dokument, HeslarNazev a Heslar pro testy create_records."""
         self.dokument = create_dokument_fixture()
@@ -174,6 +177,7 @@ class TvarMapperCreateRecordsInsertTest(TestCase):
 class TvarMapperImportValidationTest(TestCase):
     """Testy pro TvarMapper.import_validation."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data Dokument, HeslarNazev, Heslar a Tvar pro testy import_validation."""
         self.dokument = create_dokument_fixture()

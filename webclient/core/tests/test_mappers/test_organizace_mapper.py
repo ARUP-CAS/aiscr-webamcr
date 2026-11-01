@@ -9,6 +9,7 @@ from core.import_data_mappers import (
     ImportDataLimitChoicesError,
     OrganizaceMapper,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from django.test import TestCase
 from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_LICENCE, HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
@@ -91,6 +92,7 @@ def _create_required_heslar_fixtures():
 class OrganizaceMapperInsertValidTest(TestCase):
     """Testy pro OrganizaceMapper — platný dataset (INSERT)."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří Heslar fixture pro typ_organizace."""
         _create_required_heslar_fixtures()
@@ -157,12 +159,13 @@ class OrganizaceMapperInsertValidTest(TestCase):
     def test_map_typ_organizace_wrong_heslar_message_uses_verbose_name(self):
         """ImportDataLimitChoicesError pro typ_organizace vypíše verbose_name pole místo ID hesláře."""
         wrong_heslar_nazev = HeslarNazev.objects.create(nazev="Jiný heslář")
-        wrong_heslar = Heslar.objects.create(
-            ident_cely="HES-WRONG-001",
-            nazev_heslare=wrong_heslar_nazev,
-            heslo="Chybná hodnota",
-            heslo_en="Wrong value",
-        )
+        with mock_fedora_for_fixture():
+            wrong_heslar = Heslar.objects.create(
+                ident_cely="HES-WRONG-001",
+                nazev_heslare=wrong_heslar_nazev,
+                heslo="Chybná hodnota",
+                heslo_en="Wrong value",
+            )
         row = VALID_ROW.copy()
         row["typ_organizace"] = wrong_heslar.ident_cely
         mapper = OrganizaceMapper(row)
@@ -209,6 +212,7 @@ class OrganizaceMapperInsertValidTest(TestCase):
 class OrganizaceMapperInvalidStructureTest(TestCase):
     """Testy pro OrganizaceMapper — neplatná struktura dat."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří Heslar fixture pro typ_organizace."""
         _create_required_heslar_fixtures()
@@ -263,6 +267,7 @@ class OrganizaceMapperInvalidStructureTest(TestCase):
 class OrganizaceMapperCreateRecordsInsertTest(TestCase):
     """Testy pro OrganizaceMapper.create_records — akce INSERT."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří Heslar fixture pro typ_organizace."""
         _create_required_heslar_fixtures()
@@ -311,6 +316,7 @@ class OrganizaceMapperCreateRecordsInsertTest(TestCase):
 class OrganizaceMapperCreateRecordsUpdateTest(TestCase):
     """Testy pro OrganizaceMapper.create_records — akce UPDATE."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří potřebné Heslar záznamy a existující Organizace pro test aktualizace."""
         _, self.typ_org = _create_heslar_nazev_a_heslar("Typ organizace", "Veřejná", HESLAR_ORGTYP_IDENT)
@@ -349,6 +355,7 @@ class OrganizaceMapperCreateRecordsUpdateTest(TestCase):
 class OrganizaceMapperImportValidationTest(TestCase):
     """Testy pro OrganizaceMapper.import_validation."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří potřebné Heslar záznamy a existující Organizace pro validační testy."""
         _, self.typ_org = _create_heslar_nazev_a_heslar("Typ organizaceV", "Veřejná", HESLAR_ORGTYP_IDENT)
@@ -414,6 +421,7 @@ class OrganizaceMapperImportValidationTest(TestCase):
 class OrganizaceMapperCheckRequiredFieldsTest(TestCase):
     """Testy pro OrganizaceMapper.check_required_fields."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří Heslar fixture pro typ_organizace."""
         _create_required_heslar_fixtures()

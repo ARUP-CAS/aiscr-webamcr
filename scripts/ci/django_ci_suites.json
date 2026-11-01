@@ -13,6 +13,7 @@
     "core.tests.test_exceptions",
     "core.tests.test_fake_redis",
     "core.tests.test_fast_writer_rdf_parity",
+    "core.tests.test_fedora_fixtures",
     "core.tests.test_fedora_session",
     "core.tests.test_filter_distinct",
     "core.tests.test_generate_metadata_fast_selhani",

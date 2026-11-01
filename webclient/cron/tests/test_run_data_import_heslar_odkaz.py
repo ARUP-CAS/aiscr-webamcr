@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from core.constants import ROLE_BADATEL_ID
 from core.forms import ImportDataAdminForm
 from core.tests.fake_redis import FakeRedis
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from cron import tasks as cron_tasks
 from django.contrib.auth.models import Group
 from django.test import TestCase
@@ -24,6 +25,7 @@ class RunDataImportHeslarOdkazTest(TestCase):
     """Testy ``run_data_import`` pro ``HeslarOdkazMapper``."""
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Připraví sdílená fixture data pro importní testy."""
         Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})

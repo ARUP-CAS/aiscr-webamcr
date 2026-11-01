@@ -5,6 +5,7 @@ from core.import_data_mappers import (
     ImportDataIncorrectStructureError,
     ImportDataIntegrityError,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from django.test import TestCase
 from heslar.models import Heslar, HeslarNazev
 
@@ -212,6 +213,7 @@ class HeslarMapperCreateRecordsInsertTest(TestCase):
 class HeslarMapperCreateRecordsUpdateTest(TestCase):
     """Testy pro HeslarMapper.create_records — akce UPDATE."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data HeslarNazev a Heslar pro testy create_records UPDATE."""
         self.heslar_nazev = HeslarNazev.objects.create(nazev="Druh nálezu")
@@ -251,6 +253,7 @@ class HeslarMapperCreateRecordsUpdateTest(TestCase):
 class HeslarMapperImportValidationTest(TestCase):
     """Testy pro HeslarMapper.import_validation."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data HeslarNazev a Heslar pro testy import_validation."""
         self.heslar_nazev = HeslarNazev.objects.create(nazev="Druh nálezu")
