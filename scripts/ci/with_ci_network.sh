@@ -14,7 +14,7 @@ test_uid=$(id -u "$test_user")
 test_gid=$(id -g "$test_user")
 mkdir -p "$output"
 output=$(realpath "$output")
-sudo -n chown "$test_uid:$test_gid" "$output"
+sudo -n bash "$(dirname "${BASH_SOURCE[0]}")/prepare_ci_access.sh" "$test_uid" "$test_gid" "$PWD" "$output"
 
 cleanup() {
     result=$?

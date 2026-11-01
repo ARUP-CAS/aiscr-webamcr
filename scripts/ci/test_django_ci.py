@@ -2,6 +2,8 @@
 
 import importlib.util
 import json
+import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -14,6 +16,68 @@ SCRIPTS = Path(__file__).resolve().parent
 
 class CiContractTests(unittest.TestCase):
     """Ověřuje chování, které by mohlo povolit síť nebo vynechat testy."""
+
+    @unittest.skipUnless(
+        sys.platform == "linux" and all(shutil.which(tool) for tool in ("sudo", "setfacl", "setpriv")),
+        "Requires Linux ACL tools and passwordless sudo",
+    )
+    def test_private_checkout_is_readable_without_write_or_sibling_access(self):
+        """Testovací UID projde privátními rodiči, přečte kód a zapíše jen výsledky."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            checkout = root / "private" / "checkout"
+            checkout.mkdir(parents=True, mode=0o700)
+            checkout.parent.chmod(0o700)
+            script = checkout / "fixture.py"
+            script.write_text("fixture")
+            script.chmod(0o600)
+            output = root / "private-results" / "suite"
+            output.mkdir(parents=True, mode=0o700)
+            output.parent.chmod(0o700)
+            sibling = root / "unrelated-secret"
+            sibling.write_text("private")
+            sibling.chmod(0o600)
+            try:
+                subprocess.run(
+                    [
+                        "sudo",
+                        "-n",
+                        "bash",
+                        str(SCRIPTS / "prepare_ci_access.sh"),
+                        "20000",
+                        "20000",
+                        str(checkout),
+                        str(output),
+                    ],
+                    check=True,
+                )
+                code = (
+                    "import os,sys; from pathlib import Path; "
+                    "assert Path(sys.argv[1]).read_text() == 'fixture'; "
+                    "assert not os.access(Path(sys.argv[1]).parent, os.W_OK); "
+                    "assert not os.access(sys.argv[3], os.R_OK); "
+                    "Path(sys.argv[2], 'result').write_text('ok')"
+                )
+                subprocess.run(
+                    [
+                        "sudo",
+                        "-n",
+                        "setpriv",
+                        "--reuid=20000",
+                        "--regid=20000",
+                        "--clear-groups",
+                        "--no-new-privs",
+                        sys.executable,
+                        "-c",
+                        code,
+                        str(script),
+                        str(output),
+                        str(sibling),
+                    ],
+                    check=True,
+                )
+            finally:
+                subprocess.run(["sudo", "-n", "chown", "-R", f"{os.getuid()}:{os.getgid()}", str(root)], check=True)
 
     def test_network_guard_blocks_resolution_before_dns(self):
         """Nepovolená doména nesmí vyvolat ani DNS dotaz."""

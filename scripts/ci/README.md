@@ -42,7 +42,10 @@ suite. Dependency installation runs before network restrictions.
 
 Use the firewall launcher only on disposable Linux runners with passwordless
 sudo and iptables; it creates a dedicated user and permits the workflow's fixed
-service ports. Local Python-only diagnostics do not provide the kernel firewall.
+service ports. The `acl` package is required: `prepare_ci_access.sh` gives that
+user read-only access to the checkout and traversal through private parent
+directories. Only the results directory is writable; unrelated files remain
+private. Local Python-only diagnostics do not provide the kernel firewall.
 
 ## Results
 

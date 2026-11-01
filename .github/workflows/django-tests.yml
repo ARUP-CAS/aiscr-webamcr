@@ -31,7 +31,7 @@ jobs:
         id: native
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends gdal-bin libgdal-dev libgeos-dev libpq-dev libmagic1 gettext iptables
+          sudo apt-get install -y --no-install-recommends gdal-bin libgdal-dev libgeos-dev libpq-dev libmagic1 gettext iptables acl
       - name: Install compiled dependencies
         id: dependencies
         run: python -m pip install -r webclient/requirements-test.txt
@@ -102,7 +102,7 @@ jobs:
         id: native
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends gdal-bin libgdal-dev libgeos-dev libpq-dev libmagic1 gettext iptables
+          sudo apt-get install -y --no-install-recommends gdal-bin libgdal-dev libgeos-dev libpq-dev libmagic1 gettext iptables acl
       - name: Install compiled dependencies
         id: dependencies
         run: python -m pip install -r webclient/requirements-test.txt
