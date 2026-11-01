@@ -63,7 +63,7 @@ sudo -n env \
     "AMCR_CI_DB_USER=${AMCR_CI_DB_USER:-amcr_ci}" \
     "AMCR_CI_DB_PASSWORD=${AMCR_CI_DB_PASSWORD:-ci-only-password}" \
     setpriv --reuid="$test_uid" --regid="$test_gid" --init-groups --no-new-privs --bounding-set=-all \
-    "$python_bin" .agents/scripts/run_django_ci.py --suite "$suite" --output-dir "$output" || result=$?
+    "$python_bin" scripts/ci/run_django_ci.py --suite "$suite" --output-dir "$output" || result=$?
 
 blocked=$(rejected_packets)
 if [[ "$blocked" -gt 0 ]]; then

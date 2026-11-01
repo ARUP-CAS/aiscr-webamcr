@@ -1,5 +1,6 @@
 {
   "fast": [
+    "api.tests.test_get_user_info",
     "api.tests.test_models",
     "arch_z.tests.test_check_stavu",
     "core.tests.test_admin_sites_import_data",
@@ -46,6 +47,7 @@
     "api.tests.test_api",
     "api.tests.test_api_permissions",
     "api.tests.test_record_lock_cache",
+    "api.tests.test_token_auth",
     "core.tests.test_anonymizace",
     "core.tests.test_coord_transform",
     "core.tests.test_distribution_history",

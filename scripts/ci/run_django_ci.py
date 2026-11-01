@@ -13,7 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 PROJECT = ROOT / "webclient"
-MANIFEST = ROOT / ".agents/config/django_ci_suites.json"
+MANIFEST = Path(__file__).with_name("django_ci_suites.json")
 
 
 def test_modules(project):
@@ -140,7 +140,7 @@ def main():
     parser.add_argument("--validate", action="store_true")
     parser.add_argument("--child", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--suite", choices=("fast", "database"))
-    parser.add_argument("--output-dir", type=Path, default=Path(".agents/ci-results"))
+    parser.add_argument("--output-dir", type=Path, default=Path(tempfile.gettempdir()) / "amcr-ci-results")
     args = parser.parse_args()
     try:
         suites = load_suites()

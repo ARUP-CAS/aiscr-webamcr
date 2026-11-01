@@ -38,11 +38,11 @@ jobs:
       - name: Validate explicit test inventory and CI helpers
         id: inventory
         run: |
-          python .agents/scripts/run_django_ci.py --validate
-          python -m unittest discover -s .agents/scripts -p test_django_ci.py -v
+          python scripts/ci/run_django_ci.py --validate
+          python -m unittest discover -s scripts/ci -p test_django_ci.py -v
       - name: Run tests with external networking blocked
         id: tests
-        run: bash .agents/scripts/with_ci_network.sh fast "$RUNNER_TEMP/django-fast" "$(command -v python)"
+        run: bash scripts/ci/with_ci_network.sh fast "$RUNNER_TEMP/django-fast" "$(command -v python)"
       - name: Publish result summary
         if: always()
         env:
@@ -108,7 +108,7 @@ jobs:
         run: python -m pip install -r webclient/requirements-test.txt
       - name: Validate explicit test inventory
         id: inventory
-        run: python .agents/scripts/run_django_ci.py --validate
+        run: python scripts/ci/run_django_ci.py --validate
       - name: Run tests with external networking blocked
         id: tests
         env:
@@ -117,7 +117,7 @@ jobs:
         run: |
           AMCR_CI_SERVICE_IPS=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' "$POSTGIS_ID" "$REDIS_ID" | tr '\n' ' ')
           export AMCR_CI_SERVICE_IPS
-          bash .agents/scripts/with_ci_network.sh database "$RUNNER_TEMP/django-database" "$(command -v python)"
+          bash scripts/ci/with_ci_network.sh database "$RUNNER_TEMP/django-database" "$(command -v python)"
       - name: Publish result summary
         if: always()
         env:
