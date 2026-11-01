@@ -7557,11 +7557,11 @@ msgstr "Attach document"
 
 #: dokument/templates/dokument/dokument_table.html:23
 msgid "dokument.templates.dokument_table.pripojitExistDokument.label"
-msgstr "Attach existing document"
+msgstr "Link existing document"
 
 #: dokument/templates/dokument/dokument_table.html:28
 msgid "dokument.templates.dokument_table.pripojitExistDokumentZProjektu.label"
-msgstr "Attach existing document from project"
+msgstr "Link existing document from project"
 
 #: dokument/templates/dokument/dokument_table.html:34
 msgid "dokument.templates.dokument_table.pridatNovyDokumentDoProjektu.label"
@@ -7570,7 +7570,7 @@ msgstr "Create document"
 #: dokument/templates/dokument/dokument_table.html:38
 msgid ""
 "dokument.templates.dokument_table.pripojitExistDokumentDoProjektu.label"
-msgstr "Attach existing document"
+msgstr "Link existing document"
 
 #: dokument/templates/dokument/dokument_table.html:49
 #: ez/templates/ez/ez_odkazy_table.html:23
@@ -13894,7 +13894,7 @@ msgstr "Bulk import reports"
 
 #: templates/admin/import_data/import_reports.html:26
 msgid "core.templates.admin.import_reports.job_id"
-msgstr "Job ID"
+msgstr "Task ID"
 
 #: templates/admin/import_data/import_reports.html:27
 msgid "core.templates.admin.import_reports.file_name"
