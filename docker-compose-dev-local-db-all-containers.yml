@@ -92,7 +92,7 @@ services:
 
   redis:
     build: ./redis
-    image: redis:8.10.1
+    image: redis:8.10.2
     ports:
       - "6379:6379"
     secrets:
@@ -100,7 +100,7 @@ services:
     command: sh -c 'redis-server /home/redis/redis.conf'
 
   redis-exporter:
-    image: oliver006/redis_exporter:v1.93.0-alpine
+    image: oliver006/redis_exporter:v1.96.0-alpine
     ports:
       - "9121:9121"
     secrets:
@@ -191,7 +191,7 @@ services:
     entrypoint: ["/bin/sh", "/docker-entrypoint.d/celery_exporter_entrypoint.sh"]
 
   selenium:
-    image: selenium/standalone-chromium:152.0
+    image: selenium/standalone-chromium:155.0
     ports:
       - 4444:4444
       - 5900:5900
