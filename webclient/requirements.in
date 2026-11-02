@@ -49,6 +49,6 @@ requests==2.34.2
 httpx==0.28.1
 polib==1.2.0
 pytz==2026.5
-python-dateutil==2.9.0.post0
+python-dateutil==3.0.0
 rdflib==7.6.0
 bleach==6.4.0
