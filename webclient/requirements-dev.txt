@@ -263,7 +263,7 @@ packaging==26.3
     #   kombu
     #   virtualenv
     #   wheel
-pandas==3.0.6
+pandas==3.1.0
     # via -r requirements-test.txt
 pdf2image==1.17.0
     # via -r requirements-test.txt

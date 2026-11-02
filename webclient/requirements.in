@@ -41,7 +41,7 @@ py7zr==1.1.4
 rarfile==4.5
 django-cacheops==7.2
 django-model-utils==5.0.0
-pandas==3.0.6
+pandas==3.1.0
 tablib[all]==3.10.0
 django-object-actions==5.1.2
 uWSGI==2.0.31
