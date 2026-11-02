@@ -144,16 +144,6 @@ CACHEOPS = {
 
 SECRET_KEY = get_secret("SECRET_KEY")
 
-DB_CONNECTION_OPTIONS = "-c statement_timeout=90000"
-# Pojistka proti DB transakci, která zůstane otevřená a nečinná, např. při zaseknutém požadavku
-# do Fedory (#4454). Hodnota musí být nad ``FEDORA_CONTENT_READ_TIMEOUT``, jinak by DB spojení
-# zavřela dřív, než doběhne zápis do Fedory. Nastavuje se jen pro uWSGI workery (``env``
-# v ``scripts/uwsgi_site.ini``);
-# Celery a management příkazy drží DB transakci i během dlouhých dávek zápisů do Fedory.
-DB_IDLE_IN_TRANSACTION_SESSION_TIMEOUT = os.environ.get("DB_IDLE_IN_TRANSACTION_SESSION_TIMEOUT")
-if DB_IDLE_IN_TRANSACTION_SESSION_TIMEOUT:
-    DB_CONNECTION_OPTIONS += f" -c idle_in_transaction_session_timeout={int(DB_IDLE_IN_TRANSACTION_SESSION_TIMEOUT)}"
-
 DATABASES = {
     "default": {
         "ENGINE": "django_prometheus.db.backends.postgis",
@@ -165,7 +155,7 @@ DATABASES = {
         "ATOMIC_REQUESTS": True,
         "DISABLE_SERVER_SIDE_CURSORS": True,
         "OPTIONS": {
-            "options": DB_CONNECTION_OPTIONS,
+            "options": "-c statement_timeout=90000",
         },
     },
     "urgent": {
@@ -177,7 +167,7 @@ DATABASES = {
         "PORT": get_secret("DB_PORT"),
         "DISABLE_SERVER_SIDE_CURSORS": True,
         "OPTIONS": {
-            "options": DB_CONNECTION_OPTIONS,
+            "options": "-c statement_timeout=90000",
         },
     },
 }
@@ -726,11 +716,14 @@ FEDORA_PROTOCOL = get_secret("FEDORA_PROTOCOL", "https")
 FEDORA_TRANSACTION_URL = get_secret("FEDORA_TRANSACTION_URL", "")
 # Timeouty HTTP požadavků do Fedory v sekundách (#4454). Read timeout omezuje čekání na další data
 # od Fedory, ne celkovou dobu požadavku. Výchozí 300 s pokrývá nejdelší pozorované čekání na zámek
-# (~180 s); connect 10 s dává rezervu při swapování hostitele. Zápis obsahu binárních souborů a commit transakce mají 1 h, protože Fedora po přijetí
-# souboru počítá digest a při commitu přesouvá obsah do OCFL; upload nesmí spadnout na timeoutu.
+# (~180 s); connect 10 s dává rezervu při swapování hostitele. Zápis obsahu binárních souborů
+# a commit transakce mají 600 s jako ``uwsgi_read_timeout`` v ``proxy/default.conf``: Fedora po
+# přijetí souboru počítá digest a při commitu přesouvá obsah do OCFL (na produkci nejvýš ~8 s).
+# Přenos souboru od klienta se do timeoutu nepočítá, tělo požadavku bufferuje nginx dřív, než
+# požadavek převezme Django.
 FEDORA_CONNECT_TIMEOUT = float(get_secret("FEDORA_CONNECT_TIMEOUT", 10))
 FEDORA_READ_TIMEOUT = float(get_secret("FEDORA_READ_TIMEOUT", 300))
-FEDORA_CONTENT_READ_TIMEOUT = float(get_secret("FEDORA_CONTENT_READ_TIMEOUT", 3600))
+FEDORA_CONTENT_READ_TIMEOUT = float(get_secret("FEDORA_CONTENT_READ_TIMEOUT", 600))
 
 DATACITE_URL = get_secret("DATACITE_URL", "")
 DOI_USER = get_secret("DOI_USER", "")

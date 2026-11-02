@@ -22,7 +22,7 @@ from core.repository_connector import (
 from django.test import SimpleTestCase, override_settings
 from uzivatel.models import User
 
-TIMEOUTY = {"FEDORA_CONNECT_TIMEOUT": 5.0, "FEDORA_READ_TIMEOUT": 300.0, "FEDORA_CONTENT_READ_TIMEOUT": 3600.0}
+TIMEOUTY = {"FEDORA_CONNECT_TIMEOUT": 10.0, "FEDORA_READ_TIMEOUT": 300.0, "FEDORA_CONTENT_READ_TIMEOUT": 600.0}
 URL = "http://fcrepo:8080/rest/AMCR/record/X-M-000023036"
 
 
@@ -47,12 +47,12 @@ class SendRequestTimeoutTest(SimpleTestCase):
     def test_metadata_maji_vychozi_timeout(self):
         """Zápis metadat dostane výchozí ``(connect, read)``."""
         session, _ = self._send(FedoraRequestType.UPDATE_METADATA, **{"put.return_value.status_code": 204})
-        self.assertEqual(session.put.call_args.kwargs["timeout"], (5.0, 300.0))
+        self.assertEqual(session.put.call_args.kwargs["timeout"], (10.0, 300.0))
 
     def test_get_ma_vychozi_timeout(self):
         """GET dostane výchozí timeout."""
         session, _ = self._send(FedoraRequestType.GET_METADATA, **{"get.return_value.status_code": 200})
-        self.assertEqual(session.get.call_args.kwargs["timeout"], (5.0, 300.0))
+        self.assertEqual(session.get.call_args.kwargs["timeout"], (10.0, 300.0))
 
     def test_obsah_souboru_ma_dlouhy_timeout(self):
         """
@@ -66,17 +66,17 @@ class SendRequestTimeoutTest(SimpleTestCase):
                     **{"post.return_value.status_code": 201, "put.return_value.status_code": 201},
                 )
                 volani = session.post.call_args or session.put.call_args
-                self.assertEqual(volani.kwargs["timeout"], (5.0, 3600.0))
+                self.assertEqual(volani.kwargs["timeout"], (10.0, 600.0))
 
     def test_zalozeni_kontejneru_souboru_nema_dlouhy_timeout(self):
         """``CREATE_BINARY_FILE`` posílá jen RDF s autorem, obsah jde až v ``CREATE_BINARY_FILE_CONTENT``."""
         session, _ = self._send(FedoraRequestType.CREATE_BINARY_FILE, **{"post.return_value.status_code": 201})
-        self.assertEqual(session.post.call_args.kwargs["timeout"], (5.0, 300.0))
+        self.assertEqual(session.post.call_args.kwargs["timeout"], (10.0, 300.0))
 
     def test_mazani_ma_timeout(self):
         """DELETE (dřív bez timeoutu) dostane výchozí timeout."""
         session, _ = self._send(FedoraRequestType.DELETE_CONTAINER, **{"delete.return_value.status_code": 204})
-        self.assertEqual(session.delete.call_args.kwargs["timeout"], (5.0, 300.0))
+        self.assertEqual(session.delete.call_args.kwargs["timeout"], (10.0, 300.0))
 
     def test_read_timeout_zapisu_je_fedora_no_response_error(self):
         """
@@ -87,10 +87,15 @@ class SendRequestTimeoutTest(SimpleTestCase):
             self._send(FedoraRequestType.METADATA_UPDATE_RDF_DATA, **{"patch.side_effect": requests.ReadTimeout()})
         self.assertIsNotNone(ctx.exception.fedora_transaction)
 
-    def test_read_timeout_get_vraci_none(self):
-        """Vypršení GET se chová jako ostatní síťové chyby GET: výsledek ``None``."""
-        _, result = self._send(FedoraRequestType.GET_METADATA, **{"get.side_effect": requests.ReadTimeout()})
-        self.assertIsNone(result)
+    def test_read_timeout_get_je_fedora_no_response_error(self):
+        """
+        Vypršení GET skončí ``FedoraNoResponseError`` místo ``None``; s ``None`` volající padali
+        na ``AttributeError`` mimo rollback nebo ho brali jako neexistující zdroj.
+        """
+        with self.assertLogs("core.repository_connector", level="ERROR"):
+            with self.assertRaises(FedoraNoResponseError) as ctx:
+                self._send(FedoraRequestType.GET_BINARY_FILE_CONTAINER, **{"get.side_effect": requests.ReadTimeout()})
+        self.assertIsNotNone(ctx.exception.fedora_transaction)
 
     def test_kontrola_smazani_ma_timeout_a_prevadi_chybu(self):
         """
@@ -102,7 +107,7 @@ class SendRequestTimeoutTest(SimpleTestCase):
             with self.assertLogs("core.repository_connector", level="ERROR"):
                 with self.assertRaises(FedoraNoResponseError):
                     FedoraRepositoryConnector.check_container_deleted_or_not_exists("X-M-000023036", "projekt")
-        self.assertEqual(session.get.call_args.kwargs["timeout"], (5.0, 300.0))
+        self.assertEqual(session.get.call_args.kwargs["timeout"], (10.0, 300.0))
 
 
 @override_settings(**TIMEOUTY)
@@ -127,13 +132,13 @@ class TransactionRequestTimeoutTest(SimpleTestCase):
         """Commit přesouvá obsah do OCFL, proto má timeout jako zápis obsahu."""
         session = mock.Mock(**{"put.return_value.status_code": 204})
         self._send(self._transaction(), FedoraTransactionOperation.COMMIT, session)
-        self.assertEqual(session.put.call_args.kwargs["timeout"], (5.0, 3600.0))
+        self.assertEqual(session.put.call_args.kwargs["timeout"], (10.0, 600.0))
 
     def test_rollback_ma_vychozi_timeout(self):
         """Rollback dostane výchozí timeout."""
         session = mock.Mock(**{"delete.return_value.status_code": 204})
         self._send(self._transaction(), FedoraTransactionOperation.ROLLBACK, session)
-        self.assertEqual(session.delete.call_args.kwargs["timeout"], (5.0, 300.0))
+        self.assertEqual(session.delete.call_args.kwargs["timeout"], (10.0, 300.0))
 
     def test_timeout_commitu_je_commit_failed_error(self):
         """Vypršení commitu skončí ``FedoraTransactionCommitFailedError`` a výsledek se neuloží jako commitnutý."""
@@ -162,4 +167,4 @@ class TransactionRequestTimeoutTest(SimpleTestCase):
         with mock.patch("core.repository_connector._get_fedora_session", return_value=session):
             with self.assertRaises(FedoraNoResponseError):
                 FedoraTransaction()
-        self.assertEqual(session.post.call_args.kwargs["timeout"], (5.0, 300.0))
+        self.assertEqual(session.post.call_args.kwargs["timeout"], (10.0, 300.0))

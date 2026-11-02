@@ -880,7 +880,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             :raises FedoraBinaryFileAlreadyDeletedError: Vyvolá se, pokud smazání binárního souboru skončí
                 chybou a ``_is_resource_gone`` potvrdí, že soubor už ve Fedoře není.
             :raises FedoraError: Vyvolá se při jiné chybové odpovědi Fedory.
-            :raises FedoraNoResponseError: Vyvolá se, pokud se zápisový požadavek nepodaří odeslat
+            :raises FedoraNoResponseError: Vyvolá se, pokud se požadavek nepodaří odeslat
                 nebo Fedora neodpoví v rámci timeoutu (``FEDORA_READ_TIMEOUT``, u obsahu souborů
                 ``FEDORA_CONTENT_READ_TIMEOUT``).
         """
@@ -926,11 +926,18 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             try:
                 response = session.get(url, headers=headers, auth=auth, verify=False, timeout=timeout)
             except requests.exceptions.RequestException as exc:
-                logger.warning(
+                # Dřív se vracelo ``None``: část volajících pak spadla na ``AttributeError`` mimo
+                # rollback a část ho vyhodnotila jako „zdroj neexistuje“ a zkusila ho vytvořit (#4454).
+                logger.error(
                     "core_repository_connector._send_request.get_request_failed",
-                    extra={"request_url": url, "request_type": request_type, "error": exc},
+                    extra={
+                        "request_url": url,
+                        "request_type": request_type,
+                        "transaction": self.transaction_uid,
+                        "error": exc,
+                    },
                 )
-                return None
+                raise FedoraNoResponseError(url, str(exc), None, fedora_transaction=self.transaction) from exc
         else:
             try:
                 if request_type in (

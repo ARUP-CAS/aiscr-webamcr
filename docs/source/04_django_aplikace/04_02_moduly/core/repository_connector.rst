@@ -273,7 +273,7 @@ Třídy
       :raises FedoraBinaryFileAlreadyDeletedError: Vyvolá se, pokud smazání binárního souboru skončí
               chybou a ``_is_resource_gone`` potvrdí, že soubor už ve Fedoře není.
       :raises FedoraError: Vyvolá se při jiné chybové odpovědi Fedory.
-      :raises FedoraNoResponseError: Vyvolá se, pokud se zápisový požadavek nepodaří odeslat
+      :raises FedoraNoResponseError: Vyvolá se, pokud se požadavek nepodaří odeslat
               nebo Fedora neodpoví v rámci timeoutu (``FEDORA_READ_TIMEOUT``, u obsahu souborů
               ``FEDORA_CONTENT_READ_TIMEOUT``).
 
