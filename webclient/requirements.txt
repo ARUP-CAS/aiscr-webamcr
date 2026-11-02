@@ -8,7 +8,7 @@ amqp==5.4.1
     # via kombu
 anyio==4.15.1
     # via httpx
-asgiref==3.11.1
+asgiref==3.13.0
     # via
     #   -r requirements.in
     #   django
@@ -54,7 +54,7 @@ cron-descriptor==1.4.5
     # via django-celery-beat
 defusedxml==0.7.1
     # via odfpy
-django==6.0.8
+django==6.0.9
     # via
     #   -r requirements.in
     #   crispy-bootstrap5
@@ -163,7 +163,7 @@ openpyxl==3.1.5
     # via tablib
 packaging==26.3
     # via kombu
-pandas==3.0.6
+pandas==3.1.0
     # via
     #   -r requirements.in
     #   tablib
@@ -173,7 +173,7 @@ phonenumbers==9.0.41
     # via -r requirements.in
 piexif==1.1.3
     # via -r requirements.in
-pillow==12.3.0
+pillow==13.0.0
     # via
     #   -r requirements.in
     #   pdf2image
@@ -200,7 +200,7 @@ pyparsing==3.3.3
     # via
     #   pyrtf3
     #   rdflib
-pypdf==6.19.0
+pypdf==6.21.2
     # via -r requirements.in
 pyppmd==1.3.1
     # via py7zr
@@ -208,7 +208,7 @@ pyrtf3==0.47.5
     # via -r requirements.in
 python-crontab==3.4.0
     # via django-celery-beat
-python-dateutil==2.9.0.post0
+python-dateutil==3.0.0
     # via
     #   -r requirements.in
     #   celery
@@ -231,7 +231,7 @@ redis==8.1.0
     # via
     #   -r requirements.in
     #   django-cacheops
-reportlab==5.0.1
+reportlab==5.1.0
     # via -r requirements.in
 requests==2.34.2
     # via
@@ -262,6 +262,7 @@ tzdata==2026.5
     # via
     #   django-celery-beat
     #   kombu
+    #   python-dateutil
 tzlocal==5.4.4
     # via celery
 urllib3==2.8.0

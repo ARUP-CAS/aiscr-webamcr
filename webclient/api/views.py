@@ -50,6 +50,7 @@ from core.soubor_naming import get_mime_safe_soubor_name, get_next_soubor_name
 from core.translation import format_message
 from core.utils import get_cadastre_from_point, hodnota_pro_log
 from django.conf import settings
+from django.contrib.auth.signals import user_logged_in
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.contrib.gis.geos import Point as GEOSPoint
 from django.core.cache import cache
@@ -3569,6 +3570,18 @@ class GetUserInfo(APIView):
         "get",
     ]
 
+    def __init__(self, **kwargs):
+        """
+        Inicializuje pohled a nastaví příznak ``is_exception`` na ``False``.
+
+        Příznak přepne ``handle_exception`` na ``True``; podle něj se chybová odpověď
+        vykreslí jako JSON místo XML.
+
+        :param kwargs: Atributy pohledu předané z ``as_view()``, předávají se do ``APIView.__init__()``.
+        """
+        super().__init__(**kwargs)
+        self.is_exception = False
+
     def get(self, request, format=None):
         """
         Vrací výsledek operace.
@@ -3594,36 +3607,34 @@ class GetUserInfo(APIView):
 
     def perform_content_negotiation(self, request, force=False):
         """
-        Provádí operaci perform content negotiation.
+        Vybere renderer odpovědi; po výjimce vždy JSON, jinak standardní negociace DRF (XML).
 
-        :param request: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
-        :param force: Parametr ``force`` se předává do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací hodnotu podle větve zpracování, typicky: n-tici, výsledek volání ``perform_content_negotiation()``.
+        :param request: Požadavek DRF předávaný do standardní negociace.
+        :param force: Předává se do ``APIView.perform_content_negotiation()``; při ``True`` se při
+            neshodě s hlavičkou ``Accept`` použije první renderer místo vyhození ``NotAcceptable``.
+        :return: Dvojice ``(renderer, media_type)``.
         """
-        try:
-            self.is_exception
+        if self.is_exception:
             return JSONRenderer(), JSONRenderer.media_type
-        except Exception:
-            return super().perform_content_negotiation(request, force)
+        return super().perform_content_negotiation(request, force)
 
     def finalize_response(self, request, response, *args, **kwargs):
         """
-        Provádí operaci finalize response.
+        Dokončí odpověď; po výjimce přepne renderer požadavku na JSON.
 
-        :param request: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, ``finalize_response()``, pracuje se s atributy ``accepted_renderer``, ``accepted_media_type``, vstupuje do návratové hodnoty.
-        :param response: Textový nebo strukturální vstup `response` používaný při sestavení nebo zpracování obsahu.
-        :param args: Parametr ``args`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
+        Případné výjimky se nepotlačují a propadnou do standardního zpracování Django/DRF.
 
-            :return: Vrací výsledek volání ``finalize_response()``.
+        :param request: Požadavek DRF; po výjimce se mu přepíšou ``accepted_renderer`` a ``accepted_media_type``.
+        :param response: Odpověď vrácená z ``get()`` nebo ``handle_exception()``.
+        :param args: Poziční argumenty předávané do ``APIView.finalize_response()``.
+        :param kwargs: Pojmenované argumenty předávané do ``APIView.finalize_response()``.
+        :return: Odpověď dokončená voláním ``APIView.finalize_response()``.
         """
-        try:
-            self.is_exception
-            neg = self.perform_content_negotiation(request, force=True)
-            request.accepted_renderer, request.accepted_media_type = neg
-        finally:
-            return super().finalize_response(request, response, *args, **kwargs)
+        if self.is_exception:
+            request.accepted_renderer, request.accepted_media_type = self.perform_content_negotiation(
+                request, force=True
+            )
+        return super().finalize_response(request, response, *args, **kwargs)
 
 
 @method_decorator(odstavka_in_progress, name="post")
@@ -3632,17 +3643,23 @@ class ObtainAuthTokenWithUpdate(ObtainAuthToken):
 
     def post(self, request, *args, **kwargs):
         """
-        Obsluhuje HTTP metodu POST.
+        Ověří přihlašovací údaje a vrátí platný API token uživatele.
 
-        :param request: Parametr ``request`` předává se do volání ``get_serializer()``, pracuje se s atributy ``data``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+        Po úspěšném ověření vyšle signál ``user_logged_in`` (bez vytvoření session), takže se stejně
+        jako při přihlášení do AMČR aktualizuje ``last_login`` a zapíše ``UzivatelPrihlaseniLog``.
+        Token starší než ``TOKEN_EXPIRATION_HOURS`` se nahradí novým.
 
-            :return: Vrací výsledek volání ``Response()``.
+        :param request: Požadavek s ``username`` a ``password`` v ``request.data``.
+        :param args: Poziční argumenty pohledu (nepoužívají se).
+        :param kwargs: Pojmenované argumenty pohledu (nepoužívají se).
+        :return: ``Response`` s klíčem ``token``.
+        :raises ValidationError: Při neplatných přihlašovacích údajích (DRF vrátí HTTP 400).
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
+        # Same signal as django.contrib.auth.login(), without creating a session.
+        user_logged_in.send(sender=user.__class__, request=request._request, user=user)
         token, created = Token.objects.get_or_create(user=user)
         if not token.created + datetime.timedelta(hours=settings.TOKEN_EXPIRATION_HOURS) > timezone.now():
             try:

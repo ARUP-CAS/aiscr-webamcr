@@ -64,7 +64,7 @@ UDALOSTI: Dict[str, str] = OrderedDict(
         ),
         (
             "heslar.ruian_sync.shp_importer._resolve_shp_layer.stale_unpacked",
-            "Rozbalená vrstva SHP byla starší než archiv, rozbalena znovu",
+            "Rozbalená vrstva SHP byla starší než archiv, stará kopie smazána",
         ),
         (
             "heslar.ruian_sync.shp_importer._centroid_wkt.fallback_used",
