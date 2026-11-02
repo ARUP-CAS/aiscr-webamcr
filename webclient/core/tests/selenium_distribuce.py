@@ -19,6 +19,7 @@ import re
 import shutil
 import tempfile
 import time
+import warnings
 import zipfile
 from contextlib import ExitStack, contextmanager
 from datetime import datetime, timedelta
@@ -31,6 +32,7 @@ from django.conf import settings
 from django.urls import reverse
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
+from urllib3.exceptions import InsecureRequestWarning
 
 logger = logging.getLogger(__name__)
 
@@ -158,13 +160,19 @@ class DistribuceSeleniumMixin:
         Soubor stažený ve vzdáleném prohlížeči není z testu dostupný, proto se cookies prohlížeče
         přenesou do ``requests`` a odkaz se stáhne přímo z testovacího serveru.
 
+        Testovací server má self-signed certifikát a běží na IP adrese, se kterou certifikát
+        nesouhlasí, takže se certifikát neověřuje a varování ``InsecureRequestWarning`` se pro
+        tento požadavek potlačí.
+
         :param href: Absolutní URL odkazu ke stažení.
         :return: Odpověď ``requests.Response``.
         """
         session = requests.Session()
         for cookie in self.driver.get_cookies():
             session.cookies.set(cookie["name"], cookie["value"])
-        return session.get(href, verify=False, allow_redirects=False)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", InsecureRequestWarning)
+            return session.get(href, verify=False, allow_redirects=False)
 
     def vyber_distribuci_v_tabulce(self, soubor_pk, distribuce):
         """
