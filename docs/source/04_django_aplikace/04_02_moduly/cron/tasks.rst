@@ -162,8 +162,12 @@ Funkce
 
    Aktualizuje Redis snapshoty všech záznamů jedné třídy modelu.
 
+   Záznamy se zpracovávají po dávkách ``REDIS_SNAPSHOT_BATCH_SIZE``: existence klíčů se ověří jedním
+   pipeline voláním na dávku a chybějící (nebo při ``rewrite_existing`` všechny) snapshoty se vygenerují
+   jednou tabulkou přes ``generate_redis_snapshots()`` a zapíšou jedním pipeline voláním.
+
    :param r: Spojení na Redis.
-   :param current_class: Třída modelu s metodami ``redis_snapshot_id`` a ``generate_redis_snapshot()``.
+   :param current_class: Třída modelu s vlastností ``redis_snapshot_id`` a metodou ``generate_redis_snapshots()``.
    :param rewrite_existing: Pokud je ``True``, přepíše i existující klíče; jinak zapisuje jen chybějící.
    :return: N-tice (počet prošlých záznamů, počet zapsaných snapshotů).
 

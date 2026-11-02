@@ -19,6 +19,12 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``__init__()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
+   .. py:method:: initial_let()
+
+      Vrátí let navázaný na dokument v okamžiku vytvoření instance (používá signál ukládající metadata letu).
+
+      :return: Instance ``Let``, nebo ``None``, pokud dokument let neměl (nebo už neexistuje).
+
    .. py:method:: __str__()
 
              Vrací textovou reprezentaci objektu.
@@ -183,9 +189,19 @@ Třídy
 
    .. py:method:: generate_redis_snapshot()
 
-      Vygeneruje redis snapshot.
+      Vygeneruje Redis snapshot tohoto záznamu (deleguje na :meth:`generate_redis_snapshots`).
 
-      :return: Vrací n-tici.
+      :return: N-tice (klíč, data); data jsou ``None``, pokud záznam v databázi neexistuje.
+
+   .. py:method:: generate_redis_snapshots()
+
+      Vygeneruje Redis snapshoty více záznamů jednou tabulkou (``Model3DTable`` pro 3D modely, jinak ``DokumentTable``).
+
+      Související záznamy zobrazované v tabulce se načítají hromadně (``select_related`` /
+      ``prefetch_related``), takže počet dotazů nezávisí na počtu záznamů.
+
+      :param records: Instance modelu, pro které se snapshoty generují.
+      :return: Slovník ``{redis_snapshot_id: data}`` pro záznamy nalezené v databázi.
 
    .. py:method:: _get_doi_client()
 

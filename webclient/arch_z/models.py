@@ -22,7 +22,7 @@ from core.exceptions import MaximalIdentNumberError
 from core.translation import format_message
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.db.models import CheckConstraint, Q
+from django.db.models import CheckConstraint, Prefetch, Q
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.functional import cached_property
@@ -777,23 +777,63 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     def generate_redis_snapshot(self):
         """
-        Připraví data akce pro uložení snapshotu do Redis cache.
+        Vygeneruje Redis snapshot této akce (deleguje na :meth:`generate_redis_snapshots`).
 
-        :return: Vrací n-tici.
+        :return: N-tice (klíč, data), nebo ``(None, None)``, pokud akce v databázi neexistuje.
         """
-        from arch_z.tables import AkceTable
-
-        data = Akce.objects.filter(archeologicky_zaznam=self)
-        if data.count() > 0:
-            table = AkceTable(data=data)
-            data = RedisConnector.prepare_model_for_redis(table)
-            return self.redis_snapshot_id, data
-        else:
+        key = self.redis_snapshot_id
+        data = Akce.generate_redis_snapshots([self]).get(key)
+        if data is None:
             logger.warning(
                 "arch_z.models.Akce.generate_redis_snapshot.not_found",
                 extra={"ident_cely": self.archeologicky_zaznam.ident_cely},
             )
             return None, None
+        return key, data
+
+    @classmethod
+    def generate_redis_snapshots(cls, records):
+        """
+        Vygeneruje Redis snapshoty více záznamů jednou tabulkou ``AkceTable``.
+
+        Související záznamy zobrazované v tabulce se načítají hromadně (``select_related`` /
+        ``prefetch_related``), takže počet dotazů nezávisí na počtu záznamů.
+
+        :param records: Instance modelu, pro které se snapshoty generují.
+        :return: Slovník ``{redis_snapshot_id: data}`` pro záznamy nalezené v databázi.
+        """
+        from arch_z.tables import AkceTable
+
+        data = (
+            cls.objects.filter(pk__in=[record.pk for record in records])
+            .select_related(
+                "archeologicky_zaznam__pristupnost",
+                "archeologicky_zaznam__hlavni_katastr__okres__kraj",
+                "organizace",
+                "hlavni_vedouci",
+                "hlavni_typ",
+                "vedlejsi_typ",
+                "specifikace_data",
+            )
+            .prefetch_related(
+                Prefetch(
+                    "archeologicky_zaznam__katastry",
+                    queryset=RuianKatastr.objects.select_related("okres").defer(
+                        "hranice", "definicni_bod", "okres__hranice", "okres__definicni_bod"
+                    ),
+                ),
+                "akcevedouci_set__organizace",
+            )
+            .defer(
+                "archeologicky_zaznam__hlavni_katastr__hranice",
+                "archeologicky_zaznam__hlavni_katastr__definicni_bod",
+                "archeologicky_zaznam__hlavni_katastr__okres__hranice",
+                "archeologicky_zaznam__hlavni_katastr__okres__definicni_bod",
+                "archeologicky_zaznam__hlavni_katastr__okres__kraj__hranice",
+                "archeologicky_zaznam__hlavni_katastr__okres__kraj__definicni_bod",
+            )
+        )
+        return RedisConnector.prepare_models_for_redis(AkceTable(data=data))
 
     @classmethod
     def get_by_ident_cely(cls, ident_cely):
