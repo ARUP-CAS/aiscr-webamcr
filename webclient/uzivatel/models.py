@@ -258,10 +258,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             )
             # Archeologům přidej ke spolupracím s jinými archeology i jejich organizaci.
             if self.hlavni_role == archeolog_group:
-                if self.organizace_id:
-                    moje_spolupracujici_organizace.extend(self.organizace_podstrom_ids)
-                else:
-                    moje_spolupracujici_organizace.append(self.organizace_id)
+                moje_spolupracujici_organizace.extend(self.organizace_podstrom_ids)
             return moje_spolupracujici_organizace
         elif self.hlavni_role == archivar_group or self.hlavni_role == admin_group:
             # Admin a archivář standardně spolupracují se všemi organizacemi.
@@ -551,6 +548,8 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
 
     IDENT_PREFIX = "ORG"
     SEQUENCE_NAME = "organizace_ident_seq"
+    # Stable AMČR-specific key shared by every writer that validates or changes the hierarchy.
+    HIERARCHY_LOCK_KEY = (0x414D4352, 1)
     _subtree_cache_version = 0
 
     nazev = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev"), max_length=255, db_index=True)
@@ -615,6 +614,12 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
         blank=True,
         null=True,
     )
+
+    @classmethod
+    def lock_hierarchy(cls):
+        """Zamkne změny hierarchie organizací do konce aktuální transakce."""
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT pg_advisory_xact_lock(%s, %s)", cls.HIERARCHY_LOCK_KEY)
 
     @classmethod
     def get_subtree_ids(cls, root_id):

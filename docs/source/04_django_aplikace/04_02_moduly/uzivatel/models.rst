@@ -178,6 +178,10 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: lock_hierarchy()
+
+      Zamkne změny hierarchie organizací do konce aktuální transakce.
+
    .. py:method:: get_subtree_ids()
 
       Vrátí ID organizace a všech jejích přímých i nepřímých součástí.

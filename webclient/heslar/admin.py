@@ -1,7 +1,7 @@
 import logging
 
 from django.contrib import admin
-from django.db import connection, transaction
+from django.db import transaction
 from django.http import StreamingHttpResponse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
@@ -461,10 +461,7 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
         """
         if request.method == "POST":
             with transaction.atomic():
-                organization_table = connection.ops.quote_name(Organizace._meta.db_table)
-                with connection.cursor() as cursor:
-                    # Serialize hierarchy edits so clean_soucast validates against the committed tree.
-                    cursor.execute(f"LOCK TABLE {organization_table} IN SHARE ROW EXCLUSIVE MODE")
+                Organizace.lock_hierarchy()
                 return super().changeform_view(request, object_id, form_url, extra_context)
         return super().changeform_view(request, object_id, form_url, extra_context)
 

@@ -94,7 +94,7 @@ from lokalita.models import Lokalita
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from projekt.models import Projekt
 from services.mailer import Mailer
-from uzivatel.models import Osoba, User, UserNotificationType
+from uzivatel.models import Organizace, Osoba, User, UserNotificationType
 from xml_generator.models import ModelWithMetadata
 
 import redis
@@ -2196,10 +2196,7 @@ def run_data_import(job_id, user_id, lock_token):
                         serialized_record.pop("__file_name")
                         organization_payloads.append(serialized_record)
                 if organization_payloads and performed_action != ImportDataAdminForm.PERFORMED_ACTION_DELETE:
-                    organization_table = connection.ops.quote_name(OrganizaceMapper.model_class._meta.db_table)
-                    with connection.cursor() as cursor:
-                        # Keep concurrent hierarchy changes out until this transaction commits.
-                        cursor.execute(f"LOCK TABLE {organization_table} IN SHARE ROW EXCLUSIVE MODE")
+                    Organizace.lock_hierarchy()
                     OrganizaceMapper.validate_batch_ordering(organization_payloads, performed_action)
 
                 for record_id in range(record_count):

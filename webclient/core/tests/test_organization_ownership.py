@@ -94,6 +94,13 @@ class OrganizationOwnershipTest(TestCase):
         self.assertEqual(len(refresh_queries), 1)
         self.assertIn(new_child.pk, refreshed_result)
 
+    def test_hierarchy_lock_uses_a_transaction_scoped_advisory_lock(self):
+        """Ověří použití advisory locku pro serializaci změn hierarchie."""
+        with CaptureQueriesContext(connection) as queries:
+            Organizace.lock_hierarchy()
+
+        self.assertTrue(any("pg_advisory_xact_lock" in query["sql"] for query in queries))
+
     def test_ownership_check_allows_descendants_but_not_ancestors_or_siblings(self):
         """Ověří dědičnost vlastnictví směrem k potomkům."""
         permission = Permissions(ownership=Permissions.ownershipChoices.our)
@@ -109,17 +116,14 @@ class OrganizationOwnershipTest(TestCase):
             permission.permission_object.get_create_org.return_value = (organization,)
             self.assertFalse(permission.check_ownership(permission.ownership), organization.ident_cely)
 
-    def test_ownership_check_preserves_missing_owner_and_missing_user_organization(self):
-        """Ověří chování pro prázdnou organizaci uživatele či záznamu."""
+    def test_ownership_check_does_not_grant_access_to_records_without_an_organization(self):
+        """Ověří, že prázdná organizace záznamu neodpovídá uživatelovu podstromu."""
         permission = Permissions(ownership=Permissions.ownershipChoices.our)
-        permission.logged_in_user = SimpleNamespace(organizace=None, organizace_id=None)
+        permission.logged_in_user = User(organizace=self.root)
         permission.permission_object = MagicMock()
         permission.permission_object.get_create_user.return_value = ()
         permission.permission_object.get_create_org.return_value = (None,)
 
-        self.assertTrue(permission.check_ownership(permission.ownership))
-
-        permission.permission_object.get_create_org.return_value = (self.root,)
         self.assertFalse(permission.check_ownership(permission.ownership))
 
     def test_restricted_accessibility_inherits_only_the_ownership_bypass(self):
@@ -241,21 +245,6 @@ class OrganizationOwnershipTest(TestCase):
         self.assertEqual(set(organization_ids), {self.child.pk, self.grandchild.pk, self.unrelated.pk})
         self.assertNotIn(self.root.pk, organization_ids)
         self.assertNotIn(self.sibling.pk, organization_ids)
-
-    def test_collaborating_organization_list_preserves_users_without_organization(self):
-        """Ověří chování spolupráce u uživatele bez organizace."""
-        badatel, archeolog, archivar, admin = [SimpleNamespace() for _ in range(4)]
-        collaborations = MagicMock()
-        collaborations.filter.return_value.select_related.return_value.values_list.return_value = [self.unrelated.pk]
-        user = User(pk=101, organizace=None)
-        user.hlavni_role = archeolog
-
-        with patch(
-            "uzivatel.models.Group.objects.get", side_effect=[badatel, archeolog, archivar, admin]
-        ), patch.object(User, "spoluprace_badatelu", new_callable=PropertyMock, return_value=collaborations):
-            organization_ids = user.moje_spolupracujici_organizace()
-
-        self.assertEqual(set(organization_ids), {self.unrelated.pk, None})
 
     def test_pian_raw_sql_map_uses_descendant_ids_for_snapshot_and_project_paths(self):
         """Ověří použití potomků v obou vlastnických větvích SQL mapy PIAN."""

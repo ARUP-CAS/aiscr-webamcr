@@ -419,24 +419,14 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
         filtered_pian_history = Historie.objects.filter(uzivatel=self.request.user)
         filtered_az_history = Historie.objects.filter(uzivatel=self.request.user)
         if ownership == Permissions.ownershipChoices.our:
-            organization_id = self.request.user.organizace_id
-            if organization_id is None:
-                filtered_pian_history_our = Historie.objects.filter(uzivatel__organizace=None)
-                organization_snapshot_lookup = Q(
-                    dokumentacni_jednotky_pianu__archeologicky_zaznam__historie__historie__organizace_snapshot=None
-                )
-                project_organization_lookup = Q(
-                    dokumentacni_jednotky_pianu__archeologicky_zaznam__akce__projekt__organizace=None
-                )
-            else:
-                organization_ids = self.request.user.organizace_podstrom_ids
-                filtered_pian_history_our = Historie.objects.filter(uzivatel__organizace__in=organization_ids)
-                organization_snapshot_lookup = Q(
-                    dokumentacni_jednotky_pianu__archeologicky_zaznam__historie__historie__organizace_snapshot__in=organization_ids
-                )
-                project_organization_lookup = Q(
-                    dokumentacni_jednotky_pianu__archeologicky_zaznam__akce__projekt__organizace__in=organization_ids
-                )
+            organization_ids = self.request.user.organizace_podstrom_ids
+            filtered_pian_history_our = Historie.objects.filter(uzivatel__organizace__in=organization_ids)
+            organization_snapshot_lookup = Q(
+                dokumentacni_jednotky_pianu__archeologicky_zaznam__historie__historie__organizace_snapshot__in=organization_ids
+            )
+            project_organization_lookup = Q(
+                dokumentacni_jednotky_pianu__archeologicky_zaznam__akce__projekt__organizace__in=organization_ids
+            )
             return (
                 Q(**{"historie_zapsat_pian__in": filtered_pian_history_our})
                 | (
