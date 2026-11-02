@@ -60,6 +60,7 @@ elif args.test is not None:
 else:
     test_list = [
         "core.tests.test_selenium",
+        "core.tests.test_selenium_distribuce",
         "projekt.tests.test_selenium",
         "dokument.tests.test_selenium",
         "lokalita.tests.test_selenium",

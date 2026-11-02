@@ -1,3 +1,4 @@
+import atexit
 import base64
 import io
 import json
@@ -26,6 +27,7 @@ from core.models import Soubor
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.tests.custom_server import WerkzeugServerThread
 from core.tests.runner import USERS
+from core.tests.selenium_distribuce import DistribuceSeleniumMixin
 from django.conf import settings
 from django.db import connection
 from django.http import Http404
@@ -178,6 +180,7 @@ class PreparedDatabaseClone:
         self.next_name = f"{target}_next"
         self.create_options = create_options
         self._future = None
+        atexit.register(self.close)
 
     def _connect(self):
         """
@@ -232,11 +235,27 @@ class PreparedDatabaseClone:
         """
         Vytvoří databázi ``db_name`` jako kopii šablony.
 
+        ``CREATE DATABASE ... WITH TEMPLATE`` selže, pokud je k šabloně kdokoli připojen. Sezení se
+        proto ukončí a pokus se stejně jako u :func:`_drop` až 10× opakuje, kdyby se někdo mezitím
+        znovu připojil.
+
         :param cursor: Kurzor administrativního spojení.
         :param db_name: Název nové databáze.
+        :raises psycopg2.errors.ObjectInUse: Pokud je šablona používána i po 10 pokusech.
         """
-        self._terminate(cursor, self.template)
-        cursor.execute(f"CREATE DATABASE {db_name} WITH TEMPLATE {self.template} {self.create_options};")
+        last_err = None
+        for attempt in range(1, 11):
+            self._terminate(cursor, self.template)
+            try:
+                cursor.execute(f"CREATE DATABASE {db_name} WITH TEMPLATE {self.template} {self.create_options};")
+                return
+            except psycopg2.errors.ObjectInUse as err:
+                last_err = err
+                logger.warning(
+                    "PreparedDatabaseClone: CREATE DATABASE %s selhal (pokus %d/10): %s", db_name, attempt, err
+                )
+                time.sleep(0.1)
+        raise last_err
 
     def _create_next(self):
         """Na pozadí znovu vytvoří připravenou kopii ``<cíl>_next``."""
@@ -276,10 +295,26 @@ class PreparedDatabaseClone:
                 self._create(cursor, self.target)
         self._future = self._executor.submit(self._create_next)
 
+    def close(self):
+        """
+        Po skončení běhu počká na rozpracovanou přípravu kopie a kopii ``<cíl>_next`` smaže.
+
+        Registruje se přes ``atexit``; bez toho by na serveru zůstala připravená kopie (řádově GB).
+        Chyby se jen zalogují, úklid nesmí shodit konec běhu testů.
+        """
+        future, self._future = self._future, None
+        try:
+            if future is not None:
+                future.result()
+            with closing(self._connect()) as conn, conn.cursor() as cursor:
+                self._drop(cursor, self.next_name)
+        except Exception as err:
+            logger.warning("PreparedDatabaseClone: úklid %s selhal: %s", self.next_name, err)
+
 
 # @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 # @override_settings(DEBUG=True)
-class BaseSeleniumTestClass(LiveServerTestCase):
+class BaseSeleniumTestClass(DistribuceSeleniumMixin, LiveServerTestCase):
     # port = 8808
     """Implementuje komponentu ``BaseSeleniumTestClass`` v rámci aplikace."""
     host = "0.0.0.0"
@@ -388,7 +423,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         else:
             # self.driver = webdriver.Firefox()
             self.driver = webdriver.Chrome(options=options)
-        self.driver.implicitly_wait(IMPLICIT_WAIT)
+        self.implicit_wait = IMPLICIT_WAIT
+        self.driver.implicitly_wait(self.implicit_wait)
         self.wait_interval = 2
         self.driver.set_page_load_timeout(120)
         self.driver.set_script_timeout(30)
@@ -416,6 +452,17 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                         members.append(result)
         return members
 
+    # Přípona referenčního souboru podle Content-Type obsahu ve Fedoře (save/check_container_content).
+    # application/ld+json mají paradata distribucí.
+    FEDORA_CONTENT_EXTENSIONS = {
+        "text/turtle": "nt",
+        "application/xml": "xml",
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "application/zip": "zip",
+        "application/pdf": "pdf",
+        "application/ld+json": "json",
+    }
     FILE_UUID_REGEX = re.compile(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}")
 
     def _build_file_uuid_map(self, fedora_ids):
@@ -487,18 +534,10 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
         members = []
-        extensions = {
-            "text/turtle": "nt",
-            "application/xml": "xml",
-            "image/jpeg": "jpg",
-            "image/png": "png",
-            "application/zip": "zip",
-            "application/pdf": "pdf",
-        }
         filename = (
             str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__").replace(":", "--")
         )
-        extension = extensions[response.headers.get("Content-Type", "").split(";")[0].strip()]
+        extension = self.FEDORA_CONTENT_EXTENSIONS[response.headers.get("Content-Type", "").split(";")[0].strip()]
         filename = self._apply_file_uuid_map(filename, uuid_map or {})
         if response.status_code == 200:
             f = open(f"{path}/{filename}.{extension}", "wb")
@@ -598,18 +637,10 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
         members = []
-        extensions = {
-            "text/turtle": "nt",
-            "application/xml": "xml",
-            "image/jpeg": "jpg",
-            "image/png": "png",
-            "application/zip": "zip",
-            "application/pdf": "pdf",
-        }
         filename = (
             str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__").replace(":", "--")
         )
-        extension = extensions[response.headers.get("Content-Type", "").split(";")[0].strip()]
+        extension = self.FEDORA_CONTENT_EXTENSIONS[response.headers.get("Content-Type", "").split(";")[0].strip()]
         filename = self._apply_file_uuid_map(filename, uuid_map or {})
         if response.status_code == 200:
             f = open(f"{path}/{filename}.{extension}", "rb")
@@ -845,7 +876,6 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 "core.tests.test_selenium.BaseSeleniumTestClass.clone_Database.general_exception", extra={"error": err}
             )
             raise
-        connection.connect()
 
     def assertIn2(self, member1, member2, container, msg=None):
         """
@@ -1056,7 +1086,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         Okamžitě ověří, zda je element na stránce, bez implicitního čekání WebDriveru.
 
         Používá se v dotazovacích smyčkách :meth:`wait_for`, které čekají samy. S implicitním
-        čekáním by každý dotaz na chybějící element trval ``IMPLICIT_WAIT`` sekund.
+        čekáním by každý dotaz na chybějící element trval ``IMPLICIT_WAIT`` sekund. Po dotazu se
+        obnoví implicitní čekání uložené v ``self.implicit_wait``; test, který ho mění, má změnit i
+        tento atribut.
 
         :param by: Strategie vyhledání elementu (``By.ID``, ``By.CSS_SELECTOR`` …).
         :param value: Hodnota selektoru.
@@ -1068,7 +1100,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         except StaleElementReferenceException:
             return False
         finally:
-            self.driver.implicitly_wait(IMPLICIT_WAIT)
+            self.driver.implicitly_wait(getattr(self, "implicit_wait", IMPLICIT_WAIT))
 
     def ElementIsClickable(self, by, value):
         """
@@ -1164,7 +1196,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         self.wait_for_modal_shown(modal_id, timeout)
 
         def _closed(driver):
-            if not driver.find_element(By.ID, modal_id).is_displayed():
+            # Bootstrap nebo stránka může dialog po zavření odstranit z DOM - to je také zavřený dialog.
+            modals = driver.find_elements(By.ID, modal_id)
+            if not modals or not modals[0].is_displayed():
                 return True
             try:
                 driver.find_element(by, value).click()
@@ -2152,6 +2186,9 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Načte XML z textového vstupu, odstraní ignorované tagy a vrátí serializovanou podobu.
 
+        Proti schématu AMČR se validují jen metadata AMČR (kořen v jeho namespace); jiné XML,
+        např. distribuce ve formátu ALTO, se jen normalizuje pro porovnání.
+
         :param xml_text: Parametr ``xml_text`` se předává do volání ``fromstring()``.
         :param ignorovane_tagy: Číselná hodnota ``ignorovane_tagy`` použitá při výpočtu nebo transformaci.
         :param filename: Parametr ``filename`` se předává do volání ``error()``.
@@ -2169,6 +2206,8 @@ return new Date('2025-06-28T12:00:00Z');}};
         self.nahrad_element_id_rekurzivne(root, "hist")
         self.nahrad_element_id_rekurzivne(root, "soub")
         self.serad_xml_podle_tagu_a_obsahu(root)
+        if not root.tag.startswith("{https://api.aiscr.cz/schema/amcr/"):
+            return etree.tostring(root, pretty_print=True, encoding="utf-8", xml_declaration=True)
         if BaseSeleniumTestClass.xmlschema is None:
             with open(DocumentGenerator.get_path_to_schema(), "rb") as f:
                 parser = etree.XMLParser()

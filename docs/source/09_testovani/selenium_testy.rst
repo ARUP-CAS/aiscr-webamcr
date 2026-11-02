@@ -1403,6 +1403,22 @@ Přehled testů
        
           <a class="reference internal" href="#selenium-test-projekt-163-test-163-cron-pro-maz-n-neodeslan-ch-projekt" title="Ověřuje, že delete_unsubmited_projects() pro projekt ve stavu VYTVORENY">Cron pro mazání neodeslaných projektů</a>
 
+   * - 164
+     - core
+     - | Administrátor (superuživatel)
+     -
+       .. raw:: html
+       
+          <a class="reference internal" href="#selenium-test-core-164-test-164-import-sta-en-a-smaz-n-distribuce-a-paradat-pozi" title="Test hromadného importu alternativní distribuce a jejích paradat k existujícímu souboru,">Import, stažení a smazání distribuce a paradat (pozitivní scénář 1)</a>
+
+   * - 165
+     - core
+     - | Badatel
+     -
+       .. raw:: html
+       
+          <a class="reference internal" href="#selenium-test-core-165-test-165-distribuce-a-paradata-p-i-zm-n-identu-z-znamu-po" title="Test odeslání dokumentu s dočasným identem, jehož soubor má alternativní distribuci">Distribuce a paradata při změně identu záznamu (pozitivní scénář 1)</a>
+
 Arch Z
 ------
 
@@ -3012,12 +3028,12 @@ Uživatelské kroky
 - Projekty → Vybrat → Filtr → ID obsahuje „C-202401980“ → Vybrat → otevřít projekt → otevřít akci „C-202401980A“
 - V části “Dokumentační jednotky” kliknout na dokumentační jednotku “D01”
 - V části “Dokumentační jednotka C-202401980A-D01” kliknout na Další volby → PIAN - připojit podle ID
-- V části ““Dokumentační jednotka C-202401980A-D01” v poli “PIAN” zadat ID PIAN “P-0134-00000” a kliknout na “uložit změny”
+- V části ““Dokumentační jednotka C-202401980A-D01” v poli “PIAN” zadat ID PIAN “P-0134-000003” a kliknout na “uložit změny”
 
 Očekávané výsledky
 ^^^^^^^^^^^^^^^^^^
 
-- U dokumentační jednotky “C-202401980A-D01” bude připojen PIAN „P-0134-00000”. V databázi bude vytvořena vazba mezi PIAN a dokumentační jednotkou “C-202401980A-D01”.
+- U dokumentační jednotky “C-202401980A-D01” bude připojen PIAN „P-0134-000003”. V databázi bude vytvořena vazba mezi PIAN a dokumentační jednotkou “C-202401980A-D01”.
 
 Stav testu
 ^^^^^^^^^^
@@ -3740,6 +3756,102 @@ Stav testu
 
 Implementován v
 ``webclient.core.tests.test_selenium.CoreSeleniumTest.test_001_core_001``.
+
+
+.. _selenium-test-core-164-test-164-import-sta-en-a-smaz-n-distribuce-a-paradat-pozi:
+
+Test 164 Import, stažení a smazání distribuce a paradat (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Test hromadného importu alternativní distribuce a jejích paradat k existujícímu souboru,
+jejich nabídky a stažení v tabulce souborů, smazání distribuce importem a smazání souboru.
+
+Uživatelská role
+^^^^^^^^^^^^^^^^
+
+Administrátor (superuživatel)
+
+Předpoklady
+^^^^^^^^^^^
+
+- Dokument M-TX-201604272 se souborem 53532 je uložen ve Fedoře.
+- Importní adresář obsahuje soubory z core/tests/resources/distribuce.
+
+Testovací data
+^^^^^^^^^^^^^^
+
+M-TX-201604272, soubor 53532, core/tests/resources/distribuce/distribution.csv a paradata.csv
+
+Uživatelské kroky
+^^^^^^^^^^^^^^^^^
+
+- Administrátor provede import distribution.csv a paradata.csv s akcí Vložit
+- Otevře detail dokumentu a v tabulce souborů vybere distribuci, stáhne ji i paradata
+- Provede import distribution_delete.csv (jako distribution.csv) s akcí Smazat
+- Znovu provede import s akcí Vložit (na místo s tombstonem)
+- Smaže soubor v tabulce souborů
+
+Očekávané výsledky
+^^^^^^^^^^^^^^^^^^
+
+- Po importu existují ve Fedoře kontejnery file/<uuid>/<distribuce> a file/<uuid>/paradata/<distribuce>
+  s obsahem ze vstupních souborů a distribuce je v historii souboru.
+- Tabulka souborů nabízí distribuci a ikonu paradat, stažení vrací obsah ze vstupních souborů.
+- Smazání distribuce odstraní i její paradata a tabulka distribuci přestane nabízet.
+- Opětovné vložení na smazané místo projde.
+- Smazaný soubor je ve Fedoře označen jako smazaný a distribuci už nelze stáhnout.
+
+Stav testu
+^^^^^^^^^^
+
+Implementován v
+``webclient.core.tests.test_selenium_distribuce.DistribuceSeleniumTest.test_164_distribuce_paradata_import_p_001``.
+
+
+.. _selenium-test-core-165-test-165-distribuce-a-paradata-p-i-zm-n-identu-z-znamu-po:
+
+Test 165 Distribuce a paradata při změně identu záznamu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Test odeslání dokumentu s dočasným identem, jehož soubor má alternativní distribuci
+a paradata. Odesláním dokument dostane trvalý ident a soubor se ve Fedoře přesune
+do kontejneru nového identu.
+
+Uživatelská role
+^^^^^^^^^^^^^^^^
+
+Badatel
+
+Předpoklady
+^^^^^^^^^^^
+
+- Uživatel je přihlášen.
+- Dokument je ve stavu D1 s dočasným identem.
+
+Testovací data
+^^^^^^^^^^^^^^
+
+X-C-TX-000000003, core/tests/resources/distribuce
+
+Uživatelské kroky
+^^^^^^^^^^^^^^^^^
+
+- Uživatel nahraje k dokumentu soubor
+- K souboru se založí distribuce a paradata (sdílený pomocník, stejně jako import)
+- Uživatel dokument odešle
+
+Očekávané výsledky
+^^^^^^^^^^^^^^^^^^
+
+- Distribuce a paradata jsou zkopírovány do kontejneru souboru pod novým identem.
+- Kontejner záznamu s dočasným identem je smazán.
+- Tabulka souborů na detailu dokumentu s novým identem nabízí distribuci i paradata ke stažení.
+
+Stav testu
+^^^^^^^^^^
+
+Implementován v
+``webclient.core.tests.test_selenium_distribuce.DistribuceSeleniumTest.test_165_distribuce_paradata_zmena_identu_p_001``.
 
 
 Dokument

@@ -126,10 +126,11 @@ docker exec -i $(docker ps -q -f name=swarm_webamcr_web) script -q -c "python3 /
 # /proc/buddyinfo = počet volných bloků podle řádu 0-10 (4 kB až 4 MB) v zóně Normal.
 print_d1 "Memory compaction"
 grep Normal /proc/buddyinfo || true
-if echo 1 > /proc/sys/vm/compact_memory; then
+# Přes sudo jako volání dockeru výše - zápis do /proc/sys vyžaduje root.
+if echo 1 | sudo tee /proc/sys/vm/compact_memory > /dev/null; then
     grep Normal /proc/buddyinfo || true
 else
-    echo "WARNING: memory compaction failed (requires root)"
+    echo "WARNING: memory compaction failed"
 fi
 
 print_d1 "PUTTING TAG ${current_deployment_tag} as LAST into ${path_last_tag}"

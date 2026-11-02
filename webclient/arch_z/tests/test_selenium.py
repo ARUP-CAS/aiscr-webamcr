@@ -1350,10 +1350,10 @@ const deadline = Date.now() + 10000;
         - Projekty → Vybrat → Filtr → ID obsahuje „C-202401980“ → Vybrat → otevřít projekt → otevřít akci „C-202401980A“
         - V části “Dokumentační jednotky” kliknout na dokumentační jednotku “D01”
         - V části “Dokumentační jednotka C-202401980A-D01” kliknout na Další volby → PIAN - připojit podle ID
-        - V části ““Dokumentační jednotka C-202401980A-D01” v poli “PIAN” zadat ID PIAN “P-0134-00000” a kliknout na “uložit změny”
+        - V části ““Dokumentační jednotka C-202401980A-D01” v poli “PIAN” zadat ID PIAN “P-0134-000003” a kliknout na “uložit změny”
 
         Expected:
-        - U dokumentační jednotky “C-202401980A-D01” bude připojen PIAN „P-0134-00000”. V databázi bude vytvořena vazba mezi PIAN a dokumentační jednotkou “C-202401980A-D01”.
+        - U dokumentační jednotky “C-202401980A-D01” bude připojen PIAN „P-0134-000003”. V databázi bude vytvořena vazba mezi PIAN a dokumentační jednotkou “C-202401980A-D01”.
         """
         logger.info("AkceProjektoveAkce.test_093_pripojeni_PIAN_projektove_akce_p_001.start")
         self.login("archivar")
@@ -1373,7 +1373,7 @@ const deadline = Date.now() + 10000;
         self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_C-202401980A-D01 .btn-group:nth-child(1) .material-icons")
         self.ElementClick(By.ID, "pian-pripojit-")
         self.ElementClick(By.ID, "select2-id_C-202401980A-D01-pian-container")
-        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("P-0134-00000")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("P-0134-000003")
         self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
@@ -1381,6 +1381,7 @@ const deadline = Date.now() + 10000;
 
         pian_new = DokumentacniJednotka.objects.filter(ident_cely="C-202401980A-D01")[0].pian
         self.assertNotEqual(pian_new, None)
+        self.assertEqual(pian_new.ident_cely, "P-0134-000003")
         logger.info("AkceProjektoveAkce.test_093_pripojeni_PIAN_projektove_akce_p_001.end")
 
     # C-201015104
