@@ -16,6 +16,11 @@ parser.add_argument("-s", "--soubor", help="uloží výstup do souboru", action=
 args = parser.parse_args()
 
 SETTINGS = "webclient.settings.dev_test"
+# Fedora modules need DEBUG=True for the loopback SITE_URL, so they run in their own process.
+FEDORA_MODULES = (
+    "core.tests.test_fedora_integration_child_walk",
+    "core.tests.test_fedora_integration_paradata",
+)
 
 logger = logging.getLogger("webamcr.test_runner")
 # logger.setLevel(logging.INFO)
@@ -69,77 +74,104 @@ else:
         "ez.tests.test_selenium",
         "uzivatel.tests.test_selenium",
         "heslar.tests.test_selenium",
-        "core.tests.test_fedora_integration_child_walk",
-        "core.tests.test_fedora_integration_paradata",
-    ]
+    ] + list(FEDORA_MODULES)
 
 
-output_buffer = StringIO()
-
-
-def reader_and_capture(pipe):
+def reader_and_capture(pipe, buffer):
     """
-    Provádí operaci reader and capture.
+    Průběžně vypisuje výstup podprocesu na terminál a ukládá jej do bufferu.
 
     :param pipe: Stream (pipe), ze kterého se průběžně čte výstup podprocesu.
+    :param buffer: Buffer, do kterého se ukládá výstup pro pozdější vyhodnocení.
     """
     while True:
         line = pipe.readline()
         if not line:
             break
         print(line, end="")
-        output_buffer.write(line)
+        buffer.write(line)
 
 
-def filelog(pipe):
+def filelog(pipe, buffer):
     """
-    Provádí operaci filelog.
+    Průběžně zapisuje výstup podprocesu do ``test.log`` a ukládá jej do bufferu.
 
     :param pipe: Stream (pipe), ze kterého se průběžně čte výstup podprocesu.
+    :param buffer: Buffer, do kterého se ukládá výstup pro pozdější vyhodnocení.
     """
     with open("/vol/web/selenium_test/test.log", "a") as file:
         while True:
             line = pipe.read(1)
             file.write(line)
+            buffer.write(line)
             if not line:
                 break
+
+
+def run_suite(modules, extra_args=""):
+    """
+    Spustí ``manage.py test`` pro zadané moduly a počká na dokončení čtení jeho výstupu.
+
+    :param modules: Seznam testovacích modulů, tříd nebo metod předaných Django test runneru.
+    :param extra_args: Další argumenty příkazu ``manage.py test``.
+    :return: Slovník s počty ``ran``, ``failures``, ``errors`` a ``skipped`` z výstupu runneru.
+    """
+    buffer = StringIO()
+    process = subprocess.Popen(
+        f"python3 manage.py test {' '.join(modules)} --settings={SETTINGS} --noinput --verbosity=2 {extra_args}",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        shell=True,
+    )
+    target = filelog if args.soubor is True else reader_and_capture
+    threads = [Thread(target=target, args=[stream, buffer]) for stream in (process.stdout, process.stderr)]
+    for thread in threads:
+        thread.start()
+    process.wait()
+    for thread in threads:
+        thread.join()
+    text = buffer.getvalue()
+    with open("/vol/web/selenium_test/test_output.log", "a") as f:
+        f.write(text)
+    counts = {"ran": 0, "failures": 0, "errors": 0, "skipped": 0}
+    ran_match = re.search(r"Ran (\d+) tests?", text)
+    if ran_match:
+        counts["ran"] = int(ran_match.group(1))
+    for key in ("failures", "errors", "skipped"):
+        match = re.search(rf"{key}=(\d+)", text)
+        if match:
+            counts[key] = int(match.group(1))
+    return counts
 
 
 logger.info("amcr_test_runner.start_test")
 subprocess.run(f"python3 manage.py migrate --database test_db --settings={SETTINGS}", text=True, shell=True)
 
-process = subprocess.Popen(
-    f"python3 manage.py test {' '.join(test_list)} --settings={SETTINGS} --noinput --verbosity=2",
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-    text=True,
-    shell=True,
-)
-if args.soubor is True:
-    t1 = Thread(target=filelog, args=[process.stdout]).start()
-    t2 = Thread(target=filelog, args=[process.stderr]).start()
-else:
-    t1 = Thread(target=reader_and_capture, args=[process.stdout]).start()
-    t2 = Thread(target=reader_and_capture, args=[process.stderr]).start()
-process.wait()
+# Truncate the log; each run_suite() call appends its output.
+open("/vol/web/selenium_test/test_output.log", "w").close()
+fedora_tests = [test for test in test_list if test.startswith(FEDORA_MODULES)]
+selenium_tests = [test for test in test_list if not test.startswith(FEDORA_MODULES)]
+
+ran = failures = errors = 0
+if selenium_tests:
+    result = run_suite(selenium_tests)
+    ran += result["ran"]
+    failures += result["failures"]
+    errors += result["errors"]
+if fedora_tests:
+    result = run_suite(fedora_tests, "--debug-mode")
+    ran += result["ran"]
+    failures += result["failures"]
+    errors += result["errors"]
+    # A skipped or missing Fedora run means no protocol coverage, so count it as a failure.
+    if result["ran"] == 0 or result["skipped"] > 0:
+        print(f"Fedora integration tests did not run completely (ran={result['ran']}, skipped={result['skipped']}).")
+        errors += max(result["skipped"], 1)
 
 logger.info("amcr_test_runner.end")
 
-stdout_text = output_buffer.getvalue()
-
-# Zápis do logu
-with open("/vol/web/selenium_test/test_output.log", "w") as f:
-    f.write(stdout_text)
-# Parsování z výstupu
-ran_match = re.search(r"Ran (\d+) tests?", stdout_text)
-failures_match = re.search(r"failures=(\d+)", stdout_text)
-errors_match = re.search(r"errors=(\d+)", stdout_text)
-ok_match = re.search(r"\nOK\n", stdout_text)
-
-ran = int(ran_match.group(1)) if ran_match else 0
-failures = int(failures_match.group(1)) if failures_match else 0
-errors = int(errors_match.group(1)) if errors_match else 0
-passed = ran - failures - errors if ran > 0 else 0
+passed = max(ran - failures - errors, 0)
 
 # Výstup do souboru pro GitHub Actions
 with open("/vol/web/selenium_test/test_summary.env", "w") as f:

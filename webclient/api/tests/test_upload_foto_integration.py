@@ -14,7 +14,7 @@ from unittest import SkipTest
 from urllib.parse import quote
 
 from core.constants import MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES
-from core.tests.integration import require_integration_environment
+from core.tests.integration import is_debug_local_origin, require_integration_environment
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.test import SimpleTestCase
@@ -53,7 +53,7 @@ def _http_connection(url, timeout):
     """
     if url.scheme != "https":
         return http.client.HTTPConnection(url.hostname, url.port, timeout=timeout)
-    if settings.DEBUG is True and url.hostname in {"localhost", "127.0.0.1", "::1"}:
+    if is_debug_local_origin(url):
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
