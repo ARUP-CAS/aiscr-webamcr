@@ -1,5 +1,6 @@
 import datetime
 import io
+import itertools
 import json
 import logging
 import os
@@ -75,7 +76,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.db import connection, transaction
-from django.db.models import F, Min, Model, Prefetch, Q
+from django.db.models import F, Min, Model, Q
 from django.db.models.functions import Coalesce, Upper
 from django.forms.models import model_to_dict
 from django.utils import timezone
@@ -93,7 +94,7 @@ from lokalita.models import Lokalita
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from projekt.models import Projekt
 from services.mailer import Mailer
-from uzivatel.models import Osoba, User, UserNotificationType
+from uzivatel.models import User, UserNotificationType
 from xml_generator.models import ModelWithMetadata
 
 import redis
@@ -693,12 +694,19 @@ def update_snapshot_fields():
         logger.error("core.cron.update_snapshot_fields.do.error", extra={"error": err})
 
 
+REDIS_SNAPSHOT_BATCH_SIZE = 1000
+
+
 def _update_redis_snapshots_for_class(r, current_class, rewrite_existing):
     """
     Aktualizuje Redis snapshoty všech záznamů jedné třídy modelu.
 
+    Záznamy se zpracovávají po dávkách ``REDIS_SNAPSHOT_BATCH_SIZE``: existence klíčů se ověří jedním
+    pipeline voláním na dávku a chybějící (nebo při ``rewrite_existing`` všechny) snapshoty se vygenerují
+    jednou tabulkou přes ``generate_redis_snapshots()`` a zapíšou jedním pipeline voláním.
+
     :param r: Spojení na Redis.
-    :param current_class: Třída modelu s metodami ``redis_snapshot_id`` a ``generate_redis_snapshot()``.
+    :param current_class: Třída modelu s vlastností ``redis_snapshot_id`` a metodou ``generate_redis_snapshots()``.
     :param rewrite_existing: Pokud je ``True``, přepíše i existující klíče; jinak zapisuje jen chybějící.
     :return: N-tice (počet prošlých záznamů, počet zapsaných snapshotů).
     """
@@ -707,29 +715,25 @@ def _update_redis_snapshots_for_class(r, current_class, rewrite_existing):
     if current_class in (Akce, Lokalita):
         # redis_snapshot_id čte ident_cely z archeologického záznamu
         query = query.select_related("archeologicky_zaznam")
-    elif current_class == Dokument:
-        query = query.prefetch_related(
-            Prefetch(
-                "autori",
-                queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
-                to_attr="ordered_autors",
-            )
-        )
-    i = 0
-    change_items = 0
-    for item in iter_pk_chunks(query):
-        if rewrite_existing or not r.exists(item.redis_snapshot_id):
-            key, value = item.generate_redis_snapshot()
-            if key and value:
-                if rewrite_existing:
-                    pipe.delete(key)
-                pipe.hset(key, mapping=value)
-                change_items = change_items + 1
-                if (change_items % 1000) == 0:
-                    pipe.execute()
-        i = i + 1
-    pipe.execute()
-    return i, change_items
+    processed = 0
+    changed = 0
+    for batch in itertools.batched(iter_pk_chunks(query, REDIS_SNAPSHOT_BATCH_SIZE), REDIS_SNAPSHOT_BATCH_SIZE):
+        processed += len(batch)
+        if rewrite_existing:
+            missing = batch
+        else:
+            for item in batch:
+                pipe.exists(item.redis_snapshot_id)
+            missing = [item for item, exists in zip(batch, pipe.execute()) if not exists]
+        if not missing:
+            continue
+        for key, value in current_class.generate_redis_snapshots(missing).items():
+            if rewrite_existing:
+                pipe.delete(key)
+            pipe.hset(key, mapping=value)
+            changed += 1
+        pipe.execute()
+    return processed, changed
 
 
 @shared_task
