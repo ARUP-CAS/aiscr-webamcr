@@ -6,11 +6,11 @@
 #
 alabaster==1.0.0
     # via sphinx
-amqp==5.4.1
+amqp==5.4.2
     # via
     #   -r requirements.txt
     #   kombu
-anyio==4.15.1
+anyio==4.16.0
     # via
     #   -r requirements.txt
     #   httpx
@@ -22,13 +22,13 @@ babel==2.18.0
     # via sphinx
 beautifulsoup4==4.15.0
     # via -r requirements.txt
-billiard==4.3.1
+billiard==4.3.2
     # via
     #   -r requirements.txt
     #   celery
 bleach==6.4.0
     # via -r requirements.txt
-brotli==1.2.0
+brotli==1.2.1
     # via
     #   -r requirements.txt
     #   py7zr
@@ -37,7 +37,7 @@ celery==5.6.3
     #   -r requirements.txt
     #   django-celery-beat
     #   django-celery-results
-certifi==2026.7.22
+certifi==2026.10.23
     # via
     #   -r requirements.txt
     #   httpcore
@@ -336,7 +336,7 @@ six==1.17.0
     #   python-dateutil
 snowballstemmer==3.1.1
     # via sphinx
-soupsieve==3.0.3
+soupsieve==3.0.4
     # via
     #   -r requirements.txt
     #   beautifulsoup4
@@ -359,7 +359,7 @@ sphinxcontrib-htmlhelp==2.1.0
     # via sphinx
 sphinxcontrib-jquery==4.1
     # via sphinx-rtd-theme
-sphinxcontrib-jsmath==1.0.1
+sphinxcontrib-jsmath==2.0.0
     # via sphinx
 sphinxcontrib-mermaid==2.1.1
     # via -r requirements-docs.in
@@ -367,7 +367,7 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-sqlparse==0.6.0
+sqlparse==0.6.1
     # via
     #   -r requirements.txt
     #   django
@@ -375,7 +375,7 @@ tablib==3.10.0
     # via -r requirements.txt
 tabulate==0.10.0
     # via -r requirements.txt
-texttable==1.7.1
+texttable==1.7.2
     # via
     #   -r requirements.txt
     #   py7zr
@@ -385,13 +385,13 @@ typing-extensions==4.16.0
     #   anyio
     #   beautifulsoup4
     #   click-repl
-tzdata==2026.5
+tzdata==2026.6
     # via
     #   -r requirements.txt
     #   django-celery-beat
     #   kombu
     #   python-dateutil
-tzlocal==5.4.4
+tzlocal==5.4.5
     # via
     #   -r requirements.txt
     #   celery
@@ -407,7 +407,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.9.2
+wcwidth==0.9.4
     # via
     #   -r requirements.txt
     #   prompt-toolkit
