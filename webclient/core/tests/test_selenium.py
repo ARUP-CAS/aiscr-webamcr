@@ -34,7 +34,7 @@ from django.http import Http404
 from django.test import LiveServerTestCase
 from lxml import etree
 from pdf2image import convert_from_bytes
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageStat
 from rdflib import XSD, Graph, Literal, URIRef
 from selenium import webdriver
 from selenium.common.exceptions import (
@@ -568,12 +568,18 @@ class BaseSeleniumTestClass(DistribuceSeleniumMixin, LiveServerTestCase):
             f.close()
         return members
 
+    # Povolený RMS rozdíl pixelů (0-255, nejhorší kanál RGBA) při porovnání obrázků.
+    # Jiná verze Pillow zmenšuje náhledy s jiným vyhlazením hran: náhled ikony ZIP z Pillow 13
+    # se od náhledu z Pillow 12.3 liší o RMS 1,9, zatímco náhled jiné ikony o více než 100.
+    PNG_RMS_TOLERANCE = 5.0
+
     def porovnej_png_obsah(self, bin1, bin2):
         """
-        Provádí operaci porovnej png obsah.
+        Porovná dva obrázky zadané jako binární řetězce.
 
-        Porovná dva PNG obrázky zadané jako binární řetězce.
-        Vrací True, pokud jsou zcela totožné.
+        Obrázky musí mít stejnou velikost a jejich RMS rozdíl v žádném kanálu RGBA nesmí
+        překročit ``PNG_RMS_TOLERANCE``. Drobné rozdíly ve vyhlazení, které vzniknou při
+        zmenšení obrázku jinou verzí knihovny Pillow, tak test neshodí, ale jiný obsah ano.
 
         :param bin1: První binární vstup použitý při porovnání.
         :param bin2: Druhý binární vstup použitý při porovnání.
@@ -586,11 +592,18 @@ class BaseSeleniumTestClass(DistribuceSeleniumMixin, LiveServerTestCase):
         except Exception:
             return False
 
-        if img1.size != img2.size or img1.mode != img2.mode:
+        if img1.size != img2.size:
+            logger.error("BaseSeleniumTestClass.porovnej_png_obsah.size", extra={"data": f"{img1.size} != {img2.size}"})
             return False
 
         rozdil = ImageChops.difference(img1, img2)
-        return not rozdil.getbbox()
+        if not rozdil.getbbox():
+            return True
+        rms = max(ImageStat.Stat(rozdil).rms)
+        if rms > self.PNG_RMS_TOLERANCE:
+            logger.error("BaseSeleniumTestClass.porovnej_png_obsah.rms", extra={"data": f"rms={rms:.2f}"})
+            return False
+        return True
 
     def porovnej_pdf_obsah(self, bin1, bin2):
         """
