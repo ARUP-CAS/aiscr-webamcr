@@ -58,7 +58,7 @@ Tyto image jsou standardní open-source image používané pro provoz podpůrný
 redis
 ~~~~~
 
-- **Verze:** 8.10.1
+- **Verze:** 8.10.2
 - **Licence:** RSALv2, SSPLv1
 - **Odkaz:** https://github.com/redis/redis
 
@@ -94,7 +94,7 @@ Image pro synchronizaci souborů pomocí rsync. Používá se pro zálohování 
 oliver006/redis_exporter
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** v1.93.0-alpine
+- **Verze:** v1.96.0-alpine
 - **Licence:** MIT license
 - **Odkaz:** https://github.com/oliver006/redis_exporter
 
@@ -157,7 +157,7 @@ Kibana pro vizualizaci a analýzu logů z Elasticsearch. Poskytuje webové rozhr
 selenium/standalone-chromium
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 152.0
+- **Verze:** 155.0
 - **Licence:** Apache License 2.0
 - **Odkaz:** https://github.com/SeleniumHQ/docker-selenium
 

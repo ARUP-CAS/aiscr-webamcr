@@ -65,6 +65,9 @@ _SHP_LAYERS = {
     "katastr": "KATUZE_P",
 }
 
+#: Přípony souborů jedné SHP vrstvy, které se z archivu rozbalují.
+_SHP_PRIPONY = (".shp", ".shx", ".dbf", ".prj", ".cpg")
+
 #: Identifikační prefixy elementů ``gml:id`` v UZSZ pro mapování na úroveň.
 #:
 #: Z PDF specifikace VFR a empirické inspekce souboru:
@@ -482,12 +485,14 @@ class ShpUzszSource(RuianSource):
 
         Rozbaluje se, pokud vrstva ještě rozbalená není **nebo je starší než
         archiv**. Bez kontroly stáří by se po stažení novějšího ``1.zip``
-        tiše použila zastaralá data.
+        tiše použila zastaralá data. Před rozbalením se vždy smažou dříve
+        rozbalené soubory vrstvy, takže když ji novější archiv neobsahuje,
+        skončí to ``FileNotFoundError`` místo návratu dat z předchozího archivu
+        a nové ``.shp`` se nesmíchá se starými pomocnými soubory.
 
         :param basename: Základ názvu vrstvy bez přípony, např. ``"VUSC_P"``.
-
-            :return: Absolutní cesta k ``.shp``.
-            :raises FileNotFoundError: Pokud vrstva neexistuje.
+        :return: Absolutní cesta k ``.shp``.
+        :raises FileNotFoundError: Pokud vrstva neexistuje.
         """
         if self.shp_path.is_dir():
             target = self.shp_path / f"{basename}.shp"
@@ -516,17 +521,16 @@ class ShpUzszSource(RuianSource):
                     },
                 )
             if not target.exists() or zastarale:
+                # Starou kopii smazat, jinak by ji vrátil archiv, ve kterém vrstva chybí,
+                # nebo by se po přerušeném rozbalení míchala se soubory z nového archivu.
+                for stary in unpack_dir.glob(f"{basename}.*"):
+                    if stary.suffix.lower() in _SHP_PRIPONY:
+                        stary.unlink()
                 with zipfile.ZipFile(str(self.shp_path)) as zf:
                     # Rozbalit všechny pomocné soubory (.shp, .shx, .dbf, .prj, .cpg)
                     for member in zf.namelist():
                         member_path = Path(member)
-                        if member_path.stem == basename and member_path.suffix.lower() in (
-                            ".shp",
-                            ".shx",
-                            ".dbf",
-                            ".prj",
-                            ".cpg",
-                        ):
+                        if member_path.stem == basename and member_path.suffix.lower() in _SHP_PRIPONY:
                             zf.extract(member, str(unpack_dir))
                             # Pokud je v ZIPu uložen v podadresáři, přemístit do unpack_dir.
                             extracted = unpack_dir / member
