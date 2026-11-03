@@ -101,6 +101,17 @@ class RunDataImportMapperTestBase(TestCase):
     """Společný základ pro jednoúčelové ``run_data_import`` smoke testy."""
 
     @classmethod
+    def setUpClass(cls):
+        """Drží Fedora mocky aktivní po celou dobu třídy.
+
+        Pokrývá tak i fixtures vytvářené v ``setUpTestData`` potomků po volání
+        ``super()`` a objekty zakládané přímo v tělech testů (např. ``Pes`` nebo
+        ``NeidentAkce``), jejichž signály jinak otevírají skutečnou ``FedoraTransaction``.
+        """
+        cls.enterClassContext(patched_fedora())
+        super().setUpClass()
+
+    @classmethod
     def setUpTestData(cls):
         """Připraví sdílená fixture data pro importní testy."""
         Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
