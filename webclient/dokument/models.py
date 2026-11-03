@@ -599,13 +599,22 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             )
 
     @property
+    def je_model_3d(self):
+        """
+        Určí, zda je dokument 3D model; podle toho se volí prefix klíče i tabulka Redis snapshotu.
+
+        :return: ``True``, pokud ``ident_cely`` začíná na ``3D``.
+        """
+        return self.ident_cely.startswith("3D")
+
+    @property
     def redis_snapshot_id(self):
         """
         Generuje klíč pro uložení snapshotu seznamu dokumentů v Redisu.
 
-        :return: Klíč Redis snapshot (3D nebo běžný dokument).
+        :return: Klíč Redis snapshot (3D nebo běžný dokument podle :attr:`je_model_3d`).
         """
-        if self.ident_cely.startswith("3D"):
+        if self.je_model_3d:
             from dokument.views import Model3DListView
 
             return f"{Model3DListView.redis_snapshot_prefix}_{self.ident_cely}"
@@ -626,7 +635,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     @classmethod
     def generate_redis_snapshots(cls, records):
         """
-        Vygeneruje Redis snapshoty více záznamů jednou tabulkou (``Model3DTable`` pro 3D modely, jinak ``DokumentTable``).
+        Vygeneruje Redis snapshoty více záznamů; tabulku volí podle :attr:`je_model_3d`
+        (``Model3DTable`` pro 3D modely, jinak ``DokumentTable``).
 
         Související záznamy zobrazované v tabulce se načítají hromadně (``select_related`` /
         ``prefetch_related``), takže počet dotazů nezávisí na počtu záznamů.
@@ -647,12 +657,14 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             "extra_data__format",
             "extra_data__udalost_typ",
             "extra_data__zeme",
+            "extra_data__zachovalost",
+            "extra_data__nahrada",
             "let",
         )
         snapshots = {}
         for table_class, table_records in (
-            (Model3DTable, [record for record in records if record.ident_cely.startswith("3D")]),
-            (DokumentTable, [record for record in records if not record.ident_cely.startswith("3D")]),
+            (Model3DTable, [record for record in records if record.je_model_3d]),
+            (DokumentTable, [record for record in records if not record.je_model_3d]),
         ):
             if not table_records:
                 continue

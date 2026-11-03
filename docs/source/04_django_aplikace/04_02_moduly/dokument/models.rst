@@ -181,11 +181,17 @@ Třídy
 
       Nastaví snapshots. v aplikaci.
 
+   .. py:method:: je_model_3d()
+
+      Určí, zda je dokument 3D model; podle toho se volí prefix klíče i tabulka Redis snapshotu.
+
+      :return: ``True``, pokud ``ident_cely`` začíná na ``3D``.
+
    .. py:method:: redis_snapshot_id()
 
       Generuje klíč pro uložení snapshotu seznamu dokumentů v Redisu.
 
-      :return: Klíč Redis snapshot (3D nebo běžný dokument).
+      :return: Klíč Redis snapshot (3D nebo běžný dokument podle :attr:`je_model_3d`).
 
    .. py:method:: generate_redis_snapshot()
 
@@ -195,7 +201,8 @@ Třídy
 
    .. py:method:: generate_redis_snapshots()
 
-      Vygeneruje Redis snapshoty více záznamů jednou tabulkou (``Model3DTable`` pro 3D modely, jinak ``DokumentTable``).
+      Vygeneruje Redis snapshoty více záznamů; tabulku volí podle :attr:`je_model_3d`
+      (``Model3DTable`` pro 3D modely, jinak ``DokumentTable``).
 
       Související záznamy zobrazované v tabulce se načítají hromadně (``select_related`` /
       ``prefetch_related``), takže počet dotazů nezávisí na počtu záznamů.
