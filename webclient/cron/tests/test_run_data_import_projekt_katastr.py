@@ -120,7 +120,7 @@ class RunDataImportProjektKatastrTest(TestCase):
             autospec=True,
             return_value=None,
         ), patch(
-            "projekt.signals.check_hlidaci_pes"
+            "projekt.signals.check_hlidaci_pes.delay"
         ), patch(
             "projekt.signals.update_single_redis_snapshot"
         ), patch(

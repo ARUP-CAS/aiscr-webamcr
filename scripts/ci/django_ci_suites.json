@@ -24,6 +24,7 @@
     "core.tests.test_mappers.test_import_error_messages",
     "core.tests.test_migrate_binary_file",
     "core.tests.test_mime_detection",
+    "core.tests.test_notification_fixtures",
     "core.tests.test_remove_gps_data_thumb_history",
     "core.tests.test_soubor_delete_concurrent",
     "core.tests.test_soubor_file_response",
@@ -151,6 +152,7 @@
     "cron.tests.test_run_data_import_uzivatel_spoluprace",
     "cron.tests.test_run_data_import_validation",
     "heslar.tests.test_ruian_sync",
+    "notifikace_projekty.tests",
     "pid.tests"
   ],
   "excluded": {
@@ -165,7 +167,6 @@
     "heslar.tests.test_selenium": "Selenium: existing manual DEV workflow.",
     "lokalita.tests.test_selenium": "Selenium: existing manual DEV workflow.",
     "neidentakce.tests": "Placeholder module with no test classes.",
-    "notifikace_projekty.tests": "Placeholder module with no test classes.",
     "oznameni.tests.test_selenium": "Selenium: existing manual DEV workflow.",
     "pas.tests.test_selenium": "Selenium: existing manual DEV workflow.",
     "projekt.tests.test_selenium": "Selenium: existing manual DEV workflow.",

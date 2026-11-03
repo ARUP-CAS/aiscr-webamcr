@@ -7,6 +7,7 @@ from core.constants import ROLE_BADATEL_ID
 from core.forms import ImportDataAdminForm
 from core.tests.fake_redis import FakeRedis
 from core.tests.fedora_fixtures import mock_fedora_for_fixture
+from core.tests.notification_fixtures import mock_project_notifications
 from cron import tasks as cron_tasks
 from cron.tests._import_test_fixtures import (
     create_heslar_fixtures,
@@ -153,8 +154,8 @@ class RunDataImportProjektTest(TestCase):
             autospec=True,
             return_value=None,
         ), patch(
-            "projekt.signals.check_hlidaci_pes"
-        ), patch(
+            "projekt.signals.check_hlidaci_pes.delay"
+        ) as notification_dispatch_mock, patch(
             "projekt.signals.update_single_redis_snapshot"
         ), patch(
             "projekt.signals.check_if_task_queued", return_value=True
@@ -177,9 +178,11 @@ class RunDataImportProjektTest(TestCase):
             fedora_transaction_mock.return_value = MagicMock(uid="test-fedora-uid", updated_ident_cely=set())
             fedora_deletion_mock.return_value = MagicMock(uid="test-fedora-deletion-uid", updated_ident_cely=set())
             signals_fedora_transaction_mock.return_value = MagicMock(uid="test-signals-fedora-uid")
+            self.notification_dispatch_mock = notification_dispatch_mock
             cron_tasks.run_data_import(JOB_ID, self.user.id, LOCK_TOKEN)
         return save_metadata_calls
 
+    @mock_project_notifications()
     def _create_existing_projekt(self) -> Projekt:
         with patch("projekt.models.Projekt.set_pristupnost", return_value=None):
             projekt = Projekt(
@@ -215,6 +218,7 @@ class RunDataImportProjektTest(TestCase):
         created = Projekt.objects.get(ident_cely=PROJEKT_IDENT)
         self.assertEqual(created.lokalizace, "U lesa")
         self.assertEqual(created.typ_projektu_id, self.typ_projektu.pk)
+        self.notification_dispatch_mock.assert_called_once_with(created.pk)
 
     def test_update_modifies_existing_projekt(self):
         """Ověřuje, že UPDATE import upraví existující záznam projekt."""
@@ -225,6 +229,7 @@ class RunDataImportProjektTest(TestCase):
 
         updated = Projekt.objects.get(ident_cely=PROJEKT_IDENT)
         self.assertEqual(updated.lokalizace, "U lesa")
+        self.notification_dispatch_mock.assert_not_called()
 
     def test_delete_removes_projekt_from_database(self):
         """Ověřuje, že DELETE import smaže záznam projekt z databáze."""

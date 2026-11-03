@@ -14,6 +14,7 @@ from core.constants import (
 from core.forms import ImportDataAdminForm
 from core.models import SouborVazby
 from core.tests.fake_redis import FakeRedis
+from core.tests.notification_fixtures import mock_project_notifications
 from cron import tasks as cron_tasks
 from cron.tests._import_test_fixtures import (
     create_archeologicky_zaznam,
@@ -342,6 +343,7 @@ class RunDataImportMapperTestBase(TestCase):
         )
 
         with ExitStack() as stack:
+            self.notification_dispatch_mock = stack.enter_context(mock_project_notifications())
             stack.enter_context(patch("core.connectors.RedisConnector.get_connection", return_value=fake_redis))
             stack.enter_context(patch("core.connectors.RedisConnector.refresh_import_lock", **refresh_lock_kwargs))
             # Report-directory gate + disk-writing report are exercised by their own dedicated tests
