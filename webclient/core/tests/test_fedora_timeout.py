@@ -10,6 +10,7 @@ Zápis obsahu souborů a commit transakce mají delší read timeout, aby upload
 from unittest import mock
 
 import requests
+from core.models import Soubor
 from core.repository_connector import (
     _CONTENT_REQUEST_TYPES,
     FedoraNoResponseError,
@@ -18,7 +19,9 @@ from core.repository_connector import (
     FedoraTransaction,
     FedoraTransactionCommitFailedError,
     FedoraTransactionOperation,
+    FedoraTransactionResult,
 )
+from django.conf import settings
 from django.test import SimpleTestCase, override_settings
 from uzivatel.models import User
 
@@ -78,6 +81,13 @@ class SendRequestTimeoutTest(SimpleTestCase):
         session, _ = self._send(FedoraRequestType.DELETE_CONTAINER, **{"delete.return_value.status_code": 204})
         self.assertEqual(session.delete.call_args.kwargs["timeout"], (10.0, 300.0))
 
+    def test_delete_a_patch_overuji_tls_jako_ostatni(self):
+        """DELETE a PATCH posílají ``verify=False`` stejně jako ostatní požadavky dispečeru."""
+        session, _ = self._send(FedoraRequestType.DELETE_CONTAINER, **{"delete.return_value.status_code": 204})
+        self.assertIs(session.delete.call_args.kwargs["verify"], False)
+        session, _ = self._send(FedoraRequestType.METADATA_UPDATE_RDF_DATA, **{"patch.return_value.status_code": 204})
+        self.assertIs(session.patch.call_args.kwargs["verify"], False)
+
     def test_read_timeout_zapisu_je_fedora_no_response_error(self):
         """
         ``ReadTimeout`` není potomkem ``ConnectionError``; musí přesto skončit jako
@@ -131,8 +141,23 @@ class TransactionRequestTimeoutTest(SimpleTestCase):
     def test_commit_ma_dlouhy_timeout(self):
         """Commit přesouvá obsah do OCFL, proto má timeout jako zápis obsahu."""
         session = mock.Mock(**{"put.return_value.status_code": 204})
-        self._send(self._transaction(), FedoraTransactionOperation.COMMIT, session)
+        save = self._send(self._transaction(), FedoraTransactionOperation.COMMIT, session)
         self.assertEqual(session.put.call_args.kwargs["timeout"], (10.0, 600.0))
+        save.assert_called_once_with(FedoraTransactionResult.COMMITED)
+
+    def test_odmitnuty_commit_se_neulozi_jako_commitnuty(self):
+        """
+        Commit, který Fedora odmítne, se v Redisu zapíše jako ``ABORTED``; dřív se ``COMMITED``
+        uložilo před kontrolou stavu a uživatel viděl hlášku o úspěšném uložení (#4470).
+        """
+        transaction = self._transaction()
+        session = mock.Mock(**{"put.return_value.status_code": 409, "put.return_value.text": "Conflict"})
+        with mock.patch("core.repository_connector._get_fedora_session", return_value=session), mock.patch.object(
+            transaction, "_save_transaction_result_to_redis"
+        ) as save, self.assertLogs("core.repository_connector", level="ERROR"):
+            with self.assertRaises(FedoraTransactionCommitFailedError):
+                transaction._send_transaction_request(FedoraTransactionOperation.COMMIT)
+        save.assert_called_once_with(FedoraTransactionResult.ABORTED)
 
     def test_rollback_ma_vychozi_timeout(self):
         """Rollback dostane výchozí timeout."""
@@ -168,3 +193,25 @@ class TransactionRequestTimeoutTest(SimpleTestCase):
             with self.assertRaises(FedoraNoResponseError):
                 FedoraTransaction()
         self.assertEqual(session.post.call_args.kwargs["timeout"], (10.0, 300.0))
+
+
+class SouborReadFromFedoraTest(SimpleTestCase):
+    """Testy, že výpadek Fedory při čtení náhledu nebo obsahu neshodí vykreslení stránky."""
+
+    def _soubor(self, **patch_kwargs):
+        soubor = Soubor(nazev="foto.jpg", path=f"/rest/{settings.FEDORA_SERVER_NAME}/record/X-M-000023036/file/abc")
+        return soubor, mock.patch.object(Soubor, "get_repository_content", **patch_kwargs)
+
+    def test_nahled_pri_vypadku_fedory_je_none(self):
+        """Náhled se při ``FedoraNoResponseError`` vrátí jako chybějící, detail záznamu se vykreslí."""
+        soubor, patch = self._soubor(side_effect=FedoraNoResponseError(URL, "timed out", None))
+        with patch, self.assertLogs("core.models", level="WARNING"):
+            self.assertIsNone(soubor.small_thumbnail)
+            self.assertIsNone(soubor.large_thumbnail)
+            self.assertIsNone(soubor.content_file_response)
+
+    def test_jina_chyba_neni_potlacena(self):
+        """Potlačí se jen nedostupnost Fedory, ostatní chyby dál propadnou."""
+        soubor, patch = self._soubor(side_effect=ValueError("bug"))
+        with patch, self.assertRaises(ValueError):
+            soubor.read_from_fedora(soubor.get_repository_content, thumb_small=True)

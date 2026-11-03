@@ -983,7 +983,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5,
                     FedoraRequestType.DELETE_DISTRIBUTION,
                 ):
-                    response = session.delete(url, headers=headers, auth=auth, timeout=timeout)
+                    response = session.delete(url, headers=headers, auth=auth, verify=False, timeout=timeout)
                 elif request_type in (
                     FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
                     FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
@@ -998,7 +998,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     FedoraRequestType.BINARY_FILE_CHILD_UPDATE_RDF_DATA,
                     FedoraRequestType.DISTRIBUTION_CONTENT_UPDATE_RDF_DATA,
                 ):
-                    response = session.patch(url, auth=auth, headers=headers, data=data, timeout=timeout)
+                    response = session.patch(url, auth=auth, headers=headers, data=data, verify=False, timeout=timeout)
             # ``ReadTimeout`` není potomkem ``ConnectionError``; bez něj by vypršení timeoutu obešlo
             # ``FedoraNoResponseError`` a rollback v ``handle_fedora_error`` (#4454).
             except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as exc:
@@ -3244,7 +3244,10 @@ class FedoraTransaction(BaseFedoraTransaction):
                 },
             )
             raise FedoraTransactionCommitFailedError(f"{operation.name}: {exc}") from exc
-        if operation == FedoraTransactionOperation.COMMIT:
+        succeeded = str(response.status_code).startswith("2")
+        # COMMITED se zapíše jen po úspěšném commitu; odmítnutý commit se zapíše jako ABORTED,
+        # jinak by middleware uživateli ohlásil uložení změn, které ve Fedoře nejsou (#4470).
+        if operation == FedoraTransactionOperation.COMMIT and succeeded:
             try:
                 self._save_transaction_result_to_redis(FedoraTransactionResult.COMMITED)
             except ResponseError as err:
@@ -3260,7 +3263,7 @@ class FedoraTransaction(BaseFedoraTransaction):
                     "core_repository_connector.FedoraTransaction._save_transaction_result_to_redis.rollback.failed",
                     extra={"transaction": self.uid, "error": err},
                 )
-        if not str(response.status_code).startswith("2"):
+        if not succeeded:
             logger.error(
                 "core_repository_connector.FedoraTransaction.commit_transaction.failed",
                 extra={
