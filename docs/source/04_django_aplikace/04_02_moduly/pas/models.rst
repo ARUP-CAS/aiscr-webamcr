@@ -228,11 +228,21 @@ Třídy
 
       Vrací hodnotu určující, zda je spolupráce aktivní.
 
+   .. py:method:: muze_potvrdit()
+
+      Zjišťuje, zda smí uživatel potvrdit žádost o spolupráci.
+
+      Potvrdit smí určený vedoucí, uživatel ze stejné organizace jako vedoucí a archivář či administrátor.
+
+      :param user: Uživatel, který žádost potvrzuje.
+      :return: ``True``, pokud je uživatel vedoucí, archivář, administrátor nebo patří do organizace vedoucího, jinak ``False``.
+
    .. py:method:: set_aktivni()
 
       Metoda pro nastavení stavu aktivní a uložení změny do historie pro spolupráci.
 
-      :param user: Parametr ``user`` se předává do volání ``Historie()``.
+      :param user: Uživatel zapisovaný do historie jako aktér, musí splňovat ``muze_potvrdit()``.
+      :raises PermissionDenied: Pokud uživatel nesmí žádost potvrdit.
 
    .. py:method:: set_neaktivni()
 

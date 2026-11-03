@@ -190,6 +190,14 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: get_object()
+
+      Vrací spolupráci k potvrzení a ověřuje, že ji smí přihlášený uživatel potvrdit.
+
+      :param queryset: Volitelný queryset předaný rodičovské metodě ``get_object()``.
+      :raises PermissionDenied: Pokud uživatel není vedoucí, archivář, administrátor ani z organizace vedoucího.
+      :return: Vrací nalezený záznam ``UzivatelSpoluprace``.
+
    .. py:method:: post()
 
       Obsluhuje HTTP metodu POST.
