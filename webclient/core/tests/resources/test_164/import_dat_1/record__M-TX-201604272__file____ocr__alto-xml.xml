@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8'?>
+<alto xmlns="http://www.loc.gov/standards/alto/ns-v4#">
+  <Description>
+    <MeasurementUnit>pixel</MeasurementUnit>
+    <sourceImageInformation>
+      <fileName>test.pdf</fileName>
+    </sourceImageInformation>
+  </Description>
+  <Layout>
+    <Page ID="P1" PHYSICAL_IMG_NR="1" WIDTH="2480" HEIGHT="3508">
+      <PrintSpace HPOS="0" VPOS="0" WIDTH="2480" HEIGHT="3508">
+        <TextBlock ID="TB1" HPOS="200" VPOS="200" WIDTH="800" HEIGHT="60">
+          <TextLine ID="TL1" HPOS="200" VPOS="200" WIDTH="800" HEIGHT="60">
+            <String ID="S1" HPOS="200" VPOS="200" WIDTH="380" HEIGHT="60" CONTENT="Testovací" WC="0.98"/>
+            <SP WIDTH="20"/>
+            <String ID="S2" HPOS="600" VPOS="200" WIDTH="400" HEIGHT="60" CONTENT="distribuce" WC="0.97"/>
+          </TextLine>
+        </TextBlock>
+      </PrintSpace>
+    </Page>
+  </Layout>
+</alto>
