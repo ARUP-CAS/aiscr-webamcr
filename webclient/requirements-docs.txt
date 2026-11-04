@@ -285,7 +285,7 @@ python-crontab==3.4.0
     # via
     #   -r requirements.txt
     #   django-celery-beat
-python-dateutil==3.0.0
+python-dateutil==4.0.0
     # via
     #   -r requirements.txt
     #   celery
@@ -327,10 +327,6 @@ roman-numerals==4.1.0
     # via sphinx
 simplejson==4.2.0
     # via -r requirements.txt
-six==1.17.0
-    # via
-    #   -r requirements.txt
-    #   python-dateutil
 snowballstemmer==3.1.1
     # via sphinx
 soupsieve==4.0.1
