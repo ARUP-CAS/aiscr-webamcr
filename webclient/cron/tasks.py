@@ -1,5 +1,6 @@
 import datetime
 import io
+import itertools
 import json
 import logging
 import os
@@ -67,6 +68,7 @@ from core.translation import format_message
 from core.utils import (
     check_import_report_directory,
     hodnota_pro_log,
+    iter_pk_chunks,
     translate_status_value,
     upsert_import_report_index_entry,
 )
@@ -74,7 +76,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.db import connection, transaction
-from django.db.models import F, Min, Model, Prefetch, Q
+from django.db.models import F, Min, Model, Q
 from django.db.models.functions import Coalesce, Upper
 from django.forms.models import model_to_dict
 from django.utils import timezone
@@ -92,7 +94,7 @@ from lokalita.models import Lokalita
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from projekt.models import Projekt
 from services.mailer import Mailer
-from uzivatel.models import Osoba, User, UserNotificationType
+from uzivatel.models import User, UserNotificationType
 from xml_generator.models import ModelWithMetadata
 
 import redis
@@ -695,51 +697,93 @@ def update_snapshot_fields():
         logger.error("core.cron.update_snapshot_fields.do.error", extra={"error": err})
 
 
+REDIS_SNAPSHOT_BATCH_SIZE = 1000
+
+
+def _update_redis_snapshots_for_class(r, current_class, rewrite_existing):
+    """
+    Aktualizuje Redis snapshoty všech záznamů jedné třídy modelu.
+
+    Záznamy se zpracovávají po dávkách ``REDIS_SNAPSHOT_BATCH_SIZE``: existence klíčů se ověří jedním
+    pipeline voláním na dávku a chybějící (nebo při ``rewrite_existing`` všechny) snapshoty se vygenerují
+    jednou tabulkou přes ``generate_redis_snapshots()`` a zapíšou jedním pipeline voláním.
+
+    :param r: Spojení na Redis.
+    :param current_class: Třída modelu s vlastností ``redis_snapshot_id`` a metodou ``generate_redis_snapshots()``.
+    :param rewrite_existing: Pokud je ``True``, přepíše i existující klíče; jinak zapisuje jen chybějící.
+    :return: N-tice (počet prošlých záznamů, počet zapsaných snapshotů).
+    """
+    pipe = r.pipeline()
+    query = current_class.objects.all()
+    if current_class in (Akce, Lokalita):
+        # redis_snapshot_id čte ident_cely z archeologického záznamu
+        query = query.select_related("archeologicky_zaznam")
+    processed = 0
+    changed = 0
+    for batch in itertools.batched(iter_pk_chunks(query, REDIS_SNAPSHOT_BATCH_SIZE), REDIS_SNAPSHOT_BATCH_SIZE):
+        processed += len(batch)
+        if rewrite_existing:
+            missing = batch
+        else:
+            for item in batch:
+                pipe.exists(item.redis_snapshot_id)
+            missing = [item for item, exists in zip(batch, pipe.execute()) if not exists]
+        if not missing:
+            continue
+        for key, value in current_class.generate_redis_snapshots(missing).items():
+            if rewrite_existing:
+                pipe.delete(key)
+            pipe.hset(key, mapping=value)
+            changed += 1
+        pipe.execute()
+    return processed, changed
+
+
 @shared_task
 def update_all_redis_snapshots(rewrite_existing=False, classes=None):
     """
     Aktualizuje Redis snapshots pro všechny nebo vybrané třídy modelů.
 
+    Záznamy se načítají po dávkách podle primárního klíče (viz ``core.utils.iter_pk_chunks``). Chyba při zpracování
+    jedné třídy se zaloguje a pokračuje se další třídou; pokud některá třída selže, úloha na konci
+    vyvolá ``RuntimeError``, aby byl běh v Celery označen jako neúspěšný.
+
     :param rewrite_existing: Pokud je ``True``, přepíše i existující záznamy v Redis. Výchozí hodnota je ``False``.
     :param classes: Volitelný seznam tříd modelů, pro které se mají Redis snapshot záznamy aktualizovat.
         Pokud není zadán, použijí se výchozí třídy
         (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez).
+    :raises RuntimeError: Pokud zpracování alespoň jedné třídy selhalo.
     """
     logger.debug("cron.tasks.update_all_redis_snapshots.start")
     r = RedisConnector.get_connection()
     default_classes = (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez)
     classes_list = classes if classes is not None else default_classes
+    failed_classes = []
     for current_class in classes_list:
-        logger.debug("cron.tasks.update_all_redis_snapshots.class_start", extra={"class_name": current_class.__name__})
-        pipe = r.pipeline()
-        query = current_class.objects.all()
-        if current_class == Dokument:
-            query = query.prefetch_related(
-                Prefetch(
-                    "autori",
-                    queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
-                    to_attr="ordered_autors",
-                )
+        class_name = current_class.__name__
+        logger.debug("cron.tasks.update_all_redis_snapshots.class_start", extra={"class_name": class_name})
+        start = time.monotonic()
+        try:
+            processed, changed = _update_redis_snapshots_for_class(r, current_class, rewrite_existing)
+        except Exception as err:
+            failed_classes.append(class_name)
+            logger.exception(
+                "cron.tasks.update_all_redis_snapshots.class_error",
+                extra={"class_name": class_name, "error": str(err), "duration_s": time.monotonic() - start},
             )
-        i = 0
-        change_items = 0
-        for item in query.iterator(chunk_size=1000):
-            if rewrite_existing or not r.exists(item.redis_snapshot_id):
-                key, value = item.generate_redis_snapshot()
-                if key and value:
-                    if rewrite_existing:
-                        pipe.delete(key)
-                    pipe.hset(key, mapping=value)
-                    change_items = change_items + 1
-                    if (change_items % 1000) == 0:
-                        pipe.execute()
-
-            i = i + 1
-            if (i % 1000) == 0:
-                print(f"\r{i}", end="")
-        pipe.execute()
-        logger.debug("cron.tasks.update_all_redis_snapshots.class_end", extra={"class_name": current_class.__name__})
-    logger.debug("cron.tasks.update_all_redis_snapshots.end")
+            continue
+        logger.debug(
+            "cron.tasks.update_all_redis_snapshots.class_end",
+            extra={
+                "class_name": class_name,
+                "count": processed,
+                "number": changed,
+                "duration_s": time.monotonic() - start,
+            },
+        )
+    logger.debug("cron.tasks.update_all_redis_snapshots.end", extra={"info": ", ".join(failed_classes)})
+    if failed_classes:
+        raise RuntimeError(f"update_all_redis_snapshots failed for: {', '.join(failed_classes)}")
 
 
 @shared_task

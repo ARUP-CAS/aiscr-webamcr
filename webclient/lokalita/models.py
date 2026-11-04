@@ -110,16 +110,46 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
     def generate_redis_snapshot(self):
         """
-        Vygeneruje redis snapshot.
+        Vygeneruje Redis snapshot tohoto záznamu (deleguje na :meth:`generate_redis_snapshots`).
 
-        :return: Vrací n-tici.
+        :return: N-tice (klíč, data); data jsou ``None``, pokud záznam v databázi neexistuje.
+        """
+        key = self.redis_snapshot_id
+        return key, Lokalita.generate_redis_snapshots([self]).get(key)
+
+    @classmethod
+    def generate_redis_snapshots(cls, records):
+        """
+        Vygeneruje Redis snapshoty více záznamů jednou tabulkou ``LokalitaTable``.
+
+        Související záznamy zobrazované v tabulce se načítají hromadně (``select_related`` /
+        ``prefetch_related``), takže počet dotazů nezávisí na počtu záznamů.
+
+        :param records: Instance modelu, pro které se snapshoty generují.
+        :return: Slovník ``{redis_snapshot_id: data}`` pro záznamy nalezené v databázi.
         """
         from lokalita.tables import LokalitaTable
 
-        data = Lokalita.objects.filter(pk=self.pk)
-        table = LokalitaTable(data=data)
-        data = RedisConnector.prepare_model_for_redis(table)
-        return self.redis_snapshot_id, data
+        data = (
+            cls.objects.filter(pk__in=[record.pk for record in records])
+            .select_related(
+                "archeologicky_zaznam__pristupnost",
+                "archeologicky_zaznam__hlavni_katastr__okres__kraj",
+                "druh",
+                "typ_lokality",
+                "zachovalost",
+                "jistota",
+            )
+            .defer(
+                "archeologicky_zaznam__hlavni_katastr__hranice",
+                "archeologicky_zaznam__hlavni_katastr__definicni_bod",
+                "archeologicky_zaznam__hlavni_katastr__okres__hranice",
+                "archeologicky_zaznam__hlavni_katastr__okres__definicni_bod",
+                "archeologicky_zaznam__hlavni_katastr__okres__kraj__hranice",
+                "archeologicky_zaznam__hlavni_katastr__okres__kraj__definicni_bod",
+            )
+        )
+        return RedisConnector.prepare_models_for_redis(LokalitaTable(data=data))
 
     def _get_igsn_client(self):
         """
