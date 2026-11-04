@@ -50,6 +50,7 @@ from heslar.hesla import (
     HESLAR_UDALOST_TYP,
     HESLAR_ZEME,
 )
+from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_TYPES
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from komponenta.models import KomponentaVazby
@@ -195,7 +196,21 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
-        self.initial_let = self.let
+        # Jen ID – načtení objektu letu by znamenalo dotaz při každém vytvoření instance (i ve výpisech).
+        self._initial_let_id = self.let_id
+
+    @cached_property
+    def initial_let(self):
+        """
+        Vrátí let navázaný na dokument v okamžiku vytvoření instance (používá signál ukládající metadata letu).
+
+        :return: Instance ``Let``, nebo ``None``, pokud dokument let neměl (nebo už neexistuje).
+        """
+        if self._initial_let_id is None:
+            return None
+        if self.let_id == self._initial_let_id:
+            return self.let
+        return Let.objects.filter(pk=self._initial_let_id).first()
 
     def __str__(self):
         """
@@ -585,13 +600,25 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             )
 
     @property
+    def je_model_3d(self):
+        """
+        Určí, zda je dokument 3D model; podle toho se volí prefix klíče i tabulka Redis snapshotu.
+
+        Rozhoduje typ dokumentu stejně jako u seznamů ``Model3DListView`` a ``DokumentListView``
+        (identifikátor 3D modelu má tvar ``C-3D-…`` nebo ``X-C-3D-…``).
+
+        :return: ``True``, pokud typ dokumentu patří do ``MODEL_3D_DOKUMENT_TYPES``.
+        """
+        return self.typ_dokumentu_id in MODEL_3D_DOKUMENT_TYPES
+
+    @property
     def redis_snapshot_id(self):
         """
         Generuje klíč pro uložení snapshotu seznamu dokumentů v Redisu.
 
-        :return: Klíč Redis snapshot (3D nebo běžný dokument).
+        :return: Klíč Redis snapshot (3D nebo běžný dokument podle :attr:`je_model_3d`).
         """
-        if self.ident_cely.startswith("3D"):
+        if self.je_model_3d:
             from dokument.views import Model3DListView
 
             return f"{Model3DListView.redis_snapshot_prefix}_{self.ident_cely}"
@@ -602,22 +629,52 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def generate_redis_snapshot(self):
         """
-        Vygeneruje redis snapshot.
+        Vygeneruje Redis snapshot tohoto záznamu (deleguje na :meth:`generate_redis_snapshots`).
 
-        :return: Vrací n-tici.
+        :return: N-tice (klíč, data); data jsou ``None``, pokud záznam v databázi neexistuje.
+        """
+        key = self.redis_snapshot_id
+        return key, Dokument.generate_redis_snapshots([self]).get(key)
+
+    @classmethod
+    def generate_redis_snapshots(cls, records):
+        """
+        Vygeneruje Redis snapshoty více záznamů; tabulku volí podle :attr:`je_model_3d`
+        (``Model3DTable`` pro 3D modely, jinak ``DokumentTable``).
+
+        Související záznamy zobrazované v tabulce se načítají hromadně (``select_related`` /
+        ``prefetch_related``), takže počet dotazů nezávisí na počtu záznamů.
+
+        :param records: Instance modelu, pro které se snapshoty generují.
+        :return: Slovník ``{redis_snapshot_id: data}`` pro záznamy nalezené v databázi.
         """
         from dokument.tables import DokumentTable, Model3DTable
 
-        if self.ident_cely.startswith("3D"):
-            data = Dokument.objects.filter(pk=self.pk)
-            table = Model3DTable(data=data)
-            data = RedisConnector.prepare_model_for_redis(table)
-            return self.redis_snapshot_id, data
-        else:
-            data = Dokument.objects.filter(pk=self.pk)
-            table = DokumentTable(data=data)
-            data = RedisConnector.prepare_model_for_redis(table)
-            return self.redis_snapshot_id, data
+        related = (
+            "organizace",
+            "typ_dokumentu",
+            "rada",
+            "pristupnost",
+            "material_originalu",
+            "ulozeni_originalu",
+            "licence",
+            "extra_data__format",
+            "extra_data__udalost_typ",
+            "extra_data__zeme",
+            "extra_data__zachovalost",
+            "extra_data__nahrada",
+            "let",
+        )
+        snapshots = {}
+        for table_class, table_records in (
+            (Model3DTable, [record for record in records if record.je_model_3d]),
+            (DokumentTable, [record for record in records if not record.je_model_3d]),
+        ):
+            if not table_records:
+                continue
+            data = cls.objects.filter(pk__in=[record.pk for record in table_records]).select_related(*related)
+            snapshots.update(RedisConnector.prepare_models_for_redis(table_class(data=data)))
+        return snapshots
 
     def _get_doi_client(self):
         """
