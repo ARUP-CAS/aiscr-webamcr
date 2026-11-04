@@ -425,7 +425,9 @@ def create(request):
                 fedora_transaction.rollback_transaction()
             else:
                 repository_connector = FedoraRepositoryConnector(projekt, skip_container_check=False)
-                if repository_connector.check_container_deleted_or_not_exists(projekt.ident_cely, "projekt"):
+                if repository_connector.check_container_deleted_or_not_exists(
+                    projekt.ident_cely, "projekt", fedora_transaction=fedora_transaction
+                ):
                     projekt.save()
                     projekt.set_zapsany(request.user)
                     form_projekt.save_m2m()

@@ -77,6 +77,9 @@ def _build_fedora_session() -> requests.Session:
     """
     Sestaví ``requests.Session`` napojenou na sdílený connection pool.
 
+    Požadavky přes tuto session posílá dispečer s ``verify=False`` záměrně: Fedora běží v interní
+    síti a na produkci se volá přes HTTP (viz ``docs/source/02_instalace_nasazeni/fedora_repository.rst``).
+
     :return: Nakonfigurovaná ``requests.Session`` instance.
     """
     session = requests.Session()
@@ -733,12 +736,15 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         return hasattr(result, "text") and regex.search(result.text)
 
     @classmethod
-    def check_container_deleted_or_not_exists(cls, ident_cely, model_name):
+    def check_container_deleted_or_not_exists(cls, ident_cely, model_name, fedora_transaction=None):
         """
         Ověří container deleted or not exists.
 
         :param ident_cely: Parametr ``ident_cely`` se předává do volání ``debug()``, ``send_request()``.
         :param model_name: Název modelu používaný pro cílení operace.
+        :param fedora_transaction: Transakce, kterou volající otevřel před kontrolou. Kontrola ji
+            nepoužívá, jen ji připojí k ``FedoraNoResponseError``, aby ``handle_fedora_error``
+            provedl rollback i ve Fedoře a přesměroval na záznam.
 
             :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
             :raises FedoraNoResponseError: Pokud Fedora na některý z dotazů neodpoví (výpadek spojení,
@@ -765,7 +771,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
                     "core_repository_connector.check_container_is_deleted.request_failed",
                     extra={"request_url": url, "request_type": request_type, "error": exc},
                 )
-                raise FedoraNoResponseError(url, str(exc), None, fedora_transaction=None) from exc
+                raise FedoraNoResponseError(url, str(exc), None, fedora_transaction=fedora_transaction) from exc
             return response
 
         result = send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)

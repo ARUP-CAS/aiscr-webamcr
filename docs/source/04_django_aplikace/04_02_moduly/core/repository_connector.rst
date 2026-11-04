@@ -224,6 +224,9 @@ Třídy
 
       :param ident_cely: Parametr ``ident_cely`` se předává do volání ``debug()``, ``send_request()``.
       :param model_name: Název modelu používaný pro cílení operace.
+      :param fedora_transaction: Transakce, kterou volající otevřel před kontrolou. Kontrola ji
+          nepoužívá, jen ji připojí k ``FedoraNoResponseError``, aby ``handle_fedora_error``
+          provedl rollback i ve Fedoře a přesměroval na záznam.
 
       :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
       :raises FedoraNoResponseError: Pokud Fedora na některý z dotazů neodpoví (výpadek spojení,
@@ -1141,6 +1144,9 @@ Funkce
 .. py:function:: _build_fedora_session()
 
    Sestaví ``requests.Session`` napojenou na sdílený connection pool.
+
+   Požadavky přes tuto session posílá dispečer s ``verify=False`` záměrně: Fedora běží v interní
+   síti a na produkci se volá přes HTTP (viz ``docs/source/02_instalace_nasazeni/fedora_repository.rst``).
 
    :return: Nakonfigurovaná ``requests.Session`` instance.
 

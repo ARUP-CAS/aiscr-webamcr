@@ -2609,7 +2609,9 @@ def zapsat(request, zaznam=None):
                 messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
                 fedora_transaction.rollback_transaction()
             else:
-                if FedoraRepositoryConnector.check_container_deleted_or_not_exists(dokument.ident_cely, "dokument"):
+                if FedoraRepositoryConnector.check_container_deleted_or_not_exists(
+                    dokument.ident_cely, "dokument", fedora_transaction=fedora_transaction
+                ):
                     dokument.stav = D_STAV_ZAPSANY
                     try:
                         # Savepoint: ručně zadaný identifikátor mohl mezi validací formuláře a uložením

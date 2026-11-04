@@ -119,6 +119,22 @@ class SendRequestTimeoutTest(SimpleTestCase):
                     FedoraRepositoryConnector.check_container_deleted_or_not_exists("X-M-000023036", "projekt")
         self.assertEqual(session.get.call_args.kwargs["timeout"], (10.0, 300.0))
 
+    def test_kontrola_smazani_nese_transakci_volajiciho(self):
+        """
+        Pohledy zakládání záznamu otevřou transakci před kontrolou; chyba ji musí nést,
+        aby ``handle_fedora_error`` provedl rollback i ve Fedoře a přesměroval na záznam.
+        """
+        transaction = self._make_connector().transaction
+        session = mock.Mock(**{"get.side_effect": requests.ReadTimeout()})
+        with mock.patch.object(FedoraRepositoryConnector, "_get_session", return_value=session):
+            with self.assertLogs("core.repository_connector", level="ERROR"):
+                with self.assertRaises(FedoraNoResponseError) as ctx:
+                    FedoraRepositoryConnector.check_container_deleted_or_not_exists(
+                        "X-M-000023036", "projekt", fedora_transaction=transaction
+                    )
+        self.assertIs(ctx.exception.fedora_transaction, transaction)
+        self.assertEqual(ctx.exception.ident_cely, "X-M-000023036")
+
 
 @override_settings(**TIMEOUTY)
 class TransactionRequestTimeoutTest(SimpleTestCase):
@@ -215,3 +231,41 @@ class SouborReadFromFedoraTest(SimpleTestCase):
         soubor, patch = self._soubor(side_effect=ValueError("bug"))
         with patch, self.assertRaises(ValueError):
             soubor.read_from_fedora(soubor.get_repository_content, thumb_small=True)
+
+
+class HistorieFedoraVypadekTest(SimpleTestCase):
+    """Testy, že výpadek Fedory neshodí stránku historie ani stažení historické verze."""
+
+    def test_tabulka_historie_bez_fedory(self):
+        """Stránka historie se při výpadku Fedory vykreslí bez tabulky verzí z Fedory."""
+        from historie.views import HistorieListView
+
+        record = mock.Mock(**{"get_historicke_verze.side_effect": FedoraNoResponseError(URL, "timed out", None)})
+        view = HistorieListView()
+        view.fedora_model = mock.Mock(**{"objects.get.return_value": record})
+        context = {"ident_cely": "X-M-000023036"}
+        with self.assertLogs("historie.views", level="WARNING"):
+            view.add_fedora_history(context)
+        self.assertNotIn("fedora_table", context)
+
+    def test_stazeni_historickych_metadat_bez_fedory_je_404(self):
+        """Stažení historických metadat skončí při výpadku Fedory 404 místo chyby 500."""
+        from core.views import StahnoutDataHistorickaView
+        from django.http import Http404
+
+        record = mock.Mock(**{"get_metadata_historicka.side_effect": FedoraNoResponseError(URL, "timed out", None)})
+        model = mock.Mock(**{"objects.get.return_value": record})
+        with mock.patch.dict(StahnoutDataHistorickaView.MODEL_MAP, {"Projekt": model}):
+            with self.assertLogs("core.views", level="WARNING"), self.assertRaises(Http404):
+                StahnoutDataHistorickaView().get(None, "Projekt", "X-M-000023036", "20260101000000")
+
+    def test_stazeni_historickeho_souboru_bez_obsahu_je_404(self):
+        """Když ``get_soubor_historicky`` vrátí ``None`` (chybějící verze, výpadek Fedory), view vrátí 404."""
+        from core.views import StahnoutDataHistorickaView
+        from django.http import Http404
+
+        record = mock.Mock(**{"get_soubor_historicky.return_value": None})
+        model = mock.Mock(**{"objects.get.return_value": record})
+        with mock.patch.dict(StahnoutDataHistorickaView.MODEL_MAP, {"Soubor": model}):
+            with self.assertRaises(Http404):
+                StahnoutDataHistorickaView().get(None, "Soubor", "1", "20260101000000")
