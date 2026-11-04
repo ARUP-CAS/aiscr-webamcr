@@ -272,6 +272,18 @@ services:
       - SE_NODE_OVERRIDE_MAX_SESSIONS=true
     networks:
       - prod-net
+    # Uzel gridu je nahoře. Nepoužívá se .value.ready (check-grid.sh) - při běžící session
+    # je s SE_NODE_MAX_SESSIONS=1 false a swarm by kontejner uprostřed testů restartoval.
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          curl -sf http://localhost:4444/status
+          | jq -e '.value.nodes | any(.availability == "UP")' > /dev/null
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.55.1

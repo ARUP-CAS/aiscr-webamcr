@@ -249,9 +249,19 @@ Třídy
 
    .. py:method:: generate_redis_snapshot()
 
-      Připraví data akce pro uložení snapshotu do Redis cache.
+      Vygeneruje Redis snapshot této akce (deleguje na :meth:`generate_redis_snapshots`).
 
-      :return: Vrací n-tici.
+      :return: N-tice (klíč, data), nebo ``(None, None)``, pokud akce v databázi neexistuje.
+
+   .. py:method:: generate_redis_snapshots()
+
+      Vygeneruje Redis snapshoty více záznamů jednou tabulkou ``AkceTable``.
+
+      Související záznamy zobrazované v tabulce se načítají hromadně (``select_related`` /
+      ``prefetch_related``), takže počet dotazů nezávisí na počtu záznamů.
+
+      :param records: Instance modelu, pro které se snapshoty generují.
+      :return: Slovník ``{redis_snapshot_id: data}`` pro záznamy nalezené v databázi.
 
    .. py:method:: get_by_ident_cely()
 
