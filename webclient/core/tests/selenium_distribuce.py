@@ -28,6 +28,7 @@ from unittest.mock import patch
 import requests
 from core.constants import NAHRANI_DISTRIBUCE
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
+from cron.tasks import IMPORT_TERMINAL_PHASES
 from django.conf import settings
 from django.urls import reverse
 from selenium.webdriver.common.by import By
@@ -36,8 +37,6 @@ from urllib3.exceptions import InsecureRequestWarning
 
 logger = logging.getLogger(__name__)
 
-# Fáze importu, ve kterých úloha skončila (shodné s ``TERMINAL_PHASES`` stránky importu).
-IMPORT_TERMINAL_PHASES = ("finished", "stopped", "canceled", "failed")
 DELETED_TRIPLE = re.compile(r'<http://purl\.org/dc/terms/type>\s+"deleted"')
 
 
