@@ -161,6 +161,7 @@
     "core.tests.test_fedora_integration_child_walk": "External integration: requires a deployed HTTP/Fedora service.",
     "core.tests.test_fedora_integration_paradata": "External integration: requires a deployed HTTP/Fedora service.",
     "core.tests.test_selenium": "Selenium: existing manual DEV workflow.",
+    "core.tests.test_selenium_distribuce": "Selenium: existing manual DEV workflow.",
     "dokument.tests.test_selenium": "Selenium: existing manual DEV workflow.",
     "ez.tests.test_selenium": "Selenium: existing manual DEV workflow.",
     "fedora_management.tests": "Placeholder module with no test classes.",
