@@ -426,6 +426,16 @@ class RunDataImportMapperTestBase(TestCase):
             ):
                 mock = stack.enter_context(patch(target))
                 mock.return_value = MagicMock(uid="test-signals-fedora-uid", updated_ident_cely=set())
+            # Signály po uložení záznamu plánují ``update_single_redis_snapshot``; v CI běží Celery eager
+            # a task by zapisoval do testovacího FakeRedis (``hset``), který snapshoty nepodporuje.
+            for target in (
+                "arch_z.signals.update_single_redis_snapshot",
+                "dokument.signals.update_single_redis_snapshot",
+                "lokalita.signals.update_single_redis_snapshot",
+                "pas.signals.update_single_redis_snapshot",
+                "projekt.signals.update_single_redis_snapshot",
+            ):
+                stack.enter_context(patch(target))
             if extra_patches:
                 for ctx in extra_patches:
                     stack.enter_context(ctx)
