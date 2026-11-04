@@ -147,7 +147,7 @@ idna==3.20
     #   requests
 inflate64==1.0.4
     # via py7zr
-kombu==5.6.2
+kombu==5.7.0
     # via celery
 libsass==0.23.0
     # via django-libsass
@@ -161,8 +161,6 @@ odfpy==1.4.1
     # via tablib
 openpyxl==3.1.5
     # via tablib
-packaging==26.3
-    # via kombu
 pandas==3.1.0
     # via
     #   -r requirements.in
@@ -243,7 +241,7 @@ simplejson==4.2.0
     # via -r requirements.in
 six==1.17.0
     # via python-dateutil
-soupsieve==3.0.4
+soupsieve==4.0.1
     # via beautifulsoup4
 sqlparse==0.6.1
     # via django
@@ -261,7 +259,6 @@ typing-extensions==4.16.0
 tzdata==2026.6
     # via
     #   django-celery-beat
-    #   kombu
     #   python-dateutil
 tzlocal==5.4.5
     # via celery

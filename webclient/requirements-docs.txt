@@ -199,7 +199,7 @@ jinja2==3.1.6
     # via
     #   sphinx
     #   sphinxcontrib-mermaid
-kombu==5.6.2
+kombu==5.7.0
     # via
     #   -r requirements.txt
     #   celery
@@ -224,10 +224,7 @@ odfpy==1.4.1
 openpyxl==3.1.5
     # via -r requirements.txt
 packaging==26.3
-    # via
-    #   -r requirements.txt
-    #   kombu
-    #   sphinx
+    # via sphinx
 pandas==3.1.0
     # via -r requirements.txt
 pdf2image==1.17.0
@@ -336,7 +333,7 @@ six==1.17.0
     #   python-dateutil
 snowballstemmer==3.1.1
     # via sphinx
-soupsieve==3.0.4
+soupsieve==4.0.1
     # via
     #   -r requirements.txt
     #   beautifulsoup4
@@ -389,7 +386,6 @@ tzdata==2026.6
     # via
     #   -r requirements.txt
     #   django-celery-beat
-    #   kombu
     #   python-dateutil
 tzlocal==5.4.5
     # via
