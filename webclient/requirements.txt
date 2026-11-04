@@ -54,7 +54,7 @@ cron-descriptor==1.4.5
     # via django-celery-beat
 defusedxml==0.7.1
     # via odfpy
-django==6.0.9
+django==6.0.10
     # via
     #   -r requirements.in
     #   crispy-bootstrap5
