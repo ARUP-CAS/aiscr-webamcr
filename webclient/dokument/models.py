@@ -50,6 +50,7 @@ from heslar.hesla import (
     HESLAR_UDALOST_TYP,
     HESLAR_ZEME,
 )
+from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_TYPES
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from komponenta.models import KomponentaVazby
@@ -603,9 +604,12 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         """
         Určí, zda je dokument 3D model; podle toho se volí prefix klíče i tabulka Redis snapshotu.
 
-        :return: ``True``, pokud ``ident_cely`` začíná na ``3D``.
+        Rozhoduje typ dokumentu stejně jako u seznamů ``Model3DListView`` a ``DokumentListView``
+        (identifikátor 3D modelu má tvar ``C-3D-…`` nebo ``X-C-3D-…``).
+
+        :return: ``True``, pokud typ dokumentu patří do ``MODEL_3D_DOKUMENT_TYPES``.
         """
-        return self.ident_cely.startswith("3D")
+        return self.typ_dokumentu_id in MODEL_3D_DOKUMENT_TYPES
 
     @property
     def redis_snapshot_id(self):

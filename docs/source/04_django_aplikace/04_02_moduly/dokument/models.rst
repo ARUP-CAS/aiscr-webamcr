@@ -185,7 +185,10 @@ Třídy
 
       Určí, zda je dokument 3D model; podle toho se volí prefix klíče i tabulka Redis snapshotu.
 
-      :return: ``True``, pokud ``ident_cely`` začíná na ``3D``.
+      Rozhoduje typ dokumentu stejně jako u seznamů ``Model3DListView`` a ``DokumentListView``
+      (identifikátor 3D modelu má tvar ``C-3D-…`` nebo ``X-C-3D-…``).
+
+      :return: ``True``, pokud typ dokumentu patří do ``MODEL_3D_DOKUMENT_TYPES``.
 
    .. py:method:: redis_snapshot_id()
 

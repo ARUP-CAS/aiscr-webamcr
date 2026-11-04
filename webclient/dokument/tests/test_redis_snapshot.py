@@ -4,6 +4,10 @@ from unittest import mock
 
 from django.test import SimpleTestCase
 from dokument.models import Dokument
+from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_TYPES
+
+TYP_3D = MODEL_3D_DOKUMENT_TYPES[0]
+TYP_JINY = max(MODEL_3D_DOKUMENT_TYPES) + 1
 
 
 class _FakeTable:
@@ -22,9 +26,10 @@ class DokumentRedisSnapshotTest(SimpleTestCase):
     """Ověřuje, že 3D a běžné dokumenty jdou do své tabulky a pod klíč se stejným rozlišením."""
 
     def test_je_model_3d(self):
-        """Za 3D model se považuje dokument, jehož ``ident_cely`` začíná na ``3D``."""
-        self.assertTrue(Dokument(ident_cely="3D-C-201900001").je_model_3d)
-        self.assertFalse(Dokument(ident_cely="C-TX-201900001").je_model_3d)
+        """O 3D modelu rozhoduje typ dokumentu z ``MODEL_3D_DOKUMENT_TYPES``, ne tvar identifikátoru."""
+        self.assertTrue(Dokument(ident_cely="C-3D-201900001", typ_dokumentu_id=TYP_3D).je_model_3d)
+        self.assertTrue(Dokument(ident_cely="X-C-3D-201900001", typ_dokumentu_id=TYP_3D).je_model_3d)
+        self.assertFalse(Dokument(ident_cely="C-TX-201900001", typ_dokumentu_id=TYP_JINY).je_model_3d)
 
     @mock.patch("dokument.models.RedisConnector.prepare_models_for_redis")
     @mock.patch("dokument.tables.DokumentTable")
@@ -39,8 +44,8 @@ class DokumentRedisSnapshotTest(SimpleTestCase):
         :param dokument_table: Mock třídy ``DokumentTable``.
         :param prepare: Mock ``RedisConnector.prepare_models_for_redis``.
         """
-        model3d = Dokument(pk=1, ident_cely="3D-C-201900001")
-        dokument = Dokument(pk=2, ident_cely="C-TX-201900001")
+        model3d = Dokument(pk=1, ident_cely="C-3D-201900001", typ_dokumentu_id=TYP_3D)
+        dokument = Dokument(pk=2, ident_cely="C-TX-201900001", typ_dokumentu_id=TYP_JINY)
         objects.filter.side_effect = lambda pk__in: mock.Mock(select_related=mock.Mock(return_value=tuple(pk__in)))
         model3d_table.side_effect = _FakeTable
         dokument_table.side_effect = _FakeTable
@@ -67,7 +72,7 @@ class DokumentRedisSnapshotTest(SimpleTestCase):
         :param dokument_table: Mock třídy ``DokumentTable``.
         :param _prepare: Mock ``RedisConnector.prepare_models_for_redis``.
         """
-        Dokument.generate_redis_snapshots([Dokument(pk=2, ident_cely="C-TX-201900001")])
+        Dokument.generate_redis_snapshots([Dokument(pk=2, ident_cely="C-TX-201900001", typ_dokumentu_id=TYP_JINY)])
 
         model3d_table.assert_not_called()
         dokument_table.assert_called_once()
