@@ -302,7 +302,7 @@ python-logstash==0.4.8
     # via -r requirements.txt
 python-magic==0.4.27
     # via -r requirements.txt
-pytz==2026.5
+pytz==2026.6
     # via -r requirements.txt
 pyyaml==6.0.3
     # via -r requirements.txt
