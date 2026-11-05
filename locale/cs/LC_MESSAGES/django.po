@@ -17610,3 +17610,7 @@ msgstr "Neúplná novinka"
 
 msgid "templates.registration.login.novinky.noNews"
 msgstr "Nejsou k dispozici žádné novinky."
+
+#: heslar/admin.py
+msgid "heslar.admin.OrganizaceAdmin.import_blocks_changes"
+msgstr "Během importu nelze přidávat, měnit ani mazat organizace. Pokud nelze ověřit stav importu, zkuste to později."

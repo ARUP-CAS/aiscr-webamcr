@@ -211,7 +211,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @property
     def organizace_podstrom_ids(self):
-        """Vrátí ID vlastní organizace a jejích potomků, načtená nejvýše jednou za změnu hierarchie."""
+        """Vrátí ID vlastní organizace a potomků; výsledek se cacheuje v instanci uživatele."""
         cache = self.__dict__.get("_organizace_podstrom_ids")
         generation = Organizace._subtree_cache_version
         if cache is None or cache[0] != generation:
@@ -548,8 +548,6 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
 
     IDENT_PREFIX = "ORG"
     SEQUENCE_NAME = "organizace_ident_seq"
-    # Stable AMČR-specific key shared by every writer that validates or changes the hierarchy.
-    HIERARCHY_LOCK_KEY = (0x414D4352, 1)
     _subtree_cache_version = 0
 
     nazev = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev"), max_length=255, db_index=True)
@@ -615,11 +613,37 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
         null=True,
     )
 
+    @staticmethod
+    def find_cycles(parent_graph, roots=None):
+        """Najde cykly v grafu rodičů bez rekurze a vrátí uzavřené cesty.
+
+        :param parent_graph: Slovník uzel → rodič; chybějící rodič ukončí cestu.
+        :param roots: Výchozí uzly pro kontrolu; ``None`` znamená celý graf.
+        :return: Seznam cyklů v pořadí průchodu, s prvním uzlem zopakovaným na konci.
+        """
+        completed = set()
+        cycles = []
+        for root in parent_graph if roots is None else roots:
+            path = []
+            positions = {}
+            current = root
+            while current in parent_graph and current not in completed:
+                if current in positions:
+                    cycles.append(path[positions[current] :] + [current])
+                    break
+                positions[current] = len(path)
+                path.append(current)
+                current = parent_graph[current]
+            completed.update(path)
+        return cycles
+
     @classmethod
-    def lock_hierarchy(cls):
-        """Zamkne změny hierarchie organizací do konce aktuální transakce."""
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT pg_advisory_xact_lock(%s, %s)", cls.HIERARCHY_LOCK_KEY)
+    def get_hierarchy_cycles(cls):
+        """Načte celou hierarchii a vrátí cykly označené identifikátory organizací.
+
+        :return: Uzavřené cesty cyklů; prázdný seznam pro hierarchii bez cyklů.
+        """
+        return cls.find_cycles(dict(cls.objects.values_list("ident_cely", "soucast__ident_cely")))
 
     @classmethod
     def get_subtree_ids(cls, root_id):
@@ -627,7 +651,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
         Vrátí ID organizace a všech jejích přímých i nepřímých součástí.
 
         :param root_id: ID organizace, od které se prohledávají potomci směrem dolů.
-        :return: ID kořene a všech dosažitelných potomků; pro chybějící kořen prázdný seznam.
+        :return: ID kořene a potomků; při cyklu pouze kořen, pro chybějící kořen prázdný seznam.
         """
         if root_id is None:
             return []
@@ -638,19 +662,26 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
         with connection.cursor() as cursor:
             cursor.execute(
                 f"""
-                WITH RECURSIVE organizational_subtree(id) AS (
-                    SELECT {pk_column} FROM {table} WHERE {pk_column} = %s
+                WITH RECURSIVE organizational_subtree(id, parent_id) AS (
+                    SELECT root.{pk_column}, root.{parent_column}
+                    FROM {table} AS root
+                    WHERE root.{pk_column} = %s
                     UNION
-                    SELECT child.{pk_column}
+                    SELECT child.{pk_column}, child.{parent_column}
                     FROM {table} AS child
                     JOIN organizational_subtree AS parent
                       ON child.{parent_column} = parent.id
                 )
-                SELECT id FROM organizational_subtree
+                SELECT id, parent_id FROM organizational_subtree
                 """,
                 [root_id],
             )
-            return [row[0] for row in cursor.fetchall()]
+            parent_graph = dict(cursor.fetchall())
+        cycles = cls.find_cycles(parent_graph)
+        if cycles:
+            logger.error("uzivatel.Organizace.get_subtree_ids.cycle", extra={"root_id": root_id, "cycles": cycles})
+            return [root_id]
+        return list(parent_graph)
 
     def save(self, *args, **kwargs):
         """

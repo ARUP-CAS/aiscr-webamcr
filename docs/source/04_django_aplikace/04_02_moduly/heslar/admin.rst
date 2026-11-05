@@ -237,15 +237,37 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: _import_blocks_changes()
+
+      Zakáže změny organizací během importu; při výpadku Redis ponechá jen čtení.
+
+      :param request: Požadavek správce, v němž se výsledek kontroly krátkodobě uchová.
+      :return: ``True``, pokud import probíhá nebo nelze jeho stav ověřit.
+
+   .. py:method:: has_add_permission()
+
+      Povolí přidání organizace jen mimo probíhající import.
+
+      :param request: Požadavek správce.
+      :return: Oprávnění správce omezené stavem importu.
+
+   .. py:method:: has_change_permission()
+
+      Povolí změnu organizace jen mimo probíhající import.
+
+      :param request: Požadavek správce.
+      :param obj: Organizace, pro kterou se oprávnění vyhodnocuje.
+      :return: Oprávnění správce omezené stavem importu.
+
    .. py:method:: changeform_view()
 
-      Serializuje změny organizací, aby kontrola hierarchie pracovala s aktuálním stromem.
+      Při importu zobrazí upozornění a organizaci ponechá pouze ke čtení.
 
-      :param request: Požadavek správce; při metodě POST spouští transakční zpracování změny.
-      :param object_id: Identifikátor upravované organizace, případně ``None`` při vytvoření.
-      :param form_url: Cílová URL formuláře správy.
-      :param extra_context: Dodatečný kontext předaný standardnímu formuláři správy.
-      :return: HTTP odpověď vytvořená standardním pohledem Django Admin.
+      :param request: Požadavek správce; POST stále podléhá kontrole oprávnění.
+      :param object_id: Identifikátor organizace, případně ``None`` při přidání.
+      :param form_url: Cílová URL formuláře.
+      :param extra_context: Dodatečný kontext formuláře.
+      :return: Standardní odpověď administračního formuláře.
 
    .. py:method:: has_delete_permission()
 

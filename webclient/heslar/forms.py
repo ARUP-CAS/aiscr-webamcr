@@ -196,10 +196,14 @@ class OrganizaceAdminForm(forms.ModelForm):
     def clean_soucast(self):
         """Odmítne přiřadit organizaci samu sobě nebo některému z jejích potomků."""
         selected_parent = self.cleaned_data.get("soucast")
-        if selected_parent and self.instance.pk:
-            if selected_parent.pk == self.instance.pk or selected_parent.pk in Organizace.get_subtree_ids(
-                self.instance.pk
-            ):
+        if selected_parent:
+            parent_graph = dict(Organizace.objects.values_list("pk", "soucast_id"))
+            # A new object has no incoming edges yet; checking its parent's path also
+            # prevents attaching it to a pre-existing corrupt hierarchy.
+            root = self.instance.pk if self.instance.pk is not None else selected_parent.pk
+            if self.instance.pk is not None:
+                parent_graph[self.instance.pk] = selected_parent.pk
+            if Organizace.find_cycles(parent_graph, [root]):
                 raise ValidationError(
                     format_message(gettext_noop("heslar.forms.OrganizaceAdminForm.clean_soucast.invalid"))
                 )

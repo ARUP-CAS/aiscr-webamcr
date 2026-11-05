@@ -518,8 +518,12 @@ class OrganizaceMapperValidateBatchOrderingTest(TestCase):
         OrganizaceMapper.validate_batch_ordering([])
 
     def test_no_soucast_references_passes(self):
-        """Záznamy bez soucast neprojdou žádnou kontrolou a validace projde."""
-        payloads = [self._row("ORG-000001"), self._row("ORG-000002"), self._row("ORG-000003")]
+        """Záznamy s chybějícím polem soucast projdou validací."""
+        payloads = [
+            {"ident_cely": "ORG-000001"},
+            {"ident_cely": "ORG-000002"},
+            {"ident_cely": "ORG-000003"},
+        ]
         OrganizaceMapper.validate_batch_ordering(payloads)
 
     def test_soucast_none_passes(self):
@@ -646,3 +650,13 @@ class OrganizaceMapperValidateBatchOrderingTest(TestCase):
         form = OrganizaceAdminForm(data={"soucast": parent.pk}, instance=self.org_a)
 
         self.assertNotIn("soucast", form.errors)
+
+    def test_admin_form_can_repair_cycle_but_cannot_keep_it_through_a_descendant(self):
+        """Oprava odpojením rodiče projde, ale nový vztah uvnitř cyklu neprojde."""
+        Organizace.objects.filter(pk=self.org_a.pk).update(soucast=self.org_c)
+        invalid = OrganizaceAdminForm(data={"soucast": self.org_b.pk}, instance=self.org_a)
+        self.assertFalse(invalid.is_valid())
+        self.assertIn("soucast", invalid.errors)
+        repair = OrganizaceAdminForm(data={"soucast": ""}, instance=self.org_a)
+        repair.is_valid()
+        self.assertNotIn("soucast", repair.errors)

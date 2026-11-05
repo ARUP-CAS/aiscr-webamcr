@@ -129,6 +129,29 @@ Users
 * Hodnota ``is_staff`` společně s rolí ``Administrátor`` určuje, zda má uživatel přístup do administrátorského rozhraní
 * Hodnota ``is_active`` značí, zda je uživatel aktivní (může se přihlásit)
 
+Organizace a jejich hierarchie
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Organizace tvoří hierarchii prostřednictvím pole ``soucast``. Při přidání, změně nebo
+smazání organizace v administraci jsou tyto operace zakázány, pokud Redis potvrzuje fázi
+``importing`` hromadného importu. Ve fázích validace a čekání na schválení se toto omezení
+neuplatňuje. Pokud stav importu nelze v Redis ověřit, změny se z bezpečnostních důvodů také
+zakážou a do logu se zapíše chyba.
+
+Vlastnická oprávnění archeologů zahrnují jejich organizaci a její potomky. Výsledek
+vyhledání podstromu se cacheuje v instanci uživatele; po uložení změny organizace přes
+model se při dalším přístupu obnoví.
+Pokud podstrom obsahuje cyklus, systém jej zaloguje a pro oprávnění ponechá pouze vlastní
+organizaci, aby cyklus nerozšířil přístup na jiné organizace.
+
+Před importem se kontrolují dopředné reference a cykly vznikající na změněných vztazích
+organizací a jejich dosažitelných předcích; nesouvisející historické cykly import
+neblokují. Prázdná hodnota ``soucast`` umožňuje vztah odstranit a cyklus opravit.
+Pokud dávka obsahuje organizační záznamy, při závěrečném úklidu po importní fázi se navíc
+provede diagnostická kontrola celé hierarchie, a to i po chybě nebo rollbacku. Nalezené
+cykly se pouze zapíší do logu s ID úlohy a nemění výsledek importu; případná chyba této
+kontroly rovněž nezastaví závěrečný úklid.
+
 
 Správa repozitáře
 -----------------

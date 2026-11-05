@@ -707,7 +707,8 @@ class ImportDataOrganizationCycleError(ImportDataError):
         """
         Inicializuje výjimku s identifikátory organizací tvořících cyklus.
 
-        :param cycle: Seřazené identifikátory cyklu včetně opakovaného uzlu na konci.
+        :param cycle: Identifikátory organizací v pořadí průchodu po vazbě
+            ``soucast``; první uzel je zopakován na konci.
         """
         self.cycle = cycle
         super().__init__(
@@ -2616,10 +2617,12 @@ class OrganizaceMapper(ImportModelMapper):
     @classmethod
     def validate_batch_ordering(cls, payloads: list[dict], performed_action=None) -> None:
         """
-        Ověří dopředné reference a cykly v úplné výsledné hierarchii organizací.
+        Ověří dopředné reference a cykly na cestách dotčených změnami v dávce.
 
-        Graf zahrnuje nezměněné organizace v databázi i vztahy z importovaných řádků.
-        Prázdná hodnota ``soucast`` proto při aktualizaci vztah výslovně odstraní.
+        Pro kontrolu cyklů se sestaví výsledný graf z databáze a importovaných řádků, ale
+        procházejí se pouze změněné vztahy a jejich dosažitelní předci. Nesouvisející
+        historický cyklus proto import neblokuje. Prázdná hodnota ``soucast`` při
+        aktualizaci vztah výslovně odstraní.
 
         :param payloads: Seznam surových řádkových slovníků ze CSV souboru v původním pořadí.
         :param performed_action: Akce importu; při ``DELETE`` se hierarchie nemění.
@@ -2661,21 +2664,9 @@ class OrganizaceMapper(ImportModelMapper):
                 changed_idents.add(ident)
             organization_graph[ident] = parent_ident
 
-        completed: set[str] = set()
-        for ident in changed_idents:
-            path: list[str] = []
-            path_indices: dict[str, int] = {}
-            current_ident = ident
-            while current_ident in organization_graph and current_ident not in completed:
-                if current_ident in path_indices:
-                    cycle = path[path_indices[current_ident] :] + [current_ident]
-                    raise ImportDataOrganizationCycleError(cycle)
-                path_indices[current_ident] = len(path)
-                path.append(current_ident)
-                current_ident = organization_graph[current_ident]
-                if current_ident is None:
-                    break
-            completed.update(path)
+        cycles = Organizace.find_cycles(organization_graph, changed_idents)
+        if cycles:
+            raise ImportDataOrganizationCycleError(cycles[0])
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Organizace) -> list:

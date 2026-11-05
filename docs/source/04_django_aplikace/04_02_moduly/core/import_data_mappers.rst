@@ -409,7 +409,8 @@ Třídy
 
       Inicializuje výjimku s identifikátory organizací tvořících cyklus.
 
-      :param cycle: Seřazené identifikátory cyklu včetně opakovaného uzlu na konci.
+      :param cycle: Identifikátory organizací v pořadí průchodu po vazbě
+          ``soucast``; první uzel je zopakován na konci.
 
 
 .. py:class:: BaseImportField
@@ -1309,10 +1310,12 @@ Třídy
 
    .. py:method:: validate_batch_ordering()
 
-      Ověří dopředné reference a cykly v úplné výsledné hierarchii organizací.
+      Ověří dopředné reference a cykly na cestách dotčených změnami v dávce.
 
-      Graf zahrnuje nezměněné organizace v databázi i vztahy z importovaných řádků.
-      Prázdná hodnota ``soucast`` proto při aktualizaci vztah výslovně odstraní.
+      Pro kontrolu cyklů se sestaví výsledný graf z databáze a importovaných řádků, ale
+      procházejí se pouze změněné vztahy a jejich dosažitelní předci. Nesouvisející
+      historický cyklus proto import neblokuje. Prázdná hodnota ``soucast`` při
+      aktualizaci vztah výslovně odstraní.
 
       :param payloads: Seznam surových řádkových slovníků ze CSV souboru v původním pořadí.
       :param performed_action: Akce importu; při ``DELETE`` se hierarchie nemění.

@@ -47,7 +47,7 @@ Třídy
 
    .. py:method:: organizace_podstrom_ids()
 
-      Vrátí ID vlastní organizace a jejích potomků, načtená nejvýše jednou za změnu hierarchie.
+      Vrátí ID vlastní organizace a potomků; výsledek se cacheuje v instanci uživatele.
 
    .. py:method:: display_name()
 
@@ -178,16 +178,26 @@ Třídy
 
    **Metody:**
 
-   .. py:method:: lock_hierarchy()
+   .. py:method:: find_cycles()
 
-      Zamkne změny hierarchie organizací do konce aktuální transakce.
+      Najde cykly v grafu rodičů bez rekurze a vrátí uzavřené cesty.
+
+      :param parent_graph: Slovník uzel → rodič; chybějící rodič ukončí cestu.
+      :param roots: Výchozí uzly pro kontrolu; ``None`` znamená celý graf.
+      :return: Seznam cyklů v pořadí průchodu, s prvním uzlem zopakovaným na konci.
+
+   .. py:method:: get_hierarchy_cycles()
+
+      Načte celou hierarchii a vrátí cykly označené identifikátory organizací.
+
+      :return: Uzavřené cesty cyklů; prázdný seznam pro hierarchii bez cyklů.
 
    .. py:method:: get_subtree_ids()
 
       Vrátí ID organizace a všech jejích přímých i nepřímých součástí.
 
       :param root_id: ID organizace, od které se prohledávají potomci směrem dolů.
-      :return: ID kořene a všech dosažitelných potomků; pro chybějící kořen prázdný seznam.
+      :return: ID kořene a potomků; při cyklu pouze kořen, pro chybějící kořen prázdný seznam.
 
    .. py:method:: save()
 

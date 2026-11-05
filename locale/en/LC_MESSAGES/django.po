@@ -17691,3 +17691,7 @@ msgstr "Incomplete news item"
 
 msgid "templates.registration.login.novinky.noNews"
 msgstr "No news is available."
+
+#: heslar/admin.py
+msgid "heslar.admin.OrganizaceAdmin.import_blocks_changes"
+msgstr "Organizations cannot be added, changed or deleted during an import. If the import status is unavailable, try again later."

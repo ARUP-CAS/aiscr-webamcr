@@ -1683,6 +1683,13 @@ def run_data_import(job_id, user_id, lock_token):
         * - ``cron.tasks.run_data_import.finished``
           - Import doběhl úspěšně, nebyl zastaven a nebyla nastavena chyba.
 
+    Pokud import zpracovával organizační záznamy, závěrečný blok ``finally`` při úklidu po
+    importní fázi zkontroluje celou hierarchii organizací, i když importní transakce selhala
+    nebo byla vrácena zpět. Nalezené cykly pouze zaloguje spolu s ID úlohy; tato diagnostika
+    nemění výsledek importu ani jeho terminální fázi. Stejně se pouze zaznamená chyba samotné
+    kontroly a pokračuje úklid. Jde o kontrolu celé databáze, odlišnou od preimportní validace,
+    která kontroluje jen změněné vztahy a jejich dosažitelné předky.
+
     :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem
         "Missing required DIRECTORY_PATH setting".
     """
@@ -1690,6 +1697,7 @@ def run_data_import(job_id, user_id, lock_token):
 
     redis_connector = RedisConnector().get_connection()
     record_count = 0
+    organization_payloads = []
     failed = True
     stopped = False  # initialized up front so the terminal finally can set the phase safely
     # None until the reports directory check below succeeds; guards the except/finally blocks,
@@ -2180,23 +2188,23 @@ def run_data_import(job_id, user_id, lock_token):
         # propagating exception). Drives the success -> rolled_back relabel.
         data_rolled_back = False
         try:
+            organization_record_ids_raw = redis_connector.get(job_key("import_data_organization_record_ids"))
+            # Existing approval jobs may predate this index; scan once to keep them importable.
+            organization_record_ids = (
+                json.loads(organization_record_ids_raw.decode("utf-8"))
+                if organization_record_ids_raw is not None
+                else range(record_count)
+            )
+            organization_payloads = []
+            for staged_record_id in organization_record_ids:
+                serialized_record = json.loads(redis_connector.get(record_key(staged_record_id)).decode("utf-8"))
+                mapper_class = ImportModelMapper.get_import_data_mapper(serialized_record["__file_name"])
+                if mapper_class is OrganizaceMapper:
+                    serialized_record.pop("__file_name")
+                    organization_payloads.append(serialized_record)
+
             with transaction.atomic():
-                organization_record_ids_raw = redis_connector.get(job_key("import_data_organization_record_ids"))
-                # Existing approval jobs may predate this index; scan once to keep them importable.
-                organization_record_ids = (
-                    json.loads(organization_record_ids_raw.decode("utf-8"))
-                    if organization_record_ids_raw is not None
-                    else range(record_count)
-                )
-                organization_payloads = []
-                for staged_record_id in organization_record_ids:
-                    serialized_record = json.loads(redis_connector.get(record_key(staged_record_id)).decode("utf-8"))
-                    mapper_class = ImportModelMapper.get_import_data_mapper(serialized_record["__file_name"])
-                    if mapper_class is OrganizaceMapper:
-                        serialized_record.pop("__file_name")
-                        organization_payloads.append(serialized_record)
                 if organization_payloads and performed_action != ImportDataAdminForm.PERFORMED_ACTION_DELETE:
-                    Organizace.lock_hierarchy()
                     OrganizaceMapper.validate_batch_ordering(organization_payloads, performed_action)
 
                 for record_id in range(record_count):
@@ -2339,7 +2347,15 @@ def run_data_import(job_id, user_id, lock_token):
                                         record_db_dict = model_to_dict(record_db) if record_db else None
                                         mapper_class.create_relations(record)
                                         mapper_class.record_postprocessing(record, performed_action, fedora_transaction)
-                                        record.save()
+                                        if (
+                                            mapper_class is OrganizaceMapper
+                                            and performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE
+                                        ):
+                                            update_fields = set(serialized_record) - {"ident_cely"}
+                                            if update_fields:
+                                                record.save(update_fields=update_fields)
+                                        else:
+                                            record.save()
                                         record_saved = mapper_class.load_record_from_db(record)
                                         pending_fedora_update.append((mapper_class, record_saved or record))
                                         record_dict = (
@@ -3379,6 +3395,18 @@ def run_data_import(job_id, user_id, lock_token):
         if reports_directory_path:
             save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
     finally:
+        if organization_payloads:
+            try:
+                cycles = Organizace.get_hierarchy_cycles()
+                if cycles:
+                    logger.error(
+                        "cron.tasks.run_data_import.organization_hierarchy_cycles",
+                        extra={"job_id": job_id, "cycles": cycles},
+                    )
+            except Exception:
+                logger.exception(
+                    "cron.tasks.run_data_import.organization_hierarchy_check_failed", extra={"job_id": job_id}
+                )
         LookupImportField.clear_cache()
         LookupImportField.clear_records()
         for suffix in IMPORT_DATA_JOB_KEY_SUFFIXES:

@@ -69,6 +69,9 @@ class OrganizationOwnershipTest(TestCase):
             organization_ids = Organizace.get_subtree_ids(self.root.pk)
 
         self.assertEqual(len(queries), 1)
+        query = queries[0]["sql"].strip().lower()
+        self.assertIn("with recursive organizational_subtree(id, parent_id) as", query)
+        self.assertTrue(query.endswith("select id, parent_id from organizational_subtree"))
         self.assertEqual(set(organization_ids), {self.root.pk, self.child.pk, self.grandchild.pk, self.sibling.pk})
         self.assertNotIn(self.ancestor.pk, organization_ids)
         self.assertNotIn(self.unrelated.pk, organization_ids)
@@ -94,12 +97,60 @@ class OrganizationOwnershipTest(TestCase):
         self.assertEqual(len(refresh_queries), 1)
         self.assertIn(new_child.pk, refreshed_result)
 
-    def test_hierarchy_lock_uses_a_transaction_scoped_advisory_lock(self):
-        """Ověří použití advisory locku pro serializaci změn hierarchie."""
-        with CaptureQueriesContext(connection) as queries:
-            Organizace.lock_hierarchy()
+    def test_cyclic_subtree_retains_only_own_organization_and_logs_once_per_user(self):
+        """Cyklus nevytvoří vzájemné vlastnictví a nevyvolá chybu oprávnění."""
+        Organizace.objects.filter(pk=self.root.pk).update(soucast=self.grandchild)
+        user = User(organizace=self.root)
+        with self.assertLogs("uzivatel.models", level="ERROR") as logs:
+            with CaptureQueriesContext(connection) as queries:
+                self.assertEqual(user.organizace_podstrom_ids, [self.root.pk])
+                self.assertEqual(user.organizace_podstrom_ids, [self.root.pk])
+        self.assertEqual(len(queries), 1)
+        self.assertEqual(len(logs.records), 1)
+        permission = Permissions(ownership=Permissions.ownershipChoices.our)
+        permission.logged_in_user = user
+        permission.permission_object = MagicMock()
+        permission.permission_object.get_create_user.return_value = ()
+        permission.permission_object.get_create_org.return_value = (self.root,)
+        self.assertTrue(permission.check_ownership(permission.ownership))
+        permission.permission_object.get_create_org.return_value = (self.child,)
+        self.assertFalse(permission.check_ownership(permission.ownership))
 
-        self.assertTrue(any("pg_advisory_xact_lock" in query["sql"] for query in queries))
+    def test_self_cycle_is_bounded_and_other_trees_are_unaffected(self):
+        """Vlastní cyklus se omezí na kořen; nesouvisející strom zůstane dostupný."""
+        Organizace.objects.filter(pk=self.unrelated.pk).update(soucast=self.unrelated)
+        with self.assertLogs("uzivatel.models", level="ERROR"):
+            self.assertEqual(Organizace.get_subtree_ids(self.unrelated.pk), [self.unrelated.pk])
+        self.assertEqual(
+            set(Organizace.get_subtree_ids(self.root.pk)),
+            {self.root.pk, self.child.pk, self.grandchild.pk, self.sibling.pk},
+        )
+
+    def test_child_below_cycle_keeps_its_acyclic_subtree(self):
+        """Organizace pod cyklem nezíská předky a zachová vlastní platný podstrom."""
+        Organizace.objects.filter(pk=self.root.pk).update(soucast=self.child)
+        self.assertEqual(Organizace.get_subtree_ids(self.grandchild.pk), [self.grandchild.pk])
+
+    def test_full_hierarchy_check_finds_cycles_once_and_has_no_writes(self):
+        """Celková kontrola vrátí každý cyklus pouze jednou včetně uzavíracího uzlu."""
+        Organizace.objects.filter(pk=self.root.pk).update(soucast=self.grandchild)
+        Organizace.objects.filter(pk=self.unrelated.pk).update(soucast=self.unrelated)
+        with self.assertNumQueries(1):
+            cycles = Organizace.get_hierarchy_cycles()
+        self.assertEqual(len(cycles), 2)
+        self.assertIn([self.unrelated.ident_cely, self.unrelated.ident_cely], cycles)
+        cycle = next(path for path in cycles if len(path) > 2)
+        self.assertEqual(cycle[0], cycle[-1])
+        self.assertEqual(set(cycle), {self.root.ident_cely, self.child.ident_cely, self.grandchild.ident_cely})
+
+    def test_deep_cycle_check_does_not_depend_on_python_recursion_limit(self):
+        """Hluboká hierarchie se zkontroluje iterativně bez přetečení zásobníku."""
+        graph = {node: node + 1 for node in range(2500)}
+        graph[2500] = 1000
+        cycles = Organizace.find_cycles(graph)
+        self.assertEqual(len(cycles), 1)
+        self.assertEqual(cycles[0][0], cycles[0][-1])
+        self.assertEqual(set(cycles[0]), set(range(1000, 2501)))
 
     def test_ownership_check_allows_descendants_but_not_ancestors_or_siblings(self):
         """Ověří dědičnost vlastnictví směrem k potomkům."""
