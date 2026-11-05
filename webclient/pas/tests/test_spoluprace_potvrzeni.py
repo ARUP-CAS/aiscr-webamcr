@@ -1,8 +1,12 @@
+import csv
+import json
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, SPOLUPRACE_AKTIVNI, SPOLUPRACE_NEAKTIVNI
 from django.core.exceptions import PermissionDenied
 from django.test import RequestFactory, SimpleTestCase
+from django.urls import reverse
 from pas.models import UzivatelSpoluprace
 from pas.views import AktivaceEmailView, aktivace
 
@@ -98,5 +102,38 @@ class AktivaceViewsPermissionTest(SimpleTestCase):
         """Funkce aktivace() odmítne cizího uživatele při GET i POST."""
         for method in ("get", "post"):
             with patch("pas.views.get_object_or_404", return_value=_spoluprace()):
-                with self.assertRaises(PermissionDenied):
-                    aktivace(self._request(method, _user(2, 11)), pk=5)
+                response = aktivace(self._request(method, _user(2, 11)), pk=5)
+            self.assertEqual(response.status_code, 403)
+            self.assertEqual(json.loads(response.content), {"redirect": reverse("pas:spoluprace_list")})
+
+    def test_aktivace_modal_nezmeni_stav_cizimu(self):
+        """Funkce aktivace() při odmítnutí neuloží spolupráci."""
+        spoluprace = _spoluprace()
+        with patch("pas.views.get_object_or_404", return_value=spoluprace), patch.object(
+            UzivatelSpoluprace, "save"
+        ) as save:
+            aktivace(self._request("post", _user(2, 11)), pk=5)
+        save.assert_not_called()
+        self.assertEqual(spoluprace.stav, SPOLUPRACE_NEAKTIVNI)
+
+
+class MaticePravSpolupraceTest(SimpleTestCase):
+    """Testy matice práv, na které závisí ``UzivatelSpoluprace.muze_potvrdit()``."""
+
+    TRASY = ("spoluprace/aktivace-email/<int:pk>", "spoluprace/aktivovat/<int:pk>")
+
+    def _radky(self):
+        cesta = Path(__file__).resolve().parents[2] / "core" / "resources" / "uzivatelska_prava.csv"
+        with open(cesta, encoding="utf-8", newline="") as soubor:
+            radky = {r["URL"]: r for r in csv.DictReader(soubor) if r["app"] == "pas"}
+        return [radky[trasa] for trasa in self.TRASY]
+
+    def test_badatel_nema_pristup(self):
+        """Badatel nemá přístup na žádnou z tras potvrzující spolupráci."""
+        for radek in self._radky():
+            self.assertEqual(radek["Základní_B"], "X", radek["URL"])
+
+    def test_archeolog_jen_vlastni_organizace(self):
+        """Archeolog smí potvrzovat jen v rámci své organizace."""
+        for radek in self._radky():
+            self.assertEqual(radek["Vlastnictví_C"], "US.ours", radek["URL"])
