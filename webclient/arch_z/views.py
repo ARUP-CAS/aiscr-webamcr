@@ -1229,7 +1229,7 @@ def zapsat(request, projekt_ident_cely=None):
                 fedora_transaction.rollback_transaction()
             else:
                 if FedoraRepositoryConnector.check_container_deleted_or_not_exists(
-                    az.ident_cely, "archeologicky_zaznam"
+                    az.ident_cely, "archeologicky_zaznam", fedora_transaction=fedora_transaction
                 ):
                     az.save()
                     form_az.save_m2m()

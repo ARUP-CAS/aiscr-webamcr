@@ -109,6 +109,22 @@ Třídy
       :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
       :return: Načtená data odpovídající zadaným vstupům.
 
+   .. py:method:: read_from_fedora()
+
+      Zavolá čtení obsahu souboru z Fedory pro zobrazení nebo stažení a výpadek Fedory převede na ``None``.
+
+      Neúspěšné GET do Fedory vyvolá ``FedoraNoResponseError`` (#4454). Náhledy a obsah se ale čtou
+      i při vykreslení detailu záznamu, které nesmí kvůli nedostupné Fedoře skončit chybou 500;
+      stránka se vykreslí bez náhledu, stažení skončí 404 stejně jako u chybějícího obsahu
+      a e-mail se odešle bez přílohy.
+      Zápisové cesty (např. přesun souboru při změně identu) volají ``get_repository_content``
+      přímo, aby výpadek vyvolal rollback a obsah se tiše neztratil.
+
+      :param read: Funkce čtoucí obsah z Fedory, např. ``get_repository_content``.
+      :param args: Poziční argumenty pro ``read``.
+      :param kwargs: Pojmenované argumenty pro ``read``.
+      :return: Výsledek ``read``, nebo ``None``, pokud Fedora neodpověděla.
+
    .. py:method:: zaznamenej_nahrani()
 
       Metoda pro zapsáni vytvoření souboru do historie.

@@ -52,7 +52,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Licence
      - Odkaz
    * - Django
-     - 6.0.9
+     - 6.0.10
      - BSD-3-Clause
      - https://www.djangoproject.com/
    * - Jinja2
@@ -304,7 +304,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 4.2.6
+     - 4.2.9
      - MIT
      - https://github.com/tox-dev/filelock
    * - freezegun
@@ -344,7 +344,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://inflate64.readthedocs.io/
    * - kombu
-     - 5.6.2
+     - 5.7.0
      - BSD-3-Clause
      - https://kombu.readthedocs.io
    * - libsass
@@ -392,7 +392,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.41
+     - 9.0.42
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -404,7 +404,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT-CMU
      - https://python-pillow.org
    * - pip
-     - 26.2.2
+     - 26.3
      - MIT
      - https://pip.pypa.io/
    * - pip-licenses
@@ -416,7 +416,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://github.com/jazzband/pip-tools/
    * - platformdirs
-     - 4.14.3
+     - 4.14.5
      - MIT
      - https://github.com/tox-dev/platformdirs
    * - polib
@@ -472,7 +472,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 6.21.2
+     - 6.21.4
      - BSD-3-Clause
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -492,7 +492,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.9.0
+     - 1.9.4
      - MIT
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
@@ -572,7 +572,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.grantjenks.com/docs/sortedcontainers/
    * - soupsieve
-     - 3.0.4
+     - 4.0.1
      - MIT
      - https://github.com/facelessuser/soupsieve
    * - sphinx_rtd_theme
@@ -668,7 +668,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.15.2
+     - 21.15.5
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
