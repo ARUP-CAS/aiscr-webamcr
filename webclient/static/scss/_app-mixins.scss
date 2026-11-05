@@ -39,11 +39,30 @@
   }
 }
 
+// "Load remaining records" button outlined in an entity color; light theme only (dark keeps neutral grey).
+@mixin setNacistZbyvajiciColor($color) {
+  html:not([data-theme="dark"]) & .app-nacist-zbyvajici-btn {
+    --bs-btn-color: #{$color};
+    --bs-btn-border-color: #{$color};
+    --bs-btn-hover-color: #{$white};
+    --bs-btn-hover-bg: #{$color};
+    --bs-btn-hover-border-color: #{$color};
+    --bs-btn-active-color: #{$white};
+    --bs-btn-active-bg: #{darken($color, 5%)};
+    --bs-btn-active-border-color: #{darken($color, 5%)};
+    --bs-btn-disabled-color: #{$color};
+    --bs-btn-disabled-border-color: #{$color};
+    --bs-btn-focus-shadow-rgb: #{red($color)}, #{green($color)}, #{blue($color)};
+  }
+}
+
 // set entity color for all defined elements inside
 // $entity-map: light ($entities) or dark ($dark-entities) entity color map
 @mixin setEntityElementsColor($entity-map: $entities) {
   @each $entity, $color in $entity-map {
     .app-entity-#{$entity} {
+      // fallback for cards without their own entity (e.g. file tables): page entity color
+      @include setNacistZbyvajiciColor($color);
 
       // common
       .app-entity-color {
@@ -228,6 +247,11 @@
 
     // card behavior based on entity
     .app-card-#{$entity} {
+      // .card raises specificity above the page-entity fallback regardless of map order
+      &.card {
+        @include setNacistZbyvajiciColor($color);
+      }
+
       table {
         tr {
           td {
