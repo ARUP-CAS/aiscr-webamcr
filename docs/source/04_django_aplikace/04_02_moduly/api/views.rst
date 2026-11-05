@@ -1128,6 +1128,16 @@ Třídy
 Funkce
 ------
 
+.. py:function:: _rollback_fedora_transaction(fedora_transaction)
+
+   Provede záložní rollback aktivní Fedora transakce a případné selhání jen zaloguje.
+
+   Po selhaném commitu (timeout, 409) zůstává transakce ve stavu ``ACTIVE`` a rollback může selhat
+   stejně (další timeout, 404/410 u zahozené transakce). Výjimka z rollbacku by v obslužné větvi
+   přeskočila uvolnění zámku záznamu a vrácení řízené chybové odpovědi (#4473).
+
+   :param fedora_transaction: Transakce, která se má zrušit; neaktivní transakce se nechá být.
+
 .. py:function:: _xsd_redis_key(url)
 
    Sestaví klíč pro Redis cache pro XSD schéma na zadané URL.

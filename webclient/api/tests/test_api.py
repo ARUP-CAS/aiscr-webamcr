@@ -22,6 +22,7 @@ from api.views import (
     SamostatnyNalezFotografieUploadView,
     SamostatnyNalezXmlImportView,
     _fetch_xsd_bytes,
+    _rollback_fedora_transaction,
     _xsd_redis_key,
 )
 from core.constants import (
@@ -43,13 +44,17 @@ from core.constants import (
     ZAPSANI_SN,
 )
 from core.models import AntivirusCheckResult, Permissions, Soubor, check_permissions
-from core.repository_connector import FedoraNoResponseError
+from core.repository_connector import (
+    FedoraNoResponseError,
+    FedoraTransactionCommitFailedError,
+    FedoraTransactionStatus,
+)
 from core.setting_models import CustomAdminSettings
 from django.conf import settings
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import DatabaseError, IntegrityError
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils.datastructures import MultiValueDict
 from django.utils.translation import gettext_lazy as _
@@ -2039,6 +2044,28 @@ class FetchXsdBytesTests(TestCase):
         urlopen_mock.assert_called_once()
 
 
+class RollbackFedoraTransactionHelperTests(SimpleTestCase):
+    """Testy pomocné funkce ``_rollback_fedora_transaction`` (#4473)."""
+
+    def test_selhani_rollbacku_se_pouze_zaloguje(self):
+        """Výjimka z rollbacku nesmí propadnout, jinak by obslužná větev přeskočila uvolnění zámku."""
+        fedora_transaction = Mock(status=FedoraTransactionStatus.ACTIVE)
+        fedora_transaction.rollback_transaction.side_effect = FedoraTransactionCommitFailedError("ROLLBACK: timeout")
+
+        with self.assertLogs("api.views", level="WARNING"):
+            _rollback_fedora_transaction(fedora_transaction)
+
+        fedora_transaction.rollback_transaction.assert_called_once_with()
+
+    def test_neaktivni_transakce_se_nerusi(self):
+        """Už uzavřená nebo zrušená transakce se znovu nerolluje."""
+        for transaction_status in (FedoraTransactionStatus.ABORTED, FedoraTransactionStatus.COMMITTED):
+            with self.subTest(status=transaction_status):
+                fedora_transaction = Mock(status=transaction_status)
+                _rollback_fedora_transaction(fedora_transaction)
+                fedora_transaction.rollback_transaction.assert_not_called()
+
+
 class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
     """Testy pro ``SamostatnyNalezEvidencniCisloPatchView``."""
 
@@ -2566,6 +2593,26 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.assertEqual(self.nalez.evidencni_cislo, "EC-TEST-001")
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("fedora_error_reading_metadata", str(log.errors))
+        self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
+
+    def test_commit_failure_with_failing_rollback_releases_lock_and_returns_500(self):
+        """
+        Selhání commitu a následně i záložního rollbacku (timeout, 404 u zahozené transakce) vrátí HTTP 500
+        s logem FAILURE a uvolní zámek záznamu; výjimka z rollbacku nesmí uvolnění přeskočit (#4473).
+        """
+        fedora_transaction = Mock(status=FedoraTransactionStatus.ACTIVE)
+        fedora_transaction.mark_transaction_as_closed.side_effect = FedoraTransactionCommitFailedError(
+            "COMMIT: timeout"
+        )
+        fedora_transaction.rollback_transaction.side_effect = FedoraTransactionCommitFailedError("ROLLBACK: timeout")
+
+        with patch("api.views.FedoraTransaction", return_value=fedora_transaction):
+            response = self._patch(IDENT_CELY)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("detail", response.text)
+        fedora_transaction.rollback_transaction.assert_called_once_with()
+        self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
 
     def test_valid_request_updates_field_and_returns_200(self):
