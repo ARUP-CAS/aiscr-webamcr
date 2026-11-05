@@ -310,7 +310,9 @@ def create(request, dj_ident_cely):
             fedora_transaction: FedoraTransaction = pian.create_transaction(request.user)
             fedora_transaction.redirect_url = dj.get_absolute_url()
             fedora_transaction.main_record = dj
-            if FedoraRepositoryConnector.check_container_deleted_or_not_exists(pian.ident_cely, "pian"):
+            if FedoraRepositoryConnector.check_container_deleted_or_not_exists(
+                pian.ident_cely, "pian", fedora_transaction=fedora_transaction
+            ):
                 pian.save()
                 pian.set_vymezeny(request.user)
                 dj.active_transaction = fedora_transaction

@@ -3818,20 +3818,6 @@ msgid ""
 "core.management.commands.utils.file_storage.save_single_file_from_storage_impl.invalid_record_type"
 msgstr "Chyba v typu záznamu."
 
-#: core/management/commands/write_value_to_redis.py:26
-msgid "core.management.commands.write_value_to_redis.Command.help"
-msgstr "Django management příkaz pro zápis hodnoty do Redis."
-
-#: core/management/commands/write_value_to_redis.py:37
-msgid ""
-"core.management.commands.write_value_to_redis.Command.add_arguments.key_help"
-msgstr "Redis klíč."
-
-#: core/management/commands/write_value_to_redis.py:42
-msgid ""
-"core.management.commands.write_value_to_redis.Command.add_arguments.value_help"
-msgstr "Hodnota, která se pod klíčem uloží."
-
 #: core/message_constants.py:5
 msgid "common.message.FORM_NOT_VALID.text"
 msgstr "Chyba ověření formuláře."
@@ -10459,17 +10445,6 @@ msgstr ""
 "archeologickou organizaci, která provedla záchranný archeologický "
 "výzkum.</div>"
 
-#: oznameni/templates/components/uvod.html:7
-#, python-format
-msgid ""
-"oznameni.templates.components.uvod.collapsed.text%(mail_arup)s%(mail_arub)s"
-msgstr ""
-"<p>Územím s archeologickými nálezy se rozumí nejen místa, kde v minulosti byly archeologické nálezy učiněny, ale i takové pozemky, kde nedošlo k přímému narušení terénu moderními zásahy a výskyt archeologických nálezů nelze vyloučit. <strong>Území s archeologickými nálezy je proto celé území České republiky</strong> s výjimkou např. vytěžených povrchových dolů nebo pískoven. Více zjistíte v související <a href=\"https://isad.npu.cz/\" target=\"_blank\">službách Národního památkového ústavu</a>.</p>      \n"
-"<p>Oznámení doporučujeme učinit <strong>v dostatečném předstihu před zahájením terénních prací</strong> (nejpozději však 30 dní), aby bylo možné vyřídit všechny nezbytné formality spojené s provedením záchranného archeologického výzkumu. Předejdete tak zbytečnému zdržení vašeho projektu nebo případným škodám na našem společném kulturním dědictví.</p>\n"
-"<p>V případě archeologického nálezu, který nebyl učiněn při provádění archeologického výzkumu, je třeba postupovat podle <a href=\"https://www.zakonyprolidi.cz/cs/1987-20#cast3\" target=\"_blank\">§ 23 odst. 2 zákona č. 20/1987 Sb. o státní památkové péči</a>, tedy podat oznámení Archeologickému ústavu nebo nejbližšímu muzeu buď přímo, nebo prostřednictvím obce, v jejímž územním obvodu k archeologickému nálezu došlo. <strong>K oznámení tohoto typu formulář níže neslouží.</strong></p>\n"
-"<p>Údaje a dokumenty poskytnuté v oznámení budou po nezbytně nutnou dobu uloženy v systému Archeologická mapa České republiky a jejich shrnutí bude odesláno na Vámi uvedený email.</p>\n"
-"<p>V případě potřeby nás neváhejte kontaktovat na emailech %(mail_arup)s (Čechy), nebo %(mail_arub)s (Morava a Slezsko).</p>"
-
 #: oznameni/templates/oznameni/edit.html:6
 msgid "oznameni.templates.oznameni.edit.title"
 msgstr "Upravit záznam"
@@ -11643,22 +11618,6 @@ msgstr "AMČR-PAS - potvrdit spolupráci"
 #: pas/templates/pas/potvrdit_spolupraci.html:16
 msgid "pas.templates.potvrdit_spolupraci.header"
 msgstr "Potvrzení žádosti o spolupráci"
-
-#: pas/templates/pas/potvrdit_spolupraci.html:22
-#, python-format
-msgid ""
-"pas.templates.potvrdit_spolupraci.question%(spolupracovnik)s%(vedouci)s"
-msgstr ""
-"Chcete potvrdit žádost spolupracovníka %(spolupracovnik)s o spolupráci s "
-"archeologem %(vedouci)s?"
-
-#: pas/templates/pas/potvrdit_spolupraci.html:26
-#, python-format
-msgid ""
-"pas.templates.potvrdit_spolupraci.already_active%(spolupracovnik)s%(vedouci)s"
-msgstr ""
-"Spolupráce mezi spolupracovníkem %(spolupracovnik)s a archeologem "
-"%(vedouci)s již byla potvrzena."
 
 #: pas/templates/pas/potvrdit_spolupraci.html:34
 msgid "pas.templates.potvrdit_spolupraci.submitButton"
@@ -15728,7 +15687,7 @@ msgstr "Cílová emailová adresa"
 
 #: uzivatel/managers.py:25
 msgid "uzivatel.managers.createUser.email.error"
-msgstr "The Email must be set."
+msgstr "E-mail musí být vyplněn."
 
 #: uzivatel/managers.py:48
 msgid "uzivatel.managers.createSuperUser.is_staff.error"
@@ -17614,3 +17573,61 @@ msgstr "Nejsou k dispozici žádné novinky."
 #: heslar/admin.py
 msgid "heslar.admin.OrganizaceAdmin.import_blocks_changes"
 msgstr "Během importu nelze přidávat, měnit ani mazat organizace. Pokud nelze ověřit stav importu, zkuste to později."
+msgid "core.templates.filetable.stahnoutParadata.title"
+msgstr "Stáhnout paradata"
+
+msgid "core_admin.DistribuceImportIntegrityError.message"
+msgstr ""
+"Distribuce {distribution} u souboru {soubor_id} neodpovídá očekávanému stavu"
+" při akci {performed_action}."
+
+msgid "core_admin.DistribuceMissingRepositoryUuidError.message"
+msgstr "Soubor {soubor_id} nemá v cestě uložené UUID kontejneru ve Fedoře."
+
+msgid "core_admin.DistribuceMissingVazbaError.message"
+msgstr "Soubor {soubor_id} nemá vazbu na nadřazený záznam."
+
+msgid "core_admin.DistribuceUnsafeFilenameError.message"
+msgstr "Název souboru {nazev} není bezpečný."
+
+msgid "core_admin.ImportDataDistributionPathConflictError.message"
+msgstr "Konflikt cesty distribuce"
+
+msgid "core_admin.ImportDataDistributionPrefixCollisionError.message"
+msgstr "Kolize předpony distribuce"
+
+msgid "core_admin.ImportDataInvalidDistributionError.message"
+msgstr "Název distribuce {distribution} není platný."
+
+msgid "core_admin.ImportDataReservedDistributionError.message"
+msgstr "Název distribuce {distribution} je vyhrazený a nelze jej použít."
+
+msgid "cron.tasks.run_data_import.importing_distribution"
+msgstr "Import distribuce {n}/{total}: {filename} ({ident_cely})"
+
+msgid "historie.models.historieStav.distribuce.DIST01"
+msgstr "DIST01 - nahrání distribuce"
+
+msgid "historie.models.historieStav.distribuce.DIST10"
+msgstr "DIST10 - smazání distribuce"
+
+msgid "historie.models.historieStav.distribuce.DIST11"
+msgstr "DIST11 - aktualizace distribuce"
+
+msgid "oznameni.templates.components.uvod.collapsed.text"
+msgstr ""
+"<p>Územím s archeologickými nálezy se rozumí nejen místa, kde v minulosti byly archeologické nálezy učiněny, ale i takové pozemky, kde nedošlo k přímému narušení terénu moderními zásahy a výskyt archeologických nálezů nelze vyloučit. <strong>Území s archeologickými nálezy je proto celé území České republiky</strong> s výjimkou např. vytěžených povrchových dolů nebo pískoven. Více zjistíte v související <a href=\"https://isad.npu.cz/\" target=\"_blank\">službách Národního památkového ústavu</a>.</p>      \n"
+"<p>Oznámení doporučujeme učinit <strong>v dostatečném předstihu před zahájením terénních prací</strong> (nejpozději však 30 dní), aby bylo možné vyřídit všechny nezbytné formality spojené s provedením záchranného archeologického výzkumu. Předejdete tak zbytečnému zdržení vašeho projektu nebo případným škodám na našem společném kulturním dědictví.</p>\n"
+"<p>V případě archeologického nálezu, který nebyl učiněn při provádění archeologického výzkumu, je třeba postupovat podle <a href=\"https://www.zakonyprolidi.cz/cs/1987-20#cast3\" target=\"_blank\">§ 23 odst. 2 zákona č. 20/1987 Sb. o státní památkové péči</a>, tedy podat oznámení Archeologickému ústavu nebo nejbližšímu muzeu buď přímo, nebo prostřednictvím obce, v jejímž územním obvodu k archeologickému nálezu došlo. <strong>K oznámení tohoto typu formulář níže neslouží.</strong></p>\n"
+"<p>Údaje a dokumenty poskytnuté v oznámení budou po nezbytně nutnou dobu uloženy v systému Archeologická mapa České republiky a jejich shrnutí bude odesláno na Vámi uvedený email.</p>\n"
+"<p>V případě potřeby nás neváhejte kontaktovat na emailech {mail_arup} (Čechy), nebo {mail_arub} (Morava a Slezsko).</p>"
+
+msgid "pas.templates.potvrdit_spolupraci.already_active"
+msgstr ""
+"Spolupráce mezi spolupracovníkem {spolupracovnik} a archeologem {vedouci} "
+"již byla potvrzena."
+
+msgid "pas.templates.potvrdit_spolupraci.question"
+msgstr ""
+"Chcete potvrdit žádost spolupracovníka {spolupracovnik} o spolupráci s "
+"archeologem {vedouci}?"

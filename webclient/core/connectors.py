@@ -340,26 +340,27 @@ return 1
         )
 
     @staticmethod
-    def prepare_model_for_redis(table):
+    def prepare_models_for_redis(table):
         """
-        Převede řádek Django-tables2 tabulky do slovníku pro uložení do Redis cache.
+        Převede všechny řádky Django-tables2 tabulky na slovníky pro uložení do Redis cache.
 
-        :param table: Tabulka (django-tables2) obsahující jeden řádek s daty záznamu.
+        Sloupce s ``exclude_from_export`` se vynechají. Sloupce náhledů (název obsahuje ``nahled``) se ukládají
+        jako prázdný řetězec a jejich hodnota se vůbec nevyhodnocuje, protože by vyžadovala dotazy na soubory.
 
-            :return: Vrací proměnná ``data``.
+        :param table: Tabulka (django-tables2) se záznamy, jejichž model má vlastnost ``redis_snapshot_id``.
+        :return: Slovník ``{redis_snapshot_id záznamu: data řádku}``.
         """
-        columns = table.columns.iterall()
-        row = table.rows[0]
-        data = {}
-        for column in columns:
-            if getattr(column.column, "exclude_from_export", False):
-                continue
-            value = row.get_cell_value(column.name)
-            if value and "nahled" not in column.name:
-                data[column.name] = force_str(value)
-            else:
-                data[column.name] = ""
-        return data
+        columns = [
+            column for column in table.columns.iterall() if not getattr(column.column, "exclude_from_export", False)
+        ]
+        snapshots = {}
+        for row in table.rows:
+            data = {}
+            for column in columns:
+                value = None if "nahled" in column.name else row.get_cell_value(column.name)
+                data[column.name] = force_str(value) if value else ""
+            snapshots[row.record.redis_snapshot_id] = data
+        return snapshots
 
 
 class ClamdError(Exception):

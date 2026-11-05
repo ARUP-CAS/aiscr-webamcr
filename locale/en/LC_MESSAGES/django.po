@@ -713,7 +713,7 @@ msgstr "The file is encrypted and password protected."
 
 #: api/views.py:3376 core/views.py:860
 msgid "core.views.post_upload.mime_check_failed"
-msgstr "Invalid file format. Only upload files in supported formats."
+msgstr "Invalid file format. Please only upload files in supported formats."
 
 #: api/views.py:3394 core/views.py:869
 msgid "core.views.post_upload.antivirus_check.virus_found"
@@ -1464,7 +1464,7 @@ msgstr "Report postponed"
 #: arch_z/templates/arch_z/arch_z_detail.html:172
 msgid ""
 "arch_z.templates.arch_z.arch_z_detail.detailForm.vytvorDalsihoVedouci.label"
-msgstr "Additional manager"
+msgstr "Additional managers"
 
 #: arch_z/templates/arch_z/arch_z_stepper.html:12
 msgid "arch_z.templates.arch_z.arch_z_stepper.rozepsana.label"
@@ -2261,7 +2261,7 @@ msgstr ""
 #: dokument/templates/dokument/dokument_table.html:19
 #: lokalita/tests/test_selenium.py:776
 msgid "dokument.templates.dokument_table.pridatNovyDokument.label"
-msgstr "Add document"
+msgstr "Create document"
 
 #: arch_z/validators.py:17 projekt/tests/test_selenium.py:868
 msgid "arch_z.validators.maxDatum.error"
@@ -3286,7 +3286,7 @@ msgstr "Processed:"
 
 #: core/management/commands/check_pian_properties.py:138
 msgid "core.management.commands.check_pian_properties.pian"
-msgstr "Spatial Unit"
+msgstr "Spatial unit"
 
 #: core/management/commands/check_pian_properties.py:179
 msgid "core.management.commands.check_pian_properties.total_processed"
@@ -3811,20 +3811,6 @@ msgid ""
 "core.management.commands.utils.file_storage.save_single_file_from_storage_impl.invalid_record_type"
 msgstr "Error in record type."
 
-#: core/management/commands/write_value_to_redis.py:26
-msgid "core.management.commands.write_value_to_redis.Command.help"
-msgstr "Django management command for writing values to Redis."
-
-#: core/management/commands/write_value_to_redis.py:37
-msgid ""
-"core.management.commands.write_value_to_redis.Command.add_arguments.key_help"
-msgstr "Redis key."
-
-#: core/management/commands/write_value_to_redis.py:42
-msgid ""
-"core.management.commands.write_value_to_redis.Command.add_arguments.value_help"
-msgstr "The value that will be stored under the key."
-
 #: core/message_constants.py:5
 msgid "common.message.FORM_NOT_VALID.text"
 msgstr "Form validation error."
@@ -4025,7 +4011,7 @@ msgstr "The date of announcement could not be edited."
 
 #: core/message_constants.py:115
 msgid "common.message.PROJEKT_NELZE_SMAZAT.text"
-msgstr "The project cannot be deleted. Remove any linked records and files."
+msgstr "The project cannot be deleted. Remove linked records and files."
 
 #: core/message_constants.py:116
 msgid "core.message_constants.projektZmenaStavuNekymJinym.text"
@@ -5243,7 +5229,7 @@ msgstr "Close"
 
 #: core/templates/core/filetable.html:7
 msgid "core.templates.filetable.columnHeader.nahled.label"
-msgstr "Preview"
+msgstr "Thumbnail"
 
 #: core/templates/core/filetable.html:8
 msgid "core.templates.filetable.columnHeader.nazev.label"
@@ -5464,7 +5450,7 @@ msgstr "Main cadastral area"
 #: core/templates/core/transakce_table_modal.html:74
 #: projekt/templates/projekt/projekt_table.html:8
 msgid "projekt.templates.projektTable.podnet.label"
-msgstr "Motivation"
+msgstr "Intervention motivation"
 
 #: core/templates/core/transakce_table_modal.html:75
 #: projekt/templates/projekt/projekt_table.html:9
@@ -5744,8 +5730,8 @@ msgstr "The file could not be linked to the parent record."
 #: core/views.py:1260
 msgid "core.views.post_upload.update_failed_another_transaction"
 msgstr ""
-"The file could not be uploaded; the record is currently blocked by another "
-"transaction. Please try again in a moment."
+"The file could not be uploaded because the record is currently blocked by "
+"another transaction. Please try again in a moment."
 
 #: core/views.py:1509
 msgid "core.views.redirectView.noRedirectUrl.message.text"
@@ -6949,8 +6935,8 @@ msgstr "General nature of the model."
 #: dokument/forms.py:764
 msgid "dokument.forms.createModelDokumentForm.organizace.tooltip"
 msgstr ""
-"Responsible organisation (if not in the list, use <i>[other "
-"organisation]</i> and specify in the note)."
+"Responsible organisation (if not listed, use <i>[other organisation]</i> and"
+" specify in the note)."
 
 #: dokument/forms.py:765
 msgid "dokument.forms.createModelDokumentForm.oznaceniOriginalu.tooltip"
@@ -7126,8 +7112,8 @@ msgstr "Flights"
 #: dokument/models.py:1157
 msgid "dokument.models.Let.save.check_container_deleted_or_not_exists.invalid"
 msgstr ""
-"The record cannot be saved because a container with the same ID already "
-"exists in the repository. Please contact your system administrator."
+"The record cannot be saved because a container with the same identifier "
+"already exists in the repository. Please contact your system administrator."
 
 #: dokument/tables.py:18
 msgid "dokument.tables.modelTable.ident_cely.label"
@@ -7263,7 +7249,7 @@ msgstr "Flight"
 
 #: dokument/tables.py:193
 msgid "dokument.tables.dokumentTable.extra_data__datum_vzniku.label"
-msgstr "Creation date"
+msgstr "Date created"
 
 #: dokument/tables.py:196
 msgid "dokument.tables.dokumentTable.extra_data__cislo_objektu.label"
@@ -7411,7 +7397,7 @@ msgstr "Upload files"
 #: dokument/templates/dokument/detail_model_3D.html:43
 msgid ""
 "dokument.templates.detail_model_3D.nahledy3dModelu.dokumentBezSouboru.text"
-msgstr "No files are attached."
+msgstr "No files attached."
 
 #: dokument/templates/dokument/detail_model_3D.html:52
 msgid "dokument.templates.detail_model_3D.detail.cardHeader"
@@ -7436,7 +7422,7 @@ msgstr "Features"
 #: dokument/templates/dokument/detail_model_3D.html:155
 msgid ""
 "dokument.templates.detail_model_3D.predmetyObjekty.dokumentBezObjektu.text"
-msgstr "No features are attached."
+msgstr "No features attached."
 
 #: dokument/templates/dokument/detail_model_3D.html:158
 msgid "dokument.templates.detail_model_3D.predmetyObjekty.Predmety"
@@ -7465,7 +7451,7 @@ msgstr "Upload files"
 
 #: dokument/templates/dokument/dok/detail.html:51
 msgid "dokument.templates.dok.detail.soubory.DokbezSouboru.text"
-msgstr "No files are attached."
+msgstr "No files attached."
 
 #: dokument/templates/dokument/dok/detail.html:60
 msgid "dokument.templates.dok.detail.dokument.cardHeader"
@@ -7579,11 +7565,11 @@ msgstr "Attach document"
 
 #: dokument/templates/dokument/dokument_table.html:23
 msgid "dokument.templates.dokument_table.pripojitExistDokument.label"
-msgstr "Attach existing document"
+msgstr "Link existing document"
 
 #: dokument/templates/dokument/dokument_table.html:28
 msgid "dokument.templates.dokument_table.pripojitExistDokumentZProjektu.label"
-msgstr "Attach existing document from project"
+msgstr "Link existing document from project"
 
 #: dokument/templates/dokument/dokument_table.html:34
 msgid "dokument.templates.dokument_table.pridatNovyDokumentDoProjektu.label"
@@ -7592,7 +7578,7 @@ msgstr "Create document"
 #: dokument/templates/dokument/dokument_table.html:38
 msgid ""
 "dokument.templates.dokument_table.pripojitExistDokumentDoProjektu.label"
-msgstr "Attach existing document"
+msgstr "Link existing document"
 
 #: dokument/templates/dokument/dokument_table.html:49
 #: ez/templates/ez/ez_odkazy_table.html:23
@@ -8019,19 +8005,19 @@ msgstr "Disconnect"
 
 #: dokument/views.py:2809
 msgid "dokument.views.pripojit.pripojitDoAkce.title"
-msgstr "Attach existing document to fieldwork"
+msgstr "Link existing document to fieldwork"
 
 #: dokument/views.py:2811
 msgid "dokument.views.pripojit.pripojitDoAkce.submitButton.text"
-msgstr "Attach"
+msgstr "Link"
 
 #: dokument/views.py:2819
 msgid "dokument.views.pripojit.pripojitDoProjektu.title"
-msgstr "Attach existing document to project"
+msgstr "Link existing document to project"
 
 #: dokument/views.py:2821
 msgid "dokument.views.pripojit.pripojitDoProjektu.submitButton.text"
-msgstr "Attach"
+msgstr "Link"
 
 #: ez/filters.py:34
 msgid "ez.filters.stav.label"
@@ -8458,11 +8444,11 @@ msgstr "Add fieldwork"
 
 #: ez/templates/ez/detail.html:59
 msgid "ez.templates.detail.odkazy.tableAkce.label"
-msgstr "Attached fieldworks"
+msgstr "Attached fieldwork events"
 
 #: ez/templates/ez/detail.html:60
 msgid "ez.templates.detail.odkazy.zadnaAkce.text"
-msgstr "No fieldworks are attached."
+msgstr "No fieldwork events attached."
 
 #: ez/templates/ez/detail.html:63
 msgid "ez.templates.detail.odkazy.pridatLokalitu.label"
@@ -8502,7 +8488,7 @@ msgstr "Main type"
 
 #: ez/templates/ez/ez_odkazy_table_only.html:13
 msgid "ez.templates.ezOdkazyTableOnly.druh.label"
-msgstr "Class"
+msgstr "Type"
 
 #: ez/templates/ez/ez_odkazy_table_only.html:14
 msgid "ez.templates.ezOdkazyTableOnly.nazev.label"
@@ -9069,7 +9055,7 @@ msgstr "RÚIAN cadastral areas"
 msgid ""
 "heslar.models.RuianKatastr.save.check_container_deleted_or_not_exists.invalid"
 msgstr ""
-"The record cannot be written, as a container with the same identifier "
+"The record cannot be saved because a container with the same identifier "
 "already exists in the repository. Please contact your system administrator."
 
 #: heslar/models.py:382
@@ -9096,8 +9082,8 @@ msgstr "RÚIAN regions"
 msgid ""
 "heslar.models.RuianKraj.save.check_container_deleted_or_not_exists.invalid"
 msgstr ""
-"The record cannot be saved, as a container with the same identifier already "
-"exists in the repository. Please contact your system administrator."
+"The record cannot be saved because a container with the same identifier "
+"already exists in the repository. Please contact your system administrator."
 
 #: heslar/models.py:438
 msgid "heslar.models.RuianOkres.nazev"
@@ -9127,8 +9113,8 @@ msgstr "RÚIAN districts"
 msgid ""
 "heslar.models.RuianOkres.save.check_container_deleted_or_not_exists.invalid"
 msgstr ""
-"The record cannot be saved, as a container with the same identifier already "
-"exists in the repository. Please contact your system administrator."
+"The record cannot be saved because a container with the same identifier "
+"already exists in the repository. Please contact your system administrator."
 
 #: heslar/models.py:505
 msgid "heslar.models.RuianSyncRun.mode.full"
@@ -9261,7 +9247,7 @@ msgstr "RÚIAN synchronisation runs"
 #: heslar/signals.py:52
 msgid "heslo.signals.save_ident_cely.fedora_container_deleted_or_not_exists"
 msgstr ""
-"The record cannot be written, as a container with the same identifier "
+"The record cannot be saved because a container with the same identifier "
 "already exists in the repository. Please contact your system administrator."
 
 #: historie/models.py:76
@@ -9627,7 +9613,7 @@ msgstr "No"
 
 #: komponenta/forms.py:46
 msgid "komponenta.forms.createKomponentaForm.presna_datace.tooltip"
-msgstr "Specific absolute or relative dating."
+msgstr "Absolute or relative dating specification."
 
 #: komponenta/forms.py:47
 msgid "komponenta.forms.createKomponentaForm.jistota.tooltip"
@@ -9801,7 +9787,7 @@ msgstr "Type"
 
 #: lokalita/tables.py:46
 msgid "lokalita.tables.lokalitaTable.zachovalost.label"
-msgstr "Preservation"
+msgstr "State of preservation"
 
 #: lokalita/tables.py:49
 msgid "lokalita.tables.lokalitaTable.jistota.label"
@@ -9963,7 +9949,7 @@ msgstr "Show in API"
 
 #: lokalita/templates/lokalita/lokalita_detail.html:15
 msgid "lokalita.template.lokalitadetail.cardHeader.detail"
-msgstr "Record detail"
+msgstr "Record details"
 
 #: lokalita/templates/lokalita/lokalita_detail_part.html:13
 msgid "lokalita.templates.lokalitaDetailPart.upravit.tooltip"
@@ -10213,15 +10199,15 @@ msgstr "Spatial unit IDs related to the fieldwork."
 #: neidentakce/forms.py:69
 msgid "neidentAkce.forms.neidentAkceForm.lokalizace.tooltip"
 msgstr ""
-"Verbal description of the location of the fieldwork within defined cadastral"
-" areas (e.g. track or street) and the circumstances that led to the "
-"fieldwork being carried out."
+"A verbal description of the location of the fieldwork within defined "
+"cadastral areas (e.g. track or street) and the circumstances that led to the"
+" fieldwork being performed."
 
 #: neidentakce/forms.py:70
 msgid "neidentAkce.forms.neidentAkceForm.popis.tooltip"
 msgstr ""
 "Summary of the results of the archaeological fieldwork - procedure, "
-"findings, notes and other communications."
+"findings, notes and other information."
 
 #: neidentakce/forms.py:71
 msgid "neidentAkce.forms.neidentAkceForm.poznamka.tooltip"
@@ -10335,7 +10321,7 @@ msgstr "Telephone"
 
 #: oznameni/forms.py:95 oznameni/forms.py:121 oznameni/forms.py:200
 msgid "oznameni.forms.oznamovatelForm.email.tooltip"
-msgstr "Contact details for the reporter or their representative."
+msgstr "Contact details for the announcer or their representative."
 
 #: oznameni/forms.py:96 oznameni/forms.py:113 oznameni/forms.py:201
 msgid "oznameni.forms.oznamovatelForm.email.label"
@@ -10394,7 +10380,7 @@ msgstr "An email confirming the announcement will be sent to the announcer."
 
 #: oznameni/forms.py:269
 msgid "oznameni.forms.projektOznameniForm.planovaneZahajeni.label"
-msgstr "Planned start date"
+msgstr "Planned start of earthwork"
 
 #: oznameni/forms.py:271
 msgid "oznameni.forms.projektOznameniForm.planovaneZahajeni.tooltip"
@@ -10431,8 +10417,8 @@ msgstr "Other cadastral areas"
 #: oznameni/forms.py:316
 msgid "oznameni.forms.projektOznameniForm.podnet.tooltip"
 msgstr ""
-"Name of construction or characteristics of other plans (e.g. landscaping, "
-"raw material extraction, forestry, etc.)."
+"Name of the construction or characteristics of another project (e.g. "
+"landscaping, raw material extraction, forestry logging, etc.)."
 
 #: oznameni/forms.py:317
 msgid "oznameni.forms.projektOznameniForm.lokalizace.tooltip"
@@ -10492,17 +10478,6 @@ msgstr ""
 "approval process, please contact the authorised archaeological organisation "
 "that carried out the rescue archaeological fieldwork.</div>"
 
-#: oznameni/templates/components/uvod.html:7
-#, python-format
-msgid ""
-"oznameni.templates.components.uvod.collapsed.text%(mail_arup)s%(mail_arub)s"
-msgstr ""
-"<p>An area with archaeological finds refers not only to places where archaeological finds have been made in the past, but also to land where the terrain has not been directly disturbed by modern interventions and the occurrence of archaeological finds cannot be ruled out. <strong>The area with archaeological finds is therefore the entire territory of the Czech Republic</strong> with the exception of, for example, mined surface mines or sand pits. See more in the related <a href=\"https://isad.npu.cz/\" target=\"_blank\">services of the National Heritage Institute</a>.</p>\n"
-"<p>We recommend that you submit your announcement<strong>well in advance of the start of earthwork</strong> (no later than 30 days) so that all the necessary formalities associated with conducting a rescue archaeological fieldwork can be completed. This will prevent unnecessary delays to your project or possible damage to our shared cultural heritage.</p>\n"
-"<p>In the case of an archaeological find that was not made during archaeological fieldwork, it is necessary to proceed in accordance with <a href=\"https://www.zakonyprolidi.cz/cs/1987-20#cast3\" target=\"_blank\">Section 23(2) of Act No. 20/1987 Coll. on State Monument Care</a>, i.e. submit a notification to the Institute of Archaeology or the nearest museum, either directly or through the municipality in whose territorial jurisdiction the archaeological find occurred. <strong>The form below is not intended for this type of notification. </strong></p>\n"
-"<p>The information and documents provided in the announcement will be stored in the Archaeological Map of the Czech Republic system for the necessary period of time, and a summary will be sent to the email address you provide. </p>\n"
-"<p>If necessary, please do not hesitate to contact us at %(mail_arup)s (Bohemia) or %(mail_arub)s (Moravia and Silesia).</p>"
-
 #: oznameni/templates/oznameni/edit.html:6
 msgid "oznameni.templates.oznameni.edit.title"
 msgstr "Edit record"
@@ -10549,11 +10524,11 @@ msgstr "Save"
 
 #: oznameni/templates/oznameni/index.html:54
 msgid "oznameni.templates.oznameni.index.stepper.vytvoreniOznameni"
-msgstr "Create announcement"
+msgstr "Creating an announcement"
 
 #: oznameni/templates/oznameni/index.html:61
 msgid "oznameni.templates.oznameni.index.stepper.uploadProjDokumentace"
-msgstr "Upload project documentation"
+msgstr "Uploading project documentation"
 
 #: oznameni/templates/oznameni/index.html:68
 msgid "oznameni.templates.oznameni.index.stepper.oznameno"
@@ -10759,10 +10734,10 @@ msgid "oznameni.templates.oznameni.index.spravce.text"
 msgstr ""
 "The joint Controllers of personal data are the Institute of Archaeology of "
 "the Czech Academy of Sciences, Prague, ID No.: 67985912, with its registered"
-" office at Letenská 4, 118 01 Prague 1, and the Institute of Archaeology "
-"Institute of the Czech Academy of Sciences, Brno, ID No.: 68081758, with its"
-" registered office at Čechyňská 363/19, 602 00 Brno (hereinafter referred to"
-" as the \"Controller\" or \"Archaeological Institute\")."
+" office at Letenská 4, 118 01 Prague 1, and the Institute of Archaeology of "
+"the Czech Academy of Sciences, Brno, ID No.: 68081758, with its registered "
+"office at Čechyňská 363/19, 602 00 Brno (hereinafter referred to as the "
+"\"Controller\" or \"Archaeological Institute\")."
 
 #: oznameni/templates/oznameni/podminky.html:12
 msgid "oznameni.templates.oznameni.index.obecne.title"
@@ -10889,7 +10864,7 @@ msgstr "Announcement of a construction or other project"
 
 #: oznameni/templates/oznameni/success.html:23
 msgid "oznameni.templates.oznameni.sucess.stepper.vytvoreniOznameni"
-msgstr "Creating announcement"
+msgstr "Creating an announcement"
 
 #: oznameni/templates/oznameni/success.html:30
 msgid "oznameni.templates.oznameni.sucess.stepper.uploadProjDokumentace"
@@ -11191,7 +11166,7 @@ msgstr "Date of the find."
 
 #: pas/forms.py:238 pas/forms.py:286
 msgid "pas.forms.createSamostatnyNalezForm.druhNalezu.tooltip"
-msgstr "Type of object."
+msgstr "Object type."
 
 #: pas/forms.py:239
 msgid "pas.forms.createSamostatnyNalezForm.pocet.tooltip"
@@ -11203,7 +11178,7 @@ msgstr "Absolute or relative dating specification."
 
 #: pas/forms.py:241
 msgid "pas.forms.createSamostatnyNalezForm.specifikace.tooltip"
-msgstr "Specification of the item's material."
+msgstr "Object material specification."
 
 #: pas/forms.py:242
 msgid "pas.forms.createSamostatnyNalezForm.poznamka.tooltip"
@@ -11327,7 +11302,7 @@ msgstr "Cadastral area is missing."
 
 #: pas/models.py:332
 msgid "pas.models.samostatnyNalez.checkPredOdeslanim.soubory.text"
-msgstr "Find photo is missing."
+msgstr "Missing find photo."
 
 #: pas/models.py:565
 msgid "pas.models.uzivatelSpoluprace.states.neaktivni.label"
@@ -11696,22 +11671,6 @@ msgstr "AMCR-PAS - confirm collaboration"
 msgid "pas.templates.potvrdit_spolupraci.header"
 msgstr "Confirm request for collaboration"
 
-#: pas/templates/pas/potvrdit_spolupraci.html:22
-#, python-format
-msgid ""
-"pas.templates.potvrdit_spolupraci.question%(spolupracovnik)s%(vedouci)s"
-msgstr ""
-"Do you wish to confirm the request of collaborator %(spolupracovnik)s to "
-"collaborate with archaeologist %(vedouci)s?"
-
-#: pas/templates/pas/potvrdit_spolupraci.html:26
-#, python-format
-msgid ""
-"pas.templates.potvrdit_spolupraci.already_active%(spolupracovnik)s%(vedouci)s"
-msgstr ""
-"Collaboration between collaborator %(spolupracovnik)s and archaeologist "
-"%(vedouci)s has already been confirmed."
-
 #: pas/templates/pas/potvrdit_spolupraci.html:34
 msgid "pas.templates.potvrdit_spolupraci.submitButton"
 msgstr "Confirm collaboration"
@@ -11913,7 +11872,7 @@ msgstr "Collaborator access to projects setup"
 
 #: pas/views.py:1486
 msgid "pas.views.editSpolupraceProjeky.submitButton.text"
-msgstr "Submit"
+msgstr "Save"
 
 #: pas/views.py:1527
 msgid "pas.views.editSpolupraceProjeky.success"
@@ -12053,7 +12012,7 @@ msgstr ""
 
 #: pian/views.py:522
 msgid "pian.views.importovatPianView.check.no_data"
-msgstr "The file does not contain any data."
+msgstr "The file contains no data."
 
 #: pian/views.py:526
 msgid "pian.views.importovatPianView.check.wrongColumnName.Column0"
@@ -12288,7 +12247,7 @@ msgstr "Planned start"
 
 #: projekt/forms.py:36
 msgid "projekt.forms.createProjekt.planovaneZahajeni.tooltip"
-msgstr "Planned start date for the project (range can be entered)."
+msgstr "Planned start date of the project (range can be entered)."
 
 #: projekt/forms.py:73
 msgid "projekt.forms.createProjekt.typProjektu.label"
@@ -12341,7 +12300,7 @@ msgstr ""
 msgid "projekt.forms.createProjekt.podnet.tooltip"
 msgstr ""
 "Name of the construction or characteristics of another project (e.g. "
-"landscaping, raw material extraction logging, forestry, etc.)."
+"landscaping, raw material extraction, forestry logging, etc.)."
 
 #: projekt/forms.py:87
 msgid "projekt.forms.createProjekt.lokalizace.tooltip"
@@ -12366,7 +12325,7 @@ msgstr "Project details"
 
 #: projekt/forms.py:184
 msgid "projekt.forms.CreateProjektForm.clean.missing_coords"
-msgstr "Location on the map is missing."
+msgstr "Location is missing from the map."
 
 #: projekt/forms.py:199
 msgid "projekt.forms.editProjekt.planovaneZahajeni.label"
@@ -12374,15 +12333,15 @@ msgstr "Planned start of earthwork"
 
 #: projekt/forms.py:201
 msgid "projekt.forms.editProjekt.planovaneZahajeni.tooltip"
-msgstr "Planned start date of project implementation (range can be entered)."
+msgstr "Planned start date of the project (range can be entered)."
 
 #: projekt/forms.py:209 projekt/forms.py:298
 msgid "projekt.forms.editProjekt.datumZahajeni.tooltip"
-msgstr "Select a date."
+msgstr "Select date."
 
 #: projekt/forms.py:214 projekt/forms.py:299
 msgid "projekt.forms.editProjekt.datumUkonceni.tooltip"
-msgstr "Select a date."
+msgstr "Select date."
 
 #: projekt/forms.py:267
 msgid "projekt.forms.editProjekt.typProjektu.label"
@@ -12430,7 +12389,7 @@ msgstr "ÚSKP registration number"
 
 #: projekt/forms.py:278
 msgid "projekt.forms.editProjekt.kulturniPamatkaPopis.label"
-msgstr "Monument name"
+msgstr "Name of monument"
 
 #: projekt/forms.py:279
 msgid "projekt.forms.editProjekt.uzivatelskeOznaceni.label"
@@ -12467,7 +12426,7 @@ msgstr ""
 msgid "projekt.forms.editProjekt.podnet.tooltip"
 msgstr ""
 "Name of the construction or characteristics of another project (e.g. "
-"landscaping, raw material extraction logging, forestry, etc.)."
+"landscaping, raw material extraction, forestry logging, etc.)."
 
 #: projekt/forms.py:289
 msgid "projekt.forms.editProjekt.lokalizace.tooltip"
@@ -12496,7 +12455,7 @@ msgstr "Filled in automatically according to the user."
 
 #: projekt/forms.py:294
 msgid "projekt.forms.editProjekt.kulturniPamatka.tooltip"
-msgstr "Level of heritage protection of the affected area."
+msgstr "Level of monument protection of the affected area."
 
 #: projekt/forms.py:295
 msgid "projekt.forms.editProjekt.kulturniPamatkaCislo.tooltip"
@@ -12512,7 +12471,7 @@ msgstr ""
 
 #: projekt/forms.py:297
 msgid "projekt.forms.editProjekt.uzivatelskeOznaceni.tooltip"
-msgstr "Identification within the organisation (e.g. reference number)."
+msgstr "Designation within the organisation (e.g. reference number)."
 
 #: projekt/forms.py:300
 msgid "projekt.forms.editProjekt.terminOdevzdani.tooltip"
@@ -12532,7 +12491,7 @@ msgstr "Fieldwork section"
 
 #: projekt/forms.py:429
 msgid "projekt.forms.EditProjektForm.validation.datum_ukonceni.error"
-msgstr "Start date cannot be after end date."
+msgstr "The start date cannot be after the end date."
 
 #: projekt/forms.py:438
 msgid "projekt.forms.navrhzruseni.duvod1.text"
@@ -12886,7 +12845,7 @@ msgstr "Type"
 
 #: projekt/models.py:97 projekt/tests/test_selenium.py:120
 msgid "projekt.models.projekt.podnet.label"
-msgstr "Motivation"
+msgstr "Intervention motivation"
 
 #: projekt/models.py:99
 msgid "projekt.models.projekt.uyivatelskeOznaceni.label"
@@ -13216,7 +13175,7 @@ msgstr "Fieldwork end date"
 
 #: projekt/templates/projekt/detail.html:519
 msgid "projekt.templates.detail.detailPart.terminOdevzdani.label"
-msgstr "Submission date"
+msgstr "Submission deadline"
 
 #: projekt/templates/projekt/detail.html:530
 msgid "projekt.templates.detail.cardHeader.oznamovatel"
@@ -13272,7 +13231,7 @@ msgstr "Create fieldwork event"
 
 #: projekt/templates/projekt/detail.html:634
 msgid "projekt.templates.detail.akcePart.bezAkci"
-msgstr "No events are attached."
+msgstr "No fieldwork events attached."
 
 #: projekt/templates/projekt/detail.html:645
 msgid "projekt.templates.detail.cardHeader.samostatneNalezy"
@@ -13519,7 +13478,7 @@ msgstr "Project selection"
 
 #: projekt/views.py:749
 msgid "projekt.views.projektListView.header.hasSchvalitOznameni"
-msgstr "Approve announcement"
+msgstr "Approve announcements"
 
 #: projekt/views.py:750 projekt/views.py:751
 msgid "projekt.views.projektListView.header.hasPrihlasit"
@@ -13943,7 +13902,7 @@ msgstr "Bulk import reports"
 
 #: templates/admin/import_data/import_reports.html:26
 msgid "core.templates.admin.import_reports.job_id"
-msgstr "Job ID"
+msgstr "Task ID"
 
 #: templates/admin/import_data/import_reports.html:27
 msgid "core.templates.admin.import_reports.file_name"
@@ -13976,11 +13935,11 @@ msgstr "Home"
 
 #: templates/admin/update_running_job.html:40
 msgid "core.templates.admin.fedora_management.job_id"
-msgstr "Job ID"
+msgstr "Task ID"
 
 #: templates/admin/update_running_job.html:47
 msgid "core.templates.admin.fedora_management.stop_request"
-msgstr "Stop job"
+msgstr "Stop task"
 
 #: templates/admin/update_running_job.html:54
 msgid "core.templates.admin.ident_cely"
@@ -14276,11 +14235,11 @@ msgstr "Czech Academy of Sciences"
 
 #: templates/base_logged_in.html:417 templates/base_logged_in.html:418
 msgid "templates.baseLogedIn.footer.logo.arub"
-msgstr "Institute of Archaeology of the CAS, Brno"
+msgstr "Institute of Archaeology of the Czech Academy of Sciences, Brno"
 
 #: templates/base_logged_in.html:420 templates/base_logged_in.html:421
 msgid "templates.baseLogedIn.footer.logo.aru"
-msgstr "Institute of Archaeology of the CAS, Prague"
+msgstr "Institute of Archaeology of the Czech Academy of Sciences, Prague"
 
 #: templates/base_logged_in.html:423 templates/base_logged_in.html:424
 msgid "templates.baseLogedIn.footer.logo.ais"
@@ -14573,7 +14532,7 @@ msgstr ""
 
 #: templates/django_registration/registration_form.html:5
 msgid "templates.djangoRegistration.registrationForm.title"
-msgstr "User registration"
+msgstr "New user registration"
 
 #: templates/django_registration/registration_form.html:11
 msgid "templates.djangoRegistration.registrationForm.submitButton.text"
@@ -14891,7 +14850,7 @@ msgstr "new password reset"
 
 #: templates/registration/password_reset_done.html:4
 msgid "templates.registration.passwordResetDone.title"
-msgstr "Password reset"
+msgstr "Reset password"
 
 #: templates/registration/password_reset_done.html:7
 msgid "templates.registration.passwordResetDone.header"
@@ -15514,7 +15473,7 @@ msgstr "project type"
 
 #: uzivatel/admin.py:257
 msgid "uzivatel.admin.form.notifikace.psy"
-msgstr "Project types being followed"
+msgstr "Watched project types"
 
 #: uzivatel/admin.py:291
 msgid "uzivatel.admin.filter.emailPotvrzen.title"
@@ -15680,7 +15639,7 @@ msgstr "Date the user account was created."
 
 #: uzivatel/forms.py:255
 msgid "uzivatel.forms.userChange.organizace.tooltip"
-msgstr "User affiliation to an organisation."
+msgstr "User's affiliation with an organisation."
 
 #: uzivatel/forms.py:256
 msgid "uzivatel.forms.userChange.groups.tooltip"
@@ -15982,8 +15941,8 @@ msgstr "Surname at birth"
 msgid ""
 "uzivatel.models.Osoba.save.check_container_deleted_or_not_exists.invalid"
 msgstr ""
-"The record cannot be saved, as a container with the same identifier already "
-"exists in the repository. Please contact your system administrator."
+"The record cannot be saved because a container with the same identifier "
+"already exists in the repository. Please contact your system administrator."
 
 #: uzivatel/models.py:734
 msgid "uzivatel.model.Osoba.modelTitle.label"
@@ -15995,7 +15954,7 @@ msgstr "Persons"
 
 #: uzivatel/models.py:752
 msgid "uzivatel.model.userNotificationType.S-E-A-XX.text"
-msgstr "AMCR: archiving records"
+msgstr "AMCR: record archiving"
 
 #: uzivatel/models.py:753
 msgid "uzivatel.model.userNotificationType.S-E-N-01.text"
@@ -16076,7 +16035,7 @@ msgstr "Note"
 #: uzivatel/templates/admin/admin_user_change_delete_history_records.html:18
 msgid "admin.admin_user_change_delete_history_records.cannot_delete"
 msgstr ""
-"The user history cannot be deleted because it is linked to other records."
+"The user's history cannot be deleted because it is linked to other records."
 
 #: uzivatel/templates/admin/admin_user_change_delete_history_records.html:32
 msgid "admin.admin_user_change_delete_history_records.confirm"
@@ -16618,7 +16577,7 @@ msgstr "Substitution for original"
 
 #: vypis/config.py:283
 msgid "vypis.dokumenty.popis_dokumentu.pocet_variant_originalu.label"
-msgstr "Number of versions"
+msgstr "Number of variants"
 
 #: vypis/config.py:289
 msgid "vypis.dokumenty.popis_dokumentu.odkaz.label"
@@ -16842,7 +16801,7 @@ msgstr "WKT (EPSG:5514)"
 
 #: vypis/config.py:461
 msgid "vypis.projekty.popis_projektu.planovane_zahajeni.label"
-msgstr "Planned start date"
+msgstr "Planned start"
 
 #: vypis/config.py:464
 msgid "vypis.projekty.popis_projektu.uzivatelske_oznaceni.label"
@@ -16874,7 +16833,7 @@ msgstr "Announcer"
 
 #: vypis/config.py:482
 msgid "vypis.projekty.oznamovatel.odpovedna_osoba.label"
-msgstr "Authorised person"
+msgstr "Authorised representative"
 
 #: vypis/config.py:484
 msgid "vypis.projekty.oznamovatel.adresa.label"
@@ -16970,11 +16929,11 @@ msgstr "Main cadastral area"
 
 #: vypis/config.py:559
 msgid "vypis.akce.hlavni_vedouci.label"
-msgstr "Manager"
+msgstr "Fieldwork manager"
 
 #: vypis/config.py:564
 msgid "vypis.akce.specifikace_data.label"
-msgstr "Date of execution (start - end)"
+msgstr "Fieldwork date (start–end)"
 
 #: vypis/config.py:565
 msgid "vypis.akce.datum_zahajeni.label"
@@ -17110,7 +17069,7 @@ msgstr "State of preservation"
 
 #: vypis/config.py:669
 msgid "vypis.lokalita.jistota.label"
-msgstr "Level of confidence"
+msgstr "Confidence"
 
 #: vypis/config.py:670
 msgid "vypis.lokalita.pristupnost.label"
@@ -17230,7 +17189,7 @@ msgstr "Cadastral area"
 
 #: vypis/config.py:776
 msgid "vypis.pas.popis_nalezu.section_name"
-msgstr "Find description"
+msgstr "Description of the find"
 
 #: vypis/config.py:778
 msgid "vypis.pas.popis_pas.projekt.label"
@@ -17330,7 +17289,7 @@ msgstr "Author"
 
 #: vypis/config.py:833
 msgid "vypis.model3d.rok_vzniku.label"
-msgstr "Year created"
+msgstr "Year of creation"
 
 #: vypis/config.py:838
 msgid "vypis.model3d.typ.label"
@@ -17695,3 +17654,61 @@ msgstr "No news is available."
 #: heslar/admin.py
 msgid "heslar.admin.OrganizaceAdmin.import_blocks_changes"
 msgstr "Organizations cannot be added, changed or deleted during an import. If the import status is unavailable, try again later."
+msgid "core.templates.filetable.stahnoutParadata.title"
+msgstr "Download paradata"
+
+msgid "core_admin.DistribuceImportIntegrityError.message"
+msgstr ""
+"Distribution {distribution} of file {soubor_id} does not match the expected "
+"state for action {performed_action}."
+
+msgid "core_admin.DistribuceMissingRepositoryUuidError.message"
+msgstr "File {soubor_id} has no Fedora container UUID stored in its path."
+
+msgid "core_admin.DistribuceMissingVazbaError.message"
+msgstr "File {soubor_id} has no link to a parent record."
+
+msgid "core_admin.DistribuceUnsafeFilenameError.message"
+msgstr "The file name {nazev} is not safe."
+
+msgid "core_admin.ImportDataDistributionPathConflictError.message"
+msgstr "Distribution path conflict"
+
+msgid "core_admin.ImportDataDistributionPrefixCollisionError.message"
+msgstr "Distribution prefix collision"
+
+msgid "core_admin.ImportDataInvalidDistributionError.message"
+msgstr "The distribution name {distribution} is not valid."
+
+msgid "core_admin.ImportDataReservedDistributionError.message"
+msgstr "The distribution name {distribution} is reserved and cannot be used."
+
+msgid "cron.tasks.run_data_import.importing_distribution"
+msgstr "Importing distribution {n}/{total}: {filename} ({ident_cely})"
+
+msgid "historie.models.historieStav.distribuce.DIST01"
+msgstr "DIST01 - distribution upload"
+
+msgid "historie.models.historieStav.distribuce.DIST10"
+msgstr "DIST10 - distribution deletion"
+
+msgid "historie.models.historieStav.distribuce.DIST11"
+msgstr "DIST11 - distribution update"
+
+msgid "oznameni.templates.components.uvod.collapsed.text"
+msgstr ""
+"<p>An area with archaeological finds refers not only to places where archaeological finds have been made in the past, but also to land where the terrain has not been directly disturbed by modern interventions and the occurrence of archaeological finds cannot be ruled out. <strong>The area with archaeological finds is therefore the entire territory of the Czech Republic</strong> with the exception of, for example, mined surface mines or sand pits. See more in the related <a href=\"https://isad.npu.cz/\" target=\"_blank\">services of the National Heritage Institute</a>.</p>\n"
+"<p>We recommend that you submit your announcement <strong>well in advance of the start of earthwork</strong> (no later than 30 days) so that all the necessary formalities associated with conducting a rescue archaeological fieldwork can be completed. This will prevent unnecessary delays to your project or possible damage to our shared cultural heritage.</p>\n"
+"<p>In the case of an archaeological find that was not made during archaeological fieldwork, it is necessary to proceed in accordance with <a href=\"https://www.zakonyprolidi.cz/cs/1987-20#cast3\" target=\"_blank\">Section 23(2) of Act No. 20/1987 Coll. on State Monument Care</a>, i.e. submit a notification to the Institute of Archaeology or the nearest museum, either directly or through the municipality in whose territorial jurisdiction the archaeological find occurred. <strong>The form below is not intended for this type of notification. </strong></p>\n"
+"<p>The information and documents provided in the announcement will be stored in the Archaeological Map of the Czech Republic system for the necessary period of time, and a summary will be sent to the email address you provide. </p>\n"
+"<p>If necessary, please do not hesitate to contact us at {mail_arup} (Bohemia) or {mail_arub} (Moravia and Silesia).</p>"
+
+msgid "pas.templates.potvrdit_spolupraci.already_active"
+msgstr ""
+"Collaboration between collaborator {spolupracovnik} and archaeologist "
+"{vedouci} has already been confirmed."
+
+msgid "pas.templates.potvrdit_spolupraci.question"
+msgstr ""
+"Do you wish to confirm the request of collaborator {spolupracovnik} to "
+"collaborate with archaeologist {vedouci}?"
