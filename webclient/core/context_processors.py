@@ -78,7 +78,9 @@ def auto_logout_client(request):
 
         :return: Vrací hodnotu podle větve zpracování, typicky: slovník, proměnná ``ctx``.
     """
-    if request.user.is_anonymous:
+    user = getattr(request, "user", None)
+    # Bez ``request.user`` (chybové stránky z middleware před autentizací, např. DisallowedHost) se chová jako anonym.
+    if user is None or user.is_anonymous:
         return {}
 
     options = getattr(settings, "AUTO_LOGOUT")
@@ -155,7 +157,8 @@ def main_shows(request):
     """
     main_show = {}
     main_show["show_dark_mode"] = getattr(settings, "SHOW_DARK_MODE", True)
-    if request.user.is_authenticated:
+    user = getattr(request, "user", None)
+    if user is not None and user.is_authenticated:
         if request.user.hlavni_role.id == ROLE_ADMIN_ID:
             main_show["show_administrace"] = True
         if request.user.is_archiver_or_more:

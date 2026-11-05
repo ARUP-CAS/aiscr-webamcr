@@ -19,6 +19,12 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``__init__()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
+   .. py:method:: initial_let()
+
+      Vrátí let navázaný na dokument v okamžiku vytvoření instance (používá signál ukládající metadata letu).
+
+      :return: Instance ``Let``, nebo ``None``, pokud dokument let neměl (nebo už neexistuje).
+
    .. py:method:: __str__()
 
              Vrací textovou reprezentaci objektu.
@@ -175,17 +181,37 @@ Třídy
 
       Nastaví snapshots. v aplikaci.
 
+   .. py:method:: je_model_3d()
+
+      Určí, zda je dokument 3D model; podle toho se volí prefix klíče i tabulka Redis snapshotu.
+
+      Rozhoduje typ dokumentu stejně jako u seznamů ``Model3DListView`` a ``DokumentListView``
+      (identifikátor 3D modelu má tvar ``C-3D-…`` nebo ``X-C-3D-…``).
+
+      :return: ``True``, pokud typ dokumentu patří do ``MODEL_3D_DOKUMENT_TYPES``.
+
    .. py:method:: redis_snapshot_id()
 
       Generuje klíč pro uložení snapshotu seznamu dokumentů v Redisu.
 
-      :return: Klíč Redis snapshot (3D nebo běžný dokument).
+      :return: Klíč Redis snapshot (3D nebo běžný dokument podle :attr:`je_model_3d`).
 
    .. py:method:: generate_redis_snapshot()
 
-      Vygeneruje redis snapshot.
+      Vygeneruje Redis snapshot tohoto záznamu (deleguje na :meth:`generate_redis_snapshots`).
 
-      :return: Vrací n-tici.
+      :return: N-tice (klíč, data); data jsou ``None``, pokud záznam v databázi neexistuje.
+
+   .. py:method:: generate_redis_snapshots()
+
+      Vygeneruje Redis snapshoty více záznamů; tabulku volí podle :attr:`je_model_3d`
+      (``Model3DTable`` pro 3D modely, jinak ``DokumentTable``).
+
+      Související záznamy zobrazované v tabulce se načítají hromadně (``select_related`` /
+      ``prefetch_related``), takže počet dotazů nezávisí na počtu záznamů.
+
+      :param records: Instance modelu, pro které se snapshoty generují.
+      :return: Slovník ``{redis_snapshot_id: data}`` pro záznamy nalezené v databázi.
 
    .. py:method:: _get_doi_client()
 

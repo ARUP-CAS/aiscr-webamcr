@@ -23,7 +23,7 @@ from django.conf import settings
 from django.contrib.gis.db import models as pgmodels
 from django.core.exceptions import PermissionDenied
 from django.db import models
-from django.db.models import CheckConstraint, Q
+from django.db.models import CheckConstraint, Prefetch, Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
@@ -478,16 +478,48 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     def generate_redis_snapshot(self):
         """
-        Vygeneruje redis snapshot.
+        Vygeneruje Redis snapshot tohoto záznamu (deleguje na :meth:`generate_redis_snapshots`).
 
-        :return: Vrací n-tici.
+        :return: N-tice (klíč, data); data jsou ``None``, pokud záznam v databázi neexistuje.
+        """
+        key = self.redis_snapshot_id
+        return key, SamostatnyNalez.generate_redis_snapshots([self]).get(key)
+
+    @classmethod
+    def generate_redis_snapshots(cls, records):
+        """
+        Vygeneruje Redis snapshoty více záznamů jednou tabulkou ``SamostatnyNalezTable``.
+
+        Související záznamy zobrazované v tabulce se načítají hromadně (``select_related`` /
+        ``prefetch_related``), takže počet dotazů nezávisí na počtu záznamů.
+
+        :param records: Instance modelu, pro které se snapshoty generují.
+        :return: Slovník ``{redis_snapshot_id: data}`` pro záznamy nalezené v databázi.
         """
         from pas.tables import SamostatnyNalezTable
 
-        data = SamostatnyNalez.objects.filter(pk=self.pk)
-        table = SamostatnyNalezTable(data=data)
-        data = RedisConnector.prepare_model_for_redis(table)
-        return self.redis_snapshot_id, data
+        data = (
+            cls.objects.filter(pk__in=[record.pk for record in records])
+            .select_related(
+                "katastr__okres__kraj",
+                "nalezce",
+                "predano_organizace",
+                "obdobi",
+                "druh_nalezu",
+                "specifikace",
+                "pristupnost",
+                "okolnosti",
+            )
+            .defer(
+                "katastr__hranice",
+                "katastr__definicni_bod",
+                "katastr__okres__hranice",
+                "katastr__okres__definicni_bod",
+                "katastr__okres__kraj__hranice",
+                "katastr__okres__kraj__definicni_bod",
+            )
+        )
+        return RedisConnector.prepare_models_for_redis(SamostatnyNalezTable(data=data))
 
     def set_igsn(self):
         """Nastaví igsn. v aplikaci."""
@@ -740,16 +772,32 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
 
     def generate_redis_snapshot(self):
         """
-        Vygeneruje redis snapshot.
+        Vygeneruje Redis snapshot tohoto záznamu (deleguje na :meth:`generate_redis_snapshots`).
 
-        :return: Vrací n-tici.
+        :return: N-tice (klíč, data); data jsou ``None``, pokud záznam v databázi neexistuje.
+        """
+        key = self.redis_snapshot_id
+        return key, UzivatelSpoluprace.generate_redis_snapshots([self]).get(key)
+
+    @classmethod
+    def generate_redis_snapshots(cls, records):
+        """
+        Vygeneruje Redis snapshoty více záznamů jednou tabulkou ``UzivatelSpolupraceTable``.
+
+        Související záznamy zobrazované v tabulce se načítají hromadně (``select_related`` /
+        ``prefetch_related``), takže počet dotazů nezávisí na počtu záznamů.
+
+        :param records: Instance modelu, pro které se snapshoty generují.
+        :return: Slovník ``{redis_snapshot_id: data}`` pro záznamy nalezené v databázi.
         """
         from pas.tables import UzivatelSpolupraceTable
 
-        data = UzivatelSpoluprace.objects.filter(pk=self.pk)
-        table = UzivatelSpolupraceTable(data=data)
-        data = RedisConnector.prepare_model_for_redis(table)
-        return self.redis_snapshot_id, data
+        data = (
+            cls.objects.filter(pk__in=[record.pk for record in records])
+            .select_related("vedouci__organizace", "spolupracovnik__organizace")
+            .prefetch_related(Prefetch("projekty", queryset=Projekt.objects.order_by("ident_cely")))
+        )
+        return RedisConnector.prepare_models_for_redis(UzivatelSpolupraceTable(data=data))
 
     @classmethod
     def get_by_ident_cely(cls, pk):

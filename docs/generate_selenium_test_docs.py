@@ -140,7 +140,8 @@ def _find_rst_file(root: Path) -> Path:
 def _iter_test_files(root: Path) -> List[Path]:
     """Vyhledá Python soubory se Selenium testy v repozitáři.
 
-    Hledá `test_selenium.py` v adresářích obsahujících segment `tests`.
+    Hledá `test_selenium.py` a `test_selenium_*.py` (např. `test_selenium_distribuce.py`)
+    v adresářích obsahujících segment `tests`.
 
     Primárně se ptá gitu (`git ls-files`), který zná jen sledované soubory a
     odpoví okamžitě. Když git selže (skript běží mimo git repozitář), spadne se
@@ -156,7 +157,7 @@ def _iter_test_files(root: Path) -> List[Path]:
 
 
 def _git_tracked_test_files(root: Path) -> Optional[List[Path]]:
-    """Vrátí sledované soubory `test_selenium.py` v adresářích `tests` přes git.
+    """Vrátí sledované soubory `test_selenium*.py` v adresářích `tests` přes git.
 
     Když git není dostupný nebo `root` není git repozitář, vrátí `None`
     (volající pak použije fallback přes procházení stromu).
@@ -166,7 +167,7 @@ def _git_tracked_test_files(root: Path) -> Optional[List[Path]]:
     """
     try:
         proc = subprocess.run(
-            ["git", "-C", str(root), "ls-files", "-z", "**/test_selenium.py", "test_selenium.py"],
+            ["git", "-C", str(root), "ls-files", "-z", "**/test_selenium*.py", "test_selenium*.py"],
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -190,7 +191,7 @@ def _git_tracked_test_files(root: Path) -> Optional[List[Path]]:
 
 
 def _walk_test_files(root: Path) -> List[Path]:
-    """Fallback hledání `test_selenium.py` přes rekurzivní procházení (`rglob`).
+    """Fallback hledání `test_selenium*.py` přes rekurzivní procházení (`rglob`).
 
     Ignoruje typické „šumové“ adresáře (venv, node_modules, …).
 
@@ -198,7 +199,7 @@ def _walk_test_files(root: Path) -> List[Path]:
         :return: Vrací hodnotu typu ``List[Path]`` (seznam nalezených cest).
     """
     files: List[Path] = []
-    for p in root.rglob("test_selenium.py"):
+    for p in root.rglob("test_selenium*.py"):
         if _is_ignored_path(p):
             continue
         if "tests" not in p.parts:

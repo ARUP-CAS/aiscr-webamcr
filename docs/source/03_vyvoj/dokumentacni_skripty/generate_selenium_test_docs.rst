@@ -83,7 +83,8 @@ Funkce
 
    Vyhledá Python soubory se Selenium testy v repozitáři.
 
-   Hledá `test_selenium.py` v adresářích obsahujících segment `tests`.
+   Hledá `test_selenium.py` a `test_selenium_*.py` (např. `test_selenium_distribuce.py`)
+   v adresářích obsahujících segment `tests`.
 
    Primárně se ptá gitu (`git ls-files`), který zná jen sledované soubory a
    odpoví okamžitě. Když git selže (skript běží mimo git repozitář), spadne se
@@ -94,7 +95,7 @@ Funkce
 
 .. py:function:: _git_tracked_test_files(root)
 
-   Vrátí sledované soubory `test_selenium.py` v adresářích `tests` přes git.
+   Vrátí sledované soubory `test_selenium*.py` v adresářích `tests` přes git.
 
    Když git není dostupný nebo `root` není git repozitář, vrátí `None`
    (volající pak použije fallback přes procházení stromu).
@@ -104,7 +105,7 @@ Funkce
 
 .. py:function:: _walk_test_files(root)
 
-   Fallback hledání `test_selenium.py` přes rekurzivní procházení (`rglob`).
+   Fallback hledání `test_selenium*.py` přes rekurzivní procházení (`rglob`).
 
    Ignoruje typické „šumové“ adresáře (venv, node_modules, …).
 

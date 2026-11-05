@@ -128,13 +128,15 @@ Třídy
       :param approval_ttl_seconds: Doba v sekundách, po kterou lock zůstane při čekání na schválení platný.
       :return: ``True``, pokud úloha stále vlastní lock a přechod proběhl; jinak ``False``.
 
-   .. py:method:: prepare_model_for_redis()
+   .. py:method:: prepare_models_for_redis()
 
-      Převede řádek Django-tables2 tabulky do slovníku pro uložení do Redis cache.
+      Převede všechny řádky Django-tables2 tabulky na slovníky pro uložení do Redis cache.
 
-      :param table: Tabulka (django-tables2) obsahující jeden řádek s daty záznamu.
+      Sloupce s ``exclude_from_export`` se vynechají. Sloupce náhledů (název obsahuje ``nahled``) se ukládají
+      jako prázdný řetězec a jejich hodnota se vůbec nevyhodnocuje, protože by vyžadovala dotazy na soubory.
 
-      :return: Vrací proměnná ``data``.
+      :param table: Tabulka (django-tables2) se záznamy, jejichž model má vlastnost ``redis_snapshot_id``.
+      :return: Slovník ``{redis_snapshot_id záznamu: data řádku}``.
 
 
 .. py:class:: ClamdError
