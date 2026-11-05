@@ -96,7 +96,7 @@ from lokalita.models import Lokalita
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from projekt.models import Projekt
 from services.mailer import Mailer
-from uzivatel.models import Organizace, Osoba, User, UserNotificationType
+from uzivatel.models import Organizace, User, UserNotificationType
 from xml_generator.models import ModelWithMetadata
 
 import redis
