@@ -502,7 +502,7 @@ def edit_ulozeni(request, ident_cely):
     :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``PotvrditNalezForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
     :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
-        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()`` (včetně JSON 403 pro uživatele, který nesmí spolupráci potvrdit), výsledek volání ``render()``.
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     predano_required = True if sn.stav == SN_POTVRZENY else False
@@ -1244,7 +1244,7 @@ def aktivace(request, pk):
     :param request: Parametr ``request`` se předává do volání ``set_aktivni()``, ``add_message()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
     :param pk: Identifikátor ``pk`` používaný pro dohledání cílového záznamu.
 
-        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``redirect()``, výsledek volání ``render()``.
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()`` (včetně JSON 403 pro uživatele, který nesmí spolupráci potvrdit), výsledek volání ``redirect()``, výsledek volání ``render()``.
     """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if not spoluprace.muze_potvrdit(request.user):
