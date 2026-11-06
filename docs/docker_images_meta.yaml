@@ -163,13 +163,6 @@ images:
       pgAdmin4 webové rozhraní pro správu PostgreSQL databází. Používá se
       pro lokální vývoj a správu databáze.
 
-  - image: "memcached"
-    licence: "BSD License"
-    odkaz: "https://github.com/docker-library/memcached"
-    popis: >-
-      Memcached pro ukládání cache v paměti. Používá se pro zrychlení aplikace
-      pomocí cache vrstvy.
-
   - image: "fcrepo/fcrepo"
     licence: "Apache-2.0 License"
     odkaz: "https://github.com/fcrepo/fcrepo"

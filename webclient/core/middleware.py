@@ -114,6 +114,20 @@ class ErrorMiddleware:
         :return: HTML error response nebo None pokud jde o neznámou výjimku.
         """
         if isinstance(exception, FedoraError):
+            # Záložní rollback Fedora transakce, kterou view neošetřilo (#4437). U výjimky z view se DB
+            # odroluje díky ATOMIC_REQUESTS a rollback Fedory drží obě strany v souladu. U výjimky
+            # z ``transaction.on_commit`` je DB už commitnutá a rollback jen uvolní zámky ve Fedoře,
+            # které by jinak blokovaly souběžné zápisy až do vypršení transakce. Selhání rollbacku
+            # (např. transakce už neexistuje) je očekávané a jen se zaloguje.
+            fedora_transaction = getattr(exception, "fedora_transaction", None)
+            if fedora_transaction:
+                try:
+                    fedora_transaction.rollback_transaction()
+                except Exception as rollback_err:
+                    logger.warning(
+                        "core.middleware.ErrorMiddleware.process_exception.rollback_failed",
+                        extra={"error": exception, "rollback_error": rollback_err},
+                    )
             context = {"exception": exception}
             return render(request, "fedora_error.html", context, status=500)
 

@@ -17,6 +17,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.repository_connector import FedoraTransaction
+from core.utils import hodnota_pro_log
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -124,7 +125,9 @@ def detail(request, typ_vazby, ident_cely):
         messages.add_message(request, messages.SUCCESS, KOMPONENTA_USPESNE_EDITOVANA)
     elif not form.is_valid():
         messages.add_message(request, messages.ERROR, KOMPONENTU_SE_NEPOVEDLO_EDITOVAT)
-        logger.debug("komponenta.views.detail.not_valid", extra={"error": form.errors, "ident_cely": ident_cely})
+        logger.debug(
+            "komponenta.views.detail.not_valid", extra={"error": hodnota_pro_log(form.errors), "ident_cely": ident_cely}
+        )
 
     if "nalez_edit_nalez" in request.POST:
         druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
@@ -198,8 +201,8 @@ def detail(request, typ_vazby, ident_cely):
             logger.debug(
                 "komponenta.views.detail.form_not_valid_2",
                 extra={
-                    "form_error": formset_predmet.errors,
-                    "error": formset_objekt.errors,
+                    "form_error": hodnota_pro_log(formset_predmet.errors),
+                    "error": hodnota_pro_log(formset_objekt.errors),
                 },
             )
             messages.add_message(request, messages.ERROR, PREDMET_NEBO_OBJEKT_SE_NEPOVEDLO_EDITOVAT)
@@ -281,7 +284,7 @@ def zapsat(request, typ_vazby, dj_ident_cely):
                 args=[cast.dokument.ident_cely, komponenta.ident_cely],
             )
     else:
-        logger.debug("komponenta.views.zapsat.form_not_valid", extra={"form_error": form.errors})
+        logger.debug("komponenta.views.zapsat.form_not_valid", extra={"form_error": hodnota_pro_log(form.errors)})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
         if dj:
             url = reverse(

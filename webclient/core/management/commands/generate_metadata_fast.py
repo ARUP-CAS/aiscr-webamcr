@@ -28,9 +28,10 @@ _RETRYABLE_EXCEPTIONS = (requests.exceptions.ConnectionError, requests.exception
 #: Timeout (sekundy) pro běžné HTTP požadavky na Fedoru. Bez timeoutu je
 #: ``requests.exceptions.Timeout`` v ``_RETRYABLE_EXCEPTIONS`` nedosažitelný (výchozí
 #: chování ``requests`` je čekat neomezeně) a zaseknuté TCP spojení by worker zablokovalo
-#: natrvalo, ne jen na dobu jednoho pokusu. Hodnota je záměrně vyšší než ``timeout=10``
-#: v ``core/repository_connector.py`` - ta je pro jednu operaci v běžném provozu, kdežto
-#: tady Fedora obsluhuje N paralelních workerů najednou a odpovídá výrazně pomaleji.
+#: natrvalo, ne jen na dobu jednoho pokusu. Na rozdíl od ``core/repository_connector.py``
+#: (``FEDORA_READ_TIMEOUT`` 300 s, obsah ``FEDORA_CONTENT_READ_TIMEOUT`` 600 s, #4454) je
+#: hodnota nižší: tady se zapisují jen malá metadata a zástupný obsah, Fedora sice obsluhuje
+#: N paralelních workerů najednou, ale vypršený pokus se opakuje v ``Command._process_record``.
 _HTTP_TIMEOUT = 60
 
 #: Timeout (sekundy) pro commit transakce - řádově vyšší než ``_HTTP_TIMEOUT``, protože
@@ -451,7 +452,8 @@ class _FastFedoraWriter:
         Odešle HTTP požadavek a ověří, že odpověď je 2xx.
 
         Rychlá náhrada za ``FedoraRepositoryConnector._send_request``.
-        Při změně oficiální funkce je potřeba změnu promítnout i sem.
+        Při změně oficiální funkce je potřeba změnu promítnout i sem; timeouty se záměrně
+        nepřebírají, platí ``_HTTP_TIMEOUT`` (viz komentář u konstanty).
         Bez retry logiky a bez mapování na ``FedoraError`` - opakování řeší až ``Command._process_record``.
 
         :param method: ``"post"`` nebo ``"patch"``.
@@ -549,7 +551,7 @@ class _FastFedoraWriter:
                 time.sleep(1)
         logger.warning(
             "core.management.commands.generate_metadata_fast.rollback_failed",
-            extra={"tx_url": tx_url, "error": duvod},
+            extra={"request_url": tx_url, "error": duvod},
         )
 
     @staticmethod
@@ -1151,7 +1153,7 @@ class Command(BaseCommand):
         if zbyva:
             logger.warning(
                 "core.management.commands.generate_metadata_fast.db_updates_neodeslane",
-                extra={"pocet": zbyva, "pruchodu": _FLUSH_MAX_PRUCHODU},
+                extra={"count": zbyva, "maximum": _FLUSH_MAX_PRUCHODU},
             )
 
     @staticmethod
@@ -1239,7 +1241,7 @@ class Command(BaseCommand):
         if not obj.ident_cely:
             logger.warning(
                 "core.management.commands.generate_metadata_fast.missing_ident_cely",
-                extra={"pk": obj.pk, "model": obj.__class__.__name__},
+                extra={"pk": obj.pk, "class_name": obj.__class__.__name__},
             )
             # Bez `ident_cely` nejde záznam ve Fedoře pojmenovat, takže se nezapíše - a to
             # je selhání, ne přeskočení. Do `failures` musí, jinak o něm ví jen log:
@@ -1283,7 +1285,7 @@ class Command(BaseCommand):
             if entry is None:
                 logger.warning(
                     "core.management.commands.generate_metadata_fast.no_placeholder",
-                    extra={"pk": pk, "mimetype": mimetype, "ident_cely": obj.ident_cely},
+                    extra={"pk": pk, "mime_type": mimetype, "ident_cely": obj.ident_cely},
                 )
                 failures.append((pk, obj.ident_cely, f"Chybí placeholder pro mimetype '{mimetype}'."))
                 continue
@@ -1339,9 +1341,9 @@ class Command(BaseCommand):
                         extra={
                             "pk": obj.pk,
                             "ident_cely": obj.ident_cely,
-                            "faze": nazev_faze,
-                            "attempt": attempt,
-                            "location": exc.location,
+                            "value": nazev_faze,
+                            "number": attempt,
+                            "request_url": exc.location,
                         },
                     )
                     return True
@@ -1354,7 +1356,7 @@ class Command(BaseCommand):
                             extra={
                                 "pk": obj.pk,
                                 "ident_cely": obj.ident_cely,
-                                "faze": nazev_faze,
+                                "value": nazev_faze,
                                 "error": str(exc),
                             },
                         )
@@ -1369,10 +1371,10 @@ class Command(BaseCommand):
                             extra={
                                 "pk": obj.pk,
                                 "ident_cely": obj.ident_cely,
-                                "faze": nazev_faze,
-                                "attempts": attempt,
-                                "elapsed": round(uplynulo),
-                                "reason": duvod,
+                                "value": nazev_faze,
+                                "number": attempt,
+                                "duration_s": round(uplynulo),
+                                "info": duvod,
                                 "error": str(exc),
                             },
                         )
@@ -1395,8 +1397,8 @@ class Command(BaseCommand):
                         extra={
                             "pk": obj.pk,
                             "ident_cely": obj.ident_cely,
-                            "faze": nazev_faze,
-                            "attempt": attempt,
+                            "value": nazev_faze,
+                            "number": attempt,
                             "backoff": round(backoff, 1),
                             "error": str(exc),
                         },
@@ -1546,7 +1548,7 @@ class Command(BaseCommand):
                     extra={
                         "pk": getattr(polozka, "pk", None),
                         "ident_cely": getattr(polozka, "ident_cely", None),
-                        "elapsed": round(nyni - odeslano),
+                        "duration_s": round(nyni - odeslano),
                     },
                 )
                 self.stdout.write("")

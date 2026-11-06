@@ -222,7 +222,7 @@ def _otevri_s_overenim_presmerovani(url: str, *, timeout: int, povolene_puvody=N
         if _puvod(cil) not in povolene:
             logger.error(
                 "heslar.ruian_sync.vfr_download._otevri_s_overenim_presmerovani.cizi_puvod",
-                extra={"z": aktualni[:200], "na": cil[:200], "povolene_puvody": sorted(map(str, povolene))},
+                extra={"old": aktualni[:200], "new": cil[:200], "list": sorted(map(str, povolene))},
             )
             raise RuianNeduveryhodnePresmerovaniError(f"Přesměrování z {aktualni} na {cil} míří mimo povolené původy.")
         aktualni = cil
@@ -261,13 +261,13 @@ def _stream_to_file(
         :raises RuianDownloadTooLargeError: Pokud přenos přeroste
             :data:`_MAX_DOWNLOAD_BYTES`; rozdělaný ``.tmp`` soubor se smaže.
     """
-    logger.debug("heslar.ruian_sync.vfr_download._stream_to_file.start", extra={"url": url})
+    logger.debug("heslar.ruian_sync.vfr_download._stream_to_file.start", extra={"request_url": url})
     target_path.parent.mkdir(parents=True, exist_ok=True)
     temp_path = target_path.with_name(target_path.name + ".tmp")
     try:
         with _otevri_s_overenim_presmerovani(url, timeout=timeout, povolene_puvody=povolene_puvody) as resp:
             if resp.status_code == 404:
-                logger.debug("heslar.ruian_sync.vfr_download._stream_to_file.not_found", extra={"url": url})
+                logger.debug("heslar.ruian_sync.vfr_download._stream_to_file.not_found", extra={"request_url": url})
                 return None
             resp.raise_for_status()
             stazeno = 0
@@ -284,7 +284,7 @@ def _stream_to_file(
         if target_path.exists():
             logger.warning(
                 "heslar.ruian_sync.vfr_download._stream_to_file.overwrite",
-                extra={"path": str(target_path)},
+                extra={"file": str(target_path)},
             )
         temp_path.replace(target_path)
     except Exception:
@@ -293,7 +293,7 @@ def _stream_to_file(
         raise
     logger.debug(
         "heslar.ruian_sync.vfr_download._stream_to_file.end",
-        extra={"url": url, "size": target_path.stat().st_size, "path": str(target_path)},
+        extra={"request_url": url, "size": target_path.stat().st_size, "file": str(target_path)},
     )
     return target_path
 
@@ -380,7 +380,7 @@ def _stahni_atom_feed(feed_url: str, timeout: int) -> bytes:
             if len(data) > _MAX_ATOM_BYTES:
                 logger.error(
                     "heslar.ruian_sync.vfr_download._stahni_atom_feed.prilis_velky",
-                    extra={"url": feed_url, "limit_bytes": _MAX_ATOM_BYTES},
+                    extra={"request_url": feed_url, "maximum": _MAX_ATOM_BYTES},
                 )
                 raise RuianAtomFeedTooLargeError(f"ATOM feed {feed_url} přesáhl {_MAX_ATOM_BYTES} B a byl odmítnut.")
     return bytes(data)
@@ -404,7 +404,7 @@ def _parse_atom_feed(feed_url: str, timeout: int = 60) -> list:
         :raises requests.HTTPError: Při HTTP chybě.
         :raises RuianAtomFeedTooLargeError: Když feed překročí limit velikosti.
     """
-    logger.debug("heslar.ruian_sync.vfr_download._parse_atom_feed.start", extra={"url": feed_url})
+    logger.debug("heslar.ruian_sync.vfr_download._parse_atom_feed.start", extra={"request_url": feed_url})
     obsah = _stahni_atom_feed(feed_url, timeout)
     parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True, huge_tree=False)
     root = etree.fromstring(obsah, parser=parser)
@@ -520,7 +520,7 @@ def _je_duveryhodny_odkaz(href: str, feed_url: str, expected_filename: str, povo
         # zalogovat a přeskočit, ne spadnout. Totéž řeší ``_puvod`` o patro níž.
         logger.warning(
             "heslar.ruian_sync.vfr_download._je_duveryhodny_odkaz.odmitnuto",
-            extra={"duvod": "nerozlozitelna_adresa", "href": href[:200]},
+            extra={"info": "nerozlozitelna_adresa", "request_url": href[:200]},
         )
         return False
     jmeno = unquote(cesta.rsplit("/", 1)[-1])
@@ -539,7 +539,7 @@ def _je_duveryhodny_odkaz(href: str, feed_url: str, expected_filename: str, povo
         return True
     logger.warning(
         "heslar.ruian_sync.vfr_download._je_duveryhodny_odkaz.odmitnuto",
-        extra={"duvod": duvod, "href": href[:200], "povolene_puvody": sorted(map(str, povolene))},
+        extra={"info": duvod, "request_url": href[:200], "list": sorted(map(str, povolene))},
     )
     return False
 
@@ -577,6 +577,6 @@ def download_via_atom(
             )
     logger.debug(
         "heslar.ruian_sync.vfr_download.download_via_atom.not_found",
-        extra={"day": day.isoformat(), "expected": expected_filename},
+        extra={"day": day.isoformat(), "file": expected_filename},
     )
     return None

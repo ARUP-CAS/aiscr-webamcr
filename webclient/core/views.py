@@ -51,6 +51,7 @@ from core.models import AntivirusCheckResult, Soubor
 from core.repository_connector import (
     FedoraBinaryFileAlreadyDeletedError,
     FedoraError,
+    FedoraNoResponseError,
     FedoraRepositoryConnector,
     FedoraTransaction,
     FedoraTransactionStatus,
@@ -74,6 +75,7 @@ from core.utils import (
     get_message,
     get_pas_from_envelope,
     get_pian_from_envelope,
+    hodnota_pro_log,
     is_maintenance_in_progress,
     read_import_report_index,
     translate_status_value,
@@ -518,7 +520,7 @@ def rename_file(request, typ_vazby, ident_cely, pk):
             return _rename_file_messages_response(request, SOUBOR_SE_NEPOVEDLO_PREJMENOVAT)
         logger.debug(
             "core.views.rename_file.success",
-            extra={"pk": pk, "old_nazev": old_nazev, "new_nazev": new_nazev, "transaction": fedora_transaction.uid},
+            extra={"pk": pk, "old": old_nazev, "new": new_nazev, "transaction": fedora_transaction.uid},
         )
         messages.add_message(request, messages.SUCCESS, SOUBOR_USPESNE_PREJMENOVAN)
         return JsonResponse({"redirect": _rename_file_safe_redirect(request)})
@@ -1010,7 +1012,7 @@ class NewFileUploadView(BasePostUploadView):
         ident_cely = kwargs.get("ident_cely")
         logger.debug(
             "core.views.post_upload.start",
-            extra={"pk": ident_cely, "source_url": self.source_url},
+            extra={"ident_cely": ident_cely, "source_url": self.source_url},
         )
 
         if not request.user.is_authenticated:
@@ -1160,7 +1162,7 @@ class NewFileUploadView(BasePostUploadView):
                 self.fedora_transaction.rollback_transaction()
                 logger.warning(
                     "core.views._resolve_object_and_name.permission_denied",
-                    extra={"user": request.user.pk, "action": action, "ident_cely": ident_cely},
+                    extra={"user": request.user.pk, "value": action, "ident_cely": ident_cely},
                 )
                 return JsonResponse({"error": str(PRISTUP_ZAKAZAN)}, status=403)
 
@@ -1343,7 +1345,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
             self.fedora_transaction.rollback_transaction()
             logger.error(
                 "core.views.post_upload.error.invalid_typ_vazby_for_update",
-                extra={"typ_vazby": typ_vazby, "ident_cely": ident_cely, "file_id": file_id},
+                extra={"typ_vazby": typ_vazby, "ident_cely": ident_cely, "pk": file_id},
             )
             return JsonResponse(
                 {"error": _("core.views.post_upload.error.invalid_typ_vazby") + f": {typ_vazby}"},
@@ -1367,7 +1369,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
             self.fedora_transaction.rollback_transaction()
             logger.error(
                 "core.views.post_upload.error.object_does_not_exist_or_type_mismatch_update",
-                extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "file_id": file_id},
+                extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": file_id},
             )
             return JsonResponse(
                 {"error": _("core.views.post_upload.error.object_does_not_exist") + " " + ident_cely},
@@ -1380,7 +1382,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
                 self.fedora_transaction.rollback_transaction()
                 logger.warning(
                     "core.views._check_update_permissions.permission_denied",
-                    extra={"user": request.user.pk, "action": action, "ident_cely": ident_cely, "file_id": file_id},
+                    extra={"user": request.user.pk, "value": action, "ident_cely": ident_cely, "pk": file_id},
                 )
                 return JsonResponse({"error": str(PRISTUP_ZAKAZAN)}, status=403)
 
@@ -1428,7 +1430,7 @@ def check_stav_changed(request, zaznam, prefix=None):
                         "core.views.check_stav_changed.state_changed.error",
                         extra={
                             "value": SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
-                            "form_error": str(form_check.errors),
+                            "form_error": hodnota_pro_log(form_check.errors),
                         },
                     )
                 elif isinstance(zaznam, ArcheologickyZaznam):
@@ -1441,20 +1443,20 @@ def check_stav_changed(request, zaznam, prefix=None):
                         "core.views.check_stav_changed.state_changed.error",
                         extra={
                             "value": get_message(zaznam, "NEKDO_ZMENIL_STAV"),
-                            "form_error": str(form_check.errors),
+                            "form_error": hodnota_pro_log(form_check.errors),
                         },
                     )
                 elif isinstance(zaznam, Dokument):
                     messages.add_message(request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV)
                     logger.debug(
                         "core.views.check_stav_changed.state_changed.error",
-                        extra={"value": DOKUMENT_NEKDO_ZMENIL_STAV, "form_error": str(form_check.errors)},
+                        extra={"value": DOKUMENT_NEKDO_ZMENIL_STAV, "form_error": hodnota_pro_log(form_check.errors)},
                     )
                 elif isinstance(zaznam, Projekt):
                     messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
                     logger.debug(
                         "core.views.check_stav_changed.state_changed.error",
-                        extra={"value": PROJEKT_NEKDO_ZMENIL_STAV, "form_error": str(form_check.errors)},
+                        extra={"value": PROJEKT_NEKDO_ZMENIL_STAV, "form_error": hodnota_pro_log(form_check.errors)},
                     )
                 return True
 
@@ -2087,7 +2089,8 @@ class StahnoutDataHistorickaView(LoginRequiredMixin, View):
         :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
 
             :return: Vrací proměnná ``response``.
-            :raises Http404: Vyvolá se při splnění podmínky ``Model is None``.
+            :raises Http404: Vyvolá se při splnění podmínky ``Model is None``; také když historická verze
+                souboru neexistuje nebo Fedora neodpoví.
         """
         Model = self.MODEL_MAP.get(model_name)
         if Model is None:
@@ -2104,9 +2107,20 @@ class StahnoutDataHistorickaView(LoginRequiredMixin, View):
         if model_name == "Soubor":
             record = Model.objects.get(pk=ident_cely)
             response = record.get_soubor_historicky(timestamp)
+            # ``None`` vrací chybějící verze i nedostupná Fedora (``Soubor.read_from_fedora``).
+            if response is None:
+                raise Http404
         else:
             record = Model.objects.get(ident_cely=ident_cely)
-            metadata = record.get_metadata_historicka(timestamp)
+            try:
+                metadata = record.get_metadata_historicka(timestamp)
+            except FedoraNoResponseError as err:
+                # Stažení historické verze jen čte; výpadek Fedory skončí 404 jako u souboru výše.
+                logger.warning(
+                    "core.views.StahnoutDataHistorickaView.fedora_read.failed",
+                    extra={"model_name": model_name, "ident_cely": ident_cely, "error": err},
+                )
+                raise Http404
             response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
             response["Content-Disposition"] = 'attachment; filename="metadata.xml"'
 
@@ -2279,7 +2293,7 @@ def post_ajax_get_list_map_data(request, layer):
 
     base_qs, type_label, geom_field = get_list_map_records_in_envelope(layer, bounds, request)
     if base_qs is None:
-        logger.warning("core.views.post_ajax_get_list_map_data.unknown_layer", extra={"layer": layer})
+        logger.warning("core.views.post_ajax_get_list_map_data.unknown_layer", extra={"value": layer})
         return JsonResponse({"points": [], "algorithm": "detail", "count": 0}, status=200)
 
     # U projektů posíláme i stav, aby je klient rozdělil do vrstev „Projekty - P1 … P7-P8“ jako v detailu.
@@ -3152,7 +3166,7 @@ class DataImportReportDownloadView(LoginRequiredMixin, View):
         if not file_name or not os.path.isfile(file_path):
             logger.error(
                 "core.views.DataImportReportDownloadView.missing_file",
-                extra={"job_id": job_id, "file_path": file_path},
+                extra={"job_id": job_id, "file": file_path},
             )
             raise Http404("core.views.DataImportReportDownloadView.missing_file")
 
@@ -3386,6 +3400,6 @@ class DataImportReset(LoginRequiredMixin, View):
                 status=409,
             )
         logger.warning(
-            "core.views.DataImportReset.reset", extra={"job_id": job_id, "by_user": request.user.id, "phase": phase}
+            "core.views.DataImportReset.reset", extra={"job_id": job_id, "by_user": request.user.id, "value": phase}
         )
         return JsonResponse({"result": "ok"})

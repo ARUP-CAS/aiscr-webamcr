@@ -121,7 +121,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("Režim --dry-run: žádné změny nebyly zapsány."))
             logger.info(
                 "uzivatel.doplnit_potvrzeni_emailu.dry_run",
-                extra={"z_logu": pocet_z_logu, "premigracni": pocet_premigracni, "aktivni": pocet_aktivni},
+                extra={"count": pocet_z_logu, "premigracni": pocet_premigracni, "aktivni": pocet_aktivni},
             )
             return
 
@@ -138,7 +138,7 @@ class Command(BaseCommand):
         logger.info(
             "uzivatel.doplnit_potvrzeni_emailu.done",
             extra={
-                "z_logu": pocet_z_logu,
+                "count": pocet_z_logu,
                 "premigracni": pocet_premigracni,
                 "aktivni": pocet_aktivni,
                 "zbyva_nevyplneno": zbyva_nevyplneno,

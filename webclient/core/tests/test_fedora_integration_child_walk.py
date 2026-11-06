@@ -8,24 +8,26 @@ výpis ``ldp:contains`` v n-triples, rozlišení kontejneru podle 404 na ``fcr:m
 ``ebucore:filename`` z ``Content-Disposition``. Test toto chování ověří na skutečné instanci, takže
 odhalí změnu protokolu, kvůli které by kterýkoli z obou průchodů přestal fungovat.
 
-Běží jen na vyžádání, protože zapisuje do Fedory nastavené v ``settings``. Pod vlastním dočasným
+Vyžaduje ``settings.FEDORA_INTEGRATION_TESTS=True``; výchozí hodnota z ``get_secret``
+je False, ve vývojovém ``dev.py`` je True. Zapisuje do Fedory nastavené v ``settings``. Pod vlastním dočasným
 záznamem si postaví strom souboru a po testu ho smaže i s tombstonem::
 
-    docker compose -f docker-compose-dev-local-db-all-containers.yml exec -e FEDORA_INTEGRATION_TESTS=1 \\
-        web python manage.py test core.tests.test_fedora_integration_child_walk
+    docker compose -f docker-compose-dev-local-db-all-containers.yml exec \\
+        web python manage.py test core.tests.test_fedora_integration_child_walk --debug-mode
 
-Při úplném běhu Selenium testů (``run_tests.py``) se spouští automaticky proti jejich testové Fedoře.
-Nespouštět proti produkční Fedoře.
+Při úplném běhu Selenium testů (``run_tests.py``) jsou součástí výběru testů proti jejich
+testové Fedoře; spustí se pouze při splnění společné kontroly prostředí.
+Nespouštět proti produkční Fedoře. Společná pojistka ověřuje SITE_URL a DEBUG před zápisem.
+Při lokálním SITE_URL vyžaduje DEBUG=True; bez něj se test přeskočí.
 """
 
-import os
 import re
-import unittest
 import uuid as uuid_lib
 from types import SimpleNamespace
 
 import requests
 from core.repository_connector import NON_RDF_SOURCE_LINK, FedoraRepositoryConnector
+from core.tests.integration import require_integration_environment
 from django.conf import settings
 from django.test import SimpleTestCase
 
@@ -36,9 +38,14 @@ FILENAME_PATTERN = re.compile(
 )
 
 
-@unittest.skipUnless(os.environ.get("FEDORA_INTEGRATION_TESTS") == "1", "Set FEDORA_INTEGRATION_TESTS=1 to run.")
 class FedoraChildWalkIntegrationTest(SimpleTestCase):
     """Ověřuje oba průchody potomky souboru na běžící Fedoře."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Ověří přepínač, SITE_URL a DEBUG před prvním zápisem do Fedory."""
+        require_integration_environment(getattr(settings, "SITE_URL", None))
+        super().setUpClass()
 
     def setUp(self):
         """Založí ve Fedoře dočasný záznam se souborem, vnořenou distribucí a paradaty."""

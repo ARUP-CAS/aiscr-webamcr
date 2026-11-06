@@ -190,6 +190,14 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: get_object()
+
+      Vrací spolupráci k potvrzení a ověřuje, že ji smí přihlášený uživatel potvrdit.
+
+      :param queryset: Volitelný queryset předaný rodičovské metodě ``get_object()``.
+      :raises PermissionDenied: Pokud uživatel není vedoucí, archivář, administrátor ani z organizace vedoucího.
+      :return: Vrací nalezený záznam ``UzivatelSpoluprace``.
+
    .. py:method:: post()
 
       Obsluhuje HTTP metodu POST.
@@ -413,7 +421,7 @@ Funkce
    :param request: Parametr ``request`` se předává do volání ``set_aktivni()``, ``add_message()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
    :param pk: Identifikátor ``pk`` používaný pro dohledání cílového záznamu.
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``redirect()``, výsledek volání ``render()``.
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()`` (včetně JSON 403 pro uživatele, který nesmí spolupráci potvrdit), výsledek volání ``redirect()``, výsledek volání ``render()``.
 
 .. py:function:: smazat_spolupraci(request, pk)
 

@@ -99,13 +99,13 @@ class Command(BaseCommand):
             records = pks
             logger.debug(
                 "core.management.commands.save_files_from_storage.start",
-                extra={"count": len(records), "storage_path": storage_path, "type": "pks"},
+                extra={"count": len(records), "file": storage_path, "value": "pks"},
             )
         else:
             records = range(pk_range[0], pk_range[1] + 1)
             logger.debug(
                 "core.management.commands.save_files_from_storage.start",
-                extra={"count": len(records), "storage_path": storage_path, "type": "range"},
+                extra={"count": len(records), "file": storage_path, "value": "range"},
             )
 
         # Process files
@@ -144,7 +144,7 @@ class Command(BaseCommand):
 
         logger.debug(
             "core.management.commands.save_files_from_storage.end",
-            extra={"count": total, "storage_path": storage_path},
+            extra={"count": total, "file": storage_path},
         )
         self.stdout.write(
             self.style.SUCCESS(_("core.management.commands.save_files_from_storage.finished") + " " + str(total))

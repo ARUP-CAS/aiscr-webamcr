@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from core.message_constants import AUTOLOGOUT_AFTER_LOGOUT
@@ -40,6 +41,12 @@ def get_secret(setting, default_value=None):
             return secrets.get(setting, default_value)
     else:
         return secrets.get(setting, "X")
+
+
+# Sdílený přepínač síťových integračních testů; výchozí stav je vypnuto.
+FEDORA_INTEGRATION_TESTS = str(get_secret("FEDORA_INTEGRATION_TESTS", False)).lower() in {"true", "1"}
+INTEGRATION_API_TEST_USERNAME = get_secret("INTEGRATION_API_TEST_USERNAME", "")
+INTEGRATION_API_TEST_PASSWORD = get_secret("INTEGRATION_API_TEST_PASSWORD", "")
 
 
 def get_mail_secret(setting, default_value=None):
@@ -669,8 +676,34 @@ CELERY_RESULT_SERIALIZER = "json"
 SKIP_SELENIUM_TESTS = False
 
 CELERY_BROKER_URL = f"redis://{get_redis_pass()}{REDIS_HOST}:{REDIS_PORT}"
+
+# Nastavení novinkového kanálu
+NEWS_FEED_BASE_URL = "https://arup-cas.github.io/aiscr-news/feed/amcr-info"
+NEWS_FEED_LANGUAGES = ["cs", "en"]  # Supported languages
+NEWS_FEED_CACHE_TTL = 3600  # 1 hour (default)
+NEWS_FEED_CACHE_KEY_PREFIX = "news_feed"
+NEWS_FEED_TIMEOUT = 10
+NEWS_FEED_WARNING_RATE_LIMIT = 3600  # seconds; same error per item logged at most once per this window
+
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+# Liveness ping workeru (viz cron.tasks.celery_worker_liveness_ping a scripts/run-healthcheck_celery.sh).
+# DatabaseScheduler si položku při startu beatu zapíše do django_celery_beat.PeriodicTask.
+#: Konfigurace periodických úloh Celery Beat, včetně obnovy novinkového kanálu.
+CELERY_BEAT_SCHEDULE = {
+    "celery_worker_liveness_ping": {
+        "task": "cron.tasks.celery_worker_liveness_ping",
+        "schedule": 120.0,
+        # Ping se nesmí hromadit ve frontě zaseknutého workeru; prošlý ping worker jen zahodí
+        # (neobnoví klíč), ve frontě ho ale healthcheck dál vidí jako čekající práci.
+        # DatabaseScheduler (ModelEntry._unpack_options) bere jen klíč expire_seconds, expires zahodí.
+        "options": {"expire_seconds": 120},
+    },
+    "load-news-feed": {
+        "task": "cron.tasks.load_news_feed",
+        "schedule": timedelta(seconds=(NEWS_FEED_CACHE_TTL - 60)),  # 59 minutes (cache_ttl - 60 = 3600 - 60)
+    },
+}
 
 FEDORA_USER = get_secret("FEDORA_USER", "")
 FEDORA_USER_PASSWORD = get_secret("FEDORA_USER_PASSWORD", "")
@@ -681,6 +714,16 @@ FEDORA_ADMIN_USER = get_secret("FEDORA_ADMIN_USER", "")
 FEDORA_ADMIN_USER_PASSWORD = get_secret("FEDORA_ADMIN_USER_PASSWORD", "")
 FEDORA_PROTOCOL = get_secret("FEDORA_PROTOCOL", "https")
 FEDORA_TRANSACTION_URL = get_secret("FEDORA_TRANSACTION_URL", "")
+# Timeouty HTTP požadavků do Fedory v sekundách (#4454). Read timeout omezuje čekání na další data
+# od Fedory, ne celkovou dobu požadavku. Výchozí 300 s pokrývá nejdelší pozorované čekání na zámek
+# (~180 s); connect 10 s dává rezervu při swapování hostitele. Zápis obsahu binárních souborů
+# a commit transakce mají 600 s jako ``uwsgi_read_timeout`` v ``proxy/default.conf``: Fedora po
+# přijetí souboru počítá digest a při commitu přesouvá obsah do OCFL (na produkci nejvýš ~8 s).
+# Přenos souboru od klienta se do timeoutu nepočítá, tělo požadavku bufferuje nginx dřív, než
+# požadavek převezme Django.
+FEDORA_CONNECT_TIMEOUT = float(get_secret("FEDORA_CONNECT_TIMEOUT", 10))
+FEDORA_READ_TIMEOUT = float(get_secret("FEDORA_READ_TIMEOUT", 300))
+FEDORA_CONTENT_READ_TIMEOUT = float(get_secret("FEDORA_CONTENT_READ_TIMEOUT", 600))
 
 DATACITE_URL = get_secret("DATACITE_URL", "")
 DOI_USER = get_secret("DOI_USER", "")

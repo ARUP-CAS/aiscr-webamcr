@@ -48,7 +48,7 @@ from core.models import Permissions as p
 from core.models import Soubor, check_permissions, soubor_nazev_razeni_klic
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.translation import format_message
-from core.utils import TwoQueryPaginator, get_cadastre_from_point
+from core.utils import TwoQueryPaginator, get_cadastre_from_point, hodnota_pro_log
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -283,7 +283,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
 
             :return: Vrací výsledek volání ``form_invalid()``.
         """
-        logger.info("pas.views.create.form_invalid", extra={"error": form.errors})
+        logger.info("pas.views.create.form_invalid", extra={"error": hodnota_pro_log(form.errors)})
         messages.error(self.request, FORM_NOT_VALID)
         return super().form_invalid(form)
 
@@ -460,11 +460,11 @@ def edit(request, ident_cely):
             if form.changed_data:
                 logger.debug(
                     "pas.views.edit.form_changed_data",
-                    extra={"data": str(form.changed_data)},
+                    extra={"data": hodnota_pro_log(form.changed_data)},
                 )
             return redirect("pas:detail", ident_cely=ident_cely)
         else:
-            logger.info("pas.views.edit.form_invalid", extra={"error": form.errors})
+            logger.info("pas.views.edit.form_invalid", extra={"error": hodnota_pro_log(form.errors)})
             return redirect("pas:detail", ident_cely=ident_cely)
     else:
         form = CreateSamostatnyNalezForm(
@@ -522,13 +522,13 @@ def edit_ulozeni(request, ident_cely):
             if form.changed_data:
                 logger.debug(
                     "pas.views.edit_ulozeni.form_changed_data",
-                    extra={"data": str(form.changed_data)},
+                    extra={"data": hodnota_pro_log(form.changed_data)},
                 )
             return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
         else:
             logger.info(
                 "pas.views.edit_ulozeni.form_invalid",
-                extra={"error": form.errors},
+                extra={"error": hodnota_pro_log(form.errors)},
             )
     else:
         form = PotvrditNalezForm(
@@ -593,7 +593,7 @@ def vratit(request, ident_cely):
                     sn.igsn_publish(False)
             return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.info("pas.views.vratit.form_invalid", extra={"error": form.errors})
+            logger.info("pas.views.vratit.form_invalid", extra={"error": hodnota_pro_log(form.errors)})
     else:
         form = VratitForm(initial={"old_stav": sn.stav})
     context = {
@@ -649,7 +649,7 @@ def odeslat(request, ident_cely):
         return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
 
     warnings = sn.check_pred_odeslanim()
-    logger.info("pas.views.odeslat.warnings", extra={"warning": warnings})
+    logger.info("pas.views.odeslat.warnings", extra={"warning": hodnota_pro_log(warnings)})
     if warnings:
         request.session["temp_data"] = warnings
         messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NELZE_ODESLAT)
@@ -696,7 +696,7 @@ def potvrdit(request, ident_cely):
             status=403,
         )
     warnings = sn.check_pred_odeslanim()
-    logger.info("pas.views.potvrdit.warnings", extra={"warning": warnings})
+    logger.info("pas.views.potvrdit.warnings", extra={"warning": hodnota_pro_log(warnings)})
     if warnings:
         request.session["temp_data"] = warnings
         messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NELZE_POTVRDIT)
@@ -714,7 +714,7 @@ def potvrdit(request, ident_cely):
             form_obj.save()
             return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.info("pas.views.potvrdit.form_invalid", extra={"error": form.errors})
+            logger.info("pas.views.potvrdit.form_invalid", extra={"error": hodnota_pro_log(form.errors)})
     else:
         form = PotvrditNalezForm(
             instance=sn,
@@ -757,7 +757,7 @@ def archivovat(request, ident_cely):
             status=403,
         )
     warnings = sn.check_pred_odeslanim()
-    logger.info("pas.views.archivovat.warnings", extra={"warning": warnings})
+    logger.info("pas.views.archivovat.warnings", extra={"warning": hodnota_pro_log(warnings)})
     if warnings:
         request.session["temp_data"] = warnings
         messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NELZE_ARCHIVOVAT)
@@ -986,30 +986,34 @@ def smazat(request, ident_cely):
         nalez.deleted_by_user = request.user
         fedora_transaction = nalez.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
         try:
-            nalez.igsn_delete()
-            nalez.close_active_transaction_when_finished = True
-            nalez.record_deletion(nalez.active_transaction)
-            resp1 = nalez.delete()
-            if resp1:
-                logger.info(
-                    "pas.views.smazat.deleted",
-                    extra={"value": resp1},
-                )
-                return JsonResponse({"redirect": reverse("pas:index")})
-            else:
-                logger.warning("pas.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
-                nalez.igsn_update(False, True)
-                fedora_transaction.rollback_transaction()
-                return JsonResponse(
-                    {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
-                    status=403,
-                )
+            # Savepoint: při chybě se smazání odroluje a spojení zůstane použitelné pro obnovu IGSN.
+            with transaction.atomic():
+                nalez.igsn_delete()
+                nalez.close_active_transaction_when_finished = True
+                # Smazání ve Fedoře zaznamená pre_delete signál uvnitř DB transakce.
+                resp1 = nalez.delete()
+                if resp1:
+                    logger.info(
+                        "pas.views.smazat.deleted",
+                        extra={"value": resp1},
+                    )
+                    return JsonResponse({"redirect": reverse("pas:index")})
+                else:
+                    logger.warning("pas.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
+                    nalez.igsn_update(False, True)
+                    fedora_transaction.rollback_transaction()
+                    return JsonResponse(
+                        {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+                        status=403,
+                    )
         except (DoiWriteError, FedoraError) as err:
             logger.info("pas.views.smazat.error", extra={"error": err, "ident_cely": ident_cely})
-            transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
             if isinstance(err, FedoraError):
+                # Obnova IGSN načítá záznam z DB, proto musí proběhnout před set_rollback(True);
+                # potom by každý dotaz skončil TransactionManagementError.
                 nalez.igsn_update(False, True)
+            transaction.set_rollback(True)
             return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav": nalez.stav})
@@ -1097,7 +1101,7 @@ def zadost(request):
                 )
                 return redirect("pas:spoluprace_list")
         else:
-            logger.info("pas.views.zadost.form_invalid", extra={"error": form.errors})
+            logger.info("pas.views.zadost.form_invalid", extra={"error": hodnota_pro_log(form.errors)})
     else:
         form = CreateZadostForm()
 
@@ -1240,9 +1244,11 @@ def aktivace(request, pk):
     :param request: Parametr ``request`` se předává do volání ``set_aktivni()``, ``add_message()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
     :param pk: Identifikátor ``pk`` používaný pro dohledání cílového záznamu.
 
-        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``redirect()``, výsledek volání ``render()``.
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()`` (včetně JSON 403 pro uživatele, který nesmí spolupráci potvrdit), výsledek volání ``redirect()``, výsledek volání ``render()``.
     """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
+    if not spoluprace.muze_potvrdit(request.user):
+        return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
     if request.method == "POST":
         fedora_transaction = FedoraTransaction()
         try:
@@ -1260,7 +1266,7 @@ def aktivace(request, pk):
             return redirect(reverse("pas:spoluprace_list"))
     else:
         warnings = spoluprace.check_pred_aktivaci()
-        logger.info("pas.views.aktivace.warnings", extra={"warning": warnings})
+        logger.info("pas.views.aktivace.warnings", extra={"warning": hodnota_pro_log(warnings)})
         if warnings:
             messages.add_message(request, messages.ERROR, f"{SPOLUPRACI_NELZE_AKTIVOVAT} {warnings[0]}")
             return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
@@ -1284,6 +1290,19 @@ class AktivaceEmailView(LoginRequiredMixin, DetailView):
 
     template_name = "pas/potvrdit_spolupraci.html"
     model = UzivatelSpoluprace
+
+    def get_object(self, queryset=None):
+        """
+        Vrací spolupráci k potvrzení a ověřuje, že ji smí přihlášený uživatel potvrdit.
+
+        :param queryset: Volitelný queryset předaný rodičovské metodě ``get_object()``.
+        :raises PermissionDenied: Pokud uživatel není vedoucí, archivář, administrátor ani z organizace vedoucího.
+        :return: Vrací nalezený záznam ``UzivatelSpoluprace``.
+        """
+        obj = super().get_object(queryset)
+        if not obj.muze_potvrdit(self.request.user):
+            raise PermissionDenied()
+        return obj
 
     def post(self, request, *args, **kwargs):
         """
@@ -1363,7 +1382,7 @@ class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
         context = self.get_context_data()
         warnings = context["object"].check_pred_deaktivaci()
         if warnings:
-            logger.info("pas.views.deaktivace.warnings", extra={"warning": warnings})
+            logger.info("pas.views.deaktivace.warnings", extra={"warning": hodnota_pro_log(warnings)})
             messages.add_message(request, messages.ERROR, f"{SPOLUPRACI_NELZE_DEAKTIVOVAT} {warnings[0]}")
             return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
         return self.render_to_response(context)
@@ -1603,7 +1622,7 @@ def post_point_position_2_katastre(request):
         :return: JsonResponse s ``katastr_name`` (prázdný pokud nenalezen).
     """
     body = json.loads(request.body.decode("utf-8"))
-    logger.debug("pas.views.post_point_position_2_katastre", extra={"data": body})
+    logger.debug("pas.views.post_point_position_2_katastre", extra={"data": hodnota_pro_log(body)})
     katastr = get_cadastre_from_point((body["x1"], body["x2"]))
     if katastr is not None:
         return JsonResponse({"katastr_name": katastr.nazev}, status=200)

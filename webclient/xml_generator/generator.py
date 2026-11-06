@@ -134,7 +134,7 @@ def stable_related_records(related_manager):
     except (FieldError, TypeError, ValueError) as err:
         logger.warning(
             "xml_generator.generator.stable_related_records.order_by.error",
-            extra={"model": queryset.model.__name__, "error": err},
+            extra={"class_name": queryset.model.__name__, "error": err},
         )
         return queryset
 

@@ -70,24 +70,13 @@ def komponenta_delete(sender, instance: Komponenta, **kwargs):
     close_transaction = instance.close_active_transaction_when_finished
     if instance.komponenta_vazby.navazany_objekt:
         navazany_objekt = instance.komponenta_vazby.navazany_objekt
-
-        def save_metadata():
-            """
-                       Uloží metadata.
-
-            Výsledek provedené změny nad cílovým objektem.
-            """
-            if isinstance(navazany_objekt, DokumentCast):
-                navazany_objekt.dokument.save_metadata(fedora_transaction, skip_container_check=True)
-            elif isinstance(navazany_objekt, DokumentacniJednotka):
-                navazany_objekt.archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=True)
-            if close_transaction:
-                fedora_transaction.mark_transaction_as_closed()
-
+        # Zápisy do Fedory uvnitř DB transakce, aby chyba Fedory vedla k rollbacku smazání (#4437).
+        if isinstance(navazany_objekt, DokumentCast):
+            navazany_objekt.dokument.save_metadata(fedora_transaction, skip_container_check=True)
+        elif isinstance(navazany_objekt, DokumentacniJednotka):
+            navazany_objekt.archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=True)
         if close_transaction:
-            transaction.on_commit(save_metadata)
-        else:
-            save_metadata()
+            transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
     logger.debug(
         "komponenta.signals.komponenta_delete.end",
         extra={"transaction": getattr(fedora_transaction, "uid", None), "pk": instance.pk},

@@ -90,13 +90,13 @@ class CreatorRdfParityTest(SimpleTestCase):
         :return: Seznam trojic ``(request_type, headers, data)`` v pořadí odeslání.
         """
         zachyceno = []
+        url_pozadavku = "https://fedora.example/rest/dummy"
         # Některé metody s odpovědí dál pracují (``result.text.split("/")[-1]``,
         # ``result.status_code``), takže atrapa musí vracet reálné hodnoty; 404 drží
-        # ``record_deletion`` ve větvi, která marker teprve zakládá.
-        odpoved = SimpleNamespace(
-            text=f"https://fedora.example/rest/{SERVER_NAME}/record/{IDENT_CELY}/file/uuid-1",
-            status_code=404,
-        )
+        # ``record_deletion`` ve větvi, která marker teprve zakládá. URI vytvořeného zdroje
+        # musí odpovídat URL sestavené connectorem, jinak ``_create_binary_file_resource``
+        # vyvolá ``FedoraError`` (rozdílná cesta od Fedory, #4302).
+        odpoved = SimpleNamespace(text=url_pozadavku, status_code=404)
 
         def zachyt(url, request_type, headers=None, data=None, **kwargs):
             zachyceno.append((request_type, headers, data))
@@ -104,7 +104,7 @@ class CreatorRdfParityTest(SimpleTestCase):
 
         spravci = [
             mock.patch.object(connector, "_send_request", side_effect=zachyt),
-            mock.patch.object(connector, "_get_request_url", return_value="https://fedora.example/rest/dummy"),
+            mock.patch.object(connector, "_get_request_url", return_value=url_pozadavku),
         ]
         spravci += [mock.patch.object(connector, nazev) for nazev in obejit]
         for spravce in spravci:
@@ -132,8 +132,9 @@ class CreatorRdfParityTest(SimpleTestCase):
         """
         Každá spustitelná kopie creator turtle v connectoru musí být shodná s ``_creator_rdf``.
 
-        Connector má tenhle fragment rozepsaný na čtyřech místech a porovnávají se
-        všechna: ``_create_container``, ``_create_binary_file_container``,
+        Connector má tenhle fragment rozepsaný na třech místech a porovnávají se
+        všechna: ``_create_container``, ``_create_binary_file_container`` a
+        ``_create_binary_file_resource`` - ten se spouští přes obě metody, které ho volají,
         ``save_binary_file`` a ``migrate_binary_file``.
         """
         ocekavane = self._writer()._creator_rdf()
@@ -325,13 +326,13 @@ class PocetKopiiTurtleTest(SimpleTestCase):
     že se musí ručně zkontrolovat shoda s ``_FastFedoraWriter``.
     """
 
-    #: Metody, které smí obsahovat creator turtle - obsah všech čtyř porovnává parity
-    #: test, tenhle seznam navíc odhalí pátou kopii, na kterou by parity test nesáhl.
+    #: Metody, které smí obsahovat creator turtle - obsah prvních tří porovnává parity
+    #: test, tenhle seznam navíc odhalí další kopii, na kterou by parity test nesáhl.
     OCEKAVANE_CREATOR = {
         "_create_container",
         "_create_binary_file_container",
-        "save_binary_file",
-        "migrate_binary_file",
+        # Sdílený pro save_binary_file i migrate_binary_file (#4302).
+        "_create_binary_file_resource",
         # Intermediate distribution containers (#3527); the fast writer never creates them.
         "_ensure_child_containers",
     }
