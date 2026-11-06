@@ -153,6 +153,25 @@ _XSD_BYTES_CACHE: dict[str, bytes] = {}
 _XSD_BYTES_CACHE_LOCK = threading.Lock()
 
 
+def _rollback_fedora_transaction(fedora_transaction) -> None:
+    """
+    Provede záložní rollback aktivní Fedora transakce a případné selhání jen zaloguje.
+
+    Po selhaném commitu (timeout, 409) zůstává transakce ve stavu ``ACTIVE`` a rollback může selhat
+    stejně (další timeout, 404/410 u zahozené transakce). Výjimka z rollbacku by v obslužné větvi
+    přeskočila uvolnění zámku záznamu a vrácení řízené chybové odpovědi (#4473).
+
+    :param fedora_transaction: Transakce, která se má zrušit; neaktivní nebo dosud nevytvořená (``None``)
+        transakce se nechá být.
+    """
+    if fedora_transaction is None or fedora_transaction.status != FedoraTransactionStatus.ACTIVE:
+        return
+    try:
+        fedora_transaction.rollback_transaction()
+    except Exception as rollback_err:
+        logger.warning("api.views._rollback_fedora_transaction.rollback_failed", extra={"error": rollback_err})
+
+
 def _xsd_redis_key(url: str) -> str:
     """
     Sestaví klíč pro Redis cache pro XSD schéma na zadané URL.
@@ -2886,8 +2905,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 instance.save()
         except ImportValidationException as exc:
             logger.warning("api.views.SamostatnyNalezXmlImportView.post.import_validation_error", extra={"error": exc})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             return self._fail(
                 log_entry,
                 {"validation_errors": [e.to_dict() for e in exc.import_errors]},
@@ -2895,8 +2913,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
             )
         except IntegrityError as err:
             logger.warning("api.views.SamostatnyNalezXmlImportView.post.integrity_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             constraint = getattr(getattr(err.__cause__, "diag", None), "constraint_name", None)
             if constraint == "osoba_jmeno_prijmeni_key":
                 detail = _("api.views.SamostatnyNalezXmlImportView.post.nalezce_already_exists")
@@ -2909,8 +2926,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
             )
         except FedoraError as err:
             logger.error("api.views.SamostatnyNalezXmlImportView.post.fedora_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezXmlImportView.post.internal_error")},
@@ -2918,8 +2934,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
             )
         except DatabaseError as err:
             logger.error("api.views.SamostatnyNalezXmlImportView.post.database_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezXmlImportView.post.internal_error")},
@@ -2927,8 +2942,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
             )
         except Exception as err:
             logger.error("api.views.SamostatnyNalezXmlImportView.post.unexpected_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezXmlImportView.post.internal_error")},
@@ -2946,8 +2960,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 "api.views.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving",
                 extra={"error": err},
             )
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving")},
@@ -3141,12 +3154,13 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
                 status.HTTP_429_TOO_MANY_REQUESTS,
             )
 
-        log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
-        log_entry.save(update_fields=["status"])
-
-        old_evidencni_cislo = instance.evidencni_cislo
-        fedora_transaction = FedoraTransaction(transaction_user=request.user)
+        fedora_transaction = None
         try:
+            log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
+            log_entry.save(update_fields=["status"])
+
+            old_evidencni_cislo = instance.evidencni_cislo
+            fedora_transaction = FedoraTransaction(transaction_user=request.user)
             with transaction.atomic():
                 instance.evidencni_cislo = evidencni_cislo
                 instance.active_transaction = fedora_transaction
@@ -3158,8 +3172,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             self._update_igsn_if_archived(instance)
         except DoiWriteError as err:
             logger.error("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.igsn_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3168,8 +3181,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             )
         except FedoraError as err:
             logger.error("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3178,8 +3190,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             )
         except DatabaseError as err:
             logger.error("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.database_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3190,8 +3201,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             logger.error(
                 "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.unexpected_error", extra={"error": err}
             )
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3207,8 +3217,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
                 "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error_reading_metadata",
                 extra={"error": err},
             )
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3420,38 +3429,39 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
                 status.HTTP_429_TOO_MANY_REQUESTS,
             )
 
-        log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
-        log_entry.save(update_fields=["status"])
-
-        mimetype = Soubor.get_mime_types(uploaded_file)
-        mime_extensions = Soubor.get_file_extension_by_mime(uploaded_file)
-        if len(mime_extensions) == 0:
-            self._release_record_lock(ident_cely, lock_ttl)
-            return self._fail(
-                log_entry,
-                {"detail": _("core.views.post_upload.mime_rename_failed")},
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-
-        new_name = get_next_soubor_name(instance, uploaded_file.name)
-        if new_name is False:
-            self._release_record_lock(ident_cely, lock_ttl)
-            return self._fail(
-                log_entry,
-                {
-                    "detail": format_message(
-                        gettext_noop("core.views.post_upload.error.maximal_file_name_exceeded"), ident=ident_cely
-                    )
-                },
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-        new_name = get_mime_safe_soubor_name(new_name, new_name, mime_extensions)
-
-        if mimetype in ["image/png", "image/jpeg", "image/tiff"]:
-            binary_data = Soubor.remove_gps_data(binary_data)
-
-        fedora_transaction = FedoraTransaction(transaction_user=request.user)
+        fedora_transaction = None
         try:
+            log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
+            log_entry.save(update_fields=["status"])
+
+            mimetype = Soubor.get_mime_types(uploaded_file)
+            mime_extensions = Soubor.get_file_extension_by_mime(uploaded_file)
+            if len(mime_extensions) == 0:
+                self._release_record_lock(ident_cely, lock_ttl)
+                return self._fail(
+                    log_entry,
+                    {"detail": _("core.views.post_upload.mime_rename_failed")},
+                    status.HTTP_422_UNPROCESSABLE_ENTITY,
+                )
+
+            new_name = get_next_soubor_name(instance, uploaded_file.name)
+            if new_name is False:
+                self._release_record_lock(ident_cely, lock_ttl)
+                return self._fail(
+                    log_entry,
+                    {
+                        "detail": format_message(
+                            gettext_noop("core.views.post_upload.error.maximal_file_name_exceeded"), ident=ident_cely
+                        )
+                    },
+                    status.HTTP_422_UNPROCESSABLE_ENTITY,
+                )
+            new_name = get_mime_safe_soubor_name(new_name, new_name, mime_extensions)
+
+            if mimetype in ["image/png", "image/jpeg", "image/tiff"]:
+                binary_data = Soubor.remove_gps_data(binary_data)
+
+            fedora_transaction = FedoraTransaction(transaction_user=request.user)
             connector = FedoraRepositoryConnector(instance, fedora_transaction, skip_container_check=False)
             rep_bin_file = connector.save_binary_file(new_name, mimetype, binary_data)
             soubor_instance = Soubor(
@@ -3475,8 +3485,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             self._update_igsn_if_archived(instance)
         except DoiWriteError as err:
             logger.error("api.views.SamostatnyNalezFotografieUploadView.post.igsn_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3485,8 +3494,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             )
         except FedoraError as err:
             logger.error("api.views.SamostatnyNalezFotografieUploadView.post.fedora_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3495,8 +3503,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             )
         except DatabaseError as err:
             logger.error("api.views.SamostatnyNalezFotografieUploadView.post.database_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3505,8 +3512,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             )
         except Exception as err:
             logger.error("api.views.SamostatnyNalezFotografieUploadView.post.unexpected_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3521,8 +3527,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             logger.error(
                 "api.views.SamostatnyNalezFotografieUploadView.post.fedora_error_reading_metadata", extra={"error": err}
             )
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,

@@ -13,6 +13,7 @@ import requests
 from core.models import Soubor
 from core.repository_connector import (
     _CONTENT_REQUEST_TYPES,
+    FedoraError,
     FedoraNoResponseError,
     FedoraRepositoryConnector,
     FedoraRequestType,
@@ -202,6 +203,48 @@ class TransactionRequestTimeoutTest(SimpleTestCase):
             with self.assertRaisesRegex(FedoraTransactionCommitFailedError, "^ROLLBACK: "):
                 transaction._send_transaction_request(FedoraTransactionOperation.ROLLBACK)
 
+    def test_commit_failed_je_fedora_error_a_nese_transakci(self):
+        """
+        Selhání commitu je ``FedoraError`` nesoucí transakci, aby ho zachytily ``handle_fedora_error``,
+        ``ErrorMiddleware`` i ``except FedoraError`` v API a provedly rollback a uvolnění zámku (#4473).
+        """
+        transaction = self._transaction()
+        session = mock.Mock(**{"put.return_value.status_code": 409, "put.return_value.text": "Conflict"})
+        with mock.patch("core.repository_connector._get_fedora_session", return_value=session), mock.patch.object(
+            transaction, "_save_transaction_result_to_redis"
+        ), self.assertLogs("core.repository_connector", level="ERROR"):
+            with self.assertRaises(FedoraError) as ctx:
+                transaction._send_transaction_request(FedoraTransactionOperation.COMMIT)
+        self.assertIsInstance(ctx.exception, FedoraTransactionCommitFailedError)
+        self.assertIs(ctx.exception.fedora_transaction, transaction)
+        self.assertEqual(ctx.exception.code, 409)
+        self.assertEqual(ctx.exception.ident_cely, "X-M-000023036")
+        self.assertEqual(str(ctx.exception), "Conflict")
+
+    def test_commit_failed_projde_rollback_cestou_dekoratoru_a_middleware(self):
+        """``handle_fedora_error`` i ``ErrorMiddleware`` selhání commitu zachytí a provedou rollback transakce."""
+        from core.middleware import ErrorMiddleware
+        from django.test import RequestFactory
+        from fedora_management.decorators import handle_fedora_error
+
+        transaction = mock.Mock(redirect_on_error=False, redirect_url=None)
+        error = FedoraTransactionCommitFailedError("timeout", fedora_transaction=transaction)
+
+        def view(request):
+            raise error
+
+        with mock.patch("fedora_management.decorators.transaction.set_rollback") as set_rollback:
+            with self.assertRaises(FedoraTransactionCommitFailedError):
+                handle_fedora_error(view)(RequestFactory().get("/"))
+        transaction.rollback_transaction.assert_called_once_with()
+        set_rollback.assert_called_once_with(True)
+
+        transaction.reset_mock()
+        with mock.patch("core.middleware.render") as render:
+            ErrorMiddleware(mock.Mock()).process_exception(RequestFactory().get("/"), error)
+        transaction.rollback_transaction.assert_called_once_with()
+        self.assertEqual(render.call_args.kwargs["status"], 500)
+
     def test_timeout_vytvoreni_transakce_je_fedora_no_response_error(self):
         """Vypršení při zakládání transakce skončí ``FedoraNoResponseError`` jako výpadek spojení."""
         session = mock.Mock(**{"post.side_effect": requests.ReadTimeout()})
@@ -209,6 +252,31 @@ class TransactionRequestTimeoutTest(SimpleTestCase):
             with self.assertRaises(FedoraNoResponseError):
                 FedoraTransaction()
         self.assertEqual(session.post.call_args.kwargs["timeout"], (10.0, 300.0))
+
+
+class ContinueMedataProcessingCommitFailedTest(SimpleTestCase):
+    """Selhání commitu v administrativní dávce musí propadnout do dávkového handleru (``is_error``, ERROR log)."""
+
+    def test_commit_failed_propadne_ven(self):
+        """``process_record`` selhání commitu nepolkne jako běžnou ``FedoraError``."""
+        from fedora_management.views import ContinueMedataProcessing
+
+        record = mock.Mock(spec=User, ident_cely="U-000001")
+        with mock.patch("fedora_management.views.FedoraTransaction") as fedora_transaction:
+            fedora_transaction.return_value.mark_transaction_as_closed.side_effect = FedoraTransactionCommitFailedError(
+                "COMMIT: timeout"
+            )
+            with self.assertRaises(FedoraTransactionCommitFailedError):
+                ContinueMedataProcessing().process_record(record, {"result": None})
+
+    def test_ostatni_fedora_error_zustava_obslouzena(self):
+        """Ostatní ``FedoraError`` se dál vrací jako výsledek záznamu bez výjimky."""
+        from fedora_management.views import ContinueMedataProcessing
+
+        record = mock.Mock(spec=User, ident_cely="U-000001")
+        with mock.patch("fedora_management.views.FedoraTransaction", side_effect=FedoraNoResponseError("u", "m", None)):
+            result = ContinueMedataProcessing().process_record(record, {"result": None})
+        self.assertIsNotNone(result["result"])
 
 
 class SouborReadFromFedoraTest(SimpleTestCase):
