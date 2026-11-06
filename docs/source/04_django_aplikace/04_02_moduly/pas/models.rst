@@ -245,7 +245,7 @@ Třídy
       Potvrdit smí určený vedoucí, uživatel ze stejné organizace jako vedoucí a archivář či administrátor.
 
       Větev pro stejnou organizaci záměrně nekontroluje roli: omezení na archeologa zajišťuje matice práv
-      (``uzivatelska_prava.csv``, trasy ``spoluprace/aktivace-email/<pk>`` a ``spoluprace/aktivovat/<pk>``), která
+      (``uzivatelska_prava.csv``, trasy ``spoluprace/aktivace-email/<int:pk>`` a ``spoluprace/aktivovat/<int:pk>``), která
       badateli přístup zakazuje (``Základní_B = X``) a archeologovi povoluje jen vlastní organizaci (``US.ours``).
       Metodu proto nelze volat z tras mimo matici práv bez vlastní kontroly role; závislost hlídá test
       ``MaticePravSpolupraceTest``.
