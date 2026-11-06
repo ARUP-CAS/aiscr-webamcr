@@ -1750,7 +1750,9 @@ class Permissions(models.Model):
             ):
                 return True
             if ownership == self.ownershipChoices.our:
-                if self.logged_in_user.organizace in self.permission_object.get_create_org():
+                create_orgs = self.permission_object.get_create_org()
+                allowed_org_ids = set(self.logged_in_user.organizace_podstrom_ids)
+                if any(org and org.pk in allowed_org_ids for org in create_orgs):
                     return True
             return False
         return True

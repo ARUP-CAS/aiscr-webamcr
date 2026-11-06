@@ -5,9 +5,11 @@ from unittest.mock import MagicMock, patch
 
 from core.constants import ROLE_BADATEL_ID
 from core.forms import ImportDataAdminForm
+from core.import_data_mappers import OrganizaceMapper
 from core.tests.fake_redis import FakeRedis
 from cron import tasks as cron_tasks
 from django.contrib.auth.models import Group
+from django.db import DatabaseError
 from django.test import TestCase
 from heslar.hesla import HESLAR_LICENCE, HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
 from heslar.models import Heslar, HeslarNazev
@@ -266,6 +268,38 @@ class RunDataImportOrganizaceTest(TestCase):
             "save_metadata mělo být zavoláno i při UPDATE.",
         )
 
+    def test_update_revalidates_organization_hierarchy_after_approval(self):
+        """Před importem odmítne cyklus vytvořený změnou stromu po schválení validace."""
+        organization = self._create_existing_organizace()
+        payload = self._build_insert_payload(ORG_IDENT, ORG_NAZEV_ZKRACENY)
+        payload["soucast"] = self.user_organizace.ident_cely
+        OrganizaceMapper.validate_batch_ordering([payload], ImportDataAdminForm.PERFORMED_ACTION_UPDATE)
+
+        with patch(
+            "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
+            return_value=True,
+        ), patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None):
+            self.user_organizace.soucast = organization
+            self.user_organizace.save()
+
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_UPDATE)
+        serialized_record = self._build_insert_payload(ORG_IDENT, ORG_NAZEV_ZKRACENY)
+        serialized_record["soucast"] = self.user_organizace.ident_cely
+        fake_redis.set(
+            f"import_data_{JOB_ID}_record_0",
+            json.dumps(serialized_record),
+        )
+        fake_redis.set(f"import_data_organization_record_ids_{JOB_ID}", json.dumps([0]))
+
+        self._run_import(fake_redis)
+
+        organization.refresh_from_db()
+        self.assertIsNone(organization.soucast_id)
+        self.assertEqual(organization.nazev, "Původní org")
+        self.user_organizace.refresh_from_db()
+        self.assertEqual(self.user_organizace.soucast_id, organization.pk)
+        self._assert_import_failed(fake_redis)
+
     def test_delete_removes_organizace_from_database(self):
         """run_data_import s akcí DELETE odstraní záznam z databáze."""
         self._create_existing_organizace()
@@ -437,3 +471,55 @@ class RunDataImportOrganizaceTest(TestCase):
             decoded,
             "Po úspěšném importu musí být v progress_details značka ``success``.",
         )
+
+    def test_attribute_update_saves_only_imported_fields(self):
+        """Import atributů nepřepíše rodiče změněného po načtení organizace."""
+        organization = self._create_existing_organizace()
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_UPDATE)
+        fake_redis.set(
+            f"import_data_{JOB_ID}_record_0",
+            json.dumps({"__file_name": ORGANIZACE_FILE_KEY, "ident_cely": ORG_IDENT, "nazev": "Nový název"}),
+        )
+        original_save = Organizace.save
+        imported_fields = []
+
+        def save_with_concurrent_parent(record, *args, **kwargs):
+            if record.pk == organization.pk:
+                Organizace.objects.filter(pk=record.pk).update(soucast=self.user_organizace)
+                imported_fields.append(kwargs.get("update_fields"))
+            return original_save(record, *args, **kwargs)
+
+        with patch.object(Organizace, "save", save_with_concurrent_parent):
+            self._run_import(fake_redis)
+        organization.refresh_from_db()
+        self.assertEqual(organization.soucast_id, self.user_organizace.pk)
+        self.assertEqual(organization.nazev, "Nový název")
+        self.assertEqual(imported_fields, [{"nazev"}])
+
+    def test_import_completion_check_error_is_logged_and_does_not_interrupt_cleanup(self):
+        """Selhání závěrečné diagnostiky nepřeruší úklid ani nezmění úspěšný import."""
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_INSERT)
+        with patch.object(Organizace, "get_hierarchy_cycles", side_effect=DatabaseError("check unavailable")):
+            with self.assertLogs("cron.tasks", level="ERROR") as logs:
+                self._run_import(fake_redis)
+        self.assertTrue(any(record.msg.endswith("organization_hierarchy_check_failed") for record in logs.records))
+        self.assertEqual(fake_redis.get(f"import_data_phase_{JOB_ID}"), b"finished")
+
+    def test_completion_detects_cycle_written_outside_import_validation(self):
+        """Kontrola po importu odhalí skutečný cyklus zapsaný mimo validační cestu."""
+        fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_INSERT)
+        original_save = Organizace.save
+
+        def save_with_direct_sql_cycle(record, *args, **kwargs):
+            result = original_save(record, *args, **kwargs)
+            if record.ident_cely == ORG_IDENT:
+                Organizace.objects.filter(pk=record.pk).update(soucast_id=record.pk)
+            return result
+
+        with patch.object(Organizace, "save", save_with_direct_sql_cycle):
+            with self.assertLogs("cron.tasks", level="ERROR") as logs:
+                self._run_import(fake_redis)
+        log = next(record for record in logs.records if record.msg.endswith("organization_hierarchy_cycles"))
+        self.assertEqual(log.cycles, [[ORG_IDENT, ORG_IDENT]])
+        self.assertEqual(log.job_id, JOB_ID)
+        self.assertEqual(fake_redis.get(f"import_data_phase_{JOB_ID}"), b"finished")

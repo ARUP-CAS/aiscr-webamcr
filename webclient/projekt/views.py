@@ -700,7 +700,7 @@ class ProjektPermissionFilterMixin(PermissionFilterMixin):
             :return: Vrací výsledek volání ``Q()``.
         """
         if ownership == Permissions.ownershipChoices.our:
-            return Q(**{"organizace": self.request.user.organizace})
+            return Q(organizace__in=self.request.user.organizace_podstrom_ids)
         else:
             return Q()
 
@@ -1960,13 +1960,14 @@ class ProjectTableRowView(LoginRequiredMixin, View):
         """
         Vrací výsledek operace.
 
-        Archeologové vidí pouze projekty průzkumového typu ze své organizace
-        v aktivním stavu (zahájený nebo ukončený v terénu).
+        Archeologové vidí projekty průzkumového typu ze své organizace a jejích
+        podřízených organizací v aktivním stavu (zahájený nebo ukončený v terénu).
 
         :param request: Parametr ``request`` předává se do volání ``get()``, pracuje se s atributy ``GET``, ``user``.
 
             :return: Vrací výsledek volání ``HttpResponse()``.
-            :raises PermissionDenied: Pokud archeolog žádá projekt mimo svou organizaci nebo mimo povolené stavy.
+            :raises PermissionDenied: Pokud archeolog žádá projekt mimo svou organizaci a její podřízené organizace
+                nebo mimo povolené stavy.
         """
         projekt_id = request.GET.get("id")
         if not projekt_id:
@@ -1975,8 +1976,8 @@ class ProjectTableRowView(LoginRequiredMixin, View):
             qs = Projekt.objects.filter(
                 id=projekt_id,
                 typ_projektu=TYP_PROJEKTU_PRUZKUM_ID,
-                organizace=request.user.organizace,
                 stav__in=[PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_UKONCENY_V_TERENU],
+                organizace__in=request.user.organizace_podstrom_ids,
             )
             if not qs.exists():
                 raise PermissionDenied

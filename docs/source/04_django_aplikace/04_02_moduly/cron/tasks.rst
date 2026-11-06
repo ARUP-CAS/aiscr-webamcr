@@ -402,6 +402,13 @@ Funkce
        * - ``cron.tasks.run_data_import.finished``
          - Import doběhl úspěšně, nebyl zastaven a nebyla nastavena chyba.
 
+   Pokud import zpracovával organizační záznamy, závěrečný blok ``finally`` při úklidu po
+   importní fázi zkontroluje celou hierarchii organizací, i když importní transakce selhala
+   nebo byla vrácena zpět. Nalezené cykly pouze zaloguje spolu s ID úlohy; tato diagnostika
+   nemění výsledek importu ani jeho terminální fázi. Stejně se pouze zaznamená chyba samotné
+   kontroly a pokračuje úklid. Jde o kontrolu celé databáze, odlišnou od preimportní validace,
+   která kontroluje jen změněné vztahy a jejich dosažitelné předky.
+
    :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem
        "Missing required DIRECTORY_PATH setting".
 
