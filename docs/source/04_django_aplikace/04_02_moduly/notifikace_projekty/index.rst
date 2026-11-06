@@ -12,3 +12,4 @@ Dokumentace modulu notifikace_projekty.
    views
    signals
    tasks
+   tests

@@ -14,6 +14,7 @@ from core.constants import (
 from core.forms import ImportDataAdminForm
 from core.models import SouborVazby
 from core.tests.fake_redis import FakeRedis
+from core.tests.notification_fixtures import mock_project_notifications
 from cron import tasks as cron_tasks
 from cron.tests._import_test_fixtures import (
     create_archeologicky_zaznam,
@@ -98,6 +99,17 @@ def patched_fedora():
 
 class RunDataImportMapperTestBase(TestCase):
     """Společný základ pro jednoúčelové ``run_data_import`` smoke testy."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Drží Fedora mocky aktivní po celou dobu třídy.
+
+        Pokrývá tak i fixtures vytvářené v ``setUpTestData`` potomků po volání
+        ``super()`` a objekty zakládané přímo v tělech testů (např. ``Pes`` nebo
+        ``NeidentAkce``), jejichž signály jinak otevírají skutečnou ``FedoraTransaction``.
+        """
+        cls.enterClassContext(patched_fedora())
+        super().setUpClass()
 
     @classmethod
     def setUpTestData(cls):
@@ -342,6 +354,7 @@ class RunDataImportMapperTestBase(TestCase):
         )
 
         with ExitStack() as stack:
+            self.notification_dispatch_mock = stack.enter_context(mock_project_notifications())
             stack.enter_context(patch("core.connectors.RedisConnector.get_connection", return_value=fake_redis))
             stack.enter_context(patch("core.connectors.RedisConnector.refresh_import_lock", **refresh_lock_kwargs))
             # Report-directory gate + disk-writing report are exercised by their own dedicated tests
@@ -413,6 +426,16 @@ class RunDataImportMapperTestBase(TestCase):
             ):
                 mock = stack.enter_context(patch(target))
                 mock.return_value = MagicMock(uid="test-signals-fedora-uid", updated_ident_cely=set())
+            # Signály po uložení záznamu plánují ``update_single_redis_snapshot``; v CI běží Celery eager
+            # a task by zapisoval do testovacího FakeRedis (``hset``), který snapshoty nepodporuje.
+            for target in (
+                "arch_z.signals.update_single_redis_snapshot",
+                "dokument.signals.update_single_redis_snapshot",
+                "lokalita.signals.update_single_redis_snapshot",
+                "pas.signals.update_single_redis_snapshot",
+                "projekt.signals.update_single_redis_snapshot",
+            ):
+                stack.enter_context(patch(target))
             if extra_patches:
                 for ctx in extra_patches:
                     stack.enter_context(ctx)

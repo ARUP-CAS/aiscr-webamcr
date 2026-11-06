@@ -45,6 +45,7 @@ from core.constants import (
 from core.models import AntivirusCheckResult, Permissions, Soubor, check_permissions
 from core.repository_connector import FedoraNoResponseError
 from core.setting_models import CustomAdminSettings
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from django.conf import settings
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -294,6 +295,7 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
         )
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Připraví sdílená testovací data pro celou třídu."""
         from core.models import Permissions
@@ -2142,6 +2144,7 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         return log_entry
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Připraví sdílená testovací data pro celou třídu."""
         from core.constants import ROLE_ARCHEOLOG_ID, ROLE_BADATEL_ID
@@ -2958,6 +2961,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
                 self.assertEqual(record.poznamka, expected_note)
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Připraví sdílená testovací data pro celou třídu."""
         from core.constants import ROLE_ARCHEOLOG_ID, ROLE_BADATEL_ID
@@ -3630,6 +3634,7 @@ class SamostatnyNalezGetCreateOrgTests(TestCase):
     databases = {"default", "urgent"}
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Připraví sdílená testovací data pro celou třídu."""
         from django.contrib.gis.geos import MultiPolygon, Point, Polygon

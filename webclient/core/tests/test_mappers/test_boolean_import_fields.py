@@ -9,6 +9,7 @@ from core.import_data_mappers import (
     SamostatnyNalezMapper,
     UzivatelMapper,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from core.tests.test_mappers.fixtures import create_dokument_fixture
 from django.db import models
 from django.test import SimpleTestCase, TestCase
@@ -69,6 +70,7 @@ def _row_for_mapper(mapper_class, boolean_field, raw_value, extra_values=None):
 class BooleanImportFieldsTest(TestCase):
     """Testy importního mapování BooleanField hodnot."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří minimální vazbu potřebnou pro KomponentaMapper."""
         dokument = create_dokument_fixture("C-TX-000000001")

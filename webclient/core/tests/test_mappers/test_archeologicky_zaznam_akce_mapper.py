@@ -7,6 +7,7 @@ from core.import_data_mappers import (
     ImportDataError,
     ImportDataIncorrectStructureError,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from cron.tests._import_test_fixtures import (
     create_akce,
     create_archeologicky_zaznam,
@@ -200,6 +201,7 @@ class ArcheologickyZaznamAkceMapperPartialUpdateValidationTest(TestCase):
     """Testy pro partial UPDATE (omitted typ/projekt musí čerpat z existující Akce)."""
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Vytvoří existující projektovou (typ=R) a samostatnou (typ=N) akci v DB."""
         with patch(
@@ -317,6 +319,7 @@ class ArcheologickyZaznamAkceMapperCreateRecordsDeleteTest(TestCase):
     AZ_IDENT = "C-202401-DEL-001A"
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Vytvoří testovací ArcheologickyZaznam a Akce v DB."""
         with patch(
