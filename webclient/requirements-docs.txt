@@ -262,7 +262,7 @@ pybcj==1.0.8
     # via
     #   -r requirements.txt
     #   py7zr
-pycryptodomex==3.24.1
+pycryptodomex==3.24.2
     # via
     #   -r requirements.txt
     #   py7zr

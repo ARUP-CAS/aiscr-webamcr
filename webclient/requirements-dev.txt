@@ -308,7 +308,7 @@ pycparser==3.12
     # via
     #   -r requirements-test.txt
     #   cffi
-pycryptodomex==3.24.1
+pycryptodomex==3.24.2
     # via
     #   -r requirements-test.txt
     #   py7zr

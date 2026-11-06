@@ -464,7 +464,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://github.com/eliben/pycparser
    * - pycryptodomex
-     - 3.24.1
+     - 3.24.2
      - BSD License; Public Domain
      - https://www.pycryptodome.org
    * - pyparsing
