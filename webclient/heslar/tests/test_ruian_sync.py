@@ -2088,15 +2088,16 @@ class PollingProtokolTests(SimpleTestCase):
 
     def test_baze_odchytava_i_commit_failed(self):
         """
-        ``FedoraTransactionCommitFailedError`` není potomek ``FedoraError``.
+        ``FedoraTransactionCommitFailedError`` je potomek ``FedoraError`` (#4473).
 
-        Bez explicitního uvedení by prošla ven jako HTTP 500 – a to až poté,
-        co se index v Redis posunul, tedy s přeskočením zbytku fronty.
+        Báze ji přesto uvádí explicitně, aby odchyt nezávisel na dědění; jinak by prošla
+        ven jako HTTP 500 – a to až poté, co se index v Redis posunul, tedy s přeskočením
+        zbytku fronty.
         """
         from core.repository_connector import FedoraError, FedoraTransactionCommitFailedError
         from fedora_management.views import AdminRecordProcessingView
 
-        self.assertFalse(issubclass(FedoraTransactionCommitFailedError, FedoraError))
+        self.assertTrue(issubclass(FedoraTransactionCommitFailedError, FedoraError))
         self.assertIn(FedoraTransactionCommitFailedError, AdminRecordProcessingView.zpracovani_chyby)
 
     def test_cizi_redis_klic_se_odmitne(self):
