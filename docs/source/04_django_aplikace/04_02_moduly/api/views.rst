@@ -1136,7 +1136,8 @@ Funkce
    stejně (další timeout, 404/410 u zahozené transakce). Výjimka z rollbacku by v obslužné větvi
    přeskočila uvolnění zámku záznamu a vrácení řízené chybové odpovědi (#4473).
 
-   :param fedora_transaction: Transakce, která se má zrušit; neaktivní transakce se nechá být.
+   :param fedora_transaction: Transakce, která se má zrušit; neaktivní nebo dosud nevytvořená (``None``)
+       transakce se nechá být.
 
 .. py:function:: _xsd_redis_key(url)
 

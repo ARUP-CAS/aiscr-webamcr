@@ -161,9 +161,10 @@ def _rollback_fedora_transaction(fedora_transaction) -> None:
     stejně (další timeout, 404/410 u zahozené transakce). Výjimka z rollbacku by v obslužné větvi
     přeskočila uvolnění zámku záznamu a vrácení řízené chybové odpovědi (#4473).
 
-    :param fedora_transaction: Transakce, která se má zrušit; neaktivní transakce se nechá být.
+    :param fedora_transaction: Transakce, která se má zrušit; neaktivní nebo dosud nevytvořená (``None``)
+        transakce se nechá být.
     """
-    if fedora_transaction.status != FedoraTransactionStatus.ACTIVE:
+    if fedora_transaction is None or fedora_transaction.status != FedoraTransactionStatus.ACTIVE:
         return
     try:
         fedora_transaction.rollback_transaction()
@@ -3153,12 +3154,13 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
                 status.HTTP_429_TOO_MANY_REQUESTS,
             )
 
-        log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
-        log_entry.save(update_fields=["status"])
-
-        old_evidencni_cislo = instance.evidencni_cislo
-        fedora_transaction = FedoraTransaction(transaction_user=request.user)
+        fedora_transaction = None
         try:
+            log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
+            log_entry.save(update_fields=["status"])
+
+            old_evidencni_cislo = instance.evidencni_cislo
+            fedora_transaction = FedoraTransaction(transaction_user=request.user)
             with transaction.atomic():
                 instance.evidencni_cislo = evidencni_cislo
                 instance.active_transaction = fedora_transaction
@@ -3427,38 +3429,39 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
                 status.HTTP_429_TOO_MANY_REQUESTS,
             )
 
-        log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
-        log_entry.save(update_fields=["status"])
-
-        mimetype = Soubor.get_mime_types(uploaded_file)
-        mime_extensions = Soubor.get_file_extension_by_mime(uploaded_file)
-        if len(mime_extensions) == 0:
-            self._release_record_lock(ident_cely, lock_ttl)
-            return self._fail(
-                log_entry,
-                {"detail": _("core.views.post_upload.mime_rename_failed")},
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-
-        new_name = get_next_soubor_name(instance, uploaded_file.name)
-        if new_name is False:
-            self._release_record_lock(ident_cely, lock_ttl)
-            return self._fail(
-                log_entry,
-                {
-                    "detail": format_message(
-                        gettext_noop("core.views.post_upload.error.maximal_file_name_exceeded"), ident=ident_cely
-                    )
-                },
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-        new_name = get_mime_safe_soubor_name(new_name, new_name, mime_extensions)
-
-        if mimetype in ["image/png", "image/jpeg", "image/tiff"]:
-            binary_data = Soubor.remove_gps_data(binary_data)
-
-        fedora_transaction = FedoraTransaction(transaction_user=request.user)
+        fedora_transaction = None
         try:
+            log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
+            log_entry.save(update_fields=["status"])
+
+            mimetype = Soubor.get_mime_types(uploaded_file)
+            mime_extensions = Soubor.get_file_extension_by_mime(uploaded_file)
+            if len(mime_extensions) == 0:
+                self._release_record_lock(ident_cely, lock_ttl)
+                return self._fail(
+                    log_entry,
+                    {"detail": _("core.views.post_upload.mime_rename_failed")},
+                    status.HTTP_422_UNPROCESSABLE_ENTITY,
+                )
+
+            new_name = get_next_soubor_name(instance, uploaded_file.name)
+            if new_name is False:
+                self._release_record_lock(ident_cely, lock_ttl)
+                return self._fail(
+                    log_entry,
+                    {
+                        "detail": format_message(
+                            gettext_noop("core.views.post_upload.error.maximal_file_name_exceeded"), ident=ident_cely
+                        )
+                    },
+                    status.HTTP_422_UNPROCESSABLE_ENTITY,
+                )
+            new_name = get_mime_safe_soubor_name(new_name, new_name, mime_extensions)
+
+            if mimetype in ["image/png", "image/jpeg", "image/tiff"]:
+                binary_data = Soubor.remove_gps_data(binary_data)
+
+            fedora_transaction = FedoraTransaction(transaction_user=request.user)
             connector = FedoraRepositoryConnector(instance, fedora_transaction, skip_container_check=False)
             rep_bin_file = connector.save_binary_file(new_name, mimetype, binary_data)
             soubor_instance = Soubor(

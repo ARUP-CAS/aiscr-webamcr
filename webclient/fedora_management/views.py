@@ -176,6 +176,9 @@ class ContinueMedataProcessing(AdminRecordProcessingView):
                 record.save_metadata(fedora_transaction)
                 fedora_transaction.mark_transaction_as_closed()
                 result["result"] = _("fedora_management.admin.YourCustomAdminSite.update_metadata_file_upload.success")
+            except FedoraTransactionCommitFailedError:
+                # Selhání commitu musí propadnout do dávkového handleru (``is_error`` a ERROR log, #4473).
+                raise
             except FedoraError as err:
                 result["result"] = _("fedora_management.admin.YourCustomAdminSite.update_metadata_file_upload.error")
                 logger.debug(

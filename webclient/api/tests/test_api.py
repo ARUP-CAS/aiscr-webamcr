@@ -2057,6 +2057,10 @@ class RollbackFedoraTransactionHelperTests(SimpleTestCase):
 
         fedora_transaction.rollback_transaction.assert_called_once_with()
 
+    def test_chybejici_transakce_se_ignoruje(self):
+        """Transakce, která se nestihla vytvořit (``None``), se nerolluje a nevyhodí výjimku."""
+        _rollback_fedora_transaction(None)
+
     def test_neaktivni_transakce_se_nerusi(self):
         """Už uzavřená nebo zrušená transakce se znovu nerolluje."""
         for transaction_status in (FedoraTransactionStatus.ABORTED, FedoraTransactionStatus.COMMITTED):
@@ -2612,6 +2616,18 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertIn("detail", response.text)
         fedora_transaction.rollback_transaction.assert_called_once_with()
+        self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
+
+    def test_transaction_create_failure_releases_lock_and_returns_500(self):
+        """Selhání vytvoření Fedora transakce uvolní zámek záznamu a vrátí HTTP 500 s logem FAILURE (#4473)."""
+        with patch(
+            "api.views.FedoraTransaction",
+            side_effect=FedoraNoResponseError("http://fedora.example/", "No response", None),
+        ):
+            response = self._patch(IDENT_CELY)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
 

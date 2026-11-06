@@ -254,6 +254,31 @@ class TransactionRequestTimeoutTest(SimpleTestCase):
         self.assertEqual(session.post.call_args.kwargs["timeout"], (10.0, 300.0))
 
 
+class ContinueMedataProcessingCommitFailedTest(SimpleTestCase):
+    """Selhání commitu v administrativní dávce musí propadnout do dávkového handleru (``is_error``, ERROR log)."""
+
+    def test_commit_failed_propadne_ven(self):
+        """``process_record`` selhání commitu nepolkne jako běžnou ``FedoraError``."""
+        from fedora_management.views import ContinueMedataProcessing
+
+        record = mock.Mock(spec=User, ident_cely="U-000001")
+        with mock.patch("fedora_management.views.FedoraTransaction") as fedora_transaction:
+            fedora_transaction.return_value.mark_transaction_as_closed.side_effect = FedoraTransactionCommitFailedError(
+                "COMMIT: timeout"
+            )
+            with self.assertRaises(FedoraTransactionCommitFailedError):
+                ContinueMedataProcessing().process_record(record, {"result": None})
+
+    def test_ostatni_fedora_error_zustava_obslouzena(self):
+        """Ostatní ``FedoraError`` se dál vrací jako výsledek záznamu bez výjimky."""
+        from fedora_management.views import ContinueMedataProcessing
+
+        record = mock.Mock(spec=User, ident_cely="U-000001")
+        with mock.patch("fedora_management.views.FedoraTransaction", side_effect=FedoraNoResponseError("u", "m", None)):
+            result = ContinueMedataProcessing().process_record(record, {"result": None})
+        self.assertIsNotNone(result["result"])
+
+
 class SouborReadFromFedoraTest(SimpleTestCase):
     """Testy, že výpadek Fedory při čtení náhledu nebo obsahu neshodí vykreslení stránky."""
 
