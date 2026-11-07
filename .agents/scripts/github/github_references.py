@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69>
 # SPDX-License-Identifier: MIT
-# delivery-version: 083eb1bc1a0c628b2d6d48b806b6568be3f67ac2 2026-11-07T12:31:37+01:00
+# delivery-version: c35418343fe8896348732bd54f8256de17338f8d 2026-11-07T14:33:16+01:00
 
 """Check repository identity in outgoing GitHub issue and pull-request citations.
 
@@ -94,8 +94,9 @@ class SourceSpan(NamedTuple):
 
 
 def text_digest(text: str) -> str:
-    """Use the posting engines' newline-insensitive payload identity."""
-    return hashlib.sha256(text.replace("\r\n", "\n").replace("\r", "\n").encode("utf-8")).hexdigest()
+    """Use the posting engines' payload identity with exactly one terminal LF."""
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n").rstrip("\n") + "\n"
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
 
 def snapshot_digest(snapshot: SourceSnapshot) -> str:

@@ -20,10 +20,6 @@ These files are delivered from the `aiscr-management` hub and recorded in `.agen
 - `lib/` — shared library modules for the delivered scripts.
 - Further workflow scripts (workstation safety, release notes) as enrolled.
 
-## Repository-owned helpers
-
-- `run_import_maintenance_tests.py` — runs the import-maintenance tests in the web container.
-
 ## Running
 
 Run from the repository root, typically:

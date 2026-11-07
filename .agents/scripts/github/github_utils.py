@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69>
 # SPDX-License-Identifier: MIT
-# delivery-version: 083eb1bc1a0c628b2d6d48b806b6568be3f67ac2 2026-11-07T12:31:37+01:00
+# delivery-version: c35418343fe8896348732bd54f8256de17338f8d 2026-11-07T14:33:16+01:00
 
 """Shared GitHub write machinery for posting engines.
 
@@ -479,12 +479,13 @@ def canonical_digest(payload: dict[str, Any]) -> str:
 
 
 def text_digest(text: str) -> str:
-    """Return the SHA-256 of a posted body, insensitive to newline style.
+    """Return the SHA-256 of a posted body with canonical line endings.
 
-    A posted body round-trips through GitHub, which may normalise line endings, so the digest that proves "nobody edited
-    this since we posted it" must not change when only the newline style does.
+    A posted body round-trips through GitHub and ``gh``, which may normalise line endings or strip the final newline.
+    Canonicalising both preserves identity across that round-trip; exactly one terminal LF remains compatible with the
+    normaliser used before posting.
     """
-    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n").rstrip("\n") + "\n"
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
 
