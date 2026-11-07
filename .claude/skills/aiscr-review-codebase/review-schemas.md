@@ -1,6 +1,6 @@
 # Codebase review schemas
 
-<!-- delivery-version: b257a1a89279be5e17cda3c133aa77b8c4d2706c 2026-11-07T11:18:12+01:00 -->
+<!-- delivery-version: 96a1e289289a180161258baa10f7547b8cd9f719 2026-11-07T11:55:51+01:00 -->
 
 ## Reference format 1
 

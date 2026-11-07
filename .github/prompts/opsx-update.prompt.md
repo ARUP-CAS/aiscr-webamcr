@@ -2,7 +2,7 @@
 description: "Update a change - revise existing planning artifacts and keep them coherent (Experimental)"
 ---
 
-<!-- delivery-version: b257a1a89279be5e17cda3c133aa77b8c4d2706c 2026-11-07T11:18:12+01:00 -->
+<!-- delivery-version: 96a1e289289a180161258baa10f7547b8cd9f719 2026-11-07T11:55:51+01:00 -->
 
 Revise a change's existing planning artifacts and keep them coherent. Never edit code.
 

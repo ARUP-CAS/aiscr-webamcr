@@ -363,7 +363,6 @@
     },
     "task": "allow",
     "external_directory": {
-      
       "*": "deny"
     }
   }

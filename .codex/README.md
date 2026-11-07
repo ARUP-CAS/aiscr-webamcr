@@ -1,6 +1,6 @@
 # Codex vendor surface
 
-<!-- delivery-version: b257a1a89279be5e17cda3c133aa77b8c4d2706c 2026-11-07T11:18:12+01:00 -->
+<!-- delivery-version: 96a1e289289a180161258baa10f7547b8cd9f719 2026-11-07T11:55:51+01:00 -->
 
 This `.codex/` directory is the delivered Codex surface for this repository, kept in sync from the `aiscr-management` hub. It carries the assets selected for this repository (rules, skills, agents, and settings as applicable).
 
