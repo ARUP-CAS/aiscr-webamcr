@@ -1,23 +1,20 @@
 # .agents/config
 
-Konfigurační soubory a perzistentní stav pro dlouhodobý technický review.
+Configuration files and persistent state for the long-running technical review.
 
-## Soubory
+## Files
 
-- `review_config.yaml`  
-  - definice tasků (T01–T11), jejich priority a rozsahu,
-  - technický stack, adresáře v rozsahu, vendored výjimky,
-  - limity velikosti tasků (počty řádků/souborů).
+- `review_config.toml`
+  - task definitions (T01–T11 full, U01–U06 update), their priority and scope,
+  - technical stack, directories in scope, vendored exclusions,
+  - task size limits (line and file counts).
 
-- `review_cache.json`  
-  - stav jednotlivých tasků (`pending`, `done`, `split`, `blocked`…),
-  - poslední čas aktualizace,
-  - hash souborů a informace o tom, kterým taskem byly naposledy revidovány.
+- `review_cache.json`
+  - state of each task (`pending`, `done`, `split`, `blocked`, …),
+  - last update time,
+  - file hashes and which task last reviewed each file.
 
-## Poznámky
+## Notes
 
-- `review_config.yaml` je kanonickým zdrojem konfigurace — hodnoty z něj **neopisovat**
-  do promptů ani jiných souborů, ale pouze odkazovat.
-- `review_cache.json` se přepisuje automaticky agenty; ruční úpravy pouze ve výjimečných
-  případech a po dohodě týmu.
-
+- `review_config.toml` is the canonical configuration source — do **not** copy its values into prompts or other files; refer to it.
+- `review_cache.json` is rewritten by agents; edit it by hand only in exceptional cases and after team agreement.

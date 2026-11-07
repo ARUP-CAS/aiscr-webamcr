@@ -1243,9 +1243,11 @@ def aktivace(request, pk):
     :param request: Parametr ``request`` se předává do volání ``set_aktivni()``, ``add_message()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
     :param pk: Identifikátor ``pk`` používaný pro dohledání cílového záznamu.
 
-        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``redirect()``, výsledek volání ``render()``.
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()`` (včetně JSON 403 pro uživatele, který nesmí spolupráci potvrdit), výsledek volání ``redirect()``, výsledek volání ``render()``.
     """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
+    if not spoluprace.muze_potvrdit(request.user):
+        return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
     if request.method == "POST":
         fedora_transaction = FedoraTransaction()
         try:
@@ -1287,6 +1289,19 @@ class AktivaceEmailView(LoginRequiredMixin, DetailView):
 
     template_name = "pas/potvrdit_spolupraci.html"
     model = UzivatelSpoluprace
+
+    def get_object(self, queryset=None):
+        """
+        Vrací spolupráci k potvrzení a ověřuje, že ji smí přihlášený uživatel potvrdit.
+
+        :param queryset: Volitelný queryset předaný rodičovské metodě ``get_object()``.
+        :raises PermissionDenied: Pokud uživatel není vedoucí, archivář, administrátor ani z organizace vedoucího.
+        :return: Vrací nalezený záznam ``UzivatelSpoluprace``.
+        """
+        obj = super().get_object(queryset)
+        if not obj.muze_potvrdit(self.request.user):
+            raise PermissionDenied()
+        return obj
 
     def post(self, request, *args, **kwargs):
         """

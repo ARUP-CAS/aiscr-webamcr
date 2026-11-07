@@ -5,6 +5,8 @@ from core.constants import (
     ARCHIVACE_SN,
     ODESLANI_SN,
     POTVRZENI_SN,
+    ROLE_ADMIN_ID,
+    ROLE_ARCHIVAR_ID,
     SN_ARCHIVOVANY,
     SN_ODESLANY,
     SN_POTVRZENY,
@@ -19,6 +21,7 @@ from core.constants import (
 from core.models import ModelWithMetadata, SouborVazby, prvni_soubor_dle_nazvu
 from django.conf import settings
 from django.contrib.gis.db import models as pgmodels
+from django.core.exceptions import PermissionDenied
 from django.db import models
 from django.db.models import CheckConstraint, Prefetch, Q
 from django.urls import reverse
@@ -646,12 +649,36 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         """
         return self.stav == SPOLUPRACE_AKTIVNI
 
+    def muze_potvrdit(self, user):
+        """
+        Zjišťuje, zda smí uživatel potvrdit žádost o spolupráci.
+
+        Potvrdit smí určený vedoucí, uživatel ze stejné organizace jako vedoucí a archivář či administrátor.
+
+        Větev pro stejnou organizaci záměrně nekontroluje roli: omezení na archeologa zajišťuje matice práv
+        (``uzivatelska_prava.csv``, trasy ``spoluprace/aktivace-email/<int:pk>`` a ``spoluprace/aktivovat/<int:pk>``), která
+        badateli přístup zakazuje (``Základní_B = X``) a archeologovi povoluje jen vlastní organizaci (``US.ours``).
+        Metodu proto nelze volat z tras mimo matici práv bez vlastní kontroly role; závislost hlídá test
+        ``MaticePravSpolupraceTest``.
+
+        :param user: Uživatel, který žádost potvrzuje.
+        :return: ``True``, pokud je uživatel vedoucí, archivář, administrátor nebo patří do organizace vedoucího, jinak ``False``.
+        """
+        if not getattr(user, "is_authenticated", False):
+            return False
+        if user.pk == self.vedouci_id or user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
+            return True
+        return user.organizace_id is not None and user.organizace_id == self.vedouci.organizace_id
+
     def set_aktivni(self, user):
         """
         Metoda pro nastavení stavu aktivní a uložení změny do historie pro spolupráci.
 
-        :param user: Parametr ``user`` se předává do volání ``Historie()``.
+        :param user: Uživatel zapisovaný do historie jako aktér, musí splňovat ``muze_potvrdit()``.
+        :raises PermissionDenied: Pokud uživatel nesmí žádost potvrdit.
         """
+        if not self.muze_potvrdit(user):
+            raise PermissionDenied()
         self.stav = SPOLUPRACE_AKTIVNI
         Historie(
             typ_zmeny=SPOLUPRACE_AKTIVACE,

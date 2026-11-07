@@ -769,6 +769,9 @@ def _delete_kraj(kraj: RuianKraj, run: Optional[RuianSyncRun] = None) -> bool:
         if run is not None:
             _append_run_warning(run, f"Kraj {kraj.kod} ({kraj.nazev}) nelze smazat: {err}")
         return False
+    except FedoraTransactionCommitFailedError:
+        # Selhání commitu není „nic ke smazání“; musí propadnout jako dřív (#4473).
+        raise
     except FedoraError as err:
         # DB delete proběhl, jen Fedora kontejner neexistoval (viz _delete_katastr).
         logger.error(
@@ -1011,6 +1014,9 @@ def _delete_okres(okres: RuianOkres, run: Optional[RuianSyncRun] = None) -> bool
         if run is not None:
             _append_run_warning(run, f"Okres {okres.kod} ({okres.nazev}) nelze smazat: {err}")
         return False
+    except FedoraTransactionCommitFailedError:
+        # Selhání commitu není „nic ke smazání“; musí propadnout jako dřív (#4473).
+        raise
     except FedoraError as err:
         # DB delete proběhl, jen Fedora kontejner neexistoval (viz _delete_katastr).
         logger.error(
@@ -1611,6 +1617,9 @@ def _delete_katastr(
         )
         _append_run_warning(run, f"Katastr {katastr.kod} ({katastr.nazev}) nelze smazat: {err}")
         return False
+    except FedoraTransactionCommitFailedError:
+        # Selhání commitu není „nic ke smazání“; musí propadnout jako dřív (#4473).
+        raise
     except FedoraError as err:
         # DB delete proběhl úspěšně (atomic transakce už commitla – pre_delete
         # signál naplánuje record_deletion přes transaction.on_commit, takže
