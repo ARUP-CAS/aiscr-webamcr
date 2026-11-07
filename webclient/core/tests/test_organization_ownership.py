@@ -45,6 +45,7 @@ class OrganizationOwnershipTest(TestCase):
         cls.child = cls._make_organization("ORG-OWN-CHILD", "OWN-CHILD", soucast=cls.root)
         cls.grandchild = cls._make_organization("ORG-OWN-GRANDCHILD", "OWN-GRANDCHILD", soucast=cls.child)
         cls.sibling = cls._make_organization("ORG-OWN-SIBLING", "OWN-SIBLING", soucast=cls.root)
+        cls.safe_grandchild = cls._make_organization("ORG-OWN-SAFE-CHILD", "OWN-SAFE-CHILD", soucast=cls.sibling)
         cls.unrelated = cls._make_organization("ORG-OWN-OTHER", "OWN-OTHER")
 
     @classmethod
@@ -72,7 +73,10 @@ class OrganizationOwnershipTest(TestCase):
         query = queries[0]["sql"].strip().lower()
         self.assertIn("with recursive organizational_subtree(id, parent_id) as", query)
         self.assertTrue(query.endswith("select id, parent_id from organizational_subtree"))
-        self.assertEqual(set(organization_ids), {self.root.pk, self.child.pk, self.grandchild.pk, self.sibling.pk})
+        self.assertEqual(
+            set(organization_ids),
+            {self.root.pk, self.child.pk, self.grandchild.pk, self.sibling.pk, self.safe_grandchild.pk},
+        )
         self.assertNotIn(self.ancestor.pk, organization_ids)
         self.assertNotIn(self.unrelated.pk, organization_ids)
         self.assertEqual(Organizace.get_subtree_ids(None), [])
@@ -88,7 +92,10 @@ class OrganizationOwnershipTest(TestCase):
 
         self.assertEqual(len(queries), 1)
         self.assertIs(first_result, second_result)
-        self.assertEqual(set(first_result), {self.root.pk, self.child.pk, self.grandchild.pk, self.sibling.pk})
+        self.assertEqual(
+            set(first_result),
+            {self.root.pk, self.child.pk, self.grandchild.pk, self.sibling.pk, self.safe_grandchild.pk},
+        )
 
         new_child = self._make_organization("ORG-OWN-NEW-CHILD", "OWN-NEW-CHILD", soucast=self.root)
         with CaptureQueriesContext(connection) as refresh_queries:
@@ -97,14 +104,18 @@ class OrganizationOwnershipTest(TestCase):
         self.assertEqual(len(refresh_queries), 1)
         self.assertIn(new_child.pk, refreshed_result)
 
-    def test_cyclic_subtree_retains_only_own_organization_and_logs_once_per_user(self):
-        """Cyklus nevytvoří vzájemné vlastnictví a nevyvolá chybu oprávnění."""
+    def test_cyclic_subtree_retains_safe_descendants_and_logs_once_per_user(self):
+        """Cyklus neudělí vlastnictví cyklické větvi a zachová bezpečné potomky."""
         Organizace.objects.filter(pk=self.root.pk).update(soucast=self.grandchild)
         user = User(organizace=self.root)
         with self.assertLogs("uzivatel.models", level="ERROR") as logs:
             with CaptureQueriesContext(connection) as queries:
-                self.assertEqual(user.organizace_podstrom_ids, [self.root.pk])
-                self.assertEqual(user.organizace_podstrom_ids, [self.root.pk])
+                self.assertEqual(
+                    set(user.organizace_podstrom_ids), {self.root.pk, self.sibling.pk, self.safe_grandchild.pk}
+                )
+                self.assertEqual(
+                    set(user.organizace_podstrom_ids), {self.root.pk, self.sibling.pk, self.safe_grandchild.pk}
+                )
         self.assertEqual(len(queries), 1)
         self.assertEqual(len(logs.records), 1)
         permission = Permissions(ownership=Permissions.ownershipChoices.our)
@@ -115,21 +126,54 @@ class OrganizationOwnershipTest(TestCase):
         self.assertTrue(permission.check_ownership(permission.ownership))
         permission.permission_object.get_create_org.return_value = (self.child,)
         self.assertFalse(permission.check_ownership(permission.ownership))
+        permission.permission_object.get_create_org.return_value = (self.safe_grandchild,)
+        self.assertTrue(permission.check_ownership(permission.ownership))
 
-    def test_self_cycle_is_bounded_and_other_trees_are_unaffected(self):
-        """Vlastní cyklus se omezí na kořen; nesouvisející strom zůstane dostupný."""
-        Organizace.objects.filter(pk=self.unrelated.pk).update(soucast=self.unrelated)
+    def test_self_cycle_preserves_children_and_other_trees_are_unaffected(self):
+        """Vlastní cyklus nevyřadí běžné potomky a nesouvisející strom zůstane dostupný."""
+        Organizace.objects.filter(pk=self.root.pk).update(soucast=self.root)
         with self.assertLogs("uzivatel.models", level="ERROR"):
+            self.assertEqual(
+                set(Organizace.get_subtree_ids(self.root.pk)),
+                {self.root.pk, self.child.pk, self.grandchild.pk, self.sibling.pk, self.safe_grandchild.pk},
+            )
             self.assertEqual(Organizace.get_subtree_ids(self.unrelated.pk), [self.unrelated.pk])
-        self.assertEqual(
-            set(Organizace.get_subtree_ids(self.root.pk)),
-            {self.root.pk, self.child.pk, self.grandchild.pk, self.sibling.pk},
-        )
 
     def test_child_below_cycle_keeps_its_acyclic_subtree(self):
         """Organizace pod cyklem nezíská předky a zachová vlastní platný podstrom."""
         Organizace.objects.filter(pk=self.root.pk).update(soucast=self.child)
         self.assertEqual(Organizace.get_subtree_ids(self.grandchild.pk), [self.grandchild.pk])
+
+    def test_cycle_branch_is_excluded_but_other_root_children_remain(self):
+        """Potomci připojení pouze k cyklu nejsou dosažitelní od původního kořene."""
+        cycle_child = self._make_organization("ORG-OWN-CYCLE-CHILD", "OWN-CYCLE-CHILD", soucast=self.root)
+        cycle_grandchild = self._make_organization("ORG-OWN-CYC-GRAND", "OWN-CYC-GRAND", soucast=cycle_child)
+        Organizace.objects.filter(pk=self.root.pk).update(soucast=cycle_child)
+
+        with self.assertLogs("uzivatel.models", level="ERROR"):
+            organization_ids = set(Organizace.get_subtree_ids(self.root.pk))
+
+        self.assertEqual(
+            organization_ids,
+            {self.root.pk, self.child.pk, self.grandchild.pk, self.sibling.pk, self.safe_grandchild.pk},
+        )
+        self.assertNotIn(cycle_child.pk, organization_ids)
+        self.assertNotIn(cycle_grandchild.pk, organization_ids)
+
+    def test_deep_cycle_fallback_walk_is_iterative(self):
+        """Fallback pro hlubokou bezpečnou větev nevyužívá rekurzi Pythonu."""
+        rows = [(0, 1), (1, 0), (2, 0)]
+        rows.extend((node, node - 1) for node in range(3, 2501))
+        cursor = MagicMock()
+        cursor.__enter__.return_value = cursor
+        cursor.fetchall.return_value = rows
+        with patch("uzivatel.models.connection.cursor", return_value=cursor):
+            with self.assertLogs("uzivatel.models", level="ERROR"):
+                organization_ids = Organizace.get_subtree_ids(0)
+
+        self.assertEqual(len(organization_ids), 2500)
+        self.assertEqual(organization_ids[0], 0)
+        self.assertEqual(organization_ids[-1], 2500)
 
     def test_full_hierarchy_check_finds_cycles_once_and_has_no_writes(self):
         """Celková kontrola vrátí každý cyklus pouze jednou včetně uzavíracího uzlu."""
@@ -332,3 +376,29 @@ class OrganizationOwnershipTest(TestCase):
             map_params[-3:],
             [[self.child.pk, self.grandchild.pk]] * 3,
         )
+
+    def test_pian_heatmap_only_skips_subtree_and_detail_queries_at_threshold(self):
+        """Heatmap-only odpověď nepočítá organizační podstrom ani nespouští detailní SQL."""
+        request = SimpleNamespace(user=User(pk=100, organizace=self.child))
+        request.user.hlavni_role = SimpleNamespace(id=ROLE_ARCHEOLOG_ID)
+        cursor = MagicMock()
+        cursor.__enter__.return_value = cursor
+        cursor.fetchone.return_value = (10,)
+        with patch("core.utils.LIMIT_PRVKU_ZOBRAZENI_HEATMAP", 5), patch(
+            "django.db.connection.cursor", return_value=cursor
+        ), patch.object(Organizace, "get_subtree_ids") as get_subtree_ids:
+            pians, count = get_pian_from_envelope(
+                {
+                    "bottomLeft": {"lng": 14, "lat": 49},
+                    "bottomRight": {"lng": 15, "lat": 49},
+                    "topRight": {"lng": 15, "lat": 50},
+                    "topLeft": {"lng": 14, "lat": 50},
+                },
+                7,
+                request,
+            )
+
+        self.assertIsNone(pians)
+        self.assertEqual(count, 10)
+        self.assertEqual(cursor.execute.call_count, 1)
+        get_subtree_ids.assert_not_called()

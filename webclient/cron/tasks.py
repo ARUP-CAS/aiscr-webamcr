@@ -181,6 +181,17 @@ IMPORT_DATA_JOB_KEY_SUFFIXES = (
 # Jak často validační task aktualizuje textový stav průběhu. Výsledky se přidávají po řádcích do
 # ``import_data_validation_details`` a report je rekonstruuje až při čtení.
 VALIDATION_REDIS_UPDATE_INTERVAL = 50
+IMPORT_DATA_RECORD_READ_BATCH_SIZE = 500
+
+
+def _decode_staged_import_record(serialized_record):
+    """Vrátí mapper a datovou část obálky importního záznamu uloženého v Redis."""
+    envelope = json.loads(serialized_record)
+    mapper_class = ImportModelMapper.get_import_data_mapper(envelope["__file_name"])
+    payload = dict(envelope)
+    payload.pop("__file_name")
+    return mapper_class, payload
+
 
 # Standardizační pravidlo: do Redis se ukládají pouze ID překladových řetězců (nikoli přeložené
 # texty); překlad se provádí až na straně čtenáře (``DataImportProgress`` /
@@ -1742,6 +1753,7 @@ def run_data_import(job_id, user_id, lock_token):
     redis_connector = RedisConnector().get_connection()
     record_count = 0
     organization_payloads = []
+    has_organization_records = False
     failed = True
     stopped = False  # initialized up front so the terminal finally can set the phase safely
     # None until the reports directory check below succeeds; guards the except/finally blocks,
@@ -2240,16 +2252,31 @@ def run_data_import(job_id, user_id, lock_token):
                 else range(record_count)
             )
             organization_payloads = []
-            for staged_record_id in organization_record_ids:
-                serialized_record = json.loads(redis_connector.get(record_key(staged_record_id)).decode("utf-8"))
-                mapper_class = ImportModelMapper.get_import_data_mapper(serialized_record["__file_name"])
-                if mapper_class is OrganizaceMapper:
-                    serialized_record.pop("__file_name")
-                    organization_payloads.append(serialized_record)
+            for batch_start in range(0, len(organization_record_ids), IMPORT_DATA_RECORD_READ_BATCH_SIZE):
+                refresh_import_lock()
+                batch_ids = organization_record_ids[batch_start : batch_start + IMPORT_DATA_RECORD_READ_BATCH_SIZE]
+                pipeline = redis_connector.pipeline()
+                for staged_record_id in batch_ids:
+                    pipeline.get(record_key(staged_record_id))
+                serialized_records = pipeline.execute()
+                for serialized_record in serialized_records:
+                    mapper_class, payload = _decode_staged_import_record(serialized_record)
+                    if mapper_class is OrganizaceMapper:
+                        has_organization_records = True
+                        organization_payloads.append(
+                            {key: payload[key] for key in ("ident_cely", "soucast") if key in payload}
+                        )
+                serialized_records = None
+                serialized_record = mapper_class = payload = None
+                del batch_ids, pipeline
 
             with transaction.atomic():
-                if organization_payloads and performed_action != ImportDataAdminForm.PERFORMED_ACTION_DELETE:
-                    OrganizaceMapper.validate_batch_ordering(organization_payloads, performed_action)
+                try:
+                    if has_organization_records and performed_action != ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+                        OrganizaceMapper.validate_batch_ordering(organization_payloads, performed_action)
+                finally:
+                    organization_payloads.clear()
+                    organization_payloads = None
 
                 for record_id in range(record_count):
                     refresh_import_lock()
@@ -2271,8 +2298,9 @@ def run_data_import(job_id, user_id, lock_token):
                         else:
                             fedora_transaction = FedoraDeletionOnlyTransaction()
                             fedora_transaction.override_tombstone = True
-                        serialized_record = json.loads(redis_connector.get(record_key(record_id)).decode("utf-8"))
-                        mapper_class = ImportModelMapper.get_import_data_mapper(serialized_record.pop("__file_name"))
+                        mapper_class, serialized_record = _decode_staged_import_record(
+                            redis_connector.get(record_key(record_id))
+                        )
                         mapper_classes[record_id] = mapper_class
                         records = mapper_class(serialized_record).create_records(performed_action)
                         if (
@@ -3439,7 +3467,9 @@ def run_data_import(job_id, user_id, lock_token):
         if reports_directory_path:
             save_import_report_to_disk(job_id, redis_connector, reports_directory_path)
     finally:
-        if organization_payloads:
+        if organization_payloads is not None:
+            organization_payloads.clear()
+        if has_organization_records:
             try:
                 cycles = Organizace.get_hierarchy_cycles()
                 if cycles:

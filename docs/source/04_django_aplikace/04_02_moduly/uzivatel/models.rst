@@ -197,7 +197,7 @@ Třídy
       Vrátí ID organizace a všech jejích přímých i nepřímých součástí.
 
       :param root_id: ID organizace, od které se prohledávají potomci směrem dolů.
-      :return: ID kořene a potomků; při cyklu pouze kořen, pro chybějící kořen prázdný seznam.
+      :return: ID kořene a bezpečně dosažitelných potomků; pro chybějící kořen prázdný seznam.
 
    .. py:method:: save()
 

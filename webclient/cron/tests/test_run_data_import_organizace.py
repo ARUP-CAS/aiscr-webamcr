@@ -131,7 +131,9 @@ class RunDataImportOrganizaceTest(TestCase):
         """run_data_import vloží jeden Organizace záznam do DB a zapíše ho do Fedory přes ``save_metadata``."""
         fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_INSERT)
 
-        save_metadata_calls = self._run_import(fake_redis)
+        with patch.object(fake_redis, "pipeline", wraps=fake_redis.pipeline) as pipeline:
+            save_metadata_calls = self._run_import(fake_redis)
+        pipeline.assert_called_once()
 
         self.assertTrue(
             Organizace.objects.filter(ident_cely=ORG_IDENT).exists(),
@@ -161,10 +163,29 @@ class RunDataImportOrganizaceTest(TestCase):
         payload["mesicu_do_zverejneni"] = 0
         fake_redis = self._build_multi_record_redis([payload])
 
-        self._run_import(fake_redis)
+        with patch.object(fake_redis, "pipeline", wraps=fake_redis.pipeline) as pipeline:
+            self._run_import(fake_redis)
+        pipeline.assert_called_once()
 
         created = Organizace.objects.get(ident_cely=ORG_IDENT)
         self.assertEqual(created.mesicu_do_zverejneni, 0)
+
+    def test_preflight_reads_ordered_parent_child_records_in_bounded_pipelines(self):
+        """Preflight zachová pořadí rodiče a potomka napříč hranicí Redis dávek."""
+        parent = self._build_insert_payload("ORG-999021", "ORGBATCH21")
+        child = self._build_insert_payload("ORG-999022", "ORGBATCH22")
+        child["soucast"] = parent["ident_cely"]
+        fake_redis = self._build_multi_record_redis([parent, child])
+
+        with patch("cron.tasks.IMPORT_DATA_RECORD_READ_BATCH_SIZE", 1), patch.object(
+            fake_redis, "pipeline", wraps=fake_redis.pipeline
+        ) as pipeline:
+            self._run_import(fake_redis)
+
+        self.assertEqual(pipeline.call_count, 2)
+        child_organization = Organizace.objects.get(ident_cely=child["ident_cely"])
+        parent_organization = Organizace.objects.get(ident_cely=parent["ident_cely"])
+        self.assertEqual(child_organization.soucast_id, parent_organization.pk)
 
     def _run_import(
         self,
@@ -268,6 +289,46 @@ class RunDataImportOrganizaceTest(TestCase):
             "save_metadata mělo být zavoláno i při UPDATE.",
         )
 
+    def test_update_with_padded_blank_parent_clears_existing_relationship(self):
+        """Import UPDATE převede obalený prázdný sentinel na odstranění vazby soucast."""
+        organization = self._create_existing_organizace()
+        Organizace.objects.filter(pk=organization.pk).update(soucast=self.user_organizace)
+        payload = self._build_insert_payload(ORG_IDENT, ORG_NAZEV_ZKRACENY)
+        payload["soucast"] = "  nOnE  "
+        fake_redis = self._build_multi_record_redis([payload])
+        fake_redis.set(f"import_performed_action_{JOB_ID}", ImportDataAdminForm.PERFORMED_ACTION_UPDATE)
+
+        self._run_import(fake_redis)
+
+        organization.refresh_from_db()
+        self.assertIsNone(organization.soucast_id)
+
+    def test_staged_envelope_decoder_returns_mapper_and_fresh_payload(self):
+        """Sdílený dekodér odstraní metadata obálky a zachová obsah záznamu."""
+        envelope = {"__file_name": ORGANIZACE_FILE_KEY, "ident_cely": ORG_IDENT, "soucast": None}
+
+        mapper_class, payload = cron_tasks._decode_staged_import_record(json.dumps(envelope))
+
+        self.assertIs(mapper_class, OrganizaceMapper)
+        self.assertEqual(payload, {"ident_cely": ORG_IDENT, "soucast": None})
+        self.assertEqual(envelope["__file_name"], ORGANIZACE_FILE_KEY)
+
+    def test_preflight_missing_or_malformed_envelope_fails_without_writes(self):
+        """Chybějící ani neúplná obálka selže před zápisem a projde běžným úklidem úlohy."""
+        for raw_envelope in (None, json.dumps({"ident_cely": ORG_IDENT})):
+            with self.subTest(raw_envelope=raw_envelope):
+                fake_redis = self._build_redis(ImportDataAdminForm.PERFORMED_ACTION_INSERT)
+                record_key = f"import_data_{JOB_ID}_record_0"
+                if raw_envelope is None:
+                    fake_redis.delete(record_key)
+                else:
+                    fake_redis.set(record_key, raw_envelope)
+
+                self._run_import(fake_redis)
+
+                self._assert_import_failed(fake_redis)
+                self.assertFalse(Organizace.objects.filter(ident_cely=ORG_IDENT).exists())
+
     def test_update_revalidates_organization_hierarchy_after_approval(self):
         """Před importem odmítne cyklus vytvořený změnou stromu po schválení validace."""
         organization = self._create_existing_organizace()
@@ -291,7 +352,9 @@ class RunDataImportOrganizaceTest(TestCase):
         )
         fake_redis.set(f"import_data_organization_record_ids_{JOB_ID}", json.dumps([0]))
 
-        self._run_import(fake_redis)
+        with patch.object(fake_redis, "pipeline", wraps=fake_redis.pipeline) as pipeline:
+            self._run_import(fake_redis)
+        pipeline.assert_called_once()
 
         organization.refresh_from_db()
         self.assertIsNone(organization.soucast_id)

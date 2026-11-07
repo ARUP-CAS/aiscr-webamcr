@@ -1300,6 +1300,14 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: _normalize_organization_identifier()
+
+      Vrátí prázdné identifikátory organizací jako ``None`` bez úpravy platného textu.
+
+   .. py:method:: __init__()
+
+      Normalizuje explicitní prázdnou vazbu ``soucast`` před zpracováním lookup pole.
+
    .. py:method:: get_mapping()
 
       Vrací mapping. v aplikaci.

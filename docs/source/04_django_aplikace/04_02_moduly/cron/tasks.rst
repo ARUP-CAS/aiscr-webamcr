@@ -87,6 +87,10 @@ Třídy
 Funkce
 ------
 
+.. py:function:: _decode_staged_import_record(serialized_record)
+
+   Vrátí mapper a datovou část obálky importního záznamu uloženého v Redis.
+
 .. py:function:: translation_value(message_id, raw)
 
    Zabalí překladové ID (a případné parametry) pro uložení do Redis.

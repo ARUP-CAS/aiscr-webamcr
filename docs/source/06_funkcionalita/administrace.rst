@@ -141,8 +141,9 @@ zakážou a do logu se zapíše chyba.
 Vlastnická oprávnění archeologů zahrnují jejich organizaci a její potomky. Výsledek
 vyhledání podstromu se cacheuje v instanci uživatele; po uložení změny organizace přes
 model se při dalším přístupu obnoví.
-Pokud podstrom obsahuje cyklus, systém jej zaloguje a pro oprávnění ponechá pouze vlastní
-organizaci, aby cyklus nerozšířil přístup na jiné organizace.
+Pokud podstrom obsahuje cyklus, systém jej zaloguje a při procházení přeskočí vazby tvořící
+cyklus. Oprávnění tak zahrne bezpečné větve dostupné mimo cyklus, ale nepovolí přístup přes
+cyklické vazby.
 
 Před importem se kontrolují dopředné reference a cykly vznikající na změněných vztazích
 organizací a jejich dosažitelných předcích; nesouvisející historické cykly import

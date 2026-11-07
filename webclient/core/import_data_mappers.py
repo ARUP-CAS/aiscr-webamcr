@@ -2584,6 +2584,21 @@ class OrganizaceMapper(ImportModelMapper):
     model_class = Organizace
     require_primary_key_value = True
 
+    @staticmethod
+    def _normalize_organization_identifier(value):
+        """Vrátí prázdné identifikátory organizací jako ``None`` bez úpravy platného textu."""
+        if value is None or pd.isna(value):
+            return None
+        value = str(value)
+        return None if value.strip().lower() in ("nan", "none", "") else value
+
+    def __init__(self, value_dict):
+        """Normalizuje explicitní prázdnou vazbu ``soucast`` před zpracováním lookup pole."""
+        value_dict = dict(value_dict)
+        if "soucast" in value_dict:
+            value_dict["soucast"] = self._normalize_organization_identifier(value_dict["soucast"])
+        super().__init__(value_dict)
+
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """
@@ -2629,28 +2644,25 @@ class OrganizaceMapper(ImportModelMapper):
         :raises ImportDataBatchOrderingError: Vyvolá se, pokud je ``soucast`` dopředná reference.
         :raises ImportDataOrganizationCycleError: Vyvolá se, pokud výsledný graf obsahuje cyklus.
         """
+        normalized_ident = cls._normalize_organization_identifier
         seen: set[str] = set()
         for row in payloads:
-            ident = row.get("ident_cely")
-            soucast = row.get("soucast")
-            if soucast is not None and str(soucast).lower() not in ("nan", "none", ""):
-                soucast_str = str(soucast)
+            ident = normalized_ident(row.get("ident_cely"))
+            soucast_str = normalized_ident(row.get("soucast"))
+            if soucast_str is not None:
                 if soucast_str not in seen and not Organizace.objects.filter(ident_cely=soucast_str).exists():
                     raise ImportDataBatchOrderingError(ident, soucast_str, "soucast")
-            if ident is not None and str(ident).lower() not in ("nan", "none", ""):
-                seen.add(str(ident))
+            if ident is not None:
+                seen.add(ident)
 
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
             return
 
+        if not any("soucast" in row for row in payloads):
+            return
+
         organization_graph = dict(Organizace.objects.values_list("ident_cely", "soucast__ident_cely"))
         existing_idents = set(organization_graph)
-
-        def normalized_ident(value):
-            if value is None or pd.isna(value):
-                return None
-            value = str(value)
-            return None if value.strip().lower() in ("nan", "none", "") else value
 
         changed_idents: set[str] = set()
         for row in payloads:

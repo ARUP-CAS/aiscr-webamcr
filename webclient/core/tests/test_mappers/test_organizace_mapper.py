@@ -526,6 +526,22 @@ class OrganizaceMapperValidateBatchOrderingTest(TestCase):
         ]
         OrganizaceMapper.validate_batch_ordering(payloads)
 
+    def test_attribute_only_batch_skips_hierarchy_query(self):
+        """Dávka bez pole soucast nečte organizační graf."""
+        payloads = [{"ident_cely": "ORG-000001", "nazev": "Nový název"}]
+        with patch("core.import_data_mappers.Organizace.objects") as mock_objects:
+            OrganizaceMapper.validate_batch_ordering(payloads, UPDATE)
+        mock_objects.values_list.assert_not_called()
+
+    def test_organization_blank_identifier_normalization_is_scoped_and_preserves_nonblank_text(self):
+        """Normalizace organizací rozpozná prázdné sentinely bez úpravy platných identifikátorů."""
+        for value in (None, float("nan"), "", "   ", "  NaN ", " nOnE "):
+            with self.subTest(value=value):
+                self.assertIsNone(OrganizaceMapper._normalize_organization_identifier(value))
+        self.assertEqual(OrganizaceMapper._normalize_organization_identifier(" ORG-PARENT "), " ORG-PARENT ")
+        self.assertIsNone(OrganizaceMapper({"soucast": "  nAn "}).value_dict["soucast"])
+        self.assertNotIn("soucast", OrganizaceMapper({"ident_cely": "ORG-000001"}).value_dict)
+
     def test_soucast_none_passes(self):
         """Záznam se soucast=None neprojde kontrolou pořadí."""
         payloads = [self._row("ORG-000001", soucast=None), self._row("ORG-000002")]
@@ -535,6 +551,14 @@ class OrganizaceMapperValidateBatchOrderingTest(TestCase):
         """Záznam se soucast=float('nan') (pandas prázdná hodnota) neprojde kontrolou pořadí."""
         payloads = [self._row("ORG-000001", soucast=float("nan")), self._row("ORG-000002")]
         OrganizaceMapper.validate_batch_ordering(payloads)
+
+    def test_padded_blank_sentinels_pass_without_database_parent_lookup(self):
+        """Obalené prázdné sentinely se shodně rozpoznají jako chybějící rodič."""
+        for value in ("  ", "  NaN ", " nOnE "):
+            with self.subTest(value=value), patch("core.import_data_mappers.Organizace.objects") as mock_objects:
+                OrganizaceMapper.validate_batch_ordering([self._row("ORG-000001", soucast=value)])
+                mock_objects.filter.assert_not_called()
+                mock_objects.values_list.assert_called_once()
 
     def test_parent_before_child_in_batch_passes(self):
         """Pokud je nadřazená organizace definována dříve v CSV než podřízená, validace projde."""

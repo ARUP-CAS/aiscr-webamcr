@@ -651,7 +651,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
         Vrátí ID organizace a všech jejích přímých i nepřímých součástí.
 
         :param root_id: ID organizace, od které se prohledávají potomci směrem dolů.
-        :return: ID kořene a potomků; při cyklu pouze kořen, pro chybějící kořen prázdný seznam.
+        :return: ID kořene a bezpečně dosažitelných potomků; pro chybějící kořen prázdný seznam.
         """
         if root_id is None:
             return []
@@ -680,7 +680,23 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
         cycles = cls.find_cycles(parent_graph)
         if cycles:
             logger.error("uzivatel.Organizace.get_subtree_ids.cycle", extra={"root_id": root_id, "cycles": cycles})
-            return [root_id]
+            cycle_edges = {(child_id, parent_id) for cycle in cycles for child_id, parent_id in zip(cycle, cycle[1:])}
+            children_by_parent = {}
+            for child_id, parent_id in parent_graph.items():
+                if parent_id is not None and (child_id, parent_id) not in cycle_edges:
+                    children_by_parent.setdefault(parent_id, []).append(child_id)
+
+            reachable = []
+            pending = [root_id]
+            seen = set()
+            while pending:
+                current_id = pending.pop()
+                if current_id in seen:
+                    continue
+                seen.add(current_id)
+                reachable.append(current_id)
+                pending.extend(children_by_parent.get(current_id, ()))
+            return reachable
         return list(parent_graph)
 
     def save(self, *args, **kwargs):
