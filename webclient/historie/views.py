@@ -4,6 +4,7 @@ from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam
 from core.models import Permissions as p
 from core.models import Soubor, check_permissions
+from core.repository_connector import FedoraNoResponseError
 from core.views import ExportMixinDate
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
@@ -118,7 +119,12 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
             record = self.fedora_model.objects.get(**lookup)
         except Exception:
             return
-        fedora_data = record.get_historicke_verze()
+        try:
+            fedora_data = record.get_historicke_verze()
+        except FedoraNoResponseError as err:
+            # Při výpadku Fedory se stránka vykreslí jen s historií z databáze, bez tabulky verzí z Fedory.
+            logger.warning("historie.views.fedora_historie.failed", extra={"ident_cely": ident, "error": err})
+            return
         if not fedora_data:
             return
         fedora_table = FedoraHistorieTable(fedora_data, prefix="fed-")

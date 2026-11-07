@@ -136,7 +136,7 @@ tranzitivními piny. Vyšší skupina zahrnuje nižší přes ``-r``, takže ka�
 pro své prostředí a instaluje se samostatně:
 
 * ``requirements.txt`` - produkční závislosti, jediné instalované do produkčního obrazu
-* ``requirements-test.txt`` - produkční + selenium, freezegun, coverage
+* ``requirements-test.txt`` - produkční + selenium, freezegun
 * ``requirements-dev.txt`` - produkční + testovací + pre-commit, debug-toolbar, livereload,
   Werkzeug (``runserver_plus``) aj. (Dockerfile-DEV, lokální vývoj)
 * ``requirements-docs.txt`` - produkční + Sphinx a jeho rozšíření (Read the Docs)
@@ -153,12 +153,14 @@ běží selenium testy. Publikovaný produkční obraz se staví bez něj.
   Balíčky, které spolu obvykle přicházejí nebo bez sebe nemohou být aktualizovány (např. Django
   s django-celery-beat), seskupuje do jednoho PR; skupiny i jejich důvody jsou v ``.github/dependabot.yml``.
   Bezpečnostní opravy zůstávají jako samostatné PR.
-* Workflow ``.github/workflows/pre_commit.yml`` při každém PR do ``test`` nebo ``main`` a při pushi
-  do ``main`` znovu zkompiluje ``requirements*.txt`` bez aktualizací; nesoulad s ``requirements*.in``
-  opraví v auto-fix PR.
-* Job ``refresh-python-pins`` téhož workflow po každém pushi do ``main`` (nebo ručně) spustí
-  ``scripts/compile_requirements.sh --upgrade`` nad větví ``test`` a udržuje průběžný PR
-  ``deps/python-pins-refresh`` do ``test`` s obnovenými tranzitivními piny.
+* Job ``pre-commit`` ve workflow ``.github/workflows/pre_commit.yml`` pro release PR ``test → main``
+  spustí ``scripts/compile_requirements.sh --upgrade`` a poté nainstaluje výsledné závislosti,
+  obnoví jejich dokumentaci a provede kontroly; opravné PR s obnovenými piny míří do ``test``.
+  Ostatní PR do ``main`` a push do ``main`` kompilují bez upgradu, obnoví dokumentaci
+  závislostí a provedou kontroly; běžná PR do ``test`` kompilují bez upgradu. Jediné opravné
+  PR cílí do zdrojové větve původního PR, po pushi do ``main`` do ``main``. Dependabot, release
+  App a opravné větve jsou vyloučeny; ruční režimy a úplná pravidla popisuje
+  :doc:`../03_vyvoj/kodovaci_standardy`.
 
 **BuildKit cache mount**
 
@@ -332,9 +334,11 @@ Místo samostatného ``RUN chown``, používáme ``COPY --chown``:
 
     HEALTHCHECK --interval=30s --timeout=10s \
                 --start-period=40s --retries=3 \
-        CMD curl -f http://localhost:8000/ || exit 1
+        CMD bash /scripts/run-healthcheck.sh
 
-* Automatická kontrola zdraví kontejneru
+* Automatická kontrola zdraví kontejneru stejným skriptem ``run-healthcheck.sh`` jako v compose souborech (Django ``/healthcheck`` na http-socketu 8001, databáze, Fedora)
+* Port 8000 je uwsgi socket v nativním protokolu (``uwsgi_pass`` z proxy), ne HTTP, proto se na něj healthcheck neptá
+* Healthcheck definovaný v compose souboru má přednost; image-level healthcheck se uplatní tam, kde compose vlastní nemá (např. ``git_docker-compose.yml``)
 * Orchestrační nástroje (Kubernetes, Docker Swarm) mohou restartovat nefunkční kontejnery
 
 ========================================

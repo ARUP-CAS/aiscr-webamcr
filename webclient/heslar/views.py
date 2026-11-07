@@ -120,7 +120,7 @@ def _souradnice_ze_starych_parametru(request):
 
     logger.warning(
         "heslar.views.zjisti_katastr_souradnic.zastarale_parametry",
-        extra={"reason": "Volající posílá long/lat; jde nejspíš o cachovaný starší mapa_projekty.js."},
+        extra={"info": "Volající posílá long/lat; jde nejspíš o cachovaný starší mapa_projekty.js."},
     )
     bod = GEOSGeometry(wkt, srid=5514)
     return bod.x, bod.y
@@ -158,7 +158,7 @@ def zjisti_katastr_souradnic(request):
             # plnit varovný log vlastním obsahem.
             logger.debug(
                 "heslar.views.zjisti_katastr_souradnic.invalid_params",
-                extra={"parametry": sorted(request.GET.keys())[:20]},
+                extra={"list": sorted(request.GET.keys())[:20]},
             )
             return JsonResponse({})
         x_val, y_val = souradnice
@@ -411,6 +411,6 @@ class ContinueKatastrProcessing(UserPassesTestMixin, AdminRecordProcessingView):
             return new_kat is not None and new_kat.pk != old_id
         logger.debug(
             "heslar.views.ContinueKatastrProcessing._process.unsupported",
-            extra={"type": type(record).__name__},
+            extra={"value": type(record).__name__},
         )
         return False

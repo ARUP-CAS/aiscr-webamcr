@@ -1,6 +1,7 @@
 import logging
 
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
+from core.utils import hodnota_pro_log
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
@@ -104,5 +105,7 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
             :return: Vrací výsledek volání ``form_invalid()``.
         """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger.debug("neidentakce.views.NeidentAkceEditView.form_invalid", extra={"error": form.errors})
+        logger.debug(
+            "neidentakce.views.NeidentAkceEditView.form_invalid", extra={"error": hodnota_pro_log(form.errors)}
+        )
         return super().form_invalid(form)

@@ -56,7 +56,7 @@ class Command(BaseCommand):
 
         logger.debug(
             "core.management.commands.update_pristupnost_snapshot.start",
-            extra={"batch_size": batch_size},
+            extra={"limit": batch_size},
         )
 
         projekt_count = Projekt.objects.all().count()
@@ -98,7 +98,7 @@ class Command(BaseCommand):
         self.stdout.write("")
         logger.debug(
             "core.management.commands.update_pristupnost_snapshot.end",
-            extra={"processed": processed_count, "batch_size": batch_size},
+            extra={"count": processed_count, "limit": batch_size},
         )
 
         self.stdout.write(

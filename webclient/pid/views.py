@@ -535,13 +535,13 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
         if response.status_code != 200:
             logger.warning(
                 "pid.views.WikiDataAutocompleteView._item_is_human.http_error",
-                extra={"status_code": response.status_code, "item_id": item_id},
+                extra={"status_code": response.status_code, "value": item_id},
             )
             return False
         try:
             payload = response.json()
         except ValueError:
-            logger.warning("pid.views.WikiDataAutocompleteView._item_is_human.invalid_json", extra={"item_id": item_id})
+            logger.warning("pid.views.WikiDataAutocompleteView._item_is_human.invalid_json", extra={"value": item_id})
             return False
         if not isinstance(payload, dict):
             return False
@@ -569,14 +569,14 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
         if response.status_code != 200:
             logger.warning(
                 "pid.views.WikiDataAutocompleteView._search_language.http_error",
-                extra={"status_code": response.status_code, "language": language},
+                extra={"status_code": response.status_code, "value": language},
             )
             return []
         try:
             payload = response.json()
         except ValueError:
             logger.warning(
-                "pid.views.WikiDataAutocompleteView._search_language.invalid_json", extra={"language": language}
+                "pid.views.WikiDataAutocompleteView._search_language.invalid_json", extra={"value": language}
             )
             return []
         if not isinstance(payload, dict):
@@ -645,15 +645,13 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
         if statements_response.status_code != 200:
             logger.warning(
                 "pid.views.WikiDataAutocompleteView._get_item_result.http_error",
-                extra={"status_code": statements_response.status_code, "item_id": item_id},
+                extra={"status_code": statements_response.status_code, "value": item_id},
             )
             return []
         try:
             statements = statements_response.json()
         except ValueError:
-            logger.warning(
-                "pid.views.WikiDataAutocompleteView._get_item_result.invalid_json", extra={"item_id": item_id}
-            )
+            logger.warning("pid.views.WikiDataAutocompleteView._get_item_result.invalid_json", extra={"value": item_id})
             return []
         if not isinstance(statements, dict):
             return []

@@ -1,8 +1,11 @@
 import datetime
 import io
+import itertools
 import json
 import logging
 import os
+import subprocess
+import time
 import traceback
 import zipfile
 from collections import defaultdict
@@ -13,6 +16,7 @@ import requests
 from arch_z.models import Akce
 from cacheops import invalidate_model
 from celery import shared_task
+from celery.signals import task_postrun
 from core.connectors import RedisConnector
 from core.constants import (
     IMPORT,
@@ -52,6 +56,7 @@ from core.import_data_mappers import (
     UzivatelOpravneniMapper,
 )
 from core.models import AntivirusCheckResult, Soubor, SouborVazby
+from core.news_feed import _parse_feed, get_news_feed_cache_keys
 from core.repository_connector import (
     DryRunFedoraTransaction,
     FedoraDeletionOnlyTransaction,
@@ -60,16 +65,23 @@ from core.repository_connector import (
     FedoraTransaction,
 )
 from core.translation import format_message
-from core.utils import check_import_report_directory, translate_status_value, upsert_import_report_index_entry
+from core.utils import (
+    check_import_report_directory,
+    hodnota_pro_log,
+    iter_pk_chunks,
+    translate_status_value,
+    upsert_import_report_index_entry,
+)
 from django.conf import settings
 from django.contrib.auth.models import Group
+from django.core.cache import cache
 from django.db import connection, transaction
-from django.db.models import F, Min, Model, Prefetch, Q
+from django.db.models import F, Min, Model, Q
 from django.db.models.functions import Coalesce, Upper
 from django.forms.models import model_to_dict
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from django.utils.translation import gettext_noop
+from django.utils.translation import gettext_noop, override
 from dokument.models import Dokument
 from ez.models import ExterniZdroj
 from heslar import hesla_dynamicka
@@ -82,8 +94,10 @@ from lokalita.models import Lokalita
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from projekt.models import Projekt
 from services.mailer import Mailer
-from uzivatel.models import Osoba, User, UserNotificationType
+from uzivatel.models import User, UserNotificationType
 from xml_generator.models import ModelWithMetadata
+
+import redis
 
 logger = logging.getLogger(__name__)
 
@@ -680,51 +694,93 @@ def update_snapshot_fields():
         logger.error("core.cron.update_snapshot_fields.do.error", extra={"error": err})
 
 
+REDIS_SNAPSHOT_BATCH_SIZE = 1000
+
+
+def _update_redis_snapshots_for_class(r, current_class, rewrite_existing):
+    """
+    Aktualizuje Redis snapshoty všech záznamů jedné třídy modelu.
+
+    Záznamy se zpracovávají po dávkách ``REDIS_SNAPSHOT_BATCH_SIZE``: existence klíčů se ověří jedním
+    pipeline voláním na dávku a chybějící (nebo při ``rewrite_existing`` všechny) snapshoty se vygenerují
+    jednou tabulkou přes ``generate_redis_snapshots()`` a zapíšou jedním pipeline voláním.
+
+    :param r: Spojení na Redis.
+    :param current_class: Třída modelu s vlastností ``redis_snapshot_id`` a metodou ``generate_redis_snapshots()``.
+    :param rewrite_existing: Pokud je ``True``, přepíše i existující klíče; jinak zapisuje jen chybějící.
+    :return: N-tice (počet prošlých záznamů, počet zapsaných snapshotů).
+    """
+    pipe = r.pipeline()
+    query = current_class.objects.all()
+    if current_class in (Akce, Lokalita):
+        # redis_snapshot_id čte ident_cely z archeologického záznamu
+        query = query.select_related("archeologicky_zaznam")
+    processed = 0
+    changed = 0
+    for batch in itertools.batched(iter_pk_chunks(query, REDIS_SNAPSHOT_BATCH_SIZE), REDIS_SNAPSHOT_BATCH_SIZE):
+        processed += len(batch)
+        if rewrite_existing:
+            missing = batch
+        else:
+            for item in batch:
+                pipe.exists(item.redis_snapshot_id)
+            missing = [item for item, exists in zip(batch, pipe.execute()) if not exists]
+        if not missing:
+            continue
+        for key, value in current_class.generate_redis_snapshots(missing).items():
+            if rewrite_existing:
+                pipe.delete(key)
+            pipe.hset(key, mapping=value)
+            changed += 1
+        pipe.execute()
+    return processed, changed
+
+
 @shared_task
 def update_all_redis_snapshots(rewrite_existing=False, classes=None):
     """
     Aktualizuje Redis snapshots pro všechny nebo vybrané třídy modelů.
 
+    Záznamy se načítají po dávkách podle primárního klíče (viz ``core.utils.iter_pk_chunks``). Chyba při zpracování
+    jedné třídy se zaloguje a pokračuje se další třídou; pokud některá třída selže, úloha na konci
+    vyvolá ``RuntimeError``, aby byl běh v Celery označen jako neúspěšný.
+
     :param rewrite_existing: Pokud je ``True``, přepíše i existující záznamy v Redis. Výchozí hodnota je ``False``.
     :param classes: Volitelný seznam tříd modelů, pro které se mají Redis snapshot záznamy aktualizovat.
         Pokud není zadán, použijí se výchozí třídy
         (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez).
+    :raises RuntimeError: Pokud zpracování alespoň jedné třídy selhalo.
     """
     logger.debug("cron.tasks.update_all_redis_snapshots.start")
     r = RedisConnector.get_connection()
     default_classes = (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez)
     classes_list = classes if classes is not None else default_classes
+    failed_classes = []
     for current_class in classes_list:
-        logger.debug("cron.tasks.update_all_redis_snapshots.class_start", extra={"class_name": current_class.__name__})
-        pipe = r.pipeline()
-        query = current_class.objects.all()
-        if current_class == Dokument:
-            query = query.prefetch_related(
-                Prefetch(
-                    "autori",
-                    queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
-                    to_attr="ordered_autors",
-                )
+        class_name = current_class.__name__
+        logger.debug("cron.tasks.update_all_redis_snapshots.class_start", extra={"class_name": class_name})
+        start = time.monotonic()
+        try:
+            processed, changed = _update_redis_snapshots_for_class(r, current_class, rewrite_existing)
+        except Exception as err:
+            failed_classes.append(class_name)
+            logger.exception(
+                "cron.tasks.update_all_redis_snapshots.class_error",
+                extra={"class_name": class_name, "error": str(err), "duration_s": time.monotonic() - start},
             )
-        i = 0
-        change_items = 0
-        for item in query.iterator(chunk_size=1000):
-            if rewrite_existing or not r.exists(item.redis_snapshot_id):
-                key, value = item.generate_redis_snapshot()
-                if key and value:
-                    if rewrite_existing:
-                        pipe.delete(key)
-                    pipe.hset(key, mapping=value)
-                    change_items = change_items + 1
-                    if (change_items % 1000) == 0:
-                        pipe.execute()
-
-            i = i + 1
-            if (i % 1000) == 0:
-                print(f"\r{i}", end="")
-        pipe.execute()
-        logger.debug("cron.tasks.update_all_redis_snapshots.class_end", extra={"class_name": current_class.__name__})
-    logger.debug("cron.tasks.update_all_redis_snapshots.end")
+            continue
+        logger.debug(
+            "cron.tasks.update_all_redis_snapshots.class_end",
+            extra={
+                "class_name": class_name,
+                "count": processed,
+                "number": changed,
+                "duration_s": time.monotonic() - start,
+            },
+        )
+    logger.debug("cron.tasks.update_all_redis_snapshots.end", extra={"info": ", ".join(failed_classes)})
+    if failed_classes:
+        raise RuntimeError(f"update_all_redis_snapshots failed for: {', '.join(failed_classes)}")
 
 
 @shared_task
@@ -789,6 +845,50 @@ def call_digiarchiv_update_task():
     url = settings.DIGIARCHIV_UPDATE
     requests.get(url, timeout=10)
     logger.debug("cron.tasks.call_digiarchiv_update_task.end")
+
+
+# Prefix klíče s unix časem poslední úlohy dokončené workerem; celý klíč je
+# ``<prefix>:<hostname workeru>`` (např. ``celery_worker_last_task_done:worker1@amcr``).
+# Čte ho healthcheck scripts/run-healthcheck_celery.sh (redis-cli GET), prefix musí zůstat shodný.
+CELERY_WORKER_LAST_TASK_DONE_KEY_PREFIX = "celery_worker_last_task_done"
+
+
+@task_postrun.connect
+def record_celery_worker_task_done(task=None, **kwargs):
+    """
+    Po každé dokončené úloze (úspěšné i neúspěšné) zapíše do Redisu aktuální unix čas
+    pod klíč ``CELERY_WORKER_LAST_TASK_DONE_KEY_PREFIX:<hostname workeru>``.
+
+    Handler běží v potomkovi prefork poolu, který úlohu vykonal, takže klíč dokládá, že worker
+    úlohy skutečně zpracovává, nejen že hlavní proces odpovídá na řídící příkazy. Klíč je
+    oddělený pro každý worker, aby zdravý worker nezamaskoval zaseknutý. Signál se posílá ještě
+    před odebráním požadavku ze zásobníku, takže ``task.request.hostname`` je k dispozici. Úlohy
+    spuštěné mimo worker (bez hostname) se nezapisují. Chyba Redisu se jen zaloguje, aby
+    neovlivnila výsledek úlohy.
+
+    :param task: Instance dokončené úlohy (argument ``task`` signálu ``task_postrun``).
+    :param kwargs: Ostatní argumenty signálu ``task_postrun`` (nepoužívají se).
+    """
+    hostname = getattr(getattr(task, "request", None), "hostname", None)
+    if not hostname:
+        return
+    try:
+        RedisConnector.get_connection().set(f"{CELERY_WORKER_LAST_TASK_DONE_KEY_PREFIX}:{hostname}", int(time.time()))
+    except redis.RedisError as err:
+        logger.warning("cron.tasks.record_celery_worker_task_done.redis_error", extra={"error": err})
+
+
+@shared_task(ignore_result=True)
+def celery_worker_liveness_ping():
+    """
+    Prázdná úloha, kterou beat posílá každé 2 minuty (``CELERY_BEAT_SCHEDULE``).
+
+    Zajišťuje, že i nečinný worker pravidelně dokončí úlohu, a tím obnoví klíč
+    ``CELERY_WORKER_LAST_TASK_DONE_KEY_PREFIX`` (handler ``record_celery_worker_task_done``). Počet jejích
+    úspěšných běhů exportuje celery_exporter jako ``celery_task_succeeded_total``, nad kterým lze
+    postavit alert v monitoringu. Výsledek se neukládá, aby nepřibývaly záznamy
+    v ``django_celery_results``.
+    """
 
 
 def _normalize_import_file_name(name: str) -> str:
@@ -1099,7 +1199,7 @@ def save_import_report_to_disk(job_id, redis_connector, reports_directory_path):
     except Exception as err:
         logger.error(
             "cron.tasks.save_import_report_to_disk.error",
-            extra={"job_id": job_id, "report_path": report_path, "error": str(err)},
+            extra={"job_id": job_id, "file": report_path, "error": str(err)},
         )
         return None
 
@@ -1549,7 +1649,7 @@ def run_data_import_validation(job_id, user_id, lock_token, performed_action):
 
     logger.debug(
         "cron.tasks.run_data_import_validation.end",
-        extra={"job_id": job_id, "failure_reason": failure_reason, "stopped": stopped, "record_count": record_id},
+        extra={"job_id": job_id, "info": failure_reason, "stopped": stopped, "count": record_id},
     )
 
 
@@ -1694,7 +1794,7 @@ def run_data_import(job_id, user_id, lock_token):
             )
             logger.error(
                 "cron.tasks.run_data_import.invalid_record_count",
-                extra={"job_id": job_id, "record_count": record_count, "record_count_raw": record_count_raw},
+                extra={"job_id": job_id, "count": record_count, "record_count_raw": record_count_raw},
             )
             return
         performed_action_raw = redis_connector.get(job_key("import_performed_action"))
@@ -1760,7 +1860,7 @@ def run_data_import(job_id, user_id, lock_token):
                 except Exception as rollback_err:
                     logger.error(
                         "cron.tasks.run_data_import.fedora_delete_rollback.error",
-                        extra={"job_id": job_id, "record_id": entry["record_id"], "error": rollback_err},
+                        extra={"job_id": job_id, "index": entry["record_id"], "error": rollback_err},
                     )
             pending_fedora_delete_commits.clear()
 
@@ -1782,8 +1882,8 @@ def run_data_import(job_id, user_id, lock_token):
                         "cron.tasks.run_data_import.fedora_delete_commit.error",
                         extra={
                             "job_id": job_id,
-                            "record_id": entry["record_id"],
-                            "identity": entry["identity"],
+                            "index": entry["record_id"],
+                            "list": hodnota_pro_log(entry["identity"]),
                             "error": commit_err,
                         },
                     )
@@ -2068,8 +2168,8 @@ def run_data_import(job_id, user_id, lock_token):
                         "cron.tasks.run_data_import.distribution.saved",
                         extra={
                             "distribution": distribution,
-                            "paradata": row["is_paradata"],
-                            "action": row["action"],
+                            "option": row["is_paradata"],
+                            "value": row["action"],
                             "ident_cely": ident_cely,
                             "transaction": fedora_transaction.uid,
                             "job_id": job_id,
@@ -2301,9 +2401,7 @@ def run_data_import(job_id, user_id, lock_token):
                         pending_fedora_update.clear()
 
                         add_item_fedora_update_target(fedora_transaction.updated_ident_cely, record_id)
-                        logger.info(
-                            "cron.tasks.run_data_import.success", extra={"record_id": record_id, "job_id": job_id}
-                        )
+                        logger.info("cron.tasks.run_data_import.success", extra={"index": record_id, "job_id": job_id})
                         redis_connector.rpush(job_key("import_data_progress_ids"), record_id)
                         redis_connector.rpush(
                             job_key("import_data_progress_details_tr"), "cron.tasks.run_data_import.success"
@@ -2320,7 +2418,7 @@ def run_data_import(job_id, user_id, lock_token):
                     except Exception as err:
                         logger.info(
                             "cron.tasks.run_data_import.error",
-                            extra={"error": err, "record_id": record_id, "job_id": job_id},
+                            extra={"error": err, "index": record_id, "job_id": job_id},
                         )
                         fedora_transaction.rollback_transaction()
                         transaction.set_rollback(True)
@@ -2401,7 +2499,7 @@ def run_data_import(job_id, user_id, lock_token):
                     except Exception as err:
                         logger.error(
                             "cron.tasks.run_data_import.soubor_delete.error",
-                            extra={"job_id": job_id, "soubor_pk": soubor.pk, "error": err},
+                            extra={"job_id": job_id, "pk": soubor.pk, "error": err},
                         )
                         transaction.set_rollback(True)
                         data_rolled_back = True
@@ -2725,7 +2823,7 @@ def run_data_import(job_id, user_id, lock_token):
                         "cron.tasks.run_data_import.fedora.error",
                         extra={
                             "job_id": job_id,
-                            "record_ids": affected_record_ids,
+                            "list": sorted(affected_record_ids, key=str),
                             "error": err,
                             "traceback": fedora_error_stack,
                         },
@@ -2872,8 +2970,8 @@ def run_data_import(job_id, user_id, lock_token):
                             extra={
                                 "job_id": job_id,
                                 "ident_cely": skipped_ident_cely,
-                                "import_filename": skipped_filename,
-                                "reason": reason_tr,
+                                "file": skipped_filename,
+                                "info": reason_tr,
                             },
                         )
 
@@ -2884,7 +2982,7 @@ def run_data_import(job_id, user_id, lock_token):
                         soubor: Soubor
                         logger.debug(
                             "cron.tasks.run_data_import.files.import_started",
-                            extra={"job_id": job_id, "file_index": file_index, "file_name": soubor.nazev},
+                            extra={"job_id": job_id, "index": file_index, "file": soubor.nazev},
                         )
                         if stopped:
                             break
@@ -3011,7 +3109,7 @@ def run_data_import(job_id, user_id, lock_token):
                         logger.info(
                             "cron.tasks.run_data_import.files.insert.saved",
                             extra={
-                                "imported_filename": filename,
+                                "file": filename,
                                 "ident_cely": ident_cely,
                                 "job_id": job_id,
                             },
@@ -3093,8 +3191,8 @@ def run_data_import(job_id, user_id, lock_token):
                         extra={
                             "error": err,
                             "job_id": job_id,
-                            "import_filename": filename,
-                            "soubor_pk": err.soubor_pk,
+                            "file": filename,
+                            "pk": err.soubor_pk,
                             **related_metadata_log_context,
                         },
                     )
@@ -3117,9 +3215,9 @@ def run_data_import(job_id, user_id, lock_token):
                         extra={
                             "error": err,
                             "job_id": job_id,
-                            "import_filename": filename,
+                            "file": filename,
                             **related_metadata_log_context,
-                            "detected_mime": err.mime_type,
+                            "mime_type": err.mime_type,
                         },
                     )
                     if record_id is not None:
@@ -3141,9 +3239,9 @@ def run_data_import(job_id, user_id, lock_token):
                         extra={
                             "error": err,
                             "job_id": job_id,
-                            "import_filename": filename,
+                            "file": filename,
                             **related_metadata_log_context,
-                            "detected_mime": err.mime_type,
+                            "mime_type": err.mime_type,
                         },
                     )
                     if record_id is not None:
@@ -3165,10 +3263,10 @@ def run_data_import(job_id, user_id, lock_token):
                         extra={
                             "error": err,
                             "job_id": job_id,
-                            "import_filename": filename,
+                            "file": filename,
                             **related_metadata_log_context,
-                            "detected_mime": err.mime_type,
-                            "navazany_ident_cely": err.navazany_ident_cely,
+                            "mime_type": err.mime_type,
+                            "info": err.navazany_ident_cely,
                         },
                     )
                     if record_id is not None:
@@ -3191,7 +3289,7 @@ def run_data_import(job_id, user_id, lock_token):
                         extra={
                             "error": err,
                             "job_id": job_id,
-                            "import_filename": filename,
+                            "file": filename,
                             "traceback": fedora_error_stack,
                             **related_metadata_log_context,
                         },
@@ -3223,7 +3321,7 @@ def run_data_import(job_id, user_id, lock_token):
                         extra={
                             "error": err,
                             "job_id": job_id,
-                            "import_filename": filename,
+                            "file": filename,
                             "traceback": error_stack,
                             **related_metadata_log_context,
                         },
@@ -3333,9 +3431,7 @@ def run_data_import(job_id, user_id, lock_token):
             redis_connector.delete(*stray_keys)
         RedisConnector.release_import_lock(redis_connector, lock_token)
 
-    logger.debug(
-        "cron.tasks.run_data_import.end", extra={"job_id": job_id, "failed": failed, "record_count": record_count}
-    )
+    logger.debug("cron.tasks.run_data_import.end", extra={"job_id": job_id, "failed": failed, "count": record_count})
 
 
 #: Kolik dní zpět musí den být, aby se HTTP 404 na jeho změnovém VFR dal
@@ -3380,6 +3476,10 @@ RUIAN_MAX_404_POKUSU_ZA_BEH = 60
 #: úspěšně staženým dnem. Slouží i k recyklaci takového běhu při dalším cronu,
 #: aby se pro tentýž den nehromadily duplicitní řádky auditu.
 NOTE_404_NEPOTVRZENO = "no_changes_nepotvrzeno (404)"
+
+#: Poznámka u dne, který se opakuje po dřívějším selhání se staženými daty
+#: (metadata se vynutí a přepočet navázaných záznamů proběhne znovu).
+NOTE_OPAKOVANI_PO_SELHANI = "opakovani_po_selhani"
 
 #: Text chyby, kterým se uzavírá běh přerušený zvenčí (SIGKILL, OOM, restart
 #: kontejneru). Takový běh nestihl zapsat ani ``failed``, ani ``success``.
@@ -3443,7 +3543,7 @@ def _zkontroluj_stari_poslednich_dat(today: datetime.date) -> None:
     if posledni_s_daty is None:
         logger.error(
             "cron.tasks.sync_ruian_changes.zadna_stazena_data",
-            extra={"reason": "Neexistuje žádný běh s neprázdným source_path – zkontrolujte URL zdroje."},
+            extra={"info": "Neexistuje žádný běh s neprázdným source_path – zkontrolujte URL zdroje."},
         )
         return
 
@@ -3455,11 +3555,11 @@ def _zkontroluj_stari_poslednich_dat(today: datetime.date) -> None:
         logger.error(
             "cron.tasks.sync_ruian_changes.mimo_retenci_zdroje",
             extra={
-                "dnu_bez_dat": stari,
-                "retence_zdroje_dnu": RUIAN_RETENCE_ZDROJE_DNU,
+                "count": stari,
+                "limit": RUIAN_RETENCE_ZDROJE_DNU,
                 "posledni_data_valid_to": posledni_s_daty.data_valid_to.isoformat(),
-                "posledni_run_id": posledni_s_daty.pk,
-                "reason": (
+                "run_id": posledni_s_daty.pk,
+                "info": (
                     f"Denní sync stojí {stari} dnů, což je za hranicí retence zdroje "
                     f"({RUIAN_RETENCE_ZDROJE_DNU} dnů). Zameškané změnové soubory už na "
                     "serveru ČÚZK nejsou a denní sync je nedožene. Je nutné spustit plný "
@@ -3473,11 +3573,11 @@ def _zkontroluj_stari_poslednich_dat(today: datetime.date) -> None:
         logger.error(
             "cron.tasks.sync_ruian_changes.dlouho_bez_dat",
             extra={
-                "dnu_bez_dat": stari,
+                "count": stari,
                 "limit": RUIAN_NO_DOWNLOAD_ERROR_DAYS,
                 "posledni_data_valid_to": posledni_s_daty.data_valid_to.isoformat(),
-                "posledni_run_id": posledni_s_daty.pk,
-                "reason": (
+                "run_id": posledni_s_daty.pk,
+                "info": (
                     "Déle než "
                     f"{RUIAN_NO_DOWNLOAD_ERROR_DAYS} dnů se nestáhl žádný změnový VFR. "
                     "Může jít o změnu URL na straně ČÚZK – ověřte base_url/atom_feed_url "
@@ -3535,7 +3635,7 @@ def sync_ruian_changes(reassign_records: bool = True):
             # hustěji, než stíhá doběhnout – obojí je potřeba vidět.
             logger.error(
                 "cron.tasks.sync_ruian_changes.lock_not_acquired",
-                extra={"reason": "Jiný běh sync_ruian_changes stále drží advisory lock, přeskakuji."},
+                extra={"info": "Jiný běh sync_ruian_changes stále drží advisory lock, přeskakuji."},
             )
             return
         _sync_ruian_changes_locked(reassign_records)
@@ -3563,7 +3663,7 @@ def _potvrd_prazdne_dny(runy: list) -> None:
     logger.info(
         "cron.tasks.sync_ruian_changes.prazdne_dny_potvrzeny",
         extra={
-            "pocet_dnu": len(runy),
+            "count": len(runy),
             "od": runy[0].data_valid_to.isoformat(),
             "do": runy[-1].data_valid_to.isoformat(),
         },
@@ -3602,10 +3702,10 @@ def _uzavri_prerusene_behy() -> None:
     logger.warning(
         "cron.tasks.sync_ruian_changes.prerusene_behy_uzavreny",
         extra={
-            "run_ids": [pk for pk, _, _ in prerusene],
-            "dny": [den.isoformat() for _, den, _ in prerusene],
+            "run_id": [pk for pk, _, _ in prerusene],
+            "list": [den.isoformat() for _, den, _ in prerusene],
             "mody": [mod for _, _, mod in prerusene],
-            "reason": "Běhy zůstaly ve stavu running po zabití procesu; den se zopakuje jako po selhání.",
+            "info": "Běhy zůstaly ve stavu running po zabití procesu; den se zopakuje jako po selhání.",
         },
     )
 
@@ -3622,6 +3722,7 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
         from heslar.models import RuianSyncRun
         from heslar.ruian_sync import FileVfrSource
         from heslar.ruian_sync import syncer as ruian_syncer
+        from heslar.ruian_sync.souhrn_varovani import SberVarovani
         from heslar.ruian_sync.vfr_download import get_target_dir
 
         _uzavri_prerusene_behy()
@@ -3630,7 +3731,7 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
         if last_run is None:
             logger.error(
                 "cron.tasks.sync_ruian_changes.no_initial_state",
-                extra={"reason": "Před spuštěním cronu je nutné provést prvotní full sync."},
+                extra={"info": "Před spuštěním cronu je nutné provést prvotní full sync."},
             )
             return
 
@@ -3665,6 +3766,10 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                         since=last_run.data_valid_to,
                         variant="ZKSH",
                     )
+                # Varování z hlubších vrstev (parser, stahování, přepočet) se
+                # logují bez vazby na běh; sběr je shrne do ``run.warnings``,
+                # aby byla vidět v administraci – viz ``SberVarovani``.
+                sber_varovani = SberVarovani(run).start()
                 try:
                     source = FileVfrSource.download_for_day(day, target_dir=target_dir)
                     if source is None:
@@ -3702,10 +3807,10 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                             logger.error(
                                 "cron.tasks.sync_ruian_changes.podezrela_serie_404",
                                 extra={
-                                    "pocet_dnu": len(nepotvrzene_404),
+                                    "count": len(nepotvrzene_404),
                                     "od": nepotvrzene_404[0].data_valid_to.isoformat(),
                                     "do": nepotvrzene_404[-1].data_valid_to.isoformat(),
-                                    "reason": (
+                                    "info": (
                                         "Souvislá série 404 na změnových VFR. Kotva se neposouvá, "
                                         "dny se po opravě stáhnou znovu. Ověřte base_url/atom_feed_url "
                                         "v CustomAdminSettings (skupina ruian_sync, item vfr_download)."
@@ -3716,10 +3821,10 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                             logger.error(
                                 "cron.tasks.sync_ruian_changes.strop_404_pokusu",
                                 extra={
-                                    "pocet_dnu": len(nepotvrzene_404),
+                                    "count": len(nepotvrzene_404),
                                     "od": nepotvrzene_404[0].data_valid_to.isoformat(),
                                     "do": nepotvrzene_404[-1].data_valid_to.isoformat(),
-                                    "reason": (
+                                    "info": (
                                         "Dosažen strop 404 pokusů na jeden běh, končím. "
                                         "Zbytek se zkusí při dalším spuštění cronu."
                                     ),
@@ -3767,12 +3872,15 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                         .exists()
                     )
                     if opakovani_po_selhani:
+                        # Informace, ne varování – do ``note``, aby nevyvolala ⚠.
+                        run.note = NOTE_OPAKOVANI_PO_SELHANI
+                        run.save(update_fields=["note"])
                         logger.warning(
                             "cron.tasks.sync_ruian_changes.opakovani_po_selhani",
                             extra={
                                 "day": day.isoformat(),
                                 "run_id": run.pk,
-                                "reason": (
+                                "info": (
                                     "Dřívější pokus o tento den selhal po stažení dat. "
                                     "Metadata se do Fedory zapíšou i u nezměněných prvků "
                                     "a přepočet navázaných záznamů proběhne znovu."
@@ -3802,14 +3910,14 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                             source_path.unlink(missing_ok=True)
                             logger.debug(
                                 "cron.tasks.sync_ruian_changes.source_removed",
-                                extra={"day": day.isoformat(), "path": str(source_path)},
+                                extra={"day": day.isoformat(), "file": str(source_path)},
                             )
                         except OSError as cleanup_err:
                             logger.warning(
                                 "cron.tasks.sync_ruian_changes.source_remove_failed",
                                 extra={
                                     "day": day.isoformat(),
-                                    "path": str(source_path),
+                                    "file": str(source_path),
                                     "error": str(cleanup_err),
                                 },
                             )
@@ -3825,6 +3933,8 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                     # Neúspěšný den přerušuje běh – další pokus proběhne v dalším spuštění
                     # cronu, který naváže od stejného `day` (last_successful nezměněno).
                     return
+                finally:
+                    sber_varovani.zapis()
 
                 day += datetime.timedelta(days=1)
 
@@ -3835,7 +3945,7 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
                 logger.info(
                     "cron.tasks.sync_ruian_changes.prazdne_dny_cekaji",
                     extra={
-                        "pocet_dnu": len(nepotvrzene_404),
+                        "count": len(nepotvrzene_404),
                         "od": nepotvrzene_404[0].data_valid_to.isoformat(),
                         "do": nepotvrzene_404[-1].data_valid_to.isoformat(),
                     },
@@ -3849,3 +3959,97 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
             "cron.tasks.sync_ruian_changes.do.error",
             extra={"error": str(err), "traceback": traceback.format_exc()},
         )
+
+
+NEWS_FEED_MAX_RETRIES = 3
+NEWS_FEED_RETRY_DELAY = 60
+
+
+@shared_task(bind=True, max_retries=NEWS_FEED_MAX_RETRIES, default_retry_delay=NEWS_FEED_RETRY_DELAY)
+def load_news_feed(self, languages=None):
+    """
+    Načte a uloží novinkový kanál do cache.
+
+    Tato úloha je volána při startu aplikace a periodicky v intervalu
+    definovaném v settings (cache_ttl - 60 sekund).
+
+    Při chybě se opakují pouze jazyky, které se nepodařilo načíst.
+
+    :param languages: Seznam jazykových kódů ke zpracování; pokud není zadán,
+        použije se seznam z nastavení aplikace.
+    """
+    cache_ttl = settings.NEWS_FEED_CACHE_TTL
+    base_url = settings.NEWS_FEED_BASE_URL
+    languages = settings.NEWS_FEED_LANGUAGES if languages is None else languages
+    failed_languages = []
+
+    for language in languages:
+        feed_url = f"{base_url}/{language}.json"
+        try:
+            response = requests.get(feed_url, timeout=settings.NEWS_FEED_TIMEOUT)
+            response.raise_for_status()
+            with override(language):
+                feed = _parse_feed(response.json())
+            cache_key, stale_key = get_news_feed_cache_keys(language)
+            cache.set(cache_key, feed, cache_ttl)
+
+            if feed:
+                cache.set(stale_key, feed, None)
+            else:
+                logger.info("News feed for %s is valid but empty; preserving stale copy.", language)
+
+            logger.info("Successfully loaded news feed for %s", language)
+        except Exception:
+            logger.exception("Failed to load news feed for %s", language)
+            failed_languages.append(language)
+
+    if failed_languages:
+        logger.warning("News feed loading failed for %s; retrying failed languages.", ", ".join(failed_languages))
+        raise self.retry(
+            exc=RuntimeError(f"Failed to load news feed for: {', '.join(failed_languages)}"),
+            kwargs={"languages": failed_languages},
+        )
+
+    logger.info("News feed loading completed successfully")
+    return True
+
+
+def run_news_feed_warmup():
+    """
+    Spustí úlohu load_news_feed v pozadí jako nezávislý proces.
+
+    Slouží jako alternativa k synchronnímu volání při startu kontejneru.
+    Úloha běží v pozadí (nohup ... &), takže neblokují spuštění uwsgi/runserver.
+    Pokud úloha selže, je zachycena a zalogována, nikdy se nešíří výjimka
+    do entrypointu (safety_guard).
+
+    Tato funkce je volána z entrypoint.sh a entrypoint.dev.sh.
+    """
+    logger.info("Starting background news feed warm-up")
+
+    # Spustit úlohu jako nezávislý Celery worker proces
+    warmup_command = 'python manage.py shell -c "from cron.tasks import load_news_feed; load_news_feed()"'
+    # nohup zajistí, že proces přežije i po ukončení entrypointu
+    background_command = f"nohup {warmup_command} >/proc/1/fd/1 2>&1 </dev/null &"
+    subprocess.run(background_command, shell=True)
+    logger.info("Background news feed warm-up started")
+
+
+def safety_guard(func):
+    """
+    Dekorátor, který zajistí, že volaná funkce nikdy nevrátí výjimku.
+
+    Slouží jako safeguard pro background warm-up. Pokud by funkce selhala,
+    je chyba zachycena a zalogována, ale nikdy se nešíří do entrypointu.
+    :param func: Funkce, kterou je třeba chránit výjimkami.
+    """
+
+    def wrapper(*args, **kwargs):
+        try:
+            result = func(*args, **kwargs)
+            return result
+        except Exception as e:
+            logger.error(f"News feed warm-up failed: {e}")
+            return None
+
+    return wrapper

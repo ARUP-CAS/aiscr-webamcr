@@ -7,30 +7,37 @@ stojí na chování Fedory, které jednotkové testy mockují: ``paradata`` je R
 zdroj vrací 410 (tombstone). Test toto chování ověří na skutečné instanci — právě dotaz na
 ``paradata/fcr:metadata`` dříve způsobil, že se ikona paradat nezobrazila nikdy.
 
-Běží jen na vyžádání, protože zapisuje do Fedory nastavené v ``settings``. Pod vlastním dočasným
+Vyžaduje ``settings.FEDORA_INTEGRATION_TESTS=True``; výchozí hodnota z ``get_secret``
+je False, ve vývojovém ``dev.py`` je True. Zapisuje do Fedory nastavené v ``settings``. Pod vlastním dočasným
 záznamem si postaví soubory s paradaty i bez nich a po testu je smaže i s tombstonem::
 
-    docker compose -f docker-compose-dev-local-db-all-containers.yml exec -e FEDORA_INTEGRATION_TESTS=1 \\
-        web python manage.py test core.tests.test_fedora_integration_paradata
+    docker compose -f docker-compose-dev-local-db-all-containers.yml exec \\
+        web python manage.py test core.tests.test_fedora_integration_paradata --debug-mode
 
-Při úplném běhu Selenium testů (``run_tests.py``) se spouští automaticky proti jejich testové Fedoře.
-Nespouštět proti produkční Fedoře.
+Při úplném běhu Selenium testů (``run_tests.py``) jsou součástí výběru testů proti jejich
+testové Fedoře; spustí se pouze při splnění společné kontroly prostředí.
+Nespouštět proti produkční Fedoře. Společná pojistka ověřuje SITE_URL a DEBUG před zápisem.
+Při lokálním SITE_URL vyžaduje DEBUG=True; bez něj se test přeskočí.
 """
 
-import os
-import unittest
 import uuid as uuid_lib
 from types import SimpleNamespace
 
 import requests
 from core.repository_connector import NON_RDF_SOURCE_LINK, FedoraRepositoryConnector
+from core.tests.integration import require_integration_environment
 from django.conf import settings
 from django.test import SimpleTestCase
 
 
-@unittest.skipUnless(os.environ.get("FEDORA_INTEGRATION_TESTS") == "1", "Set FEDORA_INTEGRATION_TESTS=1 to run.")
 class FedoraParadataIntegrationTest(SimpleTestCase):
     """Ověřuje ``has_paradata`` a ``paradata_exists`` na běžící Fedoře."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Ověří přepínač, SITE_URL a DEBUG před prvním zápisem do Fedory."""
+        require_integration_environment(getattr(settings, "SITE_URL", None))
+        super().setUpClass()
 
     def setUp(self):
         """Založí ve Fedoře dočasný záznam se souborem s paradaty a souborem bez nich."""

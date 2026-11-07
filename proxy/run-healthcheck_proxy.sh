@@ -1,9 +1,10 @@
-
 #!/bin/sh
 
-status_code="$(curl -s -L -o /dev/null -w '%{http_code}'  127.0.0.1:8080)"
+# Ověřuje jen běh nginx; zdraví Djanga hlídá healthcheck kontejneru web.
+# Bez -L a bez průchodu do Djanga, jinak by proxy padala při odstávce (503) nebo výpadku webu (#4417).
+status_code="$(curl -s -o /dev/null -w '%{http_code}' 127.0.0.1:8080/nginx-health)"
 
-echo "HTTP status code from proxyt is ${status_code}"
+echo "HTTP status code from proxy is ${status_code}"
 
 test "${status_code}" -eq "200" && true || false
 

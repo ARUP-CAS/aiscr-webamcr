@@ -130,7 +130,7 @@ RUN chmod +x /scripts/* && \
     sed -i "s/YYYY/$(date +%Y)/g" ./templates/base_logged_in.html
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
+    CMD bash /scripts/run-healthcheck.sh
 
 USER user
 CMD ["entrypoint.sh"]

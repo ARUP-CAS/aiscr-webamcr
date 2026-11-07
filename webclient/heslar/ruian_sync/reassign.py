@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import contextlib
 import logging
-from typing import Dict, Iterable, Iterator, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from arch_z.models import ArcheologickyZaznam
 from core.constants import ZMENA_KATASTRU
@@ -31,7 +31,7 @@ from core.repository_connector import (
     FedoraTransactionCommitFailedError,
     FedoraTransactionStatus,
 )
-from core.utils import get_cadastre_from_point, reprezentativni_bod_sql
+from core.utils import get_cadastre_from_point, iter_pk_chunks, reprezentativni_bod_sql
 from dj.models import DokumentacniJednotka
 from django.db import connection, transaction
 from heslar import hesla_dynamicka
@@ -70,7 +70,7 @@ def _prefer_sjtsk(sjtsk_geom, wgs84_geom):
     if status != "OK":
         logger.warning(
             "heslar.ruian_sync.reassign._prefer_sjtsk.transform_failed",
-            extra={"status": status, "wkt_prefix": wgs84_geom.wkt[:80]},
+            extra={"value": status, "geom": wgs84_geom.wkt[:80]},
         )
         return None
     return GEOSGeometry(wkt_5514, srid=5514)
@@ -118,7 +118,7 @@ def _close_or_rollback(fedora_tx: FedoraTransaction, success: bool) -> None:
     if fedora_tx.status is not FedoraTransactionStatus.ACTIVE:
         logger.debug(
             "heslar.ruian_sync.reassign._close_or_rollback.uz_uzavrena",
-            extra={"transaction": getattr(fedora_tx, "uid", None), "status": str(fedora_tx.status)},
+            extra={"transaction": getattr(fedora_tx, "uid", None), "value": str(fedora_tx.status)},
         )
         return
     if success:
@@ -196,7 +196,7 @@ def _db_a_fedora(ident_cely: str, *, commit_v_signalu: bool = False):
                 extra={
                     "ident_cely": ident_cely,
                     "transaction": getattr(fedora_tx, "uid", None),
-                    "reason": (
+                    "info": (
                         "Databaze je zapsana, ale zapis metadat do Fedory po commitu "
                         "selhal - repozitar ma u tohoto zaznamu zastarala metadata. "
                         "Nahradou je manage.py generate_metadata pro tento ident."
@@ -209,7 +209,7 @@ def _db_a_fedora(ident_cely: str, *, commit_v_signalu: bool = False):
                 extra={
                     "ident_cely": ident_cely,
                     "transaction": getattr(fedora_tx, "uid", None),
-                    "reason": (
+                    "info": (
                         "Fedora transakce uz byla commitnuta, ale databazova cast se "
                         "rollbackla - repozitar a DB se u tohoto zaznamu rozesly."
                     ),
@@ -278,7 +278,7 @@ def log_katastr_change(historie_vazba_id: Optional[int], *casti: str) -> None:
     )
     logger.debug(
         "heslar.ruian_sync.reassign.log_katastr_change",
-        extra={"vazba_id": historie_vazba_id, "poznamka": poznamka},
+        extra={"pk": historie_vazba_id, "info": poznamka},
     )
 
 
@@ -716,7 +716,7 @@ def reassign_projekt_dalsi_katastr(
     """
     logger.debug(
         "heslar.ruian_sync.reassign.reassign_projekt_dalsi_katastr.start",
-        extra={"ident_cely": projekt.ident_cely, "old_katastr_kod": old_katastr.kod},
+        extra={"ident_cely": projekt.ident_cely, "old": old_katastr.kod},
     )
 
     current = set(projekt.katastry.values_list("pk", flat=True))
@@ -849,35 +849,6 @@ def reassign_neident_akce(
 _REASSIGN_MODELS = ("projekt", "az", "sn")
 
 
-def _iter_pk_chunks(queryset, chunk_size: int = 1000) -> Iterator:
-    """
-    Iteruje queryset po dávkách řazených podle PK (keyset pagination).
-
-    Náhrada za ``QuerySet.iterator()``, který je v této konfiguraci k ničemu:
-    default DB má ``DISABLE_SERVER_SIDE_CURSORS = True``, takže
-    ``iterator()`` nestreamuje, ale natáhne celý resultset do paměti procesu
-    naráz. Tato funkce drží v paměti vždy jen ``chunk_size`` záznamů – každou
-    dávku získá samostatným dotazem ``... WHERE pk > last_pk ORDER BY pk LIMIT n``.
-
-    Keyset paginace je bezpečná i při souběžném mutování záznamů, protože reassign
-    nemění PK ani příslušnost záznamu do iterované množiny (AZ stále má DJ apod.).
-
-    :param queryset: Queryset ke zpracování (přeřadí se podle ``pk``).
-    :param chunk_size: Počet záznamů načtených na jednu dávku.
-
-        :return: Generátor instancí modelu.
-    """
-    ordered = queryset.order_by("pk")
-    last_pk = 0
-    while True:
-        chunk = list(ordered.filter(pk__gt=last_pk)[:chunk_size])
-        if not chunk:
-            break
-        for obj in chunk:
-            yield obj
-        last_pk = chunk[-1].pk
-
-
 def reassign_all(
     *,
     only_models: Optional[Iterable[str]] = None,
@@ -966,7 +937,7 @@ def _reassign_all_projekt() -> Dict[str, int]:
     total = qs.count()
     print(f"Projekt: zpracovávám {total} záznamů (jen s geom)", flush=True)
     last_pct = -1
-    for idx, projekt in enumerate(_iter_pk_chunks(qs), start=1):
+    for idx, projekt in enumerate(iter_pk_chunks(qs), start=1):
         old_pk = projekt.hlavni_katastr_id
         try:
             new_kat = reassign_projekt(projekt)
@@ -1016,7 +987,7 @@ def _reassign_all_az() -> Dict[str, int]:
     total = qs.count()
     print(f"AZ: zpracovávám {total} záznamů (jen s DJ)", flush=True)
     last_pct = -1
-    for idx, az in enumerate(_iter_pk_chunks(qs), start=1):
+    for idx, az in enumerate(iter_pk_chunks(qs), start=1):
         old_pk = az.hlavni_katastr_id
         try:
             new_kat = reassign_az(az)
@@ -1055,7 +1026,7 @@ def _reassign_all_sn() -> Dict[str, int]:
     total = qs.count()
     print(f"SN: zpracovávám {total} záznamů (jen s geom)", flush=True)
     last_pct = -1
-    for idx, sn in enumerate(_iter_pk_chunks(qs), start=1):
+    for idx, sn in enumerate(iter_pk_chunks(qs), start=1):
         old_pk = sn.katastr_id
         try:
             new_kat = reassign_sn(sn)

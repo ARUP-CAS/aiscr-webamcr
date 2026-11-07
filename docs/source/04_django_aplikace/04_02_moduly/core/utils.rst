@@ -661,3 +661,42 @@ Funkce
    Funkce pro získání časového pásma z nastavení.
 
    :return: Vrací výsledek volání ``timezone()``.
+
+.. py:function:: hodnota_pro_log(hodnota)
+
+   Převede strukturovanou hodnotu na JSON řetězec pro textové pole v ``extra`` logu.
+
+   Šablona ``amcr_template`` v Elasticsearch mapuje pole jako ``data``, ``error``,
+   ``initial`` nebo ``warning`` na typ ``text``. ``python-logstash`` posílá ``dict``
+   a ``list`` beze změny (včetně podtříd jako ``QueryDict`` nebo ``ErrorDict``),
+   takže v takovém poli dorazí JSON objekt, Elasticsearch dokument odmítne a Logstash
+   celou událost zahodí (issue #4397). Proto se hodnota serializuje na řetězec už
+   v aplikaci.
+
+   Chyby formulářů (``ErrorDict``, ``ErrorList``) se převádí přes ``get_json_data()``:
+   ``ErrorList`` je ``UserList``, takže přímý ``json.dumps`` by z něj udělal prázdný
+   seznam. Vnořený řetězec, který je sám JSON objektem nebo polem (např.
+   ``optimistic_lock_data`` ve ``form.initial``), se rozbalí, aby se nezakódoval podruhé
+   a v logu nebyl plný escapovaných uvozovek. Ostatní neserializovatelné objekty (lazy
+   překlady, modely, data, ``Decimal``) se převádí přes ``str()``.
+
+   :param hodnota: Libovolná hodnota - dict, list, chyby formuláře či formsetu.
+   :return: JSON řetězec (``ensure_ascii=False``).
+
+.. py:function:: iter_pk_chunks(queryset, chunk_size)
+
+   Prochází queryset po dávkách seřazených podle primárního klíče (keyset stránkování).
+
+   Náhrada za ``QuerySet.iterator()``: obě databázová spojení mají ``DISABLE_SERVER_SIDE_CURSORS = True``,
+   takže ``iterator()`` nestreamuje, ale jedním ``SELECT`` natáhne celou výslednou sadu na klienta.
+   Takový dotaz musí včetně přenosu všech řádků doběhnout v rámci ``statement_timeout`` a u velkých
+   tabulek drží celou sadu v paměti procesu. Tato funkce místo toho načítá každou dávku samostatným
+   dotazem ``... WHERE pk > posledni_pk ORDER BY pk LIMIT chunk_size``, v paměti je vždy jen jedna
+   dávka. Prefetch a ``select_related`` definované na querysetu se aplikují na každou dávku.
+
+   Záznamy přidané během průchodu s vyšším PK se ještě zpracují, smazané se přeskočí; procházející
+   kód nesmí měnit PK ani příslušnost záznamu do iterované množiny.
+
+   :param queryset: Queryset ke zpracování (přeřadí se podle ``pk``).
+   :param chunk_size: Počet záznamů načtených jedním dotazem.
+   :return: Generátor instancí modelu v pořadí podle primárního klíče.

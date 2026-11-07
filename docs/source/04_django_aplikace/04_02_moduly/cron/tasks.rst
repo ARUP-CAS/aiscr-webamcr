@@ -158,14 +158,32 @@ Funkce
 
    Aktualizuje snapshot fields.
 
+.. py:function:: _update_redis_snapshots_for_class(r, current_class, rewrite_existing)
+
+   Aktualizuje Redis snapshoty všech záznamů jedné třídy modelu.
+
+   Záznamy se zpracovávají po dávkách ``REDIS_SNAPSHOT_BATCH_SIZE``: existence klíčů se ověří jedním
+   pipeline voláním na dávku a chybějící (nebo při ``rewrite_existing`` všechny) snapshoty se vygenerují
+   jednou tabulkou přes ``generate_redis_snapshots()`` a zapíšou jedním pipeline voláním.
+
+   :param r: Spojení na Redis.
+   :param current_class: Třída modelu s vlastností ``redis_snapshot_id`` a metodou ``generate_redis_snapshots()``.
+   :param rewrite_existing: Pokud je ``True``, přepíše i existující klíče; jinak zapisuje jen chybějící.
+   :return: N-tice (počet prošlých záznamů, počet zapsaných snapshotů).
+
 .. py:function:: update_all_redis_snapshots(rewrite_existing, classes)
 
    Aktualizuje Redis snapshots pro všechny nebo vybrané třídy modelů.
+
+   Záznamy se načítají po dávkách podle primárního klíče (viz ``core.utils.iter_pk_chunks``). Chyba při zpracování
+   jedné třídy se zaloguje a pokračuje se další třídou; pokud některá třída selže, úloha na konci
+   vyvolá ``RuntimeError``, aby byl běh v Celery označen jako neúspěšný.
 
    :param rewrite_existing: Pokud je ``True``, přepíše i existující záznamy v Redis. Výchozí hodnota je ``False``.
    :param classes: Volitelný seznam tříd modelů, pro které se mají Redis snapshot záznamy aktualizovat.
        Pokud není zadán, použijí se výchozí třídy
        (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez).
+   :raises RuntimeError: Pokud zpracování alespoň jedné třídy selhalo.
 
 .. py:function:: update_single_redis_snapshot(class_name, record_pk)
 
@@ -181,6 +199,31 @@ Funkce
 .. py:function:: call_digiarchiv_update_task()
 
    Zavolá URL digiarchívu pro spuštění aktualizace dat.
+
+.. py:function:: record_celery_worker_task_done(task)
+
+   Po každé dokončené úloze (úspěšné i neúspěšné) zapíše do Redisu aktuální unix čas
+   pod klíč ``CELERY_WORKER_LAST_TASK_DONE_KEY_PREFIX:<hostname workeru>``.
+
+   Handler běží v potomkovi prefork poolu, který úlohu vykonal, takže klíč dokládá, že worker
+   úlohy skutečně zpracovává, nejen že hlavní proces odpovídá na řídící příkazy. Klíč je
+   oddělený pro každý worker, aby zdravý worker nezamaskoval zaseknutý. Signál se posílá ještě
+   před odebráním požadavku ze zásobníku, takže ``task.request.hostname`` je k dispozici. Úlohy
+   spuštěné mimo worker (bez hostname) se nezapisují. Chyba Redisu se jen zaloguje, aby
+   neovlivnila výsledek úlohy.
+
+   :param task: Instance dokončené úlohy (argument ``task`` signálu ``task_postrun``).
+   :param kwargs: Ostatní argumenty signálu ``task_postrun`` (nepoužívají se).
+
+.. py:function:: celery_worker_liveness_ping()
+
+   Prázdná úloha, kterou beat posílá každé 2 minuty (``CELERY_BEAT_SCHEDULE``).
+
+   Zajišťuje, že i nečinný worker pravidelně dokončí úlohu, a tím obnoví klíč
+   ``CELERY_WORKER_LAST_TASK_DONE_KEY_PREFIX`` (handler ``record_celery_worker_task_done``). Počet jejích
+   úspěšných běhů exportuje celery_exporter jako ``celery_task_succeeded_total``, nad kterým lze
+   postavit alert v monitoringu. Výsledek se neukládá, aby nepřibývaly záznamy
+   v ``django_celery_results``.
 
 .. py:function:: _normalize_import_file_name(name)
 
@@ -455,3 +498,34 @@ Funkce
    Vlastní tělo :func:`sync_ruian_changes` běžící pod advisory lockem.
 
    :param reassign_records: Viz :func:`sync_ruian_changes`.
+
+.. py:function:: load_news_feed(self, languages)
+
+   Načte a uloží novinkový kanál do cache.
+
+   Tato úloha je volána při startu aplikace a periodicky v intervalu
+   definovaném v settings (cache_ttl - 60 sekund).
+
+   Při chybě se opakují pouze jazyky, které se nepodařilo načíst.
+
+   :param languages: Seznam jazykových kódů ke zpracování; pokud není zadán,
+       použije se seznam z nastavení aplikace.
+
+.. py:function:: run_news_feed_warmup()
+
+   Spustí úlohu load_news_feed v pozadí jako nezávislý proces.
+
+   Slouží jako alternativa k synchronnímu volání při startu kontejneru.
+   Úloha běží v pozadí (nohup ... &), takže neblokují spuštění uwsgi/runserver.
+   Pokud úloha selže, je zachycena a zalogována, nikdy se nešíří výjimka
+   do entrypointu (safety_guard).
+
+   Tato funkce je volána z entrypoint.sh a entrypoint.dev.sh.
+
+.. py:function:: safety_guard(func)
+
+   Dekorátor, který zajistí, že volaná funkce nikdy nevrátí výjimku.
+
+   Slouží jako safeguard pro background warm-up. Pokud by funkce selhala,
+   je chyba zachycena a zalogována, ale nikdy se nešíří do entrypointu.
+   :param func: Funkce, kterou je třeba chránit výjimkami.

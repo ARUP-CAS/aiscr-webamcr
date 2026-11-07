@@ -215,7 +215,7 @@ class FileVfrSource(RuianSource):
 
         logger.debug(
             "heslar.ruian_sync.FileVfrSource.fetch_changes.start",
-            extra={"path": str(self.path), "day": day.isoformat()},
+            extra={"file": str(self.path), "day": day.isoformat()},
         )
         return vfr_parser.parse_changes(self.path)
 

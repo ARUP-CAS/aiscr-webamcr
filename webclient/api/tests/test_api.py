@@ -9,6 +9,7 @@ import time
 import urllib.error
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from api.models import ApiRequestLog
@@ -18,8 +19,10 @@ from api.views import (
     ImportErrorType,
     ImportValidationException,
     SamostatnyNalezEvidencniCisloPatchView,
+    SamostatnyNalezFotografieUploadView,
     SamostatnyNalezXmlImportView,
     _fetch_xsd_bytes,
+    _rollback_fedora_transaction,
     _xsd_redis_key,
 )
 from core.constants import (
@@ -29,6 +32,7 @@ from core.constants import (
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_EVIDENCNI_CISLO_PATCH,
     API_REQUEST_LOG_TARGET_SAMOSTATNY_NALEZ_FOTOGRAFIE_UPLOAD,
     ARCHIVACE_SN,
+    MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES,
     NAHRANI_SBR,
     ODESLANI_SN,
     POTVRZENI_SN,
@@ -40,14 +44,19 @@ from core.constants import (
     ZAPSANI_SN,
 )
 from core.models import AntivirusCheckResult, Permissions, Soubor, check_permissions
-from core.repository_connector import FedoraNoResponseError
+from core.repository_connector import (
+    FedoraNoResponseError,
+    FedoraTransactionCommitFailedError,
+    FedoraTransactionStatus,
+)
 from core.setting_models import CustomAdminSettings
 from django.conf import settings
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import DatabaseError, IntegrityError
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
+from django.utils.datastructures import MultiValueDict
 from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_LICENCE, HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
 from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
@@ -539,8 +548,9 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
                     ),
                 },
             )
-            with patch("projekt.signals.projekt_post_save", lambda **kw: None), patch(
-                "xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None
+            with (
+                patch("projekt.signals.projekt_post_save", lambda **kw: None),
+                patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None),
             ):
                 Projekt.objects.get_or_create(
                     ident_cely="M-202400099A",
@@ -713,9 +723,10 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             return schema_instance
 
         try:
-            with patch("api.views._fetch_xsd_bytes", return_value=b"<schema/>") as fetch_mock, patch(
-                "api.views.etree.XMLSchema", side_effect=build_schema
-            ) as xmlschema_mock:
+            with (
+                patch("api.views._fetch_xsd_bytes", return_value=b"<schema/>") as fetch_mock,
+                patch("api.views.etree.XMLSchema", side_effect=build_schema) as xmlschema_mock,
+            ):
                 with ThreadPoolExecutor(max_workers=8) as executor:
                     results = list(executor.map(lambda _: SamostatnyNalezXmlImportView._get_amcr_schema(doc), range(8)))
 
@@ -1437,11 +1448,10 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             stav=2,
         )
 
-        with patch.object(
-            SamostatnyNalez, "check_pred_odeslanim", autospec=True, return_value=[]
-        ) as mock_odeslanim, patch.object(
-            SamostatnyNalez, "check_pred_potvrzenim", autospec=True, return_value=[]
-        ) as mock_potvrzenim:
+        with (
+            patch.object(SamostatnyNalez, "check_pred_odeslanim", autospec=True, return_value=[]) as mock_odeslanim,
+            patch.object(SamostatnyNalez, "check_pred_potvrzenim", autospec=True, return_value=[]) as mock_potvrzenim,
+        ):
             response = self._post_xml(xml)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -1459,11 +1469,10 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
             stav=3,
         )
 
-        with patch.object(
-            SamostatnyNalez, "check_pred_odeslanim", autospec=True, return_value=[]
-        ) as mock_odeslanim, patch.object(
-            SamostatnyNalez, "check_pred_potvrzenim", autospec=True, return_value=[]
-        ) as mock_potvrzenim:
+        with (
+            patch.object(SamostatnyNalez, "check_pred_odeslanim", autospec=True, return_value=[]) as mock_odeslanim,
+            patch.object(SamostatnyNalez, "check_pred_potvrzenim", autospec=True, return_value=[]) as mock_potvrzenim,
+        ):
             response = self._post_xml(xml)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -2035,6 +2044,32 @@ class FetchXsdBytesTests(TestCase):
         urlopen_mock.assert_called_once()
 
 
+class RollbackFedoraTransactionHelperTests(SimpleTestCase):
+    """Testy pomocné funkce ``_rollback_fedora_transaction`` (#4473)."""
+
+    def test_selhani_rollbacku_se_pouze_zaloguje(self):
+        """Výjimka z rollbacku nesmí propadnout, jinak by obslužná větev přeskočila uvolnění zámku."""
+        fedora_transaction = Mock(status=FedoraTransactionStatus.ACTIVE)
+        fedora_transaction.rollback_transaction.side_effect = FedoraTransactionCommitFailedError("ROLLBACK: timeout")
+
+        with self.assertLogs("api.views", level="WARNING"):
+            _rollback_fedora_transaction(fedora_transaction)
+
+        fedora_transaction.rollback_transaction.assert_called_once_with()
+
+    def test_chybejici_transakce_se_ignoruje(self):
+        """Transakce, která se nestihla vytvořit (``None``), se nerolluje a nevyhodí výjimku."""
+        _rollback_fedora_transaction(None)
+
+    def test_neaktivni_transakce_se_nerusi(self):
+        """Už uzavřená nebo zrušená transakce se znovu nerolluje."""
+        for transaction_status in (FedoraTransactionStatus.ABORTED, FedoraTransactionStatus.COMMITTED):
+            with self.subTest(status=transaction_status):
+                fedora_transaction = Mock(status=transaction_status)
+                _rollback_fedora_transaction(fedora_transaction)
+                fedora_transaction.rollback_transaction.assert_not_called()
+
+
 class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
     """Testy pro ``SamostatnyNalezEvidencniCisloPatchView``."""
 
@@ -2242,9 +2277,12 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         cls.second_user.groups.add(archeolog_group)
         cls.second_token, _ = Token.objects.get_or_create(user=cls.second_user)
 
-        with patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None), patch(
-            "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
-            return_value=True,
+        with (
+            patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None),
+            patch(
+                "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
+                return_value=True,
+            ),
         ):
             cls.target_organizace, _ = Organizace.objects.get_or_create(
                 ident_cely="ORG-TST-PATCH-TGT",
@@ -2350,8 +2388,9 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
                 "heslo_en": "Survey",
             },
         )
-        with patch("projekt.signals.projekt_post_save", lambda **kw: None), patch(
-            "xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None
+        with (
+            patch("projekt.signals.projekt_post_save", lambda **kw: None),
+            patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None),
         ):
             cls.projekt, _ = Projekt.objects.get_or_create(
                 ident_cely="M-202400098A",
@@ -2558,6 +2597,38 @@ class SamostatnyNalezEvidencniCisloPatchViewTests(TestCase):
         self.assertEqual(self.nalez.evidencni_cislo, "EC-TEST-001")
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("fedora_error_reading_metadata", str(log.errors))
+        self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
+
+    def test_commit_failure_with_failing_rollback_releases_lock_and_returns_500(self):
+        """
+        Selhání commitu a následně i záložního rollbacku (timeout, 404 u zahozené transakce) vrátí HTTP 500
+        s logem FAILURE a uvolní zámek záznamu; výjimka z rollbacku nesmí uvolnění přeskočit (#4473).
+        """
+        fedora_transaction = Mock(status=FedoraTransactionStatus.ACTIVE)
+        fedora_transaction.mark_transaction_as_closed.side_effect = FedoraTransactionCommitFailedError(
+            "COMMIT: timeout"
+        )
+        fedora_transaction.rollback_transaction.side_effect = FedoraTransactionCommitFailedError("ROLLBACK: timeout")
+
+        with patch("api.views.FedoraTransaction", return_value=fedora_transaction):
+            response = self._patch(IDENT_CELY)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("detail", response.text)
+        fedora_transaction.rollback_transaction.assert_called_once_with()
+        self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+        self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
+
+    def test_transaction_create_failure_releases_lock_and_returns_500(self):
+        """Selhání vytvoření Fedora transakce uvolní zámek záznamu a vrátí HTTP 500 s logem FAILURE (#4473)."""
+        with patch(
+            "api.views.FedoraTransaction",
+            side_effect=FedoraNoResponseError("http://fedora.example/", "No response", None),
+        ):
+            response = self._patch(IDENT_CELY)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
 
     def test_valid_request_updates_field_and_returns_200(self):
@@ -3105,8 +3176,9 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
                 "heslo_en": "Survey",
             },
         )
-        with patch("projekt.signals.projekt_post_save", lambda **kw: None), patch(
-            "xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None
+        with (
+            patch("projekt.signals.projekt_post_save", lambda **kw: None),
+            patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None),
         ):
             cls.projekt, _ = Projekt.objects.get_or_create(
                 ident_cely="M-202400097A",
@@ -3247,6 +3319,47 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         self._assert_attached_files(self.nalez, 0)
         self.assertNotEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 1)
 
+    def test_file_size_boundary_before_content_validation(self):
+        """Přesný limit projde kontrolou velikosti, limit plus bajt skončí před validací obsahu."""
+        for size, too_large in (
+            (MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES, False),
+            (MAX_PAS_API_FOTOGRAFIE_FILE_SIZE_BYTES + 1, True),
+        ):
+            with self.subTest(size=size):
+                ApiRequestLog.objects.all().delete()
+                photo = SimpleUploadedFile("boundary.png", self._minimal_photo_bytes(), content_type="image/png")
+                # Unit-level boundary coverage; the separate HTTP test sends real large PNG files.
+                photo.size = size
+                request = SimpleNamespace(
+                    FILES=MultiValueDict({"file": [photo]}),
+                    META={"REMOTE_ADDR": "127.0.0.1"},
+                    user=self.user,
+                    path=reverse(FOTO_UPLOAD_URL_NAME, kwargs={"ident_cely": IDENT_CELY}),
+                )
+                with (
+                    patch.object(SamostatnyNalezFotografieUploadView, "_has_upload_permissions", return_value=True),
+                    patch("api.views.Soubor.check_mime_for_url", return_value=False) as mime_check,
+                    patch.object(SamostatnyNalezFotografieUploadView, "_verify_content_digest") as digest_check,
+                    patch("api.views.Soubor.check_antivirus") as antivirus_check,
+                    patch.object(SamostatnyNalezFotografieUploadView, "_acquire_record_lock") as acquire_lock,
+                ):
+                    response = SamostatnyNalezFotografieUploadView().post(request, IDENT_CELY)
+
+                self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+                log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
+                expected_key = (
+                    "api.views.SamostatnyNalezFotografieUploadView.post.file_too_large"
+                    if too_large
+                    else "core.views.post_upload.mime_check_failed"
+                )
+                self.assertEqual(str(response.data["detail"]), str(_(expected_key)))
+                self.assertEqual(log.file_size, size)
+                self.assertEqual(mime_check.call_count, 0 if too_large else 1)
+                digest_check.assert_not_called()
+                antivirus_check.assert_not_called()
+                acquire_lock.assert_not_called()
+                self._assert_attached_files(self.nalez, 0)
+
     def test_user_without_file_upload_permission_returns_403(self):
         """Uživatel bez oprávnění ``soubor_nahrat_pas`` obdrží HTTP 403."""
 
@@ -3307,8 +3420,9 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         """Soubor s MIME typem ``image/heic`` projde validací a upload skončí HTTP 201."""
         heic_bytes = self._minimal_heif_container(b"heic")
 
-        with patch("api.views.Soubor.get_mime_types", return_value="image/heic"), patch(
-            "api.views.Soubor.get_file_extension_by_mime", return_value=("heic", "heif")
+        with (
+            patch("api.views.Soubor.get_mime_types", return_value="image/heic"),
+            patch("api.views.Soubor.get_file_extension_by_mime", return_value=("heic", "heif")),
         ):
             response = self._post_file(IDENT_CELY, heic_bytes, filename="photo.heic")
 
@@ -3320,8 +3434,9 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         """Soubor s MIME typem ``image/heif`` projde validací a upload skončí HTTP 201."""
         heif_bytes = self._minimal_heif_container(b"mif1")
 
-        with patch("api.views.Soubor.get_mime_types", return_value="image/heif"), patch(
-            "api.views.Soubor.get_file_extension_by_mime", return_value=("heic", "heif")
+        with (
+            patch("api.views.Soubor.get_mime_types", return_value="image/heif"),
+            patch("api.views.Soubor.get_file_extension_by_mime", return_value=("heic", "heif")),
         ):
             response = self._post_file(IDENT_CELY, heif_bytes, filename="photo.heif")
 
@@ -3688,8 +3803,9 @@ class SamostatnyNalezGetCreateOrgTests(TestCase):
             },
         )
 
-        with patch("projekt.signals.projekt_post_save", lambda **kw: None), patch(
-            "xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None
+        with (
+            patch("projekt.signals.projekt_post_save", lambda **kw: None),
+            patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None),
         ):
             cls.projekt_with_org, _ = Projekt.objects.get_or_create(
                 ident_cely="M-202400096A",

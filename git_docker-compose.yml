@@ -50,7 +50,7 @@ services:
 
   redis:
     build: ./redis
-    image: redis:8.10.1
+    image: redis:8.10.2
     ports:
       - "6379:6379"
     secrets:
@@ -63,7 +63,7 @@ services:
       - redis_data:/data
 
   redis-exporter:
-    image: oliver006/redis_exporter:v1.93.0-alpine
+    image: oliver006/redis_exporter:v1.96.0-alpine
     ports:
       - "9121:9121"
     secrets:
@@ -159,7 +159,7 @@ services:
       - git-reverse-proxy
 
   prometheus:
-    image: prom/prometheus:v3.15.0
+    image: prom/prometheus:v3.15.1
     volumes:
       - ./prometheus:/etc/prometheus
     networks:
@@ -176,8 +176,11 @@ services:
 
   logstash:
     image: docker.elastic.co/logstash/logstash:9.5.5
-    environment:
-      - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
+    # Image Logstashe neumí *_FILE proměnné; heslo pro logstash.conf (${ES_PASSWORD}) se načte ze secretu.
+    entrypoint:
+      - bash
+      - -c
+      - 'ES_PASSWORD="$$(cat /run/secrets/logstash_elastic_pass)" && [ -n "$$ES_PASSWORD" ] || { echo "Secret logstash_elastic_pass chybí nebo je prázdný" >&2; exit 1; }; export ES_PASSWORD; exec /usr/local/bin/docker-entrypoint'
     volumes:
       - logs_volume:/logs
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
@@ -188,7 +191,6 @@ services:
     restart: always
     secrets:
       - logstash_elastic_pass
-      - logstash_elastic_host
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.5.5
@@ -198,7 +200,6 @@ services:
       - ES_JAVA_OPTS=-Xms750m -Xmx750m
       - http.host=0.0.0.0
       - XPACK_MONITORING_ENABLED=false
-      - ELASTIC_PASSWORD=elastic_pass
     volumes:
       - /opt/elastic_logs:/usr/share/elasticsearch/data
       - /opt/docker_logs/elastic_backup:/usr/share/elasticsearch/backup
@@ -207,8 +208,6 @@ services:
       - 9200:9200
     networks:
       - git-reverse-proxy
-    secrets:
-      - elastic_pass
     restart: always
     deploy:
       resources:
@@ -231,7 +230,7 @@ services:
       - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
 
   selenium:
-    image: selenium/standalone-chromium:152.0
+    image: selenium/standalone-chromium:155.0
     ports:
       - 4444:4444
       - 7900:7900
@@ -271,11 +270,7 @@ secrets:
     file: redis_host.txt
   grafana_admin_password:
     file: grafana_admin_password.txt
-  elastic_pass:
-    file: elastic_password.txt
   logstash_elastic_pass:
     file: logstash_elastic_password.txt
-  logstash_elastic_host:
-    file: logstash_elastic_host.txt
   prometheus_config:
     file: prometheus.yml

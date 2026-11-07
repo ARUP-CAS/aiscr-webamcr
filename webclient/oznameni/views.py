@@ -7,7 +7,7 @@ from core.forms import CheckStavNotChangedForm
 from core.ident_cely import get_temporary_project_ident
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
 from core.repository_connector import FedoraTransaction
-from core.utils import SessionIdentifier, get_cadastre_from_point
+from core.utils import SessionIdentifier, get_cadastre_from_point, hodnota_pro_log
 from core.views import check_stav_changed
 from django.conf import settings
 from django.contrib import messages
@@ -132,9 +132,9 @@ class OznameniZapsatView(OznameniView):
                 self.session_identifier.set_project_ownership(projekt.ident_cely)
                 return redirect("oznameni:index2", ident_cely=projekt.ident_cely)
             else:
-                extra = {"form_error": form_ozn.errors, "error": form_projekt.errors}
+                extra = {"form_error": hodnota_pro_log(form_ozn.errors), "error": hodnota_pro_log(form_projekt.errors)}
                 if not settings.SKIP_RECAPTCHA:
-                    extra["error"] = form_captcha.errors
+                    extra["error"] = hodnota_pro_log(form_captcha.errors)
                 logger.debug("oznameni.views.index.form_not_valid", extra=extra)
                 return render(
                     request,

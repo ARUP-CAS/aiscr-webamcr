@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:dokument>
+    <amcr:ident_cely>M-TX-201604272</amcr:ident_cely>
+    <amcr:stav>2</amcr:stav>
+    <amcr:typ_dokumentu xml:lang="cs" id="HES-001075">nálezová zpráva</amcr:typ_dokumentu>
+    <amcr:material_originalu xml:lang="cs" id="HES-000217">digitální soubor</amcr:material_originalu>
+    <amcr:rada xml:lang="cs" id="HES-000883">zprávy a hlášení</amcr:rada>
+    <amcr:autor id="OS-001241" poradi="1">Trampota, František</amcr:autor>
+    <amcr:rok_vzniku>2011</amcr:rok_vzniku>
+    <amcr:organizace xml:lang="cs" id="ORG-000161">Regionální muzeum v Mikulově, p.o.</amcr:organizace>
+    <amcr:pristupnost xml:lang="cs" id="HES-000866">badatel</amcr:pristupnost>
+    <amcr:datum_zverejneni>2020-01-01</amcr:datum_zverejneni>
+    <amcr:jazyk_dokumentu xml:lang="cs" id="HES-000167">čeština</amcr:jazyk_dokumentu>
+    <amcr:ulozeni_originalu xml:lang="cs" id="HES-001167">archiv ARÚB</amcr:ulozeni_originalu>
+    <amcr:oznaceni_originalu>4272/16</amcr:oznaceni_originalu>
+    <amcr:popis>Mikulov na Moravě (BV); Parc.č.: 2088/50. Ul. 22. dubna.</amcr:popis>
+    <amcr:licence xml:lang="cs" id="HES-001458">neznámá</amcr:licence>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000303">U-000303</amcr:uzivatel>
+      <amcr:typ_zmeny>D23</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-001227">U-001227</amcr:uzivatel>
+      <amcr:typ_zmeny>D01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:extra_data>
+      <amcr:format xml:lang="cs" id="HES-000146">A4 (21 x 30 cm)</amcr:format>
+      <amcr:geom_system>4326</amcr:geom_system>
+    </amcr:extra_data>
+    <amcr:dokument_cast>
+      <amcr:ident_cely>M-TX-201604272-D001</amcr:ident_cely>
+      <amcr:archeologicky_zaznam id="M-201100127A">M-201100127A</amcr:archeologicky_zaznam>
+      <amcr:komponenta>
+        <amcr:ident_cely>M-TX-201604272-K001</amcr:ident_cely>
+        <amcr:obdobi xml:lang="cs" id="HES-000358">únětická kultura</amcr:obdobi>
+        <amcr:jistota>true</amcr:jistota>
+        <amcr:areal xml:lang="cs" id="HES-000060">neurčený areál</amcr:areal>
+      </amcr:komponenta>
+      <amcr:komponenta>
+        <amcr:ident_cely>M-TX-201604272-K002</amcr:ident_cely>
+        <amcr:obdobi xml:lang="cs" id="HES-000338">velatická kultura</amcr:obdobi>
+        <amcr:jistota>true</amcr:jistota>
+        <amcr:areal xml:lang="cs" id="HES-000060">neurčený areál</amcr:areal>
+      </amcr:komponenta>
+      <amcr:komponenta>
+        <amcr:ident_cely>M-TX-201604272-K003</amcr:ident_cely>
+        <amcr:obdobi xml:lang="cs" id="HES-000318">kultura zvoncovitých pohárů</amcr:obdobi>
+        <amcr:jistota>true</amcr:jistota>
+        <amcr:areal xml:lang="cs" id="HES-000060">neurčený areál</amcr:areal>
+      </amcr:komponenta>
+      <amcr:komponenta>
+        <amcr:ident_cely>M-TX-201604272-K004</amcr:ident_cely>
+        <amcr:obdobi xml:lang="cs" id="HES-000267">neolit</amcr:obdobi>
+        <amcr:jistota>true</amcr:jistota>
+        <amcr:areal xml:lang="cs" id="HES-000060">neurčený areál</amcr:areal>
+      </amcr:komponenta>
+      <amcr:komponenta>
+        <amcr:ident_cely>M-TX-201604272-K005</amcr:ident_cely>
+        <amcr:obdobi xml:lang="cs" id="HES-000325">raný středověk 4</amcr:obdobi>
+        <amcr:jistota>true</amcr:jistota>
+        <amcr:areal xml:lang="cs" id="HES-000060">neurčený areál</amcr:areal>
+      </amcr:komponenta>
+      <amcr:komponenta>
+        <amcr:ident_cely>M-TX-201604272-K006</amcr:ident_cely>
+        <amcr:obdobi xml:lang="cs" id="HES-000327">vrcholný – pozdní středověk</amcr:obdobi>
+        <amcr:jistota>true</amcr:jistota>
+        <amcr:areal xml:lang="cs" id="HES-000060">neurčený areál</amcr:areal>
+      </amcr:komponenta>
+    </amcr:dokument_cast>
+  </amcr:dokument>
+</amcr:amcr>

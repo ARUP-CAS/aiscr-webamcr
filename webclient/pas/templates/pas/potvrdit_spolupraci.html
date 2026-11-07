@@ -2,6 +2,7 @@
 {% load i18n %}
 {% load static %}
 {% load crispy_forms_tags %}
+{% load translation_tags %}
 
 {% block title %}{% trans "pas.templates.potvrdit_spolupraci.title" %}{% endblock %}
 {% block head %}
@@ -19,13 +20,9 @@
         <div class="card-body">
           <p>
             {% if not object.aktivni %}
-              {% blocktranslate trimmed with spolupracovnik=object.spolupracovnik vedouci=object.vedouci %}
-              pas.templates.potvrdit_spolupraci.question{{ spolupracovnik }}{{ vedouci }}
-              {% endblocktranslate %}
+              {% translate_format "pas.templates.potvrdit_spolupraci.question" spolupracovnik=object.spolupracovnik vedouci=object.vedouci %}
             {% else %}
-              {% blocktranslate trimmed with spolupracovnik=object.spolupracovnik vedouci=object.vedouci %}
-              pas.templates.potvrdit_spolupraci.already_active{{ spolupracovnik }}{{ vedouci }}
-              {% endblocktranslate %}
+              {% translate_format "pas.templates.potvrdit_spolupraci.already_active" spolupracovnik=object.spolupracovnik vedouci=object.vedouci %}
             {% endif %}
           </p>
           <div class="mt-3">

@@ -61,6 +61,12 @@ Jsou definovány následující secrets:
      - Administrátorské heslo pro Fedora repository
    * - ``FEDORA_TRANSACTION_URL``
      - Základ transakčního endpointu
+   * - ``FEDORA_CONNECT_TIMEOUT``
+     - Nepovinné. Timeout navázání spojení s Fedorou v sekundách (výchozí 10)
+   * - ``FEDORA_READ_TIMEOUT``
+     - Nepovinné. Maximální čekání na další data od Fedory v sekundách (výchozí 300); omezuje čekání na zámek ve Fedoře
+   * - ``FEDORA_CONTENT_READ_TIMEOUT``
+     - Nepovinné. Read timeout pro zápis obsahu souborů, náhledů a distribucí a pro commit transakce v sekundách (výchozí 600). Nemá být vyšší než ``uwsgi_read_timeout`` v ``proxy/default.conf``, jinak nginx vrátí 504, zatímco zápis doběhne
    * - ``DIGIARCHIV_SERVER_URL``
      - Základní URL pro odkazy do Digiarchivu
    * - ``ALLOWED_HOSTS``
@@ -104,9 +110,7 @@ Jsou definovány následující secrets:
 
 **Elasticsearch a monitoring**
 
-* ``elastic_pass`` - Heslo pro přístup k Elasticsearch clusteru
-* ``logstash_elastic_host`` - Adresa Elasticsearch hostu pro Logstash
-* ``logstash_elastic_pass`` - Heslo pro připojení Logstash k Elasticsearch
+* ``logstash_elastic_pass`` - Heslo účtu ``amcr_logger``, kterým Logstash zapisuje do Elasticsearch
 * ``postgresql_exporter`` - Konfigurace pro PostgreSQL Prometheus exporter
 * ``postgresql_exporter_uri`` - URI připojení pro PostgreSQL exporter
 

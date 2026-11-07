@@ -595,7 +595,9 @@ class AmcrCustomAdminSite(admin.AdminSite):
 
                 tasks.run_data_import_validation.delay(job_id, request.user.id, lock_token, performed_action)
             except Exception as err:
-                logger.exception("core.admin_sites.AmcrCustomAdminSite.import_data.dispatch_failed", extra={"err": err})
+                logger.exception(
+                    "core.admin_sites.AmcrCustomAdminSite.import_data.dispatch_failed", extra={"error": err}
+                )
                 # On dispatch failure release the lock and delete every staged chunk key plus the
                 # count and the per-user pointer.
                 RedisConnector.release_import_lock(self.redis_connector, lock_token)
@@ -616,7 +618,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
 
             logger.debug(
                 "core.admin_sites.AmcrCustomAdminSite.import_data.enqueued",
-                extra={"job_id": job_id, "chunk_count": chunk_count},
+                extra={"job_id": job_id, "count": chunk_count},
             )
             return self._render_import_polling_ui(request, context, job_id)
 

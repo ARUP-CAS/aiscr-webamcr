@@ -574,7 +574,7 @@ class GeneratorPoloh:
                 return kandidat
         logger.warning(
             "core.management.commands.utils.anonymizace_geometrie.min_posun_nesplnen",
-            extra={"klic": str(klic), "min_posun_m": min_posun_m},
+            extra={"key": str(klic), "min_posun_m": min_posun_m},
         )
         return None
 

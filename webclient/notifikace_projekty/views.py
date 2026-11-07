@@ -7,6 +7,7 @@ from core.message_constants import (
     HLIDACI_PES_USPESNE_VYTVOREN,
 )
 from core.repository_connector import FedoraTransaction
+from core.utils import hodnota_pro_log
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.contenttypes.models import ContentType
@@ -187,7 +188,8 @@ class PesCreateView(LoginRequiredMixin, View):
             user.save()
         else:
             logger.debug(
-                "notifikace_projekty.PesCreateView.post.not_valid", extra={"error": [fs.errors for fs in formsets]}
+                "notifikace_projekty.PesCreateView.post.not_valid",
+                extra={"error": hodnota_pro_log([fs.errors for fs in formsets])},
             )
             request.session["_old_pes_post"] = request.POST
             request.session["_old_pes_notifications"] = request.POST.getlist("notifications-notification_types")
