@@ -63,4 +63,6 @@ repos:
         language: python
         pass_filenames: false
         always_run: true
-exclude: (migrations)
+# Hub-delivered AIS CR tooling under .agents/scripts/ follows the management hub's own
+# lint (ruff/pylint); only the repository-owned helper there is linted by these hooks.
+exclude: '(migrations)|^\.agents/scripts/(?!run_import_maintenance_tests\.py$)'

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Gemini user settings safety template",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["security", "tools"],
+  "properties": {
+    "security": {
+      "type": "object",
+      "required": ["disableYoloMode"],
+      "properties": {
+        "disableYoloMode": { "type": "boolean", "const": true }
+      },
+      "additionalProperties": true
+    },
+    "tools": {
+      "type": "object",
+      "required": ["core"],
+      "properties": {
+        "core": {
+          "type": "array",
+          "items": { "type": "string" },
+          "not": {
+            "contains": { "const": "run_shell_command" }
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

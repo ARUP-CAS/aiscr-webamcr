@@ -2,48 +2,40 @@
   "context": {
     "includeDirectories": [
       ".gemini/context"
+    ],
+    "fileName": [
+      "GEMINI.md",
+      "aiscr-ecosystem-governance.md",
+      "aiscr-workspace-boundary-safety.md",
+      "aiscr-openspec-posture.md",
+      "aiscr-model-logging.md",
+      "aiscr-review-conduct.md",
+      "aiscr-quality-first-execution.md",
+      "aiscr-mgmt-entry.md",
+      "aiscr-mgmt-doc-dynamic-sets.md",
+      "aiscr-mgmt-repo-operating-basics.md",
+      "aiscr-planning-core.md",
+      "aiscr-usage-logging.md",
+      "aiscr-delivered-assets.md"
     ]
   },
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 .agents/scripts/gemini_cli_hooks.py session_start",
-            "timeout": 60000,
-            "name": "planning-baseline-advisory",
-            "description": "Advisory: not behind upstream before significant planning (management hub policy)."
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 .agents/scripts/gemini_cli_hooks.py session_end",
-            "timeout": 10000,
-            "name": "mgmt-stop-advisory",
-            "description": "Advisory: usage log, sync-layer2, README CZ/EN parity reminders."
-          }
-        ]
-      }
-    ],
-    "BeforeTool": [
-      {
-        "matcher": "run_shell_command",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 .agents/scripts/gemini_cli_hooks.py before_tool",
-            "timeout": 10000,
-            "name": "shell-guard-advisory",
-            "description": "Advisory: high-impact script and venv guards for shell commands."
-          }
-        ]
-      }
+  "tools": {
+    "core": [
+      "read_file",
+      "read_many_files",
+      "list_directory",
+      "glob",
+      "grep_search",
+      "replace",
+      "write_file",
+      "ask_user",
+      "write_todos",
+      "web_fetch",
+      "google_web_search",
+      "activate_skill"
     ]
+  },
+  "security": {
+    "disableYoloMode": true
   }
 }

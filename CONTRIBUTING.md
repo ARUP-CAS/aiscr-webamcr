@@ -335,8 +335,8 @@ npm run openspec:validate
 ```
 
 Vstupní body příkazů OpenSpec jsou dodány podle nástroje (např.
-`.github/prompts/opsx-*.prompt.md` pro Copilot a skills `openspec-*` / `opsx`
-pod `.claude/skills/`). Dodržujte schvalování „plan-first“ a přechody režimů
+`.github/prompts/opsx-*.prompt.md` pro Copilot a skills `openspec-*`
+pod `.claude/skills/` a ve sdíleném stromu `.agents/skills/`). Dodržujte schvalování „plan-first“ a přechody režimů
 explore → plan → implement podle pravidla `aiscr-planning-core`.
 
 ---
@@ -361,12 +361,12 @@ Technický dluh a auditní výstupy jsou evidovány v `.agents/`.
 
 Otevřete nový kontext AI agenta a jako první zprávu vložte:
 
-```
+```text
 Run the aiscr-review-codebase workflow (mode: full or update) and continue the review.
 ```
 
 Agent si načte `AGENTS.md`, stav z `.agents/config/review_cache.json` a zahájí
-další čekající task podle kanonického workflow `aiscr-review-codebase` (dodaného přes skill surfaces `.cursor/` / `.claude/` / `.codex/` / `.gemini/`).
+další čekající task podle kanonického workflow `aiscr-review-codebase` (dodaného jako skill v `.claude/skills/` a ve sdíleném stromu `.agents/skills/`).
 
 ---
 

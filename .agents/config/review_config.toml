@@ -383,7 +383,7 @@ phases = [
     "U06",
 ]
 output = ".agents/reports/review_reports/final_audit.md"
-tools = ".agents/scripts/review_tools.py"
+tools = ".agents/scripts/codebase_review.py"
 note = """
-Incremental update prompt — detects changes, coverage gaps, cross-validation issues, and spot-checks existing findings. Output goes into final_audit.md Changelog section (not separate files). Does not replace the full T01-T11 audit cycle. review_tools.py provides: hash, cross-validate, coverage-gaps, id-inventory, lint-artifacts, prompt-evolution, repo-structure, status. Script is repo-agnostic and config-driven (uses review_config.yaml).
+Incremental update prompt — detects changes, coverage gaps, cross-validation issues, and spot-checks existing findings. Output goes into final_audit.md Changelog section (not separate files). Does not replace the full T01-T11 audit cycle. codebase_review.py provides: hash, cross-validate, coverage-gaps, id-inventory, lint-artifacts, prompt-evolution, repo-structure, status, render, and issue capture (issue-transfer, record-issue, reconcile-issues). Script is repo-agnostic and config-driven (uses review_config.toml).
 """

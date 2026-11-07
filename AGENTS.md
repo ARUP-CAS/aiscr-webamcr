@@ -24,6 +24,25 @@ This generated block is rendered from AIS CR hub canonical governance stems. In 
 - **Workspace and sibling boundaries:** Work stays inside opened workspaces unless explicitly approved. Sibling repositories may be touched only when registry-scoped, branch-aware, and covered by the approved operation.
 - **Hub authority:** Sibling workflows may consume delivered governance surfaces but must not write back to hub paths; hub adoption starts as a separate explicit hub action.
 
+**Basic operation rules:**
+
+- **Permission is not authorization.**
+  An allowed tool or command may be used only within the user-approved task and scope.
+- **Check before changing existing state.**
+  Before moving, deleting, overwriting, or resetting, inspect exact targets and destinations, identify what could be lost, and preserve unrelated work, including untracked or ignored files, mounted data, and persistent volumes.
+- **Prefer reversible steps.**
+  Use the smallest effective operation, preview bulk changes, and establish a recovery path.
+  When consequences or recovery are uncertain, explain the uncertainty and resolve missing scope, authority, or preservation decisions before proceeding.
+- **Treat live infrastructure explicitly.**
+  Operations affecting live environments require project-specific opt-in and authorization covering the target and operation.
+  Infrastructure files or installed tooling alone do not supply that opt-in.
+- **Judge the effect across every route.**
+  Apply the same obligations through shell commands, scripts, runtimes, APIs, and hosted workflows.
+  Never use another route to obtain a refused or unauthorized effect, including before a technical refusal occurs.
+- **Preserve routine autonomy.**
+  Scoped, reversible work within existing approval proceeds without repeated confirmation.
+  Existing planning, protected-configuration, and delivery gates still apply.
+
 **Source stems:**
 
 - `Planning and approval` - source stem `aiscr-planning-core`
@@ -58,13 +77,13 @@ Read the following files:
 - `.agents/reports/bugs.md`
 - `.agents/reports/refactoring_backlog.md`
 
-The operational review procedure is the hub-canonical `aiscr-review-codebase` workflow, delivered via the `.cursor/`, `.claude/`, `.codex/`, and `.gemini/` skill surfaces; there is no long-form review prompt under `.agents/prompts/`.
+The operational review procedure is the hub-canonical `aiscr-review-codebase` workflow, delivered as a workflow skill in `.claude/skills/` and the shared `.agents/skills/` tree; this repository carries no long-form review prompt.
 
 Purpose:
 
 - understand repository structure
-- avoid repeating previous audit work
-- reuse previously collected analysis
+- avoid repeating recorded audit work
+- reuse collected analysis
 - continue long-running technical review sessions
 
 Agents should treat these files as the **persistent state of the review
@@ -136,7 +155,7 @@ Agents must:
 
 - gather repository context before starting work
 - use the canonical codebase-review language rule for review artifacts: English by default, while preserving verbatim Czech quotations, source text, domain identifiers, and user-facing Czech documentation excerpts where those exact words matter
-- avoid repeating previously recorded work
+- avoid repeating recorded work
 - prefer incremental improvements
 - record findings in `.agents/`
 - follow repository coding standards
@@ -163,7 +182,8 @@ OpenSpec is the requirement (`what`) layer for migrated workflows; `AGENTS.md`
 and `CONTRIBUTING.md` remain the `how` and approval layer. Validate edits with
 `npm run openspec:validate`. OpenSpec command entry points are delivered per
 vendor (for example `.github/prompts/opsx-*.prompt.md` for Copilot and the
-`openspec-*` skills under `.claude/skills/`). Follow the same planning-first
+`openspec-*` skills under `.claude/skills/` and the shared `.agents/skills/`
+tree). Follow the same planning-first
 approval and explore → plan → implement mode-transfer gating from the delivered
 `aiscr-planning-core` rule.
 
@@ -241,7 +261,8 @@ exist.
 5. Do not commit secrets, keys, or sensitive local configuration.
 6. Do not edit sensitive paths that are in `.gitignore` (e.g.
    `local_settings.py`, `secrets*.json`, `webclient_env_var.sh`); follow the
-   delivered workspace-boundary and tool-guard guidance for any assistant hooks.
+   delivered workspace-boundary rule and the permission floor carried in the
+   tracked vendor settings.
 
 Note:
 
@@ -273,35 +294,37 @@ recommended and documented here so the team can enable them locally:
 - **GitHub MCP** (e.g. plugin-github-github) — Issues, PRs, Actions; aligns
   with AGENTS.md requirement to cross-reference bugs with GitHub Issues.
 
-For deep review of a specific area or security-sensitive changes, agents
-may use (or recommend) subagents such as **code-reviewer** or
-**security-reviewer**; any findings must be written to `.agents/reports/`
-and, when relevant, to `refactoring_backlog.md` or `bugs.md`.
+For deep review of a specific area or security-sensitive changes, the
+enrolled review workflows delegate to the delivered `aiscr-*` subagents
+(for example `aiscr-survey`, `aiscr-analyse-security`, `aiscr-verify`) in each
+vendor's `agents/` directory; any findings must be written to
+`.agents/reports/` and, when relevant, to `refactoring_backlog.md` or `bugs.md`.
 
 ------------------------------------------------------------------------
 
 ## Shared Automation Rules
 
 Team-shared rules and automation config must live in the repository so they
-are versioned and visible to all. Agent-vendor folders such as `.cursor/`,
-`.claude/`, `.codex/`, `.gemini/`, `.clinerules/`, and `.qodo/` are tracked
-repository content when materialized from the `aiscr-management` hub sync
-baseline. Treat hub-synchronized vendor surfaces as shared governance assets,
-not as private local tooling.
+are versioned and visible to all. The assistant vendor roots and the shared
+`.agents/skills/` tree are tracked repository content delivered from the
+`aiscr-management` hub. Treat delivered surfaces as shared governance assets,
+not as private local tooling, and do not edit them here: propose changes at
+the hub. `.agents/delivery-manifest.json` records what was delivered and from
+which hub commit.
 
 - **Agent and project rules:** `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`
 - **Review config and task definitions:** `.agents/config/` (e.g.
   `review_config.toml`)
-- **Portable prompts:** `.agents/prompts/` (e.g. `postmortem_template.md`)
-- **Ecosystem automation recommendations:** hub `aiscr-management` — see below
-- **Vendor delivery surfaces:** `.cursor/`, `.claude/`, `.codex/`,
-  `.gemini/`, `.clinerules/`, `.qodo/` as synchronized from the
-  `aiscr-management` hub via direct-bundle sync, resolved from the hub
-  assistant roots plus this repo's enrollment in the hub sync registry
+- **Templates:** `.agents/canonical_configs/templates/` (delivered; e.g.
+  `documents/incident_postmortem.md`)
+- **Vendor delivery surfaces:** `.claude/`, `.cursor/`, `.codex/`, `.gemini/`,
+  `.kilo/`, `.github/` (instructions, prompts) and `.agents/skills/`, resolved
+  from the hub assistant roots plus this repository's enrollment in the hub
+  sync registry
 
-Ecosystem-wide automation recommendations (MCP, skills, hooks, subagents) are maintained in **`aiscr-management`** repository.
-
-Document recommended hooks, MCP servers, and subagents through `AGENTS.md` and tracked vendor hook and configuration surfaces where enabled.
+Ecosystem-wide automation recommendations (MCP servers, skills, subagents)
+are maintained in the **`aiscr-management`** repository. This repository
+commits no assistant hook surface.
 
 ------------------------------------------------------------------------
 

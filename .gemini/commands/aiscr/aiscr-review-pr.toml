@@ -1,16 +1,23 @@
-# aiscr:canonical=.agents/canonical_configs/workflow_skills/aiscr-review-pr.md
-description = "Review a GitHub PR — durable behavioral contract in OpenSpec spec; execution runbook in plan. Ingest prior review context, structure findings into buckets (resolved / disputed / not addressed / new), post body and inline comments as a single grouped review via GH API."
-prompt = """
-<!-- aiscr:canonical=.agents/canonical_configs/workflow_skills/aiscr-review-pr.md -->
+# SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69>
+# SPDX-License-Identifier: CC-BY-4.0
+# aiscr:canonical=.agents/canonical_configs/workflows/aiscr-review-pr.md
+# delivery-version: b257a1a89279be5e17cda3c133aa77b8c4d2706c 2026-11-07T11:18:12+01:00
 
-<!-- aiscr:stop-anchor -->
+description = "Use when the user asks to review a pull request or local Git changes. Perform track analysis and focused verification; for PRs, gather marked lineage and prepare the summary and exact approval payload for grouped posting."
+prompt = """
+<!-- aiscr:entry-scope -->
+
 **Entry scope**
 
 - Stay in this `.gemini/commands/aiscr/` surface and its same-vendor pointers first.
 - Do not open parallel vendor trees by default just in case.
 - Cross into another vendor tree only for explicit parity checks, generator work, or governance maintenance.
 
-Review a GitHub PR — durable behavioral contract in OpenSpec spec; execution runbook in plan. Ingest prior review context, structure findings into buckets (resolved / disputed / not addressed / new), post body and inline comments as a single grouped review via GH API.
+Use when the user asks to review a pull request or local Git changes. Perform track analysis and focused verification; for PRs, gather marked lineage and prepare the summary and exact approval payload for grouped posting.
 
-**Skill body (authoritative):** [`.gemini/skills/aiscr-review-pr/SKILL.md`](.gemini/skills/aiscr-review-pr/SKILL.md) — load that repository-local file for the full workflow body, guardrails, and verification.
+Execute the AIS CR workflow `aiscr-review-pr`. The full workflow body for this command is the repository-local skill included below; follow it as the authoritative procedure, guardrails, and verification requirements.
+
+@{.agents/skills/aiscr-review-pr/SKILL.md}
+
+If the skill inclusion above did not expand — the paired skill file is missing or excluded by repository ignore rules — stop and report that `/aiscr-review-pr` cannot run in this checkout instead of improvising the workflow.
 """

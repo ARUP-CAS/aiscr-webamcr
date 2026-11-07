@@ -1,5 +1,12 @@
 # CLAUDE.md — Claude Code Instructions
 
+<!-- aiscr:entry-scope -->
+
+**Entry scope**
+
+- Stay on **`CLAUDE.md`** and repo **`.claude/`** surfaces for Claude-specific behaviour first.
+- Shared policy lives in **`AGENTS.md`**; the full generated rule readers are delivered under **`.claude/rules/`**.
+
 Full agent rules, repository structure, and coding standards: see [AGENTS.md](AGENTS.md).
 Coding standards, branch rules, and PR process: see [CONTRIBUTING.md](CONTRIBUTING.md).
 AI review system state and artifacts: see [.agents/README.md](.agents/README.md).
@@ -7,9 +14,9 @@ AI review system state and artifacts: see [.agents/README.md](.agents/README.md)
 ## Governance & OpenSpec
 
 Use [AGENTS.md](AGENTS.md) as the governance authority. Claude-specific rule
-readers live under [.claude/rules/](.claude/rules/); OpenSpec skills and `opsx`
-commands live under [.claude/skills/](.claude/skills/) and
-[.claude/commands/opsx/](.claude/commands/opsx/).
+readers live under [.claude/rules/](.claude/rules/); workflow and OpenSpec skills
+live under [.claude/skills/](.claude/skills/) and project subagents under
+[.claude/agents/](.claude/agents/).
 
 OpenSpec is versioned in `openspec/` with schema `spec-driven`. Validate with
 `npm run openspec:validate`.
@@ -74,9 +81,9 @@ Migrations are excluded from all hooks.
 
 For live library docs (Django, DRF, Celery, Sphinx): **context7**. For
 issues/PRs and cross-referencing with AGENTS.md: **GitHub MCP**. Configure
-personal MCP credentials locally. Repository vendor surfaces such as
-`.cursor/`, `.claude/`, `.codex/`, `.gemini/`, `.clinerules/`, and `.qodo/`
-are tracked when materialized from the `aiscr-management` hub sync baseline;
+personal MCP credentials locally. The assistant vendor roots (`.claude/`,
+`.cursor/`, `.codex/`, `.gemini/`, `.kilo/`) and the shared `.agents/skills/`
+tree are tracked repository content delivered from the `aiscr-management` hub;
 do not store private credentials in them. For development setup, use
 `README_en.md`, `CONTRIBUTING.md`, and repository-local environment notes.
 
@@ -85,45 +92,38 @@ do not store private credentials in them. For development setup, use
 
 ## AIS CR shared assistant orientation
 
-This repository is part of the AIS CR ecosystem. The entry doc you are reading follows the same shared governance as every other assistant integration in this repository; this section is generated from one shared canonical body and is identical across the vendor entry docs. Entry scope (which surfaces to stay in first) is defined once in this document's preamble and is not repeated here.
+This repository is part of the AIS CR ecosystem.
+This entry doc follows the same shared governance as every other assistant integration; this section is generated from one shared canonical body and is identical across the vendor entry docs.
+Entry scope is defined once in this document's preamble and is not repeated here.
 
 ### Cross-vendor map
 
-Each product loads its own configuration tree; workflow slugs stay aligned across them:
-
-| Product | Entry surfaces |
-| --- | --- |
-| Cursor | `.cursor/` (rules, skills, agents) |
-| Claude Code | `CLAUDE.md` + `.claude/` |
-| Codex | `CODEX.md` + `.codex/` |
-| Gemini | `GEMINI.md` + `.gemini/` |
-| GitHub Copilot | `.github/copilot-instructions.md` + `.github/` (instructions, prompts, skills) |
-
-Cross into another vendor tree only for explicit parity checks, generator work, or governance maintenance.
+Each product loads its own configuration tree; workflow slugs stay aligned across them (the per-product entry docs — `CLAUDE.md`, `CODEX.md`, `GEMINI.md`, `.github/copilot-instructions.md` — and the config-root map are owned by the `aiscr-ecosystem-governance` rule).
 
 ### Shared governance kernel
 
-`AGENTS.md` is the governance authority for AI agents in this repository; `CONTRIBUTING.md` owns the branch and PR workflow. The generated `agents-governance-kernel` block in `AGENTS.md` carries the current cross-vendor minimums for planning and approval, usage and model logging, script/sync/git approval, workspace and sibling boundaries, and hub authority.
+`AGENTS.md` is the governance authority for AI agents in this repository, and `CONTRIBUTING.md` owns the branch and PR workflow.
+The generated `agents-governance-kernel` block in `AGENTS.md` carries the cross-vendor minimums for planning and approval, usage and model logging, script/sync/git approval, workspace and sibling boundaries, and hub authority.
 
-The full rule bodies are delivered per assistant; the vendor section below says where this product reads them. This digest points to the shared kernel instead of restating it.
+The full rule bodies are delivered per assistant; the vendor section below says where this product reads them.
 
 ### Where workflows live
 
-Standard `aiscr-*` workflows are authored at the `aiscr-management` hub and delivered per repository enrollment as per-vendor skill trees with matching slugs. Do not assume every workflow is mirrored in this repository; when an ecosystem-wide workflow (config sync, parity validation, registry maintenance) is needed, use the management hub.
+Standard `aiscr-*` workflows are authored at the `aiscr-management` hub and delivered per repository enrollment as per-vendor skill trees with matching slugs.
+Do not assume every workflow is mirrored in this repository; use the management hub for ecosystem-wide workflow needs.
 
 ### OpenSpec
 
-- Whether this repository uses OpenSpec at all is its declared **posture**, read from the `context:` content of its own `openspec/config.yaml`; no config means posture `none`, and at `none` OpenSpec is not in use here — do not create an `openspec/` tree as a side effect of ordinary work. The adoption ladder itself, the work-kind triggers that fire a change inside an adopting posture, and how a session reads and respects the declared posture are owned by the `aiscr-openspec-posture` rule, which is BASELINE-delivered and so is already loaded alongside this digest in every repository that receives it; read the rungs there rather than from a copy here.
-- Mode-transfer gating iron law: `NEVER TREAT ARTIFACT COMPLETION AS IMPLICIT APPROVAL TO IMPLEMENT.` The explore → plan → implement boundaries each need fresh, phase-local human approval; after planning artifacts are complete, stop and offer apply instead of continuing silently.
+- Whether this repository uses OpenSpec at all is its declared **posture** — the adoption ladder, work-kind triggers, and reading discipline are owned by the `aiscr-openspec-posture` rule, which is BASELINE-delivered alongside this digest.
+- Mode-transfer gating iron law: `NEVER TREAT ARTIFACT COMPLETION AS IMPLICIT APPROVAL TO IMPLEMENT.` The explore → plan → implement boundaries each need fresh, phase-local human approval; the full procedure, including the hard stop after planning, is owned by the `aiscr-planning-core` rule, which is BASELINE-delivered alongside this digest.
 - Validate OpenSpec artifacts after editing them (`npm run openspec:validate` where available).
 
 ### Secrets and boundaries
 
-- Do not commit secrets, tokens, or API keys; do not paste production data or real PII into prompts; abstract or redact when demonstrating behaviour. Redact secret-bearing logs and config excerpts **before** they enter AI context or storage, not afterwards, and check a generated artifact for secrets before committing it.
+- Do not commit secrets, tokens, or API keys; do not paste production data or real PII into prompts; abstract or redact when demonstrating behaviour.
+  Redact secret-bearing logs and config excerpts **before** they enter AI context or storage, not afterwards, and check a generated artifact for secrets before committing it.
 - Use placeholders for internal infrastructure detail — `https://internal.example/...` and equivalents — unless the real value is explicitly needed and allowed.
 - Automation must not send sensitive content to an external service silently: that path needs explicit intent, a safeguard, and the user's approval before transmission.
-- Stay inside the opened workspace; out-of-workspace access needs an explicit user request and a plain statement of impact.
-- Do not weaken sandbox, permission, or other safety-related assistant configuration unless the user strictly orders it.
 
 <!-- end:generated:vendor-digest-core -->
 
@@ -132,9 +132,13 @@ Standard `aiscr-*` workflows are authored at the `aiscr-management` hub and deli
 
 ## Claude Code in this repository
 
-- **Rules:** the generated rule readers under `.claude/rules/` are loaded in full at session start — every reader, every session, not selected by topic. They carry the same shared governance as the other assistants, so treat them as already in context rather than as files to go and open.
-- **Skills:** workflow entry points live in `.claude/skills/aiscr-*/SKILL.md` and are invoked as `/aiscr-<name>`; OpenSpec entry points are the generated `openspec-*` skills and, where enrolled, the `/opsx:*` commands under `.claude/commands/opsx/`.
+- **Rules:** the generated rule readers under `.claude/rules/` are loaded in full at session start — every reader, every session, not selected by topic — so treat them as already in context, not as files to go and open.
+  To edit policy or settle which surface owns a topic, use the topic index `.agents/canonical_configs/references/governance_by_tool.md`.
+- **Skills:** workflow entry points are committed in `.claude/skills/aiscr-*/SKILL.md` and invoked as `/aiscr-<name>`; OpenSpec entry points are the generated `openspec-*` skills — Claude Code invokes them natively and carries no `opsx-*` command mirror.
 - **Agents:** project subagents (when delivered) live in `.claude/agents/`; prefer them over generic agents when the task matches their scope.
-- **Settings and hooks:** `.claude/settings.json` carries the sandbox and permission-deny policy plus advisory, non-blocking hooks; the hook set and what each one is for come from the intent index rather than from a list here. Machine-local `.claude/settings.local.json` stays unmanaged.
+- **Settings and hooks:** `.claude/settings.json` carries the sandbox and permission-deny policy; this repository commits no hook surface.
+  Machine-local `.claude/settings.local.json` stays unmanaged.
+
+(Tree root for workflow delivery: `.claude/skills/`.)
 
 <!-- end:generated:vendor-digest-claude -->

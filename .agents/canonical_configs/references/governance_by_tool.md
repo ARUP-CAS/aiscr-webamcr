@@ -1,69 +1,59 @@
-# Governance by Assistant Product - Canonical Rule Map (aiscr-management hub)
+# Governance by Assistant Product – Canonical Rule Map
 
-**Purpose:** Map policy topics to the canonical shared rule sources under `.agents/canonical_configs/governance_rules/`. Every vendor delivery surface — `.cursor/rules/*.mdc`, `.claude/rules/*.md`, `.gemini/context/*.md`, `.github/instructions/*.instructions.md`, and generated sections in `CODEX.md` — is a routing stub that names the matching `.agents/canonical_configs/governance_rules/<stem>.md` canonical document as the rule body. This file is a lookup table only.
+<!-- delivery-version: b257a1a89279be5e17cda3c133aa77b8c4d2706c 2026-11-07T11:18:12+01:00 -->
 
-**Related:** Full vendor × asset matrix, official URLs, and vendor alignment live in `agent_tool_feature_matrix.md` and `mandatory_vendor_doc_urls.toml`.
+**Purpose:** Map policy topics to the governance rule stem that owns each one, so a reader can tell which surface is authoritative for a topic.
+Every vendor delivery surface carries the full rule body generated from the matching stem.
+This file is a lookup table only.
 
-The routing diagram below is a scanning aid only.
+**This is not a session-time loading map.**
+No supported product selects a rule reader by topic: Cursor marks every `.mdc` `alwaysApply: true`, Claude Code injects every `.claude/rules/` reader at session start, Kilo Code loads every `.kilo/rules/*.md` reader through the `instructions` array in `.kilo/kilo.jsonc`, Gemini CLI loads the whole `.gemini/context/` directory through `settings.json` `context.includeDirectories`, every Copilot instruction file declares `applyTo: "**/*"`, and Codex embeds the bodies in `CODEX.md`.
+Use this table to decide **who owns a topic**, not to decide what to read into a session — the delivered set is already there.
+
+The ownership diagram below is a scanning aid only.
 
 ```mermaid
 flowchart LR
-  topic["Need governance for a topic"] --> table["Find the topic row in this table"]
-  table --> stem["Open the canonical stem under .agents/canonical_configs/governance_rules/"]
-  stem --> assistant{"Assistant in use?"}
-  assistant -->|Cursor| cursor["AGENTS.md + .cursor/rules/<stem>.mdc stub -> canonical doc"]
-  assistant -->|Claude| claude["CLAUDE.md + .claude/rules/<stem>.md stub -> canonical doc"]
-  assistant -->|Codex| codex["CODEX.md generated stub -> canonical doc"]
-  assistant -->|Gemini| gemini["GEMINI.md + .gemini/context/<stem>.md stub -> canonical doc"]
-  assistant -->|Other| other["Tool entry doc + matching vendor surface"]
+  topic["Need to know who owns a topic"] --> table["Find the topic row in this table"]
+  table --> stem["The governance rule stem named in the row"]
+  stem --> gen["Rule generation at the management hub"]
+  gen --> delivered["Full rule body rendered into each vendor surface"]
+  delivered --> loaded["Already loaded in the session: every reader, every session"]
 ```
 
 ## Topic -> Canonical Rule Stem
 
+**Scope** says who a row binds.
+`All agents` and `Ecosystem` rows name stems delivered to every repository.
+Rows whose owner is not `BASELINE` (`Management hub`, `Port/safety`, and any other such scope) sit inside the sibling fence, so a recipient that does not carry that owner does not see them.
+
+<!-- begin:generated:ownership-topics -->
 | Topic | Canonical rule source | Scope |
 | --- | --- | --- |
-| Planning baseline before non-trivial work | `planning-baseline-upstream.md` | All agents |
-| Planning-first execution model and re-plan triggers | `planning-core.md` | All agents |
-| Usage-log lifecycle, required fields, close-out prompt | `usage-logging.md` | All agents |
-| Model/runtime metadata in usage logs | `model-logging.md` | All agents |
-| Agent work-style defaults and pre-presentation self-check Iron Law | `quality-first-execution.md` | All agents |
-| Advisory model-setup / config sync reminder | `model-setup-reminder.md` | Advisory |
-| Workspace boundary, sibling repos, config protection | `workspace-boundary-safety.md` | All agents |
-| Management hub identity and canonical-source reminders | `mgmt-entry.md` | This repo |
-| Management durable docs: dynamic sets and counts | `mgmt-doc-dynamic-sets.md` | This repo |
-| Management operating basics: ideas, scripts, parity, hygiene | `mgmt-repo-operating-basics.md` | This repo |
-| Management hook intents and ownership map | `hook-intents.md` | This repo |
+| Workspace boundary, sibling repos, config protection | `aiscr-workspace-boundary-safety.md` | All agents |
+| OpenSpec adoption posture and work-kind triggers | `aiscr-openspec-posture.md` | All agents |
+| Model/runtime metadata in usage logs | `aiscr-model-logging.md` | All agents |
+| Agent work-style defaults and pre-presentation self-check Iron Law | `aiscr-quality-first-execution.md` | All agents |
+| Repository-qualified GitHub issue and PR citations | `aiscr-quality-first-execution.md` | All agents |
+| Planning baseline before non-trivial work | `aiscr-planning-core.md` (*Upstream baseline before significant planning*) | All agents |
+| Planning-first execution model and re-plan triggers | `aiscr-planning-core.md` | All agents |
+| Usage-log lifecycle, required fields, close-out prompt | `aiscr-usage-logging.md` | All agents |
+| Review severity, admissibility, observations, scope, and untrusted input | `aiscr-review-conduct.md` | Reviews |
 | Ecosystem-wide shared rules (siblings; workflow alignment) | `aiscr-ecosystem-governance.md` | Ecosystem |
-| Hub vs sibling workflow routing | `ecosystem-hub-workflow-routing.md` | Ecosystem |
-| `port_workspace_safety_config.py` guidance | `port-workspace-safety-config.md` | Port/safety |
+| Hub vs sibling workflow routing | `aiscr-ecosystem-governance.md` (*Hub vs sibling workflow surfaces*) | Ecosystem |
+<!-- end:generated:ownership-topics -->
 
-**Delivery surfaces:** For any stem above, the canonical body lives at `.agents/canonical_configs/governance_rules/<stem>.md`. Every vendor surface (`.cursor/rules/<stem>.mdc`, `.claude/rules/<stem>.md`, `.gemini/context/<stem>.md`, `.github/instructions/<stem>.instructions.md`, generated `CODEX.md` sections) renders as a routing stub that preserves the stop anchor, topic summary, and canonical-document link; follow that link when the rule text is load-bearing for the task.
+**Delivery surfaces:** Every vendor surface (`.cursor/rules/*.mdc`, `.claude/rules/*.md`, `.kilo/rules/*.md`, `.gemini/context/*.md`, `.github/instructions/*.instructions.md`, generated `CODEX.md` sections) carries the **full rule body** for its stem, preceded by the Entry-scope region — not a summary and not a link to fetch.
+Never edit a delivered copy; it is regenerated from the canonical stem at the management hub.
+(Rendered template form: `.cursor/rules/<stem>.mdc`, `.claude/rules/<stem>.md`, `.kilo/rules/<stem>.md`, `.gemini/context/<stem>.md`, `.github/instructions/<stem>.instructions.md`.)
 
-**Entry-doc pointers (workspace boundary):** `CLAUDE.md`, `CODEX.md`, and `GEMINI.md` each include a short workspace-boundary pointer back to `AGENTS.md` and the relevant canonical rule when needed.
+**Entry-doc pointers (workspace boundary):** `CLAUDE.md`, `CODEX.md`, and `GEMINI.md` each carry a short workspace-boundary pointer back to `AGENTS.md` and the owning canonical rule.
 
-**Three-tier hub model**
+## What to read, given that the rule set is already loaded
 
-| Tier | Meaning | Examples (this hub) |
-| --- | --- | --- |
-| **1 - Hub-root entry docs** | Committed at repo root; selected for siblings by direct-bundle policy rather than payload mirrors | `GEMINI.md`, `.pr_agent.toml` |
-| **2 - Repo-root vendor trees** | Generated or maintained at the hub root, then selected for siblings by `.agents/sync/repos.toml` and direct-bundle policy | `.gemini/`, `.qodo/` |
-| **3 - `AGENT_FOLDERS` assistant roots** | Full profile-based sync (rules, skills, agents, settings, ...) per `sync_policy.py` and `.agents/sync/repos.toml` repo policy | `.cursor`, `.claude`, `.codex` |
+1. Read `AGENTS.md` and `CONTRIBUTING.md`, plus any repository-specific agent guide — these are **not** part of any vendor's automatic rule delivery (Codex is the exception: it receives `AGENTS.md` through its own instruction-file hierarchy).
+2. Your tool entry doc (`CLAUDE.md`, `CODEX.md`, `GEMINI.md`, `.github/copilot-instructions.md`) for product-specific behaviour.
+3. The delivered rule bodies for your product are already in context — they carry the full rule text, not a pointer to it, so there is nothing further to open for the rule's content.
 
-**Repo-root and digest vendors - where governance loads**
+**Cursor:** primary project context is `AGENTS.md` plus `.cursor/rules/*.mdc`, every one of which is marked `alwaysApply: true`; use `.cursor/README.md` for assistant-specific routing.
 
-| Vendor / product | Primary human entry | Rules / config surface | Notes |
-| --- | --- | --- | --- |
-| Gemini | `GEMINI.md` | `.gemini/` | Tier 1 + tier 2 |
-| Qodo Merge | `.pr_agent.toml` | — | Tier 1 only for PR-agent config; `.qodo/` is tier 2 IDE baseline |
-| GitHub Copilot | `.github/copilot-instructions.md` | `.github/instructions/*.instructions.md` | Digest-only entry |
-| Cursor (incl. BugBot) | `AGENTS.md` | `.cursor/rules/`, `.cursor/BUGBOT.md` | No vendor `CURSOR.md` |
-
-**Drift guard:** This table must list every active canonical governance stem that an entry doc or assistant wrapper is expected to open by topic. After adding, splitting, retiring, or renaming a rule stem, update this table and run the usual governance validation suite.
-
-## Suggested Governance Load Order (Non-Cursor Tools)
-
-1. `AGENTS.md`, `CONTRIBUTING.md`, `.agents/README_en.md`
-2. Tool entry doc (`CLAUDE.md`, `CODEX.md`, `GEMINI.md`) and short generated or direct-bundle vendor pointers where applicable
-3. Topics in the table above: open the assistant-specific stub for orientation, then load the linked `.agents/canonical_configs/governance_rules/<stem>.md` canonical document when the task touches that rule's details
-
-**Cursor:** primary project context is `AGENTS.md` plus `.cursor/rules/*.mdc`; use `.cursor/README_en.md` for assistant-specific routing. The `.cursor/rules/*.mdc` files are routing stubs on equal footing with every other vendor surface — follow the canonical-document link inside the stub when the rule text is load-bearing.

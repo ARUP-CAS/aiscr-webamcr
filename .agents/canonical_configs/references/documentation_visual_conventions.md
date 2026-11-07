@@ -1,23 +1,16 @@
 # Documentation visual conventions
 
-This reference defines the hub-first authoring convention for Mermaid diagrams in AIS CR `aiscr-management` documentation. It is the companion doc for the `documentation-visual-conventions` OpenSpec capability and is the source an author consults when deciding whether a diagram belongs in a hub doc, which syntax subset is allowed, and how the diagram coexists with prose.
+<!-- delivery-version: b257a1a89279be5e17cda3c133aa77b8c4d2706c 2026-11-07T11:18:12+01:00 -->
 
-The durable behavioral contract lives in `openspec/specs/documentation-visual-conventions/spec.md`. This reference is the human/agent-readable authoring guide and MUST stay aligned with that spec.
+This reference is the authoring convention for Mermaid diagrams in AIS CR documentation.
+It is the source an author consults when deciding whether a diagram belongs in a durable document, how the diagram coexists with prose, and which Mermaid families GitHub actually renders.
 
 ## Scope
 
-- Hub-only. This convention applies to durable documents inside
-  `aiscr-management` (governance stems, canonical references, OpenSpec specs,
-  reusable plans, root governance docs, README pairs, and equivalent committed
-  hub delivery surfaces).
-- Sibling rollout is limited to the convention reference itself: register and propagate `.agents/canonical_configs/references/documentation_visual_conventions.md` through the specialized sync-asset layer, but do not edit sibling doc content or assume sibling adoption from that propagation alone.
-- Time-stamped reports under `.agents/reports/**`, `.agents/local_configs/**`,
-  transient session artefacts, and runtime/cache trees remain out of scope.
-
-For syntax validation, the committed scan scope is tracked `.md` and `.mdc`
-files in the hub except those explicit exclusions. In practice that means root
-docs, `.agents/**`, `openspec/**`, and committed hub delivery surfaces are
-scanned, while sibling mirrors, reports, and scratch/cache trees are not.
+- Applies to durable documents: governance stems and their delivered readers, canonical references, capability specs, workflow bodies, root governance docs, README pairs, and equivalent committed delivery surfaces.
+- Time-stamped reports, transient session artefacts, and runtime or cache trees are out of scope.
+- Receiving this reference does not by itself change any existing document.
+  It states how a diagram should be authored when one is added or revised.
 
 ## When Mermaid is appropriate
 
@@ -35,100 +28,466 @@ Reject Mermaid when any of the following hold:
 
 ## Diagram plus prose is mandatory
 
-Every Mermaid block in a hub doc MUST keep a short adjacent prose summary or bullets so the text remains sufficient on its own for humans and agents that do not render the diagram.
+Every Mermaid block MUST keep a short adjacent prose summary or bullets that state the same operational meaning in text.
 
 - Prose may precede or follow the Mermaid block.
-- Prose MUST restate the operational meaning in text. A pure caption such as "the diagram above" is not sufficient.
-- Prose SHOULD be short — a few sentences or a short bullet list. A second full narrative restatement is not required and is usually duplication.
+- Prose MUST restate the same operational meaning in text; a pure caption is not enough.
+- Prose SHOULD be short — a few sentences or bullets; a second full narrative restatement is not required.
 
 A Mermaid block without adjacent prose is an incomplete doc change and must be rejected in review.
 
-## Mermaid family classification
+## Choosing a Mermaid family
 
-The convention tracks the Mermaid diagram families listed in the official syntax reference and assigns each family one local AIS CR status. Authors MUST use only families whose current status is `approved-v1` or `approved-v2`.
+There is no gated family list.
+Any core Mermaid family that GitHub renders may be used, chosen to fit the material.
+Family choice is a judgment aid, not a permission gate; the two rules that always bind are that the diagram renders on GitHub and that it stays paired with prose.
 
-| Mermaid family | Status | Rationale |
-| --- | --- | --- |
-| `flowchart` | `approved-v1` | Best fit for load order, routing, and authority flow in hub docs. |
-| `sequenceDiagram` | `approved-v1` | Good fit for short cross-role or tool-interaction sequences without replacing prose. |
-| `stateDiagram-v2` | `approved-v1` | Useful for lifecycle and approval-boundary material that is hard to scan in bullets alone. |
-| `erDiagram` | `approved-v2` | High-value option for structured registry or asset-relation material. |
-| `classDiagram` | `approved-v2` | Useful when canonical component or type relationships are clearer as a static model. |
-| `gantt` | `approved-v2` | Acceptable for staged rollout or schedule-like governance material with explicit prose. |
-| `requirementDiagram` | `approved-v2` | Fits requirement-traceability or requirement-to-artifact relationships in OpenSpec-heavy docs. |
-| `C4Context` | `approved-v2` | Useful for system-context and boundary diagrams where prose is otherwise dense. |
-| `mindmap` | `approved-v2.1` (gated) | Potentially useful for taxonomy summaries, but promotion waits until the whole v2 cohort has live exemplars. |
-| `timeline` | `approved-v2.1` (gated) | Potentially useful for historical or phased sequence summaries, but promotion is gated the same way as `mindmap`. |
-| `journey` | `excluded` | User-journey framing is a weak fit for this governance-heavy hub and usually reads as decorative. |
-| `pie` | `excluded` | Share-of-whole charts are low-value for the repo's governance and workflow material. |
-| `quadrantChart` | `excluded` | Matrix scoring tends to add opinionated visuals without enough durable operational value here. |
-| `gitGraph` | `excluded` | Branch history visuals overlap with prose and Git tooling while adding little reusable governance value. |
-| `zenuml` | `excluded` | Parallel sequence syntaxes increase review cost without a repo-specific benefit over `sequenceDiagram`. |
-| `sankey` | `deferred` | Flow-volume visuals could be useful later, but no current hub doc needs them enough to justify a new family. |
-| `xychart` | `excluded` | Quantitative plotting is not a common need in hub governance documents. |
-| `block` | `deferred` | Could help dense structural layouts later, but current hub docs are covered by `flowchart` and `C4Context`. |
-| `packet` | `deferred` | Network-packet framing is niche for AIS CR management documentation. |
-| `kanban` | `deferred` | Board-style visuals may help later workflow overviews, but there is no current exemplar-worthy use case. |
-| `architecture` | `deferred` | Could become useful for system-boundary views, but `C4Context` is the preferred approved option first. |
-| `radar` | `excluded` | Scorecard visuals add weak governance value and encourage decorative diagrams. |
-| `treemap` | `deferred` | Hierarchy-plus-size views may help later inventories, but no current hub doc needs them. |
-| `venn` | `excluded` | Set-overlap visuals rarely justify themselves in the current hub documentation set. |
-| `ishikawa` | `deferred` | Cause-analysis diagrams may help postmortem-style material later, but they are not needed for this convention rollout. |
-| `treeview` | `deferred` | Explicit tree views may help future hierarchy references, but current docs are adequately served by `flowchart`. |
+Two facts constrain the choice:
 
-For local authoring purposes, treat unapproved families as out of scope even if Mermaid itself renders them. Widening the approved set still requires an approved OpenSpec change.
+- GitHub renders the **core** Mermaid build.
+  Families that require a third-party plugin do not render there and are unsupported; `zenuml` is the only such family in the official set and MUST NOT be used.
+- GitHub's deployed Mermaid version advances independently of this repo's.
+  The repo aligns its parser to that version; the alignment requirement is owned by `openspec/specs/documentation/documentation-visual-conventions/spec.md`, and the probe procedure and observed version are recorded below.
+  Parsing is a syntax check; authors still review the rendered result.
 
-## v2.1 promotion condition
+### Version alignment and probe
 
-`mindmap` and `timeline` stay gated until every v2 family has at least one compliant hub exemplar with adjacent prose:
+The repo moved from Mermaid **11.16.1** to **12.1.0** after the operator's GitHub `info` probe on **2026-10-09**.
+On **2026-10-10**, an independent read of the [GitHub renderer entry](https://viewscreen.githubusercontent.com/markdown/mermaid) and its [served JavaScript asset](https://viewscreen.githubusercontent.com/static/assets/mermaidMarkdown-87477f4cef49418a818e.js) confirmed that the deployed renderer passes **12.1.0** to Mermaid's drawing routine.
+The manifest, lockfile, and installed parser agree with that version; no version divergence was observed.
+This confirms the deployed bundle version, not the appearance of every family.
 
-- `erDiagram`
-- `classDiagram`
-- `gantt`
-- `C4Context`
-- `requirementDiagram`
+When reviewing or changing the pin:
 
-Do not promote either v2.1 family ad hoc in a single doc. First land the missing v2 exemplars, then update this reference in a later approved change.
+1. In a GitHub Markdown preview, render a `mermaid` code fence whose only body line is `info`.
+   Read the version displayed by that diagnostic diagram, following [GitHub's version-check instructions](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams#checking-your-version-of-mermaid).
+2. Compare that observed version with `package.json`, `package-lock.json`, and the installed `mermaid` package.
+   A local `info` diagram reports the local parser's version and does not establish GitHub's version.
+3. Record the observation date, source, old and new versions, and any outstanding divergence in this section.
+   Attribute an operator observation as such; do not describe it as an independently reproduced probe.
+4. If the versions differ, refresh the pin through an approved toolchain change, including any required Node engine and CI adjustments.
+   Consult the [official Mermaid diagram index](https://mermaid.js.org/intro/) at the adopted version and reconcile the advisory table and samples when the core family set changes.
+5. Reinstall the pinned dependencies and run `npm run validate:mermaid` and the toolchain version-agreement and installed-pin checks.
+   Review GitHub rendering and companion prose separately.
 
-## Exemplar coverage
+The table below is advisory guidance per family.
+The samples after it show each family in practice.
 
-The hub maintains at least one compliant Mermaid exemplar across the main durable doc surfaces this convention is meant to support:
+| Mermaid family | Renders on GitHub | Best for | Watch out |
+| --- | --- | --- | --- |
+| `flowchart` | Yes | Process, routing, load order, authority flow. | Label edges where logic branches. |
+| `sequenceDiagram` | Yes | Short cross-role or tool-interaction sequences. | Keep participants and messages few; leave details in prose. |
+| `stateDiagram-v2` | Yes | Lifecycle and approval-boundary material. | Name transitions; keep states mutually exclusive. |
+| `classDiagram` | Yes | Static component or type relationships. | Do not model runtime sequence here. |
+| `erDiagram` | Yes | Registry or asset-relation structure. | Keep to the entities the document discusses. |
+| `gantt` | Yes | Staged rollout or schedule-like material. | Dates age; state the intent in prose too. |
+| `pie` | Yes | A single share-of-whole split. | Low value for governance; use only when the split is the point. |
+| `quadrantChart` | Yes | Positioning or scoring on two axes. | Axis choice is opinionated; justify it. |
+| `requirementDiagram` | Yes | Requirement-traceability relationships. | Best in OpenSpec-heavy documents. |
+| `gitGraph` | Yes | Branch or merge topology. | Overlaps Git tooling; use only when history shape matters. |
+| `C4Context` | Yes | System-context and boundary views. | Keep one level; `C4Context`/`C4Container` are the usual subtypes. |
+| `mindmap` | Yes | Taxonomy or family overviews. | Deep nesting renders wide. |
+| `timeline` | Yes | Historical or phased summaries. | Keep milestones few and dated. |
+| `journey` | Yes | User-journey framing. | Often decorative in governance material; use sparingly. |
+| `sankey` | Yes | Flow or volume between stages. | Needs real volumes, not guesses. |
+| `xychart` | Yes | Quantitative series. | Rare in governance docs; only with real data. |
+| `block` | Yes | Dense structural layouts. | Beta syntax; `flowchart` often suffices. |
+| `packet` | Yes | Byte or field layout. | Niche; rarely warranted here. |
+| `kanban` | Yes | Board-style workflow overviews. | A static snapshot only; it does not track state. |
+| `architecture` | Yes | System-boundary views. | Beta syntax; `C4Context` is often safer. |
+| `radar` | Yes | Multi-axis scorecards. | Beta syntax; encodes opinion. |
+| `treemap` | Yes | Hierarchy-plus-size views. | Beta syntax; needs real proportions. |
+| `venn` | Yes | Set-overlap relationships. | Beta syntax; rarely justifies itself. |
+| `ishikawa` | Yes | Cause analysis for postmortems. | Beta syntax; keep causes evidence-based. |
+| `treeView` | Yes | Explicit hierarchy references. | Beta syntax; `flowchart` often suffices. |
+| `swimlane` | Yes | Processes whose steps cross responsibility boundaries. | Beta syntax; keep each lane one kind of owner. |
+| `usecase` | Yes | Actors and the system capabilities they use. | Beta syntax; declare actors explicitly. |
+| `eventmodeling` | Yes | Interfaces, commands, and resulting events. | Beta syntax; distinguish commands from facts that occurred. |
+| `wardley` | Yes | Dependencies positioned by visibility and evolution. | Beta syntax; positions are judgments, not measurements. |
+| `cynefin` | Yes | Decision contexts and approaches to uncertainty. | Beta syntax; classification needs supporting reasoning. |
+| `zenuml` | No — plugin only | — | GitHub does not render third-party plugins; unsupported. |
 
-- governance rules (`.agents/canonical_configs/governance_rules/`)
-- canonical references (`.agents/canonical_configs/references/`)
-- OpenSpec capability specs (`openspec/specs/`)
-- at least one hub README pair (`README.md` / `README_en.md`)
+### Worked samples
 
-If exemplar coverage erodes — for example because an exemplar doc is rewritten and the diagram is dropped — treat that as a signal to restore coverage rather than to relax the convention.
+Each sample illustrates its family's syntax and keeps companion prose stating the depicted meaning.
+Dates, counts, scores, and classifications in the samples are illustrative rather than reports about the ecosystem.
+
+#### `flowchart`
+
+Intake proceeds to planning, then to applying the plan.
+
+```mermaid
+flowchart LR
+  intake[Intake] --> plan[Plan] --> apply[Apply]
+```
+
+#### `sequenceDiagram`
+
+The operator approves the plan; the agent returns a report to the operator.
+
+```mermaid
+sequenceDiagram
+  participant O as Operator
+  participant A as Agent
+  O->>A: Approve plan
+  A-->>O: Report
+```
+
+#### `stateDiagram-v2`
+
+A draft enters the approved state after sign-off, then completes its lifecycle.
+
+```mermaid
+stateDiagram-v2
+  [*] --> Draft
+  Draft --> Approved: sign-off
+  Approved --> [*]
+```
+
+#### `classDiagram`
+
+One requirement relates to multiple scenarios; each scenario relates to one requirement.
+
+```mermaid
+classDiagram
+  class Requirement
+  class Scenario
+  Requirement "1" --> "*" Scenario
+```
+
+#### `erDiagram`
+
+A change carries zero or more requirements, and each requirement belongs to one change.
+
+```mermaid
+erDiagram
+  CHANGE ||--o{ REQUIREMENT : carries
+```
+
+#### `gantt`
+
+The illustrative hub rollout contains one authoring stage starting on 2026-01-01 and lasting 30 days.
+
+```mermaid
+gantt
+  title Rollout
+  dateFormat YYYY-MM-DD
+  section Hub
+    Authoring :a1, 2026-01-01, 30d
+```
+
+#### `pie`
+
+The illustrative total consists of five flowchart diagrams and three sequence diagrams.
+
+```mermaid
+pie title Families in use
+  "flowchart" : 5
+  "sequence" : 3
+```
+
+#### `quadrantChart`
+
+The illustrative proposal sits at effort 0.3 and value 0.8, within the quadrant labeled Plan.
+
+```mermaid
+quadrantChart
+  title Value versus effort
+  x-axis Low effort --> High effort
+  y-axis Low value --> High value
+  quadrant-1 Do now
+  quadrant-2 Plan
+  quadrant-3 Drop
+  quadrant-4 Delegate
+  "Widen the set": [0.3, 0.8]
+```
+
+#### `requirementDiagram`
+
+Requirement 1 states that prose owns meaning; its risk is low and verification uses inspection.
+
+```mermaid
+requirementDiagram
+  requirement prose_first {
+    id: "1"
+    text: "prose owns meaning"
+    risk: low
+    verifymethod: inspection
+  }
+```
+
+#### `gitGraph`
+
+A feature branch starts from the base commit, receives the work commit, and merges into main.
+
+```mermaid
+gitGraph
+  commit id: "base"
+  branch feature
+  commit id: "work"
+  checkout main
+  merge feature
+```
+
+#### `C4Context`
+
+The operator uses the management hub to run workflows.
+
+```mermaid
+C4Context
+  title Hub context
+  Person(operator, "Operator")
+  System(hub, "Management hub")
+  Rel(operator, hub, "runs workflows")
+```
+
+#### `mindmap`
+
+The taxonomy groups flowchart and sequence diagrams under Flow, and timeline and Gantt diagrams under Time.
+
+```mermaid
+mindmap
+  root((Mermaid families))
+    Flow
+      flowchart
+      sequenceDiagram
+    Time
+      timeline
+      gantt
+```
+
+#### `timeline`
+
+The illustrative rollout authors hub rules in 2025, adopts OpenSpec in 2026, and delivers sibling bundles in 2026.
+
+```mermaid
+timeline
+  title Rollout
+  section Hub
+    2025 : rules authored
+    2026 : OpenSpec adopted
+  section Siblings
+    2026 : bundle delivery
+```
+
+#### `journey`
+
+The author selects a family and writes its fence; the reviewer then confirms the prose companion.
+The illustrative scores for these steps are 4, 5, and 3.
+
+```mermaid
+journey
+  title Author plans a diagram
+  section Draft
+    Pick a family: 4: Author
+    Write the fence: 5: Author
+  section Review
+    Confirm prose: 3: Reviewer
+```
+
+#### `sankey`
+
+The illustrative hub flow sends eight units to siblings and four units to the archive.
+
+```mermaid
+sankey-beta
+  Hub,Siblings,8
+  Hub,Archive,4
+```
+
+#### `xychart`
+
+The illustrative fence counts are eight for rules, six for references, five for specs, and three for READMEs.
+
+```mermaid
+xychart-beta
+  title "Fences per doc"
+  x-axis [rules, refs, specs, readme]
+  y-axis "count" 0 --> 10
+  bar [8, 6, 5, 3]
+```
+
+#### `block`
+
+Collect, Plan, and Apply appear side by side in a three-column layout.
+
+```mermaid
+block-beta
+  columns 3
+  a["Collect"] b["Plan"] c["Apply"]
+```
+
+#### `packet`
+
+Byte 0 occupies bit positions 0-7; byte 1 occupies positions 8-15.
+
+```mermaid
+packet-beta
+  0-7: "byte 0"
+  8-15: "byte 1"
+```
+
+#### `kanban`
+
+Widen the set is in Backlog, while Samples added is in Done; this is an illustrative board snapshot.
+
+```mermaid
+kanban
+  Backlog
+    widen[Widen the set]
+  Done
+    samples[Samples added]
+```
+
+#### `architecture`
+
+Read and Write are services within the Hub group, with a connection from Read's right side to Write's left side.
+
+```mermaid
+architecture-beta
+  group hub(cloud)[Hub]
+  service read(server)[Read] in hub
+  service write(server)[Write] in hub
+  read:R -- L:write
+```
+
+#### `radar`
+
+The illustrative set scores 1 on axis A, 2 on axis B, and 3 on axis C.
+
+```mermaid
+radar-beta
+  title Coverage
+  axis a["A"], b["B"], c["C"]
+  curve plot["set"]{1, 2, 3}
+```
+
+#### `treemap`
+
+The illustrative Hub total is 100, with child values of 40 for rules and 30 for references.
+
+```mermaid
+treemap-beta
+  "Hub": 100
+    "rules": 40
+    "refs": 30
+```
+
+#### `venn`
+
+The Rules and References sets overlap in the region labeled Both.
+
+```mermaid
+venn-beta
+  title "Rules and references overlap"
+  set Rules
+  set References
+  union Rules,References["Both"]
+```
+
+#### `ishikawa`
+
+The illustrative effect Blame has two proposed contributing causes: Cause one and Cause two.
+
+```mermaid
+ishikawa-beta
+  title Root causes
+  Blame
+    Cause one
+    Cause two
+```
+
+#### `treeView`
+
+The root contains two children: governance and references.
+
+```mermaid
+treeView-beta
+  root
+    governance
+    references
+```
+
+#### `swimlane`
+
+The operator owns approval and the agent owns application; the arrow hands work from the operator to the agent.
+
+```mermaid
+swimlane-beta LR
+  subgraph Operator
+    approve[Approve plan]
+  end
+  subgraph Agent
+    apply[Apply plan]
+  end
+  approve --> apply
+```
+
+#### `usecase`
+
+The operator uses the Preview change capability within the Hub system boundary.
+
+```mermaid
+usecase-beta
+direction LR
+actor Operator
+systemBoundary Hub
+  Preview("Preview change")
+end
+Operator --> Preview
+```
+
+#### `eventmodeling`
+
+The illustrative review flow starts at ReviewScreen, issues an ApprovePlan command, and records a PlanApproved event.
+The command and event each carry a change identifier.
+
+```mermaid
+eventmodeling
+tf 01 ui ReviewScreen
+tf 02 cmd ApprovePlan { change: string }
+tf 03 evt PlanApproved { change: string }
+```
+
+#### `wardley`
+
+The Operator anchor depends on Validation.
+Their illustrative positions express visibility and evolution rather than measured performance.
+
+```mermaid
+wardley-beta
+anchor Operator [0.95, 0.20]
+component Validation [0.70, 0.80]
+Operator -> Validation
+```
+
+#### `cynefin`
+
+The illustrative incident map places Apply known fix in Clear and Investigate unknown cause in Complex.
+
+```mermaid
+cynefin-beta
+  clear
+    "Apply known fix"
+  complex
+    "Investigate unknown cause"
+```
 
 ## Authoring checklist
 
-Before merging a doc change that adds or modifies a Mermaid block in a hub doc:
+Before merging a doc change that adds or modifies a Mermaid block:
 
-1. The diagram is in the currently approved cohort (`approved-v1` or `approved-v2` in the table above).
+1. The family is a core Mermaid family that GitHub renders (see the advisory table above); `zenuml` is unsupported.
 2. The diagram clarifies dense flow, authority, lifecycle, sequence, state, or data-flow material.
 3. A short adjacent prose summary or bullet list restates the operational meaning in text.
 4. Prose remains the normative owner; the diagram is a supporting aid.
-5. The diagram renders under GitHub-flavored Markdown.
-6. The diagram parses under the repo-pinned Mermaid validator
-   (`npm run validate:mermaid`).
+5. The diagram renders under GitHub Flavored Markdown.
+6. The diagram parses under this repository's Mermaid validator where one is configured.
 
-## Automated syntax validation
+Automated validation checks syntax only.
+It does not replace author review for prose adjacency, GitHub renderability, or diagram quality.
 
-The hub uses syntax-only Mermaid validation via the official `mermaid` npm
-package and async `parse()`. The validator:
+## At the management hub
 
-- scans tracked in-scope hub `.md` and `.mdc` files,
-- validates every fenced Mermaid block without rendering,
-- reports relative path, approximate line, and parser message on failure,
-- fails CI and local aggregate validation when any in-scope block is invalid.
-
-This automation does **not** replace author review for prose adjacency,
-approved family choice, or diagram quality; it checks syntax only.
-
-## Related sources
-
-- Capability spec: `openspec/specs/documentation-visual-conventions/spec.md`
-- Planning-first and quality gates: `.agents/canonical_configs/governance_rules/aiscr-planning-core.md`
-- Documentation audit and hygiene: `openspec/specs/documentation-consistency/spec.md`
-- Existing Mermaid precedents in the hub: `.agents/canonical_configs/references/canonical_workflows_context.md`, `.agents/canonical_configs/references/subagent_vanilla_templates_and_mapping.md`
+The hub-side half of this convention is owned by `openspec/specs/documentation/documentation-visual-conventions/spec.md`, which carries the durable contract: exemplar coverage across hub doc surfaces, the plugin-family rejection, the pinned-version alignment with GitHub's renderer, the committed scan scope, and the pinned-version parse requirement enforced by `npm run validate:mermaid`.
+Those obligations bind hub authoring and are not restated here.
