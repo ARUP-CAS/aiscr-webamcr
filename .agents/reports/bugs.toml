@@ -1,0 +1,259 @@
+schema_version = "1"
+preamble = """
+# Tracked bugs — AMČR (aiscr-webamcr)
+
+> Review prose follows the canonical English-default rule; verbatim Czech is preserved where exact source wording, field names, or AIS CR domain identifiers matter.
+> Before adding a new bug, check the existing GitHub Issues (currently 113 open).
+>
+> Statuses: `already tracked (Issue #XXX)` | `extends existing issue #XXX` | `new issue candidate`
+>
+> Severity values: `Critical` | `High` | `Medium` | `Low`
+
+---
+
+<!-- Entries are added by agents after completing individual tasks -->"""
+
+[[bug]]
+id = "BUG-001"
+title = "eval() on values from the database in the identifier generators"
+severity = "Medium"
+github_issue = "new issue candidate"
+description = "All five places use `eval(i)` to convert a textual number (a segment of `ident_cely` from the DB) to an integer. Although the values are internally generated and their format is controlled by the application, `eval()` is an inherently dangerous function — if the ident_cely format were compromised (e.g. by a faulty data migration), arbitrary Python code could be executed. See SEC-ORM-001 through SEC-ORM-005 in `orm_analysis.json`."
+recommended_fix = "Replace `eval(i)` with `int(i)` in all five places. Add format validation before the conversion (e.g. `i.isdigit()`)."
+task = "T03"
+
+[[bug.files]]
+line = 663
+path = "webclient/projekt/models.py"
+symbol = "Projekt.set_permanent_ident_cely()"
+
+[[bug.files]]
+line = 331
+path = "webclient/arch_z/models.py"
+symbol = "ArcheologickyZaznam.set_lokalita_permanent_ident_cely()"
+
+[[bug.files]]
+line = 889
+path = "webclient/arch_z/models.py"
+symbol = "get_akce_ident()"
+
+[[bug.files]]
+line = 441
+path = "webclient/dokument/models.py"
+symbol = "Dokument.set_permanent_ident_cely()"
+note = "found in T03c"
+
+[[bug.files]]
+line = 301
+path = "webclient/ez/models.py"
+symbol = "get_perm_ez_ident()"
+note = "found in T03c"
+
+[[bug]]
+id = "BUG-002"
+title = "N+1 queries in ArcheologickyZaznam.check_pred_odeslanim() and Projekt.check_pred_uzavrenim()"
+severity = "Medium"
+github_issue = "new issue candidate"
+description = "`check_pred_odeslanim()` calls `self.dokumentacni_jednotky_akce.all()` twice and, for each DJ, makes a query on `dj.komponenty.komponenty.all()`. `check_pred_uzavrenim()` calls `self.akce_set.all()` twice and, for each akce, runs a cascading `check_pred_odeslanim()`. These methods are called on every attempt to advance the record's state — for projects with multiple akce and DJ, the number of queries can reach dozens."
+recommended_fix = "Add `prefetch_related` in the view methods before calling `check_pred_*`. Refactor the `check_pred_*` methods to accept prefetched data as a parameter."
+task = "T03"
+files = [
+    { path = "webclient/arch_z/models.py:240-268" },
+    { path = "webclient/projekt/models.py:561-578" },
+]
+
+[[bug]]
+id = "BUG-003"
+title = "Import of cached_property from distlib.util instead of functools"
+severity = "Low"
+github_issue = "new issue candidate"
+description = "`from distlib.util import cached_property` — `distlib` is a packaging tool (part of pip), not Django or the Python standard library. The correct implementation is `from functools import cached_property` (Python 3.8+). The import works, but it is unreliable as a dependency and confusing for developers."
+recommended_fix = "`from functools import cached_property`"
+task = "T03"
+files = [
+    { line = 28, path = "webclient/uzivatel/models.py" },
+]
+
+[[bug]]
+id = "BUG-004"
+title = "Extra SELECT in SamostatnyNalez.save() — the initial_pristupnost pattern is incomplete"
+severity = "Medium"
+alignment = "Severity raised from Low to Medium (2026-03-13); the extra SELECT runs on every record save and is an architectural anti-pattern — it corresponds to the High-priority classification of ORM-01 in refactoring_backlog.md."
+github_issue = "new issue candidate — cannot verify, GitHub Issues unavailable without authentication"
+description = "The `SamostatnyNalez` model has an `initial_pristupnost` property, but its `save()` method still unconditionally calls `SamostatnyNalez.objects.get(pk=self.pk)` on every record save (where `pk is not None`). The correct pattern stores the initial value in `__init__()`, which eliminates the extra SELECT."
+recommended_fix = "Add to `__init__()`: `self._initial_pristupnost = self.pristupnost`. In `save()`, compare `self._initial_pristupnost != self.pristupnost` without the extra SELECT."
+task = "T03b"
+files = [
+    { path = "webclient/pas/models.py:182-186" },
+]
+
+[[bug]]
+id = "BUG-005"
+title = "Missing db_index on Heslar.nazev_heslare (an FK used globally in limit_choices_to)"
+severity = "Medium"
+github_issue = "new issue candidate — cannot verify, GitHub Issues unavailable without authentication"
+description = "The `Heslar.nazev_heslare` field is an FK to `HeslarNazev` without `db_index=True`. This field is filtered in `limit_choices_to` in dozens of FK fields across the entire application (proj, pas, arch_z, uzivatel, dokument, adb, heslar, etc.). The absence of an index causes a table scan on the `heslar` table for every form query."
+recommended_fix = "Add `db_index=True` to the `nazev_heslare` FK definition in `heslar/models.py`. Alternatively add an explicit `models.Index(fields=[\"nazev_heslare\"])` in `Meta.indexes`."
+task = "T03b"
+files = [
+    { path = "webclient/heslar/models.py:22-23" },
+]
+
+[[bug]]
+id = "BUG-006"
+title = "get_vyskovy_bod() calls .count() twice on the same queryset"
+severity = "Low"
+github_issue = "new issue candidate — cannot verify, GitHub Issues unavailable without authentication"
+description = "The `get_vyskovy_bod()` function calls `vyskove_body.count()` twice — once to test for 0 and once to test for the maximum — each call runs a separate SQL COUNT query."
+recommended_fix = "Store the result `count = vyskove_body.count()` once and compare `count == 0` and `count <= MAXIMAL_VYSKOVY_BOD + offset`."
+task = "T03b"
+files = [
+    { path = "webclient/adb/models.py:163-171" },
+]
+
+[[bug]]
+id = "BUG-007"
+title = "GF_SECURITY_ADMIN_PASSWORD set to a file path instead of the password"
+severity = "Medium"
+github_issue = "new issue candidate — cannot verify, GitHub Issues unavailable without authentication"
+description = "Grafana `GF_SECURITY_ADMIN_PASSWORD=/run/secrets/grafana_admin_password` sets the admin password to a literal string (the file path), not to the contents of the Docker secret. Grafana does not support automatic reading of Docker secrets via `GF_SECURITY_ADMIN_PASSWORD`; the correct format is `GF_SECURITY_ADMIN_PASSWORD__FILE`. Consequence: the Grafana admin password is the literal string `/run/secrets/grafana_admin_password`."
+recommended_fix = "Replace `GF_SECURITY_ADMIN_PASSWORD=...` with `GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_admin_password` in all three files."
+task = "T04"
+files = [
+    { line = 149, path = "docker-compose.yml" },
+    { line = 169, path = "docker-compose-test.yml" },
+    { line = 144, path = "git_docker-compose.yml" },
+]
+
+[[bug]]
+id = "BUG-008"
+title = "ELASTIC_PASSWORD and LOGSTASH_INTERNAL_PASSWORD set to secret names"
+severity = "Medium"
+github_issue = "new issue candidate — cannot verify, GitHub Issues unavailable without authentication"
+description = "Elasticsearch `ELASTIC_PASSWORD=elastic_pass` and Logstash `LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass` have the name of the Docker secret (a string) as their value, not its contents. Neither the Elasticsearch nor the Logstash Docker image supports the `_FILE` variant for these variables. Result: the Elasticsearch bootstrap password is set to the literal `\"elastic_pass\"` instead of the actual value from the secret."
+recommended_fix = "Use an entrypoint wrapper script: `export ELASTIC_PASSWORD=$(cat /run/secrets/elastic_pass)` before starting Elasticsearch / Logstash."
+task = "T04"
+files = [
+    { path = "docker-compose.yml:180-181,201" },
+    { path = "git_docker-compose.yml:172-173,194" },
+]
+
+[[bug]]
+id = "BUG-009"
+title = "sudo access for the application user in the production container"
+severity = "Medium"
+github_issue = "new issue candidate — cannot verify, GitHub Issues unavailable without authentication"
+description = "`usermod -aG sudo user` adds the production application user to the `sudo` group. If an RCE exploit of the application occurs (e.g. via eval() — see BUG-001), an attacker can escalate privileges to root inside the container."
+recommended_fix = "Remove `usermod -aG sudo user`. For necessary privileged operations (crontab setup), set specific NOPASSWD rules in `/etc/sudoers`."
+task = "T04"
+files = [
+    { line = 99, path = "Dockerfile" },
+]
+
+[[bug]]
+id = "BUG-010"
+title = "Dangerous fallback for DEBUG in production.py"
+severity = "High"
+github_issue = "new issue candidate — cannot verify, GitHub Issues unavailable without authentication"
+description = "`DEBUG = get_secret(\"DEBUG\", \"True\") == \"True\"` — the default fallback is the string `\"True\"`. If the `DEBUG` key is missing from the secrets file, the production instance starts with `DEBUG=True`. This exposes full Python tracebacks, settings values, and deactivates Django's security checks."
+recommended_fix = "Change the fallback to `\"False\"`: `DEBUG = get_secret(\"DEBUG\", \"False\") == \"True\"`"
+task = "T05"
+files = [
+    { line = 3, path = "webclient/webclient/settings/production.py" },
+]
+
+[[bug]]
+id = "BUG-011"
+title = "Mailtrap credentials in a commit"
+severity = "Medium"
+github_issue = "new issue candidate — cannot verify, GitHub Issues unavailable without authentication"
+description = "The file contains seemingly real Mailtrap sandbox credentials (`EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`). Anyone with access to the repository can use these credentials to log into Mailtrap and read captured test emails."
+recommended_fix = "Verify whether the credentials are active, and if so, rotate them. Replace them in the file with obvious placeholder values (e.g. `\"PLACEHOLDER_USER\"`, `\"PLACEHOLDER_PASSWORD\"`)."
+task = "T05"
+files = [
+    { path = "webclient/webclient/settings/sample_secrets_mail_client.json" },
+]
+
+[[bug]]
+id = "BUG-012"
+title = "mark_safe() with values from the database in vypis/fields.py"
+severity = "Medium"
+github_issue = "new issue candidate — cannot verify, GitHub Issues unavailable without authentication"
+description = "Three places in `vypis/` apply `mark_safe()` to values derived from database instances or model properties. If these values are not properly escaped before being wrapped in `mark_safe()`, stored XSS may occur. The ident_cely values have a controlled structure, but the pattern is architecturally dangerous and requires explicit verification."
+recommended_fix = "Audit the `get_ident_cely_link` property, the `get_name()` implementations, and the Dokument.extra_data attribute. Rewrite using `format_html()` or ensure `escape()` before `mark_safe()`."
+task = "T05"
+
+[[bug.files]]
+line = 363
+path = "webclient/vypis/fields.py"
+symbol = "mark_safe(value.get_ident_cely_link)"
+
+[[bug.files]]
+line = 438
+path = "webclient/vypis/fields.py"
+symbol = "mark_safe(new_instance)"
+
+[[bug.files]]
+line = 79
+path = "webclient/vypis/views.py"
+symbol = "mark_safe(field.get_name(instance))"
+
+[[bug]]
+id = "BUG-013"
+title = "restore_database.sh does not validate required environment variables before DROP DATABASE"
+severity = "Medium"
+github_issue = "new issue candidate — cannot verify, GitHub Issues unavailable without authentication"
+description = "The script uses `${DBNAME}`, `${USED_DB_BACKUP}`, `${DB_FLAG_ROLE}` without checking whether they are set. With empty values, an unintended DROP/CREATE may occur (e.g. an empty database name) or an unclear error during pg_restore."
+recommended_fix = "At the start of the script, verify that `DBNAME`, `USED_DB_BACKUP`, `DB_FLAG_ROLE` are non-empty; on error print usage and exit with exit 1. Add `set -e`."
+task = "T10"
+files = [
+    { path = "scripts/restore_database.sh" },
+]
+
+[[bug]]
+id = "BUG-014"
+title = "db_connection_from_docker-web.py ignores DB_PORT from the secret"
+severity = "Medium"
+github_issue = "new issue candidate — cannot verify, GitHub Issues unavailable without authentication"
+description = "The script reads only `DB_NAME`, `DB_PASS`, `DB_USER`, `DB_HOST` from `/run/secrets/db_conf`. The PostgreSQL connection therefore always uses the default port 5432. If the database is on a different port, the health check fails or checks a different instance."
+recommended_fix = "Also read `DB_PORT` from the JSON (with a default of 5432) and pass it to `psycopg2.connect(..., port=db_port)`."
+task = "T10"
+files = [
+    { path = "scripts/db/db_connection_from_docker-web.py" },
+]
+
+[[bug]]
+id = "BUG-015"
+title = "NalezPredmet.__init_ — typo in the method name (one underscore missing)"
+severity = "Medium"
+github_issue = "new issue candidate"
+description = "The method is defined as `def __init_(self, ...)` with a single trailing underscore instead of `__init__` with two. Python does not call this method as a constructor, so the custom initialization (`close_active_transaction_when_finished = False`, `active_transaction = None`) is never performed. The sibling model `NalezObjekt` correctly has `__init__`. The impact depends on whether these attributes are used elsewhere (signals, transactions)."
+recommended_fix = "Rename `__init_` to `__init__`."
+task = "T03d"
+files = [
+    { line = 116, path = "webclient/nalez/models.py" },
+]
+
+[[bug]]
+id = "BUG-016"
+title = "form_fields_disabling.js — inverted condition for select/non-select elements"
+severity = "Medium"
+github_issue = "new issue candidate"
+description = "The condition `element.type != 'select-multiple' || element.type != 'select-one'` is logically always true (De Morgan's law — OR of negations). The branches for select and non-select form elements are thereby inverted. This manifests as incorrect enabling/disabling of fields when the parent select changes."
+recommended_fix = "Replace the `||` operator with `&&`."
+task = "T07b"
+files = [
+    { line = 65, path = "webclient/static/js/form_fields_disabling.js" },
+]
+
+[[bug]]
+id = "BUG-017"
+title = "coor_precision.js — wrong precision constant for JTSK (uses WGS84)"
+severity = "Medium"
+github_issue = "new issue candidate"
+description = "The `amcr_static_coordinate_precision_jtsk` function uses `global_fixed_precision.wgs84` instead of `global_fixed_precision.jtsk` for a non-array input. JTSK coordinates are rounded with WGS84 precision, which leads to incorrect rounding (typically 6 decimal places for WGS84 vs 2 for JTSK)."
+recommended_fix = "On line 31, replace `global_fixed_precision.wgs84` with `global_fixed_precision.jtsk`."
+task = "T07b"
+files = [
+    { line = 31, path = "webclient/static/js/coor_precision.js" },
+]
