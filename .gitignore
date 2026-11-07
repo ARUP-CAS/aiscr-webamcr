@@ -33,6 +33,8 @@ develop-eggs/
 dist/
 eggs/
 lib/
+# Python packaging rule above must not hide the hub-delivered governance library.
+!.agents/scripts/lib/
 lib64/
 parts/
 sdist/
@@ -117,8 +119,5 @@ kibana/kibana.yml
 /webclient/core/tests/resources/ssl.crt
 /webclient/core/tests/resources/ssl.key
 
-# agents
-.codex/
-.claude/
-.cursor/
+# secrets
 .env

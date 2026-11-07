@@ -1,0 +1,748 @@
+# SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69>
+# SPDX-License-Identifier: MIT
+# delivery-version: 96a1e289289a180161258baa10f7547b8cd9f719 2026-11-07T11:55:51+01:00
+
+# AIS CR workstation safety floor for Codex execpolicy — user profile.
+#
+# This template is the source for the delimited managed region that
+# setup_workstation_assistant_safety.py merges into
+# <home>/.codex/rules/default.rules. Only the region between the BEGIN and
+# END markers below is delivered; operator-authored content outside the
+# markers in the destination file is preserved byte-for-byte, and the merge
+# replaces the region wholesale on every apply.
+#
+# Composition facts (probed with `codex execpolicy check` over two --rules
+# files in both orders): composing rule files is most-restrictive-wins and
+# order-independent, and execpolicy has no catch-all — an unmatched command
+# carries no decision at all, so the forbidden rules below are the only
+# refusal this file provides and the allow rules buy friction relief only;
+# most-restrictive-wins keeps every forbidden rule in force over them. The
+# rules bind the agent, not the operator: every operator retains direct
+# access to these commands.
+#
+# Validation: `codex execpolicy check --rules <this file>` resolves the same
+# syntax the consuming runtime resolves, and the port refuses to write a
+# template that parser rejects.
+
+# >>> BEGIN AIS CR WORKSTATION SAFETY MANAGED REGION >>>
+# Scope: these rules govern only commands Codex would run OUTSIDE the sandbox
+# (the escalation path). They do not protect ordinary in-sandbox writes,
+# the specialized host apply_patch route, MCP, hosted connectors or deferred
+# tools. Each rule below carries its own evidence — the threat it names and
+# the expected benefit of refusing it — and repository-relative patterns are
+# retained deliberately: at user layer the same pattern resolves against
+# whatever directory a session starts in, so the unanchored form refuses a
+# superset, which is the safe direction.
+
+# Published-history destruction: no ordinary corrective restoration exists.
+
+prefix_rule(
+    pattern = ["git", "push", ["--force", "--force-with-lease", "-f"]],
+    decision = "forbidden",
+    justification = "Force push rewrites remote history with no ordinary corrective restoration; the operator performs it directly when genuinely needed.",
+)
+
+prefix_rule(
+    pattern = ["git", "push", "--delete"],
+    decision = "forbidden",
+    justification = "Deleting a remote ref destroys published history; the operator performs it directly.",
+)
+
+prefix_rule(
+    pattern = ["git", "push", ["origin", "upstream"], "--delete"],
+    decision = "forbidden",
+    justification = "Deleting a remote ref destroys published history; the operator performs it directly.",
+)
+
+prefix_rule(
+    pattern = ["git", "branch", ["-D", "--force"]],
+    decision = "forbidden",
+    justification = "Force-deleting or force-moving a branch can destroy commits no other ref carries; use git branch -d or let the operator perform it.",
+)
+
+prefix_rule(
+    pattern = ["git", "clean"],
+    decision = "forbidden",
+    justification = "git clean destroys untracked files with no version-control recovery; inspect with git status --ignored and let the operator clean.",
+)
+
+prefix_rule(
+    pattern = ["git", "stash", "clear"],
+    decision = "forbidden",
+    justification = "Clearing the stash destroys stashed uncommitted work with no recovery path.",
+)
+
+prefix_rule(
+    pattern = ["gh", "repo", "delete"],
+    decision = "forbidden",
+    justification = "Deleting a GitHub repository is external mutation with no ordinary corrective restoration; the operator performs it.",
+)
+
+# Drive-root destruction: recursive removal of a filesystem root, volume
+# formatting and storage-wipe cmdlets destroy the drive with no recovery
+# path. Sub-root recursive deletion is deliberately not covered here: it is
+# not distinguishable from ordinary cleanup by command shape.
+
+prefix_rule(
+    pattern = ["rm", ["-rf", "-fr"], ["/", "/c", "/c/", "/d", "/d/", "/z", "/z/"]],
+    decision = "forbidden",
+    justification = "Recursive removal of a filesystem root destroys the drive with no recovery path; the operator performs any such action directly.",
+)
+
+prefix_rule(
+    pattern = ["format"],
+    decision = "forbidden",
+    justification = "Formatting a volume is drive destruction with no recovery path.",
+)
+
+prefix_rule(
+    pattern = ["Remove-Item", ["A:\\", "B:\\", "C:\\", "D:\\", "E:\\", "F:\\", "G:\\", "H:\\", "I:\\", "J:\\", "K:\\", "L:\\", "M:\\", "N:\\", "O:\\", "P:\\", "Q:\\", "R:\\", "S:\\", "T:\\", "U:\\", "V:\\", "W:\\", "X:\\", "Y:\\", "Z:\\"]],
+    decision = "forbidden",
+    justification = "Removing a drive root destroys the volume with no recovery path; the operator performs any such action directly.",
+)
+
+prefix_rule(
+    pattern = ["Clear-Disk"],
+    decision = "forbidden",
+    justification = "Clearing a disk destroys the volume with no recovery path.",
+)
+
+prefix_rule(
+    pattern = ["Format-Volume"],
+    decision = "forbidden",
+    justification = "Formatting a volume destroys the volume with no recovery path.",
+)
+
+prefix_rule(
+    pattern = ["Remove-Partition"],
+    decision = "forbidden",
+    justification = "Removing a partition destroys the volume with no recovery path.",
+)
+
+prefix_rule(
+    pattern = ["Initialize-Disk"],
+    decision = "forbidden",
+    justification = "Initializing a disk destroys its partition table with no recovery path.",
+)
+
+prefix_rule(
+    pattern = ["diskpart"],
+    decision = "forbidden",
+    justification = "The disk partition tool can reconfigure or destroy volumes with no recovery path.",
+)
+
+# Recovery-path and system-state destruction: the restore paths themselves.
+
+prefix_rule(
+    pattern = ["Clear-RecycleBin"],
+    decision = "forbidden",
+    justification = "Clearing the recycle bin destroys the recovery path for everything it holds.",
+)
+
+prefix_rule(
+    pattern = ["vssadmin", "delete"],
+    decision = "forbidden",
+    justification = "Deleting shadow copies destroys the system's restore points with no recovery path.",
+)
+
+prefix_rule(
+    pattern = ["wbadmin", "delete"],
+    decision = "forbidden",
+    justification = "Deleting backup catalogues and system state destroys the recovery path.",
+)
+
+prefix_rule(
+    pattern = ["reg", "delete"],
+    decision = "forbidden",
+    justification = "Deleting registry keys destroys system state; the operator performs registry surgery directly.",
+)
+
+prefix_rule(
+    pattern = ["bcdedit"],
+    decision = "forbidden",
+    justification = "Rewriting the boot configuration can make the system unbootable.",
+)
+
+prefix_rule(
+    pattern = ["cipher", ["/w", "/w:C", "/w:D"]],
+    decision = "forbidden",
+    justification = "The cipher wipe overwrites free space permanently.",
+)
+
+prefix_rule(
+    pattern = ["sdelete"],
+    decision = "forbidden",
+    justification = "The secure-delete tool overwrites files permanently.",
+)
+
+prefix_rule(
+    pattern = ["dd"],
+    decision = "forbidden",
+    justification = "Raw device writing can overwrite a disk image or volume with no recovery path.",
+)
+
+# Operator-reserved entry points (the staged-patch handoff and the workstation
+# port) carry no rule at this layer: they name tooling that exists only inside
+# governed trees, which the repository-layer rules of those trees cover, and
+# the apply tool's interactive-terminal gate is the structural backstop for
+# any other reach. The repository rules file carries their forbidden rules.
+# Curated working-set allow rules (source: command_allowlist.toml, workstation
+# delivery layer). Most-restrictive-wins keeps every forbidden rule above in
+# force over these allows. Repository-anchored shapes, the repository
+# virtualenv interpreter and the module invocations pinned to it, are
+# withheld from this layer by the delivery-layer axis and stay on the
+# repository rules file.
+
+prefix_rule(
+    pattern = ["git", "status"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["git", "log"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["git", "diff"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["git", "show"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["git", "show-ref", "--verify"],
+    decision = "allow",
+    justification = "Exact reference verification for review-pr acquisition through sibling_git_read.py; independent of the broader show prefix.",
+)
+
+prefix_rule(
+    pattern = ["git", "--no-pager", "grep", "--no-textconv", "--"],
+    decision = "allow",
+    justification = "Content search used by sibling_git_read.py. grep's -O/--open-files-in-pager and --textconv invoke programs; options end before the search pattern, conversion is disabled, and the global no-pager flag also disables configured pagers.",
+)
+
+prefix_rule(
+    pattern = ["git", "blame"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["git", "rev-parse"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["git", "merge-base"],
+    decision = "allow",
+    justification = "Read-only common-ancestor resolution for branch-scope review base selection; writes nothing and reaches no remote.",
+)
+
+prefix_rule(
+    pattern = ["git", "ls-files"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["git", "ls-tree"],
+    decision = "allow",
+    justification = "Tree enumeration at a named reference, dispatched through sibling_git_read.py for hub-cockpit release builds. The bridge injects the recursive, name-only, NUL-separated form itself, bounds the call to one reference and an optional repository-relative prefix, resolves the reference to a commit, and screens every emitted name against the deny floor before returning it.",
+)
+
+prefix_rule(
+    pattern = ["git", "cat-file"],
+    decision = "allow",
+    justification = "File read at a named reference through sibling_git_read.py for hub-cockpit release builds. The caller passes one '<ref>:<path>' object; the bridge screens the path part against the deny floor before any content is returned, resolves the reference to a commit, returns only a blob, and reports a path absent at that reference as absent rather than failed. cat-file applies no text conversion, so no configured helper can run.",
+)
+
+prefix_rule(
+    pattern = ["git", "rev-list"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["git", "config", "--get"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["git", "stash", "list"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["git", "fetch"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["git", "branch", "-vv"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["git", "remote", "-v"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["git", "remote", "prune"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["git", "worktree", "prune"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["date", "+%Y-%m-%d"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["grep"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["rg"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["sed", "-n"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["cat"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["head"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["tail"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["less"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["wc"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["file"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["diff"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["ls"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["tree"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["pwd"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["du"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["df"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["which"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["type"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["cut"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["tr"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["uniq"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["jq"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["ag"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["uname"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["whoami"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["man"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+
+prefix_rule(
+    pattern = ["claude", "--version"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+
+
+
+prefix_rule(
+    pattern = ["Get-Content"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+
+
+
+
+
+
+
+
+prefix_rule(
+    pattern = ["Out-String"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["Get-ChildItem"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["Get-Item"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["Get-Date"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["Test-Path"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["Select-String"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+
+prefix_rule(
+    pattern = ["Get-Member"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+
+prefix_rule(
+    pattern = ["Write-Output"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+
+prefix_rule(
+    pattern = ["Get-Variable"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+
+prefix_rule(
+    pattern = ["Get-FileHash"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["gh", "issue", "view"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["gh", "issue", "list"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", "view"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", "list"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", "diff"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", "checks"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["gh", "repo", "view"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["gh", "run", "view"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["gh", "run", "list"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["gh", "auth", "status"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["gh", "release", "list"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+prefix_rule(
+    pattern = ["codex", "execpolicy", "check"],
+    decision = "allow",
+    justification = "Curated working-set command; the forbidden floor still wins over this allow.",
+)
+
+# Read-only HTTP probes for the live acceptance verification workflow
+# (aiscr-review-live). The -w-anchored null-device shape keeps the full
+# argv prefix transferable per argument, so no rule degrades to a bare
+# curl stem. Broad developer HTTP grants also admit credentialed and mutating
+# requests; their effects retain the applicable task-authorization gates.
+
+# Developer working set: repository toolchains, package managers, build/test/lint
+# runners, VCS and hosted-VCS writes, HTTP clients, and local container workflows. The
+# forbidden floor composes most-restrictive-wins and still refuses the direct
+# catastrophic shapes; generic shells, remote clients, and shell-write shapes are
+# not carried. Broad live-infrastructure grants are excluded from both defaults;
+# projects opt in for named environments and operations. Tool admission does not
+# grant authority to deploy through an admitted runtime or script.
+
+prefix_rule(pattern = ["cd"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["Set-Location"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["python"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["python3"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["py"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["node"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["deno"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["bun"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["java"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["javac"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["dotnet"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["go"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["cargo"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["rustc"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["ruby"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["php"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["npm"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["npx"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["pnpm"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["yarn"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["pip"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["pip3"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["uv"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["poetry"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["gem"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["bundle"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["composer"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["make"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["cmake"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["ninja"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["mvn"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["gradle"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["gradlew"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["pytest"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["ruff"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["mypy"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["black"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["isort"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["flake8"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["eslint"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["prettier"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["tsc"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["vitest"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["jest"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["vite"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["next"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["git"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["gh"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["curl"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["curl.exe"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["wget"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["Invoke-WebRequest"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["Invoke-RestMethod"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["iwr"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["irm"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["docker"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["podman"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = [".venv/Scripts/python.exe"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = [".venv/bin/python"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["./.venv/Scripts/python.exe"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["ForEach-Object"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["Where-Object"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["Sort-Object"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["Select-Object"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["Format-Table"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["Format-List"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["Format-Wide"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["Group-Object"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["Measure-Object"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["Compare-Object"], decision = "allow", justification = "Curated working-set command; the forbidden floor still wins over this allow.")
+prefix_rule(pattern = ["git", "reset", "--hard"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["git", "filter-branch"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["git", "filter-repo"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["npm", "publish"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["pnpm", "publish"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["yarn", "publish"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["cargo", "publish"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["twine", "upload"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["dotnet", "nuget", "push"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["gh", "pr", "merge"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["gh", "release", "delete"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["terraform", "destroy"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["kubectl", "delete"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["helm", "uninstall"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["docker", "system", "prune"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["mkfs"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["shred"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["wipefs"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["parted"], decision = "forbidden", justification = "Brake for a newly reachable high-impact effect; delivered unproven with a structured deferral.")
+prefix_rule(pattern = ["yarn", "npm", "publish"], decision = "forbidden", justification = "Modern Yarn package publication changes an external registry. Delivered unproven; static coverage is not runtime proof.")
+prefix_rule(pattern = ["podman", "system", "prune"], decision = "forbidden", justification = "Prunes container state; the Podman counterpart of the Docker system brake. Delivered unproven; static coverage is not runtime proof.")
+prefix_rule(pattern = ["podman", "volume", "prune"], decision = "forbidden", justification = "Removes persistent volume data outside version control. Delivered unproven; static coverage is not runtime proof.")
+prefix_rule(pattern = ["podman", "volume", "rm"], decision = "forbidden", justification = "Removes persistent volume data outside version control. Delivered unproven; static coverage is not runtime proof.")
+prefix_rule(pattern = ["docker", "volume", "prune"], decision = "forbidden", justification = "Removes persistent volume data outside version control. Delivered unproven; static coverage is not runtime proof.")
+prefix_rule(pattern = ["docker", "volume", "rm"], decision = "forbidden", justification = "Removes persistent volume data outside version control. Delivered unproven; static coverage is not runtime proof.")
+prefix_rule(pattern = ["docker", "compose", "down", "-v"], decision = "forbidden", justification = "Compose volume removal destroys persistent data; option-position gaps remain recorded. Delivered unproven; static coverage is not runtime proof.")
+prefix_rule(pattern = ["docker", "compose", "down", "--volumes"], decision = "forbidden", justification = "Compose volume removal destroys persistent data; option-position gaps remain recorded. Delivered unproven; static coverage is not runtime proof.")
+prefix_rule(pattern = ["podman", "compose", "down", "-v"], decision = "forbidden", justification = "Compose volume removal destroys persistent data; option-position gaps remain recorded. Delivered unproven; static coverage is not runtime proof.")
+prefix_rule(pattern = ["podman", "compose", "down", "--volumes"], decision = "forbidden", justification = "Compose volume removal destroys persistent data; option-position gaps remain recorded. Delivered unproven; static coverage is not runtime proof.")
+# <<< END AIS CR WORKSTATION SAFETY MANAGED REGION <<<
+
+# Operator-authored rules may live outside the managed region; the port
+# preserves every byte outside the markers.

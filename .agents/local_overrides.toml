@@ -1,0 +1,14 @@
+[bootstrap]
+schema_in_use = "spec-driven"
+last_aligned_at = "2026-11-07"
+last_aligned_hub_revision = "96a1e289289a180161258baa10f7547b8cd9f719"
+target_branch = "DN-agents-setup-review"
+
+[bootstrap.notes]
+summary = "Reconcile run (aiscr-setup-governance; purpose reconcile, posture apply, whole governed tree): delivered the current hub baseline and enrolled assets through sibling_governance_delivery.py (shared .agents/skills tree with the dispatch library, aiscr-* subagents, delivered review and workflow tooling, refreshed rule readers and OpenSpec seeds, delivery manifest; sibling settings carry no hub grants); removed retired vendor surfaces and superseded .agents prompts and scripts; reconciled the entry docs and .agents READMEs; review_config points at codebase_review.py; .gitignore and .pre-commit-config.yaml no longer hide or reformat the delivered .agents/scripts tooling; OpenSpec pinned at 1.16.0 with the hub."
+
+[bootstrap.notes.open_items]
+quality_baseline_gaps = ".editorconfig absent; .gitattributes treats binary test fixtures and fonts as text. Owned by aiscr-setup-quality-baseline."
+readme_quick_start = "README.md and README_en.md run pip install -r requirements-dev.txt and manage.py from the repository root; both live under webclient/."
+openspec_update_script = "package.json carries an openspec:update script; running it re-emits vendor trees the hub does not carry (for example .cline/). OpenSpec seeds arrive through hub delivery."
+settings_drift_report = "inspect reports the keywise-reconciled settings carriers (.claude/settings.json, .gemini/settings.json, .kilo/kilo.jsonc) as CONTENT although each equals its expected merge; a hub reporting defect, not drift in this repository."
