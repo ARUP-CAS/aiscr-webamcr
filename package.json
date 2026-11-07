@@ -5,8 +5,7 @@
   "description": "JavaScript dependency management for AMCR web client",
   "scripts": {
     "openspec:validate": "node ./node_modules/@fission-ai/openspec/bin/openspec.js validate --all",
-    "openspec:cli": "node ./node_modules/@fission-ai/openspec/bin/openspec.js",
-    "openspec:update": "node ./node_modules/@fission-ai/openspec/bin/openspec.js update"
+    "openspec:cli": "node ./node_modules/@fission-ai/openspec/bin/openspec.js"
   },
   "dependencies": {
     "bootstrap": "5.3.8",
