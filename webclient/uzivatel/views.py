@@ -13,9 +13,8 @@ from core.message_constants import (
 )
 from core.models import Permissions as p
 from core.models import check_permissions
-from core.news_feed import get_news_feed_cache_keys
+from core.news_feed_config import get_news_feed_cache_keys, get_news_feed_config
 from core.repository_connector import FedoraTransaction
-from core.setting_models import CustomAdminSettings
 from core.views import PermissionFilterMixin
 from dal import autocomplete
 from django.conf import settings
@@ -57,8 +56,6 @@ from uzivatel.forms import (
 from uzivatel.models import NotificationsLog, Osoba, User, UserNotificationType, UzivatelPrihlaseniLog
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_NEWS_FEED_BLOCK_HEIGHT = 300  # výška bloku v pixelech
 
 
 class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
@@ -270,35 +267,18 @@ class UserLoginView(LoginView):
         """
         context = super().get_context_data(**kwargs)
 
-        # Načte nastavení novinek z cache (klíč je unikátní pro tuto aplikaci)
-        cache_key = "news_feed_block_height:v1"
-        block_height_value = cache.cache.get(cache_key)
-        if block_height_value is None:
-            try:
-                block_height_value = CustomAdminSettings.objects.get(
-                    item_group="news_feed",
-                    item_id="news_feed_block_height",
-                ).value
-            except CustomAdminSettings.DoesNotExist:
-                logger.warning("News feed block height setting not found, using default.")
-                block_height_value = str(DEFAULT_NEWS_FEED_BLOCK_HEIGHT)
-            except CustomAdminSettings.MultipleObjectsReturned:
-                logger.error("Multiple news feed block height settings found; using default.")
-                block_height_value = str(DEFAULT_NEWS_FEED_BLOCK_HEIGHT)
-            cache.cache.set(cache_key, block_height_value, 3600)
-
-        try:
-            block_height = int(block_height_value)
-            if block_height <= 0:
-                raise ValueError
-        except (ValueError, TypeError):
-            logger.warning("Invalid news feed block height; using default: %s", DEFAULT_NEWS_FEED_BLOCK_HEIGHT)
-            block_height = DEFAULT_NEWS_FEED_BLOCK_HEIGHT
+        config = get_news_feed_config()
+        block_height = config.block_height
 
         # Načíst novinky z cache (bude automaticky načteno Celery taskem)
-        cache_key, stale_key = get_news_feed_cache_keys(self.request.LANGUAGE_CODE)
-        news_feed = cache.cache.get(cache_key)
-        context["news_feed"] = news_feed or cache.cache.get(stale_key, [])
+        language = self.request.LANGUAGE_CODE
+        if language in config.languages:
+            cache_key, last_good_key = get_news_feed_cache_keys(language, config)
+            news_feed = cache.cache.get(cache_key)
+            news_feed = news_feed or cache.cache.get(last_good_key, [])
+        else:
+            news_feed = []
+        context["news_feed"] = news_feed
         context["news_feed_block_height"] = block_height
         return context
 

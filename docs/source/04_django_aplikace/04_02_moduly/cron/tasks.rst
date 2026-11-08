@@ -503,8 +503,8 @@ Funkce
 
    Načte a uloží novinkový kanál do cache.
 
-   Tato úloha je volána při startu aplikace a periodicky v intervalu
-   definovaném v settings (cache_ttl - 60 sekund).
+   Tato úloha je volána při startu aplikace, po změně konfigurace a periodicky
+   v intervalu řízeném databázovým nastavením (cache_ttl - 60 sekund).
 
    Při chybě se opakují pouze jazyky, které se nepodařilo načíst.
 

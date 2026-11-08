@@ -32,6 +32,8 @@ Dokumentace modulu core.
    middleware
    mixins
    news_feed
+   news_feed_config
+   news_feed_scheduler
    repository_connector
    services
    setting_models
