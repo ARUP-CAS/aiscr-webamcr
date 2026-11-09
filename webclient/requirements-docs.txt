@@ -48,7 +48,7 @@ charset-normalizer==3.5.2
     #   -r requirements.txt
     #   reportlab
     #   requests
-click==8.5.0
+click==8.5.1
     # via
     #   -r requirements.txt
     #   celery
