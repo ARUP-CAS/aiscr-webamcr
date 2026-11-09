@@ -3013,10 +3013,25 @@ class FedoraTransactionNoIDError(Exception):
     pass
 
 
-class FedoraTransactionCommitFailedError(Exception):
-    """Implementuje komponentu ``FedoraTransactionCommitFailedError`` v rámci aplikace."""
+class FedoraTransactionCommitFailedError(FedoraError):
+    """
+    Selhání commitu (nebo rollbacku) Fedora transakce – chybová odpověď, výpadek spojení nebo vypršení timeoutu.
 
-    pass
+    Dědí z ``FedoraError``, aby ji zachytily ``handle_fedora_error``, ``ErrorMiddleware`` i obsluhy v API
+    a selhání prošlo společnou cestou s rollbackem transakce a uvolněním zámku záznamu (#4473).
+    """
+
+    def __init__(self, message, url=None, code=None, headers=None, fedora_transaction=None):
+        """
+        Inicializuje výjimku selhání commitu transakce.
+
+        :param message: Chybová zpráva (text odpovědi Fedory nebo popis výjimky spojení).
+        :param url: URL transakce ve Fedoře.
+        :param code: HTTP kód odpovědi, pokud Fedora odpověděla.
+        :param headers: HTTP hlavičky odpovědi.
+        :param fedora_transaction: Transakce, jejíž commit selhal; používá se pro záložní rollback.
+        """
+        super().__init__(url, message, code, headers=headers, fedora_transaction=fedora_transaction)
 
 
 class FedoraTransactionUnsupportedOperationError(Exception):
@@ -3249,7 +3264,9 @@ class FedoraTransaction(BaseFedoraTransaction):
                     "ident_cely": getattr(self.main_record, "ident_cely", None),
                 },
             )
-            raise FedoraTransactionCommitFailedError(f"{operation.name}: {exc}") from exc
+            raise FedoraTransactionCommitFailedError(
+                f"{operation.name}: {exc}", url=url, fedora_transaction=self
+            ) from exc
         succeeded = str(response.status_code).startswith("2")
         # COMMITED se zapíše jen po úspěšném commitu; odmítnutý commit se zapíše jako ABORTED,
         # jinak by middleware uživateli ohlásil uložení změn, které ve Fedoře nejsou (#4470).
@@ -3281,7 +3298,13 @@ class FedoraTransaction(BaseFedoraTransaction):
                     "ident_cely": getattr(self.main_record, "ident_cely", None),
                 },
             )
-            raise FedoraTransactionCommitFailedError(response.text)
+            raise FedoraTransactionCommitFailedError(
+                response.text,
+                url=url,
+                code=response.status_code,
+                headers=response.headers,
+                fedora_transaction=self,
+            )
         logger.debug(
             "core_repository_connector.FedoraTransaction.commit_transaction.end", extra={"transaction": self.uid}
         )

@@ -51,7 +51,7 @@ charset-normalizer==3.5.2
     #   -r requirements.txt
     #   reportlab
     #   requests
-click==8.5.0
+click==8.5.1
     # via
     #   -r requirements.txt
     #   celery
@@ -265,7 +265,7 @@ pybcj==1.0.8
     #   py7zr
 pycparser==3.12
     # via cffi
-pycryptodomex==3.24.1
+pycryptodomex==3.24.2
     # via
     #   -r requirements.txt
     #   py7zr

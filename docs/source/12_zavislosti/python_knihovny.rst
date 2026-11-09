@@ -80,7 +80,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-2-Clause
      - https://pygments.org
    * - Sphinx
-     - 9.1.0
+     - 9.2.0
      - BSD-2-Clause
      - https://www.sphinx-doc.org/
    * - Werkzeug
@@ -156,7 +156,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/jawah/charset_normalizer/blob/master/CHANGELOG.md
    * - click
-     - 8.5.0
+     - 8.5.1
      - BSD-3-Clause
      - https://github.com/pallets/click/
    * - click-didyoumean
@@ -304,7 +304,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 4.2.9
+     - 4.2.10
      - MIT
      - https://github.com/tox-dev/filelock
    * - freezegun
@@ -464,7 +464,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://github.com/eliben/pycparser
    * - pycryptodomex
-     - 3.24.1
+     - 3.24.2
      - BSD License; Public Domain
      - https://www.pycryptodome.org
    * - pyparsing
@@ -492,7 +492,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.9.4
+     - 1.9.5
      - MIT
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
@@ -588,7 +588,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://www.sphinx-doc.org/
    * - sphinxcontrib-googleanalytics
-     - 0.5
+     - 0.6
      - BSD-3-Clause
      - https://github.com/sphinx-contrib/googleanalytics
    * - sphinxcontrib-htmlhelp
@@ -668,7 +668,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 21.15.5
+     - 21.15.6
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth

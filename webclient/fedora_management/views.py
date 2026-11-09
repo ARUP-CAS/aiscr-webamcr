@@ -40,9 +40,9 @@ class AdminRecordProcessingView(LoginRequiredMixin, View):
     job_expirace = None
 
     #: Výjimky ze zpracování jednoho záznamu, které nesmí shodit celou dávku.
-    #: ``FedoraTransactionCommitFailedError`` **není** potomek ``FedoraError``,
-    #: takže bez explicitního uvedení by prošla ven jako HTTP 500 – a to až
-    #: poté, co se index v Redis posunul, tedy s přeskočením zbytku fronty.
+    #: ``FedoraTransactionCommitFailedError`` je potomek ``FedoraError``, uvádí se
+    #: ale explicitně, aby odchyt nezávisel na dědění; jinak by prošla ven jako
+    #: HTTP 500 – a to až poté, co se index v Redis posunul, tedy s přeskočením zbytku fronty.
     zpracovani_chyby = (FedoraError, FedoraTransactionCommitFailedError, ValueError)
 
     def process_record(self, record, result, **kwargs):
@@ -176,6 +176,9 @@ class ContinueMedataProcessing(AdminRecordProcessingView):
                 record.save_metadata(fedora_transaction)
                 fedora_transaction.mark_transaction_as_closed()
                 result["result"] = _("fedora_management.admin.YourCustomAdminSite.update_metadata_file_upload.success")
+            except FedoraTransactionCommitFailedError:
+                # Selhání commitu musí propadnout do dávkového handleru (``is_error`` a ERROR log, #4473).
+                raise
             except FedoraError as err:
                 result["result"] = _("fedora_management.admin.YourCustomAdminSite.update_metadata_file_upload.error")
                 logger.debug(
