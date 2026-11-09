@@ -119,7 +119,7 @@ jobs:
         if: steps.gate.outputs.run == 'true'
         uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.13"
 
       - name: Cache pre-commit
         if: steps.gate.outputs.run == 'true'
