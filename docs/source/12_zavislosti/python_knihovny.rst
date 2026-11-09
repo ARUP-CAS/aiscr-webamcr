@@ -80,7 +80,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-2-Clause
      - https://pygments.org
    * - Sphinx
-     - 9.1.0
+     - 9.2.0
      - BSD-2-Clause
      - https://www.sphinx-doc.org/
    * - Werkzeug
@@ -588,7 +588,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://www.sphinx-doc.org/
    * - sphinxcontrib-googleanalytics
-     - 0.5
+     - 0.6
      - BSD-3-Clause
      - https://github.com/sphinx-contrib/googleanalytics
    * - sphinxcontrib-htmlhelp
