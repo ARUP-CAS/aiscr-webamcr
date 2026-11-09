@@ -594,10 +594,9 @@ class OrganizaceMapperValidateBatchOrderingTest(TestCase):
         """Pokud soucast odkazuje na organizaci, která již existuje v DB, validace projde (i když není v CSV dříve)."""
         payloads = [self._row("ORG-CHILD", soucast="ORG-EXISTING")]
         with patch("core.import_data_mappers.Organizace.objects") as mock_objects:
-            mock_objects.filter.return_value.exists.return_value = True
-            mock_objects.values_list.return_value = []
+            mock_objects.filter.return_value.values_list.return_value = ["ORG-EXISTING"]
             OrganizaceMapper.validate_batch_ordering(payloads)
-        mock_objects.filter.assert_called_once_with(ident_cely="ORG-EXISTING")
+        mock_objects.filter.assert_called_once_with(ident_cely__in=["ORG-EXISTING"])
 
     def test_multiple_children_with_shared_parent_passes(self):
         """Více potomků odkazujících na jednoho předka, který je definován jako první, projde validací."""

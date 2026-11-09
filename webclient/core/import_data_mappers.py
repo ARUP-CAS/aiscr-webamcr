@@ -2583,6 +2583,7 @@ class OrganizaceMapper(ImportModelMapper):
     )
     model_class = Organizace
     require_primary_key_value = True
+    EXISTENCE_QUERY_BATCH_SIZE = 1000
 
     @staticmethod
     def _normalize_organization_identifier(value):
@@ -2645,13 +2646,25 @@ class OrganizaceMapper(ImportModelMapper):
         :raises ImportDataOrganizationCycleError: Vyvolá se, pokud výsledný graf obsahuje cyklus.
         """
         normalized_ident = cls._normalize_organization_identifier
+        parent_idents = set()
+        for row in payloads:
+            parent_ident = normalized_ident(row.get("soucast"))
+            if parent_ident is not None:
+                parent_idents.add(parent_ident)
+        existing_parent_idents = set()
+        parent_ident_list = sorted(parent_idents)
+        for batch_start in range(0, len(parent_ident_list), cls.EXISTENCE_QUERY_BATCH_SIZE):
+            batch = parent_ident_list[batch_start : batch_start + cls.EXISTENCE_QUERY_BATCH_SIZE]
+            existing_parent_idents.update(
+                Organizace.objects.filter(ident_cely__in=batch).values_list("ident_cely", flat=True)
+            )
+
         seen: set[str] = set()
         for row in payloads:
             ident = normalized_ident(row.get("ident_cely"))
             soucast_str = normalized_ident(row.get("soucast"))
-            if soucast_str is not None:
-                if soucast_str not in seen and not Organizace.objects.filter(ident_cely=soucast_str).exists():
-                    raise ImportDataBatchOrderingError(ident, soucast_str, "soucast")
+            if soucast_str is not None and soucast_str not in seen and soucast_str not in existing_parent_idents:
+                raise ImportDataBatchOrderingError(ident, soucast_str, "soucast")
             if ident is not None:
                 seen.add(ident)
 

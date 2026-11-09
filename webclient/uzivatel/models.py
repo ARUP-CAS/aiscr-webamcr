@@ -214,10 +214,11 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         """Vrátí ID vlastní organizace a potomků; výsledek se cacheuje v instanci uživatele."""
         cache = self.__dict__.get("_organizace_podstrom_ids")
         generation = Organizace._subtree_cache_version
-        if cache is None or cache[0] != generation:
-            cache = (generation, Organizace.get_subtree_ids(self.organizace_id))
+        organization_id = self.organizace_id
+        if cache is None or cache[:2] != (generation, organization_id):
+            cache = (generation, organization_id, Organizace.get_subtree_ids(organization_id))
             self.__dict__["_organizace_podstrom_ids"] = cache
-        return cache[1]
+        return cache[2]
 
     def display_name(self, viewer=None):
         """
