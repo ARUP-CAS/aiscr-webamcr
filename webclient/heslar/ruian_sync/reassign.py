@@ -458,6 +458,28 @@ def reassign_az(
     exclude_kod: Optional[int] = None,
 ) -> Optional[RuianKatastr]:
     """
+    Přepočítá katastry archeologického záznamu a vrátí nový hlavní katastr.
+
+    Tenký obal nad :func:`reassign_az_se_zmenou` pro volající, kterým stačí
+    výsledný hlavní katastr. Kdo potřebuje vědět, jestli se AZ změnil, musí
+    použít :func:`reassign_az_se_zmenou` – samotné porovnání hlavního katastru
+    nestačí, protože se může změnit jen M2M ``katastry``.
+
+    :param az: Instance :class:`ArcheologickyZaznam`, která má být přepočítána.
+    :param fallback_point: Viz :func:`reassign_az_se_zmenou`.
+    :param exclude_kod: Viz :func:`reassign_az_se_zmenou`.
+    :return: Nový ``hlavni_katastr`` po přepočtu nebo ``None`` (nepodařilo se určit).
+    """
+    return reassign_az_se_zmenou(az, fallback_point, exclude_kod=exclude_kod)[0]
+
+
+def reassign_az_se_zmenou(
+    az: ArcheologickyZaznam,
+    fallback_point=None,
+    *,
+    exclude_kod: Optional[int] = None,
+) -> Tuple[Optional[RuianKatastr], bool]:
+    """
     Přepočítá ``hlavni_katastr`` a M2M ``katastry`` archeologického záznamu.
 
     Pokud má AZ alespoň jednu DJ, deleguje výpočet na lokální optimalizovanou
@@ -501,13 +523,18 @@ def reassign_az(
         intersect (používá se při mazání katastru – aby se mazaný katastr,
         který je do okamžiku ``katastr.delete()`` stále v DB, nevybral zpět).
 
-        :return: Nový ``hlavni_katastr`` po přepočtu nebo ``None`` (nepodařilo se určit).
+    :return: Dvojice ``(hlavni_katastr, zmeneno)``. ``hlavni_katastr`` je nový
+        hlavní katastr po přepočtu, nebo ``None``, když se nepodařilo určit.
+        ``zmeneno`` je ``True``, když se zapsala jakákoli změna – hlavního
+        katastru **nebo jen** M2M ``katastry``; obojí zapisuje historii
+        ``ZMENA_KATASTRU`` a posílá metadata do Fedory.
     """
     logger.debug("heslar.ruian_sync.reassign.reassign_az.start", extra={"ident_cely": az.ident_cely})
 
     first_dj = DokumentacniJednotka.objects.filter(archeologicky_zaznam=az).order_by("ident_cely").first()
     je_celokatastr = first_dj is not None and first_dj.typ_id == TYP_DJ_KATASTR
 
+    changed = False
     if first_dj is not None and not je_celokatastr:
         changed = _update_az_katastry_if_changed(az, exclude_kod=exclude_kod)
         if changed:
@@ -521,7 +548,7 @@ def reassign_az(
         # jen s poznámkou v auditu. Proto se tu nekončí, ale propadá se na
         # stejnou fallback větev jako u celokatastr DJ.
         if not _odkazuje_na_mazany_katastr(az, exclude_kod):
-            return az.hlavni_katastr
+            return az.hlavni_katastr, changed
         logger.warning(
             "heslar.ruian_sync.reassign.reassign_az.fallback_bez_pianu",
             extra={"ident_cely": az.ident_cely, "exclude_kod": exclude_kod},
@@ -538,16 +565,16 @@ def reassign_az(
     # fallback větev jako AZ bez DJ – tedy prostorový náhradník z definičního
     # bodu mazaného katastru, obdobně jako :func:`reassign_neident_akce`.
     if je_celokatastr and not _odkazuje_na_mazany_katastr(az, exclude_kod):
-        return az.hlavni_katastr
+        return az.hlavni_katastr, False
 
     target = _resolve_target_point(None, fallback_point)
     if target is None:
         logger.warning("heslar.ruian_sync.reassign.reassign_az.no_geometry", extra={"ident_cely": az.ident_cely})
-        return None
+        return None, changed
 
     new_katastr = get_cadastre_from_point(target, exclude_kod=exclude_kod)
     if new_katastr is None:
-        return None
+        return None, changed
 
     # Hlavní katastr přepisujeme jen tehdy, když se maže právě on. Kdyby se
     # mazal katastr, který je u AZ jen mezi „dalšími", nesmí se hlavní sáhnout –
@@ -577,7 +604,7 @@ def reassign_az(
                 to_add = {new_katastr.pk}
 
     if not hlavni_changed and not to_remove:
-        return new_katastr
+        return new_katastr, changed
 
     popis_hlavni = ""
     if hlavni_changed:
@@ -594,7 +621,7 @@ def reassign_az(
             az.katastry.remove(*to_remove)
         az.active_transaction = fedora_tx
         az.save()
-    return new_katastr
+    return new_katastr, True
 
 
 def _odkazuje_na_mazany_katastr(az: ArcheologickyZaznam, exclude_kod: Optional[int]) -> bool:
@@ -988,9 +1015,8 @@ def _reassign_all_az() -> Dict[str, int]:
     print(f"AZ: zpracovávám {total} záznamů (jen s DJ)", flush=True)
     last_pct = -1
     for idx, az in enumerate(iter_pk_chunks(qs), start=1):
-        old_pk = az.hlavni_katastr_id
         try:
-            new_kat = reassign_az(az)
+            new_kat, zmeneno = reassign_az_se_zmenou(az)
         except (FedoraError, FedoraTransactionCommitFailedError, ValueError) as err:
             logger.error(
                 "heslar.ruian_sync.reassign.reassign_all.az_error",
@@ -999,10 +1025,13 @@ def _reassign_all_az() -> Dict[str, int]:
             counts["errors"] += 1
             last_pct = print_progress("az", idx, total, last_pct)
             continue
-        if new_kat is None:
-            counts["skipped"] += 1
-        elif new_kat.pk != old_pk:
+        # U AZ se může změnit i jen M2M ``katastry`` – porovnání hlavního
+        # katastru by takovou změnu (včetně zápisu historie) počítalo jako
+        # ``unchanged``.
+        if zmeneno:
             counts["changed"] += 1
+        elif new_kat is None:
+            counts["skipped"] += 1
         else:
             counts["unchanged"] += 1
         last_pct = print_progress("az", idx, total, last_pct)

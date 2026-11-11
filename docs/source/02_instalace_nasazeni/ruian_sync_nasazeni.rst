@@ -89,29 +89,40 @@ Hodnota ``--valid-to``
 ----------------------
 
 ``--valid-to`` se ukládá jako kotva ``RuianSyncRun.data_valid_to`` a cron od ní
-pokračuje následujícím dnem. Uvádí se **poslední den, jehož změny SHP
-snapshot obsahuje** – typicky den před stažením ``1.zip``.
+pokračuje následujícím dnem. Je to **poslední den, jehož změny SHP snapshot
+jistě obsahuje** – den před vygenerováním ``1.zip``.
 
-Příkaz tuto hodnotu **nedokáže ověřit**, protože ji ze vstupů nejde odvodit:
+U ``1.zip`` od ČÚZK se ``--valid-to`` **nezadává**: příkaz ho odvodí sám
+a vypíše (``kotva bude …``). Zadává se jen u rozbaleného adresáře, kde je
+povinné, nebo když chcete kotvu záměrně dřívější.
 
-* ``1.zip`` s polygony je nedatovaný – stejná URL vždy vrací aktuální stav;
-* ``YYYYMMDD_ST_UZSZ.xml.zip`` dodává jen definiční body a vychází řidčeji,
-  takže je běžně starší než SHP. ÚZSZ z 31. 7. spolu s ``--valid-to``
-  2026-08-13 je správná kombinace, ne chyba.
+``1.zip`` má stálou URL a nedatovaný název, datum vygenerování ale nesou časy
+souborů uvnitř archivu (např. ``1/OKRESY_P.shp`` 2026-11-10 20:27). ČÚZK
+archiv generuje večer, ale změny ze změnového souboru téhož dne v něm ještě
+nejsou (ověřeno na archivu z 12. 10. 2026: obsahoval změny z 1.–10. 10.,
+změny z ``20261012_ST_ZKSH`` ne), proto platí den předtím. Archiv vygenerovaný 13. 8. tedy připouští
+``--valid-to`` nejvýš 2026-08-12. ``YYYYMMDD_ST_UZSZ.xml.zip`` dodává jen
+definiční body a vychází řidčeji, takže je běžně starší než SHP – ÚZSZ
+z 31. 7. spolu s ``--valid-to`` 2026-08-12 je správná kombinace.
 
-Kontroluje se jen to, co ověřit jde:
+Příkaz kontroluje:
 
-* ``--valid-to`` v budoucnosti příkaz **odmítne**;
+* ``--valid-to`` v budoucnosti **odmítne**;
+* ``--valid-to`` pozdější než den před vygenerováním ``1.zip`` **odmítne**.
+  U rozbaleného adresáře datum zjistit nejde (časy souborů určilo rozbalení),
+  příkaz u zadané hodnoty jen upozorní a bez ní skončí chybou;
 * ÚZSZ novější než ``--valid-to`` vypíše varování – definiční body by
   pocházely z pozdějšího stavu, než jaký se ukládá jako kotva;
 * ÚZSZ starší o víc než 60 dnů vypíše varování – katastrům vzniklým mezitím
   mohou chybět definiční body a dopočítají se z centroidu hranice.
 
-Hodnota pozdější, než jaký stav ``1.zip`` skutečně obsahuje, proto **projde
-bez varování** a kotva přeskočí denní změny za rozdílové dny. Hlídač stáří
-dat se neozve, protože kotva vypadá čerstvě. Když si nejste jistí, zadejte
-raději dřívější datum: cron pak jen zopakuje dny, které už v datech jsou, což
-je neškodné.
+Proč na tom záleží: kotva pozdější, než jaký stav ``1.zip`` obsahuje,
+přeskočí denní změny za rozdílové dny a hlídač stáří dat se neozve. Na testu
+plný sync s ``1.zip`` vygenerovaným 12. 10. 2026 a kotvou 12. 10. vynechal
+změnový soubor z 12. 10.; Luhačovice zůstaly ve starém stavu, zatímco
+sousední Ludkovice a Biskupice dostaly novou hranici o dva dny později, a
+katastry se překrývaly. Dřívější datum je naopak neškodné – cron jen zopakuje dny,
+které už v datech jsou.
 
 Cron během plného synchu
 ------------------------
@@ -171,6 +182,25 @@ má tři textová pole:
   selhání) nebo ``uzsz=…`` (soubor ÚZSZ použitý plným syncem).
 
 Úspěšný běh s ⚠ tedy proběhl celý, ale některá kontrola něco našla.
+
+Katastr bez hranice ve změnovém souboru
+---------------------------------------
+
+Při slučování katastrálních území pošle ČÚZK nástupci novou hranici, která
+zahrnuje celé území rušeného katastru, a rušený katastr ještě **bez hranice**;
+formální zánik (``ZaniklePrvky``) přijde až později. Tak to proběhlo 4. 11. 2026
+u Nových Petrovic sloučených do Okříšek.
+
+Denní sync takový katastr smaže hned, pokud jeho dosavadní území z alespoň
+95 % pokryjí ostatní katastry v databázi – včetně hranic uložených ze
+zpracovávaného souboru, takže nevadí, když nástupce dostal novou hranici
+v souboru jiného dne. Navázané záznamy se přitom přepočítají na nástupce. Katastr tak z výběrů v AMČR zmizí
+dřív, než úředně zanikne, a pozdější zánik už nic nenajde. Do ``warnings`` se
+zapíše řádek „… bere se jako zrušený a maže se“.
+
+Když pokrytí nestačí, hranice se ponechá a ve ``warnings`` je řádek „… hranice
+ponechána, zkontrolujte“ – může jít o vadný export a je třeba ho prověřit.
+Katastr bez hranice, který v databázi není, se nezakládá (hranice je povinná).
 
 Když plný sync selže
 --------------------
