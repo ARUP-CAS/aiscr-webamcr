@@ -218,7 +218,7 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
             connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt, fedora_transaction)
             logger.debug("core.views.delete_file_DZ.deleted.delete_binary_file_completely", extra={"pk": soubor_pk})
             connector.delete_binary_file_completely(soubor)
-            fedora_transaction.mark_transaction_as_closed()
+            transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
             return JsonResponse({"success": True})
     except FedoraUpdatedByAnotherTransactionError as err:
         logger.debug(
@@ -252,7 +252,7 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
         return JsonResponse({"success": False}, status=400)
 
     if not transaction_error and fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-        fedora_transaction.mark_transaction_as_closed()
+        transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
     elif transaction_error and fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
         fedora_transaction.rollback_transaction()
     return JsonResponse({"success": False}, status=400)
@@ -355,7 +355,7 @@ def delete_file(request, typ_vazby, ident_cely, pk):
         else:
             response = reverse("core:home")
         if not transaction_error and fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-            fedora_transaction.mark_transaction_as_closed()
+            transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
         elif transaction_error and fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
             fedora_transaction.rollback_transaction()
         return JsonResponse({"redirect": response})

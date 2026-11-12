@@ -165,7 +165,7 @@ def update_akce_snapshot(sender, instance: Akce, **kwargs):
             instance.projekt.save_metadata(fedora_transaction)
             instance.initial_projekt.save_metadata(fedora_transaction)
         if instance.close_active_transaction_when_finished:
-            fedora_transaction.mark_transaction_as_closed()
+            transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
     logger.debug("arch_z.signals.update_akce_snapshot.end", extra={"pk": instance.pk})
 
 
@@ -188,7 +188,7 @@ def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
             instance.externi_zdroj.save_metadata(fedora_transaction)
         close_transaction = instance.close_active_transaction_when_finished
         if close_transaction:
-            fedora_transaction.mark_transaction_as_closed()
+            transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
         logger.debug(
             "arch_z.signals.create_externi_odkaz_metadata.end",
             extra={"pk": instance.pk, "transaction": fedora_transaction},
