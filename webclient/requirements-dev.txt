@@ -261,7 +261,7 @@ packaging==26.3
     #   build
     #   virtualenv
     #   wheel
-pandas==3.1.0
+pandas==3.1.1
     # via -r requirements-test.txt
 pdf2image==1.17.0
     # via -r requirements-test.txt

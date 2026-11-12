@@ -225,7 +225,7 @@ openpyxl==3.1.5
     # via -r requirements.txt
 packaging==26.3
     # via sphinx
-pandas==3.1.0
+pandas==3.1.1
     # via -r requirements.txt
 pdf2image==1.17.0
     # via -r requirements.txt
