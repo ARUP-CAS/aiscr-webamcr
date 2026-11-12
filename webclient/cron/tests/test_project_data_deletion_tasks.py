@@ -5,7 +5,13 @@ from unittest.mock import MagicMock, call, patch
 
 from core.repository_connector import FedoraUpdatedByAnotherTransactionError
 from cron import tasks
-from cron.zamek import cron_task_lock
+from cron.zamek import (
+    LOCK_CANCEL_OLD_PROJECTS,
+    LOCK_DELETE_PERSONAL_DATA_CANCELED_PROJECTS,
+    LOCK_DELETE_REPORTER_DATA_TEN_YEARS,
+    LOCK_DELETE_UNSUBMITED_PROJECTS,
+    cron_task_lock,
+)
 from django.test import SimpleTestCase
 
 LOG_PREFIX = "core.cron.test"
@@ -344,3 +350,47 @@ class DeleteProjectDataTasksTest(SimpleTestCase):
         self.assertIn(tasks.UDAJ_ODSTRANEN, values.pop())
         item.oznamovatel.save.assert_called_once_with()
         item.archive_project_documentation.assert_called_once_with()
+
+
+class DailyProjectTasksLockTest(SimpleTestCase):
+    """Testy zámku úloh :func:`cron.tasks.cancel_old_projects` a ``delete_unsubmited_projects`` proti souběhu."""
+
+    @staticmethod
+    def _lock(acquired, keys):
+        """Vytvoří náhradu ``cron_task_lock`` vracející zadanou hodnotu a zapisující použité klíče do ``keys``."""
+
+        @contextlib.contextmanager
+        def _lock(key):
+            keys.append(key)
+            yield acquired
+
+        return _lock
+
+    def _assert_skipped(self, task, key):
+        """Ověří, že úloha s drženým zámkem zaloguje ``already_running`` a nesáhne na model ``Projekt``."""
+        keys = []
+        with patch.object(tasks, "Projekt") as model, patch.object(tasks, "cron_task_lock", self._lock(False, keys)):
+            with self.assertLogs(tasks.logger, level="WARNING") as logs:
+                task()
+
+        model.objects.filter.assert_not_called()
+        self.assertEqual(keys, [key])
+        self.assertTrue(any("do.already_running" in line for line in logs.output))
+
+    def test_cancel_old_projects_skips_when_lock_is_held(self):
+        """Druhá instance úlohy rušící staré projekty se přeskočí."""
+        self._assert_skipped(tasks.cancel_old_projects, LOCK_CANCEL_OLD_PROJECTS)
+
+    def test_delete_unsubmited_projects_skips_when_lock_is_held(self):
+        """Druhá instance úlohy mazající nepodané projekty se přeskočí."""
+        self._assert_skipped(tasks.delete_unsubmited_projects, LOCK_DELETE_UNSUBMITED_PROJECTS)
+
+    def test_lock_keys_are_unique(self):
+        """Každá úloha používá vlastní klíč zámku, aby se úlohy navzájem neblokovaly."""
+        keys = [
+            LOCK_DELETE_PERSONAL_DATA_CANCELED_PROJECTS,
+            LOCK_DELETE_REPORTER_DATA_TEN_YEARS,
+            LOCK_CANCEL_OLD_PROJECTS,
+            LOCK_DELETE_UNSUBMITED_PROJECTS,
+        ]
+        self.assertEqual(len(keys), len(set(keys)))

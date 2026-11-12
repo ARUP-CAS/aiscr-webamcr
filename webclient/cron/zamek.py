@@ -15,6 +15,10 @@ logger = logging.getLogger(__name__)
 LOCK_DELETE_PERSONAL_DATA_CANCELED_PROJECTS = 372_004_101
 #: Klíč zámku úlohy :func:`cron.tasks.delete_reporter_data_ten_years`.
 LOCK_DELETE_REPORTER_DATA_TEN_YEARS = 372_004_102
+#: Klíč zámku úlohy :func:`cron.tasks.cancel_old_projects`.
+LOCK_CANCEL_OLD_PROJECTS = 372_004_103
+#: Klíč zámku úlohy :func:`cron.tasks.delete_unsubmited_projects`.
+LOCK_DELETE_UNSUBMITED_PROJECTS = 372_004_104
 
 
 @contextlib.contextmanager

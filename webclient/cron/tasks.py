@@ -74,8 +74,10 @@ from core.utils import (
     upsert_import_report_index_entry,
 )
 from cron.zamek import (
+    LOCK_CANCEL_OLD_PROJECTS,
     LOCK_DELETE_PERSONAL_DATA_CANCELED_PROJECTS,
     LOCK_DELETE_REPORTER_DATA_TEN_YEARS,
+    LOCK_DELETE_UNSUBMITED_PROJECTS,
     cron_task_lock,
 )
 from django.conf import settings
@@ -689,41 +691,49 @@ def change_document_accessibility():
 
 @shared_task
 def delete_unsubmited_projects():
-    """Každý den smazat projekty ve stavu -1, které vznikly před více než 12 hodinami."""
-    logger.debug("core.cron.delete_unsubmited_projects.do.start")
-    now_minus_12_hours = timezone.now() - datetime.timedelta(hours=12)
-    projekt_query = (
-        Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY)
-        .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours)
-        .distinct("id")
-    )
-    admin_user = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
-    for item in projekt_query:
-        item: Projekt
-        logger.debug("core.cron.delete_unsubmited_projects.delete_projekt", extra={"ident_cely": item.ident_cely})
-        fedora_transaction = FedoraTransaction(main_record=item, transaction_user=admin_user, suppress_message=True)
-        item.active_transaction = fedora_transaction
-        item.deleted_by_user = admin_user
-        try:
-            con = FedoraRepositoryConnector(item, fedora_transaction)
-            if con.container_exists():
-                # Vytvoří proxy /model/deleted/member/X-... ukazující na record/X-...
-                con.record_deletion()
-                # Tombstone record/X-...; /model/projekt/member/X-... zůstává nedotčen.
-                con.delete_container(delete_tombstone=False, delete_link=False)
-            if isinstance(item.soubory, SouborVazby):
-                for item_file in item.soubory.soubory.all():
-                    item_file.suppress_signal = True
-                    item_file.delete()
-                item.soubory.delete()
-                item.soubory = None
-            item.suppress_signal = True
-            item.delete()
-            fedora_transaction.mark_transaction_as_closed()
-        except Exception as err:
-            fedora_transaction.rollback_transaction()
-            logger.error("core.cron.delete_unsubmited_projects.do.error", extra={"error": err})
-    logger.debug("core.cron.delete_unsubmited_projects.do.end")
+    """
+    Každý den smazat projekty ve stavu -1, které vznikly před více než 12 hodinami.
+
+    Běží pod zámkem :func:`cron.zamek.cron_task_lock`; souběžná druhá instance se přeskočí.
+    """
+    with cron_task_lock(LOCK_DELETE_UNSUBMITED_PROJECTS) as lock_acquired:
+        if not lock_acquired:
+            logger.warning("core.cron.delete_unsubmited_projects.do.already_running")
+            return
+        logger.debug("core.cron.delete_unsubmited_projects.do.start")
+        now_minus_12_hours = timezone.now() - datetime.timedelta(hours=12)
+        projekt_query = (
+            Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY)
+            .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours)
+            .distinct("id")
+        )
+        admin_user = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
+        for item in projekt_query:
+            item: Projekt
+            logger.debug("core.cron.delete_unsubmited_projects.delete_projekt", extra={"ident_cely": item.ident_cely})
+            fedora_transaction = FedoraTransaction(main_record=item, transaction_user=admin_user, suppress_message=True)
+            item.active_transaction = fedora_transaction
+            item.deleted_by_user = admin_user
+            try:
+                con = FedoraRepositoryConnector(item, fedora_transaction)
+                if con.container_exists():
+                    # Vytvoří proxy /model/deleted/member/X-... ukazující na record/X-...
+                    con.record_deletion()
+                    # Tombstone record/X-...; /model/projekt/member/X-... zůstává nedotčen.
+                    con.delete_container(delete_tombstone=False, delete_link=False)
+                if isinstance(item.soubory, SouborVazby):
+                    for item_file in item.soubory.soubory.all():
+                        item_file.suppress_signal = True
+                        item_file.delete()
+                    item.soubory.delete()
+                    item.soubory = None
+                item.suppress_signal = True
+                item.delete()
+                fedora_transaction.mark_transaction_as_closed()
+            except Exception as err:
+                fedora_transaction.rollback_transaction()
+                logger.error("core.cron.delete_unsubmited_projects.do.error", extra={"error": err})
+        logger.debug("core.cron.delete_unsubmited_projects.do.end")
 
 
 @shared_task
@@ -733,42 +743,50 @@ def cancel_old_projects():
 
     v minulosti. Do poznámky ke zrušení uvést “Automatické zrušení projektů starších tří let, u kterých již
     nelze očekávat zahájení.”
+
+    Běží pod zámkem :func:`cron.zamek.cron_task_lock`; souběžná druhá instance se přeskočí.
     """
     try:
-        logger.debug("core.cron.cancel_old_projects.do.start")
-        today_minus_3_years = timezone.now() - datetime.timedelta(days=365 * 3)
-        today_minus_1_year = timezone.now() - datetime.timedelta(days=365)
-        projects = (
-            Projekt.objects.filter(stav=PROJEKT_STAV_ZAPSANY)
-            .filter(typ_projektu=TYP_PROJEKTU_ZACHRANNY_ID)
-            .filter(
-                Q(historie__historie__typ_zmeny__in=(ZAPSANI_PROJ, SCHVALENI_OZNAMENI_PROJ))
-                & Q(historie__historie__datum_zmeny__lt=today_minus_3_years)
-            )
-            .annotate(upper=Upper("planovane_zahajeni"))
-            .filter(upper__lte=today_minus_1_year)
-            .distinct()
-        )
-        cancelled_string = STARY_PROJEKT_ZRUSEN
-        for project in projects:
-            project: Projekt
-            project.active_transaction = FedoraTransaction()
-            project.set_zruseny(User.objects.get(pk=hesla_dynamicka.ADMIN_USER), cancelled_string, RUSENI_STARE_PROJ)
-            if project.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID and project.has_oznamovatel():
-                rep_bin_file = project.create_cancel_confirmation_document(
-                    User.objects.get(pk=hesla_dynamicka.ADMIN_USER)
+        with cron_task_lock(LOCK_CANCEL_OLD_PROJECTS) as lock_acquired:
+            if not lock_acquired:
+                logger.warning("core.cron.cancel_old_projects.do.already_running")
+                return
+            logger.debug("core.cron.cancel_old_projects.do.start")
+            today_minus_3_years = timezone.now() - datetime.timedelta(days=365 * 3)
+            today_minus_1_year = timezone.now() - datetime.timedelta(days=365)
+            projects = (
+                Projekt.objects.filter(stav=PROJEKT_STAV_ZAPSANY)
+                .filter(typ_projektu=TYP_PROJEKTU_ZACHRANNY_ID)
+                .filter(
+                    Q(historie__historie__typ_zmeny__in=(ZAPSANI_PROJ, SCHVALENI_OZNAMENI_PROJ))
+                    & Q(historie__historie__datum_zmeny__lt=today_minus_3_years)
                 )
-            else:
-                rep_bin_file = None
-            project.close_active_transaction_when_finished = True
-            project.save()
-            reason = STARY_PROJEKT_ZRUSEN
-            if project.ident_cely[0] == OBLAST_CECHY:
-                Mailer.send_ep06a(project=project, reason=reason, rep_bin_file=rep_bin_file)
-            else:
-                Mailer.send_ep06b(project=project, reason=reason, rep_bin_file=rep_bin_file)
-            logger.debug("core.cron.cancel_old_projects.do.project", extra={"ident_cely": project.ident_cely})
-        logger.debug("core.cron.cancel_old_projects.do.end")
+                .annotate(upper=Upper("planovane_zahajeni"))
+                .filter(upper__lte=today_minus_1_year)
+                .distinct()
+            )
+            cancelled_string = STARY_PROJEKT_ZRUSEN
+            for project in projects:
+                project: Projekt
+                project.active_transaction = FedoraTransaction()
+                project.set_zruseny(
+                    User.objects.get(pk=hesla_dynamicka.ADMIN_USER), cancelled_string, RUSENI_STARE_PROJ
+                )
+                if project.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID and project.has_oznamovatel():
+                    rep_bin_file = project.create_cancel_confirmation_document(
+                        User.objects.get(pk=hesla_dynamicka.ADMIN_USER)
+                    )
+                else:
+                    rep_bin_file = None
+                project.close_active_transaction_when_finished = True
+                project.save()
+                reason = STARY_PROJEKT_ZRUSEN
+                if project.ident_cely[0] == OBLAST_CECHY:
+                    Mailer.send_ep06a(project=project, reason=reason, rep_bin_file=rep_bin_file)
+                else:
+                    Mailer.send_ep06b(project=project, reason=reason, rep_bin_file=rep_bin_file)
+                logger.debug("core.cron.cancel_old_projects.do.project", extra={"ident_cely": project.ident_cely})
+            logger.debug("core.cron.cancel_old_projects.do.end")
     except Exception as err:
         logger.error("core.cron.cancel_old_projects.do.error", extra={"error": err})
 

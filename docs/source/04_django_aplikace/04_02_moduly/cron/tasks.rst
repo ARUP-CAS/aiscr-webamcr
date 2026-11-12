@@ -182,12 +182,16 @@ Funkce
 
    Každý den smazat projekty ve stavu -1, které vznikly před více než 12 hodinami.
 
+   Běží pod zámkem :func:`cron.zamek.cron_task_lock`; souběžná druhá instance se přeskočí.
+
 .. py:function:: cancel_old_projects()
 
    Každý den převést na P8 projekty v P1 starší tří let, které mají plánované datum zahájení více než rok
 
    v minulosti. Do poznámky ke zrušení uvést “Automatické zrušení projektů starších tří let, u kterých již
    nelze očekávat zahájení.”
+
+   Běží pod zámkem :func:`cron.zamek.cron_task_lock`; souběžná druhá instance se přeskočí.
 
 .. py:function:: update_snapshot_fields()
 
