@@ -35,6 +35,16 @@ Aplikace proto musí stát po celou dobu migrací:
 6. Založit plánovanou úlohu denního synchu (viz `Plánování denního synchu`_)
    a teprve pak spustit ``celery_beat``.
 
+.. note::
+
+   Hranice okresů (``ruian_okres.hranice``) plní až plný sync v kroku 5.
+   Dokud ho neprošla produkce, kopie produkční databáze obnovená na
+   testovacím serveru hranice okresů nemá a sekce ``geometrie`` příkazu
+   ``anonymizace_dat`` nemá kam chráněné polohy přesunout – předběžná kontrola
+   příkazu běh zastaví dřív, než cokoli zapíše. Na testovacím serveru proto
+   po obnově kopie a migracích spusťte plný sync ``aktualizuj_ruian_shp``
+   ještě **před** ``anonymizace_dat``.
+
 Pořadí migrací
 ~~~~~~~~~~~~~~
 

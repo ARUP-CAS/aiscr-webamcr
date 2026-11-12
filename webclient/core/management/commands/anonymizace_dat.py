@@ -1,7 +1,7 @@
 import logging
 import random
 
-from core.constants import PRISTUPNOST_MIN_RAZENI, ROLE_ADMIN_ID
+from core.constants import PRISTUPNOST_MIN_RAZENI, ROLE_ADMIN_ID, ZMENA_KATASTRU
 from core.coordTransform import transform_geom_to_wgs84
 from core.management.commands.utils import anonymizace
 from core.management.commands.utils.anonymizace_geometrie import (
@@ -56,6 +56,47 @@ TRIGGER_VALIDACE_PIANU = "trg_validate_geometries"
 #: Úplný seznam jde vždy do logu, výpis na konzoli má zůstat čitelný.
 MAX_VYPSANYCH_IDENTU = 50
 
+#: Popisy důvodů, které se sbírají během sekce ``geometrie`` a v předběžné kontrole.
+POPISY_DUVODU = {
+    "okres_bez_hranice": "okres nemá vyplněnou hranici, není kam polohu PIANu přesunout",
+    "bez_nove_polohy": "nepodařilo se najít novou polohu ve stejném okresu",
+    "bez_nahradniho_katastru": "nenašel se náhradní katastr ve stejném okresu",
+    "mimo_list_zm50": "PIAN přesunut mimo původní list ZM50, číslo listu v identifikátoru neodpovídá sloupci zm50",
+    "neplatna_geometrie": "výsledná geometrie by neprošla kontrolou v databázi",
+    "zapsano_s_vadou_zdroje": "přesunuto i přes vadu zdrojové geometrie, trigger validace byl při zápisu vypnut",
+    "zdrojova_geometrie_neplatna": (
+        "pravidla databáze porušuje už zdrojová geometrie (krátký segment nebo protínající se tvar)"
+    ),
+    "bez_deformace": "tvar se nepodařilo zdeformovat, PIAN je pouze posunutý",
+    "bez_nahodneho_katastru": "okres nemá jiný katastr, hlavní katastr záznamu zůstal původní",
+    "bod_bez_okresu": "u projektu, nálezu nebo dokumentu nejde určit okres, geometrie odstraněna",
+    "bod_bez_nove_polohy": "u projektu, nálezu nebo dokumentu se nenašla nová poloha v okresu, geometrie odstraněna",
+    "bod_bez_katastru": "nová poloha projektu nebo nálezu neleží v žádném katastru, geometrie odstraněna",
+    "transformace_selhala": "převod nové polohy do WGS-84 selhal, geometrie odstraněna",
+}
+
+#: Důvody, po kterých zůstala chráněná poloha nebo katastr skutečná. Běh s některým
+#: z nich nesmí hlásit úspěch – po něm by se generovala metadata se skutečnou polohou.
+#: Ostatní důvody popisují náhradní řešení (poloha mimo list, odstraněná geometrie)
+#: nebo jen informují.
+DUVODY_NENAHRAZENE = frozenset(
+    {
+        "okres_bez_hranice",
+        "bez_nove_polohy",
+        "bez_nahradniho_katastru",
+        "neplatna_geometrie",
+        "zdrojova_geometrie_neplatna",
+        "bez_nahodneho_katastru",
+    }
+)
+
+#: Nápověda k okresům bez hranice. Hranice okresů plní jen plný sync katastrů;
+#: dokud ho produkce neprošla, kopie produkční databáze je nemá.
+NAPOVEDA_HRANICE_OKRESU = (
+    "Hranice okresů (ruian_okres.hranice) plní plný sync katastrů. Dokud ho neprošla produkce, "
+    "spusť na testovacím serveru před anonymizací: python manage.py aktualizuj_ruian_shp"
+)
+
 
 class Command(BaseCommand):
     """
@@ -67,16 +108,36 @@ class Command(BaseCommand):
     ``generate_metadata_fast``, kterou používá migrace dat podle #3967).
     Metadata se pak vytvoří už z anonymizovaných dat.
 
+    Dokud produkce neprošla plným syncem katastrů (``aktualizuj_ruian_shp``,
+    krok prvního nasazení přechodu katastrů na EPSG:5514), nemá kopie produkční
+    databáze vyplněné hranice okresů. Na testovacím serveru je proto potřeba
+    spustit plný sync katastrů ještě před tímto příkazem, jinak ho předběžná
+    kontrola zastaví.
+
+    Před první sekcí běží předběžná kontrola (jen když je vybraná sekce
+    ``geometrie``): najde chráněné polohy a katastry, které nepůjde nahradit
+    (PIAN v okrese bez hranice, okres bez jiného katastru, vadná zdrojová
+    geometrie bez možnosti vypnout trigger), vypíše je podle důvodu
+    a v ostrém běhu skončí chybou dřív, než cokoli zapíše. Běh, po kterém
+    některá chráněná poloha nebo katastr zůstaly skutečné nebo došlo k chybě,
+    skončí nenulovým návratovým kódem a úspěch nehlásí.
+
     **Příkaz je nevratný a patří výhradně na testovací server.** Chrání ho dvě
     pojistky, které platí současně: ``settings.TEST_ENV`` musí být zapnuté
     a musí být předán přepínač ``--potvrzuji-testovaci-server``.
 
     Co příkaz mění:
 
-    - osobní údaje uživatelů mimo administrátorské a umělé účty, včetně hesel,
+    - osobní údaje uživatelů mimo administrátory a umělé účty napojené na
+      osobu ``OS-007414``, včetně hesel, ORCID a napojení na osobu,
+    - e-mailové adresy krajů,
     - údaje oznamovatelů,
     - IP adresy přihlášení a adresy příjemců notifikací,
-    - chráněná textová pole podle ``xml_generator/definitions/amcr.xsd``,
+    - chráněná textová pole podle ``xml_generator/definitions/amcr.xsd`` u záznamů
+      s přístupností vyšší než A (projekt bez určené přístupnosti se bere jako
+      chráněný); veřejné záznamy si skutečné texty ponechají,
+    - poznámky historie typu ``KAT`` (změna katastru) chráněných archeologických
+      záznamů, projektů a samostatných nálezů,
     - polohy záznamů s přístupností vyšší než A,
     - uložené hodnoty ``doi`` a ``igsn`` na prefix cílové instance.
 
@@ -98,9 +159,16 @@ class Command(BaseCommand):
       zapnutým ``suppress_signal``, takže nevznikají zápisy do Fedory ani
       záznamy v historii. Metadata se stejně generují znovu až po anonymizaci.
     - ``Pian.ident_cely`` a ``Adb.ident_cely`` zůstávají původní, protože je
-      na ně navázaný obsah Fedory. Nová poloha PIANu se proto hledá jen uvnitř
-      původního listu ZM50 a ``Adb.sm5`` se nemění. Po anonymizaci tedy
+      na ně navázaný obsah Fedory. Nová poloha PIANu se proto hledá přednostně
+      uvnitř původního listu ZM50 a ``Adb.sm5`` se nemění. Po anonymizaci tedy
       ``check_pian_properties`` hlásí nesoulad kladu SM5 s geometrií.
+    - Když v průniku okresu a listu ZM50 nová poloha není, přesune se PIAN
+      kamkoli v okrese a ``zm10`` i ``zm50`` se přepočítají; číslo listu
+      v ``ident_cely`` pak sloupci ``zm50`` neodpovídá (důvod ``mimo_list_zm50``).
+      Katastrální PIAN bez jiného katastru v listu dostane jiný katastr okresu.
+    - Projekt, samostatný nález nebo dokument, pro který se nová poloha
+      nenajde, přijde o geometrii; samostatný nález zároveň dostane náhodný
+      katastr okresu, nebo žádný, když okres nejde určit.
     - Uvnitř původního okresu a listu ZM50 leží zaručeně jen reprezentativní
       bod přesunutého PIANu (střed linie, bod uvnitř plochy). Velká plocha
       nebo dlouhá linie poblíž hranice okresu ji po posunu a deformaci může
@@ -114,7 +182,10 @@ class Command(BaseCommand):
     - Anonymizované účty dostanou nepoužitelné heslo a nepřihlásí se vůbec –
       jiný způsob přihlášení než e-mail a heslo aplikace nemá. Použitelné
       zůstávají jen účty vyloučené z anonymizace (administrátoři a umělé účty
-      s ``Anonym`` v příjmení); jinému účtu je potřeba heslo nastavit ručně.
+      napojené na osobu ``OS-007414``); jinému účtu je potřeba heslo nastavit
+      ručně. Osoby samotné příkaz nemění, odpojí od nich jen anonymizované účty.
+    - Zástupné e-maily leží v doméně ``anonymizace.invalid``; doména nejvyšší
+      úrovně ``.invalid`` je podle RFC 2606 rezervovaná a pošta na ni se nedoručí.
     - Staré verze metadat ve Fedoře a OCFL příkaz nečistí, to řeší migrace dat.
     - PIANy, jejichž geometrie porušuje pravidla databáze už v produkci, se
       zapíšou s dočasně vypnutým triggerem ``trg_validate_geometries`` – jen
@@ -152,6 +223,7 @@ class Command(BaseCommand):
         self.generator_poloh = None
         self.katastry_okresu = {}
         self.az_s_prepoctenymi_katastry = set()
+        self._predikaty = {}
 
     def _zaklad(self, model):
         """
@@ -246,6 +318,8 @@ class Command(BaseCommand):
             extra={"value": ",".join(sekce), "option": options["dry_run"]},
         )
         self._vypis_banner(sekce, options)
+        if "geometrie" in sekce:
+            self._predbezna_kontrola(options)
 
         for nazev in sekce:
             self.statistika[nazev] = {"zpracovano": 0, "zmeneno": 0, "preskoceno": 0, "chyb": 0}
@@ -320,9 +394,15 @@ class Command(BaseCommand):
 
     def _vypis_shrnuti(self, options):
         """
-        Vypíše závěrečné počty za jednotlivé sekce.
+        Vypíše závěrečné počty za jednotlivé sekce a vyhodnotí výsledek běhu.
+
+        Úspěch se hlásí jen tehdy, když nedošlo k chybě a žádná chráněná poloha
+        ani katastr nezůstaly skutečné (důvody z :data:`DUVODY_NENAHRAZENE`).
+        Jinak příkaz skončí ``CommandError``, tedy nenulovým návratovým kódem,
+        aby navazující generování metadat nepokračovalo.
 
         :param options: Pojmenované argumenty z příkazového řádku.
+        :raises CommandError: Pokud došlo k chybě nebo zůstala nenahrazená chráněná poloha.
         """
         self.stdout.write("")
         self.stdout.write("=" * 60)
@@ -334,10 +414,15 @@ class Command(BaseCommand):
         self.stdout.write("=" * 60)
 
         chyb = sum(pocty["chyb"] for pocty in self.statistika.values())
+        nenahrazeno = sum(pocet for duvod, pocet in self.duvody_preskoceni.items() if duvod in DUVODY_NENAHRAZENE)
         if options["dry_run"]:
             self.stdout.write(self.style.WARNING("Dry-run: žádné změny nebyly uloženy."))
-        elif chyb:
-            self.stdout.write(self.style.WARNING(f"Dokončeno s {chyb} chybami."))
+        elif chyb or nenahrazeno:
+            raise CommandError(
+                f"Anonymizace neskončila úspěšně: chyb {chyb}, nenahrazených chráněných poloh a katastrů "
+                f"{nenahrazeno}. Identifikátory jsou výše ve výpisu důvodů. Metadata negeneruj, dokud se to "
+                "nevyřeší."
+            )
         else:
             self.stdout.write(self.style.SUCCESS("Anonymizace dokončena."))
 
@@ -410,45 +495,27 @@ class Command(BaseCommand):
             self.identy_preskocenych.setdefault(duvod, []).append(ident_cely)
 
     def _vypis_duvody(self):
-        """Vypíše souhrn důvodů, proč některé záznamy zůstaly beze změny."""
-        popisy = {
-            "bez_nove_polohy": "nepodařilo se najít novou polohu ve stejném okresu a listu ZM50",
-            "bez_nahradniho_katastru": "nenašel se náhradní katastr ve stejném okresu a listu ZM50",
-            "neplatna_geometrie": "výsledná geometrie by neprošla kontrolou v databázi",
-            "zapsano_s_vadou_zdroje": (
-                "přesunuto i přes vadu zdrojové geometrie, trigger validace byl při zápisu vypnut"
-            ),
-            "zdrojova_geometrie_neplatna": (
-                "pravidla databáze porušuje už zdrojová geometrie (krátký segment nebo protínající se tvar)"
-            ),
-            "bez_deformace": "tvar se nepodařilo zdeformovat, PIAN je pouze posunutý",
-            "bez_nahodneho_katastru": "okres nemá jiný katastr, hlavní katastr záznamu zůstal původní",
-            "bod_bez_okresu": "u projektu, nálezu nebo dokumentu nejde určit okres, poloha zůstala původní",
-            "bod_bez_nove_polohy": "u projektu, nálezu nebo dokumentu se nenašla nová poloha v okresu",
-            "bod_bez_katastru": "nová poloha projektu nebo nálezu neleží v žádném katastru, poloha zůstala původní",
-            "transformace_selhala": "převod nové polohy do WGS-84 selhal, poloha zůstala původní",
-        }
+        """Vypíše souhrn důvodů, proč některé záznamy zůstaly beze změny nebo se řešily náhradou."""
         if not self.duvody_preskoceni:
             return
         self.stdout.write("")
         for duvod, pocet in sorted(self.duvody_preskoceni.items(), key=lambda polozka: -polozka[1]):
-            self.stdout.write(f"  {pocet}× {popisy.get(duvod, duvod)}")
-            self._vypis_identy(duvod)
+            self.stdout.write(f"  {pocet}× {POPISY_DUVODU.get(duvod, duvod)}")
+            self._vypis_identy(self.identy_preskocenych.get(duvod))
         logger.info(
             "core.management.commands.anonymizace_dat.geometrie.duvody",
             extra={"info": hodnota_pro_log(self.duvody_preskoceni), "list": hodnota_pro_log(self.identy_preskocenych)},
         )
 
-    def _vypis_identy(self, duvod):
+    def _vypis_identy(self, identy):
         """
-        Vypíše identifikátory záznamů spadajících pod zadaný důvod.
+        Vypíše identifikátory záznamů spadajících pod jeden důvod.
 
         Dlouhý seznam se na konzoli zkrátí, celý jde do logu – u desítek tisíc
         PIANů by jinak výpis přerostl vše ostatní.
 
-        :param duvod: Strojový název důvodu.
+        :param identy: Seznam identifikátorů, nebo ``None``.
         """
-        identy = self.identy_preskocenych.get(duvod)
         if not identy:
             return
         ukazka = identy[:MAX_VYPSANYCH_IDENTU]
@@ -460,19 +527,36 @@ class Command(BaseCommand):
         """
         Anonymizuje osobní údaje uživatelů mimo vyloučené účty.
 
-        Vyloučené jsou účty ve skupině administrátorů a umělé účty s řetězcem
-        ``Anonym`` v příjmení. Zápis jde jedním ``UPDATE``, protože ``User.save()``
-        normalizuje e-mail a zakládá vazbu do historie.
+        Vyloučené jsou účty ve skupině administrátorů a umělé účty napojené na
+        osobu :data:`~core.management.commands.utils.anonymizace.IDENT_ANONYMNI_OSOBY`.
+        Když taková osoba v databázi chybí (typicky lokální kopie), vypíše se
+        varování a vyloučení zůstanou jen administrátoři. Anonymizované účty
+        přijdou o napojení na osobu i o ORCID, aby se k nim skutečná identita
+        nedala dohledat přes záznam osoby; samotné osoby se nemění. Zápis jde jedním
+        ``UPDATE``, protože ``User.save()`` normalizuje e-mail a zakládá vazbu
+        do historie.
 
         :param options: Pojmenované argumenty z příkazového řádku.
         :raises CommandError: Pokud by zástupné adresy kolidovaly s vyloučeným účtem.
         """
-        from uzivatel.models import User
+        from uzivatel.models import Osoba, User
 
         vsichni = self._zaklad(User)
-        k_anonymizaci = vsichni.exclude(groups__id=ROLE_ADMIN_ID).exclude(
-            last_name__icontains=anonymizace.VYJIMKA_PRIJMENI
+        k_anonymizaci = vsichni.exclude(groups__id=ROLE_ADMIN_ID)
+        anonymni_osoba = (
+            Osoba.objects.filter(ident_cely=anonymizace.IDENT_ANONYMNI_OSOBY).values_list("pk", flat=True).first()
         )
+        if anonymni_osoba is None:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Osoba {anonymizace.IDENT_ANONYMNI_OSOBY} v databázi není; z anonymizace se vyloučí jen "
+                    "administrátoři a umělé účty se anonymizují také."
+                )
+            )
+        else:
+            # Účty bez osoby (NULL) zůstávají mezi anonymizovanými – Django u exclude
+            # nad nepovinným cizím klíčem NULL řádky nevyřadí.
+            k_anonymizaci = k_anonymizaci.exclude(osoba_id=anonymni_osoba)
         pocet = k_anonymizaci.count()
         self._zapocti("uzivatele", zpracovano=pocet)
         self.stdout.write(f"Uživatelů k anonymizaci: {pocet} z {vsichni.count()}")
@@ -509,9 +593,45 @@ class Command(BaseCommand):
             ),
             password=Value(anonymizace.NEPOUZITELNE_HESLO),
             sha_1=None,
+            osoba=None,
+            orcid=None,
         )
         self._zapocti("uzivatele", zmeneno=zmeneno)
         self.stdout.write(f"Anonymizováno uživatelů: {zmeneno}")
+        self._anonymizuj_kraje(options)
+
+    def _anonymizuj_kraje(self, options):
+        """
+        Nahradí neprázdné e-mailové adresy krajů zástupnou adresou.
+
+        Na adresu kraje aplikace posílá upozornění, takže na testovacím serveru
+        by skutečná adresa mohla dostávat poštu. Prázdná adresa zůstává prázdná.
+
+        :param options: Pojmenované argumenty z příkazového řádku.
+        """
+        from heslar.models import RuianKraj
+
+        k_anonymizaci = (
+            self._zaklad(RuianKraj)
+            .exclude(Q(email__isnull=True) | Q(email=""))
+            .exclude(email__endswith=f"@{anonymizace.ANONYM_DOMENA}")
+        )
+        pocet = k_anonymizaci.count()
+        self._zapocti("uzivatele", zpracovano=pocet)
+        self.stdout.write(f"E-mailů krajů k anonymizaci: {pocet}")
+
+        if options["dry_run"] or not pocet:
+            return
+
+        zmeneno = k_anonymizaci.update(
+            email=Concat(
+                Value(anonymizace.PREDPONA_EMAILU_KRAJE),
+                Cast("kod", TextField()),
+                Value(f"@{anonymizace.ANONYM_DOMENA}"),
+                output_field=TextField(),
+            )
+        )
+        self._zapocti("uzivatele", zmeneno=zmeneno)
 
     def _sekce_oznamovatele(self, options):
         """
@@ -589,11 +709,17 @@ class Command(BaseCommand):
 
     def _sekce_texty(self, options):
         """
-        Zakryje chráněná textová pole podle schématu ``amcr.xsd``.
+        Zakryje chráněná textová pole podle schématu ``amcr.xsd`` a poznámky změn katastru.
 
-        Mění se všechny záznamy bez ohledu na přístupnost, protože zadání to tak
-        vyžaduje. Prázdná pole a ``NULL`` zůstávají, aby se nezměnila struktura
-        exportovaného XML.
+        Mění se jen záznamy s přístupností vyšší než A (cesta k přístupnosti je
+        v :data:`~core.management.commands.utils.anonymizace.CESTA_K_PRISTUPNOSTI`);
+        veřejné záznamy si skutečné texty ponechají, protože je stejně vidí každý.
+        Projekt bez určené přístupnosti se bere jako chráněný. Prázdná pole
+        a ``NULL`` zůstávají, aby se nezměnila struktura exportovaného XML.
+
+        Nakonec se vynuluje poznámka u záznamů historie typu ``KAT`` chráněných
+        archeologických záznamů, projektů a samostatných nálezů – poznámka ve
+        tvaru „PŮVODNÍ -> NOVÝ“ by jinak prozradila skutečné katastry.
 
         :param options: Pojmenované argumenty z příkazového řádku.
         """
@@ -601,7 +727,7 @@ class Command(BaseCommand):
 
         for klic_modelu, pole in anonymizace.CHRANENA_TEXTOVA_POLE.items():
             model = apps.get_model(klic_modelu)
-            queryset = self._zaklad(model)
+            queryset = self._zaklad(model).filter(self._chraneny_zaznam(klic_modelu))
 
             podminka = Q()
             for _element, nazev_pole in pole:
@@ -626,6 +752,52 @@ class Command(BaseCommand):
                 )
             zmeneno = k_anonymizaci.update(**zmeny)
             self._zapocti("texty", zmeneno=zmeneno)
+
+        self._poznamky_zmen_katastru(options)
+
+    def _chraneny_zaznam(self, klic_modelu):
+        """
+        Vrátí podmínku pro záznamy modelu, jejichž chráněné texty se mají zakrýt.
+
+        :param klic_modelu: Klíč ``app_label.ModelName`` z
+            :data:`~core.management.commands.utils.anonymizace.CHRANENA_TEXTOVA_POLE`.
+        :return: Podmínka ``Q`` nad daným modelem.
+        """
+        cesta = anonymizace.CESTA_K_PRISTUPNOSTI[klic_modelu]
+        if cesta is None:
+            return self._chraneny_projekt()
+        return Q(**{f"{cesta}__razeni__gt": PRISTUPNOST_MIN_RAZENI})
+
+    def _poznamky_zmen_katastru(self, options):
+        """
+        Vynuluje poznámky historie typu ``KAT`` u chráněných záznamů.
+
+        Poznámku zapisuje synchronizace RÚIAN při přeřazení katastru a obsahuje
+        názvy původního i nového katastru. Ostatní údaje záznamu historie se nemění.
+
+        :param options: Pojmenované argumenty z příkazového řádku.
+        """
+        from arch_z.models import ArcheologickyZaznam
+        from historie.models import Historie
+        from pas.models import SamostatnyNalez
+        from projekt.models import Projekt
+
+        zaznamy = self._zaklad(ArcheologickyZaznam).filter(self._chraneny_zaznam("arch_z.ArcheologickyZaznam"))
+        projekty = self._zaklad(Projekt).filter(self._chraneny_projekt())
+        nalezy = self._zaklad(SamostatnyNalez).filter(self._chraneny_zaznam("pas.SamostatnyNalez"))
+        k_anonymizaci = Historie.objects.filter(
+            Q(vazba__in=zaznamy.values("historie_id"))
+            | Q(vazba__in=projekty.values("historie_id"))
+            | Q(vazba__in=nalezy.values("historie_id")),
+            typ_zmeny=ZMENA_KATASTRU,
+            poznamka__isnull=False,
+        )
+        pocet = k_anonymizaci.count()
+        self._zapocti("texty", zpracovano=pocet)
+        self.stdout.write(f"Poznámky změn katastru u chráněných záznamů: {pocet}")
+        if options["dry_run"] or not pocet:
+            return
+        self._zapocti("texty", zmeneno=k_anonymizaci.update(poznamka=None))
 
     def _sekce_pid(self, options):
         """
@@ -737,7 +909,8 @@ class Command(BaseCommand):
 
         self._overr_srid()
         self._overr_hranice_okresu()
-        self.lze_vypnout_trigger = self._lze_vypnout_trigger()
+        if "lze_vypnout_trigger" not in self._predikaty:
+            self.lze_vypnout_trigger = self._lze_vypnout_trigger()
         self.generator_poloh = GeneratorPoloh()
 
         with ruian_sync_lock() as ziskan:
@@ -784,29 +957,170 @@ class Command(BaseCommand):
         """
         Ověří, že okresy mají vyplněné hranice.
 
-        ``RuianOkres.hranice`` je v modelu nepovinné a některé starší kopie
-        databáze ho mají prázdné. Nové polohy se generují právě uvnitř hranice
-        okresu, takže bez ní by se nepřesunul jediný záznam – a protože se
-        záznamy bez nové polohy jen tiše přeskakují, vypadal by běh jako úspěšný.
-        Proto se raději zastaví hned.
+        ``RuianOkres.hranice`` je v modelu nepovinné a kopie produkční databáze
+        ho mají prázdné, dokud produkce neprošla plným syncem katastrů. Nové
+        polohy se generují právě uvnitř hranice okresu, takže bez ní by se
+        nepřesunul jediný záznam a bodové záznamy by přišly o geometrii. Proto
+        se běh zastaví hned. Jednotlivé okresy bez hranice hlásí předběžná
+        kontrola.
 
         :raises CommandError: Pokud žádný okres nemá vyplněnou hranici.
         """
         from heslar.models import RuianOkres
 
-        celkem = RuianOkres.objects.count()
-        s_hranici = RuianOkres.objects.filter(hranice__isnull=False).count()
-        if s_hranici == 0:
+        if not RuianOkres.objects.filter(hranice__isnull=False).exists():
             raise CommandError(
-                f"Žádný z {celkem} okresů nemá vyplněnou hranici (ruian_okres.hranice), "
-                "takže není kam polohy přesunout. Doplň hranice okresů, nebo sekci geometrie vynech."
+                f"Žádný z {RuianOkres.objects.count()} okresů nemá vyplněnou hranici, takže není kam polohy "
+                f"přesunout. {NAPOVEDA_HRANICE_OKRESU}"
             )
-        if s_hranici < celkem:
-            self.stdout.write(
-                self.style.WARNING(
-                    f"Hranici má jen {s_hranici} z {celkem} okresů; záznamy ve zbylých okresech se přeskočí."
-                )
+
+    def _okresy_bez_hranice(self):
+        """
+        Vrátí okresy bez vyplněné hranice.
+
+        Do takového okresu nejde vygenerovat novou polohu PIANu. Sdílí ho
+        předběžná kontrola i sekce ``geometrie``, aby rozhodovaly stejně.
+
+        :return: Množina primárních klíčů okresů.
+        """
+        from heslar.models import RuianOkres
+
+        if "okresy_bez_hranice" not in self._predikaty:
+            self._predikaty["okresy_bez_hranice"] = set(
+                RuianOkres.objects.filter(hranice__isnull=True).values_list("pk", flat=True)
             )
+        return self._predikaty["okresy_bez_hranice"]
+
+    def _okresy_bez_jineho_katastru(self, s_polohou=False):
+        """
+        Vrátí okresy, které nemají aspoň dva katastry.
+
+        V takovém okrese nejde katastr záznamu nahradit jiným. Náhodné katastry
+        archeologických záznamů a projektů berou libovolný katastr okresu;
+        náhrada katastrálního PIANu potřebuje katastr s hranicí i definičním
+        bodem, proto přepínač ``s_polohou``.
+
+        :param s_polohou: Počítat jen katastry s vyplněnou hranicí a definičním bodem.
+        :return: Množina primárních klíčů okresů.
+        """
+        from django.db.models import Count
+        from heslar.models import RuianKatastr, RuianOkres
+
+        klic = f"okresy_bez_jineho_katastru_{s_polohou}"
+        if klic not in self._predikaty:
+            katastry = RuianKatastr.objects.all()
+            if s_polohou:
+                katastry = katastry.filter(hranice__isnull=False, definicni_bod__isnull=False)
+            s_vice = katastry.values("okres_id").annotate(pocet=Count("pk")).filter(pocet__gte=2)
+            self._predikaty[klic] = set(RuianOkres.objects.values_list("pk", flat=True)) - {
+                radek["okres_id"] for radek in s_vice
+            }
+        return self._predikaty[klic]
+
+    def _zdroj_pianu_je_vadny(self, pian):
+        """
+        Zjistí, zda pravidla databáze porušuje už původní geometrie PIANu.
+
+        :param pian: Instance ``Pian`` s původní geometrií.
+        :return: ``True``, pokud vadu má geometrie v S-JTSK nebo ve WGS-84.
+        """
+        return not splnuje_pravidla_databaze(pian.geom_sjtsk) or self._zdroj_wgs_je_vadny(pian)
+
+    def _predbezna_kontrola(self, options):
+        """
+        Před prvním zápisem zjistí chráněné polohy a katastry, které nepůjde nahradit.
+
+        Hledají se jen strukturální stavy, které náhoda nezmění: PIAN v okrese
+        bez hranice, katastrální PIAN v okrese bez jiného použitelného katastru,
+        PIAN s vadnou zdrojovou geometrií, když nejde vypnout trigger validace,
+        a chráněný archeologický záznam nebo projekt v okrese s jediným
+        katastrem. Kontrola používá tytéž predikáty jako sekce ``geometrie``.
+        Vzácná náhodná selhání zachytí až vyhodnocení výsledku běhu.
+
+        V dry-runu se nález jen vypíše, v ostrém běhu příkaz skončí dřív, než
+        cokoli zapíše.
+
+        :param options: Pojmenované argumenty z příkazového řádku.
+        :raises CommandError: Pokud kontrola něco najde a nejde o dry-run, nebo
+            pokud neodpovídají souřadnicové systémy či žádný okres nemá hranici.
+        """
+        from arch_z.models import ArcheologickyZaznam
+        from pian.models import Pian
+        from projekt.models import Projekt
+
+        self.stdout.write("")
+        self.stdout.write("--- předběžná kontrola ---")
+        self._overr_srid()
+        self._overr_hranice_okresu()
+        self.lze_vypnout_trigger = self._lze_vypnout_trigger()
+        self._predikaty["lze_vypnout_trigger"] = self.lze_vypnout_trigger
+
+        bez_hranice = self._okresy_bez_hranice()
+        bez_katastru_s_polohou = self._okresy_bez_jineho_katastru(s_polohou=True)
+        problemy = {}
+        zkontrolovat_zdroj = []
+        for pian_id, _zm50, okres_id, _katastr_id, zkratka in self._chranene_piany():
+            if zkratka == PRESNOST_KATASTR:
+                if okres_id in bez_katastru_s_polohou:
+                    problemy.setdefault("bez_nahradniho_katastru", []).append(pian_id)
+            elif okres_id in bez_hranice:
+                problemy.setdefault("okres_bez_hranice", []).append(pian_id)
+            elif not self.lze_vypnout_trigger:
+                zkontrolovat_zdroj.append(pian_id)
+
+        for davka in self._po_klicich(zkontrolovat_zdroj, options["batch_size"]):
+            for pian in Pian.objects.filter(pk__in=davka).only("pk", "geom", "geom_sjtsk"):
+                if self._zdroj_pianu_je_vadny(pian):
+                    problemy.setdefault("zdrojova_geometrie_neplatna", []).append(pian.pk)
+
+        id_pianu = [pian_id for seznam in problemy.values() for pian_id in seznam]
+        identy_pianu = dict(Pian.objects.filter(pk__in=id_pianu).values_list("pk", "ident_cely"))
+        problemy = {duvod: [identy_pianu[pk] for pk in seznam] for duvod, seznam in problemy.items()}
+
+        bez_katastru = self._okresy_bez_jineho_katastru()
+        if bez_katastru:
+            zaznamy = ArcheologickyZaznam.objects.filter(
+                self._chraneny_zaznam("arch_z.ArcheologickyZaznam"), hlavni_katastr__okres_id__in=bez_katastru
+            )
+            projekty = Projekt.objects.filter(self._chraneny_projekt(), hlavni_katastr__okres_id__in=bez_katastru)
+            identy = list(zaznamy.values_list("ident_cely", flat=True)) + list(
+                projekty.values_list("ident_cely", flat=True)
+            )
+            if identy:
+                problemy["bez_nahodneho_katastru"] = sorted(identy)
+
+        self._vypis_predbezne_kontroly(problemy, options)
+
+    def _vypis_predbezne_kontroly(self, problemy, options):
+        """
+        Vypíše výsledek předběžné kontroly a v ostrém běhu případně zastaví příkaz.
+
+        :param problemy: Slovník ``{důvod: [ident_cely, ...]}``.
+        :param options: Pojmenované argumenty z příkazového řádku.
+        :raises CommandError: Pokud kontrola něco našla a nejde o dry-run.
+        """
+        if not problemy:
+            self.stdout.write("Všechny chráněné polohy a katastry jde nahradit.")
+            return
+
+        celkem = sum(len(identy) for identy in problemy.values())
+        self.stdout.write(f"Chráněné polohy a katastry, které nepůjde nahradit: {celkem}")
+        for duvod, identy in sorted(problemy.items(), key=lambda polozka: -len(polozka[1])):
+            self.stdout.write(f"  {len(identy)}× {POPISY_DUVODU.get(duvod, duvod)}")
+            self._vypis_identy(identy)
+        logger.warning(
+            "core.management.commands.anonymizace_dat.predbezna_kontrola",
+            extra={"count": celkem, "list": hodnota_pro_log(problemy)},
+        )
+
+        napoveda = f" {NAPOVEDA_HRANICE_OKRESU}" if "okres_bez_hranice" in problemy else ""
+        if options["dry_run"]:
+            self.stdout.write(self.style.WARNING(f"Ostrý běh by se zastavil před prvním zápisem.{napoveda}"))
+            return
+        raise CommandError(
+            f"Předběžná kontrola našla {celkem} chráněných poloh nebo katastrů, které nejde nahradit; "
+            f"nic se nezapsalo.{napoveda}"
+        )
 
     def _lze_vypnout_trigger(self):
         """
@@ -965,7 +1279,7 @@ class Command(BaseCommand):
                 with transaction.atomic():
                     if vypnout:
                         self._nastav_trigger(False)
-                    Pian.objects.bulk_update(k_zapisu, ["geom", "geom_sjtsk", "zm10"])
+                    Pian.objects.bulk_update(k_zapisu, ["geom", "geom_sjtsk", "zm10", "zm50"])
                     if vypnout:
                         self._nastav_trigger(True)
                 self._zapocti("geometrie", zmeneno=len(k_zapisu))
@@ -978,11 +1292,16 @@ class Command(BaseCommand):
 
     def _presun_pian(self, pian, zm50_gid, okres_id, options):
         """
-        Najde PIANu novou polohu uvnitř původního okresu a listu ZM50.
+        Najde PIANu novou polohu uvnitř původního okresu, přednostně v původním listu ZM50.
 
         Omezení na původní list ZM50 drží v souladu ``Pian.ident_cely``, které
-        číslo listu obsahuje, se sloupcem ``zm50``. Nastaví atributy instance,
-        ale neukládá ji – zápis dělá dávkově volající.
+        číslo listu obsahuje, se sloupcem ``zm50``. Když v průniku okresu a listu
+        poloha není (malý nebo prázdný průnik u hranice listu), přesune se PIAN
+        kamkoli v okrese a ``zm10`` i ``zm50`` se přepočítají z nové polohy –
+        ponechat chráněný PIAN na skutečné poloze je horší než ident neodpovídající
+        listu. Takový PIAN se ve výpisu počítá pod samostatným důvodem.
+
+        Nastaví atributy instance, ale neukládá ji – zápis dělá dávkově volající.
 
         :param pian: Instance ``Pian`` k přesunu.
         :param zm50_gid: Identifikátor původního listu ZM50.
@@ -990,34 +1309,32 @@ class Command(BaseCommand):
         :param options: Pojmenované argumenty z příkazového řádku.
         :return: Dvojice ``(dx, dy)`` s vektorem posunu, nebo ``None`` při neúspěchu.
         """
-        from pian.models import get_ZM_from_point
+        if okres_id in self._okresy_bez_hranice():
+            self._zapocti_duvod("okres_bez_hranice", pian.ident_cely)
+            return None
 
         stary_bod = reprezentativni_bod(pian.geom_sjtsk)
-        duvod = "min_posun"
+        min_posun = options["min_posun_m"]
 
-        for _pokus in range(POKUSY_POLOHY):
-            novy_bod = self.generator_poloh.nova_poloha_pro_pian(okres_id, zm50_gid, stary_bod, options["min_posun_m"])
-            if novy_bod is None:
-                break
-
-            dx, dy = spocitej_posun(stary_bod, novy_bod)
-            nova_geom = posun_geometrii(pian.geom_sjtsk, dx, dy)
-            nova_geom, deformovano = deformuj_geometrii(nova_geom, options["deformace_m"], self.generator_nahody)
-
-            zm10, zm50 = get_ZM_from_point(reprezentativni_bod(nova_geom))
-            if zm10 is None or zm50 is None or zm50.pk != zm50_gid:
-                duvod = "zm_nenalezeno"
-                continue
-
-            if not self._uloz_geometrii_pianu(pian, nova_geom, zm10):
-                # Mez ve WGS-84 závisí na poloze, takže jinde tentýž tvar projít může.
-                duvod = "neplatna_geometrie"
-                continue
-            # Počítá se až u uloženého PIANu, aby zahozené pokusy o novou polohu
-            # tentýž záznam nezapočítaly víckrát.
-            if not deformovano and options["deformace_m"] > 0 and nova_geom.num_coords > 1:
-                self._zapocti_duvod("bez_deformace", pian.ident_cely)
-            return dx, dy
+        posun, duvod = self._zkus_polohy_pianu(
+            pian,
+            stary_bod,
+            lambda: self.generator_poloh.nova_poloha_pro_pian(okres_id, zm50_gid, stary_bod, min_posun),
+            zm50_gid,
+            options,
+        )
+        if posun is None and duvod != "neplatna_geometrie":
+            posun, duvod = self._zkus_polohy_pianu(
+                pian,
+                stary_bod,
+                lambda: self.generator_poloh.nova_poloha_v_okrese(okres_id, stary_bod, min_posun),
+                None,
+                options,
+            )
+            if posun is not None and pian.zm50_id != zm50_gid:
+                self._zapocti_duvod("mimo_list_zm50", pian.ident_cely)
+        if posun is not None:
+            return posun
 
         logger.debug(
             "core.management.commands.anonymizace_dat.pian.bez_nove_polohy",
@@ -1031,6 +1348,47 @@ class Command(BaseCommand):
         self._zapocti_duvod(duvod, pian.ident_cely)
         return None
 
+    def _zkus_polohy_pianu(self, pian, stary_bod, dalsi_bod, zm50_gid, options):
+        """
+        Zkusí PIAN přesunout na některou z nabízených poloh.
+
+        :param pian: Instance ``Pian`` k přesunu.
+        :param stary_bod: Reprezentativní bod původní geometrie.
+        :param dalsi_bod: Funkce bez parametrů vracející další kandidátní bod,
+            nebo ``None``, když už žádný není.
+        :param zm50_gid: Identifikátor listu ZM50, ve kterém musí nová poloha
+            ležet; ``None`` znamená libovolný list.
+        :param options: Pojmenované argumenty z příkazového řádku.
+        :return: Dvojice ``((dx, dy), None)`` při úspěchu, jinak ``(None, důvod)``.
+        """
+        from pian.models import get_ZM_from_point
+
+        duvod = "min_posun"
+        for _pokus in range(POKUSY_POLOHY):
+            novy_bod = dalsi_bod()
+            if novy_bod is None:
+                break
+
+            dx, dy = spocitej_posun(stary_bod, novy_bod)
+            nova_geom = posun_geometrii(pian.geom_sjtsk, dx, dy)
+            nova_geom, deformovano = deformuj_geometrii(nova_geom, options["deformace_m"], self.generator_nahody)
+
+            zm10, zm50 = get_ZM_from_point(reprezentativni_bod(nova_geom))
+            if zm10 is None or zm50 is None or (zm50_gid is not None and zm50.pk != zm50_gid):
+                duvod = "zm_nenalezeno"
+                continue
+
+            if not self._uloz_geometrii_pianu(pian, nova_geom, zm10, zm50):
+                # Mez ve WGS-84 závisí na poloze, takže jinde tentýž tvar projít může.
+                duvod = "neplatna_geometrie"
+                continue
+            # Počítá se až u uloženého PIANu, aby zahozené pokusy o novou polohu
+            # tentýž záznam nezapočítaly víckrát.
+            if not deformovano and options["deformace_m"] > 0 and nova_geom.num_coords > 1:
+                self._zapocti_duvod("bez_deformace", pian.ident_cely)
+            return (dx, dy), None
+        return None, duvod
+
     def _nahrad_katastralni_pian(self, pian, zm50_gid, okres_id, katastr_id, options):
         """
         Nahradí geometrii PIANu s přesností „katastr“ hranicí jiného katastru.
@@ -1038,7 +1396,9 @@ class Command(BaseCommand):
         Posouvat ani deformovat hranici katastru nedává smysl – není to citlivý
         tvar a výsledkem by byl polygon neodpovídající žádnému katastru. Vybírá
         se proto jiný katastr téhož okresu ležící v témže listu ZM50, stejně jako
-        to při zakládání dělá ``pian.models.vytvor_pian``.
+        to při zakládání dělá ``pian.models.vytvor_pian``. Když takový v listu
+        není, vybere se kterýkoli jiný katastr okresu a mapové listy se přepočítají
+        z jeho definičního bodu (důvod ``mimo_list_zm50``).
 
         :param pian: Instance ``Pian`` k záměně.
         :param zm50_gid: Identifikátor původního listu ZM50.
@@ -1053,31 +1413,45 @@ class Command(BaseCommand):
         from heslar.models import RuianKatastr
         from pian.models import get_ZM_from_point
 
+        if okres_id in self._okresy_bez_jineho_katastru(s_polohou=True):
+            self._zapocti_duvod("bez_nahradniho_katastru", pian.ident_cely)
+            return None
+
         stary_bod = reprezentativni_bod(pian.geom_sjtsk)
         # Vyloučit je potřeba katastr, jehož hranici PIAN právě nese, ne hlavní
         # katastr záznamu: ten už mohl přepsat dřívější běh a PIAN by se pak
         # mohl vrátit na svou původní hranici.
         soucasny = get_cadastre_from_point((stary_bod.x, stary_bod.y))
-        kandidati = self._kandidatni_katastry(okres_id, zm50_gid, soucasny.pk if soucasny else katastr_id)
-        self.generator_nahody.shuffle(kandidati)
+        vyloucit_id = soucasny.pk if soucasny else katastr_id
         neplatnych = 0
+        vyzkousene = set()
 
-        for kandidat_id, novy_bod, definicni_bod in kandidati:
-            # Levné kontroly jdou nad body z jednoho dotazu na kandidáty; polygon
-            # hranice se načte až u kandidáta, který jimi projde.
-            if not splnuje_minimalni_posun(stary_bod, Point(*novy_bod, srid=5514), options["min_posun_m"]):
-                continue
-            zm10, zm50 = get_ZM_from_point(Point(*definicni_bod, srid=5514))
-            if zm10 is None or zm50 is None or zm50.pk != zm50_gid:
-                continue
-            hranice = RuianKatastr.objects.filter(pk=kandidat_id).values_list("hranice", flat=True).first()
-            if hranice is None:
-                continue
-            if not self._uloz_geometrii_pianu(pian, hranice, zm10):
-                # Hranice neprošla kontrolou databáze (třeba po převodu do WGS-84); zkusíme jiný katastr.
-                neplatnych += 1
-                continue
-            return spocitej_posun(stary_bod, reprezentativni_bod(hranice))
+        for list_zm50 in (zm50_gid, None):
+            kandidati = [
+                kandidat
+                for kandidat in self._kandidatni_katastry(okres_id, list_zm50, vyloucit_id)
+                if kandidat[0] not in vyzkousene
+            ]
+            self.generator_nahody.shuffle(kandidati)
+            for kandidat_id, novy_bod, definicni_bod in kandidati:
+                vyzkousene.add(kandidat_id)
+                # Levné kontroly jdou nad body z jednoho dotazu na kandidáty; polygon
+                # hranice se načte až u kandidáta, který jimi projde.
+                if not splnuje_minimalni_posun(stary_bod, Point(*novy_bod, srid=5514), options["min_posun_m"]):
+                    continue
+                zm10, zm50 = get_ZM_from_point(Point(*definicni_bod, srid=5514))
+                if zm10 is None or zm50 is None or (list_zm50 is not None and zm50.pk != list_zm50):
+                    continue
+                hranice = RuianKatastr.objects.filter(pk=kandidat_id).values_list("hranice", flat=True).first()
+                if hranice is None:
+                    continue
+                if not self._uloz_geometrii_pianu(pian, hranice, zm10, zm50):
+                    # Hranice neprošla kontrolou databáze (třeba po převodu do WGS-84); zkusíme jiný katastr.
+                    neplatnych += 1
+                    continue
+                if zm50.pk != zm50_gid:
+                    self._zapocti_duvod("mimo_list_zm50", pian.ident_cely)
+                return spocitej_posun(stary_bod, reprezentativni_bod(hranice))
 
         logger.debug(
             "core.management.commands.anonymizace_dat.pian.bez_nahradniho_katastru",
@@ -1101,7 +1475,7 @@ class Command(BaseCommand):
         :param pian: Instance ``Pian`` s původní geometrií.
         :return: Strojový název důvodu.
         """
-        if not splnuje_pravidla_databaze(pian.geom_sjtsk) or self._zdroj_wgs_je_vadny(pian):
+        if self._zdroj_pianu_je_vadny(pian):
             return "zdrojova_geometrie_neplatna"
         return "neplatna_geometrie"
 
@@ -1125,7 +1499,8 @@ class Command(BaseCommand):
         Vrátí katastry téhož okresu ležící v zadaném listu ZM50.
 
         :param okres_id: Primární klíč okresu.
-        :param zm50_gid: Identifikátor listu ZM50.
+        :param zm50_gid: Identifikátor listu ZM50; ``None`` vrátí katastry okresu
+            bez ohledu na list.
         :param vyloucit_id: Primární klíč katastru, který se do výběru nezahrne.
         :return: Seznam trojic ``(pk, (x, y) reprezentativního bodu, (x, y)
             definičního bodu)`` v EPSG:5514.
@@ -1145,11 +1520,22 @@ class Command(BaseCommand):
             WHERE k.okres = %s AND k.id <> %s AND z.gid = %s AND k.hranice IS NOT NULL
             ORDER BY k.id
         """
+        parametry = [KLADYZM50, okres_id, vyloucit_id, zm50_gid]
+        if zm50_gid is None:
+            dotaz = """
+                SELECT k.id,
+                       ST_X(ST_PointOnSurface(k.hranice)), ST_Y(ST_PointOnSurface(k.hranice)),
+                       ST_X(k.definicni_bod), ST_Y(k.definicni_bod)
+                FROM ruian_katastr k
+                WHERE k.okres = %s AND k.id <> %s AND k.hranice IS NOT NULL AND k.definicni_bod IS NOT NULL
+                ORDER BY k.id
+            """
+            parametry = [okres_id, vyloucit_id]
         with connection.cursor() as kurzor:
-            kurzor.execute(dotaz, [KLADYZM50, okres_id, vyloucit_id, zm50_gid])
+            kurzor.execute(dotaz, parametry)
             return [(radek[0], (radek[1], radek[2]), (radek[3], radek[4])) for radek in kurzor.fetchall()]
 
-    def _uloz_geometrii_pianu(self, pian, nova_geom_sjtsk, zm10):
+    def _uloz_geometrii_pianu(self, pian, nova_geom_sjtsk, zm10, zm50):
         """
         Nastaví PIANu novou geometrii v obou souřadnicových systémech.
 
@@ -1160,6 +1546,7 @@ class Command(BaseCommand):
         :param pian: Instance ``Pian``, která se upraví na místě.
         :param nova_geom_sjtsk: Nová geometrie v EPSG:5514.
         :param zm10: Nový klad mapového listu 1:10 000.
+        :param zm50: Nový klad mapového listu 1:50 000.
         :return: ``True`` při úspěchu, ``False`` pokud selhala transformace.
         """
         wgs_wkt, vysledek = transform_geom_to_wgs84(nova_geom_sjtsk.wkt)
@@ -1199,6 +1586,7 @@ class Command(BaseCommand):
         pian.geom_sjtsk = nova_geom_sjtsk
         pian.geom = nova_geom_wgs
         pian.zm10 = zm10
+        pian.zm50 = zm50
         return True
 
     def _posun_vyskove_body(self, posunute_piany, options):
@@ -1506,6 +1894,7 @@ class Command(BaseCommand):
         U projektů navíc nahradí katastry, které nová poloha neurčuje: další
         katastry všech chráněných projektů a hlavní katastr těch, které se
         nepřesunuly (nemají geometrii, nebo se pro ně nenašla nová poloha).
+        Záznam, pro který se nová poloha nenašla, přijde o geometrii.
 
         :param options: Pojmenované argumenty z příkazového řádku.
         """
@@ -1633,6 +2022,7 @@ class Command(BaseCommand):
         :param options: Pojmenované argumenty z příkazového řádku.
         :return: Slovník ``{pk: původní hodnota pole katastru}`` přesunutých
             záznamů (``None`` u modelu bez katastru); v dry-runu prázdný.
+            Záznamy, kterým se geometrie odstranila, v něm nejsou.
         """
         model = queryset.model
         pocet = queryset.count()
@@ -1650,24 +2040,26 @@ class Command(BaseCommand):
         zmeneno = 0
         for davka in self._po_davkach(queryset, options["batch_size"]):
             pripravene = []
+            k_zapisu = []
             for zaznam in davka:
-                poloha = self._nova_poloha_zaznamu(zaznam, zjisti_okres(zaznam), options)
+                okres_id = zjisti_okres(zaznam)
+                poloha = self._nova_poloha_zaznamu(zaznam, okres_id, options)
                 if poloha is None:
                     # Důvod i identifikátor zapsal už _nova_poloha_zaznamu.
-                    self._zapocti("geometrie", preskoceno=1)
+                    k_zapisu.append(self._odstran_polohu(zaznam, okres_id, nazev_pole_katastru))
                 else:
-                    pripravene.append((zaznam, poloha[0], poloha[1]))
+                    pripravene.append((zaznam, okres_id, poloha[0], poloha[1]))
 
-            katastry = self._katastry_pro_body([bod for _z, bod, _wgs in pripravene]) if nazev_pole_katastru else None
+            body = [bod for _z, _o, bod, _wgs in pripravene]
+            katastry = self._katastry_pro_body(body) if nazev_pole_katastru else None
 
-            k_zapisu = []
-            for poradi, (zaznam, bod, wgs) in enumerate(pripravene):
+            for poradi, (zaznam, okres_id, bod, wgs) in enumerate(pripravene):
                 puvodni_katastr = getattr(zaznam, nazev_pole_katastru) if nazev_pole_katastru else None
                 if nazev_pole_katastru:
                     katastr_id = katastry[poradi]
                     if katastr_id is None:
-                        self._zapocti("geometrie", preskoceno=1)
                         self._zapocti_duvod("bod_bez_katastru", self._ident_zaznamu(zaznam))
+                        k_zapisu.append(self._odstran_polohu(zaznam, okres_id, nazev_pole_katastru))
                         continue
                     setattr(zaznam, nazev_pole_katastru, katastr_id)
                 presunute[zaznam.pk] = puvodni_katastr
@@ -1684,6 +2076,34 @@ class Command(BaseCommand):
         self._zapocti("geometrie", zmeneno=zmeneno)
         self.stdout.write(f"Přesunuto {model.__name__}: {zmeneno}")
         return presunute
+
+    def _odstran_polohu(self, zaznam, okres_id, nazev_pole_katastru):
+        """
+        Odstraní geometrii záznamu, pro který se nenašla nová poloha.
+
+        Geometrie projektu, nálezu i dokumentu je nepovinná a chráněná poloha
+        nesmí zůstat skutečná. Nepovinný katastr (samostatný nález) dostane
+        náhodný jiný katastr okresu, a když okres neznáme nebo jiný katastr nemá,
+        vynuluje se. Povinný hlavní katastr projektu zůstává – nepřesunutému
+        projektu ho nahradí krok náhodných katastrů.
+
+        Nastaví atributy instance, ale neukládá ji.
+
+        :param zaznam: Projekt, samostatný nález nebo ``DokumentExtraData``.
+        :param okres_id: Primární klíč okresu záznamu, nebo ``None``.
+        :param nazev_pole_katastru: Název pole s katastrem, nebo ``None``.
+        :return: Upravený záznam.
+        """
+        zaznam.suppress_signal = True
+        zaznam.geom = None
+        zaznam.geom_sjtsk = None
+        if nazev_pole_katastru:
+            pole = zaznam._meta.get_field(nazev_pole_katastru.removesuffix("_id"))
+            if pole.null:
+                puvodni = getattr(zaznam, nazev_pole_katastru)
+                nahodny = self._vyber_nahodne_katastry(okres_id, 1, {puvodni}) if okres_id else []
+                setattr(zaznam, nazev_pole_katastru, nahodny[0] if nahodny else None)
+        return zaznam
 
     def _nova_poloha_zaznamu(self, zaznam, okres_id, options):
         """
