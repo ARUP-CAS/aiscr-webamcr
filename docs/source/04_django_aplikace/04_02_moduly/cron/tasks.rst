@@ -124,17 +124,52 @@ Funkce
 
    Každý den kontrola a odeslání emailů E-N-01 a E-N-02
 
+.. py:function:: _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes, log_prefix)
+
+   Zpracuje jeden projekt jako jednu transakci DB a Fedory a při konfliktu Fedory ji zopakuje.
+
+   Změny v DB a požadavky na Fedoru (včetně uložení metadat projektu) probíhají uvnitř
+   ``transaction.atomic()``. Metadata se proto ukládají přímo, ne přes ``transaction.on_commit``:
+   chyba Fedory tak vrátí zpět i DB a projekt zůstane nezměněný a vybere se při dalším běhu.
+   Fedora transakce se uzavře až po commitu DB. Při chybě konektor Fedora transakci vrací zpět sám.
+
+   Při HTTP 409 (záznam mění jiná transakce) se projekt načte znovu a zkusí se až
+   :data:`FEDORA_CONFLICT_MAX_ATTEMPTS` krát. Každá jiná chyba se zaloguje a vrátí ``False``,
+   takže se nepřeruší zpracování dalších projektů.
+
+   :param projekt_pk: Primární klíč zpracovávaného projektu.
+   :param is_pending: Funkce ``is_pending(projekt) -> bool``, která na čerstvě načteném projektu ověří,
+       že ještě čeká na zpracování (jiný běh ho mohl mezitím zpracovat).
+   :param apply_changes: Funkce ``apply_changes(projekt)``, která provede změny dat projektu a jeho souborů.
+   :param log_prefix: Prefix logovacích zpráv úlohy.
+   :return: ``True``, pokud byl projekt zpracován; ``False``, pokud byl přeskočen nebo zpracování selhalo.
+
+.. py:function:: _rollback_fedora_transaction_quietly(fedora_transaction)
+
+   Vrátí zpět Fedora transakci, pokud ještě běží, a případnou chybu jen zaloguje.
+
+   Konektor transakci při chybě požadavku vrací sám; opakované volání je neškodné, protože
+   ``rollback_transaction`` už zrušenou ani potvrzenou transakci neodesílá znovu.
+
+   :param fedora_transaction: Transakce k vrácení zpět nebo ``None``, když ještě nevznikla.
+
 .. py:function:: delete_personal_data_canceled_projects()
 
    Rok po zrušení projektu nahradit související údaje v tabulce oznamovatel řetězcem “RRRR-MM-DD: údaj odstraněn”,
 
    kromě pole projekt.oznamovatel + odstranit projektovou dokumentaci a vytvořit log (jako při archivaci projektu).
 
+   Úloha trvá hodiny, proto běží pod zámkem :func:`cron.zamek.cron_task_lock`; druhá instance se přeskočí.
+   Každý projekt se zpracovává samostatně v :func:`_process_project_in_fedora_transaction`.
+
 .. py:function:: delete_reporter_data_ten_years()
 
    Deset let po zápisu projektu smazat související záznam z tabulky oznamovatel + odstranit projektovou dokumentaci
 
    a vytvořit log (jako při archivaci projektu).
+
+   Úloha běží pod zámkem :func:`cron.zamek.cron_task_lock`; druhá instance se přeskočí.
+   Každý projekt se zpracovává samostatně v :func:`_process_project_in_fedora_transaction`.
 
 .. py:function:: change_document_accessibility()
 

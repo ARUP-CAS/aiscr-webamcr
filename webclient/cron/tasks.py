@@ -63,6 +63,7 @@ from core.repository_connector import (
     FedoraError,
     FedoraRepositoryConnector,
     FedoraTransaction,
+    FedoraUpdatedByAnotherTransactionError,
 )
 from core.translation import format_message
 from core.utils import (
@@ -71,6 +72,11 @@ from core.utils import (
     iter_pk_chunks,
     translate_status_value,
     upsert_import_report_index_entry,
+)
+from cron.zamek import (
+    LOCK_DELETE_PERSONAL_DATA_CANCELED_PROJECTS,
+    LOCK_DELETE_REPORTER_DATA_TEN_YEARS,
+    cron_task_lock,
 )
 from django.conf import settings
 from django.contrib.auth.models import Group
@@ -428,46 +434,154 @@ def send_notifications_en():
         )
 
 
+#: Počet pokusů o zpracování jednoho projektu při konfliktu Fedora transakcí (HTTP 409).
+FEDORA_CONFLICT_MAX_ATTEMPTS = 3
+#: Základní prodleva mezi pokusy v sekundách; před n-tým opakováním se čeká ``n`` násobek.
+FEDORA_CONFLICT_RETRY_DELAY_SECONDS = 5
+
+
+def _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes, log_prefix):
+    """
+    Zpracuje jeden projekt jako jednu transakci DB a Fedory a při konfliktu Fedory ji zopakuje.
+
+    Změny v DB a požadavky na Fedoru (včetně uložení metadat projektu) probíhají uvnitř
+    ``transaction.atomic()``. Metadata se proto ukládají přímo, ne přes ``transaction.on_commit``:
+    chyba Fedory tak vrátí zpět i DB a projekt zůstane nezměněný a vybere se při dalším běhu.
+    Fedora transakce se uzavře až po commitu DB. Při chybě konektor Fedora transakci vrací zpět sám.
+
+    Při HTTP 409 (záznam mění jiná transakce) se projekt načte znovu a zkusí se až
+    :data:`FEDORA_CONFLICT_MAX_ATTEMPTS` krát. Každá jiná chyba se zaloguje a vrátí ``False``,
+    takže se nepřeruší zpracování dalších projektů.
+
+    :param projekt_pk: Primární klíč zpracovávaného projektu.
+    :param is_pending: Funkce ``is_pending(projekt) -> bool``, která na čerstvě načteném projektu ověří,
+        že ještě čeká na zpracování (jiný běh ho mohl mezitím zpracovat).
+    :param apply_changes: Funkce ``apply_changes(projekt)``, která provede změny dat projektu a jeho souborů.
+    :param log_prefix: Prefix logovacích zpráv úlohy.
+    :return: ``True``, pokud byl projekt zpracován; ``False``, pokud byl přeskočen nebo zpracování selhalo.
+    """
+    for attempt in range(1, FEDORA_CONFLICT_MAX_ATTEMPTS + 1):
+        fedora_transaction = None
+        db_committed = False
+        try:
+            item: Projekt = Projekt.objects.get(pk=projekt_pk)
+            if not is_pending(item):
+                logger.debug(f"{log_prefix}.do.project.skipped", extra={"projekt": item.ident_cely})
+                return False
+            fedora_transaction = FedoraTransaction()
+            item.active_transaction = fedora_transaction
+            logger.debug(
+                f"{log_prefix}.do.project",
+                extra={"projekt": item.ident_cely, "transaction": fedora_transaction.uid, "attempt": attempt},
+            )
+            with transaction.atomic():
+                apply_changes(item)
+                # Metadata ukládáme sami uvnitř atomic bloku, viz docstring; signál je proto potlačen.
+                item.suppress_signal = True
+                item.save()
+                if item.hlavni_katastr in item.katastry.all():
+                    item.katastry.remove(item.hlavni_katastr)
+                item.save_metadata(fedora_transaction)
+            db_committed = True
+            fedora_transaction.mark_transaction_as_closed()
+            return True
+        except FedoraUpdatedByAnotherTransactionError as err:
+            _rollback_fedora_transaction_quietly(fedora_transaction)
+            if attempt < FEDORA_CONFLICT_MAX_ATTEMPTS:
+                logger.warning(
+                    f"{log_prefix}.do.project.conflict_retry",
+                    extra={"projekt_pk": projekt_pk, "attempt": attempt, "error": str(err)},
+                )
+                time.sleep(FEDORA_CONFLICT_RETRY_DELAY_SECONDS * attempt)
+                continue
+            logger.error(
+                f"{log_prefix}.do.project.error",
+                extra={"projekt_pk": projekt_pk, "error": str(err), "attempts": attempt, "db_committed": db_committed},
+            )
+            return False
+        except Exception as err:
+            _rollback_fedora_transaction_quietly(fedora_transaction)
+            logger.error(
+                f"{log_prefix}.do.project.error",
+                extra={
+                    "projekt_pk": projekt_pk,
+                    "error": str(err),
+                    "traceback": traceback.format_exc(),
+                    "db_committed": db_committed,
+                },
+            )
+            return False
+    return False
+
+
+def _rollback_fedora_transaction_quietly(fedora_transaction):
+    """
+    Vrátí zpět Fedora transakci, pokud ještě běží, a případnou chybu jen zaloguje.
+
+    Konektor transakci při chybě požadavku vrací sám; opakované volání je neškodné, protože
+    ``rollback_transaction`` už zrušenou ani potvrzenou transakci neodesílá znovu.
+
+    :param fedora_transaction: Transakce k vrácení zpět nebo ``None``, když ještě nevznikla.
+    """
+    if fedora_transaction is None:
+        return
+    try:
+        fedora_transaction.rollback_transaction()
+    except Exception as err:
+        logger.warning("cron.tasks.rollback_fedora_transaction_quietly.failed", extra={"error": str(err)})
+
+
 @shared_task
 def delete_personal_data_canceled_projects():
     """
     Rok po zrušení projektu nahradit související údaje v tabulce oznamovatel řetězcem “RRRR-MM-DD: údaj odstraněn”,
 
     kromě pole projekt.oznamovatel + odstranit projektovou dokumentaci a vytvořit log (jako při archivaci projektu).
+
+    Úloha trvá hodiny, proto běží pod zámkem :func:`cron.zamek.cron_task_lock`; druhá instance se přeskočí.
+    Každý projekt se zpracovává samostatně v :func:`_process_project_in_fedora_transaction`.
     """
+    log_prefix = "core.cron.delete_personal_data_canceled_projects"
     try:
-        logger.debug("core.cron.delete_personal_data_canceled_projects.do.start")
-        deleted_string = UDAJ_ODSTRANEN
-        today = datetime.datetime.now().date()
-        year_ago = today - datetime.timedelta(days=365)
-        projects = (
-            Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY)
-            .filter(~Q(oznamovatel__email__icontains=deleted_string))
-            .filter(
-                Q(historie__historie__typ_zmeny__in=(RUSENI_PROJ, RUSENI_STARE_PROJ))
-                & Q(historie__historie__datum_zmeny__lt=year_ago)
-            )
-            .distinct()
-        )
-        for item in projects:
-            item: Projekt
-            if item.has_oznamovatel():
-                item.active_transaction = FedoraTransaction()
-                logger.debug(
-                    "core.cron.delete_personal_data_canceled_projects.do.project", extra={"projekt": item.ident_cely}
+        with cron_task_lock(LOCK_DELETE_PERSONAL_DATA_CANCELED_PROJECTS) as lock_acquired:
+            if not lock_acquired:
+                logger.warning(f"{log_prefix}.do.already_running")
+                return
+            logger.debug(f"{log_prefix}.do.start")
+            deleted_string = UDAJ_ODSTRANEN
+            today = datetime.datetime.now().date()
+            year_ago = today - datetime.timedelta(days=365)
+            deleted_value = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
+            project_pks = list(
+                Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY)
+                .filter(~Q(oznamovatel__email__icontains=deleted_string))
+                .filter(
+                    Q(historie__historie__typ_zmeny__in=(RUSENI_PROJ, RUSENI_STARE_PROJ))
+                    & Q(historie__historie__datum_zmeny__lt=year_ago)
                 )
-                item.oznamovatel.email = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
-                item.oznamovatel.adresa = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
-                item.oznamovatel.odpovedna_osoba = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
-                item.oznamovatel.telefon = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
-                item.oznamovatel.poznamka = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
+                .distinct()
+                .values_list("pk", flat=True)
+            )
+
+            def is_pending(item: Projekt) -> bool:
+                """Ověří, že projekt má oznamovatele, jehož údaje ještě nebyly odstraněny."""
+                return item.has_oznamovatel() and deleted_string not in (item.oznamovatel.email or "")
+
+            def apply_changes(item: Projekt):
+                """Přepíše údaje oznamovatele a odstraní projektovou dokumentaci."""
+                item.oznamovatel.email = deleted_value
+                item.oznamovatel.adresa = deleted_value
+                item.oznamovatel.odpovedna_osoba = deleted_value
+                item.oznamovatel.telefon = deleted_value
+                item.oznamovatel.poznamka = deleted_value
                 item.oznamovatel.save()
                 item.archive_project_documentation()
-                item.close_active_transaction_when_finished = True
-                item.save()
-        logger.debug("core.cron.delete_personal_data_canceled_projects.do.end")
+
+            for projekt_pk in project_pks:
+                _process_project_in_fedora_transaction(projekt_pk, is_pending, apply_changes, log_prefix)
+            logger.debug(f"{log_prefix}.do.end")
     except Exception as err:
-        logger.error("core.cron.delete_personal_data_canceled_projects.do.error", extra={"error": err})
+        logger.error(f"{log_prefix}.do.error", extra={"error": str(err), "traceback": traceback.format_exc()})
 
 
 @shared_task
@@ -476,39 +590,41 @@ def delete_reporter_data_ten_years():
     Deset let po zápisu projektu smazat související záznam z tabulky oznamovatel + odstranit projektovou dokumentaci
 
     a vytvořit log (jako při archivaci projektu).
+
+    Úloha běží pod zámkem :func:`cron.zamek.cron_task_lock`; druhá instance se přeskočí.
+    Každý projekt se zpracovává samostatně v :func:`_process_project_in_fedora_transaction`.
     """
-    logger.debug("core.cron.delete_reporter_data_canceled_projects.do.start")
-    today = datetime.datetime.now().date()
-    ten_years_ago = today - datetime.timedelta(days=365 * 10)
-    projects = (
-        Projekt.objects.filter(oznamovatel__isnull=False)
-        .filter(typ_projektu=TYP_PROJEKTU_ZACHRANNY_ID)
-        .filter(
-            Q(historie__historie__typ_zmeny__in=(ZAPSANI_PROJ, SCHVALENI_OZNAMENI_PROJ))
-            & Q(historie__historie__datum_zmeny__lt=ten_years_ago)
-        )
-        .distinct()
-    )
-    for item in projects:
-        try:
-            item.active_transaction = FedoraTransaction()
-            logger.debug(
-                "core.cron.delete_reporter_data_canceled_projects.do.project.start",
-                extra={"ident_cely": item.ident_cely, "transaction": item.active_transaction.uid},
+    log_prefix = "core.cron.delete_reporter_data_canceled_projects"
+    try:
+        with cron_task_lock(LOCK_DELETE_REPORTER_DATA_TEN_YEARS) as lock_acquired:
+            if not lock_acquired:
+                logger.warning(f"{log_prefix}.do.already_running")
+                return
+            logger.debug(f"{log_prefix}.do.start")
+            today = datetime.datetime.now().date()
+            ten_years_ago = today - datetime.timedelta(days=365 * 10)
+            project_pks = list(
+                Projekt.objects.filter(oznamovatel__isnull=False)
+                .filter(typ_projektu=TYP_PROJEKTU_ZACHRANNY_ID)
+                .filter(
+                    Q(historie__historie__typ_zmeny__in=(ZAPSANI_PROJ, SCHVALENI_OZNAMENI_PROJ))
+                    & Q(historie__historie__datum_zmeny__lt=ten_years_ago)
+                )
+                .distinct()
+                .values_list("pk", flat=True)
             )
-            item.oznamovatel.delete()
-            item.archive_project_documentation()
-            item.oznamovatel = None
-            item.save()
-            item.close_active_transaction_when_finished = True
-            item.save()
-            logger.debug(
-                "core.cron.delete_reporter_data_canceled_projects.do.end",
-                extra={"ident_cely": item.ident_cely, "transaction": item.active_transaction.uid},
-            )
-        except Exception as err:
-            logger.error("core.cron.delete_reporter_data_canceled_projects.do.error", extra={"error": err})
-    logger.debug("core.cron.delete_reporter_data_canceled_projects.do.end")
+
+            def apply_changes(item: Projekt):
+                """Smaže oznamovatele a odstraní projektovou dokumentaci."""
+                item.oznamovatel.delete()
+                item.archive_project_documentation()
+                item.oznamovatel = None
+
+            for projekt_pk in project_pks:
+                _process_project_in_fedora_transaction(projekt_pk, Projekt.has_oznamovatel, apply_changes, log_prefix)
+            logger.debug(f"{log_prefix}.do.end")
+    except Exception as err:
+        logger.error(f"{log_prefix}.do.error", extra={"error": str(err), "traceback": traceback.format_exc()})
 
 
 @shared_task
