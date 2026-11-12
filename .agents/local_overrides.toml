@@ -1,0 +1,15 @@
+[bootstrap]
+schema_in_use = "spec-driven"
+last_aligned_at = "2026-11-07"
+last_aligned_hub_revision = "c35418343fe8896348732bd54f8256de17338f8d"
+target_branch = "DN-agents-setup-review"
+
+[bootstrap.notes]
+summary = "Reconcile run (aiscr-setup-governance; purpose reconcile, posture apply, whole governed tree): refreshed github_references.py and github_utils.py from hub c3541834 to canonicalize body digests to exactly one terminal LF; regenerated the delivery manifest and accepted receipt-only updates across the delivered bundle after post-apply review; updated the File API and OAI-PMH documentation links to live GitHub Pages mirrors; retained .kilo/.gitignore and four sibling-only README files; deleted .agents/scripts/run_import_maintenance_tests.py under explicit per-file approval with restore point a7a2176f29e997430098821362abc173766d2ae2; deferred advisory findings to their named owners; no commit, staging, push, branch, or remote write was performed."
+
+[bootstrap.notes.open_items]
+quality_tools_decision = "The quality-baseline doctor reports catalog tools this repository does not run: Ruff (in place of black, isort and flake8), ESLint and Prettier for webclient JavaScript, yamllint, check-toml, shellcheck, vnu, jena-riot and a Markdown linter. Adopting them changes formatting across production code, so it is a maintainer decision for a separate aiscr-setup-quality-baseline run."
+cleanup_review = "Four sibling-only README files were retained; .agents/scripts/run_import_maintenance_tests.py was deleted under explicit per-file approval with restore point a7a2176f29e997430098821362abc173766d2ae2. The .pre-commit-config.yaml exclusion remains unchanged as a protected control surface for separate review."
+upstream_links = "Three internal-link failures in delivered workstation-safety surfaces require an upstream hub correction and later redelivery; local delivered copies are not patched."
+text_hygiene = ".github/copilot-floor.cmd remains LF in index and working tree while .gitattributes requires CRLF; no renormalization is performed in this run."
+security_observation = "BUG-011 remains a pre-existing, validity-unverified sample-mail credential concern deferred to the existing security lifecycle; no credential values were emitted or validity probe made."

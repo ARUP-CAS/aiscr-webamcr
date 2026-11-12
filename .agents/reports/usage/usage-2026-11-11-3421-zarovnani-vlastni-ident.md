@@ -1,0 +1,9 @@
+# Usage: zarovnání zaškrtávátka vlastního identifikátoru (#3421)
+
+- **When:** 2026-11-11
+- **Agent / runtime:** Claude Code (VS Code extension)
+- **Model / backend:** `claude-opus-5`
+- **What:** Vypořádána kosmetická připomínka z testu v2.0.0-alpha.2 v issue #3421 (komentář 6721109865): zaškrtávátko „Použít vlastní identifikátor" na `/dokument/zapsat` lícovalo s nadpisem sousedního pole místo s polem samotným. Příčinou je, že crispy renderuje `BooleanField` bez řádku s `label.form-label`, který má sousední textové pole, takže sloupci chybí jedna řádka nadpisu. Nejprve zkusen existujici vzor z `oznameni/forms.py` (pole `send_mail`) s tridami `d-flex align-items-center`; mereni v prohlizeci ukazalo, ze nepomaha, protoze oba sloupce maji stejnou vysku a neni co centrovat. Vysledna oprava vklada do sloupce se zaskrtavatkem prazdnou vycpavku se stylem `form-label`, ktera nahradi chybejici radek nadpisu. Založena větev `bugfix/3421-zarovnani-vlastni-ident` z `origin/test`.
+- **Impacted:** `webclient/dokument/forms.py` (layout formuláře `EditDokumentForm`) a tento záznam. Bez zásahu do SCSS, šablon a logiky formuláře.
+- **Verification:** `compileall` bez chyb, `manage.py check` bez nálezů, pre-commit na změněném souboru prošel (isort, black, flake8, generátory dokumentace), `dokument.tests.test_autori` 5 testů OK. Zmereno v prohlizeci pres Selenium (dev stack, uzivatel archivar1, sirky okna 1920/1600/1366): pred opravou byl stred zaskrtavatka 24 px nad stredem vstupniho pole a lical s nadpisem, po oprave je rozdil -2 px na vsech trech sirkach. Vizualne overeno na vyrezu snimku, odpovida druhemu obrazku z komentare.
+- **Close-out:** Zmena zustava necommitnuta na vetvi `bugfix/3421-zarovnani-vlastni-ident`; neprobehlo staging, commit, push ani zalozeni PR. Vizualni kontrola probehla. Pozn.: pri uzsim okne se popisek zaskrtavatka zalomi na dva radky a napoveda pod nim zacina o radek niz nez u sousedniho pole; jde o dusledek delky textu, ne zarovnani.
