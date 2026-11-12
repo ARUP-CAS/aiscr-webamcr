@@ -398,7 +398,7 @@ sortedcontainers==2.4.0
     # via
     #   -r requirements-test.txt
     #   trio
-soupsieve==4.0.1
+soupsieve==4.1
     # via
     #   -r requirements-test.txt
     #   beautifulsoup4
@@ -415,7 +415,7 @@ texttable==1.7.2
     # via
     #   -r requirements-test.txt
     #   py7zr
-tornado==6.6
+tornado==6.6.1
     # via django-livereload-server
 trio==0.35.0
     # via
