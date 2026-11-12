@@ -8914,7 +8914,10 @@ msgstr "Path to the ZIP archive with VFR ST_UZSZ (definition points)."
 #: heslar/management/commands/aktualizuj_ruian_shp.py:99
 msgid ""
 "heslar.management.commands.aktualizuj_ruian_shp.Command.add_arguments.valid_to_help"
-msgstr "Data validity date in YYYY-MM-DD format."
+msgstr ""
+"Data validity date in YYYY-MM-DD format. Optional: for the 1.zip archive "
+"from ČÚZK it is derived as the day before the archive was generated; the "
+"generation date and later dates are rejected."
 
 #: heslar/migrations/0014_ruian_geom_srid_5514.py:248
 #: heslar/migrations/0014_ruian_geom_srid_5514.py:265
@@ -17734,3 +17737,9 @@ msgid "vypis.templates.vypis_list.error.500"
 msgstr ""
 "The record could not be displayed due to a server error. If the problem "
 "persists,please contact your system administrator."
+
+msgid "heslar.views.ContinueKatastrProcessing.changed"
+msgstr "Cadastral area changed"
+
+msgid "heslar.views.ContinueKatastrProcessing.no_change"
+msgstr "Cadastral area unchanged"
