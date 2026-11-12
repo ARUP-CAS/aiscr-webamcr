@@ -26,7 +26,7 @@
     "leaflet.markercluster": "1.5.3",
     "moment": "2.31.0",
     "spin.js": "2.3.2",
-    "vanilla-cookieconsent": "3.1.0"
+    "vanilla-cookieconsent": "3.3.0"
   },
   "devDependencies": {
     "@fission-ai/openspec": "1.16.1"
