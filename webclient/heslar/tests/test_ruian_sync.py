@@ -35,6 +35,7 @@ from heslar.models import RuianKatastr, RuianKraj, RuianOkres, RuianSyncRun
 from heslar.ruian_sync import reassign as reassign_mod
 from heslar.ruian_sync import souhrn_varovani, syncer
 from heslar.ruian_sync.provider import (
+    EVENT_DELETE,
     EVENT_UPSERT,
     LEVEL_KATASTR,
     LEVEL_KRAJ,
@@ -48,6 +49,7 @@ from heslar.ruian_sync.vfr_parser import (
     RuianMissingMandatoryFieldError,
     _lezi_uvnitr,
     _neznamy_geometricky_prvek,
+    _parse_katastr_dto,
     _preved_vnorene_casti_na_diry,
 )
 from lxml import etree
@@ -175,6 +177,61 @@ class NeznamyGeometrickyPrvekTests(SimpleTestCase):
     def test_koren_se_nekontroluje(self):
         """Prázdná hranice nehlásí sama sebe jako neznámý prvek."""
         self.assertIsNone(_neznamy_geometricky_prvek(self._hranice("")))
+
+
+class HraniceKatastruDtoTests(SimpleTestCase):
+    """
+    Testy rozlišení chybějící a odmítnuté hranice katastru v parseru.
+
+    Katastr, který ve změnovém VFR přijde **bez hranice**, se může smazat jako
+    zrušený. Hranice, kterou parser odmítl (nepodporovaný GML), je vada
+    exportu a ke smazání vést nesmí – musí se proto dát odlišit.
+    """
+
+    @staticmethod
+    def _dto(geometrie):
+        """
+        Naparsuje ``KatastralniUzemi`` s předaným obsahem elementu ``Geometrie``.
+
+        :param geometrie: Obsah ``Geometrie``, nebo ``None`` pro prvek bez ní.
+        :return: :class:`RuianKatastrDTO`.
+        """
+        vnitrek = "" if geometrie is None else f"<Geometrie>{geometrie}</Geometrie>"
+        elem = etree.fromstring(
+            f'<KatastralniUzemi xmlns:gml="{GML}"><Kod>798762</Kod><Nazev>Nové Petrovice</Nazev>'
+            f"{vnitrek}</KatastralniUzemi>"
+        )
+        return _parse_katastr_dto(elem, obec_okres_map={})
+
+    def test_chybejici_hranice(self):
+        """Prvek bez ``Geometrie`` (Nové Petrovice 4. 11. 2026) – hranice chybí, ne odmítnutá."""
+        dto = self._dto(None)
+
+        self.assertIsNone(dto.hranice_wkt)
+        self.assertFalse(dto.hranice_odmitnuta)
+
+    def test_odmitnuta_hranice(self):
+        """Nepodporovaný GML prvek v ``OriginalniHranice`` → hranice odmítnutá."""
+        dto = self._dto(
+            "<OriginalniHranice><gml:MultiSurface><gml:surfaceMember><gml:Polygon><gml:exterior>"
+            "<gml:LinearRing><gml:Bezier>0 0</gml:Bezier></gml:LinearRing>"
+            "</gml:exterior></gml:Polygon></gml:surfaceMember></gml:MultiSurface></OriginalniHranice>"
+        )
+
+        self.assertIsNone(dto.hranice_wkt)
+        self.assertTrue(dto.hranice_odmitnuta)
+
+    def test_platna_hranice(self):
+        """Čitelná hranice se převede a odmítnutá není."""
+        dto = self._dto(
+            "<OriginalniHranice><gml:MultiSurface><gml:surfaceMember><gml:Polygon><gml:exterior>"
+            "<gml:LinearRing><gml:posList>-700000 -1100000 -699000 -1100000 -699000 -1099000 "
+            "-700000 -1100000</gml:posList></gml:LinearRing>"
+            "</gml:exterior></gml:Polygon></gml:surfaceMember></gml:MultiSurface></OriginalniHranice>"
+        )
+
+        self.assertTrue(dto.hranice_wkt)
+        self.assertFalse(dto.hranice_odmitnuta)
 
 
 class PopisZmenyKatastruTests(SimpleTestCase):
@@ -2282,12 +2339,13 @@ class KatastrBezHraniceTests(TestCase):
             ]
         )
 
-    def _udalost(self, kod, hranice_wkt=None):
+    def _udalost(self, kod, hranice_wkt=None, *, hranice_odmitnuta=False):
         """
         Sestaví upsert událost katastru.
 
         :param kod: Kód katastru.
         :param hranice_wkt: Hranice ve WKT, nebo ``None`` (přišel bez hranice).
+        :param hranice_odmitnuta: Hranice přišla, ale parser ji odmítl.
         :return: Instance :class:`RuianChangeEvent`.
         """
         return RuianChangeEvent(
@@ -2295,9 +2353,64 @@ class KatastrBezHraniceTests(TestCase):
             event_type=EVENT_UPSERT,
             kod=kod,
             payload=RuianKatastrDTO(
-                kod=kod, nazev=f"Testovací KÚ {kod}", okres_kod=self.okres.kod, hranice_wkt=hranice_wkt
+                kod=kod,
+                nazev=f"Testovací KÚ {kod}",
+                okres_kod=self.okres.kod,
+                hranice_wkt=hranice_wkt,
+                hranice_odmitnuta=hranice_odmitnuta,
             ),
         )
+
+    def _apply(self, udalosti):
+        """
+        Spustí ``_apply_changes`` s náhradou mazání a kontrol (bez Fedory).
+
+        :param udalosti: Události změnového souboru.
+        :return: Kódy katastrů, které by se smazaly.
+        """
+        smazane = []
+
+        def smaz(katastr, run):
+            smazane.append(katastr.kod)
+            return True
+
+        with self._patche(), mock.patch.object(syncer, "_delete_katastr", smaz), mock.patch.object(
+            syncer, "_check_katastry_topology"
+        ), mock.patch.object(syncer, "_soucet_plochy_katastru", return_value=None), mock.patch.object(self.run, "save"):
+            syncer._apply_changes(udalosti, self.run)
+        return smazane
+
+    def test_odmitnuta_hranice_katastr_nemaze(self):
+        """
+        Hranice, kterou parser odmítl, nevede ke smazání ani při úplném pokrytí.
+
+        Jde běžným upsertem, který stávající hranici ponechá – stejně jako
+        před zavedením rušení katastrů bez hranice.
+        """
+        self._katastr(self.NASTUPCE, self.X0, self.X0 + 2 * self.STRANA)
+
+        smazane = self._apply([self._udalost(self.RUSENY, hranice_odmitnuta=True)])
+
+        self.assertEqual(smazane, [])
+        self.upsert.assert_called_once()
+        self.assertTrue(RuianKatastr.objects.filter(kod=self.RUSENY).exists())
+
+    def test_mazany_soused_pokryti_nepodlozi(self):
+        """
+        Katastr, který tentýž soubor maže, se do pokrytí nezapočítá.
+
+        Po fázi mazání jeho území nikdo nepokrývá – zrušení katastru bez
+        hranice by tím nebylo podložené.
+        """
+        self._katastr(self.NASTUPCE, self.X0, self.X0 + 2 * self.STRANA)
+        smazani_nastupce = RuianChangeEvent(
+            level=LEVEL_KATASTR, event_type=EVENT_DELETE, kod=self.NASTUPCE, payload=None
+        )
+
+        smazane = self._apply([self._udalost(self.RUSENY), smazani_nastupce])
+
+        self.assertEqual(smazane, [self.NASTUPCE])
+        self.assertIn("hranice ponechána", self.varovani[0])
 
     def _patche(self):
         """

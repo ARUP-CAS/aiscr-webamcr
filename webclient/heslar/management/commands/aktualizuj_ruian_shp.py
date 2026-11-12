@@ -235,9 +235,11 @@ class Command(BaseCommand):
             )
         valid_to = datum_shp - timedelta(days=1)
         self.stdout.write(
-            self.style.NOTICE(
-                f"  --valid-to nezadáno: archiv vygeneroval ČÚZK {datum_shp.isoformat()} (podle časů "
-                f"souborů v ZIP), kotva bude {valid_to.isoformat()}."
+            self.style.WARNING(
+                f"  --valid-to nezadáno: podle časů souborů v ZIP vznikl archiv {datum_shp.isoformat()}, "
+                f"kotva bude {valid_to.isoformat()}. Platí jen pro 1.zip stažený přímo od ČÚZK – u archivu "
+                f"přebaleného nebo odjinud zadejte --valid-to ručně, jinak denní sync přeskočí dny, které "
+                f"archiv neobsahuje."
             )
         )
         return valid_to

@@ -92,9 +92,15 @@ Hodnota ``--valid-to``
 pokračuje následujícím dnem. Je to **poslední den, jehož změny SHP snapshot
 jistě obsahuje** – den před vygenerováním ``1.zip``.
 
-U ``1.zip`` od ČÚZK se ``--valid-to`` **nezadává**: příkaz ho odvodí sám
-a vypíše (``kotva bude …``). Zadává se jen u rozbaleného adresáře, kde je
-povinné, nebo když chcete kotvu záměrně dřívější.
+U ``1.zip`` staženého přímo od ČÚZK se ``--valid-to`` **nezadává**: příkaz
+ho odvodí sám a vypíše (``kotva bude …``). Odvození věří časům souborů
+v archivu – **archiv přebalený nebo získaný odjinud** může nést pozdější časy,
+než odpovídá jeho obsahu, a kotva by pak přeskočila dny, které neobsahuje.
+``--valid-to`` proto zadejte ručně:
+
+* u přebaleného archivu nebo archivu neznámého původu;
+* u rozbaleného adresáře (tam je povinné);
+* když chcete kotvu záměrně dřívější.
 
 ``1.zip`` má stálou URL a nedatovaný název, datum vygenerování ale nesou časy
 souborů uvnitř archivu (např. ``1/OKRESY_P.shp`` 2026-11-10 20:27). ČÚZK

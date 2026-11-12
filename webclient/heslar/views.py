@@ -383,14 +383,18 @@ class ContinueKatastrProcessing(UserPassesTestMixin, AdminRecordProcessingView):
         """
         Vyvolá příslušnou ``reassign_*`` funkci podle typu záznamu.
 
-        Záznam se zapíše pouze pokud došlo ke změně oproti původnímu stavu
-        (porovnává se ``hlavni_katastr_id`` resp. ``katastr_id``).
+        Záznam se zapíše pouze pokud došlo ke změně oproti původnímu stavu.
+        U projektu a samostatného nálezu se porovnává ``hlavni_katastr_id``
+        resp. ``katastr_id``; u archeologického záznamu se za změnu počítá
+        i změna jen ostatních katastrů (M2M ``katastry``), když hlavní katastr
+        zůstal stejný.
 
         :param record: Instance Projekt/ArcheologickyZaznam/SamostatnyNalez.
         :param reassign_mod: Modul ``heslar.ruian_sync.reassign`` (předáno
             kvůli lazy importu).
 
-            :return: ``True`` pokud reassign vrátil katastr odlišný od původního.
+            :return: ``True`` pokud se změnil hlavní katastr, u archeologického
+                záznamu i když se změnily jen ostatní katastry.
         """
         from arch_z.models import ArcheologickyZaznam
         from pas.models import SamostatnyNalez

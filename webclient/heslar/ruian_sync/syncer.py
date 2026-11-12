@@ -579,6 +579,7 @@ def _vyhodnot_katastry_bez_hranice(
     bez_hranice: List[RuianChangeEvent],
     run: RuianSyncRun,
     *,
+    mazane_kody: Iterable[int] = (),
     vynutit_metadata: bool = False,
 ) -> List[int]:
     """
@@ -604,13 +605,16 @@ def _vyhodnot_katastry_bez_hranice(
     :param bez_hranice: Upsert události katastrů bez hranice, které jsou v DB.
         Navzájem se do pokrytí nezapočítávají.
     :param run: Audit záznam.
+    :param mazane_kody: Katastry, které tentýž soubor maže (``ZaniklePrvky``).
+        Do pokrytí se nezapočítávají – po fázi mazání už jejich území nikdo
+        nepokrývá, takže by zrušení nepodložily.
     :param vynutit_metadata: Předá se do :func:`_upsert_katastr` u ponechaných.
     :return: Kódy katastrů, které se mají smazat jako zrušené.
     """
     zrusit: List[int] = []
-    bez_hranice_kody = [ev.kod for ev in bez_hranice]
+    vyloucene_kody = [ev.kod for ev in bez_hranice] + list(mazane_kody)
     for ev in bez_hranice:
-        pokryti = _pokryti_sousedy(ev.kod, bez_hranice_kody)
+        pokryti = _pokryti_sousedy(ev.kod, vyloucene_kody)
         if pokryti is not None and pokryti >= _MIN_POKRYTI_KU_BEZ_HRANICE_PCT:
             logger.warning(
                 "heslar.ruian_sync.syncer._vyhodnot_katastry_bez_hranice.zrusen",
@@ -717,7 +721,10 @@ def _apply_changes(
     db_katastr_codes = set(RuianKatastr.objects.values_list("kod", flat=True))
     bez_hranice: List[RuianChangeEvent] = []
     for ev in bucket[LEVEL_KATASTR]:
-        if ev.event_type == EVENT_UPSERT and not ev.payload.hranice_wkt:
+        # Jen hranice, která v souboru opravdu chybí. Odmítnutou (nepodporovaný
+        # GML, nečitelná data) parser už ohlásil a jde běžným upsertem, který
+        # stávající hranici ponechá – vada exportu nesmí vést ke smazání.
+        if ev.event_type == EVENT_UPSERT and not ev.payload.hranice_wkt and not ev.payload.hranice_odmitnuta:
             if ev.kod in db_katastr_codes:
                 # Rozhodne se až po upsertech sousedů – viz _vyhodnot_katastry_bez_hranice.
                 bez_hranice.append(ev)
@@ -749,12 +756,15 @@ def _apply_changes(
             if hranice_changed or (vynutit_metadata and ev.payload.hranice_wkt):
                 hranice_changed_kody.add(ev.kod)
 
-    zrusene_kody = _vyhodnot_katastry_bez_hranice(bez_hranice, run, vynutit_metadata=vynutit_metadata)
+    mazane_kody = [ev.kod for ev in bucket[LEVEL_KATASTR] if ev.event_type == EVENT_DELETE]
+    zrusene_kody = _vyhodnot_katastry_bez_hranice(
+        bez_hranice, run, mazane_kody=mazane_kody, vynutit_metadata=vynutit_metadata
+    )
 
     # ---- Fáze 2: delete (katastr → okres → kraj, reverzně dle FK) ----
     db_katastr_codes = set(RuianKatastr.objects.values_list("kod", flat=True))
     nesmazane = []
-    ke_smazani = [ev.kod for ev in bucket[LEVEL_KATASTR] if ev.event_type == EVENT_DELETE] + zrusene_kody
+    ke_smazani = mazane_kody + zrusene_kody
     for kod in ke_smazani:
         if kod in db_katastr_codes:
             katastr = RuianKatastr.objects.select_related("okres").filter(kod=kod).first()
