@@ -241,7 +241,7 @@ simplejson==4.2.0
     # via -r requirements.in
 six==1.17.0
     # via python-dateutil
-soupsieve==4.0.1
+soupsieve==4.1
     # via beautifulsoup4
 sqlparse==0.6.1
     # via django
