@@ -580,6 +580,7 @@ def _vyhodnot_katastry_bez_hranice(
     run: RuianSyncRun,
     *,
     mazane_kody: Iterable[int] = (),
+    odmitnute_kody: Iterable[int] = (),
     vynutit_metadata: bool = False,
 ) -> List[int]:
     """
@@ -608,11 +609,15 @@ def _vyhodnot_katastry_bez_hranice(
     :param mazane_kody: Katastry, které tentýž soubor maže (``ZaniklePrvky``).
         Do pokrytí se nezapočítávají – po fázi mazání už jejich území nikdo
         nepokrývá, takže by zrušení nepodložily.
+    :param odmitnute_kody: Katastry, jejichž hranici v tomtéž souboru parser
+        odmítl. V DB jim zůstala stará hranice, která o aktuálním stavu nic
+        neříká – zrušení smí podložit jen hranice opravdu načtená ze souboru
+        nebo nezměněná.
     :param vynutit_metadata: Předá se do :func:`_upsert_katastr` u ponechaných.
     :return: Kódy katastrů, které se mají smazat jako zrušené.
     """
     zrusit: List[int] = []
-    vyloucene_kody = [ev.kod for ev in bez_hranice] + list(mazane_kody)
+    vyloucene_kody = [ev.kod for ev in bez_hranice] + list(mazane_kody) + list(odmitnute_kody)
     for ev in bez_hranice:
         pokryti = _pokryti_sousedy(ev.kod, vyloucene_kody)
         if pokryti is not None and pokryti >= _MIN_POKRYTI_KU_BEZ_HRANICE_PCT:
@@ -757,8 +762,15 @@ def _apply_changes(
                 hranice_changed_kody.add(ev.kod)
 
     mazane_kody = [ev.kod for ev in bucket[LEVEL_KATASTR] if ev.event_type == EVENT_DELETE]
+    odmitnute_kody = [
+        ev.kod for ev in bucket[LEVEL_KATASTR] if ev.event_type == EVENT_UPSERT and ev.payload.hranice_odmitnuta
+    ]
     zrusene_kody = _vyhodnot_katastry_bez_hranice(
-        bez_hranice, run, mazane_kody=mazane_kody, vynutit_metadata=vynutit_metadata
+        bez_hranice,
+        run,
+        mazane_kody=mazane_kody,
+        odmitnute_kody=odmitnute_kody,
+        vynutit_metadata=vynutit_metadata,
     )
 
     # ---- Fáze 2: delete (katastr → okres → kraj, reverzně dle FK) ----

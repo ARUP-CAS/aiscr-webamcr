@@ -2395,6 +2395,20 @@ class KatastrBezHraniceTests(TestCase):
         self.upsert.assert_called_once()
         self.assertTrue(RuianKatastr.objects.filter(kod=self.RUSENY).exists())
 
+    def test_soused_s_odmitnutou_hranici_pokryti_nepodlozi(self):
+        """
+        Soused, jehož novou hranici parser odmítl, se do pokrytí nezapočítá.
+
+        V DB mu zůstala stará hranice – o tom, jestli území rušeného katastru
+        opravdu převzal, nic neříká. Katastr bez hranice se proto nesmaže.
+        """
+        self._katastr(self.NASTUPCE, self.X0, self.X0 + 2 * self.STRANA)
+
+        smazane = self._apply([self._udalost(self.RUSENY), self._udalost(self.NASTUPCE, hranice_odmitnuta=True)])
+
+        self.assertEqual(smazane, [])
+        self.assertIn("hranice ponechána", self.varovani[0])
+
     def test_mazany_soused_pokryti_nepodlozi(self):
         """
         Katastr, který tentýž soubor maže, se do pokrytí nezapočítá.
