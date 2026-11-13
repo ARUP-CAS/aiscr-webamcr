@@ -700,6 +700,25 @@ class ImportDataBatchOrderingError(ImportDataError):
         )
 
 
+class ImportDataOrganizationCycleError(ImportDataError):
+    """Výjimka vyvolaná při vytvoření cyklu v hierarchii organizací."""
+
+    def __init__(self, cycle):
+        """
+        Inicializuje výjimku s identifikátory organizací tvořících cyklus.
+
+        :param cycle: Identifikátory organizací v pořadí průchodu po vazbě
+            ``soucast``; první uzel je zopakován na konci.
+        """
+        self.cycle = cycle
+        super().__init__(
+            format_message(
+                gettext_noop("core_admin.ImportDataOrganizationCycleError.message"),
+                organizations=" -> ".join(cycle),
+            )
+        )
+
+
 class BaseImportField:
     """
     Základní třída pro importní pole. Neprovádí žádnou validaci ani zpracování hodnoty.
@@ -2564,6 +2583,22 @@ class OrganizaceMapper(ImportModelMapper):
     )
     model_class = Organizace
     require_primary_key_value = True
+    EXISTENCE_QUERY_BATCH_SIZE = 1000
+
+    @staticmethod
+    def _normalize_organization_identifier(value):
+        """Vrátí prázdné identifikátory organizací jako ``None`` bez úpravy platného textu."""
+        if value is None or pd.isna(value):
+            return None
+        value = str(value)
+        return None if value.strip().lower() in ("nan", "none", "") else value
+
+    def __init__(self, value_dict):
+        """Normalizuje explicitní prázdnou vazbu ``soucast`` před zpracováním lookup pole."""
+        value_dict = dict(value_dict)
+        if "soucast" in value_dict:
+            value_dict["soucast"] = self._normalize_organization_identifier(value_dict["soucast"])
+        super().__init__(value_dict)
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
@@ -2596,26 +2631,67 @@ class OrganizaceMapper(ImportModelMapper):
         return field_mapping
 
     @classmethod
-    def validate_batch_ordering(cls, payloads: list[dict]) -> None:
+    def validate_batch_ordering(cls, payloads: list[dict], performed_action=None) -> None:
         """
-        Ověří, že záznamy neobsahují dopřednou referenci v poli ``soucast`` (self-join FK na Organizace).
+        Ověří dopředné reference a cykly na cestách dotčených změnami v dávce.
 
-        Pokud záznam odkazuje přes ``soucast`` na jinou organizaci, která se v CSV vyskytuje
-        až za ním a zároveň v databázi dosud neexistuje, vyvolá výjimku.
+        Pro kontrolu cyklů se sestaví výsledný graf z databáze a importovaných řádků, ale
+        procházejí se pouze změněné vztahy a jejich dosažitelní předci. Nesouvisející
+        historický cyklus proto import neblokuje. Prázdná hodnota ``soucast`` při
+        aktualizaci vztah výslovně odstraní.
 
         :param payloads: Seznam surových řádkových slovníků ze CSV souboru v původním pořadí.
+        :param performed_action: Akce importu; při ``DELETE`` se hierarchie nemění.
         :raises ImportDataBatchOrderingError: Vyvolá se, pokud je ``soucast`` dopředná reference.
+        :raises ImportDataOrganizationCycleError: Vyvolá se, pokud výsledný graf obsahuje cyklus.
         """
+        normalized_ident = cls._normalize_organization_identifier
+        parent_idents = set()
+        for row in payloads:
+            parent_ident = normalized_ident(row.get("soucast"))
+            if parent_ident is not None:
+                parent_idents.add(parent_ident)
+        existing_parent_idents = set()
+        parent_ident_list = sorted(parent_idents)
+        for batch_start in range(0, len(parent_ident_list), cls.EXISTENCE_QUERY_BATCH_SIZE):
+            batch = parent_ident_list[batch_start : batch_start + cls.EXISTENCE_QUERY_BATCH_SIZE]
+            existing_parent_idents.update(
+                Organizace.objects.filter(ident_cely__in=batch).values_list("ident_cely", flat=True)
+            )
+
         seen: set[str] = set()
         for row in payloads:
-            ident = row.get("ident_cely")
-            soucast = row.get("soucast")
-            if soucast is not None and str(soucast).lower() not in ("nan", "none", ""):
-                soucast_str = str(soucast)
-                if soucast_str not in seen and not Organizace.objects.filter(ident_cely=soucast_str).exists():
-                    raise ImportDataBatchOrderingError(ident, soucast_str, "soucast")
-            if ident is not None and str(ident).lower() not in ("nan", "none", ""):
-                seen.add(str(ident))
+            ident = normalized_ident(row.get("ident_cely"))
+            soucast_str = normalized_ident(row.get("soucast"))
+            if soucast_str is not None and soucast_str not in seen and soucast_str not in existing_parent_idents:
+                raise ImportDataBatchOrderingError(ident, soucast_str, "soucast")
+            if ident is not None:
+                seen.add(ident)
+
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+            return
+
+        if not any("soucast" in row for row in payloads):
+            return
+
+        organization_graph = dict(Organizace.objects.values_list("ident_cely", "soucast__ident_cely"))
+        existing_idents = set(organization_graph)
+
+        changed_idents: set[str] = set()
+        for row in payloads:
+            ident = normalized_ident(row.get("ident_cely"))
+            if ident is None or "soucast" not in row:
+                continue
+            if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and ident in existing_idents:
+                continue
+            parent_ident = normalized_ident(row.get("soucast"))
+            if ident not in organization_graph or organization_graph[ident] != parent_ident:
+                changed_idents.add(ident)
+            organization_graph[ident] = parent_ident
+
+        cycles = Organizace.find_cycles(organization_graph, changed_idents)
+        if cycles:
+            raise ImportDataOrganizationCycleError(cycles[0])
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Organizace) -> list:

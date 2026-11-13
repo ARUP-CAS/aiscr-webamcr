@@ -87,6 +87,10 @@ Třídy
 Funkce
 ------
 
+.. py:function:: _decode_staged_import_record(serialized_record)
+
+   Vrátí mapper a datovou část obálky importního záznamu uloženého v Redis.
+
 .. py:function:: translation_value(message_id, raw)
 
    Zabalí překladové ID (a případné parametry) pro uložení do Redis.
@@ -401,6 +405,13 @@ Funkce
          - Při importu souborů nastane chyba čtení z adresáře nebo zpracování souboru.
        * - ``cron.tasks.run_data_import.finished``
          - Import doběhl úspěšně, nebyl zastaven a nebyla nastavena chyba.
+
+   Pokud import zpracovával organizační záznamy, závěrečný blok ``finally`` při úklidu po
+   importní fázi zkontroluje celou hierarchii organizací, i když importní transakce selhala
+   nebo byla vrácena zpět. Nalezené cykly pouze zaloguje spolu s ID úlohy; tato diagnostika
+   nemění výsledek importu ani jeho terminální fázi. Stejně se pouze zaznamená chyba samotné
+   kontroly a pokračuje úklid. Jde o kontrolu celé databáze, odlišnou od preimportní validace,
+   která kontroluje jen změněné vztahy a jejich dosažitelné předky.
 
    :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem
        "Missing required DIRECTORY_PATH setting".

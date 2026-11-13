@@ -821,9 +821,8 @@ class PasPermissionFilterMixin(PermissionFilterMixin):
         filter_historie = {"uzivatel": self.request.user}
         filtered_my = Historie.objects.filter(**filter_historie)
         if ownership == p.ownershipChoices.our:
-            return Q(projekt__organizace=self.request.user.organizace) | Q(
-                predano_organizace=self.request.user.organizace
-            )
+            organization_ids = self.request.user.organizace_podstrom_ids
+            return Q(projekt__organizace__in=organization_ids) | Q(predano_organizace__in=organization_ids)
         else:
             return Q(**{"historie_zapsat__in": filtered_my})
 
@@ -1192,7 +1191,7 @@ class UzivatelSpolupraceListView(SearchListView):
         """
         filtered_my = Q(spolupracovnik=self.request.user)
         if ownership == p.ownershipChoices.our:
-            filtered_our = Q(vedouci__organizace=self.request.user.organizace)
+            filtered_our = Q(vedouci__organizace__in=self.request.user.organizace_podstrom_ids)
             return filtered_our | filtered_my
         else:
             return filtered_my

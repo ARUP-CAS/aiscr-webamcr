@@ -79,3 +79,7 @@ Třídy
       :param args: Parametr ``args`` se předává do volání ``__init__()``.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
+   .. py:method:: clean_soucast()
+
+      Odmítne přiřadit organizaci samu sobě nebo některému z jejích potomků.
+

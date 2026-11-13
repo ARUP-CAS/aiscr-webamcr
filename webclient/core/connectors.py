@@ -139,6 +139,25 @@ return 1
         return cls.r_decode
 
     @classmethod
+    def is_data_import_running(cls, connection):
+        """Ověří, zda aktivní import stále vlastní svůj Redis zámek a zapisuje data.
+
+        :param connection: Redis spojení s bytovými nebo dekódovanými odpověďmi.
+        :return: ``True`` pouze pro fázi ``importing`` s platným vlastnickým tokenem.
+        """
+        job_id = connection.get(cls.IMPORT_DATA_ACTIVE_JOB_KEY)
+        if not job_id:
+            return False
+        if isinstance(job_id, bytes):
+            job_id = job_id.decode("utf-8")
+        pipeline = connection.pipeline()
+        pipeline.get(f"import_data_phase_{job_id}")
+        pipeline.get(f"import_data_lock_token_{job_id}")
+        pipeline.get(cls.IMPORT_DATA_LOCK_KEY)
+        phase, job_token, lock_token = pipeline.execute()
+        return phase in (b"importing", "importing") and bool(job_token) and job_token == lock_token
+
+    @classmethod
     def acquire_import_lock(cls, connection: redis.Redis, token: str, ttl_seconds: int) -> bool:
         """
         Atomicky získá Redis lock pro běžící hromadný import.
