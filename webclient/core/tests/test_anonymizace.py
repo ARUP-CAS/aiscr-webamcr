@@ -1410,6 +1410,36 @@ class TestSekceNadDatabazi(TestCase):
         self.assertEqual(s_emailem.email, anonymizace.zastupny_email_kraje(991))
         self.assertIsNone(bez_emailu.email)
 
+    def test_dry_run_zapocita_kraje_a_nic_nezmeni(self):
+        """Dry-run vypíše počet e-mailů krajů k anonymizaci, ale adresy nechá beze změny."""
+        from heslar.models import RuianKraj
+
+        kraj = RuianKraj.objects.bulk_create(
+            [RuianKraj(nazev="Kraj náhled", nazev_en="Region P", kod=993, rada_id="P", email="podatelna@kraj.cz")]
+        )[0]
+        prikaz = _spust_sekci("uzivatele", {RuianKraj: [kraj.pk]}, dry_run=True)
+        kraj.refresh_from_db()
+        self.assertEqual(kraj.email, "podatelna@kraj.cz")
+        self.assertIn("E-mailů krajů k anonymizaci: 1", prikaz.stdout.getvalue())
+
+    def test_oznamovatel_se_zastupnym_emailem_a_skutecnou_adresou_se_dokonci(self):
+        """
+        Zástupný e-mail sám oznamovatele nevyřadí; zbylé skutečné údaje se nahradí.
+
+        Plně anonymizovaný oznamovatel se při dalším běhu už nepočítá.
+        """
+        from oznameni.models import Oznamovatel
+
+        ozn = self.d.oznamovatel
+        Oznamovatel.objects.filter(pk=ozn.pk).update(email=anonymizace.zastupny_email_oznamovatele(ozn.pk))
+        _spust_sekci("oznamovatele", {Oznamovatel: [ozn.pk]})
+        ozn.refresh_from_db()
+        self.assertEqual(ozn.adresa, anonymizace.zastupny_udaj_oznamovatele("adresa", ozn.pk))
+        self.assertEqual(ozn.oznamovatel, anonymizace.zastupny_udaj_oznamovatele("oznamovatel", ozn.pk))
+
+        druhy = _spust_sekci("oznamovatele", {Oznamovatel: [ozn.pk]})
+        self.assertEqual(druhy.statistika["oznamovatele"]["zpracovano"], 0)
+
     def test_starsi_zastupna_adresa_se_prepise_do_invalid(self):
         """
         Oznamovatel s adresou z dřívější anonymizace v ``example.cz`` se přepíše znovu.
@@ -1960,7 +1990,7 @@ class TestSekceGeometrie(TestCase):
 
         prikaz._posun_bodovy_model(
             SamostatnyNalez.objects.filter(pk=self.d.nalez.pk).select_related("katastr", "projekt__hlavni_katastr"),
-            prikaz._okres_samostatneho_nalezu,
+            prikaz._po_zaznamech(prikaz._okres_samostatneho_nalezu),
             "katastr_id",
             _volby_prikazu(),
         )
@@ -1973,6 +2003,65 @@ class TestSekceGeometrie(TestCase):
 
         bez_okresu = prikaz._odstran_polohu(nalez, None, "katastr_id")
         self.assertIsNone(bez_okresu.katastr_id)
+
+    def test_nalez_s_polohou_jen_ve_wgs_prijde_o_geometrii(self):
+        """
+        Chráněný nález s ``geom`` a bez ``geom_sjtsk`` se zpracuje a přijde o geometrii.
+
+        Dřív ho výběr podle ``geom_sjtsk`` vynechal a skutečná poloha ve WGS-84 zůstala.
+        """
+        from django.contrib.gis.geos import Point
+        from django.db.models import Q
+        from pas.models import SamostatnyNalez
+
+        k0 = self.d.katastry[0]
+        SamostatnyNalez.objects.filter(pk=self.d.nalez.pk).update(
+            katastr=k0, geom=Point(15.0, 50.0, srid=4326), geom_sjtsk=None, geom_system="4326"
+        )
+        prikaz = self._prikaz_geometrie()
+
+        prikaz._posun_bodovy_model(
+            SamostatnyNalez.objects.filter(pk=self.d.nalez.pk)
+            .filter(Q(geom_sjtsk__isnull=False) | Q(geom__isnull=False))
+            .select_related("katastr", "projekt__hlavni_katastr"),
+            prikaz._po_zaznamech(prikaz._okres_samostatneho_nalezu),
+            "katastr_id",
+            _volby_prikazu(),
+        )
+
+        nalez = SamostatnyNalez.objects.get(pk=self.d.nalez.pk)
+        self.assertIsNone(nalez.geom)
+        self.assertIsNone(nalez.geom_sjtsk)
+        self.assertIn(nalez.katastr_id, {k.pk for k in self.d.katastry[1:]})
+        self.assertEqual(prikaz.identy_preskocenych["bod_jen_wgs"], [nalez.ident_cely])
+
+    def test_okresy_dokumentu_jednim_dotazem(self):
+        """Okresy celé dávky dokumentů se dohledají dvěma dotazy bez ohledu na velikost dávky."""
+        from types import SimpleNamespace
+
+        from django.contrib.gis.geos import Point
+
+        davka = [
+            SimpleNamespace(pk=1, geom_sjtsk=Point(X0 + 500, Y0 + 500, srid=5514)),
+            SimpleNamespace(pk=2, geom_sjtsk=None),
+            SimpleNamespace(pk=3, geom_sjtsk=Point(X0 + 2500, Y0 + 1500, srid=5514)),
+        ]
+        prikaz = self._prikaz_geometrie()
+        with self.assertNumQueries(2):
+            okresy = prikaz._okresy_podle_polohy(davka)
+        self.assertEqual(okresy, [self.d.okres.pk, None, self.d.okres.pk])
+
+    def test_piany_z_predbezne_kontroly_se_nehledaji_znovu(self):
+        """Sekce geometrie převezme chráněné PIANy z předběžné kontroly a dotaz neopakuje."""
+        from unittest import mock
+
+        prikaz = self._prikaz_geometrie()
+        volby = _volby_prikazu(dry_run=True)
+        with mock.patch.object(prikaz, "_chranene_piany", wraps=prikaz._chranene_piany) as dotaz:
+            prikaz._predbezna_kontrola(volby)
+            posunute = prikaz._posun_piany(volby)
+        self.assertEqual(dotaz.call_count, 1)
+        self.assertIn(self.d.pian.pk, posunute)
 
     def _pian_do_okresu_bez_hranice(self):
         """

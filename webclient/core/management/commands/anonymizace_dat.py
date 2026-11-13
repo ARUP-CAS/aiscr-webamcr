@@ -72,6 +72,7 @@ POPISY_DUVODU = {
     "bod_bez_okresu": "u projektu, nálezu nebo dokumentu nejde určit okres, geometrie odstraněna",
     "bod_bez_nove_polohy": "u projektu, nálezu nebo dokumentu se nenašla nová poloha v okresu, geometrie odstraněna",
     "bod_bez_katastru": "nová poloha projektu nebo nálezu neleží v žádném katastru, geometrie odstraněna",
+    "bod_jen_wgs": "projekt, nález nebo dokument měl polohu jen ve WGS-84 bez S-JTSK, geometrie odstraněna",
     "transformace_selhala": "převod nové polohy do WGS-84 selhal, geometrie odstraněna",
 }
 
@@ -573,6 +574,8 @@ class Command(BaseCommand):
             identy = ", ".join(kolize.values_list("ident_cely", flat=True)[:10])
             raise CommandError(f"Vyloučené účty už mají zástupnou adresu, hrozí kolize unikátního e-mailu: {identy}")
 
+        # Kraje před návratem dry-runu, aby je náhled započítal; zapisuje se jen v ostrém běhu.
+        self._anonymizuj_kraje(options)
         if options["dry_run"]:
             return
 
@@ -598,7 +601,6 @@ class Command(BaseCommand):
         )
         self._zapocti("uzivatele", zmeneno=zmeneno)
         self.stdout.write(f"Anonymizováno uživatelů: {zmeneno}")
-        self._anonymizuj_kraje(options)
 
     def _anonymizuj_kraje(self, options):
         """
@@ -637,11 +639,34 @@ class Command(BaseCommand):
         """
         Anonymizuje kontaktní údaje oznamovatelů.
 
+        Přeskočí se jen řádek, který má zástupné hodnoty ve všech polích. Samotný
+        zástupný e-mail nestačí: řádek s ním mohl mít ostatní údaje skutečné
+        (třeba po ruční úpravě), a ty by pak zůstaly.
+
         :param options: Pojmenované argumenty z příkazového řádku.
         """
         from oznameni.models import Oznamovatel
 
-        k_anonymizaci = self._zaklad(Oznamovatel).exclude(email__endswith=f"@{anonymizace.ANONYM_DOMENA}")
+        def zastupny(pole):
+            """
+            Vrátí výraz zástupné hodnoty pole oznamovatele.
+
+            :param pole: Název pole s předponou v ``PREDPONY_OZNAMOVATELE``.
+            :return: Výraz ``Concat`` s předponou a primárním klíčem.
+            """
+            return Concat(
+                Value(anonymizace.PREDPONY_OZNAMOVATELE[pole]), Cast("pk", TextField()), output_field=TextField()
+            )
+
+        zmeny = {
+            "oznamovatel": zastupny("oznamovatel"),
+            "odpovedna_osoba": zastupny("odpovedna_osoba"),
+            "adresa": zastupny("adresa"),
+            "telefon": Value(anonymizace.ANONYM_TELEFON),
+            "email": Concat(Cast("pk", TextField()), Value(f"@{anonymizace.ANONYM_DOMENA}"), output_field=TextField()),
+        }
+        hotove = Q(**zmeny) & (Q(poznamka__isnull=True) | Q(poznamka="") | Q(poznamka=zastupny("poznamka")))
+        k_anonymizaci = self._zaklad(Oznamovatel).exclude(hotove)
         pocet = k_anonymizaci.count()
         self._zapocti("oznamovatele", zpracovano=pocet)
         self.stdout.write(f"Oznamovatelů k anonymizaci: {pocet}")
@@ -650,28 +675,10 @@ class Command(BaseCommand):
             return
 
         zmeneno = k_anonymizaci.update(
-            oznamovatel=Concat(
-                Value(anonymizace.PREDPONY_OZNAMOVATELE["oznamovatel"]),
-                Cast("pk", TextField()),
-                output_field=TextField(),
-            ),
-            odpovedna_osoba=Concat(
-                Value(anonymizace.PREDPONY_OZNAMOVATELE["odpovedna_osoba"]),
-                Cast("pk", TextField()),
-                output_field=TextField(),
-            ),
-            adresa=Concat(
-                Value(anonymizace.PREDPONY_OZNAMOVATELE["adresa"]), Cast("pk", TextField()), output_field=TextField()
-            ),
-            telefon=Value(anonymizace.ANONYM_TELEFON),
-            email=Concat(Cast("pk", TextField()), Value(f"@{anonymizace.ANONYM_DOMENA}"), output_field=TextField()),
+            **zmeny,
             poznamka=Case(
                 When(Q(poznamka__isnull=True) | Q(poznamka=""), then=F("poznamka")),
-                default=Concat(
-                    Value(anonymizace.PREDPONY_OZNAMOVATELE["poznamka"]),
-                    Cast("pk", TextField()),
-                    output_field=TextField(),
-                ),
+                default=zastupny("poznamka"),
                 output_field=TextField(),
             ),
         )
@@ -1059,7 +1066,10 @@ class Command(BaseCommand):
         bez_katastru_s_polohou = self._okresy_bez_jineho_katastru(s_polohou=True)
         problemy = {}
         zkontrolovat_zdroj = []
-        for pian_id, _zm50, okres_id, _katastr_id, zkratka in self._chranene_piany():
+        # Řádky si sekce geometrie převezme, aby se drahý prostorový dotaz neopakoval
+        # a zpracovaly se přesně ty PIANy, které kontrola prověřila.
+        self._predikaty["chranene_piany"] = self._chranene_piany()
+        for pian_id, _zm50, okres_id, _katastr_id, zkratka in self._predikaty["chranene_piany"]:
             if zkratka == PRESNOST_KATASTR:
                 if okres_id in bez_katastru_s_polohou:
                     problemy.setdefault("bez_nahradniho_katastru", []).append(pian_id)
@@ -1244,7 +1254,9 @@ class Command(BaseCommand):
         """
         from pian.models import Pian
 
-        radky = self._chranene_piany()
+        radky = self._predikaty.pop("chranene_piany", None)
+        if radky is None:
+            radky = self._chranene_piany()
         self._zapocti("geometrie", zpracovano=len(radky))
         self.stdout.write(f"Chráněných PIANů: {len(radky)}")
 
@@ -1902,26 +1914,29 @@ class Command(BaseCommand):
         from pas.models import SamostatnyNalez
         from projekt.models import Projekt
 
+        # Zahrnují se i záznamy s polohou jen ve WGS-84: bez ``geom_sjtsk`` je nejde
+        # přesunout, ale skutečná poloha v ``geom`` nesmí zůstat.
+        s_polohou = Q(geom_sjtsk__isnull=False) | Q(geom__isnull=False)
         presunute_projekty = self._posun_bodovy_model(
-            Projekt.objects.filter(self._chraneny_projekt(), geom_sjtsk__isnull=False).select_related("hlavni_katastr"),
-            lambda zaznam: zaznam.hlavni_katastr.okres_id,
+            Projekt.objects.filter(self._chraneny_projekt()).filter(s_polohou).select_related("hlavni_katastr"),
+            self._po_zaznamech(lambda zaznam: zaznam.hlavni_katastr.okres_id),
             "hlavni_katastr_id",
             options,
         )
         self._nahodne_katastry_projektu(presunute_projekty, options)
         self._posun_bodovy_model(
-            SamostatnyNalez.objects.filter(
-                pristupnost__razeni__gt=PRISTUPNOST_MIN_RAZENI, geom_sjtsk__isnull=False
-            ).select_related("katastr", "projekt__hlavni_katastr"),
-            self._okres_samostatneho_nalezu,
+            SamostatnyNalez.objects.filter(pristupnost__razeni__gt=PRISTUPNOST_MIN_RAZENI)
+            .filter(s_polohou)
+            .select_related("katastr", "projekt__hlavni_katastr"),
+            self._po_zaznamech(self._okres_samostatneho_nalezu),
             "katastr_id",
             options,
         )
         self._posun_bodovy_model(
-            DokumentExtraData.objects.filter(
-                dokument__pristupnost__razeni__gt=PRISTUPNOST_MIN_RAZENI, geom_sjtsk__isnull=False
-            ).select_related("dokument"),
-            self._okres_podle_polohy,
+            DokumentExtraData.objects.filter(dokument__pristupnost__razeni__gt=PRISTUPNOST_MIN_RAZENI)
+            .filter(s_polohou)
+            .select_related("dokument"),
+            self._okresy_podle_polohy,
             None,
             options,
         )
@@ -1992,21 +2007,37 @@ class Command(BaseCommand):
         return None
 
     @staticmethod
-    def _okres_podle_polohy(zaznam):
+    def _po_zaznamech(zjisti_okres):
         """
-        Dohledá okres prostorově podle aktuální polohy záznamu.
+        Převede funkci určující okres jednoho záznamu na funkci pro celou dávku.
 
-        Používá se u dokumentů, které vlastní vazbu na katastr nemají.
+        :param zjisti_okres: Funkce vracející primární klíč okresu záznamu.
+        :return: Funkce, která pro seznam záznamů vrátí seznam okresů ve stejném pořadí.
+        """
+        return lambda davka: [zjisti_okres(zaznam) for zaznam in davka]
 
-        :param zaznam: Záznam s neprázdným polem ``geom_sjtsk``.
-        :return: Primární klíč okresu, nebo ``None`` pro polohu mimo ČR.
+    def _okresy_podle_polohy(self, davka):
+        """
+        Dohledá okresy prostorově podle aktuální polohy záznamů celé dávky.
+
+        Používá se u dokumentů, které vlastní vazbu na katastr nemají. Dávka jde
+        jedním dotazem přes :meth:`_katastry_pro_body`, ne dotazem po záznamech.
+
+        :param davka: Záznamy s poli ``geom_sjtsk``.
+        :return: Seznam primárních klíčů okresů ve stejném pořadí; ``None`` pro
+            záznam bez ``geom_sjtsk`` nebo s polohou mimo ČR.
         """
         from heslar.models import RuianKatastr
 
-        katastr = RuianKatastr.objects.filter(hranice__contains=zaznam.geom_sjtsk).values("okres_id").first()
-        return katastr["okres_id"] if katastr else None
+        s_polohou = [zaznam for zaznam in davka if zaznam.geom_sjtsk is not None]
+        katastry = self._katastry_pro_body([zaznam.geom_sjtsk for zaznam in s_polohou])
+        okres_katastru = dict(
+            RuianKatastr.objects.filter(pk__in={k for k in katastry if k is not None}).values_list("pk", "okres_id")
+        )
+        okresy = {zaznam.pk: okres_katastru.get(katastr) for zaznam, katastr in zip(s_polohou, katastry)}
+        return [okresy.get(zaznam.pk) for zaznam in davka]
 
-    def _posun_bodovy_model(self, queryset, zjisti_okres, nazev_pole_katastru, options):
+    def _posun_bodovy_model(self, queryset, zjisti_okresy, nazev_pole_katastru, options):
         """
         Přesune bodové geometrie jednoho modelu do náhodných poloh v okrese.
 
@@ -2015,8 +2046,10 @@ class Command(BaseCommand):
         a po záznamech by u desítek tisíc nálezů trvalo déle než všechno ostatní
         dohromady.
 
-        :param queryset: Záznamy s neprázdnou geometrií.
-        :param zjisti_okres: Funkce vracející primární klíč okresu záznamu.
+        :param queryset: Záznamy s neprázdnou geometrií (``geom_sjtsk`` nebo ``geom``).
+            Záznam s polohou jen ve WGS-84 nejde přesunout a přijde o geometrii.
+        :param zjisti_okresy: Funkce, která pro dávku záznamů vrátí seznam
+            primárních klíčů okresů ve stejném pořadí.
         :param nazev_pole_katastru: Název pole s katastrem, nebo ``None``,
             pokud model katastr nedrží.
         :param options: Pojmenované argumenty z příkazového řádku.
@@ -2041,8 +2074,11 @@ class Command(BaseCommand):
         for davka in self._po_davkach(queryset, options["batch_size"]):
             pripravene = []
             k_zapisu = []
-            for zaznam in davka:
-                okres_id = zjisti_okres(zaznam)
+            for zaznam, okres_id in zip(davka, zjisti_okresy(davka)):
+                if zaznam.geom_sjtsk is None:
+                    self._zapocti_duvod("bod_jen_wgs", self._ident_zaznamu(zaznam))
+                    k_zapisu.append(self._odstran_polohu(zaznam, okres_id, nazev_pole_katastru))
+                    continue
                 poloha = self._nova_poloha_zaznamu(zaznam, okres_id, options)
                 if poloha is None:
                     # Důvod i identifikátor zapsal už _nova_poloha_zaznamu.
