@@ -74,6 +74,11 @@ class RuianKatastrDTO:
     :param okres_kod: Kód nadřazeného okresu.
     :param definicni_bod_wkt: Definiční bod katastru ve WKT (Point, EPSG:4326).
     :param hranice_wkt: Hranice katastru ve WKT (MultiPolygon, EPSG:4326).
+    :param hranice_odmitnuta: ``True``, když prvek hranici **nese**, ale parser
+        ji odmítl (nepodporovaný GML prvek, žádný čitelný polygon). Odlišuje
+        to odmítnutou hranici od hranice, která v souboru opravdu chybí – jen
+        ta druhá smí vést ke zrušení katastru (viz
+        :func:`heslar.ruian_sync.syncer._vyhodnot_katastry_bez_hranice`).
     """
 
     kod: int
@@ -81,6 +86,7 @@ class RuianKatastrDTO:
     okres_kod: int
     definicni_bod_wkt: Optional[str] = None
     hranice_wkt: Optional[str] = None
+    hranice_odmitnuta: bool = False
 
 
 #: Druhy událostí ve změnovém VFR souboru, které syncer rozlišuje.

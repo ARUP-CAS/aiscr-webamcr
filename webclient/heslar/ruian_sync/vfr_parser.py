@@ -531,6 +531,8 @@ def _parse_katastr_dto(elem, *, obec_okres_map: dict) -> Optional[RuianKatastrDT
         okres_kod=okres_kod,
         definicni_bod_wkt=db_wkt,
         hranice_wkt=hr_wkt,
+        # Prvek hranici nese, ale nešla převést – to není „přišel bez hranice“.
+        hranice_odmitnuta=hr_wkt is None and _ma_originalni_hranici(elem),
     )
 
 
@@ -678,6 +680,20 @@ def _extract_hranice(elem) -> Optional[str]:
                 if wkt_5514:
                     return _normalize_sjtsk_wkt(wkt_5514)
     return None
+
+
+def _ma_originalni_hranici(elem) -> bool:
+    """
+    Zjistí, jestli prvek nese element ``OriginalniHranice``.
+
+    Spolu s výsledkem :func:`_extract_hranice` odliší hranici, která ve
+    změnovém souboru **chybí** (ČÚZK ji neposlal – např. rušený katastr), od
+    hranice, kterou parser **odmítl** (nepodporovaný prvek, nečitelná data).
+
+    :param elem: Kořenový element prvku.
+    :return: ``True``, když prvek ``OriginalniHranice`` obsahuje.
+    """
+    return any(etree.QName(d.tag).localname in _HRANICE_PREFERENCE for d in elem.iter())
 
 
 #: Krok linearizace kruhových oblouků ve stupních, viz :func:`_linearize_arc`.

@@ -8888,7 +8888,10 @@ msgstr "Cesta k archivu ZIP s VFR ST_UZSZ (definiční body)."
 #: heslar/management/commands/aktualizuj_ruian_shp.py:99
 msgid ""
 "heslar.management.commands.aktualizuj_ruian_shp.Command.add_arguments.valid_to_help"
-msgstr "Datum platnosti dat ve formátu RRRR-MM-DD."
+msgstr ""
+"Datum platnosti dat ve formátu RRRR-MM-DD. Nepovinné: u archivu 1.zip od "
+"ČÚZK se odvodí jako den před datem vygenerování archivu; datum vygenerování "
+"a pozdější se odmítne."
 
 #: heslar/migrations/0014_ruian_geom_srid_5514.py:248
 #: heslar/migrations/0014_ruian_geom_srid_5514.py:265
@@ -17653,3 +17656,9 @@ msgid "vypis.templates.vypis_list.error.500"
 msgstr ""
 "Záznam se nepodařilo vypsat z důvodu chyby serveru. V případě opakujících se"
 " problémů kontaktujte správce systému."
+
+msgid "heslar.views.ContinueKatastrProcessing.changed"
+msgstr "Katastrální území změněno"
+
+msgid "heslar.views.ContinueKatastrProcessing.no_change"
+msgstr "Katastrální území nezměněno"
