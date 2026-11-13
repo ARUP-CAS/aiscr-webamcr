@@ -53,7 +53,7 @@ def soubor_save_update_record_metadata(sender, instance: Soubor, **kwargs):
                 },
             )
         elif instance.close_active_transaction_when_finished:
-            fedora_transaction.mark_transaction_as_closed()
+            transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
     logger.debug("cron.signals.soubor_save_update_record_metadata.no_action")
 
 

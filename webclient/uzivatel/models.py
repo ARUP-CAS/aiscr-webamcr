@@ -31,7 +31,7 @@ from django.contrib.auth.models import Group, PermissionsMixin
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models import CheckConstraint, Q
 from django.db.models.functions import Collate
 from django.utils import timezone
@@ -419,7 +419,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                 "uzivatel.models.User.save_metadata.close_transaction",
                 extra={"transaction": fedora_transaction.uid, "ident_cely": self.ident_cely},
             )
-            fedora_transaction.mark_transaction_as_closed()
+            transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
         logger.debug(
             "uzivatel.models.User.save_metadata.end",
             extra={"transaction": fedora_transaction.uid, "ident_cely": self.ident_cely},

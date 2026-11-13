@@ -190,7 +190,7 @@ class UzivatelSpolupracePostDeleteTests(SimpleTestCase):
     """Smazání spolupráce nesmí commitnout Fedoru uvnitř DB transakce přes ``User.save_metadata``."""
 
     def test_user_save_metadata_called_without_close(self):
-        """``User.save_metadata`` zavírá synchronně, proto se mu příznak uzavření nepředává."""
+        """Commit Fedory plánuje signál sám, proto se ``User.save_metadata`` příznak uzavření nepředává."""
         spoluprace = _instance(True)
         with mock.patch("django.db.transaction.on_commit"):
             delete_uzivatel_spoluprce_connections(sender=None, instance=spoluprace)

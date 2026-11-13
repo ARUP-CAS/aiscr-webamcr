@@ -380,7 +380,7 @@ def smazat(request, ident_cely):
             resp = dj.delete()
             update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
             if resp:
-                fedora_transaction.mark_transaction_as_closed()
+                transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
                 logger.debug("dj.views.detail.smazat.deleted", extra={"value": resp})
                 return JsonResponse({"redirect": dj.archeologicky_zaznam.get_absolute_url()})
             else:

@@ -258,7 +258,7 @@ def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **
         else:
             logger.debug("dokument.signals.dokument_cast_save_metadata.no_change", extra=extra)
         if fedora_transaction and instance.close_active_transaction_when_finished:
-            fedora_transaction.mark_transaction_as_closed()
+            transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
     logger.debug("dokument.signals.dokument_cast_save_metadata.end", extra=extra)
 
 
