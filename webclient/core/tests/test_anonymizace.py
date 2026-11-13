@@ -72,8 +72,24 @@ class TestZastupneHodnoty(SimpleTestCase):
         """Tvary hodnot odpovídají tomu, co na testovacím serveru už je."""
         self.assertEqual(anonymizace.zastupne_jmeno(1), "Jméno_1")
         self.assertEqual(anonymizace.zastupne_prijmeni(1), "Příjmení_1")
-        self.assertEqual(anonymizace.zastupny_email_oznamovatele(1093528), "1093528@example.cz")
+        self.assertEqual(anonymizace.zastupny_email_oznamovatele(1093528), "1093528@anonymizace.invalid")
         self.assertEqual(anonymizace.zastupny_text("oznamovatel", 1093528), "oznamovatel_1093528")
+
+    def test_zastupne_adresy_lezi_v_domene_invalid(self):
+        """
+        Každá zástupná adresa leží v doméně ``.invalid`` podle RFC 2606.
+
+        Jen ta zaručuje, že adresa neexistuje; testovací server tak poštu
+        anonymizovaným adresátům doručit nemůže.
+        """
+        adresy = (
+            anonymizace.zastupny_email_uzivatele(7),
+            anonymizace.zastupny_email_oznamovatele(7),
+            anonymizace.zastupny_email_notifikace(7),
+        )
+        for adresa in adresy:
+            with self.subTest(adresa=adresa):
+                self.assertTrue(adresa.endswith(".invalid"))
 
     def test_emaily_jsou_unikatni_pro_ruzne_klice(self):
         """``User.email`` má ``unique=True``, odvození z pk to musí zaručit."""
@@ -183,6 +199,24 @@ class TestXsdParitaChranenychUdaju(SimpleTestCase):
             if (complex_type.get("name") or "").endswith("-chranene_udajeType")
         }
         self.assertEqual(ve_schematu, set(anonymizace.XSD_TYP_MODELU))
+
+    def test_kazdy_model_s_texty_ma_cestu_k_pristupnosti(self):
+        """
+        Každý model se chráněnými texty má určenou cestu k přístupnosti a ta vede na heslář.
+
+        Bez cesty by sekce ``texty`` spadla na ``KeyError``; špatná cesta by se
+        projevila až v databázovém dotazu.
+        """
+        from django.apps import apps
+
+        self.assertEqual(set(anonymizace.CESTA_K_PRISTUPNOSTI), set(anonymizace.CHRANENA_TEXTOVA_POLE))
+        for klic_modelu, cesta in anonymizace.CESTA_K_PRISTUPNOSTI.items():
+            if cesta is None:
+                continue
+            model = apps.get_model(klic_modelu)
+            for nazev in cesta.split("__"):
+                model = model._meta.get_field(nazev).related_model
+            self.assertEqual(model._meta.label, "heslar.Heslar", klic_modelu)
 
     def test_textova_pole_odpovidaji_schematu(self):
         """
@@ -495,7 +529,7 @@ class TestZapisSVypnutymTriggerem(SimpleTestCase):
         pian = self._pian(self.VADNY)
         posunuta = posun_geometrii(pian.geom_sjtsk, 500.0, 500.0)
 
-        self.assertTrue(prikaz._uloz_geometrii_pianu(pian, posunuta, zm10=None))
+        self.assertTrue(prikaz._uloz_geometrii_pianu(pian, posunuta, zm10=None, zm50=None))
         self.assertIn(pian.pk, prikaz.piany_s_vadou_zdroje)
         self.assertEqual(prikaz.duvody_preskoceni.get("zapsano_s_vadou_zdroje"), 1)
 
@@ -505,7 +539,7 @@ class TestZapisSVypnutymTriggerem(SimpleTestCase):
         pian = self._pian(self.VADNY)
         posunuta = posun_geometrii(pian.geom_sjtsk, 500.0, 500.0)
 
-        self.assertFalse(prikaz._uloz_geometrii_pianu(pian, posunuta, zm10=None))
+        self.assertFalse(prikaz._uloz_geometrii_pianu(pian, posunuta, zm10=None, zm50=None))
         self.assertEqual(prikaz.piany_s_vadou_zdroje, set())
 
     def test_vada_vyrobena_anonymizaci_se_nezapise(self):
@@ -513,7 +547,7 @@ class TestZapisSVypnutymTriggerem(SimpleTestCase):
         prikaz = self._prikaz(lze_vypnout=True)
         pian = self._pian(PLOCHA)
 
-        self.assertFalse(prikaz._uloz_geometrii_pianu(pian, GEOSGeometry(self.VADNY), zm10=None))
+        self.assertFalse(prikaz._uloz_geometrii_pianu(pian, GEOSGeometry(self.VADNY), zm10=None, zm50=None))
         self.assertEqual(prikaz.piany_s_vadou_zdroje, set())
 
     def test_vada_zdroje_jen_ve_wgs_se_rozpozna(self):
@@ -615,6 +649,58 @@ class TestDuvodyBodovychModelu(SimpleTestCase):
 
         extra = SimpleNamespace(pk=3, dokument=SimpleNamespace(ident_cely="C-TX-202699001"))
         self.assertEqual(Command._ident_zaznamu(extra), "C-TX-202699001")
+
+
+class TestVysledekBehu(SimpleTestCase):
+    """Běh s chybou nebo nenahrazenou chráněnou polohou nesmí hlásit úspěch."""
+
+    def _prikaz(self, chyb=0, duvody=None):
+        """
+        Připraví příkaz se zadaným stavem počitadel.
+
+        :param chyb: Počet chyb v sekci ``geometrie``.
+        :param duvody: Slovník ``{důvod: [ident_cely, ...]}``.
+        :return: Instance příkazu.
+        """
+        from core.management.commands.anonymizace_dat import Command
+
+        prikaz = Command(stdout=io.StringIO(), stderr=io.StringIO())
+        prikaz.statistika["geometrie"] = {"zpracovano": 1, "zmeneno": 0, "preskoceno": 0, "chyb": chyb}
+        for duvod, identy in (duvody or {}).items():
+            for ident in identy:
+                prikaz._zapocti_duvod(duvod, ident)
+        return prikaz
+
+    def test_chyba_prevodu_skonci_chybou(self):
+        """Chyba převodu souřadnic vede na nenulový návratový kód a ident je ve výpisu důvodů."""
+        from django.core.management import CommandError
+
+        prikaz = self._prikaz(chyb=1, duvody={"transformace_selhala": ["C-202699007"]})
+        prikaz._vypis_duvody()
+        with self.assertRaisesRegex(CommandError, "chyb 1"):
+            prikaz._vypis_shrnuti(_volby_prikazu())
+        self.assertIn("C-202699007", prikaz.stdout.getvalue())
+        self.assertNotIn("Anonymizace dokončena", prikaz.stdout.getvalue())
+
+    def test_preskoceny_pian_skonci_chybou(self):
+        """PIAN, který zůstal na skutečné poloze, vede na nenulový návratový kód."""
+        from django.core.management import CommandError
+
+        prikaz = self._prikaz(duvody={"bez_nove_polohy": ["P-9999-000001"]})
+        with self.assertRaisesRegex(CommandError, "nenahrazených chráněných poloh a katastrů 1"):
+            prikaz._vypis_shrnuti(_volby_prikazu())
+
+    def test_nahradni_reseni_uspech_neblokuje(self):
+        """Poloha mimo list ZM50 i odstraněná geometrie jsou vyřešené, běh skončí úspěchem."""
+        prikaz = self._prikaz(duvody={"mimo_list_zm50": ["P-9999-000001"], "bod_bez_nove_polohy": ["C-202699007"]})
+        prikaz._vypis_shrnuti(_volby_prikazu())
+        self.assertIn("Anonymizace dokončena", prikaz.stdout.getvalue())
+
+    def test_dry_run_neblokuje(self):
+        """Dry-run nic nezapisuje, a proto výsledkem nekončí chybou."""
+        prikaz = self._prikaz(chyb=1, duvody={"bez_nove_polohy": ["P-9999-000001"]})
+        prikaz._vypis_shrnuti(_volby_prikazu(dry_run=True))
+        self.assertIn("Dry-run", prikaz.stdout.getvalue())
 
 
 class TestMinimalniPosun(SimpleTestCase):
@@ -804,6 +890,26 @@ def _volby_prikazu(**zmeny):
     return volby
 
 
+def _heslo_pristupnosti_a():
+    """
+    Vrátí heslo přístupnosti A (nejnižší řazení), případně ho založí.
+
+    :return: Instance ``Heslar`` s ``razeni`` rovným ``PRISTUPNOST_MIN_RAZENI``.
+    """
+    from core.constants import PRISTUPNOST_MIN_RAZENI
+    from heslar.hesla import HESLAR_PRISTUPNOST
+    from heslar.models import Heslar
+
+    heslo = Heslar.objects.filter(nazev_heslare_id=HESLAR_PRISTUPNOST, razeni=PRISTUPNOST_MIN_RAZENI).first()
+    return heslo or Heslar.objects.create(
+        ident_cely="HES-PRIST-A",
+        heslo="A",
+        heslo_en="A",
+        nazev_heslare_id=HESLAR_PRISTUPNOST,
+        razeni=PRISTUPNOST_MIN_RAZENI,
+    )
+
+
 def _spust_sekci(nazev, omezeni, **zmeny):
     """
     Spustí jednu sekci příkazu nad vybranými záznamy.
@@ -861,6 +967,17 @@ class TestPojistky(SimpleTestCase):
             call_command(
                 "anonymizace_dat", "--potvrzuji-testovaci-server", "--jen=uzivatele,neznama", stdout=io.StringIO()
             )
+
+
+#: Počátek umělého území databázových testů v EPSG:5514.
+#:
+#: Testovací databáze se klonuje z kopie s reálným RÚIAN, jehož katastry pokrývají
+#: celé území republiky. Umělý okres proto leží v rohu obálky, kterou připouští
+#: trigger ``validate_geom_fields_trigger``, ale mimo republiku – tam není žádný
+#: skutečný katastr ani klad mapového listu, se kterým by se umělá data překryla
+#: a prostorové dotazy pak našly místo nich skutečná.
+X0 = -420000
+Y0 = -950000
 
 
 def _ctverec(x, y, strana, vyska=None):
@@ -934,7 +1051,7 @@ def _vytvor_data():
                 spz="XX",
                 kod=1,
                 # Okres pokrývají katastry beze zbytku, stejně jako ve skutečných datech.
-                hranice=MultiPolygon(_ctverec(-700000, -1000000, 3000, 2000)),
+                hranice=MultiPolygon(_ctverec(X0, Y0, 3000, 2000)),
             )
         ]
     )[0]
@@ -943,8 +1060,8 @@ def _vytvor_data():
             okres=d.okres,
             nazev=f"Katastr {poradi}",
             kod=poradi,
-            hranice=MultiPolygon(_ctverec(-700000 + (poradi % 3) * 1000, -1000000 + (poradi // 3) * 1000, 1000)),
-            definicni_bod=Point(-699500 + (poradi % 3) * 1000, -999500 + (poradi // 3) * 1000, srid=5514),
+            hranice=MultiPolygon(_ctverec(X0 + (poradi % 3) * 1000, Y0 + (poradi // 3) * 1000, 1000)),
+            definicni_bod=Point(X0 + 500 + (poradi % 3) * 1000, Y0 + 500 + (poradi // 3) * 1000, srid=5514),
         )
         for poradi in range(6)
     )
@@ -1012,15 +1129,15 @@ def _vytvor_data():
         ]
     )[0]
 
-    zm10 = Kladyzm.objects.create(kategorie=KLADYZM10, cislo="T10", the_geom=_ctverec(-700000, -1000000, 3000))
-    zm50 = Kladyzm.objects.create(kategorie=KLADYZM50, cislo="T50", the_geom=_ctverec(-700000, -1000000, 3000))
+    zm10 = Kladyzm.objects.create(kategorie=KLADYZM10, cislo="T10", the_geom=_ctverec(X0, Y0, 3000))
+    zm50 = Kladyzm.objects.create(kategorie=KLADYZM50, cislo="T50", the_geom=_ctverec(X0, Y0, 3000))
     d.pian = Pian.objects.bulk_create(
         [
             Pian(
                 presnost=ostatni,
                 typ=ostatni,
                 geom=Point(15.0, 50.0, srid=4326),
-                geom_sjtsk=Point(-698500, -999500, srid=5514),
+                geom_sjtsk=Point(X0 + 1500, Y0 + 500, srid=5514),
                 zm10=zm10,
                 zm50=zm50,
                 ident_cely="P-9999-000001",
@@ -1034,6 +1151,33 @@ def _vytvor_data():
             )
         ]
     )
+
+    from uzivatel.models import Osoba
+
+    d.anonymni_osoba = Osoba.objects.filter(ident_cely=anonymizace.IDENT_ANONYMNI_OSOBY).first() or (
+        Osoba.objects.bulk_create(
+            [
+                Osoba(
+                    ident_cely=anonymizace.IDENT_ANONYMNI_OSOBY,
+                    jmeno="Anonym test",
+                    prijmeni="Anonymizace test",
+                    vypis="Anonymizace test A.",
+                    vypis_cely="Anonymizace test, Anonym test",
+                )
+            ]
+        )[0]
+    )
+    d.skutecna_osoba = Osoba.objects.bulk_create(
+        [
+            Osoba(
+                ident_cely="OS-990001",
+                jmeno="Jana",
+                prijmeni="Skutečná",
+                vypis="Skutečná J.",
+                vypis_cely="Skutečná, Jana",
+            )
+        ]
+    )[0]
 
     admin_skupina = Group.objects.get_or_create(pk=ROLE_ADMIN_ID, defaults={"name": "Admin anonymizace test"})[0]
     d.admin, d.umely, d.bezny, d.bez_telefonu = User.objects.bulk_create(
@@ -1057,6 +1201,10 @@ def _vytvor_data():
         )
     )
     User.groups.through.objects.create(user_id=d.admin.pk, group_id=admin_skupina.pk)
+    User.objects.filter(pk=d.umely.pk).update(osoba=d.anonymni_osoba)
+    User.objects.filter(pk=d.bezny.pk).update(osoba=d.skutecna_osoba, orcid="0000-0002-1825-0097")
+    d.umely.refresh_from_db()
+    d.bezny.refresh_from_db()
 
     d.prihlaseni = UzivatelPrihlaseniLog.objects.create(user=d.bezny, ip_adresa="192.0.2.10")
     typ = UserNotificationType.objects.create(ident_cely="E-ANON-TEST")
@@ -1084,8 +1232,13 @@ class TestSekceNadDatabazi(TestCase):
         cls.d = _vytvor_data()
 
     def test_uzivatele_mimo_vyjimky_se_anonymizuji(self):
-        """Běžní uživatelé dostanou zástupné údaje, admin a umělý účet ne."""
-        from uzivatel.models import User
+        """
+        Běžní uživatelé dostanou zástupné údaje, admin a umělý účet ne.
+
+        Anonymizovaný účet přijde o napojení na osobu i o ORCID, záznam osoby
+        samotný zůstane beze změny.
+        """
+        from uzivatel.models import Osoba, User
 
         d = self.d
         vsichni = [d.admin, d.umely, d.bezny, d.bez_telefonu]
@@ -1104,6 +1257,7 @@ class TestSekceNadDatabazi(TestCase):
             )
 
         admin_pred, umely_pred = stav(d.admin), stav(d.umely)
+        osoba_pred = Osoba.objects.filter(pk=d.skutecna_osoba.pk).values().get()
         omezeni = {User: [uzivatel.pk for uzivatel in vsichni]}
         _spust_sekci("uzivatele", omezeni)
 
@@ -1114,6 +1268,10 @@ class TestSekceNadDatabazi(TestCase):
             self.assertEqual(uzivatel.email, anonymizace.zastupny_email_uzivatele(uzivatel.pk))
             self.assertEqual(uzivatel.password, anonymizace.NEPOUZITELNE_HESLO)
             self.assertIsNone(uzivatel.sha_1)
+            self.assertIsNone(uzivatel.osoba_id)
+            self.assertIsNone(uzivatel.orcid)
+        self.assertEqual(Osoba.objects.filter(pk=d.skutecna_osoba.pk).values().get(), osoba_pred)
+        self.assertEqual(User.objects.get(pk=d.umely.pk).osoba_id, d.anonymni_osoba.pk)
         self.assertEqual(d.bezny.telefon, anonymizace.ANONYM_TELEFON)
         self.assertIsNone(d.bez_telefonu.telefon)
         self.assertEqual(stav(d.admin), admin_pred)
@@ -1146,13 +1304,47 @@ class TestSekceNadDatabazi(TestCase):
         )[0]
         self.assertTrue(Projekt.objects.filter(Command._chraneny_projekt(), pk=projekt.pk).exists())
 
+    def test_prijmeni_anonym_bez_napojeni_vyjimku_nezaklada(self):
+        """Účet s příjmením „Anonym“, ale bez napojení na anonymní osobu, se anonymizuje."""
+        from uzivatel.models import User
+
+        nenapojeny = User.objects.bulk_create(
+            [
+                User(
+                    ident_cely="U-990099",
+                    first_name="Muzeum",
+                    last_name="Anonym",
+                    email="muzeum@firma.cz",
+                    organizace=self.d.admin.organizace,
+                )
+            ]
+        )[0]
+        _spust_sekci("uzivatele", {User: [nenapojeny.pk]})
+        nenapojeny.refresh_from_db()
+        self.assertEqual(nenapojeny.email, anonymizace.zastupny_email_uzivatele(nenapojeny.pk))
+
+    def test_bez_anonymni_osoby_se_vyloucit_jen_admini(self):
+        """
+        Když osoba ``OS-007414`` v databázi chybí, umělý účet se anonymizuje a vypíše se varování.
+
+        Lokální kopie databáze tu osobu nemají; běh nesmí spadnout, jen to musí říct.
+        """
+        from uzivatel.models import Osoba, User
+
+        Osoba.objects.filter(pk=self.d.anonymni_osoba.pk).update(ident_cely="OS-990002")
+        prikaz = _spust_sekci("uzivatele", {User: [self.d.admin.pk, self.d.umely.pk]})
+        umely = User.objects.get(pk=self.d.umely.pk)
+        admin = User.objects.get(pk=self.d.admin.pk)
+        self.assertEqual(umely.email, anonymizace.zastupny_email_uzivatele(umely.pk))
+        self.assertEqual(admin.email, self.d.admin.email)
+        self.assertIn(anonymizace.IDENT_ANONYMNI_OSOBY, prikaz.stdout.getvalue())
+
     def test_ucet_s_anonymizovanym_jmenem_se_dokonci(self):
         """
         Účet, který má zástupné jméno, ale skutečný e-mail, se anonymizuje celý.
 
         To je stav testovacího serveru po dřívější ruční anonymizaci. Zástupné
-        příjmení ``Příjmení_{pk}`` proto nesmí spadnout do výjimky pro umělé
-        účty (filtr ``last_name__icontains``), jinak by e-mail zůstal skutečný.
+        jméno nesmí účet vyřadit z anonymizace, jinak by e-mail zůstal skutečný.
         """
         from uzivatel.models import User
 
@@ -1201,6 +1393,68 @@ class TestSekceNadDatabazi(TestCase):
         _spust_sekci("oznamovatele", {Oznamovatel: [ozn.pk]})
         ozn.refresh_from_db()
         self.assertEqual(ozn.poznamka, anonymizace.zastupny_udaj_oznamovatele("poznamka", ozn.pk))
+
+    def test_email_kraje_se_nahradi_prazdny_zustane(self):
+        """Vyplněný e-mail kraje dostane zástupnou adresu, prázdný zůstane prázdný."""
+        from heslar.models import RuianKraj
+
+        s_emailem = RuianKraj.objects.bulk_create(
+            [RuianKraj(nazev="Kraj s e-mailem", nazev_en="Region A", kod=991, rada_id="A", email="podatelna@kraj.cz")]
+        )[0]
+        bez_emailu = RuianKraj.objects.bulk_create(
+            [RuianKraj(nazev="Kraj bez e-mailu", nazev_en="Region B", kod=992, rada_id="B", email=None)]
+        )[0]
+        _spust_sekci("uzivatele", {RuianKraj: [s_emailem.pk, bez_emailu.pk]})
+        s_emailem.refresh_from_db()
+        bez_emailu.refresh_from_db()
+        self.assertEqual(s_emailem.email, anonymizace.zastupny_email_kraje(991))
+        self.assertIsNone(bez_emailu.email)
+
+    def test_dry_run_zapocita_kraje_a_nic_nezmeni(self):
+        """Dry-run vypíše počet e-mailů krajů k anonymizaci, ale adresy nechá beze změny."""
+        from heslar.models import RuianKraj
+
+        kraj = RuianKraj.objects.bulk_create(
+            [RuianKraj(nazev="Kraj náhled", nazev_en="Region P", kod=993, rada_id="P", email="podatelna@kraj.cz")]
+        )[0]
+        prikaz = _spust_sekci("uzivatele", {RuianKraj: [kraj.pk]}, dry_run=True)
+        kraj.refresh_from_db()
+        self.assertEqual(kraj.email, "podatelna@kraj.cz")
+        self.assertIn("E-mailů krajů k anonymizaci: 1", prikaz.stdout.getvalue())
+
+    def test_oznamovatel_se_zastupnym_emailem_a_skutecnou_adresou_se_dokonci(self):
+        """
+        Zástupný e-mail sám oznamovatele nevyřadí; zbylé skutečné údaje se nahradí.
+
+        Plně anonymizovaný oznamovatel se při dalším běhu už nepočítá.
+        """
+        from oznameni.models import Oznamovatel
+
+        ozn = self.d.oznamovatel
+        Oznamovatel.objects.filter(pk=ozn.pk).update(email=anonymizace.zastupny_email_oznamovatele(ozn.pk))
+        _spust_sekci("oznamovatele", {Oznamovatel: [ozn.pk]})
+        ozn.refresh_from_db()
+        self.assertEqual(ozn.adresa, anonymizace.zastupny_udaj_oznamovatele("adresa", ozn.pk))
+        self.assertEqual(ozn.oznamovatel, anonymizace.zastupny_udaj_oznamovatele("oznamovatel", ozn.pk))
+
+        druhy = _spust_sekci("oznamovatele", {Oznamovatel: [ozn.pk]})
+        self.assertEqual(druhy.statistika["oznamovatele"]["zpracovano"], 0)
+
+    def test_starsi_zastupna_adresa_se_prepise_do_invalid(self):
+        """
+        Oznamovatel s adresou z dřívější anonymizace v ``example.cz`` se přepíše znovu.
+
+        Testovací server nese hodnoty z dřívějších běhů; ty nesmí zůstat v doméně,
+        která nezaručuje nedoručitelnost.
+        """
+        from oznameni.models import Oznamovatel
+
+        ozn = self.d.oznamovatel
+        Oznamovatel.objects.filter(pk=ozn.pk).update(email=f"{ozn.pk}@example.cz")
+        _spust_sekci("oznamovatele", {Oznamovatel: [ozn.pk]})
+        ozn.refresh_from_db()
+        self.assertEqual(ozn.email, anonymizace.zastupny_email_oznamovatele(ozn.pk))
+        self.assertTrue(ozn.email.endswith(".invalid"))
 
     def test_oznamovatele_se_anonymizuji(self):
         """Kontaktní údaje oznamovatele se nahradí, telefon projde validátorem."""
@@ -1253,6 +1507,107 @@ class TestSekceNadDatabazi(TestCase):
         _spust_sekci("texty", omezeni)
         d.projekt.refresh_from_db()
         self.assertEqual(d.projekt.lokalizace, anonymizace.zastupny_text("lokalizace", d.projekt.pk))
+
+    def _zaznam(self, ident, typ, pristupnost):
+        """
+        Založí archeologický záznam s danou přístupností.
+
+        :param ident: Identifikátor záznamu.
+        :param typ: Typ záznamu (lokalita nebo akce).
+        :param pristupnost: Heslo přístupnosti.
+        :return: Uložený záznam.
+        """
+        from arch_z.models import ArcheologickyZaznam
+
+        return ArcheologickyZaznam.objects.bulk_create(
+            [
+                ArcheologickyZaznam(
+                    typ_zaznamu=typ,
+                    pristupnost=pristupnost,
+                    ident_cely=ident,
+                    stav=1,
+                    hlavni_katastr=self.d.katastry[0],
+                )
+            ]
+        )[0]
+
+    def test_texty_verejnych_zaznamu_zustanou(self):
+        """
+        Texty se zakryjí jen u chráněných záznamů, veřejná lokalita a akce si je ponechají.
+
+        Pokrývá modely, které přístupnost čtou přes archeologický záznam (lokalita, akce).
+        """
+        from arch_z.models import Akce, ArcheologickyZaznam
+        from lokalita.models import Lokalita
+
+        d = self.d
+        verejna = _heslo_pristupnosti_a()
+        lok_zaznam = self._zaznam("C-L9900002", ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA, verejna)
+        verejna_lokalita = Lokalita.objects.bulk_create(
+            [
+                Lokalita(
+                    archeologicky_zaznam=lok_zaznam,
+                    druh=d.lokalita.druh,
+                    typ_lokality=d.lokalita.druh,
+                    nazev="Hradiště",
+                )
+            ]
+        )[0]
+        akce = {}
+        for ident, pristupnost in (("C-9900003A", verejna), ("C-9900004A", d.chranena)):
+            zaznam = self._zaznam(ident, ArcheologickyZaznam.TYP_ZAZNAMU_AKCE, pristupnost)
+            akce[pristupnost.pk] = Akce.objects.bulk_create(
+                [
+                    Akce(
+                        archeologicky_zaznam=zaznam,
+                        typ="N",
+                        specifikace_data=d.lokalita.druh,
+                        lokalizace_okolnosti="U mostu",
+                    )
+                ]
+            )[0]
+        omezeni = {Lokalita: [d.lokalita.pk, verejna_lokalita.pk], Akce: [a.pk for a in akce.values()]}
+        _spust_sekci("texty", omezeni)
+
+        verejna_lokalita.refresh_from_db()
+        d.lokalita.refresh_from_db()
+        self.assertEqual(verejna_lokalita.nazev, "Hradiště")
+        self.assertEqual(d.lokalita.nazev, anonymizace.zastupny_text("nazev", d.lokalita.pk))
+        verejna_akce = Akce.objects.get(pk=akce[verejna.pk].pk)
+        chranena_akce = Akce.objects.get(pk=akce[d.chranena.pk].pk)
+        self.assertEqual(verejna_akce.lokalizace_okolnosti, "U mostu")
+        self.assertEqual(
+            chranena_akce.lokalizace_okolnosti,
+            anonymizace.zastupny_text("lokalizace_okolnosti", chranena_akce.pk),
+        )
+
+    def test_poznamka_zmeny_katastru_chraneneho_zaznamu_se_vynuluje(self):
+        """Chráněný záznam přijde o poznámku historie ``KAT``, veřejný a jiné typy změn ne."""
+        from arch_z.models import ArcheologickyZaznam
+        from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, ZMENA_KATASTRU
+        from historie.models import Historie, HistorieVazby
+
+        d = self.d
+        verejny = self._zaznam("C-L9900005", ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA, _heslo_pristupnosti_a())
+        zapisy = {}
+        for zaznam in (d.zaznam, verejny):
+            vazba = HistorieVazby.objects.create(typ_vazby=ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE)
+            ArcheologickyZaznam.objects.filter(pk=zaznam.pk).update(historie=vazba)
+            zapisy[zaznam.pk] = [
+                Historie.objects.create(vazba=vazba, typ_zmeny=typ, poznamka=poznamka, uzivatel=d.admin)
+                for typ, poznamka in ((ZMENA_KATASTRU, "KOŠUMBERK -> LUŽE"), ("AZ12", "odesláno"))
+            ]
+        _spust_sekci("texty", {ArcheologickyZaznam: [d.zaznam.pk, verejny.pk]})
+
+        kat = Historie.objects.get(pk=zapisy[d.zaznam.pk][0].pk)
+        jina = Historie.objects.get(pk=zapisy[d.zaznam.pk][1].pk)
+        self.assertIsNone(kat.poznamka)
+        self.assertEqual(kat.typ_zmeny, ZMENA_KATASTRU)
+        self.assertEqual(jina.poznamka, "odesláno")
+        self.assertEqual(
+            [Historie.objects.get(pk=h.pk).poznamka for h in zapisy[verejny.pk]],
+            ["KOŠUMBERK -> LUŽE", "odesláno"],
+        )
 
     def test_pid_nese_prefix_instance(self):
         """Uložené DOI a IGSN dostanou prefix cílové instance ze settings."""
@@ -1433,7 +1788,7 @@ class TestSekceGeometrie(TestCase):
 
         cls.d = _vytvor_data()
         Projekt.objects.filter(pk=cls.d.projekt.pk).update(
-            geom_sjtsk=Point(-699500, -999500, srid=5514), geom=Point(15.0, 50.0, srid=4326)
+            geom_sjtsk=Point(X0 + 500, Y0 + 500, srid=5514), geom=Point(15.0, 50.0, srid=4326)
         )
 
     def _spust(self, **volby):
@@ -1517,7 +1872,7 @@ class TestSekceGeometrie(TestCase):
                     kraj=self.d.okres.kraj,
                     spz="YY",
                     kod=2,
-                    hranice=MultiPolygon(_ctverec(-690000, -1000000, 1000)),
+                    hranice=MultiPolygon(_ctverec(X0 + 10000, Y0, 1000)),
                 )
             ]
         )[0]
@@ -1527,15 +1882,256 @@ class TestSekceGeometrie(TestCase):
                     okres=okres2,
                     nazev="Katastr jinde",
                     kod=99,
-                    hranice=MultiPolygon(_ctverec(-690000, -1000000, 1000)),
-                    definicni_bod=Point(-689500, -999500, srid=5514),
+                    hranice=MultiPolygon(_ctverec(X0 + 10000, Y0, 1000)),
+                    definicni_bod=Point(X0 + 10500, Y0 + 500, srid=5514),
                 )
             ]
         )[0]
-        Pian.objects.filter(pk=self.d.pian.pk).update(geom_sjtsk=Point(-689500, -999500, srid=5514))
+        Pian.objects.filter(pk=self.d.pian.pk).update(geom_sjtsk=Point(X0 + 10500, Y0 + 500, srid=5514))
 
         radky = {radek[0]: radek for radek in Command()._chranene_piany()}
 
         _pian_id, _zm50, okres_id, katastr_id, _zkratka = radky[self.d.pian.pk]
         self.assertEqual(okres_id, okres2.pk)
         self.assertEqual(katastr_id, katastr2.pk)
+
+    def _cizi_list_zm50(self):
+        """
+        Založí list ZM50 mimo testovací okres.
+
+        :return: Instance ``Kladyzm``, jejíž průnik s okresem je prázdný.
+        """
+        from core.constants import KLADYZM50
+        from pian.models import Kladyzm
+
+        return Kladyzm.objects.create(kategorie=KLADYZM50, cislo="T50X", the_geom=_ctverec(X0 + 20000, Y0, 3000))
+
+    def _prikaz_geometrie(self):
+        """
+        Připraví příkaz pro přímé volání kroků sekce ``geometrie``.
+
+        :return: Instance příkazu s inicializovaným generátorem poloh.
+        """
+        from core.management.commands.anonymizace_dat import Command
+        from core.management.commands.utils.anonymizace_geometrie import GeneratorPoloh
+
+        prikaz = Command(stdout=io.StringIO(), stderr=io.StringIO())
+        prikaz.statistika["geometrie"] = {"zpracovano": 0, "zmeneno": 0, "preskoceno": 0, "chyb": 0}
+        prikaz.generator_poloh = GeneratorPoloh()
+        return prikaz
+
+    def test_pian_bez_polohy_v_listu_se_presune_v_okrese(self):
+        """
+        PIAN, jehož list ZM50 s okresem nemá průnik, se přesune jinam v okrese.
+
+        Mapové listy se přepočítají z nové polohy a ve výpisu je samostatný důvod.
+        """
+        from pian.models import Pian
+
+        cizi = self._cizi_list_zm50()
+        puvodni_list = self.d.pian.zm50_id
+        Pian.objects.filter(pk=self.d.pian.pk).update(zm50=cizi)
+
+        prikaz = self._spust()
+
+        pian = Pian.objects.get(pk=self.d.pian.pk)
+        self.assertTrue(self.d.okres.hranice.contains(pian.geom_sjtsk))
+        self.assertGreaterEqual(vzdalenost(pian.geom_sjtsk, self.d.pian.geom_sjtsk), 100)
+        self.assertEqual(pian.zm50_id, puvodni_list)
+        self.assertEqual(prikaz.identy_preskocenych["mimo_list_zm50"], [self.d.pian.ident_cely])
+
+    def test_katastralni_pian_dostane_katastr_mimo_list(self):
+        """Katastrální PIAN bez jiného katastru v listu ZM50 dostane jiný katastr okresu."""
+        from pian.models import Pian
+
+        k0 = self.d.katastry[0]
+        cizi = self._cizi_list_zm50()
+        Pian.objects.filter(pk=self.d.pian.pk).update(geom_sjtsk=k0.hranice, zm50=cizi)
+        pian = Pian.objects.get(pk=self.d.pian.pk)
+        prikaz = self._prikaz_geometrie()
+
+        posun = prikaz._nahrad_katastralni_pian(pian, cizi.pk, self.d.okres.pk, k0.pk, _volby_prikazu())
+
+        self.assertIsNotNone(posun)
+        ostatni = {k.hranice.wkt for k in self.d.katastry[1:]}
+        self.assertIn(pian.geom_sjtsk.wkt, ostatni)
+        self.assertEqual(pian.zm50_id, self.d.pian.zm50_id)
+        self.assertEqual(prikaz.identy_preskocenych["mimo_list_zm50"], [pian.ident_cely])
+
+    def test_nalez_v_okrese_bez_hranice_prijde_o_geometrii(self):
+        """
+        Samostatný nález v okrese bez hranice nemá po anonymizaci geometrii ani původní katastr.
+
+        Katastr se nahradí jiným katastrem téhož okresu; když okres neznáme, vynuluje se.
+        """
+        from django.contrib.gis.geos import MultiPolygon, Point
+        from heslar.models import RuianKatastr, RuianOkres
+        from pas.models import SamostatnyNalez
+
+        okres = RuianOkres.objects.bulk_create(
+            [RuianOkres(nazev="Bez hranice", nazev_en="No boundary", kraj=self.d.okres.kraj, spz="ZZ", kod=3)]
+        )[0]
+        katastry = RuianKatastr.objects.bulk_create(
+            RuianKatastr(
+                okres=okres,
+                nazev=f"Katastr bez hranice okresu {poradi}",
+                kod=80 + poradi,
+                hranice=MultiPolygon(_ctverec(X0 + 30000 + poradi * 1000, Y0, 1000)),
+                definicni_bod=Point(X0 + 30500 + poradi * 1000, Y0 + 500, srid=5514),
+            )
+            for poradi in range(2)
+        )
+        SamostatnyNalez.objects.filter(pk=self.d.nalez.pk).update(
+            katastr=katastry[0],
+            geom_sjtsk=Point(X0 + 30500, Y0 + 500, srid=5514),
+            geom=Point(15.0, 50.0, srid=4326),
+        )
+        prikaz = self._prikaz_geometrie()
+
+        prikaz._posun_bodovy_model(
+            SamostatnyNalez.objects.filter(pk=self.d.nalez.pk).select_related("katastr", "projekt__hlavni_katastr"),
+            prikaz._po_zaznamech(prikaz._okres_samostatneho_nalezu),
+            "katastr_id",
+            _volby_prikazu(),
+        )
+
+        nalez = SamostatnyNalez.objects.get(pk=self.d.nalez.pk)
+        self.assertIsNone(nalez.geom_sjtsk)
+        self.assertIsNone(nalez.geom)
+        self.assertEqual(nalez.katastr_id, katastry[1].pk)
+        self.assertEqual(prikaz.identy_preskocenych["bod_bez_nove_polohy"], [nalez.ident_cely])
+
+        bez_okresu = prikaz._odstran_polohu(nalez, None, "katastr_id")
+        self.assertIsNone(bez_okresu.katastr_id)
+
+    def test_nalez_s_polohou_jen_ve_wgs_prijde_o_geometrii(self):
+        """
+        Chráněný nález s ``geom`` a bez ``geom_sjtsk`` se zpracuje a přijde o geometrii.
+
+        Dřív ho výběr podle ``geom_sjtsk`` vynechal a skutečná poloha ve WGS-84 zůstala.
+        """
+        from django.contrib.gis.geos import Point
+        from django.db.models import Q
+        from pas.models import SamostatnyNalez
+
+        k0 = self.d.katastry[0]
+        SamostatnyNalez.objects.filter(pk=self.d.nalez.pk).update(
+            katastr=k0, geom=Point(15.0, 50.0, srid=4326), geom_sjtsk=None, geom_system="4326"
+        )
+        prikaz = self._prikaz_geometrie()
+
+        prikaz._posun_bodovy_model(
+            SamostatnyNalez.objects.filter(pk=self.d.nalez.pk)
+            .filter(Q(geom_sjtsk__isnull=False) | Q(geom__isnull=False))
+            .select_related("katastr", "projekt__hlavni_katastr"),
+            prikaz._po_zaznamech(prikaz._okres_samostatneho_nalezu),
+            "katastr_id",
+            _volby_prikazu(),
+        )
+
+        nalez = SamostatnyNalez.objects.get(pk=self.d.nalez.pk)
+        self.assertIsNone(nalez.geom)
+        self.assertIsNone(nalez.geom_sjtsk)
+        self.assertIn(nalez.katastr_id, {k.pk for k in self.d.katastry[1:]})
+        self.assertEqual(prikaz.identy_preskocenych["bod_jen_wgs"], [nalez.ident_cely])
+
+    def test_okresy_dokumentu_jednim_dotazem(self):
+        """Okresy celé dávky dokumentů se dohledají dvěma dotazy bez ohledu na velikost dávky."""
+        from types import SimpleNamespace
+
+        from django.contrib.gis.geos import Point
+
+        davka = [
+            SimpleNamespace(pk=1, geom_sjtsk=Point(X0 + 500, Y0 + 500, srid=5514)),
+            SimpleNamespace(pk=2, geom_sjtsk=None),
+            SimpleNamespace(pk=3, geom_sjtsk=Point(X0 + 2500, Y0 + 1500, srid=5514)),
+        ]
+        prikaz = self._prikaz_geometrie()
+        with self.assertNumQueries(2):
+            okresy = prikaz._okresy_podle_polohy(davka)
+        self.assertEqual(okresy, [self.d.okres.pk, None, self.d.okres.pk])
+
+    def test_piany_z_predbezne_kontroly_se_nehledaji_znovu(self):
+        """Sekce geometrie převezme chráněné PIANy z předběžné kontroly a dotaz neopakuje."""
+        from unittest import mock
+
+        prikaz = self._prikaz_geometrie()
+        volby = _volby_prikazu(dry_run=True)
+        with mock.patch.object(prikaz, "_chranene_piany", wraps=prikaz._chranene_piany) as dotaz:
+            prikaz._predbezna_kontrola(volby)
+            posunute = prikaz._posun_piany(volby)
+        self.assertEqual(dotaz.call_count, 1)
+        self.assertIn(self.d.pian.pk, posunute)
+
+    def _pian_do_okresu_bez_hranice(self):
+        """
+        Přesune testovací PIAN do nově založeného okresu bez hranice.
+
+        Okres PIANu se určuje z katastru, ve kterém leží jeho reprezentativní bod.
+
+        :return: Nevrací hodnotu.
+        """
+        from django.contrib.gis.geos import MultiPolygon, Point
+        from heslar.models import RuianKatastr, RuianOkres
+        from pian.models import Pian
+
+        okres = RuianOkres.objects.bulk_create(
+            [RuianOkres(nazev="Bez hranice", nazev_en="No boundary", kraj=self.d.okres.kraj, spz="ZZ", kod=3)]
+        )[0]
+        RuianKatastr.objects.bulk_create(
+            [
+                RuianKatastr(
+                    okres=okres,
+                    nazev="Katastr okresu bez hranice",
+                    kod=90,
+                    hranice=MultiPolygon(_ctverec(X0 + 5000, Y0, 1000)),
+                    definicni_bod=Point(X0 + 5500, Y0 + 500, srid=5514),
+                )
+            ]
+        )
+        Pian.objects.filter(pk=self.d.pian.pk).update(geom_sjtsk=Point(X0 + 5500, Y0 + 500, srid=5514))
+
+    def test_predbezna_kontrola_zastavi_beh_pred_zapisem(self):
+        """
+        PIAN v okrese bez hranice zastaví běh dřív, než se cokoli zapíše.
+
+        Hláška odkazuje na plný sync katastrů a výpis obsahuje identifikátor PIANu.
+        """
+        from unittest import mock
+
+        from django.core.management import CommandError
+        from django.test import override_settings
+        from pian.models import Pian
+        from uzivatel.models import User
+
+        self._pian_do_okresu_bez_hranice()
+        pian_pred = Pian.objects.get(pk=self.d.pian.pk).geom_sjtsk.wkt
+        email_pred = self.d.bezny.email
+        prikaz = _OmezenyPrikaz.vytvor({User: [self.d.bezny.pk]})
+
+        # Testovací databáze je kopie produkce, takže výpis obsahuje i skutečné PIANy
+        # a bez zvětšení limitu by se ten testovací ztratil ve zkrácené části.
+        with (
+            override_settings(TEST_ENV=True),
+            mock.patch("core.management.commands.anonymizace_dat.MAX_VYPSANYCH_IDENTU", 100000),
+            self.assertRaisesRegex(CommandError, "aktualizuj_ruian_shp"),
+        ):
+            prikaz.handle(**_volby_prikazu())
+
+        self.assertIn(self.d.pian.ident_cely, prikaz.stdout.getvalue())
+        self.assertEqual(Pian.objects.get(pk=self.d.pian.pk).geom_sjtsk.wkt, pian_pred)
+        self.assertEqual(User.objects.get(pk=self.d.bezny.pk).email, email_pred)
+
+    def test_predbezna_kontrola_v_dry_runu_jen_vypise(self):
+        """V dry-runu kontrola nález vypíše, ale běh nezastaví."""
+        from unittest import mock
+
+        self._pian_do_okresu_bez_hranice()
+        prikaz = self._prikaz_geometrie()
+
+        with mock.patch("core.management.commands.anonymizace_dat.MAX_VYPSANYCH_IDENTU", 100000):
+            prikaz._predbezna_kontrola(_volby_prikazu(dry_run=True))
+
+        vystup = prikaz.stdout.getvalue()
+        self.assertIn(self.d.pian.ident_cely, vystup)
+        self.assertIn("aktualizuj_ruian_shp", vystup)

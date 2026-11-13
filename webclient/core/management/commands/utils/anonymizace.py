@@ -10,11 +10,20 @@ přímo v ``core/management/commands/``.
 
 Konvence zástupných hodnot navazuje na dřívější ruční anonymizaci testovacího
 serveru, aby anonymizovaná data vypadala stejně jako dosud: textová pole mají
-tvar ``{název_pole}_{pk}``, e-maily leží v doméně ``example.cz``.
+tvar ``{název_pole}_{pk}``. E-maily leží v doméně :data:`ANONYM_DOMENA`.
 """
 
-#: Doména zástupných e-mailových adres. Vyhrazená pro testy, nikdy nedoručí.
-ANONYM_DOMENA = "example.cz"
+#: Doména zástupných e-mailových adres.
+#:
+#: Leží v doméně nejvyšší úrovně ``.invalid``, kterou RFC 2606 vyhrazuje pro
+#: jména, která nesmí existovat – adresa se tedy nedá doručit, ani kdyby
+#: testovací server poštu odesílal. Dřívější ``example.cz`` tuto záruku nedávala:
+#: rezervované jsou jen ``example.com``, ``example.net``, ``example.org``
+#: a doména ``.example``, kdežto ``example.cz`` je běžně registrovatelná.
+#:
+#: Předfiltry idempotence v příkazu přeskakují jen adresy v této doméně, takže
+#: opakovaný běh přepíše i hodnoty z dřívější anonymizace v ``example.cz``.
+ANONYM_DOMENA = "anonymizace.invalid"
 
 #: Zástupná IP adresa přihlášení, rozsah TEST-NET-3 podle RFC 5737.
 ANONYM_IP = "203.0.113.1"
@@ -36,10 +45,11 @@ ANONYM_TELEFON = "+420 222 222 222"
 #: idempotentní.
 NEPOUZITELNE_HESLO = "!"
 
-#: Řetězec v ``User.last_name`` označující umělé účty spojené se správou dat
-#: (typicky organizační účty s názvem instituce v ``first_name``). Podle zadání
-#: se takové účty neanonymizují.
-VYJIMKA_PRIJMENI = "Anonym"
+#: Identifikátor osoby, na kterou jsou napojené umělé účty spojené se správou
+#: dat (organizační účty s názvem instituce v ``first_name``). Takové účty se
+#: podle zadání neanonymizují. Napojení na osobu je stabilnější znak než
+#: řetězec „Anonym“ v příjmení, kterým se výjimka určovala dřív.
+IDENT_ANONYMNI_OSOBY = "OS-007414"
 
 #: Předpony zástupných hodnot, na které se skládá výsledek ``{předpona}{pk}``.
 #:
@@ -51,6 +61,7 @@ PREDPONA_JMENA = "Jméno_"
 PREDPONA_PRIJMENI = "Příjmení_"
 PREDPONA_EMAILU_UZIVATELE = "uzivatel_"
 PREDPONA_EMAILU_NOTIFIKACE = "notifikace_"
+PREDPONA_EMAILU_KRAJE = "kraj_"
 
 #: Předpony zástupných údajů oznamovatele podle pole modelu. Odpovědná osoba
 #: má ``osoba_`` místo ``odpovedna_osoba_`` – tvar je převzatý z dřívější ruční
@@ -94,6 +105,19 @@ CHRANENA_TEXTOVA_POLE = {
         ("poznamka", "poznamka"),
     ),
     "pas.SamostatnyNalez": (("lokalizace", "lokalizace"),),
+}
+
+#: Cesta od modelu z :data:`CHRANENA_TEXTOVA_POLE` k jeho přístupnosti (cizímu
+#: klíči do hesláře přístupností). Texty se zakrývají jen u záznamů s přístupností
+#: vyšší než A. ``None`` znamená, že model má vlastní pravidlo – projekt bere
+#: přístupnost ze snapshotu a neurčenou přístupnost posuzuje jako chráněnou.
+CESTA_K_PRISTUPNOSTI = {
+    "projekt.Projekt": None,
+    "arch_z.ArcheologickyZaznam": "pristupnost",
+    "arch_z.Akce": "archeologicky_zaznam__pristupnost",
+    "lokalita.Lokalita": "archeologicky_zaznam__pristupnost",
+    "adb.Adb": "dokumentacni_jednotka__archeologicky_zaznam__pristupnost",
+    "pas.SamostatnyNalez": "pristupnost",
 }
 
 #: Mapování typů ``*-chranene_udajeType`` z ``amcr.xsd`` na klíče
@@ -175,10 +199,6 @@ def zastupne_prijmeni(pk):
     """
     Vrací zástupné příjmení uživatele.
 
-    Vzor záměrně neobsahuje řetězec :data:`VYJIMKA_PRIJMENI`, aby anonymizovaný
-    účet nespadl do výjimky pro umělé účty (filtr ``last_name__icontains``
-    v příkazu) a druhý běh ho zpracoval znovu.
-
     :param pk: Primární klíč uživatele.
     :return: Řetězec ``Příjmení_{pk}``.
     """
@@ -193,7 +213,7 @@ def zastupny_email_uzivatele(pk):
     zároveň jako ``USERNAME_FIELD``; odvození z ``pk`` to zaručuje.
 
     :param pk: Primární klíč uživatele.
-    :return: Řetězec ``uzivatel_{pk}@example.cz``.
+    :return: Řetězec ``uzivatel_{pk}@anonymizace.invalid``.
     """
     return f"{PREDPONA_EMAILU_UZIVATELE}{pk}@{ANONYM_DOMENA}"
 
@@ -206,7 +226,7 @@ def zastupny_email_oznamovatele(pk):
     na testovacím serveru nezměnily.
 
     :param pk: Primární klíč oznamovatele, tedy ``projekt_id``.
-    :return: Řetězec ``{pk}@example.cz``.
+    :return: Řetězec ``{pk}@anonymizace.invalid``.
     """
     return f"{pk}@{ANONYM_DOMENA}"
 
@@ -222,12 +242,25 @@ def zastupny_udaj_oznamovatele(nazev_pole, pk):
     return f"{PREDPONY_OZNAMOVATELE[nazev_pole]}{pk}"
 
 
+def zastupny_email_kraje(kod):
+    """
+    Vrací zástupnou e-mailovou adresu kraje.
+
+    Kraje mají e-mail kvůli odesílání upozornění; na testovacím serveru by
+    skutečná adresa mohla dostat poštu.
+
+    :param kod: Kód kraje z RÚIAN.
+    :return: Řetězec ``kraj_{kod}@anonymizace.invalid``.
+    """
+    return f"{PREDPONA_EMAILU_KRAJE}{kod}@{ANONYM_DOMENA}"
+
+
 def zastupny_email_notifikace(pk):
     """
     Vrací zástupnou adresu příjemce v logu notifikací.
 
     :param pk: Primární klíč záznamu ``NotificationsLog``.
-    :return: Řetězec ``notifikace_{pk}@example.cz``.
+    :return: Řetězec ``notifikace_{pk}@anonymizace.invalid``.
     """
     return f"{PREDPONA_EMAILU_NOTIFIKACE}{pk}@{ANONYM_DOMENA}"
 
