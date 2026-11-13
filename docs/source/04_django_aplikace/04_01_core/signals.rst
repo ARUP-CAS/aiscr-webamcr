@@ -83,6 +83,15 @@ CORE
    * - Model
      - Typ signálu
      - Název funkce
+   * - ``CustomAdminSettings``
+     - ``pre_save``
+     - ``news_feed_settings_capture_previous_identity``
+   * - ``CustomAdminSettings``
+     - ``post_save``
+     - ``news_feed_settings_saved``
+   * - ``CustomAdminSettings``
+     - ``post_delete``
+     - ``news_feed_settings_deleted``
    * - ``Soubor``
      - ``pre_save``
      - ``soubor_get_rozsah``

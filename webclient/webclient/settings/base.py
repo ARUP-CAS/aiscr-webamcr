@@ -1,6 +1,5 @@
 import json
 import os
-from datetime import timedelta
 from pathlib import Path
 
 from core.message_constants import AUTOLOGOUT_AFTER_LOGOUT
@@ -677,14 +676,6 @@ SKIP_SELENIUM_TESTS = False
 
 CELERY_BROKER_URL = f"redis://{get_redis_pass()}{REDIS_HOST}:{REDIS_PORT}"
 
-# Nastavení novinkového kanálu
-NEWS_FEED_BASE_URL = "https://arup-cas.github.io/aiscr-news/feed/amcr-info"
-NEWS_FEED_LANGUAGES = ["cs", "en"]  # Supported languages
-NEWS_FEED_CACHE_TTL = 3600  # 1 hour (default)
-NEWS_FEED_CACHE_KEY_PREFIX = "news_feed"
-NEWS_FEED_TIMEOUT = 10
-NEWS_FEED_WARNING_RATE_LIMIT = 3600  # seconds; same error per item logged at most once per this window
-
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # Liveness ping workeru (viz cron.tasks.celery_worker_liveness_ping a scripts/run-healthcheck_celery.sh).
@@ -698,10 +689,6 @@ CELERY_BEAT_SCHEDULE = {
         # (neobnoví klíč), ve frontě ho ale healthcheck dál vidí jako čekající práci.
         # DatabaseScheduler (ModelEntry._unpack_options) bere jen klíč expire_seconds, expires zahodí.
         "options": {"expire_seconds": 120},
-    },
-    "load-news-feed": {
-        "task": "cron.tasks.load_news_feed",
-        "schedule": timedelta(seconds=(NEWS_FEED_CACHE_TTL - 60)),  # 59 minutes (cache_ttl - 60 = 3600 - 60)
     },
 }
 

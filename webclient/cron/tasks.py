@@ -56,7 +56,8 @@ from core.import_data_mappers import (
     UzivatelOpravneniMapper,
 )
 from core.models import AntivirusCheckResult, Soubor, SouborVazby
-from core.news_feed import _parse_feed, get_news_feed_cache_keys
+from core.news_feed import _parse_feed
+from core.news_feed_config import fetch_configuration_fingerprint, get_news_feed_cache_keys, get_news_feed_config
 from core.repository_connector import (
     DryRunFedoraTransaction,
     FedoraDeletionOnlyTransaction,
@@ -3970,33 +3971,42 @@ def load_news_feed(self, languages=None):
     """
     Načte a uloží novinkový kanál do cache.
 
-    Tato úloha je volána při startu aplikace a periodicky v intervalu
-    definovaném v settings (cache_ttl - 60 sekund).
+    Tato úloha je volána při startu aplikace, po změně konfigurace a periodicky
+    v intervalu řízeném databázovým nastavením (cache_ttl - 60 sekund).
 
     Při chybě se opakují pouze jazyky, které se nepodařilo načíst.
 
     :param languages: Seznam jazykových kódů ke zpracování; pokud není zadán,
         použije se seznam z nastavení aplikace.
     """
-    cache_ttl = settings.NEWS_FEED_CACHE_TTL
-    base_url = settings.NEWS_FEED_BASE_URL
-    languages = settings.NEWS_FEED_LANGUAGES if languages is None else languages
+    config = get_news_feed_config(force_refresh=True)
+    cache_ttl = config.cache_ttl
+    base_url = config.base_url
+    languages = (
+        config.languages if languages is None else [language for language in languages if language in config.languages]
+    )
     failed_languages = []
 
     for language in languages:
         feed_url = f"{base_url}/{language}.json"
         try:
-            response = requests.get(feed_url, timeout=settings.NEWS_FEED_TIMEOUT)
+            response = requests.get(feed_url, timeout=config.timeout)
             response.raise_for_status()
             with override(language):
                 feed = _parse_feed(response.json())
-            cache_key, stale_key = get_news_feed_cache_keys(language)
+            current_config = get_news_feed_config(force_refresh=True)
+            if fetch_configuration_fingerprint(current_config) != fetch_configuration_fingerprint(config):
+                logger.info(
+                    "Discarding news feed result for %s because its configuration changed during fetch.", language
+                )
+                continue
+            cache_key, last_good_key = get_news_feed_cache_keys(language, config)
             cache.set(cache_key, feed, cache_ttl)
 
             if feed:
-                cache.set(stale_key, feed, None)
+                cache.set(last_good_key, feed, None)
             else:
-                logger.info("News feed for %s is valid but empty; preserving stale copy.", language)
+                logger.info("News feed for %s is valid but empty; preserving last-good copy.", language)
 
             logger.info("Successfully loaded news feed for %s", language)
         except Exception:
@@ -4026,6 +4036,14 @@ def run_news_feed_warmup():
     Tato funkce je volána z entrypoint.sh a entrypoint.dev.sh.
     """
     logger.info("Starting background news feed warm-up")
+
+    # Repair a schedule left stale by a transient post-commit database failure.
+    try:
+        from core.news_feed_scheduler import reconcile_news_feed_schedule
+
+        reconcile_news_feed_schedule()
+    except Exception:
+        logger.exception("Could not reconcile the news-feed schedule during startup.")
 
     # Spustit úlohu jako nezávislý Celery worker proces
     warmup_command = 'python manage.py shell -c "from cron.tasks import load_news_feed; load_news_feed()"'
