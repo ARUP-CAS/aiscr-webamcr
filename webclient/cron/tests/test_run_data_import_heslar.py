@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from core.constants import ROLE_BADATEL_ID
 from core.forms import ImportDataAdminForm
 from core.tests.fake_redis import FakeRedis
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from cron import tasks as cron_tasks
 from django.contrib.auth.models import Group
 from django.test import TestCase
@@ -25,6 +26,7 @@ class RunDataImportHeslarTest(TestCase):
     """Testy ``run_data_import`` pro mapper ``HeslarMapper`` s mocknutým Redis i Fedora repozitářem."""
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Připraví minimální fixtures — ``HeslarNazev``, organizaci a uživatele běžícího import."""
         Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
@@ -131,12 +133,15 @@ class RunDataImportHeslarTest(TestCase):
         ), patch(
             "cron.tasks.FedoraTransaction"
         ) as fedora_transaction_mock, patch(
+            "heslar.signals.FedoraTransaction"
+        ) as signals_fedora_transaction_mock, patch(
             "cron.tasks.check_import_report_directory",
             return_value=("/tmp/fake-import-dir", "/tmp/fake-import-dir/reports", None),
         ), patch(
             "cron.tasks.save_import_report_to_disk", return_value="/tmp/fake-import-dir/reports/report.xlsx"
         ):
             fedora_transaction_mock.return_value = MagicMock(uid="test-fedora-uid")
+            signals_fedora_transaction_mock.return_value = MagicMock(uid="test-signals-fedora-uid")
 
             cron_tasks.run_data_import(JOB_ID, self.user.id, LOCK_TOKEN)
 
@@ -230,6 +235,7 @@ class RunDataImportHeslarTest(TestCase):
             cron_tasks.run_data_import(JOB_ID, self.user.id, LOCK_TOKEN)
         return save_metadata_calls
 
+    @mock_fedora_for_fixture()
     def _create_existing_heslar(self) -> Heslar:
         """Vytvoří v DB heslo, na které se navazují testy update/delete."""
         return Heslar.objects.create(

@@ -9,6 +9,7 @@ from core.import_data_mappers import (
     ImportDataIntegrityError,
     LookupImportField,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from django.test import TestCase
 from heslar.models import Heslar, HeslarHierarchie, HeslarNazev
 
@@ -26,6 +27,7 @@ VALID_ROW = {
 class HeslarHierarchieMapperInsertValidTest(TestCase):
     """Testy pro HeslarHierarchieMapper — platný dataset (INSERT)."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data HeslarNazev a Heslar pro platný INSERT dataset."""
         self.heslar_nazev = HeslarNazev.objects.create(nazev="Druh hierarchie")
@@ -149,6 +151,7 @@ class HeslarHierarchieMapperInvalidStructureTest(TestCase):
 class HeslarHierarchieMapperCreateRecordsInsertTest(TestCase):
     """Testy pro HeslarHierarchieMapper.create_records — akce INSERT."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data HeslarNazev a Heslar pro testy create_records."""
         self.heslar_nazev = HeslarNazev.objects.create(nazev="Druh hierarchie")
@@ -196,6 +199,7 @@ class HeslarHierarchieMapperCreateRecordsInsertTest(TestCase):
 class HeslarHierarchieMapperImportValidationTest(TestCase):
     """Testy pro HeslarHierarchieMapper.import_validation."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data HeslarNazev a Heslar pro testy import_validation."""
         self.heslar_nazev = HeslarNazev.objects.create(nazev="Druh hierarchie")
@@ -293,6 +297,7 @@ class HeslarHierarchieMapperValidateBatchOrderingTest(TestCase):
     """Testy pro ``HeslarHierarchieMapper.validate_batch_ordering``."""
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Vytvoří Heslar záznamy pro testy."""
         nazev = HeslarNazev.objects.create(nazev="Test nazev hierarchie")

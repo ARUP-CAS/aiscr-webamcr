@@ -12,6 +12,7 @@ from unittest import mock
 from core.constants import NAHRANI_DISTRIBUCE, ROLE_BADATEL_ID, SMAZANI_DISTRIBUCE, UPDATE_DISTRIBUCE
 from core.distribution_names import ORIGINAL_DISTRIBUTION_NAME
 from core.models import Soubor
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from core.tests.test_mappers.fixtures import create_dokument_fixture, create_soubor_fixture
 from django.conf import settings
 from django.contrib.auth.models import Group
@@ -29,6 +30,7 @@ BASE_TIME = timezone.make_aware(datetime.datetime(2025, 1, 1, 12, 0, 0))
 class SouborAvailableDistributionsTest(TestCase):
     """Testy pro ``Soubor.available_distributions``."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Připraví dokument se souborem, k jehož historii testy zapisují distribuce."""
         Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
@@ -133,6 +135,7 @@ class SouborAvailableDistributionsTest(TestCase):
 class SouborDistributionHistoryPrefetchTest(TestCase):
     """Testy pro ``Soubor.distribution_history_prefetch`` — hromadné načtení historie distribucí."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Připraví dokument se třemi soubory, z nichž každý má nahranou distribuci."""
         Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
@@ -216,6 +219,7 @@ class SouborDistributionHistoryPrefetchTest(TestCase):
 class SouborZaznamenejDistribuceTest(TestCase):
     """Testy pro ``Soubor.zaznamenej_distribuce`` — doplnění historie náhledů po uložení souboru."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Připraví dokument se souborem a administrátora, kterému se historie náhledů připisuje."""
         Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
@@ -315,6 +319,7 @@ class SouborZaznamenejDistribuceTest(TestCase):
 class BackfillThumbHistoryCommandTest(TestCase):
     """Testy pro management příkaz ``backfill_thumb_history``."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Připraví admin uživatele a soubor s náhledy bez historie."""
         Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})

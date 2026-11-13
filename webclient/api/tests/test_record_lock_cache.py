@@ -30,6 +30,8 @@ Pokrytí
 """
 
 import multiprocessing
+import os
+import queue
 import threading
 import time
 
@@ -61,8 +63,18 @@ def _process_worker(ident, results_q):
         django.setup()
     from api.views import PasApiBaseView as _PV
 
-    acquired, _ttl = _PV._acquire_record_lock(ident)
-    results_q.put(acquired)
+    try:
+        acquired, _ttl = _PV._acquire_record_lock(ident)
+        results_q.put(acquired)
+    except Exception as error:
+        # Chybu vrátí rodiči jako text, aby se v asserci neztratila.
+        results_q.put(repr(error))
+    finally:
+        # Výsledek se nejdřív vyprázdní do roury, pak proces skončí bez atexit handlerů
+        # a finalizerů; ty by po ``fork`` mohly uváznout na zámku zděděném z jiného vlákna.
+        results_q.close()
+        results_q.join_thread()
+        os._exit(0)
 
 
 class RecordLockCacheTests(TransactionTestCase):
@@ -174,16 +186,30 @@ class RecordLockCacheTests(TransactionTestCase):
         n_procs = 8
         ctx = multiprocessing.get_context("fork")
         results_q = ctx.Queue()
-        procs = [ctx.Process(target=_process_worker, args=(ident, results_q)) for _ in range(n_procs)]
+        procs = [ctx.Process(target=_process_worker, args=(ident, results_q), daemon=True) for _ in range(n_procs)]
+        # Poraženým stačí ~5 s (10 pokusů po 0,5 s); limit chrání CI před nekonečným čekáním.
+        deadline = time.monotonic() + 60
+        winners_results = []
         try:
             for p in procs:
                 p.start()
+            for _ in procs:
+                try:
+                    winners_results.append(results_q.get(timeout=max(0.1, deadline - time.monotonic())))
+                except queue.Empty:
+                    break
             for p in procs:
-                p.join(timeout=30)
-            winners_results = []
-            while not results_q.empty():
-                winners_results.append(results_q.get())
-            winners = sum(1 for r in winners_results if r)
+                p.join(timeout=max(0.1, deadline - time.monotonic()))
+            self.assertEqual(
+                len(winners_results), n_procs, f"Výsledek vrátilo jen {len(winners_results)}/{n_procs} procesů."
+            )
+            winners = sum(1 for r in winners_results if r is True)
             self.assertEqual(winners, 1, f"winners={winners}/{n_procs}; all_results={winners_results}")
         finally:
+            for p in procs:
+                if p.is_alive():
+                    p.kill()
+                    p.join(timeout=5)
+            results_q.close()
+            results_q.cancel_join_thread()
             self._clear(ident)

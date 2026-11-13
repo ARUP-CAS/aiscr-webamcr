@@ -12,6 +12,7 @@ from arch_z.models import ArcheologickyZaznam
 from core.constants import AZ_STAV_ZAPSANY, ROLE_BADATEL_ID
 from core.forms import ImportDataAdminForm
 from core.tests.fake_redis import FakeRedis
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from cron import tasks as cron_tasks
 from dj.models import DokumentacniJednotka
 from django.contrib.auth.models import Group
@@ -41,6 +42,7 @@ class RunDataImportDokumentacniJednotkaTest(TestCase):
     """Testy ``run_data_import`` pro ``DokumentacniJednotkaMapper``."""
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Připraví sdílená fixture data pro importní testy."""
         Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
