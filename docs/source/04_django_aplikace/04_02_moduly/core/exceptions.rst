@@ -127,6 +127,21 @@ Třídy
       :param message: Textová zpráva popisující důvod výjimky.
 
 
+.. py:class:: GpsDataRemovalError
+
+   Fotografii nelze bezpečně zbavit GPS metadat a nesmí se archivovat.
+
+
+.. py:class:: GpsImagePixelLimitError
+
+   Obrázek nebo TIFF dlaždice překračuje limit pixelů pro odstranění GPS.
+
+
+.. py:class:: GpsImageMemoryError
+
+   Při odstraňování GPS metadat došla paměť; původní soubor se nesmí archivovat.
+
+
 .. py:class:: StateChangedError
 
    Implementuje komponentu ``StateChangedError`` v rámci aplikace.

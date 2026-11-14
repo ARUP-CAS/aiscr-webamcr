@@ -322,6 +322,10 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
      - ``str``
      - 
      - core.management.commands.generate_thumbs.Command.add_arguments.csv_help
+   * - ``--force``
+     - 
+     - 
+     - core.management.commands.generate_thumbs.Command.add_arguments.force_help
 
 
 ``import_permissions``

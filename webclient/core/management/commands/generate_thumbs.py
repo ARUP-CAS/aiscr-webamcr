@@ -23,6 +23,10 @@ class Command(BaseCommand):
     - --range: Rozsah primárních klíčů ve formátu "start end"
     - --csv: Cesta k CSV souboru s listem cest v sloupci "record" (repository path)
 
+    Volitelně:
+    - --force: Přegeneruje náhledy i u souborů, které je už mají. Slouží k opravě náhledů,
+      které vznikly z ikony typu místo z obrázku (např. velké fotografie před issue #4229).
+
     Poznámka:
     - Musí být zadán právě jeden z parametrů --pks, --range, nebo --csv
     - Náhledy jsou generovány pouze pro obrazové formáty podporované systémem
@@ -33,6 +37,7 @@ class Command(BaseCommand):
     python manage.py generate_thumbs --range 100 200
     python manage.py generate_thumbs --range 1 1000
     python manage.py generate_thumbs --csv /tmp/missing_thumbs.csv
+    python manage.py generate_thumbs --pks 1 2 3 --force
     """
 
     help = _("core.management.commands.generate_thumbs.Command.help")
@@ -61,18 +66,24 @@ class Command(BaseCommand):
             type=str,
             help=_("core.management.commands.generate_thumbs.Command.add_arguments.csv_help"),
         )
+        parser.add_argument(
+            "--force",
+            action="store_true",
+            help=_("core.management.commands.generate_thumbs.Command.add_arguments.force_help"),
+        )
 
     def handle(self, *args, **options):
         """
         Vygeneruje náhledy (thumbnaily) pro specifikované AMČR soubory v Fedora repozitáři.
 
         :param args: Poziční argumenty příkazu (nepoužívá se).
-        :param options: Pojmenované argumenty (pks, range, csv) ze příkazového řádku.
+        :param options: Pojmenované argumenty (pks, range, csv, force) ze příkazového řádku.
         :raises CommandError: Pokud není zadán právě jeden z argumentů (pks, range, csv).
         """
         pks = options.get("pks")
         pk_range = options.get("range")
         csv_file = options.get("csv")
+        force = options.get("force", False)
 
         # Validate arguments
         provided_options = sum([pks is not None, pk_range is not None, csv_file is not None])
@@ -81,7 +92,7 @@ class Command(BaseCommand):
 
         logger.debug(
             "core.management.commands.generate_thumbs.start",
-            extra={"list": pks, "range": pk_range, "file": csv_file},
+            extra={"list": pks, "range": pk_range, "file": csv_file, "force": force},
         )
 
         from core.models import Soubor
@@ -128,8 +139,8 @@ class Command(BaseCommand):
                 related_record = soubor.vazba.navazany_objekt
                 conn = FedoraRepositoryConnector(related_record, None)
 
-                # Ověří existenci náhledů.
-                both_thumbnails_exist = (
+                # With --force existing thumbnails are regenerated too, so their existence is not checked.
+                both_thumbnails_exist = not force and (
                     conn.get_binary_file(soubor.repository_uuid, thumb_small=True) is not None
                     and conn.get_binary_file(soubor.repository_uuid, thumb_large=True) is not None
                 )

@@ -111,10 +111,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 2.18.0
      - BSD License
      - https://babel.pocoo.org/
-   * - backports.zstd
-     - 1.8.0
-     - PSF-2.0
-     - https://github.com/rogdham/backports.zstd
    * - beautifulsoup4
      - 4.15.0
      - MIT License
@@ -395,10 +391,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 9.0.42
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
-   * - piexif
-     - 1.1.3
-     - MIT License
-     - https://github.com/hMatoba/Piexif
    * - pillow
      - 13.0.0
      - MIT-CMU
