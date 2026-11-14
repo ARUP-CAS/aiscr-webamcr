@@ -1,0 +1,173 @@
+{
+  "behaviour": {
+    "controlled": 18,
+    "coverage_items": 747,
+    "covered_by_inputs": 727,
+    "deferred_batches": [
+      "N07x-deferred-known-defects",
+      "V17-branches-update",
+      "V18-branches-update",
+      "V19-branches-update"
+    ],
+    "deferred_coverage": [
+      "historie.branch.cooperation-owner",
+      "historie.branch.file-owner",
+      "historie.branch.user-owner",
+      "historie.field.vazba.missing-lookup",
+      "komponenty.field.vazba.missing-lookup",
+      "soubory.field.vazba.missing-lookup"
+    ],
+    "procedures": 2,
+    "uploads": 80
+  },
+  "binary_sources": {
+    "bytes": 25346682,
+    "files": 40000,
+    "sha256": "48be57b8dfd5aef902f0e0fbd7a20d4e9f9738f59fd30214755df46accda0829"
+  },
+  "delivery": "generated/delivery-2026-11-14-r4",
+  "deployed_revision": {
+    "last_recorded_test_deployment": {
+      "commit": "3d4a4dd15e83c769eaa78235c985b326ae838a24",
+      "deployed": "2026-11-06",
+      "tag": "v2.0.0-alpha.2"
+    },
+    "note": "Confirm at session start and start runs with a deployment-parity record",
+    "parity": "different: webclient/core/repository_connector.py (#4493 not deployed); PO catalogs equal in all used entries",
+    "state": "unverified"
+  },
+  "history": {
+    "2026-11-09": {
+      "evidence": "52 focused local tests, source-only Git-candidate CLI/offline build and regression execution, full-size ZIP contents, 40000 binary source entries checked against SHA256/SHA512 manifests, isolated portable controls and 85-card blocked handoff rehearsal",
+      "portable_rehearsal": {
+        "cards": 85,
+        "checksum_file": "exports/imports-391-3527-2026-11-09-repaired-final.zip.sha256",
+        "export_files": 672,
+        "fresh_python_isolated": true,
+        "isolated_regression_tests": 11,
+        "live_complete": false,
+        "mode": "offline-rehearsal",
+        "next_candidate": "B01-foundations",
+        "open_spec_all": "passed",
+        "open_spec_strict": "passed",
+        "source_only_git_snapshot": "passed",
+        "ui": "unobserved"
+      },
+      "verification_remediation": {
+        "git_visible_helpers": 25,
+        "live_outcomes": "unexecuted",
+        "load_provenance_controls": "missing/mismatched/stale/altered evidence, simulation, missing events and selected input revisions",
+        "original_defects_reproduced_before_fix": true,
+        "resolved": [
+          "W1",
+          "W2",
+          "W3"
+        ],
+        "retention_controls": "real XLSX validation/terminal/later-task originals, snapshots and stored-byte tampering"
+      }
+    }
+  },
+  "known_defects": [
+    {
+      "deferred_batches": [
+        "N07x-deferred-known-defects",
+        "V17-branches-update",
+        "V18-branches-update",
+        "V19-branches-update"
+      ],
+      "evidence_kind": "source-confirmed",
+      "id": "vazba-lookup-fallback"
+    }
+  ],
+  "lint": {
+    "black": "passed (idempotent)",
+    "flake8": "passed",
+    "isort": "passed"
+  },
+  "live_imports_executed": false,
+  "live_outcomes": "unexecuted",
+  "load_distributions": {
+    "distributions": 20000,
+    "expected_parent_groups": 5000,
+    "files": 10000,
+    "measured_rows": 40000,
+    "paradata": 20000,
+    "parent_records": 5000
+  },
+  "load_relational": {
+    "combined": {
+      "batch": "L01-relational-50000",
+      "blocked_by": "vazba-lookup-fallback",
+      "measured_rows": 50000,
+      "state": "blocked"
+    },
+    "substitute": {
+      "imports": [
+        {
+          "batch": "L01a-relational-parents-30000",
+          "documentation_units": 10000,
+          "fieldwork_events": 10000,
+          "measured_rows": 30000,
+          "projects": 10000
+        },
+        {
+          "batch": "L01b-relational-components-20000",
+          "components": 10000,
+          "finds": 10000,
+          "measured_rows": 20000
+        }
+      ],
+      "label": "two-import substitute"
+    }
+  },
+  "mode": "offline-preparation",
+  "portable_export": {
+    "bundle": "exports/imports-391-3527-2026-11-14-r4.zip",
+    "checksum_file": "exports/imports-391-3527-2026-11-14-r4.zip.sha256"
+  },
+  "previous_bundle_sha256": "cfe9e2fa5e207e44ad59927c252169c7352fa21bc2823e8e9691ebc2701f6c6c",
+  "remediation_2026_11_14": {
+    "changed_inputs_vs_r3": {
+      "behaviour": [
+        "N07-field-boundaries (3 rows moved)",
+        "N07x-deferred-known-defects (added)"
+      ],
+      "load-distributions": [],
+      "load-relational": [
+        "L01a-relational-parents-30000 (added)",
+        "L01b-relational-components-20000 (added)"
+      ]
+    },
+    "relocated_to": ".agents/testing/imports-391-3527/",
+    "tasks": [
+      "9.1",
+      "9.2",
+      "9.3",
+      "9.4",
+      "9.5",
+      "9.6",
+      "9.7"
+    ]
+  },
+  "removed_superseded": {
+    "date": "2026-11-14",
+    "decision": "operator",
+    "items": [
+      "generated/behaviour",
+      "generated/load",
+      "generated/delivery-2026-11-08-r1",
+      "generated/delivery-2026-11-08-r2",
+      "generated/delivery-2026-11-09-r3",
+      "generated/portable-rehearsal-2026-11-09",
+      "generated/verification-repaired-export",
+      "runs/behaviour/offline-delivery-rehearsal-2026-11-09 (simulation)",
+      "exports/imports-391-3527-2026-11-09*.zip and .sha256"
+    ]
+  },
+  "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
+  "source_hash_mode": "sha256-lf-text-v1",
+  "unit_tests": {
+    "failed": 0,
+    "passed": 69
+  }
+}

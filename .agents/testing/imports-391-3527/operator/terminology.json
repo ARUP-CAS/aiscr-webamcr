@@ -1,0 +1,109 @@
+{
+  "labels": {
+    "adp": {
+      "cs": "Archeologický dokumentační bod",
+      "en": "Archaeological documentation point",
+      "msgid": "vypis.adb.adb.section_name"
+    },
+    "announcer": {
+      "cs": "Oznamovatel",
+      "en": "Announcer",
+      "msgid": "oznameni.forms.oznamovatelForm.oznamovatel.label"
+    },
+    "cancel": {
+      "cs": "Zrušit import",
+      "en": "Cancel import",
+      "msgid": "core.templates.admin.import_data.cancel_release_lock"
+    },
+    "delete": {
+      "cs": "delete (odstranění)",
+      "en": "delete",
+      "msgid": "core.forms.ImportDataAdminForm.delete"
+    },
+    "download": {
+      "cs": "Stáhnout log importu",
+      "en": "Download import log",
+      "msgid": "core.templates.admin.import_data.download_report"
+    },
+    "elevation": {
+      "cs": "Výškové body",
+      "en": "Elevation points",
+      "msgid": "vypis.adb.vb.label"
+    },
+    "fieldwork": {
+      "cs": "Akce",
+      "en": "Fieldwork events",
+      "msgid": "arch_z.views.AkceListView.toolbar_name.text"
+    },
+    "individual_find": {
+      "cs": "Samostatný nález",
+      "en": "Individual find",
+      "msgid": "historie.models.historieVazby.nalez"
+    },
+    "insert": {
+      "cs": "insert (nové záznamy)",
+      "en": "insert (new records)",
+      "msgid": "core.forms.ImportDataAdminForm.insert"
+    },
+    "operation": {
+      "cs": "Operace",
+      "en": "Operation",
+      "msgid": "core.forms.ImportDataAdminForm.action.label"
+    },
+    "reports": {
+      "cs": "Reporty hromadného importu",
+      "en": "Bulk import reports",
+      "msgid": "core.templates.admin.import_reports.heading"
+    },
+    "representative": {
+      "cs": "Pověřená osoba",
+      "en": "Authorised representative",
+      "msgid": "oznameni.forms.oznamovatelForm.odpovednaOsoba.label"
+    },
+    "reset": {
+      "cs": "Resetovat import",
+      "en": "Reset import",
+      "msgid": "core.templates.admin.import_data.reset_import"
+    },
+    "saved": {
+      "cs": "Report uložen",
+      "en": "Report saved",
+      "msgid": "core.templates.admin.import_data.report_saved_label"
+    },
+    "site": {
+      "cs": "Lokality",
+      "en": "Sites",
+      "msgid": "templates.baseLogedIn.sidebar.lokality"
+    },
+    "spatial_unit": {
+      "cs": "PIAN",
+      "en": "Spatial unit",
+      "msgid": "mapa.pian"
+    },
+    "start": {
+      "cs": "Zahájit import",
+      "en": "Start importing",
+      "msgid": "core.templates.admin.import_data.start_import"
+    },
+    "stop": {
+      "cs": "Zastavit úlohu",
+      "en": "Stop task",
+      "msgid": "core.templates.admin.import_data.stop_request"
+    },
+    "unidentified": {
+      "cs": "Neidentifikovaná akce",
+      "en": "Unidentified fieldwork",
+      "msgid": "dokument.filters.dokumentFilter.existNeidentAkce.label"
+    },
+    "update": {
+      "cs": "update (aktualizace)",
+      "en": "update",
+      "msgid": "core.forms.ImportDataAdminForm.update"
+    }
+  },
+  "schema_version": 1,
+  "source_hashes": {
+    "cs": "6f417460531fec566a9a3fdb367cd372fc7e20b1e868113fe5d9c8471f8f7b45",
+    "en": "716734191ba4ae49b54db4d056932b241dde4d06abd19a2a2e38ecd74ece6b98"
+  }
+}

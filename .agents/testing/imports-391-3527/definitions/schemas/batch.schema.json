@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["id", "suite", "operation", "coverage_ids", "input_sha256", "rows", "prerequisites"],
+  "properties": {
+    "id": {"type": "string"},
+    "suite": {"enum": ["behaviour", "load"]},
+    "operation": {"enum": ["insert", "update", "delete"]},
+    "coverage_ids": {"type": "array", "items": {"type": "string"}},
+    "rows": {"type": "integer", "minimum": 0},
+    "input_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "prerequisites": {"type": "array"}
+  }
+}
