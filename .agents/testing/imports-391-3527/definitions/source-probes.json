@@ -1,0 +1,10 @@
+{
+  "case": "ownership lookup fallback for a record not yet persisted",
+  "hosted_status": "unverified",
+  "line": 1381,
+  "mode": "isolated-source-probe",
+  "outcome": "AttributeError: 'types.SimpleNamespace' object has no attribute 'records'",
+  "scope": "Exact extracted helper, stub resolver returns no persisted parent; no Django startup or DB/Fedora access",
+  "source": "webclient/core/import_data_mappers.py",
+  "source_sha256": "67c673f36b56da1bdcb711262a0c92b65a40d34acf5c7ca8228faef04847a2f7"
+}

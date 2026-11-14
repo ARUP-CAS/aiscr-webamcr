@@ -1,0 +1,201 @@
+{
+  "defects": [
+    {
+      "classes": [
+        "komponenty",
+        "soubory",
+        "historie"
+      ],
+      "conditions": {
+        "document-part-missing": "A document-part owner whose document exists but whose part does not: DokumentCast.objects.get raises an uncaught DoesNotExist in the same method.",
+        "no-identifier-pattern": "get_record_from_ident has no pattern for the value (cooperation and file owners referenced by numeric ID, or a nonexistent reference); the intended ImportDataMissingReferencedValueError is never raised.",
+        "owner-lacks-read-attribute": "The resolved owner model has no attribute named read_field_name (User exposes history_vazba, not historie).",
+        "owner-not-persisted": "The owner is created in the same import or by a batch that is not guaranteed to run earlier."
+      },
+      "defects": [
+        "The fallback for an owner not returned by get_record_from_ident iterates self.records; the field exposes only the class method get_records(), so AttributeError is raised (line 1417).",
+        "Even after that is corrected, the fallback assigns filtered_records[0].historie regardless of read_field_name, so component (komponenty) and file (soubory) owners would receive the wrong object (line 1421)."
+      ],
+      "effect": "run_data_import catches only ImportData* errors per row (webclient/cron/tasks.py:1470); the exception reaches the outer except Exception (webclient/cron/tasks.py:1519) and the whole validation job fails with core.admin.import_data.error.unexpected_error, concealing every other check in the ZIP.",
+      "evidence": {
+        "isolated_probe": "definitions/source-probes.json",
+        "kind": "source-confirmed",
+        "source_review": "2026-11-14 pre-session review (design decision 10)"
+      },
+      "id": "vazba-lookup-fallback",
+      "lines": {
+        "function": 1381,
+        "hardcoded_historie": 1421,
+        "records_attribute": 1417
+      },
+      "prerequisite": "Developer fix of VazbaLookupImportField._process_value deployed to the test instance; record resolved_in here and rebuild the pack.",
+      "resolved_in": null,
+      "resolver": [
+        {
+          "model": "Projekt",
+          "patterns": [
+            "(C|M|X-C|X-M)-\\d{9}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "ArcheologickyZaznam",
+          "patterns": [
+            "(C|M|X-C|X-M)-\\d{9}\\D{1}\\d{0,2}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "ArcheologickyZaznam",
+          "patterns": [
+            "(C|M|X-C|X-M)-9\\d{6,9}\\D{1}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "ArcheologickyZaznam",
+          "patterns": [
+            "(C|M|X-C|X-M)-(N|L|K)\\d{7,9}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "ExterniZdroj",
+          "patterns": [
+            "(BIB|X-BIB)-\\d{7,9}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "DokumentacniJednotka",
+          "patterns": [
+            "(C|M|X-C|X-M)-\\w{7,10}\\D{1}\\d{0,2}-D\\d{2}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "DokumentacniJednotka",
+          "patterns": [
+            "(C|M|X-C|X-M)-(N|L|K)\\d{7,9}-D\\d{2}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "Komponenta",
+          "patterns": [
+            "(C|M|X-C|X-M)-\\w{7,10}\\D{1}\\d{0,2}-K\\d{3}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "Komponenta",
+          "patterns": [
+            "(C|M|X-C|X-M)-(N|L|K)\\d{7,9}-K\\d{3}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "Adb",
+          "patterns": [
+            "ADB-\\D{4}\\d{2}-\\d{6}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "VyskovyBod",
+          "patterns": [
+            "(X-ADB|ADB)-\\D{4}\\d{2}-\\d{4,6}-V\\d{4}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "Pian",
+          "patterns": [
+            "(P|N)-\\d{4}-\\d{6,9}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "Dokument",
+          "patterns": [
+            "(C|M|X-C|X-M)-(3D)-\\d{9}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "Dokument",
+          "patterns": [
+            "(C|M|X-C|X-M)-(3D)-\\d{9}-(D|K)\\d{3}",
+            "3D-(C|M|X-C|X-M)-\\w{8,10}-\\d{1,9}-(D|K)\\d{3}"
+          ],
+          "strip_suffix": 5
+        },
+        {
+          "model": "Dokument",
+          "patterns": [
+            "(C|M|X-C|X-M)-\\D{2}-\\d{9}",
+            "(C|M|X-C|X-M)-\\w{8,10}-\\D{2}-\\d{1,9}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "Dokument",
+          "patterns": [
+            "(C|M|X-C|X-M)-\\D{2}-\\d{9}-(D|K)\\d{3}",
+            "(C|M|X-C|X-M)-\\w{8,10}-\\D{2}-\\d{1,9}-(D|K)\\d{3}"
+          ],
+          "strip_suffix": 5
+        },
+        {
+          "model": "SamostatnyNalez",
+          "patterns": [
+            "(C|M|X-C|X-M)-\\d{9}-N\\d{5}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "User",
+          "patterns": [
+            "(U)-\\d{6}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "Let",
+          "patterns": [
+            "(?:C-)?(LET)-\\d{5,7}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "Heslar",
+          "patterns": [
+            "(HES)-\\d{6}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "Organizace",
+          "patterns": [
+            "(ORG)-\\d{6}"
+          ],
+          "strip_suffix": 0
+        },
+        {
+          "model": "Osoba",
+          "patterns": [
+            "(OS)-\\d{6}"
+          ],
+          "strip_suffix": 0
+        }
+      ],
+      "source": "webclient/core/import_data_mappers.py",
+      "source_commit": "32d9a23b356259ea2c289d5b084f308f8505cb5e",
+      "source_sha256": "6ba8dc5c9ef1af96fdbd20f0b33a2b40c188820b0db1642aa339cb63694dedfc",
+      "symbol": "VazbaLookupImportField._process_value",
+      "title": "VazbaLookupImportField fallback raises AttributeError and ignores read_field_name"
+    }
+  ],
+  "note": "Source-confirmed importer defects. Reported for the developer, not fixed by this pack. A defect whose source file changes must be re-reviewed: record resolved_in {commit, source_sha256} when fixed, or refresh source_sha256 when still present.",
+  "schema_version": 1
+}
