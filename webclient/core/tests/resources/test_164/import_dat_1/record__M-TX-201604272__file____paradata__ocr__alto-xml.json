@@ -1,0 +1,15 @@
+{
+  "@context": {
+    "prov": "http://www.w3.org/ns/prov#"
+  },
+  "@type": "prov:Activity",
+  "prov:used": "orig",
+  "prov:generated": "ocr/alto-xml",
+  "prov:wasAssociatedWith": {
+    "@type": "prov:SoftwareAgent",
+    "name": "Testovací OCR",
+    "version": "1.0"
+  },
+  "language": "ces",
+  "confidence": 0.97
+}

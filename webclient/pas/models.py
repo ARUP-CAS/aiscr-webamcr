@@ -5,6 +5,8 @@ from core.constants import (
     ARCHIVACE_SN,
     ODESLANI_SN,
     POTVRZENI_SN,
+    ROLE_ADMIN_ID,
+    ROLE_ARCHIVAR_ID,
     SN_ARCHIVOVANY,
     SN_ODESLANY,
     SN_POTVRZENY,
@@ -19,8 +21,9 @@ from core.constants import (
 from core.models import ModelWithMetadata, SouborVazby, prvni_soubor_dle_nazvu
 from django.conf import settings
 from django.contrib.gis.db import models as pgmodels
+from django.core.exceptions import PermissionDenied
 from django.db import models
-from django.db.models import CheckConstraint, Q
+from django.db.models import CheckConstraint, Prefetch, Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
@@ -475,16 +478,48 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     def generate_redis_snapshot(self):
         """
-        Vygeneruje redis snapshot.
+        Vygeneruje Redis snapshot tohoto záznamu (deleguje na :meth:`generate_redis_snapshots`).
 
-        :return: Vrací n-tici.
+        :return: N-tice (klíč, data); data jsou ``None``, pokud záznam v databázi neexistuje.
+        """
+        key = self.redis_snapshot_id
+        return key, SamostatnyNalez.generate_redis_snapshots([self]).get(key)
+
+    @classmethod
+    def generate_redis_snapshots(cls, records):
+        """
+        Vygeneruje Redis snapshoty více záznamů jednou tabulkou ``SamostatnyNalezTable``.
+
+        Související záznamy zobrazované v tabulce se načítají hromadně (``select_related`` /
+        ``prefetch_related``), takže počet dotazů nezávisí na počtu záznamů.
+
+        :param records: Instance modelu, pro které se snapshoty generují.
+        :return: Slovník ``{redis_snapshot_id: data}`` pro záznamy nalezené v databázi.
         """
         from pas.tables import SamostatnyNalezTable
 
-        data = SamostatnyNalez.objects.filter(pk=self.pk)
-        table = SamostatnyNalezTable(data=data)
-        data = RedisConnector.prepare_model_for_redis(table)
-        return self.redis_snapshot_id, data
+        data = (
+            cls.objects.filter(pk__in=[record.pk for record in records])
+            .select_related(
+                "katastr__okres__kraj",
+                "nalezce",
+                "predano_organizace",
+                "obdobi",
+                "druh_nalezu",
+                "specifikace",
+                "pristupnost",
+                "okolnosti",
+            )
+            .defer(
+                "katastr__hranice",
+                "katastr__definicni_bod",
+                "katastr__okres__hranice",
+                "katastr__okres__definicni_bod",
+                "katastr__okres__kraj__hranice",
+                "katastr__okres__kraj__definicni_bod",
+            )
+        )
+        return RedisConnector.prepare_models_for_redis(SamostatnyNalezTable(data=data))
 
     def set_igsn(self):
         """Nastaví igsn. v aplikaci."""
@@ -614,12 +649,36 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         """
         return self.stav == SPOLUPRACE_AKTIVNI
 
+    def muze_potvrdit(self, user):
+        """
+        Zjišťuje, zda smí uživatel potvrdit žádost o spolupráci.
+
+        Potvrdit smí určený vedoucí, uživatel ze stejné organizace jako vedoucí a archivář či administrátor.
+
+        Větev pro stejnou organizaci záměrně nekontroluje roli: omezení na archeologa zajišťuje matice práv
+        (``uzivatelska_prava.csv``, trasy ``spoluprace/aktivace-email/<int:pk>`` a ``spoluprace/aktivovat/<int:pk>``), která
+        badateli přístup zakazuje (``Základní_B = X``) a archeologovi povoluje jen vlastní organizaci (``US.ours``).
+        Metodu proto nelze volat z tras mimo matici práv bez vlastní kontroly role; závislost hlídá test
+        ``MaticePravSpolupraceTest``.
+
+        :param user: Uživatel, který žádost potvrzuje.
+        :return: ``True``, pokud je uživatel vedoucí, archivář, administrátor nebo patří do organizace vedoucího, jinak ``False``.
+        """
+        if not getattr(user, "is_authenticated", False):
+            return False
+        if user.pk == self.vedouci_id or user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
+            return True
+        return user.organizace_id is not None and user.organizace_id == self.vedouci.organizace_id
+
     def set_aktivni(self, user):
         """
         Metoda pro nastavení stavu aktivní a uložení změny do historie pro spolupráci.
 
-        :param user: Parametr ``user`` se předává do volání ``Historie()``.
+        :param user: Uživatel zapisovaný do historie jako aktér, musí splňovat ``muze_potvrdit()``.
+        :raises PermissionDenied: Pokud uživatel nesmí žádost potvrdit.
         """
+        if not self.muze_potvrdit(user):
+            raise PermissionDenied()
         self.stav = SPOLUPRACE_AKTIVNI
         Historie(
             typ_zmeny=SPOLUPRACE_AKTIVACE,
@@ -713,16 +772,32 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
 
     def generate_redis_snapshot(self):
         """
-        Vygeneruje redis snapshot.
+        Vygeneruje Redis snapshot tohoto záznamu (deleguje na :meth:`generate_redis_snapshots`).
 
-        :return: Vrací n-tici.
+        :return: N-tice (klíč, data); data jsou ``None``, pokud záznam v databázi neexistuje.
+        """
+        key = self.redis_snapshot_id
+        return key, UzivatelSpoluprace.generate_redis_snapshots([self]).get(key)
+
+    @classmethod
+    def generate_redis_snapshots(cls, records):
+        """
+        Vygeneruje Redis snapshoty více záznamů jednou tabulkou ``UzivatelSpolupraceTable``.
+
+        Související záznamy zobrazované v tabulce se načítají hromadně (``select_related`` /
+        ``prefetch_related``), takže počet dotazů nezávisí na počtu záznamů.
+
+        :param records: Instance modelu, pro které se snapshoty generují.
+        :return: Slovník ``{redis_snapshot_id: data}`` pro záznamy nalezené v databázi.
         """
         from pas.tables import UzivatelSpolupraceTable
 
-        data = UzivatelSpoluprace.objects.filter(pk=self.pk)
-        table = UzivatelSpolupraceTable(data=data)
-        data = RedisConnector.prepare_model_for_redis(table)
-        return self.redis_snapshot_id, data
+        data = (
+            cls.objects.filter(pk__in=[record.pk for record in records])
+            .select_related("vedouci__organizace", "spolupracovnik__organizace")
+            .prefetch_related(Prefetch("projekty", queryset=Projekt.objects.order_by("ident_cely")))
+        )
+        return RedisConnector.prepare_models_for_redis(UzivatelSpolupraceTable(data=data))
 
     @classmethod
     def get_by_ident_cely(cls, pk):

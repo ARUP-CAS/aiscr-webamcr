@@ -52,6 +52,7 @@ from core.models import AntivirusCheckResult, Soubor
 from core.repository_connector import (
     FedoraBinaryFileAlreadyDeletedError,
     FedoraError,
+    FedoraNoResponseError,
     FedoraRepositoryConnector,
     FedoraTransaction,
     FedoraTransactionStatus,
@@ -2095,7 +2096,8 @@ class StahnoutDataHistorickaView(LoginRequiredMixin, View):
         :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
 
             :return: Vrací proměnná ``response``.
-            :raises Http404: Vyvolá se při splnění podmínky ``Model is None``.
+            :raises Http404: Vyvolá se při splnění podmínky ``Model is None``; také když historická verze
+                souboru neexistuje nebo Fedora neodpoví.
         """
         Model = self.MODEL_MAP.get(model_name)
         if Model is None:
@@ -2112,9 +2114,20 @@ class StahnoutDataHistorickaView(LoginRequiredMixin, View):
         if model_name == "Soubor":
             record = Model.objects.get(pk=ident_cely)
             response = record.get_soubor_historicky(timestamp)
+            # ``None`` vrací chybějící verze i nedostupná Fedora (``Soubor.read_from_fedora``).
+            if response is None:
+                raise Http404
         else:
             record = Model.objects.get(ident_cely=ident_cely)
-            metadata = record.get_metadata_historicka(timestamp)
+            try:
+                metadata = record.get_metadata_historicka(timestamp)
+            except FedoraNoResponseError as err:
+                # Stažení historické verze jen čte; výpadek Fedory skončí 404 jako u souboru výše.
+                logger.warning(
+                    "core.views.StahnoutDataHistorickaView.fedora_read.failed",
+                    extra={"model_name": model_name, "ident_cely": ident_cely, "error": err},
+                )
+                raise Http404
             response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
             response["Content-Disposition"] = 'attachment; filename="metadata.xml"'
 

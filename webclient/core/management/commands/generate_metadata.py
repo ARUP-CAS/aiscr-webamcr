@@ -182,7 +182,7 @@ class Command(BaseCommand):
            Dávkování výše tedy omezuje počet **živých instancí**, ne velikost
            načtených dat. U běhu přes celý model je proto paměťová náročnost
            úměrná počtu řádků – stejné omezení popisuje
-           :func:`heslar.ruian_sync.reassign._iter_pk_chunks`, která ho obchází
+           :func:`core.utils.iter_pk_chunks`, která ho obchází
            čtením po blocích primárních klíčů.
 
         :param queryset: Django QuerySet záznamů ke zpracování.

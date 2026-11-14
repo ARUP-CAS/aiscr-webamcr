@@ -807,7 +807,9 @@ class Mailer:
                 project_file: Soubor | RepositoryBinaryFile
                 if isinstance(project_file, Soubor):
                     repository_coonector = FedoraRepositoryConnector(project)
-                    attachment = repository_coonector.get_binary_file(project_file.repository_uuid)
+                    attachment = project_file.read_from_fedora(
+                        repository_coonector.get_binary_file, project_file.repository_uuid
+                    )
                 else:
                     attachment = project_file
                 if attachment is not None:
@@ -1088,7 +1090,9 @@ class Mailer:
                 extra={"file": project_file.nazev, "ident_cely": project.ident_cely},
             )
             repository_coonector = FedoraRepositoryConnector(project)
-            attachment = repository_coonector.get_binary_file(project_file.repository_uuid)
+            attachment = project_file.read_from_fedora(
+                repository_coonector.get_binary_file, project_file.repository_uuid
+            )
             if not attachment:
                 logger.warning(
                     "services.mailer.get_ep06_attachments.attachment_not_loaded_from_fedora",

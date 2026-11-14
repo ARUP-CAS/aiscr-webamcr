@@ -444,6 +444,30 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         )
         return None
 
+    def read_from_fedora(self, read, *args, **kwargs):
+        """
+        Zavolá čtení obsahu souboru z Fedory pro zobrazení nebo stažení a výpadek Fedory převede na ``None``.
+
+        Neúspěšné GET do Fedory vyvolá ``FedoraNoResponseError`` (#4454). Náhledy a obsah se ale čtou
+        i při vykreslení detailu záznamu, které nesmí kvůli nedostupné Fedoře skončit chybou 500;
+        stránka se vykreslí bez náhledu, stažení skončí 404 stejně jako u chybějícího obsahu
+        a e-mail se odešle bez přílohy.
+        Zápisové cesty (např. přesun souboru při změně identu) volají ``get_repository_content``
+        přímo, aby výpadek vyvolal rollback a obsah se tiše neztratil.
+
+        :param read: Funkce čtoucí obsah z Fedory, např. ``get_repository_content``.
+        :param args: Poziční argumenty pro ``read``.
+        :param kwargs: Pojmenované argumenty pro ``read``.
+        :return: Výsledek ``read``, nebo ``None``, pokud Fedora neodpověděla.
+        """
+        from .repository_connector import FedoraNoResponseError
+
+        try:
+            return read(*args, **kwargs)
+        except FedoraNoResponseError as err:
+            logger.warning("core.models.soubor.fedora_read.failed", extra={"soubor": self.pk, "error": err})
+            return None
+
     def zaznamenej_nahrani(self, user, file_name=None):
         """
         Metoda pro zapsáni vytvoření souboru do historie.
@@ -1252,7 +1276,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
         :return: FileResponse s náhledem nebo None.
         """
-        rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_large=True)
+        rep_bin_file: RepositoryBinaryFile = self.read_from_fedora(self.get_repository_content, thumb_large=True)
         if self.repository_uuid is not None and rep_bin_file:
             response = self._create_file_response(rep_bin_file, filename=f"{self.nazev}.png")
             response["Content-Type"] = "image/png"
@@ -1266,7 +1290,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
         :return: FileResponse s náhledem nebo None.
         """
-        rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_small=True)
+        rep_bin_file: RepositoryBinaryFile = self.read_from_fedora(self.get_repository_content, thumb_small=True)
         if self.repository_uuid is not None and rep_bin_file:
             response = self._create_file_response(rep_bin_file, filename=f"{self.nazev}.png", as_attachment=False)
             response["Content-Type"] = "image/png"
@@ -1281,7 +1305,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
         :return: FileResponse se souborem nebo None.
         """
-        rep_bin_file: RepositoryBinaryFile = self.get_repository_content()
+        rep_bin_file: RepositoryBinaryFile = self.read_from_fedora(self.get_repository_content)
         if self.repository_uuid is not None and rep_bin_file and rep_bin_file.size_mb > 0:
             return self._create_file_response(rep_bin_file)
         return None
@@ -1371,7 +1395,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         if record is None or self.repository_uuid is None:
             return None
         connector = FedoraRepositoryConnector(record, skip_container_check=False)
-        rep_bin_file = connector.get_distribution(self.repository_uuid, distribution)
+        rep_bin_file = self.read_from_fedora(connector.get_distribution, self.repository_uuid, distribution)
         if rep_bin_file is None:
             return None
         filename = rep_bin_file.filename or f"{self.nazev}.{distribution.replace('/', '_')}"
@@ -1463,7 +1487,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         if record is None or self.repository_uuid is None:
             return None
         connector = FedoraRepositoryConnector(record)
-        rep_bin_file = connector.get_paradata(self.repository_uuid, distribution)
+        rep_bin_file = self.read_from_fedora(connector.get_paradata, self.repository_uuid, distribution)
         if rep_bin_file is None:
             return None
         filename = rep_bin_file.filename or f"{self.nazev}.{distribution.replace('/', '_')}.paradata"
@@ -1525,7 +1549,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
         :return: Vrací výsledek operace.
         """
-        rep_bin_file: RepositoryBinaryFile = self.get_repository_content(timestamp=timestamp)
+        rep_bin_file: RepositoryBinaryFile = self.read_from_fedora(self.get_repository_content, timestamp=timestamp)
         if self.repository_uuid is not None and rep_bin_file and rep_bin_file.size_mb > 0:
             return self._create_file_response(rep_bin_file)
         return None

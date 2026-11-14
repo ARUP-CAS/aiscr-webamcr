@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2026 AIS CR (Archaeological Information System of the Czech Republic) <https://ror.org/01a7rqj69>
+# SPDX-License-Identifier: CC-BY-4.0
+# aiscr:canonical=.agents/canonical_configs/workflows/aiscr-review-pr.md
+# delivery-version: c35418343fe8896348732bd54f8256de17338f8d 2026-11-07T14:33:16+01:00
+
+description = "Use when the user asks to review a pull request or local Git changes. Perform track analysis and focused verification; for PRs, gather marked lineage and prepare the summary and exact approval payload for grouped posting."
+prompt = """
+<!-- aiscr:entry-scope -->
+
+**Entry scope**
+
+- Stay in this `.gemini/commands/aiscr/` surface and its same-vendor pointers first.
+- Do not open parallel vendor trees by default just in case.
+- Cross into another vendor tree only for explicit parity checks, generator work, or governance maintenance.
+
+Use when the user asks to review a pull request or local Git changes. Perform track analysis and focused verification; for PRs, gather marked lineage and prepare the summary and exact approval payload for grouped posting.
+
+Execute the AIS CR workflow `aiscr-review-pr`. The full workflow body for this command is the repository-local skill included below; follow it as the authoritative procedure, guardrails, and verification requirements.
+
+@{.agents/skills/aiscr-review-pr/SKILL.md}
+
+If the skill inclusion above did not expand — the paired skill file is missing or excluded by repository ignore rules — stop and report that `/aiscr-review-pr` cannot run in this checkout instead of improvising the workflow.
+"""

@@ -197,7 +197,12 @@ install_test_requirements="${INSTALL_TEST_REQUIREMENTS:-true}"
 cmd_create_images="docker build -t test_web -f Dockerfile --build-arg INSTALL_TEST_REQUIREMENTS=${install_test_requirements} --build-arg VERSION_APP=\"$(git rev-parse --short HEAD | head -c 8)\" --build-arg TAG_APP=local_build  ."
 cmd_create_images_proxy="docker build -t test_proxy -f proxy/Dockerfile --build-arg VERSION_APP="$(git rev-parse --short HEAD | head -c 8)" --build-arg TAG_APP=local_build  ./proxy"
 cmd_create_images_redis="docker build -t test_redis -f redis/Dockerfile --build-arg VERSION_APP="$(git rev-parse --short HEAD | head -c 8)" --build-arg TAG_APP=local_build  ./redis"
-cmd_deploy_base="docker stack deploy --compose-file"
+# --resolve-image never: swarm použije image podle tagu z compose a nepřipíná je na digest.
+# Image připnuté na digest nemají lokálně tag, po "stack rm" je "docker image prune" bere
+# jako dangling a smaže (~8 GB) - při každém deployi se pak stahují znovu (selenium 2,3 GB
+# nestihlo naběhnout před testy). Lokální test_web/test_proxy/test_redis se tím také přestanou
+# zbytečně zkoušet stahovat z Docker Hubu.
+cmd_deploy_base="docker stack deploy --resolve-image never --compose-file"
 
 #Cleaning old images
 echo "Pruning unused Docker images..."
