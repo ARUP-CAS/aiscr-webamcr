@@ -53,11 +53,11 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.models import Permissions as p
-from core.models import Soubor, check_permissions, soubor_nazev_razeni_klic
+from core.models import Soubor, check_permissions
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.translation import format_message
 from core.utils import TwoQueryPaginator, get_3d_from_envelope, hodnota_pro_log
-from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
+from core.views import PermissionFilterMixin, SearchListView, SouboryTableView, check_stav_changed
 from dal import autocomplete
 from django.conf import settings
 from django.contrib import messages
@@ -246,16 +246,42 @@ def detail_model_3D(request, ident_cely):
     context["history_dates"] = get_history_dates(dokument.historie, request.user)
     context["show"] = show
     context["global_map_can_edit"] = False
-    if dokument.soubory:
-        context["soubory"] = sorted(
-            dokument.soubory.soubory.select_related("historie").prefetch_related(
-                Soubor.distribution_history_prefetch()
-            ),
-            key=soubor_nazev_razeni_klic,
-        )
-    else:
-        context["soubory"] = None
+    context["soubory"] = dokument.soubory.serazene_soubory() if dokument.soubory else None
     return render(request, "dokument/detail_model_3D.html", context)
+
+
+class DokumentSouboryTableView(SouboryTableView):
+    """
+    Vrací samotnou tabulku souborů dokumentu (odpovídá ``dokument/dok/detail.html``).
+
+    ``get_detail_template_shows()`` sám rozliší 3D model podle identifikátoru, takže stejná metoda
+    slouží i potomkovi pro 3D modely.
+    """
+
+    model = Dokument
+    vazba_trida = "dokument"
+    next_url = "/dokument/detail/"
+
+    def get_show(self, zaznam, user):
+        """
+        Vrátí příznaky zobrazení z ``get_detail_template_shows()`` dokumentu nebo 3D modelu.
+
+        :param zaznam: Dokument nebo 3D model, jehož soubory se zobrazují.
+        :param user: Přihlášený uživatel.
+        :return: Slovník příznaků zobrazení.
+        """
+        return get_detail_template_shows(zaznam, user)
+
+
+class Model3DSouboryTableView(DokumentSouboryTableView):
+    """
+    Vrací samotnou tabulku souborů 3D modelu (odpovídá ``dokument/detail_model_3D.html``).
+
+    Přístup hlídá ``PermissionMiddleware`` podle stejných pravidel jako detail 3D modelu.
+    """
+
+    vazba_trida = "model3d"
+    next_url = "/dokument/model/detail/"
 
 
 class Model3DListView(SearchListView):
@@ -647,15 +673,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         context["history_dates"] = get_history_dates(dokument.historie, self.request.user)
         context["show"] = show
 
-        if dokument.soubory:
-            context["soubory"] = sorted(
-                dokument.soubory.soubory.select_related("historie").prefetch_related(
-                    Soubor.distribution_history_prefetch()
-                ),
-                key=soubor_nazev_razeni_klic,
-            )
-        else:
-            context["soubory"] = None
+        context["soubory"] = dokument.soubory.serazene_soubory() if dokument.soubory else None
 
         context["casti"] = dokument.casti.all()
         return context

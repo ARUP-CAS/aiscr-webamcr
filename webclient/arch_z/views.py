@@ -5,7 +5,13 @@ from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod
 from adb.models import Adb, VyskovyBod
 from arch_z.filters import AkceFilter
 from arch_z.forms import AkceVedouciFormSetHelper, CreateAkceForm, CreateArchZForm, create_akce_vedouci_objekt_form
-from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam, ExterniOdkaz, ExterniZdroj, get_akce_ident
+from arch_z.models import (
+    Akce,
+    AkceVedouci,
+    ArcheologickyZaznam,
+    ExterniZdroj,
+    get_akce_ident,
+)
 from arch_z.tables import AkceTable
 from cacheops import invalidate_model
 from core.constants import (
@@ -127,6 +133,38 @@ def get_areal_choices():
     return heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
 
 
+@method_decorator(never_cache, name="dispatch")
+class ExterniOdkazyTableView(LoginRequiredMixin, View):
+    """
+    Vrací samotnou tabulku externích odkazů archeologického záznamu pro tlačítko „Načíst zbývající záznamy“.
+
+    Kontext odpovídá ``ez/az_ez_odkazy_table.html`` v detailu akce i lokality; z příznaků zobrazení
+    tabulka používá jen ``odpojit_eo`` a ``paginace_edit``, které se počítají stejně jako
+    v ``get_detail_template_shows()``. Přístup hlídá ``PermissionMiddleware`` podle stejných pravidel
+    jako detail archeologického záznamu.
+    """
+
+    def get(self, request, ident_cely):
+        """
+        Vykreslí tabulku externích odkazů archeologického záznamu.
+
+        :param request: HTTP požadavek s parametrem ``SOUVISEJICI_RADKY_PARAM``.
+        :param ident_cely: Identifikátor archeologického záznamu.
+        :return: ``HttpResponse`` s HTML tabulky externích odkazů.
+        """
+        zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+        context = {
+            "externi_odkazy": zaznam.get_externi_odkazy(),
+            "zaznam": zaznam,
+            "next_url": zaznam.get_absolute_url(),
+            "show": {
+                "odpojit_eo": check_permissions(p.actionChoices.eo_odpojit_ez, request.user, zaznam.ident_cely),
+                "paginace_edit": check_permissions(p.actionChoices.eo_edit_akce, request.user, zaznam.ident_cely),
+            },
+        }
+        return HttpResponse(render_to_string("ez/az_ez_odkazy_table_only.html", context, request=request))
+
+
 class AkceRelatedRecordUpdateView(TemplateView):
     """Třida, která se dedí a která obsahuje metody pro získaní relací akce."""
 
@@ -196,11 +234,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
 
         :return: Vrací výsledek volání ``order_by()``.
         """
-        return (
-            ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=self.arch_zaznam.ident_cely)
-            .select_related("externi_zdroj")
-            .order_by("externi_zdroj__ident_cely", "id")
-        )
+        return self.arch_zaznam.get_externi_odkazy()
 
     def get_vedouci(self, context):
         """

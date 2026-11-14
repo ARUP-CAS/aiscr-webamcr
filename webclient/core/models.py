@@ -128,6 +128,20 @@ class SouborVazby(ExportModelOperationsMixin("soubor_vazby"), models.Model):
         if self.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
             return self.samostatny_nalez_souboru
 
+    def serazene_soubory(self):
+        """
+        Vrátí soubory vazby seřazené pro tabulku souborů v detailu dokumentu, 3D modelu a samostatného nálezu.
+
+        Pořadí určuje ``soubor_nazev_razeni_klic``; ``sorted`` je stabilní, takže u shodných názvů zůstává
+        pořadí podle ``Soubor.Meta.ordering`` (``nazev``, ``id``).
+
+        :return: Seznam souborů s načtenou historií a distribucemi.
+        """
+        return sorted(
+            self.soubory.select_related("historie").prefetch_related(Soubor.distribution_history_prefetch()),
+            key=soubor_nazev_razeni_klic,
+        )
+
 
 def soubor_nazev_razeni_klic(soubor):
     """

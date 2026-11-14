@@ -18,7 +18,8 @@
     </div>
         <div class="card-body content-with-table-responsive">
     {% if externi_odkazy %}
-    {%include "ez/az_ez_odkazy_table_only.html"%}
+    {% url 'arch_z:externi_odkazy_tabulka' zaznam.ident_cely as externi_odkazy_tabulka_url %}
+    {%include "ez/az_ez_odkazy_table_only.html" with radky_url=externi_odkazy_tabulka_url %}
     {% else %}
     <div class="app-note">
       <span class="material-icons">info</span>

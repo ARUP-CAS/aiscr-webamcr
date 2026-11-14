@@ -6,6 +6,47 @@ Definice views.
 Třídy
 ------
 
+.. py:class:: ProjektSouboryTableView
+
+   Vrací samotnou tabulku souborů projektu (odpovídá ``projekt/detail.html``).
+
+   **Metody:**
+
+   .. py:method:: get_soubory()
+
+      Vrátí soubory projektu ve stejném pořadí jako detail projektu.
+
+      :param zaznam: Projekt, jehož soubory se zobrazují.
+      :return: Queryset souborů z ``Projekt.get_soubory()``.
+
+   .. py:method:: get_show()
+
+      Vrátí příznaky zobrazení z ``get_detail_template_shows()`` projektu.
+
+      :param zaznam: Projekt, jehož soubory se zobrazují.
+      :param user: Přihlášený uživatel.
+      :return: Slovník příznaků zobrazení.
+
+
+.. py:class:: ProjektAkceTableView
+
+   Vrací samotnou tabulku akcí projektu pro tlačítko „Načíst zbývající záznamy“.
+
+   Kontext odpovídá ``include`` v kartě akcí v ``projekt/detail.html``; ta nepředává příznaky
+   ``show.paginace`` ani ``show.odpojit``, proto je nepředává ani tento pohled.
+   Přístup hlídá ``PermissionMiddleware`` podle stejných pravidel jako detail projektu.
+
+   **Metody:**
+
+   .. py:method:: get()
+
+      Vykreslí tabulku akcí projektu.
+
+      :param request: HTTP požadavek s parametrem ``SOUVISEJICI_RADKY_PARAM``.
+      :param ident_cely: Identifikátor projektu.
+      :return: ``HttpResponse`` s HTML tabulky akcí.
+
+
 .. py:class:: ProjectPasFromEnvelopeView
 
    Trida pohledu pro získaní heatmapy pas.

@@ -345,6 +345,18 @@ Třídy
 
       :return: Vrací výsledek volání ``exclude()``.
 
+   .. py:method:: get_akce()
+
+      Vrátí akce projektu pro kartu „Archeologické akce“ v detailu projektu.
+
+      :return: Queryset akcí seřazený podle identifikátoru archeologického záznamu.
+
+   .. py:method:: get_soubory()
+
+      Vrátí soubory projektu pro tabulku souborů v detailu projektu.
+
+      :return: Queryset souborů seřazený podle názvu a ``id`` (``nazev`` není unikátní).
+
 
 .. py:class:: ProjektKatastr
 

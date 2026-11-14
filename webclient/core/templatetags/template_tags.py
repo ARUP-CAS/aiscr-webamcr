@@ -15,6 +15,7 @@ from core.utils import get_set_maintenance_in_cache
 from django import template
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.http import QueryDict
 from django.template import Node, TemplateSyntaxError
 from django.utils.html import escape
 from django.utils.http import urlencode
@@ -230,7 +231,7 @@ def get_test_env():
 
 
 @register.simple_tag(takes_context=True)
-def omezit_radky(context, radky, klic):
+def omezit_radky(context, radky, klic, url=None):
     """
     Omezí řádky tabulky souvisejících záznamů na detailu na prvních ``SOUVISEJICI_RADKY_LIMIT`` řádků.
 
@@ -239,9 +240,15 @@ def omezit_radky(context, radky, klic):
     vrátí se jen řádky za limitem — odpověď tlačítka „Načíst zbývající záznamy“. Jinak se načte
     o jeden řádek víc než limit, aby šlo bez dalšího ``count()`` poznat, zda zbývají další.
 
+    URL zbytku vede na ``url``, pokud je zadané — tabulky vložené přímo do detailu tak zbytek
+    načtou z pohledu, který vrací jen tabulku, místo opětovného vykreslení celého detailu.
+    Bez ``url`` vede na ``request.path`` se zachovanými GET parametry (tabulky vykreslené
+    vlastním pohledem).
+
     :param context: Kontext šablony; čte se z něj ``request`` a ``SOUVISEJICI_RADKY_BEZ_LIMITU``.
     :param radky: Queryset nebo seznam řádků tabulky; řeže se jen pro zobrazení.
     :param klic: Identifikátor tabulky na stránce, shodný s ``data-radky`` u jejího ``tbody``.
+    :param url: Cesta pohledu, který vrací jen tuto tabulku; prázdná hodnota znamená ``request.path``.
     :return: Slovník s klíči ``SOUVISEJICI_RADKY_VYSLEDEK_RADKY`` (řádky k vykreslení),
         ``SOUVISEJICI_RADKY_VYSLEDEK_KLIC`` a ``SOUVISEJICI_RADKY_VYSLEDEK_ZBYVAJICI_URL``
         (URL pro načtení zbytku, nebo ``None``, pokud žádný zbytek není).
@@ -262,6 +269,10 @@ def omezit_radky(context, radky, klic):
     prvni = list(radky[: SOUVISEJICI_RADKY_LIMIT + 1])
     if len(prvni) <= SOUVISEJICI_RADKY_LIMIT:
         return vysledek(prvni)
-    query = request.GET.copy()
+    if url:
+        query = QueryDict(mutable=True)
+    else:
+        url = request.path
+        query = request.GET.copy()
     query[SOUVISEJICI_RADKY_PARAM] = klic
-    return vysledek(prvni[:SOUVISEJICI_RADKY_LIMIT], request.path + "?" + query.urlencode())
+    return vysledek(prvni[:SOUVISEJICI_RADKY_LIMIT], url + "?" + query.urlencode())

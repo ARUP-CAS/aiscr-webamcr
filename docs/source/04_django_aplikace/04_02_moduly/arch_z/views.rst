@@ -6,6 +6,26 @@ Definice views.
 Třídy
 ------
 
+.. py:class:: ExterniOdkazyTableView
+
+   Vrací samotnou tabulku externích odkazů archeologického záznamu pro tlačítko „Načíst zbývající záznamy“.
+
+   Kontext odpovídá ``ez/az_ez_odkazy_table.html`` v detailu akce i lokality; z příznaků zobrazení
+   tabulka používá jen ``odpojit_eo`` a ``paginace_edit``, které se počítají stejně jako
+   v ``get_detail_template_shows()``. Přístup hlídá ``PermissionMiddleware`` podle stejných pravidel
+   jako detail archeologického záznamu.
+
+   **Metody:**
+
+   .. py:method:: get()
+
+      Vykreslí tabulku externích odkazů archeologického záznamu.
+
+      :param request: HTTP požadavek s parametrem ``SOUVISEJICI_RADKY_PARAM``.
+      :param ident_cely: Identifikátor archeologického záznamu.
+      :return: ``HttpResponse`` s HTML tabulky externích odkazů.
+
+
 .. py:class:: AkceRelatedRecordUpdateView
 
    Třida, která se dedí a která obsahuje metody pro získaní relací akce.

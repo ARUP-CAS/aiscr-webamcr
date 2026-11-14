@@ -45,11 +45,11 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.models import Permissions as p
-from core.models import Soubor, check_permissions, soubor_nazev_razeni_klic
+from core.models import check_permissions
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.translation import format_message
 from core.utils import TwoQueryPaginator, get_cadastre_from_point, hodnota_pro_log
-from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
+from core.views import PermissionFilterMixin, SearchListView, SouboryTableView, check_stav_changed
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -105,15 +105,35 @@ def get_detail_context(sn, request):
     context["ulozeni_form"] = PotvrditNalezForm(instance=sn, readonly=True)
     context["history_dates"] = get_history_dates(sn.historie, request.user)
     context["show"] = get_detail_template_shows(sn, request.user)
-    if sn.soubory:
-        context["soubory"] = sorted(
-            sn.soubory.soubory.select_related("historie").prefetch_related(Soubor.distribution_history_prefetch()),
-            key=soubor_nazev_razeni_klic,
-        )
-    else:
-        context["soubory"] = None
+    context["soubory"] = sn.soubory.serazene_soubory() if sn.soubory else None
     context["app"] = "pas"
     return context
+
+
+class SamostatnyNalezSouboryTableView(SouboryTableView):
+    """Vrací samotnou tabulku souborů samostatného nálezu (odpovídá ``pas/detail.html``)."""
+
+    model = SamostatnyNalez
+    vazba_trida = "pas"
+    next_url = "/pas/detail/"
+
+    def get_queryset(self):
+        """
+        Vrátí samostatné nálezy s předem načtenou vazbou souborů.
+
+        :return: Queryset samostatných nálezů.
+        """
+        return SamostatnyNalez.objects.select_related("soubory")
+
+    def get_show(self, zaznam, user):
+        """
+        Vrátí příznaky zobrazení z ``get_detail_template_shows()`` samostatného nálezu.
+
+        :param zaznam: Samostatný nález, jehož soubory se zobrazují.
+        :param user: Přihlášený uživatel.
+        :return: Slovník příznaků zobrazení.
+        """
+        return get_detail_template_shows(zaznam, user)
 
 
 @login_required

@@ -10,6 +10,7 @@ urlpatterns = [
     path("zapsat/<str:ident_cely>", views.SamostatnyNalezCreateView.as_view(), name="create-from-project"),
     path("zapsat/kopie/<str:ident_cely>", views.SamostatnyNalezCreateView.as_view(), name="create-copy"),
     path("detail/<str:ident_cely>", views.detail, name="detail"),
+    path("soubory-tabulka/<str:ident_cely>", views.SamostatnyNalezSouboryTableView.as_view(), name="soubory_tabulka"),
     path("edit/<str:ident_cely>", views.edit, name="edit"),
     path("ulozeni/edit/<str:ident_cely>", views.edit_ulozeni, name="edit_ulozeni"),
     path("stav/vratit/<str:ident_cely>", views.vratit, name="vratit"),

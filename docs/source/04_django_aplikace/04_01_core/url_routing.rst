@@ -63,6 +63,9 @@ ARCH_Z
    * - ``detail``
      - ``akce/detail/<str:ident_cely>``
      - ``views.ArcheologickyZaznamDetailView.as_view()``
+   * - ``externi_odkazy_tabulka``
+     - ``externi-odkazy-tabulka/<str:ident_cely>``
+     - ``views.ExterniOdkazyTableView.as_view()``
    * - ``create-dj``
      - ``akce/detail/<str:ident_cely>/dj/zapsat``
      - ``views.DokumentacniJednotkaCreateView.as_view()``
@@ -300,6 +303,9 @@ DOKUMENT
    * - ``detail``
      - ``detail/<str:ident_cely>``
      - ``views.DokumentDetailView.as_view()``
+   * - ``soubory_tabulka``
+     - ``soubory-tabulka/<str:ident_cely>``
+     - ``views.DokumentSouboryTableView.as_view()``
    * - ``detail-cast``
      - ``detail/<str:ident_cely>/cast/<str:cast_ident_cely>``
      - ``views.DokumentCastDetailView.as_view()``
@@ -381,6 +387,9 @@ DOKUMENT
    * - ``detail-model-3D``
      - ``model/detail/<str:ident_cely>``
      - ``views.detail_model_3D``
+   * - ``soubory_tabulka_model_3D``
+     - ``model/soubory-tabulka/<str:ident_cely>``
+     - ``views.Model3DSouboryTableView.as_view()``
    * - ``get_dokument_table_row``
      - ``radek-tabulky-odkaz``
      - ``views.get_dokument_table_row``
@@ -750,6 +759,9 @@ PAS
    * - ``detail``
      - ``detail/<str:ident_cely>``
      - ``views.detail``
+   * - ``soubory_tabulka``
+     - ``soubory-tabulka/<str:ident_cely>``
+     - ``views.SamostatnyNalezSouboryTableView.as_view()``
    * - ``edit``
      - ``edit/<str:ident_cely>``
      - ``views.edit``
@@ -876,6 +888,12 @@ PROJEKT
    * - ``detail``
      - ``detail/<str:ident_cely>``
      - ``detail``
+   * - ``soubory_tabulka``
+     - ``soubory-tabulka/<str:ident_cely>``
+     - ``ProjektSouboryTableView.as_view()``
+   * - ``akce_tabulka``
+     - ``akce-tabulka/<str:ident_cely>``
+     - ``ProjektAkceTableView.as_view()``
    * - ``create``
      - ``zapsat``
      - ``create``

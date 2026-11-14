@@ -344,6 +344,52 @@ Třídy
       :return: ``True`` při úspěchu, jinak ``JsonResponse`` s chybovým popisem.
 
 
+.. py:class:: SouboryTableView
+
+   Základ pohledů, které vrací samotnou tabulku souborů (``core/filetable.html``) pro tlačítko
+   „Načíst zbývající záznamy“.
+
+   Kontext odpovídá ``include`` tabulky v detailu záznamu, takže řádky vypadají a chovají se stejně.
+   Potomek nastaví ``model``, ``vazba_trida``, ``next_url`` a ``allow_replace`` podle detailu
+   a implementuje ``get_show()``. Přístup hlídá ``PermissionMiddleware`` podle řádku oprávnění
+   dané cesty, který odpovídá detailu záznamu.
+
+   **Metody:**
+
+   .. py:method:: get_queryset()
+
+      Vrátí queryset, ve kterém se záznam dohledá podle identifikátoru.
+
+      :return: Queryset modelu ``model``.
+
+   .. py:method:: get_soubory()
+
+      Vrátí soubory záznamu ve stejném pořadí jako v detailu.
+
+      Výchozí pořadí je ``SouborVazby.serazene_soubory()``; záznam bez vazby souborů nemá žádné soubory.
+
+      :param zaznam: Záznam, jehož soubory se zobrazují.
+      :return: Seznam nebo queryset souborů, nebo ``None``, pokud záznam vazbu souborů nemá.
+
+   .. py:method:: get_show()
+
+      Vrátí příznaky zobrazení tabulky stejné jako v detailu záznamu.
+
+      :param zaznam: Záznam, jehož soubory se zobrazují.
+      :param user: Přihlášený uživatel.
+      :return: Slovník příznaků (``soubor_nahled``, ``soubor_stahnout`` apod.).
+      :raises NotImplementedError: Pokud potomek metodu neimplementuje.
+
+   .. py:method:: get()
+
+      Vykreslí tabulku souborů záznamu.
+
+      :param request: HTTP požadavek s parametrem ``SOUVISEJICI_RADKY_PARAM``; tag ``omezit_radky``
+          z něj čte, kterou část řádků vrátit.
+      :param ident_cely: Identifikátor záznamu.
+      :return: ``HttpResponse`` s HTML tabulky souborů.
+
+
 .. py:class:: ExportMixinDate
 
    Mixin pro získaní názvu exportovaného souboru.

@@ -8,6 +8,7 @@ app_name = "dokument"
 urlpatterns = [
     path("", views.DokumentIndexView.as_view(), name="index"),
     path("detail/<str:ident_cely>", views.DokumentDetailView.as_view(), name="detail"),
+    path("soubory-tabulka/<str:ident_cely>", views.DokumentSouboryTableView.as_view(), name="soubory_tabulka"),
     path(
         "detail/<str:ident_cely>/cast/<str:cast_ident_cely>", views.DokumentCastDetailView.as_view(), name="detail-cast"
     ),
@@ -56,6 +57,11 @@ urlpatterns = [
     path("model/zapsat", views.create_model_3D, name="create-model-3D"),
     path("model/edit/<str:ident_cely>", views.edit_model_3D, name="edit-model-3D"),
     path("model/detail/<str:ident_cely>", views.detail_model_3D, name="detail-model-3D"),
+    path(
+        "model/soubory-tabulka/<str:ident_cely>",
+        views.Model3DSouboryTableView.as_view(),
+        name="soubory_tabulka_model_3D",
+    ),
     path("radek-tabulky-odkaz", views.get_dokument_table_row, name="get_dokument_table_row"),
     path("radek-tabulky-odkaz-vratit", views.get_dokument_table_row_vratit, name="get_dokument_table_row_vratit"),
     path(

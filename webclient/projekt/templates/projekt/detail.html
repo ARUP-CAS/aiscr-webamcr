@@ -599,7 +599,8 @@
       </div>
       <div class="card-body content-with-table-responsive">
         {% if soubory %}
-          {% include "core/filetable.html" with next_url='/projekt/detail/' ident=projekt.ident_cely allow_replace=False vazba_trida="projekt" %}
+          {% url 'projekt:soubory_tabulka' projekt.ident_cely as soubory_tabulka_url %}
+          {% include "core/filetable.html" with next_url='/projekt/detail/' ident=projekt.ident_cely allow_replace=False vazba_trida="projekt" radky_url=soubory_tabulka_url %}
         {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>
@@ -627,7 +628,8 @@
       </div>
       <div class="card-body content-with-table-responsive">
         {% if akce %}
-        {% include "ez/ez_odkazy_table_only.html" with zaznamy=akce type="arch_z" card_type="akce" %}
+        {% url 'projekt:akce_tabulka' projekt.ident_cely as akce_tabulka_url %}
+        {% include "ez/ez_odkazy_table_only.html" with zaznamy=akce type="arch_z" card_type="akce" radky_url=akce_tabulka_url %}
         {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>

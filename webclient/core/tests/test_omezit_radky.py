@@ -44,6 +44,21 @@ class OmezitRadkyTagTests(SimpleTestCase):
         self.assertEqual(url.path, "/ez/odkazy/X")
         self.assertEqual(parse_qs(url.query), {"card_type": ["akce"], SOUVISEJICI_RADKY_PARAM: ["ez_odkazy_akce"]})
 
+    def test_explicit_url_points_rest_to_table_view(self):
+        """Se zadaným ``url`` vede URL zbytku na pohled tabulky a nepřenáší GET parametry detailu."""
+        context = self._context("/projekt/detail/X?tab=soubory")
+        result = omezit_radky(context, self.radky, "soubory", url="/projekt/soubory-tabulka/X")
+
+        url = urlsplit(result[SOUVISEJICI_RADKY_VYSLEDEK_ZBYVAJICI_URL])
+        self.assertEqual(url.path, "/projekt/soubory-tabulka/X")
+        self.assertEqual(parse_qs(url.query), {SOUVISEJICI_RADKY_PARAM: ["soubory"]})
+
+    def test_empty_url_falls_back_to_request_path(self):
+        """Prázdné ``url`` (nedefinovaná proměnná šablony) znamená ``request.path``."""
+        result = omezit_radky(self._context("/ez/odkazy/X"), self.radky, "ez_odkazy_akce", url="")
+
+        self.assertEqual(urlsplit(result[SOUVISEJICI_RADKY_VYSLEDEK_ZBYVAJICI_URL]).path, "/ez/odkazy/X")
+
     def test_at_limit_shows_all_rows_without_button(self):
         """Přesně 20 řádků se zobrazí celé a bez URL zbytku (bez tlačítka)."""
         radky = self.radky[:SOUVISEJICI_RADKY_LIMIT]
@@ -92,14 +107,22 @@ class FiletableOmezeniTests(SimpleTestCase):
             for i in range(1, SOUVISEJICI_RADKY_LIMIT + 6)
         ]
 
-    def _render(self, path):
+    def _render(self, path, **extra):
         """
         Vykreslí filetable pro požadavek na ``path``.
 
         :param path: Cesta požadavku včetně query stringu.
+        :param extra: Další proměnné kontextu (např. ``radky_url``).
         :return: Vykreslené HTML.
         """
-        context = {"soubory": self.soubory, "show": {}, "ident": "X", "vazba_trida": "projekt", "next_url": "/"}
+        context = {
+            "soubory": self.soubory,
+            "show": {},
+            "ident": "X",
+            "vazba_trida": "projekt",
+            "next_url": "/",
+            **extra,
+        }
         request = self.factory.get(path)
         # Project context processors read request.user.
         request.user = AnonymousUser()
@@ -123,3 +146,9 @@ class FiletableOmezeniTests(SimpleTestCase):
         self.assertIn("soubor-%d.pdf" % (SOUVISEJICI_RADKY_LIMIT + 1), html)
         self.assertIn("soubor-%d.pdf" % (SOUVISEJICI_RADKY_LIMIT + 5), html)
         self.assertNotIn("app-nacist-zbyvajici-btn", html)
+
+    def test_button_uses_table_view_url_when_given(self):
+        """S ``radky_url`` (tabulka vložená do detailu) tlačítko načítá zbytek z pohledu tabulky."""
+        html = self._render("/projekt/detail/X", radky_url="/projekt/soubory-tabulka/X")
+
+        self.assertIn('data-url="/projekt/soubory-tabulka/X?%s=soubory"' % SOUVISEJICI_RADKY_PARAM, html)
