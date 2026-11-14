@@ -192,6 +192,25 @@ class CiContractTests(unittest.TestCase):
             self.assertEqual(ci.run_suite("fast", output), 1)
             self.assertIn("Forbidden network attempts", (output / "summary.md").read_text())
 
+    def test_database_suite_seeds_constants_first_and_stops_when_seeding_fails(self):
+        """Databázová sada nespustí testy nad nepřipravenými konstantami hesláře."""
+        spec = importlib.util.spec_from_file_location("ci", SCRIPTS / "run_django_ci.py")
+        ci = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(ci)
+        original = subprocess.Popen
+        started = []
+
+        def fake_popen(command, **kwargs):
+            started.append(command)
+            return original([sys.executable, "-c", "import sys; print('seed failed'); sys.exit(4)"], **kwargs)
+
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(ci.subprocess, "Popen", side_effect=fake_popen):
+            output = Path(tmp)
+            self.assertEqual(ci.run_suite("database", output), 4)
+        self.assertEqual(len(started), 1)
+        self.assertIn("--seed-constants", started[0])
+        self.assertEqual(ci.constant_seed_id("HES-000865"), 900865)
+
 
 if __name__ == "__main__":
     unittest.main()

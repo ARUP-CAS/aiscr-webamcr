@@ -34,6 +34,19 @@ password `ci-only-password`. Override them with `AMCR_CI_DB_NAME`,
 `AMCR_CI_DB_PORT` and `AMCR_CI_REDIS_PORT`. Both Django database aliases use the
 same test database through separate connections.
 
+Before the database tests start, the launcher runs a separate seeding step
+(`--seed-constants`). `heslar.hesla_dynamicka` resolves its constants, such as
+`PRISTUPNOST_ANONYM_ID` or `TYP_PROJEKTU_PRUZKUM_ID`, by `ident_cely` in the
+configured database when Django starts, not in the test database. In an empty CI
+database they would all be `None`. The seeding step migrates the configured
+database and inserts one `heslar` row for each `HESLAR_CONSTANTS` identifier, with
+the fixed ID `900000 + <number>` (`HES-000865` → `900865`). The constants then hold
+real IDs, as on developer machines, and tests can create matching rows in the test
+database. The step is idempotent and writes to the configured database, so point it
+only at a disposable one. Organization, person and user constants are not seeded
+and stay `None`. The fast suite has no database, so its tests must not depend on
+these constants.
+
 The Python launcher rejects external DNS and socket calls before importing the
 application. CI also runs `with_ci_network.sh`, which restricts a dedicated
 unprivileged user's IPv4/IPv6 traffic to the database/cache services. This covers
