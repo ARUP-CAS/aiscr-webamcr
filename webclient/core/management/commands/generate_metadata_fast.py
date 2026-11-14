@@ -28,9 +28,10 @@ _RETRYABLE_EXCEPTIONS = (requests.exceptions.ConnectionError, requests.exception
 #: Timeout (sekundy) pro běžné HTTP požadavky na Fedoru. Bez timeoutu je
 #: ``requests.exceptions.Timeout`` v ``_RETRYABLE_EXCEPTIONS`` nedosažitelný (výchozí
 #: chování ``requests`` je čekat neomezeně) a zaseknuté TCP spojení by worker zablokovalo
-#: natrvalo, ne jen na dobu jednoho pokusu. Hodnota je záměrně vyšší než ``timeout=10``
-#: v ``core/repository_connector.py`` - ta je pro jednu operaci v běžném provozu, kdežto
-#: tady Fedora obsluhuje N paralelních workerů najednou a odpovídá výrazně pomaleji.
+#: natrvalo, ne jen na dobu jednoho pokusu. Na rozdíl od ``core/repository_connector.py``
+#: (``FEDORA_READ_TIMEOUT`` 300 s, obsah ``FEDORA_CONTENT_READ_TIMEOUT`` 600 s, #4454) je
+#: hodnota nižší: tady se zapisují jen malá metadata a zástupný obsah, Fedora sice obsluhuje
+#: N paralelních workerů najednou, ale vypršený pokus se opakuje v ``Command._process_record``.
 _HTTP_TIMEOUT = 60
 
 #: Timeout (sekundy) pro commit transakce - řádově vyšší než ``_HTTP_TIMEOUT``, protože
@@ -451,7 +452,8 @@ class _FastFedoraWriter:
         Odešle HTTP požadavek a ověří, že odpověď je 2xx.
 
         Rychlá náhrada za ``FedoraRepositoryConnector._send_request``.
-        Při změně oficiální funkce je potřeba změnu promítnout i sem.
+        Při změně oficiální funkce je potřeba změnu promítnout i sem; timeouty se záměrně
+        nepřebírají, platí ``_HTTP_TIMEOUT`` (viz komentář u konstanty).
         Bez retry logiky a bez mapování na ``FedoraError`` - opakování řeší až ``Command._process_record``.
 
         :param method: ``"post"`` nebo ``"patch"``.

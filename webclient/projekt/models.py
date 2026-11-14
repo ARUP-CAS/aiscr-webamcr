@@ -40,7 +40,7 @@ from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.html import format_html
@@ -990,16 +990,56 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def generate_redis_snapshot(self):
         """
-        Vygeneruje redis snapshot.
+        Vygeneruje Redis snapshot tohoto záznamu (deleguje na :meth:`generate_redis_snapshots`).
 
-        :return: Vrací n-tici.
+        :return: N-tice (klíč, data); data jsou ``None``, pokud záznam v databázi neexistuje.
+        """
+        key = self.redis_snapshot_id
+        return key, Projekt.generate_redis_snapshots([self]).get(key)
+
+    @classmethod
+    def generate_redis_snapshots(cls, records):
+        """
+        Vygeneruje Redis snapshoty více záznamů jednou tabulkou ``ProjektTable``.
+
+        Související záznamy zobrazované v tabulce se načítají hromadně (``select_related`` /
+        ``prefetch_related``), takže počet dotazů nezávisí na počtu záznamů.
+
+        :param records: Instance modelu, pro které se snapshoty generují.
+        :return: Slovník ``{redis_snapshot_id: data}`` pro záznamy nalezené v databázi.
         """
         from projekt.tables import ProjektTable
 
-        data = Projekt.objects.filter(pk=self.pk).select_related("oznamovatel", "typ_projektu")
-        table = ProjektTable(data=data)
-        data = RedisConnector.prepare_model_for_redis(table)
-        return self.redis_snapshot_id, data
+        data = (
+            cls.objects.filter(pk__in=[record.pk for record in records])
+            .select_related(
+                "typ_projektu",
+                "hlavni_katastr__okres__kraj",
+                "organizace",
+                "vedouci_projektu",
+                "kulturni_pamatka",
+                "oznamovatel",
+            )
+            .prefetch_related(
+                Prefetch(
+                    "katastry",
+                    queryset=RuianKatastr.objects.select_related("okres").defer(
+                        "hranice", "definicni_bod", "okres__hranice", "okres__definicni_bod"
+                    ),
+                )
+            )
+            .defer(
+                "geom",
+                "geom_sjtsk",
+                "hlavni_katastr__hranice",
+                "hlavni_katastr__definicni_bod",
+                "hlavni_katastr__okres__hranice",
+                "hlavni_katastr__okres__definicni_bod",
+                "hlavni_katastr__okres__kraj__hranice",
+                "hlavni_katastr__okres__kraj__definicni_bod",
+            )
+        )
+        return RedisConnector.prepare_models_for_redis(ProjektTable(data=data))
 
     def get_kraje_s_emailem(self):
         """

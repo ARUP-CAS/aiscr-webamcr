@@ -60,6 +60,7 @@ elif args.test is not None:
 else:
     test_list = [
         "core.tests.test_selenium",
+        "core.tests.test_selenium_distribuce",
         "projekt.tests.test_selenium",
         "dokument.tests.test_selenium",
         "lokalita.tests.test_selenium",
@@ -106,7 +107,10 @@ def filelog(pipe):
 
 
 logger.info("amcr_test_runner.start_test")
-subprocess.run(f"python3 manage.py migrate --database test_db --settings={SETTINGS}", text=True, shell=True)
+# Migruje se vzorová DB přes alias default (v dev_test ukazuje na TEST_DATABASE_NAME stejně jako test_db).
+# Datové migrace (RunPython) se bez .using() dotazují přes default; při migraci přes test_db by šly druhým
+# spojením do téže DB a čekaly by na zámek ALTER TABLE z vlastní migrace až do statement_timeout.
+subprocess.run(f"python3 manage.py migrate --settings={SETTINGS}", text=True, shell=True)
 
 process = subprocess.Popen(
     f"python3 manage.py test {' '.join(test_list)} --settings={SETTINGS} --noinput --verbosity=2",
@@ -114,8 +118,6 @@ process = subprocess.Popen(
     stderr=subprocess.PIPE,
     text=True,
     shell=True,
-    # Enables the manual integration tests that write to the (test) Fedora configured in SETTINGS.
-    env={**os.environ, "FEDORA_INTEGRATION_TESTS": "1"},
 )
 if args.soubor is True:
     t1 = Thread(target=filelog, args=[process.stdout]).start()

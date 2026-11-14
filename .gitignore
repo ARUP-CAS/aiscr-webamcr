@@ -33,6 +33,8 @@ develop-eggs/
 dist/
 eggs/
 lib/
+# Python packaging rule above must not hide the hub-delivered governance library.
+!.agents/scripts/lib/
 lib64/
 parts/
 sdist/
@@ -103,11 +105,10 @@ docker-compose-mac-dev-local-db-proxy.yml
 # kibana config
 kibana/kibana.yml
 
-# logstash config
-logstash/logstash.conf
 /scripts/test_preparaton.sh
 /scripts/temp_manual_test_scripts/
 /redis_pass.txt
+/logstash_elastic_password.txt
 
 # elasticsearch config
 /elasticsearch/elasticsearch.yml
@@ -118,8 +119,5 @@ logstash/logstash.conf
 /webclient/core/tests/resources/ssl.crt
 /webclient/core/tests/resources/ssl.key
 
-# agents
-.codex/
-.claude/
-.cursor/
+# secrets
 .env

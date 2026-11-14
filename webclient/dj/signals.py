@@ -201,26 +201,14 @@ def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwarg
             komponenta.delete()
         instance.komponenty.delete()
     if fedora_transaction:
-        if instance.close_active_transaction_when_finished:
-
-            def save_metadata():
-                """
-                               Uloží metadata.
-
-                Výsledek provedené změny nad cílovým objektem.
-                """
-                if not instance.suppress_signal_arch_z:
-                    instance.archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=True)
-                if instance.save_pian_metadata:
-                    instance.initial_pian.save_metadata(fedora_transaction, skip_container_check=True)
-                fedora_transaction.mark_transaction_as_closed()
-
-            transaction.on_commit(save_metadata)
-        else:
-            if not instance.suppress_signal_arch_z:
-                instance.archeologicky_zaznam.save_metadata(fedora_transaction)
-            if instance.save_pian_metadata:
-                instance.initial_pian.save_metadata(fedora_transaction)
+        # Zápisy do Fedory uvnitř DB transakce, aby chyba Fedory vedla k rollbacku smazání (#4437).
+        close_transaction = instance.close_active_transaction_when_finished
+        if not instance.suppress_signal_arch_z:
+            instance.archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=close_transaction)
+        if instance.save_pian_metadata:
+            instance.initial_pian.save_metadata(fedora_transaction, skip_container_check=close_transaction)
+        if close_transaction:
+            transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
     logger.debug(
         "dj.signals.delete_dokumentacni_jednotka.end",
         extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)},

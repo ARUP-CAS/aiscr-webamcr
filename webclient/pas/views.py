@@ -986,30 +986,34 @@ def smazat(request, ident_cely):
         nalez.deleted_by_user = request.user
         fedora_transaction = nalez.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
         try:
-            nalez.igsn_delete()
-            nalez.close_active_transaction_when_finished = True
-            nalez.record_deletion(nalez.active_transaction)
-            resp1 = nalez.delete()
-            if resp1:
-                logger.info(
-                    "pas.views.smazat.deleted",
-                    extra={"value": resp1},
-                )
-                return JsonResponse({"redirect": reverse("pas:index")})
-            else:
-                logger.warning("pas.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
-                nalez.igsn_update(False, True)
-                fedora_transaction.rollback_transaction()
-                return JsonResponse(
-                    {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
-                    status=403,
-                )
+            # Savepoint: při chybě se smazání odroluje a spojení zůstane použitelné pro obnovu IGSN.
+            with transaction.atomic():
+                nalez.igsn_delete()
+                nalez.close_active_transaction_when_finished = True
+                # Smazání ve Fedoře zaznamená pre_delete signál uvnitř DB transakce.
+                resp1 = nalez.delete()
+                if resp1:
+                    logger.info(
+                        "pas.views.smazat.deleted",
+                        extra={"value": resp1},
+                    )
+                    return JsonResponse({"redirect": reverse("pas:index")})
+                else:
+                    logger.warning("pas.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
+                    nalez.igsn_update(False, True)
+                    fedora_transaction.rollback_transaction()
+                    return JsonResponse(
+                        {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+                        status=403,
+                    )
         except (DoiWriteError, FedoraError) as err:
             logger.info("pas.views.smazat.error", extra={"error": err, "ident_cely": ident_cely})
-            transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
             if isinstance(err, FedoraError):
+                # Obnova IGSN načítá záznam z DB, proto musí proběhnout před set_rollback(True);
+                # potom by každý dotaz skončil TransactionManagementError.
                 nalez.igsn_update(False, True)
+            transaction.set_rollback(True)
             return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav": nalez.stav})
@@ -1240,9 +1244,11 @@ def aktivace(request, pk):
     :param request: Parametr ``request`` se předává do volání ``set_aktivni()``, ``add_message()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
     :param pk: Identifikátor ``pk`` používaný pro dohledání cílového záznamu.
 
-        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``redirect()``, výsledek volání ``render()``.
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()`` (včetně JSON 403 pro uživatele, který nesmí spolupráci potvrdit), výsledek volání ``redirect()``, výsledek volání ``render()``.
     """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
+    if not spoluprace.muze_potvrdit(request.user):
+        return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
     if request.method == "POST":
         fedora_transaction = FedoraTransaction()
         try:
@@ -1284,6 +1290,19 @@ class AktivaceEmailView(LoginRequiredMixin, DetailView):
 
     template_name = "pas/potvrdit_spolupraci.html"
     model = UzivatelSpoluprace
+
+    def get_object(self, queryset=None):
+        """
+        Vrací spolupráci k potvrzení a ověřuje, že ji smí přihlášený uživatel potvrdit.
+
+        :param queryset: Volitelný queryset předaný rodičovské metodě ``get_object()``.
+        :raises PermissionDenied: Pokud uživatel není vedoucí, archivář, administrátor ani z organizace vedoucího.
+        :return: Vrací nalezený záznam ``UzivatelSpoluprace``.
+        """
+        obj = super().get_object(queryset)
+        if not obj.muze_potvrdit(self.request.user):
+            raise PermissionDenied()
+        return obj
 
     def post(self, request, *args, **kwargs):
         """

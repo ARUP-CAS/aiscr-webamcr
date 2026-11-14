@@ -354,6 +354,9 @@ PAS
    * - ``SamostatnyNalez``
      - ``pre_delete``
      - ``dokument_delete_container_soubor_vazby``
+   * - ``SamostatnyNalez``
+     - ``post_delete``
+     - ``samostatny_nalez_delete_update_projekt``
    * - ``UzivatelSpoluprace``
      - ``post_save``
      - ``save_uzivatel_spoluprce``

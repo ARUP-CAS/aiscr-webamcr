@@ -82,31 +82,20 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
 @receiver(pre_delete, sender=SamostatnyNalez, weak=False)
 def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **kwargs):
     """
-    Provádí operaci dokument delete container soubor vazby.
+    Před smazáním samostatného nálezu označí záznam ve Fedoře jako smazaný a odstraní jeho soubory a historii v DB.
 
-    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``dokument_delete_container_soubor_vazby``.
-    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``active_transaction``, ovlivňuje větvení podmínek.
-    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``dokument_delete_container_soubor_vazby``.
+    Zápis do Fedory probíhá hned (uvnitř DB transakce), aby chyba Fedory (např. 409 při souběžném
+    zápisu jiné transakce) vedla k rollbacku smazání v DB. Metadata projektu se zapisují až
+    v ``samostatny_nalez_delete_update_projekt`` po smazání řádku, aby už nález neobsahovala.
+
+    :param sender: Model, který signál vyvolal (``SamostatnyNalez``).
+    :param instance: Mazaný samostatný nález; používá se jeho ``active_transaction``, ``soubory`` a ``historie``.
+    :param kwargs: Dodatečné argumenty předané Django signálem.
     """
     logger.debug("pas.signals.dokument_delete_container_soubor_vazby.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(SamostatnyNalez)
     invalidate_model(Projekt)
-    fedora_transaction = instance.active_transaction
-
-    def save_metadata(close_transaction=False):
-        """
-        Uloží metadata. v aplikaci.
-
-        :param close_transaction: Parametr ``close_transaction`` předává se do volání ``record_deletion()``.
-        """
-        if instance.projekt:
-            instance.projekt.save_metadata(fedora_transaction)
-        instance.record_deletion(fedora_transaction, close_transaction=close_transaction)
-
-    if instance.close_active_transaction_when_finished:
-        transaction.on_commit(lambda: save_metadata(True))
-    else:
-        save_metadata(False)
+    instance.record_deletion(instance.active_transaction)
     if instance.soubory and instance.soubory.pk:
         for item in instance.soubory.soubory.all():
             item.suppress_signal = True
@@ -117,6 +106,37 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
     logger.debug(
         "pas.signals.dokument_delete_container_soubor_vazby.end",
         extra={"ident_cely": instance.ident_cely, "transaction": transaction},
+    )
+
+
+@receiver(post_delete, sender=SamostatnyNalez, weak=False)
+def samostatny_nalez_delete_update_projekt(sender, instance: SamostatnyNalez, **kwargs):
+    """
+    Po smazání samostatného nálezu přegeneruje metadata projektu ve Fedoře a případně uzavře transakci.
+
+    Metadata projektu se zapisují ještě uvnitř DB transakce, takže konflikt ve Fedoře (409 při souběžném
+    mazání jiného nálezu téhož projektu) se projeví výjimkou ve view a smazání v DB se odroluje.
+    Do ``transaction.on_commit`` se odkládá jen commit Fedora transakce (#4437). Selhání samotného
+    commitu Fedory po commitu DB tím pokryté není; zaloguje se jako ERROR s ``ident_cely``
+    (``core_repository_connector.FedoraTransaction.commit_transaction.failed``).
+
+    :param sender: Model, který signál vyvolal (``SamostatnyNalez``).
+    :param instance: Smazaný samostatný nález; používá se jeho ``projekt``, ``active_transaction``
+        a ``close_active_transaction_when_finished``.
+    :param kwargs: Dodatečné argumenty předané Django signálem.
+    """
+    fedora_transaction = instance.active_transaction
+    logger.debug(
+        "pas.signals.samostatny_nalez_delete_update_projekt.start",
+        extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)},
+    )
+    if instance.projekt:
+        instance.projekt.save_metadata(fedora_transaction)
+    if instance.close_active_transaction_when_finished:
+        transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
+    logger.debug(
+        "pas.signals.samostatny_nalez_delete_update_projekt.end",
+        extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)},
     )
 
 
@@ -161,23 +181,16 @@ def delete_uzivatel_spoluprce_connections(sender, instance: UzivatelSpoluprace, 
     """
     logger.debug("pas.signals.delete_uzivatel_spoluprce_connections.start", extra={"pk": instance.pk})
     fedora_transaction = instance.active_transaction
-
-    def save_metadata(close_transaction=False):
-        """
-        Uloží metadata. v aplikaci.
-
-        :param close_transaction: Parametr ``close_transaction`` předává se do volání ``save_metadata()``.
-        """
-        Historie.save_record_deletion_record(record=instance)
-        instance.vedouci.save_metadata(fedora_transaction)
-        if instance.historie and instance.historie.pk:
-            instance.historie.delete()
-        instance.spolupracovnik.save_metadata(fedora_transaction, close_transaction=close_transaction)
-
+    # Zápisy do DB i Fedory uvnitř DB transakce, aby chyba Fedory vedla k rollbacku smazání (#4437).
+    Historie.save_record_deletion_record(record=instance)
+    instance.vedouci.save_metadata(fedora_transaction)
+    if instance.historie and instance.historie.pk:
+        instance.historie.delete()
+    instance.spolupracovnik.save_metadata(fedora_transaction)
+    # User.save_metadata s close_transaction=True commitne Fedoru hned (na rozdíl od ModelWithMetadata),
+    # proto se commit Fedora transakce plánuje explicitně až po commitu DB.
     if instance.close_active_transaction_when_finished:
-        transaction.on_commit(lambda: save_metadata(True))
-    else:
-        save_metadata()
+        transaction.on_commit(fedora_transaction.mark_transaction_as_closed)
     logger.debug(
         "pas.signals.delete_uzivatel_spoluprce_connections.end",
         extra={"pk": instance.pk, "transaction": getattr(fedora_transaction, "uid", None)},

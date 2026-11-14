@@ -51,6 +51,7 @@ from core.soubor_naming import get_mime_safe_soubor_name, get_next_soubor_name
 from core.translation import format_message
 from core.utils import get_cadastre_from_point, hodnota_pro_log
 from django.conf import settings
+from django.contrib.auth.signals import user_logged_in
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.contrib.gis.geos import Point as GEOSPoint
 from django.core.cache import cache
@@ -151,6 +152,25 @@ _ALLOWED_SCHEMA_URL_PATTERNS = (
 
 _XSD_BYTES_CACHE: dict[str, bytes] = {}
 _XSD_BYTES_CACHE_LOCK = threading.Lock()
+
+
+def _rollback_fedora_transaction(fedora_transaction) -> None:
+    """
+    Provede záložní rollback aktivní Fedora transakce a případné selhání jen zaloguje.
+
+    Po selhaném commitu (timeout, 409) zůstává transakce ve stavu ``ACTIVE`` a rollback může selhat
+    stejně (další timeout, 404/410 u zahozené transakce). Výjimka z rollbacku by v obslužné větvi
+    přeskočila uvolnění zámku záznamu a vrácení řízené chybové odpovědi (#4473).
+
+    :param fedora_transaction: Transakce, která se má zrušit; neaktivní nebo dosud nevytvořená (``None``)
+        transakce se nechá být.
+    """
+    if fedora_transaction is None or fedora_transaction.status != FedoraTransactionStatus.ACTIVE:
+        return
+    try:
+        fedora_transaction.rollback_transaction()
+    except Exception as rollback_err:
+        logger.warning("api.views._rollback_fedora_transaction.rollback_failed", extra={"error": rollback_err})
 
 
 def _xsd_redis_key(url: str) -> str:
@@ -2886,8 +2906,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 instance.save()
         except ImportValidationException as exc:
             logger.warning("api.views.SamostatnyNalezXmlImportView.post.import_validation_error", extra={"error": exc})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             return self._fail(
                 log_entry,
                 {"validation_errors": [e.to_dict() for e in exc.import_errors]},
@@ -2895,8 +2914,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
             )
         except IntegrityError as err:
             logger.warning("api.views.SamostatnyNalezXmlImportView.post.integrity_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             constraint = getattr(getattr(err.__cause__, "diag", None), "constraint_name", None)
             if constraint == "osoba_jmeno_prijmeni_key":
                 detail = _("api.views.SamostatnyNalezXmlImportView.post.nalezce_already_exists")
@@ -2909,8 +2927,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
             )
         except FedoraError as err:
             logger.error("api.views.SamostatnyNalezXmlImportView.post.fedora_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezXmlImportView.post.internal_error")},
@@ -2918,8 +2935,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
             )
         except DatabaseError as err:
             logger.error("api.views.SamostatnyNalezXmlImportView.post.database_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezXmlImportView.post.internal_error")},
@@ -2927,8 +2943,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
             )
         except Exception as err:
             logger.error("api.views.SamostatnyNalezXmlImportView.post.unexpected_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezXmlImportView.post.internal_error")},
@@ -2946,8 +2961,7 @@ class SamostatnyNalezXmlImportView(SamostatnyNalezXmlBaseView):
                 "api.views.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving",
                 extra={"error": err},
             )
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             return self._fail(
                 log_entry,
                 {"detail": _("api.views.SamostatnyNalezXmlImportView.post.fedor_error_reading_data_after_saving")},
@@ -3141,12 +3155,13 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
                 status.HTTP_429_TOO_MANY_REQUESTS,
             )
 
-        log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
-        log_entry.save(update_fields=["status"])
-
-        old_evidencni_cislo = instance.evidencni_cislo
-        fedora_transaction = FedoraTransaction(transaction_user=request.user)
+        fedora_transaction = None
         try:
+            log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
+            log_entry.save(update_fields=["status"])
+
+            old_evidencni_cislo = instance.evidencni_cislo
+            fedora_transaction = FedoraTransaction(transaction_user=request.user)
             with transaction.atomic():
                 instance.evidencni_cislo = evidencni_cislo
                 instance.active_transaction = fedora_transaction
@@ -3158,8 +3173,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             self._update_igsn_if_archived(instance)
         except DoiWriteError as err:
             logger.error("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.igsn_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3168,8 +3182,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             )
         except FedoraError as err:
             logger.error("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3178,8 +3191,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             )
         except DatabaseError as err:
             logger.error("api.views.SamostatnyNalezEvidencniCisloPatchView.patch.database_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3190,8 +3202,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
             logger.error(
                 "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.unexpected_error", extra={"error": err}
             )
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3207,8 +3218,7 @@ class SamostatnyNalezEvidencniCisloPatchView(PasApiBaseView):
                 "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.fedora_error_reading_metadata",
                 extra={"error": err},
             )
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3420,37 +3430,39 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
                 status.HTTP_429_TOO_MANY_REQUESTS,
             )
 
-        log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
-        log_entry.save(update_fields=["status"])
-
-        mimetype = Soubor.get_mime_types(uploaded_file)
-        mime_extensions = Soubor.get_file_extension_by_mime(uploaded_file)
-        if len(mime_extensions) == 0:
-            self._release_record_lock(ident_cely, lock_ttl)
-            return self._fail(
-                log_entry,
-                {"detail": _("core.views.post_upload.mime_rename_failed")},
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-
-        new_name = get_next_soubor_name(instance, uploaded_file.name)
-        if new_name is False:
-            self._release_record_lock(ident_cely, lock_ttl)
-            return self._fail(
-                log_entry,
-                {
-                    "detail": format_message(
-                        gettext_noop("core.views.post_upload.error.maximal_file_name_exceeded"), ident=ident_cely
-                    )
-                },
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-        new_name = get_mime_safe_soubor_name(new_name, new_name, mime_extensions)
-
-        fedora_transaction = FedoraTransaction(transaction_user=request.user)
+        fedora_transaction = None
         try:
+            log_entry.status = API_REQUEST_LOG_STATUS_PROCESSING
+            log_entry.save(update_fields=["status"])
+
+            mimetype = Soubor.get_mime_types(uploaded_file)
+            mime_extensions = Soubor.get_file_extension_by_mime(uploaded_file)
+            if len(mime_extensions) == 0:
+                self._release_record_lock(ident_cely, lock_ttl)
+                return self._fail(
+                    log_entry,
+                    {"detail": _("core.views.post_upload.mime_rename_failed")},
+                    status.HTTP_422_UNPROCESSABLE_ENTITY,
+                )
+
+            new_name = get_next_soubor_name(instance, uploaded_file.name)
+            if new_name is False:
+                self._release_record_lock(ident_cely, lock_ttl)
+                return self._fail(
+                    log_entry,
+                    {
+                        "detail": format_message(
+                            gettext_noop("core.views.post_upload.error.maximal_file_name_exceeded"), ident=ident_cely
+                        )
+                    },
+                    status.HTTP_422_UNPROCESSABLE_ENTITY,
+                )
+            new_name = get_mime_safe_soubor_name(new_name, new_name, mime_extensions)
+
             if mimetype in Soubor.PAS_ACCEPTED_MIMES:
                 binary_data = Soubor.remove_gps_data(binary_data)
+
+            fedora_transaction = FedoraTransaction(transaction_user=request.user)
             connector = FedoraRepositoryConnector(instance, fedora_transaction, skip_container_check=False)
             rep_bin_file = connector.save_binary_file(new_name, mimetype, binary_data)
             soubor_instance = Soubor(
@@ -3474,8 +3486,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             self._update_igsn_if_archived(instance)
         except GpsDataRemovalError:
             logger.exception("api.views.SamostatnyNalezFotografieUploadView.post.gps_cleanup_failed")
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3484,8 +3495,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             )
         except DoiWriteError as err:
             logger.error("api.views.SamostatnyNalezFotografieUploadView.post.igsn_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3494,8 +3504,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             )
         except FedoraError as err:
             logger.error("api.views.SamostatnyNalezFotografieUploadView.post.fedora_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3504,8 +3513,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             )
         except DatabaseError as err:
             logger.error("api.views.SamostatnyNalezFotografieUploadView.post.database_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3514,8 +3522,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             )
         except Exception as err:
             logger.error("api.views.SamostatnyNalezFotografieUploadView.post.unexpected_error", extra={"error": err})
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3530,8 +3537,7 @@ class SamostatnyNalezFotografieUploadView(PasApiBaseView):
             logger.error(
                 "api.views.SamostatnyNalezFotografieUploadView.post.fedora_error_reading_metadata", extra={"error": err}
             )
-            if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
-                fedora_transaction.rollback_transaction()
+            _rollback_fedora_transaction(fedora_transaction)
             self._release_record_lock(ident_cely, lock_ttl)
             return self._fail(
                 log_entry,
@@ -3579,6 +3585,18 @@ class GetUserInfo(APIView):
         "get",
     ]
 
+    def __init__(self, **kwargs):
+        """
+        Inicializuje pohled a nastaví příznak ``is_exception`` na ``False``.
+
+        Příznak přepne ``handle_exception`` na ``True``; podle něj se chybová odpověď
+        vykreslí jako JSON místo XML.
+
+        :param kwargs: Atributy pohledu předané z ``as_view()``, předávají se do ``APIView.__init__()``.
+        """
+        super().__init__(**kwargs)
+        self.is_exception = False
+
     def get(self, request, format=None):
         """
         Vrací výsledek operace.
@@ -3604,36 +3622,34 @@ class GetUserInfo(APIView):
 
     def perform_content_negotiation(self, request, force=False):
         """
-        Provádí operaci perform content negotiation.
+        Vybere renderer odpovědi; po výjimce vždy JSON, jinak standardní negociace DRF (XML).
 
-        :param request: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
-        :param force: Parametr ``force`` se předává do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací hodnotu podle větve zpracování, typicky: n-tici, výsledek volání ``perform_content_negotiation()``.
+        :param request: Požadavek DRF předávaný do standardní negociace.
+        :param force: Předává se do ``APIView.perform_content_negotiation()``; při ``True`` se při
+            neshodě s hlavičkou ``Accept`` použije první renderer místo vyhození ``NotAcceptable``.
+        :return: Dvojice ``(renderer, media_type)``.
         """
-        try:
-            self.is_exception
+        if self.is_exception:
             return JSONRenderer(), JSONRenderer.media_type
-        except Exception:
-            return super().perform_content_negotiation(request, force)
+        return super().perform_content_negotiation(request, force)
 
     def finalize_response(self, request, response, *args, **kwargs):
         """
-        Provádí operaci finalize response.
+        Dokončí odpověď; po výjimce přepne renderer požadavku na JSON.
 
-        :param request: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, ``finalize_response()``, pracuje se s atributy ``accepted_renderer``, ``accepted_media_type``, vstupuje do návratové hodnoty.
-        :param response: Textový nebo strukturální vstup `response` používaný při sestavení nebo zpracování obsahu.
-        :param args: Parametr ``args`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
+        Případné výjimky se nepotlačují a propadnou do standardního zpracování Django/DRF.
 
-            :return: Vrací výsledek volání ``finalize_response()``.
+        :param request: Požadavek DRF; po výjimce se mu přepíšou ``accepted_renderer`` a ``accepted_media_type``.
+        :param response: Odpověď vrácená z ``get()`` nebo ``handle_exception()``.
+        :param args: Poziční argumenty předávané do ``APIView.finalize_response()``.
+        :param kwargs: Pojmenované argumenty předávané do ``APIView.finalize_response()``.
+        :return: Odpověď dokončená voláním ``APIView.finalize_response()``.
         """
-        try:
-            self.is_exception
-            neg = self.perform_content_negotiation(request, force=True)
-            request.accepted_renderer, request.accepted_media_type = neg
-        finally:
-            return super().finalize_response(request, response, *args, **kwargs)
+        if self.is_exception:
+            request.accepted_renderer, request.accepted_media_type = self.perform_content_negotiation(
+                request, force=True
+            )
+        return super().finalize_response(request, response, *args, **kwargs)
 
 
 @method_decorator(odstavka_in_progress, name="post")
@@ -3642,17 +3658,23 @@ class ObtainAuthTokenWithUpdate(ObtainAuthToken):
 
     def post(self, request, *args, **kwargs):
         """
-        Obsluhuje HTTP metodu POST.
+        Ověří přihlašovací údaje a vrátí platný API token uživatele.
 
-        :param request: Parametr ``request`` předává se do volání ``get_serializer()``, pracuje se s atributy ``data``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+        Po úspěšném ověření vyšle signál ``user_logged_in`` (bez vytvoření session), takže se stejně
+        jako při přihlášení do AMČR aktualizuje ``last_login`` a zapíše ``UzivatelPrihlaseniLog``.
+        Token starší než ``TOKEN_EXPIRATION_HOURS`` se nahradí novým.
 
-            :return: Vrací výsledek volání ``Response()``.
+        :param request: Požadavek s ``username`` a ``password`` v ``request.data``.
+        :param args: Poziční argumenty pohledu (nepoužívají se).
+        :param kwargs: Pojmenované argumenty pohledu (nepoužívají se).
+        :return: ``Response`` s klíčem ``token``.
+        :raises ValidationError: Při neplatných přihlašovacích údajích (DRF vrátí HTTP 400).
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
+        # Same signal as django.contrib.auth.login(), without creating a session.
+        user_logged_in.send(sender=user.__class__, request=request._request, user=user)
         token, created = Token.objects.get_or_create(user=user)
         if not token.created + datetime.timedelta(hours=settings.TOKEN_EXPIRATION_HOURS) > timezone.now():
             try:

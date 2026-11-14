@@ -1,34 +1,35 @@
 # .agents/scripts
 
-Skripty a pomocné nástroje pro AI review systém v tomto repozitáři.
-Všechny skripty předpokládají standardní strukturu `.agents/` popsanou v
-`AGENTS.md` a `.agents/README.md`.
+Scripts for the AI review system and the delivered AIS CR workflows in this repository.
+All scripts assume the standard `.agents/` layout described in `AGENTS.md` and `.agents/README.md`.
 
-## Hlavní skripty
+## Delivered tooling (read-only here)
 
-- `review_tools.py` — repo‑agnostický CLI nástroj pro ověřování a
-  sumarizaci artefaktů v `.agents/`. Umí mimo jiné:
-  - `hash` — kontrola hashů souborů podle `review_cache.json`
-  - `cross-validate` — konzistence `bugs.md`, backlogu a `final_audit.md`
-  - `coverage-gaps` — nevdokumentované modely/skripty/JS soubory
-  - `id-inventory` — inventarizace a křížové reference ID (`BUG-*`, `SEC-*`, …)
-  - `lint-artifacts` — validace struktury `.agents/`
-  - `prompt-evolution` — stav integrace návrhů z `prompt_evolution/`
-  - `repo-structure` — souhrn struktury repozitáře
-  - `status` — dashboard stavu review systému
-  - `all` — spuštění všech výše uvedených kontrol
+These files are delivered from the `aiscr-management` hub and recorded in `.agents/delivery-manifest.json`; propose changes at the hub rather than editing them here.
 
-## Spuštění
+- `codebase_review.py` — repo-agnostic CLI for validating and summarising the `.agents/` review artifacts. Subcommands include:
+  - `hash` — compare file hashes against `review_cache.json`
+  - `cross-validate` — consistency of `bugs.md`, the backlog, and `final_audit.md`
+  - `coverage-gaps` — undocumented models, scripts, and JS files
+  - `id-inventory` — inventory and cross-references of IDs (`BUG-*`, `SEC-*`, …)
+  - `lint-artifacts` — structural validation of `.agents/`
+  - `render` — regenerate `bugs.md` and `refactoring_backlog.md` from their TOML sources
+  - `issue-transfer`, `record-issue`, `reconcile-issues` — deduplicated GitHub issue capture for findings
+  - `status` — review system dashboard; `all` — run every validation check
+- `github/` — governed GitHub issue and PR-review engines used by the enrolled workflows.
+- `lib/` — shared library modules for the delivered scripts.
+- Further workflow scripts (workstation safety, release notes) as enrolled.
 
-Spouštějte z kořene repozitáře, typicky:
+## Running
+
+Run from the repository root, typically:
 
 ```bash
-python .agents/scripts/review_tools.py status
-python .agents/scripts/review_tools.py all
+python .agents/scripts/codebase_review.py status
+python .agents/scripts/codebase_review.py all
 ```
 
-Volitelné přepínače:
+Optional switches:
 
-- `--repo-root` — cesta ke kořeni repozitáře (jinak se detekuje z `.git`)
-- `--config` — cesta k `review_config.yaml` (výchozí `.agents/config/review_config.yaml`)
-
+- `--repo-root` — path to the repository root (otherwise detected from `.git`)
+- `--config` — path to `review_config.toml` (default `.agents/config/review_config.toml`)

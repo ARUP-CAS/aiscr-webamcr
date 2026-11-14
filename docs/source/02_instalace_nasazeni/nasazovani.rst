@@ -145,12 +145,10 @@ Niže je přehled dostupných parametrů.
 * mail_conf - konfigurace pro odesílání emailů
 * redis_pass - heslo k redis serveru
 * grafana_admin_password - heslo pro rozhraní grafana
-* elastic_pass - heslo ke službě elasticsearch
-* logstash_elastic_pass - heslo ke službě logstash
+* logstash_elastic_pass - heslo účtu ``amcr_logger``, kterým logstash zapisuje do elasticsearch
 * prometheus_config - nastavení služby prometheus
 * postgresql_exporter - heslo k PostgreSQL databázi, která má být monitorována
 * postgresql_exporter_uri - adresa rozhraní databáze PostgreSQL, která má být monitorována
-* logstash_elastic_host - adresa elasticsearch databáze
 
 **Souhrn:** ``./scripts/prod_deploy.sh``, docker swarm-mode, <ip_adresa_stanice:8080>, existující definice docker secrets.
 
@@ -167,7 +165,6 @@ Základní spuštění probíhá bez jakéhokoliv volitelného parametru, tzn. `
 * mail_conf: secrets_mail_client.json
 * redis_pass: redis_pass.txt
 * grafana_admin_password: grafana_admin_password.txt
-* elastic_pass: elastic_password.txt
 * logstash_elastic_pass: logstash_elastic_password.txt
 
 **Souhrh:** ``./scripts/git_prod_deploy.sh``, docker compose mode, <ip_adresa_stanice:8081>, existující soubory s definicí secrets.

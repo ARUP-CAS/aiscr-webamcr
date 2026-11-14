@@ -8,6 +8,7 @@ Tato sekce popisuje testování aplikace WebAMČR.
    :caption: Obsah:
 
    selenium_testy
+   integracni_testy
    databaze_konzistence_testy
 
 

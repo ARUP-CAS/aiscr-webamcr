@@ -43,6 +43,12 @@ def get_secret(setting, default_value=None):
         return secrets.get(setting, "X")
 
 
+# Sdílený přepínač síťových integračních testů; výchozí stav je vypnuto.
+FEDORA_INTEGRATION_TESTS = str(get_secret("FEDORA_INTEGRATION_TESTS", False)).lower() in {"true", "1"}
+INTEGRATION_API_TEST_USERNAME = get_secret("INTEGRATION_API_TEST_USERNAME", "")
+INTEGRATION_API_TEST_PASSWORD = get_secret("INTEGRATION_API_TEST_PASSWORD", "")
+
+
 def get_mail_secret(setting, default_value=None):
     """
     Vrací mail secret.
@@ -708,6 +714,16 @@ FEDORA_ADMIN_USER = get_secret("FEDORA_ADMIN_USER", "")
 FEDORA_ADMIN_USER_PASSWORD = get_secret("FEDORA_ADMIN_USER_PASSWORD", "")
 FEDORA_PROTOCOL = get_secret("FEDORA_PROTOCOL", "https")
 FEDORA_TRANSACTION_URL = get_secret("FEDORA_TRANSACTION_URL", "")
+# Timeouty HTTP požadavků do Fedory v sekundách (#4454). Read timeout omezuje čekání na další data
+# od Fedory, ne celkovou dobu požadavku. Výchozí 300 s pokrývá nejdelší pozorované čekání na zámek
+# (~180 s); connect 10 s dává rezervu při swapování hostitele. Zápis obsahu binárních souborů
+# a commit transakce mají 600 s jako ``uwsgi_read_timeout`` v ``proxy/default.conf``: Fedora po
+# přijetí souboru počítá digest a při commitu přesouvá obsah do OCFL (na produkci nejvýš ~8 s).
+# Přenos souboru od klienta se do timeoutu nepočítá, tělo požadavku bufferuje nginx dřív, než
+# požadavek převezme Django.
+FEDORA_CONNECT_TIMEOUT = float(get_secret("FEDORA_CONNECT_TIMEOUT", 10))
+FEDORA_READ_TIMEOUT = float(get_secret("FEDORA_READ_TIMEOUT", 300))
+FEDORA_CONTENT_READ_TIMEOUT = float(get_secret("FEDORA_CONTENT_READ_TIMEOUT", 600))
 
 DATACITE_URL = get_secret("DATACITE_URL", "")
 DOI_USER = get_secret("DOI_USER", "")

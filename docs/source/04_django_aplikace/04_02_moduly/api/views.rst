@@ -1056,6 +1056,15 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: __init__()
+
+      Inicializuje pohled a nastaví příznak ``is_exception`` na ``False``.
+
+      Příznak přepne ``handle_exception`` na ``True``; podle něj se chybová odpověď
+      vykreslí jako JSON místo XML.
+
+      :param kwargs: Atributy pohledu předané z ``as_view()``, předávají se do ``APIView.__init__()``.
+
    .. py:method:: get()
 
       Vrací výsledek operace.
@@ -1075,23 +1084,24 @@ Třídy
 
    .. py:method:: perform_content_negotiation()
 
-      Provádí operaci perform content negotiation.
+      Vybere renderer odpovědi; po výjimce vždy JSON, jinak standardní negociace DRF (XML).
 
-      :param request: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
-      :param force: Parametr ``force`` se předává do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
-
-      :return: Vrací hodnotu podle větve zpracování, typicky: n-tici, výsledek volání ``perform_content_negotiation()``.
+      :param request: Požadavek DRF předávaný do standardní negociace.
+      :param force: Předává se do ``APIView.perform_content_negotiation()``; při ``True`` se při
+          neshodě s hlavičkou ``Accept`` použije první renderer místo vyhození ``NotAcceptable``.
+      :return: Dvojice ``(renderer, media_type)``.
 
    .. py:method:: finalize_response()
 
-      Provádí operaci finalize response.
+      Dokončí odpověď; po výjimce přepne renderer požadavku na JSON.
 
-      :param request: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, ``finalize_response()``, pracuje se s atributy ``accepted_renderer``, ``accepted_media_type``, vstupuje do návratové hodnoty.
-      :param response: Textový nebo strukturální vstup `response` používaný při sestavení nebo zpracování obsahu.
-      :param args: Parametr ``args`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
+      Případné výjimky se nepotlačují a propadnou do standardního zpracování Django/DRF.
 
-      :return: Vrací výsledek volání ``finalize_response()``.
+      :param request: Požadavek DRF; po výjimce se mu přepíšou ``accepted_renderer`` a ``accepted_media_type``.
+      :param response: Odpověď vrácená z ``get()`` nebo ``handle_exception()``.
+      :param args: Poziční argumenty předávané do ``APIView.finalize_response()``.
+      :param kwargs: Pojmenované argumenty předávané do ``APIView.finalize_response()``.
+      :return: Odpověď dokončená voláním ``APIView.finalize_response()``.
 
 
 .. py:class:: ObtainAuthTokenWithUpdate
@@ -1102,17 +1112,32 @@ Třídy
 
    .. py:method:: post()
 
-      Obsluhuje HTTP metodu POST.
+      Ověří přihlašovací údaje a vrátí platný API token uživatele.
 
-      :param request: Parametr ``request`` předává se do volání ``get_serializer()``, pracuje se s atributy ``data``.
-      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+      Po úspěšném ověření vyšle signál ``user_logged_in`` (bez vytvoření session), takže se stejně
+      jako při přihlášení do AMČR aktualizuje ``last_login`` a zapíše ``UzivatelPrihlaseniLog``.
+      Token starší než ``TOKEN_EXPIRATION_HOURS`` se nahradí novým.
 
-      :return: Vrací výsledek volání ``Response()``.
+      :param request: Požadavek s ``username`` a ``password`` v ``request.data``.
+      :param args: Poziční argumenty pohledu (nepoužívají se).
+      :param kwargs: Pojmenované argumenty pohledu (nepoužívají se).
+      :return: ``Response`` s klíčem ``token``.
+      :raises ValidationError: Při neplatných přihlašovacích údajích (DRF vrátí HTTP 400).
 
 
 Funkce
 ------
+
+.. py:function:: _rollback_fedora_transaction(fedora_transaction)
+
+   Provede záložní rollback aktivní Fedora transakce a případné selhání jen zaloguje.
+
+   Po selhaném commitu (timeout, 409) zůstává transakce ve stavu ``ACTIVE`` a rollback může selhat
+   stejně (další timeout, 404/410 u zahozené transakce). Výjimka z rollbacku by v obslužné větvi
+   přeskočila uvolnění zámku záznamu a vrácení řízené chybové odpovědi (#4473).
+
+   :param fedora_transaction: Transakce, která se má zrušit; neaktivní nebo dosud nevytvořená (``None``)
+       transakce se nechá být.
 
 .. py:function:: _xsd_redis_key(url)
 

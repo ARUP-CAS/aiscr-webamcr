@@ -15,16 +15,23 @@ nespouští, takže se při testech do repozitáře nesahá.
 
 import datetime
 import logging
+import os
+import tempfile
+import threading
+import time
+import zipfile
+from pathlib import Path
 from unittest import mock
 
 from core.utils import reprezentativni_bod_sql
 from cron import tasks
+from django.apps import apps as django_apps
 from django.contrib.gis.geos import MultiPolygon, Point, Polygon
 from django.db import connection, transaction
 from django.test import SimpleTestCase, TestCase, override_settings
 from heslar.models import RuianKatastr, RuianKraj, RuianOkres, RuianSyncRun
 from heslar.ruian_sync import reassign as reassign_mod
-from heslar.ruian_sync import syncer
+from heslar.ruian_sync import souhrn_varovani, syncer
 from heslar.ruian_sync.provider import (
     EVENT_UPSERT,
     LEVEL_KATASTR,
@@ -302,7 +309,7 @@ class UplnostZdrojeTests(TestCase):
             syncer._zkontroluj_uplnost_zdroje(self._stav(chybi_katastru=syncer._MAX_UBYTEK_KATASTRU + 1), self.run)
 
         self.run.refresh_from_db()
-        self.assertIn("Neúplný zdroj", self.run.note or "", "důvod zastavení musí zůstat v auditu")
+        self.assertIn("Neúplný zdroj", self.run.warnings or "", "důvod zastavení musí zůstat v auditu")
 
     def test_chybejici_okresy_zastavi_beh(self):
         """Zánik okresu je změna „jednou za generaci“, víc než jeden = vadný vstup."""
@@ -1089,6 +1096,276 @@ class RozpoznaniOpakovaniTests(TestCase):
             "po běhu nesmí zůstat žádný řádek running",
         )
 
+    def test_opakovani_se_zapise_do_poznamky(self):
+        """
+        Opakování dne po selhání je informace, ne varování.
+
+        Zapíše se do ``note``, aby ve výpisu běhů nevyvolalo ⚠.
+        """
+        self._spust([(RuianSyncRun.STATUS_FAILED, "/tmp/20260404_ST_ZKSH.xml.zip")])
+
+        opakovany = RuianSyncRun.objects.filter(data_valid_to=self.DEN).order_by("-pk").first()
+        self.assertEqual(opakovany.note, tasks.NOTE_OPAKOVANI_PO_SELHANI)
+        self.assertEqual(opakovany.warnings, "")
+
+
+class SouhrnVarovaniTests(SimpleTestCase):
+    """
+    Testy souhrnu varování z logu do auditu běhu.
+
+    Varování z parseru, stahování a přepočtu se logují bez vazby na běh.
+    :class:`SberVarovani` je zachytí a do ``warnings`` zapíše jeden řádek za
+    druh události, aby byla vidět v administraci a tabulku nezaplavila.
+    """
+
+    def _sber(self, zaloguj, warnings=""):
+        """
+        Spustí sběr, zaloguje události a vrátí zapsané řádky.
+
+        :param zaloguj: Funkce, která během sběru loguje.
+        :param warnings: Výchozí obsah ``run.warnings``.
+        :return: Seznam řádků předaných do ``_append_run_warning``.
+        """
+        run = RuianSyncRun(warnings=warnings)
+        zapsano = []
+        sber = souhrn_varovani.SberVarovani(run).start()
+        try:
+            zaloguj()
+        finally:
+            with mock.patch.object(syncer, "_append_run_warning", lambda r, radek: zapsano.append(radek)):
+                sber.zapis()
+        return zapsano
+
+    def test_sledovana_udalost_se_shrne(self):
+        """Opakovaná událost dá jediný řádek s počtem, příklady a klíčem události."""
+        log = logging.getLogger("heslar.ruian_sync.reassign")
+
+        def zaloguj():
+            for ident in ("C-1", "C-2", "C-3"):
+                log.warning("heslar.ruian_sync.reassign.reassign_projekt.no_geometry", extra={"ident_cely": ident})
+
+        radky = self._sber(zaloguj)
+
+        self.assertEqual(len(radky), 1)
+        self.assertIn("Projekt bez geometrie", radky[0])
+        self.assertIn("3×", radky[0])
+        self.assertIn("C-1, C-2, C-3", radky[0])
+        self.assertIn("[heslar.ruian_sync.reassign.reassign_projekt.no_geometry]", radky[0])
+
+    def test_varovani_zapsana_syncerem_se_nezdvoji(self):
+        """
+        Události, které syncer zapisuje do ``warnings`` sám, se nesbírají.
+
+        Prefix ``_delete_katastr.reassign_`` zachytí chyby Fedory při přesunu
+        záznamů, ale ne ``_delete_katastr.restricted``.
+        """
+        log = logging.getLogger("heslar.ruian_sync.syncer")
+
+        def zaloguj():
+            log.error("heslar.ruian_sync.syncer._delete_katastr.restricted", extra={"kod": 1})
+            log.error("heslar.ruian_sync.syncer._delete_katastr.reassign_az_fedora_error", extra={"ident_cely": "C-9"})
+
+        radky = self._sber(zaloguj)
+
+        self.assertEqual(len(radky), 1)
+        self.assertIn("reassign_az_fedora_error", radky[0])
+
+    def test_nesledovana_a_debug_udalost_se_ignoruje(self):
+        """Debug zprávy ani nesledované události souhrn nevytvoří."""
+        log = logging.getLogger("heslar.ruian_sync.syncer")
+
+        def zaloguj():
+            log.debug("heslar.ruian_sync.syncer._log_hranice_change_if_significant.significant")
+            log.warning("heslar.ruian_sync.syncer.neco_jineho")
+
+        self.assertEqual(self._sber(zaloguj), [])
+
+    def test_jine_vlakno_se_nezapocita(self):
+        """Varování z jiného vlákna téhož procesu do auditu běhu nepatří."""
+        log = logging.getLogger("heslar.ruian_sync.syncer")
+
+        def zaloguj():
+            vlakno = threading.Thread(
+                target=lambda: log.warning("heslar.ruian_sync.syncer._upsert_okres.precislovani", extra={"kod": 5})
+            )
+            vlakno.start()
+            vlakno.join()
+
+        self.assertEqual(self._sber(zaloguj), [])
+
+    def test_stejny_radek_se_neopakuje(self):
+        """Opakovaný pokus o tentýž den nepřipíše identický řádek znovu."""
+        log = logging.getLogger("heslar.ruian_sync.vfr_download")
+
+        def zaloguj():
+            log.warning("heslar.ruian_sync.vfr_download.download_change_file.atom_failed", extra={"day": "2026-10-06"})
+
+        prvni = self._sber(zaloguj)
+        druhy = self._sber(zaloguj, warnings=prvni[0])
+
+        self.assertEqual(len(prvni), 1)
+        self.assertEqual(druhy, [])
+
+    def test_fallback_centroidu_neni_chyba_vypoctu(self):
+        """Dopočítaný centroid z fallbacku má vlastní řádek, oddělený od chyb výpočtu."""
+        log = logging.getLogger("heslar.ruian_sync.shp_importer")
+
+        def zaloguj():
+            log.warning("heslar.ruian_sync.shp_importer._centroid_wkt.fallback_used", extra={"kod": 1})
+            log.warning("heslar.ruian_sync.shp_importer._centroid_wkt.error", extra={"kod": 2})
+
+        radky = self._sber(zaloguj)
+
+        self.assertEqual(len(radky), 2)
+        self.assertIn("použit centroid polygonu: 1×", radky[0])
+        self.assertIn("Nepodařilo se spočítat centroid: 1×", radky[1])
+
+    def test_selhani_zapisu_nevyhodi_vyjimku(self):
+        """
+        Selhaný zápis souhrnu jen zaloguje chybu.
+
+        Volá se z ``finally`` – výjimka by přebila skutečnou chybu běhu nebo
+        přeskočila uložení úspěšného stavu.
+        """
+        log = logging.getLogger("heslar.ruian_sync.syncer")
+        sber = souhrn_varovani.SberVarovani(RuianSyncRun(warnings="")).start()
+        log.warning("heslar.ruian_sync.syncer._upsert_okres.precislovani", extra={"kod": 5})
+
+        def selze(run, radek):
+            raise RuntimeError("spojení ztraceno")
+
+        with mock.patch.object(syncer, "_append_run_warning", selze), self.assertLogs(
+            "heslar.ruian_sync.souhrn_varovani", level="ERROR"
+        ):
+            self.assertEqual(sber.zapis(), ())
+
+    def test_handler_se_po_zapisu_odpoji(self):
+        """Po zápisu nesmí na loggerech zůstat handler sběru."""
+        self._sber(lambda: None)
+
+        for jmeno in souhrn_varovani.LOGGERY:
+            self.assertFalse(
+                [h for h in logging.getLogger(jmeno).handlers if isinstance(h, souhrn_varovani._Handler)],
+                jmeno,
+            )
+
+
+@_BEZ_CACHEOPS
+class VarovaniBehuTests(TestCase):
+    """
+    Testy oddělení varování od informativních poznámek běhu.
+
+    Sloupec ⚠ ve výpisu běhů dřív hlídal ``note``, a tak se objevoval i u
+    úspěšného dne bez změn s poznámkou ``no_changes (404)``. Varování proto
+    mají vlastní pole ``warnings`` a ⚠ reaguje jen na ně.
+    """
+
+    def _run(self, **pole):
+        """
+        Založí audit záznam běhu.
+
+        :param pole: Hodnoty polí ``note``/``warnings``.
+        :return: Uložená instance :class:`RuianSyncRun`.
+        """
+        return RuianSyncRun.objects.create(
+            mode=RuianSyncRun.MODE_DELTA,
+            source="file_vfr",
+            triggered_by=RuianSyncRun.TRIGGER_CRON,
+            data_valid_to=datetime.date(2026, 10, 6),
+            variant="ZKSH",
+            status=RuianSyncRun.STATUS_SUCCESS,
+            **pole,
+        )
+
+    def _sloupec(self, run):
+        """
+        Vrátí obsah sloupce ⚠ pro daný běh.
+
+        :param run: Instance :class:`RuianSyncRun`.
+        :return: HTML buňky sloupce.
+        """
+        from django.contrib.admin.sites import site
+        from heslar.admin import RuianSyncRunAdmin
+
+        return RuianSyncRunAdmin(RuianSyncRun, site).warnings_flag(run)
+
+    def test_informativni_poznamka_varovani_nevyvola(self):
+        """Úspěšný den bez změn (``no_changes (404)``) nemá ⚠."""
+        self.assertEqual(self._sloupec(self._run(note="no_changes (404)")), "")
+
+    def test_varovani_ukaze_pocet_a_text(self):
+        """Sloupec ukáže počet varování a jejich text v tooltipu."""
+        bunka = self._sloupec(self._run(warnings="Díra v pokrytí\nKatastr 1 nelze smazat"))
+
+        self.assertIn("⚠ 2", bunka)
+        self.assertIn('title="Díra v pokrytí', bunka)
+
+    def test_zapis_varovani_nemeni_poznamku(self):
+        """Varování ze synceru jde do ``warnings``, informativní ``note`` zůstane."""
+        run = self._run(note="uzsz=UZSZ.xml.zip")
+
+        syncer._append_run_warning(run, "První")
+        syncer._append_run_warning(run, "Druhé")
+        run.refresh_from_db()
+
+        self.assertEqual(run.warnings, "První\nDruhé")
+        self.assertEqual(run.note, "uzsz=UZSZ.xml.zip")
+
+    def test_migrace_presune_jen_varovani(self):
+        """
+        Datová migrace přesune do ``warnings`` jen varování.
+
+        Informativní řádky (404 poznámky, soubor ÚZSZ) zůstanou v ``note``.
+        """
+        import importlib
+
+        migrace = importlib.import_module("heslar.migrations.0016_ruiansyncrun_warnings")
+        jen_info = self._run(note="no_changes (404)")
+        opakovany = self._run(note="opakovani_po_selhani")
+        smisene = self._run(note="uzsz=UZSZ.xml.zip\nTopologická kontrola: 1 děr v pokrytí")
+
+        migrace.presun_varovani(django_apps, None)
+        jen_info.refresh_from_db()
+        opakovany.refresh_from_db()
+        smisene.refresh_from_db()
+
+        self.assertEqual((jen_info.note, jen_info.warnings), ("no_changes (404)", ""))
+        self.assertEqual((opakovany.note, opakovany.warnings), ("opakovani_po_selhani", ""))
+        self.assertEqual(
+            (smisene.note, smisene.warnings), ("uzsz=UZSZ.xml.zip", "Topologická kontrola: 1 děr v pokrytí")
+        )
+
+
+class KlasifikacePoznamekMigraceTests(SimpleTestCase):
+    """
+    Testy, které řádky ``note`` migrace 0016 nechá jako informativní.
+
+    Informativní řádek přesunutý do ``warnings`` by vyvolal ⚠ za normální
+    stav – i po návratu migrace a jejím opětovném nasazení.
+    """
+
+    def setUp(self):
+        """Načte migraci (název modulu začíná číslicí, běžný import nejde)."""
+        import importlib
+
+        self.migrace = importlib.import_module("heslar.migrations.0016_ruiansyncrun_warnings")
+
+    def test_informativni_poznamky_cronu(self):
+        """Všechny poznámky, které cron a plný sync zapisují do ``note``, jsou informativní."""
+        for poznamka in (
+            "no_changes (404)",
+            "not_published_yet (404)",
+            tasks.NOTE_404_NEPOTVRZENO,
+            tasks.NOTE_OPAKOVANI_PO_SELHANI,
+            "uzsz=UZSZ.xml.zip",
+        ):
+            with self.subTest(poznamka=poznamka):
+                self.assertTrue(self.migrace._je_informativni(poznamka))
+
+    def test_varovani_neni_informativni(self):
+        """Text zapsaný dřív přes ``_append_run_note`` je varování."""
+        self.assertFalse(self.migrace._je_informativni("Topologická kontrola: 1 děr v pokrytí"))
+
 
 @_BEZ_CACHEOPS
 class UnieKatastruTests(TestCase):
@@ -1164,7 +1441,7 @@ class UnieKatastruTests(TestCase):
         self._mrizka()
 
         self.assertFalse(syncer._zkontroluj_unii_pokryti(self.run))
-        self.assertEqual(self.run.note, "")
+        self.assertEqual(self.run.warnings, "")
 
     def test_dira_se_odhali(self):
         """
@@ -1176,7 +1453,7 @@ class UnieKatastruTests(TestCase):
         self._mrizka(vynechat={(1, 1)})
 
         self.assertTrue(syncer._zkontroluj_unii_pokryti(self.run))
-        self.assertIn("1 děr v pokrytí", self.run.note)
+        self.assertIn("1 děr v pokrytí", self.run.warnings)
 
     def test_prekryv_mezi_okresy_se_odhali(self):
         """
@@ -1207,7 +1484,7 @@ class UnieKatastruTests(TestCase):
         with mock.patch.object(syncer, "_SQL_UNIE_POKRYTI", "SELECT 1 / 0"):
             self.assertTrue(syncer._zkontroluj_unii_pokryti(self.run))
 
-        self.assertIn("Sjednocení pokrytí selhalo", self.run.note)
+        self.assertIn("Sjednocení pokrytí selhalo", self.run.warnings)
         self.assertEqual(RuianKatastr.objects.filter(okres=self.okres_pravy).count(), 6)
 
 
@@ -1491,7 +1768,7 @@ class UbytekPokrytiTests(TestCase):
             syncer._ohlas_ubytek_pokryti(run, self.UBYTEK, podezrele=podezrele)
         run.refresh_from_db()
         uroven, _, hlaska = zachyt.output[0].partition(":")
-        return uroven, hlaska, run.note or ""
+        return uroven, hlaska, run.warnings or ""
 
     def test_full_bez_anomalie_je_jen_varovani(self):
         """Plošná výměna hranic při plném synchu není chyba."""
@@ -1590,7 +1867,7 @@ class SouladUrovniTests(TestCase):
             syncer._zkontroluj_soulad_urovni(self.run)
 
         self.run.refresh_from_db()
-        self.assertEqual(self.run.note or "", "")
+        self.assertEqual(self.run.warnings or "", "")
 
     def test_rozejity_okres_se_ohlasi(self):
         """
@@ -1606,7 +1883,7 @@ class SouladUrovniTests(TestCase):
 
         self.assertTrue(any("nesoulad" in radek for radek in zachyt.output), zachyt.output)
         self.run.refresh_from_db()
-        self.assertIn("okresů", self.run.note or "")
+        self.assertIn("okresů", self.run.warnings or "")
 
     def test_hlasi_se_kazda_rozejita_uroven(self):
         """Rozejdou-li se obě nadřazené úrovně, musí být v poznámce obě."""
@@ -1616,8 +1893,8 @@ class SouladUrovniTests(TestCase):
             syncer._zkontroluj_soulad_urovni(self.run)
 
         self.run.refresh_from_db()
-        self.assertIn("okresů", self.run.note or "")
-        self.assertIn("krajů", self.run.note or "")
+        self.assertIn("okresů", self.run.warnings or "")
+        self.assertIn("krajů", self.run.warnings or "")
 
     def test_chybejici_geometrie_je_chyba(self):
         """
@@ -1633,7 +1910,7 @@ class SouladUrovniTests(TestCase):
 
         self.assertTrue(any("chybi_geometrie" in radek for radek in zachyt.output), zachyt.output)
         self.run.refresh_from_db()
-        self.assertIn("nemá vyplněnou hranici", self.run.note or "")
+        self.assertIn("nemá vyplněnou hranici", self.run.warnings or "")
 
     def test_pri_chybejici_geometrii_se_plochy_neporovnavaji(self):
         """
@@ -1811,15 +2088,16 @@ class PollingProtokolTests(SimpleTestCase):
 
     def test_baze_odchytava_i_commit_failed(self):
         """
-        ``FedoraTransactionCommitFailedError`` není potomek ``FedoraError``.
+        ``FedoraTransactionCommitFailedError`` je potomek ``FedoraError`` (#4473).
 
-        Bez explicitního uvedení by prošla ven jako HTTP 500 – a to až poté,
-        co se index v Redis posunul, tedy s přeskočením zbytku fronty.
+        Báze ji přesto uvádí explicitně, aby odchyt nezávisel na dědění; jinak by prošla
+        ven jako HTTP 500 – a to až poté, co se index v Redis posunul, tedy s přeskočením
+        zbytku fronty.
         """
         from core.repository_connector import FedoraError, FedoraTransactionCommitFailedError
         from fedora_management.views import AdminRecordProcessingView
 
-        self.assertFalse(issubclass(FedoraTransactionCommitFailedError, FedoraError))
+        self.assertTrue(issubclass(FedoraTransactionCommitFailedError, FedoraError))
         self.assertIn(FedoraTransactionCommitFailedError, AdminRecordProcessingView.zpracovani_chyby)
 
     def test_cizi_redis_klic_se_odmitne(self):
@@ -2180,3 +2458,99 @@ class PresmerovaniPriStahovaniTests(SimpleTestCase):
             odpoved = vfr_download._otevri_s_overenim_presmerovani("https://vdp.cuzk.gov.cz/a.zip", timeout=5)
 
         self.assertEqual(odpoved.status_code, 200)
+
+
+class ZastaralaRozbalenaVrstvaTests(SimpleTestCase):
+    """
+    Testy rozbalení vrstvy SHP z novějšího archivu (#4455).
+
+    Zastaralá rozbalená kopie se nesmí vrátit, když ji novější archiv
+    neobsahuje – plný sync by jinak tiše naimportoval data z předchozího
+    archivu.
+    """
+
+    def setUp(self):
+        """Připraví dočasný adresář pro archiv a jeho rozbalenou kopii."""
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.zip_path = Path(self._tmp.name) / "1.zip"
+        self.unpack_dir = Path(self._tmp.name) / "1_unpacked"
+
+    def _zapis_archiv(self, soubory):
+        """
+        Zapíše ``1.zip`` s danými soubory a nastaví mu mtime do budoucna.
+
+        :param soubory: Slovník ``{jméno v archivu: obsah}``.
+        """
+        with zipfile.ZipFile(self.zip_path, "w") as zf:
+            for jmeno, obsah in soubory.items():
+                zf.writestr(jmeno, obsah)
+        budouci = time.time() + 3600
+        os.utime(self.zip_path, (budouci, budouci))
+
+    def _zastarala_kopie(self):
+        """Vytvoří rozbalenou kopii vrstvy ``VUSC_P`` s obsahem ``stara``."""
+        self.unpack_dir.mkdir()
+        for pripona in (".shp", ".shx", ".dbf"):
+            (self.unpack_dir / f"VUSC_P{pripona}").write_bytes(b"stara")
+
+    def _zdroj(self):
+        """
+        Sestaví :class:`ShpUzszSource` bez kontroly UZSZ v konstruktoru.
+
+        :return: Instance s nastaveným ``shp_path``.
+        """
+        from heslar.ruian_sync.shp_importer import ShpUzszSource
+
+        zdroj = ShpUzszSource.__new__(ShpUzszSource)
+        zdroj.shp_path = self.zip_path
+        return zdroj
+
+    def test_vrstva_chybejici_v_novejsim_archivu_vyhodi_chybu(self):
+        """Novější archiv bez vrstvy skončí chybou a stará kopie zmizí."""
+        self._zastarala_kopie()
+        self._zapis_archiv({"OKRESY_P.shp": b"nova"})
+
+        with self.assertLogs("heslar.ruian_sync.shp_importer", level="WARNING"):
+            with self.assertRaises(FileNotFoundError):
+                self._zdroj()._resolve_shp_layer("VUSC_P")
+
+        self.assertEqual(list(self.unpack_dir.glob("VUSC_P.*")), [])
+
+    def test_vrstva_v_novejsim_archivu_se_rozbali_znovu(self):
+        """Novější archiv s vrstvou přepíše starou kopii novými daty."""
+        self._zastarala_kopie()
+        self._zapis_archiv({"data/VUSC_P.shp": b"nova", "data/VUSC_P.dbf": b"nova-dbf"})
+
+        with self.assertLogs("heslar.ruian_sync.shp_importer", level="WARNING"):
+            target = self._zdroj()._resolve_shp_layer("VUSC_P")
+
+        self.assertEqual(target, self.unpack_dir / "VUSC_P.shp")
+        self.assertEqual(target.read_bytes(), b"nova")
+        self.assertEqual((self.unpack_dir / "VUSC_P.dbf").read_bytes(), b"nova-dbf")
+        # .shx v novém archivu není, stará kopie se nesmí míchat s novými soubory.
+        self.assertFalse((self.unpack_dir / "VUSC_P.shx").exists())
+
+    def test_pozustatky_preruseneho_rozbaleni_se_smazou(self):
+        """Bez ``.shp`` se zbylé pomocné soubory nesmí míchat s novým rozbalením."""
+        self._zastarala_kopie()
+        (self.unpack_dir / "VUSC_P.shp").unlink()
+        self._zapis_archiv({"VUSC_P.shp": b"nova"})
+
+        target = self._zdroj()._resolve_shp_layer("VUSC_P")
+
+        self.assertEqual(target.read_bytes(), b"nova")
+        self.assertEqual(sorted(p.name for p in self.unpack_dir.glob("VUSC_P.*")), ["VUSC_P.shp"])
+
+    def test_aktualni_kopie_se_nerozbaluje(self):
+        """Kopie novější než archiv se vrátí beze změny a archiv se neotevře."""
+        self._zastarala_kopie()
+        self._zapis_archiv({"VUSC_P.shp": b"nova"})
+        minuly = time.time() - 3600
+        os.utime(self.zip_path, (minuly, minuly))
+
+        with self.assertNoLogs("heslar.ruian_sync.shp_importer", level="INFO"):
+            target = self._zdroj()._resolve_shp_layer("VUSC_P")
+
+        self.assertEqual(target.read_bytes(), b"stara")
+        self.assertEqual((self.unpack_dir / "VUSC_P.dbf").read_bytes(), b"stara")

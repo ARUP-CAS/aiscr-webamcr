@@ -44,6 +44,7 @@ from django.utils.translation import gettext as _
 from heslar.models import RuianSyncRun
 from heslar.ruian_sync import ShpUzszSource
 from heslar.ruian_sync import syncer as ruian_syncer
+from heslar.ruian_sync.souhrn_varovani import SberVarovani
 from heslar.ruian_sync.zamek import ruian_sync_lock
 
 logger = logging.getLogger(__name__)
@@ -251,6 +252,9 @@ class Command(BaseCommand):
         self.stdout.write(f"  UZSZ: {uzsz_path}")
         self.stdout.write(f"  valid_to: {valid_to.isoformat()}")
 
+        # Varování z parseru a přepočtu se shrnou do ``run.warnings`` – viz
+        # :class:`~heslar.ruian_sync.souhrn_varovani.SberVarovani`.
+        sber_varovani = SberVarovani(run).start()
         try:
             ruian_syncer.sync_full(source=source, run=run)
         except Exception as exc:  # noqa: BLE001 — záměrně chytáme vše a logujeme
@@ -263,6 +267,8 @@ class Command(BaseCommand):
                 extra={"run_id": run.pk, "error": str(exc)},
             )
             raise CommandError(f"Synchronizace selhala – RuianSyncRun #{run.pk}: {exc}")
+        finally:
+            sber_varovani.zapis()
 
         run.refresh_from_db()
         run.status = RuianSyncRun.STATUS_SUCCESS

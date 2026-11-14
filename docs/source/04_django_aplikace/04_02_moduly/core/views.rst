@@ -515,7 +515,8 @@ Třídy
       :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
 
       :return: Vrací proměnná ``response``.
-      :raises Http404: Vyvolá se při splnění podmínky ``Model is None``.
+      :raises Http404: Vyvolá se při splnění podmínky ``Model is None``; také když historická verze
+              souboru neexistuje nebo Fedora neodpoví.
 
 
 .. py:class:: CheckUserAuthentication

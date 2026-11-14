@@ -27,11 +27,30 @@ Funkce
 
 .. py:function:: dokument_delete_container_soubor_vazby(sender, instance)
 
-   Provádí operaci dokument delete container soubor vazby.
+   Před smazáním samostatného nálezu označí záznam ve Fedoře jako smazaný a odstraní jeho soubory a historii v DB.
 
-   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``dokument_delete_container_soubor_vazby``.
-   :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``active_transaction``, ovlivňuje větvení podmínek.
-   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``dokument_delete_container_soubor_vazby``.
+   Zápis do Fedory probíhá hned (uvnitř DB transakce), aby chyba Fedory (např. 409 při souběžném
+   zápisu jiné transakce) vedla k rollbacku smazání v DB. Metadata projektu se zapisují až
+   v ``samostatny_nalez_delete_update_projekt`` po smazání řádku, aby už nález neobsahovala.
+
+   :param sender: Model, který signál vyvolal (``SamostatnyNalez``).
+   :param instance: Mazaný samostatný nález; používá se jeho ``active_transaction``, ``soubory`` a ``historie``.
+   :param kwargs: Dodatečné argumenty předané Django signálem.
+
+.. py:function:: samostatny_nalez_delete_update_projekt(sender, instance)
+
+   Po smazání samostatného nálezu přegeneruje metadata projektu ve Fedoře a případně uzavře transakci.
+
+   Metadata projektu se zapisují ještě uvnitř DB transakce, takže konflikt ve Fedoře (409 při souběžném
+   mazání jiného nálezu téhož projektu) se projeví výjimkou ve view a smazání v DB se odroluje.
+   Do ``transaction.on_commit`` se odkládá jen commit Fedora transakce (#4437). Selhání samotného
+   commitu Fedory po commitu DB tím pokryté není; zaloguje se jako ERROR s ``ident_cely``
+   (``core_repository_connector.FedoraTransaction.commit_transaction.failed``).
+
+   :param sender: Model, který signál vyvolal (``SamostatnyNalez``).
+   :param instance: Smazaný samostatný nález; používá se jeho ``projekt``, ``active_transaction``
+       a ``close_active_transaction_when_finished``.
+   :param kwargs: Dodatečné argumenty předané Django signálem.
 
 .. py:function:: save_uzivatel_spoluprce(sender, instance)
 
