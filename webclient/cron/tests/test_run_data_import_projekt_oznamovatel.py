@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from core.constants import IMPORT, ROLE_BADATEL_ID
 from core.forms import ImportDataAdminForm
 from core.tests.fake_redis import FakeRedis
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from cron import tasks as cron_tasks
 from cron.tests._import_test_fixtures import (
     create_heslar_fixtures,
@@ -31,6 +32,7 @@ class RunDataImportProjektOznamovatelTest(TestCase):
     """Testy ``run_data_import`` pro ``ProjektOznamovatelMapper``."""
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Připraví sdílená fixture data pro importní testy."""
         Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
@@ -113,7 +115,7 @@ class RunDataImportProjektOznamovatelTest(TestCase):
             autospec=True,
             return_value=None,
         ), patch(
-            "projekt.signals.check_hlidaci_pes"
+            "projekt.signals.check_hlidaci_pes.delay"
         ), patch(
             "projekt.signals.update_single_redis_snapshot"
         ), patch(

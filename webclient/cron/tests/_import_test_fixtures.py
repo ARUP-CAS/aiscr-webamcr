@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import AZ_STAV_ZAPSANY
+from core.tests.notification_fixtures import mock_project_notifications
 from dj.models import DokumentacniJednotka
 from heslar.hesla import (
     HESLAR_AKCE_TYP,
@@ -230,6 +231,7 @@ def create_projekt_typ(suffix: str) -> Heslar:
     return heslar
 
 
+@mock_project_notifications()
 def create_projekt(ident_cely: str, katastr, typ_projektu, stav: int = 1) -> Projekt:
     """Vytvoří Projekt s minimem povinných FK (typ_projektu, hlavni_katastr).
 

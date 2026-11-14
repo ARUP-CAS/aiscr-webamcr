@@ -34,6 +34,7 @@ from core.management.commands.utils.anonymizace_geometrie import (
     velikost_deformace,
     vzdalenost,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from django.contrib.gis.geos import GEOSGeometry, Point
 from django.test import SimpleTestCase, TestCase
 
@@ -1075,6 +1076,7 @@ class TestSekceNadDatabazi(TestCase):
     """
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """
         Založí data sdílená testy třídy.
@@ -1304,6 +1306,7 @@ class TestNahodneKatastry(TestCase):
     """Náhodné katastry musí zůstat v okrese a nahradit ty skutečné."""
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """
         Založí data sdílená testy třídy.
@@ -1422,6 +1425,7 @@ class TestSekceGeometrie(TestCase):
     """Celá sekce ``geometrie`` nad malými daty – dry-run i ostrý běh."""
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """
         Založí data a dá chráněnému projektu bodovou polohu.

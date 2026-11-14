@@ -8,6 +8,7 @@ from core.import_data_mappers import (
     ImportDataIntegrityError,
     UzivatelOpravneniMapper,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from django.contrib.auth.models import Group
 from django.test import TestCase
 from heslar.hesla import HESLAR_LICENCE, HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
@@ -62,6 +63,7 @@ class UzivatelOpravneniMapperValidationTest(TestCase):
     """Testy pro UzivatelOpravneniMapper — validace aktuálního stavu relace."""
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Vytvoří minimálního uživatele a skupinu pro validační testy relace."""
         Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
@@ -106,7 +108,9 @@ class UzivatelOpravneniMapperValidationTest(TestCase):
                 first_name="Import",
                 last_name="Opravneni",
             )
-            cls.group = Group.objects.create(name="import-opravneni")
+            # Pevné ID: vložení role s explicitním ID neposune sekvenci ``auth_group``,
+            # takže automaticky přidělené ID by kolidovalo s ``ROLE_BADATEL_ID``.
+            cls.group = Group.objects.create(id=900001, name="import-opravneni")
 
     def test_insert_validation_passes_when_group_is_missing(self):
         """INSERT validace projde, pokud uživatel skupinu zatím nemá."""

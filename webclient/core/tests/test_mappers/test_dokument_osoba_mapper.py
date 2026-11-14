@@ -5,6 +5,7 @@ from core.import_data_mappers import (
     ImportDataIncorrectStructureError,
     ImportDataIntegrityError,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from core.tests.test_mappers.fixtures import create_dokument_fixture
 from django.test import TestCase
 from dokument.models import Dokument, DokumentOsoba
@@ -22,6 +23,7 @@ VALID_ROW = {
 class DokumentOsobaMapperInsertValidTest(TestCase):
     """Testy pro DokumentOsobaMapper — platný dataset (INSERT)."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data Dokument a Osoba pro platný INSERT dataset."""
         self.dokument = create_dokument_fixture()
@@ -105,6 +107,7 @@ class DokumentOsobaMapperInvalidStructureTest(TestCase):
 class DokumentOsobaMapperCreateRecordsInsertTest(TestCase):
     """Testy pro DokumentOsobaMapper.create_records — akce INSERT."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data Dokument a Osoba pro testy create_records."""
         self.dokument = create_dokument_fixture()
@@ -143,6 +146,7 @@ class DokumentOsobaMapperCreateRecordsInsertTest(TestCase):
 class DokumentOsobaMapperImportValidationTest(TestCase):
     """Testy pro DokumentOsobaMapper.import_validation."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data Dokument a Osoba pro testy import_validation."""
         self.dokument = create_dokument_fixture()

@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from core.constants import ROLE_BADATEL_ID
 from core.forms import ImportDataAdminForm
 from core.tests.fake_redis import FakeRedis
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from cron import tasks as cron_tasks
 from django.contrib.auth.models import Group
 from django.test import TestCase
@@ -28,6 +29,7 @@ class RunDataImportOrganizaceTest(TestCase):
     """Testy ``run_data_import`` pro mapper ``OrganizaceMapper`` s mocknutým Redis i Fedora repozitářem."""
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Připraví minimální fixtures — heslářové entity, organizaci uživatele a uživatele běžícího import."""
         Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
@@ -213,6 +215,7 @@ class RunDataImportOrganizaceTest(TestCase):
             cron_tasks.run_data_import(JOB_ID, self.user.id, LOCK_TOKEN)
         return save_metadata_calls
 
+    @mock_fedora_for_fixture()
     def _create_existing_organizace(self) -> Organizace:
         """Vytvoří v DB organizaci, na kterou navazují testy update/delete.
 

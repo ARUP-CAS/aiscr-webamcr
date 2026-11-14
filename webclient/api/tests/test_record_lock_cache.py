@@ -26,43 +26,19 @@ Pokrytí
    (``cache.add`` selže, ``cache.get == 0``, fallback ``cache.set(1)``).
 5. TTL expiry — krátký TTL skutečně způsobí automatické uvolnění klíče.
 6. Konkurence threadů — právě jeden získá zámek.
-7. Konkurence procesů (fork) — právě jeden získá zámek (atomicita ``cache.add``).
+7. Konkurence procesů (spawn) — právě jeden získá zámek (atomicita ``cache.add``).
 """
 
 import multiprocessing
+import queue
 import threading
 import time
 
+from api.tests._record_lock_worker import process_worker
 from api.views import _RECORD_LOCK_PREFIX, PasApiBaseView
 from django.core.cache import cache
+from django.db import connections
 from django.test import TransactionTestCase
-
-
-def _process_worker(ident, results_q):
-    """Worker pro multiprocessing scénář — re-bootstrapuje Django state.
-
-    Po ``fork`` uzavře zděděná spojení (DB i Redis cache), aby se zabránilo
-    sdílení soketů mezi procesy; znovu se otevřou líně při prvním použití.
-    """
-    import django
-    from django.core.cache import caches
-    from django.db import connections
-
-    connections.close_all()
-    for cache_instance in caches.all():
-        close = getattr(cache_instance, "close", None)
-        if callable(close):
-            try:
-                close()
-            except Exception:
-                pass
-
-    if not django.apps.apps.ready:
-        django.setup()
-    from api.views import PasApiBaseView as _PV
-
-    acquired, _ttl = _PV._acquire_record_lock(ident)
-    results_q.put(acquired)
 
 
 class RecordLockCacheTests(TransactionTestCase):
@@ -172,18 +148,39 @@ class RecordLockCacheTests(TransactionTestCase):
         ident = "TEST_RL_PROCS"
         self._clear(ident)
         n_procs = 8
-        ctx = multiprocessing.get_context("fork")
+        # ``spawn`` místo ``fork``: potomek nesdílí PostgreSQL spojení ani zámky vláken rodiče.
+        ctx = multiprocessing.get_context("spawn")
         results_q = ctx.Queue()
-        procs = [ctx.Process(target=_process_worker, args=(ident, results_q)) for _ in range(n_procs)]
+        database_names = {alias: connections[alias].settings_dict["NAME"] for alias in connections}
+        procs = [
+            ctx.Process(target=process_worker, args=(ident, results_q, database_names), daemon=True)
+            for _ in range(n_procs)
+        ]
+        # Start Django v každém potomkovi trvá jednotky sekund a poraženým stačí ~5 s (10 pokusů
+        # po 0,5 s); zámek drží vítěz 300 s, takže i opožděně startující potomek soutěží o týž zámek.
+        # Limit chrání CI před nekonečným čekáním.
+        deadline = time.monotonic() + 120
+        winners_results = []
         try:
             for p in procs:
                 p.start()
+            for _ in procs:
+                try:
+                    winners_results.append(results_q.get(timeout=max(0.1, deadline - time.monotonic())))
+                except queue.Empty:
+                    break
             for p in procs:
-                p.join(timeout=30)
-            winners_results = []
-            while not results_q.empty():
-                winners_results.append(results_q.get())
-            winners = sum(1 for r in winners_results if r)
+                p.join(timeout=max(0.1, deadline - time.monotonic()))
+            self.assertEqual(
+                len(winners_results), n_procs, f"Výsledek vrátilo jen {len(winners_results)}/{n_procs} procesů."
+            )
+            winners = sum(1 for r in winners_results if r is True)
             self.assertEqual(winners, 1, f"winners={winners}/{n_procs}; all_results={winners_results}")
         finally:
+            for p in procs:
+                if p.is_alive():
+                    p.kill()
+                    p.join(timeout=5)
+            results_q.close()
+            results_q.cancel_join_thread()
             self._clear(ident)

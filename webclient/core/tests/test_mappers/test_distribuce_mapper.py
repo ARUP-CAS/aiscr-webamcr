@@ -27,6 +27,7 @@ from core.import_data_mappers import (
 )
 from core.models import Soubor
 from core.repository_connector import FedoraNoResponseError, FedoraRepositoryConnector
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from core.tests.test_mappers.fixtures import create_dokument_fixture, create_soubor_fixture
 from django.contrib.auth.models import Group
 from django.test import TestCase
@@ -163,6 +164,7 @@ class DistribuceMapperValidationTest(TestCase):
     """Testy validace importu proti existujícím souborům a stavu distribucí ve Fedoře."""
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Vytvoří dokument a soubor s cestou do Fedory."""
         cls.dokument = create_dokument_fixture(ident_cely="C-TX-DIST-001")
@@ -218,15 +220,16 @@ class DistribuceMapperValidationTest(TestCase):
     def test_history_is_not_consulted(self):
         """Historie souboru nerozhoduje – zdrojem pravdy je výhradně Fedora."""
         Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})
-        user = User.objects.create_user(  # type: ignore[attr-defined]
-            email="distribuce-historie@example.cz",
-            password="pass",
-            is_active=True,
-            organizace=self.dokument.organizace,
-            ident_cely="U-DIST-002",
-            first_name="Import",
-            last_name="Historie",
-        )
+        with mock_fedora_for_fixture():
+            user = User.objects.create_user(  # type: ignore[attr-defined]
+                email="distribuce-historie@example.cz",
+                password="pass",
+                is_active=True,
+                organizace=self.dokument.organizace,
+                ident_cely="U-DIST-002",
+                first_name="Import",
+                last_name="Historie",
+            )
         Historie.objects.create(
             typ_zmeny=NAHRANI_DISTRIBUCE, uzivatel=user, poznamka="ocr/alto-xml", vazba=self.soubor.historie
         )
@@ -318,6 +321,7 @@ class DistribuceMapperCreateRecordsTest(TestCase):
     """Testy přípravy záznamu pro fázi importu."""
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Vytvoří dokument a soubor, na který se importní řádek odkazuje."""
         cls.dokument = create_dokument_fixture(ident_cely="C-TX-DIST-003")

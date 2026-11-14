@@ -8,9 +8,9 @@ dohledání chybějícího nadřazeného prvku a serializaci souběžných běh�
 
 Testy bez databáze jsou v :class:`django.test.SimpleTestCase`, aby se daly
 spustit kdekoli. Ostatní používají :class:`django.test.TestCase`, tedy běží
-v transakci, která se na konci vrátí – ``post_save`` signály heslářů plánují
-zápis do Fedory přes ``transaction.on_commit()``, který se v ``TestCase``
-nespouští, takže se při testech do repozitáře nesahá.
+v transakci, která se na konci vrátí. Fixture mocky nahrazují také otevření
+Fedora transakce a kontroly kontejnerů, které probíhají ještě před odloženým
+zápisem metadat přes ``transaction.on_commit()``.
 """
 
 import datetime
@@ -23,6 +23,7 @@ import zipfile
 from pathlib import Path
 from unittest import mock
 
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from core.utils import reprezentativni_bod_sql
 from cron import tasks
 from django.apps import apps as django_apps
@@ -198,6 +199,7 @@ class PopisZmenyKatastruTests(SimpleTestCase):
 _BEZ_CACHEOPS = override_settings(CACHEOPS_ENABLED=False)
 
 
+@mock_fedora_for_fixture()
 def _vytvor_ruian_data(pocet_katastru, *, prefix=900000):
     """
     Vytvoří minimální hesláře RÚIAN pro testy nezávisle na obsahu databáze.
@@ -254,6 +256,7 @@ class UplnostZdrojeTests(TestCase):
     smazal katastry i s reassignem navázaných záznamů.
     """
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """
         Připraví audit záznam a vlastní hesláře.
@@ -342,6 +345,7 @@ class DohledaniOkresuTests(TestCase):
     pak není z čeho vzít povinný cizí klíč.
     """
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří vlastní kraj, okres a katastr s hranicí i definičním bodem."""
         _, self.okres, katastry = _vytvor_ruian_data(1, prefix=920000)
@@ -954,6 +958,7 @@ class VynuceniMetadatPoSelhaniTests(TestCase):
     vyšlo ``False`` a ``save()`` by se už nikdy nezavolal.
     """
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří kraj, jehož data se proti zdroji nebudou lišit."""
         self.kraj, _, _ = _vytvor_ruian_data(0, prefix=940000)
@@ -1386,6 +1391,7 @@ class UnieKatastruTests(TestCase):
     X0 = -600000.0
     Y0 = -1100000.0
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Skryje existující hranice a připraví dva okresy pro mřížku."""
         RuianKatastr.objects.update(hranice=MultiPolygon(srid=5514))
@@ -1553,6 +1559,7 @@ class GeometrieZdrojeTests(TestCase):
     podstaty běží až po zápisu a sync nezastavuje.
     """
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří katastry se známou plochou (čtverce 900 × 900 m)."""
         _, self.okres, self.katastry = _vytvor_ruian_data(4, prefix=950000)
@@ -1822,6 +1829,7 @@ class SouladUrovniTests(TestCase):
     jeden kraj a jeden okres o ploše dvou katastrů.
     """
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří dva katastry a k nim odpovídající okres a kraj."""
         self.run = RuianSyncRun.objects.create(
@@ -1927,13 +1935,14 @@ class SouladUrovniTests(TestCase):
     def test_castecne_vyplnena_uroven_je_chyba(self):
         """Stačí jediný okres bez hranice – kontrola nesmí projít."""
         self._nastav_hranice_urovni()
-        druhy = RuianOkres.objects.create(
-            nazev="Okres bez hranice",
-            kraj=self.kraj,
-            spz="TZZ",
-            kod=979999,
-            nazev_en="District without boundary",
-        )
+        with mock_fedora_for_fixture():
+            druhy = RuianOkres.objects.create(
+                nazev="Okres bez hranice",
+                kraj=self.kraj,
+                spz="TZZ",
+                kod=979999,
+                nazev_en="District without boundary",
+            )
         self.addCleanup(druhy.delete)
 
         with self.assertLogs(syncer.logger, level=logging.ERROR) as zachyt:

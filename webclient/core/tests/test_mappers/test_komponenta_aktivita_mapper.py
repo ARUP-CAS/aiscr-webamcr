@@ -1,6 +1,7 @@
 from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
 from core.forms import ImportDataAdminForm
 from core.import_data_mappers import ImportDataError, ImportDataIncorrectStructureError, KomponentaAktivitaMapper
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from django.test import TestCase
 from heslar.hesla import HESLAR_AKTIVITA
 from heslar.models import Heslar, HeslarNazev
@@ -13,6 +14,7 @@ DELETE = ImportDataAdminForm.PERFORMED_ACTION_DELETE
 class KomponentaAktivitaMapperInsertValidTest(TestCase):
     """Testy pro KomponentaAktivitaMapper — platný dataset (INSERT)."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data Heslar, KomponentaVazby a Komponenta pro platný INSERT dataset."""
         self.heslar_nazev = HeslarNazev.objects.create(pk=HESLAR_AKTIVITA, nazev="aktivita")
@@ -59,6 +61,7 @@ class KomponentaAktivitaMapperInsertValidTest(TestCase):
 class KomponentaAktivitaMapperInvalidStructureTest(TestCase):
     """Testy pro KomponentaAktivitaMapper — neplatná struktura dat."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data Heslar, KomponentaVazby a Komponenta pro testy neplatné struktury."""
         self.heslar_nazev = HeslarNazev.objects.create(pk=HESLAR_AKTIVITA, nazev="aktivita")
@@ -118,6 +121,7 @@ class KomponentaAktivitaMapperInvalidStructureTest(TestCase):
 class KomponentaAktivitaMapperCheckRequiredFieldsTest(TestCase):
     """Testy pro KomponentaAktivitaMapper.check_required_fields."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data Heslar, KomponentaVazby a Komponenta pro testy check_required_fields."""
         self.heslar_nazev = HeslarNazev.objects.create(pk=HESLAR_AKTIVITA, nazev="aktivita")

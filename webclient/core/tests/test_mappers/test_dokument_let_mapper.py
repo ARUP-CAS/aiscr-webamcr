@@ -5,6 +5,7 @@ from core.import_data_mappers import (
     ImportDataIncorrectStructureError,
     ImportDataIntegrityError,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from django.test import TestCase
 from dokument.models import Let
 
@@ -164,6 +165,7 @@ class DokumentLetMapperCreateRecordsInsertTest(TestCase):
 class DokumentLetMapperCreateRecordsUpdateTest(TestCase):
     """Testy pro DokumentLetMapper.create_records — akce UPDATE."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací fixture Let pro testy create_records UPDATE."""
         self.let = Let.objects.create(
@@ -191,6 +193,7 @@ class DokumentLetMapperCreateRecordsUpdateTest(TestCase):
 class DokumentLetMapperImportValidationTest(TestCase):
     """Testy pro DokumentLetMapper.import_validation."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací fixture Let pro testy import_validation."""
         self.let = Let.objects.create(

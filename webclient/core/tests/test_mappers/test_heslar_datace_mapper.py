@@ -6,6 +6,7 @@ from core.import_data_mappers import (
     ImportDataIntegrityError,
     ImportDataMissingHeslarValueError,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from django.test import TestCase
 from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_OBDOBI
@@ -41,6 +42,7 @@ def _create_heslar_fixture():
 class HeslarDataceMapperInsertValidTest(TestCase):
     """Testy pro HeslarDataceMapper — platný dataset (INSERT)."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data HeslarNazev a Heslar pro platný INSERT dataset."""
         self.heslar = _create_heslar_fixture()
@@ -132,6 +134,7 @@ class HeslarDataceMapperInvalidStructureTest(TestCase):
 class HeslarDataceMapperCreateRecordsTest(TestCase):
     """Testy pro HeslarDataceMapper.create_records — akce INSERT."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data HeslarNazev a Heslar pro testy create_records INSERT."""
         self.heslar = _create_heslar_fixture()
@@ -175,6 +178,7 @@ class HeslarDataceMapperCreateRecordsTest(TestCase):
 class HeslarDataceMapperImportValidationTest(TestCase):
     """Testy pro HeslarDataceMapper.import_validation."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data HeslarNazev a Heslar pro testy import_validation."""
         self.heslar = _create_heslar_fixture()

@@ -4,6 +4,7 @@ import secrets
 from unittest.mock import PropertyMock, patch
 
 from core.constants import ROLE_BADATEL_ID
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from core.tests.test_mappers.fixtures import create_dokument_fixture
 from django.contrib.auth.models import Group
 from django.test import TestCase
@@ -21,6 +22,7 @@ PASSWORD = secrets.token_urlsafe(16)
 class ObtainAuthTokenLastLoginTests(TestCase):
     """Ověřuje, že token-auth eviduje přihlášení stejně jako webové přihlášení, ale bez session."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří aktivního uživatele bez dosavadního přihlášení a API klienta."""
         Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})

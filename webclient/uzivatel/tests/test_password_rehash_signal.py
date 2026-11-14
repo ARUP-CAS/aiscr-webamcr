@@ -91,6 +91,7 @@ class UserPostSaveSuppressTests(SimpleTestCase):
             mock.patch("uzivatel.signals.FedoraTransaction") as fedora_transaction,
             mock.patch("uzivatel.signals.send_deactivation_email"),
             mock.patch("uzivatel.signals.send_account_confirmed_email"),
+            mock.patch("uzivatel.signals.transaction.on_commit", side_effect=lambda callback: callback()),
         ):
             user_post_save_method(sender=User, instance=user, created=False, update_fields=["password"])
         return token, fedora_transaction, user.save_metadata

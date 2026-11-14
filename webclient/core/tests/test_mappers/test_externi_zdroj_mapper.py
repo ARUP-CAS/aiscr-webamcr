@@ -5,6 +5,7 @@ from core.import_data_mappers import (
     ImportDataIncorrectStructureError,
     ImportDataIntegrityError,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from django.test import TestCase
 from ez.models import ExterniZdroj
 from heslar.hesla import HESLAR_DOKUMENT_TYP, HESLAR_EXTERNI_ZDROJ_TYP
@@ -60,6 +61,7 @@ def _create_heslar_fixtures():
 class ExterniZdrojMapperInsertValidTest(TestCase):
     """Testy pro ExterniZdrojMapper — platný dataset (INSERT)."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací fixture ExterniZdroj pro platný INSERT dataset."""
         _create_heslar_fixtures()
@@ -179,6 +181,7 @@ class ExterniZdrojMapperInvalidStructureTest(TestCase):
 class ExterniZdrojMapperCreateRecordsInsertTest(TestCase):
     """Testy pro ExterniZdrojMapper.create_records — akce INSERT."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací fixture ExterniZdroj pro testy create_records INSERT."""
         _create_heslar_fixtures()
@@ -222,6 +225,7 @@ class ExterniZdrojMapperCreateRecordsInsertTest(TestCase):
 class ExterniZdrojMapperCreateRecordsUpdateTest(TestCase):
     """Testy pro ExterniZdrojMapper.create_records — akce UPDATE."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací fixture ExterniZdroj pro testy create_records UPDATE."""
         heslar_typ, _ = _create_heslar_fixtures()
@@ -260,6 +264,7 @@ class ExterniZdrojMapperCreateRecordsUpdateTest(TestCase):
 class ExterniZdrojMapperImportValidationTest(TestCase):
     """Testy pro ExterniZdrojMapper.import_validation."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací fixture ExterniZdroj pro testy import_validation."""
         heslar_typ, _ = _create_heslar_fixtures()
@@ -318,6 +323,7 @@ class ExterniZdrojMapperImportValidationTest(TestCase):
 class ExterniZdrojMapperCheckRequiredFieldsTest(TestCase):
     """Testy pro ExterniZdrojMapper.check_required_fields."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací fixture ExterniZdroj pro testy check_required_fields."""
         _create_heslar_fixtures()

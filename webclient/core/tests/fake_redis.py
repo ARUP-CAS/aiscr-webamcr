@@ -8,12 +8,13 @@ class FakeRedis:
 
     Podporuje operace, které využívá importní pipeline (``cron.tasks.run_data_import`` i
     ``cron.tasks.run_data_import_validation``) a další taskové cesty:
-    ``get``/``set``/``delete``/``expire``/``persist``/``rpush``/``lrange``/``lset``/``incr``
-    a ``eval`` dispatchovaný přes přesnou shodu se skriptovými konstantami ``RedisConnector``
-    (viz ``eval()``). ``pipeline()`` vrací ``FakePipeline``, který operace zaznamená
-    a při ``execute()`` je sekvenčně provede nad stejným úložištěm; podporuje ``get``/``set``/
-    ``delete``/``expire``/``persist``/``rpush``/``incr``. Pokud bude test potřebovat další
-    metody, doplňte je sem.
+    ``get``/``set``/``delete``/``expire``/``persist``/``rpush``/``lrange``/``lset``/``incr``,
+    hashe ``hset``/``hget``/``hgetall`` (zápis Redis snapshotů z ``update_single_redis_snapshot``,
+    který při ``CELERY_TASK_ALWAYS_EAGER`` běží přímo v testu) a ``eval`` dispatchovaný přes
+    přesnou shodu se skriptovými konstantami ``RedisConnector`` (viz ``eval()``). ``pipeline()``
+    vrací ``FakePipeline``, který operace zaznamená a při ``execute()`` je sekvenčně provede nad
+    stejným úložištěm; podporuje ``get``/``set``/``delete``/``expire``/``persist``/``rpush``/
+    ``incr``/``hset``/``hget``/``hgetall``. Pokud bude test potřebovat další metody, doplňte je sem.
 
     TTL se nesimuluje reálným časem (nic samo nevyprší), ale ``set(ex=...)``/``expire``/
     ``persist`` si pamatují poslední zadanou hodnotu TTL na klíč, dostupnou přes ``ttl()`` —
@@ -36,6 +37,7 @@ class FakeRedis:
         """
         self._kv: dict[str, bytes] = {}
         self._lists: dict[str, list[bytes]] = {}
+        self._hashes: dict[str, dict[bytes, bytes]] = {}
         self._ttl: dict[str, int] = {}
         self._eval_results: list = list(eval_results) if eval_results is not None else []
         self._decode = decode_responses
@@ -58,6 +60,14 @@ class FakeRedis:
         if self._decode and isinstance(value, bytes):
             return value.decode("utf-8")
         return value
+
+    def _exists(self, key) -> bool:
+        """Zjistí, zda je klíč uložen jako hodnota, list nebo hash.
+
+        :param key: Redis klíč.
+        :return: ``True``, pokud klíč existuje v libovolném typu úložiště.
+        """
+        return key in self._kv or key in self._lists or key in self._hashes
 
     def set(self, key, value, ex=None, nx=False):
         """
@@ -87,7 +97,7 @@ class FakeRedis:
         return self._maybe_decode(self._kv.get(key))
 
     def delete(self, *keys):
-        """Smaže předané klíče (i listy) a vrátí počet skutečně odstraněných položek.
+        """Smaže předané klíče (i listy a hashe) a vrátí počet skutečně odstraněných položek.
 
         :param keys: Redis klíče určené ke smazání.
         """
@@ -95,6 +105,7 @@ class FakeRedis:
         for key in keys:
             removed += int(self._kv.pop(key, None) is not None)
             removed += int(self._lists.pop(key, None) is not None)
+            removed += int(self._hashes.pop(key, None) is not None)
             self._ttl.pop(key, None)
         return removed
 
@@ -104,7 +115,7 @@ class FakeRedis:
         :param key: Redis klíč, pro který se nastavuje TTL.
         :param seconds: Počet sekund TTL.
         """
-        exists = key in self._kv or key in self._lists
+        exists = self._exists(key)
         if exists:
             self._ttl[key] = seconds
         return exists
@@ -114,7 +125,7 @@ class FakeRedis:
 
         :param key: Redis klíč, u kterého se má zrušit expirace.
         """
-        exists = key in self._kv or key in self._lists
+        exists = self._exists(key)
         if exists:
             self._ttl.pop(key, None)
         return exists
@@ -128,7 +139,7 @@ class FakeRedis:
 
         :param key: Redis klíč, jehož TTL se zjišťuje.
         """
-        if key not in self._kv and key not in self._lists:
+        if not self._exists(key):
             return -2
         return self._ttl.get(key, -1)
 
@@ -172,6 +183,59 @@ class FakeRedis:
         current += amount
         self._kv[key] = str(current).encode("utf-8")
         return current
+
+    def hset(self, name, key=None, value=None, mapping=None, items=None):
+        """Zapíše pole do hashe se stejnou signaturou jako ``redis-py`` ``hset()``.
+
+        Pole lze předat jednotlivě (``key``/``value``), slovníkem ``mapping`` nebo plochým
+        seznamem ``items`` (``[pole1, hodnota1, pole2, hodnota2, …]``); názvy i hodnoty se kódují
+        na ``bytes`` jako u reálného klienta.
+
+        :param name: Redis klíč hashe.
+        :param key: Název jednoho zapisovaného pole.
+        :param value: Hodnota pole ``key``.
+        :param mapping: Slovník polí a hodnot k zápisu.
+        :param items: Plochý seznam střídajících se polí a hodnot.
+        :return: Počet nově přidaných polí (přepsaná existující pole se nezapočítají).
+        :raises ValueError: Pokud nebylo předáno žádné pole, nebo má ``items`` lichou délku.
+        """
+        pairs = []
+        if key is not None:
+            pairs.append((key, value))
+        if mapping:
+            pairs.extend(mapping.items())
+        if items:
+            if len(items) % 2:
+                raise ValueError("FakeRedis.hset: 'items' musí obsahovat páry pole a hodnota.")
+            pairs.extend(zip(items[::2], items[1::2]))
+        if not pairs:
+            raise ValueError("FakeRedis.hset: chybí pole k zápisu (key/value, mapping nebo items).")
+        stored = self._hashes.setdefault(name, {})
+        added = 0
+        for field, field_value in pairs:
+            encoded_field = self._encode(field)
+            added += int(encoded_field not in stored)
+            stored[encoded_field] = self._encode(field_value)
+        return added
+
+    def hget(self, name, key):
+        """Vrátí hodnotu pole hashe, nebo ``None``, pokud hash nebo pole neexistuje.
+
+        :param name: Redis klíč hashe.
+        :param key: Název čteného pole.
+        """
+        return self._maybe_decode(self._hashes.get(name, {}).get(self._encode(key)))
+
+    def hgetall(self, name):
+        """Vrátí všechna pole hashe jako slovník; pro neexistující hash prázdný slovník.
+
+        :param name: Redis klíč hashe.
+        :return: Kopie hashe s ``bytes`` (v decode režimu ``str``) klíči i hodnotami.
+        """
+        return {
+            self._maybe_decode(field): self._maybe_decode(field_value)
+            for field, field_value in self._hashes.get(name, {}).items()
+        }
 
     def pipeline(self):
         """Vrátí ``FakePipeline`` sdílející toto úložiště; operace se provedou až při ``execute()``.
@@ -400,6 +464,35 @@ class FakeRedis:
             self._ops.append(("incr", key, amount))
             return self
 
+        def hset(self, name, key=None, value=None, mapping=None, items=None):
+            """Zaznamená ``hset`` operaci do fronty.
+
+            :param name: Redis klíč hashe.
+            :param key: Název jednoho zapisovaného pole.
+            :param value: Hodnota pole ``key``.
+            :param mapping: Slovník polí a hodnot k zápisu.
+            :param items: Plochý seznam střídajících se polí a hodnot.
+            """
+            self._ops.append(("hset", name, key, value, mapping, items))
+            return self
+
+        def hget(self, name, key):
+            """Zaznamená ``hget`` operaci do fronty.
+
+            :param name: Redis klíč hashe.
+            :param key: Název čteného pole.
+            """
+            self._ops.append(("hget", name, key))
+            return self
+
+        def hgetall(self, name):
+            """Zaznamená ``hgetall`` operaci do fronty.
+
+            :param name: Redis klíč hashe.
+            """
+            self._ops.append(("hgetall", name))
+            return self
+
         def execute(self):
             """Provede zaznamenané operace sekvenčně a vrátí seznam jejich návratových hodnot.
 
@@ -422,5 +515,11 @@ class FakeRedis:
                     results.append(self._redis.rpush(op[1], op[2]))
                 elif name == "incr":
                     results.append(self._redis.incr(op[1], op[2]))
+                elif name == "hset":
+                    results.append(self._redis.hset(op[1], op[2], op[3], mapping=op[4], items=op[5]))
+                elif name == "hget":
+                    results.append(self._redis.hget(op[1], op[2]))
+                elif name == "hgetall":
+                    results.append(self._redis.hgetall(op[1]))
             self._ops = []
             return results

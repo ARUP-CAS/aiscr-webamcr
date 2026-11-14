@@ -5,6 +5,7 @@ from core.import_data_mappers import (
     ImportDataIncorrectStructureError,
     ImportDataIntegrityError,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from django.test import TestCase
 from heslar.models import Heslar, HeslarNazev, HeslarOdkaz
 
@@ -38,6 +39,7 @@ def _create_heslar_fixture():
 class HeslarOdkazMapperInsertValidTest(TestCase):
     """Testy pro HeslarOdkazMapper — platný dataset (INSERT)."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data HeslarNazev a Heslar pro platný INSERT dataset."""
         self.heslar = _create_heslar_fixture()
@@ -142,6 +144,7 @@ class HeslarOdkazMapperInvalidStructureTest(TestCase):
 class HeslarOdkazMapperCreateRecordsInsertTest(TestCase):
     """Testy pro HeslarOdkazMapper.create_records — akce INSERT."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data HeslarNazev a Heslar pro testy create_records."""
         self.heslar = _create_heslar_fixture()
@@ -179,6 +182,7 @@ class HeslarOdkazMapperCreateRecordsInsertTest(TestCase):
 class HeslarOdkazMapperImportValidationTest(TestCase):
     """Testy pro HeslarOdkazMapper.import_validation."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data HeslarNazev a Heslar pro testy import_validation."""
         self.heslar = _create_heslar_fixture()
@@ -233,6 +237,7 @@ class HeslarOdkazMapperImportValidationTest(TestCase):
 class HeslarOdkazMapperCheckRequiredFieldsTest(TestCase):
     """Testy pro HeslarOdkazMapper.check_required_fields."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data HeslarNazev a Heslar pro testy check_required_fields."""
         _create_heslar_fixture()

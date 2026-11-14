@@ -5,6 +5,7 @@ from core.import_data_mappers import (
     ImportDataIntegrityError,
     UzivatelSpolupraceMapper,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from heslar.hesla import HESLAR_LICENCE, HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
@@ -67,6 +68,7 @@ def _create_user_fixtures():
 class UzivatelSpolupraceMapperInsertValidTest(TestCase):
     """Testy pro UzivatelSpolupraceMapper — platný dataset (INSERT)."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data User a Organizace pro platný INSERT dataset."""
         self.vedouci, self.spolupracovnik = _create_user_fixtures()
@@ -173,6 +175,7 @@ class UzivatelSpolupraceMapperInvalidStructureTest(TestCase):
 class UzivatelSpolupraceMapperCreateRecordsInsertTest(TestCase):
     """Testy pro UzivatelSpolupraceMapper.create_records — akce INSERT."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data User a Organizace pro testy create_records."""
         self.vedouci, self.spolupracovnik = _create_user_fixtures()
@@ -213,6 +216,7 @@ class UzivatelSpolupraceMapperCreateRecordsInsertTest(TestCase):
 class UzivatelSpolupraceMapperImportValidationTest(TestCase):
     """Testy pro UzivatelSpolupraceMapper.import_validation."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data User a Organizace pro testy import_validation."""
         self.vedouci, self.spolupracovnik = _create_user_fixtures()

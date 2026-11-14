@@ -10,6 +10,7 @@ from core.forms import ImportDataAdminForm
 from core.import_data_mappers import SouborImportIntegrityError
 from core.models import AntivirusCheckResult
 from core.tests.fake_redis import FakeRedis
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from cron import tasks as cron_tasks
 from django.contrib.auth.models import Group
 from django.db import connection
@@ -92,6 +93,7 @@ class RunDataImportValidationTest(TestCase):
     """Testy ``run_data_import_validation`` s mocknutým Redis, antivirem a Fedora repozitářem."""
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Připraví minimální fixtures — organizaci a uživatele běžícího import."""
         Group.objects.get_or_create(id=ROLE_BADATEL_ID, defaults={"name": "badatel"})

@@ -1,0 +1,141 @@
+name: Django tests (advisory)
+
+on:
+  pull_request:
+    branches: [main, test]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: django-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fast:
+    name: Django without database (advisory)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: webclient/requirements-test.txt
+      - name: Install native libraries
+        id: native
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gdal-bin libgdal-dev libgeos-dev libpq-dev libmagic1 gettext iptables acl
+      - name: Install compiled dependencies
+        id: dependencies
+        run: python -m pip install -r webclient/requirements-test.txt
+      - name: Validate explicit test inventory and CI helpers
+        id: inventory
+        run: |
+          python scripts/ci/run_django_ci.py --validate
+          python -m unittest discover -s scripts/ci -p test_django_ci.py -v
+      - name: Run tests with external networking blocked
+        id: tests
+        run: bash scripts/ci/with_ci_network.sh fast "$RUNNER_TEMP/django-fast" "$(command -v python)"
+      - name: Publish result summary
+        if: always()
+        env:
+          NATIVE: ${{ steps.native.outcome }}
+          DEPENDENCIES: ${{ steps.dependencies.outcome }}
+          INVENTORY: ${{ steps.inventory.outcome }}
+          TESTS: ${{ steps.tests.outcome }}
+        run: |
+          if [ -f "$RUNNER_TEMP/django-fast/summary.md" ]; then
+            cat "$RUNNER_TEMP/django-fast/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            printf '## Django fast: setup or execution failed\n\nNative: %s; dependencies: %s; inventory: %s; tests: %s\n' \
+              "$NATIVE" "$DEPENDENCIES" "$INVENTORY" "$TESTS" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: django-fast-logs
+          path: ${{ runner.temp }}/django-fast
+          retention-days: 14
+          if-no-files-found: ignore
+
+  database:
+    name: Django database and imports (advisory)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    continue-on-error: true
+    services:
+      postgis:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: amcr_ci
+          POSTGRES_USER: amcr_ci
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U amcr_ci -d amcr_ci"
+          --health-interval 10s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:8.10.1
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: webclient/requirements-test.txt
+      - name: Install native libraries
+        id: native
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gdal-bin libgdal-dev libgeos-dev libpq-dev libmagic1 gettext iptables acl
+      - name: Install compiled dependencies
+        id: dependencies
+        run: python -m pip install -r webclient/requirements-test.txt
+      - name: Validate explicit test inventory
+        id: inventory
+        run: python scripts/ci/run_django_ci.py --validate
+      - name: Run tests with external networking blocked
+        id: tests
+        env:
+          POSTGIS_ID: ${{ job.services.postgis.id }}
+          REDIS_ID: ${{ job.services.redis.id }}
+        run: |
+          AMCR_CI_SERVICE_IPS=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' "$POSTGIS_ID" "$REDIS_ID" | tr '\n' ' ')
+          export AMCR_CI_SERVICE_IPS
+          bash scripts/ci/with_ci_network.sh database "$RUNNER_TEMP/django-database" "$(command -v python)"
+      - name: Publish result summary
+        if: always()
+        env:
+          NATIVE: ${{ steps.native.outcome }}
+          DEPENDENCIES: ${{ steps.dependencies.outcome }}
+          INVENTORY: ${{ steps.inventory.outcome }}
+          TESTS: ${{ steps.tests.outcome }}
+        run: |
+          if [ -f "$RUNNER_TEMP/django-database/summary.md" ]; then
+            cat "$RUNNER_TEMP/django-database/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            printf '## Django database: setup or execution failed\n\nNative: %s; dependencies: %s; inventory: %s; tests: %s\n' \
+              "$NATIVE" "$DEPENDENCIES" "$INVENTORY" "$TESTS" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: django-database-logs
+          path: ${{ runner.temp }}/django-database
+          retention-days: 14
+          if-no-files-found: ignore

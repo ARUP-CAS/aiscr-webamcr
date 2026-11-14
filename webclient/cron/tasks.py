@@ -179,6 +179,9 @@ IMPORT_DATA_JOB_KEY_SUFFIXES = (
 # ``import_data_validation_details`` a report je rekonstruuje až při čtení.
 VALIDATION_REDIS_UPDATE_INTERVAL = 50
 
+# Po kolika záznamech historie / Fedora cílech importní task průběžně zapíše stav a výsledky do Redis.
+HISTORY_REDIS_UPDATE_INTERVAL = 10
+
 # Standardizační pravidlo: do Redis se ukládají pouze ID překladových řetězců (nikoli přeložené
 # texty); překlad se provádí až na straně čtenáře (``DataImportProgress`` /
 # ``DataImportProgressReportView``) v locale přihlášeného admina. Klíče, které drží překladové
@@ -2621,7 +2624,6 @@ def run_data_import(job_id, user_id, lock_token):
                 if detail == success_marker:
                     redis_connector.lset(job_key("import_data_progress_details_tr"), index, rollback_marker)
 
-        HISTORY_REDIS_UPDATE_INTERVAL = 10
         history_total = len(updated_history_dict)
         redis_connector.set(job_key("import_data_history_total"), history_total, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)
         redis_connector.set(job_key("import_data_history_progress"), 0, ex=IMPORT_DATA_RUNNING_TTL_SECONDS)

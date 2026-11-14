@@ -23,6 +23,7 @@ from core.import_data_mappers import (
 )
 from core.models import Soubor
 from core.repository_connector import FedoraNoResponseError, FedoraRepositoryConnector
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from core.tests.test_mappers.fixtures import create_dokument_fixture, create_soubor_fixture
 from django.test import TestCase
 
@@ -125,6 +126,7 @@ class ParadataMapperValidationTest(TestCase):
     """Testy validace importu paradat proti existujícím souborům a stavu distribucí ve Fedoře."""
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Vytvoří dokument a soubor s cestou do Fedory."""
         cls.dokument = create_dokument_fixture(ident_cely="C-TX-PARA-001")
@@ -328,6 +330,7 @@ class ParadataMapperCreateRecordsTest(TestCase):
     """Testy přípravy záznamu paradat pro fázi importu."""
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Vytvoří dokument a soubor, na který se importní řádek odkazuje."""
         cls.dokument = create_dokument_fixture(ident_cely="C-TX-PARA-004")

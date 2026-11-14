@@ -8,6 +8,7 @@ from core.import_data_mappers import (
     ImportDataIntegrityError,
     UzivatelNotifikaceMapper,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from django.test import TestCase
 from heslar.hesla import HESLAR_LICENCE, HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
 from heslar.models import Heslar, HeslarNazev
@@ -61,6 +62,7 @@ class UzivatelNotifikaceMapperValidationTest(TestCase):
     """Testy pro UzivatelNotifikaceMapper — validace aktuálního stavu relace."""
 
     @classmethod
+    @mock_fedora_for_fixture()
     def setUpTestData(cls):
         """Vytvoří minimálního uživatele a typ notifikace pro validační testy relace."""
         from django.contrib.auth.models import Group

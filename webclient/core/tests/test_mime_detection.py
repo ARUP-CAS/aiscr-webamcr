@@ -13,6 +13,7 @@ import zipfile
 import py7zr
 from core.models import Soubor
 from django.test import SimpleTestCase
+from openpyxl import Workbook
 from PIL import Image
 
 RESOURCES_DIR = os.path.join(
@@ -68,6 +69,19 @@ def _opendocument(mimetype: str, extra_entries: dict = None) -> io.BytesIO:
         zf.writestr(zipfile.ZipInfo("mimetype"), mimetype, compress_type=zipfile.ZIP_STORED)
         for name, content in (extra_entries or {}).items():
             zf.writestr(name, content, compress_type=zipfile.ZIP_DEFLATED)
+    buf.seek(0)
+    return buf
+
+
+def _xlsx_workbook() -> io.BytesIO:
+    """Vytvoří platný XLSX rozpoznatelný i databází MIME v Ubuntu 24.04.
+
+    :return: Pozicovaný stream s úplným OOXML sešitem, nikoliv dvousouborovým ZIPem.
+    """
+    buf = io.BytesIO()
+    workbook = Workbook()
+    workbook.active["A1"] = "MIME fixture"
+    workbook.save(buf)
     buf.seek(0)
     return buf
 
@@ -195,16 +209,7 @@ class MimeDetectionTests(SimpleTestCase):
 
     def test_xlsx(self):
         """Ověří detekci XLSX (MS Excel, formát OOXML)."""
-        # Minimální XLSX = ZIP obsahující xl/workbook.xml a [Content_Types].xml
-        data = _zip_with(
-            {
-                "[Content_Types].xml": (
-                    '<?xml version="1.0"?>'
-                    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>'
-                ),
-                "xl/workbook.xml": '<?xml version="1.0"?><workbook/>',
-            }
-        )
+        data = _xlsx_workbook()
         self._assert_mime(
             "xlsx",
             data,
@@ -395,15 +400,7 @@ class CheckMimeForUrlTests(SimpleTestCase):
 
     def test_dokument_accepts_xlsx(self):
         """XLSX je povolen v dokumentovém uploadu."""
-        xlsx = _zip_with(
-            {
-                "[Content_Types].xml": (
-                    '<?xml version="1.0"?>'
-                    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>'
-                ),
-                "xl/workbook.xml": '<?xml version="1.0"?><workbook/>',
-            }
-        )
+        xlsx = _xlsx_workbook()
         self.assertTrue(self._check(self.DOKUMENT_URL, xlsx))
 
     def test_dokument_accepts_csv(self):

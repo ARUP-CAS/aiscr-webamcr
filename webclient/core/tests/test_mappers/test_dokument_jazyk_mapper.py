@@ -5,6 +5,7 @@ from core.import_data_mappers import (
     ImportDataIncorrectStructureError,
     ImportDataIntegrityError,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from core.tests.test_mappers.fixtures import create_dokument_fixture
 from django.test import TestCase
 from dokument.models import Dokument, DokumentJazyk
@@ -35,6 +36,7 @@ def _create_heslar_fixtures():
 class DokumentJazykMapperInsertValidTest(TestCase):
     """Testy pro DokumentJazykMapper — platný dataset (INSERT)."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data Dokument a Heslar pro platný INSERT dataset."""
         self.dokument = create_dokument_fixture()
@@ -116,6 +118,7 @@ class DokumentJazykMapperInvalidStructureTest(TestCase):
 class DokumentJazykMapperCreateRecordsInsertTest(TestCase):
     """Testy pro DokumentJazykMapper.create_records — akce INSERT."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data Dokument a Heslar pro testy create_records."""
         self.dokument = create_dokument_fixture()
@@ -152,6 +155,7 @@ class DokumentJazykMapperCreateRecordsInsertTest(TestCase):
 class DokumentJazykMapperImportValidationTest(TestCase):
     """Testy pro DokumentJazykMapper.import_validation."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací data Dokument a Heslar pro testy import_validation."""
         self.dokument = create_dokument_fixture()

@@ -5,6 +5,7 @@ from core.import_data_mappers import (
     ImportDataIncorrectStructureError,
     ImportDataIntegrityError,
 )
+from core.tests.fedora_fixtures import mock_fedora_for_fixture
 from core.tests.test_mappers.fixtures import create_externi_zdroj_fixture
 from django.test import TestCase
 from ez.models import ExterniZdroj, ExterniZdrojAutor
@@ -24,6 +25,7 @@ VALID_ROW = {
 class ExterniZdrojAutorMapperInsertValidTest(TestCase):
     """Testy pro ExterniZdrojAutorMapper — platný dataset (INSERT)."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací fixtures ExterniZdroj a Osoba."""
         self.externi_zdroj = create_externi_zdroj_fixture()
@@ -124,6 +126,7 @@ class ExterniZdrojAutorMapperInvalidStructureTest(TestCase):
 class ExterniZdrojAutorMapperCreateRecordsInsertTest(TestCase):
     """Testy pro ExterniZdrojAutorMapper.create_records — akce INSERT."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací fixtures ExterniZdroj a Osoba."""
         self.externi_zdroj = create_externi_zdroj_fixture()
@@ -174,6 +177,7 @@ class ExterniZdrojAutorMapperCreateRecordsInsertTest(TestCase):
 class ExterniZdrojAutorMapperImportValidationTest(TestCase):
     """Testy pro ExterniZdrojAutorMapper.import_validation."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací fixtures ExterniZdroj a Osoba."""
         self.externi_zdroj = create_externi_zdroj_fixture()
@@ -229,6 +233,7 @@ class ExterniZdrojAutorMapperImportValidationTest(TestCase):
 class ExterniZdrojAutorMapperCheckRequiredFieldsTest(TestCase):
     """Testy pro ExterniZdrojAutorMapper.check_required_fields."""
 
+    @mock_fedora_for_fixture()
     def setUp(self):
         """Vytvoří testovací fixtures ExterniZdroj a Osoba."""
         self.externi_zdroj = create_externi_zdroj_fixture()
