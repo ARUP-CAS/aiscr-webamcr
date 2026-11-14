@@ -206,7 +206,7 @@ def detail(request, ident_cely):
     soubory = (
         projekt.soubory.soubory.select_related("historie")
         .prefetch_related(Soubor.distribution_history_prefetch())
-        .order_by("nazev")
+        .order_by("nazev", "id")
     )
     context["soubory"] = soubory
     context["dalsi_katastry"] = projekt.katastry.all()

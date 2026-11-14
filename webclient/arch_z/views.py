@@ -199,7 +199,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         return (
             ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=self.arch_zaznam.ident_cely)
             .select_related("externi_zdroj")
-            .order_by("externi_zdroj__ident_cely")
+            .order_by("externi_zdroj__ident_cely", "id")
         )
 
     def get_vedouci(self, context):
