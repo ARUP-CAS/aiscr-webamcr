@@ -119,6 +119,7 @@ class Command(BaseCommand):
                     ending="",
                 )
 
+            fedora_transaction = None
             try:
                 record = Soubor.objects.get(path=row["record"])
 
@@ -172,6 +173,16 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING("\n" + error_msg))
             except Exception as err:
                 error_count += 1
+                # Transakce vzniká ve Fedoře už v konstruktoru, proto se při chybě musí zrušit.
+                # Selhání rollbacku se jen zaloguje, aby nepřerušilo zpracování dalších řádků.
+                if fedora_transaction is not None:
+                    try:
+                        fedora_transaction.rollback_transaction()
+                    except Exception as rollback_err:
+                        logger.warning(
+                            "core.management.commands.remove_gps_data.rollback_failed",
+                            extra={"file": row["record"], "error": str(rollback_err)},
+                        )
                 logger.error(
                     "core.management.commands.remove_gps_data.error",
                     extra={"file": row["record"], "error": str(err), "reason": getattr(err, "reason", "error")},

@@ -40,8 +40,9 @@ class RemoveGpsDataThumbHistoryTest(SimpleTestCase):
             mock.patch("core.models.Soubor.objects") as soubor_objects,
             mock.patch("core.models.Soubor.remove_gps_data", return_value=new_content, side_effect=cleanup_error),
             mock.patch(COMMAND_MODULE + ".FedoraRepositoryConnector", return_value=connector),
-            mock.patch(COMMAND_MODULE + ".FedoraTransaction"),
+            mock.patch(COMMAND_MODULE + ".FedoraTransaction") as fedora_transaction_cls,
         ):
+            self.fedora_transaction = fedora_transaction_cls.return_value
             soubor_objects.get.return_value = record
             Command(stdout=io.StringIO()).handle(csv_file="ignored.csv")
         return record, updated_file
@@ -70,3 +71,5 @@ class RemoveGpsDataThumbHistoryTest(SimpleTestCase):
         self.assertEqual(summary.success, 0)
         self.assertEqual(summary.skipped, 0)
         self.assertEqual(summary.error, 1)
+        self.fedora_transaction.rollback_transaction.assert_called_once_with()
+        self.fedora_transaction.mark_transaction_as_closed.assert_not_called()
