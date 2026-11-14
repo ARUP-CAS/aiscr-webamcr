@@ -22,7 +22,7 @@
     {% endif %}
   </tr>
   </thead>
-  <tbody data-radky="dokumenty">
+  <tbody data-radky="{{ omezene.klic }}">
   {% for d in omezene.radky %}
       {% include "dokument/dokument_table_row.html" %}
   {% endfor %}

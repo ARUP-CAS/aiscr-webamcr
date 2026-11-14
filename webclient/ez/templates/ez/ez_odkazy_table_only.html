@@ -23,7 +23,7 @@
       {% endif %}
     </tr>
     </thead>
-    <tbody data-radky="ez_odkazy_{{ card_type }}">
+    <tbody data-radky="{{ omezene.klic }}">
     {% for z in omezene.radky %}
         {% include "ez/ez_odkazy_table_row.html" with arch_z=z.archeologicky_zaznam %}
     {% endfor %}

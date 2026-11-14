@@ -17,7 +17,7 @@
       {% endif %}
     </tr>
     </thead>
-    <tbody data-radky="externi_odkazy">
+    <tbody data-radky="{{ omezene.klic }}">
     {% for z in omezene.radky %}
         {% include "ez/az_ez_odkazy_table_row.html" with ez=z.externi_zdroj %}
     {% endfor %}

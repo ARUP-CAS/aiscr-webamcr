@@ -15,7 +15,7 @@
       <th>{% trans "projekt.templates.detail.nalezyPart.table.druhNalezu.label" %}</th>
     </tr>
   </thead>
-  <tbody data-radky="samostatne_nalezy">
+  <tbody data-radky="{{ omezene.klic }}">
           {% for nalez in omezene.radky %}
             <tr>
               <td>
