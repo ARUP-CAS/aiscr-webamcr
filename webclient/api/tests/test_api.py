@@ -59,7 +59,7 @@ from historie.models import Historie
 from lxml import etree
 from pas.models import SamostatnyNalez
 from pid.exceptions import DoiWriteError
-from PIL import Image
+from PIL import ExifTags, Image
 from projekt.models import Projekt
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -3322,7 +3322,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
                     self.assertTrue(piexif.load(pillow_heif.open_heif(photo.getvalue()).info["exif"])["GPS"])
                 else:
                     with Image.open(io.BytesIO(photo.getvalue())) as original:
-                        self.assertTrue(original.getexif().get_ifd(34853))
+                        self.assertTrue(original.getexif().get_ifd(ExifTags.IFD.GPSInfo))
                 with patch.object(self, "_mock_binary_file", wraps=self._mock_binary_file) as archive:
                     response = self._post_file(IDENT_CELY, photo.getvalue(), filename=f"photo.{extension}")
                 self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -3332,7 +3332,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
                     self.assertFalse(piexif.load(pillow_heif.open_heif(payload).info["exif"])["GPS"])
                 else:
                     with Image.open(io.BytesIO(payload)) as stored:
-                        self.assertFalse(stored.getexif().get_ifd(34853))
+                        self.assertFalse(stored.getexif().get_ifd(ExifTags.IFD.GPSInfo))
 
     def test_gps_cleanup_failure_blocks_upload_and_releases_lock(self):
         """Chyba čištění GPS nevytvoří soubor a uvolní zámek nálezu."""

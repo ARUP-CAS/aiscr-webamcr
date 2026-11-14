@@ -35,7 +35,7 @@ from heslar.hesla_dynamicka import (
 from historie.models import Historie, HistorieVazby
 from nalez.models import NalezObjekt, NalezPredmet
 from notifikace_projekty.models import Pes
-from PIL import Image, UnidentifiedImageError
+from PIL import ExifTags, Image, UnidentifiedImageError
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 from uzivatel.models import User
@@ -742,6 +742,58 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         output.seek(0)
         return output
 
+    @staticmethod
+    def remove_tiff_gps_data(content: io.BytesIO) -> io.BytesIO:
+        """Odstraní GPS ze všech snímků TIFF a zachová jejich počet i základní EXIF.
+
+        Každý snímek se uloží s vlastní kopií EXIF bez GPS IFD. Pillow při připojování
+        dalších snímků nepřepočítá ukazatele na vnořené IFD, proto snímky po prvním
+        zachovají jen tagy hlavního IFD (např. výrobce) bez Exif a Interop IFD.
+        Tagy uložené pouze v adresáři TIFF (např. XMP, IPTC) se při přeuložení nezachovají.
+
+        :param content: Obsah TIFF fotografie s jedním nebo více snímky.
+        :return: Stream bez GPS na pozici nula, nebo původní stream, pokud GPS neobsahoval žádný snímek.
+        :raises ValueError: Pokud uložený soubor nemá stejný počet snímků nebo v něm zůstalo GPS.
+        """
+        gps_tag = ExifTags.IFD.GPSInfo
+        content.seek(0)
+        with Image.open(content) as img:
+            frame_count = getattr(img, "n_frames", 1)
+            frames = []
+            changed = False
+            for index in range(frame_count):
+                img.seek(index)
+                # getexif() vrací pro všechny snímky stejný objekt, proto se EXIF ihned serializuje.
+                exif = img.getexif()
+                if gps_tag in exif or gps_tag in img.tag_v2:
+                    changed = True
+                exif.pop(gps_tag, None)
+                if index > 0:
+                    for ifd_tag in ExifTags.IFD:
+                        exif.pop(ifd_tag, None)
+                frames.append((img.copy(), exif.tobytes()))
+        if not changed:
+            content.seek(0)
+            return content
+        first_frame, first_exif = frames[0]
+        appended_frames = []
+        for frame, exif_bytes in frames[1:]:
+            # Pillow upřednostní encoderinfo připojeného snímku před parametry volání save().
+            frame.encoderinfo = {"exif": exif_bytes}
+            appended_frames.append(frame)
+        output = io.BytesIO()
+        first_frame.save(output, format="TIFF", save_all=True, append_images=appended_frames, exif=first_exif)
+        output.seek(0)
+        with Image.open(output) as stored:
+            if getattr(stored, "n_frames", 1) != frame_count:
+                raise ValueError("TIFF frame count changed during GPS cleanup")
+            for index in range(frame_count):
+                stored.seek(index)
+                if stored.getexif().get_ifd(gps_tag) or gps_tag in stored.tag_v2:
+                    raise ValueError("Saved TIFF still contains GPS metadata")
+        output.seek(0)
+        return output
+
     @classmethod
     def remove_gps_data(cls, bytes_io: io.BytesIO) -> io.BytesIO:
         """
@@ -752,7 +804,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         tagy (např. UserComment, MakerNote apod.), automaticky je odstraní,
         aby bylo možné obrázek úspěšně uložit.
 
-        HEIC/HEIF čistí ve všech obrázcích kontejneru. Při chybě parsování,
+        HEIC/HEIF čistí ve všech obrázcích kontejneru a TIFF ve všech snímcích
+        se zachováním jejich počtu. Při chybě parsování,
         odstranění nebo ověření GPS vyvolá výjimku, aby zabránila archivaci
         původního souboru. Soubor bez GPS vrací beze změny.
 
@@ -767,7 +820,17 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 raise GpsDataRemovalError("HEIF GPS metadata cleanup failed") from err
         try:
             img = Image.open(bytes_io)
-            exif_data = img.getexif().tobytes() if img.format == "TIFF" else img.info.get("exif")
+        except Exception as err:
+            logger.error("core.models.Soubor.remove_gps_data.cannot_open_file", extra={"error": err})
+            raise GpsDataRemovalError("Cannot parse image GPS metadata") from err
+        if img.format == "TIFF":
+            try:
+                return cls.remove_tiff_gps_data(bytes_io)
+            except Exception as err:
+                logger.error("core.models.Soubor.remove_gps_data.tiff_cleanup_failed", extra={"error": err})
+                raise GpsDataRemovalError("TIFF GPS metadata cleanup failed") from err
+        try:
+            exif_data = img.info.get("exif")
             if exif_data:
                 exif_dict = piexif.load(exif_data)
             else:
@@ -779,15 +842,13 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         # Odstranění GPS dat, pokud existují
         if "GPS" in exif_dict and exif_dict["GPS"] != {}:
             del exif_dict["GPS"]
-            # TIFF ukládá původní GPS IFD také přímo v adresáři tagů obrázku.
-            if img.format == "TIFF" and 34853 in img.tag_v2:
-                del img.tag_v2[34853]
         else:
             logger.debug("core.models.Soubor.remove_gps_data.no_GPS_data")
             bytes_io.seek(0)
             return bytes_io
-        if 41729 in exif_dict["Exif"] and isinstance(exif_dict["Exif"][41729], int):
-            exif_dict["Exif"][41729] = str(exif_dict["Exif"][41729]).encode("utf-8")
+        scene_type = piexif.ExifIFD.SceneType
+        if isinstance(exif_dict["Exif"].get(scene_type), int):
+            exif_dict["Exif"][scene_type] = str(exif_dict["Exif"][scene_type]).encode("utf-8")
         MAX_FIX_ATTEMPTS = 10
         for attempt in range(MAX_FIX_ATTEMPTS):
             try:
@@ -820,7 +881,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             img.save(output_io, format=img.format, exif=new_exif_bytes)
             output_io.seek(0)
             with Image.open(output_io) as stored:
-                if stored.getexif().get_ifd(34853):
+                if stored.getexif().get_ifd(ExifTags.IFD.GPSInfo):
                     raise GpsDataRemovalError("Saved image still contains GPS metadata")
             output_io.seek(0)
             logger.debug("core.models.Soubor.remove_gps_data.GPS_data_removed")

@@ -2,6 +2,7 @@
 
 import io
 import json
+import struct
 import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
@@ -17,7 +18,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils.datastructures import MultiValueDict
 from django.utils.translation import gettext as _
 from pas.models import SamostatnyNalez
-from PIL import Image
+from PIL import ExifTags, Image, TiffTags
 
 
 class GpsCleanupTests(unittest.TestCase):
@@ -37,6 +38,112 @@ class GpsCleanupTests(unittest.TestCase):
         content.seek(0)
         return content
 
+    FRAME_VALUES = (10, 128, 250)
+
+    @classmethod
+    def _multi_frame_tiff(cls, gps_frames):
+        """Ručně sestaví vícesnímkový TIFF s vlastním EXIF a GPS IFD v každém snímku.
+
+        Pillow při zápisu dalších snímků nepřepočítá ukazatele na vnořené IFD, proto
+        se testovací soubor skládá přímo podle specifikace TIFF.
+
+        :param gps_frames: Indexy snímků, které dostanou GPS IFD se zeměpisnou šířkou.
+        :return: Stream little-endian TIFF na začátku; snímek ``i`` má výrobce ``Cam{i}``
+            a jediný šedý pixel s hodnotou ``FRAME_VALUES[i]``.
+        """
+        data = bytearray(b"II*\x00\x00\x00\x00\x00")
+        next_ifd_pointer = 4
+
+        def append(chunk):
+            offset = len(data)
+            data.extend(chunk)
+            if len(data) % 2:
+                data.append(0)
+            return offset
+
+        def entry(tag, field_type, count, value):
+            packed_value = struct.pack("<HH", value, 0) if field_type == TiffTags.SHORT else struct.pack("<I", value)
+            return struct.pack("<HHI", tag, field_type, count) + packed_value
+
+        for index, value in enumerate(cls.FRAME_VALUES):
+            make = f"Cam{index}".encode() + b"\x00"
+            make_offset = append(make)
+            pixel_offset = append(bytes([value]))
+            entries = [
+                entry(ExifTags.Base.ImageWidth, TiffTags.SHORT, 1, 1),
+                entry(ExifTags.Base.ImageLength, TiffTags.SHORT, 1, 1),
+                entry(ExifTags.Base.BitsPerSample, TiffTags.SHORT, 1, 8),
+                entry(ExifTags.Base.Compression, TiffTags.SHORT, 1, 1),
+                entry(ExifTags.Base.PhotometricInterpretation, TiffTags.SHORT, 1, 1),
+                entry(ExifTags.Base.Make, TiffTags.ASCII, len(make), make_offset),
+                entry(ExifTags.Base.StripOffsets, TiffTags.LONG, 1, pixel_offset),
+                entry(ExifTags.Base.SamplesPerPixel, TiffTags.SHORT, 1, 1),
+                entry(ExifTags.Base.RowsPerStrip, TiffTags.SHORT, 1, 1),
+                entry(ExifTags.Base.StripByteCounts, TiffTags.LONG, 1, 1),
+            ]
+            if index in gps_frames:
+                latitude_ref = struct.pack("<HHI", ExifTags.GPS.GPSLatitudeRef, TiffTags.ASCII, 2) + b"N\x00\x00\x00"
+                gps_offset = append(struct.pack("<H", 1) + latitude_ref + struct.pack("<I", 0))
+                entries.append(entry(ExifTags.IFD.GPSInfo, TiffTags.LONG, 1, gps_offset))
+            ifd_offset = append(struct.pack("<H", len(entries)) + b"".join(entries))
+            struct.pack_into("<I", data, next_ifd_pointer, ifd_offset)
+            next_ifd_pointer = append(struct.pack("<I", 0))
+        return io.BytesIO(bytes(data))
+
+    def _frames(self, content):
+        """Vrátí pro každý snímek výrobce, přítomnost GPS a hodnotu pixelu.
+
+        :param content: Stream TIFF ke kontrole.
+        :return: Seznam trojic ``(make, has_gps, pixel)`` v pořadí snímků.
+        """
+        content.seek(0)
+        result = []
+        with Image.open(content) as image:
+            for index in range(image.n_frames):
+                image.seek(index)
+                exif = image.getexif()
+                result.append(
+                    (exif.get(ExifTags.Base.Make), bool(exif.get_ifd(ExifTags.IFD.GPSInfo)), image.getpixel((0, 0)))
+                )
+        content.seek(0)
+        return result
+
+    def test_multi_frame_tiff_keeps_all_frames_without_gps(self):
+        """GPS v libovolném snímku se odstraní a všechny snímky i jejich EXIF zůstanou."""
+        expected = [(f"Cam{index}", False, value) for index, value in enumerate(self.FRAME_VALUES)]
+        for gps_frames in ({0, 2}, {2}, {0, 1, 2}):
+            with self.subTest(gps_frames=gps_frames):
+                content = self._multi_frame_tiff(gps_frames)
+                source = [(f"Cam{index}", index in gps_frames, value) for index, value in enumerate(self.FRAME_VALUES)]
+                self.assertEqual(self._frames(content), source)
+                result = Soubor.remove_gps_data(content)
+                self.assertIsNot(result, content)
+                self.assertEqual(result.tell(), 0)
+                self.assertEqual(self._frames(result), expected)
+                self.assertEqual(Soubor().calculate_rozsah(result, "photo.tiff"), len(self.FRAME_VALUES))
+
+    def test_multi_frame_tiff_without_gps_is_unchanged(self):
+        """Vícesnímkový TIFF bez GPS se vrátí beze změny."""
+        content = self._multi_frame_tiff(set())
+        original = content.getvalue()
+        self.assertIs(Soubor.remove_gps_data(content), content)
+        self.assertEqual(content.getvalue(), original)
+        self.assertEqual(content.tell(), 0)
+
+    def test_multi_frame_tiff_with_lost_frames_is_rejected(self):
+        """Výstup s menším počtem snímků se nesmí archivovat."""
+        content = self._multi_frame_tiff({0})
+        original_save = Image.Image.save
+
+        def save_first_frame_only(image, output, **kwargs):
+            kwargs.pop("save_all", None)
+            kwargs.pop("append_images", None)
+            original_save(image, output, **kwargs)
+
+        with patch.object(Image.Image, "save", autospec=True, side_effect=save_first_frame_only):
+            with self.assertRaises(ValueError):
+                Soubor.remove_gps_data(content)
+
     def test_unreadable_image_is_rejected(self):
         """Nečitelný obrázek se nesmí vrátit volajícímu jako vyčištěný."""
         with self.assertRaises(ValueError):
@@ -51,7 +158,7 @@ class GpsCleanupTests(unittest.TestCase):
 
     def test_unrepairable_exif_is_rejected(self):
         """Neznámá chyba i vyčerpání oprav EXIF musí zastavit upload."""
-        for message in ("cannot serialize EXIF", "41729 in Exif IFD"):
+        for message in ("cannot serialize EXIF", f"{piexif.ExifIFD.SceneType} in Exif IFD"):
             with self.subTest(message=message):
                 content = self._photo()
                 with patch("core.models.piexif.dump", side_effect=ValueError(message)):
@@ -80,7 +187,7 @@ class GpsCleanupTests(unittest.TestCase):
                 result = Soubor.remove_gps_data(self._photo(fmt))
                 self.assertEqual(result.tell(), 0)
                 with Image.open(result) as image:
-                    self.assertFalse(image.getexif().get_ifd(34853))
+                    self.assertFalse(image.getexif().get_ifd(ExifTags.IFD.GPSInfo))
                 content = self._photo(fmt, gps=False)
                 original = content.getvalue()
                 self.assertIs(Soubor.remove_gps_data(content), content)
