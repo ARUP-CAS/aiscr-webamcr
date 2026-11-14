@@ -49,10 +49,13 @@ Načítání a cache
 ----------------
 
 Přihlášení načítá novinky pouze z cache a nikdy při něm nestahuje externí obsah.
-Úlohu ``cron.tasks.load_news_feed`` spouští Celery asynchronně při zahřátí aplikace,
-po změně nastavení ovlivňujícího stahování a periodicky. Nová položka se zobrazí po
-úspěšném dokončení úlohy. Při chybě stahování zůstává dostupná poslední úspěšná
-kopie stejného zdroje.
+Při zahřátí aplikace spustí vstupní skript úlohu ``cron.tasks.load_news_feed``
+přímo v samostatném procesu ``nohup python manage.py shell``. Po změně nastavení
+ovlivňujícího stahování se úloha odešle do fronty Celery; periodická spuštění
+zajišťuje databázový plánovač Celery Beat. Nová položka se zobrazí po úspěšném
+dokončení úlohy. Při chybě stahování zůstává dostupná poslední úspěšná kopie
+stejného zdroje. Poslední úspěšná neprázdná kopie zůstává v cache 30 dní od
+posledního úspěšného načtení; po vypršení se při chybě stahování novinky nezobrazí.
 
 Klíče cache zahrnují nastavený prefix, jazyk a identitu normalizované URL. Změna
 zdroje nebo prefixu proto nevrací obsah předchozího kanálu. Hodnota TTL pod

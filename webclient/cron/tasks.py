@@ -3964,6 +3964,7 @@ def _sync_ruian_changes_locked(reassign_records: bool = True):
 
 NEWS_FEED_MAX_RETRIES = 3
 NEWS_FEED_RETRY_DELAY = 60
+NEWS_FEED_LAST_GOOD_TTL = 30 * 24 * 60 * 60
 
 
 @shared_task(bind=True, max_retries=NEWS_FEED_MAX_RETRIES, default_retry_delay=NEWS_FEED_RETRY_DELAY)
@@ -4004,7 +4005,7 @@ def load_news_feed(self, languages=None):
             cache.set(cache_key, feed, cache_ttl)
 
             if feed:
-                cache.set(last_good_key, feed, None)
+                cache.set(last_good_key, feed, NEWS_FEED_LAST_GOOD_TTL)
             else:
                 logger.info("News feed for %s is valid but empty; preserving last-good copy.", language)
 
@@ -4045,7 +4046,7 @@ def run_news_feed_warmup():
     except Exception:
         logger.exception("Could not reconcile the news-feed schedule during startup.")
 
-    # Spustit úlohu jako nezávislý Celery worker proces
+    # Spustit úlohu přímo v samostatném procesu.
     warmup_command = 'python manage.py shell -c "from cron.tasks import load_news_feed; load_news_feed()"'
     # nohup zajistí, že proces přežije i po ukončení entrypointu
     background_command = f"nohup {warmup_command} >/proc/1/fd/1 2>&1 </dev/null &"
