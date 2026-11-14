@@ -6,7 +6,9 @@ from unittest.mock import patch
 
 import piexif
 import pillow_heif
+from core import image_location
 from core.models import Soubor
+from core.tests import location_fixtures as fx
 from PIL import Image
 
 
@@ -46,6 +48,22 @@ class HeifGpsTests(unittest.TestCase):
                     exif = piexif.load(image.info["exif"])
                     self.assertFalse(exif["GPS"])
                     self.assertEqual(exif["0th"][piexif.ImageIFD.Make], b"Test camera")
+
+    def test_xmp_location_is_cleaned(self):
+        """Poloha jen v XMP se vyčistí; ostatní XMP a EXIF zůstanou."""
+        content = fx.heif(exif=fx.exif_bytes(gps=False), xmp_packet=fx.XMP_GPS_ELEMENT)
+        result = Soubor.remove_heif_gps_data(content)
+        self.assertIsNot(result, content)
+        self.assertEqual(image_location.find_location_metadata(result), [])
+        stored = pillow_heif.open_heif(result)
+        self.assertIn(b'format="image/jpeg"', stored.info["xmp"])
+        self.assertTrue(stored.info["exif"])
+
+    def test_unparseable_xmp_is_dropped(self):
+        """XMP, které nelze rozebrat, se zahodí místo archivace s možnou polohou."""
+        content = fx.heif(xmp_packet=b"<x:xmpmeta><broken")
+        stored = pillow_heif.open_heif(Soubor.remove_heif_gps_data(content))
+        self.assertFalse(stored.info.get("xmp"))
 
     def test_clean_file_is_unchanged(self):
         """Soubor bez GPS nevyžaduje opětovné kódování."""

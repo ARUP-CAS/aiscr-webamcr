@@ -7,11 +7,13 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-import piexif
 from api.views import _RECORD_LOCK_PREFIX, PasApiBaseView, SamostatnyNalezFotografieUploadView
+from core import image_location
 from core.constants import API_REQUEST_LOG_STATUS_FAILURE
+from core.exceptions import GpsDataRemovalError
 from core.models import Soubor
 from core.repository_connector import FedoraTransactionStatus
+from core.tests import location_fixtures as fx
 from core.views import NewFileUploadView, UpdateExistingFileUploadView
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -33,21 +35,21 @@ class GpsCleanupTests(unittest.TestCase):
         :return: Stream fotografie na začátku.
         """
         content = io.BytesIO()
-        exif = piexif.dump({"GPS": {1: b"N", 2: ((50, 1), (5, 1), (0, 1))} if gps else {}})
-        Image.new("RGB", (32, 32), "red").save(content, format=fmt, exif=exif)
+        Image.new("RGB", (32, 32), "red").save(content, format=fmt, exif=fx.exif_bytes(gps=gps))
         content.seek(0)
         return content
 
     FRAME_VALUES = (10, 128, 250)
 
     @classmethod
-    def _multi_frame_tiff(cls, gps_frames):
+    def _multi_frame_tiff(cls, gps_frames, xmp_frames=None):
         """Ručně sestaví vícesnímkový TIFF s vlastním EXIF a GPS IFD v každém snímku.
 
         Pillow při zápisu dalších snímků nepřepočítá ukazatele na vnořené IFD, proto
         se testovací soubor skládá přímo podle specifikace TIFF.
 
         :param gps_frames: Indexy snímků, které dostanou GPS IFD se zeměpisnou šířkou.
+        :param xmp_frames: Slovník index snímku → paket XMP uložený v tagu XMLPacket.
         :return: Stream little-endian TIFF na začátku; snímek ``i`` má výrobce ``Cam{i}``
             a jediný šedý pixel s hodnotou ``FRAME_VALUES[i]``.
         """
@@ -81,6 +83,9 @@ class GpsCleanupTests(unittest.TestCase):
                 entry(ExifTags.Base.RowsPerStrip, TiffTags.SHORT, 1, 1),
                 entry(ExifTags.Base.StripByteCounts, TiffTags.LONG, 1, 1),
             ]
+            if index in (xmp_frames or {}):
+                packet = xmp_frames[index]
+                entries.append(entry(ExifTags.Base.XMLPacket, TiffTags.BYTE, len(packet), append(packet)))
             if index in gps_frames:
                 latitude_ref = struct.pack("<HHI", ExifTags.GPS.GPSLatitudeRef, TiffTags.ASCII, 2) + b"N\x00\x00\x00"
                 gps_offset = append(struct.pack("<H", 1) + latitude_ref + struct.pack("<I", 0))
@@ -151,34 +156,96 @@ class GpsCleanupTests(unittest.TestCase):
 
     def test_unreadable_exif_is_rejected(self):
         """Chyba parsování EXIF zabrání předání originálu k archivaci."""
-        content = self._photo()
-        with patch("core.models.piexif.load", side_effect=ValueError("broken EXIF")):
-            with self.assertRaises(ValueError):
-                Soubor.remove_gps_data(content)
-
-    def test_unrepairable_exif_is_rejected(self):
-        """Neznámá chyba i vyčerpání oprav EXIF musí zastavit upload."""
-        for message in ("cannot serialize EXIF", f"{piexif.ExifIFD.SceneType} in Exif IFD"):
-            with self.subTest(message=message):
-                content = self._photo()
-                with patch("core.models.piexif.dump", side_effect=ValueError(message)):
-                    with self.assertRaises(ValueError):
-                        Soubor.remove_gps_data(content)
+        broken = image_location._segment(
+            image_location.JPEG_MARKER_APP1, image_location.EXIF_SIGNATURE + b"XX*\x00\x08\x00\x00\x00"
+        )
+        with self.assertRaises(GpsDataRemovalError):
+            Soubor.remove_gps_data(fx.jpeg(segments=[broken]))
 
     def test_encoder_failure_is_rejected(self):
         """Selhání zápisu obrázku nesmí vrátit původní GPS metadata."""
-        content = self._photo()
+        content = self._photo("PNG")
         with patch.object(Image.Image, "save", side_effect=OSError("encoder failed")):
             with self.assertRaises(ValueError):
                 Soubor.remove_gps_data(content)
 
     def test_saved_image_with_remaining_gps_is_rejected(self):
         """Kontrola výstupu odhalí kodér, který GPS metadata neodstranil."""
-        content = self._photo()
+        content = self._photo("PNG")
         original = content.getvalue()
         with patch.object(Image.Image, "save", side_effect=lambda output, **kwargs: output.write(original)):
             with self.assertRaises(ValueError):
                 Soubor.remove_gps_data(content)
+
+    def test_remaining_xmp_location_is_rejected(self):
+        """Kontrola výstupu odhalí XMP, ze kterého se poloha neodstranila."""
+        content = fx.jpeg(xmp_packet=fx.XMP_GPS_ATTRIBUTE)
+        with patch("core.image_location.rewrite_xmp", side_effect=lambda packet, *args, **kwargs: packet):
+            with self.assertRaises(GpsDataRemovalError):
+                Soubor.remove_gps_data(content)
+
+    def test_image_count_change_is_rejected(self):
+        """Výstup, který ztratí vedlejší obrázek MPF, se nesmí archivovat."""
+        content = fx.mpo(secondary_exif=fx.exif_bytes())
+        with patch("core.image_location.remove_location_metadata", return_value=fx.jpeg()):
+            with self.assertRaises(GpsDataRemovalError):
+                Soubor.remove_gps_data(content)
+
+    def test_jpeg_is_cleaned_without_recompression(self):
+        """JPEG s GPS se vyčistí bez rekomprese: obrazová data, tabulky i ICC zůstanou."""
+        icc = fx.icc_profile()
+        content = fx.jpeg(exif=fx.exif_bytes(), icc=icc)
+        result = Soubor.remove_gps_data(content)
+        self.assertEqual(result.tell(), 0)
+        self.assertEqual(len(result.getvalue()), len(content.getvalue()))
+        self.assertEqual(fx.scan_data(result.getvalue()), fx.scan_data(content.getvalue()))
+        with Image.open(result) as stored, Image.open(io.BytesIO(content.getvalue())) as original:
+            self.assertNotIn(ExifTags.IFD.GPSInfo, stored.getexif())
+            self.assertEqual(stored.quantization, original.quantization)
+            self.assertEqual(stored.info["icc_profile"], icc)
+
+    def test_location_outside_exif_is_removed(self):
+        """Poloha jen v XMP, surovém profilu PNG nebo vedlejším obrázku MPF se odstraní."""
+        cases = {
+            "jpeg_xmp": fx.jpeg(xmp_packet=fx.XMP_GPS_ELEMENT),
+            "png_xmp": fx.png(xmp_packet=fx.XMP_DJI),
+            "png_raw_profile": fx.png(texts=[("Raw profile type exif", fx.raw_profile("exif", fx.exif_bytes()))]),
+            "mpo_secondary": fx.mpo(secondary_exif=fx.exif_bytes()),
+            "heif_xmp": fx.heif(xmp_packet=fx.XMP_LOCATION_CREATED),
+        }
+        for name, content in cases.items():
+            with self.subTest(case=name):
+                self.assertTrue(Soubor.find_location_metadata(content))
+                result = Soubor.remove_gps_data(content)
+                self.assertIsNot(result, content)
+                self.assertEqual(Soubor.find_location_metadata(result), [])
+                self.assertEqual(image_location.image_count(result), image_location.image_count(content))
+
+    def test_multi_frame_tiff_xmp_location(self):
+        """XMP s polohou v posledním snímku se vyčistí, XMP ostatních snímků zůstane."""
+        content = self._multi_frame_tiff(set(), {0: fx.XMP_CLEAN, 2: fx.XMP_GPS_ATTRIBUTE})
+        self.assertEqual(Soubor.find_location_metadata(content), ["tiff[2].xmp"])
+        result = Soubor.remove_gps_data(content)
+        self.assertEqual(Soubor.find_location_metadata(result), [])
+        with Image.open(result) as stored:
+            self.assertEqual(stored.n_frames, len(self.FRAME_VALUES))
+            self.assertEqual(image_location.tiff_xmp(stored), fx.XMP_CLEAN)
+            stored.seek(1)
+            self.assertIsNone(image_location.tiff_xmp(stored))
+            stored.seek(2)
+            packet = image_location.tiff_xmp(stored)
+        self.assertIn(b'format="image/jpeg"', packet)
+        self.assertNotIn(b"GPSLatitude", packet)
+
+    def test_location_blocks_are_logged_without_values(self):
+        """Log uvede jen identifikátory bloků, nikdy hodnoty souřadnic."""
+        content = fx.jpeg(exif=fx.exif_bytes(), xmp_packet=fx.XMP_GPS_ATTRIBUTE)
+        with self.assertLogs("core.models", "DEBUG") as logs:
+            Soubor.remove_gps_data(content)
+        found = [record for record in logs.records if record.msg.endswith(".location_found")]
+        self.assertEqual(found[0].blocks, ["jpeg[0].exif.gps", "jpeg[0].xmp"])
+        for record in logs.records:
+            self.assertNotIn("50,5.0N", str(record.__dict__))
 
     def test_clean_and_gps_free_photos(self):
         """JPEG, PNG a TIFF se vyčistí; obsah bez GPS zůstane beze změny."""

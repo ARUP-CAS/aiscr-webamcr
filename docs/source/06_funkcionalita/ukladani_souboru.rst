@@ -173,15 +173,32 @@ Distribution catalogue
 
 .. note::
 
-   For PAS photographs, ``orig`` contains the image after GPS coordinates have been
-   removed from EXIF. This applies to JPEG, PNG and TIFF, and also to HEIC and HEIF;
-   HEIC/HEIF cleanup covers all images in the container and multi-frame TIFF
-   cleanup keeps every frame; frames after the first keep only their main-IFD
-   metadata (e.g. camera make), because Pillow cannot relocate nested Exif IFDs
-   in appended frames. If parsing, cleanup or
-   verification fails, the file is not stored. A photograph confirmed to contain
-   no GPS is left unchanged. See :doc:`sprava_souboru` for the upload policy and
-   :doc:`/05_integrace/pas_api` for API error responses.
+   For PAS photographs, ``orig`` contains the image after location data has been
+   removed. This applies to JPEG, PNG, TIFF, HEIC and HEIF and covers:
+
+   - GPS coordinates in EXIF;
+   - coordinates in XMP (``exif:GPS*``, any property whose name starts with ``GPS``,
+     e.g. DJI ``drone-dji:GpsLatitude``, and ``Iptc4xmpExt:LocationCreated``/``LocationShown``),
+     including JPEG Extended XMP; other XMP properties are kept;
+   - ImageMagick ``Raw profile type exif/APP1/xmp`` text chunks in PNG;
+   - every image of a multi-picture JPEG (MPF/MPO, e.g. an Ultra HDR gain map), all
+     frames of a TIFF and all images of a HEIC/HEIF container.
+
+   JPEG is never re-encoded: EXIF is edited in place and XMP rewritten, so image data,
+   quantization tables, ICC profile, thumbnail and MPF index stay valid. PNG is re-saved
+   losslessly with its other text chunks. Multi-frame TIFF keeps every frame; frames after
+   the first keep only their main-IFD metadata (e.g. camera make), because Pillow cannot
+   relocate nested Exif IFDs in appended frames.
+
+   The output is checked again: it must contain no location data and the same number of
+   images. If parsing, cleanup or verification fails, the file is not stored. A
+   photograph confirmed to contain no location data is left unchanged.
+
+   Not cleaned: textual place names in IPTC-IIM (City, Sub-location, Province, Country)
+   and in vendor MakerNotes, free-text comments (JPEG COM, PNG ``Comment``/``Description``),
+   data appended after the end of a JPEG (e.g. the video of a motion photo, which is only
+   logged) and GeoTIFF georeferencing tags. See :doc:`sprava_souboru` for the upload policy
+   and :doc:`/05_integrace/pas_api` for API error responses.
 
 Kept only in the record, with no file of their own:
 

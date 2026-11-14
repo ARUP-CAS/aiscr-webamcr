@@ -216,44 +216,71 @@ Třídy
       :param content: Binární obsah fotografie; původní pozice streamu se nezachovává.
       :return: Zda hlavička odpovídá formátu podporovanému knihovnou libheif.
 
+   .. py:method:: find_location_metadata()
+
+      Najde bloky metadat s polohou; deleguje na ``core.image_location``.
+
+      :param content: Obsah fotografie; pozice streamu se vrátí na začátek.
+      :return: Identifikátory bloků s polohou, prázdný seznam pro soubor bez polohy.
+      :raises ValueError: Pokud metadata nelze rozebrat.
+
+   .. py:method:: strip_xmp_location()
+
+      Odstraní z paketu XMP polohu; deleguje na ``core.image_location``.
+
+      :param xmp: Paket XMP.
+      :return: Paket bez polohy, nebo ``None``, pokud ho nelze rozebrat.
+
    .. py:method:: remove_heif_gps_data()
 
-      Odstraní GPS ze všech obrázků; chyby předá volajícímu bez návratu originálu.
+      Odstraní GPS z EXIF a polohu z XMP ve všech obrázcích kontejneru HEIF.
+
+      EXIF se upraví na místě bez změny ostatních tagů. XMP bez polohy zůstane, XMP
+      s polohou se vyčistí a XMP, které nelze rozebrat, se zahodí. Chyby předá
+      volajícímu bez návratu originálu.
 
       :param content: Obsah HEIC/HEIF fotografie včetně případných vedlejších obrázků.
-      :return: Stream bez GPS na pozici nula, nebo původní stream, pokud GPS neobsahoval.
-      :raises ValueError: Pokud kontrola uloženého kontejneru najde zbývající GPS.
+      :return: Stream bez polohy na pozici nula, nebo původní stream, pokud polohu neobsahoval.
+      :raises ValueError: Pokud kontrola uloženého kontejneru najde zbývající polohu.
 
    .. py:method:: remove_tiff_gps_data()
 
-      Odstraní GPS ze všech snímků TIFF a zachová jejich počet i základní EXIF.
+      Odstraní GPS a polohu v XMP ze všech snímků TIFF a zachová jejich počet.
 
-      Každý snímek se uloží s vlastní kopií EXIF bez GPS IFD. Pillow při připojování
-      dalších snímků nepřepočítá ukazatele na vnořené IFD, proto snímky po prvním
-      zachovají jen tagy hlavního IFD (např. výrobce) bez Exif a Interop IFD.
-      Tagy uložené pouze v adresáři TIFF (např. XMP, IPTC) se při přeuložení nezachovají.
+      Každý snímek se uloží s vlastní kopií EXIF bez GPS IFD a s vlastním XMP
+      (vyčištěným, pokud nese polohu). Pillow při připojování dalších snímků
+      nepřepočítá ukazatele na vnořené IFD, proto snímky po prvním zachovají jen tagy
+      hlavního IFD (např. výrobce) bez Exif a Interop IFD. Ostatní tagy uložené pouze
+      v adresáři TIFF (např. IPTC, GeoTIFF) se při přeuložení nezachovají.
 
       :param content: Obsah TIFF fotografie s jedním nebo více snímky.
-      :return: Stream bez GPS na pozici nula, nebo původní stream, pokud GPS neobsahoval žádný snímek.
-      :raises ValueError: Pokud uložený soubor nemá stejný počet snímků nebo v něm zůstalo GPS.
+      :return: Stream bez polohy na pozici nula, nebo původní stream, pokud ji neobsahoval žádný snímek.
+      :raises ValueError: Pokud uložený soubor nemá stejný počet snímků nebo v něm zůstala poloha.
 
    .. py:method:: remove_gps_data()
 
-      Odstraní GPS metadata z fotografie uložené v paměti.
+      Odstraní z fotografie uložené v paměti všechny podporované údaje o poloze.
 
-      Funkce načte EXIF data z obrázku, odstraní GPS informace a pokusí se
-      znovu uložit EXIF. Pokud narazí na nevalidní nebo nekompatibilní EXIF
-      tagy (např. UserComment, MakerNote apod.), automaticky je odstraní,
-      aby bylo možné obrázek úspěšně uložit.
+      Nejprve najde bloky s polohou: GPS v EXIF, souřadnice v XMP (u JPEG i rozšířené
+      XMP), surové profily EXIF/XMP v textových blocích PNG a u JPEG všechny vedlejší
+      obrázky indexu MPF (např. mapa zesílení Ultra HDR). Soubor bez polohy vrátí
+      beze změny.
 
-      HEIC/HEIF čistí ve všech obrázcích kontejneru a TIFF ve všech snímcích
-      se zachováním jejich počtu. Při chybě parsování,
-      odstranění nebo ověření GPS vyvolá výjimku, aby zabránila archivaci
-      původního souboru. Soubor bez GPS vrací beze změny.
+      JPEG se nikdy znovu nekóduje: EXIF se upraví na místě a XMP se přepíše, ostatní
+      segmenty a obrazová data zůstanou bajtově shodná. PNG se uloží bezeztrátově
+      s ostatními textovými bloky, TIFF ve všech snímcích se zachováním jejich počtu
+      a HEIC/HEIF ve všech obrázcích kontejneru.
+
+      Výstup znovu zkontroluje: nesmí obsahovat žádný blok s polohou a musí mít stejný
+      počet obrázků. Při chybě rozboru, čištění nebo kontroly vyvolá výjimku, aby se
+      původní soubor nearchivoval.
+
+      Nezpracovává textové údaje o místě v IPTC-IIM, MakerNote, komentářích, data za
+      koncem JPEG (např. video pohyblivé fotografie) ani georeferenční tagy GeoTIFF.
 
       :param bytes_io: Obsah souboru připravený ke kontrole antivirem.
-      :return: Vrací výsledek operace odstranění.
-      :raises GpsDataRemovalError: Pokud GPS nelze bezpečně odstranit nebo ověřit výstup.
+      :return: Původní stream, pokud polohu neobsahuje, jinak nový stream bez polohy.
+      :raises GpsDataRemovalError: Pokud polohu nelze bezpečně najít, odstranit nebo ověřit výstup.
 
    .. py:method:: check_mime_for_url()
 

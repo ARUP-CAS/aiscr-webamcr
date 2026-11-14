@@ -24,6 +24,7 @@ Dokumentace modulu core.
    distribution_names
    exceptions
    ident_cely
+   image_location
    import_data_mappers
    import_maintenance
    log_middleware
