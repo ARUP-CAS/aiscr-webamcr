@@ -175,7 +175,8 @@ Distribution catalogue
 
    For PAS photographs, ``orig`` contains the image after GPS coordinates have been
    removed from EXIF. This applies to JPEG, PNG and TIFF, and also to HEIC and HEIF;
-   HEIC/HEIF cleanup covers all images in the container and multi-frame TIFF
+   HEIC/HEIF cleanup covers all images in the container and also drops an XMP
+   packet that mentions GPS; multi-frame TIFF
    cleanup keeps every frame; frames after the first keep only their main-IFD
    metadata (e.g. camera make), because Pillow cannot relocate nested Exif IFDs
    in appended frames. If parsing, cleanup or

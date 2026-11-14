@@ -234,7 +234,10 @@ Třídy
 
    .. py:method:: remove_heif_gps_data()
 
-      Odstraní GPS ze všech obrázků; chyby předá volajícímu bez návratu originálu.
+      Odstraní GPS z EXIF i XMP všech obrázků; chyby předá volajícímu bez návratu originálu.
+
+      XMP zmiňující GPS se odstraní celé, protože jeho souřadnice nelze spolehlivě
+      vyjmout bez úpravy RDF.
 
       :param content: Obsah HEIC/HEIF fotografie včetně případných vedlejších obrázků.
       :return: Stream bez GPS na pozici nula, nebo původní stream, pokud GPS neobsahoval.

@@ -734,7 +734,10 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @staticmethod
     def remove_heif_gps_data(content: io.BytesIO) -> io.BytesIO:
-        """Odstraní GPS ze všech obrázků; chyby předá volajícímu bez návratu originálu.
+        """Odstraní GPS z EXIF i XMP všech obrázků; chyby předá volajícímu bez návratu originálu.
+
+        XMP zmiňující GPS se odstraní celé, protože jeho souřadnice nelze spolehlivě
+        vyjmout bez úpravy RDF.
 
         :param content: Obsah HEIC/HEIF fotografie včetně případných vedlejších obrázků.
         :return: Stream bez GPS na pozici nula, nebo původní stream, pokud GPS neobsahoval.
@@ -744,6 +747,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         images = pillow_heif.open_heif(content, convert_hdr_to_8bit=False)
         changed = False
         for image in images:
+            if b"GPS" in (image.info.get("xmp") or b""):
+                image.info["xmp"] = None
+                changed = True
             exif = image.info.get("exif")
             if not exif:
                 continue
@@ -763,6 +769,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             exif = image.info.get("exif")
             if exif and piexif.load(exif).get("GPS"):
                 raise ValueError("HEIF GPS metadata cleanup failed")
+            if b"GPS" in (image.info.get("xmp") or b""):
+                raise ValueError("HEIF XMP GPS metadata cleanup failed")
         output.seek(0)
         return output
 

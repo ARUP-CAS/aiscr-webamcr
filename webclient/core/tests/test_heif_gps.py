@@ -47,6 +47,27 @@ class HeifGpsTests(unittest.TestCase):
                     self.assertFalse(exif["GPS"])
                     self.assertEqual(exif["0th"][piexif.ImageIFD.Make], b"Test camera")
 
+    def test_xmp_gps_is_removed(self):
+        """GPS uložené jen v XMP se odstraní i bez GPS v EXIF."""
+        xmp = (
+            b'<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+            b'<rdf:Description xmlns:exif="http://ns.adobe.com/exif/1.0/" exif:GPSLatitude="50,5.0N"'
+            b' exif:GPSLongitude="14,25.0E"/></rdf:RDF></x:xmpmeta>'
+        )
+        images = pillow_heif.open_heif(self._photo((False,)))
+        images[0].info["xmp"] = xmp
+        content = io.BytesIO()
+        images.save(content)
+        content.seek(0)
+        self.assertIn(b"GPS", pillow_heif.open_heif(content)[0].info["xmp"])
+        content.seek(0)
+        result = Soubor.remove_heif_gps_data(content)
+        self.assertIsNot(result, content)
+        self.assertEqual(result.tell(), 0)
+        stored = pillow_heif.open_heif(result)[0]
+        self.assertNotIn(b"GPS", stored.info.get("xmp") or b"")
+        self.assertEqual(piexif.load(stored.info["exif"])["0th"][piexif.ImageIFD.Make], b"Test camera")
+
     def test_clean_file_is_unchanged(self):
         """Soubor bez GPS nevyžaduje opětovné kódování."""
         content = self._photo((False,))
