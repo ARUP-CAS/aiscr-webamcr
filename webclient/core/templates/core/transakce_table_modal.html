@@ -44,14 +44,14 @@
     <div class="app-card-dokument">
         <div class="app-table-list-wrapper vratit-dokument-table" style="display: none;">
         {{ formset.management_form }}
-        {%include "dokument/dokument_table_only.html"%}
+        {%include "dokument/dokument_table_only.html" with bez_limitu=True %}
         </div>
     </div>
     {% endif %}
     {% if id_tag == "pripojit-dokument-form" %}
     <div class="app-card-dokument">
         <div class="app-table-list-wrapper add-dokument-table" {% if hide_table %} style="display: none;" {%endif%}>
-    {%include "dokument/dokument_table_only.html"%}
+    {%include "dokument/dokument_table_only.html" with bez_limitu=True %}
         </div>
     </div>
     {% endif %}
@@ -87,14 +87,14 @@
     {% if id_tag == "pripojit-eo-form" %}
     <div class="app-card-{{type}}">
         <div class="app-table-list-wrapper add-eo-table" {% if hide_table %} style="display: none;" {%endif%}>
-    {%include "ez/ez_odkazy_table_only.html"%}
+    {%include "ez/ez_odkazy_table_only.html" with bez_limitu=True %}
         </div>
     </div>
     {% endif %}
     {% if id_tag == "pripojit-eo-doaz-form" %}
     <div class="app-card-ext_zdroj">
         <div class="app-table-list-wrapper add-ez-table" {% if hide_table %} style="display: none;" {%endif%}>
-    {%include "ez/az_ez_odkazy_table_only.html" with hide_paginace="True" %}
+    {%include "ez/az_ez_odkazy_table_only.html" with hide_paginace="True" bez_limitu=True %}
         </div>
     </div>
     {% endif %}

@@ -1,8 +1,22 @@
 {% load i18n %}
 {% load template_filters %}
 {% load template_tags %}
-
-          {% for nalez in samostatne_nalezy %}
+{% omezit_radky samostatne_nalezy "samostatne_nalezy" as omezene %}
+<table class="table table-striped table-hover table-sm mb-0">
+  <thead>
+    <tr>
+      <th>{% trans "projekt.templates.detail.nalezyPart.table.nahled.label" %}</th>
+      <th>{% trans "projekt.templates.detail.nalezyPart.table.identCely.label" %}</th>
+      <th>{% trans "projekt.templates.detail.nalezyPart.table.stav.label" %}</th>
+      <th>{% trans "projekt.templates.detail.nalezyPart.table.katastr.label" %}</th>
+      <th>{% trans "projekt.templates.detail.nalezyPart.table.datumNalezu.label" %}</th>
+      <th>{% trans "projekt.templates.detail.nalezyPart.table.nalezce.label" %}</th>
+      <th>{% trans "projekt.templates.detail.nalezyPart.table.obdobi.label" %}</th>
+      <th>{% trans "projekt.templates.detail.nalezyPart.table.druhNalezu.label" %}</th>
+    </tr>
+  </thead>
+  <tbody data-radky="samostatne_nalezy">
+          {% for nalez in omezene.radky %}
             <tr>
               <td>
                 {% if nalez.nahled_soubor %}
@@ -32,3 +46,6 @@
               <td>{{ nalez.druh_nalezu }}</td>
             </tr>
           {% endfor %}
+  </tbody>
+</table>
+{% include "core/nacist_zbyvajici.html" %}

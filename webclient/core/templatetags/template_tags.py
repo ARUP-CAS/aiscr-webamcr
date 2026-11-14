@@ -2,6 +2,14 @@ import logging
 from datetime import datetime
 
 import core.message_constants as mc
+from core.constants import (
+    SOUVISEJICI_RADKY_BEZ_LIMITU,
+    SOUVISEJICI_RADKY_LIMIT,
+    SOUVISEJICI_RADKY_PARAM,
+    SOUVISEJICI_RADKY_VYSLEDEK_KLIC,
+    SOUVISEJICI_RADKY_VYSLEDEK_RADKY,
+    SOUVISEJICI_RADKY_VYSLEDEK_ZBYVAJICI_URL,
+)
 from core.setting_models import CustomAdminSettings
 from core.utils import get_set_maintenance_in_cache
 from django import template
@@ -219,3 +227,41 @@ def get_test_env():
     :return: Vrací atribut objektu.
     """
     return settings.TEST_ENV
+
+
+@register.simple_tag(takes_context=True)
+def omezit_radky(context, radky, klic):
+    """
+    Omezí řádky tabulky souvisejících záznamů na detailu na prvních ``SOUVISEJICI_RADKY_LIMIT`` řádků.
+
+    Bez limitu se vrátí všechny řádky, pokud kontext nese ``SOUVISEJICI_RADKY_BEZ_LIMITU`` (modaly připojení/odpojení)
+    nebo v něm chybí ``request``. Pokud ``request.GET[SOUVISEJICI_RADKY_PARAM]`` je rovno ``klic``,
+    vrátí se jen řádky za limitem — odpověď tlačítka „Načíst zbývající záznamy“. Jinak se načte
+    o jeden řádek víc než limit, aby šlo bez dalšího ``count()`` poznat, zda zbývají další.
+
+    :param context: Kontext šablony; čte se z něj ``request`` a ``SOUVISEJICI_RADKY_BEZ_LIMITU``.
+    :param radky: Queryset nebo seznam řádků tabulky; řeže se jen pro zobrazení.
+    :param klic: Identifikátor tabulky na stránce, shodný s ``data-radky`` u jejího ``tbody``.
+    :return: Slovník s klíči ``SOUVISEJICI_RADKY_VYSLEDEK_RADKY`` (řádky k vykreslení),
+        ``SOUVISEJICI_RADKY_VYSLEDEK_KLIC`` a ``SOUVISEJICI_RADKY_VYSLEDEK_ZBYVAJICI_URL``
+        (URL pro načtení zbytku, nebo ``None``, pokud žádný zbytek není).
+    """
+
+    def vysledek(vykreslene_radky, zbyvajici_url=None):
+        return {
+            SOUVISEJICI_RADKY_VYSLEDEK_RADKY: vykreslene_radky,
+            SOUVISEJICI_RADKY_VYSLEDEK_KLIC: klic,
+            SOUVISEJICI_RADKY_VYSLEDEK_ZBYVAJICI_URL: zbyvajici_url,
+        }
+
+    request = context.get("request")
+    if radky is None or context.get(SOUVISEJICI_RADKY_BEZ_LIMITU) or request is None:
+        return vysledek(radky)
+    if request.GET.get(SOUVISEJICI_RADKY_PARAM) == klic:
+        return vysledek(radky[SOUVISEJICI_RADKY_LIMIT:])
+    prvni = list(radky[: SOUVISEJICI_RADKY_LIMIT + 1])
+    if len(prvni) <= SOUVISEJICI_RADKY_LIMIT:
+        return vysledek(prvni)
+    query = request.GET.copy()
+    query[SOUVISEJICI_RADKY_PARAM] = klic
+    return vysledek(prvni[:SOUVISEJICI_RADKY_LIMIT], request.path + "?" + query.urlencode())
