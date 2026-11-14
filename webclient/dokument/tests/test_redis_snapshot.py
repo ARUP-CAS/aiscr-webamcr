@@ -4,10 +4,10 @@ from unittest import mock
 
 from django.test import SimpleTestCase
 from dokument.models import Dokument
-from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_TYPES
 
-TYP_3D = MODEL_3D_DOKUMENT_TYPES[0]
-TYP_JINY = max(MODEL_3D_DOKUMENT_TYPES) + 1
+# Pevná ID místo hodnot z ``heslar.hesla_dynamicka``: ta se načítají z databáze a bez ní je seznam prázdný.
+TYP_3D = 1001
+TYP_JINY = 1002
 
 
 class _FakeTable:
@@ -22,6 +22,7 @@ class _FakeTable:
         self.data = data
 
 
+@mock.patch("dokument.models.MODEL_3D_DOKUMENT_TYPES", [TYP_3D])
 class DokumentRedisSnapshotTest(SimpleTestCase):
     """Ověřuje, že 3D a běžné dokumenty jdou do své tabulky a pod klíč se stejným rozlišením."""
 
