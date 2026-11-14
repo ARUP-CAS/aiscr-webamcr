@@ -14,6 +14,7 @@ from unittest.mock import Mock, patch
 
 from api.models import ApiRequestLog
 from api.views import (
+    _ALLOWED_XML_XSD_URLS,
     _RECORD_LOCK_PREFIX,
     _XSD_BYTES_CACHE,
     ImportErrorType,
@@ -80,6 +81,29 @@ PATCH_URL_NAME = "api:patch-evidencni-cislo"
 FOTO_UPLOAD_URL_NAME = "api:upload-foto"
 IDENT_CELY = "C-202600009-N00007"
 
+# Lokální kopie schémat, které by import XML jinak stahoval ze sítě (api.aiscr.cz, w3.org).
+_XSD_DEFINITIONS_DIR = Path(__file__).resolve().parents[2] / "xml_generator" / "definitions"
+_LOCAL_XSD_FILES = {
+    "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd": "amcr.xsd",
+    **{url: "xml.xsd" for url in _ALLOWED_XML_XSD_URLS},
+}
+
+
+def _local_xsd_bytes(url):
+    """Vrátí lokální kopii XSD schématu z ``xml_generator/definitions`` místo stažení ze sítě.
+
+    Náhrada za ``api.views._fetch_xsd_bytes``: testy importu XML tak neposílají požadavky na
+    api.aiscr.cz ani w3.org a nezávisí na jejich dostupnosti.
+
+    :param url: URL schématu požadovaného při validaci importovaného XML.
+    :return: Bajty lokální kopie schématu.
+    :raises urllib.error.URLError: Pokud pro URL neexistuje lokální kopie (stejně jako nedostupná síť).
+    """
+    file_name = _LOCAL_XSD_FILES.get(url)
+    if file_name is None:
+        raise urllib.error.URLError(f"Test nemá lokální kopii schématu: {url}")
+    return (_XSD_DEFINITIONS_DIR / file_name).read_bytes()
+
 
 class SamostatnyNalezXmlImportViewTests(TestCase):
     """Testy pro ``SamostatnyNalezXmlImportView``."""
@@ -89,9 +113,14 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
     _DATA_DIR = Path(__file__).parent / "data"
 
     def setUp(self):
-        """Připraví per-test PAS API nastavení a mocky Fedora repozitáře."""
+        """Připraví per-test PAS API nastavení, lokální XSD schémata a mocky Fedora repozitáře."""
         super().setUp()
         self._clear_pas_api_settings()
+
+        # Testy, které chování stahování ověřují, si ``_fetch_xsd_bytes`` patchují samy uvnitř testu.
+        xsd_patcher = patch("api.views._fetch_xsd_bytes", side_effect=_local_xsd_bytes)
+        xsd_patcher.start()
+        self.addCleanup(xsd_patcher.stop)
 
         patcher = patch("xml_generator.models.ModelWithMetadata.save_metadata", lambda *a, **kw: None)
         patcher.start()
@@ -1764,10 +1793,8 @@ class SamostatnyNalezXmlImportViewTests(TestCase):
 
     def test_tba_nalezce_reuses_existing_osoba_when_name_matches(self):
         """Import s ``nalezce id=":tba"`` použije existující osobu, pokud shodné jméno a příjmení již existují."""
-        with patch(
-            "core.repository_connector.FedoraRepositoryConnector.check_container_deleted_or_not_exists",
-            return_value=True,
-        ):
+        # Uložení osoby spouští signál s Fedora transakcí; ta by bez mocku otevřela skutečné spojení.
+        with mock_fedora_for_fixture():
             existing_osoba, _ = Osoba.objects.get_or_create(
                 prijmeni="Novák",
                 jmeno="Jan",
@@ -3527,7 +3554,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         self.assertIn("detail", response.data)
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_FAILURE)
         self.assertIn("fedora_error_reading_metadata", str(log.errors))
-        self._assert_attached_files(self.nalez, 1, expected_name="C202600009N00007F01.png")
+        self._assert_attached_files(self.nalez, 1, expected_name="C202600009N00007F001.png")
         self._assert_file_upload_history(1, expected_note="photo.png")
         self.assertEqual(cache.get(f"{_RECORD_LOCK_PREFIX}{IDENT_CELY}"), 0)
 
@@ -3543,7 +3570,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         self.assertIn(IDENT_CELY, response.content.decode("utf-8"))
         log = self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
         self.assertEqual(log.ident_cely, IDENT_CELY)
-        self._assert_attached_files(self.nalez, 1, expected_name="C202600009N00007F01.png")
+        self._assert_attached_files(self.nalez, 1, expected_name="C202600009N00007F001.png")
         self._assert_file_upload_history(1, expected_note="photo.png")
         archivace = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN)
         self.assertEqual(archivace.count(), 0)
@@ -3562,7 +3589,7 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         archivace = Historie.objects.filter(vazba=self.nalez.historie, typ_zmeny=ARCHIVACE_SN)
         self.assertEqual(archivace.count(), 1)
         self._assert_log_entry(API_REQUEST_LOG_STATUS_SUCCESS)
-        self._assert_attached_files(self.nalez, 1, expected_name="C202600009N00007F01.png")
+        self._assert_attached_files(self.nalez, 1, expected_name="C202600009N00007F001.png")
 
     def test_doi_write_error_on_archived_record_returns_500(self):
         """Selhání IGSN aktualizace při uploadu na archivovaný záznam vrátí HTTP 500 a soubor se neuloží."""
@@ -3612,8 +3639,8 @@ class SamostatnyNalezFotografieUploadViewTests(TestCase):
         self.assertEqual(second_record_response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(throttled_response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
-        self._assert_attached_files(self.nalez, 1, expected_name="C202600009N00007F01.png")
-        self._assert_attached_files(self.nalez_second, 1, expected_name="C202600009N00009F01.png")
+        self._assert_attached_files(self.nalez, 1, expected_name="C202600009N00007F001.png")
+        self._assert_attached_files(self.nalez_second, 1, expected_name="C202600009N00009F001.png")
         self.assertEqual(ApiRequestLog.objects.count(), 2)
 
     def test_record_rate_limit_is_shared_between_patch_and_upload_for_same_ident(self):

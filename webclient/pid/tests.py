@@ -131,11 +131,12 @@ class DoiAutocompleteViewApiCallTest(TestCase):
         mock_dc_doi.assert_called_once()
 
     @patch.object(DoiAutocompleteView, "_doi_item_exists")
+    @patch.object(DoiAutocompleteView, "_api_call_cross_ref_doi", return_value=[])
     @patch.object(DoiAutocompleteView, "_api_call_cross_ref_title", new_callable=AsyncMock, return_value=[])
     @patch.object(DoiAutocompleteView, "_api_call_data_cite", new_callable=AsyncMock, return_value=[])
     @patch.object(DoiAutocompleteView, "_api_call_data_cite_doi", new_callable=AsyncMock, return_value=[])
     def test_doi_item_exists_prepended_when_exact_doi_not_in_results(
-        self, mock_dc_doi, mock_dc_title, mock_cr_title, mock_exists
+        self, mock_dc_doi, mock_dc_title, mock_cr_title, _mock_cr_doi, mock_exists
     ):
         """
         Pokud výsledky neobsahují přesné DOI, je zavoláno ``_doi_item_exists`` a výsledek přidán na začátek.
@@ -143,6 +144,7 @@ class DoiAutocompleteViewApiCallTest(TestCase):
         :param mock_dc_doi: Mock pro ``_api_call_data_cite_doi``.
         :param mock_dc_title: Mock pro ``_api_call_data_cite``.
         :param mock_cr_title: Mock pro ``_api_call_cross_ref_title``.
+        :param _mock_cr_doi: Mock pro ``_api_call_cross_ref_doi``; DOI vstup jinak volá skutečné CrossRef API.
         :param mock_exists: Mock pro ``_doi_item_exists``.
         """
         mock_exists.return_value = [["10.1234/exact", "10.1234/exact"]]

@@ -71,6 +71,7 @@ Třídy
       :param mock_dc_doi: Mock pro ``_api_call_data_cite_doi``.
       :param mock_dc_title: Mock pro ``_api_call_data_cite``.
       :param mock_cr_title: Mock pro ``_api_call_cross_ref_title``.
+      :param _mock_cr_doi: Mock pro ``_api_call_cross_ref_doi``; DOI vstup jinak volá skutečné CrossRef API.
       :param mock_exists: Mock pro ``_doi_item_exists``.
 
    .. py:method:: test_empty_query_returns_empty_list()

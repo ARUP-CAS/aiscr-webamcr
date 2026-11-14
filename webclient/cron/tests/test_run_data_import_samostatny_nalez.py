@@ -253,22 +253,27 @@ class RunDataImportSamostatnyNalezTest(RunDataImportMapperTestBase):
 
     def test_fedora_target_result_writes_are_throttled(self):
         """Průběžný seznam Fedora cílů se zapisuje po intervalech, ne po každém cíli."""
+        interval = 2
+        target_results_key = f"import_fedora_target_results_tr_{JOB_ID}"
         target_result_writes = []
 
         def observe_redis_set(key):
-            if key == f"import_fedora_target_results_tr_{JOB_ID}":
+            if key == target_results_key:
                 target_result_writes.append(key)
 
         fake_redis, _ = self.run_import_records(
             FILE_KEY,
             self._three_fedora_payloads(),
-            extra_patches=[patch("cron.tasks.HISTORY_REDIS_UPDATE_INTERVAL", 2)],
+            extra_patches=[patch("cron.tasks.HISTORY_REDIS_UPDATE_INTERVAL", interval)],
             redis_set_observer=observe_redis_set,
         )
 
         self.assert_import_success(fake_redis)
-        # Durable plan, the two-target checkpoint, and the terminal snapshot.
-        self.assertEqual(len(target_result_writes), 3)
+        # Fedora cíli jsou tři nálezy i jejich nadřazený projekt, takže cílů je víc než interval.
+        target_count = len(json.loads(fake_redis.get(target_results_key)))
+        self.assertGreater(target_count, interval)
+        # Vyprázdnění na začátku úlohy, durabilní plán, checkpoint po každých ``interval`` cílech a koncový snímek.
+        self.assertEqual(len(target_result_writes), 1 + 1 + target_count // interval + 1)
 
     def test_fedora_plan_report_failure_prevents_first_fedora_mutation(self):
         """Selhání durabilního snapshotu úplného plánu ukončí fázi před první Fedora transakcí."""

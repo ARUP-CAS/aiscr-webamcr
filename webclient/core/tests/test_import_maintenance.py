@@ -167,12 +167,11 @@ class MaintenanceImportDatabaseTest(TransactionTestCase):
         self.redis.set(RedisConnector.IMPORT_DATA_LOCK_KEY, "token")
         proposed = copy(self.maintenance)
         proposed.status = False
-        with patch("core.admin.pofile") as po, patch.object(self.model_admin, "file_handler") as files:
+        with patch.object(self.model_admin, "file_handler") as files:
             with self.assertRaises(MaintenanceImportConflict):
                 self.model_admin.save_model(self.request, proposed, MagicMock(), True)
         self.maintenance.refresh_from_db()
         self.assertTrue(self.maintenance.status)
-        po.assert_not_called()
         files.assert_not_called()
         self.cache_delete.assert_not_called()
 

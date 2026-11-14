@@ -108,7 +108,9 @@ class UzivatelOpravneniMapperValidationTest(TestCase):
                 first_name="Import",
                 last_name="Opravneni",
             )
-            cls.group = Group.objects.create(name="import-opravneni")
+            # Pevné ID: vložení role s explicitním ID neposune sekvenci ``auth_group``,
+            # takže automaticky přidělené ID by kolidovalo s ``ROLE_BADATEL_ID``.
+            cls.group = Group.objects.create(id=900001, name="import-opravneni")
 
     def test_insert_validation_passes_when_group_is_missing(self):
         """INSERT validace projde, pokud uživatel skupinu zatím nemá."""
