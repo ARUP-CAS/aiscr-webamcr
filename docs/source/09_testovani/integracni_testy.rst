@@ -99,9 +99,10 @@ V Django konfiguraci povolte společný přepínač a v prostředí nastavte vst
    * - ``PAS_UPLOAD_IDENT_CELY``
      - Identifikátor existujícího vyhrazeného testovacího nálezu
 
-Z adresáře ``webclient/`` spusťte s explicitně zvoleným settings modulem. Bez parametru
-``--settings`` použije ``manage.py`` modul ``webclient.settings``, který sám nic nenastavuje,
-a příkaz selže už při inicializaci Django::
+Z adresáře ``webclient/`` spusťte s explicitně zvoleným settings modulem. Pokud není nastavena
+proměnná ``DJANGO_SETTINGS_MODULE`` ani parametr ``--settings``, použije ``manage.py`` modul
+``webclient.settings``, který sám nic nenastavuje. Django se spustí, ale ``setUpClass`` testu
+selže s ``AttributeError`` na chybějícím ``settings.FEDORA_INTEGRATION_TESTS``::
 
    python manage.py test api.tests.test_upload_foto_integration \
        --settings=webclient.settings.dev \
