@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, mock_open, patch
 
 from core.constants import IMPORT, SN_ZAPSANY, SOUBOR_RELATION_TYPE
+from core.exceptions import GpsDataRemovalError
 from core.forms import ImportDataAdminForm
 from core.models import Soubor
 from core.tests.fake_redis import FakeRedis
@@ -829,6 +830,26 @@ class RunDataImportSouborTest(RunDataImportMapperTestBase):
         self.assertEqual(status_message, "cron.tasks.run_data_import.failed_mime_not_allowed")
         fedora_result = self._fedora_update_result(fake_redis)
         self.assertIn("is not allowed for record", fedora_result["0"][0])
+
+    def test_insert_photo_with_failed_gps_removal_marks_import_as_failed(self):
+        """Selhání odstranění GPS u fotografie PAS zastaví import s vlastní zprávou, ne chybou adresáře."""
+        nalez = self._create_samostatny_nalez_for_soubor("C-202399001-N95002")
+        fake_redis, _ = self._run_soubor_import(
+            [{"vazba": nalez.ident_cely, "nazev": "foto.jpg"}],
+            mimetype="image/jpeg",
+            extra_patches=[
+                patch(
+                    "core.models.Soubor.remove_gps_data",
+                    side_effect=GpsDataRemovalError("Cannot parse image GPS metadata"),
+                )
+            ],
+        )
+
+        self.assert_import_failed(fake_redis)
+        status_message = fake_redis.get(f"import_data_status_message_tr_{JOB_ID}").decode("utf-8")
+        self.assertEqual(status_message, "cron.tasks.run_data_import.failed_gps_removal")
+        fedora_result = self._fedora_update_result(fake_redis)
+        self.assertIn("Cannot parse image GPS metadata", fedora_result["0"][0])
 
     def test_failure_mid_batch_marks_import_as_failed(self):
         """Selhání zápisu v polovině dávky ve fázi souborů musí celý import označit jako selhalý.

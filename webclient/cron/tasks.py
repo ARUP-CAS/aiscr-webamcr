@@ -35,6 +35,7 @@ from core.constants import (
     UPDATE_DISTRIBUCE,
     ZAPSANI_PROJ,
 )
+from core.exceptions import GpsDataRemovalError
 from core.forms import ImportDataAdminForm
 from core.ident_cely import get_record_from_ident
 from core.import_data_mappers import (
@@ -3042,7 +3043,7 @@ def run_data_import(job_id, user_id, lock_token):
                             raise SouborMimeExtensionMismatchError(filename, file_extension, mimetype)
                         if mimetype not in Soubor.allowed_mimes_for_record(soubor.vazba.navazany_objekt):
                             raise SouborMimeNotAllowedError(filename, mimetype, ident_cely)
-                        if mimetype in ["image/png", "image/jpeg", "image/tiff"] and isinstance(
+                        if mimetype in Soubor.PAS_ACCEPTED_MIMES and isinstance(
                             soubor.vazba.navazany_objekt, SamostatnyNalez
                         ):
                             bio = Soubor.remove_gps_data(bio)
@@ -3278,6 +3279,29 @@ def run_data_import(job_id, user_id, lock_token):
                     redis_connector.set(
                         job_key("import_data_status_message_tr"),
                         translation_value("cron.tasks.run_data_import.failed_mime_not_allowed"),
+                    )
+                    failed = True
+                except GpsDataRemovalError as err:
+                    if fedora_transaction is not None:
+                        fedora_transaction.rollback_transaction()
+                    logger.error(
+                        "cron.tasks.run_data_import.files.gps_removal_failed",
+                        extra={
+                            "error": err,
+                            "job_id": job_id,
+                            "file": filename,
+                            **related_metadata_log_context,
+                        },
+                    )
+                    if record_id is not None:
+                        import_fedora_result[record_id] = [
+                            translation_value("cron.tasks.run_data_import.error.raw", raw=True, message=str(err))
+                        ]
+                        redis_connector.set(job_key("import_fedora_result_tr"), json.dumps(import_fedora_result))
+                    redis_connector.set(job_key("import_data_stop"), 1)
+                    redis_connector.set(
+                        job_key("import_data_status_message_tr"),
+                        translation_value("cron.tasks.run_data_import.failed_gps_removal"),
                     )
                     failed = True
                 except FedoraError as err:
