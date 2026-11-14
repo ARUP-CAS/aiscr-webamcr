@@ -52,3 +52,5 @@ pytz==2026.5
 python-dateutil==3.0.0
 rdflib==7.6.0
 bleach==6.4.0
+# kombu 5.7 importuje packaging v kombu.transport.redis, ale nedeklaruje ho jako závislost.
+packaging==26.3
