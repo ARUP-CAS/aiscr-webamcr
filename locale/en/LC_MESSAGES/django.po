@@ -250,6 +250,22 @@ msgstr "Find"
 msgid "api.model.apiRequestLog.errors"
 msgstr "Errors"
 
+#: api/models.py:114
+msgid "api.model.apiRequestLog.igsnStatus"
+msgstr "IGSN status"
+
+#: api/models.py:29
+msgid "api.model.apiRequestLog.igsnStatus.retryPending"
+msgstr "retry pending"
+
+#: api/models.py:30
+msgid "api.model.apiRequestLog.igsnStatus.updated"
+msgstr "updated"
+
+#: api/models.py:31
+msgid "api.model.apiRequestLog.igsnStatus.failed"
+msgstr "failed"
+
 #: api/models.py:105
 msgid "api.model.apiRequestLog.modelTitle.label"
 msgstr "API management"
@@ -670,11 +686,6 @@ msgid "api.views.PasApiBaseView.record_locked"
 msgstr ""
 "The record is currently being processed by another request. Please try again"
 " later."
-
-#: api/views.py:3166
-msgid ""
-"api.views.SamostatnyNalezEvidencniCisloPatchView.patch.doi_update_error"
-msgstr "Inventory number could not be propagated to DOI/IGSN."
 
 #: api/views.py:3176 api/views.py:3186 api/views.py:3198
 msgid "api.views.SamostatnyNalezEvidencniCisloPatchView.patch.internal_error"

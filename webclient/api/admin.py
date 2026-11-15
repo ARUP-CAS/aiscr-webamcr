@@ -16,6 +16,7 @@ class ApiRequestLogAdmin(admin.ModelAdmin):
         "client_ip",
         "request_target",
         "status",
+        "igsn_status",
         "ident_cely",
         "filename",
         "file_size",
@@ -52,7 +53,7 @@ class ApiRequestLogAdmin(admin.ModelAdmin):
         """
         return self._format_datetime(obj.finished_at)
 
-    list_filter = ["status", "request_target"]
+    list_filter = ["status", "igsn_status", "request_target"]
     search_fields = ["user__email", "client_ip", "ident_cely"]
     readonly_fields = [
         "user",
@@ -66,6 +67,7 @@ class ApiRequestLogAdmin(admin.ModelAdmin):
         "ident_cely",
         "samostatny_nalez",
         "errors",
+        "igsn_status",
     ]
 
     def has_add_permission(self, request: HttpRequest) -> bool:
