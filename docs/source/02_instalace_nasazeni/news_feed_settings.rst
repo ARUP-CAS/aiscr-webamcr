@@ -53,18 +53,26 @@ Při zahřátí aplikace spustí vstupní skript úlohu ``cron.tasks.load_news_f
 přímo v samostatném procesu ``nohup python manage.py shell``. Po změně nastavení
 ovlivňujícího stahování se úloha odešle do fronty Celery; periodická spuštění
 zajišťuje databázový plánovač Celery Beat. Nová položka se zobrazí po úspěšném
-dokončení úlohy. Při chybě stahování zůstává dostupná poslední úspěšná kopie
-stejného zdroje. Poslední úspěšná neprázdná kopie zůstává v cache 30 dní od
-posledního úspěšného načtení; po vypršení se při chybě stahování novinky nezobrazí.
+dokončení úlohy. Zdroj musí vracet JSON přímo; HTTP přesměrování se nenásledují
+a odpovědi 3xx se zpracují jako neúspěšné načtení.
+Při chybě stahování se zobrazí dostupná čerstvá kopie; pokud chybí nebo je
+prázdná, použije se poslední úspěšná neprázdná kopie stejného zdroje, pokud je
+dostupná v cache. Její platnost je 30 dní od posledního
+úspěšného neprázdného načtení. Platný, ale prázdný kanál tuto dobu neprodlužuje;
+přihlašovací stránka i v tomto případě zobrazuje poslední neprázdnou kopii,
+dokud je dostupná. Pokud taková kopie chybí nebo vypršela a čerstvá kopie je
+prázdná či nedostupná, novinky se nezobrazí.
 
 Klíče cache zahrnují nastavený prefix, jazyk a identitu normalizované URL. Změna
 zdroje nebo prefixu proto nevrací obsah předchozího kanálu. Hodnota TTL pod
 ``600`` sekund je neplatná: administrace ji odmítne a historická neplatná hodnota
 se při čtení zaloguje a nahradí výchozí hodnotou. Změna výšky bloku se projeví
-v následujícím požadavku na přihlášení bez nového stahování. Změna TTL upraví
-expiraci cache i periodický interval na ``TTL - 60`` sekund (nejméně ``540``
-sekund). Změny se řadí podle aktuální uložené hodnoty; neúspěšné sladění se
-zkusí znovu při startu aplikace. Existující duplicitní interval Beat se znovu
+v následujícím požadavku na přihlášení bez nového stahování. Změna TTL upraví expiraci cache. U intervalového plánu se perioda odvozuje jako
+``TTL - 60`` sekund (nejméně ``540`` sekund); vlastní crontab, solar nebo clocked
+plán má přednost. Sladění zachovává povolení úlohy a její argumenty. Neúspěšné
+sladění se zkusí znovu při startu a dalším načtení novinek. Vypnutí úlohy v Beat
+zastaví periodická spuštění, nikoliv zahřátí při startu ani obnovu po změně
+nastavení. Nezměněný plán nevyvolá oznámení plánovači. Existující duplicitní interval Beat se znovu
 použije bez chyby. Invalidace se provádí po potvrzení databázové transakce a
 nemaže nesouvisející záznamy Redis.
 

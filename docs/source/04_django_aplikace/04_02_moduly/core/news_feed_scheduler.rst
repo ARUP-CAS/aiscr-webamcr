@@ -13,7 +13,11 @@ Funkce
 
 .. py:function:: reconcile_news_feed_schedule(config)
 
-   Nastaví interval obnovy zpráv a upozorní databázový plánovač.
+   Sladí interval úlohy s TTL a zachová ostatní nastavení operátora.
 
-   :param config: Konfigurace intervalu; pokud chybí, načte se aktuální.
-   :return: Vytvořená nebo aktualizovaná periodická úloha.
+   Vlastní neintervalový plán, cizí úlohu a neplatný plán ponechá beze změny.
+   Při shodném intervalu úlohu neukládá a neupozorňuje plánovač.
+
+   :param config: Snímek konfigurace pro izolované testy. Produkční volání jej
+       nepředává, aby se aktuální hodnota načetla pod zámkem databázového řádku.
+   :return: Vytvořená, aktualizovaná nebo beze změny zachovaná periodická úloha.

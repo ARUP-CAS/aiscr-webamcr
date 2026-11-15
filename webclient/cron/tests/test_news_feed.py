@@ -41,12 +41,15 @@ class LoadNewsFeedTest(TestCase):
         self.set_setting("news_feed_base_url", "https://arup-cas.github.io/aiscr-news/feed/custom")
         self.set_setting("news_feed_cache_ttl", "600")
         response = Mock()
+        response.status_code = 200
         response.json.return_value = {"items": []}
         get.return_value = response
 
         self.assertTrue(load_news_feed.run())
 
-        get.assert_any_call("https://arup-cas.github.io/aiscr-news/feed/custom/cs.json", timeout=10.0)
+        get.assert_any_call(
+            "https://arup-cas.github.io/aiscr-news/feed/custom/cs.json", timeout=10.0, allow_redirects=False
+        )
         config = get_news_feed_config(force_refresh=True)
         fresh_key, _last_good_key = config.cache_keys("cs")
         self.assertEqual(caches["default"].get(fresh_key), [])
@@ -62,6 +65,7 @@ class LoadNewsFeedTest(TestCase):
         previous = ["previous-item"]
         caches["default"].set(last_good_key, previous, None)
         response = Mock()
+        response.status_code = 200
         response.json.return_value = {"items": []}
         get.return_value = response
 
@@ -78,6 +82,7 @@ class LoadNewsFeedTest(TestCase):
         """
         self.set_setting("news_feed_languages", '["cs"]')
         response = Mock()
+        response.status_code = 200
         response.json.return_value = {"items": []}
 
         def change_source_during_request(*_args, **_kwargs):
@@ -120,6 +125,7 @@ class LoadNewsFeedTest(TestCase):
         :param get: Náhrada HTTP požadavku na zdroj zpráv.
         """
         response = Mock()
+        response.status_code = 200
         response.json.side_effect = ValueError("invalid JSON")
         get.return_value = response
 
@@ -127,3 +133,111 @@ class LoadNewsFeedTest(TestCase):
             load_news_feed.run(languages=["cs"])
 
         retry.assert_called_once()
+
+    @patch("cron.tasks.requests.get")
+    @patch.object(load_news_feed, "retry", side_effect=RuntimeError("retry requested"))
+    def test_redirects_are_rejected_without_publishing(self, retry, get):
+        """Ověří odmítnutí přesměrování a zachování poslední kopie.
+
+        :param retry: Náhrada pro opakování úlohy.
+        :param get: Náhrada HTTP požadavku na zdroj zpráv.
+        """
+        config = get_news_feed_config(force_refresh=True)
+        fresh_key, last_good_key = config.cache_keys("cs")
+        caches["default"].set(last_good_key, ["previous"], None)
+        for status in (300, 301, 302, 303, 304, 307, 308):
+            with self.subTest(status=status):
+                response = Mock(status_code=status)
+                get.return_value = response
+                with self.assertRaisesRegex(RuntimeError, "retry requested"):
+                    load_news_feed.run(languages=["cs"])
+                response.json.assert_not_called()
+                self.assertIsNone(caches["default"].get(fresh_key))
+                self.assertEqual(caches["default"].get(last_good_key), ["previous"])
+                self.assertFalse(get.call_args.kwargs["allow_redirects"])
+        self.assertEqual(retry.call_count, 7)
+
+    @patch("core.news_feed_scheduler.reconcile_news_feed_schedule", side_effect=RuntimeError("unavailable"))
+    @patch("cron.tasks.requests.get")
+    def test_failed_reconciliation_does_not_prevent_fetch(self, get, reconcile):
+        """Ověří, že chyba sladění nezabrání načtení zpráv.
+
+        :param get: Náhrada HTTP požadavku na zdroj zpráv.
+        :param reconcile: Náhrada pro sladění plánu úloh.
+        """
+        response = Mock(status_code=200)
+        response.json.return_value = {"items": []}
+        get.return_value = response
+        self.assertTrue(load_news_feed.run(languages=["cs"]))
+        reconcile.assert_called_once()
+        get.assert_called_once()
+
+    @patch("cron.tasks.requests.get")
+    def test_load_repairs_stale_interval(self, get):
+        """Ověří opravu starého intervalu při dalším načtení zpráv.
+
+        :param get: Náhrada HTTP požadavku na zdroj zpráv.
+        """
+        from core.news_feed_scheduler import reconcile_news_feed_schedule
+        from django_celery_beat.models import PeriodicTask
+
+        self.set_setting("news_feed_cache_ttl", "3600")
+        reconcile_news_feed_schedule()
+        with patch("cron.tasks.load_news_feed.delay") as dispatch:
+            with patch(
+                "core.news_feed_scheduler.reconcile_news_feed_schedule", side_effect=RuntimeError("unavailable")
+            ):
+                with self.captureOnCommitCallbacks(execute=True):
+                    self.set_setting("news_feed_cache_ttl", "600")
+            dispatch.assert_called_once()
+        self.assertEqual(PeriodicTask.objects.get(name="load-news-feed").interval.every, 3540)
+        response = Mock(status_code=200)
+        response.json.return_value = {"items": []}
+        get.return_value = response
+        self.assertTrue(load_news_feed.run(languages=["cs"]))
+        self.assertEqual(PeriodicTask.objects.get(name="load-news-feed").interval.every, 540)
+
+    @patch.object(load_news_feed, "retry", side_effect=RuntimeError("retry requested"))
+    def test_redirect_never_reaches_second_host(self, retry):
+        """Ověří zastavení přesměrování na úrovni HTTP transportu.
+
+        :param retry: Náhrada pro opakování úlohy.
+        """
+        import requests
+        from requests.adapters import BaseAdapter
+
+        class RedirectAdapter(BaseAdapter):
+            """Testovací adaptér zaznamenávající požadavky a vracející přesměrování."""
+
+            def __init__(self):
+                super().__init__()
+                self.sent_urls = []
+
+            def send(self, request, **kwargs):
+                self.sent_urls.append(request.url)
+                if len(self.sent_urls) > 1:
+                    raise AssertionError("Unexpected redirect request")
+                response = requests.Response()
+                response.status_code = 302
+                response.headers["Location"] = "http://127.0.0.1/private"
+                response._content = b'{"items": []}'
+                response.url = request.url
+                response.request = request
+                return response
+
+            def close(self):
+                pass
+
+        session = requests.Session()
+        session.trust_env = False
+        adapter = RedirectAdapter()
+        session.mount("https://", adapter)
+        session.mount("http://", adapter)
+        try:
+            with patch("cron.tasks.requests.get", side_effect=session.get):
+                with self.assertRaisesRegex(RuntimeError, "retry requested"):
+                    load_news_feed.run(languages=["cs"])
+            self.assertEqual(len(adapter.sent_urls), 1)
+            retry.assert_called_once()
+        finally:
+            session.close()

@@ -503,9 +503,12 @@ Funkce
 
    Načte a uloží novinkový kanál do cache.
 
-   Tato úloha je volána při startu aplikace, po změně konfigurace a periodicky
-   v intervalu řízeném databázovým nastavením (cache_ttl - 60 sekund).
+   Úloha se spouští při startu aplikace, po změně konfigurace a podle plánu
+   Celery Beat. Spravovaný interval vychází z cache_ttl - 60 sekund, vlastní
+   plán může mít přednost. Před načítáním se pokusí sladit plán; chyba sladění
+   nezabrání samotnému načítání.
 
+   HTTP přesměrování se nenásledují a odpovědi 3xx jsou považovány za chybu.
    Při chybě se opakují pouze jazyky, které se nepodařilo načíst.
 
    :param languages: Seznam jazykových kódů ke zpracování; pokud není zadán,

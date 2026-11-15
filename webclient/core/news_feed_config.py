@@ -267,7 +267,6 @@ def invalidate_news_feed_config_cache() -> None:
     """Invalidate the parsed configuration shared by all application processes."""
     cache = caches["default"]
     cache.set(NEWS_FEED_CONFIG_GENERATION_KEY, uuid.uuid4().hex, timeout=None)
-    cache.delete(NEWS_FEED_CONFIG_CACHE_KEY)
 
 
 def get_news_feed_cache_keys(language: str, config: NewsFeedConfig | None = None) -> tuple[str, str]:

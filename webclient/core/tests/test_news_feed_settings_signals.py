@@ -2,7 +2,11 @@
 
 from unittest.mock import patch
 
-from core.news_feed_config import NEWS_FEED_BLOCK_HEIGHT_CACHE_KEY, NEWS_FEED_CONFIG_CACHE_KEY
+from core.news_feed_config import (
+    NEWS_FEED_BLOCK_HEIGHT_CACHE_KEY,
+    NEWS_FEED_CONFIG_GENERATION_KEY,
+    get_news_feed_config,
+)
 from core.setting_models import CustomAdminSettings
 from django.core.cache import caches
 from django.db import transaction
@@ -37,20 +41,20 @@ class NewsFeedSettingsSignalTest(TestCase):
         )[0]
 
     @patch("cron.tasks.load_news_feed.delay")
-    def test_height_change_invalidates_legacy_cache_without_refresh(self, dispatch):
+    def test_height_change_invalidates_config_without_refresh(self, dispatch):
         """Ověří zneplatnění cache výšky bez spuštění obnovy zpráv.
 
         :param dispatch: Náhrada pro spuštění asynchronní obnovy.
         """
         setting = self.create_without_signal("news_feed_block_height", "300")
         cache = caches["default"]
-        cache.set(NEWS_FEED_CONFIG_CACHE_KEY, "old-config")
+        self.assertEqual(get_news_feed_config().block_height, 300)
         cache.set(NEWS_FEED_BLOCK_HEIGHT_CACHE_KEY, "300")
         with self.captureOnCommitCallbacks(execute=True):
             setting.value = "420"
             setting.save()
 
-        self.assertIsNone(cache.get(NEWS_FEED_CONFIG_CACHE_KEY))
+        self.assertEqual(get_news_feed_config().block_height, 420)
         self.assertIsNone(cache.get(NEWS_FEED_BLOCK_HEIGHT_CACHE_KEY))
         dispatch.assert_not_called()
 
@@ -107,20 +111,22 @@ class NewsFeedSettingsSignalTest(TestCase):
         :param dispatch: Náhrada pro spuštění asynchronní obnovy.
         """
         cache = caches["default"]
-        cache.set(NEWS_FEED_CONFIG_CACHE_KEY, "still-valid")
+        setting = self.create_without_signal("news_feed_block_height", "300")
+        self.assertEqual(get_news_feed_config().block_height, 300)
+        generation = cache.get(NEWS_FEED_CONFIG_GENERATION_KEY)
         with self.captureOnCommitCallbacks(execute=True):
             try:
                 with transaction.atomic():
-                    CustomAdminSettings.objects.create(
-                        item_group="news_feed",
-                        item_id="news_feed_base_url",
-                        value="https://arup-cas.github.io/aiscr-news/feed/new",
-                    )
+                    setting.value = "420"
+                    setting.save()
                     raise RuntimeError("rollback")
             except RuntimeError:
                 pass
 
-        self.assertEqual(cache.get(NEWS_FEED_CONFIG_CACHE_KEY), "still-valid")
+        setting.refresh_from_db()
+        self.assertEqual(setting.value, "300")
+        self.assertEqual(cache.get(NEWS_FEED_CONFIG_GENERATION_KEY), generation)
+        self.assertEqual(get_news_feed_config().block_height, 300)
         dispatch.assert_not_called()
 
     @patch("cron.tasks.load_news_feed.delay")

@@ -3972,14 +3972,24 @@ def load_news_feed(self, languages=None):
     """
     Načte a uloží novinkový kanál do cache.
 
-    Tato úloha je volána při startu aplikace, po změně konfigurace a periodicky
-    v intervalu řízeném databázovým nastavením (cache_ttl - 60 sekund).
+    Úloha se spouští při startu aplikace, po změně konfigurace a podle plánu
+    Celery Beat. Spravovaný interval vychází z cache_ttl - 60 sekund, vlastní
+    plán může mít přednost. Před načítáním se pokusí sladit plán; chyba sladění
+    nezabrání samotnému načítání.
 
+    HTTP přesměrování se nenásledují a odpovědi 3xx jsou považovány za chybu.
     Při chybě se opakují pouze jazyky, které se nepodařilo načíst.
 
     :param languages: Seznam jazykových kódů ke zpracování; pokud není zadán,
         použije se seznam z nastavení aplikace.
     """
+    try:
+        from core.news_feed_scheduler import reconcile_news_feed_schedule
+
+        reconcile_news_feed_schedule()
+    except Exception:
+        logger.exception("Could not reconcile the news-feed schedule before refresh.")
+
     config = get_news_feed_config(force_refresh=True)
     cache_ttl = config.cache_ttl
     base_url = config.base_url
@@ -3991,7 +4001,9 @@ def load_news_feed(self, languages=None):
     for language in languages:
         feed_url = f"{base_url}/{language}.json"
         try:
-            response = requests.get(feed_url, timeout=config.timeout)
+            response = requests.get(feed_url, timeout=config.timeout, allow_redirects=False)
+            if 300 <= response.status_code < 400:
+                raise requests.exceptions.HTTPError("News-feed redirects are not permitted.", response=response)
             response.raise_for_status()
             with override(language):
                 feed = _parse_feed(response.json())
